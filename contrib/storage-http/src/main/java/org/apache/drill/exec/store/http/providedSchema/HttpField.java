@@ -97,6 +97,9 @@ public class HttpField {
   }
 
   public Map<String, String> getProperties() {
+    if (properties == null) {
+      return Collections.emptyMap();
+    }
     return properties;
   }
 
@@ -107,7 +110,6 @@ public class HttpField {
   @JsonIgnore
   public boolean isComplex() {
     return getDrillType() == MinorType.MAP ||
-      getDrillType() == MinorType.LIST ||
       getDrillType() == MinorType.DICT ||
       getDrillType() == MinorType.UNION;
   }

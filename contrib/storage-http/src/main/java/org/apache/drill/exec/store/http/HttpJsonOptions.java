@@ -132,13 +132,24 @@ public class HttpJsonOptions {
     logger.debug("Adding field {}", field);
     if (field.isComplex()) {
       if (field.getDrillType() == MinorType.MAP) {
-        MapBuilder innerMapBuilder = schemaBuilder.addMap(field.getFieldName());
+        MapBuilder innerMapBuilder;
+        if (field.isArray()) {
+          // Case for repeated maps
+          innerMapBuilder = schemaBuilder.addMapArray(field.getFieldName());
+        } else {
+          // Case for simple (non-repeated) maps
+          innerMapBuilder = schemaBuilder.addMap(field.getFieldName());
+        }
         for (HttpField innerField : field.getFields()) {
           addFieldToMap(innerMapBuilder, innerField);
         }
         innerMapBuilder.resumeSchema();
       }
+    } else if (field.isArray()) {
+      logger.debug("Adding array {}", field);
+      schemaBuilder.addArray(field.getFieldName(), field.getDrillType());
     } else {
+      // Case for simple scalar columns
       ColumnMetadata metadata = MetadataUtils.newScalar(field.getFieldName(), field.getDrillType(), DataMode.OPTIONAL);
       // Add properties if present
       for (Entry<String, String> property : field.getProperties().entrySet()) {
@@ -162,8 +173,16 @@ public class HttpJsonOptions {
         }
         innerMapBuilder.resumeMap();
       }
+    } else if (field.isArray()) {
+      builder.addArray(field.getFieldName(), field.getDrillType());
     } else {
-      builder.addNullable(field.getFieldName(), field.getDrillType());
+      // Case for simple scalar columns
+      ColumnMetadata metadata = MetadataUtils.newScalar(field.getFieldName(), field.getDrillType(), DataMode.OPTIONAL);
+      // Add properties if present
+      for (Entry<String, String> property : field.getProperties().entrySet()) {
+        metadata.setProperty(property.getKey(), property.getValue());
+      }
+      builder.add(metadata.schema());
     }
   }
 

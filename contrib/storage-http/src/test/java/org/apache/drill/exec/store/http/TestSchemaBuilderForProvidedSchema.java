@@ -58,19 +58,6 @@ public class TestSchemaBuilderForProvidedSchema {
     assertTrue(expectedSchema.isEquivalent(schema));
   }
 
-  /*
-  {"type":"tuple_schema","columns":
-    [
-      {
-        "name":"outer_map",
-        "type":"STRUCT<`bigint_col` BIGINT, `boolean_col` BOOLEAN, `date_col` DATE, `double_col` DOUBLE, `interval_col` INTERVAL, `int_col` BIGINT, `timestamp_col` TIMESTAMP, `time_col` TIME, `varchar_col` VARCHAR>",
-        "mode":"REQUIRED"
-      }
-    ]
-  }
-
-*/
-
   @Test
   public void testSingleMapSchema() {
     List<HttpField> outer = new ArrayList<>();
@@ -99,20 +86,6 @@ public class TestSchemaBuilderForProvidedSchema {
 
     assertTrue(expectedSchema.isEquivalent(schema));
   }
-
-/*
-  {
-    "type":"tuple_schema",
-    "columns":[
-      {
-        "name":"outer_map",
-        "type":"STRUCT<`bigint_col` BIGINT, `boolean_col` BOOLEAN, `date_col` DATE, `double_col` DOUBLE, `interval_col` INTERVAL, `int_col` BIGINT, `timestamp_col` TIMESTAMP, `time_col` TIME, `varchar_col` VARCHAR, `inner_map` STRUCT<`bigint_col` BIGINT, `boolean_col` BOOLEAN, `date_col` DATE, `double_col` DOUBLE, `interval_col` INTERVAL, `int_col` BIGINT, `timestamp_col` TIMESTAMP, `time_col` TIME, `varchar_col` VARCHAR>>",
-        "mode":"REQUIRED"
-      }
-    ]
-  }
-
-*/
 
   @Test
   public void testNestedMapSchema() {
@@ -157,9 +130,61 @@ public class TestSchemaBuilderForProvidedSchema {
   }
 
   @Test
+  public void testSchemaWithSimpleList() {
+    List<HttpField> schemaWithArray = new ArrayList<>();
+    schemaWithArray.add(new HttpField.HttpFieldBuilder().fieldName("int_field").fieldType("int").build());
+    schemaWithArray.add(new HttpField.HttpFieldBuilder().fieldName("int_array").fieldType("int").isArray(true).build());
+
+    HttpJsonOptions jsonOptions = new HttpJsonOptions.HttpJsonOptionsBuilder()
+      .providedSchema(schemaWithArray)
+      .build();
+
+    TupleMetadata schema = jsonOptions.buildSchema();
+
+    TupleMetadata expectedSchema = new SchemaBuilder()
+      .addNullable("int_field", MinorType.BIGINT)
+      .addArray("int_array", MinorType.BIGINT)
+      .build();
+    assertTrue(expectedSchema.isEquivalent(schema));
+  }
+
+  @Test
+  public void testListInMap() {
+    List<HttpField> innerFields = new ArrayList<>();
+    innerFields.add(new HttpField.HttpFieldBuilder().fieldName("int_field").fieldType("int").build());
+    innerFields.add(new HttpField.HttpFieldBuilder().fieldName("int_array").fieldType("int").isArray(true).build());
+
+    List<HttpField> outer = new ArrayList<>();
+    outer.add(new HttpField("outer_map", "map", innerFields, false, new HashMap<>()));
+
+    HttpJsonOptions jsonOptions = new HttpJsonOptions.HttpJsonOptionsBuilder()
+      .providedSchema(outer)
+      .build();
+
+    TupleMetadata schema = jsonOptions.buildSchema();
+    TupleMetadata expectedSchema = new SchemaBuilder()
+      .addMap("outer_map")
+        .addNullable("int_field", MinorType.BIGINT)
+        .addArray("int_array", MinorType.BIGINT)
+      .resumeSchema()
+      .build();
+
+    assertTrue(expectedSchema.isEquivalent(schema));
+  }
+
+  @Test
   public void testProvidedSchemaFromJsonString() {
-    String jsonString = "{\n" + "    \"type\":\"tuple_schema\",\n" + "    \"columns\":[\n" + "      {\n" + "        \"name\":\"outer_map\",\n" + "        \"type\":\"STRUCT" +
-      "<`bigint_col` BIGINT, `boolean_col` BOOLEAN, `date_col` DATE, `double_col` DOUBLE, `interval_col` INTERVAL, `int_col` BIGINT, `timestamp_col` TIMESTAMP, `time_col` TIME, `varchar_col` VARCHAR, `inner_map` STRUCT<`bigint_col` BIGINT, `boolean_col` BOOLEAN, `date_col` DATE, `double_col` DOUBLE, `interval_col` INTERVAL, `int_col` BIGINT, `timestamp_col` TIMESTAMP, `time_col` TIME, `varchar_col` VARCHAR>>\",\n" + "        \"mode\":\"REQUIRED\"\n" + "      }\n" + "    ]\n" + "  }";
+    String jsonString = "{\n" + "" +
+      "\"type\":\"tuple_schema\",\n" +
+      "    \"columns\":[\n" +
+      "      {\n" +
+      "        \"name\":\"outer_map\",\n" +
+      "        \"type\":\"STRUCT" +
+      "<`bigint_col` BIGINT, `boolean_col` BOOLEAN, `date_col` DATE, `double_col` DOUBLE, `interval_col` INTERVAL, `int_col` BIGINT, `timestamp_col` TIMESTAMP, `time_col` TIME, `varchar_col` VARCHAR, `inner_map` STRUCT<`bigint_col` BIGINT, `boolean_col` BOOLEAN, `date_col` DATE, `double_col` DOUBLE, `interval_col` INTERVAL, `int_col` BIGINT, `timestamp_col` TIMESTAMP, `time_col` TIME, `varchar_col` VARCHAR>>\",\n" +
+      "        \"mode\":\"REQUIRED\"\n" +
+      "      }\n" +
+      "    ]\n" +
+      "  }";
 
     HttpJsonOptions jsonOptions = new HttpJsonOptions.HttpJsonOptionsBuilder()
       .jsonSchema(jsonString)
@@ -199,7 +224,7 @@ public class TestSchemaBuilderForProvidedSchema {
 
     assertTrue(expectedSchema.isEquivalent(schema));
   }
-  
+
   private List<HttpField> generateFieldList() {
     List<HttpField> fields = new ArrayList<>();
     fields.add(new HttpField("bigint_col", "bigint"));
