@@ -20,6 +20,7 @@ package org.apache.drill.exec.store.http;
 
 import okhttp3.mockwebserver.MockResponse;
 import okhttp3.mockwebserver.MockWebServer;
+import org.apache.drill.common.logical.StoragePluginConfig.AuthMode;
 import org.apache.drill.common.logical.security.PlainCredentialsProvider;
 import org.apache.drill.common.types.TypeProtos.MinorType;
 import org.apache.drill.common.util.DrillFileUtils;
@@ -29,7 +30,9 @@ import org.apache.drill.exec.physical.rowSet.RowSetBuilder;
 import org.apache.drill.exec.record.metadata.SchemaBuilder;
 import org.apache.drill.exec.record.metadata.TupleMetadata;
 import org.apache.drill.exec.store.http.providedSchema.HttpField;
+import org.apache.drill.exec.store.security.UsernamePasswordCredentials;
 import org.apache.drill.shaded.guava.com.google.common.base.Charsets;
+import org.apache.drill.shaded.guava.com.google.common.collect.ImmutableMap;
 import org.apache.drill.shaded.guava.com.google.common.io.Files;
 import org.apache.drill.test.ClusterFixture;
 import org.apache.drill.test.ClusterTest;
@@ -44,14 +47,15 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import static org.apache.drill.test.rowSet.RowSetUtilities.strArray;
+
 
 public class TestProvidedSchema extends ClusterTest {
   private static final int MOCK_SERVER_PORT = 47777;
 
   private static String TEST_JSON_PAGE1;
   private static String TEST_SCHEMA_CHANGE1;
-  private static String TEST_JSON_PAGE2;
-  private static String TEST_JSON_PAGE3;
+  private static String TEST_SCHEMA_CHANGE3;
 
   @BeforeClass
   public static void setup() throws Exception {
@@ -59,8 +63,7 @@ public class TestProvidedSchema extends ClusterTest {
 
     TEST_JSON_PAGE1 = Files.asCharSource(DrillFileUtils.getResourceAsFile("/data/p1.json"), Charsets.UTF_8).read();
     TEST_SCHEMA_CHANGE1 = Files.asCharSource(DrillFileUtils.getResourceAsFile("/data/schema_change_1.json"), Charsets.UTF_8).read();
-    TEST_JSON_PAGE2 = Files.asCharSource(DrillFileUtils.getResourceAsFile("/data/p2.json"), Charsets.UTF_8).read();
-    TEST_JSON_PAGE3 = Files.asCharSource(DrillFileUtils.getResourceAsFile("/data/p3.json"), Charsets.UTF_8).read();
+    TEST_SCHEMA_CHANGE3 = Files.asCharSource(DrillFileUtils.getResourceAsFile("/data/clickup.json"), Charsets.UTF_8).read();
 
     dirTestWatcher.copyResourceToRoot(Paths.get("data/"));
     makeMockConfig(cluster);
@@ -90,7 +93,7 @@ public class TestProvidedSchema extends ClusterTest {
     List<HttpField> innerMap = new ArrayList<>();
     innerMap.add(new HttpField("nested_value1", "varchar"));
     innerMap.add(new HttpField("nested_value2", "varchar"));
-    mapSchema.add(new HttpField("field2", "MAP", innerMap));
+    mapSchema.add(new HttpField("field2", "MAP", innerMap, false, new HashMap<>()));
 
     HttpJsonOptions jsonOptionsSchemaChange = new HttpJsonOptions.HttpJsonOptionsBuilder()
       .providedSchema(mapSchema)
@@ -106,39 +109,31 @@ public class TestProvidedSchema extends ClusterTest {
       .build();
 
 
-    List<HttpField> nestedFields = new ArrayList<>();
-    nestedFields.add(new HttpField("nested_value1", "varchar"));
-    nestedFields.add(new HttpField("nested_value2", "varchar"));
+    List<HttpField> partialMapSchema = new ArrayList<>();
+    partialMapSchema.add(new HttpField("field1", "VARCHAR"));
+    List<HttpField> partialInnerMap = new ArrayList<>();
+    partialInnerMap.add(new HttpField("nested_value1", "varchar"));
+    partialMapSchema.add(new HttpField("field2", "MAP", partialInnerMap, false, new HashMap<>()));
 
-    List<HttpField> innerMapSchema = new ArrayList<>();
-    innerMapSchema.add(new HttpField("field2", "map", nestedFields));
 
-    List<HttpField> unionSchema = new ArrayList<>();
-    unionSchema.add(new HttpField("field1", "varchar"));
-    unionSchema.add(new HttpField("field2", "union", innerMapSchema));
-
-    HttpJsonOptions unionJsonOptions = new HttpJsonOptions.HttpJsonOptionsBuilder()
-      .providedSchema(unionSchema)
-      .skipMalformedRecords(true)
-      .build();
-
-    HttpApiConfig unionApi = HttpApiConfig.builder()
+    HttpApiConfig partialSchema = HttpApiConfig.builder()
       .url("http://localhost:47777/json")
       .method("get")
-      .jsonOptions(unionJsonOptions)
+      .jsonOptions(new HttpJsonOptions.HttpJsonOptionsBuilder().providedSchema(partialMapSchema).build())
       .requireTail(false)
       .inputType("json")
       .build();
 
-
     Map<String, HttpApiConfig> configs = new HashMap<>();
     configs.put("basicJson", basicJson);
     configs.put("schemaChange", schemaChange);
-    configs.put("union", unionApi);
-
+    configs.put("partialSchema", partialSchema);
 
     HttpStoragePluginConfig mockStorageConfigWithWorkspace =
-      new HttpStoragePluginConfig(false, configs, 2, null, null, "", 80, "", "", "", null, PlainCredentialsProvider.EMPTY_CREDENTIALS_PROVIDER);
+      new HttpStoragePluginConfig(false, configs, 2, "globaluser", "globalpass", "",
+        80, "", "", "", null, new PlainCredentialsProvider(ImmutableMap.of(
+        UsernamePasswordCredentials.USERNAME, "globaluser",
+        UsernamePasswordCredentials.PASSWORD, "globalpass")), AuthMode.SHARED_USER.name());
     mockStorageConfigWithWorkspace.setEnabled(true);
     cluster.defineStoragePlugin("local", mockStorageConfigWithWorkspace);
   }
@@ -171,43 +166,73 @@ public class TestProvidedSchema extends ClusterTest {
     try (MockWebServer server = startServer()) {
       server.enqueue(new MockResponse().setResponseCode(200).setBody(TEST_SCHEMA_CHANGE1));
       RowSet results = client.queryBuilder().sql(sql).rowSet();
-      results.print();
 
-      /*TupleMetadata expectedSchema = new SchemaBuilder()
-        .addNullable("col_1", MinorType.FLOAT8)
-        .addNullable("col_2", MinorType.FLOAT8)
-        .addNullable("col_3", MinorType.FLOAT8)
+      TupleMetadata expectedSchema = new SchemaBuilder()
+        .addNullable("field1", MinorType.VARCHAR)
+        .addMap("field2")
+          .addNullable("nested_value1", MinorType.VARCHAR)
+          .addNullable("nested_value2", MinorType.VARCHAR)
+        .resumeSchema()
         .build();
 
       RowSet expected = new RowSetBuilder(client.allocator(), expectedSchema)
-        .addRow(1.0, 2.0, 3.0)
-        .addRow(4.0, 5.0, 6.0)
+        .addRow("value1", strArray(null, null))
+        .addRow("value3", strArray("nv1", "nv2"))
+        .addRow("value5", strArray("nv3", "nv4"))
         .build();
 
-      RowSetUtilities.verify(expected, results);*/
+      RowSetUtilities.verify(expected, results);
     }
   }
 
   @Test
-  public void testSchemaChangeWithUnion() throws Exception {
-    String sql = "SELECT * FROM `local`.`union`";
+  public void testPartialSchema() throws Exception {
+    String sql = "SELECT * FROM `local`.`partialSchema`";
+    try (MockWebServer server = startServer()) {
+      server.enqueue(new MockResponse().setResponseCode(200).setBody(TEST_SCHEMA_CHANGE1));
+      RowSet results = client.queryBuilder().sql(sql).rowSet();
+
+      TupleMetadata expectedSchema = new SchemaBuilder()
+        .addNullable("field1", MinorType.VARCHAR)
+        .addMap("field2")
+        .addNullable("nested_value1", MinorType.VARCHAR)
+        .addNullable("nested_value2", MinorType.VARCHAR)
+        .resumeSchema()
+        .build();
+
+      RowSet expected = new RowSetBuilder(client.allocator(), expectedSchema)
+        .addRow("value1", strArray(null, null))
+        .addRow("value3", strArray("nv1", "nv2"))
+        .addRow("value5", strArray("nv3", "nv4"))
+        .build();
+
+      RowSetUtilities.verify(expected, results);
+    }
+  }
+
+  @Test
+  public void testPartialJSONSchema() throws Exception {
+    String sql = "SELECT * FROM `local`.`partialSchema`";
     try (MockWebServer server = startServer()) {
       server.enqueue(new MockResponse().setResponseCode(200).setBody(TEST_SCHEMA_CHANGE1));
       RowSet results = client.queryBuilder().sql(sql).rowSet();
       results.print();
 
-      /*TupleMetadata expectedSchema = new SchemaBuilder()
-        .addNullable("col_1", MinorType.FLOAT8)
-        .addNullable("col_2", MinorType.FLOAT8)
-        .addNullable("col_3", MinorType.FLOAT8)
+      TupleMetadata expectedSchema = new SchemaBuilder()
+        .addNullable("field1", MinorType.VARCHAR)
+        .addMap("field2")
+        .addNullable("nested_value1", MinorType.VARCHAR)
+        .addNullable("nested_value2", MinorType.VARCHAR)
+        .resumeSchema()
         .build();
 
       RowSet expected = new RowSetBuilder(client.allocator(), expectedSchema)
-        .addRow(1.0, 2.0, 3.0)
-        .addRow(4.0, 5.0, 6.0)
+        .addRow("value1", strArray(null, null))
+        .addRow("value3", strArray("nv1", "nv2"))
+        .addRow("value5", strArray("nv3", "nv4"))
         .build();
 
-      RowSetUtilities.verify(expected, results);*/
+      RowSetUtilities.verify(expected, results);
     }
   }
 

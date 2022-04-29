@@ -18,6 +18,7 @@
 
 package org.apache.drill.exec.store.http;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import org.apache.drill.common.types.TypeProtos.MinorType;
 import org.apache.drill.exec.record.metadata.SchemaBuilder;
 import org.apache.drill.exec.record.metadata.TupleMetadata;
@@ -25,8 +26,10 @@ import org.apache.drill.exec.store.http.providedSchema.HttpField;
 import org.junit.Test;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 
+import static org.junit.Assert.fail;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class TestSchemaBuilderForProvidedSchema {
@@ -52,15 +55,27 @@ public class TestSchemaBuilderForProvidedSchema {
       .addNullable("time_col", MinorType.TIME)
       .addNullable("varchar_col", MinorType.VARCHAR)
       .build();
-
     assertTrue(expectedSchema.isEquivalent(schema));
   }
+
+  /*
+  {"type":"tuple_schema","columns":
+    [
+      {
+        "name":"outer_map",
+        "type":"STRUCT<`bigint_col` BIGINT, `boolean_col` BOOLEAN, `date_col` DATE, `double_col` DOUBLE, `interval_col` INTERVAL, `int_col` BIGINT, `timestamp_col` TIMESTAMP, `time_col` TIME, `varchar_col` VARCHAR>",
+        "mode":"REQUIRED"
+      }
+    ]
+  }
+
+*/
 
   @Test
   public void testSingleMapSchema() {
     List<HttpField> outer = new ArrayList<>();
     List<HttpField> innerFields = generateFieldList();
-    outer.add(new HttpField("outer_map", "map", innerFields));
+    outer.add(new HttpField("outer_map", "map", innerFields, false, new HashMap<>()));
 
     HttpJsonOptions jsonOptions = new HttpJsonOptions.HttpJsonOptionsBuilder()
       .providedSchema(outer)
@@ -85,14 +100,28 @@ public class TestSchemaBuilderForProvidedSchema {
     assertTrue(expectedSchema.isEquivalent(schema));
   }
 
+/*
+  {
+    "type":"tuple_schema",
+    "columns":[
+      {
+        "name":"outer_map",
+        "type":"STRUCT<`bigint_col` BIGINT, `boolean_col` BOOLEAN, `date_col` DATE, `double_col` DOUBLE, `interval_col` INTERVAL, `int_col` BIGINT, `timestamp_col` TIMESTAMP, `time_col` TIME, `varchar_col` VARCHAR, `inner_map` STRUCT<`bigint_col` BIGINT, `boolean_col` BOOLEAN, `date_col` DATE, `double_col` DOUBLE, `interval_col` INTERVAL, `int_col` BIGINT, `timestamp_col` TIMESTAMP, `time_col` TIME, `varchar_col` VARCHAR>>",
+        "mode":"REQUIRED"
+      }
+    ]
+  }
+
+*/
+
   @Test
   public void testNestedMapSchema() {
     List<HttpField> outer = new ArrayList<>();
     List<HttpField> middle = generateFieldList();
 
     List<HttpField> innerFields = generateFieldList();
-    middle.add(new HttpField("inner_map", "map", innerFields));
-    outer.add(new HttpField("outer_map", "map", middle));
+    middle.add(new HttpField("inner_map", "map", innerFields, false, new HashMap<>()));
+    outer.add(new HttpField("outer_map", "map", middle, false, new HashMap<>()));
 
     HttpJsonOptions jsonOptions = new HttpJsonOptions.HttpJsonOptionsBuilder()
       .providedSchema(outer)
@@ -124,33 +153,53 @@ public class TestSchemaBuilderForProvidedSchema {
         .resumeMap()
       .resumeSchema()
       .build();
-
     assertTrue(expectedSchema.isEquivalent(schema));
   }
 
   @Test
-  public void testProvidedSchemaWithUnion() {
-
-    List<HttpField> unionFields = new ArrayList<>();
-    unionFields.add(new HttpField("nested_value1", "varchar"));
-    unionFields.add(new HttpField("nested_value2", "varchar"));
-
-    List<HttpField> mapField = new ArrayList<>();
-    mapField.add(new HttpField("field2", "map", unionFields));
-
-    List<HttpField> fields = new ArrayList<>();
-    fields.add(new HttpField("field1", "varchar"));
-    fields.add(new HttpField("field2", "union", mapField));
+  public void testProvidedSchemaFromJsonString() {
+    String jsonString = "{\n" + "    \"type\":\"tuple_schema\",\n" + "    \"columns\":[\n" + "      {\n" + "        \"name\":\"outer_map\",\n" + "        \"type\":\"STRUCT" +
+      "<`bigint_col` BIGINT, `boolean_col` BOOLEAN, `date_col` DATE, `double_col` DOUBLE, `interval_col` INTERVAL, `int_col` BIGINT, `timestamp_col` TIMESTAMP, `time_col` TIME, `varchar_col` VARCHAR, `inner_map` STRUCT<`bigint_col` BIGINT, `boolean_col` BOOLEAN, `date_col` DATE, `double_col` DOUBLE, `interval_col` INTERVAL, `int_col` BIGINT, `timestamp_col` TIMESTAMP, `time_col` TIME, `varchar_col` VARCHAR>>\",\n" + "        \"mode\":\"REQUIRED\"\n" + "      }\n" + "    ]\n" + "  }";
 
     HttpJsonOptions jsonOptions = new HttpJsonOptions.HttpJsonOptionsBuilder()
-      .providedSchema(fields)
+      .jsonSchema(jsonString)
       .build();
 
-    TupleMetadata schema = jsonOptions.buildSchema();
-    System.out.println(schema);
+    TupleMetadata schema = null;
+    try {
+      schema = jsonOptions.getSchemaFromJsonString();
+    } catch (JsonProcessingException e) {
+      fail();
+    }
 
+    TupleMetadata expectedSchema = new SchemaBuilder()
+      .addMap("outer_map")
+      .addNullable("bigint_col", MinorType.BIGINT)
+      .addNullable("boolean_col", MinorType.BIT)
+      .addNullable("date_col", MinorType.DATE)
+      .addNullable("double_col", MinorType.FLOAT8)
+      .addNullable("interval_col", MinorType.INTERVAL)
+      .addNullable("int_col", MinorType.BIGINT)
+      .addNullable("timestamp_col", MinorType.TIMESTAMP)
+      .addNullable("time_col", MinorType.TIME)
+      .addNullable("varchar_col", MinorType.VARCHAR)
+        .addMap("inner_map")
+          .addNullable("bigint_col", MinorType.BIGINT)
+          .addNullable("boolean_col", MinorType.BIT)
+          .addNullable("date_col", MinorType.DATE)
+          .addNullable("double_col", MinorType.FLOAT8)
+          .addNullable("interval_col", MinorType.INTERVAL)
+          .addNullable("int_col", MinorType.BIGINT)
+          .addNullable("timestamp_col", MinorType.TIMESTAMP)
+          .addNullable("time_col", MinorType.TIME)
+          .addNullable("varchar_col", MinorType.VARCHAR)
+        .resumeMap()
+      .resumeSchema()
+      .build();
+
+    assertTrue(expectedSchema.isEquivalent(schema));
   }
-
+  
   private List<HttpField> generateFieldList() {
     List<HttpField> fields = new ArrayList<>();
     fields.add(new HttpField("bigint_col", "bigint"));

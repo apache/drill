@@ -23,39 +23,69 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonTypeName;
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import com.fasterxml.jackson.databind.annotation.JsonPOJOBuilder;
 import org.apache.drill.common.PlanStringBuilder;
 import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.common.types.TypeProtos.MinorType;
+import org.apache.drill.exec.store.http.HttpJsonOptions;
 import org.apache.drill.exec.store.log.LogFormatField;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 import java.util.Objects;
 
 @JsonTypeName("HttpSchemaFieldDescription")
 @JsonInclude(JsonInclude.Include.NON_DEFAULT)
+@JsonDeserialize(builder = HttpField.HttpFieldBuilder.class)
 public class HttpField {
 
   private static final Logger logger = LoggerFactory.getLogger(HttpField.class);
+
+  @JsonProperty
   private final String fieldName;
+
+  @JsonProperty
   private final String fieldType;
+
+  @JsonProperty
   private final List<HttpField> fields;
 
+  @JsonProperty
+  private final boolean isArray;
+
+  @JsonProperty
+  private final Map<String, String> properties;
+
   public HttpField(String fieldName, String fieldType) {
-    this(fieldName, fieldType, Collections.emptyList());
+    this(fieldName, fieldType, Collections.emptyList(), false, Collections.emptyMap());
+  }
+
+  public HttpField(HttpFieldBuilder builder) {
+    this.fieldName = builder.fieldName;
+    this.fieldType = builder.fieldType;
+    this.fields = builder.fields;
+    this.isArray = builder.isArray;
+    this.properties = builder.properties;
   }
 
   @JsonCreator
   public HttpField(
     @JsonProperty("fieldName") String fieldName,
     @JsonProperty("fieldType") String fieldType,
-    @JsonProperty("fields") List<HttpField> fields) {
+    @JsonProperty("fields") List<HttpField> fields,
+    @JsonProperty("array") Boolean isArray,
+    @JsonProperty("properties") Map<String,String> properties) {
     this.fieldName = fieldName;
     this.fieldType = fieldType;
     this.fields = fields;
+    this.isArray = isArray != null && isArray;
+    this.properties = properties == null ? new HashMap<>() : properties;
   }
 
   public String getFieldName() { return fieldName; }
@@ -64,6 +94,22 @@ public class HttpField {
 
   public List<HttpField> getFields() {
     return fields;
+  }
+
+  public Map<String, String> getProperties() {
+    return properties;
+  }
+
+  public boolean isArray() {
+    return isArray;
+  }
+
+  @JsonIgnore
+  public boolean isComplex() {
+    return getDrillType() == MinorType.MAP ||
+      getDrillType() == MinorType.LIST ||
+      getDrillType() == MinorType.DICT ||
+      getDrillType() == MinorType.UNION;
   }
 
   @JsonIgnore
@@ -96,8 +142,6 @@ public class HttpField {
       // Complex Fields
       case "map":
         return MinorType.MAP;
-      case "union":
-        return MinorType.UNION;
       case "list":
         return MinorType.LIST;
       default:
@@ -115,12 +159,14 @@ public class HttpField {
     HttpField other = (HttpField) o;
     return fieldName.equals(other.fieldName) &&
       Objects.equals(fieldType, other.fieldType) &&
-      Objects.equals(fields, other.fields);
+      Objects.equals(fields, other.fields) &&
+      Objects.equals(properties, other.properties) &&
+      Objects.equals(isArray, other.isArray);
   }
 
   @Override
   public int hashCode() {
-    return Objects.hash(fieldName, fieldType, fields);
+    return Objects.hash(fieldName, fieldType, fields, properties, isArray);
   }
 
   @Override
@@ -129,6 +175,47 @@ public class HttpField {
       .field("fieldName", fieldName)
       .field("fieldType", fieldType)
       .field("fields", fields)
+      .field("properties", properties)
+      .field("isArray", isArray)
       .toString();
   }
+
+  @JsonPOJOBuilder(withPrefix = "")
+  public static class HttpFieldBuilder {
+    private String fieldName;
+    private String fieldType;
+    private List<HttpField> fields;
+    private boolean isArray;
+    private Map<String, String> properties;
+
+    public HttpFieldBuilder fieldName(String fieldName) {
+      this.fieldName = fieldName;
+      return this;
+    }
+
+    public HttpFieldBuilder fieldType(String fieldType) {
+      this.fieldType = fieldType;
+      return this;
+    }
+
+    public HttpFieldBuilder fields(List<HttpField> fields) {
+      this.fields = fields;
+      return this;
+    }
+
+    public HttpFieldBuilder isArray(Boolean isArray) {
+      this.isArray = isArray;
+      return this;
+    }
+
+    public HttpFieldBuilder properties(Map<String, String> properties) {
+      this.properties = properties;
+      return this;
+    }
+
+    public HttpField build() {
+      return new HttpField(this);
+    }
+  }
+
 }

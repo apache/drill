@@ -21,14 +21,18 @@ package org.apache.drill.exec.store.http;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonPOJOBuilder;
 import org.apache.drill.common.PlanStringBuilder;
+import org.apache.drill.common.types.TypeProtos.DataMode;
 import org.apache.drill.common.types.TypeProtos.MinorType;
+import org.apache.drill.exec.record.metadata.ColumnMetadata;
 import org.apache.drill.exec.record.metadata.MapBuilder;
+import org.apache.drill.exec.record.metadata.MetadataUtils;
 import org.apache.drill.exec.record.metadata.SchemaBuilder;
 import org.apache.drill.exec.record.metadata.TupleMetadata;
-import org.apache.drill.exec.record.metadata.UnionBuilder;
 import org.apache.drill.exec.server.options.OptionSet;
 import org.apache.drill.exec.store.easy.json.loader.JsonLoaderOptions;
 import org.apache.drill.exec.store.http.providedSchema.HttpField;
@@ -36,6 +40,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.List;
+import java.util.Map.Entry;
 import java.util.Objects;
 
 @JsonInclude(JsonInclude.Include.NON_DEFAULT)
@@ -63,6 +68,9 @@ public class HttpJsonOptions {
   private final Boolean skipMalformedDocument;
 
   @JsonProperty
+  private final String jsonSchema;
+
+  @JsonProperty
   private final List<HttpField> providedSchema;
 
   HttpJsonOptions(HttpJsonOptionsBuilder builder) {
@@ -72,6 +80,7 @@ public class HttpJsonOptions {
     this.enableEscapeAnyChar = builder.enableEscapeAnyChar;
     this.skipMalformedRecords = builder.skipMalformedRecords;
     this.skipMalformedDocument = builder.skipMalformedDocument;
+    this.jsonSchema = builder.jsonSchema;
     this.providedSchema = builder.providedSchema;
   }
 
@@ -113,24 +122,29 @@ public class HttpJsonOptions {
     return schemaBuilder.build();
   }
 
+  @JsonIgnore
+  public TupleMetadata getSchemaFromJsonString() throws JsonProcessingException {
+    ObjectMapper mapper = new ObjectMapper();
+    return mapper.readValue(jsonSchema, TupleMetadata.class);
+  }
+
   private void addFieldToSchema(SchemaBuilder schemaBuilder, HttpField field) {
     logger.debug("Adding field {}", field);
-    if (isCompoundField(field.getDrillType())) {
+    if (field.isComplex()) {
       if (field.getDrillType() == MinorType.MAP) {
         MapBuilder innerMapBuilder = schemaBuilder.addMap(field.getFieldName());
         for (HttpField innerField : field.getFields()) {
           addFieldToMap(innerMapBuilder, innerField);
         }
         innerMapBuilder.resumeSchema();
-      } else if (field.getDrillType() == MinorType.UNION) {
-        UnionBuilder unionBuilder = schemaBuilder.addUnion(field.getFieldName());
-        for (HttpField innerField : field.getFields()) {
-          addFieldToUnion(unionBuilder, innerField);
-        }
-        unionBuilder.resumeSchema();
       }
-    }  else {
-      schemaBuilder.addNullable(field.getFieldName(), field.getDrillType());
+    } else {
+      ColumnMetadata metadata = MetadataUtils.newScalar(field.getFieldName(), field.getDrillType(), DataMode.OPTIONAL);
+      // Add properties if present
+      for (Entry<String, String> property : field.getProperties().entrySet()) {
+        metadata.setProperty(property.getKey(), property.getValue());
+      }
+      schemaBuilder.add(metadata);
     }
   }
 
@@ -140,7 +154,7 @@ public class HttpJsonOptions {
    * @param field A {@link HttpField} field to be inserted into the map.
    */
   private void addFieldToMap(MapBuilder builder, HttpField field) {
-    if (isCompoundField(field.getDrillType())) {
+    if (field.isComplex()) {
       if (field.getDrillType() == MinorType.MAP) {
         MapBuilder innerMapBuilder = builder.addMap(field.getFieldName());
         for (HttpField innerField : field.getFields()) {
@@ -151,30 +165,6 @@ public class HttpJsonOptions {
     } else {
       builder.addNullable(field.getFieldName(), field.getDrillType());
     }
-  }
-
-  private void addFieldToUnion(UnionBuilder unionBuilder, HttpField field) {
-    if (isCompoundField(field.getDrillType())) {
-      // Drill does not support unions in unions, so only allow maps in unions
-      if (field.getDrillType() == MinorType.MAP) {
-        MapBuilder innerMapBuilder = unionBuilder.addMap();
-        for (HttpField innerField : field.getFields()) {
-          addFieldToMap(innerMapBuilder, innerField);
-        }
-        innerMapBuilder.resumeUnion();
-      }
-    } else {
-      try {
-        unionBuilder.addType(field.getDrillType());
-      } catch (IllegalArgumentException e) {
-        // Do nothing
-      }
-    }
-  }
-
-
-  public static boolean isCompoundField(MinorType type) {
-    return type == MinorType.MAP || type == MinorType.UNION || type == MinorType.DICT || type == MinorType.LIST;
   }
 
   @JsonProperty("allowNanInf")
@@ -207,6 +197,11 @@ public class HttpJsonOptions {
     return this.skipMalformedDocument;
   }
 
+  @JsonProperty("jsonSchema")
+  public String jsonSchema() {
+    return this.jsonSchema;
+  }
+
   @JsonProperty("providedSchema")
   public List<HttpField> providedSchema() {
     return this.providedSchema;
@@ -227,12 +222,13 @@ public class HttpJsonOptions {
       && Objects.equals(enableEscapeAnyChar, that.enableEscapeAnyChar)
       && Objects.equals(skipMalformedDocument, that.skipMalformedDocument)
       && Objects.equals(skipMalformedRecords, that.skipMalformedRecords)
-      && Objects.equals(providedSchema, that.providedSchema);
+      && Objects.equals(providedSchema, that.providedSchema)
+      && Objects.equals(jsonSchema, that.jsonSchema);
   }
 
   @Override
   public int hashCode() {
-    return Objects.hash(allowNanInf, allTextMode, readNumbersAsDouble, enableEscapeAnyChar, skipMalformedDocument, skipMalformedRecords, providedSchema);
+    return Objects.hash(allowNanInf, allTextMode, readNumbersAsDouble, enableEscapeAnyChar, skipMalformedDocument, skipMalformedRecords, providedSchema, jsonSchema);
   }
 
   @Override
@@ -244,6 +240,7 @@ public class HttpJsonOptions {
       .field("enableEscapeAnyChar", enableEscapeAnyChar)
       .field("skipMalformedRecords", skipMalformedRecords)
       .field("skipMalformedDocument", skipMalformedDocument)
+      .field("jsonSchema", jsonSchema)
       .field("providedSchema", providedSchema)
       .toString();
   }
@@ -264,9 +261,7 @@ public class HttpJsonOptions {
 
     private List<HttpField> providedSchema;
 
-    private Boolean skipMalformedRecords;
-
-    private Boolean skipMalformedDocument;
+    private String jsonSchema;
 
     public HttpJsonOptionsBuilder allowNanInf(Boolean allowNanInf) {
       this.allowNanInf = allowNanInf;
@@ -300,6 +295,11 @@ public class HttpJsonOptions {
 
     public HttpJsonOptionsBuilder providedSchema(List<HttpField> schema) {
       this.providedSchema = schema;
+      return this;
+    }
+
+    public HttpJsonOptionsBuilder jsonSchema(String jsonSchema) {
+      this.jsonSchema = jsonSchema;
       return this;
     }
 
