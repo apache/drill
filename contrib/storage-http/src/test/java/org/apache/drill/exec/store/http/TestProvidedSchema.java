@@ -274,7 +274,6 @@ public class TestProvidedSchema extends ClusterTest {
       RowSetUtilities.verify(expected, results);
     }
   }
-  
   /**
    * Helper function to start the MockHTTPServer
    * @return Started Mock server
