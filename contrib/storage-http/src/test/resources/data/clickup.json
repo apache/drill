@@ -1,213 +1,1784 @@
-"tasks":
 {
-  "id": "23d7vj7",
-  "custom_id": "DEV-737",
-  "name": "Create alerting system for drillbits",
-  "text_content": "",
-  "description": "",
-  "status": {
-  "status": "to do",
-  "color": "#d3d3d3",
-  "type": "open",
-  "orderindex": 0
-},
-"orderindex": "8521.39567417866800000000000000000000",
-"date_created": "1640717161274",
-"date_updated": "1640717161329",
-"date_closed": null,
-"archived": false,
-"creator": {
-"id": 14869958,
-"username": "Megan Foss",
-"color": "#006063",
-"email": "megan@datadistillr.com",
-"profilePicture": null
-},
-"assignees": [
-],
-"watchers": [
-],
-"checklists": [
-],
-"tags": [
-],
-"parent": null,
-"priority": null,
-"due_date": null,
-"start_date": null,
-"points": null,
-"time_estimate": null,
-"custom_fields": [
-{
-"id": "e1a24c69-f464-4792-9cbd-c1b9516053d0",
-"name": "Documentation Required?",
-"type": "checkbox",
-"type_config": {
-},
-"date_created": "1637002692152",
-"hide_from_guests": false,
-"required": false
-},
-{
-"id": "4000564b-babf-4819-9981-35a8127c6406",
-"name": "Drill dev area",
-"type": "drop_down",
-"type_config": {
-"default": 0,
-"placeholder": null,
-"new_drop_down": true,
-"options": [
-{
-"id": "5e9ada93-2c76-42c0-a79b-347fb21d93fa",
-"name": "Stability and performance",
-"color": null,
-"orderindex": 0
-},
-{
-"id": "a6423187-77e6-4ea2-a9f2-819bb5c56035",
-"name": "Security and multi-user",
-"color": null,
-"orderindex": 1
-},
-{
-"id": "66239fb4-5252-4da0-992e-36ac384b9878",
-"name": "Plugins and UDFs",
-"color": null,
-"orderindex": 2
-},
-{
-"id": "5e9c9abb-9ffd-4348-984c-1c17376087b5",
-"name": "Connectors, tools and infrastructure",
-"color": null,
-"orderindex": 3
-},
-{
-"id": "5aa6a4a3-6098-4df3-8599-a00ee43d018a",
-"name": "Community and documentation",
-"color": null,
-"orderindex": 4
-},
-{
-"id": "b66e9c0f-a561-4736-807d-c0ef40c6b5e8",
-"name": "Consulting work",
-"color": null,
-"orderindex": 5
-},
-{
-"id": "a69d14b5-ee9a-4620-88f9-58822f7097df",
-"name": "Refactoring and library upgrades",
-"color": null,
-"orderindex": 6
-}
-]
-},
-"date_created": "1633630384893",
-"hide_from_guests": false,
-"required": false
-},
-{
-"id": "c8c73c31-b6f0-4f32-8119-382a5e73a9f0",
-"name": "Progress",
-"type": "manual_progress",
-"type_config": {
-"end": 100,
-"start": 0
-},
-"date_created": "1637073791858",
-"hide_from_guests": false,
-"value": {
-"current": 0,
-"percent_completed": 0
-},
-"required": false
-},
-{
-"id": "3b2907ee-6307-4bbc-b434-e5f253d091e9",
-"name": "Sprint Priority",
-"type": "number",
-"type_config": {
-},
-"date_created": "1651171497927",
-"hide_from_guests": false,
-"required": false
-},
-{
-"id": "3c2e2374-c23d-41b7-b3b6-8fa89665d2df",
-"name": "Estimate Amount of Effort",
-"type": "drop_down",
-"type_config": {
-"new_drop_down": true,
-"options": [
-{
-"id": "72cbedb6-904d-4b88-a47e-334724d1f7df",
-"name": "Small (S)",
-"color": null,
-"orderindex": 0
-},
-{
-"id": "0b4de55b-152d-4409-8d52-8c3bd6fff319",
-"name": "Medium (M)",
-"color": null,
-"orderindex": 1
-},
-{
-"id": "3cd1f4a9-c714-4864-b935-355ae4f1cb87",
-"name": "Large (L)",
-"color": null,
-"orderindex": 2
-},
-{
-"id": "e7c59075-f8da-4657-8ed1-9ab560200460",
-"name": "Extra Large (XL)",
-"color": null,
-"orderindex": 3
-},
-{
-"id": "9caea549-9106-4de4-ad9c-3c2bd5c19d58",
-"name": "4",
-"color": null,
-"orderindex": 4
-},
-{
-"id": "643066f2-46dd-4360-9740-5439b1d737d5",
-"name": "6",
-"color": null,
-"orderindex": 5
-}
-]
-},
-"date_created": "1634826144647",
-"hide_from_guests": false,
-"value": 0,
-"required": true
-}
-],
-"dependencies": [
-],
-"linked_tasks": [
-],
-"team_id": "3054541",
-"url": "https://app.clickup.com/t/23d7vj7",
-"permission_level": "create",
-"list": {
-"id": "84246120",
-"name": "Systems Engineering",
-"access": true
-},
-"project": {
-"id": "40114610",
-"name": "hidden",
-"hidden": true,
-"access": true
-},
-"folder": {
-"id": "40114610",
-"name": "hidden",
-"hidden": true,
-"access": true
-},
-"space": {
-"id": "3110392"
-}
-}
+  "tasks": [
+    {
+      "id": "23d7vj7",
+      "custom_id": "DEV-737",
+      "name": "Create alerting system for drillbits",
+      "text_content": "",
+      "description": "",
+      "status": {
+        "status": "to do",
+        "color": "#d3d3d3",
+        "type": "open",
+        "orderindex": 0
+      },
+      "orderindex": "8521.39567417866800000000000000000000",
+      "date_created": "1640717161274",
+      "date_updated": "1640717161329",
+      "date_closed": null,
+      "archived": false,
+      "creator": {
+        "id": 14869958,
+        "username": "Megan Foss",
+        "color": "#006063",
+        "email": "megan@datadistillr.com",
+        "profilePicture": null
+      },
+      "assignees": [
+      ],
+      "watchers": [
+      ],
+      "checklists": [
+      ],
+      "tags": [
+      ],
+      "parent": null,
+      "priority": null,
+      "due_date": null,
+      "start_date": null,
+      "points": null,
+      "time_estimate": null,
+      "custom_fields": [
+        {
+          "id": "e1a24c69-f464-4792-9cbd-c1b9516053d0",
+          "name": "Documentation Required?",
+          "type": "checkbox",
+          "type_config": {
+          },
+          "date_created": "1637002692152",
+          "hide_from_guests": false,
+          "required": false
+        },
+        {
+          "id": "4000564b-babf-4819-9981-35a8127c6406",
+          "name": "Drill dev area",
+          "type": "drop_down",
+          "type_config": {
+            "default": 0,
+            "placeholder": null,
+            "new_drop_down": true,
+            "options": [
+              {
+                "id": "5e9ada93-2c76-42c0-a79b-347fb21d93fa",
+                "name": "Stability and performance",
+                "color": null,
+                "orderindex": 0
+              },
+              {
+                "id": "a6423187-77e6-4ea2-a9f2-819bb5c56035",
+                "name": "Security and multi-user",
+                "color": null,
+                "orderindex": 1
+              },
+              {
+                "id": "66239fb4-5252-4da0-992e-36ac384b9878",
+                "name": "Plugins and UDFs",
+                "color": null,
+                "orderindex": 2
+              },
+              {
+                "id": "5e9c9abb-9ffd-4348-984c-1c17376087b5",
+                "name": "Connectors, tools and infrastructure",
+                "color": null,
+                "orderindex": 3
+              },
+              {
+                "id": "5aa6a4a3-6098-4df3-8599-a00ee43d018a",
+                "name": "Community and documentation",
+                "color": null,
+                "orderindex": 4
+              },
+              {
+                "id": "b66e9c0f-a561-4736-807d-c0ef40c6b5e8",
+                "name": "Consulting work",
+                "color": null,
+                "orderindex": 5
+              },
+              {
+                "id": "a69d14b5-ee9a-4620-88f9-58822f7097df",
+                "name": "Refactoring and library upgrades",
+                "color": null,
+                "orderindex": 6
+              }
+            ]
+          },
+          "date_created": "1633630384893",
+          "hide_from_guests": false,
+          "required": false
+        },
+        {
+          "id": "c8c73c31-b6f0-4f32-8119-382a5e73a9f0",
+          "name": "Progress",
+          "type": "manual_progress",
+          "type_config": {
+            "end": 100,
+            "start": 0
+          },
+          "date_created": "1637073791858",
+          "hide_from_guests": false,
+          "value": {
+            "current": 0,
+            "percent_completed": 0
+          },
+          "required": false
+        },
+        {
+          "id": "3b2907ee-6307-4bbc-b434-e5f253d091e9",
+          "name": "Sprint Priority",
+          "type": "number",
+          "type_config": {
+          },
+          "date_created": "1651171497927",
+          "hide_from_guests": false,
+          "required": false
+        },
+        {
+          "id": "3c2e2374-c23d-41b7-b3b6-8fa89665d2df",
+          "name": "Estimate Amount of Effort",
+          "type": "drop_down",
+          "type_config": {
+            "new_drop_down": true,
+            "options": [
+              {
+                "id": "72cbedb6-904d-4b88-a47e-334724d1f7df",
+                "name": "Small (S)",
+                "color": null,
+                "orderindex": 0
+              },
+              {
+                "id": "0b4de55b-152d-4409-8d52-8c3bd6fff319",
+                "name": "Medium (M)",
+                "color": null,
+                "orderindex": 1
+              },
+              {
+                "id": "3cd1f4a9-c714-4864-b935-355ae4f1cb87",
+                "name": "Large (L)",
+                "color": null,
+                "orderindex": 2
+              },
+              {
+                "id": "e7c59075-f8da-4657-8ed1-9ab560200460",
+                "name": "Extra Large (XL)",
+                "color": null,
+                "orderindex": 3
+              },
+              {
+                "id": "9caea549-9106-4de4-ad9c-3c2bd5c19d58",
+                "name": "4",
+                "color": null,
+                "orderindex": 4
+              },
+              {
+                "id": "643066f2-46dd-4360-9740-5439b1d737d5",
+                "name": "6",
+                "color": null,
+                "orderindex": 5
+              }
+            ]
+          },
+          "date_created": "1634826144647",
+          "hide_from_guests": false,
+          "value": 0,
+          "required": true
+        }
+      ],
+      "dependencies": [
+      ],
+      "linked_tasks": [
+      ],
+      "team_id": "3054541",
+      "url": "https://app.clickup.com/t/23d7vj7",
+      "permission_level": "create",
+      "list": {
+        "id": "84246120",
+        "name": "Systems Engineering",
+        "access": true
+      },
+      "project": {
+        "id": "40114610",
+        "name": "hidden",
+        "hidden": true,
+        "access": true
+      },
+      "folder": {
+        "id": "40114610",
+        "name": "hidden",
+        "hidden": true,
+        "access": true
+      },
+      "space": {
+        "id": "3110392"
+      }
+    },
+    {
+      "id": "1yk56c8",
+      "custom_id": "DEV-735",
+      "name": "Increase Linux open file limit in Drill containers",
+      "text_content": "I recommend a new limit of something like 10k - 100k.  This limit is implemented in the kernel, which raises a question about whether it can be set from inside a container.  Presumably if the container is granted the needed capabilities it can change its own open file limit.",
+      "description": "I recommend a new limit of something like 10k - 100k.  This limit is implemented in the kernel, which raises a question about whether it can be set from inside a container.  Presumably if the container is granted the needed capabilities it can change its own open file limit.",
+      "status": {
+        "status": "to do",
+        "color": "#d3d3d3",
+        "type": "open",
+        "orderindex": 0
+      },
+      "orderindex": "8520.00039620000000000000000000000000",
+      "date_created": "1640591435977",
+      "date_updated": "1640592196213",
+      "date_closed": null,
+      "archived": false,
+      "creator": {
+        "id": 30071996,
+        "username": "James Turton",
+        "color": "#5f7c8a",
+        "email": "james@datadistillr.com",
+        "profilePicture": null
+      },
+      "assignees": [
+        {
+          "id": 14756584,
+          "username": "John F Marion",
+          "color": "#02579b",
+          "initials": "JM",
+          "email": "john@datadistillr.com",
+          "profilePicture": null
+        }
+      ],
+      "watchers": [
+      ],
+      "checklists": [
+      ],
+      "tags": [
+      ],
+      "parent": null,
+      "priority": null,
+      "due_date": null,
+      "start_date": null,
+      "points": null,
+      "time_estimate": null,
+      "custom_fields": [
+        {
+          "id": "e1a24c69-f464-4792-9cbd-c1b9516053d0",
+          "name": "Documentation Required?",
+          "type": "checkbox",
+          "type_config": {
+          },
+          "date_created": "1637002692152",
+          "hide_from_guests": false,
+          "required": false
+        },
+        {
+          "id": "4000564b-babf-4819-9981-35a8127c6406",
+          "name": "Drill dev area",
+          "type": "drop_down",
+          "type_config": {
+            "default": 0,
+            "placeholder": null,
+            "new_drop_down": true,
+            "options": [
+              {
+                "id": "5e9ada93-2c76-42c0-a79b-347fb21d93fa",
+                "name": "Stability and performance",
+                "color": null,
+                "orderindex": 0
+              },
+              {
+                "id": "a6423187-77e6-4ea2-a9f2-819bb5c56035",
+                "name": "Security and multi-user",
+                "color": null,
+                "orderindex": 1
+              },
+              {
+                "id": "66239fb4-5252-4da0-992e-36ac384b9878",
+                "name": "Plugins and UDFs",
+                "color": null,
+                "orderindex": 2
+              },
+              {
+                "id": "5e9c9abb-9ffd-4348-984c-1c17376087b5",
+                "name": "Connectors, tools and infrastructure",
+                "color": null,
+                "orderindex": 3
+              },
+              {
+                "id": "5aa6a4a3-6098-4df3-8599-a00ee43d018a",
+                "name": "Community and documentation",
+                "color": null,
+                "orderindex": 4
+              },
+              {
+                "id": "b66e9c0f-a561-4736-807d-c0ef40c6b5e8",
+                "name": "Consulting work",
+                "color": null,
+                "orderindex": 5
+              },
+              {
+                "id": "a69d14b5-ee9a-4620-88f9-58822f7097df",
+                "name": "Refactoring and library upgrades",
+                "color": null,
+                "orderindex": 6
+              }
+            ]
+          },
+          "date_created": "1633630384893",
+          "hide_from_guests": false,
+          "required": false
+        },
+        {
+          "id": "c8c73c31-b6f0-4f32-8119-382a5e73a9f0",
+          "name": "Progress",
+          "type": "manual_progress",
+          "type_config": {
+            "end": 100,
+            "start": 0
+          },
+          "date_created": "1637073791858",
+          "hide_from_guests": false,
+          "value": {
+            "current": 0,
+            "percent_completed": 0
+          },
+          "required": false
+        },
+        {
+          "id": "3b2907ee-6307-4bbc-b434-e5f253d091e9",
+          "name": "Sprint Priority",
+          "type": "number",
+          "type_config": {
+          },
+          "date_created": "1651171497927",
+          "hide_from_guests": false,
+          "required": false
+        },
+        {
+          "id": "3c2e2374-c23d-41b7-b3b6-8fa89665d2df",
+          "name": "Estimate Amount of Effort",
+          "type": "drop_down",
+          "type_config": {
+            "new_drop_down": true,
+            "options": [
+              {
+                "id": "72cbedb6-904d-4b88-a47e-334724d1f7df",
+                "name": "Small (S)",
+                "color": null,
+                "orderindex": 0
+              },
+              {
+                "id": "0b4de55b-152d-4409-8d52-8c3bd6fff319",
+                "name": "Medium (M)",
+                "color": null,
+                "orderindex": 1
+              },
+              {
+                "id": "3cd1f4a9-c714-4864-b935-355ae4f1cb87",
+                "name": "Large (L)",
+                "color": null,
+                "orderindex": 2
+              },
+              {
+                "id": "e7c59075-f8da-4657-8ed1-9ab560200460",
+                "name": "Extra Large (XL)",
+                "color": null,
+                "orderindex": 3
+              },
+              {
+                "id": "9caea549-9106-4de4-ad9c-3c2bd5c19d58",
+                "name": "4",
+                "color": null,
+                "orderindex": 4
+              },
+              {
+                "id": "643066f2-46dd-4360-9740-5439b1d737d5",
+                "name": "6",
+                "color": null,
+                "orderindex": 5
+              }
+            ]
+          },
+          "date_created": "1634826144647",
+          "hide_from_guests": false,
+          "value": 0,
+          "required": true
+        }
+      ],
+      "dependencies": [
+      ],
+      "linked_tasks": [
+      ],
+      "team_id": "3054541",
+      "url": "https://app.clickup.com/t/1yk56c8",
+      "permission_level": "create",
+      "list": {
+        "id": "84246120",
+        "name": "Systems Engineering",
+        "access": true
+      },
+      "project": {
+        "id": "40114610",
+        "name": "hidden",
+        "hidden": true,
+        "access": true
+      },
+      "folder": {
+        "id": "40114610",
+        "name": "hidden",
+        "hidden": true,
+        "access": true
+      },
+      "space": {
+        "id": "3110392"
+      }
+    },
+    {
+      "id": "218m0q5",
+      "custom_id": "DEV-662",
+      "name": "Add Splunk and MS SQL",
+      "text_content": "",
+      "description": "",
+      "status": {
+        "status": "done",
+        "color": "#1bbc9c",
+        "type": "done",
+        "orderindex": 5
+      },
+      "orderindex": "10825.00039030000000000000000000000000",
+      "date_created": "1639417138634",
+      "date_updated": "1648853623608",
+      "date_closed": null,
+      "archived": false,
+      "creator": {
+        "id": 14869958,
+        "username": "Megan Foss",
+        "color": "#006063",
+        "email": "megan@datadistillr.com",
+        "profilePicture": null
+      },
+      "assignees": [
+        {
+          "id": 14756584,
+          "username": "John F Marion",
+          "color": "#02579b",
+          "initials": "JM",
+          "email": "john@datadistillr.com",
+          "profilePicture": null
+        },
+        {
+          "id": 14924643,
+          "username": "Esther Buchwalter",
+          "color": "#e040fb",
+          "initials": "EB",
+          "email": "esther@datadistillr.com",
+          "profilePicture": null
+        }
+      ],
+      "watchers": [
+      ],
+      "checklists": [
+      ],
+      "tags": [
+      ],
+      "parent": null,
+      "priority": null,
+      "due_date": null,
+      "start_date": null,
+      "points": null,
+      "time_estimate": null,
+      "custom_fields": [
+        {
+          "id": "e1a24c69-f464-4792-9cbd-c1b9516053d0",
+          "name": "Documentation Required?",
+          "type": "checkbox",
+          "type_config": {
+          },
+          "date_created": "1637002692152",
+          "hide_from_guests": false,
+          "required": false
+        },
+        {
+          "id": "4000564b-babf-4819-9981-35a8127c6406",
+          "name": "Drill dev area",
+          "type": "drop_down",
+          "type_config": {
+            "default": 0,
+            "placeholder": null,
+            "new_drop_down": true,
+            "options": [
+              {
+                "id": "5e9ada93-2c76-42c0-a79b-347fb21d93fa",
+                "name": "Stability and performance",
+                "color": null,
+                "orderindex": 0
+              },
+              {
+                "id": "a6423187-77e6-4ea2-a9f2-819bb5c56035",
+                "name": "Security and multi-user",
+                "color": null,
+                "orderindex": 1
+              },
+              {
+                "id": "66239fb4-5252-4da0-992e-36ac384b9878",
+                "name": "Plugins and UDFs",
+                "color": null,
+                "orderindex": 2
+              },
+              {
+                "id": "5e9c9abb-9ffd-4348-984c-1c17376087b5",
+                "name": "Connectors, tools and infrastructure",
+                "color": null,
+                "orderindex": 3
+              },
+              {
+                "id": "5aa6a4a3-6098-4df3-8599-a00ee43d018a",
+                "name": "Community and documentation",
+                "color": null,
+                "orderindex": 4
+              },
+              {
+                "id": "b66e9c0f-a561-4736-807d-c0ef40c6b5e8",
+                "name": "Consulting work",
+                "color": null,
+                "orderindex": 5
+              },
+              {
+                "id": "a69d14b5-ee9a-4620-88f9-58822f7097df",
+                "name": "Refactoring and library upgrades",
+                "color": null,
+                "orderindex": 6
+              }
+            ]
+          },
+          "date_created": "1633630384893",
+          "hide_from_guests": false,
+          "required": false
+        },
+        {
+          "id": "c8c73c31-b6f0-4f32-8119-382a5e73a9f0",
+          "name": "Progress",
+          "type": "manual_progress",
+          "type_config": {
+            "end": 100,
+            "start": 0
+          },
+          "date_created": "1637073791858",
+          "hide_from_guests": false,
+          "value": {
+            "current": 0,
+            "percent_completed": 0
+          },
+          "required": false
+        },
+        {
+          "id": "3b2907ee-6307-4bbc-b434-e5f253d091e9",
+          "name": "Sprint Priority",
+          "type": "number",
+          "type_config": {
+          },
+          "date_created": "1651171497927",
+          "hide_from_guests": false,
+          "required": false
+        },
+        {
+          "id": "3c2e2374-c23d-41b7-b3b6-8fa89665d2df",
+          "name": "Estimate Amount of Effort",
+          "type": "drop_down",
+          "type_config": {
+            "new_drop_down": true,
+            "options": [
+              {
+                "id": "72cbedb6-904d-4b88-a47e-334724d1f7df",
+                "name": "Small (S)",
+                "color": null,
+                "orderindex": 0
+              },
+              {
+                "id": "0b4de55b-152d-4409-8d52-8c3bd6fff319",
+                "name": "Medium (M)",
+                "color": null,
+                "orderindex": 1
+              },
+              {
+                "id": "3cd1f4a9-c714-4864-b935-355ae4f1cb87",
+                "name": "Large (L)",
+                "color": null,
+                "orderindex": 2
+              },
+              {
+                "id": "e7c59075-f8da-4657-8ed1-9ab560200460",
+                "name": "Extra Large (XL)",
+                "color": null,
+                "orderindex": 3
+              },
+              {
+                "id": "9caea549-9106-4de4-ad9c-3c2bd5c19d58",
+                "name": "4",
+                "color": null,
+                "orderindex": 4
+              },
+              {
+                "id": "643066f2-46dd-4360-9740-5439b1d737d5",
+                "name": "6",
+                "color": null,
+                "orderindex": 5
+              }
+            ]
+          },
+          "date_created": "1634826144647",
+          "hide_from_guests": false,
+          "value": 0,
+          "required": true
+        }
+      ],
+      "dependencies": [
+      ],
+      "linked_tasks": [
+      ],
+      "team_id": "3054541",
+      "url": "https://app.clickup.com/t/218m0q5",
+      "permission_level": "create",
+      "list": {
+        "id": "84246120",
+        "name": "Systems Engineering",
+        "access": true
+      },
+      "project": {
+        "id": "40114610",
+        "name": "hidden",
+        "hidden": true,
+        "access": true
+      },
+      "folder": {
+        "id": "40114610",
+        "name": "hidden",
+        "hidden": true,
+        "access": true
+      },
+      "space": {
+        "id": "3110392"
+      }
+    },
+    {
+      "id": "1yrgbu4",
+      "custom_id": "DEV-606",
+      "name": "Prevent Users from Running Non-Data Queries in Front End",
+      "text_content": "For security reasons, we should disallow users from running queries that would expose sensitive information and other metadata.  Specific queries to prohibit are:\nCREATE TABLE AS\nCREATE TEMPORARY TABLE AS\nCREATE VIEW \nCREATE SCHEMA\nDROP TABLE/VIEW/SCHEMA\nSHOW DATABASES (or anything really)\nINSERT / UPSERT\nSELECT <fields> FROM INFORMATION_SCHEMA\nEXPLAIN PLAN FOR\nALTER SYSTEM\nSET\nBasically, we want to disallow any queries that could expose metadata, allow users to alter system or session settings, or anything else that would be a security hazard. \n\nThese queries should be allowed in the query runner, just now in the query text editor.",
+      "description": "For security reasons, we should disallow users from running queries that would expose sensitive information and other metadata.  Specific queries to prohibit are:\nCREATE TABLE AS\nCREATE TEMPORARY TABLE AS\nCREATE VIEW \nCREATE SCHEMA\nDROP TABLE/VIEW/SCHEMA\nSHOW DATABASES (or anything really)\nINSERT / UPSERT\nSELECT <fields> FROM INFORMATION_SCHEMA\nEXPLAIN PLAN FOR\nALTER SYSTEM\nSET\nBasically, we want to disallow any queries that could expose metadata, allow users to alter system or session settings, or anything else that would be a security hazard. \n\nThese queries should be allowed in the query runner, just now in the query text editor.",
+      "status": {
+        "status": "in progress",
+        "color": "#7C4DFF",
+        "type": "custom",
+        "orderindex": 1
+      },
+      "orderindex": "8290.00012250000000000000000000000000",
+      "date_created": "1637767590700",
+      "date_updated": "1643821008067",
+      "date_closed": null,
+      "archived": false,
+      "creator": {
+        "id": 3099112,
+        "username": "Charles Givre",
+        "color": "#d60800",
+        "email": "charles@datadistillr.com",
+        "profilePicture": "https://attachments.clickup.com/profilePictures/3099112_gJZ.jpg"
+      },
+      "assignees": [
+        {
+          "id": 14924643,
+          "username": "Esther Buchwalter",
+          "color": "#e040fb",
+          "initials": "EB",
+          "email": "esther@datadistillr.com",
+          "profilePicture": null
+        }
+      ],
+      "watchers": [
+      ],
+      "checklists": [
+      ],
+      "tags": [
+        {
+          "name": "security",
+          "tag_fg": "#9B59B6",
+          "tag_bg": "#2ecd6f",
+          "creator": 12633547
+        },
+        {
+          "name": "usability",
+          "tag_fg": "#FF4081",
+          "tag_bg": "#ff7800",
+          "creator": 14869958
+        }
+      ],
+      "parent": null,
+      "priority": {
+        "id": "1",
+        "priority": "urgent",
+        "color": "#f50000",
+        "orderindex": "1"
+      },
+      "due_date": null,
+      "start_date": null,
+      "points": null,
+      "time_estimate": null,
+      "custom_fields": [
+        {
+          "id": "e1a24c69-f464-4792-9cbd-c1b9516053d0",
+          "name": "Documentation Required?",
+          "type": "checkbox",
+          "type_config": {
+          },
+          "date_created": "1637002692152",
+          "hide_from_guests": false,
+          "required": false
+        },
+        {
+          "id": "4000564b-babf-4819-9981-35a8127c6406",
+          "name": "Drill dev area",
+          "type": "drop_down",
+          "type_config": {
+            "default": 0,
+            "placeholder": null,
+            "new_drop_down": true,
+            "options": [
+              {
+                "id": "5e9ada93-2c76-42c0-a79b-347fb21d93fa",
+                "name": "Stability and performance",
+                "color": null,
+                "orderindex": 0
+              },
+              {
+                "id": "a6423187-77e6-4ea2-a9f2-819bb5c56035",
+                "name": "Security and multi-user",
+                "color": null,
+                "orderindex": 1
+              },
+              {
+                "id": "66239fb4-5252-4da0-992e-36ac384b9878",
+                "name": "Plugins and UDFs",
+                "color": null,
+                "orderindex": 2
+              },
+              {
+                "id": "5e9c9abb-9ffd-4348-984c-1c17376087b5",
+                "name": "Connectors, tools and infrastructure",
+                "color": null,
+                "orderindex": 3
+              },
+              {
+                "id": "5aa6a4a3-6098-4df3-8599-a00ee43d018a",
+                "name": "Community and documentation",
+                "color": null,
+                "orderindex": 4
+              },
+              {
+                "id": "b66e9c0f-a561-4736-807d-c0ef40c6b5e8",
+                "name": "Consulting work",
+                "color": null,
+                "orderindex": 5
+              },
+              {
+                "id": "a69d14b5-ee9a-4620-88f9-58822f7097df",
+                "name": "Refactoring and library upgrades",
+                "color": null,
+                "orderindex": 6
+              }
+            ]
+          },
+          "date_created": "1633630384893",
+          "hide_from_guests": false,
+          "required": false
+        },
+        {
+          "id": "c8c73c31-b6f0-4f32-8119-382a5e73a9f0",
+          "name": "Progress",
+          "type": "manual_progress",
+          "type_config": {
+            "end": 100,
+            "start": 0
+          },
+          "date_created": "1637073791858",
+          "hide_from_guests": false,
+          "value": {
+            "current": "99",
+            "percent_completed": 0.99
+          },
+          "required": false
+        },
+        {
+          "id": "3b2907ee-6307-4bbc-b434-e5f253d091e9",
+          "name": "Sprint Priority",
+          "type": "number",
+          "type_config": {
+          },
+          "date_created": "1651171497927",
+          "hide_from_guests": false,
+          "required": false
+        },
+        {
+          "id": "3c2e2374-c23d-41b7-b3b6-8fa89665d2df",
+          "name": "Estimate Amount of Effort",
+          "type": "drop_down",
+          "type_config": {
+            "new_drop_down": true,
+            "options": [
+              {
+                "id": "72cbedb6-904d-4b88-a47e-334724d1f7df",
+                "name": "Small (S)",
+                "color": null,
+                "orderindex": 0
+              },
+              {
+                "id": "0b4de55b-152d-4409-8d52-8c3bd6fff319",
+                "name": "Medium (M)",
+                "color": null,
+                "orderindex": 1
+              },
+              {
+                "id": "3cd1f4a9-c714-4864-b935-355ae4f1cb87",
+                "name": "Large (L)",
+                "color": null,
+                "orderindex": 2
+              },
+              {
+                "id": "e7c59075-f8da-4657-8ed1-9ab560200460",
+                "name": "Extra Large (XL)",
+                "color": null,
+                "orderindex": 3
+              },
+              {
+                "id": "9caea549-9106-4de4-ad9c-3c2bd5c19d58",
+                "name": "4",
+                "color": null,
+                "orderindex": 4
+              },
+              {
+                "id": "643066f2-46dd-4360-9740-5439b1d737d5",
+                "name": "6",
+                "color": null,
+                "orderindex": 5
+              }
+            ]
+          },
+          "date_created": "1634826144647",
+          "hide_from_guests": false,
+          "value": 0,
+          "required": true
+        }
+      ],
+      "dependencies": [
+      ],
+      "linked_tasks": [
+      ],
+      "team_id": "3054541",
+      "url": "https://app.clickup.com/t/1yrgbu4",
+      "permission_level": "create",
+      "list": {
+        "id": "84246120",
+        "name": "Systems Engineering",
+        "access": true
+      },
+      "project": {
+        "id": "40114610",
+        "name": "hidden",
+        "hidden": true,
+        "access": true
+      },
+      "folder": {
+        "id": "40114610",
+        "name": "hidden",
+        "hidden": true,
+        "access": true
+      },
+      "space": {
+        "id": "3110392"
+      }
+    },
+    {
+      "id": "1b8x1wm",
+      "custom_id": "DEV-306",
+      "name": "Vault Integration",
+      "text_content": null,
+      "description": null,
+      "status": {
+        "status": "in progress",
+        "color": "#7C4DFF",
+        "type": "custom",
+        "orderindex": 1
+      },
+      "orderindex": "3016.00001514500040000000000000000000",
+      "date_created": "1628187376808",
+      "date_updated": "1634225435052",
+      "date_closed": null,
+      "archived": false,
+      "creator": {
+        "id": 14829539,
+        "username": "Fritz Cheung",
+        "color": "#8ac34a",
+        "email": "fritz@datadistillr.com",
+        "profilePicture": null
+      },
+      "assignees": [
+        {
+          "id": 14829539,
+          "username": "Fritz Cheung",
+          "color": "#8ac34a",
+          "initials": "FC",
+          "email": "fritz@datadistillr.com",
+          "profilePicture": null
+        }
+      ],
+      "watchers": [
+      ],
+      "checklists": [
+      ],
+      "tags": [
+      ],
+      "parent": null,
+      "priority": null,
+      "due_date": null,
+      "start_date": null,
+      "points": null,
+      "time_estimate": null,
+      "custom_fields": [
+        {
+          "id": "e1a24c69-f464-4792-9cbd-c1b9516053d0",
+          "name": "Documentation Required?",
+          "type": "checkbox",
+          "type_config": {
+          },
+          "date_created": "1637002692152",
+          "hide_from_guests": false,
+          "required": false
+        },
+        {
+          "id": "4000564b-babf-4819-9981-35a8127c6406",
+          "name": "Drill dev area",
+          "type": "drop_down",
+          "type_config": {
+            "default": 0,
+            "placeholder": null,
+            "new_drop_down": true,
+            "options": [
+              {
+                "id": "5e9ada93-2c76-42c0-a79b-347fb21d93fa",
+                "name": "Stability and performance",
+                "color": null,
+                "orderindex": 0
+              },
+              {
+                "id": "a6423187-77e6-4ea2-a9f2-819bb5c56035",
+                "name": "Security and multi-user",
+                "color": null,
+                "orderindex": 1
+              },
+              {
+                "id": "66239fb4-5252-4da0-992e-36ac384b9878",
+                "name": "Plugins and UDFs",
+                "color": null,
+                "orderindex": 2
+              },
+              {
+                "id": "5e9c9abb-9ffd-4348-984c-1c17376087b5",
+                "name": "Connectors, tools and infrastructure",
+                "color": null,
+                "orderindex": 3
+              },
+              {
+                "id": "5aa6a4a3-6098-4df3-8599-a00ee43d018a",
+                "name": "Community and documentation",
+                "color": null,
+                "orderindex": 4
+              },
+              {
+                "id": "b66e9c0f-a561-4736-807d-c0ef40c6b5e8",
+                "name": "Consulting work",
+                "color": null,
+                "orderindex": 5
+              },
+              {
+                "id": "a69d14b5-ee9a-4620-88f9-58822f7097df",
+                "name": "Refactoring and library upgrades",
+                "color": null,
+                "orderindex": 6
+              }
+            ]
+          },
+          "date_created": "1633630384893",
+          "hide_from_guests": false,
+          "required": false
+        },
+        {
+          "id": "c8c73c31-b6f0-4f32-8119-382a5e73a9f0",
+          "name": "Progress",
+          "type": "manual_progress",
+          "type_config": {
+            "end": 100,
+            "start": 0
+          },
+          "date_created": "1637073791858",
+          "hide_from_guests": false,
+          "value": {
+            "current": 0,
+            "percent_completed": 0
+          },
+          "required": false
+        },
+        {
+          "id": "3b2907ee-6307-4bbc-b434-e5f253d091e9",
+          "name": "Sprint Priority",
+          "type": "number",
+          "type_config": {
+          },
+          "date_created": "1651171497927",
+          "hide_from_guests": false,
+          "required": false
+        },
+        {
+          "id": "3c2e2374-c23d-41b7-b3b6-8fa89665d2df",
+          "name": "Estimate Amount of Effort",
+          "type": "drop_down",
+          "type_config": {
+            "new_drop_down": true,
+            "options": [
+              {
+                "id": "72cbedb6-904d-4b88-a47e-334724d1f7df",
+                "name": "Small (S)",
+                "color": null,
+                "orderindex": 0
+              },
+              {
+                "id": "0b4de55b-152d-4409-8d52-8c3bd6fff319",
+                "name": "Medium (M)",
+                "color": null,
+                "orderindex": 1
+              },
+              {
+                "id": "3cd1f4a9-c714-4864-b935-355ae4f1cb87",
+                "name": "Large (L)",
+                "color": null,
+                "orderindex": 2
+              },
+              {
+                "id": "e7c59075-f8da-4657-8ed1-9ab560200460",
+                "name": "Extra Large (XL)",
+                "color": null,
+                "orderindex": 3
+              },
+              {
+                "id": "9caea549-9106-4de4-ad9c-3c2bd5c19d58",
+                "name": "4",
+                "color": null,
+                "orderindex": 4
+              },
+              {
+                "id": "643066f2-46dd-4360-9740-5439b1d737d5",
+                "name": "6",
+                "color": null,
+                "orderindex": 5
+              }
+            ]
+          },
+          "date_created": "1634826144647",
+          "hide_from_guests": false,
+          "required": true
+        }
+      ],
+      "dependencies": [
+      ],
+      "linked_tasks": [
+      ],
+      "team_id": "3054541",
+      "url": "https://app.clickup.com/t/1b8x1wm",
+      "permission_level": "create",
+      "list": {
+        "id": "84246120",
+        "name": "Systems Engineering",
+        "access": true
+      },
+      "project": {
+        "id": "40114610",
+        "name": "hidden",
+        "hidden": true,
+        "access": true
+      },
+      "folder": {
+        "id": "40114610",
+        "name": "hidden",
+        "hidden": true,
+        "access": true
+      },
+      "space": {
+        "id": "3110392"
+      }
+    },
+    {
+      "id": "119neax",
+      "custom_id": "DEV-48",
+      "name": "Environments Work",
+      "text_content": "Create a deployable lab infrastructure using terraform and docker containers.\n",
+      "description": "Create a deployable lab infrastructure using terraform and docker containers.\n",
+      "status": {
+        "status": "in progress",
+        "color": "#7C4DFF",
+        "type": "custom",
+        "orderindex": 1
+      },
+      "orderindex": "1.00000759000000000000000000000000",
+      "date_created": "1625679471923",
+      "date_updated": "1633528623868",
+      "date_closed": null,
+      "archived": false,
+      "creator": {
+        "id": 12646068,
+        "username": "Curtis Lambert",
+        "color": "#aa2fff",
+        "email": "curtis@datadistillr.com",
+        "profilePicture": null
+      },
+      "assignees": [
+        {
+          "id": 14756584,
+          "username": "John F Marion",
+          "color": "#02579b",
+          "initials": "JM",
+          "email": "john@datadistillr.com",
+          "profilePicture": null
+        }
+      ],
+      "watchers": [
+      ],
+      "checklists": [
+      ],
+      "tags": [
+      ],
+      "parent": null,
+      "priority": {
+        "id": "2",
+        "priority": "high",
+        "color": "#ffcc00",
+        "orderindex": "2"
+      },
+      "due_date": null,
+      "start_date": null,
+      "points": null,
+      "time_estimate": null,
+      "custom_fields": [
+        {
+          "id": "e1a24c69-f464-4792-9cbd-c1b9516053d0",
+          "name": "Documentation Required?",
+          "type": "checkbox",
+          "type_config": {
+          },
+          "date_created": "1637002692152",
+          "hide_from_guests": false,
+          "required": false
+        },
+        {
+          "id": "4000564b-babf-4819-9981-35a8127c6406",
+          "name": "Drill dev area",
+          "type": "drop_down",
+          "type_config": {
+            "default": 0,
+            "placeholder": null,
+            "new_drop_down": true,
+            "options": [
+              {
+                "id": "5e9ada93-2c76-42c0-a79b-347fb21d93fa",
+                "name": "Stability and performance",
+                "color": null,
+                "orderindex": 0
+              },
+              {
+                "id": "a6423187-77e6-4ea2-a9f2-819bb5c56035",
+                "name": "Security and multi-user",
+                "color": null,
+                "orderindex": 1
+              },
+              {
+                "id": "66239fb4-5252-4da0-992e-36ac384b9878",
+                "name": "Plugins and UDFs",
+                "color": null,
+                "orderindex": 2
+              },
+              {
+                "id": "5e9c9abb-9ffd-4348-984c-1c17376087b5",
+                "name": "Connectors, tools and infrastructure",
+                "color": null,
+                "orderindex": 3
+              },
+              {
+                "id": "5aa6a4a3-6098-4df3-8599-a00ee43d018a",
+                "name": "Community and documentation",
+                "color": null,
+                "orderindex": 4
+              },
+              {
+                "id": "b66e9c0f-a561-4736-807d-c0ef40c6b5e8",
+                "name": "Consulting work",
+                "color": null,
+                "orderindex": 5
+              },
+              {
+                "id": "a69d14b5-ee9a-4620-88f9-58822f7097df",
+                "name": "Refactoring and library upgrades",
+                "color": null,
+                "orderindex": 6
+              }
+            ]
+          },
+          "date_created": "1633630384893",
+          "hide_from_guests": false,
+          "required": false
+        },
+        {
+          "id": "c8c73c31-b6f0-4f32-8119-382a5e73a9f0",
+          "name": "Progress",
+          "type": "manual_progress",
+          "type_config": {
+            "end": 100,
+            "start": 0
+          },
+          "date_created": "1637073791858",
+          "hide_from_guests": false,
+          "value": {
+            "current": 0,
+            "percent_completed": 0
+          },
+          "required": false
+        },
+        {
+          "id": "3b2907ee-6307-4bbc-b434-e5f253d091e9",
+          "name": "Sprint Priority",
+          "type": "number",
+          "type_config": {
+          },
+          "date_created": "1651171497927",
+          "hide_from_guests": false,
+          "required": false
+        },
+        {
+          "id": "3c2e2374-c23d-41b7-b3b6-8fa89665d2df",
+          "name": "Estimate Amount of Effort",
+          "type": "drop_down",
+          "type_config": {
+            "new_drop_down": true,
+            "options": [
+              {
+                "id": "72cbedb6-904d-4b88-a47e-334724d1f7df",
+                "name": "Small (S)",
+                "color": null,
+                "orderindex": 0
+              },
+              {
+                "id": "0b4de55b-152d-4409-8d52-8c3bd6fff319",
+                "name": "Medium (M)",
+                "color": null,
+                "orderindex": 1
+              },
+              {
+                "id": "3cd1f4a9-c714-4864-b935-355ae4f1cb87",
+                "name": "Large (L)",
+                "color": null,
+                "orderindex": 2
+              },
+              {
+                "id": "e7c59075-f8da-4657-8ed1-9ab560200460",
+                "name": "Extra Large (XL)",
+                "color": null,
+                "orderindex": 3
+              },
+              {
+                "id": "9caea549-9106-4de4-ad9c-3c2bd5c19d58",
+                "name": "4",
+                "color": null,
+                "orderindex": 4
+              },
+              {
+                "id": "643066f2-46dd-4360-9740-5439b1d737d5",
+                "name": "6",
+                "color": null,
+                "orderindex": 5
+              }
+            ]
+          },
+          "date_created": "1634826144647",
+          "hide_from_guests": false,
+          "required": true
+        }
+      ],
+      "dependencies": [
+      ],
+      "linked_tasks": [
+      ],
+      "team_id": "3054541",
+      "url": "https://app.clickup.com/t/119neax",
+      "permission_level": "create",
+      "list": {
+        "id": "84246120",
+        "name": "Systems Engineering",
+        "access": true
+      },
+      "project": {
+        "id": "40114610",
+        "name": "hidden",
+        "hidden": true,
+        "access": true
+      },
+      "folder": {
+        "id": "40114610",
+        "name": "hidden",
+        "hidden": true,
+        "access": true
+      },
+      "space": {
+        "id": "3110392"
+      }
+    },
+    {
+      "id": "119nd02",
+      "custom_id": "DEV-44",
+      "name": "OCI Deployability",
+      "text_content": "Make the entire application deployable on Oracles cloud\n",
+      "description": "Make the entire application deployable on Oracles cloud\n",
+      "status": {
+        "status": "in progress",
+        "color": "#7C4DFF",
+        "type": "custom",
+        "orderindex": 1
+      },
+      "orderindex": "0.00000759000000000000000000000000",
+      "date_created": "1625679288156",
+      "date_updated": "1637092317576",
+      "date_closed": null,
+      "archived": false,
+      "creator": {
+        "id": 12646068,
+        "username": "Curtis Lambert",
+        "color": "#aa2fff",
+        "email": "curtis@datadistillr.com",
+        "profilePicture": null
+      },
+      "assignees": [
+        {
+          "id": 14756584,
+          "username": "John F Marion",
+          "color": "#02579b",
+          "initials": "JM",
+          "email": "john@datadistillr.com",
+          "profilePicture": null
+        }
+      ],
+      "watchers": [
+      ],
+      "checklists": [
+      ],
+      "tags": [
+      ],
+      "parent": null,
+      "priority": {
+        "id": "1",
+        "priority": "urgent",
+        "color": "#f50000",
+        "orderindex": "1"
+      },
+      "due_date": "1627804800000",
+      "start_date": null,
+      "points": null,
+      "time_estimate": null,
+      "custom_fields": [
+        {
+          "id": "e1a24c69-f464-4792-9cbd-c1b9516053d0",
+          "name": "Documentation Required?",
+          "type": "checkbox",
+          "type_config": {
+          },
+          "date_created": "1637002692152",
+          "hide_from_guests": false,
+          "required": false
+        },
+        {
+          "id": "4000564b-babf-4819-9981-35a8127c6406",
+          "name": "Drill dev area",
+          "type": "drop_down",
+          "type_config": {
+            "default": 0,
+            "placeholder": null,
+            "new_drop_down": true,
+            "options": [
+              {
+                "id": "5e9ada93-2c76-42c0-a79b-347fb21d93fa",
+                "name": "Stability and performance",
+                "color": null,
+                "orderindex": 0
+              },
+              {
+                "id": "a6423187-77e6-4ea2-a9f2-819bb5c56035",
+                "name": "Security and multi-user",
+                "color": null,
+                "orderindex": 1
+              },
+              {
+                "id": "66239fb4-5252-4da0-992e-36ac384b9878",
+                "name": "Plugins and UDFs",
+                "color": null,
+                "orderindex": 2
+              },
+              {
+                "id": "5e9c9abb-9ffd-4348-984c-1c17376087b5",
+                "name": "Connectors, tools and infrastructure",
+                "color": null,
+                "orderindex": 3
+              },
+              {
+                "id": "5aa6a4a3-6098-4df3-8599-a00ee43d018a",
+                "name": "Community and documentation",
+                "color": null,
+                "orderindex": 4
+              },
+              {
+                "id": "b66e9c0f-a561-4736-807d-c0ef40c6b5e8",
+                "name": "Consulting work",
+                "color": null,
+                "orderindex": 5
+              },
+              {
+                "id": "a69d14b5-ee9a-4620-88f9-58822f7097df",
+                "name": "Refactoring and library upgrades",
+                "color": null,
+                "orderindex": 6
+              }
+            ]
+          },
+          "date_created": "1633630384893",
+          "hide_from_guests": false,
+          "required": false
+        },
+        {
+          "id": "c8c73c31-b6f0-4f32-8119-382a5e73a9f0",
+          "name": "Progress",
+          "type": "manual_progress",
+          "type_config": {
+            "end": 100,
+            "start": 0
+          },
+          "date_created": "1637073791858",
+          "hide_from_guests": false,
+          "value": {
+            "current": "87",
+            "percent_completed": 0.87
+          },
+          "required": false
+        },
+        {
+          "id": "3b2907ee-6307-4bbc-b434-e5f253d091e9",
+          "name": "Sprint Priority",
+          "type": "number",
+          "type_config": {
+          },
+          "date_created": "1651171497927",
+          "hide_from_guests": false,
+          "required": false
+        },
+        {
+          "id": "3c2e2374-c23d-41b7-b3b6-8fa89665d2df",
+          "name": "Estimate Amount of Effort",
+          "type": "drop_down",
+          "type_config": {
+            "new_drop_down": true,
+            "options": [
+              {
+                "id": "72cbedb6-904d-4b88-a47e-334724d1f7df",
+                "name": "Small (S)",
+                "color": null,
+                "orderindex": 0
+              },
+              {
+                "id": "0b4de55b-152d-4409-8d52-8c3bd6fff319",
+                "name": "Medium (M)",
+                "color": null,
+                "orderindex": 1
+              },
+              {
+                "id": "3cd1f4a9-c714-4864-b935-355ae4f1cb87",
+                "name": "Large (L)",
+                "color": null,
+                "orderindex": 2
+              },
+              {
+                "id": "e7c59075-f8da-4657-8ed1-9ab560200460",
+                "name": "Extra Large (XL)",
+                "color": null,
+                "orderindex": 3
+              },
+              {
+                "id": "9caea549-9106-4de4-ad9c-3c2bd5c19d58",
+                "name": "4",
+                "color": null,
+                "orderindex": 4
+              },
+              {
+                "id": "643066f2-46dd-4360-9740-5439b1d737d5",
+                "name": "6",
+                "color": null,
+                "orderindex": 5
+              }
+            ]
+          },
+          "date_created": "1634826144647",
+          "hide_from_guests": false,
+          "required": true
+        }
+      ],
+      "dependencies": [
+      ],
+      "linked_tasks": [
+      ],
+      "team_id": "3054541",
+      "url": "https://app.clickup.com/t/119nd02",
+      "permission_level": "create",
+      "list": {
+        "id": "84246120",
+        "name": "Systems Engineering",
+        "access": true
+      },
+      "project": {
+        "id": "40114610",
+        "name": "hidden",
+        "hidden": true,
+        "access": true
+      },
+      "folder": {
+        "id": "40114610",
+        "name": "hidden",
+        "hidden": true,
+        "access": true
+      },
+      "space": {
+        "id": "3110392"
+      }
+    },
+    {
+      "id": "j6ztbh",
+      "custom_id": "DEV-607",
+      "name": "Libpostal Dependency",
+      "text_content": "Address Parser UDF will have dependencies on the Libpostal C libraries and associated data files as well as JPostal. The data files will also need to be refreshed periodically.\n\nLibpostal: https://github.com/openvenues/libpostal\nJpostal: https://github.com/openvenues/jpostal\n",
+      "description": "Address Parser UDF will have dependencies on the Libpostal C libraries and associated data files as well as JPostal. The data files will also need to be refreshed periodically.\n\nLibpostal: https://github.com/openvenues/libpostal\nJpostal: https://github.com/openvenues/jpostal\n",
+      "status": {
+        "status": "done",
+        "color": "#1bbc9c",
+        "type": "done",
+        "orderindex": 5
+      },
+      "orderindex": "8775.00023720000000000000000000000000",
+      "date_created": "1609871891397",
+      "date_updated": "1641510834659",
+      "date_closed": null,
+      "archived": false,
+      "creator": {
+        "id": 12646068,
+        "username": "Curtis Lambert",
+        "color": "#aa2fff",
+        "email": "curtis@datadistillr.com",
+        "profilePicture": null
+      },
+      "assignees": [
+        {
+          "id": 14756584,
+          "username": "John F Marion",
+          "color": "#02579b",
+          "initials": "JM",
+          "email": "john@datadistillr.com",
+          "profilePicture": null
+        }
+      ],
+      "watchers": [
+      ],
+      "checklists": [
+      ],
+      "tags": [
+      ],
+      "parent": null,
+      "priority": {
+        "id": "4",
+        "priority": "low",
+        "color": "#d8d8d8",
+        "orderindex": "4"
+      },
+      "due_date": null,
+      "start_date": null,
+      "points": null,
+      "time_estimate": null,
+      "custom_fields": [
+        {
+          "id": "e1a24c69-f464-4792-9cbd-c1b9516053d0",
+          "name": "Documentation Required?",
+          "type": "checkbox",
+          "type_config": {
+          },
+          "date_created": "1637002692152",
+          "hide_from_guests": false,
+          "required": false
+        },
+        {
+          "id": "4000564b-babf-4819-9981-35a8127c6406",
+          "name": "Drill dev area",
+          "type": "drop_down",
+          "type_config": {
+            "default": 0,
+            "placeholder": null,
+            "new_drop_down": true,
+            "options": [
+              {
+                "id": "5e9ada93-2c76-42c0-a79b-347fb21d93fa",
+                "name": "Stability and performance",
+                "color": null,
+                "orderindex": 0
+              },
+              {
+                "id": "a6423187-77e6-4ea2-a9f2-819bb5c56035",
+                "name": "Security and multi-user",
+                "color": null,
+                "orderindex": 1
+              },
+              {
+                "id": "66239fb4-5252-4da0-992e-36ac384b9878",
+                "name": "Plugins and UDFs",
+                "color": null,
+                "orderindex": 2
+              },
+              {
+                "id": "5e9c9abb-9ffd-4348-984c-1c17376087b5",
+                "name": "Connectors, tools and infrastructure",
+                "color": null,
+                "orderindex": 3
+              },
+              {
+                "id": "5aa6a4a3-6098-4df3-8599-a00ee43d018a",
+                "name": "Community and documentation",
+                "color": null,
+                "orderindex": 4
+              },
+              {
+                "id": "b66e9c0f-a561-4736-807d-c0ef40c6b5e8",
+                "name": "Consulting work",
+                "color": null,
+                "orderindex": 5
+              },
+              {
+                "id": "a69d14b5-ee9a-4620-88f9-58822f7097df",
+                "name": "Refactoring and library upgrades",
+                "color": null,
+                "orderindex": 6
+              }
+            ]
+          },
+          "date_created": "1633630384893",
+          "hide_from_guests": false,
+          "required": false
+        },
+        {
+          "id": "c8c73c31-b6f0-4f32-8119-382a5e73a9f0",
+          "name": "Progress",
+          "type": "manual_progress",
+          "type_config": {
+            "end": 100,
+            "start": 0
+          },
+          "date_created": "1637073791858",
+          "hide_from_guests": false,
+          "value": {
+            "current": 0,
+            "percent_completed": 0
+          },
+          "required": false
+        },
+        {
+          "id": "3b2907ee-6307-4bbc-b434-e5f253d091e9",
+          "name": "Sprint Priority",
+          "type": "number",
+          "type_config": {
+          },
+          "date_created": "1651171497927",
+          "hide_from_guests": false,
+          "required": false
+        },
+        {
+          "id": "3c2e2374-c23d-41b7-b3b6-8fa89665d2df",
+          "name": "Estimate Amount of Effort",
+          "type": "drop_down",
+          "type_config": {
+            "new_drop_down": true,
+            "options": [
+              {
+                "id": "72cbedb6-904d-4b88-a47e-334724d1f7df",
+                "name": "Small (S)",
+                "color": null,
+                "orderindex": 0
+              },
+              {
+                "id": "0b4de55b-152d-4409-8d52-8c3bd6fff319",
+                "name": "Medium (M)",
+                "color": null,
+                "orderindex": 1
+              },
+              {
+                "id": "3cd1f4a9-c714-4864-b935-355ae4f1cb87",
+                "name": "Large (L)",
+                "color": null,
+                "orderindex": 2
+              },
+              {
+                "id": "e7c59075-f8da-4657-8ed1-9ab560200460",
+                "name": "Extra Large (XL)",
+                "color": null,
+                "orderindex": 3
+              },
+              {
+                "id": "9caea549-9106-4de4-ad9c-3c2bd5c19d58",
+                "name": "4",
+                "color": null,
+                "orderindex": 4
+              },
+              {
+                "id": "643066f2-46dd-4360-9740-5439b1d737d5",
+                "name": "6",
+                "color": null,
+                "orderindex": 5
+              }
+            ]
+          },
+          "date_created": "1634826144647",
+          "hide_from_guests": false,
+          "required": true
+        }
+      ],
+      "dependencies": [
+      ],
+      "linked_tasks": [
+      ],
+      "team_id": "3054541",
+      "url": "https://app.clickup.com/t/j6ztbh",
+      "permission_level": "create",
+      "list": {
+        "id": "84246120",
+        "name": "Systems Engineering",
+        "access": true
+      },
+      "project": {
+        "id": "40114610",
+        "name": "hidden",
+        "hidden": true,
+        "access": true
+      },
+      "folder": {
+        "id": "40114610",
+        "name": "hidden",
+        "hidden": true,
+        "access": true
+      },
+      "space": {
+        "id": "3110392"
+      }
+    }
+  ]
 }

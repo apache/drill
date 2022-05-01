@@ -188,7 +188,7 @@ public class HttpJsonOptions {
       for (Entry<String, String> property : field.getProperties().entrySet()) {
         metadata.setProperty(property.getKey(), property.getValue());
       }
-      builder.add(metadata.schema());
+      builder.addColumn(metadata);
     }
   }
 

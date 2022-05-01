@@ -41,7 +41,7 @@ The schema provisioning currently supports complex types of Arrays and Maps at a
       "fieldName": "jsonField",
       "fieldType": "varchar",
       "properties": {
-        "json-mode":"json"
+        "drill.json-mode":"json"
       }
     },{
       // Array field
@@ -66,10 +66,6 @@ The schema provisioning currently supports complex types of Arrays and Maps at a
 }
 ```
 
-### Inconsistent Schemas 
-One of the major challenges of interacting with JSON data is when the schema is inconsistent.  Drill has a `UNION` data type which is marked as experimental. At the time of 
-writing, the HTTP plugin does not support the `UNION`, however supplying a schema can solve a lot of those issues.
-
 ### Example Provisioning the Schema with a JSON String
 ```json
 "jsonOptions": {
@@ -77,4 +73,50 @@ writing, the HTTP plugin does not support the `UNION`, however supplying a schem
 }
 ```
 
+You can print out a JSON string of a schema with the Java code below. 
 
+```java
+   TupleMetadata schema = new SchemaBuilder()
+        .addNullable("a", MinorType.BIGINT)
+        .addNullable("m", MinorType.VARCHAR)
+        .build();
+    ColumnMetadata m = schema.metadata("m");
+    m.setProperty(JsonLoader.JSON_MODE, JsonLoader.JSON_LITERAL_MODE);
+
+    System.out.println(schema.jsonString());
+```
+
+This will generate something like the JSON string below:
+
+```json
+{
+  "type":"tuple_schema",
+  "columns":[
+    {"name":"a","type":"BIGINT","mode":"OPTIONAL"},
+    {"name":"m","type":"VARCHAR","mode":"OPTIONAL","properties":{"drill.json-mode":"json"}
+    }
+  ]
+}
+```
+
+## Dealing With Inconsistent Schemas
+One of the major challenges of interacting with JSON data is when the schema is inconsistent.  Drill has a `UNION` data type which is marked as experimental. At the time of
+writing, the HTTP plugin does not support the `UNION`, however supplying a schema can solve a lot of those issues.
+
+### Json Mode
+Drill offers the option of reading all JSON values as a string. While this can complicate downstream analytics, it can also be a more memory-efficient way of reading data with 
+inconsistent schema.  Unfortunately, at the time of writing, JSON-mode is only available with a provided schema.  However, future work will allow this mode to be enabled for 
+any JSON data.
+
+#### Enabling JSON Mode:
+You can enable JSON mode simply by adding the `drill.json-mode` property with a value of `json` to a field, as shown below:
+
+```json
+{
+  "fieldName": "jsonField",
+  "fieldType": "varchar",
+  "properties": {
+    "drill.json-mode": "json"
+  }
+}
+```

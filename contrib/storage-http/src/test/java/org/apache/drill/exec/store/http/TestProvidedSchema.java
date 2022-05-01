@@ -55,7 +55,6 @@ public class TestProvidedSchema extends ClusterTest {
 
   private static String TEST_JSON_PAGE1;
   private static String TEST_SCHEMA_CHANGE1;
-  private static String TEST_SCHEMA_CHANGE3;
 
   @BeforeClass
   public static void setup() throws Exception {
@@ -63,7 +62,6 @@ public class TestProvidedSchema extends ClusterTest {
 
     TEST_JSON_PAGE1 = Files.asCharSource(DrillFileUtils.getResourceAsFile("/data/p1.json"), Charsets.UTF_8).read();
     TEST_SCHEMA_CHANGE1 = Files.asCharSource(DrillFileUtils.getResourceAsFile("/data/schema_change_1.json"), Charsets.UTF_8).read();
-    TEST_SCHEMA_CHANGE3 = Files.asCharSource(DrillFileUtils.getResourceAsFile("/data/clickup.json"), Charsets.UTF_8).read();
 
     dirTestWatcher.copyResourceToRoot(Paths.get("data/"));
     makeMockConfig(cluster);
@@ -72,9 +70,9 @@ public class TestProvidedSchema extends ClusterTest {
   public static void makeMockConfig(ClusterFixture cluster) {
 
     List<HttpField> schema = new ArrayList<>();
-    schema.add(new HttpField("col_1", "DOUBLE"));
-    schema.add(new HttpField("col_2", "DOUBLE"));
-    schema.add(new HttpField("col_3", "DOUBLE"));
+    schema.add(HttpField.builder().fieldName("col_1").fieldType("DOUBLE").build());
+    schema.add(HttpField.builder().fieldName("col_2").fieldType("DOUBLE").build());
+    schema.add(HttpField.builder().fieldName("col_3").fieldType("DOUBLE").build());
 
     HttpJsonOptions jsonOptions = new HttpJsonOptions.HttpJsonOptionsBuilder()
       .providedSchema(schema)
@@ -89,11 +87,11 @@ public class TestProvidedSchema extends ClusterTest {
       .build();
 
     List<HttpField> mapSchema = new ArrayList<>();
-    mapSchema.add(new HttpField("field1", "VARCHAR"));
+    mapSchema.add(HttpField.builder().fieldName("field1").fieldType("VARCHAR").build());
     List<HttpField> innerMap = new ArrayList<>();
-    innerMap.add(new HttpField("nested_value1", "varchar"));
-    innerMap.add(new HttpField("nested_value2", "varchar"));
-    mapSchema.add(new HttpField("field2", "MAP", innerMap, false, new HashMap<>()));
+    innerMap.add(HttpField.builder().fieldName("nested_value1").fieldType("varchar").build());
+    innerMap.add(HttpField.builder().fieldName("nested_value2").fieldType("varchar").build());
+    mapSchema.add(HttpField.builder().fieldName("field2").fieldType("MAP").fields(innerMap).build());
 
     HttpJsonOptions jsonOptionsSchemaChange = new HttpJsonOptions.HttpJsonOptionsBuilder()
       .providedSchema(mapSchema)
@@ -108,18 +106,37 @@ public class TestProvidedSchema extends ClusterTest {
       .inputType("json")
       .build();
 
-
     List<HttpField> partialMapSchema = new ArrayList<>();
-    partialMapSchema.add(new HttpField("field1", "VARCHAR"));
+    partialMapSchema.add(HttpField.builder().fieldName("field1").fieldType("VARCHAR").build());
     List<HttpField> partialInnerMap = new ArrayList<>();
-    partialInnerMap.add(new HttpField("nested_value1", "varchar"));
-    partialMapSchema.add(new HttpField("field2", "MAP", partialInnerMap, false, new HashMap<>()));
+    partialInnerMap.add(HttpField.builder().fieldName("nested_value1").fieldType("varchar").build());
+    partialMapSchema.add(HttpField.builder().fieldName("field2").fieldType("MAP").fields(partialInnerMap).build());
 
 
     HttpApiConfig partialSchema = HttpApiConfig.builder()
       .url("http://localhost:47777/json")
       .method("get")
-      .jsonOptions(new HttpJsonOptions.HttpJsonOptionsBuilder().providedSchema(partialMapSchema).build())
+      .jsonOptions(HttpJsonOptions.builder().providedSchema(partialMapSchema).build())
+      .requireTail(false)
+      .inputType("json")
+      .build();
+
+    Map<String,String> properties = new HashMap<>();
+    properties.put("drill.json-mode", "json");
+    List<HttpField> jsonModeSchema = new ArrayList<>();
+    jsonModeSchema.add(HttpField.builder().fieldName("field1").fieldType("VARCHAR").build());
+    jsonModeSchema.add(HttpField.builder().fieldName("field2").fieldType("VARCHAR").properties(properties).build());
+
+
+    HttpJsonOptions jsonModeOptions = HttpJsonOptions.builder()
+      .providedSchema(jsonModeSchema)
+      .skipMalformedRecords(true)
+      .build();
+
+    HttpApiConfig jsonModeConfig = HttpApiConfig.builder()
+      .url("http://localhost:47777/json")
+      .method("get")
+      .jsonOptions(jsonModeOptions)
       .requireTail(false)
       .inputType("json")
       .build();
@@ -128,6 +145,7 @@ public class TestProvidedSchema extends ClusterTest {
     configs.put("basicJson", basicJson);
     configs.put("schemaChange", schemaChange);
     configs.put("partialSchema", partialSchema);
+    configs.put("jsonMode", jsonModeConfig);
 
     HttpStoragePluginConfig mockStorageConfigWithWorkspace =
       new HttpStoragePluginConfig(false, configs, 2, "globaluser", "globalpass", "",
@@ -216,7 +234,6 @@ public class TestProvidedSchema extends ClusterTest {
     try (MockWebServer server = startServer()) {
       server.enqueue(new MockResponse().setResponseCode(200).setBody(TEST_SCHEMA_CHANGE1));
       RowSet results = client.queryBuilder().sql(sql).rowSet();
-      results.print();
 
       TupleMetadata expectedSchema = new SchemaBuilder()
         .addNullable("field1", MinorType.VARCHAR)
@@ -236,6 +253,28 @@ public class TestProvidedSchema extends ClusterTest {
     }
   }
 
+  @Test
+  public void testJsonMode() throws Exception {
+    String sql = "SELECT * FROM `local`.`jsonMode`";
+    try (MockWebServer server = startServer()) {
+      server.enqueue(new MockResponse().setResponseCode(200).setBody(TEST_SCHEMA_CHANGE1));
+      RowSet results = client.queryBuilder().sql(sql).rowSet();
+
+      TupleMetadata expectedSchema = new SchemaBuilder()
+        .addNullable("field1", MinorType.VARCHAR)
+        .addNullable("field2", MinorType.VARCHAR)
+        .build();
+
+      RowSet expected = new RowSetBuilder(client.allocator(), expectedSchema)
+        .addRow("value1", "value2")
+        .addRow("value3", "{\"nested_value1\": nv1, \"nested_value2\": nv2}")
+        .addRow("value5", "{\"nested_value1\": nv3, \"nested_value2\": nv4}")
+        .build();
+
+      RowSetUtilities.verify(expected, results);
+    }
+  }
+  
   /**
    * Helper function to start the MockHTTPServer
    * @return Started Mock server

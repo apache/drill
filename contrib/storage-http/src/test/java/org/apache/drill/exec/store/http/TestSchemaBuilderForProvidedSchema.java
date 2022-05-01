@@ -26,7 +26,6 @@ import org.apache.drill.exec.store.http.providedSchema.HttpField;
 import org.junit.Test;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 
 import static org.junit.Assert.fail;
@@ -62,7 +61,7 @@ public class TestSchemaBuilderForProvidedSchema {
   public void testSingleMapSchema() {
     List<HttpField> outer = new ArrayList<>();
     List<HttpField> innerFields = generateFieldList();
-    outer.add(new HttpField("outer_map", "map", innerFields, false, new HashMap<>()));
+    outer.add(HttpField.builder().fieldName("outer_map").fieldType("map").fields(innerFields).build());
 
     HttpJsonOptions jsonOptions = new HttpJsonOptions.HttpJsonOptionsBuilder()
       .providedSchema(outer)
@@ -93,8 +92,8 @@ public class TestSchemaBuilderForProvidedSchema {
     List<HttpField> middle = generateFieldList();
 
     List<HttpField> innerFields = generateFieldList();
-    middle.add(new HttpField("inner_map", "map", innerFields, false, new HashMap<>()));
-    outer.add(new HttpField("outer_map", "map", middle, false, new HashMap<>()));
+    middle.add(HttpField.builder().fieldName("inner_map").fieldType("map").fields(innerFields).build());
+    outer.add(HttpField.builder().fieldName("outer_map").fieldType("map").fields(middle).build());
 
     HttpJsonOptions jsonOptions = new HttpJsonOptions.HttpJsonOptionsBuilder()
       .providedSchema(outer)
@@ -151,11 +150,11 @@ public class TestSchemaBuilderForProvidedSchema {
   @Test
   public void testListInMap() {
     List<HttpField> innerFields = new ArrayList<>();
-    innerFields.add(new HttpField.HttpFieldBuilder().fieldName("int_field").fieldType("int").build());
-    innerFields.add(new HttpField.HttpFieldBuilder().fieldName("int_array").fieldType("int").isArray(true).build());
+    innerFields.add(HttpField.builder().fieldName("int_field").fieldType("int").build());
+    innerFields.add(HttpField.builder().fieldName("int_array").fieldType("int").isArray(true).build());
 
     List<HttpField> outer = new ArrayList<>();
-    outer.add(new HttpField("outer_map", "map", innerFields, false, new HashMap<>()));
+    outer.add(HttpField.builder().fieldName("outer_map").fieldType("map").fields(innerFields).build());
 
     HttpJsonOptions jsonOptions = new HttpJsonOptions.HttpJsonOptionsBuilder()
       .providedSchema(outer)
@@ -176,7 +175,7 @@ public class TestSchemaBuilderForProvidedSchema {
   public void testArrayOfMaps() {
     List<HttpField> outer = new ArrayList<>();
     List<HttpField> innerFields = generateFieldList();
-    outer.add(new HttpField("outer_map", "map", innerFields, true, new HashMap<>()));
+    outer.add(HttpField.builder().fieldName("outer_map").fieldType("map").fields(innerFields).isArray(true).build());
 
     HttpJsonOptions jsonOptions = new HttpJsonOptions.HttpJsonOptionsBuilder()
       .providedSchema(outer)
@@ -256,15 +255,15 @@ public class TestSchemaBuilderForProvidedSchema {
 
   private List<HttpField> generateFieldList() {
     List<HttpField> fields = new ArrayList<>();
-    fields.add(new HttpField("bigint_col", "bigint"));
-    fields.add(new HttpField("boolean_col", "boolean"));
-    fields.add(new HttpField("date_col", "date"));
-    fields.add(new HttpField("double_col", "double"));
-    fields.add(new HttpField("interval_col", "interval"));
-    fields.add(new HttpField("int_col", "int"));
-    fields.add(new HttpField("timestamp_col", "timestamp"));
-    fields.add(new HttpField("time_col", "time"));
-    fields.add(new HttpField("varchar_col", "varchar"));
+    fields.add(HttpField.builder().fieldName("bigint_col").fieldType("bigint").build());
+    fields.add(HttpField.builder().fieldName("boolean_col").fieldType("boolean").build());
+    fields.add(HttpField.builder().fieldName("date_col").fieldType("date").build());
+    fields.add(HttpField.builder().fieldName("double_col").fieldType("double").build());
+    fields.add(HttpField.builder().fieldName("interval_col").fieldType("interval").build());
+    fields.add(HttpField.builder().fieldName("int_col").fieldType("int").build());
+    fields.add(HttpField.builder().fieldName("timestamp_col").fieldType("timestamp").build());
+    fields.add(HttpField.builder().fieldName("time_col").fieldType("time").build());
+    fields.add(HttpField.builder().fieldName("varchar_col").fieldType("varchar").build());
 
     return fields;
   }
