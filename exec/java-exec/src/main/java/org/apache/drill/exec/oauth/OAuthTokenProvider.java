@@ -17,6 +17,7 @@
  */
 package org.apache.drill.exec.oauth;
 
+import org.apache.commons.lang3.StringUtils;
 import org.apache.drill.common.AutoCloseables;
 import org.apache.drill.exec.server.DrillbitContext;
 
@@ -37,14 +38,22 @@ public class OAuthTokenProvider implements AutoCloseable {
 
   public TokenRegistry getOauthTokenRegistry() {
     if (oauthTokenRegistry == null) {
-      initRemoteRegistries();
+      initRemoteRegistries(null);
     }
     return oauthTokenRegistry;
   }
 
-  private synchronized void initRemoteRegistries() {
+  private synchronized void initRemoteRegistries(String username) {
+    // Add the username to the path if present
+    String finalpath;
+    if (StringUtils.isNotEmpty(username)) {
+      finalpath = STORAGE_REGISTRY_PATH + "/" + username;
+    } else {
+      finalpath = STORAGE_REGISTRY_PATH;
+    }
+
     if (oauthTokenRegistry == null) {
-      oauthTokenRegistry = new PersistentTokenRegistry(context, STORAGE_REGISTRY_PATH);
+      oauthTokenRegistry = new PersistentTokenRegistry(context, finalpath);
     }
   }
 

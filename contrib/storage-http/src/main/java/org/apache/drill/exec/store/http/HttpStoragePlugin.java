@@ -46,7 +46,7 @@ public class HttpStoragePlugin extends AbstractStoragePlugin {
   private final HttpStoragePluginConfig config;
   private final HttpSchemaFactory schemaFactory;
   private final StoragePluginRegistry registry;
-  private final TokenRegistry tokenRegistry;
+  private TokenRegistry tokenRegistry;
 
   public HttpStoragePlugin(HttpStoragePluginConfig configuration, DrillbitContext context, String name) {
     super(context, name);
@@ -54,14 +54,16 @@ public class HttpStoragePlugin extends AbstractStoragePlugin {
     this.registry = context.getStorage();
     this.schemaFactory = new HttpSchemaFactory(this);
 
-    // Get OAuth Token Provider if needed
-    OAuthTokenProvider tokenProvider = context.getoAuthTokenProvider();
-    tokenRegistry = tokenProvider.getOauthTokenRegistry();
-    tokenRegistry.createTokenTable(getName());
+    // TODO Check Auth mode
+
   }
 
   @Override
   public void registerSchemas(SchemaConfig schemaConfig, SchemaPlus parent) {
+    // Get OAuth Token Provider if needed
+    OAuthTokenProvider tokenProvider = context.getoAuthTokenProvider();
+    tokenRegistry = tokenProvider.getOauthTokenRegistry();
+    tokenRegistry.createTokenTable(getName());
     schemaFactory.registerSchemas(schemaConfig, parent);
   }
 
