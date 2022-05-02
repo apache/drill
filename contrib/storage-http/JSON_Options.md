@@ -25,8 +25,11 @@ All of these can be set by adding the `jsonOptions` to your connection configura
 ```
 
 ## Schema Provisioning
-One of the challenges of querying APIs is inconsistent data.  Drill allows you to provide a schema for individual endpoints.  You can do this in one of two ways: either by 
-providing a serialized TupleMetadata of the desired schema.  This is an advanced functionality and should only be used by advanced Drill users.
+One of the challenges of querying APIs is inconsistent data.  Drill allows you to provide a schema for individual endpoints.  You can do this in one of three ways: 
+
+1. By providing a schema inline [See: Specifying Schema as Table Function Parameter](https://drill.apache.org/docs/plugin-configuration-basics/#specifying-the-schema-as-table-function-parameter)
+2. By providing a schema in the configuration for the endpoint.
+3. By providing a serialized TupleMetadata of the desired schema.  This is an advanced functionality and should only be used by advanced Drill users.
 
 The schema provisioning currently supports complex types of Arrays and Maps at any nesting level.
 

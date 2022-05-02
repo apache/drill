@@ -38,7 +38,6 @@ import org.apache.drill.test.ClusterFixture;
 import org.apache.drill.test.ClusterTest;
 import org.apache.drill.test.rowSet.RowSetUtilities;
 import org.junit.BeforeClass;
-import org.junit.Ignore;
 import org.junit.Test;
 
 import java.io.IOException;
@@ -238,7 +237,6 @@ public class TestProvidedSchema extends ClusterTest {
   }
 
   @Test
-  @Ignore("Pending DRILL-8205")
   public void testInlineSchema() throws Exception {
     String sql = "SELECT * FROM table(`local`.`noSchema` " +
       "(schema => 'inline=(`field1` VARCHAR, `field2` VARCHAR properties {`drill.json-mode` = `json`})'" +

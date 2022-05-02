@@ -143,10 +143,6 @@ public class HttpBatchReader implements ManagedReader<SchemaNegotiator> {
         // Add provided schema to JSON Builder
         // This logic allows a user to also supply a schema inline as well as via the config.
         // If both are provided, the schemas will be merged together.
-        //
-        // Note:  There seems to be a bug in the SchemaNegotiator which prevents inline schemas from being
-        // passed down.  See: DRILL-8205 (https://issues.apache.org/jira/browse/DRILL-8205)  Once this issue
-        // is resolved, this logic will work as expected.
         if (subScan.tableSpec().connectionConfig().jsonOptions().providedSchema() != null &&
           subScan.tableSpec().connectionConfig().jsonOptions().providedSchema().size() > 0) {
           TupleMetadata schema = subScan.tableSpec().connectionConfig().jsonOptions().buildSchema();
