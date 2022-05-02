@@ -25,6 +25,8 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonPOJOBuilder;
+import org.apache.avro.data.Json;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.drill.common.PlanStringBuilder;
 import org.apache.drill.common.types.TypeProtos.DataMode;
 import org.apache.drill.common.types.TypeProtos.MinorType;
@@ -113,8 +115,22 @@ public class HttpJsonOptions {
     return options;
   }
 
+
+  /**
+   * Builds the schema from either the JSON schema (if provided) or the provided schema objects.  If the
+   * JSON schema is populated and valid, that will be returned.  If not, or if the JSON is invalid, Drill will fall back
+   * to the provided schema.
+   * @return {@link TupleMetadata} of the provided schema.
+   */
   @JsonIgnore
   public TupleMetadata buildSchema() {
+    if (StringUtils.isNotEmpty(jsonSchema)) {
+      try {
+        return getSchemaFromJsonString();
+      } catch (JsonProcessingException e) {
+        logger.error("Invalid JSON schema.  Falling back to provided schema. {}", e.getMessage());
+      }
+    }
     SchemaBuilder schemaBuilder = new SchemaBuilder();
     for (HttpField field : providedSchema) {
       addFieldToSchema(schemaBuilder, field);
