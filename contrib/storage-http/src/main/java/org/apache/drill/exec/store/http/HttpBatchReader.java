@@ -29,7 +29,9 @@ import org.apache.drill.common.types.TypeProtos.MinorType;
 import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.physical.impl.scan.framework.ManagedReader;
 import org.apache.drill.exec.physical.impl.scan.framework.SchemaNegotiator;
+import org.apache.drill.exec.physical.impl.scan.v3.FixedReceiver;
 import org.apache.drill.exec.physical.resultSet.ResultSetLoader;
+import org.apache.drill.exec.record.metadata.TupleMetadata;
 import org.apache.drill.exec.store.easy.json.loader.JsonLoader;
 import org.apache.drill.exec.store.easy.json.loader.JsonLoaderImpl.JsonLoaderBuilder;
 import org.apache.drill.exec.store.easy.json.loader.JsonLoaderOptions;
@@ -111,7 +113,6 @@ public class HttpBatchReader implements ManagedReader<SchemaNegotiator> {
       .build();
 
     // JSON loader setup
-
     resultSetLoader = negotiator.build();
     if (implicitColumnsAreProjected()) {
       implicitColumns = new ImplicitColumns(resultSetLoader.writer());
@@ -139,13 +140,32 @@ public class HttpBatchReader implements ManagedReader<SchemaNegotiator> {
           .getJsonOptions(negotiator.queryOptions());
         jsonBuilder.options(jsonOptions);
 
-        // Add provided schema if populated
+        // Add provided schema to JSON Builder
+        // This logic allows a user to also supply a schema inline as well as via the config.
+        // If both are provided, the schemas will be merged together.
+        //
+        // Note:  There seems to be a bug in the SchemaNegotiator which prevents inline schemas from being
+        // passed down.  See: DRILL-8205 (https://issues.apache.org/jira/browse/DRILL-8205)  Once this issue
+        // is resolved, this logic will work as expected.
         if (subScan.tableSpec().connectionConfig().jsonOptions().providedSchema() != null &&
           subScan.tableSpec().connectionConfig().jsonOptions().providedSchema().size() > 0) {
-          jsonBuilder.providedSchema(subScan.tableSpec().connectionConfig().jsonOptions().buildSchema());
+          TupleMetadata schema = subScan.tableSpec().connectionConfig().jsonOptions().buildSchema();
+          if (negotiator.hasProvidedSchema()) {
+            TupleMetadata inlineSchema = negotiator.providedSchema();
+            TupleMetadata finalSchema = FixedReceiver.Builder.mergeSchemas(schema, inlineSchema);
+            jsonBuilder.providedSchema(finalSchema);
+          } else {
+            jsonBuilder.providedSchema(schema);
+          }
+        } else if (negotiator.hasProvidedSchema()) {
+          jsonBuilder.providedSchema(negotiator.providedSchema());
         }
 
       } else {
+        // If there is a provided inline schema, add that to the JSON Builder
+        if (negotiator.hasProvidedSchema()) {
+          jsonBuilder.providedSchema(negotiator.providedSchema());
+        }
         jsonBuilder.standardOptions(negotiator.queryOptions());
       }
       jsonLoader = jsonBuilder.build();

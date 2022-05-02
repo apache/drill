@@ -38,6 +38,7 @@ import org.apache.drill.test.ClusterFixture;
 import org.apache.drill.test.ClusterTest;
 import org.apache.drill.test.rowSet.RowSetUtilities;
 import org.junit.BeforeClass;
+import org.junit.Ignore;
 import org.junit.Test;
 
 import java.io.IOException;
@@ -141,11 +142,19 @@ public class TestProvidedSchema extends ClusterTest {
       .inputType("json")
       .build();
 
+    HttpApiConfig noSchema = HttpApiConfig.builder()
+      .url("http://localhost:47777/json")
+      .method("get")
+      .requireTail(false)
+      .inputType("json")
+      .build();
+
     Map<String, HttpApiConfig> configs = new HashMap<>();
     configs.put("basicJson", basicJson);
     configs.put("schemaChange", schemaChange);
     configs.put("partialSchema", partialSchema);
     configs.put("jsonMode", jsonModeConfig);
+    configs.put("noSchema", noSchema);
 
     HttpStoragePluginConfig mockStorageConfigWithWorkspace =
       new HttpStoragePluginConfig(false, configs, 2, "globaluser", "globalpass", "",
@@ -222,6 +231,32 @@ public class TestProvidedSchema extends ClusterTest {
         .addRow("value1", strArray(null, null))
         .addRow("value3", strArray("nv1", "nv2"))
         .addRow("value5", strArray("nv3", "nv4"))
+        .build();
+
+      RowSetUtilities.verify(expected, results);
+    }
+  }
+
+  @Test
+  @Ignore("Pending DRILL-8205")
+  public void testInlineSchema() throws Exception {
+    String sql = "SELECT * FROM table(`local`.`noSchema` " +
+      "(schema => 'inline=(`field1` VARCHAR, `field2` VARCHAR properties {`drill.json-mode` = `json`})'" +
+      "))";
+
+    try (MockWebServer server = startServer()) {
+      server.enqueue(new MockResponse().setResponseCode(200).setBody(TEST_SCHEMA_CHANGE1));
+      RowSet results = client.queryBuilder().sql(sql).rowSet();
+
+      TupleMetadata expectedSchema = new SchemaBuilder()
+        .addNullable("field1", MinorType.VARCHAR)
+        .addNullable("field2", MinorType.VARCHAR)
+        .build();
+
+      RowSet expected = new RowSetBuilder(client.allocator(), expectedSchema)
+        .addRow("value1", "value2")
+        .addRow("value3", "{\"nested_value1\": nv1, \"nested_value2\": nv2}")
+        .addRow("value5", "{\"nested_value1\": nv3, \"nested_value2\": nv4}")
         .build();
 
       RowSetUtilities.verify(expected, results);

@@ -102,7 +102,6 @@ public class HttpScanBatchCreator implements BatchCreator<HttpSubScan> {
 
       paginatorConfig = subScan.tableSpec().connectionConfig().paginator();
       if (paginatorConfig != null) {
-        // TODO Handle the case of no limit queries in pagination
         logger.debug("Creating paginator using config: {}", paginatorConfig);
 
         // Initialize the paginator and generate the base URLs
