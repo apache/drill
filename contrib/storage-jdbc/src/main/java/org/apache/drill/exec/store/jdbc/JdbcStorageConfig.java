@@ -70,7 +70,7 @@ public class JdbcStorageConfig extends CredentialedStoragePluginConfig {
     super(
       CredentialProviderUtils.getCredentialsProvider(username, password, credentialsProvider),
       credentialsProvider == null,
-      AuthMode.parseOrDefault(authMode)
+      AuthMode.parseOrDefault(authMode, AuthMode.SHARED_USER)
     );
     this.driver = driver;
     this.url = url;

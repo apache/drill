@@ -82,7 +82,7 @@ public class HttpStoragePluginConfig extends CredentialedStoragePluginConfig {
         normalize(proxyPassword),
         credentialsProvider),
         credentialsProvider == null,
-        AuthMode.parseOrDefault(authMode)
+        AuthMode.parseOrDefault(authMode, AuthMode.SHARED_USER)
     );
     this.cacheResults = cacheResults != null && cacheResults;
 
