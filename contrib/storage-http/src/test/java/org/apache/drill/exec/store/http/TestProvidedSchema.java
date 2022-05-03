@@ -132,7 +132,6 @@ public class TestProvidedSchema extends ClusterTest {
       .add(jsonColumn)
       .build();
 
-
     HttpJsonOptions jsonModeOptions = HttpJsonOptions.builder()
       .schema(jsonModeSchema)
       .skipMalformedRecords(true)

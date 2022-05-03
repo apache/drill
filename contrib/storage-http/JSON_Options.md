@@ -35,36 +35,18 @@ The schema provisioning currently supports complex types of Arrays and Maps at a
 ### Example Schema Provisioning:
 ```json
 "jsonOptions": {
-  "providedSchema": [
-    {
-      "fieldName": "int_field",
-      "fieldType": "bigint"
-    }, {
-      "fieldName": "jsonField",
-      "fieldType": "varchar",
-      "properties": {
-        "drill.json-mode":"json"
-      }
-    },{
-      // Array field
-      "fieldName": "stringField",
-      "fieldType": "varchar",
-      "isArray": true
-    }, {
-      // Map field
-      "fieldName": "mapField",
-      "fieldType": "map",
-      "fields": [
-        {
-          "fieldName": "nestedField",
-          "fieldType": "int"
-        },{
-          "fieldName": "nestedField2",
-          "fieldType": "varchar"
-        }
-      ]
-    }
-  ]
+  "schema": {
+    "columns":[
+      {
+        "name":"outer_map",
+        "type":"ARRAY<STRUCT<`bigint_col` BIGINT, `boolean_col` BOOLEAN, `date_col` DATE, `double_col` DOUBLE, `interval_col` INTERVAL, `int_col` BIGINT, `timestamp_col` TIMESTAMP, `time_col` TIME, `varchar_col` VARCHAR>>","mode":"REPEATED"
+      }, {
+        "name":"field1",
+        "type":"VARCHAR",
+        "mode":"OPTIONAL"
+      },
+    ]
+  }
 }
 ```
 
@@ -81,11 +63,17 @@ any JSON data.
 You can enable JSON mode simply by adding the `drill.json-mode` property with a value of `json` to a field, as shown below:
 
 ```json
-{
-  "fieldName": "jsonField",
-  "fieldType": "varchar",
-  "properties": {
-    "drill.json-mode": "json"
+"jsonOptions": {
+  "readNumbersAsDouble": true,
+  "schema": {
+    "type": "tuple_schema",
+      "columns": [
+        {
+          "name": "custom_fields",
+          "type": "ARRAY<STRUCT<`value` VARCHAR PROPERTIES { 'drill.json-mode' = 'json' }>>",
+          "mode": "REPEATED"
+      }
+    ]
   }
 }
 ```
