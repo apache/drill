@@ -22,14 +22,16 @@ import okhttp3.mockwebserver.MockResponse;
 import okhttp3.mockwebserver.MockWebServer;
 import org.apache.drill.common.logical.StoragePluginConfig.AuthMode;
 import org.apache.drill.common.logical.security.PlainCredentialsProvider;
+import org.apache.drill.common.types.TypeProtos.DataMode;
 import org.apache.drill.common.types.TypeProtos.MinorType;
 import org.apache.drill.common.util.DrillFileUtils;
 
 import org.apache.drill.exec.physical.rowSet.RowSet;
 import org.apache.drill.exec.physical.rowSet.RowSetBuilder;
+import org.apache.drill.exec.record.metadata.ColumnMetadata;
+import org.apache.drill.exec.record.metadata.MetadataUtils;
 import org.apache.drill.exec.record.metadata.SchemaBuilder;
 import org.apache.drill.exec.record.metadata.TupleMetadata;
-import org.apache.drill.exec.store.http.providedSchema.HttpField;
 import org.apache.drill.exec.store.security.UsernamePasswordCredentials;
 import org.apache.drill.shaded.guava.com.google.common.base.Charsets;
 import org.apache.drill.shaded.guava.com.google.common.collect.ImmutableMap;
@@ -42,9 +44,7 @@ import org.junit.Test;
 
 import java.io.IOException;
 import java.nio.file.Paths;
-import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
 import static org.apache.drill.test.rowSet.RowSetUtilities.strArray;
@@ -69,13 +69,14 @@ public class TestProvidedSchema extends ClusterTest {
 
   public static void makeMockConfig(ClusterFixture cluster) {
 
-    List<HttpField> schema = new ArrayList<>();
-    schema.add(HttpField.builder().fieldName("col_1").fieldType("DOUBLE").build());
-    schema.add(HttpField.builder().fieldName("col_2").fieldType("DOUBLE").build());
-    schema.add(HttpField.builder().fieldName("col_3").fieldType("DOUBLE").build());
+    TupleMetadata simpleSchema = new SchemaBuilder()
+      .addNullable("col_1", MinorType.FLOAT8)
+      .addNullable("col_2", MinorType.FLOAT8)
+      .addNullable("col_3", MinorType.FLOAT8)
+      .build();
 
     HttpJsonOptions jsonOptions = new HttpJsonOptions.HttpJsonOptionsBuilder()
-      .providedSchema(schema)
+      .schema(simpleSchema)
       .build();
 
     HttpApiConfig basicJson = HttpApiConfig.builder()
@@ -86,15 +87,16 @@ public class TestProvidedSchema extends ClusterTest {
       .inputType("json")
       .build();
 
-    List<HttpField> mapSchema = new ArrayList<>();
-    mapSchema.add(HttpField.builder().fieldName("field1").fieldType("VARCHAR").build());
-    List<HttpField> innerMap = new ArrayList<>();
-    innerMap.add(HttpField.builder().fieldName("nested_value1").fieldType("varchar").build());
-    innerMap.add(HttpField.builder().fieldName("nested_value2").fieldType("varchar").build());
-    mapSchema.add(HttpField.builder().fieldName("field2").fieldType("MAP").fields(innerMap).build());
+    TupleMetadata mapSchema = new SchemaBuilder()
+      .addNullable("field1", MinorType.VARCHAR)
+      .addMap("field2")
+      .addNullable("nested_value1", MinorType.VARCHAR)
+      .addNullable("nested_value2", MinorType.VARCHAR)
+      .resumeSchema()
+      .buildSchema();
 
     HttpJsonOptions jsonOptionsSchemaChange = new HttpJsonOptions.HttpJsonOptionsBuilder()
-      .providedSchema(mapSchema)
+      .schema(mapSchema)
       .skipMalformedRecords(true)
       .build();
 
@@ -106,30 +108,33 @@ public class TestProvidedSchema extends ClusterTest {
       .inputType("json")
       .build();
 
-    List<HttpField> partialMapSchema = new ArrayList<>();
-    partialMapSchema.add(HttpField.builder().fieldName("field1").fieldType("VARCHAR").build());
-    List<HttpField> partialInnerMap = new ArrayList<>();
-    partialInnerMap.add(HttpField.builder().fieldName("nested_value1").fieldType("varchar").build());
-    partialMapSchema.add(HttpField.builder().fieldName("field2").fieldType("MAP").fields(partialInnerMap).build());
+    TupleMetadata partialMapSchema = new SchemaBuilder()
+      .addNullable("field1", MinorType.VARCHAR)
+      .addMap("field2")
+      .addNullable("nested_value1", MinorType.VARCHAR)
+      .resumeSchema()
+      .buildSchema();
 
 
     HttpApiConfig partialSchema = HttpApiConfig.builder()
       .url("http://localhost:47777/json")
       .method("get")
-      .jsonOptions(HttpJsonOptions.builder().providedSchema(partialMapSchema).build())
+      .jsonOptions(HttpJsonOptions.builder().schema(partialMapSchema).build())
       .requireTail(false)
       .inputType("json")
       .build();
 
-    Map<String,String> properties = new HashMap<>();
-    properties.put("drill.json-mode", "json");
-    List<HttpField> jsonModeSchema = new ArrayList<>();
-    jsonModeSchema.add(HttpField.builder().fieldName("field1").fieldType("VARCHAR").build());
-    jsonModeSchema.add(HttpField.builder().fieldName("field2").fieldType("VARCHAR").properties(properties).build());
+    ColumnMetadata jsonColumn = MetadataUtils.newScalar("field2", MinorType.VARCHAR, DataMode.OPTIONAL);
+    jsonColumn.setProperty("drill.json-mode", "json");
+
+    TupleMetadata jsonModeSchema = new SchemaBuilder()
+      .addNullable("field1", MinorType.VARCHAR)
+      .add(jsonColumn)
+      .build();
 
 
     HttpJsonOptions jsonModeOptions = HttpJsonOptions.builder()
-      .providedSchema(jsonModeSchema)
+      .schema(jsonModeSchema)
       .skipMalformedRecords(true)
       .build();
 

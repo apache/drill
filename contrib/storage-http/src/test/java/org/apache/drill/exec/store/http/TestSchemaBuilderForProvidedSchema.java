@@ -200,7 +200,7 @@ public class TestSchemaBuilderForProvidedSchema {
     assertTrue(expectedSchema.isEquivalent(schema));
   }
 
-  @Test
+  /*@Test
   public void testProvidedSchemaFromJsonString() {
     String jsonString = "{\n" + "" +
       "\"type\":\"tuple_schema\",\n" +
@@ -251,7 +251,7 @@ public class TestSchemaBuilderForProvidedSchema {
       .build();
 
     assertTrue(expectedSchema.isEquivalent(schema));
-  }
+  }*/
 
   private List<HttpField> generateFieldList() {
     List<HttpField> fields = new ArrayList<>();

@@ -29,7 +29,6 @@ One of the challenges of querying APIs is inconsistent data.  Drill allows you t
 
 1. By providing a schema inline [See: Specifying Schema as Table Function Parameter](https://drill.apache.org/docs/plugin-configuration-basics/#specifying-the-schema-as-table-function-parameter)
 2. By providing a schema in the configuration for the endpoint.
-3. By providing a serialized TupleMetadata of the desired schema.  This is an advanced functionality and should only be used by advanced Drill users.
 
 The schema provisioning currently supports complex types of Arrays and Maps at any nesting level.
 
@@ -64,39 +63,6 @@ The schema provisioning currently supports complex types of Arrays and Maps at a
           "fieldType": "varchar"
         }
       ]
-    }
-  ]
-}
-```
-
-### Example Provisioning the Schema with a JSON String
-```json
-"jsonOptions": {
-  "jsonSchema": "{\"type\":\"tuple_schema\",\"columns\":[{\"name\":\"outer_map\",\"type\":\"STRUCT<`int_field` BIGINT, `int_array` ARRAY<BIGINT>>\",\"mode\":\"REQUIRED\"}]}"
-}
-```
-
-You can print out a JSON string of a schema with the Java code below. 
-
-```java
-   TupleMetadata schema = new SchemaBuilder()
-        .addNullable("a", MinorType.BIGINT)
-        .addNullable("m", MinorType.VARCHAR)
-        .build();
-    ColumnMetadata m = schema.metadata("m");
-    m.setProperty(JsonLoader.JSON_MODE, JsonLoader.JSON_LITERAL_MODE);
-
-    System.out.println(schema.jsonString());
-```
-
-This will generate something like the JSON string below:
-
-```json
-{
-  "type":"tuple_schema",
-  "columns":[
-    {"name":"a","type":"BIGINT","mode":"OPTIONAL"},
-    {"name":"m","type":"VARCHAR","mode":"OPTIONAL","properties":{"drill.json-mode":"json"}
     }
   ]
 }

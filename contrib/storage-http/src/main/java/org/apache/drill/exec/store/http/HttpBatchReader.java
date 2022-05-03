@@ -143,7 +143,7 @@ public class HttpBatchReader implements ManagedReader<SchemaNegotiator> {
         // Add provided schema to JSON Builder
         // This logic allows a user to also supply a schema inline as well as via the config.
         // If both are provided, the schemas will be merged together.
-        if (subScan.tableSpec().connectionConfig().jsonOptions().providedSchema() != null &&
+        /*if (subScan.tableSpec().connectionConfig().jsonOptions().providedSchema() != null &&
           subScan.tableSpec().connectionConfig().jsonOptions().providedSchema().size() > 0) {
           TupleMetadata schema = subScan.tableSpec().connectionConfig().jsonOptions().buildSchema();
           if (negotiator.hasProvidedSchema()) {
@@ -157,7 +157,21 @@ public class HttpBatchReader implements ManagedReader<SchemaNegotiator> {
           jsonBuilder.providedSchema(negotiator.providedSchema());
         }
 
-      } else {
+      } */
+        if (subScan.tableSpec().connectionConfig().jsonOptions().schema() != null &&
+        subScan.tableSpec().connectionConfig().jsonOptions().schema() != null) {
+          TupleMetadata configuredSchema = subScan.tableSpec().connectionConfig().jsonOptions().schema();
+          if (negotiator.hasProvidedSchema()) {
+            TupleMetadata inlineSchema = negotiator.providedSchema();
+            TupleMetadata finalSchema = FixedReceiver.Builder.mergeSchemas(configuredSchema, inlineSchema);
+            jsonBuilder.providedSchema(finalSchema);
+          } else {
+            jsonBuilder.providedSchema(configuredSchema);
+          }
+        } else if (negotiator.hasProvidedSchema()) {
+          jsonBuilder.providedSchema(negotiator.providedSchema());
+        }
+        } else {
         // If there is a provided inline schema, add that to the JSON Builder
         if (negotiator.hasProvidedSchema()) {
           jsonBuilder.providedSchema(negotiator.providedSchema());

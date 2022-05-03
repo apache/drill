@@ -21,11 +21,8 @@ package org.apache.drill.exec.store.http;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonPOJOBuilder;
-import org.apache.commons.lang3.StringUtils;
 import org.apache.drill.common.PlanStringBuilder;
 import org.apache.drill.common.types.TypeProtos.DataMode;
 import org.apache.drill.common.types.TypeProtos.MinorType;
@@ -69,7 +66,7 @@ public class HttpJsonOptions {
   private final Boolean skipMalformedDocument;
 
   @JsonProperty
-  private final String jsonSchema;
+  private final TupleMetadata schema;
 
   @JsonProperty
   private final List<HttpField> providedSchema;
@@ -81,8 +78,8 @@ public class HttpJsonOptions {
     this.enableEscapeAnyChar = builder.enableEscapeAnyChar;
     this.skipMalformedRecords = builder.skipMalformedRecords;
     this.skipMalformedDocument = builder.skipMalformedDocument;
-    this.jsonSchema = builder.jsonSchema;
     this.providedSchema = builder.providedSchema;
+    this.schema = builder.schema;
   }
 
   public static HttpJsonOptionsBuilder builder() {
@@ -123,24 +120,15 @@ public class HttpJsonOptions {
    */
   @JsonIgnore
   public TupleMetadata buildSchema() {
-    if (StringUtils.isNotEmpty(jsonSchema)) {
-      try {
-        return getSchemaFromJsonString();
-      } catch (JsonProcessingException e) {
-        logger.error("Invalid JSON schema.  Falling back to provided schema. {}", e.getMessage());
-      }
+    if (schema != null) {
+      return schema;
     }
+
     SchemaBuilder schemaBuilder = new SchemaBuilder();
     for (HttpField field : providedSchema) {
       addFieldToSchema(schemaBuilder, field);
     }
     return schemaBuilder.build();
-  }
-
-  @JsonIgnore
-  public TupleMetadata getSchemaFromJsonString() throws JsonProcessingException {
-    ObjectMapper mapper = new ObjectMapper();
-    return mapper.readValue(jsonSchema, TupleMetadata.class);
   }
 
   private void addFieldToSchema(SchemaBuilder schemaBuilder, HttpField field) {
@@ -237,14 +225,14 @@ public class HttpJsonOptions {
     return this.skipMalformedDocument;
   }
 
-  @JsonProperty("jsonSchema")
-  public String jsonSchema() {
-    return this.jsonSchema;
-  }
-
   @JsonProperty("providedSchema")
   public List<HttpField> providedSchema() {
     return this.providedSchema;
+  }
+
+  @JsonProperty("schema")
+  public TupleMetadata schema() {
+    return this.schema;
   }
 
   @Override
@@ -263,12 +251,12 @@ public class HttpJsonOptions {
       && Objects.equals(skipMalformedDocument, that.skipMalformedDocument)
       && Objects.equals(skipMalformedRecords, that.skipMalformedRecords)
       && Objects.equals(providedSchema, that.providedSchema)
-      && Objects.equals(jsonSchema, that.jsonSchema);
+      && Objects.equals(schema, that.schema);
   }
 
   @Override
   public int hashCode() {
-    return Objects.hash(allowNanInf, allTextMode, readNumbersAsDouble, enableEscapeAnyChar, skipMalformedDocument, skipMalformedRecords, providedSchema, jsonSchema);
+    return Objects.hash(allowNanInf, allTextMode, readNumbersAsDouble, enableEscapeAnyChar, skipMalformedDocument, skipMalformedRecords, providedSchema, schema);
   }
 
   @Override
@@ -280,8 +268,8 @@ public class HttpJsonOptions {
       .field("enableEscapeAnyChar", enableEscapeAnyChar)
       .field("skipMalformedRecords", skipMalformedRecords)
       .field("skipMalformedDocument", skipMalformedDocument)
-      .field("jsonSchema", jsonSchema)
       .field("providedSchema", providedSchema)
+      .field("schema", schema)
       .toString();
   }
 
@@ -301,7 +289,7 @@ public class HttpJsonOptions {
 
     private List<HttpField> providedSchema;
 
-    private String jsonSchema;
+    private TupleMetadata schema;
 
     public HttpJsonOptionsBuilder allowNanInf(Boolean allowNanInf) {
       this.allowNanInf = allowNanInf;
@@ -338,8 +326,8 @@ public class HttpJsonOptions {
       return this;
     }
 
-    public HttpJsonOptionsBuilder jsonSchema(String jsonSchema) {
-      this.jsonSchema = jsonSchema;
+    public HttpJsonOptionsBuilder schema(TupleMetadata schema) {
+      this.schema = schema;
       return this;
     }
 
