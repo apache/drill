@@ -139,6 +139,7 @@ public class HttpBatchReader implements ManagedReader<SchemaNegotiator> {
           .jsonOptions()
           .getJsonOptions(negotiator.queryOptions());
         jsonBuilder.options(jsonOptions);
+      } else {
         jsonBuilder.standardOptions(negotiator.queryOptions());
       }
 
@@ -158,6 +159,15 @@ public class HttpBatchReader implements ManagedReader<SchemaNegotiator> {
     return true;
   }
 
+  /**
+   * This function obtains the correct schema for the {@link JsonLoader}.  There are four possibilities:
+   * 1.  The schema is provided in the configuration only.  In this case, that schema will be returned.
+   * 2.  The schema is provided in both the configuration and inline.  These two schemas will be merged together.
+   * 3.  The schema is provided inline in a query.  In this case, that schema will be returned.
+   * 4.  No schema is provided.  Function returns null.
+   * @param negotiator {@link SchemaNegotiator} The schema negotiator with all the connection information
+   * @return The built {@link TupleMetadata} of the provided schema, null if none provided.
+   */
   private TupleMetadata getSchema(SchemaNegotiator negotiator) {
     if (subScan.tableSpec().connectionConfig().jsonOptions() != null &&
       subScan.tableSpec().connectionConfig().jsonOptions().schema() != null) {
