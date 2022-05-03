@@ -24,6 +24,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonPOJOBuilder;
 import org.apache.drill.common.PlanStringBuilder;
+import org.apache.drill.exec.record.metadata.TupleMetadata;
 import org.apache.drill.exec.server.options.OptionSet;
 import org.apache.drill.exec.store.easy.json.loader.JsonLoaderOptions;
 
@@ -51,6 +52,8 @@ public class HttpJsonOptions {
   @JsonProperty
   private final Boolean skipMalformedDocument;
 
+  @JsonProperty
+  private final TupleMetadata schema;
 
   HttpJsonOptions(HttpJsonOptionsBuilder builder) {
     this.allowNanInf = builder.allowNanInf;
@@ -59,6 +62,7 @@ public class HttpJsonOptions {
     this.enableEscapeAnyChar = builder.enableEscapeAnyChar;
     this.skipMalformedRecords = builder.skipMalformedRecords;
     this.skipMalformedDocument = builder.skipMalformedDocument;
+    this.schema = builder.schema;
   }
 
   public static HttpJsonOptionsBuilder builder() {
@@ -80,12 +84,13 @@ public class HttpJsonOptions {
     if (enableEscapeAnyChar != null) {
       options.enableEscapeAnyChar = enableEscapeAnyChar;
     }
-    if (skipMalformedDocument != null) {
-      options.skipMalformedDocument = skipMalformedDocument;
-    }
     if (skipMalformedRecords != null) {
       options.skipMalformedRecords = skipMalformedRecords;
     }
+    if (skipMalformedDocument != null) {
+      options.skipMalformedDocument = skipMalformedDocument;
+    }
+
     return options;
   }
 
@@ -119,6 +124,11 @@ public class HttpJsonOptions {
     return this.skipMalformedDocument;
   }
 
+  @JsonProperty("schema")
+  public TupleMetadata schema() {
+    return this.schema;
+  }
+
   @Override
   public boolean equals(Object o) {
     if (this == o) {
@@ -132,12 +142,14 @@ public class HttpJsonOptions {
       && Objects.equals(allTextMode, that.allTextMode)
       && Objects.equals(readNumbersAsDouble, that.readNumbersAsDouble)
       && Objects.equals(enableEscapeAnyChar, that.enableEscapeAnyChar)
-      && Objects.equals(skipMalformedRecords, that.skipMalformedRecords);
+      && Objects.equals(skipMalformedDocument, that.skipMalformedDocument)
+      && Objects.equals(skipMalformedRecords, that.skipMalformedRecords)
+      && Objects.equals(schema, that.schema);
   }
 
   @Override
   public int hashCode() {
-    return Objects.hash(allowNanInf, allTextMode, readNumbersAsDouble, enableEscapeAnyChar, skipMalformedRecords, skipMalformedDocument);
+    return Objects.hash(allowNanInf, allTextMode, readNumbersAsDouble, enableEscapeAnyChar, skipMalformedDocument, skipMalformedRecords, schema);
   }
 
   @Override
@@ -149,6 +161,7 @@ public class HttpJsonOptions {
       .field("enableEscapeAnyChar", enableEscapeAnyChar)
       .field("skipMalformedRecords", skipMalformedRecords)
       .field("skipMalformedDocument", skipMalformedDocument)
+      .field("schema", schema)
       .toString();
   }
 
@@ -165,6 +178,8 @@ public class HttpJsonOptions {
     private Boolean skipMalformedRecords;
 
     private Boolean skipMalformedDocument;
+
+    private TupleMetadata schema;
 
     public HttpJsonOptionsBuilder allowNanInf(Boolean allowNanInf) {
       this.allowNanInf = allowNanInf;
@@ -193,6 +208,11 @@ public class HttpJsonOptions {
 
     public HttpJsonOptionsBuilder skipMalformedDocument(Boolean skipMalformedDocument) {
       this.skipMalformedDocument = skipMalformedDocument;
+      return this;
+    }
+
+    public HttpJsonOptionsBuilder schema(TupleMetadata schema) {
+      this.schema = schema;
       return this;
     }
 

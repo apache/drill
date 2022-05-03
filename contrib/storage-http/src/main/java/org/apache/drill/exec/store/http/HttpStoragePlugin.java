@@ -20,6 +20,8 @@ package org.apache.drill.exec.store.http;
 import org.apache.calcite.plan.RelOptRule;
 import org.apache.calcite.schema.SchemaPlus;
 import org.apache.drill.common.JSONOptions;
+import org.apache.drill.common.expression.SchemaPath;
+import org.apache.drill.exec.metastore.MetadataProviderManager;
 import org.apache.drill.exec.oauth.OAuthTokenProvider;
 import org.apache.drill.exec.oauth.PersistentTokenTable;
 import org.apache.drill.exec.oauth.TokenRegistry;
@@ -27,6 +29,7 @@ import org.apache.drill.exec.ops.OptimizerRulesContext;
 import org.apache.drill.exec.physical.base.AbstractGroupScan;
 import org.apache.drill.exec.planner.PlannerPhase;
 import org.apache.drill.exec.server.DrillbitContext;
+import org.apache.drill.exec.server.options.SessionOptionManager;
 import org.apache.drill.exec.store.AbstractStoragePlugin;
 import org.apache.drill.exec.store.SchemaConfig;
 import org.apache.drill.exec.store.StoragePluginRegistry;
@@ -35,6 +38,7 @@ import org.apache.drill.shaded.guava.com.google.common.collect.ImmutableSet;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import java.io.IOException;
+import java.util.List;
 import java.util.Set;
 
 public class HttpStoragePlugin extends AbstractStoragePlugin {
@@ -82,9 +86,36 @@ public class HttpStoragePlugin extends AbstractStoragePlugin {
   }
 
   @Override
+  public AbstractGroupScan getPhysicalScan(String userName, JSONOptions selection,
+                                           SessionOptionManager options) throws IOException {
+    return getPhysicalScan(userName, selection, AbstractGroupScan.ALL_COLUMNS,
+      options, null);
+  }
+
+
+  @Override
+  public AbstractGroupScan getPhysicalScan(String userName, JSONOptions selection,
+                                           SessionOptionManager options, MetadataProviderManager metadataProviderManager) throws IOException {
+    return getPhysicalScan(userName, selection, AbstractGroupScan.ALL_COLUMNS,
+      options, metadataProviderManager);
+  }
+
+  @Override
+  public AbstractGroupScan getPhysicalScan(String userName, JSONOptions selection,
+                                           List<SchemaPath> columns) throws IOException {
+    return getPhysicalScan(userName, selection, columns, null, null);
+  }
+
+  @Override
   public AbstractGroupScan getPhysicalScan(String userName, JSONOptions selection) throws IOException {
+    return getPhysicalScan(userName, selection, AbstractGroupScan.ALL_COLUMNS, null);
+  }
+
+  @Override
+  public AbstractGroupScan getPhysicalScan(String userName, JSONOptions selection, List<SchemaPath> columns, SessionOptionManager options,
+                                           MetadataProviderManager metadataProviderManager) throws IOException {
     HttpScanSpec scanSpec = selection.getListWith(context.getLpPersistence().getMapper(), new TypeReference<HttpScanSpec>() {});
-    return new HttpGroupScan(scanSpec);
+    return new HttpGroupScan(scanSpec, metadataProviderManager);
   }
 
   @Override

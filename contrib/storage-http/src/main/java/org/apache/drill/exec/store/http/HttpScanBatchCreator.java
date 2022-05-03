@@ -68,6 +68,7 @@ public class HttpScanBatchCreator implements BatchCreator<HttpSubScan> {
       HttpSubScan subScan) {
     ScanFrameworkBuilder builder = new ScanFrameworkBuilder();
     builder.projection(subScan.columns());
+    builder.providedSchema(subScan.schema());
     builder.setUserName(subScan.getUserName());
 
     // Provide custom error context
@@ -102,7 +103,6 @@ public class HttpScanBatchCreator implements BatchCreator<HttpSubScan> {
 
       paginatorConfig = subScan.tableSpec().connectionConfig().paginator();
       if (paginatorConfig != null) {
-        // TODO Handle the case of no limit queries in pagination
         logger.debug("Creating paginator using config: {}", paginatorConfig);
 
         // Initialize the paginator and generate the base URLs

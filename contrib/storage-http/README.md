@@ -250,29 +250,7 @@ configuration option called `xmlDataLevel` which reduces the level of unneeded n
 format plugin. 
 
 #### JSON Configuration
-Drill has a collection of JSON configuration options to allow you to configure how Drill interprets JSON files.  These are set at the global level, however the HTTP plugin 
-allows you to configure these options individually per connection and override the Drill defaults.  The options are:
-
-* `allowNanInf`:  Configures the connection to interpret `NaN` and `Inf` values
-* `allTextMode`:  By default, Drill attempts to infer data types from JSON data. If the data is malformed, Drill may throw schema change exceptions. If your data is 
-  inconsistent, you can enable `allTextMode` which when true, Drill will read all JSON values as strings, rather than try to infer the data type. 
-* `readNumbersAsDouble`:  By default Drill will attempt to interpret integers, floating point number types and strings.  One challenge is when data is consistent, Drill may 
-  throw schema change exceptions. In addition to `allTextMode`, you can make Drill less sensitive by setting the `readNumbersAsDouble` to `true` which causes Drill to read all 
-  numeric fields in JSON data as `double` data type rather than trying to distinguish between ints and doubles.
-* `enableEscapeAnyChar`:  Allows a user to escape any character with a \
-* `skipMalformedRecords`:  Allows Drill to skip malformed records and recover without throwing exceptions.
-* `skipMalformedDocument`:  Allows Drill to skip entire malformed documents without throwing errors.
-
-All of these can be set by adding the `jsonOptions` to your connection configuration as shown below:
-
-```json
-
-"jsonOptions": {
-  "allTextMode": true, 
-  "readNumbersAsDouble": true
-}
-
-```
+[Read the documentation for configuring json options, including schema provisioning.](JSON_Options.md)
 
 #### Authorization
 

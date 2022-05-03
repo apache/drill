@@ -33,6 +33,7 @@ import org.apache.drill.exec.physical.base.AbstractBase;
 import org.apache.drill.exec.physical.base.PhysicalOperator;
 import org.apache.drill.exec.physical.base.PhysicalVisitor;
 import org.apache.drill.exec.physical.base.SubScan;
+import org.apache.drill.exec.record.metadata.TupleMetadata;
 
 @JsonTypeName("http-sub-scan")
 public class HttpSubScan extends AbstractBase implements SubScan {
@@ -43,19 +44,22 @@ public class HttpSubScan extends AbstractBase implements SubScan {
   private final List<SchemaPath> columns;
   private final Map<String, String> filters;
   private final int maxRecords;
+  private final TupleMetadata schema;
 
   @JsonCreator
   public HttpSubScan(
     @JsonProperty("tableSpec") HttpScanSpec tableSpec,
     @JsonProperty("columns") List<SchemaPath> columns,
     @JsonProperty("filters") Map<String, String> filters,
-    @JsonProperty("maxRecords") int maxRecords
+    @JsonProperty("maxRecords") int maxRecords,
+    @JsonProperty("schema") TupleMetadata schema
     ) {
     super(tableSpec.queryUserName());
     this.tableSpec = tableSpec;
     this.columns = columns;
     this.filters = filters;
     this.maxRecords = maxRecords;
+    this.schema = schema;
   }
 
   @JsonProperty("tableSpec")
@@ -78,6 +82,11 @@ public class HttpSubScan extends AbstractBase implements SubScan {
     return maxRecords;
   }
 
+  @JsonProperty("schema")
+  public TupleMetadata schema() {
+    return schema;
+  }
+
  @Override
   public <T, X, E extends Throwable> T accept(
    PhysicalVisitor<T, X, E> physicalVisitor, X value) throws E {
@@ -86,7 +95,7 @@ public class HttpSubScan extends AbstractBase implements SubScan {
 
   @Override
   public PhysicalOperator getNewWithChildren(List<PhysicalOperator> children) {
-    return new HttpSubScan(tableSpec, columns, filters, maxRecords);
+    return new HttpSubScan(tableSpec, columns, filters, maxRecords, schema);
   }
 
   @Override
@@ -107,12 +116,13 @@ public class HttpSubScan extends AbstractBase implements SubScan {
       .field("columns", columns)
       .field("filters", filters)
       .field("maxRecords", maxRecords)
+      .field("schema", schema)
       .toString();
   }
 
   @Override
   public int hashCode() {
-    return Objects.hash(tableSpec, columns, filters);
+    return Objects.hash(tableSpec, columns, filters, maxRecords, schema);
   }
 
   @Override
@@ -127,6 +137,7 @@ public class HttpSubScan extends AbstractBase implements SubScan {
     return Objects.equals(tableSpec, other.tableSpec)
       && Objects.equals(columns, other.columns)
       && Objects.equals(filters, other.filters)
-      && Objects.equals(maxRecords, other.maxRecords);
+      && Objects.equals(maxRecords, other.maxRecords)
+      && Objects.equals(schema, other.schema);
   }
 }

@@ -1,0 +1,30 @@
+{
+  "result": {
+    "data": [
+      {
+        "workStopDuration": "00:14:29",
+        "driver": "UnknownDriverId",
+        "id": "b2"
+      },
+      {
+
+        "workDrivingDuration": "00:00:13",
+        "workStopDuration": "00:01:57.0630000",
+        "driver": "UnknownDriverId",
+        "id": "b4"
+      },
+      {
+        "workStopDuration": "00:00:00",
+        "device": {
+          "id": "b4"
+        },
+        "driver": {
+          "id": "b12",
+          "isDriver": true
+        },
+        "id": "bF"
+      }
+    ],
+  },
+  "jsonrpc": "2.0"
+}
