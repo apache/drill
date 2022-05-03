@@ -32,7 +32,8 @@ public abstract class StoragePluginConfig {
   // comparisons; doing so will break the plugin registry.
   protected Boolean enabled;
 
-  protected AuthMode authMode;
+  // The overridable default plugin auth mode is DRILL_PROCESS
+  protected AuthMode authMode = AuthMode.DRILL_PROCESS;
 
   /**
    * Check for enabled status of the plugin
@@ -105,8 +106,8 @@ public abstract class StoragePluginConfig {
      */
     USER_TRANSLATION;
 
-    public static AuthMode parseOrDefault(String authMode) {
-      return !Strings.isNullOrEmpty(authMode) ? AuthMode.valueOf(authMode.toUpperCase()) : DRILL_PROCESS;
+    public static AuthMode parseOrDefault(String authMode, AuthMode defavlt) {
+      return !Strings.isNullOrEmpty(authMode) ? AuthMode.valueOf(authMode.toUpperCase()) : defavlt;
     }
   }
 }

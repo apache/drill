@@ -55,12 +55,13 @@ public class TestDataSource extends BaseTest {
   @Test
   public void testInitWithoutUserAndPassword() {
     JdbcStorageConfig config = new JdbcStorageConfig(
-      DRIVER, url, null, null, false, false, null, null, AuthMode.SHARED_USER.name(), 1000);
+      DRIVER, url, null, null, false, false, null, null, null, 1000);
     try (HikariDataSource dataSource = JdbcStoragePlugin.initDataSource(config, null)) {
       assertEquals(DRIVER, dataSource.getDriverClassName());
       assertEquals(url, dataSource.getJdbcUrl());
       assertNull(dataSource.getUsername());
       assertNull(dataSource.getPassword());
+      assertEquals(config.getAuthMode(), AuthMode.SHARED_USER);
     }
   }
 
