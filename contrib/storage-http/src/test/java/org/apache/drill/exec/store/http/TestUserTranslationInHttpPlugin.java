@@ -56,6 +56,7 @@ import org.junit.ClassRule;
 import org.junit.Test;
 
 import java.io.IOException;
+import java.net.CookiePolicy;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -273,6 +274,4 @@ public class TestUserTranslationInHttpPlugin extends ClusterTest {
       return new ArrayList<>();
     }
   }
-
-
 }

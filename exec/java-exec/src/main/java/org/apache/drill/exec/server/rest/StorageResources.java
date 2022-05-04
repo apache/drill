@@ -57,6 +57,8 @@ import okhttp3.OkHttpClient.Builder;
 import okhttp3.Request;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.drill.common.logical.CredentialedStoragePluginConfig;
+import org.apache.drill.common.logical.StoragePluginConfig;
+import org.apache.drill.common.logical.StoragePluginConfig.AuthMode;
 import org.apache.drill.common.logical.security.CredentialsProvider;
 import org.apache.drill.exec.oauth.OAuthTokenProvider;
 import org.apache.drill.exec.oauth.PersistentTokenTable;
@@ -216,7 +218,7 @@ public class StorageResources {
       if (storage.getPlugin(name).getConfig() instanceof CredentialedStoragePluginConfig) {
         DrillbitContext context = ((AbstractStoragePlugin) storage.getPlugin(name)).getContext();
         OAuthTokenProvider tokenProvider = context.getoAuthTokenProvider();
-        PersistentTokenTable tokenTable = tokenProvider.getOauthTokenRegistry().getTokenTable(name);
+        PersistentTokenTable tokenTable = tokenProvider.getOauthTokenRegistry(getActiveUser(storage.getPlugin(name).getConfig())).getTokenTable(name);
 
         // Set the access token
         tokenTable.setRefreshToken(tokens.getRefreshToken());
@@ -247,7 +249,7 @@ public class StorageResources {
       if (storage.getPlugin(name).getConfig() instanceof CredentialedStoragePluginConfig) {
         DrillbitContext context = ((AbstractStoragePlugin) storage.getPlugin(name)).getContext();
         OAuthTokenProvider tokenProvider = context.getoAuthTokenProvider();
-        PersistentTokenTable tokenTable = tokenProvider.getOauthTokenRegistry().getTokenTable(name);
+        PersistentTokenTable tokenTable = tokenProvider.getOauthTokenRegistry(getActiveUser(storage.getPlugin(name).getConfig())).getTokenTable(name);
 
         // Set the access token
         tokenTable.setAccessToken(tokens.getAccessToken());
@@ -279,7 +281,7 @@ public class StorageResources {
       if (storage.getPlugin(name).getConfig() instanceof CredentialedStoragePluginConfig) {
         DrillbitContext context = ((AbstractStoragePlugin) storage.getPlugin(name)).getContext();
         OAuthTokenProvider tokenProvider = context.getoAuthTokenProvider();
-        PersistentTokenTable tokenTable = tokenProvider.getOauthTokenRegistry().getTokenTable(name);
+        PersistentTokenTable tokenTable = tokenProvider.getOauthTokenRegistry(getActiveUser(storage.getPlugin(name).getConfig())).getTokenTable(name);
 
         // Set the access and refresh token
         tokenTable.setAccessToken(tokenContainer.getAccessToken());
@@ -322,7 +324,7 @@ public class StorageResources {
         TokenRegistry tokenRegistry = ((AbstractStoragePlugin) storage.getPlugin(name))
           .getContext()
           .getoAuthTokenProvider()
-          .getOauthTokenRegistry();
+          .getOauthTokenRegistry(getActiveUser(storage.getPlugin(name).getConfig()));
 
         // Add a token registry table if none exists
         tokenRegistry.createTokenTable(name);
@@ -403,7 +405,7 @@ public class StorageResources {
       TokenRegistry tokenRegistry = ((AbstractStoragePlugin) storage.getPlugin(name))
         .getContext()
         .getoAuthTokenProvider()
-        .getOauthTokenRegistry();
+        .getOauthTokenRegistry(getActiveUser(storage.getPlugin(name).getConfig()));
 
       // Delete a token registry table if it exists
       tokenRegistry.deleteTokenTable(name);
@@ -537,6 +539,14 @@ public class StorageResources {
   @Deprecated
   public Response deletePluginViaGet(@PathParam("name") String name) {
     return deletePlugin(name);
+  }
+
+  private String getActiveUser(StoragePluginConfig config) {
+    if (config.getAuthMode() == AuthMode.USER_TRANSLATION) {
+      return sc.getUserPrincipal().getName();
+    } else {
+      return null;
+    }
   }
 
   @XmlRootElement

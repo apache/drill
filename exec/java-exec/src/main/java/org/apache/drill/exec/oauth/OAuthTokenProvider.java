@@ -36,9 +36,9 @@ public class OAuthTokenProvider implements AutoCloseable {
     this.context = context;
   }
 
-  public TokenRegistry getOauthTokenRegistry() {
+  public TokenRegistry getOauthTokenRegistry(String username) {
     if (oauthTokenRegistry == null) {
-      initRemoteRegistries(null);
+      initRemoteRegistries(username);
     }
     return oauthTokenRegistry;
   }

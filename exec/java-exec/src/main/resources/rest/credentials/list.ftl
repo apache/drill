@@ -71,6 +71,11 @@
           </div>
           <div class="modal-body">
 
+  <#if model.getType() == "HttpStoragePluginConfig" && model.getPlugin().isOauth() >
+      <a id="getOauth" class="btn btn-success text-white">Authorize</a>
+  </#if>
+
+
             <form id="createForm" role="form" action="/credentials/update_credentials" method="POST">
               <input type="text" class="form-control" name="username" id="usernameField" placeholder="Username" />
               <input type="text" class="form-control" name="password" id="passwordField" placeholder="Password" />

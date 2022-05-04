@@ -21,6 +21,7 @@ import org.apache.calcite.plan.RelOptRule;
 import org.apache.calcite.schema.SchemaPlus;
 import org.apache.drill.common.JSONOptions;
 import org.apache.drill.common.expression.SchemaPath;
+import org.apache.drill.common.logical.StoragePluginConfig.AuthMode;
 import org.apache.drill.exec.metastore.MetadataProviderManager;
 import org.apache.drill.exec.oauth.OAuthTokenProvider;
 import org.apache.drill.exec.oauth.PersistentTokenTable;
@@ -34,6 +35,7 @@ import org.apache.drill.exec.store.AbstractStoragePlugin;
 import org.apache.drill.exec.store.SchemaConfig;
 import org.apache.drill.exec.store.StoragePluginRegistry;
 import org.apache.drill.exec.store.base.filter.FilterPushDownUtils;
+import org.apache.drill.shaded.guava.com.google.common.annotations.VisibleForTesting;
 import org.apache.drill.shaded.guava.com.google.common.collect.ImmutableSet;
 
 import com.fasterxml.jackson.core.type.TypeReference;
@@ -54,17 +56,28 @@ public class HttpStoragePlugin extends AbstractStoragePlugin {
     this.registry = context.getStorage();
     this.schemaFactory = new HttpSchemaFactory(this);
 
-    // TODO Check Auth mode
-
+    if (config.getAuthMode() != AuthMode.USER_TRANSLATION) {
+      initializeOauthTokenTable(null);
+    }
   }
 
   @Override
   public void registerSchemas(SchemaConfig schemaConfig, SchemaPlus parent) {
-    // Get OAuth Token Provider if needed
-    OAuthTokenProvider tokenProvider = context.getoAuthTokenProvider();
-    tokenRegistry = tokenProvider.getOauthTokenRegistry();
-    tokenRegistry.createTokenTable(getName());
+
+    // For user translation mode, this is moved here because we don't have the
+    // active username in the constructor.  Removing it from the constructor makes
+    // it difficult to test, so we do the check and leave it in both places.
+    if (config.getAuthMode() == AuthMode.USER_TRANSLATION) {
+      initializeOauthTokenTable(schemaConfig.getUserName());
+    }
     schemaFactory.registerSchemas(schemaConfig, parent);
+  }
+
+  @VisibleForTesting
+  public void initializeOauthTokenTable(String username) {
+    OAuthTokenProvider tokenProvider = context.getoAuthTokenProvider();
+    tokenRegistry = tokenProvider.getOauthTokenRegistry(username);
+    tokenRegistry.createTokenTable(getName());
   }
 
   @Override
