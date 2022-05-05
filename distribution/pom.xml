@@ -31,7 +31,7 @@
   <name>Drill : Packaging and Distribution Assembly</name>
 
   <properties>
-    <aws.java.sdk.version>1.12.186</aws.java.sdk.version>
+    <aws.java.sdk.version>1.12.211</aws.java.sdk.version>
     <oci.hdfs.version>3.3.0.7.0.1</oci.hdfs.version>
   </properties>
 
