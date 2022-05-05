@@ -91,7 +91,7 @@ public class JdbcStorageConfig extends CredentialedStoragePluginConfig {
     this.writerBatchSize = that.writerBatchSize;
   }
 
-  @JsonProperty("userName")
+  @JsonProperty("username")
   public String getUsername() {
     if (!directCredentials) {
       return null;
