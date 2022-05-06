@@ -51,7 +51,7 @@ public class JdbcStorageConfig extends CredentialedStoragePluginConfig {
   private final String driver;
   private final String url;
   private final boolean caseInsensitiveTableNames;
-  private final Boolean writable;
+  private final boolean writable;
   private final Map<String, Object> sourceParameters;
   private final int writerBatchSize;
 
@@ -62,7 +62,7 @@ public class JdbcStorageConfig extends CredentialedStoragePluginConfig {
       @JsonProperty("username") String username,
       @JsonProperty("password") String password,
       @JsonProperty("caseInsensitiveTableNames") boolean caseInsensitiveTableNames,
-      @JsonProperty("writable") Boolean writable,
+      @JsonProperty("writable") boolean writable,
       @JsonProperty("sourceParameters") Map<String, Object> sourceParameters,
       @JsonProperty("credentialsProvider") CredentialsProvider credentialsProvider,
       @JsonProperty("authMode") String authMode,
