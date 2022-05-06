@@ -72,7 +72,7 @@
           <div class="modal-body">
 
   <#if model.getType() == "HttpStoragePluginConfig" && model.getPlugin().isOauth() >
-      <a id="getOauth" class="btn btn-success text-white">Authorize</a>
+    <h3>OAuth Enabled</h3>
   </#if>
 
 
