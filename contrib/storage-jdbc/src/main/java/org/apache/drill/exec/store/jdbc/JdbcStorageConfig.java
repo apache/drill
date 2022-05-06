@@ -101,7 +101,6 @@ public class JdbcStorageConfig extends CredentialedStoragePluginConfig {
       .orElse(null);
   }
 
-  @JsonIgnore
   @JsonProperty("password")
   public String getPassword() {
     if (!directCredentials) {
