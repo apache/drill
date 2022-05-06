@@ -51,7 +51,7 @@ public class JdbcStorageConfig extends CredentialedStoragePluginConfig {
   private final String driver;
   private final String url;
   private final boolean caseInsensitiveTableNames;
-  private final Boolean writable;
+  private final boolean writable;
   private final Map<String, Object> sourceParameters;
   private final int writerBatchSize;
 
@@ -62,7 +62,7 @@ public class JdbcStorageConfig extends CredentialedStoragePluginConfig {
       @JsonProperty("username") String username,
       @JsonProperty("password") String password,
       @JsonProperty("caseInsensitiveTableNames") boolean caseInsensitiveTableNames,
-      @JsonProperty("writable") Boolean writable,
+      @JsonProperty("writable") boolean writable,
       @JsonProperty("sourceParameters") Map<String, Object> sourceParameters,
       @JsonProperty("credentialsProvider") CredentialsProvider credentialsProvider,
       @JsonProperty("authMode") String authMode,
@@ -101,7 +101,6 @@ public class JdbcStorageConfig extends CredentialedStoragePluginConfig {
       .orElse(null);
   }
 
-  @JsonIgnore
   @JsonProperty("password")
   public String getPassword() {
     if (!directCredentials) {
@@ -163,7 +162,10 @@ public class JdbcStorageConfig extends CredentialedStoragePluginConfig {
 
   @Override
   public int hashCode() {
-    return Objects.hash(driver, url, caseInsensitiveTableNames, sourceParameters, credentialsProvider, writable, writerBatchSize);
+    return Objects.hash(
+      driver, url, caseInsensitiveTableNames, sourceParameters,
+      credentialsProvider, writable, writerBatchSize, authMode
+    );
   }
 
   @Override
@@ -181,7 +183,8 @@ public class JdbcStorageConfig extends CredentialedStoragePluginConfig {
         Objects.equals(writable, that.writable) &&
         Objects.equals(sourceParameters, that.sourceParameters) &&
         Objects.equals(credentialsProvider, that.credentialsProvider) &&
-        Objects.equals(writerBatchSize, that.writerBatchSize);
+        Objects.equals(writerBatchSize, that.writerBatchSize) &&
+        Objects.equals(authMode, that.authMode);
   }
 
   @Override
@@ -194,6 +197,7 @@ public class JdbcStorageConfig extends CredentialedStoragePluginConfig {
       .field("sourceParameters", sourceParameters)
       .field("caseInsensitiveTableNames", caseInsensitiveTableNames)
       .field("credentialProvider", credentialsProvider)
+      .field("authMode", authMode)
       .toString();
   }
 }
