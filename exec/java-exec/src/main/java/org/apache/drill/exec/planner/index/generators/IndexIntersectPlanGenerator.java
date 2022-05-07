@@ -17,6 +17,7 @@
  */
 package org.apache.drill.exec.planner.index.generators;
 
+import org.apache.calcite.rel.metadata.RelMetadataQuery;
 import org.apache.drill.shaded.guava.com.google.common.collect.ImmutableList;
 import org.apache.drill.shaded.guava.com.google.common.collect.Lists;
 import org.apache.drill.shaded.guava.com.google.common.collect.Maps;
@@ -204,10 +205,11 @@ public class IndexIntersectPlanGenerator extends AbstractIndexPlanGenerator {
         indexFilterPrel, indexProjectExprs, indexProjectRowType);
 
     RelTraitSet rightSideTraits = newTraitSet().plus(Prel.DRILL_PHYSICAL);
+    RelMetadataQuery mq = indexProjectPrel.getCluster().getMetadataQuery();
     // if build(right) side does not exist, this index scan is the right most.
     if (right == null) {
       if (partition == DrillDistributionTrait.RANDOM_DISTRIBUTED &&
-          settings.getSliceTarget() < indexProjectPrel.getRows()) {
+          settings.getSliceTarget() < indexProjectPrel.estimateRowCount(mq)) {
         final DrillDistributionTrait distRight =
             new DrillDistributionTrait(DistributionType.BROADCAST_DISTRIBUTED);
         rightSideTraits = newTraitSet(distRight).plus(Prel.DRILL_PHYSICAL);

@@ -63,7 +63,7 @@ public class RangePartitionExchangePrel extends ExchangePrel {
   @Override
   public RelOptCost computeSelfCost(RelOptPlanner planner, RelMetadataQuery mq) {
     if (PrelUtil.getSettings(getCluster()).useDefaultCosting()) {
-      return super.computeSelfCost(planner).multiplyBy(.1);
+      return super.computeSelfCost(planner, mq).multiplyBy(.1);
     }
     RelNode child = this.getInput();
     double inputRows = (mq == null)? ROWCOUNT_UNKNOWN : mq.getRowCount(child);
