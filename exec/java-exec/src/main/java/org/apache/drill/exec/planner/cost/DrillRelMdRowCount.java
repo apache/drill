@@ -87,7 +87,7 @@ public class DrillRelMdRowCount extends RelMdRowCount{
   @Override
   public Double getRowCount(Filter rel, RelMetadataQuery mq) {
     // Need capped selectivity estimates. See the Filter getRows() method
-    return rel.getRows();
+    return rel.estimateRowCount(mq);
   }
 
   @Override

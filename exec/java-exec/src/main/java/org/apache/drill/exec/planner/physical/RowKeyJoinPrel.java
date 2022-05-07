@@ -42,7 +42,7 @@ public class RowKeyJoinPrel extends JoinPrel implements Prel {
 
   double estimatedRowCount = -1;
   public RowKeyJoinPrel(RelOptCluster cluster, RelTraitSet traits, RelNode left, RelNode right,
-      RexNode condition, JoinRelType joinType) throws InvalidRelException {
+      RexNode condition, JoinRelType joinType) {
     super(cluster, traits, left, right, condition, joinType);
     Preconditions.checkArgument(joinType == JoinRelType.INNER);
   }
@@ -66,7 +66,7 @@ public class RowKeyJoinPrel extends JoinPrel implements Prel {
     if (estimatedRowCount >= 0) {
       return estimatedRowCount;
     }
-    return this.getLeft().getRows();
+    return getLeft().estimateRowCount(mq);
   }
 
   @Override
@@ -85,7 +85,7 @@ public class RowKeyJoinPrel extends JoinPrel implements Prel {
   @Override
   public RelOptCost computeSelfCost(RelOptPlanner planner, RelMetadataQuery mq) {
     if(PrelUtil.getSettings(getCluster()).useDefaultCosting()) {
-      return super.computeSelfCost(planner).multiplyBy(.1);
+      return super.computeSelfCost(planner, mq).multiplyBy(.1);
     }
     double rowCount = mq.getRowCount(this.getRight());
     DrillCostFactory costFactory = (DrillCostFactory) planner.getCostFactory();
