@@ -54,7 +54,7 @@ public class DrillProjectPushIntoLateralJoinRule extends RelOptRule {
       return;
     }
     DrillRelOptUtil.InputRefVisitor collectRefs = new DrillRelOptUtil.InputRefVisitor();
-    for (RexNode exp: origProj.getChildExps()) {
+    for (RexNode exp: origProj.getProjects()) {
       exp.accept(collectRefs);
     }
 
@@ -78,7 +78,7 @@ public class DrillProjectPushIntoLateralJoinRule extends RelOptRule {
 
     if (!trivial) {
       Map<Integer, Integer> mapWithoutCorr = buildMapWithoutCorrColumn(corr, correlationIndex);
-      List<RexNode> outputExprs = DrillRelOptUtil.transformExprs(origProj.getCluster().getRexBuilder(), origProj.getChildExps(), mapWithoutCorr);
+      List<RexNode> outputExprs = DrillRelOptUtil.transformExprs(origProj.getCluster().getRexBuilder(), origProj.getProjects(), mapWithoutCorr);
 
       relNode = new DrillProjectRel(origProj.getCluster(),
                                     left.getTraitSet().plus(DrillRel.DRILL_LOGICAL),
@@ -89,11 +89,9 @@ public class DrillProjectPushIntoLateralJoinRule extends RelOptRule {
 
   private Map<Integer, Integer> buildMapWithoutCorrColumn(RelNode corr, int correlationIndex) {
     int index = 0;
-    Map<Integer, Integer> result = new HashMap();
-    for (int i=0;i<corr.getRowType().getFieldList().size();i++) {
-      if (i == correlationIndex) {
-        continue;
-      } else {
+    Map<Integer, Integer> result = new HashMap<>();
+    for (int i = 0; i < corr.getRowType().getFieldList().size(); i++) {
+      if (i != correlationIndex) {
         result.put(i, index++);
       }
     }

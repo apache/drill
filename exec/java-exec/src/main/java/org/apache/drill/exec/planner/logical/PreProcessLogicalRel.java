@@ -58,9 +58,9 @@ public class PreProcessLogicalRel extends RelShuttleImpl {
 
   private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(PreProcessLogicalRel.class);
 
-  private RelDataTypeFactory factory;
-  private DrillOperatorTable table;
-  private UnsupportedOperatorCollector unsupportedOperatorCollector;
+  private final RelDataTypeFactory factory;
+  private final DrillOperatorTable table;
+  private final UnsupportedOperatorCollector unsupportedOperatorCollector;
   private final UnwrappingExpressionVisitor unwrappingExpressionVisitor;
 
   public static PreProcessLogicalRel createVisitor(RelDataTypeFactory factory, DrillOperatorTable table, RexBuilder rexBuilder) {
@@ -78,7 +78,7 @@ public class PreProcessLogicalRel extends RelShuttleImpl {
   @Override
   public RelNode visit(LogicalProject project) {
     final List<RexNode> projExpr = Lists.newArrayList();
-    for(RexNode rexNode : project.getChildExps()) {
+    for(RexNode rexNode : project.getProjects()) {
       projExpr.add(rexNode.accept(unwrappingExpressionVisitor));
     }
 
@@ -90,7 +90,7 @@ public class PreProcessLogicalRel extends RelShuttleImpl {
     List<RexNode> exprList = new ArrayList<>();
     boolean rewrite = false;
 
-    for (RexNode rex : project.getChildExps()) {
+    for (RexNode rex : project.getProjects()) {
       RexNode newExpr = rex;
       if (rex instanceof RexCall) {
         RexCall function = (RexCall) rex;

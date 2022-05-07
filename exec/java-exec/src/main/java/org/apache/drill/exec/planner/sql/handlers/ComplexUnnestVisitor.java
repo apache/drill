@@ -118,7 +118,7 @@ public class ComplexUnnestVisitor extends RelShuttleImpl {
 
     Project project = (Project) uncollect.getInput();
     // If project below uncollect contains only field references, no need to rewrite it
-    List<RexNode> projectChildExps = project.getChildExps();
+    List<RexNode> projectChildExps = project.getProjects();
     assert projectChildExps.size() == 1 : "Uncollect does not support multiple expressions";
 
     RexNode projectExpr = projectChildExps.iterator().next();

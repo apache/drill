@@ -71,7 +71,7 @@ public class PluginProjectRule extends PluginConverterRule {
       return null;
     }
 
-    List<RexNode> newProjects = project.getChildExps().stream()
+    List<RexNode> newProjects = project.getProjects().stream()
       .map(n -> n.accept(projectPushInfo.getInputReWriter()))
       .collect(Collectors.toList());
 

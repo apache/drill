@@ -28,7 +28,6 @@ import org.apache.calcite.linq4j.Ord;
 import org.apache.calcite.rel.RelNode;
 import org.apache.calcite.rel.RelWriter;
 import org.apache.calcite.rel.metadata.RelMetadataQuery;
-import org.apache.calcite.rex.RexNode;
 import org.apache.calcite.runtime.FlatLists;
 import org.apache.calcite.sql.SqlExplainLevel;
 import org.apache.calcite.util.Pair;
@@ -209,7 +208,6 @@ class NumberingRelWriter implements RelWriter {
     return this;
   }
 
-  @SuppressWarnings("deprecation")
   public RelWriter done(RelNode node) {
     int i = 0;
     if (values.size() > 0 && values.get(0).left.equals("subset")) {
@@ -219,11 +217,7 @@ class NumberingRelWriter implements RelWriter {
       assert values.get(i).right == input;
       ++i;
     }
-    for (RexNode expr : node.getChildExps()) {
-      assert values.get(i).right == expr;
-      ++i;
-    }
-    final List<Pair<String, Object>> valuesCopy =
+    List<Pair<String, Object>> valuesCopy =
         ImmutableList.copyOf(values);
     values.clear();
     explain_(node, valuesCopy);

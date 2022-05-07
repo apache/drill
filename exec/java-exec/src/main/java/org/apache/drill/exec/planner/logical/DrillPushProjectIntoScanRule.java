@@ -36,8 +36,8 @@ import org.apache.drill.exec.planner.physical.ScanPrel;
 import org.apache.drill.exec.util.Utilities;
 
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  * When table support project push down, rule can be applied to reduce number of read columns
@@ -110,10 +110,9 @@ public class DrillPushProjectIntoScanRule extends RelOptRule {
 
       TableScan newScan = createScan(scan, projectPushInfo);
 
-      List<RexNode> newProjects = new ArrayList<>();
-      for (RexNode n : project.getChildExps()) {
-        newProjects.add(n.accept(projectPushInfo.getInputReWriter()));
-      }
+      List<RexNode> newProjects = project.getProjects().stream()
+        .map(n -> n.accept(projectPushInfo.getInputReWriter()))
+        .collect(Collectors.toList());
 
       Project newProject =
           createProject(project, newScan, newProjects);

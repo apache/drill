@@ -444,12 +444,12 @@ public abstract class DrillRelOptUtil {
     }
   }
 
-  @SuppressWarnings("deprecation")
-  public static boolean isProjectFlatten(RelNode project) {
+  public static boolean isProjectFlatten(RelNode relNode) {
 
-    assert project instanceof Project : "Rel is NOT an instance of project!";
+    assert relNode instanceof Project : "Rel is NOT an instance of Project";
 
-    for (RexNode rex : project.getChildExps()) {
+    Project project = (Project) relNode;
+    for (RexNode rex : project.getProjects()) {
       if (rex instanceof RexCall) {
         RexCall function = (RexCall) rex;
         String functionName = function.getOperator().getName();
