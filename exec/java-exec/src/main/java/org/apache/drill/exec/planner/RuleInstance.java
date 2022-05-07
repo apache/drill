@@ -72,6 +72,14 @@ public interface RuleInstance {
     }
   };
 
+  SemiJoinRule JOIN_TO_SEMI_JOIN_RULE = new SemiJoinRule.JoinToSemiJoinRule(Join.class, Aggregate.class,
+    DrillRelFactories.LOGICAL_BUILDER, "DrillJoinToSemiJoinRule") {
+    public boolean matches(RelOptRuleCall call) {
+      Join join = call.rel(0);
+      return !(join.getCondition().isAlwaysTrue() || join.getCondition().isAlwaysFalse());
+    }
+  };
+
   JoinPushExpressionsRule JOIN_PUSH_EXPRESSIONS_RULE =
       new JoinPushExpressionsRule(Join.class,
           DrillRelFactories.LOGICAL_BUILDER);
