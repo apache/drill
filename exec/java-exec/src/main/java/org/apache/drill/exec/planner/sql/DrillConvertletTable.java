@@ -36,10 +36,8 @@ import org.apache.calcite.sql.SqlLiteral;
 import org.apache.calcite.sql.SqlNode;
 import org.apache.calcite.sql.SqlNumericLiteral;
 import org.apache.calcite.sql.SqlOperator;
-import org.apache.calcite.sql.SqlOperatorBinding;
 import org.apache.calcite.sql.fun.SqlStdOperatorTable;
 import org.apache.calcite.sql.parser.SqlParserPos;
-import org.apache.calcite.sql.type.SqlReturnTypeInference;
 import org.apache.calcite.sql.type.SqlTypeName;
 import org.apache.calcite.sql2rel.SqlRexConvertlet;
 import org.apache.calcite.sql2rel.SqlRexConvertletTable;
@@ -54,16 +52,15 @@ import org.apache.drill.shaded.guava.com.google.common.collect.ImmutableMap;
 public class DrillConvertletTable implements SqlRexConvertletTable {
 
   public static final SqlRexConvertletTable INSTANCE = new DrillConvertletTable();
-  private static final DrillSqlOperator CastHighOp = new DrillSqlOperator("CastHigh", 1, false,
-      new SqlReturnTypeInference() {
-        @Override
-        public RelDataType inferReturnType(SqlOperatorBinding opBinding) {
-          return TypeInferenceUtils.createCalciteTypeWithNullability(
-              opBinding.getTypeFactory(),
-              SqlTypeName.ANY,
-              opBinding.getOperandType(0).isNullable());
-        }
-      }, false);
+
+  private static final DrillSqlOperator CAST_HIGH_OP = new DrillSqlOperator(
+    "CastHigh",
+    new ArrayList<>(),
+    Checker.getChecker(1, 1), false,
+    opBinding -> TypeInferenceUtils.createCalciteTypeWithNullability(
+      opBinding.getTypeFactory(),
+      SqlTypeName.ANY,
+      opBinding.getOperandType(0).isNullable()), false);
 
   private final Map<SqlOperator, SqlRexConvertlet> operatorToConvertletMap;
 
@@ -71,6 +68,7 @@ public class DrillConvertletTable implements SqlRexConvertletTable {
     operatorToConvertletMap = ImmutableMap.<SqlOperator, SqlRexConvertlet>builder()
         .put(SqlStdOperatorTable.EXTRACT, extractConvertlet())
         .put(SqlStdOperatorTable.SQRT, sqrtConvertlet())
+        .put(SqlStdOperatorTable.SUBSTRING, substringConvertlet())
         .put(SqlStdOperatorTable.COALESCE, coalesceConvertlet())
         .put(SqlStdOperatorTable.TIMESTAMP_DIFF, timestampDiffConvertlet())
         .put(SqlStdOperatorTable.ROW, rowConvertlet())
@@ -155,6 +153,18 @@ public class DrillConvertletTable implements SqlRexConvertletTable {
     };
   }
 
+  private static SqlRexConvertlet substringConvertlet() {
+    return (cx, call) -> {
+      List<RexNode> exprs = call.getOperandList().stream()
+        .map(cx::convertExpression)
+        .collect(Collectors.toList());
+
+      RelDataType returnType = TypeInferenceUtils.createCalciteTypeWithNullability(cx.getTypeFactory(),
+        SqlTypeName.VARCHAR, exprs.get(0).getType().isNullable());
+      return cx.getRexBuilder().makeCall(returnType, SqlStdOperatorTable.SUBSTRING, exprs);
+    };
+  }
+
   /**
    * Rewrites COALESCE function into CASE WHEN IS NOT NULL operand1 THEN operand1...
    * all Calcite interval representations correctly.
@@ -219,7 +229,7 @@ public class DrillConvertletTable implements SqlRexConvertletTable {
   private static SqlNode expandAvg(final SqlNode arg) {
     SqlNode sum = DrillCalciteSqlAggFunctionWrapper.SUM.createCall(SqlParserPos.ZERO, arg);
     SqlNode count = SqlStdOperatorTable.COUNT.createCall(SqlParserPos.ZERO, arg);
-    SqlNode sumAsDouble = CastHighOp.createCall(SqlParserPos.ZERO, sum);
+    SqlNode sumAsDouble = CAST_HIGH_OP.createCall(SqlParserPos.ZERO, sum);
     return SqlStdOperatorTable.DIVIDE.createCall(SqlParserPos.ZERO, sumAsDouble, count);
   }
 
@@ -254,7 +264,7 @@ public class DrillConvertletTable implements SqlRexConvertletTable {
     final SqlParserPos pos = SqlParserPos.ZERO;
 
     // cast the argument to double
-    final SqlNode castHighArg = CastHighOp.createCall(pos, arg);
+    final SqlNode castHighArg = CAST_HIGH_OP.createCall(pos, arg);
     final SqlNode argSquared =
         SqlStdOperatorTable.MULTIPLY.createCall(pos, castHighArg, castHighArg);
     final SqlNode sumArgSquared =
@@ -282,7 +292,7 @@ public class DrillConvertletTable implements SqlRexConvertletTable {
               pos, count, one);
     }
     final SqlNode diffAsDouble =
-        CastHighOp.createCall(pos, diff);
+        CAST_HIGH_OP.createCall(pos, diff);
     final SqlNode div =
         SqlStdOperatorTable.DIVIDE.createCall(
             pos, diffAsDouble, denominator);
