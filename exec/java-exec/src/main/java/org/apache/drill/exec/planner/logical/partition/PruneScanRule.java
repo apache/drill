@@ -26,10 +26,11 @@ import java.util.Map;
 import java.util.concurrent.TimeUnit;
 import java.util.regex.Pattern;
 
+import org.apache.calcite.rel.logical.LogicalTableScan;
 import org.apache.drill.exec.planner.common.DrillRelOptUtil;
+import org.apache.drill.exec.planner.logical.DirPrunedTableScan;
 import org.apache.drill.exec.util.DrillFileSystemUtil;
 import org.apache.drill.shaded.guava.com.google.common.base.Stopwatch;
-import org.apache.calcite.adapter.enumerable.EnumerableTableScan;
 import org.apache.calcite.plan.RelTraitSet;
 import org.apache.calcite.rel.core.Aggregate;
 import org.apache.calcite.rel.core.Filter;
@@ -541,7 +542,7 @@ public abstract class PruneScanRule extends StoragePluginOptimizerRule {
   public abstract PartitionDescriptor getPartitionDescriptor(PlannerSettings settings, TableScan scanRel);
 
   private static boolean isQualifiedDirPruning(final TableScan scan) {
-    if (scan instanceof EnumerableTableScan) {
+    if (supportsScan(scan)) {
       final Object selection = DrillRelOptUtil.getDrillTable(scan).getSelection();
       if (selection instanceof FormatSelection
           && ((FormatSelection)selection).supportsDirPruning()) {
@@ -767,7 +768,7 @@ public abstract class PruneScanRule extends StoragePluginOptimizerRule {
     }
 
     private static boolean isQualifiedFilePruning(final TableScan scan) {
-      if (scan instanceof EnumerableTableScan) {
+      if (supportsScan(scan)) {
         Object selection = DrillRelOptUtil.getDrillTable(scan).getSelection();
         return selection instanceof FormatSelection;
       } else if (scan instanceof DrillScanRel) {
@@ -777,5 +778,10 @@ public abstract class PruneScanRule extends StoragePluginOptimizerRule {
       }
       return false;
     }
+  }
+
+  private static boolean supportsScan(TableScan scan) {
+    return scan instanceof DirPrunedTableScan
+      || scan instanceof LogicalTableScan;
   }
 }
