@@ -21,7 +21,6 @@ import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 
-import org.apache.drill.common.JSONOptions;
 import org.apache.drill.common.exceptions.ExecutionSetupException;
 import org.apache.drill.exec.physical.base.AbstractBase;
 import org.apache.drill.exec.physical.base.Leaf;
@@ -31,19 +30,30 @@ import org.apache.drill.exec.physical.base.PhysicalVisitor;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
+import org.apache.drill.exec.record.metadata.TupleMetadata;
+
 public class Values extends AbstractBase implements Leaf {
 
   public static final String OPERATOR_TYPE = "VALUES";
 
-  private final JSONOptions content;
+  private final String content;
+
+  private final TupleMetadata schema;
 
   @JsonCreator
-  public Values(@JsonProperty("content") JSONOptions content){
+  public Values(
+    @JsonProperty("content") String content,
+    @JsonProperty("schema") TupleMetadata schema) {
     this.content = content;
+    this.schema = schema;
   }
 
-  public JSONOptions getContent(){
+  public String getContent() {
     return content;
+  }
+
+  public TupleMetadata getSchema() {
+    return schema;
   }
 
   @Override
@@ -54,7 +64,7 @@ public class Values extends AbstractBase implements Leaf {
   @Override
   public PhysicalOperator getNewWithChildren(List<PhysicalOperator> children) throws ExecutionSetupException {
     assert children.isEmpty();
-    return new Values(content);
+    return new Values(content, schema);
   }
 
   @Override
