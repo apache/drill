@@ -350,7 +350,7 @@ public class MetastoreAnalyzeTableHandler extends DefaultSqlHandler {
     RelNode analyzeRel = useStatistics
         ? new DrillAnalyzeRel(
               convertedRelNode.getCluster(), convertedRelNode.getTraitSet(), convertToRawDrel(relNode), samplePercent)
-        : convertToRawDrel(relBuilder.values(new String[]{""}, "").build());
+        : convertToRawDrel(relBuilder.values(convertedRelNode.getRowType()).build());
 
     MetadataControllerContext metadataControllerContext = MetadataControllerContext.builder()
         .tableInfo(tableInfo)

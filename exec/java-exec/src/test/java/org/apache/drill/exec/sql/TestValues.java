@@ -61,8 +61,8 @@ public class TestValues extends ClusterTest {
         .sqlQuery("select id, name from (values(1, 'A'), (2, 'B')) t(id, name)")
         .unOrdered()
         .baselineColumns("id", "name")
-        .baselineValues(1L, "A")
-        .baselineValues(2L, "B")
+        .baselineValues(1, "A")
+        .baselineValues(2, "B")
         .go();
     } finally {
       client.resetSession(ExecConstants.SLICE_TARGET);

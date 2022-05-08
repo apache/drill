@@ -145,13 +145,13 @@ public class TestJdbcWriterWithMySQL extends ClusterTest {
     DirectRowSet results = queryBuilder().sql(testQuery).rowSet();
 
     TupleMetadata expectedSchema = new SchemaBuilder()
-      .add("ID", MinorType.BIGINT, DataMode.OPTIONAL)
-      .add("NAME", MinorType.BIGINT, DataMode.OPTIONAL)
+      .add("ID", MinorType.INT, DataMode.OPTIONAL)
+      .add("NAME", MinorType.INT, DataMode.OPTIONAL)
       .buildSchema();
 
     RowSet expected = new RowSetBuilder(client.allocator(), expectedSchema)
-      .addRow(1L, 2L)
-      .addRow(3L, 4L)
+      .addRow(1, 2)
+      .addRow(3, 4)
       .build();
 
     RowSetUtilities.verify(expected, results);
@@ -174,13 +174,13 @@ public class TestJdbcWriterWithMySQL extends ClusterTest {
     DirectRowSet results = queryBuilder().sql(testQuery).rowSet();
 
     TupleMetadata expectedSchema = new SchemaBuilder()
-      .add("ID", MinorType.BIGINT, DataMode.OPTIONAL)
-      .add("NAME", MinorType.BIGINT, DataMode.OPTIONAL)
+      .add("ID", MinorType.INT, DataMode.OPTIONAL)
+      .add("NAME", MinorType.INT, DataMode.OPTIONAL)
       .buildSchema();
 
     RowSet expected = new RowSetBuilder(client.allocator(), expectedSchema)
-      .addRow(1L, 2L)
-      .addRow(3L, 4L)
+      .addRow(1, 2)
+      .addRow(3, 4)
       .build();
 
     RowSetUtilities.verify(expected, results);
@@ -203,13 +203,13 @@ public class TestJdbcWriterWithMySQL extends ClusterTest {
     DirectRowSet results = queryBuilder().sql(testQuery).rowSet();
 
     TupleMetadata expectedSchema = new SchemaBuilder()
-      .add("My id", MinorType.BIGINT, DataMode.OPTIONAL)
-      .add("My name", MinorType.BIGINT, DataMode.OPTIONAL)
+      .add("My id", MinorType.INT, DataMode.OPTIONAL)
+      .add("My name", MinorType.INT, DataMode.OPTIONAL)
       .buildSchema();
 
     RowSet expected = new RowSetBuilder(client.allocator(), expectedSchema)
-      .addRow(1L, 2L)
-      .addRow(3L, 4L)
+      .addRow(1, 2)
+      .addRow(3, 4)
       .build();
 
     RowSetUtilities.verify(expected, results);
@@ -379,13 +379,13 @@ public class TestJdbcWriterWithMySQL extends ClusterTest {
     DirectRowSet results = queryBuilder().sql(testQuery).rowSet();
 
     TupleMetadata expectedSchema = new SchemaBuilder()
-      .add("ID", MinorType.BIGINT, DataMode.OPTIONAL)
-      .add("NAME", MinorType.BIGINT, DataMode.OPTIONAL)
+      .add("ID", MinorType.INT, DataMode.OPTIONAL)
+      .add("NAME", MinorType.INT, DataMode.OPTIONAL)
       .buildSchema();
 
     RowSet expected = new RowSetBuilder(client.allocator(), expectedSchema)
-      .addRow(1L, 2L)
-      .addRow(3L, 4L)
+      .addRow(1, 2)
+      .addRow(3, 4)
       .build();
 
     RowSetUtilities.verify(expected, results);

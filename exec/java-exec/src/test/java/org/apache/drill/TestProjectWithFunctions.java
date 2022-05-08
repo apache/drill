@@ -77,7 +77,7 @@ public class TestProjectWithFunctions extends ClusterTest {
             .sqlQuery(sql)
             .unOrdered()
             .baselineColumns("c", "d")
-            .baselineValues(2L, 1L)
+            .baselineValues(2, 1)
             .go();
       }
     } finally {
