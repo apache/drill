@@ -163,7 +163,7 @@ public class StorageResources {
   @Operation(externalDocs = @ExternalDocumentation(description = "Apache Drill REST API documentation:", url = "https://drill.apache.org/docs/rest-api-introduction/"))
   public Response getPluginConfig(@PathParam("name") String name) {
     try {
-      return Response.ok(new PluginConfigWrapper(name, storage.getStoredConfig(name), sc))
+      return Response.ok(new PluginConfigWrapper(name, storage.getStoredConfig(name)))
         .build();
     } catch (Exception e) {
       logger.error("Failure while trying to access storage config: {}", name, e);
@@ -389,7 +389,7 @@ public class StorageResources {
         .build();
     }
 
-    return Response.ok(new PluginConfigWrapper(name, storage.getStoredConfig(name), sc))
+    return Response.ok(new PluginConfigWrapper(name, storage.getStoredConfig(name)))
       .header(HttpHeaders.CONTENT_DISPOSITION, String.format("attachment;filename=\"%s.%s\"", name, format))
       .build();
   }
@@ -511,7 +511,7 @@ public class StorageResources {
     pluginGroup = StringUtils.isNotEmpty(pluginGroup) ? pluginGroup.replace("/", "") : ALL_PLUGINS;
     return StreamSupport.stream(
       Spliterators.spliteratorUnknownSize(storage.storedConfigs(filter).entrySet().iterator(), Spliterator.ORDERED), false)
-        .map(entry -> new PluginConfigWrapper(entry.getKey(), entry.getValue(), sc))
+        .map(entry -> new PluginConfigWrapper(entry.getKey(), entry.getValue()))
         .sorted(PLUGIN_COMPARATOR)
         .collect(Collectors.toList());
   }
@@ -554,7 +554,7 @@ public class StorageResources {
   }
 
   /**
-   * Model class for Storage Plugin page.
+   * Model class for Storage Plugin and Credentials page.
    * It contains a storage plugin as well as the CSRF token for the page.
    */
   public static class StoragePluginModel {
@@ -577,6 +577,26 @@ public class StorageResources {
 
     public String getActiveUser() {
       return securityContext.getUserPrincipal().getName();
+    }
+
+    public String getUserName() {
+      String username = plugin.getUserName(getActiveUser());
+      if (StringUtils.isEmpty(username)) {
+        return "";
+      }
+      else {
+        return username;
+      }
+    }
+
+    public String getPassword() {
+      String password = plugin.getPassword(getActiveUser());
+      if (StringUtils.isEmpty(password)) {
+        return "";
+      }
+      else {
+        return password;
+      }
     }
 
     public String getType() {

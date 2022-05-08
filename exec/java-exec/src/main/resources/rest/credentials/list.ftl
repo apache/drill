@@ -42,17 +42,19 @@
       <table class="table table-hover">
         <tbody>
         <#list model as pluginModel>
+          <#if pluginModel.getPlugin()?? >
           <tr>
             <td style="border:none; max-width: 200px; overflow: hidden; text-overflow: ellipsis;">
                 ${pluginModel.getPlugin().getName()}
             </td>
             <td style="border:none;">
               <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#new-plugin-modal" data-plugin="${pluginModel.getPlugin().getName()}"
-                      data-username="${pluginModel.getPlugin().getUserName()}" data-password="${pluginModel.getPlugin().getPassword()}">
+                      data-username="${pluginModel.getUserName()}" data-password="${pluginModel.getPassword()}">
                 Update Credentials
               </button>
             </td>
           </tr>
+          </#if>
         </#list>
         </tbody>
       </table>

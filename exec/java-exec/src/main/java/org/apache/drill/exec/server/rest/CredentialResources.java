@@ -125,11 +125,18 @@ public class CredentialResources {
       default:
         return Collections.emptyList();
     }
-    return StreamSupport.stream(
+    List<PluginConfigWrapper> results = StreamSupport.stream(
         Spliterators.spliteratorUnknownSize(storage.storedConfigs(filter).entrySet().iterator(), Spliterator.ORDERED), false)
-      .map(entry -> new PluginConfigWrapper(entry.getKey(), entry.getValue(), sc))
+      .map(entry -> new PluginConfigWrapper(entry.getKey(), entry.getValue()))
       .sorted(PLUGIN_COMPARATOR)
       .collect(Collectors.toList());
+
+    if (results.isEmpty()) {
+      return Collections.emptyList();
+    } else {
+      return results;
+    }
+
   }
 
   @POST
