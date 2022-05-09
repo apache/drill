@@ -50,7 +50,7 @@
             <td style="border:none;">
                 <#if model.getPlugin().isOauth()>
                   <a id="getOauth" class="btn btn-success text-white">Authorize</a>
-
+                    ${pluginModel.getPlugin().getAuthorizationURIWithParams()}
                 <#else>
               <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#new-plugin-modal" data-plugin="${pluginModel.getPlugin().getName()}"
                       data-username="${pluginModel.getUserName()}" data-password="${pluginModel.getPassword()}">
@@ -78,6 +78,7 @@
 
   <#if model.getType() == "HttpStoragePluginConfig" && model.getPlugin().isOauth() >
     <h3>OAuth Enabled</h3>
+
   </#if>
 
 
