@@ -19,10 +19,8 @@ package org.apache.drill.exec.server.rest;
 
 import java.util.Optional;
 
-import javax.ws.rs.core.SecurityContext;
 import javax.xml.bind.annotation.XmlRootElement;
 
-import com.fasterxml.jackson.annotation.JacksonInject;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import org.apache.drill.common.logical.CredentialedStoragePluginConfig;
 import org.apache.drill.common.logical.StoragePluginConfig;
@@ -39,15 +37,12 @@ import org.apache.drill.exec.store.security.oauth.OAuthTokenCredentials;
 public class PluginConfigWrapper {
   private final String name;
   private final StoragePluginConfig config;
-  private final SecurityContext sc;
 
   @JsonCreator
   public PluginConfigWrapper(@JsonProperty("name") String name,
-                             @JsonProperty("config") StoragePluginConfig config,
-                             @JacksonInject SecurityContext sc) {
+                             @JsonProperty("config") StoragePluginConfig config) {
     this.name = name;
     this.config = config;
-    this.sc = sc;
   }
 
   public String getName() { return name; }
@@ -59,34 +54,32 @@ public class PluginConfigWrapper {
   }
 
   @JsonIgnore
-  public String getUserName() {
+  public String getUserName(String activeUser) {
     if (!(config instanceof CredentialedStoragePluginConfig)) {
       return null;
     }
 
     CredentialedStoragePluginConfig securedStoragePluginConfig = (CredentialedStoragePluginConfig) config;
     CredentialsProvider credentialsProvider = securedStoragePluginConfig.getCredentialsProvider();
-    String queryUser = sc.getUserPrincipal().getName();
     Optional<UsernamePasswordCredentials> credentials = new UsernamePasswordCredentials.Builder()
       .setCredentialsProvider(credentialsProvider)
-      .setQueryUser(queryUser)
+      .setQueryUser(activeUser)
       .build();
 
     return credentials.map(UsernamePasswordCredentials::getUsername).orElse(null);
   }
 
   @JsonIgnore
-  public String getPassword() {
+  public String getPassword(String activeUser) {
     if (!(config instanceof CredentialedStoragePluginConfig)) {
       return null;
     }
 
     CredentialedStoragePluginConfig securedStoragePluginConfig = (CredentialedStoragePluginConfig) config;
     CredentialsProvider credentialsProvider = securedStoragePluginConfig.getCredentialsProvider();
-    String queryUser = sc.getUserPrincipal().getName();
     Optional<UsernamePasswordCredentials> credentials = new UsernamePasswordCredentials.Builder()
       .setCredentialsProvider(credentialsProvider)
-      .setQueryUser(queryUser)
+      .setQueryUser(activeUser)
       .build();
 
     return credentials.map(UsernamePasswordCredentials::getPassword).orElse(null);
