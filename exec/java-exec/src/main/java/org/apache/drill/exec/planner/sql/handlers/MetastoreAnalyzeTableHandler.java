@@ -55,6 +55,7 @@ import org.apache.drill.exec.planner.logical.MetadataControllerRel;
 import org.apache.drill.exec.planner.logical.MetadataHandlerRel;
 import org.apache.drill.exec.planner.physical.PlannerSettings;
 import org.apache.drill.exec.planner.physical.Prel;
+import org.apache.drill.exec.planner.sql.SqlSelectBuilder;
 import org.apache.drill.exec.planner.sql.parser.SqlMetastoreAnalyzeTable;
 import org.apache.drill.exec.store.AbstractSchema;
 import org.apache.drill.exec.store.dfs.FormatSelection;
@@ -69,7 +70,6 @@ import org.apache.drill.metastore.metadata.MetadataType;
 import org.apache.drill.metastore.metadata.TableInfo;
 import org.apache.drill.shaded.guava.com.google.common.collect.ArrayListMultimap;
 import org.apache.drill.shaded.guava.com.google.common.collect.Multimap;
-import org.apache.parquet.Strings;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -119,19 +119,16 @@ public class MetastoreAnalyzeTableHandler extends DefaultSqlHandler {
     ColumnNamesOptions columnNamesOptions = new ColumnNamesOptions(context.getOptions());
 
     // creates select with DYNAMIC_STAR column and analyze specific columns to obtain corresponding table scan
-    SqlSelect scanSql = new SqlSelect(
-        SqlParserPos.ZERO,
-        SqlNodeList.EMPTY,
-        getColumnList(analyzeInfoProvider.getProjectionFields(drillTableInfo.drillTable(), getMetadataType(sqlAnalyzeTable), columnNamesOptions)),
-        tableRef,
-        null,
-        null,
-        null,
-        null,
-        null,
-        null,
-        null
-    );
+    SqlSelect scanSql = new SqlSelectBuilder()
+      .parserPosition(SqlParserPos.ZERO)
+      .keywordList(SqlNodeList.EMPTY)
+      .selectList(
+        getColumnList(analyzeInfoProvider.getProjectionFields(
+          drillTableInfo.drillTable(),
+          getMetadataType(sqlAnalyzeTable),
+          columnNamesOptions)))
+      .from(tableRef)
+      .build();
 
     ConvertedRelNode convertedRelNode = validateAndConvert(rewrite(scanSql));
     RelDataType validatedRowType = convertedRelNode.getValidatedRowType();
@@ -184,7 +181,7 @@ public class MetastoreAnalyzeTableHandler extends DefaultSqlHandler {
 
     List<String> schemaPath = drillTableInfo.schemaPath();
     String pluginName = schemaPath.get(0);
-    String workspaceName = Strings.join(schemaPath.subList(1, schemaPath.size()), AbstractSchema.SCHEMA_SEPARATOR);
+    String workspaceName = String.join(AbstractSchema.SCHEMA_SEPARATOR, schemaPath.subList(1, schemaPath.size()));
 
     String tableName = drillTableInfo.tableName();
     TableInfo tableInfo = TableInfo.builder()

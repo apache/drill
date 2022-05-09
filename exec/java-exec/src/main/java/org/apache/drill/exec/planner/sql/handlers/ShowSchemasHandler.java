@@ -23,6 +23,7 @@ import java.util.List;
 
 import org.apache.calcite.sql.SqlCharStringLiteral;
 import org.apache.calcite.util.NlsString;
+import org.apache.drill.exec.planner.sql.SqlSelectBuilder;
 import org.apache.drill.exec.planner.sql.parser.DrillParserUtil;
 import org.apache.drill.exec.planner.sql.parser.SqlShowSchemas;
 import static org.apache.drill.exec.store.ischema.InfoSchemaConstants.IS_SCHEMA_NAME;
@@ -33,7 +34,6 @@ import org.apache.drill.exec.work.foreman.ForemanSetupException;
 import org.apache.calcite.sql.SqlIdentifier;
 import org.apache.calcite.sql.SqlNode;
 import org.apache.calcite.sql.SqlNodeList;
-import org.apache.calcite.sql.SqlSelect;
 import org.apache.calcite.sql.fun.SqlStdOperatorTable;
 import org.apache.calcite.sql.parser.SqlParserPos;
 
@@ -67,7 +67,11 @@ public class ShowSchemasHandler extends DefaultSqlHandler {
       where = node.getWhereClause();
     }
 
-    return new SqlSelect(SqlParserPos.ZERO, null, new SqlNodeList(selectList, SqlParserPos.ZERO),
-        fromClause, where, null, null, null, null, null, null);
+    return new SqlSelectBuilder()
+      .parserPosition(SqlParserPos.ZERO)
+      .selectList(new SqlNodeList(selectList, SqlParserPos.ZERO))
+      .from(fromClause)
+      .where(where)
+      .build();
   }
 }
