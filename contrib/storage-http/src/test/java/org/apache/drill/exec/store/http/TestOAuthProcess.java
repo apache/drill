@@ -23,6 +23,7 @@ import okhttp3.Request;
 import okhttp3.Response;
 import okhttp3.mockwebserver.MockResponse;
 import okhttp3.mockwebserver.MockWebServer;
+import org.apache.drill.common.logical.OAuthConfig;
 import org.apache.drill.common.logical.StoragePluginConfig.AuthMode;
 import org.apache.drill.common.logical.security.CredentialsProvider;
 import org.apache.drill.common.logical.security.PlainCredentialsProvider;
@@ -101,7 +102,7 @@ public class TestOAuthProcess extends ClusterTest {
       .inputType("json")
       .build();
 
-    HttpOAuthConfig oAuthConfig = HttpOAuthConfig.builder()
+    OAuthConfig oAuthConfig = OAuthConfig.builder()
       .callbackURL(hostname + "/update_oauth2_authtoken")
       .build();
 

@@ -32,6 +32,7 @@ import okhttp3.Response;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.drill.common.exceptions.EmptyErrorContext;
+import org.apache.drill.common.logical.OAuthConfig;
 import org.apache.drill.common.logical.StoragePluginConfig.AuthMode;
 import org.apache.drill.common.map.CaseInsensitiveMap;
 import org.apache.drill.common.exceptions.CustomErrorContext;
@@ -47,7 +48,6 @@ import org.apache.drill.exec.store.StoragePluginRegistry.PluginException;
 import org.apache.drill.exec.store.http.HttpApiConfig;
 import org.apache.drill.exec.store.http.HttpApiConfig.HttpMethod;
 import org.apache.drill.exec.store.http.HttpApiConfig.PostLocation;
-import org.apache.drill.exec.store.http.HttpOAuthConfig;
 import org.apache.drill.exec.store.http.HttpStoragePlugin;
 import org.apache.drill.exec.store.http.HttpStoragePluginConfig;
 import org.apache.drill.exec.store.http.HttpSubScan;
@@ -114,7 +114,7 @@ public class SimpleHttp {
   private final String connection;
   private final HttpStoragePluginConfig pluginConfig;
   private final HttpApiConfig apiConfig;
-  private final HttpOAuthConfig oAuthConfig;
+  private final OAuthConfig oAuthConfig;
   private String responseMessage;
   private int responseCode;
   private String responseProtocol;
@@ -967,7 +967,7 @@ public class SimpleHttp {
     private PersistentTokenTable tokenTable;
     private HttpStoragePluginConfig pluginConfig;
     private HttpApiConfig endpointConfig;
-    private HttpOAuthConfig oAuthConfig;
+    private OAuthConfig oAuthConfig;
     private Map<String,String> filters;
     private String connection;
     private String username;

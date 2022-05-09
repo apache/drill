@@ -48,10 +48,15 @@
                 ${pluginModel.getPlugin().getName()}
             </td>
             <td style="border:none;">
+                <#if model.getPlugin().isOauth()>
+                  <a id="getOauth" class="btn btn-success text-white">Authorize</a>
+
+                <#else>
               <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#new-plugin-modal" data-plugin="${pluginModel.getPlugin().getName()}"
                       data-username="${pluginModel.getUserName()}" data-password="${pluginModel.getPassword()}">
                 Update Credentials
               </button>
+                </#if>
             </td>
           </tr>
           </#if>

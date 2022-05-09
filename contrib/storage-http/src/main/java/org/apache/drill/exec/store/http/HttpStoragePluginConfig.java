@@ -19,6 +19,7 @@ package org.apache.drill.exec.store.http;
 
 import org.apache.drill.common.PlanStringBuilder;
 import org.apache.drill.common.exceptions.UserException;
+import org.apache.drill.common.logical.OAuthConfig;
 import org.apache.drill.common.map.CaseInsensitiveMap;
 import org.apache.drill.common.logical.CredentialedStoragePluginConfig;
 
@@ -50,8 +51,6 @@ public class HttpStoragePluginConfig extends CredentialedStoragePluginConfig {
   public final String proxyHost;
   public final int proxyPort;
   public final String proxyType;
-  public final HttpOAuthConfig oAuthConfig;
-
   /**
    * Timeout in {@link TimeUnit#SECONDS}.
    */
@@ -68,7 +67,7 @@ public class HttpStoragePluginConfig extends CredentialedStoragePluginConfig {
                                  @JsonProperty("proxyType") String proxyType,
                                  @JsonProperty("proxyUsername") String proxyUsername,
                                  @JsonProperty("proxyPassword") String proxyPassword,
-                                 @JsonProperty("oAuthConfig") HttpOAuthConfig oAuthConfig,
+                                 @JsonProperty("oAuthConfig") OAuthConfig oAuthConfig,
                                  @JsonProperty("credentialsProvider") CredentialsProvider credentialsProvider,
                                  @JsonProperty("authMode") String authMode
                                  ) {
@@ -82,8 +81,8 @@ public class HttpStoragePluginConfig extends CredentialedStoragePluginConfig {
         normalize(proxyPassword),
         credentialsProvider),
         credentialsProvider == null,
-        AuthMode.parseOrDefault(authMode, AuthMode.SHARED_USER)
-    );
+        AuthMode.parseOrDefault(authMode, AuthMode.SHARED_USER),
+      oAuthConfig);
     this.cacheResults = cacheResults != null && cacheResults;
 
     this.connections = CaseInsensitiveMap.newHashMap();
@@ -94,7 +93,6 @@ public class HttpStoragePluginConfig extends CredentialedStoragePluginConfig {
     this.timeout = timeout == null ? 0 : timeout;
     this.proxyHost = normalize(proxyHost);
     this.proxyPort = proxyPort == null ? 0 : proxyPort;
-    this.oAuthConfig = oAuthConfig;
 
     proxyType = normalize(proxyType);
     this.proxyType = proxyType == null
@@ -130,7 +128,7 @@ public class HttpStoragePluginConfig extends CredentialedStoragePluginConfig {
    * @param that The current HTTP Plugin Config
    * @param oAuthConfig The updated OAuth config
    */
-  public HttpStoragePluginConfig(HttpStoragePluginConfig that, HttpOAuthConfig oAuthConfig) {
+  public HttpStoragePluginConfig(HttpStoragePluginConfig that, OAuthConfig oAuthConfig) {
     super(CredentialProviderUtils.getCredentialsProvider(that.proxyUsername(), that.proxyPassword(), that.credentialsProvider),
       that.credentialsProvider == null);
 
@@ -140,7 +138,7 @@ public class HttpStoragePluginConfig extends CredentialedStoragePluginConfig {
     this.proxyHost = that.proxyHost;
     this.proxyPort = that.proxyPort;
     this.proxyType = that.proxyType;
-    this.oAuthConfig = oAuthConfig;
+    this.oAuthConfig = that.oAuthConfig;
   }
 
   private static String normalize(String value) {
@@ -233,11 +231,6 @@ public class HttpStoragePluginConfig extends CredentialedStoragePluginConfig {
 
   @JsonProperty("proxyPort")
   public int proxyPort() { return proxyPort; }
-
-  @JsonProperty("oAuthConfig")
-  public HttpOAuthConfig oAuthConfig() {
-    return oAuthConfig;
-  }
 
   @JsonProperty("username")
   public String username() {

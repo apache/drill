@@ -114,4 +114,17 @@ public class PluginConfigWrapper {
 
     return tokenCredentials.map(OAuthTokenCredentials::getClientID).orElse(null) != null;
   }
+
+  @JsonIgnore
+  public String getCallbackURI() {
+    String callbackURI = "";
+    if (!isOauth()) {
+      return callbackURI;
+    }
+
+    CredentialedStoragePluginConfig securedStoragePluginConfig = (CredentialedStoragePluginConfig) config;
+    CredentialsProvider credentialsProvider = securedStoragePluginConfig.getCredentialsProvider();
+
+    return null;
+  }
 }

@@ -17,6 +17,9 @@
  */
 package org.apache.drill.common.logical;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonInclude.Include;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import org.apache.drill.common.logical.security.CredentialsProvider;
 import org.apache.drill.common.logical.security.PlainCredentialsProvider;
 import org.slf4j.Logger;
@@ -27,6 +30,7 @@ public abstract class CredentialedStoragePluginConfig extends StoragePluginConfi
   private static final Logger logger = LoggerFactory.getLogger(CredentialedStoragePluginConfig.class);
   protected boolean directCredentials;
   protected final CredentialsProvider credentialsProvider;
+  protected OAuthConfig oAuthConfig;
 
   public CredentialedStoragePluginConfig() {
     this(PlainCredentialsProvider.EMPTY_CREDENTIALS_PROVIDER,  true);
@@ -48,14 +52,27 @@ public abstract class CredentialedStoragePluginConfig extends StoragePluginConfi
     this.credentialsProvider = credentialsProvider;
     this.directCredentials = directCredentials;
     this.authMode = authMode;
+    this.oAuthConfig = null;
+  }
+
+  public CredentialedStoragePluginConfig(
+    CredentialsProvider credentialsProvider,
+    boolean directCredentials,
+    AuthMode authMode,
+    OAuthConfig oAuthConfig
+  ) {
+    this.credentialsProvider = credentialsProvider;
+    this.directCredentials = directCredentials;
+    this.authMode = authMode;
+    this.oAuthConfig = oAuthConfig;
   }
 
   public abstract CredentialedStoragePluginConfig updateCredentialProvider(CredentialsProvider credentialsProvider);
 
-  @Override
-  public boolean isEnabled() {
-    logger.debug("Enabled status");
-    return super.isEnabled();
+  @JsonProperty("oAuthConfig")
+  @JsonInclude(Include.NON_NULL)
+  public OAuthConfig oAuthConfig() {
+    return oAuthConfig;
   }
 
   public CredentialsProvider getCredentialsProvider() {

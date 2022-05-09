@@ -418,7 +418,6 @@ public class CredentialResources {
         .build();
     }
   }
-  
   private String getActiveUser(StoragePluginConfig config) {
     if (config.getAuthMode() == AuthMode.USER_TRANSLATION) {
       return sc.getUserPrincipal().getName();

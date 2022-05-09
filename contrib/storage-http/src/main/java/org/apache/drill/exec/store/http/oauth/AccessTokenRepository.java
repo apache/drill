@@ -23,9 +23,9 @@ import okhttp3.OkHttpClient;
 import okhttp3.Request;
 
 import org.apache.drill.common.exceptions.UserException;
+import org.apache.drill.common.logical.OAuthConfig;
 import org.apache.drill.common.logical.security.CredentialsProvider;
 import org.apache.drill.exec.oauth.PersistentTokenTable;
-import org.apache.drill.exec.store.http.HttpOAuthConfig;
 import org.apache.drill.exec.store.http.HttpStoragePluginConfig;
 import org.apache.drill.exec.store.http.util.HttpProxyConfig;
 import org.apache.drill.exec.store.http.util.SimpleHttp;
@@ -69,7 +69,7 @@ public class AccessTokenRepository {
     client = builder.build();
   }
 
-  public HttpOAuthConfig getOAuthConfig() {
+  public OAuthConfig getOAuthConfig() {
     return pluginConfig.oAuthConfig();
   }
 

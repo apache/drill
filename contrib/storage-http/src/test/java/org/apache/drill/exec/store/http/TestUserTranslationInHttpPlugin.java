@@ -50,13 +50,13 @@ import org.apache.drill.test.ClientFixture;
 import org.apache.drill.test.ClusterFixtureBuilder;
 import org.apache.drill.test.ClusterTest;
 import org.apache.drill.test.QueryBuilder.QuerySummary;
+import org.jetbrains.annotations.NotNull;
 import org.junit.After;
 import org.junit.BeforeClass;
 import org.junit.ClassRule;
 import org.junit.Test;
 
 import java.io.IOException;
-import java.net.CookiePolicy;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -77,15 +77,14 @@ import static org.junit.Assert.fail;
 public class TestUserTranslationInHttpPlugin extends ClusterTest {
 
   private static final int MOCK_SERVER_PORT = 47775;
-
   private static final int TIMEOUT = 30;
-  private final OkHttpClient httpClient = new OkHttpClient.Builder()
+  private final OkHttpClient httpClient = new OkHttpClient
+    .Builder()
     .connectTimeout(TIMEOUT, TimeUnit.SECONDS)
     .writeTimeout(TIMEOUT, TimeUnit.SECONDS)
     .readTimeout(TIMEOUT, TimeUnit.SECONDS)
     .cookieJar(new TestCookieJar())
     .build();
-
   private static String TEST_JSON_RESPONSE_WITH_DATATYPES;
   private static int portNumber;
 
@@ -131,16 +130,15 @@ public class TestUserTranslationInHttpPlugin extends ClusterTest {
     PlainCredentialsProvider credentialsProvider = new PlainCredentialsProvider(TEST_USER_2, credentials);
 
 
-    HttpStoragePluginConfig mockStorageConfigWithWorkspace =
-      new HttpStoragePluginConfig(false, configs, 2, null, null, "",
-        80, "", "", "", null, credentialsProvider, AuthMode.USER_TRANSLATION.name());
+    HttpStoragePluginConfig mockStorageConfigWithWorkspace = new HttpStoragePluginConfig(false, configs, 2, null, null, "", 80, "", "", "", null, credentialsProvider, AuthMode.USER_TRANSLATION.name());
     mockStorageConfigWithWorkspace.setEnabled(true);
     cluster.defineStoragePlugin("local", mockStorageConfigWithWorkspace);
   }
 
   @Test
   public void testEmptyUserCredentials() throws Exception {
-    ClientFixture client = cluster.clientBuilder()
+    ClientFixture client = cluster
+      .clientBuilder()
       .property(DrillProperties.USER, TEST_USER_1)
       .property(DrillProperties.PASSWORD, TEST_USER_1_PASSWORD)
       .build();
@@ -148,7 +146,7 @@ public class TestUserTranslationInHttpPlugin extends ClusterTest {
     // First verify that the user has no credentials
     StoragePluginRegistry registry = cluster.storageRegistry();
     StoragePlugin plugin = registry.getPlugin("local");
-    PlainCredentialsProvider credentialsProvider = (PlainCredentialsProvider)((CredentialedStoragePluginConfig)plugin.getConfig()).getCredentialsProvider();
+    PlainCredentialsProvider credentialsProvider = (PlainCredentialsProvider) ((CredentialedStoragePluginConfig) plugin.getConfig()).getCredentialsProvider();
     Map<String, String> credentials = credentialsProvider.getCredentials(TEST_USER_1);
     assertNotNull(credentials);
     assertNull(credentials.get("username"));
@@ -158,15 +156,10 @@ public class TestUserTranslationInHttpPlugin extends ClusterTest {
   @Test
   public void testQueryWithValidCredentials() throws Exception {
     // This test validates that the correct credentials are sent down to the HTTP API.
-    ClientFixture client = cluster.clientBuilder()
-      .property(DrillProperties.USER, TEST_USER_2)
-      .property(DrillProperties.PASSWORD, TEST_USER_2_PASSWORD)
-      .build();
+    ClientFixture client = cluster.clientBuilder().property(DrillProperties.USER, TEST_USER_2).property(DrillProperties.PASSWORD, TEST_USER_2_PASSWORD).build();
 
     try (MockWebServer server = startServer()) {
-      server.enqueue(new MockResponse()
-        .setResponseCode(200)
-        .setBody(TEST_JSON_RESPONSE_WITH_DATATYPES));
+      server.enqueue(new MockResponse().setResponseCode(200).setBody(TEST_JSON_RESPONSE_WITH_DATATYPES));
 
       String sql = "SELECT * FROM local.sharedEndpoint";
       RowSet results = client.queryBuilder().sql(sql).rowSet();
@@ -176,22 +169,17 @@ public class TestUserTranslationInHttpPlugin extends ClusterTest {
       // Verify correct username/password from endpoint configuration
       RecordedRequest recordedRequest = server.takeRequest();
       Headers headers = recordedRequest.getHeaders();
-      assertEquals(headers.get("Authorization"), createEncodedText("user2user", "user2pass") );
+      assertEquals(headers.get("Authorization"), createEncodedText("user2user", "user2pass"));
     }
   }
 
   @Test
   public void testQueryWithMissingCredentials() throws Exception {
     // This test validates that the correct credentials are sent down to the HTTP API.
-    ClientFixture client = cluster.clientBuilder()
-      .property(DrillProperties.USER, TEST_USER_1)
-      .property(DrillProperties.PASSWORD, TEST_USER_1_PASSWORD)
-      .build();
+    ClientFixture client = cluster.clientBuilder().property(DrillProperties.USER, TEST_USER_1).property(DrillProperties.PASSWORD, TEST_USER_1_PASSWORD).build();
 
     try (MockWebServer server = startServer()) {
-      server.enqueue(new MockResponse()
-        .setResponseCode(200)
-        .setBody(TEST_JSON_RESPONSE_WITH_DATATYPES));
+      server.enqueue(new MockResponse().setResponseCode(200).setBody(TEST_JSON_RESPONSE_WITH_DATATYPES));
 
       String sql = "SELECT * FROM local.sharedEndpoint";
       try {
@@ -204,19 +192,11 @@ public class TestUserTranslationInHttpPlugin extends ClusterTest {
   }
 
   private boolean makeLoginRequest(String username, String password) throws IOException {
-    String loginURL =  "http://localhost:" + portNumber + "/j_security_check";
+    String loginURL = "http://localhost:" + portNumber + "/j_security_check";
 
-    RequestBody formBody = new FormBody.Builder()
-      .add("j_username", username)
-      .add("j_password", password)
-      .build();
+    RequestBody formBody = new FormBody.Builder().add("j_username", username).add("j_password", password).build();
 
-    Request request = new Request.Builder()
-      .url(loginURL)
-      .post(formBody)
-      .addHeader("Content-Type", "application/x-www-form-urlencoded")
-      .addHeader("Accept", "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8")
-      .build();
+    Request request = new Request.Builder().url(loginURL).post(formBody).addHeader("Content-Type", "application/x-www-form-urlencoded").addHeader("Accept", "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8").build();
 
     Response response = httpClient.newCall(request).execute();
     return response.code() == 200;
@@ -226,10 +206,7 @@ public class TestUserTranslationInHttpPlugin extends ClusterTest {
   public void testUnrelatedQueryWithUser() throws Exception {
     // This test verifies that a query with a user that does NOT have credentials
     // for a plugin using user translation will still execute.
-    ClientFixture client = cluster.clientBuilder()
-      .property(DrillProperties.USER, TEST_USER_1)
-      .property(DrillProperties.PASSWORD, TEST_USER_1_PASSWORD)
-      .build();
+    ClientFixture client = cluster.clientBuilder().property(DrillProperties.USER, TEST_USER_1).property(DrillProperties.PASSWORD, TEST_USER_1_PASSWORD).build();
 
     String sql = "SHOW FILES IN dfs";
     QuerySummary result = client.queryBuilder().sql(sql).run();
@@ -238,10 +215,11 @@ public class TestUserTranslationInHttpPlugin extends ClusterTest {
 
   /**
    * Helper function to start the MockHTTPServer
+   *
    * @return Started Mock server
    * @throws IOException If the server cannot start, throws IOException
    */
-  public static MockWebServer startServer () throws IOException {
+  public static MockWebServer startServer() throws IOException {
     MockWebServer server = new MockWebServer();
     server.start(MOCK_SERVER_PORT);
     return server;
@@ -258,16 +236,15 @@ public class TestUserTranslationInHttpPlugin extends ClusterTest {
   }
 
   public static class TestCookieJar implements CookieJar {
-
     private List<Cookie> cookies;
 
     @Override
     public void saveFromResponse(HttpUrl url, List<Cookie> cookies) {
-      this.cookies =  cookies;
+      this.cookies = cookies;
     }
 
     @Override
-    public List<Cookie> loadForRequest(HttpUrl url) {
+    public List<Cookie> loadForRequest(@NotNull HttpUrl url) {
       if (cookies != null) {
         return cookies;
       }
