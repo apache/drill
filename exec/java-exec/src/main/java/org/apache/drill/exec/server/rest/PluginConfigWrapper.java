@@ -127,22 +127,6 @@ public class PluginConfigWrapper {
   }
 
   @JsonIgnore
-  public String getCallbackURI() {
-    String callbackURI = "";
-    if (!isOauth()) {
-      return callbackURI;
-    }
-
-    CredentialedStoragePluginConfig securedStoragePluginConfig = (CredentialedStoragePluginConfig) config;
-    OAuthConfig oAuthConfig = securedStoragePluginConfig.oAuthConfig();
-    if (oAuthConfig != null) {
-      return oAuthConfig.getCallbackURL();
-    } else {
-      return callbackURI;
-    }
-  }
-
-  @JsonIgnore
   public String getClientID() {
     CredentialedStoragePluginConfig securedStoragePluginConfig = (CredentialedStoragePluginConfig) config;
     CredentialsProvider credentialsProvider = securedStoragePluginConfig.getCredentialsProvider();
@@ -150,9 +134,18 @@ public class PluginConfigWrapper {
     return credentialsProvider.getCredentials().getOrDefault("clientID", "");
   }
 
+  /**
+   * This function generates the authorization URI for use when a non-admin user is authorizing
+   * OAuth2.0 access for a storage plugin.  This function is necessary as we do not wish to expose
+   * any plugin configuration information to the user.
+   *
+   * If the plugin is not OAuth, or is missing components, the function will return an empty string.
+   * @return The authorization URI for an OAuth enabled plugin.
+   */
   @JsonIgnore
   public String getAuthorizationURIWithParams() {
     if (!isOauth()) {
+      logger.warn("{} is not an OAuth enabled storage plugin", name);
       return "";
     }
 
@@ -165,8 +158,6 @@ public class PluginConfigWrapper {
     // Add the client id and redirect URI
     finalUrlBuilder.append(authorizationURI)
       .append("?client_id=")
-
-
       .append(clientID)
       .append("&redirect_uri=")
       .append(oAuthConfig.getCallbackURL());
@@ -190,6 +181,11 @@ public class PluginConfigWrapper {
     return finalUrlBuilder.toString();
   }
 
+  /**
+   * URL Encodes a String.  Throws a {@link UserException} if anything goes wrong.
+   * @param value The unencoded String
+   * @return The URL encoded version of the input String
+   */
   private String URLEncodeValue(String value) {
     try {
       return URLEncoder.encode(value, StandardCharsets.UTF_8.toString());

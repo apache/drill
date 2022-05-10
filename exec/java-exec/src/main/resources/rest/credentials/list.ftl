@@ -48,9 +48,9 @@
                 ${pluginModel.getPlugin().getName()}
             </td>
             <td style="border:none;">
-                <#if model.getPlugin().isOauth()>
-                  <a id="getOauth" class="btn btn-success text-white">Authorize</a>
-                    ${pluginModel.getPlugin().getAuthorizationURIWithParams()}
+                <#if pluginModel.getPlugin().isOauth()>
+                  <button type="button" class="btn btn-primary"
+                          id="getOauth" class="btn btn-success text-white" data-authlink="${pluginModel.getPlugin().getAuthorizationURIWithParams()!}">Authorize</button>
                 <#else>
               <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#new-plugin-modal" data-plugin="${pluginModel.getPlugin().getName()}"
                       data-username="${pluginModel.getUserName()}" data-password="${pluginModel.getPassword()}">
@@ -75,13 +75,6 @@
             <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
           </div>
           <div class="modal-body">
-
-  <#if model.getType() == "HttpStoragePluginConfig" && model.getPlugin().isOauth() >
-    <h3>OAuth Enabled</h3>
-
-  </#if>
-
-
             <form id="createForm" role="form" action="/credentials/update_credentials" method="POST">
               <input type="text" class="form-control" name="username" id="usernameField" placeholder="Username" />
               <input type="text" class="form-control" name="password" id="passwordField" placeholder="Password" />
