@@ -24,25 +24,31 @@ import org.apache.drill.test.ClusterFixture;
 import org.apache.drill.test.ClusterFixtureBuilder;
 import org.apache.drill.test.ClusterTest;
 import org.apache.drill.test.RestClientFixture;
+import org.junit.AfterClass;
 import org.junit.Assert;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
 public class StorageResourcesTest extends ClusterTest {
   @BeforeClass
-  public static void setup() throws Exception {
+  public static void setUp() throws Exception {
     ClusterFixtureBuilder builder = ClusterFixture.builder(dirTestWatcher)
       .configProperty(ExecConstants.HTTP_ENABLE, true)
       .configProperty(ExecConstants.HTTP_PORT_HUNT, true);
 
-      startCluster(builder);
+    startCluster(builder);
+  }
+
+  @AfterClass
+  public static void cleanUp() throws Exception {
+    cluster.close();
   }
 
   @Test
   public void testCreateStorageConfig() throws Exception {
-    try (RestClientFixture restClientFixture = cluster.restClientFixture()) {
+    try {
       PluginConfigWrapper pcw = new PluginConfigWrapper(MockStorageEngineConfig.NAME, MockStorageEngineConfig.INSTANCE);
-      restClientFixture.postStorageConfig(pcw);
+      cluster.restClientFixture().postStorageConfig(pcw);
       StoragePluginConfig config_server = cluster.storageRegistry().getDefinedConfig(MockStorageEngineConfig.NAME);
       Assert.assertEquals(MockStorageEngineConfig.INSTANCE, config_server);
       Assert.assertTrue(config_server.isEnabled());
@@ -53,10 +59,10 @@ public class StorageResourcesTest extends ClusterTest {
 
   @Test
   public void testEnabledToggle() throws Exception {
-    try (RestClientFixture restClientFixture = cluster.restClientFixture()) {
+    try {
       PluginConfigWrapper pcw = new PluginConfigWrapper(MockStorageEngineConfig.NAME, MockStorageEngineConfig.INSTANCE);
-      restClientFixture.postStorageConfig(pcw);
-      restClientFixture.toggleEnabled(MockStorageEngineConfig.NAME, false);
+      cluster.restClientFixture().postStorageConfig(pcw);
+      cluster.restClientFixture().toggleEnabled(MockStorageEngineConfig.NAME, false);
       StoragePluginConfig config_server = cluster.storageRegistry().getStoredConfig(MockStorageEngineConfig.NAME);
       Assert.assertEquals(pcw.getConfig(), config_server);
       Assert.assertFalse(config_server.isEnabled());
@@ -67,10 +73,10 @@ public class StorageResourcesTest extends ClusterTest {
 
   @Test
   public void testDeleteStorageConfig() throws Exception {
-    try (RestClientFixture restClientFixture = cluster.restClientFixture()) {
+    try {
       PluginConfigWrapper pcw = new PluginConfigWrapper(MockStorageEngineConfig.NAME, MockStorageEngineConfig.INSTANCE);
-      restClientFixture.postStorageConfig(pcw);
-      restClientFixture.deleteStorageConfig(MockStorageEngineConfig.NAME);
+      cluster.restClientFixture().postStorageConfig(pcw);
+      cluster.restClientFixture().deleteStorageConfig(MockStorageEngineConfig.NAME);
       StoragePluginConfig config_server = cluster.storageRegistry().getStoredConfig(MockStorageEngineConfig.NAME);
       Assert.assertNull(config_server);
     } finally {
