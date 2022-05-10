@@ -21,7 +21,6 @@ import com.fasterxml.jackson.jaxrs.json.JacksonJsonProvider;
 import org.apache.drill.exec.server.rest.PluginConfigWrapper;
 import org.apache.drill.shaded.guava.com.google.common.base.Preconditions;
 import org.apache.drill.exec.server.rest.StatusResources;
-import org.apache.drill.exec.server.rest.StorageResources;
 import org.glassfish.jersey.client.ClientConfig;
 import org.glassfish.jersey.client.JerseyClientBuilder;
 
@@ -124,8 +123,8 @@ public class RestClientFixture implements AutoCloseable {
   }
 
   public PluginConfigWrapper getStorageConfig(String name) {
-		return baseTarget.path(String.format("/storage/%s.json", name))
-		  .request(MediaType.APPLICATION_JSON)
+    return baseTarget.path(String.format("/storage/%s.json", name))
+      .request(MediaType.APPLICATION_JSON)
       .get(new GenericType<PluginConfigWrapper>() {});
   }
 
