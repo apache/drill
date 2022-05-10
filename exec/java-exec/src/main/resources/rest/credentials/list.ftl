@@ -50,7 +50,8 @@
             <td style="border:none;">
                 <#if pluginModel.getPlugin().isOauth()>
                   <button type="button" class="btn btn-primary"
-                          id="getOauth" class="btn btn-success text-white" data-authlink="${pluginModel.getPlugin().getAuthorizationURIWithParams()!}">Authorize</button>
+                          id="getOauth" class="btn btn-success text-white"
+                          onclick="authorize('${pluginModel.getPlugin().getAuthorizationURIWithParams()!}')">Authorize</button>
                 <#else>
               <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#new-plugin-modal" data-plugin="${pluginModel.getPlugin().getName()}"
                       data-username="${pluginModel.getUserName()}" data-password="${pluginModel.getPassword()}">
@@ -65,7 +66,6 @@
       </table>
     </div>
 
-      <#--onclick="doUpdate('${pluginModel.getPlugin().getName()}')"-->
       <#-- Modal window for creating plugin -->
     <div class="modal fade" id="new-plugin-modal" role="dialog" aria-labelledby="configuration">
       <div class="modal-dialog" role="document">
@@ -108,6 +108,18 @@
           $('#passwordField').val(password);
         });
       });
+
+      function authorize(finalURL) {
+        console.log(finalURL);
+        var tokenGetterWindow = window.open(finalURL, 'Authorize Drill', "toolbar=no,menubar=no,scrollbars=yes,resizable=yes,top=500,left=500,width=450,height=600");
+
+        var timer = setInterval(function () {
+          if (tokenGetterWindow.closed) {
+            clearInterval(timer);
+            window.location.reload(); // Refresh the parent page
+          }
+        }, 1000);
+      }
 
       function doCreate() {
         $("#createForm").ajaxForm({
