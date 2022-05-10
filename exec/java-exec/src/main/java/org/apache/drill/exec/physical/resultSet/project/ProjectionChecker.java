@@ -104,6 +104,7 @@ public class ProjectionChecker {
       if (colReq.arrayDims() == 1) {
         return readCol.isArray() || readCol.isDict() || readCol.isVariant();
       } else {
+//        return readCol.type() == MinorType.LIST || readCol.isDict() || readCol.isMap() || readCol.isVariant();
         return readCol.type() == MinorType.LIST || readCol.isDict() || readCol.isVariant();
       }
     }

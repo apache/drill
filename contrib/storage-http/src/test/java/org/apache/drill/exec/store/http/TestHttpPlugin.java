@@ -1118,7 +1118,7 @@ public class TestHttpPlugin extends ClusterTest {
       server.enqueue(
         new MockResponse().setResponseCode(200)
           .setBody(TEST_JSON_RESPONSE)
-          .throttleBody(64, 6, TimeUnit.SECONDS)
+          .setBodyDelay(6, TimeUnit.SECONDS)
       );
 
       String sql = "SELECT sunrise AS sunrise, sunset AS sunset FROM local.sunrise.`?lat=36.7201600&lng=-4.4203400&date=2019-10-02` AS t1";

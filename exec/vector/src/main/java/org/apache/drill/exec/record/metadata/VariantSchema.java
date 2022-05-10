@@ -42,23 +42,21 @@ public class VariantSchema implements VariantMetadata {
   public static ColumnMetadata memberMetadata(MinorType type) {
     String name = Types.typeKey(type);
     switch (type) {
-    case LIST:
-      return VariantColumnMetadata.list(name);
-    case MAP:
-      // Although maps do not have a bits vector, when used in a
-      // union the map must be marked as optional since the union as a
-      // whole can be null, implying that the map is null by implication.
-      // (In fact, the readers have a special mechanism to work out the
-      // null state in this case.
+      case LIST:
+        return VariantColumnMetadata.list(name);
+      case MAP:
+        // Although maps do not have a bits vector, when used in a
+        // union the map must be marked as optional since the union as a
+        // whole can be null, implying that the map is null by implication.
+        // (In fact, the readers have a special mechanism to work out the
+        // null state in this case.
 
-      return new MapColumnMetadata(name, DataMode.OPTIONAL, null);
-    case UNION:
-      throw new IllegalArgumentException("Cannot add a union to a union");
-    default:
-      return new PrimitiveColumnMetadata(
-          MaterializedField.create(
-              name,
-              Types.optional(type)));
+        return new MapColumnMetadata(name, DataMode.OPTIONAL, null);
+      case UNION:
+        throw new IllegalArgumentException("Cannot add a union to a union");
+      default:
+        return new PrimitiveColumnMetadata(
+            MaterializedField.create(name, Types.optional(type)));
     }
   }
 

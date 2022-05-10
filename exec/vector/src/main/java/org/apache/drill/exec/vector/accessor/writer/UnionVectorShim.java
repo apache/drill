@@ -146,7 +146,8 @@ public class UnionVectorShim implements UnionShim {
 
   @Override
   public void setType(MinorType type) {
-    typeWriter.setInt(type.getNumber());
+//    typeWriter.setInt(type.getNumber());
+    typeWriter.setInt(type.ordinal());
   }
 
   @Override

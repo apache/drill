@@ -236,7 +236,7 @@ public class TestJsonReader extends BaseTestQuery {
                 "from cp.`jsoninput/union/a.json`) where a is not null")
               .ordered()
               .optionSettingQueriesForTestQuery("alter session set `exec.enable_union_type` = true")
-              .optionSettingQueriesForTestQuery("alter session set `store.json.enable_v2_reader` = false")
+//              .optionSettingQueriesForTestQuery("alter session set `store.json.enable_v2_reader` = false")
               .baselineColumns("a", "type")
               .baselineValues(13L, "BIGINT")
               .go();

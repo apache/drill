@@ -77,7 +77,7 @@ public class VariantParser extends FullValueParser {
   @Override
   protected ArrayParser buildArrayParser(TokenIterator tokenizer) {
     // TODO Auto-generated method stub
-    return null;
+    return new ArrayParser(loader.parser(), new SimpleArrayListener(), this);
   }
 
   private static class VariantObjectParser extends TupleParser {

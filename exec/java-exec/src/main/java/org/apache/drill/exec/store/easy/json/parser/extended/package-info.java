@@ -139,4 +139,4 @@
  * @see org.apache.drill.exec.vector.complex.fn.VectorOutput.MapVectorOutput MapVectorOutput
  * for an older implementation
 */
-package org.apache.drill.exec.store.easy.json.extended;
+package org.apache.drill.exec.store.easy.json.parser.extended;

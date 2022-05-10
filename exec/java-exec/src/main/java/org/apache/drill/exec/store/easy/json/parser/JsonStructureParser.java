@@ -62,7 +62,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
  * The structure parser follows the structure of the incoming data, whatever it
  * might be. This class imposes no semantic rules on that data, it just "calls
  * 'em as it sees 'em" as they say. The listeners are responsible for deciding
- * if the data data makes sense, and if so, how it should be handled.
+ * if the data makes sense, and if so, how it should be handled.
  * <p>
  * The root listener will receive an event to fields in the top-level object as
  * those fields first appear. Each field is a value object and can correspond to
