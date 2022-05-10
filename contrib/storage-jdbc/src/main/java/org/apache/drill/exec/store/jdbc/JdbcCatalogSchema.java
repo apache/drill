@@ -55,6 +55,11 @@ class JdbcCatalogSchema extends AbstractSchema {
       connectionSchemaName = con.getSchema();
       while (set.next()) {
         final String catalogName = set.getString(1);
+        if (catalogName == null) {
+          // DB2 is an example of why of this escape is needed.
+          continue;
+        }
+
         CapitalizingJdbcSchema schema = new CapitalizingJdbcSchema(
             getSchemaPath(), catalogName, source, dialect, convention, catalogName, null, caseSensitive);
         schemaMap.put(schema.getName(), schema);
