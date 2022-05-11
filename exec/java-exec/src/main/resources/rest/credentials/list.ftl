@@ -112,7 +112,6 @@
       function authorize(finalURL) {
         console.log(finalURL);
         var tokenGetterWindow = window.open(finalURL, 'Authorize Drill', "toolbar=no,menubar=no,scrollbars=yes,resizable=yes,top=500,left=500,width=450,height=600");
-
         var timer = setInterval(function () {
           if (tokenGetterWindow.closed) {
             clearInterval(timer);

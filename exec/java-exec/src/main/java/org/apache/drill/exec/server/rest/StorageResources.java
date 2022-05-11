@@ -307,6 +307,7 @@ public class StorageResources {
   @GET
   @Path("/storage/{name}/update_oauth2_authtoken")
   @Produces(MediaType.TEXT_HTML)
+  @Operation(externalDocs = @ExternalDocumentation(description = "Apache Drill REST API documentation:", url = "https://drill.apache.org/docs/rest-api-introduction/"))
   public Response updateAuthToken(@PathParam("name") String name, @QueryParam("code") String code) {
     try {
       if (storage.getPlugin(name).getConfig() instanceof CredentialedStoragePluginConfig) {
@@ -317,10 +318,12 @@ public class StorageResources {
         // Now exchange the authorization token for an access token
         Builder builder = new OkHttpClient.Builder();
         OkHttpClient client = builder.build();
+
         Request accessTokenRequest = OAuthUtils.getAccessTokenRequest(credentialsProvider, code, callbackURL);
         Map<String, String> updatedTokens = OAuthUtils.getOAuthTokens(client, accessTokenRequest);
 
         // Add to token registry
+        // If USER_TRANSLATION is enabled, Drill will create a token table for each user.
         TokenRegistry tokenRegistry = ((AbstractStoragePlugin) storage.getPlugin(name))
           .getContext()
           .getoAuthTokenProvider()
@@ -541,6 +544,12 @@ public class StorageResources {
     return deletePlugin(name);
   }
 
+  /**
+   * This function checks to see if a given storage plugin is using USER_TRANSLATION mode.
+   * If so, it will return the active user name.  If not it will return null.
+   * @param config {@link StoragePluginConfig} The current plugin configuration
+   * @return If USER_TRANSLATION is enabled, returns the active user.  If not, returns null.
+   */
   private String getActiveUser(StoragePluginConfig config) {
     if (config.getAuthMode() == AuthMode.USER_TRANSLATION) {
       return sc.getUserPrincipal().getName();

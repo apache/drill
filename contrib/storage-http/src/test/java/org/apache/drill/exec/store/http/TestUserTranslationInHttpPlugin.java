@@ -73,7 +73,6 @@ import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
-
 public class TestUserTranslationInHttpPlugin extends ClusterTest {
 
   private static final int MOCK_SERVER_PORT = 47775;
@@ -122,13 +121,11 @@ public class TestUserTranslationInHttpPlugin extends ClusterTest {
     Map<String, HttpApiConfig> configs = new HashMap<>();
     configs.put("sharedEndpoint", testEndpoint);
 
-
     Map<String, String> credentials = new HashMap<>();
     credentials.put("username", "user2user");
     credentials.put("password", "user2pass");
 
     PlainCredentialsProvider credentialsProvider = new PlainCredentialsProvider(TEST_USER_2, credentials);
-
 
     HttpStoragePluginConfig mockStorageConfigWithWorkspace = new HttpStoragePluginConfig(false, configs, 2, null, null, "", 80, "", "", "", null, credentialsProvider, AuthMode.USER_TRANSLATION.name());
     mockStorageConfigWithWorkspace.setEnabled(true);
@@ -156,7 +153,11 @@ public class TestUserTranslationInHttpPlugin extends ClusterTest {
   @Test
   public void testQueryWithValidCredentials() throws Exception {
     // This test validates that the correct credentials are sent down to the HTTP API.
-    ClientFixture client = cluster.clientBuilder().property(DrillProperties.USER, TEST_USER_2).property(DrillProperties.PASSWORD, TEST_USER_2_PASSWORD).build();
+    ClientFixture client = cluster
+      .clientBuilder()
+      .property(DrillProperties.USER, TEST_USER_2)
+      .property(DrillProperties.PASSWORD, TEST_USER_2_PASSWORD)
+      .build();
 
     try (MockWebServer server = startServer()) {
       server.enqueue(new MockResponse().setResponseCode(200).setBody(TEST_JSON_RESPONSE_WITH_DATATYPES));
@@ -176,7 +177,11 @@ public class TestUserTranslationInHttpPlugin extends ClusterTest {
   @Test
   public void testQueryWithMissingCredentials() throws Exception {
     // This test validates that the correct credentials are sent down to the HTTP API.
-    ClientFixture client = cluster.clientBuilder().property(DrillProperties.USER, TEST_USER_1).property(DrillProperties.PASSWORD, TEST_USER_1_PASSWORD).build();
+    ClientFixture client = cluster
+      .clientBuilder()
+      .property(DrillProperties.USER, TEST_USER_1)
+      .property(DrillProperties.PASSWORD, TEST_USER_1_PASSWORD)
+      .build();
 
     try (MockWebServer server = startServer()) {
       server.enqueue(new MockResponse().setResponseCode(200).setBody(TEST_JSON_RESPONSE_WITH_DATATYPES));
@@ -206,7 +211,11 @@ public class TestUserTranslationInHttpPlugin extends ClusterTest {
   public void testUnrelatedQueryWithUser() throws Exception {
     // This test verifies that a query with a user that does NOT have credentials
     // for a plugin using user translation will still execute.
-    ClientFixture client = cluster.clientBuilder().property(DrillProperties.USER, TEST_USER_1).property(DrillProperties.PASSWORD, TEST_USER_1_PASSWORD).build();
+    ClientFixture client = cluster
+      .clientBuilder()
+      .property(DrillProperties.USER, TEST_USER_1)
+      .property(DrillProperties.PASSWORD, TEST_USER_1_PASSWORD)
+      .build();
 
     String sql = "SHOW FILES IN dfs";
     QuerySummary result = client.queryBuilder().sql(sql).run();
