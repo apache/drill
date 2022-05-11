@@ -57,6 +57,7 @@ public class StatusResourcesTest extends BaseTest {
       client.alterSystem(MOCK_PROPERTY, "c");
 
       Assert.assertNull(restClientFixture.getStatusOption(MOCK_PROPERTY));
+      option = restClientFixture.getStatusInternalOption(MOCK_PROPERTY);
       Assert.assertEquals("c", option.getValueAsString());
     }
   }
