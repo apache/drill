@@ -165,12 +165,12 @@ public class VarCharConcatFunctions {
       boolean addSeparator = false;
 
       for (NullableVarCharHolder input : inputs) {
-        if (addSeparator) {
-          for (int id = separator.start; id < separator.end; id++) {
-            out.buffer.setByte(out.end++, separator.buffer.getByte(id));
-          }
-        }
         if (input.isSet > 0) {
+          if (addSeparator) {
+            for (int id = separator.start; id < separator.end; id++) {
+              out.buffer.setByte(out.end++, separator.buffer.getByte(id));
+            }
+          }
           addSeparator = true;
           for (int id = input.start; id < input.end; id++) {
             out.buffer.setByte(out.end++, input.buffer.getByte(id));
@@ -258,12 +258,12 @@ public class VarCharConcatFunctions {
       boolean addSeparator = false;
 
       for (NullableVarCharHolder input : inputs) {
-        if (addSeparator) {
-          for (int id = separator.start; id < separator.end; id++) {
-            out.buffer.setByte(out.end++, separator.buffer.getByte(id));
-          }
-        }
         if (input.isSet > 0) {
+          if (addSeparator) {
+            for (int id = separator.start; id < separator.end; id++) {
+              out.buffer.setByte(out.end++, separator.buffer.getByte(id));
+            }
+          }
           addSeparator = true;
           for (int id = input.start; id < input.end; id++) {
             out.buffer.setByte(out.end++, input.buffer.getByte(id));
