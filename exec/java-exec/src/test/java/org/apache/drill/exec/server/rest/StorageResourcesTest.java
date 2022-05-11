@@ -23,7 +23,6 @@ import org.apache.drill.exec.store.mock.MockStorageEngineConfig;
 import org.apache.drill.test.ClusterFixture;
 import org.apache.drill.test.ClusterFixtureBuilder;
 import org.apache.drill.test.ClusterTest;
-import org.apache.drill.test.RestClientFixture;
 import org.junit.AfterClass;
 import org.junit.Assert;
 import org.junit.BeforeClass;
