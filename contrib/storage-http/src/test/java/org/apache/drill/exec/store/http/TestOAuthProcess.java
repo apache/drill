@@ -137,7 +137,7 @@ public class TestOAuthProcess extends ClusterTest {
       assertEquals("refresh_me", tokenTable.getRefreshToken());
 
     } catch (Exception e) {
-      logger.debug(e.getMessage());
+      logger.error(e.getMessage());
       fail();
     }
   }
@@ -183,7 +183,7 @@ public class TestOAuthProcess extends ClusterTest {
       RowSetUtilities.verify(expected, results);
 
     } catch (Exception e) {
-      logger.debug(e.getMessage());
+      logger.error(e.getMessage());
       fail();
     }
   }
