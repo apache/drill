@@ -486,14 +486,13 @@ public abstract class BaseAllocator extends Accountant implements BufferAllocato
         if (!childAllocators.isEmpty()) {
           for (final BaseAllocator childAllocator : childAllocators.keySet()) {
             if (childAllocator.isClosed) {
-              logger.warn(String.format(
-                  "Closed child allocator[%s] on parent allocator[%s]'s child list.\n%s",
-                  childAllocator.name, name, toString()));
+              logger.warn(String.format("Closed child allocator[%s] on parent allocator[%s]'s child list.\n%s",
+                  childAllocator.name, name, this));
             }
           }
 
           throw new IllegalStateException(
-              String.format("Allocator[%s] closed with outstanding child allocators.\n%s", name, toString()));
+              String.format("Allocator[%s] closed with outstanding child allocators.\n%s", name, this));
         }
 
         // are there outstanding buffers?

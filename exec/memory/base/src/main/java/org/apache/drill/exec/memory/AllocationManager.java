@@ -200,7 +200,7 @@ public class AllocationManager {
   public class BufferLedger {
 
     private final IdentityHashMap<DrillBuf, Object> buffers =
-        BaseAllocator.DEBUG ? new IdentityHashMap<DrillBuf, Object>() : null;
+        BaseAllocator.DEBUG ? new IdentityHashMap<>() : null;
 
     private final long ledgerId = LEDGER_ID_GENERATOR.incrementAndGet(); // unique ID assigned to each ledger
     private final AtomicInteger bufRefCnt = new AtomicInteger(0); // start at zero so we can manage request for retain

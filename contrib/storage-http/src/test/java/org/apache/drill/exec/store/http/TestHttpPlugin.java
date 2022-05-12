@@ -1118,7 +1118,7 @@ public class TestHttpPlugin extends ClusterTest {
       server.enqueue(
         new MockResponse().setResponseCode(200)
           .setBody(TEST_JSON_RESPONSE)
-          .throttleBody(64, 6, TimeUnit.SECONDS)
+          .setBodyDelay(6, TimeUnit.SECONDS)
       );
 
       String sql = "SELECT sunrise AS sunrise, sunset AS sunset FROM local.sunrise.`?lat=36.7201600&lng=-4.4203400&date=2019-10-02` AS t1";
@@ -1127,7 +1127,7 @@ public class TestHttpPlugin extends ClusterTest {
         client.queryBuilder().sql(sql).rowSet();
         fail();
       } catch (Exception e) {
-         assertTrue(e.getMessage().contains("DATA_READ ERROR: timeout"));
+         assertTrue("Not timeout exception, " + e, e.getMessage().contains("DATA_READ ERROR: timeout"));
       }
     }
   }
@@ -1527,8 +1527,9 @@ public class TestHttpPlugin extends ClusterTest {
    * @return Started Mock server
    * @throws IOException If the server cannot start, throws IOException
    */
-  public static MockWebServer startServer() throws IOException {
+  public static MockWebServer startServer() throws IOException, InterruptedException {
     MockWebServer server = new MockWebServer();
+//    server.takeRequest(25, TimeUnit.SECONDS);
     server.start(MOCK_SERVER_PORT);
     return server;
   }
