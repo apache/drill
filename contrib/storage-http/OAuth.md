@@ -59,7 +59,7 @@ credentialProvider.
 To use OAuth2.0, you will have to create an `oAuthConfig` in the plugin configuration.  Within the `oAuthConfig`, define the `callbackURL` and `authorizationURL` parameters:
 * The `authorizationURL` is provided by the API and is the URL where the authorization code is obtained. 
 * The `callbackURL` parameter is the URL where the API will send the access token.  You must provide this when you register and obtain your client ID and client secret.  This 
-  will be in the format: `http(s)://<your drill host>/storage/<storage plugin name>update_oauth2_authtoken`
+  will be in the format: `http(s)://<your drill host>/credentials/<storage plugin name>update_oauth2_authtoken`
 * (Optional)`scope`: The scope parameter limits the scope of your access.  This is something which can be found in the remote API documentation.
 
 ### The Credential Provider
@@ -104,7 +104,7 @@ The example configuration below demonstrates how to connect Drill to the API ava
   },
   "proxyType": "direct",
   "oAuthConfig": {
-    "callbackURL": "http://localhost:8047/storage/clickup/update_oath2_authtoken",
+    "callbackURL": "http://localhost:8047/credentials/clickup/update_oath2_authtoken",
     "authorizationURL": "https://app.clickup.com/api"
   },
   "credentialsProvider": {
