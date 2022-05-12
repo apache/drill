@@ -52,8 +52,9 @@ import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
+import org.junit.jupiter.api.condition.DisabledOnOs;
 import org.junit.jupiter.api.condition.EnabledIfSystemProperty;
-import org.junit.jupiter.api.condition.DisabledIfSystemProperty;
+import org.junit.jupiter.api.condition.OS;
 
 import java.io.File;
 import java.io.FileWriter;
@@ -999,12 +1000,11 @@ public class TestParquetWriter extends ClusterTest {
     }
   }
 
-  // We currently bundle the JNI-based com.rdblue.brotli-codec and it only provides
-  // natives for Mac and Linux on AMD64.  See PARQUET-1975.
+  // Only attempt this test on Linux / amd64 because com.rdblue.brotli-codec
+  // only bundles natives for Mac and Linux on AMD64.  See PARQUET-1975.
   @Test
-  @DisabledIfSystemProperty(named = "os.name", matches = "Windows")
-  @EnabledIfSystemProperty(named = "os.arch", matches = "amd64") // reported for Linux on AMD64
-  @EnabledIfSystemProperty(named = "os.arch", matches = "x86_64") // reported for OS X on AMD64
+  @EnabledIfSystemProperty(named = "os.arch", matches = "(amd64|x86_64)")
+  @DisabledOnOs({ OS.WINDOWS })
   public void testTPCHReadWriteBrotli() throws Exception {
     try {
       client.alterSession(ExecConstants.PARQUET_WRITER_COMPRESSION_TYPE, "brotli");

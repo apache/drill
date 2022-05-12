@@ -24,7 +24,7 @@
   <parent>
     <artifactId>drill-contrib-parent</artifactId>
     <groupId>org.apache.drill.contrib</groupId>
-    <version>1.20.0</version>
+    <version>1.20.1-SNAPSHOT</version>
   </parent>
 
   <artifactId>drill-storage-cassandra</artifactId>
@@ -107,7 +107,7 @@
         <artifactId>maven-surefire-plugin</artifactId>
         <configuration>
           <includes>
-            <include>**/TestCassandraSuit.class</include>
+            <include>**/TestCassandraSuite.class</include>
           </includes>
           <excludes>
             <exclude>**/CassandraComplexTypesTest.java</exclude>

@@ -114,7 +114,7 @@
     "DeviceModel" : "sRGB",
     "XYZValues" : "0.964 1 0.825",
     "TagCount" : "17",
-    "Copyright" : "Copyright (c) 1998 Hewlett-Packard Company",
+    "ProfileCopyright" : "Copyright (c) 1998 Hewlett-Packard Company",
     "ProfileDescription" : "sRGB IEC61966-2.1",
     "MediaWhitePoint" : "(0.9505, 1, 1.0891)",
     "MediaBlackPoint" : "(0, 0, 0)",

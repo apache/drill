@@ -24,7 +24,7 @@
   <parent>
     <artifactId>drill-contrib-parent</artifactId>
     <groupId>org.apache.drill.contrib</groupId>
-    <version>1.20.0</version>
+    <version>1.20.1-SNAPSHOT</version>
   </parent>
 
   <artifactId>drill-format-image</artifactId>
@@ -39,6 +39,7 @@
     <dependency>
       <groupId>com.drewnoakes</groupId>
       <artifactId>metadata-extractor</artifactId>
+      <version>2.17.0</version>
     </dependency>
 
     <!-- Test dependencies -->

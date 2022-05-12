@@ -31,6 +31,7 @@ import org.apache.drill.exec.physical.base.GroupScan;
 import org.apache.drill.exec.planner.common.DrillLimitRelBase;
 import org.apache.drill.exec.planner.common.DrillRelOptUtil;
 import org.apache.drill.exec.planner.logical.DrillTable;
+import org.apache.drill.exec.store.StoragePlugin;
 import org.apache.drill.exec.store.plan.rel.PluginAggregateRel;
 import org.apache.drill.exec.store.plan.rel.PluginFilterRel;
 import org.apache.drill.exec.store.plan.rel.PluginJoinRel;
@@ -152,9 +153,16 @@ public abstract class AbstractPluginImplementor implements PluginImplementor {
     CheckedFunction<DrillTable, GroupScan, IOException> groupScanFunction = DrillTable::getGroupScan;
     return Optional.ofNullable(DrillRelOptUtil.findScan(node))
       .map(DrillRelOptUtil::getDrillTable)
+      .filter(this::supportsDrillTable)
       .map(groupScanFunction)
       .orElse(null);
   }
+
+  private boolean supportsDrillTable(DrillTable table) {
+    return supportedPlugin().isInstance(table.getPlugin());
+  }
+
+  protected abstract Class<? extends StoragePlugin> supportedPlugin();
 
   protected abstract boolean hasPluginGroupScan(RelNode node);
 }

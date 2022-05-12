@@ -23,7 +23,7 @@
   <parent>
     <artifactId>exec-parent</artifactId>
     <groupId>org.apache.drill.exec</groupId>
-    <version>1.20.0</version>
+    <version>1.20.1-SNAPSHOT</version>
   </parent>
   <artifactId>drill-java-exec</artifactId>
   <name>Drill : Exec : Java Execution Engine</name>
@@ -219,12 +219,10 @@
     <dependency>
       <groupId>com.fasterxml.jackson.jaxrs</groupId>
       <artifactId>jackson-jaxrs-json-provider</artifactId>
-      <version>${jackson.version}</version>
     </dependency>
     <dependency>
       <groupId>com.fasterxml.jackson.module</groupId>
       <artifactId>jackson-module-afterburner</artifactId>
-      <version>${jackson.version}</version>
     </dependency>
     <dependency>
       <groupId>org.honton.chas.hocon</groupId>
@@ -652,14 +650,6 @@
       <version>${testcontainers.version}</version>
       <scope>test</scope>
     </dependency>
-    <dependency>
-      <groupId>com.github.rdblue</groupId>
-      <artifactId>brotli-codec</artifactId>
-      <version>0.1.1</version>
-      <!-- brotli-codec bundles natives for linux and darwin, amd64 only so
-      we don't ship it so as not to break startup on windows or arm -->
-      <scope>provided</scope>
-    </dependency>
   </dependencies>
 
   <profiles>
@@ -769,8 +759,41 @@
         </dependency>
       </dependencies>
     </profile>
+    <profile>
+      <!-- Only include a Brotli codec in test scope on AMD64 and x86_64, see PARQUET-1975 -->
+      <id>brotli-amd64</id>
+      <activation>
+        <os>
+          <arch>amd64</arch>
+        </os>
+      </activation>
+      <dependencies>
+        <dependency>
+          <groupId>com.github.rdblue</groupId>
+          <artifactId>brotli-codec</artifactId>
+          <version>0.1.1</version>
+          <!-- this codec is not shipped because it breaks startup on unsupported platforms -->
+          <scope>test</scope>
+        </dependency>
+      </dependencies>
+    </profile>
+    <profile>
+      <id>brotli-x86_64</id>
+      <activation>
+        <os>
+          <arch>x86_64</arch>
+        </os>
+      </activation>
+      <dependencies>
+        <dependency>
+          <groupId>com.github.rdblue</groupId>
+          <artifactId>brotli-codec</artifactId>
+          <version>0.1.1</version>
+          <scope>test</scope>
+        </dependency>
+      </dependencies>
+    </profile>
   </profiles>
-
   <build>
     <plugins>
       <plugin>

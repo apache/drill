@@ -27,8 +27,8 @@ public class BaseCassandraTest extends ClusterTest {
 
   @BeforeClass
   public static void setUpBeforeClass() throws Exception {
-    TestCassandraSuit.initCassandra();
-    initCassandraPlugin(TestCassandraSuit.cassandra);
+    TestCassandraSuite.initCassandra();
+    initCassandraPlugin(TestCassandraSuite.cassandra);
   }
 
   private static void initCassandraPlugin(CassandraContainer<?> cassandra) throws Exception {
@@ -46,8 +46,8 @@ public class BaseCassandraTest extends ClusterTest {
 
   @AfterClass
   public static void tearDownCassandra() {
-    if (TestCassandraSuit.isRunningSuite()) {
-      TestCassandraSuit.tearDownCluster();
+    if (TestCassandraSuite.isRunningSuite()) {
+      TestCassandraSuite.tearDownCluster();
     }
   }
 }

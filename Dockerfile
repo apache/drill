@@ -49,25 +49,33 @@ RUN mvn -Dmaven.artifact.threads=5 -T1C clean install -DskipTests
 # Get project version and copy built binaries into /opt/drill directory
 RUN VERSION=$(mvn -q -Dexec.executable=echo -Dexec.args='${project.version}' --non-recursive exec:exec) \
  && mkdir /opt/drill \
- && mv distribution/target/apache-drill-${VERSION}/apache-drill-${VERSION}/* /opt/drill
+ && mv distribution/target/apache-drill-${VERSION}/apache-drill-${VERSION}/* /opt/drill \
+ && chmod -R +r /opt/drill
 
 # Target image
 
 # Set the BASE_IMAGE build arg when you invoke docker build.  
 FROM $BASE_IMAGE
 
-ENV DRILL_HOME=/opt/drill DRILL_USER=drilluser
-
-RUN mkdir $DRILL_HOME
-
-RUN groupadd -g 999 $DRILL_USER \
- && useradd -r -u 999 -g $DRILL_USER $DRILL_USER -m -d /var/lib/drill \
- && chown -R $DRILL_USER: $DRILL_HOME
-
-USER $DRILL_USER
-
-COPY --from=build --chown=$DRILL_USER /opt/drill $DRILL_HOME
-
 # Starts Drill in embedded mode and connects to Sqlline
 ENTRYPOINT $DRILL_HOME/bin/drill-embedded
 
+ENV DRILL_HOME=/opt/drill
+ENV DRILL_USER=drilluser
+ENV DRILL_USER_HOME=/var/lib/drill
+ENV DRILL_PID_DIR=$DRILL_USER_HOME
+ENV DRILL_LOG_DIR=$DRILL_USER_HOME/log
+ENV DATA_VOL=/data
+
+RUN mkdir $DRILL_HOME $DATA_VOL \
+ && groupadd -g 999 $DRILL_USER \
+ && useradd -r -u 999 -g $DRILL_USER $DRILL_USER -m -d $DRILL_USER_HOME \
+ && chown $DRILL_USER: $DATA_VOL
+
+# A Docker volume where users may store persistent data, e.g. persistent Drill
+# config by specifying a Drill BOOT option of sys.store.provider.local.path: "/data".
+VOLUME $DATA_VOL
+
+COPY --from=build /opt/drill $DRILL_HOME
+
+USER $DRILL_USER

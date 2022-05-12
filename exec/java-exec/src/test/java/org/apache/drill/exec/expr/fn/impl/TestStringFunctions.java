@@ -19,6 +19,7 @@ package org.apache.drill.exec.expr.fn.impl;
 
 import static org.junit.Assert.assertTrue;
 
+import org.apache.commons.lang3.RandomStringUtils;
 import org.apache.drill.categories.UnlikelyTest;
 import org.apache.drill.test.BaseTestQuery;
 import org.apache.drill.categories.SqlFunctionTest;
@@ -333,6 +334,19 @@ public class TestStringFunctions extends BaseTestQuery {
         .baselineValues("bxd", "abc")
         .build()
         .run();
+  }
+
+  @Test
+  public void testReplaceOutBuffer() throws Exception {
+    String originValue = RandomStringUtils.randomAlphabetic(8192).toLowerCase() + "12345";
+    String expectValue = originValue.replace("12345", "67890");
+    String sql = "select replace(c1, '12345', '67890') as col from (values('" + originValue + "')) as t(c1)";
+    testBuilder()
+      .sqlQuery(sql)
+      .ordered()
+      .baselineColumns("col")
+      .baselineValues(expectValue)
+      .go();
   }
 
   @Test

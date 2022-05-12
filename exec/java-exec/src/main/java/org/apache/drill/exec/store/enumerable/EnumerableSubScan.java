@@ -35,6 +35,7 @@ public class EnumerableSubScan extends AbstractSubScan {
   private final List<SchemaPath> columns;
   private final Map<String, Integer> fieldsMap;
   private final TupleMetadata schema;
+  private final ColumnConverterFactoryProvider converterFactoryProvider;
 
   @JsonCreator
   public EnumerableSubScan(
@@ -42,13 +43,15 @@ public class EnumerableSubScan extends AbstractSubScan {
       @JsonProperty("columns") List<SchemaPath> columns,
       @JsonProperty("fieldsMap") Map<String, Integer> fieldsMap,
       @JsonProperty("schema") TupleMetadata schema,
-      @JsonProperty("schemaPath") String schemaPath) {
+      @JsonProperty("schemaPath") String schemaPath,
+      @JsonProperty("converterFactoryProvider") ColumnConverterFactoryProvider converterFactoryProvider) {
     super("");
     this.code = code;
     this.columns = columns;
     this.fieldsMap = fieldsMap;
     this.schema = schema;
     this.schemaPath = schemaPath;
+    this.converterFactoryProvider = converterFactoryProvider;
   }
 
   @Override
@@ -74,5 +77,9 @@ public class EnumerableSubScan extends AbstractSubScan {
 
   public String getSchemaPath() {
     return schemaPath;
+  }
+
+  public ColumnConverterFactoryProvider factoryProvider() {
+    return converterFactoryProvider;
   }
 }

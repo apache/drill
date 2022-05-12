@@ -23,7 +23,7 @@
   <parent>
     <artifactId>drill-root</artifactId>
     <groupId>org.apache.drill</groupId>
-    <version>1.20.0</version>
+    <version>1.20.1-SNAPSHOT</version>
   </parent>
 
   <artifactId>distribution</artifactId>
@@ -31,7 +31,7 @@
   <name>Drill : Packaging and Distribution Assembly</name>
 
   <properties>
-    <aws.java.sdk.version>1.11.375</aws.java.sdk.version>
+    <aws.java.sdk.version>1.12.211</aws.java.sdk.version>
     <oci.hdfs.version>3.3.0.7.0.1</oci.hdfs.version>
   </properties>
 

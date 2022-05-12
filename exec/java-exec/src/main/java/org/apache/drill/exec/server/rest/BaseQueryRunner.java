@@ -57,28 +57,39 @@ public abstract class BaseQueryRunner {
   }
 
   protected void applyUserName(String userName) {
-    if (!Strings.isNullOrEmpty(userName)) {
-      DrillConfig config = workManager.getContext().getConfig();
-      if (!config.getBoolean(ExecConstants.IMPERSONATION_ENABLED)) {
-        throw UserException.permissionError()
-          .message("User impersonation is not enabled")
-          .build(logger);
-      }
-      InboundImpersonationManager inboundImpersonationManager = new InboundImpersonationManager();
-      boolean isAdmin = !config.getBoolean(ExecConstants.USER_AUTHENTICATION_ENABLED) ||
-        ImpersonationUtil.hasAdminPrivileges(
-            webUserConnection.getSession().getCredentials().getUserName(),
-            ExecConstants.ADMIN_USERS_VALIDATOR.getAdminUsers(options),
-            ExecConstants.ADMIN_USER_GROUPS_VALIDATOR.getAdminUserGroups(options));
-      if (isAdmin) {
-        // Admin user can impersonate any user they want to (when authentication is disabled, all users are admin)
-        webUserConnection.getSession().replaceUserCredentials(
-          inboundImpersonationManager,
-          UserBitShared.UserCredentials.newBuilder().setUserName(userName).build());
-      } else {
-        // Check configured impersonation rules to see if this user is allowed to impersonate the given user
-        inboundImpersonationManager.replaceUserOnSession(userName, webUserConnection.getSession());
-      }
+    if (Strings.isNullOrEmpty(userName)) {
+      return;
+    }
+
+    DrillConfig config = workManager.getContext().getConfig();
+    if (!config.getBoolean(ExecConstants.IMPERSONATION_ENABLED)) {
+      throw UserException.permissionError()
+        .message("User impersonation is not enabled")
+        .build(logger);
+    }
+
+    String proxyUserName = webUserConnection.getSession().getCredentials().getUserName();
+    if (proxyUserName.equals(userName)) {
+      // Either the proxy user is impersonating itself, which is a no-op, or
+      // the userName on the UserSession has already been modified to be the
+      // impersonated user by an earlier request belonging to the same session.
+      return;
+    }
+
+    InboundImpersonationManager inboundImpersonationManager = new InboundImpersonationManager();
+    boolean isAdmin = !config.getBoolean(ExecConstants.USER_AUTHENTICATION_ENABLED) ||
+      ImpersonationUtil.hasAdminPrivileges(
+          proxyUserName,
+          ExecConstants.ADMIN_USERS_VALIDATOR.getAdminUsers(options),
+          ExecConstants.ADMIN_USER_GROUPS_VALIDATOR.getAdminUserGroups(options));
+    if (isAdmin) {
+      // Admin user can impersonate any user they want to (when authentication is disabled, all users are admin)
+      webUserConnection.getSession().replaceUserCredentials(
+        inboundImpersonationManager,
+        UserBitShared.UserCredentials.newBuilder().setUserName(userName).build());
+    } else {
+      // Check configured impersonation rules to see if this user is allowed to impersonate the given user
+      inboundImpersonationManager.replaceUserOnSession(userName, webUserConnection.getSession());
     }
   }
 

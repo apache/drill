@@ -35,13 +35,27 @@ CREATE TABLE test_keyspace.employee (
     marital_status text,
     gender text,
     management_role text,
+    ascii_field ascii,
+    blob_field blob,
+    boolean_field boolean,
+    date_field date,
+    decimal_field decimal,
+    double_field double,
+    duration_field duration,
+    inet_field inet,
+    time_field time,
+    timestamp_field timestamp,
+    timeuuid_field timeuuid,
+    uuid_field uuid,
+    varchar_field varchar,
+    varint_field varint,
     PRIMARY KEY (full_name, employee_id)
 ) WITH CLUSTERING ORDER BY (employee_id ASC);
 
 USE test_keyspace;
 
-INSERT INTO employee(employee_id, full_name, first_name, last_name, position_id, position_title, store_id, department_id, birth_date, hire_date, salary, supervisor_id, education_level, marital_status, gender, management_role)
- VALUES (1, 'Sheri Nowmer', 'Sheri', 'Nowmer', 1, 'President',0,1, '1961-08-26', '1994-12-01 00:00:00.0',80000.0 ,0, 'Graduate Degree', 'S', 'F', 'Senior Management');
+INSERT INTO employee(employee_id, full_name, first_name, last_name, position_id, position_title, store_id, department_id, birth_date, hire_date, salary, supervisor_id, education_level, marital_status, gender, management_role, ascii_field, blob_field, boolean_field, date_field, decimal_field, double_field, duration_field, inet_field, time_field,  timestamp_field, timeuuid_field, uuid_field, varchar_field, varint_field)
+ VALUES (1, 'Sheri Nowmer', 'Sheri', 'Nowmer', 1, 'President',0,1, '1961-08-26', '1994-12-01 00:00:00.0',80000.0 ,0, 'Graduate Degree', 'S', 'F', 'Senior Management', 'abc', bigintAsBlob(3), true, '2011-02-03', 123.456, 321.123, 3d89h4m48s, '8.8.8.8', '04:05:00',  '2011-02-03 04:05:00', 50554d6e-29bb-11e5-b345-feff819cdc9f, 50554d6e-29bb-11e5-b345-feff819cdc9f, 'abc', 123);
 INSERT INTO employee(employee_id, full_name, first_name, last_name, position_id, position_title, store_id, department_id, birth_date, hire_date, salary, supervisor_id, education_level, marital_status, gender, management_role)
  VALUES (2, 'Derrick Whelply', 'Derrick', 'Whelply', 2, 'VP Country Manager',0,1, '1915-07-03', '1994-12-01 00:00:00.0',40000.0 ,1, 'Graduate Degree', 'M', 'M', 'Senior Management');
 INSERT INTO employee(employee_id, full_name, first_name, last_name, position_id, position_title, store_id, department_id, birth_date, hire_date, salary, supervisor_id, education_level, marital_status, gender, management_role)

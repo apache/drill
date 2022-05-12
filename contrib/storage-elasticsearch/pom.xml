@@ -20,13 +20,10 @@
 -->
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
   <modelVersion>4.0.0</modelVersion>
-  <properties>
-    <test.elasticsearch.version>7.10.1</test.elasticsearch.version>
-  </properties>
   <parent>
     <artifactId>drill-contrib-parent</artifactId>
     <groupId>org.apache.drill.contrib</groupId>
-    <version>1.20.0</version>
+    <version>1.20.1-SNAPSHOT</version>
   </parent>
 
   <artifactId>drill-storage-elasticsearch</artifactId>
@@ -80,6 +77,18 @@
       <version>0.4</version>
       <scope>test</scope>
     </dependency>
+    <dependency>
+      <groupId>org.testcontainers</groupId>
+      <artifactId>elasticsearch</artifactId>
+      <version>${testcontainers.version}</version>
+      <scope>test</scope>
+      <exclusions>
+        <exclusion>
+          <groupId>com.datastax.cassandra</groupId>
+          <artifactId>cassandra-driver-core</artifactId>
+        </exclusion>
+      </exclusions>
+    </dependency>
   </dependencies>
 
   <build>
@@ -88,35 +97,16 @@
         <artifactId>maven-surefire-plugin</artifactId>
         <configuration>
           <forkCount combine.self="override">1</forkCount>
+          <includes>
+            <include>**/TestElasticsearchSuite.class</include>
+          </includes>
+          <excludes>
+            <exclude>**/ElasticComplexTypesTest.java</exclude>
+            <exclude>**/ElasticInfoSchemaTest.java</exclude>
+            <exclude>**/ElasticSearchPlanTest.java</exclude>
+            <exclude>**/ElasticSearchQueryTest.java</exclude>
+          </excludes>
         </configuration>
-      </plugin>
-      <plugin>
-        <groupId>com.github.alexcojocaru</groupId>
-        <artifactId>elasticsearch-maven-plugin</artifactId>
-        <version>6.19</version>
-        <configuration>
-          <version>${test.elasticsearch.version}</version>
-          <clusterName>test</clusterName>
-          <transportPort>9300</transportPort>
-          <httpPort>9200</httpPort>
-          <skip>${skipTests}</skip>
-        </configuration>
-        <executions>
-          <execution>
-            <id>start-elasticsearch</id>
-            <phase>process-test-classes</phase>
-            <goals>
-              <goal>runforked</goal>
-            </goals>
-          </execution>
-          <execution>
-            <id>stop-elasticsearch</id>
-            <phase>post-integration-test</phase>
-            <goals>
-              <goal>stop</goal>
-            </goals>
-          </execution>
-        </executions>
       </plugin>
     </plugins>
   </build>

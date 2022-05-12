@@ -40,10 +40,12 @@ import org.apache.drill.exec.planner.common.DrillLimitRelBase;
 import org.apache.drill.exec.planner.logical.DrillOptiq;
 import org.apache.drill.exec.planner.logical.DrillParseContext;
 import org.apache.drill.exec.planner.physical.PrelUtil;
+import org.apache.drill.exec.store.StoragePlugin;
 import org.apache.drill.exec.store.mongo.MongoAggregateUtils;
 import org.apache.drill.exec.store.mongo.MongoFilterBuilder;
 import org.apache.drill.exec.store.mongo.MongoGroupScan;
 import org.apache.drill.exec.store.mongo.MongoScanSpec;
+import org.apache.drill.exec.store.mongo.MongoStoragePlugin;
 import org.apache.drill.exec.store.plan.AbstractPluginImplementor;
 import org.apache.drill.exec.store.plan.PluginImplementor;
 import org.apache.drill.exec.store.plan.rel.PluginAggregateRel;
@@ -280,6 +282,11 @@ public class MongoPluginImplementor extends AbstractPluginImplementor {
   @Override
   public boolean canImplement(TableScan scan) {
     return hasPluginGroupScan(scan);
+  }
+
+  @Override
+  protected Class<? extends StoragePlugin> supportedPlugin() {
+    return MongoStoragePlugin.class;
   }
 
   @Override

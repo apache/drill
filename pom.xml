@@ -30,7 +30,7 @@
 
   <groupId>org.apache.drill</groupId>
   <artifactId>drill-root</artifactId>
-  <version>1.20.0</version>
+  <version>1.20.1-SNAPSHOT</version>
   <packaging>pom</packaging>
 
   <name>Drill : </name>
@@ -60,11 +60,11 @@
       avoid_bad_dependencies plugin found in the file.
     -->
     <calcite.groupId>com.github.vvysotskyi.drill-calcite</calcite.groupId>
-    <calcite.version>1.21.0-drill-r7</calcite.version>
+    <calcite.version>1.21.0-drill-r8</calcite.version>
     <avatica.version>1.17.0</avatica.version>
     <janino.version>3.0.11</janino.version>
     <sqlline.version>1.12.0</sqlline.version>
-    <jackson.version>2.12.6</jackson.version>
+    <jackson.version>2.13.2.20220328</jackson.version>
     <zookeeper.version>3.5.7</zookeeper.version>
     <mapr.release.version>6.1.0-mapr</mapr.release.version>
     <ojai.version>3.0-mapr-1808</ojai.version>
@@ -80,7 +80,7 @@
     <logback.version>1.2.9</logback.version>
     <mockito.version>3.11.2</mockito.version>
     <!--
-      Currently Hive storage plugin only supports Apache Hive 3.1.2 or vendor specific variants of the
+      Currently, Hive storage plugin only supports Apache Hive 3.1.2 or vendor specific variants of the
       Apache Hive 2.3.2. If the version is changed, make sure the jars and their dependencies are updated,
       for example parquet-hadoop-bundle and derby dependencies.
     -->
@@ -100,7 +100,7 @@
     <asm.version>9.2</asm.version>
     <excludedGroups />
     <memoryMb>2500</memoryMb>
-    <directMemoryMb>2500</directMemoryMb>
+    <directMemoryMb>4500</directMemoryMb>
     <rat.skip>true</rat.skip>
     <license.skip>true</license.skip>
     <docker.repository>apache/drill</docker.repository>
@@ -126,10 +126,9 @@
     <commons.cli.version>1.4</commons.cli.version>
     <snakeyaml.version>1.26</snakeyaml.version>
     <commons.lang3.version>3.10</commons.lang3.version>
-    <testcontainers.version>1.16.2</testcontainers.version>
+    <testcontainers.version>1.16.3</testcontainers.version>
     <typesafe.config.version>1.0.0</typesafe.config.version>
     <commons.codec.version>1.14</commons.codec.version>
-    <metadata.extractor.version>2.13.0</metadata.extractor.version>
     <xalan.version>2.7.2</xalan.version>
     <xerces.version>2.12.2</xerces.version>
     <commons.configuration.version>1.10</commons.configuration.version>
@@ -147,7 +146,7 @@
     <connection>scm:git:https://gitbox.apache.org/repos/asf/drill.git</connection>
     <developerConnection>scm:git:https://gitbox.apache.org/repos/asf/drill.git</developerConnection>
     <url>https://github.com/apache/drill</url>
-    <tag>drill-1.20.0</tag>
+    <tag>drill-1.20.1-SNAPSHOT</tag>
   </scm>
 
   <mailingLists>
@@ -1238,6 +1237,13 @@
   <dependencyManagement>
     <dependencies>
       <dependency>
+        <groupId>com.fasterxml.jackson</groupId>
+        <artifactId>jackson-bom</artifactId>
+        <version>${jackson.version}</version>
+        <scope>import</scope>
+        <type>pom</type>
+      </dependency>
+      <dependency>
         <groupId>net.java.dev.jna</groupId>
         <artifactId>jna</artifactId>
         <version>${jna.version}</version>
@@ -1283,18 +1289,6 @@
           <exclusion>
             <groupId>commons-logging</groupId>
             <artifactId>commons-logging</artifactId>
-          </exclusion>
-          <exclusion>
-            <groupId>com.fasterxml.jackson.core</groupId>
-            <artifactId>jackson-annotations</artifactId>
-          </exclusion>
-          <exclusion>
-            <groupId>com.fasterxml.jackson.core</groupId>
-            <artifactId>jackson-core</artifactId>
-          </exclusion>
-          <exclusion>
-            <groupId>com.fasterxml.jackson.core</groupId>
-            <artifactId>jackson-databind</artifactId>
           </exclusion>
         </exclusions>
       </dependency>
@@ -1673,26 +1667,6 @@
         <version>${janino.version}</version>
       </dependency>
       <dependency>
-        <groupId>com.fasterxml.jackson.core</groupId>
-        <artifactId>jackson-annotations</artifactId>
-        <version>${jackson.version}</version>
-      </dependency>
-      <dependency>
-        <groupId>com.fasterxml.jackson.core</groupId>
-        <artifactId>jackson-databind</artifactId>
-        <version>${jackson.version}</version>
-      </dependency>
-      <dependency>
-        <groupId>com.fasterxml.jackson.core</groupId>
-        <artifactId>jackson-core</artifactId>
-        <version>${jackson.version}</version>
-      </dependency>
-      <dependency>
-        <groupId>com.fasterxml.jackson.datatype</groupId>
-        <artifactId>jackson-datatype-joda</artifactId>
-        <version>${jackson.version}</version>
-      </dependency>
-      <dependency>
         <groupId>org.honton.chas.hocon</groupId>
         <artifactId>jackson-dataformat-hocon</artifactId>
         <version>1.1.1</version>
@@ -2068,11 +2042,6 @@
         <groupId>org.yaml</groupId>
         <artifactId>snakeyaml</artifactId>
         <version>${snakeyaml.version}</version>
-      </dependency>
-      <dependency>
-        <groupId>com.drewnoakes</groupId>
-        <artifactId>metadata-extractor</artifactId>
-        <version>${metadata.extractor.version}</version>
       </dependency>
       <dependency>
         <groupId>xerces</groupId>

@@ -19,6 +19,8 @@ package org.apache.drill.exec.store.enumerable.plan;
 
 import org.apache.calcite.plan.RelOptCluster;
 import org.apache.calcite.rel.RelNode;
+import org.apache.drill.exec.store.enumerable.ColumnConverterFactoryProvider;
+import org.apache.drill.exec.store.enumerable.DefaultColumnConverterFactoryProvider;
 
 import java.util.Map;
 
@@ -33,4 +35,8 @@ public interface EnumerablePrelContext {
   String getPlanPrefix();
 
   String getTablePath(RelNode input);
+
+  default ColumnConverterFactoryProvider factoryProvider() {
+    return DefaultColumnConverterFactoryProvider.INSTANCE;
+  }
 }

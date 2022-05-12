@@ -56,7 +56,7 @@ public class TestSasReader extends ClusterTest {
     RowSet results  = client.queryBuilder().sql(sql).rowSet();
 
     TupleMetadata expectedSchema = new SchemaBuilder()
-      .addNullable("x1", MinorType.BIGINT)
+      .addNullable("x1", MinorType.FLOAT8)
       .addNullable("x2", MinorType.FLOAT8)
       .addNullable("x3", MinorType.VARCHAR)
       .addNullable("x4", MinorType.FLOAT8)
@@ -70,13 +70,13 @@ public class TestSasReader extends ClusterTest {
       .addNullable("x12", MinorType.FLOAT8)
       .addNullable("x13", MinorType.FLOAT8)
       .addNullable("x14", MinorType.FLOAT8)
-      .addNullable("x15", MinorType.BIGINT)
-      .addNullable("x16", MinorType.BIGINT)
-      .addNullable("x17", MinorType.BIGINT)
-      .addNullable("x18", MinorType.BIGINT)
-      .addNullable("x19", MinorType.BIGINT)
-      .addNullable("x20", MinorType.BIGINT)
-      .addNullable("x21", MinorType.BIGINT)
+      .addNullable("x15", MinorType.FLOAT8)
+      .addNullable("x16", MinorType.FLOAT8)
+      .addNullable("x17", MinorType.FLOAT8)
+      .addNullable("x18", MinorType.FLOAT8)
+      .addNullable("x19", MinorType.FLOAT8)
+      .addNullable("x20", MinorType.FLOAT8)
+      .addNullable("x21", MinorType.FLOAT8)
       .buildSchema();
 
     RowSet expected = new RowSetBuilder(client.allocator(), expectedSchema)
@@ -122,7 +122,7 @@ public class TestSasReader extends ClusterTest {
     RowSet results  = client.queryBuilder().sql(sql).rowSet();
 
     TupleMetadata expectedSchema = new SchemaBuilder()
-      .addNullable("x1", MinorType.BIGINT)
+      .addNullable("x1", MinorType.FLOAT8)
       .addNullable("x2", MinorType.FLOAT8)
       .addNullable("x3", MinorType.VARCHAR)
       .buildSchema();

@@ -103,7 +103,7 @@ requires a recompilation of HBase because of incompatible changes between Hadoop
 
  1. Download HBase 2.4.2 sources and rebuild with Hadoop 3.
 
-    ```mvn clean install -DskipTests -Dhadoop.profile=3.0 -Dhadoop-three.version=3.2.2```
+    ```mvn clean install -DskipTests -Dhadoop.profile=3.0 -Dhadoop-three.version=3.2.3```
 
  2. Remove the `Ignore` annotation in `PhoenixTestSuite.java`.
     

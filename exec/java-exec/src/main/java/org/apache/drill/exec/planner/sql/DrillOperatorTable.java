@@ -17,6 +17,7 @@
  */
 package org.apache.drill.exec.planner.sql;
 
+import org.apache.calcite.sql.fun.SqlSumEmptyIsZeroAggFunction;
 import org.apache.calcite.sql.validate.SqlNameMatcher;
 import org.apache.drill.shaded.guava.com.google.common.collect.ArrayListMultimap;
 import org.apache.drill.shaded.guava.com.google.common.collect.Lists;
@@ -169,7 +170,11 @@ public class DrillOperatorTable extends SqlStdOperatorTable {
   private void populateWrappedCalciteOperators() {
     for (SqlOperator calciteOperator : inner.getOperatorList()) {
       final SqlOperator wrapper;
-      if (calciteOperator instanceof SqlAggFunction) {
+      if (calciteOperator instanceof SqlSumEmptyIsZeroAggFunction) {
+        wrapper = new DrillCalciteSqlSumEmptyIsZeroAggFunctionWrapper(
+          (SqlSumEmptyIsZeroAggFunction) calciteOperator,
+          getFunctionListWithInference(calciteOperator.getName()));
+      } else if (calciteOperator instanceof SqlAggFunction) {
         wrapper = new DrillCalciteSqlAggFunctionWrapper((SqlAggFunction) calciteOperator,
             getFunctionListWithInference(calciteOperator.getName()));
       } else if (calciteOperator instanceof SqlFunction) {
