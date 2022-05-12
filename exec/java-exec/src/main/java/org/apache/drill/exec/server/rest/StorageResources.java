@@ -346,7 +346,7 @@ public class StorageResources {
           bufferedReader.close();
           reader.close();
         } catch (IOException e) {
-          Response.status(Status.OK).entity("You may close this window.").build();
+          return Response.status(Status.OK).entity("You may close this window.").build();
         }
 
         return Response.status(Status.OK).entity(successPage).build();
@@ -550,7 +550,7 @@ public class StorageResources {
    * @return If USER_TRANSLATION is enabled, returns the active user.  If not, returns null.
    */
   private String getActiveUser(StoragePluginConfig config) {
-    if (config.getAuthMode() == AuthMode.USER_TRANSLATION) {
+    if (config.getAuthMode() == AuthMode.USER_TRANSLATION && authEnabled.get()) {
       return sc.getUserPrincipal().getName();
     } else {
       return null;
