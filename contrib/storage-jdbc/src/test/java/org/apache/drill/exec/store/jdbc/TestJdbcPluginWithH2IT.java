@@ -55,6 +55,7 @@ public class TestJdbcPluginWithH2IT extends ClusterTest {
   private static final String TABLE_PATH = "jdbcmulti/";
   private static final String TABLE_NAME = String.format("%s.`%s`", StoragePluginTestUtils.DFS_PLUGIN_NAME, TABLE_PATH);
   private static TimeZone defaultTimeZone;
+  private static URL SCRIPT_FILE = TestJdbcPluginWithH2IT.class.getClassLoader().getResource("h2-test-data.sql");
 
   @BeforeClass
   public static void init() throws Exception {
@@ -66,10 +67,10 @@ public class TestJdbcPluginWithH2IT extends ClusterTest {
     dirTestWatcher.copyResourceToRoot(Paths.get(TABLE_PATH));
     Class.forName("org.h2.Driver");
     String connString = "jdbc:h2:" + dirTestWatcher.getTmpDir().getCanonicalPath();
-    URL scriptFile = TestJdbcPluginWithH2IT.class.getClassLoader().getResource("h2-test-data.sql");
-    assertNotNull("Script for test tables generation 'h2-test-data.sql' cannot be found in test resources", scriptFile);
+
+    assertNotNull("Script for test tables generation 'h2-test-data.sql' cannot be found in test resources", SCRIPT_FILE);
     try (Connection connection = DriverManager.getConnection(connString, "root", "root");
-         FileReader fileReader = new FileReader(scriptFile.getFile())) {
+         FileReader fileReader = new FileReader(SCRIPT_FILE.getFile())) {
       RunScript.execute(connection, fileReader);
     }
 
@@ -312,5 +313,40 @@ public class TestJdbcPluginWithH2IT extends ClusterTest {
         .planMatcher()
         .include("mocked_enum")
         .match();
+  }
+
+  @Test
+  public void testSharedUserNoCreds() throws Exception {
+    String connString = "jdbc:h2:" + dirTestWatcher.getTmpDir().getCanonicalPath() + "/noauth";
+    JdbcStorageConfig cfg = new JdbcStorageConfig(
+      "org.h2.Driver",
+        connString,
+        null,
+        null,
+        true,
+        false,
+        null,
+        null,
+        AuthMode.SHARED_USER.name(),
+        10000
+    );
+    cfg.setEnabled(true);
+    cluster.defineStoragePlugin("h2_noauth", cfg);
+
+    try (
+      Connection connection = DriverManager.getConnection(connString, null, null);
+      FileReader fileReader = new FileReader(SCRIPT_FILE.getFile())
+    ) {
+      RunScript.execute(connection, fileReader);
+    }
+
+    run("USE h2_noauth");
+    String sql = "SHOW TABLES";
+    testBuilder()
+      .sqlQuery(sql)
+      .unOrdered()
+      .baselineColumns("TABLE_SCHEMA", "TABLE_NAME")
+      .baselineValues("h2_noauth.noauth.drill_h2_test_1", "PERSON")
+      .go();
   }
 }

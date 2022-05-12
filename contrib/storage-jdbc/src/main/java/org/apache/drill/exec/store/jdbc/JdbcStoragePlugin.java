@@ -40,6 +40,7 @@ import org.apache.drill.exec.server.DrillbitContext;
 import org.apache.drill.exec.store.AbstractStoragePlugin;
 import org.apache.drill.exec.store.SchemaConfig;
 import org.apache.drill.exec.store.security.UsernamePasswordCredentials;
+import org.apache.drill.exec.util.ImpersonationUtil;
 import org.apache.drill.shaded.guava.com.google.common.annotations.VisibleForTesting;
 import org.apache.drill.shaded.guava.com.google.common.collect.ImmutableSet;
 import org.slf4j.Logger;
@@ -94,7 +95,11 @@ public class JdbcStoragePlugin extends AbstractStoragePlugin {
       return Optional.<DataSource>empty();
     }
 
-    String dsKey = jdbcCreds.map(UsernamePasswordCredentials::getUsername).orElse(null);
+    // Missing creds is valid under SHARED_USER (e.g. unsecured DBs, BigQuery's OAuth)
+    // and we fall back to using a key of Drillbit process username in this instance.
+    String dsKey = jdbcCreds.isPresent()
+      ? jdbcCreds.get().getUsername()
+      : ImpersonationUtil.getProcessUserName();
 
     return Optional.of(dataSources.computeIfAbsent(
       dsKey,
