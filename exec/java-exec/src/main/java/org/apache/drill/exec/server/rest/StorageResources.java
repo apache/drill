@@ -60,10 +60,8 @@ import org.apache.drill.common.logical.CredentialedStoragePluginConfig;
 import org.apache.drill.common.logical.StoragePluginConfig;
 import org.apache.drill.common.logical.StoragePluginConfig.AuthMode;
 import org.apache.drill.common.logical.security.CredentialsProvider;
-import org.apache.drill.exec.oauth.OAuthTokenProvider;
 import org.apache.drill.exec.oauth.PersistentTokenTable;
 import org.apache.drill.exec.oauth.TokenRegistry;
-import org.apache.drill.exec.server.DrillbitContext;
 import org.apache.drill.exec.server.rest.DrillRestServer.UserAuthEnabled;
 import org.apache.drill.exec.store.AbstractStoragePlugin;
 import org.apache.drill.exec.store.StoragePluginRegistry;
@@ -105,7 +103,6 @@ public class StorageResources {
   private static final String ALL_PLUGINS = "all";
   private static final String ENABLED_PLUGINS = "enabled";
   private static final String DISABLED_PLUGINS = "disabled";
-  private static final String OAUTH_SUCCESS_PAGE = "/rest/storage/success.html";
 
   private static final Comparator<PluginConfigWrapper> PLUGIN_COMPARATOR =
     Comparator.comparing(PluginConfigWrapper::getName);
@@ -214,30 +211,7 @@ public class StorageResources {
   @Consumes(MediaType.APPLICATION_JSON)
   @Produces(MediaType.APPLICATION_JSON)
   public Response updateRefreshToken(@PathParam("name") String name, OAuthTokenContainer tokens) {
-    try {
-      if (storage.getPlugin(name).getConfig() instanceof CredentialedStoragePluginConfig) {
-        DrillbitContext context = ((AbstractStoragePlugin) storage.getPlugin(name)).getContext();
-        OAuthTokenProvider tokenProvider = context.getoAuthTokenProvider();
-        PersistentTokenTable tokenTable = tokenProvider.getOauthTokenRegistry(getActiveUser(storage.getPlugin(name).getConfig())).getTokenTable(name);
-
-        // Set the access token
-        tokenTable.setRefreshToken(tokens.getRefreshToken());
-
-        return Response.status(Status.OK)
-          .entity("Refresh token have been updated.")
-          .build();
-      } else {
-        logger.error("{} is not a HTTP plugin. You can only add access tokens to HTTP plugins.", name);
-        return Response.status(Status.INTERNAL_SERVER_ERROR)
-          .entity(message("Unable to add tokens: %s", name))
-          .build();
-      }
-    } catch (PluginException e) {
-      logger.error("Error when adding tokens to {}", name);
-      return Response.status(Status.INTERNAL_SERVER_ERROR)
-        .entity(message("Unable to add tokens: %s", e.getMessage()))
-        .build();
-    }
+    return OAuthRequests.updateRefreshToken(name, tokens, storage, authEnabled, sc);
   }
 
   @POST
@@ -245,30 +219,7 @@ public class StorageResources {
   @Consumes(MediaType.APPLICATION_JSON)
   @Produces(MediaType.APPLICATION_JSON)
   public Response updateAccessToken(@PathParam("name") String name, OAuthTokenContainer tokens) {
-    try {
-      if (storage.getPlugin(name).getConfig() instanceof CredentialedStoragePluginConfig) {
-        DrillbitContext context = ((AbstractStoragePlugin) storage.getPlugin(name)).getContext();
-        OAuthTokenProvider tokenProvider = context.getoAuthTokenProvider();
-        PersistentTokenTable tokenTable = tokenProvider.getOauthTokenRegistry(getActiveUser(storage.getPlugin(name).getConfig())).getTokenTable(name);
-
-        // Set the access token
-        tokenTable.setAccessToken(tokens.getAccessToken());
-
-        return Response.status(Status.OK)
-          .entity("Access tokens have been updated.")
-          .build();
-      } else {
-        logger.error("{} is not a HTTP plugin. You can only add access tokens to HTTP plugins.", name);
-        return Response.status(Status.INTERNAL_SERVER_ERROR)
-          .entity(message("Unable to add tokens: %s", name))
-          .build();
-      }
-    } catch (PluginException e) {
-      logger.error("Error when adding tokens to {}", name);
-      return Response.status(Status.INTERNAL_SERVER_ERROR)
-        .entity(message("Unable to add tokens: %s", e.getMessage()))
-        .build();
-    }
+    return OAuthRequests.updateAccessToken(name, tokens, storage, authEnabled, sc);
   }
 
   @POST
@@ -277,91 +228,14 @@ public class StorageResources {
   @Produces(MediaType.APPLICATION_JSON)
   public Response updateOAuthTokens(@PathParam("name") String name,
                                     OAuthTokenContainer tokenContainer) {
-    try {
-      if (storage.getPlugin(name).getConfig() instanceof CredentialedStoragePluginConfig) {
-        DrillbitContext context = ((AbstractStoragePlugin) storage.getPlugin(name)).getContext();
-        OAuthTokenProvider tokenProvider = context.getoAuthTokenProvider();
-        PersistentTokenTable tokenTable = tokenProvider.getOauthTokenRegistry(getActiveUser(storage.getPlugin(name).getConfig())).getTokenTable(name);
-
-        // Set the access and refresh token
-        tokenTable.setAccessToken(tokenContainer.getAccessToken());
-        tokenTable.setRefreshToken(tokenContainer.getRefreshToken());
-
-        return Response.status(Status.OK)
-          .entity("Access tokens have been updated.")
-          .build();
-      } else {
-        logger.error("{} is not a HTTP plugin. You can only add access tokens to HTTP plugins.", name);
-        return Response.status(Status.INTERNAL_SERVER_ERROR)
-          .entity(message("Unable to add tokens: %s", name))
-          .build();
-      }
-    } catch (PluginException e) {
-      logger.error("Error when adding tokens to {}", name);
-      return Response.status(Status.INTERNAL_SERVER_ERROR)
-        .entity(message("Unable to add tokens: %s", e.getMessage()))
-        .build();
-    }
+    return OAuthRequests.updateOAuthTokens(name, tokenContainer, storage, authEnabled, sc);
   }
 
   @GET
   @Path("/storage/{name}/update_oauth2_authtoken")
   @Produces(MediaType.TEXT_HTML)
   public Response updateAuthToken(@PathParam("name") String name, @QueryParam("code") String code) {
-    try {
-      if (storage.getPlugin(name).getConfig() instanceof CredentialedStoragePluginConfig) {
-        CredentialedStoragePluginConfig securedStoragePluginConfig = (CredentialedStoragePluginConfig) storage.getPlugin(name).getConfig();
-        CredentialsProvider credentialsProvider = securedStoragePluginConfig.getCredentialsProvider();
-        String callbackURL = this.request.getRequestURL().toString();
-
-        // Now exchange the authorization token for an access token
-        Builder builder = new OkHttpClient.Builder();
-        OkHttpClient client = builder.build();
-
-        Request accessTokenRequest = OAuthUtils.getAccessTokenRequest(credentialsProvider, code, callbackURL);
-        Map<String, String> updatedTokens = OAuthUtils.getOAuthTokens(client, accessTokenRequest);
-
-        // Add to token registry
-        // If USER_TRANSLATION is enabled, Drill will create a token table for each user.
-        TokenRegistry tokenRegistry = ((AbstractStoragePlugin) storage.getPlugin(name))
-          .getContext()
-          .getoAuthTokenProvider()
-          .getOauthTokenRegistry(getActiveUser(storage.getPlugin(name).getConfig()));
-
-        // Add a token registry table if none exists
-        tokenRegistry.createTokenTable(name);
-        PersistentTokenTable tokenTable = tokenRegistry.getTokenTable(name);
-
-        // Add tokens to persistent storage
-        tokenTable.setAccessToken(updatedTokens.get(OAuthTokenCredentials.ACCESS_TOKEN));
-        tokenTable.setRefreshToken(updatedTokens.get(OAuthTokenCredentials.REFRESH_TOKEN));
-
-        // Get success page
-        String successPage = null;
-        try (InputStream inputStream = Resource.newClassPathResource(OAUTH_SUCCESS_PAGE).getInputStream()) {
-          InputStreamReader reader = new InputStreamReader(inputStream, StandardCharsets.UTF_8);
-          BufferedReader bufferedReader = new BufferedReader(reader);
-          successPage = bufferedReader.lines()
-            .collect(Collectors.joining("\n"));
-          bufferedReader.close();
-          reader.close();
-        } catch (IOException e) {
-          return Response.status(Status.OK).entity("You may close this window.").build();
-        }
-
-        return Response.status(Status.OK).entity(successPage).build();
-      } else {
-        logger.error("{} is not a HTTP plugin. You can only add auth code to HTTP plugins.", name);
-        return Response.status(Status.INTERNAL_SERVER_ERROR)
-          .entity(message("Unable to add authorization code: %s", name))
-          .build();
-      }
-    } catch (PluginException e) {
-      logger.error("Error when adding auth token to {}", name);
-      return Response.status(Status.INTERNAL_SERVER_ERROR)
-        .entity(message("Unable to add authorization code: %s", e.getMessage()))
-        .build();
-    }
+    return OAuthRequests.updateAuthToken(name, code, request, storage, authEnabled, sc);
   }
 
   /**
@@ -558,7 +432,7 @@ public class StorageResources {
   }
 
   @XmlRootElement
-  public class JsonResult {
+  public static class JsonResult {
 
     private final String result;
 
