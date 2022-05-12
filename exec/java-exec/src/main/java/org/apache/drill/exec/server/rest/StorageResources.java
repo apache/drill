@@ -307,7 +307,6 @@ public class StorageResources {
   @GET
   @Path("/storage/{name}/update_oauth2_authtoken")
   @Produces(MediaType.TEXT_HTML)
-  @Operation(externalDocs = @ExternalDocumentation(description = "Apache Drill REST API documentation:", url = "https://drill.apache.org/docs/rest-api-introduction/"))
   public Response updateAuthToken(@PathParam("name") String name, @QueryParam("code") String code) {
     try {
       if (storage.getPlugin(name).getConfig() instanceof CredentialedStoragePluginConfig) {

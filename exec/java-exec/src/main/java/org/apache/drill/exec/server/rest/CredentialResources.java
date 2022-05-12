@@ -155,7 +155,6 @@ public class CredentialResources {
     } else {
       return results;
     }
-
   }
 
   @POST
@@ -270,6 +269,7 @@ public class CredentialResources {
   @Path("/credentials/{name}/update_refresh_token")
   @Consumes(MediaType.APPLICATION_JSON)
   @Produces(MediaType.APPLICATION_JSON)
+  @Operation(externalDocs = @ExternalDocumentation(description = "Apache Drill REST API documentation:", url = "https://drill.apache.org/docs/rest-api-introduction/"))
   public Response updateRefreshToken(@PathParam("name") String name, OAuthTokenContainer tokens) {
     try {
       if (storage.getPlugin(name).getConfig() instanceof CredentialedStoragePluginConfig) {
@@ -332,6 +332,7 @@ public class CredentialResources {
   @Path("/credentials/{name}/update_oauth_tokens")
   @Consumes(MediaType.APPLICATION_JSON)
   @Produces(MediaType.APPLICATION_JSON)
+  @Operation(externalDocs = @ExternalDocumentation(description = "Apache Drill REST API documentation:", url = "https://drill.apache.org/docs/rest-api-introduction/"))
   public Response updateOAuthTokens(@PathParam("name") String name,
                                     OAuthTokenContainer tokenContainer) {
     try {
@@ -364,6 +365,7 @@ public class CredentialResources {
   @GET
   @Path("/credentials/{name}/update_oauth2_authtoken")
   @Produces(MediaType.TEXT_HTML)
+  @Operation(externalDocs = @ExternalDocumentation(description = "Apache Drill REST API documentation:", url = "https://drill.apache.org/docs/rest-api-introduction/"))
   public Response updateAuthToken(@PathParam("name") String name, @QueryParam("code") String code) {
     try {
       if (storage.getPlugin(name).getConfig() instanceof CredentialedStoragePluginConfig) {
@@ -418,6 +420,13 @@ public class CredentialResources {
         .build();
     }
   }
+
+  /**
+   * If the storage plugin uses user translation mode, this function returns the active user.
+   * Otherwise, it returns null.
+   * @param config A {@link StoragePluginConfig} config for a given storage plugin
+   * @return The active user if the plugin is in user translation mode, null if not.
+   */
   private String getActiveUser(StoragePluginConfig config) {
     if (config.getAuthMode() == AuthMode.USER_TRANSLATION) {
       return sc.getUserPrincipal().getName();
