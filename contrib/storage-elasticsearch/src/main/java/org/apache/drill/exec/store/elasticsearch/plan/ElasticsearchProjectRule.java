@@ -65,7 +65,7 @@ public class ElasticsearchProjectRule extends ConverterRule {
 
     // check for literals only without input exprs
     DrillRelOptUtil.InputRefVisitor collectRefs = new DrillRelOptUtil.InputRefVisitor();
-    project.getChildExps().forEach(exp -> exp.accept(collectRefs));
+    project.getProjects().forEach(exp -> exp.accept(collectRefs));
 
     if (!collectRefs.getInputRefs().isEmpty()) {
       for (RelDataTypeField relDataTypeField : rowType.getFieldList()) {
@@ -73,7 +73,7 @@ public class ElasticsearchProjectRule extends ConverterRule {
       }
     }
 
-    boolean allExprsInputRefs = project.getChildExps().stream().allMatch(rexNode -> rexNode instanceof RexInputRef);
+    boolean allExprsInputRefs = project.getProjects().stream().allMatch(rexNode -> rexNode instanceof RexInputRef);
     if (collectRefs.getInputRefs().isEmpty() || allExprsInputRefs) {
       return CalciteUtils.createProject(traitSet,
           convert(project.getInput(), out), project.getProjects(), project.getRowType());

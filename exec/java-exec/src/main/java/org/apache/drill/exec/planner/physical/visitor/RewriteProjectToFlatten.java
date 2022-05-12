@@ -70,7 +70,7 @@ public class RewriteProjectToFlatten extends BasePrelVisitor<Prel, Object, RelCo
     List<RelDataTypeField> relDataTypes = new ArrayList<>();
     int i = 0;
     RexNode flatttenExpr = null;
-    for (RexNode rex : project.getChildExps()) {
+    for (RexNode rex : project.getProjects()) {
       RexNode newExpr = rex;
       if (rex instanceof RexCall) {
         RexCall function = (RexCall) rex;
@@ -99,7 +99,7 @@ public class RewriteProjectToFlatten extends BasePrelVisitor<Prel, Object, RelCo
     }
 
     Prel child = ((Prel)project.getInput()).accept(this, null);
-    if (child == project.getInput() && exprList.equals(project.getChildExps())) {
+    if (child == project.getInput() && exprList.equals(project.getProjects())) {
       return project;
     }
     return (Prel) project.copy(project.getTraitSet(), child, exprList, new RelRecordType(relDataTypes));

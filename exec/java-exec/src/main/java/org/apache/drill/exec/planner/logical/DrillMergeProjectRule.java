@@ -46,7 +46,7 @@ import java.util.List;
  */
 public class DrillMergeProjectRule extends RelOptRule {
 
-  private FunctionImplementationRegistry functionRegistry;
+  private final FunctionImplementationRegistry functionRegistry;
   private final boolean force;
 
   public static DrillMergeProjectRule getInstance(boolean force, ProjectFactory pFactory,
@@ -71,15 +71,11 @@ public class DrillMergeProjectRule extends RelOptRule {
     Project bottomProject = call.rel(1);
 
     // We have a complex output type do not fire the merge project rule
-    if (checkComplexOutput(topProject) || checkComplexOutput(bottomProject)) {
-      return false;
-    }
-
-    return true;
+    return !checkComplexOutput(topProject) && !checkComplexOutput(bottomProject);
   }
 
   private boolean checkComplexOutput(Project project) {
-    for (RexNode expr: project.getChildExps()) {
+    for (RexNode expr: project.getProjects()) {
       if (expr instanceof RexCall) {
         if (functionRegistry.isFunctionComplexOutput(((RexCall) expr).getOperator().getName())) {
           return true;

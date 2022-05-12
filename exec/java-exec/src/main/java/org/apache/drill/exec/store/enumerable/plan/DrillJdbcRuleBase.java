@@ -78,7 +78,7 @@ public abstract class DrillJdbcRuleBase extends ConverterRule {
       try {
 
         final LogicalProject project = call.rel(0);
-        for (RexNode node : project.getChildExps()) {
+        for (RexNode node : project.getProjects()) {
           if (!checkedExpressions.get(node)) {
             return false;
           }
@@ -108,15 +108,8 @@ public abstract class DrillJdbcRuleBase extends ConverterRule {
     @Override
     public boolean matches(RelOptRuleCall call) {
       try {
-
-        final LogicalFilter filter = call.rel(0);
-        for (RexNode node : filter.getChildExps()) {
-          if (!checkedExpressions.get(node)) {
-            return false;
-          }
-        }
-        return true;
-
+        LogicalFilter filter = call.rel(0);
+        return checkedExpressions.get(filter.getCondition());
       } catch (ExecutionException e) {
         throw new IllegalStateException("Failure while trying to evaluate push down.", e);
       }
