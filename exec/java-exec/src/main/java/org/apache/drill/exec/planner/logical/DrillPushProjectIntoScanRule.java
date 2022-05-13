@@ -63,7 +63,7 @@ public class DrillPushProjectIntoScanRule extends RelOptRule {
 
       @Override
       protected boolean skipScanConversion(RelDataType projectRelDataType, TableScan scan) {
-        // do not allow skipping conversion of EnumerableTableScan to DrillScanRel if rule is applicable
+        // do not allow skipping conversion of LogicalTableScan to DrillScanRel if rule is applicable
         return false;
       }
     };
