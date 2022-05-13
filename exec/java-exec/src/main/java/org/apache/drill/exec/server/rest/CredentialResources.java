@@ -69,7 +69,6 @@ public class CredentialResources {
   private static final String ENABLED_PLUGINS = "enabled";
   private static final String DISABLED_PLUGINS = "disabled";
   private static final String TRANSLATES_USERS = "translates_users";
-  private static final String OAUTH_SUCCESS_PAGE = "/rest/storage/success.html";
 
   @Inject
   UserAuthEnabled authEnabled;
@@ -282,20 +281,6 @@ public class CredentialResources {
   @Operation(externalDocs = @ExternalDocumentation(description = "Apache Drill REST API documentation:", url = "https://drill.apache.org/docs/rest-api-introduction/"))
   public Response updateAuthToken(@PathParam("name") String name, @QueryParam("code") String code) {
     return OAuthRequests.updateAuthToken(name, code, request, storage, authEnabled, sc);
-  }
-
-  /**
-   * If the storage plugin uses user translation mode, this function returns the active user.
-   * Otherwise, it returns null.
-   * @param config A {@link StoragePluginConfig} config for a given storage plugin
-   * @return The active user if the plugin is in user translation mode, null if not.
-   */
-  private String getActiveUser(StoragePluginConfig config) {
-    if (config.getAuthMode() == AuthMode.USER_TRANSLATION) {
-      return sc.getUserPrincipal().getName();
-    } else {
-      return null;
-    }
   }
 
   private JsonResult message(String message, Object... args) {
