@@ -20,14 +20,15 @@ package org.apache.drill.exec.planner.logical;
 import java.io.IOException;
 import java.util.Objects;
 
-import org.apache.calcite.adapter.enumerable.EnumerableTableScan;
 import org.apache.calcite.config.CalciteConnectionConfig;
 import org.apache.calcite.plan.RelOptTable;
 import org.apache.calcite.rel.RelNode;
+import org.apache.calcite.rel.logical.LogicalTableScan;
 import org.apache.calcite.schema.Schema.TableType;
 import org.apache.calcite.schema.Statistic;
 import org.apache.calcite.schema.Statistics;
 import org.apache.calcite.schema.Table;
+import org.apache.calcite.schema.TranslatableTable;
 import org.apache.calcite.sql.SqlCall;
 import org.apache.calcite.sql.SqlNode;
 import org.apache.drill.common.JSONOptions;
@@ -42,7 +43,7 @@ import org.apache.drill.exec.store.StoragePlugin;
 import org.apache.drill.exec.store.dfs.FileSelection;
 import org.apache.drill.exec.util.ImpersonationUtil;
 
-public abstract class DrillTable implements Table {
+public abstract class DrillTable implements Table, TranslatableTable {
 
   private final String storageEngineName;
   private final StoragePluginConfig storageEngineConfig;
@@ -165,10 +166,11 @@ public abstract class DrillTable implements Table {
     return Statistics.UNKNOWN;
   }
 
+  @Override
   public RelNode toRel(RelOptTable.ToRelContext context, RelOptTable table) {
     // returns non-drill table scan to allow directory-based partition pruning
     // before table group scan is created
-    return EnumerableTableScan.create(context.getCluster(), table);
+    return LogicalTableScan.create(context.getCluster(), table);
   }
 
   @Override
