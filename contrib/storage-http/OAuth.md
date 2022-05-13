@@ -125,3 +125,20 @@ There are a few optional parameters in the OAuth config which you may need to se
 
 * `tokenType`:  Some OAuth enabled APIs provide a `Bearer` token.  If that is the case, this should be set to `Bearer`.
 * `authorizationParams`:  A key value parameters which are sent during the authentication process.
+
+## Enabling Individual User Credentials with OAuth 2.0
+Drill recently introduced the `USER_TRANSLATION` authorization mode, which is useful for plugins that do not have the concept of user impersonation.  This is very much the
+case for OAuth enabled APIs.  When you configure an OAuth enabled API, the client secret keys belong to the application.  Following this design pattern, each individual user
+should authorize (or not) the application.  Thus the `clientID` and `client_secret` tokens really belong to the application and the `access_token` and `refresh_token` belong 
+to the individual user.
+
+Enabling user translation is quite simple.  In the configuration for the storage plugin simply add the key below to your 
+plugin configuration.  Note that for user translation to work, user impersonation and authentication must both be enabled globally.
+
+```json
+"authMode":"USER_TRANSLATION"
+```
+
+Once you've done this, when a user logs in, they will see a new menu option at the top bar called `Credentials`.  This will contain a listing 
+of storage plugin instances that require credentials.  For OAuth enabled plugins, there will be an `Authorize` button next to the plugin name.
+Each user will have to authorize Drill to access the plugin.

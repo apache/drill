@@ -35,6 +35,7 @@ import org.apache.commons.net.util.Base64;
 import org.apache.drill.common.config.DrillProperties;
 import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.common.logical.CredentialedStoragePluginConfig;
+import org.apache.drill.common.logical.OAuthConfig;
 import org.apache.drill.common.logical.StoragePluginConfig.AuthMode;
 import org.apache.drill.common.logical.security.PlainCredentialsProvider;
 import org.apache.drill.common.util.DrillFileUtils;
@@ -118,6 +119,10 @@ public class TestUserTranslationInHttpPlugin extends ClusterTest {
       .errorOn400(true)
       .build();
 
+    OAuthConfig oAuthConfig = OAuthConfig.builder()
+      .callbackURL(makeUrl("http://localhost:%d") + "/update_oauth2_authtoken")
+      .build();
+
     Map<String, HttpApiConfig> configs = new HashMap<>();
     configs.put("sharedEndpoint", testEndpoint);
 
@@ -127,8 +132,10 @@ public class TestUserTranslationInHttpPlugin extends ClusterTest {
 
     PlainCredentialsProvider credentialsProvider = new PlainCredentialsProvider(TEST_USER_2, credentials);
 
-    HttpStoragePluginConfig mockStorageConfigWithWorkspace = new HttpStoragePluginConfig(false, configs, 2, null, null, "", 80, "", "", "", null, credentialsProvider, AuthMode.USER_TRANSLATION.name());
+    HttpStoragePluginConfig mockStorageConfigWithWorkspace = new HttpStoragePluginConfig(false, configs, 2, null, null, "", 80, "", "", "", oAuthConfig, credentialsProvider,
+      AuthMode.USER_TRANSLATION.name());
     mockStorageConfigWithWorkspace.setEnabled(true);
+
     cluster.defineStoragePlugin("local", mockStorageConfigWithWorkspace);
   }
 
@@ -199,12 +206,28 @@ public class TestUserTranslationInHttpPlugin extends ClusterTest {
   private boolean makeLoginRequest(String username, String password) throws IOException {
     String loginURL = "http://localhost:" + portNumber + "/j_security_check";
 
-    RequestBody formBody = new FormBody.Builder().add("j_username", username).add("j_password", password).build();
+    RequestBody formBody = new FormBody.Builder()
+      .add("j_username", username)
+      .add("j_password", password)
+      .build();
 
-    Request request = new Request.Builder().url(loginURL).post(formBody).addHeader("Content-Type", "application/x-www-form-urlencoded").addHeader("Accept", "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8").build();
+    Request request = new Request.Builder()
+      .url(loginURL)
+      .post(formBody)
+      .addHeader("Content-Type", "application/x-www-form-urlencoded")
+      .addHeader("Accept", "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8")
+      .build();
 
     Response response = httpClient.newCall(request).execute();
     return response.code() == 200;
+  }
+
+  @Test
+  public void testOAuthWithUserTranslation() throws Exception {
+    makeLoginRequest(TEST_USER_2, TEST_USER_2_PASSWORD);
+
+    // Now get credentials for this user
+
   }
 
   @Test
