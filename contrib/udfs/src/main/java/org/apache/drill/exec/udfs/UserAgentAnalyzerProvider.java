@@ -18,12 +18,36 @@
 
 package org.apache.drill.exec.udfs;
 
+import nl.basjes.parse.useragent.AnalyzerUtilities.ParsedArguments;
 import nl.basjes.parse.useragent.UserAgentAnalyzer;
+import org.apache.drill.exec.expr.holders.NullableVarCharHolder;
+
+import java.util.ArrayList;
+import java.util.List;
+
+import static nl.basjes.parse.useragent.AnalyzerUtilities.parseArguments;
+import static nl.basjes.parse.useragent.UserAgent.USERAGENT_HEADER;
+import static org.apache.drill.exec.expr.fn.impl.StringFunctionHelpers.getStringFromVarCharHolder;
 
 public class UserAgentAnalyzerProvider {
 
   public static UserAgentAnalyzer getInstance() {
     return UserAgentAnalyzerHolder.INSTANCE;
+  }
+
+  public static List<String> getAllFields() {
+    return UserAgentAnalyzerHolder.INSTANCE.getAllPossibleFieldNamesSorted();
+  }
+
+  private static List<String> allHeaders = null;
+
+  public static synchronized List<String> getAllHeaders() {
+    if (allHeaders == null) {
+      allHeaders = new ArrayList<>();
+      allHeaders.add(USERAGENT_HEADER);
+      allHeaders.addAll(getInstance().supportedClientHintHeaders());
+    }
+    return allHeaders;
   }
 
   private static class UserAgentAnalyzerHolder {
@@ -32,5 +56,17 @@ public class UserAgentAnalyzerProvider {
             .hideMatcherLoadStats()
             .immediateInitialization()
             .build();
+  }
+
+  public static ParsedArguments parseArgumentArray(NullableVarCharHolder[] input) {
+    List<String> inputList = new ArrayList<>();
+    for (NullableVarCharHolder holder : input) {
+      if (holder == null || holder.buffer == null) {
+        inputList.add(null);
+      } else {
+        inputList.add(getStringFromVarCharHolder(holder));
+      }
+    }
+    return parseArguments(inputList, getAllFields(), getAllHeaders());
   }
 }
