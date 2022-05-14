@@ -18,11 +18,14 @@
 
 package org.apache.drill.exec.udfs;
 
+import nl.basjes.parse.useragent.AbstractUserAgentAnalyzer;
 import nl.basjes.parse.useragent.AnalyzerUtilities.ParsedArguments;
 import nl.basjes.parse.useragent.UserAgentAnalyzer;
+import org.apache.commons.collections4.map.LRUMap;
 import org.apache.drill.exec.expr.holders.NullableVarCharHolder;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 import static nl.basjes.parse.useragent.AnalyzerUtilities.parseArguments;
@@ -54,7 +57,15 @@ public class UserAgentAnalyzerProvider {
     private static final UserAgentAnalyzer INSTANCE = UserAgentAnalyzer.newBuilder()
             .dropTests()
             .hideMatcherLoadStats()
-            .immediateInitialization()
+            // Caffeine is a Java 11+ library.
+            // This is one is Java 8 compatible.
+            .withCacheInstantiator(
+              (AbstractUserAgentAnalyzer.CacheInstantiator) size ->
+                Collections.synchronizedMap(new LRUMap<>(size)))
+            .withClientHintCacheInstantiator(
+              (AbstractUserAgentAnalyzer.ClientHintsCacheInstantiator<?>) size ->
+                Collections.synchronizedMap(new LRUMap<>(size)))
+                  .immediateInitialization()
             .build();
   }
 
