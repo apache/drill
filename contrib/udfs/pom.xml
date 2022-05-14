@@ -94,7 +94,7 @@
     </dependency>
 
     <!-- The default logging implementation for Yauaa -->
-    <!-- Send all Log4j2 call to SLF4J -->
+    <!-- Send all Log4j2 calls to SLF4J -->
     <dependency>
       <groupId>org.apache.logging.log4j</groupId>
       <artifactId>log4j-to-slf4j</artifactId>
