@@ -364,7 +364,7 @@ public class DefaultSqlHandler extends AbstractSqlHandler {
   protected RelNode transform(PlannerType plannerType, PlannerPhase phase, RelNode input, RelTraitSet targetTraits,
       boolean log) {
     final Stopwatch watch = Stopwatch.createStarted();
-    final RuleSet rules = config.getRules(phase);
+    final RuleSet rules = config.getRules(phase, input);
     final RelTraitSet toTraits = targetTraits.simplify();
 
     final RelNode output;

@@ -17,16 +17,26 @@
  */
 package org.apache.drill.exec.planner.sql.handlers;
 
+import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Map.Entry;
+import java.util.List;
+import java.util.Optional;
 
+import org.apache.calcite.jdbc.DynamicRootSchema;
+import org.apache.calcite.jdbc.DynamicSchema;
+import org.apache.calcite.rel.RelNode;
+import org.apache.calcite.rel.RelShuttleImpl;
+import org.apache.calcite.rel.core.TableScan;
 import org.apache.calcite.tools.RuleSet;
+import org.apache.drill.common.util.function.CheckedSupplier;
 import org.apache.drill.exec.ops.QueryContext;
 import org.apache.drill.exec.planner.PlannerPhase;
+import org.apache.drill.exec.planner.common.DrillRelOptUtil;
+import org.apache.drill.exec.planner.logical.DrillTable;
+import org.apache.drill.exec.planner.sql.SchemaUtilites;
 import org.apache.drill.exec.planner.sql.conversion.SqlConverter;
 import org.apache.drill.exec.store.StoragePlugin;
-
-import org.apache.drill.shaded.guava.com.google.common.collect.Lists;
+import org.apache.drill.exec.store.StoragePluginRegistry;
 
 public class SqlHandlerConfig {
 
@@ -43,15 +53,43 @@ public class SqlHandlerConfig {
     return context;
   }
 
-  public RuleSet getRules(PlannerPhase phase) {
-    Collection<StoragePlugin> plugins = Lists.newArrayList();
-    for (Entry<String, StoragePlugin> k : context.getStorage()) {
-      plugins.add(k.getValue());
-    }
+  public RuleSet getRules(PlannerPhase phase, RelNode input) {
+    PluginsCollector pluginsCollector = new PluginsCollector(
+      (DynamicRootSchema) DynamicSchema.from(converter.getRootSchema()));
+    input.accept(pluginsCollector);
+
+    Collection<StoragePlugin> plugins = pluginsCollector.getPlugins();
     return phase.getRules(context, plugins);
   }
 
   public SqlConverter getConverter() {
     return converter;
+  }
+
+  public static class PluginsCollector extends RelShuttleImpl {
+    private final List<StoragePlugin> plugins = new ArrayList<>();
+    private final DynamicRootSchema schema;
+
+    public PluginsCollector(DynamicRootSchema schema) {
+      this.schema = schema;
+    }
+
+    @Override
+    public RelNode visit(TableScan scan) {
+      String pluginName = SchemaUtilites.getSchemaPathAsList(
+        scan.getTable().getQualifiedName().iterator().next()).iterator().next();
+      CheckedSupplier<StoragePlugin, StoragePluginRegistry.PluginException> pluginsProvider =
+        () -> schema.getPlugin(pluginName);
+
+      StoragePlugin storagePlugin = Optional.ofNullable(DrillRelOptUtil.getDrillTable(scan))
+        .map(DrillTable::getPlugin)
+        .orElseGet(pluginsProvider);
+      plugins.add(storagePlugin);
+      return scan;
+    }
+
+    public List<StoragePlugin> getPlugins() {
+      return plugins;
+    }
   }
 }

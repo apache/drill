@@ -104,7 +104,7 @@ public class DynamicRootSchema extends DynamicSchema {
   private void loadSchemaFactory(String schemaName, boolean caseSensitive) {
     try {
       SchemaPlus schemaPlus = this.plus();
-      StoragePlugin plugin = storages.getPlugin(schemaName);
+      StoragePlugin plugin = getPlugin(schemaName);
       if (plugin != null) {
         plugin.registerSchemas(schemaConfig, schemaPlus);
         return;
@@ -113,7 +113,7 @@ public class DynamicRootSchema extends DynamicSchema {
       // Could not find the plugin of schemaName. The schemaName could be `dfs.tmp`, a 2nd level schema under 'dfs'
       List<String> paths = SchemaUtilites.getSchemaPathAsList(schemaName);
       if (paths.size() == 2) {
-        plugin = storages.getPlugin(paths.get(0));
+        plugin = getPlugin(paths.get(0));
         if (plugin == null) {
           return;
         }
@@ -155,9 +155,13 @@ public class DynamicRootSchema extends DynamicSchema {
     }
   }
 
+  public StoragePlugin getPlugin(String schemaName) throws PluginException {
+    return storages.getPlugin(schemaName);
+  }
+
   public static class RootSchema extends AbstractSchema {
 
-    private StoragePluginRegistry storages;
+    private final StoragePluginRegistry storages;
 
     public RootSchema(StoragePluginRegistry storages) {
       super(Collections.emptyList(), ROOT_SCHEMA_NAME);
