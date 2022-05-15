@@ -93,6 +93,18 @@ public class HttpStoragePlugin extends AbstractStoragePlugin {
     return tokenRegistry;
   }
 
+  /**
+   * This method returns the {@link TokenRegistry} for a given user.  It is only used for testing user translation
+   * with OAuth 2.0.
+   * @param username A {@link String} of the current active user.
+   * @return A {@link TokenRegistry} for the given user.
+   */
+  @VisibleForTesting
+  public TokenRegistry getTokenRegistry(String username) {
+    initializeOauthTokenTable(username);
+    return tokenRegistry;
+  }
+
   public PersistentTokenTable getTokenTable() { return tokenRegistry.getTokenTable(getName()); }
 
   @Override
