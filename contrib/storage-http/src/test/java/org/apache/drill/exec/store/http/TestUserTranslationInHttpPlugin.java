@@ -133,7 +133,7 @@ public class TestUserTranslationInHttpPlugin extends ClusterTest {
 
     Map<String, String> oauthCreds = new HashMap<>();
     oauthCreds.put("clientID", "12345");
-    oauthCreds.put("clientSecret", "54321");;
+    oauthCreds.put("clientSecret", "54321");
     oauthCreds.put(OAuthTokenCredentials.TOKEN_URI, "http://localhost:" + MOCK_SERVER_PORT + "/get_access_token");
 
     CredentialsProvider oauthCredentialProvider = new PlainCredentialsProvider(oauthCreds);
