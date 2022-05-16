@@ -85,7 +85,7 @@
       for example parquet-hadoop-bundle and derby dependencies.
     -->
     <hive.version>3.1.2</hive.version>
-    <hadoop.version>3.2.2</hadoop.version>
+    <hadoop.version>3.2.3</hadoop.version>
     <hbase.version>2.4.9</hbase.version>
     <fmpp.version>1.0</fmpp.version>
     <freemarker.version>2.3.28</freemarker.version>
