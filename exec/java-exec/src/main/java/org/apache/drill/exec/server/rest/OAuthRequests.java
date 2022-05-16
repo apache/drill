@@ -66,7 +66,7 @@ public class OAuthRequests {
       if (storage.getPlugin(name).getConfig() instanceof CredentialedStoragePluginConfig) {
         DrillbitContext context = ((AbstractStoragePlugin) storage.getPlugin(name)).getContext();
         OAuthTokenProvider tokenProvider = context.getoAuthTokenProvider();
-        PersistentTokenTable tokenTable = tokenProvider.getOauthTokenRegistry(getActiveUser(storage.getPlugin(name).getConfig(), authEnabled, sc)).getTokenTable(name);
+        PersistentTokenTable tokenTable = tokenProvider.getOauthTokenRegistry(getQueryUser(storage.getPlugin(name).getConfig(), authEnabled, sc)).getTokenTable(name);
 
         // Set the access token
         tokenTable.setAccessToken(tokens.getAccessToken());
@@ -96,7 +96,7 @@ public class OAuthRequests {
         DrillbitContext context = ((AbstractStoragePlugin) storage.getPlugin(name)).getContext();
         OAuthTokenProvider tokenProvider = context.getoAuthTokenProvider();
         PersistentTokenTable tokenTable = tokenProvider.getOauthTokenRegistry(
-          getActiveUser(storage.getPlugin(name).getConfig(), authEnabled, sc)).getTokenTable(name);
+          getQueryUser(storage.getPlugin(name).getConfig(), authEnabled, sc)).getTokenTable(name);
 
         // Set the access token
         tokenTable.setRefreshToken(tokens.getRefreshToken());
@@ -125,7 +125,7 @@ public class OAuthRequests {
         DrillbitContext context = ((AbstractStoragePlugin) storage.getPlugin(name)).getContext();
         OAuthTokenProvider tokenProvider = context.getoAuthTokenProvider();
         PersistentTokenTable tokenTable = tokenProvider
-          .getOauthTokenRegistry(getActiveUser(storage.getPlugin(name).getConfig(), authEnabled, sc))
+          .getOauthTokenRegistry(getQueryUser(storage.getPlugin(name).getConfig(), authEnabled, sc))
           .getTokenTable(name);
 
         // Set the access and refresh token
@@ -170,7 +170,7 @@ public class OAuthRequests {
         TokenRegistry tokenRegistry = ((AbstractStoragePlugin) storage.getPlugin(name))
           .getContext()
           .getoAuthTokenProvider()
-          .getOauthTokenRegistry(getActiveUser(storage.getPlugin(name).getConfig(), authEnabled, sc));
+          .getOauthTokenRegistry(getQueryUser(storage.getPlugin(name).getConfig(), authEnabled, sc));
 
         // Add a token registry table if none exists
         tokenRegistry.createTokenTable(name);
@@ -218,9 +218,9 @@ public class OAuthRequests {
    * @param config {@link StoragePluginConfig} The current plugin configuration
    * @return If USER_TRANSLATION is enabled, returns the active user.  If not, returns null.
    */
-  private static String getActiveUser(StoragePluginConfig config,
-                                      UserAuthEnabled authEnabled,
-                                      SecurityContext sc) {
+  private static String getQueryUser(StoragePluginConfig config,
+                                     UserAuthEnabled authEnabled,
+                                     SecurityContext sc) {
     if (config.getAuthMode() == AuthMode.USER_TRANSLATION && authEnabled.get()) {
       return sc.getUserPrincipal().getName();
     } else {
