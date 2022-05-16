@@ -194,7 +194,9 @@ public class StorageResources {
   @Path("/storage/{name}/update_refresh_token")
   @Consumes(MediaType.APPLICATION_JSON)
   @Produces(MediaType.APPLICATION_JSON)
+  @Deprecated
   public Response updateRefreshToken(@PathParam("name") String name, OAuthTokenContainer tokens) {
+    // This endpoint is deprecated.  Use the same path in credentials resources instead.
     return OAuthRequests.updateRefreshToken(name, tokens, storage, authEnabled, sc);
   }
 
@@ -202,7 +204,9 @@ public class StorageResources {
   @Path("/storage/{name}/update_access_token")
   @Consumes(MediaType.APPLICATION_JSON)
   @Produces(MediaType.APPLICATION_JSON)
+  @Deprecated
   public Response updateAccessToken(@PathParam("name") String name, OAuthTokenContainer tokens) {
+    // This endpoint is deprecated.  Use the same path in credentials resources instead.
     return OAuthRequests.updateAccessToken(name, tokens, storage, authEnabled, sc);
   }
 
@@ -210,15 +214,19 @@ public class StorageResources {
   @Path("/storage/{name}/update_oauth_tokens")
   @Consumes(MediaType.APPLICATION_JSON)
   @Produces(MediaType.APPLICATION_JSON)
+  @Deprecated
   public Response updateOAuthTokens(@PathParam("name") String name,
                                     OAuthTokenContainer tokenContainer) {
+    // This endpoint is deprecated.  Use the same path in credentials resources instead.
     return OAuthRequests.updateOAuthTokens(name, tokenContainer, storage, authEnabled, sc);
   }
 
   @GET
   @Path("/storage/{name}/update_oauth2_authtoken")
   @Produces(MediaType.TEXT_HTML)
+  @Deprecated
   public Response updateAuthToken(@PathParam("name") String name, @QueryParam("code") String code) {
+    // This endpoint is deprecated.  Use the same path in credentials resources instead.
     return OAuthRequests.updateAuthToken(name, code, request, storage, authEnabled, sc);
   }
 
