@@ -48,10 +48,16 @@
                 ${pluginModel.getPlugin().getName()}
             </td>
             <td style="border:none;">
+                <#if pluginModel.getPlugin().isOauth()>
+                  <button type="button" class="btn btn-primary"
+                          id="getOauth" class="btn btn-success text-white"
+                          onclick="authorize('${pluginModel.getPlugin().getAuthorizationURIWithParams()!}')">Authorize</button>
+                <#else>
               <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#new-plugin-modal" data-plugin="${pluginModel.getPlugin().getName()}"
                       data-username="${pluginModel.getUserName()}" data-password="${pluginModel.getPassword()}">
                 Update Credentials
               </button>
+                </#if>
             </td>
           </tr>
           </#if>
@@ -60,7 +66,6 @@
       </table>
     </div>
 
-      <#--onclick="doUpdate('${pluginModel.getPlugin().getName()}')"-->
       <#-- Modal window for creating plugin -->
     <div class="modal fade" id="new-plugin-modal" role="dialog" aria-labelledby="configuration">
       <div class="modal-dialog" role="document">
@@ -70,7 +75,6 @@
             <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
           </div>
           <div class="modal-body">
-
             <form id="createForm" role="form" action="/credentials/update_credentials" method="POST">
               <input type="text" class="form-control" name="username" id="usernameField" placeholder="Username" />
               <input type="text" class="form-control" name="password" id="passwordField" placeholder="Password" />
@@ -104,6 +108,17 @@
           $('#passwordField').val(password);
         });
       });
+
+      function authorize(finalURL) {
+        console.log(finalURL);
+        var tokenGetterWindow = window.open(finalURL, 'Authorize Drill', "toolbar=no,menubar=no,scrollbars=yes,resizable=yes,top=500,left=500,width=450,height=600");
+        var timer = setInterval(function () {
+          if (tokenGetterWindow.closed) {
+            clearInterval(timer);
+            window.location.reload(); // Refresh the parent page
+          }
+        }, 1000);
+      }
 
       function doCreate() {
         $("#createForm").ajaxForm({

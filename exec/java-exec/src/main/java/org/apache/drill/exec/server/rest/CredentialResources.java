@@ -43,6 +43,7 @@ import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
+import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
@@ -136,7 +137,6 @@ public class CredentialResources {
     } else {
       return results;
     }
-
   }
 
   @POST
@@ -245,6 +245,42 @@ public class CredentialResources {
     return Response.status(Status.OK)
       .entity("Credentials have been updated.")
       .build();
+  }
+
+  @POST
+  @Path("/credentials/{name}/update_refresh_token")
+  @Consumes(MediaType.APPLICATION_JSON)
+  @Produces(MediaType.APPLICATION_JSON)
+  @Operation(externalDocs = @ExternalDocumentation(description = "Apache Drill REST API documentation:", url = "https://drill.apache.org/docs/rest-api-introduction/"))
+  public Response updateRefreshToken(@PathParam("name") String name, OAuthTokenContainer tokens) {
+    return OAuthRequests.updateRefreshToken(name, tokens, storage, authEnabled, sc);
+  }
+
+  @POST
+  @Path("/credentials/{name}/update_access_token")
+  @Consumes(MediaType.APPLICATION_JSON)
+  @Produces(MediaType.APPLICATION_JSON)
+  @Operation(externalDocs = @ExternalDocumentation(description = "Apache Drill REST API documentation:", url = "https://drill.apache.org/docs/rest-api-introduction/"))
+  public Response updateAccessToken(@PathParam("name") String name, OAuthTokenContainer tokens) {
+    return OAuthRequests.updateAccessToken(name, tokens, storage, authEnabled, sc);
+  }
+
+  @POST
+  @Path("/credentials/{name}/update_oauth_tokens")
+  @Consumes(MediaType.APPLICATION_JSON)
+  @Produces(MediaType.APPLICATION_JSON)
+  @Operation(externalDocs = @ExternalDocumentation(description = "Apache Drill REST API documentation:", url = "https://drill.apache.org/docs/rest-api-introduction/"))
+  public Response updateOAuthTokens(@PathParam("name") String name,
+                                    OAuthTokenContainer tokenContainer) {
+    return OAuthRequests.updateOAuthTokens(name, tokenContainer, storage, authEnabled, sc);
+  }
+
+  @GET
+  @Path("/credentials/{name}/update_oauth2_authtoken")
+  @Produces(MediaType.TEXT_HTML)
+  @Operation(externalDocs = @ExternalDocumentation(description = "Apache Drill REST API documentation:", url = "https://drill.apache.org/docs/rest-api-introduction/"))
+  public Response updateAuthToken(@PathParam("name") String name, @QueryParam("code") String code) {
+    return OAuthRequests.updateAuthToken(name, code, request, storage, authEnabled, sc);
   }
 
   private JsonResult message(String message, Object... args) {

@@ -21,6 +21,7 @@ import org.apache.calcite.plan.RelOptRule;
 import org.apache.calcite.schema.SchemaPlus;
 import org.apache.drill.common.JSONOptions;
 import org.apache.drill.common.expression.SchemaPath;
+import org.apache.drill.common.logical.StoragePluginConfig.AuthMode;
 import org.apache.drill.exec.metastore.MetadataProviderManager;
 import org.apache.drill.exec.oauth.OAuthTokenProvider;
 import org.apache.drill.exec.oauth.PersistentTokenTable;
@@ -34,6 +35,7 @@ import org.apache.drill.exec.store.AbstractStoragePlugin;
 import org.apache.drill.exec.store.SchemaConfig;
 import org.apache.drill.exec.store.StoragePluginRegistry;
 import org.apache.drill.exec.store.base.filter.FilterPushDownUtils;
+import org.apache.drill.shaded.guava.com.google.common.annotations.VisibleForTesting;
 import org.apache.drill.shaded.guava.com.google.common.collect.ImmutableSet;
 
 import com.fasterxml.jackson.core.type.TypeReference;
@@ -46,7 +48,7 @@ public class HttpStoragePlugin extends AbstractStoragePlugin {
   private final HttpStoragePluginConfig config;
   private final HttpSchemaFactory schemaFactory;
   private final StoragePluginRegistry registry;
-  private final TokenRegistry tokenRegistry;
+  private TokenRegistry tokenRegistry;
 
   public HttpStoragePlugin(HttpStoragePluginConfig configuration, DrillbitContext context, String name) {
     super(context, name);
@@ -54,15 +56,28 @@ public class HttpStoragePlugin extends AbstractStoragePlugin {
     this.registry = context.getStorage();
     this.schemaFactory = new HttpSchemaFactory(this);
 
-    // Get OAuth Token Provider if needed
-    OAuthTokenProvider tokenProvider = context.getoAuthTokenProvider();
-    tokenRegistry = tokenProvider.getOauthTokenRegistry();
-    tokenRegistry.createTokenTable(getName());
+    if (config.getAuthMode() != AuthMode.USER_TRANSLATION) {
+      initializeOauthTokenTable(null);
+    }
   }
 
   @Override
   public void registerSchemas(SchemaConfig schemaConfig, SchemaPlus parent) {
+
+    // For user translation mode, this is moved here because we don't have the
+    // active username in the constructor.  Removing it from the constructor makes
+    // it difficult to test, so we do the check and leave it in both places.
+    if (config.getAuthMode() == AuthMode.USER_TRANSLATION) {
+      initializeOauthTokenTable(schemaConfig.getUserName());
+    }
     schemaFactory.registerSchemas(schemaConfig, parent);
+  }
+
+  @VisibleForTesting
+  public void initializeOauthTokenTable(String username) {
+    OAuthTokenProvider tokenProvider = context.getoAuthTokenProvider();
+    tokenRegistry = tokenProvider.getOauthTokenRegistry(username);
+    tokenRegistry.createTokenTable(getName());
   }
 
   @Override
@@ -75,6 +90,18 @@ public class HttpStoragePlugin extends AbstractStoragePlugin {
   }
 
   public TokenRegistry getTokenRegistry() {
+    return tokenRegistry;
+  }
+
+  /**
+   * This method returns the {@link TokenRegistry} for a given user.  It is only used for testing user translation
+   * with OAuth 2.0.
+   * @param username A {@link String} of the current active user.
+   * @return A {@link TokenRegistry} for the given user.
+   */
+  @VisibleForTesting
+  public TokenRegistry getTokenRegistry(String username) {
+    initializeOauthTokenTable(username);
     return tokenRegistry;
   }
 

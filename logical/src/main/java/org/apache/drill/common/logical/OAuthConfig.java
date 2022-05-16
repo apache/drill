@@ -16,7 +16,7 @@
  * limitations under the License.
  */
 
-package org.apache.drill.exec.store.http;
+package org.apache.drill.common.logical;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonInclude;
@@ -29,8 +29,8 @@ import java.util.Map;
 import java.util.Objects;
 
 @JsonInclude(JsonInclude.Include.NON_DEFAULT)
-@JsonDeserialize(builder = HttpOAuthConfig.HttpOAuthConfigBuilder.class)
-public class HttpOAuthConfig {
+@JsonDeserialize(builder = OAuthConfig.OAuthConfigBuilder.class)
+public class OAuthConfig {
 
   private final String callbackURL;
   private final String authorizationURL;
@@ -41,13 +41,13 @@ public class HttpOAuthConfig {
   private final boolean accessTokenInHeader;
 
   @JsonCreator
-  public HttpOAuthConfig(@JsonProperty("callbackURL") String callbackURL,
-                         @JsonProperty("authorizationURL") String authorizationURL,
-                         @JsonProperty("authorizationParams") Map<String, String> authorizationParams,
-                         @JsonProperty("tokenType") String tokenType,
-                         @JsonProperty("generateCSRFToken") boolean generateCSRFToken,
-                         @JsonProperty("scope") String scope,
-                         @JsonProperty("accessTokenInHeader") boolean accessTokenInHeader) {
+  public OAuthConfig(@JsonProperty("callbackURL") String callbackURL,
+                     @JsonProperty("authorizationURL") String authorizationURL,
+                     @JsonProperty("authorizationParams") Map<String, String> authorizationParams,
+                     @JsonProperty("tokenType") String tokenType,
+                     @JsonProperty("generateCSRFToken") boolean generateCSRFToken,
+                     @JsonProperty("scope") String scope,
+                     @JsonProperty("accessTokenInHeader") boolean accessTokenInHeader) {
     this.callbackURL = callbackURL;
     this.authorizationURL = authorizationURL;
     this.authorizationParams = authorizationParams;
@@ -57,7 +57,7 @@ public class HttpOAuthConfig {
     this.scope = scope;
   }
 
-  public HttpOAuthConfig(HttpOAuthConfig.HttpOAuthConfigBuilder builder) {
+  public OAuthConfig(OAuthConfig.OAuthConfigBuilder builder) {
     this.callbackURL = builder.callbackURL;
     this.authorizationURL = builder.authorizationURL;
     this.authorizationParams = builder.authorizationParams;
@@ -67,8 +67,8 @@ public class HttpOAuthConfig {
     this.scope = builder.scope;
   }
 
-  public static HttpOAuthConfigBuilder builder() {
-    return new HttpOAuthConfigBuilder();
+  public static OAuthConfigBuilder builder() {
+    return new OAuthConfigBuilder();
   }
 
   public String getCallbackURL() {
@@ -125,7 +125,7 @@ public class HttpOAuthConfig {
     } else if (that == null || getClass() != that.getClass()) {
       return false;
     }
-    HttpOAuthConfig thatConfig = (HttpOAuthConfig) that;
+    OAuthConfig thatConfig = (OAuthConfig) that;
     return Objects.equals(callbackURL, thatConfig.callbackURL) &&
       Objects.equals(authorizationURL, thatConfig.authorizationURL) &&
       Objects.equals(authorizationParams, thatConfig.authorizationParams) &&
@@ -136,7 +136,7 @@ public class HttpOAuthConfig {
   }
 
   @JsonPOJOBuilder(withPrefix = "")
-  public static class HttpOAuthConfigBuilder {
+  public static class OAuthConfigBuilder {
     private String callbackURL;
 
     private String authorizationURL;
@@ -153,44 +153,44 @@ public class HttpOAuthConfig {
 
     private Map<String, String> tokens;
 
-    HttpOAuthConfigBuilder() {
+    OAuthConfigBuilder() {
     }
 
-    public HttpOAuthConfig build() {
-      return new HttpOAuthConfig(this);
+    public OAuthConfig build() {
+      return new OAuthConfig(this);
     }
 
-    public HttpOAuthConfigBuilder callbackURL(String callbackURL) {
+    public OAuthConfigBuilder callbackURL(String callbackURL) {
       this.callbackURL = callbackURL;
       return this;
     }
 
-    public HttpOAuthConfigBuilder authorizationURL(String authorizationURL) {
+    public OAuthConfigBuilder authorizationURL(String authorizationURL) {
       this.authorizationURL = authorizationURL;
       return this;
     }
 
-    public HttpOAuthConfigBuilder authorizationParams(Map<String, String> authorizationParams) {
+    public OAuthConfigBuilder authorizationParams(Map<String, String> authorizationParams) {
       this.authorizationParams = authorizationParams;
       return this;
     }
 
-    public HttpOAuthConfigBuilder tokenType(String tokenType) {
+    public OAuthConfigBuilder tokenType(String tokenType) {
       this.tokenType = tokenType;
       return this;
     }
 
-    public HttpOAuthConfigBuilder generateCSRFToken(boolean generateCSRFToken) {
+    public OAuthConfigBuilder generateCSRFToken(boolean generateCSRFToken) {
       this.generateCSRFToken = generateCSRFToken;
       return this;
     }
 
-    public HttpOAuthConfigBuilder scope(String scope) {
+    public OAuthConfigBuilder scope(String scope) {
       this.scope = scope;
       return this;
     }
 
-    public HttpOAuthConfigBuilder accessTokenInHeader(boolean accessTokenInHeader) {
+    public OAuthConfigBuilder accessTokenInHeader(boolean accessTokenInHeader) {
       this.accessTokenInHeader = accessTokenInHeader;
       return this;
     }
