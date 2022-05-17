@@ -33,12 +33,14 @@ import org.apache.calcite.sql.SqlDialect;
 import org.apache.calcite.sql.SqlDialectFactoryImpl;
 import org.apache.drill.common.AutoCloseables;
 import org.apache.drill.common.exceptions.UserException;
+import org.apache.drill.common.logical.StoragePluginConfig.AuthMode;
 import org.apache.drill.exec.ops.OptimizerRulesContext;
 import org.apache.drill.exec.proto.UserBitShared.UserCredentials;
 import org.apache.drill.exec.server.DrillbitContext;
 import org.apache.drill.exec.store.AbstractStoragePlugin;
 import org.apache.drill.exec.store.SchemaConfig;
 import org.apache.drill.exec.store.security.UsernamePasswordCredentials;
+import org.apache.drill.exec.util.ImpersonationUtil;
 import org.apache.drill.shaded.guava.com.google.common.annotations.VisibleForTesting;
 import org.apache.drill.shaded.guava.com.google.common.collect.ImmutableSet;
 import org.slf4j.Logger;
@@ -83,19 +85,25 @@ public class JdbcStoragePlugin extends AbstractStoragePlugin {
   public Optional<DataSource> getDataSource(UserCredentials userCredentials) {
     Optional<UsernamePasswordCredentials> jdbcCreds = jdbcStorageConfig.getUsernamePasswordCredentials(userCredentials);
 
-    if (!jdbcCreds.isPresent()) {
-      logger.debug(
-        "There are no {} mode credentials in {} for query user {}",
-        jdbcStorageConfig.getAuthMode(),
+    if (!jdbcCreds.isPresent() && jdbcStorageConfig.getAuthMode() == AuthMode.USER_TRANSLATION) {
+      logger.info(
+        "There are no {} mode credentials in {} for query user {}, will not attempt to connect.",
+        AuthMode.USER_TRANSLATION,
         getName(),
         userCredentials.getUserName()
       );
       return Optional.<DataSource>empty();
     }
 
+    // Missing creds is valid under SHARED_USER (e.g. unsecured DBs, BigQuery's OAuth)
+    // and we fall back to using a key of Drillbit process username in this instance.
+    String dsKey = jdbcCreds.isPresent()
+      ? jdbcCreds.get().getUsername()
+      : ImpersonationUtil.getProcessUserName();
+
     return Optional.of(dataSources.computeIfAbsent(
-      jdbcCreds.get().getUsername(),
-      ds -> initDataSource(this.jdbcStorageConfig, jdbcCreds.get())
+      dsKey,
+      ds -> initDataSource(this.jdbcStorageConfig, jdbcCreds.orElse(null))
     ));
   }
 

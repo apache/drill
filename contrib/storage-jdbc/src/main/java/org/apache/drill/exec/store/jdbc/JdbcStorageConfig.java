@@ -30,9 +30,9 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import org.apache.drill.common.PlanStringBuilder;
 import org.apache.drill.common.exceptions.UserException;
-import org.apache.drill.common.logical.CredentialedStoragePluginConfig;
 import org.apache.drill.exec.proto.UserBitShared.UserCredentials;
 import org.apache.drill.exec.store.security.CredentialProviderUtils;
+import org.apache.drill.common.logical.StoragePluginConfig;
 import org.apache.drill.common.logical.security.CredentialsProvider;
 import org.apache.drill.exec.store.security.UsernamePasswordCredentials;
 import org.apache.drill.shaded.guava.com.google.common.base.Preconditions;
@@ -41,7 +41,7 @@ import org.slf4j.LoggerFactory;
 
 @JsonTypeName(JdbcStorageConfig.NAME)
 @JsonFilter("passwordFilter")
-public class JdbcStorageConfig extends CredentialedStoragePluginConfig {
+public class JdbcStorageConfig extends StoragePluginConfig {
 
   private static final Logger logger = LoggerFactory.getLogger(JdbcStorageConfig.class);
 

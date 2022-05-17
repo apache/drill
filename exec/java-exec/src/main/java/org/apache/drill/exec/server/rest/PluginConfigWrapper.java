@@ -29,7 +29,6 @@ import javax.xml.bind.annotation.XmlRootElement;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.drill.common.exceptions.UserException;
-import org.apache.drill.common.logical.CredentialedStoragePluginConfig;
 import org.apache.drill.common.logical.OAuthConfig;
 import org.apache.drill.common.logical.StoragePluginConfig;
 import org.apache.drill.common.logical.security.CredentialsProvider;
@@ -66,12 +65,7 @@ public class PluginConfigWrapper {
 
   @JsonIgnore
   public String getUserName(String activeUser) {
-    if (!(config instanceof CredentialedStoragePluginConfig)) {
-      return null;
-    }
-
-    CredentialedStoragePluginConfig securedStoragePluginConfig = (CredentialedStoragePluginConfig) config;
-    CredentialsProvider credentialsProvider = securedStoragePluginConfig.getCredentialsProvider();
+    CredentialsProvider credentialsProvider = config.getCredentialsProvider();
     Optional<UsernamePasswordCredentials> credentials = new UsernamePasswordCredentials.Builder()
       .setCredentialsProvider(credentialsProvider)
       .setQueryUser(activeUser)
@@ -82,12 +76,7 @@ public class PluginConfigWrapper {
 
   @JsonIgnore
   public String getPassword(String activeUser) {
-    if (!(config instanceof CredentialedStoragePluginConfig)) {
-      return null;
-    }
-
-    CredentialedStoragePluginConfig securedStoragePluginConfig = (CredentialedStoragePluginConfig) config;
-    CredentialsProvider credentialsProvider = securedStoragePluginConfig.getCredentialsProvider();
+    CredentialsProvider credentialsProvider = config.getCredentialsProvider();
     Optional<UsernamePasswordCredentials> credentials = new UsernamePasswordCredentials.Builder()
       .setCredentialsProvider(credentialsProvider)
       .setQueryUser(activeUser)
@@ -110,11 +99,7 @@ public class PluginConfigWrapper {
    */
   @JsonIgnore
   public boolean isOauth() {
-    if (! (config instanceof CredentialedStoragePluginConfig)) {
-      return false;
-    }
-    CredentialedStoragePluginConfig securedStoragePluginConfig = (CredentialedStoragePluginConfig) config;
-    CredentialsProvider credentialsProvider = securedStoragePluginConfig.getCredentialsProvider();
+    CredentialsProvider credentialsProvider = config.getCredentialsProvider();
     if (credentialsProvider == null) {
       return false;
     }
@@ -128,8 +113,7 @@ public class PluginConfigWrapper {
 
   @JsonIgnore
   public String getClientID() {
-    CredentialedStoragePluginConfig securedStoragePluginConfig = (CredentialedStoragePluginConfig) config;
-    CredentialsProvider credentialsProvider = securedStoragePluginConfig.getCredentialsProvider();
+    CredentialsProvider credentialsProvider = config.getCredentialsProvider();
 
     return credentialsProvider.getCredentials().getOrDefault("clientID", "");
   }
@@ -150,7 +134,7 @@ public class PluginConfigWrapper {
     }
 
     String clientID = getClientID();
-    OAuthConfig oAuthConfig = ((CredentialedStoragePluginConfig)config).oAuthConfig();
+    OAuthConfig oAuthConfig = config.oAuthConfig();
     String authorizationURI = oAuthConfig.getAuthorizationURL();
 
     StringBuilder finalUrlBuilder = new StringBuilder();

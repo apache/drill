@@ -22,7 +22,7 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonTypeName;
 
-import org.apache.drill.common.logical.CredentialedStoragePluginConfig;
+import org.apache.drill.common.logical.StoragePluginConfig;
 import org.apache.drill.exec.store.security.CredentialProviderUtils;
 import org.apache.drill.common.logical.security.CredentialsProvider;
 import org.apache.drill.exec.store.security.UsernamePasswordCredentials;
@@ -33,7 +33,7 @@ import java.util.Objects;
 import java.util.Optional;
 
 @JsonTypeName(CassandraStorageConfig.NAME)
-public class CassandraStorageConfig extends CredentialedStoragePluginConfig {
+public class CassandraStorageConfig extends StoragePluginConfig {
   public static final String NAME = "cassandra";
 
   private final String host;
@@ -109,10 +109,5 @@ public class CassandraStorageConfig extends CredentialedStoragePluginConfig {
   @Override
   public int hashCode() {
     return Objects.hash(host, credentialsProvider);
-  }
-
-  @Override
-  public CassandraStorageConfig updateCredentialProvider(CredentialsProvider credentialsProvider) {
-    return this;
   }
 }

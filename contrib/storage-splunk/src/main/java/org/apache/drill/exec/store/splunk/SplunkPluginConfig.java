@@ -23,7 +23,7 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import org.apache.drill.common.PlanStringBuilder;
-import org.apache.drill.common.logical.CredentialedStoragePluginConfig;
+import org.apache.drill.common.logical.StoragePluginConfig;
 import org.apache.drill.common.logical.security.CredentialsProvider;
 import org.apache.drill.common.logical.security.PlainCredentialsProvider;
 import org.apache.drill.exec.store.security.CredentialProviderUtils;
@@ -33,7 +33,7 @@ import java.util.Objects;
 import java.util.Optional;
 
 @JsonTypeName(SplunkPluginConfig.NAME)
-public class SplunkPluginConfig extends CredentialedStoragePluginConfig {
+public class SplunkPluginConfig extends StoragePluginConfig {
 
   public static final String NAME = "splunk";
   public static final int DISABLED_RECONNECT_RETRIES = 1;

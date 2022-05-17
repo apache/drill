@@ -24,7 +24,7 @@ import com.fasterxml.jackson.annotation.JsonTypeName;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.ObjectWriter;
-import org.apache.drill.common.logical.CredentialedStoragePluginConfig;
+import org.apache.drill.common.logical.StoragePluginConfig;
 import org.apache.drill.exec.store.security.CredentialProviderUtils;
 import org.apache.drill.common.logical.security.CredentialsProvider;
 import org.apache.drill.exec.store.security.UsernamePasswordCredentials;
@@ -36,7 +36,7 @@ import java.util.Objects;
 import java.util.Optional;
 
 @JsonTypeName(ElasticsearchStorageConfig.NAME)
-public class ElasticsearchStorageConfig extends CredentialedStoragePluginConfig {
+public class ElasticsearchStorageConfig extends StoragePluginConfig {
   public static final String NAME = "elastic";
 
   private static final ObjectWriter OBJECT_WRITER = new ObjectMapper().writerFor(List.class);
@@ -108,10 +108,5 @@ public class ElasticsearchStorageConfig extends CredentialedStoragePluginConfig 
   @Override
   public int hashCode() {
     return Objects.hash(hosts, credentialsProvider);
-  }
-
-  @Override
-  public CredentialedStoragePluginConfig updateCredentialProvider(CredentialsProvider credentialsProvider) {
-    return this;
   }
 }
