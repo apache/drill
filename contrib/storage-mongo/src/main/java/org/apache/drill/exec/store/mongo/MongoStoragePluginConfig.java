@@ -23,7 +23,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import com.mongodb.ConnectionString;
 import org.apache.commons.lang3.ObjectUtils;
-import org.apache.drill.common.logical.CredentialedStoragePluginConfig;
+import org.apache.drill.common.logical.StoragePluginConfig;
 import org.apache.drill.common.logical.security.CredentialsProvider;
 import org.apache.drill.common.logical.security.PlainCredentialsProvider;
 
@@ -31,7 +31,7 @@ import java.util.List;
 import java.util.Objects;
 
 @JsonTypeName(MongoStoragePluginConfig.NAME)
-public class MongoStoragePluginConfig extends CredentialedStoragePluginConfig {
+public class MongoStoragePluginConfig extends StoragePluginConfig {
 
   public static final String NAME = "mongo";
 

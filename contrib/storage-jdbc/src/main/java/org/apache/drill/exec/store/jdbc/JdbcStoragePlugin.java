@@ -33,6 +33,7 @@ import org.apache.calcite.sql.SqlDialect;
 import org.apache.calcite.sql.SqlDialectFactoryImpl;
 import org.apache.drill.common.AutoCloseables;
 import org.apache.drill.common.exceptions.UserException;
+import org.apache.drill.common.logical.StoragePluginConfig.AuthMode;
 import org.apache.drill.exec.ops.OptimizerRulesContext;
 import org.apache.drill.exec.proto.UserBitShared.UserCredentials;
 import org.apache.drill.exec.server.DrillbitContext;
@@ -83,19 +84,21 @@ public class JdbcStoragePlugin extends AbstractStoragePlugin {
   public Optional<DataSource> getDataSource(UserCredentials userCredentials) {
     Optional<UsernamePasswordCredentials> jdbcCreds = jdbcStorageConfig.getUsernamePasswordCredentials(userCredentials);
 
-    if (!jdbcCreds.isPresent()) {
-      logger.debug(
-        "There are no {} mode credentials in {} for query user {}",
-        jdbcStorageConfig.getAuthMode(),
+    if (!jdbcCreds.isPresent() && jdbcStorageConfig.getAuthMode() == AuthMode.USER_TRANSLATION) {
+      logger.info(
+        "There are no {} mode credentials in {} for query user {}, will not attempt to connect.",
+        AuthMode.USER_TRANSLATION,
         getName(),
         userCredentials.getUserName()
       );
       return Optional.<DataSource>empty();
     }
 
+    String dsKey = jdbcCreds.map(UsernamePasswordCredentials::getUsername).orElse(null);
+
     return Optional.of(dataSources.computeIfAbsent(
-      jdbcCreds.get().getUsername(),
-      ds -> initDataSource(this.jdbcStorageConfig, jdbcCreds.get())
+      dsKey,
+      ds -> initDataSource(this.jdbcStorageConfig, jdbcCreds.orElse(null))
     ));
   }
 

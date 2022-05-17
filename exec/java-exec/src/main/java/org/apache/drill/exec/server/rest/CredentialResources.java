@@ -20,7 +20,6 @@ package org.apache.drill.exec.server.rest;
 
 import io.swagger.v3.oas.annotations.ExternalDocumentation;
 import io.swagger.v3.oas.annotations.Operation;
-import org.apache.drill.common.logical.CredentialedStoragePluginConfig;
 import org.apache.drill.common.logical.StoragePluginConfig.AuthMode;
 import org.apache.drill.common.logical.StoragePluginConfig;
 import org.apache.drill.common.logical.security.CredentialsProvider;
@@ -156,14 +155,7 @@ public class CredentialResources {
     }
 
     // Get the config
-    StoragePluginConfig rawConfig = storage.getStoredConfig(pluginName);
-    if (!(rawConfig instanceof CredentialedStoragePluginConfig)) {
-      return Response.status(Status.INTERNAL_SERVER_ERROR)
-        .entity(message(pluginName + " does not support per user credentials."))
-        .build();
-    }
-
-    CredentialedStoragePluginConfig config = (CredentialedStoragePluginConfig)rawConfig;
+    StoragePluginConfig config = storage.getStoredConfig(pluginName);
 
     if (config.getAuthMode() != AuthMode.USER_TRANSLATION) {
       return Response.status(Status.INTERNAL_SERVER_ERROR)
@@ -177,7 +169,7 @@ public class CredentialResources {
 
     // Since the config classes are not accessible from java-exec, we have to serialize them,
     // replace the credential provider with the updated one, and update the storage plugin registry
-    CredentialedStoragePluginConfig newConfig = config.updateCredentialProvider(credentialProvider);
+    StoragePluginConfig newConfig = config.updateCredentialProvider(credentialProvider);
     newConfig.setEnabled(config.isEnabled());
 
     try {
@@ -210,26 +202,19 @@ public class CredentialResources {
     cleanPluginName = pluginName.trim();
     StoragePluginConfig config = storage.getStoredConfig(cleanPluginName);
 
-    if (!(config instanceof CredentialedStoragePluginConfig)) {
-      return Response.status(Status.INTERNAL_SERVER_ERROR)
-        .entity(message(cleanPluginName + " does not support user translation."))
-        .build();
-    }
-
     if (config.getAuthMode() != AuthMode.USER_TRANSLATION) {
       return Response.status(Status.INTERNAL_SERVER_ERROR)
         .entity(message(cleanPluginName + " does not have user translation enabled."))
         .build();
     }
 
-    CredentialedStoragePluginConfig credsConfig = (CredentialedStoragePluginConfig)config;
-    CredentialsProvider credentialProvider = credsConfig.getCredentialsProvider();
+    CredentialsProvider credentialProvider = config.getCredentialsProvider();
     credentialProvider.setUserCredentials(credentials.getUsername(), credentials.getPassword(), queryUser);
 
     // Since the config classes are not accessible from java-exec, we have to serialize them,
     // replace the credential provider with the updated one, and update the storage plugin registry
-    CredentialedStoragePluginConfig newConfig = credsConfig.updateCredentialProvider(credentialProvider);
-    newConfig.setEnabled(credsConfig.isEnabled());
+    StoragePluginConfig newConfig = config.updateCredentialProvider(credentialProvider);
+    newConfig.setEnabled(config.isEnabled());
 
     try {
       storage.validatedPut(cleanPluginName, newConfig);

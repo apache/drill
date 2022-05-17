@@ -34,7 +34,7 @@ import org.apache.drill.common.logical.FormatPluginConfig;
 
 import com.fasterxml.jackson.annotation.JsonTypeName;
 
-import org.apache.drill.common.logical.CredentialedStoragePluginConfig;
+import org.apache.drill.common.logical.StoragePluginConfig;
 import org.apache.drill.common.map.CaseInsensitiveMap;
 import org.apache.drill.common.logical.security.CredentialsProvider;
 import org.apache.drill.common.logical.security.PlainCredentialsProvider;
@@ -43,7 +43,7 @@ import org.apache.drill.shaded.guava.com.google.common.collect.ImmutableMap.Buil
 import org.apache.hadoop.fs.CommonConfigurationKeysPublic;
 
 @JsonTypeName(FileSystemConfig.NAME)
-public class FileSystemConfig extends CredentialedStoragePluginConfig {
+public class FileSystemConfig extends StoragePluginConfig {
   private static final List<String> FS_CREDENTIAL_KEYS =
       Arrays.asList(
           CommonConfigurationKeysPublic.HADOOP_SECURITY_CREDENTIAL_PROVIDER_PATH,
@@ -181,10 +181,5 @@ public class FileSystemConfig extends CredentialedStoragePluginConfig {
       return new PlainCredentialsProvider(credentials);
     }
     return PlainCredentialsProvider.EMPTY_CREDENTIALS_PROVIDER;
-  }
-
-  @Override
-  public FileSystemConfig updateCredentialProvider(CredentialsProvider credentialsProvider) {
-    return this;
   }
 }

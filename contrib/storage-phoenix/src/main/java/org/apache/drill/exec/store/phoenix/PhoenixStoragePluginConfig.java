@@ -24,7 +24,7 @@ import java.util.Optional;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.drill.common.PlanStringBuilder;
-import org.apache.drill.common.logical.CredentialedStoragePluginConfig;
+import org.apache.drill.common.logical.StoragePluginConfig;
 import org.apache.drill.common.logical.security.CredentialsProvider;
 import org.apache.drill.exec.store.security.CredentialProviderUtils;
 import org.apache.drill.exec.store.security.UsernamePasswordCredentials;
@@ -35,7 +35,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonTypeName;
 
 @JsonTypeName(PhoenixStoragePluginConfig.NAME)
-public class PhoenixStoragePluginConfig extends CredentialedStoragePluginConfig {
+public class PhoenixStoragePluginConfig extends StoragePluginConfig {
 
   public static final String NAME = "phoenix";
   public static final String THIN_DRIVER_CLASS = "org.apache.phoenix.queryserver.client.Driver";
@@ -146,10 +146,5 @@ public class PhoenixStoragePluginConfig extends CredentialedStoragePluginConfig 
         .field("jdbcURL", jdbcURL)
         .field("props", props)
         .toString();
-  }
-
-  @Override
-  public PhoenixStoragePluginConfig updateCredentialProvider(CredentialsProvider credentialsProvider) {
-    return this;
   }
 }
