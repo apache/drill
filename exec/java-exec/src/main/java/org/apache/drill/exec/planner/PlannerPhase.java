@@ -18,6 +18,7 @@
 package org.apache.drill.exec.planner;
 
 import org.apache.drill.exec.planner.logical.ConvertMetadataAggregateToDirectScanRule;
+import org.apache.drill.exec.planner.logical.DrillDistinctJoinToSemiJoinRule;
 import org.apache.drill.exec.planner.physical.MetadataAggPrule;
 import org.apache.drill.exec.planner.physical.MetadataControllerPrule;
 import org.apache.drill.exec.planner.physical.MetadataHandlerPrule;
@@ -403,6 +404,8 @@ public enum PlannerPhase {
     if (optimizerRulesContext.getPlannerSettings().isHashJoinEnabled() &&
         optimizerRulesContext.getPlannerSettings().isSemiJoinEnabled()) {
       basicRules.add(RuleInstance.SEMI_JOIN_PROJECT_RULE);
+      basicRules.add(DrillDistinctJoinToSemiJoinRule.INSTANCE);
+      basicRules.add(RuleInstance.JOIN_TO_SEMI_JOIN_RULE);
     }
 
     return RuleSets.ofList(basicRules.build());

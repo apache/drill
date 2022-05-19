@@ -24,6 +24,7 @@ import org.apache.calcite.plan.RelTraitSet;
 import org.apache.calcite.rel.RelNode;
 import org.apache.calcite.rel.core.JoinInfo;
 import org.apache.calcite.rel.core.JoinRelType;
+import org.apache.calcite.rel.metadata.RelMdUtil;
 import org.apache.calcite.rel.metadata.RelMetadataQuery;
 import org.apache.calcite.rex.RexNode;
 import org.apache.calcite.util.Pair;
@@ -102,9 +103,16 @@ public class DrillSemiJoinRel extends DrillJoinRelBase implements DrillJoin, Dri
     return new LogicalSemiJoin(leftOp, rightOp, conditions, joinType);
   }
 
-  // This method is the same as in Calcite and is here to ensure SemiJoin's behavior
   @Override
   public RelOptCost computeSelfCost(RelOptPlanner planner, RelMetadataQuery mq) {
-    return planner.getCostFactory().makeTinyCost();
+    return computeLogicalJoinCost(planner, mq);
+  }
+
+  @Override
+  public double estimateRowCount(RelMetadataQuery mq) {
+    RexNode semiJoinSelectivity =
+      RelMdUtil.makeSemiJoinSelectivityRexNode(mq, this);
+    Double selectivity = mq.getSelectivity(getLeft(), semiJoinSelectivity);
+    return selectivity * mq.getRowCount(getLeft());
   }
 }
