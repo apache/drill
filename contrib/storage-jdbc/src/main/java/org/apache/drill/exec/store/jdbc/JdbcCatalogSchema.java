@@ -57,7 +57,7 @@ class JdbcCatalogSchema extends AbstractSchema {
         connectionSchemaName = con.getSchema();
       } catch (AbstractMethodError ex) {
         // DRILL-8227. Some Sybase JDBC drivers still don't implement this method, e.g. JConnect, jTDS.
-        logger.info(
+        logger.warn(
           "{} does not provide an implementation of getSchema(), default schema will be guessed",
           con.getClass()
         );
