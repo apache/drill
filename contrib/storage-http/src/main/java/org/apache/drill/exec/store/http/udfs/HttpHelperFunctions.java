@@ -67,7 +67,7 @@ public class HttpHelperFunctions {
         .build();
 
       jsonReader.setIgnoreJSONParseErrors(
-        options.getOption(org.apache.drill.exec.ExecConstants.JSON_READER_SKIP_INVALID_RECORDS_FLAG).bool_val);
+        options.getBoolean(org.apache.drill.exec.ExecConstants.JSON_READER_SKIP_INVALID_RECORDS_FLAG));
     }
 
     @Override
@@ -155,7 +155,7 @@ public class HttpHelperFunctions {
         .build();
 
       jsonReader.setIgnoreJSONParseErrors(
-        options.getOption(org.apache.drill.exec.ExecConstants.JSON_READER_SKIP_INVALID_RECORDS_FLAG).bool_val);
+        options.getBoolean(org.apache.drill.exec.ExecConstants.JSON_READER_SKIP_INVALID_RECORDS_FLAG));
 
       String schemaPath = org.apache.drill.exec.expr.fn.impl.StringFunctionHelpers.toStringFromUTF8(rawInput.start, rawInput.end, rawInput.buffer);
       // Get the plugin name and endpoint name
