@@ -52,11 +52,21 @@ class JdbcCatalogSchema extends AbstractSchema {
     String connectionSchemaName = null;
     try (Connection con = source.getConnection();
          ResultSet set = con.getMetaData().getCatalogs()) {
-      connectionSchemaName = con.getSchema();
+
+      try {
+        connectionSchemaName = con.getSchema();
+      } catch (AbstractMethodError ex) {
+        // DRILL-8227. Some Sybase JDBC drivers still don't implement this method, e.g. JConnect, jTDS.
+        logger.warn(
+          "{} does not provide an implementation of getSchema(), default schema will be guessed",
+          con.getClass()
+        );
+      }
+
       while (set.next()) {
         final String catalogName = set.getString(1);
         if (catalogName == null) {
-          // DB2 is an example of why of this escape is needed.
+          // DRILL-8219. DB2 is an example of why of this escape is needed.
           continue;
         }
 
