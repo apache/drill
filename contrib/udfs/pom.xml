@@ -68,6 +68,12 @@
       <groupId>nl.basjes.parse.useragent</groupId>
       <artifactId>yauaa</artifactId>
       <version>${yauaa.version}</version>
+      <exclusions>
+        <exclusion>
+          <groupId>com.github.ben-manes.caffeine</groupId>
+          <artifactId>caffeine</artifactId>
+        </exclusion>
+      </exclusions>
     </dependency>
 
     <!-- Test dependencies -->
@@ -86,6 +92,15 @@
       <version>${project.version}</version>
       <scope>test</scope>
     </dependency>
+
+    <!-- The default logging implementation for Yauaa -->
+    <!-- Send all Log4j2 calls to SLF4J -->
+    <dependency>
+      <groupId>org.apache.logging.log4j</groupId>
+      <artifactId>log4j-to-slf4j</artifactId>
+      <version>${log4j.version}</version>
+    </dependency>
+
   </dependencies>
 
   <build>
