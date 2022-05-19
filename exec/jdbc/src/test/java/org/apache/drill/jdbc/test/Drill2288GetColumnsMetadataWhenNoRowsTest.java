@@ -31,7 +31,6 @@ import java.sql.Statement;
 import org.apache.drill.jdbc.Driver;
 import org.apache.drill.categories.JdbcTest;
 import org.apache.drill.jdbc.JdbcTestBase;
-import org.apache.drill.test.BaseTest;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -42,7 +41,7 @@ import org.junit.experimental.categories.Category;
  * scan yielded an empty (zero-row) result set.
  */
 @Category(JdbcTest.class)
-public class Drill2288GetColumnsMetadataWhenNoRowsTest extends BaseTest {
+public class Drill2288GetColumnsMetadataWhenNoRowsTest extends JdbcTestBase {
   private static Connection connection;
 
   @BeforeClass
