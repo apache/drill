@@ -34,7 +34,6 @@ import org.junit.BeforeClass;
 import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
-import org.junit.jupiter.api.condition.EnabledIfSystemProperty;
 import org.testcontainers.containers.MSSQLServerContainer;
 
 import java.math.BigDecimal;
@@ -47,7 +46,6 @@ import static org.junit.Assert.assertEquals;
  * JDBC storage plugin tests against MSSQL.
  */
 @Category(JdbcStorageTest.class)
-@EnabledIfSystemProperty(named = "os.arch", matches = "(amd64|x86_64)")
 public class TestJdbcPluginWithMSSQL extends ClusterTest {
 
   private static MSSQLServerContainer jdbcContainer;
