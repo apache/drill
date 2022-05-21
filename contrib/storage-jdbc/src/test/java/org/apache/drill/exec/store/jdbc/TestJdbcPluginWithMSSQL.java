@@ -46,6 +46,7 @@ import static org.junit.Assert.assertEquals;
  * JDBC storage plugin tests against MSSQL.
  */
 @Category(JdbcStorageTest.class)
+@EnabledIfSystemProperty(named = "os.arch", matches = "(amd64|x86_64)")
 public class TestJdbcPluginWithMSSQL extends ClusterTest {
 
   private static MSSQLServerContainer jdbcContainer;
