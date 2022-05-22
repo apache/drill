@@ -31,8 +31,7 @@
   <name>Drill : Contrib : Format : Excel</name>
 
   <properties>
-    <poi.version>5.2.1</poi.version>
-    <log4j.version>2.17.2</log4j.version>
+    <poi.version>5.2.2</poi.version>
   </properties>
   <dependencies>
     <dependency>
@@ -53,7 +52,7 @@
     <dependency>
       <groupId>com.github.pjfanning</groupId>
       <artifactId>excel-streaming-reader</artifactId>
-      <version>3.6.0</version>
+      <version>4.0.1</version>
     </dependency>
     <dependency>
       <groupId>org.apache.logging.log4j</groupId>
