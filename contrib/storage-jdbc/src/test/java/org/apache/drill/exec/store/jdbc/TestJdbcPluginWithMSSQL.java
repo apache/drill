@@ -34,7 +34,7 @@ import org.junit.BeforeClass;
 import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
-import org.junit.jupiter.api.condition.DisabledIfSystemProperty;
+import org.junit.jupiter.api.condition.EnabledIfSystemProperty;
 import org.testcontainers.containers.MSSQLServerContainer;
 
 import java.math.BigDecimal;
@@ -47,12 +47,13 @@ import static org.junit.Assert.assertEquals;
  * JDBC storage plugin tests against MSSQL.
  */
 @Category(JdbcStorageTest.class)
-@DisabledIfSystemProperty(named = "os.arch", matches = "aarch64")
+@EnabledIfSystemProperty(named = "os.arch", matches = "(amd64|x86_64)")
 public class TestJdbcPluginWithMSSQL extends ClusterTest {
 
   private static MSSQLServerContainer jdbcContainer;
 
   @BeforeClass
+  @EnabledIfSystemProperty(named = "os.arch", matches = "(amd64|x86_64)")
   public static void initMSSQL() throws Exception {
     startCluster(ClusterFixture.builder(dirTestWatcher));
     TimeZone.setDefault(TimeZone.getTimeZone("UTC"));
@@ -96,6 +97,7 @@ public class TestJdbcPluginWithMSSQL extends ClusterTest {
   }
 
   @AfterClass
+  @EnabledIfSystemProperty(named = "os.arch", matches = "(amd64|x86_64)")
   public static void stopMSSQL() {
     if (jdbcContainer != null) {
       jdbcContainer.stop();
