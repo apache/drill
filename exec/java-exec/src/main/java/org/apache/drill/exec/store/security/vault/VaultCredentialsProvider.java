@@ -40,7 +40,7 @@ import java.util.Objects;
  */
 public class VaultCredentialsProvider implements CredentialsProvider {
 
-  private static final Logger LOGGER = LoggerFactory.getLogger(VaultCredentialsProvider.class);
+  private static final Logger logger = LoggerFactory.getLogger(VaultCredentialsProvider.class);
   // Drill boot options used to configure a Vault credentials provider
   public static final String VAULT_ADDRESS = "drill.exec.storage.vault.address";
   public static final String VAULT_TOKEN = "drill.exec.storage.vault.token";
@@ -96,7 +96,7 @@ public class VaultCredentialsProvider implements CredentialsProvider {
     } catch (VaultException e) {
       throw UserException.systemError(e)
         .message("Error while fetching credentials from vault")
-        .build(LOGGER);
+        .build(logger);
     }
   }
 
