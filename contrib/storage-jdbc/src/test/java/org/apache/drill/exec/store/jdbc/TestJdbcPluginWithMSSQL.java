@@ -44,9 +44,14 @@ import java.util.Map;
 import static org.junit.Assert.assertEquals;
 
 /**
- * JDBC storage plugin tests against MSSQL.
+ * JDBC storage plugin tests against MSSQL. Note that there is no mssql container
+ * available on aarch64 so these tests must be disabled on that arch. Since a class-
+ * level EnabledIf... annotation was ignored by JUnit, there annotations on every
+ * test method. 
  */
 @Category(JdbcStorageTest.class)
+// The next annotation is supposed disable this whole class on aarch64 but seems
+// to be ignored.
 @EnabledIfSystemProperty(named = "os.arch", matches = "(amd64|x86_64)")
 public class TestJdbcPluginWithMSSQL extends ClusterTest {
 
@@ -108,6 +113,7 @@ public class TestJdbcPluginWithMSSQL extends ClusterTest {
   }
 
   @Test
+  @EnabledIfSystemProperty(named = "os.arch", matches = "(amd64|x86_64)")
   public void validateResult() throws Exception {
     String sql = "SELECT person_id, first_name, last_name, address, city, state, zip, " +
       "json, bigint_field, smallint_field, decimal_field, bit_field, " +
@@ -158,6 +164,7 @@ public class TestJdbcPluginWithMSSQL extends ClusterTest {
   }
 
   @Test
+  @EnabledIfSystemProperty(named = "os.arch", matches = "(amd64|x86_64)")
   public void pushDownJoin() throws Exception {
     String query = "select x.person_id from (select person_id from mssql.dbo.person) x "
       + "join (select person_id from mssql.dbo.person) y on x.person_id = y.person_id";
@@ -169,6 +176,7 @@ public class TestJdbcPluginWithMSSQL extends ClusterTest {
   }
 
   @Test
+  @EnabledIfSystemProperty(named = "os.arch", matches = "(amd64|x86_64)")
   public void pushDownJoinAndFilterPushDown() throws Exception {
     String query = "select * from " +
       "mssql.dbo.person e " +
@@ -185,6 +193,7 @@ public class TestJdbcPluginWithMSSQL extends ClusterTest {
   }
 
   @Test
+  @EnabledIfSystemProperty(named = "os.arch", matches = "(amd64|x86_64)")
   public void testPhysicalPlanSubmission() throws Exception {
     String query = "select * from mssql.dbo.person";
     String plan = queryBuilder().sql(query).explainJson();
@@ -192,6 +201,7 @@ public class TestJdbcPluginWithMSSQL extends ClusterTest {
   }
 
   @Test
+  @EnabledIfSystemProperty(named = "os.arch", matches = "(amd64|x86_64)")
   public void emptyOutput() {
     String query = "select * from mssql.dbo.person e limit 0";
 
@@ -201,6 +211,7 @@ public class TestJdbcPluginWithMSSQL extends ClusterTest {
   }
 
   @Test
+  @EnabledIfSystemProperty(named = "os.arch", matches = "(amd64|x86_64)")
   public void testExpressionsWithoutAlias() throws Exception {
     String sql = "select count(*), 1+1+2+3+5+8+13+21+34, (1+sqrt(5))/2\n" +
       "from mssql.dbo.person";
@@ -221,6 +232,7 @@ public class TestJdbcPluginWithMSSQL extends ClusterTest {
   }
 
   @Test
+  @EnabledIfSystemProperty(named = "os.arch", matches = "(amd64|x86_64)")
   public void testExpressionsWithoutAliasesPermutations() throws Exception {
     String query = "select EXPR$1, EXPR$0, EXPR$2\n" +
       "from (select 1+1+2+3+5+8+13+21+34, (1+sqrt(5))/2, count(*) from mssql.dbo.person)";
@@ -234,6 +246,7 @@ public class TestJdbcPluginWithMSSQL extends ClusterTest {
   }
 
   @Test
+  @EnabledIfSystemProperty(named = "os.arch", matches = "(amd64|x86_64)")
   public void testExpressionsWithAliases() throws Exception {
     String query = "SELECT person_id AS ID, 1+1+2+3+5+8+13+21+34 as FIBONACCI_SUM, (1+sqrt(5))/2 as golden_ratio\n" +
       "FROM mssql.dbo.person limit 2";
@@ -248,6 +261,7 @@ public class TestJdbcPluginWithMSSQL extends ClusterTest {
   }
 
   @Test
+  @EnabledIfSystemProperty(named = "os.arch", matches = "(amd64|x86_64)")
   public void testJoinStar() throws Exception {
     String query = "select * from (select person_id from mssql.dbo.person) t1 join " +
       "(select person_id from mssql.dbo.person) t2 on t1.person_id = t2.person_id";
@@ -264,6 +278,7 @@ public class TestJdbcPluginWithMSSQL extends ClusterTest {
   }
 
   @Test
+  @EnabledIfSystemProperty(named = "os.arch", matches = "(amd64|x86_64)")
   public void testSemiJoin() throws Exception {
     String query =
       "select person_id from mssql.dbo.person t1\n" +
@@ -279,12 +294,14 @@ public class TestJdbcPluginWithMSSQL extends ClusterTest {
   }
 
   @Test
+  @EnabledIfSystemProperty(named = "os.arch", matches = "(amd64|x86_64)")
   public void testInformationSchemaViews() throws Exception {
     String query = "select * from information_schema.`views`";
     run(query);
   }
 
   @Test
+  @EnabledIfSystemProperty(named = "os.arch", matches = "(amd64|x86_64)")
   public void testJdbcTableTypes() throws Exception {
     String query = "select distinct table_type from information_schema.`tables` " +
       "where table_schema like 'mssql%'";
@@ -298,6 +315,7 @@ public class TestJdbcPluginWithMSSQL extends ClusterTest {
 
   // DRILL-8090
   @Test
+  @EnabledIfSystemProperty(named = "os.arch", matches = "(amd64|x86_64)")
   public void testLimitPushDown() throws Exception {
     String query = "select person_id, first_name, last_name from mssql.dbo.person limit 100";
     queryBuilder()
@@ -309,6 +327,7 @@ public class TestJdbcPluginWithMSSQL extends ClusterTest {
   }
 
   @Test
+  @EnabledIfSystemProperty(named = "os.arch", matches = "(amd64|x86_64)")
   public void testLimitPushDownWithOrderBy() throws Exception {
     String query = "select person_id from mssql.dbo.person order by first_name limit 100";
     queryBuilder()
@@ -320,6 +339,7 @@ public class TestJdbcPluginWithMSSQL extends ClusterTest {
   }
 
   @Test
+  @EnabledIfSystemProperty(named = "os.arch", matches = "(amd64|x86_64)")
   @Ignore
   // TODO: Enable once the push down logic has been clarified.
   public void testLimitPushDownWithOffset() throws Exception {
@@ -333,6 +353,7 @@ public class TestJdbcPluginWithMSSQL extends ClusterTest {
   }
 
   @Test
+  @EnabledIfSystemProperty(named = "os.arch", matches = "(amd64|x86_64)")
   public void testLimitPushDownWithConvertFromJson() throws Exception {
     String query = "select convert_fromJSON(first_name)['ppid'] from mssql.dbo.person LIMIT 100";
     queryBuilder()
