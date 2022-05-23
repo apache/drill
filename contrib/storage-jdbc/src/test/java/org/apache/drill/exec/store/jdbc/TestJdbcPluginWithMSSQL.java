@@ -30,11 +30,11 @@ import org.apache.drill.test.ClusterFixture;
 import org.apache.drill.test.ClusterTest;
 import org.apache.drill.test.rowSet.RowSetUtilities;
 import org.junit.AfterClass;
+import org.junit.Assume;
 import org.junit.BeforeClass;
 import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
-import org.junit.jupiter.api.condition.DisabledIfSystemProperty;
 import org.testcontainers.containers.MSSQLServerContainer;
 
 import java.math.BigDecimal;
@@ -48,17 +48,13 @@ import static org.junit.Assert.assertEquals;
  * available on aarch64 so these tests must be disabled on that arch.
  */
 @Category(JdbcStorageTest.class)
-@DisabledIfSystemProperty(named = "os.arch", matches = "aarch_64")
 public class TestJdbcPluginWithMSSQL extends ClusterTest {
 
   private static MSSQLServerContainer jdbcContainer;
 
   @BeforeClass
   public static void initMSSQL() throws Exception {
-    // JUnit annotations don't work for bypassing @BeforeClass methods.
-    if (!System.getProperty("os.arch").matches("(amd64|x86_64)")) {
-      return;
-    }
+    Assume.assumeTrue(System.getProperty("os.arch").matches("(amd64|x86_64)"));
 
     startCluster(ClusterFixture.builder(dirTestWatcher));
     TimeZone.setDefault(TimeZone.getTimeZone("UTC"));
