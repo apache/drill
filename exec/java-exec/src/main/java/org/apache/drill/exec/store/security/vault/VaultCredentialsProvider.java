@@ -25,7 +25,10 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.OptBoolean;
 import org.apache.drill.common.config.DrillConfig;
+import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.common.logical.security.CredentialsProvider;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -37,9 +40,11 @@ import java.util.Objects;
  */
 public class VaultCredentialsProvider implements CredentialsProvider {
 
+  private static final Logger LOGGER = LoggerFactory.getLogger(VaultCredentialsProvider.class);
   // Drill boot options used to configure a Vault credentials provider
   public static final String VAULT_ADDRESS = "drill.exec.storage.vault.address";
   public static final String VAULT_TOKEN = "drill.exec.storage.vault.token";
+  public static final String QUERY_USER_VAR = "$user";
 
   private final String secretPath;
 
@@ -72,22 +77,39 @@ public class VaultCredentialsProvider implements CredentialsProvider {
     this.vault = new Vault(vaultConfig);
   }
 
+  private Map<String, String> getCredentialsAt(String path) {
+    try {
+      // Sends a REST API request to Vault
+      Map<String, String> pathSecrets = vault.logical()
+        .read(path)
+        .getData();
+
+      Map<String, String> credentials = new HashMap<>();
+      propertyNames.forEach((key, value) -> {
+        String cred = pathSecrets.get(value);
+        if (cred != null) {
+          credentials.put(key, pathSecrets.get(value));
+        }
+      });
+
+      return credentials;
+    } catch (VaultException e) {
+      throw UserException.systemError(e)
+        .message("Error while fetching credentials from vault")
+        .build(LOGGER);
+    }
+  }
+
   @Override
   public Map<String, String> getCredentials() {
-    Map<String, String> credentials = new HashMap<>();
-    propertyNames.forEach((key, value) -> {
-      try {
-        String credValue = vault.logical()
-            .read(secretPath)
-            .getData()
-            .get(value);
-        credentials.put(key, credValue);
-      } catch (VaultException e) {
-        throw new RuntimeException("Error while fetching credentials from vault", e);
-      }
-    });
+    return getCredentialsAt(secretPath);
+  }
 
-    return credentials;
+  @Override
+  public Map<String, String> getUserCredentials(String queryUser) {
+    // Resolve a Vault path that may contain the $user var, e.g. /org/dept/$user -> /org/dept/alice
+    String resolvedPath = secretPath.replace(QUERY_USER_VAR, queryUser);
+    return getCredentialsAt(resolvedPath);
   }
 
   public String getSecretPath() {

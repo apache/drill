@@ -42,8 +42,12 @@ public class EnvCredentialsProvider implements CredentialsProvider {
   @Override
   public Map<String, String> getCredentials() {
     Map<String, String> credentials = new HashMap<>();
-    envVariables.forEach((key, value) -> credentials.put(key, System.getenv(value)));
-
+    envVariables.forEach((key, value) -> {
+      String cred = System.getenv(value);
+      if (cred != null) {
+        credentials.put(key, cred);
+      }
+    });
     return credentials;
   }
 

@@ -46,7 +46,7 @@ public interface CredentialsProvider {
    * @return A Map of the logged in user's credentials.
    */
   @JsonIgnore
-  default Map<String, String> getCredentials(String username) {
+  default Map<String, String> getUserCredentials(String username) {
     throw UserException.unsupportedError()
       .message("%s does not support per-user credentials.", getClass())
       .build(logger);

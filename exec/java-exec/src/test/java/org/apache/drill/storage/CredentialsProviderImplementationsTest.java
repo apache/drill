@@ -42,23 +42,29 @@ import static org.junit.Assert.assertEquals;
 public class CredentialsProviderImplementationsTest extends ClusterTest {
 
   private static final String VAULT_TOKEN_VALUE = "vault-token";
-
-  private static final String SECRET_PATH = "secret/testing";
+  private static final String SHARED_SECRET_PATH = "secret/testing";
+  private static final String USER_SECRET_PATH = "secret/testing/$user";
 
   @ClassRule
   public static final VaultContainer<?> vaultContainer =
       new VaultContainer<>(DockerImageName.parse("vault").withTag("1.1.3"))
           .withVaultToken(VAULT_TOKEN_VALUE)
-          .withVaultPort(8200)
-          .withSecretInVault(SECRET_PATH,
+          .withSecretInVault(SHARED_SECRET_PATH,
+              "top_secret=password1",
+              "db_password=dbpassword1")
+          .withSecretInVault(USER_SECRET_PATH.replace(VaultCredentialsProvider.QUERY_USER_VAR, "alice"),
               "top_secret=password1",
               "db_password=dbpassword1");
 
   @BeforeClass
   public static void init() throws Exception {
     startCluster(ClusterFixture.builder(dirTestWatcher)
-        .configProperty(VaultCredentialsProvider.VAULT_ADDRESS, "http://" + vaultContainer.getHost() + ":" + vaultContainer.getMappedPort(8200))
-    .configProperty(VaultCredentialsProvider.VAULT_TOKEN, VAULT_TOKEN_VALUE));
+      .configProperty(
+        VaultCredentialsProvider.VAULT_ADDRESS,
+        "http://" + vaultContainer.getHost() + ":" + vaultContainer.getFirstMappedPort()
+      )
+      .configProperty(VaultCredentialsProvider.VAULT_TOKEN, VAULT_TOKEN_VALUE)
+    );
   }
 
   @Test
@@ -102,16 +108,52 @@ public class CredentialsProviderImplementationsTest extends ClusterTest {
   public void testVaultCredentialsProvider() throws VaultException {
     DrillConfig config = cluster.drillbit().getContext().getConfig();
 
-    CredentialsProvider envCredentialsProvider = new VaultCredentialsProvider(
-        SECRET_PATH,
+    CredentialsProvider vaultCredsProvider = new VaultCredentialsProvider(
+        SHARED_SECRET_PATH,
         ImmutableMap.of(UsernamePasswordCredentials.USERNAME, "top_secret",
             UsernamePasswordCredentials.PASSWORD, "db_password"),
         config);
 
-    Map<String, String> actualCredentials = envCredentialsProvider.getCredentials();
+    Map<String, String> actualCredentials = vaultCredsProvider.getCredentials();
 
     assertEquals(ImmutableMap.of(UsernamePasswordCredentials.USERNAME, "password1",
         UsernamePasswordCredentials.PASSWORD, "dbpassword1"),
         actualCredentials);
+  }
+
+  @Test
+  public void testVaultUserCredentialsPresent() throws VaultException {
+    DrillConfig config = cluster.drillbit().getContext().getConfig();
+
+    CredentialsProvider vaultCredsProvider = new VaultCredentialsProvider(
+        USER_SECRET_PATH,
+        ImmutableMap.of(UsernamePasswordCredentials.USERNAME, "top_secret",
+            UsernamePasswordCredentials.PASSWORD, "db_password"),
+        config);
+
+    Map<String, String> actualCredentials = vaultCredsProvider.getUserCredentials("alice");
+
+    assertEquals(
+      ImmutableMap.of(
+        UsernamePasswordCredentials.USERNAME, "password1",
+        UsernamePasswordCredentials.PASSWORD, "dbpassword1"
+      ),
+      actualCredentials
+    );
+  }
+
+  @Test
+  public void testVaultUserCredentialsAbsent() throws VaultException {
+    DrillConfig config = cluster.drillbit().getContext().getConfig();
+
+    CredentialsProvider vaultCredsProvider = new VaultCredentialsProvider(
+        USER_SECRET_PATH,
+        ImmutableMap.of(UsernamePasswordCredentials.USERNAME, "top_secret",
+            UsernamePasswordCredentials.PASSWORD, "db_password"),
+        config);
+
+    Map<String, String> actualCredentials = vaultCredsProvider.getUserCredentials("bob");
+
+    assertEquals(Collections.<String, String>emptyMap(), actualCredentials);
   }
 }

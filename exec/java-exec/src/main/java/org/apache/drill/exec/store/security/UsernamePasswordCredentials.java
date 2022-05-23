@@ -19,15 +19,12 @@ package org.apache.drill.exec.store.security;
 
 import org.apache.drill.common.PlanStringBuilder;
 import org.apache.drill.common.logical.security.CredentialsProvider;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 
 public class UsernamePasswordCredentials {
-  private static final Logger logger = LoggerFactory.getLogger(UsernamePasswordCredentials.class);
   public static final String USERNAME = "username";
   public static final String PASSWORD = "password";
 
@@ -58,7 +55,7 @@ public class UsernamePasswordCredentials {
       }
 
       Map<String, String> credentials = queryUser != null
-        ? credentialsProvider.getCredentials(queryUser)
+        ? credentialsProvider.getUserCredentials(queryUser)
         : credentialsProvider.getCredentials();
 
       if (credentials.size() == 0) {
