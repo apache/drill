@@ -53,8 +53,12 @@ public class TestJdbcPluginWithMSSQL extends ClusterTest {
   private static MSSQLServerContainer jdbcContainer;
 
   @BeforeClass
-  @EnabledIfSystemProperty(named = "os.arch", matches = "(amd64|x86_64)")
   public static void initMSSQL() throws Exception {
+    // JUnit annotations don't work for bypassing @BeforeClass methods.
+    if (!System.getProperty("os.arch").matches("(amd64|x86_64)")) {
+      return;
+    }
+
     startCluster(ClusterFixture.builder(dirTestWatcher));
     TimeZone.setDefault(TimeZone.getTimeZone("UTC"));
 
@@ -97,7 +101,6 @@ public class TestJdbcPluginWithMSSQL extends ClusterTest {
   }
 
   @AfterClass
-  @EnabledIfSystemProperty(named = "os.arch", matches = "(amd64|x86_64)")
   public static void stopMSSQL() {
     if (jdbcContainer != null) {
       jdbcContainer.stop();
