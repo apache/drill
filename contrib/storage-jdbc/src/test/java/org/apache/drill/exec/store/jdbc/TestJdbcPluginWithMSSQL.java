@@ -29,6 +29,7 @@ import org.apache.drill.test.ClusterFixture;
 import org.apache.drill.test.ClusterTest;
 import org.apache.drill.test.rowSet.RowSetUtilities;
 import org.junit.AfterClass;
+import org.junit.Assume;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -41,7 +42,8 @@ import java.util.Map;
 import static org.junit.Assert.assertEquals;
 
 /**
- * JDBC storage plugin tests against MSSQL.
+ * JDBC storage plugin tests against MSSQL. Note that there is no mssql container
+ * available on aarch64 so these tests must be disabled on that arch.
  */
 @Category(JdbcStorageTest.class)
 public class TestJdbcPluginWithMSSQL extends ClusterTest {
@@ -50,6 +52,8 @@ public class TestJdbcPluginWithMSSQL extends ClusterTest {
 
   @BeforeClass
   public static void initMSSQL() throws Exception {
+    Assume.assumeTrue(System.getProperty("os.arch").matches("(amd64|x86_64)"));
+
     startCluster(ClusterFixture.builder(dirTestWatcher));
     TimeZone.setDefault(TimeZone.getTimeZone("UTC"));
 
