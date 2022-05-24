@@ -22,8 +22,6 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 
-import org.apache.calcite.jdbc.DynamicRootSchema;
-import org.apache.calcite.jdbc.DynamicSchema;
 import org.apache.calcite.rel.RelNode;
 import org.apache.calcite.rel.RelShuttleImpl;
 import org.apache.calcite.rel.core.TableScan;
@@ -44,7 +42,6 @@ public class SqlHandlerConfig {
   private final SqlConverter converter;
 
   public SqlHandlerConfig(QueryContext context, SqlConverter converter) {
-    super();
     this.context = context;
     this.converter = converter;
   }
@@ -54,8 +51,7 @@ public class SqlHandlerConfig {
   }
 
   public RuleSet getRules(PlannerPhase phase, RelNode input) {
-    PluginsCollector pluginsCollector = new PluginsCollector(
-      (DynamicRootSchema) DynamicSchema.from(converter.getRootSchema()));
+    PluginsCollector pluginsCollector = new PluginsCollector(context.getStorage());
     input.accept(pluginsCollector);
 
     Collection<StoragePlugin> plugins = pluginsCollector.getPlugins();
@@ -68,10 +64,10 @@ public class SqlHandlerConfig {
 
   public static class PluginsCollector extends RelShuttleImpl {
     private final List<StoragePlugin> plugins = new ArrayList<>();
-    private final DynamicRootSchema schema;
+    private final StoragePluginRegistry storagePlugins;
 
-    public PluginsCollector(DynamicRootSchema schema) {
-      this.schema = schema;
+    public PluginsCollector(StoragePluginRegistry storagePlugins) {
+      this.storagePlugins = storagePlugins;
     }
 
     @Override
@@ -79,7 +75,7 @@ public class SqlHandlerConfig {
       String pluginName = SchemaUtilites.getSchemaPathAsList(
         scan.getTable().getQualifiedName().iterator().next()).iterator().next();
       CheckedSupplier<StoragePlugin, StoragePluginRegistry.PluginException> pluginsProvider =
-        () -> schema.getPlugin(pluginName);
+        () -> storagePlugins.getPlugin(pluginName);
 
       StoragePlugin storagePlugin = Optional.ofNullable(DrillRelOptUtil.getDrillTable(scan))
         .map(DrillTable::getPlugin)
