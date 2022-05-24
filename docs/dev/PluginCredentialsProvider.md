@@ -93,13 +93,16 @@ In this case, the storage `jdbc` plugin will use `user1` value as the `username`
 
 ## Using credentials managed by Vault
 
-`VaultCredentialsProvider` credentials provider implementation allows using Vault secrets as plugin credentials.
+`VaultCredentialsProvider` credentials provider implementation allows using Vault secrets as plugin credentials. Currently, this credentials provider authenticates itself to Vault using the [AppRole](https://www.vaultproject.io/docs/auth/approle) auth method which is intended for use by applications and services. In future, it may be able to use the Vault token of the Drill query user instead, in the event that the `VaultUserAuthenticator` is also in use.
 
 Before using this credential provider, the following Drill properties should be configured in `drill-override.conf`:
 ```
-"drill.exec.storage.vault.address" - address of the Vault server
-"drill.exec.storage.vault.token" - token used to access Vault
+"drill.exec.storage.vault.address" - host name or address of the Vault server.
+"drill.exec.storage.vault.app_role_id" - the role ID belonging to the AppRole Drill will use
+"drill.exec.storage.vault.secret_id" - the secret ID belonging to the AppRole Drill will use
 ```
+
+Note that you will generally need to create and assign a [Vault policy](https://www.hashicorp.com/resources/policies-vault) to grant the AppRole used by Drill read access to Vault secrets.
 
 Once it is set, we can configure storage plugin to use this way of obtaining credentials:
 ```json
@@ -118,7 +121,7 @@ Once it is set, we can configure storage plugin to use this way of obtaining cre
 }
 ```
 
-`secretPath` property specifies the Vault key value from which to read
+`secretPath` property specifies the Vault key value from which to read. If the plugin's `authMode` is set to `user_translation` then the `secretPath` may include a variable named `$user` which will be replaced with the Drill query username at query execution time.
 `propertyNames` map contains keys that specify which credential will be obtained from the Vault secret with the secret name of the `propertyNames` value.
 
 For example, user may store the following secrets in the Vault:

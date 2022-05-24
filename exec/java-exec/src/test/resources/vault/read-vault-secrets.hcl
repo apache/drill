@@ -1,0 +1,4 @@
+path "secret/*"
+{
+  capabilities = ["read"]
+}

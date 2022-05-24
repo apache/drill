@@ -20,6 +20,7 @@ package org.apache.drill.exec.store.security.vault;
 import com.bettercloud.vault.Vault;
 import com.bettercloud.vault.VaultConfig;
 import com.bettercloud.vault.VaultException;
+import com.bettercloud.vault.response.AuthResponse;
 import com.fasterxml.jackson.annotation.JacksonInject;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -42,15 +43,15 @@ public class VaultCredentialsProvider implements CredentialsProvider {
 
   private static final Logger logger = LoggerFactory.getLogger(VaultCredentialsProvider.class);
   // Drill boot options used to configure a Vault credentials provider
-  public static final String VAULT_ADDRESS = "drill.exec.storage.vault.address";
-  public static final String VAULT_TOKEN = "drill.exec.storage.vault.token";
+  public static final String VAULT_ADDRESS = "drill.exec.security.vault.address";
+  public static final String VAULT_APP_ROLE_ID = "drill.exec.security.vault.app_role_id";
+  public static final String VAULT_SECRET_ID = "drill.exec.security.vault.secret_id";
   public static final String QUERY_USER_VAR = "$user";
 
-  private final String secretPath;
-
+  private final String secretPath, appRoleId, secretId;
   private final Map<String, String> propertyNames;
-
-  private final Vault vault;
+  private final VaultConfig vaultConfig;
+  private Vault vault;
 
   /**
    * @param secretPath The Vault key value from which to read
@@ -63,38 +64,84 @@ public class VaultCredentialsProvider implements CredentialsProvider {
       @JsonProperty("secretPath") String secretPath,
       @JsonProperty("propertyNames") Map<String, String> propertyNames,
       @JacksonInject(useInput = OptBoolean.FALSE) DrillConfig config) throws VaultException {
+
     this.propertyNames = propertyNames;
     this.secretPath = secretPath;
-    String vaultAddress = Objects.requireNonNull(config.getString(VAULT_ADDRESS),
-        String.format("Vault address is not specified. Please set [%s] config property.", VAULT_ADDRESS));
-    String token = Objects.requireNonNull(config.getString(VAULT_TOKEN),
-        String.format("Vault token is not specified. Please set [%s] config property.", VAULT_TOKEN));
+    this.appRoleId = Objects.requireNonNull(
+      config.getString(VAULT_APP_ROLE_ID),
+      String.format(
+        "Vault app role id is not specified. Please set [%s] config property.",
+        VAULT_APP_ROLE_ID
+      )
+    );
+    this.secretId = Objects.requireNonNull(
+      config.getString(VAULT_SECRET_ID),
+      String.format(
+        "Vault secret id is not specified. Please set [%s] config property.",
+        VAULT_SECRET_ID
+      )
+    );
+    String vaultAddress = Objects.requireNonNull(
+      config.getString(VAULT_ADDRESS),
+      String.format(
+        "Vault address is not specified. Please set [%s] config property.",
+        VAULT_ADDRESS
+      )
+    );
 
-    VaultConfig vaultConfig = new VaultConfig()
+    this.vaultConfig = new VaultConfig()
         .address(vaultAddress)
-        .token(token)
         .build();
+    // Initial unauthenticated Vault client, needed for the first auth() call.
     this.vault = new Vault(vaultConfig);
   }
 
+  private Map<String, String> extractCredentials(Map<String, String> vaultSecrets) {
+    Map<String, String> credentials = new HashMap<>();
+    for (Map.Entry<String, String> entry : propertyNames.entrySet()) {
+      String cred = vaultSecrets.get(entry.getValue());
+      if (cred != null) {
+        credentials.put(entry.getKey(), vaultSecrets.get(entry.getValue()));
+      }
+    }
+    return credentials;
+  }
+
   private Map<String, String> getCredentialsAt(String path) {
+    Map<String, String> vaultSecrets, drillCreds = new HashMap<>();
+    // Obtain this thread's own reference to the current Vault object to use
+    // for deciding whether _we_ need to reauthenticate in the event of a
+    // failed read, or another thread has done that already.
+    Vault threadVault = this.vault;
     try {
-      // Sends a REST API request to Vault
-      Map<String, String> pathSecrets = vault.logical()
+      logger.debug("Attempting to fetch secrets from Vault path {}", path);
+      vaultSecrets = threadVault.logical()
         .read(path)
         .getData();
 
-      Map<String, String> credentials = new HashMap<>();
-      propertyNames.forEach((key, value) -> {
-        String cred = pathSecrets.get(value);
-        if (cred != null) {
-          credentials.put(key, pathSecrets.get(value));
-        }
-      });
+      if (vaultSecrets.size() > 0) {
+        return extractCredentials(vaultSecrets);
+      }
 
-      return credentials;
-    } catch (VaultException e) {
-      throw UserException.systemError(e)
+      synchronized (this) {
+        if (threadVault == vault) {
+          // The Vault object has not already been replaced by another thread,
+          // reauthenticate and replace it.
+          logger.info("Attempt to fetch secrets failed, attempting to reauthenticate");
+          AuthResponse authResp = vault.auth().loginByAppRole(appRoleId, secretId);
+          vault = new Vault(vaultConfig.token(authResp.getAuthClientToken()));
+        } else {
+          logger.debug("Another caller has already attempted reauthentication.");
+        }
+      }
+      logger.debug("Reattempting to fetch secrets from Vault path {}", path);
+      vaultSecrets = vault.logical()
+        .read(path)
+        .getData();
+      return extractCredentials(vaultSecrets);
+
+    } catch (VaultException exProblem) {
+      throw UserException.systemError(exProblem)
         .message("Error while fetching credentials from vault")
         .build(logger);
     }
@@ -102,14 +149,29 @@ public class VaultCredentialsProvider implements CredentialsProvider {
 
   @Override
   public Map<String, String> getCredentials() {
-    return getCredentialsAt(secretPath);
+    Map<String, String> creds = getCredentialsAt(secretPath);
+    if (creds.isEmpty()) {
+      logger.warn(
+        "No credentials matching the configured property names were readable at {}",
+        secretPath
+      );
+    }
+    return creds;
   }
 
   @Override
   public Map<String, String> getUserCredentials(String queryUser) {
     // Resolve a Vault path that may contain the $user var, e.g. /org/dept/$user -> /org/dept/alice
     String resolvedPath = secretPath.replace(QUERY_USER_VAR, queryUser);
-    return getCredentialsAt(resolvedPath);
+    Map<String, String> creds = getCredentialsAt(resolvedPath);
+    if (creds.isEmpty()) {
+      logger.warn(
+        "No credentials for {} matching the configured property names were readable at {}",
+        queryUser,
+        resolvedPath
+      );
+    }
+    return creds;
   }
 
   public String getSecretPath() {
