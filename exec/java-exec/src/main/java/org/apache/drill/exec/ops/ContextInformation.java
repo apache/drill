@@ -27,14 +27,14 @@ import org.apache.drill.exec.expr.fn.impl.DateUtility;
  * Provides query context information (such as query start time, query user, default schema etc.) for UDFs.
  */
 public class ContextInformation {
-  private final String queryUser;
+  private final UserCredentials queryUserCredentials;
   private final String currentDefaultSchema;
   private final long queryStartTime;
   private final int rootFragmentTimeZone;
   private final String sessionId;
 
   public ContextInformation(final UserCredentials userCredentials, final QueryContextInformation queryContextInfo) {
-    this.queryUser = userCredentials.getUserName();
+    this.queryUserCredentials = userCredentials;
     this.currentDefaultSchema = queryContextInfo.getDefaultSchemaName();
     this.queryStartTime = queryContextInfo.getQueryStartTime();
     this.rootFragmentTimeZone = queryContextInfo.getTimeZone();
@@ -45,7 +45,14 @@ public class ContextInformation {
    * @return userName of the user who issued the current query.
    */
   public String getQueryUser() {
-    return queryUser;
+    return queryUserCredentials.getUserName();
+  }
+
+  /**
+   * @return credentials of the user who issued the current query.
+   */
+  public UserCredentials getQueryUserCredentials() {
+    return queryUserCredentials;
   }
 
   /**

@@ -30,7 +30,7 @@ import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.proto.UserBitShared.QueryType;
-import org.apache.drill.exec.store.easy.text.TextFormatPlugin.TextFormatConfig;
+import org.apache.drill.exec.store.easy.text.TextFormatConfig;
 import org.apache.drill.shaded.guava.com.google.common.collect.ImmutableMap;
 import org.apache.drill.test.ClusterFixtureBuilder;
 import org.apache.drill.test.ClusterTest;
@@ -182,7 +182,7 @@ public class TestRestJson extends ClusterTest {
       System.out.println(
           client.queryBuilder().sql(sql).singletonLong());
       long end = System.currentTimeMillis();
-      System.out.println(String.format("COUNT(*) - Elapsed: %d ms", end - start));
+      System.out.printf("COUNT(*) - Elapsed: %d ms%n", end - start);
     }
 
     // Run the query and dump to a file to do a rough check

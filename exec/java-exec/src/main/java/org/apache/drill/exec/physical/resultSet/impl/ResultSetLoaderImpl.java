@@ -307,7 +307,7 @@ public class ResultSetLoaderImpl implements ResultSetLoader, LoaderInternals {
       // provided schema. The schema can be extended later, but normally
       // won't be if known up front.
 
-      logger.debug("Schema: " + options.schema.toString());
+      logger.debug("Schema: " + options.schema);
       BuildFromSchema.instance().buildTuple(rootWriter, options.schema);
     }
 

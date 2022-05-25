@@ -112,7 +112,7 @@ public class CapitalizingJdbcSchema extends AbstractSchema {
 
   @Override
   public CreateTableEntry createNewTable(String tableName, List<String> partitionColumns, StorageStrategy strategy) {
-    if (! plugin.getConfig().isWritable()) {
+    if (plugin.getConfig().isWritable() == null || (! plugin.getConfig().isWritable())) {
       throw UserException
         .dataWriteError()
         .message(plugin.getName() + " is not writable.")
@@ -145,7 +145,8 @@ public class CapitalizingJdbcSchema extends AbstractSchema {
 
     String tableWithSchema = CreateTableStmtBuilder.buildCompleteTableName(tableName, catalog, schema);
     String dropTableQuery = String.format("DROP TABLE %s", tableWithSchema);
-    dropTableQuery = JdbcDDLQueryUtils.cleanDDLQuery(dropTableQuery, plugin.getDialect());
+    SqlDialect dialect = plugin.getDialect(inner.getDataSource());
+    dropTableQuery = JdbcDDLQueryUtils.cleanDDLQuery(dropTableQuery, dialect);
 
     try (Connection conn = inner.getDataSource().getConnection();
          Statement stmt = conn.createStatement()) {

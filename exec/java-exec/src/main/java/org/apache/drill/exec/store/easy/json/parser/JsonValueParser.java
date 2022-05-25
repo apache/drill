@@ -56,9 +56,9 @@ public class JsonValueParser extends ValueParser {
         break;
 
       case VALUE_STRING:
-        json.append("\"");
+        //json.append("\"");
         json.append(textValue);
-        json.append("\"");
+        //json.append("\"");
         break;
 
       default:

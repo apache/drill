@@ -32,12 +32,14 @@ import okhttp3.Response;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.drill.common.exceptions.EmptyErrorContext;
+import org.apache.drill.common.logical.OAuthConfig;
+import org.apache.drill.common.logical.StoragePluginConfig.AuthMode;
 import org.apache.drill.common.map.CaseInsensitiveMap;
 import org.apache.drill.common.exceptions.CustomErrorContext;
 import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.expr.fn.impl.StringFunctionHelpers;
-import org.apache.drill.exec.expr.holders.VarCharHolder;
+import org.apache.drill.exec.expr.holders.NullableVarCharHolder;
 import org.apache.drill.exec.oauth.PersistentTokenTable;
 import org.apache.drill.exec.server.DrillbitContext;
 import org.apache.drill.exec.store.StoragePlugin;
@@ -46,7 +48,6 @@ import org.apache.drill.exec.store.StoragePluginRegistry.PluginException;
 import org.apache.drill.exec.store.http.HttpApiConfig;
 import org.apache.drill.exec.store.http.HttpApiConfig.HttpMethod;
 import org.apache.drill.exec.store.http.HttpApiConfig.PostLocation;
-import org.apache.drill.exec.store.http.HttpOAuthConfig;
 import org.apache.drill.exec.store.http.HttpStoragePlugin;
 import org.apache.drill.exec.store.http.HttpStoragePluginConfig;
 import org.apache.drill.exec.store.http.HttpSubScan;
@@ -55,7 +56,7 @@ import org.apache.drill.exec.store.http.oauth.AccessTokenAuthenticator;
 import org.apache.drill.exec.store.http.oauth.AccessTokenInterceptor;
 import org.apache.drill.exec.store.http.oauth.AccessTokenRepository;
 import org.apache.drill.exec.store.http.util.HttpProxyConfig.ProxyBuilder;
-import org.apache.drill.exec.store.security.UsernamePasswordCredentials;
+import org.apache.drill.exec.store.security.UsernamePasswordWithProxyCredentials;
 import org.jetbrains.annotations.NotNull;
 import org.json.simple.JSONObject;
 import org.slf4j.Logger;
@@ -84,6 +85,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -112,11 +114,12 @@ public class SimpleHttp {
   private final String connection;
   private final HttpStoragePluginConfig pluginConfig;
   private final HttpApiConfig apiConfig;
-  private final HttpOAuthConfig oAuthConfig;
+  private final OAuthConfig oAuthConfig;
   private String responseMessage;
   private int responseCode;
   private String responseProtocol;
   private String responseURL;
+  private String username;
 
 
   public SimpleHttp(HttpSubScan scanDefn, HttpUrl url, File tempDir,
@@ -125,6 +128,7 @@ public class SimpleHttp {
     this.pluginConfig = scanDefn.tableSpec().config();
     this.connection = scanDefn.tableSpec().connection();
     this.oAuthConfig = scanDefn.tableSpec().config().oAuthConfig();
+    this.username = scanDefn.getUserName();
     this.filters = scanDefn.filters();
     this.url = url;
     this.tempDir = tempDir;
@@ -208,8 +212,19 @@ public class SimpleHttp {
       // If the API uses basic authentication add the authentication code.  Use the global credentials unless there are credentials
       // for the specific endpoint.
       logger.debug("Adding Interceptor");
-      UsernamePasswordCredentials credentials = getCredentials();
-      builder.addInterceptor(new BasicAuthInterceptor(credentials.getUsername(), credentials.getPassword()));
+      Optional<UsernamePasswordWithProxyCredentials> credentials;
+      if (pluginConfig.getAuthMode() == AuthMode.USER_TRANSLATION) {
+        credentials = getCredentials(username);
+        if (!credentials.isPresent() || StringUtils.isEmpty(credentials.get().getUsername()) || StringUtils.isEmpty(credentials.get().getPassword())) {
+          throw UserException.connectionError()
+            .message("You do not have valid credentials for this API.  Please provide your credentials.")
+            .addContext(errorContext)
+            .build(logger);
+        }
+      } else {
+        credentials = getCredentials();
+      }
+      builder.addInterceptor(new BasicAuthInterceptor(credentials.get().getUsername(), credentials.get().getPassword()));
     }
 
     // Set timeouts
@@ -415,13 +430,17 @@ public class SimpleHttp {
       .fromConfigForURL(drillConfig, url.toString());
     final String proxyType = config.proxyType();
     if (proxyType != null && !"direct".equals(proxyType)) {
-      UsernamePasswordCredentials credentials = config.getUsernamePasswordCredentials();
       builder
         .type(config.proxyType())
         .host(config.proxyHost())
-        .port(config.proxyPort())
-        .username(credentials.getUsername())
-        .password(credentials.getPassword());
+        .port(config.proxyPort());
+
+      Optional<UsernamePasswordWithProxyCredentials> credentials = config.getUsernamePasswordCredentials();
+
+      if (credentials.isPresent()) {
+        builder.username(credentials.get().getUsername())
+          .password(credentials.get().getPassword());
+      }
     }
     return builder.build();
   }
@@ -445,31 +464,18 @@ public class SimpleHttp {
   }
 
   /**
-   * Logic to determine whether the API connection has global credentials or credentials specific for the
-   * API endpoint.
-   * @param endpointConfig The API endpoint configuration
-   * @return True if the endpoint has credentials, false if not.
-   */
-  private boolean hasEndpointCredentials(HttpApiConfig endpointConfig) {
-    UsernamePasswordCredentials credentials = endpointConfig.getUsernamePasswordCredentials();
-    if (StringUtils.isNotEmpty(credentials.getUsername()) &&
-    StringUtils.isNotEmpty(credentials.getPassword())) {
-      return true;
-    }
-    return false;
-  }
-
-  /**
    * If the user has defined username/password for the specific API endpoint, pass the API endpoint credentials.
    * Otherwise, use the global connection credentials.
    * @return A UsernamePasswordCredentials collection with the correct username/password
    */
-  private UsernamePasswordCredentials getCredentials() {
-    if (hasEndpointCredentials(apiConfig)) {
-      return apiConfig.getUsernamePasswordCredentials();
-    } else {
-      return pluginConfig.getUsernamePasswordCredentials();
-    }
+  private Optional<UsernamePasswordWithProxyCredentials> getCredentials() {
+    Optional<UsernamePasswordWithProxyCredentials> apiCreds = apiConfig.getUsernamePasswordCredentials();
+    return apiCreds.isPresent() ? apiCreds : pluginConfig.getUsernamePasswordCredentials();
+  }
+
+  private Optional<UsernamePasswordWithProxyCredentials> getCredentials(String queryUser) {
+    Optional<UsernamePasswordWithProxyCredentials> apiCreds = apiConfig.getUsernamePasswordCredentials();
+    return apiCreds.isPresent() ? apiCreds : pluginConfig.getUsernamePasswordCredentials(queryUser);
   }
 
   /**
@@ -796,42 +802,35 @@ public class SimpleHttp {
   /**
    * Accepts a list of input readers and converts that into an ArrayList of Strings
    * @param inputReaders The array of FieldReaders
-   * @return A List of Strings containing the values from the FieldReaders.
+   * @return A List of Strings containing the values from the FieldReaders or null
+   * to indicate that at least one null is present in the arguments.
    */
-  public static List<String> buildParameterList(VarCharHolder[] inputReaders) {
+  public static List<String> buildParameterList(NullableVarCharHolder[] inputReaders) {
     if (inputReaders == null || inputReaders.length == 0) {
+      // no args provided
       return Collections.emptyList();
     }
 
     List<String> inputArguments = new ArrayList<>();
     for (int i = 0; i < inputReaders.length; i++) {
+      if (inputReaders[i].buffer == null) {
+        // at least one null arg provided
+        return null;
+      }
+
       inputArguments.add(StringFunctionHelpers.getStringFromVarCharHolder(inputReaders[i]));
     }
 
     return inputArguments;
   }
 
-  public static HttpStoragePluginConfig getPluginConfig(String name, DrillbitContext context) throws PluginException {
-    HttpStoragePlugin httpStoragePlugin = getStoragePlugin(context, name);
-    return httpStoragePlugin.getConfig();
-  }
-
-  public static HttpApiConfig getEndpointConfig(String name, HttpStoragePluginConfig pluginConfig) {
-    // Get the plugin name and endpoint name
-    String[] parts = name.split("\\.");
-    if (parts.length < 2) {
-      throw UserException.functionError()
-        .message("You must call this function with a connection name and endpoint.")
-        .build(logger);
-    }
-
-    String endpoint = parts[1];
+  public static HttpApiConfig getEndpointConfig(String endpoint, HttpStoragePluginConfig pluginConfig) {
     HttpApiConfig endpointConfig = pluginConfig.getConnection(endpoint);
     if (endpointConfig == null) {
       throw UserException.functionError()
         .message("You must call this function with a valid endpoint name.")
         .build(logger);
-    } else if (endpointConfig.inputType() != "json") {
+    } else if (! endpointConfig.inputType().contentEquals("json")) {
       throw UserException.functionError()
         .message("Http_get only supports API endpoints which return json.")
         .build(logger);
@@ -840,7 +839,7 @@ public class SimpleHttp {
     return endpointConfig;
   }
 
-  private static HttpStoragePlugin getStoragePlugin(DrillbitContext context, String pluginName) {
+  public static HttpStoragePlugin getStoragePlugin(DrillbitContext context, String pluginName) {
     StoragePluginRegistry storage = context.getStorage();
     try {
       StoragePlugin pluginInstance = storage.getPlugin(pluginName);
@@ -868,34 +867,20 @@ public class SimpleHttp {
    * This function makes an API call and returns a string of the parsed results. It is used in the http_get() UDF
    * and retrieves all the configuration parameters contained in the storage plugin and endpoint configuration. The exception
    * is pagination.  This does not support pagination.
-   * @param schemaPath The path of storage_plugin.endpoint from which the data will be retrieved
+   * @param plugin The HTTP storage plugin upon which the API call is based.
+   * @param endpointConfig The configuration of the API endpoint upon which the API call is based.
    * @param context {@link DrillbitContext} The context from the current query
    * @param args An optional list of parameter arguments which will be included in the URL
    * @return A String of the results.
    */
-  public static String makeAPICall(String schemaPath, DrillbitContext context, List<String> args) {
+  public static String makeAPICall(
+    HttpStoragePlugin plugin,
+    HttpApiConfig endpointConfig,
+    DrillbitContext context,
+    List<String> args
+  ) {
     HttpStoragePluginConfig pluginConfig;
-    HttpApiConfig endpointConfig;
-
-    // Get the plugin name and endpoint name
-    String[] parts = schemaPath.split("\\.");
-    if (parts.length < 2) {
-      throw UserException.functionError()
-        .message("You must call this function with a connection name and endpoint.")
-        .build(logger);
-    }
-    String pluginName = parts[0];
-
-    HttpStoragePlugin plugin = getStoragePlugin(context, pluginName);
-
-    try {
-      pluginConfig = getPluginConfig(pluginName, context);
-      endpointConfig = getEndpointConfig(schemaPath, pluginConfig);
-    } catch (PluginException e) {
-      throw UserException.functionError()
-        .message("Could not access plugin " + pluginName)
-        .build(logger);
-    }
+    pluginConfig = plugin.getConfig();
 
     // Get proxy settings
     HttpProxyConfig proxyConfig = SimpleHttp.getProxySettings(pluginConfig, context.getConfig(), endpointConfig.getHttpUrl());
@@ -982,9 +967,10 @@ public class SimpleHttp {
     private PersistentTokenTable tokenTable;
     private HttpStoragePluginConfig pluginConfig;
     private HttpApiConfig endpointConfig;
-    private HttpOAuthConfig oAuthConfig;
+    private OAuthConfig oAuthConfig;
     private Map<String,String> filters;
     private String connection;
+    private String username;
 
     public SimpleHttpBuilder scanDefn(HttpSubScan scanDefn) {
       this.scanDefn = scanDefn;
@@ -993,6 +979,7 @@ public class SimpleHttp {
       this.oAuthConfig = scanDefn.tableSpec().config().oAuthConfig();
       this.tokenTable = scanDefn.tableSpec().getTokenTable();
       this.filters = scanDefn.filters();
+      this.username = scanDefn.getUserName();
       return this;
     }
 
@@ -1003,6 +990,11 @@ public class SimpleHttp {
 
     public SimpleHttpBuilder tempDir(File tempDir) {
       this.tempDir = tempDir;
+      return this;
+    }
+
+    public SimpleHttpBuilder username(String username) {
+      this.username = username;
       return this;
     }
 

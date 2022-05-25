@@ -127,8 +127,7 @@ public class CreateTableHandler extends DefaultSqlHandler {
                                  String tableName,
                                  List<String> partitionColumns,
                                  RelDataType queryRowType,
-                                 StorageStrategy storageStrategy)
-      throws RelConversionException, SqlUnsupportedException {
+                                 StorageStrategy storageStrategy) throws SqlUnsupportedException {
     final DrillRel convertedRelNode = convertToRawDrel(relNode);
 
     // Put a non-trivial topProject to ensure the final output field name is preserved, when necessary.

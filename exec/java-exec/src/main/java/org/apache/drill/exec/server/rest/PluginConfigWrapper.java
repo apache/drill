@@ -17,11 +17,19 @@
  */
 package org.apache.drill.exec.server.rest;
 
+import java.io.UnsupportedEncodingException;
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
+import java.util.Map;
+import java.util.Map.Entry;
+import java.util.Optional;
+
 import javax.xml.bind.annotation.XmlRootElement;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import org.apache.commons.lang3.StringUtils;
-import org.apache.drill.common.logical.AbstractSecuredStoragePluginConfig;
+import org.apache.drill.common.exceptions.UserException;
+import org.apache.drill.common.logical.OAuthConfig;
 import org.apache.drill.common.logical.StoragePluginConfig;
 import org.apache.drill.common.logical.security.CredentialsProvider;
 import org.apache.drill.exec.store.StoragePluginRegistry;
@@ -29,17 +37,20 @@ import org.apache.drill.exec.store.StoragePluginRegistry.PluginException;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import org.apache.drill.exec.store.security.UsernamePasswordCredentials;
 import org.apache.drill.exec.store.security.oauth.OAuthTokenCredentials;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 @XmlRootElement
 public class PluginConfigWrapper {
-
+  private static final Logger logger = LoggerFactory.getLogger(PluginConfigWrapper.class);
   private final String name;
   private final StoragePluginConfig config;
 
   @JsonCreator
   public PluginConfigWrapper(@JsonProperty("name") String name,
-      @JsonProperty("config") StoragePluginConfig config) {
+                             @JsonProperty("config") StoragePluginConfig config) {
     this.name = name;
     this.config = config;
   }
@@ -50,6 +61,28 @@ public class PluginConfigWrapper {
 
   public boolean enabled() {
     return config.isEnabled();
+  }
+
+  @JsonIgnore
+  public String getUserName(String activeUser) {
+    CredentialsProvider credentialsProvider = config.getCredentialsProvider();
+    Optional<UsernamePasswordCredentials> credentials = new UsernamePasswordCredentials.Builder()
+      .setCredentialsProvider(credentialsProvider)
+      .setQueryUser(activeUser)
+      .build();
+
+    return credentials.map(UsernamePasswordCredentials::getUsername).orElse(null);
+  }
+
+  @JsonIgnore
+  public String getPassword(String activeUser) {
+    CredentialsProvider credentialsProvider = config.getCredentialsProvider();
+    Optional<UsernamePasswordCredentials> credentials = new UsernamePasswordCredentials.Builder()
+      .setCredentialsProvider(credentialsProvider)
+      .setQueryUser(activeUser)
+      .build();
+
+    return credentials.map(UsernamePasswordCredentials::getPassword).orElse(null);
   }
 
   public void createOrUpdateInStorage(StoragePluginRegistry storage) throws PluginException {
@@ -66,17 +99,85 @@ public class PluginConfigWrapper {
    */
   @JsonIgnore
   public boolean isOauth() {
-    if (! (config instanceof AbstractSecuredStoragePluginConfig)) {
-      return false;
-    }
-    AbstractSecuredStoragePluginConfig securedStoragePluginConfig = (AbstractSecuredStoragePluginConfig) config;
-    CredentialsProvider credentialsProvider = securedStoragePluginConfig.getCredentialsProvider();
+    CredentialsProvider credentialsProvider = config.getCredentialsProvider();
     if (credentialsProvider == null) {
       return false;
     }
-    OAuthTokenCredentials tokenCredentials = new OAuthTokenCredentials(credentialsProvider);
 
-    return !StringUtils.isEmpty(tokenCredentials.getClientID()) ||
-      !StringUtils.isEmpty(tokenCredentials.getClientSecret());
+    Optional<OAuthTokenCredentials> tokenCredentials = new OAuthTokenCredentials.Builder()
+      .setCredentialsProvider(credentialsProvider)
+      .build();
+
+    return tokenCredentials.map(OAuthTokenCredentials::getClientID).orElse(null) != null;
+  }
+
+  @JsonIgnore
+  public String getClientID() {
+    CredentialsProvider credentialsProvider = config.getCredentialsProvider();
+
+    return credentialsProvider.getCredentials().getOrDefault("clientID", "");
+  }
+
+  /**
+   * This function generates the authorization URI for use when a non-admin user is authorizing
+   * OAuth2.0 access for a storage plugin.  This function is necessary as we do not wish to expose
+   * any plugin configuration information to the user.
+   *
+   * If the plugin is not OAuth, or is missing components, the function will return an empty string.
+   * @return The authorization URI for an OAuth enabled plugin.
+   */
+  @JsonIgnore
+  public String getAuthorizationURIWithParams() {
+    if (!isOauth()) {
+      logger.warn("{} is not an OAuth enabled storage plugin", name);
+      return "";
+    }
+
+    String clientID = getClientID();
+    OAuthConfig oAuthConfig = config.oAuthConfig();
+    String authorizationURI = oAuthConfig.getAuthorizationURL();
+
+    StringBuilder finalUrlBuilder = new StringBuilder();
+
+    // Add the client id and redirect URI
+    finalUrlBuilder.append(authorizationURI)
+      .append("?client_id=")
+      .append(clientID)
+      .append("&redirect_uri=")
+      .append(oAuthConfig.getCallbackURL());
+
+    // Add scope if populated
+    if (StringUtils.isNotEmpty(oAuthConfig.getScope())) {
+      finalUrlBuilder.append("&scope=")
+        .append(URLEncodeValue(oAuthConfig.getScope()));
+    }
+
+    // Add additional params if present
+    Map<String,String> params = oAuthConfig.getAuthorizationParams();
+    if (params != null) {
+      for (Entry<String, String> param: params.entrySet()) {
+        finalUrlBuilder.append("&")
+          .append(param.getKey())
+          .append("=")
+          .append(URLEncodeValue(param.getValue()));
+      }
+    }
+    return finalUrlBuilder.toString();
+  }
+
+  /**
+   * URL Encodes a String.  Throws a {@link UserException} if anything goes wrong.
+   * @param value The unencoded String
+   * @return The URL encoded version of the input String
+   */
+  private String URLEncodeValue(String value) {
+    try {
+      return URLEncoder.encode(value, StandardCharsets.UTF_8.toString());
+    } catch (UnsupportedEncodingException e) {
+      throw UserException
+        .internalError(e)
+        .message("Error encoding value: " + value)
+        .build(logger);
+    }
   }
 }

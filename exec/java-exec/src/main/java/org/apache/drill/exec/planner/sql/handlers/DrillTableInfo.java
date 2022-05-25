@@ -18,7 +18,6 @@
 package org.apache.drill.exec.planner.sql.handlers;
 
 import org.apache.calcite.schema.Table;
-import org.apache.calcite.schema.TranslatableTable;
 import org.apache.calcite.sql.SqlCall;
 import org.apache.calcite.sql.SqlFunction;
 import org.apache.calcite.sql.SqlIdentifier;
@@ -31,7 +30,6 @@ import org.apache.calcite.sql.validate.SqlUserDefinedTableMacro;
 import org.apache.calcite.util.Util;
 import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.exec.planner.logical.DrillTable;
-import org.apache.drill.exec.planner.logical.DrillTranslatableTable;
 import org.apache.drill.exec.planner.sql.SchemaUtilites;
 import org.apache.drill.exec.store.AbstractSchema;
 import org.apache.drill.shaded.guava.com.google.common.base.Preconditions;
@@ -92,8 +90,7 @@ public class DrillTableInfo {
         AbstractSchema drillSchema = SchemaUtilites.resolveToDrillSchema(
             config.getConverter().getDefaultSchema(), SchemaUtilites.getSchemaPath(tableIdentifier));
 
-        TranslatableTable translatableTable = tableMacro.getTable(config.getConverter().getTypeFactory(), prepareTableMacroOperands(call.operand(0)));
-        DrillTable table = ((DrillTranslatableTable) translatableTable).getDrillTable();
+        DrillTable table = (DrillTable) tableMacro.getTable(config.getConverter().getTypeFactory(), prepareTableMacroOperands(call.operand(0)));
         return new DrillTableInfo(table, drillSchema.getSchemaPath(), Util.last(tableIdentifier.names));
       }
       case IDENTIFIER: {

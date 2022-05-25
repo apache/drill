@@ -22,7 +22,7 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
-import org.apache.drill.categories.RowSetTests;
+import org.apache.drill.categories.RowSetTest;
 import org.apache.drill.common.types.TypeProtos.DataMode;
 import org.apache.drill.common.types.TypeProtos.MajorType;
 import org.apache.drill.common.types.TypeProtos.MinorType;
@@ -53,7 +53,7 @@ import org.junit.experimental.categories.Category;
  * The tests here focus on the scan orchestrator itself; the tests assume
  * that tests for lower-level components have already passed.
  */
-@Category(RowSetTests.class)
+@Category(RowSetTest.class)
 public class TestScanOrchestratorEarlySchema extends SubOperatorTest {
 
   /**

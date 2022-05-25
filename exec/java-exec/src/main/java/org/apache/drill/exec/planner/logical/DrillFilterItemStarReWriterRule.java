@@ -39,6 +39,7 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 import static org.apache.drill.exec.planner.logical.FieldsReWriterUtil.DesiredField;
 import static org.apache.drill.exec.planner.logical.FieldsReWriterUtil.FieldsReWriter;
@@ -99,10 +100,9 @@ public class DrillFilterItemStarReWriterRule {
       // re-write projects
       Map<RexNode, Integer> fieldMapper = createFieldMapper(itemStarFields.values(), scanRel.getRowType().getFieldCount());
       FieldsReWriter fieldsReWriter = new FieldsReWriter(fieldMapper);
-      List<RexNode> newProjects = new ArrayList<>();
-      for (RexNode node : projectRel.getChildExps()) {
-        newProjects.add(node.accept(fieldsReWriter));
-      }
+      List<RexNode> newProjects = projectRel.getProjects().stream()
+        .map(node -> node.accept(fieldsReWriter))
+        .collect(Collectors.toList());
 
       DrillProjectRel newProject = new DrillProjectRel(
           projectRel.getCluster(),

@@ -18,7 +18,7 @@
 
 package org.apache.drill.exec.store.pdf;
 
-import org.apache.drill.categories.RowSetTests;
+import org.apache.drill.categories.RowSetTest;
 import org.apache.drill.common.types.TypeProtos.MinorType;
 import org.apache.drill.exec.physical.rowSet.RowSet;
 import org.apache.drill.exec.physical.rowSet.RowSetBuilder;
@@ -42,7 +42,7 @@ import static org.apache.drill.test.QueryTestUtil.generateCompressedFile;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
-@Category(RowSetTests.class)
+@Category(RowSetTest.class)
 public class TestPdfFormat extends ClusterTest {
 
   @BeforeClass

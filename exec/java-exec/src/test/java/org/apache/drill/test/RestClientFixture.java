@@ -18,6 +18,7 @@
 package org.apache.drill.test;
 
 import com.fasterxml.jackson.jaxrs.json.JacksonJsonProvider;
+import org.apache.drill.exec.server.rest.PluginConfigWrapper;
 import org.apache.drill.shaded.guava.com.google.common.base.Preconditions;
 import org.apache.drill.exec.server.rest.StatusResources;
 import org.glassfish.jersey.client.ClientConfig;
@@ -25,6 +26,7 @@ import org.glassfish.jersey.client.JerseyClientBuilder;
 
 import javax.annotation.Nullable;
 import javax.ws.rs.client.Client;
+import javax.ws.rs.client.Entity;
 import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.GenericType;
 import javax.ws.rs.core.MediaType;
@@ -118,6 +120,30 @@ public class RestClientFixture implements AutoCloseable {
     }
 
     return null;
+  }
+
+  public PluginConfigWrapper getStorageConfig(String name) {
+    return baseTarget.path(String.format("/storage/%s.json", name))
+      .request(MediaType.APPLICATION_JSON)
+      .get(new GenericType<PluginConfigWrapper>() {});
+  }
+
+  public void postStorageConfig(PluginConfigWrapper pcw) {
+    baseTarget.path(String.format("/storage/%s.json", pcw.getName()))
+      .request(MediaType.APPLICATION_JSON)
+      .post(Entity.entity(pcw, MediaType.APPLICATION_JSON));
+  }
+
+  public void toggleEnabled(String name, boolean b) {
+    baseTarget.path(String.format("/storage/%s/enable/%b", name, b))
+      .request(MediaType.APPLICATION_JSON)
+      .post(Entity.json(""));
+  }
+
+  public void deleteStorageConfig(String name) {
+    baseTarget.path(String.format("/storage/%s.json", name))
+      .request(MediaType.APPLICATION_JSON)
+      .delete();
   }
 
   @Override

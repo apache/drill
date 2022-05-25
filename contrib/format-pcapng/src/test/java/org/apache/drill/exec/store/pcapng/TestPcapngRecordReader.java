@@ -22,7 +22,7 @@ import static org.junit.Assert.assertEquals;
 import java.nio.file.Paths;
 import java.time.Instant;
 
-import org.apache.drill.categories.RowSetTests;
+import org.apache.drill.categories.RowSetTest;
 import org.apache.drill.common.exceptions.UserRemoteException;
 import org.apache.drill.common.types.TypeProtos.MinorType;
 import org.apache.drill.exec.physical.rowSet.RowSet;
@@ -39,7 +39,7 @@ import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
-@Category(RowSetTests.class)
+@Category(RowSetTest.class)
 public class TestPcapngRecordReader extends ClusterTest {
 
   @BeforeClass

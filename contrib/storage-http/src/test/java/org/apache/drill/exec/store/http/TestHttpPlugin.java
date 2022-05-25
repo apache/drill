@@ -22,6 +22,7 @@ import okhttp3.mockwebserver.MockResponse;
 import okhttp3.mockwebserver.MockWebServer;
 import okhttp3.mockwebserver.RecordedRequest;
 import org.apache.drill.common.exceptions.UserException;
+import org.apache.drill.common.logical.StoragePluginConfig.AuthMode;
 import org.apache.drill.common.logical.security.PlainCredentialsProvider;
 import org.apache.drill.common.types.TypeProtos;
 import org.apache.drill.common.types.TypeProtos.DataMode;
@@ -69,17 +70,25 @@ import static org.junit.Assert.fail;
  */
 public class TestHttpPlugin extends ClusterTest {
 
-  private static final int MOCK_SERVER_PORT = 8091;
+  // Use high-numbered ports to avoid colliding with other tools on the
+  // build machine.
+  private static final int MOCK_SERVER_PORT = 44332;
   private static String TEST_JSON_RESPONSE;
+  private static String TEST_MALFORMED_JSON_RESPONSE;
   private static String TEST_CSV_RESPONSE;
   private static String TEST_XML_RESPONSE;
   private static String TEST_JSON_RESPONSE_WITH_DATATYPES;
+
+  public static String makeUrl(String url) {
+    return String.format(url, MOCK_SERVER_PORT);
+  }
 
   @BeforeClass
   public static void setup() throws Exception {
     startCluster(ClusterFixture.builder(dirTestWatcher));
 
     TEST_JSON_RESPONSE = Files.asCharSource(DrillFileUtils.getResourceAsFile("/data/response.json"), Charsets.UTF_8).read();
+    TEST_MALFORMED_JSON_RESPONSE = Files.asCharSource(DrillFileUtils.getResourceAsFile("/data/malformed.json"), Charsets.UTF_8).read();
     TEST_CSV_RESPONSE = Files.asCharSource(DrillFileUtils.getResourceAsFile("/data/response.csv"), Charsets.UTF_8).read();
     TEST_XML_RESPONSE = Files.asCharSource(DrillFileUtils.getResourceAsFile("/data/response.xml"), Charsets.UTF_8).read();
     TEST_JSON_RESPONSE_WITH_DATATYPES = Files.asCharSource(DrillFileUtils.getResourceAsFile("/data/response2.json"), Charsets.UTF_8).read();
@@ -129,7 +138,7 @@ public class TestHttpPlugin extends ClusterTest {
     configs.put("pokemon", pokemonConfig);
 
     HttpStoragePluginConfig mockStorageConfigWithWorkspace =
-        new HttpStoragePluginConfig(false, configs, 10, null, null, "", 80, "", "", "", null, PlainCredentialsProvider.EMPTY_CREDENTIALS_PROVIDER);
+        new HttpStoragePluginConfig(false, configs, 10, null, null, "", 80, "", "", "", null, PlainCredentialsProvider.EMPTY_CREDENTIALS_PROVIDER, AuthMode.SHARED_USER.name());
     mockStorageConfigWithWorkspace.setEnabled(true);
     cluster.defineStoragePlugin("live", mockStorageConfigWithWorkspace);
   }
@@ -149,7 +158,7 @@ public class TestHttpPlugin extends ClusterTest {
     // The connection acts like a schema.
     // Ignores the message body except for data.
     HttpApiConfig mockSchema = HttpApiConfig.builder()
-      .url("http://localhost:8091/json")
+      .url(makeUrl("http://localhost:%d/json"))
       .method("GET")
       .headers(headers)
       .authType("basic")
@@ -166,7 +175,7 @@ public class TestHttpPlugin extends ClusterTest {
     // This is the preferred approach, the base URL contains as much info as possible;
     // all other parameters are specified in SQL. See README for an example.
     HttpApiConfig mockTable = HttpApiConfig.builder()
-      .url("http://localhost:8091/json")
+      .url(makeUrl("http://localhost:%d/json"))
       .method("GET")
       .headers(headers)
       .authType("basic")
@@ -178,14 +187,14 @@ public class TestHttpPlugin extends ClusterTest {
       .build();
 
     HttpApiConfig mockPostConfig = HttpApiConfig.builder()
-      .url("http://localhost:8091/")
+      .url(makeUrl("http://localhost:%d/"))
       .method("POST")
       .headers(headers)
       .postBody("key1=value1\nkey2=value2")
       .build();
 
     HttpApiConfig mockPostPushdownWithStaticParams = HttpApiConfig.builder()
-      .url("http://localhost:8091/")
+      .url(makeUrl("http://localhost:%d/"))
       .method("POST")
       .headers(headers)
       .requireTail(false)
@@ -195,7 +204,7 @@ public class TestHttpPlugin extends ClusterTest {
       .build();
 
     HttpApiConfig mockPostPushdown = HttpApiConfig.builder()
-      .url("http://localhost:8091/")
+      .url(makeUrl("http://localhost:%d/"))
       .method("POST")
       .headers(headers)
       .requireTail(false)
@@ -204,7 +213,7 @@ public class TestHttpPlugin extends ClusterTest {
       .build();
 
     HttpApiConfig mockJsonNullBodyPost = HttpApiConfig.builder()
-      .url("http://localhost:8091/")
+      .url(makeUrl("http://localhost:%d/"))
       .method("POST")
       .headers(headers)
       .requireTail(false)
@@ -213,7 +222,7 @@ public class TestHttpPlugin extends ClusterTest {
       .build();
 
     HttpApiConfig mockJsonPostConfig = HttpApiConfig.builder()
-      .url("http://localhost:8091/")
+      .url(makeUrl("http://localhost:%d/"))
       .method("POST")
       .headers(headers)
       .requireTail(false)
@@ -230,7 +239,7 @@ public class TestHttpPlugin extends ClusterTest {
       .build();
 
     HttpApiConfig mockJsonConfigWithPaginator = HttpApiConfig.builder()
-      .url("http://localhost:8091/json")
+      .url(makeUrl("http://localhost:%d/json"))
       .method("get")
       .headers(headers)
       .requireTail(false)
@@ -238,15 +247,26 @@ public class TestHttpPlugin extends ClusterTest {
       .inputType("json")
       .build();
 
+    HttpApiConfig mockJsonWithMalformedData = HttpApiConfig.builder()
+      .url(makeUrl("http://localhost:%d/json"))
+      .method("get")
+      .requireTail(false)
+      .jsonOptions(new HttpJsonOptions.HttpJsonOptionsBuilder()
+        .skipMalformedRecords(true)
+        .build())
+      .inputType("json")
+      .build();
+
+
     HttpApiConfig mockPostConfigWithoutPostBody = HttpApiConfig.builder()
-      .url("http://localhost:8091/")
+      .url(makeUrl("http://localhost:%d/"))
       .method("POST")
       .authType("basic")
       .headers(headers)
       .build();
 
     HttpApiConfig mockCsvConfig = HttpApiConfig.builder()
-      .url("http://localhost:8091/csv")
+      .url(makeUrl("http://localhost:%d/csv"))
       .method("GET")
       .headers(headers)
       .authType("basic")
@@ -257,7 +277,7 @@ public class TestHttpPlugin extends ClusterTest {
       .build();
 
     HttpApiConfig mockCsvConfigWithPaginator = HttpApiConfig.builder()
-      .url("http://localhost:8091/csv")
+      .url(makeUrl("http://localhost:%d/csv"))
       .method("get")
       .paginator(offsetPaginatorForJson)
       .inputType("csv")
@@ -266,7 +286,7 @@ public class TestHttpPlugin extends ClusterTest {
       .build();
 
     HttpApiConfig mockXmlConfig = HttpApiConfig.builder()
-      .url("http://localhost:8091/xml")
+      .url(makeUrl("http://localhost:%d/xml"))
       .method("GET")
       .headers(headers)
       .authType("basic")
@@ -278,7 +298,7 @@ public class TestHttpPlugin extends ClusterTest {
       .build();
 
     HttpApiConfig mockGithubWithParam = HttpApiConfig.builder()
-      .url("http://localhost:8091/orgs/{org}/repos")
+      .url(makeUrl("http://localhost:%d/orgs/{org}/repos"))
       .method("GET")
       .headers(headers)
       .params(Arrays.asList("lat", "lng", "date"))
@@ -287,7 +307,7 @@ public class TestHttpPlugin extends ClusterTest {
       .build();
 
     HttpApiConfig mockGithubWithDuplicateParam = HttpApiConfig.builder()
-      .url("http://localhost:8091/orgs/{org}/repos")
+      .url(makeUrl("http://localhost:%d/orgs/{org}/repos"))
       .method("GET")
       .headers(headers)
       .params(Arrays.asList("org", "lng", "date"))
@@ -296,7 +316,7 @@ public class TestHttpPlugin extends ClusterTest {
       .build();
 
     HttpApiConfig mockGithubWithParamInQuery = HttpApiConfig.builder()
-      .url("http://localhost:8091/orgs/{org}/repos?p1={p1}")
+      .url(makeUrl("http://localhost:%d/orgs/{org}/repos?p1={p1}"))
       .method("GET")
       .headers(headers)
       .params(Arrays.asList("p2", "p3"))
@@ -305,7 +325,7 @@ public class TestHttpPlugin extends ClusterTest {
       .build();
 
     HttpApiConfig mockTableWithJsonOptions = HttpApiConfig.builder()
-      .url("http://localhost:8091/json")
+      .url(makeUrl("http://localhost:%d/json"))
       .method("GET")
       .headers(headers)
       .requireTail(false)
@@ -332,12 +352,13 @@ public class TestHttpPlugin extends ClusterTest {
     configs.put("github2", mockGithubWithDuplicateParam);
     configs.put("github3", mockGithubWithParamInQuery);
     configs.put("mockJsonAllText", mockTableWithJsonOptions);
+    configs.put("malformedJson", mockJsonWithMalformedData);
 
     HttpStoragePluginConfig mockStorageConfigWithWorkspace =
         new HttpStoragePluginConfig(false, configs, 2, "globaluser", "globalpass", "",
           80, "", "", "", null, new PlainCredentialsProvider(ImmutableMap.of(
           UsernamePasswordCredentials.USERNAME, "globaluser",
-          UsernamePasswordCredentials.PASSWORD, "globalpass")));
+          UsernamePasswordCredentials.PASSWORD, "globalpass")), AuthMode.SHARED_USER.name());
     mockStorageConfigWithWorkspace.setEnabled(true);
     cluster.defineStoragePlugin("local", mockStorageConfigWithWorkspace);
   }
@@ -530,7 +551,30 @@ public class TestHttpPlugin extends ClusterTest {
 
       RowSetUtilities.verify(expected, results);
     } catch (Exception e) {
-      System.out.println(e.getMessage());
+      fail();
+    }
+  }
+
+  @Test
+  public void simpleTestWithMalformedJson() {
+    String sql = "SELECT * FROM local.malformedJson";
+
+    try (MockWebServer server = startServer()) {
+      server.enqueue(new MockResponse().setResponseCode(200).setBody(TEST_MALFORMED_JSON_RESPONSE));
+      RowSet results = client.queryBuilder().sql(sql).rowSet();
+
+      TupleMetadata expectedSchema = new SchemaBuilder()
+        .addNullable("a", MinorType.BIGINT)
+        .build();
+
+      RowSet expected = new RowSetBuilder(client.allocator(), expectedSchema)
+        .addRow(1)
+        .addRow(5)
+        .addRow(6)
+        .build();
+
+      RowSetUtilities.verify(expected, results);
+    } catch (Exception e) {
       fail();
     }
   }
@@ -554,7 +598,7 @@ public class TestHttpPlugin extends ClusterTest {
           .build();
 
       RowSet expected = new RowSetBuilder(client.allocator(), expectedSchema)
-          .addRow("http://localhost:8091/orgs/apache/repos")
+          .addRow(makeUrl("http://localhost:%d/orgs/apache/repos"))
           .build();
 
       RowSetUtilities.verify(expected, results);
@@ -580,7 +624,7 @@ public class TestHttpPlugin extends ClusterTest {
         .build();
 
       RowSet expected = new RowSetBuilder(client.allocator(), expectedSchema)
-        .addRow("http://localhost:8091/orgs/true/repos")
+        .addRow(makeUrl("http://localhost:%d/orgs/true/repos"))
         .build();
 
       RowSetUtilities.verify(expected, results);
@@ -606,7 +650,7 @@ public class TestHttpPlugin extends ClusterTest {
         .build();
 
       RowSet expected = new RowSetBuilder(client.allocator(), expectedSchema)
-        .addRow("http://localhost:8091/orgs/1234/repos")
+        .addRow(makeUrl("http://localhost:%d/orgs/1234/repos"))
         .build();
 
       RowSetUtilities.verify(expected, results);
@@ -657,7 +701,7 @@ public class TestHttpPlugin extends ClusterTest {
         .build();
 
       RowSet expected = new RowSetBuilder(client.allocator(), expectedSchema)
-        .addRow("http://localhost:8091/orgs/apache/repos?org=apache")
+        .addRow(makeUrl("http://localhost:%d/orgs/apache/repos?org=apache"))
         .build();
 
       RowSetUtilities.verify(expected, results);
@@ -683,7 +727,7 @@ public class TestHttpPlugin extends ClusterTest {
         .build();
 
       RowSet expected = new RowSetBuilder(client.allocator(), expectedSchema)
-        .addRow("http://localhost:8091/orgs/apache/repos?p1=param1&p2=param2")
+        .addRow(makeUrl("http://localhost:%d/orgs/apache/repos?p1=param1&p2=param2"))
         .build();
 
       RowSetUtilities.verify(expected, results);
@@ -845,7 +889,7 @@ public class TestHttpPlugin extends ClusterTest {
         .build();
 
       RowSet expected = new RowSetBuilder(client.allocator(), expectedSchema)
-        .addRow(200, "OK", "http/1.1", "http://localhost:8091/json?lat=36.7201600&lng=-4.4203400&date=2019-10-02")
+        .addRow(200, "OK", "http/1.1", makeUrl("http://localhost:%d/json?lat=36.7201600&lng=-4.4203400&date=2019-10-02"))
         .build();
 
       RowSetUtilities.verify(expected, results);
@@ -868,8 +912,8 @@ public class TestHttpPlugin extends ClusterTest {
         .build();
 
       RowSet expected = new RowSetBuilder(client.allocator(), expectedSchema)
-        .addRow(200, "OK", "http/1.1", "http://localhost:8091/csvcsv?arg1=4")
-        .addRow(200, "OK", "http/1.1", "http://localhost:8091/csvcsv?arg1=4")
+        .addRow(200, "OK", "http/1.1", makeUrl("http://localhost:%d/csvcsv?arg1=4"))
+        .addRow(200, "OK", "http/1.1", makeUrl("http://localhost:%d/csvcsv?arg1=4"))
         .build();
 
       RowSetUtilities.verify(expected, results);
@@ -892,11 +936,11 @@ public class TestHttpPlugin extends ClusterTest {
         .build();
 
       RowSet expected = new RowSetBuilder(client.allocator(), expectedSchema)
-        .addRow(200, "OK", "http/1.1", "http://localhost:8091/xml?arg1=4")
-        .addRow(200, "OK", "http/1.1", "http://localhost:8091/xml?arg1=4")
-        .addRow(200, "OK", "http/1.1", "http://localhost:8091/xml?arg1=4")
-        .addRow(200, "OK", "http/1.1", "http://localhost:8091/xml?arg1=4")
-        .addRow(200, "OK", "http/1.1", "http://localhost:8091/xml?arg1=4")
+        .addRow(200, "OK", "http/1.1", makeUrl("http://localhost:%d/xml?arg1=4"))
+        .addRow(200, "OK", "http/1.1", makeUrl("http://localhost:%d/xml?arg1=4"))
+        .addRow(200, "OK", "http/1.1", makeUrl("http://localhost:%d/xml?arg1=4"))
+        .addRow(200, "OK", "http/1.1", makeUrl("http://localhost:%d/xml?arg1=4"))
+        .addRow(200, "OK", "http/1.1", makeUrl("http://localhost:%d/xml?arg1=4"))
         .build();
 
       RowSetUtilities.verify(expected, results);
@@ -1074,7 +1118,7 @@ public class TestHttpPlugin extends ClusterTest {
       server.enqueue(
         new MockResponse().setResponseCode(200)
           .setBody(TEST_JSON_RESPONSE)
-          .throttleBody(64, 6, TimeUnit.SECONDS)
+          .setBodyDelay(6, TimeUnit.SECONDS)
       );
 
       String sql = "SELECT sunrise AS sunrise, sunset AS sunset FROM local.sunrise.`?lat=36.7201600&lng=-4.4203400&date=2019-10-02` AS t1";
@@ -1083,7 +1127,7 @@ public class TestHttpPlugin extends ClusterTest {
         client.queryBuilder().sql(sql).rowSet();
         fail();
       } catch (Exception e) {
-         assertTrue(e.getMessage().contains("DATA_READ ERROR: timeout"));
+         assertTrue("Not timeout exception, " + e, e.getMessage().contains("DATA_READ ERROR: timeout"));
       }
     }
   }
@@ -1227,7 +1271,7 @@ public class TestHttpPlugin extends ClusterTest {
         .build();
 
       RowSet expected = new RowSetBuilder(client.allocator(), expectedSchema)
-        .addRow(404, "Client Error", "http/1.1", "http://localhost:8091/json")
+        .addRow(404, "Client Error", "http/1.1", makeUrl("http://localhost:%d/json"))
         .build();
 
       RowSetUtilities.verify(expected, results);
@@ -1483,8 +1527,9 @@ public class TestHttpPlugin extends ClusterTest {
    * @return Started Mock server
    * @throws IOException If the server cannot start, throws IOException
    */
-  public static MockWebServer startServer() throws IOException {
+  public static MockWebServer startServer() throws IOException, InterruptedException {
     MockWebServer server = new MockWebServer();
+//    server.takeRequest(25, TimeUnit.SECONDS);
     server.start(MOCK_SERVER_PORT);
     return server;
   }

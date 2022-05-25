@@ -143,17 +143,14 @@ public class TupleParser extends ObjectParser {
   }
 
   public ElementParser resolveArray(String key, TokenIterator tokenizer) {
-    return replaceFieldParser(key,
-        fieldFactory().fieldParser(new FieldDefn(this, key, tokenizer, true)));
+    return replaceFieldParser(key, fieldFactory().fieldParser(new FieldDefn(this, key, tokenizer, true)));
   }
 
   public void forceNullResolution(String key) {
-    replaceFieldParser(key,
-        fieldFactory().forceNullResolution(new FieldDefn(this, key, null)));
+    replaceFieldParser(key, fieldFactory().forceNullResolution(new FieldDefn(this, key, null)));
   }
 
   public void forceEmptyArrayResolution(String key) {
-    replaceFieldParser(key,
-        fieldFactory().forceArrayResolution(new FieldDefn(this, key, null)));
+    replaceFieldParser(key, fieldFactory().forceArrayResolution(new FieldDefn(this, key, null)));
   }
 }

@@ -180,8 +180,7 @@ public class ScanOperatorExec implements OperatorExec {
   private int readerCount;
   private ReaderState readerState;
 
-  public ScanOperatorExec(ScanOperatorEvents factory,
-      boolean allowEmptyResult) {
+  public ScanOperatorExec(ScanOperatorEvents factory, boolean allowEmptyResult) {
     this.factory = factory;
     this.allowEmptyResult = allowEmptyResult;
   }

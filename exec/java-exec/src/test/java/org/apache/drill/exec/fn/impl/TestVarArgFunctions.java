@@ -97,6 +97,16 @@ public class TestVarArgFunctions extends ClusterTest {
   }
 
   @Test
+  public void testConcatDelimVarArgsWithNullValue() throws Exception {
+    testBuilder()
+      .sqlQuery("select concat_delim(',', 'a', null, 'b') as c")
+      .unOrdered()
+      .baselineColumns("c")
+      .baselineValues("a,b")
+      .go();
+  }
+
+  @Test
   public void testVarargUdfWithDifferentDataModes() throws Exception {
     testBuilder()
         .sqlQuery("SELECT concat_varchar(first_name, ' ', last_name) as c1\n" +

@@ -18,7 +18,7 @@
 
 package org.apache.drill.exec.store.httpd;
 
-import org.apache.drill.categories.RowSetTests;
+import org.apache.drill.categories.RowSetTest;
 import org.apache.drill.common.exceptions.DrillRuntimeException;
 import org.apache.drill.common.types.TypeProtos.MinorType;
 import org.apache.drill.exec.physical.rowSet.RowSet;
@@ -46,7 +46,7 @@ import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
 
-@Category(RowSetTests.class)
+@Category(RowSetTest.class)
 public class TestHTTPDLogReader extends ClusterTest {
 
   @BeforeClass

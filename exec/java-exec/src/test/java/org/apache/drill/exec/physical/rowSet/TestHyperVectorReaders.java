@@ -25,7 +25,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
-import org.apache.drill.categories.RowSetTests;
+import org.apache.drill.categories.RowSetTest;
 import org.apache.drill.common.types.TypeProtos.MinorType;
 import org.apache.drill.exec.physical.rowSet.RowSet.ExtendableRowSet;
 import org.apache.drill.exec.physical.rowSet.RowSet.HyperRowSet;
@@ -48,7 +48,7 @@ import org.junit.experimental.categories.Category;
  * <p>
  * This test does not cover repeated vectors; those tests should be added.
  */
-@Category(RowSetTests.class)
+@Category(RowSetTest.class)
 public class TestHyperVectorReaders extends SubOperatorTest {
 
   /**

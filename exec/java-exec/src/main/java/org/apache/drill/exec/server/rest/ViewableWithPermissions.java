@@ -79,8 +79,11 @@ public class ViewableWithPermissions extends Viewable {
 
     final boolean isUserLoggedIn = AuthDynamicFeature.isUserLoggedIn(sc);
 
+    final boolean showCredentials = (authEnabled && isUserLoggedIn);
+
     final ImmutableMap.Builder<String, Object> mapBuilder = ImmutableMap.<String, Object>builder()
         .put("showStorage", isAdmin)
+        .put("showCredentials", showCredentials)
         .put("showOptions", isAdmin)
         .put("showThreads", isAdmin)
         .put("showLogs", isAdmin)

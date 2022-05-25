@@ -19,7 +19,7 @@ package org.apache.drill.exec.store.phoenix;
 
 import static org.junit.Assert.assertEquals;
 
-import org.apache.drill.categories.RowSetTests;
+import org.apache.drill.categories.RowSetTest;
 import org.apache.drill.categories.SlowTest;
 import org.apache.drill.common.types.TypeProtos.MinorType;
 import org.apache.drill.exec.physical.rowSet.RowSet;
@@ -34,7 +34,7 @@ import org.junit.experimental.categories.Category;
 import org.junit.runners.MethodSorters;
 
 @FixMethodOrder(MethodSorters.JVM)
-@Category({ SlowTest.class, RowSetTests.class })
+@Category({ SlowTest.class, RowSetTest.class })
 public class PhoenixCommandTest extends PhoenixBaseTest {
 
   @Test

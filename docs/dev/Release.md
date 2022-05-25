@@ -35,9 +35,9 @@
     1. ### SVN
         1. Install subversion client (see instructions on http://subversion.apache.org/packages.html#osx for
          installing svn on different systems).
-        2. Check that svn works:
+        2. Check that svn works and obtain a working copy of dist/dev/drill:
         ```
-        svn co https://dist.apache.org/repos/dist/release/drill ~/src/release/drill-dist
+        svn co https://dist.apache.org/repos/dist/dev/drill ~/src/release/drill-dist-dev
         ```
         You also need writable access to Apache SVN. (You need to be a PMC member for this).
     2. ### GPG key:
@@ -58,7 +58,7 @@
             gpg --allow-secret-key-import --import mygpgkey_sec.gpg
             ```
         5. Have another committer signed your key (add to the trust chain).
-            Apache advises to do it at 
+            Apache advises to do it at
             [key signing parties](https://www.apache.org/dev/release-signing.html#key-signing-party).
         6. Make sure the default key is the key generated using the Apache email.
         7. Publish your public key to a public server (e.g. http://pgp.surfnet.nl or http://pgp.mit.edu)
@@ -77,7 +77,7 @@
         3. Note that you can add more than one SSH key corresponding to multiple machines.
         4. Enter your Apache password and submit the changes.
         5. Verify that you can do an sftp to the Apache server by running the following: `sftp <username>@home.apache.org`.
-    4. ### Setup Maven
+    4. ### Set up Maven
         1. Apache's Maven repository access is documented here:
             http://www.apache.org/dev/publishing-maven-artifacts.html
             http://www.apache.org/dev/publishing-maven-artifacts.html#dev-env.
@@ -130,16 +130,16 @@
         ```
     9. Do the release preparation:
         ```
-        mvn -X release:prepare -Papache-release -DpushChanges=false -DskipTests -Darguments="-Dgpg.passphrase=${GPG_PASSPHRASE}  -DskipTests=true -Dmaven.javadoc.skip=false" -DreleaseVersion=1.17.0 -DdevelopmentVersion=1.18.0-SNAPSHOT -Dtag=drill-1.17.0
+        mvn -X release:prepare -Papache-release -DpushChanges=false -DskipTests -DreleaseVersion=1.17.0 -DdevelopmentVersion=1.18.0-SNAPSHOT -Dtag=drill-1.17.0 -Darguments="-Dgpg.passphrase=${GPG_PASSPHRASE}  -DskipTests=true -Dmaven.javadoc.skip=false [-Pfoo_profile]"
         ```
     10. Make sure to change Drill version to the proper one.
     11. Check that `target` folder contains the following files (with the correct version number):
         ```
-        apache-drill-1.17.0-src.tar.gz 
+        apache-drill-1.17.0-src.tar.gz
         apache-drill-1.17.0-src.tar.gz.asc
         apache-drill-1.17.0-src.tar.gz.sha512
         apache-drill-1.17.0-src.zip
-        apache-drill-1.17.0-src.zip.asc 
+        apache-drill-1.17.0-src.zip.asc
         apache-drill-1.17.0-src.zip.sha512
         ```
     12. Verify signature, ensure that GPG key for Apache was used (see details at
@@ -167,7 +167,7 @@
         ```
         If you want to additionally check resulting archives and jars, add `-Dmaven.deploy.skip=true` flag to avoid deploying jars to the Nexus repository:
         ```
-        mvn release:perform -DconnectionUrl=scm:git:git@github.com:vvysotskyi/drill.git -DskipTests -Darguments="-Dgpg.passphrase=${GPG_PASSPHRASE} -DskipTests=true -DconnectionUrl=scm:git:git@github.com:vvysotskyi/drill.git -Dmaven.deploy.skip=true"
+        mvn release:perform -DconnectionUrl=scm:git:git@github.com:vvysotskyi/drill.git -DskipTests -Darguments="-Dgpg.passphrase=${GPG_PASSPHRASE} -DskipTests=true -DconnectionUrl=scm:git:git@github.com:vvysotskyi/drill.git -Dmaven.deploy.skip=true [-Pfoo_profile]"
         ```
         After checks are performed, run this command without the flag.
     15. Deploy the release commit:
@@ -175,21 +175,23 @@
         git checkout drill-1.17.0
         mvn deploy -Papache-release -DskipTests -Dgpg.passphrase=${GPG_PASSPHRASE}
         ```
-    16. Copy release files to a local release staging directory:
+    16. Copy release files to your svn working copy of dist.apache.org/repos/dist/dev/drill:
         ```
-        cp ~/src/release/drill/target/target/checkout/apache-drill-1.17.0-src.tar.gz* ~/release/1.17.0-rc0/ && \ 
-        cp ~/src/release/drill/target/target/checkout/apache-drill-1.17.0.zip* ~/release/1.17.0-rc0/ \ 
-        cp ~/src/release/drill/target/checkout/distribution/target/apache-drill-1.17.0.tar.gz* ~/release/1.17.0-rc0/ \ 
+        cp ~/src/release/drill/target/target/checkout/apache-drill-1.17.0-src.tar.gz* ~/src/release/drill-dist-dev/1.17.0-rc0/ && \
+        cp ~/src/release/drill/target/target/checkout/apache-drill-1.17.0.zip* ~/src/release/drill-dist-dev/1.17.0-rc0/ \
+        cp ~/src/release/drill/target/checkout/distribution/target/apache-drill-1.17.0.tar.gz* ~/src/release/drill-dist-dev/1.17.0-rc0/ \
         ```
     17. Check if the artifacts are signed properly:
         ```
-        ./tools/release-scripts/checksum.sh ~/release/1.17.0-rc0/apache-drill-1.17.0-src.tar.gz
-        ./tools/release-scripts/checksum.sh ~/release/1.17.0-rc0/apache-drill-1.17.0-src.zip
-        ./tools/release-scripts/checksum.sh ~/release/1.17.0-rc0/apache-drill-1.17.0.tar.gz
+        ./tools/release-scripts/checksum.sh ~/src/release/drill-dist-dev/1.17.0-rc0/apache-drill-1.17.0-src.tar.gz
+        ./tools/release-scripts/checksum.sh ~/src/release/drill-dist-dev/1.17.0-rc0/apache-drill-1.17.0-src.zip
+        ./tools/release-scripts/checksum.sh ~/src/release/drill-dist-dev/1.17.0-rc0/apache-drill-1.17.0.tar.gz
         ```
-    18. Copy release files to a directory on `home.apache.org` for voting:
+    18. Commit the release files and browse to https://dist.apache.org/repos/dist/dev/drill/ to check that they are accessible. This can only done by a PMC member:
         ```
-        scp ~/release/1.17.0-rc0/* <username>@home.apache.org:~/public_html/drill/releases/1.17.0/rc0
+        cd ~/src/release/drill-dist-dev
+        svn add 1.17.0-rc0
+        svn commit
         ```
 
 4. ## Automated release process
@@ -198,9 +200,18 @@
     tools/release-scripts/release.sh
     ```
     The release script will push the maven artifacts to the Maven staging repo.
+
+5. ## Multiple builds
+    Currently, releasing multiple builds is done by performing consecutive releases.  E.g. to add
+    an Hadoop 2 build of Drill,  loop back to the top of the instructions now and start again with
+    a build profile of 'hadoop-2' and a release version of '1.17.0-hadoop2'.  Note that it is not
+    necessary to close the jar release in the Maven repo first since the artifacts from your next
+    release will cause no identifier collisions due to their different version suffix.  This means
+    that a single Maven repo can hold the artifacts for both 1.17.0 and 1.17.0-hadoop2.
+
 5. ## Publish release candidate and vote
     1. Go to the [Apache Maven staging repo](https://repository.apache.org/) and close the new jar release.
-        This step is done in the Maven GUI. For detailed instructions on sonatype GUI please refer to 
+        This step is done in the Maven GUI. For detailed instructions on sonatype GUI please refer to
         https://central.sonatype.org/pages/releasing-the-deployment.html#locate-and-examine-your-staging-repository.
     2. Start vote (vote should last at least 72 hours).
 
@@ -236,7 +247,7 @@
 
 
         [1] https://issues.apache.org/jira/secure/ReleaseNote.jspa?projectId=12313820&version=12341087
-        [2] http://home.apache.org/~arina/drill/releases/1.12.0/rc0/
+        [2] http://home.apache.org/~arina/drill/releases/1.12.0-rc0/
         [3] https://repository.apache.org/content/repositories/orgapachedrill-1043/
         [4] https://github.com/arina-ielchiieva/drill/commits/drill-1.12.0
         ```
@@ -280,7 +291,7 @@
 
             3x +1 (binding): Arina, Aman, Parth
 
-            5x +1 (non-binding): Vitalii, Holger, Prasad, Vova, Charles 
+            5x +1 (non-binding): Vitalii, Holger, Prasad, Vova, Charles
 
             No 0s or -1s.
 
@@ -288,17 +299,17 @@
 
             Kind regards
             ```
-        2. Add the release to the [dist.apache.org](https://dist.apache.org/repos/dist/release/drill/) and delete the old version, keeping two most recent.
+        2. Move the release files to the Drill release directory with an entirely remote `svn move` operation and delete the old version, keeping two most recent.
             This can only done by a PMC member:
             ```
-            svn co https://dist.apache.org/repos/dist/release/drill ~/src/release/drill-dist
-            cd ~/src/release/drill-dist
-            mkdir drill-1.17.0
-            cp -r ~/release/1.17.0-rc0 drill-1.17.0
-            svn add drill-1.17.0
-            svn commit --message "Upload Apache Drill 1.17.0 release."
-            svn delete 1.15.0
-            svn commit --message "Deleting drill-1.15.0 to keep only last two versions"
+            svn move \
+              -m "Upload Apache Drill 1.17.0 release." \
+              https://dist.apache.org/repos/dist/dev/drill/drill-1.17.0-rc0 \
+              https://dist.apache.org/repos/dist/release/drill/drill-1.17.0
+
+            svn delete \
+              -m "Deleting drill-1.15.0 to keep only last two versions" \
+              https://dist.apache.org/repos/dist/release/drill/drill-1.15.0
             ```
         3. Go to the [Apache Maven staging repo](https://repository.apache.org/) and promote the release to the production.
         4. Create branch and tag for this release and update Drill version in master (if used automated scripts, tag will be like this `drill-1.11.0`. Branch should be named as `1.11.0`).
@@ -309,7 +320,7 @@
         6. Post release:
             1. "What's New" for the new release.
             2. Update Apache JIRA and add release date for this release. Add a new release tag if not already there.
-            3. Update Drill Web site:
+            3. Update Drill Web site through its source repo, https://github.com/apache/drill-site.
                 1. Generate release notes for Drill: https://confluence.atlassian.com/jira/creating-release-notes-185729647.html
                     and create a MarkDown file for the release notes - post to the site the day of the release.
                 2. Write the blog post and push it out to the Apache Drill website so it can be referenced in the announcement.
@@ -346,7 +357,7 @@
                         ```
                     6. Commit changes with the commit message `Publish JavaDocs for the Apache Drill 1.17.0`
                 5. Instructions how to build and deploy Web site may be found here:
-                    https://github.com/apache/drill/blob/gh-pages/README.md
+                    https://github.com/apache/drill-site
             3. Post the announcement about new release on [Apache Drill Twitter](https://twitter.com/apachedrill]).
             4. A PMC member needs to update the release date for new release here:
                 https://reporter.apache.org/addrelease.html?drill

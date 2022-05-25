@@ -180,6 +180,4 @@ public class ExtendedJsonOutput extends BasicJsonOutput {
   public void writeIntNull() throws IOException {
     writeBigIntNull();
   }
-
-
 }

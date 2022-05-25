@@ -20,7 +20,7 @@ package org.apache.drill.exec.physical.impl.scan;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
-import org.apache.drill.categories.RowSetTests;
+import org.apache.drill.categories.RowSetTest;
 import org.apache.drill.common.types.TypeProtos.MinorType;
 import org.apache.drill.common.types.Types;
 import org.apache.drill.exec.physical.impl.scan.ScanTestUtils.ScanFixture;
@@ -45,7 +45,7 @@ import org.junit.experimental.categories.Category;
  * defines the schema to be output from the scan operator, and forces
  * conversions between reader and output data types.
  */
-@Category(RowSetTests.class)
+@Category(RowSetTest.class)
 public class TestScanOperExecOuputSchema extends BaseScanOperatorExecTest {
 
   private static class MockSimpleReader implements ManagedReader<SchemaNegotiator> {

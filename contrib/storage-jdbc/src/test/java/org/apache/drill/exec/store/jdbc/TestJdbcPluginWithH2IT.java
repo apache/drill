@@ -20,6 +20,8 @@ package org.apache.drill.exec.store.jdbc;
 import java.util.HashMap;
 import java.util.Map;
 import org.apache.drill.categories.JdbcStorageTest;
+import org.apache.drill.common.logical.security.PlainCredentialsProvider;
+import org.apache.drill.common.logical.StoragePluginConfig.AuthMode;
 import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.expr.fn.impl.DateUtility;
 
@@ -30,6 +32,7 @@ import org.apache.drill.test.ClusterTest;
 import org.h2.tools.RunScript;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
@@ -52,6 +55,7 @@ public class TestJdbcPluginWithH2IT extends ClusterTest {
   private static final String TABLE_PATH = "jdbcmulti/";
   private static final String TABLE_NAME = String.format("%s.`%s`", StoragePluginTestUtils.DFS_PLUGIN_NAME, TABLE_PATH);
   private static TimeZone defaultTimeZone;
+  private static URL SCRIPT_FILE = TestJdbcPluginWithH2IT.class.getClassLoader().getResource("h2-test-data.sql");
 
   @BeforeClass
   public static void init() throws Exception {
@@ -63,16 +67,24 @@ public class TestJdbcPluginWithH2IT extends ClusterTest {
     dirTestWatcher.copyResourceToRoot(Paths.get(TABLE_PATH));
     Class.forName("org.h2.Driver");
     String connString = "jdbc:h2:" + dirTestWatcher.getTmpDir().getCanonicalPath();
-    URL scriptFile = TestJdbcPluginWithH2IT.class.getClassLoader().getResource("h2-test-data.sql");
-    assertNotNull("Script for test tables generation 'h2-test-data.sql' cannot be found in test resources", scriptFile);
+
+    assertNotNull("Script for test tables generation 'h2-test-data.sql' cannot be found in test resources", SCRIPT_FILE);
     try (Connection connection = DriverManager.getConnection(connString, "root", "root");
-         FileReader fileReader = new FileReader(scriptFile.getFile())) {
+         FileReader fileReader = new FileReader(SCRIPT_FILE.getFile())) {
       RunScript.execute(connection, fileReader);
     }
+
+    Map<String, String> credentials = new HashMap<>();
+    credentials.put("username", "root");
+    credentials.put("password", "root");
+    PlainCredentialsProvider credentialsProvider = new PlainCredentialsProvider(credentials);
+
     Map<String, Object> sourceParameters =  new HashMap<>();
     sourceParameters.put("minimumIdle", 1);
+    sourceParameters.put("maximumPoolSize", "1");
+
     JdbcStorageConfig jdbcStorageConfig = new JdbcStorageConfig("org.h2.Driver", connString,
-        "root", "root", true, false, sourceParameters, null, 10000);
+        null, null, true, false, sourceParameters, credentialsProvider, AuthMode.SHARED_USER.name(), 10000);
     jdbcStorageConfig.setEnabled(true);
     cluster.defineStoragePlugin("h2", jdbcStorageConfig);
     cluster.defineStoragePlugin("h2o", jdbcStorageConfig);
@@ -189,6 +201,7 @@ public class TestJdbcPluginWithH2IT extends ClusterTest {
   }
 
   @Test // DRILL-7340
+  @Ignore
   public void twoPluginsPredicatesPushDown() throws Exception {
     String query = "SELECT * " +
         "FROM h2.tmp.drill_h2_test.person l " +
@@ -300,5 +313,40 @@ public class TestJdbcPluginWithH2IT extends ClusterTest {
         .planMatcher()
         .include("mocked_enum")
         .match();
+  }
+
+  @Test
+  public void testSharedUserNoCreds() throws Exception {
+    String connString = "jdbc:h2:" + dirTestWatcher.getTmpDir().getCanonicalPath() + "/noauth";
+    JdbcStorageConfig cfg = new JdbcStorageConfig(
+      "org.h2.Driver",
+        connString,
+        null,
+        null,
+        true,
+        false,
+        null,
+        null,
+        AuthMode.SHARED_USER.name(),
+        10000
+    );
+    cfg.setEnabled(true);
+    cluster.defineStoragePlugin("h2_noauth", cfg);
+
+    try (
+      Connection connection = DriverManager.getConnection(connString, null, null);
+      FileReader fileReader = new FileReader(SCRIPT_FILE.getFile())
+    ) {
+      RunScript.execute(connection, fileReader);
+    }
+
+    run("USE h2_noauth");
+    String sql = "SHOW TABLES";
+    testBuilder()
+      .sqlQuery(sql)
+      .unOrdered()
+      .baselineColumns("TABLE_SCHEMA", "TABLE_NAME")
+      .baselineValues("h2_noauth.noauth.drill_h2_test_1", "PERSON")
+      .go();
   }
 }

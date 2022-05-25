@@ -19,6 +19,7 @@ package org.apache.drill.common.logical.security;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
+import org.apache.drill.common.exceptions.UserException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -28,15 +29,33 @@ import java.util.Map;
  * Provider of authentication credentials.
  */
 @JsonTypeInfo(use = JsonTypeInfo.Id.NAME,
-    property = "credentialsProviderType",
-    defaultImpl = PlainCredentialsProvider.class)
+  property = "credentialsProviderType",
+  defaultImpl = PlainCredentialsProvider.class)
 public interface CredentialsProvider {
+  Logger logger = LoggerFactory.getLogger(CredentialsProvider.class);
   /**
    * Returns map with authentication credentials. Key is the credential name, for example {@code "username"}
    * and map value is corresponding credential value.
    */
-  Logger logger = LoggerFactory.getLogger(CredentialsProvider.class);
-
   @JsonIgnore
   Map<String, String> getCredentials();
+
+  /**
+   * This method returns the credentials associated with a specific user.
+   * @param username The logged in username
+   * @return A Map of the logged in user's credentials.
+   */
+  @JsonIgnore
+  default Map<String, String> getCredentials(String username) {
+    throw UserException.unsupportedError()
+      .message("%s does not support per-user credentials.", getClass())
+      .build(logger);
+  }
+
+  @JsonIgnore
+  default void setUserCredentials(String username, String password, String queryUser) {
+    throw UserException.unsupportedError()
+      .message("%s does not support per-user credentials.", getClass())
+      .build(logger);
+  }
 }

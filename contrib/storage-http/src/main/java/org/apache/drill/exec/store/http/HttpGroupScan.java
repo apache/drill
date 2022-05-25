@@ -17,6 +17,7 @@
  */
 package org.apache.drill.exec.store.http;
 
+import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -28,6 +29,7 @@ import com.fasterxml.jackson.annotation.JsonTypeName;
 import org.apache.drill.common.PlanStringBuilder;
 import org.apache.drill.common.expression.SchemaPath;
 
+import org.apache.drill.exec.metastore.MetadataProviderManager;
 import org.apache.drill.exec.physical.base.AbstractGroupScan;
 import org.apache.drill.exec.physical.base.GroupScan;
 import org.apache.drill.exec.physical.base.PhysicalOperator;
@@ -35,8 +37,11 @@ import org.apache.drill.exec.physical.base.ScanStats;
 import org.apache.drill.exec.physical.base.SubScan;
 import org.apache.drill.exec.planner.logical.DrillScanRel;
 import org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint;
+import org.apache.drill.exec.record.metadata.TupleMetadata;
 import org.apache.drill.exec.store.http.util.SimpleHttp;
 import org.apache.drill.exec.util.Utilities;
+import org.apache.drill.metastore.metadata.TableMetadata;
+import org.apache.drill.metastore.metadata.TableMetadataProvider;
 import org.apache.drill.shaded.guava.com.google.common.base.Preconditions;
 
 
@@ -49,21 +54,25 @@ public class HttpGroupScan extends AbstractGroupScan {
   private final ScanStats scanStats;
   private final double filterSelectivity;
   private final int maxRecords;
+  private final String username;
 
   // Used only in planner, not serialized
   private int hashCode;
+  private MetadataProviderManager metadataProviderManager;
 
   /**
    * Creates a new group scan from the storage plugin.
    */
-  public HttpGroupScan (HttpScanSpec scanSpec) {
-    super("no-user");
+  public HttpGroupScan (HttpScanSpec scanSpec, MetadataProviderManager metadataProviderManager) {
+    super(scanSpec.queryUserName());
     this.httpScanSpec = scanSpec;
+    this.username = scanSpec.queryUserName();
     this.columns = ALL_COLUMNS;
     this.filters = null;
     this.filterSelectivity = 0.0;
     this.scanStats = computeScanStats();
     this.maxRecords = -1;
+    this.metadataProviderManager = metadataProviderManager;
   }
 
   /**
@@ -76,6 +85,8 @@ public class HttpGroupScan extends AbstractGroupScan {
     this.filters = that.filters;
     this.filterSelectivity = that.filterSelectivity;
     this.maxRecords = that.maxRecords;
+    this.username = that.username;
+    this.metadataProviderManager = that.metadataProviderManager;
 
     // Calcite makes many copies in the later stage of planning
     // without changing anything. Retain the previous stats.
@@ -95,7 +106,9 @@ public class HttpGroupScan extends AbstractGroupScan {
     // to again assign columns. Retain filters, but compute new stats.
     this.filters = that.filters;
     this.filterSelectivity = that.filterSelectivity;
+    this.metadataProviderManager = that.metadataProviderManager;
     this.scanStats = computeScanStats();
+    this.username = that.username;
     this.maxRecords = that.maxRecords;
   }
 
@@ -107,12 +120,14 @@ public class HttpGroupScan extends AbstractGroupScan {
     super(that);
     this.columns = that.columns;
     this.httpScanSpec = that.httpScanSpec;
+    this.username = that.username;
 
     // Applies a filter.
     this.filters = filters;
     this.filterSelectivity = filterSelectivity;
     this.scanStats = computeScanStats();
     this.maxRecords = that.maxRecords;
+    this.metadataProviderManager = that.metadataProviderManager;
   }
 
   /**
@@ -122,12 +137,14 @@ public class HttpGroupScan extends AbstractGroupScan {
     super(that);
     this.columns = that.columns;
     this.httpScanSpec = that.httpScanSpec;
+    this.username = that.username;
 
     // Applies a filter.
     this.filters = that.filters;
     this.filterSelectivity = that.filterSelectivity;
     this.scanStats = computeScanStats();
     this.maxRecords = maxRecords;
+    this.metadataProviderManager = that.metadataProviderManager;
   }
 
 
@@ -143,9 +160,10 @@ public class HttpGroupScan extends AbstractGroupScan {
     @JsonProperty("filterSelectivity") double selectivity,
     @JsonProperty("maxRecords") int maxRecords
   ) {
-    super("no-user");
+    super(httpScanSpec.queryUserName());
     this.columns = columns;
     this.httpScanSpec = httpScanSpec;
+    this.username = httpScanSpec.queryUserName();
     this.filters = filters;
     this.filterSelectivity = selectivity;
     this.scanStats = computeScanStats();
@@ -185,7 +203,7 @@ public class HttpGroupScan extends AbstractGroupScan {
 
   @Override
   public SubScan getSpecificScan(int minorFragmentId) {
-    return new HttpSubScan(httpScanSpec, columns, filters, maxRecords);
+    return new HttpSubScan(httpScanSpec, columns, filters, maxRecords, getSchema());
   }
 
   @Override
@@ -207,6 +225,33 @@ public class HttpGroupScan extends AbstractGroupScan {
   public PhysicalOperator getNewWithChildren(List<PhysicalOperator> children) {
     Preconditions.checkArgument(children.isEmpty());
     return new HttpGroupScan(this);
+  }
+
+  public TupleMetadata getSchema() {
+    if (metadataProviderManager == null) {
+      return null;
+    }
+    try {
+      return metadataProviderManager.getSchemaProvider().read().getSchema();
+    } catch (IOException | NullPointerException e) {
+      return null;
+    }
+  }
+
+  @Override
+  public TableMetadata getTableMetadata() {
+    if (getMetadataProvider() == null) {
+      return null;
+    }
+    return getMetadataProvider().getTableMetadata();
+  }
+
+  @Override
+  public TableMetadataProvider getMetadataProvider() {
+    if (metadataProviderManager == null) {
+      return null;
+    }
+    return metadataProviderManager.getTableMetadataProvider();
   }
 
   @Override

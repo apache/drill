@@ -25,7 +25,7 @@ import java.io.IOException;
 import java.nio.file.Paths;
 import java.util.List;
 
-import org.apache.drill.categories.RowSetTests;
+import org.apache.drill.categories.RowSetTest;
 import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.common.types.TypeProtos.DataMode;
 import org.apache.drill.common.types.TypeProtos.MajorType;
@@ -59,7 +59,7 @@ import org.apache.drill.shaded.guava.com.google.common.collect.Lists;
  * with implicit file columns provided by the file metadata manager.
  */
 
-@Category(RowSetTests.class)
+@Category(RowSetTest.class)
 public class TestScanOrchestratorImplicitColumns extends SubOperatorTest {
 
   private ImplicitColumnOptions standardOptions(Path filePath) {

@@ -55,7 +55,6 @@ public class XMLReader implements Closeable {
   private final Stack<String> fieldNameStack;
   private final Stack<TupleWriter> rowWriterStack;
   private final int dataLevel;
-  private final int maxRecords;
   private final Map<String, XMLMap> nestedMapCollection;
 
   private TupleWriter attributeWriter;
@@ -89,7 +88,7 @@ public class XMLReader implements Closeable {
     ROW_ENDED
   }
 
-  public XMLReader(InputStream fsStream, int dataLevel, int maxRecords) throws XMLStreamException {
+  public XMLReader(InputStream fsStream, int dataLevel) throws XMLStreamException {
     this.fsStream = fsStream;
     XMLInputFactory inputFactory = XMLInputFactory.newInstance();
     reader = inputFactory.createXMLEventReader(fsStream);
@@ -97,7 +96,6 @@ public class XMLReader implements Closeable {
     rowWriterStack = new Stack<>();
     nestedMapCollection = new HashMap<>();
     this.dataLevel = dataLevel;
-    this.maxRecords = maxRecords;
     isSelfClosingEvent = false;
   }
 
@@ -125,6 +123,7 @@ public class XMLReader implements Closeable {
   }
 
 
+  @Override
   public void close() {
     if (fsStream != null) {
       AutoCloseables.closeSilently(fsStream);
@@ -152,9 +151,6 @@ public class XMLReader implements Closeable {
 
     if (!reader.hasNext()) {
       // Stop reading if there are no more results
-      return false;
-    } else if (rootRowWriter.limitReached(maxRecords)) {
-      // Stop if the query limit has been reached
       return false;
     }
 
@@ -286,6 +282,7 @@ public class XMLReader implements Closeable {
             attributePrefix = XMLUtils.addField(attributePrefix, fieldName);
           }
 
+          @SuppressWarnings("unchecked")
           Iterator<Attribute> attributes = startElement.getAttributes();
           if (attributes != null && attributes.hasNext()) {
             writeAttributes(attributePrefix, attributes);

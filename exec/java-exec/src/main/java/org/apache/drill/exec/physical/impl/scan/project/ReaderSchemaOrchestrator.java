@@ -272,14 +272,12 @@ public class ReaderSchemaOrchestrator implements VectorSource {
    */
   private void doWildcardProjection(TupleMetadata tableSchema) {
     rootTuple = newRootTuple();
-    new WildcardProjection(scanOrchestrator.scanProj,
-        tableSchema, rootTuple, scanOrchestrator.options.schemaResolvers);
+    new WildcardProjection(scanOrchestrator.scanProj, tableSchema, rootTuple, scanOrchestrator.options.schemaResolvers);
   }
 
   private void doStrictWildcardProjection(TupleMetadata tableSchema) {
     rootTuple = newRootTuple();
-    new WildcardSchemaProjection(scanOrchestrator.scanProj,
-        tableSchema, rootTuple, scanOrchestrator.options.schemaResolvers);
+    new WildcardSchemaProjection(scanOrchestrator.scanProj, tableSchema, rootTuple, scanOrchestrator.options.schemaResolvers);
   }
 
   private ResolvedRow newRootTuple() {
@@ -300,9 +298,8 @@ public class ReaderSchemaOrchestrator implements VectorSource {
    */
   private void doExplicitProjection(TupleMetadata tableSchema) {
     rootTuple = newRootTuple();
-    new ExplicitSchemaProjection(scanOrchestrator.scanProj,
-            tableSchema, rootTuple,
-            scanOrchestrator.options.schemaResolvers);
+    new ExplicitSchemaProjection(scanOrchestrator.scanProj, tableSchema, rootTuple,
+      scanOrchestrator.options.schemaResolvers);
   }
 
   @Override

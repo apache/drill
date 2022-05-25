@@ -32,6 +32,10 @@ import java.io.FileWriter;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 
+import static org.apache.drill.exec.ExecConstants.ENABLE_UNION_TYPE_KEY;
+import static org.apache.drill.exec.ExecConstants.ENABLE_V2_JSON_READER_KEY;
+import static org.apache.drill.exec.planner.physical.PlannerSettings.ENABLE_HASH_JOIN_OPTION;
+
 @Category(OperatorTest.class)
 public class TestMergeJoinWithSchemaChanges extends BaseTestQuery {
   public static final Path LEFT_DIR = Paths.get("mergejoin-schemachanges-left");
@@ -263,7 +267,9 @@ public class TestMergeJoinWithSchemaChanges extends BaseTestQuery {
 
     TestBuilder builder = testBuilder()
       .sqlQuery(query)
-      .optionSettingQueriesForTestQuery("alter session set `planner.enable_hashjoin` = false; alter session set `exec.enable_union_type` = true")
+      .disableSessionOption(ENABLE_HASH_JOIN_OPTION)
+      .enableSessionOption(ENABLE_UNION_TYPE_KEY)
+      .disableSessionOption(ENABLE_V2_JSON_READER_KEY)
       .unOrdered()
       .baselineColumns("kl", "vl", "kr", "vr", "kl1", "vl1", "kl2", "vl2", "kr1", "vr1", "kr2", "vr2");
 
@@ -278,7 +284,9 @@ public class TestMergeJoinWithSchemaChanges extends BaseTestQuery {
 
     builder = testBuilder()
       .sqlQuery(query)
-      .optionSettingQueriesForTestQuery("alter session set `planner.enable_hashjoin` = false; alter session set `exec.enable_union_type` = true")
+      .disableSessionOption(ENABLE_HASH_JOIN_OPTION)
+      .enableSessionOption(ENABLE_UNION_TYPE_KEY)
+      .disableSessionOption(ENABLE_V2_JSON_READER_KEY)
       .unOrdered()
       .baselineColumns("kl", "vl", "kr", "vr", "kl1", "vl1", "kl2", "vl2", "kr1", "vr1", "kr2", "vr2");
 
@@ -299,7 +307,9 @@ public class TestMergeJoinWithSchemaChanges extends BaseTestQuery {
 
     builder = testBuilder()
       .sqlQuery(query)
-      .optionSettingQueriesForTestQuery("alter session set `planner.enable_hashjoin` = false; alter session set `exec.enable_union_type` = true")
+      .disableSessionOption(ENABLE_HASH_JOIN_OPTION)
+      .enableSessionOption(ENABLE_UNION_TYPE_KEY)
+      .disableSessionOption(ENABLE_V2_JSON_READER_KEY)
       .unOrdered()
       .baselineColumns("kl", "vl", "kr", "vr", "kl1", "vl1", "kl2", "vl2", "kr1", "vr1", "kr2", "vr2");
 

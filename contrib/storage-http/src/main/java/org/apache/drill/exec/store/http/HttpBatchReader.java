@@ -29,7 +29,9 @@ import org.apache.drill.common.types.TypeProtos.MinorType;
 import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.physical.impl.scan.framework.ManagedReader;
 import org.apache.drill.exec.physical.impl.scan.framework.SchemaNegotiator;
+import org.apache.drill.exec.physical.impl.scan.v3.FixedReceiver;
 import org.apache.drill.exec.physical.resultSet.ResultSetLoader;
+import org.apache.drill.exec.record.metadata.TupleMetadata;
 import org.apache.drill.exec.store.easy.json.loader.JsonLoader;
 import org.apache.drill.exec.store.easy.json.loader.JsonLoaderImpl.JsonLoaderBuilder;
 import org.apache.drill.exec.store.easy.json.loader.JsonLoaderOptions;
@@ -38,8 +40,8 @@ import org.apache.drill.exec.store.http.paginator.Paginator;
 import org.apache.drill.exec.store.http.util.HttpProxyConfig;
 import org.apache.drill.exec.store.http.util.HttpProxyConfig.ProxyBuilder;
 import org.apache.drill.exec.store.http.util.SimpleHttp;
-import org.apache.drill.exec.store.security.UsernamePasswordCredentials;
 import org.apache.drill.exec.store.ImplicitColumnUtils.ImplicitColumns;
+import org.apache.drill.exec.store.security.UsernamePasswordWithProxyCredentials;
 import org.apache.drill.shaded.guava.com.google.common.base.Strings;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -48,6 +50,7 @@ import java.io.File;
 import java.io.InputStream;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 public class HttpBatchReader implements ManagedReader<SchemaNegotiator> {
 
@@ -110,7 +113,6 @@ public class HttpBatchReader implements ManagedReader<SchemaNegotiator> {
       .build();
 
     // JSON loader setup
-
     resultSetLoader = negotiator.build();
     if (implicitColumnsAreProjected()) {
       implicitColumns = new ImplicitColumns(resultSetLoader.writer());
@@ -140,6 +142,11 @@ public class HttpBatchReader implements ManagedReader<SchemaNegotiator> {
       } else {
         jsonBuilder.standardOptions(negotiator.queryOptions());
       }
+
+      if (getSchema(negotiator) != null) {
+        jsonBuilder.providedSchema(getSchema(negotiator));
+      }
+
       jsonLoader = jsonBuilder.build();
     } catch (Throwable t) {
 
@@ -150,6 +157,35 @@ public class HttpBatchReader implements ManagedReader<SchemaNegotiator> {
     }
 
     return true;
+  }
+
+  /**
+   * This function obtains the correct schema for the {@link JsonLoader}.  There are four possibilities:
+   * 1.  The schema is provided in the configuration only.  In this case, that schema will be returned.
+   * 2.  The schema is provided in both the configuration and inline.  These two schemas will be merged together.
+   * 3.  The schema is provided inline in a query.  In this case, that schema will be returned.
+   * 4.  No schema is provided.  Function returns null.
+   * @param negotiator {@link SchemaNegotiator} The schema negotiator with all the connection information
+   * @return The built {@link TupleMetadata} of the provided schema, null if none provided.
+   */
+  private TupleMetadata getSchema(SchemaNegotiator negotiator) {
+    if (subScan.tableSpec().connectionConfig().jsonOptions() != null &&
+      subScan.tableSpec().connectionConfig().jsonOptions().schema() != null) {
+      TupleMetadata configuredSchema = subScan.tableSpec().connectionConfig().jsonOptions().schema();
+
+      // If it has a provided schema both inline and in the config, merge the two, otherwise, return the config schema
+      if (negotiator.hasProvidedSchema()) {
+        TupleMetadata inlineSchema = negotiator.providedSchema();
+        return FixedReceiver.Builder.mergeSchemas(configuredSchema, inlineSchema);
+      } else {
+        return configuredSchema;
+      }
+    } else {
+       if (negotiator.hasProvidedSchema()) {
+         return negotiator.providedSchema();
+       }
+    }
+    return null;
   }
 
   protected void buildImplicitColumns() {
@@ -242,13 +278,15 @@ public class HttpBatchReader implements ManagedReader<SchemaNegotiator> {
         .fromConfigForURL(drillConfig, url.toString());
     final String proxyType = config.proxyType();
     if (proxyType != null && !"direct".equals(proxyType)) {
-      UsernamePasswordCredentials credentials = config.getUsernamePasswordCredentials();
       builder
         .type(config.proxyType())
         .host(config.proxyHost())
-        .port(config.proxyPort())
-        .username(credentials.getUsername())
-        .password(credentials.getPassword());
+        .port(config.proxyPort());
+
+      Optional<UsernamePasswordWithProxyCredentials> credentials = config.getUsernamePasswordCredentials();
+      if (credentials.isPresent()) {
+        builder.username(credentials.get().getUsername()).password(credentials.get().getPassword());
+      }
     }
     return builder.build();
   }

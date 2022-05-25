@@ -41,7 +41,7 @@ public abstract class SSLConfig {
   private static final Logger logger = LoggerFactory.getLogger(SSLConfig.class);
 
   public static final String DEFAULT_SSL_PROVIDER = "JDK"; // JDK or OPENSSL
-  public static final String DEFAULT_SSL_PROTOCOL = "TLSv1.2";
+  public static final String DEFAULT_SSL_PROTOCOL = "TLSv1.3";
   public static final int DEFAULT_SSL_HANDSHAKE_TIMEOUT_MS = 10 * 1000; // 10 seconds
 
   // Either the Netty SSL context or the JDK SSL context will be initialized

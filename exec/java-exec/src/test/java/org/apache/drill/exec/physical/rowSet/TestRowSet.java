@@ -32,7 +32,7 @@ import java.math.BigDecimal;
 import java.util.Arrays;
 import java.util.Map;
 
-import org.apache.drill.categories.RowSetTests;
+import org.apache.drill.categories.RowSetTest;
 import org.apache.drill.common.types.TypeProtos.MinorType;
 import org.apache.drill.exec.physical.rowSet.RowSet.ExtendableRowSet;
 import org.apache.drill.exec.physical.rowSet.RowSet.SingleRowSet;
@@ -80,7 +80,7 @@ import org.junit.experimental.categories.Category;
  * A list is an array of variants. Variants are tested elsewhere.
  */
 
-@Category(RowSetTests.class)
+@Category(RowSetTest.class)
 public class TestRowSet extends SubOperatorTest {
   private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(TestRowSet.class);
 

@@ -15,13 +15,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.drill.exec.vector.complex.writer;
+package org.apache.drill.exec.store.json;
 
 import static org.apache.drill.test.TestBuilder.mapOf;
 import static org.hamcrest.CoreMatchers.containsString;
-import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertEquals;
 import static org.hamcrest.MatcherAssert.assertThat;
-import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.assertNotEquals;
+import static org.junit.Assert.fail;
 
 import java.io.File;
 import java.util.List;
@@ -35,15 +36,31 @@ import org.apache.drill.exec.record.RecordBatchLoader;
 import org.apache.drill.exec.record.VectorWrapper;
 import org.apache.drill.exec.rpc.user.QueryDataBatch;
 import org.apache.drill.exec.vector.VarCharVector;
+import org.apache.drill.exec.store.json.TestJsonReader.TestWrapper;
 import org.apache.drill.test.BaseTestQuery;
 import org.junit.Ignore;
 import org.junit.Test;
 
+// TODO: Split or rename: this tests mor than NanInf
 public class TestJsonNanInf extends BaseTestQuery {
 
+  public void runBoth(TestWrapper wrapper) throws Exception {
+    try {
+      enableV2Reader(false);
+      wrapper.apply();
+      enableV2Reader(true);
+      wrapper.apply();
+    } finally {
+      resetV2Reader();
+    }
+  }
 
   @Test
   public void testNanInfSelect() throws Exception {
+    runBoth(this::doTestNanInfSelect);
+  }
+
+  private void doTestNanInfSelect() throws Exception {
     String table = "nan_test.json";
     File file = new File(dirTestWatcher.getRootDir(), table);
     String json = "{\"nan_col\":NaN, \"inf_col\":Infinity}";
@@ -55,8 +72,7 @@ public class TestJsonNanInf extends BaseTestQuery {
         .unOrdered()
         .baselineColumns("nan_col", "inf_col")
         .baselineValues(Double.NaN, Double.POSITIVE_INFINITY)
-        .build()
-        .run();
+        .go();
     } finally {
       FileUtils.deleteQuietly(file);
     }
@@ -65,6 +81,10 @@ public class TestJsonNanInf extends BaseTestQuery {
   @Test
   @Ignore // see DRILL-6018
   public void testExcludePositiveInfinity() throws Exception {
+    runBoth(this::doTestExcludePositiveInfinity);
+  }
+
+  private void doTestExcludePositiveInfinity() throws Exception {
     String table = "nan_test.json";
     File file = new File(dirTestWatcher.getRootDir(), table);
     String json = "[{\"nan_col\":NaN, \"inf_col\":Infinity}," +
@@ -77,8 +97,7 @@ public class TestJsonNanInf extends BaseTestQuery {
         .unOrdered()
         .baselineColumns("inf_col")
         .baselineValues(5.0)
-        .build()
-        .run();
+        .go();
     } finally {
       FileUtils.deleteQuietly(file);
     }
@@ -87,6 +106,10 @@ public class TestJsonNanInf extends BaseTestQuery {
   @Test
   @Ignore // see DRILL-6018
   public void testExcludeNegativeInfinity() throws Exception {
+    runBoth(this::doTestExcludeNegativeInfinity);
+  }
+
+  private void doTestExcludeNegativeInfinity() throws Exception {
     String table = "nan_test.json";
     File file = new File(dirTestWatcher.getRootDir(), table);
     String json = "[{\"nan_col\":NaN, \"inf_col\":-Infinity}," +
@@ -99,8 +122,7 @@ public class TestJsonNanInf extends BaseTestQuery {
         .unOrdered()
         .baselineColumns("inf_col")
         .baselineValues(5.0)
-        .build()
-        .run();
+        .go();
     } finally {
       FileUtils.deleteQuietly(file);
     }
@@ -109,6 +131,10 @@ public class TestJsonNanInf extends BaseTestQuery {
   @Test
   @Ignore // see DRILL-6018
   public void testIncludePositiveInfinity() throws Exception {
+    runBoth(this::doTestIncludePositiveInfinity);
+  }
+
+  private void doTestIncludePositiveInfinity() throws Exception {
     String table = "nan_test.json";
     File file = new File(dirTestWatcher.getRootDir(), table);
     String json = "[{\"nan_col\":NaN, \"inf_col\":Infinity}," +
@@ -130,6 +156,10 @@ public class TestJsonNanInf extends BaseTestQuery {
 
   @Test
   public void testExcludeNan() throws Exception {
+    runBoth(this::doTestExcludeNan);
+  }
+
+  private void doTestExcludeNan() throws Exception {
     String table = "nan_test.json";
     File file = new File(dirTestWatcher.getRootDir(), table);
     String json = "[{\"nan_col\":NaN, \"inf_col\":-Infinity}," +
@@ -142,16 +172,18 @@ public class TestJsonNanInf extends BaseTestQuery {
           .unOrdered()
           .baselineColumns("nan_col")
           .baselineValues(5.0)
-          .build()
-          .run();
+          .go();
     } finally {
       FileUtils.deleteQuietly(file);
     }
   }
 
-
   @Test
   public void testIncludeNan() throws Exception {
+    runBoth(this::doTestIncludeNan);
+  }
+
+  private void doTestIncludeNan() throws Exception {
     String table = "nan_test.json";
     File file = new File(dirTestWatcher.getRootDir(), table);
     String json = "[{\"nan_col\":NaN, \"inf_col\":-Infinity}," +
@@ -164,15 +196,18 @@ public class TestJsonNanInf extends BaseTestQuery {
           .unOrdered()
           .baselineColumns("nan_col")
           .baselineValues(Double.NaN)
-          .build()
-          .run();
+          .go();
     } finally {
       FileUtils.deleteQuietly(file);
     }
   }
 
-  @Test(expected = UserRemoteException.class)
+  @Test
   public void testNanInfFailure() throws Exception {
+    runBoth(this::doTestNanInfFailure);
+  }
+
+  private void doTestNanInfFailure() throws Exception {
     String table = "nan_test.json";
     File file = new File(dirTestWatcher.getRootDir(), table);
     test("alter session set `%s` = false", ExecConstants.JSON_READER_NAN_INF_NUMBERS);
@@ -180,9 +215,9 @@ public class TestJsonNanInf extends BaseTestQuery {
     try {
       FileUtils.writeStringToFile(file, json);
       test("select * from dfs.`%s`;", table);
+      fail();
     } catch (UserRemoteException e) {
       assertThat(e.getMessage(), containsString("Error parsing JSON"));
-      throw e;
     } finally {
       resetSessionOption(ExecConstants.JSON_READER_NAN_INF_NUMBERS);
       FileUtils.deleteQuietly(file);
@@ -191,6 +226,10 @@ public class TestJsonNanInf extends BaseTestQuery {
 
   @Test
   public void testCreateTableNanInf() throws Exception {
+    runBoth(this::doTestCreateTableNanInf);
+  }
+
+  private void doTestCreateTableNanInf() throws Exception {
     String table = "nan_test.json";
     File file = new File(dirTestWatcher.getRootDir(), table);
     String json = "{\"nan_col\":NaN, \"inf_col\":Infinity}";
@@ -204,11 +243,11 @@ public class TestJsonNanInf extends BaseTestQuery {
       File resultFile = new File(new File(file.getParent(), newTable),"0_0_0.json");
       String resultJson = FileUtils.readFileToString(resultFile);
       int nanIndex = resultJson.indexOf("NaN");
-      assertFalse("`NaN` must not be enclosed with \"\" ", resultJson.charAt(nanIndex - 1) == '"');
-      assertFalse("`NaN` must not be enclosed with \"\" ", resultJson.charAt(nanIndex + "NaN".length()) == '"');
+      assertNotEquals("`NaN` must not be enclosed with \"\" ", '"', resultJson.charAt(nanIndex - 1));
+      assertNotEquals("`NaN` must not be enclosed with \"\" ", '"', resultJson.charAt(nanIndex + "NaN".length()));
       int infIndex = resultJson.indexOf("Infinity");
-      assertFalse("`Infinity` must not be enclosed with \"\" ", resultJson.charAt(infIndex - 1) == '"');
-      assertFalse("`Infinity` must not be enclosed with \"\" ", resultJson.charAt(infIndex + "Infinity".length()) == '"');
+      assertNotEquals("`Infinity` must not be enclosed with \"\" ", '"', resultJson.charAt(infIndex - 1));
+      assertNotEquals("`Infinity` must not be enclosed with \"\" ", '"', resultJson.charAt(infIndex + "Infinity".length()));
     } finally {
       test("drop table if exists dfs.`%s`", newTable);
       FileUtils.deleteQuietly(file);
@@ -217,6 +256,10 @@ public class TestJsonNanInf extends BaseTestQuery {
 
   @Test
   public void testConvertFromJsonFunction() throws Exception {
+    runBoth(this::doTestConvertFromJsonFunction);
+  }
+
+  private void doTestConvertFromJsonFunction() throws Exception {
     String table = "nan_test.csv";
     File file = new File(dirTestWatcher.getRootDir(), table);
     String csv = "col_0, {\"nan_col\":NaN}";
@@ -227,17 +270,18 @@ public class TestJsonNanInf extends BaseTestQuery {
           .unOrdered()
           .baselineColumns("col")
           .baselineValues(mapOf("nan_col", Double.NaN))
-          .build()
-          .run();
+          .go();
     } finally {
       FileUtils.deleteQuietly(file);
     }
   }
 
-
-
   @Test
   public void testLargeStringBinary() throws Exception {
+    runBoth(() -> doTestLargeStringBinary());
+  }
+
+  private void doTestLargeStringBinary() throws Exception {
     String chunk = "0123456789";
     StringBuilder builder = new StringBuilder();
     for (int i = 0; i < 1000; i++) {
@@ -249,6 +293,10 @@ public class TestJsonNanInf extends BaseTestQuery {
 
   @Test
   public void testConvertToJsonFunction() throws Exception {
+    runBoth(() -> doTestConvertToJsonFunction());
+  }
+
+  private void doTestConvertToJsonFunction() throws Exception {
     String table = "nan_test.csv";
     File file = new File(dirTestWatcher.getRootDir(), table);
     String csv = "col_0, {\"nan_col\":NaN}";
@@ -258,7 +306,7 @@ public class TestJsonNanInf extends BaseTestQuery {
       FileUtils.writeStringToFile(file, csv);
       List<QueryDataBatch> results = testSqlWithResults(query);
       RecordBatchLoader batchLoader = new RecordBatchLoader(getAllocator());
-      assertTrue("Query result must contain 1 row", results.size() == 1);
+      assertEquals("Query result must contain 1 row", 1, results.size());
       QueryDataBatch batch = results.get(0);
 
       batchLoader.load(batch.getHeader().getDef(), batch.getData());
@@ -266,8 +314,8 @@ public class TestJsonNanInf extends BaseTestQuery {
       // ensuring that `NaN` token ARE NOT enclosed with double quotes
       String resultJson = vw.getValueVector().getAccessor().getObject(0).toString();
       int nanIndex = resultJson.indexOf("NaN");
-      assertFalse("`NaN` must not be enclosed with \"\" ", resultJson.charAt(nanIndex - 1) == '"');
-      assertFalse("`NaN` must not be enclosed with \"\" ", resultJson.charAt(nanIndex + "NaN".length()) == '"');
+      assertNotEquals("`NaN` must not be enclosed with \"\" ", '"', resultJson.charAt(nanIndex - 1));
+      assertNotEquals("`NaN` must not be enclosed with \"\" ", '"', resultJson.charAt(nanIndex + "NaN".length()));
       batch.release();
       batchLoader.clear();
     } finally {
@@ -284,12 +332,15 @@ public class TestJsonNanInf extends BaseTestQuery {
           .unOrdered()
           .baselineColumns("sin_col", "sum_col")
           .baselineValues(Double.NaN, Double.POSITIVE_INFINITY)
-          .build()
-          .run();
+          .go();
   }
 
   @Test
   public void testOrderByWithNaN() throws Exception {
+    runBoth(this::doTestOrderByWithNaN);
+  }
+
+  private void doTestOrderByWithNaN() throws Exception {
     String table_name = "nan_test.json";
     String json = "{\"name\":\"obj1\", \"attr1\":1, \"attr2\":2, \"attr3\":3, \"attr4\":NaN}\n" +
         "{\"name\":\"obj1\", \"attr1\":1, \"attr2\":2, \"attr3\":4, \"attr4\":Infinity}\n" +
@@ -309,8 +360,7 @@ public class TestJsonNanInf extends BaseTestQuery {
           .baselineValues("obj1", Double.NaN)
           .baselineValues("obj2", Double.NEGATIVE_INFINITY)
           .baselineValues("obj2", Double.NaN)
-          .build()
-          .run();
+          .go();
     } finally {
       test("alter session set `%s` = false", ExecConstants.JSON_READ_NUMBERS_AS_DOUBLE);
       FileUtils.deleteQuietly(file);
@@ -319,6 +369,10 @@ public class TestJsonNanInf extends BaseTestQuery {
 
   @Test
   public void testNestedLoopJoinWithNaN() throws Exception {
+    runBoth(this::doTestNestedLoopJoinWithNaN);
+  }
+
+  private void doTestNestedLoopJoinWithNaN() throws Exception {
     String table_name = "nan_test.json";
     String json = "{\"name\":\"object1\", \"attr1\":1, \"attr2\":2, \"attr3\":3, \"attr4\":NaN}\n" +
             "{\"name\":\"object1\", \"attr1\":1, \"attr2\":2, \"attr3\":3, \"attr4\":NaN}\n" +
@@ -347,8 +401,7 @@ public class TestJsonNanInf extends BaseTestQuery {
           .baselineValues("object2")
           .baselineValues("object3")
           .baselineValues("object4")
-          .build()
-          .run();
+          .go();
     } finally {
       test("alter session set `%s` = false", ExecConstants.JSON_READ_NUMBERS_AS_DOUBLE);
       JoinTestBase.resetJoinOptions();
@@ -358,6 +411,10 @@ public class TestJsonNanInf extends BaseTestQuery {
 
   @Test
   public void testHashJoinWithNaN() throws Exception {
+    runBoth(this::doTestHashJoinWithNaN);
+  }
+
+  private void doTestHashJoinWithNaN() throws Exception {
     String table_name = "nan_test.json";
     String json = "{\"name\":\"obj1\", \"attr1\":1, \"attr2\":2, \"attr3\":3, \"attr4\":NaN}\n" +
             "{\"name\":\"obj1\", \"attr1\":1, \"attr2\":2, \"attr3\":4, \"attr4\":Infinity}\n" +
@@ -372,13 +429,12 @@ public class TestJsonNanInf extends BaseTestQuery {
       FileUtils.writeStringToFile(file, json);
       test("alter session set `%s` = true", ExecConstants.JSON_READ_NUMBERS_AS_DOUBLE);
       testBuilder()
-              .sqlQuery(query)
-              .ordered()
-              .baselineColumns("name")
-              .baselineValues("obj1")
-              .baselineValues("obj2")
-              .build()
-              .run();
+          .sqlQuery(query)
+          .ordered()
+          .baselineColumns("name")
+          .baselineValues("obj1")
+          .baselineValues("obj2")
+          .go();
     } finally {
       test("alter session set `%s` = false", ExecConstants.JSON_READ_NUMBERS_AS_DOUBLE);
       JoinTestBase.resetJoinOptions();
@@ -386,9 +442,12 @@ public class TestJsonNanInf extends BaseTestQuery {
     }
   }
 
-
   @Test
   public void testMergeJoinWithNaN() throws Exception {
+    runBoth(this::doTestMergeJoinWithNaN);
+  }
+
+  private void doTestMergeJoinWithNaN() throws Exception {
     String table_name = "nan_test.json";
     String json = "{\"name\":\"obj1\", \"attr1\":1, \"attr2\":2, \"attr3\":3, \"attr4\":NaN}\n" +
             "{\"name\":\"obj1\", \"attr1\":1, \"attr2\":2, \"attr3\":4, \"attr4\":Infinity}\n" +
@@ -403,13 +462,12 @@ public class TestJsonNanInf extends BaseTestQuery {
       FileUtils.writeStringToFile(file, json);
       test("alter session set `%s` = true", ExecConstants.JSON_READ_NUMBERS_AS_DOUBLE);
       testBuilder()
-              .sqlQuery(query)
-              .ordered()
-              .baselineColumns("name")
-              .baselineValues("obj1")
-              .baselineValues("obj2")
-              .build()
-              .run();
+          .sqlQuery(query)
+          .ordered()
+          .baselineColumns("name")
+          .baselineValues("obj1")
+          .baselineValues("obj2")
+          .go();
     } finally {
       test("alter session set `%s` = false", ExecConstants.JSON_READ_NUMBERS_AS_DOUBLE);
       JoinTestBase.resetJoinOptions();
@@ -417,4 +475,11 @@ public class TestJsonNanInf extends BaseTestQuery {
     }
   }
 
+  private void enableV2Reader(boolean enable) throws Exception {
+    alterSession(ExecConstants.ENABLE_V2_JSON_READER_KEY, enable);
+  }
+
+  private void resetV2Reader() throws Exception {
+    resetSessionOption(ExecConstants.ENABLE_V2_JSON_READER_KEY);
+  }
 }

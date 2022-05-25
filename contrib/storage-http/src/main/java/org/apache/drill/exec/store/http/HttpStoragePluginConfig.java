@@ -19,8 +19,9 @@ package org.apache.drill.exec.store.http;
 
 import org.apache.drill.common.PlanStringBuilder;
 import org.apache.drill.common.exceptions.UserException;
+import org.apache.drill.common.logical.OAuthConfig;
 import org.apache.drill.common.map.CaseInsensitiveMap;
-import org.apache.drill.common.logical.AbstractSecuredStoragePluginConfig;
+import org.apache.drill.common.logical.StoragePluginConfig;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnore;
@@ -36,11 +37,12 @@ import org.slf4j.LoggerFactory;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 
 
 @JsonTypeName(HttpStoragePluginConfig.NAME)
-public class HttpStoragePluginConfig extends AbstractSecuredStoragePluginConfig {
+public class HttpStoragePluginConfig extends StoragePluginConfig {
   private static final Logger logger = LoggerFactory.getLogger(HttpStoragePluginConfig.class);
   public static final String NAME = "http";
 
@@ -49,8 +51,6 @@ public class HttpStoragePluginConfig extends AbstractSecuredStoragePluginConfig 
   public final String proxyHost;
   public final int proxyPort;
   public final String proxyType;
-  public final HttpOAuthConfig oAuthConfig;
-
   /**
    * Timeout in {@link TimeUnit#SECONDS}.
    */
@@ -67,19 +67,22 @@ public class HttpStoragePluginConfig extends AbstractSecuredStoragePluginConfig 
                                  @JsonProperty("proxyType") String proxyType,
                                  @JsonProperty("proxyUsername") String proxyUsername,
                                  @JsonProperty("proxyPassword") String proxyPassword,
-                                 @JsonProperty("oAuthConfig") HttpOAuthConfig oAuthConfig,
-                                 @JsonProperty("credentialsProvider") CredentialsProvider credentialsProvider
+                                 @JsonProperty("oAuthConfig") OAuthConfig oAuthConfig,
+                                 @JsonProperty("credentialsProvider") CredentialsProvider credentialsProvider,
+                                 @JsonProperty("authMode") String authMode
                                  ) {
     super(CredentialProviderUtils.getCredentialsProvider(
-        getClientID(new OAuthTokenCredentials(credentialsProvider)),
-        getClientSecret(new OAuthTokenCredentials(credentialsProvider)),
-        getTokenURL(new OAuthTokenCredentials(credentialsProvider)),
+        null,
+        null,
+        null,
         normalize(username),
         normalize(password),
         normalize(proxyUsername),
         normalize(proxyPassword),
         credentialsProvider),
-        credentialsProvider == null);
+        credentialsProvider == null,
+        AuthMode.parseOrDefault(authMode, AuthMode.SHARED_USER),
+      oAuthConfig);
     this.cacheResults = cacheResults != null && cacheResults;
 
     this.connections = CaseInsensitiveMap.newHashMap();
@@ -90,7 +93,6 @@ public class HttpStoragePluginConfig extends AbstractSecuredStoragePluginConfig 
     this.timeout = timeout == null ? 0 : timeout;
     this.proxyHost = normalize(proxyHost);
     this.proxyPort = proxyPort == null ? 0 : proxyPort;
-    this.oAuthConfig = oAuthConfig;
 
     proxyType = normalize(proxyType);
     this.proxyType = proxyType == null
@@ -110,12 +112,23 @@ public class HttpStoragePluginConfig extends AbstractSecuredStoragePluginConfig 
     }
   }
 
+  private HttpStoragePluginConfig(HttpStoragePluginConfig that, CredentialsProvider credentialsProvider) {
+    super(credentialsProvider, credentialsProvider == null, that.authMode);
+    this.cacheResults = that.cacheResults;
+    this.connections = that.connections;
+    this.timeout = that.timeout;
+    this.proxyHost = that.proxyHost;
+    this.proxyPort = that.proxyPort;
+    this.proxyType = that.proxyType;
+    this.oAuthConfig = that.oAuthConfig;
+  }
+
   /**
    * Clone constructor used for updating OAuth tokens
    * @param that The current HTTP Plugin Config
    * @param oAuthConfig The updated OAuth config
    */
-  public HttpStoragePluginConfig(HttpStoragePluginConfig that, HttpOAuthConfig oAuthConfig) {
+  public HttpStoragePluginConfig(HttpStoragePluginConfig that, OAuthConfig oAuthConfig) {
     super(CredentialProviderUtils.getCredentialsProvider(that.proxyUsername(), that.proxyPassword(), that.credentialsProvider),
       that.credentialsProvider == null);
 
@@ -125,7 +138,7 @@ public class HttpStoragePluginConfig extends AbstractSecuredStoragePluginConfig 
     this.proxyHost = that.proxyHost;
     this.proxyPort = that.proxyPort;
     this.proxyType = that.proxyType;
-    this.oAuthConfig = oAuthConfig;
+    this.oAuthConfig = that.oAuthConfig;
   }
 
   private static String normalize(String value) {
@@ -141,12 +154,22 @@ public class HttpStoragePluginConfig extends AbstractSecuredStoragePluginConfig 
    * The copy is used in the query plan to avoid including unnecessary information.
    */
   public HttpStoragePluginConfig copyForPlan(String connectionName) {
+    Optional<UsernamePasswordWithProxyCredentials> creds = getUsernamePasswordCredentials();
     return new HttpStoragePluginConfig(
-        cacheResults, configFor(connectionName), timeout,
-      getUsernamePasswordCredentials().getUsername(),
-      getUsernamePasswordCredentials().getPassword(),
-        proxyHost, proxyPort, proxyType, getUsernamePasswordCredentials().getProxyUsername(),
-      getUsernamePasswordCredentials().getProxyPassword(), oAuthConfig, credentialsProvider);
+      cacheResults,
+      configFor(connectionName),
+      timeout,
+      username(),
+      password(),
+      proxyHost,
+      proxyPort,
+      proxyType,
+      proxyUsername(),
+      proxyPassword(),
+      oAuthConfig,
+      credentialsProvider,
+      authMode.name()
+    );
   }
 
   private Map<String, HttpApiConfig> configFor(String connectionName) {
@@ -164,12 +187,13 @@ public class HttpStoragePluginConfig extends AbstractSecuredStoragePluginConfig 
     }
     HttpStoragePluginConfig thatConfig = (HttpStoragePluginConfig) that;
     return Objects.equals(connections, thatConfig.connections) &&
-           Objects.equals(cacheResults, thatConfig.cacheResults) &&
-           Objects.equals(proxyHost, thatConfig.proxyHost) &&
-           Objects.equals(proxyPort, thatConfig.proxyPort) &&
-           Objects.equals(proxyType, thatConfig.proxyType) &&
-           Objects.equals(oAuthConfig, thatConfig.oAuthConfig) &&
-           Objects.equals(credentialsProvider, thatConfig.credentialsProvider);
+      Objects.equals(cacheResults, thatConfig.cacheResults) &&
+      Objects.equals(proxyHost, thatConfig.proxyHost) &&
+      Objects.equals(proxyPort, thatConfig.proxyPort) &&
+      Objects.equals(proxyType, thatConfig.proxyType) &&
+      Objects.equals(oAuthConfig, thatConfig.oAuthConfig) &&
+      Objects.equals(credentialsProvider, thatConfig.credentialsProvider) &&
+      Objects.equals(authMode, thatConfig.authMode);
   }
 
   @Override
@@ -183,13 +207,14 @@ public class HttpStoragePluginConfig extends AbstractSecuredStoragePluginConfig 
       .field("credentialsProvider", credentialsProvider)
       .field("oauthConfig", oAuthConfig)
       .field("proxyType", proxyType)
+      .field("authMode", authMode)
       .toString();
   }
 
   @Override
   public int hashCode() {
     return Objects.hash(connections, cacheResults, timeout,
-        proxyHost, proxyPort, proxyType, oAuthConfig, credentialsProvider);
+        proxyHost, proxyPort, proxyType, oAuthConfig, credentialsProvider, authMode);
   }
 
   @JsonProperty("cacheResults")
@@ -201,47 +226,50 @@ public class HttpStoragePluginConfig extends AbstractSecuredStoragePluginConfig 
   @JsonProperty("timeout")
   public int timeout() { return timeout;}
 
-  @JsonProperty("proxyHost")
+   @JsonProperty("proxyHost")
   public String proxyHost() { return proxyHost; }
 
   @JsonProperty("proxyPort")
   public int proxyPort() { return proxyPort; }
 
-  @JsonProperty("oAuthConfig")
-  public HttpOAuthConfig oAuthConfig() {
-    return oAuthConfig;
-  }
-
   @JsonProperty("username")
   public String username() {
-    if (directCredentials) {
-      return getUsernamePasswordCredentials().getUsername();
+    if (!directCredentials) {
+      return null;
     }
-    return null;
+    return getUsernamePasswordCredentials()
+      .map(UsernamePasswordWithProxyCredentials::getUsername)
+      .orElse(null);
   }
 
   @JsonProperty("password")
   public String password() {
-    if (directCredentials) {
-      return getUsernamePasswordCredentials().getPassword();
+    if (!directCredentials) {
+      return null;
     }
-    return null;
+    return getUsernamePasswordCredentials()
+      .map(UsernamePasswordWithProxyCredentials::getPassword)
+      .orElse(null);
   }
 
   @JsonProperty("proxyUsername")
   public String proxyUsername() {
-    if (directCredentials) {
-      return getUsernamePasswordCredentials().getProxyUsername();
+    if (!directCredentials) {
+      return null;
     }
-    return null;
+    return getUsernamePasswordCredentials()
+      .map(UsernamePasswordWithProxyCredentials::getProxyUsername)
+      .orElse(null);
   }
 
   @JsonProperty("proxyPassword")
   public String proxyPassword() {
-    if (directCredentials) {
-      return getUsernamePasswordCredentials().getProxyPassword();
+    if (!directCredentials) {
+      return null;
     }
-    return null;
+    return getUsernamePasswordCredentials()
+      .map(UsernamePasswordWithProxyCredentials::getProxyPassword)
+      .orElse(null);
   }
 
   @JsonIgnore
@@ -268,12 +296,29 @@ public class HttpStoragePluginConfig extends AbstractSecuredStoragePluginConfig 
   }
 
   @JsonIgnore
-  public UsernamePasswordWithProxyCredentials getUsernamePasswordCredentials() {
-    return new UsernamePasswordWithProxyCredentials(credentialsProvider);
+  public Optional<UsernamePasswordWithProxyCredentials> getUsernamePasswordCredentials() {
+    return new UsernamePasswordWithProxyCredentials.Builder()
+      .setCredentialsProvider(credentialsProvider)
+      .build();
   }
 
   @JsonIgnore
-  public static OAuthTokenCredentials getOAuthCredentials(CredentialsProvider credentialsProvider) {
-    return new OAuthTokenCredentials(credentialsProvider);
+  public Optional<UsernamePasswordWithProxyCredentials> getUsernamePasswordCredentials(String username) {
+    return new UsernamePasswordWithProxyCredentials.Builder()
+      .setCredentialsProvider(credentialsProvider)
+      .setQueryUser(username)
+      .build();
+  }
+
+  @JsonIgnore
+  public static Optional<OAuthTokenCredentials> getOAuthCredentials(CredentialsProvider credentialsProvider) {
+    return new OAuthTokenCredentials.Builder()
+      .setCredentialsProvider(credentialsProvider)
+      .build();
+  }
+
+  @Override
+  public HttpStoragePluginConfig updateCredentialProvider(CredentialsProvider credentialsProvider) {
+    return new HttpStoragePluginConfig(this, credentialsProvider);
   }
 }

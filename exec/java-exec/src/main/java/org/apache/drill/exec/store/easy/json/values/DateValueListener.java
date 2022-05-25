@@ -19,6 +19,7 @@ package org.apache.drill.exec.store.easy.json.values;
 
 import java.time.Duration;
 import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
 
 import org.apache.drill.exec.store.easy.json.loader.JsonLoaderImpl;
 import org.apache.drill.exec.store.easy.json.parser.TokenIterator;
@@ -56,7 +57,10 @@ public class DateValueListener extends ScalarListener {
           // want to copy the offset since the epoch from UTC to our local
           // time, so that we retain the date, even if the span of the date
           // is different locally than UTC. A mess.
-          LocalDate localDate = LocalDate.parse(tokenizer.stringValue());
+          final String formatValue = schema().format();
+          DateTimeFormatter dateTimeFormatter = formatValue == null
+            ? DateTimeFormatter.ISO_LOCAL_DATE : DateTimeFormatter.ofPattern(formatValue);
+          LocalDate localDate = LocalDate.parse(tokenizer.stringValue(), dateTimeFormatter);
           writer.setLong(Duration.between(TimestampValueListener.LOCAL_EPOCH,
               localDate.atStartOfDay()).toMillis());
         } catch (Exception e) {

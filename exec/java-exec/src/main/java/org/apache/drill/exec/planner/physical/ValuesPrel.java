@@ -27,26 +27,30 @@ import org.apache.calcite.plan.RelTraitSet;
 import org.apache.calcite.rel.RelNode;
 import org.apache.calcite.rel.type.RelDataType;
 import org.apache.calcite.rex.RexLiteral;
-import org.apache.drill.common.JSONOptions;
+import org.apache.drill.common.types.TypeProtos;
 import org.apache.drill.exec.physical.base.PhysicalOperator;
 import org.apache.drill.exec.physical.config.Values;
+import org.apache.drill.exec.physical.impl.scan.v3.schema.SchemaUtils;
 import org.apache.drill.exec.planner.common.DrillValuesRelBase;
 import org.apache.drill.exec.planner.physical.visitor.PrelVisitor;
 import org.apache.drill.exec.record.BatchSchema.SelectionVectorMode;
+import org.apache.drill.exec.record.metadata.TupleMetadata;
+import org.apache.drill.exec.record.metadata.TupleSchema;
 
 /**
  * Physical Values implementation in Drill.
  */
 public class ValuesPrel extends DrillValuesRelBase implements Prel {
 
-  public ValuesPrel(RelOptCluster cluster, RelDataType rowType, List<? extends List<RexLiteral>> tuples, RelTraitSet traits) {
+  public ValuesPrel(RelOptCluster cluster, RelDataType rowType,
+    List<? extends List<RexLiteral>> tuples, RelTraitSet traits) {
     super(cluster, rowType, tuples, traits);
   }
 
   public ValuesPrel(RelOptCluster cluster,
                     RelDataType rowType,
                     List<? extends List<RexLiteral>> tuples, RelTraitSet traits,
-                    JSONOptions content) {
+                    String content) {
     super(cluster, rowType, tuples, traits, content);
   }
 
@@ -57,7 +61,17 @@ public class ValuesPrel extends DrillValuesRelBase implements Prel {
 
   @Override
   public PhysicalOperator getPhysicalOperator(PhysicalPlanCreator creator) throws IOException {
-    return creator.addMetadata(this, new Values(content));
+    return creator.addMetadata(this, new Values(content, getSchema()));
+  }
+
+  private TupleMetadata getSchema() {
+    TupleSchema columnMetadata = new TupleSchema();
+    getRowType().getFieldList().stream()
+      .map(field -> SchemaUtils.getColumnMetadata(field.getName(), field.getType()))
+      .filter(metadata -> metadata.type() != TypeProtos.MinorType.LATE)
+      .forEach(columnMetadata::add);
+
+    return columnMetadata;
   }
 
   @Override

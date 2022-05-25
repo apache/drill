@@ -25,8 +25,6 @@ import java.time.OffsetDateTime;
 import java.time.OffsetTime;
 import java.time.ZoneId;
 import java.time.ZoneOffset;
-import java.time.format.DateTimeFormatter;
-import java.time.format.DateTimeFormatterBuilder;
 
 import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.exec.expr.fn.impl.DateUtility;
@@ -58,6 +56,8 @@ import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.core.JsonToken;
 
+import static org.apache.drill.common.util.DrillDateTimeFormatter.ISO_DATETIME_FORMATTER;
+
 abstract class VectorOutput {
 
   private static final Logger logger = LoggerFactory.getLogger(VectorOutput.class);
@@ -74,35 +74,29 @@ abstract class VectorOutput {
   protected final WorkingBuffer work;
   protected JsonParser parser;
 
-  protected DateTimeFormatter isoDateTimeFormatter = new DateTimeFormatterBuilder().append(DateTimeFormatter.ISO_LOCAL_DATE_TIME)
-      .optionalStart().appendOffset("+HH:MM", "+00:00").optionalEnd()
-      .optionalStart().appendOffset("+HHMM", "+0000").optionalEnd()
-      .optionalStart().appendOffset("+HH", "Z").optionalEnd()
-      .toFormatter();
-
-  public VectorOutput(WorkingBuffer work){
+  public VectorOutput(WorkingBuffer work) {
     this.work = work;
   }
 
-  public void setParser(JsonParser parser){
+  public void setParser(JsonParser parser) {
     this.parser = parser;
   }
 
-  protected boolean innerRun() throws IOException{
+  protected boolean innerRun() throws IOException {
     JsonToken t = parser.nextToken();
-    if(t != JsonToken.FIELD_NAME){
+    if (t != JsonToken.FIELD_NAME) {
       return false;
     }
 
     String possibleTypeName = parser.getText();
-    if(!possibleTypeName.isEmpty() && possibleTypeName.charAt(0) == '$'){
-      switch(possibleTypeName){
+    if (!possibleTypeName.isEmpty() && possibleTypeName.charAt(0) == '$') {
+      switch(possibleTypeName) {
       case ExtendedTypeName.BINARY:
         writeBinary(checkNextToken(JsonToken.VALUE_STRING));
         checkCurrentToken(JsonToken.END_OBJECT);
         return true;
       case ExtendedTypeName.TYPE:
-        if(checkNextToken(JsonToken.VALUE_NUMBER_INT) || !hasBinary()) {
+        if (checkNextToken(JsonToken.VALUE_NUMBER_INT) || !hasBinary()) {
           throw UserException.parseError()
           .message("Either $type is not an integer or has no $binary")
           .build(logger);
@@ -155,37 +149,36 @@ abstract class VectorOutput {
     return checkToken(parser.getCurrentToken(), expected1, expected2);
   }
 
-  boolean hasType() throws JsonParseException, IOException {
+  boolean hasType() throws IOException {
     JsonToken token = parser.nextToken();
     return token == JsonToken.FIELD_NAME && parser.getText().equals(ExtendedTypeName.TYPE);
   }
 
-  boolean hasBinary() throws JsonParseException, IOException {
+  boolean hasBinary() throws IOException {
     JsonToken token = parser.nextToken();
     return token == JsonToken.FIELD_NAME && parser.getText().equals(ExtendedTypeName.BINARY);
   }
 
-  long getType() throws JsonParseException, IOException {
+  long getType() throws IOException {
     if (!checkNextToken(JsonToken.VALUE_NUMBER_INT, JsonToken.VALUE_STRING)) {
       long type = parser.getValueAsLong();
       //Advancing the token, as checking current token in binary
       parser.nextToken();
       return type;
     }
-    throw new JsonParseException("Failure while reading $type value. Expected a NUMBER or STRING",
-        parser.getCurrentLocation());
+    throw new JsonParseException(parser, "Failure while reading $type value. Expected a NUMBER or STRING");
   }
 
   public boolean checkToken(final JsonToken t, final JsonToken expected1, final JsonToken expected2) throws IOException{
-    if(t == JsonToken.VALUE_NULL){
+    if (t == JsonToken.VALUE_NULL) {
       return true;
-    }else if(t == expected1){
+    } else if (t == expected1) {
       return false;
-    }else if(t == expected2){
+    } else if (t == expected2) {
       return false;
-    }else{
-      throw new JsonParseException(String.format("Failure while reading ExtendedJSON typed value. Expected a %s but "
-          + "received a token of type %s", expected1, t), parser.getCurrentLocation());
+    } else {
+      throw new JsonParseException(parser, String.format("Failure while reading ExtendedJSON typed value. Expected a %s but "
+          + "received a token of type %s", expected1, t));
     }
   }
 
@@ -197,7 +190,7 @@ abstract class VectorOutput {
   public abstract void writeInteger(boolean isNull) throws IOException;
   public abstract void writeDecimal(boolean isNull) throws IOException;
 
-  static class ListVectorOutput extends VectorOutput{
+  static class ListVectorOutput extends VectorOutput {
     private ListWriter writer;
 
     public ListVectorOutput(WorkingBuffer work) {
@@ -212,7 +205,7 @@ abstract class VectorOutput {
     @Override
     public void writeBinary(boolean isNull) throws IOException {
       VarBinaryWriter bin = writer.varBinary();
-      if(!isNull){
+      if (!isNull) {
         byte[] binaryData = parser.getBinaryValue();
         if (hasType()) {
           //Ignoring type info as of now.
@@ -231,7 +224,7 @@ abstract class VectorOutput {
     @Override
     public void writeDate(boolean isNull) throws IOException {
       DateWriter dt = writer.date();
-      if(!isNull){
+      if (!isNull) {
         work.prepareVarCharHolder(parser.getValueAsString(), varchar);
         dt.writeDate(StringFunctionHelpers.getDate(varchar.buffer, varchar.start, varchar.end));
       }
@@ -240,7 +233,7 @@ abstract class VectorOutput {
     @Override
     public void writeTime(boolean isNull) throws IOException {
       TimeWriter t = writer.time();
-      if(!isNull){
+      if (!isNull) {
         // read time and obtain the local time in the provided time zone.
         LocalTime localTime = OffsetTime.parse(parser.getValueAsString(), DateUtility.isoFormatTime).toLocalTime();
         t.writeTime((int) ((localTime.toNanoOfDay() + 500000L) / 1000000L)); // round to milliseconds
@@ -250,7 +243,7 @@ abstract class VectorOutput {
     @Override
     public void writeTimestamp(boolean isNull) throws IOException {
       TimeStampWriter ts = writer.timeStamp();
-      if(!isNull){
+      if (!isNull) {
         switch (parser.getCurrentToken()) {
         case VALUE_NUMBER_INT:
           DateTime dt = new DateTime(parser.getLongValue(), org.joda.time.DateTimeZone.UTC);
@@ -261,8 +254,8 @@ abstract class VectorOutput {
           // See the mongo specs and the Drill handler (in new JSON loader) :
           // 1. https://docs.mongodb.com/manual/reference/mongodb-extended-json
           // 2. org.apache.drill.exec.store.easy.json.values.UtcTimestampValueListener
-          Instant instant = isoDateTimeFormatter.parse(parser.getValueAsString(), Instant::from);
-          long offset = ZoneId.systemDefault().getRules().getOffset(instant).getTotalSeconds() * 1000;
+          Instant instant = ISO_DATETIME_FORMATTER.parse(parser.getValueAsString(), Instant::from);
+          long offset = ZoneId.systemDefault().getRules().getOffset(instant).getTotalSeconds() * 1000L;
           ts.writeTimeStamp(instant.toEpochMilli() + offset);
           break;
         default:
@@ -276,7 +269,7 @@ abstract class VectorOutput {
     @Override
     public void writeInterval(boolean isNull) throws IOException {
       IntervalWriter intervalWriter = writer.interval();
-      if(!isNull){
+      if (!isNull) {
         final Period p = ISOPeriodFormat.standard().parsePeriod(parser.getValueAsString());
         int months = DateUtilities.monthsFromPeriod(p);
         int days = p.getDays();
@@ -288,16 +281,15 @@ abstract class VectorOutput {
     @Override
     public void writeInteger(boolean isNull) throws IOException {
       BigIntWriter intWriter = writer.bigInt();
-      if(!isNull){
+      if (!isNull) {
         intWriter.writeBigInt(Long.parseLong(parser.getValueAsString()));
       }
     }
 
     @Override
     public void writeDecimal(boolean isNull) throws IOException {
-      throw new JsonParseException("Decimal Extended types not yet supported.", parser.getCurrentLocation());
+      throw new JsonParseException(parser, "Decimal Extended types not yet supported");
     }
-
   }
 
   static class MapVectorOutput extends VectorOutput {
@@ -318,7 +310,7 @@ abstract class VectorOutput {
     @Override
     public void writeBinary(boolean isNull) throws IOException {
       VarBinaryWriter bin = writer.varBinary(fieldName);
-      if(!isNull){
+      if (!isNull) {
         byte[] binaryData = parser.getBinaryValue();
         if (hasType()) {
           //Ignoring type info as of now.
@@ -337,7 +329,7 @@ abstract class VectorOutput {
     @Override
     public void writeDate(boolean isNull) throws IOException {
       DateWriter dt = writer.date(fieldName);
-      if(!isNull){
+      if (!isNull) {
         LocalDate    localDate = LocalDate.parse(parser.getValueAsString(), DateUtility.isoFormatDate);
         OffsetDateTime utcDate = OffsetDateTime.of(localDate, LocalTime.MIDNIGHT, ZoneOffset.UTC);
 
@@ -348,7 +340,7 @@ abstract class VectorOutput {
     @Override
     public void writeTime(boolean isNull) throws IOException {
       TimeWriter t = writer.time(fieldName);
-      if(!isNull){
+      if (!isNull) {
         LocalTime localTime = OffsetTime.parse(parser.getValueAsString(), DateUtility.isoFormatTime).toLocalTime();
         t.writeTime((int) ((localTime.toNanoOfDay() + 500000L) / 1000000L)); // round to milliseconds
       }
@@ -357,7 +349,7 @@ abstract class VectorOutput {
     @Override
     public void writeTimestamp(boolean isNull) throws IOException {
       TimeStampWriter ts = writer.timeStamp(fieldName);
-      if(!isNull){
+      if (!isNull) {
         switch (parser.getCurrentToken()) {
         case VALUE_NUMBER_INT:
           DateTime dt = new DateTime(parser.getLongValue(), org.joda.time.DateTimeZone.UTC);
@@ -368,8 +360,8 @@ abstract class VectorOutput {
           // See the mongo specs and the Drill handler (in new JSON loader) :
           // 1. https://docs.mongodb.com/manual/reference/mongodb-extended-json
           // 2. org.apache.drill.exec.store.easy.json.values.UtcTimestampValueListener
-          Instant instant = isoDateTimeFormatter.parse(parser.getValueAsString(), Instant::from);
-          long offset = ZoneId.systemDefault().getRules().getOffset(instant).getTotalSeconds() * 1000;
+          Instant instant = ISO_DATETIME_FORMATTER.parse(parser.getValueAsString(), Instant::from);
+          long offset = ZoneId.systemDefault().getRules().getOffset(instant).getTotalSeconds() * 1000L;
           ts.writeTimeStamp(instant.toEpochMilli() + offset);
           break;
         default:
@@ -383,7 +375,7 @@ abstract class VectorOutput {
     @Override
     public void writeInterval(boolean isNull) throws IOException {
       IntervalWriter intervalWriter = writer.interval(fieldName);
-      if(!isNull){
+      if (!isNull) {
         final Period p = ISOPeriodFormat.standard().parsePeriod(parser.getValueAsString());
         int months = DateUtilities.monthsFromPeriod(p);
         int days = p.getDays();
@@ -395,7 +387,7 @@ abstract class VectorOutput {
     @Override
     public void writeInteger(boolean isNull) throws IOException {
       BigIntWriter intWriter = writer.bigInt(fieldName);
-      if(!isNull){
+      if (!isNull) {
         intWriter.writeBigInt(Long.parseLong(parser.getValueAsString()));
       }
     }
@@ -404,7 +396,5 @@ abstract class VectorOutput {
     public void writeDecimal(boolean isNull) throws IOException {
       throw new IOException("Decimal Extended types not yet supported.");
     }
-
   }
-
 }

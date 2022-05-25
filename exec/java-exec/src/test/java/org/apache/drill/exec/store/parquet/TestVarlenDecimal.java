@@ -49,10 +49,6 @@ public class TestVarlenDecimal extends ClusterTest {
   @BeforeClass
   public static void setUp() throws Exception {
     startCluster(ClusterFixture.builder(dirTestWatcher));
-  }
-
-  @BeforeClass
-  public static void enableDecimalDataType() {
     client.alterSession(PlannerSettings.ENABLE_DECIMAL_DATA_TYPE_KEY, true);
   }
 

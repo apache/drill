@@ -61,11 +61,11 @@
       avoid_bad_dependencies plugin found in the file.
     -->
     <calcite.groupId>com.github.vvysotskyi.drill-calcite</calcite.groupId>
-    <calcite.version>1.21.0-drill-r7</calcite.version>
+    <calcite.version>1.21.0-drill-r8</calcite.version>
     <avatica.version>1.17.0</avatica.version>
-    <janino.version>3.0.11</janino.version>
+    <janino.version>3.1.7</janino.version>
     <sqlline.version>1.12.0</sqlline.version>
-    <jackson.version>2.12.6</jackson.version>
+    <jackson.version>2.13.2.20220328</jackson.version>
     <zookeeper.version>3.5.7</zookeeper.version>
     <mapr.release.version>6.1.0-mapr</mapr.release.version>
     <ojai.version>3.0-mapr-1808</ojai.version>
@@ -81,12 +81,12 @@
     <logback.version>1.2.9</logback.version>
     <mockito.version>3.11.2</mockito.version>
     <!--
-      Currently Hive storage plugin only supports Apache Hive 3.1.2 or vendor specific variants of the
+      Currently, Hive storage plugin only supports Apache Hive 3.1.2 or vendor specific variants of the
       Apache Hive 2.3.2. If the version is changed, make sure the jars and their dependencies are updated,
       for example parquet-hadoop-bundle and derby dependencies.
     -->
     <hive.version>3.1.2</hive.version>
-    <hadoop.version>3.2.2</hadoop.version>
+    <hadoop.version>3.2.3</hadoop.version>
     <hbase.version>2.4.9</hbase.version>
     <fmpp.version>1.0</fmpp.version>
     <freemarker.version>2.3.28</freemarker.version>
@@ -130,13 +130,13 @@
     <testcontainers.version>1.16.3</testcontainers.version>
     <typesafe.config.version>1.0.0</typesafe.config.version>
     <commons.codec.version>1.14</commons.codec.version>
-    <metadata.extractor.version>2.13.0</metadata.extractor.version>
     <xalan.version>2.7.2</xalan.version>
     <xerces.version>2.12.2</xerces.version>
     <commons.configuration.version>1.10</commons.configuration.version>
     <commons.beanutils.version>1.9.4</commons.beanutils.version>
-    <httpdlog-parser.version>5.7</httpdlog-parser.version>
-    <yauaa.version>5.20</yauaa.version>
+    <httpdlog-parser.version>5.8</httpdlog-parser.version>
+    <yauaa.version>7.1.0</yauaa.version>
+    <log4j.version>2.17.2</log4j.version>
     <aircompressor.version>0.20</aircompressor.version>
     <iceberg.version>0.12.1</iceberg.version>
     <univocity-parsers.version>2.8.3</univocity-parsers.version>
@@ -2045,11 +2045,6 @@
         <groupId>org.yaml</groupId>
         <artifactId>snakeyaml</artifactId>
         <version>${snakeyaml.version}</version>
-      </dependency>
-      <dependency>
-        <groupId>com.drewnoakes</groupId>
-        <artifactId>metadata-extractor</artifactId>
-        <version>${metadata.extractor.version}</version>
       </dependency>
       <dependency>
         <groupId>xerces</groupId>

@@ -20,7 +20,7 @@ package org.apache.drill.exec.physical.impl.scan.project;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.apache.drill.categories.RowSetTests;
+import org.apache.drill.categories.RowSetTest;
 import org.apache.drill.common.types.TypeProtos.DataMode;
 import org.apache.drill.common.types.TypeProtos.MajorType;
 import org.apache.drill.common.types.TypeProtos.MinorType;
@@ -48,7 +48,7 @@ import org.junit.experimental.categories.Category;
  * values. The ConstantColumnLoader builds and populates these columns.
  */
 
-@Category(RowSetTests.class)
+@Category(RowSetTest.class)
 public class TestConstantColumnLoader extends SubOperatorTest {
 
   private static class DummyColumn implements ConstantColumnSpec {

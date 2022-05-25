@@ -145,17 +145,17 @@ public class GenericMetadataReader
           try {
             int numOfComponent = 1;
             int colorType = pngDir.getInt(PngDirectory.TAG_COLOR_TYPE);
-            if (colorType == PngColorType.IndexedColor.getNumericValue()) {
+            if (colorType == PngColorType.INDEXED_COLOR.getNumericValue()) {
               directory.setColorMode("Indexed");
-            } else if (colorType == PngColorType.Greyscale.getNumericValue()) {
+            } else if (colorType == PngColorType.GREYSCALE.getNumericValue()) {
               directory.setColorMode("Grayscale");
-            } else if (colorType == PngColorType.GreyscaleWithAlpha.getNumericValue()) {
+            } else if (colorType == PngColorType.GREYSCALE_WITH_ALPHA.getNumericValue()) {
               numOfComponent = 2;
               directory.setColorMode("Grayscale");
               directory.setAlpha(true);
-            } else if (colorType == PngColorType.TrueColor.getNumericValue()) {
+            } else if (colorType == PngColorType.TRUE_COLOR.getNumericValue()) {
               numOfComponent = 3;
-            } else if (colorType == PngColorType.TrueColorWithAlpha.getNumericValue()) {
+            } else if (colorType == PngColorType.TRUE_COLOR_WITH_ALPHA.getNumericValue()) {
               numOfComponent = 4;
               directory.setAlpha(true);
             }

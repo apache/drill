@@ -220,6 +220,16 @@ public class TestBuilder {
     return this;
   }
 
+  public TestBuilder enableSessionOption(String option) {
+    optionSettingQueriesForTestQuery("ALTER SESSION SET `" + option + "` = 'true'");
+    return this;
+  }
+
+  public TestBuilder disableSessionOption(String option) {
+    optionSettingQueriesForTestQuery("ALTER SESSION SET `" + option + "` = 'false'");
+    return this;
+  }
+
   public TestBuilder approximateEquality() {
     return approximateEquality(0.1);
   }

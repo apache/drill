@@ -87,7 +87,7 @@ public class QueryResources {
   public Viewable getQuery() {
     List<StorageResources.StoragePluginModel> enabledPlugins = sr.getConfigsFor("enabled")
       .stream()
-      .map(plugin -> new StorageResources.StoragePluginModel(plugin, request))
+      .map(plugin -> new StorageResources.StoragePluginModel(plugin, request, sc))
       .collect(Collectors.toList());
     return ViewableWithPermissions.create(
         authEnabled.get(), "/rest/query/query.ftl",

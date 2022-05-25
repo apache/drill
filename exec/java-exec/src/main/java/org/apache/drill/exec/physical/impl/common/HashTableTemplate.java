@@ -981,11 +981,11 @@ public abstract class HashTableTemplate implements HashTable {
 
   @Override
   public void setTargetBatchRowCount(int batchRowCount) {
-    batchHolders.get(batchHolders.size()-1).targetBatchRowCount = batchRowCount;
+    batchHolders.get(batchHolders.size() - 1).targetBatchRowCount = batchRowCount;
   }
 
   @Override
   public int getTargetBatchRowCount() {
-    return batchHolders.get(batchHolders.size()-1).targetBatchRowCount;
+    return batchHolders.get(batchHolders.size() - 1).targetBatchRowCount;
   }
 }

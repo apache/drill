@@ -15,11 +15,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.drill.exec.vector.complex.writer;
+package org.apache.drill.exec.store.json;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.drill.common.exceptions.UserRemoteException;
 import org.apache.drill.exec.ExecConstants;
+import org.apache.drill.exec.store.json.TestJsonReader.TestWrapper;
 import org.apache.drill.test.ClusterFixture;
 import org.apache.drill.test.ClusterTest;
 import org.junit.After;
@@ -45,9 +46,23 @@ public class TestJsonEscapeAnyChar extends ClusterTest {
     FileUtils.writeStringToFile(testFile, JSON_DATA);
   }
 
+  public void runBoth(TestWrapper wrapper) throws Exception {
+    try {
+      enableV2Reader(false);
+      wrapper.apply();
+      enableV2Reader(true);
+      wrapper.apply();
+    } finally {
+      resetV2Reader();
+    }
+  }
+
   @Test
   public void testwithOptionEnabled() throws Exception {
+    runBoth(this::doTestWithOptionEnabled);
+  }
 
+  private void doTestWithOptionEnabled() throws Exception {
     try {
       enableJsonReaderEscapeAnyChar();
       testBuilder()
@@ -64,8 +79,13 @@ public class TestJsonEscapeAnyChar extends ClusterTest {
 
   @Test
   public void testwithOptionDisabled() throws Exception {
+    runBoth(this::doTestWithOptionDisabled);
+  }
+
+  private void doTestWithOptionDisabled() throws Exception {
     try {
-      queryBuilder().sql(QUERY)
+      queryBuilder()
+        .sql(QUERY)
         .run();
     } catch (UserRemoteException e) {
       assertThat(e.getMessage(), containsString("DATA_READ ERROR: Error parsing JSON - Unrecognized character escape"));
@@ -78,6 +98,14 @@ public class TestJsonEscapeAnyChar extends ClusterTest {
 
   private void resetJsonReaderEscapeAnyChar() {
     client.alterSession(ExecConstants.JSON_READER_ESCAPE_ANY_CHAR, false);
+  }
+
+  private void enableV2Reader(boolean enable) {
+    client.alterSession(ExecConstants.ENABLE_V2_JSON_READER_KEY, enable);
+  }
+
+  private void resetV2Reader() {
+    client.resetSession(ExecConstants.ENABLE_V2_JSON_READER_KEY);
   }
 
   @After

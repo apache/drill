@@ -87,7 +87,7 @@ public class SplitUpComplexExpressions extends BasePrelVisitor<Prel, Object, Rel
     final int lastRexInput = lastColumnReferenced + 1;
     RexVisitorComplexExprSplitter exprSplitter = new RexVisitorComplexExprSplitter(funcReg, rexBuilder, lastRexInput);
     int i = 0;
-    for (RexNode rex : newProject.getChildExps()) {
+    for (RexNode rex : newProject.getProjects()) {
       RelDataTypeField originField = projectFields.get(i++);
       RexNode splitRex = rex.accept(exprSplitter);
       origRelDataTypes.add(originField);
@@ -95,7 +95,7 @@ public class SplitUpComplexExpressions extends BasePrelVisitor<Prel, Object, Rel
     }
 
     final List<RexNode> complexExprs = exprSplitter.getComplexExprs();
-    if (complexExprs.size() == 1 && findTopComplexFunc(newProject.getChildExps()).size() == 1) {
+    if (complexExprs.size() == 1 && findTopComplexFunc(newProject.getProjects()).size() == 1) {
       return newProject;
     }
 
@@ -132,8 +132,7 @@ public class SplitUpComplexExpressions extends BasePrelVisitor<Prel, Object, Rel
         relDataTypes.add(new RelDataTypeFieldImpl(getExprName(exprIndex), allExprs.size(), factory.createSqlType(SqlTypeName.ANY)));
 
         RelRecordType childProjectType = new RelRecordType(relDataTypes);
-        ProjectPrel childProject  = new ProjectPrel(newProject.getCluster(), newProject.getTraitSet(), newInput, ImmutableList.copyOf(allExprs), childProjectType);
-        newInput = childProject;
+        newInput = new ProjectPrel(newProject.getCluster(), newProject.getTraitSet(), newInput, ImmutableList.copyOf(allExprs), childProjectType);
       }
 
       allExprs.set(allExprs.size() - 1,

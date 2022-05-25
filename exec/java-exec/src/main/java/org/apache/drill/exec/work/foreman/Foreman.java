@@ -730,7 +730,7 @@ public class Foreman implements Runnable {
             new Date(queryContext.getQueryContextInfo().getQueryStartTime()),
             new Date(System.currentTimeMillis()),
             queryStateProcessor.getState(),
-            queryContext.getSession().getCredentials().getUserName(),
+            queryContext.getQueryUserCredentials().getUserName(),
             initiatingClient.getRemoteAddress());
         queryLogger.info(MAPPER.writeValueAsString(q));
       } catch (Exception e) {

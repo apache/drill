@@ -21,6 +21,7 @@ import static org.apache.drill.exec.planner.logical.DrillOptiq.isLiteralNull;
 
 import java.io.IOException;
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
@@ -32,16 +33,14 @@ import org.apache.calcite.rel.core.Values;
 import org.apache.calcite.rel.type.RelDataType;
 import org.apache.calcite.rex.RexLiteral;
 import org.apache.calcite.util.NlsString;
-import org.apache.drill.common.JSONOptions;
 import org.apache.drill.common.exceptions.DrillRuntimeException;
 import org.apache.drill.common.util.GuavaUtils;
-import org.apache.drill.exec.vector.complex.fn.ExtendedJsonOutput;
+import org.apache.drill.exec.vector.complex.fn.BasicJsonOutput;
 import org.apache.drill.exec.vector.complex.fn.JsonOutput;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeConstants;
 import org.joda.time.Period;
 
-import com.fasterxml.jackson.core.JsonLocation;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.util.TokenBuffer;
@@ -53,7 +52,7 @@ public abstract class DrillValuesRelBase extends Values implements DrillRelNode 
 
   private static final ObjectMapper MAPPER = new ObjectMapper();
 
-  protected final JSONOptions content;
+  protected final String content;
 
   public DrillValuesRelBase(RelOptCluster cluster, RelDataType rowType, List<? extends List<RexLiteral>> tuples, RelTraitSet traits) {
     this(cluster, rowType, tuples, traits, convertToJsonOptions(rowType, tuples));
@@ -67,15 +66,15 @@ public abstract class DrillValuesRelBase extends Values implements DrillRelNode 
                             RelDataType rowType,
                             List<? extends List<RexLiteral>> tuples,
                             RelTraitSet traits,
-                            JSONOptions content) {
+                            String content) {
     super(cluster, rowType, GuavaUtils.convertToNestedUnshadedImmutableList(tuples), traits);
     this.content = content;
   }
 
   /**
-   * @return values content represented as json
+   * @return values content represented as json string
    */
-  public JSONOptions getContent() {
+  public String getContent() {
     return content;
   }
 
@@ -87,9 +86,9 @@ public abstract class DrillValuesRelBase extends Values implements DrillRelNode 
    * @param tuples list of constant values in a row-expression
    * @return json representation of tuples
    */
-  private static JSONOptions convertToJsonOptions(RelDataType rowType, List<? extends List<RexLiteral>> tuples) {
+  private static String convertToJsonOptions(RelDataType rowType, List<? extends List<RexLiteral>> tuples) {
     try {
-      return new JSONOptions(convertToJsonNode(rowType, tuples), JsonLocation.NA);
+      return MAPPER.writeValueAsString(convertToJsonNode(rowType, tuples));
     } catch (IOException e) {
       throw new DrillRuntimeException("Failure while attempting to encode Values in JSON.", e);
     }
@@ -97,7 +96,7 @@ public abstract class DrillValuesRelBase extends Values implements DrillRelNode 
 
   private static JsonNode convertToJsonNode(RelDataType rowType, List<? extends List<RexLiteral>> tuples) throws IOException {
     TokenBuffer out = new TokenBuffer(MAPPER.getFactory().getCodec(), false);
-    JsonOutput json = new ExtendedJsonOutput(out);
+    JsonOutput json = new BasicJsonOutput(out);
     json.writeStartArray();
     String[] fields = rowType.getFieldNames().toArray(new String[rowType.getFieldCount()]);
 
@@ -122,7 +121,7 @@ public abstract class DrillValuesRelBase extends Values implements DrillRelNode 
         if (isLiteralNull(literal)) {
           out.writeBigIntNull();
         } else {
-          out.writeBigInt((((BigDecimal) literal.getValue()).setScale(0, BigDecimal.ROUND_HALF_UP)).longValue());
+          out.writeBigInt((((BigDecimal) literal.getValue()).setScale(0, RoundingMode.HALF_UP)).longValue());
         }
         return;
 
@@ -167,7 +166,7 @@ public abstract class DrillValuesRelBase extends Values implements DrillRelNode 
         if (isLiteralNull(literal)) {
           out.writeIntNull();
         } else {
-          out.writeInt((((BigDecimal) literal.getValue()).setScale(0, BigDecimal.ROUND_HALF_UP)).intValue());
+          out.writeInt((((BigDecimal) literal.getValue()).setScale(0, RoundingMode.HALF_UP)).intValue());
         }
         return;
 
@@ -246,9 +245,9 @@ public abstract class DrillValuesRelBase extends Values implements DrillRelNode 
           out.writeIntervalNull();
         } else {
           long millis = ((BigDecimal) (literal.getValue())).longValue();
-          int days = (int) (millis / DateTimeConstants.MILLIS_PER_DAY);
+          long days = millis / DateTimeConstants.MILLIS_PER_DAY;
           millis = millis - (days * DateTimeConstants.MILLIS_PER_DAY);
-          out.writeInterval(new Period().plusDays(days).plusMillis((int) millis));
+          out.writeInterval(new Period().plusDays((int) days).plusMillis((int) millis));
         }
         return;
 

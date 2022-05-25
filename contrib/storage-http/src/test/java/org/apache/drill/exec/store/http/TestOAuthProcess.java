@@ -23,6 +23,8 @@ import okhttp3.Request;
 import okhttp3.Response;
 import okhttp3.mockwebserver.MockResponse;
 import okhttp3.mockwebserver.MockWebServer;
+import org.apache.drill.common.logical.OAuthConfig;
+import org.apache.drill.common.logical.StoragePluginConfig.AuthMode;
 import org.apache.drill.common.logical.security.CredentialsProvider;
 import org.apache.drill.common.logical.security.PlainCredentialsProvider;
 import org.apache.drill.common.types.TypeProtos.DataMode;
@@ -57,7 +59,7 @@ import static org.junit.Assert.fail;
 public class TestOAuthProcess extends ClusterTest {
 
   private static final Logger logger = LoggerFactory.getLogger(TestOAuthProcess.class);
-  private static final int MOCK_SERVER_PORT = 47770;
+  private static final int MOCK_SERVER_PORT = 47775;
 
   private static final int TIMEOUT = 30;
   private static final String CONNECTION_NAME = "localOauth";
@@ -100,7 +102,7 @@ public class TestOAuthProcess extends ClusterTest {
       .inputType("json")
       .build();
 
-    HttpOAuthConfig oAuthConfig = HttpOAuthConfig.builder()
+    OAuthConfig oAuthConfig = OAuthConfig.builder()
       .callbackURL(hostname + "/update_oauth2_authtoken")
       .build();
 
@@ -110,7 +112,7 @@ public class TestOAuthProcess extends ClusterTest {
     // Add storage plugin for test OAuth
     HttpStoragePluginConfig mockStorageConfigWithWorkspace =
       new HttpStoragePluginConfig(false, configs, TIMEOUT, null, null, "", 80, "", "", "",
-        oAuthConfig, credentialsProvider);
+        oAuthConfig, credentialsProvider, AuthMode.SHARED_USER.name());
     mockStorageConfigWithWorkspace.setEnabled(true);
     cluster.defineStoragePlugin("localOauth", mockStorageConfigWithWorkspace);
   }
@@ -137,7 +139,7 @@ public class TestOAuthProcess extends ClusterTest {
       assertEquals("refresh_me", tokenTable.getRefreshToken());
 
     } catch (Exception e) {
-      logger.debug(e.getMessage());
+      logger.error(e.getMessage());
       fail();
     }
   }
@@ -183,7 +185,7 @@ public class TestOAuthProcess extends ClusterTest {
       RowSetUtilities.verify(expected, results);
 
     } catch (Exception e) {
-      logger.debug(e.getMessage());
+      logger.error(e.getMessage());
       fail();
     }
   }

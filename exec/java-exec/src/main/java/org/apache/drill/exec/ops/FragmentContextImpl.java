@@ -55,6 +55,7 @@ import org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint;
 import org.apache.drill.exec.proto.ExecProtos.FragmentHandle;
 import org.apache.drill.exec.proto.GeneralRPCProtos.Ack;
 import org.apache.drill.exec.proto.UserBitShared.QueryId;
+import org.apache.drill.exec.proto.UserBitShared.UserCredentials;
 import org.apache.drill.exec.proto.helper.QueryIdHelper;
 import org.apache.drill.exec.record.RecordBatch;
 import org.apache.drill.exec.rpc.RpcException;
@@ -319,7 +320,7 @@ public class FragmentContextImpl extends BaseFragmentContext implements Executor
     SchemaConfig schemaConfig = SchemaConfig
         .newBuilder(
             isImpersonationEnabled ? contextInformation.getQueryUser() : ImpersonationUtil.getProcessUserName(),
-            new FragmentSchemaConfigInfoProvider(fragmentOptions, contextInformation.getQueryUser(), context))
+            new FragmentSchemaConfigInfoProvider(fragmentOptions, contextInformation.getQueryUserCredentials(), context))
         .setIgnoreAuthErrors(isImpersonationEnabled)
         .build();
 
@@ -680,16 +681,16 @@ public class FragmentContextImpl extends BaseFragmentContext implements Executor
 
     private final OptionManager optionManager;
 
-    private final String queryUser;
+    private final UserCredentials queryUserCredentials;
 
     private final SchemaTreeProvider schemaTreeProvider;
 
     private final ViewExpansionContext viewExpansionContext;
 
     private FragmentSchemaConfigInfoProvider(OptionManager optionManager,
-        String queryUser, DrillbitContext context) {
+        UserCredentials queryUserCredentials, DrillbitContext context) {
       this.optionManager = optionManager;
-      this.queryUser = queryUser;
+      this.queryUserCredentials = queryUserCredentials;
       this.schemaTreeProvider = new SchemaTreeProvider(context);
       viewExpansionContext = new ViewExpansionContext(context.getConfig(), this);
     }
@@ -706,7 +707,12 @@ public class FragmentContextImpl extends BaseFragmentContext implements Executor
 
     @Override
     public String getQueryUserName() {
-      return queryUser;
+      return queryUserCredentials.getUserName();
+    }
+
+    @Override
+    public UserCredentials getQueryUserCredentials() {
+      return queryUserCredentials;
     }
 
     @Override

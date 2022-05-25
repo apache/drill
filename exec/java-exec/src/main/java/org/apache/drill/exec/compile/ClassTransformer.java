@@ -240,7 +240,7 @@ public class ClassTransformer {
       Map<String, Pair<byte[], ClassNode>> classesToMerge = Maps.newHashMap();
       for (byte[] clazz : implementationClasses) {
         totalBytecodeSize += clazz.length;
-        final ClassNode node = AsmUtil.classFromBytes(clazz, ClassReader.EXPAND_FRAMES);
+        ClassNode node = AsmUtil.classFromBytes(clazz, ClassReader.SKIP_FRAMES);
         if (!AsmUtil.isClassOk(logger, "implementationClasses", node)) {
           throw new IllegalStateException("Problem found with implementationClasses");
         }

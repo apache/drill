@@ -405,8 +405,7 @@ public class ScanLevelProjection {
       }
       rootProjection = Projections.build(outputProj);
     }
-    readerProjection = ProjectionFilter.providedSchemaFilter(
-        rootProjection, readerSchema, errorContext);
+    readerProjection = ProjectionFilter.providedSchemaFilter(rootProjection, readerSchema, errorContext);
   }
 
   /**
@@ -445,8 +444,7 @@ public class ScanLevelProjection {
     // If not consumed, put the wildcard column into the projection list as a
     // placeholder to be filled in later with actual table columns.
     if (expanded) {
-      projectionType =
-          readerSchema.booleanProperty(TupleMetadata.IS_STRICT_SCHEMA_PROP)
+      projectionType = readerSchema.booleanProperty(TupleMetadata.IS_STRICT_SCHEMA_PROP)
           ? ScanProjectionType.STRICT_SCHEMA_WILDCARD
           : ScanProjectionType.SCHEMA_WILDCARD;
     } else if (wildcardPosn != -1) {

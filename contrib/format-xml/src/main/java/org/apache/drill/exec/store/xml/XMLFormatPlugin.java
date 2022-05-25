@@ -21,21 +21,22 @@ package org.apache.drill.exec.store.xml;
 import org.apache.drill.common.logical.StoragePluginConfig;
 import org.apache.drill.common.types.TypeProtos.MinorType;
 import org.apache.drill.common.types.Types;
-import org.apache.drill.exec.physical.impl.scan.file.FileScanFramework;
-import org.apache.drill.exec.physical.impl.scan.file.FileScanFramework.FileScanBuilder;
-import org.apache.drill.exec.physical.impl.scan.framework.ManagedReader;
+import org.apache.drill.exec.physical.impl.scan.v3.ManagedReader;
+import org.apache.drill.exec.physical.impl.scan.v3.ManagedReader.EarlyEofException;
+import org.apache.drill.exec.physical.impl.scan.v3.file.FileReaderFactory;
+import org.apache.drill.exec.physical.impl.scan.v3.file.FileScanLifecycleBuilder;
+import org.apache.drill.exec.physical.impl.scan.v3.file.FileSchemaNegotiator;
 import org.apache.drill.exec.server.DrillbitContext;
-import org.apache.drill.exec.server.options.OptionManager;
 import org.apache.drill.exec.store.dfs.easy.EasyFormatPlugin;
 import org.apache.drill.exec.store.dfs.easy.EasySubScan;
-import org.apache.drill.exec.store.dfs.easy.EasyFormatPlugin.ScanFrameworkVersion;
 import org.apache.hadoop.conf.Configuration;
 
 public class XMLFormatPlugin extends EasyFormatPlugin<XMLFormatConfig> {
 
   public static final String DEFAULT_NAME = "xml";
+  public static final String OPERATOR_TYPE = "XML_SUB_SCAN";
 
-  public static class XMLReaderFactory extends FileScanFramework.FileReaderFactory {
+  public static class XMLReaderFactory extends FileReaderFactory {
     private final XMLBatchReader.XMLReaderConfig readerConfig;
     private final EasySubScan scan;
 
@@ -45,8 +46,8 @@ public class XMLFormatPlugin extends EasyFormatPlugin<XMLFormatConfig> {
     }
 
     @Override
-    public ManagedReader<? extends FileScanFramework.FileSchemaNegotiator> newReader() {
-      return new XMLBatchReader(readerConfig, scan);
+    public ManagedReader newReader(FileSchemaNegotiator negotiator) throws EarlyEofException {
+      return new XMLBatchReader(readerConfig, scan, negotiator);
     }
   }
 
@@ -64,27 +65,19 @@ public class XMLFormatPlugin extends EasyFormatPlugin<XMLFormatConfig> {
         .writable(false)
         .blockSplittable(false)
         .compressible(true)
-        .supportsProjectPushdown(true)
         .extensions(pluginConfig.getExtensions())
         .fsConf(fsConf)
-        .defaultName(DEFAULT_NAME)
-        .scanVersion(ScanFrameworkVersion.EVF_V1)
+        .readerOperatorType(OPERATOR_TYPE)
+        .scanVersion(ScanFrameworkVersion.EVF_V2)
         .supportsLimitPushdown(true)
+        .supportsProjectPushdown(true)
+        .defaultName(XMLFormatPlugin.DEFAULT_NAME)
         .build();
   }
 
   @Override
-  public ManagedReader<? extends FileScanFramework.FileSchemaNegotiator> newBatchReader(
-    EasySubScan scan, OptionManager options) {
-    return new XMLBatchReader(formatConfig.getReaderConfig(this), scan);
-  }
-
-  @Override
-  protected FileScanFramework.FileScanBuilder frameworkBuilder(OptionManager options, EasySubScan scan) {
-    FileScanBuilder builder = new FileScanBuilder();
-    builder.setReaderFactory(new XMLReaderFactory(new XMLBatchReader.XMLReaderConfig(this), scan));
-    initScanBuilder(builder, scan);
+  protected void configureScan(FileScanLifecycleBuilder builder, EasySubScan scan) {
     builder.nullType(Types.optional(MinorType.VARCHAR));
-    return builder;
+    builder.readerFactory(new XMLReaderFactory(formatConfig.getReaderConfig(this), scan));
   }
 }

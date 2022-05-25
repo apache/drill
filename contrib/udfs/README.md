@@ -224,8 +224,24 @@ SELECT time_bucket(time_stamp, 30000) AS five_min, avg(cpu)
 Drill UDF for parsing User Agent Strings.
 This function is based on Niels Basjes Java library for parsing user agent strings which is available here: <https://github.com/nielsbasjes/yauaa>.
 
-### Usage
+### Basic usage
 The function `parse_user_agent()` takes a user agent string as an argument and returns a map of the available fields. Note that not every field will be present in every user agent string. 
+
+The basic function signature looks like this
+
+    parse_user_agent ( <useragent> )
+    parse_user_agent ( <useragent> , <desired fieldname> )
+
+to support the analysis of the Client Hints it now also supports
+
+    parse_user_agent ( <useragent> , [<header name>,<value>]+ )
+
+or the variant which requires the presence of a `User-Agent` header.
+
+    parse_user_agent ( [<header name>,<value>]+ )
+
+### Analyzing the User-Agent
+
 ```
 SELECT parse_user_agent( columns[0] ) as ua 
 FROM dfs.`/tmp/data/drill-httpd/ua.csv`;
@@ -272,6 +288,96 @@ The function can also be called with an optional field as an argument. IE:
 SELECT parse_user_agent( `user_agent`, 'AgentName` ) as AgentName ...
 ```
 which will just return the requested field. If the user agent string is empty, all fields will have the value of `Hacker`.  
+
+### Analyzing the User-Agent Client Hints
+
+Assume an Apache Httpd webserver with the following LogFormat config:
+
+    LogFormat "%a %l %u %t \"%r\" %>s %b \"%{Referer}i\" \"%{User-Agent}i\" \"%{Sec-CH-UA}i\" \"%{Sec-CH-UA-Arch}i\" \"%{Sec-CH-UA-Bitness}i\" \"%{Sec-CH-UA-Full-Version}i\" \"%{Sec-CH-UA-Full-Version-List}i\" \"%{Sec-CH-UA-Mobile}i\" \"%{Sec-CH-UA-Model}i\" \"%{Sec-CH-UA-Platform}i\" \"%{Sec-CH-UA-Platform-Version}i\" \"%{Sec-CH-UA-WoW64}i\" %V" combinedhintsvhost
+
+Behind this Apache Httpd webserver is a website that returns the header
+
+    Accept-CH: Sec-CH-UA, Sec-CH-UA-Arch, Sec-CH-UA-Bitness, Sec-CH-UA-Full-Version, Sec-CH-UA-Full-Version-List, Sec-CH-UA-Mobile, Sec-CH-UA-Model, Sec-CH-UA-Platform, Sec-CH-UA-Platform-Version, Sec-CH-UA-WoW64
+
+With all of this in place: these are two of the lines that are found in the access log of this Apache Httpd webserver:
+
+    45.138.228.54 - - [02/May/2022:12:25:10 +0200] "GET / HTTP/1.1" 200 16141 "-" "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/100.0.4896.127 Safari/537.36" "\" Not A;Brand\";v=\"99\", \"Chromium\";v=\"100\", \"Google Chrome\";v=\"100\"" "\"x86\"" "\"64\"" "\"100.0.4896.127\"" "\" Not A;Brand\";v=\"99.0.0.0\", \"Chromium\";v=\"100.0.4896.127\", \"Google Chrome\";v=\"100.0.4896.127\"" "?0" "\"\"" "\"Linux\"" "\"5.13.0\"" "?0" try.yauaa.basjes.nl
+    45.138.228.54 - - [02/May/2022:12:25:34 +0200] "GET / HTTP/1.1" 200 15376 "-" "Mozilla/5.0 (Linux; Android 10; K) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/101.0.0.0 Mobile Safari/537.36" "\" Not A;Brand\";v=\"99\", \"Chromium\";v=\"101\", \"Google Chrome\";v=\"101\"" "\"\"" "-" "\"101.0.4951.41\"" "\" Not A;Brand\";v=\"99.0.0.0\", \"Chromium\";v=\"101.0.4951.41\", \"Google Chrome\";v=\"101.0.4951.41\"" "?1" "\"Nokia 7.2\"" "\"Android\"" "\"11.0.0\"" "?0" try.yauaa.basjes.nl
+
+For this example the name of this file is `access.hints`
+
+When doing a query on this data and ONLY use the User-Agent as the input:
+
+    SELECT  uadata.ua.DeviceClass                AS DeviceClass,
+            uadata.ua.AgentNameVersionMajor      AS AgentNameVersionMajor,
+            uadata.ua.OperatingSystemNameVersion AS OperatingSystemNameVersion
+    FROM (
+        SELECT
+                parse_user_agent(`request_user-agent`) AS ua
+        FROM    table(
+                    dfs.`/tmp/access.hints` (
+                        type => 'httpd',
+                        logFormat => '%a %l %u %t "%r" %>s %b "%{Referer}i" "%{User-Agent}i" "%{Sec-CH-UA}i" "%{Sec-CH-UA-Arch}i" "%{Sec-CH-UA-Bitness}i" "%{Sec-CH-UA-Full-Version}i" "%{Sec-CH-UA-Full-Version-List}i" "%{Sec-CH-UA-Mobile}i" "%{Sec-CH-UA-Model}i" "%{Sec-CH-UA-Platform}i" "%{Sec-CH-UA-Platform-Version}i" "%{Sec-CH-UA-WoW64}i" %V',
+                        flattenWildcards => true
+                    )
+                )
+    ) AS uadata;
+
+it produces
+
+    +-------------+-----------------------+----------------------------+
+    | DeviceClass | AgentNameVersionMajor | OperatingSystemNameVersion |
+    +-------------+-----------------------+----------------------------+
+    | Desktop     | Chrome 100            | Linux ??                   |
+    | Phone       | Chrome 101            | Android ??                 |
+    +-------------+-----------------------+----------------------------+
+    2 rows selected (0.183 seconds)
+
+The first example here does not have the exact version of the operating system as part of the User-Agent and this results in `Linux ??`.
+
+The second example shows `Android 10` but was recognized as being a `reduced` variant of the `User-Agent`, this means that the version `10` is an invalid standard value that is not true. So here you see `Android ??`. See https://www.chromium.org/updates/ua-reduction
+
+Now let's repeat the same and use the recorded `User-Agent Client Hint` header values:
+
+    SELECT  uadata.ua.DeviceClass                AS DeviceClass,
+            uadata.ua.AgentNameVersionMajor      AS AgentNameVersionMajor,
+            uadata.ua.OperatingSystemNameVersion AS OperatingSystemNameVersion
+    FROM (
+        SELECT
+                parse_user_agent(
+                    'User-Agent' ,                  `request_user-agent`,
+                    'sec-ch-ua',                    `request_header_sec-ch-ua`,
+                    'sec-ch-ua-arch',               `request_header_sec-ch-ua-arch`,
+                    'sec-ch-ua-bitness',            `request_header_sec-ch-ua-bitness`,
+                    'sec-ch-ua-full-version',       `request_header_sec-ch-ua-full-version`,
+                    'sec-ch-ua-full-version-list',  `request_header_sec-ch-ua-full-version-list`,
+                    'sec-ch-ua-mobile',             `request_header_sec-ch-ua-mobile`,
+                    'sec-ch-ua-model',              `request_header_sec-ch-ua-model`,
+                    'sec-ch-ua-platform',           `request_header_sec-ch-ua-platform`,
+                    'sec-ch-ua-platform-version',   `request_header_sec-ch-ua-platform-version`,
+                    'sec-ch-ua-wow64',              `request_header_sec-ch-ua-wow64`
+                ) AS ua
+        FROM    table(
+                    dfs.`/tmp/access.hints` (
+                        type => 'httpd',
+                        logFormat => '%a %l %u %t "%r" %>s %b "%{Referer}i" "%{User-Agent}i" "%{Sec-CH-UA}i" "%{Sec-CH-UA-Arch}i" "%{Sec-CH-UA-Bitness}i" "%{Sec-CH-UA-Full-Version}i" "%{Sec-CH-UA-Full-Version-List}i" "%{Sec-CH-UA-Mobile}i" "%{Sec-CH-UA-Model}i" "%{Sec-CH-UA-Platform}i" "%{Sec-CH-UA-Platform-Version}i" "%{Sec-CH-UA-WoW64}i" %V',
+                        flattenWildcards => true
+                    )
+                )
+    ) AS uadata;
+
+
+which produces
+
+    +-------------+-----------------------+----------------------------+
+    | DeviceClass | AgentNameVersionMajor | OperatingSystemNameVersion |
+    +-------------+-----------------------+----------------------------+
+    | Desktop     | Chrome 100            | Linux 5.13.0               |
+    | Phone       | Chrome 101            | Android 11.0.0             |
+    +-------------+-----------------------+----------------------------+
+    2 rows selected (0.275 seconds)
+
+The improvement after adding the Client Hints is evident.
 
 ## Map Schema Function
 This function allows you to drill down into the schema of maps.  The REST API and JDBC interfaces will only return `MAP`, `LIST` for the MAP, however, it is not possible to get 

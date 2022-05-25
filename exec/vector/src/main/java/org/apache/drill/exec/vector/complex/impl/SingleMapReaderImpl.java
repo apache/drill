@@ -105,7 +105,5 @@ public class SingleMapReaderImpl extends AbstractFieldReader {
     SingleMapWriter impl = (SingleMapWriter) writer.map(name);
     impl.container.copyFromSafe(idx(), impl.idx(), vector);
   }
-
-
 }
 

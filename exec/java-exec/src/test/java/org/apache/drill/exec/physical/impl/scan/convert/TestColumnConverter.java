@@ -19,7 +19,7 @@ package org.apache.drill.exec.physical.impl.scan.convert;
 
 import static org.apache.drill.test.rowSet.RowSetUtilities.intArray;
 
-import org.apache.drill.categories.RowSetTests;
+import org.apache.drill.categories.RowSetTest;
 import org.apache.drill.common.types.TypeProtos.MinorType;
 import org.apache.drill.exec.physical.rowSet.RowSet.SingleRowSet;
 import org.apache.drill.exec.physical.rowSet.RowSetTestUtils;
@@ -43,7 +43,7 @@ import org.junit.experimental.categories.Category;
  * Not really much to test, more a verification that the pattern works
  * in practice.
  */
-@Category(RowSetTests.class)
+@Category(RowSetTest.class)
 public class TestColumnConverter extends SubOperatorTest {
 
   private static class MockSource {

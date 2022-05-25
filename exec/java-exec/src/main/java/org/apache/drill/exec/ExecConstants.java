@@ -197,7 +197,7 @@ public final class ExecConstants {
       new OptionDescription("Linearly reduces partition sender buffer row count after this number of receivers. Default is 0 (disabled). (Since Drill 1.18)"));
 
   public static final String SSL_PROVIDER = "drill.exec.ssl.provider"; // valid values are "JDK", "OPENSSL" // default JDK
-  public static final String SSL_PROTOCOL = "drill.exec.ssl.protocol"; // valid values are SSL, SSLV2, SSLV3, TLS, TLSV1, TLSv1.1, TLSv1.2(default)
+  public static final String SSL_PROTOCOL = "drill.exec.ssl.protocol"; // valid values are SSL, SSLV2, SSLV3, TLS, TLSV1, TLSv1.1, TLSv1.2, TLSv1.3(default)
   public static final String SSL_KEYSTORE_TYPE = "drill.exec.ssl.keyStoreType";
   public static final String SSL_KEYSTORE_PATH = "drill.exec.ssl.keyStorePath";     // path to keystore. default : $JRE_HOME/lib/security/keystore.jks
   public static final String SSL_KEYSTORE_PASSWORD = "drill.exec.ssl.keyStorePassword"; // default: changeit
@@ -471,6 +471,9 @@ public final class ExecConstants {
   public static final OptionValidator PARQUET_COMPLEX_BATCH_NUM_RECORDS_VALIDATOR = new RangeLongValidator(PARQUET_COMPLEX_BATCH_NUM_RECORDS, 1, ValueVector.MAX_ROW_COUNT -1,
       new OptionDescription("Complex Parquet Reader maximum number of records per batch."));
 
+  public static final String ENABLE_V2_JSON_READER_KEY = "store.json.enable_v2_reader";
+  public static final BooleanValidator ENABLE_V2_JSON_READER_VALIDATOR = new BooleanValidator(ENABLE_V2_JSON_READER_KEY,
+      new OptionDescription("Enable the experimental \"version 2\" JSON reader."));
   public static final String JSON_ALL_TEXT_MODE = "store.json.all_text_mode";
   public static final BooleanValidator JSON_READER_ALL_TEXT_MODE_VALIDATOR = new BooleanValidator(JSON_ALL_TEXT_MODE,
       new OptionDescription("Drill reads all data from the JSON files as VARCHAR. Prevents schema change errors."));

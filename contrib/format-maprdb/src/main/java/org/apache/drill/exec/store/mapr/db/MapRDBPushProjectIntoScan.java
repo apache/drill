@@ -17,7 +17,6 @@
  */
 package org.apache.drill.exec.store.mapr.db;
 
-import org.apache.drill.shaded.guava.com.google.common.collect.Lists;
 import org.apache.calcite.plan.RelOptRuleCall;
 import org.apache.calcite.plan.RelOptRuleOperand;
 import org.apache.calcite.plan.RelTrait;
@@ -38,6 +37,7 @@ import org.apache.drill.exec.store.mapr.db.json.JsonTableGroupScan;
 import org.apache.drill.exec.util.Utilities;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  * Push a physical Project into Scan. Currently, this rule is only doing projection pushdown for MapRDB-JSON tables
@@ -46,7 +46,6 @@ import java.util.List;
  * planning phase.
  */
 public abstract class MapRDBPushProjectIntoScan extends StoragePluginOptimizerRule {
-  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(MapRDBPushProjectIntoScan.class);
 
   private MapRDBPushProjectIntoScan(RelOptRuleOperand operand, String description) {
     super(operand, description);
@@ -99,10 +98,9 @@ public abstract class MapRDBPushProjectIntoScan extends StoragePluginOptimizerRu
           groupScan.clone(columnInfo.getFields()),
           columnInfo.createNewRowType(project.getInput().getCluster().getTypeFactory()), scan.getTable());
 
-      List<RexNode> newProjects = Lists.newArrayList();
-      for (RexNode n : project.getChildExps()) {
-        newProjects.add(n.accept(columnInfo.getInputReWriter()));
-      }
+      List<RexNode> newProjects = project.getProjects().stream()
+        .map(n -> n.accept(columnInfo.getInputReWriter()))
+        .collect(Collectors.toList());
 
       final ProjectPrel newProj =
           new ProjectPrel(project.getCluster(),

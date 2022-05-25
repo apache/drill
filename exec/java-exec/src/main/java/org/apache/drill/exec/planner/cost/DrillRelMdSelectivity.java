@@ -372,7 +372,7 @@ public class DrillRelMdSelectivity extends RelMdSelectivity {
     int[] adjustments = new int[rel.getRowType().getFieldCount()];
 
     if (DrillRelOptUtil.guessRows(rel)) {
-      return super.getSelectivity(rel, mq, predicate);
+      return RelMdUtil.guessSelectivity(predicate);
     }
 
     if (predicate != null) {

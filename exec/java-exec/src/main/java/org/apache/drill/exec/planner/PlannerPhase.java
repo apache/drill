@@ -18,6 +18,7 @@
 package org.apache.drill.exec.planner;
 
 import org.apache.drill.exec.planner.logical.ConvertMetadataAggregateToDirectScanRule;
+import org.apache.drill.exec.planner.logical.DrillDistinctJoinToSemiJoinRule;
 import org.apache.drill.exec.planner.physical.MetadataAggPrule;
 import org.apache.drill.exec.planner.physical.MetadataControllerPrule;
 import org.apache.drill.exec.planner.physical.MetadataHandlerPrule;
@@ -346,6 +347,7 @@ public enum PlannerPhase {
       // Due to infinite loop in planning (DRILL-3257/CALCITE-1271), temporarily use this rule in Hep planner
       // RuleInstance.PROJECT_SET_OP_TRANSPOSE_RULE,
       RuleInstance.PROJECT_WINDOW_TRANSPOSE_RULE,
+      DrillPushProjectIntoScanRule.LOGICAL_INSTANCE,
       DrillPushProjectIntoScanRule.INSTANCE,
       DrillPushProjectIntoScanRule.DRILL_LOGICAL_INSTANCE,
 
@@ -353,7 +355,8 @@ public enum PlannerPhase {
        Convert from Calcite Logical to Drill Logical Rules.
        */
       RuleInstance.EXPAND_CONVERSION_RULE,
-      DrillScanRule.INSTANCE,
+      DrillScanRule.LOGICAL_TABLE_SCAN_TO_DRILL,
+      DrillScanRule.DIR_PRUNED_TABLE_SCAN_TO_DRILL,
       DrillFilterRule.INSTANCE,
       DrillProjectRule.INSTANCE,
       DrillWindowRule.INSTANCE,
@@ -401,6 +404,8 @@ public enum PlannerPhase {
     if (optimizerRulesContext.getPlannerSettings().isHashJoinEnabled() &&
         optimizerRulesContext.getPlannerSettings().isSemiJoinEnabled()) {
       basicRules.add(RuleInstance.SEMI_JOIN_PROJECT_RULE);
+      basicRules.add(DrillDistinctJoinToSemiJoinRule.INSTANCE);
+      basicRules.add(RuleInstance.JOIN_TO_SEMI_JOIN_RULE);
     }
 
     return RuleSets.ofList(basicRules.build());

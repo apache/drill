@@ -31,7 +31,7 @@ import org.apache.drill.exec.store.dfs.FileSystemConfig;
 import org.apache.drill.exec.store.dfs.WorkspaceConfig;
 
 import org.apache.drill.exec.store.easy.sequencefile.SequenceFileFormatConfig;
-import org.apache.drill.exec.store.easy.text.TextFormatPlugin.TextFormatConfig;
+import org.apache.drill.exec.store.easy.text.TextFormatConfig;
 
 /**
  * Utility methods to speed up tests.

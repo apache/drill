@@ -117,6 +117,17 @@ public class TestEmptyInputSql extends BaseTestQuery {
 
   @Test
   public void testQueryMapArrayEmptyJson() throws Exception {
+    try {
+      enableV2Reader(false);
+      doTestQueryMapArrayEmptyJson();
+      enableV2Reader(true);
+      doTestQueryMapArrayEmptyJson();
+    } finally {
+      resetV2Reader();
+    }
+  }
+
+  private void doTestQueryMapArrayEmptyJson() throws Exception {
     SchemaBuilder schemaBuilder = new SchemaBuilder()
         .addNullable("col1", TypeProtos.MinorType.INT)
         .addNullable("col2", TypeProtos.MinorType.INT)
@@ -130,6 +141,14 @@ public class TestEmptyInputSql extends BaseTestQuery {
         .schemaBaseLine(expectedSchema)
         .build()
         .run();
+  }
+
+  private void enableV2Reader(boolean enable) throws Exception {
+    alterSession(ExecConstants.ENABLE_V2_JSON_READER_KEY, enable);
+  }
+
+  private void resetV2Reader() throws Exception {
+    resetSessionOption(ExecConstants.ENABLE_V2_JSON_READER_KEY);
   }
 
   /**

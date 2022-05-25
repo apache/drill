@@ -139,7 +139,7 @@ public abstract class DynamicSchemaFilter implements ProjectionFilter {
   protected ProjResult fromSchema(ColumnMetadata schemaCol,
       ColumnMetadata probeCol) {
     SchemaUtils.verifyConsistency(schemaCol, probeCol, source, errorContext);
-    if (schemaCol.isMap()) {
+    if (schemaCol.isMap() || schemaCol.isDict()) {
       return new ProjResult(true, schemaCol, mapProjection(schemaCol));
     } else {
       return new ProjResult(true, schemaCol);

@@ -35,6 +35,7 @@ public class CredentialProviderUtils {
     if (credentialsProvider != null) {
       return credentialsProvider;
     }
+
     ImmutableMap.Builder<String, String> mapBuilder = ImmutableMap.builder();
     if (username != null) {
       mapBuilder.put(UsernamePasswordCredentials.USERNAME, username);

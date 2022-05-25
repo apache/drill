@@ -17,7 +17,7 @@
  */
 package org.apache.drill.exec.store.httpd;
 
-import org.apache.drill.categories.RowSetTests;
+import org.apache.drill.categories.RowSetTest;
 import org.apache.drill.common.logical.FormatPluginConfig;
 import org.apache.drill.common.types.TypeProtos.MinorType;
 import org.apache.drill.exec.physical.rowSet.RowSet;
@@ -36,7 +36,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 
-@Category(RowSetTests.class)
+@Category(RowSetTest.class)
 public class TestHTTPDLogReaderUserAgent extends ClusterTest {
 
   @BeforeClass

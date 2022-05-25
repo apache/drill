@@ -17,7 +17,7 @@
  */
 package org.apache.drill.exec.store.phoenix.secured;
 
-import org.apache.drill.categories.RowSetTests;
+import org.apache.drill.categories.RowSetTest;
 import org.apache.drill.categories.SlowTest;
 import org.apache.drill.common.types.TypeProtos.MinorType;
 import org.apache.drill.exec.physical.rowSet.RowSet;
@@ -44,7 +44,7 @@ import static org.apache.drill.test.rowSet.RowSetUtilities.shortArray;
 import static org.apache.drill.test.rowSet.RowSetUtilities.strArray;
 
 @Tag(SlowTest.TAG)
-@Tag(RowSetTests.TAG)
+@Tag(RowSetTest.TAG)
 public class SecuredPhoenixDataTypeTest extends SecuredPhoenixBaseTest {
 
   @Test

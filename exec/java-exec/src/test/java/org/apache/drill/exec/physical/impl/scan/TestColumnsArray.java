@@ -22,7 +22,7 @@ import static org.junit.Assert.fail;
 
 import java.util.List;
 
-import org.apache.drill.categories.RowSetTests;
+import org.apache.drill.categories.RowSetTest;
 import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.common.types.TypeProtos.MinorType;
 import org.apache.drill.exec.physical.impl.scan.ScanTestUtils.MockScanBuilder;
@@ -50,7 +50,7 @@ import org.junit.experimental.categories.Category;
  * Test the "columns" array mechanism integrated with the scan schema
  * orchestrator including simulating reading data.
  */
-@Category(RowSetTests.class)
+@Category(RowSetTest.class)
 public class TestColumnsArray extends SubOperatorTest {
 
   private static class MockScanner {

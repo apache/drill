@@ -463,8 +463,9 @@ public class DrillPushRowKeyJoinToScanRule extends RelOptRule {
       }
       // If no exprs present in projection the column index remains the same in the child.
       // Otherwise, the column index is the `RexInputRef` index.
-      if (curRel != null && curRel instanceof DrillProjectRel) {
-        List<RexNode> childExprs = curRel.getChildExps();
+      if (curRel instanceof DrillProjectRel) {
+        DrillProjectRel projectRel = (DrillProjectRel) curRel;
+        List<RexNode> childExprs = projectRel.getProjects();
         if (childExprs != null && childExprs.size() > 0) {
           if (childExprs.get(curIndex) instanceof RexInputRef) {
             curIndex = ((RexInputRef) childExprs.get(curIndex)).getIndex();

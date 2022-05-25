@@ -19,6 +19,8 @@
 package org.apache.drill.exec.store.jdbc;
 
 import org.apache.drill.common.exceptions.UserRemoteException;
+import org.apache.drill.common.logical.security.PlainCredentialsProvider;
+import org.apache.drill.common.logical.StoragePluginConfig.AuthMode;
 import org.apache.drill.common.types.TypeProtos.DataMode;
 import org.apache.drill.common.types.TypeProtos.MinorType;
 import org.apache.drill.exec.physical.rowSet.DirectRowSet;
@@ -76,14 +78,20 @@ public class TestJdbcWriterWithH2 extends ClusterTest {
          FileReader fileReader = new FileReader(scriptFile.getFile())) {
       RunScript.execute(connection, fileReader);
     }
+
+    Map<String, String> credentials = new HashMap<>();
+    credentials.put("username", "root");
+    credentials.put("password", "root");
+    PlainCredentialsProvider credentialsProvider = new PlainCredentialsProvider(credentials);
+
     Map<String, Object> sourceParameters =  new HashMap<>();
     sourceParameters.put("minimumIdle", 1);
     JdbcStorageConfig jdbcStorageConfig = new JdbcStorageConfig("org.h2.Driver", connString,
-      "root", "root", true, true, sourceParameters, null, 10000);
+      "root", "root", true, true, sourceParameters, credentialsProvider, AuthMode.SHARED_USER.name(), 10000);
     jdbcStorageConfig.setEnabled(true);
 
     JdbcStorageConfig jdbcStorageConfigNoWrite = new JdbcStorageConfig("org.h2.Driver", connString,
-      "root", "root", true, false, sourceParameters, null, 10000);
+      "root", "root", true, false, sourceParameters, credentialsProvider, AuthMode.SHARED_USER.name(), 10000);
     jdbcStorageConfig.setEnabled(true);
     jdbcStorageConfigNoWrite.setEnabled(true);
 
@@ -109,13 +117,13 @@ public class TestJdbcWriterWithH2 extends ClusterTest {
       DirectRowSet results = queryBuilder().sql(testQuery).rowSet();
 
       TupleMetadata expectedSchema = new SchemaBuilder()
-        .add("ID", MinorType.BIGINT, DataMode.OPTIONAL)
-        .add("NAME", MinorType.BIGINT, DataMode.OPTIONAL)
+        .add("ID", MinorType.INT, DataMode.OPTIONAL)
+        .add("NAME", MinorType.INT, DataMode.OPTIONAL)
         .buildSchema();
 
       RowSet expected = new RowSetBuilder(client.allocator(), expectedSchema)
-        .addRow(1L, 2L)
-        .addRow(3L, 4L)
+        .addRow(1, 2)
+        .addRow(3, 4)
         .build();
 
       RowSetUtilities.verify(expected, results);
@@ -182,13 +190,13 @@ public class TestJdbcWriterWithH2 extends ClusterTest {
       DirectRowSet results = queryBuilder().sql(testQuery).rowSet();
 
       TupleMetadata expectedSchema = new SchemaBuilder()
-        .add("My id", MinorType.BIGINT, DataMode.OPTIONAL)
-        .add("My name", MinorType.BIGINT, DataMode.OPTIONAL)
+        .add("My id", MinorType.INT, DataMode.OPTIONAL)
+        .add("My name", MinorType.INT, DataMode.OPTIONAL)
         .buildSchema();
 
       RowSet expected = new RowSetBuilder(client.allocator(), expectedSchema)
-        .addRow(1L, 2L)
-        .addRow(3L, 4L)
+        .addRow(1, 2)
+        .addRow(3, 4)
         .build();
 
       RowSetUtilities.verify(expected, results);
@@ -252,13 +260,13 @@ public class TestJdbcWriterWithH2 extends ClusterTest {
       DirectRowSet results = queryBuilder().sql(testQuery).rowSet();
 
       TupleMetadata expectedSchema = new SchemaBuilder()
-        .add("ID", MinorType.BIGINT, DataMode.OPTIONAL)
-        .add("NAME", MinorType.BIGINT, DataMode.OPTIONAL)
+        .add("ID", MinorType.INT, DataMode.OPTIONAL)
+        .add("NAME", MinorType.INT, DataMode.OPTIONAL)
         .buildSchema();
 
       RowSet expected = new RowSetBuilder(client.allocator(), expectedSchema)
-        .addRow(1L, 2L)
-        .addRow(3L, 4L)
+        .addRow(1, 2)
+        .addRow(3, 4)
         .build();
 
       RowSetUtilities.verify(expected, results);
@@ -282,13 +290,13 @@ public class TestJdbcWriterWithH2 extends ClusterTest {
       DirectRowSet results = queryBuilder().sql(testQuery).rowSet();
 
       TupleMetadata expectedSchema = new SchemaBuilder()
-        .add("ID", MinorType.BIGINT, DataMode.OPTIONAL)
-        .add("NAME", MinorType.BIGINT, DataMode.OPTIONAL)
+        .add("ID", MinorType.INT, DataMode.OPTIONAL)
+        .add("NAME", MinorType.INT, DataMode.OPTIONAL)
         .buildSchema();
 
       RowSet expected = new RowSetBuilder(client.allocator(), expectedSchema)
-        .addRow(1L, 2L)
-        .addRow(3L, 4L)
+        .addRow(1, 2)
+        .addRow(3, 4)
         .build();
 
       RowSetUtilities.verify(expected, results);

@@ -21,7 +21,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertTrue;
 
-import org.apache.drill.categories.RowSetTests;
+import org.apache.drill.categories.RowSetTest;
 import org.apache.drill.common.types.TypeProtos.DataMode;
 import org.apache.drill.common.types.TypeProtos.MinorType;
 import org.apache.drill.exec.record.MaterializedField;
@@ -42,7 +42,7 @@ import org.junit.experimental.categories.Category;
  * overflow, and filling in empty values.
  */
 
-@Category(RowSetTests.class)
+@Category(RowSetTest.class)
 public class TestFixedWidthWriter extends SubOperatorTest {
 
   public static class TestIndex implements ColumnWriterIndex {

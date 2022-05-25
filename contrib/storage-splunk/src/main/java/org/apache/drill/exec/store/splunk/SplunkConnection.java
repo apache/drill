@@ -31,6 +31,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.concurrent.TimeUnit;
+import java.util.Optional;
 
 /**
  * This class wraps the functionality of the Splunk connection for Drill.
@@ -39,7 +40,7 @@ public class SplunkConnection {
 
   private static final Logger logger = LoggerFactory.getLogger(SplunkConnection.class);
 
-  private final UsernamePasswordCredentials credentials;
+  private final Optional<UsernamePasswordCredentials> credentials;
   private final String hostname;
   private final int port;
   private Service service;
@@ -73,8 +74,8 @@ public class SplunkConnection {
     ServiceArgs loginArgs = new ServiceArgs();
     loginArgs.setHost(hostname);
     loginArgs.setPort(port);
-    loginArgs.setPassword(credentials.getPassword());
-    loginArgs.setUsername(credentials.getUsername());
+    loginArgs.setPassword(credentials.map(UsernamePasswordCredentials::getPassword).orElse(null));
+    loginArgs.setUsername(credentials.map(UsernamePasswordCredentials::getUsername).orElse(null));
     try {
       connectionAttempts--;
       service = Service.connect(loginArgs);

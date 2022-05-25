@@ -17,9 +17,10 @@
  */
 package org.apache.drill.exec.expr.fn.impl;
 
+import static org.apache.drill.exec.ExecConstants.ENABLE_UNION_TYPE_KEY;
+import static org.apache.drill.exec.ExecConstants.ENABLE_V2_JSON_READER_KEY;
 import static org.junit.Assert.assertEquals;
 
-import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.planner.physical.PlannerSettings;
 import org.apache.drill.exec.rpc.RpcException;
 import org.apache.drill.test.ClusterFixture;
@@ -307,8 +308,34 @@ public class TestTypeFns extends ClusterTest {
         .go();
   }
 
+  /**
+   * The V1 JSON reader appears to omit missing columns.
+   */
   @Test
-  public void testTypeOfWithFile() throws Exception {
+  public void testTypeOfWithFileV1() throws Exception {
+    try {
+      client.alterSession(ENABLE_V2_JSON_READER_KEY, false);
+      // Column `x` does not actually appear in the file.
+      String sql ="SELECT typeof(bi) AS bi_t, typeof(fl) AS fl_t, typeof(st) AS st_t,\n" +
+                  "       typeof(mp) AS mp_t, typeof(ar) AS ar_t, typeof(nu) AS nu_t,\n" +
+                  "       typeof(x) AS x_t\n" +
+                  "FROM cp.`jsoninput/allTypes.json`";
+       testBuilder()
+        .sqlQuery(sql)
+        .ordered()
+        .baselineColumns("bi_t",   "fl_t",   "st_t",    "mp_t", "ar_t",   "nu_t", "x_t")
+        .baselineValues( "BIGINT", "FLOAT8", "VARCHAR", "MAP",  "BIGINT", "NULL", "NULL")
+        .go();
+    } finally {
+      client.resetSession(ENABLE_V2_JSON_READER_KEY);
+    }
+  }
+
+  /**
+   * The V2 JSON reader fills in missing columns with a nullable VARCHAR.
+   */
+  @Test
+  public void testTypeOfWithFileV2() throws Exception {
     // Column `x` does not actually appear in the file.
     String sql ="SELECT typeof(bi) AS bi_t, typeof(fl) AS fl_t, typeof(st) AS st_t,\n" +
                 "       typeof(mp) AS mp_t, typeof(ar) AS ar_t, typeof(nu) AS nu_t,\n" +
@@ -317,18 +344,18 @@ public class TestTypeFns extends ClusterTest {
      testBuilder()
       .sqlQuery(sql)
       .ordered()
-      .baselineColumns("bi_t",   "fl_t",   "st_t",    "mp_t", "ar_t",   "nu_t", "x_t")
-      .baselineValues( "BIGINT", "FLOAT8", "VARCHAR", "MAP",  "BIGINT", "NULL", "NULL")
+      .baselineColumns("bi_t",   "fl_t",   "st_t",    "mp_t", "ar_t",   "nu_t",    "x_t")
+      .baselineValues( "BIGINT", "FLOAT8", "VARCHAR", "MAP",  "BIGINT", "VARCHAR", "VARCHAR")
       .go();
   }
 
   @Test
   public void testUnionType() throws Exception {
-    String sql ="SELECT typeof(a) AS t, modeof(a) AS m, drilltypeof(a) AS dt\n" +
-                "FROM cp.`jsoninput/union/c.json`";
+    String sql ="SELECT typeof(a) AS t, modeof(a) AS m, drilltypeof(a) AS dt FROM cp.`jsoninput/union/c.json`";
     try {
       testBuilder()
-        .optionSettingQueriesForTestQuery("alter session set `exec.enable_union_type` = true")
+        .enableSessionOption(ENABLE_UNION_TYPE_KEY)
+        .disableSessionOption(ENABLE_V2_JSON_READER_KEY)
         .sqlQuery(sql)
         .ordered()
         .baselineColumns("t",       "m",        "dt")
@@ -340,9 +367,9 @@ public class TestTypeFns extends ClusterTest {
         .baselineValues( "LIST",    "NULLABLE", "UNION")
         .baselineValues( "NULL",    "NULLABLE", "UNION")
         .go();
-    }
-    finally {
-      client.resetSession(ExecConstants.ENABLE_UNION_TYPE_KEY);
+    } finally {
+      client.resetSession(ENABLE_UNION_TYPE_KEY);
+      client.resetSession(ENABLE_V2_JSON_READER_KEY);
     }
   }
 }

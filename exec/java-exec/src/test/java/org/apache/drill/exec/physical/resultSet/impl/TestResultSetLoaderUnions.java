@@ -33,7 +33,7 @@ import java.util.Arrays;
 import org.apache.drill.common.types.TypeProtos.DataMode;
 import org.apache.drill.common.types.TypeProtos.MajorType;
 import org.apache.drill.common.types.TypeProtos.MinorType;
-import org.apache.drill.categories.RowSetTests;
+import org.apache.drill.categories.RowSetTest;
 import org.apache.drill.common.types.Types;
 import org.apache.drill.exec.physical.resultSet.ResultSetLoader;
 import org.apache.drill.exec.physical.resultSet.RowSetLoader;
@@ -76,7 +76,7 @@ import org.apache.drill.shaded.guava.com.google.common.base.Charsets;
  * Most operators do not support them. But, JSON uses them, so they must
  * be made to work in the result set loader layer.
  */
-@Category(RowSetTests.class)
+@Category(RowSetTest.class)
 public class TestResultSetLoaderUnions extends SubOperatorTest {
 
   @Test

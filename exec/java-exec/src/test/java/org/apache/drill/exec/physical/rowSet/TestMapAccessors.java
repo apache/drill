@@ -26,7 +26,7 @@ import static org.junit.Assert.assertTrue;
 
 import java.util.Iterator;
 
-import org.apache.drill.categories.RowSetTests;
+import org.apache.drill.categories.RowSetTest;
 import org.apache.drill.common.types.TypeProtos.MinorType;
 import org.apache.drill.exec.physical.rowSet.RowSet.SingleRowSet;
 import org.apache.drill.exec.record.MaterializedField;
@@ -58,7 +58,7 @@ import org.junit.experimental.categories.Category;
  * schema, which makes this mechanism far simpler.
  */
 
-@Category(RowSetTests.class)
+@Category(RowSetTest.class)
 public class TestMapAccessors extends SubOperatorTest {
 
   @Test

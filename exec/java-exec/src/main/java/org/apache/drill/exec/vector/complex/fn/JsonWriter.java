@@ -61,7 +61,7 @@ public class JsonWriter {
     final DataMode m = reader.getType().getMode();
     final MinorType mt = reader.getType().getMinorType();
 
-    switch(m){
+    switch(m) {
     case OPTIONAL:
     case REQUIRED:
 
@@ -87,7 +87,6 @@ public class JsonWriter {
       case BIT:
         gen.writeBoolean(reader);
         break;
-
       case DATE:
         gen.writeDate(reader);
         break;
@@ -123,9 +122,9 @@ public class JsonWriter {
       case MAP:
         gen.writeStartObject();
         if (reader.isSet()) {
-          for(String name : reader){
+          for (String name : reader) {
             FieldReader childReader = reader.reader(name);
-            if(childReader.isSet()){
+            if (childReader.isSet()) {
               gen.writeFieldName(name);
               writeValue(childReader);
             }
@@ -154,60 +153,60 @@ public class JsonWriter {
       gen.writeStartArray();
       switch (mt) {
       case FLOAT4:
-        for(int i = 0; i < reader.size(); i++){
+        for (int i = 0; i < reader.size(); i++) {
           gen.writeFloat(i, reader);
         }
         break;
       case FLOAT8:
-        for(int i = 0; i < reader.size(); i++){
+        for (int i = 0; i < reader.size(); i++) {
           gen.writeDouble(i, reader);
         }
         break;
       case INT:
-        for(int i = 0; i < reader.size(); i++){
+        for (int i = 0; i < reader.size(); i++) {
           gen.writeInt(i, reader);
         }
         break;
       case SMALLINT:
-        for(int i = 0; i < reader.size(); i++){
+        for (int i = 0; i < reader.size(); i++) {
           gen.writeSmallInt(i, reader);
         }
         break;
       case TINYINT:
-        for(int i = 0; i < reader.size(); i++){
+        for (int i = 0; i < reader.size(); i++) {
           gen.writeTinyInt(i, reader);
         }
         break;
       case BIGINT:
-        for(int i = 0; i < reader.size(); i++){
+        for (int i = 0; i < reader.size(); i++) {
           gen.writeBigInt(i, reader);
         }
         break;
       case BIT:
-        for(int i = 0; i < reader.size(); i++){
+        for (int i = 0; i < reader.size(); i++) {
           gen.writeBoolean(i, reader);
         }
         break;
 
       case DATE:
-        for(int i = 0; i < reader.size(); i++){
+        for (int i = 0; i < reader.size(); i++) {
           gen.writeDate(i, reader);
         }
         break;
       case TIME:
-        for(int i = 0; i < reader.size(); i++){
+        for (int i = 0; i < reader.size(); i++) {
           gen.writeTime(i, reader);
         }
         break;
       case TIMESTAMP:
-        for(int i = 0; i < reader.size(); i++){
+        for (int i = 0; i < reader.size(); i++) {
           gen.writeTimestamp(i, reader);
         }
         break;
       case INTERVALYEAR:
       case INTERVALDAY:
       case INTERVAL:
-        for(int i = 0; i < reader.size(); i++){
+        for (int i = 0; i < reader.size(); i++) {
           gen.writeInterval(i, reader);
         }
         break;
@@ -218,24 +217,24 @@ public class JsonWriter {
       case DECIMAL9:
       case DECIMAL18:
       case VARDECIMAL:
-        for(int i = 0; i < reader.size(); i++){
+        for (int i = 0; i < reader.size(); i++) {
           gen.writeDecimal(i, reader);
         }
         break;
 
       case LIST:
-        for(int i = 0; i < reader.size(); i++){
-          while(reader.next()){
+        for (int i = 0; i < reader.size(); i++) {
+          while (reader.next()) {
             writeValue(reader.reader());
           }
         }
         break;
       case MAP:
-        while(reader.next()){
+        while (reader.next()) {
           gen.writeStartObject();
-          for(String name : reader){
+          for (String name : reader) {
             FieldReader mapField = reader.reader(name);
-            if(mapField.isSet()){
+            if (mapField.isSet()) {
               gen.writeFieldName(name);
               writeValue(mapField);
             }
@@ -247,17 +246,17 @@ public class JsonWriter {
         break;
 
       case VAR16CHAR:
-        for(int i = 0; i < reader.size(); i++){
+        for (int i = 0; i < reader.size(); i++) {
           gen.writeVar16Char(i, reader);
         }
         break;
       case VARBINARY:
-        for(int i = 0; i < reader.size(); i++){
+        for (int i = 0; i < reader.size(); i++) {
           gen.writeBinary(i, reader);
         }
         break;
       case VARCHAR:
-        for(int i = 0; i < reader.size(); i++){
+        for (int i = 0; i < reader.size(); i++) {
           gen.writeVarChar(i, reader);
         }
         break;

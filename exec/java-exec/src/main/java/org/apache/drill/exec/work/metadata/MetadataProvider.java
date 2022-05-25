@@ -40,6 +40,7 @@ import org.apache.drill.common.exceptions.ErrorHelper;
 import org.apache.drill.exec.ops.ViewExpansionContext;
 import org.apache.drill.exec.proto.UserBitShared.DrillPBError;
 import org.apache.drill.exec.proto.UserBitShared.DrillPBError.ErrorType;
+import org.apache.drill.exec.proto.UserBitShared.UserCredentials;
 import org.apache.drill.exec.proto.UserProtos.CatalogMetadata;
 import org.apache.drill.exec.proto.UserProtos.ColumnMetadata;
 import org.apache.drill.exec.proto.UserProtos.GetCatalogsReq;
@@ -601,6 +602,10 @@ public class MetadataProvider {
       @Override
       public String getQueryUserName() {
         return session.getCredentials().getUserName();
+      }
+
+      @Override public UserCredentials getQueryUserCredentials() {
+        return session.getCredentials();
       }
     };
   }
