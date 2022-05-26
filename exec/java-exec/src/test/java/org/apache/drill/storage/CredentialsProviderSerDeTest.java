@@ -31,10 +31,7 @@ import org.apache.drill.shaded.guava.com.google.common.collect.ImmutableMap;
 import org.apache.drill.test.ClusterFixture;
 import org.apache.drill.test.ClusterTest;
 import org.junit.BeforeClass;
-import org.junit.ClassRule;
 import org.junit.Test;
-import org.testcontainers.utility.DockerImageName;
-import org.testcontainers.vault.VaultContainer;
 
 import static org.junit.Assert.assertEquals;
 

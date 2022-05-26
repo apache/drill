@@ -20,7 +20,6 @@ package org.apache.drill.storage;
 import com.bettercloud.vault.Vault;
 import com.bettercloud.vault.VaultConfig;
 import com.bettercloud.vault.VaultException;
-import com.bettercloud.vault.api.Logical;
 import com.bettercloud.vault.response.LogicalResponse;
 
 import org.apache.drill.common.config.DrillConfig;
@@ -52,7 +51,6 @@ public class CredentialsProviderImplementationsTest extends ClusterTest {
   private static final String SHARED_SECRET_PATH = "secret/testing";
   private static final String USER_SECRET_PATH = "secret/testing/$user";
   private static final String CONTAINER_POLICY_PATH = "/tmp/read-vault-secrets.hcl";
-  private static String vaultAddr;
 
   @ClassRule
   public static final VaultContainer<?> vaultContainer =
@@ -73,7 +71,7 @@ public class CredentialsProviderImplementationsTest extends ClusterTest {
 
   @BeforeClass
   public static void init() throws Exception {
-    vaultAddr = String.format(
+    String vaultAddr = String.format(
       "http://%s:%d",
       vaultContainer.getHost(),
       vaultContainer.getFirstMappedPort()
@@ -88,9 +86,10 @@ public class CredentialsProviderImplementationsTest extends ClusterTest {
     // the AppRole paths produced 404s and forced the specification of version 1 in the
     // BetterCloud client used to perform AppRole operations.
     Vault vault = new Vault(vaultConfig, 1);
+
     LogicalResponse resp = vault.logical()
       .read(String.format("%s/role-id", VAULT_APP_ROLE_PATH));
-		String appRoleId = resp.getData().get("role_id");
+    String appRoleId = resp.getData().get("role_id");
 
     resp = vault.logical().write(
       String.format("%s/secret-id", VAULT_APP_ROLE_PATH),

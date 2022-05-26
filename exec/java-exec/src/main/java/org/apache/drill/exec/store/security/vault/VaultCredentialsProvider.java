@@ -21,6 +21,7 @@ import com.bettercloud.vault.Vault;
 import com.bettercloud.vault.VaultConfig;
 import com.bettercloud.vault.VaultException;
 import com.bettercloud.vault.response.AuthResponse;
+import com.bettercloud.vault.response.LogicalResponse;
 import com.fasterxml.jackson.annotation.JacksonInject;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -43,9 +44,9 @@ public class VaultCredentialsProvider implements CredentialsProvider {
 
   private static final Logger logger = LoggerFactory.getLogger(VaultCredentialsProvider.class);
   // Drill boot options used to configure a Vault credentials provider
-  public static final String VAULT_ADDRESS = "drill.exec.security.vault.address";
-  public static final String VAULT_APP_ROLE_ID = "drill.exec.security.vault.app_role_id";
-  public static final String VAULT_SECRET_ID = "drill.exec.security.vault.secret_id";
+  public static final String VAULT_ADDRESS = "drill.exec.storage.vault.address";
+  public static final String VAULT_APP_ROLE_ID = "drill.exec.storage.vault.app_role_id";
+  public static final String VAULT_SECRET_ID = "drill.exec.storage.vault.secret_id";
   public static final String QUERY_USER_VAR = "$user";
 
   private final String secretPath, appRoleId, secretId;
@@ -108,40 +109,36 @@ public class VaultCredentialsProvider implements CredentialsProvider {
   }
 
   private Map<String, String> getCredentialsAt(String path) {
-    Map<String, String> vaultSecrets, drillCreds = new HashMap<>();
+    LogicalResponse resp;
     // Obtain this thread's own reference to the current Vault object to use
-    // for deciding whether _we_ need to reauthenticate in the event of a
-    // failed read, or another thread has done that already.
+    // for deciding whether _we_ need to reauthenticate in the event of an
+    // unauthorised read, or another thread has done that already.
     Vault threadVault = this.vault;
+
     try {
-      logger.debug("Attempting to fetch secrets from Vault path {}", path);
-      vaultSecrets = threadVault.logical()
-        .read(path)
-        .getData();
+      logger.debug("Attempting to fetch secrets from Vault path {}.", path);
+      resp = threadVault.logical().read(path);
 
-      if (vaultSecrets.size() > 0) {
-        return extractCredentials(vaultSecrets);
-      }
-
-      synchronized (this) {
-        if (threadVault == vault) {
-          // The Vault object has not already been replaced by another thread,
-          // reauthenticate and replace it.
-          logger.info("Attempt to fetch secrets failed, attempting to reauthenticate");
-          AuthResponse authResp = vault.auth().loginByAppRole(appRoleId, secretId);
-          vault = new Vault(vaultConfig.token(authResp.getAuthClientToken()));
-        } else {
-          logger.debug("Another caller has already attempted reauthentication.");
+      if (resp.getRestResponse().getStatus() == 403) {
+        logger.info("Attempt to fetch secrets received HTTP 403 from Vault.");
+        synchronized (this) {
+          if (threadVault == vault) {
+            // The Vault object has not already been replaced by another thread,
+            // reauthenticate and replace it.
+            logger.info("Attempting to reauthenticate.");
+            AuthResponse authResp = vault.auth().loginByAppRole(appRoleId, secretId);
+            vault = new Vault(vaultConfig.token(authResp.getAuthClientToken()));
+          } else {
+            logger.debug("Another caller has already attempted reauthentication.");
+          }
         }
+        logger.debug("Reattempting to fetch secrets from Vault path {}", path);
+        resp = vault.logical().read(path);
       }
-      logger.debug("Reattempting to fetch secrets from Vault path {}", path);
-      vaultSecrets = vault.logical()
-        .read(path)
-        .getData();
-      return extractCredentials(vaultSecrets);
+      return extractCredentials(resp.getData());
 
-    } catch (VaultException exProblem) {
-      throw UserException.systemError(exProblem)
+    } catch (VaultException ex) {
+      throw UserException.systemError(ex)
         .message("Error while fetching credentials from vault")
         .build(logger);
     }
