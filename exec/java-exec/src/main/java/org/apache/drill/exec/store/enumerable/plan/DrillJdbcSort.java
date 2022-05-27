@@ -42,7 +42,8 @@ public class DrillJdbcSort extends JdbcRules.JdbcSort {
       double numRows = mq.getRowCount(this);
       double cpuCost = DrillCostBase.COMPARE_CPU_COST * numRows;
       DrillCostBase.DrillCostFactory costFactory = (DrillCostBase.DrillCostFactory) planner.getCostFactory();
-      return costFactory.makeCost(numRows, cpuCost, 0, 0);
+      // adjust cost to handle the case when the original limit was split
+      return costFactory.makeCost(numRows, cpuCost, 0, 0).multiplyBy(0.1);
     }
     return super.computeSelfCost(planner, mq);
   }
