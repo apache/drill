@@ -34,7 +34,6 @@ import org.apache.hadoop.security.authentication.util.KerberosUtil;
 import org.apache.kerby.kerberos.kerb.client.JaasKrbUtil;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
@@ -45,7 +44,6 @@ import java.util.Properties;
 
 import static junit.framework.TestCase.assertTrue;
 
-@Ignore("See DRILL-5387")
 @Category(SecurityTest.class)
 public class TestUserBitKerberos extends BaseTestQuery {
   //private static final org.slf4j.Logger logger =org.slf4j.LoggerFactory.getLogger(TestUserBitKerberos.class);
@@ -82,7 +80,10 @@ public class TestUserBitKerberos extends BaseTestQuery {
     // initialization which causes the tests to fail. So the following two changes are required.
 
     // (1) Refresh Kerberos config.
-    sun.security.krb5.Config.refresh();
+    // This disabled call to an unsupported internal API does not appear to be
+    // required and it prevents compiling with a target of JDK 8 on newer JDKs.
+    // sun.security.krb5.Config.refresh();
+
     // (2) Reset the default realm.
     final Field defaultRealm = KerberosName.class.getDeclaredField("defaultRealm");
     defaultRealm.setAccessible(true);

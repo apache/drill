@@ -33,7 +33,6 @@ import org.apache.hadoop.security.authentication.util.KerberosName;
 import org.apache.hadoop.security.authentication.util.KerberosUtil;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
@@ -46,11 +45,8 @@ import static org.junit.Assert.assertTrue;
 /**
  * Test for validating {@link SpnegoConfig}
  */
-@Ignore("See DRILL-5387")
 @Category(SecurityTest.class)
 public class TestSpnegoConfig extends BaseTest {
-  //private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(TestSpnegoConfig.class);
-
   private static KerberosHelper spnegoHelper;
 
   private static final String primaryName = "HTTP";
@@ -62,8 +58,10 @@ public class TestSpnegoConfig extends BaseTest {
     spnegoHelper = new KerberosHelper(TestSpnegoAuthentication.class.getSimpleName(), primaryName);
     spnegoHelper.setupKdc(dirTestWatcher.getTmpDir());
 
-
-    sun.security.krb5.Config.refresh();
+    // (1) Refresh Kerberos config.
+    // This disabled call to an unsupported internal API does not appear to be
+    // required and it prevents compiling with a target of JDK 8 on newer JDKs.
+    // sun.security.krb5.Config.refresh();
 
     // (2) Reset the default realm.
     final Field defaultRealm = KerberosName.class.getDeclaredField("defaultRealm");
