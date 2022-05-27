@@ -31,7 +31,6 @@ import org.apache.drill.test.ClusterTest;
 import org.apache.drill.test.rowSet.RowSetUtilities;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.testcontainers.containers.MSSQLServerContainer;
@@ -48,7 +47,7 @@ import static org.junit.Assert.assertEquals;
 @Category(JdbcStorageTest.class)
 public class TestJdbcPluginWithMSSQL extends ClusterTest {
 
-  private static MSSQLServerContainer jdbcContainer;
+  private static MSSQLServerContainer<?> jdbcContainer;
 
   @BeforeClass
   public static void initMSSQL() throws Exception {
@@ -313,8 +312,6 @@ public class TestJdbcPluginWithMSSQL extends ClusterTest {
   }
 
   @Test
-  @Ignore
-  // TODO: Enable once the push down logic has been clarified.
   public void testLimitPushDownWithOffset() throws Exception {
     String query = "select person_id, first_name from mssql.dbo.person limit 100 offset 10";
     queryBuilder()
