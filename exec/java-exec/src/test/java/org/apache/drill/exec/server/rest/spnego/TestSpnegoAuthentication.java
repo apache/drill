@@ -64,7 +64,6 @@ import static org.junit.Assert.assertTrue;
 /**
  * Test for validating {@link DrillSpnegoLoginService}
  */
-@Ignore("See DRILL-5387")
 @Category(SecurityTest.class)
 public class TestSpnegoAuthentication extends BaseTest {
 
@@ -246,6 +245,7 @@ public class TestSpnegoAuthentication extends BaseTest {
    * when provided with client token for a configured service principal.
    */
   @Test
+  @Ignore("See DRILL-5387")
   public void testDrillSpnegoLoginService() throws Exception {
 
     // Create client subject using it's principal and keytab

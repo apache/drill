@@ -67,7 +67,6 @@ import static org.mockito.Mockito.verify;
 /**
  * Test for validating {@link DrillSpnegoAuthenticator}
  */
-@Ignore("See DRILL-5387")
 @Category(SecurityTest.class)
 public class TestDrillSpnegoAuthenticator extends BaseTest {
 
@@ -203,6 +202,7 @@ public class TestDrillSpnegoAuthenticator extends BaseTest {
    * {@link DrillSpnegoAuthenticator#validateRequest(javax.servlet.ServletRequest, javax.servlet.ServletResponse, boolean)}
    */
   @Test
+  @Ignore("See DRILL-5387")
   public void testAuthClientRequestForLogOut() throws Exception {
     final HttpServletRequest request = Mockito.mock(HttpServletRequest.class);
     final HttpServletResponse response = Mockito.mock(HttpServletResponse.class);
