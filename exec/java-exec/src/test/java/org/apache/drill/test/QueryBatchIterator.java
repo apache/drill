@@ -17,6 +17,7 @@
  */
 package org.apache.drill.test;
 
+import org.apache.drill.common.exceptions.DrillRuntimeException;
 import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.exec.memory.BufferAllocator;
 import org.apache.drill.exec.physical.resultSet.impl.PullResultSetReaderImpl.UpstreamSource;
@@ -156,6 +157,8 @@ public class QueryBatchIterator implements UpstreamSource, AutoCloseable {
       QueryEvent event = listener.get();
       if (event.type == QueryEvent.Type.EOF) {
         state = State.EOF;
+      } else if (event.type == QueryEvent.Type.ERROR) {
+        throw DrillRuntimeException.create("Closed with outstanding buffers allocated");
       }
     }
   }

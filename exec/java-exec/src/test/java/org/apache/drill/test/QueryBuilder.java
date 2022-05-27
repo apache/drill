@@ -694,21 +694,21 @@ public class QueryBuilder {
       QueryEvent event = listener.get();
       switch (event.type)
       {
-      case BATCH:
-        batchCount++;
-        recordCount += event.batch.getHeader().getRowCount();
-        event.batch.release();
-        break;
-      case EOF:
-        state = event.state;
-        break loop;
-      case ERROR:
-        throw event.error;
-      case QUERY_ID:
-        queryId = event.queryId;
-        break;
-      default:
-        throw new IllegalStateException("Unexpected event: " + event.type);
+        case BATCH:
+          batchCount++;
+          recordCount += event.batch.getHeader().getRowCount();
+          event.batch.release();
+          break;
+        case EOF:
+          state = event.state;
+          break loop;
+        case ERROR:
+          throw event.error;
+        case QUERY_ID:
+          queryId = event.queryId;
+          break;
+        default:
+          throw new IllegalStateException("Unexpected event: " + event.type);
       }
     }
     long end = System.currentTimeMillis();

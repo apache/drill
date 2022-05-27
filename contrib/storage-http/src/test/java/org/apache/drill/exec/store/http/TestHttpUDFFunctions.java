@@ -18,13 +18,17 @@
 
 package org.apache.drill.exec.store.http;
 
+import ch.qos.logback.classic.Level;
 import okhttp3.mockwebserver.MockResponse;
 import okhttp3.mockwebserver.MockWebServer;
 import okhttp3.mockwebserver.RecordedRequest;
 import org.apache.drill.common.logical.StoragePluginConfig.AuthMode;
 import org.apache.drill.common.logical.security.PlainCredentialsProvider;
 import org.apache.drill.common.util.DrillFileUtils;
+import org.apache.drill.exec.physical.impl.project.ProjectRecordBatch;
+import org.apache.drill.exec.physical.impl.validate.IteratorValidatorBatchIterator;
 import org.apache.drill.exec.physical.rowSet.RowSet;
+import org.apache.drill.exec.store.easy.json.loader.JsonLoaderImpl;
 import org.apache.drill.exec.store.http.util.SimpleHttp;
 import org.apache.drill.exec.store.security.UsernamePasswordCredentials;
 import org.apache.drill.shaded.guava.com.google.common.base.Charsets;
@@ -32,6 +36,7 @@ import org.apache.drill.shaded.guava.com.google.common.collect.ImmutableMap;
 import org.apache.drill.shaded.guava.com.google.common.io.Files;
 import org.apache.drill.test.ClusterFixture;
 import org.apache.drill.test.ClusterTest;
+import org.apache.drill.test.LogFixture;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
@@ -51,10 +56,17 @@ public class TestHttpUDFFunctions extends ClusterTest {
   private static final int MOCK_SERVER_PORT = 47771;
   private static String TEST_JSON_RESPONSE;
   private static String DUMMY_URL = "http://localhost:" + MOCK_SERVER_PORT;
-
+  protected static LogFixture logFixture;
+  private final static Level CURRENT_LOG_LEVEL = Level.INFO;
 
   @BeforeClass
   public static void setup() throws Exception {
+    logFixture = LogFixture.builder()
+      .toConsole()
+      .logger(ProjectRecordBatch.class, CURRENT_LOG_LEVEL)
+      .logger(JsonLoaderImpl.class, CURRENT_LOG_LEVEL)
+      .logger(IteratorValidatorBatchIterator.class, CURRENT_LOG_LEVEL)
+      .build();
     startCluster(ClusterFixture.builder(dirTestWatcher));
     TEST_JSON_RESPONSE = Files.asCharSource(DrillFileUtils.getResourceAsFile("/data/simple.json"), Charsets.UTF_8).read();
 
@@ -133,7 +145,7 @@ public class TestHttpUDFFunctions extends ClusterTest {
       client.queryBuilder().sql(sql).run();
       fail();
     } catch (Exception e) {
-      assertTrue(e.getMessage().contains("FUNCTION ERROR: nope is not a valid plugin."));
+      assertTrue(e.getMessage(), e.getMessage().contains("FUNCTION ERROR: nope is not a valid plugin."));
     }
   }
 
