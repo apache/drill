@@ -31,32 +31,22 @@ import org.apache.drill.shaded.guava.com.google.common.collect.ImmutableMap;
 import org.apache.drill.test.ClusterFixture;
 import org.apache.drill.test.ClusterTest;
 import org.junit.BeforeClass;
-import org.junit.ClassRule;
 import org.junit.Test;
-import org.testcontainers.utility.DockerImageName;
-import org.testcontainers.vault.VaultContainer;
 
 import static org.junit.Assert.assertEquals;
 
 public class CredentialsProviderSerDeTest extends ClusterTest {
 
-  private static final String VAULT_TOKEN_VALUE = "vault-token";
-
   private static final String SECRET_PATH = "secret/testing";
-
-  @ClassRule
-  public static final VaultContainer<?> vaultContainer =
-      new VaultContainer<>(DockerImageName.parse("vault").withTag("1.1.3"))
-          .withVaultToken(VAULT_TOKEN_VALUE)
-          .withSecretInVault(SECRET_PATH,
-              "top_secret=password1",
-              "db_password=dbpassword1");
 
   @BeforeClass
   public static void init() throws Exception {
     startCluster(ClusterFixture.builder(dirTestWatcher)
-        .configProperty(VaultCredentialsProvider.VAULT_ADDRESS, "http://" + vaultContainer.getHost() + ":" + vaultContainer.getFirstMappedPort())
-        .configProperty(VaultCredentialsProvider.VAULT_TOKEN, VAULT_TOKEN_VALUE));
+      // Bogus Vault server values are sufficient for the tests in this class.
+      .configProperty(VaultCredentialsProvider.VAULT_ADDRESS, "foo")
+      .configProperty(VaultCredentialsProvider.VAULT_APP_ROLE_ID, "foo")
+      .configProperty(VaultCredentialsProvider.VAULT_SECRET_ID, "foo")
+    );
   }
 
   @Test

@@ -42,15 +42,15 @@ import static org.junit.Assert.fail;
 @Category(SecurityTest.class)
 public class TestVaultUserAuthenticator extends ClusterTest {
 
-  private static final String ROOT_TOKEN_VALUE = "vault-token";
+  private static final String VAULT_ROOT_TOKEN = "vault-token";
 
   private static String vaultAddr;
 
   @ClassRule
   public static final VaultContainer<?> vaultContainer =
-      new VaultContainer<>(DockerImageName.parse("vault").withTag("1.1.3"))
+      new VaultContainer<>(DockerImageName.parse("vault").withTag("1.10.3"))
           .withLogLevel(VaultLogLevel.Debug)
-          .withVaultToken(ROOT_TOKEN_VALUE)
+          .withVaultToken(VAULT_ROOT_TOKEN)
           .withInitCommand(
             "auth enable userpass",
             "write auth/userpass/users/alice password=pass1 policies=admins",
@@ -93,7 +93,7 @@ public class TestVaultUserAuthenticator extends ClusterTest {
     // Use the Vault client lib to obtain Vault tokens for our test users.
     VaultConfig vaultConfig = new VaultConfig()
       .address(vaultAddr)
-      .token(ROOT_TOKEN_VALUE)
+      .token(VAULT_ROOT_TOKEN)
       .build();
 
     Vault vault = new Vault(vaultConfig);

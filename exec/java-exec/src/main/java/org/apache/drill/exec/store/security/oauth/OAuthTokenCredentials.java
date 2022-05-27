@@ -70,7 +70,7 @@ public class OAuthTokenCredentials extends UsernamePasswordCredentials {
       }
 
       Map<String, String> credentials = queryUser != null
-        ? credentialsProvider.getCredentials(queryUser)
+        ? credentialsProvider.getUserCredentials(queryUser)
         : credentialsProvider.getCredentials();
 
       if (credentials.size() == 0) {

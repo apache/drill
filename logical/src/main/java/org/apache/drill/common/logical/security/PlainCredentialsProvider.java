@@ -68,7 +68,8 @@ public class PlainCredentialsProvider implements CredentialsProvider {
 
   @Override
   @JsonIgnore(false)
-  @JsonProperty("credentials") public Map<String, String> getCredentials() {
+  @JsonProperty("credentials")
+  public Map<String, String> getCredentials() {
     return credentials;
   }
 
@@ -85,7 +86,7 @@ public class PlainCredentialsProvider implements CredentialsProvider {
    * @return A Map of the active user's credentials
    */
   @Override
-  public Map<String, String> getCredentials(String queryUser) {
+  public Map<String, String> getUserCredentials(String queryUser) {
     assert queryUser != null;
     logger.debug("Getting credentials for query user {}", queryUser);
 

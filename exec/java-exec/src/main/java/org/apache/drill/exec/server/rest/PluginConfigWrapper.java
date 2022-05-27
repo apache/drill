@@ -64,22 +64,22 @@ public class PluginConfigWrapper {
   }
 
   @JsonIgnore
-  public String getUserName(String activeUser) {
+  public String getUserName(String queryUser) {
     CredentialsProvider credentialsProvider = config.getCredentialsProvider();
     Optional<UsernamePasswordCredentials> credentials = new UsernamePasswordCredentials.Builder()
       .setCredentialsProvider(credentialsProvider)
-      .setQueryUser(activeUser)
+      .setQueryUser(queryUser)
       .build();
 
     return credentials.map(UsernamePasswordCredentials::getUsername).orElse(null);
   }
 
   @JsonIgnore
-  public String getPassword(String activeUser) {
+  public String getPassword(String queryUser) {
     CredentialsProvider credentialsProvider = config.getCredentialsProvider();
     Optional<UsernamePasswordCredentials> credentials = new UsernamePasswordCredentials.Builder()
       .setCredentialsProvider(credentialsProvider)
-      .setQueryUser(activeUser)
+      .setQueryUser(queryUser)
       .build();
 
     return credentials.map(UsernamePasswordCredentials::getPassword).orElse(null);

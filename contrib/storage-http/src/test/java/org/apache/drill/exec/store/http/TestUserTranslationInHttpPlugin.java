@@ -172,7 +172,7 @@ public class TestUserTranslationInHttpPlugin extends ClusterTest {
     StoragePluginRegistry registry = cluster.storageRegistry();
     StoragePlugin plugin = registry.getPlugin("local");
     PlainCredentialsProvider credentialsProvider = (PlainCredentialsProvider) plugin.getConfig().getCredentialsProvider();
-    Map<String, String> credentials = credentialsProvider.getCredentials(TEST_USER_1);
+    Map<String, String> credentials = credentialsProvider.getUserCredentials(TEST_USER_1);
     assertNotNull(credentials);
     assertNull(credentials.get("username"));
     assertNull(credentials.get("password"));
