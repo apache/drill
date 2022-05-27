@@ -20,6 +20,7 @@ package org.apache.drill.exec.ops;
 import io.netty.buffer.DrillBuf;
 import org.apache.drill.common.types.TypeProtos.MinorType;
 import org.apache.drill.exec.expr.holders.ValueHolder;
+import org.apache.drill.exec.physical.resultSet.ResultSetLoader;
 import org.apache.drill.exec.server.DrillbitContext;
 import org.apache.drill.exec.server.options.OptionManager;
 import org.apache.drill.exec.store.PartitionExplorer;
@@ -44,6 +45,7 @@ public interface UdfUtilities {
           .put(OptionManager.class, "getOptions")
           .put(BufferManager.class, "getManagedBufferManager")
           .put(DrillbitContext.class, "getDrillbitContext")
+          .put(ResultSetLoader.class, "getResultSetLoader")
           .build();
 
 
@@ -97,6 +99,8 @@ public interface UdfUtilities {
    * @return - an object for accessing drillbit information such as storage configs.
    */
   DrillbitContext getDrillbitContext();
+
+  ResultSetLoader getResultSetLoader();
 
   /**
    * Works with value holders cache which holds constant value and its wrapper by type.

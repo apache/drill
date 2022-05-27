@@ -18,6 +18,7 @@
 package org.apache.drill.exec.ops;
 
 import io.netty.buffer.DrillBuf;
+import org.apache.drill.exec.memory.BufferAllocator;
 
 /**
  * Manages a list of {@link DrillBuf}s that can be reallocated as needed. Upon
@@ -61,6 +62,8 @@ public interface BufferManager extends AutoCloseable {
    * @return A buffer
    */
   public DrillBuf getManagedBuffer(int size);
+
+  BufferAllocator getAllocator();
 
   public void close();
 }

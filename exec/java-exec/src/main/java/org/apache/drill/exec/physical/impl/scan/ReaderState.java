@@ -344,29 +344,26 @@ class ReaderState {
    */
   protected boolean next() {
     switch (state) {
-    case LOOK_AHEAD:
-    case LOOK_AHEAD_WITH_EOF:
-      // Use batch previously read.
-      assert lookahead != null;
-      lookahead.exchange(scanOp.containerAccessor.container());
-      assert lookahead.getRecordCount() == 0;
-      lookahead = null;
-      if (state == State.LOOK_AHEAD_WITH_EOF) {
-        state = State.EOF;
-      } else {
-        state = State.ACTIVE;
+      case LOOK_AHEAD:
+      case LOOK_AHEAD_WITH_EOF:
+        // Use batch previously read.
+        assert lookahead != null;
+        lookahead.exchange(scanOp.containerAccessor.container());
+        assert lookahead.getRecordCount() == 0;
+        lookahead = null;
+        if (state == State.LOOK_AHEAD_WITH_EOF) {
+          state = State.EOF;
+        } else {
+          state = State.ACTIVE;
+        }
+        return true;
+      case ACTIVE:
+        return readBatch();
+      case EOF:
+        return false;
+      default:
+        throw new IllegalStateException("Unexpected state: " + state);
       }
-      return true;
-
-    case ACTIVE:
-      return readBatch();
-
-    case EOF:
-      return false;
-
-    default:
-      throw new IllegalStateException("Unexpected state: " + state);
-    }
   }
 
   /**

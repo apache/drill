@@ -57,7 +57,7 @@ public abstract class BaseAllocator extends Accountant implements BufferAllocato
    * because the buffer is used multiple times by an operator.
    */
 
-  private static final int IO_BUFFER_SIZE = 32*1024;
+  private static final int IO_BUFFER_SIZE = 32 * 1024;
   private final Object DEBUG_LOCK = DEBUG ? new Object() : null;
 
   private final BaseAllocator parentAllocator;
@@ -500,13 +500,13 @@ public abstract class BaseAllocator extends Accountant implements BufferAllocato
         if (allocatedCount > 0) {
           throw new IllegalStateException(
               String.format("Allocator[%s] closed with outstanding buffers allocated (%d).\n%s",
-                  name, allocatedCount, toString()));
+                  name, allocatedCount, this));
         }
 
         if (reservations.size() != 0) {
           throw new IllegalStateException(
               String.format("Allocator[%s] closed with outstanding reservations (%d).\n%s", name, reservations.size(),
-                  toString()));
+                this));
         }
 
       }
@@ -535,8 +535,7 @@ public abstract class BaseAllocator extends Accountant implements BufferAllocato
 
   @Override
   public String toString() {
-    final Verbosity verbosity = logger.isTraceEnabled() ? Verbosity.LOG_WITH_STACKTRACE
-        : Verbosity.BASIC;
+    final Verbosity verbosity = logger.isTraceEnabled() ? Verbosity.LOG_WITH_STACKTRACE : Verbosity.BASIC;
     final StringBuilder sb = new StringBuilder();
     print(sb, 0, verbosity);
     return sb.toString();
@@ -562,8 +561,7 @@ public abstract class BaseAllocator extends Accountant implements BufferAllocato
   /**
    * Rounds up the provided value to the nearest power of two.
    *
-   * @param val
-   *          An integer value.
+   * @param val An integer value.
    * @return The closest power of two of that value.
    */
   public static int nextPowerOfTwo(int val) {
@@ -578,8 +576,7 @@ public abstract class BaseAllocator extends Accountant implements BufferAllocato
   /**
    * Rounds up the provided value to the nearest power of two.
    *
-   * @param val
-   *          An integer long value.
+   * @param val An integer long value.
    * @return The closest power of two of that value.
    */
   public static long longNextPowerOfTwo(long val) {
@@ -622,7 +619,6 @@ public abstract class BaseAllocator extends Accountant implements BufferAllocato
     }
 
     synchronized (DEBUG_LOCK) {
-
       final long allocated = getAllocatedMemory();
 
       // verify my direct descendants
@@ -689,9 +685,9 @@ public abstract class BaseAllocator extends Accountant implements BufferAllocato
         sb.append("allocator[");
         sb.append(name);
         sb.append("]\nallocated: ");
-        sb.append(Long.toString(allocated));
+        sb.append(allocated);
         sb.append(" allocated - (bufferTotal + reservedTotal + childTotal): ");
-        sb.append(Long.toString(allocated - (bufferTotal + reservedTotal + childTotal)));
+        sb.append(allocated - (bufferTotal + reservedTotal + childTotal));
         sb.append('\n');
 
         if (bufferTotal != 0) {
@@ -703,14 +699,14 @@ public abstract class BaseAllocator extends Accountant implements BufferAllocato
 
         if (childTotal != 0) {
           sb.append("child total: ");
-          sb.append(Long.toString(childTotal));
+          sb.append(childTotal);
           sb.append('\n');
 
           for (final BaseAllocator childAllocator : childSet) {
             sb.append("child allocator[");
             sb.append(childAllocator.name);
             sb.append("] owned ");
-            sb.append(Long.toString(childAllocator.getAllocatedMemory()));
+            sb.append(childAllocator.getAllocatedMemory());
             sb.append('\n');
           }
         }

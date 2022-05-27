@@ -18,6 +18,9 @@
 package org.apache.drill.test;
 
 import org.apache.drill.exec.alias.AliasRegistryProvider;
+import org.apache.drill.exec.physical.resultSet.ResultSetLoader;
+import org.apache.drill.exec.physical.resultSet.impl.ResultSetLoaderImpl;
+import org.apache.drill.exec.physical.resultSet.impl.ResultSetLoaderImpl.ResultSetOptions;
 import org.apache.drill.exec.server.DrillbitContext;
 import org.apache.drill.metastore.MetastoreRegistry;
 import org.apache.drill.shaded.guava.com.google.common.base.Function;
@@ -242,6 +245,11 @@ public class OperatorFixture extends BaseFixture implements AutoCloseable {
     @Override
     public DrillbitContext getDrillbitContext() {
       return null;
+    }
+
+    @Override
+    public ResultSetLoader getResultSetLoader() {
+      return new ResultSetLoaderImpl(allocator, new ResultSetOptions());
     }
 
     @Override

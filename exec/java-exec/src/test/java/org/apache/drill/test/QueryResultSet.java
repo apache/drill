@@ -58,32 +58,27 @@ public class QueryResultSet {
     }
     while (true) {
       QueryEvent event = listener.get();
-      switch (event.type)
-      {
-      case BATCH:
-        batchCount++;
-        recordCount += event.batch.getHeader().getRowCount();
-        loader.load(event.batch.getHeader().getDef(), event.batch.getData());
-        event.batch.release();
-        return DirectRowSet.fromVectorAccessible(loader.allocator(), loader);
-
-      case EOF:
-        state = event.state;
-        eof = true;
-        return null;
-
-      case ERROR:
-        state = event.state;
-        eof = true;
-        throw event.error;
-
-      case QUERY_ID:
-        queryId = event.queryId;
-        continue;
-
-      default:
-        throw new IllegalStateException("Unexpected event: " + event.type);
-      }
+      switch (event.type) {
+        case BATCH:
+          batchCount++;
+          recordCount += event.batch.getHeader().getRowCount();
+          loader.load(event.batch.getHeader().getDef(), event.batch.getData());
+          event.batch.release();
+          return DirectRowSet.fromVectorAccessible(loader.allocator(), loader);
+        case EOF:
+          state = event.state;
+          eof = true;
+          return null;
+        case ERROR:
+          state = event.state;
+          eof = true;
+          throw event.error;
+        case QUERY_ID:
+          queryId = event.queryId;
+          continue;
+        default:
+          throw new IllegalStateException("Unexpected event: " + event.type);
+        }
     }
   }
 

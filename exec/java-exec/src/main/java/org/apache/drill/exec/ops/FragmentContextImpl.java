@@ -47,6 +47,9 @@ import org.apache.drill.exec.memory.BufferAllocator;
 import org.apache.drill.exec.ops.QueryContext.SqlStatementType;
 import org.apache.drill.exec.physical.base.PhysicalOperator;
 import org.apache.drill.exec.physical.impl.OperatorCreatorRegistry;
+import org.apache.drill.exec.physical.resultSet.ResultSetLoader;
+import org.apache.drill.exec.physical.resultSet.impl.ResultSetLoaderImpl;
+import org.apache.drill.exec.physical.resultSet.impl.ResultSetLoaderImpl.ResultSetOptions;
 import org.apache.drill.exec.planner.PhysicalPlanReader;
 import org.apache.drill.exec.planner.physical.PlannerSettings;
 import org.apache.drill.exec.proto.BitControl.PlanFragment;
@@ -345,6 +348,11 @@ public class FragmentContextImpl extends BaseFragmentContext implements Executor
   @Override
   public DrillbitContext getDrillbitContext() {
     return context;
+  }
+
+  @Override
+  public ResultSetLoader getResultSetLoader() {
+    return new ResultSetLoaderImpl(bufferManager.getAllocator(), new ResultSetOptions());
   }
 
   @Override

@@ -44,6 +44,10 @@ public class BufferManagerImpl implements BufferManager {
     managedBuffers.clear();
   }
 
+  public BufferAllocator getAllocator() {
+    return allocator;
+  }
+
   @Override
   public DrillBuf replace(DrillBuf old, int newSize) {
     if (managedBuffers.remove(old.memoryAddress()) == null) {

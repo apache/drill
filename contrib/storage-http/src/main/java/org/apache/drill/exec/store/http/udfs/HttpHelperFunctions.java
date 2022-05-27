@@ -18,7 +18,6 @@
 
 package org.apache.drill.exec.store.http.udfs;
 
-import io.netty.buffer.DrillBuf;
 import org.apache.drill.exec.expr.DrillSimpleFunc;
 import org.apache.drill.exec.expr.annotations.FunctionTemplate;
 import org.apache.drill.exec.expr.annotations.Output;
@@ -26,6 +25,7 @@ import org.apache.drill.exec.expr.annotations.Param;
 import org.apache.drill.exec.expr.annotations.Workspace;
 import org.apache.drill.exec.expr.holders.NullableVarCharHolder;
 import org.apache.drill.exec.expr.holders.VarCharHolder;
+import org.apache.drill.exec.physical.resultSet.ResultSetLoader;
 import org.apache.drill.exec.server.DrillbitContext;
 import org.apache.drill.exec.server.options.OptionManager;
 import org.apache.drill.exec.vector.complex.writer.BaseWriter.ComplexWriter;
@@ -52,22 +52,16 @@ public class HttpHelperFunctions {
     OptionManager options;
 
     @Inject
-    DrillBuf buffer;
+    ResultSetLoader loader;
 
     @Workspace
-    org.apache.drill.exec.vector.complex.fn.JsonReader jsonReader;
+    org.apache.drill.exec.store.easy.json.loader.JsonLoaderImpl.JsonLoaderBuilder jsonLoaderBuilder;
 
     @Override
     public void setup() {
-      jsonReader = new org.apache.drill.exec.vector.complex.fn.JsonReader.Builder(buffer)
-        .defaultSchemaPathColumns()
-        .readNumbersAsDouble(options.getOption(org.apache.drill.exec.ExecConstants.JSON_READ_NUMBERS_AS_DOUBLE).bool_val)
-        .allTextMode(options.getOption(org.apache.drill.exec.ExecConstants.JSON_ALL_TEXT_MODE).bool_val)
-        .enableNanInf(options.getOption(org.apache.drill.exec.ExecConstants.JSON_READER_NAN_INF_NUMBERS).bool_val)
-        .build();
-
-      jsonReader.setIgnoreJSONParseErrors(
-        options.getBoolean(org.apache.drill.exec.ExecConstants.JSON_READER_SKIP_INVALID_RECORDS_FLAG));
+      jsonLoaderBuilder = new org.apache.drill.exec.store.easy.json.loader.JsonLoaderImpl.JsonLoaderBuilder()
+        .resultSetLoader(loader)
+        .standardOptions(options);
     }
 
     @Override
@@ -102,10 +96,11 @@ public class HttpHelperFunctions {
       }
 
       try {
-        jsonReader.setSource(results);
-        jsonReader.setIgnoreJSONParseErrors(true);  // Reduce number of errors
-        jsonReader.write(writer);
-        buffer = jsonReader.getWorkBuf();
+        jsonLoaderBuilder.fromString(results);
+        org.apache.drill.exec.store.easy.json.loader.JsonLoader jsonLoader = jsonLoaderBuilder.build();
+        loader.startBatch();
+        jsonLoader.readBatch();
+        loader.close();
       } catch (Exception e) {
         throw new org.apache.drill.common.exceptions.DrillRuntimeException("Error while converting from JSON. ", e);
       }
@@ -134,10 +129,10 @@ public class HttpHelperFunctions {
     DrillbitContext drillbitContext;
 
     @Inject
-    DrillBuf buffer;
+    ResultSetLoader loader;
 
     @Workspace
-    org.apache.drill.exec.vector.complex.fn.JsonReader jsonReader;
+    org.apache.drill.exec.store.easy.json.loader.JsonLoaderImpl.JsonLoaderBuilder jsonLoaderBuilder;
 
     @Workspace
     org.apache.drill.exec.store.http.HttpStoragePlugin plugin;
@@ -147,15 +142,9 @@ public class HttpHelperFunctions {
 
     @Override
     public void setup() {
-      jsonReader = new org.apache.drill.exec.vector.complex.fn.JsonReader.Builder(buffer)
-        .defaultSchemaPathColumns()
-        .readNumbersAsDouble(options.getOption(org.apache.drill.exec.ExecConstants.JSON_READ_NUMBERS_AS_DOUBLE).bool_val)
-        .allTextMode(options.getOption(org.apache.drill.exec.ExecConstants.JSON_ALL_TEXT_MODE).bool_val)
-        .enableNanInf(options.getOption(org.apache.drill.exec.ExecConstants.JSON_READER_NAN_INF_NUMBERS).bool_val)
-        .build();
-
-      jsonReader.setIgnoreJSONParseErrors(
-        options.getBoolean(org.apache.drill.exec.ExecConstants.JSON_READER_SKIP_INVALID_RECORDS_FLAG));
+      jsonLoaderBuilder = new org.apache.drill.exec.store.easy.json.loader.JsonLoaderImpl.JsonLoaderBuilder()
+        .resultSetLoader(loader)
+        .standardOptions(options);
 
       String schemaPath = org.apache.drill.exec.expr.fn.impl.StringFunctionHelpers.toStringFromUTF8(rawInput.start, rawInput.end, rawInput.buffer);
       // Get the plugin name and endpoint name
@@ -208,10 +197,11 @@ public class HttpHelperFunctions {
       }
 
       try {
-        jsonReader.setSource(results);
-        jsonReader.setIgnoreJSONParseErrors(true);  // Reduce number of errors
-        jsonReader.write(writer);
-        buffer = jsonReader.getWorkBuf();
+        jsonLoaderBuilder.fromString(results);
+        org.apache.drill.exec.store.easy.json.loader.JsonLoader jsonLoader = jsonLoaderBuilder.build();
+        loader.startBatch();
+        jsonLoader.readBatch();
+        loader.close();
       } catch (Exception e) {
         throw new org.apache.drill.common.exceptions.DrillRuntimeException("Error while converting from JSON. ", e);
       }

@@ -32,6 +32,9 @@ import org.apache.drill.exec.expr.fn.FunctionImplementationRegistry;
 import org.apache.drill.exec.expr.fn.registry.RemoteFunctionRegistry;
 import org.apache.drill.exec.expr.holders.ValueHolder;
 import org.apache.drill.exec.memory.BufferAllocator;
+import org.apache.drill.exec.physical.resultSet.ResultSetLoader;
+import org.apache.drill.exec.physical.resultSet.impl.ResultSetLoaderImpl;
+import org.apache.drill.exec.physical.resultSet.impl.ResultSetLoaderImpl.ResultSetOptions;
 import org.apache.drill.exec.planner.physical.PlannerSettings;
 import org.apache.drill.exec.planner.sql.DrillOperatorTable;
 import org.apache.drill.exec.proto.BitControl.QueryContextInformation;
@@ -319,6 +322,11 @@ public class QueryContext implements AutoCloseable, OptimizerRulesContext, Schem
   @Override
   public DrillbitContext getDrillbitContext() {
     return drillbitContext;
+  }
+
+  @Override
+  public ResultSetLoader getResultSetLoader() {
+    return new ResultSetLoaderImpl(allocator, new ResultSetOptions());
   }
 
   @Override
