@@ -3988,13 +3988,13 @@
         <jdk>[9,)</jdk>
       </activation>
       <properties>
+        <maven.compiler.release>8</maven.compiler.release>
         <junit.args>
           --add-opens=java.base/java.lang=ALL-UNNAMED
           --add-opens java.base/java.net=ALL-UNNAMED
           --add-opens java.base/java.nio=ALL-UNNAMED
           --add-opens=java.base/java.util=ALL-UNNAMED
           --add-opens java.base/sun.nio.ch=ALL-UNNAMED
-          --add-opens java.security.jgss/sun.security.krb5=ALL-UNNAMED
         </junit.args>
       </properties>
     </profile>
