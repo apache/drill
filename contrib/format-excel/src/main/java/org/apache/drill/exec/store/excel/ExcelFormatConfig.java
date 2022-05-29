@@ -27,6 +27,7 @@ import org.apache.drill.common.PlanStringBuilder;
 import org.apache.drill.common.logical.FormatPluginConfig;
 import org.apache.drill.exec.store.excel.ExcelBatchReader.ExcelReaderConfig;
 import org.apache.drill.shaded.guava.com.google.common.collect.ImmutableList;
+import org.apache.poi.ss.SpreadsheetVersion;
 
 import java.util.Collections;
 import java.util.List;
@@ -37,7 +38,7 @@ import java.util.Objects;
 public class ExcelFormatConfig implements FormatPluginConfig {
 
   // This is the theoretical maximum number of rows in an Excel spreadsheet
-  private final int MAX_ROWS = 1_048_576;
+  private final int MAX_ROWS = SpreadsheetVersion.EXCEL2007.getMaxRows();
 
   private final List<String> extensions;
   private final int headerRow;
@@ -46,6 +47,9 @@ public class ExcelFormatConfig implements FormatPluginConfig {
   private final int lastColumn;
   private final boolean allTextMode;
   private final String sheetName;
+  private final int maxArraySize;
+  private final int thresholdBytesForTempFiles;
+  private final boolean useTempFilePackageParts;
 
   // Omitted properties take reasonable defaults
   @JsonCreator
@@ -56,7 +60,11 @@ public class ExcelFormatConfig implements FormatPluginConfig {
       @JsonProperty("firstColumn") Integer firstColumn,
       @JsonProperty("lastColumn") Integer lastColumn,
       @JsonProperty("allTextMode") Boolean allTextMode,
-      @JsonProperty("sheetName") String sheetName) {
+      @JsonProperty("sheetName") String sheetName,
+      @JsonProperty("maxArraySize") Integer maxArraySize,
+      @JsonProperty("thresholdBytesForTempFiles") Integer thresholdBytesForTempFiles,
+      @JsonProperty("useTempFilePackageParts") Boolean useTempFilePackageParts
+  ) {
     this.extensions = extensions == null
         ? Collections.singletonList("xlsx")
         : ImmutableList.copyOf(extensions);
@@ -67,6 +75,9 @@ public class ExcelFormatConfig implements FormatPluginConfig {
     this.lastColumn = lastColumn == null ? 0 : lastColumn;
     this.allTextMode = allTextMode == null ? false : allTextMode;
     this.sheetName = sheetName == null ? "" : sheetName;
+    this.maxArraySize = maxArraySize == null ? -1 : maxArraySize;
+    this.thresholdBytesForTempFiles = thresholdBytesForTempFiles == null ? -1 : thresholdBytesForTempFiles;
+    this.useTempFilePackageParts = useTempFilePackageParts == null ? false : useTempFilePackageParts;
   }
 
   @JsonInclude(JsonInclude.Include.NON_DEFAULT)
@@ -98,6 +109,34 @@ public class ExcelFormatConfig implements FormatPluginConfig {
     return sheetName;
   }
 
+  /**
+   * See the <code>setByteArrayMaxOverride</code> section in the Apache POI
+   * <a href="https://poi.apache.org/components/configuration.html">configuration</a> doc.
+   * @return max size of POI array (-1 means default limits applied)
+   */
+  public int getMaxArraySize() {
+    return maxArraySize;
+  }
+
+  /**
+   * See the <code>setThresholdBytesForTempFiles</code> section in the Apache POI
+   * <a href="https://poi.apache.org/components/configuration.html">configuration</a> doc.
+   * @return size at which xlsx parts are switched to temp file backing
+   * (-1 means no temp files for this feature - POI does use temp files in some other cases)
+   */
+  public int getThresholdBytesForTempFiles() {
+    return thresholdBytesForTempFiles;
+  }
+
+  /**
+   * See the <code>setUseTempFilePackageParts</code> section in the Apache POI
+   * <a href="https://poi.apache.org/components/configuration.html">configuration</a> doc.
+   * @return whether to use temp files for package parts (default is false)
+   */
+  public boolean isUseTempFilePackageParts() {
+    return useTempFilePackageParts;
+  }
+
   public ExcelReaderConfig getReaderConfig(ExcelFormatPlugin plugin) {
     ExcelReaderConfig readerConfig = new ExcelReaderConfig(plugin);
     return readerConfig;
@@ -124,7 +163,10 @@ public class ExcelFormatConfig implements FormatPluginConfig {
       && Objects.equals(firstColumn, other.firstColumn)
       && Objects.equals(lastColumn, other.lastColumn)
       && Objects.equals(allTextMode, other.allTextMode)
-      && Objects.equals(sheetName, other.sheetName);
+      && Objects.equals(sheetName, other.sheetName)
+      && Objects.equals(maxArraySize, other.maxArraySize)
+      && Objects.equals(thresholdBytesForTempFiles, other.thresholdBytesForTempFiles)
+      && Objects.equals(useTempFilePackageParts, other.useTempFilePackageParts);
   }
 
   @Override
@@ -137,6 +179,9 @@ public class ExcelFormatConfig implements FormatPluginConfig {
         .field("firstColumn", firstColumn)
         .field("lastColumn", lastColumn)
         .field("allTextMode", allTextMode)
+        .field("maxArraySize", maxArraySize)
+        .field("thresholdBytesForTempFiles", thresholdBytesForTempFiles)
+        .field("useTempFilePackageParts", useTempFilePackageParts)
         .toString();
   }
 }

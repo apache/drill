@@ -26,6 +26,9 @@ The plugin has many other configuration options listed below:
 * `lastColumn`: To define a region within a spreadsheet, this is the right-most column index. This is indexed from one. If set to `0` Drill will read all available columns. This
  is not inclusive, so if you ask for columns 2-5 you will get columns 2,3 and 4. 
 * `allTextMode`: When set to `true`, Drill will not attempt to infer column data types and will read everything as `VARCHAR`. Defaults to `false`;
+* `maxArraySize`: Overrides the default [POI config](https://poi.apache.org/components/configuration.html) for `setByteArrayMaxOverride(int maxOverride)`. May be needed with large Excel files.
+* `thresholdBytesForTempFiles`: Overrides the default [POI config](https://poi.apache.org/components/configuration.html) for `ZipInputStreamZipEntrySource.setThresholdBytesForTempFiles(int thresholdBytes)`. May be needed with large Excel files.
+* `useTempFilePackageParts`: Overrides the default [POI config](https://poi.apache.org/components/configuration.html) for `ZipPackage.setUseTempFilePackageParts(boolean tempFilePackageParts)`. May be needed with large Excel files.
 
 ## Usage
 You can specify the configuration at runtime via the `table()` function or in the storage plugin configuration. For instance, if you just want to query an Excel file, you could
