@@ -18,32 +18,29 @@
 package org.apache.drill.exec.rpc.user.security;
 
 import org.apache.drill.shaded.guava.com.google.common.collect.Lists;
-import com.typesafe.config.ConfigValueFactory;
-import org.apache.drill.test.*;
+import org.apache.drill.test.ClientFixture;
+import org.apache.drill.test.ClusterFixture;
+import org.apache.drill.test.ClusterFixtureBuilder;
+import org.apache.drill.test.ClusterTest;
 import org.apache.drill.categories.SecurityTest;
-import org.apache.drill.common.config.DrillConfig;
 import org.apache.drill.common.config.DrillProperties;
 import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.rpc.NonTransientRpcException;
 import org.apache.drill.exec.rpc.RpcException;
+import org.apache.drill.exec.rpc.RpcMetrics;
 import org.apache.drill.exec.rpc.control.ControlRpcMetrics;
 import org.apache.drill.exec.rpc.data.DataRpcMetrics;
 import org.apache.drill.exec.rpc.security.KerberosHelper;
 import org.apache.drill.exec.rpc.user.UserRpcMetrics;
 import org.apache.drill.exec.rpc.user.security.testing.UserAuthenticatorTestImpl;
-import org.apache.hadoop.security.authentication.util.KerberosName;
-import org.apache.hadoop.security.authentication.util.KerberosUtil;
 import org.apache.kerby.kerberos.kerb.client.JaasKrbUtil;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
 import javax.security.auth.Subject;
-import java.lang.reflect.Field;
 import java.security.PrivilegedExceptionAction;
-import java.util.Properties;
 
 import static junit.framework.TestCase.assertEquals;
 import static junit.framework.TestCase.fail;
@@ -54,7 +51,6 @@ public class TestUserBitKerberosEncryption extends ClusterTest {
       org.slf4j.LoggerFactory.getLogger(TestUserBitKerberosEncryption.class);
 
   private static KerberosHelper krbHelper;
-  private static DrillConfig newConfig;
 
   @BeforeClass
   public static void setupTest() throws Exception {
@@ -119,6 +115,8 @@ public class TestUserBitKerberosEncryption extends ClusterTest {
   @Test
   public void testConnectionCounters() throws Exception {
     try (
+      // Use a dedicated cluster fixture so that the tested RPC counters have a clean start.
+      ClusterFixture cluster = defaultClusterConfig().build();
       ClientFixture client = cluster.clientBuilder()
       .property(DrillProperties.SERVICE_PRINCIPAL, krbHelper.SERVER_PRINCIPAL)
       .property(DrillProperties.USER, krbHelper.CLIENT_PRINCIPAL)
@@ -132,15 +130,19 @@ public class TestUserBitKerberosEncryption extends ClusterTest {
         .baselineValues(krbHelper.CLIENT_SHORT_NAME)
         .go();
 
-      // Check encrypted counters value, only user-bit encryption is enabled
-      assertEquals(1, UserRpcMetrics.getInstance().getEncryptedConnectionCount());
-      assertEquals(0, ControlRpcMetrics.getInstance().getEncryptedConnectionCount());
-      assertEquals(0, DataRpcMetrics.getInstance().getEncryptedConnectionCount());
+      RpcMetrics userMetrics = UserRpcMetrics.getInstance(),
+        ctrlMetrics = ControlRpcMetrics.getInstance(),
+        dataMetrics = DataRpcMetrics.getInstance();
 
-      // Check unencrypted counters value, only user-bit encryption is enabled
-      assertEquals(0, UserRpcMetrics.getInstance().getUnEncryptedConnectionCount());
-      assertEquals(0, ControlRpcMetrics.getInstance().getUnEncryptedConnectionCount());
-      assertEquals(0, DataRpcMetrics.getInstance().getUnEncryptedConnectionCount());
+      // Check encrypted counters value, only user-bit encryption is enabled
+      assertEquals(1, userMetrics.getEncryptedConnectionCount());
+      assertEquals(0, ctrlMetrics.getEncryptedConnectionCount());
+      assertEquals(0, dataMetrics.getEncryptedConnectionCount());
+
+      // Check encrypted counters value, only user-bit encryption is enabled
+      assertEquals(0, userMetrics.getUnEncryptedConnectionCount());
+      assertEquals(0, ctrlMetrics.getUnEncryptedConnectionCount());
+      assertEquals(0, dataMetrics.getUnEncryptedConnectionCount());
     }
   }
 
@@ -315,6 +317,7 @@ public class TestUserBitKerberosEncryption extends ClusterTest {
   @Test
   public void testEncryptedConnectionCountersAllChannel() throws Exception {
     try (
+      // Use a dedicated cluster fixture so that the tested RPC counters have a clean start.
       ClusterFixture cluster = defaultClusterConfig()
         .configProperty(ExecConstants.USER_ENCRYPTION_SASL_MAX_WRAPPED_SIZE, 100)
         .configProperty(ExecConstants.USER_ENCRYPTION_SASL_MAX_WRAPPED_SIZE, 10000)
@@ -336,15 +339,19 @@ public class TestUserBitKerberosEncryption extends ClusterTest {
         .baselineValues(krbHelper.CLIENT_SHORT_NAME)
         .go();
 
+      RpcMetrics userMetrics = UserRpcMetrics.getInstance(),
+        ctrlMetrics = ControlRpcMetrics.getInstance(),
+        dataMetrics = DataRpcMetrics.getInstance();
+
       // Check encrypted counters value
-      assertEquals(1, UserRpcMetrics.getInstance().getEncryptedConnectionCount());
-      assertEquals(0, ControlRpcMetrics.getInstance().getEncryptedConnectionCount());
-      assertEquals(0, DataRpcMetrics.getInstance().getEncryptedConnectionCount());
+      assertEquals(1, userMetrics.getEncryptedConnectionCount());
+      assertEquals(0, ctrlMetrics.getEncryptedConnectionCount());
+      assertEquals(0, dataMetrics.getEncryptedConnectionCount());
 
       // Check unencrypted counters value
-      assertEquals(0, UserRpcMetrics.getInstance().getUnEncryptedConnectionCount());
-      assertEquals(0, ControlRpcMetrics.getInstance().getUnEncryptedConnectionCount());
-      assertEquals(0, DataRpcMetrics.getInstance().getUnEncryptedConnectionCount());
+      assertEquals(0, userMetrics.getUnEncryptedConnectionCount());
+      assertEquals(0, ctrlMetrics.getUnEncryptedConnectionCount());
+      assertEquals(0, dataMetrics.getUnEncryptedConnectionCount());
     }
   }
 
