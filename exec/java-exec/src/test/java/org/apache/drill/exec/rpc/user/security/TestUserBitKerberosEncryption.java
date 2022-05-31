@@ -19,7 +19,7 @@ package org.apache.drill.exec.rpc.user.security;
 
 import org.apache.drill.shaded.guava.com.google.common.collect.Lists;
 import com.typesafe.config.ConfigValueFactory;
-import org.apache.drill.test.BaseTestQuery;
+import org.apache.drill.test.*;
 import org.apache.drill.categories.SecurityTest;
 import org.apache.drill.common.config.DrillConfig;
 import org.apache.drill.common.config.DrillProperties;
@@ -36,6 +36,7 @@ import org.apache.hadoop.security.authentication.util.KerberosUtil;
 import org.apache.kerby.kerberos.kerb.client.JaasKrbUtil;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
@@ -44,11 +45,11 @@ import java.lang.reflect.Field;
 import java.security.PrivilegedExceptionAction;
 import java.util.Properties;
 
-import static junit.framework.TestCase.assertTrue;
+import static junit.framework.TestCase.assertEquals;
 import static junit.framework.TestCase.fail;
 
 @Category(SecurityTest.class)
-public class TestUserBitKerberosEncryption extends BaseTestQuery {
+public class TestUserBitKerberosEncryption extends ClusterTest {
   private static final org.slf4j.Logger logger =
       org.slf4j.LoggerFactory.getLogger(TestUserBitKerberosEncryption.class);
 
@@ -59,45 +60,18 @@ public class TestUserBitKerberosEncryption extends BaseTestQuery {
   public static void setupTest() throws Exception {
     krbHelper = new KerberosHelper(TestUserBitKerberosEncryption.class.getSimpleName(), null);
     krbHelper.setupKdc(dirTestWatcher.getTmpDir());
+    cluster = defaultClusterConfig().build();
+  }
 
-    // Create a new DrillConfig which has user authentication enabled and authenticator set to
-    // UserAuthenticatorTestImpl.
-    newConfig = new DrillConfig(DrillConfig.create(cloneDefaultTestConfigProperties())
-        .withValue(ExecConstants.USER_AUTHENTICATION_ENABLED,
-            ConfigValueFactory.fromAnyRef(true))
-        .withValue(ExecConstants.USER_AUTHENTICATOR_IMPL,
-            ConfigValueFactory.fromAnyRef(UserAuthenticatorTestImpl.TYPE))
-        .withValue(ExecConstants.SERVICE_PRINCIPAL,
-            ConfigValueFactory.fromAnyRef(krbHelper.SERVER_PRINCIPAL))
-        .withValue(ExecConstants.SERVICE_KEYTAB_LOCATION,
-            ConfigValueFactory.fromAnyRef(krbHelper.serverKeytab.toString()))
-        .withValue(ExecConstants.AUTHENTICATION_MECHANISMS,
-            ConfigValueFactory.fromIterable(Lists.newArrayList("plain", "kerberos")))
-        .withValue(ExecConstants.USER_ENCRYPTION_SASL_ENABLED,
-            ConfigValueFactory.fromAnyRef(true)));
-
-    final Properties connectionProps = new Properties();
-    connectionProps.setProperty(DrillProperties.SERVICE_PRINCIPAL, krbHelper.SERVER_PRINCIPAL);
-    connectionProps.setProperty(DrillProperties.USER, krbHelper.CLIENT_PRINCIPAL);
-    connectionProps.setProperty(DrillProperties.KEYTAB, krbHelper.clientKeytab.getAbsolutePath());
-
-    // Ignore the compile time warning caused by the code below.
-
-    // Config is statically initialized at this point. But the above configuration results in a different
-    // initialization which causes the tests to fail. So the following two changes are required.
-
-    // (1) Refresh Kerberos config.
-    // This disabled call to an unsupported internal API does not appear to be
-    // required and it prevents compiling with a target of JDK 8 on newer JDKs.
-    // sun.security.krb5.Config.refresh();
-
-    // (2) Reset the default realm.
-    final Field defaultRealm = KerberosName.class.getDeclaredField("defaultRealm");
-    defaultRealm.setAccessible(true);
-    defaultRealm.set(null, KerberosUtil.getDefaultRealm());
-
-    // Start a secure cluster with client using Kerberos related parameters.
-    updateTestCluster(1, newConfig, connectionProps);
+  private static ClusterFixtureBuilder defaultClusterConfig() {
+    return ClusterFixture.bareBuilder(dirTestWatcher)
+      .clusterSize(1)
+      .configProperty(ExecConstants.USER_AUTHENTICATION_ENABLED, true)
+      .configProperty(ExecConstants.USER_AUTHENTICATOR_IMPL, UserAuthenticatorTestImpl.TYPE)
+      .configProperty(ExecConstants.SERVICE_PRINCIPAL, krbHelper.SERVER_PRINCIPAL)
+      .configProperty(ExecConstants.SERVICE_KEYTAB_LOCATION, krbHelper.serverKeytab.toString())
+      .configNonStringProperty(ExecConstants.AUTHENTICATION_MECHANISMS, Lists.newArrayList("plain", "kerberos"))
+      .configProperty(ExecConstants.USER_ENCRYPTION_SASL_ENABLED, "true");
   }
 
   @AfterClass
@@ -107,39 +81,27 @@ public class TestUserBitKerberosEncryption extends BaseTestQuery {
 
   @Test
   public void successKeytabWithoutChunking() throws Exception {
-    final Properties connectionProps = new Properties();
-    connectionProps.setProperty(DrillProperties.SERVICE_PRINCIPAL, krbHelper.SERVER_PRINCIPAL);
-    connectionProps.setProperty(DrillProperties.USER, krbHelper.CLIENT_PRINCIPAL);
-    connectionProps.setProperty(DrillProperties.KEYTAB, krbHelper.clientKeytab.getAbsolutePath());
+    try (
+      ClientFixture client = cluster.clientBuilder()
+      .property(DrillProperties.SERVICE_PRINCIPAL, krbHelper.SERVER_PRINCIPAL)
+      .property(DrillProperties.USER, krbHelper.CLIENT_PRINCIPAL)
+      .property(DrillProperties.KEYTAB, krbHelper.clientKeytab.getAbsolutePath())
+      .build()
+    ) {
+      // Run few queries using the new client
+      client.testBuilder()
+          .sqlQuery("SELECT session_user FROM (SELECT * FROM sys.drillbits LIMIT 1)")
+          .unOrdered()
+          .baselineColumns("session_user")
+          .baselineValues(krbHelper.CLIENT_SHORT_NAME)
+          .go();
 
-    newConfig = new DrillConfig(DrillConfig.create(cloneDefaultTestConfigProperties())
-      .withValue(ExecConstants.USER_AUTHENTICATION_ENABLED,
-        ConfigValueFactory.fromAnyRef(true))
-      .withValue(ExecConstants.USER_AUTHENTICATOR_IMPL,
-        ConfigValueFactory.fromAnyRef(UserAuthenticatorTestImpl.TYPE))
-      .withValue(ExecConstants.SERVICE_PRINCIPAL,
-        ConfigValueFactory.fromAnyRef(krbHelper.SERVER_PRINCIPAL))
-      .withValue(ExecConstants.SERVICE_KEYTAB_LOCATION,
-        ConfigValueFactory.fromAnyRef(krbHelper.serverKeytab.toString()))
-      .withValue(ExecConstants.AUTHENTICATION_MECHANISMS,
-        ConfigValueFactory.fromIterable(Lists.newArrayList("plain", "kerberos")))
-      .withValue(ExecConstants.USER_ENCRYPTION_SASL_ENABLED,
-        ConfigValueFactory.fromAnyRef(true)));
-
-    updateTestCluster(1, newConfig, connectionProps);
-
-    // Run few queries using the new client
-    testBuilder()
-        .sqlQuery("SELECT session_user FROM (SELECT * FROM sys.drillbits LIMIT 1)")
-        .unOrdered()
-        .baselineColumns("session_user")
-        .baselineValues(krbHelper.CLIENT_SHORT_NAME)
-        .go();
-    test("SHOW SCHEMAS");
-    test("USE INFORMATION_SCHEMA");
-    test("SHOW TABLES");
-    test("SELECT * FROM INFORMATION_SCHEMA.`TABLES` WHERE TABLE_NAME LIKE 'COLUMNS'");
-    test("SELECT * FROM cp.`region.json`");
+      client.runSqlSilently("SHOW SCHEMAS");
+      client.runSqlSilently("USE INFORMATION_SCHEMA");
+      client.runSqlSilently("SHOW TABLES");
+      client.runSqlSilently("SELECT * FROM INFORMATION_SCHEMA.`TABLES` WHERE TABLE_NAME LIKE 'COLUMNS'");
+      client.runSqlSilently("SELECT * FROM cp.`region.json`");
+    }
   }
 
   /**
@@ -156,169 +118,113 @@ public class TestUserBitKerberosEncryption extends BaseTestQuery {
    */
   @Test
   public void testConnectionCounters() throws Exception {
-    final Properties connectionProps = new Properties();
-    connectionProps.setProperty(DrillProperties.SERVICE_PRINCIPAL, krbHelper.SERVER_PRINCIPAL);
-    connectionProps.setProperty(DrillProperties.USER, krbHelper.CLIENT_PRINCIPAL);
-    connectionProps.setProperty(DrillProperties.KEYTAB, krbHelper.clientKeytab.getAbsolutePath());
-
-    newConfig = new DrillConfig(DrillConfig.create(cloneDefaultTestConfigProperties())
-      .withValue(ExecConstants.USER_AUTHENTICATION_ENABLED,
-        ConfigValueFactory.fromAnyRef(true))
-      .withValue(ExecConstants.USER_AUTHENTICATOR_IMPL,
-        ConfigValueFactory.fromAnyRef(UserAuthenticatorTestImpl.TYPE))
-      .withValue(ExecConstants.SERVICE_PRINCIPAL,
-        ConfigValueFactory.fromAnyRef(krbHelper.SERVER_PRINCIPAL))
-      .withValue(ExecConstants.SERVICE_KEYTAB_LOCATION,
-        ConfigValueFactory.fromAnyRef(krbHelper.serverKeytab.toString()))
-      .withValue(ExecConstants.AUTHENTICATION_MECHANISMS,
-        ConfigValueFactory.fromIterable(Lists.newArrayList("plain", "kerberos")))
-      .withValue(ExecConstants.USER_ENCRYPTION_SASL_ENABLED,
-        ConfigValueFactory.fromAnyRef(true)));
-
-    updateTestCluster(1, newConfig, connectionProps);
-
-    assertTrue(UserRpcMetrics.getInstance().getEncryptedConnectionCount() == 1);
-    assertTrue(UserRpcMetrics.getInstance().getUnEncryptedConnectionCount() == 0);
-
-    // Run few queries using the new client
-    testBuilder()
+    try (
+      ClientFixture client = cluster.clientBuilder()
+      .property(DrillProperties.SERVICE_PRINCIPAL, krbHelper.SERVER_PRINCIPAL)
+      .property(DrillProperties.USER, krbHelper.CLIENT_PRINCIPAL)
+      .property(DrillProperties.KEYTAB, krbHelper.clientKeytab.getAbsolutePath())
+      .build()
+    ) {
+      client.testBuilder()
         .sqlQuery("SELECT session_user FROM (SELECT * FROM sys.drillbits LIMIT 1)")
         .unOrdered()
         .baselineColumns("session_user")
         .baselineValues(krbHelper.CLIENT_SHORT_NAME)
         .go();
 
-    // Check encrypted counters value
-    assertTrue(1 == UserRpcMetrics.getInstance().getEncryptedConnectionCount());
-    assertTrue(0 == ControlRpcMetrics.getInstance().getEncryptedConnectionCount());
-    assertTrue(0 == DataRpcMetrics.getInstance().getEncryptedConnectionCount());
+      // Check encrypted counters value, only user-bit encryption is enabled
+      assertEquals(1, UserRpcMetrics.getInstance().getEncryptedConnectionCount());
+      assertEquals(0, ControlRpcMetrics.getInstance().getEncryptedConnectionCount());
+      assertEquals(0, DataRpcMetrics.getInstance().getEncryptedConnectionCount());
 
-    // Check unencrypted counters value
-    assertTrue(0 == UserRpcMetrics.getInstance().getUnEncryptedConnectionCount());
-    assertTrue(0 == ControlRpcMetrics.getInstance().getUnEncryptedConnectionCount());
-    assertTrue(0 == DataRpcMetrics.getInstance().getUnEncryptedConnectionCount());
+      // Check unencrypted counters value, only user-bit encryption is enabled
+      assertEquals(0, UserRpcMetrics.getInstance().getUnEncryptedConnectionCount());
+      assertEquals(0, ControlRpcMetrics.getInstance().getUnEncryptedConnectionCount());
+      assertEquals(0, DataRpcMetrics.getInstance().getUnEncryptedConnectionCount());
+    }
   }
 
   @Test
   public void successTicketWithoutChunking() throws Exception {
-    final Properties connectionProps = new Properties();
-    connectionProps.setProperty(DrillProperties.SERVICE_PRINCIPAL, krbHelper.SERVER_PRINCIPAL);
-    connectionProps.setProperty(DrillProperties.KERBEROS_FROM_SUBJECT, "true");
-    final Subject clientSubject = JaasKrbUtil.loginUsingKeytab(krbHelper.CLIENT_PRINCIPAL,
-                                                               krbHelper.clientKeytab.getAbsoluteFile());
+    Subject clientSubject = JaasKrbUtil.loginUsingKeytab(
+      krbHelper.CLIENT_PRINCIPAL,
+      krbHelper.clientKeytab.getAbsoluteFile()
+    );
 
-    newConfig = new DrillConfig(DrillConfig.create(cloneDefaultTestConfigProperties())
-      .withValue(ExecConstants.USER_AUTHENTICATION_ENABLED,
-        ConfigValueFactory.fromAnyRef(true))
-      .withValue(ExecConstants.USER_AUTHENTICATOR_IMPL,
-        ConfigValueFactory.fromAnyRef(UserAuthenticatorTestImpl.TYPE))
-      .withValue(ExecConstants.SERVICE_PRINCIPAL,
-        ConfigValueFactory.fromAnyRef(krbHelper.SERVER_PRINCIPAL))
-      .withValue(ExecConstants.SERVICE_KEYTAB_LOCATION,
-        ConfigValueFactory.fromAnyRef(krbHelper.serverKeytab.toString()))
-      .withValue(ExecConstants.AUTHENTICATION_MECHANISMS,
-        ConfigValueFactory.fromIterable(Lists.newArrayList("plain", "kerberos")))
-      .withValue(ExecConstants.USER_ENCRYPTION_SASL_ENABLED,
-        ConfigValueFactory.fromAnyRef(true)));
+    try (
+      ClientFixture client = Subject.doAs(
+        clientSubject,
+        (PrivilegedExceptionAction<ClientFixture>) () -> cluster.clientBuilder()
+          .property(DrillProperties.SERVICE_PRINCIPAL, krbHelper.SERVER_PRINCIPAL)
+          .property(DrillProperties.KERBEROS_FROM_SUBJECT, "true")
+          .build()
+      )
+    ) {
+      client.testBuilder()
+          .sqlQuery("SELECT session_user FROM (SELECT * FROM sys.drillbits LIMIT 1)")
+          .unOrdered()
+          .baselineColumns("session_user")
+          .baselineValues(krbHelper.CLIENT_SHORT_NAME)
+          .go();
 
-    Subject.doAs(clientSubject, new PrivilegedExceptionAction<Void>() {
-      @Override
-      public Void run() throws Exception {
-        updateTestCluster(1, newConfig, connectionProps);
-        return null;
-      }
-    });
+      client.runSqlSilently("SHOW SCHEMAS");
+      client.runSqlSilently("USE INFORMATION_SCHEMA");
+      client.runSqlSilently("SHOW TABLES");
+      client.runSqlSilently("SELECT * FROM INFORMATION_SCHEMA.`TABLES` WHERE TABLE_NAME LIKE 'COLUMNS'");
+      client.runSqlSilently("SELECT * FROM cp.`region.json` LIMIT 5");
+    }
+  }
 
-    // Run few queries using the new client
-    testBuilder()
+  @Test
+  public void successKeytabWithChunking() throws Exception {
+    try (
+      ClusterFixture cluster = defaultClusterConfig()
+        .configProperty(ExecConstants.USER_ENCRYPTION_SASL_MAX_WRAPPED_SIZE, 100)
+        .build();
+      ClientFixture client = cluster.clientBuilder()
+        .property(DrillProperties.SERVICE_PRINCIPAL, krbHelper.SERVER_PRINCIPAL)
+        .property(DrillProperties.USER, krbHelper.CLIENT_PRINCIPAL)
+        .property(DrillProperties.KEYTAB, krbHelper.clientKeytab.getAbsolutePath())
+        .build()
+    ) {
+      client.testBuilder()
         .sqlQuery("SELECT session_user FROM (SELECT * FROM sys.drillbits LIMIT 1)")
         .unOrdered()
         .baselineColumns("session_user")
         .baselineValues(krbHelper.CLIENT_SHORT_NAME)
         .go();
-    test("SHOW SCHEMAS");
-    test("USE INFORMATION_SCHEMA");
-    test("SHOW TABLES");
-    test("SELECT * FROM INFORMATION_SCHEMA.`TABLES` WHERE TABLE_NAME LIKE 'COLUMNS'");
-    test("SELECT * FROM cp.`region.json` LIMIT 5");
-  }
 
-  @Test
-  public void successKeytabWithChunking() throws Exception {
-    final Properties connectionProps = new Properties();
-    connectionProps.setProperty(DrillProperties.SERVICE_PRINCIPAL, krbHelper.SERVER_PRINCIPAL);
-    connectionProps.setProperty(DrillProperties.USER, krbHelper.CLIENT_PRINCIPAL);
-    connectionProps.setProperty(DrillProperties.KEYTAB, krbHelper.clientKeytab.getAbsolutePath());
-
-    newConfig = new DrillConfig(DrillConfig.create(cloneDefaultTestConfigProperties())
-      .withValue(ExecConstants.USER_AUTHENTICATION_ENABLED,
-        ConfigValueFactory.fromAnyRef(true))
-      .withValue(ExecConstants.USER_AUTHENTICATOR_IMPL,
-        ConfigValueFactory.fromAnyRef(UserAuthenticatorTestImpl.TYPE))
-      .withValue(ExecConstants.SERVICE_PRINCIPAL,
-        ConfigValueFactory.fromAnyRef(krbHelper.SERVER_PRINCIPAL))
-      .withValue(ExecConstants.SERVICE_KEYTAB_LOCATION,
-        ConfigValueFactory.fromAnyRef(krbHelper.serverKeytab.toString()))
-      .withValue(ExecConstants.AUTHENTICATION_MECHANISMS,
-        ConfigValueFactory.fromIterable(Lists.newArrayList("plain", "kerberos")))
-      .withValue(ExecConstants.USER_ENCRYPTION_SASL_ENABLED,
-        ConfigValueFactory.fromAnyRef(true))
-      .withValue(ExecConstants.USER_ENCRYPTION_SASL_MAX_WRAPPED_SIZE,
-        ConfigValueFactory.fromAnyRef(100)));
-
-    updateTestCluster(1, newConfig, connectionProps);
-
-    // Run few queries using the new client
-    testBuilder()
-      .sqlQuery("SELECT session_user FROM (SELECT * FROM sys.drillbits LIMIT 1)")
-      .unOrdered()
-      .baselineColumns("session_user")
-      .baselineValues(krbHelper.CLIENT_SHORT_NAME)
-      .go();
-    test("SHOW SCHEMAS");
-    test("USE INFORMATION_SCHEMA");
-    test("SHOW TABLES");
-    test("SELECT * FROM INFORMATION_SCHEMA.`TABLES` WHERE TABLE_NAME LIKE 'COLUMNS'");
-    test("SELECT * FROM cp.`region.json`");
+      client.runSqlSilently("SHOW SCHEMAS");
+      client.runSqlSilently("USE INFORMATION_SCHEMA");
+      client.runSqlSilently("SHOW TABLES");
+      client.runSqlSilently("SELECT * FROM INFORMATION_SCHEMA.`TABLES` WHERE TABLE_NAME LIKE 'COLUMNS'");
+      client.runSqlSilently("SELECT * FROM cp.`region.json` LIMIT 5");
+    }
   }
 
   @Test
   public void successKeytabWithChunkingDefaultChunkSize() throws Exception {
-    final Properties connectionProps = new Properties();
-    connectionProps.setProperty(DrillProperties.SERVICE_PRINCIPAL, krbHelper.SERVER_PRINCIPAL);
-    connectionProps.setProperty(DrillProperties.USER, krbHelper.CLIENT_PRINCIPAL);
-    connectionProps.setProperty(DrillProperties.KEYTAB, krbHelper.clientKeytab.getAbsolutePath());
+    try (
+      ClientFixture client = cluster.clientBuilder()
+        .property(DrillProperties.SERVICE_PRINCIPAL, krbHelper.SERVER_PRINCIPAL)
+        .property(DrillProperties.USER, krbHelper.CLIENT_PRINCIPAL)
+        .property(DrillProperties.KEYTAB, krbHelper.clientKeytab.getAbsolutePath())
+        .build()
+    ) {
+      client.testBuilder()
+        .sqlQuery("SELECT session_user FROM (SELECT * FROM sys.drillbits LIMIT 1)")
+        .unOrdered()
+        .baselineColumns("session_user")
+        .baselineValues(krbHelper.CLIENT_SHORT_NAME)
+        .go();
 
-    newConfig = new DrillConfig(DrillConfig.create(cloneDefaultTestConfigProperties())
-      .withValue(ExecConstants.USER_AUTHENTICATION_ENABLED,
-        ConfigValueFactory.fromAnyRef(true))
-      .withValue(ExecConstants.USER_AUTHENTICATOR_IMPL,
-        ConfigValueFactory.fromAnyRef(UserAuthenticatorTestImpl.TYPE))
-      .withValue(ExecConstants.SERVICE_PRINCIPAL,
-        ConfigValueFactory.fromAnyRef(krbHelper.SERVER_PRINCIPAL))
-      .withValue(ExecConstants.SERVICE_KEYTAB_LOCATION,
-        ConfigValueFactory.fromAnyRef(krbHelper.serverKeytab.toString()))
-      .withValue(ExecConstants.AUTHENTICATION_MECHANISMS,
-        ConfigValueFactory.fromIterable(Lists.newArrayList("plain", "kerberos")))
-      .withValue(ExecConstants.USER_ENCRYPTION_SASL_ENABLED,
-        ConfigValueFactory.fromAnyRef(true)));
-
-    updateTestCluster(1, newConfig, connectionProps);
-
-    // Run few queries using the new client
-    testBuilder()
-      .sqlQuery("SELECT session_user FROM (SELECT * FROM sys.drillbits LIMIT 1)")
-      .unOrdered()
-      .baselineColumns("session_user")
-      .baselineValues(krbHelper.CLIENT_SHORT_NAME)
-      .go();
-    test("SHOW SCHEMAS");
-    test("USE INFORMATION_SCHEMA");
-    test("SHOW TABLES");
-    test("SELECT * FROM INFORMATION_SCHEMA.`TABLES` WHERE TABLE_NAME LIKE 'COLUMNS'");
-    test("SELECT * FROM cp.`region.json` LIMIT 5");
+      client.runSqlSilently("SHOW SCHEMAS");
+      client.runSqlSilently("USE INFORMATION_SCHEMA");
+      client.runSqlSilently("SHOW TABLES");
+      client.runSqlSilently("SELECT * FROM INFORMATION_SCHEMA.`TABLES` WHERE TABLE_NAME LIKE 'COLUMNS'");
+      client.runSqlSilently("SELECT * FROM cp.`region.json` LIMIT 5");
+    }
   }
-
 
   /**
    *  This test will not cover the data channel since we are using only 1 Drillbit and the query doesn't involve
@@ -327,54 +233,36 @@ public class TestUserBitKerberosEncryption extends BaseTestQuery {
    */
   @Test
   public void successEncryptionAllChannelChunkMode() throws Exception {
-    final Properties connectionProps = new Properties();
-    connectionProps.setProperty(DrillProperties.SERVICE_PRINCIPAL, krbHelper.SERVER_PRINCIPAL);
-    connectionProps.setProperty(DrillProperties.USER, krbHelper.CLIENT_PRINCIPAL);
-    connectionProps.setProperty(DrillProperties.KEYTAB, krbHelper.clientKeytab.getAbsolutePath());
+    try (
+      ClusterFixture cluster = defaultClusterConfig()
+        .configProperty(ExecConstants.USER_ENCRYPTION_SASL_MAX_WRAPPED_SIZE, 100)
+        .configProperty(ExecConstants.USER_ENCRYPTION_SASL_MAX_WRAPPED_SIZE, 10000)
+        .configProperty(ExecConstants.BIT_AUTHENTICATION_ENABLED, true)
+        .configProperty(ExecConstants.BIT_AUTHENTICATION_MECHANISM, "kerberos")
+        .configProperty(ExecConstants.USE_LOGIN_PRINCIPAL, true)
+        .configProperty(ExecConstants.BIT_ENCRYPTION_SASL_ENABLED, true)
+        .configProperty(ExecConstants.BIT_ENCRYPTION_SASL_MAX_WRAPPED_SIZE, 10000)
+        .build();
+      ClientFixture client = cluster.clientBuilder()
+        .property(DrillProperties.SERVICE_PRINCIPAL, krbHelper.SERVER_PRINCIPAL)
+        .property(DrillProperties.USER, krbHelper.CLIENT_PRINCIPAL)
+        .property(DrillProperties.KEYTAB, krbHelper.clientKeytab.getAbsolutePath())
+        .build()
+    ) {
+      client.testBuilder()
+        .sqlQuery("SELECT session_user FROM (SELECT * FROM sys.drillbits LIMIT 1)")
+        .unOrdered()
+        .baselineColumns("session_user")
+        .baselineValues(krbHelper.CLIENT_SHORT_NAME)
+        .go();
 
-    newConfig = new DrillConfig(DrillConfig.create(cloneDefaultTestConfigProperties())
-      .withValue(ExecConstants.USER_AUTHENTICATION_ENABLED,
-        ConfigValueFactory.fromAnyRef(true))
-      .withValue(ExecConstants.USER_AUTHENTICATOR_IMPL,
-        ConfigValueFactory.fromAnyRef(UserAuthenticatorTestImpl.TYPE))
-      .withValue(ExecConstants.SERVICE_PRINCIPAL,
-        ConfigValueFactory.fromAnyRef(krbHelper.SERVER_PRINCIPAL))
-      .withValue(ExecConstants.SERVICE_KEYTAB_LOCATION,
-        ConfigValueFactory.fromAnyRef(krbHelper.serverKeytab.toString()))
-      .withValue(ExecConstants.AUTHENTICATION_MECHANISMS,
-        ConfigValueFactory.fromIterable(Lists.newArrayList("plain", "kerberos")))
-      .withValue(ExecConstants.USER_ENCRYPTION_SASL_ENABLED,
-        ConfigValueFactory.fromAnyRef(true))
-      .withValue(ExecConstants.USER_ENCRYPTION_SASL_MAX_WRAPPED_SIZE,
-        ConfigValueFactory.fromAnyRef(10000))
-      .withValue(ExecConstants.BIT_AUTHENTICATION_ENABLED,
-        ConfigValueFactory.fromAnyRef(true))
-      .withValue(ExecConstants.BIT_AUTHENTICATION_MECHANISM,
-        ConfigValueFactory.fromAnyRef("kerberos"))
-      .withValue(ExecConstants.USE_LOGIN_PRINCIPAL,
-        ConfigValueFactory.fromAnyRef(true))
-      .withValue(ExecConstants.BIT_ENCRYPTION_SASL_ENABLED,
-        ConfigValueFactory.fromAnyRef(true))
-      .withValue(ExecConstants.BIT_ENCRYPTION_SASL_MAX_WRAPPED_SIZE,
-        ConfigValueFactory.fromAnyRef(10000)));
-
-    updateTestCluster(1, newConfig, connectionProps);
-
-    // Run few queries using the new client
-    testBuilder()
-      .sqlQuery("SELECT session_user FROM (SELECT * FROM sys.drillbits LIMIT 1)")
-      .unOrdered()
-      .baselineColumns("session_user")
-      .baselineValues(krbHelper.CLIENT_SHORT_NAME)
-      .go();
-    test("SHOW SCHEMAS");
-    test("USE INFORMATION_SCHEMA");
-    test("SHOW TABLES");
-    test("SELECT * FROM INFORMATION_SCHEMA.`TABLES` WHERE TABLE_NAME LIKE 'COLUMNS'");
-    test("SELECT * FROM cp.`region.json` LIMIT 5");
+        client.runSqlSilently("SHOW SCHEMAS");
+        client.runSqlSilently("USE INFORMATION_SCHEMA");
+        client.runSqlSilently("SHOW TABLES");
+        client.runSqlSilently("SELECT * FROM INFORMATION_SCHEMA.`TABLES` WHERE TABLE_NAME LIKE 'COLUMNS'");
+        client.runSqlSilently("SELECT * FROM cp.`region.json` LIMIT 5");
+    }
   }
-
-
 
   /**
    *  This test will not cover the data channel since we are using only 1 Drillbit and the query doesn't involve
@@ -383,48 +271,34 @@ public class TestUserBitKerberosEncryption extends BaseTestQuery {
    */
   @Test
   public void successEncryptionAllChannel() throws Exception {
+    try (
+      ClusterFixture cluster = defaultClusterConfig()
+        .configProperty(ExecConstants.USER_ENCRYPTION_SASL_MAX_WRAPPED_SIZE, 100)
+        .configProperty(ExecConstants.USER_ENCRYPTION_SASL_MAX_WRAPPED_SIZE, 10000)
+        .configProperty(ExecConstants.BIT_AUTHENTICATION_ENABLED, true)
+        .configProperty(ExecConstants.BIT_AUTHENTICATION_MECHANISM, "kerberos")
+        .configProperty(ExecConstants.USE_LOGIN_PRINCIPAL, true)
+        .configProperty(ExecConstants.BIT_ENCRYPTION_SASL_ENABLED, true)
+        .build();
+      ClientFixture client = cluster.clientBuilder()
+        .property(DrillProperties.SERVICE_PRINCIPAL, krbHelper.SERVER_PRINCIPAL)
+        .property(DrillProperties.USER, krbHelper.CLIENT_PRINCIPAL)
+        .property(DrillProperties.KEYTAB, krbHelper.clientKeytab.getAbsolutePath())
+        .build()
+    ) {
+      client.testBuilder()
+        .sqlQuery("SELECT session_user FROM (SELECT * FROM sys.drillbits LIMIT 1)")
+        .unOrdered()
+        .baselineColumns("session_user")
+        .baselineValues(krbHelper.CLIENT_SHORT_NAME)
+        .go();
 
-    final Properties connectionProps = new Properties();
-    connectionProps.setProperty(DrillProperties.SERVICE_PRINCIPAL, krbHelper.SERVER_PRINCIPAL);
-    connectionProps.setProperty(DrillProperties.USER, krbHelper.CLIENT_PRINCIPAL);
-    connectionProps.setProperty(DrillProperties.KEYTAB, krbHelper.clientKeytab.getAbsolutePath());
-
-    newConfig = new DrillConfig(DrillConfig.create(cloneDefaultTestConfigProperties())
-      .withValue(ExecConstants.USER_AUTHENTICATION_ENABLED,
-        ConfigValueFactory.fromAnyRef(true))
-      .withValue(ExecConstants.USER_AUTHENTICATOR_IMPL,
-        ConfigValueFactory.fromAnyRef(UserAuthenticatorTestImpl.TYPE))
-      .withValue(ExecConstants.SERVICE_PRINCIPAL,
-        ConfigValueFactory.fromAnyRef(krbHelper.SERVER_PRINCIPAL))
-      .withValue(ExecConstants.SERVICE_KEYTAB_LOCATION,
-        ConfigValueFactory.fromAnyRef(krbHelper.serverKeytab.toString()))
-      .withValue(ExecConstants.AUTHENTICATION_MECHANISMS,
-        ConfigValueFactory.fromIterable(Lists.newArrayList("plain", "kerberos")))
-      .withValue(ExecConstants.USER_ENCRYPTION_SASL_ENABLED,
-        ConfigValueFactory.fromAnyRef(true))
-      .withValue(ExecConstants.BIT_AUTHENTICATION_ENABLED,
-        ConfigValueFactory.fromAnyRef(true))
-      .withValue(ExecConstants.BIT_AUTHENTICATION_MECHANISM,
-        ConfigValueFactory.fromAnyRef("kerberos"))
-      .withValue(ExecConstants.USE_LOGIN_PRINCIPAL,
-        ConfigValueFactory.fromAnyRef(true))
-      .withValue(ExecConstants.BIT_ENCRYPTION_SASL_ENABLED,
-        ConfigValueFactory.fromAnyRef(true)));
-
-    updateTestCluster(1, newConfig, connectionProps);
-
-    // Run few queries using the new client
-    testBuilder()
-      .sqlQuery("SELECT session_user FROM (SELECT * FROM sys.drillbits LIMIT 1)")
-      .unOrdered()
-      .baselineColumns("session_user")
-      .baselineValues(krbHelper.CLIENT_SHORT_NAME)
-      .go();
-    test("SHOW SCHEMAS");
-    test("USE INFORMATION_SCHEMA");
-    test("SHOW TABLES");
-    test("SELECT * FROM INFORMATION_SCHEMA.`TABLES` WHERE TABLE_NAME LIKE 'COLUMNS'");
-    test("SELECT * FROM cp.`region.json` LIMIT 5");
+      client.runSqlSilently("SHOW SCHEMAS");
+      client.runSqlSilently("USE INFORMATION_SCHEMA");
+      client.runSqlSilently("SHOW TABLES");
+      client.runSqlSilently("SELECT * FROM INFORMATION_SCHEMA.`TABLES` WHERE TABLE_NAME LIKE 'COLUMNS'");
+      client.runSqlSilently("SELECT * FROM cp.`region.json` LIMIT 5");
+    }
   }
 
   /**
@@ -440,76 +314,48 @@ public class TestUserBitKerberosEncryption extends BaseTestQuery {
 
   @Test
   public void testEncryptedConnectionCountersAllChannel() throws Exception {
-    final Properties connectionProps = new Properties();
-    connectionProps.setProperty(DrillProperties.SERVICE_PRINCIPAL, krbHelper.SERVER_PRINCIPAL);
-    connectionProps.setProperty(DrillProperties.USER, krbHelper.CLIENT_PRINCIPAL);
-    connectionProps.setProperty(DrillProperties.KEYTAB, krbHelper.clientKeytab.getAbsolutePath());
-
-    newConfig = new DrillConfig(DrillConfig.create(cloneDefaultTestConfigProperties())
-        .withValue(ExecConstants.USER_AUTHENTICATION_ENABLED,
-            ConfigValueFactory.fromAnyRef(true))
-        .withValue(ExecConstants.USER_AUTHENTICATOR_IMPL,
-            ConfigValueFactory.fromAnyRef(UserAuthenticatorTestImpl.TYPE))
-        .withValue(ExecConstants.SERVICE_PRINCIPAL,
-            ConfigValueFactory.fromAnyRef(krbHelper.SERVER_PRINCIPAL))
-        .withValue(ExecConstants.SERVICE_KEYTAB_LOCATION,
-            ConfigValueFactory.fromAnyRef(krbHelper.serverKeytab.toString()))
-        .withValue(ExecConstants.AUTHENTICATION_MECHANISMS,
-            ConfigValueFactory.fromIterable(Lists.newArrayList("plain", "kerberos")))
-        .withValue(ExecConstants.USER_ENCRYPTION_SASL_ENABLED,
-            ConfigValueFactory.fromAnyRef(true))
-        .withValue(ExecConstants.BIT_AUTHENTICATION_ENABLED,
-            ConfigValueFactory.fromAnyRef(true))
-        .withValue(ExecConstants.BIT_AUTHENTICATION_MECHANISM,
-            ConfigValueFactory.fromAnyRef("kerberos"))
-        .withValue(ExecConstants.USE_LOGIN_PRINCIPAL,
-            ConfigValueFactory.fromAnyRef(true))
-        .withValue(ExecConstants.BIT_ENCRYPTION_SASL_ENABLED,
-            ConfigValueFactory.fromAnyRef(true)));
-
-    updateTestCluster(1, newConfig, connectionProps);
-
-    // Run few queries using the new client
-    testBuilder()
+    try (
+      ClusterFixture cluster = defaultClusterConfig()
+        .configProperty(ExecConstants.USER_ENCRYPTION_SASL_MAX_WRAPPED_SIZE, 100)
+        .configProperty(ExecConstants.USER_ENCRYPTION_SASL_MAX_WRAPPED_SIZE, 10000)
+        .configProperty(ExecConstants.BIT_AUTHENTICATION_ENABLED, true)
+        .configProperty(ExecConstants.BIT_AUTHENTICATION_MECHANISM, "kerberos")
+        .configProperty(ExecConstants.USE_LOGIN_PRINCIPAL, true)
+        .configProperty(ExecConstants.BIT_ENCRYPTION_SASL_ENABLED, true)
+        .build();
+      ClientFixture client = cluster.clientBuilder()
+        .property(DrillProperties.SERVICE_PRINCIPAL, krbHelper.SERVER_PRINCIPAL)
+        .property(DrillProperties.USER, krbHelper.CLIENT_PRINCIPAL)
+        .property(DrillProperties.KEYTAB, krbHelper.clientKeytab.getAbsolutePath())
+        .build()
+    ) {
+      client.testBuilder()
         .sqlQuery("SELECT session_user FROM (SELECT * FROM sys.drillbits LIMIT 1)")
         .unOrdered()
         .baselineColumns("session_user")
         .baselineValues(krbHelper.CLIENT_SHORT_NAME)
         .go();
 
-    // Check encrypted counters value
-    assertTrue(1 == UserRpcMetrics.getInstance().getEncryptedConnectionCount());
-    assertTrue(0 == ControlRpcMetrics.getInstance().getEncryptedConnectionCount());
-    assertTrue(0 == DataRpcMetrics.getInstance().getEncryptedConnectionCount());
+      // Check encrypted counters value
+      assertEquals(1, UserRpcMetrics.getInstance().getEncryptedConnectionCount());
+      assertEquals(0, ControlRpcMetrics.getInstance().getEncryptedConnectionCount());
+      assertEquals(0, DataRpcMetrics.getInstance().getEncryptedConnectionCount());
 
-    // Check unencrypted counters value
-    assertTrue(0 == UserRpcMetrics.getInstance().getUnEncryptedConnectionCount());
-    assertTrue(0 == ControlRpcMetrics.getInstance().getUnEncryptedConnectionCount());
-    assertTrue(0 == DataRpcMetrics.getInstance().getUnEncryptedConnectionCount());
+      // Check unencrypted counters value
+      assertEquals(0, UserRpcMetrics.getInstance().getUnEncryptedConnectionCount());
+      assertEquals(0, ControlRpcMetrics.getInstance().getUnEncryptedConnectionCount());
+      assertEquals(0, DataRpcMetrics.getInstance().getUnEncryptedConnectionCount());
+    }
   }
 
   @Test
   public void failurePlainMech() {
-    try {
-      final Properties connectionProps = new Properties();
-      connectionProps.setProperty(DrillProperties.USER, "anonymous");
-      connectionProps.setProperty(DrillProperties.PASSWORD, "anything works!");
-
-      newConfig = new DrillConfig(DrillConfig.create(cloneDefaultTestConfigProperties())
-        .withValue(ExecConstants.USER_AUTHENTICATION_ENABLED,
-          ConfigValueFactory.fromAnyRef(true))
-        .withValue(ExecConstants.USER_AUTHENTICATOR_IMPL,
-          ConfigValueFactory.fromAnyRef(UserAuthenticatorTestImpl.TYPE))
-        .withValue(ExecConstants.SERVICE_PRINCIPAL,
-          ConfigValueFactory.fromAnyRef(krbHelper.SERVER_PRINCIPAL))
-        .withValue(ExecConstants.SERVICE_KEYTAB_LOCATION,
-          ConfigValueFactory.fromAnyRef(krbHelper.serverKeytab.toString()))
-        .withValue(ExecConstants.AUTHENTICATION_MECHANISMS,
-          ConfigValueFactory.fromIterable(Lists.newArrayList("plain", "kerberos")))
-        .withValue(ExecConstants.USER_ENCRYPTION_SASL_ENABLED,
-          ConfigValueFactory.fromAnyRef(true)));
-
-      updateTestCluster(1, newConfig, connectionProps);
+    try (
+      ClientFixture client = cluster.clientBuilder()
+        .property(DrillProperties.USER, "anonymous")
+        .property(DrillProperties.PASSWORD, "anything works!")
+        .build()
+    ) {
       fail();
     } catch (Exception ex) {
       assert (ex.getCause() instanceof NonTransientRpcException);
@@ -519,27 +365,16 @@ public class TestUserBitKerberosEncryption extends BaseTestQuery {
 
   @Test
   public void encryptionEnabledWithOnlyPlainMech() {
-    try {
-      final Properties connectionProps = new Properties();
-      connectionProps.setProperty(DrillProperties.SERVICE_PRINCIPAL, krbHelper.SERVER_PRINCIPAL);
-      connectionProps.setProperty(DrillProperties.USER, krbHelper.CLIENT_PRINCIPAL);
-      connectionProps.setProperty(DrillProperties.KEYTAB, krbHelper.clientKeytab.getAbsolutePath());
-
-      newConfig = new DrillConfig(DrillConfig.create(cloneDefaultTestConfigProperties())
-        .withValue(ExecConstants.USER_AUTHENTICATION_ENABLED,
-          ConfigValueFactory.fromAnyRef(true))
-        .withValue(ExecConstants.USER_AUTHENTICATOR_IMPL,
-          ConfigValueFactory.fromAnyRef(UserAuthenticatorTestImpl.TYPE))
-        .withValue(ExecConstants.SERVICE_PRINCIPAL,
-          ConfigValueFactory.fromAnyRef(krbHelper.SERVER_PRINCIPAL))
-        .withValue(ExecConstants.SERVICE_KEYTAB_LOCATION,
-          ConfigValueFactory.fromAnyRef(krbHelper.serverKeytab.toString()))
-        .withValue(ExecConstants.AUTHENTICATION_MECHANISMS,
-          ConfigValueFactory.fromIterable(Lists.newArrayList("plain")))
-        .withValue(ExecConstants.USER_ENCRYPTION_SASL_ENABLED,
-          ConfigValueFactory.fromAnyRef(true)));
-      updateTestCluster(1, newConfig, connectionProps);
-
+    try (
+      ClusterFixture cluster = defaultClusterConfig()
+        .configNonStringProperty(ExecConstants.AUTHENTICATION_MECHANISMS, Lists.newArrayList("plain"))
+        .build();
+      ClientFixture client = cluster.clientBuilder()
+        .property(DrillProperties.SERVICE_PRINCIPAL, krbHelper.SERVER_PRINCIPAL)
+        .property(DrillProperties.USER, krbHelper.CLIENT_PRINCIPAL)
+        .property(DrillProperties.KEYTAB, krbHelper.clientKeytab.getAbsolutePath())
+        .build()
+    ) {
       fail();
     } catch (Exception ex) {
       assert (ex.getCause() instanceof NonTransientRpcException);
@@ -553,28 +388,14 @@ public class TestUserBitKerberosEncryption extends BaseTestQuery {
    */
   @Test
   public void failureOldClientEncryptionEnabled() {
-    try {
-      final Properties connectionProps = new Properties();
-      connectionProps.setProperty(DrillProperties.SERVICE_PRINCIPAL, krbHelper.SERVER_PRINCIPAL);
-      connectionProps.setProperty(DrillProperties.USER, krbHelper.CLIENT_PRINCIPAL);
-      connectionProps.setProperty(DrillProperties.KEYTAB, krbHelper.clientKeytab.getAbsolutePath());
-      connectionProps.setProperty(DrillProperties.TEST_SASL_LEVEL, "1");
-
-      newConfig = new DrillConfig(DrillConfig.create(cloneDefaultTestConfigProperties())
-        .withValue(ExecConstants.USER_AUTHENTICATION_ENABLED,
-          ConfigValueFactory.fromAnyRef(true))
-        .withValue(ExecConstants.USER_AUTHENTICATOR_IMPL,
-          ConfigValueFactory.fromAnyRef(UserAuthenticatorTestImpl.TYPE))
-        .withValue(ExecConstants.SERVICE_PRINCIPAL,
-          ConfigValueFactory.fromAnyRef(krbHelper.SERVER_PRINCIPAL))
-        .withValue(ExecConstants.SERVICE_KEYTAB_LOCATION,
-          ConfigValueFactory.fromAnyRef(krbHelper.serverKeytab.toString()))
-        .withValue(ExecConstants.AUTHENTICATION_MECHANISMS,
-          ConfigValueFactory.fromIterable(Lists.newArrayList("plain", "kerberos")))
-        .withValue(ExecConstants.USER_ENCRYPTION_SASL_ENABLED,
-          ConfigValueFactory.fromAnyRef(true)));
-      updateTestCluster(1, newConfig, connectionProps);
-
+    try (
+      ClientFixture client = cluster.clientBuilder()
+        .property(DrillProperties.SERVICE_PRINCIPAL, krbHelper.SERVER_PRINCIPAL)
+        .property(DrillProperties.USER, krbHelper.CLIENT_PRINCIPAL)
+        .property(DrillProperties.KEYTAB, krbHelper.clientKeytab.getAbsolutePath())
+        .property(DrillProperties.TEST_SASL_LEVEL, "1")
+        .build()
+    ) {
       fail();
     } catch (Exception ex) {
       assert (ex.getCause() instanceof RpcException);
@@ -588,26 +409,27 @@ public class TestUserBitKerberosEncryption extends BaseTestQuery {
    */
   @Test
   public void successOldClientEncryptionDisabled() {
-
-    final Properties connectionProps = new Properties();
-    connectionProps.setProperty(DrillProperties.SERVICE_PRINCIPAL, krbHelper.SERVER_PRINCIPAL);
-    connectionProps.setProperty(DrillProperties.USER, krbHelper.CLIENT_PRINCIPAL);
-    connectionProps.setProperty(DrillProperties.KEYTAB, krbHelper.clientKeytab.getAbsolutePath());
-    connectionProps.setProperty(DrillProperties.TEST_SASL_LEVEL, "1");
-
-    newConfig = new DrillConfig(DrillConfig.create(cloneDefaultTestConfigProperties())
-      .withValue(ExecConstants.USER_AUTHENTICATION_ENABLED,
-        ConfigValueFactory.fromAnyRef(true))
-      .withValue(ExecConstants.USER_AUTHENTICATOR_IMPL,
-        ConfigValueFactory.fromAnyRef(UserAuthenticatorTestImpl.TYPE))
-      .withValue(ExecConstants.SERVICE_PRINCIPAL,
-        ConfigValueFactory.fromAnyRef(krbHelper.SERVER_PRINCIPAL))
-      .withValue(ExecConstants.SERVICE_KEYTAB_LOCATION,
-        ConfigValueFactory.fromAnyRef(krbHelper.serverKeytab.toString()))
-      .withValue(ExecConstants.AUTHENTICATION_MECHANISMS,
-        ConfigValueFactory.fromIterable(Lists.newArrayList("plain", "kerberos"))));
-
-    updateTestCluster(1, newConfig, connectionProps);
+    try (
+      ClusterFixture cluster = defaultClusterConfig()
+        .configProperty(ExecConstants.USER_ENCRYPTION_SASL_ENABLED, false)
+        .build();
+      ClientFixture client = cluster.clientBuilder()
+        .property(DrillProperties.SERVICE_PRINCIPAL, krbHelper.SERVER_PRINCIPAL)
+        .property(DrillProperties.USER, krbHelper.CLIENT_PRINCIPAL)
+        .property(DrillProperties.KEYTAB, krbHelper.clientKeytab.getAbsolutePath())
+        .property(DrillProperties.TEST_SASL_LEVEL, "1")
+        .build()
+    ) {
+      client.testBuilder()
+        .sqlQuery("SELECT session_user FROM (SELECT * FROM sys.drillbits LIMIT 1)")
+        .unOrdered()
+        .baselineColumns("session_user")
+        .baselineValues(krbHelper.CLIENT_SHORT_NAME)
+        .go();
+    } catch (Exception ex) {
+      fail();
+      assert (ex.getCause() instanceof NonTransientRpcException);
+    }
   }
 
   /**
@@ -615,28 +437,18 @@ public class TestUserBitKerberosEncryption extends BaseTestQuery {
    * to server with encryption disabled.
    */
   @Test
-  public void clientNeedsEncryptionWithNoServerSupport() throws Exception {
-    try {
-      final Properties connectionProps = new Properties();
-      connectionProps.setProperty(DrillProperties.SERVICE_PRINCIPAL, krbHelper.SERVER_PRINCIPAL);
-      connectionProps.setProperty(DrillProperties.USER, krbHelper.CLIENT_PRINCIPAL);
-      connectionProps.setProperty(DrillProperties.KEYTAB, krbHelper.clientKeytab.getAbsolutePath());
-      connectionProps.setProperty(DrillProperties.SASL_ENCRYPT, "true");
-
-      newConfig = new DrillConfig(DrillConfig.create(cloneDefaultTestConfigProperties())
-        .withValue(ExecConstants.USER_AUTHENTICATION_ENABLED,
-          ConfigValueFactory.fromAnyRef(true))
-        .withValue(ExecConstants.USER_AUTHENTICATOR_IMPL,
-          ConfigValueFactory.fromAnyRef(UserAuthenticatorTestImpl.TYPE))
-        .withValue(ExecConstants.SERVICE_PRINCIPAL,
-          ConfigValueFactory.fromAnyRef(krbHelper.SERVER_PRINCIPAL))
-        .withValue(ExecConstants.SERVICE_KEYTAB_LOCATION,
-          ConfigValueFactory.fromAnyRef(krbHelper.serverKeytab.toString()))
-        .withValue(ExecConstants.AUTHENTICATION_MECHANISMS,
-          ConfigValueFactory.fromIterable(Lists.newArrayList("plain", "kerberos"))));
-
-      updateTestCluster(1, newConfig, connectionProps);
-
+  public void clientNeedsEncryptionWithNoServerSupport() {
+    try (
+      ClusterFixture cluster = defaultClusterConfig()
+        .configProperty(ExecConstants.USER_ENCRYPTION_SASL_ENABLED, false)
+        .build();
+      ClientFixture client = cluster.clientBuilder()
+        .property(DrillProperties.SERVICE_PRINCIPAL, krbHelper.SERVER_PRINCIPAL)
+        .property(DrillProperties.USER, krbHelper.CLIENT_PRINCIPAL)
+        .property(DrillProperties.KEYTAB, krbHelper.clientKeytab.getAbsolutePath())
+        .property(DrillProperties.SASL_ENCRYPT, "true")
+        .build()
+    ) {
       fail();
     } catch (Exception ex) {
       assert (ex.getCause() instanceof NonTransientRpcException);
@@ -648,32 +460,25 @@ public class TestUserBitKerberosEncryption extends BaseTestQuery {
    * to server with encryption enabled.
    */
   @Test
-  public void clientNeedsEncryptionWithServerSupport() throws Exception {
-    try {
-      final Properties connectionProps = new Properties();
-      connectionProps.setProperty(DrillProperties.SERVICE_PRINCIPAL, krbHelper.SERVER_PRINCIPAL);
-      connectionProps.setProperty(DrillProperties.USER, krbHelper.CLIENT_PRINCIPAL);
-      connectionProps.setProperty(DrillProperties.KEYTAB, krbHelper.clientKeytab.getAbsolutePath());
-      connectionProps.setProperty(DrillProperties.SASL_ENCRYPT, "true");
-
-      newConfig = new DrillConfig(DrillConfig.create(cloneDefaultTestConfigProperties())
-        .withValue(ExecConstants.USER_AUTHENTICATION_ENABLED,
-          ConfigValueFactory.fromAnyRef(true))
-        .withValue(ExecConstants.USER_AUTHENTICATOR_IMPL,
-          ConfigValueFactory.fromAnyRef(UserAuthenticatorTestImpl.TYPE))
-        .withValue(ExecConstants.SERVICE_PRINCIPAL,
-          ConfigValueFactory.fromAnyRef(krbHelper.SERVER_PRINCIPAL))
-        .withValue(ExecConstants.SERVICE_KEYTAB_LOCATION,
-          ConfigValueFactory.fromAnyRef(krbHelper.serverKeytab.toString()))
-        .withValue(ExecConstants.AUTHENTICATION_MECHANISMS,
-          ConfigValueFactory.fromIterable(Lists.newArrayList("plain", "kerberos")))
-        .withValue(ExecConstants.USER_ENCRYPTION_SASL_ENABLED,
-              ConfigValueFactory.fromAnyRef(true)));
-
-      updateTestCluster(1, newConfig, connectionProps);
+  public void clientNeedsEncryptionWithServerSupport() {
+    try (
+      ClientFixture client = cluster.clientBuilder()
+        .property(DrillProperties.SERVICE_PRINCIPAL, krbHelper.SERVER_PRINCIPAL)
+        .property(DrillProperties.USER, krbHelper.CLIENT_PRINCIPAL)
+        .property(DrillProperties.KEYTAB, krbHelper.clientKeytab.getAbsolutePath())
+        .property(DrillProperties.SASL_ENCRYPT, "true")
+        .build()
+    ) {
+      client.testBuilder()
+        .sqlQuery("SELECT session_user FROM (SELECT * FROM sys.drillbits LIMIT 1)")
+        .unOrdered()
+        .baselineColumns("session_user")
+        .baselineValues(krbHelper.CLIENT_SHORT_NAME)
+        .go();
     } catch (Exception ex) {
       fail();
       assert (ex.getCause() instanceof NonTransientRpcException);
     }
   }
 }
+
