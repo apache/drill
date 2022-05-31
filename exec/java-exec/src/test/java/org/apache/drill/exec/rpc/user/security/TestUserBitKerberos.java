@@ -34,6 +34,7 @@ import org.apache.drill.test.ClusterTest;
 import org.apache.kerby.kerberos.kerb.client.JaasKrbUtil;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
@@ -124,6 +125,7 @@ public class TestUserBitKerberos extends ClusterTest {
    }
 
   @Test
+  @Ignore("See DRILL-5387. This test works in isolation but not when sharing counters with other tests")
   public void testUnencryptedConnectionCounter() throws Exception {
     Subject clientSubject = JaasKrbUtil.loginUsingKeytab(
       krbHelper.CLIENT_PRINCIPAL,
@@ -165,6 +167,7 @@ public class TestUserBitKerberos extends ClusterTest {
   }
 
   @Test
+  @Ignore("See DRILL-5387. This test works in isolation but not when sharing counters with other tests")
   public void testUnencryptedConnectionCounter_LocalControlMessage() throws Exception {
     Subject clientSubject = JaasKrbUtil.loginUsingKeytab(
       krbHelper.CLIENT_PRINCIPAL,

@@ -36,6 +36,7 @@ import org.apache.drill.exec.rpc.user.security.testing.UserAuthenticatorTestImpl
 import org.apache.kerby.kerberos.kerb.client.JaasKrbUtil;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
@@ -113,6 +114,7 @@ public class TestUserBitKerberosEncryption extends ClusterTest {
    * @throws Exception
    */
   @Test
+  @Ignore("See DRILL-5387. This test works in isolation but not when sharing counters with other tests")
   public void testConnectionCounters() throws Exception {
     try (
       // Use a dedicated cluster fixture so that the tested RPC counters have a clean start.
@@ -315,6 +317,7 @@ public class TestUserBitKerberosEncryption extends ClusterTest {
    */
 
   @Test
+  @Ignore("See DRILL-5387. This test works in isolation but not when sharing counters with other tests")
   public void testEncryptedConnectionCountersAllChannel() throws Exception {
     try (
       // Use a dedicated cluster fixture so that the tested RPC counters have a clean start.
