@@ -23,99 +23,27 @@ import javax.inject.Inject;
 import org.apache.drill.exec.expr.DrillSimpleFunc;
 import org.apache.drill.exec.expr.annotations.FunctionTemplate;
 import org.apache.drill.exec.expr.annotations.FunctionTemplate.FunctionScope;
+import org.apache.drill.exec.expr.annotations.FunctionTemplate.NullHandling;
 import org.apache.drill.exec.expr.annotations.Output;
 import org.apache.drill.exec.expr.annotations.Param;
 import org.apache.drill.exec.expr.annotations.Workspace;
 import org.apache.drill.exec.expr.holders.NullableVarBinaryHolder;
-import org.apache.drill.exec.expr.holders.NullableVarCharHolder;
-import org.apache.drill.exec.expr.holders.VarBinaryHolder;
 import org.apache.drill.exec.expr.holders.VarCharHolder;
 import org.apache.drill.exec.physical.resultSet.ResultSetLoader;
 import org.apache.drill.exec.server.options.OptionManager;
+import org.apache.drill.exec.vector.complex.writer.BaseWriter;
 import org.apache.drill.exec.vector.complex.writer.BaseWriter.ComplexWriter;
 
 public class JsonConvertFrom {
 
-  private JsonConvertFrom() {
-  }
+  private JsonConvertFrom() {}
 
-  @FunctionTemplate(name = "convert_fromJSON", scope = FunctionScope.SIMPLE, isRandom = true)
-  public static class ConvertFromJson implements DrillSimpleFunc {
-
-    @Param VarBinaryHolder in;
-    @Inject
-    ResultSetLoader loader;
-    @Workspace
-    org.apache.drill.exec.store.easy.json.loader.JsonLoaderImpl.JsonLoaderBuilder jsonLoaderBuilder;
-
-    @Inject
-    OptionManager options;
-
-    @Output ComplexWriter writer;
-
-    @Override
-    public void setup() {
-      jsonLoaderBuilder = new org.apache.drill.exec.store.easy.json.loader.JsonLoaderImpl.JsonLoaderBuilder()
-        .resultSetLoader(loader)
-        .standardOptions(options);
-    }
-
-    @Override
-    public void eval() {
-      try {
-        jsonLoaderBuilder.fromStream(in.start, in.end, in.buffer);
-        org.apache.drill.exec.store.easy.json.loader.JsonLoader jsonLoader = jsonLoaderBuilder.build();
-        loader.startBatch();
-        jsonLoader.readBatch();
-        loader.close();
-
-      } catch (Exception e) {
-        throw new org.apache.drill.common.exceptions.DrillRuntimeException("Error while converting from JSON. ", e);
-      }
-    }
-  }
-
-  @FunctionTemplate(name = "convert_fromJSON", scope = FunctionScope.SIMPLE, isRandom = true)
-  public static class ConvertFromJsonVarchar implements DrillSimpleFunc {
-
-    @Param VarCharHolder in;
-    @Workspace
-    org.apache.drill.exec.store.easy.json.loader.JsonLoaderImpl.JsonLoaderBuilder jsonLoaderBuilder;
-
-    @Inject
-    OptionManager options;
-
-    @Inject
-    ResultSetLoader loader;
-
-    @Output ComplexWriter writer;
-
-    @Override
-    public void setup() {
-      jsonLoaderBuilder = new org.apache.drill.exec.store.easy.json.loader.JsonLoaderImpl.JsonLoaderBuilder()
-        .resultSetLoader(loader)
-        .standardOptions(options);
-    }
-
-    @Override
-    public void eval() {
-      try {
-        jsonLoaderBuilder.fromStream(in.start, in.end, in.buffer);
-        org.apache.drill.exec.store.easy.json.loader.JsonLoader jsonLoader = jsonLoaderBuilder.build();
-        loader.startBatch();
-        jsonLoader.readBatch();
-        loader.close();
-
-      } catch (Exception e) {
-        throw new org.apache.drill.common.exceptions.DrillRuntimeException("Error while converting from JSON. ", e);
-      }
-    }
-  }
-
-  @FunctionTemplate(name = "convert_fromJSON", scope = FunctionScope.SIMPLE, isRandom = true)
+  @FunctionTemplate(names = {"convert_fromJSON", "convertFromJson", "convert_from_json"},
+    scope = FunctionScope.SIMPLE, nulls = NullHandling.INTERNAL)
   public static class ConvertFromJsonNullableInput implements DrillSimpleFunc {
 
-    @Param NullableVarBinaryHolder in;
+    @Param
+    NullableVarBinaryHolder in;
 
     @Workspace
     org.apache.drill.exec.store.easy.json.loader.JsonLoaderImpl.JsonLoaderBuilder jsonLoaderBuilder;
@@ -126,7 +54,8 @@ public class JsonConvertFrom {
     @Inject
     ResultSetLoader loader;
 
-    @Output ComplexWriter writer;
+    @Output
+    BaseWriter.ComplexWriter writer;
 
     @Override
     public void setup() {
@@ -137,7 +66,7 @@ public class JsonConvertFrom {
 
     @Override
     public void eval() {
-      if (in.isSet == 0) {
+      if (in.end == 0) {
         // Return empty map
         org.apache.drill.exec.vector.complex.writer.BaseWriter.MapWriter mapWriter = writer.rootAsMap();
         mapWriter.start();
@@ -157,10 +86,15 @@ public class JsonConvertFrom {
     }
   }
 
-  @FunctionTemplate(name = "convert_fromJSON", scope = FunctionScope.SIMPLE, isRandom = true)
-  public static class ConvertFromJsonVarcharNullableInput implements DrillSimpleFunc {
+  @FunctionTemplate(names = {"convert_fromJSON", "convertFromJson", "convert_from_json"},
+    scope = FunctionScope.SIMPLE)
+  public static class ConvertFromJsonVarcharInput implements DrillSimpleFunc {
 
-    @Param NullableVarCharHolder in;
+    @Param
+    VarCharHolder in;
+
+    @Output
+    ComplexWriter writer;
 
     @Workspace
     org.apache.drill.exec.store.easy.json.loader.JsonLoaderImpl.JsonLoaderBuilder jsonLoaderBuilder;
@@ -171,19 +105,19 @@ public class JsonConvertFrom {
     @Inject
     ResultSetLoader loader;
 
-    @Output ComplexWriter writer;
-
     @Override
     public void setup() {
-      jsonLoaderBuilder = new org.apache.drill.exec.store.easy.json.loader.JsonLoaderImpl.JsonLoaderBuilder()
+     jsonLoaderBuilder = new org.apache.drill.exec.store.easy.json.loader.JsonLoaderImpl.JsonLoaderBuilder()
         .resultSetLoader(loader)
         .standardOptions(options);
     }
 
     @Override
     public void eval() {
-      if (in.isSet == 0) {
-        // Return empty map
+      String jsonString = org.apache.drill.exec.expr.fn.impl.StringFunctionHelpers.toStringFromUTF8(in.start, in.end, in.buffer);
+
+      // If the input is null or empty, return an empty map
+      if (jsonString.length() == 0) {
         org.apache.drill.exec.vector.complex.writer.BaseWriter.MapWriter mapWriter = writer.rootAsMap();
         mapWriter.start();
         mapWriter.end();
@@ -191,7 +125,7 @@ public class JsonConvertFrom {
       }
 
       try {
-        jsonLoaderBuilder.fromStream(in.start, in.end, in.buffer);
+        jsonLoaderBuilder.fromString(jsonString);
         org.apache.drill.exec.store.easy.json.loader.JsonLoader jsonLoader = jsonLoaderBuilder.build();
         loader.startBatch();
         jsonLoader.readBatch();
