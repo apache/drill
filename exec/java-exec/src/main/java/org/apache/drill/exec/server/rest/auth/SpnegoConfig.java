@@ -26,12 +26,12 @@ import org.apache.hadoop.security.UserGroupInformation;
 
 public class SpnegoConfig {
 
+  // Standard Object Identifier for the SPNEGO GSS-API mechanism.
+  public static final String GSS_SPNEGO_MECH_OID = "1.3.6.1.5.5.2";
+
   private UserGroupInformation loggedInUgi;
-
   private final String principal;
-
   private final String keytab;
-
   // Optional parameter
   private final String clientNameMapping;
 

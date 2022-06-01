@@ -29,6 +29,7 @@ import org.apache.drill.exec.server.options.SystemOptionManager;
 import org.apache.drill.exec.server.rest.WebServerConstants;
 import org.apache.drill.exec.server.rest.auth.DrillSpnegoAuthenticator;
 import org.apache.drill.exec.server.rest.auth.DrillSpnegoLoginService;
+import org.apache.drill.exec.server.rest.auth.SpnegoConfig;
 import org.apache.drill.test.BaseDirTestWatcher;
 import org.apache.drill.test.BaseTest;
 import org.apache.hadoop.security.authentication.util.KerberosName;
@@ -50,7 +51,6 @@ import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mockito.Mockito;
-import sun.security.jgss.GSSUtil;
 
 import javax.security.auth.Subject;
 import javax.servlet.http.HttpServletRequest;
@@ -67,7 +67,6 @@ import static org.mockito.Mockito.verify;
 /**
  * Test for validating {@link DrillSpnegoAuthenticator}
  */
-@Ignore("See DRILL-5387")
 @Category(SecurityTest.class)
 public class TestDrillSpnegoAuthenticator extends BaseTest {
 
@@ -84,8 +83,10 @@ public class TestDrillSpnegoAuthenticator extends BaseTest {
     spnegoHelper = new KerberosHelper(TestSpnegoAuthentication.class.getSimpleName(), primaryName);
     spnegoHelper.setupKdc(dirTestWatcher.getTmpDir());
 
-
-    sun.security.krb5.Config.refresh();
+    // (1) Refresh Kerberos config.
+    // This disabled call to an unsupported internal API does not appear to be
+    // required and it prevents compiling with a target of JDK 8 on newer JDKs.
+    // sun.security.krb5.Config.refresh();
 
     // (2) Reset the default realm.
     final Field defaultRealm = KerberosName.class.getDeclaredField("defaultRealm");
@@ -203,6 +204,7 @@ public class TestDrillSpnegoAuthenticator extends BaseTest {
    * {@link DrillSpnegoAuthenticator#validateRequest(javax.servlet.ServletRequest, javax.servlet.ServletResponse, boolean)}
    */
   @Test
+  @Ignore("See DRILL-5387")
   public void testAuthClientRequestForLogOut() throws Exception {
     final HttpServletRequest request = Mockito.mock(HttpServletRequest.class);
     final HttpServletResponse response = Mockito.mock(HttpServletResponse.class);
@@ -242,7 +244,7 @@ public class TestDrillSpnegoAuthenticator extends BaseTest {
       final GSSManager gssManager = GSSManager.getInstance();
       GSSContext gssContext = null;
       try {
-        final Oid oid = GSSUtil.GSS_SPNEGO_MECH_OID;
+        final Oid oid = new Oid(SpnegoConfig.GSS_SPNEGO_MECH_OID);
         final GSSName serviceName = gssManager.createName(spnegoHelper.SERVER_PRINCIPAL, GSSName.NT_USER_NAME, oid);
 
         gssContext = gssManager.createContext(serviceName, oid, null, GSSContext.DEFAULT_LIFETIME);
