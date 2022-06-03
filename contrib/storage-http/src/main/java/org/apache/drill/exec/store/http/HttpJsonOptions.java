@@ -18,50 +18,24 @@
 
 package org.apache.drill.exec.store.http;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
+
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonPOJOBuilder;
 import org.apache.drill.common.PlanStringBuilder;
 import org.apache.drill.exec.record.metadata.TupleMetadata;
-import org.apache.drill.exec.server.options.OptionSet;
-import org.apache.drill.exec.store.easy.json.loader.JsonLoaderOptions;
-
+import org.apache.drill.exec.store.easy.json.config.JsonConfigOptions;
 import java.util.Objects;
 
 @JsonInclude(JsonInclude.Include.NON_DEFAULT)
 @JsonDeserialize(builder = HttpJsonOptions.HttpJsonOptionsBuilder.class)
-public class HttpJsonOptions {
-
-  @JsonProperty
-  private final Boolean allowNanInf;
-
-  @JsonProperty
-  private final Boolean allTextMode;
-
-  @JsonProperty
-  private final Boolean readNumbersAsDouble;
-
-  @JsonProperty
-  private final Boolean enableEscapeAnyChar;
-
-  @JsonProperty
-  private final Boolean skipMalformedRecords;
-
-  @JsonProperty
-  private final Boolean skipMalformedDocument;
-
+public class HttpJsonOptions extends JsonConfigOptions {
   @JsonProperty
   private final TupleMetadata schema;
 
   HttpJsonOptions(HttpJsonOptionsBuilder builder) {
-    this.allowNanInf = builder.allowNanInf;
-    this.allTextMode = builder.allTextMode;
-    this.readNumbersAsDouble = builder.readNumbersAsDouble;
-    this.enableEscapeAnyChar = builder.enableEscapeAnyChar;
-    this.skipMalformedRecords = builder.skipMalformedRecords;
-    this.skipMalformedDocument = builder.skipMalformedDocument;
+    super(builder.allowNanInf, builder.allTextMode, builder.readNumbersAsDouble, builder.enableEscapeAnyChar, builder.skipMalformedDocument, builder.skipMalformedRecords);
     this.schema = builder.schema;
   }
 
@@ -69,60 +43,6 @@ public class HttpJsonOptions {
     return new HttpJsonOptionsBuilder();
   }
 
-  @JsonIgnore
-  public JsonLoaderOptions getJsonOptions(OptionSet optionSet) {
-    JsonLoaderOptions options = new JsonLoaderOptions(optionSet);
-    if (allowNanInf != null) {
-      options.allowNanInf = allowNanInf;
-    }
-    if (allTextMode != null) {
-      options.allTextMode = allTextMode;
-    }
-    if (readNumbersAsDouble != null) {
-      options.readNumbersAsDouble = readNumbersAsDouble;
-    }
-    if (enableEscapeAnyChar != null) {
-      options.enableEscapeAnyChar = enableEscapeAnyChar;
-    }
-    if (skipMalformedRecords != null) {
-      options.skipMalformedRecords = skipMalformedRecords;
-    }
-    if (skipMalformedDocument != null) {
-      options.skipMalformedDocument = skipMalformedDocument;
-    }
-
-    return options;
-  }
-
-  @JsonProperty("allowNanInf")
-  public Boolean allowNanInf() {
-    return this.allowNanInf;
-  }
-
-  @JsonProperty("allTextMode")
-  public Boolean allTextMode() {
-    return this.allTextMode;
-  }
-
-  @JsonProperty("readNumbersAsDouble")
-  public Boolean readNumbersAsDouble() {
-    return this.readNumbersAsDouble;
-  }
-
-  @JsonProperty("enableEscapeAnyChar")
-  public Boolean enableEscapeAnyChar() {
-    return this.enableEscapeAnyChar;
-  }
-
-  @JsonProperty("skipMalformedRecords")
-  public Boolean skipMalformedRecords() {
-    return this.skipMalformedRecords;
-  }
-
-  @JsonProperty("skipMalformedDocument")
-  public Boolean skipMalformedDocument() {
-    return this.skipMalformedDocument;
-  }
 
   @JsonProperty("schema")
   public TupleMetadata schema() {
@@ -166,53 +86,41 @@ public class HttpJsonOptions {
   }
 
   @JsonPOJOBuilder(withPrefix = "")
-  public static class HttpJsonOptionsBuilder {
-    private Boolean allowNanInf;
-
-    private Boolean allTextMode;
-
-    private Boolean readNumbersAsDouble;
-
-    private Boolean enableEscapeAnyChar;
-
-    private Boolean skipMalformedRecords;
-
-    private Boolean skipMalformedDocument;
-
+  public static class HttpJsonOptionsBuilder extends JsonConfigOptionsBuilder {
     private TupleMetadata schema;
 
-    public HttpJsonOptionsBuilder allowNanInf(Boolean allowNanInf) {
-      this.allowNanInf = allowNanInf;
+    public HttpJsonOptionsBuilder schema(TupleMetadata schema) {
+      this.schema = schema;
       return this;
     }
 
     public HttpJsonOptionsBuilder allTextMode(Boolean allTextMode) {
-      this.allTextMode = allTextMode;
+      super.allTextMode(allTextMode);
       return this;
     }
 
-    public HttpJsonOptionsBuilder readNumbersAsDouble(Boolean readNumbersAsDouble) {
-      this.readNumbersAsDouble = readNumbersAsDouble;
+    public HttpJsonOptionsBuilder allowNanInf(Boolean allowNanInf) {
+      super.allowNanInf(allowNanInf);
       return this;
     }
 
     public HttpJsonOptionsBuilder enableEscapeAnyChar(Boolean enableEscapeAnyChar) {
-      this.enableEscapeAnyChar = enableEscapeAnyChar;
+      super.enableEscapeAnyChar(enableEscapeAnyChar);
+      return this;
+    }
+
+    public HttpJsonOptionsBuilder readNumbersAsDouble(Boolean readNumbersAsDouble) {
+      super.readNumbersAsDouble(readNumbersAsDouble);
       return this;
     }
 
     public HttpJsonOptionsBuilder skipMalformedRecords(Boolean skipMalformedRecords) {
-      this.skipMalformedRecords = skipMalformedRecords;
+      super.skipMalformedRecords(skipMalformedRecords);
       return this;
     }
 
     public HttpJsonOptionsBuilder skipMalformedDocument(Boolean skipMalformedDocument) {
-      this.skipMalformedDocument = skipMalformedDocument;
-      return this;
-    }
-
-    public HttpJsonOptionsBuilder schema(TupleMetadata schema) {
-      this.schema = schema;
+      super.skipMalformedDocument(skipMalformedDocument);
       return this;
     }
 
