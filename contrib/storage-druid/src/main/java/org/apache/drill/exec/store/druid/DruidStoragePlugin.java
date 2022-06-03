@@ -20,9 +20,13 @@ package org.apache.drill.exec.store.druid;
 import com.fasterxml.jackson.core.type.TypeReference;
 import org.apache.calcite.schema.SchemaPlus;
 import org.apache.drill.common.JSONOptions;
+import org.apache.drill.common.expression.SchemaPath;
+import org.apache.drill.exec.metastore.MetadataProviderManager;
 import org.apache.drill.exec.ops.OptimizerRulesContext;
 import org.apache.drill.exec.planner.PlannerPhase;
+import org.apache.drill.exec.physical.base.AbstractGroupScan;
 import org.apache.drill.exec.server.DrillbitContext;
+import org.apache.drill.exec.server.options.SessionOptionManager;
 import org.apache.drill.exec.store.AbstractStoragePlugin;
 import org.apache.drill.exec.store.SchemaConfig;
 import org.apache.drill.exec.store.StoragePluginOptimizerRule;
@@ -35,6 +39,7 @@ import org.apache.drill.exec.store.druid.schema.DruidSchemaFactory;
 import com.google.common.collect.ImmutableSet;
 
 import java.io.IOException;
+import java.util.List;
 import java.util.Set;
 
 public class DruidStoragePlugin extends AbstractStoragePlugin {
@@ -57,9 +62,36 @@ public class DruidStoragePlugin extends AbstractStoragePlugin {
   }
 
   @Override
-  public DruidGroupScan getPhysicalScan(String userName, JSONOptions selection) throws IOException {
-    DruidScanSpec scanSpec = selection.getListWith(new TypeReference<DruidScanSpec>() {});
-    return new DruidGroupScan(userName, this, scanSpec, null, -1);
+  public AbstractGroupScan getPhysicalScan(String userName, JSONOptions selection,
+                                           SessionOptionManager options) throws IOException {
+    return getPhysicalScan(userName, selection, AbstractGroupScan.ALL_COLUMNS,
+      options, null);
+  }
+
+
+  @Override
+  public AbstractGroupScan getPhysicalScan(String userName, JSONOptions selection,
+                                           SessionOptionManager options, MetadataProviderManager metadataProviderManager) throws IOException {
+    return getPhysicalScan(userName, selection, AbstractGroupScan.ALL_COLUMNS,
+      options, metadataProviderManager);
+  }
+
+  @Override
+  public AbstractGroupScan getPhysicalScan(String userName, JSONOptions selection,
+                                           List<SchemaPath> columns) throws IOException {
+    return getPhysicalScan(userName, selection, columns, null, null);
+  }
+
+  @Override
+  public AbstractGroupScan getPhysicalScan(String userName, JSONOptions selection) throws IOException {
+    return getPhysicalScan(userName, selection, AbstractGroupScan.ALL_COLUMNS, null);
+  }
+
+  @Override
+  public AbstractGroupScan getPhysicalScan(String userName, JSONOptions selection, List<SchemaPath> columns, SessionOptionManager options,
+                                           MetadataProviderManager metadataProviderManager) throws IOException {
+    DruidScanSpec scanSpec = selection.getListWith(new ObjectMapper(), new TypeReference<DruidScanSpec>() {});
+    return new DruidGroupScan(userName, this, scanSpec, null, -1, metadataProviderManager);
   }
 
   @Override

@@ -23,14 +23,17 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 
+import org.apache.calcite.avatica.Meta;
 import org.apache.drill.common.PlanStringBuilder;
 import org.apache.drill.common.expression.SchemaPath;
+import org.apache.drill.exec.metastore.MetadataProviderManager;
 import org.apache.drill.exec.physical.EndpointAffinity;
 import org.apache.drill.exec.physical.base.AbstractGroupScan;
 import org.apache.drill.exec.physical.base.GroupScan;
 import org.apache.drill.exec.physical.base.PhysicalOperator;
 import org.apache.drill.exec.physical.base.ScanStats;
 import org.apache.drill.exec.proto.CoordinationProtos;
+import org.apache.drill.exec.record.metadata.TupleMetadata;
 import org.apache.drill.exec.store.StoragePluginRegistry;
 
 import org.apache.drill.exec.store.schedule.AffinityCreator;
@@ -44,6 +47,7 @@ import com.google.common.collect.Lists;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -54,6 +58,8 @@ public class DruidGroupScan extends AbstractGroupScan {
   private static final long DEFAULT_TABLET_SIZE = 1000;
   private final DruidScanSpec scanSpec;
   private final DruidStoragePlugin storagePlugin;
+
+  private MetadataProviderManager metadataProviderManager;
 
   private List<SchemaPath> columns;
   private boolean filterPushedDown = false;
@@ -73,19 +79,20 @@ public class DruidGroupScan extends AbstractGroupScan {
         pluginRegistry.resolve(storagePluginConfig, DruidStoragePlugin.class),
         scanSpec,
         columns,
-        maxRecordsToRead);
+        maxRecordsToRead, null);
   }
 
   public DruidGroupScan(String userName,
                         DruidStoragePlugin storagePlugin,
                         DruidScanSpec scanSpec,
                         List<SchemaPath> columns,
-                        int maxRecordsToRead) {
+                        int maxRecordsToRead, MetadataProviderManager metadataProviderManager) {
     super(userName);
     this.storagePlugin = storagePlugin;
     this.scanSpec = scanSpec;
     this.columns = columns == null || columns.size() == 0? ALL_COLUMNS : columns;
     this.maxRecordsToRead = maxRecordsToRead;
+    this.metadataProviderManager = metadataProviderManager;
     init();
   }
 
@@ -102,6 +109,7 @@ public class DruidGroupScan extends AbstractGroupScan {
     this.filterPushedDown = that.filterPushedDown;
     this.druidWorkList = that.druidWorkList;
     this.assignments = that.assignments;
+    this.metadataProviderManager = that.metadataProviderManager;
   }
 
   @Override
@@ -163,7 +171,8 @@ public class DruidGroupScan extends AbstractGroupScan {
           getScanSpec().getFilter(),
           getDatasourceSize(),
           getDataSourceMinTime(),
-          getDataSourceMaxTime()
+          getDataSourceMaxTime(),
+          getSchema()
         )
       );
     druidWorkList.add(druidWork);
@@ -225,12 +234,13 @@ public class DruidGroupScan extends AbstractGroupScan {
             druidWork.getDruidSubScanSpec().getFilter(),
             druidWork.getDruidSubScanSpec().getDataSourceSize(),
             druidWork.getDruidSubScanSpec().getMinTime(),
-            druidWork.getDruidSubScanSpec().getMaxTime()
+            druidWork.getDruidSubScanSpec().getMaxTime(),
+            druidWork.getDruidSubScanSpec().getSchema()
           )
         );
     }
 
-    return new DruidSubScan(getUserName(), storagePlugin, scanSpecList, this.columns, this.maxRecordsToRead);
+    return new DruidSubScan(getUserName(), storagePlugin, scanSpecList, this.columns, this.maxRecordsToRead, getSchema());
   }
 
   @JsonIgnore
@@ -283,13 +293,25 @@ public class DruidGroupScan extends AbstractGroupScan {
     return maxRecordsToRead;
   }
 
+  public TupleMetadata getSchema() {
+    if (metadataProviderManager == null) {
+      return null;
+    }
+    try {
+      return metadataProviderManager.getSchemaProvider().read().getSchema();
+    } catch (IOException | NullPointerException e) {
+      return null;
+    }
+  }
+
   @Override
   public String toString() {
     return new PlanStringBuilder(this)
-        .field("druidScanSpec", scanSpec)
-        .field("columns", columns)
-        .field("druidStoragePlugin", storagePlugin)
-        .toString();
+      .field("druidScanSpec", scanSpec)
+      .field("columns", columns)
+      .field("druidStoragePlugin", storagePlugin)
+      .field("schema", getSchema())
+      .toString();
   }
 
   @Override
