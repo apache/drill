@@ -67,6 +67,7 @@ import static org.mockito.Mockito.verify;
 /**
  * Test for validating {@link DrillSpnegoAuthenticator}
  */
+@Ignore("See DRILL-5387")
 @Category(SecurityTest.class)
 public class TestDrillSpnegoAuthenticator extends BaseTest {
 

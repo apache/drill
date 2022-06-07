@@ -30,6 +30,7 @@ import okhttp3.Request;
 import okhttp3.RequestBody;
 import okhttp3.Response;
 
+import okhttp3.ResponseBody;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.drill.common.exceptions.EmptyErrorContext;
 import org.apache.drill.common.logical.OAuthConfig;
@@ -873,7 +874,7 @@ public class SimpleHttp {
    * @param args An optional list of parameter arguments which will be included in the URL
    * @return A String of the results.
    */
-  public static String makeAPICall(
+  public static SimpleHttp apiCall(
     HttpStoragePlugin plugin,
     HttpApiConfig endpointConfig,
     DrillbitContext context,
@@ -895,7 +896,7 @@ public class SimpleHttp {
     }
 
     // Now get the client
-    SimpleHttp client = new SimpleHttpBuilder()
+    return new SimpleHttpBuilder()
       .pluginConfig(pluginConfig)
       .endpointConfig(endpointConfig)
       .tempDir(new File(context.getConfig().getString(ExecConstants.DRILL_TMP_DIR)))
@@ -903,8 +904,6 @@ public class SimpleHttp {
       .proxyConfig(proxyConfig)
       .tokenTable(plugin.getTokenTable())
       .build();
-
-    return client.getResultsFromApiCall();
   }
 
   public static OkHttpClient getSimpleHttpClient() {
@@ -915,7 +914,29 @@ public class SimpleHttp {
       .build();
   }
 
-  public static String makeSimpleGetRequest(String url) {
+  public static String getRequestAndStringResponse(String url) {
+    try {
+      return makeSimpleGetRequest(url).string();
+    } catch (IOException e) {
+      throw UserException
+        .dataReadError(e)
+        .message("HTTP request failed")
+        .build(logger);
+    }
+  }
+
+  public static InputStream getRequestAndStreamResponse(String url) {
+    try {
+      return makeSimpleGetRequest(url).byteStream();
+    } catch (IOException e) {
+      throw UserException
+        .dataReadError(e)
+        .message("HTTP request failed")
+        .build(logger);
+    }
+  }
+
+  public static ResponseBody makeSimpleGetRequest(String url) throws IOException {
     OkHttpClient client = getSimpleHttpClient();
     Request.Builder requestBuilder = new Request.Builder()
       .url(url);
@@ -924,15 +945,8 @@ public class SimpleHttp {
     Request request = requestBuilder.build();
 
     // Execute the request
-    try {
       Response response = client.newCall(request).execute();
-      return response.body().string();
-    } catch (IOException e) {
-      throw UserException
-        .dataReadError(e)
-        .message("HTTP request failed")
-        .build(logger);
-    }
+      return response.body();
   }
 
   /**

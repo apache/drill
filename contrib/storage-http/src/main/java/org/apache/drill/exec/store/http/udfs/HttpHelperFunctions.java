@@ -45,7 +45,7 @@ public class HttpHelperFunctions {
     @Param
     NullableVarCharHolder[] inputReaders;
 
-    @Output
+    @Output // todo: remove. Not used in this UDF
     ComplexWriter writer;
 
     @Inject
@@ -81,16 +81,16 @@ public class HttpHelperFunctions {
       String finalUrl = org.apache.drill.exec.store.http.util.SimpleHttp.mapPositionalParameters(url, args);
 
       // Make the API call
-      String results = org.apache.drill.exec.store.http.util.SimpleHttp.makeSimpleGetRequest(finalUrl);
+      java.io.InputStream results = org.apache.drill.exec.store.http.util.SimpleHttp.getRequestAndStreamResponse(finalUrl);
 
       // If the result string is null or empty, return an empty map
-      if (results == null || results.length() == 0) {
+      if (results == null) {
         // Return empty map
         return;
       }
 
       try {
-        jsonLoaderBuilder.fromString(results);
+        jsonLoaderBuilder.fromStream(results);
         org.apache.drill.exec.store.easy.json.loader.JsonLoader jsonLoader = jsonLoaderBuilder.build();
         loader.startBatch();
         jsonLoader.readBatch();
@@ -112,7 +112,7 @@ public class HttpHelperFunctions {
     @Param
     NullableVarCharHolder[] inputReaders;
 
-    @Output
+    @Output // todo: remove. Not used in this UDF
     ComplexWriter writer;
 
     @Inject
@@ -170,21 +170,21 @@ public class HttpHelperFunctions {
         return;
       }
 
-      String results = org.apache.drill.exec.store.http.util.SimpleHttp.makeAPICall(
+      java.io.InputStream results = org.apache.drill.exec.store.http.util.SimpleHttp.apiCall(
         plugin,
         endpointConfig,
         drillbitContext,
         args
-      );
+      ).getInputStream();
 
       // If the result string is null or empty, return an empty map
-      if (results == null || results.length() == 0) {
+      if (results == null) {
         // Return empty map
         return;
       }
 
       try {
-        jsonLoaderBuilder.fromString(results);
+        jsonLoaderBuilder.fromStream(results);
         org.apache.drill.exec.store.easy.json.loader.JsonLoader jsonLoader = jsonLoaderBuilder.build();
         loader.startBatch();
         jsonLoader.readBatch();

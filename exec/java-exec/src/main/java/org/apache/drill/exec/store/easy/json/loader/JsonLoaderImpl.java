@@ -20,12 +20,10 @@ package org.apache.drill.exec.store.easy.json.loader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.Reader;
-import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-import org.apache.commons.io.IOUtils;
 import org.apache.drill.common.exceptions.CustomErrorContext;
 import org.apache.drill.common.exceptions.EmptyErrorContext;
 import org.apache.drill.common.exceptions.UserException;
@@ -189,16 +187,6 @@ public class JsonLoaderImpl implements JsonLoader, ErrorFactory {
     public JsonLoaderBuilder fromStream(Iterable<InputStream> streams) {
       this.streams = streams;
       return this;
-    }
-
-    public JsonLoaderBuilder fromString(String jsonString) {
-      try (InputStream targetStream = IOUtils.toInputStream(jsonString, Charset.defaultCharset())) {
-        return fromStream(targetStream);
-      } catch (IOException e) {
-        throw UserException.dataReadError(e)
-          .message("Could not read JSON string: " + jsonString)
-          .build(logger);
-      }
     }
 
     public JsonLoaderBuilder fromReader(Reader reader) {
