@@ -38,6 +38,7 @@ import org.apache.drill.exec.util.record.RecordBatchStats.RecordBatchIOType;
 import org.apache.drill.exec.vector.AllocationHelper;
 import org.apache.drill.exec.vector.ValueVector;
 import org.apache.drill.exec.vector.complex.MapVector;
+import org.apache.drill.exec.vector.complex.writer.BaseWriter.ComplexWriter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -50,6 +51,8 @@ public class ProjectRecordBatch extends AbstractSingleRecordBatch<Project> {
   private static final Logger logger = LoggerFactory.getLogger(ProjectRecordBatch.class);
 
   protected List<ValueVector> allocationVectors;
+  @Deprecated // use new writer rsLoader
+  protected List<ComplexWriter> complexWriters;
   protected ResultSetLoader rsLoader;
   protected List<FieldReference> complexFieldReferencesList;
   protected ProjectMemoryManager memoryManager;
@@ -107,7 +110,7 @@ public class ProjectRecordBatch extends AbstractSingleRecordBatch<Project> {
     memoryManager.update();
 
     if (first && incomingRecordCount == 0) {
-      if (rsLoader != null) {
+      if (complexWriters != null || rsLoader != null ) {
         IterOutcome next = null;
         while (incomingRecordCount == 0) {
           if (getLastKnownOutcome() == EMIT) {
@@ -142,7 +145,7 @@ public class ProjectRecordBatch extends AbstractSingleRecordBatch<Project> {
       }
     }
 
-    if (rsLoader != null && getLastKnownOutcome() == EMIT) {
+    if ((complexWriters != null || rsLoader != null) && getLastKnownOutcome() == EMIT) {
       throw UserException.unsupportedError()
           .message("Currently functions producing complex types as output are not " +
             "supported in project list for subquery between LATERAL and UNNEST. Please re-write the query using this " +
@@ -182,6 +185,8 @@ public class ProjectRecordBatch extends AbstractSingleRecordBatch<Project> {
         map.putChild(valueVector.getField().getName(), valueVector);
       }
       container.buildSchema(SelectionVectorMode.NONE);
+    } else if (complexWriters != null) {
+      container.buildSchema(SelectionVectorMode.NONE);
     }
 
     memoryManager.updateOutgoingStats(outputRecords);
@@ -219,7 +224,7 @@ public class ProjectRecordBatch extends AbstractSingleRecordBatch<Project> {
     }
     // In case of complex writer expression, vectors would be added to batch run-time.
     // We have to re-build the schema.
-    if (rsLoader != null) {
+    if (complexWriters != null || rsLoader != null) {
       container.buildSchema(SelectionVectorMode.NONE);
     }
 
@@ -229,7 +234,11 @@ public class ProjectRecordBatch extends AbstractSingleRecordBatch<Project> {
 
   // Called from generated code.
 
-  public void addComplexWriter(ResultSetLoader loader) {
+  public void addComplexWriter(ComplexWriter writer) {
+    complexWriters.add(writer);
+  }
+
+  public void addLoader(ResultSetLoader loader) {
     rsLoader = loader;
   }
 
@@ -237,6 +246,13 @@ public class ProjectRecordBatch extends AbstractSingleRecordBatch<Project> {
     // Allocate vv in the allocationVectors.
     for (ValueVector v : allocationVectors) {
       AllocationHelper.allocateNew(v, recordCount);
+    }
+
+    // Allocate vv for complexWriters.
+    if (complexWriters != null) {
+      for (ComplexWriter writer : complexWriters) {
+        writer.allocate();
+      }
     }
   }
 
@@ -253,10 +269,13 @@ public class ProjectRecordBatch extends AbstractSingleRecordBatch<Project> {
     // the transfer pairs or vector copies.
     container.setRecordCount(count);
 
-    if (rsLoader == null) {
-      return;
+    if (complexWriters != null) {
+      for (ComplexWriter writer : complexWriters) {
+        writer.setValueCount(count);
+      }
+    } else if (rsLoader != null) {
+      rsLoader.setTargetRowCount(count);
     }
-    rsLoader.setTargetRowCount(count);
   }
 
   @Override
@@ -339,7 +358,7 @@ public class ProjectRecordBatch extends AbstractSingleRecordBatch<Project> {
   protected IterOutcome getFinalOutcome(boolean hasMoreRecordInBoundary) {
     // In a case of complex writers vectors are added at runtime, so the schema
     // may change (e.g. when a batch contains new column(s) not present in previous batches)
-    if (rsLoader != null) {
+    if (complexWriters != null || rsLoader != null) {
       return IterOutcome.OK_NEW_SCHEMA;
     }
     return super.getFinalOutcome(hasMoreRecordInBoundary);
@@ -355,7 +374,9 @@ public class ProjectRecordBatch extends AbstractSingleRecordBatch<Project> {
     }
     allocationVectors = new ArrayList<>();
 
-    if (rsLoader != null) {
+    if (complexWriters != null) {
+      container.clear();
+    } else if (rsLoader != null) {
       container.clear();
       rsLoader.close();
     } else {
