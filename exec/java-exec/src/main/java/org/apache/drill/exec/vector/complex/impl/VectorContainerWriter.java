@@ -26,6 +26,10 @@ import org.apache.drill.exec.vector.ValueVector;
 import org.apache.drill.exec.vector.complex.MapVector;
 import org.apache.drill.exec.vector.complex.writer.BaseWriter.ComplexWriter;
 
+/**
+ * @see {@link org.apache.drill.exec.physical.resultSet.ResultSetLoader} - the replacement for this class
+ */
+@Deprecated
 public class VectorContainerWriter extends AbstractFieldWriter implements ComplexWriter {
   //private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(VectorContainerWriter.class);
 

@@ -342,8 +342,7 @@ class ProjectionMaterializer {
     transferFieldIds.add(fid);
   }
 
-  private void setupFnCall(NamedExpression namedExpression,
-      LogicalExpression expr) {
+  private void setupFnCall(NamedExpression namedExpression, LogicalExpression expr) {
 
     // Need to process ComplexWriter function evaluation.
     // The reference name will be passed to ComplexWriter, used as the name of

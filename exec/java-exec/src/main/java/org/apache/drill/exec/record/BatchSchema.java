@@ -247,8 +247,7 @@ public class BatchSchema implements Iterable<MaterializedField> {
         otherSchema.selectionVectorMode != SelectionVectorMode.NONE) {
       throw new IllegalArgumentException("Cannot merge schemas with selection vectors");
     }
-    List<MaterializedField> mergedFields =
-        new ArrayList<>(fields.size() + otherSchema.fields.size());
+    List<MaterializedField> mergedFields = new ArrayList<>(fields.size() + otherSchema.fields.size());
     mergedFields.addAll(this.fields);
     mergedFields.addAll(otherSchema.fields);
     return new BatchSchema(selectionVectorMode, mergedFields);

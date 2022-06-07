@@ -68,17 +68,8 @@ public abstract class AbstractRecordBatch<T extends PhysicalOperator> implements
     this.batchStatsContext = new RecordBatchStatsContext(context, oContext);
     stats = oContext.getStats();
     container = new VectorContainer(this.oContext.getAllocator());
-    if (buildSchema) {
-      state = BatchState.BUILD_SCHEMA;
-    } else {
-      state = BatchState.FIRST;
-    }
-    OptionValue option = context.getOptions().getOption(ExecConstants.ENABLE_UNION_TYPE.getOptionName());
-    if (option != null) {
-      unionTypeEnabled = option.bool_val;
-    } else {
-      unionTypeEnabled = false;
-    }
+    state = buildSchema ? BatchState.BUILD_SCHEMA : BatchState.FIRST;
+    unionTypeEnabled = context.getOptions().getBoolean(ExecConstants.ENABLE_UNION_TYPE_KEY);
   }
 
   public enum BatchState {

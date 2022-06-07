@@ -278,7 +278,7 @@ public class ProjectMemoryManager extends RecordBatchMemoryManager {
                 + ", total variable width {}, total complex width {}, batchSizer time {} ms, update time {}  ms"
                 + ", manager {}, incoming {}",outPutRowCount, batchSizer.rowCount(), incomingBatch.getRecordCount(),
                 rowWidth, totalFixedWidthColumnWidth, totalVariableColumnWidth, totalComplexColumnWidth,
-                (batchSizerEndTime - updateStartTime),(updateEndTime - updateStartTime), this, incomingBatch);
+                  (batchSizerEndTime - updateStartTime),(updateEndTime - updateStartTime), this, incomingBatch);
 
     RecordBatchStats.logRecordBatchStats(RecordBatchIOType.INPUT, getRecordBatchSizer(), outgoingBatch.getRecordBatchStatsContext());
     updateIncomingStats();

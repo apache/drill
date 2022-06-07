@@ -23,14 +23,13 @@ import org.apache.drill.exec.expr.ClassGenerator;
 import org.apache.drill.exec.expr.ClassGenerator.HoldingContainer;
 import org.apache.drill.exec.expr.annotations.FunctionTemplate.NullHandling;
 import org.apache.drill.exec.physical.impl.project.ProjectRecordBatch;
+import org.apache.drill.exec.physical.resultSet.ResultSetLoader;
 import org.apache.drill.exec.record.VectorAccessibleComplexWriter;
-import org.apache.drill.exec.vector.complex.writer.BaseWriter.ComplexWriter;
 
 import com.sun.codemodel.JBlock;
 import com.sun.codemodel.JClass;
 import com.sun.codemodel.JExpr;
 import com.sun.codemodel.JExpression;
-import com.sun.codemodel.JInvocation;
 import com.sun.codemodel.JVar;
 
 import static org.apache.drill.shaded.guava.com.google.common.base.Preconditions.checkArgument;
@@ -56,26 +55,26 @@ public class DrillComplexWriterFuncHolder extends DrillSimpleFuncHolder {
     JBlock sub = new JBlock(true, true);
     JBlock topSub = sub;
 
-    JVar complexWriter = classGenerator.declareClassField("complexWriter", classGenerator.getModel()._ref(ComplexWriter.class));
+    JVar rsLoader = null;
 
-
-    JInvocation container = classGenerator.getMappingSet().getOutgoing().invoke("getOutgoingContainer");
-
+    for (JVar workspaceJVar : workspaceJVars) {
+      if ("ResultSetLoader".equals(workspaceJVar.type().name())) {
+        rsLoader = workspaceJVar;
+      }
+    }
+    assert rsLoader != null : "Function should have ResultSetLoader variable";
     //Default name is "col", if not passed in a reference name for the output vector.
     String refName = fieldReference == null ? "col" : fieldReference.getRootSegment().getPath();
 
     JClass cwClass = classGenerator.getModel().ref(VectorAccessibleComplexWriter.class);
-    classGenerator.getSetupBlock().assign(complexWriter, cwClass.staticInvoke("getWriter").arg(refName).arg(container));
 
     JClass projBatchClass = classGenerator.getModel().ref(ProjectRecordBatch.class);
     JExpression projBatch = JExpr.cast(projBatchClass, classGenerator.getMappingSet().getOutgoing());
 
-    classGenerator.getSetupBlock().add(projBatch.invoke("addComplexWriter").arg(complexWriter));
+    classGenerator.getSetupBlock().add(projBatch.invoke("addComplexWriter").arg(rsLoader));
 
 
-    classGenerator.getEvalBlock().add(complexWriter.invoke("setPosition").arg(classGenerator.getMappingSet().getValueWriteIndex()));
-
-    sub.decl(classGenerator.getModel()._ref(ComplexWriter.class), getReturnValue().getName(), complexWriter);
+    sub.decl(classGenerator.getModel()._ref(ResultSetLoader.class), getReturnValue().getName(), rsLoader);
 
     // add the subblock after the out declaration.
     classGenerator.getEvalBlock().add(topSub);

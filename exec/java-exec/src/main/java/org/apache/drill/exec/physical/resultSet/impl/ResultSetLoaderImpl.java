@@ -34,8 +34,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * Implementation of the result set loader. Caches vectors
- * for a row or map.
+ * Implementation of the result set loader. Caches vectors for a row or map.
  *
  * @see {@link ResultSetLoader}
  */

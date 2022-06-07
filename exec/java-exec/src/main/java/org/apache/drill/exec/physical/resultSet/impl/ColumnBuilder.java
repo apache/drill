@@ -253,8 +253,7 @@ public class ColumnBuilder {
       // have content that varies from batch to batch. Only the leaf
       // vectors can be cached.
       assert columnSchema.tupleSchema().isEmpty();
-      mapVector = new RepeatedMapVector(mapColSchema.schema(),
-          parent.loader().allocator(), null);
+      mapVector = new RepeatedMapVector(mapColSchema.schema(), parent.loader().allocator(), null);
       offsetVector = mapVector.getOffsetVector();
     } else {
       mapVector = null;
@@ -262,8 +261,7 @@ public class ColumnBuilder {
     }
 
     // Create the writer using the offset vector
-    final AbstractObjectWriter writer = MapWriter.buildMapArray(
-        columnSchema, mapVector, new ArrayList<>());
+    final AbstractObjectWriter writer = MapWriter.buildMapArray(columnSchema, mapVector, new ArrayList<>());
 
     // Wrap the offset vector in a vector state
     VectorState offsetVectorState;

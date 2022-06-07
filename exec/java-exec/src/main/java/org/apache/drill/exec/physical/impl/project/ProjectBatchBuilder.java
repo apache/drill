@@ -95,7 +95,6 @@ public class ProjectBatchBuilder implements ProjectionMaterializer.BatchBuilder 
 
   @Override
   public void addComplexField(FieldReference ref) {
-    initComplexWriters();
     if (projectBatch.complexFieldReferencesList == null) {
       projectBatch.complexFieldReferencesList = Lists.newArrayList();
     } else {
@@ -109,15 +108,6 @@ public class ProjectBatchBuilder implements ProjectionMaterializer.BatchBuilder 
     // save the field reference for later for getting schema when input is empty
     projectBatch.complexFieldReferencesList.add(ref);
     projectBatch.memoryManager.addComplexField(null); // this will just add an estimate to the row width
-  }
-
-  private void initComplexWriters() {
-    // Lazy initialization of the list of complex writers, if not done yet.
-    if (projectBatch.complexWriters == null) {
-      projectBatch.complexWriters = new ArrayList<>();
-    } else {
-      projectBatch.complexWriters.clear();
-    }
   }
 
   @Override

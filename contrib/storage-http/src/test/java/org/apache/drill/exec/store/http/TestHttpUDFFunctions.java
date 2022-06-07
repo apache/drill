@@ -26,8 +26,10 @@ import org.apache.drill.common.logical.StoragePluginConfig.AuthMode;
 import org.apache.drill.common.logical.security.PlainCredentialsProvider;
 import org.apache.drill.common.types.TypeProtos;
 import org.apache.drill.common.util.DrillFileUtils;
+import org.apache.drill.exec.physical.impl.project.ProjectMemoryManager;
 import org.apache.drill.exec.physical.impl.project.ProjectRecordBatch;
 import org.apache.drill.exec.physical.impl.validate.IteratorValidatorBatchIterator;
+import org.apache.drill.exec.physical.resultSet.impl.ResultSetLoaderImpl;
 import org.apache.drill.exec.physical.rowSet.RowSet;
 import org.apache.drill.exec.physical.rowSet.RowSetBuilder;
 import org.apache.drill.exec.record.metadata.SchemaBuilder;
@@ -70,9 +72,11 @@ public class TestHttpUDFFunctions extends ClusterTest {
   public static void setup() throws Exception {
     logFixture = LogFixture.builder()
       .toConsole()
+      .logger(ProjectMemoryManager.class, CURRENT_LOG_LEVEL)
       .logger(ProjectRecordBatch.class, CURRENT_LOG_LEVEL)
       .logger(JsonLoaderImpl.class, CURRENT_LOG_LEVEL)
       .logger(IteratorValidatorBatchIterator.class, CURRENT_LOG_LEVEL)
+      .logger(ResultSetLoaderImpl.class, CURRENT_LOG_LEVEL)
       .build();
     startCluster(ClusterFixture.builder(dirTestWatcher));
     TEST_JSON_RESPONSE = Files.asCharSource(DrillFileUtils.getResourceAsFile("/data/simple.json"), Charsets.UTF_8).read();

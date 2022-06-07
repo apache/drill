@@ -75,9 +75,6 @@ public class HttpHelperFunctions {
       // as an approximation of null-if-null handling.
       if (args == null) {
         // Return empty map
-        org.apache.drill.exec.vector.complex.writer.BaseWriter.MapWriter mapWriter = writer.rootAsMap();
-        mapWriter.start();
-        mapWriter.end();
         return;
       }
 
@@ -89,9 +86,6 @@ public class HttpHelperFunctions {
       // If the result string is null or empty, return an empty map
       if (results == null || results.length() == 0) {
         // Return empty map
-        org.apache.drill.exec.vector.complex.writer.BaseWriter.MapWriter mapWriter = writer.rootAsMap();
-        mapWriter.start();
-        mapWriter.end();
         return;
       }
 
@@ -100,7 +94,6 @@ public class HttpHelperFunctions {
         org.apache.drill.exec.store.easy.json.loader.JsonLoader jsonLoader = jsonLoaderBuilder.build();
         loader.startBatch();
         jsonLoader.readBatch();
-        loader.close();
       } catch (Exception e) {
         throw new org.apache.drill.common.exceptions.DrillRuntimeException("Error while converting from JSON. ", e);
       }
@@ -174,9 +167,6 @@ public class HttpHelperFunctions {
       // as an approximation of null-if-null handling.
       if (args == null) {
         // Return empty map
-        org.apache.drill.exec.vector.complex.writer.BaseWriter.MapWriter mapWriter = writer.rootAsMap();
-        mapWriter.start();
-        mapWriter.end();
         return;
       }
 
@@ -190,9 +180,6 @@ public class HttpHelperFunctions {
       // If the result string is null or empty, return an empty map
       if (results == null || results.length() == 0) {
         // Return empty map
-        org.apache.drill.exec.vector.complex.writer.BaseWriter.MapWriter mapWriter = writer.rootAsMap();
-        mapWriter.start();
-        mapWriter.end();
         return;
       }
 
@@ -201,7 +188,6 @@ public class HttpHelperFunctions {
         org.apache.drill.exec.store.easy.json.loader.JsonLoader jsonLoader = jsonLoaderBuilder.build();
         loader.startBatch();
         jsonLoader.readBatch();
-        loader.close();
       } catch (Exception e) {
         throw new org.apache.drill.common.exceptions.DrillRuntimeException("Error while converting from JSON. ", e);
       }
