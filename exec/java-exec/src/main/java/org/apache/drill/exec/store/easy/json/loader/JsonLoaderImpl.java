@@ -202,6 +202,11 @@ public class JsonLoaderImpl implements JsonLoader, ErrorFactory {
       return this;
     }
 
+    public JsonLoaderBuilder fromString(String jsonString) {
+      this.streams = Collections.singletonList(IOUtils.toInputStream(jsonString, Charset.defaultCharset()));
+      return this;
+    }
+
     public JsonLoaderBuilder fromStream(Iterable<InputStream> streams) {
       this.streams = streams;
       return this;
