@@ -54,7 +54,7 @@ public class JsonConvertFrom {
     @Inject
     ResultSetLoader loader;
 
-    @Output
+    @Output // TODO Remove in future work
     BaseWriter.ComplexWriter writer;
 
     @Override
@@ -68,9 +68,6 @@ public class JsonConvertFrom {
     public void eval() {
       if (in.end == 0) {
         // Return empty map
-        org.apache.drill.exec.vector.complex.writer.BaseWriter.MapWriter mapWriter = writer.rootAsMap();
-        mapWriter.start();
-        mapWriter.end();
         return;
       }
 
@@ -79,7 +76,6 @@ public class JsonConvertFrom {
         org.apache.drill.exec.store.easy.json.loader.JsonLoader jsonLoader = jsonLoaderBuilder.build();
         loader.startBatch();
         jsonLoader.readBatch();
-        loader.close();
       } catch (Exception e) {
         throw new org.apache.drill.common.exceptions.DrillRuntimeException("Error while converting from JSON. ", e);
       }
@@ -93,7 +89,7 @@ public class JsonConvertFrom {
     @Param
     VarCharHolder in;
 
-    @Output
+    @Output // TODO Remove in future work
     ComplexWriter writer;
 
     @Workspace
@@ -118,9 +114,6 @@ public class JsonConvertFrom {
 
       // If the input is null or empty, return an empty map
       if (jsonString.length() == 0) {
-        org.apache.drill.exec.vector.complex.writer.BaseWriter.MapWriter mapWriter = writer.rootAsMap();
-        mapWriter.start();
-        mapWriter.end();
         return;
       }
 
@@ -129,7 +122,6 @@ public class JsonConvertFrom {
         org.apache.drill.exec.store.easy.json.loader.JsonLoader jsonLoader = jsonLoaderBuilder.build();
         loader.startBatch();
         jsonLoader.readBatch();
-        loader.close();
       } catch (Exception e) {
         throw new org.apache.drill.common.exceptions.DrillRuntimeException("Error while converting from JSON. ", e);
       }
