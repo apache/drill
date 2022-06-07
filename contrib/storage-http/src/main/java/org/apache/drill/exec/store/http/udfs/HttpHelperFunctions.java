@@ -45,7 +45,7 @@ public class HttpHelperFunctions {
     @Param
     NullableVarCharHolder[] inputReaders;
 
-    @Output
+    @Output // todo: remove. Not used in this UDF
     ComplexWriter writer;
 
     @Inject
@@ -75,32 +75,25 @@ public class HttpHelperFunctions {
       // as an approximation of null-if-null handling.
       if (args == null) {
         // Return empty map
-        org.apache.drill.exec.vector.complex.writer.BaseWriter.MapWriter mapWriter = writer.rootAsMap();
-        mapWriter.start();
-        mapWriter.end();
         return;
       }
 
       String finalUrl = org.apache.drill.exec.store.http.util.SimpleHttp.mapPositionalParameters(url, args);
 
       // Make the API call
-      String results = org.apache.drill.exec.store.http.util.SimpleHttp.makeSimpleGetRequest(finalUrl);
+      java.io.InputStream results = org.apache.drill.exec.store.http.util.SimpleHttp.getRequestAndStreamResponse(finalUrl);
 
       // If the result string is null or empty, return an empty map
-      if (results == null || results.length() == 0) {
+      if (results == null) {
         // Return empty map
-        org.apache.drill.exec.vector.complex.writer.BaseWriter.MapWriter mapWriter = writer.rootAsMap();
-        mapWriter.start();
-        mapWriter.end();
         return;
       }
 
       try {
-        jsonLoaderBuilder.fromString(results);
+        jsonLoaderBuilder.fromStream(results);
         org.apache.drill.exec.store.easy.json.loader.JsonLoader jsonLoader = jsonLoaderBuilder.build();
         loader.startBatch();
         jsonLoader.readBatch();
-        loader.close();
       } catch (Exception e) {
         throw new org.apache.drill.common.exceptions.DrillRuntimeException("Error while converting from JSON. ", e);
       }
@@ -119,7 +112,7 @@ public class HttpHelperFunctions {
     @Param
     NullableVarCharHolder[] inputReaders;
 
-    @Output
+    @Output // todo: remove. Not used in this UDF
     ComplexWriter writer;
 
     @Inject
@@ -174,34 +167,27 @@ public class HttpHelperFunctions {
       // as an approximation of null-if-null handling.
       if (args == null) {
         // Return empty map
-        org.apache.drill.exec.vector.complex.writer.BaseWriter.MapWriter mapWriter = writer.rootAsMap();
-        mapWriter.start();
-        mapWriter.end();
         return;
       }
 
-      String results = org.apache.drill.exec.store.http.util.SimpleHttp.makeAPICall(
+      java.io.InputStream results = org.apache.drill.exec.store.http.util.SimpleHttp.apiCall(
         plugin,
         endpointConfig,
         drillbitContext,
         args
-      );
+      ).getInputStream();
 
       // If the result string is null or empty, return an empty map
-      if (results == null || results.length() == 0) {
+      if (results == null) {
         // Return empty map
-        org.apache.drill.exec.vector.complex.writer.BaseWriter.MapWriter mapWriter = writer.rootAsMap();
-        mapWriter.start();
-        mapWriter.end();
         return;
       }
 
       try {
-        jsonLoaderBuilder.fromString(results);
+        jsonLoaderBuilder.fromStream(results);
         org.apache.drill.exec.store.easy.json.loader.JsonLoader jsonLoader = jsonLoaderBuilder.build();
         loader.startBatch();
         jsonLoader.readBatch();
-        loader.close();
       } catch (Exception e) {
         throw new org.apache.drill.common.exceptions.DrillRuntimeException("Error while converting from JSON. ", e);
       }

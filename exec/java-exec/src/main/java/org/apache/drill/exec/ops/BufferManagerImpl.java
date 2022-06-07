@@ -34,12 +34,9 @@ public class BufferManagerImpl implements BufferManager {
 
   @Override
   public void close() {
-    managedBuffers.forEach(new LongObjectPredicate<DrillBuf>() {
-      @Override
-      public boolean apply(long key, DrillBuf value) {
-        value.release();
-        return true;
-      }
+    managedBuffers.forEach((LongObjectPredicate<DrillBuf>) (key, value) -> {
+      value.release();
+      return true;
     });
     managedBuffers.clear();
   }

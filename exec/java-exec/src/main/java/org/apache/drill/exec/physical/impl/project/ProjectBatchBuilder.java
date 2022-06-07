@@ -95,7 +95,9 @@ public class ProjectBatchBuilder implements ProjectionMaterializer.BatchBuilder 
 
   @Override
   public void addComplexField(FieldReference ref) {
-    initComplexWriters();
+    if (projectBatch.rsLoader == null) {
+      initComplexWriters();
+    }
     if (projectBatch.complexFieldReferencesList == null) {
       projectBatch.complexFieldReferencesList = Lists.newArrayList();
     } else {

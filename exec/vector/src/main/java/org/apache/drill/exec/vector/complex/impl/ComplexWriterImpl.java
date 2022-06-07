@@ -105,13 +105,13 @@ public class ComplexWriterImpl extends AbstractFieldWriter implements ComplexWri
   @Override
   public void setPosition(int index){
     super.setPosition(index);
-    switch(mode){
-    case MAP:
-      mapRoot.setPosition(index);
-      break;
-    case LIST:
-      listRoot.setPosition(index);
-      break;
+    switch (mode) {
+      case MAP:
+        mapRoot.setPosition(index);
+        break;
+      case LIST:
+        listRoot.setPosition(index);
+        break;
     }
   }
 

@@ -24,10 +24,16 @@ import okhttp3.mockwebserver.MockWebServer;
 import okhttp3.mockwebserver.RecordedRequest;
 import org.apache.drill.common.logical.StoragePluginConfig.AuthMode;
 import org.apache.drill.common.logical.security.PlainCredentialsProvider;
+import org.apache.drill.common.types.TypeProtos;
 import org.apache.drill.common.util.DrillFileUtils;
+import org.apache.drill.exec.physical.impl.project.ProjectMemoryManager;
 import org.apache.drill.exec.physical.impl.project.ProjectRecordBatch;
 import org.apache.drill.exec.physical.impl.validate.IteratorValidatorBatchIterator;
+import org.apache.drill.exec.physical.resultSet.impl.ResultSetLoaderImpl;
 import org.apache.drill.exec.physical.rowSet.RowSet;
+import org.apache.drill.exec.physical.rowSet.RowSetBuilder;
+import org.apache.drill.exec.record.metadata.SchemaBuilder;
+import org.apache.drill.exec.record.metadata.TupleMetadata;
 import org.apache.drill.exec.store.easy.json.loader.JsonLoaderImpl;
 import org.apache.drill.exec.store.http.util.SimpleHttp;
 import org.apache.drill.exec.store.security.UsernamePasswordCredentials;
@@ -37,6 +43,7 @@ import org.apache.drill.shaded.guava.com.google.common.io.Files;
 import org.apache.drill.test.ClusterFixture;
 import org.apache.drill.test.ClusterTest;
 import org.apache.drill.test.LogFixture;
+import org.apache.drill.test.rowSet.RowSetUtilities;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
@@ -47,6 +54,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import static org.apache.drill.test.rowSet.RowSetUtilities.mapValue;
+import static org.apache.drill.test.rowSet.RowSetUtilities.singleMap;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
@@ -63,9 +72,11 @@ public class TestHttpUDFFunctions extends ClusterTest {
   public static void setup() throws Exception {
     logFixture = LogFixture.builder()
       .toConsole()
+      .logger(ProjectMemoryManager.class, CURRENT_LOG_LEVEL)
       .logger(ProjectRecordBatch.class, CURRENT_LOG_LEVEL)
       .logger(JsonLoaderImpl.class, CURRENT_LOG_LEVEL)
       .logger(IteratorValidatorBatchIterator.class, CURRENT_LOG_LEVEL)
+      .logger(ResultSetLoaderImpl.class, CURRENT_LOG_LEVEL)
       .build();
     startCluster(ClusterFixture.builder(dirTestWatcher));
     TEST_JSON_RESPONSE = Files.asCharSource(DrillFileUtils.getResourceAsFile("/data/simple.json"), Charsets.UTF_8).read();
@@ -98,6 +109,33 @@ public class TestHttpUDFFunctions extends ClusterTest {
 
       RowSet results = client.queryBuilder().sql(sql).rowSet();
       assertEquals(1, results.rowCount());
+      TupleMetadata expectedSchema = new SchemaBuilder()
+        .addMap("result")
+          .addMap("results")
+            .addNullable("sunrise", TypeProtos.MinorType.VARCHAR)
+            .addNullable("sunset", TypeProtos.MinorType.VARCHAR)
+            .addNullable("solar_noon", TypeProtos.MinorType.VARCHAR)
+            .addNullable("day_length", TypeProtos.MinorType.VARCHAR)
+            .addNullable("civil_twilight_begin", TypeProtos.MinorType.VARCHAR)
+            .addNullable("civil_twilight_end", TypeProtos.MinorType.VARCHAR)
+            .addNullable("nautical_twilight_begin", TypeProtos.MinorType.VARCHAR)
+            .addNullable("nautical_twilight_end", TypeProtos.MinorType.VARCHAR)
+            .addNullable("astronomical_twilight_begin", TypeProtos.MinorType.VARCHAR)
+            .addNullable("astronomical_twilight_end", TypeProtos.MinorType.VARCHAR)
+            .resumeMap()
+          .addNullable("status", TypeProtos.MinorType.VARCHAR)
+          .resumeSchema()
+        .build();
+
+      RowSet expected = new RowSetBuilder(client.allocator(), expectedSchema)
+        .addRow(singleMap(
+                  mapValue(
+                    mapValue("6:13:58 AM", "5:59:55 PM", "12:06:56 PM", "11:45:57", "5:48:14 AM",
+          "6:25:38 PM", "5:18:16 AM", "6:55:36 PM", "4:48:07 AM", "7:25:45 PM"),
+                    "OK")))
+        .build();
+
+      RowSetUtilities.verify(expected, results);
       results.clear();
 
       RecordedRequest recordedRequest = server.takeRequest();

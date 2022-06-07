@@ -31,7 +31,6 @@ import org.apache.drill.exec.physical.base.PhysicalOperator;
 import org.apache.drill.exec.physical.impl.aggregate.SpilledRecordBatch;
 import org.apache.drill.exec.record.selection.SelectionVector2;
 import org.apache.drill.exec.record.selection.SelectionVector4;
-import org.apache.drill.exec.server.options.OptionValue;
 import org.apache.drill.exec.util.record.RecordBatchStats.RecordBatchStatsContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -68,17 +67,8 @@ public abstract class AbstractRecordBatch<T extends PhysicalOperator> implements
     this.batchStatsContext = new RecordBatchStatsContext(context, oContext);
     stats = oContext.getStats();
     container = new VectorContainer(this.oContext.getAllocator());
-    if (buildSchema) {
-      state = BatchState.BUILD_SCHEMA;
-    } else {
-      state = BatchState.FIRST;
-    }
-    OptionValue option = context.getOptions().getOption(ExecConstants.ENABLE_UNION_TYPE.getOptionName());
-    if (option != null) {
-      unionTypeEnabled = option.bool_val;
-    } else {
-      unionTypeEnabled = false;
-    }
+    state = buildSchema ? BatchState.BUILD_SCHEMA : BatchState.FIRST;
+    unionTypeEnabled = context.getOptions().getBoolean(ExecConstants.ENABLE_UNION_TYPE_KEY);
   }
 
   public enum BatchState {

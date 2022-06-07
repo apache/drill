@@ -1127,7 +1127,8 @@ public class TestHttpPlugin extends ClusterTest {
         client.queryBuilder().sql(sql).rowSet();
         fail();
       } catch (Exception e) {
-         assertTrue("Not timeout exception, " + e, e.getMessage().contains("DATA_READ ERROR: timeout"));
+         assertTrue("Not timeout exception, " + e,
+           e.getMessage().contains("DATA_READ ERROR: timeout") || e.getMessage().contains("DATA_READ ERROR: Read timed out"));
       }
     }
   }
