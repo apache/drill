@@ -25,6 +25,7 @@ import okhttp3.mockwebserver.RecordedRequest;
 import org.apache.drill.common.logical.StoragePluginConfig.AuthMode;
 import org.apache.drill.common.logical.security.PlainCredentialsProvider;
 import org.apache.drill.common.types.TypeProtos;
+import org.apache.drill.common.types.TypeProtos.MinorType;
 import org.apache.drill.common.util.DrillFileUtils;
 import org.apache.drill.exec.physical.impl.project.ProjectMemoryManager;
 import org.apache.drill.exec.physical.impl.project.ProjectRecordBatch;
@@ -64,6 +65,7 @@ public class TestHttpUDFFunctions extends ClusterTest {
 
   private static final int MOCK_SERVER_PORT = 47771;
   private static String TEST_JSON_RESPONSE;
+  private static String TEST_JSON_PAGE1;
   private static String DUMMY_URL = "http://localhost:" + MOCK_SERVER_PORT;
   protected static LogFixture logFixture;
   private final static Level CURRENT_LOG_LEVEL = Level.INFO;
@@ -80,6 +82,7 @@ public class TestHttpUDFFunctions extends ClusterTest {
       .build();
     startCluster(ClusterFixture.builder(dirTestWatcher));
     TEST_JSON_RESPONSE = Files.asCharSource(DrillFileUtils.getResourceAsFile("/data/simple.json"), Charsets.UTF_8).read();
+    TEST_JSON_PAGE1 = Files.asCharSource(DrillFileUtils.getResourceAsFile("/data/p1.json"), Charsets.UTF_8).read();
 
     HttpApiConfig mockGithubWithDuplicateParam = HttpApiConfig.builder()
       .url(String.format("%s/orgs/{org}/repos", DUMMY_URL))
@@ -89,8 +92,27 @@ public class TestHttpUDFFunctions extends ClusterTest {
       .requireTail(false)
       .build();
 
+    TupleMetadata simpleSchema = new SchemaBuilder()
+      .addNullable("col_1", MinorType.FLOAT8)
+      .addNullable("col_2", MinorType.FLOAT8)
+      .addNullable("col_3", MinorType.FLOAT8)
+      .build();
+
+    HttpJsonOptions jsonOptions = new HttpJsonOptions.HttpJsonOptionsBuilder()
+      .schema(simpleSchema)
+      .build();
+
+    HttpApiConfig basicJson = HttpApiConfig.builder()
+      .url(String.format("%s/json", DUMMY_URL))
+      .method("get")
+      .jsonOptions(jsonOptions)
+      .requireTail(false)
+      .inputType("json")
+      .build();
+
     Map<String, HttpApiConfig> configs = new HashMap<>();
     configs.put("github", mockGithubWithDuplicateParam);
+    configs.put("basicJson", basicJson);
 
     HttpStoragePluginConfig mockStorageConfigWithWorkspace =
       new HttpStoragePluginConfig(false, configs, 2, "globaluser", "globalpass", "",
@@ -99,6 +121,30 @@ public class TestHttpUDFFunctions extends ClusterTest {
         UsernamePasswordCredentials.PASSWORD, "globalpass")), AuthMode.SHARED_USER.name());
     mockStorageConfigWithWorkspace.setEnabled(true);
     cluster.defineStoragePlugin("local", mockStorageConfigWithWorkspace);
+  }
+
+  @Test
+  public void testProvidedSchema() throws Exception {
+    String sql = "SELECT http_request('local.basicJson') as data FROM (values(1))";
+    try (MockWebServer server = startServer()) {
+      server.enqueue(new MockResponse().setResponseCode(200).setBody(TEST_JSON_PAGE1));
+      RowSet results = client.queryBuilder().sql(sql).rowSet();
+
+      TupleMetadata expectedSchema = new SchemaBuilder()
+        .addMap("data")
+          .addNullable("col_1", MinorType.FLOAT8)
+          .addNullable("col_2", MinorType.FLOAT8)
+          .addNullable("col_3", MinorType.FLOAT8)
+        .resumeSchema()
+        .build();
+
+      RowSet expected = new RowSetBuilder(client.allocator(), expectedSchema)
+        .addRow(singleMap(
+          mapValue(1.0, 2.0, 3.0)))
+        .build();
+
+      RowSetUtilities.verify(expected, results);
+    }
   }
 
   @Test
