@@ -33,8 +33,6 @@ public class HttpUdfUtils {
   private static final Logger logger = LoggerFactory.getLogger(HttpUdfUtils.class);
 
   public static JsonLoaderBuilder setupJsonBuilder(HttpApiConfig endpointConfig, ResultSetLoader loader, OptionManager options) {
-    logger.debug(String.valueOf(options));
-
     loader.setTargetRowCount(1);
     // Add JSON configuration from Storage plugin, if present.
     HttpJsonOptions jsonOptions = endpointConfig.jsonOptions();
@@ -55,6 +53,7 @@ public class HttpUdfUtils {
 
       // Add provided schema if present
       if (jsonOptions.schema() != null) {
+        logger.debug("Found schema: {}", jsonOptions.schema());
         jsonLoaderBuilder.providedSchema(jsonOptions.schema());
       }
     }
