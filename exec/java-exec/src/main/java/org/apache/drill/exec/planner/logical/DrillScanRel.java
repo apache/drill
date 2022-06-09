@@ -60,9 +60,7 @@ public class DrillScanRel extends DrillScanRelBase implements DrillRel {
 
   public DrillScanRel(final RelOptCluster cluster, final RelTraitSet traits,
                       final RelOptTable table, boolean partitionFilterPushdown) {
-    // By default, scan does not support project pushdown.
-    // Decision whether push projects into scan will be made solely in DrillPushProjIntoScanRule.
-    this(cluster, traits, table, table.getRowType(), getProjectedColumns(table, true), partitionFilterPushdown);
+    this(cluster, traits, table, table.getRowType(), getProjectedColumns(table, false), partitionFilterPushdown);
     this.settings = PrelUtil.getPlannerSettings(cluster.getPlanner());
   }
 
@@ -139,7 +137,9 @@ public class DrillScanRel extends DrillScanRelBase implements DrillRel {
   @Override
   public RelOptCost computeSelfCost(final RelOptPlanner planner, RelMetadataQuery mq) {
     final ScanStats stats = getGroupScan().getScanStats(settings);
-    int columnCount = Utilities.isStarQuery(columns) ? STAR_COLUMN_COST : getRowType().getFieldCount();
+    double columnCount = Utilities.isStarQuery(columns)
+      ? STAR_COLUMN_COST
+      : Math.pow(getRowType().getFieldCount(), 2) / Math.max(columns.size(), 1);
 
     // double rowCount = RelMetadataQuery.getRowCount(this);
     double rowCount = Math.max(1, stats.getRecordCount());

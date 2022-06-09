@@ -199,8 +199,6 @@ public class TestHTTPDLogReaderUserAgent extends ClusterTest {
 
     RowSet results = client.queryBuilder().sql(sql).rowSet();
 
-    results.print();
-
     TupleMetadata expectedSchema = new SchemaBuilder()
             .addNullable("request_receive_time_epoch",                          MinorType.TIMESTAMP)
             .addNullable("request_user-agent",                                  MinorType.VARCHAR)
@@ -255,8 +253,4 @@ public class TestHTTPDLogReaderUserAgent extends ClusterTest {
     RowSetUtilities.verify(expected, results);
   }
 
-
-
 }
-
-
