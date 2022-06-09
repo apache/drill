@@ -17,6 +17,7 @@
  */
 package org.apache.drill.exec.planner.logical;
 
+import org.apache.drill.exec.planner.common.DrillProjectRelBase;
 import org.apache.drill.shaded.guava.com.google.common.collect.Lists;
 import org.apache.calcite.plan.RelOptRule;
 import org.apache.calcite.plan.RelOptRuleCall;
@@ -39,7 +40,10 @@ import java.util.List;
 
 public class DrillPushFilterPastProjectRule extends RelOptRule {
 
-  public final static RelOptRule INSTANCE = new DrillPushFilterPastProjectRule(DrillRelFactories.LOGICAL_BUILDER);
+  public final static RelOptRule LOGICAL = new DrillPushFilterPastProjectRule(
+    LogicalFilter.class, LogicalProject.class, DrillRelFactories.LOGICAL_BUILDER, "DrillPushFilterPastProjectRule:logical");
+  public final static RelOptRule DRILL_INSTANCE = new DrillPushFilterPastProjectRule(
+    DrillFilterRel.class, DrillProjectRelBase.class, DrillRelFactories.LOGICAL_BUILDER, "DrillPushFilterPastProjectRule:drill_logical");
 
   private static final Collection<String> BANNED_OPERATORS;
 
@@ -49,8 +53,9 @@ public class DrillPushFilterPastProjectRule extends RelOptRule {
     BANNED_OPERATORS.add("item");
   }
 
-  private DrillPushFilterPastProjectRule(RelBuilderFactory relBuilderFactory) {
-    super(operand(LogicalFilter.class, operand(LogicalProject.class, any())), relBuilderFactory,null);
+  private DrillPushFilterPastProjectRule(Class<? extends Filter> filter,
+    Class<? extends Project> project, RelBuilderFactory relBuilderFactory, String description) {
+    super(operand(filter, operand(project, any())), relBuilderFactory,description);
   }
 
   //~ Methods ----------------------------------------------------------------
