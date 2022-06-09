@@ -118,6 +118,12 @@ public class TestHTTPDLogReader extends ClusterTest {
       "\\\"%{User-agent}i\\\"', " +
       "flattenWildcards => true)) WHERE `request_firstline_original_uri_query_came__from` IS NOT NULL";
 
+    queryBuilder()
+      .sql(sql)
+      .planMatcher()
+      .include("columns=\\[`request_firstline_original_uri_query_came__from`\\]")
+      .match();
+
     RowSet results = client.queryBuilder().sql(sql).rowSet();
 
     TupleMetadata expectedSchema = new SchemaBuilder()
