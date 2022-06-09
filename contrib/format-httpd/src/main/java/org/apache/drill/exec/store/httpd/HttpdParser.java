@@ -33,10 +33,10 @@ import nl.basjes.parse.core.exceptions.DissectionFailure;
 import nl.basjes.parse.core.exceptions.InvalidDissectorException;
 import nl.basjes.parse.core.exceptions.MissingDissectorsException;
 import nl.basjes.parse.httpdlog.HttpdLoglineParser;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.ArrayList;
 import java.util.EnumSet;
 import java.util.List;
 import java.util.Map;
@@ -192,13 +192,7 @@ public class HttpdParser {
     if (!isStarQuery() &&
         !isMetadataQuery() &&
         !isOnlyImplicitColumns()) {
-      List<String> keysToRemove = new ArrayList<>();
-      for (final String key : requestedPaths.keySet()) {
-        if (!isRequested(key)) {
-          keysToRemove.add(key);
-        }
-      }
-      keysToRemove.forEach( key -> requestedPaths.remove(key));
+      requestedPaths = getRequestedColumnPaths();
     }
 
     EnumSet<Casts> allCasts;
@@ -256,6 +250,25 @@ public class HttpdParser {
     return builder.build();
   }
 
+  private Map<String, String> getRequestedColumnPaths() {
+    Map<String, String> requestedColumnPaths = new TreeMap<>();
+    for (SchemaPath requestedColumn : requestedColumns) {
+      String columnName = requestedColumn.getRootSegmentPath();
+      String parserPath = requestedPaths.get(columnName);
+      if (parserPath != null) {
+        requestedColumnPaths.put(columnName, parserPath);
+      } else {
+        requestedPaths.keySet()
+          .stream()
+          .filter(colName -> colName.endsWith(HttpdUtils.SAFE_WILDCARD)
+            && requestedColumn.rootName().startsWith(colName.substring(0, colName.length() - HttpdUtils.SAFE_WILDCARD.length())))
+          .findAny()
+          .ifPresent(colName -> requestedColumnPaths.put(colName, requestedPaths.get(colName)));
+      }
+    }
+    return requestedColumnPaths;
+  }
+
   public void addFieldsToParser(RowSetLoader rowWriter) {
     for (final Map.Entry<String, String> entry : requestedPaths.entrySet()) {
       try {
@@ -268,22 +281,12 @@ public class HttpdParser {
   }
 
   public boolean isStarQuery() {
-    return requestedColumns.size() == 1 && requestedColumns.get(0).isDynamicStar();
+    return requestedColumns.stream()
+      .anyMatch(SchemaPath::isDynamicStar);
   }
 
   public boolean isMetadataQuery() {
     return requestedColumns.size() == 0;
-  }
-
-  public boolean isRequested(String colName) {
-    for (SchemaPath path : requestedColumns) {
-      if (path.isDynamicStar()) {
-        return true;
-      } else if (path.nameEquals(colName)) {
-        return true;
-      }
-    }
-    return false;
   }
 
   /*
