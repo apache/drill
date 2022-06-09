@@ -135,10 +135,6 @@ public class HttpHelperFunctions {
 
     @Override
     public void setup() {
-      jsonLoaderBuilder = new org.apache.drill.exec.store.easy.json.loader.JsonLoaderImpl.JsonLoaderBuilder()
-        .resultSetLoader(loader)
-        .standardOptions(options);
-
       String schemaPath = org.apache.drill.exec.expr.fn.impl.StringFunctionHelpers.toStringFromUTF8(rawInput.start, rawInput.end, rawInput.buffer);
       // Get the plugin name and endpoint name
       String[] parts = schemaPath.split("\\.");
@@ -153,10 +149,15 @@ public class HttpHelperFunctions {
         drillbitContext,
         pluginName
       );
+
       endpointConfig = org.apache.drill.exec.store.http.util.SimpleHttp.getEndpointConfig(
         endpointName,
         plugin.getConfig()
       );
+
+      // Add JSON configuration from Storage plugin, if present.
+      jsonLoaderBuilder = org.apache.drill.exec.store.http.udfs.HttpUdfUtils.setupJsonBuilder(endpointConfig, loader, options);
+
     }
 
     @Override
