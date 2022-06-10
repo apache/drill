@@ -162,36 +162,7 @@ public class HttpHelperFunctions {
 
     @Override
     public void eval() {
-      // Process Positional Arguments
-      java.util.List args = org.apache.drill.exec.store.http.util.SimpleHttp.buildParameterList(inputReaders);
-      // If the arg list is null, indicating at least one null arg, return an empty map
-      // as an approximation of null-if-null handling.
-      if (args == null) {
-        // Return empty map
-        return;
-      }
-
-      java.io.InputStream results = org.apache.drill.exec.store.http.util.SimpleHttp.apiCall(
-        plugin,
-        endpointConfig,
-        drillbitContext,
-        args
-      ).getInputStream();
-
-      // If the result string is null or empty, return an empty map
-      if (results == null) {
-        // Return empty map
-        return;
-      }
-
-      try {
-        jsonLoaderBuilder.fromStream(results);
-        org.apache.drill.exec.store.easy.json.loader.JsonLoader jsonLoader = jsonLoaderBuilder.build();
-        loader.startBatch();
-        jsonLoader.readBatch();
-      } catch (Exception e) {
-        throw new org.apache.drill.common.exceptions.DrillRuntimeException("Error while converting from JSON. ", e);
-      }
+      org.apache.drill.exec.store.http.udfs.HttpUdfUtils.processResults(inputReaders, plugin, endpointConfig, drillbitContext, jsonLoaderBuilder, loader);
     }
   }
 }
