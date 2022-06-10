@@ -41,7 +41,7 @@ public class ControlServer extends BasicServer<RpcType, ControlConnection>{
     super(ControlRpcConfig.getMapping(config.getBootstrapContext().getConfig(),
         config.getBootstrapContext().getExecutor()),
         config.getAllocator().getAsByteBufAllocator(),
-        config.getBootstrapContext().getBitLoopGroup());
+        config.getBootstrapContext().getControlLoopGroup());
     this.config = config;
     this.connectionRegistry = connectionRegistry;
   }

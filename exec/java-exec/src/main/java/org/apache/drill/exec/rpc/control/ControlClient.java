@@ -50,7 +50,7 @@ public class ControlClient extends BasicClient<RpcType, ControlConnection, BitCo
     super(ControlRpcConfig.getMapping(config.getBootstrapContext().getConfig(),
         config.getBootstrapContext().getExecutor()),
         config.getAllocator().getAsByteBufAllocator(),
-        config.getBootstrapContext().getBitLoopGroup(),
+        config.getBootstrapContext().getControlLoopGroup(),
         RpcType.HANDSHAKE,
         BitControlHandshake.class,
         BitControlHandshake.PARSER);

@@ -41,7 +41,7 @@ public class DataServer extends BasicServer<RpcType, DataServerConnection> {
         DataRpcConfig.getMapping(config.getBootstrapContext().getConfig(),
             config.getBootstrapContext().getExecutor()),
         config.getAllocator().getAsByteBufAllocator(),
-        config.getBootstrapContext().getBitLoopGroup());
+        config.getBootstrapContext().getDataServerLoopGroup());
     this.config = config;
   }
 

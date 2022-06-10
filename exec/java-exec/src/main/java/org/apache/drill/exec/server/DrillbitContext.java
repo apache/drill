@@ -227,7 +227,7 @@ public class DrillbitContext implements AutoCloseable {
   public OAuthTokenProvider getoAuthTokenProvider() { return oAuthTokenProvider; }
 
   public EventLoopGroup getBitLoopGroup() {
-    return context.getBitLoopGroup();
+    return context.getControlLoopGroup();
   }
 
   public DataConnectionCreator getDataConnectionsPool() {
