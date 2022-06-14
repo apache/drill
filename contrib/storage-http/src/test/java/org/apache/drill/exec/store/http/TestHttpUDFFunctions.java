@@ -36,6 +36,7 @@ import org.apache.drill.exec.physical.rowSet.RowSetBuilder;
 import org.apache.drill.exec.record.metadata.SchemaBuilder;
 import org.apache.drill.exec.record.metadata.TupleMetadata;
 import org.apache.drill.exec.store.easy.json.loader.JsonLoaderImpl;
+import org.apache.drill.exec.store.http.udfs.HttpUdfUtils;
 import org.apache.drill.exec.store.http.util.SimpleHttp;
 import org.apache.drill.exec.store.security.UsernamePasswordCredentials;
 import org.apache.drill.shaded.guava.com.google.common.base.Charsets;
@@ -68,7 +69,7 @@ public class TestHttpUDFFunctions extends ClusterTest {
   private static String TEST_JSON_PAGE1;
   private static String DUMMY_URL = "http://localhost:" + MOCK_SERVER_PORT;
   protected static LogFixture logFixture;
-  private final static Level CURRENT_LOG_LEVEL = Level.INFO;
+  private final static Level CURRENT_LOG_LEVEL = Level.DEBUG;
 
   @BeforeClass
   public static void setup() throws Exception {
@@ -79,6 +80,7 @@ public class TestHttpUDFFunctions extends ClusterTest {
       .logger(JsonLoaderImpl.class, CURRENT_LOG_LEVEL)
       .logger(IteratorValidatorBatchIterator.class, CURRENT_LOG_LEVEL)
       .logger(ResultSetLoaderImpl.class, CURRENT_LOG_LEVEL)
+      .logger(HttpUdfUtils.class, CURRENT_LOG_LEVEL)
       .build();
     startCluster(ClusterFixture.builder(dirTestWatcher));
     TEST_JSON_RESPONSE = Files.asCharSource(DrillFileUtils.getResourceAsFile("/data/simple.json"), Charsets.UTF_8).read();
