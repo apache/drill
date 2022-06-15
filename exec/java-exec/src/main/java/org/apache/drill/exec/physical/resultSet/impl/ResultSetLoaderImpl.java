@@ -434,8 +434,7 @@ public class ResultSetLoaderImpl implements ResultSetLoader, LoaderInternals {
         throw new IllegalStateException("Unexpected state: " + state);
     }
 
-    // Update the visible schema with any pending overflow batch
-    // updates
+    // Update the visible schema with any pending overflow batch updates
     harvestSchemaVersion = activeSchemaVersion;
     pendingRowCount = 0;
     batchSizeLimit = (int) Math.min(targetRowCount, options.scanLimit - totalRowCount());

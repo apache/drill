@@ -21,42 +21,50 @@ package org.apache.drill.exec.store.http.udfs;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.drill.exec.physical.resultSet.ResultSetLoader;
 import org.apache.drill.exec.server.options.OptionManager;
-import org.apache.drill.exec.store.easy.json.loader.JsonLoaderImpl.JsonLoaderBuilder;
-import org.apache.drill.exec.store.easy.json.loader.JsonLoaderOptions;
+import org.apache.drill.exec.store.easy.json.loader.JsonLoaderImpl;
+import org.apache.drill.exec.store.easy.json.loader.SingleElementIterator;
 import org.apache.drill.exec.store.http.HttpApiConfig;
-import org.apache.drill.exec.store.http.HttpJsonOptions;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import java.io.InputStream;
 
 public class HttpUdfUtils {
 
   private static final Logger logger = LoggerFactory.getLogger(HttpUdfUtils.class);
 
-  public static JsonLoaderBuilder setupJsonBuilder(HttpApiConfig endpointConfig, ResultSetLoader loader, OptionManager options) {
-    loader.setTargetRowCount(1);
+  public static JsonLoaderImpl createJsonLoader(ResultSetLoader rsLoader,
+                                                OptionManager options,
+                                                SingleElementIterator<InputStream> stream) {
+    return createJsonLoader(null, rsLoader, options, stream);
+  }
+  public static JsonLoaderImpl createJsonLoader(HttpApiConfig endpointConfig, ResultSetLoader rsLoader,
+                                                OptionManager options, SingleElementIterator<InputStream> stream) {
     // Add JSON configuration from Storage plugin, if present.
-    HttpJsonOptions jsonOptions = endpointConfig.jsonOptions();
-    JsonLoaderBuilder jsonLoaderBuilder = new JsonLoaderBuilder()
-      .resultSetLoader(loader)
-      .maxRows(1)
-      .standardOptions(options);
-
+    org.apache.drill.exec.store.easy.json.loader.JsonLoaderImpl.JsonLoaderBuilder jsonLoaderBuilder =
+      new org.apache.drill.exec.store.easy.json.loader.JsonLoaderImpl.JsonLoaderBuilder()
+      .resultSetLoader(rsLoader)
+      .standardOptions(options)
+      .fromStream(() -> stream);
     // Add data path if present
-    if (StringUtils.isNotEmpty(endpointConfig.dataPath())) {
-      jsonLoaderBuilder.dataPath(endpointConfig.dataPath());
-    }
+    if (endpointConfig != null) {
+      if (StringUtils.isNotEmpty(endpointConfig.dataPath())) {
+        jsonLoaderBuilder.dataPath(endpointConfig.dataPath());
+      }
+      // Add JSON configuration from Storage plugin, if present.
+      org.apache.drill.exec.store.http.HttpJsonOptions jsonOptions = endpointConfig.jsonOptions();
+      if (jsonOptions != null) {
+        // Add options from endpoint configuration to jsonLoader
+        org.apache.drill.exec.store.easy.json.loader.JsonLoaderOptions jsonLoaderOptions = jsonOptions.getJsonOptions(options);
+        jsonLoaderBuilder.options(jsonLoaderOptions);
 
-    if (jsonOptions != null) {
-      // Add options from endpoint configuration to jsonLoader
-      JsonLoaderOptions jsonLoaderOptions = jsonOptions.getJsonOptions(options);
-      jsonLoaderBuilder.options(jsonLoaderOptions);
-
-      // Add provided schema if present
-      if (jsonOptions.schema() != null) {
-        logger.debug("Found schema: {}", jsonOptions.schema());
-        jsonLoaderBuilder.providedSchema(jsonOptions.schema());
+        // Add provided schema if present
+        if (jsonOptions.schema() != null) {
+          logger.debug("Found schema: {}", jsonOptions.schema());
+          jsonLoaderBuilder.providedSchema(jsonOptions.schema());
+        }
       }
     }
-    return jsonLoaderBuilder;
+    return (org.apache.drill.exec.store.easy.json.loader.JsonLoaderImpl) jsonLoaderBuilder.build();
   }
 }

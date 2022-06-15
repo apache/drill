@@ -17,6 +17,7 @@
  */
 package org.apache.drill.exec.physical.impl.project;
 
+import org.apache.commons.collections4.CollectionUtils;
 import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.common.expression.FieldReference;
 import org.apache.drill.common.types.TypeProtos;
@@ -110,7 +111,7 @@ public class ProjectRecordBatch extends AbstractSingleRecordBatch<Project> {
     memoryManager.update();
 
     if (first && incomingRecordCount == 0) {
-      if (complexWriters != null || rsLoader != null ) {
+      if (!CollectionUtils.isEmpty(complexWriters) || rsLoader != null ) {
         IterOutcome next = null;
         while (incomingRecordCount == 0) {
           if (getLastKnownOutcome() == EMIT) {
@@ -145,7 +146,7 @@ public class ProjectRecordBatch extends AbstractSingleRecordBatch<Project> {
       }
     }
 
-    if ((complexWriters != null || rsLoader != null) && getLastKnownOutcome() == EMIT) {
+    if ((!CollectionUtils.isEmpty(complexWriters) || rsLoader != null) && getLastKnownOutcome() == EMIT) {
       throw UserException.unsupportedError()
           .message("Currently functions producing complex types as output are not " +
             "supported in project list for subquery between LATERAL and UNNEST. Please re-write the query using this " +
@@ -177,7 +178,7 @@ public class ProjectRecordBatch extends AbstractSingleRecordBatch<Project> {
     }
     // In case of complex writer expression, vectors would be added to batch run-time.
     // We have to re-build the schema.
-    if (rsLoader != null && !rsLoader.isProjectionEmpty()) {
+    if (rsLoader != null) {
       MapVector map = container.addOrGet(container.getLast().getField().getName(), Types.required(TypeProtos.MinorType.MAP), MapVector.class);
       map.setMapValueCount(recordCount);
       for (VectorWrapper<?> vectorWrapper : rsLoader.harvest()) {
@@ -185,7 +186,7 @@ public class ProjectRecordBatch extends AbstractSingleRecordBatch<Project> {
         map.putChild(valueVector.getField().getName(), valueVector);
       }
       container.buildSchema(SelectionVectorMode.NONE);
-    } else if (complexWriters != null) {
+    } else if (!CollectionUtils.isEmpty(complexWriters)) {
       container.buildSchema(SelectionVectorMode.NONE);
     }
 
@@ -224,7 +225,7 @@ public class ProjectRecordBatch extends AbstractSingleRecordBatch<Project> {
     }
     // In case of complex writer expression, vectors would be added to batch run-time.
     // We have to re-build the schema.
-    if (complexWriters != null || rsLoader != null) {
+    if (!CollectionUtils.isEmpty(complexWriters) || rsLoader != null) {
       container.buildSchema(SelectionVectorMode.NONE);
     }
 
@@ -358,7 +359,7 @@ public class ProjectRecordBatch extends AbstractSingleRecordBatch<Project> {
   protected IterOutcome getFinalOutcome(boolean hasMoreRecordInBoundary) {
     // In a case of complex writers vectors are added at runtime, so the schema
     // may change (e.g. when a batch contains new column(s) not present in previous batches)
-    if (complexWriters != null || rsLoader != null) {
+    if (!CollectionUtils.isEmpty(complexWriters) || rsLoader != null) {
       return IterOutcome.OK_NEW_SCHEMA;
     }
     return super.getFinalOutcome(hasMoreRecordInBoundary);
@@ -374,11 +375,11 @@ public class ProjectRecordBatch extends AbstractSingleRecordBatch<Project> {
     }
     allocationVectors = new ArrayList<>();
 
-    if (complexWriters != null) {
-      container.clear();
-    } else if (rsLoader != null) {
+    if (rsLoader != null) {
       container.clear();
       rsLoader.close();
+    } else if (!CollectionUtils.isEmpty(complexWriters)) {
+      container.clear();
     } else {
       // Release the underlying DrillBufs and reset the ValueVectors to empty
       // Not clearing the container here is fine since Project output schema is

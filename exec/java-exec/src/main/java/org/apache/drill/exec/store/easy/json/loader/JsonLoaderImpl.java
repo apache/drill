@@ -20,10 +20,14 @@ package org.apache.drill.exec.store.easy.json.loader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.Reader;
+import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 
+import io.netty.buffer.DrillBuf;
+import org.apache.commons.io.IOUtils;
 import org.apache.drill.common.exceptions.CustomErrorContext;
 import org.apache.drill.common.exceptions.EmptyErrorContext;
 import org.apache.drill.common.exceptions.UserException;
@@ -43,6 +47,7 @@ import org.apache.drill.exec.store.easy.json.parser.TokenIterator.RecoverableJso
 import org.apache.drill.exec.store.easy.json.parser.ValueDef;
 import org.apache.drill.exec.store.easy.json.parser.ValueDef.JsonType;
 import org.apache.drill.exec.vector.accessor.UnsupportedConversionError;
+import org.apache.drill.exec.vector.complex.fn.DrillBufInputStream;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -186,6 +191,16 @@ public class JsonLoaderImpl implements JsonLoader, ErrorFactory {
 
     public JsonLoaderBuilder fromStream(Iterable<InputStream> streams) {
       this.streams = streams;
+      return this;
+    }
+
+    public JsonLoaderBuilder fromStream(int start, int end, DrillBuf buf) {
+      this.streams = Collections.singletonList(DrillBufInputStream.getStream(start, end, buf));
+      return this;
+    }
+
+    public JsonLoaderBuilder fromString(String jsonString) {
+      this.streams = Collections.singletonList(IOUtils.toInputStream(jsonString, Charset.defaultCharset()));
       return this;
     }
 

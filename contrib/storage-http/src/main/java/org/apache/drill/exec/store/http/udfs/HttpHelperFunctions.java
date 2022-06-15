@@ -52,54 +52,56 @@ public class HttpHelperFunctions {
     OptionManager options;
 
     @Inject
-    ResultSetLoader loader;
+    ResultSetLoader rsLoader;
 
     @Workspace
-    org.apache.drill.exec.store.easy.json.loader.JsonLoaderImpl.JsonLoaderBuilder jsonLoaderBuilder;
+    org.apache.drill.exec.store.easy.json.loader.JsonLoaderImpl jsonLoader;
+
+    @Workspace
+    org.apache.drill.exec.store.easy.json.loader.SingleElementIterator<java.io.InputStream> stream;
 
     @Override
     public void setup() {
-      jsonLoaderBuilder = new org.apache.drill.exec.store.easy.json.loader.JsonLoaderImpl.JsonLoaderBuilder()
-        .resultSetLoader(loader)
-        .standardOptions(options);
+      stream = new org.apache.drill.exec.store.easy.json.loader.SingleElementIterator<>();
+      rsLoader.startBatch();
     }
 
     @Override
     public void eval() {
       // Get the URL
       String url = org.apache.drill.exec.expr.fn.impl.StringFunctionHelpers.toStringFromUTF8(rawInput.start, rawInput.end, rawInput.buffer);
-
       // Process Positional Arguments
       java.util.List args = org.apache.drill.exec.store.http.util.SimpleHttp.buildParameterList(inputReaders);
       // If the arg list is null, indicating at least one null arg, return an empty map
       // as an approximation of null-if-null handling.
       if (args == null) {
-        // Return empty map
         return;
       }
-
       String finalUrl = org.apache.drill.exec.store.http.util.SimpleHttp.mapPositionalParameters(url, args);
-
       // Make the API call
       java.io.InputStream results = org.apache.drill.exec.store.http.util.SimpleHttp.getRequestAndStreamResponse(finalUrl);
-
       // If the result string is null or empty, return an empty map
       if (results == null) {
-        // Return empty map
         return;
       }
-
       try {
-        jsonLoaderBuilder.fromStream(results);
-        org.apache.drill.exec.store.easy.json.loader.JsonLoader jsonLoader = jsonLoaderBuilder.build();
-        loader.startBatch();
-        jsonLoader.readBatch();
+        stream.setValue(results);
+        if (jsonLoader == null) {
+          jsonLoader = org.apache.drill.exec.store.http.udfs.HttpUdfUtils.createJsonLoader(rsLoader, options, stream);
+        }
+        org.apache.drill.exec.physical.resultSet.RowSetLoader rowWriter = rsLoader.writer();
+        rowWriter.start();
+        if (jsonLoader.parser().next()) {
+          rowWriter.save();
+        }
       } catch (Exception e) {
-        throw new org.apache.drill.common.exceptions.DrillRuntimeException("Error while converting from JSON. ", e);
+        throw org.apache.drill.common.exceptions.UserException.dataReadError(e)
+          .message("Error while reading JSON. ")
+          .addContext(e.getMessage())
+          .build();
       }
     }
   }
-
 
   @FunctionTemplate(names = {"http_request", "httpRequest"},
     scope = FunctionTemplate.FunctionScope.SIMPLE,
@@ -122,16 +124,19 @@ public class HttpHelperFunctions {
     DrillbitContext drillbitContext;
 
     @Inject
-    ResultSetLoader loader;
+    ResultSetLoader rsLoader;
 
     @Workspace
-    org.apache.drill.exec.store.easy.json.loader.JsonLoaderImpl.JsonLoaderBuilder jsonLoaderBuilder;
+    org.apache.drill.exec.store.easy.json.loader.JsonLoaderImpl jsonLoader;
 
     @Workspace
     org.apache.drill.exec.store.http.HttpStoragePlugin plugin;
 
     @Workspace
     org.apache.drill.exec.store.http.HttpApiConfig endpointConfig;
+
+    @Workspace
+    org.apache.drill.exec.store.easy.json.loader.SingleElementIterator<java.io.InputStream> stream;
 
     @Override
     public void setup() {
@@ -154,10 +159,9 @@ public class HttpHelperFunctions {
         endpointName,
         plugin.getConfig()
       );
-
+      stream = new org.apache.drill.exec.store.easy.json.loader.SingleElementIterator<>();
       // Add JSON configuration from Storage plugin, if present.
-      jsonLoaderBuilder = org.apache.drill.exec.store.http.udfs.HttpUdfUtils.setupJsonBuilder(endpointConfig, loader, options);
-
+      rsLoader.startBatch();
     }
 
     @Override
@@ -167,30 +171,30 @@ public class HttpHelperFunctions {
       // If the arg list is null, indicating at least one null arg, return an empty map
       // as an approximation of null-if-null handling.
       if (args == null) {
-        // Return empty map
         return;
       }
-
-      java.io.InputStream results = org.apache.drill.exec.store.http.util.SimpleHttp.apiCall(
-        plugin,
-        endpointConfig,
-        drillbitContext,
-        args
-      ).getInputStream();
-
+      java.io.InputStream results = org.apache.drill.exec.store.http.util.SimpleHttp.apiCall(plugin, endpointConfig, drillbitContext, args)
+        .getInputStream();
       // If the result string is null or empty, return an empty map
       if (results == null) {
-        // Return empty map
         return;
       }
-
       try {
-        jsonLoaderBuilder.fromStream(results);
-        org.apache.drill.exec.store.easy.json.loader.JsonLoader jsonLoader = jsonLoaderBuilder.build();
-        loader.startBatch();
-        jsonLoader.readBatch();
+        stream.setValue(results);
+        if (jsonLoader == null) {
+          // Add JSON configuration from Storage plugin, if present.
+          jsonLoader = org.apache.drill.exec.store.http.udfs.HttpUdfUtils.createJsonLoader(endpointConfig, rsLoader, options, stream);
+        }
+        org.apache.drill.exec.physical.resultSet.RowSetLoader rowWriter = rsLoader.writer();
+        rowWriter.start();
+        if (jsonLoader.parser().next()) {
+          rowWriter.save();
+        }
       } catch (Exception e) {
-        throw new org.apache.drill.common.exceptions.DrillRuntimeException("Error while converting from JSON. ", e);
+        throw org.apache.drill.common.exceptions.UserException.dataReadError(e)
+          .message("Error while reading JSON. ")
+          .addContext(e.getMessage())
+          .build();
       }
     }
   }
