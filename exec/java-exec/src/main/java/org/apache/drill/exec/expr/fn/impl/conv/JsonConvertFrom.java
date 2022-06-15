@@ -28,7 +28,7 @@ import org.apache.drill.exec.expr.annotations.Output;
 import org.apache.drill.exec.expr.annotations.Param;
 import org.apache.drill.exec.expr.annotations.Workspace;
 import org.apache.drill.exec.expr.holders.NullableVarBinaryHolder;
-import org.apache.drill.exec.expr.holders.VarCharHolder;
+import org.apache.drill.exec.expr.holders.NullableVarCharHolder;
 import org.apache.drill.exec.physical.resultSet.ResultSetLoader;
 import org.apache.drill.exec.server.options.OptionManager;
 import org.apache.drill.exec.vector.complex.writer.BaseWriter;
@@ -45,23 +45,24 @@ public class JsonConvertFrom {
     @Param
     NullableVarBinaryHolder in;
 
-    @Workspace
-    org.apache.drill.exec.store.easy.json.loader.JsonLoaderImpl.JsonLoaderBuilder jsonLoaderBuilder;
+    @Output // TODO Remove in future work
+    BaseWriter.ComplexWriter writer;
 
     @Inject
     OptionManager options;
 
     @Inject
-    ResultSetLoader loader;
+    ResultSetLoader rsLoader;
 
-    @Output // TODO Remove in future work
-    BaseWriter.ComplexWriter writer;
+    @Workspace
+    org.apache.drill.exec.store.easy.json.loader.SingleElementIterator<java.io.InputStream> stream;
+
+    @Workspace
+    org.apache.drill.exec.store.easy.json.loader.JsonLoaderImpl jsonLoader;
 
     @Override
     public void setup() {
-      jsonLoaderBuilder = new org.apache.drill.exec.store.easy.json.loader.JsonLoaderImpl.JsonLoaderBuilder()
-        .resultSetLoader(loader)
-        .standardOptions(options);
+      rsLoader.startBatch();
     }
 
     @Override
@@ -71,41 +72,57 @@ public class JsonConvertFrom {
         return;
       }
 
+      java.io.InputStream inputStream = org.apache.drill.exec.vector.complex.fn.DrillBufInputStream.getStream(in.start, in.end, in.buffer);
+
       try {
-        jsonLoaderBuilder.fromStream(in.start, in.end, in.buffer);
-        org.apache.drill.exec.store.easy.json.loader.JsonLoader jsonLoader = jsonLoaderBuilder.build();
-        loader.startBatch();
-        jsonLoader.readBatch();
+        stream.setValue(inputStream);
+
+        if (jsonLoader == null) {
+          jsonLoader = org.apache.drill.exec.expr.fn.impl.conv.JsonConverterUtils.createJsonLoader(rsLoader, options, stream);
+        }
+
+        org.apache.drill.exec.physical.resultSet.RowSetLoader rowWriter = rsLoader.writer();
+        rowWriter.start();
+        if (jsonLoader.parser().next()) {
+          rowWriter.save();
+        }
+        inputStream.close();
+
       } catch (Exception e) {
-        throw new org.apache.drill.common.exceptions.DrillRuntimeException("Error while converting from JSON. ", e);
+        throw org.apache.drill.common.exceptions.UserException.dataReadError(e)
+          .message("Error while reading JSON. ")
+          .addContext(e.getMessage())
+          .build();
       }
     }
   }
 
   @FunctionTemplate(names = {"convert_fromJSON", "convertFromJson", "convert_from_json"},
-    scope = FunctionScope.SIMPLE)
+    scope = FunctionScope.SIMPLE, nulls = NullHandling.INTERNAL)
   public static class ConvertFromJsonVarcharInput implements DrillSimpleFunc {
 
     @Param
-    VarCharHolder in;
+    NullableVarCharHolder in;
 
     @Output // TODO Remove in future work
     ComplexWriter writer;
 
     @Workspace
-    org.apache.drill.exec.store.easy.json.loader.JsonLoaderImpl.JsonLoaderBuilder jsonLoaderBuilder;
+    org.apache.drill.exec.store.easy.json.loader.SingleElementIterator<java.io.InputStream> stream;
 
     @Inject
     OptionManager options;
 
     @Inject
-    ResultSetLoader loader;
+    ResultSetLoader rsLoader;
+
+    @Workspace
+    org.apache.drill.exec.store.easy.json.loader.JsonLoaderImpl jsonLoader;
+
 
     @Override
     public void setup() {
-     jsonLoaderBuilder = new org.apache.drill.exec.store.easy.json.loader.JsonLoaderImpl.JsonLoaderBuilder()
-        .resultSetLoader(loader)
-        .standardOptions(options);
+      rsLoader.startBatch();
     }
 
     @Override
@@ -118,12 +135,20 @@ public class JsonConvertFrom {
       }
 
       try {
-        jsonLoaderBuilder.fromString(jsonString);
-        org.apache.drill.exec.store.easy.json.loader.JsonLoader jsonLoader = jsonLoaderBuilder.build();
-        loader.startBatch();
-        jsonLoader.readBatch();
+        stream.setValue(org.apache.drill.exec.expr.fn.impl.conv.JsonConverterUtils.convertStringToInputStream(jsonString));
+        if (jsonLoader == null) {
+          jsonLoader = org.apache.drill.exec.expr.fn.impl.conv.JsonConverterUtils.createJsonLoader(rsLoader, options, stream);
+        }
+        org.apache.drill.exec.physical.resultSet.RowSetLoader rowWriter = rsLoader.writer();
+        rowWriter.start();
+        if (jsonLoader.parser().next()) {
+          rowWriter.save();
+        }
       } catch (Exception e) {
-        throw new org.apache.drill.common.exceptions.DrillRuntimeException("Error while converting from JSON. ", e);
+        throw org.apache.drill.common.exceptions.UserException.dataReadError(e)
+          .message("Error while reading JSON. ")
+          .addContext(e.getMessage())
+          .build();
       }
     }
   }

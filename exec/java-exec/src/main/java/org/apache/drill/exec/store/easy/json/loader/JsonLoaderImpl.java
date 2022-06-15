@@ -197,16 +197,6 @@ public class JsonLoaderImpl implements JsonLoader, ErrorFactory {
       return this;
     }
 
-    public JsonLoaderBuilder fromStream(int start, int end, DrillBuf buf) {
-      this.streams = Collections.singletonList(DrillBufInputStream.getStream(start, end, buf));
-      return this;
-    }
-
-    public JsonLoaderBuilder fromString(String jsonString) {
-      this.streams = Collections.singletonList(IOUtils.toInputStream(jsonString, Charset.defaultCharset()));
-      return this;
-    }
-
     public JsonLoaderBuilder fromStream(Iterable<InputStream> streams) {
       this.streams = streams;
       return this;
