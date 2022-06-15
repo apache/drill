@@ -20,7 +20,7 @@ package org.apache.drill.exec.store.easy.json.loader;
 import java.util.Iterator;
 
 /**
- * It allows setting current value in the iterator and cane be used once after {@link #next} call
+ * It allows setting the current value in the iterator and can be used once after {@link #next} call
  *
  * @param <T> type of the value
  */

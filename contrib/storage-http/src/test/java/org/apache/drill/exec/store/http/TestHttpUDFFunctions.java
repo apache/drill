@@ -117,7 +117,7 @@ public class TestHttpUDFFunctions extends ClusterTest {
     configs.put("basicJson", basicJson);
 
     HttpStoragePluginConfig mockStorageConfigWithWorkspace =
-      new HttpStoragePluginConfig(false, configs, 2, "globaluser", "globalpass", "",
+      new HttpStoragePluginConfig(false, configs, 200, "globaluser", "globalpass", "",
         80, "", "", "", null, new PlainCredentialsProvider(ImmutableMap.of(
         UsernamePasswordCredentials.USERNAME, "globaluser",
         UsernamePasswordCredentials.PASSWORD, "globalpass")), AuthMode.SHARED_USER.name());
@@ -132,6 +132,8 @@ public class TestHttpUDFFunctions extends ClusterTest {
       server.enqueue(new MockResponse().setResponseCode(200).setBody(TEST_JSON_PAGE1));
       RowSet results = client.queryBuilder().sql(sql).rowSet();
 
+      assertEquals(1, results.rowCount());
+
       TupleMetadata expectedSchema = new SchemaBuilder()
         .addMap("data")
           .addNullable("col_1", MinorType.FLOAT8)
@@ -143,6 +145,33 @@ public class TestHttpUDFFunctions extends ClusterTest {
       RowSet expected = new RowSetBuilder(client.allocator(), expectedSchema)
         .addRow(singleMap(
           mapValue(1.0, 2.0, 3.0)))
+        .build();
+
+      RowSetUtilities.verify(expected, results);
+    }
+  }
+
+  @Test
+  public void testSeveralRowsAndRequests() throws Exception {
+    String sql = "SELECT http_request('local.basicJson', `col1`) as data FROM cp.`/data/p4.json`";
+    try (MockWebServer server = startServer()) {
+      server.enqueue(new MockResponse().setResponseCode(200).setBody(TEST_JSON_PAGE1));
+      server.enqueue(new MockResponse().setResponseCode(200).setBody(TEST_JSON_PAGE1));
+      RowSet results = client.queryBuilder().sql(sql).rowSet();
+
+      assertEquals(2, results.rowCount());
+
+      TupleMetadata expectedSchema = new SchemaBuilder()
+        .addMap("data")
+          .addNullable("col_1", MinorType.FLOAT8)
+          .addNullable("col_2", MinorType.FLOAT8)
+          .addNullable("col_3", MinorType.FLOAT8)
+        .resumeSchema()
+        .build();
+
+      RowSet expected = new RowSetBuilder(client.allocator(), expectedSchema)
+        .addRow(singleMap(mapValue(1.0, 2.0, 3.0)))
+        .addRow(singleMap(mapValue(4.0, 5.0, 6.0)))
         .build();
 
       RowSetUtilities.verify(expected, results);
