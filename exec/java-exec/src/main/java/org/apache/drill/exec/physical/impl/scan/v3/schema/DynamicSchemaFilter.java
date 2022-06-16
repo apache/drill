@@ -232,6 +232,9 @@ public abstract class DynamicSchemaFilter implements ProjectionFilter {
     @Override
     public ProjResult projection(ColumnMetadata col) {
       ColumnHandle handle = schema.find(col.name());
+      if (SchemaUtils.isExcludedFromWildcard(col) && handle == null) {
+        return NOT_PROJECTED;
+      }
       if (handle == null) {
         return newColumnProjection();
       }
