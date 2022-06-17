@@ -24,9 +24,9 @@ import org.apache.drill.common.exceptions.CustomErrorContext;
 import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.common.types.TypeProtos.DataMode;
 import org.apache.drill.common.types.TypeProtos.MinorType;
-import org.apache.drill.exec.physical.impl.scan.file.FileScanFramework;
-import org.apache.drill.exec.physical.impl.scan.file.FileScanFramework.FileSchemaNegotiator;
-import org.apache.drill.exec.physical.impl.scan.framework.ManagedReader;
+import org.apache.drill.exec.physical.impl.scan.v3.file.FileDescrip;
+import org.apache.drill.exec.physical.impl.scan.v3.file.FileSchemaNegotiator;
+import org.apache.drill.exec.physical.impl.scan.v3.ManagedReader;
 import org.apache.drill.exec.physical.resultSet.ResultSetLoader;
 import org.apache.drill.exec.physical.resultSet.RowSetLoader;
 import org.apache.drill.exec.record.MaterializedField;
@@ -34,9 +34,9 @@ import org.apache.drill.exec.record.metadata.ColumnMetadata;
 import org.apache.drill.exec.record.metadata.MetadataUtils;
 import org.apache.drill.exec.record.metadata.SchemaBuilder;
 import org.apache.drill.exec.record.metadata.TupleMetadata;
+import org.apache.drill.exec.store.dfs.easy.EasySubScan;
 import org.apache.drill.exec.vector.accessor.ScalarWriter;
 import org.apache.drill.exec.vector.accessor.TupleWriter;
-import org.apache.hadoop.mapred.FileSplit;
 import org.apache.poi.ooxml.POIXMLProperties.CoreProperties;
 import org.apache.poi.openxml4j.opc.ZipPackage;
 import org.apache.poi.openxml4j.util.ZipInputStreamZipEntrySource;
@@ -65,7 +65,7 @@ import java.util.TreeSet;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-public class ExcelBatchReader implements ManagedReader<FileSchemaNegotiator> {
+public class ExcelBatchReader implements ManagedReader {
 
   private static final Logger logger = LoggerFactory.getLogger(ExcelBatchReader.class);
 
@@ -145,8 +145,10 @@ public class ExcelBatchReader implements ManagedReader<FileSchemaNegotiator> {
   private static final int BUFFER_SIZE = 4096;
 
   private final ExcelReaderConfig readerConfig;
-  private final int maxRecords;
   private final TreeSet<String> columnNameChecker;
+  private final RowSetLoader rowWriter;
+  private final CustomErrorContext errorContext;
+
   private Sheet sheet;
   private Row currentRow;
   private StreamingWorkbook streamingWorkbook;
@@ -157,17 +159,13 @@ public class ExcelBatchReader implements ManagedReader<FileSchemaNegotiator> {
   private List<ScalarWriter> metadataColumnWriters;
   private ScalarWriter sheetNameWriter;
   private Iterator<Row> rowIterator;
-  private RowSetLoader rowWriter;
+  private FileDescrip file;
   private int totalColumnCount;
   private boolean firstLine;
-  private FileSplit split;
   private int recordCount;
   private Map<String, String> stringMetadata;
   private Map<String, Date> dateMetadata;
   private Map<String, List<String>> listMetadata;
-  private CustomErrorContext errorContext;
-
-
 
   static class ExcelReaderConfig {
     final ExcelFormatPlugin plugin;
@@ -195,49 +193,43 @@ public class ExcelBatchReader implements ManagedReader<FileSchemaNegotiator> {
     }
   }
 
-  public ExcelBatchReader(ExcelReaderConfig readerConfig, int maxRecords) {
+  public ExcelBatchReader(ExcelReaderConfig readerConfig, EasySubScan scan, FileSchemaNegotiator negotiator) {
+    this.errorContext = negotiator.parentErrorContext();
     this.readerConfig = readerConfig;
-    this.maxRecords = maxRecords;
-    this.columnNameChecker = new TreeSet<>(String.CASE_INSENSITIVE_ORDER);
-    firstLine = true;
-  }
+    this.file = negotiator.file();
 
-  @Override
-  public boolean open(FileSchemaNegotiator negotiator) {
-    split = negotiator.split();
-    errorContext = negotiator.parentErrorContext();
     ResultSetLoader loader = negotiator.build();
-    rowWriter = loader.writer();
-    openFile(negotiator);
+    this.rowWriter = loader.writer();
+    this.columnNameChecker = new TreeSet<>(String.CASE_INSENSITIVE_ORDER);
+    this.firstLine = true;
 
-    if (negotiator.hasProvidedSchema()) {
+    openFile();
+    if (negotiator.providedSchema() != null) {
       TupleMetadata providedSchema = negotiator.providedSchema();
-      logger.debug("Found inline schema");
+      logger.debug("Found a provided schema");
 
       // Add Implicit columns to schema
       SchemaBuilder builderForProvidedSchema = new SchemaBuilder();
       builderForProvidedSchema.addAll(providedSchema);
       TupleMetadata finalSchema = builderForProvidedSchema.build();
       buildColumnWritersFromProvidedSchema(finalSchema);
-
       // Add schema to file negotiator
       logger.debug("Metadata added to provided schema.");
       addMetadataToSchema(builderForProvidedSchema);
+
       // Build column writer array
       negotiator.tableSchema(finalSchema, true);
     } else {
       defineSchema(negotiator);
     }
-    return true;
   }
 
   /**
    * This method opens the Excel file, initializes the Streaming Excel Reader, and initializes the sheet variable.
-   * @param negotiator The Drill file negotiator object that represents the file system
    */
-  private void openFile(FileScanFramework.FileSchemaNegotiator negotiator) {
+  private void openFile() {
     try {
-      fsStream = negotiator.fileSystem().openPossiblyCompressedStream(split.getPath());
+      fsStream = file.fileSystem().openPossiblyCompressedStream(file.split().getPath());
 
       if (readerConfig.maxArraySize >= 0) {
         IOUtils.setByteArrayMaxOverride(readerConfig.maxArraySize);
@@ -263,7 +255,7 @@ public class ExcelBatchReader implements ManagedReader<FileSchemaNegotiator> {
     } catch (Exception e) {
       throw UserException
         .dataReadError(e)
-        .message("Failed to open open input file: %s", split.getPath().toString())
+        .message("Failed to open open input file: %s", file.split().getPath().toString())
         .addContext(e.getMessage())
         .addContext(errorContext)
         .build(logger);
@@ -518,10 +510,6 @@ public class ExcelBatchReader implements ManagedReader<FileSchemaNegotiator> {
       finalColumn = readerConfig.lastColumn - 1;
     }
 
-    if (rowWriter.limitReached(maxRecords)) {
-      return false;
-    }
-
     rowWriter.start();
     for (int colWriterIndex = 0; colPosition < finalColumn; colWriterIndex++) {
       Cell cell = currentRow.getCell(colPosition);
@@ -679,9 +667,7 @@ public class ExcelBatchReader implements ManagedReader<FileSchemaNegotiator> {
     int index = rowWriter.tupleSchema().index(name);
     if (index == -1) {
       ColumnMetadata colSchema = MetadataUtils.newScalar(name, type, DataMode.OPTIONAL);
-      if (isMetadata) {
-        colSchema.setBooleanProperty(ColumnMetadata.EXCLUDE_FROM_WILDCARD, true);
-      }
+      colSchema.setBooleanProperty(ColumnMetadata.EXCLUDE_FROM_WILDCARD, isMetadata);
       index = rowWriter.addColumn(colSchema);
     } else {
       return;
