@@ -162,7 +162,8 @@ public class SchemaFunctions {
           (org.apache.drill.exec.record.metadata.TupleMetadata) schemaHolder.obj;
 
       if (!resolvedSchema.isEquivalent(currentSchema)) {
-        throw new UnsupportedOperationException("merge_schema function does not support schema changes.");
+        schemaHolder.obj = org.apache.drill.exec.physical.impl.scan.v3.FixedReceiver.Builder
+          .mergeSchemas(currentSchema, resolvedSchema);
       }
     }
 
@@ -215,7 +216,8 @@ public class SchemaFunctions {
           (org.apache.drill.exec.record.metadata.TupleMetadata) schemaHolder.obj;
 
       if (!resolvedSchema.isEquivalent(currentSchema)) {
-        throw new UnsupportedOperationException("merge_schema function does not support schema changes.");
+        schemaHolder.obj = org.apache.drill.exec.physical.impl.scan.v3.FixedReceiver.Builder
+          .mergeSchemas(currentSchema, resolvedSchema);
       }
     }
 

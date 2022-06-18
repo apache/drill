@@ -240,4 +240,17 @@ public class TestSchemaWithTableFunction extends ClusterTest {
 
     run("select Year from table(%s(schema=>'path=(int)')) where Make = 'Ford'", table);
   }
+
+  @Test // DRILL-7526
+  public void testWithTypeAndSchema() throws Exception {
+    String query = "select Year from table(dfs.`store/text/data/cars.csvh`(type=> 'text', " +
+      "schema=>'inline=(`Year` int)')) where Make = 'Ford'";
+
+    testBuilder()
+      .sqlQuery(query)
+      .unOrdered()
+      .baselineColumns("Year")
+      .baselineValues(1997)
+      .go();
+  }
 }

@@ -21,14 +21,13 @@ import java.util.Collection;
 import java.util.List;
 import java.util.stream.Stream;
 
-import org.apache.calcite.plan.RelOptTable;
 import org.apache.calcite.rel.RelNode;
-import org.apache.calcite.rel.type.RelDataType;
 import org.apache.calcite.schema.SchemaPlus;
 import org.apache.calcite.sql.type.SqlTypeFactoryImpl;
 import org.apache.drill.exec.dotdrill.View;
 import org.apache.drill.exec.planner.logical.DrillViewTable;
 import org.apache.drill.exec.planner.sql.SchemaUtilites;
+import org.apache.drill.exec.planner.sql.conversion.DrillViewExpander;
 import org.apache.drill.exec.planner.types.DrillRelDataTypeSystem;
 import org.apache.drill.exec.planner.types.HiveToRelDataTypeConverter;
 import org.apache.drill.exec.store.SchemaConfig;
@@ -62,17 +61,16 @@ public class DrillHiveViewTable extends DrillViewTable {
    * table.
    *
    * @param context - to rel conversion context
-   * @param rowType - data type of requested columns
    * @param workspaceSchemaPath - path to view in drill, for example: ["hive"]
    * @param tokenSchemaTree - schema created for impersonated user
    * @return - relational representation of expanded Hive view
    */
   @Override
-  protected RelNode expandViewForImpersonatedUser(RelOptTable.ToRelContext context, RelDataType rowType,
+  protected RelNode expandViewForImpersonatedUser(DrillViewExpander context,
                                                   List<String> workspaceSchemaPath, SchemaPlus tokenSchemaTree) {
     SchemaPlus drillHiveSchema = SchemaUtilites.findSchema(tokenSchemaTree, workspaceSchemaPath);
     workspaceSchemaPath = ImmutableList.of();
-    return super.expandViewForImpersonatedUser(context, rowType, workspaceSchemaPath, drillHiveSchema);
+    return super.expandViewForImpersonatedUser(context, workspaceSchemaPath, drillHiveSchema);
   }
 
   /**

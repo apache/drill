@@ -38,7 +38,6 @@ public class TestTpchDistributedStreaming extends BaseTestQuery {
   }
 
   @Test
-  @Ignore // DRILL-512
   public void tpch02() throws Exception{
     testDistributed("queries/tpch/02.sql");
   }
@@ -84,7 +83,6 @@ public class TestTpchDistributedStreaming extends BaseTestQuery {
   }
 
   @Test
-  @Ignore // cartesion problem
   public void tpch11() throws Exception{
     testDistributed("queries/tpch/11.sql");
   }
@@ -105,19 +103,16 @@ public class TestTpchDistributedStreaming extends BaseTestQuery {
   }
 
   @Test
-  @Ignore // non-equality join
   public void tpch15() throws Exception{
     testDistributed("queries/tpch/15.sql");
   }
 
   @Test
-  @Ignore // invalid plan, due to Nulls value NOT IN sub-q
   public void tpch16() throws Exception{
     testDistributed("queries/tpch/16.sql");
   }
 
   @Test
-  @Ignore // non-equality join
   public void tpch17() throws Exception{
     testDistributed("queries/tpch/17.sql");
   }
@@ -149,7 +144,6 @@ public class TestTpchDistributedStreaming extends BaseTestQuery {
   }
 
   @Test
-  @Ignore // DRILL-518
   public void tpch22() throws Exception{
     testDistributed("queries/tpch/22.sql");
   }

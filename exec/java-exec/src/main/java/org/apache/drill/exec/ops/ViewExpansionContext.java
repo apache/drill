@@ -23,6 +23,7 @@ import org.apache.calcite.schema.SchemaPlus;
 import org.apache.drill.common.config.DrillConfig;
 import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.exec.ExecConstants;
+import org.apache.drill.exec.planner.sql.conversion.DrillViewExpander;
 import org.apache.drill.exec.proto.UserBitShared.UserCredentials;
 import org.apache.drill.exec.store.SchemaConfig.SchemaConfigInfoProvider;
 
@@ -78,6 +79,7 @@ public class ViewExpansionContext {
   private final UserCredentials queryUserCredentials;
   private final ObjectIntHashMap<String> userTokens = new ObjectIntHashMap<>();
   private final boolean impersonationEnabled;
+  private DrillViewExpander viewExpander;
 
   public ViewExpansionContext(QueryContext queryContext) {
     this(queryContext.getConfig(), queryContext);
@@ -148,6 +150,14 @@ public class ViewExpansionContext {
       userTokens.put(viewOwner, userTokenCount - 1);
     }
     logger.debug("Released view expansion token issued for user '{}'", viewOwner);
+  }
+
+  public void setViewExpander(DrillViewExpander viewExpander) {
+    this.viewExpander = viewExpander;
+  }
+
+  public DrillViewExpander getViewExpander() {
+    return viewExpander;
   }
 
   /**

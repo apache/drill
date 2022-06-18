@@ -29,12 +29,12 @@ import org.apache.drill.shaded.guava.com.google.common.base.Joiner;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-class DrillViewExpander implements RelOptTable.ViewExpander {
+public class DrillViewExpander implements RelOptTable.ViewExpander {
   private static final Logger logger = LoggerFactory.getLogger(DrillViewExpander.class);
 
   private final SqlConverter sqlConverter;
 
-  DrillViewExpander(SqlConverter sqlConverter) {
+  public DrillViewExpander(SqlConverter sqlConverter) {
     this.sqlConverter = sqlConverter;
   }
 
@@ -46,8 +46,7 @@ class DrillViewExpander implements RelOptTable.ViewExpander {
     return convertToRel(queryString, parser);
   }
 
-  @Override
-  public RelRoot expandView(RelDataType rowType, String queryString, SchemaPlus rootSchema, List<String> schemaPath) {
+  public RelRoot expandView(String queryString, SchemaPlus rootSchema, List<String> schemaPath) {
     final DrillCalciteCatalogReader catalogReader = newCatalogReader(rootSchema, schemaPath);
     SchemaPlus schema = findSchema(queryString, rootSchema, schemaPath);
     SqlConverter parser = new SqlConverter(sqlConverter, schema, rootSchema, catalogReader);

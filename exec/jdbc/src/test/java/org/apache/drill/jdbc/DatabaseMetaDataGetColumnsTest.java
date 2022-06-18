@@ -1042,7 +1042,7 @@ public class DatabaseMetaDataGetColumnsTest extends JdbcTestBase {
   @Test
   public void test_COLUMN_SIZE_hasRightValue_mdrReqTIME() throws SQLException {
     assertThat( getIntOrNull( mdrReqTIME, "COLUMN_SIZE" ),
-                equalTo( 8  /* HH:MM:SS */  ) );
+                equalTo( 12  /* HH:MM:SS.SSS */  ) );
   }
 
   @Ignore( "TODO(DRILL-3225): unignore when datetime precision is implemented" )
@@ -1056,13 +1056,13 @@ public class DatabaseMetaDataGetColumnsTest extends JdbcTestBase {
   public void test_COLUMN_SIZE_hasINTERIMValue_mdrOptTIME_7() throws SQLException {
     assertThat( "When datetime precision is implemented, un-ignore above method and purge this.",
                 getIntOrNull( mdrOptTIME_7, "COLUMN_SIZE" ),
-                equalTo( 8  /* HH:MM:SS */ ) );
+                equalTo( 12  /* HH:MM:SS.SSS */ ) );
   }
 
   @Test
   public void test_COLUMN_SIZE_hasRightValue_mdrOptTIMESTAMP() throws SQLException {
     assertThat( getIntOrNull( mdrOptTIMESTAMP, "COLUMN_SIZE" ),
-                equalTo( 19 /* YYYY-MM-DDTHH:MM:SS */  ) );
+                equalTo( 23 /* YYYY-MM-DDTHH:MM:SS.SSS */  ) );
   }
 
   @Test
@@ -1353,8 +1353,8 @@ public class DatabaseMetaDataGetColumnsTest extends JdbcTestBase {
 
   @Test
   public void test_DECIMAL_DIGITS_hasRightValue_mdrReqTIME() throws SQLException {
-    // Zero is default datetime precision for TIME in SQL DATETIME_PRECISION.
-    assertThat( getIntOrNull( mdrReqTIME, "DECIMAL_DIGITS" ), equalTo( 0 ) );
+    // 3 is default datetime precision for TIME in SQL DATETIME_PRECISION.
+    assertThat( getIntOrNull( mdrReqTIME, "DECIMAL_DIGITS" ), equalTo( 3 ) );
   }
 
   @Ignore( "TODO(DRILL-3225): unignore when datetime precision is implemented" )
@@ -1366,7 +1366,7 @@ public class DatabaseMetaDataGetColumnsTest extends JdbcTestBase {
   @Test
   public void test_DECIMAL_DIGITS_hasINTERIMValue_mdrOptTIME_7() throws SQLException {
     assertThat( "When datetime precision is implemented, un-ignore above method and purge this.",
-                getIntOrNull( mdrOptTIME_7, "DECIMAL_DIGITS" ), equalTo( 0 ) );
+                getIntOrNull( mdrOptTIME_7, "DECIMAL_DIGITS" ), equalTo( 3 ) );
   }
 
   @Ignore( "TODO(DRILL-3225): unignore when datetime precision is implemented" )

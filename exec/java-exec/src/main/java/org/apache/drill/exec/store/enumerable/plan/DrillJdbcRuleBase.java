@@ -55,7 +55,10 @@ public abstract class DrillJdbcRuleBase extends ConverterRule {
   protected final JdbcConvention out;
 
   protected DrillJdbcRuleBase(Class<? extends RelNode> clazz, RelTrait in, JdbcConvention out, String description) {
-    super(clazz, (Predicate<RelNode>) input -> true, in, out, DrillRelFactories.LOGICAL_BUILDER, description);
+    super(Config.INSTANCE
+      .withConversion(clazz, (Predicate<RelNode>) input -> true, in, out, description)
+      .withRelBuilderFactory(DrillRelFactories.LOGICAL_BUILDER)
+      .as(Config.class));
     this.out = out;
   }
 

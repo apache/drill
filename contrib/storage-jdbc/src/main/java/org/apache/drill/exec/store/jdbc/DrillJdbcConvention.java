@@ -72,7 +72,7 @@ public class DrillJdbcConvention extends JdbcConvention {
     ImmutableSet.Builder<RelOptRule> builder = ImmutableSet.<RelOptRule>builder()
       .addAll(calciteJdbcRules)
       .add(new JdbcIntermediatePrelConverterRule(this, username))
-      .add(new VertexDrelConverterRule(this))
+      .add(VertexDrelConverterRule.create(this))
       .add(RuleInstance.FILTER_SET_OP_TRANSPOSE_RULE)
       .add(RuleInstance.PROJECT_REMOVE_RULE);
     for (RelTrait inputTrait : inputTraits) {

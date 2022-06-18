@@ -40,7 +40,7 @@ public class SelectionBasedTableScan extends TableScan {
 
   public SelectionBasedTableScan(RelOptCluster cluster, RelTraitSet traitSet,
                                  RelOptTable table, String digestFromSelection) {
-    super(cluster, traitSet, table);
+    super(cluster, traitSet, Collections.emptyList(), table);
     this.digestFromSelection = digestFromSelection;
   }
 

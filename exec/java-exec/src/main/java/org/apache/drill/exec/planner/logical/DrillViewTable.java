@@ -17,10 +17,11 @@
  */
 package org.apache.drill.exec.planner.logical;
 
+import java.util.Collections;
 import java.util.List;
 
 import org.apache.calcite.schema.SchemaPlus;
-import org.apache.drill.shaded.guava.com.google.common.collect.ImmutableList;
+import org.apache.drill.exec.planner.sql.conversion.DrillViewExpander;
 import org.apache.calcite.config.CalciteConnectionConfig;
 import org.apache.calcite.schema.Schema.TableType;
 import org.apache.calcite.schema.Statistic;
@@ -39,7 +40,6 @@ import org.apache.calcite.rel.type.RelDataTypeFactory;
 import org.apache.drill.exec.ops.ViewExpansionContext;
 
 public class DrillViewTable implements TranslatableTable, DrillViewInfoProvider {
-  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(DrillViewTable.class);
 
   private final View view;
   private final String viewOwner;
@@ -63,6 +63,7 @@ public class DrillViewTable implements TranslatableTable, DrillViewInfoProvider 
 
   @Override
   public RelNode toRel(ToRelContext context, RelOptTable relOptTable) {
+    DrillViewExpander viewExpander = viewExpansionContext.getViewExpander();
     ViewExpansionContext.ViewExpansionToken token = null;
     try {
       RelDataType rowType = relOptTable.getRowType();
@@ -70,9 +71,9 @@ public class DrillViewTable implements TranslatableTable, DrillViewInfoProvider 
 
       if (viewExpansionContext.isImpersonationEnabled()) {
         token = viewExpansionContext.reserveViewExpansionToken(viewOwner);
-        rel = expandViewForImpersonatedUser(context, rowType, view.getWorkspaceSchemaPath(), token.getSchemaTree());
+        rel = expandViewForImpersonatedUser(viewExpander, view.getWorkspaceSchemaPath(), token.getSchemaTree());
       } else {
-        rel = context.expandView(rowType, view.getSql(), view.getWorkspaceSchemaPath(), ImmutableList.<String>of()).rel;
+        rel = viewExpander.expandView(rowType, view.getSql(), view.getWorkspaceSchemaPath(), Collections.emptyList()).rel;
       }
 
       // If the View's field list is not "*", create a cast.
@@ -89,11 +90,10 @@ public class DrillViewTable implements TranslatableTable, DrillViewInfoProvider 
   }
 
 
-  protected RelNode expandViewForImpersonatedUser(ToRelContext context,
-                                                  RelDataType rowType,
+  protected RelNode expandViewForImpersonatedUser(DrillViewExpander context,
                                                   List<String> workspaceSchemaPath,
                                                   SchemaPlus tokenSchemaTree) {
-    return context.expandView(rowType, view.getSql(), tokenSchemaTree, workspaceSchemaPath).rel;
+    return context.expandView(view.getSql(), tokenSchemaTree, workspaceSchemaPath).rel;
   }
 
   @Override

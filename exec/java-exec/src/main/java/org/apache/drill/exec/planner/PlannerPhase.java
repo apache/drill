@@ -19,6 +19,7 @@ package org.apache.drill.exec.planner;
 
 import org.apache.drill.exec.planner.logical.ConvertMetadataAggregateToDirectScanRule;
 import org.apache.drill.exec.planner.logical.DrillDistinctJoinToSemiJoinRule;
+import org.apache.drill.exec.planner.logical.DrillReduceExpressionsRule;
 import org.apache.drill.exec.planner.physical.MetadataAggPrule;
 import org.apache.drill.exec.planner.physical.MetadataControllerPrule;
 import org.apache.drill.exec.planner.physical.MetadataHandlerPrule;
@@ -54,7 +55,7 @@ import org.apache.drill.exec.planner.logical.DrillPushProjectPastFilterRule;
 import org.apache.drill.exec.planner.logical.DrillPushProjectPastJoinRule;
 import org.apache.drill.exec.planner.logical.DrillPushRowKeyJoinToScanRule;
 import org.apache.drill.exec.planner.logical.DrillReduceAggregatesRule;
-import org.apache.drill.exec.planner.logical.DrillReduceExpressionsRule;
+import org.apache.drill.exec.planner.logical.ReduceAndSimplifyExpressionsRules;
 import org.apache.drill.exec.planner.logical.DrillRelFactories;
 import org.apache.drill.exec.planner.logical.DrillScanRule;
 import org.apache.drill.exec.planner.logical.DrillSortRule;
@@ -232,13 +233,6 @@ public enum PlannerPhase {
     }
   },
 
-  PRE_LOGICAL_PLANNING("Planning with Hep planner only for rules, which are failed for Volcano planner") {
-    @Override
-    public RuleSet getRules (OptimizerRulesContext context, Collection<StoragePlugin> plugins) {
-      return PlannerPhase.getSetOpTransposeRules();
-    }
-  },
-
   TRANSITIVE_CLOSURE("Transitive closure") {
     @Override
     public RuleSet getRules(OptimizerRulesContext context, Collection<StoragePlugin> plugins) {
@@ -269,12 +263,18 @@ public enum PlannerPhase {
   }
 
   static final RelOptRule DRILL_JOIN_TO_MULTIJOIN_RULE =
-      new JoinToMultiJoinRule(DrillJoinRel.class, DrillRelFactories.LOGICAL_BUILDER);
+    JoinToMultiJoinRule.Config.DEFAULT
+      .withOperandFor(DrillJoinRel.class)
+      .withRelBuilderFactory(DrillRelFactories.LOGICAL_BUILDER)
+      .toRule();
+
   static final RelOptRule DRILL_LOPT_OPTIMIZE_JOIN_RULE =
-      new LoptOptimizeJoinRule(DrillRelBuilder.proto(
-          DrillRelFactories.DRILL_LOGICAL_JOIN_FACTORY,
-          DrillRelFactories.DRILL_LOGICAL_PROJECT_FACTORY,
-          DrillRelFactories.DRILL_LOGICAL_FILTER_FACTORY));
+    LoptOptimizeJoinRule.Config.DEFAULT
+      .withRelBuilderFactory(DrillRelBuilder.proto(
+        DrillRelFactories.DRILL_LOGICAL_JOIN_FACTORY,
+        DrillRelFactories.DRILL_LOGICAL_PROJECT_FACTORY,
+        DrillRelFactories.DRILL_LOGICAL_FILTER_FACTORY))
+      .toRule();
 
   /**
    * Get a list of logical rules that can be turned on or off by session/system options.
@@ -298,7 +298,10 @@ public enum PlannerPhase {
 
     if (ps.isConstantFoldingEnabled()) {
       // TODO - DRILL-2218
-      userConfigurableRules.add(RuleInstance.PROJECT_INSTANCE);
+      userConfigurableRules.add(ReduceAndSimplifyExpressionsRules.PROJECT_INSTANCE_DRILL);
+      userConfigurableRules.add(ReduceAndSimplifyExpressionsRules.FILTER_INSTANCE_DRILL);
+      userConfigurableRules.add(ReduceAndSimplifyExpressionsRules.CALC_INSTANCE_DRILL);
+      userConfigurableRules.add(DrillReduceExpressionsRule.PROJECT_INSTANCE_DRILL);
       userConfigurableRules.add(DrillReduceExpressionsRule.FILTER_INSTANCE_DRILL);
       userConfigurableRules.add(DrillReduceExpressionsRule.CALC_INSTANCE_DRILL);
     }
@@ -406,6 +409,8 @@ public enum PlannerPhase {
       basicRules.add(DrillDistinctJoinToSemiJoinRule.INSTANCE);
       basicRules.add(RuleInstance.JOIN_TO_SEMI_JOIN_RULE);
     }
+
+    basicRules.addAll(getSetOpTransposeRules());
 
     return RuleSets.ofList(basicRules.build());
   }
@@ -614,7 +619,6 @@ public enum PlannerPhase {
 
   /**
    *  Get an immutable list of rules to transpose SetOp(Union) operator with other operators.<p>
-   *  Note: Used by Hep planner only (failed for Volcano planner - CALCITE-1271)
    *
    * @return SetOp(Union) transpose rules
    */

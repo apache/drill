@@ -77,7 +77,7 @@ public class EnumMockPlugin extends AbstractStoragePlugin {
         return ImmutableSet.of(
             new EnumerableIntermediatePrelConverterRule(
                 new EnumMockRel.MockEnumerablePrelContext(convention), convention),
-            new VertexDrelConverterRule(convention));
+            VertexDrelConverterRule.create(convention));
       case LOGICAL_PRUNE_AND_JOIN:
       case LOGICAL_PRUNE:
       case PARTITION_PRUNING:

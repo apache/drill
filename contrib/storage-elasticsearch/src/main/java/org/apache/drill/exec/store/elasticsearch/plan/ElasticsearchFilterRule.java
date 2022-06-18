@@ -36,8 +36,9 @@ public class ElasticsearchFilterRule extends ConverterRule {
   private final Convention out;
 
   private ElasticsearchFilterRule() {
-    super(Filter.class, Convention.NONE, ElasticsearchRel.CONVENTION,
-        "DrillElasticsearchFilterRule");
+    super(Config.INSTANCE
+      .withConversion(Filter.class, Convention.NONE, ElasticsearchRel.CONVENTION,
+        "DrillElasticsearchFilterRule"));
     this.out = ElasticsearchRel.CONVENTION;
   }
 

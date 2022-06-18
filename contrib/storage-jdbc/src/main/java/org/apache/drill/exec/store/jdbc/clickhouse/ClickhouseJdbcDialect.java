@@ -67,7 +67,7 @@ public class ClickhouseJdbcDialect implements JdbcDialect {
   public String generateSql(RelOptCluster cluster, RelNode input) {
     final JdbcImplementor jdbcImplementor = new ClickhouseJdbcImplementor(dialect,
       (JavaTypeFactory) cluster.getTypeFactory());
-    final JdbcImplementor.Result result = jdbcImplementor.visitChild(0,
+    final JdbcImplementor.Result result = jdbcImplementor.visitRoot(
       input.accept(SubsetRemover.INSTANCE));
     return result.asStatement().toSqlString(dialect).getSql();
   }

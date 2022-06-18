@@ -29,8 +29,9 @@ public class DrillCassandraLimitRule extends ConverterRule {
   public static final DrillCassandraLimitRule INSTANCE = new DrillCassandraLimitRule();
 
   private DrillCassandraLimitRule() {
-    super(DrillLimitRelBase.class, DrillRel.DRILL_LOGICAL, CassandraRel.CONVENTION,
-        "DrillCassandraLimitRule");
+    super(Config.INSTANCE
+      .withConversion(DrillLimitRelBase.class, DrillRel.DRILL_LOGICAL,
+        CassandraRel.CONVENTION, "DrillCassandraLimitRule"));
   }
 
   public RelNode convert(RelNode relNode) {

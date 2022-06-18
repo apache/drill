@@ -61,7 +61,7 @@ public class ${className} implements DrillSimpleFunc {
   <#elseif (minor.class == "IntervalDay")>
     output.days = input.days;
     output.milliseconds = input.milliseconds;
-  <#elseif minor.class.startsWith("Decimal")>
+  <#elseif minor.class.contains("Decimal")>
     output.scale = input.scale;
     output.precision = input.precision;
     <#if minor.class.startsWith("Decimal28") || minor.class.startsWith("Decimal38")>
@@ -78,6 +78,10 @@ public class ${className} implements DrillSimpleFunc {
     output.value = input.value;
   </#if>
 <#else>
+  <#if minor.class.contains("Decimal")>
+    output.scale = input.scale;
+    output.precision = input.precision;
+  </#if>
     output.start = input.start;
     output.end = input.end;
     output.buffer = input.buffer;

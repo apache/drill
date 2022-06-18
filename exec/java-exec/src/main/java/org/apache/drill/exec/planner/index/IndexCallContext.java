@@ -36,8 +36,6 @@ public interface IndexCallContext {
 
   DbGroupScan getGroupScan();
 
-  List<RelCollation> getCollationList();
-
   RelCollation getCollation();
 
   boolean hasLowerProject();

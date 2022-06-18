@@ -48,7 +48,7 @@ public class TestSchemaConversion extends BaseTest {
   public void testPrimitiveSchema() {
     verifyConversion("int", Types.optional(TypeProtos.MinorType.INT));
     verifyConversion("varchar(123)", TypeProtos.MajorType.newBuilder().setMinorType(TypeProtos.MinorType.VARCHAR).setPrecision(123).build());
-    verifyConversion("timestamp", Types.optional(TypeProtos.MinorType.TIMESTAMP));
+    verifyConversion("timestamp", Types.withPrecision(TypeProtos.MinorType.TIMESTAMP, TypeProtos.DataMode.OPTIONAL, 3));
   }
 
   @Test

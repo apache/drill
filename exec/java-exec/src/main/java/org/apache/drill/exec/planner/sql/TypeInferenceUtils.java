@@ -606,6 +606,7 @@ public class TypeInferenceUtils {
       TimeUnit qualifier = ((SqlLiteral) ((SqlCallBinding) opBinding).operand(0)).getValueAs(TimeUnit.class);
 
       SqlTypeName sqlTypeName;
+      int precision = 0;
 
       // follow up with type inference of reduced expression
       switch (qualifier) {
@@ -616,17 +617,19 @@ public class TypeInferenceUtils {
         case YEAR:
         case NANOSECOND:  // NANOSECOND is not supported by Calcite SqlTimestampAddFunction.
                           // Once it is fixed, NANOSECOND should be moved to the group below.
+          precision = 3;
           sqlTypeName = inputTypeName;
           break;
         case MICROSECOND:
         case MILLISECOND:
           // precision should be specified for MICROSECOND and MILLISECOND
-          return factory.createTypeWithNullability(
-              factory.createSqlType(SqlTypeName.TIMESTAMP, 3),
-              isNullable);
+          precision = 3;
+          sqlTypeName = SqlTypeName.TIMESTAMP;
+          break;
         case SECOND:
         case MINUTE:
         case HOUR:
+          precision = 3;
           if (inputTypeName == SqlTypeName.TIME) {
             sqlTypeName = SqlTypeName.TIME;
           } else {
@@ -639,7 +642,7 @@ public class TypeInferenceUtils {
 
       // preserves precision of input type if it was specified
       if (inputType.getSqlTypeName().allowsPrecNoScale()) {
-        RelDataType type = factory.createSqlType(sqlTypeName, inputType.getPrecision());
+        RelDataType type = factory.createSqlType(sqlTypeName, precision);
         return factory.createTypeWithNullability(type, isNullable);
       }
       return createCalciteTypeWithNullability(
@@ -984,10 +987,18 @@ public class TypeInferenceUtils {
   public static RelDataType convertToCalciteType(RelDataTypeFactory typeFactory,
                                                  TypeProtos.MajorType drillType, boolean isNullable) {
     SqlTypeName sqlTypeName = getCalciteTypeFromDrillType(drillType.getMinorType());
-    if (sqlTypeName == SqlTypeName.DECIMAL) {
-      return typeFactory.createTypeWithNullability(
+    switch (sqlTypeName) {
+      case DECIMAL:
+        return typeFactory.createTypeWithNullability(
           typeFactory.createSqlType(sqlTypeName, drillType.getPrecision(),
               drillType.getScale()), isNullable);
+      case TIME:
+      case TIMESTAMP:
+        int precision = drillType.hasPrecision()
+          ? drillType.getPrecision()
+          : typeFactory.getTypeSystem().getDefaultPrecision(sqlTypeName);
+        return typeFactory.createTypeWithNullability(
+          typeFactory.createSqlType(sqlTypeName, precision), isNullable);
     }
     return createCalciteTypeWithNullability(typeFactory, sqlTypeName, isNullable);
   }

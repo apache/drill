@@ -1985,8 +1985,8 @@ public class TestInformationSchemaColumns extends JdbcTestBase {
 
   @Test
   public void test_DATETIME_PRECISION_hasRightValue_mdrReqTIME() throws SQLException {
-    // Zero is default datetime precision for TIME.
-    assertThat( getIntOrNull( mdrReqTIME, "DATETIME_PRECISION" ), equalTo( 0 ) );
+    // 3 is default datetime precision for TIME.
+    assertThat( getIntOrNull( mdrReqTIME, "DATETIME_PRECISION" ), equalTo( 3 ) );
   }
 
   @Ignore( "TODO(DRILL-3225): unignore when datetime precision is implemented" )

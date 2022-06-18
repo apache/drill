@@ -22,6 +22,7 @@ import java.net.URL;
 
 import org.apache.calcite.jdbc.DynamicSchema;
 import org.apache.drill.exec.alias.AliasRegistryProvider;
+import org.apache.drill.exec.ops.ViewExpansionContext;
 import org.apache.drill.shaded.guava.com.google.common.base.Function;
 import io.netty.buffer.DrillBuf;
 import org.apache.calcite.schema.SchemaPlus;
@@ -81,6 +82,7 @@ public class PlanningBase extends ExecTest {
   protected void testSqlPlan(String sqlCommands) throws Exception {
     final DrillbitContext dbContext = mock(DrillbitContext.class);
     final QueryContext context = mock(QueryContext.class);
+    ViewExpansionContext viewExpansionContext = mock(ViewExpansionContext.class);
 
     final String[] sqlStrings = sqlCommands.split(";");
     final LocalPersistentStoreProvider provider = new LocalPersistentStoreProvider(config);
@@ -136,6 +138,7 @@ public class PlanningBase extends ExecTest {
         Matchers.<Function<DrillBuf, ValueHolder>>any()))
       .thenReturn(ValueHolderHelper.getVarDecimalHolder(allocator.buffer(4), "0.01"));
     when(context.getOption(anyString())).thenCallRealMethod();
+    when(context.getViewExpansionContext()).thenReturn(viewExpansionContext);
 
 
     for (final String sql : sqlStrings) {

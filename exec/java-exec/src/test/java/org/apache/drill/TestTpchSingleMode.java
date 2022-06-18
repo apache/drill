@@ -41,7 +41,6 @@ public class TestTpchSingleMode extends BaseTestQuery {
   }
 
   @Test
-  @Ignore // DRILL-512
   public void tpch02() throws Exception{
     testSingleMode("queries/tpch/02.sql");
   }
@@ -87,7 +86,6 @@ public class TestTpchSingleMode extends BaseTestQuery {
   }
 
   @Test
-  @Ignore // Cartesian problem
   public void tpch11() throws Exception{
     testSingleMode("queries/tpch/11.sql");
   }
@@ -108,13 +106,11 @@ public class TestTpchSingleMode extends BaseTestQuery {
   }
 
   @Test
-  @Ignore //
   public void tpch15() throws Exception{
     testSingleMode("queries/tpch/15.sql");
   }
 
   @Test
-  @Ignore // invalid plan, due to Nulls value NOT IN sub-q
   public void tpch16() throws Exception{
     testSingleMode("queries/tpch/16.sql");
   }
@@ -146,7 +142,6 @@ public class TestTpchSingleMode extends BaseTestQuery {
   }
 
   @Test
-  @Ignore // DRILL-518
   public void tpch22() throws Exception{
     testSingleMode("queries/tpch/22.sql");
   }

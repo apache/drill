@@ -76,13 +76,16 @@ import org.apache.calcite.sql.type.SqlTypeName;
 import org.apache.drill.exec.planner.physical.PlannerSettings;
 import org.apache.drill.exec.planner.sql.TypeInferenceUtils;
 import org.apache.drill.exec.vector.DateUtilities;
-import org.joda.time.DateTime;
-import org.joda.time.DateTimeZone;
 
 import java.math.BigDecimal;
 import java.math.BigInteger;
-import java.util.Calendar;
+import java.time.Instant;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.LocalTime;
+import java.time.ZoneOffset;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 import java.util.function.Function;
 
 public class DrillConstExecutor implements RexExecutor {
@@ -172,13 +175,13 @@ public class DrillConstExecutor implements RexExecutor {
           case INT: {
             int value = (materializedExpr.getMajorType().getMode() == TypeProtos.DataMode.OPTIONAL) ?
                 ((NullableIntHolder) valueHolder).value : ((IntHolder) valueHolder).value;
-            return rexBuilder.makeLiteral(new BigDecimal(value),
+            return rexBuilder.makeLiteral(BigDecimal.valueOf(value),
                 TypeInferenceUtils.createCalciteTypeWithNullability(typeFactory, SqlTypeName.INTEGER, newCall.getType().isNullable()), false);
           }
           case BIGINT: {
             long value = (materializedExpr.getMajorType().getMode() == TypeProtos.DataMode.OPTIONAL) ?
                 ((NullableBigIntHolder) valueHolder).value : ((BigIntHolder) valueHolder).value;
-            return rexBuilder.makeLiteral(new BigDecimal(value),
+            return rexBuilder.makeLiteral(BigDecimal.valueOf(value),
                 TypeInferenceUtils.createCalciteTypeWithNullability(typeFactory, SqlTypeName.BIGINT, newCall.getType().isNullable()), false);
           }
           case FLOAT4: {
@@ -191,7 +194,7 @@ public class DrillConstExecutor implements RexExecutor {
               return rexBuilder.makeLiteral(Float.toString(value));
             }
 
-            return rexBuilder.makeLiteral(new BigDecimal(value),
+            return rexBuilder.makeLiteral(BigDecimal.valueOf(value),
                 TypeInferenceUtils.createCalciteTypeWithNullability(typeFactory, SqlTypeName.FLOAT, newCall.getType().isNullable()), false);
           }
           case FLOAT8: {
@@ -204,7 +207,7 @@ public class DrillConstExecutor implements RexExecutor {
               return rexBuilder.makeLiteral(Double.toString(value));
             }
 
-            return rexBuilder.makeLiteral(new BigDecimal(value),
+            return rexBuilder.makeLiteral(BigDecimal.valueOf(value),
                 TypeInferenceUtils.createCalciteTypeWithNullability(typeFactory, SqlTypeName.DOUBLE, newCall.getType().isNullable()), false);
           }
           case VARCHAR: {
@@ -222,10 +225,12 @@ public class DrillConstExecutor implements RexExecutor {
                 TypeInferenceUtils.createCalciteTypeWithNullability(typeFactory, SqlTypeName.BOOLEAN, newCall.getType().isNullable()), false);
           }
           case DATE: {
-            Calendar value = (materializedExpr.getMajorType().getMode() == TypeProtos.DataMode.OPTIONAL) ?
-                new DateTime(((NullableDateHolder) valueHolder).value, DateTimeZone.UTC).toCalendar(null) :
-                new DateTime(((DateHolder) valueHolder).value, DateTimeZone.UTC).toCalendar(null);
-            return rexBuilder.makeLiteral(DateString.fromCalendarFields(value),
+            long millis = (materializedExpr.getMajorType().getMode() == TypeProtos.DataMode.OPTIONAL) ?
+                ((NullableDateHolder) valueHolder).value :
+                ((DateHolder) valueHolder).value;
+            long days = millis / TimeUnit.DAYS.toMillis(1);
+            LocalDate localDate = LocalDate.ofEpochDay(days);
+            return rexBuilder.makeLiteral(new DateString(localDate.getYear(), localDate.getMonthValue(), localDate.getDayOfMonth()),
                 TypeInferenceUtils.createCalciteTypeWithNullability(typeFactory, SqlTypeName.DATE, newCall.getType().isNullable()), false);
           }
           case DECIMAL9: {
@@ -327,25 +332,27 @@ public class DrillConstExecutor implements RexExecutor {
                 false);
           }
           case TIME: {
-            Calendar value = (materializedExpr.getMajorType().getMode() == TypeProtos.DataMode.OPTIONAL) ?
-                new DateTime(((NullableTimeHolder) valueHolder).value, DateTimeZone.UTC).toCalendar(null) :
-                new DateTime(((TimeHolder) valueHolder).value, DateTimeZone.UTC).toCalendar(null);
+            int value = (materializedExpr.getMajorType().getMode() == TypeProtos.DataMode.OPTIONAL) ?
+                ((NullableTimeHolder) valueHolder).value :
+                ((TimeHolder) valueHolder).value;
+            LocalTime time = LocalDateTime.ofInstant(Instant.ofEpochMilli(value), ZoneOffset.UTC).toLocalTime();
             RelDataType type = typeFactory.createSqlType(SqlTypeName.TIME, newCall.getType().getPrecision());
             RelDataType typeWithNullability = typeFactory.createTypeWithNullability(type, newCall.getType().isNullable());
-            return rexBuilder.makeLiteral(TimeString.fromCalendarFields(value), typeWithNullability, false);
+            TimeString timeString = new TimeString(time.getHour(), time.getMinute(), time.getSecond()).withNanos(time.getNano());
+            return rexBuilder.makeLiteral(timeString, typeWithNullability, false);
           }
           case TIMESTAMP: {
-            Calendar value = (materializedExpr.getMajorType().getMode() == TypeProtos.DataMode.OPTIONAL) ?
-                new DateTime(((NullableTimeStampHolder) valueHolder).value, DateTimeZone.UTC).toCalendar(null) :
-                new DateTime(((TimeStampHolder) valueHolder).value, DateTimeZone.UTC).toCalendar(null);
+            long value = (materializedExpr.getMajorType().getMode() == TypeProtos.DataMode.OPTIONAL) ?
+                ((NullableTimeStampHolder) valueHolder).value :
+                ((TimeStampHolder) valueHolder).value;
             RelDataType type = typeFactory.createSqlType(SqlTypeName.TIMESTAMP, newCall.getType().getPrecision());
             RelDataType typeWithNullability = typeFactory.createTypeWithNullability(type, newCall.getType().isNullable());
-            return rexBuilder.makeLiteral(TimestampString.fromCalendarFields(value), typeWithNullability, false);
+            return rexBuilder.makeLiteral(TimestampString.fromMillisSinceEpoch(value), typeWithNullability, false);
           }
           case INTERVALYEAR: {
             BigDecimal value = (materializedExpr.getMajorType().getMode() == TypeProtos.DataMode.OPTIONAL) ?
-                new BigDecimal(((NullableIntervalYearHolder) valueHolder).value) :
-                new BigDecimal(((IntervalYearHolder) valueHolder).value);
+                BigDecimal.valueOf(((NullableIntervalYearHolder) valueHolder).value) :
+                BigDecimal.valueOf(((IntervalYearHolder) valueHolder).value);
             return rexBuilder.makeLiteral(value,
                 TypeInferenceUtils.createCalciteTypeWithNullability(typeFactory, SqlTypeName.INTERVAL_YEAR_MONTH, newCall.getType().isNullable()), false);
           }
@@ -362,7 +369,7 @@ public class DrillConstExecutor implements RexExecutor {
               milliseconds = intervalDayOut.milliseconds;
             }
             return rexBuilder.makeLiteral(
-                new BigDecimal(days * (long) DateUtilities.daysToStandardMillis + milliseconds),
+                BigDecimal.valueOf(days * (long) DateUtilities.daysToStandardMillis + milliseconds),
                 TypeInferenceUtils.createCalciteTypeWithNullability(typeFactory, SqlTypeName.INTERVAL_DAY,
                     newCall.getType().isNullable()), false);
           }

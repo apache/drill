@@ -1462,7 +1462,7 @@ public class TestStringFunctions extends BaseTestQuery {
   @Test
   public void testILike() throws Exception {
     testBuilder()
-        .sqlQuery("select n_name from cp.`tpch/nation.parquet` where ilike(n_name, '%united%') = true")
+        .sqlQuery("select n_name from cp.`tpch/nation.parquet` where `ilike`(n_name, '%united%') = true")
         .unOrdered()
         .baselineColumns("n_name")
         .baselineValues("UNITED STATES")
@@ -1474,7 +1474,7 @@ public class TestStringFunctions extends BaseTestQuery {
   @Test
   public void testILikeEscape() throws Exception {
     testBuilder()
-        .sqlQuery("select a from (select concat(r_name , '_region') a from cp.`tpch/region.parquet`) where ilike(a, 'asia#_region', '#') = true")
+        .sqlQuery("select a from (select concat(r_name , '_region') a from cp.`tpch/region.parquet`) where `ilike`(a, 'asia#_region', '#') = true")
         .unOrdered()
         .baselineColumns("a")
         .baselineValues("ASIA_region")
@@ -1485,7 +1485,7 @@ public class TestStringFunctions extends BaseTestQuery {
   @Test
   public void testSubstr() throws Exception {
     testBuilder()
-        .sqlQuery("select substr(n_name, 'UN.TE.') a from cp.`tpch/nation.parquet` where ilike(n_name, 'united%') = true")
+        .sqlQuery("select substr(n_name, 'UN.TE.') a from cp.`tpch/nation.parquet` where `ilike`(n_name, 'united%') = true")
         .unOrdered()
         .baselineColumns("a")
         .baselineValues("UNITED")

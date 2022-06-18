@@ -25,6 +25,7 @@ import org.apache.calcite.rel.core.CorrelationId;
 import org.apache.calcite.rel.core.JoinInfo;
 import org.apache.calcite.rel.core.JoinRelType;
 import org.apache.calcite.rel.core.RelFactories;
+import org.apache.calcite.rel.hint.RelHint;
 import org.apache.calcite.rel.type.RelDataType;
 import org.apache.calcite.rex.RexNode;
 import org.apache.calcite.rex.RexUtil;
@@ -51,7 +52,6 @@ import static org.apache.drill.exec.planner.logical.DrillRel.DRILL_LOGICAL;
  */
 
 public class DrillRelFactories {
-  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(DrillRelFactories.class);
   public static final RelFactories.ProjectFactory DRILL_LOGICAL_PROJECT_FACTORY =
       new DrillProjectFactoryImpl();
 
@@ -94,14 +94,15 @@ public class DrillRelFactories {
    * {@link DrillProjectRel}.
    */
   private static class DrillProjectFactoryImpl implements RelFactories.ProjectFactory {
-    @Override
-    public RelNode createProject(RelNode child,
-                                 List<? extends RexNode> childExprs, List<String> fieldNames) {
-      final RelOptCluster cluster = child.getCluster();
-      final RelDataType rowType =
-          RexUtil.createStructType(cluster.getTypeFactory(), childExprs, fieldNames, null);
 
-      return DrillProjectRel.create(cluster, child.getTraitSet().plus(DRILL_LOGICAL), child, childExprs, rowType);
+    @Override
+    public RelNode createProject(RelNode input, List<RelHint> hints, List<? extends RexNode> childExprs,
+      List<? extends String> fieldNames) {
+      RelOptCluster cluster = input.getCluster();
+      RelDataType rowType =
+        RexUtil.createStructType(cluster.getTypeFactory(), childExprs, fieldNames, null);
+
+      return DrillProjectRel.create(cluster, input.getTraitSet().plus(DRILL_LOGICAL), input, childExprs, rowType);
     }
   }
 
@@ -123,17 +124,16 @@ public class DrillRelFactories {
   private static class DrillJoinFactoryImpl implements RelFactories.JoinFactory {
 
     @Override
-    public RelNode createJoin(RelNode left, RelNode right,
+    public RelNode createJoin(RelNode left, RelNode right, List<RelHint> hints,
                               RexNode condition, Set<CorrelationId> variablesSet,
                               JoinRelType joinType, boolean semiJoinDone) {
-      return new DrillJoinRel(left.getCluster(), left.getTraitSet().plus(DRILL_LOGICAL), left, right, condition, joinType);
-    }
-
-    @Override
-    public RelNode createJoin(RelNode left, RelNode right,
-                              RexNode condition, JoinRelType joinType,
-                              Set<String> variablesStopped, boolean semiJoinDone) {
-      return new DrillJoinRel(left.getCluster(), left.getTraitSet().plus(DRILL_LOGICAL), left, right, condition, joinType);
+      switch (joinType) {
+        case SEMI:
+          JoinInfo joinInfo = JoinInfo.of(left, right, condition);
+          return DrillSemiJoinRel.create(left, right, condition, joinInfo.leftKeys, joinInfo.rightKeys);
+        default:
+          return new DrillJoinRel(left.getCluster(), left.getTraitSet().plus(DRILL_LOGICAL), left, right, condition, joinType);
+      }
     }
   }
 
@@ -144,7 +144,7 @@ public class DrillRelFactories {
   private static class DrillAggregateFactoryImpl implements RelFactories.AggregateFactory {
 
     @Override
-    public RelNode createAggregate(RelNode input, ImmutableBitSet groupSet,
+    public RelNode createAggregate(RelNode input, List<RelHint> hints, ImmutableBitSet groupSet,
                                    com.google.common.collect.ImmutableList<ImmutableBitSet> groupSets, List<AggregateCall> aggCalls) {
       return new DrillAggregateRel(input.getCluster(), input.getTraitSet().plus(DRILL_LOGICAL), input, groupSet, groupSets, aggCalls);
     }

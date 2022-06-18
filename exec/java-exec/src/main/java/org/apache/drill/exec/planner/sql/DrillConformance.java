@@ -57,4 +57,14 @@ public class DrillConformance extends SqlDelegatingConformance {
   public boolean isHavingAlias() {
     return true;
   }
+
+  @Override
+  public boolean isOffsetLimitAllowed() {
+    return true;
+  }
+
+  @Override
+  public boolean isLimitStartCountAllowed() {
+    return true;
+  }
 }

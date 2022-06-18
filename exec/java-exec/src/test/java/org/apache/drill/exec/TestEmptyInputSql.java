@@ -153,33 +153,15 @@ public class TestEmptyInputSql extends BaseTestQuery {
 
   /**
    * Test with query against an empty file. Select clause has three expressions.
-   * 1.0 + 100.0 as constant expression, is resolved to required FLOAT8/VARDECIMAL
+   * 1.0 + 100.0 as constant expression, is resolved to required VARDECIMAL
    * cast(100 as varchar(100) is resolved to required varchar(100)
    * cast(columns as varchar(100)) is resolved to nullable varchar(100).
    */
   @Test
   public void testQueryConstExprEmptyJson() throws Exception {
     try {
-      alterSession(PlannerSettings.ENABLE_DECIMAL_DATA_TYPE_KEY, false);
-      SchemaBuilder schemaBuilder = new SchemaBuilder()
-          .add("key", TypeProtos.MinorType.FLOAT8)
-          .add("name", TypeProtos.MinorType.VARCHAR, 100)
-          .addNullable("name2", TypeProtos.MinorType.VARCHAR, 100);
-      BatchSchema expectedSchema = new BatchSchemaBuilder()
-          .withSchemaBuilder(schemaBuilder)
-          .build();
-
-      testBuilder()
-          .sqlQuery("select 1.0 + 100.0 as key, "
-            + " cast(100 as varchar(100)) as name, "
-            + " cast(columns as varchar(100)) as name2 "
-            + " from cp.`%s` ", SINGLE_EMPTY_JSON)
-          .schemaBaseLine(expectedSchema)
-          .build()
-          .run();
-
       alterSession(PlannerSettings.ENABLE_DECIMAL_DATA_TYPE_KEY, true);
-      schemaBuilder = new SchemaBuilder()
+      SchemaBuilder schemaBuilder = new SchemaBuilder()
           .add("key",
               TypeProtos.MajorType.newBuilder()
                   .setMinorType(TypeProtos.MinorType.VARDECIMAL)
@@ -189,7 +171,7 @@ public class TestEmptyInputSql extends BaseTestQuery {
                   .build())
           .add("name", TypeProtos.MinorType.VARCHAR, 100)
           .addNullable("name2", TypeProtos.MinorType.VARCHAR, 100);
-      expectedSchema = new BatchSchemaBuilder()
+      BatchSchema expectedSchema = new BatchSchemaBuilder()
           .withSchemaBuilder(schemaBuilder)
           .build();
 

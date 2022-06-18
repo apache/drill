@@ -98,12 +98,6 @@ public class IndexLogicalPlanCallContext implements IndexCallContext {
     return scan;
   }
 
-  public List<RelCollation> getCollationList() {
-    if (sort != null) {
-      return sort.getCollationList();
-    }
-    return null;
-  }
 
   public RelCollation getCollation() {
     if (sort != null) {
@@ -174,5 +168,5 @@ public class IndexLogicalPlanCallContext implements IndexCallContext {
 
   public RelNode getExchange() { return null; }
 
-  public List<DistributionField> getDistributionFields() { return Collections.EMPTY_LIST; }
+  public List<DistributionField> getDistributionFields() { return Collections.emptyList(); }
 }

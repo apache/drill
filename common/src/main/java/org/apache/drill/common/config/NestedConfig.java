@@ -17,12 +17,17 @@
  */
 package org.apache.drill.common.config;
 
+import java.time.Duration;
+import java.time.Period;
+import java.time.temporal.TemporalAmount;
 import java.util.List;
 import java.util.Map.Entry;
 import java.util.Set;
+import java.util.concurrent.TimeUnit;
 
 import com.typesafe.config.Config;
 import com.typesafe.config.ConfigList;
+import com.typesafe.config.ConfigMemorySize;
 import com.typesafe.config.ConfigMergeable;
 import com.typesafe.config.ConfigObject;
 import com.typesafe.config.ConfigOrigin;
@@ -234,5 +239,80 @@ abstract class NestedConfig implements Config {
   @Override
   public Config withValue(String path, ConfigValue value) {
     return c.withValue(path, value);
+  }
+
+  @Override
+  public boolean isResolved() {
+    return c.isResolved();
+  }
+
+  @Override
+  public Config resolveWith(Config config) {
+    return c.resolveWith(config);
+  }
+
+  @Override
+  public Config resolveWith(Config config, ConfigResolveOptions configResolveOptions) {
+    return c.resolveWith(config, configResolveOptions);
+  }
+
+  @Override
+  public boolean hasPathOrNull(String s) {
+    return c.hasPathOrNull(s);
+  }
+
+  @Override
+  public boolean getIsNull(String s) {
+    return c.getIsNull(s);
+  }
+
+  @Override
+  public <T extends Enum<T>> T getEnum(Class<T> aClass, String s) {
+    return c.getEnum(aClass, s);
+  }
+
+  @Override
+  public ConfigMemorySize getMemorySize(String s) {
+    return c.getMemorySize(s);
+  }
+
+  @Override
+  public long getDuration(String s, TimeUnit timeUnit) {
+    return c.getDuration(s, timeUnit);
+  }
+
+  @Override
+  public Duration getDuration(String s) {
+    return c.getDuration(s);
+  }
+
+  @Override
+  public Period getPeriod(String s) {
+    return c.getPeriod(s);
+  }
+
+  @Override
+  public TemporalAmount getTemporal(String s) {
+    return c.getTemporal(s);
+  }
+
+  @Override
+  public <T extends Enum<T>> List<T> getEnumList(Class<T> aClass, String s) {
+    return c.getEnumList(aClass, s);
+  }
+
+  @Override
+  public List<ConfigMemorySize> getMemorySizeList(String s) {
+    return c.getMemorySizeList(s);
+  }
+
+  @Override
+  public List<Long> getDurationList(String s, TimeUnit timeUnit) {
+    return c.getDurationList(s, timeUnit);
+  }
+
+  @Override
+  public List<Duration> getDurationList(String s) {
+    return c.getDurationList(s);
   }
 }

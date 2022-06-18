@@ -180,7 +180,7 @@ public class TestLimit0VsRegularQueriesMetadata extends PreparedStatementTestBas
     List<ExpectedColumnResult> expectedMetadata = ImmutableList.of(
         new ExpectedColumnResult("col_first_cond", "CHARACTER VARYING", true, 10, 10, 0, false, String.class.getName()),
         new ExpectedColumnResult("col_second_cond", "CHARACTER VARYING", true, 20, 20, 0, false, String.class.getName()),
-        new ExpectedColumnResult("col_null", "CHARACTER VARYING", true, 10, 10, 0, false, String.class.getName()),
+        new ExpectedColumnResult("col_null", "CHARACTER VARYING", false, 10, 10, 0, false, String.class.getName()),
         new ExpectedColumnResult("col_unk", "CHARACTER VARYING", true, Types.MAX_VARCHAR_LENGTH, Types.MAX_VARCHAR_LENGTH, 0, false, String.class.getName())
     );
 

@@ -45,8 +45,8 @@ public class CalciteUtils {
       relOptRule -> BANNED_RULES.stream()
           .noneMatch(banned -> relOptRule.toString().startsWith(banned));
 
-  public static final VertexDrelConverterRule ELASTIC_DREL_CONVERTER_RULE =
-      new VertexDrelConverterRule(ElasticsearchRel.CONVENTION);
+  public static final RelOptRule ELASTIC_DREL_CONVERTER_RULE =
+    VertexDrelConverterRule.create(ElasticsearchRel.CONVENTION);
 
   public static final RelOptRule ENUMERABLE_INTERMEDIATE_PREL_CONVERTER_RULE =
       new EnumerableIntermediatePrelConverterRule(

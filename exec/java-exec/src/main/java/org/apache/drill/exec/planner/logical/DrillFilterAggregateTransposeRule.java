@@ -39,7 +39,8 @@ public class DrillFilterAggregateTransposeRule extends FilterAggregateTransposeR
       DrillRelBuilder.proto(DrillRelFactories.DRILL_LOGICAL_FILTER_FACTORY, DrillRelFactories.DRILL_LOGICAL_AGGREGATE_FACTORY));
 
   private DrillFilterAggregateTransposeRule(RelBuilderFactory relBuilderFactory) {
-    super(Filter.class, relBuilderFactory, Aggregate.class);
+    super(Config.DEFAULT.withRelBuilderFactory(relBuilderFactory)
+      .as(Config.class));
   }
 
   @Override

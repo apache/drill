@@ -48,12 +48,10 @@ import static org.junit.Assert.assertEquals;
 
 /**
  * JDBC storage plugin tests against MySQL.
- * Note: it requires libaio1.so library on Linux
  */
 @Category(JdbcStorageTest.class)
 public class TestJdbcPluginWithMySQLIT extends ClusterTest {
 
-  private static final String DOCKER_IMAGE_MYSQL = "mysql:5.7.27";
   private static final String DOCKER_IMAGE_MARIADB = "mariadb:10.6.0";
   private static JdbcDatabaseContainer<?> jdbcContainer;
 
@@ -63,12 +61,8 @@ public class TestJdbcPluginWithMySQLIT extends ClusterTest {
     String osName = System.getProperty("os.name").toLowerCase();
     String mysqlDBName = "drill_mysql_test";
 
-    DockerImageName imageName;
-    if (osName.startsWith("linux") && "aarch64".equals(System.getProperty("os.arch"))) {
-      imageName = DockerImageName.parse(DOCKER_IMAGE_MARIADB).asCompatibleSubstituteFor("mysql");
-    } else {
-      imageName = DockerImageName.parse(DOCKER_IMAGE_MYSQL);
-    }
+    DockerImageName imageName = DockerImageName.parse(DOCKER_IMAGE_MARIADB)
+      .asCompatibleSubstituteFor("mysql");
 
     jdbcContainer = new MySQLContainer<>(imageName)
             .withExposedPorts(3306)
@@ -282,7 +276,7 @@ public class TestJdbcPluginWithMySQLIT extends ClusterTest {
         .sqlQuery(query)
         .unOrdered()
         .baselineColumns("EXPR$0", "EXPR$1", "EXPR$2")
-        .baselineValues(4L, 88L, 1.618033988749895)
+        .baselineValues(4L, 88, BigDecimal.valueOf(1.618033988749895))
         .go();
   }
 
@@ -293,9 +287,9 @@ public class TestJdbcPluginWithMySQLIT extends ClusterTest {
 
     testBuilder()
         .sqlQuery(query)
-        .unOrdered()
+        .ordered()
         .baselineColumns("EXPR$1", "EXPR$0", "EXPR$2")
-        .baselineValues(1.618033988749895, 88L, 4L)
+        .baselineValues(BigDecimal.valueOf(1.618033988749895), 88, 4L)
         .go();
   }
 
@@ -308,8 +302,8 @@ public class TestJdbcPluginWithMySQLIT extends ClusterTest {
         .sqlQuery(query)
         .unOrdered()
         .baselineColumns("ID", "FIBONACCI_SUM", "golden_ratio")
-        .baselineValues(1, 88L, 1.618033988749895)
-        .baselineValues(2, 88L, 1.618033988749895)
+        .baselineValues(1, 88, BigDecimal.valueOf(1.618033988749895))
+        .baselineValues(2, 88, BigDecimal.valueOf(1.618033988749895))
         .go();
   }
 

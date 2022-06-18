@@ -34,6 +34,7 @@
     }
   }
 -->
+
 /**
  * Parses statement
  *   SHOW TABLES [{FROM | IN} db_name] [LIKE 'pattern' | WHERE expr]
@@ -166,9 +167,7 @@ SqlNodeList ParseRequiredFieldList(String relType) :
     Pair<SqlNodeList, SqlNodeList> fieldList;
 }
 {
-    <LPAREN>
     fieldList = ParenthesizedCompoundIdentifierList()
-    <RPAREN>
     {
         for(SqlNode node : fieldList.left)
         {
@@ -688,25 +687,6 @@ SqlNode SqlDropFunction() :
    }
 }
 
-<#if !parser.includeCompoundIdentifier >
-/**
-* Parses a comma-separated list of simple identifiers.
-*/
-Pair<SqlNodeList, SqlNodeList> ParenthesizedCompoundIdentifierList() :
-{
-    List<SqlIdentifier> list = new ArrayList<SqlIdentifier>();
-    SqlIdentifier id;
-}
-{
-    id = CompoundIdentifier() {list.add(id);}
-    (
-   <COMMA> id = CompoundIdentifier() {list.add(id);}) *
-    {
-       return Pair.of(new SqlNodeList(list, getPos()), null);
-    }
-}
-</#if>
-
 /**
  * Parses a analyze statements:
  * <ul>
@@ -733,9 +713,7 @@ SqlNode SqlAnalyzeTable() :
     (
         tableRef = CompoundIdentifier()
     |
-        <TABLE> { s = span(); } <LPAREN>
-        tableRef = TableFunctionCall(s.pos())
-        <RPAREN>
+        tableRef = TableFunctionCall()
     )
     [
         (

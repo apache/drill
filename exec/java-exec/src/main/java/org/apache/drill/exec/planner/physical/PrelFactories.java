@@ -18,6 +18,7 @@
 package org.apache.drill.exec.planner.physical;
 
 
+import org.apache.calcite.rel.hint.RelHint;
 import org.apache.drill.shaded.guava.com.google.common.collect.Lists;
 import org.apache.calcite.plan.RelOptCluster;
 import org.apache.calcite.rel.RelNode;
@@ -39,14 +40,12 @@ public class PrelFactories {
    */
   private static class DrillProjectPrelFactory implements RelFactories.ProjectFactory {
     @Override
-    public RelNode createProject(RelNode child,
-                                 List<? extends RexNode> childExprs, List<String> fieldNames) {
-      final RelOptCluster cluster = child.getCluster();
-      final RelDataType rowType = RexUtil.createStructType(cluster.getTypeFactory(), childExprs, fieldNames);
-      final RelNode project = new ProjectPrel(cluster, child.getTraitSet().plus(Prel.DRILL_PHYSICAL),
-          child, Lists.newArrayList(childExprs), rowType);
+    public RelNode createProject(RelNode child, List<RelHint> hints, List<? extends RexNode> childExprs, List<? extends String> fieldNames) {
+      RelOptCluster cluster = child.getCluster();
+      RelDataType rowType = RexUtil.createStructType(cluster.getTypeFactory(), childExprs, fieldNames, null);
 
-      return project;
+      return new ProjectPrel(cluster, child.getTraitSet().plus(Prel.DRILL_PHYSICAL),
+        child, Lists.newArrayList(childExprs), rowType);
     }
   }
 }

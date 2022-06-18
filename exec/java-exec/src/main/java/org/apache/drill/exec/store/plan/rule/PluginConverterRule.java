@@ -43,7 +43,10 @@ public abstract class PluginConverterRule extends ConverterRule {
 
   protected PluginConverterRule(Class<? extends RelNode> clazz,
       RelTrait in, Convention out, String description, PluginImplementor pluginImplementor) {
-    super(clazz, (Predicate<RelNode>) input -> true, in, out, DrillRelFactories.LOGICAL_BUILDER, description);
+    super(Config.INSTANCE
+        .withConversion(clazz, (Predicate<RelNode>) input -> true, in, out, description)
+        .withRelBuilderFactory(DrillRelFactories.LOGICAL_BUILDER)
+        .as(Config.class));
     this.pluginImplementor = pluginImplementor;
   }
 

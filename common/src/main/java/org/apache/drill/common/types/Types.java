@@ -35,6 +35,7 @@ public class Types {
   private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(Types.class);
 
   public static final int MAX_VARCHAR_LENGTH = 65535;
+  public static final int DEFAULT_TIMESTAMP_PRECISION = 3;
   public static final int UNDEFINED = 0;
 
   public static final MajorType NULL = required(MinorType.NULL);

@@ -35,6 +35,7 @@ import org.apache.drill.exec.planner.DrillRelBuilder;
 import org.apache.drill.exec.planner.physical.PrelFactories;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 /**
@@ -174,14 +175,14 @@ public class DrillMergeProjectRule extends RelOptRule {
     // replace the two projects with a combined projection
     if (topProject instanceof DrillProjectRel) {
       RelNode newProjectRel = DrillRelFactories.DRILL_LOGICAL_PROJECT_FACTORY.createProject(
-          bottomProject.getInput(), newProjects,
+          bottomProject.getInput(), Collections.emptyList(), newProjects,
           topProject.getRowType().getFieldNames());
 
       return (Project) newProjectRel;
     }
     else {
       RelNode newProjectRel = PrelFactories.PROJECT_FACTORY.createProject(
-          bottomProject.getInput(), newProjects,
+          bottomProject.getInput(), Collections.emptyList(), newProjects,
           topProject.getRowType().getFieldNames());
 
       return (Project) newProjectRel;

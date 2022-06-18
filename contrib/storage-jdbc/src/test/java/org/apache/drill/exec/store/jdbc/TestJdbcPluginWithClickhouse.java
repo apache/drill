@@ -194,7 +194,7 @@ public class TestJdbcPluginWithClickhouse extends ClusterTest {
         .sqlQuery(query)
         .unOrdered()
         .baselineColumns("EXPR$0", "EXPR$1", "EXPR$2")
-        .baselineValues(4L, 88L, 1.618033988749895)
+        .baselineValues(4L, 88, 1.618033988749895)
         .go();
   }
 
@@ -207,7 +207,7 @@ public class TestJdbcPluginWithClickhouse extends ClusterTest {
         .sqlQuery(query)
         .unOrdered()
         .baselineColumns("EXPR$1", "EXPR$0", "EXPR$2")
-        .baselineValues(1.618033988749895, 88L, 4L)
+        .baselineValues(1.618033988749895, 88, 4L)
         .go();
   }
 
@@ -220,8 +220,8 @@ public class TestJdbcPluginWithClickhouse extends ClusterTest {
         .sqlQuery(query)
         .unOrdered()
         .baselineColumns("ID", "FIBONACCI_SUM", "golden_ratio")
-        .baselineValues(1, 88L, 1.618033988749895)
-        .baselineValues(2, 88L, 1.618033988749895)
+        .baselineValues(1, 88, 1.618033988749895)
+        .baselineValues(2, 88, 1.618033988749895)
         .go();
   }
 

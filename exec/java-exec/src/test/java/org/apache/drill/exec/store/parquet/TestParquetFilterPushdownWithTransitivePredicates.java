@@ -178,8 +178,7 @@ public class TestParquetFilterPushdownWithTransitivePredicates extends PlanTestB
     testPlanMatchingPatterns(query, expectedPlan);
   }
 
-  @Test // TODO: CALCITE-1048
-  @Ignore // For now plan has "first.*numRowGroups=7". Replacing left join to inner should be made earlier.
+  @Test
   public void testForTwoExists() throws Exception {
     String query = String.format("SELECT * from %s t1 " +
         " WHERE EXISTS (SELECT * FROM %s t2 WHERE t1.`year` = t2.`year` AND t2.`year` = 1988) " +
@@ -227,8 +226,7 @@ public class TestParquetFilterPushdownWithTransitivePredicates extends PlanTestB
     testPlanMatchingPatterns(query, expectedPlan);
   }
 
-  @Test // TODO: CALCITE-2275
-  @Ignore // For now plan has "first.*numRowGroups=14""
+  @Test
   public void testForInAndNotOperatorsInJoinCondition() throws Exception {
     String query = String.format("SELECT * FROM %s t1 JOIN %s t2 " +
             "ON t1.`year` = t2.`year` AND t2.`year` NOT IN (1987, 1988) JOIN %s t3 ON t1.`period` = t3.`period` " +
@@ -286,6 +284,40 @@ public class TestParquetFilterPushdownWithTransitivePredicates extends PlanTestB
 
     final String[] expectedPlan = {"first.*numRowGroups=1", "second.*numRowGroups=1"};
     testPlanMatchingPatterns(query, expectedPlan);
+  }
+
+  @Test // DRILL-6371
+  public void testForTransitiveFilterPushPastUnion() throws Exception {
+    String query = "WITH year_total_1\n" +
+      "     AS (SELECT c.r_regionkey    customer_id,\n" +
+      "                1 year_total\n" +
+      "         FROM   cp.`tpch/region.parquet` c\n" +
+      "         UNION ALL\n" +
+      "         SELECT c.n_nationkey    customer_id,\n" +
+      "                1 year_total\n" +
+      "         FROM   cp.`tpch/nation.parquet` c),\n" +
+      "     year_total_2\n" +
+      "     AS (SELECT c.r_regionkey    customer_id,\n" +
+      "                1 year_total\n" +
+      "         FROM   cp.`tpch/region.parquet` c\n" +
+      "         UNION ALL\n" +
+      "         SELECT c.n_nationkey    customer_id,\n" +
+      "                1 year_total\n" +
+      "         FROM   cp.`tpch/nation.parquet` c)\n" +
+      "SELECT count(t_w_firstyear.customer_id) as ct\n" +
+      "FROM   year_total_1 t_w_firstyear,\n" +
+      "       year_total_2 t_w_secyear\n" +
+      "WHERE  t_w_firstyear.year_total = t_w_secyear.year_total\n" +
+      " AND t_w_firstyear.year_total > 0 and t_w_secyear.year_total > 0";
+
+    // Validate the plan
+    int actualRowCount = testSql(query);
+    int expectedRowCount = 1;
+    assertEquals("Expected and actual row count should match",
+      expectedRowCount, actualRowCount);
+
+    String[] excludedPlan = {"Filter"};
+    testPlanMatchingPatterns(query, new String[0], excludedPlan);
   }
 }
 

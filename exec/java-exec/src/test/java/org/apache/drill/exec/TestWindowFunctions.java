@@ -50,7 +50,7 @@ public class TestWindowFunctions extends BaseTestQuery {
         "from cp.`tpch/nation.parquet`";
 
     // Validate the plan
-    final String[] expectedPlan = {"Window.*partition \\{0\\} order by \\[\\].*\\[SUM\\(\\$0\\), COUNT\\(\\)",
+    final String[] expectedPlan = {"Window.*partition \\{0\\} aggs .*\\[SUM\\(\\$0\\), COUNT\\(\\)",
         "Scan.*columns=\\[`n_nationKey`\\].*"};
     final String[] excludedPatterns = {"Scan.*columns=\\[`\\*`\\].*"};
     PlanTestBase.testPlanMatchingPatterns(query, expectedPlan, excludedPatterns);
@@ -413,7 +413,7 @@ public class TestWindowFunctions extends BaseTestQuery {
     String query = "select count(*) over (order by o_orderpriority) as cnt from dfs.`multilevel/parquet` where o_custkey < 100";
     try {
       // Validate the plan
-      final String[] expectedPlan = {"Window.*partition \\{\\} order by \\[0\\].*COUNT\\(\\)",
+      final String[] expectedPlan = {"Window.*order by \\[0\\].*COUNT\\(\\)",
           "Scan.*columns=\\[`o_custkey`, `o_orderpriority`\\]"};
       final String[] excludedPatterns = {"Scan.*columns=\\[`\\*`\\]"};
       PlanTestBase.testPlanMatchingPatterns(query, expectedPlan, excludedPatterns);
@@ -445,7 +445,7 @@ public class TestWindowFunctions extends BaseTestQuery {
         "where n_nationkey = 1";
 
     // Validate the plan
-    final String[] expectedPlan1 = {"Window.*partition \\{0\\} order by \\[\\].*SUM\\(\\$0\\), COUNT\\(\\$0\\)",
+    final String[] expectedPlan1 = {"Window.*partition \\{0\\} aggs .*SUM\\(\\$0\\), COUNT\\(\\$0\\)",
         "Scan.*columns=\\[`n_nationkey`\\]"};
     final String[] excludedPatterns1 = {"Scan.*columns=\\[`\\*`\\]"};
     PlanTestBase.testPlanMatchingPatterns(avgQuery, expectedPlan1, excludedPatterns1);
@@ -462,7 +462,7 @@ public class TestWindowFunctions extends BaseTestQuery {
         "where n_nationkey = 1";
 
     // Validate the plan
-    final String[] expectedPlan2 = {"Window.*partition \\{0\\} order by \\[\\].*SUM\\(\\$2\\), SUM\\(\\$1\\), COUNT\\(\\$1\\)",
+    final String[] expectedPlan2 = {"Window.*partition \\{0\\} aggs .*SUM\\(\\$2\\), SUM\\(\\$1\\), COUNT\\(\\$1\\)",
         "Scan.*columns=\\[`n_nationkey`\\]"};
     final String[] excludedPatterns2 = {"Scan.*columns=\\[`\\*`\\]"};
     PlanTestBase.testPlanMatchingPatterns(varianceQuery, expectedPlan2, excludedPatterns2);
@@ -481,7 +481,7 @@ public class TestWindowFunctions extends BaseTestQuery {
         "from cp.`jsoninput/large_int.json` limit 1";
 
     // Validate the plan
-    final String[] expectedPlan1 = {"Window.*partition \\{0\\} order by \\[\\].*SUM\\(\\$1\\)",
+    final String[] expectedPlan1 = {"Window.*partition \\{0\\} aggs .*SUM\\(\\$1\\)",
         "Scan.*columns=\\[`col_varchar`, `col_int`\\]"};
     final String[] excludedPatterns1 = {"Scan.*columns=\\[`\\*`\\]"};
     PlanTestBase.testPlanMatchingPatterns(query, expectedPlan1, excludedPatterns1);
@@ -497,7 +497,7 @@ public class TestWindowFunctions extends BaseTestQuery {
         "from cp.`jsoninput/large_int.json` limit 1";
 
     // Validate the plan
-    final String[] expectedPlan2 = {"Window.*partition \\{0\\} order by \\[\\].*SUM\\(\\$1\\), COUNT\\(\\$1\\)",
+    final String[] expectedPlan2 = {"Window.*partition \\{0\\} aggs .*SUM\\(\\$1\\), COUNT\\(\\$1\\)",
         "Scan.*columns=\\[`col_varchar`, `col_int`\\]"};
     final String[] excludedPatterns2 = {"Scan.*columns=\\[`\\*`\\]"};
     PlanTestBase.testPlanMatchingPatterns(avgQuery, expectedPlan2, excludedPatterns2);
@@ -549,7 +549,7 @@ public class TestWindowFunctions extends BaseTestQuery {
         " from cp.`tpch/lineitem.parquet` group by l_partkey, l_suppkey order by 1 desc limit 1";
 
     // Validate the plan
-    final String[] expectedPlan = {"Window.*partition \\{\\} order by \\[1\\].*DENSE_RANK\\(\\)",
+    final String[] expectedPlan = {"Window.*order by \\[1\\].*DENSE_RANK\\(\\)",
         "Scan.*columns=\\[`l_partkey`, `l_suppkey`\\]"};
     final String[] excludedPatterns = {"Scan.*columns=\\[`\\*`\\]"};
     PlanTestBase.testPlanMatchingPatterns(query, expectedPlan, excludedPatterns);
@@ -684,7 +684,7 @@ public class TestWindowFunctions extends BaseTestQuery {
     test("alter session set `planner.slice_target` = 1");
 
     // Validate the plan
-    final String[] expectedPlan = {"Window\\(window#0=\\[window\\(partition \\{\\}.*\n" +
+    final String[] expectedPlan = {"Window\\(window#0=\\[window\\(aggs .*\n" +
         ".*UnionExchange"};
     PlanTestBase.testPlanMatchingPatterns(query, expectedPlan, new String[]{});
 
@@ -747,7 +747,7 @@ public class TestWindowFunctions extends BaseTestQuery {
         "from cp.`%s`", root);
 
     // Validate the plan
-    final String[] expectedPlan = {"Window\\(window#0=\\[window\\(partition \\{0\\} order by \\[\\].*\\[SUM\\(\\$1\\), SUM\\(\\$2\\)\\]"};
+    final String[] expectedPlan = {"Window\\(window#0=\\[window\\(partition \\{0\\} aggs .*\\[SUM\\(\\$1\\), SUM\\(\\$2\\)\\]"};
     PlanTestBase.testPlanMatchingPatterns(query, expectedPlan, new String[]{});
 
     testBuilder()

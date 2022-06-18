@@ -51,7 +51,6 @@ public abstract class DrillUnionRelBase extends Union implements DrillRelNode {
     return true;
   }
 
-  @Override
   public boolean isDistinct() {
     return !this.all;
   }

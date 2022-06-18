@@ -106,7 +106,7 @@ public class PluginRulesProviderImpl implements PluginRulesProvider {
 
   @Override
   public RelOptRule vertexRule() {
-    return new VertexDrelConverterRule(convention);
+    return VertexDrelConverterRule.create(convention);
   }
 
   @Override

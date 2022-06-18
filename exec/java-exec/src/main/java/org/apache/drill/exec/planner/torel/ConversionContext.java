@@ -17,12 +17,12 @@
  */
 package org.apache.drill.exec.planner.torel;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
-import org.apache.calcite.prepare.Prepare;
-
 import org.apache.calcite.rel.RelRoot;
+import org.apache.calcite.rel.hint.RelHint;
 import org.apache.drill.common.expression.LogicalExpression;
 import org.apache.drill.common.logical.LogicalPlan;
 import org.apache.drill.common.logical.data.Filter;
@@ -53,22 +53,18 @@ import org.apache.calcite.rel.type.RelDataType;
 import org.apache.calcite.rel.type.RelDataTypeFactory;
 import org.apache.calcite.rex.RexBuilder;
 import org.apache.calcite.rex.RexNode;
-import org.apache.calcite.schema.SchemaPlus;
 
 public class ConversionContext implements ToRelContext {
-  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(ConversionContext.class);
 
   private static final ConverterVisitor VISITOR = new ConverterVisitor();
 
   private final Map<Scan, FieldList> scanFieldLists;
   private final RelOptCluster cluster;
-  private final Prepare prepare;
 
   public ConversionContext(RelOptCluster cluster, LogicalPlan plan) {
     super();
     scanFieldLists = ScanFieldDeterminer.getFieldLists(plan);
     this.cluster = cluster;
-    this.prepare = null;
   }
 
   @Override
@@ -76,6 +72,10 @@ public class ConversionContext implements ToRelContext {
     return cluster;
   }
 
+  @Override
+  public List<RelHint> getTableHints() {
+    return Collections.emptyList();
+  }
 
   private FieldList getFieldList(Scan scan) {
     assert scanFieldLists.containsKey(scan);
@@ -113,11 +113,6 @@ public class ConversionContext implements ToRelContext {
 
   @Override
   public RelRoot expandView(RelDataType rowType, String queryString, List<String> schemaPath, List<String> viewPath) {
-    throw new UnsupportedOperationException();
-  }
-
-  @Override
-  public RelRoot expandView(RelDataType rowType, String queryString, SchemaPlus rootSchema, List<String> schemaPath) {
     throw new UnsupportedOperationException();
   }
 

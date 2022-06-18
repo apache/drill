@@ -117,7 +117,7 @@ public class ConvertHiveParquetScanToDrillParquetScan extends StoragePluginOptim
         and thus Hive Scan can be chosen instead of Drill native scan because costings allegedly lower for Hive.
         To ensure Drill native scan will be chosen, reduce Hive scan importance to 0.
        */
-      call.getPlanner().setImportance(hiveScanRel, 0.0);
+      call.getPlanner().prune(hiveScanRel);
     } catch (final Exception e) {
       logger.warn("Failed to convert HiveScan to HiveDrillNativeParquetScan", e);
     }

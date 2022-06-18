@@ -26,6 +26,7 @@ import java.util.Map;
 import java.util.concurrent.TimeUnit;
 import java.util.regex.Pattern;
 
+import org.apache.calcite.rel.metadata.RelMetadataQuery;
 import org.apache.drill.exec.planner.common.DrillRelOptUtil;
 import org.apache.drill.exec.planner.logical.SelectionBasedTableScan;
 import org.apache.drill.exec.util.DrillFileSystemUtil;
@@ -609,7 +610,12 @@ public abstract class PruneScanRule extends StoragePluginOptimizerRule {
         }
       }
 
-      return scan.isDistinct() || aggregate.getGroupCount() > 0;
+      return isDistinct(scan) || aggregate.getGroupCount() > 0;
+    }
+
+    private boolean isDistinct(RelNode relNode) {
+      final RelMetadataQuery mq = relNode.getCluster().getMetadataQuery();
+      return Boolean.TRUE.equals(mq.areRowsUnique(relNode));
     }
 
     /*

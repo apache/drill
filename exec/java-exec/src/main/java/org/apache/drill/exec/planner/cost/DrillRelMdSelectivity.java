@@ -169,7 +169,8 @@ public class DrillRelMdSelectivity extends RelMdSelectivity {
       return sel;
     }
 
-    List<RexNode> conjuncts1 = RelOptUtil.conjunctions(predicate);
+    List<RexNode> conjuncts1 = RelOptUtil.conjunctions(
+      RexUtil.expandSearch(rexBuilder, null, predicate));
 
     // a Set that holds range predicates that are combined based on whether they are defined on the same column
     Set<RexNode> combinedRangePredicates = new HashSet<>();
@@ -380,7 +381,8 @@ public class DrillRelMdSelectivity extends RelMdSelectivity {
       List<RexNode> leftFilters = new ArrayList<>();
       List<RexNode> rightFilters = new ArrayList<>();
       List<RexNode> joinFilters = new ArrayList<>();
-      List<RexNode> predList = RelOptUtil.conjunctions(predicate);
+      List<RexNode> predList = RelOptUtil.conjunctions(
+        RexUtil.expandSearch(rexBuilder, null, predicate));
 
       RelOptUtil.classifyFilters(
           rel,

@@ -55,7 +55,8 @@ public abstract class DrillFilterRelBase extends Filter implements DrillRelNode 
 
     // save the number of conjuncts that make up the filter condition such
     // that repeated calls to the costing function can use the saved copy
-    conjunctions = RelOptUtil.conjunctions(condition);
+    conjunctions = RelOptUtil.conjunctions(
+      RexUtil.expandSearch(cluster.getRexBuilder(), null, condition));
     numConjuncts = conjunctions.size();
     // assert numConjuncts >= 1;
 
