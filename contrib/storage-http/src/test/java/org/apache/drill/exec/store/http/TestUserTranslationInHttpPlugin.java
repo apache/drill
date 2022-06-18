@@ -18,11 +18,7 @@
 
 package org.apache.drill.exec.store.http;
 
-import okhttp3.Cookie;
-import okhttp3.CookieJar;
 import okhttp3.Headers;
-import okhttp3.HttpUrl;
-import okhttp3.OkHttpClient;
 import okhttp3.mockwebserver.MockResponse;
 import okhttp3.mockwebserver.MockWebServer;
 import okhttp3.mockwebserver.RecordedRequest;
@@ -54,7 +50,6 @@ import org.apache.drill.test.ClusterFixtureBuilder;
 import org.apache.drill.test.ClusterTest;
 import org.apache.drill.test.QueryBuilder.QuerySummary;
 import org.apache.drill.test.rowSet.RowSetUtilities;
-import org.jetbrains.annotations.NotNull;
 import org.junit.After;
 import org.junit.BeforeClass;
 import org.junit.ClassRule;
@@ -63,11 +58,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
-import java.util.concurrent.TimeUnit;
 
 import static org.apache.drill.exec.rpc.user.security.testing.UserAuthenticatorTestImpl.TEST_USER_1;
 import static org.apache.drill.exec.rpc.user.security.testing.UserAuthenticatorTestImpl.TEST_USER_1_PASSWORD;
@@ -82,15 +74,7 @@ import static org.junit.Assert.fail;
 public class TestUserTranslationInHttpPlugin extends ClusterTest {
   private static final Logger logger = LoggerFactory.getLogger(TestUserTranslationInHttpPlugin.class);
 
-  private static final int MOCK_SERVER_PORT = 47775;
-  private static final int TIMEOUT = 30;
-  private final OkHttpClient httpClient = new OkHttpClient
-    .Builder()
-    .connectTimeout(TIMEOUT, TimeUnit.SECONDS)
-    .writeTimeout(TIMEOUT, TimeUnit.SECONDS)
-    .readTimeout(TIMEOUT, TimeUnit.SECONDS)
-    .cookieJar(new TestCookieJar())
-    .build();
+  private static final int MOCK_SERVER_PORT = 47778;
   private static String TEST_JSON_RESPONSE_WITH_DATATYPES;
   private static String ACCESS_TOKEN_RESPONSE;
   private static int portNumber;
@@ -298,13 +282,13 @@ public class TestUserTranslationInHttpPlugin extends ClusterTest {
    * @return Started Mock server
    * @throws IOException If the server cannot start, throws IOException
    */
-  public static MockWebServer startServer() throws IOException {
+  private static MockWebServer startServer() throws IOException {
     MockWebServer server = new MockWebServer();
     server.start(MOCK_SERVER_PORT);
     return server;
   }
 
-  public static String makeUrl(String url) {
+  private static String makeUrl(String url) {
     return String.format(url, MOCK_SERVER_PORT);
   }
 
@@ -312,22 +296,5 @@ public class TestUserTranslationInHttpPlugin extends ClusterTest {
     String pair = username + ":" + password;
     byte[] encodedBytes = Base64.encodeBase64(pair.getBytes());
     return "Basic " + new String(encodedBytes);
-  }
-
-  public static class TestCookieJar implements CookieJar {
-    private List<Cookie> cookies;
-
-    @Override
-    public void saveFromResponse(HttpUrl url, List<Cookie> cookies) {
-      this.cookies = cookies;
-    }
-
-    @Override
-    public List<Cookie> loadForRequest(@NotNull HttpUrl url) {
-      if (cookies != null) {
-        return cookies;
-      }
-      return new ArrayList<>();
-    }
   }
 }

@@ -59,7 +59,7 @@ import static org.junit.Assert.fail;
 public class TestOAuthProcess extends ClusterTest {
 
   private static final Logger logger = LoggerFactory.getLogger(TestOAuthProcess.class);
-  private static final int MOCK_SERVER_PORT = 47775;
+  private static final int MOCK_SERVER_PORT = 47779;
 
   private static final int TIMEOUT = 30;
   private static final String CONNECTION_NAME = "localOauth";
