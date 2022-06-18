@@ -26,6 +26,7 @@ import java.sql.Time;
 import java.sql.Timestamp;
 import java.sql.Types;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -320,8 +321,14 @@ public class DrillMetaImpl extends MetaImpl {
 
         Meta.Frame frame = Meta.Frame.create(0, true, tables);
         StructType fieldMetaData = drillFieldMetaData(clazz);
+        List<String> fieldNames = fieldMetaData.columns.stream()
+          .map(c -> c.columnName)
+          .collect(Collectors.toList());
+        List<Field> fields = Arrays.stream(clazz.getFields())
+          .filter(field -> Modifier.isPublic(field.getModifiers()) && !Modifier.isStatic(field.getModifiers()))
+          .collect(Collectors.toList());
         Meta.Signature signature = Meta.Signature.create(fieldMetaData.columns, "", Collections.emptyList(),
-            CursorFactory.record(clazz), Meta.StatementType.SELECT);
+            CursorFactory.record(clazz, fields, fieldNames), Meta.StatementType.SELECT);
 
         AvaticaStatement statement = connection.createStatement();
         return MetaResultSet.create(connection.id, statement.getId(), true,

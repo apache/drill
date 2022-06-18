@@ -147,4 +147,9 @@ public class DrillCalciteSqlOperatorWrapper extends SqlOperator implements Drill
       return super.inferReturnType(opBinding);
     }
   }
+
+  @Override
+  public SqlOperator reverse() {
+    return operator.reverse();
+  }
 }

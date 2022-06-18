@@ -17,7 +17,7 @@
  */
 package org.apache.drill.exec.store.cassandra;
 
-import com.datastax.driver.core.Duration;
+import com.datastax.oss.driver.api.core.data.CqlDuration;
 import org.apache.drill.common.types.TypeProtos;
 import org.apache.drill.exec.record.ColumnConverter;
 import org.apache.drill.exec.record.ColumnConverterFactory;
@@ -67,7 +67,7 @@ public class CassandraColumnConverterFactory extends ColumnConverterFactory {
     switch (readerSchema.type()) {
       case INTERVAL:
         return new ColumnConverter.ScalarColumnConverter(value -> {
-          Duration duration = (Duration) value;
+          CqlDuration duration = (CqlDuration) value;
           writer.setPeriod(Period.parse(duration.toString(), FORMATTER));
         });
       case BIGINT:
@@ -128,7 +128,7 @@ public class CassandraColumnConverterFactory extends ColumnConverterFactory {
 
     @Override
     protected TypeProtos.MinorType getScalarMinorType(Class<?> clazz) {
-      if (clazz == Duration.class) {
+      if (clazz == CqlDuration.class) {
         return TypeProtos.MinorType.INTERVAL;
       } else if (clazz == Inet4Address.class
         || clazz == UUID.class) {

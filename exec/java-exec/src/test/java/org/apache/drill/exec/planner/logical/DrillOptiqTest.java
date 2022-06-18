@@ -17,6 +17,7 @@
  */
 package org.apache.drill.exec.planner.logical;
 
+import org.apache.calcite.rex.RexWindowBounds;
 import org.apache.drill.common.util.GuavaUtils;
 import org.apache.drill.shaded.guava.com.google.common.collect.ImmutableList;
 import org.apache.calcite.rel.RelNode;
@@ -32,12 +33,13 @@ import org.apache.drill.categories.PlannerTest;
 import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.exec.planner.types.DrillRelDataTypeSystem;
 import org.apache.drill.test.BaseTest;
-import org.junit.Assert;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
 import java.util.LinkedList;
 import java.util.List;
+
+import static org.junit.Assert.fail;
 
 @Category(PlannerTest.class)
 public class DrillOptiqTest extends BaseTest {
@@ -58,16 +60,17 @@ public class DrillOptiqTest extends BaseTest {
 
       // create a dummy RexOver object.
       RexNode window = rex.makeOver(anyType, SqlStdOperatorTable.AVG, emptyList, emptyList, GuavaUtils.convertToUnshadedImmutableList(e),
-          null, null, true, false, false, false);
+        RexWindowBounds.UNBOUNDED_PRECEDING, RexWindowBounds.UNBOUNDED_PRECEDING, true, false, false, false, false);
       DrillOptiq.toDrill(null, (RelNode) null, window);
+      fail();
     } catch (UserException e) {
       if (e.getMessage().contains(DrillOptiq.UNSUPPORTED_REX_NODE_ERROR)) {
         // got expected error return
         return;
       }
-      Assert.fail("Hit exception with unexpected error message");
+      fail("Hit exception with unexpected error message");
     }
 
-    Assert.fail("Failed to raise the expected exception");
+    fail("Failed to raise the expected exception");
   }
 }

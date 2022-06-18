@@ -55,7 +55,7 @@ public class PhoenixPrel extends AbstractRelNode implements Prel {
     convention = (PhoenixConvention) input.getTraitSet().getTrait(ConventionTraitDef.INSTANCE);
     final SqlDialect dialect = convention.getPlugin().getDialect();
     final JdbcImplementor jdbcImplementor = new PhoenixImplementor(dialect, (JavaTypeFactory) getCluster().getTypeFactory());
-    final JdbcImplementor.Result result = jdbcImplementor.visitChild(0, input.accept(SubsetRemover.INSTANCE));
+    final JdbcImplementor.Result result = jdbcImplementor.visitRoot(input.accept(SubsetRemover.INSTANCE));
     sql = result.asStatement().toSqlString(dialect).getSql();
     rowType = input.getRowType();
   }

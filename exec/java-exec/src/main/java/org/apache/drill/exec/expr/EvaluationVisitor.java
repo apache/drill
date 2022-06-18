@@ -910,7 +910,7 @@ public class EvaluationVisitor {
     }
 
     private JVar getDateTimeKey(PathSegment segment, ClassGenerator<?> generator, Class<?> javaClass, String methodName) {
-      String strValue = (String) segment.getOriginalValue();
+      String strValue = segment.getNameSegment().getPath();
 
       JClass dateUtilityClass = generator.getModel().ref(org.apache.drill.exec.expr.fn.impl.DateUtility.class);
       JExpression newKeyObject = dateUtilityClass.staticInvoke(methodName).arg(JExpr.lit(strValue));

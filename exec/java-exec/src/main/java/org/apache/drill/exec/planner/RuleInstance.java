@@ -20,14 +20,7 @@ package org.apache.drill.exec.planner;
 import org.apache.calcite.plan.RelOptRule;
 import org.apache.calcite.plan.RelOptRuleCall;
 import org.apache.calcite.plan.volcano.AbstractConverter;
-import org.apache.calcite.rel.core.Aggregate;
 import org.apache.calcite.rel.core.Join;
-import org.apache.calcite.rel.core.Project;
-import org.apache.calcite.rel.logical.LogicalAggregate;
-import org.apache.calcite.rel.logical.LogicalCalc;
-import org.apache.calcite.rel.logical.LogicalJoin;
-import org.apache.calcite.rel.logical.LogicalProject;
-import org.apache.calcite.rel.logical.LogicalUnion;
 import org.apache.calcite.rel.rules.AggregateExpandDistinctAggregatesRule;
 import org.apache.calcite.rel.rules.AggregateRemoveRule;
 import org.apache.calcite.rel.rules.FilterCorrelateRule;
@@ -55,16 +48,17 @@ import org.apache.drill.shaded.guava.com.google.common.base.Preconditions;
  */
 public interface RuleInstance {
 
-  ReduceExpressionsRule PROJECT_INSTANCE =
-      new ReduceExpressionsRule.ProjectReduceExpressionsRule(LogicalProject.class, true,
-          DrillRelFactories.LOGICAL_BUILDER);
+  RelOptRule UNION_TO_DISTINCT_RULE =
+    UnionToDistinctRule.Config.DEFAULT
+      .withRelBuilderFactory(DrillRelFactories.LOGICAL_BUILDER)
+      .toRule();
 
-  UnionToDistinctRule UNION_TO_DISTINCT_RULE =
-      new UnionToDistinctRule(LogicalUnion.class,
-          DrillRelFactories.LOGICAL_BUILDER);
+  RelOptRule SEMI_JOIN_PROJECT_RULE = new SemiJoinRule.ProjectToSemiJoinRule(
+    SemiJoinRule.ProjectToSemiJoinRule.ProjectToSemiJoinRuleConfig.DEFAULT
+      .withRelBuilderFactory(DrillRelFactories.LOGICAL_BUILDER)
+      .withDescription("DrillSemiJoinRule:project")
+      .as(SemiJoinRule.ProjectToSemiJoinRule.ProjectToSemiJoinRuleConfig.class)) {
 
-  SemiJoinRule SEMI_JOIN_PROJECT_RULE = new SemiJoinRule.ProjectToSemiJoinRule(Project.class, Join.class, Aggregate.class,
-          DrillRelFactories.LOGICAL_BUILDER, "DrillSemiJoinRule:project") {
     public boolean matches(RelOptRuleCall call) {
       Preconditions.checkArgument(call.rel(1) instanceof Join);
       Join join = call.rel(1);
@@ -72,74 +66,105 @@ public interface RuleInstance {
     }
   };
 
-  SemiJoinRule JOIN_TO_SEMI_JOIN_RULE = new SemiJoinRule.JoinToSemiJoinRule(Join.class, Aggregate.class,
-    DrillRelFactories.LOGICAL_BUILDER, "DrillJoinToSemiJoinRule") {
+  SemiJoinRule JOIN_TO_SEMI_JOIN_RULE = new SemiJoinRule.JoinToSemiJoinRule(
+    SemiJoinRule.JoinToSemiJoinRule.JoinToSemiJoinRuleConfig.DEFAULT
+      .withRelBuilderFactory(DrillRelFactories.LOGICAL_BUILDER)
+      .withDescription("DrillJoinToSemiJoinRule")
+      .as(SemiJoinRule.JoinToSemiJoinRule.JoinToSemiJoinRuleConfig.class)) {
     public boolean matches(RelOptRuleCall call) {
       Join join = call.rel(0);
       return !(join.getCondition().isAlwaysTrue() || join.getCondition().isAlwaysFalse());
     }
   };
 
-  JoinPushExpressionsRule JOIN_PUSH_EXPRESSIONS_RULE =
-      new JoinPushExpressionsRule(Join.class,
-          DrillRelFactories.LOGICAL_BUILDER);
+  RelOptRule JOIN_PUSH_EXPRESSIONS_RULE =
+    JoinPushExpressionsRule.Config.DEFAULT
+      .withRelBuilderFactory(DrillRelFactories.LOGICAL_BUILDER)
+      .toRule();
 
-  FilterMergeRule FILTER_MERGE_RULE =
-      new FilterMergeRule(DrillRelFactories.LOGICAL_BUILDER);
+  RelOptRule FILTER_MERGE_RULE =
+    FilterMergeRule.Config.DEFAULT
+      .withRelBuilderFactory(DrillRelFactories.LOGICAL_BUILDER)
+      .toRule();
 
-  FilterMergeRule DRILL_FILTER_MERGE_RULE =
-      new FilterMergeRule(DrillRelBuilder.proto(DrillRelFactories.DRILL_LOGICAL_FILTER_FACTORY));
+  RelOptRule DRILL_FILTER_MERGE_RULE =
+    FilterMergeRule.Config.DEFAULT
+      .withRelBuilderFactory(DrillRelBuilder.proto(DrillRelFactories.DRILL_LOGICAL_FILTER_FACTORY))
+      .toRule();
 
-  FilterCorrelateRule FILTER_CORRELATE_RULE =
-      new FilterCorrelateRule(DrillRelFactories.LOGICAL_BUILDER);
+  RelOptRule FILTER_CORRELATE_RULE =
+    FilterCorrelateRule.Config.DEFAULT
+      .withRelBuilderFactory(DrillRelFactories.LOGICAL_BUILDER)
+      .toRule();
 
-  AggregateRemoveRule AGGREGATE_REMOVE_RULE =
-      new AggregateRemoveRule(LogicalAggregate.class, DrillRelFactories.LOGICAL_BUILDER);
+  RelOptRule AGGREGATE_REMOVE_RULE =
+    AggregateRemoveRule.Config.DEFAULT
+      .withRelBuilderFactory(DrillRelFactories.LOGICAL_BUILDER)
+      .toRule();
 
-  AggregateExpandDistinctAggregatesRule AGGREGATE_EXPAND_DISTINCT_AGGREGATES_RULE =
-      new AggregateExpandDistinctAggregatesRule(LogicalAggregate.class, false,
-          DrillRelFactories.LOGICAL_BUILDER);
+  RelOptRule AGGREGATE_EXPAND_DISTINCT_AGGREGATES_RULE =
+    AggregateExpandDistinctAggregatesRule.Config.JOIN
+      .withRelBuilderFactory(DrillRelFactories.LOGICAL_BUILDER)
+      .toRule();
 
   /**
    * Instance of the rule that works on logical joins only, and pushes to the
    * right.
    */
   RelOptRule JOIN_PUSH_THROUGH_JOIN_RULE_RIGHT =
-      new JoinPushThroughJoinRule("JoinPushThroughJoinRule:right", true,
-          LogicalJoin.class, DrillRelFactories.LOGICAL_BUILDER);
+    JoinPushThroughJoinRule.Config.RIGHT
+      .withRelBuilderFactory(DrillRelFactories.LOGICAL_BUILDER)
+      .toRule();
 
   /**
    * Instance of the rule that works on logical joins only, and pushes to the
    * left.
    */
   RelOptRule JOIN_PUSH_THROUGH_JOIN_RULE_LEFT =
-      new JoinPushThroughJoinRule("JoinPushThroughJoinRule:left", false,
-          LogicalJoin.class, DrillRelFactories.LOGICAL_BUILDER);
+    JoinPushThroughJoinRule.Config.LEFT
+      .withRelBuilderFactory(DrillRelFactories.LOGICAL_BUILDER)
+      .toRule();
 
-  ReduceExpressionsRule CALC_INSTANCE =
-      new ReduceExpressionsRule.CalcReduceExpressionsRule(LogicalCalc.class, true,
-          DrillRelFactories.LOGICAL_BUILDER);
+  RelOptRule CALC_INSTANCE =
+    ReduceExpressionsRule.CalcReduceExpressionsRule.CalcReduceExpressionsRuleConfig.DEFAULT
+      .withRelBuilderFactory(DrillRelFactories.LOGICAL_BUILDER)
+      .toRule();
 
-  FilterSetOpTransposeRule FILTER_SET_OP_TRANSPOSE_RULE =
-      new FilterSetOpTransposeRule(DrillRelFactories.LOGICAL_BUILDER);
+  RelOptRule FILTER_SET_OP_TRANSPOSE_RULE =
+    FilterSetOpTransposeRule.Config.DEFAULT
+      .withRelBuilderFactory(DrillRelFactories.LOGICAL_BUILDER)
+      .toRule();
 
-  ProjectSetOpTransposeRule PROJECT_SET_OP_TRANSPOSE_RULE =
-      new ProjectSetOpTransposeRule(DrillConditions.PRESERVE_ITEM, DrillRelFactories.LOGICAL_BUILDER);
+  RelOptRule PROJECT_SET_OP_TRANSPOSE_RULE =
+    ProjectSetOpTransposeRule.Config.DEFAULT
+      .withPreserveExprCondition(DrillConditions.PRESERVE_ITEM)
+      .withRelBuilderFactory(DrillRelFactories.LOGICAL_BUILDER)
+      .toRule();
 
-  ProjectRemoveRule PROJECT_REMOVE_RULE =
-      new ProjectRemoveRule(DrillRelFactories.LOGICAL_BUILDER);
+  RelOptRule PROJECT_REMOVE_RULE =
+    ProjectRemoveRule.Config.DEFAULT
+      .withRelBuilderFactory(DrillRelFactories.LOGICAL_BUILDER)
+      .toRule();
 
-  ProjectToWindowRule PROJECT_TO_LOGICAL_PROJECT_AND_WINDOW_RULE =
-      new ProjectToWindowRule.ProjectToLogicalProjectAndWindowRule(DrillRelFactories.LOGICAL_BUILDER);
+  RelOptRule PROJECT_TO_LOGICAL_PROJECT_AND_WINDOW_RULE =
+    ProjectToWindowRule.ProjectToLogicalProjectAndWindowRule.ProjectToLogicalProjectAndWindowRuleConfig.DEFAULT
+      .withRelBuilderFactory(DrillRelFactories.LOGICAL_BUILDER)
+      .toRule();
 
-  SortRemoveRule SORT_REMOVE_RULE =
-      new SortRemoveRule(DrillRelFactories.LOGICAL_BUILDER);
+  RelOptRule SORT_REMOVE_RULE =
+    SortRemoveRule.Config.DEFAULT
+      .withRelBuilderFactory(DrillRelFactories.LOGICAL_BUILDER)
+      .toRule();
 
-  ProjectWindowTransposeRule PROJECT_WINDOW_TRANSPOSE_RULE =
-      new ProjectWindowTransposeRule(DrillRelFactories.LOGICAL_BUILDER);
+  RelOptRule PROJECT_WINDOW_TRANSPOSE_RULE =
+    ProjectWindowTransposeRule.Config.DEFAULT
+      .withRelBuilderFactory(DrillRelFactories.LOGICAL_BUILDER)
+      .toRule();
 
-  AbstractConverter.ExpandConversionRule EXPAND_CONVERSION_RULE =
-      new AbstractConverter.ExpandConversionRule(DrillRelFactories.LOGICAL_BUILDER);
+  RelOptRule EXPAND_CONVERSION_RULE =
+    AbstractConverter.ExpandConversionRule.Config.DEFAULT
+      .withRelBuilderFactory(DrillRelFactories.LOGICAL_BUILDER)
+      .toRule();
 
   /**
    * Instance of the rule that infers predicates from on a
@@ -147,19 +172,29 @@ public interface RuleInstance {
    * {@link org.apache.calcite.rel.core.Filter}s if those predicates can be pushed
    * to its inputs.
    */
-  JoinPushTransitivePredicatesRule DRILL_JOIN_PUSH_TRANSITIVE_PREDICATES_RULE =
-      new JoinPushTransitivePredicatesRule(Join.class, DrillRelBuilder.proto(
-          DrillRelFactories.DRILL_LOGICAL_JOIN_FACTORY, DrillRelFactories.DRILL_LOGICAL_FILTER_FACTORY));
+  RelOptRule DRILL_JOIN_PUSH_TRANSITIVE_PREDICATES_RULE =
+    JoinPushTransitivePredicatesRule.Config.DEFAULT
+      .withRelBuilderFactory(DrillRelBuilder.proto(
+        DrillRelFactories.DRILL_LOGICAL_JOIN_FACTORY, DrillRelFactories.DRILL_LOGICAL_FILTER_FACTORY))
+      .toRule();
 
-  FilterRemoveIsNotDistinctFromRule REMOVE_IS_NOT_DISTINCT_FROM_RULE =
-      new FilterRemoveIsNotDistinctFromRule(DrillRelBuilder.proto(DrillRelFactories.DRILL_LOGICAL_FILTER_FACTORY));
+  RelOptRule REMOVE_IS_NOT_DISTINCT_FROM_RULE =
+    FilterRemoveIsNotDistinctFromRule.Config.DEFAULT
+      .withRelBuilderFactory(DrillRelBuilder.proto(DrillRelFactories.DRILL_LOGICAL_FILTER_FACTORY))
+      .toRule();
 
-  SubQueryRemoveRule SUB_QUERY_FILTER_REMOVE_RULE =
-      new SubQueryRemoveRule.SubQueryFilterRemoveRule(DrillRelFactories.LOGICAL_BUILDER);
+  RelOptRule SUB_QUERY_FILTER_REMOVE_RULE =
+      SubQueryRemoveRule.Config.FILTER
+        .withRelBuilderFactory(DrillRelFactories.LOGICAL_BUILDER)
+        .toRule();
 
-  SubQueryRemoveRule SUB_QUERY_PROJECT_REMOVE_RULE =
-      new SubQueryRemoveRule.SubQueryProjectRemoveRule(DrillRelFactories.LOGICAL_BUILDER);
+  RelOptRule SUB_QUERY_PROJECT_REMOVE_RULE =
+    SubQueryRemoveRule.Config.PROJECT
+      .withRelBuilderFactory(DrillRelFactories.LOGICAL_BUILDER)
+      .toRule();
 
-  SubQueryRemoveRule SUB_QUERY_JOIN_REMOVE_RULE =
-      new SubQueryRemoveRule.SubQueryJoinRemoveRule(DrillRelFactories.LOGICAL_BUILDER);
+  RelOptRule SUB_QUERY_JOIN_REMOVE_RULE =
+    SubQueryRemoveRule.Config.JOIN
+      .withRelBuilderFactory(DrillRelFactories.LOGICAL_BUILDER)
+      .toRule();
 }

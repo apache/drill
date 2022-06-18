@@ -34,6 +34,7 @@ public class SqlSelectBuilder {
   private SqlNodeList orderBy;
   private SqlNode offset;
   private SqlNode fetch;
+  private SqlNodeList hints;
 
   public SqlSelectBuilder parserPosition(SqlParserPos parserPosition) {
     this.parserPosition = parserPosition;
@@ -90,8 +91,14 @@ public class SqlSelectBuilder {
     return this;
   }
 
+  public SqlSelectBuilder hints(SqlNodeList hints) {
+    this.hints = hints;
+    return this;
+  }
+
   public SqlSelect build() {
-    return new SqlSelect(parserPosition, keywordList, selectList, from, where, groupBy, having, windowDecls, orderBy, offset, fetch);
+    return new SqlSelect(parserPosition, keywordList, selectList, from,
+      where, groupBy, having, windowDecls, orderBy, offset, fetch, hints);
   }
 
 }

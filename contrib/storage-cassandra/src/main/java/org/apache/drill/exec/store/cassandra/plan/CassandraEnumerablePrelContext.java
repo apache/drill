@@ -24,6 +24,7 @@ import org.apache.calcite.linq4j.tree.ClassDeclaration;
 import org.apache.calcite.linq4j.tree.Expressions;
 import org.apache.calcite.plan.RelOptCluster;
 import org.apache.calcite.rel.RelNode;
+import org.apache.calcite.rel.convert.ConverterRule;
 import org.apache.calcite.rel.core.TableScan;
 import org.apache.calcite.rel.type.RelDataTypeField;
 import org.apache.drill.exec.planner.common.DrillRelOptUtil;
@@ -48,7 +49,7 @@ public class CassandraEnumerablePrelContext implements EnumerablePrelContext {
   @Override
   public String generateCode(RelOptCluster cluster, RelNode relNode) {
     RelNode enumerableRel =
-        CassandraToEnumerableConverterRule.INSTANCE.convert(relNode);
+      CassandraToEnumerableConverterRule.DEFAULT_CONFIG.toRule(ConverterRule.class).convert(relNode);
 
     ClassDeclaration classDeclaration = new EnumerableRelImplementor(cluster.getRexBuilder(), Collections.emptyMap())
         .implementRoot((EnumerableRel) enumerableRel, EnumerableRel.Prefer.ARRAY);

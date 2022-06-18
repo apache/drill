@@ -34,6 +34,9 @@ public class DrillRelDataTypeSystem extends RelDataTypeSystemImpl {
       case VARCHAR:
       case VARBINARY:
         return Types.MAX_VARCHAR_LENGTH;
+      case TIMESTAMP:
+      case TIME:
+        return Types.DEFAULT_TIMESTAMP_PRECISION;
       default:
         return super.getDefaultPrecision(typeName);
     }

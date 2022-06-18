@@ -30,6 +30,7 @@ import org.apache.calcite.tools.RelBuilderFactory;
 import org.apache.calcite.util.Util;
 
 public class DrillRelBuilder extends RelBuilder {
+  public static final int DISABLE_MERGE_PROJECT = -1;
   private final RelFactories.FilterFactory filterFactory;
 
   protected DrillRelBuilder(Context context, RelOptCluster cluster, RelOptSchema relOptSchema) {
@@ -59,7 +60,11 @@ public class DrillRelBuilder extends RelBuilder {
   /** Creates a {@link RelBuilderFactory}, a partially-created DrillRelBuilder.
    * Just add a {@link RelOptCluster} and a {@link RelOptSchema} */
   public static RelBuilderFactory proto(final Context context) {
-    return (cluster, schema) -> new DrillRelBuilder(context, cluster, schema);
+    Config conf = Util.first(context.unwrap(Config.class), Config.DEFAULT)
+      .withBloat(DISABLE_MERGE_PROJECT)
+      .withSimplify(false);
+    Context drillContext = Contexts.chain(Contexts.of(conf), context);
+    return (cluster, schema) -> new DrillRelBuilder(drillContext, cluster, schema);
   }
 
   /** Creates a {@link RelBuilderFactory} that uses a given set of factories. */
@@ -67,13 +72,4 @@ public class DrillRelBuilder extends RelBuilder {
     return proto(Contexts.of(factories));
   }
 
-  /**
-   * Disables combining of consecutive {@link org.apache.calcite.rel.core.Project} nodes.
-   * See comments under CALCITE-2470 for details.
-   * @return false
-   */
-  @Override
-  protected boolean shouldMergeProject() {
-    return false;
-  }
 }

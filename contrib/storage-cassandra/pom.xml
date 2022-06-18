@@ -47,7 +47,7 @@
           <artifactId>commons-logging</artifactId>
         </exclusion>
         <exclusion>
-          <groupId>com.datastax.cassandra</groupId>
+          <groupId>com.datastax.oss</groupId>
           <artifactId>cassandra-driver-core</artifactId>
         </exclusion>
         <exclusion>
@@ -59,7 +59,12 @@
     <dependency>
       <groupId>com.scylladb</groupId>
       <artifactId>scylla-driver-core</artifactId>
-      <version>3.10.2-scylla-1</version>
+      <version>3.11.2.0</version>
+    </dependency>
+    <dependency>
+      <groupId>com.scylladb</groupId>
+      <artifactId>java-driver-core-shaded</artifactId>
+      <version>4.13.0.0</version>
     </dependency>
     <dependency>
       <groupId>org.ow2.asm</groupId>

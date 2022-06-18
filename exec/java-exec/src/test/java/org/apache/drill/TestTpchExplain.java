@@ -25,7 +25,6 @@ import org.junit.experimental.categories.Category;
 
 @Category(PlannerTest.class)
 public class TestTpchExplain extends BaseTestQuery {
-  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(TestTpchExplain.class);
 
   private static final String EXPLAIN_PREFIX = "EXPLAIN PLAN FOR ";
 
@@ -42,7 +41,6 @@ public class TestTpchExplain extends BaseTestQuery {
   }
 
   @Test
-  @Ignore // DRILL-512
   public void tpch02() throws Exception{
     doExplain("queries/tpch/02.sql");
   }
@@ -88,7 +86,6 @@ public class TestTpchExplain extends BaseTestQuery {
   }
 
   @Test
-  @Ignore // cartesion problem
   public void tpch11() throws Exception{
     doExplain("queries/tpch/11.sql");
   }
@@ -115,7 +112,6 @@ public class TestTpchExplain extends BaseTestQuery {
   }
 
   @Test
-  @Ignore // invalid plan, due to Nulls value NOT IN sub-q
   public void tpch16() throws Exception{
     doExplain("queries/tpch/16.sql");
   }
@@ -153,7 +149,6 @@ public class TestTpchExplain extends BaseTestQuery {
   }
 
   @Test
-  @Ignore // DRILL-518
   public void tpch22() throws Exception{
     doExplain("queries/tpch/22.sql");
   }

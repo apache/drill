@@ -615,7 +615,7 @@ public class TestHBaseFilterPushDown extends BaseHBaseTest {
 
     runHBaseSQLVerifyCount(sql, 5);
 
-    final String[] expectedPlan = {".*startRow=\"\", stopRow=\"\", filter=\"FilterList OR.*GREATER_OR_EQUAL, b5.*LESS_OR_EQUAL, a2.*\""};
+    final String[] expectedPlan = {".*startRow=\"\", stopRow=\"\", filter=\"FilterList OR.*LESS_OR_EQUAL, a2.*GREATER_OR_EQUAL, b5.*\""};
     final String[] excludedPlan ={};
     final String sqlHBase = canonizeHBaseSQL(sql);
     PlanTestBase.testPlanMatchingPatterns(sqlHBase, expectedPlan, excludedPlan);
@@ -631,7 +631,7 @@ public class TestHBaseFilterPushDown extends BaseHBaseTest {
         + "WHERE\n"
         + "  (row_key >= 'b5' OR row_key <= 'a2') AND (t.f.c1 >= '1' OR t.f.c1 is null)";
 
-    final String[] expectedPlan = {".*startRow=\"\", stopRow=\"\", filter=\"FilterList OR.*GREATER_OR_EQUAL, b5.*LESS_OR_EQUAL, a2.*\""};
+    final String[] expectedPlan = {".*startRow=\"\", stopRow=\"\", filter=\"FilterList OR.*LESS_OR_EQUAL, a2.*GREATER_OR_EQUAL, b5.*\""};
     final String[] excludedPlan ={};
     final String sqlHBase = canonizeHBaseSQL(sql);
     PlanTestBase.testPlanMatchingPatterns(sqlHBase, expectedPlan, excludedPlan);
@@ -734,7 +734,7 @@ public class TestHBaseFilterPushDown extends BaseHBaseTest {
 
     runHBaseSQLVerifyCount(sql, 2);
 
-    final String[] expectedPlan = {".*startRow=\"a2\", stopRow=\"b4\\\\x00\", filter=\"FilterList OR \\(2/2\\): \\[RowFilter \\(EQUAL, b4\\), RowFilter \\(EQUAL, a2\\).*\""};
+    final String[] expectedPlan = {".*startRow=\"a2\", stopRow=\"b4\\\\x00\", filter=\"FilterList OR \\(2/2\\): \\[RowFilter \\(EQUAL, a2\\), RowFilter \\(EQUAL, b4\\).*\""};
     final String[] excludedPlan ={};
     final String sqlHBase = canonizeHBaseSQL(sql);
     PlanTestBase.testPlanMatchingPatterns(sqlHBase, expectedPlan, excludedPlan);
@@ -753,7 +753,7 @@ public class TestHBaseFilterPushDown extends BaseHBaseTest {
 
     runHBaseSQLVerifyCount(sql, 2);
 
-    final String[] expectedPlan = {".*startRow=\"a2\", stopRow=\"b4\\\\x00\", filter=\"FilterList OR \\(2/2\\): \\[RowFilter \\(EQUAL, b4\\), RowFilter \\(EQUAL, a2\\).*\""};
+    final String[] expectedPlan = {".*startRow=\"a2\", stopRow=\"b4\\\\x00\", filter=\"FilterList OR \\(2/2\\): \\[RowFilter \\(EQUAL, a2\\), RowFilter \\(EQUAL, b4\\).*\""};
     final String[] excludedPlan ={};
     final String sqlHBase = canonizeHBaseSQL(sql);
     PlanTestBase.testPlanMatchingPatterns(sqlHBase, expectedPlan, excludedPlan);

@@ -18,10 +18,12 @@
 package org.apache.drill.exec.planner.sql.conversion;
 
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 
 import org.apache.calcite.adapter.java.JavaTypeFactory;
+import org.apache.calcite.avatica.util.Casing;
 import org.apache.calcite.jdbc.DynamicSchema;
 import org.apache.calcite.jdbc.JavaTypeFactoryImpl;
 import org.apache.calcite.plan.ConventionTraitDef;
@@ -37,27 +39,29 @@ import org.apache.calcite.rel.metadata.JaninoRelMetadataProvider;
 import org.apache.calcite.rel.type.RelDataType;
 import org.apache.calcite.rex.RexBuilder;
 import org.apache.calcite.rex.RexNode;
-import org.apache.calcite.runtime.Hook;
 import org.apache.calcite.schema.SchemaPlus;
 import org.apache.calcite.sql.SqlNode;
 import org.apache.calcite.sql.SqlOperatorTable;
 import org.apache.calcite.sql.parser.SqlParseException;
 import org.apache.calcite.sql.parser.SqlParser;
 import org.apache.calcite.sql.util.ChainedSqlOperatorTable;
+import org.apache.calcite.sql.validate.SqlConformance;
 import org.apache.calcite.sql2rel.SqlToRelConverter;
 import org.apache.drill.common.config.DrillConfig;
 import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.expr.fn.FunctionImplementationRegistry;
 import org.apache.drill.exec.ops.QueryContext;
+import org.apache.drill.exec.planner.DrillRelBuilder;
 import org.apache.drill.exec.planner.cost.DrillCostBase;
 import org.apache.drill.exec.planner.logical.DrillConstExecutor;
 import org.apache.drill.exec.planner.logical.DrillRelFactories;
 import org.apache.drill.exec.planner.physical.DrillDistributionTraitDef;
 import org.apache.drill.exec.planner.physical.PlannerSettings;
+import org.apache.drill.exec.planner.sql.DrillConformance;
 import org.apache.drill.exec.planner.sql.DrillConvertletTable;
-import org.apache.drill.exec.planner.sql.DrillParserConfig;
 import org.apache.drill.exec.planner.sql.SchemaUtilites;
+import org.apache.drill.exec.planner.sql.parser.impl.DrillParserWithCompoundIdConverter;
 import org.apache.drill.exec.planner.sql.parser.impl.DrillSqlParseException;
 import org.apache.drill.exec.planner.types.DrillRelDataTypeSystem;
 import org.apache.drill.exec.rpc.user.UserSession;
@@ -75,6 +79,7 @@ import org.slf4j.LoggerFactory;
  */
 public class SqlConverter {
   private static final Logger logger = LoggerFactory.getLogger(SqlConverter.class);
+  public final static SqlConformance DRILL_CONFORMANCE = new DrillConformance();
 
   private final JavaTypeFactory typeFactory;
   private final SqlParser.Config parserConfig;
@@ -93,31 +98,36 @@ public class SqlConverter {
   private final UserSession session;
   private final DrillConfig drillConfig;
   // Allow the default config to be modified using immutable configs
-  private SqlToRelConverter.Config sqlToRelConverterConfig;
+  private final SqlToRelConverter.Config sqlToRelConverterConfig;
   private RelOptCluster cluster;
   private VolcanoPlanner planner;
   private boolean useRootSchema = false;
-
-  static {
-    /*
-     * Sets value to false to avoid simplifying project expressions
-     * during creating new projects since it may cause changing data mode
-     * which causes to assertion errors during type validation
-     */
-    Hook.REL_BUILDER_SIMPLIFY.add(Hook.propertyJ(false));
-  }
 
   public SqlConverter(QueryContext context) {
     this.settings = context.getPlannerSettings();
     this.util = context;
     this.functions = context.getFunctionRegistry();
-    this.parserConfig = new DrillParserConfig(settings);
-    this.sqlToRelConverterConfig = SqlToRelConverter.configBuilder()
+    this.parserConfig = SqlParser.Config.DEFAULT
+      .withIdentifierMaxLength((int) settings.getIdentifierMaxLength())
+      .withQuoting(settings.getQuotingIdentifiers())
+      .withParserFactory(DrillParserWithCompoundIdConverter.FACTORY)
+      .withCaseSensitive(false)
+      .withConformance(DRILL_CONFORMANCE)
+      .withUnquotedCasing(Casing.UNCHANGED)
+      .withQuotedCasing(Casing.UNCHANGED);
+    this.sqlToRelConverterConfig = SqlToRelConverter.config()
         .withInSubQueryThreshold((int) settings.getInSubqueryThreshold())
-        .withConvertTableAccess(false)
+        .withRemoveSortInSubQuery(false)
+        .withRelBuilderConfigTransform(t -> t
+          .withSimplify(false)
+          .withAggregateUnique(true)
+          .withPruneInputOfAggregate(false)
+          .withDedupAggregateCalls(false)
+          .withSimplifyLimit(false)
+          .withBloat(DrillRelBuilder.DISABLE_MERGE_PROJECT)
+          .withSimplifyValues(false))
         .withExpand(false)
-        .withRelBuilderFactory(DrillRelFactories.LOGICAL_BUILDER)
-        .build();
+        .withRelBuilderFactory(DrillRelFactories.LOGICAL_BUILDER);
     this.isInnerQuery = false;
     this.isExpandedView = false;
     this.typeFactory = new JavaTypeFactoryImpl(DrillRelDataTypeSystem.DRILL_REL_DATATYPE_SYSTEM);
@@ -140,7 +150,6 @@ public class SqlConverter {
     this.costFactory = (settings.useDefaultCosting()) ? null : new DrillCostBase.DrillCostFactory();
     this.validator =
       new DrillValidator(opTab, catalog, typeFactory, parserConfig.conformance(), context.isImpersonationEnabled());
-    validator.setIdentifierExpansion(true);
     cluster = null;
   }
 
@@ -165,7 +174,6 @@ public class SqlConverter {
     this.temporarySchema = parent.temporarySchema;
     this.session = parent.session;
     this.drillConfig = parent.drillConfig;
-    validator.setIdentifierExpansion(true);
     this.cluster = parent.cluster;
   }
 
@@ -201,6 +209,7 @@ public class SqlConverter {
   public RelRoot toRel(final SqlNode validatedNode) {
     initCluster(initPlanner());
     DrillViewExpander viewExpander = new DrillViewExpander(this);
+    util.getViewExpansionContext().setViewExpander(viewExpander);
     final SqlToRelConverter sqlToRelConverter = new SqlToRelConverter(
         viewExpander, validator, catalog, cluster,
         DrillConvertletTable.INSTANCE, sqlToRelConverterConfig);
@@ -218,7 +227,7 @@ public class SqlConverter {
           .map(f -> builder.makeInputRef(relNode, f.left))
           .collect(Collectors.toList());
 
-      RelNode project = LogicalProject.create(rel.rel, expressions, rel.validatedRowType);
+      RelNode project = LogicalProject.create(rel.rel, Collections.emptyList(), expressions, rel.validatedRowType);
       rel = RelRoot.of(project, rel.validatedRowType, rel.kind);
     }
     return rel.withRel(sqlToRelConverter.flattenTypes(rel.rel, true));
@@ -226,6 +235,10 @@ public class SqlConverter {
 
   public RelDataType getOutputType(SqlNode validatedNode) {
     return validator.getValidatedNodeType(validatedNode);
+  }
+
+  public DrillValidator getValidator() {
+    return validator;
   }
 
   public JavaTypeFactory getTypeFactory() {

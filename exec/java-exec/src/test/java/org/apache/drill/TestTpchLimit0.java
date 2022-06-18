@@ -38,7 +38,6 @@ public class TestTpchLimit0 extends BaseTestQuery {
   }
 
   @Test
-  @Ignore // DRILL-512
   public void tpch02() throws Exception{
     testLimitZero("queries/tpch/02.sql");
   }
@@ -84,7 +83,6 @@ public class TestTpchLimit0 extends BaseTestQuery {
   }
 
   @Test
-  @Ignore // Cartesian problem
   public void tpch11() throws Exception{
     testLimitZero("queries/tpch/11.sql");
   }
@@ -111,13 +109,11 @@ public class TestTpchLimit0 extends BaseTestQuery {
   }
 
   @Test
-  @Ignore // invalid plan, due to Nulls value NOT IN sub-q
   public void tpch16() throws Exception{
     testLimitZero("queries/tpch/16.sql");
   }
 
   @Test
-  @Ignore //
   public void tpch17() throws Exception{
     testLimitZero("queries/tpch/17.sql");
   }
@@ -144,7 +140,6 @@ public class TestTpchLimit0 extends BaseTestQuery {
   }
 
   @Test
-  @Ignore // DRILL-518
   public void tpch22() throws Exception{
     testLimitZero("queries/tpch/22.sql");
   }

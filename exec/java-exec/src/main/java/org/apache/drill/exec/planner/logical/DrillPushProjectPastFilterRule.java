@@ -28,7 +28,10 @@ public class DrillPushProjectPastFilterRule extends ProjectFilterTransposeRule {
   public final static RelOptRule INSTANCE = new DrillPushProjectPastFilterRule(DrillConditions.PRESERVE_ITEM);
 
   protected DrillPushProjectPastFilterRule(PushProjector.ExprCondition preserveExprCondition) {
-    super(LogicalProject.class, LogicalFilter.class,
-        DrillRelFactories.LOGICAL_BUILDER, preserveExprCondition);
+    super(Config.DEFAULT
+      .withRelBuilderFactory(DrillRelFactories.LOGICAL_BUILDER)
+      .as(Config.class)
+      .withOperandFor(LogicalProject.class, LogicalFilter.class)
+      .withPreserveExprCondition(preserveExprCondition));
   }
 }

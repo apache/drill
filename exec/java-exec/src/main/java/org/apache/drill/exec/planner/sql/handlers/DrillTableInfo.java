@@ -19,6 +19,7 @@ package org.apache.drill.exec.planner.sql.handlers;
 
 import org.apache.calcite.schema.Table;
 import org.apache.calcite.sql.SqlCall;
+import org.apache.calcite.sql.SqlCallBinding;
 import org.apache.calcite.sql.SqlFunction;
 import org.apache.calcite.sql.SqlIdentifier;
 import org.apache.calcite.sql.SqlKind;
@@ -90,7 +91,7 @@ public class DrillTableInfo {
         AbstractSchema drillSchema = SchemaUtilites.resolveToDrillSchema(
             config.getConverter().getDefaultSchema(), SchemaUtilites.getSchemaPath(tableIdentifier));
 
-        DrillTable table = (DrillTable) tableMacro.getTable(config.getConverter().getTypeFactory(), prepareTableMacroOperands(call.operand(0)));
+        DrillTable table = (DrillTable) tableMacro.getTable(new SqlCallBinding(config.getConverter().getValidator(), null, call.operand(0)));
         return new DrillTableInfo(table, drillSchema.getSchemaPath(), Util.last(tableIdentifier.names));
       }
       case IDENTIFIER: {

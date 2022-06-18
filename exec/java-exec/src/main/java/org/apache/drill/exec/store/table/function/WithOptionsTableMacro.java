@@ -45,8 +45,8 @@ public class WithOptionsTableMacro implements TableMacro {
   }
 
   @Override
-  public TranslatableTable apply(List<Object> arguments) {
-    DrillTable drillTable = function.apply(arguments);
+  public TranslatableTable apply(List<?> arguments) {
+    DrillTable drillTable = function.apply((List<Object>) arguments);
     if (drillTable == null) {
       throw UserException
         .validationError()

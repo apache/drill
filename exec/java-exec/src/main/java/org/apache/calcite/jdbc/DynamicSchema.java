@@ -53,6 +53,19 @@ public class DynamicSchema extends SimpleCalciteSchema implements AutoCloseable 
   }
 
   @Override
+  public CalciteSchema add(String name, Schema schema) {
+    CalciteSchema calciteSchema =
+      new DynamicSchema(this, schema, name);
+    subSchemaMap.put(name, calciteSchema);
+    return calciteSchema;
+  }
+
+  @Override
+  protected TableEntry getImplicitTable(String tableName, boolean caseSensitive) {
+    return super.getImplicitTable(tableName, true);
+  }
+
+  @Override
   public void close() throws Exception {
     for (CalciteSchema cs : subSchemaMap.map().values()) {
       AutoCloseables.closeWithUserException(cs.plus().unwrap(AbstractSchema.class));

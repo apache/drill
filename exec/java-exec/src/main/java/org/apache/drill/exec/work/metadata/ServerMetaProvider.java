@@ -25,7 +25,6 @@ import org.apache.calcite.sql.parser.SqlAbstractParserImpl.Metadata;
 import org.apache.calcite.sql.parser.SqlParser;
 import org.apache.drill.common.types.TypeProtos.MinorType;
 import org.apache.drill.exec.planner.physical.PlannerSettings;
-import org.apache.drill.exec.planner.sql.DrillParserConfig;
 import org.apache.drill.exec.proto.UserProtos.ConvertSupport;
 import org.apache.drill.exec.proto.UserProtos.CorrelationNamesSupport;
 import org.apache.drill.exec.proto.UserProtos.DateTimeLiteralsSupport;
@@ -54,7 +53,7 @@ import org.apache.drill.shaded.guava.com.google.common.collect.ImmutableList;
  * Contains worker {@link Runnable} for returning server meta information
  */
 public class ServerMetaProvider {
-  private static ServerMeta DEFAULT = ServerMeta.newBuilder()
+  private static final ServerMeta DEFAULT = ServerMeta.newBuilder()
       .addAllConvertSupport(getSupportedConvertOps())
       .addAllDateTimeFunctions(Splitter.on(",").split(SqlJdbcFunctionCall.getTimeDateFunctions()))
       .addAllDateTimeLiteralsSupport(Arrays.asList(DateTimeLiteralsSupport.values()))
@@ -83,7 +82,7 @@ public class ServerMetaProvider {
       .build();
 
 
-  private static final Iterable<ConvertSupport> getSupportedConvertOps() {
+  private static Iterable<ConvertSupport> getSupportedConvertOps() {
     // A set would be more appropriate but it's not possible to produce
     // duplicates, and an iterable is all we need.
     ImmutableList.Builder<ConvertSupport> supportedConvertedOps = ImmutableList.builder();
@@ -124,7 +123,9 @@ public class ServerMetaProvider {
         final ServerMeta.Builder metaBuilder = ServerMeta.newBuilder(DEFAULT);
         PlannerSettings plannerSettings = new PlannerSettings(session.getOptions(), context.getFunctionImplementationRegistry());
 
-        DrillParserConfig config = new DrillParserConfig(plannerSettings);
+        SqlParser.Config config = SqlParser.Config.DEFAULT
+          .withIdentifierMaxLength((int) plannerSettings.getIdentifierMaxLength())
+          .withQuoting(plannerSettings.getQuotingIdentifiers());
 
         int identifierMaxLength = config.identifierMaxLength();
         Metadata metadata = SqlParser.create("", config).getMetadata();

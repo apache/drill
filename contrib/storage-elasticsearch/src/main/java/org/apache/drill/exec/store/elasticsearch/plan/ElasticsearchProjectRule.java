@@ -45,8 +45,9 @@ public class ElasticsearchProjectRule extends ConverterRule {
   public static final ElasticsearchProjectRule INSTANCE = new ElasticsearchProjectRule();
 
   private ElasticsearchProjectRule() {
-    super(Project.class, Convention.NONE, ElasticsearchRel.CONVENTION,
-        "DrillElasticsearchProjectRule");
+    super(Config.INSTANCE
+      .withConversion(Project.class, Convention.NONE, ElasticsearchRel.CONVENTION,
+        "DrillElasticsearchProjectRule"));
     this.out = ElasticsearchRel.CONVENTION;
   }
 

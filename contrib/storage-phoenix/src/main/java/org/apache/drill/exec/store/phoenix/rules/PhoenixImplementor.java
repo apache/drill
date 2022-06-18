@@ -67,7 +67,7 @@ public class PhoenixImplementor extends JdbcImplementor {
   @Override
   public Result visit(Filter e) {
     final RelNode input = e.getInput();
-    Result x = visitChild(0, input);
+    Result x = visitRoot(input);
     parseCorrelTable(e, x);
     if (input instanceof Aggregate) {
       return super.visit(e);

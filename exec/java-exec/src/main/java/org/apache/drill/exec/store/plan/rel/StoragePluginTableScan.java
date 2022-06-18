@@ -71,11 +71,6 @@ public class StoragePluginTableScan extends DrillScanRelBase implements PluginRe
   }
 
   @Override
-  protected String computeDigest() {
-    return super.computeDigest();
-  }
-
-  @Override
   public boolean canImplement(PluginImplementor implementor) {
     return implementor.canImplement(this);
   }

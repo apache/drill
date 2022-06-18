@@ -34,7 +34,8 @@ public class PhoenixJoinRule extends ConverterRule {
   private final JdbcConvention out;
 
   public PhoenixJoinRule(RelTrait in, JdbcConvention out) {
-    super(LogicalJoin.class, in, out, "PhoenixJoinRule");
+    super(Config.INSTANCE
+      .withConversion(LogicalJoin.class, in, out, "PhoenixJoinRule"));
     this.out = out;
   }
 
@@ -49,7 +50,7 @@ public class PhoenixJoinRule extends ConverterRule {
       newInputs.add(input);
     }
     try {
-      JdbcJoin jdbcJoin = new JdbcJoin(
+      return new JdbcJoin(
           join.getCluster(),
           join.getTraitSet().replace(out),
           newInputs.get(0),
@@ -57,7 +58,6 @@ public class PhoenixJoinRule extends ConverterRule {
           join.getCondition(),
           join.getVariablesSet(),
           join.getJoinType());
-      return jdbcJoin;
     } catch (InvalidRelException e) {
       return null;
     }

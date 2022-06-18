@@ -218,7 +218,8 @@ public class DrillRelMdDistinctRowCount extends RelMdDistinctRowCount{
       List<RexNode> leftFilters = new ArrayList<>();
       List<RexNode> rightFilters = new ArrayList<>();
       List<RexNode> joinFilters = new ArrayList();
-      List<RexNode> predList = RelOptUtil.conjunctions(predicate);
+      List<RexNode> predList = RelOptUtil.conjunctions(
+        RexUtil.expandSearch(joinRel.getCluster().getRexBuilder(), null, predicate));
       RelOptUtil.classifyFilters(joinRel, predList, joinType, joinType == JoinRelType.INNER,
           !joinType.generatesNullsOnLeft(), !joinType.generatesNullsOnRight(), joinFilters,
               leftFilters, rightFilters);
@@ -238,9 +239,10 @@ public class DrillRelMdDistinctRowCount extends RelMdDistinctRowCount{
      * B) Otherwise, based on independence assumption CNDV(sX) = NDV(sX)
      */
     Set<ImmutableBitSet> joinFiltersSet = new HashSet<>();
-    for (RexNode filter : RelOptUtil.conjunctions(joinRel.getCondition())) {
+    for (RexNode filter : RelOptUtil.conjunctions(
+      RexUtil.expandSearch(joinRel.getCluster().getRexBuilder(), null, joinRel.getCondition()))) {
       final RelOptUtil.InputFinder inputFinder = RelOptUtil.InputFinder.analyze(filter);
-      joinFiltersSet.add(inputFinder.inputBitSet.build());
+      joinFiltersSet.add(inputFinder.build());
     }
     for (int idx = 0; idx < groupKey.length(); idx++) {
       if (groupKey.get(idx)) {

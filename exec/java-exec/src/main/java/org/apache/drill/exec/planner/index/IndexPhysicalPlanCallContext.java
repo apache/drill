@@ -104,14 +104,6 @@ public class IndexPhysicalPlanCallContext implements IndexCallContext {
     return scan;
   }
 
-
-  public List<RelCollation> getCollationList() {
-    if (sort != null) {
-      return sort.getCollationList();
-    }
-    return null;
-  }
-
   public RelCollation getCollation() {
     if (sort != null) {
       return sort.getCollation();

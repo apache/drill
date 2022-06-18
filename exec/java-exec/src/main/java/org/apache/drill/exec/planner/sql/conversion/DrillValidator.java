@@ -17,10 +17,6 @@
  */
 package org.apache.drill.exec.planner.sql.conversion;
 
-import java.security.PrivilegedAction;
-import java.util.ArrayList;
-import java.util.List;
-
 import org.apache.calcite.jdbc.CalciteSchema;
 import org.apache.calcite.jdbc.DynamicRootSchema;
 import org.apache.calcite.rel.type.RelDataType;
@@ -42,13 +38,20 @@ import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.exec.util.ImpersonationUtil;
 import org.apache.drill.shaded.guava.com.google.common.collect.Lists;
 
+import java.security.PrivilegedAction;
+import java.util.ArrayList;
+import java.util.List;
+
 class DrillValidator extends SqlValidatorImpl {
 
   private final boolean isImpersonationEnabled;
 
   DrillValidator(SqlOperatorTable opTab, SqlValidatorCatalogReader catalogReader,
                  RelDataTypeFactory typeFactory, SqlConformance conformance, boolean isImpersonationEnabled) {
-    super(opTab, catalogReader, typeFactory, conformance);
+    super(opTab, catalogReader, typeFactory,
+      Config.DEFAULT.withConformance(conformance)
+        .withTypeCoercionEnabled(true)
+        .withIdentifierExpansion(true));
     this.isImpersonationEnabled = isImpersonationEnabled;
   }
 

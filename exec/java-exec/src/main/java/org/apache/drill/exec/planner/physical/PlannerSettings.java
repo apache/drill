@@ -413,10 +413,19 @@ public class PlannerSettings implements Context{
    */
   public Quoting getQuotingIdentifiers() {
     String quotingIdentifiersCharacter = options.getOption(QUOTING_IDENTIFIERS);
-    for (Quoting value : Quoting.values()) {
-      if (value.string.equals(quotingIdentifiersCharacter)) {
-        return value;
-      }
+    switch (quotingIdentifiersCharacter) {
+      case "\"":
+        return Quoting.DOUBLE_QUOTE;
+      case "`":
+        return Quoting.BACK_TICK;
+      case "[":
+        return Quoting.BRACKET;
+      default:
+        for (Quoting value : Quoting.values()) {
+          if (value.string.equals(quotingIdentifiersCharacter)) {
+            return value;
+          }
+        }
     }
     // this is never reached
     throw UserException.validationError()

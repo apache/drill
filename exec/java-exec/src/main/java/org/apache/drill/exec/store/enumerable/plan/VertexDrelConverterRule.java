@@ -18,18 +18,24 @@
 package org.apache.drill.exec.store.enumerable.plan;
 
 import org.apache.calcite.plan.Convention;
+import org.apache.calcite.plan.RelOptRule;
 import org.apache.calcite.rel.RelNode;
 import org.apache.calcite.rel.convert.ConverterRule;
 import org.apache.drill.exec.planner.logical.DrillRel;
 import org.apache.drill.exec.planner.logical.DrillRelFactories;
 
-import java.util.function.Predicate;
-
 public class VertexDrelConverterRule extends ConverterRule {
 
-  public VertexDrelConverterRule(Convention in) {
-    super(RelNode.class, (Predicate<RelNode>) input -> true, in, DrillRel.DRILL_LOGICAL,
-        DrillRelFactories.LOGICAL_BUILDER, "VertexDrelConverterRule" + in.getName());
+  private VertexDrelConverterRule(Config config) {
+    super(config);
+  }
+
+  public static RelOptRule create(Convention in) {
+    return Config.INSTANCE
+      .withRuleFactory(VertexDrelConverterRule::new)
+      .withConversion(RelNode.class, input -> true, in, DrillRel.DRILL_LOGICAL, "VertexDrelConverterRule" + in.getName())
+      .withRelBuilderFactory(DrillRelFactories.LOGICAL_BUILDER)
+      .toRule();
   }
 
   @Override

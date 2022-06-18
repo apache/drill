@@ -36,7 +36,8 @@ public class SortConvertPrule extends ConverterRule {
   //public static final RelOptRule INSTANCE_SRC_LOGICAL = new SortPrule("SortPrule:Src_Logical", DrillRel.DRILL_LOGICAL);
 
   private SortConvertPrule(String description, Convention srcConvention) {
-    super(Sort.class, srcConvention, Prel.DRILL_PHYSICAL, description);
+    super(Config.INSTANCE
+      .withConversion(Sort.class, srcConvention, Prel.DRILL_PHYSICAL, description));
   }
 
   @Override

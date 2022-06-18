@@ -36,6 +36,7 @@ import org.apache.calcite.sql.SqlLiteral;
 import org.apache.calcite.sql.SqlNode;
 import org.apache.calcite.sql.SqlNumericLiteral;
 import org.apache.calcite.sql.SqlOperator;
+import org.apache.calcite.sql.fun.SqlRandFunction;
 import org.apache.calcite.sql.fun.SqlStdOperatorTable;
 import org.apache.calcite.sql.parser.SqlParserPos;
 import org.apache.calcite.sql.type.SqlTypeName;
@@ -72,6 +73,7 @@ public class DrillConvertletTable implements SqlRexConvertletTable {
         .put(SqlStdOperatorTable.COALESCE, coalesceConvertlet())
         .put(SqlStdOperatorTable.TIMESTAMP_DIFF, timestampDiffConvertlet())
         .put(SqlStdOperatorTable.ROW, rowConvertlet())
+        .put(SqlStdOperatorTable.RAND, randConvertlet())
         .put(SqlStdOperatorTable.AVG, avgVarianceConvertlet(DrillConvertletTable::expandAvg))
         .put(SqlStdOperatorTable.STDDEV_POP, avgVarianceConvertlet(arg -> expandVariance(arg, true, true)))
         .put(SqlStdOperatorTable.STDDEV_SAMP, avgVarianceConvertlet(arg -> expandVariance(arg, false, true)))
@@ -150,6 +152,20 @@ public class DrillConvertletTable implements SqlRexConvertletTable {
     return (cx, call) -> {
       RexNode operand = cx.convertExpression(call.operand(0));
       return cx.getRexBuilder().makeCall(SqlStdOperatorTable.SQRT, operand);
+    };
+  }
+
+  private static SqlRexConvertlet randConvertlet() {
+    return (cx, call) -> {
+      List<RexNode> operands = call.getOperandList().stream()
+        .map(cx::convertExpression)
+        .collect(Collectors.toList());
+      return cx.getRexBuilder().makeCall(new SqlRandFunction() {
+        @Override
+        public boolean isDeterministic() {
+          return false;
+        }
+      }, operands);
     };
   }
 

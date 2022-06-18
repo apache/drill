@@ -25,9 +25,13 @@ import java.util.List;
 
 import org.apache.calcite.avatica.util.TimeUnit;
 import org.apache.calcite.rel.type.RelDataType;
+import org.apache.calcite.rex.RexUtil;
 import org.apache.calcite.sql.SqlKind;
 import org.apache.calcite.sql.type.BasicSqlType;
 import org.apache.calcite.sql.type.SqlTypeName;
+import org.apache.calcite.util.DateString;
+import org.apache.calcite.util.TimeString;
+import org.apache.calcite.util.TimestampString;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.drill.common.exceptions.DrillRuntimeException;
 import org.apache.drill.common.exceptions.UserException;
@@ -266,7 +270,10 @@ public class DrillOptiq {
         if (call.getOperator() == SqlStdOperatorTable.MINUS_DATE) {
           return doFunction(call, "-");
         }
-
+      case INTERNAL:
+        if (call.getOperator() == SqlStdOperatorTable.SEARCH) {
+          return RexUtil.expandSearch(getRexBuilder(), null, call).accept(this);
+        }
         // fall through
       default:
         throw notImplementedException(syntax, call);
@@ -309,6 +316,9 @@ public class DrillOptiq {
           }
           return left.getChild(((BigDecimal) literal.getValue()).intValue());
         case CHAR:
+        case TIMESTAMP:
+        case TIME:
+        case DATE:
           if (isMap) {
             return handleMapCharKey(literal, operand, dataType, left);
           }
@@ -385,15 +395,19 @@ public class DrillOptiq {
       TypeProtos.DataMode mode = operand.getType().isNullable()
           ? TypeProtos.DataMode.OPTIONAL : TypeProtos.DataMode.REQUIRED;
       TypeProtos.MajorType type;
+      Object value = literal.getValue2();
       switch (mapType.getKeyType().getSqlTypeName()) {
         case TIMESTAMP:
           type = Types.withMode(MinorType.TIMESTAMP, mode);
+          value = literal.getValueAs(TimestampString.class);
           break;
         case DATE:
           type = Types.withMode(MinorType.DATE, mode);
+          value = literal.getValueAs(DateString.class);
           break;
         case TIME:
           type = Types.withMode(MinorType.TIME, mode);
+          value = literal.getValueAs(TimeString.class);
           break;
         case INTERVAL_DAY:
           type = Types.withMode(MinorType.INTERVALDAY, mode);
@@ -408,7 +422,7 @@ public class DrillOptiq {
           type = Types.withMode(MinorType.VARCHAR, mode);
           break;
       }
-      return parentPath.getChild(literal.getValue2().toString(), literal.getValue2(), type);
+      return parentPath.getChild(value.toString(), value, type);
     }
 
     private LogicalExpression doFunction(RexCall call, String funcName) {

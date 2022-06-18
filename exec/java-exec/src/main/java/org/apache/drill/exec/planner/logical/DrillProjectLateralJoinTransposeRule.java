@@ -30,7 +30,9 @@ public class DrillProjectLateralJoinTransposeRule extends ProjectCorrelateTransp
   public static final DrillProjectLateralJoinTransposeRule INSTANCE = new DrillProjectLateralJoinTransposeRule(PushProjector.ExprCondition.TRUE, RelFactories.LOGICAL_BUILDER);
 
   public DrillProjectLateralJoinTransposeRule(PushProjector.ExprCondition preserveExprCondition, RelBuilderFactory relFactory) {
-    super(preserveExprCondition, relFactory);
+    super(Config.DEFAULT.withRelBuilderFactory(relFactory)
+      .as(Config.class)
+      .withPreserveExprCondition(preserveExprCondition));
   }
 
   @Override
@@ -40,11 +42,7 @@ public class DrillProjectLateralJoinTransposeRule extends ProjectCorrelateTransp
 
     // No need to call ProjectCorrelateTransposeRule if the current lateralJoin contains excludeCorrelationColumn set to true.
     // This is needed as the project push into Lateral join rule changes the output row type which will fail assertions in ProjectCorrelateTransposeRule.
-    if (correlate instanceof DrillLateralJoinRel &&
-        ((DrillLateralJoinRel)correlate).excludeCorrelateColumn) {
-      return false;
-    }
-
-    return true;
+    return !(correlate instanceof DrillLateralJoinRel) ||
+      !((DrillLateralJoinRel) correlate).excludeCorrelateColumn;
   }
 }
