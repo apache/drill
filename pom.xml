@@ -49,7 +49,7 @@
     <junit4.version>4.13.2</junit4.version>
     <junit.platform.version>1.8.2</junit.platform.version>
     <slf4j.version>1.7.26</slf4j.version>
-    <shaded.guava.version>28.2-jre</shaded.guava.version>
+    <shaded.guava.version>30.1.1-jre</shaded.guava.version>
     <guava.version>30.1.1-jre</guava.version>
     <forkCount>2</forkCount>
     <parquet.version>1.12.2</parquet.version>
