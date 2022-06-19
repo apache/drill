@@ -80,7 +80,7 @@ public class TestProvidedSchema extends ClusterTest {
       .build();
 
     HttpApiConfig basicJson = HttpApiConfig.builder()
-      .url("http://localhost:47777/json")
+      .url(makeUrl("http://localhost:%d/json"))
       .method("get")
       .jsonOptions(jsonOptions)
       .requireTail(false)
@@ -101,7 +101,7 @@ public class TestProvidedSchema extends ClusterTest {
       .build();
 
     HttpApiConfig schemaChange = HttpApiConfig.builder()
-      .url("http://localhost:47777/json")
+      .url(makeUrl("http://localhost:%d/json"))
       .method("get")
       .jsonOptions(jsonOptionsSchemaChange)
       .requireTail(false)
@@ -117,7 +117,7 @@ public class TestProvidedSchema extends ClusterTest {
 
 
     HttpApiConfig partialSchema = HttpApiConfig.builder()
-      .url("http://localhost:47777/json")
+      .url(makeUrl("http://localhost:%d/json"))
       .method("get")
       .jsonOptions(HttpJsonOptions.builder().schema(partialMapSchema).build())
       .requireTail(false)
@@ -138,7 +138,7 @@ public class TestProvidedSchema extends ClusterTest {
       .build();
 
     HttpApiConfig jsonModeConfig = HttpApiConfig.builder()
-      .url("http://localhost:47777/json")
+      .url(makeUrl("http://localhost:%d/json"))
       .method("get")
       .jsonOptions(jsonModeOptions)
       .requireTail(false)
@@ -146,7 +146,7 @@ public class TestProvidedSchema extends ClusterTest {
       .build();
 
     HttpApiConfig noSchema = HttpApiConfig.builder()
-      .url("http://localhost:47777/json")
+      .url(makeUrl("http://localhost:%d/json"))
       .method("get")
       .requireTail(false)
       .inputType("json")
@@ -316,9 +316,13 @@ public class TestProvidedSchema extends ClusterTest {
    * @return Started Mock server
    * @throws IOException If the server cannot start, throws IOException
    */
-  public MockWebServer startServer() throws IOException {
+  private MockWebServer startServer() throws IOException {
     MockWebServer server = new MockWebServer();
     server.start(MOCK_SERVER_PORT);
     return server;
+  }
+
+  private static String makeUrl(String url) {
+    return String.format(url, MOCK_SERVER_PORT);
   }
 }

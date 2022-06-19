@@ -798,7 +798,7 @@ typedef NullableValueVectorTyped<int, ValueVectorBit > NullableValueVectorBit;
 // The definitions for decimal digits, width, max precision are defined in
 // /exec/java-exec/src/main/codegen/data/ValueVectorTypes.tdd
 //
-// Decimal9 and Decimal18 could be optimized, maybe write seperate classes?
+// Decimal9 and Decimal18 could be optimized, maybe write separate classes?
 typedef ValueVectorDecimalTrivial<int32_t> ValueVectorDecimal9;
 typedef ValueVectorDecimalTrivial<int64_t> ValueVectorDecimal18;
 typedef ValueVectorDecimal<3, 12, false, 28> ValueVectorDecimal28Dense;

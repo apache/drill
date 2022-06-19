@@ -26,7 +26,7 @@ import org.apache.drill.shaded.guava.com.google.common.base.Charsets;
 import org.apache.drill.shaded.guava.com.google.common.io.Files;
 
 public class DrillFileUtils {
-  // These two seperators are intentionally used instead of Path.SEPERATPR or File.seperator
+  // These two separators are intentionally used instead of Path.SEPARATOR or File.separator
   // for loading classes since both alternatives return '\' on Windows. However, in the context
   // of classpath scanning and loading only '/' is valid.
   public static final char SEPARATOR_CHAR = '/';
