@@ -38,7 +38,7 @@ public class JsonConvertFrom {
 
   private JsonConvertFrom() {}
 
-  @FunctionTemplate(names = {"convert_fromJSON", "convertFromJson", "convert_from_json"},
+  @FunctionTemplate(name = "convert_fromJSON",
     scope = FunctionScope.SIMPLE, nulls = NullHandling.INTERNAL)
   public static class ConvertFromJsonNullableInput implements DrillSimpleFunc {
 
@@ -97,7 +97,7 @@ public class JsonConvertFrom {
     }
   }
 
-  @FunctionTemplate(names = {"convert_fromJSON", "convertFromJson", "convert_from_json"},
+  @FunctionTemplate(name = "convert_fromJSON",
     scope = FunctionScope.SIMPLE, nulls = NullHandling.INTERNAL)
   public static class ConvertFromJsonVarcharInput implements DrillSimpleFunc {
 
