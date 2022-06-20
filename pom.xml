@@ -4004,7 +4004,7 @@
         </property>
       </activation>
       <properties>
-        <hadoop.version>2.10.1</hadoop.version>
+        <hadoop.version>2.10.2</hadoop.version>
       </properties>
       <dependencyManagement>
         <dependencies>
