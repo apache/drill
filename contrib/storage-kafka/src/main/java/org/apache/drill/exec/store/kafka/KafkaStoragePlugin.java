@@ -76,7 +76,7 @@ public class KafkaStoragePlugin extends AbstractStoragePlugin {
     KafkaScanSpec kafkaScanSpec = selection.getListWith(new ObjectMapper(),
         new TypeReference<KafkaScanSpec>() {
         });
-    return new KafkaGroupScan(this, kafkaScanSpec, null);
+    return new KafkaGroupScan(this, kafkaScanSpec, null, -1);
   }
 
   public void registerToClose(AutoCloseable autoCloseable) {

@@ -62,6 +62,7 @@ public class KafkaRecordReader implements ManagedReader<SchemaNegotiator> {
       }
     };
     negotiator.setErrorContext(errorContext);
+    negotiator.limit(maxRecords);
 
     messageReader = MessageReaderFactory.getMessageReader(readOptions.getMessageReader());
     messageReader.init(negotiator, readOptions, plugin);
@@ -86,10 +87,6 @@ public class KafkaRecordReader implements ManagedReader<SchemaNegotiator> {
   }
 
   private boolean nextLine(RowSetLoader rowWriter) {
-    if (rowWriter.limitReached(maxRecords)) {
-      return false;
-    }
-
     if (currentOffset >= subScanSpec.getEndOffset() || !msgItr.hasNext()) {
       return false;
     }

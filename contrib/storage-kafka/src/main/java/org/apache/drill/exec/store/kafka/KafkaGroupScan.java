@@ -30,6 +30,7 @@ import java.util.stream.Collectors;
 import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.shaded.guava.com.google.common.collect.Sets;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.drill.common.PlanStringBuilder;
 import org.apache.drill.common.exceptions.ExecutionSetupException;
 import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.common.expression.SchemaPath;
@@ -76,7 +77,8 @@ public class KafkaGroupScan extends AbstractGroupScan {
   private final KafkaStoragePlugin kafkaStoragePlugin;
   private final KafkaScanSpec kafkaScanSpec;
 
-  private List<SchemaPath> columns;
+  private final List<SchemaPath> columns;
+  private final int records;
   private ListMultimap<Integer, PartitionScanWork> assignments;
   private List<EndpointAffinity> affinities;
 
@@ -86,18 +88,21 @@ public class KafkaGroupScan extends AbstractGroupScan {
   public KafkaGroupScan(@JsonProperty("userName") String userName,
                         @JsonProperty("kafkaStoragePluginConfig") KafkaStoragePluginConfig kafkaStoragePluginConfig,
                         @JsonProperty("columns") List<SchemaPath> columns,
+                        @JsonProperty("records") int records,
                         @JsonProperty("kafkaScanSpec") KafkaScanSpec scanSpec,
                         @JacksonInject StoragePluginRegistry pluginRegistry) throws ExecutionSetupException {
     this(userName,
         pluginRegistry.resolve(kafkaStoragePluginConfig, KafkaStoragePlugin.class),
         columns,
+        records,
         scanSpec);
   }
 
-  public KafkaGroupScan(KafkaStoragePlugin kafkaStoragePlugin, KafkaScanSpec kafkaScanSpec, List<SchemaPath> columns) {
+  public KafkaGroupScan(KafkaStoragePlugin kafkaStoragePlugin, KafkaScanSpec kafkaScanSpec, List<SchemaPath> columns, int records) {
     super(StringUtils.EMPTY);
     this.kafkaStoragePlugin = kafkaStoragePlugin;
     this.columns = columns;
+    this.records = records;
     this.kafkaScanSpec = kafkaScanSpec;
     init();
   }
@@ -105,10 +110,12 @@ public class KafkaGroupScan extends AbstractGroupScan {
   public KafkaGroupScan(String userName,
                         KafkaStoragePlugin kafkaStoragePlugin,
                         List<SchemaPath> columns,
+                        int records,
                         KafkaScanSpec kafkaScanSpec) {
     super(userName);
     this.kafkaStoragePlugin = kafkaStoragePlugin;
     this.columns = columns;
+    this.records = records;
     this.kafkaScanSpec = kafkaScanSpec;
     init();
   }
@@ -117,6 +124,27 @@ public class KafkaGroupScan extends AbstractGroupScan {
     super(that);
     this.kafkaStoragePlugin = that.kafkaStoragePlugin;
     this.columns = that.columns;
+    this.records = that.records;
+    this.kafkaScanSpec = that.kafkaScanSpec;
+    this.assignments = that.assignments;
+    this.partitionWorkMap = that.partitionWorkMap;
+  }
+
+  public KafkaGroupScan(KafkaGroupScan that, List<SchemaPath> columns) {
+    super(that);
+    this.kafkaStoragePlugin = that.kafkaStoragePlugin;
+    this.columns = columns;
+    this.records = that.records;
+    this.kafkaScanSpec = that.kafkaScanSpec;
+    this.assignments = that.assignments;
+    this.partitionWorkMap = that.partitionWorkMap;
+  }
+
+  public KafkaGroupScan(KafkaGroupScan that, int records) {
+    super(that);
+    this.kafkaStoragePlugin = that.kafkaStoragePlugin;
+    this.columns = that.columns;
+    this.records = records;
     this.kafkaScanSpec = that.kafkaScanSpec;
     this.assignments = that.assignments;
     this.partitionWorkMap = that.partitionWorkMap;
@@ -263,6 +291,20 @@ public class KafkaGroupScan extends AbstractGroupScan {
   }
 
   @Override
+  public GroupScan applyLimit(int maxRecords) {
+    if (maxRecords > records) { // pass the limit value into sub-scan
+      return new KafkaGroupScan(this, maxRecords);
+    } else { // stop the transform
+      return null;
+    }
+  }
+
+  @Override
+  public boolean supportsLimitPushdown() {
+    return true;
+  }
+
+  @Override
   public KafkaSubScan getSpecificScan(int minorFragmentId) {
     List<PartitionScanWork> workList = assignments.get(minorFragmentId);
 
@@ -270,7 +312,7 @@ public class KafkaGroupScan extends AbstractGroupScan {
       .map(PartitionScanWork::getPartitionScanSpec)
       .collect(Collectors.toList());
 
-    return new KafkaSubScan(getUserName(), kafkaStoragePlugin, columns, scanSpecList);
+    return new KafkaSubScan(getUserName(), kafkaStoragePlugin, columns, records, scanSpecList);
   }
 
   @Override
@@ -314,9 +356,7 @@ public class KafkaGroupScan extends AbstractGroupScan {
 
   @Override
   public GroupScan clone(List<SchemaPath> columns) {
-    KafkaGroupScan clone = new KafkaGroupScan(this);
-    clone.columns = columns;
-    return clone;
+    return new KafkaGroupScan(this, columns);
   }
 
   public GroupScan cloneWithNewSpec(List<KafkaPartitionScanSpec> partitionScanSpecList) {
@@ -348,6 +388,11 @@ public class KafkaGroupScan extends AbstractGroupScan {
   }
 
   @JsonProperty
+  public int getRecords() {
+    return records;
+  }
+
+  @JsonProperty
   public KafkaScanSpec getKafkaScanSpec() {
     return kafkaScanSpec;
   }
@@ -359,7 +404,11 @@ public class KafkaGroupScan extends AbstractGroupScan {
 
   @Override
   public String toString() {
-    return String.format("KafkaGroupScan [KafkaScanSpec=%s, columns=%s]", kafkaScanSpec, columns);
+    return new PlanStringBuilder("")
+        .field("scanSpec", kafkaScanSpec)
+        .field("columns", columns)
+        .field("records", records)
+        .toString();
   }
 
   @JsonIgnore

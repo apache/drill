@@ -61,7 +61,7 @@ public class KafkaScanBatchCreator implements BatchCreator<KafkaSubScan> {
     builder.setUserName(subScan.getUserName());
 
     List<ManagedReader<SchemaNegotiator>> readers = subScan.getPartitionSubScanSpecList().stream()
-        .map(scanSpec -> new KafkaRecordReader(scanSpec, options, subScan.getKafkaStoragePlugin(), -1))
+        .map(scanSpec -> new KafkaRecordReader(scanSpec, options, subScan.getKafkaStoragePlugin(), subScan.getRecords()))
         .collect(Collectors.toList());
     ManagedScanFramework.ReaderFactory readerFactory = new BasicScanFactory(readers.iterator());
     builder.setReaderFactory(readerFactory);
