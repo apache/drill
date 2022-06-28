@@ -31,7 +31,7 @@
   <name>Drill : Contrib : Storage : JDBC</name>
 
   <properties>
-    <mysql.connector.version>8.0.25</mysql.connector.version>
+    <mysql.connector.version>8.0.28</mysql.connector.version>
     <clickhouse.jdbc.version>0.3.1</clickhouse.jdbc.version>
     <h2.version>2.1.210</h2.version>
     <postgresql.version>42.3.3</postgresql.version>
