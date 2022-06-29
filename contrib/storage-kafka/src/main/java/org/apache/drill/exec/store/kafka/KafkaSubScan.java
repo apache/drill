@@ -44,6 +44,7 @@ public class KafkaSubScan extends AbstractBase implements SubScan {
 
   private final KafkaStoragePlugin kafkaStoragePlugin;
   private final List<SchemaPath> columns;
+  private final int records;
   private final List<KafkaPartitionScanSpec> partitionSubScanSpecList;
 
   @JsonCreator
@@ -51,21 +52,25 @@ public class KafkaSubScan extends AbstractBase implements SubScan {
                       @JsonProperty("userName") String userName,
                       @JsonProperty("kafkaStoragePluginConfig") KafkaStoragePluginConfig kafkaStoragePluginConfig,
                       @JsonProperty("columns") List<SchemaPath> columns,
+                      @JsonProperty("records") int records,
                       @JsonProperty("partitionSubScanSpecList") LinkedList<KafkaPartitionScanSpec> partitionSubScanSpecList)
       throws ExecutionSetupException {
     this(userName,
         registry.resolve(kafkaStoragePluginConfig, KafkaStoragePlugin.class),
         columns,
+        records,
         partitionSubScanSpecList);
   }
 
   public KafkaSubScan(String userName,
                       KafkaStoragePlugin kafkaStoragePlugin,
                       List<SchemaPath> columns,
+                      int records,
                       List<KafkaPartitionScanSpec> partitionSubScanSpecList) {
     super(userName);
     this.kafkaStoragePlugin = kafkaStoragePlugin;
     this.columns = columns;
+    this.records = records;
     this.partitionSubScanSpecList = partitionSubScanSpecList;
   }
 
@@ -77,7 +82,7 @@ public class KafkaSubScan extends AbstractBase implements SubScan {
   @Override
   public PhysicalOperator getNewWithChildren(List<PhysicalOperator> children) {
     Preconditions.checkArgument(children.isEmpty());
-    return new KafkaSubScan(getUserName(), kafkaStoragePlugin, columns, partitionSubScanSpecList);
+    return new KafkaSubScan(getUserName(), kafkaStoragePlugin, columns, records, partitionSubScanSpecList);
   }
 
   @Override
@@ -93,6 +98,11 @@ public class KafkaSubScan extends AbstractBase implements SubScan {
   @JsonProperty
   public List<SchemaPath> getColumns() {
     return columns;
+  }
+
+  @JsonProperty
+  public int getRecords() {
+    return records;
   }
 
   @JsonProperty

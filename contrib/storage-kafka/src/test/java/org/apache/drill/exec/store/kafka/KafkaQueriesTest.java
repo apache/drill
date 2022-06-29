@@ -64,6 +64,16 @@ public class KafkaQueriesTest extends KafkaTestBase {
   }
 
   @Test
+  public void testResultLimit() throws Exception {
+    String queryString = String.format(TestQueryConstants.MSG_LIMIT_QUERY, TestQueryConstants.JSON_TOPIC);
+    queryBuilder()
+      .sql(queryString)
+      .planMatcher()
+      .include("Scan", "records=3")
+      .match();
+  }
+
+  @Test
   public void testResultCount() {
     String queryString = String.format(TestQueryConstants.MSG_SELECT_QUERY, TestQueryConstants.JSON_TOPIC);
     runKafkaSQLVerifyCount(queryString, TestKafkaSuit.NUM_JSON_MSG);
