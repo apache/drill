@@ -23,7 +23,6 @@ import org.apache.calcite.plan.RelOptTable;
 import org.apache.calcite.rel.core.Project;
 import org.apache.calcite.rel.core.TableScan;
 import org.apache.calcite.rel.logical.LogicalProject;
-import org.apache.calcite.rel.logical.LogicalTableScan;
 import org.apache.calcite.rel.rules.ProjectRemoveRule;
 import org.apache.calcite.rel.type.RelDataType;
 import org.apache.calcite.rex.RexNode;
@@ -46,8 +45,8 @@ import java.util.stream.Collectors;
 public class DrillPushProjectIntoScanRule extends RelOptRule {
   public static final RelOptRule INSTANCE =
       new DrillPushProjectIntoScanRule(LogicalProject.class,
-          DirPrunedTableScan.class,
-          "DrillPushProjectIntoScanRule:enumerable") {
+          SelectionBasedTableScan.class,
+          "DrillPushProjectIntoScanRule:none") {
 
         @Override
         protected boolean skipScanConversion(RelDataType projectRelDataType, TableScan scan) {
@@ -55,18 +54,6 @@ public class DrillPushProjectIntoScanRule extends RelOptRule {
           return false;
         }
       };
-
-  public static final RelOptRule LOGICAL_INSTANCE =
-    new DrillPushProjectIntoScanRule(LogicalProject.class,
-      LogicalTableScan.class,
-      "DrillPushProjectIntoScanRule:none") {
-
-      @Override
-      protected boolean skipScanConversion(RelDataType projectRelDataType, TableScan scan) {
-        // do not allow skipping conversion of LogicalTableScan to DrillScanRel if rule is applicable
-        return false;
-      }
-    };
 
   public static final RelOptRule DRILL_LOGICAL_INSTANCE =
       new DrillPushProjectIntoScanRule(LogicalProject.class,

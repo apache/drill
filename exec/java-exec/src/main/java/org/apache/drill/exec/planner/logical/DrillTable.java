@@ -23,7 +23,6 @@ import java.util.Objects;
 import org.apache.calcite.config.CalciteConnectionConfig;
 import org.apache.calcite.plan.RelOptTable;
 import org.apache.calcite.rel.RelNode;
-import org.apache.calcite.rel.logical.LogicalTableScan;
 import org.apache.calcite.schema.Schema.TableType;
 import org.apache.calcite.schema.Statistic;
 import org.apache.calcite.schema.Statistics;
@@ -35,6 +34,7 @@ import org.apache.drill.common.JSONOptions;
 import org.apache.drill.common.logical.StoragePluginConfig;
 import org.apache.drill.exec.metastore.store.FileSystemMetadataProviderManager;
 import org.apache.drill.exec.metastore.MetadataProviderManager;
+import org.apache.drill.exec.store.dfs.FormatSelection;
 import org.apache.drill.metastore.metadata.TableMetadataProvider;
 import org.apache.drill.exec.physical.base.SchemalessScan;
 import org.apache.drill.exec.physical.base.GroupScan;
@@ -168,9 +168,13 @@ public abstract class DrillTable implements Table, TranslatableTable {
 
   @Override
   public RelNode toRel(RelOptTable.ToRelContext context, RelOptTable table) {
-    // returns non-drill table scan to allow directory-based partition pruning
-    // before table group scan is created
-    return LogicalTableScan.create(context.getCluster(), table);
+    // Returns non-drill table scan to allow directory-based partition pruning
+    // before table group scan is created. A string digest from the format
+    // selection is included so that scans which differ only by format config
+    // will correctly be differentiated, rather than incorrectly identified and
+    // reduced to a single scan.
+    String fmtSelDigest = ((FormatSelection) selection).getFormat().toString();
+    return SelectionBasedTableScan.create(context.getCluster(), table, fmtSelDigest);
   }
 
   @Override

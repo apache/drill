@@ -21,11 +21,9 @@ import org.apache.calcite.plan.RelOptRule;
 import org.apache.calcite.plan.RelOptRuleCall;
 import org.apache.calcite.plan.RelTraitSet;
 import org.apache.calcite.rel.core.TableScan;
-import org.apache.calcite.rel.logical.LogicalTableScan;
 
-public class DrillScanRule  extends RelOptRule {
-  public static final RelOptRule LOGICAL_TABLE_SCAN_TO_DRILL = new DrillScanRule(LogicalTableScan.class);
-  public static final RelOptRule DIR_PRUNED_TABLE_SCAN_TO_DRILL = new DrillScanRule(DirPrunedTableScan.class);
+public class DrillScanRule extends RelOptRule {
+  public static final RelOptRule INSTANCE = new DrillScanRule(SelectionBasedTableScan.class);
 
   private DrillScanRule(Class<? extends TableScan> scan) {
     super(RelOptHelper.any(scan),

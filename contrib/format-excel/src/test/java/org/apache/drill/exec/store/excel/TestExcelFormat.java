@@ -785,9 +785,9 @@ public class TestExcelFormat extends ClusterTest {
   @Test
   public void testTableFuncsThatDifferOnlyByFormatConfig() throws Exception {
     String sql = "WITH prod AS (" +
-      " SELECT id, name FROM table(cp.`excel/test_data.xlsx` (type=> 'excel', sheetName => 'products', lastRow=>6))" +
+      " SELECT id, name FROM table(cp.`excel/test_cross_sheet_join.xlsx` (type=> 'excel', sheetName => 'products'))" +
       "), cust AS (" +
-      " SELECT id, name FROM table(cp.`excel/test_data.xlsx` (type=> 'excel', sheetName => 'customers', lastRow=>5))" +
+      " SELECT id, name FROM table(cp.`excel/test_cross_sheet_join.xlsx` (type=> 'excel', sheetName => 'customers'))" +
       ")" +
       "SELECT prod.*, cust.* from prod JOIN cust ON prod.id = cust.id";
 

@@ -35,18 +35,18 @@ import java.util.List;
  * When directory-based partition pruning applied, file selection could be different for the same
  * table.
  */
-public class DirPrunedTableScan extends TableScan {
+public class SelectionBasedTableScan extends TableScan {
   private final String digestFromSelection;
 
-  public DirPrunedTableScan(RelOptCluster cluster, RelTraitSet traitSet,
-    RelOptTable table, String digestFromSelection) {
+  public SelectionBasedTableScan(RelOptCluster cluster, RelTraitSet traitSet,
+                                 RelOptTable table, String digestFromSelection) {
     super(cluster, traitSet, table);
     this.digestFromSelection = digestFromSelection;
   }
 
   @Override
   public RelNode copy(RelTraitSet traitSet, List<RelNode> inputs) {
-    return new DirPrunedTableScan(getCluster(), traitSet, table, digestFromSelection);
+    return new SelectionBasedTableScan(getCluster(), traitSet, table, digestFromSelection);
   }
 
   /** Creates an DirPrunedTableScan. */
@@ -59,7 +59,7 @@ public class DirPrunedTableScan extends TableScan {
           () -> table != null
             ? table.getStatistic().getCollations()
             : Collections.emptyList());
-    return new DirPrunedTableScan(cluster, traitSet, relOptTable, digestFromSelection);
+    return new SelectionBasedTableScan(cluster, traitSet, relOptTable, digestFromSelection);
   }
 
   @Override
