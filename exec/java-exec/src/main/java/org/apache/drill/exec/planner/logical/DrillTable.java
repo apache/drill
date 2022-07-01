@@ -45,6 +45,8 @@ import org.apache.drill.exec.util.ImpersonationUtil;
 
 public abstract class DrillTable implements Table, TranslatableTable {
 
+  public static final String SELECTION_DIGEST_NONE = "NONE";
+
   private final String storageEngineName;
   private final StoragePluginConfig storageEngineConfig;
   private final TableType tableType;
@@ -169,12 +171,18 @@ public abstract class DrillTable implements Table, TranslatableTable {
   @Override
   public RelNode toRel(RelOptTable.ToRelContext context, RelOptTable table) {
     // Returns non-drill table scan to allow directory-based partition pruning
-    // before table group scan is created. A string digest from the format
-    // selection is included so that scans which differ only by format config
-    // will correctly be differentiated, rather than incorrectly identified and
-    // reduced to a single scan.
-    String fmtSelDigest = ((FormatSelection) selection).getFormat().toString();
-    return SelectionBasedTableScan.create(context.getCluster(), table, fmtSelDigest);
+    // before table group scan is created.
+    String selDigest = SELECTION_DIGEST_NONE;
+
+    if (selection instanceof FormatSelection) {
+      // A string digest from the format selection is included so
+      // that scans which differ only by format config will correctly
+      // be differentiated, rather than incorrectly identified
+      // and reduced to a single scan.
+      selDigest = ((FormatSelection) selection).getFormat().toString();
+    }
+
+    return SelectionBasedTableScan.create(context.getCluster(), table, selDigest);
   }
 
   @Override

@@ -252,7 +252,7 @@ public class FileSystemPartitionDescriptor extends AbstractPartitionDescriptor {
       RelOptTableImpl newOptTableImpl = RelOptTableImpl.create(relOptTable.getRelOptSchema(), relOptTable.getRowType(),
           newTable, GuavaUtils.convertToUnshadedImmutableList(relOptTable.getQualifiedName()));
 
-      // return an DirPrunedTableScan with fileSelection being part of digest of TableScan node.
+      // return a SelectionBasedTableScan with fileSelection being part of digest of TableScan node.
       return SelectionBasedTableScan.create(scanRel.getCluster(), newOptTableImpl, newFileSelection.toString());
     } else {
       throw new UnsupportedOperationException("Only DrillScanRel and DirPrunedTableScan is allowed!");
