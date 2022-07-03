@@ -25,6 +25,8 @@
  *   <li>{@link org.apache.drill.categories.SlowTest}: These tests run slowly, and are disabled by default.</li>
  *   <li>{@link org.apache.drill.categories.UnlikelyTest}: These tests represent corner cases, specific bug fixes, or tests for pieces of code that are unlikely to be changed.
  *   These are disabled by default</li>
+ *   <li>{@link org.apache.drill.categories.FlakyTest}: A category for tests that intermittently fail.</li>
+ *   <li>{@link org.apache.drill.categories.EasyOutOfMemory}: Inherited class FlakyTest and allow the CI tool uses a new JVM to test the unit.</li>
  * </ul>
  * </p>
  * <p>

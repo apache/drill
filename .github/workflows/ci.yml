@@ -46,22 +46,20 @@ jobs:
           key: ${{ runner.os }}-maven-${{ hashFiles('**/pom.xml') }}
           restore-keys: |
               ${{ runner.os }}-maven-
-      # Caches MySQL directory used for JDBC storage plugin tests
-      - name: Cache MySQL
-        uses: actions/cache@v2
-        with:
-          path: ~/.embedmysql
-          key: ${{ runner.os }}-mysql
-      - name: Set up JDK ${{ matrix.java }}
-        uses: actions/setup-java@v2
-        with:
-          distribution: 'adopt'
-          java-version: ${{ matrix.java }}
       - name: Build and test
         # The total GitHub Actions memory is 7000Mb. But GitHub CI requires some memory for the container to perform tests
         run: |
           MAVEN_OPTS="-XX:+UseG1GC"
-          mvn install --batch-mode --no-transfer-progress -Dhttp.keepAlive=false -Dmaven.wagon.http.pool=false -Dmaven.wagon.httpconnectionManager.ttlSeconds=120 # -X -V for debugging
+          sudo sh -c 'echo 1 > /proc/sys/vm/drop_caches' && \
+          mvn install --batch-mode --no-transfer-progress \
+          -DexcludedGroups=org.apache.drill.categories.EasyOutOfMemory \
+          -Dhttp.keepAlive=false -Dmaven.wagon.http.pool=false -Dmaven.wagon.httpconnectionManager.ttlSeconds=120
+      - name: Test Specific Categories # EasyOutOfMemory
+        run: |
+          sudo sh -c 'echo 1 > /proc/sys/vm/drop_caches' && \
+          mvn test -pl org.apache.drill.exec:drill-java-exec \
+          -Dgroups=org.apache.drill.categories.EasyOutOfMemory \
+          -Dhttp.keepAlive=false -Dmaven.wagon.http.pool=false -Dmaven.wagon.httpconnectionManager.ttlSeconds=120
 
   checkstyle_protobuf:
     name: Run checkstyle and generate protobufs
