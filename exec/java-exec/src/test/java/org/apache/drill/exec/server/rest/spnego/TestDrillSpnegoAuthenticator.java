@@ -67,7 +67,6 @@ import static org.mockito.Mockito.verify;
 /**
  * Test for validating {@link DrillSpnegoAuthenticator}
  */
-@Ignore("See DRILL-5387")
 @Category(SecurityTest.class)
 public class TestDrillSpnegoAuthenticator extends BaseTest {
 
@@ -81,7 +80,7 @@ public class TestDrillSpnegoAuthenticator extends BaseTest {
 
   @BeforeClass
   public static void setupTest() throws Exception {
-    spnegoHelper = new KerberosHelper(TestSpnegoAuthentication.class.getSimpleName(), primaryName);
+    spnegoHelper = new KerberosHelper(TestDrillSpnegoAuthenticator.class.getSimpleName(), primaryName);
     spnegoHelper.setupKdc(dirTestWatcher.getTmpDir());
 
     // (1) Refresh Kerberos config.
