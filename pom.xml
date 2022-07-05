@@ -140,6 +140,7 @@
     <univocity-parsers.version>2.8.3</univocity-parsers.version>
     <mongo.version>4.3.3</mongo.version>
     <junit.args />
+    <log4j.version>2.17.2</log4j.version>
   </properties>
 
   <scm>
