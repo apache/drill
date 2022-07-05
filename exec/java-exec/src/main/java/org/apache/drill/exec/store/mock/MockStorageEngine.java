@@ -161,7 +161,7 @@ public class MockStorageEngine extends AbstractStoragePlugin {
       } catch (IOException e) {
         throw new IllegalArgumentException("Unable to read mock table definition file: " + name, e);
       }
-      return new DynamicDrillTable(engine, this.name, mockTableDefn.getEntries());
+      return new DynamicDrillTable(engine, this.name, mockTableDefn);
     }
 
     private Table getDirectTable(String name) {
@@ -178,9 +178,8 @@ public class MockStorageEngine extends AbstractStoragePlugin {
       else if (unit.equalsIgnoreCase("K")) { n *= 1000; }
       else if (unit.equalsIgnoreCase("M")) { n *= 1_000_000; }
       MockTableDef.MockScanEntry entry = new MockTableDef.MockScanEntry(n, true, 0, 1, null);
-      List<MockTableDef.MockScanEntry> list = new ArrayList<>();
-      list.add(entry);
-      return new DynamicDrillTable(engine, this.name, list);
+      MockTableDef tableDef = new MockTableDef(name, ImmutableList.of(entry));
+      return new DynamicDrillTable(engine, this.name, tableDef);
     }
 
     @Override

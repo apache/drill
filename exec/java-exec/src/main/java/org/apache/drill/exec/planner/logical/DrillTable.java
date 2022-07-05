@@ -34,7 +34,6 @@ import org.apache.drill.common.JSONOptions;
 import org.apache.drill.common.logical.StoragePluginConfig;
 import org.apache.drill.exec.metastore.store.FileSystemMetadataProviderManager;
 import org.apache.drill.exec.metastore.MetadataProviderManager;
-import org.apache.drill.exec.store.dfs.FormatSelection;
 import org.apache.drill.metastore.metadata.TableMetadataProvider;
 import org.apache.drill.exec.physical.base.SchemalessScan;
 import org.apache.drill.exec.physical.base.GroupScan;
@@ -45,12 +44,10 @@ import org.apache.drill.exec.util.ImpersonationUtil;
 
 public abstract class DrillTable implements Table, TranslatableTable {
 
-  public static final String SELECTION_DIGEST_NONE = "NONE";
-
   private final String storageEngineName;
   private final StoragePluginConfig storageEngineConfig;
   private final TableType tableType;
-  private final Object selection;
+  private final DrillTableSelection selection;
   private final StoragePlugin plugin;
   private final String userName;
   private GroupScan scan;
@@ -64,7 +61,7 @@ public abstract class DrillTable implements Table, TranslatableTable {
    * @param userName Whom to impersonate while reading the contents of the table.
    * @param selection Table contents (type and contents depend on type of StoragePlugin).
    */
-  public DrillTable(String storageEngineName, StoragePlugin plugin, String userName, Object selection) {
+  public DrillTable(String storageEngineName, StoragePlugin plugin, String userName, DrillTableSelection selection) {
     this(storageEngineName, plugin, TableType.TABLE, userName, selection);
   }
 
@@ -76,12 +73,12 @@ public abstract class DrillTable implements Table, TranslatableTable {
    * @param userName Whom to impersonate while reading the contents of the table.
    * @param selection Table contents (type and contents depend on type of StoragePlugin).
    */
-  public DrillTable(String storageEngineName, StoragePlugin plugin, TableType tableType, String userName, Object selection) {
+  public DrillTable(String storageEngineName, StoragePlugin plugin, TableType tableType, String userName, DrillTableSelection selection) {
     this(storageEngineName, plugin, tableType, userName, selection, null);
   }
 
   public DrillTable(String storageEngineName, StoragePlugin plugin, TableType tableType,
-                    String userName, Object selection, MetadataProviderManager metadataProviderManager) {
+                    String userName, DrillTableSelection selection, MetadataProviderManager metadataProviderManager) {
     this.selection = selection;
     this.plugin = plugin;
 
@@ -98,7 +95,7 @@ public abstract class DrillTable implements Table, TranslatableTable {
    * process. Once we add impersonation to non-FileSystem storage plugins such as Hive, HBase etc,
    * we can remove this constructor.
    */
-  public DrillTable(String storageEngineName, StoragePlugin plugin, Object selection) {
+  public DrillTable(String storageEngineName, StoragePlugin plugin, DrillTableSelection selection) {
     this(storageEngineName, plugin, ImpersonationUtil.getProcessUserName(), selection);
   }
 
@@ -172,17 +169,7 @@ public abstract class DrillTable implements Table, TranslatableTable {
   public RelNode toRel(RelOptTable.ToRelContext context, RelOptTable table) {
     // Returns non-drill table scan to allow directory-based partition pruning
     // before table group scan is created.
-    String selDigest = SELECTION_DIGEST_NONE;
-
-    if (selection instanceof FormatSelection) {
-      // A string digest from the format selection is included so
-      // that scans which differ only by format config will correctly
-      // be differentiated, rather than incorrectly identified
-      // and reduced to a single scan.
-      selDigest = ((FormatSelection) selection).getFormat().toString();
-    }
-
-    return SelectionBasedTableScan.create(context.getCluster(), table, selDigest);
+    return SelectionBasedTableScan.create(context.getCluster(), table, selection.digest());
   }
 
   @Override

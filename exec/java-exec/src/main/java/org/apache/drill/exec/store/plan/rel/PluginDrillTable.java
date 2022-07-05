@@ -23,6 +23,7 @@ import org.apache.calcite.rel.RelNode;
 import org.apache.calcite.schema.TranslatableTable;
 import org.apache.drill.common.exceptions.DrillRuntimeException;
 import org.apache.drill.exec.planner.logical.DrillTable;
+import org.apache.drill.exec.planner.logical.DrillTableSelection;
 import org.apache.drill.exec.planner.logical.DynamicDrillTable;
 import org.apache.drill.exec.store.StoragePlugin;
 import org.apache.drill.exec.util.Utilities;
@@ -36,7 +37,7 @@ public class PluginDrillTable extends DynamicDrillTable implements TranslatableT
   private final Convention convention;
 
   public PluginDrillTable(StoragePlugin plugin, String storageEngineName,
-      String userName, Object selection, Convention convention) {
+      String userName, DrillTableSelection selection, Convention convention) {
     super(plugin, storageEngineName, userName, selection);
     this.convention = convention;
   }

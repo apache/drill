@@ -24,6 +24,7 @@ import java.util.Map;
 import org.apache.drill.common.types.TypeProtos.DataMode;
 import org.apache.drill.common.types.TypeProtos.MajorType;
 import org.apache.drill.common.types.TypeProtos.MinorType;
+import org.apache.drill.exec.planner.logical.DrillTableSelection;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnore;
@@ -39,7 +40,7 @@ import com.fasterxml.jackson.annotation.JsonTypeName;
  */
 
 @JsonTypeName("mock-table")
-public class MockTableDef {
+public class MockTableDef implements DrillTableSelection {
 
   /**
    * Describes one simulated file (or block) within the logical file scan
@@ -212,4 +213,9 @@ public class MockTableDef {
    */
 
   public List<MockTableDef.MockScanEntry> getEntries() { return entries; }
+
+  @Override
+  public String digest() {
+    return entries.toString();
+  }
 }
