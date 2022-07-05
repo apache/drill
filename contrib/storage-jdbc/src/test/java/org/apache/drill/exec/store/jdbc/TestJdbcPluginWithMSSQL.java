@@ -19,7 +19,6 @@ package org.apache.drill.exec.store.jdbc;
 
 import org.apache.drill.categories.JdbcStorageTest;
 import org.apache.drill.common.logical.security.PlainCredentialsProvider;
-import org.apache.drill.common.logical.StoragePluginConfig.AuthMode;
 import org.apache.drill.common.types.TypeProtos.MinorType;
 import org.apache.drill.exec.physical.rowSet.DirectRowSet;
 import org.apache.drill.exec.physical.rowSet.RowSet;
@@ -85,7 +84,6 @@ public class TestJdbcPluginWithMSSQL extends ClusterTest {
       false,
       sourceParms,
       credentialsProvider,
-      AuthMode.SHARED_USER.name(),
       100000
     );
     jdbcStorageConfig.setEnabled(true);
