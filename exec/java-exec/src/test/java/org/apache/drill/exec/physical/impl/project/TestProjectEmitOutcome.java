@@ -188,7 +188,7 @@ public class TestProjectEmitOutcome extends BaseTestOpBatchEmitOutcome {
       fail();
     } catch (UserException e) {
       // exception is expected because of complex writers case
-      assertEquals(ErrorType.FUNCTION, e.getErrorType());
+      assertEquals(ErrorType.UNSUPPORTED_OPERATION, e.getErrorType());
     }
   }
 
@@ -225,7 +225,7 @@ public class TestProjectEmitOutcome extends BaseTestOpBatchEmitOutcome {
       fail();
     } catch (UserException e) {
       // exception is expected because of complex writers case
-      assertEquals(ErrorType.FUNCTION, e.getErrorType());
+      assertEquals(ErrorType.UNSUPPORTED_OPERATION, e.getErrorType());
     }
   }
 }
