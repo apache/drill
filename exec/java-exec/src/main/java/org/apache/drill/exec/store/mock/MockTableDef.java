@@ -17,14 +17,13 @@
  */
 package org.apache.drill.exec.store.mock;
 
+import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.List;
 import java.util.Map;
 
 import org.apache.drill.common.types.TypeProtos.DataMode;
 import org.apache.drill.common.types.TypeProtos.MajorType;
 import org.apache.drill.common.types.TypeProtos.MinorType;
-import org.apache.drill.exec.planner.logical.DrillTableSelection;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnore;
@@ -32,6 +31,7 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonTypeName;
+import org.apache.drill.exec.planner.logical.DrillTableSelection;
 
 /**
  * Structure of a mock table definition file. Yes, using Jackson deserialization to parse
@@ -40,7 +40,7 @@ import com.fasterxml.jackson.annotation.JsonTypeName;
  */
 
 @JsonTypeName("mock-table")
-public class MockTableDef implements DrillTableSelection {
+public class MockTableDef {
 
   /**
    * Describes one simulated file (or block) within the logical file scan
@@ -82,6 +82,19 @@ public class MockTableDef implements DrillTableSelection {
     public String toString() {
       return "MockScanEntry [records=" + records + ", columns="
           + Arrays.toString(types) + "]";
+    }
+  }
+
+  /**
+   * An unfortunate hack that adds required DrillTableSelection behaviour to
+   * the entries list while keeping its serialised form a JSON array to remain
+   * compatible with existing, serialised logical plan JSON files as may be
+   * found in the Drill unit test code, for example.
+   */
+  public static class MockTableSelection extends ArrayList<MockScanEntry> implements DrillTableSelection {
+    @Override
+    public String digest() {
+      return toString();
     }
   }
 
@@ -190,10 +203,10 @@ public class MockTableDef implements DrillTableSelection {
   }
 
   private String descrip;
-  List<MockTableDef.MockScanEntry> entries;
+  MockTableSelection entries;
 
   public MockTableDef(@JsonProperty("descrip") final String descrip,
-                      @JsonProperty("entries") final List<MockTableDef.MockScanEntry> entries) {
+                      @JsonProperty("entries") final MockTableSelection entries) {
     this.descrip = descrip;
     this.entries = entries;
   }
@@ -212,10 +225,5 @@ public class MockTableDef implements DrillTableSelection {
    * @return
    */
 
-  public List<MockTableDef.MockScanEntry> getEntries() { return entries; }
-
-  @Override
-  public String digest() {
-    return entries.toString();
-  }
+  public MockTableSelection getEntries() { return entries; }
 }

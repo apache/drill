@@ -41,6 +41,7 @@ import org.apache.drill.exec.store.SchemaConfig;
 
 import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.core.JsonParser;
+import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.drill.shaded.guava.com.google.common.base.Charsets;
@@ -61,8 +62,11 @@ public class MockStorageEngine extends AbstractStoragePlugin {
   @Override
   public AbstractGroupScan getPhysicalScan(String userName, JSONOptions selection, List<SchemaPath> columns)
       throws IOException {
-    MockTableDef tableDef = selection.getWith(new ObjectMapper(), MockTableDef.class);
-    List<MockTableDef.MockScanEntry> readEntries = tableDef.getEntries();
+
+    MockTableDef.MockTableSelection readEntries = selection.getListWith(new ObjectMapper(),
+        new TypeReference<MockTableDef.MockTableSelection>() {
+        });
+
     assert ! readEntries.isEmpty();
     return new MockGroupScanPOP(null, readEntries);
   }
@@ -156,7 +160,8 @@ public class MockStorageEngine extends AbstractStoragePlugin {
       } catch (IOException e) {
         throw new IllegalArgumentException("Unable to read mock table definition file: " + name, e);
       }
-      return new DynamicDrillTable(engine, this.name, mockTableDefn);
+
+      return new DynamicDrillTable(engine, this.name, mockTableDefn.getEntries());
     }
 
     private Table getDirectTable(String name) {
@@ -173,8 +178,9 @@ public class MockStorageEngine extends AbstractStoragePlugin {
       else if (unit.equalsIgnoreCase("K")) { n *= 1000; }
       else if (unit.equalsIgnoreCase("M")) { n *= 1_000_000; }
       MockTableDef.MockScanEntry entry = new MockTableDef.MockScanEntry(n, true, 0, 1, null);
-      MockTableDef tableDef = new MockTableDef(name, ImmutableList.of(entry));
-      return new DynamicDrillTable(engine, this.name, tableDef);
+      MockTableDef.MockTableSelection entries = new MockTableDef.MockTableSelection();
+      entries.add(entry);
+      return new DynamicDrillTable(engine, this.name, entries);
     }
 
     @Override
