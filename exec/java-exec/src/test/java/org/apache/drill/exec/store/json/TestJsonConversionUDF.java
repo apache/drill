@@ -51,21 +51,20 @@ public class TestJsonConversionUDF extends ClusterTest {
   }
 
   @Test
-  public void testConvertFromJsonFunctionWithBinaryInput() throws Exception {
+  public void testConvertFromJsonVarBinary() throws Exception {
     client.alterSession(ExecConstants.JSON_READER_NAN_INF_NUMBERS, true);
     String sql = "SELECT string_binary(convert_toJSON(convert_fromJSON(columns[1]))) as col FROM cp.`jsoninput/nan_test.csv`";
     RowSet results = client.queryBuilder().sql(sql).rowSet();
     assertEquals("Query result must contain 1 row", 1, results.rowCount());
-
-    results.print();
+    results.clear();
   }
 
   @Test
-  public void testConvertFromJSONWithStringInput() throws Exception {
+  public void testConvertFromJsonVarChar() throws Exception {
     // String sql = "SELECT *, convert_FromJSON('{\"foo\":\"bar\"}') FROM cp.`jsoninput/allTypes.csv`";
     String sql = "SELECT convert_FromJSON('{\"foo\":\"bar\"}') FROM (VALUES(1))";
     RowSet results = client.queryBuilder().sql(sql).rowSet();
-    results.print();
+    results.clear();
   }
 
 /*

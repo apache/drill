@@ -19,8 +19,6 @@
 package org.apache.drill.exec.expr.fn.impl.conv;
 
 
-import org.apache.commons.io.IOUtils;
-import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.exec.physical.resultSet.ResultSetLoader;
 import org.apache.drill.exec.server.options.OptionManager;
 import org.apache.drill.exec.store.easy.json.loader.JsonLoaderImpl;
@@ -29,14 +27,13 @@ import org.apache.drill.exec.store.easy.json.loader.SingleElementIterator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.IOException;
 import java.io.InputStream;
-import java.nio.charset.Charset;
 
 public class JsonConverterUtils {
 
   private static final Logger logger = LoggerFactory.getLogger(JsonConverterUtils.class);
 
+  /*
   public static InputStream convertStringToInputStream(String input) {
     try (InputStream stream = IOUtils.toInputStream(input, Charset.defaultCharset())) {
       return stream;
@@ -46,6 +43,7 @@ public class JsonConverterUtils {
         .build(logger);
     }
   }
+  */
 
   /**
    * Creates a {@link JsonLoaderImpl} for use in JSON conversion UDFs.

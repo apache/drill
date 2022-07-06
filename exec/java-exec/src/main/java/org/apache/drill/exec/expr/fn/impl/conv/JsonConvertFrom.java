@@ -33,7 +33,7 @@ import org.apache.drill.exec.physical.resultSet.ResultSetLoader;
 import org.apache.drill.exec.server.options.OptionManager;
 import org.apache.drill.exec.vector.complex.writer.BaseWriter;
 import org.apache.drill.exec.vector.complex.writer.BaseWriter.ComplexWriter;
-
+@SuppressWarnings("unused")
 public class JsonConvertFrom {
 
   private JsonConvertFrom() {}
@@ -55,30 +55,31 @@ public class JsonConvertFrom {
     ResultSetLoader rsLoader;
 
     @Workspace
-    org.apache.drill.exec.store.easy.json.loader.SingleElementIterator<java.io.InputStream> stream;
+    org.apache.drill.exec.store.easy.json.loader.SingleElementIterator<java.io.InputStream> streamIter;
 
     @Workspace
     org.apache.drill.exec.store.easy.json.loader.JsonLoaderImpl jsonLoader;
 
     @Override
     public void setup() {
+      streamIter = new org.apache.drill.exec.store.easy.json.loader.SingleElementIterator<>();
       rsLoader.startBatch();
     }
 
     @Override
     public void eval() {
-      if (in.end == 0) {
-        // Return empty map
+      // If the input is null or empty, return an empty map
+      if (in.isSet == 0 || in.start == in.end) {
         return;
       }
 
       java.io.InputStream inputStream = org.apache.drill.exec.vector.complex.fn.DrillBufInputStream.getStream(in.start, in.end, in.buffer);
 
       try {
-        stream.setValue(inputStream);
+        streamIter.setValue(inputStream);
 
         if (jsonLoader == null) {
-          jsonLoader = org.apache.drill.exec.expr.fn.impl.conv.JsonConverterUtils.createJsonLoader(rsLoader, options, stream);
+          jsonLoader = org.apache.drill.exec.expr.fn.impl.conv.JsonConverterUtils.createJsonLoader(rsLoader, options, streamIter);
         }
 
         org.apache.drill.exec.physical.resultSet.RowSetLoader rowWriter = rsLoader.writer();
@@ -86,7 +87,7 @@ public class JsonConvertFrom {
         if (jsonLoader.parser().next()) {
           rowWriter.save();
         }
-        inputStream.close();
+        //inputStream.close();
 
       } catch (Exception e) {
         throw org.apache.drill.common.exceptions.UserException.dataReadError(e)
@@ -108,7 +109,7 @@ public class JsonConvertFrom {
     ComplexWriter writer;
 
     @Workspace
-    org.apache.drill.exec.store.easy.json.loader.SingleElementIterator<java.io.InputStream> stream;
+    org.apache.drill.exec.store.easy.json.loader.SingleElementIterator<java.io.InputStream> streamIter;
 
     @Inject
     OptionManager options;
@@ -119,25 +120,25 @@ public class JsonConvertFrom {
     @Workspace
     org.apache.drill.exec.store.easy.json.loader.JsonLoaderImpl jsonLoader;
 
-
     @Override
     public void setup() {
+      streamIter = new org.apache.drill.exec.store.easy.json.loader.SingleElementIterator<>();
       rsLoader.startBatch();
     }
 
     @Override
     public void eval() {
-      String jsonString = org.apache.drill.exec.expr.fn.impl.StringFunctionHelpers.toStringFromUTF8(in.start, in.end, in.buffer);
-
       // If the input is null or empty, return an empty map
-      if (jsonString.length() == 0) {
+      if (in.isSet == 0 || in.start == in.end) {
         return;
       }
 
+      java.io.InputStream inputStream = org.apache.drill.exec.vector.complex.fn.DrillBufInputStream.getStream(in.start, in.end, in.buffer);
+
       try {
-        stream.setValue(org.apache.drill.exec.expr.fn.impl.conv.JsonConverterUtils.convertStringToInputStream(jsonString));
+        streamIter.setValue(inputStream);
         if (jsonLoader == null) {
-          jsonLoader = org.apache.drill.exec.expr.fn.impl.conv.JsonConverterUtils.createJsonLoader(rsLoader, options, stream);
+          jsonLoader = org.apache.drill.exec.expr.fn.impl.conv.JsonConverterUtils.createJsonLoader(rsLoader, options, streamIter);
         }
         org.apache.drill.exec.physical.resultSet.RowSetLoader rowWriter = rsLoader.writer();
         rowWriter.start();
