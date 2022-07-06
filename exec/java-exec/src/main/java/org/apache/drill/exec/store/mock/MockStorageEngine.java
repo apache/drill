@@ -63,11 +63,8 @@ public class MockStorageEngine extends AbstractStoragePlugin {
   @Override
   public AbstractGroupScan getPhysicalScan(String userName, JSONOptions selection, List<SchemaPath> columns)
       throws IOException {
-
-    List<MockTableDef.MockScanEntry> readEntries = selection.getListWith(new ObjectMapper(),
-        new TypeReference<ArrayList<MockTableDef.MockScanEntry>>() {
-        });
-
+    MockTableDef tableDef = selection.getWith(new ObjectMapper(), MockTableDef.class);
+    List<MockTableDef.MockScanEntry> readEntries = tableDef.getEntries();
     assert ! readEntries.isEmpty();
     return new MockGroupScanPOP(null, readEntries);
   }

@@ -18,7 +18,6 @@
 package org.apache.drill.exec.planner.logical;
 
 public interface DrillTableSelection {
-  public static final String SELECTION_DIGEST_NONE = "NONE";
 
   /**
    * The digest of the selection represented by the implementation. The
@@ -33,7 +32,5 @@ public interface DrillTableSelection {
    *
    * @return this selection's digest, normally a string built from its properties.
    */
-  default String digest() {
-    return SELECTION_DIGEST_NONE;
-  }
+  public String digest();
 }
