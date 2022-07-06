@@ -21,6 +21,8 @@ import java.util.List;
 
 import org.apache.calcite.schema.Schema.TableType;
 
+import org.apache.drill.common.PlanStringBuilder;
+import org.apache.drill.exec.planner.logical.DrillTableSelection;
 import org.apache.drill.exec.store.hive.HiveTableWrapper.HivePartitionWrapper;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
@@ -28,7 +30,7 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import org.apache.drill.shaded.guava.com.google.common.collect.Lists;
 
-public class HiveReadEntry {
+public class HiveReadEntry implements DrillTableSelection {
 
   @JsonProperty("table")
   public HiveTableWrapper table;
@@ -92,6 +94,19 @@ public class HiveReadEntry {
     }
 
     return partitionPath;
+  }
+
+  @Override
+  public String toString() {
+    return new PlanStringBuilder(this)
+      .field("tableName", table)
+      .field("partitions", partitions)
+      .toString();
+  }
+
+  @Override
+  public String digest() {
+    return toString();
   }
 }
 

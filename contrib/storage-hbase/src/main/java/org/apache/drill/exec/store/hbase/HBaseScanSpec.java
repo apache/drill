@@ -18,6 +18,8 @@
 package org.apache.drill.exec.store.hbase;
 
 
+import org.apache.drill.common.PlanStringBuilder;
+import org.apache.drill.exec.planner.logical.DrillTableSelection;
 import org.apache.hadoop.hbase.HConstants;
 import org.apache.hadoop.hbase.filter.Filter;
 import org.apache.hadoop.hbase.util.Bytes;
@@ -26,7 +28,7 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
-public class HBaseScanSpec {
+public class HBaseScanSpec implements DrillTableSelection {
 
   protected String tableName;
   protected byte[] startRow;
@@ -87,10 +89,16 @@ public class HBaseScanSpec {
 
   @Override
   public String toString() {
-    return "HBaseScanSpec [tableName=" + tableName
-        + ", startRow=" + (startRow == null ? null : Bytes.toStringBinary(startRow))
-        + ", stopRow=" + (stopRow == null ? null : Bytes.toStringBinary(stopRow))
-        + ", filter=" + (filter == null ? null : filter.toString())
-        + "]";
+    return new PlanStringBuilder(this)
+      .field("tableName", tableName)
+      .field("startRow", startRow == null ? null : Bytes.toStringBinary(startRow))
+      .field("stopRow", stopRow == null ? null : Bytes.toStringBinary(stopRow))
+      .field("filter", filter == null ? null : filter.toString())
+      .toString();
+  }
+
+  @Override
+  public String digest() {
+    return toString();
   }
 }
