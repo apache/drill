@@ -57,6 +57,8 @@ public class DruidBatchRecordReader implements ManagedReader<SchemaNegotiator> {
   private final DruidQueryClient druidQueryClient;
   private final FragmentContext fragmentContext;
 
+  private final DruidSubScan subScan;
+
   private final TupleMetadata schema;
   private BigInteger nextOffset = BigInteger.ZERO;
   private int maxRecordsToRead = -1;
@@ -69,17 +71,18 @@ public class DruidBatchRecordReader implements ManagedReader<SchemaNegotiator> {
   private CustomErrorContext errorContext;
 
 
-  public DruidBatchRecordReader(DruidSubScanSpec subScanSpec,
+  public DruidBatchRecordReader(DruidSubScan subScan,
+                                DruidSubScanSpec subScanSpec,
                                 List<SchemaPath> projectedColumns,
                                 int maxRecordsToRead,
                                 FragmentContext context,
                                 DruidStoragePlugin plugin) {
+    this.subScan = subScan;
     columns = new ArrayList<>();
-    setColumns(projectedColumns);
     this.maxRecordsToRead = maxRecordsToRead;
     this.plugin = plugin;
     scanSpec = subScanSpec;
-    this.schema = scanSpec.getSchema();
+    this.schema = subScan.getSchema();
     fragmentContext = context;
     this.filter = subScanSpec.getFilter();
     this.druidQueryClient = plugin.getDruidQueryClient();
@@ -89,8 +92,8 @@ public class DruidBatchRecordReader implements ManagedReader<SchemaNegotiator> {
   public boolean open(SchemaNegotiator negotiator) {
     resultSetLoader = negotiator.build();
     errorContext = negotiator.parentErrorContext();
+    negotiator.setErrorContext(errorContext);
 
-    negotiator
     jsonBuilder = new JsonLoaderBuilder()
       .resultSetLoader(resultSetLoader)
       .errorContext(errorContext);
