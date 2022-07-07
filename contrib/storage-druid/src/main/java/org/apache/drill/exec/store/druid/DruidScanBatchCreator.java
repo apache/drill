@@ -19,7 +19,6 @@ package org.apache.drill.exec.store.druid;
 
 import org.apache.drill.common.exceptions.ChildErrorContext;
 import org.apache.drill.common.exceptions.ExecutionSetupException;
-import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.common.types.TypeProtos.MinorType;
 import org.apache.drill.common.types.Types;
@@ -41,11 +40,32 @@ import org.apache.drill.exec.store.druid.DruidSubScan.DruidSubScanSpec;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.Iterator;
 import java.util.List;
 
 public class DruidScanBatchCreator implements BatchCreator<DruidSubScan> {
 
   private static final Logger logger = LoggerFactory.getLogger(DruidScanBatchCreator.class);
+
+  /*
+    @Override
+  public CloseableRecordBatch getBatch(ExecutorFragmentContext context,
+                                       SplunkSubScan subScan, List<RecordBatch> children) throws ExecutionSetupException {
+    Preconditions.checkArgument(children.isEmpty());
+
+    try {
+      ScanFrameworkBuilder builder = createBuilder(context.getOptions(), subScan);
+      return builder.buildScanOperator(context, subScan);
+    } catch (UserException e) {
+      // Rethrow user exceptions directly
+      throw e;
+    } catch (Throwable e) {
+      // Wrap all others
+      throw new ExecutionSetupException(e);
+    }
+  }
+   */
+
 
   @Override
   public CloseableRecordBatch getBatch(ExecutorFragmentContext context, DruidSubScan subScan, List<RecordBatch> children) throws ExecutionSetupException {
@@ -55,6 +75,7 @@ public class DruidScanBatchCreator implements BatchCreator<DruidSubScan> {
 
     for (DruidSubScan.DruidSubScanSpec scanSpec : subScan.getScanSpec()) {
       try {
+        ScanFrameworkBuilder builder = createBuilder(context.getOptions(), subScan, context);
         columns = subScan.getColumns();
         readers.add(new DruidRecordReader(scanSpec, columns, subScan.getMaxRecordsToRead(), context, subScan.getStorageEngine()));
       } catch (Exception ex) {
@@ -67,7 +88,7 @@ public class DruidScanBatchCreator implements BatchCreator<DruidSubScan> {
 
   private ScanFrameworkBuilder createBuilder(OptionManager options,
                                              DruidSubScan subScan,
-                                             DruidSubScanSpec scanSpec) {
+                                             ExecutorFragmentContext context) {
     ScanFrameworkBuilder builder = new ScanFrameworkBuilder();
     builder.projection(subScan.getColumns());
     builder.providedSchema(subScan.getSchema());
@@ -76,18 +97,21 @@ public class DruidScanBatchCreator implements BatchCreator<DruidSubScan> {
     builder.errorContext(new ChildErrorContext(builder.errorContext()) {});
 
     // Reader
-    ReaderFactory readerFactory = new DruidReaderFactory(subScan);
+    ReaderFactory readerFactory = new DruidReaderFactory(subScan, context);
     builder.setReaderFactory(readerFactory);
     builder.nullType(Types.optional(MinorType.VARCHAR));
 
     return builder;
   }
 
-  private static class DruidReaderFactory() implements ReaderFactory {
-
+  private static class DruidReaderFactory implements ReaderFactory {
     private final DruidSubScan subScan;
-    public DruidReaderFactory(DruidSubScan subScan) {
+    private final ExecutorFragmentContext context;
+    private final Iterator<DruidSubScanSpec> subScanSpecIterator;
+    public DruidReaderFactory(DruidSubScan subScan, ExecutorFragmentContext context) {
       this.subScan = subScan;
+      this.context = context;
+      this.subScanSpecIterator = subScan.getScanSpec().iterator();
     }
 
     @Override
@@ -95,7 +119,12 @@ public class DruidScanBatchCreator implements BatchCreator<DruidSubScan> {
 
     @Override
     public ManagedReader<SchemaNegotiator> next() {
-      return new DruidBatchRecordReader();
+      return new DruidBatchRecordReader(subScan,
+        subScanSpecIterator.next(),
+        subScan.getColumns(),
+        subScan.getMaxRecordsToRead(),
+        context,
+        subScan.getStorageEngine());
     }
   }
 }
