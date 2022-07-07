@@ -17,8 +17,8 @@
  */
 package org.apache.drill.exec.store.mock;
 
-import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
 import java.util.Map;
 
 import org.apache.drill.common.types.TypeProtos.DataMode;
@@ -86,15 +86,25 @@ public class MockTableDef {
   }
 
   /**
-   * An unfortunate hack that adds required DrillTableSelection behaviour to
-   * the entries list while keeping its serialised form a JSON array to remain
-   * compatible with existing, serialised logical plan JSON files as may be
-   * found in the Drill unit test code, for example.
+   * A tiny wrapper class to add required DrillTableSelection behaviour to
+   * the entries list.
    */
-  public static class MockTableSelection extends ArrayList<MockScanEntry> implements DrillTableSelection {
+  public static class MockTableSelection implements DrillTableSelection {
+    private final List<MockScanEntry> entries;
+
+    @JsonCreator
+    public MockTableSelection(@JsonProperty("entries") List<MockScanEntry> entries) {
+      this.entries = entries;
+    }
+
+    @JsonIgnore
     @Override
     public String digest() {
-      return toString();
+      return entries.toString();
+    }
+
+    public List<MockScanEntry> getEntries() {
+      return entries;
     }
   }
 
