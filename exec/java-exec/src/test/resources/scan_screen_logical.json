@@ -18,14 +18,16 @@
     "op" : "scan",
     "memo" : "initial_scan",
     "storageengine" : "mock",
-    "selection" : [ {
-      "records" : 100,
-      "types" : [ {
-        "name" : "superhero_name",
-        "type" : "VARCHAR",
-        "mode" : "REQUIRED"
+    "selection" : {
+      "entries": [ {
+        "records" : 100,
+        "types" : [ {
+          "name" : "superhero_name",
+          "type" : "VARCHAR",
+          "mode" : "REQUIRED"
+        } ]
       } ]
-    } ]
+    }
   }, {
     "@id" : "2",
     "input" : 1,

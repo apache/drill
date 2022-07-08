@@ -21,11 +21,12 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import org.apache.drill.common.logical.FormatPluginConfig;
+import org.apache.drill.exec.planner.logical.DrillTableSelection;
 import org.apache.hadoop.fs.Path;
 
 import java.util.List;
 
-public class FormatSelection {
+public class FormatSelection implements DrillTableSelection {
 
   private FormatPluginConfig format;
   private FileSelection selection;
@@ -61,5 +62,15 @@ public class FormatSelection {
   @JsonIgnore
   public boolean supportsDirPruning() {
     return selection.supportsDirPruning();
+  }
+
+  @Override
+  public String digest() {
+    return toString();
+  }
+
+  @Override
+  public String toString() {
+    return String.format("fileSelection=%s,formatConfig=%s", selection, format);
   }
 }

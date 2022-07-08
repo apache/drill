@@ -20,7 +20,6 @@ package org.apache.drill.exec.planner.logical;
 import java.io.IOException;
 import java.util.Objects;
 
-import org.apache.calcite.adapter.enumerable.EnumerableTableScan;
 import org.apache.calcite.config.CalciteConnectionConfig;
 import org.apache.calcite.plan.RelOptTable;
 import org.apache.calcite.rel.RelNode;
@@ -47,7 +46,7 @@ public abstract class DrillTable implements Table {
   private final String storageEngineName;
   private final StoragePluginConfig storageEngineConfig;
   private final TableType tableType;
-  private final Object selection;
+  private final DrillTableSelection selection;
   private final StoragePlugin plugin;
   private final String userName;
   private GroupScan scan;
@@ -61,7 +60,7 @@ public abstract class DrillTable implements Table {
    * @param userName Whom to impersonate while reading the contents of the table.
    * @param selection Table contents (type and contents depend on type of StoragePlugin).
    */
-  public DrillTable(String storageEngineName, StoragePlugin plugin, String userName, Object selection) {
+  public DrillTable(String storageEngineName, StoragePlugin plugin, String userName, DrillTableSelection selection) {
     this(storageEngineName, plugin, TableType.TABLE, userName, selection);
   }
 
@@ -73,12 +72,12 @@ public abstract class DrillTable implements Table {
    * @param userName Whom to impersonate while reading the contents of the table.
    * @param selection Table contents (type and contents depend on type of StoragePlugin).
    */
-  public DrillTable(String storageEngineName, StoragePlugin plugin, TableType tableType, String userName, Object selection) {
+  public DrillTable(String storageEngineName, StoragePlugin plugin, TableType tableType, String userName, DrillTableSelection selection) {
     this(storageEngineName, plugin, tableType, userName, selection, null);
   }
 
   public DrillTable(String storageEngineName, StoragePlugin plugin, TableType tableType,
-                    String userName, Object selection, MetadataProviderManager metadataProviderManager) {
+                    String userName, DrillTableSelection selection, MetadataProviderManager metadataProviderManager) {
     this.selection = selection;
     this.plugin = plugin;
 
@@ -95,7 +94,7 @@ public abstract class DrillTable implements Table {
    * process. Once we add impersonation to non-FileSystem storage plugins such as Hive, HBase etc,
    * we can remove this constructor.
    */
-  public DrillTable(String storageEngineName, StoragePlugin plugin, Object selection) {
+  public DrillTable(String storageEngineName, StoragePlugin plugin, DrillTableSelection selection) {
     this(storageEngineName, plugin, ImpersonationUtil.getProcessUserName(), selection);
   }
 
@@ -166,9 +165,9 @@ public abstract class DrillTable implements Table {
   }
 
   public RelNode toRel(RelOptTable.ToRelContext context, RelOptTable table) {
-    // returns non-drill table scan to allow directory-based partition pruning
-    // before table group scan is created
-    return EnumerableTableScan.create(context.getCluster(), table);
+    // Returns non-drill table scan to allow directory-based partition pruning
+    // before table group scan is created.
+    return SelectionBasedTableScan.create(context.getCluster(), table, selection.digest());
   }
 
   @Override

@@ -19,8 +19,10 @@ package org.apache.drill.exec.store.openTSDB;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import org.apache.drill.common.PlanStringBuilder;
+import org.apache.drill.exec.planner.logical.DrillTableSelection;
 
-public class OpenTSDBScanSpec {
+public class OpenTSDBScanSpec implements DrillTableSelection {
 
   private final String tableName;
 
@@ -35,8 +37,13 @@ public class OpenTSDBScanSpec {
 
   @Override
   public String toString() {
-    return "OpenTSDBScanSpec{" +
-            "tableName='" + tableName + '\'' +
-            '}';
+    return new PlanStringBuilder(this)
+      .field("tableName", tableName)
+      .toString();
+  }
+
+  @Override
+  public String digest() {
+    return toString();
   }
 }

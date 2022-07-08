@@ -18,30 +18,32 @@
     "op" : "scan",
     "@id" : 1,
     "storageengine" : "mock",
-    "selection" : [ {
-      "records" : 10,
-      "types" : [ {
-        "name" : "tinyint_val",
-        "type" : "TINYINT",
-        "mode" : "REQUIRED"
-      }, {
-        "name" : "smallint_val",
-        "type" : "SMALLINT",
-        "mode" : "REQUIRED"
-      }, {
-        "name" : "int_val",
-        "type" : "INT",
-        "mode" : "REQUIRED"
-      }, {
-        "name" : "bigint_val",
-        "type" : "BIGINT",
-        "mode" : "REQUIRED"
-      }, {
-        "name" : "uint8_val",
-        "type" : "UINT8",
-        "mode" : "REQUIRED"
+    "selection" : {
+      "entries": [ {
+        "records" : 10,
+        "types" : [ {
+          "name" : "tinyint_val",
+          "type" : "TINYINT",
+          "mode" : "REQUIRED"
+        }, {
+          "name" : "smallint_val",
+          "type" : "SMALLINT",
+          "mode" : "REQUIRED"
+        }, {
+          "name" : "int_val",
+          "type" : "INT",
+          "mode" : "REQUIRED"
+        }, {
+          "name" : "bigint_val",
+          "type" : "BIGINT",
+          "mode" : "REQUIRED"
+        }, {
+          "name" : "uint8_val",
+          "type" : "UINT8",
+          "mode" : "REQUIRED"
+        } ]
       } ]
-    } ]
+    }
   }, {
     "op" : "project",
     "@id" : 2,

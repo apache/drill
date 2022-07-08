@@ -21,6 +21,7 @@ import org.apache.calcite.rel.type.RelDataType;
 import org.apache.calcite.rel.type.RelDataTypeFactory;
 import org.apache.calcite.schema.Schema.TableType;
 import org.apache.drill.exec.planner.logical.DrillTable;
+import org.apache.drill.exec.planner.logical.DrillTableSelection;
 import org.apache.drill.exec.store.RecordDataType;
 import org.apache.drill.exec.store.StoragePlugin;
 import org.apache.drill.exec.util.ImpersonationUtil;
@@ -34,7 +35,7 @@ public class StaticDrillTable extends DrillTable {
 
   private final RecordDataType dataType;
 
-  public StaticDrillTable(String storageEngineName, StoragePlugin plugin, TableType tableType, Object selection, RecordDataType dataType) {
+  public StaticDrillTable(String storageEngineName, StoragePlugin plugin, TableType tableType, DrillTableSelection selection, RecordDataType dataType) {
     super(storageEngineName, plugin, tableType, ImpersonationUtil.getProcessUserName(), selection);
     this.dataType = dataType;
   }

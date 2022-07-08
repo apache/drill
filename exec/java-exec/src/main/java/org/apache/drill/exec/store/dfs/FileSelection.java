@@ -19,6 +19,7 @@ package org.apache.drill.exec.store.dfs;
 
 import org.apache.drill.common.exceptions.DrillRuntimeException;
 import org.apache.drill.common.util.DrillStringUtils;
+import org.apache.drill.exec.planner.logical.DrillTableSelection;
 import org.apache.drill.exec.util.DrillFileSystemUtil;
 import org.apache.drill.shaded.guava.com.google.common.base.Preconditions;
 import org.apache.drill.shaded.guava.com.google.common.base.Stopwatch;
@@ -40,7 +41,7 @@ import java.util.stream.Collectors;
 /**
  * Jackson serializable description of a file selection.
  */
-public class FileSelection {
+public class FileSelection implements DrillTableSelection {
 
   private static final Logger logger = LoggerFactory.getLogger(FileSelection.class);
   private static final String WILD_CARD = "*";
@@ -435,6 +436,11 @@ public class FileSelection {
    */
   public void setEmptyDirectoryStatus() {
     this.emptyDirectory = true;
+  }
+
+  @Override
+  public String digest() {
+    return toString();
   }
 
   @Override

@@ -21,9 +21,10 @@ package org.apache.drill.exec.store.druid;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import org.apache.drill.common.PlanStringBuilder;
+import org.apache.drill.exec.planner.logical.DrillTableSelection;
 import org.apache.drill.exec.store.druid.common.DruidFilter;
 
-public class DruidScanSpec {
+public class DruidScanSpec implements DrillTableSelection {
 
   private final String dataSourceName;
   private final long dataSourceSize;
@@ -83,5 +84,10 @@ public class DruidScanSpec {
       .field("", dataSourceMaxTime)
       .field("filter", filter)
       .toString();
+  }
+
+  @Override
+  public String digest() {
+    return toString();
   }
 }

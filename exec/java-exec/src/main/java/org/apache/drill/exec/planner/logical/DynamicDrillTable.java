@@ -30,12 +30,12 @@ public class DynamicDrillTable extends DrillTable {
 
   private final RelDataTypeHolder holder;
 
-  public DynamicDrillTable(StoragePlugin plugin, String storageEngineName, String userName, Object selection) {
+  public DynamicDrillTable(StoragePlugin plugin, String storageEngineName, String userName, DrillTableSelection selection) {
     this(plugin, storageEngineName, userName, selection, null);
   }
 
   public DynamicDrillTable(StoragePlugin plugin, String storageEngineName, String userName,
-    Object selection, MetadataProviderManager metadataProviderManager) {
+    DrillTableSelection selection, MetadataProviderManager metadataProviderManager) {
     super(storageEngineName, plugin, Schema.TableType.TABLE, userName, selection, metadataProviderManager);
     this.holder = new RelDataTypeHolder();
   }
@@ -46,7 +46,7 @@ public class DynamicDrillTable extends DrillTable {
    * non-FileSystem storage plugins such as Hive, HBase etc, we can remove this
    * constructor.
    */
-  public DynamicDrillTable(StoragePlugin plugin, String storageEngineName, Object selection) {
+  public DynamicDrillTable(StoragePlugin plugin, String storageEngineName, DrillTableSelection selection) {
     this(plugin, storageEngineName, ImpersonationUtil.getProcessUserName(), selection, null);
   }
 

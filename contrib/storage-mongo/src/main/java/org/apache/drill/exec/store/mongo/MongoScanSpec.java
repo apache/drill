@@ -20,11 +20,12 @@ package org.apache.drill.exec.store.mongo;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import org.apache.drill.common.PlanStringBuilder;
+import org.apache.drill.exec.planner.logical.DrillTableSelection;
 
 import java.util.ArrayList;
 import java.util.List;
 
-public class MongoScanSpec {
+public class MongoScanSpec implements DrillTableSelection {
   private final String dbName;
   private final String collectionName;
 
@@ -70,5 +71,10 @@ public class MongoScanSpec {
       .field("filters", filters)
       .field("operations", operations)
       .toString();
+  }
+
+  @Override
+  public String digest() {
+    return toString();
   }
 }

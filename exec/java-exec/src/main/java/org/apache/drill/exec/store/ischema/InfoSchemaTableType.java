@@ -21,6 +21,7 @@ import org.apache.calcite.rel.type.RelDataType;
 import org.apache.calcite.rel.type.RelDataTypeFactory;
 import org.apache.calcite.schema.SchemaPlus;
 import org.apache.drill.exec.ExecConstants;
+import org.apache.drill.exec.planner.logical.DrillTableSelection;
 import org.apache.drill.exec.server.options.OptionManager;
 import org.apache.drill.exec.store.ischema.InfoSchemaTable.Catalogs;
 import org.apache.drill.exec.store.ischema.InfoSchemaTable.Columns;
@@ -40,7 +41,7 @@ import static org.slf4j.LoggerFactory.getLogger;
 /**
  * The set of tables / views in INFORMATION_SCHEMA.
  */
-public enum InfoSchemaTableType {
+public enum InfoSchemaTableType implements DrillTableSelection {
 
   CATALOGS(new Catalogs()),
   SCHEMATA(new Schemata()),
@@ -90,5 +91,10 @@ public enum InfoSchemaTableType {
 
   public RelDataType getRowType(RelDataTypeFactory typeFactory) {
     return tableDef.getRowType(typeFactory);
+  }
+
+  @Override
+  public String digest() {
+    return toString();
   }
 }
