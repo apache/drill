@@ -34,6 +34,7 @@ import org.apache.calcite.schema.SchemaPlus;
 import org.apache.calcite.schema.TranslatableTable;
 import org.apache.calcite.schema.Wrapper;
 import org.apache.drill.exec.planner.logical.DrillTable;
+import org.apache.drill.exec.planner.logical.DrillTableSelection;
 import org.apache.drill.exec.store.StoragePlugin;
 
 import java.lang.reflect.Type;
@@ -44,7 +45,7 @@ public class CassandraDynamicTable extends DrillTable implements TranslatableTab
 
   private final CassandraTable table;
 
-  public CassandraDynamicTable(StoragePlugin plugin, String storageEngineName, Object selection, CassandraTable table) {
+  public CassandraDynamicTable(StoragePlugin plugin, String storageEngineName, DrillTableSelection selection, CassandraTable table) {
     super(storageEngineName, plugin, selection);
     this.table = table;
   }

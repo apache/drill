@@ -31,6 +31,7 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonTypeName;
+import org.apache.drill.exec.planner.logical.DrillTableSelection;
 
 /**
  * Structure of a mock table definition file. Yes, using Jackson deserialization to parse
@@ -81,6 +82,29 @@ public class MockTableDef {
     public String toString() {
       return "MockScanEntry [records=" + records + ", columns="
           + Arrays.toString(types) + "]";
+    }
+  }
+
+  /**
+   * A tiny wrapper class to add required DrillTableSelection behaviour to
+   * the entries list.
+   */
+  public static class MockTableSelection implements DrillTableSelection {
+    private final List<MockScanEntry> entries;
+
+    @JsonCreator
+    public MockTableSelection(@JsonProperty("entries") List<MockScanEntry> entries) {
+      this.entries = entries;
+    }
+
+    @JsonIgnore
+    @Override
+    public String digest() {
+      return entries.toString();
+    }
+
+    public List<MockScanEntry> getEntries() {
+      return entries;
     }
   }
 
@@ -189,10 +213,10 @@ public class MockTableDef {
   }
 
   private String descrip;
-  List<MockTableDef.MockScanEntry> entries;
+  MockTableSelection entries;
 
   public MockTableDef(@JsonProperty("descrip") final String descrip,
-                      @JsonProperty("entries") final List<MockTableDef.MockScanEntry> entries) {
+                      @JsonProperty("entries") final MockTableSelection entries) {
     this.descrip = descrip;
     this.entries = entries;
   }
@@ -211,5 +235,5 @@ public class MockTableDef {
    * @return
    */
 
-  public List<MockTableDef.MockScanEntry> getEntries() { return entries; }
+  public MockTableSelection getEntries() { return entries; }
 }

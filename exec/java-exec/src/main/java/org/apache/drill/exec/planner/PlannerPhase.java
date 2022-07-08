@@ -348,7 +348,6 @@ public enum PlannerPhase {
       // Due to infinite loop in planning (DRILL-3257/CALCITE-1271), temporarily use this rule in Hep planner
       // RuleInstance.PROJECT_SET_OP_TRANSPOSE_RULE,
       RuleInstance.PROJECT_WINDOW_TRANSPOSE_RULE,
-      DrillPushProjectIntoScanRule.LOGICAL_INSTANCE,
       DrillPushProjectIntoScanRule.INSTANCE,
       DrillPushProjectIntoScanRule.DRILL_LOGICAL_INSTANCE,
 
@@ -356,8 +355,7 @@ public enum PlannerPhase {
        Convert from Calcite Logical to Drill Logical Rules.
        */
       RuleInstance.EXPAND_CONVERSION_RULE,
-      DrillScanRule.LOGICAL_TABLE_SCAN_TO_DRILL,
-      DrillScanRule.DIR_PRUNED_TABLE_SCAN_TO_DRILL,
+      DrillScanRule.INSTANCE,
       DrillFilterRule.INSTANCE,
       DrillProjectRule.INSTANCE,
       DrillWindowRule.INSTANCE,

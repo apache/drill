@@ -17,23 +17,20 @@
  */
 package org.apache.drill.exec.planner.logical;
 
-import org.apache.calcite.plan.RelOptRule;
-import org.apache.calcite.plan.RelOptRuleCall;
-import org.apache.calcite.plan.RelTraitSet;
-import org.apache.calcite.rel.core.TableScan;
+public interface DrillTableSelection {
 
-public class DrillScanRule extends RelOptRule {
-  public static final RelOptRule INSTANCE = new DrillScanRule(SelectionBasedTableScan.class);
-
-  private DrillScanRule(Class<? extends TableScan> scan) {
-    super(RelOptHelper.any(scan),
-        DrillRelFactories.LOGICAL_BUILDER, "DrillScanRule:" + scan.getSimpleName());
-  }
-
-  @Override
-  public void onMatch(RelOptRuleCall call) {
-    TableScan access = call.rel(0);
-    RelTraitSet traits = access.getTraitSet().plus(DrillRel.DRILL_LOGICAL);
-    call.transformTo(new DrillScanRel(access.getCluster(), traits, access.getTable()));
-  }
+  /**
+   * The digest of the selection represented by the implementation. The
+   * selections that accompany Tables can modify the contained dataset, e.g.
+   * a file selection can restrict to a subset of the available data and a
+   * format selection can include options that affect the behaviour of the
+   * underlying reader. Two scans will end up being considered identical during
+   * logical planning if their digests are the same so selection
+   * implementations should override this method so that exactly those scans
+   * that really are identical (in terms of the data they produce) have matching
+   * digests.
+   *
+   * @return this selection's digest, normally a string built from its properties.
+   */
+  public String digest();
 }

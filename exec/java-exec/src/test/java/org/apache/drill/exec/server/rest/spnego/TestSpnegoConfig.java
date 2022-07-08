@@ -55,7 +55,7 @@ public class TestSpnegoConfig extends BaseTest {
 
   @BeforeClass
   public static void setupTest() throws Exception {
-    spnegoHelper = new KerberosHelper(TestSpnegoAuthentication.class.getSimpleName(), primaryName);
+    spnegoHelper = new KerberosHelper(TestSpnegoConfig.class.getSimpleName(), primaryName);
     spnegoHelper.setupKdc(dirTestWatcher.getTmpDir());
 
     // (1) Refresh Kerberos config.

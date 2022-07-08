@@ -22,6 +22,7 @@ import org.apache.calcite.rel.type.RelDataTypeFactory;
 import org.apache.calcite.sql.type.SqlTypeName;
 import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.exec.planner.logical.DrillTable;
+import org.apache.drill.exec.planner.logical.DrillTableSelection;
 import org.apache.drill.exec.store.StoragePlugin;
 import org.apache.hadoop.hbase.TableName;
 import org.apache.hadoop.hbase.client.Connection;
@@ -41,7 +42,7 @@ public abstract class AbstractHBaseDrillTable extends DrillTable {
 
   protected HTableDescriptor tableDesc;
 
-  public AbstractHBaseDrillTable(String storageEngineName, StoragePlugin plugin, Object selection) {
+  public AbstractHBaseDrillTable(String storageEngineName, StoragePlugin plugin, DrillTableSelection selection) {
     super(storageEngineName, plugin, selection);
   }
 

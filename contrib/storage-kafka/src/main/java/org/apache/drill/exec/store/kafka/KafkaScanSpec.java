@@ -19,8 +19,10 @@ package org.apache.drill.exec.store.kafka;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import org.apache.drill.common.PlanStringBuilder;
+import org.apache.drill.exec.planner.logical.DrillTableSelection;
 
-public class KafkaScanSpec {
+public class KafkaScanSpec implements DrillTableSelection {
   private final String topicName;
 
   @JsonCreator
@@ -34,6 +36,13 @@ public class KafkaScanSpec {
 
   @Override
   public String toString() {
-    return "KafkaScanSpec [topicName=" + topicName + "]";
+    return new PlanStringBuilder(this)
+      .field("topicName", topicName)
+      .toString();
+  }
+
+  @Override
+  public String digest() {
+    return toString();
   }
 }

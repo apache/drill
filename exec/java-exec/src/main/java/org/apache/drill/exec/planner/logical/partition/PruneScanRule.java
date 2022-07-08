@@ -26,9 +26,8 @@ import java.util.Map;
 import java.util.concurrent.TimeUnit;
 import java.util.regex.Pattern;
 
-import org.apache.calcite.rel.logical.LogicalTableScan;
 import org.apache.drill.exec.planner.common.DrillRelOptUtil;
-import org.apache.drill.exec.planner.logical.DirPrunedTableScan;
+import org.apache.drill.exec.planner.logical.SelectionBasedTableScan;
 import org.apache.drill.exec.util.DrillFileSystemUtil;
 import org.apache.drill.shaded.guava.com.google.common.base.Stopwatch;
 import org.apache.calcite.plan.RelTraitSet;
@@ -781,7 +780,6 @@ public abstract class PruneScanRule extends StoragePluginOptimizerRule {
   }
 
   private static boolean supportsScan(TableScan scan) {
-    return scan instanceof DirPrunedTableScan
-      || scan instanceof LogicalTableScan;
+    return scan instanceof SelectionBasedTableScan;
   }
 }
