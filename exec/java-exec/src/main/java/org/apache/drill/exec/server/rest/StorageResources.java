@@ -197,6 +197,7 @@ public class StorageResources {
   @Deprecated
   public Response updateRefreshToken(@PathParam("name") String name, OAuthTokenContainer tokens) {
     // This endpoint is deprecated.  Use the same path in credentials resources instead.
+    logger.warn("Deprecated endpoint call: {}", "/storage/" + name + "/update_refresh_token.");
     return OAuthRequests.updateRefreshToken(name, tokens, storage, authEnabled, sc);
   }
 
@@ -207,6 +208,8 @@ public class StorageResources {
   @Deprecated
   public Response updateAccessToken(@PathParam("name") String name, OAuthTokenContainer tokens) {
     // This endpoint is deprecated.  Use the same path in credentials resources instead.
+    logger.warn("Deprecated endpoint call: {}", "/storage/" + name + "/update_access_token.");
+
     return OAuthRequests.updateAccessToken(name, tokens, storage, authEnabled, sc);
   }
 
@@ -218,6 +221,7 @@ public class StorageResources {
   public Response updateOAuthTokens(@PathParam("name") String name,
                                     OAuthTokenContainer tokenContainer) {
     // This endpoint is deprecated.  Use the same path in credentials resources instead.
+    logger.warn("Deprecated endpoint call: {}", "/storage/" + name + "/update_oauth_tokens.");
     return OAuthRequests.updateOAuthTokens(name, tokenContainer, storage, authEnabled, sc);
   }
 
@@ -227,6 +231,7 @@ public class StorageResources {
   @Deprecated
   public Response updateAuthToken(@PathParam("name") String name, @QueryParam("code") String code) {
     // This endpoint is deprecated.  Use the same path in credentials resources instead.
+    logger.warn("Deprecated endpoint call: {}", "/storage/" + name + "/update_oauth2_authtoken.");
     return OAuthRequests.updateAuthToken(name, code, request, storage, authEnabled, sc);
   }
 

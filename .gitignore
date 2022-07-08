@@ -28,3 +28,6 @@ exec/jdbc-all/dependency-reduced-pom.xml
 .*.html
 venv/
 tools/venv/
+
+# Directory to store oauth tokens for testing Googlesheets Storage plugin
+contrib/storage-googlesheets/src/test/resources/tokens/*

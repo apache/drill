@@ -105,7 +105,7 @@ public class TestHTTPDLogReaderUserAgent extends ClusterTest {
                     "          `request_user-agent_device__name`,                 " +
                     "          `request_user-agent_agent__name__version__major`   " +
                     "FROM       table(                                            " +
-                    "             cp.`httpd/typeremap.log`                        " +
+                    "             cp.`httpd/typeremap.httpd`                        " +
                     "                 (                                           " +
                     "                   type => 'httpd',                          " +
                     "                   logFormat => 'common\ncombined\n%h %l %u %t \"%r\" %>s %b %{RequestId}o\n',\n" +
@@ -140,7 +140,7 @@ public class TestHTTPDLogReaderUserAgent extends ClusterTest {
             "          `request_user-agent_device__name`,                 " +
             "          `request_user-agent_agent__name__version__major`   " +
             "FROM       table(                                            " +
-            "             cp.`httpd/typeremap.log`                        " +
+            "             cp.`httpd/typeremap.httpd`                        " +
             "                 (                                           " +
             "                   type => 'httpd',                          " +
             "                   logFormat => 'common\ncombined\n%h %l %u %t \"%r\" %>s %b %{RequestId}o\n',\n" +
@@ -182,7 +182,7 @@ public class TestHTTPDLogReaderUserAgent extends ClusterTest {
             "        , `response_header_requestid_epoch`                                      \n" +
 //            "        , *                                                                     \n"+
             "FROM       table(                                                                \n" +
-            "             cp.`httpd/typeremap.log`                                            \n" +
+            "             cp.`httpd/typeremap.httpd`                                            \n" +
             "                 (                                                               \n" +
             "                   type => 'httpd',                                              \n" +
             //                  LogFormat: Mind the leading and trailing spaces! Empty lines are ignored

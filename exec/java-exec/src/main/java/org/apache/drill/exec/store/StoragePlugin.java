@@ -82,7 +82,7 @@ public interface StoragePlugin extends SchemaFactory, AutoCloseable {
   /**
    * Get the physical scan operator for the particular GroupScan (read) node.
    *
-   * @param userName User whom to impersonate when when reading the contents as part of Scan.
+   * @param userName User whom to impersonate when reading the contents as part of Scan.
    * @param selection The configured storage engine specific selection.
    * @param options (optional) session options
    * @return The physical scan operator for the particular GroupScan (read) node.
@@ -93,7 +93,7 @@ public interface StoragePlugin extends SchemaFactory, AutoCloseable {
   /**
    * Get the physical scan operator for the particular GroupScan (read) node.
    *
-   * @param userName        User whom to impersonate when when reading the contents as part of Scan.
+   * @param userName        User whom to impersonate when reading the contents as part of Scan.
    * @param selection       The configured storage engine specific selection.
    * @param options         (optional) session options
    * @param providerManager manager for handling metadata providers
@@ -105,7 +105,7 @@ public interface StoragePlugin extends SchemaFactory, AutoCloseable {
   /**
    * Get the physical scan operator for the particular GroupScan (read) node.
    *
-   * @param userName User whom to impersonate when when reading the contents as part of Scan.
+   * @param userName User whom to impersonate when reading the contents as part of Scan.
    * @param selection The configured storage engine specific selection.
    * @param columns (optional) The list of column names to scan from the data source.
    * @return The physical scan operator for the particular GroupScan (read) node.
@@ -116,7 +116,7 @@ public interface StoragePlugin extends SchemaFactory, AutoCloseable {
   /**
    * Get the physical scan operator for the particular GroupScan (read) node.
    *
-   * @param userName User whom to impersonate when when reading the contents as part of Scan.
+   * @param userName User whom to impersonate when reading the contents as part of Scan.
    * @param selection The configured storage engine specific selection.
    * @param columns (optional) The list of column names to scan from the data source.
    * @param options (optional) session options
@@ -128,7 +128,7 @@ public interface StoragePlugin extends SchemaFactory, AutoCloseable {
   /**
    * Get the physical scan operator for the particular GroupScan (read) node.
    *
-   * @param userName        User whom to impersonate when when reading the contents as part of Scan.
+   * @param userName        User whom to impersonate when reading the contents as part of Scan.
    * @param selection       The configured storage engine specific selection.
    * @param columns         (optional) The list of column names to scan from the data source.
    * @param options         (optional) session options
