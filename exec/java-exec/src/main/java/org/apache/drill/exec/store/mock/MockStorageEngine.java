@@ -19,7 +19,6 @@ package org.apache.drill.exec.store.mock;
 
 import java.io.IOException;
 import java.net.URL;
-import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -39,10 +38,11 @@ import org.apache.drill.exec.server.DrillbitContext;
 import org.apache.drill.exec.store.AbstractSchema;
 import org.apache.drill.exec.store.AbstractStoragePlugin;
 import org.apache.drill.exec.store.SchemaConfig;
+import org.apache.drill.exec.store.mock.MockTableDef.MockScanEntry;
+import org.apache.drill.exec.store.mock.MockTableDef.MockTableSelection;
 
 import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.core.JsonParser;
-import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.drill.shaded.guava.com.google.common.base.Charsets;
@@ -64,10 +64,11 @@ public class MockStorageEngine extends AbstractStoragePlugin {
   public AbstractGroupScan getPhysicalScan(String userName, JSONOptions selection, List<SchemaPath> columns)
       throws IOException {
 
-    List<MockTableDef.MockScanEntry> readEntries = selection.getListWith(new ObjectMapper(),
-        new TypeReference<ArrayList<MockTableDef.MockScanEntry>>() {
-        });
-
+    MockTableSelection tableSelection = selection.getWith(
+      new ObjectMapper(),
+      MockTableSelection.class
+    );
+    List<MockScanEntry> readEntries = tableSelection.getEntries();
     assert ! readEntries.isEmpty();
     return new MockGroupScanPOP(null, readEntries);
   }
@@ -161,6 +162,7 @@ public class MockStorageEngine extends AbstractStoragePlugin {
       } catch (IOException e) {
         throw new IllegalArgumentException("Unable to read mock table definition file: " + name, e);
       }
+
       return new DynamicDrillTable(engine, this.name, mockTableDefn.getEntries());
     }
 
@@ -177,10 +179,9 @@ public class MockStorageEngine extends AbstractStoragePlugin {
       if (unit == null) { }
       else if (unit.equalsIgnoreCase("K")) { n *= 1000; }
       else if (unit.equalsIgnoreCase("M")) { n *= 1_000_000; }
-      MockTableDef.MockScanEntry entry = new MockTableDef.MockScanEntry(n, true, 0, 1, null);
-      List<MockTableDef.MockScanEntry> list = new ArrayList<>();
-      list.add(entry);
-      return new DynamicDrillTable(engine, this.name, list);
+      MockScanEntry entry = new MockTableDef.MockScanEntry(n, true, 0, 1, null);
+      MockTableSelection entries = new MockTableSelection(ImmutableList.<MockScanEntry>of(entry));
+      return new DynamicDrillTable(engine, this.name, entries);
     }
 
     @Override

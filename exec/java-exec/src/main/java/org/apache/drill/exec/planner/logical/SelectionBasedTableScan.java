@@ -35,11 +35,11 @@ import java.util.List;
  * When directory-based partition pruning applied, file selection could be different for the same
  * table.
  */
-public class DirPrunedEnumerableTableScan extends EnumerableTableScan {
+public class SelectionBasedTableScan extends EnumerableTableScan {
   private final String digestFromSelection;
 
-  public DirPrunedEnumerableTableScan(RelOptCluster cluster, RelTraitSet traitSet,
-      RelOptTable table, Class elementType, String digestFromSelection) {
+  public SelectionBasedTableScan(RelOptCluster cluster, RelTraitSet traitSet,
+                                 RelOptTable table, Class elementType, String digestFromSelection) {
     super(cluster, traitSet, table, elementType);
     this.digestFromSelection = digestFromSelection;
   }
@@ -48,12 +48,11 @@ public class DirPrunedEnumerableTableScan extends EnumerableTableScan {
   public RelNode copy(RelTraitSet traitSet, List<RelNode> inputs) {
     final Table tbl = this.table.unwrap(Table.class);
     Class elementType = EnumerableTableScan.deduceElementType(tbl);
-
-    return new DirPrunedEnumerableTableScan(getCluster(), traitSet, table, elementType, digestFromSelection);
+    return new SelectionBasedTableScan(getCluster(), traitSet, table, elementType, digestFromSelection);
   }
 
-  /** Creates an DirPrunedEnumerableTableScan. */
-  public static EnumerableTableScan create(RelOptCluster cluster,
+  /** Creates an SelectionBasedTableScan. */
+  public static SelectionBasedTableScan create(RelOptCluster cluster,
       RelOptTable relOptTable, String digestFromSelection) {
     final Table table = relOptTable.unwrap(Table.class);
     Class elementType = EnumerableTableScan.deduceElementType(table);
@@ -66,7 +65,8 @@ public class DirPrunedEnumerableTableScan extends EnumerableTableScan {
                   }
                   return ImmutableList.of();
                 });
-    return new DirPrunedEnumerableTableScan(cluster, traitSet, relOptTable, elementType, digestFromSelection);
+
+    return new SelectionBasedTableScan(cluster, traitSet, relOptTable, elementType, digestFromSelection);
   }
 
   @Override

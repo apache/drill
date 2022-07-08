@@ -22,9 +22,10 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import org.apache.drill.common.PlanStringBuilder;
+import org.apache.drill.exec.planner.logical.DrillTableSelection;
 
 @JsonTypeName("splunk-scan-spec")
-public class SplunkScanSpec {
+public class SplunkScanSpec implements DrillTableSelection {
   private final String pluginName;
   private final String indexName;
   private final SplunkPluginConfig config;
@@ -54,5 +55,10 @@ public class SplunkScanSpec {
       .field("schemaName", pluginName)
       .field("indexName", indexName)
       .toString();
+  }
+
+  @Override
+  public String digest() {
+    return toString();
   }
 }

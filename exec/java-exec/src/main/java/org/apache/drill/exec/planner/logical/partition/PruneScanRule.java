@@ -27,6 +27,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.regex.Pattern;
 
 import org.apache.drill.exec.planner.common.DrillRelOptUtil;
+import org.apache.drill.exec.planner.logical.SelectionBasedTableScan;
 import org.apache.drill.exec.util.DrillFileSystemUtil;
 import org.apache.drill.shaded.guava.com.google.common.base.Stopwatch;
 import org.apache.calcite.adapter.enumerable.EnumerableTableScan;
@@ -777,5 +778,9 @@ public abstract class PruneScanRule extends StoragePluginOptimizerRule {
       }
       return false;
     }
+  }
+
+  private static boolean supportsScan(TableScan scan) {
+    return scan instanceof SelectionBasedTableScan;
   }
 }

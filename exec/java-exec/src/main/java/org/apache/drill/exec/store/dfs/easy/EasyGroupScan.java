@@ -319,6 +319,13 @@ public class EasyGroupScan extends AbstractGroupScanWithMetadata<TableMetadataPr
 
   @Override
   public String toString() {
+    // Note that the output of this method is incorporated in the digest of
+    // the corresponding scan node in the query plan. This means that the
+    // fields included here constitute what the planner will use to decide
+    // whether two scans are identical or not. E.g. the format config must be
+    // present here because format config can be overriden using table functions
+    // Two scans that differ by format config alone may produce different data
+    // and therefore should not be considered identical.
     return new PlanStringBuilder(this)
       .field("selectionRoot", selectionRoot)
       .field("numFiles", getFiles().size())
@@ -327,6 +334,7 @@ public class EasyGroupScan extends AbstractGroupScanWithMetadata<TableMetadataPr
       .field("schema", getSchema())
       .field("usedMetastore", usedMetastore())
       .field("limit", limit)
+      .field("formatConfig", getFormatConfig())
       .toString();
   }
 

@@ -41,7 +41,7 @@ import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.common.types.TypeProtos;
 import org.apache.drill.common.types.Types;
 import org.apache.drill.exec.physical.base.FileGroupScan;
-import org.apache.drill.exec.planner.logical.DirPrunedEnumerableTableScan;
+import org.apache.drill.exec.planner.logical.SelectionBasedTableScan;
 import org.apache.drill.exec.planner.logical.DrillRel;
 import org.apache.drill.exec.planner.logical.DrillScanRel;
 import org.apache.drill.exec.planner.logical.DrillTable;
@@ -252,8 +252,8 @@ public class FileSystemPartitionDescriptor extends AbstractPartitionDescriptor {
       RelOptTableImpl newOptTableImpl = RelOptTableImpl.create(relOptTable.getRelOptSchema(), relOptTable.getRowType(),
           newTable, GuavaUtils.convertToUnshadedImmutableList(relOptTable.getQualifiedName()));
 
-      // return an EnumerableTableScan with fileSelection being part of digest of TableScan node.
-      return DirPrunedEnumerableTableScan.create(scanRel.getCluster(), newOptTableImpl, newFileSelection.toString());
+      // return a SelectionBasedTableScan with fileSelection being part of digest of TableScan node.
+      return SelectionBasedTableScan.create(scanRel.getCluster(), newOptTableImpl, newFileSelection.toString());
     } else {
       throw new UnsupportedOperationException("Only DrillScanRel and EnumerableTableScan is allowed!");
     }
@@ -270,5 +270,9 @@ public class FileSystemPartitionDescriptor extends AbstractPartitionDescriptor {
     final Object selection = this.table.getSelection();
     return selection instanceof FormatSelection
         && ((FormatSelection)selection).getSelection().getCacheFileRoot() != null;
+  }
+
+  private static boolean supportsScan(TableScan scanRel) {
+    return scanRel instanceof SelectionBasedTableScan;
   }
 }

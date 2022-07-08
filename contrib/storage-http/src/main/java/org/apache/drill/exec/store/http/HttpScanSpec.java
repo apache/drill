@@ -24,10 +24,11 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import org.apache.drill.common.PlanStringBuilder;
 import org.apache.drill.exec.oauth.PersistentTokenTable;
+import org.apache.drill.exec.planner.logical.DrillTableSelection;
 import org.apache.drill.exec.store.StoragePluginRegistry;
 
 @JsonTypeName("http-scan-spec")
-public class HttpScanSpec {
+public class HttpScanSpec implements DrillTableSelection {
 
   private final String pluginName;
   private final String connectionName;
@@ -99,5 +100,10 @@ public class HttpScanSpec {
       .field("tableName", tableName)
       .field("config", config)
       .toString();
+  }
+
+  @Override
+  public String digest() {
+    return toString();
   }
 }

@@ -20,8 +20,10 @@ package org.apache.drill.exec.store.kudu;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import org.apache.drill.common.PlanStringBuilder;
+import org.apache.drill.exec.planner.logical.DrillTableSelection;
 
-public class KuduScanSpec {
+public class KuduScanSpec implements DrillTableSelection {
 
   private final String tableName;
 
@@ -32,5 +34,17 @@ public class KuduScanSpec {
 
   public String getTableName() {
     return tableName;
+  }
+
+  @Override
+  public String toString() {
+    return new PlanStringBuilder(this)
+      .field("tableName", tableName)
+      .toString();
+  }
+
+  @Override
+  public String digest() {
+    return toString();
   }
 }

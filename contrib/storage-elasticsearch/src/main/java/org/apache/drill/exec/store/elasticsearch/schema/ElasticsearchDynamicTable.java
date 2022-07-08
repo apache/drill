@@ -31,6 +31,7 @@ import org.apache.calcite.schema.SchemaPlus;
 import org.apache.calcite.schema.Table;
 import org.apache.calcite.schema.TranslatableTable;
 import org.apache.calcite.schema.Wrapper;
+import org.apache.drill.exec.planner.logical.DrillTableSelection;
 import org.apache.drill.exec.planner.logical.DynamicDrillTable;
 import org.apache.drill.exec.store.StoragePlugin;
 
@@ -40,7 +41,7 @@ public class ElasticsearchDynamicTable extends DynamicDrillTable implements Tran
 
   private final ElasticsearchTable table;
 
-  public ElasticsearchDynamicTable(StoragePlugin plugin, String storageEngineName, Object selection, Table table) {
+  public ElasticsearchDynamicTable(StoragePlugin plugin, String storageEngineName, DrillTableSelection selection, Table table) {
     super(plugin, storageEngineName, selection);
     this.table = (ElasticsearchTable) table;
   }

@@ -21,6 +21,7 @@ import java.util.Iterator;
 
 import org.apache.drill.exec.alias.AliasTarget;
 import org.apache.drill.exec.ops.ExecutorFragmentContext;
+import org.apache.drill.exec.planner.logical.DrillTableSelection;
 import org.apache.drill.exec.store.sys.OptionIterator.OptionValueWrapper;
 
 /**
@@ -31,7 +32,7 @@ import org.apache.drill.exec.store.sys.OptionIterator.OptionValueWrapper;
  *   PROFILES and PROFILES_JSON are stored in local / distributed storage.
  * </p>
  */
-public enum SystemTable {
+public enum SystemTable implements DrillTableSelection {
   OPTIONS_OLD("options_old", false, OptionValueWrapper.class) {
     @Deprecated
     @Override
@@ -163,5 +164,10 @@ public enum SystemTable {
 
   public Class<?> getPojoClass() {
     return pojoClass;
+  }
+
+  @Override
+  public String digest() {
+    return toString();
   }
 }

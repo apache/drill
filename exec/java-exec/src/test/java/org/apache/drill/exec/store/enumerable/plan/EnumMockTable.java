@@ -20,12 +20,13 @@ package org.apache.drill.exec.store.enumerable.plan;
 import org.apache.calcite.plan.RelOptTable;
 import org.apache.calcite.rel.RelNode;
 import org.apache.calcite.schema.TranslatableTable;
+import org.apache.drill.exec.planner.logical.DrillTableSelection;
 import org.apache.drill.exec.planner.logical.DynamicDrillTable;
 import org.apache.drill.exec.store.StoragePlugin;
 
 public class EnumMockTable extends DynamicDrillTable implements TranslatableTable {
 
-  public EnumMockTable(StoragePlugin plugin, String storageEngineName, String userName, Object selection) {
+  public EnumMockTable(StoragePlugin plugin, String storageEngineName, String userName, DrillTableSelection selection) {
     super(plugin, storageEngineName, userName, selection);
   }
 
