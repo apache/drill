@@ -49,7 +49,8 @@ public class ElasticSearchPlanTest extends ClusterTest {
     startCluster(ClusterFixture.builder(dirTestWatcher));
 
     ElasticsearchStorageConfig config = new ElasticsearchStorageConfig(
-        Collections.singletonList(TestElasticsearchSuite.getAddress()), null, null, PlainCredentialsProvider.EMPTY_CREDENTIALS_PROVIDER);
+        Collections.singletonList(TestElasticsearchSuite.getAddress()),
+        null, null, null, PlainCredentialsProvider.EMPTY_CREDENTIALS_PROVIDER);
     config.setEnabled(true);
     cluster.defineStoragePlugin("elastic", config);
 
