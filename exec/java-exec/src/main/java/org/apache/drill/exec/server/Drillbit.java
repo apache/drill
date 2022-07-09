@@ -233,8 +233,9 @@ public class Drillbit implements AutoCloseable {
     manager.getContext().getRemoteFunctionRegistry().init(context.getConfig(), storeProvider, coord);
     webServer.start();
     //Discovering HTTP port (in case of port hunting)
+    int httpPort = -1;
     if (webServer.isRunning()) {
-      int httpPort = getWebServerPort();
+      httpPort = getWebServerPort();
       md = md.toBuilder().setHttpPort(httpPort).build();
     }
     registrationHandle = coord.register(md);
@@ -244,7 +245,7 @@ public class Drillbit implements AutoCloseable {
     shutdownHook = new ShutdownThread(this, new StackTrace());
     Runtime.getRuntime().addShutdownHook(shutdownHook);
     gracefulShutdownThread.start();
-    logger.info("Startup completed ({} ms).", w.elapsed(TimeUnit.MILLISECONDS));
+    logger.info("Startup completed in {} ms and running on port: {}", w.elapsed(TimeUnit.MILLISECONDS), httpPort);
   }
 
   /**
