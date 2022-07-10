@@ -105,6 +105,9 @@ supply a schema or other information to allow Drill to identify the data types o
 
 If the data type inference is not working for you, you can set the `allTextMode` to `true` and Drill will read everything as a `VARCHAR`.
 
+#### Schema Provisioning
+
+
 ### Column Headers
 When Drill reads GoogleSheets, it is assumed that the first row contains column headers.  
 If this is incorrect you can set the `extractHeaders` parameter to `false`and Drill will name each field `field_n` where `n` is the column index. 

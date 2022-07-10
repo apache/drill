@@ -26,6 +26,7 @@ import org.apache.drill.common.map.CaseInsensitiveMap;
 import org.apache.drill.exec.physical.base.PhysicalOperator;
 import org.apache.drill.exec.physical.base.Writer;
 import org.apache.drill.exec.planner.logical.CreateTableEntry;
+import org.apache.drill.exec.planner.logical.DrillTableSelection;
 import org.apache.drill.exec.planner.logical.DynamicDrillTable;
 import org.apache.drill.exec.store.AbstractSchema;
 import org.apache.drill.exec.store.SchemaConfig;
@@ -61,12 +62,19 @@ public class GoogleSheetsDrillSchema extends AbstractSchema {
     super(parent.getSchemaPath(), name);
     this.plugin = plugin;
     this.schemaConfig = schemaConfig;
+
     // Add sub schemas to list, then create tables
     for (Sheet sheet : subSchemas) {
-      registerTable(sheet.getProperties().getTitle(), new DynamicDrillTable(plugin, plugin.getName(),
-         new GoogleSheetsScanSpec(name, (GoogleSheetsStoragePluginConfig) plugin.getConfig(),
-           sheet.getProperties().getTitle(), plugin.getName(), subSchemas.indexOf(sheet))
-      ));
+      registerTable(sheet.getProperties().getTitle(),
+        new DynamicDrillTable(plugin, plugin.getName(),
+        (DrillTableSelection) new GoogleSheetsScanSpec(
+          name,
+          (GoogleSheetsStoragePluginConfig) plugin.getConfig(),
+          sheet.getProperties().getTitle(),
+          plugin.getName(),
+          subSchemas.indexOf(sheet))
+        )
+      );
     }
   }
 
