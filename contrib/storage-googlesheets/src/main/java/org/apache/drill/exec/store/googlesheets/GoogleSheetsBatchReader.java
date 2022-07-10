@@ -63,11 +63,11 @@ public class GoogleSheetsBatchReader implements ManagedReader<SchemaNegotiator> 
   private Map<String, GoogleSheetsColumn> columnMap;
   private RowSetLoader rowWriter;
 
-  public GoogleSheetsBatchReader(GoogleSheetsStoragePluginConfig config, GoogleSheetsSubScan subScan) {
+  public GoogleSheetsBatchReader(GoogleSheetsStoragePluginConfig config, GoogleSheetsSubScan subScan, GoogleSheetsStoragePlugin plugin) {
     this.config = config;
     this.subScan = subScan;
     this.projectedColumns = subScan.getColumns();
-    this.service = subScan.getPlugin().getSheetsService(subScan.getUserName());
+    this.service = plugin.getSheetsService(subScan.getUserName());
     this.sheetID = subScan.getScanSpec().getSheetID();
     try {
       List<Sheet> sheetList = GoogleSheetsUtils.getSheetList(service, sheetID);

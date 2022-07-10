@@ -62,6 +62,7 @@ public class GoogleSheetsStoragePlugin extends AbstractStoragePlugin {
   private DataStore<StoredCredential> dataStore;
   private Sheets service;
   private TokenRegistry tokenRegistry;
+  private String username;
 
 
   public GoogleSheetsStoragePlugin(GoogleSheetsStoragePluginConfig configuration, DrillbitContext context, String name) {
@@ -92,16 +93,15 @@ public class GoogleSheetsStoragePlugin extends AbstractStoragePlugin {
     // the plugin is loaded, we read the tokens from the persistent store into a GS dataStore.
     // This happens when the plugin is registered.
 
-    String username;
     if (config.getAuthMode() == AuthMode.USER_TRANSLATION) {
-      username = schemaConfig.getUserName();
-      tokenRegistry = tokenProvider.getOauthTokenRegistry(username);
+      this.username = schemaConfig.getUserName();
+      tokenRegistry = tokenProvider.getOauthTokenRegistry(this.username);
     } else {
-      username = SHARED_USERNAME;
+      this.username = SHARED_USERNAME;
       tokenRegistry = tokenProvider.getOauthTokenRegistry(null);
     }
     tokenRegistry.createTokenTable(getName());
-    this.dataStore = new DrillDataStoreFactory(tokenProvider, getName()).createDataStore(username);
+    this.dataStore = new DrillDataStoreFactory(tokenProvider, getName()).createDataStore(this.username);
   }
 
   public DataStore<StoredCredential> getDataStore(String username) {
@@ -151,7 +151,7 @@ public class GoogleSheetsStoragePlugin extends AbstractStoragePlugin {
   public AbstractGroupScan getPhysicalScan(String userName, JSONOptions selection, List<SchemaPath> columns, SessionOptionManager options,
                                            MetadataProviderManager metadataProviderManager) throws IOException {
     GoogleSheetsScanSpec scanSpec = selection.getListWith(context.getLpPersistence().getMapper(), new TypeReference<GoogleSheetsScanSpec>() {});
-    return new GoogleSheetsGroupScan(userName, scanSpec, this, metadataProviderManager);
+    return new GoogleSheetsGroupScan(this.username, scanSpec, this, metadataProviderManager);
   }
 
   @Override
@@ -200,9 +200,9 @@ public class GoogleSheetsStoragePlugin extends AbstractStoragePlugin {
 
       try {
         if (config.getAuthMode() == AuthMode.USER_TRANSLATION) {
-          service = GoogleSheetsUtils.getSheetsService(config, dataStore, tokenProvider, getName(), queryUser);
+          service = GoogleSheetsUtils.getSheetsService(config, dataStore, queryUser);
         } else {
-          service = GoogleSheetsUtils.getSheetsService(config, dataStore, tokenProvider, getName(), SHARED_USERNAME);
+          service = GoogleSheetsUtils.getSheetsService(config, dataStore, SHARED_USERNAME);
         }
         return service;
       } catch (IOException | GeneralSecurityException e) {

@@ -110,6 +110,7 @@ public class GoogleSheetsStoragePluginConfig extends StoragePluginConfig {
     this.oAuthConfig = that.oAuthConfig;
   }
 
+  @JsonIgnore
   public static GoogleSheetsStoragePluginConfigBuilder builder() {
     return new GoogleSheetsStoragePluginConfigBuilder();
   }

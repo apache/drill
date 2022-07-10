@@ -18,7 +18,6 @@
 
 package org.apache.drill.exec.store.googlesheets;
 
-import com.fasterxml.jackson.annotation.JacksonInject;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -29,7 +28,6 @@ import org.apache.drill.exec.physical.base.AbstractSubScan;
 import org.apache.drill.exec.physical.base.PhysicalOperator;
 import org.apache.drill.exec.physical.base.PhysicalVisitor;
 import org.apache.drill.exec.record.metadata.TupleMetadata;
-import org.apache.drill.exec.store.StoragePluginRegistry;
 import org.apache.drill.exec.store.base.filter.ExprNode;
 import org.apache.drill.exec.store.base.filter.ExprNode.ColRelOpConstNode;
 import org.apache.drill.shaded.guava.com.google.common.collect.ImmutableSet;
@@ -42,17 +40,14 @@ import java.util.Objects;
 @JsonTypeName("googlesheets-sub-scan")
 public class GoogleSheetsSubScan extends AbstractSubScan {
 
+  public static final String OPERATOR_TYPE = "GOOGLESHEETS_SUB_SCAN";
+
   private final GoogleSheetsStoragePluginConfig config;
   private final GoogleSheetsScanSpec scanSpec;
   private final List<SchemaPath> columns;
   private final Map<String, ColRelOpConstNode> filters;
   private final int maxRecords;
-
   private final TupleMetadata schema;
-
-  @JsonIgnore
-  private final GoogleSheetsStoragePlugin plugin;
-
 
   @JsonCreator
   public GoogleSheetsSubScan(
@@ -62,8 +57,7 @@ public class GoogleSheetsSubScan extends AbstractSubScan {
     @JsonProperty("columns") List<SchemaPath> columns,
     @JsonProperty("filters") Map<String, ColRelOpConstNode> filters,
     @JsonProperty("maxRecords") int maxRecords,
-    @JsonProperty("schema") TupleMetadata schema,
-    @JacksonInject StoragePluginRegistry plugins) {
+    @JsonProperty("schema") TupleMetadata schema) {
     super(username);
     this.config = config;
     this.scanSpec = scanSpec;
@@ -71,26 +65,6 @@ public class GoogleSheetsSubScan extends AbstractSubScan {
     this.filters = filters;
     this.schema = schema;
     this.maxRecords = maxRecords;
-
-    this.plugin = plugins.resolve(config, GoogleSheetsStoragePlugin.class);
-  }
-
-  public GoogleSheetsSubScan(String username,
-                             GoogleSheetsStoragePluginConfig config,
-                             GoogleSheetsScanSpec scanSpec,
-                             List<SchemaPath> columns,
-                             Map<String, ColRelOpConstNode> filters,
-                             int maxRecords,
-                             GoogleSheetsStoragePlugin plugin,
-                             TupleMetadata schema) {
-    super(username);
-    this.config = config;
-    this.scanSpec = scanSpec;
-    this.columns = columns;
-    this.filters = filters;
-    this.maxRecords = maxRecords;
-    this.schema = schema;
-    this.plugin = plugin;
   }
 
   @JsonProperty("config")
@@ -123,11 +97,6 @@ public class GoogleSheetsSubScan extends AbstractSubScan {
     return schema;
   }
 
-  @JsonIgnore
-  public GoogleSheetsStoragePlugin getPlugin() {
-    return this.plugin;
-  }
-
   @Override
   public <T, X, E extends Throwable> T accept(
     PhysicalVisitor<T, X, E> physicalVisitor, X value) throws E {
@@ -142,7 +111,7 @@ public class GoogleSheetsSubScan extends AbstractSubScan {
   @Override
   @JsonIgnore
   public String getOperatorType() {
-    return "GOOGLE-SHEETS";
+    return OPERATOR_TYPE;
   }
 
   @Override

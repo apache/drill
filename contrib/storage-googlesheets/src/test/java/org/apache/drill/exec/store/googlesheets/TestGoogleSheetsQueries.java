@@ -23,7 +23,6 @@ import org.apache.drill.common.types.TypeProtos.MinorType;
 import org.apache.drill.common.util.DrillFileUtils;
 import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.oauth.PersistentTokenTable;
-import org.apache.drill.exec.physical.rowSet.DirectRowSet;
 import org.apache.drill.exec.physical.rowSet.RowSet;
 import org.apache.drill.exec.record.metadata.SchemaBuilder;
 import org.apache.drill.exec.record.metadata.TupleMetadata;
@@ -102,13 +101,6 @@ public class TestGoogleSheetsQueries extends ClusterTest {
   }
 
   @Test
-  public void testWithDefaultSchema() throws Exception {
-    String sql = "SELECT * FROM googlesheets.`1Ba-jKao8nztNXe1HLI3oFQyvYmOqkVH3luWotmEplyw`";
-    DirectRowSet results = queryBuilder().sql(sql).rowSet();
-    results.print();
-  }
-
-  @Test
   public void testWithSheetName() throws Exception {
     try {
       initializeTokens();
@@ -118,7 +110,6 @@ public class TestGoogleSheetsQueries extends ClusterTest {
 
     String sql = String.format("SELECT * FROM googlesheets.`%s`.`MixedSheet` WHERE `Col2` < 6.0", sheetID);
     RowSet results = queryBuilder().sql(sql).rowSet();
-    results.print();
 
     TupleMetadata expectedSchema = new SchemaBuilder()
       .addNullable("Col1", MinorType.VARCHAR)
@@ -142,7 +133,6 @@ public class TestGoogleSheetsQueries extends ClusterTest {
 
   // TODO Test with invalid doc name, invalid sheet name
   // TODO Test query plan generation...
-  // TODO Test limit.. (off by one due to column headers)
 
   @Test
   public void testWithExplicitColumns() throws Exception {
@@ -184,8 +174,7 @@ public class TestGoogleSheetsQueries extends ClusterTest {
       fail(e.getMessage());
     }
 
-    String sql = "SELECT Major, COUNT(*)FROM googlesheets.`1BxiMVs0XRA5nFMdKvBdBZjgmUUqptlbs74OgvE2upms`.`Class Data`" +
-      "GROUP BY Major";
+    String sql = String.format("SELECT EXTRACT(YEAR FROM Col3) AS event_year, COUNT(*) AS event_count FROM googlesheets.`%s`.`MixedSheet` GROUP BY event_year", sheetID);
     RowSet results = queryBuilder().sql(sql).rowSet();
     results.print();
   }
@@ -198,7 +187,7 @@ public class TestGoogleSheetsQueries extends ClusterTest {
       fail(e.getMessage());
     }
 
-    String sql = String.format("SELECT COUNT(*) FROM googlesheets.`%s`.`MixedSheet`", sheetID);;
+    String sql = String.format("SELECT COUNT(*) FROM googlesheets.`%s`.`MixedSheet`", sheetID);
     String plan = queryBuilder().sql(sql).explainJson();
     long cnt = queryBuilder().physical(plan).singletonLong();
     assertEquals("Counts should match", 30L, cnt);

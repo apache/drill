@@ -31,19 +31,36 @@ import org.apache.drill.exec.physical.impl.scan.framework.SchemaNegotiator;
 import org.apache.drill.exec.record.CloseableRecordBatch;
 import org.apache.drill.exec.record.RecordBatch;
 import org.apache.drill.exec.server.options.OptionManager;
+import org.apache.drill.exec.store.StoragePluginRegistry;
+import org.apache.drill.exec.store.StoragePluginRegistry.PluginException;
 import org.apache.drill.shaded.guava.com.google.common.base.Preconditions;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.List;
 
 public class GoogleSheetsScanBatchCreator implements BatchCreator<GoogleSheetsSubScan> {
+
+  private static final Logger logger = LoggerFactory.getLogger(GoogleSheetsScanBatchCreator.class);
 
   @Override
   public CloseableRecordBatch getBatch(ExecutorFragmentContext context,
                                        GoogleSheetsSubScan subScan, List<RecordBatch> children) throws ExecutionSetupException {
     Preconditions.checkArgument(children.isEmpty());
 
+    StoragePluginRegistry registry = context.getDrillbitContext().getStorage();
+    GoogleSheetsStoragePlugin plugin;
     try {
-      ScanFrameworkBuilder builder = createBuilder(context.getOptions(), subScan);
+      plugin = (GoogleSheetsStoragePlugin) registry.getPluginByConfig(subScan.getConfig());
+    } catch (PluginException e) {
+      throw UserException.internalError(e)
+        .message("Unable to locate GoogleSheets storage plugin")
+        .build(logger);
+    }
+
+
+    try {
+      ScanFrameworkBuilder builder = createBuilder(context.getOptions(), subScan, plugin);
       return builder.buildScanOperator(context, subScan);
     } catch (UserException e) {
       // Rethrow user exceptions directly
@@ -54,7 +71,7 @@ public class GoogleSheetsScanBatchCreator implements BatchCreator<GoogleSheetsSu
     }
   }
 
-  private ScanFrameworkBuilder createBuilder(OptionManager options, GoogleSheetsSubScan subScan) {
+  private ScanFrameworkBuilder createBuilder(OptionManager options, GoogleSheetsSubScan subScan, GoogleSheetsStoragePlugin plugin) {
     GoogleSheetsStoragePluginConfig config = subScan.getConfig();
     ScanFrameworkBuilder builder = new ScanFrameworkBuilder();
     builder.projection(subScan.getColumns());
@@ -62,7 +79,7 @@ public class GoogleSheetsScanBatchCreator implements BatchCreator<GoogleSheetsSu
     builder.setUserName(subScan.getUserName());
 
     // Reader
-    ReaderFactory readerFactory = new GoogleSheetsReaderFactory(config, subScan);
+    ReaderFactory readerFactory = new GoogleSheetsReaderFactory(config, subScan, plugin);
     builder.setReaderFactory(readerFactory);
     builder.nullType(Types.optional(MinorType.VARCHAR));
     return builder;
@@ -72,11 +89,13 @@ public class GoogleSheetsScanBatchCreator implements BatchCreator<GoogleSheetsSu
 
     private final GoogleSheetsStoragePluginConfig config;
     private final GoogleSheetsSubScan subScan;
+    private final GoogleSheetsStoragePlugin plugin;
     private int count;
 
-    public GoogleSheetsReaderFactory(GoogleSheetsStoragePluginConfig config, GoogleSheetsSubScan subScan) {
+    public GoogleSheetsReaderFactory(GoogleSheetsStoragePluginConfig config, GoogleSheetsSubScan subScan, GoogleSheetsStoragePlugin plugin) {
       this.config = config;
       this.subScan = subScan;
+      this.plugin = plugin;
     }
 
     @Override
@@ -87,7 +106,7 @@ public class GoogleSheetsScanBatchCreator implements BatchCreator<GoogleSheetsSu
     public ManagedReader<SchemaNegotiator> next() {
       // Only a single scan (in a single thread)
       if (count++ == 0) {
-        return new GoogleSheetsBatchReader(config, subScan);
+        return new GoogleSheetsBatchReader(config, subScan, plugin);
       }
       return null;
     }

@@ -91,7 +91,8 @@ public class GoogleSheetsPushDownListener implements FilterPushDownListener {
       if (node instanceof OrNode) {
         return null;
       } else if (node instanceof ColRelOpConstNode) {
-        return acceptRelOp((ColRelOpConstNode) node);
+        return null;
+        //return acceptRelOp((ColRelOpConstNode) node);
       } else {
         return null;
       }

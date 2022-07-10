@@ -42,7 +42,6 @@ import com.google.api.services.sheets.v4.model.ValueRange;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.common.expression.SchemaPath;
-import org.apache.drill.exec.oauth.OAuthTokenProvider;
 import org.apache.drill.exec.record.metadata.SchemaBuilder;
 import org.apache.drill.exec.record.metadata.TupleMetadata;
 import org.apache.drill.exec.store.googlesheets.DrillDataStore;
@@ -106,16 +105,16 @@ public class GoogleSheetsUtils {
   }
 
   /**
-   * Returns a Google Credential Object which shall be used to authenticate calls to the Google Sheets service
-   * @param config The Drill GoogleSheets config
-   * @return An authorized Credential
-   * @throws IOException in the event of network or other connectivity issues, throws an IOException
-   * @throws GeneralSecurityException In the event the credentials are incorrect, throws a Security Exception
+   * Creates an authorized {@link Credential} for use in GoogleSheets queries.
+   * @param config The {@link GoogleSheetsStoragePluginConfig} to be authorized
+   * @param dataStore A {@link DrillDataStore} containing the user's tokens
+   * @param queryUser The current query user's ID.  This should be set to anonymous if user translation is disabled.
+   * @return A validated {@link Credential} object.
+   * @throws IOException If anything goes wrong
+   * @throws GeneralSecurityException If the credentials are invalid
    */
   public static Credential authorize(GoogleSheetsStoragePluginConfig config,
                                      DataStore<StoredCredential> dataStore,
-                                     OAuthTokenProvider tokenProvider,
-                                     String pluginName,
                                      String queryUser) throws IOException, GeneralSecurityException {
     GoogleClientSecrets clientSecrets = config.getSecrets();
     GoogleAuthorizationCodeFlow flow;
@@ -142,8 +141,7 @@ public class GoogleSheetsUtils {
     return loadCredential(queryUser, flow, dataStore);
   }
 
-  public static Credential loadCredential(String userId, GoogleAuthorizationCodeFlow flow, DataStore<StoredCredential> credentialDataStore) throws IOException {
-
+  public static Credential loadCredential(String userId, GoogleAuthorizationCodeFlow flow, DataStore<StoredCredential> credentialDataStore) {
     // No requests need to be performed when userId is not specified.
     if (isNullOrEmpty(userId)) {
       return null;
@@ -191,11 +189,9 @@ public class GoogleSheetsUtils {
 
   public static Sheets getSheetsService(GoogleSheetsStoragePluginConfig config,
                                         DataStore<StoredCredential> dataStore,
-                                        OAuthTokenProvider tokenProvider,
-                                        String pluginName,
                                         String queryUser)
     throws IOException, GeneralSecurityException {
-    Credential credential = GoogleSheetsUtils.authorize(config, dataStore, tokenProvider, pluginName, queryUser);
+    Credential credential = GoogleSheetsUtils.authorize(config, dataStore, queryUser);
     return new Sheets.Builder(
       GoogleNetHttpTransport.newTrustedTransport(), GsonFactory.getDefaultInstance(), credential)
       .setApplicationName("Drill")

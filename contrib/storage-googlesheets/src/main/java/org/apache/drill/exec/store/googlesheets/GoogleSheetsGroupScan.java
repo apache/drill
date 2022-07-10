@@ -58,7 +58,6 @@ public class GoogleSheetsGroupScan extends AbstractGroupScan {
   private final int maxRecords;
   private final GoogleSheetsStoragePlugin plugin;
   private int hashCode;
-
   private MetadataProviderManager metadataProviderManager;
 
   // Initial Constructor
@@ -241,7 +240,7 @@ public class GoogleSheetsGroupScan extends AbstractGroupScan {
 
   @Override
   public SubScan getSpecificScan(int minorFragmentId) {
-    return new GoogleSheetsSubScan(userName, config, scanSpec, columns, filters, maxRecords, plugin, getSchema());
+    return new GoogleSheetsSubScan(userName, config, scanSpec, columns, filters, maxRecords, getSchema());
   }
 
   @Override
