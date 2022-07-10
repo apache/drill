@@ -97,7 +97,7 @@ public class PersistentTokenTable implements Tokens {
   @JsonIgnore
   public void setExpiresIn(String expiresIn) {
     if (!tokens.containsKey(EXPIRES_IN_KEY) || !expiresIn.equals(getAccessToken())) {
-      put(ACCESS_TOKEN_KEY, expiresIn, true);
+      put(EXPIRES_IN_KEY, expiresIn, true);
     }
   }
 

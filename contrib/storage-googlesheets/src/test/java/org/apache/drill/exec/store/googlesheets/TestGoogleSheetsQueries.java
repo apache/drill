@@ -26,6 +26,7 @@ import org.apache.drill.exec.oauth.PersistentTokenTable;
 import org.apache.drill.exec.physical.rowSet.RowSet;
 import org.apache.drill.exec.record.metadata.SchemaBuilder;
 import org.apache.drill.exec.record.metadata.TupleMetadata;
+import org.apache.drill.exec.rpc.user.QueryDataBatch;
 import org.apache.drill.exec.store.StoragePluginRegistry;
 import org.apache.drill.exec.store.StoragePluginRegistry.PluginException;
 import org.apache.drill.shaded.guava.com.google.common.base.Charsets;
@@ -144,8 +145,6 @@ public class TestGoogleSheetsQueries extends ClusterTest {
 
     String sql = String.format("SELECT Col1, Col3 FROM googlesheets.`%s`.`MixedSheet` WHERE `Col2` < 6.0", sheetID);
     RowSet results = queryBuilder().sql(sql).rowSet();
-    results.print();
-
 
     TupleMetadata expectedSchema = new SchemaBuilder()
       .addNullable("Col1", MinorType.VARCHAR)
@@ -175,8 +174,12 @@ public class TestGoogleSheetsQueries extends ClusterTest {
     }
 
     String sql = String.format("SELECT EXTRACT(YEAR FROM Col3) AS event_year, COUNT(*) AS event_count FROM googlesheets.`%s`.`MixedSheet` GROUP BY event_year", sheetID);
-    RowSet results = queryBuilder().sql(sql).rowSet();
-    results.print();
+    List<QueryDataBatch> results = queryBuilder().sql(sql).results();
+
+    for(QueryDataBatch b : results){
+      b.release();
+    }
+    assertEquals(4, results.size());
   }
 
   @Test
@@ -190,7 +193,7 @@ public class TestGoogleSheetsQueries extends ClusterTest {
     String sql = String.format("SELECT COUNT(*) FROM googlesheets.`%s`.`MixedSheet`", sheetID);
     String plan = queryBuilder().sql(sql).explainJson();
     long cnt = queryBuilder().physical(plan).singletonLong();
-    assertEquals("Counts should match", 30L, cnt);
+    assertEquals("Counts should match", 25L, cnt);
   }
 
   /**

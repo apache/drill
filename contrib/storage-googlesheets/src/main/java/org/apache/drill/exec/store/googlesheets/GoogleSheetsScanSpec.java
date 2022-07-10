@@ -32,13 +32,16 @@ public class GoogleSheetsScanSpec {
   private final GoogleSheetsStoragePluginConfig config;
   private final String tableName;
   private final int tabIndex;
+  private final String pluginName;
 
   public GoogleSheetsScanSpec(@JsonProperty("sheetID") String sheetID,
                               @JsonProperty("config") GoogleSheetsStoragePluginConfig config,
                               @JsonProperty("tableName") String tableName,
+                              @JsonProperty("pluginName") String pluginName,
                               @JsonProperty("tabIndex") int tabIndex) {
     this.sheetID = sheetID;
     this.config = config;
+    this.pluginName = pluginName;
     this.tableName = tableName;
     this.tabIndex = tabIndex;
   }
@@ -56,6 +59,11 @@ public class GoogleSheetsScanSpec {
   @JsonProperty("tableName")
   public String getTableName() {
     return tableName;
+  }
+
+  @JsonProperty("pluginName")
+  public String getPluginName() {
+    return pluginName;
   }
 
   @JsonProperty("tabIndex")
@@ -76,12 +84,13 @@ public class GoogleSheetsScanSpec {
     return Objects.equals(sheetID, other.sheetID) &&
       Objects.equals(config, other.config) &&
       Objects.equals(tableName, other.tableName) &&
+      Objects.equals(pluginName, other.pluginName) &&
       Objects.equals(tabIndex, other.tabIndex);
   }
 
   @Override
   public int hashCode() {
-    return Objects.hash(sheetID, config, tableName, tabIndex);
+    return Objects.hash(sheetID, config, tableName, tabIndex, pluginName);
   }
 
   @Override
@@ -90,6 +99,7 @@ public class GoogleSheetsScanSpec {
       .field("pluginName", sheetID)
       .field("config", config)
       .field("tableName", tableName)
+      .field("pluginName", pluginName)
       .field("tabIndex", tabIndex)
       .toString();
   }

@@ -52,6 +52,7 @@ public class GoogleSheetsGroupScan extends AbstractGroupScan {
   private final GoogleSheetsScanSpec scanSpec;
   private final GoogleSheetsStoragePluginConfig config;
   private final List<SchemaPath> columns;
+  private final String pluginName;
   private final Map<String, ExprNode.ColRelOpConstNode> filters;
   private final ScanStats scanStats;
   private final double filterSelectivity;
@@ -69,6 +70,7 @@ public class GoogleSheetsGroupScan extends AbstractGroupScan {
     this.scanSpec = scanSpec;
     this.config = scanSpec.getConfig();
     this.columns = ALL_COLUMNS;
+    this.pluginName = plugin.getName();
     this.filters = null;
     this.filterSelectivity = 0.0;
     this.maxRecords = -1;
@@ -84,6 +86,7 @@ public class GoogleSheetsGroupScan extends AbstractGroupScan {
     this.config = that.config;
     this.columns = that.columns;
     this.filters = that.filters;
+    this.pluginName = that.pluginName;
     this.filterSelectivity = that.filterSelectivity;
     this.scanStats = that.scanStats;
     this.maxRecords = that.maxRecords;
@@ -102,6 +105,7 @@ public class GoogleSheetsGroupScan extends AbstractGroupScan {
     this.scanSpec = that.scanSpec;
     this.config = that.config;
     this.columns = that.columns;
+    this.pluginName = that.pluginName;
     this.filters = that.filters;
     this.filterSelectivity = that.filterSelectivity;
     this.maxRecords = maxRecords;
@@ -121,6 +125,7 @@ public class GoogleSheetsGroupScan extends AbstractGroupScan {
     this.config = scanSpec.getConfig();
     this.columns = columns;
     this.filters = that.filters;
+    this.pluginName = that.pluginName;
     this.filterSelectivity = that.filterSelectivity;
     this.maxRecords = that.maxRecords;
     this.plugin = that.plugin;
@@ -142,6 +147,7 @@ public class GoogleSheetsGroupScan extends AbstractGroupScan {
     this.config = that.config;
     this.columns = that.columns;
     this.filters = filters;
+    this.pluginName = that.pluginName;
     this.filterSelectivity = filterSelectivity;
     this.maxRecords = that.maxRecords;
     this.plugin = that.plugin;
@@ -168,6 +174,7 @@ public class GoogleSheetsGroupScan extends AbstractGroupScan {
     this.maxRecords = maxRecords;
     this.scanStats = computeScanStats();
     this.plugin = plugins.resolve(config, GoogleSheetsStoragePlugin.class);
+    this.pluginName = plugin.getName();
   }
 
   @JsonProperty("scanSpec")
@@ -327,7 +334,7 @@ public class GoogleSheetsGroupScan extends AbstractGroupScan {
   @Override
   public int hashCode() {
     if (hashCode == 0) {
-      hashCode = Objects.hash(scanSpec, config, columns, filters, maxRecords);
+      hashCode = Objects.hash(scanSpec, config, columns, filters, maxRecords, pluginName);
     }
     return hashCode;
   }

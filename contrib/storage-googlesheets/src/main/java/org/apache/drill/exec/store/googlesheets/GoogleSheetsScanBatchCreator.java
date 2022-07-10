@@ -51,13 +51,12 @@ public class GoogleSheetsScanBatchCreator implements BatchCreator<GoogleSheetsSu
     StoragePluginRegistry registry = context.getDrillbitContext().getStorage();
     GoogleSheetsStoragePlugin plugin;
     try {
-      plugin = (GoogleSheetsStoragePlugin) registry.getPluginByConfig(subScan.getConfig());
+      plugin = (GoogleSheetsStoragePlugin) registry.getPlugin(subScan.getScanSpec().getPluginName());
     } catch (PluginException e) {
       throw UserException.internalError(e)
         .message("Unable to locate GoogleSheets storage plugin")
         .build(logger);
     }
-
 
     try {
       ScanFrameworkBuilder builder = createBuilder(context.getOptions(), subScan, plugin);

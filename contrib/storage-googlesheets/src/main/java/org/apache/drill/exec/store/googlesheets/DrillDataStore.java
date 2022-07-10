@@ -21,6 +21,7 @@ package org.apache.drill.exec.store.googlesheets;
 import com.google.api.client.auth.oauth2.StoredCredential;
 import com.google.api.client.util.store.AbstractMemoryDataStore;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.drill.common.PlanStringBuilder;
 import org.apache.drill.exec.oauth.OAuthTokenProvider;
 import org.apache.drill.exec.oauth.PersistentTokenTable;
 import org.apache.drill.exec.oauth.TokenRegistry;
@@ -91,5 +92,13 @@ public class DrillDataStore<V extends Serializable> extends AbstractMemoryDataSt
 
   private boolean hasValidTokens(PersistentTokenTable tokenTable) {
     return StringUtils.isNotEmpty(tokenTable.getAccessToken()) && StringUtils.isNotEmpty(tokenTable.getRefreshToken());
+  }
+
+  @Override
+  public String toString() {
+    return new PlanStringBuilder(this)
+      .field("tokenTable", tokenTable)
+      .field("data store factory", drillDataStoreFactory)
+      .toString();
   }
 }

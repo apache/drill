@@ -105,7 +105,7 @@ public class GoogleSheetsStoragePlugin extends AbstractStoragePlugin {
   }
 
   public DataStore<StoredCredential> getDataStore(String username) {
-    if (dataStore == null) {
+    if (this.dataStore == null) {
       this.dataStore = new DrillDataStoreFactory(tokenProvider, getName()).createDataStore(username);
     }
     return dataStore;
@@ -174,6 +174,10 @@ public class GoogleSheetsStoragePlugin extends AbstractStoragePlugin {
     return config;
   }
 
+  /**
+   * This function is only used for testing and creates the necessary token tables.  Note that
+   * the token tables still need to be populated.
+   */
   @VisibleForTesting
   public void initializeTokenTableForTesting() {
     OAuthTokenProvider tokenProvider = context.getoAuthTokenProvider();
@@ -190,7 +194,7 @@ public class GoogleSheetsStoragePlugin extends AbstractStoragePlugin {
    * @return An authenticated {@link Sheets} Google Sheets service.
    */
   public Sheets getSheetsService(String queryUser) {
-    if (service != null) {
+    if (service != null && dataStore != null) {
       return service;
     } else {
       // Check if datastore is null and initialize if so.

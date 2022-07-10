@@ -65,7 +65,7 @@ public class GoogleSheetsDrillSchema extends AbstractSchema {
     for (Sheet sheet : subSchemas) {
       registerTable(sheet.getProperties().getTitle(), new DynamicDrillTable(plugin, plugin.getName(),
          new GoogleSheetsScanSpec(name, (GoogleSheetsStoragePluginConfig) plugin.getConfig(),
-           sheet.getProperties().getTitle(), subSchemas.indexOf(sheet))
+           sheet.getProperties().getTitle(), plugin.getName(), subSchemas.indexOf(sheet))
       ));
     }
   }
