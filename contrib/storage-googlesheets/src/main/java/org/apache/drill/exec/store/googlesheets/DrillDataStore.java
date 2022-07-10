@@ -53,6 +53,9 @@ public class DrillDataStore<V extends Serializable> extends AbstractMemoryDataSt
     }
   }
 
+  /**
+   * Updates credentials in Drill's persistent store.
+   */
   @Override
   public void save() {
     logger.debug("Saving credentials to token table");
@@ -60,7 +63,12 @@ public class DrillDataStore<V extends Serializable> extends AbstractMemoryDataSt
     tokenTable.setRefreshToken(Arrays.toString(keyValueMap.get(tokenTable.REFRESH_TOKEN_KEY)));
   }
 
-  public StoredCredential getStoredCredential(String userID) {
+  /**
+   * Returns a {@link StoredCredential} containing the given user's access and refresh tokens.  This method
+   * must only be called AFTER the tokenTable has been initialized.
+   * @return A {@link StoredCredential with the user's access and refresh tokens.}
+   */
+  public StoredCredential getStoredCredential() {
     if (tokenTable == null) {
       logger.debug("Token table is null. Please be sure to initialize token table before calling getStoredCredentials.");
       return null;

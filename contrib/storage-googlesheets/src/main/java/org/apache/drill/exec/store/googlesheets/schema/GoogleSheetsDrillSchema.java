@@ -43,6 +43,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+/**
+ * This class represents the actual tab within a GoogleSheets document.
+ */
 public class GoogleSheetsDrillSchema extends AbstractSchema {
   private static final Logger logger = LoggerFactory.getLogger(GoogleSheetsDrillSchema.class);
 

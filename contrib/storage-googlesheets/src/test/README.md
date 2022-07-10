@@ -19,7 +19,7 @@ Now that you have the actual tokens, the next step is to actually save them in a
   "client_secret": "<your client secret>",
   "access_token":"<your access token>",
   "refresh_token":"<your refresh token>",
-  "sheetID": "<your sheet id>"
+  "sheet_id": "<your sheet id>"
 }
 
 ```

@@ -22,6 +22,7 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.google.api.client.auth.oauth2.StoredCredential;
 import com.google.api.client.util.store.DataStore;
 import com.google.api.services.sheets.v4.Sheets;
+import org.apache.calcite.plan.RelOptRule;
 import org.apache.calcite.schema.SchemaPlus;
 import org.apache.drill.common.JSONOptions;
 import org.apache.drill.common.exceptions.UserException;
@@ -32,20 +33,25 @@ import org.apache.drill.exec.metastore.MetadataProviderManager;
 import org.apache.drill.exec.oauth.OAuthTokenProvider;
 import org.apache.drill.exec.oauth.PersistentTokenTable;
 import org.apache.drill.exec.oauth.TokenRegistry;
+import org.apache.drill.exec.ops.OptimizerRulesContext;
 import org.apache.drill.exec.physical.base.AbstractGroupScan;
+import org.apache.drill.exec.planner.PlannerPhase;
 import org.apache.drill.exec.server.DrillbitContext;
 import org.apache.drill.exec.server.options.SessionOptionManager;
 import org.apache.drill.exec.store.AbstractStoragePlugin;
 import org.apache.drill.exec.store.SchemaConfig;
+import org.apache.drill.exec.store.base.filter.FilterPushDownUtils;
 import org.apache.drill.exec.store.googlesheets.schema.GoogleSheetsSchemaFactory;
 import org.apache.drill.exec.store.googlesheets.utils.GoogleSheetsUtils;
 import org.apache.drill.shaded.guava.com.google.common.annotations.VisibleForTesting;
+import org.apache.drill.shaded.guava.com.google.common.collect.ImmutableSet;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.security.GeneralSecurityException;
 import java.util.List;
+import java.util.Set;
 
 public class GoogleSheetsStoragePlugin extends AbstractStoragePlugin {
   private final static Logger logger = LoggerFactory.getLogger(GoogleSheetsStoragePlugin.class);
@@ -146,6 +152,21 @@ public class GoogleSheetsStoragePlugin extends AbstractStoragePlugin {
                                            MetadataProviderManager metadataProviderManager) throws IOException {
     GoogleSheetsScanSpec scanSpec = selection.getListWith(context.getLpPersistence().getMapper(), new TypeReference<GoogleSheetsScanSpec>() {});
     return new GoogleSheetsGroupScan(userName, scanSpec, this, metadataProviderManager);
+  }
+
+  @Override
+  public Set<? extends RelOptRule> getOptimizerRules(OptimizerRulesContext optimizerContext, PlannerPhase phase) {
+
+    // Push-down planning is done at the logical phase so it can
+    // influence parallelization in the physical phase. Note that many
+    // existing plugins perform filter push-down at the physical
+    // phase, which also works fine if push-down is independent of
+    // parallelization.
+    if (FilterPushDownUtils.isFilterPushDownPhase(phase) || phase == PlannerPhase.LOGICAL) {
+      return GoogleSheetsPushDownListener.rulesFor(optimizerContext);
+    } else {
+      return ImmutableSet.of();
+    }
   }
 
   @Override

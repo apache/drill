@@ -46,7 +46,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 
-@JsonTypeName("googlesheets--group-scan")
+@JsonTypeName("googlesheets-group-scan")
 public class GoogleSheetsGroupScan extends AbstractGroupScan {
 
   private final GoogleSheetsScanSpec scanSpec;
@@ -116,14 +116,13 @@ public class GoogleSheetsGroupScan extends AbstractGroupScan {
    * @param that The previous GroupScan, without the columns
    * @param columns The list of columns to push down
    */
-  public GoogleSheetsGroupScan(GoogleSheetsGroupScan that,
-                               List<SchemaPath> columns) {
+  public GoogleSheetsGroupScan(GoogleSheetsGroupScan that, List<SchemaPath> columns) {
     super(that);
     this.scanSpec = that.scanSpec;
     this.config = scanSpec.getConfig();
     this.columns = columns;
     this.filters = that.filters;
-    this.filterSelectivity = 0.0;
+    this.filterSelectivity = that.filterSelectivity;
     this.maxRecords = that.maxRecords;
     this.plugin = that.plugin;
     this.metadataProviderManager = that.metadataProviderManager;
@@ -235,6 +234,11 @@ public class GoogleSheetsGroupScan extends AbstractGroupScan {
     return true;
   }
 
+  @JsonIgnore
+  public boolean allowsFilters() {
+    return true;
+  }
+
   @Override
   public SubScan getSpecificScan(int minorFragmentId) {
     return new GoogleSheetsSubScan(userName, config, scanSpec, columns, filters, maxRecords, plugin, getSchema());
@@ -289,6 +293,9 @@ public class GoogleSheetsGroupScan extends AbstractGroupScan {
 
     // No good estimates at all, just make up something.
     double estRowCount = 10_000;
+    if (maxRecords > 0) {
+      estRowCount = maxRecords;
+    }
 
     // NOTE this was important! if the predicates don't make the query more
     // efficient they won't get pushed down

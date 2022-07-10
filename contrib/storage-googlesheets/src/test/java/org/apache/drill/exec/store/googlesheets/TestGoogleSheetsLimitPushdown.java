@@ -19,40 +19,28 @@
 package org.apache.drill.exec.store.googlesheets;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import org.apache.drill.common.types.TypeProtos.MinorType;
 import org.apache.drill.common.util.DrillFileUtils;
 import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.oauth.PersistentTokenTable;
-import org.apache.drill.exec.physical.rowSet.DirectRowSet;
-import org.apache.drill.exec.physical.rowSet.RowSet;
-import org.apache.drill.exec.record.metadata.SchemaBuilder;
-import org.apache.drill.exec.record.metadata.TupleMetadata;
 import org.apache.drill.exec.store.StoragePluginRegistry;
 import org.apache.drill.exec.store.StoragePluginRegistry.PluginException;
 import org.apache.drill.shaded.guava.com.google.common.base.Charsets;
 import org.apache.drill.shaded.guava.com.google.common.io.Files;
 import org.apache.drill.test.ClusterFixtureBuilder;
 import org.apache.drill.test.ClusterTest;
-import org.apache.drill.test.rowSet.RowSetComparison;
 import org.junit.BeforeClass;
 import org.junit.Ignore;
 import org.junit.Test;
 
-import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 
-import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.fail;
 
-/**
- * This class tests the Google Sheets plugin. Since GoogleSheets is essentially an API, these tests
- * must be run with a live internet connection.  These tests use
- */
-@Ignore("Requires live connection to GoogleSheets.  Please run tests manually.")
-public class TestGoogleSheetsQueries extends ClusterTest {
+@Ignore("This test requires a live connection to GoogleSheets.  Please run tests manually.")
+public class TestGoogleSheetsLimitPushdown extends ClusterTest {
 
   private static final String AUTH_URI = "https://accounts.google.com/o/oauth2/auth";
   private static final String TOKEN_URI = "https://oauth2.googleapis.com/token";
@@ -102,106 +90,69 @@ public class TestGoogleSheetsQueries extends ClusterTest {
   }
 
   @Test
-  public void testWithDefaultSchema() throws Exception {
-    String sql = "SELECT * FROM googlesheets.`1Ba-jKao8nztNXe1HLI3oFQyvYmOqkVH3luWotmEplyw`";
-    DirectRowSet results = queryBuilder().sql(sql).rowSet();
-    results.print();
-  }
-
-  @Test
-  public void testWithSheetName() throws Exception {
+  public void testLimit() throws Exception {
     try {
       initializeTokens();
     } catch (PluginException e) {
       fail(e.getMessage());
     }
 
-    String sql = String.format("SELECT * FROM googlesheets.`%s`.`MixedSheet` WHERE `Col2` < 6.0", sheetID);
-    RowSet results = queryBuilder().sql(sql).rowSet();
-    results.print();
-
-    TupleMetadata expectedSchema = new SchemaBuilder()
-      .addNullable("Col1", MinorType.VARCHAR)
-      .addNullable("Col2", MinorType.FLOAT8)
-      .addNullable("Col3", MinorType.DATE)
-      .buildSchema();
-
-   RowSet expected = client.rowSetBuilder(expectedSchema)
-      .addRow("Rosaline  Thales", 1.0, null)
-      .addRow("Abdolhossein  Detlev", 2.0001, LocalDate.parse("2020-04-30"))
-      .addRow(null, 4.0, LocalDate.parse("2020-06-30"))
-      .addRow("Yunus  Elena", 3.5, LocalDate.parse("2021-01-15"))
-      .addRow("Swaran  Ohiyesa", -63.8, LocalDate.parse("2021-04-08"))
-      .addRow("Kalani  Godabert", 0.0, LocalDate.parse("2021-06-28"))
-      .addRow("Caishen  Origenes", 5.0E-7, LocalDate.parse("2021-07-09"))
-      .addRow("Toufik  Gurgen", 2.0, LocalDate.parse("2021-11-05"))
-      .build();
-
-    new RowSetComparison(expected).verifyAndClearAll(results);
+    String sql = String.format("SELECT * FROM googlesheets.`%s`.`MixedSheet` LIMIT 5", sheetID);
+    queryBuilder()
+      .sql(sql)
+      .planMatcher()
+      .include("Limit", "maxRecords=5")
+      .match();
   }
 
-  // TODO Test with invalid doc name, invalid sheet name
-  // TODO Test query plan generation...
-  // TODO Test limit.. (off by one due to column headers)
-
   @Test
-  public void testWithExplicitColumns() throws Exception {
+  public void testLimitWithOrderBy() throws Exception {
     try {
       initializeTokens();
     } catch (PluginException e) {
       fail(e.getMessage());
     }
 
-    String sql = String.format("SELECT Col1, Col3 FROM googlesheets.`%s`.`MixedSheet` WHERE `Col2` < 6.0", sheetID);
-    RowSet results = queryBuilder().sql(sql).rowSet();
-    results.print();
-
-
-    TupleMetadata expectedSchema = new SchemaBuilder()
-      .addNullable("Col1", MinorType.VARCHAR)
-      .addNullable("Col3", MinorType.DATE)
-      .buildSchema();
-
-    RowSet expected = client.rowSetBuilder(expectedSchema)
-      .addRow("Rosaline  Thales", null)
-      .addRow("Abdolhossein  Detlev", LocalDate.parse("2020-04-30"))
-      .addRow(null, LocalDate.parse("2020-06-30"))
-      .addRow("Yunus  Elena", LocalDate.parse("2021-01-15"))
-      .addRow("Swaran  Ohiyesa", LocalDate.parse("2021-04-08"))
-      .addRow("Kalani  Godabert",LocalDate.parse("2021-06-28"))
-      .addRow("Caishen  Origenes", LocalDate.parse("2021-07-09"))
-      .addRow("Toufik  Gurgen", LocalDate.parse("2021-11-05"))
-      .build();
-
-    new RowSetComparison(expected).verifyAndClearAll(results);
+    // Limit should not be pushed down for this example due to the sort
+    String sql = String.format("SELECT * FROM googlesheets.`%s`.`MixedSheet` ORDER BY Col2 LIMIT 4", sheetID);
+    queryBuilder()
+      .sql(sql)
+      .planMatcher()
+      .include("Limit", "maxRecords=-1")
+      .match();
   }
 
   @Test
-  public void testAggregateQuery() throws Exception {
+  public void testLimitWithOffset() throws Exception {
     try {
       initializeTokens();
     } catch (PluginException e) {
       fail(e.getMessage());
     }
 
-    String sql = "SELECT Major, COUNT(*)FROM googlesheets.`1BxiMVs0XRA5nFMdKvBdBZjgmUUqptlbs74OgvE2upms`.`Class Data`" +
-      "GROUP BY Major";
-    RowSet results = queryBuilder().sql(sql).rowSet();
-    results.print();
+    // Limit should be pushed down and include the offset
+    String sql = String.format("SELECT * FROM googlesheets.`%s`.`MixedSheet` LIMIT 4 OFFSET 5", sheetID);
+    queryBuilder()
+      .sql(sql)
+      .planMatcher()
+      .include("Limit", "maxRecords=9")
+      .match();
   }
 
   @Test
-  public void testSerDe() throws Exception {
+  public void testLimitWithFilter() throws Exception {
     try {
       initializeTokens();
     } catch (PluginException e) {
       fail(e.getMessage());
     }
 
-    String sql = String.format("SELECT COUNT(*) FROM googlesheets.`%s`.`MixedSheet`", sheetID);;
-    String plan = queryBuilder().sql(sql).explainJson();
-    long cnt = queryBuilder().physical(plan).singletonLong();
-    assertEquals("Counts should match", 30L, cnt);
+    String sql = String.format("SELECT * FROM googlesheets.`%s`.`MixedSheet` WHERE Col2 < 6.0 LIMIT 4", sheetID);
+    queryBuilder()
+      .sql(sql)
+      .planMatcher()
+      .include("Limit", "maxRecords=4")
+      .match();
   }
 
   /**

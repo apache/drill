@@ -74,6 +74,9 @@ public class GoogleSheetsRootSchema extends AbstractSchema {
     List<Sheet> sheetList;
     // This level here represents the actual Google document. Attempt to validate that it exists, and
     // if so, add it to the schema list.  If not, throw an exception.
+    //
+    // TODO In the future, we could add a check here to see whether the user has the DRIVE permission, and if so,
+    // retrieve the actual "file" name to use in the query instead of the non-readable ID.
     if (schema == null) {
       Sheets service = plugin.getSheetsService(schemaConfig.getUserName());
       try {

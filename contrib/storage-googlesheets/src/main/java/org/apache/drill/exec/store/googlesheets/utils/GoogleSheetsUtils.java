@@ -37,10 +37,10 @@ import com.google.api.services.sheets.v4.model.Request;
 import com.google.api.services.sheets.v4.model.Sheet;
 import com.google.api.services.sheets.v4.model.SheetProperties;
 import com.google.api.services.sheets.v4.model.Spreadsheet;
-import com.google.api.services.sheets.v4.model.SpreadsheetProperties;
 import com.google.api.services.sheets.v4.model.UpdateValuesResponse;
 import com.google.api.services.sheets.v4.model.ValueRange;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.exec.oauth.OAuthTokenProvider;
 import org.apache.drill.exec.record.metadata.SchemaBuilder;
@@ -123,8 +123,14 @@ public class GoogleSheetsUtils {
 
     if (dataStore == null) {
       logger.debug("Datastore is null");
+      throw UserException.connectionError()
+        .message("The DrillDataStore is null.  This should not happen.")
+        .build(logger);
     } else if (dataStore.getDataStoreFactory() == null) {
       logger.debug("Datastore factory is null");
+      throw UserException.connectionError()
+        .message("The DrillDataStoreFactory is null.  This should not happen.")
+        .build(logger);
     }
 
     flow = new GoogleAuthorizationCodeFlow.Builder
@@ -147,7 +153,7 @@ public class GoogleSheetsUtils {
       return null;
     }
     Credential credential = newCredential(userId, flow, credentialDataStore);
-    StoredCredential stored = ((DrillDataStore<StoredCredential>)credentialDataStore).getStoredCredential(userId);
+    StoredCredential stored = ((DrillDataStore<StoredCredential>)credentialDataStore).getStoredCredential();
     if (stored == null) {
       return null;
     }
@@ -197,20 +203,6 @@ public class GoogleSheetsUtils {
   }
 
   /**
-   * Returns the title of the GoogleSheet corresponding with the sheetID.  This is the human readable
-   * name of the actual GoogleSheet document.
-   * @param service An authenticated GoogleSheet service
-   * @param sheetID The sheetID.  This can be obtained from the sheet URL
-   * @return The title of the sheet document.
-   * @throws IOException
-   */
-  public static String getSheetTitle (Sheets service, String sheetID) throws IOException {
-    Spreadsheet spreadsheet = service.spreadsheets().get(sheetID).execute();
-    SpreadsheetProperties properties = spreadsheet.getProperties();
-    return properties.getTitle();
-  }
-
-  /**
    * Returns a list of the titles of the available spreadsheets within a given Google sheet.
    * @param service The Google Sheets service
    * @param sheetID The sheetID for the Google sheet.  This can be obtained from the URL of your Google sheet
@@ -237,7 +229,7 @@ public class GoogleSheetsUtils {
       return null;
     }
 
-    int temp = 0;
+    int temp;
     StringBuilder letter = new StringBuilder();
     while (column > 0) {
       temp = (column - 1) % 26;
@@ -445,7 +437,7 @@ public class GoogleSheetsUtils {
   }
 
   /**
-   * Infers the data type of an unknown string.
+   * Infers the datatype of an unknown string.
    * @param data An input String of unknown type.
    * @return The {@link DATA_TYPES} of the unknown string.
    */
