@@ -25,6 +25,7 @@ import com.typesafe.config.Config;
 import com.typesafe.config.ConfigValueFactory;
 import io.netty.buffer.ByteBuf;
 import org.apache.drill.exec.ops.FragmentContextImpl;
+import org.apache.drill.test.BaseDirTestWatcher;
 import org.apache.drill.test.BaseTestQuery;
 import org.apache.drill.categories.SecurityTest;
 import org.apache.drill.common.config.DrillConfig;
@@ -64,7 +65,6 @@ import org.apache.hadoop.security.authentication.util.KerberosName;
 import org.apache.hadoop.security.authentication.util.KerberosUtil;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mockito.Mockito;
@@ -81,7 +81,6 @@ import static org.junit.Assert.assertTrue;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
-@Ignore("See DRILL-5387")
 @Category(SecurityTest.class)
 public class TestBitBitKerberos extends BaseTestQuery {
   private static KerberosHelper krbHelper;
@@ -95,7 +94,7 @@ public class TestBitBitKerberos extends BaseTestQuery {
     final Config config = DrillConfig.create(cloneDefaultTestConfigProperties());
 
     krbHelper = new KerberosHelper(TestBitBitKerberos.class.getSimpleName(), null);
-    krbHelper.setupKdc(dirTestWatcher.getTmpDir());
+    krbHelper.setupKdc(BaseDirTestWatcher.createTempDir(dirTestWatcher.getTmpDir()));
 
     newConfig = new DrillConfig(
         config.withValue(ExecConstants.AUTHENTICATION_MECHANISMS,

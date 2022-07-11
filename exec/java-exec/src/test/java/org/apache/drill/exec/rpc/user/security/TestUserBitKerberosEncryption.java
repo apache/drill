@@ -18,6 +18,7 @@
 package org.apache.drill.exec.rpc.user.security;
 
 import org.apache.drill.shaded.guava.com.google.common.collect.Lists;
+import org.apache.drill.test.BaseDirTestWatcher;
 import org.apache.drill.test.ClientFixture;
 import org.apache.drill.test.ClusterFixture;
 import org.apache.drill.test.ClusterFixtureBuilder;
@@ -56,7 +57,7 @@ public class TestUserBitKerberosEncryption extends ClusterTest {
   @BeforeClass
   public static void setupTest() throws Exception {
     krbHelper = new KerberosHelper(TestUserBitKerberosEncryption.class.getSimpleName(), null);
-    krbHelper.setupKdc(dirTestWatcher.getTmpDir());
+    krbHelper.setupKdc(BaseDirTestWatcher.createTempDir(dirTestWatcher.getTmpDir()));
     cluster = defaultClusterConfig().build();
   }
 
