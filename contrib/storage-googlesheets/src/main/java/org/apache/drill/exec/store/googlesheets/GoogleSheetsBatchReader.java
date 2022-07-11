@@ -28,8 +28,11 @@ import org.apache.drill.exec.physical.impl.scan.framework.ManagedReader;
 import org.apache.drill.exec.physical.impl.scan.framework.SchemaNegotiator;
 import org.apache.drill.exec.physical.resultSet.ResultSetLoader;
 import org.apache.drill.exec.physical.resultSet.RowSetLoader;
+import org.apache.drill.exec.record.MaterializedField;
 import org.apache.drill.exec.record.metadata.TupleMetadata;
+import org.apache.drill.exec.store.googlesheets.columns.GoogleSheetsBigIntegerColumnWriter;
 import org.apache.drill.exec.store.googlesheets.columns.GoogleSheetsDateColumnWriter;
+import org.apache.drill.exec.store.googlesheets.columns.GoogleSheetsIntegerColumnWriter;
 import org.apache.drill.exec.store.googlesheets.columns.GoogleSheetsNumericColumnWriter;
 import org.apache.drill.exec.store.googlesheets.columns.GoogleSheetsTimeColumnWriter;
 import org.apache.drill.exec.store.googlesheets.columns.GoogleSheetsTimestampColumnWriter;
@@ -82,7 +85,12 @@ public class GoogleSheetsBatchReader implements ManagedReader<SchemaNegotiator> 
     this.rangeBuilder = new GoogleSheetsRangeBuilder(subScan.getScanSpec().getTableName(), BATCH_SIZE)
       .addRowCount(sheet.getProperties().getGridProperties().getRowCount());
     if (maxRecords > 0) {
-      rangeBuilder.addLimit(maxRecords);
+      // Since the headers are in the first row, add one more row of records to the batch.
+      if (config.getExtractHeaders()) {
+        rangeBuilder.addLimit(maxRecords + 1);
+      } else {
+        rangeBuilder.addLimit(maxRecords);
+      }
     }
   }
 
@@ -149,20 +157,24 @@ public class GoogleSheetsBatchReader implements ManagedReader<SchemaNegotiator> 
     // Create ScalarWriters
     rowWriter = resultLoader.writer();
 
-    // Build writers
-    MinorType dataType;
-    for (GoogleSheetsColumn column : columnMap.values()) {
-      dataType = column.getDrillDataType();
-      if (dataType == MinorType.FLOAT8) {
-        column.setWriter(new GoogleSheetsNumericColumnWriter(rowWriter, column.getColumnName()));
-      } else if (dataType == MinorType.VARCHAR) {
-        column.setWriter(new GoogleSheetsVarcharColumnWriter(rowWriter, column.getColumnName()));
-      } else if (dataType == MinorType.DATE) {
-        column.setWriter(new GoogleSheetsDateColumnWriter(rowWriter, column.getColumnName()));
-      } else if (dataType == MinorType.TIMESTAMP) {
-        column.setWriter(new GoogleSheetsTimestampColumnWriter(rowWriter, column.getColumnName()));
-      } else if (dataType == MinorType.TIME) {
-        column.setWriter(new GoogleSheetsTimeColumnWriter(rowWriter, column.getColumnName()));
+    if (negotiator.hasProvidedSchema()) {
+      setColumnWritersFromProvidedSchema(schema);
+    } else {
+      // Build writers
+      MinorType dataType;
+      for (GoogleSheetsColumn column : columnMap.values()) {
+        dataType = column.getDrillDataType();
+        if (dataType == MinorType.FLOAT8) {
+          column.setWriter(new GoogleSheetsNumericColumnWriter(rowWriter, column.getColumnName()));
+        } else if (dataType == MinorType.VARCHAR) {
+          column.setWriter(new GoogleSheetsVarcharColumnWriter(rowWriter, column.getColumnName()));
+        } else if (dataType == MinorType.DATE) {
+          column.setWriter(new GoogleSheetsDateColumnWriter(rowWriter, column.getColumnName()));
+        } else if (dataType == MinorType.TIMESTAMP) {
+          column.setWriter(new GoogleSheetsTimestampColumnWriter(rowWriter, column.getColumnName()));
+        } else if (dataType == MinorType.TIME) {
+          column.setWriter(new GoogleSheetsTimeColumnWriter(rowWriter, column.getColumnName()));
+        }
       }
     }
     return true;
@@ -232,6 +244,38 @@ public class GoogleSheetsBatchReader implements ManagedReader<SchemaNegotiator> 
       return false;
     }
     return true;
+  }
+
+  private void setColumnWritersFromProvidedSchema(TupleMetadata schema) {
+    List<MaterializedField> fieldList = schema.toFieldList();
+
+    MinorType dataType;
+    GoogleSheetsColumn column;
+    for (MaterializedField field: fieldList) {
+      dataType = field.getType().getMinorType();
+      column = columnMap.get(field.getName());
+
+      // Get the field
+      if (dataType == MinorType.FLOAT8) {
+        column.setWriter(new GoogleSheetsNumericColumnWriter(rowWriter, column.getColumnName()));
+      } else if (dataType == MinorType.VARCHAR) {
+        column.setWriter(new GoogleSheetsVarcharColumnWriter(rowWriter, column.getColumnName()));
+      } else if (dataType == MinorType.INT) {
+        column.setWriter(new GoogleSheetsIntegerColumnWriter(rowWriter, column.getColumnName()));
+      } else if (dataType == MinorType.BIGINT) {
+        column.setWriter(new GoogleSheetsBigIntegerColumnWriter(rowWriter, column.getColumnName()));
+      } else if (dataType == MinorType.DATE) {
+        column.setWriter(new GoogleSheetsDateColumnWriter(rowWriter, column.getColumnName()));
+      } else if (dataType == MinorType.TIMESTAMP) {
+        column.setWriter(new GoogleSheetsTimestampColumnWriter(rowWriter, column.getColumnName()));
+      } else if (dataType == MinorType.TIME) {
+        column.setWriter(new GoogleSheetsTimeColumnWriter(rowWriter, column.getColumnName()));
+      } else {
+        throw UserException.validationError()
+          .message(dataType + " is not supported for GoogleSheets.")
+          .build(logger);
+      }
+    }
   }
 
   /**

@@ -133,9 +133,6 @@ public class TestGoogleSheetsQueries extends ClusterTest {
     new RowSetComparison(expected).verifyAndClearAll(results);
   }
 
-  // TODO Test with invalid doc name, invalid sheet name
-  // TODO Test query plan generation...
-
   @Test
   public void testWithExplicitColumns() throws Exception {
     try {
@@ -197,6 +194,34 @@ public class TestGoogleSheetsQueries extends ClusterTest {
     assertEquals("Counts should match", 25L, cnt);
   }
 
+  @Test
+  public void testSchemaProvisioning() throws Exception {
+    try {
+      initializeTokens();
+    } catch (PluginException e) {
+      fail(e.getMessage());
+    }
+
+    String sql = String.format("SELECT * FROM table(`googlesheets`.`%s`.`MixedSheet` (schema => 'inline=(`Col1` VARCHAR, `Col2` INTEGER, `Col3` VARCHAR)')) LIMIT 5", sheetID);
+    RowSet results = queryBuilder().sql(sql).rowSet();
+
+    TupleMetadata expectedSchema = new SchemaBuilder()
+      .addNullable("Col1", MinorType.VARCHAR)
+      .addNullable("Col2", MinorType.INT)
+      .addNullable("Col3", MinorType.VARCHAR)
+      .buildSchema();
+
+    RowSet expected = client.rowSetBuilder(expectedSchema)
+      .addRow("Rosaline  Thales", 1, null)
+      .addRow("Abdolhossein  Detlev", 2, "2020-04-30")
+      .addRow("Yosuke  Simon", null, "2020-05-22")
+      .addRow(null, 4, "2020-06-30")
+      .addRow("Avitus  Stribog", 500000, "2020-07-27")
+      .build();
+
+    new RowSetComparison(expected).verifyAndClearAll(results);
+  }
+  
   /**
    * This function is used for testing only.  It initializes a {@link PersistentTokenTable} and populates it
    * with a valid access and refresh token.
