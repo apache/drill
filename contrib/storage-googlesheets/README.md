@@ -106,6 +106,14 @@ supply a schema or other information to allow Drill to identify the data types o
 If the data type inference is not working for you, you can set the `allTextMode` to `true` and Drill will read everything as a `VARCHAR`.
 
 #### Schema Provisioning
+As with other plugins, you can provide a schema inline as shown in the example query below.
+
+```sql
+SELECT * 
+FROM table(`googlesheets`.`<your google sheet>`.`MixedSheet` 
+    (schema => 'inline=(`Col1` VARCHAR, `Col2` INTEGER, `Col3` VARCHAR)')) 
+LIMIT 5
+```
 
 
 ### Column Headers

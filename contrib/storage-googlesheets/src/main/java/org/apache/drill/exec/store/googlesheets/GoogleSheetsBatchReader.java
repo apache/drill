@@ -31,7 +31,9 @@ import org.apache.drill.exec.physical.resultSet.RowSetLoader;
 import org.apache.drill.exec.record.MaterializedField;
 import org.apache.drill.exec.record.metadata.TupleMetadata;
 import org.apache.drill.exec.store.googlesheets.columns.GoogleSheetsBigIntegerColumnWriter;
+import org.apache.drill.exec.store.googlesheets.columns.GoogleSheetsBooleanColumnWriter;
 import org.apache.drill.exec.store.googlesheets.columns.GoogleSheetsDateColumnWriter;
+import org.apache.drill.exec.store.googlesheets.columns.GoogleSheetsFloatColumnWriter;
 import org.apache.drill.exec.store.googlesheets.columns.GoogleSheetsIntegerColumnWriter;
 import org.apache.drill.exec.store.googlesheets.columns.GoogleSheetsNumericColumnWriter;
 import org.apache.drill.exec.store.googlesheets.columns.GoogleSheetsTimeColumnWriter;
@@ -174,6 +176,8 @@ public class GoogleSheetsBatchReader implements ManagedReader<SchemaNegotiator> 
           column.setWriter(new GoogleSheetsTimestampColumnWriter(rowWriter, column.getColumnName()));
         } else if (dataType == MinorType.TIME) {
           column.setWriter(new GoogleSheetsTimeColumnWriter(rowWriter, column.getColumnName()));
+        } else if (dataType == MinorType.BIT) {
+          column.setWriter(new GoogleSheetsBooleanColumnWriter(rowWriter, column.getColumnName()));
         }
       }
     }
@@ -258,6 +262,8 @@ public class GoogleSheetsBatchReader implements ManagedReader<SchemaNegotiator> 
       // Get the field
       if (dataType == MinorType.FLOAT8) {
         column.setWriter(new GoogleSheetsNumericColumnWriter(rowWriter, column.getColumnName()));
+      } else if (dataType == MinorType.FLOAT4) {
+        column.setWriter(new GoogleSheetsFloatColumnWriter(rowWriter, column.getColumnName()));
       } else if (dataType == MinorType.VARCHAR) {
         column.setWriter(new GoogleSheetsVarcharColumnWriter(rowWriter, column.getColumnName()));
       } else if (dataType == MinorType.INT) {
@@ -270,6 +276,8 @@ public class GoogleSheetsBatchReader implements ManagedReader<SchemaNegotiator> 
         column.setWriter(new GoogleSheetsTimestampColumnWriter(rowWriter, column.getColumnName()));
       } else if (dataType == MinorType.TIME) {
         column.setWriter(new GoogleSheetsTimeColumnWriter(rowWriter, column.getColumnName()));
+      } else if (dataType == MinorType.BIT) {
+        column.setWriter(new GoogleSheetsBooleanColumnWriter(rowWriter, column.getColumnName()));
       } else {
         throw UserException.validationError()
           .message(dataType + " is not supported for GoogleSheets.")

@@ -63,6 +63,8 @@ public class TestGoogleSheetsQueries extends ClusterTest {
   private static String accessToken;
   private static String refreshToken;
   private static String sheetID;
+  private static String clientID;
+  private static String clientSecret;
 
   @BeforeClass
   public static void init() throws Exception {
@@ -72,8 +74,8 @@ public class TestGoogleSheetsQueries extends ClusterTest {
     ObjectMapper mapper = new ObjectMapper();
     Map<String,String> tokenMap = mapper.readValue(oauthJson, Map.class);
 
-    String clientID = tokenMap.get("client_id");
-    String clientSecret = tokenMap.get("client_secret");
+    clientID = tokenMap.get("client_id");
+    clientSecret = tokenMap.get("client_secret");
     accessToken = tokenMap.get("access_token");
     refreshToken = tokenMap.get("refresh_token");
     sheetID = tokenMap.get("sheet_id");
@@ -85,8 +87,6 @@ public class TestGoogleSheetsQueries extends ClusterTest {
 
     startCluster(builder);
 
-    int portNumber = cluster.drillbit().getWebServerPort();
-
     pluginRegistry = cluster.drillbit().getContext().getStorage();
     GoogleSheetsStoragePluginConfig config = GoogleSheetsStoragePluginConfig.builder()
       .clientID(clientID)
@@ -97,15 +97,14 @@ public class TestGoogleSheetsQueries extends ClusterTest {
       .allTextMode(false)
       .extractHeaders(true)
       .build();
-
     config.setEnabled(true);
     pluginRegistry.validatedPut("googlesheets", config);
   }
 
   @Test
-  public void testWithSheetName() throws Exception {
+  public void testStarQuery() throws Exception {
     try {
-      initializeTokens();
+      initializeTokens("googlesheets");
     } catch (PluginException e) {
       fail(e.getMessage());
     }
@@ -134,9 +133,37 @@ public class TestGoogleSheetsQueries extends ClusterTest {
   }
 
   @Test
+  public void testProjectPushdown() throws Exception {
+    try {
+      initializeTokens("googlesheets");
+    } catch (PluginException e) {
+      fail(e.getMessage());
+    }
+
+    String sql = String.format("SELECT Col1, Col3 FROM googlesheets.`%s`.`MixedSheet` LIMIT 5", sheetID);
+    RowSet results = queryBuilder().sql(sql).rowSet();
+
+    TupleMetadata expectedSchema = new SchemaBuilder()
+      .addNullable("Col1", MinorType.VARCHAR)
+      .addNullable("Col3", MinorType.DATE)
+      .buildSchema();
+
+    RowSet expected = client.rowSetBuilder(expectedSchema)
+      .addRow("Rosaline  Thales", null)
+      .addRow("Abdolhossein  Detlev", LocalDate.parse("2020-04-30"))
+      .addRow("Yosuke  Simon", LocalDate.parse("2020-05-22"))
+      .addRow(null, LocalDate.parse("2020-06-30"))
+      .addRow("Avitus  Stribog", LocalDate.parse("2020-07-27"))
+      .build();
+
+    new RowSetComparison(expected).verifyAndClearAll(results);
+  }
+
+
+  @Test
   public void testWithExplicitColumns() throws Exception {
     try {
-      initializeTokens();
+      initializeTokens("googlesheets");
     } catch (PluginException e) {
       fail(e.getMessage());
     }
@@ -166,7 +193,7 @@ public class TestGoogleSheetsQueries extends ClusterTest {
   @Test
   public void testAggregateQuery() throws Exception {
     try {
-      initializeTokens();
+      initializeTokens("googlesheets");
     } catch (PluginException e) {
       fail(e.getMessage());
     }
@@ -183,7 +210,7 @@ public class TestGoogleSheetsQueries extends ClusterTest {
   @Test
   public void testSerDe() throws Exception {
     try {
-      initializeTokens();
+      initializeTokens("googlesheets");
     } catch (PluginException e) {
       fail(e.getMessage());
     }
@@ -195,9 +222,61 @@ public class TestGoogleSheetsQueries extends ClusterTest {
   }
 
   @Test
+  public void testAllTextMode() throws Exception {
+    try {
+      initializeTokens("googlesheets");
+    } catch (PluginException e) {
+      fail(e.getMessage());
+    }
+
+    GoogleSheetsStoragePluginConfig config = GoogleSheetsStoragePluginConfig.builder()
+      .clientID(clientID)
+      .clientSecret(clientSecret)
+      .redirectUris(REDIRECT_URI)
+      .authUri(AUTH_URI)
+      .tokenUri(TOKEN_URI)
+      .allTextMode(true)
+      .extractHeaders(true)
+      .build();
+    config.setEnabled(true);
+    pluginRegistry.validatedPut("googlesheets", config);
+
+    String sql = String.format("SELECT * FROM googlesheets.`%s`.`MixedSheet` LIMIT 5", sheetID);
+    RowSet results = queryBuilder().sql(sql).rowSet();
+
+    TupleMetadata expectedSchema = new SchemaBuilder()
+      .addNullable("Col1", MinorType.VARCHAR)
+      .addNullable("Col2", MinorType.VARCHAR)
+      .addNullable("Col3", MinorType.VARCHAR)
+      .buildSchema();
+
+    RowSet expected = client.rowSetBuilder(expectedSchema)
+      .addRow("Rosaline  Thales", "1", null)
+      .addRow("Abdolhossein  Detlev", "2.0001", "2020-04-30")
+      .addRow("Yosuke  Simon", null, "2020-05-22")
+      .addRow(null, "4", "2020-06-30")
+      .addRow("Avitus  Stribog", "5.00E+05", "2020-07-27")
+      .build();
+
+    new RowSetComparison(expected).verifyAndClearAll(results);
+
+    config = GoogleSheetsStoragePluginConfig.builder()
+      .clientID(clientID)
+      .clientSecret(clientSecret)
+      .redirectUris(REDIRECT_URI)
+      .authUri(AUTH_URI)
+      .tokenUri(TOKEN_URI)
+      .allTextMode(false)
+      .extractHeaders(true)
+      .build();
+    config.setEnabled(true);
+    pluginRegistry.validatedPut("googlesheets", config);
+  }
+
+  @Test
   public void testSchemaProvisioning() throws Exception {
     try {
-      initializeTokens();
+      initializeTokens("googlesheets");
     } catch (PluginException e) {
       fail(e.getMessage());
     }
@@ -221,13 +300,14 @@ public class TestGoogleSheetsQueries extends ClusterTest {
 
     new RowSetComparison(expected).verifyAndClearAll(results);
   }
+
   /**
    * This function is used for testing only.  It initializes a {@link PersistentTokenTable} and populates it
    * with a valid access and refresh token.
    * @throws PluginException If anything goes wrong
    */
-  private void initializeTokens() throws PluginException {
-    GoogleSheetsStoragePlugin plugin = (GoogleSheetsStoragePlugin) pluginRegistry.getPlugin("googlesheets");
+  private void initializeTokens(String pluginName) throws PluginException {
+    GoogleSheetsStoragePlugin plugin = (GoogleSheetsStoragePlugin) pluginRegistry.getPlugin(pluginName);
     plugin.initializeTokenTableForTesting();
     PersistentTokenTable tokenTable = plugin.getTokenTable();
     tokenTable.setAccessToken(accessToken);
