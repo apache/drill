@@ -22,11 +22,12 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonTypeName;
 
 import org.apache.drill.common.PlanStringBuilder;
+import org.apache.drill.exec.planner.logical.DrillTableSelection;
 
 import java.util.Objects;
 
 @JsonTypeName("googlesheets-scan-spec")
-public class GoogleSheetsScanSpec {
+public class GoogleSheetsScanSpec implements DrillTableSelection {
 
   private final String sheetID;
   private final GoogleSheetsStoragePluginConfig config;
@@ -102,5 +103,10 @@ public class GoogleSheetsScanSpec {
       .field("pluginName", pluginName)
       .field("tabIndex", tabIndex)
       .toString();
+  }
+
+  @Override
+  public String digest() {
+    return toString();
   }
 }

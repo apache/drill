@@ -19,6 +19,7 @@
 package org.apache.drill.exec.store.googlesheets.schema;
 
 import com.google.api.services.sheets.v4.model.Sheet;
+import org.apache.calcite.schema.Schema;
 import org.apache.calcite.schema.SchemaPlus;
 import org.apache.calcite.schema.Table;
 import org.apache.drill.common.exceptions.UserException;
@@ -26,7 +27,6 @@ import org.apache.drill.common.map.CaseInsensitiveMap;
 import org.apache.drill.exec.physical.base.PhysicalOperator;
 import org.apache.drill.exec.physical.base.Writer;
 import org.apache.drill.exec.planner.logical.CreateTableEntry;
-import org.apache.drill.exec.planner.logical.DrillTableSelection;
 import org.apache.drill.exec.planner.logical.DynamicDrillTable;
 import org.apache.drill.exec.store.AbstractSchema;
 import org.apache.drill.exec.store.SchemaConfig;
@@ -53,6 +53,7 @@ public class GoogleSheetsDrillSchema extends AbstractSchema {
   private final Map<String, DynamicDrillTable> activeTables = CaseInsensitiveMap.newHashMap();
   private final Map<String, GoogleSheetsDrillSchema> schemas = new HashMap<>();
   private final GoogleSheetsStoragePlugin plugin;
+  private final List<Sheet> subSchemaList;
 
   private final SchemaConfig schemaConfig;
 
@@ -62,12 +63,13 @@ public class GoogleSheetsDrillSchema extends AbstractSchema {
     super(parent.getSchemaPath(), name);
     this.plugin = plugin;
     this.schemaConfig = schemaConfig;
+    this.subSchemaList = subSchemas;
 
     // Add sub schemas to list, then create tables
     for (Sheet sheet : subSchemas) {
       registerTable(sheet.getProperties().getTitle(),
         new DynamicDrillTable(plugin, plugin.getName(),
-        (DrillTableSelection) new GoogleSheetsScanSpec(
+        new GoogleSheetsScanSpec(
           name,
           (GoogleSheetsStoragePluginConfig) plugin.getConfig(),
           sheet.getProperties().getTitle(),

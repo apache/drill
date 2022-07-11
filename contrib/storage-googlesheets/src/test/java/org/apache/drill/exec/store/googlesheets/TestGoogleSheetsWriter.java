@@ -21,6 +21,7 @@ package org.apache.drill.exec.store.googlesheets;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.drill.common.util.DrillFileUtils;
 import org.apache.drill.exec.oauth.PersistentTokenTable;
+import org.apache.drill.exec.physical.rowSet.RowSet;
 import org.apache.drill.exec.store.StoragePluginRegistry;
 import org.apache.drill.exec.store.StoragePluginRegistry.PluginException;
 import org.apache.drill.shaded.guava.com.google.common.base.Charsets;
@@ -32,6 +33,7 @@ import org.junit.BeforeClass;
 import org.junit.Ignore;
 import org.junit.Test;
 
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -54,6 +56,7 @@ public class TestGoogleSheetsWriter extends ClusterTest {
   @BeforeClass
   public static void init() throws Exception {
     startCluster(ClusterFixture.builder(dirTestWatcher));
+    dirTestWatcher.copyResourceToRoot(Paths.get("data/"));
 
     String oauthJson = Files.asCharSource(DrillFileUtils.getResourceAsFile("/tokens/oauth_tokens.json"), Charsets.UTF_8).read();
 
@@ -92,6 +95,27 @@ public class TestGoogleSheetsWriter extends ClusterTest {
     QuerySummary insertResults = queryBuilder().sql(query).run();
     assertTrue(insertResults.succeeded());
   }
+
+  @Test
+  public void testCTASFromFile() throws Exception {
+    try {
+      initializeTokens();
+    } catch (PluginException e) {
+      fail(e.getMessage());
+    }
+
+    /*String query = "CREATE TABLE googlesheets.`test_sheet`.`test_table` (ID, NAME) AS " +
+      "SELECT * FROM (VALUES(1,2), (3,4))";*/
+   String sql = "SELECT * FROM dfs.`data/Drill_Test_Data.xlsx`";
+
+    //String sql = "SHOW FILES IN dfs.`data/`";
+    RowSet results = queryBuilder().sql(sql).rowSet();
+    results.print();
+    // Create the table and insert the values
+    //QuerySummary insertResults = queryBuilder().sql(query).run();
+    //assertTrue(insertResults.succeeded());
+  }
+
 
   /**
    * This function is used for testing only.  It initializes a {@link PersistentTokenTable} and populates it

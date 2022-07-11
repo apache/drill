@@ -46,8 +46,11 @@ public class GoogleSheetsRootSchema extends AbstractSchema {
 
   private final Map<String, DynamicDrillTable> activeTables = new HashMap<>();
   private final Map<String, GoogleSheetsDrillSchema> schemas = new HashMap<>();
+
+  private List<Sheet> sheetList = new ArrayList<>();
   private final GoogleSheetsStoragePlugin plugin;
   private final SchemaConfig schemaConfig;
+
 
   public GoogleSheetsRootSchema(GoogleSheetsStoragePlugin plugin, SchemaConfig schemaConfig) {
     super(Collections.emptyList(), plugin.getName());
@@ -71,7 +74,6 @@ public class GoogleSheetsRootSchema extends AbstractSchema {
   @Override
   public GoogleSheetsDrillSchema getSubSchema(String name) {
     GoogleSheetsDrillSchema schema = schemas.get(name);
-    List<Sheet> sheetList;
     // This level here represents the actual Google document. Attempt to validate that it exists, and
     // if so, add it to the schema list.  If not, throw an exception.
     //
@@ -86,7 +88,7 @@ public class GoogleSheetsRootSchema extends AbstractSchema {
 
         sheetList = GoogleSheetsUtils.getSheetList(service, name);
       } catch (IOException e) {
-        sheetList = new ArrayList<>();
+        // Do nothing
       }
       // At this point we know we have a valid sheet because we obtained the Sheet list, so we need to
       // add the schema to the schemas list and return it.
@@ -116,26 +118,5 @@ public class GoogleSheetsRootSchema extends AbstractSchema {
   @Override
   public String getTypeName() {
     return GoogleSheetsStoragePluginConfig.NAME;
-  }
-
-  // TODO Make sure that the root schema appears in the activeTables list.
-  private Schema createSubSchema(String schemaName) {
-    logger.debug("Creating subSchema for: {}", schemaName);
-    List<Sheet> subSchemas;
-
-    // Since Sheets may have sub sheets, we need to retrieve a list of sub-sheets
-    // for the sheet in question.
-    try {
-      Sheets service = plugin.getSheetsService(schemaConfig.getUserName());
-      subSchemas = GoogleSheetsUtils.getSheetList(service, schemaName);
-    } catch (IOException e) {
-      throw UserException.connectionError(e)
-        .message("Unable to connect to Google Sheets: " + e.getMessage())
-        .build(logger);
-    }
-    Schema schema = new GoogleSheetsDrillSchema(this, schemaName, plugin, subSchemas, schemaConfig);
-    logger.debug("Returning sub schemas for {} ", schemaName);
-    logger.debug("Schema: {}", schema);
-    return schema;
   }
 }
