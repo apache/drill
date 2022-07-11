@@ -35,7 +35,9 @@ public class VersionIterator implements Iterator<Object>{
     public String commit_id = "Unknown";
     public String commit_message = "";
     public String commit_time = "";
+    /** @deprecated No longer populated in order to achieve reproducible builds */
     public String build_email = "Unknown";
+    /** @deprecated No longer populated in order to achieve reproducible builds */
     public String build_time = "";
 
     public VersionInfo(){
