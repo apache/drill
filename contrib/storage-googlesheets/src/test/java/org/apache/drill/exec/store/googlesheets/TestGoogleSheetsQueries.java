@@ -221,7 +221,6 @@ public class TestGoogleSheetsQueries extends ClusterTest {
 
     new RowSetComparison(expected).verifyAndClearAll(results);
   }
-  
   /**
    * This function is used for testing only.  It initializes a {@link PersistentTokenTable} and populates it
    * with a valid access and refresh token.
