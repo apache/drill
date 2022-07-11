@@ -27,9 +27,7 @@
 
         Example:
         ```
-        Note for the committers:
-        until the release is not over and Drill version is not changed to 1.17.0-SNAPSHOT, please do not push any
-        changes into Drill master.
+        Note for committers: until the release is over and Drill version is changed to 1.17.0-SNAPSHOT, please do not push any changes into Drill master.
         ```
 2. ## Setup environment:
     1. ### SVN
@@ -202,14 +200,9 @@
     The release script will push the maven artifacts to the Maven staging repo.
 
 5. ## Multiple builds
-    Currently, releasing multiple builds is done by performing consecutive releases.  E.g. to add
-    an Hadoop 2 build of Drill,  loop back to the top of the instructions now and start again with
-    a build profile of 'hadoop-2' and a release version of '1.17.0-hadoop2'.  Note that it is not
-    necessary to close the jar release in the Maven repo first since the artifacts from your next
-    release will cause no identifier collisions due to their different version suffix.  This means
-    that a single Maven repo can hold the artifacts for both 1.17.0 and 1.17.0-hadoop2.
+    For each additional build of Drill beyond the default, e.g. an Hadoop 2 build, create only the signed archives of the source and binaries and upload these to the Apache distribution network using svn. Do not run the full release process again using the Maven release plugin since that will result in the unwanted creation of a new Drill version number. This has the consequence that for additional builds we do not publish code artifacts to the Apache Maven repo. Users of these builds who require these artifacts must therefore build them by compiling Drill under the appropriate profile themselves.
 
-5. ## Publish release candidate and vote
+6. ## Publish release candidate and vote
     1. Go to the [Apache Maven staging repo](https://repository.apache.org/) and close the new jar release.
         This step is done in the Maven GUI. For detailed instructions on sonatype GUI please refer to
         https://central.sonatype.org/pages/releasing-the-deployment.html#locate-and-examine-your-staging-repository.
