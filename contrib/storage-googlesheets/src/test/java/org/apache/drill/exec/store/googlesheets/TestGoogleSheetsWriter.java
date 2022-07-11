@@ -19,6 +19,7 @@
 package org.apache.drill.exec.store.googlesheets;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.apache.drill.categories.RowSetTest;
 import org.apache.drill.common.util.DrillFileUtils;
 import org.apache.drill.exec.oauth.PersistentTokenTable;
 import org.apache.drill.exec.physical.rowSet.RowSet;
@@ -32,6 +33,7 @@ import org.apache.drill.test.QueryBuilder.QuerySummary;
 import org.junit.BeforeClass;
 import org.junit.Ignore;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
 import java.nio.file.Paths;
 import java.util.ArrayList;
@@ -42,9 +44,9 @@ import java.util.Map;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
+@Category(RowSetTest.class)
 @Ignore("These tests require a live Google Sheets connection.  Please run manually.")
 public class TestGoogleSheetsWriter extends ClusterTest {
-
   private static final String AUTH_URI = "https://accounts.google.com/o/oauth2/auth";
   private static final String TOKEN_URI = "https://oauth2.googleapis.com/token";
   private static final List<String> REDIRECT_URI = new ArrayList<>(Arrays.asList("urn:ietf:wg:oauth:2.0:oob", "http://localhost"));
@@ -55,8 +57,8 @@ public class TestGoogleSheetsWriter extends ClusterTest {
 
   @BeforeClass
   public static void init() throws Exception {
-    startCluster(ClusterFixture.builder(dirTestWatcher));
-    dirTestWatcher.copyResourceToRoot(Paths.get("data/"));
+    ClusterTest.startCluster(ClusterFixture.builder(dirTestWatcher));
+    dirTestWatcher.copyResourceToRoot(Paths.get(""));
 
     String oauthJson = Files.asCharSource(DrillFileUtils.getResourceAsFile("/tokens/oauth_tokens.json"), Charsets.UTF_8).read();
 
@@ -106,7 +108,7 @@ public class TestGoogleSheetsWriter extends ClusterTest {
 
     /*String query = "CREATE TABLE googlesheets.`test_sheet`.`test_table` (ID, NAME) AS " +
       "SELECT * FROM (VALUES(1,2), (3,4))";*/
-   String sql = "SELECT * FROM dfs.`data/Drill_Test_Data.xlsx`";
+   String sql = "SELECT * FROM table(cp.`data/Drill_Test_Data.xlsx` (type => 'excel', sheetName => 'MixedSheet'))";
 
     //String sql = "SHOW FILES IN dfs.`data/`";
     RowSet results = queryBuilder().sql(sql).rowSet();

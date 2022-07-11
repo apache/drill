@@ -49,7 +49,8 @@ import static org.junit.Assert.fail;
 
 /**
  * This class tests the Google Sheets plugin. Since GoogleSheets is essentially an API, these tests
- * must be run with a live internet connection.  These tests use
+ * must be run with a live internet connection.  These tests use test data which can be found in the
+ * resources directory.
  */
 @Ignore("Requires live connection to GoogleSheets.  Please run tests manually.")
 public class TestGoogleSheetsQueries extends ClusterTest {

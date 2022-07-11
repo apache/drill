@@ -172,7 +172,7 @@ public class GoogleSheetsRangeBuilder implements Iterator<String> {
         .append(":")
         .append(lastColumn)
         .append(getEndIndex());
-    } else if (projectedRanges.size() > 0) {
+    } else if (projectedRanges != null && projectedRanges.size() > 0) {
       range.append("'")
         .append(sheetName)
         .append("'!");

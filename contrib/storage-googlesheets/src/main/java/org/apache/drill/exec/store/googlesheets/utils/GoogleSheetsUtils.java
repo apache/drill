@@ -251,7 +251,7 @@ public class GoogleSheetsUtils {
     int column = 0;
     int length = letter.length();
     for (int i = 0; i < length; i++) {
-      column += (Character.codePointAt(letter, i) - 64) * Math.pow(26, length - i - 1);
+      column += (Character.codePointAt(letter, i) - 64) * (int)Math.pow(26, length - i - 1);
     }
     return column;
   }

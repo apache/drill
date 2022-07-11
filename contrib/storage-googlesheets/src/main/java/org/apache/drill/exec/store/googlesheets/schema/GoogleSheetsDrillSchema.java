@@ -19,7 +19,6 @@
 package org.apache.drill.exec.store.googlesheets.schema;
 
 import com.google.api.services.sheets.v4.model.Sheet;
-import org.apache.calcite.schema.Schema;
 import org.apache.calcite.schema.SchemaPlus;
 import org.apache.calcite.schema.Table;
 import org.apache.drill.common.exceptions.UserException;
@@ -39,7 +38,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -51,9 +49,7 @@ public class GoogleSheetsDrillSchema extends AbstractSchema {
   private static final Logger logger = LoggerFactory.getLogger(GoogleSheetsDrillSchema.class);
 
   private final Map<String, DynamicDrillTable> activeTables = CaseInsensitiveMap.newHashMap();
-  private final Map<String, GoogleSheetsDrillSchema> schemas = new HashMap<>();
   private final GoogleSheetsStoragePlugin plugin;
-  private final List<Sheet> subSchemaList;
 
   private final SchemaConfig schemaConfig;
 
@@ -63,7 +59,6 @@ public class GoogleSheetsDrillSchema extends AbstractSchema {
     super(parent.getSchemaPath(), name);
     this.plugin = plugin;
     this.schemaConfig = schemaConfig;
-    this.subSchemaList = subSchemas;
 
     // Add sub schemas to list, then create tables
     for (Sheet sheet : subSchemas) {
@@ -118,7 +113,7 @@ public class GoogleSheetsDrillSchema extends AbstractSchema {
 
   @Override
   public GoogleSheetsDrillSchema getSubSchema(String name) {
-    return  schemas.get(name);
+    return null;
   }
 
   @Override
