@@ -30,6 +30,7 @@ import org.apache.drill.common.logical.security.CredentialsProvider;
 import org.apache.drill.exec.store.security.UsernamePasswordCredentials;
 import org.apache.drill.shaded.guava.com.google.common.collect.ImmutableMap;
 
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -40,20 +41,39 @@ public class ElasticsearchStorageConfig extends AbstractSecuredStoragePluginConf
 
   private static final ObjectWriter OBJECT_WRITER = new ObjectMapper().writerFor(List.class);
 
+  private static final String HOSTS = "hosts";
+
+  private static final String PATH_PREFIX = "pathPrefix";
+
+  private static final String USERNAME = "username";
+
+  private static final String PASSWORD = "password";
+
+  public static final String CREDENTIALS_PROVIDER = "credentialsProvider";
+
+  private static final String EMPTY_STRING = "";
+
   private final List<String> hosts;
+  private final String pathPrefix;
 
   @JsonCreator
   public ElasticsearchStorageConfig(
-      @JsonProperty("hosts") List<String> hosts,
-      @JsonProperty("username") String username,
-      @JsonProperty("password") String password,
-      @JsonProperty("credentialsProvider") CredentialsProvider credentialsProvider) {
+      @JsonProperty(HOSTS) List<String> hosts,
+      @JsonProperty(USERNAME) String username,
+      @JsonProperty(PASSWORD) String password,
+      @JsonProperty(PATH_PREFIX) String pathPrefix,
+      @JsonProperty(CREDENTIALS_PROVIDER) CredentialsProvider credentialsProvider) {
     super(CredentialProviderUtils.getCredentialsProvider(username, password, credentialsProvider), credentialsProvider == null);
     this.hosts = hosts;
+    this.pathPrefix = pathPrefix;
   }
 
   public List<String> getHosts() {
     return hosts;
+  }
+
+  public String getPathPrefix() {
+    return pathPrefix;
   }
 
   public String getUsername() {
@@ -78,10 +98,16 @@ public class ElasticsearchStorageConfig extends AbstractSecuredStoragePluginConf
   @JsonIgnore
   public Map<String, Object> toConfigMap()
       throws JsonProcessingException {
+    Map<String, String> credentials = new HashMap<>(credentialsProvider.getCredentials());
     ImmutableMap.Builder<String, Object> builder = ImmutableMap.builder();
-    builder.put("hosts", OBJECT_WRITER.writeValueAsString(hosts));
+    builder.put(HOSTS, OBJECT_WRITER.writeValueAsString(hosts));
+    builder.put(PATH_PREFIX, pathPrefix != null ? pathPrefix : EMPTY_STRING);
+    builder.put(USERNAME, credentials.getOrDefault(USERNAME, EMPTY_STRING));
+    builder.put(PASSWORD, credentials.getOrDefault(PASSWORD, EMPTY_STRING));
 
-    builder.putAll(credentialsProvider.getCredentials());
+    credentials.remove(USERNAME);
+    credentials.remove(PASSWORD);
+    builder.putAll(credentials);
     return builder.build();
   }
 

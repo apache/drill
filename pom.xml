@@ -60,7 +60,7 @@
       avoid_bad_dependencies plugin found in the file.
     -->
     <calcite.groupId>com.github.vvysotskyi.drill-calcite</calcite.groupId>
-    <calcite.version>1.21.0-drill-r8</calcite.version>
+    <calcite.version>1.21.0-drill-r9</calcite.version>
     <avatica.version>1.17.0</avatica.version>
     <janino.version>3.0.11</janino.version>
     <sqlline.version>1.12.0</sqlline.version>
