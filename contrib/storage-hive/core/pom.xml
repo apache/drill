@@ -218,14 +218,6 @@
           <artifactId>servlet-api-2.5</artifactId>
         </exclusion>
         <exclusion>
-          <groupId>io.netty</groupId>
-          <artifactId>netty</artifactId>
-        </exclusion>
-        <exclusion>
-          <groupId>io.netty</groupId>
-          <artifactId>netty-all</artifactId>
-        </exclusion>
-        <exclusion>
           <groupId>tomcat</groupId>
           <artifactId>jasper-compiler</artifactId>
         </exclusion>
