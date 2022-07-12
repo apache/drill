@@ -120,7 +120,7 @@
     <jna.version>5.8.0</jna.version>
     <commons.compress.version>1.21</commons.compress.version>
     <hikari.version>4.0.3</hikari.version>
-    <netty.version>4.1.78.Final</netty.version>
+    <netty.version>4.1.73.Final</netty.version>
     <httpclient.version>4.5.13</httpclient.version>
     <libthrift.version>0.14.0</libthrift.version>
     <derby.version>10.14.2.0</derby.version>
