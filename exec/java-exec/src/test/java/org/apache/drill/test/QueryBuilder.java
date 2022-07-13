@@ -281,19 +281,31 @@ public class QueryBuilder {
   }
 
   /**
-   * Run a query contained in a resource file.
+   * Parse a single SQL statement (with optional ending semi-colon) from
+   * the resource provided.
    *
-   * @param resource Name of the resource
+   * @param resource the resource containing exactly one SQL statement, with
+   * optional ending semi-colon
    * @return this builder
    */
-  public QueryBuilder sqlResource(String resource) {
-    sql(ClusterFixture.loadResource(resource));
-    return this;
+  public QueryBuilder sqlResource(String resource) throws IOException {
+    String script = ClusterFixture.loadResource(resource);
+    StatementParser parser = new StatementParser(script);
+    String sql = parser.parseNext();
+    if (sql == null) {
+      throw new IllegalArgumentException("No query found");
+    }
+    return sql(sql);
   }
 
-  public QueryBuilder sqlResource(String resource, Object... args) {
-    sql(ClusterFixture.loadResource(resource), args);
-    return this;
+  public QueryBuilder sqlResource(String resource, Object... args) throws IOException {
+    String script = ClusterFixture.loadResource(resource);
+    StatementParser parser = new StatementParser(script);
+    String sql = parser.parseNext();
+    if (sql == null) {
+      throw new IllegalArgumentException("No query found");
+    }
+    return sql(sql, args);
   }
 
   public QueryBuilder physicalResource(String resource) {

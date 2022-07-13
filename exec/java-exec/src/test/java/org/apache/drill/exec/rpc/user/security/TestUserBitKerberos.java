@@ -27,6 +27,7 @@ import org.apache.drill.exec.rpc.data.DataRpcMetrics;
 import org.apache.drill.exec.rpc.security.KerberosHelper;
 import org.apache.drill.exec.rpc.user.UserRpcMetrics;
 import org.apache.drill.exec.rpc.user.security.testing.UserAuthenticatorTestImpl;
+import org.apache.drill.test.BaseDirTestWatcher;
 import org.apache.drill.test.ClientFixture;
 import org.apache.drill.test.ClusterFixture;
 import org.apache.drill.test.ClusterFixtureBuilder;
@@ -51,7 +52,7 @@ public class TestUserBitKerberos extends ClusterTest {
   @BeforeClass
   public static void setupTest() throws Exception {
     krbHelper = new KerberosHelper(TestUserBitKerberos.class.getSimpleName(), null);
-    krbHelper.setupKdc(dirTestWatcher.getTmpDir());
+    krbHelper.setupKdc(BaseDirTestWatcher.createTempDir(dirTestWatcher.getTmpDir()));
     cluster = defaultClusterConfig().build();
   }
 
