@@ -178,14 +178,6 @@
               <artifactId>hadoop-mapreduce-client-core</artifactId>
             </exclusion>
             <exclusion>
-              <groupId>io.netty</groupId>
-              <artifactId>netty</artifactId>
-            </exclusion>
-            <exclusion>
-              <groupId>io.netty</groupId>
-              <artifactId>netty-all</artifactId>
-            </exclusion>
-            <exclusion>
               <groupId>log4j</groupId>
               <artifactId>log4j</artifactId>
             </exclusion>
@@ -257,14 +249,6 @@
           <groupId>org.apache.hbase</groupId>
           <artifactId>hbase-client</artifactId>
           <exclusions>
-            <exclusion>
-              <groupId>io.netty</groupId>
-              <artifactId>netty</artifactId>
-            </exclusion>
-            <exclusion>
-              <groupId>io.netty</groupId>
-              <artifactId>netty-all</artifactId>
-            </exclusion>
             <exclusion>
               <groupId>log4j</groupId>
               <artifactId>log4j</artifactId>

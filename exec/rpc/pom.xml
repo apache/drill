@@ -56,26 +56,6 @@
       <classifier>linux-x86_64</classifier>
       <version>${netty.version}</version>
       <exclusions>
-        <exclusion>
-          <groupId>io.netty</groupId>
-          <artifactId>netty-handler</artifactId>
-        </exclusion>
-        <exclusion>
-          <groupId>io.netty</groupId>
-          <artifactId>netty-common</artifactId>
-        </exclusion>
-        <exclusion>
-          <groupId>io.netty</groupId>
-          <artifactId>netty-buffer</artifactId>
-        </exclusion>
-        <exclusion>
-          <groupId>io.netty</groupId>
-          <artifactId>netty-transport</artifactId>
-        </exclusion>
-        <exclusion>
-          <groupId>io.netty</groupId>
-          <artifactId>netty-parent</artifactId>
-        </exclusion>
       </exclusions>
     </dependency>
     <dependency>
