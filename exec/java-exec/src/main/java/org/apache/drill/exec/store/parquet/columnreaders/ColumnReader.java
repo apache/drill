@@ -223,7 +223,7 @@ public abstract class ColumnReader<V extends ValueVector> {
   }
 
   protected boolean recordsRequireDecoding() {
-    return !Collections.disjoint(VALUE_ENCODINGS, columnChunkMetaData.getEncodings());
+    return usingDictionary || !Collections.disjoint(VALUE_ENCODINGS, columnChunkMetaData.getEncodings());
   }
 
   protected boolean processPageData(int recordsToReadInThisPass) throws IOException {
