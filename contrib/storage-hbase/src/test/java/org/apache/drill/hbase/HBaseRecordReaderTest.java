@@ -17,14 +17,14 @@
  */
 package org.apache.drill.hbase;
 
-import org.apache.drill.categories.HbaseStorageTest;
+import org.apache.drill.categories.HBaseStorageTest;
 import org.apache.drill.categories.SlowTest;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
 import static org.apache.drill.test.TestBuilder.mapOf;
 
-@Category({SlowTest.class, HbaseStorageTest.class})
+@Category({SlowTest.class, HBaseStorageTest.class})
 public class HBaseRecordReaderTest extends BaseHBaseTest {
 
   @Test

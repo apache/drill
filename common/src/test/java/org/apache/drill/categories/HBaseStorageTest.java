@@ -20,5 +20,5 @@ package org.apache.drill.categories;
 /**
  * This is a category used to mark unit tests that test the HBase storage plugin.
  */
-public interface HbaseStorageTest {
+public interface HBaseStorageTest {
 }

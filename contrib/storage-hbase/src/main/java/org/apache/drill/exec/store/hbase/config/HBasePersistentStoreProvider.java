@@ -20,6 +20,7 @@ package org.apache.drill.exec.store.hbase.config;
 import java.io.IOException;
 import java.util.Map;
 
+import org.apache.drill.common.AutoCloseables;
 import org.apache.drill.common.exceptions.DrillRuntimeException;
 import org.apache.drill.exec.exception.StoreException;
 import org.apache.drill.exec.store.hbase.DrillHBaseConstants;
@@ -27,109 +28,225 @@ import org.apache.drill.exec.store.sys.PersistentStore;
 import org.apache.drill.exec.store.sys.PersistentStoreConfig;
 import org.apache.drill.exec.store.sys.PersistentStoreRegistry;
 import org.apache.drill.exec.store.sys.store.provider.BasePersistentStoreProvider;
+import org.apache.drill.shaded.guava.com.google.common.annotations.VisibleForTesting;
+import org.apache.drill.shaded.guava.com.google.common.collect.Maps;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.hbase.HBaseConfiguration;
-import org.apache.hadoop.hbase.HColumnDescriptor;
 import org.apache.hadoop.hbase.HConstants;
-import org.apache.hadoop.hbase.HTableDescriptor;
 import org.apache.hadoop.hbase.TableName;
 import org.apache.hadoop.hbase.client.Admin;
+import org.apache.hadoop.hbase.client.ColumnFamilyDescriptorBuilder;
 import org.apache.hadoop.hbase.client.Connection;
 import org.apache.hadoop.hbase.client.ConnectionFactory;
+import org.apache.hadoop.hbase.client.Durability;
 import org.apache.hadoop.hbase.client.Table;
+import org.apache.hadoop.hbase.client.TableDescriptor;
+import org.apache.hadoop.hbase.client.TableDescriptorBuilder;
+import org.apache.hadoop.hbase.io.compress.Compression.Algorithm;
+import org.apache.hadoop.hbase.io.encoding.DataBlockEncoding;
 import org.apache.hadoop.hbase.util.Bytes;
-
-import org.apache.drill.shaded.guava.com.google.common.annotations.VisibleForTesting;
 
 public class HBasePersistentStoreProvider extends BasePersistentStoreProvider {
   private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(HBasePersistentStoreProvider.class);
 
-  static final byte[] FAMILY = Bytes.toBytes("s");
+  public static final byte[] FAMILY_NAME = Bytes.toBytes("s");
 
-  static final byte[] QUALIFIER = Bytes.toBytes("d");
+  public static final byte[] QUALIFIER_NAME = Bytes.toBytes("d");
+
+  private static final String HBASE_CLIENT_ID = "drill-hbase-persistent-store-client";
 
   private final TableName hbaseTableName;
 
+  private Table hbaseTable;
+
   private Configuration hbaseConf;
+
+  private final Map<String, Object> tableConfig;
+
+  private final Map<String, Object> columnConfig;
 
   private Connection connection;
 
-  private Table hbaseTable;
-
+  @SuppressWarnings("unchecked")
   public HBasePersistentStoreProvider(PersistentStoreRegistry registry) {
-    @SuppressWarnings("unchecked")
-    final Map<String, Object> config = (Map<String, Object>) registry.getConfig().getAnyRef(DrillHBaseConstants.SYS_STORE_PROVIDER_HBASE_CONFIG);
-    this.hbaseConf = HBaseConfiguration.create();
-    this.hbaseConf.set(HConstants.HBASE_CLIENT_INSTANCE_ID, "drill-hbase-persistent-store-client");
-    if (config != null) {
-      for (Map.Entry<String, Object> entry : config.entrySet()) {
-        this.hbaseConf.set(entry.getKey(), String.valueOf(entry.getValue()));
+    final Map<String, Object> hbaseConfig = (Map<String, Object>) registry.getConfig().getAnyRef(DrillHBaseConstants.SYS_STORE_PROVIDER_HBASE_CONFIG);
+    if (registry.getConfig().hasPath(DrillHBaseConstants.SYS_STORE_PROVIDER_HBASE_TABLE_CONFIG)) {
+      tableConfig = (Map<String, Object>) registry.getConfig().getAnyRef(DrillHBaseConstants.SYS_STORE_PROVIDER_HBASE_TABLE_CONFIG);
+    } else {
+      tableConfig = Maps.newHashMap();
+    }
+    if (registry.getConfig().hasPath(DrillHBaseConstants.SYS_STORE_PROVIDER_HBASE_COLUMN_CONFIG)) {
+      columnConfig = (Map<String, Object>) registry.getConfig().getAnyRef(DrillHBaseConstants.SYS_STORE_PROVIDER_HBASE_COLUMN_CONFIG);
+    } else {
+      columnConfig = Maps.newHashMap();
+    }
+    hbaseConf = HBaseConfiguration.create();
+    hbaseConf.set(HConstants.HBASE_CLIENT_INSTANCE_ID, HBASE_CLIENT_ID);
+    if (hbaseConfig != null) {
+      for (Map.Entry<String, Object> entry : hbaseConfig.entrySet()) {
+        hbaseConf.set(entry.getKey(), String.valueOf(entry.getValue()));
       }
     }
-    this.hbaseTableName = TableName.valueOf(registry.getConfig().getString(DrillHBaseConstants.SYS_STORE_PROVIDER_HBASE_TABLE));
+    logger.info("Received the hbase config is {}", hbaseConfig);
+    if (!tableConfig.isEmpty()) {
+      logger.info("Received the table config is {}", tableConfig);
+    }
+    if (!columnConfig.isEmpty()) {
+      logger.info("Received the column config is {}", columnConfig);
+    }
+    hbaseTableName = TableName.valueOf(registry.getConfig().getString(DrillHBaseConstants.SYS_STORE_PROVIDER_HBASE_TABLE));
   }
 
   @VisibleForTesting
   public HBasePersistentStoreProvider(Configuration conf, String storeTableName) {
+    this.tableConfig = Maps.newHashMap();
+    this.columnConfig = Maps.newHashMap();
     this.hbaseConf = conf;
     this.hbaseTableName = TableName.valueOf(storeTableName);
   }
 
-
+  @VisibleForTesting
+  public HBasePersistentStoreProvider(Map<String, Object> tableConfig, Map<String, Object> columnConfig, Configuration conf, String storeTableName) {
+    this.tableConfig = tableConfig;
+    this.columnConfig = columnConfig;
+    this.hbaseConf = conf;
+    this.hbaseTableName = TableName.valueOf(storeTableName);
+  }
 
   @Override
   public <V> PersistentStore<V> getOrCreateStore(PersistentStoreConfig<V> config) throws StoreException {
-    switch(config.getMode()){
+    switch (config.getMode()) {
     case BLOB_PERSISTENT:
     case PERSISTENT:
-      return new HBasePersistentStore<>(config, this.hbaseTable);
-
+      return new HBasePersistentStore<>(config, hbaseTable);
     default:
-      throw new IllegalStateException();
+      throw new IllegalStateException("Unknown persistent mode");
     }
   }
 
-
   @Override
   public void start() throws IOException {
+    // Create the column family builder
+    ColumnFamilyDescriptorBuilder columnFamilyBuilder = ColumnFamilyDescriptorBuilder
+        .newBuilder(FAMILY_NAME)
+        .setMaxVersions(1);
+    // Append the config to column family
+    verifyAndSetColumnConfig(columnConfig, columnFamilyBuilder);
+    // Create the table builder
+    TableDescriptorBuilder tableBuilder = TableDescriptorBuilder
+        .newBuilder(hbaseTableName)
+        .setColumnFamily(columnFamilyBuilder.build());
+    // Append the config to table
+    verifyAndSetTableConfig(tableConfig, tableBuilder);
     this.connection = ConnectionFactory.createConnection(hbaseConf);
-
     try(Admin admin = connection.getAdmin()) {
       if (!admin.tableExists(hbaseTableName)) {
-        HTableDescriptor desc = new HTableDescriptor(hbaseTableName);
-        desc.addFamily(new HColumnDescriptor(FAMILY).setMaxVersions(1));
-        admin.createTable(desc);
+        // Go to create the table
+        admin.createTable(tableBuilder.build());
+        logger.info("The HBase table of persistent store created : {}", hbaseTableName);
       } else {
-        HTableDescriptor desc = admin.getTableDescriptor(hbaseTableName);
-        if (!desc.hasFamily(FAMILY)) {
+        TableDescriptor table = admin.getDescriptor(hbaseTableName);
+        if (!admin.isTableEnabled(hbaseTableName)) {
+          admin.enableTable(hbaseTableName); // In case the table is disabled
+        }
+        if (!table.hasColumnFamily(FAMILY_NAME)) {
           throw new DrillRuntimeException("The HBase table " + hbaseTableName
               + " specified as persistent store exists but does not contain column family: "
-              + (Bytes.toString(FAMILY)));
+              + (Bytes.toString(FAMILY_NAME)));
         }
+        logger.info("The HBase table of persistent store is loaded : {}", hbaseTableName);
       }
     }
 
     this.hbaseTable = connection.getTable(hbaseTableName);
   }
 
-  @Override
-  public synchronized void close() {
-    if (this.hbaseTable != null) {
-      try {
-        this.hbaseTable.close();
-        this.hbaseTable = null;
-      } catch (IOException e) {
-        logger.warn("Caught exception while closing HBase table.", e);
+  /**
+   * Verify the configuration of HBase table and
+   * add them to the table builder.
+   * @param config  Received the table config
+   * @param builder HBase table builder
+   */
+  private void verifyAndSetTableConfig(Map<String, Object> config, TableDescriptorBuilder builder) {
+    for (Map.Entry<String, Object> entry : config.entrySet()) {
+      switch (entry.getKey().toUpperCase()) {
+      case TableDescriptorBuilder.DURABILITY:
+        Durability durability = Durability.valueOf(((String) entry.getValue()).toUpperCase());
+        builder.setDurability(durability);
+        break;
+      case TableDescriptorBuilder.COMPACTION_ENABLED:
+        builder.setCompactionEnabled((Boolean) entry.getValue());
+        break;
+      case TableDescriptorBuilder.SPLIT_ENABLED:
+        builder.setSplitEnabled((Boolean) entry.getValue());
+        break;
+      case TableDescriptorBuilder.FLUSH_POLICY:
+        builder.setFlushPolicyClassName((String) entry.getValue());
+        break;
+      case TableDescriptorBuilder.SPLIT_POLICY:
+        builder.setRegionSplitPolicyClassName((String) entry.getValue());
+        break;
+      case TableDescriptorBuilder.MAX_FILESIZE:
+        builder.setMaxFileSize((Integer) entry.getValue());
+        break;
+      case TableDescriptorBuilder.MEMSTORE_FLUSHSIZE:
+        builder.setMemStoreFlushSize((Integer) entry.getValue());
+        break;
+      default:
+        break;
       }
-    }
-    if (this.connection != null && !this.connection.isClosed()) {
-      try {
-        this.connection.close();
-      } catch (IOException e) {
-        logger.warn("Caught exception while closing HBase connection.", e);
-      }
-      this.connection = null;
     }
   }
 
+  /**
+   * Verify the configuration of HBase column family and
+   * add them to the column family builder.
+   * @param config  Received the column config
+   * @param builder HBase column family builder
+   */
+  private void verifyAndSetColumnConfig(Map<String, Object> config, ColumnFamilyDescriptorBuilder builder) {
+    for (Map.Entry<String, Object> entry : config.entrySet()) {
+      switch (entry.getKey().toUpperCase()) {
+      case ColumnFamilyDescriptorBuilder.MAX_VERSIONS:
+        builder.setMaxVersions((Integer) entry.getValue());
+        break;
+      case ColumnFamilyDescriptorBuilder.TTL:
+        builder.setTimeToLive((Integer) entry.getValue());
+        break;
+      case ColumnFamilyDescriptorBuilder.COMPRESSION:
+        Algorithm algorithm = Algorithm.valueOf(((String) entry.getValue()).toUpperCase());
+        builder.setCompressionType(algorithm);
+        break;
+      case ColumnFamilyDescriptorBuilder.BLOCKCACHE:
+        builder.setBlockCacheEnabled((Boolean) entry.getValue());
+        break;
+      case ColumnFamilyDescriptorBuilder.BLOCKSIZE:
+        builder.setBlocksize((Integer) entry.getValue());
+        break;
+      case ColumnFamilyDescriptorBuilder.DATA_BLOCK_ENCODING:
+        DataBlockEncoding encoding = DataBlockEncoding.valueOf(((String) entry.getValue()).toUpperCase());
+        builder.setDataBlockEncoding(encoding);
+        break;
+      case ColumnFamilyDescriptorBuilder.IN_MEMORY:
+        builder.setInMemory((Boolean) entry.getValue());
+        break;
+      case ColumnFamilyDescriptorBuilder.DFS_REPLICATION:
+        builder.setDFSReplication(((Integer) entry.getValue()).shortValue());
+        break;
+      default:
+        break;
+      }
+    }
+  }
+
+  @Override
+  public synchronized void close() {
+    if (hbaseTable != null) {
+      AutoCloseables.closeSilently(hbaseTable);
+    }
+    if (connection != null && !connection.isClosed()) {
+      AutoCloseables.closeSilently(connection);
+    }
+    logger.info("The HBase connection of persistent store closed.");
+  }
 }
