@@ -21,13 +21,15 @@ import org.apache.drill.exec.proto.BitData;
 import org.apache.drill.shaded.guava.com.google.common.base.Preconditions;
 import org.apache.drill.shaded.guava.com.google.common.base.Stopwatch;
 import org.apache.drill.shaded.guava.com.google.common.collect.Lists;
-import com.typesafe.config.Config;
-import com.typesafe.config.ConfigValueFactory;
+import org.apache.drill.test.BaseDirTestWatcher;
+import org.apache.drill.test.ClientFixture;
+import org.apache.drill.test.ClusterFixture;
+import org.apache.drill.test.ClusterFixtureBuilder;
+import org.apache.drill.test.ClusterTest;
+
 import io.netty.buffer.ByteBuf;
 import org.apache.drill.exec.ops.FragmentContextImpl;
-import org.apache.drill.test.BaseTestQuery;
 import org.apache.drill.categories.SecurityTest;
-import org.apache.drill.common.config.DrillConfig;
 import org.apache.drill.common.config.DrillProperties;
 import org.apache.drill.common.exceptions.UserRemoteException;
 import org.apache.drill.common.scanner.ClassPathScanner;
@@ -60,19 +62,14 @@ import org.apache.drill.exec.vector.ValueVector;
 import org.apache.drill.exec.work.WorkManager.WorkerBee;
 import org.apache.drill.exec.work.fragment.FragmentExecutor;
 import org.apache.drill.exec.work.fragment.FragmentManager;
-import org.apache.hadoop.security.authentication.util.KerberosName;
-import org.apache.hadoop.security.authentication.util.KerberosUtil;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mockito.Mockito;
 
 import java.io.IOException;
-import java.lang.reflect.Field;
 import java.util.List;
-import java.util.Properties;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicLong;
 
@@ -81,52 +78,28 @@ import static org.junit.Assert.assertTrue;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
-@Ignore("See DRILL-5387")
 @Category(SecurityTest.class)
-public class TestBitBitKerberos extends BaseTestQuery {
+public class TestBitBitKerberos extends ClusterTest {
   private static KerberosHelper krbHelper;
-  private static DrillConfig newConfig;
 
   private int port = 1234;
 
   @BeforeClass
   public static void setupTest() throws Exception {
-
-    final Config config = DrillConfig.create(cloneDefaultTestConfigProperties());
-
     krbHelper = new KerberosHelper(TestBitBitKerberos.class.getSimpleName(), null);
-    krbHelper.setupKdc(dirTestWatcher.getTmpDir());
+    krbHelper.setupKdc(BaseDirTestWatcher.createTempDir(dirTestWatcher.getTmpDir()));
+    cluster = defaultClusterConfig().build();
+  }
 
-    newConfig = new DrillConfig(
-        config.withValue(ExecConstants.AUTHENTICATION_MECHANISMS,
-            ConfigValueFactory.fromIterable(Lists.newArrayList("kerberos")))
-        .withValue(ExecConstants.BIT_AUTHENTICATION_ENABLED,
-            ConfigValueFactory.fromAnyRef(true))
-        .withValue(ExecConstants.BIT_AUTHENTICATION_MECHANISM,
-            ConfigValueFactory.fromAnyRef("kerberos"))
-        .withValue(ExecConstants.USE_LOGIN_PRINCIPAL,
-            ConfigValueFactory.fromAnyRef(true))
-        .withValue(ExecConstants.SERVICE_PRINCIPAL,
-            ConfigValueFactory.fromAnyRef(krbHelper.SERVER_PRINCIPAL))
-        .withValue(ExecConstants.SERVICE_KEYTAB_LOCATION,
-            ConfigValueFactory.fromAnyRef(krbHelper.serverKeytab.toString())));
-
-    // Ignore the compile time warning caused by the code below.
-
-    // Config is statically initialized at this point. But the above configuration results in a different
-    // initialization which causes the tests to fail. So the following two changes are required.
-
-    // (1) Refresh Kerberos config.
-    // This disabled call to an unsupported internal API does not appear to be
-    // required and it prevents compiling with a target of JDK 8 on newer JDKs.
-    // sun.security.krb5.Config.refresh();
-
-    // (2) Reset the default realm.
-    final Field defaultRealm = KerberosName.class.getDeclaredField("defaultRealm");
-    defaultRealm.setAccessible(true);
-    defaultRealm.set(null, KerberosUtil.getDefaultRealm());
-
-    updateTestCluster(1, newConfig);
+  private static ClusterFixtureBuilder defaultClusterConfig() {
+    return ClusterFixture.bareBuilder(dirTestWatcher)
+      .clusterSize(1)
+      .configNonStringProperty(ExecConstants.AUTHENTICATION_MECHANISMS, Lists.newArrayList("kerberos"))
+      .configProperty(ExecConstants.BIT_AUTHENTICATION_ENABLED, true)
+      .configProperty(ExecConstants.BIT_AUTHENTICATION_MECHANISM, "kerberos")
+      .configProperty(ExecConstants.USE_LOGIN_PRINCIPAL, true)
+      .configProperty(ExecConstants.SERVICE_PRINCIPAL, krbHelper.SERVER_PRINCIPAL)
+      .configProperty(ExecConstants.SERVICE_KEYTAB_LOCATION, krbHelper.serverKeytab.toString());
   }
 
   private FragmentManager setupFragmentContextAndManager(BufferAllocator allocator) {
@@ -188,23 +161,9 @@ public class TestBitBitKerberos extends BaseTestQuery {
     final WorkerBee bee = mock(WorkerBee.class);
     final WorkEventBus workBus = mock(WorkEventBus.class);
 
-    newConfig = new DrillConfig(DrillConfig.create(cloneDefaultTestConfigProperties())
-        .withValue(ExecConstants.AUTHENTICATION_MECHANISMS,
-          ConfigValueFactory.fromIterable(Lists.newArrayList("kerberos")))
-        .withValue(ExecConstants.BIT_AUTHENTICATION_ENABLED,
-          ConfigValueFactory.fromAnyRef(true))
-        .withValue(ExecConstants.BIT_AUTHENTICATION_MECHANISM,
-          ConfigValueFactory.fromAnyRef("kerberos"))
-        .withValue(ExecConstants.USE_LOGIN_PRINCIPAL,
-          ConfigValueFactory.fromAnyRef(true))
-        .withValue(ExecConstants.SERVICE_PRINCIPAL,
-          ConfigValueFactory.fromAnyRef(krbHelper.SERVER_PRINCIPAL))
-        .withValue(ExecConstants.SERVICE_KEYTAB_LOCATION,
-          ConfigValueFactory.fromAnyRef(krbHelper.serverKeytab.toString())));
-
-    final ScanResult result = ClassPathScanner.fromPrescan(newConfig);
+    final ScanResult result = ClassPathScanner.fromPrescan(cluster.config());
     final BootStrapContext c1 =
-      new BootStrapContext(newConfig, SystemOptionManager.createDefaultOptionDefinitions(), result);
+      new BootStrapContext(cluster.config(), SystemOptionManager.createDefaultOptionDefinitions(), result);
 
     final FragmentManager manager = setupFragmentContextAndManager(c1.getAllocator());
     when(workBus.getFragmentManager(Mockito.<FragmentHandle>any())).thenReturn(manager);
@@ -242,51 +201,42 @@ public class TestBitBitKerberos extends BaseTestQuery {
 
     final WorkerBee bee = mock(WorkerBee.class);
     final WorkEventBus workBus = mock(WorkEventBus.class);
-    newConfig = new DrillConfig(DrillConfig.create(cloneDefaultTestConfigProperties())
-      .withValue(ExecConstants.AUTHENTICATION_MECHANISMS,
-        ConfigValueFactory.fromIterable(Lists.newArrayList("kerberos")))
-      .withValue(ExecConstants.BIT_AUTHENTICATION_ENABLED,
-        ConfigValueFactory.fromAnyRef(true))
-      .withValue(ExecConstants.BIT_AUTHENTICATION_MECHANISM,
-        ConfigValueFactory.fromAnyRef("kerberos"))
-      .withValue(ExecConstants.BIT_ENCRYPTION_SASL_ENABLED,
-        ConfigValueFactory.fromAnyRef(true))
-      .withValue(ExecConstants.USE_LOGIN_PRINCIPAL,
-        ConfigValueFactory.fromAnyRef(true))
-      .withValue(ExecConstants.SERVICE_PRINCIPAL,
-        ConfigValueFactory.fromAnyRef(krbHelper.SERVER_PRINCIPAL))
-      .withValue(ExecConstants.SERVICE_KEYTAB_LOCATION,
-        ConfigValueFactory.fromAnyRef(krbHelper.serverKeytab.toString())));
+    try (
+      ClusterFixture cluster = defaultClusterConfig()
+        .configProperty(ExecConstants.BIT_ENCRYPTION_SASL_ENABLED, true)
+        .build();
+    ) {
 
-    final ScanResult result = ClassPathScanner.fromPrescan(newConfig);
-    final BootStrapContext c2 =
-      new BootStrapContext(newConfig, SystemOptionManager.createDefaultOptionDefinitions(), result);
+      final ScanResult result = ClassPathScanner.fromPrescan(cluster.config());
+      final BootStrapContext c2 =
+        new BootStrapContext(cluster.config(), SystemOptionManager.createDefaultOptionDefinitions(), result);
 
-    final FragmentManager manager = setupFragmentContextAndManager(c2.getAllocator());
-    when(workBus.getFragmentManager(Mockito.<FragmentHandle>any())).thenReturn(manager);
+      final FragmentManager manager = setupFragmentContextAndManager(c2.getAllocator());
+      when(workBus.getFragmentManager(Mockito.<FragmentHandle>any())).thenReturn(manager);
 
-    final DataConnectionConfig config =
-      new DataConnectionConfig(c2.getAllocator(), c2, new DataServerRequestHandler(workBus, bee));
-    final DataServer server = new DataServer(config);
+      final DataConnectionConfig config =
+        new DataConnectionConfig(c2.getAllocator(), c2, new DataServerRequestHandler(workBus, bee));
+      final DataServer server = new DataServer(config);
 
-    port = server.bind(port, true);
-    DrillbitEndpoint ep = DrillbitEndpoint.newBuilder().setAddress("localhost").setDataPort(port).build();
-    final DataConnectionManager connectionManager = new DataConnectionManager(ep, config);
-    final DataTunnel tunnel = new DataTunnel(connectionManager);
-    AtomicLong max = new AtomicLong(0);
-    try {
-      for (int i = 0; i < 40; i++) {
-        long t1 = System.currentTimeMillis();
-        tunnel.sendRecordBatch(new TimingOutcome(max),
-          new FragmentWritableBatch(false, QueryId.getDefaultInstance(), 1, 1, 1, 1,
-            getRandomBatch(c2.getAllocator(), 5000)));
+      port = server.bind(port, true);
+      DrillbitEndpoint ep = DrillbitEndpoint.newBuilder().setAddress("localhost").setDataPort(port).build();
+      final DataConnectionManager connectionManager = new DataConnectionManager(ep, config);
+      final DataTunnel tunnel = new DataTunnel(connectionManager);
+      AtomicLong max = new AtomicLong(0);
+      try {
+        for (int i = 0; i < 40; i++) {
+          long t1 = System.currentTimeMillis();
+          tunnel.sendRecordBatch(new TimingOutcome(max),
+            new FragmentWritableBatch(false, QueryId.getDefaultInstance(), 1, 1, 1, 1,
+              getRandomBatch(c2.getAllocator(), 5000)));
+        }
+        assertTrue(max.get() > 2700);
+        Thread.sleep(5000);
+      } finally {
+        server.close();
+        connectionManager.close();
+        c2.close();
       }
-      assertTrue(max.get() > 2700);
-      Thread.sleep(5000);
-    } finally {
-      server.close();
-      connectionManager.close();
-      c2.close();
     }
   }
 
@@ -297,79 +247,58 @@ public class TestBitBitKerberos extends BaseTestQuery {
     final WorkerBee bee = mock(WorkerBee.class);
     final WorkEventBus workBus = mock(WorkEventBus.class);
 
-    newConfig = new DrillConfig(DrillConfig.create(cloneDefaultTestConfigProperties())
-      .withValue(ExecConstants.AUTHENTICATION_MECHANISMS,
-        ConfigValueFactory.fromIterable(Lists.newArrayList("kerberos")))
-        .withValue(ExecConstants.BIT_AUTHENTICATION_ENABLED,
-          ConfigValueFactory.fromAnyRef(true))
-        .withValue(ExecConstants.BIT_AUTHENTICATION_MECHANISM,
-          ConfigValueFactory.fromAnyRef("kerberos"))
-        .withValue(ExecConstants.BIT_ENCRYPTION_SASL_ENABLED,
-          ConfigValueFactory.fromAnyRef(true))
-        .withValue(ExecConstants.BIT_ENCRYPTION_SASL_MAX_WRAPPED_SIZE,
-          ConfigValueFactory.fromAnyRef(100000))
-        .withValue(ExecConstants.USE_LOGIN_PRINCIPAL,
-          ConfigValueFactory.fromAnyRef(true))
-        .withValue(ExecConstants.SERVICE_PRINCIPAL,
-          ConfigValueFactory.fromAnyRef(krbHelper.SERVER_PRINCIPAL))
-        .withValue(ExecConstants.SERVICE_KEYTAB_LOCATION,
-          ConfigValueFactory.fromAnyRef(krbHelper.serverKeytab.toString())));
+    try (
+      ClusterFixture cluster = defaultClusterConfig()
+        .configProperty(ExecConstants.BIT_ENCRYPTION_SASL_ENABLED, true)
+        .configProperty(ExecConstants.BIT_ENCRYPTION_SASL_MAX_WRAPPED_SIZE, 100000)
+        .build();
+    ) {
 
-    final ScanResult result = ClassPathScanner.fromPrescan(newConfig);
-    final BootStrapContext c2 =
-      new BootStrapContext(newConfig, SystemOptionManager.createDefaultOptionDefinitions(), result);
+      final ScanResult result = ClassPathScanner.fromPrescan(cluster.config());
+      final BootStrapContext c2 =
+        new BootStrapContext(cluster.config(), SystemOptionManager.createDefaultOptionDefinitions(), result);
 
-    final FragmentManager manager = setupFragmentContextAndManager(c2.getAllocator());
-    when(workBus.getFragmentManager(Mockito.<FragmentHandle>any())).thenReturn(manager);
+      final FragmentManager manager = setupFragmentContextAndManager(c2.getAllocator());
+      when(workBus.getFragmentManager(Mockito.<FragmentHandle>any())).thenReturn(manager);
 
-    final DataConnectionConfig config = new DataConnectionConfig(c2.getAllocator(), c2,
-      new DataServerRequestHandler(workBus, bee));
-    final DataServer server = new DataServer(config);
+      final DataConnectionConfig config = new DataConnectionConfig(c2.getAllocator(), c2,
+        new DataServerRequestHandler(workBus, bee));
+      final DataServer server = new DataServer(config);
 
-    port = server.bind(port, true);
-    final DrillbitEndpoint ep = DrillbitEndpoint.newBuilder().setAddress("localhost").setDataPort(port).build();
-    final DataConnectionManager connectionManager = new DataConnectionManager(ep, config);
-    final DataTunnel tunnel = new DataTunnel(connectionManager);
-    AtomicLong max = new AtomicLong(0);
+      port = server.bind(port, true);
+      final DrillbitEndpoint ep = DrillbitEndpoint.newBuilder().setAddress("localhost").setDataPort(port).build();
+      final DataConnectionManager connectionManager = new DataConnectionManager(ep, config);
+      final DataTunnel tunnel = new DataTunnel(connectionManager);
+      AtomicLong max = new AtomicLong(0);
 
-    try {
-      for (int i = 0; i < 40; i++) {
-        long t1 = System.currentTimeMillis();
-        tunnel.sendRecordBatch(new TimingOutcome(max),
-          new FragmentWritableBatch(false, QueryId.getDefaultInstance(), 1, 1, 1, 1,
-            getRandomBatch(c2.getAllocator(), 5000)));
+      try {
+        for (int i = 0; i < 40; i++) {
+          long t1 = System.currentTimeMillis();
+          tunnel.sendRecordBatch(new TimingOutcome(max),
+            new FragmentWritableBatch(false, QueryId.getDefaultInstance(), 1, 1, 1, 1,
+              getRandomBatch(c2.getAllocator(), 5000)));
+        }
+        assertTrue(max.get() > 2700);
+        Thread.sleep(5000);
+      } catch (Exception | AssertionError ex) {
+        fail();
+      } finally {
+        server.close();
+        connectionManager.close();
+        c2.close();
       }
-      assertTrue(max.get() > 2700);
-      Thread.sleep(5000);
-    } catch (Exception | AssertionError ex) {
-      fail();
-    } finally {
-      server.close();
-      connectionManager.close();
-      c2.close();
     }
   }
 
   @Test
   public void failureEncryptionOnlyPlainMechanism() throws Exception {
-    try{
-      newConfig = new DrillConfig(DrillConfig.create(cloneDefaultTestConfigProperties())
-        .withValue(ExecConstants.AUTHENTICATION_MECHANISMS,
-          ConfigValueFactory.fromIterable(Lists.newArrayList("plain")))
-          .withValue(ExecConstants.BIT_AUTHENTICATION_ENABLED,
-            ConfigValueFactory.fromAnyRef(true))
-          .withValue(ExecConstants.BIT_AUTHENTICATION_MECHANISM,
-            ConfigValueFactory.fromAnyRef("kerberos"))
-          .withValue(ExecConstants.BIT_ENCRYPTION_SASL_ENABLED,
-            ConfigValueFactory.fromAnyRef(true))
-          .withValue(ExecConstants.USE_LOGIN_PRINCIPAL,
-            ConfigValueFactory.fromAnyRef(true))
-          .withValue(ExecConstants.SERVICE_PRINCIPAL,
-            ConfigValueFactory.fromAnyRef(krbHelper.SERVER_PRINCIPAL))
-          .withValue(ExecConstants.SERVICE_KEYTAB_LOCATION,
-            ConfigValueFactory.fromAnyRef(krbHelper.serverKeytab.toString())));
+    try {
+      defaultClusterConfig()
+        .configNonStringProperty(ExecConstants.AUTHENTICATION_MECHANISMS, Lists.newArrayList("plain"))
+        .configProperty(ExecConstants.BIT_ENCRYPTION_SASL_ENABLED, true)
+        .build()
+        .close();
 
-      updateTestCluster(1, newConfig);
       fail();
     } catch(Exception ex) {
       assertTrue(ex.getCause() instanceof DrillbitStartupException);
@@ -387,35 +316,25 @@ public class TestBitBitKerberos extends BaseTestQuery {
    */
   @Test
   public void localQuerySuccessWithWrongBitAuthConfig() throws Exception {
-
-    final Properties connectionProps = new Properties();
-    connectionProps.setProperty(DrillProperties.SERVICE_PRINCIPAL, krbHelper.SERVER_PRINCIPAL);
-    connectionProps.setProperty(DrillProperties.USER, krbHelper.CLIENT_PRINCIPAL);
-    connectionProps.setProperty(DrillProperties.KEYTAB, krbHelper.clientKeytab.getAbsolutePath());
-
-    newConfig = new DrillConfig(DrillConfig.create(cloneDefaultTestConfigProperties())
-        .withValue(ExecConstants.USER_AUTHENTICATION_ENABLED,
-            ConfigValueFactory.fromAnyRef(true))
-        .withValue(ExecConstants.USER_AUTHENTICATOR_IMPL,
-            ConfigValueFactory.fromAnyRef(UserAuthenticatorTestImpl.TYPE))
-        .withValue(ExecConstants.SERVICE_PRINCIPAL,
-            ConfigValueFactory.fromAnyRef(krbHelper.SERVER_PRINCIPAL))
-        .withValue(ExecConstants.SERVICE_KEYTAB_LOCATION,
-            ConfigValueFactory.fromAnyRef(krbHelper.serverKeytab.toString()))
-        .withValue(ExecConstants.AUTHENTICATION_MECHANISMS,
-            ConfigValueFactory.fromIterable(Lists.newArrayList("plain", "kerberos")))
-        .withValue(ExecConstants.BIT_AUTHENTICATION_ENABLED,
-            ConfigValueFactory.fromAnyRef(true))
-        .withValue(ExecConstants.BIT_AUTHENTICATION_MECHANISM,
-            ConfigValueFactory.fromAnyRef("kerberos"))
-        .withValue(ExecConstants.USE_LOGIN_PRINCIPAL,
-            ConfigValueFactory.fromAnyRef(false)));
-
-    updateTestCluster(1, newConfig, connectionProps);
-
-    // Run a query using the new client
-    final String query = getFile("queries/tpch/01.sql");
-    test(query);
+    try (
+      ClusterFixture cluster = defaultClusterConfig()
+        .configProperty(ExecConstants.USER_AUTHENTICATION_ENABLED, true)
+        .configProperty(ExecConstants.USER_AUTHENTICATOR_IMPL, UserAuthenticatorTestImpl.TYPE)
+        .configNonStringProperty(
+          ExecConstants.AUTHENTICATION_MECHANISMS,
+          Lists.newArrayList("plain", "kerberos")
+        )
+        .configProperty(ExecConstants.USE_LOGIN_PRINCIPAL, false)
+        .build();
+      ClientFixture client = cluster.clientBuilder()
+      .property(DrillProperties.SERVICE_PRINCIPAL, krbHelper.SERVER_PRINCIPAL)
+      .property(DrillProperties.USER, krbHelper.CLIENT_PRINCIPAL)
+      .property(DrillProperties.KEYTAB, krbHelper.clientKeytab.getAbsolutePath())
+      .build()
+    ) {
+      // Run a query using the new client
+      client.queryBuilder().sqlResource("queries/tpch/01.sql").run();
+    }
   }
 
   /**
@@ -430,36 +349,28 @@ public class TestBitBitKerberos extends BaseTestQuery {
    */
   @Test
   public void queryFailureWithWrongBitAuthConfig() throws Exception {
-    try{
-      final Properties connectionProps = new Properties();
-      connectionProps.setProperty(DrillProperties.SERVICE_PRINCIPAL, krbHelper.SERVER_PRINCIPAL);
-      connectionProps.setProperty(DrillProperties.USER, krbHelper.CLIENT_PRINCIPAL);
-      connectionProps.setProperty(DrillProperties.KEYTAB, krbHelper.clientKeytab.getAbsolutePath());
-
-      newConfig = new DrillConfig(DrillConfig.create(cloneDefaultTestConfigProperties())
-          .withValue(ExecConstants.USER_AUTHENTICATION_ENABLED,
-              ConfigValueFactory.fromAnyRef(true))
-          .withValue(ExecConstants.USER_AUTHENTICATOR_IMPL,
-              ConfigValueFactory.fromAnyRef(UserAuthenticatorTestImpl.TYPE))
-          .withValue(ExecConstants.SERVICE_PRINCIPAL,
-              ConfigValueFactory.fromAnyRef(krbHelper.SERVER_PRINCIPAL))
-          .withValue(ExecConstants.SERVICE_KEYTAB_LOCATION,
-              ConfigValueFactory.fromAnyRef(krbHelper.serverKeytab.toString()))
-          .withValue(ExecConstants.AUTHENTICATION_MECHANISMS,
-              ConfigValueFactory.fromIterable(Lists.newArrayList("plain", "kerberos")))
-          .withValue(ExecConstants.BIT_AUTHENTICATION_ENABLED,
-              ConfigValueFactory.fromAnyRef(true))
-          .withValue(ExecConstants.BIT_AUTHENTICATION_MECHANISM,
-              ConfigValueFactory.fromAnyRef("kerberos"))
-          .withValue(ExecConstants.USE_LOGIN_PRINCIPAL,
-              ConfigValueFactory.fromAnyRef(false)));
-
-      updateTestCluster(2, newConfig, connectionProps);
-
-      test("alter session set `planner.slice_target` = 10");
-      final String query = getFile("queries/tpch/01.sql");
-      test(query);
-      fail();
+    try {
+      try (
+        ClusterFixture cluster = defaultClusterConfig()
+          .clusterSize(2)
+          .configProperty(ExecConstants.USER_AUTHENTICATION_ENABLED, true)
+          .configProperty(ExecConstants.USER_AUTHENTICATOR_IMPL, UserAuthenticatorTestImpl.TYPE)
+          .configNonStringProperty(
+            ExecConstants.AUTHENTICATION_MECHANISMS,
+            Lists.newArrayList("plain", "kerberos")
+          )
+          .configProperty(ExecConstants.USE_LOGIN_PRINCIPAL, false)
+          .build();
+        ClientFixture client = cluster.clientBuilder()
+        .property(DrillProperties.SERVICE_PRINCIPAL, krbHelper.SERVER_PRINCIPAL)
+        .property(DrillProperties.USER, krbHelper.CLIENT_PRINCIPAL)
+        .property(DrillProperties.KEYTAB, krbHelper.clientKeytab.getAbsolutePath())
+        .build()
+      ) {
+        client.alterSession("planner.slice_target", 10);
+        client.queryBuilder().sqlResource("queries/tpch/01.sql").run();
+        fail();
+      }
     } catch(Exception ex) {
       assertTrue(ex instanceof UserRemoteException);
       assertTrue(((UserRemoteException)ex).getErrorType() == UserBitShared.DrillPBError.ErrorType.CONNECTION);

@@ -45,8 +45,11 @@ public class AuthenticatorProviderImpl implements AuthenticatorProvider {
 
   @SuppressWarnings("unchecked")
   public AuthenticatorProviderImpl(final DrillConfig config, final ScanResult scan) throws DrillbitStartupException {
-    // Skip auth mechanisms setup if user authentication is disabled
-    if (!config.getBoolean(ExecConstants.USER_AUTHENTICATION_ENABLED)) {
+    // Skip auth mechanisms setup if no authentication is enabled
+    if (
+      !config.getBoolean(ExecConstants.USER_AUTHENTICATION_ENABLED) &&
+      !config.getBoolean(ExecConstants.BIT_AUTHENTICATION_ENABLED)
+    ) {
       return;
     }
 

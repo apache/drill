@@ -55,8 +55,8 @@ public class TestSpnegoConfig extends BaseTest {
 
   @BeforeClass
   public static void setupTest() throws Exception {
-    spnegoHelper = new KerberosHelper(TestSpnegoAuthentication.class.getSimpleName(), primaryName);
-    spnegoHelper.setupKdc(dirTestWatcher.getTmpDir());
+    spnegoHelper = new KerberosHelper(TestSpnegoConfig.class.getSimpleName(), primaryName);
+    spnegoHelper.setupKdc(BaseDirTestWatcher.createTempDir(dirTestWatcher.getTmpDir()));
 
     // (1) Refresh Kerberos config.
     // This disabled call to an unsupported internal API does not appear to be
