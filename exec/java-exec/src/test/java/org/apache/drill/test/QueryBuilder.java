@@ -305,7 +305,7 @@ public class QueryBuilder {
     if (sql == null) {
       throw new IllegalArgumentException("No query found");
     }
-    return sql(sql);
+    return sql(sql, args);
   }
 
   public QueryBuilder physicalResource(String resource) {
