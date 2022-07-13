@@ -42,7 +42,7 @@
     <maven.compiler.source>1.8</maven.compiler.source>
     <maven.compiler.target>1.8</maven.compiler.target>
     <sourceReleaseAssemblyDescriptor>source-release-zip-tar</sourceReleaseAssemblyDescriptor>
-    <project.build.outputTimestamp>1</project.build.outputTimestamp>
+    <project.build.outputTimestamp>10</project.build.outputTimestamp>
     <target.gen.source.path>${project.basedir}/target/generated-sources</target.gen.source.path>
     <proto.cas.path>${project.basedir}/src/main/protobuf/</proto.cas.path>
     <junit.version>5.7.2</junit.version>
@@ -580,6 +580,16 @@
             <dirty>-dirty</dirty>
             <forceLongFormat>true</forceLongFormat>
           </gitDescribe>
+          <includeOnlyProperties>
+            <!-- Only include properties that are compatible with reproducible builds -->
+            <includeOnlyProperty>^git\.branch$</includeOnlyProperty>
+            <includeOnlyProperty>^git\.build\.version$</includeOnlyProperty>
+            <includeOnlyProperty>^git\.closest\.tag\..*$</includeOnlyProperty>
+            <includeOnlyProperty>^git\.commit\..*$</includeOnlyProperty>
+            <includeOnlyProperty>^git\.dirty$</includeOnlyProperty>
+            <includeOnlyProperty>^git\.tags$</includeOnlyProperty>
+            <includeOnlyProperty>^git\.total\.commit\.count$</includeOnlyProperty>
+          </includeOnlyProperties>
         </configuration>
       </plugin>
       <plugin>
