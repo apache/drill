@@ -306,6 +306,10 @@ public class SSLConfigServer extends SSLConfig {
 
   @Override
   public int getHandshakeTimeout() {
+    // A value of 0 is interpreted by Netty as "no timeout". This is hard coded
+    // here instead being read from {@link ExecConstants.SSL_HANDSHAKE_TIMEOUT}
+    // because the SSL handshake timeout is managed from the client end only
+    // (see {@link SSLConfigClient}).
     return 0;
   }
 
