@@ -246,6 +246,10 @@
       <outputDirectory />
     </file>
     <file>
+      <source>../git.properties</source>
+      <outputDirectory />
+    </file>
+    <file>
       <source>src/main/resources/runbit</source>
       <fileMode>0755</fileMode>
       <outputDirectory>bin</outputDirectory>
