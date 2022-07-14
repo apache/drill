@@ -32,6 +32,7 @@ import org.apache.drill.common.types.TypeProtos.MinorType;
 import com.google.protobuf.TextFormat;
 
 public class Types {
+  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(Types.class);
 
   public static final int MAX_VARCHAR_LENGTH = 65535;
   public static final int UNDEFINED = 0;
@@ -806,7 +807,9 @@ public class Types {
    * @return type builder
    */
   public static MajorType.Builder calculateTypePrecisionAndScale(MajorType leftType, MajorType rightType, MajorType.Builder typeBuilder) {
-    if (leftType.getMinorType().equals(rightType.getMinorType())) {
+    MinorType minorType = leftType.getMinorType();
+
+    if (minorType.equals(rightType.getMinorType())) {
       boolean isScalarString = Types.isScalarStringType(leftType) && Types.isScalarStringType(rightType);
       boolean isDecimal = isDecimalType(leftType);
 
@@ -827,6 +830,16 @@ public class Types {
         int leftNumberOfDigits = leftType.getPrecision() - leftType.getScale();
         int rightNumberOfDigits = rightType.getPrecision() - rightType.getScale();
         int precision = Math.max(leftNumberOfDigits, rightNumberOfDigits) + scale;
+        int maxPrecision = maxPrecision(minorType);
+
+        if (precision > maxPrecision) {
+          logger.warn(
+            "Possible loss of precision: wanted {}({}, {}) but limited to {}({}, {})",
+            minorType, precision, scale,
+            minorType, maxPrecision, scale
+          );
+          precision = maxPrecision;
+        }
 
         typeBuilder.setPrecision(precision);
         typeBuilder.setScale(scale);
