@@ -32,7 +32,6 @@ import com.google.common.base.Preconditions;
  * the case that a list may eventually hold a union, but at present
  * it holds nothing.
  */
-
 public class EmptyListShim implements UnionShim {
 
   private UnionWriterImpl writer;
@@ -116,7 +115,6 @@ public class EmptyListShim implements UnionShim {
    * @param colWriter the column writer returned from the listener
    * @return the same column writer
    */
-
   private AbstractObjectWriter doAddMember(AbstractObjectWriter colWriter) {
     // Something went terribly wrong if the check below fails.
     Preconditions.checkState(writer.shim() != this);
@@ -146,4 +144,7 @@ public class EmptyListShim implements UnionShim {
   public void dump(HierarchicalFormatter format) {
     format.startObject(this).endObject();
   }
+
+  @Override
+  public boolean isProjected() { return true; }
 }

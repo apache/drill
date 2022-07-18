@@ -55,6 +55,31 @@ import org.joda.time.Period;
  */
 public class UnionWriterImpl implements VariantWriter, WriterEvents {
 
+  public interface UnionShim extends WriterEvents {
+    void bindWriter(UnionWriterImpl writer);
+    void setNull();
+    boolean hasType(MinorType type);
+
+    /**
+     * Return an existing writer for the given type, or create a new one
+     * if needed.
+     *
+     * @param type desired variant type
+     * @return a writer for that type
+     */
+
+    ObjectWriter member(MinorType type);
+    void setType(MinorType type);
+    @Override
+    int lastWriteIndex();
+    @Override
+    int rowStartIndex();
+    AbstractObjectWriter addMember(ColumnMetadata colSchema);
+    AbstractObjectWriter addMember(MinorType type);
+    void addMember(AbstractObjectWriter colWriter);
+    boolean isProjected();
+  }
+
   public static class VariantObjectWriter extends AbstractObjectWriter {
 
     private final UnionWriterImpl writer;
@@ -256,7 +281,7 @@ public class UnionWriterImpl implements VariantWriter, WriterEvents {
   }
 
   @Override
-  public boolean isProjected() { return true; }
+  public boolean isProjected() { return shim.isProjected(); }
 
   @Override
   public void startWrite() {
