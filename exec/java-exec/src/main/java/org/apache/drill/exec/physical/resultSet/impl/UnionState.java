@@ -95,12 +95,16 @@ public class UnionState extends ContainerState
   public static class UnionVectorState implements VectorState {
 
     private final UnionVector vector;
-    private final SimpleVectorState typesVectorState;
+    private final VectorState typesVectorState;
 
     public UnionVectorState(UnionVector vector, UnionWriterImpl unionWriter) {
       this.vector = vector;
-      typesVectorState = new FixedWidthVectorState(
-          ((UnionVectorShim) unionWriter.shim()).typeWriter(), vector.getTypeVector());
+      if (vector == null) {
+        typesVectorState = new NullVectorState();
+      } else {
+        typesVectorState = new FixedWidthVectorState(
+            ((UnionVectorShim) unionWriter.shim()).typeWriter(), vector.getTypeVector());
+      }
     }
 
     @Override
@@ -133,7 +137,7 @@ public class UnionState extends ContainerState
     public UnionVector vector() { return vector; }
 
     @Override
-    public boolean isProjected() { return true; }
+    public boolean isProjected() { return vector != null; }
 
     @Override
     public void dump(HierarchicalFormatter format) {
@@ -147,11 +151,10 @@ public class UnionState extends ContainerState
    * vectors in the union,
    * and matches the set of child writers in the union writer.
    */
-
   private final Map<MinorType, ColumnState> columns = new HashMap<>();
 
-  public UnionState(LoaderInternals events, ResultVectorCache vectorCache) {
-    super(events, vectorCache);
+  public UnionState(LoaderInternals events, ResultVectorCache vectorCache, ProjectionFilter projectionSet) {
+    super(events, vectorCache, projectionSet);
   }
 
   public UnionWriterImpl writer() {
@@ -183,7 +186,13 @@ public class UnionState extends ContainerState
   protected void addColumn(ColumnState colState) {
     assert ! columns.containsKey(colState.schema().type());
     columns.put(colState.schema().type(), colState);
-    vector().addType(colState.vector());
+    if (vector() == null) {
+      if (colState.vector() != null) {
+        throw new IllegalStateException("Attempt to add a materialized vector to an unprojected vector");
+      }
+    } else {
+      vector().addType(colState.vector());
+    }
   }
 
   @Override

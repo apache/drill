@@ -15,6 +15,7 @@ import org.apache.drill.exec.physical.resultSet.project.Projections;
 import org.apache.drill.exec.physical.rowSet.RowSet;
 import org.apache.drill.exec.physical.rowSet.RowSetTestUtils;
 import org.apache.drill.exec.physical.rowSet.RowSet.SingleRowSet;
+import org.apache.drill.exec.physical.rowSet.RowSetFormatter;
 import org.apache.drill.exec.record.metadata.SchemaBuilder;
 import org.apache.drill.exec.record.metadata.TupleMetadata;
 import org.apache.drill.exec.vector.accessor.ArrayWriter;
@@ -292,12 +293,12 @@ public class TestResultSetLoaderUnprojected  extends SubOperatorTest {
     assertFalse(rootWriter.column("b").isProjected());
     rsLoader.startBatch();
     rootWriter.start();
-    rootWriter.scalar(0).setInt(1);
-    rootWriter.scalar(1).setInt(5);
+    rootWriter.variant(0).scalar(MinorType.INT).setInt(1);
+    rootWriter.variant(1).scalar(MinorType.INT).setInt(5);
     rootWriter.save();
     rootWriter.start();
-    rootWriter.scalar(0).setString("2");
-    rootWriter.scalar(1).setString("10");
+    rootWriter.variant(0).scalar(MinorType.VARCHAR).setString("2");
+    rootWriter.variant(1).scalar(MinorType.VARCHAR).setString("10");
     rootWriter.save();
 
     TupleMetadata expectedSchema = new SchemaBuilder()
@@ -311,6 +312,8 @@ public class TestResultSetLoaderUnprojected  extends SubOperatorTest {
         .addRow("2")
         .build();
     RowSet actual = fixture.wrap(rsLoader.harvest());
+    RowSetFormatter.print(actual);
+    RowSetFormatter.print(expected);
     RowSetUtilities.verify(expected, actual);
     rsLoader.close();
   }

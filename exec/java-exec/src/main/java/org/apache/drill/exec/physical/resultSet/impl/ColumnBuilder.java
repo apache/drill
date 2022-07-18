@@ -320,10 +320,8 @@ public class ColumnBuilder {
     // vectors can be cached.
     assert columnSchema.variantSchema().size() == 0;
     final UnionVector vector;
-    final UnionWriterImpl unionWriter;
     if (parent.projection().projection(columnSchema).isProjected || allowCreation(parent)) {
       vector = new UnionVector(columnSchema.schema(), parent.loader().allocator(), null);
-      unionWriter = new UnionWriterImpl(columnSchema, vector, null);
     } else {
       vector = null;
     }
@@ -337,7 +335,8 @@ public class ColumnBuilder {
 
     // Create the manager for the columns within the union.
     final UnionState unionState = new UnionState(parent.loader(),
-        parent.vectorCache().childCache(columnSchema.name()));
+        parent.vectorCache().childCache(columnSchema.name()),
+        vector == null ? ProjectionFilter.PROJECT_NONE : ProjectionFilter.PROJECT_ALL);
 
     // Bind the union state to the union writer to handle column additions.
     unionWriter.bindListener(unionState);

@@ -20,7 +20,6 @@ package org.apache.drill.exec.vector.accessor.writer;
 import org.apache.drill.common.types.TypeProtos.MinorType;
 import org.apache.drill.exec.record.metadata.ColumnMetadata;
 import org.apache.drill.exec.vector.accessor.ObjectWriter;
-import org.apache.drill.exec.vector.complex.UnionVector;
 
 /**
  * Unions are overly complex. They can evolve from no type, to a single type,
