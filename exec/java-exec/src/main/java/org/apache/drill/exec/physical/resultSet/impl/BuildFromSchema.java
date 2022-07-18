@@ -48,7 +48,6 @@ import org.apache.drill.exec.vector.accessor.writer.RepeatedListWriter;
  * This class contrasts with the @{link ColumnBuilder} class which
  * builds the structure within a single vector and writer.
  */
-
 public class BuildFromSchema {
 
   /**
@@ -59,7 +58,6 @@ public class BuildFromSchema {
    * but have slightly different semantics. This shim wraps
    * the semantics so the builder code is simpler.
    */
-
   private interface ParentShim {
     ObjectWriter add(ColumnMetadata colSchema);
   }
@@ -140,7 +138,6 @@ public class BuildFromSchema {
    *
    * @param schema desired tuple schema to be materialized
    */
-
   public void buildTuple(TupleWriter writer, TupleMetadata schema) {
     final ParentShim tupleShim = new TupleShim(writer);
     for (int i = 0; i < schema.size(); i++) {
@@ -157,7 +154,6 @@ public class BuildFromSchema {
    * @param colSchema the schema of the column to add
    * @return the object writer for the added column
    */
-
   public ObjectWriter buildColumn(TupleState state, ColumnMetadata colSchema) {
     return buildColumn(new TupleStateShim(state), colSchema);
   }
@@ -171,7 +167,6 @@ public class BuildFromSchema {
    * @param colSchema the schema of the column to add
    * @return the object writer for the added column
    */
-
   private ObjectWriter buildColumn(ParentShim parent, ColumnMetadata colSchema) {
     if (colSchema.isMultiList()) {
       return buildRepeatedList(parent, colSchema);
@@ -197,7 +192,6 @@ public class BuildFromSchema {
    * @return true if the column is of type LIST with a single
    * element type
    */
-
   private boolean isSingleList(ColumnMetadata colSchema) {
     return colSchema.isVariant() && colSchema.isArray() && colSchema.variantSchema().isSingleType();
   }
@@ -231,7 +225,6 @@ public class BuildFromSchema {
    * the common behavior
    * @param colSchema the schema of the variant (LIST or UNION) column
    */
-
   private ObjectWriter buildVariant(ParentShim parent, ColumnMetadata colSchema) {
     final ObjectWriter colWriter = parent.add(colSchema.cloneEmpty());
     expandVariant(colWriter, colSchema);
@@ -271,7 +264,6 @@ public class BuildFromSchema {
    * @param parent tuple writer for the tuple that holds the array
    * @param colSchema schema definition of the array
    */
-
   private ObjectWriter buildRepeatedList(ParentShim parent, ColumnMetadata colSchema) {
     final ObjectWriter objWriter = parent.add(colSchema.cloneEmpty());
     final RepeatedListWriter listWriter = (RepeatedListWriter) objWriter.array();
@@ -292,7 +284,6 @@ public class BuildFromSchema {
    * @param colWriter the writer for the (possibly structured) column
    * @param colSchema the schema definition for the column
    */
-
   private void expandColumn(ObjectWriter colWriter, ColumnMetadata colSchema) {
 
     if (colSchema.isMultiList()) {

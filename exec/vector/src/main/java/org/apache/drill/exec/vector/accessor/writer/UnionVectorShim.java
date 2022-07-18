@@ -25,7 +25,7 @@ import org.apache.drill.exec.vector.accessor.ObjectWriter;
 import org.apache.drill.exec.vector.accessor.VariantWriter.VariantWriterListener;
 import org.apache.drill.exec.vector.accessor.impl.HierarchicalFormatter;
 import org.apache.drill.exec.vector.accessor.writer.AbstractFixedWidthWriter.BaseFixedWidthWriter;
-import org.apache.drill.exec.vector.accessor.writer.UnionWriterImpl.UnionShim;
+import org.apache.drill.exec.vector.accessor.writer.UnionWriter.UnionShim;
 import org.apache.drill.exec.vector.complex.UnionVector;
 
 /**
@@ -68,7 +68,7 @@ public class UnionVectorShim implements UnionShim {
 
   private final UnionVector vector;
   private final AbstractObjectWriter variants[];
-  private UnionWriterImpl writer;
+  private UnionWriter writer;
 
   /**
    * Writer for the type vector associated with the union. The type vector
@@ -95,7 +95,7 @@ public class UnionVectorShim implements UnionShim {
   }
 
   @Override
-  public void bindWriter(UnionWriterImpl writer) {
+  public void bindWriter(UnionWriter writer) {
     this.writer = writer;
     final ColumnWriterIndex index = writer.index();
     if (index != null) {
