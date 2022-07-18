@@ -39,33 +39,21 @@ import org.joda.time.Period;
 
 /**
  * Writer to a union vector.
+ * <p>
+ * A union vector has three attributes: null flag, type and value.
+ * The union vector holds the type: a bundle of other vectors hold
+ * the value. The type says which of the other vectors to consult
+ * to write the value. If a column is null, then we consult no other
+ * vectors. If all columns (thus far) are null, then there are no
+ * associated data vectors.
+ * <p>
+ * The protocol is to first set the type. Doing so creates the
+ * associated data vector, if it does not yet exist. This highlights the
+ * poor design of this vector: if we have even one value of a given type,
+ * we must have a vector that holds values for all rows, then we ignore
+ * the unwanted values.
  */
-
 public class UnionWriterImpl implements VariantWriter, WriterEvents {
-
-  public interface UnionShim extends WriterEvents {
-    void bindWriter(UnionWriterImpl writer);
-    void setNull();
-    boolean hasType(MinorType type);
-
-    /**
-     * Return an existing writer for the given type, or create a new one
-     * if needed.
-     *
-     * @param type desired variant type
-     * @return a writer for that type
-     */
-
-    ObjectWriter member(MinorType type);
-    void setType(MinorType type);
-    @Override
-    int lastWriteIndex();
-    @Override
-    int rowStartIndex();
-    AbstractObjectWriter addMember(ColumnMetadata colSchema);
-    AbstractObjectWriter addMember(MinorType type);
-    void addMember(AbstractObjectWriter colWriter);
-  }
 
   public static class VariantObjectWriter extends AbstractObjectWriter {
 
@@ -102,7 +90,6 @@ public class UnionWriterImpl implements VariantWriter, WriterEvents {
    * need to implement the same methods, so we can't just implement these
    * methods on the union writer itself.
    */
-
   private class ElementPositions implements WriterPosition {
 
     @Override
@@ -234,7 +221,6 @@ public class UnionWriterImpl implements VariantWriter, WriterEvents {
    *
    * @param writer the column writer to add
    */
-
   protected void addMember(AbstractObjectWriter writer) {
     final MinorType type = writer.schema().type();
 
@@ -270,7 +256,7 @@ public class UnionWriterImpl implements VariantWriter, WriterEvents {
   }
 
   @Override
-  public boolean isProjected() { return true; }
+  public boolean isProjected() { return shim.isProjected(); }
 
   @Override
   public void startWrite() {

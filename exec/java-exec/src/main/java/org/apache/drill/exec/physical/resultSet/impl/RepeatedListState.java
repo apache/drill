@@ -37,7 +37,7 @@ import com.google.common.collect.Lists;
 /**
  * Represents the internal state of a RepeatedList vector. The repeated list
  * is wrapped in a repeated list "column state" that manages the column as a
- * whole. The repeated list acts as a container which the <tt>RepeatedListState<tt>
+ * whole. The repeated list acts as a container which the {@code RepeatedListState}
  * implements. At the vector level, we track the repeated list vector, but
  * only perform operations on its associated offset vector.
  */
@@ -48,12 +48,12 @@ public class RepeatedListState extends ContainerState implements RepeatedListWri
    */
   public static class RepeatedListColumnState extends BaseContainerColumnState {
 
-    private final RepeatedListState listState;
+    private final ContainerState listState;
 
     public RepeatedListColumnState(LoaderInternals loader,
         AbstractObjectWriter writer,
-        RepeatedListVectorState vectorState,
-        RepeatedListState listState) {
+        VectorState vectorState,
+        ContainerState listState) {
       super(loader, writer, vectorState);
       this.listState = listState;
       listState.bindColumnState(this);
@@ -80,14 +80,19 @@ public class RepeatedListState extends ContainerState implements RepeatedListWri
 
     private final ArrayWriter arrayWriter;
     private final RepeatedListVector vector;
-    private final OffsetVectorState offsetsState;
+    private final VectorState offsetsState;
 
     public RepeatedListVectorState(AbstractObjectWriter arrayWriter, RepeatedListVector vector) {
       this.vector = vector;
       this.arrayWriter = arrayWriter.array();
-      offsetsState = new OffsetVectorState(
-          arrayWriter.events(), vector.getOffsetVector(),
-          this.arrayWriter.entryType() == null ? null : arrayWriter.events());
+      if (vector == null) {
+        offsetsState = new NullVectorState();
+      } else {
+        offsetsState = new OffsetVectorState(
+            arrayWriter.events(),
+            vector.getOffsetVector(),
+            this.arrayWriter.entryType() == null ? null : arrayWriter.events());
+      }
     }
 
     /**
@@ -99,7 +104,9 @@ public class RepeatedListState extends ContainerState implements RepeatedListWri
      * of the repeated list
      */
     public void updateChildWriter(AbstractObjectWriter childWriter) {
-      offsetsState.setChildWriter(childWriter.events());
+      if (offsetsState instanceof OffsetVectorState) {
+        ((OffsetVectorState) offsetsState).setChildWriter(childWriter.events());
+      }
     }
 
     @SuppressWarnings("unchecked")
@@ -175,7 +182,9 @@ public class RepeatedListState extends ContainerState implements RepeatedListWri
     // vector.
     final RepeatedListVectorState vectorState = (RepeatedListVectorState) parentColumn.vectorState();
     final RepeatedListVector listVector = vectorState.vector;
-    listVector.setChildVector(childState.vector());
+    if (listVector != null) {
+      listVector.setChildVector(childState.vector());
+    }
 
     // The repeated list's offset vector state needs to know the offset
     // of the inner vector. Bind that information now that we have

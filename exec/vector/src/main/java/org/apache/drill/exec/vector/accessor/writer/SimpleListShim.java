@@ -22,7 +22,6 @@ import org.apache.drill.exec.record.metadata.ColumnMetadata;
 import org.apache.drill.exec.vector.accessor.ColumnWriterIndex;
 import org.apache.drill.exec.vector.accessor.ObjectWriter;
 import org.apache.drill.exec.vector.accessor.impl.HierarchicalFormatter;
-import org.apache.drill.exec.vector.accessor.writer.UnionWriterImpl.UnionShim;
 import com.google.common.base.Preconditions;
 
 /**
@@ -33,7 +32,6 @@ import com.google.common.base.Preconditions;
  * to present a uniform variant interface for a list that holds zero
  * one (this case) or many types.
  */
-
 public class SimpleListShim implements UnionShim {
 
   private UnionWriterImpl writer;
@@ -208,5 +206,10 @@ public class SimpleListShim implements UnionShim {
     format.startObject(this).attribute("colWriter");
     colWriter.dump(format);
     format.endObject();
+  }
+
+  @Override
+  public boolean isProjected() {
+    return true;
   }
 }
