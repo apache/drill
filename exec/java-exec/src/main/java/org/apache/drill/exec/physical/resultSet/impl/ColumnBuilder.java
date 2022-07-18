@@ -319,7 +319,14 @@ public class ColumnBuilder {
     // have content that varies from batch to batch. Only the leaf
     // vectors can be cached.
     assert columnSchema.variantSchema().size() == 0;
-    final UnionVector vector = new UnionVector(columnSchema.schema(), parent.loader().allocator(), null);
+    final UnionVector vector;
+    final UnionWriterImpl unionWriter;
+    if (parent.projection().projection(columnSchema).isProjected || allowCreation(parent)) {
+      vector = new UnionVector(columnSchema.schema(), parent.loader().allocator(), null);
+      unionWriter = new UnionWriterImpl(columnSchema, vector, null);
+    } else {
+      vector = null;
+    }
 
     // Then the union writer.
     final UnionWriterImpl unionWriter = new UnionWriterImpl(columnSchema, vector, null);
