@@ -25,7 +25,7 @@ import org.apache.drill.exec.vector.accessor.ObjectWriter;
 import org.apache.drill.exec.vector.accessor.VariantWriter.VariantWriterListener;
 import org.apache.drill.exec.vector.accessor.impl.HierarchicalFormatter;
 import org.apache.drill.exec.vector.accessor.writer.AbstractFixedWidthWriter.BaseFixedWidthWriter;
-import org.apache.drill.exec.vector.accessor.writer.UnionWriter.UnionShim;
+import org.apache.drill.exec.vector.accessor.writer.UnionShim.AbstractUnionShim;
 import org.apache.drill.exec.vector.complex.UnionVector;
 
 /**
@@ -37,7 +37,7 @@ import org.apache.drill.exec.vector.complex.UnionVector;
  * list itself evolves from no type, to a single type and to
  * a union.
  */
-public class UnionVectorShim implements UnionShim {
+public class UnionVectorShim extends AbstractUnionShim {
 
   static class DefaultListener implements VariantWriterListener {
 
@@ -67,8 +67,7 @@ public class UnionVectorShim implements UnionShim {
   }
 
   private final UnionVector vector;
-  private final AbstractObjectWriter variants[];
-  private UnionWriter writer;
+  private UnionWriterImpl writer;
 
   /**
    * Writer for the type vector associated with the union. The type vector
@@ -80,22 +79,17 @@ public class UnionVectorShim implements UnionShim {
   public UnionVectorShim(UnionVector vector) {
     this.vector = vector;
     typeWriter = ColumnWriterFactory.newWriter(vector.getTypeVector());
-    variants = new AbstractObjectWriter[MinorType.values().length];
   }
 
   public UnionVectorShim(UnionVector vector,
       AbstractObjectWriter variants[]) {
+    super(variants);
     this.vector = vector;
     typeWriter = ColumnWriterFactory.newWriter(vector.getTypeVector());
-    if (variants == null) {
-      this.variants = new AbstractObjectWriter[MinorType.values().length];
-    } else {
-      this.variants = variants;
-    }
   }
 
   @Override
-  public void bindWriter(UnionWriter writer) {
+  public void bindWriter(UnionWriterImpl writer) {
     this.writer = writer;
     final ColumnWriterIndex index = writer.index();
     if (index != null) {
@@ -125,11 +119,6 @@ public class UnionVectorShim implements UnionShim {
     // This lets a caller change its mind after setting a
     // value.
     typeWriter.setInt(UnionVector.NULL_MARKER);
-  }
-
-  @Override
-  public boolean hasType(MinorType type) {
-    return variants[type.ordinal()] != null;
   }
 
   @Override
@@ -174,23 +163,6 @@ public class UnionVectorShim implements UnionShim {
   public void addMember(AbstractObjectWriter colWriter) {
     addMemberWriter(colWriter);
     writer.addMember(colWriter);
-  }
-
-  /**
-   * Performs just the work of adding a vector to the list of existing
-   * variants. Called when adding a type via the writer, but also when
-   * the result set loader promotes a list from single type to a union,
-   * and provides this shim with the writer from the single-list shim.
-   * In the latter case, the writer is already initialized and is already
-   * part of the metadata for this list; so we don't want to call the
-   * list's {@code addMember()} and repeat those operations.
-   *
-   * @param colWriter the column (type) writer to add
-   */
-  public void addMemberWriter(AbstractObjectWriter colWriter) {
-    final MinorType type = colWriter.schema().type();
-    assert variants[type.ordinal()] == null;
-    variants[type.ordinal()] = colWriter;
   }
 
   @Override

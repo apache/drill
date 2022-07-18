@@ -1,25 +1,82 @@
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package org.apache.drill.exec.vector.accessor.writer;
 
 import java.math.BigDecimal;
 
 import org.apache.drill.common.types.TypeProtos.MinorType;
 import org.apache.drill.exec.record.metadata.ColumnMetadata;
+import org.apache.drill.exec.record.metadata.VariantMetadata;
 import org.apache.drill.exec.vector.accessor.ArrayWriter;
 import org.apache.drill.exec.vector.accessor.ColumnReader;
+import org.apache.drill.exec.vector.accessor.ColumnWriter;
 import org.apache.drill.exec.vector.accessor.ColumnWriterIndex;
+import org.apache.drill.exec.vector.accessor.ObjectType;
 import org.apache.drill.exec.vector.accessor.ObjectWriter;
 import org.apache.drill.exec.vector.accessor.ScalarWriter;
 import org.apache.drill.exec.vector.accessor.TupleWriter;
 import org.apache.drill.exec.vector.accessor.VariantReader;
+import org.apache.drill.exec.vector.accessor.VariantWriter;
 import org.apache.drill.exec.vector.accessor.WriterPosition;
 import org.apache.drill.exec.vector.accessor.impl.HierarchicalFormatter;
 import org.apache.drill.exec.vector.complex.UnionVector;
 import org.joda.time.Period;
 
 /**
- * Writer to a materialized union.
+ * Writer to a union vector.
+ * <p>
+ * A union vector has three attributes: null flag, type and value.
+ * The union vector holds the type: a bundle of other vectors hold
+ * the value. The type says which of the other vectors to consult
+ * to write the value. If a column is null, then we consult no other
+ * vectors. If all columns (thus far) are null, then there are no
+ * associated data vectors.
+ * <p>
+ * The protocol is to first set the type. Doing so creates the
+ * associated data vector, if it does not yet exist. This highlights the
+ * poor design of this vector: if we have even one value of a given type,
+ * we must have a vector that holds values for all rows, then we ignore
+ * the unwanted values.
  */
-public class UnionWriterImpl extends UnionWriter {
+public class UnionWriterImpl implements VariantWriter, WriterEvents {
+
+  public static class VariantObjectWriter extends AbstractObjectWriter {
+
+    private final UnionWriterImpl writer;
+
+    public VariantObjectWriter(UnionWriterImpl writer) {
+      this.writer = writer;
+    }
+
+    @Override
+    public ColumnWriter writer() { return writer; }
+
+    @Override
+    public VariantWriter variant() { return writer; }
+
+    @Override
+    public WriterEvents events() { return writer; }
+
+    @Override
+    public void dump(HierarchicalFormatter format) {
+      writer.dump(format);
+    }
+  }
 
   /**
    * The result set loader requires information about the child positions
@@ -47,12 +104,15 @@ public class UnionWriterImpl extends UnionWriter {
     }
   }
 
+  private final ColumnMetadata schema;
+  private UnionShim shim;
   private ColumnWriterIndex index;
   private State state = State.IDLE;
+  private VariantWriterListener listener;
   private final WriterPosition elementPosition = new ElementPositions();
 
   public UnionWriterImpl(ColumnMetadata schema) {
-    super(schema);
+    this.schema = schema;
   }
 
   public UnionWriterImpl(ColumnMetadata schema, UnionVector vector,
@@ -67,13 +127,24 @@ public class UnionWriterImpl extends UnionWriter {
     shim.bindIndex(index);
   }
 
+  public void bindListener(VariantWriterListener listener) {
+    this.listener = listener;
+  }
+
+  // Unions are complex: listeners should bind to the components as they
+  // are created.
+
+  @Override
+  public void bindListener(ColumnWriterListener listener) { }
+
   // The following are for coordinating with the shim.
 
   public State state() { return state; }
   public ColumnWriterIndex index() { return index; }
+  public VariantWriterListener listener() { return listener; }
+  public UnionShim shim() { return shim; }
   public WriterPosition elementPosition() { return elementPosition; }
 
-  @Override
   public void bindShim(UnionShim shim) {
     this.shim = shim;
     shim.bindWriter(this);
@@ -86,6 +157,36 @@ public class UnionWriterImpl extends UnionWriter {
   }
 
   @Override
+  public ObjectType type() { return ObjectType.VARIANT; }
+
+  @Override
+  public boolean nullable() { return true; }
+
+  @Override
+  public ColumnMetadata schema() { return schema; }
+
+  @Override
+  public VariantMetadata variantSchema() { return schema.variantSchema(); }
+
+  @Override
+  public int size() { return variantSchema().size(); }
+
+  @Override
+  public boolean hasType(MinorType type) {
+    return shim.hasType(type);
+  }
+
+  @Override
+  public void setNull() {
+    shim.setNull();
+  }
+
+  @Override
+  public ObjectWriter memberWriter(MinorType type) {
+    return shim.member(type);
+  }
+
+  @Override
   public ObjectWriter member(MinorType type) {
 
     // Get the writer first, which may trigger the single-to-union
@@ -95,6 +196,21 @@ public class UnionWriterImpl extends UnionWriter {
     final ObjectWriter writer = shim.member(type);
     setType(type);
     return writer;
+  }
+
+  @Override
+  public void setType(MinorType type) {
+    shim.setType(type);
+  }
+
+  @Override
+  public ObjectWriter addMember(ColumnMetadata colSchema) {
+    return shim.addMember(colSchema);
+  }
+
+  @Override
+  public ObjectWriter addMember(MinorType type) {
+    return shim.addMember(type);
   }
 
   /**

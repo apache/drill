@@ -35,7 +35,7 @@ import com.google.common.base.Preconditions;
  */
 public class SimpleListShim implements UnionShim {
 
-  private UnionWriter writer;
+  private UnionWriterImpl writer;
   private AbstractObjectWriter colWriter;
 
   public SimpleListShim() { }
@@ -45,7 +45,7 @@ public class SimpleListShim implements UnionShim {
   }
 
   @Override
-  public void bindWriter(UnionWriter writer) {
+  public void bindWriter(UnionWriterImpl writer) {
     this.writer = writer;
   }
 
