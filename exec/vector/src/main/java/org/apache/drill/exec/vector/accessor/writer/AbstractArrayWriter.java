@@ -32,6 +32,7 @@ import org.apache.drill.exec.vector.accessor.ScalarWriter;
 import org.apache.drill.exec.vector.accessor.TupleWriter;
 import org.apache.drill.exec.vector.accessor.VariantWriter;
 import org.apache.drill.exec.vector.accessor.impl.HierarchicalFormatter;
+import org.apache.drill.exec.vector.accessor.writer.dummy.DummyArrayWriter.DummyOffsetVectorWriter;
 
 /**
  * Writer for an array-valued column. This writer appends values: once a value
@@ -177,7 +178,8 @@ public abstract class AbstractArrayWriter implements ArrayWriter, WriterEvents {
   public static abstract class BaseArrayWriter extends AbstractArrayWriter {
 
     public BaseArrayWriter(ColumnMetadata schema, UInt4Vector offsetVector, AbstractObjectWriter elementObjWriter) {
-      super(schema, elementObjWriter, new OffsetVectorWriterImpl(offsetVector));
+      super(schema, elementObjWriter,
+          offsetVector == null ? new DummyOffsetVectorWriter() : new OffsetVectorWriterImpl(offsetVector));
     }
 
     @Override
@@ -328,7 +330,7 @@ public abstract class AbstractArrayWriter implements ArrayWriter, WriterEvents {
   public boolean nullable() { return false; }
 
   @Override
-  public boolean isProjected() { return true; }
+  public boolean isProjected() { return offsetsWriter.isProjected(); }
 
   @Override
   public void setNull() {

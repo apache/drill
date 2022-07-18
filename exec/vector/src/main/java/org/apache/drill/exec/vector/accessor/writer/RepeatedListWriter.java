@@ -42,7 +42,6 @@ import org.apache.drill.exec.vector.complex.RepeatedListVector;
  * list is a dummy, to be replaced by the real one once it is discovered
  * by reading data (or by parsing a schema.)
  */
-
 public class RepeatedListWriter extends ObjectArrayWriter {
 
   public interface ArrayListener {
@@ -63,7 +62,7 @@ public class RepeatedListWriter extends ObjectArrayWriter {
   public static AbstractObjectWriter buildRepeatedList(ColumnMetadata schema,
       RepeatedListVector vector, AbstractObjectWriter elementWriter) {
     AbstractArrayWriter arrayWriter = new RepeatedListWriter(schema,
-        vector.getOffsetVector(),
+        vector == null ? null : vector.getOffsetVector(),
         elementWriter);
     return new ArrayObjectWriter(arrayWriter);
   }

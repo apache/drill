@@ -125,15 +125,14 @@ public class ColumnWriterFactory {
         final ScalarObjectWriter scalarWriter = new ScalarObjectWriter(
             new DummyScalarWriter(schema));
         switch (schema.mode()) {
-        case OPTIONAL:
-        case REQUIRED:
-          return scalarWriter;
-        case REPEATED:
-          return new ArrayObjectWriter(
-              new DummyArrayWriter(schema,
-                scalarWriter));
-        default:
-          throw new UnsupportedOperationException(schema.mode().toString());
+          case OPTIONAL:
+          case REQUIRED:
+            return scalarWriter;
+          case REPEATED:
+            return new ArrayObjectWriter(
+                new DummyArrayWriter(schema, scalarWriter));
+          default:
+            throw new UnsupportedOperationException(schema.mode().toString());
       }
     }
   }
