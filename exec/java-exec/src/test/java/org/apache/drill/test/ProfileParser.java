@@ -241,7 +241,7 @@ public class ProfileParser {
   private void aggregateOpers() {
     for (FragInfo major : fragments.values()) {
       for (OperatorSummary opDef : major.ops) {
-        int sumPeak = 0;
+        long sumPeak = 0;
         opDef.execCount = opDef.opExecs.size();
         for (OperatorProfile op : opDef.opExecs) {
           Preconditions.checkState(major.id == op.majorFragId);
@@ -252,7 +252,7 @@ public class ProfileParser {
           opDef.processMs += op.processMs;
           sumPeak += op.peakMem;
         }
-        opDef.actualMemory = (long)sumPeak * 1024 * 1024;
+        opDef.actualMemory = sumPeak * 1024 * 1024;
       }
     }
   }
