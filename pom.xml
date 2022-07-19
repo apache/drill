@@ -114,7 +114,7 @@
     <protobuf.version>3.16.1</protobuf.version>
     <protostuff.version>1.7.1</protostuff.version>
     <codemodel.version>2.6</codemodel.version>
-    <joda.version>2.10.5</joda.version>
+    <joda.version>2.10.14</joda.version>
     <javax.el.version>3.0.0</javax.el.version>
     <surefire.version>3.0.0-M7</surefire.version>
     <jna.version>5.8.0</jna.version>
