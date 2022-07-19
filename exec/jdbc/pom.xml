@@ -72,14 +72,10 @@
       <artifactId>sqlline</artifactId>
       <scope>test</scope>
     </dependency>
-    <!-- Specify xalan and xerces versions to avoid setXIncludeAware error. -->
+    <!-- Specify xerces versions to avoid setXIncludeAware error. -->
     <dependency>
       <groupId>xerces</groupId>
       <artifactId>xercesImpl</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>xalan</groupId>
-      <artifactId>xalan</artifactId>
     </dependency>
     <dependency>
       <groupId>javax.validation</groupId>
