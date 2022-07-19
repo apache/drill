@@ -130,7 +130,6 @@
     <testcontainers.version>1.16.3</testcontainers.version>
     <typesafe.config.version>1.0.0</typesafe.config.version>
     <commons.codec.version>1.14</commons.codec.version>
-    <xalan.version>2.7.2</xalan.version>
     <xerces.version>2.12.2</xerces.version>
     <commons.configuration.version>1.10</commons.configuration.version>
     <commons.beanutils.version>1.9.4</commons.beanutils.version>
@@ -1986,11 +1985,6 @@
         <version>${xerces.version}</version>
       </dependency>
       <dependency>
-        <groupId>xalan</groupId>
-        <artifactId>xalan</artifactId>
-        <version>${xalan.version}</version>
-      </dependency>
-      <dependency>
         <groupId>commons-configuration</groupId>
         <artifactId>commons-configuration</artifactId>
         <version>${commons.configuration.version}</version>
@@ -2774,11 +2768,6 @@
             <version>${xerces.version}</version>
           </dependency>
           <dependency>
-            <groupId>xalan</groupId>
-            <artifactId>xalan</artifactId>
-            <version>${xalan.version}</version>
-          </dependency>
-          <dependency>
             <groupId>net.sf.jpam</groupId>
             <artifactId>jpam</artifactId>
             <version>1.1</version>
@@ -3145,11 +3134,6 @@
             <groupId>xerces</groupId>
             <artifactId>xercesImpl</artifactId>
             <version>${xerces.version}</version>
-          </dependency>
-          <dependency>
-            <groupId>xalan</groupId>
-            <artifactId>xalan</artifactId>
-            <version>${xalan.version}</version>
           </dependency>
           <dependency>
             <groupId>org.apache.parquet</groupId>
@@ -4041,11 +4025,6 @@
             <groupId>xerces</groupId>
             <artifactId>xercesImpl</artifactId>
             <version>${xerces.version}</version>
-          </dependency>
-          <dependency>
-            <groupId>xalan</groupId>
-            <artifactId>xalan</artifactId>
-            <version>${xalan.version}</version>
           </dependency>
           <dependency>
             <groupId>org.apache.parquet</groupId>
