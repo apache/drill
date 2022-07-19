@@ -141,22 +141,11 @@ public class TestGoogleSheetsQueries extends ClusterTest {
     }
 
     String sql = String.format("SELECT Col1, Col3 FROM googlesheets.`%s`.`MixedSheet` LIMIT 5", sheetID);
-    RowSet results = queryBuilder().sql(sql).rowSet();
-
-    TupleMetadata expectedSchema = new SchemaBuilder()
-      .addNullable("Col1", MinorType.VARCHAR)
-      .addNullable("Col3", MinorType.DATE)
-      .buildSchema();
-
-    RowSet expected = client.rowSetBuilder(expectedSchema)
-      .addRow("Rosaline  Thales", null)
-      .addRow("Abdolhossein  Detlev", LocalDate.parse("2020-04-30"))
-      .addRow("Yosuke  Simon", LocalDate.parse("2020-05-22"))
-      .addRow(null, LocalDate.parse("2020-06-30"))
-      .addRow("Avitus  Stribog", LocalDate.parse("2020-07-27"))
-      .build();
-
-    new RowSetComparison(expected).verifyAndClearAll(results);
+    queryBuilder()
+      .sql(sql)
+      .planMatcher()
+      .include("Project", "columns=\\[`Col1`, `Col3`\\]", "Limit", "maxRecords=5")
+      .match();
   }
 
 
