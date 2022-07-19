@@ -545,7 +545,7 @@ public abstract class AbstractGroupScanWithMetadata<P extends TableMetadataProvi
    */
   protected <T extends BaseMetadata> List<T> limitMetadata(Collection<T> metadataList, int maxRecords) {
     List<T> qualifiedMetadata = new ArrayList<>();
-    int currentRowCount = 0;
+    long currentRowCount = 0;
     for (T metadata : metadataList) {
       long rowCount = TableStatisticsKind.ROW_COUNT.getValue(metadata);
       if (rowCount == Statistic.NO_COLUMN_STATS) {

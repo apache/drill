@@ -431,7 +431,7 @@ public class NetworkFunctions {
         int power = 3 - i;
         try {
           int ip = Integer.parseInt(ipAddressInArray[i]);
-          result += ip * Math.pow(256, power);
+          result += Math.round(ip * Math.pow(256, power));
         } catch (NumberFormatException e) {
           // should not happen since we validated the address
           // but if does, return null

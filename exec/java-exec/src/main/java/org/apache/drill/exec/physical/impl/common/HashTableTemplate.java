@@ -862,7 +862,7 @@ public abstract class HashTableTemplate implements HashTable {
         bh.dump(startIdx);
       }
     }
-    resizingTime += System.currentTimeMillis() - t0;
+    resizingTime += Math.toIntExact(System.currentTimeMillis() - t0);
     numResizing++;
   }
 

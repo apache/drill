@@ -104,8 +104,8 @@ public class BufferedDirectBufInputStream extends DirectBufInputStream implement
     super(in, allocator, id, startOffset, totalByteSize, enforceTotalByteSize, enableHints);
     Preconditions.checkArgument(bufSize >= 0);
     // We make the buffer size the smaller of the buffer Size parameter or the total Byte Size
-    // rounded to next highest pwoer of two
-    int bSize = bufSize < (int) totalByteSize ? bufSize : (int) totalByteSize;
+    // rounded to next highest power of two
+    int bSize = Math.min(bufSize, Math.toIntExact(totalByteSize));
     // round up to next power of 2
     bSize--;
     bSize |= bSize >>> 1;
@@ -216,7 +216,7 @@ public class BufferedDirectBufInputStream extends DirectBufInputStream implement
     }
     bytesAvailable = this.count - this.curPosInBuffer;
     //copy into output buffer
-    int copyBytes = bytesAvailable < len ? bytesAvailable : len;
+    int copyBytes = Math.min(bytesAvailable, len);
     getBuf().getBytes(curPosInBuffer, buf, off, copyBytes);
     buf.writerIndex(off + copyBytes);
     this.curPosInBuffer += copyBytes;
@@ -241,7 +241,7 @@ public class BufferedDirectBufInputStream extends DirectBufInputStream implement
     }
     bytesAvailable = this.count - this.curPosInBuffer;
     // return a slice as the  output
-    int bytesToRead = bytesAvailable < len ? bytesAvailable : len;
+    int bytesToRead = Math.min(bytesAvailable, len);
     DrillBuf newBuf = this.getBuf().slice(off, bytesToRead);
     newBuf.retain();
     return newBuf;
@@ -297,7 +297,7 @@ public class BufferedDirectBufInputStream extends DirectBufInputStream implement
 
 
   @Override public int read(byte[] b) throws IOException {
-    return b.length == 1 ? read() : read(b, (int) 0, b.length);
+    return b.length == 1 ? read() : read(b, 0, b.length);
   }
 
 
@@ -358,8 +358,8 @@ public class BufferedDirectBufInputStream extends DirectBufInputStream implement
         return 0;
       }
     }
-    bytesSkipped = bytesAvailable < n ? bytesAvailable : n;
-    this.curPosInBuffer += bytesSkipped;
+    bytesSkipped = Math.min(bytesAvailable, n);
+    this.curPosInBuffer += Math.toIntExact(bytesSkipped);
 
     return bytesSkipped;
   }
@@ -404,8 +404,6 @@ public class BufferedDirectBufInputStream extends DirectBufInputStream implement
           in = null;
           inp.close();
         }
-      } catch (IOException e) {
-        throw e;
       } finally {
         if ((buffer = this.internalBuffer) != null) {
           this.internalBuffer = null;
