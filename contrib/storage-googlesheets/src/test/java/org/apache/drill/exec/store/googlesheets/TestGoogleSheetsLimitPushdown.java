@@ -39,7 +39,7 @@ import java.util.Map;
 
 import static org.junit.Assert.fail;
 
-@Ignore("This test requires a live connection to GoogleSheets.  Please run tests manually.")
+@Ignore("This test requires a live connection to Google Sheets.  Please run tests manually.")
 public class TestGoogleSheetsLimitPushdown extends ClusterTest {
 
   private static final String AUTH_URI = "https://accounts.google.com/o/oauth2/auth";
@@ -136,22 +136,6 @@ public class TestGoogleSheetsLimitPushdown extends ClusterTest {
       .sql(sql)
       .planMatcher()
       .include("Limit", "maxRecords=9")
-      .match();
-  }
-
-  @Test
-  public void testLimitWithFilter() throws Exception {
-    try {
-      initializeTokens();
-    } catch (PluginException e) {
-      fail(e.getMessage());
-    }
-
-    String sql = String.format("SELECT * FROM googlesheets.`%s`.`MixedSheet` WHERE Col2 < 6.0 LIMIT 4", sheetID);
-    queryBuilder()
-      .sql(sql)
-      .planMatcher()
-      .include("Limit", "maxRecords=4")
       .match();
   }
 

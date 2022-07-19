@@ -52,7 +52,7 @@ import static org.junit.Assert.fail;
  * must be run with a live internet connection.  These tests use test data which can be found in the
  * resources directory.
  */
-@Ignore("Requires live connection to GoogleSheets.  Please run tests manually.")
+@Ignore("Requires live connection to Google Sheets.  Please run tests manually.")
 public class TestGoogleSheetsQueries extends ClusterTest {
 
   private static final String AUTH_URI = "https://accounts.google.com/o/oauth2/auth";

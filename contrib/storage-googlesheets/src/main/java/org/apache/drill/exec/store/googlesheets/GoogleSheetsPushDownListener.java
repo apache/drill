@@ -91,6 +91,11 @@ public class GoogleSheetsPushDownListener implements FilterPushDownListener {
       if (node instanceof OrNode) {
         return null;
       } else if (node instanceof ColRelOpConstNode) {
+        // TODO Implement Filter Pushdowns
+        // This entire method always returns null.  Google Sheets SDK may allow
+        // filter pushdowns, however the SDK was so complicated and poorly documented, I was not able
+        // to figure out how to implement filter pushdowns. If and when we figure that out, uncomment
+        // the line below, and then the filter rules will be pushed down.
         return null;
         //return acceptRelOp((ColRelOpConstNode) node);
       } else {

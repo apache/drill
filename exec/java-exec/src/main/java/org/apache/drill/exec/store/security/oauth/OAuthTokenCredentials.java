@@ -30,6 +30,7 @@ public class OAuthTokenCredentials extends UsernamePasswordCredentials {
   public static final String CLIENT_ID = "clientID";
   public static final String CLIENT_SECRET = "clientSecret";
   public static final String ACCESS_TOKEN = "accessToken";
+  public static final String EXPIRES_IN = "expiresIn";
   public static final String REFRESH_TOKEN = "refreshToken";
   public static final String TOKEN_URI = "tokenURI";
   public static final String PROXY_USERNAME = "proxyUsername";
@@ -38,6 +39,7 @@ public class OAuthTokenCredentials extends UsernamePasswordCredentials {
   private final String clientID;
   private final String clientSecret;
   private final String tokenURI;
+
   private Optional<PersistentTokenTable> tokenTable;
 
   /**
@@ -119,6 +121,10 @@ public class OAuthTokenCredentials extends UsernamePasswordCredentials {
 
   public String getRefreshToken() {
     return tokenTable.map(PersistentTokenTable::getRefreshToken).orElse(null);
+  }
+
+  public String getExpiresIn() {
+    return tokenTable.map(PersistentTokenTable::getExpiresIn).orElse(null);
   }
 
   public String getTokenUri() {

@@ -162,7 +162,7 @@ public class GoogleSheetsStoragePlugin extends AbstractStoragePlugin {
     // existing plugins perform filter push-down at the physical
     // phase, which also works fine if push-down is independent of
     // parallelization.
-    if (FilterPushDownUtils.isFilterPushDownPhase(phase) || phase == PlannerPhase.LOGICAL) {
+    if (FilterPushDownUtils.isFilterPushDownPhase(phase)) {
       return GoogleSheetsPushDownListener.rulesFor(optimizerContext);
     } else {
       return ImmutableSet.of();
