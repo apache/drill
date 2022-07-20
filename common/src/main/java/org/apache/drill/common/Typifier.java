@@ -16,7 +16,7 @@
  * limitations under the License.
  */
 
-package org.apache.drill.exec.store.googlesheets.utils;
+package org.apache.drill.common;
 
 import java.nio.CharBuffer;
 
@@ -35,7 +35,7 @@ import java.time.format.DateTimeFormatter;
  * This class attempts to infer the data type of an unknown data type. It is somewhat
  * configurable.  This was sourced from <a href="https://gist.github.com/awwsmm/56b8164410c89c719ebfca7b3d85870b">this code on github</a>.
  */
-public class GoogleSheetsTypifier {
+public class Typifier {
 
   private static final Locale defaultLocale = new Locale("en");
 

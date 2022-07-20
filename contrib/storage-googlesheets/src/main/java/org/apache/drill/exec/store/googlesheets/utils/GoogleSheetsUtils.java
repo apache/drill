@@ -40,6 +40,7 @@ import com.google.api.services.sheets.v4.model.Spreadsheet;
 import com.google.api.services.sheets.v4.model.UpdateValuesResponse;
 import com.google.api.services.sheets.v4.model.ValueRange;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.drill.common.Typifier;
 import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.exec.record.metadata.SchemaBuilder;
@@ -438,7 +439,7 @@ public class GoogleSheetsUtils {
    * @return The {@link DATA_TYPES} of the unknown string.
    */
   public static DATA_TYPES inferDataType (String data) {
-    Entry<Class, String> result = GoogleSheetsTypifier.typify(data);
+    Entry<Class, String> result = Typifier.typify(data);
     String dataType = result.getKey().getSimpleName();
 
     // If the string is empty, return UNKNOWN
