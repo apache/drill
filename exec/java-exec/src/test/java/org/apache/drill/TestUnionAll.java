@@ -27,11 +27,14 @@ import org.apache.drill.categories.UnlikelyTest;
 import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.common.types.TypeProtos;
+import org.apache.drill.exec.ExecConstants;
+import org.apache.drill.exec.planner.physical.PlannerSettings;
 import org.apache.drill.exec.record.BatchSchema;
 import org.apache.drill.exec.record.metadata.SchemaBuilder;
 import org.apache.drill.exec.work.foreman.SqlUnsupportedException;
 import org.apache.drill.exec.work.foreman.UnsupportedRelOperatorException;
-import org.apache.drill.test.BaseTestQuery;
+import org.apache.drill.test.ClusterFixture;
+import org.apache.drill.test.ClusterTest;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -43,17 +46,14 @@ import java.nio.file.Paths;
 import java.util.List;
 
 @Category({SqlTest.class, OperatorTest.class})
-public class TestUnionAll extends BaseTestQuery {
+public class TestUnionAll extends ClusterTest {
 
-  private static final String sliceTargetSmall = "alter session set `planner.slice_target` = 1";
-  private static final String sliceTargetDefault = "alter session reset `planner.slice_target`";
-  private static final String enableDistribute = "alter session set `planner.enable_unionall_distribute` = true";
-  private static final String defaultDistribute = "alter session reset `planner.enable_unionall_distribute`";
-
+  private static final String SLICE_TARGET_DEFAULT = "alter session reset `planner.slice_target`";
   private static final String EMPTY_DIR_NAME = "empty_directory";
 
   @BeforeClass
-  public static void setupTestFiles() {
+  public static void setupTestFiles() throws Exception {
+    startCluster(ClusterFixture.builder(dirTestWatcher));
     dirTestWatcher.copyResourceToRoot(Paths.get("multilevel", "parquet"));
     dirTestWatcher.makeTestTmpSubDir(Paths.get(EMPTY_DIR_NAME));
   }
@@ -217,9 +217,9 @@ public class TestUnionAll extends BaseTestQuery {
   @Category(UnlikelyTest.class)
   public void testUnionAllViewExpandableStar() throws Exception {
     try {
-      test("use dfs.tmp");
-      test("create view nation_view_testunionall_expandable_star as select n_name, n_nationkey from cp.`tpch/nation.parquet`;");
-      test("create view region_view_testunionall_expandable_star as select r_name, r_regionkey from cp.`tpch/region.parquet`;");
+      run("use dfs.tmp");
+      run("create view nation_view_testunionall_expandable_star as select n_name, n_nationkey from cp.`tpch/nation.parquet`");
+      run("create view region_view_testunionall_expandable_star as select r_name, r_regionkey from cp.`tpch/region.parquet`");
 
       String query1 = "(select * from dfs.tmp.`nation_view_testunionall_expandable_star`) " +
           "union all " +
@@ -245,34 +245,34 @@ public class TestUnionAll extends BaseTestQuery {
           .baselineColumns("r_name", "r_regionkey")
           .build().run();
     } finally {
-      test("drop view if exists nation_view_testunionall_expandable_star");
-      test("drop view if exists region_view_testunionall_expandable_star");
+      run("drop view if exists nation_view_testunionall_expandable_star");
+      run("drop view if exists region_view_testunionall_expandable_star");
     }
   }
 
   @Test(expected = UnsupportedRelOperatorException.class) // see DRILL-2002
   public void testUnionAllViewUnExpandableStar() throws Exception {
     try {
-      test("use dfs.tmp");
-      test("create view nation_view_testunionall_expandable_star as select * from cp.`tpch/nation.parquet`;");
+      run("use dfs.tmp");
+      run("create view nation_view_testunionall_expandable_star as select * from cp.`tpch/nation.parquet`");
 
       String query = "(select * from dfs.tmp.`nation_view_testunionall_expandable_star`) " +
                      "union all (select * from cp.`tpch/region.parquet`)";
-      test(query);
+      run(query);
     } catch(UserException ex) {
       SqlUnsupportedException.errorClassNameToException(ex.getOrCreatePBError(false).getException().getExceptionClass());
       throw ex;
     } finally {
-      test("drop view if exists nation_view_testunionall_expandable_star");
+      run("drop view if exists nation_view_testunionall_expandable_star");
     }
   }
 
   @Test
   public void testDiffDataTypesAndModes() throws Exception {
     try {
-      test("use dfs.tmp");
-      test("create view nation_view_testunionall_expandable_star as select n_name, n_nationkey from cp.`tpch/nation.parquet`;");
-      test("create view region_view_testunionall_expandable_star as select r_name, r_regionkey from cp.`tpch/region.parquet`;");
+      run("use dfs.tmp");
+      run("create view nation_view_testunionall_expandable_star as select n_name, n_nationkey from cp.`tpch/nation.parquet`");
+      run("create view region_view_testunionall_expandable_star as select r_name, r_regionkey from cp.`tpch/region.parquet`");
 
       String t1 = "(select n_comment, n_regionkey from cp.`tpch/nation.parquet` limit 5)";
       String t2 = "(select * from nation_view_testunionall_expandable_star  limit 5)";
@@ -289,8 +289,8 @@ public class TestUnionAll extends BaseTestQuery {
           .baselineColumns("n_comment", "n_regionkey")
           .build().run();
     } finally {
-      test("drop view if exists nation_view_testunionall_expandable_star");
-      test("drop view if exists region_view_testunionall_expandable_star");
+      run("drop view if exists nation_view_testunionall_expandable_star");
+      run("drop view if exists region_view_testunionall_expandable_star");
     }
   }
 
@@ -389,7 +389,7 @@ public class TestUnionAll extends BaseTestQuery {
     String rootInt = "/store/json/intData.json";
     String rootBoolean = "/store/json/booleanData.json";
 
-    test("(select key from cp.`%s` " +
+    run("(select key from cp.`%s` " +
         "union all " +
         "select key from cp.`%s` )", rootInt, rootBoolean);
   }
@@ -643,8 +643,11 @@ public class TestUnionAll extends BaseTestQuery {
             ".*SelectionVectorRemover.*\n" +
                 ".*Filter.*\n" +
                     ".*Scan.*columns=\\[`r_regionkey`\\].*"};
-    final String[] excludedPlan = {};
-    PlanTestBase.testPlanMatchingPatterns(query, expectedPlan, excludedPlan);
+    queryBuilder()
+      .sql(query)
+      .planMatcher()
+      .include(expectedPlan)
+      .match();
 
     // Validate the result
     testBuilder()
@@ -685,8 +688,11 @@ public class TestUnionAll extends BaseTestQuery {
                         ".*Filter.*\n" +
                             ".*Scan.*columns=\\[`n_regionkey`, `n_nationkey`\\].*\n" +
                         ".*Scan.*columns=\\[`r_regionkey`\\].*"};
-    final String[] excludedPlan = {};
-    PlanTestBase.testPlanMatchingPatterns(query, expectedPlan, excludedPlan);
+    queryBuilder()
+      .sql(query)
+      .planMatcher()
+      .include(expectedPlan)
+      .match();
 
     // Validate the result
     testBuilder()
@@ -724,8 +730,11 @@ public class TestUnionAll extends BaseTestQuery {
                     ".*Project.*\n" +
                         ".*Scan.*columns=\\[`columns`\\[0\\]\\].*"};
 
-    final String[] excludedPlan = {};
-    PlanTestBase.testPlanMatchingPatterns(query, expectedPlan, excludedPlan);
+    queryBuilder()
+      .sql(query)
+      .planMatcher()
+      .include(expectedPlan)
+      .match();
 
     // Validate the result
     testBuilder()
@@ -752,8 +761,12 @@ public class TestUnionAll extends BaseTestQuery {
             ".*Project.*\n" +
                 ".*Scan.*columns=\\[`r_regionkey`, `r_name`\\].*"
     };
-    final String[] excludedPlan = {};
-    PlanTestBase.testPlanMatchingPatterns(query, expectedPlan, excludedPlan);
+
+    queryBuilder()
+      .sql(query)
+      .planMatcher()
+      .include(expectedPlan)
+      .match();
 
     testBuilder()
         .sqlQuery(query)
@@ -776,8 +789,12 @@ public class TestUnionAll extends BaseTestQuery {
         ".*UnionAll.*\n" +
             ".*Scan.*columns=\\[`n_nationkey`\\].*\n" +
             ".*Scan.*columns=\\[`r_regionkey`\\].*"};
-    final String[] excludedPlan = {};
-    PlanTestBase.testPlanMatchingPatterns(query, expectedPlan, excludedPlan);
+
+    queryBuilder()
+      .sql(query)
+      .planMatcher()
+      .include(expectedPlan)
+      .match();
 
     // Validate the result
     testBuilder()
@@ -802,8 +819,12 @@ public class TestUnionAll extends BaseTestQuery {
             ".*Scan.*columns=\\[`n_nationkey`\\].*\n" +
         ".*Project\\(col=\\[\\*\\(2, \\$0\\)\\]\\).*\n" +
             ".*Scan.*columns=\\[`r_regionkey`\\].*"};
-    final String[] excludedPlan = {};
-    PlanTestBase.testPlanMatchingPatterns(query, expectedPlan, excludedPlan);
+
+    queryBuilder()
+      .sql(query)
+      .planMatcher()
+      .include(expectedPlan)
+      .match();
 
     // Validate the result
     testBuilder()
@@ -830,8 +851,12 @@ public class TestUnionAll extends BaseTestQuery {
             ".*Scan.*columns=\\[`n_nationkey`\\].*\n" +
         ".*Project\\(col=\\[\\*\\(2, ITEM\\(\\$0, 0\\)\\)\\]\\).*\n" +
             ".*Scan.*columns=\\[`columns`\\[0\\]\\]"};
-    final String[] excludedPlan = {};
-    PlanTestBase.testPlanMatchingPatterns(query, expectedPlan, excludedPlan);
+
+    queryBuilder()
+      .sql(query)
+      .planMatcher()
+      .include(expectedPlan)
+      .match();
 
     // Validate the result
     testBuilder()
@@ -856,8 +881,12 @@ public class TestUnionAll extends BaseTestQuery {
             ".*Scan.*columns=\\[`n_comment`, `n_nationkey`, `n_name`\\].*\n" +
         ".*Project.*\n" +
             ".*Scan.*columns=\\[`r_comment`, `r_regionkey`, `r_name`\\]"};
-    final String[] excludedPlan = {};
-    PlanTestBase.testPlanMatchingPatterns(query, expectedPlan, excludedPlan);
+
+    queryBuilder()
+      .sql(query)
+      .planMatcher()
+      .include(expectedPlan)
+      .match();
 
     // Validate the result
     testBuilder()
@@ -887,8 +916,12 @@ public class TestUnionAll extends BaseTestQuery {
             ".*Filter.*\n" +
                 ".*Scan.*columns=\\[`r_regionkey`\\]"
     };
-    final String[] excludedPlan = {};
-    PlanTestBase.testPlanMatchingPatterns(query, expectedPlan, excludedPlan);
+
+    queryBuilder()
+      .sql(query)
+      .planMatcher()
+      .include(expectedPlan)
+      .match();
 
     // Validate the result
     testBuilder()
@@ -1028,22 +1061,24 @@ public class TestUnionAll extends BaseTestQuery {
     // Validate the plan
     final String[] expectedPlan = {"UnionExchange.*\n",
         ".*UnionAll"};
-    final String[] excludedPlan = {};
 
     try {
-      test(sliceTargetSmall);
-      PlanTestBase.testPlanMatchingPatterns(query, expectedPlan, excludedPlan);
+      client.alterSession(ExecConstants.SLICE_TARGET, 1);
+      queryBuilder()
+        .sql(query)
+        .planMatcher()
+        .include(expectedPlan)
+        .match();
 
       testBuilder()
-        .optionSettingQueriesForTestQuery(sliceTargetSmall)
-        .optionSettingQueriesForBaseline(sliceTargetDefault)
+        .optionSettingQueriesForBaseline(SLICE_TARGET_DEFAULT)
         .unOrdered()
         .sqlQuery(query)
         .sqlBaselineQuery(query)
         .build()
         .run();
     } finally {
-      test(sliceTargetDefault);
+      client.resetSession(ExecConstants.SLICE_TARGET);
     }
   }
 
@@ -1059,22 +1094,24 @@ public class TestUnionAll extends BaseTestQuery {
 
     // Validate the plan
     final String[] expectedPlan = {"(?s)UnionExchange.*HashAgg.*HashToRandomExchange.*UnionAll.*"};
-    final String[] excludedPlan = {};
 
     try {
-      test(sliceTargetSmall);
-      PlanTestBase.testPlanMatchingPatterns(query, expectedPlan, excludedPlan);
+      client.alterSession(ExecConstants.SLICE_TARGET, 1);
+      queryBuilder()
+        .sql(query)
+        .planMatcher()
+        .include(expectedPlan)
+        .match();
 
       testBuilder()
-        .optionSettingQueriesForTestQuery(sliceTargetSmall)
-        .optionSettingQueriesForBaseline(sliceTargetDefault)
+        .optionSettingQueriesForBaseline(SLICE_TARGET_DEFAULT)
         .unOrdered()
         .sqlQuery(query)
         .sqlBaselineQuery(query)
         .build()
         .run();
     } finally {
-      test(sliceTargetDefault);
+      client.resetSession(ExecConstants.SLICE_TARGET);
     }
   }
 
@@ -1089,22 +1126,24 @@ public class TestUnionAll extends BaseTestQuery {
 
     // Validate the plan
     final String[] expectedPlan = {"(?s)UnionExchange.*UnionAll.*HashJoin.*"};
-    final String[] excludedPlan = {};
 
     try {
-      test(sliceTargetSmall);
-      PlanTestBase.testPlanMatchingPatterns(query, expectedPlan, excludedPlan);
+      client.alterSession(ExecConstants.SLICE_TARGET, 1);
+      queryBuilder()
+        .sql(query)
+        .planMatcher()
+        .include(expectedPlan)
+        .match();
 
       testBuilder()
-        .optionSettingQueriesForTestQuery(sliceTargetSmall)
-        .optionSettingQueriesForBaseline(sliceTargetDefault)
+        .optionSettingQueriesForBaseline(SLICE_TARGET_DEFAULT)
         .unOrdered()
         .sqlQuery(query)
         .sqlBaselineQuery(query)
         .build()
         .run();
     } finally {
-      test(sliceTargetDefault);
+      client.resetSession(ExecConstants.SLICE_TARGET);
     }
   }
 
@@ -1120,25 +1159,26 @@ public class TestUnionAll extends BaseTestQuery {
 
     // Validate the plan
     final String[] expectedPlan = {"(?s)UnionExchange.*UnionAll.*HashJoin.*"};
-    final String[] excludedPlan = {};
 
     try {
-      test(sliceTargetSmall);
-      test(enableDistribute);
-
-      PlanTestBase.testPlanMatchingPatterns(query, expectedPlan, excludedPlan);
+      client.alterSession(ExecConstants.SLICE_TARGET, 1);
+      client.alterSession(PlannerSettings.UNIONALL_DISTRIBUTE_KEY, true);
+      queryBuilder()
+        .sql(query)
+        .planMatcher()
+        .include(expectedPlan)
+        .match();
 
       testBuilder()
-        .optionSettingQueriesForTestQuery(sliceTargetSmall)
-        .optionSettingQueriesForBaseline(sliceTargetDefault)
+        .optionSettingQueriesForBaseline(SLICE_TARGET_DEFAULT)
         .unOrdered()
         .sqlQuery(query)
         .sqlBaselineQuery(query)
         .build()
         .run();
     } finally {
-      test(sliceTargetDefault);
-      test(defaultDistribute);
+      client.resetSession(ExecConstants.SLICE_TARGET);
+      client.resetSession(PlannerSettings.UNIONALL_DISTRIBUTE_KEY);
     }
   }
 
@@ -1155,25 +1195,26 @@ public class TestUnionAll extends BaseTestQuery {
 
     // Validate the plan
     final String[] expectedPlan = {"(?s)UnionExchange.*UnionAll.*HashJoin.*"};
-    final String[] excludedPlan = {};
 
     try {
-      test(sliceTargetSmall);
-      test(enableDistribute);
-
-      PlanTestBase.testPlanMatchingPatterns(query, expectedPlan, excludedPlan);
+      client.alterSession(ExecConstants.SLICE_TARGET, 1);
+      client.alterSession(PlannerSettings.UNIONALL_DISTRIBUTE_KEY, true);
+      queryBuilder()
+        .sql(query)
+        .planMatcher()
+        .include(expectedPlan)
+        .match();
 
       testBuilder()
-        .optionSettingQueriesForTestQuery(sliceTargetSmall)
-        .optionSettingQueriesForBaseline(sliceTargetDefault)
+        .optionSettingQueriesForBaseline(SLICE_TARGET_DEFAULT)
         .unOrdered()
         .sqlQuery(query)
         .sqlBaselineQuery(query)
         .build()
         .run();
     } finally {
-      test(sliceTargetDefault);
-      test(defaultDistribute);
+      client.resetSession(ExecConstants.SLICE_TARGET);
+      client.resetSession(PlannerSettings.UNIONALL_DISTRIBUTE_KEY);
     }
   }
 
@@ -1311,7 +1352,12 @@ public class TestUnionAll extends BaseTestQuery {
                 ".*Filter.*\n" +
                     ".*Scan.*columns=\\[`r_regionkey`\\]"};
 
-    PlanTestBase.testPlanMatchingPatterns(query, expectedPlan, null);
+      queryBuilder()
+        .sql(query)
+        .planMatcher()
+        .include(expectedPlan)
+        .match();
+
 
     testBuilder()
         .sqlQuery(query)
@@ -1341,5 +1387,4 @@ public class TestUnionAll extends BaseTestQuery {
       .build()
       .run();
   }
-
 }
