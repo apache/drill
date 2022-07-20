@@ -32,6 +32,7 @@ import org.apache.drill.common.types.TypeProtos.MinorType;
 import com.google.protobuf.TextFormat;
 
 public class Types {
+  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(Types.class);
 
   public static final int MAX_VARCHAR_LENGTH = 65535;
   public static final int UNDEFINED = 0;
@@ -806,32 +807,44 @@ public class Types {
    * @return type builder
    */
   public static MajorType.Builder calculateTypePrecisionAndScale(MajorType leftType, MajorType rightType, MajorType.Builder typeBuilder) {
-    if (leftType.getMinorType().equals(rightType.getMinorType())) {
-      boolean isScalarString = Types.isScalarStringType(leftType) && Types.isScalarStringType(rightType);
-      boolean isDecimal = isDecimalType(leftType);
-
-      if (isScalarString && leftType.hasPrecision() && rightType.hasPrecision()) {
-        typeBuilder.setPrecision(Math.max(leftType.getPrecision(), rightType.getPrecision()));
-      }
-
-      if (isDecimal) {
-        int scale = Math.max(leftType.getScale(), rightType.getScale());
-        // resulting precision should take into account resulting scale value and be calculated as
-        // sum of two components:
-        // - max integer digits number (precision - scale) for left and right;
-        // - resulting scale.
-        // So for the case of cast(9999 as decimal(4,0)) and cast(1.23 as decimal(3,2))
-        // resulting scale would be Max(0, 2) = 2 and resulting precision
-        // would be Max(4 - 0, 3 - 2) + 2 = 6.
-        // In this case, both values would fit into decimal(6, 2): 9999.00, 1.23
-        int leftNumberOfDigits = leftType.getPrecision() - leftType.getScale();
-        int rightNumberOfDigits = rightType.getPrecision() - rightType.getScale();
-        int precision = Math.max(leftNumberOfDigits, rightNumberOfDigits) + scale;
-
-        typeBuilder.setPrecision(precision);
-        typeBuilder.setScale(scale);
-      }
+    if (!leftType.getMinorType().equals(rightType.getMinorType())) {
+      return typeBuilder;
     }
+
+    if (Types.isScalarStringType(leftType) && leftType.hasPrecision() && rightType.hasPrecision()) {
+      return typeBuilder.setPrecision(Math.max(leftType.getPrecision(), rightType.getPrecision()));
+    }
+
+    MinorType minorType = leftType.getMinorType();
+    if (isDecimalType(leftType)) {
+      int scale = Math.max(leftType.getScale(), rightType.getScale());
+      // resulting precision should take into account resulting scale value and be calculated as
+      // sum of two components:
+      // - max integer digits number (precision - scale) for left and right;
+      // - resulting scale.
+      // So for the case of cast(9999 as decimal(4,0)) and cast(1.23 as decimal(3,2))
+      // resulting scale would be Max(0, 2) = 2 and resulting precision
+      // would be Max(4 - 0, 3 - 2) + 2 = 6.
+      // In this case, both values would fit into decimal(6, 2): 9999.00, 1.23
+      int leftNumberOfDigits = leftType.getPrecision() - leftType.getScale();
+      int rightNumberOfDigits = rightType.getPrecision() - rightType.getScale();
+      int precision = Math.max(leftNumberOfDigits, rightNumberOfDigits) + scale;
+      int maxPrecision = maxPrecision(minorType);
+
+      if (precision > maxPrecision) {
+        logger.warn(
+          "Possible loss of precision: wanted {}({}, {}) but limited to {}({}, {})",
+          minorType, precision, scale,
+          minorType, maxPrecision, scale
+        );
+        precision = maxPrecision;
+      }
+
+      typeBuilder.setPrecision(precision);
+      typeBuilder.setScale(scale);
+      return typeBuilder;
+    }
+
     return typeBuilder;
   }
 

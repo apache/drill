@@ -195,4 +195,31 @@ public class TestVarlenDecimal extends ClusterTest {
       run("drop table if exists dfs.tmp.t");
     }
   }
+
+  @Test // DRILL-7960
+  public void testWideningLimit() throws Exception {
+    // A union of VARDECIMALs that requires a widening to an unsupported
+    // DECIMAL(40, 6). The resulting column should be limited DECIMAL(38, 6)
+    // and a precision loss warning logged.
+    String query = "SELECT CAST(10 AS DECIMAL(38, 4)) AS `Col1` " +
+      "UNION ALL " +
+      "SELECT CAST(22 AS DECIMAL(29, 6)) AS `Col1`";
+
+    testBuilder().sqlQuery(query)
+      .unOrdered()
+      .baselineColumns("Col1")
+      .baselineValues(new BigDecimal("10.000000"))
+      .baselineValues(new BigDecimal("22.000000"))
+      .go();
+
+    List<Pair<SchemaPath, TypeProtos.MajorType>> expectedSchema = Collections.singletonList(Pair.of(
+        SchemaPath.getSimplePath("Col1"),
+        Types.withPrecisionAndScale(MinorType.VARDECIMAL, DataMode.REQUIRED, 38, 6)
+    ));
+
+    testBuilder()
+        .sqlQuery(query)
+        .schemaBaseLine(expectedSchema)
+        .go();
+  }
 }
