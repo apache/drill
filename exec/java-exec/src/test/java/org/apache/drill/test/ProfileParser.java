@@ -129,7 +129,7 @@ public class ProfileParser {
 
     public void parsePlans(String plan) {
       plans = new ArrayList<>();
-      String parts[] = plan.split("\n");
+      String[] parts = plan.split("\n");
       for (String part : parts) {
         plans.add(part);
         OperatorSummary opDef = new OperatorSummary(part);
@@ -206,10 +206,10 @@ public class ProfileParser {
   }
 
   private static List<FieldDef> parseCols(String cols) {
-    String parts[] = cols.split(", ");
+    String[] parts = cols.split(", ");
     List<FieldDef> fields = new ArrayList<>();
     for (String part : parts) {
-      String halves[] = part.split(" ");
+      String[] halves = part.split(" ");
       fields.add(new FieldDef(halves[1], halves[0]));
     }
     return fields;
@@ -241,7 +241,7 @@ public class ProfileParser {
   private void aggregateOpers() {
     for (FragInfo major : fragments.values()) {
       for (OperatorSummary opDef : major.ops) {
-        int sumPeak = 0;
+        long sumPeak = 0;
         opDef.execCount = opDef.opExecs.size();
         for (OperatorProfile op : opDef.opExecs) {
           Preconditions.checkState(major.id == op.majorFragId);
@@ -263,7 +263,7 @@ public class ProfileParser {
 
   public void buildTree() {
     int currentLevel = 0;
-    OperatorSummary opStack[] = new OperatorSummary[topoOrder.size()];
+    OperatorSummary[] opStack = new OperatorSummary[topoOrder.size()];
     for (OperatorSummary opDef : topoOrder) {
       currentLevel = opDef.globalLevel;
       opStack[currentLevel] = opDef;
@@ -307,10 +307,10 @@ public class ProfileParser {
     Matcher m = p.matcher(plan);
     if (! m.find()) { return null; }
     String frag = m.group(1);
-    String parts[] = frag.split(", ");
+    String[] parts = frag.split(", ");
     List<FieldDef> fields = new ArrayList<>();
     for (String part : parts) {
-      String halves[] = part.split(" ");
+      String[] halves = part.split(" ");
       fields.add(new FieldDef(halves[1], halves[0]));
     }
     return fields;
@@ -463,10 +463,11 @@ public class ProfileParser {
     }
 
     public long getMetric(int id) {
-      JsonValue value = metrics.get(id);
+      JsonNumber value = metrics.get(id);
       if (value == null) {
-        return 0; }
-      return ((JsonNumber) value).longValue();
+        return 0;
+      }
+      return value.longValue();
     }
 
     @Override
@@ -673,9 +674,9 @@ public class ProfileParser {
       final StringBuilder nodeBuilder = new StringBuilder();
       nodeBuilder.append(String.format("%02d-%02d ", node.majorId, node.stepId));
       String indent = indentString(indentLevel, ". ");
-      nodeBuilder.append(indent + node.name);
+      nodeBuilder.append(indent).append(node.name);
       if (node.opName != null) {
-        nodeBuilder.append(" (" + node.opName + ")");
+        nodeBuilder.append(" (").append(node.opName).append(")");
       }
       logger.info(nodeBuilder.toString());
 
@@ -835,7 +836,7 @@ public class ProfileParser {
       }
       sb.append(node.name);
       if (node.opName != null) {
-        sb.append(" (" + node.opName + ")");
+        sb.append(" (").append(node.opName).append(")");
       }
       logger.info(sb.toString());
       printTimes(node, "  ");
@@ -854,9 +855,9 @@ public class ProfileParser {
       final StringBuilder sb = new StringBuilder();
       sb.append(String.format("%02d-%02d ", node.majorId, node.stepId));
       String indent = indentString(indentLevel, ". ");
-      sb.append(indent + node.name);
+      sb.append(indent).append(node.name);
       if (node.opName != null) {
-        sb.append(" (" + node.opName + ")");
+        sb.append(" (").append(node.opName).append(")");
       }
       logger.info(sb.toString());
       indent = indentString(15);
@@ -911,7 +912,7 @@ public class ProfileParser {
   public static long percent(long value, long total) {
     if (total == 0) {
       return 0; }
-    return Math.round(value * 100 / total);
+    return Math.round(value * 100 / (double)total);
   }
 
   public List<OperatorSummary> getOpDefn(String target) {

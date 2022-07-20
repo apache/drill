@@ -462,7 +462,7 @@ public class TestTableGenerator {
 
     BufferedMutator table = conn.getBufferedMutator(tableName);
 
-    for (float i = (float)0.5; i <= 100.00; i += 0.75) {
+    for (float i = 0.5f; i <= 100.00; i += 0.75f) {
       byte[] bytes = new byte[5];
       PositionedByteRange br = new SimplePositionedMutableByteRange(bytes, 0, 5);
       OrderedBytes.encodeFloat32(br, i,Order.ASCENDING);
@@ -586,7 +586,7 @@ public class TestTableGenerator {
 
     BufferedMutator table = conn.getBufferedMutator(tableName);
 
-    for (float i = (float)0.5; i <= 100.00; i += 0.75) {
+    for (float i = 0.5f; i <= 100.00; i += 0.75f) {
       byte[] bytes = new byte[5];
       PositionedByteRange br = new SimplePositionedMutableByteRange(bytes, 0, 5);
       OrderedBytes.encodeFloat32(br, i, Order.DESCENDING);
