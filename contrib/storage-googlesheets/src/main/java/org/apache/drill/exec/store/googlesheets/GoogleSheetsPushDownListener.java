@@ -47,6 +47,9 @@ import java.util.Set;
  * <li>If the value is one with an unambiguous conversion to
  * a string. (That is, not dates, binary, maps, etc.)</li>
  * </ul>
+ *
+ * Note, at the moment, no filters are pushed down. Once we figure out the Google SDK for this,
+ * we can easily uncomment out the lines below and the filters will be pushed down.
  */
 public class GoogleSheetsPushDownListener implements FilterPushDownListener {
 

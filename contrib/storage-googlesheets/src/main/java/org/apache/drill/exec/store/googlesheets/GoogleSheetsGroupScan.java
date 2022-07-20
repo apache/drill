@@ -298,6 +298,7 @@ public class GoogleSheetsGroupScan extends AbstractGroupScan {
     }
 
     // No good estimates at all, just make up something.
+    // TODO It may be possible to obtain this from the Google SDK.
     double estRowCount = 10_000;
     if (maxRecords > 0) {
       estRowCount = maxRecords;
