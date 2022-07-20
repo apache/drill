@@ -176,7 +176,7 @@ public class DrillSeparatePlanningTest extends ClusterTest {
   }
 
   private int getResultsHelper(final QueryPlanFragments planFragments) throws Exception {
-    int totalRows = 0;
+    long totalRows = 0;
     for (PlanFragment fragment : planFragments.getFragmentsList()) {
       DrillbitEndpoint assignedNode = fragment.getAssignment();
       ClientFixture fragmentClient = cluster.client(assignedNode.getAddress(), assignedNode.getUserPort());
@@ -198,6 +198,6 @@ public class DrillSeparatePlanningTest extends ClusterTest {
       totalRows += summary.recordCount();
       fragmentClient.close();
     }
-    return totalRows;
+    return Math.toIntExact(totalRows);
   }
 }

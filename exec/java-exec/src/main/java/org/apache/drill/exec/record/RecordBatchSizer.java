@@ -466,7 +466,7 @@ public class RecordBatchSizer {
     private void allocateMap(AbstractMapVector map, int recordCount) {
       if (map instanceof AbstractRepeatedMapVector) {
         ((AbstractRepeatedMapVector) map).allocateOffsetsNew(recordCount);
-          recordCount *= getEntryCardinalityForAlloc();
+          recordCount *= Math.round(getEntryCardinalityForAlloc());
         }
 
       for (ValueVector vector : map) {
@@ -476,7 +476,7 @@ public class RecordBatchSizer {
 
     private void allocateRepeatedList(RepeatedListVector vector, int recordCount) {
       vector.allocateOffsetsNew(recordCount);
-      recordCount *= getEntryCardinalityForAlloc();
+      recordCount *= Math.round(getEntryCardinalityForAlloc());
       ColumnSize child = children.get(vector.getField().getName());
       if (vector.getDataVector() != null) {
         child.allocateVector(vector.getDataVector(), recordCount);
