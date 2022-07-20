@@ -114,7 +114,7 @@
     <protobuf.version>3.16.1</protobuf.version>
     <protostuff.version>1.7.1</protostuff.version>
     <codemodel.version>2.6</codemodel.version>
-    <joda.version>2.10.5</joda.version>
+    <joda.version>2.10.14</joda.version>
     <javax.el.version>3.0.0</javax.el.version>
     <surefire.version>3.0.0-M7</surefire.version>
     <jna.version>5.8.0</jna.version>
@@ -130,7 +130,6 @@
     <testcontainers.version>1.16.3</testcontainers.version>
     <typesafe.config.version>1.0.0</typesafe.config.version>
     <commons.codec.version>1.14</commons.codec.version>
-    <xalan.version>2.7.2</xalan.version>
     <xerces.version>2.12.2</xerces.version>
     <commons.beanutils.version>1.9.4</commons.beanutils.version>
     <httpdlog-parser.version>5.8</httpdlog-parser.version>
@@ -1985,11 +1984,6 @@
         <version>${xerces.version}</version>
       </dependency>
       <dependency>
-        <groupId>xalan</groupId>
-        <artifactId>xalan</artifactId>
-        <version>${xalan.version}</version>
-      </dependency>
-      <dependency>
         <groupId>commons-beanutils</groupId>
         <artifactId>commons-beanutils</artifactId>
         <version>${commons.beanutils.version}</version>
@@ -2762,11 +2756,6 @@
             <version>${xerces.version}</version>
           </dependency>
           <dependency>
-            <groupId>xalan</groupId>
-            <artifactId>xalan</artifactId>
-            <version>${xalan.version}</version>
-          </dependency>
-          <dependency>
             <groupId>net.sf.jpam</groupId>
             <artifactId>jpam</artifactId>
             <version>1.1</version>
@@ -3133,11 +3122,6 @@
             <groupId>xerces</groupId>
             <artifactId>xercesImpl</artifactId>
             <version>${xerces.version}</version>
-          </dependency>
-          <dependency>
-            <groupId>xalan</groupId>
-            <artifactId>xalan</artifactId>
-            <version>${xalan.version}</version>
           </dependency>
           <dependency>
             <groupId>org.apache.parquet</groupId>
@@ -4029,11 +4013,6 @@
             <groupId>xerces</groupId>
             <artifactId>xercesImpl</artifactId>
             <version>${xerces.version}</version>
-          </dependency>
-          <dependency>
-            <groupId>xalan</groupId>
-            <artifactId>xalan</artifactId>
-            <version>${xalan.version}</version>
           </dependency>
           <dependency>
             <groupId>org.apache.parquet</groupId>
