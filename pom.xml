@@ -132,7 +132,6 @@
     <commons.codec.version>1.14</commons.codec.version>
     <xalan.version>2.7.2</xalan.version>
     <xerces.version>2.12.2</xerces.version>
-    <commons.configuration.version>1.10</commons.configuration.version>
     <commons.beanutils.version>1.9.4</commons.beanutils.version>
     <httpdlog-parser.version>5.8</httpdlog-parser.version>
     <yauaa.version>7.1.0</yauaa.version>
@@ -1989,17 +1988,6 @@
         <groupId>xalan</groupId>
         <artifactId>xalan</artifactId>
         <version>${xalan.version}</version>
-      </dependency>
-      <dependency>
-        <groupId>commons-configuration</groupId>
-        <artifactId>commons-configuration</artifactId>
-        <version>${commons.configuration.version}</version>
-        <exclusions>
-          <exclusion>
-            <groupId>commons-logging</groupId>
-            <artifactId>commons-logging</artifactId>
-          </exclusion>
-        </exclusions>
       </dependency>
       <dependency>
         <groupId>commons-beanutils</groupId>
