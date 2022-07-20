@@ -149,7 +149,7 @@ public class TestWriter extends BaseTestQuery {
 
     RecordBatchLoader batchLoader = new RecordBatchLoader(getAllocator());
 
-    int recordsWritten = 0;
+    long recordsWritten = 0;
     for (QueryDataBatch batch : results) {
       batchLoader.load(batch.getHeader().getDef(), batch.getData());
 

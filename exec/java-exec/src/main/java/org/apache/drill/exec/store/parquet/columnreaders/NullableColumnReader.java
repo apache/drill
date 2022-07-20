@@ -173,7 +173,7 @@ abstract class NullableColumnReader<V extends ValueVector> extends ColumnReader<
         pageReader.readPosInBytes = readStartInBytes + readLength;
       }
 
-      pageReader.valuesRead += recordsReadInThisIteration;
+      pageReader.valuesRead += Math.toIntExact(recordsReadInThisIteration);
 
       totalValuesRead += runLength + nullRunLength;
 
@@ -287,7 +287,7 @@ abstract class NullableColumnReader<V extends ValueVector> extends ColumnReader<
         pageReader.readPosInBytes = readStartInBytes + readLength;
       }
 
-      pageReader.valuesRead += recordsReadInThisIteration;
+      pageReader.valuesRead += Math.toIntExact(recordsReadInThisIteration);
       totalValuesRead += numNonNullValues + numNullValues;
       currPageValuesProcessed += numNonNullValues + numNullValues;
       valueCount += numNonNullValues + numNullValues;

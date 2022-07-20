@@ -140,7 +140,7 @@ public class VectorInitializer {
       if (hint == null) {
         recordCount *= 10;
       } else {
-        recordCount *= hint.elementCount;
+        recordCount *= Math.round(hint.elementCount);
       }
     }
     prefix += map.getField().getName() + ".";
