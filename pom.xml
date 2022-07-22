@@ -2374,6 +2374,27 @@
 
           <dependency>
             <groupId>org.apache.hadoop</groupId>
+            <artifactId>hadoop-common</artifactId>
+            <version>${hadoop.version}</version>
+            <scope>test</scope>
+            <classifier>tests</classifier>
+            <exclusions>
+              <exclusion>
+                <groupId>org.codehaus.jackson</groupId>
+                <artifactId>jackson-xc</artifactId>
+              </exclusion>
+              <exclusion>
+                <groupId>org.codehaus.jackson</groupId>
+                <artifactId>jackson-jaxrs</artifactId>
+              </exclusion>
+              <exclusion>
+                <artifactId>slf4j-log4j12</artifactId>
+                <groupId>org.slf4j</groupId>
+              </exclusion>
+            </exclusions>
+          </dependency>
+          <dependency>
+            <groupId>org.apache.hadoop</groupId>
             <artifactId>hadoop-hdfs</artifactId>
             <version>${hadoop.version}</version>
             <scope>test</scope>
@@ -3882,6 +3903,14 @@
                 <groupId>org.slf4j</groupId>
               </exclusion>
               <exclusion>
+                <artifactId>reload4j</artifactId>
+                <groupId>ch.qos.reload4j</groupId>
+              </exclusion>
+              <exclusion>
+                <artifactId>slf4j-reload4j</artifactId>
+                <groupId>org.slf4j</groupId>
+              </exclusion>
+              <exclusion>
                 <artifactId>mockito-all</artifactId>
                 <groupId>org.mockito</groupId>
               </exclusion>
@@ -3938,6 +3967,10 @@
               </exclusion>
               <exclusion>
                 <artifactId>slf4j-log4j12</artifactId>
+                <groupId>org.slf4j</groupId>
+              </exclusion>
+              <exclusion>
+                <artifactId>slf4j-reload4j</artifactId>
                 <groupId>org.slf4j</groupId>
               </exclusion>
               <exclusion>
@@ -4096,6 +4129,10 @@
                 <groupId>commons-logging</groupId>
                 <artifactId>commons-logging</artifactId>
               </exclusion>
+              <exclusion>
+                <artifactId>reload4j</artifactId>
+                <groupId>ch.qos.reload4j</groupId>
+              </exclusion>
             </exclusions>
           </dependency>
           <dependency>
@@ -4115,6 +4152,31 @@
             </exclusions>
           </dependency>
           <!-- Test Dependencies -->
+          <dependency>
+            <groupId>org.apache.hadoop</groupId>
+            <artifactId>hadoop-common</artifactId>
+            <version>${hadoop.version}</version>
+            <classifier>tests</classifier>
+            <scope>test</scope>
+            <exclusions>
+              <exclusion>
+                <groupId>commons-logging</groupId>
+                <artifactId>commons-logging</artifactId>
+              </exclusion>
+              <exclusion>
+                <artifactId>reload4j</artifactId>
+                <groupId>ch.qos.reload4j</groupId>
+              </exclusion>
+              <exclusion>
+                <groupId>org.slf4j</groupId>
+                <artifactId>slf4j-reload4j</artifactId>
+              </exclusion>
+              <exclusion>
+                <groupId>javax.servlet</groupId>
+                <artifactId>servlet-api</artifactId>
+              </exclusion>
+            </exclusions>
+          </dependency>
           <dependency>
             <groupId>org.apache.hadoop</groupId>
             <artifactId>hadoop-hdfs</artifactId>
@@ -4280,6 +4342,10 @@
                 <groupId>org.slf4j</groupId>
               </exclusion>
               <exclusion>
+                <groupId>org.slf4j</groupId>
+                <artifactId>slf4j-reload4j</artifactId>
+              </exclusion>
+              <exclusion>
                 <artifactId>log4j</artifactId>
                 <groupId>log4j</groupId>
               </exclusion>
@@ -4323,6 +4389,10 @@
               <exclusion>
                 <artifactId>slf4j-log4j12</artifactId>
                 <groupId>org.slf4j</groupId>
+              </exclusion>
+              <exclusion>
+                <groupId>org.slf4j</groupId>
+                <artifactId>slf4j-reload4j</artifactId>
               </exclusion>
               <exclusion>
                 <artifactId>asm</artifactId>

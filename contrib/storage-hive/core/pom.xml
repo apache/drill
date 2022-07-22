@@ -164,6 +164,10 @@
           <groupId>commons-codec</groupId>
           <artifactId>commons-codec</artifactId>
         </exclusion>
+        <exclusion>
+          <artifactId>reload4j</artifactId>
+          <groupId>ch.qos.reload4j</groupId>
+        </exclusion>
       </exclusions>
     </dependency>
     <!-- Used by complex types tests for loading nested data -->
@@ -212,6 +216,10 @@
         <exclusion>
           <groupId>org.apache.logging.log4j</groupId>
           <artifactId>log4j-web</artifactId>
+        </exclusion>
+        <exclusion>
+          <artifactId>reload4j</artifactId>
+          <groupId>ch.qos.reload4j</groupId>
         </exclusion>
         <exclusion>
           <groupId>org.mortbay.jetty</groupId>
