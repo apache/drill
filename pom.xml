@@ -2200,11 +2200,23 @@
             <groupId>org.apache.hadoop</groupId>
             <artifactId>hadoop-mapreduce-client-jobclient</artifactId>
             <version>${hadoop.version}</version>
+            <exclusions>
+              <exclusion>
+                <groupId>io.netty</groupId>
+                <artifactId>netty</artifactId>
+              </exclusion>
+            </exclusions>
           </dependency>
           <dependency>
             <groupId>org.apache.hadoop</groupId>
             <artifactId>hadoop-mapreduce-client-core</artifactId>
             <version>${hadoop.version}</version>
+            <exclusions>
+              <exclusion>
+                <groupId>io.netty</groupId>
+                <artifactId>netty</artifactId>
+              </exclusion>
+            </exclusions>
           </dependency>
           <dependency>
             <groupId>org.apache.hadoop</groupId>
@@ -2235,8 +2247,6 @@
             <groupId>org.apache.hadoop</groupId>
             <artifactId>hadoop-common</artifactId>
             <version>${hadoop.version}</version>
-            <scope>test</scope>
-            <classifier>tests</classifier>
             <exclusions>
               <exclusion>
                 <groupId>org.mortbay.jetty</groupId>
@@ -2332,7 +2342,6 @@
             <groupId>org.apache.hadoop</groupId>
             <artifactId>hadoop-hdfs</artifactId>
             <version>${hadoop.version}</version>
-            <scope>test</scope>
             <exclusions>
               <exclusion>
                 <groupId>commons-logging</groupId>
@@ -2349,6 +2358,14 @@
               <exclusion>
                 <groupId>log4j</groupId>
                 <artifactId>log4j</artifactId>
+              </exclusion>
+              <exclusion>
+                <groupId>io.netty</groupId>
+                <artifactId>netty-all</artifactId>
+              </exclusion>
+              <exclusion>
+                <groupId>io.netty</groupId>
+                <artifactId>netty</artifactId>
               </exclusion>
             </exclusions>
           </dependency>
@@ -2389,6 +2406,14 @@
               <exclusion>
                 <groupId>org.codehaus.jackson</groupId>
                 <artifactId>jackson-mapper-asl</artifactId>
+              </exclusion>
+              <exclusion>
+                <groupId>io.netty</groupId>
+                <artifactId>netty-all</artifactId>
+              </exclusion>
+              <exclusion>
+                <groupId>io.netty</groupId>
+                <artifactId>netty</artifactId>
               </exclusion>
             </exclusions>
           </dependency>
@@ -3967,6 +3992,58 @@
           </dependency>
           <dependency>
             <groupId>org.apache.hadoop</groupId>
+            <artifactId>hadoop-mapreduce-client-core</artifactId>
+            <version>${hadoop.version}</version>
+            <scope>compile</scope>
+            <exclusions>
+              <exclusion>
+                <artifactId>reload4j</artifactId>
+                <groupId>ch.qos.reload4j</groupId>
+              </exclusion>
+              <exclusion>
+                <groupId>org.slf4j</groupId>
+                <artifactId>slf4j-reload4j</artifactId>
+              </exclusion>
+              <exclusion>
+                <groupId>io.netty</groupId>
+                <artifactId>netty</artifactId>
+              </exclusion>
+            </exclusions>
+          </dependency>
+          <dependency>
+            <groupId>org.apache.hadoop</groupId>
+            <artifactId>hadoop-auth</artifactId>
+            <version>${hadoop.version}</version>
+            <scope>compile</scope>
+            <exclusions>
+              <exclusion>
+                <groupId>org.slf4j</groupId>
+                <artifactId>slf4j-reload4j</artifactId>
+              </exclusion>
+              <exclusion>
+                <artifactId>reload4j</artifactId>
+                <groupId>ch.qos.reload4j</groupId>
+              </exclusion>
+              <exclusion>
+                <groupId>org.ow2.asm</groupId>
+                <artifactId>asm</artifactId>
+              </exclusion>
+            </exclusions>
+          </dependency>
+          <dependency>
+            <groupId>org.apache.hadoop</groupId>
+            <artifactId>hadoop-yarn-common</artifactId>
+            <version>${hadoop.version}</version>
+            <scope>compile</scope>
+            <exclusions>
+              <exclusion>
+                <artifactId>reload4j</artifactId>
+                <groupId>ch.qos.reload4j</groupId>
+              </exclusion>
+            </exclusions>
+          </dependency>
+          <dependency>
+            <groupId>org.apache.hadoop</groupId>
             <artifactId>hadoop-yarn-client</artifactId>
             <version>${hadoop.version}</version>
             <scope>compile</scope>
@@ -4063,6 +4140,22 @@
               <exclusion>
                 <groupId>log4j</groupId>
                 <artifactId>log4j</artifactId>
+              </exclusion>
+              <exclusion>
+                <artifactId>reload4j</artifactId>
+                <groupId>ch.qos.reload4j</groupId>
+              </exclusion>
+              <exclusion>
+                <groupId>org.slf4j</groupId>
+                <artifactId>slf4j-reload4j</artifactId>
+              </exclusion>
+              <exclusion>
+                <groupId>io.netty</groupId>
+                <artifactId>netty-all</artifactId>
+              </exclusion>
+              <exclusion>
+                <groupId>io.netty</groupId>
+                <artifactId>netty</artifactId>
               </exclusion>
             </exclusions>
           </dependency>
