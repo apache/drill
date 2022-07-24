@@ -72,7 +72,9 @@ public class DictColumnMetadata extends AbstractMapColumnMetadata {
 
   @Override
   public ColumnMetadata cloneEmpty() {
-    return new DictColumnMetadata(name, mode, new TupleSchema());
+    ColumnMetadata colMeta = new DictColumnMetadata(name, mode, new TupleSchema());
+    colMeta.setProperties(this.properties());
+    return colMeta;
   }
 
   @Override

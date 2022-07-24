@@ -867,7 +867,6 @@ public class ExcelBatchReader implements ManagedReader {
     }
   }
 
-
   public static class TimestampCellWriter extends ExcelBatchReader.CellWriter {
     TimestampCellWriter(ScalarWriter columnWriter) {
       super(columnWriter);
