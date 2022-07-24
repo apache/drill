@@ -22,7 +22,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.drill.categories.RowSetTest;
 import org.apache.drill.common.util.DrillFileUtils;
 import org.apache.drill.exec.oauth.PersistentTokenTable;
-import org.apache.drill.exec.physical.rowSet.RowSet;
 import org.apache.drill.exec.store.StoragePluginRegistry;
 import org.apache.drill.exec.store.StoragePluginRegistry.PluginException;
 import org.apache.drill.shaded.guava.com.google.common.base.Charsets;
@@ -54,6 +53,12 @@ public class TestGoogleSheetsWriter extends ClusterTest {
   private static StoragePluginRegistry pluginRegistry;
   private static String accessToken;
   private static String refreshToken;
+
+  // Note on testing:  Testing the writing capabilites of this plugin is challenging.
+  // The primary issue is that when you execute a CTAS query, you do so using the file name.
+  // However, it does not seem possible to retrieve the created file's ID which is what you
+  // need to actually verify that the query successfully wrote the results.  Therefore, at this
+  // juncture, I can only recommend manual tests for the writing capabilities of this plugin.
 
   @BeforeClass
   public static void init() throws Exception {
@@ -97,27 +102,6 @@ public class TestGoogleSheetsWriter extends ClusterTest {
     QuerySummary insertResults = queryBuilder().sql(query).run();
     assertTrue(insertResults.succeeded());
   }
-
-  @Test
-  public void testCTASFromFile() throws Exception {
-    try {
-      initializeTokens();
-    } catch (PluginException e) {
-      fail(e.getMessage());
-    }
-
-    /*String query = "CREATE TABLE googlesheets.`test_sheet`.`test_table` (ID, NAME) AS " +
-      "SELECT * FROM (VALUES(1,2), (3,4))";*/
-   String sql = "SELECT * FROM table(cp.`data/Drill_Test_Data.xlsx` (type => 'excel', sheetName => 'MixedSheet'))";
-
-    //String sql = "SHOW FILES IN dfs.`data/`";
-    RowSet results = queryBuilder().sql(sql).rowSet();
-    results.print();
-    // Create the table and insert the values
-    //QuerySummary insertResults = queryBuilder().sql(query).run();
-    //assertTrue(insertResults.succeeded());
-  }
-
 
   /**
    * This function is used for testing only.  It initializes a {@link PersistentTokenTable} and populates it
