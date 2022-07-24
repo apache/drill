@@ -30,19 +30,23 @@ import org.apache.drill.common.logical.OAuthConfig;
 import org.apache.drill.common.logical.StoragePluginConfig;
 import org.apache.drill.common.logical.security.CredentialsProvider;
 import org.apache.drill.exec.store.security.CredentialProviderUtils;
-import org.apache.drill.exec.store.security.OAuthTokenCredentials;
+import org.apache.drill.exec.store.security.oauth.OAuthTokenCredentials;
 
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
 
 @JsonTypeName(GoogleSheetsStoragePluginConfig.NAME)
 public class GoogleSheetsStoragePluginConfig extends StoragePluginConfig {
   private static final String AUTH_URI = "https://accounts.google.com/o/oauth2/auth";
   private static final String TOKEN_URI = "https://oauth2.googleapis.com/token";
   private static final String GOOGLE_SHEET_SCOPE = "https://www.googleapis.com/auth/spreadsheets";
+  private static final String GOOGLE_DRIVE_SCOPE = "https://www.googleapis.com/auth/drive.readonly";
+  private static final String DEFAULT_SCOPE = GOOGLE_SHEET_SCOPE + " " + GOOGLE_DRIVE_SCOPE;
+  private static final String DEFAULT_RESPONSE_TYPE = "code";
   public static final String NAME = "googlesheets";
   private final List<String> redirectUris;
   private final String authUri;
@@ -86,8 +90,8 @@ public class GoogleSheetsStoragePluginConfig extends StoragePluginConfig {
           firstRun = false;
         }
         // Add additional parameter for Google Authentication
-        authParams.put("response_type", "code");
-        authParams.put("scope",GOOGLE_SHEET_SCOPE);
+        authParams.put("response_type", DEFAULT_RESPONSE_TYPE);
+        authParams.put("scope",DEFAULT_SCOPE);
       }
 
       this.oAuthConfig = OAuthConfig.builder()
@@ -116,18 +120,28 @@ public class GoogleSheetsStoragePluginConfig extends StoragePluginConfig {
   }
 
   @JsonIgnore
-  public OAuthTokenCredentials getOAuthCredentials() {
-    return new OAuthTokenCredentials(credentialsProvider);
+  public Optional<OAuthTokenCredentials> getOAuthCredentials() {
+    return new OAuthTokenCredentials.Builder()
+      .setCredentialsProvider(credentialsProvider)
+      .build();
   }
 
   @JsonProperty("clientID")
   public String getClientID() {
-    return getOAuthCredentials().getClientID();
+    if(getOAuthCredentials().isPresent()) {
+      return getOAuthCredentials().get().getClientID();
+    } else {
+      return null;
+    }
   }
 
   @JsonProperty("clientSecret")
   public String getClientSecret() {
-    return getOAuthCredentials().getClientSecret();
+    if (getOAuthCredentials().isPresent()) {
+      return getOAuthCredentials().get().getClientSecret();
+    } else {
+      return null;
+    }
   }
 
   @JsonProperty("allTextMode")

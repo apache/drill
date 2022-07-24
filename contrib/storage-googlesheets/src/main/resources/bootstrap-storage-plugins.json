@@ -17,7 +17,7 @@
         "credentials": {
           "clientID": "<YOUR CLIENT ID>",
           "clientSecret": "<YOUR CLIENT SECRET>",
-          "tokenURI": "https://oauth2.googleapis.com/token"
+          "tokenURI": "https://oauth2.googleapis.com/token https://www.googleapis.com/auth/drive.readonly"
         },
         "userCredentials": {}
       },
