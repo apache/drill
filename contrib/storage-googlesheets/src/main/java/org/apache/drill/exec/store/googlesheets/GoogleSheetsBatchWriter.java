@@ -22,6 +22,7 @@ import com.google.api.services.sheets.v4.Sheets;
 import com.google.api.services.sheets.v4.model.Spreadsheet;
 import com.google.api.services.sheets.v4.model.SpreadsheetProperties;
 import org.apache.drill.common.exceptions.UserException;
+import org.apache.drill.exec.expr.fn.impl.StringFunctionHelpers;
 import org.apache.drill.exec.expr.holders.BigIntHolder;
 import org.apache.drill.exec.expr.holders.BitHolder;
 import org.apache.drill.exec.expr.holders.DateHolder;
@@ -476,12 +477,12 @@ public class GoogleSheetsBatchWriter extends AbstractRecordWriter {
     public void writeField() {
       reader.read(holder);
       if (reader.isSet()) {
-        byte[] bytes = new byte[holder.end - holder.start];
-        holder.buffer.getBytes(holder.start, bytes);
+        String input = StringFunctionHelpers.toStringFromUTF8(holder.start, holder.end, holder.buffer);
+        rowList.add(input);
       }
-      rowList.add(holder);
     }
   }
+
 
   @Override
   public FieldConverter getNewVarCharConverter(int fieldId, String fieldName, FieldReader reader) {
@@ -499,9 +500,8 @@ public class GoogleSheetsBatchWriter extends AbstractRecordWriter {
     public void writeField() {
       reader.read(holder);
       if (reader.isSet()) {
-        byte[] bytes = new byte[holder.end - holder.start];
-        holder.buffer.getBytes(holder.start, bytes);
-        rowList.add(holder);
+        String input = StringFunctionHelpers.toStringFromUTF8(holder.start, holder.end, holder.buffer);
+        rowList.add(input);
       }
     }
   }
