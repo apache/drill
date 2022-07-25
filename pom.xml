@@ -94,7 +94,7 @@
     <msgpack.version>0.6.6</msgpack.version>
     <reflections.version>0.9.10</reflections.version>
     <avro.version>1.11.0</avro.version>
-    <metrics.version>4.0.2</metrics.version>
+    <metrics.version>4.2.10</metrics.version>
     <jetty.version>9.4.44.v20210927</jetty.version>
     <jersey.version>2.34</jersey.version>
     <javax.validation.api>2.0.1.Final</javax.validation.api>
