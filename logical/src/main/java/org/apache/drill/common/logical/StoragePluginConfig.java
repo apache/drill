@@ -34,7 +34,6 @@ import org.slf4j.LoggerFactory;
 
 @JsonTypeInfo(use = JsonTypeInfo.Id.NAME, property = "type")
 @JsonInclude(JsonInclude.Include.NON_DEFAULT)
-@JsonFormat(with = JsonFormat.Feature.ACCEPT_CASE_INSENSITIVE_PROPERTIES)
 public abstract class StoragePluginConfig {
 
   Logger logger = LoggerFactory.getLogger(StoragePluginConfig.class);
