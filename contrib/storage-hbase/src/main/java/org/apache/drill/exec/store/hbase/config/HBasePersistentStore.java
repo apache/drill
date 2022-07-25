@@ -17,7 +17,6 @@
  */
 package org.apache.drill.exec.store.hbase.config;
 
-import static org.apache.drill.exec.store.hbase.config.HBasePersistentStoreProvider.FAMILY_NAME;
 import static org.apache.drill.exec.store.hbase.config.HBasePersistentStoreProvider.QUALIFIER_NAME;
 
 import java.io.IOException;
@@ -48,10 +47,11 @@ public class HBasePersistentStore<V> extends BasePersistentStore<V> {
   private final String hbaseTableName;
 
   private final String tableName;
+  private final byte[] familyName;
   private final byte[] tableNameStartKey;
   private final byte[] tableNameStopKey;
 
-  public HBasePersistentStore(PersistentStoreConfig<V> config, Table table) {
+  public HBasePersistentStore(PersistentStoreConfig<V> config, Table table, byte[] family) {
     this.tableName = config.getName() + '\0';
     this.tableNameStartKey = Bytes.toBytes(tableName); // "tableName\x00"
     this.tableNameStopKey = this.tableNameStartKey.clone();
@@ -59,6 +59,7 @@ public class HBasePersistentStore<V> extends BasePersistentStore<V> {
     this.config = config;
     this.hbaseTable = table;
     this.hbaseTableName = table.getName().getNameAsString();
+    this.familyName = family;
   }
 
   @Override
@@ -70,7 +71,7 @@ public class HBasePersistentStore<V> extends BasePersistentStore<V> {
   public boolean contains(String key) {
     try {
       Get get = new Get(row(key));
-      get.addColumn(FAMILY_NAME, QUALIFIER_NAME);
+      get.addColumn(familyName, QUALIFIER_NAME);
       return hbaseTable.exists(get);
     } catch (IOException e) {
       throw UserException
@@ -82,7 +83,7 @@ public class HBasePersistentStore<V> extends BasePersistentStore<V> {
 
   @Override
   public V get(String key) {
-    return get(key, FAMILY_NAME);
+    return get(key, familyName);
   }
 
   protected synchronized V get(String key, byte[] family) {
@@ -103,7 +104,7 @@ public class HBasePersistentStore<V> extends BasePersistentStore<V> {
 
   @Override
   public void put(String key, V value) {
-    put(key, FAMILY_NAME, value);
+    put(key, familyName, value);
   }
 
   protected synchronized void put(String key, byte[] family, V value) {
@@ -122,8 +123,8 @@ public class HBasePersistentStore<V> extends BasePersistentStore<V> {
   public synchronized boolean putIfAbsent(String key, V value) {
     try {
       Put put = new Put(row(key));
-      put.addColumn(FAMILY_NAME, QUALIFIER_NAME, bytes(value));
-      return hbaseTable.checkAndPut(put.getRow(), FAMILY_NAME, QUALIFIER_NAME, null /*absent*/, put);
+      put.addColumn(familyName, QUALIFIER_NAME, bytes(value));
+      return hbaseTable.checkAndPut(put.getRow(), familyName, QUALIFIER_NAME, null /*absent*/, put);
     } catch (IOException e) {
       throw UserException.dataReadError(e)
           .message("Caught error while putting row '%s' into table '%s'", key, hbaseTableName)
@@ -183,7 +184,7 @@ public class HBasePersistentStore<V> extends BasePersistentStore<V> {
     Iter(int take) {
       try {
         Scan scan = new Scan(tableNameStartKey, tableNameStopKey);
-        scan.addColumn(FAMILY_NAME, QUALIFIER_NAME);
+        scan.addColumn(familyName, QUALIFIER_NAME);
         scan.setCaching(Math.min(take, 100));
         scan.setBatch(take);  // set batch size
         scanner = hbaseTable.getScanner(scan);

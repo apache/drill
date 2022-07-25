@@ -104,8 +104,8 @@ public class TestHBaseTableProvider extends BaseHBaseTest {
       assertTrue("The max size of hfile must be " + MAX_FILESIZE, tableDescriptor.getMaxFileSize() == MAX_FILESIZE);
       assertTrue("The memstore size must be " + MEMSTORE_FLUSHSIZE, tableDescriptor.getMemStoreFlushSize() == MEMSTORE_FLUSHSIZE);
       // Column Family verify
-      assertTrue("The column family not found", tableDescriptor.hasColumnFamily(HBasePersistentStoreProvider.FAMILY_NAME));
-      ColumnFamilyDescriptor columnDescriptor = tableDescriptor.getColumnFamily(HBasePersistentStoreProvider.FAMILY_NAME);
+      assertTrue("The column family not found", tableDescriptor.hasColumnFamily(HBasePersistentStoreProvider.DEFAULT_FAMILY_NAME));
+      ColumnFamilyDescriptor columnDescriptor = tableDescriptor.getColumnFamily(HBasePersistentStoreProvider.DEFAULT_FAMILY_NAME);
       assertTrue("The max number of versions must be " + MAX_VERSIONS, columnDescriptor.getMaxVersions() == MAX_VERSIONS);
       assertTrue("The time-to-live must be " + TTL, columnDescriptor.getTimeToLive() == TTL);
       // TODO native snappy* library not available

@@ -36,7 +36,11 @@ public interface DrillHBaseConstants {
 
   MajorType COLUMN_TYPE = Types.optional(MinorType.VARBINARY);
 
+  String SYS_STORE_PROVIDER_HBASE_NAMESPACE = "drill.exec.sys.store.provider.hbase.namespace";
+
   String SYS_STORE_PROVIDER_HBASE_TABLE = "drill.exec.sys.store.provider.hbase.table";
+
+  String SYS_STORE_PROVIDER_HBASE_FAMILY = "drill.exec.sys.store.provider.hbase.family";
 
   String SYS_STORE_PROVIDER_HBASE_CONFIG = "drill.exec.sys.store.provider.hbase.config";
 

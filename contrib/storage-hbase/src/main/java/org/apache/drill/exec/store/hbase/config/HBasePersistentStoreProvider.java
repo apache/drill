@@ -49,13 +49,15 @@ import org.apache.hadoop.hbase.util.Bytes;
 public class HBasePersistentStoreProvider extends BasePersistentStoreProvider {
   private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(HBasePersistentStoreProvider.class);
 
-  public static final byte[] FAMILY_NAME = Bytes.toBytes("s");
+  public static final byte[] DEFAULT_FAMILY_NAME = Bytes.toBytes("s");
 
   public static final byte[] QUALIFIER_NAME = Bytes.toBytes("d");
 
   private static final String HBASE_CLIENT_ID = "drill-hbase-persistent-store-client";
 
   private final TableName hbaseTableName;
+
+  private final byte[] family;
 
   private Table hbaseTable;
 
@@ -94,7 +96,19 @@ public class HBasePersistentStoreProvider extends BasePersistentStoreProvider {
     if (!columnConfig.isEmpty()) {
       logger.info("Received the column config is {}", columnConfig);
     }
-    hbaseTableName = TableName.valueOf(registry.getConfig().getString(DrillHBaseConstants.SYS_STORE_PROVIDER_HBASE_TABLE));
+    String tableName = registry.getConfig().getString(DrillHBaseConstants.SYS_STORE_PROVIDER_HBASE_TABLE);
+    if (registry.getConfig().hasPath(DrillHBaseConstants.SYS_STORE_PROVIDER_HBASE_NAMESPACE)) {
+      String namespaceStr = registry.getConfig().getString(DrillHBaseConstants.SYS_STORE_PROVIDER_HBASE_NAMESPACE);
+      hbaseTableName = TableName.valueOf(namespaceStr.concat(":").concat(tableName));
+    } else {
+      hbaseTableName = TableName.valueOf(tableName);
+    }
+    if (registry.getConfig().hasPath(DrillHBaseConstants.SYS_STORE_PROVIDER_HBASE_FAMILY)) {
+      String familyStr = registry.getConfig().getString(DrillHBaseConstants.SYS_STORE_PROVIDER_HBASE_FAMILY);
+      family = Bytes.toBytes(familyStr);
+    } else { // The default name
+      family = DEFAULT_FAMILY_NAME;
+    }
   }
 
   @VisibleForTesting
@@ -103,6 +117,7 @@ public class HBasePersistentStoreProvider extends BasePersistentStoreProvider {
     this.columnConfig = Maps.newHashMap();
     this.hbaseConf = conf;
     this.hbaseTableName = TableName.valueOf(storeTableName);
+    this.family = DEFAULT_FAMILY_NAME;
   }
 
   @VisibleForTesting
@@ -111,6 +126,7 @@ public class HBasePersistentStoreProvider extends BasePersistentStoreProvider {
     this.columnConfig = columnConfig;
     this.hbaseConf = conf;
     this.hbaseTableName = TableName.valueOf(storeTableName);
+    this.family = DEFAULT_FAMILY_NAME;
   }
 
   @Override
@@ -118,7 +134,7 @@ public class HBasePersistentStoreProvider extends BasePersistentStoreProvider {
     switch (config.getMode()) {
     case BLOB_PERSISTENT:
     case PERSISTENT:
-      return new HBasePersistentStore<>(config, hbaseTable);
+      return new HBasePersistentStore<>(config, hbaseTable, family);
     default:
       throw new IllegalStateException("Unknown persistent mode");
     }
@@ -128,7 +144,7 @@ public class HBasePersistentStoreProvider extends BasePersistentStoreProvider {
   public void start() throws IOException {
     // Create the column family builder
     ColumnFamilyDescriptorBuilder columnFamilyBuilder = ColumnFamilyDescriptorBuilder
-        .newBuilder(FAMILY_NAME)
+        .newBuilder(family)
         .setMaxVersions(1);
     // Append the config to column family
     verifyAndSetColumnConfig(columnConfig, columnFamilyBuilder);
@@ -149,10 +165,10 @@ public class HBasePersistentStoreProvider extends BasePersistentStoreProvider {
         if (!admin.isTableEnabled(hbaseTableName)) {
           admin.enableTable(hbaseTableName); // In case the table is disabled
         }
-        if (!table.hasColumnFamily(FAMILY_NAME)) {
+        if (!table.hasColumnFamily(family)) {
           throw new DrillRuntimeException("The HBase table " + hbaseTableName
               + " specified as persistent store exists but does not contain column family: "
-              + (Bytes.toString(FAMILY_NAME)));
+              + (Bytes.toString(family)));
         }
         logger.info("The HBase table of persistent store is loaded : {}", hbaseTableName);
       }
