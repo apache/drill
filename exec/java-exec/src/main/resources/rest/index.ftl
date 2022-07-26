@@ -493,8 +493,8 @@
             }
             let metrics = data.responseJSON['gauges'];
             //Memory
-            let usedHeap = metrics['heap.used'].value;
-            let maxHeap = metrics['heap.max'].value;
+            let usedHeap = metrics['memory.heap.used'].value;
+            let maxHeap = metrics['memory.heap.max'].value;
             let usedDirect = metrics['drill.allocator.root.used'].value;
             let peakDirect = metrics['drill.allocator.root.peak'].value;
             let heapUsage = computeMemUsage(usedHeap, maxHeap);
@@ -515,7 +515,7 @@
             //AvgSysLoad
             let avgSysLoad = metrics['os.load.avg'].value;
             let sysLoadElem = rowElem.getElementsByClassName("avgload")[0];
-            sysLoadElem.innerHTML = avgSysLoad;
+            sysLoadElem.innerHTML = avgSysLoad.toFixed(2);
             //Uptime
             let uptimeValue = metrics['drillbit.uptime'].value;
             let uptimeElem = rowElem.getElementsByClassName("uptime")[0];

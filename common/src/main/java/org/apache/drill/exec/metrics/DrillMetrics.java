@@ -20,17 +20,20 @@ package org.apache.drill.exec.metrics;
 import java.lang.management.ManagementFactory;
 import java.util.concurrent.TimeUnit;
 
-import com.codahale.metrics.jmx.JmxReporter;
+import org.apache.drill.exec.util.SystemPropertyUtil;
+
 import com.codahale.metrics.Metric;
 import com.codahale.metrics.MetricFilter;
 import com.codahale.metrics.MetricRegistry;
 import com.codahale.metrics.Slf4jReporter;
+import com.codahale.metrics.jmx.JmxReporter;
 import com.codahale.metrics.jvm.BufferPoolMetricSet;
+import com.codahale.metrics.jvm.CachedThreadStatesGaugeSet;
+import com.codahale.metrics.jvm.ClassLoadingGaugeSet;
 import com.codahale.metrics.jvm.FileDescriptorRatioGauge;
 import com.codahale.metrics.jvm.GarbageCollectorMetricSet;
 import com.codahale.metrics.jvm.MemoryUsageGaugeSet;
 import com.codahale.metrics.jvm.ThreadStatesGaugeSet;
-import org.apache.drill.exec.util.SystemPropertyUtil;
 
 public final class DrillMetrics {
   private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(DrillMetrics.class);
@@ -45,21 +48,21 @@ public final class DrillMetrics {
   private static class RegistryHolder {
 
     private static final MetricRegistry REGISTRY;
-    private static final JmxReporter JMX_REPORTER;
-    private static final Slf4jReporter LOG_REPORTER;
 
     static {
       REGISTRY = new MetricRegistry();
       registerSystemMetrics();
-      JMX_REPORTER = getJmxReporter();
-      LOG_REPORTER = getLogReporter();
+      getJmxReporter();
+      getLogReporter();
     }
 
     private static void registerSystemMetrics() {
       REGISTRY.registerAll(new GarbageCollectorMetricSet());
-      REGISTRY.registerAll(new BufferPoolMetricSet(ManagementFactory.getPlatformMBeanServer()));
-      REGISTRY.registerAll(new MemoryUsageGaugeSet());
-      REGISTRY.registerAll(new ThreadStatesGaugeSet());
+      REGISTRY.registerAll(MetricsCategory.BUFFERPOOL_PREFIX, new BufferPoolMetricSet(ManagementFactory.getPlatformMBeanServer()));
+      REGISTRY.registerAll(MetricsCategory.MEMORY_PREFIX, new MemoryUsageGaugeSet());
+      REGISTRY.registerAll(MetricsCategory.THREADS_PREFIX, new ThreadStatesGaugeSet());
+      REGISTRY.registerAll(MetricsCategory.CACHED_THREADS_PREFIX, new CachedThreadStatesGaugeSet(1, TimeUnit.MINUTES));
+      REGISTRY.registerAll(MetricsCategory.CLASS_PREFIX, new ClassLoadingGaugeSet());
       REGISTRY.registerAll(new CpuGaugeSet());
       register("fd.usage", new FileDescriptorRatioGauge());
     }

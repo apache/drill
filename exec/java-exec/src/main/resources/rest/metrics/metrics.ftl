@@ -38,21 +38,25 @@
         <div id="heapUsage" class="progress-bar" role="progressbar" aria-valuenow="50" aria-valuemin="0" aria-valuemax="100" style="width: 50%;">
         </div>
       </div>
-      Non heap
+      <div id="heapValue" class="progress-value"></div>
+      Non Heap
       <div class="progress">
         <div id="non-heapUsage" class="progress-bar" role="progressbar" aria-valuenow="50" aria-valuemin="0" aria-valuemax="100" style="width: 50%;">
         </div>
       </div>
+      <div id="non-heapValue" class="progress-value"></div>
       Total
       <div class="progress">
         <div id="totalUsage" class="progress-bar" role="progressbar" aria-valuenow="50" aria-valuemin="0" aria-valuemax="100" style="width: 50%;">
         </div>
       </div>
+      <div id="totalValue" class="progress-value"></div>
       Actively Used Direct (Estimate)
       <div class="progress">
         <div id="estDirectUsage" class="progress-bar" role="progressbar" aria-valuenow="50" aria-valuemin="0" aria-valuemax="100" style="width: 50%;">
         </div>
       </div>
+      <div id="estDirectValue" class="progress-value"></div>
     </div>
 
     <div id="mainDiv" class="col-md-9" role="main">
@@ -129,22 +133,27 @@
 
     function updateBars(gauges) {
       $.each(["heap","non-heap","total","drill.allocator.root"], function(i, key) {
-        var used = gauges[key + ".used"].value;
+      	var used;
+      	if (isAllocator(key)) {
+      	  used = gauges[key + ".used"].value;
+      	} else {
+      	  used = gauges["memory." + key + ".used"].value;
+      	}
         var max;
         if (isAllocator(key)) {
           max = gauges[key + ".peak"].value;
         } else {
-          max = gauges[key + ".max"].value;
+          max = gauges["memory." + key + ".max"].value;
         }
         var percent = round((100 * used / max), 2);
         var usage = getGBUsageText(used, percent);
-
-        var styleVal = "width: " + percent + "%;color: #202020;white-space: nowrap"
+        var styleVal = "width: " + percent + "%;color: transparent;white-space: nowrap"
         $("#" + (isAllocator(key) ? "estDirect" : key) + "Usage").attr({
           "aria-valuenow" : percent,
           "style" : styleVal
         });
-        $("#" + (isAllocator(key) ? "estDirect" : key) + "Usage").html(usage);
+        $("#" + (isAllocator(key) ? "estDirect" : key) + "Usage").html("-");
+        $("#" + (isAllocator(key) ? "estDirect" : key) + "Value").html(usage);
       });
     };
 
