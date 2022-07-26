@@ -34,6 +34,7 @@ import java.util.Map;
 public class PersistentTokenTable implements Tokens {
   public final String ACCESS_TOKEN_KEY = "access_token";
   public final String REFRESH_TOKEN_KEY = "refresh_token";
+  public final String EXPIRES_IN_KEY = "expires_in";
 
   private final Map<String, String> tokens;
 
@@ -84,6 +85,20 @@ public class PersistentTokenTable implements Tokens {
   @JsonIgnore
   public String getRefreshToken() {
     return get(REFRESH_TOKEN_KEY);
+  }
+
+  @Override
+  @JsonIgnore
+  public String getExpiresIn() {
+    return get(EXPIRES_IN_KEY);
+  }
+
+  @Override
+  @JsonIgnore
+  public void setExpiresIn(String expiresIn) {
+    if (!tokens.containsKey(EXPIRES_IN_KEY) || !expiresIn.equals(getAccessToken())) {
+      put(EXPIRES_IN_KEY, expiresIn, true);
+    }
   }
 
   @Override

@@ -129,12 +129,12 @@ Windows platforms should be more or less similar.
     d) Build the protobuf project first (not the solution)
     e) Build the solution!
 
-2.3 Zookeeper (3.4.6) 
+2.3 Zookeeper (3.5.7)
     a) Set the ZOOKEEPER_HOME environment variable
-    b) The 3.4.6 release of Zookeeper does not build correctly on 64 bit windows. To
-    fix that for the 64 bit build, apply patch zookeeper-3.4.6-x64.patch
-    For example in Msysgit 
-        $ cd <ZOOKEEPER_HOME> && git apply <DRILL_HOME>/contrib/native/client/patches/zookeeper-3.4.6-x64.patch
+    b) The 3.5.7 release of Zookeeper is the current verison of Zookeeper and will build on Windows.  Note:
+    there is a patch in git history which allowed Drill to run using ZooKeeper 3.4.6.
+     However, this version is ancient, ZooKeeper 3.5.7 is current and does not need any patch to build on Windows so the
+    patch remains in the Git history only
     c) In Visual Studio 2010 Express open <ZOOKEEPER_HOME>/src/c/zookeeper.sln
         i) Add a 64 bit project configuration for each project. (Make sure the
             platform toolset is set to Windows7.1SDK)

@@ -1,0 +1,28 @@
+{
+  "storage":{
+    "googlesheets" : {
+      "type": "googlesheets",
+      "allTextMode": true,
+      "extractHeaders": true,
+      "oAuthConfig": {
+        "callbackURL": "http://localhost:8047/credentials/googlesheets/update_oauth2_authtoken",
+        "authorizationURL": "https://accounts.google.com/o/oauth2/auth",
+        "authorizationParams": {
+          "response_type": "code",
+          "scope": "https://www.googleapis.com/auth/spreadsheets"
+        }
+      },
+      "credentialsProvider": {
+        "credentialsProviderType": "PlainCredentialsProvider",
+        "credentials": {
+          "clientID": "<YOUR CLIENT ID>",
+          "clientSecret": "<YOUR CLIENT SECRET>",
+          "tokenURI": "https://oauth2.googleapis.com/token https://www.googleapis.com/auth/drive.readonly"
+        },
+        "userCredentials": {}
+      },
+      "enabled": false,
+      "authMode": "SHARED_USER"
+    }
+  }
+}

@@ -59,6 +59,7 @@
         <include>org.apache.drill.contrib:drill-kudu-storage:jar</include>
         <include>org.apache.drill.contrib:drill-storage-phoenix:jar</include>
         <include>org.apache.drill.contrib:drill-storage-splunk:jar</include>
+        <include>org.apache.drill.contrib:drill-storage-googlesheets:jar</include>
         <include>org.apache.drill.contrib:drill-storage-kafka:jar</include>
         <include>org.apache.drill.contrib:drill-storage-elasticsearch:jar</include>
         <include>org.apache.drill.contrib:drill-storage-cassandra:jar</include>

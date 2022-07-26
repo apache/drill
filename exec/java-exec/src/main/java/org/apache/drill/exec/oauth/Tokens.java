@@ -41,6 +41,11 @@ public interface Tokens {
 
   void setRefreshToken(String refreshToken);
 
+  void setExpiresIn(String expiresIn);
+
+  String getExpiresIn();
+
+
   /**
    * Returns value from tokens table that corresponds to provided plugin.
    *

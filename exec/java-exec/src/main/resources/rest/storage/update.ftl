@@ -44,7 +44,7 @@
   <#else>
       <a id="enabled" class="btn btn-success text-white">Enable</a>
   </#if>
-  <#if model.getType() == "HttpStoragePluginConfig" && model.getPlugin().isOauth() >
+  <#if model.getPlugin().isOauth() >
       <a id="getOauth" class="btn btn-success text-white">Authorize</a>
   </#if>
     <button type="button" class="btn btn-secondary export" name="${model.getPlugin().getName()}" data-toggle="modal"
@@ -137,7 +137,6 @@
       }
     });
 
-  <#if model.getType() == "HttpStoragePluginConfig" >
     $("#getOauth").click(function() {
       var field = document.getElementById("config");
       try {
@@ -194,7 +193,6 @@
       window.alert("Cannot parse JSON.");
     }
   });
-  </#if>
 
     function doUpdate() {
       $("#updateForm").ajaxForm({
