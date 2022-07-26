@@ -29,6 +29,7 @@ import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.stream.Collectors;
 
+import org.apache.commons.collections4.CollectionUtils;
 import org.apache.drill.common.exceptions.DrillRuntimeException;
 import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.common.types.TypeProtos;
@@ -249,10 +250,10 @@ public class ParquetRecordWriter extends ParquetOutputRecordWriter {
     }
   }
 
-  private void newSchema() throws IOException {
+  private void newSchema() {
     List<Type> types = new ArrayList<>();
     for (MaterializedField field : batchSchema) {
-      if (field.getName().equalsIgnoreCase(WriterPrel.PARTITION_COMPARATOR_FIELD)) {
+      if (!supportsField(field)) {
         continue;
       }
       types.add(getType(field));
@@ -297,6 +298,13 @@ public class ParquetRecordWriter extends ParquetOutputRecordWriter {
     setUp(schema, consumer);
   }
 
+  @Override
+  public boolean supportsField(MaterializedField field) {
+    return super.supportsField(field)
+      && (field.getType().getMinorType() != MinorType.MAP || field.getChildCount() > 0);
+  }
+
+  @Override
   protected PrimitiveType getPrimitiveType(MaterializedField field) {
     MinorType minorType = field.getType().getMinorType();
     String name = field.getName();
@@ -513,13 +521,15 @@ public class ParquetRecordWriter extends ParquetOutputRecordWriter {
 
     @Override
     public void writeField() throws IOException {
-      consumer.startField(fieldName, fieldId);
-      consumer.startGroup();
-      for (FieldConverter converter : converters) {
-        converter.writeField();
+      if (!converters.isEmpty()) {
+        consumer.startField(fieldName, fieldId);
+        consumer.startGroup();
+        for (FieldConverter converter : converters) {
+          converter.writeField();
+        }
+        consumer.endGroup();
+        consumer.endField(fieldName, fieldId);
       }
-      consumer.endGroup();
-      consumer.endField(fieldName, fieldId);
     }
   }
 
@@ -683,11 +693,17 @@ public class ParquetRecordWriter extends ParquetOutputRecordWriter {
 
   @Override
   public void startRecord() throws IOException {
+    if (CollectionUtils.isEmpty(schema.getFields())) {
+      return;
+    }
     consumer.startMessage();
   }
 
   @Override
   public void endRecord() throws IOException {
+    if (CollectionUtils.isEmpty(schema.getFields())) {
+      return;
+    }
     consumer.endMessage();
 
     // we wait until there is at least one record before creating the parquet file
