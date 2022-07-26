@@ -24,6 +24,8 @@ import java.lang.UnsupportedOperationException;
 package org.apache.drill.exec.store;
 
 import org.apache.drill.exec.expr.holders.*;
+import org.apache.drill.exec.planner.physical.WriterPrel;
+import org.apache.drill.exec.record.MaterializedField;
 import org.apache.drill.exec.store.EventBasedRecordWriter.FieldConverter;
 import org.apache.drill.exec.vector.BitVector;
 import org.apache.drill.exec.vector.BitVector.Accessor;
@@ -95,5 +97,10 @@ public abstract class AbstractRecordWriter implements RecordWriter {
   @Override
   public void postProcessing() throws IOException {
     // no op
+  }
+
+  @Override
+  public boolean supportsField(MaterializedField field) {
+    return !field.getName().equalsIgnoreCase(WriterPrel.PARTITION_COMPARATOR_FIELD);
   }
 }

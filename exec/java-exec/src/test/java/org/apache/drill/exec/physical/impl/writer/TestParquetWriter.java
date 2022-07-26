@@ -18,6 +18,7 @@
 package org.apache.drill.exec.physical.impl.writer;
 
 import org.apache.calcite.util.Pair;
+import org.apache.commons.io.FileUtils;
 import org.apache.drill.categories.ParquetTest;
 import org.apache.drill.categories.SlowTest;
 import org.apache.drill.categories.UnlikelyTest;
@@ -57,6 +58,7 @@ import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.math.BigDecimal;
+import java.nio.charset.Charset;
 import java.nio.file.Paths;
 import java.time.LocalDate;
 import java.util.ArrayList;
@@ -1511,6 +1513,23 @@ public class TestParquetWriter extends ClusterTest {
     } finally {
       cluster.defineFormat("dfs", "parquet", backupConfig);
     }
+  }
+
+  @Test
+  public void testResultWithEmptyMap() throws Exception {
+    String fileName = "emptyMap.json";
+
+    FileUtils.writeStringToFile(new File(dirTestWatcher.getRootDir(), fileName),
+      "{\"sample\": {}, \"a\": \"a\"}", Charset.defaultCharset());
+
+    run("create table dfs.tmp.t1 as SELECT * from dfs.`%s` t", fileName);
+
+    testBuilder()
+      .sqlQuery("select * from dfs.tmp.t1")
+      .unOrdered()
+      .baselineColumns("a")
+      .baselineValues("a")
+      .go();
   }
 
   /**

@@ -23,6 +23,7 @@ package org.apache.drill.exec.store;
 
 import org.apache.drill.exec.expr.holders.*;
 import org.apache.drill.exec.record.BatchSchema;
+import org.apache.drill.exec.record.MaterializedField;
 import org.apache.drill.exec.record.VectorAccessible;
 import org.apache.drill.exec.store.EventBasedRecordWriter.FieldConverter;
 import org.apache.drill.exec.vector.complex.reader.FieldReader;
@@ -94,4 +95,9 @@ public interface RecordWriter {
   void postProcessing() throws IOException;
   void abort() throws IOException;
   void cleanup() throws IOException;
+
+  /**
+   * Checks whether this writer supports writing of the given field.
+   */
+  boolean supportsField(MaterializedField field);
 }
