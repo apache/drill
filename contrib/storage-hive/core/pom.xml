@@ -261,6 +261,10 @@
           <artifactId>netty</artifactId>
           <groupId>io.netty</groupId>
         </exclusion>
+        <exclusion>
+          <groupId>com.zaxxer</groupId>
+          <artifactId>HikariCP-java7</artifactId>
+        </exclusion>
       </exclusions>
     </dependency>
 
