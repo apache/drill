@@ -21,7 +21,6 @@ import java.io.IOException;
 import java.security.PrivilegedExceptionAction;
 import java.util.concurrent.TimeUnit;
 
-import org.apache.drill.common.AutoCloseables;
 import org.apache.drill.common.exceptions.CustomErrorContext;
 import org.apache.drill.common.exceptions.ExecutionSetupException;
 import org.apache.drill.common.exceptions.UserException;
@@ -154,6 +153,19 @@ public class SequenceFileBatchReader implements ManagedReader {
 
   @Override
   public void close() {
-    AutoCloseables.closeSilently(reader);
+    try {
+      // Hadoop 2 compat: {@link org.apache.hadoop.mapred.RecordReader} does not
+      // support AutoCloseable and must be closed manually.
+      if (reader != null) {
+        reader.close();
+        reader = null;
+      }
+    } catch (IOException e) {
+      throw UserException
+        .dataReadError(e)
+        .message("Error closing sequencefile reader: " + e.getMessage())
+        .addContext(errorContext)
+        .build(logger);
+    }
   }
 }

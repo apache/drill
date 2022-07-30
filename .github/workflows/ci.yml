@@ -34,6 +34,10 @@ jobs:
       matrix:
         # Java versions to run unit tests
         java: [ '8', '11', '17' ]
+        profile: ['default-hadoop']
+        include:
+          - java: '8'
+            profile: 'hadoop-2'
       fail-fast: false
     steps:
       - name: Checkout
@@ -51,16 +55,15 @@ jobs:
         run: |
           MAVEN_OPTS="-XX:+UseG1GC"
           sudo sh -c 'echo 1 > /proc/sys/vm/drop_caches' && \
-          mvn install --batch-mode --no-transfer-progress \
+          mvn -P${{ matrix.profile }} install --batch-mode --no-transfer-progress \
           -DexcludedGroups=org.apache.drill.categories.EasyOutOfMemory \
           -Dhttp.keepAlive=false -Dmaven.wagon.http.pool=false -Dmaven.wagon.httpconnectionManager.ttlSeconds=120
       - name: Test Specific Categories # EasyOutOfMemory
         run: |
           sudo sh -c 'echo 1 > /proc/sys/vm/drop_caches' && \
-          mvn test -pl org.apache.drill.exec:drill-java-exec \
+          mvn -P${{ matrix.profile }} test -pl org.apache.drill.exec:drill-java-exec \
           -Dgroups=org.apache.drill.categories.EasyOutOfMemory \
           -Dhttp.keepAlive=false -Dmaven.wagon.http.pool=false -Dmaven.wagon.httpconnectionManager.ttlSeconds=120
-
   checkstyle_protobuf:
     name: Run checkstyle and generate protobufs
     runs-on: ubuntu-latest
