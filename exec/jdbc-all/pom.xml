@@ -62,16 +62,6 @@
       <version>${slf4j.version}</version>
     </dependency>
 
-    <!--
-      The JDBC driver uses a very lightweight logger backend that can only
-      log to stderr.
-    -->
-    <dependency>
-      <groupId>org.slf4j</groupId>
-      <artifactId>slf4j-simple</artifactId>
-      <version>${slf4j.version}</version>
-    </dependency>
-
     <dependency>
       <groupId>org.apache.drill</groupId>
       <artifactId>drill-common</artifactId>
@@ -370,8 +360,6 @@
             <java.io.tmpdir>${project.build.directory}</java.io.tmpdir>
             <app.class.path>${app.class.path}</app.class.path>
             <project.version>${project.version}</project.version>
-            <!-- Suppress noisy log messages that would hit stderr because of SimpleLogger -->
-            <org.slf4j.simpleLogger.defaultLogLevel>error</org.slf4j.simpleLogger.defaultLogLevel>
           </systemPropertyVariables>
           <useSystemClassLoader>false</useSystemClassLoader>
         </configuration>
