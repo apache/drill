@@ -33,10 +33,27 @@
        "package.namespace.prefix" equals to "oadd.". It can be overridden if necessary within any profile -->
   <properties>
     <package.namespace.prefix>oadd.</package.namespace.prefix>
-    <jdbc-all-jar.maxsize>49400000</jdbc-all-jar.maxsize>
+    <jdbc-all-jar.maxsize>46000000</jdbc-all-jar.maxsize>
   </properties>
 
   <dependencies>
+    <!--
+      Notes for excluding unwanted code from the JDBC driver to keep its
+      size down.
+
+      First use conventional Maven exclusions, most commonly required under
+      drill-java-exec, to try to exclude the dependency. If you cannot see
+      the code you want exclude in this module's mvn:dependency-tree under
+      a dependency where you could add an exclusion then you will need to
+      use exclusion rules in the maven-shade-plugin instead.
+
+      Once you've excluded something that was previously present in the JDBC
+      driver you need to test it. Note that neither the JDBC unit tests nor
+      drill-embedded exercise the JDBC driver JAR produced by *this module*,
+      even though they both connect to Drill using JDBC. So to test you need
+      to launch a JDBC client like DBeaver or a short Java CLI program that
+      loads the driver JAR created by this module.
+    -->
 
     <dependency>
       <groupId>org.slf4j</groupId>
@@ -52,6 +69,10 @@
         <exclusion>
           <artifactId>javassist</artifactId>
           <groupId>javassist</groupId>
+        </exclusion>
+        <exclusion>
+          <groupId>io.dropwizard.metrics</groupId>
+          <artifactId>metrics-servlets</artifactId>
         </exclusion>
       </exclusions>
     </dependency>
@@ -130,6 +151,10 @@
           <groupId>org.apache.parquet</groupId>
         </exclusion>
         <exclusion>
+          <artifactId>parquet-common</artifactId>
+          <groupId>org.apache.parquet</groupId>
+        </exclusion>
+        <exclusion>
           <artifactId>infinispan-core</artifactId>
           <groupId>org.infinispan</groupId>
         </exclusion>
@@ -195,7 +220,47 @@
         </exclusion>
         <exclusion>
           <groupId>io.airlift</groupId>
-          <artifactId>aircompresssor</artifactId>
+          <artifactId>aircompressor</artifactId>
+        </exclusion>
+        <exclusion>
+          <groupId>io.swagger.core.v3</groupId>
+          <artifactId>swagger-jaxrs2</artifactId>
+        </exclusion>
+        <exclusion>
+          <groupId>io.swagger.core.v3</groupId>
+          <artifactId>swagger-jaxrs2-servlet-initializer-v2</artifactId>
+        </exclusion>
+        <exclusion>
+          <groupId>com.squareup.okhttp3</groupId>
+          <artifactId>okhttp</artifactId>
+        </exclusion>
+        <exclusion>
+          <groupId>com.tdunning</groupId>
+          <artifactId>t-digest</artifactId>
+        </exclusion>
+        <exclusion>
+          <groupId>com.bettercloud</groupId>
+          <artifactId>vault-java-driver</artifactId>
+        </exclusion>
+        <exclusion>
+          <groupId>com.esri.geometry</groupId>
+          <artifactId>esri-geometry-api</artifactId>
+        </exclusion>
+        <exclusion>
+          <groupId>com.yahoo.datasketches</groupId>
+          <artifactId>sketches-core</artifactId>
+        </exclusion>
+        <exclusion>
+          <groupId>${calcite.groupId}</groupId>
+          <artifactId>calcite-core</artifactId>
+        </exclusion>
+        <exclusion>
+          <groupId>${calcite.groupId}</groupId>
+          <artifactId>calcite-linq4j</artifactId>
+        </exclusion>
+        <exclusion>
+          <groupId>net.sf.jpam</groupId>
+          <artifactId>jpam</artifactId>
         </exclusion>
       </exclusions>
     </dependency>
@@ -318,8 +383,6 @@
             </includes>
             <excludes>
               <exclude>io.protostuff:*</exclude>
-              <exclude>${calcite.groupId}:calcite-core</exclude>
-              <exclude>${calcite.groupId}:calcite-linq4j</exclude>
               <exclude>org.pentaho:*</exclude>
               <exclude>org.msgpack:*</exclude>
               <exclude>xerces:*</exclude>
@@ -334,7 +397,6 @@
               <exclude>com.github.stefanbirkner</exclude>
               <exclude>org.ow2.asm:*</exclude>
               <exclude>com.univocity:*</exclude>
-              <exclude>net.sf.jpam:*</exclude>
               <exclude>com.twitter:*</exclude>
               <exclude>org.apache.parquet:*</exclude>
               <exclude>javax.inject:*</exclude>
@@ -347,7 +409,6 @@
               <exclude>net.hydromatic:linq4j</exclude>
               <exclude>org.mortbay.jetty:*</exclude>
               <exclude>org.slf4j:jul-to-slf4j</exclude>
-              <exclude>org.slf4j:log4j-over-slf4j</exclude>
               <exclude>org.hamcrest:hamcrest-core</exclude>
               <exclude>org.mockito:mockito-core</exclude>
               <exclude>org.objenesis:objenesis</exclude>
@@ -361,14 +422,11 @@
               <exclude>commons-beanutils:commons-beanutils-core:jar:*</exclude>
               <exclude>commons-beanutils:commons-beanutils:jar:*</exclude>
               <exclude>com.google.code.findbugs:jsr305:*</exclude>
-              <exclude>com.esri.geometry:esri-geometry-api:*</exclude>
               <exclude>dnsjava:dnsjava:jar:*</exclude>
               <exclude>io.netty:netty-tcnative:jar:*</exclude>
               <exclude>io.netty:netty-tcnative-classes:jar:*</exclude>
-              <exclude>com.bettercloud:vault-java-driver:jar:*</exclude>
-              <exclude>com.tdunning:t-digest:jar:*</exclude>
-              <exclude>io.airlift:aircompressor:jar:*</exclude>
-              <exclude>com.rdblue:brotli-codec:jar:*</exclude>
+              <exclude>com.nimbusds:*</exclude>
+              <exclude>org.apache.yetus:*</exclude>
             </excludes>
           </artifactSet>
           <relocations>
@@ -882,7 +940,7 @@
     <profile>
       <id>hadoop-2</id>
       <properties>
-        <jdbc-all-jar.maxsize>50400000</jdbc-all-jar.maxsize>
+        <jdbc-all-jar.maxsize>49000000</jdbc-all-jar.maxsize>
       </properties>
     </profile>
   </profiles>

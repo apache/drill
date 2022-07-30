@@ -77,9 +77,7 @@ function readInputAndSetup(){
     read -p "Drill Working Directory : " WORK_DIR
     createDirectoryIfAbsent "${WORK_DIR}"
 
-    read -p "Build profile (e.g. hadoop-2, blank for default) : " BUILD_PROFILE
-
-    read -p "Drill Release Version (e.g. 1.4.0, 1.20.0-hadoop2) : " DRILL_RELEASE_VERSION
+    read -p "Drill Release Version (e.g. 1.4.0) : " DRILL_RELEASE_VERSION
 
     read -p "Drill Development Version (e.g. 1.5.0-SNAPSHOT) : " DRILL_DEV_VERSION
 
@@ -100,14 +98,12 @@ function readInputAndSetup(){
 
     DRILL_RELEASE_OUTFILE="${DRILL_RELEASE_OUTDIR}/drill_release.out.txt"
     DRILL_SRC=${WORK_DIR}/drill-release
-    [ -z "$BUILD_PROFILE" ] || BUILD_PROFILE="-P$BUILD_PROFILE"
 
     echo ""
     echo "-----------------"
     echo "JAVA_HOME : " ${JAVA_HOME}
     echo "Drill Working Directory : " ${WORK_DIR}
     echo "Drill Src Directory : " ${DRILL_SRC}
-    echo "Build profile mvn arg: " ${BUILD_PROFILE}
     echo "Drill Release Version : " ${DRILL_RELEASE_VERSION}
     echo "Drill Development Version : " ${DRILL_DEV_VERSION}
     echo "Release Commit SHA : " ${RELEASE_COMMIT_SHA}
@@ -163,14 +159,14 @@ runCmd "Preparing the release " mvn -X release:prepare \
   -DdevelopmentVersion=${DRILL_DEV_VERSION} \
   -DreleaseVersion=${DRILL_RELEASE_VERSION} \
   -Dtag=drill-${DRILL_RELEASE_VERSION} \
-  -Darguments="-Dgpg.passphrase=${GPG_PASSPHRASE} -DskipTests -Dmaven.javadoc.skip=false ${BUILD_PROFILE}"
+  -Darguments="-Dgpg.passphrase=${GPG_PASSPHRASE} -DskipTests -Dmaven.javadoc.skip=false"
 
 runCmd "Pushing to private repo ${MY_REPO}" git push ${MY_REPO} drill-${DRILL_RELEASE_VERSION}
 
 runCmd "Performing the release to ${MY_REPO}" mvn release:perform \
   -DconnectionUrl=scm:git:${MY_REPO} \
   -DlocalCheckout=true \
-  -Darguments="-Dgpg.passphrase=${GPG_PASSPHRASE} -DskipTests ${BUILD_PROFILE}"
+  -Darguments="-Dgpg.passphrase=${GPG_PASSPHRASE} -DskipTests"
 
 runCmd "Checking out release commit" git checkout drill-${DRILL_RELEASE_VERSION}
 
