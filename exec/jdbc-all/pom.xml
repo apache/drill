@@ -34,7 +34,7 @@
        "package.namespace.prefix" equals to "oadd.". It can be overridden if necessary within any profile -->
   <properties>
     <package.namespace.prefix>oadd.</package.namespace.prefix>
-    <jdbc-all-jar.maxsize>44100000</jdbc-all-jar.maxsize>
+    <jdbc-all-jar.maxsize>45550000</jdbc-all-jar.maxsize>
   </properties>
 
   <dependencies>
@@ -256,10 +256,6 @@
         <exclusion>
           <groupId>com.yahoo.datasketches</groupId>
           <artifactId>sketches-core</artifactId>
-        </exclusion>
-        <exclusion>
-          <groupId>org.apache.htrace</groupId>
-          <artifactId>htrace-core4</artifactId>
         </exclusion>
         <exclusion>
           <groupId>${calcite.groupId}</groupId>
@@ -1290,7 +1286,7 @@
     <profile>
       <id>hadoop-2</id>
       <properties>
-        <jdbc-all-jar.maxsize>47150000</jdbc-all-jar.maxsize>
+        <jdbc-all-jar.maxsize>48650000</jdbc-all-jar.maxsize>
       </properties>
     </profile>
   </profiles>
