@@ -200,8 +200,20 @@
     The release script will push the maven artifacts to the Maven staging repo.
 
 5. ## Multiple builds
-    For each additional build of Drill beyond the default, e.g. an Hadoop 2 build, create only the signed archives of the source and binaries and upload these to the Apache distribution network using svn. Do not run the full release process again using the Maven release plugin since that will result in the unwanted creation of a new Drill version number. This has the consequence that for additional builds we do not publish code artifacts to the Apache Maven repo. Users of these builds who require these artifacts must therefore build them by compiling Drill under the appropriate profile themselves.
+    For each additional build of Drill beyond the default create only the signed binary archives and upload these to the Apache distribution network using svn. Do not run the full release process again using the Maven release plugin since that will result in the unwanted creation of a new Drill version number. This has the consequence that for additional builds we do not publish code artifacts to the Apache Maven repo. Users of these builds who require these artifacts must therefore build them by compiling Drill under the appropriate profile themselves.
 
+    An example command sequence for RC0 of the Hadoop 2 build follows.
+    ```sh
+    git checkout drill-1.17.0 # check out the tag created for this release
+    git status # ensure that you working copy is completely clean
+    mvn -T1C -Phadoop-2 install -DskipTests # build Drill for Hadoop 2
+    cp distribution/target/apache-drill-1.17.0.tar.gz ~/src/release/drill-dist-dev/1.17.0-rc0/apache-drill-1.17.0-hadoop2.tar.gz
+    cd ~/src/release/drill-dist-dev
+    gpg --clearsign --output apache-drill-1.17.0-hadoop2.tar.gz.asc --detach-sign apache-drill-1.17.0-hadoop2.tar.gz
+    sha512sum apache-drill-1.17.0-hadoop2.tar.gz > apache-drill-1.17.0-hadoop2.tar.gz.sha512
+    svn add apache-drill-*-hadoop2.*
+    svn commit
+    ```
 6. ## Publish release candidate and vote
     1. Go to the [Apache Maven staging repo](https://repository.apache.org/) and close the new jar release.
         This step is done in the Maven GUI. For detailed instructions on sonatype GUI please refer to
@@ -214,13 +226,13 @@
 
         Subject:
         ```
-        [VOTE] Release Apache Drill 1.12.0 - RC0
+        [VOTE] Release Apache Drill 1.17.0 - RC0
         ```
         Body:
         ```
         Hi all,
 
-        I'd like to propose the first release candidate (RC0) of Apache Drill, version 1.12.0.
+        I'd like to propose the first release candidate (RC0) of Apache Drill, version 1.17.0.
 
         The release candidate covers a total of 100500 resolved JIRAs [1]. Thanks to everyone who contributed to this release.
 
@@ -276,7 +288,7 @@
 
             Subject:
             ```
-            [RESULT] [VOTE] Release Apache Drill 1.12.0 RC1
+            [RESULT] [VOTE] Release Apache Drill 1.17.0 RC1
             ```
             Body:
             ```

@@ -170,17 +170,18 @@ public class SequenceFileBatchReader implements ManagedReader<FileSchemaNegotiat
   @Override
   public void close() {
     try {
-      // The reader not support AutoCloseable, must be closed by invoke close().
+      // Hadoop 2 compat: {@link org.apache.hadoop.mapred.RecordReader} does not
+      // support AutoCloseable and must be closed manually.
       if (reader != null) {
         reader.close();
         reader = null;
       }
     } catch (IOException e) {
       throw UserException
-              .dataReadError(e)
-              .message("Failed closing sequencefile reader. " + e.getMessage())
-              .addContext(errorContext)
-              .build(logger);
+        .dataReadError(e)
+        .message("Error closing sequencefile reader: " + e.getMessage())
+        .addContext(errorContext)
+        .build(logger);
     }
   }
 }
