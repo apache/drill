@@ -64,7 +64,9 @@ public class MapColumnMetadata extends AbstractMapColumnMetadata {
 
   @Override
   public ColumnMetadata cloneEmpty() {
-    return new MapColumnMetadata(name, mode, new TupleSchema());
+    ColumnMetadata colMeta = new MapColumnMetadata(name, mode, new TupleSchema());
+    colMeta.setProperties(this.properties());
+    return colMeta;
   }
 
   @Override

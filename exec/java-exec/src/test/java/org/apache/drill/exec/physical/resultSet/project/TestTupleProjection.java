@@ -60,10 +60,13 @@ public class TestTupleProjection extends BaseTest {
       MetadataUtils.newScalar("a", Types.required(MinorType.INT));
   private static final ColumnMetadata UNPROJECTED_SPECIAL_COLUMN =
       MetadataUtils.newScalar("bar", Types.required(MinorType.INT));
+  private static final ColumnMetadata COMPLEX_SPECIAL_COLUMN =
+      MetadataUtils.newMap("a_map");
 
   static {
     SPECIAL_COLUMN.setBooleanProperty(ColumnMetadata.EXCLUDE_FROM_WILDCARD, true);
     UNPROJECTED_SPECIAL_COLUMN.setBooleanProperty(ColumnMetadata.EXCLUDE_FROM_WILDCARD, true);
+    COMPLEX_SPECIAL_COLUMN.setBooleanProperty(ColumnMetadata.EXCLUDE_FROM_WILDCARD, true);
   }
 
   /**
@@ -76,6 +79,7 @@ public class TestTupleProjection extends BaseTest {
     assertTrue(projSet.isProjected("foo"));
     assertTrue(projSet.isProjected(NORMAL_COLUMN));
     assertFalse(projSet.isProjected(SPECIAL_COLUMN));
+    assertFalse(projSet.isProjected(COMPLEX_SPECIAL_COLUMN));
     assertTrue(projSet.projections().isEmpty());
     assertFalse(projSet.isEmpty());
   }
@@ -91,6 +95,7 @@ public class TestTupleProjection extends BaseTest {
     assertNull(projSet.get("foo"));
     assertTrue(projSet.isProjected(NORMAL_COLUMN));
     assertFalse(projSet.isProjected(SPECIAL_COLUMN));
+    assertFalse(projSet.isProjected(COMPLEX_SPECIAL_COLUMN));
     assertEquals(1, projSet.projections().size());
     assertFalse(projSet.isEmpty());
   }
@@ -107,6 +112,7 @@ public class TestTupleProjection extends BaseTest {
     assertFalse(projSet.isProjected("foo"));
     assertFalse(projSet.isProjected(NORMAL_COLUMN));
     assertFalse(projSet.isProjected(SPECIAL_COLUMN));
+    assertFalse(projSet.isProjected(COMPLEX_SPECIAL_COLUMN));
     assertTrue(projSet.projections().isEmpty());
     assertTrue(projSet.isEmpty());
   }
@@ -128,6 +134,7 @@ public class TestTupleProjection extends BaseTest {
     assertTrue(projSet.isProjected(SPECIAL_COLUMN));
     assertFalse(projSet.isProjected(UNPROJECTED_COLUMN));
     assertFalse(projSet.isProjected(UNPROJECTED_SPECIAL_COLUMN));
+    assertFalse(projSet.isProjected(COMPLEX_SPECIAL_COLUMN));
 
     List<RequestedColumn> cols = projSet.projections();
     assertEquals(3, cols.size());
