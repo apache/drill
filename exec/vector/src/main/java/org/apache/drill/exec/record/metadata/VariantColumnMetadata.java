@@ -140,7 +140,9 @@ public class VariantColumnMetadata extends AbstractColumnMetadata {
 
   @Override
   public ColumnMetadata cloneEmpty() {
-    return new VariantColumnMetadata(name, type, mode, new VariantSchema());
+    VariantColumnMetadata colMeta = new VariantColumnMetadata(name, type, mode, new VariantSchema());
+    colMeta.setProperties(this.properties());
+    return colMeta;
   }
 
   @Override

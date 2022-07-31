@@ -79,7 +79,9 @@ public class RepeatedListColumnMetadata extends AbstractColumnMetadata {
 
   @Override
   public ColumnMetadata cloneEmpty() {
-    return new RepeatedListColumnMetadata(name, null);
+    ColumnMetadata colMeta = new RepeatedListColumnMetadata(name, null);
+    colMeta.setProperties(this.properties());
+    return colMeta;
   }
 
   @Override
