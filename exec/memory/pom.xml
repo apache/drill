@@ -23,7 +23,7 @@
   <parent>
     <artifactId>exec-parent</artifactId>
     <groupId>org.apache.drill.exec</groupId>
-    <version>1.20.2</version>
+    <version>1.20.3-SNAPSHOT</version>
   </parent>
 
   <groupId>org.apache.drill.memory</groupId>
