@@ -24,7 +24,7 @@
   <parent>
     <groupId>org.apache.drill.contrib.storage-hive</groupId>
     <artifactId>drill-contrib-storage-hive-parent</artifactId>
-    <version>1.20.2-SNAPSHOT</version>
+    <version>1.20.2</version>
   </parent>
 
   <artifactId>drill-storage-hive-core</artifactId>
