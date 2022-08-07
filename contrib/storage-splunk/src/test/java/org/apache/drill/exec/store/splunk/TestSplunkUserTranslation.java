@@ -33,7 +33,8 @@ import org.junit.experimental.categories.Category;
 
 import java.util.Map;
 
-import static org.apache.drill.exec.rpc.user.security.testing.UserAuthenticatorTestImpl.*;
+import static org.apache.drill.exec.rpc.user.security.testing.UserAuthenticatorTestImpl.ADMIN_USER;
+import static org.apache.drill.exec.rpc.user.security.testing.UserAuthenticatorTestImpl.ADMIN_USER_PASSWORD;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
