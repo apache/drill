@@ -50,7 +50,7 @@ public class SplunkSchemaFactory extends AbstractSchemaFactory {
     SchemaPlus plusOfThis = parent.add(schema.getName(), schema);
   }
 
-  class SplunkSchema extends AbstractSchema {
+  static class SplunkSchema extends AbstractSchema {
 
     private final Map<String, DynamicDrillTable> activeTables = new HashMap<>();
     private final SplunkStoragePlugin plugin;

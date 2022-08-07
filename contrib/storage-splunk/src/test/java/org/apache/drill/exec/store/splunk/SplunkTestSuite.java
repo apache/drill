@@ -20,6 +20,8 @@ package org.apache.drill.exec.store.splunk;
 
 import org.apache.drill.categories.SlowTest;
 import org.apache.drill.common.logical.StoragePluginConfig;
+import org.apache.drill.common.logical.StoragePluginConfig.AuthMode;
+import org.apache.drill.common.logical.security.PlainCredentialsProvider;
 import org.apache.drill.exec.store.StoragePluginRegistry;
 import org.apache.drill.test.ClusterFixture;
 import org.apache.drill.test.ClusterTest;
@@ -34,7 +36,12 @@ import org.slf4j.LoggerFactory;
 import org.testcontainers.containers.GenericContainer;
 import org.testcontainers.utility.DockerImageName;
 
+import java.util.HashMap;
+import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
+
+import static org.apache.drill.exec.rpc.user.security.testing.UserAuthenticatorTestImpl.TEST_USER_1;
+import static org.apache.drill.exec.rpc.user.security.testing.UserAuthenticatorTestImpl.TEST_USER_2;
 
 
 @RunWith(Suite.class)
@@ -44,7 +51,8 @@ import java.util.concurrent.atomic.AtomicInteger;
   SplunkLimitPushDownTest.class,
   SplunkIndexesTest.class,
   SplunkPluginTest.class,
-  SplunkTestSplunkUtils.class
+  SplunkTestSplunkUtils.class,
+  TestSplunkUserTranslation.class
 })
 
 @Category({SlowTest.class})
@@ -52,6 +60,8 @@ public class SplunkTestSuite extends ClusterTest {
   private static final Logger logger = LoggerFactory.getLogger(SplunkTestSuite.class);
 
   protected static SplunkPluginConfig SPLUNK_STORAGE_PLUGIN_CONFIG = null;
+
+  protected static SplunkPluginConfig SPLUNK_STORAGE_PLUGIN_CONFIG_WITH_USER_TRANSLATION = null;
   public static final String SPLUNK_LOGIN = "admin";
   public static final String SPLUNK_PASS = "password";
 
@@ -79,6 +89,19 @@ public class SplunkTestSuite extends ClusterTest {
         runningSuite = true;
         logger.info("Take a time to ready more Splunk events (10 sec)...");
         Thread.sleep(10000);
+
+
+        PlainCredentialsProvider credentialsProvider = new PlainCredentialsProvider(new HashMap<>());
+        // Add authorized user
+        credentialsProvider.setUserCredentials(SPLUNK_LOGIN, SPLUNK_PASS, TEST_USER_1);
+        // Add unauthorized user
+        credentialsProvider.setUserCredentials("nope", "no way dude", TEST_USER_2);
+
+        // TODO Start here.. add config for Splunk with user translation
+        SPLUNK_STORAGE_PLUGIN_CONFIG_WITH_USER_TRANSLATION = new SplunkPluginConfig(null, null, hostname, port, "1", "now",
+          credentialsProvider, 4, AuthMode.USER_TRANSLATION.name());
+        cluster.defineStoragePlugin("ut_splunk", SPLUNK_STORAGE_PLUGIN_CONFIG_WITH_USER_TRANSLATION);
+
       }
       initCount.incrementAndGet();
       runningSuite = true;

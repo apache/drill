@@ -80,11 +80,11 @@ public class SplunkConnection {
       connectionAttempts--;
       service = Service.connect(loginArgs);
     } catch (Exception e) {
-      if(connectionAttempts > 0) {
+      if (connectionAttempts > 0) {
         try {
           TimeUnit.SECONDS.sleep(2);
         } catch (InterruptedException interruptedException) {
-          logger.error("Unable to wait 2 secs before next connection trey to Splunk");
+          logger.error("Unable to wait 2 secs before next connection try to Splunk");
         }
         return connect();
       }

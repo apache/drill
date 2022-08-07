@@ -47,12 +47,13 @@ public class SplunkSubScan extends AbstractBase implements SubScan {
 
   @JsonCreator
   public SplunkSubScan(
+    @JsonProperty("username") String username,
     @JsonProperty("config") SplunkPluginConfig config,
     @JsonProperty("tableSpec") SplunkScanSpec splunkScanSpec,
     @JsonProperty("columns") List<SchemaPath> columns,
     @JsonProperty("filters") Map<String, ExprNode.ColRelOpConstNode> filters,
     @JsonProperty("maxRecords") int maxRecords) {
-      super("user");
+      super(username);
       this.config = config;
       this.splunkScanSpec = splunkScanSpec;
       this.columns = columns;
@@ -93,7 +94,7 @@ public class SplunkSubScan extends AbstractBase implements SubScan {
 
   @Override
   public PhysicalOperator getNewWithChildren(List<PhysicalOperator> children) {
-    return new SplunkSubScan(config, splunkScanSpec, columns, filters, maxRecords);
+    return new SplunkSubScan(userName, config, splunkScanSpec, columns, filters, maxRecords);
   }
 
   @Override

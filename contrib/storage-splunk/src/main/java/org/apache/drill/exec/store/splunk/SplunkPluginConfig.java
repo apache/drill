@@ -41,7 +41,6 @@ public class SplunkPluginConfig extends StoragePluginConfig {
   private final String hostname;
   private final String earliestTime;
   private final String latestTime;
-
   private final int port;
   private final Integer reconnectRetries;
 
@@ -56,7 +55,7 @@ public class SplunkPluginConfig extends StoragePluginConfig {
                             @JsonProperty("reconnectRetries") Integer reconnectRetries,
                             @JsonProperty("authMode") String authMode) {
     super(CredentialProviderUtils.getCredentialsProvider(username, password, credentialsProvider),
-        credentialsProvider == null);
+        credentialsProvider == null, AuthMode.parseOrDefault(authMode, AuthMode.SHARED_USER));
     this.hostname = hostname;
     this.port = port;
     this.earliestTime = earliestTime;
@@ -141,12 +140,13 @@ public class SplunkPluginConfig extends StoragePluginConfig {
       Objects.equals(hostname, thatConfig.hostname) &&
       Objects.equals(port, thatConfig.port) &&
       Objects.equals(earliestTime, thatConfig.earliestTime) &&
-      Objects.equals(latestTime, thatConfig.latestTime);
+      Objects.equals(latestTime, thatConfig.latestTime) &&
+      Objects.equals(authMode, thatConfig.authMode);
   }
 
   @Override
   public int hashCode() {
-    return Objects.hash(credentialsProvider, hostname, port, earliestTime, latestTime);
+    return Objects.hash(credentialsProvider, hostname, port, earliestTime, latestTime, authMode);
   }
 
   @Override
@@ -157,6 +157,7 @@ public class SplunkPluginConfig extends StoragePluginConfig {
       .field("port", port)
       .field("earliestTime", earliestTime)
       .field("latestTime", latestTime)
+      .field("Authentication Mode", authMode)
       .toString();
   }
 
