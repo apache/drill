@@ -34,8 +34,10 @@ import org.junit.experimental.categories.Category;
 import java.util.Map;
 
 import static org.apache.drill.exec.rpc.user.security.testing.UserAuthenticatorTestImpl.*;
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 @Category({SlowTest.class})
 public class TestSplunkUserTranslation extends SplunkBaseTest {
@@ -48,7 +50,6 @@ public class TestSplunkUserTranslation extends SplunkBaseTest {
       .configProperty(ExecConstants.IMPERSONATION_ENABLED, true);
     startCluster(builder);
   }
-  
   @Test
   public void testEmptyUserCredentials() throws Exception {
     ClientFixture client = cluster
@@ -85,6 +86,4 @@ public class TestSplunkUserTranslation extends SplunkBaseTest {
       assertTrue(e.getMessage().contains("You do not have valid credentials for this API."));
     }
   }
-
-
 }
