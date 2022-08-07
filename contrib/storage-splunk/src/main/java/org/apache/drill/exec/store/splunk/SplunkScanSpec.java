@@ -29,14 +29,17 @@ public class SplunkScanSpec implements DrillTableSelection {
   private final String pluginName;
   private final String indexName;
   private final SplunkPluginConfig config;
+  private final String queryUserName;
 
   @JsonCreator
   public SplunkScanSpec(@JsonProperty("pluginName") String pluginName,
                         @JsonProperty("indexName") String indexName,
-                        @JsonProperty("config") SplunkPluginConfig config) {
+                        @JsonProperty("config") SplunkPluginConfig config,
+                        @JsonProperty("queryUserName") String queryUserName) {
     this.pluginName = pluginName;
     this.indexName = indexName;
     this.config = config;
+    this.queryUserName = queryUserName;
   }
 
   @JsonProperty("pluginName")
@@ -48,12 +51,18 @@ public class SplunkScanSpec implements DrillTableSelection {
   @JsonProperty("config")
   public SplunkPluginConfig getConfig() { return config; }
 
+  @JsonProperty("queryUserName")
+  public String queryUserName() {
+    return queryUserName;
+  }
+
   @Override
   public String toString() {
     return new PlanStringBuilder(this)
       .field("config", config)
       .field("schemaName", pluginName)
       .field("indexName", indexName)
+      .field("queryUserName", queryUserName)
       .toString();
   }
 

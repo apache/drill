@@ -59,8 +59,8 @@ public class SplunkGroupScan extends AbstractGroupScan {
   /**
    * Creates a new group scan from the storage plugin.
    */
-  public SplunkGroupScan (String username, SplunkScanSpec scanSpec, MetadataProviderManager metadataProviderManager) {
-    super(username);
+  public SplunkGroupScan (SplunkScanSpec scanSpec, MetadataProviderManager metadataProviderManager) {
+    super(scanSpec.queryUserName());
     this.splunkScanSpec = scanSpec;
     this.config = scanSpec.getConfig();
     this.columns = ALL_COLUMNS;
@@ -88,6 +88,7 @@ public class SplunkGroupScan extends AbstractGroupScan {
     // Calcite makes many copies in the later stage of planning
     // without changing anything. Retain the previous stats.
     this.scanStats = that.scanStats;
+    this.hashCode = that.hashCode;
   }
 
   /**
@@ -191,7 +192,7 @@ public class SplunkGroupScan extends AbstractGroupScan {
 
   @Override
   public SubScan getSpecificScan(int minorFragmentId) {
-    return new SplunkSubScan(userName, config, splunkScanSpec, columns, filters, maxRecords);
+    return new SplunkSubScan(config, splunkScanSpec, columns, filters, maxRecords);
   }
 
   @Override

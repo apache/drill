@@ -92,7 +92,7 @@ public class SplunkStoragePlugin extends AbstractStoragePlugin {
   public AbstractGroupScan getPhysicalScan(String userName, JSONOptions selection, List<SchemaPath> columns, SessionOptionManager options,
                                            MetadataProviderManager metadataProviderManager) throws IOException {
     SplunkScanSpec scanSpec = selection.getListWith(context.getLpPersistence().getMapper(), new TypeReference<SplunkScanSpec>() {});
-    return new SplunkGroupScan(userName, scanSpec, metadataProviderManager);
+    return new SplunkGroupScan(scanSpec, metadataProviderManager);
   }
 
   @Override

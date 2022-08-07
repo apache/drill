@@ -37,7 +37,6 @@ import org.testcontainers.containers.GenericContainer;
 import org.testcontainers.utility.DockerImageName;
 
 import java.util.HashMap;
-import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import static org.apache.drill.exec.rpc.user.security.testing.UserAuthenticatorTestImpl.TEST_USER_1;
@@ -97,7 +96,6 @@ public class SplunkTestSuite extends ClusterTest {
         // Add unauthorized user
         credentialsProvider.setUserCredentials("nope", "no way dude", TEST_USER_2);
 
-        // TODO Start here.. add config for Splunk with user translation
         SPLUNK_STORAGE_PLUGIN_CONFIG_WITH_USER_TRANSLATION = new SplunkPluginConfig(null, null, hostname, port, "1", "now",
           credentialsProvider, 4, AuthMode.USER_TRANSLATION.name());
         cluster.defineStoragePlugin("ut_splunk", SPLUNK_STORAGE_PLUGIN_CONFIG_WITH_USER_TRANSLATION);

@@ -36,7 +36,7 @@ public class SplunkConnectionTest extends SplunkBaseTest {
 
   @Test
   public void testConnection() {
-    SplunkConnection sc = new SplunkConnection(SPLUNK_STORAGE_PLUGIN_CONFIG);
+    SplunkConnection sc = new SplunkConnection(SPLUNK_STORAGE_PLUGIN_CONFIG, null);
     sc.connect();
   }
 
@@ -54,7 +54,7 @@ public class SplunkConnectionTest extends SplunkBaseTest {
               SPLUNK_STORAGE_PLUGIN_CONFIG.getReconnectRetries(),
               StoragePluginConfig.AuthMode.SHARED_USER.name()
       );
-      SplunkConnection sc = new SplunkConnection(invalidSplunkConfig);
+      SplunkConnection sc = new SplunkConnection(invalidSplunkConfig, null);
       sc.connect();
       fail();
     } catch (UserException e) {
@@ -64,7 +64,7 @@ public class SplunkConnectionTest extends SplunkBaseTest {
 
   @Test
   public void testGetIndexes() {
-    SplunkConnection sc = new SplunkConnection(SPLUNK_STORAGE_PLUGIN_CONFIG);
+    SplunkConnection sc = new SplunkConnection(SPLUNK_STORAGE_PLUGIN_CONFIG, null);
     EntityCollection<Index> indexes = sc.getIndexes();
     assertEquals(9, indexes.size());
 

@@ -28,12 +28,16 @@ import org.apache.drill.common.logical.security.CredentialsProvider;
 import org.apache.drill.common.logical.security.PlainCredentialsProvider;
 import org.apache.drill.exec.store.security.CredentialProviderUtils;
 import org.apache.drill.exec.store.security.UsernamePasswordCredentials;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.Objects;
 import java.util.Optional;
 
 @JsonTypeName(SplunkPluginConfig.NAME)
 public class SplunkPluginConfig extends StoragePluginConfig {
+
+  private static final Logger logger = LoggerFactory.getLogger(SplunkPluginConfig.class);
 
   public static final String NAME = "splunk";
   public static final int DISABLED_RECONNECT_RETRIES = 1;
@@ -79,12 +83,20 @@ public class SplunkPluginConfig extends StoragePluginConfig {
       .build();
   }
 
+  @JsonIgnore
+  public Optional<UsernamePasswordCredentials> getUsernamePasswordCredentials(String username) {
+    return new UsernamePasswordCredentials.Builder()
+      .setCredentialsProvider(credentialsProvider)
+      .setQueryUser(username)
+      .build();
+  }
+
   @JsonProperty("username")
   public String getUsername() {
     if (!directCredentials) {
       return null;
     }
-    return getUsernamePasswordCredentials()
+    return getUsernamePasswordCredentials(null)
       .map(UsernamePasswordCredentials::getUsername)
       .orElse(null);
   }
@@ -94,7 +106,7 @@ public class SplunkPluginConfig extends StoragePluginConfig {
     if (!directCredentials) {
       return null;
     }
-    return getUsernamePasswordCredentials()
+    return getUsernamePasswordCredentials(null)
       .map(UsernamePasswordCredentials::getPassword)
       .orElse(null);
   }
