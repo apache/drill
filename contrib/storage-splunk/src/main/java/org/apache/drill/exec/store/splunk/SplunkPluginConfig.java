@@ -76,6 +76,10 @@ public class SplunkPluginConfig extends StoragePluginConfig {
     this.reconnectRetries = that.reconnectRetries;
   }
 
+  /**
+   * Gets the credentials. This method is used when user translation is not enabled.
+   * @return An {@link Optional} containing {@link UsernamePasswordCredentials} from the config.
+   */
   @JsonIgnore
   public Optional<UsernamePasswordCredentials> getUsernamePasswordCredentials() {
     return new UsernamePasswordCredentials.Builder()
@@ -83,6 +87,10 @@ public class SplunkPluginConfig extends StoragePluginConfig {
       .build();
   }
 
+  /**
+   * Gets the credentials. This method is used when user translation is enabled.
+   * @return An {@link Optional} containing {@link UsernamePasswordCredentials} from the config.
+   */
   @JsonIgnore
   public Optional<UsernamePasswordCredentials> getUsernamePasswordCredentials(String username) {
     return new UsernamePasswordCredentials.Builder()

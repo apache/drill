@@ -47,8 +47,8 @@ public class SplunkSchemaFactory extends AbstractSchemaFactory {
 
   @Override
   public void registerSchemas(SchemaConfig schemaConfig, SchemaPlus parent) {
-    SplunkSchema schema = new SplunkSchema(plugin, queryUserName);
     this.queryUserName = schemaConfig.getUserName();
+    SplunkSchema schema = new SplunkSchema(plugin, queryUserName);
     SchemaPlus plusOfThis = parent.add(schema.getName(), schema);
   }
 
@@ -62,6 +62,8 @@ public class SplunkSchemaFactory extends AbstractSchemaFactory {
       super(Collections.emptyList(), plugin.getName());
       this.plugin = plugin;
       this.queryUserName = queryUserName;
+
+
       registerIndexes();
     }
 
@@ -105,8 +107,14 @@ public class SplunkSchemaFactory extends AbstractSchemaFactory {
 
       // Retrieve and add all other Splunk indexes
       SplunkPluginConfig config = plugin.getConfig();
-      SplunkConnection connection = new SplunkConnection(config, queryUserName);
-      connection.connect();
+      SplunkConnection connection;
+      try {
+        connection = new SplunkConnection(config, queryUserName);
+        connection.connect();
+      } catch (Exception e) {
+        logger.error("Unable to connect to Splunk {}. {} ", plugin.getName(), e.getMessage());
+        return;
+      }
 
       for (String indexName : connection.getIndexes().keySet()) {
         logger.debug("Registering {}", indexName);
