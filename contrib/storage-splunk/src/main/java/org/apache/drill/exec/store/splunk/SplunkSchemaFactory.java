@@ -20,6 +20,7 @@ package org.apache.drill.exec.store.splunk;
 
 import org.apache.calcite.schema.SchemaPlus;
 import org.apache.calcite.schema.Table;
+import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.exec.planner.logical.DynamicDrillTable;
 import org.apache.drill.exec.store.AbstractSchema;
 import org.apache.drill.exec.store.AbstractSchemaFactory;
@@ -101,21 +102,25 @@ public class SplunkSchemaFactory extends AbstractSchemaFactory {
     }
 
     private void registerIndexes() {
-      // Add default "spl" table to index list.
-      registerTable(SPL_TABLE_NAME, new DynamicDrillTable(plugin, plugin.getName(),
-        new SplunkScanSpec(plugin.getName(), SPL_TABLE_NAME, plugin.getConfig(), queryUserName)));
-
-      // Retrieve and add all other Splunk indexes
+      // Verify that the connection is successful.  If not, don't register any indexes,
+      // and throw an exception.
       SplunkPluginConfig config = plugin.getConfig();
       SplunkConnection connection;
       try {
         connection = new SplunkConnection(config, queryUserName);
         connection.connect();
       } catch (Exception e) {
-        logger.error("Unable to connect to Splunk {}. {} ", plugin.getName(), e.getMessage());
-        return;
+        // Catch any connection errors that may happen.
+        throw UserException.connectionError()
+          .message("Unable to connect to Splunk {}. {} ", plugin.getName(), e.getMessage())
+          .build(logger);
       }
 
+      // Add default "spl" table to index list.
+      registerTable(SPL_TABLE_NAME, new DynamicDrillTable(plugin, plugin.getName(),
+        new SplunkScanSpec(plugin.getName(), SPL_TABLE_NAME, plugin.getConfig(), queryUserName)));
+
+      // Retrieve and add all other Splunk indexes
       for (String indexName : connection.getIndexes().keySet()) {
         logger.debug("Registering {}", indexName);
         registerTable(indexName, new DynamicDrillTable(plugin, plugin.getName(),
