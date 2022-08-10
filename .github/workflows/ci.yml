@@ -65,7 +65,7 @@ jobs:
           -Dgroups=org.apache.drill.categories.EasyOutOfMemory \
           -Dhttp.keepAlive=false -Dmaven.wagon.http.pool=false -Dmaven.wagon.httpconnectionManager.ttlSeconds=120
   checkstyle_protobuf:
-    name: Run checkstyle and generate protobufs
+    name: Run checkstyle, generate protobufs and publish SNAPSHOT artifacts
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -107,6 +107,12 @@ jobs:
           pushd protocol && mvn process-sources -P proto-compile && popd && \
           mkdir contrib/native/client/build && pushd contrib/native/client/build && cmake -G "Unix Makefiles" .. && make cpProtobufs && popd; \
       # Checks whether project files weren't changed after regenerating protobufs
+      - name: Publish SNAPSHOT artifacts
+        # TODO: change 'pull_request' to 'push' after testing a draft PR.
+        if: github.event_name == 'pull_request' && github.ref == 'refs/heads/master'
+        run: |
+          echo "Publishing SNAPSHOT artifacts because a new commit has been pushed to master."
+          MAVEN_OPTS="-Xms1G -Xmx1G" mvn deploy
       - name: Check protobufs
         run: |
           if [ "$(git status -s | grep -c "")" -gt 0 ]; then \
