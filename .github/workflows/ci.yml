@@ -116,27 +116,3 @@ jobs:
           else
             echo "All checks are passed!";
           fi
-
-  publish_snapshot_artifacts:
-    name: Publish snapshot artifacts
-    # TODO: change 'pull_request' to 'push' after testing a draft PR.
-    if: github.event_name == 'pull_request' && github.ref == 'refs/heads/master'
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v2
-      - name: Cache Maven Repository
-        uses: actions/cache@v2
-        with:
-          path: ~/.m2/repository
-          key: ${{ runner.os }}-maven-${{ hashFiles('**/pom.xml') }}
-          restore-keys: |
-            ${{ runner.os }}-maven-
-      - name: Build and publish snapshot artifacts
-        # The total GitHub Actions memory is 7000Mb. But GitHub CI requires some memory for the container to perform tests
-        run: |
-          MAVEN_OPTS="-XX:+UseG1GC"
-          sudo sh -c 'echo 1 > /proc/sys/vm/drop_caches' && \
-          mvn -P${{ matrix.profile }} install --batch-mode --no-transfer-progress \
-          -DexcludedGroups=org.apache.drill.categories.EasyOutOfMemory \
-          -Dhttp.keepAlive=false -Dmaven.wagon.http.pool=false -Dmaven.wagon.httpconnectionManager.ttlSeconds=120
