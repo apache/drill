@@ -40,4 +40,9 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-maven-
       - name: Build and publish snapshot artifacts
-        run: mvn deploy
+        env:
+          ASF_USERNAME: ${{ secrets.NEXUS_USER }}
+          ASF_PASSWORD: ${{ secrets.NEXUS_PW }}
+        run: |
+          echo "<settings><servers><server><id>apache.snapshots.https</id><username>$ASF_USERNAME</username><password>$ASF_PASSWORD</password></server></servers></settings>" > settings.xml
+          mvn --settings settings.xml deploy -DskipTests
