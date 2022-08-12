@@ -18,12 +18,10 @@
 
 name: Publish snapshot artifacts
 
-on: [push, pull_request]
-# TODO: replace the above line with the below after testing.
-#on:
-#  push:
-#    branches:
-#      - master
+on:
+  push:
+    branches:
+      - master
 
 jobs:
   publish:
