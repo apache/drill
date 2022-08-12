@@ -159,6 +159,13 @@ public class TestSqlPatterns extends BaseTest {
     assertEquals("AB", patternInfo.getSimplePatternString());
     assertEquals(RegexpUtil.SqlPatternType.CONSTANT, patternInfo.getPatternType());
 
+    // A.B is constant. DRILL-8278
+    patternInfo = RegexpUtil.sqlToRegexLike("A.B");
+    // The . should be escaped with a \ so that it represents a literal .
+    assertEquals("A\\.B", patternInfo.getJavaPatternString());
+    assertEquals("A.B", patternInfo.getSimplePatternString());
+    assertEquals(RegexpUtil.SqlPatternType.CONSTANT, patternInfo.getPatternType());
+
     // Test with escape characters.
 
     // A%#B is invalid escape sequence
@@ -449,7 +456,7 @@ public class TestSqlPatterns extends BaseTest {
   }
 
   @Test
-  public void testSqlPatternContainsMUltipleMatchers() {
+  public void testSqlPatternContainsMultipleMatchers() {
 
     final String longASCIIString = "Drill supports a variety of NoSQL databases and file systems, including HBase, MongoDB, MapR-DB, HDFS, MapR-FS, Amazon S3, Azure Blob Storage, Google Cloud Storage, Swift, "
       + "NAS and local files. A single query can join data from multiple datastores. For example, you can join a user profile collection in MongoDB with a directory of event logs in Hadoop.";
