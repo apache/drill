@@ -25,6 +25,7 @@ import org.apache.drill.common.types.TypeProtos.MinorType;
 import org.apache.drill.common.types.Types;
 import org.apache.drill.exec.ops.ExecutorFragmentContext;
 import org.apache.drill.exec.physical.impl.BatchCreator;
+import org.apache.drill.exec.physical.impl.protocol.OperatorRecordBatch;
 import org.apache.drill.exec.physical.impl.scan.framework.ManagedReader;
 import org.apache.drill.exec.physical.impl.scan.framework.ManagedScanFramework;
 import org.apache.drill.exec.physical.impl.scan.framework.ManagedScanFramework.ReaderFactory;
@@ -34,6 +35,7 @@ import org.apache.drill.exec.record.CloseableRecordBatch;
 import org.apache.drill.exec.record.RecordBatch;
 import org.apache.drill.exec.server.options.OptionManager;
 import org.apache.drill.exec.store.http.HttpPaginatorConfig.PaginatorMethod;
+import org.apache.drill.exec.store.http.paginator.IndexPaginator;
 import org.apache.drill.exec.store.http.paginator.OffsetPaginator;
 import org.apache.drill.exec.store.http.paginator.PagePaginator;
 import org.apache.drill.exec.store.http.paginator.Paginator;
@@ -136,6 +138,12 @@ public class HttpScanBatchCreator implements BatchCreator<HttpSubScan> {
           paginatorConfig.pageSize(),
           paginatorConfig.pageParam(),
           paginatorConfig.pageSizeParam());
+      } else if (paginatorConfig.getMethodType() == PaginatorMethod.INDEX) {
+        paginator = new IndexPaginator(urlBuilder,
+          subScan.maxRecords(),
+          0, paginatorConfig.hasMoreParam(),
+          paginatorConfig.indexParam(),
+          paginatorConfig.nextPageParam());
       }
       return paginator;
     }

@@ -61,6 +61,15 @@ public class HttpPaginatorConfig {
   @JsonProperty
   private final String method;
 
+  @JsonProperty
+  private final String hasMoreParam;
+
+  @JsonProperty
+  private final String indexParam;
+
+  @JsonProperty
+  private final String nextPageParam;
+
   public HttpPaginatorConfig(HttpPaginatorConfigBuilder builder) {
     this.limitParam = builder.limitParam;
     this.offsetParam = builder.offsetParam;
@@ -69,6 +78,9 @@ public class HttpPaginatorConfig {
     this.pageSize = builder.pageSize;
     this.maxRecords = builder.maxRecords;
     this.method = builder.method;
+    this.hasMoreParam = builder.hasMoreParam;
+    this.indexParam = builder.indexParam;
+    this.nextPageParam = builder.nextPageParam;
   }
 
   public static HttpPaginatorConfigBuilder builder() {
@@ -103,6 +115,17 @@ public class HttpPaginatorConfig {
     return this.method;
   }
 
+  public String hasMoreParam() {
+    return hasMoreParam;
+  }
+
+  public String nextPageParam() {
+    return nextPageParam;
+  }
+  public String indexParam() {
+    return indexParam;
+  }
+
   @Override
   public boolean equals(Object o) {
     if (this == o) {
@@ -118,13 +141,16 @@ public class HttpPaginatorConfig {
       && Objects.equals(offsetParam, that.offsetParam)
       && Objects.equals(pageParam, that.pageParam)
       && Objects.equals(pageSizeParam, that.pageSizeParam)
-      && Objects.equals(method, that.method);
+      && Objects.equals(method, that.method)
+      && Objects.equals(hasMoreParam, that.hasMoreParam)
+      && Objects.equals(indexParam, that.indexParam)
+      && Objects.equals(nextPageParam, that.nextPageParam);
   }
 
   @Override
   public int hashCode() {
     return Objects.hash(limitParam, offsetParam, pageParam, pageSizeParam,
-      pageSize, maxRecords, method);
+      pageSize, maxRecords, method, nextPageParam, indexParam, hasMoreParam);
   }
 
   @Override
@@ -137,12 +163,16 @@ public class HttpPaginatorConfig {
       .field("pageSize", pageSize)
       .field("maxRecords", maxRecords)
       .field("method", method)
+      .field("indexParam", indexParam)
+      .field("hasMoreParam", hasMoreParam)
+      .field("nextPageParam", nextPageParam)
       .toString();
   }
 
   public enum PaginatorMethod {
     OFFSET,
-    PAGE
+    PAGE,
+    INDEX
   }
 
   private HttpPaginatorConfig(HttpPaginatorConfig.HttpPaginatorBuilder builder) {
@@ -152,6 +182,9 @@ public class HttpPaginatorConfig {
     this.pageParam = builder.pageParam;
     this.pageSizeParam = builder.pageSizeParam;
     this.maxRecords = builder.maxRecords;
+    this.nextPageParam = builder.nextPageParam;
+    this.hasMoreParam = builder.hasMoreParam;
+    this.indexParam = builder.indexParam;
 
     this.method = StringUtils.isEmpty(builder.method)
       ? PaginatorMethod.OFFSET.toString() : builder.method.trim().toUpperCase();
@@ -189,10 +222,23 @@ public class HttpPaginatorConfig {
             .build(logger);
         }
         break;
+      case INDEX:
+        // Either the nextPageParam OR the indexParam must be populated
+        if (StringUtils.isEmpty(hasMoreParam)) {
+          throw UserException
+            .validationError()
+            .message("Invalid paginator configuration.  For INDEX pagination, the hasMoreParam must be defined.")
+            .build(logger);
+        } else if (StringUtils.isEmpty(nextPageParam) || StringUtils.isEmpty(indexParam)) {
+          throw UserException
+            .validationError()
+            .message("Invalid paginator configuration.  For INDEX pagination, the nextPageParam or indexParam must be defined.")
+            .build(logger);
+        }
       default:
         throw UserException
           .validationError()
-          .message("Invalid paginator method: %s.  Drill supports 'OFFSET' and 'PAGE'", method)
+          .message("Invalid paginator method: %s.  Drill supports 'OFFSET', 'INDEX' and 'PAGE'", method)
           .build(logger);
     }
   }
@@ -218,10 +264,28 @@ public class HttpPaginatorConfig {
 
     public String method;
 
+    public String hasMoreParam;
+
+    public String indexParam;
+
+    public String nextPageParam;
+
+
     public HttpPaginatorConfig build() {
       return new HttpPaginatorConfig(this);
     }
 
+    public String hasMoreParam() {
+      return this.hasMoreParam;
+    }
+
+    public String indexParam() {
+      return this.indexParam;
+    }
+
+    public String nextPageParam() {
+      return this.nextPageParam;
+    }
     public String limitParam() {
       return this.limitParam;
     }
@@ -248,6 +312,21 @@ public class HttpPaginatorConfig {
 
     public String method() {
       return this.method;
+    }
+
+    public HttpPaginatorBuilder hasMoreParam(String hasMoreParam) {
+      this.hasMoreParam = hasMoreParam;
+      return this;
+    }
+
+    public HttpPaginatorBuilder indexParam(String indexParam) {
+      this.indexParam = indexParam;
+      return this;
+    }
+
+    public HttpPaginatorBuilder nextPageParam(String nextPageParam) {
+      this.nextPageParam = nextPageParam;
+      return this;
     }
 
     public HttpPaginatorBuilder limitParam(String limitParam) {
@@ -288,18 +367,30 @@ public class HttpPaginatorConfig {
 
   public static class HttpPaginatorConfigBuilder {
     private String limitParam;
-
     private String offsetParam;
-
     private String pageParam;
-
     private String pageSizeParam;
-
     private int pageSize;
-
     private int maxRecords;
-
     private String method;
+    private String hasMoreParam;
+    private String indexParam;
+    private String nextPageParam;
+
+    public HttpPaginatorConfigBuilder hasMoreParam(String hasMoreParam) {
+      this.hasMoreParam = hasMoreParam;
+      return this;
+    }
+
+    public HttpPaginatorConfigBuilder indexParam(String indexParam) {
+      this.indexParam = indexParam;
+      return this;
+    }
+
+    public HttpPaginatorConfigBuilder nextPageParam(String nextPageParam) {
+      this.nextPageParam = nextPageParam;
+      return this;
+    }
 
     public HttpPaginatorConfigBuilder limitParam(String limitParam) {
       this.limitParam = limitParam;

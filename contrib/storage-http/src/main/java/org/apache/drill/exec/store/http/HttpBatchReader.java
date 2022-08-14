@@ -31,17 +31,22 @@ import org.apache.drill.exec.physical.impl.scan.framework.ManagedReader;
 import org.apache.drill.exec.physical.impl.scan.framework.SchemaNegotiator;
 import org.apache.drill.exec.physical.impl.scan.v3.FixedReceiver;
 import org.apache.drill.exec.physical.resultSet.ResultSetLoader;
+import org.apache.drill.exec.physical.resultSet.ResultVectorCache;
+import org.apache.drill.exec.physical.resultSet.impl.ResultVectorCacheImpl;
 import org.apache.drill.exec.record.metadata.TupleMetadata;
 import org.apache.drill.exec.store.easy.json.loader.JsonLoader;
 import org.apache.drill.exec.store.easy.json.loader.JsonLoaderImpl.JsonLoaderBuilder;
 import org.apache.drill.exec.store.easy.json.loader.JsonLoaderOptions;
 import org.apache.drill.exec.store.http.HttpApiConfig.PostLocation;
+import org.apache.drill.exec.store.http.HttpPaginatorConfig.PaginatorMethod;
+import org.apache.drill.exec.store.http.paginator.IndexPaginator;
 import org.apache.drill.exec.store.http.paginator.Paginator;
 import org.apache.drill.exec.store.http.util.HttpProxyConfig;
 import org.apache.drill.exec.store.http.util.HttpProxyConfig.ProxyBuilder;
 import org.apache.drill.exec.store.http.util.SimpleHttp;
 import org.apache.drill.exec.store.ImplicitColumnUtils.ImplicitColumns;
 import org.apache.drill.exec.store.security.UsernamePasswordWithProxyCredentials;
+import org.apache.drill.exec.vector.ValueVector;
 import org.apache.drill.shaded.guava.com.google.common.base.Strings;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -294,6 +299,13 @@ public class HttpBatchReader implements ManagedReader<SchemaNegotiator> {
   @Override
   public boolean next() {
     boolean result = jsonLoader.readBatch();
+
+    // TODO Start here... pull the value(s) from the ResultVectorCache
+    if (paginator != null && paginator.getMode() == PaginatorMethod.INDEX) {
+      IndexPaginator indexPaginator = (IndexPaginator) paginator;
+      ResultVectorCacheImpl cache = (ResultVectorCacheImpl) resultSetLoader.vectorCache();
+      logger.debug("tet");
+    }
 
     // Allows limitless pagination.
     if (paginator != null &&
