@@ -220,7 +220,7 @@ public class PhoenixSQLTest extends PhoenixBaseTest {
     sets.clear();
   }
 
-  @Ignore("use the remote query server directly without minicluster")
+  @Ignore("use the remote phoenix directly without minicluster")
   @Test
   public void testJoinWithFilterPushdown() throws Exception {
     String sql = "select 10 as DRILL, a.n_name, b.r_name from phoenix123.v1.nation a join phoenix123.v1.region b "

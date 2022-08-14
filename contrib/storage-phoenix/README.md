@@ -22,7 +22,6 @@ Related Information :
  2. PHOENIX-6582: Bump default HBase version to 2.3.7 and 2.4.8
  3. PHOENIX-6605, PHOENIX-6606 and PHOENIX-6607.
  4. DRILL-8060, DRILL-8061 and DRILL-8062.
- 5. [QueryServer 6.0.0-drill-r1](https://github.com/luocooong/phoenix-queryserver/releases/tag/6.0.0-drill-r1)
 
 ## Configuration
 
@@ -33,8 +32,9 @@ Option 1 (Use the host and port):
 ```json
 {
   "type": "phoenix",
-  "host": "the.queryserver.hostname",
-  "port": 8765,
+  "zkQuorum": "zk.quorum.hostnames",
+  "port": 2181,
+  "zkPath": "/hbase",
   "enabled": true
 }
 ```
@@ -44,7 +44,7 @@ Option 2 (Use the jdbcURL) :
 ```json
 {
   "type": "phoenix",
-  "jdbcURL": "jdbc:phoenix:thin:url=http://the.queryserver.hostname:8765;serialization=PROTOBUF",
+  "jdbcURL": "jdbc:phoenix:zk.quorum.hostname1,zk.quorum.hostname2,zk.quorum.hostname3:2181:/hbase",
   "enabled": true
 }
 ```
@@ -54,10 +54,11 @@ Use the connection properties :
 ```json
 {
   "type": "phoenix",
-  "host": "the.queryserver.hostname",
-  "port": 8765,
+  "zkQuorum": "zk.quorum.hostnames",
+  "port": 2181,
   "props": {
-    "phoenix.query.timeoutMs": 60000
+    "hbase.client.retries.number": 10,
+    "hbase.client.pause": 10000
   },
   "enabled": true
 }
@@ -65,13 +66,12 @@ Use the connection properties :
 
 Tips :
  * More connection properties, see also [PQS Configuration](http://phoenix.apache.org/server.html).
- * If you provide the `jdbcURL`, the connection will ignore the value of `host` and `port`.
- * If you [extended the authentication of QueryServer](https://github.com/Boostport/avatica/issues/28), you can also pass the `userName` and `password`.
+ * If you provide the `jdbcURL`, the connection will ignore the value of `zkQuorum` and `port`.
 
 ```json
 {
   "type": "phoenix",
-  "host": "the.queryserver.hostname",
+  "zkQuorum": "zk.quorum.hostnames",
   "port": 8765,
   "userName": "my_user",
   "password": "my_pass",
@@ -83,11 +83,11 @@ Tips :
 Configurations :
 1. Enable [Drill User Impersonation](https://drill.apache.org/docs/configuring-user-impersonation/)
 2. Enable [PQS Impersonation](https://phoenix.apache.org/server.html#Impersonation)
-3. PQS URL:
-  1. Provide `host` and `port` and Drill will generate the PQS URL with a doAs parameter of current session user
-  2. Provide the `jdbcURL` with a `doAs` url param and `$user` placeholder as a value, for instance:
-     `jdbc:phoenix:thin:url=http://localhost:8765?doAs=$user`. In case Drill Impersonation is enabled, but `doAs=$user`
-     is missing the User Exception is thrown.
+3. Phoenix URL:
+  1. Provide `zkQuorum` and `port` and Drill will create a connection to Phoenix with a doAs of current 
+     session user
+  2. Provide the `jdbcURL` with a `principal`, for instance:
+     `jdbc:phoenix:<ZK-QUORUM>:<ZK-PORT>:<ZK-HBASE-NODE>:principal_name@REALM:/path/to/keytab`.
 
 ## Testing
 
@@ -98,27 +98,6 @@ Configurations :
 Current HBase2 releases still compile against Hadoop2 by default, and using Hadoop 3 against HBase2
 requires a recompilation of HBase because of incompatible changes between Hadoop2 and Hadoop3. "
 ```
-
-### Recommended Practices
-
- 1. Download HBase 2.4.2 sources and rebuild with Hadoop 3.
-
-    ```mvn clean install -DskipTests -Dhadoop.profile=3.0 -Dhadoop-three.version=3.2.3```
-
- 2. Remove the `Ignore` annotation in `PhoenixTestSuite.java`.
-    
-  ```
-    @Ignore
-    @Category({ SlowTest.class })
-    public class PhoenixTestSuite extends ClusterTest {
-   ```
-    
- 3. Go to the phoenix root folder and run test.
-
-  ```
-  cd contrib/storage-phoenix/
-  mvn test
-  ```
 
 ### To Add Features
 

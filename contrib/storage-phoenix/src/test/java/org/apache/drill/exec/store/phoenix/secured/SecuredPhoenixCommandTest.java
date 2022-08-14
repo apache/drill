@@ -26,12 +26,12 @@ import org.apache.drill.exec.record.metadata.SchemaBuilder;
 import org.apache.drill.exec.record.metadata.TupleMetadata;
 import org.apache.drill.test.QueryBuilder;
 import org.apache.drill.test.rowSet.RowSetComparison;
-import org.junit.jupiter.api.Assertions;
-import org.junit.jupiter.api.Tag;
-import org.junit.jupiter.api.Test;
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
-@Tag(SlowTest.TAG)
-@Tag(RowSetTest.TAG)
+import static org.junit.Assert.assertEquals;
+
+@Category({ SlowTest.class, RowSetTest.class })
 public class SecuredPhoenixCommandTest extends SecuredPhoenixBaseTest {
 
   @Test
@@ -42,7 +42,7 @@ public class SecuredPhoenixCommandTest extends SecuredPhoenixBaseTest {
   private void doTestShowTablesLike() throws Exception {
     runAndPrint("SHOW SCHEMAS");
     run("USE phoenix123.V1");
-    Assertions.assertEquals(1, queryBuilder().sql("SHOW TABLES LIKE '%REGION%'").run().recordCount());
+    assertEquals(1, queryBuilder().sql("SHOW TABLES LIKE '%REGION%'").run().recordCount());
   }
 
   @Test
@@ -77,6 +77,6 @@ public class SecuredPhoenixCommandTest extends SecuredPhoenixBaseTest {
 
   private void doTestDescribe() throws Exception {
     run("USE phoenix123.v1");
-    Assertions.assertEquals(4, queryBuilder().sql("DESCRIBE NATION").run().recordCount());
+    assertEquals(4, queryBuilder().sql("DESCRIBE NATION").run().recordCount());
   }
 }

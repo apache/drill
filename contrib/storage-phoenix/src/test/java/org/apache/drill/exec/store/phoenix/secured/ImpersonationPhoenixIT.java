@@ -25,26 +25,23 @@ import org.apache.hadoop.hbase.security.access.AccessController;
 import org.apache.hadoop.hbase.security.access.Permission.Action;
 import org.apache.hadoop.hbase.security.token.TokenProvider;
 import org.apache.phoenix.end2end.NeedsOwnMiniClusterTest;
-import org.apache.phoenix.end2end.TlsUtil;
 import org.apache.phoenix.jdbc.PhoenixDatabaseMetaData;
-import org.apache.phoenix.queryserver.QueryServerOptions;
-import org.apache.phoenix.queryserver.QueryServerProperties;
-import org.apache.phoenix.queryserver.client.Driver;
+import org.apache.phoenix.util.PhoenixRuntime;
 import org.junit.experimental.categories.Category;
 
 import java.util.Arrays;
 import java.util.List;
 
-import static org.apache.drill.exec.store.phoenix.secured.QueryServerEnvironment.LOGIN_USER;
+import static org.apache.drill.exec.store.phoenix.secured.PhoenixEnvironment.LOGIN_USER;
 
 /**
- * This is a copy of {@link org.apache.phoenix.end2end.HttpParamImpersonationQueryServerIT},
+ * This is a copy of {@code org.apache.phoenix.end2end.HttpParamImpersonationQueryServerIT},
  * but customized with 3 users, see {@link SecuredPhoenixBaseTest#runForThreeClients} for details
  */
 @Category(NeedsOwnMiniClusterTest.class)
-public class HttpParamImpersonationQueryServerIT {
+public class ImpersonationPhoenixIT {
 
-  public static QueryServerEnvironment environment;
+  public static PhoenixEnvironment environment;
 
   private static final List<TableName> SYSTEM_TABLE_NAMES = Arrays.asList(
     PhoenixDatabaseMetaData.SYSTEM_CATALOG_HBASE_TABLE_NAME,
@@ -54,7 +51,7 @@ public class HttpParamImpersonationQueryServerIT {
     PhoenixDatabaseMetaData.SYSTEM_SEQUENCE_HBASE_TABLE_NAME,
     PhoenixDatabaseMetaData.SYSTEM_STATS_HBASE_TABLE_NAME);
 
-  public static synchronized void startQueryServerEnvironment() throws Exception {
+  public static synchronized void startPhoenixEnvironment() throws Exception {
     // Clean up previous environment if any (Junit 4.13 @BeforeParam / @AfterParam would be an alternative)
     if(environment != null) {
       stopEnvironment();
@@ -69,8 +66,7 @@ public class HttpParamImpersonationQueryServerIT {
     // so that the user who is running the Drillbits/MiniDfs can impersonate user1 and user2 (not user3)
     conf.set(String.format("hadoop.proxyuser.%s.hosts", LOGIN_USER), "*");
     conf.set(String.format("hadoop.proxyuser.%s.users", LOGIN_USER), "user1,user2");
-    conf.setBoolean(QueryServerProperties.QUERY_SERVER_WITH_REMOTEUSEREXTRACTOR_ATTRIB, true);
-    environment = new QueryServerEnvironment(conf, 3, false);
+    environment = new PhoenixEnvironment(conf, 3, false);
   }
 
   public static synchronized void stopEnvironment() throws Exception {
@@ -79,14 +75,7 @@ public class HttpParamImpersonationQueryServerIT {
   }
 
   static public String getUrlTemplate() {
-    String url = Driver.CONNECT_STRING_PREFIX + "url=%s://localhost:" + environment.getPqsPort() + "?"
-      + QueryServerOptions.DEFAULT_QUERY_SERVER_REMOTEUSEREXTRACTOR_PARAM + "=%s;authentication=SPNEGO;serialization=PROTOBUF%s";
-    if (environment.getTls()) {
-      return String.format(url, "https", "%s", ";truststore=" + TlsUtil.getTrustStoreFile().getAbsolutePath()
-        + ";truststore_password=" + TlsUtil.getTrustStorePassword());
-    } else {
-      return String.format(url, "http", "%s", "");
-    }
+    return PhoenixRuntime.JDBC_PROTOCOL + ":localhost:%s";
   }
 
   static void grantUsersToPhoenixSystemTables(List<String> usersToGrant) throws Exception {

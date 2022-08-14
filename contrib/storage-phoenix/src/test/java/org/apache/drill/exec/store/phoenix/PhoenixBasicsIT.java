@@ -17,52 +17,54 @@
  */
 package org.apache.drill.exec.store.phoenix;
 
+import static org.apache.hadoop.hbase.HConstants.HBASE_DIR;
 import static org.apache.phoenix.jdbc.PhoenixDatabaseMetaData.TABLE_CAT;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.fail;
 
+import java.io.IOException;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
-import java.util.concurrent.TimeUnit;
+import java.util.Optional;
 
 import org.apache.hadoop.conf.Configuration;
-import org.apache.phoenix.end2end.QueryServerThread;
-import org.apache.phoenix.query.BaseTest;
-import org.apache.phoenix.queryserver.QueryServerProperties;
-import org.apache.phoenix.util.ReadOnlyProps;
-import org.apache.phoenix.util.ThinClientUtil;
+import org.apache.hadoop.fs.Path;
+import org.apache.hadoop.hbase.HBaseTestingUtility;
+import org.apache.hadoop.hbase.HConstants;
+import org.apache.hadoop.hbase.LocalHBaseCluster;
+import org.apache.phoenix.util.PhoenixRuntime;
 import org.slf4j.LoggerFactory;
 
 /**
- * This is a copy of {@link org.apache.phoenix.end2end.QueryServerBasicsIT} until
+ * This is a copy of {@code org.apache.phoenix.end2end.QueryServerBasicsIT} until
  * <a href="https://issues.apache.org/jira/browse/PHOENIX-6613">PHOENIX-6613</a> is fixed
  */
-public class QueryServerBasicsIT extends BaseTest {
+public class PhoenixBasicsIT {
+  private static final HBaseTestingUtility util = new HBaseTestingUtility();
 
-  private static final org.slf4j.Logger logger = LoggerFactory.getLogger(QueryServerBasicsIT.class);
+  private static final org.slf4j.Logger logger = LoggerFactory.getLogger(PhoenixBasicsIT.class);
 
-  private static QueryServerThread AVATICA_SERVER;
-  private static Configuration CONF;
   protected static String CONN_STRING;
+  static LocalHBaseCluster hbaseCluster;
 
   public static synchronized void doSetup() throws Exception {
-      setUpTestDriver(ReadOnlyProps.EMPTY_PROPS);
+    Configuration conf = util.getConfiguration();
+    // Start ZK by hand
+    util.startMiniZKCluster();
+    Path rootdir = util.getDataTestDirOnTestFS(PhoenixBasicsIT.class.getSimpleName());
+    // There is no setRootdir method that is available in all supported HBase versions.
+    conf.set(HBASE_DIR, rootdir.toString());
+    hbaseCluster = new LocalHBaseCluster(conf, 1);
+    hbaseCluster.startup();
 
-      CONF = config;
-      if(System.getProperty("do.not.randomize.pqs.port") == null) {
-        CONF.setInt(QueryServerProperties.QUERY_SERVER_HTTP_PORT_ATTRIB, 0);
-      }
-      String url = getUrl();
-      AVATICA_SERVER = new QueryServerThread(new String[] { url }, CONF, QueryServerBasicsIT.class.getName());
-      AVATICA_SERVER.start();
-      AVATICA_SERVER.getQueryServer().awaitRunning();
-      final int port = AVATICA_SERVER.getQueryServer().getPort();
-      logger.info("Avatica server started on port " + port);
-      CONN_STRING = ThinClientUtil.getConnectionUrl("localhost", port);
-      logger.info("JDBC connection string is " + CONN_STRING);
+    CONN_STRING = PhoenixRuntime.JDBC_PROTOCOL + ":localhost:" + getZookeeperPort();
+    logger.info("JDBC connection string is " + CONN_STRING);
+  }
+
+  public static int getZookeeperPort() {
+    return util.getConfiguration().getInt(HConstants.ZOOKEEPER_CLIENT_PORT, 2181);
   }
 
   public static void testCatalogs() throws Exception {
@@ -77,14 +79,8 @@ public class QueryServerBasicsIT extends BaseTest {
     }
   }
 
-  public static synchronized void afterClass() throws Exception {
-    if (AVATICA_SERVER != null) {
-      AVATICA_SERVER.join(TimeUnit.SECONDS.toSeconds(3));
-      Throwable t = AVATICA_SERVER.getQueryServer().getThrowable();
-      if (t != null) {
-        fail("query server threw. " + t.getMessage());
-      }
-      assertEquals("query server didn't exit cleanly", 0, AVATICA_SERVER.getQueryServer().getRetCode());
-    }
+  public static synchronized void afterClass() throws IOException {
+    Optional.of(hbaseCluster).ifPresent(LocalHBaseCluster::shutdown);
+    util.shutdownMiniCluster();
   }
 }

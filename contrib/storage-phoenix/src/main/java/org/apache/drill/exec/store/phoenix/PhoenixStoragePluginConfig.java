@@ -38,26 +38,28 @@ import com.fasterxml.jackson.annotation.JsonTypeName;
 public class PhoenixStoragePluginConfig extends StoragePluginConfig {
 
   public static final String NAME = "phoenix";
-  public static final String THIN_DRIVER_CLASS = "org.apache.phoenix.queryserver.client.Driver";
   public static final String FAT_DRIVER_CLASS = "org.apache.phoenix.jdbc.PhoenixDriver";
 
-  private final String host;
-  private final int port;
-  private final String jdbcURL; // (options) Equal to host + port
+  private final String zkQuorum;
+  private final String zkPath;
+  private final Integer port;
+  private final String jdbcURL; // (options) Equal to host + port + zkPath
   private final Map<String, Object> props; // (options) See also http://phoenix.apache.org/tuning.html
 
   @JsonCreator
   public PhoenixStoragePluginConfig(
-      @JsonProperty("host") String host,
-      @JsonProperty("port") int port,
+      @JsonProperty("zkQuorum") String zkQuorum,
+      @JsonProperty("port") Integer port,
+      @JsonProperty("zkPath") String zkPath,
       @JsonProperty("userName") String userName,
       @JsonProperty("password") String password,
       @JsonProperty("jdbcURL") String jdbcURL,
       @JsonProperty("credentialsProvider") CredentialsProvider credentialsProvider,
       @JsonProperty("props") Map<String, Object> props) {
     super(CredentialProviderUtils.getCredentialsProvider(userName, password, credentialsProvider), credentialsProvider == null);
-    this.host = host;
-    this.port = port == 0 ? 8765 : port;
+    this.zkQuorum = zkQuorum;
+    this.zkPath = zkPath;
+    this.port = port;
     this.jdbcURL = jdbcURL;
     this.props = props == null ? Collections.emptyMap() : props;
   }
@@ -69,13 +71,18 @@ public class PhoenixStoragePluginConfig extends StoragePluginConfig {
       .build();
   }
 
-  @JsonProperty("host")
-  public String getHost() {
-    return host;
+  @JsonProperty("zkQuorum")
+  public String getZkQuorum() {
+    return zkQuorum;
+  }
+
+  @JsonProperty("zkPath")
+  public String getZkPath() {
+    return zkPath;
   }
 
   @JsonProperty("port")
-  public int getPort() {
+  public Integer getPort() {
     return port;
   }
 
@@ -124,7 +131,9 @@ public class PhoenixStoragePluginConfig extends StoragePluginConfig {
       return Objects.equals(this.jdbcURL, config.getJdbcURL());
     }
     // Then the host and port
-    return Objects.equals(this.host, config.getHost()) && Objects.equals(this.port, config.getPort());
+    return Objects.equals(this.zkQuorum, config.getZkQuorum())
+      && Objects.equals(this.port, config.getPort())
+      && Objects.equals(this.zkPath, config.getZkPath());
   }
 
   @Override
@@ -132,15 +141,15 @@ public class PhoenixStoragePluginConfig extends StoragePluginConfig {
     if (StringUtils.isNotBlank(jdbcURL)) {
      return Objects.hash(jdbcURL);
     }
-    return Objects.hash(host, port);
+    return Objects.hash(zkQuorum, port, zkPath);
   }
 
   @Override
   public String toString() {
     return new PlanStringBuilder(PhoenixStoragePluginConfig.NAME)
-        .field("driverName", THIN_DRIVER_CLASS)
-        .field("host", host)
+        .field("zkQuorum", zkQuorum)
         .field("port", port)
+        .field("zkPath", zkPath)
         .field("userName", getUsername())
         .maskedField("password", getPassword()) // will set to "*******"
         .field("jdbcURL", jdbcURL)

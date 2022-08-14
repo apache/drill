@@ -47,14 +47,12 @@ public class PhoenixImplementor extends JdbcImplementor {
     if (node instanceof SqlIdentifier) {
       SqlIdentifier identifier = (SqlIdentifier) node;
       String name = identifier.names.get(identifier.names.size() -1);
-      if (!aliasSet.contains(name)) {
-        /*
-         * phoenix does not support the 'SELECT `table_name`.`field_name`',
-         * need to force the alias name and start from `table_name0`,
-         * the result is that 'SELECT `table_name0`.`field_name`'.
-         */
-        aliasSet.add(name);
-      }
+      /*
+       * phoenix does not support the 'SELECT `table_name`.`field_name`',
+       * need to force the alias name and start from `table_name0`,
+       * the result is that 'SELECT `table_name0`.`field_name`'.
+       */
+      aliasSet.add(name);
     }
     return super.result(node, clauses, rel, aliases);
   }
@@ -67,12 +65,12 @@ public class PhoenixImplementor extends JdbcImplementor {
   @Override
   public Result visit(Filter e) {
     final RelNode input = e.getInput();
-    Result x = visitRoot(input);
-    parseCorrelTable(e, x);
     if (input instanceof Aggregate) {
       return super.visit(e);
     } else {
-      final Builder builder = x.builder(e, Clause.WHERE);
+      final Result x = visitInput(e, 0, Clause.WHERE);
+      parseCorrelTable(e, x);
+      final Builder builder = x.builder(e);
       builder.setWhere(builder.context.toSql(null, e.getCondition()));
       final List<SqlNode> selectList = new ArrayList<>();
       e.getRowType().getFieldNames().forEach(fieldName -> {

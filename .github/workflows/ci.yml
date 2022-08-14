@@ -29,7 +29,7 @@ jobs:
   build:
     name: Main Build
     runs-on: ubuntu-latest
-    timeout-minutes: 100
+    timeout-minutes: 120
     strategy:
       matrix:
         # Java versions to run unit tests
