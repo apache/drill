@@ -26,8 +26,8 @@ import org.apache.drill.exec.record.metadata.SchemaBuilder;
 import org.apache.drill.exec.record.metadata.TupleMetadata;
 import org.apache.drill.test.QueryBuilder;
 import org.apache.drill.test.rowSet.RowSetComparison;
-import org.junit.jupiter.api.Tag;
-import org.junit.jupiter.api.Test;
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
 import java.math.BigDecimal;
 import java.time.Instant;
@@ -43,8 +43,7 @@ import static org.apache.drill.test.rowSet.RowSetUtilities.longArray;
 import static org.apache.drill.test.rowSet.RowSetUtilities.shortArray;
 import static org.apache.drill.test.rowSet.RowSetUtilities.strArray;
 
-@Tag(SlowTest.TAG)
-@Tag(RowSetTest.TAG)
+@Category({ SlowTest.class, RowSetTest.class })
 public class SecuredPhoenixDataTypeTest extends SecuredPhoenixBaseTest {
 
   @Test

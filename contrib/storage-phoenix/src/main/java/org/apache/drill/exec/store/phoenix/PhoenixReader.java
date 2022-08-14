@@ -236,7 +236,11 @@ public class PhoenixReader implements AutoCloseable {
     public void load(ResultSet row) throws SQLException {
       Array array = row.getArray(index);
       if (array != null && array.getArray() != null) {
-        Object[] values = (Object[]) array.getArray();
+        // Phoenix can create an array of primitives, so need to convert them
+        Object[] values = new Object[java.lang.reflect.Array.getLength(array.getArray())];
+        for (int i = 0; i < values.length; i++) {
+          values[i] = java.lang.reflect.Array.get(array.getArray(), i);
+        }
         ((ScalarArrayWriter) writer).setObjectArray(values);
       }
     }

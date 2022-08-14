@@ -28,4 +28,8 @@
     <name>phoenix.schema.isNamespaceMappingEnabled</name>
     <value>true</value>
   </property>
+  <property>
+    <name>hbase.wal.provider</name>
+    <value>filesystem</value>
+  </property>
 </configuration>

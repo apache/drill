@@ -28,14 +28,13 @@ import org.apache.drill.exec.record.metadata.TupleMetadata;
 import org.apache.drill.exec.rpc.RpcException;
 import org.apache.drill.test.QueryBuilder;
 import org.apache.drill.test.rowSet.RowSetComparison;
-import org.junit.jupiter.api.Disabled;
-import org.junit.jupiter.api.Tag;
-import org.junit.jupiter.api.Test;
+import org.junit.Ignore;
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.Assert.assertEquals;
 
-@Tag(SlowTest.TAG)
-@Tag(RowSetTest.TAG)
+@Category({ SlowTest.class, RowSetTest.class })
 public class SecuredPhoenixSQLTest extends SecuredPhoenixBaseTest {
 
   @Test
@@ -175,7 +174,7 @@ public class SecuredPhoenixSQLTest extends SecuredPhoenixBaseTest {
     String sql = "select count(*) as total from phoenix123.v1.nation";
     String plan = queryBuilder().sql(sql).explainJson();
     long cnt = queryBuilder().physical(plan).singletonLong();
-    assertEquals(25, cnt, "Counts should match");
+    assertEquals("Counts should match", 25, cnt);
   }
 
   @Test
@@ -243,12 +242,12 @@ public class SecuredPhoenixSQLTest extends SecuredPhoenixBaseTest {
 
     builder.planMatcher().exclude("Join").match();
 
-    assertEquals(625, sets.rowCount(), "Counts should match");
+    assertEquals("Counts should match", 625, sets.rowCount());
     sets.clear();
   }
 
   @Test
-  @Disabled("use the remote query server directly without minicluster")
+  @Ignore("use the remote phoenix directly without minicluster")
   public void testJoinWithFilterPushdown() throws Exception {
     String sql = "select 10 as DRILL, a.n_name, b.r_name from phoenix123.v1.nation a join phoenix123.v1.region b "
         + "on a.n_regionkey = b.r_regionkey where b.r_name = 'ASIA'";

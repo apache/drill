@@ -2,10 +2,10 @@
   "storage": {
     "phoenix": {
       "type": "phoenix",
-      "host": "the.queryserver.hostname",
+      "zkQuorum": "zk.quorum.hostnames",
       "port": 8765,
       "props" : {
-        "phoenix.query.timeoutMs": 60000
+        "hbase.client.retries.number": 10
       },
       "enabled": false
     }

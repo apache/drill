@@ -121,7 +121,7 @@ public class PhoenixStoragePlugin extends AbstractStoragePlugin {
     try {
       return CACHE.get(userName);
     } catch (final ExecutionException e) {
-      throw new SQLException("Failure setting up Phoenix DataSource (PQS client)", e);
+      throw new SQLException("Failure setting up Phoenix DataSource (Phoenix client)", e);
     }
   }
 
@@ -135,6 +135,6 @@ public class PhoenixStoragePlugin extends AbstractStoragePlugin {
     boolean impersonationEnabled = context.getConfig().getBoolean(ExecConstants.IMPERSONATION_ENABLED);
     return StringUtils.isNotBlank(config.getJdbcURL())
       ? new PhoenixDataSource(config.getJdbcURL(), userName, props, impersonationEnabled) // the props is initiated.
-      : new PhoenixDataSource(config.getHost(), config.getPort(), userName, props, impersonationEnabled);
+      : new PhoenixDataSource(config.getZkQuorum(), config.getPort(), config.getZkPath(), userName, props, impersonationEnabled);
   }
 }

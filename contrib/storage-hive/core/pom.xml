@@ -76,6 +76,14 @@
           <groupId>io.airlift</groupId>
           <artifactId>aircompressor</artifactId>
         </exclusion>
+        <exclusion>
+          <groupId>co.cask.tephra</groupId>
+          <artifactId>tephra-api</artifactId>
+        </exclusion>
+        <exclusion>
+          <groupId>co.cask.tephra</groupId>
+          <artifactId>tephra-core</artifactId>
+        </exclusion>
       </exclusions>
     </dependency>
     <dependency>

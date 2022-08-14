@@ -36,10 +36,8 @@ import org.apache.drill.test.ClusterTest;
 import org.apache.drill.test.LogFixture;
 import org.apache.hadoop.hbase.security.HBaseKerberosUtils;
 import org.apache.hadoop.security.UserGroupInformation;
-import org.apache.phoenix.queryserver.server.QueryServer;
-import org.junit.jupiter.api.AfterAll;
-import org.junit.jupiter.api.Assertions;
-import org.junit.jupiter.api.BeforeAll;
+import org.junit.AfterClass;
+import org.junit.BeforeClass;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -47,7 +45,7 @@ import java.io.File;
 import java.nio.file.Paths;
 import java.security.PrivilegedExceptionAction;
 import java.util.Arrays;
-import java.util.HashMap;
+import java.util.Collections;
 import java.util.Map;
 import java.util.Properties;
 import java.util.TimeZone;
@@ -56,11 +54,12 @@ import java.util.concurrent.atomic.AtomicInteger;
 import static org.apache.drill.exec.store.phoenix.PhoenixBaseTest.createSampleData;
 import static org.apache.drill.exec.store.phoenix.PhoenixBaseTest.createSchema;
 import static org.apache.drill.exec.store.phoenix.PhoenixBaseTest.createTables;
-import static org.apache.drill.exec.store.phoenix.secured.HttpParamImpersonationQueryServerIT.environment;
-import static org.apache.drill.exec.store.phoenix.secured.HttpParamImpersonationQueryServerIT.getUrlTemplate;
-import static org.apache.drill.exec.store.phoenix.secured.HttpParamImpersonationQueryServerIT.grantUsersToGlobalPhoenixUserTables;
-import static org.apache.drill.exec.store.phoenix.secured.HttpParamImpersonationQueryServerIT.grantUsersToPhoenixSystemTables;
-import static org.apache.drill.exec.store.phoenix.secured.SecuredPhoenixTestSuite.initPhoenixQueryServer;
+import static org.apache.drill.exec.store.phoenix.secured.ImpersonationPhoenixIT.environment;
+import static org.apache.drill.exec.store.phoenix.secured.ImpersonationPhoenixIT.getUrlTemplate;
+import static org.apache.drill.exec.store.phoenix.secured.ImpersonationPhoenixIT.grantUsersToGlobalPhoenixUserTables;
+import static org.apache.drill.exec.store.phoenix.secured.ImpersonationPhoenixIT.grantUsersToPhoenixSystemTables;
+import static org.apache.drill.exec.store.phoenix.secured.SecuredPhoenixTestSuite.initPhoenix;
+import static org.junit.Assert.assertThrows;
 
 public abstract class SecuredPhoenixBaseTest extends ClusterTest {
   private static final Logger logger = LoggerFactory.getLogger(PhoenixDataSource.class);
@@ -70,10 +69,10 @@ public abstract class SecuredPhoenixBaseTest extends ClusterTest {
 
   private final static AtomicInteger initCount = new AtomicInteger(0);
 
-  @BeforeAll
+  @BeforeClass
   public static void setUpBeforeClass() throws Exception {
     TimeZone.setDefault(TimeZone.getTimeZone("UTC"));
-    initPhoenixQueryServer();
+    initPhoenix();
     startSecuredDrillCluster();
     initializeDatabase();
   }
@@ -81,11 +80,10 @@ public abstract class SecuredPhoenixBaseTest extends ClusterTest {
   private static void startSecuredDrillCluster() throws Exception {
     logFixture = LogFixture.builder()
       .toConsole()
-      .logger(QueryServerEnvironment.class, CURRENT_LOG_LEVEL)
+      .logger(PhoenixEnvironment.class, CURRENT_LOG_LEVEL)
       .logger(SecuredPhoenixBaseTest.class, CURRENT_LOG_LEVEL)
       .logger(KerberosFactory.class, CURRENT_LOG_LEVEL)
       .logger(Krb5LoginModule.class, CURRENT_LOG_LEVEL)
-      .logger(QueryServer.class, CURRENT_LOG_LEVEL)
       .logger(ServerAuthenticationHandler.class, CURRENT_LOG_LEVEL)
       .build();
 
@@ -118,15 +116,10 @@ public abstract class SecuredPhoenixBaseTest extends ClusterTest {
     user3ClientProperties.setProperty(DrillProperties.KEYTAB, user3.getValue().getAbsolutePath());
     cluster.addClientFixture(user3ClientProperties);
 
-    Map<String, Object> phoenixProps = new HashMap<>();
-    phoenixProps.put("phoenix.query.timeoutMs", 90000);
-    phoenixProps.put("phoenix.query.keepAliveMs", "30000");
-    phoenixProps.put("phoenix.queryserver.withRemoteUserExtractor", true);
     StoragePluginRegistry registry = cluster.drillbit().getContext().getStorage();
-    final String doAsUrl = String.format(getUrlTemplate(), "$user");
-    logger.debug("Phoenix Query Server URL: {}", environment.getPqsUrl());
-    PhoenixStoragePluginConfig config = new PhoenixStoragePluginConfig(null, 0, null, null,
-      doAsUrl, null, phoenixProps);
+    logger.debug("Phoenix URL: {}", environment.getPhoenixUrl());
+    PhoenixStoragePluginConfig config = new PhoenixStoragePluginConfig(null, 0, null, null, null,
+      getUrlTemplate(), null, Collections.emptyMap());
     config.setEnabled(true);
     registry.put(PhoenixStoragePluginConfig.NAME + "123", config);
   }
@@ -143,9 +136,9 @@ public abstract class SecuredPhoenixBaseTest extends ClusterTest {
       // Build the JDBC URL by hand with the doAs
       final UserGroupInformation serviceUgi = ImpersonationUtil.getProcessUserUGI();
       serviceUgi.doAs((PrivilegedExceptionAction<Void>) () -> {
-        createSchema(environment.getPqsUrl());
-        createTables(environment.getPqsUrl());
-        createSampleData(environment.getPqsUrl());
+        createSchema(environment.getPhoenixUrl());
+        createTables(environment.getPhoenixUrl());
+        createSampleData(environment.getPhoenixUrl());
         grantUsersToPhoenixSystemTables(Arrays.asList(user1.getKey(), user2.getKey()));
         grantUsersToGlobalPhoenixUserTables(Arrays.asList(user1.getKey()));
         return null;
@@ -173,19 +166,19 @@ public abstract class SecuredPhoenixBaseTest extends ClusterTest {
       wrapper.apply();
       client = cluster.client(1);
       // original is AccessDeniedException: Insufficient permissions for user 'user2'
-      Assertions.assertThrows(user2ExpectedException, wrapper::apply);
+      assertThrows(user2ExpectedException, wrapper::apply);
       client = cluster.client(2);
       // RuntimeException for user3, Failed to execute HTTP Request, got HTTP/401
-      Assertions.assertThrows(user3ExpectedException, wrapper::apply);
+      assertThrows(user3ExpectedException, wrapper::apply);
     } finally {
       client = cluster.client(0);
     }
   }
 
-  @AfterAll
+  @AfterClass
   public static void tearDownCluster() throws Exception {
     if (!SecuredPhoenixTestSuite.isRunningSuite() && environment != null) {
-      HttpParamImpersonationQueryServerIT.stopEnvironment();
+      ImpersonationPhoenixIT.stopEnvironment();
     }
   }
 }

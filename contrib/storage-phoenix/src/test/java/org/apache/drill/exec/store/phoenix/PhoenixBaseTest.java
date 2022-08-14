@@ -59,15 +59,15 @@ public class PhoenixBaseTest extends ClusterTest {
   @BeforeClass
   public static void setUpBeforeClass() throws Exception {
     TimeZone.setDefault(TimeZone.getTimeZone("UTC"));
-    PhoenixTestSuite.initPhoenixQueryServer();
+    PhoenixTestSuite.initPhoenix();
     if (PhoenixTestSuite.isRunningSuite()) {
-      QueryServerBasicsIT.testCatalogs();
+      PhoenixBasicsIT.testCatalogs();
     }
     startDrillCluster();
     if (initCount.incrementAndGet() == 1) {
-      createSchema(QueryServerBasicsIT.CONN_STRING);
-      createTables(QueryServerBasicsIT.CONN_STRING);
-      createSampleData(QueryServerBasicsIT.CONN_STRING);
+      createSchema(PhoenixBasicsIT.CONN_STRING);
+      createTables(PhoenixBasicsIT.CONN_STRING);
+      createSampleData(PhoenixBasicsIT.CONN_STRING);
     }
   }
 
@@ -85,8 +85,8 @@ public class PhoenixBaseTest extends ClusterTest {
     props.put("phoenix.query.timeoutMs", 90000);
     props.put("phoenix.query.keepAliveMs", "30000");
     StoragePluginRegistry registry = cluster.drillbit().getContext().getStorage();
-    PhoenixStoragePluginConfig config = new PhoenixStoragePluginConfig(null, 0, null, null,
-      QueryServerBasicsIT.CONN_STRING, null, props);
+    PhoenixStoragePluginConfig config = new PhoenixStoragePluginConfig(null, 0, null, null, null,
+      PhoenixBasicsIT.CONN_STRING, null, props);
     config.setEnabled(true);
     registry.put(PhoenixStoragePluginConfig.NAME + "123", config);
     dirTestWatcher.copyResourceToRoot(Paths.get(""));

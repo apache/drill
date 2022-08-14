@@ -29,12 +29,12 @@
   <name>Drill : Contrib : Storage : Phoenix</name>
   
   <properties>
-    <phoenix.queryserver.version>6.0.0</phoenix.queryserver.version>
     <phoenix.version>5.1.2</phoenix.version>
     <!-- Keep the 2.4.2 to reduce dependency conflict -->
     <hbase.minicluster.version>2.4.2</hbase.minicluster.version>
+    <phoenix.skip.tests>false</phoenix.skip.tests>
   </properties>
-  
+
   <dependencies>
     <dependency>
       <groupId>org.apache.drill.exec</groupId>
@@ -55,60 +55,6 @@
       <version>${project.version}</version>
       <scope>test</scope>
     </dependency>
-	<dependency>
-	  <groupId>org.apache.phoenix</groupId>
-	  <artifactId>phoenix-queryserver-client</artifactId>
-	  <version>${phoenix.queryserver.version}</version>
-	</dependency>
- 
-    <!-- Test Dependency versions -->
-    <dependency>
-      <!-- PHOENIX-6605 -->
-      <groupId>com.github.luocooong.phoenix-queryserver</groupId>
-      <artifactId>phoenix-queryserver</artifactId>
-      <version>6.0.0-drill-r1</version>
-      <scope>test</scope>
-      <exclusions>
-        <exclusion>
-          <groupId>org.slf4j</groupId>
-          <artifactId>*</artifactId>
-        </exclusion>
-        <exclusion>
-          <groupId>log4j</groupId>
-          <artifactId>log4j</artifactId>
-        </exclusion>
-        <exclusion>
-          <groupId>commons-logging</groupId>
-          <artifactId>commons-logging</artifactId>
-        </exclusion>
-        <exclusion>
-          <groupId>javax.servlet</groupId>
-          <artifactId>*</artifactId>
-        </exclusion>
-        <exclusion>
-          <groupId>org.ow2.asm</groupId>
-          <artifactId>asm</artifactId>
-        </exclusion>
-      </exclusions>
-    </dependency>
-    <dependency>
-      <!-- PHOENIX-6605 -->
-      <groupId>com.github.luocooong.phoenix-queryserver</groupId>
-      <artifactId>phoenix-queryserver-it</artifactId>
-      <version>6.0.0-drill-r1</version>
-      <scope>test</scope>
-      <classifier>tests</classifier>
-      <exclusions>
-        <exclusion>
-          <groupId>org.codehaus.jackson</groupId>
-          <artifactId>jackson-jaxrs</artifactId>
-        </exclusion>
-        <exclusion>
-          <groupId>org.codehaus.jackson</groupId>
-          <artifactId>jackson-xc</artifactId>
-        </exclusion>
-      </exclusions>
-    </dependency>
     <dependency>
       <groupId>org.apache.phoenix</groupId>
       <artifactId>phoenix-core</artifactId>
@@ -136,13 +82,53 @@
           <groupId>org.ow2.asm</groupId>
           <artifactId>asm</artifactId>
         </exclusion>
+        <exclusion>
+          <groupId>org.ow2.asm</groupId>
+          <artifactId>asm-all</artifactId>
+        </exclusion>
+        <exclusion>
+          <groupId>commons-configuration</groupId>
+          <artifactId>commons-configuration</artifactId>
+        </exclusion>
+        <exclusion>
+          <groupId>org.apache.commons</groupId>
+          <artifactId>commons-csv</artifactId>
+        </exclusion>
+        <exclusion>
+          <groupId>org.apache.hbase</groupId>
+          <artifactId>hbase-endpoint</artifactId>
+        </exclusion>
+        <exclusion>
+          <groupId>com.salesforce.i18n</groupId>
+          <artifactId>i18n-util</artifactId>
+        </exclusion>
+        <exclusion>
+          <groupId>jline</groupId>
+          <artifactId>jline</artifactId>
+        </exclusion>
+        <exclusion>
+          <groupId>com.codahale.metrics</groupId>
+          <artifactId>metrics-core</artifactId>
+        </exclusion>
+        <exclusion>
+          <groupId>com.codahale.metrics</groupId>
+          <artifactId>metrics-graphite</artifactId>
+        </exclusion>
+        <exclusion>
+          <groupId>org.jboss.netty</groupId>
+          <artifactId>netty</artifactId>
+        </exclusion>
       </exclusions>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.phoenix</groupId>
+      <artifactId>phoenix-hbase-compat-2.4.1</artifactId>
+      <version>${phoenix.version}</version>
     </dependency>
     <dependency>
       <groupId>org.apache.phoenix</groupId>
       <artifactId>phoenix-core</artifactId>
       <version>${phoenix.version}</version>
-      <scope>test</scope>
       <exclusions>
         <exclusion>
           <groupId>org.slf4j</groupId>
@@ -151,6 +137,62 @@
         <exclusion>
           <groupId>log4j</groupId>
           <artifactId>log4j</artifactId>
+        </exclusion>
+        <exclusion>
+          <artifactId>commons-logging</artifactId>
+          <groupId>commons-logging</groupId>
+        </exclusion>
+        <exclusion>
+          <groupId>javax.servlet</groupId>
+          <artifactId>*</artifactId>
+        </exclusion>
+        <exclusion>
+          <groupId>org.ow2.asm</groupId>
+          <artifactId>asm</artifactId>
+        </exclusion>
+        <exclusion>
+          <groupId>org.ow2.asm</groupId>
+          <artifactId>asm-all</artifactId>
+        </exclusion>
+        <exclusion>
+          <groupId>commons-configuration</groupId>
+          <artifactId>commons-configuration</artifactId>
+        </exclusion>
+        <exclusion>
+          <groupId>org.apache.hbase</groupId>
+          <artifactId>hbase-testing-util</artifactId>
+        </exclusion>
+        <exclusion>
+          <groupId>org.apache.htrace</groupId>
+          <artifactId>htrace-core</artifactId>
+        </exclusion>
+        <exclusion>
+          <groupId>org.apache.commons</groupId>
+          <artifactId>commons-csv</artifactId>
+        </exclusion>
+        <exclusion>
+          <groupId>org.apache.hbase</groupId>
+          <artifactId>hbase-endpoint</artifactId>
+        </exclusion>
+        <exclusion>
+          <groupId>jline</groupId>
+          <artifactId>jline</artifactId>
+        </exclusion>
+        <exclusion>
+          <groupId>com.salesforce.i18n</groupId>
+          <artifactId>i18n-util</artifactId>
+        </exclusion>
+        <exclusion>
+          <groupId>com.codahale.metrics</groupId>
+          <artifactId>metrics-core</artifactId>
+        </exclusion>
+        <exclusion>
+          <groupId>com.codahale.metrics</groupId>
+          <artifactId>metrics-graphite</artifactId>
+        </exclusion>
+        <exclusion>
+          <groupId>org.jboss.netty</groupId>
+          <artifactId>netty</artifactId>
         </exclusion>
       </exclusions>
     </dependency>
@@ -170,21 +212,20 @@
       <groupId>org.apache.hbase</groupId>
       <artifactId>hbase-it</artifactId>
       <version>${hbase.minicluster.version}</version>
-      <type>test-jar</type>
+      <classifier>tests</classifier>
       <scope>test</scope>
+      <exclusions>
+        <exclusion>
+          <groupId>org.apache.hbase</groupId>
+          <artifactId>hbase-endpoint</artifactId>
+        </exclusion>
+      </exclusions>
     </dependency>
     <dependency>
       <groupId>org.apache.hbase</groupId>
       <artifactId>hbase-common</artifactId>
       <version>${hbase.minicluster.version}</version>
-      <type>test-jar</type>
-      <scope>test</scope>
-    </dependency>
-    <dependency>
-      <groupId>org.apache.hbase</groupId>
-      <artifactId>hbase-server</artifactId>
-      <version>${hbase.minicluster.version}</version>
-      <type>test-jar</type>
+      <classifier>tests</classifier>
       <scope>test</scope>
     </dependency>
     <dependency>
@@ -214,7 +255,7 @@
     <dependency>
       <groupId>org.apache.hbase</groupId>
       <artifactId>hbase-asyncfs</artifactId>
-      <type>test-jar</type>
+      <classifier>tests</classifier>
       <version>${hbase.minicluster.version}</version>
       <scope>test</scope>
       <exclusions>
@@ -288,28 +329,11 @@
           <groupId>com.zaxxer</groupId>
           <artifactId>HikariCP-java7</artifactId>
         </exclusion>
+        <exclusion>
+          <groupId>org.apache.commons</groupId>
+          <artifactId>commons-csv</artifactId>
+        </exclusion>
       </exclusions>
-    </dependency>
-    <dependency>
-      <groupId>com.univocity</groupId>
-      <artifactId>univocity-parsers</artifactId>
-      <version>${univocity-parsers.version}</version>
-      <scope>test</scope>
-    </dependency>
-    <dependency>
-      <groupId>org.eclipse.jetty</groupId>
-      <artifactId>jetty-server</artifactId>
-      <scope>test</scope>
-    </dependency>
-    <dependency>
-      <groupId>org.eclipse.jetty</groupId>
-      <artifactId>jetty-http</artifactId>
-      <scope>test</scope>
-    </dependency>
-    <dependency>
-      <groupId>org.eclipse.jetty</groupId>
-      <artifactId>jetty-servlet</artifactId>
-      <scope>test</scope>
     </dependency>
   </dependencies>
   <build>
@@ -339,8 +363,12 @@
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-surefire-plugin</artifactId>
         <configuration>
+          <skipTests>${phoenix.skip.tests}</skipTests>
+          <forkCount combine.self="override">1</forkCount>
+          <reuseForks>false</reuseForks>
           <includes>
             <include>**/PhoenixTestSuite.class</include>
+            <include>**/SecuredPhoenixTestSuite.class</include>
           </includes>
           <excludes>
             <exclude>**/*Test.java</exclude>
@@ -353,6 +381,9 @@
   <profiles>
     <profile>
       <id>hadoop-2</id>
+      <properties>
+        <phoenix.skip.tests>true</phoenix.skip.tests>
+      </properties>
       <build>
         <plugins>
           <plugin>
