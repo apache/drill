@@ -22,8 +22,9 @@ import org.apache.drill.categories.SlowTest;
 import org.apache.drill.common.logical.StoragePluginConfig;
 import org.apache.drill.common.logical.StoragePluginConfig.AuthMode;
 import org.apache.drill.common.logical.security.PlainCredentialsProvider;
+import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.store.StoragePluginRegistry;
-import org.apache.drill.test.ClusterFixture;
+import org.apache.drill.test.ClusterFixtureBuilder;
 import org.apache.drill.test.ClusterTest;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
@@ -76,7 +77,12 @@ public class SplunkTestSuite extends ClusterTest {
   public static void initSplunk() throws Exception {
     synchronized (SplunkTestSuite.class) {
       if (initCount.get() == 0) {
-        startCluster(ClusterFixture.builder(dirTestWatcher));
+        ClusterFixtureBuilder builder = new ClusterFixtureBuilder(dirTestWatcher)
+          .configProperty(ExecConstants.HTTP_ENABLE, true)
+          .configProperty(ExecConstants.HTTP_PORT_HUNT, true)
+          .configProperty(ExecConstants.IMPERSONATION_ENABLED, true);
+        startCluster(builder);
+
         splunk.start();
         String hostname = splunk.getHost();
         Integer port = splunk.getFirstMappedPort();
@@ -98,7 +104,8 @@ public class SplunkTestSuite extends ClusterTest {
 
         SPLUNK_STORAGE_PLUGIN_CONFIG_WITH_USER_TRANSLATION = new SplunkPluginConfig(null, null, hostname, port, "1", "now",
           credentialsProvider, 4, AuthMode.USER_TRANSLATION.name());
-        cluster.defineStoragePlugin("ut_splunk", SPLUNK_STORAGE_PLUGIN_CONFIG_WITH_USER_TRANSLATION);
+        SPLUNK_STORAGE_PLUGIN_CONFIG_WITH_USER_TRANSLATION.setEnabled(true);
+        pluginRegistry.put("ut_splunk", SPLUNK_STORAGE_PLUGIN_CONFIG_WITH_USER_TRANSLATION);
 
       }
       initCount.incrementAndGet();

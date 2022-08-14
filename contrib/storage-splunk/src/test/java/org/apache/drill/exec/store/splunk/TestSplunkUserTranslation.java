@@ -20,71 +20,61 @@ package org.apache.drill.exec.store.splunk;
 
 import org.apache.drill.categories.SlowTest;
 import org.apache.drill.common.config.DrillProperties;
-import org.apache.drill.common.exceptions.UserException;
-import org.apache.drill.common.logical.security.PlainCredentialsProvider;
-import org.apache.drill.exec.ExecConstants;
-import org.apache.drill.exec.store.StoragePlugin;
-import org.apache.drill.exec.store.StoragePluginRegistry;
+import org.apache.drill.exec.physical.rowSet.RowSet;
 import org.apache.drill.test.ClientFixture;
-import org.apache.drill.test.ClusterFixtureBuilder;
-import org.junit.BeforeClass;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
-import java.util.Map;
 
 import static org.apache.drill.exec.rpc.user.security.testing.UserAuthenticatorTestImpl.ADMIN_USER;
 import static org.apache.drill.exec.rpc.user.security.testing.UserAuthenticatorTestImpl.ADMIN_USER_PASSWORD;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.apache.drill.exec.rpc.user.security.testing.UserAuthenticatorTestImpl.TEST_USER_1;
+import static org.apache.drill.exec.rpc.user.security.testing.UserAuthenticatorTestImpl.TEST_USER_1_PASSWORD;
+import static org.junit.Assert.assertEquals;
 
 @Category({SlowTest.class})
 public class TestSplunkUserTranslation extends SplunkBaseTest {
 
-  @BeforeClass
-  public static void setup() throws Exception {
-    ClusterFixtureBuilder builder = new ClusterFixtureBuilder(dirTestWatcher)
-      .configProperty(ExecConstants.HTTP_ENABLE, true)
-      .configProperty(ExecConstants.HTTP_PORT_HUNT, true)
-      .configProperty(ExecConstants.IMPERSONATION_ENABLED, true);
-    startCluster(builder);
-  }
-  @Test
-  public void testEmptyUserCredentials() throws Exception {
-    ClientFixture client = cluster
-      .clientBuilder()
-      .property(DrillProperties.USER, ADMIN_USER)
-      .property(DrillProperties.PASSWORD, ADMIN_USER_PASSWORD)
-      .build();
-
-    // First verify that the user has no credentials
-    StoragePluginRegistry registry = cluster.storageRegistry();
-    StoragePlugin plugin = registry.getPlugin("ut_splunk");
-    PlainCredentialsProvider credentialsProvider = (PlainCredentialsProvider) plugin.getConfig().getCredentialsProvider();
-    Map<String, String> credentials = credentialsProvider.getUserCredentials(ADMIN_USER);
-    assertNotNull(credentials);
-    assertNull(credentials.get("username"));
-    assertNull(credentials.get("password"));
-  }
-
   @Test
   public void testQueryWithMissingCredentials() throws Exception {
     // This test validates that the correct credentials are sent down to Splunk.
-    // The query should fail, but Drill should not crash
+    // This user should not see the ut_splunk because they do not have valid credentials
     ClientFixture client = cluster
       .clientBuilder()
       .property(DrillProperties.USER, ADMIN_USER)
       .property(DrillProperties.PASSWORD, ADMIN_USER_PASSWORD)
       .build();
 
-    String sql = "SELECT `component` FROM splunk.`_introspection` ORDER BY `component` LIMIT 2";
-    try {
-      client.queryBuilder().sql(sql).run();
-      fail();
-    } catch (UserException e) {
-      assertTrue(e.getMessage().contains("You do not have valid credentials for this API."));
-    }
+    String sql = "SHOW DATABASES";
+
+    RowSet results = client.queryBuilder().sql(sql).rowSet();
+    assertEquals(8, results.rowCount());
+  }
+
+  @Test
+  public void testQueryWithValidCredentials() throws Exception {
+    ClientFixture client = cluster
+      .clientBuilder()
+      .property(DrillProperties.USER, TEST_USER_1)
+      .property(DrillProperties.PASSWORD, TEST_USER_1_PASSWORD)
+      .build();
+
+    String sql = "SHOW DATABASES";
+
+    RowSet results = client.queryBuilder().sql(sql).rowSet();
+    assertEquals(9, results.rowCount());
+  }
+
+  @Test
+  public void testSplunkQueryWithUserTranslation() throws Exception {
+    ClientFixture client = cluster
+      .clientBuilder()
+      .property(DrillProperties.USER, TEST_USER_1)
+      .property(DrillProperties.PASSWORD, TEST_USER_1_PASSWORD)
+      .build();
+
+    String sql = "SELECT acceleration_id, action, add_offset, add_timestamp FROM ut_splunk._audit LIMIT 2";
+    RowSet results = client.queryBuilder().sql(sql).rowSet();
+    assertEquals(2, results.rowCount());
   }
 }
