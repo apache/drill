@@ -311,7 +311,7 @@ public class SplunkPluginTest extends SplunkBaseTest {
           .thenThrow(new RuntimeException("Fail second connection to Splunk"))
           .thenThrow(new RuntimeException("Fail third connection to Splunk"))
           .thenReturn(new Service(loginArgs)); // fourth connection is successful
-      new SplunkConnection(SPLUNK_STORAGE_PLUGIN_CONFIG); // it will fail, in case "reconnectRetries": 1 is specified in configs
+      new SplunkConnection(SPLUNK_STORAGE_PLUGIN_CONFIG, null); // it will fail, in case "reconnectRetries": 1 is specified in configs
       splunk.verify(
           () -> Service.connect(loginArgs),
           times(4)

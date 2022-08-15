@@ -81,7 +81,7 @@ public class SplunkBatchReader implements ManagedReader<SchemaNegotiator> {
     this.subScan = subScan;
     this.projectedColumns = subScan.getColumns();
     this.subScanSpec = subScan.getScanSpec();
-    SplunkConnection connection = new SplunkConnection(config);
+    SplunkConnection connection = new SplunkConnection(config, subScan.getUserName());
     this.splunkService = connection.connect();
 
     this.csvSettings = new CsvParserSettings();

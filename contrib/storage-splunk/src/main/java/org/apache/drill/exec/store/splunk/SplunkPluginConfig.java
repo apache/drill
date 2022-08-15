@@ -28,6 +28,8 @@ import org.apache.drill.common.logical.security.CredentialsProvider;
 import org.apache.drill.common.logical.security.PlainCredentialsProvider;
 import org.apache.drill.exec.store.security.CredentialProviderUtils;
 import org.apache.drill.exec.store.security.UsernamePasswordCredentials;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.Objects;
 import java.util.Optional;
@@ -35,13 +37,14 @@ import java.util.Optional;
 @JsonTypeName(SplunkPluginConfig.NAME)
 public class SplunkPluginConfig extends StoragePluginConfig {
 
+  private static final Logger logger = LoggerFactory.getLogger(SplunkPluginConfig.class);
+
   public static final String NAME = "splunk";
   public static final int DISABLED_RECONNECT_RETRIES = 1;
 
   private final String hostname;
   private final String earliestTime;
   private final String latestTime;
-
   private final int port;
   private final Integer reconnectRetries;
 
@@ -56,7 +59,7 @@ public class SplunkPluginConfig extends StoragePluginConfig {
                             @JsonProperty("reconnectRetries") Integer reconnectRetries,
                             @JsonProperty("authMode") String authMode) {
     super(CredentialProviderUtils.getCredentialsProvider(username, password, credentialsProvider),
-        credentialsProvider == null);
+        credentialsProvider == null, AuthMode.parseOrDefault(authMode, AuthMode.SHARED_USER));
     this.hostname = hostname;
     this.port = port;
     this.earliestTime = earliestTime;
@@ -73,10 +76,26 @@ public class SplunkPluginConfig extends StoragePluginConfig {
     this.reconnectRetries = that.reconnectRetries;
   }
 
+  /**
+   * Gets the credentials. This method is used when user translation is not enabled.
+   * @return An {@link Optional} containing {@link UsernamePasswordCredentials} from the config.
+   */
   @JsonIgnore
   public Optional<UsernamePasswordCredentials> getUsernamePasswordCredentials() {
     return new UsernamePasswordCredentials.Builder()
       .setCredentialsProvider(credentialsProvider)
+      .build();
+  }
+
+  /**
+   * Gets the credentials. This method is used when user translation is enabled.
+   * @return An {@link Optional} containing {@link UsernamePasswordCredentials} from the config.
+   */
+  @JsonIgnore
+  public Optional<UsernamePasswordCredentials> getUsernamePasswordCredentials(String username) {
+    return new UsernamePasswordCredentials.Builder()
+      .setCredentialsProvider(credentialsProvider)
+      .setQueryUser(username)
       .build();
   }
 
@@ -85,7 +104,7 @@ public class SplunkPluginConfig extends StoragePluginConfig {
     if (!directCredentials) {
       return null;
     }
-    return getUsernamePasswordCredentials()
+    return getUsernamePasswordCredentials(null)
       .map(UsernamePasswordCredentials::getUsername)
       .orElse(null);
   }
@@ -95,7 +114,7 @@ public class SplunkPluginConfig extends StoragePluginConfig {
     if (!directCredentials) {
       return null;
     }
-    return getUsernamePasswordCredentials()
+    return getUsernamePasswordCredentials(null)
       .map(UsernamePasswordCredentials::getPassword)
       .orElse(null);
   }
@@ -141,12 +160,13 @@ public class SplunkPluginConfig extends StoragePluginConfig {
       Objects.equals(hostname, thatConfig.hostname) &&
       Objects.equals(port, thatConfig.port) &&
       Objects.equals(earliestTime, thatConfig.earliestTime) &&
-      Objects.equals(latestTime, thatConfig.latestTime);
+      Objects.equals(latestTime, thatConfig.latestTime) &&
+      Objects.equals(authMode, thatConfig.authMode);
   }
 
   @Override
   public int hashCode() {
-    return Objects.hash(credentialsProvider, hostname, port, earliestTime, latestTime);
+    return Objects.hash(credentialsProvider, hostname, port, earliestTime, latestTime, authMode);
   }
 
   @Override
@@ -157,6 +177,7 @@ public class SplunkPluginConfig extends StoragePluginConfig {
       .field("port", port)
       .field("earliestTime", earliestTime)
       .field("latestTime", latestTime)
+      .field("Authentication Mode", authMode)
       .toString();
   }
 

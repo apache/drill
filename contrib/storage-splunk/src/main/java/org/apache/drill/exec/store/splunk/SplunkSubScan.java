@@ -52,7 +52,7 @@ public class SplunkSubScan extends AbstractBase implements SubScan {
     @JsonProperty("columns") List<SchemaPath> columns,
     @JsonProperty("filters") Map<String, ExprNode.ColRelOpConstNode> filters,
     @JsonProperty("maxRecords") int maxRecords) {
-      super("user");
+      super(splunkScanSpec.queryUserName());
       this.config = config;
       this.splunkScanSpec = splunkScanSpec;
       this.columns = columns;

@@ -23,6 +23,7 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import org.apache.drill.common.PlanStringBuilder;
 import org.apache.drill.common.expression.SchemaPath;
+import org.apache.drill.exec.metastore.MetadataProviderManager;
 import org.apache.drill.exec.physical.base.AbstractGroupScan;
 import org.apache.drill.exec.physical.base.GroupScan;
 import org.apache.drill.exec.physical.base.PhysicalOperator;
@@ -30,10 +31,13 @@ import org.apache.drill.exec.physical.base.ScanStats;
 import org.apache.drill.exec.physical.base.SubScan;
 import org.apache.drill.exec.planner.logical.DrillScanRel;
 import org.apache.drill.exec.proto.CoordinationProtos;
+import org.apache.drill.exec.record.metadata.TupleMetadata;
 import org.apache.drill.exec.store.base.filter.ExprNode;
 import org.apache.drill.exec.util.Utilities;
+import org.apache.drill.metastore.metadata.TableMetadataProvider;
 import org.apache.drill.shaded.guava.com.google.common.base.Preconditions;
 
+import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -50,17 +54,20 @@ public class SplunkGroupScan extends AbstractGroupScan {
 
   private int hashCode;
 
+  private MetadataProviderManager metadataProviderManager;
+
   /**
    * Creates a new group scan from the storage plugin.
    */
-  public SplunkGroupScan (SplunkScanSpec scanSpec) {
-    super("no-user");
+  public SplunkGroupScan (SplunkScanSpec scanSpec, MetadataProviderManager metadataProviderManager) {
+    super(scanSpec.queryUserName());
     this.splunkScanSpec = scanSpec;
     this.config = scanSpec.getConfig();
     this.columns = ALL_COLUMNS;
     this.filters = null;
     this.filterSelectivity = 0.0;
     this.maxRecords = -1;
+    this.metadataProviderManager = metadataProviderManager;
     this.scanStats = computeScanStats();
 
   }
@@ -76,10 +83,12 @@ public class SplunkGroupScan extends AbstractGroupScan {
     this.filters = that.filters;
     this.filterSelectivity = that.filterSelectivity;
     this.maxRecords = that.maxRecords;
+    this.metadataProviderManager = that.metadataProviderManager;
 
     // Calcite makes many copies in the later stage of planning
     // without changing anything. Retain the previous stats.
     this.scanStats = that.scanStats;
+    this.hashCode = that.hashCode;
   }
 
   /**
@@ -97,8 +106,8 @@ public class SplunkGroupScan extends AbstractGroupScan {
     this.filters = that.filters;
     this.filterSelectivity = that.filterSelectivity;
     this.maxRecords = that.maxRecords;
+    this.metadataProviderManager = that.metadataProviderManager;
     this.scanStats = computeScanStats();
-
   }
 
   /**
@@ -115,6 +124,7 @@ public class SplunkGroupScan extends AbstractGroupScan {
     this.filters = filters;
     this.filterSelectivity = filterSelectivity;
     this.maxRecords = that.maxRecords;
+    this.metadataProviderManager = that.metadataProviderManager;
     this.scanStats = computeScanStats();
   }
 
@@ -206,6 +216,25 @@ public class SplunkGroupScan extends AbstractGroupScan {
       return null;
     }
     return new SplunkGroupScan(this, maxRecords);
+  }
+
+  public TupleMetadata getSchema() {
+    if (metadataProviderManager == null) {
+      return null;
+    }
+    try {
+      return metadataProviderManager.getSchemaProvider().read().getSchema();
+    } catch (IOException | NullPointerException e) {
+      return null;
+    }
+  }
+
+  @Override
+  public TableMetadataProvider getMetadataProvider() {
+    if (metadataProviderManager == null) {
+      return null;
+    }
+    return metadataProviderManager.getTableMetadataProvider();
   }
 
   @Override

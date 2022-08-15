@@ -20,6 +20,7 @@ package org.apache.drill.exec.store.splunk;
 
 import org.apache.calcite.schema.SchemaPlus;
 import org.apache.calcite.schema.Table;
+import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.exec.planner.logical.DynamicDrillTable;
 import org.apache.drill.exec.store.AbstractSchema;
 import org.apache.drill.exec.store.AbstractSchemaFactory;
@@ -38,6 +39,7 @@ public class SplunkSchemaFactory extends AbstractSchemaFactory {
   private static final Logger logger = LoggerFactory.getLogger(SplunkSchemaFactory.class);
   private static final String SPL_TABLE_NAME = "spl";
   private final SplunkStoragePlugin plugin;
+  private String queryUserName;
 
   public SplunkSchemaFactory(SplunkStoragePlugin plugin) {
     super(plugin.getName());
@@ -46,18 +48,23 @@ public class SplunkSchemaFactory extends AbstractSchemaFactory {
 
   @Override
   public void registerSchemas(SchemaConfig schemaConfig, SchemaPlus parent) {
-    SplunkSchema schema = new SplunkSchema(plugin);
+    this.queryUserName = schemaConfig.getUserName();
+    SplunkSchema schema = new SplunkSchema(plugin, queryUserName);
     SchemaPlus plusOfThis = parent.add(schema.getName(), schema);
   }
 
-  class SplunkSchema extends AbstractSchema {
+  static class SplunkSchema extends AbstractSchema {
 
     private final Map<String, DynamicDrillTable> activeTables = new HashMap<>();
     private final SplunkStoragePlugin plugin;
+    private final String queryUserName;
 
-    public SplunkSchema(SplunkStoragePlugin plugin) {
+    public SplunkSchema(SplunkStoragePlugin plugin, String queryUserName) {
       super(Collections.emptyList(), plugin.getName());
       this.plugin = plugin;
+      this.queryUserName = queryUserName;
+
+
       registerIndexes();
     }
 
@@ -70,7 +77,7 @@ public class SplunkSchemaFactory extends AbstractSchemaFactory {
       } else {
         // Register the table
         return registerTable(name, new DynamicDrillTable(plugin, plugin.getName(),
-          new SplunkScanSpec(plugin.getName(), name, plugin.getConfig())));
+          new SplunkScanSpec(plugin.getName(), name, plugin.getConfig(), queryUserName)));
       }
     }
 
@@ -95,19 +102,29 @@ public class SplunkSchemaFactory extends AbstractSchemaFactory {
     }
 
     private void registerIndexes() {
+      // Verify that the connection is successful.  If not, don't register any indexes,
+      // and throw an exception.
+      SplunkPluginConfig config = plugin.getConfig();
+      SplunkConnection connection;
+      try {
+        connection = new SplunkConnection(config, queryUserName);
+        connection.connect();
+      } catch (Exception e) {
+        // Catch any connection errors that may happen.
+        throw UserException.connectionError()
+          .message("Unable to connect to Splunk: " +  plugin.getName() + " " + e.getMessage())
+          .build(logger);
+      }
+
       // Add default "spl" table to index list.
       registerTable(SPL_TABLE_NAME, new DynamicDrillTable(plugin, plugin.getName(),
-        new SplunkScanSpec(plugin.getName(), SPL_TABLE_NAME, plugin.getConfig())));
+        new SplunkScanSpec(plugin.getName(), SPL_TABLE_NAME, plugin.getConfig(), queryUserName)));
 
       // Retrieve and add all other Splunk indexes
-      SplunkPluginConfig config = plugin.getConfig();
-      SplunkConnection connection = new SplunkConnection(config);
-      connection.connect();
-
       for (String indexName : connection.getIndexes().keySet()) {
         logger.debug("Registering {}", indexName);
         registerTable(indexName, new DynamicDrillTable(plugin, plugin.getName(),
-          new SplunkScanSpec(plugin.getName(), indexName, config)));
+          new SplunkScanSpec(plugin.getName(), indexName, config, queryUserName)));
       }
     }
   }

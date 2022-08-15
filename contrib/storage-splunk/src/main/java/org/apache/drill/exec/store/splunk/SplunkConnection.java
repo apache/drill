@@ -26,6 +26,7 @@ import com.splunk.SSLSecurityProtocol;
 import com.splunk.Service;
 import com.splunk.ServiceArgs;
 import org.apache.drill.common.exceptions.UserException;
+import org.apache.drill.common.logical.StoragePluginConfig.AuthMode;
 import org.apache.drill.exec.store.security.UsernamePasswordCredentials;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -43,12 +44,18 @@ public class SplunkConnection {
   private final Optional<UsernamePasswordCredentials> credentials;
   private final String hostname;
   private final int port;
+  private final String queryUserName;
   private Service service;
   private int connectionAttempts;
 
-  public SplunkConnection(SplunkPluginConfig config) {
-    this.credentials = config.getUsernamePasswordCredentials();
+  public SplunkConnection(SplunkPluginConfig config, String queryUserName) {
+    if (config.getAuthMode() == AuthMode.USER_TRANSLATION) {
+      this.credentials = config.getUsernamePasswordCredentials(queryUserName);
+    } else {
+      this.credentials = config.getUsernamePasswordCredentials();
+    }
     this.hostname = config.getHostname();
+    this.queryUserName = queryUserName;
     this.port = config.getPort();
     this.connectionAttempts = config.getReconnectRetries();
     service = connect();
@@ -58,10 +65,15 @@ public class SplunkConnection {
   /**
    * This constructor is used for testing only
    */
-  public SplunkConnection(SplunkPluginConfig config, Service service) {
-    this.credentials = config.getUsernamePasswordCredentials();
+  public SplunkConnection(SplunkPluginConfig config, Service service, String queryUserName) {
+    if (config.getAuthMode() == AuthMode.USER_TRANSLATION) {
+      this.credentials = config.getUsernamePasswordCredentials(queryUserName);
+    } else {
+      this.credentials = config.getUsernamePasswordCredentials();
+    }
     this.hostname = config.getHostname();
     this.port = config.getPort();
+    this.queryUserName = queryUserName;
     this.service = service;
   }
 
@@ -80,11 +92,11 @@ public class SplunkConnection {
       connectionAttempts--;
       service = Service.connect(loginArgs);
     } catch (Exception e) {
-      if(connectionAttempts > 0) {
+      if (connectionAttempts > 0) {
         try {
           TimeUnit.SECONDS.sleep(2);
         } catch (InterruptedException interruptedException) {
-          logger.error("Unable to wait 2 secs before next connection trey to Splunk");
+          logger.error("Unable to wait 2 secs before next connection try to Splunk");
         }
         return connect();
       }

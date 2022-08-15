@@ -121,7 +121,7 @@
     <commons.cli.version>1.4</commons.cli.version>
     <snakeyaml.version>1.26</snakeyaml.version>
     <commons.lang3.version>3.10</commons.lang3.version>
-    <testcontainers.version>1.16.3</testcontainers.version>
+    <testcontainers.version>1.17.3</testcontainers.version>
     <typesafe.config.version>1.4.2</typesafe.config.version>
     <commons.codec.version>1.14</commons.codec.version>
     <xerces.version>2.12.2</xerces.version>
