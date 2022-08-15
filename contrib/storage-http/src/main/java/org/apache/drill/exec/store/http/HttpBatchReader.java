@@ -27,12 +27,15 @@ import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.common.types.TypeProtos.MinorType;
 import org.apache.drill.exec.ExecConstants;
+import org.apache.drill.exec.memory.BufferAllocator;
 import org.apache.drill.exec.physical.impl.scan.framework.ManagedReader;
 import org.apache.drill.exec.physical.impl.scan.framework.SchemaNegotiator;
 import org.apache.drill.exec.physical.impl.scan.v3.FixedReceiver;
 import org.apache.drill.exec.physical.resultSet.ResultSetLoader;
 import org.apache.drill.exec.physical.resultSet.ResultVectorCache;
 import org.apache.drill.exec.physical.resultSet.impl.ResultVectorCacheImpl;
+import org.apache.drill.exec.record.VectorContainer;
+import org.apache.drill.exec.record.VectorWrapper;
 import org.apache.drill.exec.record.metadata.TupleMetadata;
 import org.apache.drill.exec.store.easy.json.loader.JsonLoader;
 import org.apache.drill.exec.store.easy.json.loader.JsonLoaderImpl.JsonLoaderBuilder;
@@ -300,10 +303,11 @@ public class HttpBatchReader implements ManagedReader<SchemaNegotiator> {
   public boolean next() {
     boolean result = jsonLoader.readBatch();
 
-    // TODO Start here... pull the value(s) from the ResultVectorCache
+    // TODO Start here... pull the value(s) from the Output Container
     if (paginator != null && paginator.getMode() == PaginatorMethod.INDEX) {
       IndexPaginator indexPaginator = (IndexPaginator) paginator;
-      ResultVectorCacheImpl cache = (ResultVectorCacheImpl) resultSetLoader.vectorCache();
+      VectorContainer vectorContainer = resultSetLoader.writer().loader().outputSchema().
+
       logger.debug("tet");
     }
 
