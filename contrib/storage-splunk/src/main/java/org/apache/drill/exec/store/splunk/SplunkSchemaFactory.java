@@ -112,7 +112,7 @@ public class SplunkSchemaFactory extends AbstractSchemaFactory {
       } catch (Exception e) {
         // Catch any connection errors that may happen.
         throw UserException.connectionError()
-          .message("Unable to connect to Splunk {}. {} ", plugin.getName(), e.getMessage())
+          .message("Unable to connect to Splunk: " +  plugin.getName() + " " + e.getMessage())
           .build(logger);
       }
 
