@@ -32,7 +32,7 @@
     <phoenix.version>5.1.2</phoenix.version>
     <!-- Keep the 2.4.2 to reduce dependency conflict -->
     <hbase.minicluster.version>2.4.2</hbase.minicluster.version>
-    <phoenix.skip.tests>false</phoenix.skip.tests>
+    <skipTests>false</skipTests>
   </properties>
 
   <dependencies>
@@ -363,7 +363,7 @@
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-surefire-plugin</artifactId>
         <configuration>
-          <skipTests>${phoenix.skip.tests}</skipTests>
+          <skipTests>${skipTests}</skipTests>
           <forkCount combine.self="override">1</forkCount>
           <reuseForks>false</reuseForks>
           <includes>
@@ -382,7 +382,7 @@
     <profile>
       <id>hadoop-2</id>
       <properties>
-        <phoenix.skip.tests>true</phoenix.skip.tests>
+        <skipTests>true</skipTests>
       </properties>
       <build>
         <plugins>
