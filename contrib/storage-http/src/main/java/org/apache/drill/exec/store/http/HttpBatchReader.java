@@ -20,6 +20,7 @@ package org.apache.drill.exec.store.http;
 import com.typesafe.config.Config;
 import okhttp3.HttpUrl;
 import okhttp3.HttpUrl.Builder;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.drill.common.AutoCloseables;
 import org.apache.drill.common.exceptions.ChildErrorContext;
 import org.apache.drill.common.exceptions.CustomErrorContext;
@@ -50,6 +51,7 @@ import org.apache.drill.exec.store.http.util.SimpleHttp;
 import org.apache.drill.exec.store.ImplicitColumnUtils.ImplicitColumns;
 import org.apache.drill.exec.store.security.UsernamePasswordWithProxyCredentials;
 import org.apache.drill.exec.vector.ValueVector;
+import org.apache.drill.exec.vector.ValueVector.Accessor;
 import org.apache.drill.shaded.guava.com.google.common.base.Strings;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -306,9 +308,30 @@ public class HttpBatchReader implements ManagedReader<SchemaNegotiator> {
     // TODO Start here... pull the value(s) from the Output Container
     if (paginator != null && paginator.getMode() == PaginatorMethod.INDEX) {
       IndexPaginator indexPaginator = (IndexPaginator) paginator;
-      VectorContainer vectorContainer = resultSetLoader.writer().loader().outputSchema().
 
-      logger.debug("tet");
+      // TODO get schema path of desired fields.
+      VectorContainer container = resultSetLoader.outputContainer();
+
+      // Skip empty batches
+      if (!resultSetLoader.outputSchema().isEmpty() && !resultSetLoader.outputSchema().toFieldList().isEmpty()) {
+        Accessor indexAccessor;
+        int indexParamIndex;
+        int hasMoreParamIndex;
+        String indexValue = null;
+
+        TupleMetadata schema = resultSetLoader.outputSchema();
+
+        // Get column indexes
+        if (StringUtils.isNotEmpty(indexPaginator.getIndexParam())) {
+          indexParamIndex = schema.index(indexPaginator.getIndexParam());
+          indexAccessor = container.getValueVector(indexParamIndex).getValueVector().getAccessor();
+          if (indexAccessor.getValueCount() > 0) {
+            // Get the last value of this field
+            indexValue = indexAccessor.getObject(indexAccessor.getValueCount() - 1).toString();
+          }
+          logger.debug("Found index accessor. {}", indexValue);
+        }
+      }
     }
 
     // Allows limitless pagination.
