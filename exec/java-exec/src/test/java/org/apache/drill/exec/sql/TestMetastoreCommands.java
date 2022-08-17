@@ -3582,7 +3582,7 @@ public class TestMetastoreCommands extends ClusterTest {
         .baselineValues(true, String.format("Collected / refreshed metadata for table [dfs.tmp.%s]", tableName))
         .go();
       String query = "select column_name from information_schema.`columns` where table_name='%s' and column_name='%s'";
-          
+
       testBuilder()
         .sqlQuery(query, tableName, colName)
         .unOrdered()
