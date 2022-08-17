@@ -3568,6 +3568,34 @@ public class TestMetastoreCommands extends ClusterTest {
     }
   }
 
+  @Test // DRILL-8280
+  public void testNonAsciiColumnName() throws Exception {
+    String tableName = "utf8_col_name";
+    String colName = "Käse";
+
+    run("create table dfs.tmp.%s as select 'Cheddar' as `%s`", tableName, colName);
+    try {
+      testBuilder()
+        .sqlQuery("analyze table dfs.tmp.`%s` refresh metadata", tableName)
+        .unOrdered()
+        .baselineColumns("ok", "summary")
+        .baselineValues(true, String.format("Collected / refreshed metadata for table [dfs.tmp.%s]", tableName))
+        .go();
+      String query = "select column_name from information_schema.`columns` where table_name='%s' and column_name='%s'";
+
+      testBuilder()
+        .sqlQuery(query, tableName, colName)
+        .unOrdered()
+        .baselineColumns("column_name")
+        .baselineValues(colName)
+        .go();
+    } finally {
+      run("analyze table dfs.tmp.`%s` drop metadata if exists", tableName);
+      run("drop table if exists dfs.tmp.`%s`", tableName);
+    }
+  }
+
+
   public static <T> ColumnStatistics<T> getColumnStatistics(T minValue, T maxValue, long rowCount,
                                                             TypeProtos.MinorType minorType) {
     return new ColumnStatistics<>(
