@@ -64,10 +64,12 @@ import java.nio.file.Paths;
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -100,85 +102,87 @@ public class TestMetastoreCommands extends ClusterTest {
       .build();
 
   public static final Map<SchemaPath, ColumnStatistics<?>> TABLE_COLUMN_STATISTICS =
-      ImmutableMap.<SchemaPath, ColumnStatistics<?>>builder()
-      .put(SchemaPath.getSimplePath("o_shippriority"),
-          getColumnStatistics(0, 0, 120L, TypeProtos.MinorType.INT))
-      .put(SchemaPath.getSimplePath("o_orderstatus"),
-          getColumnStatistics("F", "P", 120L, TypeProtos.MinorType.VARCHAR))
-      .put(SchemaPath.getSimplePath("o_orderpriority"),
-          getColumnStatistics("1-URGENT", "5-LOW", 120L, TypeProtos.MinorType.VARCHAR))
-      .put(SchemaPath.getSimplePath("o_orderkey"),
-          getColumnStatistics(1, 1319, 120L, TypeProtos.MinorType.INT))
-      .put(SchemaPath.getSimplePath("o_clerk"),
-          getColumnStatistics("Clerk#000000004", "Clerk#000000995", 120L, TypeProtos.MinorType.VARCHAR))
-      .put(SchemaPath.getSimplePath("o_totalprice"),
-          getColumnStatistics(3266.69, 350110.21, 120L, TypeProtos.MinorType.FLOAT8))
-      .put(SchemaPath.getSimplePath("o_comment"),
+    new LinkedHashMap<SchemaPath, ColumnStatistics<?>>()
+    {{
+      put(SchemaPath.getSimplePath("o_shippriority"),
+          getColumnStatistics(0, 0, 120L, TypeProtos.MinorType.INT));
+      put(SchemaPath.getSimplePath("o_orderstatus"),
+          getColumnStatistics("F", "P", 120L, TypeProtos.MinorType.VARCHAR));
+      put(SchemaPath.getSimplePath("o_orderpriority"),
+          getColumnStatistics("1-URGENT", "5-LOW", 120L, TypeProtos.MinorType.VARCHAR));
+      put(SchemaPath.getSimplePath("o_orderkey"),
+          getColumnStatistics(1, 1319, 120L, TypeProtos.MinorType.INT));
+      put(SchemaPath.getSimplePath("o_clerk"),
+          getColumnStatistics("Clerk#000000004", "Clerk#000000995", 120L, TypeProtos.MinorType.VARCHAR));
+      put(SchemaPath.getSimplePath("o_totalprice"),
+          getColumnStatistics(3266.69, 350110.21, 120L, TypeProtos.MinorType.FLOAT8));
+      put(SchemaPath.getSimplePath("o_comment"),
           getColumnStatistics(" about the final platelets. dependen",
-              "zzle. carefully enticing deposits nag furio", 120L, TypeProtos.MinorType.VARCHAR))
-      .put(SchemaPath.getSimplePath("o_custkey"),
-          getColumnStatistics(25, 1498, 120L, TypeProtos.MinorType.INT))
-      .put(SchemaPath.getSimplePath("dir0"),
-          getColumnStatistics("1994", "1996", 120L, TypeProtos.MinorType.VARCHAR))
-      .put(SchemaPath.getSimplePath("dir1"),
-          getColumnStatistics("Q1", "Q4", 120L, TypeProtos.MinorType.VARCHAR))
-      .put(SchemaPath.getSimplePath("o_orderdate"),
-          getColumnStatistics(757382400000L, 850953600000L, 120L, TypeProtos.MinorType.DATE))
-      .build();
+              "zzle. carefully enticing deposits nag furio", 120L, TypeProtos.MinorType.VARCHAR));
+      put(SchemaPath.getSimplePath("o_custkey"),
+          getColumnStatistics(25, 1498, 120L, TypeProtos.MinorType.INT));
+      put(SchemaPath.getSimplePath("dir0"),
+          getColumnStatistics("1994", "1996", 120L, TypeProtos.MinorType.VARCHAR));
+      put(SchemaPath.getSimplePath("dir1"),
+          getColumnStatistics("Q1", "Q4", 120L, TypeProtos.MinorType.VARCHAR));
+      put(SchemaPath.getSimplePath("o_orderdate"),
+          getColumnStatistics(757382400000L, 850953600000L, 120L, TypeProtos.MinorType.DATE));
+    }};
 
   public static final Map<SchemaPath, ColumnStatistics<?>> DIR0_1994_SEGMENT_COLUMN_STATISTICS =
-      ImmutableMap.<SchemaPath, ColumnStatistics<?>>builder()
-      .put(SchemaPath.getSimplePath("o_shippriority"),
-          getColumnStatistics(0, 0, 40L, TypeProtos.MinorType.INT))
-      .put(SchemaPath.getSimplePath("o_orderstatus"),
-          getColumnStatistics("F", "F", 40L, TypeProtos.MinorType.VARCHAR))
-      .put(SchemaPath.getSimplePath("o_orderpriority"),
-          getColumnStatistics("1-URGENT", "5-LOW", 40L, TypeProtos.MinorType.VARCHAR))
-      .put(SchemaPath.getSimplePath("o_orderkey"),
-          getColumnStatistics(5, 1031, 40L, TypeProtos.MinorType.INT))
-      .put(SchemaPath.getSimplePath("o_clerk"),
-          getColumnStatistics("Clerk#000000004", "Clerk#000000973", 40L, TypeProtos.MinorType.VARCHAR))
-      .put(SchemaPath.getSimplePath("o_totalprice"),
-          getColumnStatistics(3266.69, 350110.21, 40L, TypeProtos.MinorType.FLOAT8))
-      .put(SchemaPath.getSimplePath("o_comment"),
+    new LinkedHashMap<SchemaPath, ColumnStatistics<?>>()
+    {{
+        put(SchemaPath.getSimplePath("o_shippriority"),
+          getColumnStatistics(0, 0, 40L, TypeProtos.MinorType.INT));
+        put(SchemaPath.getSimplePath("o_orderstatus"),
+          getColumnStatistics("F", "F", 40L, TypeProtos.MinorType.VARCHAR));
+        put(SchemaPath.getSimplePath("o_orderpriority"),
+          getColumnStatistics("1-URGENT", "5-LOW", 40L, TypeProtos.MinorType.VARCHAR));
+        put(SchemaPath.getSimplePath("o_orderkey"),
+          getColumnStatistics(5, 1031, 40L, TypeProtos.MinorType.INT));
+        put(SchemaPath.getSimplePath("o_clerk"),
+          getColumnStatistics("Clerk#000000004", "Clerk#000000973", 40L, TypeProtos.MinorType.VARCHAR));
+        put(SchemaPath.getSimplePath("o_totalprice"),
+          getColumnStatistics(3266.69, 350110.21, 40L, TypeProtos.MinorType.FLOAT8));
+        put(SchemaPath.getSimplePath("o_comment"),
           getColumnStatistics(" accounts nag slyly. ironic, ironic accounts wake blithel",
-              "yly final requests over the furiously regula", 40L, TypeProtos.MinorType.VARCHAR))
-      .put(SchemaPath.getSimplePath("o_custkey"),
-          getColumnStatistics(25, 1469, 40L, TypeProtos.MinorType.INT))
-      .put(SchemaPath.getSimplePath("dir0"),
-          getColumnStatistics("1994", "1994", 40L, TypeProtos.MinorType.VARCHAR))
-      .put(SchemaPath.getSimplePath("dir1"),
-          getColumnStatistics("Q1", "Q4", 40L, TypeProtos.MinorType.VARCHAR))
-      .put(SchemaPath.getSimplePath("o_orderdate"),
-          getColumnStatistics(757382400000L, 788140800000L, 40L, TypeProtos.MinorType.DATE))
-      .build();
+            "yly final requests over the furiously regula", 40L, TypeProtos.MinorType.VARCHAR));
+        put(SchemaPath.getSimplePath("o_custkey"),
+          getColumnStatistics(25, 1469, 40L, TypeProtos.MinorType.INT));
+        put(SchemaPath.getSimplePath("dir0"),
+          getColumnStatistics("1994", "1994", 40L, TypeProtos.MinorType.VARCHAR));
+        put(SchemaPath.getSimplePath("dir1"),
+          getColumnStatistics("Q1", "Q4", 40L, TypeProtos.MinorType.VARCHAR));
+        put(SchemaPath.getSimplePath("o_orderdate"),
+          getColumnStatistics(757382400000L, 788140800000L, 40L, TypeProtos.MinorType.DATE));
+    }};
 
   public static final Map<SchemaPath, ColumnStatistics<?>> DIR0_1994_Q1_SEGMENT_COLUMN_STATISTICS =
-      ImmutableMap.<SchemaPath, ColumnStatistics<?>>builder()
-      .put(SchemaPath.getSimplePath("o_shippriority"),
-          getColumnStatistics(0, 0, 10L, TypeProtos.MinorType.INT))
-      .put(SchemaPath.getSimplePath("o_orderstatus"),
-          getColumnStatistics("F", "F", 10L, TypeProtos.MinorType.VARCHAR))
-      .put(SchemaPath.getSimplePath("o_orderpriority"),
-          getColumnStatistics("1-URGENT", "5-LOW", 10L, TypeProtos.MinorType.VARCHAR))
-      .put(SchemaPath.getSimplePath("o_orderkey"),
-          getColumnStatistics(66, 833, 10L, TypeProtos.MinorType.INT))
-      .put(SchemaPath.getSimplePath("o_clerk"),
-          getColumnStatistics("Clerk#000000062", "Clerk#000000973", 10L, TypeProtos.MinorType.VARCHAR))
-      .put(SchemaPath.getSimplePath("o_totalprice"),
-          getColumnStatistics(3266.69, 132531.73, 10L, TypeProtos.MinorType.FLOAT8))
-      .put(SchemaPath.getSimplePath("o_comment"),
+    new LinkedHashMap<SchemaPath, ColumnStatistics<?>>() {{
+        put(SchemaPath.getSimplePath("o_shippriority"),
+          getColumnStatistics(0, 0, 10L, TypeProtos.MinorType.INT));
+        put(SchemaPath.getSimplePath("o_orderstatus"),
+          getColumnStatistics("F", "F", 10L, TypeProtos.MinorType.VARCHAR));
+        put(SchemaPath.getSimplePath("o_orderpriority"),
+          getColumnStatistics("1-URGENT", "5-LOW", 10L, TypeProtos.MinorType.VARCHAR));
+        put(SchemaPath.getSimplePath("o_orderkey"),
+          getColumnStatistics(66, 833, 10L, TypeProtos.MinorType.INT));
+        put(SchemaPath.getSimplePath("o_clerk"),
+          getColumnStatistics("Clerk#000000062", "Clerk#000000973", 10L, TypeProtos.MinorType.VARCHAR));
+        put(SchemaPath.getSimplePath("o_totalprice"),
+          getColumnStatistics(3266.69, 132531.73, 10L, TypeProtos.MinorType.FLOAT8));
+        put(SchemaPath.getSimplePath("o_comment"),
           getColumnStatistics(" special pinto beans use quickly furiously even depende",
-              "y pending requests integrate", 10L, TypeProtos.MinorType.VARCHAR))
-      .put(SchemaPath.getSimplePath("o_custkey"),
-          getColumnStatistics(392, 1411, 10L, TypeProtos.MinorType.INT))
-      .put(SchemaPath.getSimplePath("dir0"),
-          getColumnStatistics("1994", "1994", 10L, TypeProtos.MinorType.VARCHAR))
-      .put(SchemaPath.getSimplePath("dir1"),
-          getColumnStatistics("Q1", "Q1", 10L, TypeProtos.MinorType.VARCHAR))
-      .put(SchemaPath.getSimplePath("o_orderdate"),
-          getColumnStatistics(757382400000L, 764640000000L, 10L, TypeProtos.MinorType.DATE))
-      .build();
+            "y pending requests integrate", 10L, TypeProtos.MinorType.VARCHAR));
+        put(SchemaPath.getSimplePath("o_custkey"),
+          getColumnStatistics(392, 1411, 10L, TypeProtos.MinorType.INT));
+        put(SchemaPath.getSimplePath("dir0"),
+          getColumnStatistics("1994", "1994", 10L, TypeProtos.MinorType.VARCHAR));
+        put(SchemaPath.getSimplePath("dir1"),
+          getColumnStatistics("Q1", "Q1", 10L, TypeProtos.MinorType.VARCHAR));
+        put(SchemaPath.getSimplePath("o_orderdate"),
+          getColumnStatistics(757382400000L, 764640000000L, 10L, TypeProtos.MinorType.DATE));
+    }};
 
   public static final MetadataInfo TABLE_META_INFO = MetadataInfo.builder()
       .type(MetadataType.TABLE)
@@ -3564,15 +3568,44 @@ public class TestMetastoreCommands extends ClusterTest {
     }
   }
 
-  public static <T> ColumnStatistics<T> getColumnStatistics(T minValue, T maxValue,
-      long rowCount, TypeProtos.MinorType minorType) {
+  @Test // DRILL-8280
+  public void testNonAsciiColumnName() throws Exception {
+    String tableName = "utf8_col_name";
+    String colName = "Käse";
+
+    run("create table dfs.tmp.%s as select 'Cheddar' as `%s`", tableName, colName);
+    try {
+      testBuilder()
+        .sqlQuery("analyze table dfs.tmp.`%s` refresh metadata", tableName)
+        .unOrdered()
+        .baselineColumns("ok", "summary")
+        .baselineValues(true, String.format("Collected / refreshed metadata for table [dfs.tmp.%s]", tableName))
+        .go();
+      String query = "select column_name from information_schema.`columns` where table_name='%s' and column_name='%s'";
+
+      testBuilder()
+        .sqlQuery(query, tableName, colName)
+        .unOrdered()
+        .baselineColumns("column_name")
+        .baselineValues(colName)
+        .go();
+    } finally {
+      run("analyze table dfs.tmp.`%s` drop metadata if exists", tableName);
+      run("drop table if exists dfs.tmp.`%s`", tableName);
+    }
+  }
+
+
+  public static <T> ColumnStatistics<T> getColumnStatistics(T minValue, T maxValue, long rowCount,
+                                                            TypeProtos.MinorType minorType) {
     return new ColumnStatistics<>(
-        Arrays.asList(
-            new StatisticsHolder<>(minValue, ColumnStatisticsKind.MIN_VALUE),
-            new StatisticsHolder<>(maxValue, ColumnStatisticsKind.MAX_VALUE),
-            new StatisticsHolder<>(rowCount, TableStatisticsKind.ROW_COUNT),
-            new StatisticsHolder<>(rowCount, ColumnStatisticsKind.NON_NULL_VALUES_COUNT),
-            new StatisticsHolder<>(0L, ColumnStatisticsKind.NULLS_COUNT)),
+      new ArrayList() {{
+          add(new StatisticsHolder<>(minValue, ColumnStatisticsKind.MIN_VALUE));
+          add(new StatisticsHolder<>(maxValue, ColumnStatisticsKind.MAX_VALUE));
+          add(new StatisticsHolder<>(rowCount, TableStatisticsKind.ROW_COUNT));
+          add(new StatisticsHolder<>(rowCount, ColumnStatisticsKind.NON_NULL_VALUES_COUNT));
+          add(new StatisticsHolder<>(0L, ColumnStatisticsKind.NULLS_COUNT));
+        }},
         minorType);
   }
 
