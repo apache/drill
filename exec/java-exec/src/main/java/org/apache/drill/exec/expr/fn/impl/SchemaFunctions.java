@@ -151,8 +151,9 @@ public class SchemaFunctions {
       }
 
       org.apache.drill.exec.record.metadata.TupleMetadata currentSchema =
-          org.apache.drill.exec.expr.fn.impl.SchemaFunctions.getTupleMetadata(
-              org.apache.drill.common.util.DrillStringUtils.toBinaryString(input.buffer, input.start, input.end));
+        org.apache.drill.exec.expr.fn.impl.SchemaFunctions.getTupleMetadata(
+          org.apache.drill.exec.expr.fn.impl.StringFunctionHelpers.toStringFromUTF8(input.start, input.end, input.buffer));
+
       if (schemaHolder.obj == null) {
         schemaHolder.obj = currentSchema;
         return;
