@@ -26,17 +26,15 @@ import org.apache.drill.common.exceptions.ChildErrorContext;
 import org.apache.drill.common.exceptions.CustomErrorContext;
 import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.common.expression.SchemaPath;
+import org.apache.drill.common.logical.StoragePluginConfig.AuthMode;
 import org.apache.drill.common.types.TypeProtos.MinorType;
 import org.apache.drill.exec.ExecConstants;
-import org.apache.drill.exec.memory.BufferAllocator;
 import org.apache.drill.exec.physical.impl.scan.framework.ManagedReader;
 import org.apache.drill.exec.physical.impl.scan.framework.SchemaNegotiator;
 import org.apache.drill.exec.physical.impl.scan.v3.FixedReceiver;
 import org.apache.drill.exec.physical.resultSet.ResultSetLoader;
-import org.apache.drill.exec.physical.resultSet.ResultVectorCache;
-import org.apache.drill.exec.physical.resultSet.impl.ResultVectorCacheImpl;
+import org.apache.drill.exec.physical.rowSet.DirectRowSet;
 import org.apache.drill.exec.record.VectorContainer;
-import org.apache.drill.exec.record.VectorWrapper;
 import org.apache.drill.exec.record.metadata.TupleMetadata;
 import org.apache.drill.exec.store.easy.json.loader.JsonLoader;
 import org.apache.drill.exec.store.easy.json.loader.JsonLoaderImpl.JsonLoaderBuilder;
@@ -50,8 +48,7 @@ import org.apache.drill.exec.store.http.util.HttpProxyConfig.ProxyBuilder;
 import org.apache.drill.exec.store.http.util.SimpleHttp;
 import org.apache.drill.exec.store.ImplicitColumnUtils.ImplicitColumns;
 import org.apache.drill.exec.store.security.UsernamePasswordWithProxyCredentials;
-import org.apache.drill.exec.vector.ValueVector;
-import org.apache.drill.exec.vector.ValueVector.Accessor;
+import org.apache.drill.exec.vector.accessor.ScalarReader;
 import org.apache.drill.shaded.guava.com.google.common.base.Strings;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -76,6 +73,9 @@ public class HttpBatchReader implements ManagedReader<SchemaNegotiator> {
   private ResultSetLoader resultSetLoader;
 
   protected ImplicitColumns implicitColumns;
+
+  protected DirectRowSet results;
+  protected TupleMetadata outputSchema;
 
 
   public HttpBatchReader(HttpSubScan subScan) {
@@ -305,34 +305,24 @@ public class HttpBatchReader implements ManagedReader<SchemaNegotiator> {
   public boolean next() {
     boolean result = jsonLoader.readBatch();
 
-    // TODO Start here... pull the value(s) from the Output Container
-    if (paginator != null && paginator.getMode() == PaginatorMethod.INDEX) {
+    /*if (paginator != null && paginator.getMode() == PaginatorMethod.INDEX) {
       IndexPaginator indexPaginator = (IndexPaginator) paginator;
 
-      // TODO get schema path of desired fields.
       VectorContainer container = resultSetLoader.outputContainer();
 
       // Skip empty batches
-      if (!resultSetLoader.outputSchema().isEmpty() && !resultSetLoader.outputSchema().toFieldList().isEmpty()) {
-        Accessor indexAccessor;
-        int indexParamIndex;
-        int hasMoreParamIndex;
-        String indexValue = null;
+      if (!resultSetLoader.outputSchema().isEmpty() &&
+        !resultSetLoader.outputSchema().toFieldList().isEmpty()) {
+        outputSchema = resultSetLoader.outputSchema();
 
-        TupleMetadata schema = resultSetLoader.outputSchema();
-
+        results = DirectRowSet.fromContainer(container);
+        
         // Get column indexes
         if (StringUtils.isNotEmpty(indexPaginator.getIndexParam())) {
-          indexParamIndex = schema.index(indexPaginator.getIndexParam());
-          indexAccessor = container.getValueVector(indexParamIndex).getValueVector().getAccessor();
-          if (indexAccessor.getValueCount() > 0) {
-            // Get the last value of this field
-            indexValue = indexAccessor.getObject(indexAccessor.getValueCount() - 1).toString();
-          }
-          logger.debug("Found index accessor. {}", indexValue);
+          indexPaginator.setIndexParamIndex(outputSchema.index(indexPaginator.getIndexParam()));
         }
       }
-    }
+    }*/
 
     // Allows limitless pagination.
     if (paginator != null &&

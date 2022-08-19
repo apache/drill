@@ -29,6 +29,10 @@ public class IndexPaginator extends Paginator {
   private final String indexParam;
   private final String nextPageParam;
 
+  private int indexParamIndex;
+  private int hasMoreIndex;
+  private int nextPageIndex;
+
   private String indexValue;
   private String hasMoreValue;
   private String nextPageValue;
@@ -68,6 +72,14 @@ public class IndexPaginator extends Paginator {
 
   public void setHasMoreValue(String hasMoreValue) {
     this.hasMoreValue = hasMoreValue;
+  }
+
+  public void setIndexParamIndex(int index) {
+    this.indexParamIndex = index;
+  }
+
+  public int getIndexParamIndex() {
+    return this.indexParamIndex;
   }
 
   @Override

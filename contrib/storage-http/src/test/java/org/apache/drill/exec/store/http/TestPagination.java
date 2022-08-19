@@ -271,9 +271,12 @@ public class TestPagination extends ClusterTest {
     try (MockWebServer server = startServer()) {
 
       server.enqueue(new MockResponse().setResponseCode(200).setBody(TEST_JSON_INDEX_PAGE1));
-      server.enqueue(new MockResponse().setResponseCode(200).setBody(TEST_JSON_INDEX_PAGE2));
+      //server.enqueue(new MockResponse().setResponseCode(200).setBody(TEST_JSON_INDEX_PAGE2));
 
-      List<QueryDataBatch> results = client.queryBuilder()
+      RowSet results = client.queryBuilder().sql(sql).rowSet();
+      results.print();
+
+      /*List<QueryDataBatch> results = client.queryBuilder()
         .sql(sql)
         .results();
 
@@ -283,7 +286,7 @@ public class TestPagination extends ClusterTest {
         b.release();
       }
       assertEquals(2, results.size());
-      assertEquals(4, count);
+      assertEquals(4, count);*/
     }
   }
 
