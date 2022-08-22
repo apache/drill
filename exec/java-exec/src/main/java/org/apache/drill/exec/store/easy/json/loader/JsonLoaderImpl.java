@@ -25,6 +25,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 
 import io.netty.buffer.DrillBuf;
 import org.apache.commons.io.IOUtils;
@@ -153,6 +154,7 @@ public class JsonLoaderImpl implements JsonLoader, ErrorFactory {
     private MessageParser messageParser;
     private ImplicitColumns implicitFields;
     private int maxRows;
+    private Map<String, Object> paginationFields;
 
     public JsonLoaderBuilder resultSetLoader(ResultSetLoader rsLoader) {
       this.rsLoader = rsLoader;
@@ -161,6 +163,11 @@ public class JsonLoaderImpl implements JsonLoader, ErrorFactory {
 
     public JsonLoaderBuilder providedSchema(TupleMetadata providedSchema) {
       this.providedSchema = providedSchema;
+      return this;
+    }
+
+    public JsonLoaderBuilder paginationFields(Map<String,Object> paginationFields) {
+      this.paginationFields = paginationFields;
       return this;
     }
 
@@ -248,6 +255,7 @@ public class JsonLoaderImpl implements JsonLoader, ErrorFactory {
   private final ImplicitColumns implicitFields;
   private final int maxRows;
   private boolean eof;
+  private Map<String, Object> paginationFields;
 
   /**
    * List of "unknown" columns (have only seen nulls or empty values)
@@ -269,6 +277,7 @@ public class JsonLoaderImpl implements JsonLoader, ErrorFactory {
     this.maxRows = builder.maxRows;
     this.fieldFactory = buildFieldFactory(builder);
     this.parser = buildParser(builder);
+    this.paginationFields = builder.paginationFields;
   }
 
   private JsonStructureParser buildParser(JsonLoaderBuilder builder) {

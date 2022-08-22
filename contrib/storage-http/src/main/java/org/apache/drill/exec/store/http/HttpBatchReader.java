@@ -26,7 +26,6 @@ import org.apache.drill.common.exceptions.ChildErrorContext;
 import org.apache.drill.common.exceptions.CustomErrorContext;
 import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.common.expression.SchemaPath;
-import org.apache.drill.common.logical.StoragePluginConfig.AuthMode;
 import org.apache.drill.common.types.TypeProtos.MinorType;
 import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.physical.impl.scan.framework.ManagedReader;
@@ -34,6 +33,7 @@ import org.apache.drill.exec.physical.impl.scan.framework.SchemaNegotiator;
 import org.apache.drill.exec.physical.impl.scan.v3.FixedReceiver;
 import org.apache.drill.exec.physical.resultSet.ResultSetLoader;
 import org.apache.drill.exec.physical.rowSet.DirectRowSet;
+import org.apache.drill.exec.physical.rowSet.RowSetReader;
 import org.apache.drill.exec.record.VectorContainer;
 import org.apache.drill.exec.record.metadata.TupleMetadata;
 import org.apache.drill.exec.store.easy.json.loader.JsonLoader;
@@ -48,13 +48,13 @@ import org.apache.drill.exec.store.http.util.HttpProxyConfig.ProxyBuilder;
 import org.apache.drill.exec.store.http.util.SimpleHttp;
 import org.apache.drill.exec.store.ImplicitColumnUtils.ImplicitColumns;
 import org.apache.drill.exec.store.security.UsernamePasswordWithProxyCredentials;
-import org.apache.drill.exec.vector.accessor.ScalarReader;
 import org.apache.drill.shaded.guava.com.google.common.base.Strings;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.File;
 import java.io.InputStream;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -71,18 +71,16 @@ public class HttpBatchReader implements ManagedReader<SchemaNegotiator> {
   protected String baseUrl;
   private JsonLoader jsonLoader;
   private ResultSetLoader resultSetLoader;
-
   protected ImplicitColumns implicitColumns;
-
-  protected DirectRowSet results;
   protected TupleMetadata outputSchema;
-
+  private final Map<String, Object> paginationFields;
 
   public HttpBatchReader(HttpSubScan subScan) {
     this.subScan = subScan;
     this.maxRecords = subScan.maxRecords();
     this.baseUrl = subScan.tableSpec().connectionConfig().url();
     this.paginator = null;
+    this.paginationFields = new HashMap<>();
   }
 
   public HttpBatchReader(HttpSubScan subScan, Paginator paginator) {
@@ -90,6 +88,7 @@ public class HttpBatchReader implements ManagedReader<SchemaNegotiator> {
     this.maxRecords = subScan.maxRecords();
     this.paginator = paginator;
     this.baseUrl = paginator.next();
+    this.paginationFields = new HashMap<>();
     logger.debug("Batch reader with URL: {}", this.baseUrl);
   }
 
@@ -140,6 +139,7 @@ public class HttpBatchReader implements ManagedReader<SchemaNegotiator> {
           .maxRows(maxRecords)
           .dataPath(subScan.tableSpec().connectionConfig().dataPath())
           .errorContext(errorContext)
+          .paginationFields(paginationFields)
           .fromStream(inStream);
 
       if (subScan.tableSpec().connectionConfig().jsonOptions() != null) {
@@ -305,9 +305,13 @@ public class HttpBatchReader implements ManagedReader<SchemaNegotiator> {
   public boolean next() {
     boolean result = jsonLoader.readBatch();
 
-    /*if (paginator != null && paginator.getMode() == PaginatorMethod.INDEX) {
+    // This code implements the index/keyset pagination.  This pagination method
+    // uses a value returned in the current result set as the starting point for the
+    // next page.  Some APIs will have a boolean parameter to indicate that there are
+    // additional pages.  Some APIs will also return a URL for the next page. In any event,
+    // it is necessary to grab these values from the returned data.
+    if (false && paginator != null && paginator.getMode() == PaginatorMethod.INDEX) {
       IndexPaginator indexPaginator = (IndexPaginator) paginator;
-
       VectorContainer container = resultSetLoader.outputContainer();
 
       // Skip empty batches
@@ -315,17 +319,31 @@ public class HttpBatchReader implements ManagedReader<SchemaNegotiator> {
         !resultSetLoader.outputSchema().toFieldList().isEmpty()) {
         outputSchema = resultSetLoader.outputSchema();
 
-        results = DirectRowSet.fromContainer(container);
-        
-        // Get column indexes
-        if (StringUtils.isNotEmpty(indexPaginator.getIndexParam())) {
-          indexPaginator.setIndexParamIndex(outputSchema.index(indexPaginator.getIndexParam()));
-        }
-      }
-    }*/
+        // Now get the results.  To do this, we will first need the indexes of the
+        // desired columns.  We can get those from the output schema.
+        int keysetIndex = outputSchema.index(indexPaginator.getIndexParam());
+        int hasMoreIndex = outputSchema.index(indexPaginator.getHasMoreParam());
+        int nextPageIndex = outputSchema.index(indexPaginator.getNextPageParam());
 
-    // Allows limitless pagination.
-    if (paginator != null &&
+
+        DirectRowSet results = DirectRowSet.fromContainer(container);
+        RowSetReader resultReader = results.reader();
+
+        // Now read and store the values
+       // if (resultReader.next()) {
+          logger.debug("Getting results");
+
+          if (keysetIndex != -1) {
+            Object v = resultReader.column(indexPaginator.getIndexParam()).reader().getObject();
+            logger.debug("Keyset value:");
+          }
+
+          //results.clear();
+          //resultReader.rewind();
+        //}
+      }
+    } else if (paginator != null &&
+      // Allows limitless pagination. Does not apply for index pagination
       maxRecords < 0 && (resultSetLoader.totalRowCount()) < paginator.getPageSize()) {
       logger.debug("Partially filled page received, ending pagination");
       paginator.notifyPartialPage();
