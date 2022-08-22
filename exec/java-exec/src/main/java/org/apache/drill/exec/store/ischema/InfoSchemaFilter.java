@@ -147,7 +147,7 @@ public class InfoSchemaFilter {
    * Evaluate the filter for given <COLUMN NAME, VALUE> pairs.
    *
    * @param recordValues map of field names and their values
-   * @param prefixMatchesInconclusive whether a prefix match between a column value and a filter value
+   * @param prefixMatchesInconclusive whether a prefix match between a schema path and a filter value
    *                                  results in Result.INCONCLUSIVE.  Used for pruning the schema search
    *                                  tree, e.g. "dfs" need not be recursed to find a schema of "cp.default"
    * @return evaluation result
@@ -194,15 +194,23 @@ public class InfoSchemaFilter {
           : sqlToRegexLike(pattern.value, escape.value);
 
         if (Pattern.matches(spi.getJavaPatternString(), fieldValue)) {
+          // E.g. pattern = 'dfs.%', schema path = 'dfs.tmp'.
+          // The entire schema path matches.
           return Result.TRUE;
         }
         if (!prefixMatchesInconclusive) {
+          // E.g. pattern = 'dfs.%', schema path = 'dfs'.
+          // There may be prefix match but prefixMatchesInconclusive is false.
           return Result.FALSE;
         }
         if ((spi.getPatternType() == SqlPatternType.STARTS_WITH || spi.getPatternType() == SqlPatternType.CONSTANT) &&
-          !pattern.value.startsWith(fieldValue)) {
+          !spi.getSimplePatternString().startsWith(fieldValue)) {
+            // E.g. pattern = 'dfs.%', schema path = 'cp'.
+            // No match, not even to a prefix.
             return Result.FALSE;
           }
+        // E.g. pattern = 'dfs.%', schema path = 'dfs'.
+        // A prefix matches
         return Result.INCONCLUSIVE;
       }
       case FunctionNames.EQ:
@@ -220,24 +228,18 @@ public class InfoSchemaFilter {
         boolean exactMatch = prefixMatch && arg.value.equals(value);
 
         if (exprNode.function.equals(FunctionNames.EQ)) {
+          // Equality case
           if (exactMatch) {
             return Result.TRUE;
           } else {
-            if (prefixMatchesInconclusive && prefixMatch) {
-              return Result.INCONCLUSIVE;
-            } else {
-              return Result.FALSE;
-            }
+            return prefixMatchesInconclusive && prefixMatch ? Result.INCONCLUSIVE: Result.FALSE;
           }
         } else {
+          // Inequality case
           if (exactMatch) {
             return Result.FALSE;
           } else {
-            if (prefixMatchesInconclusive && prefixMatch) {
-              return Result.INCONCLUSIVE;
-            } else {
-              return Result.TRUE;
-            }
+            return prefixMatchesInconclusive && prefixMatch ? Result.INCONCLUSIVE : Result.TRUE;
           }
         }
       }
