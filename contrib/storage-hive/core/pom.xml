@@ -101,7 +101,11 @@
         <exclusion>
           <groupId>commons-codec</groupId>
           <artifactId>commons-codec</artifactId>
-          </exclusion>
+        </exclusion>
+        <exclusion>
+          <groupId>ch.qos.reload4j</groupId>
+          <artifactId>reload4j</artifactId>
+        </exclusion>
         <exclusion>
           <artifactId>hadoop-auth</artifactId>
           <groupId>org.apache.hadoop</groupId>

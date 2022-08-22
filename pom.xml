@@ -1493,6 +1493,10 @@
             <artifactId>log4j</artifactId>
             <groupId>log4j</groupId>
           </exclusion>
+          <exclusion>
+            <groupId>ch.qos.reload4j</groupId>
+            <artifactId>reload4j</artifactId>
+          </exclusion>
         </exclusions>
       </dependency>
       <dependency>
