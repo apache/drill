@@ -1446,6 +1446,10 @@
             <groupId>org.slf4j</groupId>
           </exclusion>
           <exclusion>
+            <artifactId>slf4j-reload4j</artifactId>
+            <groupId>org.slf4j</groupId>
+          </exclusion>
+          <exclusion>
             <groupId>jline</groupId>
             <artifactId>jline</artifactId>
           </exclusion>
@@ -1525,6 +1529,10 @@
             <groupId>org.slf4j</groupId>
           </exclusion>
           <exclusion>
+            <artifactId>slf4j-reload4j</artifactId>
+            <groupId>org.slf4j</groupId>
+          </exclusion>
+          <exclusion>
             <groupId>commons-logging</groupId>
             <artifactId>commons-logging-api</artifactId>
           </exclusion>
@@ -1550,6 +1558,10 @@
           <exclusion>
             <groupId>org.slf4j</groupId>
             <artifactId>slf4j-log4j12</artifactId>
+          </exclusion>
+          <exclusion>
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-reload4j</artifactId>
           </exclusion>
           <exclusion>
             <groupId>org.apache.hbase</groupId>
@@ -1609,6 +1621,10 @@
           <exclusion>
             <artifactId>slf4j-log4j12</artifactId>
             <groupId>org.slf4j</groupId>
+          </exclusion>
+          <exclusion>
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-reload4j</artifactId>
           </exclusion>
         </exclusions>
       </dependency>
@@ -1671,6 +1687,10 @@
             <groupId>org.slf4j</groupId>
           </exclusion>
           <exclusion>
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-reload4j</artifactId>
+          </exclusion>
+          <exclusion>
             <groupId>com.sun.jersey</groupId>
             <artifactId>jersey-core</artifactId>
           </exclusion>
@@ -1720,6 +1740,10 @@
           <exclusion>
             <artifactId>slf4j-log4j12</artifactId>
             <groupId>org.slf4j</groupId>
+          </exclusion>
+          <exclusion>
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-reload4j</artifactId>
           </exclusion>
           <exclusion>
             <groupId>org.json</groupId>
@@ -1865,6 +1889,10 @@
           <exclusion>
             <artifactId>slf4j-log4j12</artifactId>
             <groupId>org.slf4j</groupId>
+          </exclusion>
+          <exclusion>
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-reload4j</artifactId>
           </exclusion>
           <exclusion>
             <artifactId>log4j</artifactId>
@@ -2129,6 +2157,10 @@
                 <groupId>org.slf4j</groupId>
               </exclusion>
               <exclusion>
+                <groupId>org.slf4j</groupId>
+                <artifactId>slf4j-reload4j</artifactId>
+              </exclusion>
+              <exclusion>
                 <artifactId>mockito-all</artifactId>
                 <groupId>org.mockito</groupId>
               </exclusion>
@@ -2290,6 +2322,10 @@
               <exclusion>
                 <artifactId>slf4j-log4j12</artifactId>
                 <groupId>org.slf4j</groupId>
+              </exclusion>
+              <exclusion>
+                <groupId>org.slf4j</groupId>
+                <artifactId>slf4j-reload4j</artifactId>
               </exclusion>
               <exclusion>
                 <artifactId>mockito-all</artifactId>
@@ -2463,6 +2499,10 @@
                 <groupId>org.slf4j</groupId>
               </exclusion>
               <exclusion>
+                <groupId>org.slf4j</groupId>
+                <artifactId>slf4j-reload4j</artifactId>
+              </exclusion>
+              <exclusion>
                 <artifactId>mockito-all</artifactId>
                 <groupId>org.mockito</groupId>
               </exclusion>
@@ -2590,7 +2630,7 @@
                 <groupId>org.slf4j</groupId>
               </exclusion>
               <exclusion>
-                <artifactId>slf4j-log4j12</artifactId>
+                <artifactId>slf4j-reload4j</artifactId>
                 <groupId>org.slf4j</groupId>
               </exclusion>
               <exclusion>
@@ -2744,6 +2784,10 @@
                 <groupId>org.slf4j</groupId>
               </exclusion>
               <exclusion>
+                <groupId>org.slf4j</groupId>
+                <artifactId>slf4j-reload4j</artifactId>
+              </exclusion>
+              <exclusion>
                 <artifactId>log4j</artifactId>
                 <groupId>log4j</groupId>
               </exclusion>
@@ -2787,6 +2831,10 @@
               <exclusion>
                 <artifactId>slf4j-log4j12</artifactId>
                 <groupId>org.slf4j</groupId>
+              </exclusion>
+              <exclusion>
+                <groupId>org.slf4j</groupId>
+                <artifactId>slf4j-reload4j</artifactId>
               </exclusion>
               <exclusion>
                 <artifactId>asm</artifactId>
@@ -3031,6 +3079,10 @@
                 <groupId>org.slf4j</groupId>
               </exclusion>
               <exclusion>
+                <groupId>org.slf4j</groupId>
+                <artifactId>slf4j-reload4j</artifactId>
+              </exclusion>
+              <exclusion>
                 <artifactId>mockito-all</artifactId>
                 <groupId>org.mockito</groupId>
               </exclusion>
@@ -3161,6 +3213,10 @@
                 <artifactId>slf4j-log4j12</artifactId>
               </exclusion>
               <exclusion>
+                <groupId>org.slf4j</groupId>
+                <artifactId>slf4j-reload4j</artifactId>
+              </exclusion>
+              <exclusion>
                 <groupId>commons-logging</groupId>
                 <artifactId>commons-logging</artifactId>
               </exclusion>
@@ -3257,6 +3313,10 @@
                 <groupId>org.slf4j</groupId>
               </exclusion>
               <exclusion>
+                <groupId>org.slf4j</groupId>
+                <artifactId>slf4j-reload4j</artifactId>
+              </exclusion>
+              <exclusion>
                 <artifactId>log4j</artifactId>
                 <groupId>log4j</groupId>
               </exclusion>
@@ -3332,6 +3392,10 @@
                 <groupId>org.slf4j</groupId>
               </exclusion>
               <exclusion>
+                <groupId>org.slf4j</groupId>
+                <artifactId>slf4j-reload4j</artifactId>
+              </exclusion>
+              <exclusion>
                 <artifactId>log4j</artifactId>
                 <groupId>log4j</groupId>
               </exclusion>
@@ -3375,6 +3439,10 @@
               <exclusion>
                 <artifactId>slf4j-log4j12</artifactId>
                 <groupId>org.slf4j</groupId>
+              </exclusion>
+              <exclusion>
+                <groupId>org.slf4j</groupId>
+                <artifactId>slf4j-reload4j</artifactId>
               </exclusion>
               <exclusion>
                 <artifactId>asm</artifactId>
@@ -3895,6 +3963,10 @@
               <exclusion>
                 <artifactId>slf4j-log4j12</artifactId>
                 <groupId>org.slf4j</groupId>
+              </exclusion>
+              <exclusion>
+                <groupId>org.slf4j</groupId>
+                <artifactId>slf4j-reload4j</artifactId>
               </exclusion>
               <exclusion>
                 <artifactId>reload4j</artifactId>
