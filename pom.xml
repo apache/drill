@@ -700,7 +700,6 @@
               <exclude>**/clientlib/y2038/*.h</exclude> <!-- All the files here should have MIT License -->
               <exclude>**/resources/parquet/**/*</exclude>
               <exclude>**/.asf.yaml</exclude>
-              <exclude>**/.lgtm.yml</exclude>
               <exclude>**/*.woff2</exclude>
               <exclude>**/*.ks</exclude>
               <exclude>**/*.pcap</exclude>
