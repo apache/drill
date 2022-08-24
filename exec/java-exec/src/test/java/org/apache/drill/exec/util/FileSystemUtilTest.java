@@ -202,7 +202,7 @@ public class FileSystemUtilTest extends FileSystemUtilTestBase {
     assertTrue("Should return empty result", fileStatuses.isEmpty());
   }
 
-  @Test // DRILL-8282
+  @Test // DRILL-8283
   public void testRecursiveListingMaxSize() throws IOException {
     int oldSize = FileSystemUtil.setRecursiveFileListingMaxSize(5);
     try {
