@@ -17,7 +17,11 @@
  */
 package org.apache.drill.exec.util;
 
+import org.apache.drill.common.config.DrillConfig;
 import org.apache.drill.common.exceptions.ErrorHelper;
+import org.apache.drill.common.exceptions.UserException;
+import org.apache.drill.exec.ExecConstants;
+import org.apache.drill.shaded.guava.com.google.common.annotations.VisibleForTesting;
 import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
@@ -31,6 +35,7 @@ import java.util.List;
 import java.util.concurrent.ForkJoinPool;
 import java.util.concurrent.ForkJoinTask;
 import java.util.concurrent.RecursiveTask;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -41,6 +46,12 @@ import java.util.stream.Stream;
 public class FileSystemUtil {
 
   private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(FileSystemUtil.class);
+
+  private static int recursiveListingMaxSize;
+
+  static {
+    recursiveListingMaxSize = DrillConfig.create().getInt(ExecConstants.RECURSIVE_FILE_LISTING_MAX_SIZE);
+  }
 
   /**
    * Filter that will accept all files and directories.
@@ -248,8 +259,17 @@ public class FileSystemUtil {
    */
   private static List<FileStatus> listRecursive(FileSystem fs, Path path, Scope scope, boolean suppressExceptions, PathFilter filter) {
     ForkJoinPool pool = new ForkJoinPool();
+    AtomicInteger fileCounter = new AtomicInteger(0);
+
     try {
-      RecursiveListing task = new RecursiveListing(fs, path, scope, suppressExceptions, filter);
+      RecursiveListing task = new RecursiveListing(
+        fs,
+        path,
+        scope,
+        suppressExceptions,
+        filter,
+        fileCounter
+      );
       return pool.invoke(task);
     } finally {
       pool.shutdown();
@@ -287,13 +307,23 @@ public class FileSystemUtil {
     private final Scope scope;
     private final boolean suppressExceptions;
     private final PathFilter filter;
+    // Running count of files for comparison with RECURSIVE_FILE_LISTING_MAX_SIZE
+    private final AtomicInteger fileCounter;
 
-    RecursiveListing(FileSystem fs, Path path, Scope scope, boolean suppressExceptions, PathFilter filter) {
+    RecursiveListing(
+      FileSystem fs,
+      Path path,
+      Scope scope,
+      boolean suppressExceptions,
+      PathFilter filter,
+      AtomicInteger fileCounter
+    ) {
       this.fs = fs;
       this.path = path;
       this.scope = scope;
       this.suppressExceptions = suppressExceptions;
       this.filter = filter;
+      this.fileCounter = fileCounter;
     }
 
     @Override
@@ -302,12 +332,32 @@ public class FileSystemUtil {
       List<RecursiveListing> tasks = new ArrayList<>();
 
       try {
-        for (FileStatus status : fs.listStatus(path, filter)) {
+        FileStatus[] dirFs = fs.listStatus(path, filter);
+        if (fileCounter.addAndGet(dirFs.length) > recursiveListingMaxSize) {
+          throw UserException
+            .resourceError()
+            .message(
+              "File listing size limit of %d exceeded recursing through path %s, see BOOT option %s",
+              recursiveListingMaxSize,
+              path,
+              ExecConstants.RECURSIVE_FILE_LISTING_MAX_SIZE
+            )
+            .build(logger);
+        }
+
+        for (FileStatus status : dirFs) {
           if (isStatusApplicable(status, scope)) {
             statuses.add(status);
           }
           if (status.isDirectory()) {
-            RecursiveListing task = new RecursiveListing(fs, status.getPath(), scope, suppressExceptions, filter);
+            RecursiveListing task = new RecursiveListing(
+              fs,
+              status.getPath(),
+              scope,
+              suppressExceptions,
+              filter,
+              fileCounter
+            );
             task.fork();
             tasks.add(task);
           }
@@ -329,4 +379,10 @@ public class FileSystemUtil {
     }
   }
 
+  @VisibleForTesting
+  public static int setRecursiveFileListingMaxSize(int newSize) {
+    int oldSize = recursiveListingMaxSize;
+    recursiveListingMaxSize = newSize;
+    return oldSize;
+  }
 }

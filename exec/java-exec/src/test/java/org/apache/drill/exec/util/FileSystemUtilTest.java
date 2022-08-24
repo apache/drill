@@ -17,6 +17,7 @@
  */
 package org.apache.drill.exec.util;
 
+import org.apache.drill.common.exceptions.UserException;
 import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.fs.PathFilter;
@@ -26,8 +27,10 @@ import java.io.IOException;
 import java.util.Collections;
 import java.util.List;
 
+import static org.hamcrest.CoreMatchers.containsString;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 
 public class FileSystemUtilTest extends FileSystemUtilTestBase {
@@ -199,4 +202,15 @@ public class FileSystemUtilTest extends FileSystemUtilTestBase {
     assertTrue("Should return empty result", fileStatuses.isEmpty());
   }
 
+  @Test // DRILL-8282
+  public void testRecursiveListingMaxSize() throws IOException {
+    int oldSize = FileSystemUtil.setRecursiveFileListingMaxSize(5);
+    try {
+      FileSystemUtil.listAll(fs, new Path(base, "a"), true);
+    } catch (UserException ex) {
+      assertThat(ex.getMessage(), containsString("RESOURCE ERROR: File listing size limit"));
+    } finally {
+      FileSystemUtil.setRecursiveFileListingMaxSize(oldSize);
+    }
+  }
 }
