@@ -40,3 +40,6 @@ Page pagination is very similar to offset pagination except instead of using an 
       }
 ```
 In either case, the `pageSize` parameter should be set to the maximum page size allowable by the API.  This will minimize the number of requests Drill is making.
+
+## Index / KeySet Pagination
+

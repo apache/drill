@@ -61,6 +61,7 @@ public class DoubleListener extends ScalarListener {
         // errors.
         throw tokenizer.invalidValue(token);
     }
+    addValueToPagination(writer.schema().name(), value);
     writer.setDouble(value);
   }
 

@@ -62,6 +62,7 @@ public class BigIntListener extends ScalarListener {
       default:
         throw tokenizer.invalidValue(token);
     }
+    addValueToPagination(writer.schema().name(), value);
     writer.setLong(value);
   }
 

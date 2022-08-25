@@ -283,7 +283,7 @@ public class TestPagination extends ClusterTest {
         b.release();
       }
       assertEquals(2, results.size());
-      assertEquals(4, count);
+      assertEquals(2, count);
     }
   }
 

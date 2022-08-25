@@ -61,6 +61,7 @@ public class BooleanListener extends ScalarListener {
         // errors.
         throw tokenizer.invalidValue(token);
     }
+    addValueToPagination(writer.schema().name(), value);
     writer.setBoolean(value);
   }
 

@@ -19,8 +19,11 @@
 package org.apache.drill.exec.store.http.paginator;
 
 import okhttp3.HttpUrl.Builder;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.drill.exec.store.http.HttpPaginatorConfig.PaginatorMethod;
 
+import java.io.UnsupportedEncodingException;
+import java.net.URLEncoder;
 import java.util.NoSuchElementException;
 
 public class IndexPaginator extends Paginator {
@@ -29,18 +32,16 @@ public class IndexPaginator extends Paginator {
   private final String indexParam;
   private final String nextPageParam;
 
-  private int indexParamIndex;
-  private int hasMoreIndex;
-  private int nextPageIndex;
-
   private String indexValue;
-  private String hasMoreValue;
+  private Boolean hasMoreValue;
   private String nextPageValue;
+  private boolean firstRun;
 
   public IndexPaginator(Builder builder, int pageSize, int limit, String hasMoreParam, String indexParam, String nextPageParam) {
     super(builder, PaginatorMethod.INDEX, pageSize, limit);
     this.hasMoreParam = hasMoreParam;
     this.indexParam = indexParam;
+    this.firstRun = true;
     this.nextPageParam = nextPageParam;
   }
 
@@ -62,7 +63,11 @@ public class IndexPaginator extends Paginator {
     return this.nextPageParam;
   }
 
-  public void setIndexParam(String indexValue) {
+  public void setHasMoreValue(Boolean hasMoreValue) {
+    this.hasMoreValue = hasMoreValue;
+  }
+
+  public void setIndexValue(String indexValue) {
     this.indexValue = indexValue;
   }
 
@@ -70,22 +75,28 @@ public class IndexPaginator extends Paginator {
     this.nextPageValue = nextPageValue;
   }
 
-  public void setHasMoreValue(String hasMoreValue) {
-    this.hasMoreValue = hasMoreValue;
-  }
-
-  public void setIndexParamIndex(int index) {
-    this.indexParamIndex = index;
-  }
-
-  public int getIndexParamIndex() {
-    return this.indexParamIndex;
-  }
-
   @Override
   public String next() {
+    // If the paginator has never been run before, just return the base URL.
+    if (firstRun) {
+      firstRun = false;
+      return builder.build().url().toString();
+    }
+
     if (!hasNext()) {
       throw new NoSuchElementException();
+    }
+
+    if (StringUtils.isNotEmpty(nextPageValue)) {
+      // TODO figure this out...
+    } else if (StringUtils.isNotEmpty(indexValue)) {
+      try {
+        indexValue = URLEncoder.encode(indexValue, "UTF-8");
+      } catch (UnsupportedEncodingException e) {
+        // Do nothing.
+      }
+      builder.removeAllEncodedQueryParameters(indexParam);
+      builder.addQueryParameter(indexParam, indexValue);
     }
 
     return builder.build().url().toString();

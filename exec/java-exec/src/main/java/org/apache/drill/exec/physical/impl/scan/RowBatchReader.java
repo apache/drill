@@ -17,7 +17,9 @@
  */
 package org.apache.drill.exec.physical.impl.scan;
 
+import org.apache.drill.exec.physical.impl.scan.framework.ManagedReader;
 import org.apache.drill.exec.record.VectorContainer;
+import org.apache.drill.exec.store.RecordReader;
 
 /**
  * Extended version of a record reader used by the revised
@@ -78,7 +80,7 @@ import org.apache.drill.exec.record.VectorContainer;
  * don't worry about it.
  * <p>
  * If an error occurs, the reader can throw a {@link RuntimeException}
- * from any method. A {@link UserException} is preferred to provide
+ * from any method. A {@link org.apache.drill.common.exceptions.UserException} is preferred to provide
  * detailed information about the source of the problem.
  */
 public interface RowBatchReader {

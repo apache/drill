@@ -253,9 +253,9 @@ public class JsonLoaderImpl implements JsonLoader, ErrorFactory {
   private final JsonStructureParser parser;
   private final FieldFactory fieldFactory;
   private final ImplicitColumns implicitFields;
+  private final Map<String, Object> paginationFields;
   private final int maxRows;
   private boolean eof;
-  private Map<String, Object> paginationFields;
 
   /**
    * List of "unknown" columns (have only seen nulls or empty values)
@@ -307,6 +307,9 @@ public class JsonLoaderImpl implements JsonLoader, ErrorFactory {
   public JsonLoaderOptions options() { return options; }
   public JsonStructureParser parser() { return parser; }
   public FieldFactory fieldFactory() { return fieldFactory; }
+  public Map<String, Object> paginationFields() {
+    return paginationFields;
+  }
 
   @Override // JsonLoader
   public boolean readBatch() {

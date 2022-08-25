@@ -61,6 +61,7 @@ public class HttpPaginatorConfig {
   @JsonProperty
   private final String method;
 
+  // For index/keyset pagination
   @JsonProperty
   private final String hasMoreParam;
 
@@ -235,6 +236,7 @@ public class HttpPaginatorConfig {
             .message("Invalid paginator configuration.  For INDEX pagination, the nextPageParam or indexParam must be defined.")
             .build(logger);
         }
+        break;
       default:
         throw UserException
           .validationError()

@@ -32,9 +32,6 @@ import org.apache.drill.exec.physical.impl.scan.framework.ManagedReader;
 import org.apache.drill.exec.physical.impl.scan.framework.SchemaNegotiator;
 import org.apache.drill.exec.physical.impl.scan.v3.FixedReceiver;
 import org.apache.drill.exec.physical.resultSet.ResultSetLoader;
-import org.apache.drill.exec.physical.rowSet.DirectRowSet;
-import org.apache.drill.exec.physical.rowSet.RowSetReader;
-import org.apache.drill.exec.record.VectorContainer;
 import org.apache.drill.exec.record.metadata.TupleMetadata;
 import org.apache.drill.exec.store.easy.json.loader.JsonLoader;
 import org.apache.drill.exec.store.easy.json.loader.JsonLoaderImpl.JsonLoaderBuilder;
@@ -80,7 +77,7 @@ public class HttpBatchReader implements ManagedReader<SchemaNegotiator> {
     this.maxRecords = subScan.maxRecords();
     this.baseUrl = subScan.tableSpec().connectionConfig().url();
     this.paginator = null;
-    this.paginationFields = new HashMap<>();
+    this.paginationFields = generatePaginationFieldMap();
   }
 
   public HttpBatchReader(HttpSubScan subScan, Paginator paginator) {
@@ -88,7 +85,7 @@ public class HttpBatchReader implements ManagedReader<SchemaNegotiator> {
     this.maxRecords = subScan.maxRecords();
     this.paginator = paginator;
     this.baseUrl = paginator.next();
-    this.paginationFields = new HashMap<>();
+    this.paginationFields = generatePaginationFieldMap();
     logger.debug("Batch reader with URL: {}", this.baseUrl);
   }
 
@@ -111,6 +108,8 @@ public class HttpBatchReader implements ManagedReader<SchemaNegotiator> {
       }
     };
     negotiator.setErrorContext(errorContext);
+
+    System.out.println("URL: " + url);
 
     // Http client setup
     SimpleHttp http = SimpleHttp.builder()
@@ -218,6 +217,29 @@ public class HttpBatchReader implements ManagedReader<SchemaNegotiator> {
     implicitColumns.getColumn(RESPONSE_CODE_FIELD).setValue(http.getResponseCode());
   }
 
+  protected Map<String, Object> generatePaginationFieldMap() {
+    if (paginator == null || paginator.getMode() != PaginatorMethod.INDEX) {
+      return null;
+    }
+
+    Map<String, Object> fieldMap = new HashMap<>();
+    IndexPaginator indexPaginator = (IndexPaginator) paginator;
+
+    // Initialize the pagination field map
+    if (StringUtils.isNotEmpty(indexPaginator.getIndexParam())) {
+      fieldMap.put(indexPaginator.getIndexParam(), null);
+    }
+
+    if (StringUtils.isNotEmpty(indexPaginator.getHasMoreParam())) {
+      fieldMap.put(indexPaginator.getHasMoreParam(), null);
+    }
+
+    if (StringUtils.isNotEmpty(indexPaginator.getNextPageParam())) {
+      fieldMap.put(indexPaginator.getNextPageParam(), null);
+    }
+    return fieldMap;
+  }
+
   protected boolean implicitColumnsAreProjected() {
     List<SchemaPath> columns = subScan.columns();
     for (SchemaPath path : columns) {
@@ -310,41 +332,43 @@ public class HttpBatchReader implements ManagedReader<SchemaNegotiator> {
     // next page.  Some APIs will have a boolean parameter to indicate that there are
     // additional pages.  Some APIs will also return a URL for the next page. In any event,
     // it is necessary to grab these values from the returned data.
-    if (false && paginator != null && paginator.getMode() == PaginatorMethod.INDEX) {
+    if (paginator != null && paginator.getMode() == PaginatorMethod.INDEX) {
       IndexPaginator indexPaginator = (IndexPaginator) paginator;
-      VectorContainer container = resultSetLoader.outputContainer();
+      // There are two cases, however in both, there is a boolean parameter which indicates
+      // whether there are more pages to follow.  The first case is when the API provides
+      // a URL for the next page and the other is when the API provides an offset which is added
+      // to the next page.
+      //
+      // In ether case, we first need the boolean "has more" parameter so let's grab that.
+      Object hasMore = paginationFields.get(indexPaginator.getHasMoreParam());
+      boolean hasMoreValues;
+      if (hasMore instanceof Boolean) {
+        hasMoreValues = (Boolean) hasMore;
+      } else {
+        String hasMoreString = hasMore.toString();
+        // Attempt to convert to boolean
+        hasMoreValues = Boolean.parseBoolean(hasMoreString);
+      }
+      indexPaginator.setHasMoreValue(hasMoreValues);
 
-      // Skip empty batches
-      if (!resultSetLoader.outputSchema().isEmpty() &&
-        !resultSetLoader.outputSchema().toFieldList().isEmpty()) {
-        outputSchema = resultSetLoader.outputSchema();
+      // If there are no more values, notify the paginator
+      if (!hasMoreValues) {
+        paginator.notifyPartialPage();
+      }
+      logger.debug("Ending index/keyset pagination.");
 
-        // Now get the results.  To do this, we will first need the indexes of the
-        // desired columns.  We can get those from the output schema.
-        int keysetIndex = outputSchema.index(indexPaginator.getIndexParam());
-        int hasMoreIndex = outputSchema.index(indexPaginator.getHasMoreParam());
-        int nextPageIndex = outputSchema.index(indexPaginator.getNextPageParam());
+      // At this point we know that there are more pages to come.  Send the data to the paginator and
+      // use that to generate the next page.
+      if (StringUtils.isNotEmpty(indexPaginator.getIndexParam())) {
+        indexPaginator.setIndexValue(paginationFields.get(indexPaginator.getIndexParam()).toString());
+      }
 
-
-        DirectRowSet results = DirectRowSet.fromContainer(container);
-        RowSetReader resultReader = results.reader();
-
-        // Now read and store the values
-       // if (resultReader.next()) {
-          logger.debug("Getting results");
-
-          if (keysetIndex != -1) {
-            Object v = resultReader.column(indexPaginator.getIndexParam()).reader().getObject();
-            logger.debug("Keyset value:");
-          }
-
-          //results.clear();
-          //resultReader.rewind();
-        //}
+      if (StringUtils.isNotEmpty(indexPaginator.getNextPageParam())) {
+        indexPaginator.setNextPageValue(paginationFields.get(indexPaginator.getNextPageParam()).toString());
       }
     } else if (paginator != null &&
-      // Allows limitless pagination. Does not apply for index pagination
       maxRecords < 0 && (resultSetLoader.totalRowCount()) < paginator.getPageSize()) {
+    // Allows limitless pagination. Does not apply for index pagination
       logger.debug("Partially filled page received, ending pagination");
       paginator.notifyPartialPage();
     }
