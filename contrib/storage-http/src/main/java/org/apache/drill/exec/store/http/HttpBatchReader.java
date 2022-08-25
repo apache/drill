@@ -339,31 +339,33 @@ public class HttpBatchReader implements ManagedReader<SchemaNegotiator> {
       // to the next page.
       //
       // In ether case, we first need the boolean "has more" parameter so let's grab that.
-      Object hasMore = paginationFields.get(indexPaginator.getHasMoreParam());
-      boolean hasMoreValues;
-      if (hasMore instanceof Boolean) {
-        hasMoreValues = (Boolean) hasMore;
-      } else {
-        String hasMoreString = hasMore.toString();
-        // Attempt to convert to boolean
-        hasMoreValues = Boolean.parseBoolean(hasMoreString);
-      }
-      indexPaginator.setHasMoreValue(hasMoreValues);
+      if (paginationFields.get(indexPaginator.getHasMoreParam()) != null) {
+        Object hasMore = paginationFields.get(indexPaginator.getHasMoreParam());
+        boolean hasMoreValues;
 
-      // If there are no more values, notify the paginator
-      if (!hasMoreValues) {
-        paginator.notifyPartialPage();
-      }
-      logger.debug("Ending index/keyset pagination.");
+        if (hasMore instanceof Boolean) {
+          hasMoreValues = (Boolean) hasMore;
+        } else {
+          String hasMoreString = hasMore.toString();
+          // Attempt to convert to boolean
+          hasMoreValues = Boolean.parseBoolean(hasMoreString);
+        }
+        indexPaginator.setHasMoreValue(hasMoreValues);
 
-      // At this point we know that there are more pages to come.  Send the data to the paginator and
-      // use that to generate the next page.
-      if (StringUtils.isNotEmpty(indexPaginator.getIndexParam())) {
-        indexPaginator.setIndexValue(paginationFields.get(indexPaginator.getIndexParam()).toString());
-      }
+        // If there are no more values, notify the paginator
+        if (!hasMoreValues) {
+          paginator.notifyPartialPage();
+        }
 
-      if (StringUtils.isNotEmpty(indexPaginator.getNextPageParam())) {
-        indexPaginator.setNextPageValue(paginationFields.get(indexPaginator.getNextPageParam()).toString());
+        // At this point we know that there are more pages to come.  Send the data to the paginator and
+        // use that to generate the next page.
+        if (StringUtils.isNotEmpty(indexPaginator.getIndexParam())) {
+          indexPaginator.setIndexValue(paginationFields.get(indexPaginator.getIndexParam()).toString());
+        }
+
+        if (StringUtils.isNotEmpty(indexPaginator.getNextPageParam())) {
+          indexPaginator.setNextPageValue(paginationFields.get(indexPaginator.getNextPageParam()).toString());
+        }
       }
     } else if (paginator != null &&
       maxRecords < 0 && (resultSetLoader.totalRowCount()) < paginator.getPageSize()) {

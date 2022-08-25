@@ -35,14 +35,14 @@ public class IndexPaginator extends Paginator {
   private String indexValue;
   private Boolean hasMoreValue;
   private String nextPageValue;
-  private boolean firstRun;
+  private int pageCount;
 
   public IndexPaginator(Builder builder, int pageSize, int limit, String hasMoreParam, String indexParam, String nextPageParam) {
     super(builder, PaginatorMethod.INDEX, pageSize, limit);
     this.hasMoreParam = hasMoreParam;
     this.indexParam = indexParam;
-    this.firstRun = true;
     this.nextPageParam = nextPageParam;
+    pageCount = 0;
   }
 
   @Override
@@ -75,11 +75,15 @@ public class IndexPaginator extends Paginator {
     this.nextPageValue = nextPageValue;
   }
 
+  public boolean isFirstPage() {
+    return pageCount < 1;
+  }
+
   @Override
   public String next() {
     // If the paginator has never been run before, just return the base URL.
-    if (firstRun) {
-      firstRun = false;
+    if (pageCount == 0) {
+      pageCount++;
       return builder.build().url().toString();
     }
 
@@ -98,7 +102,7 @@ public class IndexPaginator extends Paginator {
       builder.removeAllEncodedQueryParameters(indexParam);
       builder.addQueryParameter(indexParam, indexValue);
     }
-
+    pageCount++;
     return builder.build().url().toString();
   }
 }
