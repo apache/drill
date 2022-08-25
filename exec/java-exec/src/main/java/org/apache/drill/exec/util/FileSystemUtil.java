@@ -337,7 +337,7 @@ public class FileSystemUtil {
 
       try {
         FileStatus[] dirFs = fs.listStatus(path, filter);
-        if (recursiveListingMaxSize > 0 && fileCounter.addAndGet(dirFs.length) > recursiveListingMaxSize) {
+        if (fileCounter.addAndGet(dirFs.length) > recursiveListingMaxSize && recursiveListingMaxSize > 0 ) {
           try {
             throw UserException
               .resourceError()
