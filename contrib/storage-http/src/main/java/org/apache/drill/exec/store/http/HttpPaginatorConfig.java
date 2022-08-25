@@ -33,7 +33,7 @@ import java.util.Objects;
 
 
 @JsonInclude(JsonInclude.Include.NON_DEFAULT)
-@JsonDeserialize(builder = HttpPaginatorConfig.HttpPaginatorBuilder.class)
+@JsonDeserialize(builder = HttpPaginatorConfig.HttpPaginatorConfigBuilder.class)
 public class HttpPaginatorConfig {
 
   private static final Logger logger = LoggerFactory.getLogger(HttpPaginatorConfig.class);
@@ -176,7 +176,7 @@ public class HttpPaginatorConfig {
     INDEX
   }
 
-  private HttpPaginatorConfig(HttpPaginatorConfig.HttpPaginatorBuilder builder) {
+  /*private HttpPaginatorConfig(HttpPaginatorConfig.HttpPaginatorConfigBuilder builder) {
     this.limitParam = builder.limitParam;
     this.offsetParam = builder.offsetParam;
     this.pageSize = builder.pageSize;
@@ -196,7 +196,7 @@ public class HttpPaginatorConfig {
     * For pagination to function key fields must be defined.  This block validates the required fields for
     * each type of paginator.
      */
-    switch (paginatorMethod) {
+    /*switch (paginatorMethod) {
       case OFFSET:
         if (StringUtils.isEmpty(this.limitParam) || StringUtils.isEmpty(this.offsetParam)) {
           throw UserException
@@ -243,7 +243,7 @@ public class HttpPaginatorConfig {
           .message("Invalid paginator method: %s.  Drill supports 'OFFSET', 'INDEX' and 'PAGE'", method)
           .build(logger);
     }
-  }
+  }*/
 
   @JsonIgnore
   public PaginatorMethod getMethodType() {
@@ -251,122 +251,6 @@ public class HttpPaginatorConfig {
   }
 
   @JsonPOJOBuilder(withPrefix = "")
-  public static class HttpPaginatorBuilder {
-    public String limitParam;
-
-    public String offsetParam;
-
-    public int maxRecords;
-
-    public int pageSize;
-
-    public String pageParam;
-
-    public String pageSizeParam;
-
-    public String method;
-
-    public String hasMoreParam;
-
-    public String indexParam;
-
-    public String nextPageParam;
-
-
-    public HttpPaginatorConfig build() {
-      return new HttpPaginatorConfig(this);
-    }
-
-    public String hasMoreParam() {
-      return this.hasMoreParam;
-    }
-
-    public String indexParam() {
-      return this.indexParam;
-    }
-
-    public String nextPageParam() {
-      return this.nextPageParam;
-    }
-    public String limitParam() {
-      return this.limitParam;
-    }
-
-    public String offsetParam() {
-      return this.offsetParam;
-    }
-
-    public int maxRecords() {
-      return this.maxRecords;
-    }
-
-    public int pageSize() {
-      return this.pageSize;
-    }
-
-    public String pageParam() {
-      return this.pageParam;
-    }
-
-    public String pageSizeParam() {
-      return this.pageSizeParam;
-    }
-
-    public String method() {
-      return this.method;
-    }
-
-    public HttpPaginatorBuilder hasMoreParam(String hasMoreParam) {
-      this.hasMoreParam = hasMoreParam;
-      return this;
-    }
-
-    public HttpPaginatorBuilder indexParam(String indexParam) {
-      this.indexParam = indexParam;
-      return this;
-    }
-
-    public HttpPaginatorBuilder nextPageParam(String nextPageParam) {
-      this.nextPageParam = nextPageParam;
-      return this;
-    }
-
-    public HttpPaginatorBuilder limitParam(String limitParam) {
-      this.limitParam = limitParam;
-      return this;
-    }
-
-    public HttpPaginatorBuilder offsetParam(String offsetParam) {
-      this.offsetParam = offsetParam;
-      return this;
-    }
-
-    public HttpPaginatorBuilder maxRecords(int maxRecords) {
-      this.maxRecords = maxRecords;
-      return this;
-    }
-
-    public HttpPaginatorBuilder pageSize(int pageSize) {
-      this.pageSize = pageSize;
-      return this;
-    }
-
-    public HttpPaginatorBuilder pageParam(String pageParam) {
-      this.pageParam = pageParam;
-      return this;
-    }
-
-    public HttpPaginatorBuilder pageSizeParam(String pageSizeParam) {
-      this.pageSizeParam = pageSizeParam;
-      return this;
-    }
-
-    public HttpPaginatorBuilder method(String method) {
-      this.method = method;
-      return this;
-    }
-  }
-
   public static class HttpPaginatorConfigBuilder {
     private String limitParam;
     private String offsetParam;

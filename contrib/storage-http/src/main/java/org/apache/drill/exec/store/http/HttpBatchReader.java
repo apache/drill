@@ -69,7 +69,6 @@ public class HttpBatchReader implements ManagedReader<SchemaNegotiator> {
   private JsonLoader jsonLoader;
   private ResultSetLoader resultSetLoader;
   protected ImplicitColumns implicitColumns;
-  protected TupleMetadata outputSchema;
   private final Map<String, Object> paginationFields;
 
   public HttpBatchReader(HttpSubScan subScan) {
