@@ -268,7 +268,8 @@ public class FileSystemUtil {
         scope,
         suppressExceptions,
         filter,
-        fileCounter
+        fileCounter,
+        pool
       );
       return pool.invoke(task);
     } finally {
@@ -309,6 +310,7 @@ public class FileSystemUtil {
     private final PathFilter filter;
     // Running count of files for comparison with RECURSIVE_FILE_LISTING_MAX_SIZE
     private final AtomicInteger fileCounter;
+    private final ForkJoinPool pool;
 
     RecursiveListing(
       FileSystem fs,
@@ -316,7 +318,8 @@ public class FileSystemUtil {
       Scope scope,
       boolean suppressExceptions,
       PathFilter filter,
-      AtomicInteger fileCounter
+      AtomicInteger fileCounter,
+      ForkJoinPool pool
     ) {
       this.fs = fs;
       this.path = path;
@@ -324,6 +327,7 @@ public class FileSystemUtil {
       this.suppressExceptions = suppressExceptions;
       this.filter = filter;
       this.fileCounter = fileCounter;
+      this.pool = pool;
     }
 
     @Override
@@ -334,15 +338,20 @@ public class FileSystemUtil {
       try {
         FileStatus[] dirFs = fs.listStatus(path, filter);
         if (recursiveListingMaxSize > 0 && fileCounter.addAndGet(dirFs.length) > recursiveListingMaxSize) {
-          throw UserException
-            .resourceError()
-            .message(
-              "File listing size limit of %d exceeded recursing through path %s, see BOOT option %s",
-              recursiveListingMaxSize,
-              path,
-              ExecConstants.RECURSIVE_FILE_LISTING_MAX_SIZE
-            )
-            .build(logger);
+          try {
+            throw UserException
+              .resourceError()
+              .message(
+                "File listing size limit of %d exceeded recursing through path %s, see BOOT option %s",
+                recursiveListingMaxSize,
+                path,
+                ExecConstants.RECURSIVE_FILE_LISTING_MAX_SIZE
+              )
+              .build(logger);
+          } finally {
+            // Attempt to abort all tasks
+            this.pool.shutdownNow();
+          }
         }
 
         for (FileStatus status : dirFs) {
@@ -356,7 +365,8 @@ public class FileSystemUtil {
               scope,
               suppressExceptions,
               filter,
-              fileCounter
+              fileCounter,
+              pool
             );
             task.fork();
             tasks.add(task);
