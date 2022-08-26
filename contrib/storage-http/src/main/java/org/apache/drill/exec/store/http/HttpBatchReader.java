@@ -68,6 +68,7 @@ public class HttpBatchReader implements ManagedReader<SchemaNegotiator> {
   protected String baseUrl;
   private JsonLoader jsonLoader;
   private ResultSetLoader resultSetLoader;
+  private final List<SchemaPath> projectedColumns;
   protected ImplicitColumns implicitColumns;
   private final Map<String, Object> paginationFields;
 
@@ -76,6 +77,7 @@ public class HttpBatchReader implements ManagedReader<SchemaNegotiator> {
     this.maxRecords = subScan.maxRecords();
     this.baseUrl = subScan.tableSpec().connectionConfig().url();
     this.paginator = null;
+    this.projectedColumns = subScan.columns();
     this.paginationFields = generatePaginationFieldMap();
   }
 
@@ -84,6 +86,7 @@ public class HttpBatchReader implements ManagedReader<SchemaNegotiator> {
     this.maxRecords = subScan.maxRecords();
     this.paginator = paginator;
     this.baseUrl = paginator.next();
+    this.projectedColumns = subScan.columns();
     this.paginationFields = generatePaginationFieldMap();
     logger.debug("Batch reader with URL: {}", this.baseUrl);
   }
@@ -322,6 +325,44 @@ public class HttpBatchReader implements ManagedReader<SchemaNegotiator> {
     return builder.build();
   }
 
+  protected void populateIndexPaginator() {
+    IndexPaginator indexPaginator = (IndexPaginator) paginator;
+    // There are two cases, however in both, there is a boolean parameter which indicates
+    // whether there are more pages to follow.  The first case is when the API provides
+    // a URL for the next page and the other is when the API provides an offset which is added
+    // to the next page.
+    //
+    // In ether case, we first need the boolean "has more" parameter so let's grab that.
+    if (paginationFields.get(indexPaginator.getHasMoreParam()) != null) {
+      Object hasMore = paginationFields.get(indexPaginator.getHasMoreParam());
+      boolean hasMoreValues;
+
+      if (hasMore instanceof Boolean) {
+        hasMoreValues = (Boolean) hasMore;
+      } else {
+        String hasMoreString = hasMore.toString();
+        // Attempt to convert to boolean
+        hasMoreValues = Boolean.parseBoolean(hasMoreString);
+      }
+      indexPaginator.setHasMoreValue(hasMoreValues);
+
+      // If there are no more values, notify the paginator
+      if (!hasMoreValues) {
+        paginator.notifyPartialPage();
+      }
+
+      // At this point we know that there are more pages to come.  Send the data to the paginator and
+      // use that to generate the next page.
+      if (StringUtils.isNotEmpty(indexPaginator.getIndexParam())) {
+        indexPaginator.setIndexValue(paginationFields.get(indexPaginator.getIndexParam()).toString());
+      }
+
+      if (StringUtils.isNotEmpty(indexPaginator.getNextPageParam())) {
+        indexPaginator.setNextPageValue(paginationFields.get(indexPaginator.getNextPageParam()).toString());
+      }
+    }
+  }
+
   @Override
   public boolean next() {
     boolean result = jsonLoader.readBatch();
@@ -332,40 +373,12 @@ public class HttpBatchReader implements ManagedReader<SchemaNegotiator> {
     // additional pages.  Some APIs will also return a URL for the next page. In any event,
     // it is necessary to grab these values from the returned data.
     if (paginator != null && paginator.getMode() == PaginatorMethod.INDEX) {
-      IndexPaginator indexPaginator = (IndexPaginator) paginator;
-      // There are two cases, however in both, there is a boolean parameter which indicates
-      // whether there are more pages to follow.  The first case is when the API provides
-      // a URL for the next page and the other is when the API provides an offset which is added
-      // to the next page.
-      //
-      // In ether case, we first need the boolean "has more" parameter so let's grab that.
-      if (paginationFields.get(indexPaginator.getHasMoreParam()) != null) {
-        Object hasMore = paginationFields.get(indexPaginator.getHasMoreParam());
-        boolean hasMoreValues;
-
-        if (hasMore instanceof Boolean) {
-          hasMoreValues = (Boolean) hasMore;
-        } else {
-          String hasMoreString = hasMore.toString();
-          // Attempt to convert to boolean
-          hasMoreValues = Boolean.parseBoolean(hasMoreString);
-        }
-        indexPaginator.setHasMoreValue(hasMoreValues);
-
-        // If there are no more values, notify the paginator
-        if (!hasMoreValues) {
-          paginator.notifyPartialPage();
-        }
-
-        // At this point we know that there are more pages to come.  Send the data to the paginator and
-        // use that to generate the next page.
-        if (StringUtils.isNotEmpty(indexPaginator.getIndexParam())) {
-          indexPaginator.setIndexValue(paginationFields.get(indexPaginator.getIndexParam()).toString());
-        }
-
-        if (StringUtils.isNotEmpty(indexPaginator.getNextPageParam())) {
-          indexPaginator.setNextPageValue(paginationFields.get(indexPaginator.getNextPageParam()).toString());
-        }
+      // First check to see if the limit has been reached.  If so, mark the end of pagination.
+      if (maxRecords > 0 && (resultSetLoader.totalRowCount() > maxRecords)) {
+        // End Pagination
+        paginator.notifyPartialPage();
+      } else {
+        populateIndexPaginator();
       }
     } else if (paginator != null &&
       maxRecords < 0 && (resultSetLoader.totalRowCount()) < paginator.getPageSize()) {

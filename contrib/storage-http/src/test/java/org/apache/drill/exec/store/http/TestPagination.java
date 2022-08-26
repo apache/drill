@@ -161,6 +161,17 @@ public class TestPagination extends ClusterTest {
       .inputType("json")
       .build();
 
+    HttpApiConfig mockJsonConfigWithKeysetAndDataPath = HttpApiConfig.builder()
+      .url("http://localhost:8092/json")
+      .method("get")
+      .headers(headers)
+      .requireTail(false)
+      .dataPath("companies")
+      .paginator(indexPaginator)
+      .inputType("json")
+      .build();
+
+
     HttpApiConfig mockJsonConfigWithPaginator = HttpApiConfig.builder()
       .url("http://localhost:8092/json")
       .method("get")
@@ -214,6 +225,7 @@ public class TestPagination extends ClusterTest {
     Map<String, HttpApiConfig> configs = new HashMap<>();
     configs.put("csv_paginator", mockCsvConfigWithPaginator);
     configs.put("json_index", mockJsonConfigWithKeyset);
+    configs.put("json_index_datapath", mockJsonConfigWithKeysetAndDataPath);
     configs.put("json_paginator", mockJsonConfigWithPaginator);
     configs.put("xml_paginator", mockXmlConfigWithPaginator);
     configs.put("xml_paginator_url_params", mockXmlConfigWithPaginatorAndUrlParams);
@@ -268,6 +280,28 @@ public class TestPagination extends ClusterTest {
   @Test
   public void simpleJSONIndexQuery() throws Exception {
     String sql = "SELECT * FROM `local`.`json_index` LIMIT 4";
+    try (MockWebServer server = startServer()) {
+
+      server.enqueue(new MockResponse().setResponseCode(200).setBody(TEST_JSON_INDEX_PAGE1));
+      server.enqueue(new MockResponse().setResponseCode(200).setBody(TEST_JSON_INDEX_PAGE2));
+
+      List<QueryDataBatch> results = client.queryBuilder()
+        .sql(sql)
+        .results();
+
+      int count = 0;
+      for(QueryDataBatch b : results){
+        count += b.getHeader().getRowCount();
+        b.release();
+      }
+      assertEquals(2, results.size());
+      assertEquals(2, count);
+    }
+  }
+
+  @Test
+  public void simpleJSONIndexQueryAndDataPath() throws Exception {
+    String sql = "SELECT * FROM `local`.`json_index_datapath` LIMIT 4";
     try (MockWebServer server = startServer()) {
 
       server.enqueue(new MockResponse().setResponseCode(200).setBody(TEST_JSON_INDEX_PAGE1));

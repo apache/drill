@@ -68,6 +68,9 @@ public class IndexPaginator extends Paginator {
   }
 
   public void setIndexValue(String indexValue) {
+    if (StringUtils.isNumeric(indexValue)) {
+
+    }
     this.indexValue = indexValue;
   }
 

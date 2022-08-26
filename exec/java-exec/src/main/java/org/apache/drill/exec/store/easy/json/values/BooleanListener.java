@@ -70,6 +70,7 @@ public class BooleanListener extends ScalarListener {
     if (value.isEmpty()) {
       setNull();
     } else {
+      addValueToPagination(writer.schema().name(), value);
       writer.setBoolean(Boolean.parseBoolean(value.trim()));
     }
   }

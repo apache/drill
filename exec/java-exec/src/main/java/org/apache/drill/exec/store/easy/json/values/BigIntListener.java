@@ -72,6 +72,7 @@ public class BigIntListener extends ScalarListener {
       setNull();
     } else {
       try {
+        addValueToPagination(writer.schema().name(), value);
         writer.setLong(Long.parseLong(value));
       } catch (NumberFormatException e) {
         throw loader.dataConversionError(schema(), "string", value);

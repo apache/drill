@@ -27,6 +27,7 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonTypeName;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.drill.common.PlanStringBuilder;
 import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.exec.physical.base.AbstractBase;
@@ -34,6 +35,7 @@ import org.apache.drill.exec.physical.base.PhysicalOperator;
 import org.apache.drill.exec.physical.base.PhysicalVisitor;
 import org.apache.drill.exec.physical.base.SubScan;
 import org.apache.drill.exec.record.metadata.TupleMetadata;
+import org.apache.drill.exec.store.http.HttpPaginatorConfig.PaginatorMethod;
 
 @JsonTypeName("http-sub-scan")
 public class HttpSubScan extends AbstractBase implements SubScan {
@@ -56,10 +58,50 @@ public class HttpSubScan extends AbstractBase implements SubScan {
     ) {
     super(tableSpec.queryUserName());
     this.tableSpec = tableSpec;
+    // this.columns = addColumnsToSchemaPath(columns);
     this.columns = columns;
     this.filters = filters;
     this.maxRecords = maxRecords;
     this.schema = schema;
+  }
+
+  private List<SchemaPath> addColumnsToSchemaPath(List<SchemaPath> columns) {
+    // This function handles an edge case when a data path is specified, the pagination columns may
+    // not be read. This logic adds these columns to the projection list to ensure they are projected
+    // This is only relevant for index pagination.
+    if (tableSpec.connectionConfig().paginator() != null &&
+      tableSpec.connectionConfig().paginator().getMethodType() != PaginatorMethod.INDEX &&
+      StringUtils.isEmpty(tableSpec.connectionConfig().dataPath())) {
+      return columns;
+    }
+
+    HttpPaginatorConfig paginatorConfig = tableSpec.connectionConfig().paginator();
+
+    if (StringUtils.isNotEmpty(paginatorConfig.hasMoreParam())) {
+      columns.add(SchemaPath.parseFromString(cleanUpColumnName(paginatorConfig.hasMoreParam())));
+    }
+
+    if (StringUtils.isNotEmpty(paginatorConfig.indexParam())) {
+      columns.add(SchemaPath.parseFromString(cleanUpColumnName(paginatorConfig.indexParam())));
+    }
+
+    if (StringUtils.isNotEmpty(paginatorConfig.nextPageParam())) {
+      columns.add(SchemaPath.parseFromString(cleanUpColumnName(paginatorConfig.nextPageParam())));
+    }
+
+    return columns;
+  }
+
+  private String cleanUpColumnName(String columnName) {
+    if (! columnName.startsWith("`")) {
+      columnName = "`" + columnName;
+    }
+
+    if (! columnName.endsWith("`")) {
+      columnName = columnName + "`";
+    }
+
+    return columnName;
   }
 
   @JsonProperty("tableSpec")
