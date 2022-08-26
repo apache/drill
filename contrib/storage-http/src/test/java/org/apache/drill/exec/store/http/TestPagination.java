@@ -300,6 +300,28 @@ public class TestPagination extends ClusterTest {
   }
 
   @Test
+  public void simpleJSONIndexQueryWithProjectedColumns() throws Exception {
+    String sql = "SELECT companies FROM `local`.`json_index` LIMIT 4";
+    try (MockWebServer server = startServer()) {
+
+      server.enqueue(new MockResponse().setResponseCode(200).setBody(TEST_JSON_INDEX_PAGE1));
+      server.enqueue(new MockResponse().setResponseCode(200).setBody(TEST_JSON_INDEX_PAGE2));
+
+      List<QueryDataBatch> results = client.queryBuilder()
+        .sql(sql)
+        .results();
+
+      int count = 0;
+      for(QueryDataBatch b : results){
+        count += b.getHeader().getRowCount();
+        b.release();
+      }
+      assertEquals(2, results.size());
+      assertEquals(2, count);
+    }
+  }
+
+  @Test
   public void simpleJSONIndexQueryAndDataPath() throws Exception {
     String sql = "SELECT * FROM `local`.`json_index_datapath` LIMIT 4";
     try (MockWebServer server = startServer()) {

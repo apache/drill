@@ -127,10 +127,23 @@ public class TupleParser extends ObjectParser {
 
   @Override
   public ElementParser onField(String key, TokenIterator tokenizer) {
-    if (!tupleWriter.isProjected(key)) {
+    /*if (!tupleWriter.isProjected(key)) {
       return fieldFactory().ignoredFieldParser();
     } else {
       return fieldParserFor(key, tokenizer);
+    }*/
+    if (projectField(key)) {
+      return fieldParserFor(key, tokenizer);
+    } else {
+      return fieldFactory().ignoredFieldParser();
+    }
+  }
+
+  private boolean projectField(String key) {
+    if (tupleWriter.isProjected(key)) {
+      return true;
+    } else {
+      return loader.paginationFields() != null && loader.paginationFields().containsKey(key);
     }
   }
 
