@@ -110,7 +110,6 @@ public class HttpBatchReader implements ManagedReader<SchemaNegotiator> {
       }
     };
     negotiator.setErrorContext(errorContext);
-    
 
     // Http client setup
     SimpleHttp http = SimpleHttp.builder()
