@@ -127,11 +127,6 @@ public class TupleParser extends ObjectParser {
 
   @Override
   public ElementParser onField(String key, TokenIterator tokenizer) {
-    /*if (!tupleWriter.isProjected(key)) {
-      return fieldFactory().ignoredFieldParser();
-    } else {
-      return fieldParserFor(key, tokenizer);
-    }*/
     if (projectField(key)) {
       return fieldParserFor(key, tokenizer);
     } else {
@@ -140,6 +135,7 @@ public class TupleParser extends ObjectParser {
   }
 
   private boolean projectField(String key) {
+    // This method makes sure that fields necessary for pagination are read.
     if (tupleWriter.isProjected(key)) {
       return true;
     } else {

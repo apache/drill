@@ -276,8 +276,8 @@ public class JsonLoaderImpl implements JsonLoader, ErrorFactory {
     this.implicitFields = builder.implicitFields;
     this.maxRows = builder.maxRows;
     this.fieldFactory = buildFieldFactory(builder);
-    this.parser = buildParser(builder);
     this.paginationFields = builder.paginationFields;
+    this.parser = buildParser(builder);
   }
 
   private JsonStructureParser buildParser(JsonLoaderBuilder builder) {
@@ -288,6 +288,7 @@ public class JsonLoaderImpl implements JsonLoader, ErrorFactory {
             .parserFactory(parser ->
                 new TupleParser(parser, JsonLoaderImpl.this, rsLoader.writer(), builder.providedSchema))
             .errorFactory(this)
+            .paginationFields(paginationFields)
             .messageParser(builder.messageParser)
             .dataPath(builder.dataPath)
             .build();

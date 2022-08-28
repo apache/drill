@@ -63,6 +63,9 @@ public class TestPagination extends ClusterTest {
 
   private static String TEST_JSON_INDEX_PAGE1;
   private static String TEST_JSON_INDEX_PAGE2;
+  private static String TEST_JSON_INDEX_PAGE3;
+  private static String TEST_JSON_INDEX_PAGE4;
+
   private static String TEST_XML_PAGE1;
   private static String TEST_XML_PAGE2;
   private static String TEST_XML_PAGE3;
@@ -82,6 +85,9 @@ public class TestPagination extends ClusterTest {
 
     TEST_JSON_INDEX_PAGE1 = Files.asCharSource(DrillFileUtils.getResourceAsFile("/data/index_response1.json"), Charsets.UTF_8).read();
     TEST_JSON_INDEX_PAGE2 = Files.asCharSource(DrillFileUtils.getResourceAsFile("/data/index_response2.json"), Charsets.UTF_8).read();
+
+    TEST_JSON_INDEX_PAGE3 = Files.asCharSource(DrillFileUtils.getResourceAsFile("/data/index_response3.json"), Charsets.UTF_8).read();
+    TEST_JSON_INDEX_PAGE4 = Files.asCharSource(DrillFileUtils.getResourceAsFile("/data/index_response4.json"), Charsets.UTF_8).read();
 
     TEST_XML_PAGE1 = Files.asCharSource(DrillFileUtils.getResourceAsFile("/data/response_1.xml"), Charsets.UTF_8).read();
     TEST_XML_PAGE2 = Files.asCharSource(DrillFileUtils.getResourceAsFile("/data/response_2.xml"), Charsets.UTF_8).read();
@@ -326,8 +332,8 @@ public class TestPagination extends ClusterTest {
     String sql = "SELECT * FROM `local`.`json_index_datapath` LIMIT 4";
     try (MockWebServer server = startServer()) {
 
-      server.enqueue(new MockResponse().setResponseCode(200).setBody(TEST_JSON_INDEX_PAGE1));
-      server.enqueue(new MockResponse().setResponseCode(200).setBody(TEST_JSON_INDEX_PAGE2));
+      server.enqueue(new MockResponse().setResponseCode(200).setBody(TEST_JSON_INDEX_PAGE3));
+      server.enqueue(new MockResponse().setResponseCode(200).setBody(TEST_JSON_INDEX_PAGE4));
 
       List<QueryDataBatch> results = client.queryBuilder()
         .sql(sql)
@@ -339,7 +345,7 @@ public class TestPagination extends ClusterTest {
         b.release();
       }
       assertEquals(2, results.size());
-      assertEquals(2, count);
+      assertEquals(4, count);
     }
   }
 

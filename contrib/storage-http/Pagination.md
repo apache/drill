@@ -5,7 +5,7 @@ data into one larger dataset.  Drill's auto-pagination features allow this to ha
 To use a paginator, you simply have to configure the paginator in the connection for the particular API.  
 
 ## Words of Caution
-While extremely powerful, the auto-pagination feature has the potential to run afoul of APIs rate limits and even potentially DDOS an API. 
+While extremely powerful, the auto-pagination feature has the potential to run afoul of APIs rate limits and even potentially DDoS an API. Please use with extreme care.
 
 
 ## Offset Pagination

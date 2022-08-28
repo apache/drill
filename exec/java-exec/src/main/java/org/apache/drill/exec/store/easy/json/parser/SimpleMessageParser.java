@@ -21,6 +21,8 @@ import org.apache.drill.shaded.guava.com.google.common.base.Preconditions;
 
 import com.fasterxml.jackson.core.JsonToken;
 
+import java.util.Map;
+
 /**
  * A message parser which accepts a path to the data encoded as a
  * slash-separated string. Given the following JSON message:
@@ -66,11 +68,13 @@ import com.fasterxml.jackson.core.JsonToken;
 public class SimpleMessageParser implements MessageParser {
 
   private final String[] path;
+  private final Map<String, Object> paginationFields;
 
-  public SimpleMessageParser(String dataPath) {
+  public SimpleMessageParser(String dataPath, Map<String, Object> paginationFields) {
     path = dataPath.split("/");
     Preconditions.checkArgument(path.length > 0,
         "Data path should not be empty.");
+    this.paginationFields = paginationFields;
   }
 
   @Override
@@ -102,6 +106,8 @@ public class SimpleMessageParser implements MessageParser {
       String fieldName = tokenizer.textValue();
       if (fieldName.equals(path[level])) {
         return parseInnerLevel(tokenizer, level);
+      } else if (paginationFields != null && paginationFields.containsKey(fieldName)) {
+        skipElementButRetainValue(tokenizer, fieldName);
       } else {
         skipElement(tokenizer);
       }
@@ -127,6 +133,46 @@ public class SimpleMessageParser implements MessageParser {
           path[level], "Expected JSON object");
     }
     return parseToElement(tokenizer, level + 1);
+  }
+
+  /**
+   * Used for the edge case of index/keyset pagination, where the key field is not contained within the datapath.
+   * In this case, we still need to visit the token and record its value, but not create a ValueVector of this column.
+   * If we project the column, it will mess up the schema, so the best thing to do is visit the field, and preserve
+   * the value in the pagatnationFields HashMap.
+   *
+   * This method is only called in the HTTP Storage Plugin, when Index/Keyset pagination is used AND when the keyset/index
+   * fields are outside of a provided datapath.
+   *
+   * @param tokenizer A {@link TokenIterator} of the parsed JSON data.
+   * @param fieldName A {@link String} of the pagination field name.
+   */
+  private void skipElementButRetainValue(TokenIterator tokenizer, String fieldName) {
+    JsonToken token = ((DummyValueParser) DummyValueParser.INSTANCE).parseAndReturnToken(tokenizer);
+    String value;
+    switch (token) {
+      case VALUE_NULL:
+        value = null;
+      case VALUE_TRUE:
+        value = Boolean.TRUE.toString();
+        break;
+      case VALUE_FALSE:
+        value = Boolean.FALSE.toString();
+        break;
+      case VALUE_NUMBER_INT:
+        value = Long.toString(tokenizer.longValue());
+        break;
+      case VALUE_NUMBER_FLOAT:
+        value = Double.toString(tokenizer.doubleValue());
+        break;
+      case VALUE_STRING:
+        value = tokenizer.stringValue();
+        break;
+      default:
+        throw tokenizer.invalidValue(token);
+    }
+
+    paginationFields.put(fieldName, value);
   }
 
   private void skipElement(TokenIterator tokenizer) {
