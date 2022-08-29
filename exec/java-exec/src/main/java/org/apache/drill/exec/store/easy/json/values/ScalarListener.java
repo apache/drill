@@ -81,11 +81,8 @@ public abstract class ScalarListener implements ValueListener {
   }
 
   /**
-   * Adds a field's most recent value to the pagination map.  This is necessary for the HTTP plugin
-   * for index or keyset pagination where the API transmits values in the results that are used to
-   * generate the next page.
-   *
-   * This data is only stored if the pagination map is defined, and has keys.
+   * Adds a field's most recent value to the column listener map.
+   * This data is only stored if the listener column map is defined, and has keys.
    * @param key The key of the pagination field
    * @param value The value of to be retained
    */

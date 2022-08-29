@@ -68,13 +68,13 @@ import java.util.Map;
 public class SimpleMessageParser implements MessageParser {
 
   private final String[] path;
-  private final Map<String, Object> paginationFields;
+  private final Map<String, Object> listenerColumnMap;
 
-  public SimpleMessageParser(String dataPath, Map<String, Object> paginationFields) {
+  public SimpleMessageParser(String dataPath, Map<String, Object> listenerColumnMap) {
     path = dataPath.split("/");
     Preconditions.checkArgument(path.length > 0,
         "Data path should not be empty.");
-    this.paginationFields = paginationFields;
+    this.listenerColumnMap = listenerColumnMap;
   }
 
   @Override
@@ -106,7 +106,7 @@ public class SimpleMessageParser implements MessageParser {
       String fieldName = tokenizer.textValue();
       if (fieldName.equals(path[level])) {
         return parseInnerLevel(tokenizer, level);
-      } else if (paginationFields != null && paginationFields.containsKey(fieldName)) {
+      } else if (listenerColumnMap != null && listenerColumnMap.containsKey(fieldName)) {
         skipElementButRetainValue(tokenizer, fieldName);
       } else {
         skipElement(tokenizer);
@@ -136,13 +136,11 @@ public class SimpleMessageParser implements MessageParser {
   }
 
   /**
-   * Used for the edge case of index/keyset pagination, where the key field is not contained within the datapath.
-   * In this case, we still need to visit the token and record its value, but not create a ValueVector of this column.
-   * If we project the column, it will mess up the schema, so the best thing to do is visit the field, and preserve
-   * the value in the pagatnationFields HashMap.
-   *
-   * This method is only called in the HTTP Storage Plugin, when Index/Keyset pagination is used AND when the keyset/index
-   * fields are outside of a provided datapath.
+   * This function is called when a storage plugin needs to retrieve values which have been read.  This logic
+   * enables use of the data path in these situations.  Normally, when the datapath is defined, the JSON reader
+   * will "free-wheel" over unprojected columns or columns outside of the datapath.  However, in this case, often
+   * the values which are being read, are outside the dataPath.  This logic offers a way to capture these values
+   * without creating a ValueVector for them.
    *
    * @param tokenizer A {@link TokenIterator} of the parsed JSON data.
    * @param fieldName A {@link String} of the pagination field name.
@@ -172,7 +170,7 @@ public class SimpleMessageParser implements MessageParser {
         throw tokenizer.invalidValue(token);
     }
 
-    paginationFields.put(fieldName, value);
+    listenerColumnMap.put(fieldName, value);
   }
 
   private void skipElement(TokenIterator tokenizer) {
