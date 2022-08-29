@@ -61,6 +61,7 @@ public class BooleanListener extends ScalarListener {
         // errors.
         throw tokenizer.invalidValue(token);
     }
+    addValueToListenerMap(writer.schema().name(), value);
     writer.setBoolean(value);
   }
 
@@ -69,6 +70,7 @@ public class BooleanListener extends ScalarListener {
     if (value.isEmpty()) {
       setNull();
     } else {
+      addValueToListenerMap(writer.schema().name(), value);
       writer.setBoolean(Boolean.parseBoolean(value.trim()));
     }
   }

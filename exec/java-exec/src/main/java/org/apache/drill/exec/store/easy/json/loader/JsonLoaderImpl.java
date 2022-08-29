@@ -25,6 +25,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 
 import io.netty.buffer.DrillBuf;
 import org.apache.commons.io.IOUtils;
@@ -153,6 +154,7 @@ public class JsonLoaderImpl implements JsonLoader, ErrorFactory {
     private MessageParser messageParser;
     private ImplicitColumns implicitFields;
     private int maxRows;
+    private Map<String, Object> listenerColumnMap;
 
     public JsonLoaderBuilder resultSetLoader(ResultSetLoader rsLoader) {
       this.rsLoader = rsLoader;
@@ -161,6 +163,11 @@ public class JsonLoaderImpl implements JsonLoader, ErrorFactory {
 
     public JsonLoaderBuilder providedSchema(TupleMetadata providedSchema) {
       this.providedSchema = providedSchema;
+      return this;
+    }
+
+    public JsonLoaderBuilder listenerColumnMap(Map<String,Object> listenerColumnMap) {
+      this.listenerColumnMap = listenerColumnMap;
       return this;
     }
 
@@ -246,6 +253,7 @@ public class JsonLoaderImpl implements JsonLoader, ErrorFactory {
   private final JsonStructureParser parser;
   private final FieldFactory fieldFactory;
   private final ImplicitColumns implicitFields;
+  private final Map<String, Object> listenerColumnMap;
   private final int maxRows;
   private boolean eof;
 
@@ -268,6 +276,7 @@ public class JsonLoaderImpl implements JsonLoader, ErrorFactory {
     this.implicitFields = builder.implicitFields;
     this.maxRows = builder.maxRows;
     this.fieldFactory = buildFieldFactory(builder);
+    this.listenerColumnMap = builder.listenerColumnMap;
     this.parser = buildParser(builder);
   }
 
@@ -279,6 +288,7 @@ public class JsonLoaderImpl implements JsonLoader, ErrorFactory {
             .parserFactory(parser ->
                 new TupleParser(parser, JsonLoaderImpl.this, rsLoader.writer(), builder.providedSchema))
             .errorFactory(this)
+            .listenerColumnMap(listenerColumnMap)
             .messageParser(builder.messageParser)
             .dataPath(builder.dataPath)
             .build();
@@ -298,6 +308,9 @@ public class JsonLoaderImpl implements JsonLoader, ErrorFactory {
   public JsonLoaderOptions options() { return options; }
   public JsonStructureParser parser() { return parser; }
   public FieldFactory fieldFactory() { return fieldFactory; }
+  public Map<String, Object> listenerColumnMap() {
+    return listenerColumnMap;
+  }
 
   @Override // JsonLoader
   public boolean readBatch() {

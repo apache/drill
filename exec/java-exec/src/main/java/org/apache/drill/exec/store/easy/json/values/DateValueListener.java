@@ -46,6 +46,7 @@ public class DateValueListener extends ScalarListener {
         setNull();
         break;
       case VALUE_NUMBER_INT:
+        addValueToListenerMap(writer.schema().name(), tokenizer.longValue());
         writer.setLong(tokenizer.longValue());
         break;
       case VALUE_STRING:
@@ -63,6 +64,7 @@ public class DateValueListener extends ScalarListener {
           LocalDate localDate = LocalDate.parse(tokenizer.stringValue(), dateTimeFormatter);
           writer.setLong(Duration.between(TimestampValueListener.LOCAL_EPOCH,
               localDate.atStartOfDay()).toMillis());
+          addValueToListenerMap(writer.schema().name(), Duration.between(TimestampValueListener.LOCAL_EPOCH, localDate.atStartOfDay()).toMillis());
         } catch (Exception e) {
           throw loader.dataConversionError(schema(), "date", tokenizer.stringValue());
         }

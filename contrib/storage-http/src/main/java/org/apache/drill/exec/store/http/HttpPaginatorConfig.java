@@ -33,7 +33,7 @@ import java.util.Objects;
 
 
 @JsonInclude(JsonInclude.Include.NON_DEFAULT)
-@JsonDeserialize(builder = HttpPaginatorConfig.HttpPaginatorBuilder.class)
+@JsonDeserialize(builder = HttpPaginatorConfig.HttpPaginatorConfigBuilder.class)
 public class HttpPaginatorConfig {
 
   private static final Logger logger = LoggerFactory.getLogger(HttpPaginatorConfig.class);
@@ -61,6 +61,16 @@ public class HttpPaginatorConfig {
   @JsonProperty
   private final String method;
 
+  // For index/keyset pagination
+  @JsonProperty
+  private final String hasMoreParam;
+
+  @JsonProperty
+  private final String indexParam;
+
+  @JsonProperty
+  private final String nextPageParam;
+
   public HttpPaginatorConfig(HttpPaginatorConfigBuilder builder) {
     this.limitParam = builder.limitParam;
     this.offsetParam = builder.offsetParam;
@@ -68,7 +78,72 @@ public class HttpPaginatorConfig {
     this.pageSizeParam = builder.pageSizeParam;
     this.pageSize = builder.pageSize;
     this.maxRecords = builder.maxRecords;
-    this.method = builder.method;
+    this.hasMoreParam = builder.hasMoreParam;
+    this.indexParam = builder.indexParam;
+    this.nextPageParam = builder.nextPageParam;
+
+    this.method = StringUtils.isEmpty(builder.method)
+      ? PaginatorMethod.OFFSET.toString() : builder.method.trim().toUpperCase();
+
+    PaginatorMethod paginatorMethod = PaginatorMethod.valueOf(this.method);
+
+    /*
+     * For pagination to function key fields must be defined.  This block validates the required fields for
+     * each type of paginator.
+     */
+    switch (paginatorMethod) {
+      case OFFSET:
+        if (StringUtils.isEmpty(this.limitParam) || StringUtils.isEmpty(this.offsetParam)) {
+          throw UserException
+            .validationError()
+            .message("Invalid paginator configuration.  For OFFSET pagination, limitField and offsetField must be defined.")
+            .build(logger);
+        } else if (this.pageSize <= 0) {
+          throw UserException
+            .validationError()
+            .message("Invalid paginator configuration.  For OFFSET pagination, maxPageSize must be defined and greater than zero.")
+            .build(logger);
+        }
+        break;
+      case PAGE:
+        if (StringUtils.isEmpty(this.pageParam) || StringUtils.isEmpty(this.pageSizeParam)) {
+          throw UserException
+            .validationError()
+            .message("Invalid paginator configuration.  For PAGE pagination, pageField and pageSizeField must be defined.")
+            .build(logger);
+        } else if (this.pageSize <= 0) {
+          throw UserException
+            .validationError()
+            .message("Invalid paginator configuration.  For PAGE pagination, maxPageSize must be defined and greater than zero.")
+            .build(logger);
+        }
+        break;
+      case INDEX:
+        // Either the nextPageParam OR the indexParam must be populated
+        if (StringUtils.isEmpty(this.hasMoreParam)) {
+          throw UserException
+            .validationError()
+            .message("Invalid paginator configuration.  For INDEX pagination, the hasMoreParam must be defined.")
+            .build(logger);
+        } else if ((StringUtils.isEmpty(this.nextPageParam) && StringUtils.isNotEmpty(this.indexParam)) &&
+          (StringUtils.isNotEmpty(this.nextPageParam) && StringUtils.isEmpty(this.indexParam))) {
+          throw UserException
+            .validationError()
+            .message("Invalid paginator configuration.  For INDEX pagination, the nextPageParam or indexParam must be defined.")
+            .build(logger);
+        } else if (StringUtils.isEmpty(this.nextPageParam) && StringUtils.isEmpty(this.indexParam)) {
+          throw UserException
+            .validationError()
+            .message("Invalid paginator configuration.  For INDEX pagination, the nextPageParam or indexParam must be defined.")
+            .build(logger);
+        }
+        break;
+      default:
+        throw UserException
+          .validationError()
+          .message("Invalid paginator method: %s.  Drill supports 'OFFSET', 'INDEX' and 'PAGE'", method)
+          .build(logger);
+    }
   }
 
   public static HttpPaginatorConfigBuilder builder() {
@@ -103,6 +178,17 @@ public class HttpPaginatorConfig {
     return this.method;
   }
 
+  public String hasMoreParam() {
+    return hasMoreParam;
+  }
+
+  public String nextPageParam() {
+    return nextPageParam;
+  }
+  public String indexParam() {
+    return indexParam;
+  }
+
   @Override
   public boolean equals(Object o) {
     if (this == o) {
@@ -118,13 +204,16 @@ public class HttpPaginatorConfig {
       && Objects.equals(offsetParam, that.offsetParam)
       && Objects.equals(pageParam, that.pageParam)
       && Objects.equals(pageSizeParam, that.pageSizeParam)
-      && Objects.equals(method, that.method);
+      && Objects.equals(method, that.method)
+      && Objects.equals(hasMoreParam, that.hasMoreParam)
+      && Objects.equals(indexParam, that.indexParam)
+      && Objects.equals(nextPageParam, that.nextPageParam);
   }
 
   @Override
   public int hashCode() {
     return Objects.hash(limitParam, offsetParam, pageParam, pageSizeParam,
-      pageSize, maxRecords, method);
+      pageSize, maxRecords, method, nextPageParam, indexParam, hasMoreParam);
   }
 
   @Override
@@ -137,64 +226,16 @@ public class HttpPaginatorConfig {
       .field("pageSize", pageSize)
       .field("maxRecords", maxRecords)
       .field("method", method)
+      .field("indexParam", indexParam)
+      .field("hasMoreParam", hasMoreParam)
+      .field("nextPageParam", nextPageParam)
       .toString();
   }
 
   public enum PaginatorMethod {
     OFFSET,
-    PAGE
-  }
-
-  private HttpPaginatorConfig(HttpPaginatorConfig.HttpPaginatorBuilder builder) {
-    this.limitParam = builder.limitParam;
-    this.offsetParam = builder.offsetParam;
-    this.pageSize = builder.pageSize;
-    this.pageParam = builder.pageParam;
-    this.pageSizeParam = builder.pageSizeParam;
-    this.maxRecords = builder.maxRecords;
-
-    this.method = StringUtils.isEmpty(builder.method)
-      ? PaginatorMethod.OFFSET.toString() : builder.method.trim().toUpperCase();
-
-    PaginatorMethod paginatorMethod = PaginatorMethod.valueOf(this.method);
-
-    /*
-    * For pagination to function key fields must be defined.  This block validates the required fields for
-    * each type of paginator.
-     */
-    switch (paginatorMethod) {
-      case OFFSET:
-        if (StringUtils.isEmpty(this.limitParam) || StringUtils.isEmpty(this.offsetParam)) {
-          throw UserException
-            .validationError()
-            .message("Invalid paginator configuration.  For OFFSET pagination, limitField and offsetField must be defined.")
-            .build(logger);
-        } else if (this.pageSize <= 0) {
-          throw UserException
-            .validationError()
-            .message("Invalid paginator configuration.  For OFFSET pagination, maxPageSize must be defined and greater than zero.")
-            .build(logger);
-        }
-        break;
-      case PAGE:
-        if (StringUtils.isEmpty(this.pageParam) || StringUtils.isEmpty(this.pageSizeParam)) {
-          throw UserException
-            .validationError()
-            .message("Invalid paginator configuration.  For PAGE pagination, pageField and pageSizeField must be defined.")
-            .build(logger);
-        } else if (this.pageSize <= 0) {
-          throw UserException
-            .validationError()
-            .message("Invalid paginator configuration.  For PAGE pagination, maxPageSize must be defined and greater than zero.")
-            .build(logger);
-        }
-        break;
-      default:
-        throw UserException
-          .validationError()
-          .message("Invalid paginator method: %s.  Drill supports 'OFFSET' and 'PAGE'", method)
-          .build(logger);
-    }
+    PAGE,
+    INDEX
   }
 
   @JsonIgnore
@@ -203,103 +244,32 @@ public class HttpPaginatorConfig {
   }
 
   @JsonPOJOBuilder(withPrefix = "")
-  public static class HttpPaginatorBuilder {
-    public String limitParam;
-
-    public String offsetParam;
-
-    public int maxRecords;
-
-    public int pageSize;
-
-    public String pageParam;
-
-    public String pageSizeParam;
-
-    public String method;
-
-    public HttpPaginatorConfig build() {
-      return new HttpPaginatorConfig(this);
-    }
-
-    public String limitParam() {
-      return this.limitParam;
-    }
-
-    public String offsetParam() {
-      return this.offsetParam;
-    }
-
-    public int maxRecords() {
-      return this.maxRecords;
-    }
-
-    public int pageSize() {
-      return this.pageSize;
-    }
-
-    public String pageParam() {
-      return this.pageParam;
-    }
-
-    public String pageSizeParam() {
-      return this.pageSizeParam;
-    }
-
-    public String method() {
-      return this.method;
-    }
-
-    public HttpPaginatorBuilder limitParam(String limitParam) {
-      this.limitParam = limitParam;
-      return this;
-    }
-
-    public HttpPaginatorBuilder offsetParam(String offsetParam) {
-      this.offsetParam = offsetParam;
-      return this;
-    }
-
-    public HttpPaginatorBuilder maxRecords(int maxRecords) {
-      this.maxRecords = maxRecords;
-      return this;
-    }
-
-    public HttpPaginatorBuilder pageSize(int pageSize) {
-      this.pageSize = pageSize;
-      return this;
-    }
-
-    public HttpPaginatorBuilder pageParam(String pageParam) {
-      this.pageParam = pageParam;
-      return this;
-    }
-
-    public HttpPaginatorBuilder pageSizeParam(String pageSizeParam) {
-      this.pageSizeParam = pageSizeParam;
-      return this;
-    }
-
-    public HttpPaginatorBuilder method(String method) {
-      this.method = method;
-      return this;
-    }
-  }
-
   public static class HttpPaginatorConfigBuilder {
     private String limitParam;
-
     private String offsetParam;
-
     private String pageParam;
-
     private String pageSizeParam;
-
     private int pageSize;
-
     private int maxRecords;
-
     private String method;
+    private String hasMoreParam;
+    private String indexParam;
+    private String nextPageParam;
+
+    public HttpPaginatorConfigBuilder hasMoreParam(String hasMoreParam) {
+      this.hasMoreParam = hasMoreParam;
+      return this;
+    }
+
+    public HttpPaginatorConfigBuilder indexParam(String indexParam) {
+      this.indexParam = indexParam;
+      return this;
+    }
+
+    public HttpPaginatorConfigBuilder nextPageParam(String nextPageParam) {
+      this.nextPageParam = nextPageParam;
+      return this;
+    }
 
     public HttpPaginatorConfigBuilder limitParam(String limitParam) {
       this.limitParam = limitParam;

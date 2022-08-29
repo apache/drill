@@ -17,6 +17,7 @@
  */
 package org.apache.drill.exec.store.easy.json.values;
 
+import org.apache.commons.lang3.StringUtils;
 import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.exec.record.metadata.ColumnMetadata;
 import org.apache.drill.exec.store.easy.json.loader.JsonLoaderImpl;
@@ -26,6 +27,8 @@ import org.apache.drill.exec.vector.accessor.ScalarWriter;
 import org.apache.drill.exec.vector.accessor.UnsupportedConversionError;
 
 import com.fasterxml.jackson.core.JsonToken;
+
+import java.util.Map;
 
 /**
  * Base class for scalar field listeners
@@ -75,5 +78,31 @@ public abstract class ScalarListener implements ValueListener {
 
   protected UserException typeConversionError(String jsonType) {
     return loader.typeConversionError(schema(), jsonType);
+  }
+
+  /**
+   * Adds a field's most recent value to the column listener map.
+   * This data is only stored if the listener column map is defined, and has keys.
+   * @param key The key of the listener field
+   * @param value The value of to be retained
+   */
+  protected void addValueToListenerMap(String key, String value) {
+    Map<String,Object> listenerColumnMap = loader.listenerColumnMap();
+
+    if (listenerColumnMap == null || listenerColumnMap.isEmpty()) {
+      return;
+    } else if (listenerColumnMap.containsKey(key) && StringUtils.isNotEmpty(value)) {
+      listenerColumnMap.put(key, value);
+    }
+  }
+
+  protected void addValueToListenerMap(String key, Object value) {
+    Map<String, Object> listenerColumnMap = loader.listenerColumnMap();
+
+    if (listenerColumnMap == null || listenerColumnMap.isEmpty()) {
+      return;
+    } else if (listenerColumnMap.containsKey(key) && value != null) {
+      listenerColumnMap.put(key, value);
+    }
   }
 }

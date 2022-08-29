@@ -40,11 +40,13 @@ public class StrictIntValueListener extends ScalarListener {
         setNull();
         break;
       case VALUE_NUMBER_INT:
+        addValueToListenerMap(writer.schema().name(), tokenizer.longValue());
         writer.setInt((int) tokenizer.longValue());
         break;
       case VALUE_STRING:
         try {
           writer.setInt(Integer.parseInt(tokenizer.stringValue()));
+          addValueToListenerMap(writer.schema().name(), Integer.parseInt(tokenizer.stringValue()));
         } catch (NumberFormatException e) {
           throw loader.dataConversionError(schema(), "string", tokenizer.stringValue());
         }

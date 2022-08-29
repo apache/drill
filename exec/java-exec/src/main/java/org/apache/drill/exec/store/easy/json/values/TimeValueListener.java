@@ -48,11 +48,13 @@ public class TimeValueListener extends ScalarListener {
         setNull();
         break;
       case VALUE_NUMBER_INT:
+        addValueToListenerMap(writer.schema().name(), tokenizer.longValue());
         writer.setInt((int) tokenizer.longValue());
         break;
       case VALUE_STRING:
         try {
           LocalTime localTime = LocalTime.parse(tokenizer.stringValue(), TIME_FORMAT);
+          addValueToListenerMap(writer.schema().name(), localTime);
           writer.setTime(localTime);
         } catch (Exception e) {
           throw loader.dataConversionError(schema(), "string", tokenizer.stringValue());

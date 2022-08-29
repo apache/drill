@@ -61,6 +61,7 @@ public class DoubleListener extends ScalarListener {
         // errors.
         throw tokenizer.invalidValue(token);
     }
+    addValueToListenerMap(writer.schema().name(), tokenizer.textValue());
     writer.setDouble(value);
   }
 
@@ -70,6 +71,7 @@ public class DoubleListener extends ScalarListener {
       setNull();
     } else {
       try {
+        addValueToListenerMap(writer.schema().name(), value);
         writer.setDouble(Double.parseDouble(value));
       } catch (NumberFormatException e) {
         throw loader.dataConversionError(schema(), "string", value);

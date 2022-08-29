@@ -20,6 +20,7 @@ package org.apache.drill.exec.store.http;
 import com.typesafe.config.Config;
 import okhttp3.HttpUrl;
 import okhttp3.HttpUrl.Builder;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.drill.common.AutoCloseables;
 import org.apache.drill.common.exceptions.ChildErrorContext;
 import org.apache.drill.common.exceptions.CustomErrorContext;
@@ -36,6 +37,8 @@ import org.apache.drill.exec.store.easy.json.loader.JsonLoader;
 import org.apache.drill.exec.store.easy.json.loader.JsonLoaderImpl.JsonLoaderBuilder;
 import org.apache.drill.exec.store.easy.json.loader.JsonLoaderOptions;
 import org.apache.drill.exec.store.http.HttpApiConfig.PostLocation;
+import org.apache.drill.exec.store.http.HttpPaginatorConfig.PaginatorMethod;
+import org.apache.drill.exec.store.http.paginator.IndexPaginator;
 import org.apache.drill.exec.store.http.paginator.Paginator;
 import org.apache.drill.exec.store.http.util.HttpProxyConfig;
 import org.apache.drill.exec.store.http.util.HttpProxyConfig.ProxyBuilder;
@@ -48,6 +51,7 @@ import org.slf4j.LoggerFactory;
 
 import java.io.File;
 import java.io.InputStream;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -64,15 +68,17 @@ public class HttpBatchReader implements ManagedReader<SchemaNegotiator> {
   protected String baseUrl;
   private JsonLoader jsonLoader;
   private ResultSetLoader resultSetLoader;
-
+  private final List<SchemaPath> projectedColumns;
   protected ImplicitColumns implicitColumns;
-
+  private final Map<String, Object> paginationFields;
 
   public HttpBatchReader(HttpSubScan subScan) {
     this.subScan = subScan;
     this.maxRecords = subScan.maxRecords();
     this.baseUrl = subScan.tableSpec().connectionConfig().url();
     this.paginator = null;
+    this.projectedColumns = subScan.columns();
+    this.paginationFields = generatePaginationFieldMap();
   }
 
   public HttpBatchReader(HttpSubScan subScan, Paginator paginator) {
@@ -80,6 +86,8 @@ public class HttpBatchReader implements ManagedReader<SchemaNegotiator> {
     this.maxRecords = subScan.maxRecords();
     this.paginator = paginator;
     this.baseUrl = paginator.next();
+    this.projectedColumns = subScan.columns();
+    this.paginationFields = generatePaginationFieldMap();
     logger.debug("Batch reader with URL: {}", this.baseUrl);
   }
 
@@ -130,6 +138,7 @@ public class HttpBatchReader implements ManagedReader<SchemaNegotiator> {
           .maxRows(maxRecords)
           .dataPath(subScan.tableSpec().connectionConfig().dataPath())
           .errorContext(errorContext)
+          .listenerColumnMap(paginationFields)
           .fromStream(inStream);
 
       if (subScan.tableSpec().connectionConfig().jsonOptions() != null) {
@@ -206,6 +215,29 @@ public class HttpBatchReader implements ManagedReader<SchemaNegotiator> {
     implicitColumns.getColumn(STRING_METADATA_FIELDS[1]).setValue(http.getResponseProtocol());
     implicitColumns.getColumn(STRING_METADATA_FIELDS[2]).setValue(http.getResponseURL());
     implicitColumns.getColumn(RESPONSE_CODE_FIELD).setValue(http.getResponseCode());
+  }
+
+  protected Map<String, Object> generatePaginationFieldMap() {
+    if (paginator == null || paginator.getMode() != PaginatorMethod.INDEX) {
+      return null;
+    }
+
+    Map<String, Object> fieldMap = new HashMap<>();
+    IndexPaginator indexPaginator = (IndexPaginator) paginator;
+
+    // Initialize the pagination field map
+    if (StringUtils.isNotEmpty(indexPaginator.getIndexParam())) {
+      fieldMap.put(indexPaginator.getIndexParam(), null);
+    }
+
+    if (StringUtils.isNotEmpty(indexPaginator.getHasMoreParam())) {
+      fieldMap.put(indexPaginator.getHasMoreParam(), null);
+    }
+
+    if (StringUtils.isNotEmpty(indexPaginator.getNextPageParam())) {
+      fieldMap.put(indexPaginator.getNextPageParam(), null);
+    }
+    return fieldMap;
   }
 
   protected boolean implicitColumnsAreProjected() {
@@ -291,13 +323,64 @@ public class HttpBatchReader implements ManagedReader<SchemaNegotiator> {
     return builder.build();
   }
 
+  protected void populateIndexPaginator() {
+    IndexPaginator indexPaginator = (IndexPaginator) paginator;
+    // There are two cases, however in both, there is a boolean parameter which indicates
+    // whether there are more pages to follow.  The first case is when the API provides
+    // a URL for the next page and the other is when the API provides an offset which is added
+    // to the next page.
+    //
+    // In ether case, we first need the boolean "has more" parameter so let's grab that.
+    if (paginationFields.get(indexPaginator.getHasMoreParam()) != null) {
+      Object hasMore = paginationFields.get(indexPaginator.getHasMoreParam());
+      boolean hasMoreValues;
+
+      if (hasMore instanceof Boolean) {
+        hasMoreValues = (Boolean) hasMore;
+      } else {
+        String hasMoreString = hasMore.toString();
+        // Attempt to convert to boolean
+        hasMoreValues = Boolean.parseBoolean(hasMoreString);
+      }
+      indexPaginator.setHasMoreValue(hasMoreValues);
+
+      // If there are no more values, notify the paginator
+      if (!hasMoreValues) {
+        paginator.notifyPartialPage();
+      }
+
+      // At this point we know that there are more pages to come.  Send the data to the paginator and
+      // use that to generate the next page.
+      if (StringUtils.isNotEmpty(indexPaginator.getIndexParam())) {
+        indexPaginator.setIndexValue(paginationFields.get(indexPaginator.getIndexParam()).toString());
+      }
+
+      if (StringUtils.isNotEmpty(indexPaginator.getNextPageParam())) {
+        indexPaginator.setNextPageValue(paginationFields.get(indexPaginator.getNextPageParam()).toString());
+      }
+    }
+  }
+
   @Override
   public boolean next() {
     boolean result = jsonLoader.readBatch();
 
-    // Allows limitless pagination.
-    if (paginator != null &&
+    // This code implements the index/keyset pagination.  This pagination method
+    // uses a value returned in the current result set as the starting point for the
+    // next page.  Some APIs will have a boolean parameter to indicate that there are
+    // additional pages.  Some APIs will also return a URL for the next page. In any event,
+    // it is necessary to grab these values from the returned data.
+    if (paginator != null && paginator.getMode() == PaginatorMethod.INDEX) {
+      // First check to see if the limit has been reached.  If so, mark the end of pagination.
+      if (maxRecords > 0 && (resultSetLoader.totalRowCount() > maxRecords)) {
+        // End Pagination
+        paginator.notifyPartialPage();
+      } else {
+        populateIndexPaginator();
+      }
+    } else if (paginator != null &&
       maxRecords < 0 && (resultSetLoader.totalRowCount()) < paginator.getPageSize()) {
+    // Allows limitless pagination. Does not apply for index pagination
       logger.debug("Partially filled page received, ending pagination");
       paginator.notifyPartialPage();
     }

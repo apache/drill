@@ -21,6 +21,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.Reader;
 import java.util.Arrays;
+import java.util.Map;
 import java.util.function.Function;
 
 import org.apache.commons.collections4.IterableUtils;
@@ -83,6 +84,7 @@ public class JsonStructureParser {
     private ErrorFactory errorFactory;
     private String dataPath;
     private MessageParser messageParser;
+    private Map<String, Object> listenerColumnMap;
 
     public JsonStructureParserBuilder options(JsonStructureOptions options) {
       this.options = options;
@@ -125,13 +127,18 @@ public class JsonStructureParser {
       return this;
     }
 
+    public JsonStructureParserBuilder listenerColumnMap(Map<String, Object> listenerColumnMap) {
+      this.listenerColumnMap = listenerColumnMap;
+      return this;
+    }
+
     public JsonStructureParser build() {
       if (dataPath != null) {
         dataPath = dataPath.trim();
         dataPath = dataPath.isEmpty() ? null : dataPath;
       }
       if (dataPath != null && messageParser == null) {
-        messageParser = new SimpleMessageParser(dataPath);
+        messageParser = new SimpleMessageParser(dataPath, listenerColumnMap);
       }
       return new JsonStructureParser(this);
     }
@@ -142,6 +149,7 @@ public class JsonStructureParser {
   private final TokenIterator tokenizer;
   private final RootParser rootState;
   private final FieldParserFactory fieldFactory;
+  private final Map<String, Object> listenerColumnMap;
   private int errorRecoveryCount;
 
   /**
@@ -166,6 +174,8 @@ public class JsonStructureParser {
     tokenizer = new TokenIterator(builder.streams, parserFunction, options, errorFactory());
     fieldFactory = new FieldParserFactory(this,
         Preconditions.checkNotNull(builder.parserFactory));
+
+    this.listenerColumnMap = builder.listenerColumnMap;
 
     // Parse to the start of the data object(s), and create a root
     // state to parse objects and watch for the end of data.

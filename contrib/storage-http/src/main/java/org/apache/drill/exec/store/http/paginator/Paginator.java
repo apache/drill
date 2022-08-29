@@ -19,6 +19,7 @@
 package org.apache.drill.exec.store.http.paginator;
 
 import okhttp3.HttpUrl.Builder;
+import org.apache.drill.exec.store.http.HttpPaginatorConfig.PaginatorMethod;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -41,17 +42,12 @@ public abstract class Paginator implements Iterator<String> {
   private static final int MAX_ATTEMPTS = 100;
   protected final int pageSize;
 
-  public enum paginationMode {
-    OFFSET,
-    PAGE
-  }
-
-  protected final paginationMode MODE;
+  protected final PaginatorMethod MODE;
   protected final int limit;
   protected boolean partialPageReceived;
   protected Builder builder;
 
-  public Paginator(Builder builder, paginationMode mode, int pageSize, int limit) {
+  public Paginator(Builder builder, PaginatorMethod mode, int pageSize, int limit) {
     this.MODE = mode;
     this.builder = builder;
     this.pageSize = pageSize;
@@ -78,4 +74,8 @@ public abstract class Paginator implements Iterator<String> {
   }
 
   public int getPageSize() { return pageSize; }
+
+  public PaginatorMethod getMode() {
+    return MODE;
+  }
 }

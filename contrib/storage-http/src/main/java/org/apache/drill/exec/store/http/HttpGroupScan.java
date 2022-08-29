@@ -26,6 +26,7 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonTypeName;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.drill.common.PlanStringBuilder;
 import org.apache.drill.common.expression.SchemaPath;
 
@@ -38,6 +39,7 @@ import org.apache.drill.exec.physical.base.SubScan;
 import org.apache.drill.exec.planner.logical.DrillScanRel;
 import org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint;
 import org.apache.drill.exec.record.metadata.TupleMetadata;
+import org.apache.drill.exec.store.http.HttpPaginatorConfig.PaginatorMethod;
 import org.apache.drill.exec.store.http.util.SimpleHttp;
 import org.apache.drill.exec.util.Utilities;
 import org.apache.drill.metastore.metadata.TableMetadata;
@@ -99,8 +101,8 @@ public class HttpGroupScan extends AbstractGroupScan {
    */
   public HttpGroupScan(HttpGroupScan that, List<SchemaPath> columns) {
     super(that);
-    this.columns = columns;
     this.httpScanSpec = that.httpScanSpec;
+    this.columns = columns;
 
     // Oddly called later in planning, after earlier assigning columns,
     // to again assign columns. Retain filters, but compute new stats.
@@ -111,6 +113,41 @@ public class HttpGroupScan extends AbstractGroupScan {
     this.username = that.username;
     this.maxRecords = that.maxRecords;
   }
+
+  private List<SchemaPath> addColumnsToSchemaPath(List<SchemaPath> columns) {
+    // This function handles the case when the pagination columns are not projected.
+    // This logic adds these columns to the projection list to ensure they are projected
+    // This is only relevant for index pagination.
+
+    // First check to see whether this is an index paginator or not, and all the fields are populated.
+    if (httpScanSpec.connectionConfig().paginator() != null &&
+      httpScanSpec.connectionConfig().paginator().getMethodType() != PaginatorMethod.INDEX &&
+      StringUtils.isEmpty(httpScanSpec.connectionConfig().dataPath())) {
+      return columns;
+    }
+
+    // Next, if the query is a star query, we don't need to modify anything.
+    if (columns == ALL_COLUMNS && StringUtils.isEmpty(httpScanSpec.connectionConfig().dataPath())) {
+      return columns;
+    }
+
+    HttpPaginatorConfig paginatorConfig = httpScanSpec.connectionConfig().paginator();
+
+    if (StringUtils.isNotEmpty(paginatorConfig.hasMoreParam())) {
+      columns.add(SchemaPath.parseFromString(cleanUpColumnName(paginatorConfig.hasMoreParam())));
+    }
+
+    if (StringUtils.isNotEmpty(paginatorConfig.indexParam())) {
+      columns.add(SchemaPath.parseFromString(cleanUpColumnName(paginatorConfig.indexParam())));
+    }
+
+    if (StringUtils.isNotEmpty(paginatorConfig.nextPageParam())) {
+      columns.add(SchemaPath.parseFromString(cleanUpColumnName(paginatorConfig.nextPageParam())));
+    }
+
+    return columns;
+  }
+
 
   /**
    * Adds a filter to the scan.
@@ -342,6 +379,18 @@ public class HttpGroupScan extends AbstractGroupScan {
   public boolean allowsFilters() {
     // Return true if the query has either parameters specified in the URL or URL params.
     return (getHttpConfig().params() != null) || SimpleHttp.hasURLParameters(getHttpConfig().getHttpUrl());
+  }
+
+  private String cleanUpColumnName(String columnName) {
+    if (! columnName.startsWith("`")) {
+      columnName = "`" + columnName;
+    }
+
+    if (! columnName.endsWith("`")) {
+      columnName = columnName + "`";
+    }
+
+    return columnName;
   }
 
   @Override
