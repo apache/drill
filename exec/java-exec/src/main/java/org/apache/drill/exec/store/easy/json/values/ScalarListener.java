@@ -83,7 +83,7 @@ public abstract class ScalarListener implements ValueListener {
   /**
    * Adds a field's most recent value to the column listener map.
    * This data is only stored if the listener column map is defined, and has keys.
-   * @param key The key of the pagination field
+   * @param key The key of the listener field
    * @param value The value of to be retained
    */
   protected void addValueToListenerMap(String key, String value) {
@@ -97,12 +97,12 @@ public abstract class ScalarListener implements ValueListener {
   }
 
   protected void addValueToListenerMap(String key, Object value) {
-    Map<String, Object> paginationMap = loader.listenerColumnMap();
+    Map<String, Object> listenerColumnMap = loader.listenerColumnMap();
 
-    if (paginationMap == null || paginationMap.isEmpty()) {
+    if (listenerColumnMap == null || listenerColumnMap.isEmpty()) {
       return;
-    } else if (paginationMap.containsKey(key) && value != null) {
-      paginationMap.put(key, value);
+    } else if (listenerColumnMap.containsKey(key) && value != null) {
+      listenerColumnMap.put(key, value);
     }
   }
 }

@@ -143,7 +143,7 @@ public class SimpleMessageParser implements MessageParser {
    * without creating a ValueVector for them.
    *
    * @param tokenizer A {@link TokenIterator} of the parsed JSON data.
-   * @param fieldName A {@link String} of the pagination field name.
+   * @param fieldName A {@link String} of the column listener field name.
    */
   private void skipElementButRetainValue(TokenIterator tokenizer, String fieldName) {
     JsonToken token = ((DummyValueParser) DummyValueParser.INSTANCE).parseAndReturnToken(tokenizer);

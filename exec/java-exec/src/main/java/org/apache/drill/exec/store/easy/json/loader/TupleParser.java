@@ -135,7 +135,7 @@ public class TupleParser extends ObjectParser {
   }
 
   private boolean projectField(String key) {
-    // This method makes sure that fields necessary for pagination are read.
+    // This method makes sure that fields necessary for column listeners are read.
     if (tupleWriter.isProjected(key)) {
       return true;
     } else {
