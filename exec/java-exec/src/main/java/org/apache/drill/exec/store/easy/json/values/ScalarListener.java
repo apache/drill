@@ -89,18 +89,18 @@ public abstract class ScalarListener implements ValueListener {
    * @param key The key of the pagination field
    * @param value The value of to be retained
    */
-  protected void addValueToPagination(String key, String value) {
-    Map<String,Object> paginationMap = loader.paginationFields();
+  protected void addValueToListenerMap(String key, String value) {
+    Map<String,Object> listenerColumnMap = loader.listenerColumnMap();
 
-    if (paginationMap == null || paginationMap.isEmpty()) {
+    if (listenerColumnMap == null || listenerColumnMap.isEmpty()) {
       return;
-    } else if (paginationMap.containsKey(key) && StringUtils.isNotEmpty(value)) {
-      paginationMap.put(key, value);
+    } else if (listenerColumnMap.containsKey(key) && StringUtils.isNotEmpty(value)) {
+      listenerColumnMap.put(key, value);
     }
   }
 
-  protected void addValueToPagination(String key, Object value) {
-    Map<String, Object> paginationMap = loader.paginationFields();
+  protected void addValueToListenerMap(String key, Object value) {
+    Map<String, Object> paginationMap = loader.listenerColumnMap();
 
     if (paginationMap == null || paginationMap.isEmpty()) {
       return;

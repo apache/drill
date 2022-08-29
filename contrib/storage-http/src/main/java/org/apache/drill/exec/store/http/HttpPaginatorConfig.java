@@ -23,7 +23,9 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonPOJOBuilder;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.drill.common.PlanStringBuilder;
+import org.apache.drill.common.exceptions.UserException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -76,10 +78,72 @@ public class HttpPaginatorConfig {
     this.pageSizeParam = builder.pageSizeParam;
     this.pageSize = builder.pageSize;
     this.maxRecords = builder.maxRecords;
-    this.method = builder.method;
     this.hasMoreParam = builder.hasMoreParam;
     this.indexParam = builder.indexParam;
     this.nextPageParam = builder.nextPageParam;
+
+    this.method = StringUtils.isEmpty(builder.method)
+      ? PaginatorMethod.OFFSET.toString() : builder.method.trim().toUpperCase();
+
+    PaginatorMethod paginatorMethod = PaginatorMethod.valueOf(this.method);
+
+    /*
+     * For pagination to function key fields must be defined.  This block validates the required fields for
+     * each type of paginator.
+     */
+    switch (paginatorMethod) {
+      case OFFSET:
+        if (StringUtils.isEmpty(this.limitParam) || StringUtils.isEmpty(this.offsetParam)) {
+          throw UserException
+            .validationError()
+            .message("Invalid paginator configuration.  For OFFSET pagination, limitField and offsetField must be defined.")
+            .build(logger);
+        } else if (this.pageSize <= 0) {
+          throw UserException
+            .validationError()
+            .message("Invalid paginator configuration.  For OFFSET pagination, maxPageSize must be defined and greater than zero.")
+            .build(logger);
+        }
+        break;
+      case PAGE:
+        if (StringUtils.isEmpty(this.pageParam) || StringUtils.isEmpty(this.pageSizeParam)) {
+          throw UserException
+            .validationError()
+            .message("Invalid paginator configuration.  For PAGE pagination, pageField and pageSizeField must be defined.")
+            .build(logger);
+        } else if (this.pageSize <= 0) {
+          throw UserException
+            .validationError()
+            .message("Invalid paginator configuration.  For PAGE pagination, maxPageSize must be defined and greater than zero.")
+            .build(logger);
+        }
+        break;
+      case INDEX:
+        // Either the nextPageParam OR the indexParam must be populated
+        if (StringUtils.isEmpty(this.hasMoreParam)) {
+          throw UserException
+            .validationError()
+            .message("Invalid paginator configuration.  For INDEX pagination, the hasMoreParam must be defined.")
+            .build(logger);
+        } else if ((StringUtils.isEmpty(this.nextPageParam) && StringUtils.isNotEmpty(this.indexParam)) &&
+          (StringUtils.isNotEmpty(this.nextPageParam) && StringUtils.isEmpty(this.indexParam))) {
+          throw UserException
+            .validationError()
+            .message("Invalid paginator configuration.  For INDEX pagination, the nextPageParam or indexParam must be defined.")
+            .build(logger);
+        } else if (StringUtils.isEmpty(this.nextPageParam) && StringUtils.isEmpty(this.indexParam)) {
+          throw UserException
+            .validationError()
+            .message("Invalid paginator configuration.  For INDEX pagination, the nextPageParam or indexParam must be defined.")
+            .build(logger);
+        }
+        break;
+      default:
+        throw UserException
+          .validationError()
+          .message("Invalid paginator method: %s.  Drill supports 'OFFSET', 'INDEX' and 'PAGE'", method)
+          .build(logger);
+    }
   }
 
   public static HttpPaginatorConfigBuilder builder() {
@@ -173,75 +237,6 @@ public class HttpPaginatorConfig {
     PAGE,
     INDEX
   }
-
-  /*private HttpPaginatorConfig(HttpPaginatorConfig.HttpPaginatorConfigBuilder builder) {
-    this.limitParam = builder.limitParam;
-    this.offsetParam = builder.offsetParam;
-    this.pageSize = builder.pageSize;
-    this.pageParam = builder.pageParam;
-    this.pageSizeParam = builder.pageSizeParam;
-    this.maxRecords = builder.maxRecords;
-    this.nextPageParam = builder.nextPageParam;
-    this.hasMoreParam = builder.hasMoreParam;
-    this.indexParam = builder.indexParam;
-
-    this.method = StringUtils.isEmpty(builder.method)
-      ? PaginatorMethod.OFFSET.toString() : builder.method.trim().toUpperCase();
-
-    PaginatorMethod paginatorMethod = PaginatorMethod.valueOf(this.method);
-
-    /*
-    * For pagination to function key fields must be defined.  This block validates the required fields for
-    * each type of paginator.
-     */
-    /*switch (paginatorMethod) {
-      case OFFSET:
-        if (StringUtils.isEmpty(this.limitParam) || StringUtils.isEmpty(this.offsetParam)) {
-          throw UserException
-            .validationError()
-            .message("Invalid paginator configuration.  For OFFSET pagination, limitField and offsetField must be defined.")
-            .build(logger);
-        } else if (this.pageSize <= 0) {
-          throw UserException
-            .validationError()
-            .message("Invalid paginator configuration.  For OFFSET pagination, maxPageSize must be defined and greater than zero.")
-            .build(logger);
-        }
-        break;
-      case PAGE:
-        if (StringUtils.isEmpty(this.pageParam) || StringUtils.isEmpty(this.pageSizeParam)) {
-          throw UserException
-            .validationError()
-            .message("Invalid paginator configuration.  For PAGE pagination, pageField and pageSizeField must be defined.")
-            .build(logger);
-        } else if (this.pageSize <= 0) {
-          throw UserException
-            .validationError()
-            .message("Invalid paginator configuration.  For PAGE pagination, maxPageSize must be defined and greater than zero.")
-            .build(logger);
-        }
-        break;
-      case INDEX:
-        // Either the nextPageParam OR the indexParam must be populated
-        if (StringUtils.isEmpty(hasMoreParam)) {
-          throw UserException
-            .validationError()
-            .message("Invalid paginator configuration.  For INDEX pagination, the hasMoreParam must be defined.")
-            .build(logger);
-        } else if (StringUtils.isEmpty(nextPageParam) || StringUtils.isEmpty(indexParam)) {
-          throw UserException
-            .validationError()
-            .message("Invalid paginator configuration.  For INDEX pagination, the nextPageParam or indexParam must be defined.")
-            .build(logger);
-        }
-        break;
-      default:
-        throw UserException
-          .validationError()
-          .message("Invalid paginator method: %s.  Drill supports 'OFFSET', 'INDEX' and 'PAGE'", method)
-          .build(logger);
-    }
-  }*/
 
   @JsonIgnore
   public PaginatorMethod getMethodType() {

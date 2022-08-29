@@ -46,13 +46,13 @@ public class TimestampValueListener extends ScalarListener {
         setNull();
         return;
       case VALUE_NUMBER_INT:
-        addValueToPagination(writer.schema().name(), tokenizer.longValue());
+        addValueToListenerMap(writer.schema().name(), tokenizer.longValue());
         writer.setLong(tokenizer.longValue());
         break;
       case VALUE_STRING:
         try {
           LocalDateTime localDT = LocalDateTime.parse(tokenizer.stringValue());
-          addValueToPagination(writer.schema().name(), Duration.between(LOCAL_EPOCH, localDT).toMillis());
+          addValueToListenerMap(writer.schema().name(), Duration.between(LOCAL_EPOCH, localDT).toMillis());
           writer.setLong(Duration.between(LOCAL_EPOCH, localDT).toMillis());
         } catch (Exception e) {
           throw loader.dataConversionError(schema(), "date", tokenizer.stringValue());

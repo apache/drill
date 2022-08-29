@@ -63,7 +63,7 @@ public class VarCharListener extends ScalarListener {
       default:
         throw tokenizer.invalidValue(token);
     }
-    addValueToPagination(writer.schema().name(), value);
+    addValueToListenerMap(writer.schema().name(), value);
     writer.setString(value);
   }
 

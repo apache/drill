@@ -48,7 +48,7 @@ public class UtcDateValueListener extends ScalarListener {
         setNull();
         break;
       case VALUE_NUMBER_INT:
-        addValueToPagination(writer.schema().name(), tokenizer.longValue());
+        addValueToListenerMap(writer.schema().name(), tokenizer.longValue());
         writer.setLong(tokenizer.longValue());
         break;
       case VALUE_STRING:
@@ -62,7 +62,7 @@ public class UtcDateValueListener extends ScalarListener {
           // is different locally than UTC. A mess.
           LocalDate localDate = LocalDate.parse(tokenizer.stringValue(), DateUtility.isoFormatDate);
           ZonedDateTime utc = localDate.atStartOfDay(ZoneOffset.UTC);
-          addValueToPagination(writer.schema().name(), utc.toEpochSecond() * 1000);
+          addValueToListenerMap(writer.schema().name(), utc.toEpochSecond() * 1000);
           writer.setLong(utc.toEpochSecond() * 1000);
         } catch (Exception e) {
           throw loader.dataConversionError(schema(), "date", tokenizer.stringValue());

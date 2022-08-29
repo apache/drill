@@ -84,7 +84,7 @@ public class JsonStructureParser {
     private ErrorFactory errorFactory;
     private String dataPath;
     private MessageParser messageParser;
-    private Map<String, Object> paginationFields;
+    private Map<String, Object> listenerColumnMap;
 
     public JsonStructureParserBuilder options(JsonStructureOptions options) {
       this.options = options;
@@ -127,8 +127,8 @@ public class JsonStructureParser {
       return this;
     }
 
-    public JsonStructureParserBuilder paginationFields(Map<String, Object> paginationFields) {
-      this.paginationFields = paginationFields;
+    public JsonStructureParserBuilder listenerColumnMap(Map<String, Object> listenerColumnMap) {
+      this.listenerColumnMap = listenerColumnMap;
       return this;
     }
 
@@ -138,7 +138,7 @@ public class JsonStructureParser {
         dataPath = dataPath.isEmpty() ? null : dataPath;
       }
       if (dataPath != null && messageParser == null) {
-        messageParser = new SimpleMessageParser(dataPath, paginationFields);
+        messageParser = new SimpleMessageParser(dataPath, listenerColumnMap);
       }
       return new JsonStructureParser(this);
     }
@@ -149,7 +149,7 @@ public class JsonStructureParser {
   private final TokenIterator tokenizer;
   private final RootParser rootState;
   private final FieldParserFactory fieldFactory;
-  private final Map<String, Object> paginationFields;
+  private final Map<String, Object> listenerColumnMap;
   private int errorRecoveryCount;
 
   /**
@@ -175,7 +175,7 @@ public class JsonStructureParser {
     fieldFactory = new FieldParserFactory(this,
         Preconditions.checkNotNull(builder.parserFactory));
 
-    this.paginationFields = builder.paginationFields;
+    this.listenerColumnMap = builder.listenerColumnMap;
 
     // Parse to the start of the data object(s), and create a root
     // state to parse objects and watch for the end of data.

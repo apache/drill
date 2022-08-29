@@ -36,7 +36,7 @@ public class StrictStringValueListener extends ScalarListener {
         setNull();
         break;
       case VALUE_STRING:
-        addValueToPagination(writer.schema().name(), tokenizer.stringValue());
+        addValueToListenerMap(writer.schema().name(), tokenizer.stringValue());
         writer.setString(tokenizer.stringValue());
         break;
       default:

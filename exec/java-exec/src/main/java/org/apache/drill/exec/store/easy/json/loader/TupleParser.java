@@ -139,7 +139,7 @@ public class TupleParser extends ObjectParser {
     if (tupleWriter.isProjected(key)) {
       return true;
     } else {
-      return loader.paginationFields() != null && loader.paginationFields().containsKey(key);
+      return loader.listenerColumnMap() != null && loader.listenerColumnMap().containsKey(key);
     }
   }
 

@@ -138,7 +138,7 @@ public class HttpBatchReader implements ManagedReader<SchemaNegotiator> {
           .maxRows(maxRecords)
           .dataPath(subScan.tableSpec().connectionConfig().dataPath())
           .errorContext(errorContext)
-          .paginationFields(paginationFields)
+          .listenerColumnMap(paginationFields)
           .fromStream(inStream);
 
       if (subScan.tableSpec().connectionConfig().jsonOptions() != null) {

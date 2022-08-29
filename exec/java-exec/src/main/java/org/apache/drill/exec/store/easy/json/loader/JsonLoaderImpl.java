@@ -154,7 +154,7 @@ public class JsonLoaderImpl implements JsonLoader, ErrorFactory {
     private MessageParser messageParser;
     private ImplicitColumns implicitFields;
     private int maxRows;
-    private Map<String, Object> paginationFields;
+    private Map<String, Object> listenerColumnMap;
 
     public JsonLoaderBuilder resultSetLoader(ResultSetLoader rsLoader) {
       this.rsLoader = rsLoader;
@@ -166,8 +166,8 @@ public class JsonLoaderImpl implements JsonLoader, ErrorFactory {
       return this;
     }
 
-    public JsonLoaderBuilder paginationFields(Map<String,Object> paginationFields) {
-      this.paginationFields = paginationFields;
+    public JsonLoaderBuilder listenerColumnMap(Map<String,Object> listenerColumnMap) {
+      this.listenerColumnMap = listenerColumnMap;
       return this;
     }
 
@@ -253,7 +253,7 @@ public class JsonLoaderImpl implements JsonLoader, ErrorFactory {
   private final JsonStructureParser parser;
   private final FieldFactory fieldFactory;
   private final ImplicitColumns implicitFields;
-  private final Map<String, Object> paginationFields;
+  private final Map<String, Object> listenerColumnMap;
   private final int maxRows;
   private boolean eof;
 
@@ -276,7 +276,7 @@ public class JsonLoaderImpl implements JsonLoader, ErrorFactory {
     this.implicitFields = builder.implicitFields;
     this.maxRows = builder.maxRows;
     this.fieldFactory = buildFieldFactory(builder);
-    this.paginationFields = builder.paginationFields;
+    this.listenerColumnMap = builder.listenerColumnMap;
     this.parser = buildParser(builder);
   }
 
@@ -288,7 +288,7 @@ public class JsonLoaderImpl implements JsonLoader, ErrorFactory {
             .parserFactory(parser ->
                 new TupleParser(parser, JsonLoaderImpl.this, rsLoader.writer(), builder.providedSchema))
             .errorFactory(this)
-            .paginationFields(paginationFields)
+            .listenerColumnMap(listenerColumnMap)
             .messageParser(builder.messageParser)
             .dataPath(builder.dataPath)
             .build();
@@ -308,8 +308,8 @@ public class JsonLoaderImpl implements JsonLoader, ErrorFactory {
   public JsonLoaderOptions options() { return options; }
   public JsonStructureParser parser() { return parser; }
   public FieldFactory fieldFactory() { return fieldFactory; }
-  public Map<String, Object> paginationFields() {
-    return paginationFields;
+  public Map<String, Object> listenerColumnMap() {
+    return listenerColumnMap;
   }
 
   @Override // JsonLoader

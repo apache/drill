@@ -41,12 +41,12 @@ public class StrictBigIntValueListener extends ScalarListener {
         break;
       case VALUE_NUMBER_INT:
         writer.setLong(tokenizer.longValue());
-        addValueToPagination(writer.schema().name(), tokenizer.longValue());
+        addValueToListenerMap(writer.schema().name(), tokenizer.longValue());
         break;
       case VALUE_STRING:
         try {
           writer.setLong(Long.parseLong(tokenizer.stringValue()));
-          addValueToPagination(writer.schema().name(), Long.parseLong(tokenizer.stringValue()));
+          addValueToListenerMap(writer.schema().name(), Long.parseLong(tokenizer.stringValue()));
         } catch (NumberFormatException e) {
           throw loader.dataConversionError(schema(), "string", tokenizer.stringValue());
         }
