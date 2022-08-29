@@ -32,6 +32,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
+import java.util.concurrent.CancellationException;
 import java.util.concurrent.ForkJoinPool;
 import java.util.concurrent.ForkJoinTask;
 import java.util.concurrent.RecursiveTask;
@@ -272,6 +273,9 @@ public class FileSystemUtil {
         pool
       );
       return pool.invoke(task);
+    } catch (CancellationException ex) {
+      logger.debug("RecursiveListing task to list {} was cancelled.", path);
+      return Collections.<FileStatus>emptyList();
     } finally {
       pool.shutdown();
     }
