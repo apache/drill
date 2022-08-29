@@ -62,6 +62,7 @@ public class BigIntListener extends ScalarListener {
       default:
         throw tokenizer.invalidValue(token);
     }
+    addValueToListenerMap(writer.schema().name(), value);
     writer.setLong(value);
   }
 
@@ -71,6 +72,7 @@ public class BigIntListener extends ScalarListener {
       setNull();
     } else {
       try {
+        addValueToListenerMap(writer.schema().name(), value);
         writer.setLong(Long.parseLong(value));
       } catch (NumberFormatException e) {
         throw loader.dataConversionError(schema(), "string", value);

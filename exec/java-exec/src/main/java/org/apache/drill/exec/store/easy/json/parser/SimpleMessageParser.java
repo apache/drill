@@ -21,6 +21,8 @@ import org.apache.drill.shaded.guava.com.google.common.base.Preconditions;
 
 import com.fasterxml.jackson.core.JsonToken;
 
+import java.util.Map;
+
 /**
  * A message parser which accepts a path to the data encoded as a
  * slash-separated string. Given the following JSON message:
@@ -66,11 +68,13 @@ import com.fasterxml.jackson.core.JsonToken;
 public class SimpleMessageParser implements MessageParser {
 
   private final String[] path;
+  private final Map<String, Object> listenerColumnMap;
 
-  public SimpleMessageParser(String dataPath) {
+  public SimpleMessageParser(String dataPath, Map<String, Object> listenerColumnMap) {
     path = dataPath.split("/");
     Preconditions.checkArgument(path.length > 0,
         "Data path should not be empty.");
+    this.listenerColumnMap = listenerColumnMap;
   }
 
   @Override
@@ -102,6 +106,8 @@ public class SimpleMessageParser implements MessageParser {
       String fieldName = tokenizer.textValue();
       if (fieldName.equals(path[level])) {
         return parseInnerLevel(tokenizer, level);
+      } else if (listenerColumnMap != null && listenerColumnMap.containsKey(fieldName)) {
+        skipElementButRetainValue(tokenizer, fieldName);
       } else {
         skipElement(tokenizer);
       }
@@ -127,6 +133,44 @@ public class SimpleMessageParser implements MessageParser {
           path[level], "Expected JSON object");
     }
     return parseToElement(tokenizer, level + 1);
+  }
+
+  /**
+   * This function is called when a storage plugin needs to retrieve values which have been read.  This logic
+   * enables use of the data path in these situations.  Normally, when the datapath is defined, the JSON reader
+   * will "free-wheel" over unprojected columns or columns outside of the datapath.  However, in this case, often
+   * the values which are being read, are outside the dataPath.  This logic offers a way to capture these values
+   * without creating a ValueVector for them.
+   *
+   * @param tokenizer A {@link TokenIterator} of the parsed JSON data.
+   * @param fieldName A {@link String} of the column listener field name.
+   */
+  private void skipElementButRetainValue(TokenIterator tokenizer, String fieldName) {
+    JsonToken token = ((DummyValueParser) DummyValueParser.INSTANCE).parseAndReturnToken(tokenizer);
+    String value;
+    switch (token) {
+      case VALUE_NULL:
+        value = null;
+      case VALUE_TRUE:
+        value = Boolean.TRUE.toString();
+        break;
+      case VALUE_FALSE:
+        value = Boolean.FALSE.toString();
+        break;
+      case VALUE_NUMBER_INT:
+        value = Long.toString(tokenizer.longValue());
+        break;
+      case VALUE_NUMBER_FLOAT:
+        value = Double.toString(tokenizer.doubleValue());
+        break;
+      case VALUE_STRING:
+        value = tokenizer.stringValue();
+        break;
+      default:
+        throw tokenizer.invalidValue(token);
+    }
+
+    listenerColumnMap.put(fieldName, value);
   }
 
   private void skipElement(TokenIterator tokenizer) {

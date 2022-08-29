@@ -20,6 +20,7 @@ package org.apache.drill.exec.store.http.paginator;
 
 import okhttp3.HttpUrl.Builder;
 import org.apache.drill.common.exceptions.UserException;
+import org.apache.drill.exec.store.http.HttpPaginatorConfig.PaginatorMethod;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -44,7 +45,7 @@ public class PagePaginator extends Paginator {
    * @param pageSizeParam The API Query parameter which specifies how many results per page
    */
   public PagePaginator(Builder builder, int limit, int pageSize, String pageParam, String pageSizeParam) {
-    super(builder, paginationMode.PAGE, pageSize, limit);
+    super(builder, PaginatorMethod.PAGE, pageSize, limit);
     this.limit = limit;
     this.pageParam = pageParam;
     this.pageSizeParam = pageSizeParam;

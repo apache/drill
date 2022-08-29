@@ -52,6 +52,7 @@ public class StrictDoubleValueListener extends ScalarListener {
       default:
         throw tokenizer.invalidValue(token);
     }
+    addValueToListenerMap(writer.schema().name(), value);
     writer.setDouble(value);
   }
 

@@ -127,10 +127,19 @@ public class TupleParser extends ObjectParser {
 
   @Override
   public ElementParser onField(String key, TokenIterator tokenizer) {
-    if (!tupleWriter.isProjected(key)) {
-      return fieldFactory().ignoredFieldParser();
-    } else {
+    if (projectField(key)) {
       return fieldParserFor(key, tokenizer);
+    } else {
+      return fieldFactory().ignoredFieldParser();
+    }
+  }
+
+  private boolean projectField(String key) {
+    // This method makes sure that fields necessary for column listeners are read.
+    if (tupleWriter.isProjected(key)) {
+      return true;
+    } else {
+      return loader.listenerColumnMap() != null && loader.listenerColumnMap().containsKey(key);
     }
   }
 

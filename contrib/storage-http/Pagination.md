@@ -5,7 +5,7 @@ data into one larger dataset.  Drill's auto-pagination features allow this to ha
 To use a paginator, you simply have to configure the paginator in the connection for the particular API.  
 
 ## Words of Caution
-While extremely powerful, the auto-pagination feature has the potential to run afoul of APIs rate limits and even potentially DDOS an API. 
+While extremely powerful, the auto-pagination feature has the potential to run afoul of APIs rate limits and even potentially DDoS an API. Please use with extreme care.
 
 
 ## Offset Pagination
@@ -40,3 +40,33 @@ Page pagination is very similar to offset pagination except instead of using an 
       }
 ```
 In either case, the `pageSize` parameter should be set to the maximum page size allowable by the API.  This will minimize the number of requests Drill is making.
+
+## Index / KeySet Pagination
+Index or KeySet pagination is when the API itself returns values to generate the next page. 
+
+Consider an API that returned data like this: 
+
+```json
+{
+  "companies": [
+    ...
+  ],
+  "has-more": true,
+  "index": 3849945478
+}
+
+```
+In this case, the `has-more` parameter is a boolean value which indicates whether or not there are more pages. The `index` parameter gets appended to the URL in question to generate the next page.
+
+`https://api.myapi.com/paged?properties=name&properties=website&offset=3856722038`
+
+There is a slight variant of this where the API will return the actual URL of the next page.
+
+There are three possible parameters:
+
+* `hasMoreParam`: This is the name of the boolean parameter which indicates whether the API has more pages.
+* `indexParam`:  The parameter name of the key or offset that will be used to generate the next page.
+* `nextPageParam`: The parameter name which returns a complete URL of the next page.
+
+
+** Note: Index / Keyset Pagination is only implemented for APIs that return JSON ** 

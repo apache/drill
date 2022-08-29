@@ -60,6 +60,12 @@ public class TestPagination extends ClusterTest {
   private static String TEST_JSON_PAGE1;
   private static String TEST_JSON_PAGE2;
   private static String TEST_JSON_PAGE3;
+
+  private static String TEST_JSON_INDEX_PAGE1;
+  private static String TEST_JSON_INDEX_PAGE2;
+  private static String TEST_JSON_INDEX_PAGE3;
+  private static String TEST_JSON_INDEX_PAGE4;
+
   private static String TEST_XML_PAGE1;
   private static String TEST_XML_PAGE2;
   private static String TEST_XML_PAGE3;
@@ -76,6 +82,12 @@ public class TestPagination extends ClusterTest {
     TEST_JSON_PAGE1 = Files.asCharSource(DrillFileUtils.getResourceAsFile("/data/p1.json"), Charsets.UTF_8).read();
     TEST_JSON_PAGE2 = Files.asCharSource(DrillFileUtils.getResourceAsFile("/data/p2.json"), Charsets.UTF_8).read();
     TEST_JSON_PAGE3 = Files.asCharSource(DrillFileUtils.getResourceAsFile("/data/p3.json"), Charsets.UTF_8).read();
+
+    TEST_JSON_INDEX_PAGE1 = Files.asCharSource(DrillFileUtils.getResourceAsFile("/data/index_response1.json"), Charsets.UTF_8).read();
+    TEST_JSON_INDEX_PAGE2 = Files.asCharSource(DrillFileUtils.getResourceAsFile("/data/index_response2.json"), Charsets.UTF_8).read();
+
+    TEST_JSON_INDEX_PAGE3 = Files.asCharSource(DrillFileUtils.getResourceAsFile("/data/index_response3.json"), Charsets.UTF_8).read();
+    TEST_JSON_INDEX_PAGE4 = Files.asCharSource(DrillFileUtils.getResourceAsFile("/data/index_response4.json"), Charsets.UTF_8).read();
 
     TEST_XML_PAGE1 = Files.asCharSource(DrillFileUtils.getResourceAsFile("/data/response_1.xml"), Charsets.UTF_8).read();
     TEST_XML_PAGE2 = Files.asCharSource(DrillFileUtils.getResourceAsFile("/data/response_2.xml"), Charsets.UTF_8).read();
@@ -140,6 +152,32 @@ public class TestPagination extends ClusterTest {
       .pageSize(2)
       .build();
 
+    HttpPaginatorConfig indexPaginator = HttpPaginatorConfig.builder()
+      .indexParam("offset")
+      .hasMoreParam("has-more")
+      .method("index")
+      .build();
+
+    HttpApiConfig mockJsonConfigWithKeyset = HttpApiConfig.builder()
+      .url("http://localhost:8092/json")
+      .method("get")
+      .headers(headers)
+      .requireTail(false)
+      .paginator(indexPaginator)
+      .inputType("json")
+      .build();
+
+    HttpApiConfig mockJsonConfigWithKeysetAndDataPath = HttpApiConfig.builder()
+      .url("http://localhost:8092/json")
+      .method("get")
+      .headers(headers)
+      .requireTail(false)
+      .dataPath("companies")
+      .paginator(indexPaginator)
+      .inputType("json")
+      .build();
+
+
     HttpApiConfig mockJsonConfigWithPaginator = HttpApiConfig.builder()
       .url("http://localhost:8092/json")
       .method("get")
@@ -192,6 +230,8 @@ public class TestPagination extends ClusterTest {
 
     Map<String, HttpApiConfig> configs = new HashMap<>();
     configs.put("csv_paginator", mockCsvConfigWithPaginator);
+    configs.put("json_index", mockJsonConfigWithKeyset);
+    configs.put("json_index_datapath", mockJsonConfigWithKeysetAndDataPath);
     configs.put("json_paginator", mockJsonConfigWithPaginator);
     configs.put("xml_paginator", mockXmlConfigWithPaginator);
     configs.put("xml_paginator_url_params", mockXmlConfigWithPaginatorAndUrlParams);
@@ -228,6 +268,72 @@ public class TestPagination extends ClusterTest {
       server.enqueue(new MockResponse().setResponseCode(200).setBody(TEST_JSON_PAGE1));
       server.enqueue(new MockResponse().setResponseCode(200).setBody(TEST_JSON_PAGE2));
       server.enqueue(new MockResponse().setResponseCode(200).setBody(TEST_JSON_PAGE3));
+
+      List<QueryDataBatch> results = client.queryBuilder()
+        .sql(sql)
+        .results();
+
+      int count = 0;
+      for(QueryDataBatch b : results){
+        count += b.getHeader().getRowCount();
+        b.release();
+      }
+      assertEquals(2, results.size());
+      assertEquals(4, count);
+    }
+  }
+
+  @Test
+  public void simpleJSONIndexQuery() throws Exception {
+    String sql = "SELECT * FROM `local`.`json_index` LIMIT 4";
+    try (MockWebServer server = startServer()) {
+
+      server.enqueue(new MockResponse().setResponseCode(200).setBody(TEST_JSON_INDEX_PAGE1));
+      server.enqueue(new MockResponse().setResponseCode(200).setBody(TEST_JSON_INDEX_PAGE2));
+
+      List<QueryDataBatch> results = client.queryBuilder()
+        .sql(sql)
+        .results();
+
+      int count = 0;
+      for(QueryDataBatch b : results){
+        count += b.getHeader().getRowCount();
+        b.release();
+      }
+      assertEquals(2, results.size());
+      assertEquals(2, count);
+    }
+  }
+
+  @Test
+  public void simpleJSONIndexQueryWithProjectedColumns() throws Exception {
+    String sql = "SELECT companies FROM `local`.`json_index` LIMIT 4";
+    try (MockWebServer server = startServer()) {
+
+      server.enqueue(new MockResponse().setResponseCode(200).setBody(TEST_JSON_INDEX_PAGE1));
+      server.enqueue(new MockResponse().setResponseCode(200).setBody(TEST_JSON_INDEX_PAGE2));
+
+      List<QueryDataBatch> results = client.queryBuilder()
+        .sql(sql)
+        .results();
+
+      int count = 0;
+      for(QueryDataBatch b : results){
+        count += b.getHeader().getRowCount();
+        b.release();
+      }
+      assertEquals(2, results.size());
+      assertEquals(2, count);
+    }
+  }
+
+  @Test
+  public void simpleJSONIndexQueryAndDataPath() throws Exception {
+    String sql = "SELECT * FROM `local`.`json_index_datapath` LIMIT 4";
+    try (MockWebServer server = startServer()) {
+
+      server.enqueue(new MockResponse().setResponseCode(200).setBody(TEST_JSON_INDEX_PAGE3));
+      server.enqueue(new MockResponse().setResponseCode(200).setBody(TEST_JSON_INDEX_PAGE4));
 
       List<QueryDataBatch> results = client.queryBuilder()
         .sql(sql)

@@ -45,6 +45,7 @@ public class IntervalValueListener extends ScalarListener {
         break;
       case VALUE_STRING:
         try {
+          addValueToListenerMap(writer.schema().name(), FORMATTER.parsePeriod(tokenizer.stringValue()));
           writer.setPeriod(FORMATTER.parsePeriod(tokenizer.stringValue()));
         } catch (Exception e) {
           throw loader.dataConversionError(schema(), "date", tokenizer.stringValue());

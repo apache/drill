@@ -126,7 +126,7 @@ public class GoogleSheetsStoragePluginConfig extends StoragePluginConfig {
       .build();
   }
 
-  @JsonProperty("clientID")
+  @JsonIgnore
   public String getClientID() {
     if(getOAuthCredentials().isPresent()) {
       return getOAuthCredentials().get().getClientID();
@@ -135,7 +135,7 @@ public class GoogleSheetsStoragePluginConfig extends StoragePluginConfig {
     }
   }
 
-  @JsonProperty("clientSecret")
+  @JsonIgnore
   public String getClientSecret() {
     if (getOAuthCredentials().isPresent()) {
       return getOAuthCredentials().get().getClientSecret();

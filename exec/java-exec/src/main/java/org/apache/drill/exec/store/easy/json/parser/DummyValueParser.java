@@ -43,6 +43,20 @@ public class DummyValueParser implements ElementParser {
     }
   }
 
+  public JsonToken parseAndReturnToken(TokenIterator tokenizer) {
+    JsonToken token = tokenizer.requireNext();
+    switch (token) {
+      case START_ARRAY:
+      case START_OBJECT:
+        parseTail(tokenizer);
+        break;
+
+      default:
+        break;
+    }
+    return token;
+  }
+
   private void parseTail(TokenIterator tokenizer) {
 
     // Parse (field: value)* }

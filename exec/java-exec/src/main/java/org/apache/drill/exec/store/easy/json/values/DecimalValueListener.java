@@ -41,6 +41,7 @@ public class DecimalValueListener extends ScalarListener {
       case VALUE_NUMBER_FLOAT:
       case VALUE_STRING:
         try {
+          addValueToListenerMap(writer.schema().name(), new BigDecimal(tokenizer.textValue()));
           writer.setDecimal(new BigDecimal(tokenizer.textValue()));
         } catch (NumberFormatException e) {
           throw loader.dataConversionError(schema(), "DECIMAL", tokenizer.textValue());

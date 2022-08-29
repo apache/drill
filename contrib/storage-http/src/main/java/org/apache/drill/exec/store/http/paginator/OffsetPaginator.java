@@ -20,6 +20,7 @@ package org.apache.drill.exec.store.http.paginator;
 
 import okhttp3.HttpUrl.Builder;
 import org.apache.drill.common.exceptions.UserException;
+import org.apache.drill.exec.store.http.HttpPaginatorConfig.PaginatorMethod;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -46,7 +47,7 @@ public class OffsetPaginator extends Paginator {
    * @param offsetParam The field name which corresponds to the offset field from the API
    */
   public OffsetPaginator(Builder builder, int limit, int pageSize, String limitParam, String offsetParam) {
-    super(builder, paginationMode.OFFSET, pageSize, limit);
+    super(builder, PaginatorMethod.OFFSET, pageSize, limit);
     this.limit = limit;
     this.limitParam = limitParam;
     this.offsetParam = offsetParam;
