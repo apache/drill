@@ -17,15 +17,15 @@
  */
 package org.apache.drill.exec.util;
 
-import org.apache.drill.common.config.DrillConfig;
 import org.apache.drill.common.exceptions.ErrorHelper;
 import org.apache.drill.common.exceptions.UserException;
-import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.shaded.guava.com.google.common.annotations.VisibleForTesting;
 import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.fs.PathFilter;
+
+import io.netty.util.internal.SystemPropertyUtil;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -47,12 +47,8 @@ import java.util.stream.Stream;
 public class FileSystemUtil {
 
   private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(FileSystemUtil.class);
-
-  private static int recursiveListingMaxSize;
-
-  static {
-    recursiveListingMaxSize = DrillConfig.create().getInt(ExecConstants.RECURSIVE_FILE_LISTING_MAX_SIZE);
-  }
+  private static final String RECURSIVE_FILE_LISTING_MAX_SIZE = "drill.exec.recursive_file_listing_max_size";
+  private static int recursiveListingMaxSize = SystemPropertyUtil.getInt(RECURSIVE_FILE_LISTING_MAX_SIZE, 0);
 
   /**
    * Filter that will accept all files and directories.
@@ -346,10 +342,10 @@ public class FileSystemUtil {
             throw UserException
               .resourceError()
               .message(
-                "File listing size limit of %d exceeded recursing through path %s, see BOOT option %s",
+                "File listing size limit of %d exceeded recursing through path %s, see JVM system property %s",
                 recursiveListingMaxSize,
                 path,
-                ExecConstants.RECURSIVE_FILE_LISTING_MAX_SIZE
+                RECURSIVE_FILE_LISTING_MAX_SIZE
               )
               .build(logger);
           } finally {
