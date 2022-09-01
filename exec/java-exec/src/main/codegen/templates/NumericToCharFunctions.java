@@ -63,7 +63,7 @@ public class G${type}ToChar implements DrillSimpleFunc {
     buffer = buffer.reallocIfNeeded(100);
     byte[] buf = new byte[right.end - right.start];
     right.buffer.getBytes(right.start, buf, 0, right.end - right.start);
-    String inputFormat = new String(buf);
+    String inputFormat = new String(buf, java.nio.charset.StandardCharsets.UTF_8);
     outputFormat = new java.text.DecimalFormat(inputFormat);
   }
 
@@ -77,7 +77,7 @@ public class G${type}ToChar implements DrillSimpleFunc {
     out.buffer = buffer;
     out.start = 0;
     out.end = Math.min(100, str.length()); // truncate if target type has length smaller than that of input's string
-    out.buffer.setBytes(0, str.substring(0, out.end).getBytes());
+    out.buffer.setBytes(0, str.substring(0, out.end).getBytes(java.nio.charset.StandardCharsets.UTF_8));
   }
 }
 </#list>

@@ -23,6 +23,7 @@ import java.io.FileInputStream;
 import java.io.InputStreamReader;
 import java.io.Reader;
 import java.math.BigDecimal;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Paths;
 import java.sql.Array;
 import java.sql.Connection;
@@ -217,8 +218,8 @@ public class PhoenixBaseTest extends ClusterTest {
         pstmt.setDate(11, java.sql.Date.valueOf("2021-12-12"));
         pstmt.setTime(12, java.sql.Time.valueOf("12:12:12"));
         pstmt.setTimestamp(13, java.sql.Timestamp.valueOf("2021-12-12 12:12:12"));
-        pstmt.setBytes(14, "a_b_c_d_e_".getBytes());
-        pstmt.setBytes(15, "12345".getBytes());
+        pstmt.setBytes(14, "a_b_c_d_e_".getBytes(StandardCharsets.UTF_8));
+        pstmt.setBytes(15, "12345".getBytes(StandardCharsets.UTF_8));
         pstmt.setBoolean(16, Boolean.TRUE);
         pstmt.addBatch();
         pstmt.executeBatch();

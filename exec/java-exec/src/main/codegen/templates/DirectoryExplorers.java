@@ -117,10 +117,10 @@ public class DirectoryExplorers {
       }
       String[] subPartitionParts = subPartitionStr.split("/");
       subPartitionStr = subPartitionParts[subPartitionParts.length - 1];
-      byte[] result = subPartitionStr.getBytes();
+      byte[] result = subPartitionStr.getBytes(java.nio.charset.StandardCharsets.UTF_8);
       out.buffer = buffer = buffer.reallocIfNeeded(result.length);
 
-      out.buffer.setBytes(0, subPartitionStr.getBytes(), 0, result.length);
+      out.buffer.setBytes(0, subPartitionStr.getBytes(java.nio.charset.StandardCharsets.UTF_8), 0, result.length);
       out.start = 0;
       out.end = result.length;
     }

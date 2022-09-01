@@ -17,6 +17,7 @@
  */
 package org.apache.drill.exec.server.rest.profile;
 
+import java.nio.charset.StandardCharsets;
 import java.text.SimpleDateFormat;
 import java.util.Collections;
 import java.util.Date;
@@ -512,7 +513,7 @@ public class ProfileResources {
   public Viewable viewProfile(@FormDataParam("profileData") String content) {
     try {
       QueryProfile profile = work.getContext().getProfileStoreContext()
-        .getProfileStoreConfig().getSerializer().deserialize(content.getBytes());
+        .getProfileStoreConfig().getSerializer().deserialize(content.getBytes(StandardCharsets.UTF_8));
       PROFILE_CACHE.put(profile.getQueryId(), content);
       ProfileWrapper wrapper = new ProfileWrapper(profile,
         work.getContext().getConfig(), request);

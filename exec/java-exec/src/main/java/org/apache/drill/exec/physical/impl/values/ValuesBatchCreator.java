@@ -19,6 +19,7 @@ package org.apache.drill.exec.physical.impl.values;
 
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
+import java.nio.charset.StandardCharsets;
 import java.util.Collections;
 import java.util.List;
 
@@ -61,7 +62,7 @@ public class ValuesBatchCreator implements BatchCreator<Values> {
     builder.providedSchema(subScan.getSchema());
 
     ManagedScanFramework.ReaderFactory readerFactory = new BasicScanFactory(Collections.singletonList(
-      getRecordReader(new ByteArrayInputStream(subScan.getContent().getBytes()))).iterator());
+      getRecordReader(new ByteArrayInputStream(subScan.getContent().getBytes(StandardCharsets.UTF_8)))).iterator());
     builder.setReaderFactory(readerFactory);
     builder.nullType(Types.optional(TypeProtos.MinorType.VARCHAR));
     return builder;

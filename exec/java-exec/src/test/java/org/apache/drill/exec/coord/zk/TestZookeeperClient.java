@@ -17,6 +17,7 @@
  */
 package org.apache.drill.exec.coord.zk;
 
+import java.nio.charset.StandardCharsets;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -51,7 +52,7 @@ public class TestZookeeperClient extends BaseTest {
   private final static String root = "/test";
   private final static String path = "test-key";
   private final static String abspath = PathUtils.join(root, path);
-  private final static byte[] data = "testing".getBytes();
+  private final static byte[] data = "testing".getBytes(StandardCharsets.UTF_8);
   private final static CreateMode mode = CreateMode.PERSISTENT;
 
   private TestingServer server;
@@ -258,7 +259,7 @@ public class TestZookeeperClient extends BaseTest {
   @Test
   public void testPutIfAbsentWhenPresent() {
     client.putIfAbsent(path, data);
-    assertEquals("Data should match", new String(data), new String(client.putIfAbsent(path, "new_data".getBytes())));
+    assertEquals("Data should match", new String(data), new String(client.putIfAbsent(path, "new_data".getBytes(StandardCharsets.UTF_8))));
   }
 
 }

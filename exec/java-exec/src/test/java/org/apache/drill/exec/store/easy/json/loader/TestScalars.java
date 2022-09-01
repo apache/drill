@@ -23,6 +23,7 @@ import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
+import java.nio.charset.StandardCharsets;
 import java.time.Duration;
 import java.time.LocalDateTime;
 
@@ -678,7 +679,7 @@ public class TestScalars extends BaseJsonLoaderTest {
     RowSet results = loader.next();
     assertNotNull(results);
 
-    byte[] bytes = "Drill".getBytes();
+    byte[] bytes = "Drill".getBytes(StandardCharsets.UTF_8);
     RowSet expected = fixture.rowSetBuilder(schema)
         .addSingleCol(null)
         .addSingleCol(bytes)

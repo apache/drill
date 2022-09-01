@@ -248,7 +248,7 @@ public class StringFunctions{
               result = matcher.find();
           } while (result);
           matcher.appendTail(sb);
-          final byte [] bytea = sb.toString().getBytes(java.nio.charset.Charset.forName("UTF-8"));
+          final byte [] bytea = sb.toString().getBytes(java.nio.charset.StandardCharsets.UTF_8);
           out.buffer = buffer = buffer.reallocIfNeeded(bytea.length);
           out.buffer.setBytes(out.start, bytea);
           out.end = bytea.length;
@@ -1720,7 +1720,7 @@ public class StringFunctions{
 
     @Override
     public void setup() {
-      charset = java.nio.charset.Charset.forName("UTF-8");
+      charset = java.nio.charset.StandardCharsets.UTF_8;
     }
 
     @Override

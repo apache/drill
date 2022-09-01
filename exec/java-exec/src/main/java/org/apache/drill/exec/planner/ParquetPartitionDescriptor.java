@@ -55,6 +55,7 @@ import org.apache.drill.shaded.guava.com.google.common.collect.Lists;
 import org.apache.hadoop.fs.Path;
 
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.BitSet;
 import java.util.LinkedList;
@@ -401,7 +402,7 @@ public class ParquetPartitionDescriptor extends AbstractPartitionDescriptor {
   private byte[] getBytes(TypeProtos.MinorType type, Object source) {
     byte[] bytes;
     if (source instanceof String) {
-      bytes = ((String) source).getBytes();
+      bytes = ((String) source).getBytes(StandardCharsets.UTF_8);
     } else if (source instanceof byte[]) {
       bytes = (byte[]) source;
     } else {

@@ -146,7 +146,7 @@ public class UnionFunctions {
     @Override
     public void eval() {
       String typeName = input.getTypeString();
-      byte[] type = typeName.getBytes();
+      byte[] type = typeName.getBytes(java.nio.charset.StandardCharsets.UTF_8);
       buf = buf.reallocIfNeeded(type.length);
       buf.setBytes(0, type);
       out.buffer = buf;

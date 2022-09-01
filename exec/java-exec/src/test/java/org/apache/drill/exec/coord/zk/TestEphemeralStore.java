@@ -18,6 +18,7 @@
 package org.apache.drill.exec.coord.zk;
 
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 
 import org.apache.curator.RetryPolicy;
 import org.apache.curator.framework.CuratorFramework;
@@ -82,7 +83,7 @@ public class TestEphemeralStore extends BaseTest {
             if (instance == null) {
               return null;
             }
-            return instance.getBytes();
+            return instance.getBytes(StandardCharsets.UTF_8);
           }
 
           @Override

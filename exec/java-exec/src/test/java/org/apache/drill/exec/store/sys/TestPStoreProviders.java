@@ -43,6 +43,7 @@ import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
 import java.io.File;
+import java.nio.charset.StandardCharsets;
 
 import static org.junit.Assert.assertTrue;
 
@@ -128,7 +129,7 @@ public class TestPStoreProviders extends TestWithZookeeper {
         PathUtils.join("/", storeConfig.getName()), CreateMode.PERSISTENT)) {
         zkClient.start();
         String oldOptionJson = DrillFileUtils.getResourceAsString("/options/old_booleanopt.json");
-        zkClient.put(oldName, oldOptionJson.getBytes(), null);
+        zkClient.put(oldName, oldOptionJson.getBytes(StandardCharsets.UTF_8), null);
       }
 
       try (ZookeeperPersistentStoreProvider provider =

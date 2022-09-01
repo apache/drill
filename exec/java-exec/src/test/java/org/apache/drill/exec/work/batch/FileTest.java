@@ -21,6 +21,7 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.util.concurrent.TimeUnit;
 
 import org.apache.hadoop.conf.Configuration;
@@ -41,7 +42,7 @@ public class FileTest {
     FileSystem fs = FileSystem.get(conf);
     Path path = new Path("/tmp/testFile");
     FSDataOutputStream out = fs.create(path);
-    byte[] s = "hello world".getBytes();
+    byte[] s = "hello world".getBytes(StandardCharsets.UTF_8);
     out.write(s);
     out.hflush();
     FSDataInputStream in = fs.open(path);

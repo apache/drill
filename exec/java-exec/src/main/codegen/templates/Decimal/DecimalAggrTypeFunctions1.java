@@ -39,12 +39,12 @@ import org.apache.drill.exec.expr.annotations.FunctionTemplate.FunctionScope;
 import org.apache.drill.exec.expr.annotations.Output;
 import org.apache.drill.exec.expr.annotations.Param;
 import org.apache.drill.exec.expr.annotations.Workspace;
+import org.apache.drill.exec.expr.holders.*;
+import org.apache.drill.exec.record.RecordBatch;
 import org.apache.drill.exec.vector.complex.writer.*;
 import org.apache.drill.exec.vector.complex.writer.BaseWriter.*;
 import javax.inject.Inject;
 import io.netty.buffer.DrillBuf;
-import org.apache.drill.exec.expr.holders.*;
-import org.apache.drill.exec.record.RecordBatch;
 import io.netty.buffer.ByteBuf;
 
 /*

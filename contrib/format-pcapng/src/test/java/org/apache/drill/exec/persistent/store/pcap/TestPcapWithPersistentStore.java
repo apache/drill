@@ -37,6 +37,7 @@ import org.apache.zookeeper.CreateMode;
 import org.junit.Assert;
 import org.junit.Test;
 
+import java.nio.charset.StandardCharsets;
 import java.util.Map;
 
 import static org.junit.Assert.assertTrue;
@@ -63,7 +64,7 @@ public class TestPcapWithPersistentStore extends TestWithZookeeper {
                     PathUtils.join("/", storeConfig.getName()), CreateMode.PERSISTENT)) {
                 zkClient.start();
                 String oldFormatPlugin = DrillFileUtils.getResourceAsString("/config/oldPcapPlugins.json");
-                zkClient.put(oldPlugin, oldFormatPlugin.getBytes(), null);
+                zkClient.put(oldPlugin, oldFormatPlugin.getBytes(StandardCharsets.UTF_8), null);
             }
 
             try (ZookeeperPersistentStoreProvider provider =

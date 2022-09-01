@@ -23,6 +23,7 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
 import java.math.BigDecimal;
+import java.nio.charset.StandardCharsets;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -133,7 +134,7 @@ public class TestHiveStorage extends HiveTestBase {
             "date_part",
             "char_part")
         .baselineValues(
-            "binaryfield".getBytes(),
+            "binaryfield".getBytes(StandardCharsets.UTF_8),
             false,
             34,
             new BigDecimal("66"),

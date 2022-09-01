@@ -23,6 +23,8 @@ import org.apache.drill.exec.vector.VarCharVector;
 import org.apache.drill.exec.vector.complex.MapVector;
 import org.apache.drill.metastore.statistics.Statistic;
 
+import java.nio.charset.StandardCharsets;
+
 public class ColumnMergedStatistic extends AbstractMergedStatistic {
 
   public ColumnMergedStatistic () {
@@ -61,7 +63,7 @@ public class ColumnMergedStatistic extends AbstractMergedStatistic {
       VarCharVector vv = (VarCharVector) outMapCol;
       vv.allocateNewSafe();
       // Set column name in ValueVector
-      vv.getMutator().setSafe(0, colName.getBytes(), 0, colName.length());
+      vv.getMutator().setSafe(0, colName.getBytes(StandardCharsets.UTF_8), 0, colName.length());
     }
     // Now moving to COMPLETE state
     state = State.COMPLETE;

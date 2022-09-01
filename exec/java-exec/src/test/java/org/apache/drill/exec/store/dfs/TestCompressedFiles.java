@@ -37,6 +37,7 @@ import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.nio.charset.StandardCharsets;
 
 import static org.junit.Assert.assertNotNull;
 
@@ -103,7 +104,7 @@ public class TestCompressedFiles extends ClusterTest {
     CompressionCodec codec = factory.getCodecByName(codecName);
     assertNotNull(codecName + " is not found", codec);
     Path outFile = new Path(dirTestWatcher.getRootDir().getAbsolutePath(), fileName);
-    try (InputStream inputStream = new ByteArrayInputStream(data.getBytes());
+    try (InputStream inputStream = new ByteArrayInputStream(data.getBytes(StandardCharsets.UTF_8));
          OutputStream outputStream = codec.createOutputStream(fs.create(outFile))) {
       IOUtils.copyBytes(inputStream, outputStream, fs.getConf(), false);
     }

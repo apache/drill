@@ -25,6 +25,8 @@ import org.apache.drill.test.BaseTest;
 import org.junit.Assert;
 import org.junit.Test;
 
+import java.nio.charset.StandardCharsets;
+
 /**
  * This test uses {@link VarCharVector} to test the template code in VariableLengthVector.
  */
@@ -155,7 +157,7 @@ public class VariableLengthVectorTest extends BaseTest {
   {
     for (int index = offset; index < size; index++) {
       String indexString = prefix + "String num " + index;
-      mutator.setSafe(index, indexString.getBytes());
+      mutator.setSafe(index, indexString.getBytes(StandardCharsets.UTF_8));
     }
   }
 
@@ -163,7 +165,7 @@ public class VariableLengthVectorTest extends BaseTest {
   {
     for (int index = offset; index < size; index++) {
       String indexString = prefix + "String num " + index;
-      Assert.assertArrayEquals(indexString.getBytes(), accessor.get(index));
+      Assert.assertArrayEquals(indexString.getBytes(StandardCharsets.UTF_8), accessor.get(index));
     }
   }
 }

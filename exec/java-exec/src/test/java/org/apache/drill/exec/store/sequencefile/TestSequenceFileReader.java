@@ -21,6 +21,7 @@ import static org.junit.Assert.assertEquals;
 
 import java.io.ByteArrayOutputStream;
 import java.io.DataOutputStream;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Paths;
 
 import org.apache.drill.categories.RowSetTest;
@@ -60,8 +61,8 @@ public class TestSequenceFileReader extends ClusterTest {
         .buildSchema();
 
     RowSet expected = new RowSetBuilder(client.allocator(), schema)
-        .addRow("key1".getBytes(), "value1".getBytes())
-        .addRow("key2".getBytes(), "value2".getBytes())
+        .addRow("key1".getBytes(StandardCharsets.UTF_8), "value1".getBytes(StandardCharsets.UTF_8))
+        .addRow("key2".getBytes(StandardCharsets.UTF_8), "value2".getBytes(StandardCharsets.UTF_8))
         .build();
 
     assertEquals(2, sets.rowCount());

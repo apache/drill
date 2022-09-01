@@ -22,18 +22,20 @@ import org.apache.http.HttpResponse;
 import org.apache.http.client.HttpClient;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpPost;
-import org.apache.http.entity.ByteArrayEntity;
+import org.apache.http.entity.StringEntity;
 import org.apache.http.impl.client.DefaultHttpClient;
 
 import javax.ws.rs.core.HttpHeaders;
 import java.io.IOException;
+import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
 import static org.apache.http.protocol.HTTP.CONTENT_TYPE;
 
 public class RestClientWrapper implements RestClient {
   private static final HttpClient httpClient = new DefaultHttpClient();
-  private static final String DEFAULT_ENCODING = "UTF-8";
+  private static final Charset DEFAULT_ENCODING = StandardCharsets.UTF_8;
 
   public HttpResponse get(String url) throws IOException {
     HttpGet httpget = new HttpGet(url);
@@ -44,7 +46,7 @@ public class RestClientWrapper implements RestClient {
   public HttpResponse post(String url, String body) throws IOException {
     HttpPost httppost = new HttpPost(url);
     httppost.addHeader(CONTENT_TYPE, APPLICATION_JSON);
-    HttpEntity entity = new ByteArrayEntity(body.getBytes(DEFAULT_ENCODING));
+    HttpEntity entity = new StringEntity(body, DEFAULT_ENCODING);
     httppost.setEntity(entity);
 
     return httpClient.execute(httppost);

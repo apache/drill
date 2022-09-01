@@ -43,7 +43,7 @@ import org.slf4j.LoggerFactory;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.ByteBuffer;
-import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 import java.time.Instant;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -143,7 +143,7 @@ public class ShpBatchReader implements ManagedReader<FileSchemaNegotiator> {
       fileReaderPrj.read(prjBuf);
       fileReaderPrj.close();
 
-      String wktReference = new String(prjBuf);
+      String wktReference = new String(prjBuf, StandardCharsets.UTF_8);
 
       Pattern pattern = Pattern.compile(SRID_PATTERN_TEXT);
       Matcher matcher = pattern.matcher(wktReference);
@@ -193,7 +193,7 @@ public class ShpBatchReader implements ManagedReader<FileSchemaNegotiator> {
       switch (field.getDataType()) {
         case CHAR:
           byte[] strType = (byte[]) dbfRow[i];
-          String stringValue = new String( strType, Charset.forName("utf-8")).trim();
+          String stringValue = new String( strType, StandardCharsets.UTF_8).trim();
           writeStringColumn(rowWriter, field.getName(), stringValue);
           break;
         case FLOAT:

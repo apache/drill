@@ -20,6 +20,8 @@ package org.apache.drill.exec.store.pcap;
 import org.apache.drill.shaded.guava.com.google.common.primitives.Ints;
 import org.apache.drill.shaded.guava.com.google.common.primitives.Shorts;
 
+import java.nio.charset.StandardCharsets;
+
 public class PcapFormatUtils {
 
   private static final String EMPTY_PACKET_PLACEHOLDER = "[]";
@@ -79,7 +81,7 @@ public class PcapFormatUtils {
       return EMPTY_PACKET_PLACEHOLDER;
     }
 
-    return new String(data).trim()
+    return new String(data, StandardCharsets.UTF_8).trim()
         .replaceAll("\\P{Print}", ".");
   }
 }

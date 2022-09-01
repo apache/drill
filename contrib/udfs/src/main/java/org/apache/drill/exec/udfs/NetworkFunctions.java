@@ -117,10 +117,11 @@ public class NetworkFunctions {
         org.apache.commons.net.util.SubnetUtils utils = new org.apache.commons.net.util.SubnetUtils(cidrString);
         String outputValue = utils.getInfo().getBroadcastAddress();
 
+        byte[] output = outputValue.getBytes(java.nio.charset.StandardCharsets.UTF_8);
         out.buffer = buffer;
         out.start = 0;
-        out.end = outputValue.getBytes().length;
-        buffer.setBytes(0, outputValue.getBytes());
+        out.end = output.length;
+        buffer.setBytes(0, output);
         out.isSet = 1;
       } catch (IllegalArgumentException e) {
         // return null is case of invalid input
@@ -153,10 +154,11 @@ public class NetworkFunctions {
         org.apache.commons.net.util.SubnetUtils utils = new org.apache.commons.net.util.SubnetUtils(cidrString);
         String outputValue = utils.getInfo().getNetmask();
 
+        byte[] output = outputValue.getBytes(java.nio.charset.StandardCharsets.UTF_8);
         out.buffer = buffer;
         out.start = 0;
-        out.end = outputValue.getBytes().length;
-        buffer.setBytes(0, outputValue.getBytes());
+        out.end = output.length;
+        buffer.setBytes(0, output);
         out.isSet = 1;
       } catch (IllegalArgumentException e) {
         // return null is case of invalid input
@@ -189,10 +191,11 @@ public class NetworkFunctions {
         org.apache.commons.net.util.SubnetUtils utils = new org.apache.commons.net.util.SubnetUtils(cidrString);
         String outputValue = utils.getInfo().getLowAddress();
 
+        byte[] output = outputValue.getBytes(java.nio.charset.StandardCharsets.UTF_8);
         out.buffer = buffer;
         out.start = 0;
-        out.end = outputValue.getBytes().length;
-        buffer.setBytes(0, outputValue.getBytes());
+        out.end = output.length;
+        buffer.setBytes(0, output);
         out.isSet = 1;
       } catch (IllegalArgumentException e) {
         // return null is case of invalid input
@@ -225,10 +228,11 @@ public class NetworkFunctions {
         org.apache.commons.net.util.SubnetUtils utils = new org.apache.commons.net.util.SubnetUtils(cidrString);
         String outputValue = utils.getInfo().getHighAddress();
 
+        byte[] output = outputValue.getBytes(java.nio.charset.StandardCharsets.UTF_8);
         out.buffer = buffer;
         out.start = 0;
-        out.end = outputValue.getBytes().length;
-        buffer.setBytes(0, outputValue.getBytes());
+        out.end = output.length;
+        buffer.setBytes(0, output);
         out.isSet = 1;
       } catch (IllegalArgumentException e) {
         // return null is case of invalid input
@@ -264,10 +268,11 @@ public class NetworkFunctions {
       } catch (Exception e) {
         // do nothing
       }
+      byte[] output = outputValue.getBytes(java.nio.charset.StandardCharsets.UTF_8);
       outputString.buffer = buffer;
       outputString.start = 0;
-      outputString.end = outputValue.getBytes().length;
-      buffer.setBytes(0, outputValue.getBytes());
+      outputString.end = output.length;
+      buffer.setBytes(0, output);
     }
   }
 
@@ -299,10 +304,11 @@ public class NetworkFunctions {
       } catch (Exception e) {
         // do nothing
       }
+      byte[] output = outputValue.getBytes(java.nio.charset.StandardCharsets.UTF_8);
       outputString.buffer = buffer;
       outputString.start = 0;
-      outputString.end = outputValue.getBytes().length;
-      buffer.setBytes(0, outputValue.getBytes());
+      outputString.end = output.length;
+      buffer.setBytes(0, output);
     }
   }
 
@@ -337,11 +343,11 @@ public class NetworkFunctions {
         inputInt = inputInt >> 8;
       }
       String outputValue = result.toString();
-
+      byte[] output = outputValue.getBytes(java.nio.charset.StandardCharsets.UTF_8);
       out.buffer = buffer;
       out.start = 0;
-      out.end = outputValue.getBytes().length;
-      buffer.setBytes(0, outputValue.getBytes());
+      out.end = output.length;
+      buffer.setBytes(0, output);
     }
   }
 

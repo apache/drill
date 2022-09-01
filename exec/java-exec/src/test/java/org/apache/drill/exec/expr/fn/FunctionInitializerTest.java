@@ -82,7 +82,8 @@ public class FunctionInitializerTest extends BaseTest {
         "import org.apache.drill.exec.expr.annotations.Output;",
         "import org.apache.drill.exec.expr.annotations.Param;",
         "import org.apache.drill.exec.expr.holders.VarCharHolder;",
-        "import javax.inject.Inject;"
+        "import javax.inject.Inject;",
+        "import java.nio.charset.StandardCharsets;"
     );
 
     assertEquals("List of imports should match", expectedImports, actualImports);

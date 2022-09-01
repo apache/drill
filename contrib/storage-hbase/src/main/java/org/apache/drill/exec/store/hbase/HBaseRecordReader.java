@@ -122,11 +122,11 @@ public class HBaseRecordReader extends AbstractRecordReader implements DrillHBas
         }
         rowKeyOnly = false;
         NameSegment root = column.getRootSegment();
-        byte[] family = root.getPath().getBytes();
+        byte[] family = root.getPath().getBytes(StandardCharsets.UTF_8);
         transformed.add(SchemaPath.getSimplePath(root.getPath()));
         PathSegment child = root.getChild();
         if (child != null && child.isNamed()) {
-          byte[] qualifier = child.getNameSegment().getPath().getBytes();
+          byte[] qualifier = child.getNameSegment().getPath().getBytes(StandardCharsets.UTF_8);
           hbaseScanColumnsOnly.addColumn(family, qualifier);
           if (!completeFamilies.contains(root.getPath())) {
             hbaseScan.addColumn(family, qualifier);
@@ -252,13 +252,13 @@ public class HBaseRecordReader extends AbstractRecordReader implements DrillHBas
           final int familyOffset = cell.getFamilyOffset();
           final int familyLength = cell.getFamilyLength();
           final byte[] familyArray = cell.getFamilyArray();
-          final MapVector mv = getOrCreateFamilyVector(new String(familyArray, familyOffset, familyLength), true);
+          final MapVector mv = getOrCreateFamilyVector(new String(familyArray, familyOffset, familyLength, StandardCharsets.UTF_8), true);
 
           final int qualifierOffset = cell.getQualifierOffset();
           final int qualifierLength = cell.getQualifierLength();
           final byte[] qualifierArray = cell.getQualifierArray();
           final NullableVarBinaryVector v = getOrCreateColumnVector(mv,
-              new String(qualifierArray, qualifierOffset, qualifierLength));
+              new String(qualifierArray, qualifierOffset, qualifierLength,StandardCharsets.UTF_8));
 
           final int valueOffset = cell.getValueOffset();
           final int valueLength = cell.getValueLength();

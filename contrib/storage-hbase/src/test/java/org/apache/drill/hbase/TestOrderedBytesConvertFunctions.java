@@ -22,6 +22,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.fail;
 
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -79,7 +80,7 @@ public class TestOrderedBytesConvertFunctions extends BaseTestQuery {
         ValueVector v = loader.iterator().next().getValueVector();
         for (int j = 0; j < v.getAccessor().getValueCount(); j++) {
           if  (v instanceof VarCharVector) {
-            res.add(new String(((VarCharVector) v).getAccessor().get(j)));
+            res.add(new String(((VarCharVector) v).getAccessor().get(j), StandardCharsets.UTF_8));
           } else {
             res.add(v.getAccessor().getObject(j));
           }

@@ -47,7 +47,6 @@ import org.apache.drill.exec.store.mapr.db.json.JsonTableGroupScan;
 import org.apache.hadoop.hbase.HConstants;
 import org.ojai.store.QueryCondition;
 
-import java.io.UnsupportedEncodingException;
 import java.util.Arrays;
 import java.util.ArrayList;
 import java.util.Iterator;
@@ -846,22 +845,15 @@ public class MapRDBStatistics implements Statistics {
           if (isMaxVal) {
             stopKey = HConstants.EMPTY_END_ROW;
           }
-          try {
-            // TODO: This maybe a potential bug since we assume UTF-8 encoding. However, we follow the
-            // current DB implementation. See HBaseFilterBuilder.createHBaseScanSpec "like" CASE statement
-            RexLiteral startKeyLiteral = builder.makeLiteral(new String(startKey,
-                Charsets.UTF_8.toString()));
-            RexLiteral stopKeyLiteral = builder.makeLiteral(new String(stopKey,
-                Charsets.UTF_8.toString()));
-            if (arg != null) {
-              RexNode startPred = builder.makeCall(SqlStdOperatorTable.GREATER_THAN_OR_EQUAL,
-                  arg, startKeyLiteral);
-              RexNode stopPred = builder.makeCall(SqlStdOperatorTable.LESS_THAN, arg, stopKeyLiteral);
-              return builder.makeCall(SqlStdOperatorTable.AND, startPred, stopPred);
-            }
-          } catch (UnsupportedEncodingException ex) {
-            // Encoding not supported - Do nothing!
-            logger.debug("Statistics: convertLikeToRange: Unsupported Encoding Exception -> {}", ex.getMessage());
+          // TODO: This maybe a potential bug since we assume UTF-8 encoding. However, we follow the
+          // current DB implementation. See HBaseFilterBuilder.createHBaseScanSpec "like" CASE statement
+          RexLiteral startKeyLiteral = builder.makeLiteral(new String(startKey, Charsets.UTF_8));
+          RexLiteral stopKeyLiteral = builder.makeLiteral(new String(stopKey, Charsets.UTF_8));
+          if (arg != null) {
+            RexNode startPred = builder.makeCall(SqlStdOperatorTable.GREATER_THAN_OR_EQUAL,
+                arg, startKeyLiteral);
+            RexNode stopPred = builder.makeCall(SqlStdOperatorTable.LESS_THAN, arg, stopKeyLiteral);
+            return builder.makeCall(SqlStdOperatorTable.AND, startPred, stopPred);
           }
         }
       }

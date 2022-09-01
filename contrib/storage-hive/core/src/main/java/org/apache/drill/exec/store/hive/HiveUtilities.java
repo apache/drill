@@ -88,6 +88,7 @@ import org.slf4j.LoggerFactory;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
+import java.nio.charset.StandardCharsets;
 import java.sql.Date;
 import java.sql.Timestamp;
 import java.util.List;
@@ -124,7 +125,7 @@ public class HiveUtilities {
     try {
       switch (pCat) {
         case BINARY:
-          return value.getBytes();
+          return value.getBytes(StandardCharsets.UTF_8);
         case BOOLEAN:
           return Boolean.parseBoolean(value);
         case DECIMAL: {
@@ -143,9 +144,9 @@ public class HiveUtilities {
           return Long.parseLong(value);
         case STRING:
         case VARCHAR:
-          return value.getBytes();
+          return value.getBytes(StandardCharsets.UTF_8);
         case CHAR:
-          return value.trim().getBytes();
+          return value.trim().getBytes(StandardCharsets.UTF_8);
         case TIMESTAMP:
           return Timestamp.valueOf(value);
         case DATE:

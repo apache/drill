@@ -17,6 +17,7 @@
  */
 package org.apache.drill.exec.fn.hive;
 
+import java.nio.charset.StandardCharsets;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.Arrays;
@@ -57,7 +58,7 @@ public class TestInbuiltHiveUDFs extends HiveTestBase {
         .sqlQuery("SELECT encode(varchar_field, 'UTF-8') as rst from hive.readtest")
         .unOrdered()
         .baselineColumns("rst")
-        .baselineValues("varcharfield".getBytes())
+        .baselineValues("varcharfield".getBytes(StandardCharsets.UTF_8))
         .baselineValues(new Object[] { null })
         .go();
   }

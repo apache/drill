@@ -39,8 +39,8 @@ import org.apache.drill.exec.expr.annotations.Param;
 import org.apache.drill.exec.expr.annotations.Workspace;
 import org.apache.drill.exec.expr.holders.*;
 import org.apache.drill.exec.record.RecordBatch;
+
 import javax.inject.Inject;
-import io.netty.buffer.DrillBuf;
 
 /*
  * This class is generated using freemarker and the ${.template_name} template.
@@ -66,7 +66,7 @@ public class Cast${type.from}${type.to} implements DrillSimpleFunc{
     out.buffer = buffer;
     out.start = 0;
     out.end = Math.min((int)len.value, istr.length()); // truncate if target type has length smaller than that of input's string
-    out.buffer.setBytes(0, istr.substring(0,out.end).getBytes());      
+    out.buffer.setBytes(0, istr.substring(0,out.end).getBytes(java.nio.charset.StandardCharsets.UTF_8));
   }
 }
 

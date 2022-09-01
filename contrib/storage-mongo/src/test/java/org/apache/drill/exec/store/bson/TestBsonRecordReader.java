@@ -24,6 +24,7 @@ import static org.junit.Assert.assertTrue;
 
 import java.io.IOException;
 import java.math.BigDecimal;
+import java.nio.charset.StandardCharsets;
 import java.time.ZoneOffset;
 
 import org.apache.drill.exec.memory.RootAllocator;
@@ -234,10 +235,10 @@ public class TestBsonRecordReader extends BaseTest {
     BsonDocument bsonDoc = new BsonDocument();
     // Binary
     // String
-    byte[] bytes = "binaryValue".getBytes();
+    byte[] bytes = "binaryValue".getBytes(StandardCharsets.UTF_8);
     bsonDoc.append("binaryKey", new BsonBinary(BsonBinarySubType.BINARY, bytes));
     // String
-    byte[] bytesString = "binaryStringValue".getBytes();
+    byte[] bytesString = "binaryStringValue".getBytes(StandardCharsets.UTF_8);
     bsonDoc.append("binaryStringKey", new BsonBinary((byte) 2, bytesString));
     // Double
     byte[] bytesDouble = new byte[8];

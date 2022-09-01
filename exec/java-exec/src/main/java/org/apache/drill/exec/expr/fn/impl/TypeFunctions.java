@@ -54,7 +54,7 @@ public class TypeFunctions {
     public void eval() {
 
       String typeName = org.apache.drill.common.types.Types.getExtendedSqlTypeName(input.getType());
-      byte[] type = typeName.getBytes();
+      byte[] type = typeName.getBytes(java.nio.charset.StandardCharsets.UTF_8);
       buf = buf.reallocIfNeeded(type.length);
       buf.setBytes(0, type);
       out.buffer = buf;
@@ -81,7 +81,7 @@ public class TypeFunctions {
     @Override
     public void eval() {
       String typeName = input.getVectorType().name();
-      byte[] type = typeName.getBytes();
+      byte[] type = typeName.getBytes(java.nio.charset.StandardCharsets.UTF_8);
       buf = buf.reallocIfNeeded(type.length);
       buf.setBytes(0, type);
       out.buffer = buf;
@@ -109,7 +109,7 @@ public class TypeFunctions {
     public void eval() {
       String typeName = org.apache.drill.common.types.Types.getSqlModeName(
           input.getType());
-      byte[] type = typeName.getBytes();
+      byte[] type = typeName.getBytes(java.nio.charset.StandardCharsets.UTF_8);
       buf = buf.reallocIfNeeded(type.length);
       buf.setBytes(0, type);
       out.buffer = buf;

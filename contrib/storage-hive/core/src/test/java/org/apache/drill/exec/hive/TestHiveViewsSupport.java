@@ -18,6 +18,7 @@
 package org.apache.drill.exec.hive;
 
 import java.math.BigDecimal;
+import java.nio.charset.StandardCharsets;
 
 import org.apache.drill.categories.HiveStorageTest;
 import org.apache.drill.categories.SlowTest;
@@ -138,7 +139,7 @@ public class TestHiveViewsSupport extends HiveTestBase {
             "date_part",
             "char_part")
         .baselineValues(
-            "binaryfield".getBytes(),
+            "binaryfield".getBytes(StandardCharsets.UTF_8),
             false,
             34,
             new BigDecimal("66"),

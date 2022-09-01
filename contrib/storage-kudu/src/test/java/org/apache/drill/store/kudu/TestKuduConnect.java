@@ -17,6 +17,7 @@
  */
 package org.apache.drill.store.kudu;
 
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -84,7 +85,7 @@ public class TestKuduConnect extends BaseTest {
         Insert insert = table.newInsert();
         PartialRow row = insert.getRow();
         row.addInt(0, i);
-        row.addBinary(1, ("Row " + i).getBytes());
+        row.addBinary(1, ("Row " + i).getBytes(StandardCharsets.UTF_8));
         row.addBoolean(2, i % 2 == 0);
         row.addFloat(3, i + 0.01f);
         row.addString(4, ("Row " + i));

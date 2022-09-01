@@ -53,6 +53,7 @@ import org.apache.parquet.example.data.simple.NanoTime;
 import org.apache.parquet.io.api.Binary;
 import org.joda.time.DateTimeZone;
 
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -404,8 +405,8 @@ public class ParquetReaderUtility {
       Object minValue = columnMetadata.getMinValue();
       Object maxValue = columnMetadata.getMaxValue();
       if (minValue instanceof String && maxValue instanceof String) {
-        minBytes = ((String) minValue).getBytes();
-        maxBytes = ((String) maxValue).getBytes();
+        minBytes = ((String) minValue).getBytes(StandardCharsets.UTF_8);
+        maxBytes = ((String) maxValue).getBytes(StandardCharsets.UTF_8);
         if (needsDecoding) {
           minBytes = Base64.decodeBase64(minBytes);
           maxBytes = hasSingleValue ? minBytes : Base64.decodeBase64(maxBytes);

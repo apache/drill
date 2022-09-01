@@ -89,7 +89,7 @@ public class HBaseSchemaFactory extends AbstractSchemaFactory {
         HTableDescriptor[] tables = admin.listTables();
         Set<String> tableNames = Sets.newHashSet();
         for (HTableDescriptor table : tables) {
-          tableNames.add(new String(table.getTableName().getNameAsString()));
+          tableNames.add(table.getTableName().getNameAsString());
         }
         return tableNames;
       } catch (Exception e) {

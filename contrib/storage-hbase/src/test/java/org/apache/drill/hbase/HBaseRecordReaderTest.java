@@ -22,6 +22,8 @@ import org.apache.drill.categories.SlowTest;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
+import java.nio.charset.StandardCharsets;
+
 import static org.apache.drill.test.TestBuilder.mapOf;
 
 @Category({SlowTest.class, HbaseStorageTest.class})
@@ -54,21 +56,21 @@ public class HBaseRecordReaderTest extends BaseHBaseTest {
       .baselineValues(
         "a2",
         mapOf(
-          "c1", "11".getBytes(),
-          "c2", "12".getBytes(),
-          "c3", "13".getBytes()))
+          "c1", "11".getBytes(StandardCharsets.UTF_8),
+          "c2", "12".getBytes(StandardCharsets.UTF_8),
+          "c3", "13".getBytes(StandardCharsets.UTF_8)))
       .baselineValues(
         "a1",
         mapOf(
-          "c1", "21".getBytes(),
-          "c2", "22".getBytes(),
-          "c3", "23".getBytes()))
+          "c1", "21".getBytes(StandardCharsets.UTF_8),
+          "c2", "22".getBytes(StandardCharsets.UTF_8),
+          "c3", "23".getBytes(StandardCharsets.UTF_8)))
       .baselineValues(
         "a3",
         mapOf(
-          "c1", "31".getBytes(),
-          "c2", "32".getBytes(),
-          "c3", "33".getBytes()))
+          "c1", "31".getBytes(StandardCharsets.UTF_8),
+          "c2", "32".getBytes(StandardCharsets.UTF_8),
+          "c3", "33".getBytes(StandardCharsets.UTF_8)))
       .go();
   }
 
@@ -79,17 +81,17 @@ public class HBaseRecordReaderTest extends BaseHBaseTest {
       .unOrdered()
       .baselineColumns("row_key", "F", "f0")
       .baselineValues(
-        "a1".getBytes(),
-        mapOf("c3", "23".getBytes()),
-        mapOf("c1", "21".getBytes(), "c2", "22".getBytes()))
+        "a1".getBytes(StandardCharsets.UTF_8),
+        mapOf("c3", "23".getBytes(StandardCharsets.UTF_8)),
+        mapOf("c1", "21".getBytes(StandardCharsets.UTF_8), "c2", "22".getBytes(StandardCharsets.UTF_8)))
       .baselineValues(
-        "a2".getBytes(),
-        mapOf("c3", "13".getBytes()),
-        mapOf("c1", "11".getBytes(), "c2", "12".getBytes()))
+        "a2".getBytes(StandardCharsets.UTF_8),
+        mapOf("c3", "13".getBytes(StandardCharsets.UTF_8)),
+        mapOf("c1", "11".getBytes(StandardCharsets.UTF_8), "c2", "12".getBytes(StandardCharsets.UTF_8)))
       .baselineValues(
-        "a3".getBytes(),
-        mapOf("c3", "33".getBytes()),
-        mapOf("c1", "31".getBytes(), "c2", "32".getBytes()))
+        "a3".getBytes(StandardCharsets.UTF_8),
+        mapOf("c3", "33".getBytes(StandardCharsets.UTF_8)),
+        mapOf("c1", "31".getBytes(StandardCharsets.UTF_8), "c2", "32".getBytes(StandardCharsets.UTF_8)))
       .go();
   }
 

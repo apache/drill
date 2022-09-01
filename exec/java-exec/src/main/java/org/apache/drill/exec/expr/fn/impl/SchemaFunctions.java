@@ -110,7 +110,7 @@ public class SchemaFunctions {
         schemaBuilder.add((org.apache.drill.exec.record.MaterializedField) materializedField);
       }
 
-      byte[] type = schemaBuilder.build().jsonString().getBytes();
+      byte[] type = schemaBuilder.build().jsonString().getBytes(java.nio.charset.StandardCharsets.UTF_8);
       buf = buf.reallocIfNeeded(type.length);
       buf.setBytes(0, type);
       out.buffer = buf;
@@ -173,7 +173,7 @@ public class SchemaFunctions {
       org.apache.drill.exec.record.metadata.TupleMetadata resolvedSchema =
           (org.apache.drill.exec.record.metadata.TupleMetadata) schemaHolder.obj;
 
-      byte[] type = resolvedSchema.jsonString().getBytes();
+      byte[] type = resolvedSchema.jsonString().getBytes(java.nio.charset.StandardCharsets.UTF_8);
       buf = buf.reallocIfNeeded(type.length);
       buf.setBytes(0, type);
       out.buffer = buf;
@@ -227,7 +227,7 @@ public class SchemaFunctions {
       org.apache.drill.exec.record.metadata.TupleMetadata resolvedSchema =
           (org.apache.drill.exec.record.metadata.TupleMetadata) schemaHolder.obj;
 
-      byte[] type = resolvedSchema.jsonString().getBytes();
+      byte[] type = resolvedSchema.jsonString().getBytes(java.nio.charset.StandardCharsets.UTF_8);
       buf = buf.reallocIfNeeded(type.length);
       buf.setBytes(0, type);
       out.buffer = buf;

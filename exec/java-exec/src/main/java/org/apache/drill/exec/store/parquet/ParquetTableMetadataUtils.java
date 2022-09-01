@@ -62,6 +62,7 @@ import org.joda.time.DateTimeConstants;
 
 import java.math.BigDecimal;
 import java.math.BigInteger;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -378,12 +379,12 @@ public class ParquetTableMetadataUtils {
     } else if (value instanceof byte[]) {
       return (byte[]) value;
     } else if (value instanceof String) { // value is obtained from metadata cache v2+
-      return ((String) value).getBytes();
+      return ((String) value).getBytes(StandardCharsets.UTF_8);
     } else if (value instanceof Map) { // value is obtained from metadata cache v1
       @SuppressWarnings("unchecked")
       String bytesString = ((Map<String,String>) value).get("bytes");
       if (bytesString != null) {
-        return bytesString.getBytes();
+        return bytesString.getBytes(StandardCharsets.UTF_8);
       }
     } else if (value instanceof Long) {
       return Longs.toByteArray((Long) value);
@@ -437,7 +438,7 @@ public class ParquetTableMetadataUtils {
     /* else if (value instanceof byte[]) {
       return new BigInteger((byte[]) value).floatValue();
     } else if (value instanceof Binary) {
-      return new BigInteger(((Binary) value).getBytes()).floatValue();
+      return new BigInteger(((Binary) value).getBytes(StandardCharsets.UTF_8)).floatValue();
     }*/
     throw new UnsupportedOperationException(String.format("Cannot obtain Integer using value %s", value));
   }
@@ -452,7 +453,7 @@ public class ParquetTableMetadataUtils {
     /* else if (value instanceof byte[]) {
       return new BigInteger((byte[]) value).doubleValue();
     } else if (value instanceof Binary) {
-      return new BigInteger(((Binary) value).getBytes()).doubleValue();
+      return new BigInteger(((Binary) value).getBytes(StandardCharsets.UTF_8)).doubleValue();
     }*/
     throw new UnsupportedOperationException(String.format("Cannot obtain Integer using value %s", value));
   }

@@ -45,7 +45,7 @@ public class CastVarCharVar16Char implements DrillSimpleFunc {
 
   @Override
   public void setup() {
-    charset = java.nio.charset.Charset.forName("UTF-16");
+    charset = java.nio.charset.StandardCharsets.UTF_16;
   }
 
   @Override

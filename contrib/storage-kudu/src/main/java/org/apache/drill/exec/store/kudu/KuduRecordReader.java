@@ -18,6 +18,7 @@
 package org.apache.drill.exec.store.kudu;
 
 import java.nio.ByteBuffer;
+import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.Map;
 
@@ -240,7 +241,7 @@ public class KuduRecordReader extends AbstractRecordReader {
         break;
       }
       case STRING: {
-        ByteBuffer value = ByteBuffer.wrap(result.getString(pci.index).getBytes());
+        ByteBuffer value = ByteBuffer.wrap(result.getString(pci.index).getBytes(StandardCharsets.UTF_8));
         if (pci.kuduColumn.isNullable()) {
           ((NullableVarCharVector.Mutator) pci.vv.getMutator())
               .setSafe(rowIndex, value, 0, value.remaining());

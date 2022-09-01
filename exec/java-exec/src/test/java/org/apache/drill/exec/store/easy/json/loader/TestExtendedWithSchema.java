@@ -22,6 +22,7 @@ import static org.apache.drill.test.rowSet.RowSetUtilities.intArray;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 
+import java.nio.charset.StandardCharsets;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -438,7 +439,7 @@ public class TestExtendedWithSchema extends BaseJsonLoaderTest {
     RowSet results = loader.next();
     assertNotNull(results);
 
-    byte[] bytes = "Drill".getBytes();
+    byte[] bytes = "Drill".getBytes(StandardCharsets.UTF_8);
     RowSet expected = fixture.rowSetBuilder(providedSchema)
         .addRow(bytes, bytes, bytes,  null, bytes, bytes, bytes, bytes)
         .addRow( null, bytes, bytes, bytes, bytes, bytes, bytes, bytes)

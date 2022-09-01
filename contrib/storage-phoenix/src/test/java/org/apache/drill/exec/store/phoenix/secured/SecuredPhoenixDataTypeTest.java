@@ -30,6 +30,7 @@ import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
 import java.math.BigDecimal;
+import java.nio.charset.StandardCharsets;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.time.LocalTime;
@@ -88,7 +89,7 @@ public class SecuredPhoenixDataTypeTest extends SecuredPhoenixBaseTest {
             LocalDate.parse("2021-12-12"),
             LocalTime.parse("12:12:12"),
             Instant.ofEpochMilli(1639311132000l),
-            "a_b_c_d_e_".getBytes(), "12345".getBytes(),
+            "a_b_c_d_e_".getBytes(StandardCharsets.UTF_8), "12345".getBytes(StandardCharsets.UTF_8),
             Boolean.TRUE)
         .build();
 
