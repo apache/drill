@@ -29,7 +29,7 @@ import javax.inject.Inject;
 
 public class ThreatHuntingFunctions {
   /**
-   * Punctuation pattern is useful for comparing log entries.  It extracts the all the punctuation and returns
+   * Punctuation pattern is useful for comparing log entries.  It extracts all the punctuation and returns
    * that pattern.  Spaces are replaced with an underscore.
    * <p>
    * Usage: SELECT punctuation_pattern( string ) FROM...
@@ -62,7 +62,7 @@ public class ThreatHuntingFunctions {
 
       out.buffer = buffer;
       out.start = 0;
-      out.end = punctuationPattern.getBytes().length;
+      out.end = punctuationPattern.getBytes(java.nio.charset.StandardCharsets.UTF_8).length;
       buffer.setBytes(0, punctuationPattern.getBytes());
     }
   }
