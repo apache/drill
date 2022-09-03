@@ -188,60 +188,6 @@ public class ResolverTypePrecedence {
     return Float.POSITIVE_INFINITY;
   }
 
-  public static final Map<MinorType, Integer> oldPrecedenceMap;
-
-  static {
-    /* The oldPrecedenceMap is used to decide whether it's allowed to implicitly "promote"
-     * one type to another type.
-     *
-     * The order that each type is inserted into HASHMAP decides its precedence.
-     * First in ==> lowest precedence.
-     * A type of lower precedence can be implicitly "promoted" to type of higher precedence.
-     * For instance, NULL could be promoted to any other type;
-     * tinyint could be promoted into int; but int could NOT be promoted into tinyint (due to possible precision loss).
-     */
-    int i = 0;
-    oldPrecedenceMap = new HashMap<>();
-    oldPrecedenceMap.put(MinorType.NULL, i += 2);       // NULL is legal to implicitly be promoted to any other type
-    oldPrecedenceMap.put(MinorType.FIXEDBINARY, i += 2); // Fixed-length is promoted to var length
-    oldPrecedenceMap.put(MinorType.VARBINARY, i += 2);
-    oldPrecedenceMap.put(MinorType.FIXEDCHAR, i += 2);
-    oldPrecedenceMap.put(MinorType.VARCHAR, i += 2);
-    oldPrecedenceMap.put(MinorType.FIXED16CHAR, i += 2);
-    oldPrecedenceMap.put(MinorType.VAR16CHAR, i += 2);
-    oldPrecedenceMap.put(MinorType.BIT, i += 2);
-    oldPrecedenceMap.put(MinorType.TINYINT, i += 2);   //type with few bytes is promoted to type with more bytes ==> no data loss.
-    oldPrecedenceMap.put(MinorType.UINT1, i += 2);     //signed is legal to implicitly be promoted to unsigned.
-    oldPrecedenceMap.put(MinorType.SMALLINT, i += 2);
-    oldPrecedenceMap.put(MinorType.UINT2, i += 2);
-    oldPrecedenceMap.put(MinorType.INT, i += 2);
-    oldPrecedenceMap.put(MinorType.UINT4, i += 2);
-    oldPrecedenceMap.put(MinorType.BIGINT, i += 2);
-    oldPrecedenceMap.put(MinorType.UINT8, i += 2);
-    oldPrecedenceMap.put(MinorType.MONEY, i += 2);
-    oldPrecedenceMap.put(MinorType.FLOAT4, i += 2);
-    oldPrecedenceMap.put(MinorType.DECIMAL9, i += 2);
-    oldPrecedenceMap.put(MinorType.DECIMAL18, i += 2);
-    oldPrecedenceMap.put(MinorType.DECIMAL28DENSE, i += 2);
-    oldPrecedenceMap.put(MinorType.DECIMAL28SPARSE, i += 2);
-    oldPrecedenceMap.put(MinorType.DECIMAL38DENSE, i += 2);
-    oldPrecedenceMap.put(MinorType.DECIMAL38SPARSE, i += 2);
-    oldPrecedenceMap.put(MinorType.VARDECIMAL, i += 2);
-    oldPrecedenceMap.put(MinorType.FLOAT8, i += 2);
-    oldPrecedenceMap.put(MinorType.DATE, i += 2);
-    oldPrecedenceMap.put(MinorType.TIMESTAMP, i += 2);
-    oldPrecedenceMap.put(MinorType.TIMETZ, i += 2);
-    oldPrecedenceMap.put(MinorType.TIMESTAMPTZ, i += 2);
-    oldPrecedenceMap.put(MinorType.TIME, i += 2);
-    oldPrecedenceMap.put(MinorType.INTERVALDAY, i+= 2);
-    oldPrecedenceMap.put(MinorType.INTERVALYEAR, i+= 2);
-    oldPrecedenceMap.put(MinorType.INTERVAL, i+= 2);
-    oldPrecedenceMap.put(MinorType.MAP, i += 2);
-    oldPrecedenceMap.put(MinorType.DICT, i += 2);
-    oldPrecedenceMap.put(MinorType.LIST, i += 2);
-    oldPrecedenceMap.put(MinorType.UNION, i += 2);
-  }
-
   /**
    * A struct to hold working data used by Dijkstra's algorithm and allowing
    * comparison based on total distance from the source vertex to this vertex.
