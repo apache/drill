@@ -33,6 +33,10 @@ public class ResolverTypePrecedence {
     MinorType.UINT2
   );
 
+  // Casting cost values are orders of magnitude intended only to capture that
+  // one cast is cheaper or less risky than another. They do not try to reflect
+  // any accurate information about how much a cast costs computationally.
+
   // Cost of casting between primitive types
   public static final float PRIMITIVE_TYPE_COST = 1f;
   // Base cost of casting
