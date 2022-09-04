@@ -42,10 +42,10 @@ public class HDF5TimestampDataWriter extends HDF5DataWriter {
 
   @Override
   public boolean write() {
-    if (counter > data.length) {
+    if (!hasNext()) {
       return false;
     } else {
-      colWriter.setTimestamp(Instant.ofEpochMilli(data[counter++])); // lgtm [java/index-out-of-bounds]
+      colWriter.setTimestamp(Instant.ofEpochMilli(data[counter++]));
       return true;
     }
   }

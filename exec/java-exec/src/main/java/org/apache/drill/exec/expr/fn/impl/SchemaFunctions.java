@@ -68,7 +68,7 @@ public class SchemaFunctions {
         // Janino cannot infer type
         org.apache.drill.exec.record.MaterializedField materializedField =
             (org.apache.drill.exec.record.MaterializedField) columns.get(columnName);
-        org.apache.drill.common.types.TypeProtos.MajorType type = inputs[i + 1].getType(); // lgtm [java/index-out-of-bounds]
+        org.apache.drill.common.types.TypeProtos.MajorType type = inputs[i + 1].getType();
         if (materializedField != null && !materializedField.getType().equals(type)) {
           org.apache.drill.common.types.TypeProtos.MinorType leastRestrictiveType =
               org.apache.drill.exec.resolver.TypeCastRules.getLeastRestrictiveType(
@@ -85,7 +85,7 @@ public class SchemaFunctions {
           columns.put(columnName, clone);
         } else {
           if (type.getMinorType() == org.apache.drill.common.types.TypeProtos.MinorType.MAP) {
-            columns.put(columnName, inputs[i + 1].getField()); // lgtm [java/index-out-of-bounds]
+            columns.put(columnName, inputs[i + 1].getField());
           } else {
             columns.put(columnName, org.apache.drill.exec.record.MaterializedField.create(columnName, type));
           }
