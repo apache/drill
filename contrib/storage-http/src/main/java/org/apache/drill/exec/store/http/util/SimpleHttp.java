@@ -35,7 +35,6 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.drill.common.exceptions.EmptyErrorContext;
 import org.apache.drill.common.logical.OAuthConfig;
 import org.apache.drill.common.logical.StoragePluginConfig.AuthMode;
-import org.apache.drill.common.map.CaseInsensitiveMap;
 import org.apache.drill.common.exceptions.CustomErrorContext;
 import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.exec.ExecConstants;
