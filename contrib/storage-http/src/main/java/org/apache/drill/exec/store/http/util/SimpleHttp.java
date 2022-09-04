@@ -712,7 +712,6 @@ public class SimpleHttp {
         .message("API Query with URL Parameters must be populated.")
         .build(logger);
     }
-    CaseInsensitiveMap<String>caseInsensitiveFilterMap = (CaseInsensitiveMap<String>)filters;
 
     List<String> params = SimpleHttp.getURLParameters(url);
     String tempUrl = SimpleHttp.decodedURL(url);
@@ -726,7 +725,7 @@ public class SimpleHttp {
       //     of providing helpful errors in strange cases, it is there.
 
 
-      String value = caseInsensitiveFilterMap.get(param);
+      String value = filters.get(param);
 
       // Check and see if there is a default for this parameter. If not throw an error.
       if (StringUtils.isEmpty(value)) {
