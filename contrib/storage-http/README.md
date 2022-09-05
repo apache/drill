@@ -305,6 +305,9 @@ on 400 series errors, `false` will return an empty result set (with implicit fie
 Default is `true`, but when set to false, Drill will trust all SSL certificates.  Useful for debugging or on internal corporate networks using self-signed certificates or 
 private certificate authorities.
 
+#### caseSensitiveFilters
+Some APIs are case sensitive with the fields which are pushed down.  If the endpoint that you are working with is in fact case sensitive, simply set this to `true`.  Defaults to `false`.
+
 ## Usage
 
 This plugin is different from other plugins in that it the table component of the `FROM` clause
@@ -576,9 +579,9 @@ ORDER BY issue_count DESC
    you may encounter errors or empty responses if you are counting on the endpoint for
    redirection.
 
-2. At this time, the plugin does not support any authentication other than basic authentication.
+~~2. At this time, the plugin does not support any authentication other than basic authentication.~~
 
-3. This plugin does not implement join filter pushdowns (only constant plushdowns are
+3. This plugin does not implement join filter pushdowns (only constant pushdowns are
    supported). Join pushdown has the potential to improve performance if you use the HTTP service
    joined to another table.
 
