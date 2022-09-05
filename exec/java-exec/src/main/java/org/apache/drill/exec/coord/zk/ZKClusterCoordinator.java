@@ -24,6 +24,7 @@ import java.util.Collections;
 import java.util.ArrayList;
 import java.util.Set;
 import java.util.HashSet;
+import java.util.Objects;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
@@ -32,6 +33,7 @@ import java.util.regex.Pattern;
 
 import org.apache.curator.framework.imps.DefaultACLProvider;
 import org.apache.drill.shaded.guava.com.google.common.base.Throwables;
+import org.apache.zookeeper.data.Stat;
 import org.apache.commons.collections.keyvalue.MultiKey;
 import org.apache.curator.RetryPolicy;
 import org.apache.curator.framework.CuratorFramework;
@@ -40,6 +42,7 @@ import org.apache.curator.framework.api.ACLProvider;
 import org.apache.curator.framework.state.ConnectionState;
 import org.apache.curator.framework.state.ConnectionStateListener;
 import org.apache.curator.retry.RetryNTimes;
+import org.apache.curator.utils.ZKPaths;
 import org.apache.curator.x.discovery.ServiceCache;
 import org.apache.curator.x.discovery.ServiceDiscovery;
 import org.apache.curator.x.discovery.ServiceDiscoveryBuilder;
@@ -78,15 +81,17 @@ public class ZKClusterCoordinator extends ClusterCoordinator {
   private ConcurrentHashMap<MultiKey, DrillbitEndpoint> endpointsMap = new ConcurrentHashMap<MultiKey,DrillbitEndpoint>();
   private static final Pattern ZK_COMPLEX_STRING = Pattern.compile("(^.*?)/(.*)/([^/]*)$");
 
-  public ZKClusterCoordinator(DrillConfig config, String connect) {
-    this(config, connect, new DefaultACLProvider());
+  public ZKClusterCoordinator(DrillConfig config, String connect) throws Exception {
+    // As a Client, the namespace (aka zkRoot) should not be created.
+    this(config, connect, false, new DefaultACLProvider());
   }
 
-  public ZKClusterCoordinator(DrillConfig config, ACLProvider aclProvider) {
-    this(config, null, aclProvider);
+  public ZKClusterCoordinator(DrillConfig config, ACLProvider aclProvider) throws Exception {
+    // As a Drillbit, it's required to create the zkRoot.
+    this(config, null, true, aclProvider);
   }
 
-  public ZKClusterCoordinator(DrillConfig config, String connect, ACLProvider aclProvider) {
+  public ZKClusterCoordinator(DrillConfig config, String connect, boolean createNamespace, ACLProvider aclProvider) throws Exception {
 
     connect = connect == null || connect.isEmpty() ? config.getString(ExecConstants.ZK_CONNECTION) : connect;
     String clusterId = config.getString(ExecConstants.SERVICE_NAME);
@@ -106,13 +111,23 @@ public class ZKClusterCoordinator extends ClusterCoordinator {
 
     RetryPolicy rp = new RetryNTimes(config.getInt(ExecConstants.ZK_RETRY_TIMES),
       config.getInt(ExecConstants.ZK_RETRY_DELAY));
-    curator = CuratorFrameworkFactory.builder()
-      .namespace(zkRoot)
+
+    CuratorFrameworkFactory.Builder curatorBuilder = CuratorFrameworkFactory.builder()
       .connectionTimeoutMs(config.getInt(ExecConstants.ZK_TIMEOUT))
       .retryPolicy(rp)
       .connectString(connect)
-      .aclProvider(aclProvider)
-      .build();
+      .aclProvider(aclProvider);
+
+    if (!createNamespace) { // Using ZK style in client, the root path should exist.
+      try (CuratorFramework client = curatorBuilder.build()) {
+        client.start();
+        Stat stat = client.checkExists().forPath(ZKPaths.PATH_SEPARATOR + zkRoot);
+        Objects.requireNonNull(stat, "The root path does not exist in the Zookeeper.");
+      }
+    }
+
+    curator = curatorBuilder.namespace(zkRoot).build();
+
     curator.getConnectionStateListenable().addListener(new InitialConnectionListener());
     curator.start();
     discovery = newDiscovery();
@@ -219,6 +234,7 @@ public class ZKClusterCoordinator extends ClusterCoordinator {
    * triggered. State information is used during planning and
    * initial client connection phases.
    */
+  @Override
   public RegistrationHandle update(RegistrationHandle handle, State state) {
     ZKRegistrationHandle h = (ZKRegistrationHandle) handle;
       try {
@@ -348,7 +364,7 @@ public class ZKClusterCoordinator extends ClusterCoordinator {
   protected ServiceDiscovery<DrillbitEndpoint> newDiscovery() {
     return ServiceDiscoveryBuilder
       .builder(DrillbitEndpoint.class)
-      .basePath("/")
+      .basePath(ZKPaths.PATH_SEPARATOR)
       .client(curator)
       .serializer(DrillServiceInstanceHelper.SERIALIZER)
       .build();

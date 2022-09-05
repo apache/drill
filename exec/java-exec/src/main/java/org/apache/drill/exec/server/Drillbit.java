@@ -18,6 +18,7 @@
 package org.apache.drill.exec.server;
 
 import org.apache.curator.framework.api.ACLProvider;
+import org.apache.curator.utils.ZKPaths;
 import org.apache.drill.common.AutoCloseables;
 import org.apache.drill.common.StackTrace;
 import org.apache.drill.common.concurrent.ExtendedLatch;
@@ -179,7 +180,7 @@ public class Drillbit implements AutoCloseable {
     } else {
       String clusterId = config.getString(ExecConstants.SERVICE_NAME);
       String zkRoot = config.getString(ExecConstants.ZK_ROOT);
-      String drillClusterPath = "/" + zkRoot + "/" +  clusterId;
+      String drillClusterPath = ZKPaths.PATH_SEPARATOR + zkRoot + ZKPaths.PATH_SEPARATOR + clusterId;
       ACLProvider aclProvider = ZKACLProviderFactory.getACLProvider(config, drillClusterPath, context);
       coord = new ZKClusterCoordinator(config, aclProvider);
       storeProvider = new PersistentStoreRegistry<>(this.coord, config).newPStoreProvider();
