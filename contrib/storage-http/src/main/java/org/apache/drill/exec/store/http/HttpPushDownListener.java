@@ -35,6 +35,7 @@ import org.apache.drill.exec.store.http.HttpPaginatorConfig.PaginatorMethod;
 import org.apache.drill.exec.store.http.util.SimpleHttp;
 
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -175,7 +176,13 @@ public class HttpPushDownListener implements FilterPushDownListener {
      */
     @Override
     public Pair<GroupScan, List<RexNode>> transform(AndNode andNode) {
-      Map<String, String> filters = CaseInsensitiveMap.newHashMap();
+      Map<String, String> filters;
+      if (groupScan.getHttpConfig().caseSensitiveFilters()) {
+        filters = new HashMap<>();
+      } else {
+        filters = CaseInsensitiveMap.newHashMap();
+      }
+
       double selectivity = 1;
       for (ExprNode expr : andNode.children) {
         ColRelOpConstNode relOp = (ColRelOpConstNode) expr;

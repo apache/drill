@@ -35,7 +35,6 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.drill.common.exceptions.EmptyErrorContext;
 import org.apache.drill.common.logical.OAuthConfig;
 import org.apache.drill.common.logical.StoragePluginConfig.AuthMode;
-import org.apache.drill.common.map.CaseInsensitiveMap;
 import org.apache.drill.common.exceptions.CustomErrorContext;
 import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.exec.ExecConstants;
@@ -712,7 +711,6 @@ public class SimpleHttp {
         .message("API Query with URL Parameters must be populated.")
         .build(logger);
     }
-    CaseInsensitiveMap<String>caseInsensitiveFilterMap = (CaseInsensitiveMap<String>)filters;
 
     List<String> params = SimpleHttp.getURLParameters(url);
     String tempUrl = SimpleHttp.decodedURL(url);
@@ -726,7 +724,7 @@ public class SimpleHttp {
       //     of providing helpful errors in strange cases, it is there.
 
 
-      String value = caseInsensitiveFilterMap.get(param);
+      String value = filters.get(param);
 
       // Check and see if there is a default for this parameter. If not throw an error.
       if (StringUtils.isEmpty(value)) {
