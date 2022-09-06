@@ -10,8 +10,8 @@ In the docker-cluster-mode directory:
 
 Then access the web UI at http://localhost:8047 or connect a JDBC client to
 jdbc:drill:drillbit=localhost or jdbc:drill:zk=localhost but note that you
-will need to make the drillbit hostnames resolvable from the host to use a
-ZooKeeper JDBC URL.
+will need to make the drillbit container hostnames resolvable from the host
+to use a ZooKeeper JDBC URL.
 
 To launch a cluster of 3 Drillbits
 
