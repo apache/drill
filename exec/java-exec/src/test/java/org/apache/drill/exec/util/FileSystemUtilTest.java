@@ -18,6 +18,7 @@
 package org.apache.drill.exec.util;
 
 import org.apache.drill.common.exceptions.UserException;
+import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.fs.PathFilter;
@@ -204,13 +205,16 @@ public class FileSystemUtilTest extends FileSystemUtilTestBase {
 
   @Test // DRILL-8283
   public void testRecursiveListingMaxSize() throws IOException {
-    int oldSize = FileSystemUtil.setRecursiveFileListingMaxSize(5);
+    Configuration conf = fs.getConf();
+    int oldSize = conf.getInt(FileSystemUtil.RECURSIVE_FILE_LISTING_MAX_SIZE, 0);
+    conf.setInt(FileSystemUtil.RECURSIVE_FILE_LISTING_MAX_SIZE, 5);
+
     try {
       FileSystemUtil.listAll(fs, new Path(base, "a"), true);
     } catch (UserException ex) {
       assertThat(ex.getMessage(), containsString("RESOURCE ERROR: File listing size limit"));
     } finally {
-      FileSystemUtil.setRecursiveFileListingMaxSize(oldSize);
+      conf.setInt(FileSystemUtil.RECURSIVE_FILE_LISTING_MAX_SIZE, oldSize);
     }
   }
 }
