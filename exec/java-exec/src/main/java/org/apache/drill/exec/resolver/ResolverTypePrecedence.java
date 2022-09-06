@@ -17,7 +17,11 @@
  */
 package org.apache.drill.exec.resolver;
 
-import java.util.*;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Map;
+import java.util.Set;
+import java.util.TreeSet;
 
 import org.apache.drill.common.types.TypeProtos.MinorType;
 import org.apache.drill.shaded.guava.com.google.common.collect.ImmutableSet;
@@ -26,7 +30,8 @@ import org.apache.drill.shaded.guava.com.google.common.graph.ValueGraphBuilder;
 
 public class ResolverTypePrecedence {
 
-  private static final Set<MinorType> UNSUPPORTED_TYPES = ImmutableSet.of(
+  // Data types that are defined but not currently supported in Drill.
+  public static final Set<MinorType> UNSUPPORTED_TYPES = ImmutableSet.of(
     MinorType.TINYINT,
     MinorType.SMALLINT,
     MinorType.UINT1,
@@ -44,7 +49,7 @@ public class ResolverTypePrecedence {
   // Cost of casting with the possibility of a loss of precision.
   // Chosen to definitely be larger than any path of BASE_COST
   // edges across the implicit casting graph.
-  public static final float PRECISION_LOSS_COST = 1e4f;
+  public static final float PRECISION_LOSS_COST = 1000f;
 
   // A weighted directed graph that represents the cost of casting between
   // pairs of data types. Coefficients (e.g. 2*BASE_COST) are used in cases
@@ -62,6 +67,9 @@ public class ResolverTypePrecedence {
     .putEdgeValue(MinorType.NULL, MinorType.INTERVALDAY, BASE_COST)
     .putEdgeValue(MinorType.NULL, MinorType.MAP, BASE_COST)
     .putEdgeValue(MinorType.NULL, MinorType.DATE, BASE_COST)
+    .putEdgeValue(MinorType.NULL, MinorType.MONEY, BASE_COST)
+    // special case: make INT the nearest cast for NULL
+    .putEdgeValue(MinorType.NULL, MinorType.INT, 0.5f*PRIMITIVE_TYPE_COST)
 
     // unsigned int widening
     .putEdgeValue(MinorType.BIT, MinorType.UINT1, PRIMITIVE_TYPE_COST)
@@ -69,13 +77,19 @@ public class ResolverTypePrecedence {
     .putEdgeValue(MinorType.UINT2, MinorType.UINT4, PRIMITIVE_TYPE_COST)
     .putEdgeValue(MinorType.UINT4, MinorType.UINT8, PRIMITIVE_TYPE_COST)
     .putEdgeValue(MinorType.UINT8, MinorType.VARDECIMAL, BASE_COST)
+    // unsigned int conversions
+    .putEdgeValue(MinorType.UINT4, MinorType.BIGINT, PRIMITIVE_TYPE_COST)
+    .putEdgeValue(MinorType.UINT4, MinorType.FLOAT8, 2*PRIMITIVE_TYPE_COST)
 
-    // signed int widening
+    // int widening
     .putEdgeValue(MinorType.BIT, MinorType.TINYINT, PRIMITIVE_TYPE_COST)
     .putEdgeValue(MinorType.TINYINT, MinorType.SMALLINT, PRIMITIVE_TYPE_COST)
     .putEdgeValue(MinorType.SMALLINT, MinorType.INT, PRIMITIVE_TYPE_COST)
     .putEdgeValue(MinorType.INT, MinorType.BIGINT, PRIMITIVE_TYPE_COST)
     .putEdgeValue(MinorType.BIGINT, MinorType.VARDECIMAL, BASE_COST)
+    // int conversions
+    .putEdgeValue(MinorType.INT, MinorType.FLOAT8, 2*PRIMITIVE_TYPE_COST)
+    .putEdgeValue(MinorType.BIGINT, MinorType.FLOAT8, PRECISION_LOSS_COST)
 
     // float widening
     .putEdgeValue(MinorType.FLOAT4, MinorType.FLOAT8, PRIMITIVE_TYPE_COST)
@@ -89,56 +103,51 @@ public class ResolverTypePrecedence {
     .putEdgeValue(MinorType.DECIMAL38SPARSE, MinorType.DECIMAL38DENSE, BASE_COST)
     .putEdgeValue(MinorType.DECIMAL38DENSE, MinorType.VARDECIMAL, BASE_COST)
     .putEdgeValue(MinorType.MONEY, MinorType.VARDECIMAL, BASE_COST)
+    // decimal conversions
+    .putEdgeValue(MinorType.VARDECIMAL, MinorType.FLOAT8, 0.5f*BASE_COST)
+    .putEdgeValue(MinorType.VARDECIMAL, MinorType.VARCHAR, BASE_COST)
 
     // interval widening
     .putEdgeValue(MinorType.INTERVALDAY, MinorType.INTERVALYEAR, BASE_COST)
     .putEdgeValue(MinorType.INTERVALYEAR, MinorType.INTERVAL, BASE_COST)
-
-    // char and binary widening
-    .putEdgeValue(MinorType.FIXEDBINARY, MinorType.VARBINARY, BASE_COST)
-    .putEdgeValue(MinorType.FIXEDCHAR, MinorType.VARCHAR, BASE_COST)
+    // interval conversions
+    .putEdgeValue(MinorType.INTERVAL, MinorType.VARCHAR, BASE_COST)
 
     // dict widening
     .putEdgeValue(MinorType.DICT, MinorType.MAP, BASE_COST)
 
-    // date and time widening
+    // timestamp widening
     .putEdgeValue(MinorType.DATE, MinorType.TIMESTAMP, BASE_COST)
     .putEdgeValue(MinorType.TIMESTAMP, MinorType.TIMESTAMPTZ, BASE_COST)
     .putEdgeValue(MinorType.TIME, MinorType.TIMETZ, BASE_COST)
-
-    // timestamp component projection
+    // timestamp conversions
     .putEdgeValue(MinorType.TIMESTAMP, MinorType.DATE, PRECISION_LOSS_COST)
     .putEdgeValue(MinorType.TIMESTAMP, MinorType.TIME, PRECISION_LOSS_COST)
-
-    // unsigned ints to numerics
-    .putEdgeValue(MinorType.UINT4, MinorType.BIGINT, PRIMITIVE_TYPE_COST)
-    .putEdgeValue(MinorType.UINT4, MinorType.FLOAT8, 2*PRIMITIVE_TYPE_COST)
-    .putEdgeValue(MinorType.UINT8, MinorType.FLOAT8, PRECISION_LOSS_COST)
-    .putEdgeValue(MinorType.UINT8, MinorType.VARDECIMAL, BASE_COST)
-
-    // ints to numerics
-    .putEdgeValue(MinorType.INT, MinorType.FLOAT8, 2*PRIMITIVE_TYPE_COST)
-    .putEdgeValue(MinorType.BIGINT, MinorType.FLOAT8, PRECISION_LOSS_COST)
-    .putEdgeValue(MinorType.BIGINT, MinorType.VARDECIMAL, BASE_COST)
-
-    // varchars to numerics
-    .putEdgeValue(MinorType.VARCHAR, MinorType.VARDECIMAL, PRECISION_LOSS_COST)
-    .putEdgeValue(MinorType.VARCHAR, MinorType.FLOAT8, 2* PRECISION_LOSS_COST)
-    .putEdgeValue(MinorType.VARCHAR, MinorType.BIGINT, 3* PRECISION_LOSS_COST)
-
-    // varchar -> varbinary -> union type sink vertex
-    .putEdgeValue(MinorType.VARDECIMAL, MinorType.VARCHAR, BASE_COST)
-    .putEdgeValue(MinorType.LIST, MinorType.VARCHAR, BASE_COST)
-    .putEdgeValue(MinorType.TIMESTAMPTZ, MinorType.VARCHAR, BASE_COST)
+    .putEdgeValue(MinorType.TIMESTAMP, MinorType.VARCHAR, BASE_COST)
     .putEdgeValue(MinorType.TIMETZ, MinorType.VARCHAR, BASE_COST)
+
+    // char and binary widening
+    .putEdgeValue(MinorType.FIXEDBINARY, MinorType.VARBINARY, BASE_COST)
+    .putEdgeValue(MinorType.FIXEDCHAR, MinorType.VARCHAR, BASE_COST)
+    // char and binary conversions
+    .putEdgeValue(MinorType.VARCHAR, MinorType.VARDECIMAL, BASE_COST)
+    .putEdgeValue(MinorType.VARCHAR, MinorType.INTERVALDAY, BASE_COST)
+    .putEdgeValue(MinorType.VARCHAR, MinorType.DATE, BASE_COST)
+    .putEdgeValue(MinorType.VARCHAR, MinorType.TIME, BASE_COST)
+    .putEdgeValue(MinorType.VARCHAR, MinorType.INT, PRECISION_LOSS_COST)
     .putEdgeValue(MinorType.VARCHAR, MinorType.VARBINARY, BASE_COST)
+
+    // union type sink vertex
+    .putEdgeValue(MinorType.LIST, MinorType.UNION, BASE_COST)
+    .putEdgeValue(MinorType.MAP, MinorType.UNION, BASE_COST)
     .putEdgeValue(MinorType.VARBINARY, MinorType.UNION, BASE_COST)
 
     .build();
 
   /**
    * Searches the implicit casting graph for the path of least total cost using
-   * Dijkstra's algorithm.
+   * Dijkstra's algorithm. A return value greater than PRECISION_LOSS_COST means
+   * that cast may involve a loss of precision.
    * @param fromType type to cast from
    * @param toType type to cast to
    * @return a positive float path cost or +∞ if no path exists
