@@ -371,35 +371,29 @@ public class SimpleHttp {
 
     // Build the request object
     Request request = requestBuilder.build();
-    Response response = null;
 
     try {
       logger.debug("Executing request: {}", request);
       logger.debug("Headers: {}", request.headers());
 
       // Execute the request
-      response = client
-        .newCall(request)
-        .execute();
+      try (Response response = client.newCall(request).execute()) {
 
-      // Preserve the response
-      responseMessage = response.message();
-      responseCode = response.code();
-      responseProtocol = response.protocol().toString();
-      responseURL = response.request().url().toString();
+        // Preserve the response
+        responseMessage = response.message();
+        responseCode = response.code();
+        responseProtocol = response.protocol().toString();
+        responseURL = response.request().url().toString();
 
-      // Case for pagination without limit
-      if (paginator != null && (
-        response.code() != 200 || response.body() == null ||
-        response.body().contentLength() == 0)) {
-        paginator.notifyPartialPage();
-      }
+        // Case for pagination without limit
+        if (paginator != null && (
+          response.code() != 200 || response.body() == null ||
+          response.body().contentLength() == 0)) {
+          paginator.notifyPartialPage();
+        }
 
-      // If the request is unsuccessful clean up and throw a UserException
-      if (!isSuccessful(responseCode)) {
-        try {
-          AutoCloseables.closeSilently(response);
-        } finally {
+        // If the request is unsuccessful clean up and throw a UserException
+        if (!isSuccessful(responseCode)) {
           throw UserException
             .dataReadError()
             .message("HTTP request failed")
@@ -408,13 +402,13 @@ public class SimpleHttp {
             .addContext(errorContext)
             .build(logger);
         }
-      }
-      logger.debug("HTTP Request for {} successful.", url());
-      logger.debug("Response Headers: {} ", response.headers());
+        logger.debug("HTTP Request for {} successful.", url());
+        logger.debug("Response Headers: {} ", response.headers());
 
-      // Return the InputStream of the response. Note that it is necessary and
-      // and sufficient that the caller invokes close() on the returned stream.
-      return Objects.requireNonNull(response.body()).byteStream();
+        // Return the InputStream of the response. Note that it is necessary and
+        // and sufficient that the caller invokes close() on the returned stream.
+        return Objects.requireNonNull(response.body()).byteStream();
+      }
     } catch (IOException e) {
       // response can only be null at this location so we do not attempt to close it.
       throw UserException
@@ -956,8 +950,9 @@ public class SimpleHttp {
     Request request = requestBuilder.build();
 
     // Execute the request
-      Response response = client.newCall(request).execute();
+    try (Response response = client.newCall(request).execute()) {
       return response.body();
+    }
   }
 
   /**
