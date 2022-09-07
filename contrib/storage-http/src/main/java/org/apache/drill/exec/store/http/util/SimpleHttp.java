@@ -922,16 +922,25 @@ public class SimpleHttp {
   }
 
   public static String getRequestAndStringResponse(String url) {
+    ResponseBody respBody = null;
     try {
-      return makeSimpleGetRequest(url).string();
+      respBody = makeSimpleGetRequest(url);
+      return respBody.string();
     } catch (IOException e) {
       throw UserException
         .dataReadError(e)
         .message("HTTP request failed")
         .build(logger);
+    } finally {
+      AutoCloseables.closeSilently(respBody);
     }
   }
 
+  /**
+   *
+   * @param url
+   * @return an input stream which the caller is responsible for closing.
+   */
   public static InputStream getRequestAndStreamResponse(String url) {
     try {
       return makeSimpleGetRequest(url).byteStream();
@@ -943,6 +952,12 @@ public class SimpleHttp {
     }
   }
 
+  /**
+   *
+   * @param url
+   * @return response body which the caller is responsible for closing.
+   * @throws IOException
+   */
   public static ResponseBody makeSimpleGetRequest(String url) throws IOException {
     OkHttpClient client = getSimpleHttpClient();
     Request.Builder requestBuilder = new Request.Builder()
@@ -952,9 +967,8 @@ public class SimpleHttp {
     Request request = requestBuilder.build();
 
     // Execute the request
-    try (Response response = client.newCall(request).execute()) {
-      return response.body();
-    }
+    Response response = client.newCall(request).execute();
+    return response.body();
   }
 
   /**
