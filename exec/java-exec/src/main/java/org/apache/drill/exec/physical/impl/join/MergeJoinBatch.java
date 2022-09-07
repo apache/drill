@@ -196,7 +196,7 @@ public class MergeJoinBatch extends AbstractBinaryRecordBatch<MergeJoinPOP> {
           break;
         case NO_MORE_DATA:
           status.resetOutputPos();
-          logger.debug("NO MORE DATA; returning {}  NONE");
+          logger.debug("NO MORE DATA; returning NONE");
           return IterOutcome.NONE;
         case FAILURE:
           status.left.clearInflightBatches();

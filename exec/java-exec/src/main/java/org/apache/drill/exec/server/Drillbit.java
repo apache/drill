@@ -306,7 +306,7 @@ public class Drillbit implements AutoCloseable {
       coord.unregister(registrationHandle);
     }
     try {
-      Thread.sleep(context.getConfig().getInt(ExecConstants.ZK_REFRESH) * 2);
+      Thread.sleep(context.getConfig().getInt(ExecConstants.ZK_REFRESH) * 2L);
     } catch (final InterruptedException e) {
       logger.warn("Interrupted while sleeping during coordination deregistration.");
 

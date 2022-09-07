@@ -207,7 +207,7 @@ public class KuduGroupScan extends AbstractGroupScan {
   // List<KuduSubScanSpec> tabletInfoList, List<SchemaPath> columns
   @Override
   public ScanStats getScanStats() {
-    long recordCount = 100000 * kuduWorkList.size();
+    long recordCount = 100000L * kuduWorkList.size();
     return new ScanStats(GroupScanProperty.NO_EXACT_ROW_COUNT, recordCount, 1, recordCount);
   }
 

@@ -163,7 +163,7 @@ abstract class NullableColumnReader<V extends ValueVector> extends ColumnReader<
         this.recordsReadInThisIteration += runLength;
 
         this.readStartInBytes = pageReader.readPosInBytes;
-        this.readLengthInBits = runLength * dataTypeLengthInBits;
+        this.readLengthInBits = (long) runLength * dataTypeLengthInBits;
         this.readLength = (int) Math.ceil(readLengthInBits / 8.0);
 
         readField(runLength);
@@ -278,7 +278,7 @@ abstract class NullableColumnReader<V extends ValueVector> extends ColumnReader<
         this.recordsReadInThisIteration += numNonNullValues;
 
         this.readStartInBytes = pageReader.readPosInBytes;
-        this.readLengthInBits = numNonNullValues * dataTypeLengthInBits;
+        this.readLengthInBits = (long) numNonNullValues * dataTypeLengthInBits;
         this.readLength = (int) Math.ceil(readLengthInBits / 8.0);
 
         readField(numNonNullValues);

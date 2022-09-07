@@ -115,7 +115,7 @@ public final class DrillProperties extends Properties {
   }
 
   @Override
-  public Object setProperty(final String key, final String value) {
+  public synchronized Object setProperty(final String key, final String value) {
     return super.setProperty(key.toLowerCase(), value);
   }
 

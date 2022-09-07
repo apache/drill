@@ -395,7 +395,7 @@ public class BufferedDirectBufInputStream extends DirectBufInputStream implement
     return curPosInBuffer + startOffset;
   }
 
-  public void close() throws IOException {
+  @Override public synchronized void close() throws IOException {
     DrillBuf buffer;
     InputStream inp;
     synchronized (this) {

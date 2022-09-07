@@ -95,10 +95,8 @@ public class FunctionGenerationHelper implements FunctionNames {
   }
 
   private static LogicalExpression getFunctionExpression(String name, HoldingContainer... args) {
-    List<MajorType> argTypes = new ArrayList<MajorType>(args.length);
     List<LogicalExpression> argExpressions = new ArrayList<LogicalExpression>(args.length);
     for (HoldingContainer c : args) {
-      argTypes.add(c.getMajorType());
       argExpressions.add(new HoldingContainerExpression(c));
     }
 

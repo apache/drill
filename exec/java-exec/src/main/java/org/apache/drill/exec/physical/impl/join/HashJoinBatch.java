@@ -1322,10 +1322,8 @@ public class HashJoinBatch extends AbstractBinaryRecordBatch<HashJoinPOP>
 
     rightExpr = new ArrayList<>(conditions.size());
     buildJoinColumns = Sets.newHashSet();
-    List<SchemaPath> rightConditionPaths = new ArrayList<>();
     for (int i = 0; i < conditions.size(); i++) {
       SchemaPath rightPath = (SchemaPath) conditions.get(i).getRight();
-      rightConditionPaths.add(rightPath);
     }
 
     for (int i = 0; i < conditions.size(); i++) {
