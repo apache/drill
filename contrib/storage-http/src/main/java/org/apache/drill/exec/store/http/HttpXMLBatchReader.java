@@ -143,7 +143,7 @@ public class HttpXMLBatchReader extends HttpBatchReader {
 
   @Override
   public void close() {
-    AutoCloseables.closeSilently(inStream);
     AutoCloseables.closeSilently(xmlReader);
+    AutoCloseables.closeSilently(inStream);
   }
 }

@@ -428,10 +428,14 @@ public class SimpleHttp {
 
   public String getResultsFromApiCall() {
     InputStream inputStream = getInputStream();
-    return new BufferedReader(
-      new InputStreamReader(inputStream, StandardCharsets.UTF_8))
-      .lines()
-      .collect(Collectors.joining("\n"));
+    try {
+      return new BufferedReader(
+        new InputStreamReader(inputStream, StandardCharsets.UTF_8))
+        .lines()
+        .collect(Collectors.joining("\n"));
+    } finally {
+      AutoCloseables.closeSilently(inputStream);
+    }
   }
 
   public static HttpProxyConfig getProxySettings(HttpStoragePluginConfig config, Config drillConfig, HttpUrl url) {

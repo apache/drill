@@ -93,6 +93,8 @@ public class HttpHelperFunctions {
         rowWriter.start();
         if (jsonLoader.parser().next()) {
           rowWriter.save();
+        } else {
+          jsonLoader.close();
         }
       } catch (Exception e) {
         throw org.apache.drill.common.exceptions.UserException.dataReadError(e)
@@ -189,6 +191,8 @@ public class HttpHelperFunctions {
         rowWriter.start();
         if (jsonLoader.parser().next()) {
           rowWriter.save();
+        } else {
+          jsonLoader.close();
         }
       } catch (Exception e) {
         throw org.apache.drill.common.exceptions.UserException.dataReadError(e)
