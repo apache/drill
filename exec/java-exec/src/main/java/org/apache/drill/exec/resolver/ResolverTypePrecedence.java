@@ -68,7 +68,7 @@ public class ResolverTypePrecedence {
     .putEdgeValue(MinorType.NULL, MinorType.MAP, BASE_COST)
     .putEdgeValue(MinorType.NULL, MinorType.DATE, BASE_COST)
     .putEdgeValue(MinorType.NULL, MinorType.MONEY, BASE_COST)
-    // special case: make INT the nearest cast for NULL
+    // prefer to cast to INT over any other type
     .putEdgeValue(MinorType.NULL, MinorType.INT, 0.5f*PRIMITIVE_TYPE_COST)
 
     // unsigned int widening
@@ -78,8 +78,10 @@ public class ResolverTypePrecedence {
     .putEdgeValue(MinorType.UINT4, MinorType.UINT8, PRIMITIVE_TYPE_COST)
     .putEdgeValue(MinorType.UINT8, MinorType.VARDECIMAL, BASE_COST)
     // unsigned int conversions
+    // prefer to cast to BIGINT over FLOAT8
     .putEdgeValue(MinorType.UINT4, MinorType.BIGINT, PRIMITIVE_TYPE_COST)
     .putEdgeValue(MinorType.UINT4, MinorType.FLOAT8, 2*PRIMITIVE_TYPE_COST)
+    .putEdgeValue(MinorType.UINT8, MinorType.FLOAT8, PRECISION_LOSS_COST)
 
     // int widening
     .putEdgeValue(MinorType.BIT, MinorType.TINYINT, PRIMITIVE_TYPE_COST)
@@ -88,6 +90,7 @@ public class ResolverTypePrecedence {
     .putEdgeValue(MinorType.INT, MinorType.BIGINT, PRIMITIVE_TYPE_COST)
     .putEdgeValue(MinorType.BIGINT, MinorType.VARDECIMAL, BASE_COST)
     // int conversions
+    // prefer to cast to BIGINT over FLOAT8
     .putEdgeValue(MinorType.INT, MinorType.FLOAT8, 2*PRIMITIVE_TYPE_COST)
     .putEdgeValue(MinorType.BIGINT, MinorType.FLOAT8, PRECISION_LOSS_COST)
 
@@ -104,7 +107,7 @@ public class ResolverTypePrecedence {
     .putEdgeValue(MinorType.DECIMAL38DENSE, MinorType.VARDECIMAL, BASE_COST)
     .putEdgeValue(MinorType.MONEY, MinorType.VARDECIMAL, BASE_COST)
     // decimal conversions
-    .putEdgeValue(MinorType.VARDECIMAL, MinorType.FLOAT8, 0.5f*BASE_COST)
+    .putEdgeValue(MinorType.VARDECIMAL, MinorType.FLOAT8, PRECISION_LOSS_COST)
     .putEdgeValue(MinorType.VARDECIMAL, MinorType.VARCHAR, BASE_COST)
 
     // interval widening
@@ -123,19 +126,19 @@ public class ResolverTypePrecedence {
     // timestamp conversions
     .putEdgeValue(MinorType.TIMESTAMP, MinorType.DATE, PRECISION_LOSS_COST)
     .putEdgeValue(MinorType.TIMESTAMP, MinorType.TIME, PRECISION_LOSS_COST)
-    .putEdgeValue(MinorType.TIMESTAMP, MinorType.VARCHAR, BASE_COST)
+    .putEdgeValue(MinorType.TIMESTAMPTZ, MinorType.VARCHAR, BASE_COST)
     .putEdgeValue(MinorType.TIMETZ, MinorType.VARCHAR, BASE_COST)
 
     // char and binary widening
     .putEdgeValue(MinorType.FIXEDBINARY, MinorType.VARBINARY, BASE_COST)
     .putEdgeValue(MinorType.FIXEDCHAR, MinorType.VARCHAR, BASE_COST)
     // char and binary conversions
-    .putEdgeValue(MinorType.VARCHAR, MinorType.VARDECIMAL, BASE_COST)
-    .putEdgeValue(MinorType.VARCHAR, MinorType.INTERVALDAY, BASE_COST)
-    .putEdgeValue(MinorType.VARCHAR, MinorType.DATE, BASE_COST)
-    .putEdgeValue(MinorType.VARCHAR, MinorType.TIME, BASE_COST)
-    .putEdgeValue(MinorType.VARCHAR, MinorType.INT, PRECISION_LOSS_COST)
-    .putEdgeValue(MinorType.VARCHAR, MinorType.VARBINARY, BASE_COST)
+    // varchar casting preference: TIMESTAMP > INTERVALDAY > VARDECIMAL > INT > VARBINARY
+    .putEdgeValue(MinorType.VARCHAR, MinorType.TIMESTAMP, BASE_COST)
+    .putEdgeValue(MinorType.VARCHAR, MinorType.INTERVALDAY, 2*BASE_COST)
+    .putEdgeValue(MinorType.VARCHAR, MinorType.VARDECIMAL, 3*BASE_COST)
+    .putEdgeValue(MinorType.VARCHAR, MinorType.INT, 4*BASE_COST)
+    .putEdgeValue(MinorType.VARCHAR, MinorType.VARBINARY, 5*BASE_COST)
 
     // union type sink vertex
     .putEdgeValue(MinorType.LIST, MinorType.UNION, BASE_COST)
