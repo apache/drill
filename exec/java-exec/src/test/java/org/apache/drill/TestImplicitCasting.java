@@ -61,15 +61,17 @@ public class TestImplicitCasting extends BaseTest {
       ResolverTypePrecedence.computeCost(TypeProtos.MinorType.DECIMAL9, TypeProtos.MinorType.VARDECIMAL),
       0f
     );
-    // No path from FLOAT4 to INT
+    // FLOAT4 -> FLOAT8 -> VARDECIMAL -> INT
     assertEquals(
-      Float.POSITIVE_INFINITY,
+      ResolverTypePrecedence.PRIMITIVE_TYPE_COST
+        + 2*ResolverTypePrecedence.BASE_COST
+        + ResolverTypePrecedence.BASE_COST,
       ResolverTypePrecedence.computeCost(TypeProtos.MinorType.FLOAT4, TypeProtos.MinorType.INT),
       0f
     );
     // TIMESTAMP -> DATE
     assertEquals(
-      ResolverTypePrecedence.PRECISION_LOSS_COST,
+      ResolverTypePrecedence.BASE_COST,
       ResolverTypePrecedence.computeCost(TypeProtos.MinorType.TIMESTAMP, TypeProtos.MinorType.DATE),
       0f
     );
@@ -79,9 +81,9 @@ public class TestImplicitCasting extends BaseTest {
       ResolverTypePrecedence.computeCost(TypeProtos.MinorType.MAP, TypeProtos.MinorType.INT),
       0f
     );
-    // VARCHAR -> BIGINT
+    // VARCHAR -> INT -> BIGINT
     assertEquals(
-      3*ResolverTypePrecedence.PRECISION_LOSS_COST,
+      4*ResolverTypePrecedence.BASE_COST + ResolverTypePrecedence.PRIMITIVE_TYPE_COST,
       ResolverTypePrecedence.computeCost(TypeProtos.MinorType.VARCHAR, TypeProtos.MinorType.BIGINT),
       0f
     );

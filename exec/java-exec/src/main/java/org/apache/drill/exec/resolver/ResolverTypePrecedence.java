@@ -38,18 +38,15 @@ public class ResolverTypePrecedence {
     MinorType.UINT2
   );
 
-  // Casting cost values are orders of magnitude intended only to capture that
-  // one cast is cheaper or less risky than another. They do not try to reflect
-  // any accurate information about how much a cast costs computationally.
+  // Casting cost values are nothing more than orders of magnitude intended
+  // to capture casting preferences that can, from a machine perspective, be
+  // quite arbitrary. They do not try to reflect any accurate information
+  // about how much different casts cost computationally.
 
   // Cost of casting between primitive types
   public static final float PRIMITIVE_TYPE_COST = 1f;
   // Base cost of casting
   public static final float BASE_COST = 10f;
-  // Cost of casting with the possibility of a loss of precision.
-  // Chosen to definitely be larger than any path of BASE_COST
-  // edges across the implicit casting graph.
-  public static final float PRECISION_LOSS_COST = 1000f;
 
   // A weighted directed graph that represents the cost of casting between
   // pairs of data types. Coefficients (e.g. 2*BASE_COST) are used in cases
@@ -78,10 +75,10 @@ public class ResolverTypePrecedence {
     .putEdgeValue(MinorType.UINT4, MinorType.UINT8, PRIMITIVE_TYPE_COST)
     .putEdgeValue(MinorType.UINT8, MinorType.VARDECIMAL, BASE_COST)
     // unsigned int conversions
-    // prefer to cast to BIGINT over FLOAT8
+    // prefer to cast UNIT4 to BIGINT over FLOAT8
     .putEdgeValue(MinorType.UINT4, MinorType.BIGINT, PRIMITIVE_TYPE_COST)
     .putEdgeValue(MinorType.UINT4, MinorType.FLOAT8, 2*PRIMITIVE_TYPE_COST)
-    .putEdgeValue(MinorType.UINT8, MinorType.FLOAT8, PRECISION_LOSS_COST)
+    .putEdgeValue(MinorType.UINT8, MinorType.FLOAT8, BASE_COST)
 
     // int widening
     .putEdgeValue(MinorType.BIT, MinorType.TINYINT, PRIMITIVE_TYPE_COST)
@@ -90,9 +87,9 @@ public class ResolverTypePrecedence {
     .putEdgeValue(MinorType.INT, MinorType.BIGINT, PRIMITIVE_TYPE_COST)
     .putEdgeValue(MinorType.BIGINT, MinorType.VARDECIMAL, BASE_COST)
     // int conversions
-    // prefer to cast to BIGINT over FLOAT8
+    // prefer to cast INT to BIGINT over FLOAT8
     .putEdgeValue(MinorType.INT, MinorType.FLOAT8, 2*PRIMITIVE_TYPE_COST)
-    .putEdgeValue(MinorType.BIGINT, MinorType.FLOAT8, PRECISION_LOSS_COST)
+    .putEdgeValue(MinorType.BIGINT, MinorType.FLOAT8, BASE_COST)
 
     // float widening
     .putEdgeValue(MinorType.FLOAT4, MinorType.FLOAT8, PRIMITIVE_TYPE_COST)
@@ -107,8 +104,10 @@ public class ResolverTypePrecedence {
     .putEdgeValue(MinorType.DECIMAL38DENSE, MinorType.VARDECIMAL, BASE_COST)
     .putEdgeValue(MinorType.MONEY, MinorType.VARDECIMAL, BASE_COST)
     // decimal conversions
-    .putEdgeValue(MinorType.VARDECIMAL, MinorType.FLOAT8, PRECISION_LOSS_COST)
-    .putEdgeValue(MinorType.VARDECIMAL, MinorType.VARCHAR, BASE_COST)
+    // VARDECIMAL casting preference: FLOAT8 > INT > VARCHAR
+    .putEdgeValue(MinorType.VARDECIMAL, MinorType.FLOAT8, BASE_COST)
+    .putEdgeValue(MinorType.VARDECIMAL, MinorType.INT, 2*BASE_COST)
+    .putEdgeValue(MinorType.VARDECIMAL, MinorType.VARCHAR, 3*BASE_COST)
 
     // interval widening
     .putEdgeValue(MinorType.INTERVALDAY, MinorType.INTERVALYEAR, BASE_COST)
@@ -124,16 +123,17 @@ public class ResolverTypePrecedence {
     .putEdgeValue(MinorType.TIMESTAMP, MinorType.TIMESTAMPTZ, BASE_COST)
     .putEdgeValue(MinorType.TIME, MinorType.TIMETZ, BASE_COST)
     // timestamp conversions
-    .putEdgeValue(MinorType.TIMESTAMP, MinorType.DATE, PRECISION_LOSS_COST)
-    .putEdgeValue(MinorType.TIMESTAMP, MinorType.TIME, PRECISION_LOSS_COST)
-    .putEdgeValue(MinorType.TIMESTAMPTZ, MinorType.VARCHAR, BASE_COST)
-    .putEdgeValue(MinorType.TIMETZ, MinorType.VARCHAR, BASE_COST)
+    // TIMESTAMP casting preference: DATE > TIME > VARCHAR
+    .putEdgeValue(MinorType.TIMESTAMP, MinorType.DATE, BASE_COST)
+    .putEdgeValue(MinorType.TIMESTAMP, MinorType.TIME, 2*BASE_COST)
+    .putEdgeValue(MinorType.TIMESTAMPTZ, MinorType.VARCHAR, 3*BASE_COST)
+    .putEdgeValue(MinorType.TIMETZ, MinorType.VARCHAR, 3*BASE_COST)
 
     // char and binary widening
     .putEdgeValue(MinorType.FIXEDBINARY, MinorType.VARBINARY, BASE_COST)
     .putEdgeValue(MinorType.FIXEDCHAR, MinorType.VARCHAR, BASE_COST)
     // char and binary conversions
-    // varchar casting preference: TIMESTAMP > INTERVALDAY > VARDECIMAL > INT > VARBINARY
+    // VARCHAR casting preference: TIMESTAMP > INTERVALDAY > VARDECIMAL > INT > VARBINARY
     .putEdgeValue(MinorType.VARCHAR, MinorType.TIMESTAMP, BASE_COST)
     .putEdgeValue(MinorType.VARCHAR, MinorType.INTERVALDAY, 2*BASE_COST)
     .putEdgeValue(MinorType.VARCHAR, MinorType.VARDECIMAL, 3*BASE_COST)
@@ -149,8 +149,7 @@ public class ResolverTypePrecedence {
 
   /**
    * Searches the implicit casting graph for the path of least total cost using
-   * Dijkstra's algorithm. A return value greater than PRECISION_LOSS_COST means
-   * that cast may involve a loss of precision.
+   * Dijkstra's algorithm.
    * @param fromType type to cast from
    * @param toType type to cast to
    * @return a positive float path cost or +∞ if no path exists
