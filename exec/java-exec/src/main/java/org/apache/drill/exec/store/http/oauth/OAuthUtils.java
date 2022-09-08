@@ -38,13 +38,13 @@ public class OAuthUtils {
   private static final Logger logger = LoggerFactory.getLogger(OAuthUtils.class);
 
   /**
-   * Craft a GET request to obtain an access token.
+   * Crafts a POST request to obtain an access token.
    * @param credentialsProvider A credential provider containing the clientID, clientSecret and authorizationCode
    * @param authorizationCode The authorization code from the OAuth2.0 enabled API
    * @param callbackURL  The callback URL. For our purposes this is obtained from the incoming Drill request as it all goes to the same place.
    * @return A Request Body to obtain an access token
    */
-  public static RequestBody getPostResponse(CredentialsProvider credentialsProvider, String authorizationCode, String callbackURL) {
+  public static RequestBody getPostRequest(CredentialsProvider credentialsProvider, String authorizationCode, String callbackURL) {
     return new FormBody.Builder()
       .add("grant_type", "authorization_code")
       .add("client_id", credentialsProvider.getCredentials().get(OAuthTokenCredentials.CLIENT_ID))
@@ -55,12 +55,12 @@ public class OAuthUtils {
   }
 
   /**
-   * Crafts a POST response for refreshing an access token when a refresh token is present.
+   * Crafts a POST request for refreshing an access token when a refresh token is present.
    * @param credentialsProvider A credential provider containing the clientID, clientSecret and refreshToken
    * @param refreshToken The refresh token
    * @return A Request Body with the correct parameters for obtaining an access token
    */
-  public static RequestBody getPostResponseForTokenRefresh(CredentialsProvider credentialsProvider, String refreshToken) {
+  public static RequestBody getPostRequestForTokenRefresh(CredentialsProvider credentialsProvider, String refreshToken) {
     return new FormBody.Builder()
       .add("grant_type", "refresh_token")
       .add("client_id", credentialsProvider.getCredentials().get(OAuthTokenCredentials.CLIENT_ID))
@@ -90,7 +90,7 @@ public class OAuthUtils {
       .url(buildAccessTokenURL(credentialsProvider))
       .header("Content-Type", "application/json")
       .addHeader("Accept", "application/json")
-      .post(getPostResponse(credentialsProvider, authenticationCode, callbackURL))
+      .post(getPostRequest(credentialsProvider, authenticationCode, callbackURL))
       .build();
   }
 
@@ -110,7 +110,7 @@ public class OAuthUtils {
       .url(tokenURI)
       .header("Content-Type", "application/json")
       .addHeader("Accept", "application/json")
-      .post(getPostResponseForTokenRefresh(credentialsProvider, refreshToken))
+      .post(getPostRequestForTokenRefresh(credentialsProvider, refreshToken))
       .build();
   }
 
@@ -127,9 +127,10 @@ public class OAuthUtils {
     String accessToken;
     String refreshToken;
     Map<String, String> tokens = new HashMap<>();
+    Response response = null;
 
     try {
-      Response response = client.newCall(request).execute();
+      response = client.newCall(request).execute();
       String responseBody = response.body().string();
 
       if (!response.isSuccessful()) {
@@ -164,13 +165,14 @@ public class OAuthUtils {
         refreshToken = (String) parsedJson.get("refresh_token");
         tokens.put(OAuthTokenCredentials.REFRESH_TOKEN, refreshToken);
       }
-      response.close();
       return tokens;
 
     } catch (NullPointerException | IOException e) {
       throw UserException.connectionError()
         .message("Error refreshing access OAuth2 access token. " + e.getMessage())
         .build(logger);
+    } finally {
+      response.close();
     }
   }
 }
