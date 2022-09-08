@@ -123,7 +123,7 @@ public class IcebergWork {
       try (ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
            ObjectOutputStream objectOutputStream = new ObjectOutputStream(byteArrayOutputStream)) {
         objectOutputStream.writeObject(scanTask);
-        gen.writeStringField(SCAN_TASK_FIELD, new String(Base64.getEncoder().encode(byteArrayOutputStream.toByteArray())));
+        gen.writeStringField(SCAN_TASK_FIELD, Base64.getEncoder().encodeToString(byteArrayOutputStream.toByteArray()));
       }
       gen.writeEndObject();
     }

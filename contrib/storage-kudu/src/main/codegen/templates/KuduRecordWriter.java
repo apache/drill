@@ -20,58 +20,32 @@
 
 package org.apache.drill.exec.store.kudu;
 
+import java.io.IOException;
+import java.lang.UnsupportedOperationException;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Map;
+
+import org.apache.drill.common.types.TypeProtos;
+import org.apache.drill.common.types.TypeProtos.MinorType;
+import org.apache.drill.exec.expr.TypeHelper;
+import org.apache.drill.exec.expr.holders.*;
+import org.apache.drill.exec.record.BatchSchema;
+import org.apache.drill.exec.record.MaterializedField;
+import org.apache.drill.exec.store.*;
 import org.apache.drill.exec.store.EventBasedRecordWriter.FieldConverter;
+import org.apache.drill.exec.util.DecimalUtility;
+import org.apache.drill.exec.vector.*;
 import org.apache.drill.exec.vector.complex.reader.FieldReader;
 import org.apache.drill.exec.vector.complex.fn.JsonOutput;
-import java.io.IOException;
-import java.lang.UnsupportedOperationException;
-import java.util.List;
 import org.apache.drill.shaded.guava.com.google.common.collect.Lists;
-import org.apache.drill.common.types.TypeProtos.MinorType;
-import org.apache.drill.exec.expr.TypeHelper;
-import org.apache.drill.exec.expr.holders.*;
-import org.apache.drill.exec.record.BatchSchema;
-import org.apache.drill.exec.store.EventBasedRecordWriter.FieldConverter;
-import org.apache.drill.exec.vector.*;
-import org.apache.drill.exec.util.DecimalUtility;
-import org.apache.drill.exec.vector.complex.reader.FieldReader;
-import org.apache.parquet.io.api.RecordConsumer;
-import org.apache.parquet.schema.MessageType;
-import org.apache.parquet.io.api.Binary;
-import io.netty.buffer.DrillBuf;
-import org.apache.drill.exec.record.BatchSchema;
-import org.apache.drill.exec.record.MaterializedField;
-import org.apache.drill.common.types.TypeProtos;
-import org.joda.time.DateTimeUtils;
-import java.io.IOException;
-import java.lang.UnsupportedOperationException;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Map;
-import org.apache.drill.shaded.guava.com.google.common.collect.Lists;
-import org.apache.drill.common.types.TypeProtos.MinorType;
-import org.apache.drill.exec.expr.TypeHelper;
-import org.apache.drill.exec.expr.holders.*;
-import org.apache.drill.exec.record.BatchSchema;
-import org.apache.drill.exec.store.EventBasedRecordWriter.FieldConverter;
-import org.apache.drill.exec.vector.*;
-import org.apache.drill.exec.util.DecimalUtility;
-import org.apache.drill.exec.vector.complex.reader.FieldReader;
-import org.apache.parquet.io.api.RecordConsumer;
-import org.apache.parquet.schema.MessageType;
-import org.apache.parquet.io.api.Binary;
-import io.netty.buffer.DrillBuf;
-import org.apache.drill.exec.record.BatchSchema;
-import org.apache.drill.exec.record.MaterializedField;
-import org.apache.drill.common.types.TypeProtos;
-import org.joda.time.DateTimeUtils;
-import java.io.IOException;
-import java.lang.UnsupportedOperationException;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Map;
+
 import org.apache.kudu.client.*;
-import org.apache.drill.exec.store.*;
+import org.apache.parquet.io.api.RecordConsumer;
+import org.apache.parquet.schema.MessageType;
+import org.apache.parquet.io.api.Binary;
+import org.joda.time.DateTimeUtils;
+import io.netty.buffer.DrillBuf;
 
 public abstract class KuduRecordWriter extends AbstractRecordWriter implements RecordWriter {
 

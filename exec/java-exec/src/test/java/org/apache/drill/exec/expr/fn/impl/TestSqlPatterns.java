@@ -16,14 +16,15 @@
  * limitations under the License.
  */
 package org.apache.drill.exec.expr.fn.impl;
+
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
 import java.nio.ByteBuffer;
 import java.nio.CharBuffer;
 import java.nio.charset.CharacterCodingException;
-import java.nio.charset.Charset;
 import java.nio.charset.CharsetEncoder;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -111,7 +112,7 @@ public class TestSqlPatterns extends BaseTest {
   public void setup() {
     allocator = RootAllocatorFactory.newRoot(16384);
     drillBuf = allocator.buffer(8192);
-    charsetEncoder = Charset.forName("UTF-8").newEncoder();
+    charsetEncoder = StandardCharsets.UTF_8.newEncoder();
   }
 
   @Test

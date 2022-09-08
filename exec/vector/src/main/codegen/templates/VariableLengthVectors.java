@@ -874,8 +874,8 @@ public final class ${minor.class}Vector extends BaseDataValueVector implements V
       <#default>
       java.nio.charset.Charset charset = Charsets.UTF_8;
       </#switch>
-      byte[] evenValue = new String("aaaaa").getBytes(charset);
-      byte[] oddValue = new String("bbbbbbbbbb").getBytes(charset);
+      byte[] evenValue = "aaaaa".getBytes(charset);
+      byte[] oddValue = "bbbbbbbbbb".getBytes(charset);
       for(int i =0; i < size; i++, even = !even){
         set(i, even ? evenValue : oddValue);
         }
