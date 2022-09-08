@@ -285,7 +285,7 @@ public class CryptoFunctions {
         keyByteArray = java.util.Arrays.copyOf(keyByteArray, 16);
         javax.crypto.spec.SecretKeySpec secretKey = new javax.crypto.spec.SecretKeySpec(keyByteArray, "AES");
 
-        javax.crypto.Cipher cipher = javax.crypto.Cipher.getInstance("AES/ECB/PKCS5Padding"); // lgtm [java/weak-cryptographic-algorithm]
+        javax.crypto.Cipher cipher = javax.crypto.Cipher.getInstance("AES/ECB/PKCS5Padding");
         cipher.init(javax.crypto.Cipher.ENCRYPT_MODE, secretKey);
         encryptedText = javax.xml.bind.DatatypeConverter.printBase64Binary(cipher.doFinal(input.getBytes(java.nio.charset.StandardCharsets.UTF_8)));
       } catch (Exception e) {
@@ -336,7 +336,7 @@ public class CryptoFunctions {
         keyByteArray = java.util.Arrays.copyOf(keyByteArray, 16);
         javax.crypto.spec.SecretKeySpec secretKey = new javax.crypto.spec.SecretKeySpec(keyByteArray, "AES");
 
-        javax.crypto.Cipher cipher = javax.crypto.Cipher.getInstance("AES/ECB/PKCS5Padding"); // lgtm [java/weak-cryptographic-algorithm]
+        javax.crypto.Cipher cipher = javax.crypto.Cipher.getInstance("AES/ECB/PKCS5Padding");
         cipher.init(javax.crypto.Cipher.DECRYPT_MODE, secretKey);
         decryptedText = new String(cipher.doFinal(javax.xml.bind.DatatypeConverter.parseBase64Binary(input)));
       } catch (Exception e) {
