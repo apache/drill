@@ -116,6 +116,7 @@ public class HttpBatchReader implements ManagedReader<SchemaNegotiator> {
       buildImplicitColumns();
     }
 
+    // inStream is expected to be closed by the JsonLoader.
     InputStream inStream = http.getInputStream();
     populateImplicitFieldMap(http);
 
