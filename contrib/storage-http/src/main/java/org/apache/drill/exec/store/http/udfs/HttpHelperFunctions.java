@@ -78,7 +78,7 @@ public class HttpHelperFunctions {
         return;
       }
       String finalUrl = org.apache.drill.exec.store.http.util.SimpleHttp.mapPositionalParameters(url, args);
-      // Make the API call
+      // Make the API call, we expect that results will be closed by the JsonLoader
       java.io.InputStream results = org.apache.drill.exec.store.http.util.SimpleHttp.getRequestAndStreamResponse(finalUrl);
       // If the result string is null or empty, return an empty map
       if (results == null) {
@@ -93,6 +93,8 @@ public class HttpHelperFunctions {
         rowWriter.start();
         if (jsonLoader.parser().next()) {
           rowWriter.save();
+        } else {
+          jsonLoader.close();
         }
       } catch (Exception e) {
         throw org.apache.drill.common.exceptions.UserException.dataReadError(e)
@@ -173,6 +175,7 @@ public class HttpHelperFunctions {
       if (args == null) {
         return;
       }
+      // we expect that results will be closed by the JsonLoader
       java.io.InputStream results = org.apache.drill.exec.store.http.util.SimpleHttp.apiCall(plugin, endpointConfig, drillbitContext, args)
         .getInputStream();
       // If the result string is null or empty, return an empty map
@@ -189,6 +192,8 @@ public class HttpHelperFunctions {
         rowWriter.start();
         if (jsonLoader.parser().next()) {
           rowWriter.save();
+        } else {
+          jsonLoader.close();
         }
       } catch (Exception e) {
         throw org.apache.drill.common.exceptions.UserException.dataReadError(e)
