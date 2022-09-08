@@ -63,10 +63,10 @@ public class HDF5FloatDataWriter extends HDF5DataWriter {
 
   @Override
   public boolean write() {
-    if (counter > data.length) {
+    if (!hasNext()) {
       return false;
     } else {
-      colWriter.setDouble(data[counter++]); // lgtm [java/index-out-of-bounds]
+      colWriter.setDouble(data[counter++]);
       return true;
     }
   }
