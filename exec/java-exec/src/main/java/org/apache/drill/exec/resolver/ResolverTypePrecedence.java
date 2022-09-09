@@ -38,35 +38,32 @@ public class ResolverTypePrecedence {
     MinorType.UINT2
   );
 
-  // Casting cost values are nothing more than orders of magnitude intended
-  // to capture casting preferences that can, from a machine perspective, be
-  // quite arbitrary. They do not try to reflect any accurate information
-  // about how much different casts cost computationally.
-
   // Cost of casting between primitive types
   public static final float PRIMITIVE_TYPE_COST = 1f;
   // Base cost of casting
   public static final float BASE_COST = 10f;
 
   // A weighted directed graph that represents the cost of casting between
-  // pairs of data types. Coefficients (e.g. 2*BASE_COST) are used in cases
-  // where we want to indicate that casting to some type is preferred over
-  // some other choice e.g. it is preferred to cast a UINT4 to a BIGINT rather
-  // than to a FLOAT8 though both are possible without a loss of precision.
+  // pairs of data types. The edge weights represent casting preferences and
+  // it is important to note that only some of these prefereces can be
+  // understood in terms of factors like computational cost or loss of
+  // precision. The others are derived from a principle of greatest user
+  // utility and can unfortunately appear to be quite arbitrary.
   public static final ImmutableValueGraph<MinorType, Float> CAST_GRAPH = ValueGraphBuilder
     .directed()
     .<MinorType, Float>immutable()
 
     // null type source vertex (null is castable to any type)
+    // NULL casting preference: BIT > INT > FLOAT4 > DECIMAL9 > VARCHAR > ... > DICT
     .putEdgeValue(MinorType.NULL, MinorType.BIT, PRIMITIVE_TYPE_COST)
-    .putEdgeValue(MinorType.NULL, MinorType.FLOAT4, PRIMITIVE_TYPE_COST)
+    .putEdgeValue(MinorType.NULL, MinorType.INT, 2*PRIMITIVE_TYPE_COST)
+    .putEdgeValue(MinorType.NULL, MinorType.FLOAT4, 3*PRIMITIVE_TYPE_COST)
     .putEdgeValue(MinorType.NULL, MinorType.DECIMAL9, BASE_COST)
-    .putEdgeValue(MinorType.NULL, MinorType.INTERVALDAY, BASE_COST)
-    .putEdgeValue(MinorType.NULL, MinorType.MAP, BASE_COST)
-    .putEdgeValue(MinorType.NULL, MinorType.DATE, BASE_COST)
-    .putEdgeValue(MinorType.NULL, MinorType.MONEY, BASE_COST)
-    // prefer to cast to INT over any other type
-    .putEdgeValue(MinorType.NULL, MinorType.INT, 0.5f*PRIMITIVE_TYPE_COST)
+    .putEdgeValue(MinorType.NULL, MinorType.VARCHAR, 2*BASE_COST)
+    .putEdgeValue(MinorType.NULL, MinorType.DATE, 3*BASE_COST)
+    .putEdgeValue(MinorType.NULL, MinorType.INTERVALDAY, 3*BASE_COST)
+    .putEdgeValue(MinorType.NULL, MinorType.MONEY, 3*BASE_COST)
+    .putEdgeValue(MinorType.NULL, MinorType.DICT, 4*BASE_COST)
 
     // unsigned int widening
     .putEdgeValue(MinorType.BIT, MinorType.UINT1, PRIMITIVE_TYPE_COST)
@@ -89,7 +86,8 @@ public class ResolverTypePrecedence {
     // int conversions
     // prefer to cast INT to BIGINT over FLOAT8
     .putEdgeValue(MinorType.INT, MinorType.FLOAT8, 2*PRIMITIVE_TYPE_COST)
-    .putEdgeValue(MinorType.BIGINT, MinorType.FLOAT8, BASE_COST)
+    // prefer to cast BIGINT to VARDECIMAL over FLOAT8
+    .putEdgeValue(MinorType.BIGINT, MinorType.FLOAT8, 2*PRIMITIVE_TYPE_COST)
 
     // float widening
     .putEdgeValue(MinorType.FLOAT4, MinorType.FLOAT8, PRIMITIVE_TYPE_COST)
@@ -133,12 +131,12 @@ public class ResolverTypePrecedence {
     .putEdgeValue(MinorType.FIXEDBINARY, MinorType.VARBINARY, BASE_COST)
     .putEdgeValue(MinorType.FIXEDCHAR, MinorType.VARCHAR, BASE_COST)
     // char and binary conversions
-    // VARCHAR casting preference: TIMESTAMP > INTERVALDAY > VARDECIMAL > INT > VARBINARY
-    .putEdgeValue(MinorType.VARCHAR, MinorType.TIMESTAMP, BASE_COST)
-    .putEdgeValue(MinorType.VARCHAR, MinorType.INTERVALDAY, 2*BASE_COST)
-    .putEdgeValue(MinorType.VARCHAR, MinorType.VARDECIMAL, 3*BASE_COST)
-    .putEdgeValue(MinorType.VARCHAR, MinorType.INT, 4*BASE_COST)
-    .putEdgeValue(MinorType.VARCHAR, MinorType.VARBINARY, 5*BASE_COST)
+    // VARCHAR casting preference: TIMESTAMP > INTERVALDAY > VARDECIMAL > FLOAT8 > INT > VARBINARY
+    .putEdgeValue(MinorType.VARCHAR, MinorType.VARDECIMAL, BASE_COST)
+    .putEdgeValue(MinorType.VARCHAR, MinorType.FLOAT8, 2*BASE_COST)
+    .putEdgeValue(MinorType.VARCHAR, MinorType.TIMESTAMP, 3*BASE_COST)
+    .putEdgeValue(MinorType.VARCHAR, MinorType.INTERVALDAY, 4*BASE_COST)
+    .putEdgeValue(MinorType.VARCHAR, MinorType.VARBINARY, 6*BASE_COST)
 
     // union type sink vertex
     .putEdgeValue(MinorType.LIST, MinorType.UNION, BASE_COST)
@@ -174,8 +172,8 @@ public class ResolverTypePrecedence {
       shortestPath.add(vertex);
 
       if (vertex.equals(toType)) {
-        // Goal found. We only wanted to the path distance so don't need to go
-        // on to backtrace it.
+        // Goal found. We only wanted to calculate the path distance so we
+        // don't need to go on to backtrace it.
         return vertexDatum.totalDistance;
       }
 

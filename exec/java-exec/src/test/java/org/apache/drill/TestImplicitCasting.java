@@ -19,9 +19,17 @@ package org.apache.drill;
 
 import org.apache.drill.categories.SqlTest;
 import org.apache.drill.common.types.TypeProtos;
+import org.apache.drill.exec.physical.rowSet.DirectRowSet;
+import org.apache.drill.exec.physical.rowSet.RowSet;
+import org.apache.drill.exec.record.metadata.SchemaBuilder;
+import org.apache.drill.exec.record.metadata.TupleMetadata;
 import org.apache.drill.exec.resolver.ResolverTypePrecedence;
 import org.apache.drill.exec.resolver.TypeCastRules;
-import org.apache.drill.test.BaseTest;
+import org.apache.drill.test.ClusterFixtureBuilder;
+import org.apache.drill.test.ClusterTest;
+import org.apache.drill.test.rowSet.RowSetUtilities;
+import org.joda.time.Period;
+import org.junit.BeforeClass;
 import org.junit.Test;
 
 import org.junit.experimental.categories.Category;
@@ -29,7 +37,13 @@ import org.junit.experimental.categories.Category;
 import static org.junit.Assert.assertEquals;
 
 @Category(SqlTest.class)
-public class TestImplicitCasting extends BaseTest {
+public class TestImplicitCasting extends ClusterTest {
+
+  @BeforeClass
+  public static void setup() throws Exception {
+    ClusterTest.startCluster(new ClusterFixtureBuilder(dirTestWatcher));
+  }
+
   @Test
   public void testTimeStampAndTime() {
     final TypeProtos.MinorType result = TypeCastRules.getLeastRestrictiveType(
@@ -81,11 +95,64 @@ public class TestImplicitCasting extends BaseTest {
       ResolverTypePrecedence.computeCost(TypeProtos.MinorType.MAP, TypeProtos.MinorType.INT),
       0f
     );
-    // VARCHAR -> INT -> BIGINT
+    // VARCHAR -> VARDECIMAL -> INT -> BIGINT
     assertEquals(
-      4*ResolverTypePrecedence.BASE_COST + ResolverTypePrecedence.PRIMITIVE_TYPE_COST,
+      ResolverTypePrecedence.BASE_COST
+        + 2*ResolverTypePrecedence.BASE_COST
+        + ResolverTypePrecedence.PRIMITIVE_TYPE_COST,
       ResolverTypePrecedence.computeCost(TypeProtos.MinorType.VARCHAR, TypeProtos.MinorType.BIGINT),
       0f
     );
+  }
+
+  @Test
+  public void testSqrtOfString() throws Exception {
+    String sql = "select sqrt('5')";
+
+    DirectRowSet results = queryBuilder().sql(sql).rowSet();
+
+    TupleMetadata expectedSchema = new SchemaBuilder()
+      .add("EXPR$0", TypeProtos.MinorType.FLOAT8)
+      .build();
+
+    RowSet expected = client.rowSetBuilder(expectedSchema)
+      .addRow(2.23606797749979)
+      .build();
+
+    RowSetUtilities.verify(expected, results);
+  }
+
+  @Test
+  public void testDateDiffOfStrings() throws Exception {
+    String sql = "select date_diff('2022-01-01', '1970-01-01')";
+
+    DirectRowSet results = queryBuilder().sql(sql).rowSet();
+
+    TupleMetadata expectedSchema = new SchemaBuilder()
+      .add("EXPR$0", TypeProtos.MinorType.INTERVALDAY)
+      .build();
+
+    RowSet expected = client.rowSetBuilder(expectedSchema)
+      .addRow(new Period("P18993D"))
+      .build();
+
+    RowSetUtilities.verify(expected, results);
+  }
+
+  @Test
+  public void testSubstringOfDate() throws Exception {
+    String sql = "select substring(date '2022-09-09', 1, 4)";
+
+    DirectRowSet results = queryBuilder().sql(sql).rowSet();
+
+    TupleMetadata expectedSchema = new SchemaBuilder()
+      .add("EXPR$0", TypeProtos.MinorType.VARCHAR, 65535)
+      .build();
+
+    RowSet expected = client.rowSetBuilder(expectedSchema)
+      .addRow("2022")
+      .build();
+
+    RowSetUtilities.verify(expected, results);
   }
 }
