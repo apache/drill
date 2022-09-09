@@ -33,6 +33,8 @@ import org.apache.drill.test.ClusterTest;
 import org.apache.drill.test.QueryBuilder.QuerySummary;
 import org.apache.drill.test.rowSet.RowSetUtilities;
 import org.apache.hadoop.fs.Path;
+import org.hamcrest.CoreMatchers;
+import org.hamcrest.MatcherAssert;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Ignore;
@@ -58,11 +60,6 @@ import java.util.concurrent.TimeUnit;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
-
-/**
- * JDBC storage plugin tests against MySQL.
- * Note: it requires libaio1.so library on Linux
- */
 
 @Category(JdbcStorageTest.class)
 public class TestJdbcWriterWithMySQL extends ClusterTest {
@@ -283,15 +280,15 @@ public class TestJdbcWriterWithMySQL extends ClusterTest {
       .addNullable("bigint_field", MinorType.BIGINT, 19)
       .addNullable("float4_field", MinorType.FLOAT8, 12)
       .addNullable("float8_field", MinorType.FLOAT8, 22)
-      .addNullable("varchar_field", MinorType.VARCHAR, 38)
+      .addNullable("varchar_field", MinorType.VARCHAR, 3)
       .addNullable("date_field", MinorType.DATE, 10)
-      .addNullable("time_field", MinorType.TIME, 10)
-      .addNullable("timestamp_field", MinorType.TIMESTAMP, 19)
-      .addNullable("boolean_field", MinorType.BIT)
+      .addNullable("time_field", MinorType.TIME, 14)
+      .addNullable("timestamp_field", MinorType.TIMESTAMP, 23)
+      .addNullable("boolean_field", MinorType.BIT, 1)
       .buildSchema();
 
     RowSet expected = new RowSetBuilder(client.allocator(), expectedSchema)
-      .addRow(1, 2L, 3.0, 4.0, "5.0", LocalDate.parse("2021-01-01"), LocalTime.parse("12:00"), 1451516155000L, true)
+      .addRow(1, 2L, 3.0, 4.0, "5.0", LocalDate.parse("2021-01-01"), LocalTime.parse("12:00"), 1451516155230L, true)
       .build();
 
     RowSetUtilities.verify(expected, results);
@@ -435,7 +432,8 @@ public class TestJdbcWriterWithMySQL extends ClusterTest {
       queryBuilder().sql(sql).run();
       fail();
     } catch (UserRemoteException e) {
-      assertTrue(e.getMessage().contains("DATA_WRITE ERROR: Drill does not support writing complex fields to JDBC data sources."));
+      MatcherAssert.assertThat(e.getMessage(),
+        CoreMatchers.containsString("DATA_WRITE ERROR: Drill does not support writing complex fields to JDBC data sources."));
     }
   }
 
@@ -447,7 +445,8 @@ public class TestJdbcWriterWithMySQL extends ClusterTest {
       queryBuilder().sql(sql).run();
       fail();
     } catch (UserRemoteException e) {
-      assertTrue(e.getMessage().contains("DATA_WRITE ERROR: Drill does not yet support writing arrays to JDBC. `repeated_field` is an array."));
+      MatcherAssert.assertThat(e.getMessage(),
+        CoreMatchers.containsString("DATA_WRITE ERROR: Drill does not yet support writing arrays to JDBC. repeated_field is an array."));
     }
   }
 

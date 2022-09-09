@@ -20,7 +20,7 @@ package org.apache.drill.exec.store.jdbc;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Set;
-import java.util.stream.Collectors;
+import java.util.function.Consumer;
 
 import org.apache.calcite.adapter.jdbc.JdbcConvention;
 import org.apache.calcite.adapter.jdbc.JdbcRules;
@@ -31,7 +31,9 @@ import org.apache.calcite.linq4j.tree.ConstantUntypedNull;
 import org.apache.calcite.plan.Convention;
 import org.apache.calcite.plan.RelOptPlanner;
 import org.apache.calcite.plan.RelOptRule;
+import org.apache.calcite.plan.RelRule;
 import org.apache.calcite.plan.RelTrait;
+import org.apache.calcite.rel.convert.ConverterRule;
 import org.apache.calcite.sql.SqlDialect;
 import org.apache.drill.exec.planner.RuleInstance;
 import org.apache.drill.exec.planner.logical.DrillRel;
@@ -40,6 +42,7 @@ import org.apache.drill.exec.store.enumerable.plan.DrillJdbcRuleBase;
 import org.apache.drill.exec.store.enumerable.plan.VertexDrelConverterRule;
 import org.apache.drill.exec.store.jdbc.rules.JdbcLimitRule;
 import org.apache.drill.exec.store.jdbc.rules.JdbcSortRule;
+import org.apache.drill.shaded.guava.com.google.common.collect.ImmutableList;
 import org.apache.drill.shaded.guava.com.google.common.collect.ImmutableSet;
 
 /**
@@ -55,22 +58,16 @@ public class DrillJdbcConvention extends JdbcConvention {
 
   private final ImmutableSet<RelOptRule> rules;
   private final JdbcStoragePlugin plugin;
-  private final String username;
 
   DrillJdbcConvention(SqlDialect dialect, String name, JdbcStoragePlugin plugin, String username) {
     super(dialect, ConstantUntypedNull.INSTANCE, name);
     this.plugin = plugin;
-    this.username = username;
-    List<RelOptRule> calciteJdbcRules = JdbcRules.rules(this, DrillRelFactories.LOGICAL_BUILDER).stream()
-        .filter(rule -> !EXCLUDED_CALCITE_RULES.contains(rule.getClass()))
-        .collect(Collectors.toList());
 
     List<RelTrait> inputTraits = Arrays.asList(
       Convention.NONE,
       DrillRel.DRILL_LOGICAL);
 
     ImmutableSet.Builder<RelOptRule> builder = ImmutableSet.<RelOptRule>builder()
-      .addAll(calciteJdbcRules)
       .add(new JdbcIntermediatePrelConverterRule(this, username))
       .add(VertexDrelConverterRule.create(this))
       .add(RuleInstance.FILTER_SET_OP_TRANSPOSE_RULE)
@@ -81,6 +78,9 @@ public class DrillJdbcConvention extends JdbcConvention {
         .add(new DrillJdbcRuleBase.DrillJdbcFilterRule(inputTrait, this))
         .add(new JdbcSortRule(inputTrait, this))
         .add(new JdbcLimitRule(inputTrait, this));
+      rules(inputTrait, this).stream()
+        .filter(rule -> !EXCLUDED_CALCITE_RULES.contains(rule.getClass()))
+        .forEach(builder::add);
     }
 
     this.rules = builder.build();
@@ -97,5 +97,32 @@ public class DrillJdbcConvention extends JdbcConvention {
 
   public JdbcStoragePlugin getPlugin() {
     return plugin;
+  }
+
+  private static List<RelOptRule> rules(
+    RelTrait inputTrait, JdbcConvention out) {
+    ImmutableList.Builder<RelOptRule> b = ImmutableList.builder();
+    foreachRule(out, r ->
+      b.add(r.config
+        .as(ConverterRule.Config.class)
+        .withConversion(r.getOperand().getMatchedClass(), inputTrait, out, r.config.description())
+        .withRelBuilderFactory(DrillRelFactories.LOGICAL_BUILDER)
+        .toRule()));
+    return b.build();
+  }
+
+  private static void foreachRule(JdbcConvention out,
+    Consumer<RelRule<?>> consumer) {
+    consumer.accept(JdbcToEnumerableConverterRule.create(out));
+    consumer.accept(JdbcRules.JdbcJoinRule.create(out));
+    consumer.accept(JdbcProjectRule.create(out));
+    consumer.accept(JdbcFilterRule.create(out));
+    consumer.accept(JdbcRules.JdbcAggregateRule.create(out));
+    consumer.accept(JdbcRules.JdbcSortRule.create(out));
+    consumer.accept(JdbcRules.JdbcUnionRule.create(out));
+    consumer.accept(JdbcRules.JdbcIntersectRule.create(out));
+    consumer.accept(JdbcRules.JdbcMinusRule.create(out));
+    consumer.accept(JdbcRules.JdbcTableModificationRule.create(out));
+    consumer.accept(JdbcRules.JdbcValuesRule.create(out));
   }
 }

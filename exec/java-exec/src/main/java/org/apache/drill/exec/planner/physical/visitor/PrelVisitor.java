@@ -25,6 +25,7 @@ import org.apache.drill.exec.planner.physical.Prel;
 import org.apache.drill.exec.planner.physical.ProjectPrel;
 import org.apache.drill.exec.planner.physical.ScanPrel;
 import org.apache.drill.exec.planner.physical.ScreenPrel;
+import org.apache.drill.exec.planner.physical.TableModifyPrel;
 import org.apache.drill.exec.planner.physical.WriterPrel;
 import org.apache.drill.exec.planner.physical.UnnestPrel;
 import org.apache.drill.exec.planner.physical.LateralJoinPrel;
@@ -44,4 +45,5 @@ public interface PrelVisitor<RETURN, EXTRA, EXCEP extends Throwable> {
   RETURN visitUnnest(UnnestPrel prel, EXTRA value) throws EXCEP;
   RETURN visitLateral(LateralJoinPrel prel, EXTRA value) throws EXCEP;
   RETURN visitLeaf(LeafPrel prel, EXTRA value) throws EXCEP;
+  RETURN visitTableModify(TableModifyPrel prel, EXTRA value) throws EXCEP;
 }

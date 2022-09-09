@@ -38,6 +38,7 @@ import org.apache.drill.exec.physical.config.Sort;
 import org.apache.drill.exec.physical.config.StatisticsAggregate;
 import org.apache.drill.exec.physical.config.StatisticsMerge;
 import org.apache.drill.exec.physical.config.StreamingAggregate;
+import org.apache.drill.exec.physical.config.TableModify;
 import org.apache.drill.exec.physical.config.Trace;
 import org.apache.drill.exec.physical.config.UnionAll;
 import org.apache.drill.exec.physical.config.UnnestPOP;
@@ -227,6 +228,11 @@ public abstract class AbstractPhysicalVisitor<T, X, E extends Throwable> impleme
 
   @Override
   public T visitUnpivot(UnpivotMaps op, X value) throws E {
+    return visitOp(op, value);
+  }
+
+  @Override
+  public T visitTableModify(TableModify op, X value) throws E {
     return visitOp(op, value);
   }
 

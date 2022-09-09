@@ -47,7 +47,7 @@ public class WriterRecordBatch extends AbstractRecordBatch<Writer> {
 
   private EventBasedRecordWriter eventBasedRecordWriter;
   private RecordWriter recordWriter;
-  private long counter;
+  protected long counter;
   private final RecordBatch incoming;
   private boolean processed;
   private final String fragmentUniqueId;
@@ -134,7 +134,7 @@ public class WriterRecordBatch extends AbstractRecordBatch<Writer> {
     return IterOutcome.OK_NEW_SCHEMA;
   }
 
-  private void addOutputContainerData() {
+  protected void addOutputContainerData() {
     final VarCharVector fragmentIdVector = (VarCharVector) container.getValueAccessorById(
         VarCharVector.class,
         container.getValueVectorId(SchemaPath.getSimplePath("Fragment")).getFieldIds())
@@ -163,17 +163,7 @@ public class WriterRecordBatch extends AbstractRecordBatch<Writer> {
           .addContext("Failure updating record writer schema")
           .build(logger);
       }
-      // Create two vectors for:
-      //   1. Fragment unique id.
-      //   2. Summary: currently contains number of records written.
-      final MaterializedField fragmentIdField =
-          MaterializedField.create("Fragment", Types.required(MinorType.VARCHAR));
-      final MaterializedField summaryField =
-          MaterializedField.create("Number of records written",
-              Types.required(MinorType.BIGINT));
-
-      container.addOrGet(fragmentIdField);
-      container.addOrGet(summaryField);
+      addOutputSchema();
       container.buildSchema(BatchSchema.SelectionVectorMode.NONE);
     } finally {
       stats.stopSetup();
@@ -188,6 +178,20 @@ public class WriterRecordBatch extends AbstractRecordBatch<Writer> {
     }
     container.buildSchema(SelectionVectorMode.NONE);
     schema = container.getSchema();
+  }
+
+  protected void addOutputSchema() {
+    // Create two vectors for:
+    //   1. Fragment unique id.
+    //   2. Summary: currently contains number of records written.
+    final MaterializedField fragmentIdField =
+        MaterializedField.create("Fragment", Types.required(MinorType.VARCHAR));
+    final MaterializedField summaryField =
+        MaterializedField.create("Number of records written",
+            Types.required(MinorType.BIGINT));
+
+    container.addOrGet(fragmentIdField);
+    container.addOrGet(summaryField);
   }
 
   /** Clean up needs to be performed before closing writer. Partially written data will be removed. */

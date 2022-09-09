@@ -59,6 +59,11 @@ public abstract class AbstractStoragePlugin implements StoragePlugin {
     return false;
   }
 
+  @Override
+  public boolean supportsInsert() {
+    return false;
+  }
+
   /**
    * @deprecated Marking for deprecation in next major version release. Use
    *             {@link #getOptimizerRules(org.apache.drill.exec.ops.OptimizerRulesContext, org.apache.drill.exec.planner.PlannerPhase)}

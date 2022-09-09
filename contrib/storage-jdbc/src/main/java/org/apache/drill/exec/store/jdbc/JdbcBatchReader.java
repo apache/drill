@@ -67,6 +67,7 @@ public class JdbcBatchReader implements ManagedReader<SchemaNegotiator> {
   private Connection connection;
   private PreparedStatement statement;
   private ResultSet resultSet;
+  private Integer updateCount;
   private RowSetLoader rowWriter;
   private CustomErrorContext errorContext;
   private List<JdbcColumnWriter> columnWriters;
@@ -130,10 +131,15 @@ public class JdbcBatchReader implements ManagedReader<SchemaNegotiator> {
     this.errorContext = negotiator.parentErrorContext();
     try {
       connection = source.getConnection();
+      TupleMetadata drillSchema;
       statement = connection.prepareStatement(sql);
-      resultSet = statement.executeQuery();
-
-      TupleMetadata drillSchema = buildSchema();
+      if (statement.execute()) {
+        resultSet = statement.getResultSet();
+        drillSchema = buildSchema();
+      } else {
+        updateCount = statement.getUpdateCount();
+        drillSchema = buildUpdateQuerySchema();
+      }
       negotiator.tableSchema(drillSchema, true);
       ResultSetLoader resultSetLoader = negotiator.build();
 
@@ -164,15 +170,11 @@ public class JdbcBatchReader implements ManagedReader<SchemaNegotiator> {
 
   private boolean processRow() {
     try {
-      if (!resultSet.next()) {
-        return false;
+      if (resultSet != null) {
+        return processResultSetRow();
+      } else {
+        return processUpdateRow();
       }
-      rowWriter.start();
-      // Process results
-      for (JdbcColumnWriter writer : columnWriters) {
-        writer.load(resultSet);
-      }
-      rowWriter.save();
     } catch (SQLException e) {
       throw UserException
         .dataReadError(e)
@@ -181,7 +183,29 @@ public class JdbcBatchReader implements ManagedReader<SchemaNegotiator> {
         .addContext(errorContext)
         .build(logger);
     }
+  }
 
+  private boolean processResultSetRow() throws SQLException {
+    if (!resultSet.next()) {
+      return false;
+    }
+    rowWriter.start();
+    // Process results
+    for (JdbcColumnWriter writer : columnWriters) {
+      writer.load(resultSet);
+    }
+    rowWriter.save();
+    return true;
+  }
+
+  private boolean processUpdateRow() {
+    if (updateCount == null) {
+      return false;
+    }
+    rowWriter.start();
+    rowWriter.scalar(columns.get(0).getRootSegmentPath()).setLong(updateCount);
+    rowWriter.save();
+    updateCount = null;
     return true;
   }
 
@@ -243,6 +267,33 @@ public class JdbcBatchReader implements ManagedReader<SchemaNegotiator> {
     }
 
     return builder.buildSchema();
+  }
+
+  private TupleMetadata buildUpdateQuerySchema() throws SQLException {
+    if (columns.size() != 1) {
+      throw UserException
+        .validationError()
+        .message(
+          "Expected columns count differs from the returned one.\n" +
+            "Expected columns: %s\n" +
+            "Returned columns count: %s",
+          columns, 1)
+        .addContext("Sql", sql)
+        .addContext(errorContext)
+        .build(logger);
+    }
+
+    String name = columns.get(0).getRootSegmentPath();
+    int width = DRILL_REL_DATATYPE_SYSTEM.getMaxNumericPrecision();
+    int scale = 0;
+
+    MinorType minorType = MinorType.BIGINT;
+
+    jdbcColumns = new ArrayList<>();
+    jdbcColumns.add(new JdbcColumn(name, minorType, 0, scale, width));
+    return new SchemaBuilder()
+      .addNullable(name, minorType, width, scale)
+      .buildSchema();
   }
 
   private void populateWriterArray() {

@@ -35,6 +35,7 @@ import org.apache.drill.common.AutoCloseables;
 import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.common.logical.StoragePluginConfig.AuthMode;
 import org.apache.drill.exec.ops.OptimizerRulesContext;
+import org.apache.drill.exec.planner.PlannerPhase;
 import org.apache.drill.exec.proto.UserBitShared.UserCredentials;
 import org.apache.drill.exec.server.DrillbitContext;
 import org.apache.drill.exec.store.AbstractStoragePlugin;
@@ -92,7 +93,7 @@ public class JdbcStoragePlugin extends AbstractStoragePlugin {
         getName(),
         userCredentials.getUserName()
       );
-      return Optional.<DataSource>empty();
+      return Optional.empty();
     }
 
     // Missing creds is valid under SHARED_USER (e.g. unsecured DBs, BigQuery's OAuth)
@@ -138,15 +139,30 @@ public class JdbcStoragePlugin extends AbstractStoragePlugin {
   }
 
   @Override
-  public Set<RelOptRule> getPhysicalOptimizerRules(OptimizerRulesContext context) {
-    UserCredentials userCreds = context.getContextInformation().getQueryUserCredentials();
-    Optional<DataSource> dataSource = getDataSource(userCreds);
+  public boolean supportsInsert() {
+    return jdbcStorageConfig.isWritable();
+  }
 
-    if (!dataSource.isPresent()) {
-      return ImmutableSet.of();
+  @Override
+  public Set<? extends RelOptRule> getOptimizerRules(
+    OptimizerRulesContext optimizerContext, PlannerPhase phase) {
+    switch (phase) {
+      case LOGICAL:
+      case PHYSICAL: {
+        UserCredentials userCreds = optimizerContext.getContextInformation().getQueryUserCredentials();
+
+        String userName = userCreds.getUserName();
+        return getDataSource(userCreds)
+          .map(dataSource -> getConvention(getDialect(dataSource), userName).getRules())
+          .orElse(ImmutableSet.of());
+      }
+      case LOGICAL_PRUNE_AND_JOIN:
+      case LOGICAL_PRUNE:
+      case PARTITION_PRUNING:
+      case JOIN_PLANNING:
+      default:
+        return ImmutableSet.of();
     }
-
-    return getConvention( getDialect(dataSource.get()), userCreds.getUserName() ).getRules();
   }
 
   @Override
