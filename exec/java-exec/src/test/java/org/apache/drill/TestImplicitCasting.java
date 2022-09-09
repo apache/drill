@@ -155,4 +155,22 @@ public class TestImplicitCasting extends ClusterTest {
 
     RowSetUtilities.verify(expected, results);
   }
+
+  @Test
+  public void testBooleanStringEquality() throws Exception {
+    String sql = "select true = 'true', true = 'FalsE'";
+
+    DirectRowSet results = queryBuilder().sql(sql).rowSet();
+
+    TupleMetadata expectedSchema = new SchemaBuilder()
+      .add("EXPR$0", TypeProtos.MinorType.BIT)
+      .add("EXPR$1", TypeProtos.MinorType.BIT)
+      .build();
+
+    RowSet expected = client.rowSetBuilder(expectedSchema)
+      .addRow(true, false)
+      .build();
+
+    RowSetUtilities.verify(expected, results);
+  }
 }

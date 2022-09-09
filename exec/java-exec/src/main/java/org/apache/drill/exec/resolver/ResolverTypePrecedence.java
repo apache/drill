@@ -65,8 +65,12 @@ public class ResolverTypePrecedence {
     .putEdgeValue(MinorType.NULL, MinorType.MONEY, 3*BASE_COST)
     .putEdgeValue(MinorType.NULL, MinorType.DICT, 4*BASE_COST)
 
+    // bit conversions
+    // prefer to cast VARCHAR to BIT than BIT to numerics
+    .putEdgeValue(MinorType.BIT, MinorType.TINYINT, 10*BASE_COST)
+    .putEdgeValue(MinorType.BIT, MinorType.UINT1, 10*BASE_COST)
+
     // unsigned int widening
-    .putEdgeValue(MinorType.BIT, MinorType.UINT1, PRIMITIVE_TYPE_COST)
     .putEdgeValue(MinorType.UINT1, MinorType.UINT2, PRIMITIVE_TYPE_COST)
     .putEdgeValue(MinorType.UINT2, MinorType.UINT4, PRIMITIVE_TYPE_COST)
     .putEdgeValue(MinorType.UINT4, MinorType.UINT8, PRIMITIVE_TYPE_COST)
@@ -78,7 +82,6 @@ public class ResolverTypePrecedence {
     .putEdgeValue(MinorType.UINT8, MinorType.FLOAT8, BASE_COST)
 
     // int widening
-    .putEdgeValue(MinorType.BIT, MinorType.TINYINT, PRIMITIVE_TYPE_COST)
     .putEdgeValue(MinorType.TINYINT, MinorType.SMALLINT, PRIMITIVE_TYPE_COST)
     .putEdgeValue(MinorType.SMALLINT, MinorType.INT, PRIMITIVE_TYPE_COST)
     .putEdgeValue(MinorType.INT, MinorType.BIGINT, PRIMITIVE_TYPE_COST)
@@ -105,13 +108,15 @@ public class ResolverTypePrecedence {
     // VARDECIMAL casting preference: FLOAT8 > INT > VARCHAR
     .putEdgeValue(MinorType.VARDECIMAL, MinorType.FLOAT8, BASE_COST)
     .putEdgeValue(MinorType.VARDECIMAL, MinorType.INT, 2*BASE_COST)
-    .putEdgeValue(MinorType.VARDECIMAL, MinorType.VARCHAR, 3*BASE_COST)
+    // prefer the cast in the opposite direction
+    .putEdgeValue(MinorType.VARDECIMAL, MinorType.VARCHAR, 10*BASE_COST)
 
     // interval widening
     .putEdgeValue(MinorType.INTERVALDAY, MinorType.INTERVALYEAR, BASE_COST)
     .putEdgeValue(MinorType.INTERVALYEAR, MinorType.INTERVAL, BASE_COST)
     // interval conversions
-    .putEdgeValue(MinorType.INTERVAL, MinorType.VARCHAR, BASE_COST)
+    // prefer the cast in the opposite direction
+    .putEdgeValue(MinorType.INTERVAL, MinorType.VARCHAR, 10*BASE_COST)
 
     // dict widening
     .putEdgeValue(MinorType.DICT, MinorType.MAP, BASE_COST)
@@ -124,8 +129,9 @@ public class ResolverTypePrecedence {
     // TIMESTAMP casting preference: DATE > TIME > VARCHAR
     .putEdgeValue(MinorType.TIMESTAMP, MinorType.DATE, BASE_COST)
     .putEdgeValue(MinorType.TIMESTAMP, MinorType.TIME, 2*BASE_COST)
-    .putEdgeValue(MinorType.TIMESTAMPTZ, MinorType.VARCHAR, 3*BASE_COST)
-    .putEdgeValue(MinorType.TIMETZ, MinorType.VARCHAR, 3*BASE_COST)
+    // prefer the cast in the opposite direction
+    .putEdgeValue(MinorType.TIMESTAMPTZ, MinorType.VARCHAR, 10*BASE_COST)
+    .putEdgeValue(MinorType.TIMETZ, MinorType.VARCHAR, 10*BASE_COST)
 
     // char and binary widening
     .putEdgeValue(MinorType.FIXEDBINARY, MinorType.VARBINARY, BASE_COST)
