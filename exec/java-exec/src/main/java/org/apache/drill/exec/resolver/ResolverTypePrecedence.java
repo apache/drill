@@ -131,11 +131,12 @@ public class ResolverTypePrecedence {
     .putEdgeValue(MinorType.FIXEDBINARY, MinorType.VARBINARY, BASE_COST)
     .putEdgeValue(MinorType.FIXEDCHAR, MinorType.VARCHAR, BASE_COST)
     // char and binary conversions
-    // VARCHAR casting preference: TIMESTAMP > INTERVALDAY > VARDECIMAL > FLOAT8 > INT > VARBINARY
+    // VARCHAR casting preference: VARDECIMAL > FLOAT8 > TIMESTAMP > INTERVALDAY > VARBINARY
     .putEdgeValue(MinorType.VARCHAR, MinorType.VARDECIMAL, BASE_COST)
     .putEdgeValue(MinorType.VARCHAR, MinorType.FLOAT8, 2*BASE_COST)
     .putEdgeValue(MinorType.VARCHAR, MinorType.TIMESTAMP, 3*BASE_COST)
-    .putEdgeValue(MinorType.VARCHAR, MinorType.INTERVALDAY, 4*BASE_COST)
+    .putEdgeValue(MinorType.VARCHAR, MinorType.BIT, 4*BASE_COST)
+    .putEdgeValue(MinorType.VARCHAR, MinorType.INTERVALDAY, 5*BASE_COST)
     .putEdgeValue(MinorType.VARCHAR, MinorType.VARBINARY, 6*BASE_COST)
 
     // union type sink vertex
