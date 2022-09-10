@@ -19,7 +19,8 @@ package org.apache.drill.exec.compile;
 
 import java.io.IOException;
 import java.io.StringReader;
-import java.util.Arrays;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
@@ -46,11 +47,11 @@ class JaninoClassCompiler extends AbstractClassCompiler {
   @Override
   protected byte[][] getByteCode(final ClassNames className, final String sourceCode)
       throws CompileException, IOException {
-    ClassFile[] classFiles = doCompile(sourceCode);
+    List<ClassFile> classFiles = doCompile(sourceCode);
 
-    byte[][] byteCodes = new byte[classFiles.length][];
-    for(int i = 0; i < classFiles.length; i++){
-      byteCodes[i] = classFiles[i].toByteArray();
+    byte[][] byteCodes = new byte[classFiles.size()][];
+    for(int i = 0; i < classFiles.size(); i++){
+      byteCodes[i] = classFiles.get(i).toByteArray();
     }
     return byteCodes;
   }
@@ -59,18 +60,19 @@ class JaninoClassCompiler extends AbstractClassCompiler {
   public Map<String,byte[]> compile(final ClassNames className, final String sourceCode)
       throws CompileException, IOException, ClassNotFoundException {
 
-    ClassFile[] classFiles = doCompile(sourceCode);
-    return Arrays.stream(classFiles)
+    return doCompile(sourceCode).stream()
       .collect(Collectors.toMap(ClassFile::getThisClassName, ClassFile::toByteArray, (a, b) -> b));
   }
 
-  private ClassFile[] doCompile(final String sourceCode)
+  private List<ClassFile> doCompile(final String sourceCode)
       throws CompileException, IOException {
     StringReader reader = new StringReader(sourceCode);
     Scanner scanner = new Scanner(null, reader);
     Java.AbstractCompilationUnit compilationUnit = new Parser(scanner).parseAbstractCompilationUnit();
-    return new UnitCompiler(compilationUnit, compilationClassLoader)
-                                  .compileUnit(this.debug, this.debug, this.debug);
+    List<ClassFile> classFiles = new ArrayList<>();
+    new UnitCompiler(compilationUnit, compilationClassLoader)
+      .compileUnit(this.debug, this.debug, this.debug, classFiles);
+    return classFiles;
   }
 
   @Override
