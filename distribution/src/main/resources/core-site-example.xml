@@ -172,5 +172,19 @@
       </description>
     </property>
     -->
-
+    <!--
+    Use the next property to set a limit on the numer of files that Drill
+    will list by recursing into a DFS directory tree. When the limit is
+    encountered the initiating operation will fail with an error. The
+    intended application of this limit is to allow admins to protect their
+    Drillbits from an errant or malicious SELECT * FROM dfs.huge_workspace
+    LIMIT 10 query, which will cause an OOM given a big enough workspace of
+    files. Defaults to 0 which means no limit.
+    -->
+    <!--
+    <property>
+      <name>drill.exec.recursive_file_listing_max_size</name>
+      <value>10000</value>
+    </property>
+    --->
 </configuration>

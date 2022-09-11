@@ -35,7 +35,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.drill.common.exceptions.EmptyErrorContext;
 import org.apache.drill.common.logical.OAuthConfig;
 import org.apache.drill.common.logical.StoragePluginConfig.AuthMode;
-import org.apache.drill.common.map.CaseInsensitiveMap;
+import org.apache.drill.common.AutoCloseables;
 import org.apache.drill.common.exceptions.CustomErrorContext;
 import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.exec.ExecConstants;
@@ -322,7 +322,8 @@ public class SimpleHttp {
   /**
    * Returns an InputStream based on the URL and config in the scanSpec. If anything goes wrong
    * the method throws a UserException.
-   * @return An Inputstream of the data from the URL call.
+   * @return An Inputstream of the data from the URL call. The caller is responsible for calling
+   *         close() on the InputStream.
    */
   public InputStream getInputStream() {
 
@@ -370,15 +371,14 @@ public class SimpleHttp {
 
     // Build the request object
     Request request = requestBuilder.build();
+    Response response = null;
 
     try {
       logger.debug("Executing request: {}", request);
       logger.debug("Headers: {}", request.headers());
 
       // Execute the request
-      Response response = client
-        .newCall(request)
-        .execute();
+      response = client.newCall(request).execute();
 
       // Preserve the response
       responseMessage = response.message();
@@ -393,8 +393,9 @@ public class SimpleHttp {
         paginator.notifyPartialPage();
       }
 
-      // If the request is unsuccessful, throw a UserException
+      // If the request is unsuccessful clean up and throw a UserException
       if (!isSuccessful(responseCode)) {
+        AutoCloseables.closeSilently(response);
         throw UserException
           .dataReadError()
           .message("HTTP request failed")
@@ -406,9 +407,12 @@ public class SimpleHttp {
       logger.debug("HTTP Request for {} successful.", url());
       logger.debug("Response Headers: {} ", response.headers());
 
-      // Return the InputStream of the response
+      // Return the InputStream of the response. Note that it is necessary and
+      // and sufficient that the caller invokes close() on the returned stream.
       return Objects.requireNonNull(response.body()).byteStream();
+
     } catch (IOException e) {
+      // response can only be null at this location so we do not attempt to close it.
       throw UserException
         .dataReadError(e)
         .message("Failed to read the HTTP response body")
@@ -420,10 +424,14 @@ public class SimpleHttp {
 
   public String getResultsFromApiCall() {
     InputStream inputStream = getInputStream();
-    return new BufferedReader(
-      new InputStreamReader(inputStream, StandardCharsets.UTF_8))
-      .lines()
-      .collect(Collectors.joining("\n"));
+    try {
+      return new BufferedReader(
+        new InputStreamReader(inputStream, StandardCharsets.UTF_8))
+        .lines()
+        .collect(Collectors.joining("\n"));
+    } finally {
+      AutoCloseables.closeSilently(inputStream);
+    }
   }
 
   public static HttpProxyConfig getProxySettings(HttpStoragePluginConfig config, Config drillConfig, HttpUrl url) {
@@ -712,7 +720,6 @@ public class SimpleHttp {
         .message("API Query with URL Parameters must be populated.")
         .build(logger);
     }
-    CaseInsensitiveMap<String>caseInsensitiveFilterMap = (CaseInsensitiveMap<String>)filters;
 
     List<String> params = SimpleHttp.getURLParameters(url);
     String tempUrl = SimpleHttp.decodedURL(url);
@@ -726,7 +733,7 @@ public class SimpleHttp {
       //     of providing helpful errors in strange cases, it is there.
 
 
-      String value = caseInsensitiveFilterMap.get(param);
+      String value = filters.get(param);
 
       // Check and see if there is a default for this parameter. If not throw an error.
       if (StringUtils.isEmpty(value)) {
@@ -915,16 +922,25 @@ public class SimpleHttp {
   }
 
   public static String getRequestAndStringResponse(String url) {
+    ResponseBody respBody = null;
     try {
-      return makeSimpleGetRequest(url).string();
+      respBody = makeSimpleGetRequest(url);
+      return respBody.string();
     } catch (IOException e) {
       throw UserException
         .dataReadError(e)
         .message("HTTP request failed")
         .build(logger);
+    } finally {
+      AutoCloseables.closeSilently(respBody);
     }
   }
 
+  /**
+   *
+   * @param url
+   * @return an input stream which the caller is responsible for closing.
+   */
   public static InputStream getRequestAndStreamResponse(String url) {
     try {
       return makeSimpleGetRequest(url).byteStream();
@@ -936,6 +952,12 @@ public class SimpleHttp {
     }
   }
 
+  /**
+   *
+   * @param url
+   * @return response body which the caller is responsible for closing.
+   * @throws IOException
+   */
   public static ResponseBody makeSimpleGetRequest(String url) throws IOException {
     OkHttpClient client = getSimpleHttpClient();
     Request.Builder requestBuilder = new Request.Builder()
@@ -945,8 +967,8 @@ public class SimpleHttp {
     Request request = requestBuilder.build();
 
     // Execute the request
-      Response response = client.newCall(request).execute();
-      return response.body();
+    Response response = client.newCall(request).execute();
+    return response.body();
   }
 
   /**

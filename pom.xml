@@ -55,9 +55,9 @@
     <parquet.version>1.12.2</parquet.version>
     <parquet.format.version>2.8.0</parquet.format.version>
     <calcite.groupId>org.apache.calcite</calcite.groupId>
-    <calcite.version>1.31.0</calcite.version>
+    <calcite.version>1.32.0</calcite.version>
     <avatica.version>1.22.0</avatica.version>
-    <janino.version>3.1.7</janino.version>
+    <janino.version>3.1.8</janino.version>
     <sqlline.version>1.12.0</sqlline.version>
     <jackson.version>2.13.2.20220328</jackson.version>
     <zookeeper.version>3.5.7</zookeeper.version>
@@ -119,7 +119,7 @@
     <libthrift.version>0.14.0</libthrift.version>
     <derby.version>10.14.2.0</derby.version>
     <commons.cli.version>1.4</commons.cli.version>
-    <snakeyaml.version>1.26</snakeyaml.version>
+    <snakeyaml.version>1.31</snakeyaml.version>
     <commons.lang3.version>3.10</commons.lang3.version>
     <testcontainers.version>1.17.3</testcontainers.version>
     <typesafe.config.version>1.4.2</typesafe.config.version>
@@ -700,7 +700,6 @@
               <exclude>**/clientlib/y2038/*.h</exclude> <!-- All the files here should have MIT License -->
               <exclude>**/resources/parquet/**/*</exclude>
               <exclude>**/.asf.yaml</exclude>
-              <exclude>**/.lgtm.yml</exclude>
               <exclude>**/*.woff2</exclude>
               <exclude>**/*.ks</exclude>
               <exclude>**/*.pcap</exclude>

@@ -43,12 +43,8 @@
       <version>${calcite.version}</version>
       <exclusions>
         <exclusion>
-          <groupId>commons-logging</groupId>
-          <artifactId>commons-logging</artifactId>
-        </exclusion>
-        <exclusion>
           <groupId>com.datastax.oss</groupId>
-          <artifactId>cassandra-driver-core</artifactId>
+          <artifactId>java-driver-core</artifactId>
         </exclusion>
         <exclusion>
           <groupId>org.apache.calcite.avatica</groupId>

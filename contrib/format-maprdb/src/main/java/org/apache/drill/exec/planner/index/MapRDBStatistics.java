@@ -847,8 +847,10 @@ public class MapRDBStatistics implements Statistics {
           }
           // TODO: This maybe a potential bug since we assume UTF-8 encoding. However, we follow the
           // current DB implementation. See HBaseFilterBuilder.createHBaseScanSpec "like" CASE statement
-          RexLiteral startKeyLiteral = builder.makeLiteral(new String(startKey, Charsets.UTF_8));
-          RexLiteral stopKeyLiteral = builder.makeLiteral(new String(stopKey, Charsets.UTF_8));
+          RexLiteral startKeyLiteral = builder.makeLiteral(new String(startKey,
+              Charsets.UTF_8));
+          RexLiteral stopKeyLiteral = builder.makeLiteral(new String(stopKey,
+              Charsets.UTF_8));
           if (arg != null) {
             RexNode startPred = builder.makeCall(SqlStdOperatorTable.GREATER_THAN_OR_EQUAL,
                 arg, startKeyLiteral);

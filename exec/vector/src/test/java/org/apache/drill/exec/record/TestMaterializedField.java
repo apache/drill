@@ -27,9 +27,9 @@ public class TestMaterializedField {
 
   @Test
   public void testHashCodeContact() {
-    MaterializedField childField = MaterializedField.create(new String("child"), Types.OPTIONAL_BIT);
-    MaterializedField field = MaterializedField.create(new String("field"), Types.OPTIONAL_INT);
-    MaterializedField equalField = MaterializedField.create(new String("field"), Types.OPTIONAL_INT);
+    MaterializedField childField = MaterializedField.create("child", Types.OPTIONAL_BIT);
+    MaterializedField field = MaterializedField.create("field", Types.OPTIONAL_INT);
+    MaterializedField equalField = MaterializedField.create("field", Types.OPTIONAL_INT);
     field.addChild(childField);
     equalField.addChild(childField);
 
@@ -37,12 +37,12 @@ public class TestMaterializedField {
     assertEquals(field.hashCode(), equalField.hashCode());
 
     //equal fields with different case of field name
-    equalField = MaterializedField.create(new String("FIELD"), Types.OPTIONAL_INT);
+    equalField = MaterializedField.create("FIELD", Types.OPTIONAL_INT);
     equalField.addChild(childField);
     assertEquals(field.hashCode(), equalField.hashCode());
 
     //not equal fields
-    MaterializedField differentField = MaterializedField.create(new String("other"), Types.OPTIONAL_BIT);
+    MaterializedField differentField = MaterializedField.create("other", Types.OPTIONAL_BIT);
     differentField.addChild(childField);
     assertNotEquals(field.hashCode(), differentField.hashCode());
 
@@ -53,9 +53,9 @@ public class TestMaterializedField {
 
   @Test
   public void testEqualsContract() {
-    MaterializedField childField = MaterializedField.create(new String("child"), Types.OPTIONAL_BIT);
-    MaterializedField field = MaterializedField.create(new String("field"), Types.OPTIONAL_INT);
-    MaterializedField equalField = MaterializedField.create(new String("field"), Types.OPTIONAL_INT);
+    MaterializedField childField = MaterializedField.create("child", Types.OPTIONAL_BIT);
+    MaterializedField field = MaterializedField.create("field", Types.OPTIONAL_INT);
+    MaterializedField equalField = MaterializedField.create("field", Types.OPTIONAL_INT);
     field.addChild(childField);
     equalField.addChild(childField);
 
@@ -70,12 +70,12 @@ public class TestMaterializedField {
     assertNotEquals(field, null);
 
     //different type
-    MaterializedField differentField = MaterializedField.create(new String("field"), Types.OPTIONAL_BIT);
+    MaterializedField differentField = MaterializedField.create("field", Types.OPTIONAL_BIT);
     differentField.addChild(childField);
     assertNotEquals(field, differentField);
 
     //different name
-    differentField = MaterializedField.create(new String("other"), Types.OPTIONAL_INT);
+    differentField = MaterializedField.create("other", Types.OPTIONAL_INT);
     differentField.addChild(childField);
     assertNotEquals(field, differentField);
 

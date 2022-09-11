@@ -104,6 +104,9 @@ public class HttpApiConfig {
   @JsonProperty
   private final boolean errorOn400;
 
+  @JsonProperty
+  private final boolean caseSensitiveFilters;
+
   // Enables the user to configure JSON options at the connection level rather than globally.
   @JsonProperty
   private final HttpJsonOptions jsonOptions;
@@ -157,6 +160,10 @@ public class HttpApiConfig {
     return this.inputType;
   }
 
+  public boolean caseSensitiveFilters() {
+    return this.caseSensitiveFilters;
+  }
+
   public int xmlDataLevel() {
     return this.xmlDataLevel;
   }
@@ -199,6 +206,7 @@ public class HttpApiConfig {
       && errorOn400 == that.errorOn400
       && verifySSLCert == that.verifySSLCert
       && directCredentials == that.directCredentials
+      && caseSensitiveFilters == that.caseSensitiveFilters
       && Objects.equals(url, that.url)
       && Objects.equals(method, that.method)
       && Objects.equals(postBody, that.postBody)
@@ -218,7 +226,7 @@ public class HttpApiConfig {
   public int hashCode() {
     return Objects.hash(url, requireTail, method, postBody, headers, params, dataPath,
       authType, inputType, xmlDataLevel, limitQueryParam, errorOn400, jsonOptions, verifySSLCert,
-      credentialsProvider, paginator, directCredentials, postParameterLocation);
+      credentialsProvider, paginator, directCredentials, postParameterLocation, caseSensitiveFilters);
   }
 
   @Override
@@ -232,6 +240,7 @@ public class HttpApiConfig {
       .field("headers", headers)
       .field("params", params)
       .field("dataPath", dataPath)
+      .field("caseSensitiveFilters", caseSensitiveFilters)
       .field("authType", authType)
       .field("inputType", inputType)
       .field("xmlDataLevel", xmlDataLevel)
@@ -328,6 +337,7 @@ public class HttpApiConfig {
 
     this.xmlDataLevel = Math.max(1, builder.xmlDataLevel);
     this.errorOn400 = builder.errorOn400;
+    this.caseSensitiveFilters = builder.caseSensitiveFilters;
     this.credentialsProvider = CredentialProviderUtils.getCredentialsProvider(builder.userName, builder.password, builder.credentialsProvider);
     this.directCredentials = builder.credentialsProvider == null;
 
@@ -422,7 +432,7 @@ public class HttpApiConfig {
     private String authType;
 
     private int xmlDataLevel;
-
+    private boolean caseSensitiveFilters;
     private String limitQueryParam;
 
     private boolean errorOn400;
@@ -486,6 +496,11 @@ public class HttpApiConfig {
 
     public HttpApiConfigBuilder url(String url) {
       this.url = url;
+      return this;
+    }
+
+    public HttpApiConfigBuilder caseSensitiveFilters(boolean caseSensitiveFilters) {
+      this.caseSensitiveFilters = caseSensitiveFilters;
       return this;
     }
 

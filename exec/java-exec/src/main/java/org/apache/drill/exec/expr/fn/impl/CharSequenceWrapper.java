@@ -80,7 +80,7 @@ public class CharSequenceWrapper implements CharSequence {
   }
 
   /**
-   * When using the Java regex {@link Matcher} the subSequence is only called
+   * When using the Java regex {@link java.util.regex.Matcher} the subSequence is only called
    * when capturing groups. Drill does not currently use capture groups in the
    * UDF so this method is not required.<br>
    * It could be implemented by creating a new CharSequenceWrapper however
