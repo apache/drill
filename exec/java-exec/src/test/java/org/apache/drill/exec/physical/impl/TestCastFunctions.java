@@ -365,11 +365,11 @@ public class TestCastFunctions extends PopUnitTestBase {
 
       final Object [][] expected = new Object[2][2];
 
-      expected[0][0] = new String("2001");
-      expected[0][1] = new String("1.2");
+      expected[0][0] = "2001";
+      expected[0][1] = "1.2";
 
-      expected[1][0] = new String("-2002");
-      expected[1][1] = new String("-1.2");
+      expected[1][0] = "-2002";
+      expected[1][1] = "-1.2";
 
       assertEquals(result.length, expected.length);
       assertEquals(result[0].length, expected[0].length);

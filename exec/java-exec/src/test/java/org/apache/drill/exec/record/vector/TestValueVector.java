@@ -23,6 +23,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
 import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 
 import org.apache.drill.categories.UnlikelyTest;
 import org.apache.drill.categories.VectorTest;
@@ -86,10 +87,10 @@ public class TestValueVector extends ExecTest {
     allocator = RootAllocatorFactory.newRoot(drillConfig);
   }
 
-  private final static Charset utf8Charset = Charset.forName("UTF-8");
-  private final static byte[] STR1 = new String("AAAAA1").getBytes(utf8Charset);
-  private final static byte[] STR2 = new String("BBBBBBBBB2").getBytes(utf8Charset);
-  private final static byte[] STR3 = new String("CCCC3").getBytes(utf8Charset);
+  private final static Charset utf8Charset = StandardCharsets.UTF_8;
+  private final static byte[] STR1 = "AAAAA1".getBytes(utf8Charset);
+  private final static byte[] STR2 = "BBBBBBBBB2".getBytes(utf8Charset);
+  private final static byte[] STR3 = "CCCC3".getBytes(utf8Charset);
 
   @After
   public void terminate() throws Exception {

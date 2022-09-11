@@ -80,9 +80,9 @@ public class TableIndexCmd {
   public static void main(String[] args) {
     GuavaPatcher.patch();
 
-    String inHost = new String("localhost");
-    String inPort = new String("5181");
-    String inTable = new String("/tmp/population");
+    String inHost = "localhost";
+    String inPort = "5181";
+    String inTable = "/tmp/population";
     String dictPath = "hbase";
     boolean waitKeyPress = true;
     long inSize = 10000;
