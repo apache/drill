@@ -156,6 +156,7 @@ public class TestGoogleSheetsQueries extends ClusterTest {
     new RowSetComparison(expected).verifyAndClearAll(results);
   }
 
+  @Ignore("Implicit columns have some projection issues. See DRILL-7080.  Once this is resolved, re-enable this test.")
   @Test
   public void testStarAndImplicitFields() throws Exception {
     try {
@@ -166,7 +167,6 @@ public class TestGoogleSheetsQueries extends ClusterTest {
 
     String sql = String.format("SELECT *, _sheets FROM googlesheets.`%s`.`MixedSheet` LIMIT 3", sheetID);
     RowSet results = queryBuilder().sql(sql).rowSet();
-    results.print();
 
     TupleMetadata expectedSchema = new SchemaBuilder()
       .addNullable("Col1", MinorType.VARCHAR)
