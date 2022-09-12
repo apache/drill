@@ -304,7 +304,7 @@ public class TestJsonReader extends BaseTestQuery {
               .optionSettingQueriesForTestQuery("alter session set `exec.enable_union_type` = true")
               .optionSettingQueriesForTestQuery("alter session set `store.json.enable_v2_reader` = false")
               .baselineColumns("c")
-              .baselineValues(3.0)
+              .baselineValues(3L)
               .baselineValues(7.0)
               .baselineValues(11.0)
               .go();
