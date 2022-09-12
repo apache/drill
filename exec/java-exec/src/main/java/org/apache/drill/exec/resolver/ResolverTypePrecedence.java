@@ -81,7 +81,8 @@ public class ResolverTypePrecedence {
     // float widening
     .putEdgeValue(MinorType.FLOAT4, MinorType.FLOAT8, 1f)
     // float conversions
-    .putEdgeValue(MinorType.FLOAT8, MinorType.VARDECIMAL, 1f)
+    // prefer the cast in the opposite direction
+    .putEdgeValue(MinorType.FLOAT4, MinorType.VARDECIMAL, 10f)
 
     // decimal widening
     .putEdgeValue(MinorType.DECIMAL9, MinorType.DECIMAL18, 1f)
@@ -94,9 +95,9 @@ public class ResolverTypePrecedence {
     // decimal conversions
     // VARDECIMAL casting preference: FLOAT8 > INT > VARCHAR
     .putEdgeValue(MinorType.VARDECIMAL, MinorType.FLOAT8, 1f)
-    .putEdgeValue(MinorType.VARDECIMAL, MinorType.INT, 2f)
-    // prefer the cast in the opposite direction
-    .putEdgeValue(MinorType.VARDECIMAL, MinorType.VARCHAR, 10f)
+    // prefer the casts in the opposite directions
+    .putEdgeValue(MinorType.VARDECIMAL, MinorType.INT, 11f)
+    .putEdgeValue(MinorType.VARDECIMAL, MinorType.VARCHAR, 12f)
 
     // interval widening
     .putEdgeValue(MinorType.INTERVALDAY, MinorType.INTERVALYEAR, 1f)
@@ -115,8 +116,8 @@ public class ResolverTypePrecedence {
     // timestamp conversions
     // TIMESTAMP casting preference: DATE > TIME > VARCHAR
     // prefer the casts in the opposite directions
-    .putEdgeValue(MinorType.TIMESTAMP, MinorType.DATE, 2f)
-    .putEdgeValue(MinorType.TIMESTAMP, MinorType.TIME, 3f)
+    .putEdgeValue(MinorType.TIMESTAMP, MinorType.DATE, 10f)
+    .putEdgeValue(MinorType.TIMESTAMP, MinorType.TIME, 11f)
     .putEdgeValue(MinorType.TIMESTAMPTZ, MinorType.VARCHAR, 10f)
     .putEdgeValue(MinorType.TIMETZ, MinorType.VARCHAR, 10f)
 
