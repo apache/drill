@@ -41,7 +41,6 @@ public class ResolverTypePrecedence {
     .<MinorType, Float>immutable()
 
     // null type source vertex (null is castable to any type)
-    // NULL casting preference: BIT > INT > FLOAT4 > DECIMAL9 > VARCHAR > ... > DICT
     .putEdgeValue(MinorType.NULL, MinorType.VARCHAR, 1f)
     .putEdgeValue(MinorType.NULL, MinorType.BIT, 2f)
     .putEdgeValue(MinorType.NULL, MinorType.INT, 3f)
@@ -82,7 +81,7 @@ public class ResolverTypePrecedence {
     .putEdgeValue(MinorType.FLOAT4, MinorType.FLOAT8, 1f)
     // float conversions
     // prefer the cast in the opposite direction
-    .putEdgeValue(MinorType.FLOAT4, MinorType.VARDECIMAL, 10f)
+    .putEdgeValue(MinorType.FLOAT8, MinorType.VARDECIMAL, 10f)
 
     // decimal widening
     .putEdgeValue(MinorType.DECIMAL9, MinorType.DECIMAL18, 1f)
@@ -93,8 +92,7 @@ public class ResolverTypePrecedence {
     .putEdgeValue(MinorType.DECIMAL38DENSE, MinorType.VARDECIMAL, 1f)
     .putEdgeValue(MinorType.MONEY, MinorType.VARDECIMAL, 1f)
     // decimal conversions
-    // VARDECIMAL casting preference: FLOAT8 > INT > VARCHAR
-    .putEdgeValue(MinorType.VARDECIMAL, MinorType.FLOAT8, 1f)
+    .putEdgeValue(MinorType.VARDECIMAL, MinorType.FLOAT4, 1f)
     // prefer the casts in the opposite directions
     .putEdgeValue(MinorType.VARDECIMAL, MinorType.INT, 11f)
     .putEdgeValue(MinorType.VARDECIMAL, MinorType.VARCHAR, 12f)
@@ -118,16 +116,15 @@ public class ResolverTypePrecedence {
     // prefer the casts in the opposite directions
     .putEdgeValue(MinorType.TIMESTAMP, MinorType.DATE, 10f)
     .putEdgeValue(MinorType.TIMESTAMP, MinorType.TIME, 11f)
-    .putEdgeValue(MinorType.TIMESTAMPTZ, MinorType.VARCHAR, 10f)
-    .putEdgeValue(MinorType.TIMETZ, MinorType.VARCHAR, 10f)
+    .putEdgeValue(MinorType.TIMESTAMPTZ, MinorType.VARCHAR, 20f)
+    .putEdgeValue(MinorType.TIMETZ, MinorType.VARCHAR, 20f)
 
     // char and binary widening
     .putEdgeValue(MinorType.FIXEDBINARY, MinorType.VARBINARY, 1f)
     .putEdgeValue(MinorType.FIXEDCHAR, MinorType.VARCHAR, 1f)
     // char and binary conversions
-    // VARCHAR casting preference: INT > FLOAT8 > VARDECIMAL > TIMESTAMP > INTERVALDAY > BIT > VARBINARY
     .putEdgeValue(MinorType.VARCHAR, MinorType.INT, 1f)
-    .putEdgeValue(MinorType.VARCHAR, MinorType.FLOAT8, 2f)
+    .putEdgeValue(MinorType.VARCHAR, MinorType.FLOAT4, 2f)
     .putEdgeValue(MinorType.VARCHAR, MinorType.VARDECIMAL, 3f)
     .putEdgeValue(MinorType.VARCHAR, MinorType.TIMESTAMP, 4f)
     .putEdgeValue(MinorType.VARCHAR, MinorType.INTERVALDAY, 5f)
