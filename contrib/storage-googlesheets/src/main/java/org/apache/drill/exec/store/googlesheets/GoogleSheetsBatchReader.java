@@ -23,12 +23,15 @@ import com.google.api.services.sheets.v4.model.Sheet;
 import org.apache.drill.common.exceptions.CustomErrorContext;
 import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.common.expression.SchemaPath;
+import org.apache.drill.common.types.TypeProtos.DataMode;
 import org.apache.drill.common.types.TypeProtos.MinorType;
 import org.apache.drill.exec.physical.impl.scan.framework.ManagedReader;
 import org.apache.drill.exec.physical.impl.scan.framework.SchemaNegotiator;
 import org.apache.drill.exec.physical.resultSet.ResultSetLoader;
 import org.apache.drill.exec.physical.resultSet.RowSetLoader;
 import org.apache.drill.exec.record.MaterializedField;
+import org.apache.drill.exec.record.metadata.ColumnMetadata;
+import org.apache.drill.exec.record.metadata.MetadataUtils;
 import org.apache.drill.exec.record.metadata.TupleMetadata;
 import org.apache.drill.exec.store.googlesheets.columns.GoogleSheetsColumnWriter.GoogleSheetsBigIntegerColumnWriter;
 import org.apache.drill.exec.store.googlesheets.columns.GoogleSheetsColumnWriter.GoogleSheetsBooleanColumnWriter;
@@ -42,10 +45,14 @@ import org.apache.drill.exec.store.googlesheets.columns.GoogleSheetsColumnWriter
 import org.apache.drill.exec.store.googlesheets.utils.GoogleSheetsRangeBuilder;
 import org.apache.drill.exec.store.googlesheets.utils.GoogleSheetsUtils;
 import org.apache.drill.exec.util.Utilities;
+import org.apache.drill.exec.vector.accessor.ScalarWriter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
@@ -56,6 +63,9 @@ public class GoogleSheetsBatchReader implements ManagedReader<SchemaNegotiator> 
   // rows. There is conflicting information about this online, but during testing, ranges with more than
   // 1000 rows would throw invalid request errors.
   private static final int BATCH_SIZE = 1000;
+  private static final String SHEET_COLUMN_NAME = "_sheets";
+
+  private static final List<String> IMPLICIT_FIELDS =  Arrays.asList(SHEET_COLUMN_NAME);
 
   private final GoogleSheetsStoragePluginConfig config;
   private final GoogleSheetsSubScan subScan;
@@ -64,7 +74,11 @@ public class GoogleSheetsBatchReader implements ManagedReader<SchemaNegotiator> 
   private final Sheets service;
   private final GoogleSheetsRangeBuilder rangeBuilder;
   private final String sheetID;
+  private final List<String> sheetNames;
   private CustomErrorContext errorContext;
+  private ScalarWriter sheetNameWriter;
+
+  private TupleMetadata schema;
   private Map<String, GoogleSheetsColumn> columnMap;
   private RowSetLoader rowWriter;
 
@@ -74,6 +88,7 @@ public class GoogleSheetsBatchReader implements ManagedReader<SchemaNegotiator> 
     this.projectedColumns = subScan.getColumns();
     this.service = plugin.getSheetsService(subScan.getUserName());
     this.sheetID = subScan.getScanSpec().getSheetID();
+    this.sheetNames = new ArrayList<>();
     try {
       List<Sheet> sheetList = GoogleSheetsUtils.getSheetList(service, sheetID);
       this.sheet = sheetList.get(subScan.getScanSpec().getTabIndex());
@@ -104,8 +119,15 @@ public class GoogleSheetsBatchReader implements ManagedReader<SchemaNegotiator> 
     // Build Schema
     String tableName = subScan.getScanSpec().getTableName();
     String pluginName = subScan.getScanSpec().getSheetID();
+
     try {
       columnMap = GoogleSheetsUtils.getColumnMap(GoogleSheetsUtils.getFirstRows(service, pluginName, tableName), projectedColumns, config.allTextMode());
+
+      // Get sheet list for metadata.
+      List<Sheet> sheetList = GoogleSheetsUtils.getSheetList(service, pluginName);
+      for (Sheet sheet : sheetList) {
+        sheetNames.add(sheet.getProperties().getTitle());
+      }
     } catch (IOException e) {
       throw UserException.validationError(e)
         .message("Error building schema: " + e.getMessage())
@@ -148,12 +170,17 @@ public class GoogleSheetsBatchReader implements ManagedReader<SchemaNegotiator> 
     logger.debug(rangeBuilder.toString());
 
     // Add provided schema if present.
-    TupleMetadata schema;
     if (negotiator.hasProvidedSchema()) {
       schema = negotiator.providedSchema();
     } else {
       schema = GoogleSheetsUtils.buildSchema(columnMap);
     }
+
+    // Add implicit metadata to schema
+    ColumnMetadata sheetImplicitColumn = MetadataUtils.newScalar(SHEET_COLUMN_NAME, MinorType.VARCHAR, DataMode.REPEATED);
+    sheetImplicitColumn.setBooleanProperty(ColumnMetadata.EXCLUDE_FROM_WILDCARD, true);
+    schema.addColumn(sheetImplicitColumn);
+
     negotiator.tableSchema(schema, true);
     ResultSetLoader resultLoader = negotiator.build();
     // Create ScalarWriters
@@ -165,6 +192,10 @@ public class GoogleSheetsBatchReader implements ManagedReader<SchemaNegotiator> 
       // Build writers
       MinorType dataType;
       for (GoogleSheetsColumn column : columnMap.values()) {
+        // Ignore metadata columns.
+        if (column.isMetadata()) {
+          continue;
+        }
         dataType = column.getDrillDataType();
         if (dataType == MinorType.FLOAT8) {
           column.setWriter(new GoogleSheetsNumericColumnWriter(rowWriter, column.getColumnName()));
@@ -207,7 +238,11 @@ public class GoogleSheetsBatchReader implements ManagedReader<SchemaNegotiator> 
         data = GoogleSheetsUtils.getDataFromRange(service, sheetID, range);
       } else {
         List<String> batches = rangeBuilder.nextBatch();
-        data = GoogleSheetsUtils.getBatchData(service, sheetID, batches);
+        if (!batches.isEmpty()) {
+          data = GoogleSheetsUtils.getBatchData(service, sheetID, batches);
+        } else {
+          data = Collections.emptyList();
+        }
       }
     } catch (IOException e) {
       throw UserException.dataReadError(e)
@@ -223,6 +258,14 @@ public class GoogleSheetsBatchReader implements ManagedReader<SchemaNegotiator> 
     if (config.getExtractHeaders()) {
       startIndex = 1;
     }
+
+    // Edge Case:  If only metadata columns are projected, project one row and return
+    if (data.size() == 0 && onlyMetadata(schema)) {
+      rowWriter.start();
+      projectMetadata();
+      rowWriter.save();
+    }
+
     for (int rowIndex = startIndex; rowIndex < data.size(); rowIndex++) {
       rowWriter.start();
       row = data.get(rowIndex);
@@ -239,6 +282,7 @@ public class GoogleSheetsBatchReader implements ManagedReader<SchemaNegotiator> 
         }
         column.load(value);
       }
+      projectMetadata();
       rowWriter.save();
     }
 
@@ -246,6 +290,36 @@ public class GoogleSheetsBatchReader implements ManagedReader<SchemaNegotiator> 
     if (rowWriter.rowCount() < BATCH_SIZE) {
       rangeBuilder.lastBatch();
       return false;
+    }
+    return true;
+  }
+
+  private void projectMetadata() {
+    // Add metadata
+    if (sheetNameWriter == null) {
+      int sheetColumnIndex = rowWriter.tupleSchema().index(SHEET_COLUMN_NAME);
+      if (sheetColumnIndex == -1) {
+        ColumnMetadata colSchema = MetadataUtils.newScalar(SHEET_COLUMN_NAME, MinorType.VARCHAR, DataMode.REPEATED);
+        colSchema.setBooleanProperty(ColumnMetadata.EXCLUDE_FROM_WILDCARD, true);
+      }
+      sheetNameWriter = rowWriter.column(SHEET_COLUMN_NAME).array().scalar();
+    }
+
+    for (String sheetName : sheetNames) {
+      sheetNameWriter.setString(sheetName);
+    }
+  }
+
+  /**
+   * Returns true if the projected schema only contains implicit metadata columns.
+   * @param schema {@link TupleMetadata} The active schema
+   * @return True if the schema is only metadata, false otherwise.
+   */
+  private boolean onlyMetadata(TupleMetadata schema) {
+    for (MaterializedField field: schema.toFieldList()) {
+      if (!IMPLICIT_FIELDS.contains(field.getName())){
+        return false;
+      }
     }
     return true;
   }
@@ -258,6 +332,11 @@ public class GoogleSheetsBatchReader implements ManagedReader<SchemaNegotiator> 
     for (MaterializedField field: fieldList) {
       dataType = field.getType().getMinorType();
       column = columnMap.get(field.getName());
+
+      // Do not create a column writer object for metadata columns
+      if (column == null || column.isMetadata()) {
+        continue;
+      }
 
       // Get the field
       if (dataType == MinorType.FLOAT8) {

@@ -102,7 +102,11 @@ public class GoogleSheetsUtils {
     /**
      * A field containing timestamps.
      */
-    TIMESTAMP
+    TIMESTAMP,
+    /**
+     * A field containing a list of strings.  Only used for implicit columns.
+     */
+    VARCHAR_REPEATED
   }
 
   /**
@@ -379,6 +383,10 @@ public class GoogleSheetsUtils {
     int currentIndex;
     GoogleSheetsColumnRange currentRange = new GoogleSheetsColumnRange(sheetName);
     for (GoogleSheetsColumn column : columnMap.values()) {
+      // Exclude metadata columns
+      if (column.isMetadata()) {
+        continue;
+      }
       currentIndex = column.getColumnIndex();
 
       // Edge case for first range
