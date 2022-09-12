@@ -345,7 +345,7 @@ public class StringFunctions{
 
     @Override
     public void eval() {
-      out.value = (input.end - input.start) * 8;
+      out.value = (input.end - input.start) * 8L;
     }
   }
 

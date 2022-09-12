@@ -20,6 +20,7 @@ package org.apache.drill.exec.schema;
 import static org.apache.drill.shaded.guava.com.google.common.base.Preconditions.checkArgument;
 
 import java.util.List;
+import java.util.Objects;
 
 import org.apache.drill.common.types.TypeProtos.DataMode;
 
@@ -37,7 +38,7 @@ public class ListSchema implements RecordSchema {
     @Override
     public void addField(Field field) {
         if (field.getFieldType().getMode() == DataMode.REPEATED || fields.isEmpty() || !isSingleTyped() ||
-                !Iterables.getOnlyElement(fields).equals(field.getFieldType())) {
+                !Objects.equals(Iterables.getOnlyElement(fields).getFieldType(), field.getFieldType())) {
             fields.add(field);
         }
     }

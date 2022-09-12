@@ -24,8 +24,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
-import java.util.Set;
-import java.util.TreeSet;
 import java.util.concurrent.TimeUnit;
 
 import org.apache.commons.lang3.tuple.ImmutablePair;
@@ -372,8 +370,6 @@ public class OperatorWrapper {
           .build());
 
       final Number[] values = new Number[metricNames.length];
-      //Track new/Unknown Metrics
-      final Set<Integer> unknownMetrics = new TreeSet<>();
       for (final MetricValue metric : op.getMetricList()) {
         if (metric.getMetricId() < metricNames.length) {
           if (metric.hasLongValue()) {
@@ -381,9 +377,6 @@ public class OperatorWrapper {
           } else if (metric.hasDoubleValue()) {
             values[metric.getMetricId()] = metric.getDoubleValue();
           }
-        } else {
-          //Tracking unknown metric IDs
-          unknownMetrics.add(metric.getMetricId());
         }
       }
       for (final Number value : values) {

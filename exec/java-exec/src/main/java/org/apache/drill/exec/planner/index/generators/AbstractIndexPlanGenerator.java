@@ -261,10 +261,6 @@ public abstract class AbstractIndexPlanGenerator extends SubsetTransformer<RelNo
       DrillSortRel topSort = (DrillSortRel)top;
       input = topSort.getInput();
     }
-    else if ( top instanceof DrillSortRel) {
-      DrillSortRel topSort = (DrillSortRel) top;
-      input = topSort.getInput();
-    }
     else {
       return;
     }

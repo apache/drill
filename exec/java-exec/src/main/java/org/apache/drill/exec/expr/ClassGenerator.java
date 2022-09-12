@@ -173,7 +173,7 @@ public class ClassGenerator<T> {
       innerClasses.put(innerClassName, new ClassGenerator<>(codeGenerator, mappingSet, child, eval, innerClazz, model, optionManager));
     }
     long maxExprsNumber = optionManager != null ? optionManager.getOption(ExecConstants.CODE_GEN_EXP_IN_METHOD_SIZE_VALIDATOR) : 50;
-    maxIndex = Math.round((0xFFFF / (1 + 3. / (3 * sig.size() + maxExprsNumber)) - 1000) / 3);
+    maxIndex = Math.round((0xFFFF / (1 + 3. / (3L * sig.size() + maxExprsNumber)) - 1000) / 3);
   }
 
   public ClassGenerator<T> getInnerGenerator(String name) {
