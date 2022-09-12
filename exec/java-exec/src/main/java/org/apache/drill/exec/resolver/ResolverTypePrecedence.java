@@ -129,7 +129,7 @@ public class ResolverTypePrecedence {
     .putEdgeValue(MinorType.FIXEDBINARY, MinorType.VARBINARY, BASE_COST)
     .putEdgeValue(MinorType.FIXEDCHAR, MinorType.VARCHAR, BASE_COST)
     // char and binary conversions
-    // VARCHAR casting preference: INT > FLOAT8 > VARDECIMAL> TIMESTAMP > INTERVALDAY > BIT > VARBINARY
+    // VARCHAR casting preference: INT > FLOAT8 > VARDECIMAL > TIMESTAMP > INTERVALDAY > BIT > VARBINARY
     .putEdgeValue(MinorType.VARCHAR, MinorType.INT, BASE_COST)
     .putEdgeValue(MinorType.VARCHAR, MinorType.FLOAT8, 2*BASE_COST)
     .putEdgeValue(MinorType.VARCHAR, MinorType.VARDECIMAL, 3*BASE_COST)

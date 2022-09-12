@@ -85,7 +85,7 @@ public class TestImplicitCasting extends ClusterTest {
     );
     // TIMESTAMP -> DATE
     assertEquals(
-      ResolverTypePrecedence.BASE_COST,
+      2*ResolverTypePrecedence.BASE_COST,
       ResolverTypePrecedence.computeCost(TypeProtos.MinorType.TIMESTAMP, TypeProtos.MinorType.DATE),
       0f
     );
@@ -95,11 +95,9 @@ public class TestImplicitCasting extends ClusterTest {
       ResolverTypePrecedence.computeCost(TypeProtos.MinorType.MAP, TypeProtos.MinorType.INT),
       0f
     );
-    // VARCHAR -> VARDECIMAL -> INT -> BIGINT
+    // VARCHAR -> INT -> BIGINT
     assertEquals(
-      ResolverTypePrecedence.BASE_COST
-        + 2*ResolverTypePrecedence.BASE_COST
-        + ResolverTypePrecedence.PRIMITIVE_TYPE_COST,
+      ResolverTypePrecedence.BASE_COST + ResolverTypePrecedence.PRIMITIVE_TYPE_COST,
       ResolverTypePrecedence.computeCost(TypeProtos.MinorType.VARCHAR, TypeProtos.MinorType.BIGINT),
       0f
     );
@@ -123,8 +121,8 @@ public class TestImplicitCasting extends ClusterTest {
   }
 
   @Test
-  public void testDateDiffOfStrings() throws Exception {
-    String sql = "select date_diff('2022-01-01', '1970-01-01')";
+  public void testDateDiffOnStringDate() throws Exception {
+    String sql = "select date_diff('2022-01-01', date '1970-01-01')";
 
     DirectRowSet results = queryBuilder().sql(sql).rowSet();
 
