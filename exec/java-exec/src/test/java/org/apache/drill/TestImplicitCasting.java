@@ -58,34 +58,32 @@ public class TestImplicitCasting extends ClusterTest {
   public void testCastingCosts() {
     // INT -> BIGINT
     assertEquals(
-      ResolverTypePrecedence.PRIMITIVE_TYPE_COST,
+      1f,
       ResolverTypePrecedence.computeCost(TypeProtos.MinorType.INT, TypeProtos.MinorType.BIGINT),
       0f
     );
     // INT -> BIGINT -> VARDECIMAL
     assertEquals(
-      ResolverTypePrecedence.BASE_COST + ResolverTypePrecedence.PRIMITIVE_TYPE_COST,
+      3f,
       ResolverTypePrecedence.computeCost(TypeProtos.MinorType.INT, TypeProtos.MinorType.VARDECIMAL),
       0f
     );
     // DECIMAL9 -> DECIMAL18 -> DECIMAL28SPARSE -> DECIMAL28DENSE -> DECIMAL38SPARSE ->
     // -> DECIMAL38DENSE -> VARDECIMAL
     assertEquals(
-      6*ResolverTypePrecedence.BASE_COST,
+      6f,
       ResolverTypePrecedence.computeCost(TypeProtos.MinorType.DECIMAL9, TypeProtos.MinorType.VARDECIMAL),
       0f
     );
     // FLOAT4 -> FLOAT8 -> VARDECIMAL -> INT
     assertEquals(
-      ResolverTypePrecedence.PRIMITIVE_TYPE_COST
-        + 2*ResolverTypePrecedence.BASE_COST
-        + ResolverTypePrecedence.BASE_COST,
+      4f,
       ResolverTypePrecedence.computeCost(TypeProtos.MinorType.FLOAT4, TypeProtos.MinorType.INT),
       0f
     );
     // TIMESTAMP -> DATE
     assertEquals(
-      2*ResolverTypePrecedence.BASE_COST,
+      2f,
       ResolverTypePrecedence.computeCost(TypeProtos.MinorType.TIMESTAMP, TypeProtos.MinorType.DATE),
       0f
     );
@@ -97,7 +95,7 @@ public class TestImplicitCasting extends ClusterTest {
     );
     // VARCHAR -> INT -> BIGINT
     assertEquals(
-      ResolverTypePrecedence.BASE_COST + ResolverTypePrecedence.PRIMITIVE_TYPE_COST,
+      2f,
       ResolverTypePrecedence.computeCost(TypeProtos.MinorType.VARCHAR, TypeProtos.MinorType.BIGINT),
       0f
     );

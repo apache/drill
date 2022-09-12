@@ -29,11 +29,6 @@ import org.apache.drill.shaded.guava.com.google.common.graph.ValueGraphBuilder;
 
 public class ResolverTypePrecedence {
 
-  // Cost of casting between primitive types
-  public static final float PRIMITIVE_TYPE_COST = 1f;
-  // Base cost of casting
-  public static final float BASE_COST = 10f;
-
   // A weighted directed graph that represents the cost of casting between
   // pairs of data types. The edge weights represent casting preferences and
   // it is important to note that only some of these prefereces can be
@@ -47,101 +42,101 @@ public class ResolverTypePrecedence {
 
     // null type source vertex (null is castable to any type)
     // NULL casting preference: BIT > INT > FLOAT4 > DECIMAL9 > VARCHAR > ... > DICT
-    .putEdgeValue(MinorType.NULL, MinorType.BIT, PRIMITIVE_TYPE_COST)
-    .putEdgeValue(MinorType.NULL, MinorType.INT, 2*PRIMITIVE_TYPE_COST)
-    .putEdgeValue(MinorType.NULL, MinorType.FLOAT4, 3*PRIMITIVE_TYPE_COST)
-    .putEdgeValue(MinorType.NULL, MinorType.DECIMAL9, BASE_COST)
-    .putEdgeValue(MinorType.NULL, MinorType.VARCHAR, 2*BASE_COST)
-    .putEdgeValue(MinorType.NULL, MinorType.DATE, 3*BASE_COST)
-    .putEdgeValue(MinorType.NULL, MinorType.INTERVALDAY, 3*BASE_COST)
-    .putEdgeValue(MinorType.NULL, MinorType.MONEY, 3*BASE_COST)
-    .putEdgeValue(MinorType.NULL, MinorType.DICT, 4*BASE_COST)
+    .putEdgeValue(MinorType.NULL, MinorType.VARCHAR, 1f)
+    .putEdgeValue(MinorType.NULL, MinorType.BIT, 2f)
+    .putEdgeValue(MinorType.NULL, MinorType.INT, 3f)
+    .putEdgeValue(MinorType.NULL, MinorType.FLOAT4, 4f)
+    .putEdgeValue(MinorType.NULL, MinorType.DECIMAL9, 5f)
+    .putEdgeValue(MinorType.NULL, MinorType.DATE, 6f)
+    .putEdgeValue(MinorType.NULL, MinorType.INTERVALDAY, 7f)
+    .putEdgeValue(MinorType.NULL, MinorType.MONEY, 8f)
+    .putEdgeValue(MinorType.NULL, MinorType.DICT, 9f)
 
     // bit conversions
     // prefer to cast VARCHAR to BIT than BIT to numerics
-    .putEdgeValue(MinorType.BIT, MinorType.TINYINT, 10*BASE_COST)
-    .putEdgeValue(MinorType.BIT, MinorType.UINT1, 10*BASE_COST)
+    .putEdgeValue(MinorType.BIT, MinorType.TINYINT, 10f)
+    .putEdgeValue(MinorType.BIT, MinorType.UINT1, 10f)
 
     // unsigned int widening
-    .putEdgeValue(MinorType.UINT1, MinorType.UINT2, PRIMITIVE_TYPE_COST)
-    .putEdgeValue(MinorType.UINT2, MinorType.UINT4, PRIMITIVE_TYPE_COST)
-    .putEdgeValue(MinorType.UINT4, MinorType.UINT8, PRIMITIVE_TYPE_COST)
-    .putEdgeValue(MinorType.UINT8, MinorType.VARDECIMAL, BASE_COST)
+    .putEdgeValue(MinorType.UINT1, MinorType.UINT2, 1f)
+    .putEdgeValue(MinorType.UINT2, MinorType.UINT4, 1f)
+    .putEdgeValue(MinorType.UINT4, MinorType.UINT8, 1f)
+    .putEdgeValue(MinorType.UINT8, MinorType.VARDECIMAL, 1f)
     // unsigned int conversions
     // prefer to cast UINTs to BIGINT over FLOAT4
-    .putEdgeValue(MinorType.UINT4, MinorType.BIGINT, PRIMITIVE_TYPE_COST)
-    .putEdgeValue(MinorType.UINT4, MinorType.FLOAT4, 2*PRIMITIVE_TYPE_COST)
-    .putEdgeValue(MinorType.UINT8, MinorType.FLOAT4, 2*PRIMITIVE_TYPE_COST)
+    .putEdgeValue(MinorType.UINT4, MinorType.BIGINT, 1f)
+    .putEdgeValue(MinorType.UINT4, MinorType.FLOAT4, 2f)
+    .putEdgeValue(MinorType.UINT8, MinorType.FLOAT4, 2f)
 
     // int widening
-    .putEdgeValue(MinorType.TINYINT, MinorType.SMALLINT, PRIMITIVE_TYPE_COST)
-    .putEdgeValue(MinorType.SMALLINT, MinorType.INT, PRIMITIVE_TYPE_COST)
-    .putEdgeValue(MinorType.INT, MinorType.BIGINT, PRIMITIVE_TYPE_COST)
+    .putEdgeValue(MinorType.TINYINT, MinorType.SMALLINT, 1f)
+    .putEdgeValue(MinorType.SMALLINT, MinorType.INT, 1f)
+    .putEdgeValue(MinorType.INT, MinorType.BIGINT, 1f)
     // int conversions
     // prefer to cast INTs to BIGINT over FLOAT4
-    .putEdgeValue(MinorType.INT, MinorType.FLOAT4, 2*PRIMITIVE_TYPE_COST)
-    .putEdgeValue(MinorType.BIGINT, MinorType.FLOAT4, 2*PRIMITIVE_TYPE_COST)
-    .putEdgeValue(MinorType.BIGINT, MinorType.VARDECIMAL, BASE_COST)
+    .putEdgeValue(MinorType.INT, MinorType.FLOAT4, 2f)
+    .putEdgeValue(MinorType.BIGINT, MinorType.FLOAT4, 1f)
+    .putEdgeValue(MinorType.BIGINT, MinorType.VARDECIMAL, 2f)
 
     // float widening
-    .putEdgeValue(MinorType.FLOAT4, MinorType.FLOAT8, PRIMITIVE_TYPE_COST)
+    .putEdgeValue(MinorType.FLOAT4, MinorType.FLOAT8, 1f)
     // float conversions
-    .putEdgeValue(MinorType.FLOAT8, MinorType.VARDECIMAL, BASE_COST)
+    .putEdgeValue(MinorType.FLOAT8, MinorType.VARDECIMAL, 1f)
 
     // decimal widening
-    .putEdgeValue(MinorType.DECIMAL9, MinorType.DECIMAL18, BASE_COST)
-    .putEdgeValue(MinorType.DECIMAL18, MinorType.DECIMAL28SPARSE, BASE_COST)
-    .putEdgeValue(MinorType.DECIMAL28SPARSE, MinorType.DECIMAL28DENSE, BASE_COST)
-    .putEdgeValue(MinorType.DECIMAL28DENSE, MinorType.DECIMAL38SPARSE, BASE_COST)
-    .putEdgeValue(MinorType.DECIMAL38SPARSE, MinorType.DECIMAL38DENSE, BASE_COST)
-    .putEdgeValue(MinorType.DECIMAL38DENSE, MinorType.VARDECIMAL, BASE_COST)
-    .putEdgeValue(MinorType.MONEY, MinorType.VARDECIMAL, BASE_COST)
+    .putEdgeValue(MinorType.DECIMAL9, MinorType.DECIMAL18, 1f)
+    .putEdgeValue(MinorType.DECIMAL18, MinorType.DECIMAL28SPARSE, 1f)
+    .putEdgeValue(MinorType.DECIMAL28SPARSE, MinorType.DECIMAL28DENSE, 1f)
+    .putEdgeValue(MinorType.DECIMAL28DENSE, MinorType.DECIMAL38SPARSE, 1f)
+    .putEdgeValue(MinorType.DECIMAL38SPARSE, MinorType.DECIMAL38DENSE, 1f)
+    .putEdgeValue(MinorType.DECIMAL38DENSE, MinorType.VARDECIMAL, 1f)
+    .putEdgeValue(MinorType.MONEY, MinorType.VARDECIMAL, 1f)
     // decimal conversions
     // VARDECIMAL casting preference: FLOAT8 > INT > VARCHAR
-    .putEdgeValue(MinorType.VARDECIMAL, MinorType.FLOAT8, BASE_COST)
-    .putEdgeValue(MinorType.VARDECIMAL, MinorType.INT, 2*BASE_COST)
+    .putEdgeValue(MinorType.VARDECIMAL, MinorType.FLOAT8, 1f)
+    .putEdgeValue(MinorType.VARDECIMAL, MinorType.INT, 2f)
     // prefer the cast in the opposite direction
-    .putEdgeValue(MinorType.VARDECIMAL, MinorType.VARCHAR, 10*BASE_COST)
+    .putEdgeValue(MinorType.VARDECIMAL, MinorType.VARCHAR, 10f)
 
     // interval widening
-    .putEdgeValue(MinorType.INTERVALDAY, MinorType.INTERVALYEAR, BASE_COST)
-    .putEdgeValue(MinorType.INTERVALYEAR, MinorType.INTERVAL, BASE_COST)
+    .putEdgeValue(MinorType.INTERVALDAY, MinorType.INTERVALYEAR, 1f)
+    .putEdgeValue(MinorType.INTERVALYEAR, MinorType.INTERVAL, 1f)
     // interval conversions
     // prefer the cast in the opposite direction
-    .putEdgeValue(MinorType.INTERVAL, MinorType.VARCHAR, 10*BASE_COST)
+    .putEdgeValue(MinorType.INTERVAL, MinorType.VARCHAR, 10f)
 
     // dict widening
-    .putEdgeValue(MinorType.DICT, MinorType.MAP, BASE_COST)
+    .putEdgeValue(MinorType.DICT, MinorType.MAP, 1f)
 
     // timestamp widening
-    .putEdgeValue(MinorType.DATE, MinorType.TIMESTAMP, BASE_COST)
-    .putEdgeValue(MinorType.TIMESTAMP, MinorType.TIMESTAMPTZ, BASE_COST)
-    .putEdgeValue(MinorType.TIME, MinorType.TIMETZ, BASE_COST)
+    .putEdgeValue(MinorType.DATE, MinorType.TIMESTAMP, 1f)
+    .putEdgeValue(MinorType.TIMESTAMP, MinorType.TIMESTAMPTZ, 1f)
+    .putEdgeValue(MinorType.TIME, MinorType.TIMETZ, 1f)
     // timestamp conversions
     // TIMESTAMP casting preference: DATE > TIME > VARCHAR
     // prefer the casts in the opposite directions
-    .putEdgeValue(MinorType.TIMESTAMP, MinorType.DATE, 2*BASE_COST)
-    .putEdgeValue(MinorType.TIMESTAMP, MinorType.TIME, 3*BASE_COST)
-    .putEdgeValue(MinorType.TIMESTAMPTZ, MinorType.VARCHAR, 10*BASE_COST)
-    .putEdgeValue(MinorType.TIMETZ, MinorType.VARCHAR, 10*BASE_COST)
+    .putEdgeValue(MinorType.TIMESTAMP, MinorType.DATE, 2f)
+    .putEdgeValue(MinorType.TIMESTAMP, MinorType.TIME, 3f)
+    .putEdgeValue(MinorType.TIMESTAMPTZ, MinorType.VARCHAR, 10f)
+    .putEdgeValue(MinorType.TIMETZ, MinorType.VARCHAR, 10f)
 
     // char and binary widening
-    .putEdgeValue(MinorType.FIXEDBINARY, MinorType.VARBINARY, BASE_COST)
-    .putEdgeValue(MinorType.FIXEDCHAR, MinorType.VARCHAR, BASE_COST)
+    .putEdgeValue(MinorType.FIXEDBINARY, MinorType.VARBINARY, 1f)
+    .putEdgeValue(MinorType.FIXEDCHAR, MinorType.VARCHAR, 1f)
     // char and binary conversions
     // VARCHAR casting preference: INT > FLOAT8 > VARDECIMAL > TIMESTAMP > INTERVALDAY > BIT > VARBINARY
-    .putEdgeValue(MinorType.VARCHAR, MinorType.INT, BASE_COST)
-    .putEdgeValue(MinorType.VARCHAR, MinorType.FLOAT8, 2*BASE_COST)
-    .putEdgeValue(MinorType.VARCHAR, MinorType.VARDECIMAL, 3*BASE_COST)
-    .putEdgeValue(MinorType.VARCHAR, MinorType.TIMESTAMP, 4*BASE_COST)
-    .putEdgeValue(MinorType.VARCHAR, MinorType.INTERVALDAY, 5*BASE_COST)
-    .putEdgeValue(MinorType.VARCHAR, MinorType.BIT, 6*BASE_COST)
-    .putEdgeValue(MinorType.VARCHAR, MinorType.VARBINARY, 7*BASE_COST)
+    .putEdgeValue(MinorType.VARCHAR, MinorType.INT, 1f)
+    .putEdgeValue(MinorType.VARCHAR, MinorType.FLOAT8, 2f)
+    .putEdgeValue(MinorType.VARCHAR, MinorType.VARDECIMAL, 3f)
+    .putEdgeValue(MinorType.VARCHAR, MinorType.TIMESTAMP, 4f)
+    .putEdgeValue(MinorType.VARCHAR, MinorType.INTERVALDAY, 5f)
+    .putEdgeValue(MinorType.VARCHAR, MinorType.BIT, 6f)
+    .putEdgeValue(MinorType.VARCHAR, MinorType.VARBINARY, 7f)
 
     // union type sink vertex
-    .putEdgeValue(MinorType.LIST, MinorType.UNION, BASE_COST)
-    .putEdgeValue(MinorType.MAP, MinorType.UNION, BASE_COST)
-    .putEdgeValue(MinorType.VARBINARY, MinorType.UNION, BASE_COST)
+    .putEdgeValue(MinorType.LIST, MinorType.UNION, 1f)
+    .putEdgeValue(MinorType.MAP, MinorType.UNION, 1f)
+    .putEdgeValue(MinorType.VARBINARY, MinorType.UNION, 1f)
 
     .build();
 
