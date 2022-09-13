@@ -36,6 +36,11 @@ public class ResolverTypePrecedence {
   // precision. The others are derived from the expected behaviour of the query
   // engine in the face of various data types and queries as expressed by the
   // test suite.
+  //
+  // Bear in mind that this class only establishes which casts will be tried
+  // automatically and how they're ranked. See
+  // {@link org.apache.drill.exec.resolver.TypeCastRules} for listings of which
+  // casts are possible at all.
   public static final ImmutableValueGraph<MinorType, Float> CAST_GRAPH = ValueGraphBuilder
     .directed()
     .<MinorType, Float>immutable()
@@ -79,9 +84,6 @@ public class ResolverTypePrecedence {
 
     // float widening
     .putEdgeValue(MinorType.FLOAT4, MinorType.FLOAT8, 1f)
-    // float conversions
-    // prefer the cast in the opposite direction
-    .putEdgeValue(MinorType.FLOAT8, MinorType.VARDECIMAL, 10f)
 
     // decimal widening
     .putEdgeValue(MinorType.DECIMAL9, MinorType.DECIMAL18, 1f)

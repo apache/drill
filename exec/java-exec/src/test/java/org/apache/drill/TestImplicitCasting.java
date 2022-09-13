@@ -75,9 +75,9 @@ public class TestImplicitCasting extends ClusterTest {
       ResolverTypePrecedence.computeCost(TypeProtos.MinorType.DECIMAL9, TypeProtos.MinorType.VARDECIMAL),
       0f
     );
-    // FLOAT4 -> FLOAT8 -> VARDECIMAL -> INT
+    // No path from FLOAT4 to INT
     assertEquals(
-      1f+1f+10f+10f,
+      Float.POSITIVE_INFINITY,
       ResolverTypePrecedence.computeCost(TypeProtos.MinorType.FLOAT4, TypeProtos.MinorType.INT),
       0f
     );
@@ -87,10 +87,10 @@ public class TestImplicitCasting extends ClusterTest {
       ResolverTypePrecedence.computeCost(TypeProtos.MinorType.TIMESTAMP, TypeProtos.MinorType.DATE),
       0f
     );
-    // No path from MAP to INT
+    // No path from MAP to FLOAT8
     assertEquals(
       Float.POSITIVE_INFINITY,
-      ResolverTypePrecedence.computeCost(TypeProtos.MinorType.MAP, TypeProtos.MinorType.INT),
+      ResolverTypePrecedence.computeCost(TypeProtos.MinorType.MAP, TypeProtos.MinorType.FLOAT8),
       0f
     );
     // VARCHAR -> INT -> BIGINT
