@@ -128,8 +128,8 @@ public class ResolverTypePrecedence {
     .putEdgeValue(MinorType.TIMETZ, MinorType.VARCHAR, 20f)
 
     // char and binary widening
-    .putEdgeValue(MinorType.FIXEDBINARY, MinorType.VARBINARY, 1f)
     .putEdgeValue(MinorType.FIXEDCHAR, MinorType.VARCHAR, 1f)
+    .putEdgeValue(MinorType.FIXEDBINARY, MinorType.VARBINARY, 1f)
     // char and binary conversions
     .putEdgeValue(MinorType.VARCHAR, MinorType.INT, 1f)
     .putEdgeValue(MinorType.VARCHAR, MinorType.FLOAT4, 2f)
@@ -138,6 +138,7 @@ public class ResolverTypePrecedence {
     .putEdgeValue(MinorType.VARCHAR, MinorType.INTERVALDAY, 5f)
     .putEdgeValue(MinorType.VARCHAR, MinorType.BIT, 6f)
     .putEdgeValue(MinorType.VARCHAR, MinorType.VARBINARY, 7f)
+    .putEdgeValue(MinorType.VARBINARY, MinorType.VARCHAR, 1f)
 
     // union type sink vertex
     .putEdgeValue(MinorType.LIST, MinorType.UNION, 1f)
