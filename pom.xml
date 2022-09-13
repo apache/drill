@@ -119,7 +119,7 @@
     <libthrift.version>0.14.0</libthrift.version>
     <derby.version>10.14.2.0</derby.version>
     <commons.cli.version>1.4</commons.cli.version>
-    <snakeyaml.version>1.32</snakeyaml.version>
+    <snakeyaml.version>1.31</snakeyaml.version>
     <commons.lang3.version>3.10</commons.lang3.version>
     <testcontainers.version>1.17.3</testcontainers.version>
     <typesafe.config.version>1.4.2</typesafe.config.version>
