@@ -44,6 +44,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 
+import static org.apache.drill.test.rowSet.RowSetUtilities.strArray;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.fail;
 
@@ -133,6 +134,81 @@ public class TestGoogleSheetsQueries extends ClusterTest {
   }
 
   @Test
+  public void testImplicitFields() throws Exception {
+    // Tests special case of only implicit metadata fields being projected.
+    try {
+      initializeTokens("googlesheets");
+    } catch (PluginException e) {
+      fail(e.getMessage());
+    }
+
+    String sql = String.format("SELECT _sheets FROM googlesheets.`%s`.`MixedSheet` LIMIT 1", sheetID);
+    RowSet results = queryBuilder().sql(sql).rowSet();
+
+    TupleMetadata expectedSchema = new SchemaBuilder()
+      .addArray("_sheets", MinorType.VARCHAR)
+      .buildSchema();
+
+    RowSet expected = client.rowSetBuilder(expectedSchema)
+      .addRow((Object) strArray("TestSheet1", "MixedSheet"))
+      .build();
+
+    new RowSetComparison(expected).verifyAndClearAll(results);
+  }
+
+  @Ignore("Implicit columns have some projection issues. See DRILL-7080.  Once this is resolved, re-enable this test.")
+  @Test
+  public void testStarAndImplicitFields() throws Exception {
+    try {
+      initializeTokens("googlesheets");
+    } catch (PluginException e) {
+      fail(e.getMessage());
+    }
+
+    String sql = String.format("SELECT *, _sheets FROM googlesheets.`%s`.`MixedSheet` LIMIT 3", sheetID);
+    RowSet results = queryBuilder().sql(sql).rowSet();
+
+    TupleMetadata expectedSchema = new SchemaBuilder()
+      .addNullable("Col1", MinorType.VARCHAR)
+      .addNullable("Col2", MinorType.FLOAT8)
+      .addNullable("Col3", MinorType.DATE)
+      .addArray("_sheets", MinorType.VARCHAR)
+      .buildSchema();
+
+    RowSet expected = client.rowSetBuilder(expectedSchema)
+      .addRow("Rosaline  Thales", 1.0, null, strArray("TestSheet1", "MixedSheet"))
+      .addRow("Abdolhossein  Detlev", 2.0001, LocalDate.parse("2020-04-30"), strArray("TestSheet1", "MixedSheet"))
+      .build();
+
+    new RowSetComparison(expected).verifyAndClearAll(results);
+  }
+
+  @Test
+  public void testExplicitAndImplicitFields() throws Exception {
+    try {
+      initializeTokens("googlesheets");
+    } catch (PluginException e) {
+      fail(e.getMessage());
+    }
+
+    String sql = String.format("SELECT Col1, Col3, _sheets FROM googlesheets.`%s`.`MixedSheet` LIMIT 3", sheetID);
+    RowSet results = queryBuilder().sql(sql).rowSet();
+
+    TupleMetadata expectedSchema = new SchemaBuilder()
+      .addNullable("Col1", MinorType.VARCHAR)
+      .addNullable("Col3", MinorType.DATE)
+      .addArray("_sheets", MinorType.VARCHAR)
+      .buildSchema();
+
+    RowSet expected = client.rowSetBuilder(expectedSchema)
+      .addRow("Rosaline  Thales", null, strArray("TestSheet1", "MixedSheet"))
+      .addRow("Abdolhossein  Detlev", LocalDate.parse("2020-04-30"), strArray("TestSheet1", "MixedSheet"))
+      .build();
+
+    new RowSetComparison(expected).verifyAndClearAll(results);
+  }
+
+  @Test
   public void testProjectPushdown() throws Exception {
     try {
       initializeTokens("googlesheets");
@@ -174,6 +250,36 @@ public class TestGoogleSheetsQueries extends ClusterTest {
       .addRow("Kalani  Godabert",LocalDate.parse("2021-06-28"))
       .addRow("Caishen  Origenes", LocalDate.parse("2021-07-09"))
       .addRow("Toufik  Gurgen", LocalDate.parse("2021-11-05"))
+      .build();
+
+    new RowSetComparison(expected).verifyAndClearAll(results);
+  }
+
+  @Test
+  public void testWithExplicitColumnsInDifferentOrder() throws Exception {
+    try {
+      initializeTokens("googlesheets");
+    } catch (PluginException e) {
+      fail(e.getMessage());
+    }
+
+    String sql = String.format("SELECT Col3, Col1 FROM googlesheets.`%s`.`MixedSheet` WHERE `Col2` < 6.0", sheetID);
+    RowSet results = queryBuilder().sql(sql).rowSet();
+
+    TupleMetadata expectedSchema = new SchemaBuilder()
+      .addNullable("Col3", MinorType.DATE)
+      .addNullable("Col1", MinorType.VARCHAR)
+      .buildSchema();
+
+    RowSet expected = client.rowSetBuilder(expectedSchema)
+      .addRow(null, "Rosaline  Thales")
+      .addRow(LocalDate.parse("2020-04-30"), "Abdolhossein  Detlev")
+      .addRow(LocalDate.parse("2020-06-30"), null)
+      .addRow(LocalDate.parse("2021-01-15"), "Yunus  Elena")
+      .addRow(LocalDate.parse("2021-04-08"), "Swaran  Ohiyesa")
+      .addRow(LocalDate.parse("2021-06-28"), "Kalani  Godabert")
+      .addRow(LocalDate.parse("2021-07-09"), "Caishen  Origenes")
+      .addRow(LocalDate.parse("2021-11-05"), "Toufik  Gurgen")
       .build();
 
     new RowSetComparison(expected).verifyAndClearAll(results);

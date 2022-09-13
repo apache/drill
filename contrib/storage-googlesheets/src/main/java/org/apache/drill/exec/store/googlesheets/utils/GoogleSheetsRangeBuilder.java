@@ -203,6 +203,11 @@ public class GoogleSheetsRangeBuilder implements Iterator<String> {
     StringBuilder batch = new StringBuilder();
 
     for (GoogleSheetsColumnRange columnRange : projectedRanges) {
+      // The start column index will be -1 for metadata columns. Since we don't want
+      // metadata columns included in the batch, we skip them.
+      if (columnRange.getStartColIndex() == null  && columnRange.getEndColIndex() == -1) {
+        continue;
+      }
       batch.append("'")
         .append(sheetName)
         .append("'!")
