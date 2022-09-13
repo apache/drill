@@ -92,7 +92,8 @@ public class ResolverTypePrecedence {
     .putEdgeValue(MinorType.DECIMAL38DENSE, MinorType.VARDECIMAL, 1f)
     .putEdgeValue(MinorType.MONEY, MinorType.VARDECIMAL, 1f)
     // decimal conversions
-    .putEdgeValue(MinorType.VARDECIMAL, MinorType.FLOAT4, 1f)
+    // prefer to cast INTs to VARDECIMALs over VARDECIMALs to FLOATs
+    .putEdgeValue(MinorType.VARDECIMAL, MinorType.FLOAT4, 10f)
     // prefer the casts in the opposite directions
     .putEdgeValue(MinorType.VARDECIMAL, MinorType.INT, 11f)
     .putEdgeValue(MinorType.VARDECIMAL, MinorType.VARCHAR, 12f)
