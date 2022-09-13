@@ -84,6 +84,11 @@ public class ResolverTypePrecedence {
 
     // float widening
     .putEdgeValue(MinorType.FLOAT4, MinorType.FLOAT8, 1f)
+    // float conversion
+    // FLOATs are not castable to VARDECIMAL (see TypeCastRules)
+    // so are linked directly to VARCHAR with the opposite direction
+    // preferred.
+    .putEdgeValue(MinorType.FLOAT8, MinorType.VARCHAR, 10f)
 
     // decimal widening
     .putEdgeValue(MinorType.DECIMAL9, MinorType.DECIMAL18, 1f)

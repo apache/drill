@@ -37,6 +37,12 @@
     {inputType: "NullableUInt4", intype: "numeric"},
     {inputType: "UInt8", intype: "numeric"},
     {inputType: "NullableUInt8", intype: "numeric"},
+    {inputType: "Float4", intype: "numeric"},
+    {inputType: "NullableFloat4", intype: "numeric"},
+    {inputType: "Float8", intype: "numeric"},
+    {inputType: "NullableFloat8", intype: "numeric"},
+    {inputType: "VarDecimal", intype: "numeric"},
+    {inputType: "NullableVarDecimal", intype: "numeric"},
     {inputType: "VarChar", intype: "char"},
     {inputType: "NullableVarChar", intype: "char"}
   ]
