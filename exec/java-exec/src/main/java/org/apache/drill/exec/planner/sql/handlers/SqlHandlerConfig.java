@@ -24,7 +24,9 @@ import java.util.Optional;
 
 import org.apache.calcite.rel.RelNode;
 import org.apache.calcite.rel.RelShuttleImpl;
+import org.apache.calcite.rel.core.TableModify;
 import org.apache.calcite.rel.core.TableScan;
+import org.apache.calcite.rel.logical.LogicalTableModify;
 import org.apache.calcite.tools.RuleSet;
 import org.apache.drill.common.util.function.CheckedSupplier;
 import org.apache.drill.exec.ops.QueryContext;
@@ -72,16 +74,34 @@ public class SqlHandlerConfig {
 
     @Override
     public RelNode visit(TableScan scan) {
+      collectPlugins(scan);
+      return scan;
+    }
+
+    @Override
+    public RelNode visit(LogicalTableModify modify) {
+      collectPlugins(modify);
+      return visitChildren(modify);
+    }
+
+    @Override
+    public RelNode visit(RelNode other) {
+      if (other instanceof TableModify) {
+        collectPlugins(other);
+      }
+      return super.visit(other);
+    }
+
+    private void collectPlugins(RelNode relNode) {
       String pluginName = SchemaUtilites.getSchemaPathAsList(
-        scan.getTable().getQualifiedName().iterator().next()).iterator().next();
+        relNode.getTable().getQualifiedName().iterator().next()).iterator().next();
       CheckedSupplier<StoragePlugin, StoragePluginRegistry.PluginException> pluginsProvider =
         () -> storagePlugins.getPlugin(pluginName);
 
-      StoragePlugin storagePlugin = Optional.ofNullable(DrillRelOptUtil.getDrillTable(scan))
+      StoragePlugin storagePlugin = Optional.ofNullable(DrillRelOptUtil.getDrillTable(relNode))
         .map(DrillTable::getPlugin)
         .orElseGet(pluginsProvider);
       plugins.add(storagePlugin);
-      return scan;
     }
 
     public List<StoragePlugin> getPlugins() {

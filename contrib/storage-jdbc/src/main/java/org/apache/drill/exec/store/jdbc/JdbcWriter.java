@@ -17,11 +17,10 @@
  */
 package org.apache.drill.exec.store.jdbc;
 
-import java.io.IOException;
+import java.util.List;
 
 import org.apache.calcite.adapter.jdbc.JdbcSchema;
 import org.apache.drill.common.PlanStringBuilder;
-import org.apache.drill.common.exceptions.ExecutionSetupException;
 import org.apache.drill.common.logical.StoragePluginConfig;
 import org.apache.drill.exec.physical.base.AbstractWriter;
 import org.apache.drill.exec.physical.base.PhysicalOperator;
@@ -37,25 +36,25 @@ public class JdbcWriter extends AbstractWriter {
   public static final String OPERATOR_TYPE = "JDBC_WRITER";
 
   private final JdbcStoragePlugin plugin;
-  private final String tableName;
+  private final List<String> tableIdentifier;
   private final JdbcSchema inner;
 
   @JsonCreator
   public JdbcWriter(
     @JsonProperty("child") PhysicalOperator child,
-    @JsonProperty("name") String name,
+    @JsonProperty("tableIdentifier") List<String> tableIdentifier,
     @JsonProperty("storage") StoragePluginConfig storageConfig,
     @JacksonInject JdbcSchema inner,
-    @JacksonInject StoragePluginRegistry engineRegistry) throws IOException, ExecutionSetupException {
+    @JacksonInject StoragePluginRegistry engineRegistry) {
     super(child);
     this.plugin = engineRegistry.resolve(storageConfig, JdbcStoragePlugin.class);
-    this.tableName = name;
+    this.tableIdentifier = tableIdentifier;
     this.inner = inner;
   }
 
-  JdbcWriter(PhysicalOperator child, String name, JdbcSchema inner, JdbcStoragePlugin plugin) {
+  JdbcWriter(PhysicalOperator child, List<String> tableIdentifier, JdbcSchema inner, JdbcStoragePlugin plugin) {
     super(child);
-    this.tableName = name;
+    this.tableIdentifier = tableIdentifier;
     this.plugin = plugin;
     this.inner = inner;
   }
@@ -67,11 +66,11 @@ public class JdbcWriter extends AbstractWriter {
 
   @Override
   protected PhysicalOperator getNewWithChild(PhysicalOperator child) {
-    return new JdbcWriter(child, tableName, inner, plugin);
+    return new JdbcWriter(child, tableIdentifier, inner, plugin);
   }
 
-  public String getTableName() {
-    return tableName;
+  public List<String> getTableIdentifier() {
+    return tableIdentifier;
   }
 
   public StoragePluginConfig getStorage() {
@@ -89,7 +88,7 @@ public class JdbcWriter extends AbstractWriter {
   @Override
   public String toString() {
     return new PlanStringBuilder(this)
-      .field("tableName", tableName)
+      .field("tableName", tableIdentifier)
       .field("storageStrategy", getStorageStrategy())
       .toString();
   }

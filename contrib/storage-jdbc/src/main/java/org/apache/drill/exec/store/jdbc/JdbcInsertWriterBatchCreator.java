@@ -17,23 +17,23 @@
  */
 package org.apache.drill.exec.store.jdbc;
 
-import java.util.List;
-
-import javax.sql.DataSource;
-
 import org.apache.drill.common.exceptions.ExecutionSetupException;
 import org.apache.drill.exec.ops.ExecutorFragmentContext;
 import org.apache.drill.exec.physical.impl.BatchCreator;
-import org.apache.drill.exec.physical.impl.WriterRecordBatch;
+import org.apache.drill.exec.physical.impl.InsertWriterRecordBatch;
 import org.apache.drill.exec.proto.UserBitShared.UserCredentials;
 import org.apache.drill.exec.record.CloseableRecordBatch;
 import org.apache.drill.exec.record.RecordBatch;
 
+import javax.sql.DataSource;
+import java.util.List;
+
 @SuppressWarnings("unused")
-public class JdbcWriterBatchCreator implements BatchCreator<JdbcWriter> {
+public class JdbcInsertWriterBatchCreator implements BatchCreator<JdbcInsertWriter> {
 
   @Override
-  public CloseableRecordBatch getBatch(ExecutorFragmentContext context, JdbcWriter config, List<RecordBatch> children)
+  public CloseableRecordBatch getBatch(ExecutorFragmentContext context,
+    JdbcInsertWriter config, List<RecordBatch> children)
     throws ExecutionSetupException {
     assert children != null && children.size() == 1;
 
@@ -45,11 +45,11 @@ public class JdbcWriterBatchCreator implements BatchCreator<JdbcWriter> {
         config.getPlugin().getName()
       )));
 
-    return new WriterRecordBatch(
+    return new InsertWriterRecordBatch(
       config,
       children.iterator().next(),
       context,
-      new JdbcRecordWriter(ds, config.getTableIdentifier(), config)
+      new JdbcTableModifyWriter(ds, config.getTableIdentifier(), config)
     );
   }
 }

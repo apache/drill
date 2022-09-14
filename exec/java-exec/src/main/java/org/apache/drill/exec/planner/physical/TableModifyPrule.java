@@ -17,31 +17,31 @@
  */
 package org.apache.drill.exec.planner.physical;
 
-import org.apache.drill.exec.planner.common.DrillScreenRelBase;
-import org.apache.drill.exec.planner.logical.DrillRel;
-import org.apache.drill.exec.planner.logical.DrillScreenRel;
-import org.apache.drill.exec.planner.logical.RelOptHelper;
-import org.apache.calcite.rel.RelNode;
 import org.apache.calcite.plan.RelOptRule;
 import org.apache.calcite.plan.RelOptRuleCall;
 import org.apache.calcite.plan.RelTraitSet;
+import org.apache.calcite.rel.RelNode;
+import org.apache.drill.exec.planner.logical.DrillTableModify;
+import org.apache.drill.exec.planner.logical.RelOptHelper;
 
-public class ScreenPrule extends Prule{
-  public static final RelOptRule INSTANCE = new ScreenPrule();
+public class TableModifyPrule extends Prule {
+  public static final RelOptRule INSTANCE = new TableModifyPrule();
 
-
-  public ScreenPrule() {
-    super(RelOptHelper.some(DrillScreenRel.class, DrillRel.DRILL_LOGICAL, RelOptHelper.any(RelNode.class)), "Prel.ScreenPrule");
+  private TableModifyPrule() {
+    super(RelOptHelper.some(DrillTableModify.class, RelOptHelper.any(RelNode.class)), "TableModifyPrule");
   }
 
   @Override
   public void onMatch(RelOptRuleCall call) {
-    final DrillScreenRelBase screen = call.rel(0);
-    final RelNode input = call.rel(1);
+    DrillTableModify tableModify = call.rel(0);
+    RelNode input = tableModify.getInput();
 
-    final RelTraitSet traits = input.getTraitSet().plus(Prel.DRILL_PHYSICAL).plus(DrillDistributionTrait.SINGLETON);
-    final RelNode convertedInput = convert(input, traits);
-    DrillScreenRelBase newScreen = new ScreenPrel(screen.getCluster(), screen.getTraitSet().plus(Prel.DRILL_PHYSICAL).plus(DrillDistributionTrait.SINGLETON), convertedInput);
-    call.transformTo(newScreen);
+    RelTraitSet traits = input.getTraitSet().plus(Prel.DRILL_PHYSICAL);
+    RelNode convertedInput = convert(input, traits);
+
+    call.transformTo(new TableModifyPrel(
+      tableModify.getCluster(), traits, tableModify.getTable(),
+      tableModify.getCatalogReader(), convertedInput, tableModify.getOperation(),
+      tableModify.getUpdateColumnList(), tableModify.getSourceExpressionList(), tableModify.isFlattened()));
   }
 }

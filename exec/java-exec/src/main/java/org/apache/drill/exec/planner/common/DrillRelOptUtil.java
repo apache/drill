@@ -690,7 +690,7 @@ public abstract class DrillRelOptUtil {
     }
   }
 
-  public static DrillTable getDrillTable(final TableScan scan) {
+  public static DrillTable getDrillTable(RelNode scan) {
     DrillTable drillTable = scan.getTable().unwrap(DrillTable.class);
     if (drillTable == null) {
       DrillTranslatableTable transTable = scan.getTable().unwrap(DrillTranslatableTable.class);

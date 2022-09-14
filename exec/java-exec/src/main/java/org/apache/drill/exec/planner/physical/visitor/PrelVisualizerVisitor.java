@@ -25,6 +25,7 @@ import org.apache.drill.exec.planner.physical.Prel;
 import org.apache.drill.exec.planner.physical.ProjectPrel;
 import org.apache.drill.exec.planner.physical.ScanPrel;
 import org.apache.drill.exec.planner.physical.ScreenPrel;
+import org.apache.drill.exec.planner.physical.TableModifyPrel;
 import org.apache.drill.exec.planner.physical.WriterPrel;
 import org.apache.drill.exec.planner.physical.UnnestPrel;
 import org.apache.drill.exec.planner.physical.LateralJoinPrel;
@@ -251,6 +252,13 @@ public class PrelVisualizerVisitor
   @Override
   public Void visitLeaf(LeafPrel prel, VisualizationState value) throws Exception {
     visitPrel(prel, value);
+    return null;
+  }
+
+  @Override
+  public Void visitTableModify(TableModifyPrel prel, VisualizationState value) throws Exception {
+    visitBasePrel(prel, value);
+    endNode(prel, value);
     return null;
   }
 }

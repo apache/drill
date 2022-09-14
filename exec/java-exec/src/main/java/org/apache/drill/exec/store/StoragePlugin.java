@@ -56,6 +56,11 @@ public interface StoragePlugin extends SchemaFactory, AutoCloseable {
   boolean supportsWrite();
 
   /**
+   * Indicates if Drill can insert to a table to this plugin.
+   */
+  boolean supportsInsert();
+
+  /**
    * Method returns a Jackson serializable object that extends a StoragePluginConfig.
    *
    * @return an extension of StoragePluginConfig

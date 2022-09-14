@@ -41,6 +41,7 @@ import org.apache.drill.exec.planner.sql.handlers.DefaultSqlHandler;
 import org.apache.drill.exec.planner.sql.handlers.DescribeSchemaHandler;
 import org.apache.drill.exec.planner.sql.handlers.DescribeTableHandler;
 import org.apache.drill.exec.planner.sql.handlers.ExplainHandler;
+import org.apache.drill.exec.planner.sql.handlers.InsertHandler;
 import org.apache.drill.exec.planner.sql.handlers.MetastoreAnalyzeTableHandler;
 import org.apache.drill.exec.planner.sql.handlers.RefreshMetadataHandler;
 import org.apache.drill.exec.planner.sql.handlers.ResetOptionHandler;
@@ -50,7 +51,6 @@ import org.apache.drill.exec.planner.sql.handlers.SqlHandlerConfig;
 import org.apache.drill.exec.planner.sql.parser.DrillSqlCall;
 import org.apache.drill.exec.planner.sql.parser.DrillSqlDescribeTable;
 import org.apache.drill.exec.planner.sql.parser.DrillSqlResetOption;
-import org.apache.drill.exec.planner.sql.parser.DrillSqlSetOption;
 import org.apache.drill.exec.planner.sql.parser.SqlSchema;
 import org.apache.drill.exec.planner.sql.conversion.SqlConverter;
 import org.apache.drill.exec.testing.ControlsInjector;
@@ -215,16 +215,11 @@ public class DrillSqlWorker {
         context.setSQLStatementType(SqlStatementType.EXPLAIN);
         break;
       case SET_OPTION:
-        if (sqlNode instanceof DrillSqlSetOption) {
-          handler = new SetOptionHandler(context);
-          context.setSQLStatementType(SqlStatementType.SETOPTION);
-          break;
-        }
-        if (sqlNode instanceof DrillSqlResetOption) {
-          handler = new ResetOptionHandler(context);
-          context.setSQLStatementType(SqlStatementType.SETOPTION);
-          break;
-        }
+        handler = sqlNode instanceof DrillSqlResetOption
+          ? new ResetOptionHandler(context)
+          : new SetOptionHandler(context);
+        context.setSQLStatementType(SqlStatementType.SETOPTION);
+        break;
       case DESCRIBE_TABLE:
         if (sqlNode instanceof DrillSqlDescribeTable) {
           handler = new DescribeTableHandler(config);
@@ -245,6 +240,10 @@ public class DrillSqlWorker {
       case CREATE_TABLE:
         handler = ((DrillSqlCall) sqlNode).getSqlHandler(config, textPlan);
         context.setSQLStatementType(SqlStatementType.CTAS);
+        break;
+      case INSERT:
+        handler = new InsertHandler(config, textPlan);
+        context.setSQLStatementType(SqlStatementType.INSERT);
         break;
       case SELECT:
         handler = new DefaultSqlHandler(config, textPlan);

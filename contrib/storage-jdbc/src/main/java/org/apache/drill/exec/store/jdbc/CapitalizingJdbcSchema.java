@@ -18,10 +18,10 @@
 package org.apache.drill.exec.store.jdbc;
 
 import javax.sql.DataSource;
-import java.io.IOException;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
@@ -34,14 +34,18 @@ import org.apache.calcite.schema.Function;
 import org.apache.calcite.schema.SchemaPlus;
 import org.apache.calcite.schema.Table;
 import org.apache.calcite.sql.SqlDialect;
+import org.apache.calcite.sql.SqlIdentifier;
+import org.apache.calcite.sql.SqlLiteral;
+import org.apache.calcite.sql.parser.SqlParserPos;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.exec.physical.base.PhysicalOperator;
 import org.apache.drill.exec.physical.base.Writer;
 import org.apache.drill.exec.planner.logical.CreateTableEntry;
+import org.apache.drill.exec.planner.logical.ModifyTableEntry;
+import org.apache.drill.exec.planner.sql.parser.SqlDropTable;
 import org.apache.drill.exec.store.AbstractSchema;
 import org.apache.drill.exec.store.StorageStrategy;
-import org.apache.drill.exec.store.jdbc.utils.JdbcDDLQueryUtils;
-import org.apache.drill.exec.store.jdbc.utils.CreateTableStmtBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -122,9 +126,8 @@ public class CapitalizingJdbcSchema extends AbstractSchema {
     return new CreateTableEntry() {
 
       @Override
-      public Writer getWriter(PhysicalOperator child) throws IOException {
-        String tableWithSchema = CreateTableStmtBuilder.buildCompleteTableName(tableName, catalog, schema);
-        return new JdbcWriter(child, tableWithSchema, inner, plugin);
+      public Writer getWriter(PhysicalOperator child) {
+        return new JdbcWriter(child, getFullTablePath(tableName), inner, plugin);
       }
 
       @Override
@@ -132,6 +135,11 @@ public class CapitalizingJdbcSchema extends AbstractSchema {
         return Collections.emptyList();
       }
     };
+  }
+
+  @Override
+  public ModifyTableEntry modifyTable(String tableName) {
+    return child -> new JdbcInsertWriter(child, getFullTablePath(tableName), inner, plugin);
   }
 
   @Override
@@ -143,10 +151,11 @@ public class CapitalizingJdbcSchema extends AbstractSchema {
         .build(logger);
     }
 
-    String tableWithSchema = CreateTableStmtBuilder.buildCompleteTableName(tableName, catalog, schema);
-    String dropTableQuery = String.format("DROP TABLE %s", tableWithSchema);
+    List<String> names = getFullTablePath(tableName);
     SqlDialect dialect = plugin.getDialect(inner.getDataSource());
-    dropTableQuery = JdbcDDLQueryUtils.cleanDDLQuery(dropTableQuery, dialect);
+    String dropTableQuery = SqlDropTable.OPERATOR.createCall(
+        SqlParserPos.ZERO, new SqlIdentifier(names, SqlParserPos.ZERO), SqlLiteral.createBoolean(false, SqlParserPos.ZERO))
+      .toSqlString(dialect).getSql();
 
     try (Connection conn = inner.getDataSource().getConnection();
          Statement stmt = conn.createStatement()) {
@@ -165,6 +174,18 @@ public class CapitalizingJdbcSchema extends AbstractSchema {
         .addContext("plugin", name)
         .build(logger);
     }
+  }
+
+  private List<String> getFullTablePath(String tableName) {
+    List<String> names = new ArrayList<>();
+    if (!StringUtils.isEmpty(catalog)) {
+      names.add(catalog);
+    }
+    if (!StringUtils.isEmpty(schema)) {
+      names.add(schema);
+    }
+    names.add(tableName);
+    return names;
   }
 
   @Override

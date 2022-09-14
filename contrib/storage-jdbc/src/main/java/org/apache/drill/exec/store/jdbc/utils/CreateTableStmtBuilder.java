@@ -18,126 +18,130 @@
 
 package org.apache.drill.exec.store.jdbc.utils;
 
+import org.apache.calcite.schema.ColumnStrategy;
+import org.apache.calcite.sql.SqlBasicTypeNameSpec;
+import org.apache.calcite.sql.SqlDataTypeSpec;
 import org.apache.calcite.sql.SqlDialect;
+import org.apache.calcite.sql.SqlIdentifier;
+import org.apache.calcite.sql.SqlNode;
+import org.apache.calcite.sql.SqlNodeList;
+import org.apache.calcite.sql.ddl.SqlDdlNodes;
 import org.apache.calcite.sql.dialect.PostgresqlSqlDialect;
+import org.apache.calcite.sql.parser.SqlParserPos;
+import org.apache.calcite.sql.type.SqlTypeName;
+import org.apache.commons.collections4.CollectionUtils;
 import org.apache.drill.common.exceptions.UserException;
-import org.apache.drill.common.types.TypeProtos.MinorType;
-import org.apache.drill.exec.store.jdbc.JdbcRecordWriter;
-import org.apache.parquet.Strings;
+import org.apache.drill.common.types.TypeProtos;
+import org.apache.drill.common.types.Types;
+import org.apache.drill.exec.record.MaterializedField;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.sql.JDBCType;
+import java.util.List;
 
 public class CreateTableStmtBuilder {
   private static final Logger logger = LoggerFactory.getLogger(CreateTableStmtBuilder.class);
   public static final int DEFAULT_VARCHAR_PRECISION = 100;
 
-  private static final String CREATE_TABLE_QUERY = "CREATE TABLE %s (";
-  private StringBuilder createTableQuery;
-  private final String tableName;
+  private final List<String> tableIdentifier;
   private final SqlDialect dialect;
-  private StringBuilder columns;
+  private final SqlNodeList sqlColumns = new SqlNodeList(SqlParserPos.ZERO);
 
-  public CreateTableStmtBuilder(String tableName, SqlDialect dialect) {
-    if (Strings.isNullOrEmpty(tableName)) {
+  public CreateTableStmtBuilder(List<String> tableIdentifier, SqlDialect dialect) {
+    if (CollectionUtils.isEmpty(tableIdentifier)) {
       throw new UnsupportedOperationException("Table name cannot be empty");
     }
-    this.tableName = tableName;
+    this.tableIdentifier = tableIdentifier;
     this.dialect = dialect;
-    columns = new StringBuilder();
   }
 
   /**
    * Adds a column to the CREATE TABLE statement
-   * @param colName The column to be added to the table
-   * @param type The Drill MinorType of the column
-   * @param nullable If the column is nullable or not.
-   * @param precision The precision, or overall length of a column
-   * @param scale The scale, or number of digits after the decimal
    */
-  public void addColumn(String colName, MinorType type, boolean nullable, int precision, int scale) {
-    StringBuilder queryText = new StringBuilder();
-    String jdbcColTypeName = "";
-    try {
-      Integer jdbcColType = JdbcRecordWriter.JDBC_TYPE_MAPPINGS.get(type);
-      jdbcColTypeName = JDBCType.valueOf(jdbcColType).getName();
-
-      if (dialect instanceof PostgresqlSqlDialect) {
-        // pg data type name special case
-        if (jdbcColType.equals(java.sql.Types.DOUBLE)) {
-          // TODO: Calcite will incorrectly output DOUBLE instead of DOUBLE PRECISION under the pg dialect
-          jdbcColTypeName = "FLOAT";
-        }
+  public void addColumn(MaterializedField field) {
+    TypeProtos.MajorType majorType = populateScaleAndPrecisionIfRequired(field.getType());
+    int jdbcType = Types.getJdbcTypeCode(Types.getSqlTypeName(majorType));
+    if (dialect instanceof PostgresqlSqlDialect) {
+      // pg data type name special case
+      if (jdbcType == java.sql.Types.DOUBLE) {
+        // TODO: Calcite will incorrectly output DOUBLE instead of DOUBLE PRECISION under the pg dialect
+        jdbcType = java.sql.Types.FLOAT;
       }
-    } catch (NullPointerException e) {
-      // JDBC Does not support writing complex fields to databases
+    }
+    SqlTypeName sqlTypeName = SqlTypeName.getNameForJdbcType(jdbcType);
+
+    if (sqlTypeName == null) {
       throw UserException.dataWriteError()
         .message("Drill does not support writing complex fields to JDBC data sources.")
-        .addContext(colName + " is a complex type.")
+        .addContext(field.getName() + " is a complex type.")
         .build(logger);
     }
 
-    queryText.append(colName).append(" ").append(jdbcColTypeName);
+    int precision = majorType.hasPrecision()
+      ? majorType.getPrecision()
+      : -1;
 
-    // Add precision or scale if applicable
-    if (jdbcColTypeName.equals("VARCHAR")) {
-      int max_precision = Math.max(precision, DEFAULT_VARCHAR_PRECISION);
-      queryText.append("(").append(max_precision).append(")");
-    }
+    int scale = majorType.hasScale()
+      ? majorType.getScale()
+      : -1;
 
-    if (!nullable) {
-      queryText.append(" NOT NULL");
-    }
+    SqlBasicTypeNameSpec typeNameSpec = new SqlBasicTypeNameSpec(
+      sqlTypeName, precision, scale, SqlParserPos.ZERO);
 
-    if (! Strings.isNullOrEmpty(columns.toString())) {
-      columns.append(",\n");
-    }
+    SqlDataTypeSpec sqlDataTypeSpec = new SqlDataTypeSpec(
+      typeNameSpec,
+      SqlParserPos.ZERO).withNullable(field.isNullable());
 
-    columns.append(queryText);
+    ColumnStrategy columnStrategy = field.isNullable()
+      ? ColumnStrategy.NULLABLE
+      : ColumnStrategy.NOT_NULLABLE;
+
+    SqlNode sqlColumnDeclaration = SqlDdlNodes.column(SqlParserPos.ZERO,
+      new SqlIdentifier(field.getName(), SqlParserPos.ZERO),
+      sqlDataTypeSpec,
+      null,
+      columnStrategy);
+
+    sqlColumns.add(sqlColumnDeclaration);
   }
 
   /**
    * Generates the CREATE TABLE query.
    * @return The create table query.
    */
-  public CreateTableStmtBuilder build() {
-    createTableQuery = new StringBuilder();
-    createTableQuery.append(String.format(CREATE_TABLE_QUERY, tableName));
-    createTableQuery.append(columns);
-    createTableQuery.append("\n)");
-    return this;
+  public String build() {
+    SqlIdentifier sqlIdentifier = new SqlIdentifier(tableIdentifier, SqlParserPos.ZERO);
+    SqlNode createTable = SqlDdlNodes.createTable(SqlParserPos.ZERO,
+      false, false, sqlIdentifier, sqlColumns, null);
+
+    return createTable.toSqlString(dialect, true).getSql();
   }
 
-  public String getCreateTableQuery() {
-    return createTableQuery != null ? createTableQuery.toString() : null;
-  }
-
-  @Override
-  public String toString() {
-    return getCreateTableQuery();
-  }
-
-  /**
-   * This function adds the appropriate catalog, schema and table for the FROM clauses for INSERT queries
-   * @param table The table
-   * @param catalog The database catalog
-   * @param schema The database schema
-   * @return The table with catalog and schema added, if present
-   */
-  public static String buildCompleteTableName(String table, String catalog, String schema) {
-    logger.debug("Building complete table.");
-    StringBuilder completeTable = new StringBuilder();
-    if (! Strings.isNullOrEmpty(catalog)) {
-      completeTable.append(catalog);
-      completeTable.append(".");
+  private static TypeProtos.MajorType populateScaleAndPrecisionIfRequired(TypeProtos.MajorType type) {
+    switch (type.getMinorType()) {
+      case VARDECIMAL:
+        if (!type.hasPrecision()) {
+          type = type.toBuilder().setPrecision(Types.maxPrecision(type.getMinorType())).build();
+        }
+        if (!type.hasScale()) {
+          type = type.toBuilder().setScale(0).build();
+        }
+        break;
+      case FIXEDCHAR:
+      case FIXED16CHAR:
+      case VARCHAR:
+      case VAR16CHAR:
+      case VARBINARY:
+        if (!type.hasPrecision()) {
+          type = type.toBuilder().setPrecision(DEFAULT_VARCHAR_PRECISION).build();
+        }
+      case TIMESTAMP:
+      case TIME:
+        if (!type.hasPrecision()) {
+          type = type.toBuilder().setPrecision(Types.DEFAULT_TIMESTAMP_PRECISION).build();
+        }
+      default:
     }
-
-    if (! Strings.isNullOrEmpty(schema)) {
-      completeTable.append(schema);
-      completeTable.append(".");
-    }
-    completeTable.append(table);
-    return JdbcDDLQueryUtils.addBackTicksToTable(completeTable.toString());
+    return type;
   }
 }

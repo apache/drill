@@ -25,6 +25,7 @@ import org.apache.drill.exec.planner.physical.Prel;
 import org.apache.drill.exec.planner.physical.ProjectPrel;
 import org.apache.drill.exec.planner.physical.ScanPrel;
 import org.apache.drill.exec.planner.physical.ScreenPrel;
+import org.apache.drill.exec.planner.physical.TableModifyPrel;
 import org.apache.drill.exec.planner.physical.WriterPrel;
 import org.apache.drill.exec.planner.physical.UnnestPrel;
 import org.apache.drill.exec.planner.physical.LateralJoinPrel;
@@ -84,6 +85,11 @@ public class BasePrelVisitor<RETURN, EXTRA, EXCEP extends Throwable> implements 
 
   @Override
   public RETURN visitLeaf(LeafPrel prel, EXTRA value) throws EXCEP {
+    return visitPrel(prel, value);
+  }
+
+  @Override
+  public RETURN visitTableModify(TableModifyPrel prel, EXTRA value) throws EXCEP {
     return visitPrel(prel, value);
   }
 }

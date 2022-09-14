@@ -20,9 +20,11 @@ package org.apache.drill.exec.planner;
 import org.apache.drill.exec.planner.logical.ConvertMetadataAggregateToDirectScanRule;
 import org.apache.drill.exec.planner.logical.DrillDistinctJoinToSemiJoinRule;
 import org.apache.drill.exec.planner.logical.DrillReduceExpressionsRule;
+import org.apache.drill.exec.planner.logical.DrillTableModifyRule;
 import org.apache.drill.exec.planner.physical.MetadataAggPrule;
 import org.apache.drill.exec.planner.physical.MetadataControllerPrule;
 import org.apache.drill.exec.planner.physical.MetadataHandlerPrule;
+import org.apache.drill.exec.planner.physical.TableModifyPrule;
 import org.apache.drill.shaded.guava.com.google.common.collect.ImmutableSet;
 import org.apache.drill.shaded.guava.com.google.common.collect.ImmutableSet.Builder;
 import org.apache.drill.shaded.guava.com.google.common.collect.Lists;
@@ -370,7 +372,8 @@ public enum PlannerPhase {
       DrillUnionAllRule.INSTANCE,
       DrillValuesRule.INSTANCE,
       DrillUnnestRule.INSTANCE,
-      DrillCorrelateRule.INSTANCE
+      DrillCorrelateRule.INSTANCE,
+      DrillTableModifyRule.INSTANCE
       ).build();
 
   /**
@@ -552,6 +555,7 @@ public enum PlannerPhase {
 
     ruleList.add(DrillPushLimitToScanRule.LIMIT_ON_PROJECT);
     ruleList.add(DrillPushLimitToScanRule.LIMIT_ON_SCAN);
+    ruleList.add(TableModifyPrule.INSTANCE);
 
     if (ps.isHashAggEnabled()) {
       ruleList.add(HashAggPrule.INSTANCE);

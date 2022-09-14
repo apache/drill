@@ -30,6 +30,7 @@ import java.util.stream.IntStream;
 
 import org.apache.drill.common.exceptions.DrillRuntimeException;
 import org.apache.drill.exec.planner.logical.DrillTable;
+import org.apache.drill.exec.planner.logical.ModifyTableEntry;
 import org.apache.drill.exec.record.metadata.schema.SchemaProvider;
 import org.apache.drill.exec.record.metadata.schema.SchemaProviderFactory;
 import org.apache.drill.exec.store.table.function.TableParamDef;
@@ -185,6 +186,18 @@ public abstract class AbstractSchema implements Schema, SchemaPartitionExplorer,
   public CreateTableEntry createNewTable(String tableName, List<String> partitionColumns, StorageStrategy storageStrategy) {
     throw UserException.unsupportedError()
         .message("Creating new tables is not supported in schema [%s]", getSchemaPath())
+        .build(logger);
+  }
+
+  /**
+   * Returns table entry using table name to insert records into the table.
+   *
+   * @param tableName : new table name.
+   * @return insert table entry
+   */
+  public ModifyTableEntry modifyTable(String tableName) {
+    throw UserException.unsupportedError()
+        .message("Modifying tables is not supported in schema [%s]", getSchemaPath())
         .build(logger);
   }
 
