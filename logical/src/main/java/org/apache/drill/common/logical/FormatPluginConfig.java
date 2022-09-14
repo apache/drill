@@ -17,6 +17,7 @@
  */
 package org.apache.drill.common.logical;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 
 /**
@@ -33,5 +34,6 @@ import com.fasterxml.jackson.annotation.JsonTypeInfo;
  * in {@see StoragePluginConfig}s.
  */
 @JsonTypeInfo(use = JsonTypeInfo.Id.NAME, property = "type")
+@JsonFormat(with = JsonFormat.Feature.ACCEPT_CASE_INSENSITIVE_PROPERTIES)
 public interface FormatPluginConfig {
 }
