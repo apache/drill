@@ -30,7 +30,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * Constructs plan to be executed for collecting metadata and storing it to the Metastore.
+ * Constructs plan to be executed for inserting data into the table.
  */
 public class InsertHandler extends DefaultSqlHandler {
   private static final Logger logger = LoggerFactory.getLogger(InsertHandler.class);
