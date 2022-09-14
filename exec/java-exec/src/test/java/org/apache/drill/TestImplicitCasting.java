@@ -67,7 +67,7 @@ public class TestImplicitCasting extends ClusterTest {
     );
     // INT -> BIGINT -> VARDECIMAL
     assertEquals(
-      1f+10f,
+      1f+2f,
       ResolverTypePrecedence.computeCost(TypeProtos.MinorType.INT, TypeProtos.MinorType.VARDECIMAL),
       0f
     );
