@@ -28,12 +28,15 @@ import org.apache.drill.exec.resolver.TypeCastRules;
 import org.apache.drill.test.ClusterFixtureBuilder;
 import org.apache.drill.test.ClusterTest;
 import org.apache.drill.test.rowSet.RowSetUtilities;
+import static org.hamcrest.MatcherAssert.assertThat;
+
 import org.joda.time.Period;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
 import org.junit.experimental.categories.Category;
 
+import static org.hamcrest.Matchers.lessThan;
 import static org.junit.Assert.assertEquals;
 
 @Category(SqlTest.class)
@@ -64,7 +67,7 @@ public class TestImplicitCasting extends ClusterTest {
     );
     // INT -> BIGINT -> VARDECIMAL
     assertEquals(
-      1f+1f+1f,
+      1f+10f,
       ResolverTypePrecedence.computeCost(TypeProtos.MinorType.INT, TypeProtos.MinorType.VARDECIMAL),
       0f
     );
@@ -75,9 +78,9 @@ public class TestImplicitCasting extends ClusterTest {
       ResolverTypePrecedence.computeCost(TypeProtos.MinorType.DECIMAL9, TypeProtos.MinorType.VARDECIMAL),
       0f
     );
-    // FLOAT4 -> FLOAT8 -> VARCHAR -> INT
+    // FLOAT4 -> FLOAT8 -> VARDECIMAL -> INT
     assertEquals(
-      1f+10f+1f,
+      1f+20f+11f,
       ResolverTypePrecedence.computeCost(TypeProtos.MinorType.FLOAT4, TypeProtos.MinorType.INT),
       0f
     );
@@ -98,6 +101,42 @@ public class TestImplicitCasting extends ClusterTest {
       1f+1f,
       ResolverTypePrecedence.computeCost(TypeProtos.MinorType.VARCHAR, TypeProtos.MinorType.BIGINT),
       0f
+    );
+  }
+
+  @Test
+  public void testCastingPreferences() {
+    assertThat(
+      ResolverTypePrecedence.computeCost(TypeProtos.MinorType.VARCHAR, TypeProtos.MinorType.BIT),
+        lessThan(ResolverTypePrecedence.computeCost(TypeProtos.MinorType.BIT, TypeProtos.MinorType.INT))
+    );
+    assertThat(
+      ResolverTypePrecedence.computeCost(TypeProtos.MinorType.UINT1, TypeProtos.MinorType.BIGINT),
+        lessThan(ResolverTypePrecedence.computeCost(TypeProtos.MinorType.UINT1, TypeProtos.MinorType.FLOAT4))
+    );
+    assertThat(
+      ResolverTypePrecedence.computeCost(TypeProtos.MinorType.UINT1, TypeProtos.MinorType.BIGINT),
+        lessThan(ResolverTypePrecedence.computeCost(TypeProtos.MinorType.UINT1, TypeProtos.MinorType.FLOAT4))
+    );
+    assertThat(
+      ResolverTypePrecedence.computeCost(TypeProtos.MinorType.INT, TypeProtos.MinorType.FLOAT4),
+        lessThan(ResolverTypePrecedence.computeCost(TypeProtos.MinorType.INT, TypeProtos.MinorType.VARDECIMAL))
+    );
+    assertThat(
+      ResolverTypePrecedence.computeCost(TypeProtos.MinorType.VARDECIMAL, TypeProtos.MinorType.FLOAT8),
+        lessThan(ResolverTypePrecedence.computeCost(TypeProtos.MinorType.FLOAT8, TypeProtos.MinorType.VARDECIMAL))
+    );
+    assertThat(
+      ResolverTypePrecedence.computeCost(TypeProtos.MinorType.INT, TypeProtos.MinorType.VARDECIMAL),
+        lessThan(ResolverTypePrecedence.computeCost(TypeProtos.MinorType.VARDECIMAL, TypeProtos.MinorType.FLOAT4))
+    );
+    assertThat(
+      ResolverTypePrecedence.computeCost(TypeProtos.MinorType.VARCHAR, TypeProtos.MinorType.INTERVAL),
+        lessThan(ResolverTypePrecedence.computeCost(TypeProtos.MinorType.INTERVAL, TypeProtos.MinorType.VARCHAR))
+    );
+    assertThat(
+      ResolverTypePrecedence.computeCost(TypeProtos.MinorType.DATE, TypeProtos.MinorType.TIMESTAMP),
+        lessThan(ResolverTypePrecedence.computeCost(TypeProtos.MinorType.TIMESTAMP, TypeProtos.MinorType.DATE))
     );
   }
 

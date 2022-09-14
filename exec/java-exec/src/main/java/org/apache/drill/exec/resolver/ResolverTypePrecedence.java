@@ -77,26 +77,27 @@ public class ResolverTypePrecedence {
     .putEdgeValue(MinorType.SMALLINT, MinorType.INT, 1f)
     .putEdgeValue(MinorType.INT, MinorType.BIGINT, 1f)
     // int conversions
-    // prefer to cast INTs to BIGINT over FLOAT4
-    .putEdgeValue(MinorType.INT, MinorType.FLOAT4, 2f)
     .putEdgeValue(MinorType.BIGINT, MinorType.FLOAT4, 1f)
+    // prefer to cast INTs to FLOATs over VARDECIMALs
     .putEdgeValue(MinorType.BIGINT, MinorType.VARDECIMAL, 2f)
 
     // float widening
     .putEdgeValue(MinorType.FLOAT4, MinorType.FLOAT8, 1f)
     // float conversion
-    // FLOATs are not castable to VARDECIMAL (see TypeCastRules)
-    // so are linked directly to VARCHAR with the opposite direction
-    // preferred.
-    .putEdgeValue(MinorType.FLOAT8, MinorType.VARCHAR, 10f)
+    // FLOATs are not currently castable to VARDECIMAL (see TypeCastRules)
+    // but it is not possible to avoid some path between them here since
+    // FLOATs must ultimately be implcitly castable to VARCHAR, and VARCHAR
+    // to VARDECIMAL.
+    // prefer the cast in the opposite direction
+    .putEdgeValue(MinorType.FLOAT8, MinorType.VARDECIMAL, 20f)
 
     // decimal widening
     .putEdgeValue(MinorType.DECIMAL9, MinorType.DECIMAL18, 1f)
-    .putEdgeValue(MinorType.DECIMAL18, MinorType.DECIMAL28SPARSE, 1f)
-    .putEdgeValue(MinorType.DECIMAL28SPARSE, MinorType.DECIMAL28DENSE, 1f)
-    .putEdgeValue(MinorType.DECIMAL28DENSE, MinorType.DECIMAL38SPARSE, 1f)
-    .putEdgeValue(MinorType.DECIMAL38SPARSE, MinorType.DECIMAL38DENSE, 1f)
-    .putEdgeValue(MinorType.DECIMAL38DENSE, MinorType.VARDECIMAL, 1f)
+    .putEdgeValue(MinorType.DECIMAL18, MinorType.DECIMAL28DENSE, 1f)
+    .putEdgeValue(MinorType.DECIMAL28DENSE, MinorType.DECIMAL28SPARSE, 1f)
+    .putEdgeValue(MinorType.DECIMAL28SPARSE, MinorType.DECIMAL38DENSE, 1f)
+    .putEdgeValue(MinorType.DECIMAL38DENSE, MinorType.DECIMAL38SPARSE, 1f)
+    .putEdgeValue(MinorType.DECIMAL38SPARSE, MinorType.VARDECIMAL, 1f)
     .putEdgeValue(MinorType.MONEY, MinorType.VARDECIMAL, 1f)
     // decimal conversions
     // prefer to cast INTs to VARDECIMALs over VARDECIMALs to FLOATs

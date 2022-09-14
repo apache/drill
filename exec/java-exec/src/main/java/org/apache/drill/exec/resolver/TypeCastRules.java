@@ -21,6 +21,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 
 import org.apache.drill.common.expression.LogicalExpression;
@@ -750,12 +751,27 @@ public class TypeCastRules {
     return result;
   }
 
+  public static Optional<MinorType> getCheapestCast(MinorType fromType, MinorType... toTypes) {
+    MinorType cheapest = null;
+    float cheapestCost = Float.POSITIVE_INFINITY;
+
+    for (MinorType toType: toTypes) {
+      float toTypeCost = ResolverTypePrecedence.computeCost(fromType, toType);
+      if (toTypeCost < cheapestCost) {
+        cheapest = toType;
+        cheapestCost = toTypeCost;
+      }
+    }
+
+    return Optional.ofNullable(cheapest);
+  }
+
   // cost of changing mode from required to optional
   private static final float DATAMODE_CHANGE_COST = 1f;
-  // cost of casting to a field reader
-  private static final float FIELD_READER_COST = 10f;
-  // cost of matching a vararg function
-  private static final float VARARG_COST = 10f;
+  // cost of casting to a field reader, compare to edge weights in ResolverTypePrecedence
+  private static final float FIELD_READER_COST = 100f;
+  // cost of matching a vararg function, compare to edge weights in ResolverTypePrecedence
+  private static final float VARARG_COST = 100f;
 
   /**
    * Decide whether it's legal to do implicit cast.
