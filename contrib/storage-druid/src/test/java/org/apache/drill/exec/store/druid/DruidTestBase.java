@@ -35,7 +35,7 @@ public class DruidTestBase extends ClusterTest implements DruidTestConstants {
     startCluster(ClusterFixture.builder(dirTestWatcher));
     pluginRegistry = cluster.drillbit().getContext().getStorage();
 
-    DruidTestSuit.initDruid();
+    DruidTestSuite.initDruid();
     initDruidStoragePlugin();
   }
 
@@ -43,7 +43,7 @@ public class DruidTestBase extends ClusterTest implements DruidTestConstants {
     pluginRegistry
       .put(
         DruidStoragePluginConfig.NAME,
-        DruidTestSuit.getDruidStoragePluginConfig());
+        DruidTestSuite.getDruidStoragePluginConfig());
   }
 
   @AfterClass
