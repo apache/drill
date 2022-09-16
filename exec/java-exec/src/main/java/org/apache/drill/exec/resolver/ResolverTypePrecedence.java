@@ -54,7 +54,8 @@ public class ResolverTypePrecedence {
     .putEdgeValue(MinorType.NULL, MinorType.DATE, 6f)
     .putEdgeValue(MinorType.NULL, MinorType.INTERVALDAY, 7f)
     .putEdgeValue(MinorType.NULL, MinorType.MONEY, 8f)
-    .putEdgeValue(MinorType.NULL, MinorType.DICT, 9f)
+    .putEdgeValue(MinorType.NULL, MinorType.LIST, 9f)
+    .putEdgeValue(MinorType.NULL, MinorType.DICT, 10f)
 
     // bit conversions
     // prefer to cast VARCHAR to BIT than BIT to numerics
@@ -145,6 +146,7 @@ public class ResolverTypePrecedence {
     .putEdgeValue(MinorType.LIST, MinorType.UNION, 1f)
     .putEdgeValue(MinorType.MAP, MinorType.UNION, 1f)
     .putEdgeValue(MinorType.VARBINARY, MinorType.UNION, 1f)
+    .putEdgeValue(MinorType.UNION, MinorType.LATE, 1f)
 
     .build();
 

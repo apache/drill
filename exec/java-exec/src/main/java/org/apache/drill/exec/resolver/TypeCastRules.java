@@ -862,9 +862,12 @@ public class TypeCastRules {
           return Float.POSITIVE_INFINITY;
         }
       }
-
       // increase cost for var arg functions to prioritize regular ones
       totalCost += VARARG_COST;
+      totalCost += ResolverTypePrecedence.computeCost(
+        MinorType.NULL,
+        holder.getParamMajorType(varArgIndex).getMinorType()
+      );
       totalCost += holder.getParamMajorType(varArgIndex).getMode() == DataMode.REQUIRED ? 0 : 1;
     }
 
