@@ -18,6 +18,7 @@
 package org.apache.drill.exec.hive.complex_types;
 
 import java.math.BigDecimal;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Paths;
 import java.util.Arrays;
 import java.util.Collections;
@@ -1716,7 +1717,7 @@ public class TestHiveArrays extends HiveClusterTest {
     private final byte[] bytes;
 
     private StringBytes(String s) {
-      bytes = s.getBytes();
+      bytes = s.getBytes(StandardCharsets.UTF_8);
     }
 
     @Override
@@ -1730,7 +1731,7 @@ public class TestHiveArrays extends HiveClusterTest {
 
     @Override
     public String toString() {
-      return new String(bytes);
+      return new String(bytes, StandardCharsets.UTF_8);
     }
   }
 

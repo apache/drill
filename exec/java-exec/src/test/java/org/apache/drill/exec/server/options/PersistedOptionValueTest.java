@@ -27,6 +27,7 @@ import org.junit.Assert;
 import org.junit.Test;
 
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 
 public class PersistedOptionValueTest extends BaseTest {
   /**
@@ -51,10 +52,10 @@ public class PersistedOptionValueTest extends BaseTest {
     String longOptionJson = DrillFileUtils.getResourceAsString(longOptionFile);
     String stringOptionJson = DrillFileUtils.getResourceAsString(stringOptionFile);
 
-    PersistedOptionValue booleanValue = (PersistedOptionValue) serializer.deserialize(booleanOptionJson.getBytes());
-    PersistedOptionValue doubleValue = (PersistedOptionValue) serializer.deserialize(doubleOptionJson.getBytes());
-    PersistedOptionValue longValue = (PersistedOptionValue) serializer.deserialize(longOptionJson.getBytes());
-    PersistedOptionValue stringValue = (PersistedOptionValue) serializer.deserialize(stringOptionJson.getBytes());
+    PersistedOptionValue booleanValue = (PersistedOptionValue) serializer.deserialize(booleanOptionJson.getBytes(StandardCharsets.UTF_8));
+    PersistedOptionValue doubleValue = (PersistedOptionValue) serializer.deserialize(doubleOptionJson.getBytes(StandardCharsets.UTF_8));
+    PersistedOptionValue longValue = (PersistedOptionValue) serializer.deserialize(longOptionJson.getBytes(StandardCharsets.UTF_8));
+    PersistedOptionValue stringValue = (PersistedOptionValue) serializer.deserialize(stringOptionJson.getBytes(StandardCharsets.UTF_8));
 
     PersistedOptionValue expectedBooleanValue = new PersistedOptionValue("true");
     PersistedOptionValue expectedDoubleValue = new PersistedOptionValue("1.5");

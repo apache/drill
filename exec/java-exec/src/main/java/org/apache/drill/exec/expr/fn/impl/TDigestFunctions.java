@@ -1106,7 +1106,7 @@ public class TDigestFunctions {
         com.tdunning.math.stats.MergingDigest tdigest = (com.tdunning.math.stats.MergingDigest) work.obj;
         try {
           if (in.isSet != 0) {
-            byte[] buf = org.apache.drill.exec.expr.fn.impl.StringFunctionHelpers.toStringFromUTF8(in.start, in.end, in.buffer).getBytes();
+            byte[] buf = org.apache.drill.exec.expr.fn.impl.StringFunctionHelpers.toStringFromUTF8(in.start, in.end, in.buffer).getBytes(java.nio.charset.StandardCharsets.UTF_8);
             com.tdunning.math.stats.MergingDigest other =
               com.tdunning.math.stats.MergingDigest.fromBytes(java.nio.ByteBuffer.wrap(buf));
             tdigest.add(other);

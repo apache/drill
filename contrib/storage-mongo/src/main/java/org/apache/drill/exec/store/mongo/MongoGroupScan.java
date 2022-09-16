@@ -17,6 +17,7 @@
  */
 package org.apache.drill.exec.store.mongo;
 
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
@@ -497,7 +498,7 @@ public class MongoGroupScan extends AbstractGroupScan implements
         // some types not known to DocumentCodec, e.g. DBRef.
         DocumentCodec codec = new DocumentCodec(db.getCodecRegistry(), new BsonTypeClassMap());
         String json = collection.find().first().toJson(codec);
-        approxDiskCost = json.getBytes().length * recordCount;
+        approxDiskCost = json.getBytes(StandardCharsets.UTF_8).length * recordCount;
       }
       return new ScanStats(GroupScanProperty.ESTIMATED_TOTAL_COST, recordCount, 1, approxDiskCost);
     } catch (Exception e) {

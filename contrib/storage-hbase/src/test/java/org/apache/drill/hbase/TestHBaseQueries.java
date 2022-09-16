@@ -17,6 +17,7 @@
  */
 package org.apache.drill.hbase;
 
+import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 import java.util.List;
 
@@ -47,8 +48,8 @@ public class TestHBaseQueries extends BaseHBaseTest {
       desc.addFamily(new HColumnDescriptor("f"));
       admin.createTable(desc, Arrays.copyOfRange(TestTableGenerator.SPLIT_KEYS, 0, 2));
 
-      Put p = new Put("b".getBytes());
-      p.addColumn("f".getBytes(), "c".getBytes(), "1".getBytes());
+      Put p = new Put("b".getBytes(StandardCharsets.UTF_8));
+      p.addColumn("f".getBytes(StandardCharsets.UTF_8), "c".getBytes(StandardCharsets.UTF_8), "1".getBytes(StandardCharsets.UTF_8));
       table.put(p);
 
       setColumnWidths(new int[] {8, 15});

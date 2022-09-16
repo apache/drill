@@ -53,7 +53,7 @@ public class ComplexSchemaUtils {
       }
 
       VarCharHolder rowHolder = new VarCharHolder();
-      byte[] rowStringBytes = dataType.getBytes();
+      byte[] rowStringBytes = dataType.getBytes(java.nio.charset.StandardCharsets.UTF_8);
       buffer = buffer.reallocIfNeeded(rowStringBytes.length);
       buffer.setBytes(0, rowStringBytes);
 

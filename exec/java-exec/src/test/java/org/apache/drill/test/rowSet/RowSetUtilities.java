@@ -21,6 +21,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
 import java.math.BigDecimal;
+import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -85,7 +86,7 @@ public class RowSetUtilities {
   public static Object testDataFromInt(ValueType valueType, MajorType dataType, int value) {
     switch (valueType) {
     case BYTES:
-      return Integer.toHexString(value).getBytes();
+      return Integer.toHexString(value).getBytes(StandardCharsets.UTF_8);
     case FLOAT:
       return (float) value;
     case DOUBLE:

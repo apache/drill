@@ -26,6 +26,7 @@ import org.apache.parquet.io.api.Binary;
 import org.apache.parquet.schema.OriginalType;
 import org.apache.parquet.schema.PrimitiveType;
 
+import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -263,7 +264,7 @@ public class Metadata_V1 {
     @JsonProperty(value = "min")
     public Object getMin() {
       if (primitiveType == PrimitiveType.PrimitiveTypeName.BINARY && min != null) {
-        return new String(((Binary) min).getBytes());
+        return new String(((Binary) min).getBytes(), StandardCharsets.UTF_8);
       }
       return min;
     }
@@ -271,7 +272,7 @@ public class Metadata_V1 {
     @JsonProperty(value = "max")
     public Object getMax() {
       if (primitiveType == PrimitiveType.PrimitiveTypeName.BINARY && max != null) {
-        return new String(((Binary) max).getBytes());
+        return new String(((Binary) max).getBytes(), StandardCharsets.UTF_8);
       }
       return max;
     }

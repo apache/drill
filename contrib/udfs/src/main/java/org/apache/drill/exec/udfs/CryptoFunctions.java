@@ -54,10 +54,11 @@ public class CryptoFunctions {
       String input = org.apache.drill.exec.expr.fn.impl.StringFunctionHelpers.toStringFromUTF8(rawInput.start, rawInput.end, rawInput.buffer);
       String outputString = org.apache.commons.codec.digest.DigestUtils.md2Hex(input).toLowerCase();
 
+      byte[] output = outputString.getBytes(java.nio.charset.StandardCharsets.UTF_8);
       out.buffer = buffer;
       out.start = 0;
-      out.end = outputString.getBytes().length;
-      buffer.setBytes(0, outputString.getBytes());
+      out.end = output.length;
+      buffer.setBytes(0, output);
     }
 
   }
@@ -89,10 +90,11 @@ public class CryptoFunctions {
       String input = org.apache.drill.exec.expr.fn.impl.StringFunctionHelpers.toStringFromUTF8(rawInput.start, rawInput.end, rawInput.buffer);
       String outputString = org.apache.commons.codec.digest.DigestUtils.md5Hex(input).toLowerCase();
 
+      byte[] output = outputString.getBytes(java.nio.charset.StandardCharsets.UTF_8);
       out.buffer = buffer;
       out.start = 0;
-      out.end = outputString.getBytes().length;
-      buffer.setBytes(0, outputString.getBytes());
+      out.end = output.length;
+      buffer.setBytes(0, output);
     }
 
   }
@@ -128,10 +130,11 @@ public class CryptoFunctions {
 
       String sha1 = org.apache.commons.codec.digest.DigestUtils.sha1Hex(input);
 
+      byte[] output = sha1.getBytes(java.nio.charset.StandardCharsets.UTF_8);
       out.buffer = buffer;
       out.start = 0;
-      out.end = sha1.getBytes().length;
-      buffer.setBytes(0, sha1.getBytes());
+      out.end = output.length;
+      buffer.setBytes(0, output);
     }
 
   }
@@ -166,10 +169,11 @@ public class CryptoFunctions {
 
       String sha2 = org.apache.commons.codec.digest.DigestUtils.sha256Hex(input);
 
+      byte[] output = sha2.getBytes(java.nio.charset.StandardCharsets.UTF_8);
       out.buffer = buffer;
       out.start = 0;
-      out.end = sha2.getBytes().length;
-      buffer.setBytes(0, sha2.getBytes());
+      out.end = output.length;
+      buffer.setBytes(0, output);
     }
 
   }
@@ -203,10 +207,11 @@ public class CryptoFunctions {
 
       String sha384 = org.apache.commons.codec.digest.DigestUtils.sha384Hex(input);
 
+      byte[] output = sha384.getBytes(java.nio.charset.StandardCharsets.UTF_8);
       out.buffer = buffer;
       out.start = 0;
-      out.end = sha384.getBytes().length;
-      buffer.setBytes(0, sha384.getBytes());
+      out.end = output.length;
+      buffer.setBytes(0, output);
     }
 
   }
@@ -240,10 +245,11 @@ public class CryptoFunctions {
 
       String sha512 = org.apache.commons.codec.digest.DigestUtils.sha512Hex(input);
 
+      byte[] output = sha512.getBytes(java.nio.charset.StandardCharsets.UTF_8);
       out.buffer = buffer;
       out.start = 0;
-      out.end = sha512.getBytes().length;
-      buffer.setBytes(0, sha512.getBytes());
+      out.end = output.length;
+      buffer.setBytes(0, output);
     }
 
   }
@@ -292,10 +298,11 @@ public class CryptoFunctions {
         //Exceptions are ignored
       }
 
+      byte[] output = encryptedText.getBytes(java.nio.charset.StandardCharsets.UTF_8);
       out.buffer = buffer;
       out.start = 0;
-      out.end = encryptedText.getBytes().length;
-      buffer.setBytes(0, encryptedText.getBytes());
+      out.end = output.length;
+      buffer.setBytes(0, output);
     }
 
   }
@@ -338,15 +345,17 @@ public class CryptoFunctions {
 
         javax.crypto.Cipher cipher = javax.crypto.Cipher.getInstance("AES/ECB/PKCS5Padding");
         cipher.init(javax.crypto.Cipher.DECRYPT_MODE, secretKey);
-        decryptedText = new String(cipher.doFinal(javax.xml.bind.DatatypeConverter.parseBase64Binary(input)));
+        decryptedText = new String(cipher.doFinal(javax.xml.bind.DatatypeConverter.parseBase64Binary(input)),
+          java.nio.charset.StandardCharsets.UTF_8);
       } catch (Exception e) {
         //Exceptions are ignored
       }
 
+      byte[] output = decryptedText.getBytes(java.nio.charset.StandardCharsets.UTF_8);
       out.buffer = buffer;
       out.start = 0;
-      out.end = decryptedText.getBytes().length;
-      buffer.setBytes(0, decryptedText.getBytes());
+      out.end = output.length;
+      buffer.setBytes(0, output);
     }
 
   }

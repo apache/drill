@@ -18,6 +18,7 @@
 package org.apache.drill.exec.cache;
 
 import java.io.File;
+import java.nio.charset.StandardCharsets;
 
 import org.apache.drill.exec.physical.rowSet.RowSet;
 import org.apache.drill.exec.physical.rowSet.RowSets;
@@ -69,10 +70,10 @@ public class TestWriteToDisk extends SubOperatorTest {
         .build();
 
     return fixture.rowSetBuilder(schema)
-        .addRow(0, "ZERO".getBytes())
-        .addRow(1, "ONE".getBytes())
-        .addRow(2, "TWO".getBytes())
-        .addRow(3, "THREE".getBytes())
+        .addRow(0, "ZERO".getBytes(StandardCharsets.UTF_8))
+        .addRow(1, "ONE".getBytes(StandardCharsets.UTF_8))
+        .addRow(2, "TWO".getBytes(StandardCharsets.UTF_8))
+        .addRow(3, "THREE".getBytes(StandardCharsets.UTF_8))
         .build();
   }
 }

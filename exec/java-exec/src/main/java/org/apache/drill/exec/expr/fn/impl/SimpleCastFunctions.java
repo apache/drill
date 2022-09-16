@@ -66,7 +66,7 @@ public class SimpleCastFunctions {
     public void setup() {}
 
     public void eval() {
-      byte[] outB = org.apache.drill.common.types.BooleanType.get(String.valueOf(in.value)).name().toLowerCase().getBytes();
+      byte[] outB = org.apache.drill.common.types.BooleanType.get(String.valueOf(in.value)).name().toLowerCase().getBytes(java.nio.charset.StandardCharsets.UTF_8);
       buffer.setBytes(0, outB);
       out.buffer = buffer;
       out.start = 0;

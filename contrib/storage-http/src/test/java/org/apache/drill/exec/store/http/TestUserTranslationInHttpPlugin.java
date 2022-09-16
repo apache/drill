@@ -58,6 +58,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -294,7 +295,7 @@ public class TestUserTranslationInHttpPlugin extends ClusterTest {
 
   private static String createEncodedText(String username, String password) {
     String pair = username + ":" + password;
-    byte[] encodedBytes = Base64.encodeBase64(pair.getBytes());
-    return "Basic " + new String(encodedBytes);
+    byte[] encodedBytes = Base64.encodeBase64(pair.getBytes(StandardCharsets.UTF_8));
+    return "Basic " + new String(encodedBytes, StandardCharsets.UTF_8);
   }
 }

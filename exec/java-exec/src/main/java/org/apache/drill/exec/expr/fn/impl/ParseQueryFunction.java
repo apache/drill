@@ -95,7 +95,7 @@ public class ParseQueryFunction {
           continue;
         }
 
-        byte[] valueBytes = keyValue[1].getBytes();
+        byte[] valueBytes = keyValue[1].getBytes(java.nio.charset.StandardCharsets.UTF_8);
         outBuffer = outBuffer.reallocIfNeeded(valueBytes.length);
         outBuffer.setBytes(0, valueBytes);
 
@@ -169,7 +169,7 @@ public class ParseQueryFunction {
           continue;
         }
 
-        byte[] valueBytes = keyValue[1].getBytes();
+        byte[] valueBytes = keyValue[1].getBytes(java.nio.charset.StandardCharsets.UTF_8);
         outBuffer = outBuffer.reallocIfNeeded(valueBytes.length);
         outBuffer.setBytes(0, valueBytes);
 

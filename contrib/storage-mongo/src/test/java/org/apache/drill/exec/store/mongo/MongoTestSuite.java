@@ -26,7 +26,6 @@ import com.mongodb.client.model.IndexOptions;
 import com.mongodb.client.model.Indexes;
 import org.apache.drill.categories.MongoStorageTest;
 import org.apache.drill.categories.SlowTest;
-import org.apache.drill.shaded.guava.com.google.common.base.Charsets;
 import org.apache.drill.shaded.guava.com.google.common.io.Files;
 import org.apache.drill.shaded.guava.com.google.common.io.Resources;
 import org.apache.drill.test.BaseTest;
@@ -53,6 +52,8 @@ import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
+
+import static java.nio.charset.StandardCharsets.UTF_8;
 
 @RunWith(Suite.class)
 @Suite.SuiteClasses({
@@ -239,10 +240,10 @@ public class MongoTestSuite extends BaseTest implements MongoTestConstants {
         }
         connectionURL = containerManager.setup();
         // ToDo DRILL-7269: fix the way how data are imported for the sharded mongo cluster
-        containerManager.getMasterContainer().copyFileToContainer(Transferable.of(Files.asCharSource(new File(Resources.getResource(EMP_DATA).toURI()), Charsets.UTF_8).read().getBytes()), EMP_DATA);
-        containerManager.getMasterContainer().copyFileToContainer(Transferable.of(Files.asCharSource(new File(Resources.getResource(SCHEMA_CHANGE_DATA).toURI()), Charsets.UTF_8).read().getBytes()), SCHEMA_CHANGE_DATA);
-        containerManager.getMasterContainer().copyFileToContainer(Transferable.of(Files.asCharSource(new File(Resources.getResource(DONUTS_DATA).toURI()), Charsets.UTF_8).read().getBytes()), DONUTS_DATA);
-        containerManager.getMasterContainer().copyFileToContainer(Transferable.of(Files.asCharSource(new File(Resources.getResource(DATATYPE_DATA).toURI()), Charsets.UTF_8).read().getBytes()), DATATYPE_DATA);
+        containerManager.getMasterContainer().copyFileToContainer(Transferable.of(Files.asCharSource(new File(Resources.getResource(EMP_DATA).toURI()), UTF_8).read().getBytes(UTF_8)), EMP_DATA);
+        containerManager.getMasterContainer().copyFileToContainer(Transferable.of(Files.asCharSource(new File(Resources.getResource(SCHEMA_CHANGE_DATA).toURI()), UTF_8).read().getBytes(UTF_8)), SCHEMA_CHANGE_DATA);
+        containerManager.getMasterContainer().copyFileToContainer(Transferable.of(Files.asCharSource(new File(Resources.getResource(DONUTS_DATA).toURI()), UTF_8).read().getBytes(UTF_8)), DONUTS_DATA);
+        containerManager.getMasterContainer().copyFileToContainer(Transferable.of(Files.asCharSource(new File(Resources.getResource(DATATYPE_DATA).toURI()), UTF_8).read().getBytes(UTF_8)), DATATYPE_DATA);
         TestTableGenerator.importData(containerManager.getMasterContainer(), EMPLOYEE_DB, EMPINFO_COLLECTION, EMP_DATA);
         TestTableGenerator.importData(containerManager.getMasterContainer(), EMPLOYEE_DB, SCHEMA_CHANGE_COLLECTION, SCHEMA_CHANGE_DATA);
         TestTableGenerator.importData(containerManager.getMasterContainer(), DONUTS_DB, DONUTS_COLLECTION, DONUTS_DATA);

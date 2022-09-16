@@ -48,10 +48,11 @@ public class STAsText implements DrillSimpleFunc {
 
     String geomWKT = geom1.asText();
 
-    int outputSize = geomWKT.getBytes().length;
+    byte[] output = geomWKT.getBytes(java.nio.charset.StandardCharsets.UTF_8);
+    int outputSize = output.length;
     buffer = out.buffer = buffer.reallocIfNeeded(outputSize);
     out.start = 0;
     out.end = outputSize;
-    buffer.setBytes(0, geomWKT.getBytes());
+    buffer.setBytes(0, output);
   }
 }

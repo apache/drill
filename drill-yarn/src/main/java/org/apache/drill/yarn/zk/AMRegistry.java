@@ -20,6 +20,8 @@ package org.apache.drill.yarn.zk;
 import org.apache.zookeeper.CreateMode;
 import org.apache.zookeeper.KeeperException.NodeExistsException;
 
+import java.nio.charset.StandardCharsets;
+
 /**
  * Register this App Master in ZK to prevent duplicates.
  * <p>
@@ -99,7 +101,7 @@ public class AMRegistry {
       String content = amHost + ":" + Integer.toString(amPort) + ":" + amAppId;
       try {
         zkCoord.getCurator().create().withMode(CreateMode.EPHEMERAL)
-            .forPath(amPath, content.getBytes("UTF-8"));
+            .forPath(amPath, content.getBytes(StandardCharsets.UTF_8));
       } catch (NodeExistsException e) {
 
         // ZK says that a node exists, which means that another AM is already
@@ -113,7 +115,7 @@ public class AMRegistry {
         if (data == null) {
           existing = "Unknown";
         } else {
-          String packed = new String(data, "UTF-8");
+          String packed = new String(data, StandardCharsets.UTF_8);
           String unpacked[] = packed.split(":");
           if (unpacked.length < 3) {
             existing = packed;

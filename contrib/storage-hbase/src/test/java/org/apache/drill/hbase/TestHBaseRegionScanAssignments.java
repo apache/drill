@@ -17,6 +17,7 @@
  */
 package org.apache.drill.hbase;
 
+import static java.nio.charset.StandardCharsets.UTF_8;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
@@ -75,9 +76,9 @@ public class TestHBaseRegionScanAssignments extends BaseHBaseTest {
   static final ServerName SERVER_X = ServerName.valueOf(HOST_X + PORT_AND_STARTTIME);
 
   static final byte[][] splits = {{},
-    "10".getBytes(), "15".getBytes(), "20".getBytes(), "25".getBytes(), "30".getBytes(), "35".getBytes(),
-    "40".getBytes(), "45".getBytes(), "50".getBytes(), "55".getBytes(), "60".getBytes(), "65".getBytes(),
-    "70".getBytes(), "75".getBytes(), "80".getBytes(), "85".getBytes(), "90".getBytes(), "95".getBytes()};
+    "10".getBytes(UTF_8), "15".getBytes(UTF_8), "20".getBytes(UTF_8), "25".getBytes(UTF_8), "30".getBytes(UTF_8), "35".getBytes(UTF_8),
+    "40".getBytes(UTF_8), "45".getBytes(UTF_8), "50".getBytes(UTF_8), "55".getBytes(UTF_8), "60".getBytes(UTF_8), "65".getBytes(UTF_8),
+    "70".getBytes(UTF_8), "75".getBytes(UTF_8), "80".getBytes(UTF_8), "85".getBytes(UTF_8), "90".getBytes(UTF_8), "95".getBytes(UTF_8)};
 
   static final String TABLE_NAME_STR = "TestTable";
   static final TableName TABLE_NAME = TableName.valueOf(TABLE_NAME_STR);

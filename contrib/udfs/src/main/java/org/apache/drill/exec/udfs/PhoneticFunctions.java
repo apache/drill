@@ -56,10 +56,11 @@ public class PhoneticFunctions {
       String input = org.apache.drill.exec.expr.fn.impl.StringFunctionHelpers.toStringFromUTF8(rawInput.start, rawInput.end, rawInput.buffer);
       String outputString = new org.apache.commons.codec.language.Caverphone1().encode(input);
 
+      byte[] output = outputString.getBytes(java.nio.charset.StandardCharsets.UTF_8);
       out.buffer = buffer;
       out.start = 0;
-      out.end = outputString.getBytes().length;
-      buffer.setBytes(0, outputString.getBytes());
+      out.end = output.length;
+      buffer.setBytes(0, output);
     }
 
   }
@@ -91,10 +92,11 @@ public class PhoneticFunctions {
       String input = org.apache.drill.exec.expr.fn.impl.StringFunctionHelpers.toStringFromUTF8(rawInput.start, rawInput.end, rawInput.buffer);
       String outputString = new org.apache.commons.codec.language.Caverphone2().encode(input);
 
+      byte[] output = outputString.getBytes(java.nio.charset.StandardCharsets.UTF_8);
       out.buffer = buffer;
       out.start = 0;
-      out.end = outputString.getBytes().length;
-      buffer.setBytes(0, outputString.getBytes());
+      out.end = output.length;
+      buffer.setBytes(0, output);
     }
 
   }
@@ -130,10 +132,11 @@ public class PhoneticFunctions {
       String input = org.apache.drill.exec.expr.fn.impl.StringFunctionHelpers.toStringFromUTF8(rawInput.start, rawInput.end, rawInput.buffer);
       String outputString = new org.apache.commons.codec.language.ColognePhonetic().encode(input);
 
+      byte[] output = outputString.getBytes(java.nio.charset.StandardCharsets.UTF_8);
       out.buffer = buffer;
       out.start = 0;
-      out.end = outputString.getBytes().length;
-      buffer.setBytes(0, outputString.getBytes());
+      out.end = output.length;
+      buffer.setBytes(0, output);
     }
 
   }
@@ -174,10 +177,11 @@ public class PhoneticFunctions {
       String input = org.apache.drill.exec.expr.fn.impl.StringFunctionHelpers.toStringFromUTF8(rawInput.start, rawInput.end, rawInput.buffer);
       String outputString = new org.apache.commons.codec.language.DaitchMokotoffSoundex().encode(input);
 
+      byte[] output = outputString.getBytes(java.nio.charset.StandardCharsets.UTF_8);
       out.buffer = buffer;
       out.start = 0;
-      out.end = outputString.getBytes().length;
-      buffer.setBytes(0, outputString.getBytes());
+      out.end = output.length;
+      buffer.setBytes(0, output);
     }
 
   }
@@ -208,10 +212,11 @@ public class PhoneticFunctions {
       String input = org.apache.drill.exec.expr.fn.impl.StringFunctionHelpers.toStringFromUTF8(rawInput.start, rawInput.end, rawInput.buffer);
       String outputString = new org.apache.commons.codec.language.MatchRatingApproachEncoder().encode(input);
 
+      byte[] output = outputString.getBytes(java.nio.charset.StandardCharsets.UTF_8);
       out.buffer = buffer;
       out.start = 0;
-      out.end = outputString.getBytes().length;
-      buffer.setBytes(0, outputString.getBytes());
+      out.end = output.length;
+      buffer.setBytes(0, output);
     }
 
   }
@@ -244,10 +249,11 @@ public class PhoneticFunctions {
       String input = org.apache.drill.exec.expr.fn.impl.StringFunctionHelpers.toStringFromUTF8(rawInput.start, rawInput.end, rawInput.buffer);
       String outputString = new org.apache.commons.codec.language.Nysiis().encode(input);
 
+      byte[] output = outputString.getBytes(java.nio.charset.StandardCharsets.UTF_8);
       out.buffer = buffer;
       out.start = 0;
-      out.end = outputString.getBytes().length;
-      buffer.setBytes(0, outputString.getBytes());
+      out.end = output.length;
+      buffer.setBytes(0, output);
     }
   }
 
@@ -278,10 +284,11 @@ public class PhoneticFunctions {
       String input = org.apache.drill.exec.expr.fn.impl.StringFunctionHelpers.toStringFromUTF8(rawInput.start, rawInput.end, rawInput.buffer);
       String outputString = new org.apache.commons.codec.language.RefinedSoundex().encode(input);
 
+      byte[] output = outputString.getBytes(java.nio.charset.StandardCharsets.UTF_8);
       out.buffer = buffer;
       out.start = 0;
-      out.end = outputString.getBytes().length;
-      buffer.setBytes(0, outputString.getBytes());
+      out.end = output.length;
+      buffer.setBytes(0, output);
     }
 
   }
@@ -313,10 +320,11 @@ public class PhoneticFunctions {
       String input = org.apache.drill.exec.expr.fn.impl.StringFunctionHelpers.toStringFromUTF8(rawInput.start, rawInput.end, rawInput.buffer);
       String outputString = new org.apache.commons.codec.language.Soundex().soundex(input);
 
+      byte[] output = outputString.getBytes(java.nio.charset.StandardCharsets.UTF_8);
       out.buffer = buffer;
       out.start = 0;
-      out.end = outputString.getBytes().length;
-      buffer.setBytes(0, outputString.getBytes());
+      out.end = output.length;
+      buffer.setBytes(0, output);
     }
   }
 
@@ -348,10 +356,11 @@ public class PhoneticFunctions {
       String input = org.apache.drill.exec.expr.fn.impl.StringFunctionHelpers.toStringFromUTF8(rawInput.start, rawInput.end, rawInput.buffer);
       String outputString = new org.apache.commons.codec.language.Metaphone().metaphone(input);
 
+      byte[] output = outputString.getBytes(java.nio.charset.StandardCharsets.UTF_8);
       out.buffer = buffer;
       out.start = 0;
-      out.end = outputString.getBytes().length;
-      buffer.setBytes(0, outputString.getBytes());
+      out.end = output.length;
+      buffer.setBytes(0, output);
     }
 
   }
@@ -385,10 +394,11 @@ public class PhoneticFunctions {
       String outputString = new org.apache.commons.codec.language.DoubleMetaphone().doubleMetaphone(input);
       outputString = outputString == null ? "" : outputString;
 
+      byte[] output = outputString.getBytes(java.nio.charset.StandardCharsets.UTF_8);
       out.buffer = buffer;
       out.start = 0;
-      out.end = outputString.getBytes().length;
-      buffer.setBytes(0, outputString.getBytes());
+      out.end = output.length;
+      buffer.setBytes(0, output);
     }
   }
 }

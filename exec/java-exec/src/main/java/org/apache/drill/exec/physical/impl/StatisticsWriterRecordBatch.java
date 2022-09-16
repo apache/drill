@@ -41,6 +41,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 
 public class StatisticsWriterRecordBatch extends AbstractRecordBatch<Writer> {
   private static final Logger logger = LoggerFactory.getLogger(StatisticsWriterRecordBatch.class);
@@ -150,7 +151,7 @@ public class StatisticsWriterRecordBatch extends AbstractRecordBatch<Writer> {
         container.getValueVectorId(SchemaPath.getSimplePath("Number of records written")).getFieldIds())
         .getValueVector();
     AllocationHelper.allocate(summaryVector, 1, 8);
-    fragmentIdVector.getMutator().setSafe(0, fragmentUniqueId.getBytes());
+    fragmentIdVector.getMutator().setSafe(0, fragmentUniqueId.getBytes(StandardCharsets.UTF_8));
     fragmentIdVector.getMutator().setValueCount(1);
     summaryVector.getMutator().setSafe(0, counter);
     summaryVector.getMutator().setValueCount(1);

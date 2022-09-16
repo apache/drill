@@ -41,6 +41,8 @@ import org.junit.Test;
 
 import io.netty.buffer.DrillBuf;
 
+import java.nio.charset.StandardCharsets;
+
 public class VectorTest extends BaseTest {
 
   private static RootAllocator allocator;
@@ -87,7 +89,7 @@ public class VectorTest extends BaseTest {
 
       // Write one value
 
-      v.getMutator().setSafe(0, "foo".getBytes());
+      v.getMutator().setSafe(0, "foo".getBytes(StandardCharsets.UTF_8));
       v.getMutator().setValueCount(1);
       assertEquals(1, va.getValueCount());
       assertEquals(2, ova.getValueCount());
@@ -105,7 +107,7 @@ public class VectorTest extends BaseTest {
 
       // Write one more value
 
-      v.getMutator().setSafe(2, "mumble".getBytes());
+      v.getMutator().setSafe(2, "mumble".getBytes(StandardCharsets.UTF_8));
       v.getMutator().setValueCount(2);
       assertEquals(2, va.getValueCount());
       assertEquals(3, ova.getValueCount());
@@ -185,7 +187,7 @@ public class VectorTest extends BaseTest {
 
       // Write one value
 
-      byte[] bytes = "foo".getBytes();
+      byte[] bytes = "foo".getBytes(StandardCharsets.UTF_8);
       vm.setSafe(0, bytes, 0, bytes.length);
       assertEquals(0, vm.getLastSet());
       vm.setValueCount(1);
@@ -217,7 +219,7 @@ public class VectorTest extends BaseTest {
 
       // Write one more value
 
-      byte[] second = "mumble".getBytes();
+      byte[] second = "mumble".getBytes(StandardCharsets.UTF_8);
       vm.setSafe(2, second, 0, second.length);
       assertEquals(2, v.getMutator().getLastSet());
       vm.setValueCount(3);
@@ -264,11 +266,11 @@ public class VectorTest extends BaseTest {
       // Write in locations 1 and 3.
 
       w.setPosition(0);
-      buf.setBytes(0, "foo".getBytes());
+      buf.setBytes(0, "foo".getBytes(StandardCharsets.UTF_8));
       w.writeVarChar(0, 3, buf);
 
       w.setPosition(2);
-      buf.setBytes(0, "mumble".getBytes());
+      buf.setBytes(0, "mumble".getBytes(StandardCharsets.UTF_8));
       w.writeVarChar(0, 6, buf);
 
       // Don't close the writer; it clears the vector

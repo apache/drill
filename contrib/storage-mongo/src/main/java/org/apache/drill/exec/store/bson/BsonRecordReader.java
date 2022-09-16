@@ -42,6 +42,7 @@ import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.math.BigDecimal;
 import java.nio.ByteBuffer;
+import java.nio.charset.StandardCharsets;
 import java.util.List;
 
 public class BsonRecordReader {
@@ -198,7 +199,7 @@ public class BsonRecordReader {
     final VarBinaryHolder vb = new VarBinaryHolder();
     BsonBinary readBinaryData = reader.readBinaryData();
     byte[] data = readBinaryData.getData();
-    Byte type = (Byte) readBinaryData.getType();
+    Byte type = readBinaryData.getType();
     // Based on specified binary type, cast it accordingly
     switch (type.intValue()) {
     case 1:
@@ -207,7 +208,7 @@ public class BsonRecordReader {
       break;
     case 2:
       // String 2
-      writeString(new String(data), writer, fieldName, isList);
+      writeString(new String(data, StandardCharsets.UTF_8), writer, fieldName, isList);
       break;
     case 8:
       // Boolean 8
@@ -220,15 +221,15 @@ public class BsonRecordReader {
       break;
     case 13:
       // JavaScript 13
-      writeString(new String(data), writer, fieldName, isList);
+      writeString(new String(data, StandardCharsets.UTF_8), writer, fieldName, isList);
       break;
     case 14:
       // Symbol 14
-      writeString(new String(data), writer, fieldName, isList);
+      writeString(new String(data, StandardCharsets.UTF_8), writer, fieldName, isList);
       break;
     case 15:
       // JavaScript (with scope) 15
-      writeString(new String(data), writer, fieldName, isList);
+      writeString(new String(data, StandardCharsets.UTF_8), writer, fieldName, isList);
       break;
     case 16:
       // 32-bit integer 16

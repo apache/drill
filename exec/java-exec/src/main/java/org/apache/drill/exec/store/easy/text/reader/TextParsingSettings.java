@@ -22,6 +22,8 @@ import org.apache.drill.exec.store.easy.text.TextFormatPlugin;
 import org.apache.drill.exec.store.easy.text.TextFormatConfig;
 import org.apache.drill.shaded.guava.com.google.common.base.Charsets;
 
+import java.nio.charset.StandardCharsets;
+
 public class TextParsingSettings {
 
   private final byte quote;
@@ -147,7 +149,7 @@ public class TextParsingSettings {
     if (value == null || value.isEmpty()) {
       return configValue;
     }
-    return value.getBytes();
+    return value.getBytes(StandardCharsets.UTF_8);
   }
 
   public byte getComment() {

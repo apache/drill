@@ -25,6 +25,7 @@ import org.apache.drill.exec.expr.annotations.Param;
 import org.apache.drill.exec.expr.holders.VarCharHolder;
 
 import javax.inject.Inject;
+import java.nio.charset.StandardCharsets;
 
 @FunctionTemplate(
     name="abs",
@@ -56,8 +57,8 @@ public class CustomAbsFunction implements DrillSimpleFunc {
 
     out.buffer = buffer;
     out.start = 0;
-    out.end = outputValue.getBytes().length;
-    buffer.setBytes(0, outputValue.getBytes());
+    out.end = outputValue.getBytes(StandardCharsets.UTF_8).length;
+    buffer.setBytes(0, outputValue.getBytes(StandardCharsets.UTF_8));
   }
 }
 

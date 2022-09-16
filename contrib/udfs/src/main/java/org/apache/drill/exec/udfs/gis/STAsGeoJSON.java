@@ -51,7 +51,7 @@ public class STAsGeoJSON implements DrillSimpleFunc {
         .fromBinary(geomParam.buffer.nioBuffer(geomParam.start, geomParam.end - geomParam.start));
 
     String geoJson = geom.asGeoJson();
-    byte[] geoJsonBytes = geoJson.getBytes();
+    byte[] geoJsonBytes = geoJson.getBytes(java.nio.charset.StandardCharsets.UTF_8);
     int outputSize = geoJsonBytes.length;
 
     buffer = out.buffer = buffer.reallocIfNeeded(outputSize);

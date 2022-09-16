@@ -72,7 +72,7 @@ public class UserAgentFunctions {
         org.apache.drill.exec.expr.holders.VarCharHolder rowHolder = new org.apache.drill.exec.expr.holders.VarCharHolder();
         String field = agent.getValue(fieldName);
 
-        byte[] rowStringBytes = field.getBytes();
+        byte[] rowStringBytes = field.getBytes(java.nio.charset.StandardCharsets.UTF_8);
         outBuffer = outBuffer.reallocIfNeeded(rowStringBytes.length);
         outBuffer.setBytes(0, rowStringBytes);
 

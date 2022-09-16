@@ -28,6 +28,8 @@ import org.apache.drill.exec.vector.NullableVarCharVector.Accessor;
 import org.apache.drill.test.BaseTest;
 import org.junit.Test;
 
+import java.nio.charset.StandardCharsets;
+
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
@@ -49,7 +51,7 @@ public class TestSplitAndTransfer extends BaseTest {
     final NullableVarCharVector.Mutator mutator = varCharVector.getMutator();
     for (int i = 0; i < valueCount; i += 3) {
       final String s = String.format("%010d", i);
-      mutator.set(i, s.getBytes());
+      mutator.set(i, s.getBytes(StandardCharsets.UTF_8));
       compareArray[i] = s;
     }
     mutator.setValueCount(valueCount);
@@ -67,7 +69,7 @@ public class TestSplitAndTransfer extends BaseTest {
       for (int i = 0; i < length; i++) {
         final boolean expectedSet = ((start + i) % 3) == 0;
         if (expectedSet) {
-          final byte[] expectedValue = compareArray[start + i].getBytes();
+          final byte[] expectedValue = compareArray[start + i].getBytes(StandardCharsets.UTF_8);
           assertFalse(accessor.isNull(i));
           assertArrayEquals(expectedValue, accessor.get(i));
         } else {

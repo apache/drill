@@ -57,6 +57,7 @@ import org.apache.hadoop.fs.Path;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -418,7 +419,7 @@ public class MetadataHandlerBatch extends AbstractSingleRecordBatch<MetadataHand
         MaterializedField.create(MetastoreAnalyzeConstants.METADATA_TYPE, Types.required(MinorType.VARCHAR)));
     metadataTypeVector.allocateNew();
     for (int i = 0; i < incoming.getRecordCount(); i++) {
-      metadataTypeVector.getMutator().setSafe(i, metadataType.name().getBytes());
+      metadataTypeVector.getMutator().setSafe(i, metadataType.name().getBytes(StandardCharsets.UTF_8));
     }
 
     metadataTypeVector.getMutator().setValueCount(incoming.getRecordCount());

@@ -43,7 +43,7 @@ public class ContextFunctions {
 
     @Override
     public void setup() {
-      final byte[] queryUserNameBytes = contextInfo.getQueryUser().getBytes();
+      final byte[] queryUserNameBytes = contextInfo.getQueryUser().getBytes(java.nio.charset.StandardCharsets.UTF_8);
       buffer = buffer.reallocIfNeeded(queryUserNameBytes.length);
       queryUserBytesLength = queryUserNameBytes.length;
       buffer.setBytes(0, queryUserNameBytes);
@@ -70,7 +70,7 @@ public class ContextFunctions {
 
     @Override
     public void setup() {
-      final byte[] currentSchemaBytes = contextInfo.getCurrentDefaultSchema().getBytes();
+      final byte[] currentSchemaBytes = contextInfo.getCurrentDefaultSchema().getBytes(java.nio.charset.StandardCharsets.UTF_8);
       buffer = buffer.reallocIfNeeded(currentSchemaBytes.length);
       currentSchemaBytesLength= currentSchemaBytes.length;
       buffer.setBytes(0, currentSchemaBytes);
@@ -97,7 +97,7 @@ public class ContextFunctions {
 
     @Override
     public void setup() {
-        final byte[] sessionIdBytes = contextInfo.getSessionId().getBytes();
+        final byte[] sessionIdBytes = contextInfo.getSessionId().getBytes(java.nio.charset.StandardCharsets.UTF_8);
         buffer = buffer.reallocIfNeeded(sessionIdBytes.length);
         sessionIdBytesLength = sessionIdBytes.length;
         buffer.setBytes(0, sessionIdBytes);

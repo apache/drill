@@ -76,7 +76,7 @@ public class G${type}ToChar implements DrillSimpleFunc {
         out.buffer = buffer;
         out.start = 0;
         out.end = Math.min(100, str.length()); // truncate if target type has length smaller than that of input's string
-        out.buffer.setBytes(0, str.substring(0,out.end).getBytes());
+        out.buffer.setBytes(0, str.substring(0,out.end).getBytes(java.nio.charset.StandardCharsets.UTF_8));
     }
 }
 </#list>

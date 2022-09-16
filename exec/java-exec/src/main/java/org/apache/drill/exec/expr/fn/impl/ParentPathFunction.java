@@ -44,7 +44,7 @@ public class ParentPathFunction implements DrillSimpleFunc {
   public void eval() {
     org.apache.hadoop.fs.Path path =
         new org.apache.hadoop.fs.Path(org.apache.drill.common.util.DrillStringUtils.toBinaryString(input.buffer, input.start, input.end));
-    byte[] bytes = path.getParent().toUri().getPath().getBytes();
+    byte[] bytes = path.getParent().toUri().getPath().getBytes(java.nio.charset.StandardCharsets.UTF_8);
 
     buf = buf.reallocIfNeeded(bytes.length);
     buf.setBytes(0, bytes);

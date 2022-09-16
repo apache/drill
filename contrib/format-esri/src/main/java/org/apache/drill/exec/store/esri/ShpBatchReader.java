@@ -143,7 +143,7 @@ public class ShpBatchReader implements ManagedReader<FileSchemaNegotiator> {
       fileReaderPrj.read(prjBuf);
       fileReaderPrj.close();
 
-      String wktReference = new String(prjBuf);
+      String wktReference = new String(prjBuf, StandardCharsets.UTF_8);
 
       Pattern pattern = Pattern.compile(SRID_PATTERN_TEXT);
       Matcher matcher = pattern.matcher(wktReference);

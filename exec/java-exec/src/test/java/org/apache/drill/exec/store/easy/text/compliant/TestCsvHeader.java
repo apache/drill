@@ -20,6 +20,7 @@ package org.apache.drill.exec.store.easy.text.compliant;
 import java.io.BufferedOutputStream;
 import java.io.File;
 import java.io.FileOutputStream;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Paths;
 import java.util.List;
 
@@ -153,9 +154,9 @@ public class TestCsvHeader extends BaseTestQuery{
   public void testEmptyFinalColumn() throws Exception {
     File table_dir = dirTestWatcher.makeTestTmpSubDir(Paths.get("emptyFinalColumn"));
     BufferedOutputStream os = new BufferedOutputStream(new FileOutputStream(new File(table_dir, "a.csvh")));
-    os.write("field1,field2\n".getBytes());
+    os.write("field1,field2\n".getBytes(StandardCharsets.UTF_8));
     for (int i = 0; i < 10000; i++) {
-      os.write("a,\n".getBytes());
+      os.write("a,\n".getBytes(StandardCharsets.UTF_8));
     }
     os.flush();
     os.close();

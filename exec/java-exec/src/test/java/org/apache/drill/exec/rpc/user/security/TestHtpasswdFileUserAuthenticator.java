@@ -28,6 +28,7 @@ import org.junit.experimental.categories.Category;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.util.Arrays;
 import java.util.List;
@@ -42,7 +43,7 @@ public class TestHtpasswdFileUserAuthenticator extends ClusterTest {
 
   private void setupCluster(String passwdContent) throws IOException {
     tempPasswdFile = new File(dirTestWatcher.getTmpDir(), "htpasswd." + System.currentTimeMillis());
-    Files.write(tempPasswdFile.toPath(), passwdContent.getBytes());
+    Files.write(tempPasswdFile.toPath(), passwdContent.getBytes(StandardCharsets.UTF_8));
 
     cluster = ClusterFixture.bareBuilder(dirTestWatcher)
       .clusterSize(3)
@@ -100,7 +101,7 @@ public class TestHtpasswdFileUserAuthenticator extends ClusterTest {
     tryCredentials("bob", "yolo", cluster, false);
 
     String passwdContent2 = "alice:pass2\nbob:yolo\n";
-    Files.write(tempPasswdFile.toPath(), passwdContent2.getBytes());
+    Files.write(tempPasswdFile.toPath(), passwdContent2.getBytes(StandardCharsets.UTF_8));
 
     tryCredentials("alice", "pass1", cluster, false);
     tryCredentials("alice", "pass2", cluster, true);
@@ -109,7 +110,7 @@ public class TestHtpasswdFileUserAuthenticator extends ClusterTest {
 
     // Invalid file is treated as empty
     String passwdContent3 = "invalid file";
-    Files.write(tempPasswdFile.toPath(), passwdContent3.getBytes());
+    Files.write(tempPasswdFile.toPath(), passwdContent3.getBytes(StandardCharsets.UTF_8));
 
     tryCredentials("alice", "pass1", cluster, false);
     tryCredentials("alice", "pass2", cluster, false);

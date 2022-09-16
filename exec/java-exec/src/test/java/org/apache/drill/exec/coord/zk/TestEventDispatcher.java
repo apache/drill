@@ -18,6 +18,7 @@
 package org.apache.drill.exec.coord.zk;
 
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 
 import org.apache.curator.framework.recipes.cache.ChildData;
 import org.apache.curator.framework.recipes.cache.PathChildrenCacheEvent;
@@ -34,7 +35,7 @@ public class TestEventDispatcher extends BaseTest {
 
   private final static String key = "some-key";
   private final static String value = "some-data";
-  private final static byte[] data = "some-data".getBytes();
+  private final static byte[] data = value.getBytes(StandardCharsets.UTF_8);
 
   private ZkEphemeralStore<String> store;
   private EventDispatcher<String> dispatcher;
@@ -53,7 +54,7 @@ public class TestEventDispatcher extends BaseTest {
         .thenReturn(new InstanceSerializer<String>() {
           @Override
           public byte[] serialize(String instance) throws IOException {
-            return instance.getBytes();
+            return instance.getBytes(StandardCharsets.UTF_8);
           }
 
           @Override

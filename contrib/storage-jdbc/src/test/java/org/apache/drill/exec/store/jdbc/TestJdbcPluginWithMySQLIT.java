@@ -41,6 +41,7 @@ import org.testcontainers.jdbc.JdbcDatabaseDelegate;
 import org.testcontainers.utility.DockerImageName;
 
 import java.math.BigDecimal;
+import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -142,7 +143,7 @@ public class TestJdbcPluginWithMySQLIT extends ClusterTest {
             "xxx",
             "a medium piece of text",
             "a longer piece of text this is going on.....",
-            "this is a test".getBytes(),
+            "this is a test".getBytes(StandardCharsets.UTF_8),
             true, "XXX")
         .baselineValues(2,
             "first_name_2", "last_name_2", "One Ferry Building", "San Francisco", "CA", 94111,
@@ -155,7 +156,7 @@ public class TestJdbcPluginWithMySQLIT extends ClusterTest {
             "abc",
             "a medium piece of text 2",
             "somewhat more text",
-            "this is a test 2".getBytes(),
+            "this is a test 2".getBytes(StandardCharsets.UTF_8),
             false, "YYY")
         .baselineValues(3,
             "first_name_3", "last_name_3", "176 Bowery", "New York", "NY", 10012,
@@ -168,7 +169,7 @@ public class TestJdbcPluginWithMySQLIT extends ClusterTest {
             "abc",
             "a medium piece of text 3",
             "somewhat more text",
-            "this is a test 3".getBytes(),
+            "this is a test 3".getBytes(StandardCharsets.UTF_8),
             true, "ZZZ")
         .baselineValues(5,
             null, null, null, null, null, null,

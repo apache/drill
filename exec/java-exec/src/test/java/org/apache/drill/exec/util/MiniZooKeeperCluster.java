@@ -23,6 +23,7 @@ import java.io.OutputStream;
 import java.net.BindException;
 import java.net.InetSocketAddress;
 import java.net.Socket;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
@@ -315,7 +316,7 @@ public class MiniZooKeeperCluster {
         Socket sock = new Socket("localhost", port);
         try {
           OutputStream outstream = sock.getOutputStream();
-          outstream.write("stat".getBytes());
+          outstream.write("stat".getBytes(StandardCharsets.UTF_8));
           outstream.flush();
         } finally {
           sock.close();

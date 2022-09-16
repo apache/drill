@@ -17,6 +17,7 @@
  */
 package org.apache.drill.exec.physical.impl;
 
+import java.nio.charset.StandardCharsets;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
@@ -566,7 +567,7 @@ public class ScanBatch implements CloseableRecordBatch {
           String val;
           if ((val = entry.getValue()) != null) {
             AllocationHelper.allocate(v, recordCount, val.length());
-            final byte[] bytes = val.getBytes();
+            final byte[] bytes = val.getBytes(StandardCharsets.UTF_8);
             for (int j = 0; j < recordCount; j++) {
               v.getMutator().setSafe(j, bytes, 0, bytes.length);
             }

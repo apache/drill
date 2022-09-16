@@ -37,6 +37,7 @@ import org.junit.Test;
 
 import java.io.IOException;
 import java.math.BigDecimal;
+import java.nio.charset.StandardCharsets;
 import java.time.LocalDate;
 import java.util.Base64;
 import java.util.Collections;
@@ -97,7 +98,7 @@ public class ElasticSearchQueryTest extends ClusterTest {
     builder.field("marital_status", "S");
     builder.field("gender", "F");
     builder.field("management_role", "Senior Management");
-    builder.field("binary_field", "Senior Management".getBytes());
+    builder.field("binary_field", "Senior Management".getBytes(StandardCharsets.UTF_8));
     builder.field("boolean_field", true);
     builder.timeField("date_field", "2015/01/01 12:10:30");
     builder.field("byte_field", (byte) 123);
@@ -320,7 +321,7 @@ public class ElasticSearchQueryTest extends ClusterTest {
             "supervisor_id", "education_level", "marital_status", "gender", "management_role",
           "binary_field", "boolean_field", "date_field", "byte_field", "long_field", "float_field",
           "short_field", "decimal_field")
-        .baselineValues(1, "Sheri Nowmer", "Sheri", "Nowmer", 1, "President", 0, 1, "1961-08-26", "1994-12-01 00:00:00.0", 80000.0, 0, "Graduate Degree", "S", "F", "Senior Management", Base64.getEncoder().encodeToString("Senior Management".getBytes()), true, "2015/01/01 12:10:30", 123, 123, 123., 123, 123.45)
+        .baselineValues(1, "Sheri Nowmer", "Sheri", "Nowmer", 1, "President", 0, 1, "1961-08-26", "1994-12-01 00:00:00.0", 80000.0, 0, "Graduate Degree", "S", "F", "Senior Management", Base64.getEncoder().encodeToString("Senior Management".getBytes(StandardCharsets.UTF_8)), true, "2015/01/01 12:10:30", 123, 123, 123., 123, 123.45)
         .baselineValues(2, "Derrick Whelply", "Derrick", "Whelply", 2, "VP Country Manager", 0, 1, "1915-07-03", "1994-12-01 00:00:00.0", 40000.0, 1, "Graduate Degree", "M", "M", "Senior Management", null, null, null, null, null, null, null, null)
         .baselineValues(4, "Michael Spence", "Michael", "Spence", 2, "VP Country Manager", 0, 1, "1969-06-20", "1998-01-01 00:00:00.0", 40000.0, 1, "Graduate Degree", "S", "M", "Senior Management", null, null, null, null, null, null, null, null)
         .baselineValues(5, "Maya Gutierrez", "Maya", "Gutierrez", 2, "VP Country Manager", 0, 1, "1951-05-10", "1998-01-01 00:00:00.0", 35000.0, 1, "Bachelors Degree", "M", "F", "Senior Management", null, null, null, null, null, null, null, null)
@@ -364,7 +365,7 @@ public class ElasticSearchQueryTest extends ClusterTest {
             "short_field", "decimal_field")
         .baselineValues(1, "Sheri Nowmer", "Sheri", "Nowmer", 1, "President", 0, 1, "1961-08-26",
             "1994-12-01 00:00:00.0", 80000.0, 0, "Graduate Degree", "S", "F", "Senior Management",
-          Base64.getEncoder().encodeToString("Senior Management".getBytes()), true,
+          Base64.getEncoder().encodeToString("Senior Management".getBytes(StandardCharsets.UTF_8)), true,
           "2015/01/01 12:10:30", 123, 123, 123., 123, 123.45)
         .go();
   }
@@ -434,7 +435,7 @@ public class ElasticSearchQueryTest extends ClusterTest {
             "supervisor_id", "education_level", "marital_status", "gender", "management_role",
           "binary_field", "boolean_field", "date_field", "byte_field", "long_field", "float_field",
           "short_field", "decimal_field")
-        .baselineValues(1, "Sheri Nowmer", "Sheri", "Nowmer", 1, "President", 0, 1, "1961-08-26", "1994-12-01 00:00:00.0", 80000.0, 0, "Graduate Degree", "S", "F", "Senior Management", Base64.getEncoder().encodeToString("Senior Management".getBytes()), true, "2015/01/01 12:10:30", 123, 123, 123., 123, 123.45)
+        .baselineValues(1, "Sheri Nowmer", "Sheri", "Nowmer", 1, "President", 0, 1, "1961-08-26", "1994-12-01 00:00:00.0", 80000.0, 0, "Graduate Degree", "S", "F", "Senior Management", Base64.getEncoder().encodeToString("Senior Management".getBytes(StandardCharsets.UTF_8)), true, "2015/01/01 12:10:30", 123, 123, 123., 123, 123.45)
         .baselineValues(2, "Derrick Whelply", "Derrick", "Whelply", 2, "VP Country Manager", 0, 1, "1915-07-03", "1994-12-01 00:00:00.0", 40000.0, 1, "Graduate Degree", "M", "M", "Senior Management", null, null, null, null, null, null, null, null)
         .baselineValues(4, "Michael Spence", "Michael", "Spence", 2, "VP Country Manager", 0, 1, "1969-06-20", "1998-01-01 00:00:00.0", 40000.0, 1, "Graduate Degree", "S", "M", "Senior Management", null, null, null, null, null, null, null, null)
         .go();
@@ -559,7 +560,7 @@ public class ElasticSearchQueryTest extends ClusterTest {
             "supervisor_id", "education_level", "marital_status", "gender", "management_role",
           "binary_field", "boolean_field", "date_field", "byte_field", "long_field", "float_field",
           "short_field", "decimal_field", "full_name0")
-        .baselineValues(1, "Sheri Nowmer", "Sheri", "Nowmer", 1, "President", 0, 1, "1961-08-26", "1994-12-01 00:00:00.0", 80000.0, 0, "Graduate Degree", "S", "F", "Senior Management", Base64.getEncoder().encodeToString("Senior Management".getBytes()), true, "2015/01/01 12:10:30", 123, 123, 123., 123, 123.45, 123)
+        .baselineValues(1, "Sheri Nowmer", "Sheri", "Nowmer", 1, "President", 0, 1, "1961-08-26", "1994-12-01 00:00:00.0", 80000.0, 0, "Graduate Degree", "S", "F", "Senior Management", Base64.getEncoder().encodeToString("Senior Management".getBytes(StandardCharsets.UTF_8)), true, "2015/01/01 12:10:30", 123, 123, 123., 123, 123.45, 123)
         .baselineValues(2, "Derrick Whelply", "Derrick", "Whelply", 2, "VP Country Manager", 0, 1, "1915-07-03", "1994-12-01 00:00:00.0", 40000.0, 1, "Graduate Degree", "M", "M", "Senior Management", null, null, null, null, null, null, null, null, 123)
         .baselineValues(4, "Michael Spence", "Michael", "Spence", 2, "VP Country Manager", 0, 1, "1969-06-20", "1998-01-01 00:00:00.0", 40000.0, 1, "Graduate Degree", "S", "M", "Senior Management", null, null, null, null, null, null, null, null, 123)
         .go();
@@ -615,7 +616,7 @@ public class ElasticSearchQueryTest extends ClusterTest {
           "short_field", "decimal_field")
         .baselineValues(1, "Sheri Nowmer", "Sheri", "Nowmer", 1, "President", 0, 1, LocalDate.parse("1961-08-26"),
             "1994-12-01 00:00:00.0", new BigDecimal("80000.00"), 0, "Graduate Degree", "S", "F", "Senior Management",
-          Base64.getEncoder().encodeToString("Senior Management".getBytes()), true,
+          Base64.getEncoder().encodeToString("Senior Management".getBytes(StandardCharsets.UTF_8)), true,
           "2015/01/01 12:10:30", 123, 123, 123., 123, 123.45)
         .go();
   }

@@ -18,6 +18,7 @@
 package org.apache.drill.exec.physical.impl.metadata;
 
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -251,7 +252,7 @@ public class MetadataControllerBatch extends AbstractBinaryRecordBatch<MetadataC
         String.format("Collected / refreshed metadata for table [%s.%s.%s]",
             popConfig.getContext().tableInfo().storagePlugin(),
             popConfig.getContext().tableInfo().workspace(),
-            popConfig.getContext().tableInfo().name()).getBytes());
+            popConfig.getContext().tableInfo().name()).getBytes(StandardCharsets.UTF_8));
 
     container.buildSchema(BatchSchema.SelectionVectorMode.NONE);
     container.setValueCount(1);
@@ -670,7 +671,7 @@ public class MetadataControllerBatch extends AbstractBinaryRecordBatch<MetadataC
     switch (objectReader.schema().type()) {
       case VARBINARY:
       case FIXEDBINARY:
-        return new String(objectReader.scalar().getBytes());
+        return new String(objectReader.scalar().getBytes(), StandardCharsets.UTF_8);
       default:
         return objectReader.getObject();
     }

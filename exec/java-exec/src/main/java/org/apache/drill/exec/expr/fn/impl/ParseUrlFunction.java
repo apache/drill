@@ -89,7 +89,7 @@ public class ParseUrlFunction {
         for (java.util.Map.Entry<String, String> entry : urlComponents.entrySet()) {
           if (entry.getValue() != null) {
             // Explicit casting to String is required because of Janino's limitations regarding generics.
-            byte[] protocolBytes = ((String) entry.getValue()).getBytes();
+            byte[] protocolBytes = ((String) entry.getValue()).getBytes(java.nio.charset.StandardCharsets.UTF_8);
             outBuffer = outBuffer.reallocIfNeeded(protocolBytes.length);
             outBuffer.setBytes(0, protocolBytes);
             rowHolder.start = 0;
@@ -164,7 +164,7 @@ public class ParseUrlFunction {
         for (java.util.Map.Entry<String, String> entry : urlComponents.entrySet()) {
           if (entry.getValue() != null) {
             // Explicit casting to String is required because of Janino's limitations regarding generics.
-            byte[] protocolBytes = ((String) entry.getValue()).getBytes();
+            byte[] protocolBytes = ((String) entry.getValue()).getBytes(java.nio.charset.StandardCharsets.UTF_8);
             outBuffer = outBuffer.reallocIfNeeded(protocolBytes.length);
             outBuffer.setBytes(0, protocolBytes);
             rowHolder.start = 0;

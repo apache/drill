@@ -20,6 +20,7 @@
 
 package org.apache.drill.exec.store.kudu;
 
+import java.nio.charset.StandardCharsets;
 import java.io.IOException;
 import java.lang.UnsupportedOperationException;
 import java.util.Arrays;
@@ -113,7 +114,7 @@ public abstract class KuduRecordWriter extends AbstractRecordWriter implements R
             <#elseif minor.class == "VarChar" >
               byte[] bytes = new byte[holder.end - holder.start];
               holder.buffer.getBytes(holder.start, bytes);
-              row.addString(fieldId, new String(bytes));
+              row.addString(fieldId, new String(bytes, StandardCharsets.UTF_8));
             <#elseif minor.class == "VarBinary">
               byte[] bytes = new byte[holder.end - holder.start];
               holder.buffer.getBytes(holder.start, bytes);

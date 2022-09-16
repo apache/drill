@@ -42,6 +42,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.util.Map;
 import java.util.Properties;
 import java.util.stream.Collectors;
@@ -98,7 +99,7 @@ public class AvroMessageReader implements MessageReader {
     if (deserializeKey) {
       return deserializer.deserialize(null, keyValue).toString();
     } else {
-      return new String(keyValue);
+      return new String(keyValue, StandardCharsets.UTF_8);
     }
   }
 

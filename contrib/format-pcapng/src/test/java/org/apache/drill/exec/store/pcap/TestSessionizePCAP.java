@@ -31,6 +31,7 @@ import org.apache.drill.test.rowSet.RowSetComparison;
 import org.joda.time.Period;
 
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import org.junit.BeforeClass;
@@ -170,6 +171,6 @@ public class TestSessionizePCAP extends ClusterTest {
    * @throws IOException If the file is unreachable or unreadable, throw IOException.
    */
   private static String readAFileIntoString(String filePath) throws IOException {
-    return new String(Files.readAllBytes(Paths.get(filePath)));
+    return new String(Files.readAllBytes(Paths.get(filePath)), StandardCharsets.UTF_8);
   }
 }

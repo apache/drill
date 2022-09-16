@@ -96,7 +96,7 @@ public class Cast${type.from}To${type.to} implements DrillSimpleFunc {
       out.buffer = buffer;
       out.start = 0;
       out.end = Math.min((int)len.value, str.length()); // truncate if target type has length smaller than that of input's string
-      out.buffer.setBytes(0, String.valueOf(str.substring(0,out.end)).getBytes());
+      out.buffer.setBytes(0, String.valueOf(str.substring(0,out.end)).getBytes(java.nio.charset.StandardCharsets.UTF_8));
   }
 }
 
@@ -153,7 +153,7 @@ public class Cast${type.from}To${type.to} implements DrillSimpleFunc {
       out.buffer = buffer;
       out.start = 0;
       out.end = Math.min((int)len.value, str.length()); // truncate if target type has length smaller than that of input's string
-      out.buffer.setBytes(0, String.valueOf(str.substring(0,out.end)).getBytes());
+      out.buffer.setBytes(0, String.valueOf(str.substring(0,out.end)).getBytes(java.nio.charset.StandardCharsets.UTF_8));
   }
 }
 
@@ -228,7 +228,7 @@ public class Cast${type.from}To${type.to} implements DrillSimpleFunc {
       out.buffer = buffer;
       out.start = 0;
       out.end = Math.min((int)len.value, str.length()); // truncate if target type has length smaller than that of input's string
-      out.buffer.setBytes(0, String.valueOf(str.substring(0,out.end)).getBytes());
+      out.buffer.setBytes(0, String.valueOf(str.substring(0,out.end)).getBytes(java.nio.charset.StandardCharsets.UTF_8));
   }
 }
 </#if> <#-- type.major -->

@@ -22,6 +22,7 @@ import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
+import java.nio.charset.StandardCharsets;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -243,7 +244,7 @@ public class TestExtendedTypes extends BaseJsonLoaderTest {
     TupleMetadata expectedSchema = new SchemaBuilder()
         .addNullable("a", MinorType.VARBINARY)
         .build();
-    byte[] bytes = "Drill".getBytes();
+    byte[] bytes = "Drill".getBytes(StandardCharsets.UTF_8);
     RowSet expected = fixture.rowSetBuilder(expectedSchema)
         .addRow(bytes)
         .addRow(bytes)

@@ -26,6 +26,7 @@ import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.FileWriter;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Paths;
 
 import org.apache.drill.categories.RowSetTest;
@@ -320,8 +321,8 @@ public class TestJsonReader extends BaseTestQuery {
     File table_dir = dirTestWatcher.makeTestTmpSubDir(Paths.get("multi_batch"));
     BufferedOutputStream os = new BufferedOutputStream(new FileOutputStream(new File(table_dir, "a.json")));
     for (int i = 0; i < 10000; i++) {
-      os.write("{ type : \"map\", data : { a : 1 } }\n".getBytes());
-      os.write("{ type : \"bigint\", data : 1 }\n".getBytes());
+      os.write("{ type : \"map\", data : { a : 1 } }\n".getBytes(StandardCharsets.UTF_8));
+      os.write("{ type : \"bigint\", data : 1 }\n".getBytes(StandardCharsets.UTF_8));
     }
     os.flush();
     os.close();
@@ -348,13 +349,13 @@ public class TestJsonReader extends BaseTestQuery {
     File table_dir = dirTestWatcher.makeTestTmpSubDir(Paths.get("multi_file"));
     BufferedOutputStream os = new BufferedOutputStream(new FileOutputStream(new File(table_dir, "a.json")));
     for (int i = 0; i < 10000; i++) {
-      os.write("{ type : \"map\", data : { a : 1 } }\n".getBytes());
+      os.write("{ type : \"map\", data : { a : 1 } }\n".getBytes(StandardCharsets.UTF_8));
     }
     os.flush();
     os.close();
     os = new BufferedOutputStream(new FileOutputStream(new File(table_dir, "b.json")));
     for (int i = 0; i < 10000; i++) {
-      os.write("{ type : \"bigint\", data : 1 }\n".getBytes());
+      os.write("{ type : \"bigint\", data : 1 }\n".getBytes(StandardCharsets.UTF_8));
     }
     os.flush();
     os.close();
@@ -381,13 +382,13 @@ public class TestJsonReader extends BaseTestQuery {
     File table_dir = dirTestWatcher.makeTestTmpSubDir(Paths.get("drill_4032"));
     table_dir.mkdir();
     BufferedOutputStream os = new BufferedOutputStream(new FileOutputStream(new File(table_dir, "a.json")));
-    os.write("{\"col1\": \"val1\",\"col2\": null}".getBytes());
-    os.write("{\"col1\": \"val1\",\"col2\": {\"col3\":\"abc\", \"col4\":\"xyz\"}}".getBytes());
+    os.write("{\"col1\": \"val1\",\"col2\": null}".getBytes(StandardCharsets.UTF_8));
+    os.write("{\"col1\": \"val1\",\"col2\": {\"col3\":\"abc\", \"col4\":\"xyz\"}}".getBytes(StandardCharsets.UTF_8));
     os.flush();
     os.close();
     os = new BufferedOutputStream(new FileOutputStream(new File(table_dir, "b.json")));
-    os.write("{\"col1\": \"val1\",\"col2\": null}".getBytes());
-    os.write("{\"col1\": \"val1\",\"col2\": null}".getBytes());
+    os.write("{\"col1\": \"val1\",\"col2\": null}".getBytes(StandardCharsets.UTF_8));
+    os.write("{\"col1\": \"val1\",\"col2\": null}".getBytes(StandardCharsets.UTF_8));
     os.flush();
     os.close();
     runBoth(() -> testNoResult("select t.col2.col3 from dfs.tmp.drill_4032 t"));
@@ -400,10 +401,10 @@ public class TestJsonReader extends BaseTestQuery {
     BufferedOutputStream os = new BufferedOutputStream(new FileOutputStream(new File(table_dir, "mostlynulls.json")));
     // Create an entire batch of null values for 3 columns
     for (int i = 0; i < JSONRecordReader.DEFAULT_ROWS_PER_BATCH; i++) {
-      os.write("{\"a\": null, \"b\": null, \"c\": null}".getBytes());
+      os.write("{\"a\": null, \"b\": null, \"c\": null}".getBytes(StandardCharsets.UTF_8));
     }
     // Add a row with {bigint,  float, string} values
-    os.write("{\"a\": 123456789123, \"b\": 99.999, \"c\": \"Hello World\"}".getBytes());
+    os.write("{\"a\": 123456789123, \"b\": 99.999, \"c\": \"Hello World\"}".getBytes(StandardCharsets.UTF_8));
     os.flush();
     os.close();
 

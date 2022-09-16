@@ -68,7 +68,7 @@ public class Cast${type.from}${type.to} implements DrillSimpleFunc {
     out.start = 0;
     out.end = Math.min((int) len.value, str.length());
     out.buffer = buffer = buffer.reallocIfNeeded((int) out.end);
-    out.buffer.setBytes(0, str.substring(0, out.end).getBytes());
+    out.buffer.setBytes(0, str.substring(0, out.end).getBytes(java.nio.charset.StandardCharsets.UTF_8));
   }
 }
 </#if> <#-- type.major -->

@@ -28,6 +28,8 @@ import com.fasterxml.jackson.databind.JsonDeserializer;
 import com.fasterxml.jackson.databind.JsonSerializer;
 import com.fasterxml.jackson.databind.KeyDeserializer;
 import com.fasterxml.jackson.databind.SerializerProvider;
+
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import org.apache.hadoop.fs.Path;
 import org.apache.parquet.io.api.Binary;
@@ -449,7 +451,7 @@ public class Metadata_V2 {
         if (value.mxValue != null) {
           Object val;
           if (value.primitiveType == PrimitiveType.PrimitiveTypeName.BINARY && value.mxValue != null) {
-            val = new String(((Binary) value.mxValue).getBytes());
+            val = new String(((Binary) value.mxValue).getBytes(), StandardCharsets.UTF_8);
           } else {
             val = value.mxValue;
           }

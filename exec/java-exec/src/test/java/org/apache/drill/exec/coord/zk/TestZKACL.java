@@ -40,6 +40,7 @@ import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
+import java.nio.charset.StandardCharsets;
 import java.util.List;
 
 @Ignore("See DRILL-6823")
@@ -48,14 +49,14 @@ public class TestZKACL extends BaseTest {
 
   private TestingServer server;
   private final static String cluster_config_znode = "test-cluster_config_znode";
-  private final static byte[] cluster_config_data = "drill-node-1".getBytes();
+  private final static byte[] cluster_config_data = "drill-node-1".getBytes(StandardCharsets.UTF_8);
   private final static String drill_zk_root = "drill-test-drill_zk_root";
   private final static String drill_cluster_name = "test-drillbits";
   private static final String drillClusterPath = "/" + drill_zk_root + "/" + drill_cluster_name;
   private static final RetryPolicy retryPolicy = new RetryNTimes(1, 1000);
 
   private static final String drillUDFName = "test-udfs";
-  private final static byte[] udf_data = "test-udf-1".getBytes();
+  private final static byte[] udf_data = "test-udf-1".getBytes(StandardCharsets.UTF_8);
   private static final String drillUDFPath = "/" + drill_zk_root + "/" + drillUDFName;
   private static ACLProvider aclProviderDelegate;
 
