@@ -20,6 +20,8 @@ package org.apache.drill.exec.resolver;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.stream.Collectors;
+
+import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.common.expression.FunctionCall;
 import org.apache.drill.common.expression.LogicalExpression;
 import org.apache.drill.common.types.TypeProtos;
@@ -62,13 +64,22 @@ public class DefaultFunctionResolver implements FunctionResolver {
       return null;
     }
     if (bestMatchAlternatives.size() > 0) {
-      logger.info("Multiple functions with best cost found, chosing {}", bestmatch);
+      logger.info("Multiple functions with best cost found, query processing will be aborted.");
 
       // printing the possible matches
       logger.debug("Printing all the possible functions that could have matched: ");
       for (DrillFuncHolder holder : bestMatchAlternatives) {
         logger.debug(holder.toString());
       }
+
+      throw UserException.functionError()
+        .message(
+          "There are %d function definitions with the same casting cost for " +
+          "%s, please write explicit casts disambiguate your function call.",
+          bestMatchAlternatives.size(),
+          call
+        )
+        .build(logger);
     }
     return bestmatch;
   }

@@ -451,7 +451,7 @@ public class TypeInferenceUtils {
       // When the cheapest cast is is to
       //  - BIGINT then the result is a BIGINT
       //  - FLOAT8 then the result is DOUBLE
-      //  - VARDECIMAL then the result a DECIMAL with the same scale as the input and
+      //  - VARDECIMAL then the result is a DECIMAL with the same scale as the input and
       //    the max allowed numeric precision.
       // When none of these conditions are satisfied an error is thrown.
       final RelDataType operandType = opBinding.getOperandType(0);
@@ -866,7 +866,7 @@ public class TypeInferenceUtils {
       // Determines SqlTypeName of the result.
       // When the cheapest cast is to
       //  - FLOAT8 then the result is a DOUBLE
-      //  - VARDECIMAL then the result a DECIMAL with scale max(6, input) and
+      //  - VARDECIMAL then the result is a DECIMAL with scale max(6, input) and
       //    the max allowed numeric precision.
       // When none of these conditions are satisfied an error is thrown.
       final RelDataType operandType = opBinding.getOperandType(0);

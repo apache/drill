@@ -751,6 +751,14 @@ public class TypeCastRules {
     return result;
   }
 
+  /**
+   * Finds the type in a given set that has the cheapest cast from a given
+   * starting type.
+   * @param fromType type to cast from.
+   * @param toTypes candidate types to cast to.
+   * @return the type in toTypes that has the cheapest cast or empty if no
+   *         finite cost cast can be found.
+   */
   public static Optional<MinorType> getCheapestCast(MinorType fromType, MinorType... toTypes) {
     MinorType cheapest = null;
     float cheapestCost = Float.POSITIVE_INFINITY;

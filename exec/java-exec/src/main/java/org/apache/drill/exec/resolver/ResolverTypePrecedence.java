@@ -31,7 +31,7 @@ public class ResolverTypePrecedence {
 
   // A weighted directed graph that represents the cost of casting between
   // pairs of data types. The edge weights represent casting preferences and
-  // it is important to note that only some of these prefereces can be
+  // it is important to note that only some of these preferences can be
   // understood in terms of factors like computational cost or loss of
   // precision. The others are derived from the expected behaviour of the query
   // engine in the face of various data types and queries as expressed by the
@@ -86,7 +86,7 @@ public class ResolverTypePrecedence {
     // float conversion
     // FLOATs are not currently castable to VARDECIMAL (see TypeCastRules)
     // but it is not possible to avoid some path between them here since
-    // FLOATs must ultimately be implcitly castable to VARCHAR, and VARCHAR
+    // FLOATs must ultimately be implicitly castable to VARCHAR, and VARCHAR
     // to VARDECIMAL.
     // prefer the cast in the opposite direction
     .putEdgeValue(MinorType.FLOAT8, MinorType.VARDECIMAL, 20f)
