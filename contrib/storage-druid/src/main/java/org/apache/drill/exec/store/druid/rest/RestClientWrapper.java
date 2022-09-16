@@ -24,7 +24,6 @@ import okhttp3.Response;
 
 import java.nio.charset.StandardCharsets;
 import java.io.IOException;
-import java.nio.charset.StandardCharsets;
 
 public class RestClientWrapper implements RestClient {
   // OkHttp client is designed to be shared across threads.

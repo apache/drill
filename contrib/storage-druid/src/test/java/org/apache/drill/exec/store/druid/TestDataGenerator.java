@@ -92,7 +92,7 @@ public class TestDataGenerator {
         .build();
 
       try (Response resp = httpClient.newCall(post).execute()) {
-				String respBodyStr = resp.body().string();
+        String respBodyStr = resp.body().string();
         TaskStartResponse taskStartResponse = mapper.readValue(
           respBodyStr,
           TaskStartResponse.class

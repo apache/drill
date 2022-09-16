@@ -43,8 +43,8 @@ import java.io.File;
     DruidScanSpecBuilderTest.class
 })
 @Category({SlowTest.class, DruidStorageTest.class})
-public class DruidTestSuit {
-  private static final Logger logger = LoggerFactory.getLogger(DruidTestSuit.class);
+public class DruidTestSuite {
+  private static final Logger logger = LoggerFactory.getLogger(DruidTestSuite.class);
 
   private static final ObjectMapper mapper = new ObjectMapper();
 
