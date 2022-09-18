@@ -61,7 +61,7 @@ public class EnumerableBatchCreator implements BatchCreator<EnumerableSubScan> {
     builder.providedSchema(subScan.getSchema());
 
     ManagedReader<SchemaNegotiator> reader = new EnumerableRecordReader(subScan.getColumns(),
-        subScan.getFieldsMap(), subScan.getCode(), subScan.getSchemaPath(), subScan.factoryProvider());
+        subScan.getFieldsMap(), subScan.getCode(), subScan.getSchemaPath(), subScan.getConverterFactoryProvider());
     ManagedScanFramework.ReaderFactory readerFactory = new BasicScanFactory(Collections.singletonList(reader).iterator());
     builder.setReaderFactory(readerFactory);
     builder.nullType(Types.optional(TypeProtos.MinorType.VARCHAR));

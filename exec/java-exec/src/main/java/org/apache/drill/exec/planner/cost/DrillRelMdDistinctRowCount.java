@@ -30,6 +30,7 @@ import org.apache.calcite.rel.core.Join;
 import org.apache.calcite.rel.core.JoinRelType;
 import org.apache.calcite.rel.core.TableScan;
 import org.apache.calcite.rel.core.Window;
+import org.apache.calcite.rel.metadata.BuiltInMetadata;
 import org.apache.calcite.rel.metadata.ReflectiveRelMetadataProvider;
 import org.apache.calcite.rel.metadata.RelMdDistinctRowCount;
 import org.apache.calcite.rel.metadata.RelMdUtil;
@@ -42,7 +43,6 @@ import org.apache.calcite.rex.RexInputRef;
 import org.apache.calcite.rex.RexNode;
 import org.apache.calcite.rex.RexUtil;
 import org.apache.calcite.sql.SqlKind;
-import org.apache.calcite.util.BuiltInMethod;
 import org.apache.calcite.util.ImmutableBitSet;
 import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.exec.planner.common.DrillJoinRelBase;
@@ -61,12 +61,9 @@ import org.slf4j.LoggerFactory;
 public class DrillRelMdDistinctRowCount extends RelMdDistinctRowCount{
   private static final Logger logger = LoggerFactory.getLogger(DrillRelMdDistinctRowCount.class);
 
-  private static final DrillRelMdDistinctRowCount INSTANCE =
-      new DrillRelMdDistinctRowCount();
-
   public static final RelMetadataProvider SOURCE =
-      ReflectiveRelMetadataProvider.reflectiveSource(
-          BuiltInMethod.DISTINCT_ROW_COUNT.method, INSTANCE);
+    ReflectiveRelMetadataProvider.reflectiveSource(
+      new DrillRelMdDistinctRowCount(), BuiltInMetadata.DistinctRowCount.Handler.class);
 
   /**
    * We need to override this method since Calcite and Drill calculate

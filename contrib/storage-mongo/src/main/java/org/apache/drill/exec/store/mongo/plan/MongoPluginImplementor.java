@@ -55,7 +55,6 @@ import org.apache.drill.exec.store.plan.rel.PluginProjectRel;
 import org.apache.drill.exec.store.plan.rel.PluginSortRel;
 import org.apache.drill.exec.store.plan.rel.PluginUnionRel;
 import org.apache.drill.exec.store.plan.rel.StoragePluginTableScan;
-import org.apache.drill.exec.util.Utilities;
 import org.bson.BsonDocument;
 import org.bson.BsonElement;
 import org.bson.BsonInt32;
@@ -220,8 +219,8 @@ public class MongoPluginImplementor extends AbstractPluginImplementor {
   }
 
   @Override
-  public void implement(StoragePluginTableScan scan) throws IOException {
-    groupScan = (MongoGroupScan) Utilities.getDrillTable(scan.getTable()).getGroupScan();
+  public void implement(StoragePluginTableScan scan) {
+    groupScan = (MongoGroupScan) scan.getGroupScan();
     operations = this.groupScan.getScanSpec().getOperations().stream()
       .map(BsonDocument::parse)
       .collect(Collectors.toList());
