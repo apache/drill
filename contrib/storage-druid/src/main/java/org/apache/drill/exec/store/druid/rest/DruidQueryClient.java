@@ -22,12 +22,12 @@ import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.exec.store.druid.druid.DruidScanResponse;
-import org.apache.http.HttpResponse;
-import org.apache.http.HttpStatus;
-import org.apache.http.util.EntityUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import okhttp3.Response;
+
+import java.io.InputStream;
 import java.util.ArrayList;
 
 public class DruidQueryClient {
@@ -48,20 +48,22 @@ public class DruidQueryClient {
 
   public DruidScanResponse executeQuery(String query) throws Exception {
     logger.debug("Executing Query - {}", query);
-    HttpResponse response = restClient.post(queryUrl, query);
 
-    if (response.getStatusLine().getStatusCode() != HttpStatus.SC_OK) {
-      throw UserException
-          .dataReadError()
-          .message("Error executing druid query. HTTP request failed")
-          .addContext("Response code", response.getStatusLine().getStatusCode())
-          .addContext("Response message", response.getStatusLine().getReasonPhrase())
-          .build(logger);
+    try (Response response = restClient.post(queryUrl, query)) {
+      if (!response.isSuccessful()) {
+        // TODO: Add a CustomErrorContext when this plugin is converted to EVF.
+        throw UserException
+            .dataReadError()
+            .message("Error executing druid query. HTTP request failed")
+            .addContext("Response code", response.code())
+            .addContext("Response message", response.message())
+            .build(logger);
+      }
+
+      InputStream responseStream = response.body().byteStream();
+      ArrayNode responses = mapper.readValue(responseStream, ArrayNode.class);
+      return parseResponse(responses);
     }
-
-    String data = EntityUtils.toString(response.getEntity());
-    ArrayNode responses = mapper.readValue(data, ArrayNode.class);
-    return parseResponse(responses);
   }
 
   private DruidScanResponse parseResponse(ArrayNode responses) {

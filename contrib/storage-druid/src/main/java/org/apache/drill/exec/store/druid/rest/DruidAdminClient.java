@@ -21,12 +21,12 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.exec.store.druid.druid.SimpleDatasourceInfo;
-import org.apache.http.HttpResponse;
-import org.apache.http.HttpStatus;
-import org.apache.http.util.EntityUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import okhttp3.Response;
+
+import java.io.InputStream;
 import java.io.IOException;
 import java.util.List;
 
@@ -34,7 +34,6 @@ public class DruidAdminClient {
   private static final Logger logger = LoggerFactory.getLogger(DruidAdminClient.class);
 
   private static final String DATASOURCES_BASE_URI = "/druid/coordinator/v1/datasources?simple";
-  private static final String DEFAULT_ENCODING = "UTF-8";
   private static final ObjectMapper mapper = new ObjectMapper();
 
   private final String coordinatorAddress;
@@ -47,18 +46,19 @@ public class DruidAdminClient {
 
   public List<SimpleDatasourceInfo> getDataSources() throws IOException {
     String url = this.coordinatorAddress + DATASOURCES_BASE_URI;
-    HttpResponse response = restClient.get(url);
+    try (Response response = restClient.get(url)) {
+      if (!response.isSuccessful()) {
+        // TODO: Add a CustomErrorContext when this plugin is converted to EVF.
+        throw UserException
+          .dataReadError()
+          .message("Error getting druid datasources. HTTP request failed")
+          .addContext("Response code", response.code())
+          .addContext("Response message", response.message())
+          .build(logger);
+      }
 
-    if (response.getStatusLine().getStatusCode() != HttpStatus.SC_OK) {
-      throw UserException
-        .dataReadError()
-        .message("Error getting druid datasources. HTTP request failed")
-        .addContext("Response code", response.getStatusLine().getStatusCode())
-        .addContext("Response message", response.getStatusLine().getReasonPhrase())
-        .build(logger);
+      InputStream responseStream = response.body().byteStream();
+      return mapper.readValue(responseStream, new TypeReference<List<SimpleDatasourceInfo>>(){});
     }
-
-    String responseJson = EntityUtils.toString(response.getEntity(), DEFAULT_ENCODING);
-    return mapper.readValue(responseJson, new TypeReference<List<SimpleDatasourceInfo>>(){});
   }
 }

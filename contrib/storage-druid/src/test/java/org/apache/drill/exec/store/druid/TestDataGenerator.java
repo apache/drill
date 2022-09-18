@@ -23,37 +23,27 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.drill.shaded.guava.com.google.common.io.Resources;
-import org.apache.http.HttpEntity;
-import org.apache.http.HttpResponse;
-import org.apache.http.HttpStatus;
-import org.apache.http.StatusLine;
-import org.apache.http.client.HttpClient;
-import org.apache.http.client.methods.HttpGet;
-import org.apache.http.client.methods.HttpPost;
-import org.apache.http.entity.ByteArrayEntity;
-import org.apache.http.impl.client.DefaultHttpClient;
-import org.apache.http.util.EntityUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.ws.rs.core.HttpHeaders;
+import okhttp3.OkHttpClient;
+import okhttp3.Request;
+import okhttp3.RequestBody;
+import okhttp3.Response;
+
+import java.io.InputStream;
 import java.io.IOException;
 import java.net.URISyntaxException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.concurrent.TimeUnit;
 
-import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
-import static org.apache.http.protocol.HTTP.CONTENT_TYPE;
-
 public class TestDataGenerator {
   private static final Logger logger = LoggerFactory.getLogger(TestDataGenerator.class);
 
-  private static final HttpClient httpClient = new DefaultHttpClient();
+  private static final OkHttpClient httpClient = new OkHttpClient();
 
   private static final ObjectMapper mapper = new ObjectMapper();
-
-  private static final String DEFAULT_ENCODING = "UTF-8";
 
   private static final String RESPONSE_SUCCESS = "SUCCESS";
 
@@ -72,11 +62,13 @@ public class TestDataGenerator {
   private static boolean isDruidRunning(DruidStoragePluginConfig druidStoragePluginConfig) {
     try {
       String healthCheckUrl = druidStoragePluginConfig.getCoordinatorAddress() + "/status/health";
-      HttpGet httpGet = new HttpGet(healthCheckUrl);
-      HttpResponse response = httpClient.execute(httpGet);
-      StatusLine statusLine = response.getStatusLine();
-      String status = EntityUtils.toString(response.getEntity(), DEFAULT_ENCODING);
-      return statusLine.getStatusCode() == HttpStatus.SC_OK && status.equalsIgnoreCase("true");
+      Request get = new Request.Builder()
+        .url(healthCheckUrl)
+        .build();
+
+      try (Response resp  = httpClient.newCall(get).execute()) {
+        return resp.isSuccessful() && resp.body().string().equalsIgnoreCase("true");
+      }
     } catch (Exception ex) {
       logger.error("Error getting druid status", ex);
       return false;
@@ -90,18 +82,24 @@ public class TestDataGenerator {
   private static String startImportTask(DruidStoragePluginConfig druidStoragePluginConfig) throws URISyntaxException, IOException {
     try {
       String url = taskUrl(druidStoragePluginConfig);
-      byte[] taskConfig = Files.readAllBytes(Paths.get(Resources.getResource("wikipedia-index.json").toURI()));
+      RequestBody postBody = RequestBody.create(
+        Files.readAllBytes(Paths.get(Resources.getResource("wikipedia-index.json").toURI()))
+      );
+      Request post = new Request.Builder()
+        .url(url)
+        .addHeader("Content-Type", "application/json")
+        .post(postBody)
+        .build();
 
-      HttpPost httpPost = new HttpPost(url);
-      httpPost.addHeader(CONTENT_TYPE, APPLICATION_JSON);
-      HttpEntity entity = new ByteArrayEntity(taskConfig);
-      httpPost.setEntity(entity);
-
-      HttpResponse response = httpClient.execute(httpPost);
-      String data = EntityUtils.toString(response.getEntity());
-      TaskStartResponse taskStartResponse = mapper.readValue(data, TaskStartResponse.class);
-      logger.debug("Started Indexing Task - " + taskStartResponse.getTaskId());
-      return taskStartResponse.getTaskId();
+      try (Response resp = httpClient.newCall(post).execute()) {
+        String respBodyStr = resp.body().string();
+        TaskStartResponse taskStartResponse = mapper.readValue(
+          respBodyStr,
+          TaskStartResponse.class
+        );
+        logger.debug("Started Indexing Task - {}", taskStartResponse.getTaskId());
+        return taskStartResponse.getTaskId();
+      }
     } catch (Exception ex) {
       logger.error("Error starting Indexing Task");
       throw ex;
@@ -114,14 +112,17 @@ public class TestDataGenerator {
     Thread.sleep(TimeUnit.MINUTES.toMillis(sleepMinutes));
 
     String url = taskUrl(druidStoragePluginConfig) + "/" + taskId + "/status";
-    HttpGet httpget = new HttpGet(url);
-    httpget.addHeader(HttpHeaders.CONTENT_TYPE, APPLICATION_JSON);
+    Request get = new Request.Builder()
+      .url(url)
+      .addHeader("Content-Type", "application/json")
+      .build();
 
-    HttpResponse response = httpClient.execute(httpget);
-    String responseJson = EntityUtils.toString(response.getEntity(), DEFAULT_ENCODING);
-    TaskStatusResponse taskStatusResponse = mapper.readValue(responseJson, TaskStatusResponse.class);
-    if (!taskStatusResponse.taskStatus.status.equalsIgnoreCase(RESPONSE_SUCCESS)) {
-      throw new Exception(String.format("Task %s finished with status %s", taskId, taskStatusResponse.taskStatus.status));
+    try (Response resp = httpClient.newCall(get).execute()) {
+      InputStream jsonStream = resp.body().byteStream();
+      TaskStatusResponse taskStatusResponse = mapper.readValue(jsonStream, TaskStatusResponse.class);
+      if (!taskStatusResponse.taskStatus.status.equalsIgnoreCase(RESPONSE_SUCCESS)) {
+        throw new Exception(String.format("Task %s finished with status %s", taskId, taskStatusResponse.taskStatus.status));
+      }
     }
 
     logger.debug("Task {} finished successfully", taskId);
