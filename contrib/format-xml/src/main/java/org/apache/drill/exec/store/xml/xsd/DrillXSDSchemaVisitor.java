@@ -18,7 +18,10 @@
 
 package org.apache.drill.exec.store.xml.xsd;
 
+import org.apache.drill.common.types.TypeProtos.MinorType;
+import org.apache.drill.exec.record.metadata.MapBuilder;
 import org.apache.drill.exec.record.metadata.SchemaBuilder;
+import org.apache.drill.exec.record.metadata.TupleMetadata;
 import org.apache.ws.commons.schema.XmlSchemaAll;
 import org.apache.ws.commons.schema.XmlSchemaAny;
 import org.apache.ws.commons.schema.XmlSchemaAnyAttribute;
@@ -32,40 +35,59 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.Locale;
+import java.util.Stack;
 
 public class DrillXSDSchemaVisitor implements XmlSchemaVisitor {
   private static final Logger logger = LoggerFactory.getLogger(DrillXSDSchemaVisitor.class);
   private final SchemaBuilder builder;
-  private DrillSchemaField currentField;
+  private MapBuilder currentMapBuilder;
+  private Stack<MapBuilder> mapBuilderStack;
+  private int nestingLevel;
 
   public DrillXSDSchemaVisitor(SchemaBuilder builder) {
     this.builder = builder;
+    this.mapBuilderStack = new Stack<>();
+    this.nestingLevel = -1;
+  }
+
+  public TupleMetadata getDrillSchema() {
+    return builder.build();
   }
 
   @Override
   public void onEnterElement(XmlSchemaElement xmlSchemaElement, XmlSchemaTypeInfo xmlSchemaTypeInfo, boolean b) {
     logger.debug("Entering element: {}", xmlSchemaElement.getName());
     if (xmlSchemaTypeInfo.getType().name().equalsIgnoreCase("COMPLEX")) {
-      logger.debug("Found map in opening element.");
+      // Start a map here.
+      logger.debug("Found map in opening element: {}", xmlSchemaElement.getName());
+      currentMapBuilder = builder.addMap(xmlSchemaElement.getName());
+      mapBuilderStack.push(currentMapBuilder);
+      nestingLevel++;
+    } else {
+      MinorType dataType = XSDSchemaUtils.getDrillDataType(xmlSchemaTypeInfo.getBaseType().name());
+      if (currentMapBuilder == null) {
+        // If the current map is null, it means we are not in a nested construct
+        builder.addNullable(xmlSchemaElement.getName(), dataType);
+      } else {
+        // Otherwise, write to the current map builder
+        currentMapBuilder.addNullable(xmlSchemaElement.getName(), dataType);
+      }
     }
   }
 
   @Override
   public void onExitElement(XmlSchemaElement xmlSchemaElement, XmlSchemaTypeInfo xmlSchemaTypeInfo, boolean b) {
-    currentField = new DrillSchemaField();
-    currentField.fieldName = xmlSchemaElement.getName();
-    currentField.type = currentField.getDrillDataType(xmlSchemaTypeInfo.getBaseType().name().toUpperCase(Locale.ROOT));
-    logger.debug("Current field {}", currentField);
+    // no op
   }
 
   @Override
   public void onVisitAttribute(XmlSchemaElement xmlSchemaElement, XmlSchemaAttrInfo xmlSchemaAttrInfo) {
-    logger.debug("Attributes: {}", xmlSchemaAttrInfo);
+    // no op
   }
 
   @Override
   public void onEndAttributes(XmlSchemaElement xmlSchemaElement, XmlSchemaTypeInfo xmlSchemaTypeInfo) {
-
+    // no op
   }
 
   @Override
@@ -100,21 +122,34 @@ public class DrillXSDSchemaVisitor implements XmlSchemaVisitor {
 
   @Override
   public void onEnterSequenceGroup(XmlSchemaSequence xmlSchemaSequence) {
-
+    // no op
   }
 
   @Override
   public void onExitSequenceGroup(XmlSchemaSequence xmlSchemaSequence) {
-    logger.debug("Leaving map: ");
+    logger.debug("Leaving map: {}", xmlSchemaSequence);
+    if (currentMapBuilder != null) {
+      if (nestingLevel > 1) {
+        currentMapBuilder.resumeMap();
+        currentMapBuilder = mapBuilderStack.pop();
+      } else {
+        // Root level
+        currentMapBuilder.resumeSchema();
+
+        // Stack should be empty at this point.
+        currentMapBuilder = mapBuilderStack.pop();
+      }
+      nestingLevel--;
+    }
   }
 
   @Override
   public void onVisitAny(XmlSchemaAny xmlSchemaAny) {
-
+    // no op
   }
 
   @Override
   public void onVisitAnyAttribute(XmlSchemaElement xmlSchemaElement, XmlSchemaAnyAttribute xmlSchemaAnyAttribute) {
-
+    // no op
   }
 }

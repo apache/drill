@@ -19,7 +19,7 @@
 package org.apache.drill.exec.store.xml.xsd;
 
 import org.apache.drill.common.util.DrillFileUtils;
-import org.apache.ws.commons.schema.XmlSchema;
+import org.apache.drill.exec.record.metadata.TupleMetadata;
 import org.junit.Test;
 
 import java.io.File;
@@ -29,7 +29,8 @@ public class TestXSDSchema {
   @Test
   public void testSimpleXSD() throws Exception {
     File simple_xsd = DrillFileUtils.getResourceAsFile("/xsd/simple.xsd");
-    XmlSchema[] schema = XSDSchemaUtils.getSchema(simple_xsd.getPath());
-    //XSDSchemaUtils.getDrillSchema(schema);
+    TupleMetadata schema = XSDSchemaUtils.getSchema(simple_xsd.getPath());
+    System.out.println(schema);
+
   }
 }
