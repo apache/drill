@@ -17,36 +17,36 @@
  */
 package org.apache.drill.exec.store.druid.rest;
 
-import org.apache.http.HttpEntity;
-import org.apache.http.HttpResponse;
-import org.apache.http.client.HttpClient;
-import org.apache.http.client.methods.HttpGet;
-import org.apache.http.client.methods.HttpPost;
-import org.apache.http.entity.ByteArrayEntity;
-import org.apache.http.impl.client.DefaultHttpClient;
+import okhttp3.OkHttpClient;
+import okhttp3.Request;
+import okhttp3.RequestBody;
+import okhttp3.Response;
 
-import javax.ws.rs.core.HttpHeaders;
+import java.nio.charset.StandardCharsets;
 import java.io.IOException;
 
-import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
-import static org.apache.http.protocol.HTTP.CONTENT_TYPE;
-
 public class RestClientWrapper implements RestClient {
-  private static final HttpClient httpClient = new DefaultHttpClient();
-  private static final String DEFAULT_ENCODING = "UTF-8";
+  // OkHttp client is designed to be shared across threads.
+  private final OkHttpClient httpClient = new OkHttpClient();
 
-  public HttpResponse get(String url) throws IOException {
-    HttpGet httpget = new HttpGet(url);
-    httpget.addHeader(HttpHeaders.CONTENT_TYPE, APPLICATION_JSON);
-    return httpClient.execute(httpget);
+  public Response get(String url) throws IOException {
+    Request get = new Request.Builder()
+      .url(url)
+      .addHeader("Content-Type", "application/json")
+      .build();
+
+    return httpClient.newCall(get).execute();
   }
 
-  public HttpResponse post(String url, String body) throws IOException {
-    HttpPost httppost = new HttpPost(url);
-    httppost.addHeader(CONTENT_TYPE, APPLICATION_JSON);
-    HttpEntity entity = new ByteArrayEntity(body.getBytes(DEFAULT_ENCODING));
-    httppost.setEntity(entity);
+  public Response post(String url, String body) throws IOException {
+    RequestBody postBody = RequestBody.create(body.getBytes(StandardCharsets.UTF_8));
 
-    return httpClient.execute(httppost);
+    Request post = new Request.Builder()
+      .url(url)
+      .addHeader("Content-Type", "application/json")
+      .post(postBody)
+      .build();
+
+    return httpClient.newCall(post).execute();
   }
 }

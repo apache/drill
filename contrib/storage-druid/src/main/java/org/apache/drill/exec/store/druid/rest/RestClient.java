@@ -17,11 +17,25 @@
  */
 package org.apache.drill.exec.store.druid.rest;
 
-import org.apache.http.HttpResponse;
+import okhttp3.Response;
 
 import java.io.IOException;
 
 public interface RestClient {
-  HttpResponse get(String url) throws IOException;
-  HttpResponse post(String url, String body) throws IOException;
+  /**
+   * Executes an HTTP GET.
+   * @param url request URL
+   * @return a Response object that the caller is responsible for closing.
+   * @throws IOException
+   */
+  Response get(String url) throws IOException;
+
+  /**
+   * Executes an HTTP POST.
+   * @param url request URL.
+   * @param body request body.
+   * @return a Response object that the caller is responsible for closing.
+   * @throws IOException
+   */
+  Response post(String url, String body) throws IOException;
 }
