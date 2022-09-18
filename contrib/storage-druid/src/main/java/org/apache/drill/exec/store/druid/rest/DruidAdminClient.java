@@ -48,6 +48,7 @@ public class DruidAdminClient {
     String url = this.coordinatorAddress + DATASOURCES_BASE_URI;
     try (Response response = restClient.get(url)) {
       if (!response.isSuccessful()) {
+        // TODO: Add a CustomErrorContext when this plugin is converted to EVF.
         throw UserException
           .dataReadError()
           .message("Error getting druid datasources. HTTP request failed")

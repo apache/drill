@@ -51,6 +51,7 @@ public class DruidQueryClient {
 
     try (Response response = restClient.post(queryUrl, query)) {
       if (!response.isSuccessful()) {
+        // TODO: Add a CustomErrorContext when this plugin is converted to EVF.
         throw UserException
             .dataReadError()
             .message("Error executing druid query. HTTP request failed")
