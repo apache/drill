@@ -23,8 +23,9 @@ import org.apache.drill.common.exceptions.CustomErrorContext;
 import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.common.types.TypeProtos;
 import org.apache.drill.common.types.TypeProtos.MinorType;
-import org.apache.drill.exec.physical.impl.scan.file.FileScanFramework.FileSchemaNegotiator;
-import org.apache.drill.exec.physical.impl.scan.framework.ManagedReader;
+import org.apache.drill.exec.physical.impl.scan.v3.file.FileSchemaNegotiator;
+import org.apache.drill.exec.physical.impl.scan.v3.ManagedReader;
+import org.apache.drill.exec.physical.impl.scan.v3.file.FileDescrip;
 import org.apache.drill.exec.physical.resultSet.ResultSetLoader;
 import org.apache.drill.exec.physical.resultSet.RowSetLoader;
 import org.apache.drill.exec.record.metadata.ColumnMetadata;
@@ -34,7 +35,6 @@ import org.apache.drill.exec.record.metadata.TupleMetadata;
 import org.apache.drill.exec.store.dfs.easy.EasySubScan;
 import org.apache.drill.exec.vector.accessor.ScalarWriter;
 import org.apache.drill.exec.vector.accessor.TupleWriter;
-import org.apache.hadoop.mapred.FileSplit;
 import org.realityforge.jsyslog.message.StructuredDataParameter;
 import org.realityforge.jsyslog.message.SyslogMessage;
 import org.slf4j.Logger;
@@ -50,13 +50,11 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
-public class SyslogBatchReader implements ManagedReader<FileSchemaNegotiator> {
+public class SyslogBatchReader implements ManagedReader {
   private static final Logger logger = LoggerFactory.getLogger(SyslogBatchReader.class);
   private final String STRUCTURED_DATA_PREFIX = "structured_data_";
   private final String STRUCTURED_DATA_MAP_NAME = "structured_data";
   private final String RAW_COLUMN_NAME = "_raw";
-
-  private final int maxRecords;
   private final SyslogFormatConfig config;
   private final EasySubScan subScan;
   private final Map<String, MinorType> mappedColumns = new LinkedHashMap<>();
@@ -64,7 +62,7 @@ public class SyslogBatchReader implements ManagedReader<FileSchemaNegotiator> {
   private int errorCount;
   private CustomErrorContext errorContext;
   private InputStream fsStream;
-  private FileSplit split;
+  private final FileDescrip file;
   private BufferedReader reader;
   private RowSetLoader rowWriter;
   private List<ScalarWriter> writerArray;
@@ -73,16 +71,12 @@ public class SyslogBatchReader implements ManagedReader<FileSchemaNegotiator> {
   private TupleWriter structuredDataWriter;
 
 
-  public SyslogBatchReader(int maxRecords, SyslogFormatConfig config, EasySubScan scan) {
-    this.maxRecords = maxRecords;
+  public SyslogBatchReader(SyslogFormatConfig config, EasySubScan scan, FileSchemaNegotiator negotiator) {
     this.config = config;
     this.subScan = scan;
     populateMappedColumns();
-  }
 
-  @Override
-  public boolean open(FileSchemaNegotiator negotiator) {
-    split = negotiator.split();
+    file = negotiator.file();
     openFile(negotiator);
     negotiator.tableSchema(buildSchema(), false);
     errorContext = negotiator.parentErrorContext();
@@ -92,7 +86,6 @@ public class SyslogBatchReader implements ManagedReader<FileSchemaNegotiator> {
     writerArray = populateRowWriters();
     rawColumnWriter = rowWriter.scalar(RAW_COLUMN_NAME);
     messageWriter = rowWriter.scalar("message");
-    return true;
   }
 
   @Override
@@ -120,11 +113,11 @@ public class SyslogBatchReader implements ManagedReader<FileSchemaNegotiator> {
 
   private void openFile(FileSchemaNegotiator negotiator) {
     try {
-      fsStream = negotiator.fileSystem().openPossiblyCompressedStream(split.getPath());
+      fsStream = file.fileSystem().openPossiblyCompressedStream(file.split().getPath());
     } catch (IOException e) {
       throw UserException
         .dataReadError(e)
-        .message("Unable to open Syslog File %s", split.getPath())
+        .message("Unable to open Syslog File %s", file.split().getPath())
         .addContext(e.getMessage())
         .addContext(errorContext)
         .build(logger);
@@ -179,11 +172,6 @@ public class SyslogBatchReader implements ManagedReader<FileSchemaNegotiator> {
   }
 
   private boolean processNextLine() {
-    // Check to see if the limit has been reached
-    if (rowWriter.limitReached(maxRecords)) {
-      return false;
-    }
-
     String line;
     try {
       line = reader.readLine();

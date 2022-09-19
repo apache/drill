@@ -21,15 +21,13 @@ package org.apache.drill.exec.store.syslog;
 import org.apache.drill.common.logical.StoragePluginConfig;
 import org.apache.drill.common.types.TypeProtos;
 import org.apache.drill.common.types.Types;
-import org.apache.drill.exec.physical.impl.scan.file.FileScanFramework.FileReaderFactory;
-import org.apache.drill.exec.physical.impl.scan.file.FileScanFramework.FileScanBuilder;
-import org.apache.drill.exec.physical.impl.scan.file.FileScanFramework.FileSchemaNegotiator;
-import org.apache.drill.exec.physical.impl.scan.framework.ManagedReader;
+import org.apache.drill.exec.physical.impl.scan.v3.file.FileReaderFactory;
+import org.apache.drill.exec.physical.impl.scan.v3.file.FileScanLifecycleBuilder;
+import org.apache.drill.exec.physical.impl.scan.v3.file.FileSchemaNegotiator;
+import org.apache.drill.exec.physical.impl.scan.v3.ManagedReader;
 import org.apache.drill.exec.server.DrillbitContext;
-import org.apache.drill.exec.server.options.OptionSet;
 import org.apache.drill.exec.store.dfs.easy.EasyFormatPlugin;
 import org.apache.drill.exec.store.dfs.easy.EasySubScan;
-import org.apache.drill.exec.store.dfs.easy.EasyFormatPlugin.ScanFrameworkVersion;
 import org.apache.hadoop.conf.Configuration;
 
 public class SyslogFormatPlugin extends EasyFormatPlugin<SyslogFormatConfig> {
@@ -37,20 +35,17 @@ public class SyslogFormatPlugin extends EasyFormatPlugin<SyslogFormatConfig> {
   public static final String DEFAULT_NAME = "syslog";
 
   private static class SyslogReaderFactory extends FileReaderFactory {
-
-    private final int maxRecords;
     private final SyslogFormatConfig formatConfig;
     private final EasySubScan scan;
 
-    public SyslogReaderFactory(int maxRecords, SyslogFormatConfig formatConfig, EasySubScan scan) {
-      this.maxRecords = maxRecords;
+    public SyslogReaderFactory(SyslogFormatConfig formatConfig, EasySubScan scan) {
       this.formatConfig = formatConfig;
       this.scan = scan;
     }
 
     @Override
-    public ManagedReader<? extends FileSchemaNegotiator> newReader() {
-      return new SyslogBatchReader(maxRecords, formatConfig, scan);
+    public ManagedReader newReader(FileSchemaNegotiator negotiator) {
+      return new SyslogBatchReader(formatConfig, scan, negotiator);
     }
   }
 
@@ -70,23 +65,14 @@ public class SyslogFormatPlugin extends EasyFormatPlugin<SyslogFormatConfig> {
         .extensions(pluginConfig.getExtensions())
         .fsConf(fsConf)
         .defaultName(DEFAULT_NAME)
-        .scanVersion(ScanFrameworkVersion.EVF_V1)
+        .scanVersion(ScanFrameworkVersion.EVF_V2)
         .supportsLimitPushdown(true)
         .build();
   }
 
   @Override
-  public ManagedReader<? extends FileSchemaNegotiator> newBatchReader(EasySubScan scan, OptionSet options)  {
-    return new SyslogBatchReader(scan.getMaxRecords(), formatConfig, scan);
-  }
-
-  @Override
-  protected FileScanBuilder frameworkBuilder(EasySubScan scan, OptionSet options) {
-    FileScanBuilder builder = new FileScanBuilder();
-    builder.setReaderFactory(new SyslogReaderFactory(scan.getMaxRecords(), formatConfig, scan));
-
-    initScanBuilder(builder, scan);
+  protected void configureScan(FileScanLifecycleBuilder builder, EasySubScan scan) {
     builder.nullType(Types.optional(TypeProtos.MinorType.VARCHAR));
-    return builder;
+    builder.readerFactory(new SyslogReaderFactory(formatConfig, scan));
   }
 }
