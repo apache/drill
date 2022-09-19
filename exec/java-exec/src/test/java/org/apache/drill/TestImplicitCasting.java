@@ -58,6 +58,9 @@ public class TestImplicitCasting extends ClusterTest {
   }
 
   @Test
+  /**
+   * Tests path cost arithmetic computed over the graph in ResolveTypePrecedence.
+   */
   public void testCastingCosts() {
     // INT -> BIGINT
     assertEquals(
@@ -106,6 +109,8 @@ public class TestImplicitCasting extends ClusterTest {
 
   @Test
   public void testCastingPreferences() {
+    // All of the constraints that follow should be satisfied in order for
+    // queries involving implicit casts to behave as expected.
     assertThat(
       ResolverTypePrecedence.computeCost(TypeProtos.MinorType.VARCHAR, TypeProtos.MinorType.BIT),
         lessThan(ResolverTypePrecedence.computeCost(TypeProtos.MinorType.BIT, TypeProtos.MinorType.INT))
@@ -133,6 +138,10 @@ public class TestImplicitCasting extends ClusterTest {
     assertThat(
       ResolverTypePrecedence.computeCost(TypeProtos.MinorType.VARCHAR, TypeProtos.MinorType.INTERVAL),
         lessThan(ResolverTypePrecedence.computeCost(TypeProtos.MinorType.INTERVAL, TypeProtos.MinorType.VARCHAR))
+    );
+    assertThat(
+      ResolverTypePrecedence.computeCost(TypeProtos.MinorType.VARCHAR, TypeProtos.MinorType.TIME),
+      lessThan(ResolverTypePrecedence.computeCost(TypeProtos.MinorType.TIME, TypeProtos.MinorType.VARCHAR))
     );
     assertThat(
       ResolverTypePrecedence.computeCost(TypeProtos.MinorType.DATE, TypeProtos.MinorType.TIMESTAMP),

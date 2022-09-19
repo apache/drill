@@ -131,8 +131,8 @@ public class ResolverTypePrecedence {
     // prefer the casts in the opposite directions
     .putEdgeValue(MinorType.TIMESTAMP, MinorType.DATE, 100f)
     .putEdgeValue(MinorType.TIMESTAMP, MinorType.TIME, 101f)
-    .putEdgeValue(MinorType.TIMESTAMPTZ, MinorType.VARCHAR, 100f)
-    .putEdgeValue(MinorType.TIMETZ, MinorType.VARCHAR, 100f)
+    .putEdgeValue(MinorType.TIMESTAMPTZ, MinorType.VARCHAR, 1_000f)
+    .putEdgeValue(MinorType.TIMETZ, MinorType.VARCHAR, 1_000f)
 
     // char and binary widening
     .putEdgeValue(MinorType.FIXEDCHAR, MinorType.VARCHAR, 10f)
