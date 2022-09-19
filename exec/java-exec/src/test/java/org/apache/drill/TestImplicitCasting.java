@@ -80,7 +80,7 @@ public class TestImplicitCasting extends ClusterTest {
     );
     // FLOAT4 -> FLOAT8 -> VARDECIMAL -> INT
     assertEquals(
-      1f+20f+11f,
+      1f+20f+12f,
       ResolverTypePrecedence.computeCost(TypeProtos.MinorType.FLOAT4, TypeProtos.MinorType.INT),
       0f
     );
@@ -137,6 +137,14 @@ public class TestImplicitCasting extends ClusterTest {
     assertThat(
       ResolverTypePrecedence.computeCost(TypeProtos.MinorType.DATE, TypeProtos.MinorType.TIMESTAMP),
         lessThan(ResolverTypePrecedence.computeCost(TypeProtos.MinorType.TIMESTAMP, TypeProtos.MinorType.DATE))
+    );
+    assertThat(
+      ResolverTypePrecedence.computeCost(TypeProtos.MinorType.VARDECIMAL, TypeProtos.MinorType.FLOAT8),
+      lessThan(ResolverTypePrecedence.computeCost(TypeProtos.MinorType.VARDECIMAL, TypeProtos.MinorType.FLOAT4))
+    );
+    assertThat(
+      ResolverTypePrecedence.computeCost(TypeProtos.MinorType.VARCHAR, TypeProtos.MinorType.FLOAT8),
+      lessThan(ResolverTypePrecedence.computeCost(TypeProtos.MinorType.VARCHAR, TypeProtos.MinorType.FLOAT4))
     );
   }
 

@@ -34,31 +34,27 @@ public class DefaultFunctionResolver implements FunctionResolver {
   @Override
   public DrillFuncHolder getBestMatch(List<DrillFuncHolder> methods, FunctionCall call) {
 
-    float bestcost = Float.POSITIVE_INFINITY, currcost = Float.POSITIVE_INFINITY;
-    DrillFuncHolder bestmatch = null;
+    float bestCost = Float.POSITIVE_INFINITY, currCost = Float.POSITIVE_INFINITY;
+    DrillFuncHolder bestMatch = null;
     final List<DrillFuncHolder> bestMatchAlternatives = new LinkedList<>();
     List<TypeProtos.MajorType> argumentTypes = call.args().stream()
             .map(LogicalExpression::getMajorType)
             .collect(Collectors.toList());
+
     for (DrillFuncHolder h : methods) {
-      currcost = TypeCastRules.getCost(argumentTypes, h);
+      currCost = TypeCastRules.getCost(argumentTypes, h);
 
-      // if cost is +∞, func implementation is not matched, either w/ or w/o implicit casts
-      if (currcost == Float.POSITIVE_INFINITY ) {
-        continue;
-      }
-
-      if (currcost < bestcost) {
-        bestcost = currcost;
-        bestmatch = h;
+      if (currCost < bestCost) {
+        bestCost = currCost;
+        bestMatch = h;
         bestMatchAlternatives.clear();
-      } else if (currcost == bestcost) {
+      } else if (currCost == bestCost && currCost < Float.POSITIVE_INFINITY) {
         // keep log of different function implementations that have the same best cost
         bestMatchAlternatives.add(h);
       }
     }
 
-    if (bestcost == Float.POSITIVE_INFINITY) {
+    if (bestCost == Float.POSITIVE_INFINITY) {
       //did not find a matched func implementation, either w/ or w/o implicit casts
       //TODO: raise exception here?
       return null;
@@ -76,11 +72,11 @@ public class DefaultFunctionResolver implements FunctionResolver {
         .message(
           "There are %d function definitions with the same casting cost for " +
           "%s, please write explicit casts disambiguate your function call.",
-          bestMatchAlternatives.size(),
+          1+bestMatchAlternatives.size(),
           call
         )
         .build(logger);
     }
-    return bestmatch;
+    return bestMatch;
   }
 }

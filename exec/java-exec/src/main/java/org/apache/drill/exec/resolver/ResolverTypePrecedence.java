@@ -102,10 +102,11 @@ public class ResolverTypePrecedence {
     .putEdgeValue(MinorType.MONEY, MinorType.VARDECIMAL, 1f)
     // decimal conversions
     // prefer to cast INTs to VARDECIMALs over VARDECIMALs to FLOATs
-    .putEdgeValue(MinorType.VARDECIMAL, MinorType.FLOAT4, 10f)
+    .putEdgeValue(MinorType.VARDECIMAL, MinorType.FLOAT8, 10f)
+    .putEdgeValue(MinorType.VARDECIMAL, MinorType.FLOAT4, 11f)
     // prefer the casts in the opposite directions
-    .putEdgeValue(MinorType.VARDECIMAL, MinorType.INT, 11f)
-    .putEdgeValue(MinorType.VARDECIMAL, MinorType.VARCHAR, 12f)
+    .putEdgeValue(MinorType.VARDECIMAL, MinorType.INT, 12f)
+    .putEdgeValue(MinorType.VARDECIMAL, MinorType.VARCHAR, 20f)
 
     // interval widening
     .putEdgeValue(MinorType.INTERVALDAY, MinorType.INTERVALYEAR, 1f)
@@ -134,12 +135,13 @@ public class ResolverTypePrecedence {
     .putEdgeValue(MinorType.FIXEDBINARY, MinorType.VARBINARY, 1f)
     // char and binary conversions
     .putEdgeValue(MinorType.VARCHAR, MinorType.INT, 1f)
-    .putEdgeValue(MinorType.VARCHAR, MinorType.FLOAT4, 2f)
-    .putEdgeValue(MinorType.VARCHAR, MinorType.VARDECIMAL, 3f)
-    .putEdgeValue(MinorType.VARCHAR, MinorType.TIMESTAMP, 4f)
-    .putEdgeValue(MinorType.VARCHAR, MinorType.INTERVALDAY, 5f)
-    .putEdgeValue(MinorType.VARCHAR, MinorType.BIT, 6f)
-    .putEdgeValue(MinorType.VARCHAR, MinorType.VARBINARY, 7f)
+    .putEdgeValue(MinorType.VARCHAR, MinorType.FLOAT8, 2f)
+    .putEdgeValue(MinorType.VARCHAR, MinorType.FLOAT4, 3f)
+    .putEdgeValue(MinorType.VARCHAR, MinorType.VARDECIMAL, 4f)
+    .putEdgeValue(MinorType.VARCHAR, MinorType.TIMESTAMP, 5f)
+    .putEdgeValue(MinorType.VARCHAR, MinorType.INTERVALDAY, 6f)
+    .putEdgeValue(MinorType.VARCHAR, MinorType.BIT, 7f)
+    .putEdgeValue(MinorType.VARCHAR, MinorType.VARBINARY, 8f)
     .putEdgeValue(MinorType.VARBINARY, MinorType.VARCHAR, 1f)
 
     // union type sink vertex
