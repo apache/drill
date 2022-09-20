@@ -30,7 +30,10 @@ import org.apache.calcite.rel.core.TableModify;
 import org.apache.calcite.rel.core.TableScan;
 import org.apache.calcite.rel.logical.LogicalTableModify;
 import org.apache.calcite.tools.RuleSet;
+import org.apache.drill.common.exceptions.UserException;
+import org.apache.drill.common.exceptions.UserExceptionUtils;
 import org.apache.drill.common.util.function.CheckedSupplier;
+import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.ops.QueryContext;
 import org.apache.drill.exec.planner.PlannerPhase;
 import org.apache.drill.exec.planner.common.DrillRelOptUtil;
@@ -39,8 +42,12 @@ import org.apache.drill.exec.planner.sql.SchemaUtilites;
 import org.apache.drill.exec.planner.sql.conversion.SqlConverter;
 import org.apache.drill.exec.store.StoragePlugin;
 import org.apache.drill.exec.store.StoragePluginRegistry;
+import org.apache.drill.exec.store.StoragePluginRegistry.PluginException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class SqlHandlerConfig {
+  private static final Logger logger = LoggerFactory.getLogger(SqlHandlerConfig.class);
 
   private final QueryContext context;
   private final SqlConverter converter;

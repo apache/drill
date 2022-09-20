@@ -34,12 +34,22 @@ public interface StoragePluginRegistry extends Iterable<Map.Entry<String, Storag
 
   @SuppressWarnings("serial")
   public static class PluginException extends Exception {
+
+    public final StoragePlugin plugin;
+
     public PluginException(String msg) {
       super(msg);
+      plugin = null;
     }
 
     public PluginException(String msg, Throwable e) {
       super(msg, e);
+      plugin = null;
+    }
+
+    public PluginException(String msg, Throwable e, StoragePlugin plugin) {
+      super(msg, e);
+      this.plugin = plugin;
     }
 
     public static PluginException systemPluginException(String operation, String name) {

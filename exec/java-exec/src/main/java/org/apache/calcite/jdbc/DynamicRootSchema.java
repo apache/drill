@@ -26,6 +26,7 @@ import org.apache.calcite.util.BuiltInMethod;
 import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.common.exceptions.UserExceptionUtils;
 import org.apache.drill.common.expression.SchemaPath;
+import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.alias.AliasRegistryProvider;
 import org.apache.drill.exec.planner.sql.SchemaUtilites;
 import org.apache.drill.exec.store.AbstractSchema;
@@ -37,7 +38,6 @@ import org.apache.drill.exec.store.SubSchemaWrapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -102,9 +102,11 @@ public class DynamicRootSchema extends DynamicSchema {
    * @param caseSensitive whether matching for the schema name is case sensitive
    */
   private void loadSchemaFactory(String schemaName, boolean caseSensitive) {
+    StoragePlugin plugin = null;
+
     try {
       SchemaPlus schemaPlus = this.plus();
-      StoragePlugin plugin = storages.getPlugin(schemaName);
+      plugin = storages.getPlugin(schemaName);
       if (plugin != null) {
         plugin.registerSchemas(schemaConfig, schemaPlus);
         return;
@@ -142,15 +144,36 @@ public class DynamicRootSchema extends DynamicSchema {
           schemaPlus.add(wrapper.getName(), wrapper);
         }
       }
-    } catch(PluginException | IOException ex) {
-      logger.warn("Failed to load schema for \"" + schemaName + "\"!", ex);
+    } catch(Exception ex) {
+      logger.error("Failed to load schema for \"" + schemaName + "\"!", ex);
       // We can't proceed further without a schema, throw a runtime exception.
       UserException.Builder exceptBuilder =
           UserException
               .resourceError(ex)
-              .message("Failed to load schema for \"" + schemaName + "\"!")
-              .addContext(ex.getClass().getName() + ": " + ex.getMessage())
+              .message("Failed to load schema for schema %s", schemaName)
+              .addContext("%s: %s", ex.getClass().getName(), ex.getMessage())
               .addContext(UserExceptionUtils.getUserHint(ex)); //Provide hint if it exists
+
+      if (plugin == null) {
+        logger.error("The plugin registry returned no plugin for {}, schemaName");
+        throw exceptBuilder.build(logger);
+      }
+
+      if (schemaConfig.getOption(ExecConstants.STORAGE_PLUGIN_AUTO_DISABLE).bool_val) {
+        String msg = String.format(
+          "The plugin %s will now be disabled (see BOOT option %s)",
+          plugin.getName(),
+          ExecConstants.STORAGE_PLUGIN_AUTO_DISABLE
+        );
+        exceptBuilder.addContext(msg);
+        logger.warn(msg);
+
+        try {
+          storages.setEnabled(plugin.getName(), false);
+        } catch (PluginException disableEx) {
+          logger.error("Could not disable {}", plugin.getName(), disableEx);
+        }
+      }
       throw exceptBuilder.build(logger);
     }
   }
