@@ -1094,6 +1094,12 @@ public final class ExecConstants {
       new OptionDescription("Enables recursive files listing when querying the `INFORMATION_SCHEMA.FILES` table or executing the SHOW FILES command. " +
         "Default is false. (Drill 1.15+)"));
 
+  public static final String STORAGE_PLUGIN_AUTO_DISABLE = "storage.plugin_auto_disable";
+  public static final BooleanValidator STORAGE_PLUGIN_AUTO_DISABLE_VALIDATOR = new BooleanValidator(
+    STORAGE_PLUGIN_AUTO_DISABLE,
+    new OptionDescription("Have broken plugins automatically disabled when they're encountered.")
+  );
+
   public static final String RETURN_RESULT_SET_FOR_DDL = "exec.query.return_result_set_for_ddl";
   public static final BooleanValidator RETURN_RESULT_SET_FOR_DDL_VALIDATOR = new BooleanValidator(RETURN_RESULT_SET_FOR_DDL,
       new OptionDescription("Controls whether to return result set for CREATE TABLE / VIEW / FUNCTION, DROP TABLE / VIEW / FUNCTION, " +
@@ -1223,8 +1229,6 @@ public final class ExecConstants {
 
   public static final String STORAGE_PLUGIN_REGISTRY_IMPL = "drill.exec.storage.registry";
   public static final String ACTION_ON_STORAGE_PLUGINS_OVERRIDE_FILE = "drill.exec.storage.action_on_plugins_override_file";
-  // Option to have broken plugins automatically disabled when encountered.
-  public static final String STORAGE_PLUGIN_AUTO_DISABLE = "drill.exec.storage.plugin_auto_disable";
 
   // Extra private plugin classes, used for testing
   public static final String PRIVATE_CONNECTORS = "drill.exec.storage.private_connectors";
