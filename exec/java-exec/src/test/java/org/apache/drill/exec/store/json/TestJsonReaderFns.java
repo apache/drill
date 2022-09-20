@@ -201,14 +201,32 @@ public class TestJsonReaderFns extends BaseTestJsonReader {
     runBoth(this::doTestRepeatedContainsFloat4);
   }
 
+  // Since decimal literals are read as FLOAT8s by the JSON readers, I don't
+  // believe that this tests the version of repeated_contains that it aims to.
   private void doTestRepeatedContainsFloat4() throws Exception {
-    final RowSet results = runTest("select repeated_contains(FLOAT4_col, -1000000000000.0) from cp.`parquet/alltypes_repeated.json`");
+    final RowSet results = runTest("select repeated_contains(FLOAT4_col, cast(5.0 as float)) from cp.`parquet/alltypes_repeated.json`");
     final RowSet expected = client.rowSetBuilder(bitCountSchema())
         .addSingleCol(1)
         .addSingleCol(0)
         .addSingleCol(0)
         .addSingleCol(0)
         .build();
+    new RowSetComparison(expected).verifyAndClearAll(results);
+  }
+
+  @Test
+  public void testRepeatedContainsFloat8() throws Exception {
+    runBoth(this::doTestRepeatedContainsFloat8);
+  }
+
+  private void doTestRepeatedContainsFloat8() throws Exception {
+    final RowSet results = runTest("select repeated_contains(FLOAT8_col, -10000000000000.0) from cp.`parquet/alltypes_repeated.json`");
+    final RowSet expected = client.rowSetBuilder(bitCountSchema())
+      .addSingleCol(1)
+      .addSingleCol(0)
+      .addSingleCol(0)
+      .addSingleCol(0)
+      .build();
     new RowSetComparison(expected).verifyAndClearAll(results);
   }
 

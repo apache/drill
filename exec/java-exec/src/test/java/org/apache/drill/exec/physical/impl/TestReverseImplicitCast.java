@@ -64,8 +64,8 @@ public class TestReverseImplicitCast extends PopUnitTestBase {
       ValueVector.Accessor varcharAccessor1 = itr.next().getValueVector().getAccessor();
 
       for (int i = 0; i < intAccessor1.getValueCount(); i++) {
-        assertEquals(intAccessor1.getObject(i), 10);
-        assertEquals(varcharAccessor1.getObject(i).toString(), "101");
+        assertEquals(10, intAccessor1.getObject(i));
+        assertEquals("101", varcharAccessor1.getObject(i).toString());
       }
 
       batchLoader.clear();

@@ -35,7 +35,7 @@ enum MinorType {
     DECIMAL18 = 8;   //  a decimal supporting precision between 10 and 18
     DECIMAL28SPARSE = 9;   //  a decimal supporting precision between 19 and 28
     DECIMAL38SPARSE = 10;   //  a decimal supporting precision between 29 and 38
-    MONEY = 11;   //  signed decimal with two digit precision
+    MONEY = 11;   //  signed decimal with two digit scale
     DATE = 12;   //  days since 4713bc
     TIME = 13;   //  time in micros before or after 2000/1/1
     TIMETZ = 14;   //  time in micros before or after 2000/1/1 with timezone

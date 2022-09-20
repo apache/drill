@@ -36,7 +36,7 @@ public class ExactFunctionResolver implements FunctionResolver {
   @Override
   public DrillFuncHolder getBestMatch(List<DrillFuncHolder> methods, FunctionCall call) {
 
-    int currCost;
+    float currCost;
 
     final List<TypeProtos.MajorType> argumentTypes = Lists.newArrayList();
     for (LogicalExpression expression : call.args()) {
@@ -46,7 +46,7 @@ public class ExactFunctionResolver implements FunctionResolver {
     for (DrillFuncHolder h : methods) {
       currCost = TypeCastRules.getCost(argumentTypes, h);
       // Return if we found a function that has an exact match with the input arguments
-      if (currCost == 0) {
+      if (currCost == 0f) {
         return h;
       }
     }

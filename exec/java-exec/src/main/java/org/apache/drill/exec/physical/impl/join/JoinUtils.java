@@ -212,10 +212,7 @@ public class JoinUtils {
         }
 
         // We need to add a cast to one of the expressions
-        List<TypeProtos.MinorType> types = new LinkedList<>();
-        types.add(rightType);
-        types.add(leftType);
-        TypeProtos.MinorType result = TypeCastRules.getLeastRestrictiveType(types);
+        TypeProtos.MinorType result = TypeCastRules.getLeastRestrictiveType(leftType, rightType);
         ErrorCollector errorCollector = new ErrorCollectorImpl();
 
         if (result == null) {

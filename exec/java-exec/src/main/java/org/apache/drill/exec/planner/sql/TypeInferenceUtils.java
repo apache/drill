@@ -56,6 +56,7 @@ import org.apache.drill.exec.resolver.FunctionResolverFactory;
 import org.apache.drill.exec.resolver.TypeCastRules;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 
 @SuppressWarnings("WeakerAccess")
@@ -447,47 +448,57 @@ public class TypeInferenceUtils {
       }
 
       // Determines SqlTypeName of the result.
-      // For the case when input may be implicitly casted to BIGINT, the type of result is BIGINT.
-      // Else for the case when input may be implicitly casted to FLOAT4, the type of result is DOUBLE.
-      // Else for the case when input may be implicitly casted to VARDECIMAL, the type of result is DECIMAL
-      // with the same scale as input and max allowed numeric precision.
-      // Else for the case when input may be implicitly casted to FLOAT8, the type of result is DOUBLE.
-      // When none of these conditions is satisfied, error is thrown.
-      // This order of checks is caused by the order of types in ResolverTypePrecedence.precedenceMap
+      // When the cheapest cast is is to
+      //  - BIGINT then the result is a BIGINT
+      //  - FLOAT8 then the result is DOUBLE
+      //  - VARDECIMAL then the result is a DECIMAL with the same scale as the input and
+      //    the max allowed numeric precision.
+      // When none of these conditions are satisfied an error is thrown.
       final RelDataType operandType = opBinding.getOperandType(0);
       final TypeProtos.MinorType inputMinorType = getDrillTypeFromCalciteType(operandType);
-      if (TypeCastRules.getLeastRestrictiveType(Lists.newArrayList(inputMinorType, TypeProtos.MinorType.BIGINT))
-          == TypeProtos.MinorType.BIGINT) {
-        return createCalciteTypeWithNullability(
-            factory,
-            SqlTypeName.BIGINT,
-            isNullable);
-      } else if (TypeCastRules.getLeastRestrictiveType(Lists.newArrayList(inputMinorType, TypeProtos.MinorType.FLOAT4))
-          == TypeProtos.MinorType.FLOAT4) {
-        return createCalciteTypeWithNullability(
-            factory,
-            SqlTypeName.DOUBLE,
-            isNullable);
-      } else if (TypeCastRules.getLeastRestrictiveType(Lists.newArrayList(inputMinorType, TypeProtos.MinorType.VARDECIMAL))
-          == TypeProtos.MinorType.VARDECIMAL) {
-        RelDataType sqlType = factory.createSqlType(SqlTypeName.DECIMAL,
-          DrillRelDataTypeSystem.DRILL_REL_DATATYPE_SYSTEM.getMaxNumericPrecision(),
-          Math.min(operandType.getScale(),
-            DrillRelDataTypeSystem.DRILL_REL_DATATYPE_SYSTEM.getMaxNumericScale()));
-        return factory.createTypeWithNullability(sqlType, isNullable);
-      } else if (TypeCastRules.getLeastRestrictiveType(Lists.newArrayList(inputMinorType, TypeProtos.MinorType.FLOAT8))
-          == TypeProtos.MinorType.FLOAT8) {
-        return createCalciteTypeWithNullability(
-            factory,
-            SqlTypeName.DOUBLE,
-            isNullable);
-      } else {
+
+      Optional<TypeProtos.MinorType> targetType = TypeCastRules.getCheapestCast(
+        inputMinorType,
+        TypeProtos.MinorType.BIGINT,
+        TypeProtos.MinorType.FLOAT8,
+        TypeProtos.MinorType.VARDECIMAL
+      );
+
+      if (!targetType.isPresent()) {
         throw UserException
-            .functionError()
-            .message(String.format("%s does not support operand types (%s)",
-                opBinding.getOperator().getName(),
-                opBinding.getOperandType(0).getSqlTypeName()))
-            .build(logger);
+          .functionError()
+          .message(String.format("%s does not support operand types (%s)",
+            opBinding.getOperator().getName(),
+            opBinding.getOperandType(0).getSqlTypeName()))
+          .build(logger);
+      }
+
+      switch (targetType.get()) {
+        case BIGINT: return createCalciteTypeWithNullability(
+          factory,
+          SqlTypeName.BIGINT,
+          isNullable
+        );
+        case FLOAT8: return createCalciteTypeWithNullability(
+          factory,
+          SqlTypeName.DOUBLE,
+          isNullable
+        );
+        case VARDECIMAL:
+          RelDataType sqlType = factory.createSqlType(
+            SqlTypeName.DECIMAL,
+            DrillRelDataTypeSystem.DRILL_REL_DATATYPE_SYSTEM.getMaxNumericPrecision(),
+            Math.min(
+              operandType.getScale(),
+              DrillRelDataTypeSystem.DRILL_REL_DATATYPE_SYSTEM.getMaxNumericScale()
+            )
+          );
+          return factory.createTypeWithNullability(sqlType, isNullable);
+        default:
+          throw new IllegalStateException(String.format(
+            "Internal error: a minor type of %s should not occur here.",
+            targetType.get()
+          ));
       }
     }
   }
@@ -853,40 +864,50 @@ public class TypeInferenceUtils {
       }
 
       // Determines SqlTypeName of the result.
-      // For the case when input may be implicitly casted to FLOAT4, the type of result is DOUBLE.
-      // Else for the case when input may be implicitly casted to VARDECIMAL, the type of result is DECIMAL
-      // with scale max(6, input) and max allowed numeric precision.
-      // Else for the case when input may be implicitly casted to FLOAT8, the type of result is DOUBLE.
-      // When none of these conditions is satisfied, error is thrown.
-      // This order of checks is caused by the order of types in ResolverTypePrecedence.precedenceMap
+      // When the cheapest cast is to
+      //  - FLOAT8 then the result is a DOUBLE
+      //  - VARDECIMAL then the result is a DECIMAL with scale max(6, input) and
+      //    the max allowed numeric precision.
+      // When none of these conditions are satisfied an error is thrown.
       final RelDataType operandType = opBinding.getOperandType(0);
       final TypeProtos.MinorType inputMinorType = getDrillTypeFromCalciteType(operandType);
-      if (TypeCastRules.getLeastRestrictiveType(Lists.newArrayList(inputMinorType, TypeProtos.MinorType.FLOAT4))
-          == TypeProtos.MinorType.FLOAT4) {
-        return createCalciteTypeWithNullability(
-            factory,
-            SqlTypeName.DOUBLE,
-            isNullable);
-      } else if (TypeCastRules.getLeastRestrictiveType(Lists.newArrayList(inputMinorType, TypeProtos.MinorType.VARDECIMAL))
-          == TypeProtos.MinorType.VARDECIMAL) {
-        RelDataType sqlType = factory.createSqlType(SqlTypeName.DECIMAL,
-            DrillRelDataTypeSystem.DRILL_REL_DATATYPE_SYSTEM.getMaxNumericPrecision(),
-            Math.min(Math.max(6, operandType.getScale()),
-                DrillRelDataTypeSystem.DRILL_REL_DATATYPE_SYSTEM.getMaxNumericScale()));
-        return factory.createTypeWithNullability(sqlType, isNullable);
-      } else if (TypeCastRules.getLeastRestrictiveType(Lists.newArrayList(inputMinorType, TypeProtos.MinorType.FLOAT8))
-          == TypeProtos.MinorType.FLOAT8) {
-        return createCalciteTypeWithNullability(
-            factory,
-            SqlTypeName.DOUBLE,
-            isNullable);
-      } else {
+
+      Optional<TypeProtos.MinorType> targetType = TypeCastRules.getCheapestCast(
+        inputMinorType,
+        TypeProtos.MinorType.FLOAT8,
+        TypeProtos.MinorType.VARDECIMAL
+      );
+
+      if (!targetType.isPresent()) {
         throw UserException
             .functionError()
             .message(String.format("%s does not support operand types (%s)",
                 opBinding.getOperator().getName(),
                 opBinding.getOperandType(0).getSqlTypeName()))
             .build(logger);
+      }
+
+      switch (targetType.get()) {
+        case FLOAT8: return createCalciteTypeWithNullability(
+          factory,
+          SqlTypeName.DOUBLE,
+          isNullable
+        );
+        case VARDECIMAL:
+          RelDataType sqlType = factory.createSqlType(
+            SqlTypeName.DECIMAL,
+            DrillRelDataTypeSystem.DRILL_REL_DATATYPE_SYSTEM.getMaxNumericPrecision(),
+            Math.min(
+              Math.max(6, operandType.getScale()),
+              DrillRelDataTypeSystem.DRILL_REL_DATATYPE_SYSTEM.getMaxNumericScale()
+            )
+          );
+          return factory.createTypeWithNullability(sqlType, isNullable);
+        default:
+          throw new IllegalStateException(String.format(
+            "Internal error: a minor type of %s should not occur here.",
+            targetType.get()
+          ));
       }
     }
   }

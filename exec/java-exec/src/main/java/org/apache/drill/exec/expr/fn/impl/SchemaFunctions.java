@@ -72,10 +72,12 @@ public class SchemaFunctions {
         if (materializedField != null && !materializedField.getType().equals(type)) {
           org.apache.drill.common.types.TypeProtos.MinorType leastRestrictiveType =
               org.apache.drill.exec.resolver.TypeCastRules.getLeastRestrictiveType(
-                  java.util.Arrays.asList(materializedField.getType().getMinorType(), type.getMinorType()));
+                  materializedField.getType().getMinorType(), type.getMinorType());
           org.apache.drill.common.types.TypeProtos.DataMode leastRestrictiveMode =
               org.apache.drill.exec.resolver.TypeCastRules.getLeastRestrictiveDataMode(
-                  java.util.Arrays.asList(materializedField.getType().getMode(), type.getMode()));
+                materializedField.getType().getMode(),
+                type.getMode()
+              );
 
           org.apache.drill.exec.record.MaterializedField clone = materializedField.clone();
           clone.replaceType(materializedField.getType().toBuilder()

@@ -20,11 +20,12 @@ package org.apache.drill.exec.resolver;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.stream.Collectors;
+
+import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.common.expression.FunctionCall;
 import org.apache.drill.common.expression.LogicalExpression;
 import org.apache.drill.common.types.TypeProtos;
 import org.apache.drill.exec.expr.fn.DrillFuncHolder;
-import org.apache.drill.exec.util.AssertionUtil;
 
 public class DefaultFunctionResolver implements FunctionResolver {
 
@@ -33,52 +34,49 @@ public class DefaultFunctionResolver implements FunctionResolver {
   @Override
   public DrillFuncHolder getBestMatch(List<DrillFuncHolder> methods, FunctionCall call) {
 
-    int bestcost = Integer.MAX_VALUE;
-    int currcost = Integer.MAX_VALUE;
-    DrillFuncHolder bestmatch = null;
+    float bestCost = Float.POSITIVE_INFINITY, currCost = Float.POSITIVE_INFINITY;
+    DrillFuncHolder bestMatch = null;
     final List<DrillFuncHolder> bestMatchAlternatives = new LinkedList<>();
     List<TypeProtos.MajorType> argumentTypes = call.args().stream()
             .map(LogicalExpression::getMajorType)
             .collect(Collectors.toList());
+
     for (DrillFuncHolder h : methods) {
-      currcost = TypeCastRules.getCost(argumentTypes, h);
+      currCost = TypeCastRules.getCost(argumentTypes, h);
 
-      // if cost is lower than 0, func implementation is not matched, either w/ or w/o implicit casts
-      if (currcost  < 0 ) {
-        continue;
-      }
-
-      if (currcost < bestcost) {
-        bestcost = currcost;
-        bestmatch = h;
+      if (currCost < bestCost) {
+        bestCost = currCost;
+        bestMatch = h;
         bestMatchAlternatives.clear();
-      } else if (currcost == bestcost) {
+      } else if (currCost == bestCost && currCost < Float.POSITIVE_INFINITY) {
         // keep log of different function implementations that have the same best cost
         bestMatchAlternatives.add(h);
       }
     }
 
-    if (bestcost < 0) {
+    if (bestCost == Float.POSITIVE_INFINITY) {
       //did not find a matched func implementation, either w/ or w/o implicit casts
       //TODO: raise exception here?
       return null;
-    } else {
-      if (AssertionUtil.isAssertionsEnabled() && bestMatchAlternatives.size() > 0) {
-        /*
-         * There are other alternatives to the best match function which could have been selected
-         * Log the possible functions and the chose implementation and raise an exception
-         */
-        logger.error("Chosen function impl: " + bestmatch.toString());
-
-        // printing the possible matches
-        logger.error("Printing all the possible functions that could have matched: ");
-        for (DrillFuncHolder holder: bestMatchAlternatives) {
-          logger.error(holder.toString());
-        }
-
-        throw new AssertionError("Multiple functions with best cost found");
-      }
-      return bestmatch;
     }
+    if (bestMatchAlternatives.size() > 0) {
+      logger.info("Multiple functions with best cost found, query processing will be aborted.");
+
+      // printing the possible matches
+      logger.debug("Printing all the possible functions that could have matched: ");
+      for (DrillFuncHolder holder : bestMatchAlternatives) {
+        logger.debug(holder.toString());
+      }
+
+      throw UserException.functionError()
+        .message(
+          "There are %d function definitions with the same casting cost for " +
+          "%s, please write explicit casts disambiguate your function call.",
+          1+bestMatchAlternatives.size(),
+          call
+        )
+        .build(logger);
+    }
+    return bestMatch;
   }
 }

@@ -19,7 +19,6 @@ package org.apache.drill.exec.expr;
 
 import java.util.ArrayDeque;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.Deque;
 import java.util.List;
@@ -721,7 +720,7 @@ public class ExpressionTreeMaterializer {
         // Check if we need a cast
         if (thenType != elseType && !(thenType == MinorType.NULL || elseType == MinorType.NULL)) {
 
-          MinorType leastRestrictive = TypeCastRules.getLeastRestrictiveType((Arrays.asList(thenType, elseType)));
+          MinorType leastRestrictive = TypeCastRules.getLeastRestrictiveType(thenType, elseType);
           if (leastRestrictive != thenType) {
             // Implicitly cast the then expression
             conditions = new IfExpression.IfCondition(newCondition,

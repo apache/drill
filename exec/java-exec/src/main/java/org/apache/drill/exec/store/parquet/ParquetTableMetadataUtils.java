@@ -64,7 +64,6 @@ import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
@@ -680,7 +679,10 @@ public class ParquetTableMetadataUtils {
     if (majorType == null) {
       columns.put(columnPath, type);
     } else if (!majorType.equals(type)) {
-      TypeProtos.MinorType leastRestrictiveType = TypeCastRules.getLeastRestrictiveType(Arrays.asList(majorType.getMinorType(), type.getMinorType()));
+      TypeProtos.MinorType leastRestrictiveType = TypeCastRules.getLeastRestrictiveType(
+        majorType.getMinorType(),
+        type.getMinorType()
+      );
       if (leastRestrictiveType != majorType.getMinorType()) {
         columns.put(columnPath, type);
       }
