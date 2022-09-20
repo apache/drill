@@ -52,10 +52,14 @@ import org.apache.drill.shaded.guava.com.google.common.collect.ImmutableSet;
  * for a particular scan.
  * <p>
  * General usage in a storage plugin: <code><pre>
- * public Set<StoragePluginOptimizerRule> getPhysicalOptimizerRules(
- *        OptimizerRulesContext optimizerRulesContext) {
- *   return FilterPushDownStrategy.rulesFor(optimizerRulesContext,
- *      new MyPushDownListener(...));
+ * public Set<StoragePluginOptimizerRule> getOptimizerRules(
+ *        OptimizerRulesContext optimizerRulesContext, PlannerPhase phase) {
+ *   switch (phase) {
+ *     case PHYSICAL:
+ *       return FilterPushDownStrategy.rulesFor(optimizerRulesContext,
+ *        new MyPushDownListener(...));
+ *     ...
+ *   }
  * }
  * </pre></code>
  */

@@ -28,9 +28,11 @@ import org.apache.drill.common.logical.FormatPluginConfig;
 import org.apache.drill.common.logical.StoragePluginConfig;
 import org.apache.drill.exec.ops.OptimizerRulesContext;
 import org.apache.drill.exec.physical.base.AbstractGroupScan;
+import org.apache.drill.exec.planner.PlannerPhase;
 import org.apache.drill.exec.metastore.MetadataProviderManager;
 import org.apache.drill.exec.server.options.SessionOptionManager;
 import org.apache.drill.exec.store.dfs.FormatPlugin;
+import org.apache.drill.shaded.guava.com.google.common.collect.ImmutableSet;
 
 /** Interface for all implementations of the storage plugins. Different implementations of the storage
  * formats will implement methods that indicate if Drill can write or read its tables from that format,
@@ -72,8 +74,9 @@ public interface StoragePlugin extends SchemaFactory, AutoCloseable {
    * optimizer can leverage in <i>physical</i> space. Otherwise, it should return an empty set.
    * @return an empty set or a set of plugin specific physical optimizer rules.
    */
-  @Deprecated
-  Set<? extends RelOptRule> getOptimizerRules(OptimizerRulesContext optimizerContext);
+  public default Set<? extends RelOptRule> getOptimizerRules(OptimizerRulesContext optimizerContext, PlannerPhase phase) {
+    return ImmutableSet.of();
+  }
 
   /**
    * Get the physical scan operator for the particular GroupScan (read) node.
