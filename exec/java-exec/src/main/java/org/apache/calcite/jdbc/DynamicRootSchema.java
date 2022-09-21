@@ -91,9 +91,54 @@ public class DynamicRootSchema extends DynamicSchema {
 
   public SchemaPath resolveTableAlias(String alias) {
     return Optional.ofNullable(aliasRegistryProvider.getTableAliasesRegistry()
-        .getUserAliases(schemaConfig.getUserName()).get(alias))
+      .getUserAliases(schemaConfig.getUserName()).get(alias))
       .map(SchemaPath::parseFromString)
       .orElse(null);
+  }
+
+  private void attemptToRegisterSchemas(StoragePlugin plugin) throws Exception {
+    long maxAttempts = schemaConfig
+      .getOption(ExecConstants.STORAGE_PLUGIN_ACCESS_ATTEMPTS)
+      .num_val;
+    long attemptDelayMs = schemaConfig
+      .getOption(ExecConstants.STORAGE_PLUGIN_ATTEMPT_DELAY)
+      .num_val;
+    int attempt=0;
+    Exception lastAttemptEx = null;
+
+    while (attempt++ < maxAttempts) {
+      try {
+        plugin.registerSchemas(schemaConfig, plus());
+        return;
+      } catch (Exception ex) {
+        lastAttemptEx = ex;
+        logger.warn(
+          "Attempt {} of {} to register schemas for plugin {} failed.",
+          attempt, maxAttempts, plugin,
+          ex
+        );
+
+        if (attempt < maxAttempts) {
+          logger.info(
+            "Next attempt to register schemas for plugin {} will be made in {}ms.",
+            plugin,
+            attemptDelayMs
+          );
+          try {
+            Thread.sleep(attemptDelayMs);
+          } catch (InterruptedException intEx) {
+            logger.warn(
+              "Interrupted while waiting to make another attempt to register " +
+              "chemas for plugin {}.",
+              plugin,
+              intEx
+            );
+          }
+        }
+      }
+    }
+
+    throw lastAttemptEx;
   }
 
   /**
@@ -103,12 +148,12 @@ public class DynamicRootSchema extends DynamicSchema {
    */
   private void loadSchemaFactory(String schemaName, boolean caseSensitive) {
     StoragePlugin plugin = null;
-
     try {
       SchemaPlus schemaPlus = this.plus();
       plugin = storages.getPlugin(schemaName);
       if (plugin != null) {
-        plugin.registerSchemas(schemaConfig, schemaPlus);
+        attemptToRegisterSchemas(plugin);
+        // plugin.registerSchemas(schemaConfig, schemaPlus);
         return;
       }
 
@@ -124,7 +169,8 @@ public class DynamicRootSchema extends DynamicSchema {
         SchemaPlus firstLevelSchema = schemaPlus.getSubSchema(paths.get(0));
         if (firstLevelSchema == null) {
           // register schema for this storage plugin to 'this'.
-          plugin.registerSchemas(schemaConfig, schemaPlus);
+          attemptToRegisterSchemas(plugin);
+          //plugin.registerSchemas(schemaConfig, schemaPlus);
           firstLevelSchema = schemaPlus.getSubSchema(paths.get(0));
         }
         // Load second level schemas for this storage plugin
@@ -144,8 +190,8 @@ public class DynamicRootSchema extends DynamicSchema {
           schemaPlus.add(wrapper.getName(), wrapper);
         }
       }
-    } catch(Exception ex) {
-      logger.error("Failed to load schema for \"" + schemaName + "\"!", ex);
+    } catch (Exception ex) {
+      logger.error("Failed to load schema for {}", schemaName, ex);
       // We can't proceed further without a schema, throw a runtime exception.
       UserException.Builder exceptBuilder =
           UserException
@@ -154,14 +200,9 @@ public class DynamicRootSchema extends DynamicSchema {
               .addContext("%s: %s", ex.getClass().getName(), ex.getMessage())
               .addContext(UserExceptionUtils.getUserHint(ex)); //Provide hint if it exists
 
-      if (plugin == null) {
-        logger.error("The plugin registry returned no plugin for {}, schemaName");
-        throw exceptBuilder.build(logger);
-      }
-
       if (schemaConfig.getOption(ExecConstants.STORAGE_PLUGIN_AUTO_DISABLE).bool_val) {
         String msg = String.format(
-          "The plugin %s will now be disabled (see BOOT option %s)",
+          "The plugin %s will now be disabled (see SYSTEM option %s)",
           plugin.getName(),
           ExecConstants.STORAGE_PLUGIN_AUTO_DISABLE
         );
@@ -174,6 +215,7 @@ public class DynamicRootSchema extends DynamicSchema {
           logger.error("Could not disable {}", plugin.getName(), disableEx);
         }
       }
+
       throw exceptBuilder.build(logger);
     }
   }

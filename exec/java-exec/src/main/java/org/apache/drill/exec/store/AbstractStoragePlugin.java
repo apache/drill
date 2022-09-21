@@ -109,4 +109,8 @@ public abstract class AbstractStoragePlugin implements StoragePlugin {
     return context;
   }
 
+  @Override
+  public String toString() {
+    return name;
+  }
 }

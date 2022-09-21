@@ -30,6 +30,7 @@ import org.apache.calcite.rel.core.TableModify;
 import org.apache.calcite.rel.core.TableScan;
 import org.apache.calcite.rel.logical.LogicalTableModify;
 import org.apache.calcite.tools.RuleSet;
+import org.apache.drill.common.config.DrillConfig;
 import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.common.exceptions.UserExceptionUtils;
 import org.apache.drill.common.util.function.CheckedSupplier;
@@ -60,6 +61,47 @@ public class SqlHandlerConfig {
 
   public QueryContext getContext() {
     return context;
+  }
+
+  private RuleSet attemptToGetRules(PlannerPhase phase, Collection<StoragePlugin> plugins) throws PluginException{
+    long maxAttempts = context.getOption(ExecConstants.STORAGE_PLUGIN_ACCESS_ATTEMPTS).num_val;
+    long attemptDelayMs = context.getOption(ExecConstants.STORAGE_PLUGIN_ATTEMPT_DELAY).num_val;
+    int attempt = 0;
+    PluginException lastAttemptEx = null;
+
+    while (attempt++ < maxAttempts) {
+      try {
+        return phase.getRules(context, plugins);
+      } catch (PluginException ex) {
+        // Hold onto the thrown PluginException because it tells us which plugin
+        // was the first to run into trouble and we may go on to disable it.
+        lastAttemptEx = ex;
+        logger.warn(
+          "Attempt {} of {} to get planning rules for plugins {} failed.",
+          attempt, maxAttempts, plugins,
+          ex
+        );
+
+        if (attempt < maxAttempts) {
+          logger.info(
+            "Next attempt to get planning rules for plugins {} will be made in {}ms.",
+            plugins,
+            attemptDelayMs
+          );
+          try {
+            Thread.sleep(attemptDelayMs);
+          } catch (InterruptedException intEx) {
+            logger.warn(
+              "Interrupted while waiting to make another attempt to get rules for plugins {}.",
+              plugins,
+              intEx
+            );
+          }
+        }
+      }
+    }
+
+    throw lastAttemptEx;
   }
 
   public RuleSet getRules(PlannerPhase phase, RelNode input) {

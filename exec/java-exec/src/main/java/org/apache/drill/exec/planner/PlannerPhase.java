@@ -261,7 +261,7 @@ public enum PlannerPhase {
         throw new PluginException(
           String.format(
             "Failed to load optimizer rules for plugin %s",
-            plugin.getName()
+            plugin
           ),
           ex,
           plugin
