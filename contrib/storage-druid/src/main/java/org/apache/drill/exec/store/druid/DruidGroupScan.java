@@ -23,7 +23,6 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 
-import org.apache.calcite.avatica.Meta;
 import org.apache.drill.common.PlanStringBuilder;
 import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.exec.metastore.MetadataProviderManager;
@@ -58,9 +57,7 @@ public class DruidGroupScan extends AbstractGroupScan {
   private static final long DEFAULT_TABLET_SIZE = 1000;
   private final DruidScanSpec scanSpec;
   private final DruidStoragePlugin storagePlugin;
-
-  private MetadataProviderManager metadataProviderManager;
-
+  private final MetadataProviderManager metadataProviderManager;
   private List<SchemaPath> columns;
   private boolean filterPushedDown = false;
   private int maxRecordsToRead;
@@ -291,6 +288,11 @@ public class DruidGroupScan extends AbstractGroupScan {
   @JsonProperty
   public int getMaxRecordsToRead() {
     return maxRecordsToRead;
+  }
+
+  @JsonIgnore
+  public MetadataProviderManager getMetadataProviderManager() {
+    return metadataProviderManager;
   }
 
   public TupleMetadata getSchema() {

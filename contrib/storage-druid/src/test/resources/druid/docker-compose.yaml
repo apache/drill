@@ -31,7 +31,7 @@ volumes:
 services:
   postgres:
     container_name: postgres
-    image: postgres:latest
+    image: postgres:12
     volumes:
       - metadata_data:/var/lib/postgresql/data
     environment:

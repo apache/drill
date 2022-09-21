@@ -24,7 +24,6 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 import org.apache.drill.common.exceptions.CustomErrorContext;
 import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.common.expression.SchemaPath;
-import org.apache.drill.exec.ops.FragmentContext;
 import org.apache.drill.exec.physical.impl.scan.framework.ManagedReader;
 import org.apache.drill.exec.physical.impl.scan.framework.SchemaNegotiator;
 import org.apache.drill.exec.physical.resultSet.ResultSetLoader;
@@ -47,27 +46,18 @@ import java.util.List;
 
 public class DruidBatchRecordReader implements ManagedReader<SchemaNegotiator> {
   private static final Logger logger = LoggerFactory.getLogger(DruidBatchRecordReader.class);
-
   private static final ObjectMapper objectMapper = new ObjectMapper();
-
   private final DruidStoragePlugin plugin;
   private final DruidSubScan.DruidSubScanSpec scanSpec;
   private final List<String> columns;
   private final DruidFilter filter;
   private final DruidQueryClient druidQueryClient;
-  private final FragmentContext fragmentContext;
 
-  private final DruidSubScan subScan;
-
-  private final TupleMetadata schema;
   private BigInteger nextOffset = BigInteger.ZERO;
   private int maxRecordsToRead = -1;
-
   private JsonLoaderBuilder jsonBuilder;
-
   private JsonLoader jsonLoader;
   private ResultSetLoader resultSetLoader;
-
   private CustomErrorContext errorContext;
 
 
@@ -75,15 +65,11 @@ public class DruidBatchRecordReader implements ManagedReader<SchemaNegotiator> {
                                 DruidSubScanSpec subScanSpec,
                                 List<SchemaPath> projectedColumns,
                                 int maxRecordsToRead,
-                                FragmentContext context,
                                 DruidStoragePlugin plugin) {
-    this.subScan = subScan;
-    columns = new ArrayList<>();
+    this.columns = new ArrayList<>();
     this.maxRecordsToRead = maxRecordsToRead;
     this.plugin = plugin;
-    scanSpec = subScanSpec;
-    this.schema = subScan.getSchema();
-    fragmentContext = context;
+    this.scanSpec = subScanSpec;
     this.filter = subScanSpec.getFilter();
     this.druidQueryClient = plugin.getDruidQueryClient();
   }
@@ -96,9 +82,8 @@ public class DruidBatchRecordReader implements ManagedReader<SchemaNegotiator> {
 
     jsonBuilder = new JsonLoaderBuilder()
       .resultSetLoader(resultSetLoader)
+      .standardOptions(negotiator.queryOptions())
       .errorContext(errorContext);
-
-
 
     return true;
   }
@@ -112,9 +97,10 @@ public class DruidBatchRecordReader implements ManagedReader<SchemaNegotiator> {
       setNextOffset(druidScanResponse);
 
       for (ObjectNode eventNode : druidScanResponse.getEvents()) {
-        jsonLoader = jsonBuilder
-          .fromString(eventNode.asText())
+        JsonLoader jsonLoader = jsonBuilder
+          .fromString(eventNode.toString())
           .build();
+
         result = jsonLoader.readBatch();
       }
       return result;

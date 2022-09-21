@@ -70,7 +70,8 @@ public class DruidPushDownFilterForScan extends StoragePluginOptimizerRule {
             groupScan.getStoragePlugin(),
             newScanSpec,
             groupScan.getColumns(),
-            groupScan.getMaxRecordsToRead());
+            groupScan.getMaxRecordsToRead(),
+            groupScan.getMetadataProviderManager());
     newGroupsScan.setFilterPushedDown(true);
 
     ScanPrel newScanPrel = scan.copy(filter.getTraitSet(), newGroupsScan, filter.getRowType());
