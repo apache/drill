@@ -27,10 +27,11 @@ import org.apache.drill.test.DrillTest;
 
 import org.junit.BeforeClass;
 import org.junit.ClassRule;
-import org.junit.Ignore;
 import org.junit.Test;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 
 public class TestSchema extends DrillTest {
 
@@ -57,7 +58,8 @@ public class TestSchema extends DrillTest {
     client.alterSystem(ExecConstants.STORAGE_PLUGIN_ACCESS_ATTEMPTS, 3);
     client.alterSystem(ExecConstants.STORAGE_PLUGIN_ATTEMPT_DELAY, 0);
 
-    mbs.setBreakRegister(breakRegister); mbs.setBreakOptimizerRules(breakOptimizerRules);
+    mbs.setBreakRegister(breakRegister);
+    mbs.setBreakOptimizerRules(breakOptimizerRules);
     try {
       client.queryBuilder().sql(sql).run();
     } catch (Exception ex) {
@@ -99,7 +101,8 @@ public class TestSchema extends DrillTest {
     client.alterSystem(ExecConstants.STORAGE_PLUGIN_AUTO_DISABLE, true);
     client.alterSystem(ExecConstants.STORAGE_PLUGIN_ACCESS_ATTEMPTS, 1);
 
-    mbs.setBreakRegister(breakRegister); mbs.setBreakOptimizerRules(breakOptimizerRules);
+    mbs.setBreakRegister(breakRegister);
+    mbs.setBreakOptimizerRules(breakOptimizerRules);
     try {
       client.queryBuilder().sql(sql).run();
     } catch (Exception ex) {
@@ -149,7 +152,8 @@ public class TestSchema extends DrillTest {
     client.alterSystem(ExecConstants.STORAGE_PLUGIN_AUTO_DISABLE, false);
     client.alterSystem(ExecConstants.STORAGE_PLUGIN_ACCESS_ATTEMPTS, 1);
 
-    mbs.setBreakRegister(true); mbs.setBreakOptimizerRules(false);
+    mbs.setBreakRegister(true);
+    mbs.setBreakOptimizerRules(false);
     try {
       String use_dfs = "use mock_broken";
       client.queryBuilder().sql(use_dfs).run();
