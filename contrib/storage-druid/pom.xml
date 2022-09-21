@@ -29,7 +29,7 @@
     <artifactId>drill-druid-storage</artifactId>
     <name>Drill : Contrib : Storage : Druid</name>
     <properties>
-        <druid.TestSuite>**/DruidTestSuit.class</druid.TestSuite>
+        <druid.TestSuite>**/DruidTestSuite.class</druid.TestSuite>
     </properties>
     <dependencies>
         <dependency>

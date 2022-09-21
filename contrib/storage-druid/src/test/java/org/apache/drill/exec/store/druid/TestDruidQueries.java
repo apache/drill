@@ -29,6 +29,15 @@ import org.junit.experimental.categories.Category;
 public class TestDruidQueries extends DruidTestBase {
 
   @Test
+  public void testStarQuery() throws Exception {
+    testBuilder()
+      .sqlQuery(String.format(TEST_STAR_QUERY, TEST_DATASOURCE_WIKIPEDIA))
+      .unOrdered()
+      .expectsNumRecords(2)
+      .go();
+  }
+
+  @Test
   public void testEqualsFilter() throws Exception {
     testBuilder()
       .sqlQuery(String.format(TEST_STRING_EQUALS_FILTER_QUERY_TEMPLATE1, TEST_DATASOURCE_WIKIPEDIA))
