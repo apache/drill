@@ -27,14 +27,13 @@ import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.exec.physical.impl.scan.framework.ManagedReader;
 import org.apache.drill.exec.physical.impl.scan.framework.SchemaNegotiator;
 import org.apache.drill.exec.physical.resultSet.ResultSetLoader;
-import org.apache.drill.exec.record.metadata.TupleMetadata;
 import org.apache.drill.exec.store.druid.DruidSubScan.DruidSubScanSpec;
 import org.apache.drill.exec.store.druid.common.DruidFilter;
 import org.apache.drill.exec.store.druid.druid.DruidScanResponse;
 import org.apache.drill.exec.store.druid.druid.ScanQuery;
 import org.apache.drill.exec.store.druid.druid.ScanQueryBuilder;
 import org.apache.drill.exec.store.druid.rest.DruidQueryClient;
-import org.apache.drill.exec.store.easy.json.loader.JsonLoader;
+import org.apache.drill.exec.store.easy.json.loader.JsonLoaderImpl;
 import org.apache.drill.exec.store.easy.json.loader.JsonLoaderImpl.JsonLoaderBuilder;
 import org.apache.drill.exec.vector.BaseValueVector;
 import org.slf4j.Logger;
@@ -56,7 +55,7 @@ public class DruidBatchRecordReader implements ManagedReader<SchemaNegotiator> {
   private BigInteger nextOffset = BigInteger.ZERO;
   private int maxRecordsToRead = -1;
   private JsonLoaderBuilder jsonBuilder;
-  private JsonLoader jsonLoader;
+  private JsonLoaderImpl jsonLoader;
   private ResultSetLoader resultSetLoader;
   private CustomErrorContext errorContext;
 
@@ -97,7 +96,7 @@ public class DruidBatchRecordReader implements ManagedReader<SchemaNegotiator> {
       setNextOffset(druidScanResponse);
 
       for (ObjectNode eventNode : druidScanResponse.getEvents()) {
-        JsonLoader jsonLoader = jsonBuilder
+        jsonLoader = (JsonLoaderImpl) jsonBuilder
           .fromString(eventNode.toString())
           .build();
 
