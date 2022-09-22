@@ -18,23 +18,21 @@
 
 package org.apache.drill.exec.store.log;
 
-import org.apache.drill.common.exceptions.ExecutionSetupException;
 import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.common.logical.StoragePluginConfig;
 import org.apache.drill.common.types.TypeProtos.MinorType;
 import org.apache.drill.common.types.Types;
 import org.apache.drill.exec.physical.impl.scan.columns.ColumnsScanFramework;
-import org.apache.drill.exec.physical.impl.scan.file.FileScanFramework.FileReaderFactory;
-import org.apache.drill.exec.physical.impl.scan.file.FileScanFramework.FileScanBuilder;
-import org.apache.drill.exec.physical.impl.scan.file.FileScanFramework.FileSchemaNegotiator;
-import org.apache.drill.exec.physical.impl.scan.framework.ManagedReader;
+import org.apache.drill.exec.physical.impl.scan.v3.ManagedReader;
+import org.apache.drill.exec.physical.impl.scan.v3.file.FileReaderFactory;
+import org.apache.drill.exec.physical.impl.scan.v3.file.FileScanLifecycleBuilder;
+import org.apache.drill.exec.physical.impl.scan.v3.file.FileSchemaNegotiator;
 import org.apache.drill.exec.record.metadata.ColumnMetadata;
 import org.apache.drill.exec.record.metadata.MetadataUtils;
 import org.apache.drill.exec.record.metadata.Propertied;
 import org.apache.drill.exec.record.metadata.SchemaBuilder;
 import org.apache.drill.exec.record.metadata.TupleMetadata;
 import org.apache.drill.exec.server.DrillbitContext;
-import org.apache.drill.exec.server.options.OptionSet;
 import org.apache.drill.exec.store.dfs.easy.EasyFormatPlugin;
 import org.apache.drill.exec.store.dfs.easy.EasySubScan;
 import org.apache.drill.exec.store.log.LogBatchReader.LogReaderConfig;
@@ -61,16 +59,14 @@ public class LogFormatPlugin extends EasyFormatPlugin<LogFormatConfig> {
 
   private static class LogReaderFactory extends FileReaderFactory {
     private final LogReaderConfig readerConfig;
-    private final int maxRecords;
 
-    public LogReaderFactory(LogReaderConfig config, int maxRecords) {
+    public LogReaderFactory(LogReaderConfig config) {
       readerConfig = config;
-      this.maxRecords = maxRecords;
     }
 
     @Override
-    public ManagedReader<? extends FileSchemaNegotiator> newReader() {
-       return new LogBatchReader(readerConfig, maxRecords);
+    public ManagedReader newReader(FileSchemaNegotiator negotiator) {
+       return new LogBatchReader(readerConfig, negotiator);
     }
   }
 
@@ -91,7 +87,7 @@ public class LogFormatPlugin extends EasyFormatPlugin<LogFormatConfig> {
         .fsConf(fsConf)
         .defaultName(PLUGIN_NAME)
         .readerOperatorType(OPERATOR_TYPE)
-        .scanVersion(ScanFrameworkVersion.EVF_V1)
+        .scanVersion(ScanFrameworkVersion.EVF_V2)
         .supportsLimitPushdown(true)
         .build();
   }
@@ -143,8 +139,7 @@ public class LogFormatPlugin extends EasyFormatPlugin<LogFormatConfig> {
    * </ul>
    */
   @Override
-  protected FileScanBuilder frameworkBuilder(EasySubScan scan, OptionSet options) throws ExecutionSetupException {
-
+  protected void configureScan(FileScanLifecycleBuilder builder, EasySubScan scan) {
     // Pattern and schema identical across readers; define
     // up front.
     final TupleMetadata providedSchema = scan.getSchema();
@@ -169,8 +164,6 @@ public class LogFormatPlugin extends EasyFormatPlugin<LogFormatConfig> {
 
     // Use the file framework to enable support for implicit and partition
     // columns.
-    final FileScanBuilder builder = new FileScanBuilder();
-    initScanBuilder(builder, scan);
     if (hasSchema) {
       if (!hasColumns) {
 
@@ -207,14 +200,13 @@ public class LogFormatPlugin extends EasyFormatPlugin<LogFormatConfig> {
 
     // Pass along the class that will create a batch reader on demand for
     // each input file.
-    builder.setReaderFactory(new LogReaderFactory(
-        new LogReaderConfig(this, pattern, providedSchema, tableSchema,
-            readerSchema, !hasSchema, groupCount, maxErrors(providedSchema)), scan.getMaxRecords()));
+    builder.readerFactory(new LogReaderFactory(
+      new LogReaderConfig(this, pattern, providedSchema, tableSchema,
+        readerSchema, !hasSchema, groupCount, maxErrors(providedSchema))));
 
     // The default type of regex columns is nullable VarChar,
     // so let's use that as the missing column type.
     builder.nullType(Types.optional(MinorType.VARCHAR));
-    return builder;
   }
 
   /**

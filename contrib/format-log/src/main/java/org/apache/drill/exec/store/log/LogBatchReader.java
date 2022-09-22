@@ -20,8 +20,9 @@ package org.apache.drill.exec.store.log;
 
 import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.exec.physical.impl.scan.convert.StandardConversions;
-import org.apache.drill.exec.physical.impl.scan.file.FileScanFramework.FileSchemaNegotiator;
-import org.apache.drill.exec.physical.impl.scan.framework.ManagedReader;
+import org.apache.drill.exec.physical.impl.scan.v3.ManagedReader;
+import org.apache.drill.exec.physical.impl.scan.v3.file.FileDescrip;
+import org.apache.drill.exec.physical.impl.scan.v3.file.FileSchemaNegotiator;
 import org.apache.drill.exec.physical.resultSet.ResultSetLoader;
 import org.apache.drill.exec.physical.resultSet.RowSetLoader;
 import org.apache.drill.exec.record.metadata.ColumnMetadata;
@@ -30,7 +31,6 @@ import org.apache.drill.exec.vector.accessor.ScalarWriter;
 import org.apache.drill.exec.vector.accessor.TupleWriter;
 import org.apache.drill.exec.vector.accessor.ValueWriter;
 import org.apache.drill.shaded.guava.com.google.common.base.Charsets;
-import org.apache.hadoop.mapred.FileSplit;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -41,7 +41,7 @@ import java.io.InputStreamReader;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-public class LogBatchReader implements ManagedReader<FileSchemaNegotiator> {
+public class LogBatchReader implements ManagedReader {
   private static final Logger logger = LoggerFactory.getLogger(LogBatchReader.class);
   public static final String RAW_LINE_COL_NAME = "_raw";
   public static final String UNMATCHED_LINE_COL_NAME = "_unmatched_rows";
@@ -126,8 +126,7 @@ public class LogBatchReader implements ManagedReader<FileSchemaNegotiator> {
   }
 
   private final LogReaderConfig config;
-  private final int maxRecords;
-  private FileSplit split;
+  private final FileDescrip file;
   private BufferedReader reader;
   private ResultSetLoader loader;
   private VectorWriter vectorWriter;
@@ -137,19 +136,13 @@ public class LogBatchReader implements ManagedReader<FileSchemaNegotiator> {
   private int lineNumber;
   private int errorCount;
 
-  public LogBatchReader(LogReaderConfig config, int maxRecords) {
+  public LogBatchReader(LogReaderConfig config, FileSchemaNegotiator negotiator) {
     this.config = config;
-    this.maxRecords = maxRecords;
-  }
-
-  @Override
-  public boolean open(FileSchemaNegotiator negotiator) {
-    split = negotiator.split();
+    this.file = negotiator.file();
     negotiator.tableSchema(config.tableSchema, true);
     loader = negotiator.build();
     bindColumns(loader.writer());
-    openFile(negotiator);
-    return true;
+    openFile();
   }
 
   private void bindColumns(RowSetLoader writer) {
@@ -188,15 +181,15 @@ public class LogBatchReader implements ManagedReader<FileSchemaNegotiator> {
     }
   }
 
-  private void openFile(FileSchemaNegotiator negotiator) {
+  private void openFile() {
     InputStream in;
     try {
-      in = negotiator.fileSystem().openPossiblyCompressedStream(split.getPath());
+      in = file.fileSystem().openPossiblyCompressedStream(file.split().getPath());
     } catch (Exception e) {
       throw UserException
           .dataReadError(e)
           .message("Failed to open input file")
-          .addContext(String.format("File path: %s", split.getPath()))
+          .addContext(String.format("File path: %s", file.split().getPath()))
           .addContext(loader.errorContext())
           .build(logger);
     }
@@ -215,10 +208,6 @@ public class LogBatchReader implements ManagedReader<FileSchemaNegotiator> {
   }
 
   private boolean nextLine(RowSetLoader rowWriter) {
-    if (rowWriter.limitReached(maxRecords)) {
-      return false;
-    }
-
     String line;
     try {
       line = reader.readLine();
@@ -226,7 +215,7 @@ public class LogBatchReader implements ManagedReader<FileSchemaNegotiator> {
       throw UserException
           .dataReadError(e)
           .message("Error reading file")
-          .addContext(String.format("File: %s", split.getPath()))
+          .addContext(String.format("File: %s", file.split().getPath()))
           .addContext(loader.errorContext())
           .build(logger);
     }
@@ -278,7 +267,7 @@ public class LogBatchReader implements ManagedReader<FileSchemaNegotiator> {
     try {
       reader.close();
     } catch (IOException e) {
-      logger.warn("Error when closing file: " + split.getPath(), e);
+      logger.warn("Error when closing file: " + file.split().getPath(), e);
     } finally {
       reader = null;
     }
@@ -288,6 +277,6 @@ public class LogBatchReader implements ManagedReader<FileSchemaNegotiator> {
   public String toString() {
     return String.format(
         "LogRecordReader[File=%s, Line=%d]",
-        split.getPath(), lineNumber);
+        file.split().getPath(), lineNumber);
   }
 }
