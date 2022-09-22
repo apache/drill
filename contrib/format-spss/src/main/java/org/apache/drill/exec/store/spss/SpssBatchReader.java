@@ -24,14 +24,14 @@ import org.apache.drill.common.AutoCloseables;
 import org.apache.drill.common.exceptions.CustomErrorContext;
 import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.common.types.TypeProtos;
-import org.apache.drill.exec.physical.impl.scan.file.FileScanFramework.FileSchemaNegotiator;
-import org.apache.drill.exec.physical.impl.scan.framework.ManagedReader;
+import org.apache.drill.exec.physical.impl.scan.v3.ManagedReader;
+import org.apache.drill.exec.physical.impl.scan.v3.file.FileDescrip;
+import org.apache.drill.exec.physical.impl.scan.v3.file.FileSchemaNegotiator;
 import org.apache.drill.exec.physical.resultSet.ResultSetLoader;
 import org.apache.drill.exec.physical.resultSet.RowSetLoader;
 import org.apache.drill.exec.record.metadata.SchemaBuilder;
 import org.apache.drill.exec.record.metadata.TupleMetadata;
 import org.apache.drill.exec.vector.accessor.ScalarWriter;
-import org.apache.hadoop.mapred.FileSplit;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -41,26 +41,17 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
-public class SpssBatchReader implements ManagedReader<FileSchemaNegotiator> {
+public class SpssBatchReader implements ManagedReader {
 
   private static final Logger logger = LoggerFactory.getLogger(SpssBatchReader.class);
 
   private static final String VALUE_LABEL = "_value";
-
-  private final int maxRecords;
-
-  private FileSplit split;
-
+  private final FileDescrip file;
   private InputStream fsStream;
-
   private SpssDataFileReader spssReader;
-
   private RowSetLoader rowWriter;
-
   private List<SpssVariable> variableList;
-
   private List<SpssColumnWriter> writerList;
-
   private CustomErrorContext errorContext;
 
 
@@ -73,21 +64,14 @@ public class SpssBatchReader implements ManagedReader<FileSchemaNegotiator> {
     }
   }
 
-  public SpssBatchReader(int maxRecords) {
-    this.maxRecords = maxRecords;
-  }
-
-  @Override
-  public boolean open(FileSchemaNegotiator negotiator) {
-    split = negotiator.split();
-    openFile(negotiator);
+  public SpssBatchReader(FileSchemaNegotiator negotiator) {
+    file = negotiator.file();
+    openFile();
     negotiator.tableSchema(buildSchema(), true);
     errorContext = negotiator.parentErrorContext();
     ResultSetLoader loader = negotiator.build();
     rowWriter = loader.writer();
     buildReaderList();
-
-    return true;
   }
 
   @Override
@@ -108,14 +92,14 @@ public class SpssBatchReader implements ManagedReader<FileSchemaNegotiator> {
     }
   }
 
-  private void openFile(FileSchemaNegotiator negotiator) {
+  private void openFile() {
     try {
-      fsStream = negotiator.fileSystem().openPossiblyCompressedStream(split.getPath());
+      fsStream = file.fileSystem().openPossiblyCompressedStream(file.split().getPath());
       spssReader = new SpssDataFileReader(fsStream);
     } catch (IOException e) {
       throw UserException
         .dataReadError(e)
-        .message("Unable to open SPSS File %s", split.getPath())
+        .message("Unable to open SPSS File %s", file.split().getPath())
         .addContext(e.getMessage())
         .addContext(errorContext)
         .build(logger);
@@ -123,11 +107,6 @@ public class SpssBatchReader implements ManagedReader<FileSchemaNegotiator> {
   }
 
   private boolean processNextRow() {
-    // Check to see if the limit has been reached
-    if (rowWriter.limitReached(maxRecords)) {
-      return false;
-    }
-
     try {
       // Stop reading when you run out of data
       if (!spssReader.readNextCase()) {
