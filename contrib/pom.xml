@@ -48,6 +48,7 @@
     <module>format-excel</module>
     <module>format-httpd</module>
     <module>format-esri</module>
+    <module>format-log</module>
     <module>format-pdf</module>
     <module>format-hdf5</module>
     <module>format-sas</module>
