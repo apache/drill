@@ -21,16 +21,13 @@ package org.apache.drill.exec.store.sas;
 import org.apache.drill.common.logical.StoragePluginConfig;
 import org.apache.drill.common.types.TypeProtos;
 import org.apache.drill.common.types.Types;
-import org.apache.drill.exec.physical.impl.scan.file.FileScanFramework.FileReaderFactory;
-import org.apache.drill.exec.physical.impl.scan.file.FileScanFramework.FileScanBuilder;
-import org.apache.drill.exec.physical.impl.scan.file.FileScanFramework.FileSchemaNegotiator;
-
-import org.apache.drill.exec.physical.impl.scan.framework.ManagedReader;
+import org.apache.drill.exec.physical.impl.scan.v3.file.FileReaderFactory;
+import org.apache.drill.exec.physical.impl.scan.v3.file.FileScanLifecycleBuilder;
+import org.apache.drill.exec.physical.impl.scan.v3.file.FileSchemaNegotiator;
+import org.apache.drill.exec.physical.impl.scan.v3.ManagedReader;
 import org.apache.drill.exec.server.DrillbitContext;
-import org.apache.drill.exec.server.options.OptionSet;
 import org.apache.drill.exec.store.dfs.easy.EasyFormatPlugin;
 import org.apache.drill.exec.store.dfs.easy.EasySubScan;
-import org.apache.drill.exec.store.dfs.easy.EasyFormatPlugin.ScanFrameworkVersion;
 import org.apache.hadoop.conf.Configuration;
 
 
@@ -40,15 +37,9 @@ public class SasFormatPlugin extends EasyFormatPlugin<SasFormatConfig> {
 
   private static class SasReaderFactory extends FileReaderFactory {
 
-    private final int maxRecords;
-
-    public SasReaderFactory(int maxRecords) {
-      this.maxRecords = maxRecords;
-    }
-
     @Override
-    public ManagedReader<? extends FileSchemaNegotiator> newReader() {
-      return new SasBatchReader(maxRecords);
+    public ManagedReader newReader(FileSchemaNegotiator negotiator) {
+      return new SasBatchReader(negotiator);
     }
   }
 
@@ -69,23 +60,14 @@ public class SasFormatPlugin extends EasyFormatPlugin<SasFormatConfig> {
       .extensions(pluginConfig.getExtensions())
       .fsConf(fsConf)
       .defaultName(DEFAULT_NAME)
-      .scanVersion(ScanFrameworkVersion.EVF_V1)
+      .scanVersion(ScanFrameworkVersion.EVF_V2)
       .supportsLimitPushdown(true)
       .build();
   }
 
   @Override
-  public ManagedReader<? extends FileSchemaNegotiator> newBatchReader(EasySubScan scan, OptionSet options)  {
-    return new SasBatchReader(scan.getMaxRecords());
-  }
-
-  @Override
-  protected FileScanBuilder frameworkBuilder(EasySubScan scan, OptionSet options) {
-    FileScanBuilder builder = new FileScanBuilder();
-    builder.setReaderFactory(new SasReaderFactory(scan.getMaxRecords()));
-
-    initScanBuilder(builder, scan);
+  protected void configureScan(FileScanLifecycleBuilder builder, EasySubScan scan) {
     builder.nullType(Types.optional(TypeProtos.MinorType.VARCHAR));
-    return builder;
+    builder.readerFactory(new SasReaderFactory());
   }
 }
