@@ -206,15 +206,15 @@ public class FileSystemUtilTest extends FileSystemUtilTestBase {
   @Test // DRILL-8283
   public void testRecursiveListingMaxSize() throws IOException {
     Configuration conf = fs.getConf();
-    int oldSize = conf.getInt(FileSystemUtil.RECURSIVE_FILE_LISTING_MAX_SIZE, 0);
-    conf.setInt(FileSystemUtil.RECURSIVE_FILE_LISTING_MAX_SIZE, 5);
+    int oldSize = conf.getInt(FileSystemUtil.RECURSIVE_LISTING_PROP_NAME, 0);
+    conf.setInt(FileSystemUtil.RECURSIVE_LISTING_PROP_NAME, 5);
 
     try {
       FileSystemUtil.listAll(fs, new Path(base, "a"), true);
     } catch (UserException ex) {
       assertThat(ex.getMessage(), containsString("RESOURCE ERROR: File listing size limit"));
     } finally {
-      conf.setInt(FileSystemUtil.RECURSIVE_FILE_LISTING_MAX_SIZE, oldSize);
+      conf.setInt(FileSystemUtil.RECURSIVE_LISTING_PROP_NAME, oldSize);
     }
   }
 }
