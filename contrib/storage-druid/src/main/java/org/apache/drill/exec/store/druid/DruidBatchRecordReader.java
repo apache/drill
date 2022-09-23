@@ -51,8 +51,7 @@ public class DruidBatchRecordReader implements ManagedReader<SchemaNegotiator> {
   private final List<String> columns;
   private final DruidFilter filter;
   private final DruidQueryClient druidQueryClient;
-
-  private BigInteger nextOffset = BigInteger.ZERO;
+  private final DruidOffsetTracker offsetTracker;
   private int maxRecordsToRead = -1;
   private JsonLoaderBuilder jsonBuilder;
   private JsonLoaderImpl jsonLoader;
@@ -64,13 +63,14 @@ public class DruidBatchRecordReader implements ManagedReader<SchemaNegotiator> {
                                 DruidSubScanSpec subScanSpec,
                                 List<SchemaPath> projectedColumns,
                                 int maxRecordsToRead,
-                                DruidStoragePlugin plugin) {
+                                DruidStoragePlugin plugin, DruidOffsetTracker offsetTracker) {
     this.columns = new ArrayList<>();
     this.maxRecordsToRead = maxRecordsToRead;
     this.plugin = plugin;
     this.scanSpec = subScanSpec;
     this.filter = subScanSpec.getFilter();
     this.druidQueryClient = plugin.getDruidQueryClient();
+    this.offsetTracker = offsetTracker;
   }
 
   @Override
@@ -118,10 +118,6 @@ public class DruidBatchRecordReader implements ManagedReader<SchemaNegotiator> {
       jsonLoader.close();
       jsonLoader = null;
     }
-
-    if (! nextOffset.equals(BigInteger.ZERO)) {
-      nextOffset = BigInteger.ZERO;
-    }
   }
 
   private String getQuery() throws JsonProcessingException {
@@ -135,7 +131,7 @@ public class DruidBatchRecordReader implements ManagedReader<SchemaNegotiator> {
         scanSpec.dataSourceName,
         columns,
         filter,
-        nextOffset,
+        offsetTracker.getOffset(),
         queryThreshold,
         scanSpec.getMinTime(),
         scanSpec.getMaxTime()
@@ -144,6 +140,7 @@ public class DruidBatchRecordReader implements ManagedReader<SchemaNegotiator> {
   }
 
   private void setNextOffset(DruidScanResponse druidScanResponse) {
-    nextOffset = nextOffset.add(BigInteger.valueOf(druidScanResponse.getEvents().size()));
+    //nextOffset = nextOffset.add(BigInteger.valueOf(druidScanResponse.getEvents().size()));
+    offsetTracker.setNextOffset(BigInteger.valueOf(druidScanResponse.getEvents().size()));
   }
 }

@@ -75,12 +75,13 @@ public class DruidScanBatchCreator implements BatchCreator<DruidSubScan> {
 
   private static class DruidReaderFactory implements ReaderFactory {
     private final DruidSubScan subScan;
-
+    private final DruidOffsetTracker offsetTracker;
     private final Iterator<DruidSubScanSpec> scanSpecIterator;
 
     public DruidReaderFactory(DruidSubScan subScan) {
       this.subScan = subScan;
       this.scanSpecIterator = subScan.getScanSpec().listIterator();
+      this.offsetTracker = new DruidOffsetTracker();
     }
 
     @Override
@@ -92,7 +93,7 @@ public class DruidScanBatchCreator implements BatchCreator<DruidSubScan> {
     public ManagedReader<? extends SchemaNegotiator> next() {
       if (scanSpecIterator.hasNext()) {
         DruidSubScanSpec scanSpec = scanSpecIterator.next();
-        return new DruidBatchRecordReader(subScan, scanSpec, subScan.getColumns(), subScan.getMaxRecordsToRead(), subScan.getStorageEngine());
+        return new DruidBatchRecordReader(subScan, scanSpec, subScan.getColumns(), subScan.getMaxRecordsToRead(), subScan.getStorageEngine(), offsetTracker);
       }
       return null;
     }
