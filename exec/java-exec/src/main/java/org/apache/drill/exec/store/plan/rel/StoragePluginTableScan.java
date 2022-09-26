@@ -18,6 +18,8 @@
 package org.apache.drill.exec.store.plan.rel;
 
 import org.apache.calcite.plan.RelOptCluster;
+import org.apache.calcite.plan.RelOptCost;
+import org.apache.calcite.plan.RelOptPlanner;
 import org.apache.calcite.plan.RelOptTable;
 import org.apache.calcite.plan.RelTraitSet;
 import org.apache.calcite.rel.RelWriter;
@@ -27,10 +29,13 @@ import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.exec.physical.base.GroupScan;
 import org.apache.drill.exec.planner.common.DrillScanRelBase;
 import org.apache.drill.exec.store.plan.PluginImplementor;
+import org.apache.drill.exec.util.Utilities;
 
 import java.io.IOException;
 import java.util.List;
 import java.util.stream.Collectors;
+
+import static org.apache.drill.exec.planner.logical.DrillScanRel.STAR_COLUMN_COST;
 
 /**
  * Storage plugin table scan rel implementation.
@@ -78,6 +83,21 @@ public class StoragePluginTableScan extends DrillScanRelBase implements PluginRe
   @Override
   public boolean canImplement(PluginImplementor implementor) {
     return implementor.canImplement(this);
+  }
+
+  @Override
+  public RelOptCost computeSelfCost(RelOptPlanner planner, RelMetadataQuery mq) {
+    List<SchemaPath> columns = groupScan.getColumns();
+    // column count should be adjusted to consider the case of projecting nested columns,
+    // such a scan should be preferable compared to the scan where root columns are projected only
+    double columnCount = Utilities.isStarQuery(columns)
+      ? STAR_COLUMN_COST
+      : Math.pow(getRowType().getFieldCount(), 2) / Math.max(columns.size(), 1);
+
+    double rowCount = estimateRowCount(mq);
+    double valueCount = rowCount * columnCount;
+
+    return planner.getCostFactory().makeCost(rowCount, valueCount, 0).multiplyBy(0.1);
   }
 
   private static List<SchemaPath> getColumns(RelDataType rowType) {

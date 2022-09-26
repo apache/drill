@@ -101,4 +101,26 @@ public class TestMongoProjectPushDown extends MongoTestBase {
         .go();
   }
 
+  @Test // DRILL-8190
+  public void testProjectWithJoin() throws Exception {
+    String query = "SELECT sum(s1.sales) s1_sales,\n" +
+      "sum(s2.sales) s2_sales\n" +
+      "FROM mongo.%s.`%s` s1\n" +
+      "JOIN mongo.%s.`%s` s2 ON s1._id = s2._id";
+
+    queryBuilder()
+      .sql(query, DONUTS_DB, DONUTS_COLLECTION, DONUTS_DB, DONUTS_COLLECTION)
+      .planMatcher()
+      .include("columns=\\[`_id`, `sales`]")
+      .exclude("columns=\\[`\\*\\*`")
+      .match();
+
+    testBuilder()
+      .sqlQuery(query, DONUTS_DB, DONUTS_COLLECTION, DONUTS_DB, DONUTS_COLLECTION)
+      .unOrdered()
+      .baselineColumns("s1_sales", "s2_sales")
+      .baselineValues(1194L, 1194L)
+      .go();
+  }
+
 }
