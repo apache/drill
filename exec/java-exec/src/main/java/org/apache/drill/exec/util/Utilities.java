@@ -21,6 +21,7 @@ import java.util.Collection;
 import org.apache.calcite.plan.RelOptTable;
 import org.apache.calcite.rel.metadata.JaninoRelMetadataProvider;
 import org.apache.calcite.rel.metadata.RelMetadataQuery;
+import org.apache.calcite.rel.type.RelDataType;
 import org.apache.calcite.rex.RexLiteral;
 import org.apache.drill.common.expression.PathSegment;
 import org.apache.drill.common.expression.SchemaPath;
@@ -33,8 +34,6 @@ import org.apache.drill.exec.proto.BitControl.QueryContextInformation;
 import org.apache.drill.exec.proto.ExecProtos;
 import org.apache.drill.exec.proto.helper.QueryIdHelper;
 import org.apache.drill.shaded.guava.com.google.common.base.Preconditions;
-import org.apache.drill.shaded.guava.com.google.common.base.Predicate;
-import org.apache.drill.shaded.guava.com.google.common.collect.Iterables;
 
 public class Utilities {
 
@@ -52,17 +51,13 @@ public class Utilities {
     int majorFragmentId = handle.getMajorFragmentId();
     int minorFragmentId = handle.getMinorFragmentId();
 
-    String fileName = String.format("%s//%s_%s_%s_%s", location, qid, majorFragmentId, minorFragmentId, tag);
-
-    return fileName;
+    return String.format("%s//%s_%s_%s_%s", location, qid, majorFragmentId, minorFragmentId, tag);
   }
 
   /**
    * Create {@link org.apache.drill.exec.proto.BitControl.QueryContextInformation} with given <i>defaultSchemaName</i>. Rest of the members of the
    * QueryContextInformation is derived from the current state of the process.
    *
-   * @param defaultSchemaName
-   * @param sessionId
    * @return A {@link org.apache.drill.exec.proto.BitControl.QueryContextInformation} with given <i>defaultSchemaName</i>.
    */
   public static QueryContextInformation createQueryContextInfo(final String defaultSchemaName,
@@ -82,22 +77,25 @@ public class Utilities {
    * @return The Drill version.
    */
   public static String getDrillVersion() {
-      String v = Utilities.class.getPackage().getImplementationVersion();
-      return v;
+    return Utilities.class.getPackage().getImplementationVersion();
   }
 
   /**
    * Return true if list of schema path has star column.
-   * @param projected
+   *
    * @return True if the list of {@link org.apache.drill.common.expression.SchemaPath}s has star column.
    */
   public static boolean isStarQuery(Collection<SchemaPath> projected) {
-    return Iterables.tryFind(Preconditions.checkNotNull(projected, COL_NULL_ERROR), new Predicate<SchemaPath>() {
-      @Override
-      public boolean apply(SchemaPath path) {
-        return Preconditions.checkNotNull(path).equals(SchemaPath.STAR_COLUMN);
-      }
-    }).isPresent();
+    return Preconditions.checkNotNull(projected, COL_NULL_ERROR).stream()
+      .anyMatch(SchemaPath::isDynamicStar);
+  }
+
+  /**
+   * Return true if the row type has star column.
+   */
+  public static boolean isStarQuery(RelDataType projected) {
+    return projected.getFieldNames().stream()
+      .anyMatch(SchemaPath.DYNAMIC_STAR::equals);
   }
 
   /**

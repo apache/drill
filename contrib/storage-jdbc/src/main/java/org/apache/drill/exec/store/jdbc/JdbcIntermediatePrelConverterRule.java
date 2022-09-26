@@ -25,6 +25,7 @@ import org.apache.calcite.rel.RelNode;
 import org.apache.drill.exec.planner.logical.DrillRel;
 import org.apache.drill.exec.planner.logical.DrillRelFactories;
 import org.apache.drill.exec.planner.logical.RelOptHelper;
+import org.apache.drill.exec.planner.physical.DrillDistributionTrait;
 import org.apache.drill.exec.planner.physical.Prel;
 import org.apache.drill.exec.store.enumerable.plan.VertexDrel;
 
@@ -48,7 +49,7 @@ class JdbcIntermediatePrelConverterRule extends RelOptRule {
     VertexDrel in = call.rel(0);
     RelNode jdbcIntermediatePrel = new JdbcIntermediatePrel(
         in.getCluster(),
-        in.getTraitSet().replace(outTrait),
+        in.getTraitSet().replace(outTrait).plus(DrillDistributionTrait.SINGLETON),
         in.getInput(0));
     call.transformTo(jdbcIntermediatePrel);
   }

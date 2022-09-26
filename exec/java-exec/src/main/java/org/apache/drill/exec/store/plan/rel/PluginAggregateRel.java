@@ -51,7 +51,7 @@ public class PluginAggregateRel extends DrillAggregateRelBase implements PluginR
 
   @Override
   public RelOptCost computeSelfCost(RelOptPlanner planner, RelMetadataQuery mq) {
-    return super.computeSelfCost(planner, mq).multiplyBy(0.1);
+    return super.computeLogicalAggCost(planner, mq).multiplyBy(0.1);
   }
 
   @Override

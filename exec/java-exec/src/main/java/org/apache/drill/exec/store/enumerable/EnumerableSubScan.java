@@ -79,7 +79,7 @@ public class EnumerableSubScan extends AbstractSubScan {
     return schemaPath;
   }
 
-  public ColumnConverterFactoryProvider factoryProvider() {
+  public ColumnConverterFactoryProvider getConverterFactoryProvider() {
     return converterFactoryProvider;
   }
 }
