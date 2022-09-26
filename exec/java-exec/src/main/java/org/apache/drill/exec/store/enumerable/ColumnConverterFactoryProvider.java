@@ -18,10 +18,12 @@
 package org.apache.drill.exec.store.enumerable;
 
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
+import com.fasterxml.jackson.databind.annotation.JsonTypeResolver;
 import org.apache.drill.exec.record.ColumnConverterFactory;
 import org.apache.drill.exec.record.metadata.TupleMetadata;
 
 @JsonTypeInfo(use = JsonTypeInfo.Id.NAME)
+@JsonTypeResolver(DynamicTypeResolverBuilder.class)
 public interface ColumnConverterFactoryProvider {
 
   ColumnConverterFactory getFactory(TupleMetadata schema);

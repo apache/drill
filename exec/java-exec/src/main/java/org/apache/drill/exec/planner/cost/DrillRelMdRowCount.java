@@ -23,11 +23,12 @@ import org.apache.calcite.rel.core.Filter;
 import org.apache.calcite.rel.core.Join;
 import org.apache.calcite.rel.core.TableScan;
 import org.apache.calcite.rel.core.Union;
+import org.apache.calcite.rel.metadata.BuiltInMetadata;
 import org.apache.calcite.rel.metadata.ReflectiveRelMetadataProvider;
 import org.apache.calcite.rel.metadata.RelMdRowCount;
 import org.apache.calcite.rel.metadata.RelMetadataProvider;
 import org.apache.calcite.rel.metadata.RelMetadataQuery;
-import org.apache.calcite.util.BuiltInMethod;
+import org.apache.calcite.schema.Table;
 import org.apache.calcite.util.ImmutableBitSet;
 import org.apache.drill.exec.planner.common.DrillLimitRelBase;
 import org.apache.drill.exec.planner.common.DrillRelOptUtil;
@@ -40,10 +41,12 @@ import org.apache.drill.exec.util.Utilities;
 import org.apache.drill.metastore.statistics.TableStatisticsKind;
 
 
-public class DrillRelMdRowCount extends RelMdRowCount{
-  private static final DrillRelMdRowCount INSTANCE = new DrillRelMdRowCount();
+public class DrillRelMdRowCount extends RelMdRowCount {
 
-  public static final RelMetadataProvider SOURCE = ReflectiveRelMetadataProvider.reflectiveSource(BuiltInMethod.ROW_COUNT.method, INSTANCE);
+  public static final RelMetadataProvider SOURCE = ReflectiveRelMetadataProvider.reflectiveSource(
+    new DrillRelMdRowCount(), BuiltInMetadata.RowCount.Handler.class);
+
+  private static final Double DEFAULT_SCAN_ROW_COUNT = 1e9;
 
   @Override
   public Double getRowCount(Aggregate rel, RelMetadataQuery mq) {
@@ -96,7 +99,14 @@ public class DrillRelMdRowCount extends RelMdRowCount{
     PlannerSettings settings = PrelUtil.getSettings(rel.getCluster());
     // If guessing, return selectivity from RelMDRowCount
     if (DrillRelOptUtil.guessRows(rel)) {
-      return super.getRowCount(rel, mq);
+      if (rel instanceof DrillScanRelBase
+        || rel.getTable().unwrap(Table.class).getStatistic().getRowCount() != null) {
+        return super.getRowCount(rel, mq);
+      } else {
+        // if table doesn't have row count statistics, return large row count
+        // to make sure that limit will be pushed down
+        return DEFAULT_SCAN_ROW_COUNT;
+      }
     }
     // Return rowcount from statistics, if available. Otherwise, delegate to parent.
     try {

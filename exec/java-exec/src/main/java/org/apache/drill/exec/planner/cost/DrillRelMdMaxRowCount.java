@@ -18,18 +18,17 @@
 package org.apache.drill.exec.planner.cost;
 
 import org.apache.calcite.rel.core.Aggregate;
+import org.apache.calcite.rel.metadata.BuiltInMetadata;
 import org.apache.calcite.rel.metadata.ReflectiveRelMetadataProvider;
 import org.apache.calcite.rel.metadata.RelMdMaxRowCount;
 import org.apache.calcite.rel.metadata.RelMetadataProvider;
 import org.apache.calcite.rel.metadata.RelMetadataQuery;
-import org.apache.calcite.util.BuiltInMethod;
 
 public class DrillRelMdMaxRowCount extends RelMdMaxRowCount {
 
-  private static final DrillRelMdMaxRowCount INSTANCE = new DrillRelMdMaxRowCount();
-
   public static final RelMetadataProvider SOURCE =
-      ReflectiveRelMetadataProvider.reflectiveSource(BuiltInMethod.MAX_ROW_COUNT.method, INSTANCE);
+    ReflectiveRelMetadataProvider.reflectiveSource(
+      new DrillRelMdMaxRowCount(), BuiltInMetadata.MaxRowCount.Handler.class);
 
   // The method is overriden because of changes done in CALCITE-2991 and
   // TODO: should be discarded when CALCITE-1048 is fixed.
