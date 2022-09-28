@@ -71,7 +71,6 @@ public class HttpScanBatchCreator implements BatchCreator<HttpSubScan> {
     builder.projection(subScan.columns());
     builder.providedSchema(subScan.schema());
     builder.setUserName(subScan.getUserName());
-    builder.limit(subScan.maxRecords());
 
     // Provide custom error context
     builder.errorContext(

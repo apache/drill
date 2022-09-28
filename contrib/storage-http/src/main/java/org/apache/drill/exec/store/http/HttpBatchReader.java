@@ -34,7 +34,6 @@ import org.apache.drill.exec.physical.impl.scan.v3.FixedReceiver;
 import org.apache.drill.exec.physical.resultSet.ResultSetLoader;
 import org.apache.drill.exec.record.metadata.TupleMetadata;
 import org.apache.drill.exec.store.easy.json.loader.JsonLoader;
-import org.apache.drill.exec.store.easy.json.loader.JsonLoaderImpl;
 import org.apache.drill.exec.store.easy.json.loader.JsonLoaderImpl.JsonLoaderBuilder;
 import org.apache.drill.exec.store.easy.json.loader.JsonLoaderOptions;
 import org.apache.drill.exec.store.http.HttpApiConfig.PostLocation;
@@ -67,7 +66,7 @@ public class HttpBatchReader implements ManagedReader<SchemaNegotiator> {
   private final int maxRecords;
   protected final Paginator paginator;
   protected String baseUrl;
-  private JsonLoaderImpl jsonLoader;
+  private JsonLoader jsonLoader;
   private ResultSetLoader resultSetLoader;
   private final List<SchemaPath> projectedColumns;
   protected ImplicitColumns implicitColumns;
@@ -160,7 +159,7 @@ public class HttpBatchReader implements ManagedReader<SchemaNegotiator> {
         jsonBuilder.providedSchema(getSchema(negotiator));
       }
 
-      jsonLoader = (JsonLoaderImpl) jsonBuilder.build();
+      jsonLoader = jsonBuilder.build();
     } catch (Throwable t) {
 
       // Paranoia: ensure stream is closed if anything goes wrong.
