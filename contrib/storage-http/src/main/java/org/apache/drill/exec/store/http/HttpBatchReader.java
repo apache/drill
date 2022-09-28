@@ -34,6 +34,7 @@ import org.apache.drill.exec.physical.impl.scan.v3.FixedReceiver;
 import org.apache.drill.exec.physical.resultSet.ResultSetLoader;
 import org.apache.drill.exec.record.metadata.TupleMetadata;
 import org.apache.drill.exec.store.easy.json.loader.JsonLoader;
+import org.apache.drill.exec.store.easy.json.loader.JsonLoaderImpl;
 import org.apache.drill.exec.store.easy.json.loader.JsonLoaderImpl.JsonLoaderBuilder;
 import org.apache.drill.exec.store.easy.json.loader.JsonLoaderOptions;
 import org.apache.drill.exec.store.http.HttpApiConfig.PostLocation;
@@ -66,7 +67,7 @@ public class HttpBatchReader implements ManagedReader<SchemaNegotiator> {
   private final int maxRecords;
   protected final Paginator paginator;
   protected String baseUrl;
-  private JsonLoader jsonLoader;
+  private JsonLoaderImpl jsonLoader;
   private ResultSetLoader resultSetLoader;
   private final List<SchemaPath> projectedColumns;
   protected ImplicitColumns implicitColumns;
@@ -110,6 +111,9 @@ public class HttpBatchReader implements ManagedReader<SchemaNegotiator> {
       }
     };
     negotiator.setErrorContext(errorContext);
+
+    logger.debug("Executing request with url: {}", url);
+    System.out.println("Executing request: " + url);
 
     // Http client setup
     SimpleHttp http = SimpleHttp.builder()
@@ -157,7 +161,7 @@ public class HttpBatchReader implements ManagedReader<SchemaNegotiator> {
         jsonBuilder.providedSchema(getSchema(negotiator));
       }
 
-      jsonLoader = jsonBuilder.build();
+      jsonLoader = (JsonLoaderImpl) jsonBuilder.build();
     } catch (Throwable t) {
 
       // Paranoia: ensure stream is closed if anything goes wrong.
@@ -359,13 +363,32 @@ public class HttpBatchReader implements ManagedReader<SchemaNegotiator> {
       if (StringUtils.isNotEmpty(indexPaginator.getNextPageParam())) {
         indexPaginator.setNextPageValue(paginationFields.get(indexPaginator.getNextPageParam()).toString());
       }
+    } else {
+      // This covers the case of keyset/index pagination where there isn't a boolean parameter to indicate whether there are more results.
+      // In this case, we will interpret the absence of the pagination field, receiving the same value, or a null value as the marker to stop pagination.
+      if ( (!paginationFields.containsKey(indexPaginator.getIndexParam())) ||
+        paginationFields.get(indexPaginator.getIndexParam()) == null
+      ) {
+        // End pagination
+        paginator.notifyPartialPage();
+      } else {
+        // Otherwise, check to see if the field is present but empty, or contains the value from the last page.
+        // This will prevent runaway pagination calls.
+        String indexParameter = paginationFields.get(indexPaginator.getIndexParam()).toString();
+        // Empty value or the last value is the same as the current one.
+        if (StringUtils.isEmpty(indexParameter) || (StringUtils.equals(indexParameter, indexPaginator.getLastIndexValue()))) {
+          paginator.notifyPartialPage();
+        } else {
+          // Whew!  We made it... get the next page.
+          indexPaginator.setIndexValue(indexParameter);
+        }
+      }
     }
   }
 
   @Override
   public boolean next() {
     boolean result = jsonLoader.readBatch();
-
     // This code implements the index/keyset pagination.  This pagination method
     // uses a value returned in the current result set as the starting point for the
     // next page.  Some APIs will have a boolean parameter to indicate that there are
@@ -373,9 +396,12 @@ public class HttpBatchReader implements ManagedReader<SchemaNegotiator> {
     // it is necessary to grab these values from the returned data.
     if (paginator != null && paginator.getMode() == PaginatorMethod.INDEX) {
       // First check to see if the limit has been reached.  If so, mark the end of pagination.
-      if (maxRecords > 0 && (resultSetLoader.totalRowCount() > maxRecords)) {
+      long totalRowCount = resultSetLoader.totalRowCount();
+      if (maxRecords > 0 && totalRowCount >= maxRecords) {
         // End Pagination
         paginator.notifyPartialPage();
+        // Returning false here because if there is a partial page, we want the reader to stop and no further batches to be created.
+        return false;
       } else {
         populateIndexPaginator();
       }

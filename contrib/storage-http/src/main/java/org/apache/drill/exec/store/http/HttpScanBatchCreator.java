@@ -71,6 +71,7 @@ public class HttpScanBatchCreator implements BatchCreator<HttpSubScan> {
     builder.projection(subScan.columns());
     builder.providedSchema(subScan.schema());
     builder.setUserName(subScan.getUserName());
+    builder.limit(subScan.maxRecords());
 
     // Provide custom error context
     builder.errorContext(
@@ -86,9 +87,6 @@ public class HttpScanBatchCreator implements BatchCreator<HttpSubScan> {
     ReaderFactory readerFactory = new HttpReaderFactory(subScan);
     builder.setReaderFactory(readerFactory);
     builder.nullType(Types.optional(MinorType.VARCHAR));
-
-    // TODO Add page size limit here to ScanFramework Builder
-
     return builder;
   }
 
@@ -139,8 +137,9 @@ public class HttpScanBatchCreator implements BatchCreator<HttpSubScan> {
           paginatorConfig.pageSizeParam());
       } else if (paginatorConfig.getMethodType() == PaginatorMethod.INDEX) {
         paginator = new IndexPaginator(urlBuilder,
+          0,  // Page size not used for Index/Keyset pagination
           subScan.maxRecords(),
-          0, paginatorConfig.hasMoreParam(),
+          paginatorConfig.hasMoreParam(),
           paginatorConfig.indexParam(),
           paginatorConfig.nextPageParam());
       }

@@ -20,19 +20,25 @@ package org.apache.drill.exec.store.http.paginator;
 
 import okhttp3.HttpUrl.Builder;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.exec.store.http.HttpPaginatorConfig.PaginatorMethod;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 import java.util.NoSuchElementException;
 
 public class IndexPaginator extends Paginator {
 
+  private static final Logger logger = LoggerFactory.getLogger(IndexPaginator.class);
   private final String hasMoreParam;
   private final String indexParam;
   private final String nextPageParam;
 
   private String indexValue;
+  private String lastIndexValue;
   private Boolean hasMoreValue;
   private String nextPageValue;
   private int pageCount;
@@ -75,7 +81,12 @@ public class IndexPaginator extends Paginator {
   }
 
   public void setNextPageValue(String nextPageValue) {
+    this.lastIndexValue = this.nextPageValue;
     this.nextPageValue = nextPageValue;
+  }
+
+  public String getLastIndexValue() {
+    return lastIndexValue;
   }
 
   public boolean isFirstPage() {
@@ -94,13 +105,14 @@ public class IndexPaginator extends Paginator {
       throw new NoSuchElementException();
     }
 
-    if (StringUtils.isNotEmpty(nextPageValue)) {
-      // TODO figure this out...
-    } else if (StringUtils.isNotEmpty(indexValue)) {
+    if (StringUtils.isNotEmpty(indexValue)) {
       try {
-        indexValue = URLEncoder.encode(indexValue, "UTF-8");
+        indexValue = URLEncoder.encode(indexValue, StandardCharsets.UTF_8.name());
       } catch (UnsupportedEncodingException e) {
-        // Do nothing.
+        // Should never happen
+        throw UserException.internalError()
+          .message(e.getMessage())
+          .build(logger);
       }
       builder.removeAllEncodedQueryParameters(indexParam);
       builder.addQueryParameter(indexParam, indexValue);
