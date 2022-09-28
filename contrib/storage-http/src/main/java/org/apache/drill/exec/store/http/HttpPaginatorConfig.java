@@ -120,12 +120,7 @@ public class HttpPaginatorConfig {
         break;
       case INDEX:
         // Either the nextPageParam OR the indexParam must be populated
-        if (StringUtils.isEmpty(this.hasMoreParam)) {
-          throw UserException
-            .validationError()
-            .message("Invalid paginator configuration.  For INDEX pagination, the hasMoreParam must be defined.")
-            .build(logger);
-        } else if ((StringUtils.isEmpty(this.nextPageParam) && StringUtils.isNotEmpty(this.indexParam)) &&
+        if ((StringUtils.isEmpty(this.nextPageParam) && StringUtils.isNotEmpty(this.indexParam)) &&
           (StringUtils.isNotEmpty(this.nextPageParam) && StringUtils.isEmpty(this.indexParam))) {
           throw UserException
             .validationError()

@@ -111,6 +111,8 @@ public class HttpBatchReader implements ManagedReader<SchemaNegotiator> {
     };
     negotiator.setErrorContext(errorContext);
 
+    logger.debug("Executing request with url: {}", url);
+
     // Http client setup
     SimpleHttp http = SimpleHttp.builder()
       .scanDefn(subScan)
@@ -359,13 +361,32 @@ public class HttpBatchReader implements ManagedReader<SchemaNegotiator> {
       if (StringUtils.isNotEmpty(indexPaginator.getNextPageParam())) {
         indexPaginator.setNextPageValue(paginationFields.get(indexPaginator.getNextPageParam()).toString());
       }
+    } else {
+      // This covers the case of keyset/index pagination where there isn't a boolean parameter to indicate whether there are more results.
+      // In this case, we will interpret the absence of the pagination field, receiving the same value, or a null value as the marker to stop pagination.
+      if ( (!paginationFields.containsKey(indexPaginator.getIndexParam())) ||
+        paginationFields.get(indexPaginator.getIndexParam()) == null
+      ) {
+        // End pagination
+        paginator.notifyPartialPage();
+      } else {
+        // Otherwise, check to see if the field is present but empty, or contains the value from the last page.
+        // This will prevent runaway pagination calls.
+        String indexParameter = paginationFields.get(indexPaginator.getIndexParam()).toString();
+        // Empty value or the last value is the same as the current one.
+        if (StringUtils.isEmpty(indexParameter) || (StringUtils.equals(indexParameter, indexPaginator.getLastIndexValue()))) {
+          paginator.notifyPartialPage();
+        } else {
+          // Whew!  We made it... get the next page.
+          indexPaginator.setIndexValue(indexParameter);
+        }
+      }
     }
   }
 
   @Override
   public boolean next() {
     boolean result = jsonLoader.readBatch();
-
     // This code implements the index/keyset pagination.  This pagination method
     // uses a value returned in the current result set as the starting point for the
     // next page.  Some APIs will have a boolean parameter to indicate that there are
@@ -373,9 +394,12 @@ public class HttpBatchReader implements ManagedReader<SchemaNegotiator> {
     // it is necessary to grab these values from the returned data.
     if (paginator != null && paginator.getMode() == PaginatorMethod.INDEX) {
       // First check to see if the limit has been reached.  If so, mark the end of pagination.
-      if (maxRecords > 0 && (resultSetLoader.totalRowCount() > maxRecords)) {
+      long totalRowCount = resultSetLoader.totalRowCount();
+      if (maxRecords > 0 && totalRowCount >= maxRecords) {
         // End Pagination
         paginator.notifyPartialPage();
+        // Returning false here because if there is a partial page, we want the reader to stop and no further batches to be created.
+        return false;
       } else {
         populateIndexPaginator();
       }

@@ -1,0 +1,17 @@
+{
+  "results": [
+    {
+      "id": "1",
+      "properties": {
+        "company": "HubSpot"
+      },
+      "archived": false
+    }
+  ],
+  "paging": {
+    "next": {
+      "after": "2",
+      "link": "https://api.hubapi.com/crm/v3/objects/contacts?includeAssociations=true&properties=record_id&properties=company&properties=createdate&properties=email&properties=firstname&properties=lastmodifieddate&properties=lastname&properties=phone&properties=website&limit=1&after=2"
+    }
+  }
+}

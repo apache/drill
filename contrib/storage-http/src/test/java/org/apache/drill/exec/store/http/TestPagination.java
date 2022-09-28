@@ -65,7 +65,8 @@ public class TestPagination extends ClusterTest {
   private static String TEST_JSON_INDEX_PAGE2;
   private static String TEST_JSON_INDEX_PAGE3;
   private static String TEST_JSON_INDEX_PAGE4;
-
+  private static String TEST_JSON_NESTED_INDEX;
+  private static String TEST_JSON_NESTED_INDEX2;
   private static String TEST_XML_PAGE1;
   private static String TEST_XML_PAGE2;
   private static String TEST_XML_PAGE3;
@@ -88,6 +89,9 @@ public class TestPagination extends ClusterTest {
 
     TEST_JSON_INDEX_PAGE3 = Files.asCharSource(DrillFileUtils.getResourceAsFile("/data/index_response3.json"), Charsets.UTF_8).read();
     TEST_JSON_INDEX_PAGE4 = Files.asCharSource(DrillFileUtils.getResourceAsFile("/data/index_response4.json"), Charsets.UTF_8).read();
+
+    TEST_JSON_NESTED_INDEX = Files.asCharSource(DrillFileUtils.getResourceAsFile("/data/nested_pagination_fields.json"), Charsets.UTF_8).read();
+    TEST_JSON_NESTED_INDEX2 = Files.asCharSource(DrillFileUtils.getResourceAsFile("/data/nested_pagination_fields2.json"), Charsets.UTF_8).read();
 
     TEST_XML_PAGE1 = Files.asCharSource(DrillFileUtils.getResourceAsFile("/data/response_1.xml"), Charsets.UTF_8).read();
     TEST_XML_PAGE2 = Files.asCharSource(DrillFileUtils.getResourceAsFile("/data/response_2.xml"), Charsets.UTF_8).read();
@@ -167,6 +171,31 @@ public class TestPagination extends ClusterTest {
       .inputType("json")
       .build();
 
+    HttpPaginatorConfig nestedIndexPaginator = HttpPaginatorConfig.builder()
+      .indexParam("after")
+      .method("index")
+      .build();
+
+    HttpApiConfig mockJsonConfigWitNestedKeyset = HttpApiConfig.builder()
+      .url("http://localhost:8092/json")
+      .method("get")
+      .headers(headers)
+      .requireTail(false)
+      .paginator(nestedIndexPaginator)
+      .inputType("json")
+      .build();
+
+    HttpApiConfig mockJsonConfigWitNestedKeysetAndDataPath = HttpApiConfig.builder()
+      .url("http://localhost:8092/json")
+      .method("get")
+      .headers(headers)
+      .dataPath("results")
+      .requireTail(false)
+      .paginator(nestedIndexPaginator)
+      .inputType("json")
+      .build();
+
+
     HttpApiConfig mockJsonConfigWithKeysetAndDataPath = HttpApiConfig.builder()
       .url("http://localhost:8092/json")
       .method("get")
@@ -232,6 +261,8 @@ public class TestPagination extends ClusterTest {
     configs.put("csv_paginator", mockCsvConfigWithPaginator);
     configs.put("json_index", mockJsonConfigWithKeyset);
     configs.put("json_index_datapath", mockJsonConfigWithKeysetAndDataPath);
+    configs.put("nested_keyset", mockJsonConfigWitNestedKeyset);
+    configs.put("nested_keyset_and_datapath", mockJsonConfigWitNestedKeysetAndDataPath);
     configs.put("json_paginator", mockJsonConfigWithPaginator);
     configs.put("xml_paginator", mockXmlConfigWithPaginator);
     configs.put("xml_paginator_url_params", mockXmlConfigWithPaginatorAndUrlParams);
@@ -346,6 +377,27 @@ public class TestPagination extends ClusterTest {
       }
       assertEquals(2, results.size());
       assertEquals(4, count);
+    }
+  }
+  @Test
+  public void jsonQueryWithoutHasMore() throws Exception {
+    String sql = "SELECT * FROM `local`.`nested_keyset` LIMIT 4";
+    try (MockWebServer server = startServer()) {
+
+      server.enqueue(new MockResponse().setResponseCode(200).setBody(TEST_JSON_NESTED_INDEX));
+      server.enqueue(new MockResponse().setResponseCode(200).setBody(TEST_JSON_NESTED_INDEX2));
+
+      List<QueryDataBatch> results = client.queryBuilder()
+        .sql(sql)
+        .results();
+
+      int count = 0;
+      for(QueryDataBatch b : results){
+        count += b.getHeader().getRowCount();
+        b.release();
+      }
+      assertEquals(2, results.size());
+      assertEquals(2, count);
     }
   }
 
