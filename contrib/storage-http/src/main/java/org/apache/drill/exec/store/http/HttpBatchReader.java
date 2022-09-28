@@ -113,7 +113,6 @@ public class HttpBatchReader implements ManagedReader<SchemaNegotiator> {
     negotiator.setErrorContext(errorContext);
 
     logger.debug("Executing request with url: {}", url);
-    System.out.println("Executing request: " + url);
 
     // Http client setup
     SimpleHttp http = SimpleHttp.builder()
