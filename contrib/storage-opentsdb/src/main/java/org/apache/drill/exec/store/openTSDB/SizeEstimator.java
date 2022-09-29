@@ -17,6 +17,7 @@
  */
 package org.apache.drill.exec.store.openTSDB;
 
+import com.google.common.collect.MapMaker;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -25,12 +26,15 @@ import java.lang.management.ManagementFactory;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
+import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.IdentityHashMap;
 import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
 import java.util.Random;
-import java.util.concurrent.ConcurrentHashMap;
 
+// based on https://github.com/apache/spark/blob/master/core/src/main/scala/org/apache/spark/util/SizeEstimator.scala
 class SizeEstimator {
 
   private static final Logger logger = LoggerFactory.getLogger(SizeEstimator.class);
@@ -103,12 +107,18 @@ class SizeEstimator {
   private static final int FLOAT_SIZE   = 4;
   private static final int DOUBLE_SIZE  = 8;
 
+  // Fields can be primitive types, sizes are: 1, 2, 4, 8. Or fields can be pointers. The size of
+  // a pointer is 4 or 8 depending on the JVM (32-bit or 64-bit) and UseCompressedOops flag.
+  // The sizes should be in descending order, as we will use that information for fields placement.
+  private static final int MAX_FIELD_SIZE = 8;
+  private static final List<Integer> fieldSizes = new ArrayList<>();
+
   // Alignment boundary for objects
   // TODO: Is this arch dependent ?
   private static final int ALIGN_SIZE = 8;
 
   // A cache of ClassInfo objects for each class
-  private static final ConcurrentHashMap<Class<?>, ClassInfo> classInfos = new ConcurrentHashMap<>();
+  private static final Map<Class<?>, ClassInfo> classInfos = new MapMaker().weakKeys().makeMap();
 
   // Object and pointer sizes are arch dependent
   private static boolean is64bit = false;
@@ -122,6 +132,11 @@ class SizeEstimator {
   private static int objectSize = 8;
 
   static {
+    fieldSizes.add(8);
+    fieldSizes.add(4);
+    fieldSizes.add(2);
+    fieldSizes.add(1);
+
     // Sets object size, pointer size based on architecture and CompressedOops settings
     // from the JVM.
     final String arch = System.getProperty("os.arch");
@@ -285,7 +300,7 @@ class SizeEstimator {
     throw new IllegalArgumentException("illegal input for arrayLength " + obj);
   }
 
-  private static long primitiveSize(Class<?> cls) {
+  private static int primitiveSize(Class<?> cls) {
     if (cls == byte.class) {
       return BYTE_SIZE;
     } else if (cls == boolean.class) {
@@ -321,21 +336,63 @@ class SizeEstimator {
     final ClassInfo parent = getClassInfo(cls.getSuperclass());
     long shellSize = parent.getShellSize();
     LinkedList<Field> pointerFields = parent.getPointerFields();
+    final int[] sizeCount = new int[MAX_FIELD_SIZE + 1];
 
     for (Field field : cls.getDeclaredFields()) {
       if (!Modifier.isStatic(field.getModifiers())) {
         final Class<?> fieldClass = field.getType();
         if (fieldClass.isPrimitive()) {
-          shellSize += primitiveSize(fieldClass);
+          sizeCount[primitiveSize(fieldClass)] += 1;
         } else {
-          field.setAccessible(true); // Enable future get()'s on this field
-          shellSize += pointerSize;
-          pointerFields.add(0, field);
+          // Note: in Java 9+ this would be better with trySetAccessible and canAccess
+          try {
+            field.setAccessible(true); // Enable future get()'s on this field
+            pointerFields.add(0, field);
+          } catch(SecurityException se) {
+            // do nothing
+            // Java 9+ can throw InaccessibleObjectException but the class is Java 9+-only
+          } catch (RuntimeException re) {
+            if (re.getClass().getSimpleName().equals("InaccessibleObjectException")) {
+              // do nothing
+            } else {
+              throw re;
+            }
+          }
+          sizeCount[pointerSize] += 1;
         }
       }
     }
 
-    shellSize = alignSize(shellSize);
+    // Based on the simulated field layout code in Aleksey Shipilev's report:
+    // http://cr.openjdk.java.net/~shade/papers/2013-shipilev-fieldlayout-latest.pdf
+    // The code is in Figure 9.
+    // The simplified idea of field layout consists of 4 parts (see more details in the report):
+    //
+    // 1. field alignment: HotSpot lays out the fields aligned by their size.
+    // 2. object alignment: HotSpot rounds instance size up to 8 bytes
+    // 3. consistent fields layouts throughout the hierarchy: This means we should layout
+    // superclass first. And we can use superclass's shellSize as a starting point to layout the
+    // other fields in this class.
+    // 4. class alignment: HotSpot rounds field blocks up to HeapOopSize not 4 bytes, confirmed
+    // with Aleksey. see https://bugs.openjdk.java.net/browse/CODETOOLS-7901322
+    //
+    // The real world field layout is much more complicated. There are three kinds of fields
+    // order in Java 8. And we don't consider the @contended annotation introduced by Java 8.
+    // see the HotSpot classloader code, layout_fields method for more details.
+    // hg.openjdk.java.net/jdk8/jdk8/hotspot/file/tip/src/share/vm/classfile/classFileParser.cpp
+    long alignedSize = shellSize;
+    for (Integer size : fieldSizes) {
+      if (sizeCount[size] > 0) {
+        final long count = sizeCount[size];
+        // If there are internal gaps, smaller field can fit in.
+        alignedSize = Math.max(alignedSize, alignSizeUp(shellSize, size) + size * count);
+        shellSize += size * count;
+      }
+    }
+
+    // Should choose a larger size to be new shellSize and clearly alignedSize >= shellSize, and
+    // round up the instance filed blocks
+    shellSize = alignSizeUp(alignedSize, pointerSize);
 
     // Create and cache a new ClassInfo
     final ClassInfo newInfo = new ClassInfo(shellSize, pointerFields);
@@ -344,8 +401,18 @@ class SizeEstimator {
   }
 
   private static long alignSize(final long size) {
-    final long rem = size % ALIGN_SIZE;
-    return (rem == 0) ? size : (size + ALIGN_SIZE - rem);
+    return alignSizeUp(size, ALIGN_SIZE);
+  }
+
+  /**
+   * Compute aligned size. The alignSize must be 2^n, otherwise the result will be wrong.
+   * When alignSize = 2^n, alignSize - 1 = 2^n - 1. The binary representation of (alignSize - 1)
+   * will only have n trailing 1s(0b00...001..1). ~(alignSize - 1) will be 0b11..110..0. Hence,
+   * (size + alignSize - 1) & ~(alignSize - 1) will set the last n bits to zeros, which leads to
+   * multiple of alignSize.
+   */
+  private static long alignSizeUp(final long size, final int alignSize) {
+    return (size + alignSize - 1) & ~(alignSize - 1);
   }
 
   private static Long knownSize(final Object obj) {
