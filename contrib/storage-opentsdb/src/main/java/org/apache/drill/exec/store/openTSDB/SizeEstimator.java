@@ -293,6 +293,8 @@ class SizeEstimator {
       return ((int[]) obj)[index];
     } else if (obj instanceof short[]) {
       return ((short[])obj)[index];
+    } else if (obj instanceof long[]) {
+      return ((long[])obj)[index];
     } else if (obj instanceof boolean[]) {
       return ((boolean[]) obj)[index];
     } else if (obj instanceof float[]) {
@@ -314,6 +316,8 @@ class SizeEstimator {
       return ((int[]) obj).length;
     } else if (obj instanceof short[]) {
       return ((short[])obj).length;
+    } else if (obj instanceof long[]) {
+      return ((long[])obj).length;
     } else if (obj instanceof boolean[]) {
       return ((boolean[]) obj).length;
     } else if (obj instanceof float[]) {
