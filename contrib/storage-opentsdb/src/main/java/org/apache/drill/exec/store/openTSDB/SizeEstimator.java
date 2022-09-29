@@ -50,7 +50,7 @@ class SizeEstimator {
   private static class SearchState {
 
     private final IdentityHashMap<Object, Object> visited;
-    final LinkedList<Object> stack = new LinkedList<>();
+    private final LinkedList<Object> stack = new LinkedList<>();
     long size = 0L;
 
     SearchState(IdentityHashMap<Object, Object> visited) {
@@ -224,7 +224,7 @@ class SizeEstimator {
         for (Field field : classInfo.pointerFields) {
           try {
             state.enqueue(field.get(obj));
-          } catch (IllegalAccessException e) {
+          } catch (Exception e) {
             //skip this field
           }
         }
@@ -287,6 +287,20 @@ class SizeEstimator {
   private static Object arrayApply(final Object obj, final int index) {
     if (obj instanceof Object[]) {
       return ((Object[])obj)[index];
+    } else if (obj instanceof byte[]) {
+      return ((byte[]) obj)[index];
+    } else if (obj instanceof int[]) {
+      return ((int[]) obj)[index];
+    } else if (obj instanceof short[]) {
+      return ((short[])obj)[index];
+    } else if (obj instanceof boolean[]) {
+      return ((boolean[]) obj)[index];
+    } else if (obj instanceof float[]) {
+      return ((float[]) obj)[index];
+    } else if (obj instanceof double[]) {
+      return ((double[]) obj)[index];
+    } else if (obj instanceof char[]) {
+      return ((char[]) obj)[index];
     }
     throw new IllegalArgumentException("illegal input for arrayApply " + obj);
   }
@@ -294,6 +308,20 @@ class SizeEstimator {
   private static int arrayLength(final Object obj) {
     if (obj instanceof Object[]) {
       return ((Object[])obj).length;
+    } else if (obj instanceof byte[]) {
+      return ((byte[]) obj).length;
+    } else if (obj instanceof int[]) {
+      return ((int[]) obj).length;
+    } else if (obj instanceof short[]) {
+      return ((short[])obj).length;
+    } else if (obj instanceof boolean[]) {
+      return ((boolean[]) obj).length;
+    } else if (obj instanceof float[]) {
+      return ((float[]) obj).length;
+    } else if (obj instanceof double[]) {
+      return ((double[])obj).length;
+    } else if (obj instanceof char[]) {
+      return ((char[]) obj).length;
     }
     throw new IllegalArgumentException("illegal input for arrayLength " + obj);
   }
