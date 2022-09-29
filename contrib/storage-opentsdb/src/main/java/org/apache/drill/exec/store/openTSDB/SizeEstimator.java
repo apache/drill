@@ -17,7 +17,7 @@
  */
 package org.apache.drill.exec.store.openTSDB;
 
-import com.google.common.collect.MapMaker;
+import org.apache.drill.shaded.guava.com.google.common.collect.MapMaker;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -69,8 +69,7 @@ class SizeEstimator {
     }
 
     Object dequeue() {
-      Object elem = stack.removeLast();
-      return elem;
+      return stack.removeLast();
     }
   }
 
@@ -121,11 +120,8 @@ class SizeEstimator {
   private static final Map<Class<?>, ClassInfo> classInfos = new MapMaker().weakKeys().makeMap();
 
   // Object and pointer sizes are arch dependent
-  private static boolean is64bit = false;
+  private static final boolean is64bit;
 
-  // Size of an object reference
-  // Based on https://wikis.oracle.com/display/HotSpotInternals/CompressedOops
-  private static boolean isCompressedOops = false;
   private static int pointerSize = 4;
 
   // Minimum size of a java.lang.Object
@@ -141,7 +137,9 @@ class SizeEstimator {
     // from the JVM.
     final String arch = System.getProperty("os.arch");
     is64bit = arch.contains("64") || arch.contains("s390x");
-    isCompressedOops = getIsCompressedOops();
+    // Size of an object reference
+    // Based on https://wikis.oracle.com/display/HotSpotInternals/CompressedOops
+    final boolean isCompressedOops = getIsCompressedOops();
 
     objectSize = !is64bit ? 8 : (!isCompressedOops ? 16 : 12);
     pointerSize = (is64bit && !isCompressedOops) ? 8 : 4;
@@ -219,7 +217,7 @@ class SizeEstimator {
     } else {
       final Long calculatedSize = knownSize(obj);
       if (calculatedSize != null) {
-        state.size += calculatedSize.longValue();
+        state.size += calculatedSize;
       } else {
         final ClassInfo classInfo = getClassInfo(cls);
         state.size += alignSize(classInfo.shellSize);
@@ -273,7 +271,7 @@ class SizeEstimator {
                                   final HashSet<Integer> drawn, final int length) {
     long size = 0L;
     for (int i = 0; i <= ARRAY_SAMPLE_SIZE; i++) {
-      int index = 0;
+      int index;
       do {
         index = rand.nextInt(length);
       } while (drawn.contains(index));
