@@ -256,6 +256,7 @@ message QueryProfile {
   optional string queue_name = 21 [default = "-"];
   optional string queryId = 22;
   optional int32 autoLimit = 23;
+  repeated string scanned_plugins = 24;
 }
 
 message MajorFragmentProfile {
