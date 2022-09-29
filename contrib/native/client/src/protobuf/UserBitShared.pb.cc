@@ -885,7 +885,7 @@ static const ::PROTOBUF_NAMESPACE_ID::internal::DescriptorTable*const descriptor
 };
 static ::PROTOBUF_NAMESPACE_ID::internal::once_flag descriptor_table_UserBitShared_2eproto_once;
 const ::PROTOBUF_NAMESPACE_ID::internal::DescriptorTable descriptor_table_UserBitShared_2eproto = {
-  false, false, 4437, descriptor_table_protodef_UserBitShared_2eproto, "UserBitShared.proto",
+  false, false, 4437, descriptor_table_protodef_UserBitShared_2eproto, "UserBitShared.proto", 
   &descriptor_table_UserBitShared_2eproto_once, descriptor_table_UserBitShared_2eproto_deps, 3, 22,
   schemas, file_default_instances, TableStruct_UserBitShared_2eproto::offsets,
   file_level_metadata_UserBitShared_2eproto, file_level_enum_descriptors_UserBitShared_2eproto, file_level_service_descriptors_UserBitShared_2eproto,
