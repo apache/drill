@@ -24,6 +24,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.stream.Collectors;
 
 import org.apache.drill.common.exceptions.DrillRuntimeException;
 import org.apache.drill.common.exceptions.UserException;
@@ -389,7 +390,13 @@ public class QueryManager implements AutoCloseable {
     }
 
     fragmentDataMap.forEach(new OuterIter(profileBuilder));
-    //profileBuilder.setScannedPlugins(queryCtx.getScannedPlugins());
+
+    profileBuilder.addAllScannedPlugins(
+      queryCtx.getScannedPlugins()
+        .stream()
+        .map(sp -> sp.getName())
+        .collect(Collectors.toList())
+    );
 
     return profileBuilder.build();
   }
