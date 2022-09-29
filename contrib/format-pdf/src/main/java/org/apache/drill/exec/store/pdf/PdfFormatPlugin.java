@@ -21,15 +21,13 @@ package org.apache.drill.exec.store.pdf;
 import org.apache.drill.common.logical.StoragePluginConfig;
 import org.apache.drill.common.types.TypeProtos;
 import org.apache.drill.common.types.Types;
-import org.apache.drill.exec.physical.impl.scan.file.FileScanFramework.FileReaderFactory;
-import org.apache.drill.exec.physical.impl.scan.file.FileScanFramework.FileScanBuilder;
-import org.apache.drill.exec.physical.impl.scan.file.FileScanFramework.FileSchemaNegotiator;
-import org.apache.drill.exec.physical.impl.scan.framework.ManagedReader;
+import org.apache.drill.exec.physical.impl.scan.v3.file.FileReaderFactory;
+import org.apache.drill.exec.physical.impl.scan.v3.file.FileScanLifecycleBuilder;
+import org.apache.drill.exec.physical.impl.scan.v3.file.FileSchemaNegotiator;
+import org.apache.drill.exec.physical.impl.scan.v3.ManagedReader;
 import org.apache.drill.exec.server.DrillbitContext;
-import org.apache.drill.exec.server.options.OptionSet;
 import org.apache.drill.exec.store.dfs.easy.EasyFormatPlugin;
 import org.apache.drill.exec.store.dfs.easy.EasySubScan;
-import org.apache.drill.exec.store.dfs.easy.EasyFormatPlugin.ScanFrameworkVersion;
 import org.apache.hadoop.conf.Configuration;
 
 
@@ -39,16 +37,14 @@ public class PdfFormatPlugin extends EasyFormatPlugin<PdfFormatConfig> {
 
   private static class PdfReaderFactory extends FileReaderFactory {
     private final PdfBatchReader.PdfReaderConfig readerConfig;
-    private final int maxRecords;
 
-    public PdfReaderFactory(PdfBatchReader.PdfReaderConfig config, int maxRecords) {
+    public PdfReaderFactory(PdfBatchReader.PdfReaderConfig config) {
       readerConfig = config;
-      this.maxRecords = maxRecords;
     }
 
     @Override
-    public ManagedReader<? extends FileSchemaNegotiator> newReader() {
-      return new PdfBatchReader(readerConfig, maxRecords);
+    public ManagedReader newReader(FileSchemaNegotiator negotiator) {
+      return new PdfBatchReader(readerConfig, negotiator);
     }
   }
 
@@ -68,24 +64,15 @@ public class PdfFormatPlugin extends EasyFormatPlugin<PdfFormatConfig> {
       .extensions(pluginConfig.extensions())
       .fsConf(fsConf)
       .defaultName(DEFAULT_NAME)
-      .scanVersion(ScanFrameworkVersion.EVF_V1)
+      .scanVersion(ScanFrameworkVersion.EVF_V2)
       .supportsLimitPushdown(true)
       .build();
   }
 
   @Override
-  public ManagedReader<? extends FileSchemaNegotiator> newBatchReader(EasySubScan scan, OptionSet options) {
-    return new PdfBatchReader(formatConfig.getReaderConfig(this), scan.getMaxRecords());
-  }
-
-  @Override
-  protected FileScanBuilder frameworkBuilder(EasySubScan scan, OptionSet options) {
-    FileScanBuilder builder = new FileScanBuilder();
+  protected void configureScan(FileScanLifecycleBuilder builder, EasySubScan scan) {
     PdfBatchReader.PdfReaderConfig readerConfig = new PdfBatchReader.PdfReaderConfig(this);
-    builder.setReaderFactory(new PdfReaderFactory(readerConfig, scan.getMaxRecords()));
-
-    initScanBuilder(builder, scan);
     builder.nullType(Types.optional(TypeProtos.MinorType.VARCHAR));
-    return builder;
+    builder.readerFactory(new PdfReaderFactory(readerConfig));
   }
 }

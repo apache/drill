@@ -24,15 +24,15 @@ import org.apache.drill.common.AutoCloseables;
 import org.apache.drill.common.exceptions.CustomErrorContext;
 import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.common.types.TypeProtos.MinorType;
-import org.apache.drill.exec.physical.impl.scan.file.FileScanFramework;
-import org.apache.drill.exec.physical.impl.scan.framework.ManagedReader;
+import org.apache.drill.exec.physical.impl.scan.v3.ManagedReader;
+import org.apache.drill.exec.physical.impl.scan.v3.file.FileDescrip;
+import org.apache.drill.exec.physical.impl.scan.v3.file.FileSchemaNegotiator;
 import org.apache.drill.exec.physical.resultSet.ResultSetLoader;
 import org.apache.drill.exec.physical.resultSet.RowSetLoader;
 import org.apache.drill.exec.record.metadata.ColumnMetadata;
 import org.apache.drill.exec.record.metadata.SchemaBuilder;
 import org.apache.drill.exec.record.metadata.TupleMetadata;
 import org.apache.drill.exec.vector.accessor.ScalarWriter;
-import org.apache.hadoop.mapred.FileSplit;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -52,17 +52,16 @@ import java.util.Date;
 import java.util.GregorianCalendar;
 import java.util.List;
 
-public class PdfBatchReader implements ManagedReader<FileScanFramework.FileSchemaNegotiator> {
+public class PdfBatchReader implements ManagedReader {
 
   private static final Logger logger = LoggerFactory.getLogger(PdfBatchReader.class);
   private static final String NEW_FIELD_PREFIX = "field_";
-  private final int maxRecords;
 
   private final List<PdfColumnWriter> writers;
   private final PdfReaderConfig config;
   private final int startingTableIndex;
+  private final FileDescrip file;
   private PdfMetadataReader metadataReader;
-  private FileSplit split;
   private CustomErrorContext errorContext;
   private RowSetLoader rowWriter;
   private PDDocument document;
@@ -73,7 +72,7 @@ public class PdfBatchReader implements ManagedReader<FileScanFramework.FileSchem
   private int currentTableIndex;
   private List<String> firstRow;
   private PdfRowIterator rowIterator;
-  private FileScanFramework.FileSchemaNegotiator negotiator;
+  private final FileSchemaNegotiator negotiator;
   private int unregisteredColumnCount;
 
   // Tables
@@ -86,21 +85,16 @@ public class PdfBatchReader implements ManagedReader<FileScanFramework.FileSchem
     }
   }
 
-  public PdfBatchReader(PdfReaderConfig readerConfig, int maxRecords) {
-    this.maxRecords = maxRecords;
+  public PdfBatchReader(PdfReaderConfig readerConfig, FileSchemaNegotiator negotiator) {
     this.unregisteredColumnCount = 0;
     this.writers = new ArrayList<>();
     this.config = readerConfig;
     this.startingTableIndex = readerConfig.plugin.getConfig().defaultTableIndex() < 0 ? 0 : readerConfig.plugin.getConfig().defaultTableIndex();
     this.currentTableIndex = this.startingTableIndex;
     this.columnHeaders = new ArrayList<>();
-  }
 
-  @Override
-  public boolean open(FileScanFramework.FileSchemaNegotiator negotiator) {
     this.negotiator = negotiator;
-
-    split = negotiator.split();
+    this.file = negotiator.file();
     errorContext = negotiator.parentErrorContext();
     builder = new SchemaBuilder();
 
@@ -132,7 +126,7 @@ public class PdfBatchReader implements ManagedReader<FileScanFramework.FileSchem
 
     // Support provided schema
     TupleMetadata schema = null;
-    if (negotiator.hasProvidedSchema()) {
+    if (negotiator.providedSchema() != null) {
       schema = negotiator.providedSchema();
       negotiator.tableSchema(schema, false);
     } else {
@@ -143,23 +137,19 @@ public class PdfBatchReader implements ManagedReader<FileScanFramework.FileSchem
     rowWriter = loader.writer();
     metadataReader.setRowWriter(rowWriter);
     // Build the schema
-    if (negotiator.hasProvidedSchema()) {
+    if (negotiator.providedSchema() != null) {
       buildWriterListFromProvidedSchema(schema);
     } else {
       buildWriterList();
     }
     metadataReader.addImplicitColumnsToSchema();
-    return true;
   }
 
   @Override
   public boolean next() {
 
     while(!rowWriter.isFull()) {
-      if (rowWriter.limitReached(maxRecords)) {
-        // Stop reading if the limit has been reached
-        return false;
-      } else if (config.plugin.getConfig().combinePages() &&
+      if (config.plugin.getConfig().combinePages() &&
                 (!rowIterator.hasNext()) &&
                   currentTableIndex < (tables.size() - 1)) {
         // Case for end of current page but more tables exist and combinePages is set to true.
@@ -227,7 +217,7 @@ public class PdfBatchReader implements ManagedReader<FileScanFramework.FileSchem
    */
   private void openFile() {
     try {
-      InputStream fsStream = negotiator.fileSystem().openPossiblyCompressedStream(split.getPath());
+      InputStream fsStream = negotiator.file().fileSystem().openPossiblyCompressedStream(file.split().getPath());
       if (Strings.isNullOrEmpty(config.plugin.getConfig().password())) {
         document = PDDocument.load(fsStream);
       } else {
@@ -239,7 +229,7 @@ public class PdfBatchReader implements ManagedReader<FileScanFramework.FileSchem
     } catch (Exception e) {
       throw UserException
         .dataReadError(e)
-        .addContext("Failed to open open input file: %s", split.getPath().toString())
+        .addContext("Failed to open open input file: %s", file.split().getPath().toString())
         .addContext(errorContext)
         .build(logger);
     }
@@ -410,7 +400,7 @@ public class PdfBatchReader implements ManagedReader<FileScanFramework.FileSchem
   public static class DatePdfColumnWriter extends PdfColumnWriter {
     private String dateFormat;
 
-    DatePdfColumnWriter (int columnIndex, String columnName, RowSetLoader rowWriter, FileScanFramework.FileSchemaNegotiator negotiator) {
+    DatePdfColumnWriter (int columnIndex, String columnName, RowSetLoader rowWriter, FileSchemaNegotiator negotiator) {
       super(columnIndex, columnName, rowWriter.scalar(columnName));
 
       ColumnMetadata metadata = negotiator.providedSchema().metadata(columnName);
@@ -441,7 +431,7 @@ public class PdfBatchReader implements ManagedReader<FileScanFramework.FileSchem
   public static class TimePdfColumnWriter extends PdfColumnWriter {
     private String dateFormat;
 
-    TimePdfColumnWriter (int columnIndex, String columnName, RowSetLoader rowWriter, FileScanFramework.FileSchemaNegotiator negotiator) {
+    TimePdfColumnWriter (int columnIndex, String columnName, RowSetLoader rowWriter, FileSchemaNegotiator negotiator) {
       super(columnIndex, columnName, rowWriter.scalar(columnName));
 
       ColumnMetadata metadata = negotiator.providedSchema().metadata(columnName);
@@ -476,7 +466,7 @@ public class PdfBatchReader implements ManagedReader<FileScanFramework.FileSchem
       super(columnIndex, columnName, rowWriter.scalar(columnName));
     }
 
-    TimestampPdfColumnWriter (int columnIndex, String columnName, RowSetLoader rowWriter, FileScanFramework.FileSchemaNegotiator negotiator) {
+    TimestampPdfColumnWriter (int columnIndex, String columnName, RowSetLoader rowWriter, FileSchemaNegotiator negotiator) {
       super(columnIndex, columnName, rowWriter.scalar(columnName));
 
       ColumnMetadata metadata = negotiator.providedSchema().metadata(columnName);
