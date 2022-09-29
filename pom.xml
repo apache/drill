@@ -109,7 +109,7 @@
     <maven.min.version>3.6.3</maven.min.version>
     <commons.net.version>3.6</commons.net.version>
     <commons.validator.version>1.6</commons.validator.version>
-    <commons.text.version>1.6</commons.text.version>
+    <commons.text.version>1.10.0</commons.text.version>
     <protobuf.version>3.16.1</protobuf.version>
     <protostuff.version>1.7.1</protostuff.version>
     <codemodel.version>2.6</codemodel.version>

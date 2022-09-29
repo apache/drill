@@ -59,7 +59,7 @@ public class TestStringDistanceFunctions extends ClusterTest {
     double result = queryBuilder()
         .sql("select jaccard_distance( 'Big car', 'red car' ) as distance FROM (VALUES(1))")
         .singletonDouble();
-    assertEquals(0.56, result, 0.0);
+    assertEquals(0.5555555555555556, result, 0.0);
   }
 
   @Test
@@ -67,7 +67,7 @@ public class TestStringDistanceFunctions extends ClusterTest {
     double result = queryBuilder()
         .sql("select jaro_distance( 'Big car', 'red car' ) as distance FROM (VALUES(1))")
         .singletonDouble();
-    assertEquals(0.7142857142857143, result, 0.0);
+    assertEquals(0.2857142857142857, result, 0.0);
   }
 
   @Test
