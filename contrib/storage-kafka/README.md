@@ -6,7 +6,7 @@ Drill kafka storage plugin allows you to perform interactive analysis using SQL 
 Kafka-0.10 and above </p>
 
 <h4 id="Supported Message Formats">Message Formats</h4>
-Currently this plugin supports reading only Kafka messages of type <strong>JSON</strong>.
+Currently this plugin supports reading only Kafka messages of types <strong>JSON</strong> and <strong>Avro</strong>.
 
 
 <h4>Message Readers</h4>
