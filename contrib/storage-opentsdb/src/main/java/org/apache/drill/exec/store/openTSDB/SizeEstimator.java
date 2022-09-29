@@ -17,27 +17,26 @@
  */
 package org.apache.drill.exec.store.openTSDB;
 
-import org.apache.drill.exec.store.openTSDB.schema.OpenTSDBSchemaFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.management.MBeanServer;
 import java.lang.management.ManagementFactory;
-import java.lang.reflect.Array;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
-import java.util.ArrayList;
-import java.util.Collections;
+import java.util.HashSet;
 import java.util.IdentityHashMap;
 import java.util.LinkedList;
-import java.util.List;
 import java.util.Random;
 import java.util.concurrent.ConcurrentHashMap;
 
 class SizeEstimator {
 
   private static final Logger logger = LoggerFactory.getLogger(SizeEstimator.class);
+  // Estimate the size of arrays larger than ARRAY_SIZE_FOR_SAMPLING by sampling.
+  private static final int ARRAY_SIZE_FOR_SAMPLING = 400;
+  private static final int ARRAY_SAMPLE_SIZE = 100; // should be lower than ARRAY_SIZE_FOR_SAMPLING
 
   /**
    * The state of an ongoing size estimation. Contains a stack of objects to visit as well as an
@@ -78,9 +77,9 @@ class SizeEstimator {
    */
   private static class ClassInfo {
     private final long shellSize;
-    private final List<Field> pointerFields;
+    private final LinkedList<Field> pointerFields;
 
-    ClassInfo(final long shellSize, final List<Field> pointerFields) {
+    ClassInfo(final long shellSize, final LinkedList<Field> pointerFields) {
       this.shellSize = shellSize;
       this.pointerFields = pointerFields;
     }
@@ -89,7 +88,7 @@ class SizeEstimator {
       return shellSize;
     }
 
-    List<Field> getPointerFields() {
+    LinkedList<Field> getPointerFields() {
       return pointerFields;
     }
   }
@@ -125,13 +124,14 @@ class SizeEstimator {
   static {
     // Sets object size, pointer size based on architecture and CompressedOops settings
     // from the JVM.
-    is64bit = System.getProperty("os.arch").contains("64");
+    final String arch = System.getProperty("os.arch");
+    is64bit = arch.contains("64") || arch.contains("s390x");
     isCompressedOops = getIsCompressedOops();
 
     objectSize = !is64bit ? 8 : (!isCompressedOops ? 16 : 12);
     pointerSize = (is64bit && !isCompressedOops) ? 8 : 4;
     classInfos.clear();
-    classInfos.put(Object.class, new ClassInfo(objectSize, Collections.emptyList()));
+    classInfos.put(Object.class, new ClassInfo(objectSize, new LinkedList<>()));
   }
 
   private static boolean getIsCompressedOops() {
@@ -139,6 +139,11 @@ class SizeEstimator {
     // actually uses a system property instead of a SparkConf, so we'll stick with that.
     if (System.getProperty("spark.test.useCompressedOops") != null) {
       return Boolean.getBoolean("spark.test.useCompressedOops");
+    }
+
+    final String javaVendor = System.getProperty("java.vendor");
+    if (javaVendor.contains("IBM") || javaVendor.contains("OpenJ9")) {
+      return System.getProperty("java.vm.info").contains("Compressed Ref");
     }
 
     try {
@@ -162,7 +167,125 @@ class SizeEstimator {
     }
   }
 
-  private long primitiveSize(Class<?> cls) {
+  /**
+   * Estimate the number of bytes that the given object takes up on the JVM heap. The estimate
+   * includes space taken up by objects referenced by the given object, their references, and so on
+   * and so forth.
+   *
+   * This is useful for determining the amount of heap space a broadcast variable will occupy on
+   * each executor or the amount of space each object will take when caching objects in
+   * deserialized form. This is not the same as the serialized size of the object, which will
+   * typically be much smaller.
+   */
+  public static long estimate(final Object obj) {
+    return estimate(obj, new IdentityHashMap<>());
+  }
+
+  private static long estimate(final Object obj, final IdentityHashMap<Object, Object> visited) {
+    final SearchState state = new SearchState(visited);
+    state.enqueue(obj);
+    while (!state.isFinished()) {
+      visitSingleObject(state.dequeue(), state);
+    }
+    return state.size;
+  }
+
+  private static void visitSingleObject(final Object obj, final SearchState state) {
+    final Class<?> cls = obj.getClass();
+    if (cls.isArray()) {
+      visitArray(obj, cls, state);
+    } else if (cls.getName().startsWith("scala.reflect")) {
+      // Many objects in the scala.reflect package reference global reflection objects which, in
+      // turn, reference many other large global objects. Do nothing in this case.
+    } else if (obj instanceof ClassLoader || obj instanceof Class<?>) {
+      // Hadoop JobConfs created in the interpreter have a ClassLoader, which greatly confuses
+      // the size estimator since it references the whole REPL. Do nothing in this case. In
+      // general all ClassLoaders and Classes will be shared between objects anyway.
+    } else {
+      final Long calculatedSize = knownSize(obj);
+      if (calculatedSize != null) {
+        state.size += calculatedSize.longValue();
+      } else {
+        final ClassInfo classInfo = getClassInfo(cls);
+        state.size += alignSize(classInfo.shellSize);
+        for (Field field : classInfo.pointerFields) {
+          try {
+            state.enqueue(field.get(obj));
+          } catch (IllegalAccessException e) {
+            //skip this field
+          }
+        }
+      }
+    }
+  }
+
+  private static void visitArray(final Object array, final Class<?> arrayClass, final SearchState state) {
+    final long length = arrayLength(array);
+    final Class<?> elementClass = arrayClass.getComponentType();
+
+    // Arrays have object header and length field which is an integer
+    long arrSize = alignSize(objectSize + INT_SIZE);
+
+    if (elementClass.isPrimitive()) {
+      arrSize += alignSize(length * primitiveSize(elementClass));
+      state.size += arrSize;
+    } else {
+      arrSize += alignSize(length * pointerSize);
+      state.size += arrSize;
+
+      if (length <= ARRAY_SIZE_FOR_SAMPLING) {
+        int arrayIndex = 0;
+        while (arrayIndex < length) {
+          state.enqueue(arrayApply(array, arrayIndex));
+          arrayIndex += 1;
+        }
+      } else {
+        // Estimate the size of a large array by sampling elements without replacement.
+        // To exclude the shared objects that the array elements may link, sample twice
+        // and use the min one to calculate array size.
+        final Random rand = new Random(42);
+        final HashSet<Integer> drawn = new HashSet<>(2 * ARRAY_SAMPLE_SIZE);
+        final long s1 = sampleArray(array, state, rand, drawn, (int) length);
+        final long s2 = sampleArray(array, state, rand, drawn, (int) length);
+        final long size = Math.min(s1, s2);
+        state.size += Math.max(s1, s2) +
+          (size * ((length - ARRAY_SAMPLE_SIZE) / ARRAY_SAMPLE_SIZE));
+      }
+    }
+  }
+
+  private static long sampleArray(final Object array, final SearchState state, final Random rand,
+                                  final HashSet<Integer> drawn, final int length) {
+    long size = 0L;
+    for (int i = 0; i <= ARRAY_SAMPLE_SIZE; i++) {
+      int index = 0;
+      do {
+        index = rand.nextInt(length);
+      } while (drawn.contains(index));
+      drawn.add(index);
+      final Object obj = arrayApply(array, index);
+      if (obj != null) {
+        size += SizeEstimator.estimate(obj, state.visited);
+      }
+    }
+    return size;
+  }
+
+  private static Object arrayApply(final Object obj, final int index) {
+    if (obj instanceof Object[]) {
+      return ((Object[])obj)[index];
+    }
+    throw new IllegalArgumentException("illegal input for arrayApply " + obj);
+  }
+
+  private static int arrayLength(final Object obj) {
+    if (obj instanceof Object[]) {
+      return ((Object[])obj).length;
+    }
+    throw new IllegalArgumentException("illegal input for arrayLength " + obj);
+  }
+
+  private static long primitiveSize(Class<?> cls) {
     if (cls == byte.class) {
       return BYTE_SIZE;
     } else if (cls == boolean.class) {
@@ -185,8 +308,52 @@ class SizeEstimator {
     }
   }
 
-  private long alignSize(long size) {
+  /**
+   * Get or compute the ClassInfo for a given class.
+   */
+  private static ClassInfo getClassInfo(Class<?> cls) {
+    // Check whether we've already cached a ClassInfo for this class
+    final ClassInfo info = classInfos.get(cls);
+    if (info != null) {
+      return info;
+    }
+
+    final ClassInfo parent = getClassInfo(cls.getSuperclass());
+    long shellSize = parent.getShellSize();
+    LinkedList<Field> pointerFields = parent.getPointerFields();
+
+    for (Field field : cls.getDeclaredFields()) {
+      if (!Modifier.isStatic(field.getModifiers())) {
+        final Class<?> fieldClass = field.getType();
+        if (fieldClass.isPrimitive()) {
+          shellSize += primitiveSize(fieldClass);
+        } else {
+          field.setAccessible(true); // Enable future get()'s on this field
+          shellSize += pointerSize;
+          pointerFields.add(0, field);
+        }
+      }
+    }
+
+    shellSize = alignSize(shellSize);
+
+    // Create and cache a new ClassInfo
+    final ClassInfo newInfo = new ClassInfo(shellSize, pointerFields);
+    classInfos.put(cls, newInfo);
+    return newInfo;
+  }
+
+  private static long alignSize(final long size) {
     final long rem = size % ALIGN_SIZE;
     return (rem == 0) ? size : (size + ALIGN_SIZE - rem);
+  }
+
+  private static Long knownSize(final Object obj) {
+    try {
+      final Method method = obj.getClass().getMethod("estimatedSize");
+      return (Long) method.invoke(obj);
+    } catch (Exception e) {
+      return null;
+    }
   }
 }
