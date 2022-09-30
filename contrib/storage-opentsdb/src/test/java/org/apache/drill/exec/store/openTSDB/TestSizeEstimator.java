@@ -24,6 +24,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
 public class TestSizeEstimator {
@@ -54,4 +55,20 @@ public class TestSizeEstimator {
     assertTrue(size > 500);
     assertTrue(size < 1000);
   }
+
+  @Test
+  public void testArrays() {
+    assertEquals(32, SizeEstimator.estimate(new byte[10]));
+    assertEquals(40, SizeEstimator.estimate(new char[10]));
+    assertEquals(40, SizeEstimator.estimate(new short[10]));
+    assertEquals(56, SizeEstimator.estimate(new int[10]));
+    assertEquals(96, SizeEstimator.estimate(new long[10]));
+    assertEquals(56, SizeEstimator.estimate(new float[10]));
+    assertEquals(96, SizeEstimator.estimate(new double[10]));
+    assertEquals(4016, SizeEstimator.estimate(new int[1000]));
+    assertEquals(8016, SizeEstimator.estimate(new long[1000]));
+    assertEquals(56, SizeEstimator.estimate(new String[10]));
+    assertEquals(56, SizeEstimator.estimate(new Object[10]));
+  }
+
 }
