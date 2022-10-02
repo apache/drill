@@ -279,20 +279,9 @@ public class GoogleSheetsUtils {
     } else if (id.length() != 44) {
       return false;
     } else {
-      Pattern pattern = Pattern.compile("[0-9][a-zA-Z0-9_]{43}");
+      Pattern pattern = Pattern.compile("[0-9][a-zA-Z0-9_-]{43}");
       return pattern.matcher(id).find();
     }
-  }
-
-  /**
-   * Returns a Google {@link Spreadsheet} object for the given sheetID.
-   * @param service The Google Sheets service
-   * @param sheetID The sheetID for the Google sheet.  This can be obtained from the URL of your Google sheet
-   * @return A validated {@link Spreadsheet} object.
-   * @throws IOException If the Google sheet is unreachable or invalid.
-   */
-  public static Spreadsheet getSpreadsheet(Sheets service, String sheetID) throws IOException {
-    return service.spreadsheets().get(sheetID).execute();
   }
 
   /**

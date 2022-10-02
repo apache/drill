@@ -77,7 +77,7 @@ public class GoogleSheetsDrillSchema extends AbstractSchema {
   @Override
   public Table getTable(String tableName) {
     // If the tables map is empty, populate it
-    if (activeTables.isEmpty()) {
+    if (activeTables.isEmpty() && GoogleSheetsUtils.isProbableFileToken(fileToken)) {
       populateActiveTables();
     }
 
