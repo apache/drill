@@ -21,6 +21,7 @@ package org.apache.drill.exec.store.googlesheets;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.google.api.client.auth.oauth2.StoredCredential;
 import com.google.api.client.util.store.DataStore;
+import com.google.api.services.drive.Drive;
 import com.google.api.services.sheets.v4.Sheets;
 import org.apache.calcite.plan.RelOptRule;
 import org.apache.calcite.schema.SchemaPlus;
@@ -61,6 +62,7 @@ public class GoogleSheetsStoragePlugin extends AbstractStoragePlugin {
   private final OAuthTokenProvider tokenProvider;
   private DataStore<StoredCredential> dataStore;
   private Sheets service;
+  private Drive driveService;
   private TokenRegistry tokenRegistry;
   private String username;
 
@@ -212,6 +214,36 @@ public class GoogleSheetsStoragePlugin extends AbstractStoragePlugin {
       } catch (IOException | GeneralSecurityException e) {
         throw UserException.connectionError(e)
           .message("Error connecting to Googlesheets Service: " + e.getMessage())
+          .build(logger);
+      }
+    }
+  }
+
+  /**
+   * This method gets (and caches) the Google Drive Service needed for mapping Google Sheet names
+   * to file tokens.
+   * @param queryUser A {@link String} of the current query user.
+   * @return A validated and authenticated {@link Drive} instance.
+   */
+  public Drive getDriveService(String queryUser) {
+    if (driveService != null && dataStore != null) {
+      return driveService;
+    } else {
+      // Check if datastore is null and initialize if so.
+      if (dataStore == null) {
+        this.dataStore = getDataStore(queryUser);
+      }
+
+      try {
+        if (config.getAuthMode() == AuthMode.USER_TRANSLATION) {
+          driveService = GoogleSheetsUtils.getDriveService(config, dataStore, queryUser);
+        } else {
+          driveService = GoogleSheetsUtils.getDriveService(config, dataStore, SHARED_USERNAME);
+        }
+        return driveService;
+      } catch (IOException | GeneralSecurityException e) {
+        throw UserException.connectionError(e)
+          .message("Error connecting to Google Drive Service: " + e.getMessage())
           .build(logger);
       }
     }

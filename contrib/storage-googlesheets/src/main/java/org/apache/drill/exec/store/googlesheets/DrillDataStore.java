@@ -30,7 +30,6 @@ import org.slf4j.LoggerFactory;
 
 import java.io.Serializable;
 import java.nio.charset.StandardCharsets;
-import java.util.Arrays;
 
 public class DrillDataStore<V extends Serializable> extends AbstractMemoryDataStore<V> {
 
@@ -47,7 +46,6 @@ public class DrillDataStore<V extends Serializable> extends AbstractMemoryDataSt
     if (hasValidTokens(tokenTable)) {
       keyValueMap.put(tokenTable.ACCESS_TOKEN_KEY, tokenTable.getAccessToken().getBytes(StandardCharsets.UTF_8));
       keyValueMap.put(tokenTable.REFRESH_TOKEN_KEY, tokenTable.getRefreshToken().getBytes(StandardCharsets.UTF_8));
-
       if (tokenTable.getExpiresIn() != null) {
         keyValueMap.put(tokenTable.EXPIRES_IN_KEY, tokenTable.getExpiresIn().getBytes(StandardCharsets.UTF_8));
       }
@@ -60,8 +58,12 @@ public class DrillDataStore<V extends Serializable> extends AbstractMemoryDataSt
   @Override
   public void save() {
     logger.debug("Saving credentials to token table");
-    tokenTable.setAccessToken(Arrays.toString(keyValueMap.get(tokenTable.ACCESS_TOKEN_KEY)));
-    tokenTable.setRefreshToken(Arrays.toString(keyValueMap.get(tokenTable.REFRESH_TOKEN_KEY)));
+    String accessToken = new String(keyValueMap.get(tokenTable.ACCESS_TOKEN_KEY), StandardCharsets.UTF_8);
+    String refreshToken = new String(keyValueMap.get(tokenTable.REFRESH_TOKEN_KEY), StandardCharsets.UTF_8);
+    String expiresIn = new String(keyValueMap.get(tokenTable.EXPIRES_IN_KEY), StandardCharsets.UTF_8);
+    tokenTable.setAccessToken(accessToken);
+    tokenTable.setRefreshToken(refreshToken);
+    tokenTable.setExpiresIn(expiresIn);
   }
 
   /**

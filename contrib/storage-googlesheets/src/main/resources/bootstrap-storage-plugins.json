@@ -9,7 +9,7 @@
         "authorizationURL": "https://accounts.google.com/o/oauth2/auth",
         "authorizationParams": {
           "response_type": "code",
-          "scope": "https://www.googleapis.com/auth/spreadsheets"
+          "scope": "https://www.googleapis.com/auth/spreadsheets https://www.googleapis.com/auth/drive.readonly https://www.googleapis.com/auth/drive.metadata.readonly"
         }
       },
       "credentialsProvider": {
@@ -17,7 +17,7 @@
         "credentials": {
           "clientID": "<YOUR CLIENT ID>",
           "clientSecret": "<YOUR CLIENT SECRET>",
-          "tokenURI": "https://oauth2.googleapis.com/token https://www.googleapis.com/auth/drive.readonly"
+          "tokenURI": "https://oauth2.googleapis.com/token"
         },
         "userCredentials": {}
       },
