@@ -45,6 +45,7 @@ import org.apache.drill.exec.expr.fn.impl.StringFunctionHelpers;
 import org.apache.drill.exec.expr.holders.NullableVarCharHolder;
 import org.apache.drill.exec.oauth.PersistentTokenTable;
 import org.apache.drill.exec.ops.ContextInformation;
+import org.apache.drill.exec.planner.physical.PlannerSettings;
 import org.apache.drill.exec.server.DrillbitContext;
 import org.apache.drill.exec.store.StoragePlugin;
 import org.apache.drill.exec.store.StoragePluginRegistry;
@@ -848,11 +849,12 @@ public class SimpleHttp implements AutoCloseable {
                                                 DrillbitContext context,
                                                 ContextInformation info,
                                                 HttpStoragePluginConfig pluginConfig) {
+    final String QUOTING_IDENTIFIER = context.getOptionManager().getOption(PlannerSettings.QUOTING_IDENTIFIERS_KEY).string_val;
     String queryUser = info.getQueryUser();
     AliasRegistryProvider aliasRegistryProvider = context.getAliasRegistryProvider();
     AliasRegistry aliasRegistry = aliasRegistryProvider.getTableAliasesRegistry();
 
-    String actualEndpointName = aliasRegistry.getUserAliases(queryUser).get(addBackTicksToAliasName(endpoint));
+    String actualEndpointName = aliasRegistry.getUserAliases(queryUser).get(addBackTicksToAliasName(endpoint, QUOTING_IDENTIFIER));
     if (StringUtils.isEmpty(actualEndpointName)) {
       // Now check if there is a public alias for the plugin
       actualEndpointName = aliasRegistry.getPublicAliases().get(endpoint);
@@ -863,7 +865,7 @@ public class SimpleHttp implements AutoCloseable {
     }
 
     // Now remove backticks
-    actualEndpointName = removeBackTicksFromPluginName(actualEndpointName);
+    actualEndpointName = removeBackTicksFromPluginName(actualEndpointName, QUOTING_IDENTIFIER);
     HttpApiConfig endpointConfig = pluginConfig.getConnection(actualEndpointName);
     if (endpointConfig == null) {
       throw UserException.functionError()
@@ -888,6 +890,8 @@ public class SimpleHttp implements AutoCloseable {
    */
   public static HttpStoragePlugin getStoragePlugin(DrillbitContext context, ContextInformation info, String pluginName) {
     StoragePluginRegistry storage = context.getStorage();
+
+    final String QUOTING_IDENTIFIER = context.getOptionManager().getOption(PlannerSettings.QUOTING_IDENTIFIERS_KEY).string_val;
     try {
       String queryUser = info.getQueryUser();
 
@@ -895,7 +899,7 @@ public class SimpleHttp implements AutoCloseable {
       AliasRegistryProvider aliasRegistryProvider = context.getAliasRegistryProvider();
       AliasRegistry storageAliasRegistry = aliasRegistryProvider.getStorageAliasesRegistry();
 
-      String actualPluginName = storageAliasRegistry.getUserAliases(queryUser).get(addBackTicksToAliasName(pluginName));
+      String actualPluginName = storageAliasRegistry.getUserAliases(queryUser).get(addBackTicksToAliasName(pluginName, QUOTING_IDENTIFIER));
       if (StringUtils.isEmpty(actualPluginName)) {
         // Now check if there is a public alias for the plugin
         actualPluginName = storageAliasRegistry.getPublicAliases().get(pluginName);
@@ -906,7 +910,7 @@ public class SimpleHttp implements AutoCloseable {
       }
 
       // Now remove backticks
-      actualPluginName = removeBackTicksFromPluginName(actualPluginName);
+      actualPluginName = removeBackTicksFromPluginName(actualPluginName, QUOTING_IDENTIFIER);
 
       StoragePlugin pluginInstance = storage.getPlugin(actualPluginName);
       if (pluginInstance == null) {
@@ -928,20 +932,20 @@ public class SimpleHttp implements AutoCloseable {
     }
   }
 
-  public static String addBackTicksToAliasName(String plugin) {
+  public static String addBackTicksToAliasName(String plugin, String identifier) {
     plugin = plugin.trim();
-    if (! plugin.startsWith("`")) {
-      plugin = "`" + plugin;
+    if (! plugin.startsWith(identifier)) {
+      plugin = identifier + plugin;
     }
-    if (! plugin.endsWith("`")) {
-      plugin = plugin + "`";
+    if (! plugin.endsWith(identifier)) {
+      plugin = plugin + identifier;
     }
     return plugin;
   }
 
-  public static String removeBackTicksFromPluginName(String plugin) {
+  public static String removeBackTicksFromPluginName(String plugin, String identifier) {
     plugin = plugin.trim();
-    plugin = plugin.replaceAll("`", "");
+    plugin = plugin.replaceAll(identifier, "");
     return plugin;
   }
 
