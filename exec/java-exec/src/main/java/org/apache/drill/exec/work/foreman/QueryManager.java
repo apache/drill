@@ -51,6 +51,7 @@ import org.apache.drill.exec.rpc.RpcException;
 import org.apache.drill.exec.rpc.control.Controller;
 import org.apache.drill.exec.server.DrillbitContext;
 import org.apache.drill.exec.server.options.OptionList;
+import org.apache.drill.exec.store.StoragePlugin;
 import org.apache.drill.exec.store.sys.PersistentStore;
 import org.apache.drill.exec.store.sys.PersistentStoreProvider;
 import org.apache.drill.exec.work.EndpointListener;
@@ -391,12 +392,11 @@ public class QueryManager implements AutoCloseable {
 
     fragmentDataMap.forEach(new OuterIter(profileBuilder));
 
-    profileBuilder.addAllScannedPlugins(
-      queryCtx.getScannedPlugins()
-        .stream()
-        .map(sp -> sp.getName())
-        .collect(Collectors.toList())
-    );
+    List<String> scannedPlugins = queryCtx.getScannedPlugins()
+      .stream()
+      .map(StoragePlugin::getName)
+      .collect(Collectors.toList());
+    profileBuilder.addAllScannedPlugins(scannedPlugins);
 
     return profileBuilder.build();
   }

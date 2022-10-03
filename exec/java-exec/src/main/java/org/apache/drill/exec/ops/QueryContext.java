@@ -18,6 +18,7 @@
 package org.apache.drill.exec.ops;
 
 import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
@@ -422,7 +423,7 @@ public class QueryContext implements AutoCloseable, OptimizerRulesContext, Schem
    * @return The collection of plugins scanned by the executing query.
    */
   public Collection<StoragePlugin> getScannedPlugins() {
-    return scannedPlugins;
+    return scannedPlugins != null ? scannedPlugins : Collections.emptySet();
   }
 
   public void setScannedPlugins(Collection<StoragePlugin> scannedPlugins) {
