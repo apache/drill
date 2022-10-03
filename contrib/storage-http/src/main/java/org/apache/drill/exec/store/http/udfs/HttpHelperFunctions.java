@@ -155,13 +155,10 @@ public class HttpHelperFunctions {
       }
       String pluginName = parts[0], endpointName = parts[1];
 
-      plugin = org.apache.drill.exec.store.http.util.SimpleHttp.getStoragePlugin(
-        drillbitContext, contextInformation,
-        pluginName
-      );
+      plugin = org.apache.drill.exec.store.http.util.SimpleHttp.getStoragePlugin(pluginName, drillbitContext);
 
       endpointConfig = org.apache.drill.exec.store.http.util.SimpleHttp.getEndpointConfig(
-        endpointName, drillbitContext, contextInformation,
+        endpointName,
         plugin.getConfig()
       );
       stream = new org.apache.drill.exec.store.easy.json.loader.SingleElementIterator<>();

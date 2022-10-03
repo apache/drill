@@ -50,6 +50,8 @@ import org.apache.drill.common.types.TypeProtos;
 import org.apache.drill.common.types.TypeProtos.MajorType;
 import org.apache.drill.common.types.TypeProtos.MinorType;
 import org.apache.drill.common.types.Types;
+import org.apache.drill.exec.alias.AliasRegistry;
+import org.apache.drill.exec.alias.AliasRegistryProvider;
 import org.apache.drill.exec.planner.StarColumnHelper;
 import org.apache.calcite.rel.RelNode;
 import org.apache.calcite.rel.type.RelDataTypeField;
@@ -713,9 +715,87 @@ public class DrillOptiq {
         case "date_trunc": {
           return handleDateTruncFunction(args);
         }
+        case "httprequest":
+        case "http_request": {
+          final String QUOTING_IDENTIFIER = context.getPlannerSettings().getOptions().getOption(PlannerSettings.QUOTING_IDENTIFIERS_KEY).string_val;
+
+          // This code resolves aliases in the http_request function.
+          String completeRawPluginName = ((QuotedString) args.get(0)).value;
+          String username = context.getPlannerSettings().getQueryContext().getQueryUserName();
+          AliasRegistryProvider aliasRegistryProvider = context.getPlannerSettings().getQueryContext().getAliasRegistryProvider();
+          AliasRegistry storageAliasRegistry = aliasRegistryProvider.getStorageAliasesRegistry();
+          AliasRegistry tableAliasRegistry = aliasRegistryProvider.getTableAliasesRegistry();
+
+          // Split into plugin and endpoint
+          String[] parts = completeRawPluginName.split("\\.");
+          if (parts.length < 2) {
+            throw new org.apache.drill.common.exceptions.DrillRuntimeException(
+              "You must call this function with a connection name and endpoint."
+            );
+          }
+
+          String rawPluginName = addBackTicksToAliasName(parts[0], QUOTING_IDENTIFIER);
+          String rawEndpoint = addBackTicksToAliasName(parts[1], QUOTING_IDENTIFIER);
+
+
+          // Now resolve plugin name
+          String actualPluginName = storageAliasRegistry.getUserAliases(username).get(rawPluginName);
+          if (StringUtils.isEmpty(actualPluginName)) {
+            // Now check if there is a public alias for the plugin
+            actualPluginName = storageAliasRegistry.getPublicAliases().get(rawPluginName);
+            // If it is still empty, assign it the original name,
+            if (StringUtils.isEmpty(actualPluginName)) {
+              actualPluginName = rawPluginName;
+            }
+          }
+
+          // Finally remove backticks
+          actualPluginName = removeBackTicksFromPluginName(actualPluginName, QUOTING_IDENTIFIER);
+
+          // Now do the same for the endpoint name
+          String actualEndpointName = tableAliasRegistry.getUserAliases(username).get(rawEndpoint);
+          if (StringUtils.isEmpty(actualEndpointName)) {
+            // Now check if there is a public alias for the plugin
+            actualEndpointName = tableAliasRegistry.getPublicAliases().get(rawEndpoint);
+            // If it is still empty, assign it the original name,
+            if (StringUtils.isEmpty(actualEndpointName)) {
+              actualEndpointName = rawEndpoint;
+            }
+          }
+
+          // Now remove backticks
+          actualEndpointName = removeBackTicksFromPluginName(actualEndpointName, QUOTING_IDENTIFIER);
+
+          String finalPluginName = actualPluginName + "." + actualEndpointName;
+          QuotedString q = new QuotedString(finalPluginName, finalPluginName.length(), ExpressionPosition.UNKNOWN);
+
+          // Add args to new arg lists
+          List<LogicalExpression> requestArgs = new ArrayList<>();
+          requestArgs.add(q);
+          requestArgs.addAll(args.subList(1, args.size()));
+
+          return FunctionCallFactory.createExpression(functionName, requestArgs);
+        }
       }
 
       return FunctionCallFactory.createExpression(functionName, args);
+    }
+
+    public static String addBackTicksToAliasName(String plugin, String identifier) {
+      plugin = plugin.trim();
+      if (! plugin.startsWith(identifier)) {
+        plugin = identifier + plugin;
+      }
+      if (! plugin.endsWith(identifier)) {
+        plugin = plugin + identifier;
+      }
+      return plugin;
+    }
+
+    public static String removeBackTicksFromPluginName(String plugin, String identifier) {
+      plugin = plugin.trim();
+      plugin = plugin.replaceAll(identifier, "");
+      return plugin;
     }
 
     private LogicalExpression handleDateTruncFunction(final List<LogicalExpression> args) {

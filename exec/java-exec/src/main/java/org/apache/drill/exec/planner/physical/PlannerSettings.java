@@ -21,6 +21,7 @@ import org.apache.calcite.avatica.util.Quoting;
 import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.expr.fn.FunctionImplementationRegistry;
+import org.apache.drill.exec.ops.QueryContext;
 import org.apache.drill.exec.server.options.OptionManager;
 import org.apache.drill.exec.server.options.OptionValidator;
 import org.apache.drill.exec.server.options.OptionValidator.OptionDescription;
@@ -242,10 +243,17 @@ public class PlannerSettings implements Context{
 
   public OptionManager options = null;
   public FunctionImplementationRegistry functionImplementationRegistry = null;
+  public QueryContext queryContext = null;
 
-  public PlannerSettings(OptionManager options, FunctionImplementationRegistry functionImplementationRegistry){
+  @Override
+  public boolean equals(Object obj) {
+    return super.equals(obj);
+  }
+
+  public PlannerSettings(OptionManager options, FunctionImplementationRegistry functionImplementationRegistry, QueryContext queryContext){
     this.options = options;
     this.functionImplementationRegistry = functionImplementationRegistry;
+    this.queryContext = queryContext;
   }
 
   public OptionManager getOptions() {
@@ -372,6 +380,9 @@ public class PlannerSettings implements Context{
 
   public long getPlanningMemoryLimit() {
     return options.getOption(PLANNER_MEMORY_LIMIT.getOptionName()).num_val;
+  }
+  public QueryContext getQueryContext() {
+    return this.queryContext;
   }
 
   public static long getInitialPlanningMemorySize() {
