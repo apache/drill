@@ -39,9 +39,12 @@ import org.apache.drill.common.AutoCloseables;
 import org.apache.drill.common.exceptions.CustomErrorContext;
 import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.exec.ExecConstants;
+import org.apache.drill.exec.alias.AliasRegistry;
+import org.apache.drill.exec.alias.AliasRegistryProvider;
 import org.apache.drill.exec.expr.fn.impl.StringFunctionHelpers;
 import org.apache.drill.exec.expr.holders.NullableVarCharHolder;
 import org.apache.drill.exec.oauth.PersistentTokenTable;
+import org.apache.drill.exec.ops.ContextInformation;
 import org.apache.drill.exec.server.DrillbitContext;
 import org.apache.drill.exec.store.StoragePlugin;
 import org.apache.drill.exec.store.StoragePluginRegistry;
@@ -832,8 +835,36 @@ public class SimpleHttp implements AutoCloseable {
     return inputArguments;
   }
 
-  public static HttpApiConfig getEndpointConfig(String endpoint, HttpStoragePluginConfig pluginConfig) {
-    HttpApiConfig endpointConfig = pluginConfig.getConnection(endpoint);
+  /**
+   * This function is used to obtain the configuration information for a given API in the HTTP UDF.
+   * If aliasing is enabled, this function will resolve aliases for connections.
+   * @param endpoint The name of the endpoint.  Should be a {@link String}
+   * @param context The {@link DrillbitContext} from the current query.
+   * @param info {@link ContextInformation} from the current query.
+   * @param pluginConfig The {@link HttpStoragePluginConfig} the configuration from the plugin
+   * @return The {@link HttpApiConfig} corresponding with the endpoint.
+   */
+  public static HttpApiConfig getEndpointConfig(String endpoint,
+                                                DrillbitContext context,
+                                                ContextInformation info,
+                                                HttpStoragePluginConfig pluginConfig) {
+    String queryUser = info.getQueryUser();
+    AliasRegistryProvider aliasRegistryProvider = context.getAliasRegistryProvider();
+    AliasRegistry aliasRegistry = aliasRegistryProvider.getTableAliasesRegistry();
+
+    String actualEndpointName = aliasRegistry.getUserAliases(queryUser).get(addBackTicksToAliasName(endpoint));
+    if (StringUtils.isEmpty(actualEndpointName)) {
+      // Now check if there is a public alias for the plugin
+      actualEndpointName = aliasRegistry.getPublicAliases().get(endpoint);
+      // If it is still empty, assign it the original name,
+      if (StringUtils.isEmpty(actualEndpointName)) {
+        actualEndpointName = endpoint;
+      }
+    }
+
+    // Now remove backticks
+    actualEndpointName = removeBackTicksFromPluginName(actualEndpointName);
+    HttpApiConfig endpointConfig = pluginConfig.getConnection(actualEndpointName);
     if (endpointConfig == null) {
       throw UserException.functionError()
         .message("You must call this function with a valid endpoint name.")
@@ -847,10 +878,37 @@ public class SimpleHttp implements AutoCloseable {
     return endpointConfig;
   }
 
-  public static HttpStoragePlugin getStoragePlugin(DrillbitContext context, String pluginName) {
+  /**
+   * This function will return a {@link HttpStoragePlugin} for use in the HTTP UDFs.  If user or public aliases
+   * are used, the function will resolve those aliases.
+   * @param context A {@link DrillbitContext} from the current query
+   * @param info The {@link ContextInformation} from the current query.
+   * @param pluginName A {@link String} of the plugin name.  Note that the function will resolve aliases.
+   * @return A {@link HttpStoragePlugin} of the plugin.
+   */
+  public static HttpStoragePlugin getStoragePlugin(DrillbitContext context, ContextInformation info, String pluginName) {
     StoragePluginRegistry storage = context.getStorage();
     try {
-      StoragePlugin pluginInstance = storage.getPlugin(pluginName);
+      String queryUser = info.getQueryUser();
+
+      // Check for aliases
+      AliasRegistryProvider aliasRegistryProvider = context.getAliasRegistryProvider();
+      AliasRegistry storageAliasRegistry = aliasRegistryProvider.getStorageAliasesRegistry();
+
+      String actualPluginName = storageAliasRegistry.getUserAliases(queryUser).get(addBackTicksToAliasName(pluginName));
+      if (StringUtils.isEmpty(actualPluginName)) {
+        // Now check if there is a public alias for the plugin
+        actualPluginName = storageAliasRegistry.getPublicAliases().get(pluginName);
+        // If it is still empty, assign it the original name,
+        if (StringUtils.isEmpty(actualPluginName)) {
+          actualPluginName = pluginName;
+        }
+      }
+
+      // Now remove backticks
+      actualPluginName = removeBackTicksFromPluginName(actualPluginName);
+
+      StoragePlugin pluginInstance = storage.getPlugin(actualPluginName);
       if (pluginInstance == null) {
         throw UserException.functionError()
           .message(pluginName + " is not a valid plugin.")
@@ -870,6 +928,22 @@ public class SimpleHttp implements AutoCloseable {
     }
   }
 
+  public static String addBackTicksToAliasName(String plugin) {
+    plugin = plugin.trim();
+    if (! plugin.startsWith("`")) {
+      plugin = "`" + plugin;
+    }
+    if (! plugin.endsWith("`")) {
+      plugin = plugin + "`";
+    }
+    return plugin;
+  }
+
+  public static String removeBackTicksFromPluginName(String plugin) {
+    plugin = plugin.trim();
+    plugin = plugin.replaceAll("`", "");
+    return plugin;
+  }
 
   /**
    * This function makes an API call and returns a string of the parsed results. It is used in the http_get() UDF

@@ -126,6 +126,9 @@ public class HttpHelperFunctions {
     DrillbitContext drillbitContext;
 
     @Inject
+    org.apache.drill.exec.ops.ContextInformation contextInformation;
+
+    @Inject
     ResultSetLoader rsLoader;
 
     @Workspace
@@ -153,12 +156,12 @@ public class HttpHelperFunctions {
       String pluginName = parts[0], endpointName = parts[1];
 
       plugin = org.apache.drill.exec.store.http.util.SimpleHttp.getStoragePlugin(
-        drillbitContext,
+        drillbitContext, contextInformation,
         pluginName
       );
 
       endpointConfig = org.apache.drill.exec.store.http.util.SimpleHttp.getEndpointConfig(
-        endpointName,
+        endpointName, drillbitContext, contextInformation,
         plugin.getConfig()
       );
       stream = new org.apache.drill.exec.store.easy.json.loader.SingleElementIterator<>();
