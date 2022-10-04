@@ -98,7 +98,7 @@ import java.util.stream.Collectors;
  * method is the getInputStream() method which accepts a url and opens an
  * InputStream with that URL's contents.
  */
-public class SimpleHttp {
+public class SimpleHttp implements AutoCloseable {
   private static final Logger logger = LoggerFactory.getLogger(SimpleHttp.class);
   private static final int DEFAULT_TIMEOUT = 1;
   private static final Pattern URL_PARAM_REGEX = Pattern.compile("\\{(\\w+)(?:=(\\w*))?}");
@@ -969,6 +969,19 @@ public class SimpleHttp {
     // Execute the request
     Response response = client.newCall(request).execute();
     return response.body();
+  }
+
+  @Override
+  public void close() {
+    Cache cache;
+    try {
+      cache = client.cache();
+      if (cache != null) {
+        cache.close();
+      }
+    } catch (IOException e) {
+      logger.warn("Error closing cache. {}", e.getMessage());
+    }
   }
 
   /**
