@@ -767,24 +767,7 @@ public class DrillOptiq {
 
       return FunctionCallFactory.createExpression(functionName, args);
     }
-
-    public static String addBackTicksToAliasName(String plugin, String identifier) {
-      plugin = plugin.trim();
-      if (! plugin.startsWith(identifier)) {
-        plugin = identifier + plugin;
-      }
-      if (! plugin.endsWith(identifier)) {
-        plugin = plugin + identifier;
-      }
-      return plugin;
-    }
-
-    public static String removeBackTicksFromPluginName(String plugin, String identifier) {
-      plugin = plugin.trim();
-      plugin = plugin.replaceAll(identifier, "");
-      return plugin;
-    }
-
+    
     private LogicalExpression handleDateTruncFunction(final List<LogicalExpression> args) {
       // Assert that the first argument to extract is a QuotedString
       assert args.get(0) instanceof ValueExpressions.QuotedString;
