@@ -20,6 +20,7 @@ package org.apache.drill.exec.planner.physical;
 import org.apache.calcite.avatica.util.Quoting;
 import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.exec.ExecConstants;
+import org.apache.drill.exec.alias.AliasRegistryProvider;
 import org.apache.drill.exec.expr.fn.FunctionImplementationRegistry;
 import org.apache.drill.exec.ops.QueryContext;
 import org.apache.drill.exec.server.options.OptionManager;
@@ -243,17 +244,18 @@ public class PlannerSettings implements Context{
 
   public OptionManager options = null;
   public FunctionImplementationRegistry functionImplementationRegistry = null;
-  public QueryContext queryContext = null;
+  private final String queryUser;
+  private final AliasRegistryProvider aliasRegistryProvider;
 
-  @Override
-  public boolean equals(Object obj) {
-    return super.equals(obj);
-  }
 
-  public PlannerSettings(OptionManager options, FunctionImplementationRegistry functionImplementationRegistry, QueryContext queryContext){
+  public PlannerSettings(OptionManager options,
+                         FunctionImplementationRegistry functionImplementationRegistry,
+                         String queryUser,
+                         AliasRegistryProvider aliasRegistryProvider){
     this.options = options;
     this.functionImplementationRegistry = functionImplementationRegistry;
-    this.queryContext = queryContext;
+    this.queryUser = queryUser;
+    this.aliasRegistryProvider = aliasRegistryProvider;
   }
 
   public OptionManager getOptions() {
@@ -381,8 +383,12 @@ public class PlannerSettings implements Context{
   public long getPlanningMemoryLimit() {
     return options.getOption(PLANNER_MEMORY_LIMIT.getOptionName()).num_val;
   }
-  public QueryContext getQueryContext() {
-    return this.queryContext;
+  public String getQueryUser() {
+    return this.queryUser;
+  }
+
+  public AliasRegistryProvider getAliasRegistryProvider() {
+    return this.aliasRegistryProvider;
   }
 
   public static long getInitialPlanningMemorySize() {

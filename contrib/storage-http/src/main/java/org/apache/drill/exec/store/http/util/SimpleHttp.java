@@ -42,7 +42,6 @@ import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.expr.fn.impl.StringFunctionHelpers;
 import org.apache.drill.exec.expr.holders.NullableVarCharHolder;
 import org.apache.drill.exec.oauth.PersistentTokenTable;
-import org.apache.drill.exec.ops.ContextInformation;
 import org.apache.drill.exec.server.DrillbitContext;
 import org.apache.drill.exec.store.StoragePlugin;
 import org.apache.drill.exec.store.StoragePluginRegistry;
@@ -837,8 +836,6 @@ public class SimpleHttp implements AutoCloseable {
    * This function is used to obtain the configuration information for a given API in the HTTP UDF.
    * If aliasing is enabled, this function will resolve aliases for connections.
    * @param endpoint The name of the endpoint.  Should be a {@link String}
-   * @param context The {@link DrillbitContext} from the current query.
-   * @param info {@link ContextInformation} from the current query.
    * @param pluginConfig The {@link HttpStoragePluginConfig} the configuration from the plugin
    * @return The {@link HttpApiConfig} corresponding with the endpoint.
    */
@@ -886,23 +883,6 @@ public class SimpleHttp implements AutoCloseable {
         .message("Could not access plugin " + pluginName)
         .build(logger);
     }
-  }
-
-  public static String addBackTicksToAliasName(String plugin, String identifier) {
-    plugin = plugin.trim();
-    if (! plugin.startsWith(identifier)) {
-      plugin = identifier + plugin;
-    }
-    if (! plugin.endsWith(identifier)) {
-      plugin = plugin + identifier;
-    }
-    return plugin;
-  }
-
-  public static String removeBackTicksFromPluginName(String plugin, String identifier) {
-    plugin = plugin.trim();
-    plugin = plugin.replaceAll(identifier, "");
-    return plugin;
   }
 
   /**

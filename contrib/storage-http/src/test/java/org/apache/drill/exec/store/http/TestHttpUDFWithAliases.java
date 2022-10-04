@@ -63,14 +63,12 @@ public class TestHttpUDFWithAliases extends ClusterTest {
   private static AliasRegistry storageAliasesRegistry;
   private static AliasRegistry tableAliasesRegistry;
   private static final int MOCK_SERVER_PORT = 47778;
-  private static String TEST_JSON_RESPONSE;
   private static String TEST_JSON_PAGE1;
-  private static String DUMMY_URL = "http://localhost:" + MOCK_SERVER_PORT;
+  private static final String DUMMY_URL = "http://localhost:" + MOCK_SERVER_PORT;
 
   @BeforeClass
   public static void setUpBeforeClass() throws Exception {
 
-    TEST_JSON_RESPONSE = Files.asCharSource(DrillFileUtils.getResourceAsFile("/data/simple.json"), Charsets.UTF_8).read();
     TEST_JSON_PAGE1 = Files.asCharSource(DrillFileUtils.getResourceAsFile("/data/p1.json"), Charsets.UTF_8).read();
 
     cluster = ClusterFixture.bareBuilder(dirTestWatcher)
