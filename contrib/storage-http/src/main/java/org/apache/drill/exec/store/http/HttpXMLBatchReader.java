@@ -115,6 +115,9 @@ public class HttpXMLBatchReader extends HttpBatchReader {
         .addContext(errorContext)
         .build(logger);
     }
+
+    // Close cache resources
+    http.close();
     return true;
   }
 

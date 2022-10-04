@@ -146,9 +146,12 @@ public class HttpBatchReader implements ManagedReader<SchemaNegotiator> {
       // Paranoia: ensure stream is closed if anything goes wrong.
       // After this, the JSON loader will close the stream.
       AutoCloseables.closeSilently(inStream);
+      AutoCloseables.closeSilently(http);
       throw t;
     }
 
+    // Close the http client
+    http.close();
     return true;
   }
 

@@ -126,6 +126,8 @@ public class HttpCSVBatchReader extends HttpBatchReader {
     rowWriter = resultLoader.writer();
     populateWriterArray();
 
+    // Close cache resources
+    http.close();
     return true;
   }
 
