@@ -21,6 +21,7 @@ import java.io.IOException;
 import java.util.Collection;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
 
 import com.fasterxml.jackson.databind.ser.PropertyFilter;
 import com.fasterxml.jackson.databind.ser.impl.SimpleBeanPropertyFilter;
@@ -100,6 +101,7 @@ import org.apache.drill.exec.planner.physical.visitor.SwapHashJoinVisitor;
 import org.apache.drill.exec.planner.physical.visitor.TopProjectVisitor;
 import org.apache.drill.exec.planner.sql.parser.UnsupportedOperatorsVisitor;
 import org.apache.drill.exec.server.options.OptionManager;
+import org.apache.drill.exec.store.StoragePlugin;
 import org.apache.drill.exec.util.Pointer;
 import org.apache.drill.exec.work.foreman.ForemanSetupException;
 import org.apache.drill.exec.work.foreman.SqlUnsupportedException;
@@ -174,7 +176,7 @@ public class DefaultSqlHandler extends AbstractSqlHandler {
     final Prel prel = convertToPrel(drel, validatedRowType);
     logAndSetTextPlan("Drill Physical", prel, logger);
     final PhysicalOperator pop = convertToPop(prel);
-    final PhysicalPlan plan = convertToPlan(pop);
+    final PhysicalPlan plan = convertToPlan(pop, queryRelNode);
     log("Drill Plan", plan, logger);
     return plan;
   }
@@ -607,13 +609,19 @@ public class DefaultSqlHandler extends AbstractSqlHandler {
     return op;
   }
 
-  protected PhysicalPlan convertToPlan(PhysicalOperator op) {
+  protected PhysicalPlan convertToPlan(PhysicalOperator op, RelNode queryRelNode) {
+    List<String> scannedPluginNames = config.getScannedPlugins(queryRelNode)
+      .stream()
+      .map(StoragePlugin::getName)
+      .collect(Collectors.toList());
+
     PlanPropertiesBuilder propsBuilder = PlanProperties.builder();
     propsBuilder.type(PlanType.APACHE_DRILL_PHYSICAL);
     propsBuilder.version(1);
     propsBuilder.options(new JSONOptions(context.getOptions().getOptionList()));
     propsBuilder.resultMode(ResultMode.EXEC);
     propsBuilder.generator(this.getClass().getSimpleName(), "");
+    propsBuilder.scannedPluginNames(scannedPluginNames);
     PhysicalPlan plan =  new PhysicalPlan(propsBuilder.build(), getPops(op));
     return plan;
 

@@ -18,7 +18,6 @@
 package org.apache.drill.exec.ops;
 
 import java.util.Collection;
-import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
@@ -54,7 +53,6 @@ import org.apache.drill.exec.store.PartitionExplorerImpl;
 import org.apache.drill.exec.store.SchemaConfig;
 import org.apache.drill.exec.store.SchemaConfig.SchemaConfigInfoProvider;
 import org.apache.drill.exec.store.SchemaTreeProvider;
-import org.apache.drill.exec.store.StoragePlugin;
 import org.apache.drill.exec.store.StoragePluginRegistry;
 import org.apache.drill.exec.testing.ExecutionControls;
 import org.apache.drill.exec.util.Utilities;
@@ -89,7 +87,6 @@ public class QueryContext implements AutoCloseable, OptimizerRulesContext, Schem
   /** Stores constants and their holders by type */
   private final Map<String, Map<MinorType, ValueHolder>> constantValueHolderCache;
   private SqlStatementType stmtType;
-  private Collection<StoragePlugin> scannedPlugins;
 
   /*
    * Flag to indicate if close has been called, after calling close the first
@@ -417,16 +414,5 @@ public class QueryContext implements AutoCloseable, OptimizerRulesContext, Schem
 
   public AliasRegistryProvider getAliasRegistryProvider() {
     return drillbitContext.getAliasRegistryProvider();
-  }
-
-  /**
-   * @return The collection of plugins scanned by the executing query.
-   */
-  public Collection<StoragePlugin> getScannedPlugins() {
-    return scannedPlugins != null ? scannedPlugins : Collections.emptySet();
-  }
-
-  public void setScannedPlugins(Collection<StoragePlugin> scannedPlugins) {
-    this.scannedPlugins = scannedPlugins;
   }
 }

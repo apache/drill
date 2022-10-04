@@ -17,6 +17,8 @@
  */
 package org.apache.drill.common.logical;
 
+import java.util.List;
+
 import org.apache.drill.common.JSONOptions;
 import org.apache.drill.common.logical.PlanProperties.Generator.ResultMode;
 
@@ -40,6 +42,7 @@ public class PlanProperties {
    * (memory, etc.) or if this plan must still be computed.
    */
   public boolean hasResourcePlan;
+  public List<String> scannedPluginNames;
 
 //  @JsonInclude(Include.NON_NULL)
   public static class Generator {
@@ -62,7 +65,8 @@ public class PlanProperties {
                          @JsonProperty("mode") ResultMode resultMode,
                          @JsonProperty("options") JSONOptions options,
                          @JsonProperty("queue") int queue,
-                         @JsonProperty("hasResourcePlan") boolean hasResourcePlan
+                         @JsonProperty("hasResourcePlan") boolean hasResourcePlan,
+                         @JsonProperty("scannedPluginNames") List<String> scannedPluginNames
                          ) {
     this.version = version;
     this.queue = queue;
@@ -71,6 +75,7 @@ public class PlanProperties {
     this.resultMode = resultMode == null ? ResultMode.EXEC : resultMode;
     this.options = options;
     this.hasResourcePlan = hasResourcePlan;
+    this.scannedPluginNames = scannedPluginNames;
   }
 
   public static PlanPropertiesBuilder builder() {
@@ -85,6 +90,7 @@ public class PlanProperties {
     private JSONOptions options;
     private int queueNumber = 0;
     private boolean hasResourcePlan = false;
+    private List<String> scannedPluginNames;
 
     public PlanPropertiesBuilder type(PlanType type) {
       this.type = type;
@@ -126,8 +132,22 @@ public class PlanProperties {
       return this;
     }
 
+    public PlanPropertiesBuilder scannedPluginNames(List<String> scannedPluginNames) {
+      this.scannedPluginNames = scannedPluginNames;
+      return this;
+    }
+
     public PlanProperties build() {
-      return new PlanProperties(version, generator, type, mode, options, queueNumber, hasResourcePlan);
+      return new PlanProperties(
+        version,
+        generator,
+        type,
+        mode,
+        options,
+        queueNumber,
+        hasResourcePlan,
+        scannedPluginNames
+      );
     }
 
   }

@@ -24,11 +24,11 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
-import java.util.stream.Collectors;
 
 import org.apache.drill.common.exceptions.DrillRuntimeException;
 import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.common.exceptions.UserRemoteException;
+import org.apache.drill.common.logical.PlanProperties;
 import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.coord.ClusterCoordinator;
 import org.apache.drill.exec.coord.store.TransientStore;
@@ -51,7 +51,6 @@ import org.apache.drill.exec.rpc.RpcException;
 import org.apache.drill.exec.rpc.control.Controller;
 import org.apache.drill.exec.server.DrillbitContext;
 import org.apache.drill.exec.server.options.OptionList;
-import org.apache.drill.exec.store.StoragePlugin;
 import org.apache.drill.exec.store.sys.PersistentStore;
 import org.apache.drill.exec.store.sys.PersistentStoreProvider;
 import org.apache.drill.exec.work.EndpointListener;
@@ -90,6 +89,7 @@ public class QueryManager implements AutoCloseable {
 
   // the following mutable variables are used to capture ongoing query status
   private String planText;
+  private PlanProperties planProps;
   private long startTime = System.currentTimeMillis();
   private long endTime;
   private long planningEndTime;
@@ -392,11 +392,7 @@ public class QueryManager implements AutoCloseable {
 
     fragmentDataMap.forEach(new OuterIter(profileBuilder));
 
-    List<String> scannedPlugins = queryCtx.getScannedPlugins()
-      .stream()
-      .map(StoragePlugin::getName)
-      .collect(Collectors.toList());
-    profileBuilder.addAllScannedPlugins(scannedPlugins);
+    profileBuilder.addAllScannedPlugins(planProps.scannedPluginNames);
 
     return profileBuilder.build();
   }
@@ -442,6 +438,10 @@ public class QueryManager implements AutoCloseable {
 
   void setPlanText(final String planText) {
     this.planText = planText;
+  }
+
+  void setPlanProperties(PlanProperties planProps) {
+    this.planProps = planProps;
   }
 
   void markStartTime() {
