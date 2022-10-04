@@ -384,6 +384,10 @@ public class QueryManager implements AutoCloseable {
       profileBuilder.setQuery(queryText);
     }
 
+    if (planProps != null && planProps.scannedPluginNames != null ) {
+      profileBuilder.addAllScannedPlugins(planProps.scannedPluginNames);
+    }
+
     int autoLimitRowCount = queryCtx.getOptions().getOption(ExecConstants.QUERY_MAX_ROWS).num_val.intValue();
     if (autoLimitRowCount > 0) {
       profileBuilder.setAutoLimit(autoLimitRowCount);
@@ -391,8 +395,6 @@ public class QueryManager implements AutoCloseable {
     }
 
     fragmentDataMap.forEach(new OuterIter(profileBuilder));
-
-    profileBuilder.addAllScannedPlugins(planProps.scannedPluginNames);
 
     return profileBuilder.build();
   }
