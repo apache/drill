@@ -142,7 +142,7 @@ public class TestGoogleSheetsQueries extends ClusterTest {
       fail(e.getMessage());
     }
     // Makes sure that the root level plugin shows up in the information schema
-    String sql = "SELECT * FROM `INFORMATION_SCHEMA`.`SCHEMATA` WHERE SCHEMA_NAME LIKE 'googlesheets%'";
+    String sql = "SELECT * FROM `INFORMATION_SCHEMA`.`SCHEMATA` WHERE SCHEMA_NAME LIKE 'googlesheets.%'";
     RowSet results = queryBuilder().sql(sql).rowSet();
     assertTrue(results.rowCount() > 1);
     results.clear();
@@ -156,7 +156,7 @@ public class TestGoogleSheetsQueries extends ClusterTest {
       fail(e.getMessage());
     }
 
-    String sql = "SELECT * FROM `INFORMATION_SCHEMA`.`TABLES` WHERE TABLE_SCHEMA LIKE 'googlesheets%'";
+    String sql = "SELECT * FROM `INFORMATION_SCHEMA`.`TABLES` WHERE TABLE_SCHEMA LIKE 'googlesheets.%'";
     RowSet results = queryBuilder().sql(sql).rowSet();
     assertEquals(0, results.rowCount());
     results.clear();

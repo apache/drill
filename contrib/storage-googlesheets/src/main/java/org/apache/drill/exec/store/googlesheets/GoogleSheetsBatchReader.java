@@ -90,8 +90,8 @@ public class GoogleSheetsBatchReader implements ManagedReader<SchemaNegotiator> 
     this.sheetID = subScan.getScanSpec().getSheetID();
     this.sheetNames = new ArrayList<>();
     try {
-      List<Sheet> sheetList = GoogleSheetsUtils.getTabList(service, sheetID);
-      this.sheet = sheetList.get(subScan.getScanSpec().getTabIndex());
+      List<Sheet> tabList = GoogleSheetsUtils.getTabList(service, sheetID);
+      this.sheet = tabList.get(subScan.getScanSpec().getTabIndex());
     } catch (IOException e) {
       throw UserException.connectionError(e)
         .message("Could not find tab with index " + subScan.getScanSpec().getTabIndex())
