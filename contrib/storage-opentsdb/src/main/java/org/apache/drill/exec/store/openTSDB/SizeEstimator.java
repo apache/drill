@@ -35,6 +35,7 @@ import java.util.Map;
 import java.util.Random;
 
 // based on https://github.com/apache/spark/blob/master/core/src/main/scala/org/apache/spark/util/SizeEstimator.scala
+// which itself is based on https://www.infoworld.com/article/2077408/sizeof-for-java.html
 class SizeEstimator {
 
   private static final Logger logger = LoggerFactory.getLogger(SizeEstimator.class);
@@ -270,7 +271,7 @@ class SizeEstimator {
   private static long sampleArray(final Object array, final SearchState state, final Random rand,
                                   final HashSet<Integer> drawn, final int length) {
     long size = 0L;
-    for (int i = 0; i <= ARRAY_SAMPLE_SIZE; i++) {
+    for (int i = 0; i < ARRAY_SAMPLE_SIZE; i++) {
       int index;
       do {
         index = rand.nextInt(length);
