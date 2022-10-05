@@ -44,19 +44,6 @@ public class TestSizeEstimator {
   }
 
   @Test
-  public void testMetricDTO() {
-    Map<String, String> tags = new HashMap<>();
-    Map<String, String> dps = new HashMap<>();
-    tags.put("t1", "v1");
-    dps.put("dp1", "dpv1");
-    List<String> aggregateTags = new ArrayList<>();
-    TestMetricDTO dto = new TestMetricDTO("metric1", tags, aggregateTags, dps);
-    long size = SizeEstimator.estimate(dto);
-    assertTrue(size > 500);
-    assertTrue(size < 1000);
-  }
-
-  @Test
   public void testArrays() {
     assertEquals(32, SizeEstimator.estimate(new byte[10]));
     assertEquals(40, SizeEstimator.estimate(new char[10]));
@@ -69,6 +56,32 @@ public class TestSizeEstimator {
     assertEquals(8016, SizeEstimator.estimate(new long[1000]));
     assertEquals(56, SizeEstimator.estimate(new String[10]));
     assertEquals(56, SizeEstimator.estimate(new Object[10]));
+  }
+
+  @Test
+  public void testList() {
+    ArrayList<Long> list = new ArrayList<>();
+    for(int i = 0; i < 10; i++) {
+      list.add(Long.valueOf(i));
+    }
+    assertEquals(320, SizeEstimator.estimate(list));
+    for(int i = 0; i < 10; i++) {
+      list.add(Long.valueOf(i));
+    }
+    assertEquals(368, SizeEstimator.estimate(list));
+  }
+
+  @Test
+  public void testMetricDTO() {
+    Map<String, String> tags = new HashMap<>();
+    Map<String, String> dps = new HashMap<>();
+    tags.put("t1", "v1");
+    dps.put("dp1", "dpv1");
+    List<String> aggregateTags = new ArrayList<>();
+    TestMetricDTO dto = new TestMetricDTO("metric1", tags, aggregateTags, dps);
+    long size = SizeEstimator.estimate(dto);
+    assertTrue("size less then expected: " + size, size > 550);
+    assertTrue("size greater then expected: " + size, size < 800);
   }
 
 }
