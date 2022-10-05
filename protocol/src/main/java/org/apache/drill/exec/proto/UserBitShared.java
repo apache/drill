@@ -16185,6 +16185,31 @@ public final class UserBitShared {
      * @return The autoLimit.
      */
     int getAutoLimit();
+
+    /**
+     * <code>repeated string scanned_plugins = 24;</code>
+     * @return A list containing the scannedPlugins.
+     */
+    java.util.List<java.lang.String>
+        getScannedPluginsList();
+    /**
+     * <code>repeated string scanned_plugins = 24;</code>
+     * @return The count of scannedPlugins.
+     */
+    int getScannedPluginsCount();
+    /**
+     * <code>repeated string scanned_plugins = 24;</code>
+     * @param index The index of the element to return.
+     * @return The scannedPlugins at the given index.
+     */
+    java.lang.String getScannedPlugins(int index);
+    /**
+     * <code>repeated string scanned_plugins = 24;</code>
+     * @param index The index of the value to return.
+     * @return The bytes of the scannedPlugins at the given index.
+     */
+    com.google.protobuf.ByteString
+        getScannedPluginsBytes(int index);
   }
   /**
    * Protobuf type {@code exec.shared.QueryProfile}
@@ -16212,6 +16237,7 @@ public final class UserBitShared {
       optionsJson_ = "";
       queueName_ = "-";
       queryId_ = "";
+      scannedPlugins_ = com.google.protobuf.LazyStringArrayList.EMPTY;
     }
 
     @java.lang.Override
@@ -16404,6 +16430,15 @@ public final class UserBitShared {
               autoLimit_ = input.readInt32();
               break;
             }
+            case 194: {
+              com.google.protobuf.ByteString bs = input.readBytes();
+              if (!((mutable_bitField0_ & 0x00800000) != 0)) {
+                scannedPlugins_ = new com.google.protobuf.LazyStringArrayList();
+                mutable_bitField0_ |= 0x00800000;
+              }
+              scannedPlugins_.add(bs);
+              break;
+            }
             default: {
               if (!parseUnknownField(
                   input, unknownFields, extensionRegistry, tag)) {
@@ -16421,6 +16456,9 @@ public final class UserBitShared {
       } finally {
         if (((mutable_bitField0_ & 0x00000400) != 0)) {
           fragmentProfile_ = java.util.Collections.unmodifiableList(fragmentProfile_);
+        }
+        if (((mutable_bitField0_ & 0x00800000) != 0)) {
+          scannedPlugins_ = scannedPlugins_.getUnmodifiableView();
         }
         this.unknownFields = unknownFields.build();
         makeExtensionsImmutable();
@@ -17202,6 +17240,41 @@ public final class UserBitShared {
       return autoLimit_;
     }
 
+    public static final int SCANNED_PLUGINS_FIELD_NUMBER = 24;
+    private com.google.protobuf.LazyStringList scannedPlugins_;
+    /**
+     * <code>repeated string scanned_plugins = 24;</code>
+     * @return A list containing the scannedPlugins.
+     */
+    public com.google.protobuf.ProtocolStringList
+        getScannedPluginsList() {
+      return scannedPlugins_;
+    }
+    /**
+     * <code>repeated string scanned_plugins = 24;</code>
+     * @return The count of scannedPlugins.
+     */
+    public int getScannedPluginsCount() {
+      return scannedPlugins_.size();
+    }
+    /**
+     * <code>repeated string scanned_plugins = 24;</code>
+     * @param index The index of the element to return.
+     * @return The scannedPlugins at the given index.
+     */
+    public java.lang.String getScannedPlugins(int index) {
+      return scannedPlugins_.get(index);
+    }
+    /**
+     * <code>repeated string scanned_plugins = 24;</code>
+     * @param index The index of the value to return.
+     * @return The bytes of the scannedPlugins at the given index.
+     */
+    public com.google.protobuf.ByteString
+        getScannedPluginsBytes(int index) {
+      return scannedPlugins_.getByteString(index);
+    }
+
     private byte memoizedIsInitialized = -1;
     @java.lang.Override
     public final boolean isInitialized() {
@@ -17284,6 +17357,9 @@ public final class UserBitShared {
       }
       if (((bitField0_ & 0x00200000) != 0)) {
         output.writeInt32(23, autoLimit_);
+      }
+      for (int i = 0; i < scannedPlugins_.size(); i++) {
+        com.google.protobuf.GeneratedMessageV3.writeString(output, 24, scannedPlugins_.getRaw(i));
       }
       unknownFields.writeTo(output);
     }
@@ -17375,6 +17451,14 @@ public final class UserBitShared {
       if (((bitField0_ & 0x00200000) != 0)) {
         size += com.google.protobuf.CodedOutputStream
           .computeInt32Size(23, autoLimit_);
+      }
+      {
+        int dataSize = 0;
+        for (int i = 0; i < scannedPlugins_.size(); i++) {
+          dataSize += computeStringSizeNoTag(scannedPlugins_.getRaw(i));
+        }
+        size += dataSize;
+        size += 2 * getScannedPluginsList().size();
       }
       size += unknownFields.getSerializedSize();
       memoizedSize = size;
@@ -17502,6 +17586,8 @@ public final class UserBitShared {
         if (getAutoLimit()
             != other.getAutoLimit()) return false;
       }
+      if (!getScannedPluginsList()
+          .equals(other.getScannedPluginsList())) return false;
       if (!unknownFields.equals(other.unknownFields)) return false;
       return true;
     }
@@ -17609,6 +17695,10 @@ public final class UserBitShared {
       if (hasAutoLimit()) {
         hash = (37 * hash) + AUTOLIMIT_FIELD_NUMBER;
         hash = (53 * hash) + getAutoLimit();
+      }
+      if (getScannedPluginsCount() > 0) {
+        hash = (37 * hash) + SCANNED_PLUGINS_FIELD_NUMBER;
+        hash = (53 * hash) + getScannedPluginsList().hashCode();
       }
       hash = (29 * hash) + unknownFields.hashCode();
       memoizedHashCode = hash;
@@ -17804,6 +17894,8 @@ public final class UserBitShared {
         bitField0_ = (bitField0_ & ~0x00200000);
         autoLimit_ = 0;
         bitField0_ = (bitField0_ & ~0x00400000);
+        scannedPlugins_ = com.google.protobuf.LazyStringArrayList.EMPTY;
+        bitField0_ = (bitField0_ & ~0x00800000);
         return this;
       }
 
@@ -17937,6 +18029,11 @@ public final class UserBitShared {
           result.autoLimit_ = autoLimit_;
           to_bitField0_ |= 0x00200000;
         }
+        if (((bitField0_ & 0x00800000) != 0)) {
+          scannedPlugins_ = scannedPlugins_.getUnmodifiableView();
+          bitField0_ = (bitField0_ & ~0x00800000);
+        }
+        result.scannedPlugins_ = scannedPlugins_;
         result.bitField0_ = to_bitField0_;
         onBuilt();
         return result;
@@ -18097,6 +18194,16 @@ public final class UserBitShared {
         }
         if (other.hasAutoLimit()) {
           setAutoLimit(other.getAutoLimit());
+        }
+        if (!other.scannedPlugins_.isEmpty()) {
+          if (scannedPlugins_.isEmpty()) {
+            scannedPlugins_ = other.scannedPlugins_;
+            bitField0_ = (bitField0_ & ~0x00800000);
+          } else {
+            ensureScannedPluginsIsMutable();
+            scannedPlugins_.addAll(other.scannedPlugins_);
+          }
+          onChanged();
         }
         this.mergeUnknownFields(other.unknownFields);
         onChanged();
@@ -19842,6 +19949,115 @@ public final class UserBitShared {
       public Builder clearAutoLimit() {
         bitField0_ = (bitField0_ & ~0x00400000);
         autoLimit_ = 0;
+        onChanged();
+        return this;
+      }
+
+      private com.google.protobuf.LazyStringList scannedPlugins_ = com.google.protobuf.LazyStringArrayList.EMPTY;
+      private void ensureScannedPluginsIsMutable() {
+        if (!((bitField0_ & 0x00800000) != 0)) {
+          scannedPlugins_ = new com.google.protobuf.LazyStringArrayList(scannedPlugins_);
+          bitField0_ |= 0x00800000;
+         }
+      }
+      /**
+       * <code>repeated string scanned_plugins = 24;</code>
+       * @return A list containing the scannedPlugins.
+       */
+      public com.google.protobuf.ProtocolStringList
+          getScannedPluginsList() {
+        return scannedPlugins_.getUnmodifiableView();
+      }
+      /**
+       * <code>repeated string scanned_plugins = 24;</code>
+       * @return The count of scannedPlugins.
+       */
+      public int getScannedPluginsCount() {
+        return scannedPlugins_.size();
+      }
+      /**
+       * <code>repeated string scanned_plugins = 24;</code>
+       * @param index The index of the element to return.
+       * @return The scannedPlugins at the given index.
+       */
+      public java.lang.String getScannedPlugins(int index) {
+        return scannedPlugins_.get(index);
+      }
+      /**
+       * <code>repeated string scanned_plugins = 24;</code>
+       * @param index The index of the value to return.
+       * @return The bytes of the scannedPlugins at the given index.
+       */
+      public com.google.protobuf.ByteString
+          getScannedPluginsBytes(int index) {
+        return scannedPlugins_.getByteString(index);
+      }
+      /**
+       * <code>repeated string scanned_plugins = 24;</code>
+       * @param index The index to set the value at.
+       * @param value The scannedPlugins to set.
+       * @return This builder for chaining.
+       */
+      public Builder setScannedPlugins(
+          int index, java.lang.String value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  ensureScannedPluginsIsMutable();
+        scannedPlugins_.set(index, value);
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>repeated string scanned_plugins = 24;</code>
+       * @param value The scannedPlugins to add.
+       * @return This builder for chaining.
+       */
+      public Builder addScannedPlugins(
+          java.lang.String value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  ensureScannedPluginsIsMutable();
+        scannedPlugins_.add(value);
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>repeated string scanned_plugins = 24;</code>
+       * @param values The scannedPlugins to add.
+       * @return This builder for chaining.
+       */
+      public Builder addAllScannedPlugins(
+          java.lang.Iterable<java.lang.String> values) {
+        ensureScannedPluginsIsMutable();
+        com.google.protobuf.AbstractMessageLite.Builder.addAll(
+            values, scannedPlugins_);
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>repeated string scanned_plugins = 24;</code>
+       * @return This builder for chaining.
+       */
+      public Builder clearScannedPlugins() {
+        scannedPlugins_ = com.google.protobuf.LazyStringArrayList.EMPTY;
+        bitField0_ = (bitField0_ & ~0x00800000);
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>repeated string scanned_plugins = 24;</code>
+       * @param value The bytes of the scannedPlugins to add.
+       * @return This builder for chaining.
+       */
+      public Builder addScannedPluginsBytes(
+          com.google.protobuf.ByteString value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  ensureScannedPluginsIsMutable();
+        scannedPlugins_.add(value);
         onChanged();
         return this;
       }
@@ -28848,7 +29064,7 @@ public final class UserBitShared {
       "ult.QueryState\022\017\n\004user\030\004 \001(\t:\001-\022\'\n\007forem" +
       "an\030\005 \001(\0132\026.exec.DrillbitEndpoint\022\024\n\014opti" +
       "ons_json\030\006 \001(\t\022\022\n\ntotal_cost\030\007 \001(\001\022\025\n\nqu" +
-      "eue_name\030\010 \001(\t:\001-\"\306\004\n\014QueryProfile\022 \n\002id" +
+      "eue_name\030\010 \001(\t:\001-\"\337\004\n\014QueryProfile\022 \n\002id" +
       "\030\001 \001(\0132\024.exec.shared.QueryId\022$\n\004type\030\002 \001" +
       "(\0162\026.exec.shared.QueryType\022\r\n\005start\030\003 \001(" +
       "\003\022\013\n\003end\030\004 \001(\003\022\r\n\005query\030\005 \001(\t\022\014\n\004plan\030\006 " +
@@ -28863,45 +29079,45 @@ public final class UserBitShared {
       " \001(\t\022\017\n\007planEnd\030\022 \001(\003\022\024\n\014queueWaitEnd\030\023 " +
       "\001(\003\022\022\n\ntotal_cost\030\024 \001(\001\022\025\n\nqueue_name\030\025 " +
       "\001(\t:\001-\022\017\n\007queryId\030\026 \001(\t\022\021\n\tautoLimit\030\027 \001" +
-      "(\005\"t\n\024MajorFragmentProfile\022\031\n\021major_frag" +
-      "ment_id\030\001 \001(\005\022A\n\026minor_fragment_profile\030" +
-      "\002 \003(\0132!.exec.shared.MinorFragmentProfile" +
-      "\"\350\002\n\024MinorFragmentProfile\022)\n\005state\030\001 \001(\016" +
-      "2\032.exec.shared.FragmentState\022(\n\005error\030\002 " +
-      "\001(\0132\031.exec.shared.DrillPBError\022\031\n\021minor_" +
-      "fragment_id\030\003 \001(\005\0226\n\020operator_profile\030\004 " +
-      "\003(\0132\034.exec.shared.OperatorProfile\022\022\n\nsta" +
-      "rt_time\030\005 \001(\003\022\020\n\010end_time\030\006 \001(\003\022\023\n\013memor" +
-      "y_used\030\007 \001(\003\022\027\n\017max_memory_used\030\010 \001(\003\022(\n" +
-      "\010endpoint\030\t \001(\0132\026.exec.DrillbitEndpoint\022" +
-      "\023\n\013last_update\030\n \001(\003\022\025\n\rlast_progress\030\013 " +
-      "\001(\003\"\237\002\n\017OperatorProfile\0221\n\rinput_profile" +
-      "\030\001 \003(\0132\032.exec.shared.StreamProfile\022\023\n\013op" +
-      "erator_id\030\003 \001(\005\022\031\n\roperator_type\030\004 \001(\005B\002" +
-      "\030\001\022\023\n\013setup_nanos\030\005 \001(\003\022\025\n\rprocess_nanos" +
-      "\030\006 \001(\003\022#\n\033peak_local_memory_allocated\030\007 " +
-      "\001(\003\022(\n\006metric\030\010 \003(\0132\030.exec.shared.Metric" +
-      "Value\022\022\n\nwait_nanos\030\t \001(\003\022\032\n\022operator_ty" +
-      "pe_name\030\n \001(\t\"B\n\rStreamProfile\022\017\n\007record" +
-      "s\030\001 \001(\003\022\017\n\007batches\030\002 \001(\003\022\017\n\007schemas\030\003 \001(" +
-      "\003\"J\n\013MetricValue\022\021\n\tmetric_id\030\001 \001(\005\022\022\n\nl" +
-      "ong_value\030\002 \001(\003\022\024\n\014double_value\030\003 \001(\001\")\n" +
-      "\010Registry\022\035\n\003jar\030\001 \003(\0132\020.exec.shared.Jar" +
-      "\"/\n\003Jar\022\014\n\004name\030\001 \001(\t\022\032\n\022function_signat" +
-      "ure\030\002 \003(\t\"W\n\013SaslMessage\022\021\n\tmechanism\030\001 " +
-      "\001(\t\022\014\n\004data\030\002 \001(\014\022\'\n\006status\030\003 \001(\0162\027.exec" +
-      ".shared.SaslStatus*5\n\nRpcChannel\022\017\n\013BIT_" +
-      "CONTROL\020\000\022\014\n\010BIT_DATA\020\001\022\010\n\004USER\020\002*V\n\tQue" +
-      "ryType\022\007\n\003SQL\020\001\022\013\n\007LOGICAL\020\002\022\014\n\010PHYSICAL" +
-      "\020\003\022\r\n\tEXECUTION\020\004\022\026\n\022PREPARED_STATEMENT\020" +
-      "\005*\207\001\n\rFragmentState\022\013\n\007SENDING\020\000\022\027\n\023AWAI" +
-      "TING_ALLOCATION\020\001\022\013\n\007RUNNING\020\002\022\014\n\010FINISH" +
-      "ED\020\003\022\r\n\tCANCELLED\020\004\022\n\n\006FAILED\020\005\022\032\n\026CANCE" +
-      "LLATION_REQUESTED\020\006*g\n\nSaslStatus\022\020\n\014SAS" +
-      "L_UNKNOWN\020\000\022\016\n\nSASL_START\020\001\022\024\n\020SASL_IN_P" +
-      "ROGRESS\020\002\022\020\n\014SASL_SUCCESS\020\003\022\017\n\013SASL_FAIL" +
-      "ED\020\004B.\n\033org.apache.drill.exec.protoB\rUse" +
-      "rBitSharedH\001"
+      "(\005\022\027\n\017scanned_plugins\030\030 \003(\t\"t\n\024MajorFrag" +
+      "mentProfile\022\031\n\021major_fragment_id\030\001 \001(\005\022A" +
+      "\n\026minor_fragment_profile\030\002 \003(\0132!.exec.sh" +
+      "ared.MinorFragmentProfile\"\350\002\n\024MinorFragm" +
+      "entProfile\022)\n\005state\030\001 \001(\0162\032.exec.shared." +
+      "FragmentState\022(\n\005error\030\002 \001(\0132\031.exec.shar" +
+      "ed.DrillPBError\022\031\n\021minor_fragment_id\030\003 \001" +
+      "(\005\0226\n\020operator_profile\030\004 \003(\0132\034.exec.shar" +
+      "ed.OperatorProfile\022\022\n\nstart_time\030\005 \001(\003\022\020" +
+      "\n\010end_time\030\006 \001(\003\022\023\n\013memory_used\030\007 \001(\003\022\027\n" +
+      "\017max_memory_used\030\010 \001(\003\022(\n\010endpoint\030\t \001(\013" +
+      "2\026.exec.DrillbitEndpoint\022\023\n\013last_update\030" +
+      "\n \001(\003\022\025\n\rlast_progress\030\013 \001(\003\"\237\002\n\017Operato" +
+      "rProfile\0221\n\rinput_profile\030\001 \003(\0132\032.exec.s" +
+      "hared.StreamProfile\022\023\n\013operator_id\030\003 \001(\005" +
+      "\022\031\n\roperator_type\030\004 \001(\005B\002\030\001\022\023\n\013setup_nan" +
+      "os\030\005 \001(\003\022\025\n\rprocess_nanos\030\006 \001(\003\022#\n\033peak_" +
+      "local_memory_allocated\030\007 \001(\003\022(\n\006metric\030\010" +
+      " \003(\0132\030.exec.shared.MetricValue\022\022\n\nwait_n" +
+      "anos\030\t \001(\003\022\032\n\022operator_type_name\030\n \001(\t\"B" +
+      "\n\rStreamProfile\022\017\n\007records\030\001 \001(\003\022\017\n\007batc" +
+      "hes\030\002 \001(\003\022\017\n\007schemas\030\003 \001(\003\"J\n\013MetricValu" +
+      "e\022\021\n\tmetric_id\030\001 \001(\005\022\022\n\nlong_value\030\002 \001(\003" +
+      "\022\024\n\014double_value\030\003 \001(\001\")\n\010Registry\022\035\n\003ja" +
+      "r\030\001 \003(\0132\020.exec.shared.Jar\"/\n\003Jar\022\014\n\004name" +
+      "\030\001 \001(\t\022\032\n\022function_signature\030\002 \003(\t\"W\n\013Sa" +
+      "slMessage\022\021\n\tmechanism\030\001 \001(\t\022\014\n\004data\030\002 \001" +
+      "(\014\022\'\n\006status\030\003 \001(\0162\027.exec.shared.SaslSta" +
+      "tus*5\n\nRpcChannel\022\017\n\013BIT_CONTROL\020\000\022\014\n\010BI" +
+      "T_DATA\020\001\022\010\n\004USER\020\002*V\n\tQueryType\022\007\n\003SQL\020\001" +
+      "\022\013\n\007LOGICAL\020\002\022\014\n\010PHYSICAL\020\003\022\r\n\tEXECUTION" +
+      "\020\004\022\026\n\022PREPARED_STATEMENT\020\005*\207\001\n\rFragmentS" +
+      "tate\022\013\n\007SENDING\020\000\022\027\n\023AWAITING_ALLOCATION" +
+      "\020\001\022\013\n\007RUNNING\020\002\022\014\n\010FINISHED\020\003\022\r\n\tCANCELL" +
+      "ED\020\004\022\n\n\006FAILED\020\005\022\032\n\026CANCELLATION_REQUEST" +
+      "ED\020\006*g\n\nSaslStatus\022\020\n\014SASL_UNKNOWN\020\000\022\016\n\n" +
+      "SASL_START\020\001\022\024\n\020SASL_IN_PROGRESS\020\002\022\020\n\014SA" +
+      "SL_SUCCESS\020\003\022\017\n\013SASL_FAILED\020\004B.\n\033org.apa" +
+      "che.drill.exec.protoB\rUserBitSharedH\001"
     };
     descriptor = com.google.protobuf.Descriptors.FileDescriptor
       .internalBuildGeneratedFileFrom(descriptorData,
@@ -28993,7 +29209,7 @@ public final class UserBitShared {
     internal_static_exec_shared_QueryProfile_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_exec_shared_QueryProfile_descriptor,
-        new java.lang.String[] { "Id", "Type", "Start", "End", "Query", "Plan", "Foreman", "State", "TotalFragments", "FinishedFragments", "FragmentProfile", "User", "Error", "VerboseError", "ErrorId", "ErrorNode", "OptionsJson", "PlanEnd", "QueueWaitEnd", "TotalCost", "QueueName", "QueryId", "AutoLimit", });
+        new java.lang.String[] { "Id", "Type", "Start", "End", "Query", "Plan", "Foreman", "State", "TotalFragments", "FinishedFragments", "FragmentProfile", "User", "Error", "VerboseError", "ErrorId", "ErrorNode", "OptionsJson", "PlanEnd", "QueueWaitEnd", "TotalCost", "QueueName", "QueryId", "AutoLimit", "ScannedPlugins", });
     internal_static_exec_shared_MajorFragmentProfile_descriptor =
       getDescriptor().getMessageTypes().get(14);
     internal_static_exec_shared_MajorFragmentProfile_fieldAccessorTable = new

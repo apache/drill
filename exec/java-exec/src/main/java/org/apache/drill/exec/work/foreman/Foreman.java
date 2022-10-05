@@ -420,6 +420,7 @@ public class Foreman implements Runnable {
     }
     if (textPlan != null) {
       queryManager.setPlanText(textPlan.value);
+      queryManager.setPlanProperties(plan.getProperties());
     }
     queryRM.visitPhysicalPlan(work);
     queryRM.setCost(plan.totalCost());

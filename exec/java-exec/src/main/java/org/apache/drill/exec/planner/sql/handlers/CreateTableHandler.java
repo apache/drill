@@ -113,7 +113,7 @@ public class CreateTableHandler extends DefaultSqlHandler {
     Prel prel = convertToPrel(drel, newTblRelNode.getRowType(), sqlCreateTable.getPartitionColumns());
     logAndSetTextPlan("Drill Physical", prel, logger);
     PhysicalOperator pop = convertToPop(prel);
-    PhysicalPlan plan = convertToPlan(pop);
+    PhysicalPlan plan = convertToPlan(pop, queryRelNode);
     log("Drill Plan", plan, logger);
 
     String message = String.format("Creating %s table [%s].",

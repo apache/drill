@@ -220,6 +220,7 @@ PROTOBUF_ATTRIBUTE_NO_DESTROY PROTOBUF_CONSTINIT QueryInfoDefaultTypeInternal _Q
 constexpr QueryProfile::QueryProfile(
   ::PROTOBUF_NAMESPACE_ID::internal::ConstantInitialized)
   : fragment_profile_()
+  , scanned_plugins_()
   , query_(&::PROTOBUF_NAMESPACE_ID::internal::fixed_address_empty_string)
   , plan_(&::PROTOBUF_NAMESPACE_ID::internal::fixed_address_empty_string)
   , user_(nullptr)
@@ -581,6 +582,7 @@ const ::PROTOBUF_NAMESPACE_ID::uint32 TableStruct_UserBitShared_2eproto::offsets
   PROTOBUF_FIELD_OFFSET(::exec::shared::QueryProfile, queue_name_),
   PROTOBUF_FIELD_OFFSET(::exec::shared::QueryProfile, queryid_),
   PROTOBUF_FIELD_OFFSET(::exec::shared::QueryProfile, autolimit_),
+  PROTOBUF_FIELD_OFFSET(::exec::shared::QueryProfile, scanned_plugins_),
   10,
   21,
   12,
@@ -604,6 +606,7 @@ const ::PROTOBUF_NAMESPACE_ID::uint32 TableStruct_UserBitShared_2eproto::offsets
   8,
   9,
   17,
+  ~0u,
   PROTOBUF_FIELD_OFFSET(::exec::shared::MajorFragmentProfile, _has_bits_),
   PROTOBUF_FIELD_OFFSET(::exec::shared::MajorFragmentProfile, _internal_metadata_),
   ~0u,  // no _extensions_
@@ -726,15 +729,15 @@ static const ::PROTOBUF_NAMESPACE_ID::internal::MigrationSchema schemas[] PROTOB
   { 124, 132, sizeof(::exec::shared::QueryResult)},
   { 135, 144, sizeof(::exec::shared::QueryData)},
   { 148, 161, sizeof(::exec::shared::QueryInfo)},
-  { 169, 197, sizeof(::exec::shared::QueryProfile)},
-  { 220, 227, sizeof(::exec::shared::MajorFragmentProfile)},
-  { 229, 245, sizeof(::exec::shared::MinorFragmentProfile)},
-  { 256, 270, sizeof(::exec::shared::OperatorProfile)},
-  { 279, 287, sizeof(::exec::shared::StreamProfile)},
-  { 290, 298, sizeof(::exec::shared::MetricValue)},
-  { 301, -1, sizeof(::exec::shared::Registry)},
-  { 307, 314, sizeof(::exec::shared::Jar)},
-  { 316, 324, sizeof(::exec::shared::SaslMessage)},
+  { 169, 198, sizeof(::exec::shared::QueryProfile)},
+  { 222, 229, sizeof(::exec::shared::MajorFragmentProfile)},
+  { 231, 247, sizeof(::exec::shared::MinorFragmentProfile)},
+  { 258, 272, sizeof(::exec::shared::OperatorProfile)},
+  { 281, 289, sizeof(::exec::shared::StreamProfile)},
+  { 292, 300, sizeof(::exec::shared::MetricValue)},
+  { 303, -1, sizeof(::exec::shared::Registry)},
+  { 309, 316, sizeof(::exec::shared::Jar)},
+  { 318, 326, sizeof(::exec::shared::SaslMessage)},
 };
 
 static ::PROTOBUF_NAMESPACE_ID::Message const * const file_default_instances[] = {
@@ -820,7 +823,7 @@ const char descriptor_table_protodef_UserBitShared_2eproto[] PROTOBUF_SECTION_VA
   "ult.QueryState\022\017\n\004user\030\004 \001(\t:\001-\022\'\n\007forem"
   "an\030\005 \001(\0132\026.exec.DrillbitEndpoint\022\024\n\014opti"
   "ons_json\030\006 \001(\t\022\022\n\ntotal_cost\030\007 \001(\001\022\025\n\nqu"
-  "eue_name\030\010 \001(\t:\001-\"\306\004\n\014QueryProfile\022 \n\002id"
+  "eue_name\030\010 \001(\t:\001-\"\337\004\n\014QueryProfile\022 \n\002id"
   "\030\001 \001(\0132\024.exec.shared.QueryId\022$\n\004type\030\002 \001"
   "(\0162\026.exec.shared.QueryType\022\r\n\005start\030\003 \001("
   "\003\022\013\n\003end\030\004 \001(\003\022\r\n\005query\030\005 \001(\t\022\014\n\004plan\030\006 "
@@ -835,45 +838,45 @@ const char descriptor_table_protodef_UserBitShared_2eproto[] PROTOBUF_SECTION_VA
   " \001(\t\022\017\n\007planEnd\030\022 \001(\003\022\024\n\014queueWaitEnd\030\023 "
   "\001(\003\022\022\n\ntotal_cost\030\024 \001(\001\022\025\n\nqueue_name\030\025 "
   "\001(\t:\001-\022\017\n\007queryId\030\026 \001(\t\022\021\n\tautoLimit\030\027 \001"
-  "(\005\"t\n\024MajorFragmentProfile\022\031\n\021major_frag"
-  "ment_id\030\001 \001(\005\022A\n\026minor_fragment_profile\030"
-  "\002 \003(\0132!.exec.shared.MinorFragmentProfile"
-  "\"\350\002\n\024MinorFragmentProfile\022)\n\005state\030\001 \001(\016"
-  "2\032.exec.shared.FragmentState\022(\n\005error\030\002 "
-  "\001(\0132\031.exec.shared.DrillPBError\022\031\n\021minor_"
-  "fragment_id\030\003 \001(\005\0226\n\020operator_profile\030\004 "
-  "\003(\0132\034.exec.shared.OperatorProfile\022\022\n\nsta"
-  "rt_time\030\005 \001(\003\022\020\n\010end_time\030\006 \001(\003\022\023\n\013memor"
-  "y_used\030\007 \001(\003\022\027\n\017max_memory_used\030\010 \001(\003\022(\n"
-  "\010endpoint\030\t \001(\0132\026.exec.DrillbitEndpoint\022"
-  "\023\n\013last_update\030\n \001(\003\022\025\n\rlast_progress\030\013 "
-  "\001(\003\"\237\002\n\017OperatorProfile\0221\n\rinput_profile"
-  "\030\001 \003(\0132\032.exec.shared.StreamProfile\022\023\n\013op"
-  "erator_id\030\003 \001(\005\022\031\n\roperator_type\030\004 \001(\005B\002"
-  "\030\001\022\023\n\013setup_nanos\030\005 \001(\003\022\025\n\rprocess_nanos"
-  "\030\006 \001(\003\022#\n\033peak_local_memory_allocated\030\007 "
-  "\001(\003\022(\n\006metric\030\010 \003(\0132\030.exec.shared.Metric"
-  "Value\022\022\n\nwait_nanos\030\t \001(\003\022\032\n\022operator_ty"
-  "pe_name\030\n \001(\t\"B\n\rStreamProfile\022\017\n\007record"
-  "s\030\001 \001(\003\022\017\n\007batches\030\002 \001(\003\022\017\n\007schemas\030\003 \001("
-  "\003\"J\n\013MetricValue\022\021\n\tmetric_id\030\001 \001(\005\022\022\n\nl"
-  "ong_value\030\002 \001(\003\022\024\n\014double_value\030\003 \001(\001\")\n"
-  "\010Registry\022\035\n\003jar\030\001 \003(\0132\020.exec.shared.Jar"
-  "\"/\n\003Jar\022\014\n\004name\030\001 \001(\t\022\032\n\022function_signat"
-  "ure\030\002 \003(\t\"W\n\013SaslMessage\022\021\n\tmechanism\030\001 "
-  "\001(\t\022\014\n\004data\030\002 \001(\014\022\'\n\006status\030\003 \001(\0162\027.exec"
-  ".shared.SaslStatus*5\n\nRpcChannel\022\017\n\013BIT_"
-  "CONTROL\020\000\022\014\n\010BIT_DATA\020\001\022\010\n\004USER\020\002*V\n\tQue"
-  "ryType\022\007\n\003SQL\020\001\022\013\n\007LOGICAL\020\002\022\014\n\010PHYSICAL"
-  "\020\003\022\r\n\tEXECUTION\020\004\022\026\n\022PREPARED_STATEMENT\020"
-  "\005*\207\001\n\rFragmentState\022\013\n\007SENDING\020\000\022\027\n\023AWAI"
-  "TING_ALLOCATION\020\001\022\013\n\007RUNNING\020\002\022\014\n\010FINISH"
-  "ED\020\003\022\r\n\tCANCELLED\020\004\022\n\n\006FAILED\020\005\022\032\n\026CANCE"
-  "LLATION_REQUESTED\020\006*g\n\nSaslStatus\022\020\n\014SAS"
-  "L_UNKNOWN\020\000\022\016\n\nSASL_START\020\001\022\024\n\020SASL_IN_P"
-  "ROGRESS\020\002\022\020\n\014SASL_SUCCESS\020\003\022\017\n\013SASL_FAIL"
-  "ED\020\004B.\n\033org.apache.drill.exec.protoB\rUse"
-  "rBitSharedH\001"
+  "(\005\022\027\n\017scanned_plugins\030\030 \003(\t\"t\n\024MajorFrag"
+  "mentProfile\022\031\n\021major_fragment_id\030\001 \001(\005\022A"
+  "\n\026minor_fragment_profile\030\002 \003(\0132!.exec.sh"
+  "ared.MinorFragmentProfile\"\350\002\n\024MinorFragm"
+  "entProfile\022)\n\005state\030\001 \001(\0162\032.exec.shared."
+  "FragmentState\022(\n\005error\030\002 \001(\0132\031.exec.shar"
+  "ed.DrillPBError\022\031\n\021minor_fragment_id\030\003 \001"
+  "(\005\0226\n\020operator_profile\030\004 \003(\0132\034.exec.shar"
+  "ed.OperatorProfile\022\022\n\nstart_time\030\005 \001(\003\022\020"
+  "\n\010end_time\030\006 \001(\003\022\023\n\013memory_used\030\007 \001(\003\022\027\n"
+  "\017max_memory_used\030\010 \001(\003\022(\n\010endpoint\030\t \001(\013"
+  "2\026.exec.DrillbitEndpoint\022\023\n\013last_update\030"
+  "\n \001(\003\022\025\n\rlast_progress\030\013 \001(\003\"\237\002\n\017Operato"
+  "rProfile\0221\n\rinput_profile\030\001 \003(\0132\032.exec.s"
+  "hared.StreamProfile\022\023\n\013operator_id\030\003 \001(\005"
+  "\022\031\n\roperator_type\030\004 \001(\005B\002\030\001\022\023\n\013setup_nan"
+  "os\030\005 \001(\003\022\025\n\rprocess_nanos\030\006 \001(\003\022#\n\033peak_"
+  "local_memory_allocated\030\007 \001(\003\022(\n\006metric\030\010"
+  " \003(\0132\030.exec.shared.MetricValue\022\022\n\nwait_n"
+  "anos\030\t \001(\003\022\032\n\022operator_type_name\030\n \001(\t\"B"
+  "\n\rStreamProfile\022\017\n\007records\030\001 \001(\003\022\017\n\007batc"
+  "hes\030\002 \001(\003\022\017\n\007schemas\030\003 \001(\003\"J\n\013MetricValu"
+  "e\022\021\n\tmetric_id\030\001 \001(\005\022\022\n\nlong_value\030\002 \001(\003"
+  "\022\024\n\014double_value\030\003 \001(\001\")\n\010Registry\022\035\n\003ja"
+  "r\030\001 \003(\0132\020.exec.shared.Jar\"/\n\003Jar\022\014\n\004name"
+  "\030\001 \001(\t\022\032\n\022function_signature\030\002 \003(\t\"W\n\013Sa"
+  "slMessage\022\021\n\tmechanism\030\001 \001(\t\022\014\n\004data\030\002 \001"
+  "(\014\022\'\n\006status\030\003 \001(\0162\027.exec.shared.SaslSta"
+  "tus*5\n\nRpcChannel\022\017\n\013BIT_CONTROL\020\000\022\014\n\010BI"
+  "T_DATA\020\001\022\010\n\004USER\020\002*V\n\tQueryType\022\007\n\003SQL\020\001"
+  "\022\013\n\007LOGICAL\020\002\022\014\n\010PHYSICAL\020\003\022\r\n\tEXECUTION"
+  "\020\004\022\026\n\022PREPARED_STATEMENT\020\005*\207\001\n\rFragmentS"
+  "tate\022\013\n\007SENDING\020\000\022\027\n\023AWAITING_ALLOCATION"
+  "\020\001\022\013\n\007RUNNING\020\002\022\014\n\010FINISHED\020\003\022\r\n\tCANCELL"
+  "ED\020\004\022\n\n\006FAILED\020\005\022\032\n\026CANCELLATION_REQUEST"
+  "ED\020\006*g\n\nSaslStatus\022\020\n\014SASL_UNKNOWN\020\000\022\016\n\n"
+  "SASL_START\020\001\022\024\n\020SASL_IN_PROGRESS\020\002\022\020\n\014SA"
+  "SL_SUCCESS\020\003\022\017\n\013SASL_FAILED\020\004B.\n\033org.apa"
+  "che.drill.exec.protoB\rUserBitSharedH\001"
   ;
 static const ::PROTOBUF_NAMESPACE_ID::internal::DescriptorTable*const descriptor_table_UserBitShared_2eproto_deps[3] = {
   &::descriptor_table_Coordination_2eproto,
@@ -882,7 +885,7 @@ static const ::PROTOBUF_NAMESPACE_ID::internal::DescriptorTable*const descriptor
 };
 static ::PROTOBUF_NAMESPACE_ID::internal::once_flag descriptor_table_UserBitShared_2eproto_once;
 const ::PROTOBUF_NAMESPACE_ID::internal::DescriptorTable descriptor_table_UserBitShared_2eproto = {
-  false, false, 4412, descriptor_table_protodef_UserBitShared_2eproto, "UserBitShared.proto", 
+  false, false, 4437, descriptor_table_protodef_UserBitShared_2eproto, "UserBitShared.proto", 
   &descriptor_table_UserBitShared_2eproto_once, descriptor_table_UserBitShared_2eproto_deps, 3, 22,
   schemas, file_default_instances, TableStruct_UserBitShared_2eproto::offsets,
   file_level_metadata_UserBitShared_2eproto, file_level_enum_descriptors_UserBitShared_2eproto, file_level_service_descriptors_UserBitShared_2eproto,
@@ -5502,7 +5505,8 @@ const ::PROTOBUF_NAMESPACE_ID::internal::LazyString QueryProfile::_i_give_permis
 const ::PROTOBUF_NAMESPACE_ID::internal::LazyString QueryProfile::_i_give_permission_to_break_this_code_default_queue_name_{{{"-", 1}}, {nullptr}};
 QueryProfile::QueryProfile(::PROTOBUF_NAMESPACE_ID::Arena* arena)
   : ::PROTOBUF_NAMESPACE_ID::Message(arena),
-  fragment_profile_(arena) {
+  fragment_profile_(arena),
+  scanned_plugins_(arena) {
   SharedCtor();
   RegisterArenaDtor(arena);
   // @@protoc_insertion_point(arena_constructor:exec.shared.QueryProfile)
@@ -5510,7 +5514,8 @@ QueryProfile::QueryProfile(::PROTOBUF_NAMESPACE_ID::Arena* arena)
 QueryProfile::QueryProfile(const QueryProfile& from)
   : ::PROTOBUF_NAMESPACE_ID::Message(),
       _has_bits_(from._has_bits_),
-      fragment_profile_(from.fragment_profile_) {
+      fragment_profile_(from.fragment_profile_),
+      scanned_plugins_(from.scanned_plugins_) {
   _internal_metadata_.MergeFrom<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>(from._internal_metadata_);
   query_.UnsafeSetDefault(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited());
   if (from._internal_has_query()) {
@@ -5635,6 +5640,7 @@ void QueryProfile::Clear() {
   (void) cached_has_bits;
 
   fragment_profile_.Clear();
+  scanned_plugins_.Clear();
   cached_has_bits = _has_bits_[0];
   if (cached_has_bits & 0x000000ffu) {
     if (cached_has_bits & 0x00000001u) {
@@ -5924,6 +5930,22 @@ const char* QueryProfile::_InternalParse(const char* ptr, ::PROTOBUF_NAMESPACE_I
           CHK_(ptr);
         } else goto handle_unusual;
         continue;
+      // repeated string scanned_plugins = 24;
+      case 24:
+        if (PROTOBUF_PREDICT_TRUE(static_cast<::PROTOBUF_NAMESPACE_ID::uint8>(tag) == 194)) {
+          ptr -= 2;
+          do {
+            ptr += 2;
+            auto str = _internal_add_scanned_plugins();
+            ptr = ::PROTOBUF_NAMESPACE_ID::internal::InlineGreedyStringParser(str, ptr, ctx);
+            #ifndef NDEBUG
+            ::PROTOBUF_NAMESPACE_ID::internal::VerifyUTF8(str, "exec.shared.QueryProfile.scanned_plugins");
+            #endif  // !NDEBUG
+            CHK_(ptr);
+            if (!ctx->DataAvailable(ptr)) break;
+          } while (::PROTOBUF_NAMESPACE_ID::internal::ExpectTag<194>(ptr));
+        } else goto handle_unusual;
+        continue;
       default: {
       handle_unusual:
         if ((tag == 0) || ((tag & 7) == 4)) {
@@ -6141,6 +6163,16 @@ failure:
     target = ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::WriteInt32ToArray(23, this->_internal_autolimit(), target);
   }
 
+  // repeated string scanned_plugins = 24;
+  for (int i = 0, n = this->_internal_scanned_plugins_size(); i < n; i++) {
+    const auto& s = this->_internal_scanned_plugins(i);
+    ::PROTOBUF_NAMESPACE_ID::internal::WireFormat::VerifyUTF8StringNamedField(
+      s.data(), static_cast<int>(s.length()),
+      ::PROTOBUF_NAMESPACE_ID::internal::WireFormat::SERIALIZE,
+      "exec.shared.QueryProfile.scanned_plugins");
+    target = stream->WriteString(24, s, target);
+  }
+
   if (PROTOBUF_PREDICT_FALSE(_internal_metadata_.have_unknown_fields())) {
     target = ::PROTOBUF_NAMESPACE_ID::internal::WireFormat::InternalSerializeUnknownFieldsToArray(
         _internal_metadata_.unknown_fields<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>(::PROTOBUF_NAMESPACE_ID::UnknownFieldSet::default_instance), target, stream);
@@ -6162,6 +6194,14 @@ size_t QueryProfile::ByteSizeLong() const {
   for (const auto& msg : this->fragment_profile_) {
     total_size +=
       ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::MessageSize(msg);
+  }
+
+  // repeated string scanned_plugins = 24;
+  total_size += 2 *
+      ::PROTOBUF_NAMESPACE_ID::internal::FromIntSize(scanned_plugins_.size());
+  for (int i = 0, n = scanned_plugins_.size(); i < n; i++) {
+    total_size += ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::StringSize(
+      scanned_plugins_.Get(i));
   }
 
   cached_has_bits = _has_bits_[0];
@@ -6353,6 +6393,7 @@ void QueryProfile::MergeFrom(const QueryProfile& from) {
   (void) cached_has_bits;
 
   fragment_profile_.MergeFrom(from.fragment_profile_);
+  scanned_plugins_.MergeFrom(from.scanned_plugins_);
   cached_has_bits = from._has_bits_[0];
   if (cached_has_bits & 0x000000ffu) {
     if (cached_has_bits & 0x00000001u) {
@@ -6453,6 +6494,7 @@ void QueryProfile::InternalSwap(QueryProfile* other) {
   _internal_metadata_.Swap<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>(&other->_internal_metadata_);
   swap(_has_bits_[0], other->_has_bits_[0]);
   fragment_profile_.InternalSwap(&other->fragment_profile_);
+  scanned_plugins_.InternalSwap(&other->scanned_plugins_);
   query_.Swap(&other->query_, &::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited(), GetArena());
   plan_.Swap(&other->plan_, &::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited(), GetArena());
   user_.Swap(&other->user_, nullptr, GetArena());

@@ -140,7 +140,7 @@ public class MetastoreAnalyzeTableHandler extends DefaultSqlHandler {
     Prel prel = convertToPrel(drel, validatedRowType);
     logAndSetTextPlan("Drill Physical", prel, logger);
     PhysicalOperator pop = convertToPop(prel);
-    PhysicalPlan plan = convertToPlan(pop);
+    PhysicalPlan plan = convertToPlan(pop, relScan);
     log("Drill Plan", plan, logger);
     return plan;
   }

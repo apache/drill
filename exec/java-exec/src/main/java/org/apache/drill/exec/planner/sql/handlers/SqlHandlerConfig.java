@@ -17,10 +17,12 @@
  */
 package org.apache.drill.exec.planner.sql.handlers;
 
-import java.util.ArrayList;
 import java.util.Collection;
-import java.util.List;
+import java.util.Comparator;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Optional;
+import java.util.TreeSet;
 
 import org.apache.calcite.rel.RelNode;
 import org.apache.calcite.rel.RelShuttleImpl;
@@ -42,6 +44,7 @@ public class SqlHandlerConfig {
 
   private final QueryContext context;
   private final SqlConverter converter;
+  private Map<RelNode, Collection<StoragePlugin>> scannedPluginCache = new HashMap<>();
 
   public SqlHandlerConfig(QueryContext context, SqlConverter converter) {
     this.context = context;
@@ -53,11 +56,20 @@ public class SqlHandlerConfig {
   }
 
   public RuleSet getRules(PlannerPhase phase, RelNode input) {
-    PluginsCollector pluginsCollector = new PluginsCollector(context.getStorage());
-    input.accept(pluginsCollector);
+    return phase.getRules(context, getScannedPlugins(input));
+  }
 
-    Collection<StoragePlugin> plugins = pluginsCollector.getPlugins();
-    return phase.getRules(context, plugins);
+  public Collection<StoragePlugin> getScannedPlugins(RelNode input) {
+    Collection<StoragePlugin> scannedPlugins = scannedPluginCache.get(input);
+    if (scannedPlugins == null) {
+      // Compute and cache for subsequent calls.
+      PluginsCollector pluginsCollector = new PluginsCollector(context.getStorage());
+      input.accept(pluginsCollector);
+      scannedPlugins = pluginsCollector.getPlugins();
+      scannedPluginCache.put(input, scannedPlugins);
+    }
+
+    return scannedPlugins;
   }
 
   public SqlConverter getConverter() {
@@ -65,7 +77,11 @@ public class SqlHandlerConfig {
   }
 
   public static class PluginsCollector extends RelShuttleImpl {
-    private final List<StoragePlugin> plugins = new ArrayList<>();
+    // A TreeSet that compares plugins by name to remove duplicates and sort
+    // alphabetically.
+    private final TreeSet<StoragePlugin> plugins = new TreeSet<>(
+      Comparator.comparing(StoragePlugin::getName)
+    );
     private final StoragePluginRegistry storagePlugins;
 
     public PluginsCollector(StoragePluginRegistry storagePlugins) {
@@ -104,7 +120,10 @@ public class SqlHandlerConfig {
       plugins.add(storagePlugin);
     }
 
-    public List<StoragePlugin> getPlugins() {
+    /**
+     * @return A deduplicated collection of storage plugins scanned by the query.
+     */
+    public Collection<StoragePlugin> getPlugins() {
       return plugins;
     }
   }

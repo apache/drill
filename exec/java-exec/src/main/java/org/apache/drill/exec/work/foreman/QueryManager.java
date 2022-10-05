@@ -28,9 +28,11 @@ import java.util.concurrent.atomic.AtomicInteger;
 import org.apache.drill.common.exceptions.DrillRuntimeException;
 import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.common.exceptions.UserRemoteException;
+import org.apache.drill.common.logical.PlanProperties;
 import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.coord.ClusterCoordinator;
 import org.apache.drill.exec.coord.store.TransientStore;
+import org.apache.drill.exec.ops.QueryContext;
 import org.apache.drill.exec.proto.BitControl.FragmentStatus;
 import org.apache.drill.exec.proto.BitControl.PlanFragment;
 import org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint;
@@ -87,6 +89,7 @@ public class QueryManager implements AutoCloseable {
 
   // the following mutable variables are used to capture ongoing query status
   private String planText;
+  private PlanProperties planProps;
   private long startTime = System.currentTimeMillis();
   private long endTime;
   private long planningEndTime;
@@ -345,13 +348,14 @@ public class QueryManager implements AutoCloseable {
   }
 
   private QueryProfile getQueryProfile(UserException ex) {
+    QueryContext queryCtx = foreman.getQueryContext();
     final QueryProfile.Builder profileBuilder = QueryProfile.newBuilder()
-        .setUser(foreman.getQueryContext().getQueryUserName())
+        .setUser(queryCtx.getQueryUserName())
         .setType(runQuery.getType())
         .setId(queryId)
         .setQueryId(QueryIdHelper.getQueryId(queryId))
         .setState(foreman.getState())
-        .setForeman(foreman.getQueryContext().getCurrentEndpoint())
+        .setForeman(queryCtx.getCurrentEndpoint())
         .setStart(startTime)
         .setEnd(endTime)
         .setPlanEnd(planningEndTime)
@@ -380,7 +384,11 @@ public class QueryManager implements AutoCloseable {
       profileBuilder.setQuery(queryText);
     }
 
-    int autoLimitRowCount = foreman.getQueryContext().getOptions().getOption(ExecConstants.QUERY_MAX_ROWS).num_val.intValue();
+    if (planProps != null && planProps.scannedPluginNames != null ) {
+      profileBuilder.addAllScannedPlugins(planProps.scannedPluginNames);
+    }
+
+    int autoLimitRowCount = queryCtx.getOptions().getOption(ExecConstants.QUERY_MAX_ROWS).num_val.intValue();
     if (autoLimitRowCount > 0) {
       profileBuilder.setAutoLimit(autoLimitRowCount);
       logger.debug("The query's resultset was limited to {} rows", autoLimitRowCount);
@@ -432,6 +440,10 @@ public class QueryManager implements AutoCloseable {
 
   void setPlanText(final String planText) {
     this.planText = planText;
+  }
+
+  void setPlanProperties(PlanProperties planProps) {
+    this.planProps = planProps;
   }
 
   void markStartTime() {

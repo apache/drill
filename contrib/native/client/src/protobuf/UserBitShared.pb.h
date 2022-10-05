@@ -3177,6 +3177,7 @@ class QueryProfile PROTOBUF_FINAL :
 
   enum : int {
     kFragmentProfileFieldNumber = 11,
+    kScannedPluginsFieldNumber = 24,
     kQueryFieldNumber = 5,
     kPlanFieldNumber = 6,
     kUserFieldNumber = 12,
@@ -3217,6 +3218,30 @@ class QueryProfile PROTOBUF_FINAL :
   ::exec::shared::MajorFragmentProfile* add_fragment_profile();
   const ::PROTOBUF_NAMESPACE_ID::RepeatedPtrField< ::exec::shared::MajorFragmentProfile >&
       fragment_profile() const;
+
+  // repeated string scanned_plugins = 24;
+  int scanned_plugins_size() const;
+  private:
+  int _internal_scanned_plugins_size() const;
+  public:
+  void clear_scanned_plugins();
+  const std::string& scanned_plugins(int index) const;
+  std::string* mutable_scanned_plugins(int index);
+  void set_scanned_plugins(int index, const std::string& value);
+  void set_scanned_plugins(int index, std::string&& value);
+  void set_scanned_plugins(int index, const char* value);
+  void set_scanned_plugins(int index, const char* value, size_t size);
+  std::string* add_scanned_plugins();
+  void add_scanned_plugins(const std::string& value);
+  void add_scanned_plugins(std::string&& value);
+  void add_scanned_plugins(const char* value);
+  void add_scanned_plugins(const char* value, size_t size);
+  const ::PROTOBUF_NAMESPACE_ID::RepeatedPtrField<std::string>& scanned_plugins() const;
+  ::PROTOBUF_NAMESPACE_ID::RepeatedPtrField<std::string>* mutable_scanned_plugins();
+  private:
+  const std::string& _internal_scanned_plugins(int index) const;
+  std::string* _internal_add_scanned_plugins();
+  public:
 
   // optional string query = 5;
   bool has_query() const;
@@ -3574,6 +3599,7 @@ class QueryProfile PROTOBUF_FINAL :
   ::PROTOBUF_NAMESPACE_ID::internal::HasBits<1> _has_bits_;
   mutable ::PROTOBUF_NAMESPACE_ID::internal::CachedSize _cached_size_;
   ::PROTOBUF_NAMESPACE_ID::RepeatedPtrField< ::exec::shared::MajorFragmentProfile > fragment_profile_;
+  ::PROTOBUF_NAMESPACE_ID::RepeatedPtrField<std::string> scanned_plugins_;
   ::PROTOBUF_NAMESPACE_ID::internal::ArenaStringPtr query_;
   ::PROTOBUF_NAMESPACE_ID::internal::ArenaStringPtr plan_;
   static const ::PROTOBUF_NAMESPACE_ID::internal::LazyString _i_give_permission_to_break_this_code_default_user_;
@@ -8747,6 +8773,80 @@ inline void QueryProfile::_internal_set_autolimit(::PROTOBUF_NAMESPACE_ID::int32
 inline void QueryProfile::set_autolimit(::PROTOBUF_NAMESPACE_ID::int32 value) {
   _internal_set_autolimit(value);
   // @@protoc_insertion_point(field_set:exec.shared.QueryProfile.autoLimit)
+}
+
+// repeated string scanned_plugins = 24;
+inline int QueryProfile::_internal_scanned_plugins_size() const {
+  return scanned_plugins_.size();
+}
+inline int QueryProfile::scanned_plugins_size() const {
+  return _internal_scanned_plugins_size();
+}
+inline void QueryProfile::clear_scanned_plugins() {
+  scanned_plugins_.Clear();
+}
+inline std::string* QueryProfile::add_scanned_plugins() {
+  // @@protoc_insertion_point(field_add_mutable:exec.shared.QueryProfile.scanned_plugins)
+  return _internal_add_scanned_plugins();
+}
+inline const std::string& QueryProfile::_internal_scanned_plugins(int index) const {
+  return scanned_plugins_.Get(index);
+}
+inline const std::string& QueryProfile::scanned_plugins(int index) const {
+  // @@protoc_insertion_point(field_get:exec.shared.QueryProfile.scanned_plugins)
+  return _internal_scanned_plugins(index);
+}
+inline std::string* QueryProfile::mutable_scanned_plugins(int index) {
+  // @@protoc_insertion_point(field_mutable:exec.shared.QueryProfile.scanned_plugins)
+  return scanned_plugins_.Mutable(index);
+}
+inline void QueryProfile::set_scanned_plugins(int index, const std::string& value) {
+  // @@protoc_insertion_point(field_set:exec.shared.QueryProfile.scanned_plugins)
+  scanned_plugins_.Mutable(index)->assign(value);
+}
+inline void QueryProfile::set_scanned_plugins(int index, std::string&& value) {
+  // @@protoc_insertion_point(field_set:exec.shared.QueryProfile.scanned_plugins)
+  scanned_plugins_.Mutable(index)->assign(std::move(value));
+}
+inline void QueryProfile::set_scanned_plugins(int index, const char* value) {
+  GOOGLE_DCHECK(value != nullptr);
+  scanned_plugins_.Mutable(index)->assign(value);
+  // @@protoc_insertion_point(field_set_char:exec.shared.QueryProfile.scanned_plugins)
+}
+inline void QueryProfile::set_scanned_plugins(int index, const char* value, size_t size) {
+  scanned_plugins_.Mutable(index)->assign(
+    reinterpret_cast<const char*>(value), size);
+  // @@protoc_insertion_point(field_set_pointer:exec.shared.QueryProfile.scanned_plugins)
+}
+inline std::string* QueryProfile::_internal_add_scanned_plugins() {
+  return scanned_plugins_.Add();
+}
+inline void QueryProfile::add_scanned_plugins(const std::string& value) {
+  scanned_plugins_.Add()->assign(value);
+  // @@protoc_insertion_point(field_add:exec.shared.QueryProfile.scanned_plugins)
+}
+inline void QueryProfile::add_scanned_plugins(std::string&& value) {
+  scanned_plugins_.Add(std::move(value));
+  // @@protoc_insertion_point(field_add:exec.shared.QueryProfile.scanned_plugins)
+}
+inline void QueryProfile::add_scanned_plugins(const char* value) {
+  GOOGLE_DCHECK(value != nullptr);
+  scanned_plugins_.Add()->assign(value);
+  // @@protoc_insertion_point(field_add_char:exec.shared.QueryProfile.scanned_plugins)
+}
+inline void QueryProfile::add_scanned_plugins(const char* value, size_t size) {
+  scanned_plugins_.Add()->assign(reinterpret_cast<const char*>(value), size);
+  // @@protoc_insertion_point(field_add_pointer:exec.shared.QueryProfile.scanned_plugins)
+}
+inline const ::PROTOBUF_NAMESPACE_ID::RepeatedPtrField<std::string>&
+QueryProfile::scanned_plugins() const {
+  // @@protoc_insertion_point(field_list:exec.shared.QueryProfile.scanned_plugins)
+  return scanned_plugins_;
+}
+inline ::PROTOBUF_NAMESPACE_ID::RepeatedPtrField<std::string>*
+QueryProfile::mutable_scanned_plugins() {
+  // @@protoc_insertion_point(field_mutable_list:exec.shared.QueryProfile.scanned_plugins)
+  return &scanned_plugins_;
 }
 
 // -------------------------------------------------------------------
