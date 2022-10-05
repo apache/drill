@@ -19,9 +19,10 @@ package org.apache.drill.exec.planner.sql.handlers;
 
 import java.util.Collection;
 import java.util.Comparator;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Optional;
 import java.util.TreeSet;
-import java.util.concurrent.ConcurrentHashMap;
 
 import org.apache.calcite.rel.RelNode;
 import org.apache.calcite.rel.RelShuttleImpl;
@@ -43,7 +44,7 @@ public class SqlHandlerConfig {
 
   private final QueryContext context;
   private final SqlConverter converter;
-  private ConcurrentHashMap<RelNode, Collection<StoragePlugin>> scannedPluginCache = new ConcurrentHashMap<>();
+  private Map<RelNode, Collection<StoragePlugin>> scannedPluginCache = new HashMap<>();
 
   public SqlHandlerConfig(QueryContext context, SqlConverter converter) {
     this.context = context;
