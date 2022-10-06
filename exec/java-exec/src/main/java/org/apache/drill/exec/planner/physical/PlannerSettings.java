@@ -20,6 +20,7 @@ package org.apache.drill.exec.planner.physical;
 import org.apache.calcite.avatica.util.Quoting;
 import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.exec.ExecConstants;
+import org.apache.drill.exec.alias.AliasRegistryProvider;
 import org.apache.drill.exec.expr.fn.FunctionImplementationRegistry;
 import org.apache.drill.exec.server.options.OptionManager;
 import org.apache.drill.exec.server.options.OptionValidator;
@@ -242,10 +243,18 @@ public class PlannerSettings implements Context{
 
   public OptionManager options = null;
   public FunctionImplementationRegistry functionImplementationRegistry = null;
+  private final String queryUser;
+  private final AliasRegistryProvider aliasRegistryProvider;
 
-  public PlannerSettings(OptionManager options, FunctionImplementationRegistry functionImplementationRegistry){
+
+  public PlannerSettings(OptionManager options,
+                         FunctionImplementationRegistry functionImplementationRegistry,
+                         String queryUser,
+                         AliasRegistryProvider aliasRegistryProvider){
     this.options = options;
     this.functionImplementationRegistry = functionImplementationRegistry;
+    this.queryUser = queryUser;
+    this.aliasRegistryProvider = aliasRegistryProvider;
   }
 
   public OptionManager getOptions() {
@@ -372,6 +381,13 @@ public class PlannerSettings implements Context{
 
   public long getPlanningMemoryLimit() {
     return options.getOption(PLANNER_MEMORY_LIMIT.getOptionName()).num_val;
+  }
+  public String getQueryUser() {
+    return this.queryUser;
+  }
+
+  public AliasRegistryProvider getAliasRegistryProvider() {
+    return this.aliasRegistryProvider;
   }
 
   public static long getInitialPlanningMemorySize() {

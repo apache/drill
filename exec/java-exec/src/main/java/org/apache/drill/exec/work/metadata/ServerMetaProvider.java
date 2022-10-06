@@ -121,7 +121,7 @@ public class ServerMetaProvider {
       final GetServerMetaResp.Builder respBuilder = GetServerMetaResp.newBuilder();
       try {
         final ServerMeta.Builder metaBuilder = ServerMeta.newBuilder(DEFAULT);
-        PlannerSettings plannerSettings = new PlannerSettings(session.getOptions(), context.getFunctionImplementationRegistry());
+        PlannerSettings plannerSettings = new PlannerSettings(session.getOptions(), context.getFunctionImplementationRegistry(), session.getCredentials().getUserName(), context.getAliasRegistryProvider());
 
         SqlParser.Config config = SqlParser.Config.DEFAULT
           .withIdentifierMaxLength((int) plannerSettings.getIdentifierMaxLength())

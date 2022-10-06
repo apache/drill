@@ -50,6 +50,8 @@ import org.apache.drill.common.types.TypeProtos;
 import org.apache.drill.common.types.TypeProtos.MajorType;
 import org.apache.drill.common.types.TypeProtos.MinorType;
 import org.apache.drill.common.types.Types;
+import org.apache.drill.exec.alias.AliasRegistry;
+import org.apache.drill.exec.alias.AliasRegistryProvider;
 import org.apache.drill.exec.planner.StarColumnHelper;
 import org.apache.calcite.rel.RelNode;
 import org.apache.calcite.rel.type.RelDataTypeField;
@@ -712,6 +714,54 @@ public class DrillOptiq {
         }
         case "date_trunc": {
           return handleDateTruncFunction(args);
+        }
+        case "httprequest":
+        case "http_request": {
+          // This code resolves aliases in the http_request function.
+          String completeRawPluginName = ((QuotedString) args.get(0)).value;
+          String username = context.getPlannerSettings().getQueryUser();
+
+          AliasRegistryProvider aliasRegistryProvider = context.getPlannerSettings().getAliasRegistryProvider();
+          AliasRegistry storageAliasRegistry = aliasRegistryProvider.getStorageAliasesRegistry();
+          AliasRegistry tableAliasRegistry = aliasRegistryProvider.getTableAliasesRegistry();
+
+          // Split into plugin and endpoint
+          SchemaPath schemaPath = SchemaPath.parseFromString(completeRawPluginName);
+          String rawPluginName = SchemaPath.getSimplePath(schemaPath.rootName()).toExpr();
+          String rawEndpoint = SchemaPath.getSimplePath(schemaPath.getLastSegment().getNameSegment().getPath()).toExpr();
+
+          // Now resolve plugin name
+          String actualPluginName = storageAliasRegistry.getUserAliases(username).get(rawPluginName);
+          if (StringUtils.isEmpty(actualPluginName)) {
+            // If it is empty, assign it the original name,
+            actualPluginName = rawPluginName;
+          }
+
+          // Finally remove backticks
+          actualPluginName = SchemaPath.parseFromString(actualPluginName).getRootSegmentPath();
+
+          // Now do the same for the endpoint name
+          String actualEndpointName = tableAliasRegistry.getUserAliases(username).get(rawEndpoint);
+          if (StringUtils.isEmpty(actualEndpointName)) {
+            // If it is empty, assign it the original name,
+            actualEndpointName = rawEndpoint;
+          }
+
+          // Now remove backticks
+          actualEndpointName = SchemaPath.parseFromString(actualEndpointName).getRootSegmentPath();
+
+          String finalPluginName = SchemaPath
+            .getCompoundPath(actualPluginName, actualEndpointName)
+            .getAsUnescapedPath();
+
+          QuotedString q = new QuotedString(finalPluginName, finalPluginName.length(), ExpressionPosition.UNKNOWN);
+
+          // Add args to new arg lists
+          List<LogicalExpression> requestArgs = new ArrayList<>();
+          requestArgs.add(q);
+          requestArgs.addAll(args.subList(1, args.size()));
+
+          return FunctionCallFactory.createExpression(functionName, requestArgs);
         }
       }
 

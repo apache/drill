@@ -832,7 +832,15 @@ public class SimpleHttp implements AutoCloseable {
     return inputArguments;
   }
 
-  public static HttpApiConfig getEndpointConfig(String endpoint, HttpStoragePluginConfig pluginConfig) {
+  /**
+   * This function is used to obtain the configuration information for a given API in the HTTP UDF.
+   * If aliasing is enabled, this function will resolve aliases for connections.
+   * @param endpoint The name of the endpoint.  Should be a {@link String}
+   * @param pluginConfig The {@link HttpStoragePluginConfig} the configuration from the plugin
+   * @return The {@link HttpApiConfig} corresponding with the endpoint.
+   */
+  public static HttpApiConfig getEndpointConfig(String endpoint,
+                                                HttpStoragePluginConfig pluginConfig) {
     HttpApiConfig endpointConfig = pluginConfig.getConnection(endpoint);
     if (endpointConfig == null) {
       throw UserException.functionError()
@@ -847,7 +855,14 @@ public class SimpleHttp implements AutoCloseable {
     return endpointConfig;
   }
 
-  public static HttpStoragePlugin getStoragePlugin(DrillbitContext context, String pluginName) {
+  /**
+   * This function will return a {@link HttpStoragePlugin} for use in the HTTP UDFs.  If user or public aliases
+   * are used, the function will resolve those aliases.
+   * @param context A {@link DrillbitContext} from the current query
+   * @param pluginName A {@link String} of the plugin name.  Note that the function will resolve aliases.
+   * @return A {@link HttpStoragePlugin} of the plugin.
+   */
+  public static HttpStoragePlugin getStoragePlugin(String pluginName, DrillbitContext context) {
     StoragePluginRegistry storage = context.getStorage();
     try {
       StoragePlugin pluginInstance = storage.getPlugin(pluginName);
@@ -869,7 +884,6 @@ public class SimpleHttp implements AutoCloseable {
         .build(logger);
     }
   }
-
 
   /**
    * This function makes an API call and returns a string of the parsed results. It is used in the http_get() UDF

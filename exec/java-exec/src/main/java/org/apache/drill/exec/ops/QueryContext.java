@@ -102,7 +102,7 @@ public class QueryContext implements AutoCloseable, OptimizerRulesContext, Schem
     this.skipProfileWrite = false;
     queryOptions = new QueryOptionManager(session.getOptions());
     executionControls = new ExecutionControls(queryOptions, drillbitContext.getEndpoint());
-    plannerSettings = new PlannerSettings(queryOptions, getFunctionRegistry());
+    plannerSettings = new PlannerSettings(queryOptions, getFunctionRegistry(), session.getCredentials().getUserName(), drillbitContext.getAliasRegistryProvider());
     plannerSettings.setNumEndPoints(drillbitContext.getBits().size());
 
     // If we do not need to support dynamic UDFs for this query, just use static operator table

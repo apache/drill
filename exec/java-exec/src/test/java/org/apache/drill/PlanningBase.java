@@ -119,7 +119,7 @@ public class PlanningBase extends ExecTest {
         UserSession.Builder.newBuilder().withOptionManager(sessionOptions).setSupportComplexTypes(true).build());
     when(context.getCurrentEndpoint()).thenReturn(DrillbitEndpoint.getDefaultInstance());
     when(context.getActiveEndpoints()).thenReturn(ImmutableList.of(DrillbitEndpoint.getDefaultInstance()));
-    when(context.getPlannerSettings()).thenReturn(new PlannerSettings(queryOptions, functionRegistry));
+    when(context.getPlannerSettings()).thenReturn(new PlannerSettings(queryOptions, functionRegistry, null, null));
     when(context.getOptions()).thenReturn(queryOptions);
     when(context.getConfig()).thenReturn(config);
     when(context.getDrillOperatorTable()).thenReturn(table);
