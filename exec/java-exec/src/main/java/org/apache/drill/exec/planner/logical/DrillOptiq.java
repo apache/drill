@@ -767,7 +767,7 @@ public class DrillOptiq {
 
       return FunctionCallFactory.createExpression(functionName, args);
     }
-    
+
     private LogicalExpression handleDateTruncFunction(final List<LogicalExpression> args) {
       // Assert that the first argument to extract is a QuotedString
       assert args.get(0) instanceof ValueExpressions.QuotedString;
