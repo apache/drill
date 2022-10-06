@@ -96,12 +96,12 @@ public class DynamicRootSchema extends DynamicSchema {
       .orElse(null);
   }
 
-  private void attemptToRegisterSchemas(StoragePlugin plugin) throws Exception {
-    long maxAttempts = schemaConfig
-      .getOption(ExecConstants.STORAGE_PLUGIN_ACCESS_ATTEMPTS)
+  private void registerSchemasWithRetry(StoragePlugin plugin) throws Exception {
+    long maxAttempts = 1 + schemaConfig
+      .getOption(ExecConstants.STORAGE_PLUGIN_RETRY_ATTEMPTS)
       .num_val;
-    long attemptDelayMs = schemaConfig
-      .getOption(ExecConstants.STORAGE_PLUGIN_ATTEMPT_DELAY)
+    long retryDelayMs = schemaConfig
+      .getOption(ExecConstants.STORAGE_PLUGIN_RETRY_DELAY)
       .num_val;
     int attempt=0;
     Exception lastAttemptEx = null;
@@ -122,10 +122,10 @@ public class DynamicRootSchema extends DynamicSchema {
           logger.info(
             "Next attempt to register schemas for plugin {} will be made in {}ms.",
             plugin,
-            attemptDelayMs
+            retryDelayMs
           );
           try {
-            Thread.sleep(attemptDelayMs);
+            Thread.sleep(retryDelayMs);
           } catch (InterruptedException intEx) {
             logger.warn(
               "Interrupted while waiting to make another attempt to register " +
@@ -152,8 +152,7 @@ public class DynamicRootSchema extends DynamicSchema {
       SchemaPlus schemaPlus = this.plus();
       plugin = storages.getPlugin(schemaName);
       if (plugin != null) {
-        attemptToRegisterSchemas(plugin);
-        // plugin.registerSchemas(schemaConfig, schemaPlus);
+        registerSchemasWithRetry(plugin);
         return;
       }
 
@@ -169,8 +168,7 @@ public class DynamicRootSchema extends DynamicSchema {
         SchemaPlus firstLevelSchema = schemaPlus.getSubSchema(paths.get(0));
         if (firstLevelSchema == null) {
           // register schema for this storage plugin to 'this'.
-          attemptToRegisterSchemas(plugin);
-          //plugin.registerSchemas(schemaConfig, schemaPlus);
+          registerSchemasWithRetry(plugin);
           firstLevelSchema = schemaPlus.getSubSchema(paths.get(0));
         }
         // Load second level schemas for this storage plugin
@@ -252,4 +250,3 @@ public class DynamicRootSchema extends DynamicSchema {
     }
   }
 }
-

@@ -1095,32 +1095,33 @@ public final class ExecConstants {
       new OptionDescription("Enables recursive files listing when querying the `INFORMATION_SCHEMA.FILES` table or executing the SHOW FILES command. " +
         "Default is false. (Drill 1.15+)"));
 
-  public static final String STORAGE_PLUGIN_ACCESS_ATTEMPTS = "storage.plugin_access_attempts";
-  public static final PositiveLongValidator STORAGE_PLUGIN_ACCESS_ATTEMPTS_VALIDATOR = new PositiveLongValidator(
-    STORAGE_PLUGIN_ACCESS_ATTEMPTS,
+  public static final String STORAGE_PLUGIN_RETRY_ATTEMPTS = "storage.plugin_retry_attempts";
+  public static final LongValidator STORAGE_PLUGIN_RETRY_ATTEMPTS_VALIDATOR = new NonNegativeLongValidator(
+    STORAGE_PLUGIN_RETRY_ATTEMPTS,
     10,
     new OptionDescription(
-      "The maximum number of attempts that will be made to request metadata " +
-      "needed for query planning from a storage plugin."
+      "The maximum number of retries that will be attempted to request metadata " +
+        "for query planning from a storage plugin."
     )
   );
-  public static final String STORAGE_PLUGIN_ATTEMPT_DELAY = "storage.plugin_access_attempt_delay";
-  public static final NonNegativeLongValidator STORAGE_PLUGIN_ATTEMPT_DELAY_VALIDATOR = new NonNegativeLongValidator(
-    STORAGE_PLUGIN_ATTEMPT_DELAY,
-    5*60*1000,
-    new OptionDescription(
+  public static final String STORAGE_PLUGIN_RETRY_DELAY = "storage.plugin_retry_attempt_delay";
+  public static final LongValidator STORAGE_PLUGIN_RETRY_DELAY_VALIDATOR = new NonNegativeLongValidator(
+    STORAGE_PLUGIN_RETRY_DELAY,
+    5 * 1000,
+    new OptionDescription(String.format(
       "The delay in milliseconds between repeated attempts to request metadata " +
-      "needed or query planning from a storage plugin."
-    )
+        "for query planning from a storage plugin (see %s).",
+        STORAGE_PLUGIN_RETRY_ATTEMPTS
+    ))
   );
   public static final String STORAGE_PLUGIN_AUTO_DISABLE = "storage.plugin_auto_disable";
   public static final BooleanValidator STORAGE_PLUGIN_AUTO_DISABLE_VALIDATOR = new BooleanValidator(
     STORAGE_PLUGIN_AUTO_DISABLE,
     new OptionDescription(String.format(
       "Controls whether a storage plugin will automatically be disabled after " +
-      "the configured number of attempts to request metadata for query " +
-      " planning from it have failed (see %s)",
-      STORAGE_PLUGIN_ACCESS_ATTEMPTS
+        "the configured number of attempts to request metadata for query " +
+        " planning from it have failed (see %s)",
+      STORAGE_PLUGIN_RETRY_ATTEMPTS
     ))
   );
 

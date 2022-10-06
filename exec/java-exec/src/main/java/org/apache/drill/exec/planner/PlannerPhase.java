@@ -94,7 +94,6 @@ import org.apache.drill.exec.planner.physical.ValuesPrule;
 import org.apache.drill.exec.planner.physical.WindowPrule;
 import org.apache.drill.exec.planner.physical.WriterPrule;
 import org.apache.drill.exec.store.StoragePlugin;
-import org.apache.drill.exec.store.StoragePluginRegistry.PluginException;
 import org.apache.drill.exec.store.parquet.FilePushDownFilter;
 
 import java.util.ArrayList;
@@ -110,7 +109,7 @@ public enum PlannerPhase {
 
   LOGICAL_PRUNE_AND_JOIN("Logical Planning (with join and partition pruning)") {
     @Override
-    public RuleSet getRules(OptimizerRulesContext context, Collection<StoragePlugin> plugins) throws PluginException {
+    public RuleSet getRules(OptimizerRulesContext context, Collection<StoragePlugin> plugins) {
       return PlannerPhase.mergedRuleSets(
           getDrillBasicRules(context),
           getPruneScanRules(context),
@@ -122,7 +121,7 @@ public enum PlannerPhase {
 
   WINDOW_REWRITE("Window Function rewrites") {
     @Override
-    public RuleSet getRules(OptimizerRulesContext context, Collection<StoragePlugin> plugins) throws PluginException {
+    public RuleSet getRules(OptimizerRulesContext context, Collection<StoragePlugin> plugins) {
       return RuleSets.ofList(
           RuleInstance.CALC_INSTANCE,
           RuleInstance.PROJECT_TO_LOGICAL_PROJECT_AND_WINDOW_RULE
@@ -132,7 +131,7 @@ public enum PlannerPhase {
 
   SUBQUERY_REWRITE("Sub-queries rewrites") {
     @Override
-    public RuleSet getRules(OptimizerRulesContext context, Collection<StoragePlugin> plugins) throws PluginException {
+    public RuleSet getRules(OptimizerRulesContext context, Collection<StoragePlugin> plugins) {
       return RuleSets.ofList(
           RuleInstance.SUB_QUERY_FILTER_REMOVE_RULE,
           RuleInstance.SUB_QUERY_PROJECT_REMOVE_RULE,
@@ -143,7 +142,7 @@ public enum PlannerPhase {
 
   LOGICAL_PRUNE("Logical Planning (with partition pruning)") {
     @Override
-    public RuleSet getRules(OptimizerRulesContext context, Collection<StoragePlugin> plugins) throws PluginException {
+    public RuleSet getRules(OptimizerRulesContext context, Collection<StoragePlugin> plugins) {
       return PlannerPhase.mergedRuleSets(
           getDrillBasicRules(context),
           getPruneScanRules(context),
@@ -154,7 +153,7 @@ public enum PlannerPhase {
 
   JOIN_PLANNING("LOPT Join Planning") {
     @Override
-    public RuleSet getRules(OptimizerRulesContext context, Collection<StoragePlugin> plugins) throws PluginException {
+    public RuleSet getRules(OptimizerRulesContext context, Collection<StoragePlugin> plugins) {
       List<RelOptRule> rules = Lists.newArrayList();
       if (context.getPlannerSettings().isJoinOptimizationEnabled()) {
         rules.add(DRILL_JOIN_TO_MULTIJOIN_RULE);
@@ -170,7 +169,7 @@ public enum PlannerPhase {
 
   ROWKEYJOIN_CONVERSION("Convert Join to RowKeyJoin") {
     @Override
-    public RuleSet getRules(OptimizerRulesContext context, Collection<StoragePlugin> plugins) throws PluginException {
+    public RuleSet getRules(OptimizerRulesContext context, Collection<StoragePlugin> plugins) {
       List<RelOptRule> rules = Lists.newArrayList();
       if (context.getPlannerSettings().isRowKeyJoinConversionEnabled()) {
         rules.add(DrillPushRowKeyJoinToScanRule.JOIN);
@@ -184,7 +183,7 @@ public enum PlannerPhase {
 
   SUM_CONVERSION("Convert SUM to $SUM0") {
     @Override
-    public RuleSet getRules(OptimizerRulesContext context, Collection<StoragePlugin> plugins) throws PluginException {
+    public RuleSet getRules(OptimizerRulesContext context, Collection<StoragePlugin> plugins) {
       return PlannerPhase.mergedRuleSets(
           RuleSets.ofList(
               DrillReduceAggregatesRule.INSTANCE_SUM,
@@ -196,28 +195,28 @@ public enum PlannerPhase {
 
   PARTITION_PRUNING("Partition Prune Planning") {
     @Override
-    public RuleSet getRules(OptimizerRulesContext context, Collection<StoragePlugin> plugins) throws PluginException {
+    public RuleSet getRules(OptimizerRulesContext context, Collection<StoragePlugin> plugins) {
       return PlannerPhase.mergedRuleSets(getPruneScanRules(context), getStorageRules(context, plugins, this));
     }
   },
 
   PHYSICAL_PARTITION_PRUNING("Physical Partition Prune Planning") {
     @Override
-    public RuleSet getRules(OptimizerRulesContext context, Collection<StoragePlugin> plugins) throws PluginException {
+    public RuleSet getRules(OptimizerRulesContext context, Collection<StoragePlugin> plugins) {
       return PlannerPhase.mergedRuleSets(getPhysicalPruneScanRules(context), getStorageRules(context, plugins, this));
     }
   },
 
   DIRECTORY_PRUNING("Directory Prune Planning") {
     @Override
-    public RuleSet getRules(OptimizerRulesContext context, Collection<StoragePlugin> plugins) throws PluginException {
+    public RuleSet getRules(OptimizerRulesContext context, Collection<StoragePlugin> plugins) {
       return PlannerPhase.mergedRuleSets(getDirPruneScanRules(context), getStorageRules(context, plugins, this));
     }
   },
 
   LOGICAL("Logical Planning (no pruning or join).") {
     @Override
-    public RuleSet getRules(OptimizerRulesContext context, Collection<StoragePlugin> plugins) throws PluginException {
+    public RuleSet getRules(OptimizerRulesContext context, Collection<StoragePlugin> plugins) {
       return PlannerPhase.mergedRuleSets(
           PlannerPhase.getDrillBasicRules(context),
           PlannerPhase.getDrillUserConfigurableLogicalRules(context),
@@ -227,7 +226,7 @@ public enum PlannerPhase {
 
   PHYSICAL("Physical Planning") {
     @Override
-    public RuleSet getRules(OptimizerRulesContext context, Collection<StoragePlugin> plugins) throws PluginException {
+    public RuleSet getRules(OptimizerRulesContext context, Collection<StoragePlugin> plugins) {
       return PlannerPhase.mergedRuleSets(
           PlannerPhase.getPhysicalRules(context),
           getIndexRules(context),
@@ -248,27 +247,12 @@ public enum PlannerPhase {
     this.description = description;
   }
 
-  public abstract RuleSet getRules(OptimizerRulesContext context, Collection<StoragePlugin> plugins) throws PluginException;
+  public abstract RuleSet getRules(OptimizerRulesContext context, Collection<StoragePlugin> plugins);
 
   private static RuleSet getStorageRules(OptimizerRulesContext context, Collection<StoragePlugin> plugins,
-      PlannerPhase phase) throws PluginException {
+      PlannerPhase phase) {
     final Builder<RelOptRule> rules = ImmutableSet.builder();
-
-    for (StoragePlugin plugin : plugins) {
-      try {
-        rules.addAll(plugin.getOptimizerRules(context, phase));
-      } catch (Exception ex) {
-        throw new PluginException(
-          String.format(
-            "Failed to load optimizer rules for plugin %s",
-            plugin
-          ),
-          ex,
-          plugin
-        );
-      }
-    }
-
+    plugins.stream().map(sp -> rules.addAll(sp.getOptimizerRules(context, phase)));
     return RuleSets.ofList(rules.build());
   }
 

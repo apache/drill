@@ -17,15 +17,11 @@
  */
 package org.apache.drill.exec.store.mock;
 
-import org.apache.calcite.plan.RelOptRule;
 import org.apache.calcite.schema.SchemaPlus;
-import org.apache.drill.exec.ops.OptimizerRulesContext;
-import org.apache.drill.exec.planner.PlannerPhase;
 import org.apache.drill.exec.server.DrillbitContext;
 import org.apache.drill.exec.store.SchemaConfig;
 
 import java.io.IOException;
-import java.util.Set;
 
 public class MockBreakageStorage extends MockStorageEngine {
 
@@ -41,21 +37,17 @@ public class MockBreakageStorage extends MockStorageEngine {
     }
   }
 
-  private boolean breakRegister, breakOptimizerRules;
+  private boolean breakRegister;
 
-  public int registerAttemptCount = 0, optimizerRulesAttemptCount = 0;
+  public int registerAttemptCount = 0;
 
   public MockBreakageStorage(MockBreakageStorageEngineConfig configuration, DrillbitContext context, String name) {
     super(configuration, context, name);
-    breakRegister = breakOptimizerRules = false;
+    breakRegister = false;
   }
 
   public void setBreakRegister(boolean breakRegister) {
     this.breakRegister = breakRegister;
-  }
-
-  public void setBreakOptimizerRules(boolean breakOptimizerRules) {
-    this.breakOptimizerRules = breakOptimizerRules;
   }
 
   @Override
@@ -65,14 +57,5 @@ public class MockBreakageStorage extends MockStorageEngine {
       throw new IOException("mock breakRegister!");
     }
     super.registerSchemas(schemaConfig, parent);
-  }
-
-  @Override
-  public Set<? extends RelOptRule> getOptimizerRules(OptimizerRulesContext optimizerContext, PlannerPhase phase) {
-    if (breakOptimizerRules) {
-      optimizerRulesAttemptCount++;
-      throw new RuntimeException("mock breakOptimizerRules!");
-    }
-    return super.getOptimizerRules(optimizerContext, phase);
   }
 }
