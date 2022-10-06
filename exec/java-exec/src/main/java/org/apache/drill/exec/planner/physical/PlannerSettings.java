@@ -243,8 +243,8 @@ public class PlannerSettings implements Context{
 
   public OptionManager options = null;
   public FunctionImplementationRegistry functionImplementationRegistry = null;
-  private final String queryUser;
-  private final AliasRegistryProvider aliasRegistryProvider;
+  public String queryUser = null;
+  public AliasRegistryProvider aliasRegistryProvider = null;
 
 
   public PlannerSettings(OptionManager options,
