@@ -46,6 +46,7 @@ import java.util.Map;
 
 import static org.apache.drill.test.rowSet.RowSetUtilities.strArray;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
 /**
@@ -131,6 +132,34 @@ public class TestGoogleSheetsQueries extends ClusterTest {
       .build();
 
     new RowSetComparison(expected).verifyAndClearAll(results);
+  }
+
+  @Test
+  public void testSchemataInformationSchema() throws Exception {
+    try {
+      initializeTokens("googlesheets");
+    } catch (PluginException e) {
+      fail(e.getMessage());
+    }
+    // Makes sure that the root level plugin shows up in the information schema
+    String sql = "SELECT * FROM `INFORMATION_SCHEMA`.`SCHEMATA` WHERE SCHEMA_NAME LIKE 'googlesheets.%'";
+    RowSet results = queryBuilder().sql(sql).rowSet();
+    assertTrue(results.rowCount() > 1);
+    results.clear();
+  }
+
+  @Test
+  public void testTablesInfoSchema() throws Exception {
+    try {
+      initializeTokens("googlesheets");
+    } catch (PluginException e) {
+      fail(e.getMessage());
+    }
+
+    String sql = "SELECT * FROM `INFORMATION_SCHEMA`.`TABLES` WHERE TABLE_SCHEMA LIKE 'googlesheets.%'";
+    RowSet results = queryBuilder().sql(sql).rowSet();
+    assertEquals(0, results.rowCount());
+    results.clear();
   }
 
   @Test

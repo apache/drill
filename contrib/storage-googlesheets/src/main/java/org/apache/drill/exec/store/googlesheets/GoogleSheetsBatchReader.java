@@ -90,8 +90,8 @@ public class GoogleSheetsBatchReader implements ManagedReader<SchemaNegotiator> 
     this.sheetID = subScan.getScanSpec().getSheetID();
     this.sheetNames = new ArrayList<>();
     try {
-      List<Sheet> sheetList = GoogleSheetsUtils.getSheetList(service, sheetID);
-      this.sheet = sheetList.get(subScan.getScanSpec().getTabIndex());
+      List<Sheet> tabList = GoogleSheetsUtils.getTabList(service, sheetID);
+      this.sheet = tabList.get(subScan.getScanSpec().getTabIndex());
     } catch (IOException e) {
       throw UserException.connectionError(e)
         .message("Could not find tab with index " + subScan.getScanSpec().getTabIndex())
@@ -124,7 +124,7 @@ public class GoogleSheetsBatchReader implements ManagedReader<SchemaNegotiator> 
       columnMap = GoogleSheetsUtils.getColumnMap(GoogleSheetsUtils.getFirstRows(service, pluginName, tableName), projectedColumns, config.allTextMode());
 
       // Get sheet list for metadata.
-      List<Sheet> sheetList = GoogleSheetsUtils.getSheetList(service, pluginName);
+      List<Sheet> sheetList = GoogleSheetsUtils.getTabList(service, pluginName);
       for (Sheet sheet : sheetList) {
         sheetNames.add(sheet.getProperties().getTitle());
       }

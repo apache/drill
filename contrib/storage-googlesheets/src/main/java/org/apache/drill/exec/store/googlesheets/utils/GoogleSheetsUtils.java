@@ -28,6 +28,9 @@ import com.google.api.client.googleapis.javanet.GoogleNetHttpTransport;
 import com.google.api.client.json.JsonFactory;
 import com.google.api.client.json.gson.GsonFactory;
 import com.google.api.client.util.store.DataStore;
+import com.google.api.services.drive.Drive;
+import com.google.api.services.drive.model.File;
+import com.google.api.services.drive.model.FileList;
 import com.google.api.services.sheets.v4.Sheets;
 import com.google.api.services.sheets.v4.Sheets.Spreadsheets.Values.BatchGet;
 import com.google.api.services.sheets.v4.SheetsScopes;
@@ -63,6 +66,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.regex.Pattern;
 
 import static com.google.api.client.util.Strings.isNullOrEmpty;
 
@@ -73,6 +77,7 @@ public class GoogleSheetsUtils {
   private static final int SAMPLE_SIZE = 5;
   private static final JsonFactory JSON_FACTORY = GsonFactory.getDefaultInstance();
   private static final String UNKNOWN_HEADER = "field_";
+  private static final String APPLICATION_NAME = "Drill";
 
   /**
    * Represents the possible data types found in a GoogleSheets document
@@ -199,8 +204,84 @@ public class GoogleSheetsUtils {
     Credential credential = GoogleSheetsUtils.authorize(config, dataStore, queryUser);
     return new Sheets.Builder(
       GoogleNetHttpTransport.newTrustedTransport(), GsonFactory.getDefaultInstance(), credential)
-      .setApplicationName("Drill")
+      .setApplicationName(APPLICATION_NAME)
       .build();
+  }
+
+   /** Returns an authenticated {@link Drive} service.
+   * @param config The {@link GoogleSheetsStoragePluginConfig} for the plugin
+   * @param dataStore A {@link DrillDataStore} for the stored credentials
+   * @param queryUser A {@link String} containing the current query user.
+   * @return An authenticated {@link Drive} service.
+   * @throws IOException If anything goes wrong throw an IOException
+   * @throws GeneralSecurityException If the creds are invalid or
+   */
+  public static Drive getDriveService(GoogleSheetsStoragePluginConfig config,
+                                      DataStore<StoredCredential> dataStore,
+                                      String queryUser) throws IOException, GeneralSecurityException {
+    Credential credential = GoogleSheetsUtils.authorize(config, dataStore, queryUser);
+    return new Drive.Builder(
+      GoogleNetHttpTransport.newTrustedTransport(), GsonFactory.getDefaultInstance(), credential)
+      .setApplicationName(APPLICATION_NAME)
+      .build();
+  }
+
+  /**
+   * In GoogleSheets, the file is uniquely identified by a non-human readable token. The Sheets SDK does
+   * not provide a means to map tokens to file names.  To do this, we need to use the Google Drive SDK.
+   *
+   * Google Drive's concept of folders is more similar to that of S3 which doesn't really have folders or
+   * directories. So the user is not able to include any file paths in the query string.
+   *
+   * More importantly however, is that Google Drive allows duplicate file names, even within the same directory.
+   * Thus, it is entirely possible to have an entire directory of files with the same name. The tokens for these files
+   * will be different, but the human-readable names can be the same.  This creates an obvious problem for Drill as we
+   * need unique file names to include in a query.
+   *
+   * @param driveService An authenticated {@link Drive} service.
+   * @return A {@link HashMap} containing the tokens as keys and the file names as values.
+   * @throws IOException If anything goes wrong, throw an IOException.
+   */
+  public static Map<String,String> getTokenToNameMap(Drive driveService) throws IOException {
+    Map<String, String> sheetMapping = new HashMap<>();
+    String pageToken = null;
+
+    do {
+      FileList result = driveService.files().list()
+        .setQ("mimeType='application/vnd.google-apps.spreadsheet'")
+        .setSpaces("drive")
+        .setPageToken(pageToken)
+        .execute();
+
+      for (File file : result.getFiles()) {
+        sheetMapping.put(file.getId(), file.getName());
+      }
+
+      pageToken = result.getNextPageToken();
+    } while (pageToken != null);
+
+    return sheetMapping;
+  }
+
+  /**
+   * Google Sheets tokens are strings of length 44 that contain upper and lower case letters, numbers and underscores.
+   * This function will attempt to identify file tokens.
+   *
+   * Given that Google's spec for file IDs is not officially published, and can change at any time, we will keep the
+   * validation as light as possible to prevent future issues, in the event Google changes their file Id structure.
+   * @param id A {@link String} containing an unknown identifier
+   * @return True if the string is a file probable file token, false if not.
+   */
+  public static boolean isProbableFileToken(String id) {
+    logger.debug("Checking token {}", id);
+    if (StringUtils.isEmpty(id)) {
+      return false;
+    } else if (id.length() != 44) {
+      return false;
+    } else {
+      Pattern pattern = Pattern.compile("[0-9][a-zA-Z0-9_-]{43}");
+      return pattern.matcher(id).find();
+    }
   }
 
   /**
@@ -210,7 +291,8 @@ public class GoogleSheetsUtils {
    * @return A list of spreadsheet names within a given Google Sheet
    * @throws IOException If the Google sheet is unreachable or invalid.
    */
-  public static List<Sheet> getSheetList(Sheets service, String sheetID) throws IOException {
+  public static List<Sheet> getTabList(Sheets service, String sheetID) throws IOException {
+    logger.debug("Getting tabs for: {}", sheetID);
     Spreadsheet spreadsheet = service.spreadsheets().get(sheetID).execute();
     return spreadsheet.getSheets();
   }

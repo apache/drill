@@ -92,6 +92,23 @@ FROM <plugin name>.<sheet ID>.<tab name>
 ```
 Note that you must specify the tab name to successfully query Google Sheets.
 
+### Metadata
+You can obtain a list of available sheets by querying the `INFORMATION_SCHEMA` as shown below.  Assuming that you have a connection to Google Sheets called `googlesheets`:
+
+```sql
+SELECT * 
+FROM `INFORMATION_SCHEMA`.`SCHEMATA` 
+WHERE SCHEMA_NAME LIKE 'googlesheets%'
+```
+
+Due to rate limits from Google, the tabs are not reported to the `INFORMATION_SCHEMA`.  However, it is possible to obtain a list of all available tabs with the following query:
+
+```sql
+SELECT _sheets 
+FROM googlesheets.`<token>`.`<sheet>` 
+LIMIT 1
+```
+
 ### Using Aliases
 Since the sheet IDs from Google are not human readable, one way to make your life easier is to use Drill's aliasing features to provide a better name for the actual sheet name. 
 

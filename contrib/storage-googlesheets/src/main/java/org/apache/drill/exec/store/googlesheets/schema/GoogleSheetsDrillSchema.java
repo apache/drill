@@ -18,8 +18,8 @@
 
 package org.apache.drill.exec.store.googlesheets.schema;
 
+import com.google.api.services.sheets.v4.Sheets;
 import com.google.api.services.sheets.v4.model.Sheet;
-import org.apache.calcite.schema.SchemaPlus;
 import org.apache.calcite.schema.Table;
 import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.common.map.CaseInsensitiveMap;
@@ -34,9 +34,11 @@ import org.apache.drill.exec.store.googlesheets.GoogleSheetsScanSpec;
 import org.apache.drill.exec.store.googlesheets.GoogleSheetsStoragePlugin;
 import org.apache.drill.exec.store.googlesheets.GoogleSheetsStoragePluginConfig;
 import org.apache.drill.exec.store.googlesheets.GoogleSheetsWriter;
+import org.apache.drill.exec.store.googlesheets.utils.GoogleSheetsUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.IOException;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -50,37 +52,21 @@ public class GoogleSheetsDrillSchema extends AbstractSchema {
 
   private final Map<String, DynamicDrillTable> activeTables = CaseInsensitiveMap.newHashMap();
   private final GoogleSheetsStoragePlugin plugin;
-
+  private final Sheets sheetsService;
   private final SchemaConfig schemaConfig;
+  private final GoogleSheetsRootSchema parent;
+  private final String fileToken;
 
-  public GoogleSheetsDrillSchema(AbstractSchema parent, String name,
+  public GoogleSheetsDrillSchema(AbstractSchema parent, String fileToken,
                                  GoogleSheetsStoragePlugin plugin,
-                                 List<Sheet> subSchemas, SchemaConfig schemaConfig) {
-    super(parent.getSchemaPath(), name);
+                                 SchemaConfig schemaConfig,
+                                 Sheets sheetsService) {
+    super(parent.getSchemaPath(), fileToken);
     this.plugin = plugin;
     this.schemaConfig = schemaConfig;
-
-    // Add sub schemas to list, then create tables
-    for (Sheet sheet : subSchemas) {
-      registerTable(sheet.getProperties().getTitle(),
-        new DynamicDrillTable(plugin, plugin.getName(),
-        new GoogleSheetsScanSpec(
-          name,
-          (GoogleSheetsStoragePluginConfig) plugin.getConfig(),
-          sheet.getProperties().getTitle(),
-          plugin.getName(),
-          subSchemas.indexOf(sheet))
-        )
-      );
-    }
-  }
-
-  public void setHolder(SchemaPlus plusOfThis) {
-    for (String s : getSubSchemaNames()) {
-      GoogleSheetsDrillSchema inner = getSubSchema(s);
-      SchemaPlus holder = plusOfThis.add(s, inner);
-      inner.setHolder(holder);
-    }
+    this.fileToken = fileToken;
+    this.parent = (GoogleSheetsRootSchema) parent;
+    this.sheetsService = sheetsService;
   }
 
   @Override
@@ -90,6 +76,11 @@ public class GoogleSheetsDrillSchema extends AbstractSchema {
 
   @Override
   public Table getTable(String tableName) {
+    // If the tables map is empty, populate it
+    if (activeTables.isEmpty() && GoogleSheetsUtils.isProbableFileToken(fileToken)) {
+      populateActiveTables();
+    }
+
     logger.debug("Getting table: {}", tableName);
     DynamicDrillTable table = activeTables.computeIfAbsent(tableName, this::getDrillTable);
     if (table != null) {
@@ -108,17 +99,36 @@ public class GoogleSheetsDrillSchema extends AbstractSchema {
 
   @Override
   public Set<String> getTableNames() {
-    return activeTables.keySet();
-  }
-
-  @Override
-  public GoogleSheetsDrillSchema getSubSchema(String name) {
-    return null;
+    return Collections.emptySet();
   }
 
   @Override
   public boolean isMutable() {
     return plugin.supportsWrite();
+  }
+
+  private void populateActiveTables() {
+    List<Sheet> tabList;
+    try {
+      tabList = GoogleSheetsUtils.getTabList(sheetsService, fileToken);
+    } catch (IOException e) {
+      throw UserException.connectionError(e)
+        .message("Unable to obtain tab list for Google Sheet document " + fileToken)
+        .build(logger);
+    }
+    // Add sub schemas to list, then create tables
+    for (Sheet sheet : tabList) {
+      registerTable(sheet.getProperties().getTitle(),
+        new DynamicDrillTable(plugin, plugin.getName(),
+          new GoogleSheetsScanSpec(this.fileToken,
+            (GoogleSheetsStoragePluginConfig) plugin.getConfig(),
+            sheet.getProperties().getTitle(),
+            plugin.getName(),
+            tabList.indexOf(sheet)
+          )
+        )
+      );
+    }
   }
 
   @Override
