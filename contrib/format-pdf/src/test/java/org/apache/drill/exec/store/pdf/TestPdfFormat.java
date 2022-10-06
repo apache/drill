@@ -148,7 +148,7 @@ public class TestPdfFormat extends ClusterTest {
 
   @Test
   public void testNoHeaders() throws RpcException {
-    String sql = "SELECT * " +
+    String sql = "SELECT field_0, field_1, field_2, field_3 " +
       "FROM table(cp.`pdf/argentina_diputados_voting_record.pdf` " +
       "(type => 'pdf', combinePages => false, extractHeaders => false)) WHERE field_2 = 'Rio Negro'";
 
