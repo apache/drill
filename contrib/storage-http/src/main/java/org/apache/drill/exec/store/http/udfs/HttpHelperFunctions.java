@@ -126,9 +126,6 @@ public class HttpHelperFunctions {
     DrillbitContext drillbitContext;
 
     @Inject
-    org.apache.drill.exec.ops.ContextInformation contextInformation;
-
-    @Inject
     ResultSetLoader rsLoader;
 
     @Workspace
