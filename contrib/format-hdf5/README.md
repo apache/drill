@@ -6,7 +6,7 @@ Per wikipedia, Hierarchical Data Format (HDF) is a set of file formats designed 
 This plugin enables Apache Drill to query HDF5 files.
 
 ## Configuration
-There are three configuration variables in this plugin:
+There are four configuration variables in this plugin:
 * `type`: This should be set to `hdf5`.
 * `extensions`: This is a list of the file extensions used to identify HDF5 files. Typically HDF5 uses `.h5` or `.hdf5` as file extensions. This defaults to `.h5`.
 * `defaultPath`: The default path defines which path Drill will query for data. Typically this should be left as `null` in the configuration file. Its usage is explained below.
