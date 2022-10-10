@@ -252,7 +252,9 @@ public enum PlannerPhase {
   private static RuleSet getStorageRules(OptimizerRulesContext context, Collection<StoragePlugin> plugins,
       PlannerPhase phase) {
     final Builder<RelOptRule> rules = ImmutableSet.builder();
-    plugins.stream().map(sp -> rules.addAll(sp.getOptimizerRules(context, phase)));
+    for (StoragePlugin sp : plugins) {
+      rules.addAll(sp.getOptimizerRules(context, phase));
+    }
     return RuleSets.ofList(rules.build());
   }
 
