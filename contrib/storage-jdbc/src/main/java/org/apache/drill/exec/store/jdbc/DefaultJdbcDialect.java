@@ -47,7 +47,7 @@ public class DefaultJdbcDialect implements JdbcDialect {
       return;
     }
 
-    DrillJdbcConvention convention = plugin.getConvention(dialect, config.getQueryUserCredentials().getUserName());
+    DrillJdbcConvention convention = plugin.getConvention(dialect, config.getQueryUserCredentials());
 
     JdbcCatalogSchema schema = new JdbcCatalogSchema(
       plugin.getName(),

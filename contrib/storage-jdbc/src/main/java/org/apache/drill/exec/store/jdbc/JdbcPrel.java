@@ -29,6 +29,7 @@ import org.apache.drill.exec.physical.base.PhysicalOperator;
 import org.apache.drill.exec.planner.physical.PhysicalPlanCreator;
 import org.apache.drill.exec.planner.physical.Prel;
 import org.apache.drill.exec.planner.physical.visitor.PrelVisitor;
+import org.apache.drill.exec.proto.UserBitShared.UserCredentials;
 import org.apache.drill.exec.record.BatchSchema.SelectionVectorMode;
 
 import java.util.ArrayList;
@@ -43,12 +44,12 @@ public class JdbcPrel extends AbstractRelNode implements Prel {
   private final String sql;
   private final double rows;
   private final DrillJdbcConvention convention;
-  private final String username;
+  private final UserCredentials userCredentials;
 
-  public JdbcPrel(RelOptCluster cluster, RelTraitSet traitSet, JdbcIntermediatePrel prel, String username) {
+  public JdbcPrel(RelOptCluster cluster, RelTraitSet traitSet, JdbcIntermediatePrel prel, UserCredentials userCredentials) {
     super(cluster, traitSet);
     final RelNode input = prel.getInput();
-    this.username = username;
+    this.userCredentials = userCredentials;
     rows = input.estimateRowCount(cluster.getMetadataQuery());
     convention = (DrillJdbcConvention) input.getTraitSet().getTrait(ConventionTraitDef.INSTANCE);
     JdbcDialect jdbcDialect = convention.getPlugin().getJdbcDialect(convention.dialect);
@@ -74,7 +75,7 @@ public class JdbcPrel extends AbstractRelNode implements Prel {
     for (String col : rowType.getFieldNames()) {
       columns.add(SchemaPath.getSimplePath(col));
     }
-    JdbcGroupScan output = new JdbcGroupScan(sql, columns, convention.getPlugin(), rows, username);
+    JdbcGroupScan output = new JdbcGroupScan(sql, columns, convention.getPlugin(), rows, userCredentials.getUserName());
     return creator.addMetadata(this, output);
   }
 

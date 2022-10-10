@@ -28,6 +28,7 @@ import org.apache.drill.exec.planner.physical.Prel;
 import org.apache.drill.exec.planner.physical.SinglePrel;
 import org.apache.drill.exec.planner.physical.visitor.PrelVisitor;
 import org.apache.drill.exec.planner.sql.handlers.PrelFinalizable;
+import org.apache.drill.exec.proto.UserBitShared.UserCredentials;
 import org.apache.drill.exec.record.BatchSchema.SelectionVectorMode;
 
 /**
@@ -35,11 +36,11 @@ import org.apache.drill.exec.record.BatchSchema.SelectionVectorMode;
  * before execution can happen.
  */
 public class JdbcIntermediatePrel extends SinglePrel implements PrelFinalizable {
-  private final String username;
+  private final UserCredentials userCredentials;
 
-  public JdbcIntermediatePrel(RelOptCluster cluster, RelTraitSet traits, RelNode child, String username) {
+  public JdbcIntermediatePrel(RelOptCluster cluster, RelTraitSet traits, RelNode child, UserCredentials userCredentials) {
     super(cluster, traits, child);
-    this.username = username;
+    this.userCredentials = userCredentials;
   }
 
   @Override
@@ -49,7 +50,7 @@ public class JdbcIntermediatePrel extends SinglePrel implements PrelFinalizable 
 
   @Override
   public RelNode copy(RelTraitSet traitSet, List<RelNode> inputs) {
-    return new JdbcIntermediatePrel(getCluster(), traitSet, getInput(), username);
+    return new JdbcIntermediatePrel(getCluster(), traitSet, getInput(), userCredentials);
   }
 
   @Override
@@ -64,7 +65,7 @@ public class JdbcIntermediatePrel extends SinglePrel implements PrelFinalizable 
 
   @Override
   public Prel finalizeRel() {
-    return new JdbcPrel(getCluster(), getTraitSet(), this, username);
+    return new JdbcPrel(getCluster(), getTraitSet(), this, userCredentials);
   }
 
   @Override

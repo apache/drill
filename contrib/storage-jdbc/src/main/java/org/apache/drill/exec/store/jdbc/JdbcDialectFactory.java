@@ -18,38 +18,24 @@
 package org.apache.drill.exec.store.jdbc;
 
 import org.apache.calcite.sql.SqlDialect;
-import org.apache.drill.common.exceptions.DrillRuntimeException;
 import org.apache.drill.exec.store.jdbc.clickhouse.ClickhouseJdbcDialect;
-import org.apache.drill.shaded.guava.com.google.common.cache.Cache;
-import org.apache.drill.shaded.guava.com.google.common.cache.CacheBuilder;
 
 import java.time.Duration;
-
-import java.util.concurrent.Callable;
-import java.util.concurrent.ExecutionException;
 
 public class JdbcDialectFactory {
   public static final String JDBC_CLICKHOUSE_PREFIX = "jdbc:clickhouse";
   public static final int CACHE_SIZE = 100;
   public static final Duration CACHE_TTL = Duration.ofHours(1);
-
-  private final Cache<SqlDialect, JdbcDialect> cache = CacheBuilder.newBuilder()
-      .maximumSize(CACHE_SIZE)
-      .expireAfterAccess(CACHE_TTL)
-      .build();
+  private JdbcDialect jdbcDialect;
 
   public JdbcDialect getJdbcDialect(JdbcStoragePlugin plugin, SqlDialect dialect) {
-    try {
-      return cache.get(dialect, new Callable<JdbcDialect>() {
-        @Override
-        public JdbcDialect call() {
-          return plugin.getConfig().getUrl().startsWith(JDBC_CLICKHOUSE_PREFIX)
-              ? new ClickhouseJdbcDialect(plugin, dialect)
-              : new DefaultJdbcDialect(plugin, dialect);
-        }
-      });
-    } catch (ExecutionException ex) {
-      throw new DrillRuntimeException("Cannot load the requested JdbcDialect", ex);
+    // Note: any given JdbcDialectFactory instance will only ever be called with
+    // a single SqlDialect.
+    if (jdbcDialect == null) {
+      jdbcDialect = plugin.getConfig().getUrl().startsWith(JDBC_CLICKHOUSE_PREFIX)
+            ? new ClickhouseJdbcDialect(plugin, dialect)
+            : new DefaultJdbcDialect(plugin, dialect);
     }
+    return jdbcDialect;
   }
 }

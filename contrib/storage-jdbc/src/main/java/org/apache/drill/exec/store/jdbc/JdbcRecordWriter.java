@@ -28,6 +28,7 @@ import org.apache.drill.common.AutoCloseables;
 import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.common.types.TypeProtos.DataMode;
 import org.apache.drill.common.types.Types;
+import org.apache.drill.exec.proto.UserBitShared.UserCredentials;
 import org.apache.drill.exec.record.BatchSchema;
 import org.apache.drill.exec.record.MaterializedField;
 import org.apache.drill.exec.record.VectorAccessible;
@@ -39,7 +40,6 @@ import org.apache.drill.exec.vector.complex.reader.FieldReader;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.sql.DataSource;
 import java.io.IOException;
 import java.sql.Connection;
 import java.sql.SQLException;
@@ -60,15 +60,15 @@ public class JdbcRecordWriter extends AbstractRecordWriter {
   private final JdbcWriter config;
   private int recordCount;
 
-  public JdbcRecordWriter(DataSource source, List<String> tableIdentifier, JdbcWriter config) {
+  public JdbcRecordWriter(UserCredentials userCredentials, List<String> tableIdentifier, JdbcWriter config) {
     this.tableIdentifier = tableIdentifier;
-    this.dialect = config.getPlugin().getDialect(source);
+    this.dialect = config.getPlugin().getDialect(userCredentials);
     this.config = config;
     this.recordCount = 0;
     this.insertStatementBuilder = getInsertStatementBuilder(tableIdentifier);
 
     try {
-      this.connection = source.getConnection();
+      this.connection = config.getPlugin().getDataSource(userCredentials).get().getConnection();
     } catch (SQLException e) {
       throw UserException.connectionError()
         .message("Unable to open JDBC connection for writing.")
