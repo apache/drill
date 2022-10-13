@@ -64,7 +64,7 @@
     <avatica.version>1.17.0</avatica.version>
     <janino.version>3.0.11</janino.version>
     <sqlline.version>1.12.0</sqlline.version>
-    <jackson.version>2.13.2.20220328</jackson.version>
+    <jackson.version>2.13.4.20221012</jackson.version>
     <zookeeper.version>3.5.7</zookeeper.version>
     <mapr.release.version>6.1.0-mapr</mapr.release.version>
     <ojai.version>3.0-mapr-1808</ojai.version>
