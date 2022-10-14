@@ -26,6 +26,7 @@ import org.apache.drill.exec.physical.resultSet.RowSetLoader;
 import org.apache.drill.exec.record.metadata.ColumnMetadata;
 import org.apache.drill.exec.record.metadata.MetadataUtils;
 import org.apache.drill.exec.store.easy.json.loader.JsonLoaderOptions;
+import org.apache.drill.exec.store.easy.json.loader.ClosingStreamIterator;
 import org.apache.drill.exec.store.easy.json.parser.TokenIterator;
 import org.apache.drill.exec.store.kafka.KafkaStoragePlugin;
 import org.apache.drill.exec.store.kafka.MetaDataField;
@@ -37,8 +38,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.ByteArrayInputStream;
-import java.io.InputStream;
-import java.util.Iterator;
 import java.util.Properties;
 import java.util.StringJoiner;
 
@@ -50,7 +49,7 @@ public class JsonMessageReader implements MessageReader {
 
   private static final Logger logger = LoggerFactory.getLogger(JsonMessageReader.class);
 
-  private final SingleElementIterator<InputStream> stream = new SingleElementIterator<>();
+  private final ClosingStreamIterator stream = new ClosingStreamIterator();
 
   private KafkaJsonLoader kafkaJsonLoader;
   private ResultSetLoader resultSetLoader;
@@ -155,25 +154,5 @@ public class JsonMessageReader implements MessageReader {
         .add("kafkaJsonLoader=" + kafkaJsonLoader)
         .add("resultSetLoader=" + resultSetLoader)
         .toString();
-  }
-
-  public static class SingleElementIterator<T> implements Iterator<T> {
-    private T value;
-
-    @Override
-    public boolean hasNext() {
-      return value != null;
-    }
-
-    @Override
-    public T next() {
-      T value = this.value;
-      this.value = null;
-      return value;
-    }
-
-    public void setValue(T value) {
-      this.value = value;
-    }
   }
 }

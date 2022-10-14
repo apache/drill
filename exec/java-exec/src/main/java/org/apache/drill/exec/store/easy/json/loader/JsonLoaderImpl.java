@@ -24,6 +24,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
+import org.apache.drill.common.AutoCloseables;
 import org.apache.drill.common.exceptions.CustomErrorContext;
 import org.apache.drill.common.exceptions.EmptyErrorContext;
 import org.apache.drill.common.exceptions.UserException;
@@ -232,6 +233,7 @@ public class JsonLoaderImpl implements JsonLoader, ErrorFactory {
   private final JsonStructureParser parser;
   private final FieldFactory fieldFactory;
   private final ImplicitColumns implicitFields;
+  private final Iterable<InputStream> streams;
   private final int maxRows;
   private boolean eof;
 
@@ -254,6 +256,7 @@ public class JsonLoaderImpl implements JsonLoader, ErrorFactory {
     this.implicitFields = builder.implicitFields;
     this.maxRows = builder.maxRows;
     this.fieldFactory = buildFieldFactory(builder);
+    this.streams = builder.streams;
     this.parser = buildParser(builder);
   }
 
@@ -354,6 +357,13 @@ public class JsonLoaderImpl implements JsonLoader, ErrorFactory {
   @Override // JsonLoader
   public void close() {
     parser.close();
+    for (InputStream stream: streams) {
+      try {
+        AutoCloseables.close(stream);
+      } catch (Exception ex) {
+        logger.warn("Failed to close an input stream, a system resource leak may ensue.", ex);
+      }
+    }
   }
 
   @Override // ErrorFactory
