@@ -29,9 +29,6 @@
 
   <artifactId>drill-storage-splunk</artifactId>
   <name>Drill : Contrib : Storage : Splunk</name>
-  <properties>
-    <okhttp.version>4.5.0</okhttp.version>
-  </properties>
 
   <dependencies>
     <dependency>
