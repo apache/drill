@@ -88,7 +88,7 @@
     <hadoop.version>3.2.4</hadoop.version>
     <hbase.version>2.4.9</hbase.version>
     <fmpp.version>1.0</fmpp.version>
-    <freemarker.version>2.3.28</freemarker.version>
+    <freemarker.version>2.3.30</freemarker.version>
     <javassist.version>3.28.0-GA</javassist.version>
     <msgpack.version>0.6.6</msgpack.version>
     <reflections.version>0.9.10</reflections.version>
