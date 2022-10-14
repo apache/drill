@@ -135,6 +135,38 @@ public class TestGoogleSheetsQueries extends ClusterTest {
   }
 
   @Test
+  public void testStarQueryWithTabs() throws Exception {
+    try {
+      initializeTokens("googlesheets");
+    } catch (PluginException e) {
+      fail(e.getMessage());
+    }
+
+    String sql = String.format("SELECT * FROM googlesheets.`%s`.`tab[1]` WHERE `Col2` < 6.0", sheetID);
+    RowSet results = queryBuilder().sql(sql).rowSet();
+
+    TupleMetadata expectedSchema = new SchemaBuilder()
+      .addNullable("Col1", MinorType.VARCHAR)
+      .addNullable("Col2", MinorType.FLOAT8)
+      .addNullable("Col3", MinorType.DATE)
+      .buildSchema();
+
+    RowSet expected = client.rowSetBuilder(expectedSchema)
+      .addRow("Rosaline  Thales", 1.0, null)
+      .addRow("Abdolhossein  Detlev", 2.0001, LocalDate.parse("2020-04-30"))
+      .addRow(null, 4.0, LocalDate.parse("2020-06-30"))
+      .addRow("Yunus  Elena", 3.5, LocalDate.parse("2021-01-15"))
+      .addRow("Swaran  Ohiyesa", -63.8, LocalDate.parse("2021-04-08"))
+      .addRow("Kalani  Godabert", 0.0, LocalDate.parse("2021-06-28"))
+      .addRow("Caishen  Origenes", 5.0E-7, LocalDate.parse("2021-07-09"))
+      .addRow("Toufik  Gurgen", 2.0, LocalDate.parse("2021-11-05"))
+      .build();
+
+    new RowSetComparison(expected).verifyAndClearAll(results);
+  }
+
+
+  @Test
   public void testSchemataInformationSchema() throws Exception {
     try {
       initializeTokens("googlesheets");
@@ -184,6 +216,30 @@ public class TestGoogleSheetsQueries extends ClusterTest {
 
     new RowSetComparison(expected).verifyAndClearAll(results);
   }
+
+  @Test
+  public void testImplicitFieldsWithTabs() throws Exception {
+    // Tests special case of only implicit metadata fields being projected.
+    try {
+      initializeTokens("googlesheets");
+    } catch (PluginException e) {
+      fail(e.getMessage());
+    }
+
+    String sql = String.format("SELECT _sheets FROM googlesheets.`%s`.`tab[1]` LIMIT 1", sheetID);
+    RowSet results = queryBuilder().sql(sql).rowSet();
+
+    TupleMetadata expectedSchema = new SchemaBuilder()
+      .addArray("_sheets", MinorType.VARCHAR)
+      .buildSchema();
+
+    RowSet expected = client.rowSetBuilder(expectedSchema)
+      .addRow((Object) strArray("TestSheet1", "MixedSheet"))
+      .build();
+
+    new RowSetComparison(expected).verifyAndClearAll(results);
+  }
+
 
   @Ignore("Implicit columns have some projection issues. See DRILL-7080.  Once this is resolved, re-enable this test.")
   @Test
@@ -263,6 +319,53 @@ public class TestGoogleSheetsQueries extends ClusterTest {
     }
 
     String sql = String.format("SELECT Col1, Col3 FROM googlesheets.`%s`.`MixedSheet` WHERE `Col2` < 6.0", sheetID);
+    RowSet results = queryBuilder().sql(sql).rowSet();
+
+    TupleMetadata expectedSchema = new SchemaBuilder()
+      .addNullable("Col1", MinorType.VARCHAR)
+      .addNullable("Col3", MinorType.DATE)
+      .buildSchema();
+
+    RowSet expected = client.rowSetBuilder(expectedSchema)
+      .addRow("Rosaline  Thales", null)
+      .addRow("Abdolhossein  Detlev", LocalDate.parse("2020-04-30"))
+      .addRow(null, LocalDate.parse("2020-06-30"))
+      .addRow("Yunus  Elena", LocalDate.parse("2021-01-15"))
+      .addRow("Swaran  Ohiyesa", LocalDate.parse("2021-04-08"))
+      .addRow("Kalani  Godabert",LocalDate.parse("2021-06-28"))
+      .addRow("Caishen  Origenes", LocalDate.parse("2021-07-09"))
+      .addRow("Toufik  Gurgen", LocalDate.parse("2021-11-05"))
+      .build();
+
+    new RowSetComparison(expected).verifyAndClearAll(results);
+  }
+
+  @Test
+  public void testInvalidTab() throws Exception {
+    try {
+      initializeTokens("googlesheets");
+    } catch (PluginException e) {
+      fail(e.getMessage());
+    }
+
+    try {
+      String sql = String.format("SELECT * FROM googlesheets.`%s`.`tab[5]` WHERE `Col2` < 6.0", sheetID);
+      queryBuilder().sql(sql).run();
+      fail();
+    } catch (Exception e) {
+      assertTrue(e.getMessage().contains("Tab not found at index 5"));
+    }
+  }
+
+  @Test
+  public void testWithExplicitColumnsWithTab() throws Exception {
+    try {
+      initializeTokens("googlesheets");
+    } catch (PluginException e) {
+      fail(e.getMessage());
+    }
+
+    String sql = String.format("SELECT Col1, Col3 FROM googlesheets.`%s`.`tab[1]` WHERE `Col2` < 6.0", sheetID);
     RowSet results = queryBuilder().sql(sql).rowSet();
 
     TupleMetadata expectedSchema = new SchemaBuilder()
@@ -406,6 +509,34 @@ public class TestGoogleSheetsQueries extends ClusterTest {
     }
 
     String sql = String.format("SELECT * FROM table(`googlesheets`.`%s`.`MixedSheet` (schema => 'inline=(`Col1` VARCHAR, `Col2` INTEGER, `Col3` VARCHAR)')) LIMIT 5", sheetID);
+    RowSet results = queryBuilder().sql(sql).rowSet();
+
+    TupleMetadata expectedSchema = new SchemaBuilder()
+      .addNullable("Col1", MinorType.VARCHAR)
+      .addNullable("Col2", MinorType.INT)
+      .addNullable("Col3", MinorType.VARCHAR)
+      .buildSchema();
+
+    RowSet expected = client.rowSetBuilder(expectedSchema)
+      .addRow("Rosaline  Thales", 1, null)
+      .addRow("Abdolhossein  Detlev", 2, "2020-04-30")
+      .addRow("Yosuke  Simon", null, "2020-05-22")
+      .addRow(null, 4, "2020-06-30")
+      .addRow("Avitus  Stribog", 500000, "2020-07-27")
+      .build();
+
+    new RowSetComparison(expected).verifyAndClearAll(results);
+  }
+
+  @Test
+  public void testSchemaProvisioningWithTab() throws Exception {
+    try {
+      initializeTokens("googlesheets");
+    } catch (PluginException e) {
+      fail(e.getMessage());
+    }
+
+    String sql = String.format("SELECT * FROM table(`googlesheets`.`%s`.`tab[1]` (schema => 'inline=(`Col1` VARCHAR, `Col2` INTEGER, `Col3` VARCHAR)')) LIMIT 5", sheetID);
     RowSet results = queryBuilder().sql(sql).rowSet();
 
     TupleMetadata expectedSchema = new SchemaBuilder()
