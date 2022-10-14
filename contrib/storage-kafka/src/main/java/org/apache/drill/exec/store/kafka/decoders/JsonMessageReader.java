@@ -38,7 +38,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.ByteArrayInputStream;
-import java.io.InputStream;
 import java.util.Properties;
 import java.util.StringJoiner;
 
@@ -50,7 +49,7 @@ public class JsonMessageReader implements MessageReader {
 
   private static final Logger logger = LoggerFactory.getLogger(JsonMessageReader.class);
 
-  private final ClosingStreamIterator<InputStream> stream = new ClosingStreamIterator<>();
+  private final ClosingStreamIterator stream = new ClosingStreamIterator();
 
   private KafkaJsonLoader kafkaJsonLoader;
   private ResultSetLoader resultSetLoader;
