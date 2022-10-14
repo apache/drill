@@ -26,7 +26,7 @@ import org.apache.drill.exec.physical.resultSet.RowSetLoader;
 import org.apache.drill.exec.record.metadata.ColumnMetadata;
 import org.apache.drill.exec.record.metadata.MetadataUtils;
 import org.apache.drill.exec.store.easy.json.loader.JsonLoaderOptions;
-import org.apache.drill.exec.store.easy.json.loader.SingleElementIterator;
+import org.apache.drill.exec.store.easy.json.loader.ClosingStreamIterator;
 import org.apache.drill.exec.store.easy.json.parser.TokenIterator;
 import org.apache.drill.exec.store.kafka.KafkaStoragePlugin;
 import org.apache.drill.exec.store.kafka.MetaDataField;
@@ -50,7 +50,7 @@ public class JsonMessageReader implements MessageReader {
 
   private static final Logger logger = LoggerFactory.getLogger(JsonMessageReader.class);
 
-  private final SingleElementIterator<InputStream> stream = new SingleElementIterator<>();
+  private final ClosingStreamIterator<InputStream> stream = new ClosingStreamIterator<>();
 
   private KafkaJsonLoader kafkaJsonLoader;
   private ResultSetLoader resultSetLoader;

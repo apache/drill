@@ -58,11 +58,11 @@ public class HttpHelperFunctions {
     org.apache.drill.exec.store.easy.json.loader.JsonLoaderImpl jsonLoader;
 
     @Workspace
-    org.apache.drill.exec.store.easy.json.loader.SingleElementIterator<java.io.InputStream> stream;
+    org.apache.drill.exec.store.easy.json.loader.ClosingStreamIterator stream;
 
     @Override
     public void setup() {
-      stream = new org.apache.drill.exec.store.easy.json.loader.SingleElementIterator<>();
+      stream = new org.apache.drill.exec.store.easy.json.loader.ClosingStreamIterator();
       rsLoader.startBatch();
     }
 
@@ -78,7 +78,7 @@ public class HttpHelperFunctions {
         return;
       }
       String finalUrl = org.apache.drill.exec.store.http.util.SimpleHttp.mapPositionalParameters(url, args);
-      // Make the API call, we expect that results will be closed by the JsonLoader
+      // Make the API call
       java.io.InputStream results = org.apache.drill.exec.store.http.util.SimpleHttp.getRequestAndStreamResponse(finalUrl);
       // If the result string is null or empty, return an empty map
       if (results == null) {
@@ -95,6 +95,7 @@ public class HttpHelperFunctions {
           rowWriter.save();
         } else {
           jsonLoader.close();
+          results.close();
         }
       } catch (Exception e) {
         throw org.apache.drill.common.exceptions.UserException.dataReadError(e)
@@ -138,7 +139,7 @@ public class HttpHelperFunctions {
     org.apache.drill.exec.store.http.HttpApiConfig endpointConfig;
 
     @Workspace
-    org.apache.drill.exec.store.easy.json.loader.SingleElementIterator<java.io.InputStream> stream;
+    org.apache.drill.exec.store.easy.json.loader.ClosingStreamIterator stream;
 
     @Override
     public void setup() {
@@ -158,7 +159,7 @@ public class HttpHelperFunctions {
         endpointName,
         plugin.getConfig()
       );
-      stream = new org.apache.drill.exec.store.easy.json.loader.SingleElementIterator<>();
+      stream = new org.apache.drill.exec.store.easy.json.loader.ClosingStreamIterator();
       // Add JSON configuration from Storage plugin, if present.
       rsLoader.startBatch();
     }
@@ -172,7 +173,6 @@ public class HttpHelperFunctions {
       if (args == null) {
         return;
       }
-      // we expect that results will be closed by the JsonLoader
       java.io.InputStream results = org.apache.drill.exec.store.http.util.SimpleHttp.apiCall(plugin, endpointConfig, drillbitContext, args)
         .getInputStream();
       // If the result string is null or empty, return an empty map
@@ -191,6 +191,7 @@ public class HttpHelperFunctions {
           rowWriter.save();
         } else {
           jsonLoader.close();
+          results.close();
         }
       } catch (Exception e) {
         throw org.apache.drill.common.exceptions.UserException.dataReadError(e)

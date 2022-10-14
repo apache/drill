@@ -19,6 +19,7 @@ package org.apache.drill.exec.store.http.util;
 
 import com.typesafe.config.Config;
 import okhttp3.Cache;
+import okhttp3.ConnectionPool;
 import okhttp3.Credentials;
 import okhttp3.FormBody;
 import okhttp3.HttpUrl;
@@ -103,6 +104,12 @@ public class SimpleHttp implements AutoCloseable {
   private static final int DEFAULT_TIMEOUT = 1;
   private static final Pattern URL_PARAM_REGEX = Pattern.compile("\\{(\\w+)(?:=(\\w*))?}");
   public static final MediaType JSON_MEDIA_TYPE = MediaType.get("application/json; charset=utf-8");
+  private static final OkHttpClient SIMPLE_CLIENT = new OkHttpClient.Builder()
+    .connectTimeout(DEFAULT_TIMEOUT, TimeUnit.SECONDS)
+    .writeTimeout(DEFAULT_TIMEOUT, TimeUnit.SECONDS)
+    .readTimeout(DEFAULT_TIMEOUT, TimeUnit.SECONDS)
+    .build();
+
 
   private final OkHttpClient client;
   private final File tempDir;
@@ -233,6 +240,10 @@ public class SimpleHttp implements AutoCloseable {
     builder.connectTimeout(timeout, TimeUnit.SECONDS);
     builder.writeTimeout(timeout, TimeUnit.SECONDS);
     builder.readTimeout(timeout, TimeUnit.SECONDS);
+    // OkHttp's connection pooling is disabled because the HTTP plugin creates
+    // and discards potentially many OkHttp clients, each leaving lingering
+    // CLOSE_WAIT connections around if they have pooling enabled.
+    builder.connectionPool(new ConnectionPool(0, 1, TimeUnit.SECONDS));
 
     // Code to skip SSL Certificate validation
     // Sourced from https://stackoverflow.com/questions/60110848/how-to-disable-ssl-verification
@@ -927,14 +938,6 @@ public class SimpleHttp implements AutoCloseable {
       .build();
   }
 
-  public static OkHttpClient getSimpleHttpClient() {
-    return new OkHttpClient.Builder()
-      .connectTimeout(DEFAULT_TIMEOUT, TimeUnit.SECONDS)
-      .writeTimeout(DEFAULT_TIMEOUT, TimeUnit.SECONDS)
-      .readTimeout(DEFAULT_TIMEOUT, TimeUnit.SECONDS)
-      .build();
-  }
-
   public static String getRequestAndStringResponse(String url) {
     ResponseBody respBody = null;
     try {
@@ -973,7 +976,6 @@ public class SimpleHttp implements AutoCloseable {
    * @throws IOException
    */
   public static ResponseBody makeSimpleGetRequest(String url) throws IOException {
-    OkHttpClient client = getSimpleHttpClient();
     Request.Builder requestBuilder = new Request.Builder()
       .url(url);
 
@@ -981,7 +983,7 @@ public class SimpleHttp implements AutoCloseable {
     Request request = requestBuilder.build();
 
     // Execute the request
-    Response response = client.newCall(request).execute();
+    Response response = SIMPLE_CLIENT.newCall(request).execute();
     return response.body();
   }
 
@@ -993,6 +995,7 @@ public class SimpleHttp implements AutoCloseable {
       if (cache != null) {
         cache.close();
       }
+      client.connectionPool().evictAll();
     } catch (IOException e) {
       logger.warn("Error closing cache. {}", e.getMessage());
     }

@@ -22,12 +22,10 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.drill.exec.physical.resultSet.ResultSetLoader;
 import org.apache.drill.exec.server.options.OptionManager;
 import org.apache.drill.exec.store.easy.json.loader.JsonLoaderImpl;
-import org.apache.drill.exec.store.easy.json.loader.SingleElementIterator;
+import org.apache.drill.exec.store.easy.json.loader.ClosingStreamIterator;
 import org.apache.drill.exec.store.http.HttpApiConfig;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import java.io.InputStream;
 
 public class HttpUdfUtils {
 
@@ -35,11 +33,11 @@ public class HttpUdfUtils {
 
   public static JsonLoaderImpl createJsonLoader(ResultSetLoader rsLoader,
                                                 OptionManager options,
-                                                SingleElementIterator<InputStream> stream) {
+                                                ClosingStreamIterator stream) {
     return createJsonLoader(null, rsLoader, options, stream);
   }
   public static JsonLoaderImpl createJsonLoader(HttpApiConfig endpointConfig, ResultSetLoader rsLoader,
-                                                OptionManager options, SingleElementIterator<InputStream> stream) {
+                                                OptionManager options, ClosingStreamIterator stream) {
     // Add JSON configuration from Storage plugin, if present.
     org.apache.drill.exec.store.easy.json.loader.JsonLoaderImpl.JsonLoaderBuilder jsonLoaderBuilder =
       new org.apache.drill.exec.store.easy.json.loader.JsonLoaderImpl.JsonLoaderBuilder()
