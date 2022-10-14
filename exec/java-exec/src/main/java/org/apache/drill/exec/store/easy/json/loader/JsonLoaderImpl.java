@@ -29,6 +29,7 @@ import java.util.Map;
 
 import io.netty.buffer.DrillBuf;
 import org.apache.commons.io.IOUtils;
+import org.apache.drill.common.AutoCloseables;
 import org.apache.drill.common.exceptions.CustomErrorContext;
 import org.apache.drill.common.exceptions.EmptyErrorContext;
 import org.apache.drill.common.exceptions.UserException;
@@ -254,6 +255,7 @@ public class JsonLoaderImpl implements JsonLoader, ErrorFactory {
   private final FieldFactory fieldFactory;
   private final ImplicitColumns implicitFields;
   private final Map<String, Object> listenerColumnMap;
+  private final Iterable<InputStream> streams;
   private final int maxRows;
   private boolean eof;
 
@@ -277,6 +279,7 @@ public class JsonLoaderImpl implements JsonLoader, ErrorFactory {
     this.maxRows = builder.maxRows;
     this.fieldFactory = buildFieldFactory(builder);
     this.listenerColumnMap = builder.listenerColumnMap;
+    this.streams = builder.streams;
     this.parser = buildParser(builder);
   }
 
@@ -381,6 +384,13 @@ public class JsonLoaderImpl implements JsonLoader, ErrorFactory {
   @Override // JsonLoader
   public void close() {
     parser.close();
+    for (InputStream stream: streams) {
+      try {
+        AutoCloseables.close(stream);
+      } catch (Exception ex) {
+        logger.warn("Failed to close an input stream, a system resource leak may ensue.", ex);
+      }
+    }
   }
 
   @Override // ErrorFactory

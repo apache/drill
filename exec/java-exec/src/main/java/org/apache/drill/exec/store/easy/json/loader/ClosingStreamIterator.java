@@ -17,6 +17,10 @@
  */
 package org.apache.drill.exec.store.easy.json.loader;
 
+import java.io.InputStream;
+
+import org.apache.drill.common.AutoCloseables;
+
 import java.util.Iterator;
 
 /**
@@ -24,22 +28,27 @@ import java.util.Iterator;
  *
  * @param <T> type of the value
  */
-public class SingleElementIterator<T> implements Iterator<T> {
-    private T value;
+public class ClosingStreamIterator implements Iterator<InputStream> {
+    private InputStream value, last;
 
     @Override
     public boolean hasNext() {
-      return value != null;
+      if (value == null) {
+        AutoCloseables.closeSilently(last);
+        return false;
+      }
+      return true;
     }
 
     @Override
-    public T next() {
-      T value = this.value;
+    public InputStream next() {
+      this.last = this.value;
       this.value = null;
-      return value;
+      return this.last;
     }
 
-    public void setValue(T value) {
+    public void setValue(InputStream value) {
+      AutoCloseables.closeSilently(this.value);
       this.value = value;
     }
   }
