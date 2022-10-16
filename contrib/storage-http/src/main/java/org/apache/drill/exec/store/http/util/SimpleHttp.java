@@ -240,6 +240,7 @@ public class SimpleHttp implements AutoCloseable {
     builder.connectTimeout(timeout, TimeUnit.SECONDS);
     builder.writeTimeout(timeout, TimeUnit.SECONDS);
     builder.readTimeout(timeout, TimeUnit.SECONDS);
+    builder.addInterceptor(new RateLimitInterceptor(1000));
     // OkHttp's connection pooling is disabled because the HTTP plugin creates
     // and discards potentially many OkHttp clients, each leaving lingering
     // CLOSE_WAIT connections around if they have pooling enabled.
@@ -1022,6 +1023,39 @@ public class SimpleHttp implements AutoCloseable {
       return chain.proceed(authenticatedRequest);
     }
   }
+
+  /**
+   * This interceptor is used in pagination situations or elsewhere when APIs have burst throttling. The rate limit interceptor
+   * will wait a configurable number of milliseconds and retry queries if it encounters a 429 response code.
+   *
+   * Code sourced from https://stackoverflow.com/questions/35364823/okhttp-api-rate-limit
+   */
+  public static class RateLimitInterceptor implements Interceptor {
+    private final int millis;
+    public RateLimitInterceptor(int millis) {
+      this.millis = millis;
+    }
+
+    @NotNull
+    @Override
+    public Response intercept(Chain chain) throws IOException {
+
+      Response response = chain.proceed(chain.request());
+      // 429 is how the api indicates a rate limit error
+      if (!response.isSuccessful() && response.code() == 429) {
+        logger.info("Received 429 Response.  Throttling API calls: {} ", response.message());
+        // Wait and retry request
+        try {
+          Thread.sleep(millis);
+        } catch (InterruptedException e) {
+          logger.error("Error retrying HTTP request: {}", e.getMessage());
+        }
+        response = chain.proceed(chain.request());
+      }
+      return response;
+    }
+  }
+
 
   public static class SimpleHttpBuilder {
     private HttpSubScan scanDefn;
