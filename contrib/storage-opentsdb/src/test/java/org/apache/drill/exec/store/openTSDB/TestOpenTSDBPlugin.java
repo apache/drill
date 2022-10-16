@@ -15,13 +15,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.drill.store.openTSDB;
+package org.apache.drill.exec.store.openTSDB;
 
 import com.github.tomakehurst.wiremock.junit.WireMockRule;
 import org.apache.drill.common.exceptions.UserRemoteException;
 import org.apache.drill.exec.proto.UserBitShared.QueryType;
 import org.apache.drill.exec.store.StoragePluginRegistry;
-import org.apache.drill.exec.store.openTSDB.OpenTSDBStoragePluginConfig;
 import org.apache.drill.test.ClientFixture;
 import org.apache.drill.test.ClusterFixture;
 import org.apache.drill.test.ClusterTest;
@@ -36,20 +35,20 @@ import static com.github.tomakehurst.wiremock.client.WireMock.equalToJson;
 import static com.github.tomakehurst.wiremock.client.WireMock.get;
 import static com.github.tomakehurst.wiremock.client.WireMock.post;
 import static com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo;
-import static org.apache.drill.store.openTSDB.TestDataHolder.DOWNSAMPLE_REQUEST_WITH_TAGS;
-import static org.apache.drill.store.openTSDB.TestDataHolder.DOWNSAMPLE_REQUEST_WTIHOUT_TAGS;
-import static org.apache.drill.store.openTSDB.TestDataHolder.END_PARAM_REQUEST_WITH_TAGS;
-import static org.apache.drill.store.openTSDB.TestDataHolder.END_PARAM_REQUEST_WTIHOUT_TAGS;
-import static org.apache.drill.store.openTSDB.TestDataHolder.POST_REQUEST_WITHOUT_TAGS;
-import static org.apache.drill.store.openTSDB.TestDataHolder.POST_REQUEST_WITH_TAGS;
-import static org.apache.drill.store.openTSDB.TestDataHolder.REQUEST_TO_NONEXISTENT_METRIC;
-import static org.apache.drill.store.openTSDB.TestDataHolder.SAMPLE_DATA_FOR_GET_TABLE_NAME_REQUEST;
-import static org.apache.drill.store.openTSDB.TestDataHolder.SAMPLE_DATA_FOR_GET_TABLE_REQUEST;
-import static org.apache.drill.store.openTSDB.TestDataHolder.SAMPLE_DATA_FOR_POST_DOWNSAMPLE_REQUEST_WITHOUT_TAGS;
-import static org.apache.drill.store.openTSDB.TestDataHolder.SAMPLE_DATA_FOR_POST_DOWNSAMPLE_REQUEST_WITH_TAGS;
-import static org.apache.drill.store.openTSDB.TestDataHolder.SAMPLE_DATA_FOR_POST_END_REQUEST_WITHOUT_TAGS;
-import static org.apache.drill.store.openTSDB.TestDataHolder.SAMPLE_DATA_FOR_POST_END_REQUEST_WITH_TAGS;
-import static org.apache.drill.store.openTSDB.TestDataHolder.SAMPLE_DATA_FOR_POST_REQUEST_WITH_TAGS;
+import static org.apache.drill.exec.store.openTSDB.TestDataHolder.DOWNSAMPLE_REQUEST_WITH_TAGS;
+import static org.apache.drill.exec.store.openTSDB.TestDataHolder.DOWNSAMPLE_REQUEST_WTIHOUT_TAGS;
+import static org.apache.drill.exec.store.openTSDB.TestDataHolder.END_PARAM_REQUEST_WITH_TAGS;
+import static org.apache.drill.exec.store.openTSDB.TestDataHolder.END_PARAM_REQUEST_WTIHOUT_TAGS;
+import static org.apache.drill.exec.store.openTSDB.TestDataHolder.POST_REQUEST_WITHOUT_TAGS;
+import static org.apache.drill.exec.store.openTSDB.TestDataHolder.POST_REQUEST_WITH_TAGS;
+import static org.apache.drill.exec.store.openTSDB.TestDataHolder.REQUEST_TO_NONEXISTENT_METRIC;
+import static org.apache.drill.exec.store.openTSDB.TestDataHolder.SAMPLE_DATA_FOR_GET_TABLE_NAME_REQUEST;
+import static org.apache.drill.exec.store.openTSDB.TestDataHolder.SAMPLE_DATA_FOR_GET_TABLE_REQUEST;
+import static org.apache.drill.exec.store.openTSDB.TestDataHolder.SAMPLE_DATA_FOR_POST_DOWNSAMPLE_REQUEST_WITHOUT_TAGS;
+import static org.apache.drill.exec.store.openTSDB.TestDataHolder.SAMPLE_DATA_FOR_POST_DOWNSAMPLE_REQUEST_WITH_TAGS;
+import static org.apache.drill.exec.store.openTSDB.TestDataHolder.SAMPLE_DATA_FOR_POST_END_REQUEST_WITHOUT_TAGS;
+import static org.apache.drill.exec.store.openTSDB.TestDataHolder.SAMPLE_DATA_FOR_POST_END_REQUEST_WITH_TAGS;
+import static org.apache.drill.exec.store.openTSDB.TestDataHolder.SAMPLE_DATA_FOR_POST_REQUEST_WITH_TAGS;
 import static org.junit.Assert.assertEquals;
 
 public class TestOpenTSDBPlugin extends ClusterTest {
