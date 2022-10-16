@@ -71,6 +71,12 @@
       <classifier>tests</classifier>
       <version>${project.version}</version>
       <scope>test</scope>
+      <exclusions>
+        <exclusion>
+          <groupId>com.squareup.okio</groupId>
+          <artifactId>okio-jvm</artifactId>
+        </exclusion>
+      </exclusions>
     </dependency>
 
     <dependency>
