@@ -75,11 +75,6 @@
             <artifactId>converter-jackson</artifactId>
             <version>${retrofit.version}</version>
         </dependency>
-        <dependency>
-            <groupId>com.madhukaraphatak</groupId>
-            <artifactId>java-sizeof_2.11</artifactId>
-            <version>0.1</version>
-        </dependency>
     </dependencies>
 
 </project>
