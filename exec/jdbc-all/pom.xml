@@ -236,6 +236,10 @@
           <artifactId>okhttp</artifactId>
         </exclusion>
         <exclusion>
+          <groupId>com.squareup.okio</groupId>
+          <artifactId>okio-jvm</artifactId>
+        </exclusion>
+        <exclusion>
           <groupId>com.tdunning</groupId>
           <artifactId>t-digest</artifactId>
         </exclusion>
