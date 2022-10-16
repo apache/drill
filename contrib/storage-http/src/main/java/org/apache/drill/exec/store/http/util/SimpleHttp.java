@@ -123,6 +123,7 @@ public class SimpleHttp implements AutoCloseable {
   private final HttpStoragePluginConfig pluginConfig;
   private final HttpApiConfig apiConfig;
   private final OAuthConfig oAuthConfig;
+  private final int rateLimit;
   private String responseMessage;
   private int responseCode;
   private String responseProtocol;
@@ -140,6 +141,7 @@ public class SimpleHttp implements AutoCloseable {
     this.filters = scanDefn.filters();
     this.url = url;
     this.tempDir = tempDir;
+    this.rateLimit = scanDefn.tableSpec().config().rateLimit();
     this.proxyConfig = proxyConfig;
     this.errorContext = errorContext;
     this.tokenTable = scanDefn.tableSpec().getTokenTable();
@@ -162,7 +164,7 @@ public class SimpleHttp implements AutoCloseable {
    */
   public SimpleHttp(HttpUrl url, File tempDir, HttpProxyConfig proxyConfig, CustomErrorContext errorContext,
                     Paginator paginator, PersistentTokenTable tokenTable, HttpStoragePluginConfig pluginConfig,
-                    HttpApiConfig endpointConfig, String connection, Map<String, String> filters) {
+                    HttpApiConfig endpointConfig, String connection, Map<String, String> filters, int rateLimit) {
     this.url = url;
     this.tempDir = tempDir;
     this.proxyConfig = proxyConfig;
@@ -185,6 +187,7 @@ public class SimpleHttp implements AutoCloseable {
     this.apiConfig = endpointConfig;
     this.connection = connection;
     this.filters = filters;
+    this.rateLimit = rateLimit;
     this.oAuthConfig = pluginConfig.oAuthConfig();
     this.client = setupHttpClient();
   }
@@ -240,7 +243,7 @@ public class SimpleHttp implements AutoCloseable {
     builder.connectTimeout(timeout, TimeUnit.SECONDS);
     builder.writeTimeout(timeout, TimeUnit.SECONDS);
     builder.readTimeout(timeout, TimeUnit.SECONDS);
-    builder.addInterceptor(new RateLimitInterceptor(1000));
+    builder.addInterceptor(new RateLimitInterceptor(rateLimit));
     // OkHttp's connection pooling is disabled because the HTTP plugin creates
     // and discards potentially many OkHttp clients, each leaving lingering
     // CLOSE_WAIT connections around if they have pooling enabled.
@@ -1071,6 +1074,7 @@ public class SimpleHttp implements AutoCloseable {
     private Map<String,String> filters;
     private String connection;
     private String username;
+    private int rateLimit;
 
     public SimpleHttpBuilder scanDefn(HttpSubScan scanDefn) {
       this.scanDefn = scanDefn;
@@ -1080,6 +1084,7 @@ public class SimpleHttp implements AutoCloseable {
       this.tokenTable = scanDefn.tableSpec().getTokenTable();
       this.filters = scanDefn.filters();
       this.username = scanDefn.getUserName();
+      this.rateLimit = scanDefn.tableSpec().config().rateLimit();
       return this;
     }
 
@@ -1113,6 +1118,11 @@ public class SimpleHttp implements AutoCloseable {
       return this;
     }
 
+    public SimpleHttpBuilder rateLimit(int rateLimit) {
+      this.rateLimit = rateLimit;
+      return this;
+    }
+
     public SimpleHttpBuilder tokenTable(PersistentTokenTable tokenTable) {
       this.tokenTable = tokenTable;
       return this;
@@ -1139,12 +1149,11 @@ public class SimpleHttp implements AutoCloseable {
       return this;
     }
 
-
     public SimpleHttp build() {
       if (this.scanDefn != null) {
         return new SimpleHttp(scanDefn, url, tempDir, proxyConfig, errorContext, paginator);
       } else {
-        return new SimpleHttp(url, tempDir, proxyConfig, errorContext, paginator, tokenTable, pluginConfig, endpointConfig, connection, filters);
+        return new SimpleHttp(url, tempDir, proxyConfig, errorContext, paginator, tokenTable, pluginConfig, endpointConfig, connection, filters, rateLimit);
       }
     }
   }

@@ -111,7 +111,7 @@ public class TestOAuthProcess extends ClusterTest {
 
     // Add storage plugin for test OAuth
     HttpStoragePluginConfig mockStorageConfigWithWorkspace =
-      new HttpStoragePluginConfig(false, configs, TIMEOUT, null, null, "", 80, "", "", "",
+      new HttpStoragePluginConfig(false, configs, TIMEOUT, 1000, null, null, "", 80, "", "", "",
         oAuthConfig, credentialsProvider, AuthMode.SHARED_USER.name());
     mockStorageConfigWithWorkspace.setEnabled(true);
     cluster.defineStoragePlugin("localOauth", mockStorageConfigWithWorkspace);

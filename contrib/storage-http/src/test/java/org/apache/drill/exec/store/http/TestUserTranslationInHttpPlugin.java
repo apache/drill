@@ -133,11 +133,11 @@ public class TestUserTranslationInHttpPlugin extends ClusterTest {
 
     PlainCredentialsProvider credentialsProvider = new PlainCredentialsProvider(TEST_USER_2, credentials);
 
-    HttpStoragePluginConfig mockStorageConfigWithWorkspace = new HttpStoragePluginConfig(false, configs, 2, null, null, "", 80, "", "", "", null, credentialsProvider,
+    HttpStoragePluginConfig mockStorageConfigWithWorkspace = new HttpStoragePluginConfig(false, configs, 2, 1000, null, null, "", 80, "", "", "", null, credentialsProvider,
       AuthMode.USER_TRANSLATION.name());
     mockStorageConfigWithWorkspace.setEnabled(true);
 
-    HttpStoragePluginConfig mockOAuthPlugin = new HttpStoragePluginConfig(false, configs, 2, null, null, "", 80, "", "", "", oAuthConfig, oauthCredentialProvider,
+    HttpStoragePluginConfig mockOAuthPlugin = new HttpStoragePluginConfig(false, configs, 2, 1000, null, null, "", 80, "", "", "", oAuthConfig, oauthCredentialProvider,
       AuthMode.USER_TRANSLATION.name());
     mockOAuthPlugin.setEnabled(true);
 
