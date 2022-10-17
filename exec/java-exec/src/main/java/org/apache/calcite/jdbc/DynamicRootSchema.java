@@ -129,7 +129,7 @@ public class DynamicRootSchema extends DynamicSchema {
           } catch (InterruptedException intEx) {
             logger.warn(
               "Interrupted while waiting to make another attempt to register " +
-              "chemas for plugin {}.",
+                "schemas for plugin {}.",
               plugin,
               intEx
             );

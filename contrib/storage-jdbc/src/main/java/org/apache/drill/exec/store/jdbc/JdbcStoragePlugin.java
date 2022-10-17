@@ -56,7 +56,7 @@ public class JdbcStoragePlugin extends AbstractStoragePlugin {
   private final JdbcStorageConfig jdbcStorageConfig;
   private final JdbcDialectFactory dialectFactory;
   private final JdbcConventionFactory conventionFactory;
-  private SqlDialect sqlDialect;
+  private volatile SqlDialect sqlDialect;
   // DataSources for this storage config keyed on JDBC username
   private final Map<String, HikariDataSource> dataSources = new ConcurrentHashMap<>();
 
@@ -109,14 +109,23 @@ public class JdbcStoragePlugin extends AbstractStoragePlugin {
     ));
   }
 
-  public synchronized SqlDialect getDialect(UserCredentials userCredentials) {
-    if (sqlDialect == null) {
-      sqlDialect = JdbcSchema.createDialect(
-        SqlDialectFactoryImpl.INSTANCE,
-        getDataSource(userCredentials).get()
-      );
+  public SqlDialect getDialect(UserCredentials userCredentials) {
+    SqlDialect sd = sqlDialect;
+    if (sd == null) {
+      // Double checked locking using a volatile member and a local var
+      // optimisation to reduce volatile accesses.
+      synchronized (this) {
+        sd = sqlDialect;
+        if (sd == null) {
+          sd = JdbcSchema.createDialect(
+            SqlDialectFactoryImpl.INSTANCE,
+            getDataSource(userCredentials).get()
+          );
+          sqlDialect = sd;
+        }
+      }
     }
-    return sqlDialect;
+    return sd;
   }
 
   public JdbcDialect getJdbcDialect(SqlDialect dialect) {

@@ -61,8 +61,6 @@ import org.apache.drill.exec.work.foreman.SqlUnsupportedException;
 import org.apache.drill.shaded.guava.com.google.common.base.Throwables;
 import org.apache.hadoop.security.AccessControlException;
 
-import static org.apache.drill.exec.proto.UserBitShared.DrillPBError.ErrorType.RESOURCE;
-
 public class DrillSqlWorker {
   private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(DrillSqlWorker.class);
   private static final ControlsInjector injector = ControlsInjectorFactory.getInjector(DrillSqlWorker.class);
@@ -132,18 +130,11 @@ public class DrillSqlWorker {
       logger.trace("There was an error during conversion into physical plan. " +
           "Will sync remote and local function registries if needed and retry " +
           "in case if issue was due to missing function implementation.", e);
-
-      int funcRegVer = context.getDrillOperatorTable().getFunctionRegistryVersion();
-      // We do not retry conversion if the error is a UserException of type RESOURCE
-      boolean isResourceErr = e instanceof UserException && ((UserException) e).getErrorType() == RESOURCE;
-
-      // It is prohibited to retry query planning for ANALYZE statement since it changes
-      // query-level option values and will fail when rerunning with updated values.
-      //
-      if (context.getFunctionRegistry().syncWithRemoteRegistry(funcRegVer)
-        && context.getSQLStatementType() != SqlStatementType.ANALYZE
-        && !isResourceErr
-      ) {
+      // it is prohibited to retry query planning for ANALYZE statement since it changes
+      // query-level option values and will fail when rerunning with updated values
+      if (context.getFunctionRegistry().syncWithRemoteRegistry(
+              context.getDrillOperatorTable().getFunctionRegistryVersion())
+        && context.getSQLStatementType() != SqlStatementType.ANALYZE) {
         context.reloadDrillOperatorTable();
         logger.trace("Local function registry was synchronized with remote. Trying to find function one more time.");
         return getPhysicalPlan(context, sql, textPlanCopy, retryAttempts);

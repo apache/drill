@@ -26,16 +26,25 @@ public class JdbcDialectFactory {
   public static final String JDBC_CLICKHOUSE_PREFIX = "jdbc:clickhouse";
   public static final int CACHE_SIZE = 100;
   public static final Duration CACHE_TTL = Duration.ofHours(1);
-  private JdbcDialect jdbcDialect;
+  private volatile JdbcDialect jdbcDialect;
 
   public JdbcDialect getJdbcDialect(JdbcStoragePlugin plugin, SqlDialect dialect) {
     // Note: any given JdbcDialectFactory instance will only ever be called with
-    // a single SqlDialect.
-    if (jdbcDialect == null) {
-      jdbcDialect = plugin.getConfig().getUrl().startsWith(JDBC_CLICKHOUSE_PREFIX)
-            ? new ClickhouseJdbcDialect(plugin, dialect)
-            : new DefaultJdbcDialect(plugin, dialect);
+    // a single SqlDialect so we can cache using a single member.
+    JdbcDialect jd = jdbcDialect;
+    if (jd == null) {
+      // Double checked locking using a volatile member and a local var
+      // optimisation to reduce volatile accesses.
+      synchronized (this) {
+        jd = jdbcDialect;
+        if (jd == null) {
+          jd = plugin.getConfig().getUrl().startsWith(JDBC_CLICKHOUSE_PREFIX)
+                ? new ClickhouseJdbcDialect(plugin, dialect)
+                : new DefaultJdbcDialect(plugin, dialect);
+          jdbcDialect = jd;
+        }
+      }
     }
-    return jdbcDialect;
+    return jd;
   }
 }
