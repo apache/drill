@@ -159,7 +159,7 @@ public final class UserBitShared {
     EXECUTION(4),
     /**
      * <pre>
-     * Input is a prepared statement 
+     * Input is a prepared statement
      * </pre>
      *
      * <code>PREPARED_STATEMENT = 5;</code>
@@ -185,7 +185,7 @@ public final class UserBitShared {
     public static final int EXECUTION_VALUE = 4;
     /**
      * <pre>
-     * Input is a prepared statement 
+     * Input is a prepared statement
      * </pre>
      *
      * <code>PREPARED_STATEMENT = 5;</code>
@@ -614,7 +614,7 @@ public final class UserBitShared {
       if (ref instanceof java.lang.String) {
         return (java.lang.String) ref;
       } else {
-        com.google.protobuf.ByteString bs = 
+        com.google.protobuf.ByteString bs =
             (com.google.protobuf.ByteString) ref;
         java.lang.String s = bs.toStringUtf8();
         if (bs.isValidUtf8()) {
@@ -632,7 +632,7 @@ public final class UserBitShared {
         getUserNameBytes() {
       java.lang.Object ref = userName_;
       if (ref instanceof java.lang.String) {
-        com.google.protobuf.ByteString b = 
+        com.google.protobuf.ByteString b =
             com.google.protobuf.ByteString.copyFromUtf8(
                 (java.lang.String) ref);
         userName_ = b;
@@ -1004,7 +1004,7 @@ public final class UserBitShared {
           getUserNameBytes() {
         java.lang.Object ref = userName_;
         if (ref instanceof String) {
-          com.google.protobuf.ByteString b = 
+          com.google.protobuf.ByteString b =
               com.google.protobuf.ByteString.copyFromUtf8(
                   (java.lang.String) ref);
           userName_ = b;
@@ -1820,7 +1820,7 @@ public final class UserBitShared {
      *
      * <code>repeated .exec.shared.ParsingError parsing_error = 6;</code>
      */
-    java.util.List<org.apache.drill.exec.proto.UserBitShared.ParsingError> 
+    java.util.List<org.apache.drill.exec.proto.UserBitShared.ParsingError>
         getParsingErrorList();
     /**
      * <pre>
@@ -1845,7 +1845,7 @@ public final class UserBitShared {
      *
      * <code>repeated .exec.shared.ParsingError parsing_error = 6;</code>
      */
-    java.util.List<? extends org.apache.drill.exec.proto.UserBitShared.ParsingErrorOrBuilder> 
+    java.util.List<? extends org.apache.drill.exec.proto.UserBitShared.ParsingErrorOrBuilder>
         getParsingErrorOrBuilderList();
     /**
      * <pre>
@@ -2046,6 +2046,16 @@ public final class UserBitShared {
        * <code>UNSPECIFIED_ERROR = 13;</code>
        */
       UNSPECIFIED_ERROR(13),
+      /**
+       * <pre>
+       * Plugin exception
+       * - A failure has occurred within a plugin.
+       * Indicates that a plugin is misconfigured or contains a bug.
+       * </pre>
+       *
+       * <code>PLUGIN = 14;</code>
+       */
+      PLUGIN(14),
       ;
 
       /**
@@ -2188,6 +2198,16 @@ public final class UserBitShared {
        * <code>UNSPECIFIED_ERROR = 13;</code>
        */
       public static final int UNSPECIFIED_ERROR_VALUE = 13;
+      /**
+       * <pre>
+       * Plugin exception
+       * - A failure has occurred within a plugin.
+       * Indicates that plugin is misconfigured or contains a bug.
+       * </pre>
+       *
+       * <code>PLUGIN = 14;</code>
+       */
+      public static final int PLUGIN_VALUE = 14;
 
 
       public final int getNumber() {
@@ -2224,6 +2244,7 @@ public final class UserBitShared {
           case 11: return EXECUTION_ERROR;
           case 12: return INTERNAL_ERROR;
           case 13: return UNSPECIFIED_ERROR;
+          case 14: return PLUGIN;
           default: return null;
         }
       }
@@ -2302,7 +2323,7 @@ public final class UserBitShared {
       if (ref instanceof java.lang.String) {
         return (java.lang.String) ref;
       } else {
-        com.google.protobuf.ByteString bs = 
+        com.google.protobuf.ByteString bs =
             (com.google.protobuf.ByteString) ref;
         java.lang.String s = bs.toStringUtf8();
         if (bs.isValidUtf8()) {
@@ -2324,7 +2345,7 @@ public final class UserBitShared {
         getErrorIdBytes() {
       java.lang.Object ref = errorId_;
       if (ref instanceof java.lang.String) {
-        com.google.protobuf.ByteString b = 
+        com.google.protobuf.ByteString b =
             com.google.protobuf.ByteString.copyFromUtf8(
                 (java.lang.String) ref);
         errorId_ = b;
@@ -2399,7 +2420,7 @@ public final class UserBitShared {
       if (ref instanceof java.lang.String) {
         return (java.lang.String) ref;
       } else {
-        com.google.protobuf.ByteString bs = 
+        com.google.protobuf.ByteString bs =
             (com.google.protobuf.ByteString) ref;
         java.lang.String s = bs.toStringUtf8();
         if (bs.isValidUtf8()) {
@@ -2417,7 +2438,7 @@ public final class UserBitShared {
         getMessageBytes() {
       java.lang.Object ref = message_;
       if (ref instanceof java.lang.String) {
-        com.google.protobuf.ByteString b = 
+        com.google.protobuf.ByteString b =
             com.google.protobuf.ByteString.copyFromUtf8(
                 (java.lang.String) ref);
         message_ = b;
@@ -2474,7 +2495,7 @@ public final class UserBitShared {
      * <code>repeated .exec.shared.ParsingError parsing_error = 6;</code>
      */
     @java.lang.Override
-    public java.util.List<? extends org.apache.drill.exec.proto.UserBitShared.ParsingErrorOrBuilder> 
+    public java.util.List<? extends org.apache.drill.exec.proto.UserBitShared.ParsingErrorOrBuilder>
         getParsingErrorOrBuilderList() {
       return parsingError_;
     }
@@ -2964,7 +2985,7 @@ public final class UserBitShared {
               parsingErrorBuilder_ = null;
               parsingError_ = other.parsingError_;
               bitField0_ = (bitField0_ & ~0x00000020);
-              parsingErrorBuilder_ = 
+              parsingErrorBuilder_ =
                 com.google.protobuf.GeneratedMessageV3.alwaysUseFieldBuilders ?
                    getParsingErrorFieldBuilder() : null;
             } else {
@@ -3110,7 +3131,7 @@ public final class UserBitShared {
           getErrorIdBytes() {
         java.lang.Object ref = errorId_;
         if (ref instanceof String) {
-          com.google.protobuf.ByteString b = 
+          com.google.protobuf.ByteString b =
               com.google.protobuf.ByteString.copyFromUtf8(
                   (java.lang.String) ref);
           errorId_ = b;
@@ -3279,7 +3300,7 @@ public final class UserBitShared {
        * <code>optional .exec.DrillbitEndpoint endpoint = 2;</code>
        */
       private com.google.protobuf.SingleFieldBuilderV3<
-          org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint, org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint.Builder, org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpointOrBuilder> 
+          org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint, org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint.Builder, org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpointOrBuilder>
           getEndpointFieldBuilder() {
         if (endpointBuilder_ == null) {
           endpointBuilder_ = new com.google.protobuf.SingleFieldBuilderV3<
@@ -3369,7 +3390,7 @@ public final class UserBitShared {
           getMessageBytes() {
         java.lang.Object ref = message_;
         if (ref instanceof String) {
-          com.google.protobuf.ByteString b = 
+          com.google.protobuf.ByteString b =
               com.google.protobuf.ByteString.copyFromUtf8(
                   (java.lang.String) ref);
           message_ = b;
@@ -3526,7 +3547,7 @@ public final class UserBitShared {
        * <code>optional .exec.shared.ExceptionWrapper exception = 5;</code>
        */
       private com.google.protobuf.SingleFieldBuilderV3<
-          org.apache.drill.exec.proto.UserBitShared.ExceptionWrapper, org.apache.drill.exec.proto.UserBitShared.ExceptionWrapper.Builder, org.apache.drill.exec.proto.UserBitShared.ExceptionWrapperOrBuilder> 
+          org.apache.drill.exec.proto.UserBitShared.ExceptionWrapper, org.apache.drill.exec.proto.UserBitShared.ExceptionWrapper.Builder, org.apache.drill.exec.proto.UserBitShared.ExceptionWrapperOrBuilder>
           getExceptionFieldBuilder() {
         if (exceptionBuilder_ == null) {
           exceptionBuilder_ = new com.google.protobuf.SingleFieldBuilderV3<
@@ -3794,7 +3815,7 @@ public final class UserBitShared {
        *
        * <code>repeated .exec.shared.ParsingError parsing_error = 6;</code>
        */
-      public java.util.List<? extends org.apache.drill.exec.proto.UserBitShared.ParsingErrorOrBuilder> 
+      public java.util.List<? extends org.apache.drill.exec.proto.UserBitShared.ParsingErrorOrBuilder>
            getParsingErrorOrBuilderList() {
         if (parsingErrorBuilder_ != null) {
           return parsingErrorBuilder_.getMessageOrBuilderList();
@@ -3832,12 +3853,12 @@ public final class UserBitShared {
        *
        * <code>repeated .exec.shared.ParsingError parsing_error = 6;</code>
        */
-      public java.util.List<org.apache.drill.exec.proto.UserBitShared.ParsingError.Builder> 
+      public java.util.List<org.apache.drill.exec.proto.UserBitShared.ParsingError.Builder>
            getParsingErrorBuilderList() {
         return getParsingErrorFieldBuilder().getBuilderList();
       }
       private com.google.protobuf.RepeatedFieldBuilderV3<
-          org.apache.drill.exec.proto.UserBitShared.ParsingError, org.apache.drill.exec.proto.UserBitShared.ParsingError.Builder, org.apache.drill.exec.proto.UserBitShared.ParsingErrorOrBuilder> 
+          org.apache.drill.exec.proto.UserBitShared.ParsingError, org.apache.drill.exec.proto.UserBitShared.ParsingError.Builder, org.apache.drill.exec.proto.UserBitShared.ParsingErrorOrBuilder>
           getParsingErrorFieldBuilder() {
         if (parsingErrorBuilder_ == null) {
           parsingErrorBuilder_ = new com.google.protobuf.RepeatedFieldBuilderV3<
@@ -3955,7 +3976,7 @@ public final class UserBitShared {
     /**
      * <code>repeated .exec.shared.StackTraceElementWrapper stack_trace = 3;</code>
      */
-    java.util.List<org.apache.drill.exec.proto.UserBitShared.StackTraceElementWrapper> 
+    java.util.List<org.apache.drill.exec.proto.UserBitShared.StackTraceElementWrapper>
         getStackTraceList();
     /**
      * <code>repeated .exec.shared.StackTraceElementWrapper stack_trace = 3;</code>
@@ -3968,7 +3989,7 @@ public final class UserBitShared {
     /**
      * <code>repeated .exec.shared.StackTraceElementWrapper stack_trace = 3;</code>
      */
-    java.util.List<? extends org.apache.drill.exec.proto.UserBitShared.StackTraceElementWrapperOrBuilder> 
+    java.util.List<? extends org.apache.drill.exec.proto.UserBitShared.StackTraceElementWrapperOrBuilder>
         getStackTraceOrBuilderList();
     /**
      * <code>repeated .exec.shared.StackTraceElementWrapper stack_trace = 3;</code>
@@ -4055,7 +4076,7 @@ public final class UserBitShared {
       if (ref instanceof java.lang.String) {
         return (java.lang.String) ref;
       } else {
-        com.google.protobuf.ByteString bs = 
+        com.google.protobuf.ByteString bs =
             (com.google.protobuf.ByteString) ref;
         java.lang.String s = bs.toStringUtf8();
         if (bs.isValidUtf8()) {
@@ -4073,7 +4094,7 @@ public final class UserBitShared {
         getExceptionClassBytes() {
       java.lang.Object ref = exceptionClass_;
       if (ref instanceof java.lang.String) {
-        com.google.protobuf.ByteString b = 
+        com.google.protobuf.ByteString b =
             com.google.protobuf.ByteString.copyFromUtf8(
                 (java.lang.String) ref);
         exceptionClass_ = b;
@@ -4103,7 +4124,7 @@ public final class UserBitShared {
       if (ref instanceof java.lang.String) {
         return (java.lang.String) ref;
       } else {
-        com.google.protobuf.ByteString bs = 
+        com.google.protobuf.ByteString bs =
             (com.google.protobuf.ByteString) ref;
         java.lang.String s = bs.toStringUtf8();
         if (bs.isValidUtf8()) {
@@ -4121,7 +4142,7 @@ public final class UserBitShared {
         getMessageBytes() {
       java.lang.Object ref = message_;
       if (ref instanceof java.lang.String) {
-        com.google.protobuf.ByteString b = 
+        com.google.protobuf.ByteString b =
             com.google.protobuf.ByteString.copyFromUtf8(
                 (java.lang.String) ref);
         message_ = b;
@@ -4144,7 +4165,7 @@ public final class UserBitShared {
      * <code>repeated .exec.shared.StackTraceElementWrapper stack_trace = 3;</code>
      */
     @java.lang.Override
-    public java.util.List<? extends org.apache.drill.exec.proto.UserBitShared.StackTraceElementWrapperOrBuilder> 
+    public java.util.List<? extends org.apache.drill.exec.proto.UserBitShared.StackTraceElementWrapperOrBuilder>
         getStackTraceOrBuilderList() {
       return stackTrace_;
     }
@@ -4587,7 +4608,7 @@ public final class UserBitShared {
               stackTraceBuilder_ = null;
               stackTrace_ = other.stackTrace_;
               bitField0_ = (bitField0_ & ~0x00000004);
-              stackTraceBuilder_ = 
+              stackTraceBuilder_ =
                 com.google.protobuf.GeneratedMessageV3.alwaysUseFieldBuilders ?
                    getStackTraceFieldBuilder() : null;
             } else {
@@ -4705,7 +4726,7 @@ public final class UserBitShared {
           getExceptionClassBytes() {
         java.lang.Object ref = exceptionClass_;
         if (ref instanceof String) {
-          com.google.protobuf.ByteString b = 
+          com.google.protobuf.ByteString b =
               com.google.protobuf.ByteString.copyFromUtf8(
                   (java.lang.String) ref);
           exceptionClass_ = b;
@@ -4789,7 +4810,7 @@ public final class UserBitShared {
           getMessageBytes() {
         java.lang.Object ref = message_;
         if (ref instanceof String) {
-          com.google.protobuf.ByteString b = 
+          com.google.protobuf.ByteString b =
               com.google.protobuf.ByteString.copyFromUtf8(
                   (java.lang.String) ref);
           message_ = b;
@@ -5034,7 +5055,7 @@ public final class UserBitShared {
       /**
        * <code>repeated .exec.shared.StackTraceElementWrapper stack_trace = 3;</code>
        */
-      public java.util.List<? extends org.apache.drill.exec.proto.UserBitShared.StackTraceElementWrapperOrBuilder> 
+      public java.util.List<? extends org.apache.drill.exec.proto.UserBitShared.StackTraceElementWrapperOrBuilder>
            getStackTraceOrBuilderList() {
         if (stackTraceBuilder_ != null) {
           return stackTraceBuilder_.getMessageOrBuilderList();
@@ -5060,12 +5081,12 @@ public final class UserBitShared {
       /**
        * <code>repeated .exec.shared.StackTraceElementWrapper stack_trace = 3;</code>
        */
-      public java.util.List<org.apache.drill.exec.proto.UserBitShared.StackTraceElementWrapper.Builder> 
+      public java.util.List<org.apache.drill.exec.proto.UserBitShared.StackTraceElementWrapper.Builder>
            getStackTraceBuilderList() {
         return getStackTraceFieldBuilder().getBuilderList();
       }
       private com.google.protobuf.RepeatedFieldBuilderV3<
-          org.apache.drill.exec.proto.UserBitShared.StackTraceElementWrapper, org.apache.drill.exec.proto.UserBitShared.StackTraceElementWrapper.Builder, org.apache.drill.exec.proto.UserBitShared.StackTraceElementWrapperOrBuilder> 
+          org.apache.drill.exec.proto.UserBitShared.StackTraceElementWrapper, org.apache.drill.exec.proto.UserBitShared.StackTraceElementWrapper.Builder, org.apache.drill.exec.proto.UserBitShared.StackTraceElementWrapperOrBuilder>
           getStackTraceFieldBuilder() {
         if (stackTraceBuilder_ == null) {
           stackTraceBuilder_ = new com.google.protobuf.RepeatedFieldBuilderV3<
@@ -5186,7 +5207,7 @@ public final class UserBitShared {
        * <code>optional .exec.shared.ExceptionWrapper cause = 4;</code>
        */
       private com.google.protobuf.SingleFieldBuilderV3<
-          org.apache.drill.exec.proto.UserBitShared.ExceptionWrapper, org.apache.drill.exec.proto.UserBitShared.ExceptionWrapper.Builder, org.apache.drill.exec.proto.UserBitShared.ExceptionWrapperOrBuilder> 
+          org.apache.drill.exec.proto.UserBitShared.ExceptionWrapper, org.apache.drill.exec.proto.UserBitShared.ExceptionWrapper.Builder, org.apache.drill.exec.proto.UserBitShared.ExceptionWrapperOrBuilder>
           getCauseFieldBuilder() {
         if (causeBuilder_ == null) {
           causeBuilder_ = new com.google.protobuf.SingleFieldBuilderV3<
@@ -5403,7 +5424,7 @@ public final class UserBitShared {
       if (ref instanceof java.lang.String) {
         return (java.lang.String) ref;
       } else {
-        com.google.protobuf.ByteString bs = 
+        com.google.protobuf.ByteString bs =
             (com.google.protobuf.ByteString) ref;
         java.lang.String s = bs.toStringUtf8();
         if (bs.isValidUtf8()) {
@@ -5421,7 +5442,7 @@ public final class UserBitShared {
         getClassNameBytes() {
       java.lang.Object ref = className_;
       if (ref instanceof java.lang.String) {
-        com.google.protobuf.ByteString b = 
+        com.google.protobuf.ByteString b =
             com.google.protobuf.ByteString.copyFromUtf8(
                 (java.lang.String) ref);
         className_ = b;
@@ -5451,7 +5472,7 @@ public final class UserBitShared {
       if (ref instanceof java.lang.String) {
         return (java.lang.String) ref;
       } else {
-        com.google.protobuf.ByteString bs = 
+        com.google.protobuf.ByteString bs =
             (com.google.protobuf.ByteString) ref;
         java.lang.String s = bs.toStringUtf8();
         if (bs.isValidUtf8()) {
@@ -5469,7 +5490,7 @@ public final class UserBitShared {
         getFileNameBytes() {
       java.lang.Object ref = fileName_;
       if (ref instanceof java.lang.String) {
-        com.google.protobuf.ByteString b = 
+        com.google.protobuf.ByteString b =
             com.google.protobuf.ByteString.copyFromUtf8(
                 (java.lang.String) ref);
         fileName_ = b;
@@ -5518,7 +5539,7 @@ public final class UserBitShared {
       if (ref instanceof java.lang.String) {
         return (java.lang.String) ref;
       } else {
-        com.google.protobuf.ByteString bs = 
+        com.google.protobuf.ByteString bs =
             (com.google.protobuf.ByteString) ref;
         java.lang.String s = bs.toStringUtf8();
         if (bs.isValidUtf8()) {
@@ -5536,7 +5557,7 @@ public final class UserBitShared {
         getMethodNameBytes() {
       java.lang.Object ref = methodName_;
       if (ref instanceof java.lang.String) {
-        com.google.protobuf.ByteString b = 
+        com.google.protobuf.ByteString b =
             com.google.protobuf.ByteString.copyFromUtf8(
                 (java.lang.String) ref);
         methodName_ = b;
@@ -6050,7 +6071,7 @@ public final class UserBitShared {
           getClassNameBytes() {
         java.lang.Object ref = className_;
         if (ref instanceof String) {
-          com.google.protobuf.ByteString b = 
+          com.google.protobuf.ByteString b =
               com.google.protobuf.ByteString.copyFromUtf8(
                   (java.lang.String) ref);
           className_ = b;
@@ -6134,7 +6155,7 @@ public final class UserBitShared {
           getFileNameBytes() {
         java.lang.Object ref = fileName_;
         if (ref instanceof String) {
-          com.google.protobuf.ByteString b = 
+          com.google.protobuf.ByteString b =
               com.google.protobuf.ByteString.copyFromUtf8(
                   (java.lang.String) ref);
           fileName_ = b;
@@ -6257,7 +6278,7 @@ public final class UserBitShared {
           getMethodNameBytes() {
         java.lang.Object ref = methodName_;
         if (ref instanceof String) {
-          com.google.protobuf.ByteString b = 
+          com.google.protobuf.ByteString b =
               com.google.protobuf.ByteString.copyFromUtf8(
                   (java.lang.String) ref);
           methodName_ = b;
@@ -7228,7 +7249,7 @@ public final class UserBitShared {
     /**
      * <code>repeated .exec.shared.SerializedField field = 2;</code>
      */
-    java.util.List<org.apache.drill.exec.proto.UserBitShared.SerializedField> 
+    java.util.List<org.apache.drill.exec.proto.UserBitShared.SerializedField>
         getFieldList();
     /**
      * <code>repeated .exec.shared.SerializedField field = 2;</code>
@@ -7241,7 +7262,7 @@ public final class UserBitShared {
     /**
      * <code>repeated .exec.shared.SerializedField field = 2;</code>
      */
-    java.util.List<? extends org.apache.drill.exec.proto.UserBitShared.SerializedFieldOrBuilder> 
+    java.util.List<? extends org.apache.drill.exec.proto.UserBitShared.SerializedFieldOrBuilder>
         getFieldOrBuilderList();
     /**
      * <code>repeated .exec.shared.SerializedField field = 2;</code>
@@ -7355,7 +7376,7 @@ public final class UserBitShared {
      * <code>repeated .exec.shared.SerializedField field = 2;</code>
      */
     @java.lang.Override
-    public java.util.List<? extends org.apache.drill.exec.proto.UserBitShared.SerializedFieldOrBuilder> 
+    public java.util.List<? extends org.apache.drill.exec.proto.UserBitShared.SerializedFieldOrBuilder>
         getFieldOrBuilderList() {
       return field_;
     }
@@ -7801,7 +7822,7 @@ public final class UserBitShared {
               fieldBuilder_ = null;
               field_ = other.field_;
               bitField0_ = (bitField0_ & ~0x00000002);
-              fieldBuilder_ = 
+              fieldBuilder_ =
                 com.google.protobuf.GeneratedMessageV3.alwaysUseFieldBuilders ?
                    getFieldFieldBuilder() : null;
             } else {
@@ -8120,7 +8141,7 @@ public final class UserBitShared {
       /**
        * <code>repeated .exec.shared.SerializedField field = 2;</code>
        */
-      public java.util.List<? extends org.apache.drill.exec.proto.UserBitShared.SerializedFieldOrBuilder> 
+      public java.util.List<? extends org.apache.drill.exec.proto.UserBitShared.SerializedFieldOrBuilder>
            getFieldOrBuilderList() {
         if (fieldBuilder_ != null) {
           return fieldBuilder_.getMessageOrBuilderList();
@@ -8146,12 +8167,12 @@ public final class UserBitShared {
       /**
        * <code>repeated .exec.shared.SerializedField field = 2;</code>
        */
-      public java.util.List<org.apache.drill.exec.proto.UserBitShared.SerializedField.Builder> 
+      public java.util.List<org.apache.drill.exec.proto.UserBitShared.SerializedField.Builder>
            getFieldBuilderList() {
         return getFieldFieldBuilder().getBuilderList();
       }
       private com.google.protobuf.RepeatedFieldBuilderV3<
-          org.apache.drill.exec.proto.UserBitShared.SerializedField, org.apache.drill.exec.proto.UserBitShared.SerializedField.Builder, org.apache.drill.exec.proto.UserBitShared.SerializedFieldOrBuilder> 
+          org.apache.drill.exec.proto.UserBitShared.SerializedField, org.apache.drill.exec.proto.UserBitShared.SerializedField.Builder, org.apache.drill.exec.proto.UserBitShared.SerializedFieldOrBuilder>
           getFieldFieldBuilder() {
         if (fieldBuilder_ == null) {
           fieldBuilder_ = new com.google.protobuf.RepeatedFieldBuilderV3<
@@ -8551,7 +8572,7 @@ public final class UserBitShared {
       if (ref instanceof java.lang.String) {
         return (java.lang.String) ref;
       } else {
-        com.google.protobuf.ByteString bs = 
+        com.google.protobuf.ByteString bs =
             (com.google.protobuf.ByteString) ref;
         java.lang.String s = bs.toStringUtf8();
         if (bs.isValidUtf8()) {
@@ -8569,7 +8590,7 @@ public final class UserBitShared {
         getNameBytes() {
       java.lang.Object ref = name_;
       if (ref instanceof java.lang.String) {
-        com.google.protobuf.ByteString b = 
+        com.google.protobuf.ByteString b =
             com.google.protobuf.ByteString.copyFromUtf8(
                 (java.lang.String) ref);
         name_ = b;
@@ -9092,7 +9113,7 @@ public final class UserBitShared {
           getNameBytes() {
         java.lang.Object ref = name_;
         if (ref instanceof String) {
-          com.google.protobuf.ByteString b = 
+          com.google.protobuf.ByteString b =
               com.google.protobuf.ByteString.copyFromUtf8(
                   (java.lang.String) ref);
           name_ = b;
@@ -9249,7 +9270,7 @@ public final class UserBitShared {
        * <code>optional .exec.shared.NamePart child = 3;</code>
        */
       private com.google.protobuf.SingleFieldBuilderV3<
-          org.apache.drill.exec.proto.UserBitShared.NamePart, org.apache.drill.exec.proto.UserBitShared.NamePart.Builder, org.apache.drill.exec.proto.UserBitShared.NamePartOrBuilder> 
+          org.apache.drill.exec.proto.UserBitShared.NamePart, org.apache.drill.exec.proto.UserBitShared.NamePart.Builder, org.apache.drill.exec.proto.UserBitShared.NamePartOrBuilder>
           getChildFieldBuilder() {
         if (childBuilder_ == null) {
           childBuilder_ = new com.google.protobuf.SingleFieldBuilderV3<
@@ -9378,7 +9399,7 @@ public final class UserBitShared {
      *
      * <code>repeated .exec.shared.SerializedField child = 3;</code>
      */
-    java.util.List<org.apache.drill.exec.proto.UserBitShared.SerializedField> 
+    java.util.List<org.apache.drill.exec.proto.UserBitShared.SerializedField>
         getChildList();
     /**
      * <pre>
@@ -9403,7 +9424,7 @@ public final class UserBitShared {
      *
      * <code>repeated .exec.shared.SerializedField child = 3;</code>
      */
-    java.util.List<? extends org.apache.drill.exec.proto.UserBitShared.SerializedFieldOrBuilder> 
+    java.util.List<? extends org.apache.drill.exec.proto.UserBitShared.SerializedFieldOrBuilder>
         getChildOrBuilderList();
     /**
      * <pre>
@@ -9575,7 +9596,7 @@ public final class UserBitShared {
      * <code>repeated .exec.shared.SerializedField child = 3;</code>
      */
     @java.lang.Override
-    public java.util.List<? extends org.apache.drill.exec.proto.UserBitShared.SerializedFieldOrBuilder> 
+    public java.util.List<? extends org.apache.drill.exec.proto.UserBitShared.SerializedFieldOrBuilder>
         getChildOrBuilderList() {
       return child_;
     }
@@ -10112,7 +10133,7 @@ public final class UserBitShared {
               childBuilder_ = null;
               child_ = other.child_;
               bitField0_ = (bitField0_ & ~0x00000004);
-              childBuilder_ = 
+              childBuilder_ =
                 com.google.protobuf.GeneratedMessageV3.alwaysUseFieldBuilders ?
                    getChildFieldBuilder() : null;
             } else {
@@ -10357,7 +10378,7 @@ public final class UserBitShared {
        * <code>optional .common.MajorType major_type = 1;</code>
        */
       private com.google.protobuf.SingleFieldBuilderV3<
-          org.apache.drill.common.types.TypeProtos.MajorType, org.apache.drill.common.types.TypeProtos.MajorType.Builder, org.apache.drill.common.types.TypeProtos.MajorTypeOrBuilder> 
+          org.apache.drill.common.types.TypeProtos.MajorType, org.apache.drill.common.types.TypeProtos.MajorType.Builder, org.apache.drill.common.types.TypeProtos.MajorTypeOrBuilder>
           getMajorTypeFieldBuilder() {
         if (majorTypeBuilder_ == null) {
           majorTypeBuilder_ = new com.google.protobuf.SingleFieldBuilderV3<
@@ -10477,7 +10498,7 @@ public final class UserBitShared {
        * <code>optional .exec.shared.NamePart name_part = 2;</code>
        */
       private com.google.protobuf.SingleFieldBuilderV3<
-          org.apache.drill.exec.proto.UserBitShared.NamePart, org.apache.drill.exec.proto.UserBitShared.NamePart.Builder, org.apache.drill.exec.proto.UserBitShared.NamePartOrBuilder> 
+          org.apache.drill.exec.proto.UserBitShared.NamePart, org.apache.drill.exec.proto.UserBitShared.NamePart.Builder, org.apache.drill.exec.proto.UserBitShared.NamePartOrBuilder>
           getNamePartFieldBuilder() {
         if (namePartBuilder_ == null) {
           namePartBuilder_ = new com.google.protobuf.SingleFieldBuilderV3<
@@ -10745,7 +10766,7 @@ public final class UserBitShared {
        *
        * <code>repeated .exec.shared.SerializedField child = 3;</code>
        */
-      public java.util.List<? extends org.apache.drill.exec.proto.UserBitShared.SerializedFieldOrBuilder> 
+      public java.util.List<? extends org.apache.drill.exec.proto.UserBitShared.SerializedFieldOrBuilder>
            getChildOrBuilderList() {
         if (childBuilder_ != null) {
           return childBuilder_.getMessageOrBuilderList();
@@ -10783,12 +10804,12 @@ public final class UserBitShared {
        *
        * <code>repeated .exec.shared.SerializedField child = 3;</code>
        */
-      public java.util.List<org.apache.drill.exec.proto.UserBitShared.SerializedField.Builder> 
+      public java.util.List<org.apache.drill.exec.proto.UserBitShared.SerializedField.Builder>
            getChildBuilderList() {
         return getChildFieldBuilder().getBuilderList();
       }
       private com.google.protobuf.RepeatedFieldBuilderV3<
-          org.apache.drill.exec.proto.UserBitShared.SerializedField, org.apache.drill.exec.proto.UserBitShared.SerializedField.Builder, org.apache.drill.exec.proto.UserBitShared.SerializedFieldOrBuilder> 
+          org.apache.drill.exec.proto.UserBitShared.SerializedField, org.apache.drill.exec.proto.UserBitShared.SerializedField.Builder, org.apache.drill.exec.proto.UserBitShared.SerializedFieldOrBuilder>
           getChildFieldBuilder() {
         if (childBuilder_ == null) {
           childBuilder_ = new com.google.protobuf.RepeatedFieldBuilderV3<
@@ -11619,7 +11640,7 @@ public final class UserBitShared {
     /**
      * <code>repeated .exec.shared.DrillPBError error = 3;</code>
      */
-    java.util.List<org.apache.drill.exec.proto.UserBitShared.DrillPBError> 
+    java.util.List<org.apache.drill.exec.proto.UserBitShared.DrillPBError>
         getErrorList();
     /**
      * <code>repeated .exec.shared.DrillPBError error = 3;</code>
@@ -11632,7 +11653,7 @@ public final class UserBitShared {
     /**
      * <code>repeated .exec.shared.DrillPBError error = 3;</code>
      */
-    java.util.List<? extends org.apache.drill.exec.proto.UserBitShared.DrillPBErrorOrBuilder> 
+    java.util.List<? extends org.apache.drill.exec.proto.UserBitShared.DrillPBErrorOrBuilder>
         getErrorOrBuilderList();
     /**
      * <code>repeated .exec.shared.DrillPBError error = 3;</code>
@@ -11960,7 +11981,7 @@ public final class UserBitShared {
      * <code>repeated .exec.shared.DrillPBError error = 3;</code>
      */
     @java.lang.Override
-    public java.util.List<? extends org.apache.drill.exec.proto.UserBitShared.DrillPBErrorOrBuilder> 
+    public java.util.List<? extends org.apache.drill.exec.proto.UserBitShared.DrillPBErrorOrBuilder>
         getErrorOrBuilderList() {
       return error_;
     }
@@ -12356,7 +12377,7 @@ public final class UserBitShared {
               errorBuilder_ = null;
               error_ = other.error_;
               bitField0_ = (bitField0_ & ~0x00000004);
-              errorBuilder_ = 
+              errorBuilder_ =
                 com.google.protobuf.GeneratedMessageV3.alwaysUseFieldBuilders ?
                    getErrorFieldBuilder() : null;
             } else {
@@ -12589,7 +12610,7 @@ public final class UserBitShared {
        * <code>optional .exec.shared.QueryId query_id = 2;</code>
        */
       private com.google.protobuf.SingleFieldBuilderV3<
-          org.apache.drill.exec.proto.UserBitShared.QueryId, org.apache.drill.exec.proto.UserBitShared.QueryId.Builder, org.apache.drill.exec.proto.UserBitShared.QueryIdOrBuilder> 
+          org.apache.drill.exec.proto.UserBitShared.QueryId, org.apache.drill.exec.proto.UserBitShared.QueryId.Builder, org.apache.drill.exec.proto.UserBitShared.QueryIdOrBuilder>
           getQueryIdFieldBuilder() {
         if (queryIdBuilder_ == null) {
           queryIdBuilder_ = new com.google.protobuf.SingleFieldBuilderV3<
@@ -12797,7 +12818,7 @@ public final class UserBitShared {
       /**
        * <code>repeated .exec.shared.DrillPBError error = 3;</code>
        */
-      public java.util.List<? extends org.apache.drill.exec.proto.UserBitShared.DrillPBErrorOrBuilder> 
+      public java.util.List<? extends org.apache.drill.exec.proto.UserBitShared.DrillPBErrorOrBuilder>
            getErrorOrBuilderList() {
         if (errorBuilder_ != null) {
           return errorBuilder_.getMessageOrBuilderList();
@@ -12823,12 +12844,12 @@ public final class UserBitShared {
       /**
        * <code>repeated .exec.shared.DrillPBError error = 3;</code>
        */
-      public java.util.List<org.apache.drill.exec.proto.UserBitShared.DrillPBError.Builder> 
+      public java.util.List<org.apache.drill.exec.proto.UserBitShared.DrillPBError.Builder>
            getErrorBuilderList() {
         return getErrorFieldBuilder().getBuilderList();
       }
       private com.google.protobuf.RepeatedFieldBuilderV3<
-          org.apache.drill.exec.proto.UserBitShared.DrillPBError, org.apache.drill.exec.proto.UserBitShared.DrillPBError.Builder, org.apache.drill.exec.proto.UserBitShared.DrillPBErrorOrBuilder> 
+          org.apache.drill.exec.proto.UserBitShared.DrillPBError, org.apache.drill.exec.proto.UserBitShared.DrillPBError.Builder, org.apache.drill.exec.proto.UserBitShared.DrillPBErrorOrBuilder>
           getErrorFieldBuilder() {
         if (errorBuilder_ == null) {
           errorBuilder_ = new com.google.protobuf.RepeatedFieldBuilderV3<
@@ -13651,7 +13672,7 @@ public final class UserBitShared {
        * <code>optional .exec.shared.QueryId query_id = 1;</code>
        */
       private com.google.protobuf.SingleFieldBuilderV3<
-          org.apache.drill.exec.proto.UserBitShared.QueryId, org.apache.drill.exec.proto.UserBitShared.QueryId.Builder, org.apache.drill.exec.proto.UserBitShared.QueryIdOrBuilder> 
+          org.apache.drill.exec.proto.UserBitShared.QueryId, org.apache.drill.exec.proto.UserBitShared.QueryId.Builder, org.apache.drill.exec.proto.UserBitShared.QueryIdOrBuilder>
           getQueryIdFieldBuilder() {
         if (queryIdBuilder_ == null) {
           queryIdBuilder_ = new com.google.protobuf.SingleFieldBuilderV3<
@@ -13810,7 +13831,7 @@ public final class UserBitShared {
        * <code>optional .exec.shared.RecordBatchDef def = 3;</code>
        */
       private com.google.protobuf.SingleFieldBuilderV3<
-          org.apache.drill.exec.proto.UserBitShared.RecordBatchDef, org.apache.drill.exec.proto.UserBitShared.RecordBatchDef.Builder, org.apache.drill.exec.proto.UserBitShared.RecordBatchDefOrBuilder> 
+          org.apache.drill.exec.proto.UserBitShared.RecordBatchDef, org.apache.drill.exec.proto.UserBitShared.RecordBatchDef.Builder, org.apache.drill.exec.proto.UserBitShared.RecordBatchDefOrBuilder>
           getDefFieldBuilder() {
         if (defBuilder_ == null) {
           defBuilder_ = new com.google.protobuf.SingleFieldBuilderV3<
@@ -14111,7 +14132,7 @@ public final class UserBitShared {
       if (ref instanceof java.lang.String) {
         return (java.lang.String) ref;
       } else {
-        com.google.protobuf.ByteString bs = 
+        com.google.protobuf.ByteString bs =
             (com.google.protobuf.ByteString) ref;
         java.lang.String s = bs.toStringUtf8();
         if (bs.isValidUtf8()) {
@@ -14129,7 +14150,7 @@ public final class UserBitShared {
         getQueryBytes() {
       java.lang.Object ref = query_;
       if (ref instanceof java.lang.String) {
-        com.google.protobuf.ByteString b = 
+        com.google.protobuf.ByteString b =
             com.google.protobuf.ByteString.copyFromUtf8(
                 (java.lang.String) ref);
         query_ = b;
@@ -14197,7 +14218,7 @@ public final class UserBitShared {
       if (ref instanceof java.lang.String) {
         return (java.lang.String) ref;
       } else {
-        com.google.protobuf.ByteString bs = 
+        com.google.protobuf.ByteString bs =
             (com.google.protobuf.ByteString) ref;
         java.lang.String s = bs.toStringUtf8();
         if (bs.isValidUtf8()) {
@@ -14215,7 +14236,7 @@ public final class UserBitShared {
         getUserBytes() {
       java.lang.Object ref = user_;
       if (ref instanceof java.lang.String) {
-        com.google.protobuf.ByteString b = 
+        com.google.protobuf.ByteString b =
             com.google.protobuf.ByteString.copyFromUtf8(
                 (java.lang.String) ref);
         user_ = b;
@@ -14271,7 +14292,7 @@ public final class UserBitShared {
       if (ref instanceof java.lang.String) {
         return (java.lang.String) ref;
       } else {
-        com.google.protobuf.ByteString bs = 
+        com.google.protobuf.ByteString bs =
             (com.google.protobuf.ByteString) ref;
         java.lang.String s = bs.toStringUtf8();
         if (bs.isValidUtf8()) {
@@ -14289,7 +14310,7 @@ public final class UserBitShared {
         getOptionsJsonBytes() {
       java.lang.Object ref = optionsJson_;
       if (ref instanceof java.lang.String) {
-        com.google.protobuf.ByteString b = 
+        com.google.protobuf.ByteString b =
             com.google.protobuf.ByteString.copyFromUtf8(
                 (java.lang.String) ref);
         optionsJson_ = b;
@@ -14338,7 +14359,7 @@ public final class UserBitShared {
       if (ref instanceof java.lang.String) {
         return (java.lang.String) ref;
       } else {
-        com.google.protobuf.ByteString bs = 
+        com.google.protobuf.ByteString bs =
             (com.google.protobuf.ByteString) ref;
         java.lang.String s = bs.toStringUtf8();
         if (bs.isValidUtf8()) {
@@ -14356,7 +14377,7 @@ public final class UserBitShared {
         getQueueNameBytes() {
       java.lang.Object ref = queueName_;
       if (ref instanceof java.lang.String) {
-        com.google.protobuf.ByteString b = 
+        com.google.protobuf.ByteString b =
             com.google.protobuf.ByteString.copyFromUtf8(
                 (java.lang.String) ref);
         queueName_ = b;
@@ -14966,7 +14987,7 @@ public final class UserBitShared {
           getQueryBytes() {
         java.lang.Object ref = query_;
         if (ref instanceof String) {
-          com.google.protobuf.ByteString b = 
+          com.google.protobuf.ByteString b =
               com.google.protobuf.ByteString.copyFromUtf8(
                   (java.lang.String) ref);
           query_ = b;
@@ -15132,7 +15153,7 @@ public final class UserBitShared {
           getUserBytes() {
         java.lang.Object ref = user_;
         if (ref instanceof String) {
-          com.google.protobuf.ByteString b = 
+          com.google.protobuf.ByteString b =
               com.google.protobuf.ByteString.copyFromUtf8(
                   (java.lang.String) ref);
           user_ = b;
@@ -15289,7 +15310,7 @@ public final class UserBitShared {
        * <code>optional .exec.DrillbitEndpoint foreman = 5;</code>
        */
       private com.google.protobuf.SingleFieldBuilderV3<
-          org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint, org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint.Builder, org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpointOrBuilder> 
+          org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint, org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint.Builder, org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpointOrBuilder>
           getForemanFieldBuilder() {
         if (foremanBuilder_ == null) {
           foremanBuilder_ = new com.google.protobuf.SingleFieldBuilderV3<
@@ -15336,7 +15357,7 @@ public final class UserBitShared {
           getOptionsJsonBytes() {
         java.lang.Object ref = optionsJson_;
         if (ref instanceof String) {
-          com.google.protobuf.ByteString b = 
+          com.google.protobuf.ByteString b =
               com.google.protobuf.ByteString.copyFromUtf8(
                   (java.lang.String) ref);
           optionsJson_ = b;
@@ -15459,7 +15480,7 @@ public final class UserBitShared {
           getQueueNameBytes() {
         java.lang.Object ref = queueName_;
         if (ref instanceof String) {
-          com.google.protobuf.ByteString b = 
+          com.google.protobuf.ByteString b =
               com.google.protobuf.ByteString.copyFromUtf8(
                   (java.lang.String) ref);
           queueName_ = b;
@@ -15709,7 +15730,7 @@ public final class UserBitShared {
     /**
      * <code>repeated .exec.shared.MajorFragmentProfile fragment_profile = 11;</code>
      */
-    java.util.List<org.apache.drill.exec.proto.UserBitShared.MajorFragmentProfile> 
+    java.util.List<org.apache.drill.exec.proto.UserBitShared.MajorFragmentProfile>
         getFragmentProfileList();
     /**
      * <code>repeated .exec.shared.MajorFragmentProfile fragment_profile = 11;</code>
@@ -15722,7 +15743,7 @@ public final class UserBitShared {
     /**
      * <code>repeated .exec.shared.MajorFragmentProfile fragment_profile = 11;</code>
      */
-    java.util.List<? extends org.apache.drill.exec.proto.UserBitShared.MajorFragmentProfileOrBuilder> 
+    java.util.List<? extends org.apache.drill.exec.proto.UserBitShared.MajorFragmentProfileOrBuilder>
         getFragmentProfileOrBuilderList();
     /**
      * <code>repeated .exec.shared.MajorFragmentProfile fragment_profile = 11;</code>
@@ -16093,7 +16114,7 @@ public final class UserBitShared {
       if (ref instanceof java.lang.String) {
         return (java.lang.String) ref;
       } else {
-        com.google.protobuf.ByteString bs = 
+        com.google.protobuf.ByteString bs =
             (com.google.protobuf.ByteString) ref;
         java.lang.String s = bs.toStringUtf8();
         if (bs.isValidUtf8()) {
@@ -16111,7 +16132,7 @@ public final class UserBitShared {
         getQueryBytes() {
       java.lang.Object ref = query_;
       if (ref instanceof java.lang.String) {
-        com.google.protobuf.ByteString b = 
+        com.google.protobuf.ByteString b =
             com.google.protobuf.ByteString.copyFromUtf8(
                 (java.lang.String) ref);
         query_ = b;
@@ -16141,7 +16162,7 @@ public final class UserBitShared {
       if (ref instanceof java.lang.String) {
         return (java.lang.String) ref;
       } else {
-        com.google.protobuf.ByteString bs = 
+        com.google.protobuf.ByteString bs =
             (com.google.protobuf.ByteString) ref;
         java.lang.String s = bs.toStringUtf8();
         if (bs.isValidUtf8()) {
@@ -16159,7 +16180,7 @@ public final class UserBitShared {
         getPlanBytes() {
       java.lang.Object ref = plan_;
       if (ref instanceof java.lang.String) {
-        com.google.protobuf.ByteString b = 
+        com.google.protobuf.ByteString b =
             com.google.protobuf.ByteString.copyFromUtf8(
                 (java.lang.String) ref);
         plan_ = b;
@@ -16265,7 +16286,7 @@ public final class UserBitShared {
      * <code>repeated .exec.shared.MajorFragmentProfile fragment_profile = 11;</code>
      */
     @java.lang.Override
-    public java.util.List<? extends org.apache.drill.exec.proto.UserBitShared.MajorFragmentProfileOrBuilder> 
+    public java.util.List<? extends org.apache.drill.exec.proto.UserBitShared.MajorFragmentProfileOrBuilder>
         getFragmentProfileOrBuilderList() {
       return fragmentProfile_;
     }
@@ -16312,7 +16333,7 @@ public final class UserBitShared {
       if (ref instanceof java.lang.String) {
         return (java.lang.String) ref;
       } else {
-        com.google.protobuf.ByteString bs = 
+        com.google.protobuf.ByteString bs =
             (com.google.protobuf.ByteString) ref;
         java.lang.String s = bs.toStringUtf8();
         if (bs.isValidUtf8()) {
@@ -16330,7 +16351,7 @@ public final class UserBitShared {
         getUserBytes() {
       java.lang.Object ref = user_;
       if (ref instanceof java.lang.String) {
-        com.google.protobuf.ByteString b = 
+        com.google.protobuf.ByteString b =
             com.google.protobuf.ByteString.copyFromUtf8(
                 (java.lang.String) ref);
         user_ = b;
@@ -16360,7 +16381,7 @@ public final class UserBitShared {
       if (ref instanceof java.lang.String) {
         return (java.lang.String) ref;
       } else {
-        com.google.protobuf.ByteString bs = 
+        com.google.protobuf.ByteString bs =
             (com.google.protobuf.ByteString) ref;
         java.lang.String s = bs.toStringUtf8();
         if (bs.isValidUtf8()) {
@@ -16378,7 +16399,7 @@ public final class UserBitShared {
         getErrorBytes() {
       java.lang.Object ref = error_;
       if (ref instanceof java.lang.String) {
-        com.google.protobuf.ByteString b = 
+        com.google.protobuf.ByteString b =
             com.google.protobuf.ByteString.copyFromUtf8(
                 (java.lang.String) ref);
         error_ = b;
@@ -16408,7 +16429,7 @@ public final class UserBitShared {
       if (ref instanceof java.lang.String) {
         return (java.lang.String) ref;
       } else {
-        com.google.protobuf.ByteString bs = 
+        com.google.protobuf.ByteString bs =
             (com.google.protobuf.ByteString) ref;
         java.lang.String s = bs.toStringUtf8();
         if (bs.isValidUtf8()) {
@@ -16426,7 +16447,7 @@ public final class UserBitShared {
         getVerboseErrorBytes() {
       java.lang.Object ref = verboseError_;
       if (ref instanceof java.lang.String) {
-        com.google.protobuf.ByteString b = 
+        com.google.protobuf.ByteString b =
             com.google.protobuf.ByteString.copyFromUtf8(
                 (java.lang.String) ref);
         verboseError_ = b;
@@ -16456,7 +16477,7 @@ public final class UserBitShared {
       if (ref instanceof java.lang.String) {
         return (java.lang.String) ref;
       } else {
-        com.google.protobuf.ByteString bs = 
+        com.google.protobuf.ByteString bs =
             (com.google.protobuf.ByteString) ref;
         java.lang.String s = bs.toStringUtf8();
         if (bs.isValidUtf8()) {
@@ -16474,7 +16495,7 @@ public final class UserBitShared {
         getErrorIdBytes() {
       java.lang.Object ref = errorId_;
       if (ref instanceof java.lang.String) {
-        com.google.protobuf.ByteString b = 
+        com.google.protobuf.ByteString b =
             com.google.protobuf.ByteString.copyFromUtf8(
                 (java.lang.String) ref);
         errorId_ = b;
@@ -16504,7 +16525,7 @@ public final class UserBitShared {
       if (ref instanceof java.lang.String) {
         return (java.lang.String) ref;
       } else {
-        com.google.protobuf.ByteString bs = 
+        com.google.protobuf.ByteString bs =
             (com.google.protobuf.ByteString) ref;
         java.lang.String s = bs.toStringUtf8();
         if (bs.isValidUtf8()) {
@@ -16522,7 +16543,7 @@ public final class UserBitShared {
         getErrorNodeBytes() {
       java.lang.Object ref = errorNode_;
       if (ref instanceof java.lang.String) {
-        com.google.protobuf.ByteString b = 
+        com.google.protobuf.ByteString b =
             com.google.protobuf.ByteString.copyFromUtf8(
                 (java.lang.String) ref);
         errorNode_ = b;
@@ -16552,7 +16573,7 @@ public final class UserBitShared {
       if (ref instanceof java.lang.String) {
         return (java.lang.String) ref;
       } else {
-        com.google.protobuf.ByteString bs = 
+        com.google.protobuf.ByteString bs =
             (com.google.protobuf.ByteString) ref;
         java.lang.String s = bs.toStringUtf8();
         if (bs.isValidUtf8()) {
@@ -16570,7 +16591,7 @@ public final class UserBitShared {
         getOptionsJsonBytes() {
       java.lang.Object ref = optionsJson_;
       if (ref instanceof java.lang.String) {
-        com.google.protobuf.ByteString b = 
+        com.google.protobuf.ByteString b =
             com.google.protobuf.ByteString.copyFromUtf8(
                 (java.lang.String) ref);
         optionsJson_ = b;
@@ -16657,7 +16678,7 @@ public final class UserBitShared {
       if (ref instanceof java.lang.String) {
         return (java.lang.String) ref;
       } else {
-        com.google.protobuf.ByteString bs = 
+        com.google.protobuf.ByteString bs =
             (com.google.protobuf.ByteString) ref;
         java.lang.String s = bs.toStringUtf8();
         if (bs.isValidUtf8()) {
@@ -16675,7 +16696,7 @@ public final class UserBitShared {
         getQueueNameBytes() {
       java.lang.Object ref = queueName_;
       if (ref instanceof java.lang.String) {
-        com.google.protobuf.ByteString b = 
+        com.google.protobuf.ByteString b =
             com.google.protobuf.ByteString.copyFromUtf8(
                 (java.lang.String) ref);
         queueName_ = b;
@@ -16705,7 +16726,7 @@ public final class UserBitShared {
       if (ref instanceof java.lang.String) {
         return (java.lang.String) ref;
       } else {
-        com.google.protobuf.ByteString bs = 
+        com.google.protobuf.ByteString bs =
             (com.google.protobuf.ByteString) ref;
         java.lang.String s = bs.toStringUtf8();
         if (bs.isValidUtf8()) {
@@ -16723,7 +16744,7 @@ public final class UserBitShared {
         getQueryIdBytes() {
       java.lang.Object ref = queryId_;
       if (ref instanceof java.lang.String) {
-        com.google.protobuf.ByteString b = 
+        com.google.protobuf.ByteString b =
             com.google.protobuf.ByteString.copyFromUtf8(
                 (java.lang.String) ref);
         queryId_ = b;
@@ -17648,7 +17669,7 @@ public final class UserBitShared {
               fragmentProfileBuilder_ = null;
               fragmentProfile_ = other.fragmentProfile_;
               bitField0_ = (bitField0_ & ~0x00000400);
-              fragmentProfileBuilder_ = 
+              fragmentProfileBuilder_ =
                 com.google.protobuf.GeneratedMessageV3.alwaysUseFieldBuilders ?
                    getFragmentProfileFieldBuilder() : null;
             } else {
@@ -18015,7 +18036,7 @@ public final class UserBitShared {
        * <code>optional .exec.shared.QueryId id = 1;</code>
        */
       private com.google.protobuf.SingleFieldBuilderV3<
-          org.apache.drill.exec.proto.UserBitShared.QueryId, org.apache.drill.exec.proto.UserBitShared.QueryId.Builder, org.apache.drill.exec.proto.UserBitShared.QueryIdOrBuilder> 
+          org.apache.drill.exec.proto.UserBitShared.QueryId, org.apache.drill.exec.proto.UserBitShared.QueryId.Builder, org.apache.drill.exec.proto.UserBitShared.QueryIdOrBuilder>
           getIdFieldBuilder() {
         if (idBuilder_ == null) {
           idBuilder_ = new com.google.protobuf.SingleFieldBuilderV3<
@@ -18183,7 +18204,7 @@ public final class UserBitShared {
           getQueryBytes() {
         java.lang.Object ref = query_;
         if (ref instanceof String) {
-          com.google.protobuf.ByteString b = 
+          com.google.protobuf.ByteString b =
               com.google.protobuf.ByteString.copyFromUtf8(
                   (java.lang.String) ref);
           query_ = b;
@@ -18267,7 +18288,7 @@ public final class UserBitShared {
           getPlanBytes() {
         java.lang.Object ref = plan_;
         if (ref instanceof String) {
-          com.google.protobuf.ByteString b = 
+          com.google.protobuf.ByteString b =
               com.google.protobuf.ByteString.copyFromUtf8(
                   (java.lang.String) ref);
           plan_ = b;
@@ -18424,7 +18445,7 @@ public final class UserBitShared {
        * <code>optional .exec.DrillbitEndpoint foreman = 7;</code>
        */
       private com.google.protobuf.SingleFieldBuilderV3<
-          org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint, org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint.Builder, org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpointOrBuilder> 
+          org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint, org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint.Builder, org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpointOrBuilder>
           getForemanFieldBuilder() {
         if (foremanBuilder_ == null) {
           foremanBuilder_ = new com.google.protobuf.SingleFieldBuilderV3<
@@ -18753,7 +18774,7 @@ public final class UserBitShared {
       /**
        * <code>repeated .exec.shared.MajorFragmentProfile fragment_profile = 11;</code>
        */
-      public java.util.List<? extends org.apache.drill.exec.proto.UserBitShared.MajorFragmentProfileOrBuilder> 
+      public java.util.List<? extends org.apache.drill.exec.proto.UserBitShared.MajorFragmentProfileOrBuilder>
            getFragmentProfileOrBuilderList() {
         if (fragmentProfileBuilder_ != null) {
           return fragmentProfileBuilder_.getMessageOrBuilderList();
@@ -18779,12 +18800,12 @@ public final class UserBitShared {
       /**
        * <code>repeated .exec.shared.MajorFragmentProfile fragment_profile = 11;</code>
        */
-      public java.util.List<org.apache.drill.exec.proto.UserBitShared.MajorFragmentProfile.Builder> 
+      public java.util.List<org.apache.drill.exec.proto.UserBitShared.MajorFragmentProfile.Builder>
            getFragmentProfileBuilderList() {
         return getFragmentProfileFieldBuilder().getBuilderList();
       }
       private com.google.protobuf.RepeatedFieldBuilderV3<
-          org.apache.drill.exec.proto.UserBitShared.MajorFragmentProfile, org.apache.drill.exec.proto.UserBitShared.MajorFragmentProfile.Builder, org.apache.drill.exec.proto.UserBitShared.MajorFragmentProfileOrBuilder> 
+          org.apache.drill.exec.proto.UserBitShared.MajorFragmentProfile, org.apache.drill.exec.proto.UserBitShared.MajorFragmentProfile.Builder, org.apache.drill.exec.proto.UserBitShared.MajorFragmentProfileOrBuilder>
           getFragmentProfileFieldBuilder() {
         if (fragmentProfileBuilder_ == null) {
           fragmentProfileBuilder_ = new com.google.protobuf.RepeatedFieldBuilderV3<
@@ -18832,7 +18853,7 @@ public final class UserBitShared {
           getUserBytes() {
         java.lang.Object ref = user_;
         if (ref instanceof String) {
-          com.google.protobuf.ByteString b = 
+          com.google.protobuf.ByteString b =
               com.google.protobuf.ByteString.copyFromUtf8(
                   (java.lang.String) ref);
           user_ = b;
@@ -18916,7 +18937,7 @@ public final class UserBitShared {
           getErrorBytes() {
         java.lang.Object ref = error_;
         if (ref instanceof String) {
-          com.google.protobuf.ByteString b = 
+          com.google.protobuf.ByteString b =
               com.google.protobuf.ByteString.copyFromUtf8(
                   (java.lang.String) ref);
           error_ = b;
@@ -19000,7 +19021,7 @@ public final class UserBitShared {
           getVerboseErrorBytes() {
         java.lang.Object ref = verboseError_;
         if (ref instanceof String) {
-          com.google.protobuf.ByteString b = 
+          com.google.protobuf.ByteString b =
               com.google.protobuf.ByteString.copyFromUtf8(
                   (java.lang.String) ref);
           verboseError_ = b;
@@ -19084,7 +19105,7 @@ public final class UserBitShared {
           getErrorIdBytes() {
         java.lang.Object ref = errorId_;
         if (ref instanceof String) {
-          com.google.protobuf.ByteString b = 
+          com.google.protobuf.ByteString b =
               com.google.protobuf.ByteString.copyFromUtf8(
                   (java.lang.String) ref);
           errorId_ = b;
@@ -19168,7 +19189,7 @@ public final class UserBitShared {
           getErrorNodeBytes() {
         java.lang.Object ref = errorNode_;
         if (ref instanceof String) {
-          com.google.protobuf.ByteString b = 
+          com.google.protobuf.ByteString b =
               com.google.protobuf.ByteString.copyFromUtf8(
                   (java.lang.String) ref);
           errorNode_ = b;
@@ -19252,7 +19273,7 @@ public final class UserBitShared {
           getOptionsJsonBytes() {
         java.lang.Object ref = optionsJson_;
         if (ref instanceof String) {
-          com.google.protobuf.ByteString b = 
+          com.google.protobuf.ByteString b =
               com.google.protobuf.ByteString.copyFromUtf8(
                   (java.lang.String) ref);
           optionsJson_ = b;
@@ -19453,7 +19474,7 @@ public final class UserBitShared {
           getQueueNameBytes() {
         java.lang.Object ref = queueName_;
         if (ref instanceof String) {
-          com.google.protobuf.ByteString b = 
+          com.google.protobuf.ByteString b =
               com.google.protobuf.ByteString.copyFromUtf8(
                   (java.lang.String) ref);
           queueName_ = b;
@@ -19537,7 +19558,7 @@ public final class UserBitShared {
           getQueryIdBytes() {
         java.lang.Object ref = queryId_;
         if (ref instanceof String) {
-          com.google.protobuf.ByteString b = 
+          com.google.protobuf.ByteString b =
               com.google.protobuf.ByteString.copyFromUtf8(
                   (java.lang.String) ref);
           queryId_ = b;
@@ -19816,7 +19837,7 @@ public final class UserBitShared {
     /**
      * <code>repeated .exec.shared.MinorFragmentProfile minor_fragment_profile = 2;</code>
      */
-    java.util.List<org.apache.drill.exec.proto.UserBitShared.MinorFragmentProfile> 
+    java.util.List<org.apache.drill.exec.proto.UserBitShared.MinorFragmentProfile>
         getMinorFragmentProfileList();
     /**
      * <code>repeated .exec.shared.MinorFragmentProfile minor_fragment_profile = 2;</code>
@@ -19829,7 +19850,7 @@ public final class UserBitShared {
     /**
      * <code>repeated .exec.shared.MinorFragmentProfile minor_fragment_profile = 2;</code>
      */
-    java.util.List<? extends org.apache.drill.exec.proto.UserBitShared.MinorFragmentProfileOrBuilder> 
+    java.util.List<? extends org.apache.drill.exec.proto.UserBitShared.MinorFragmentProfileOrBuilder>
         getMinorFragmentProfileOrBuilderList();
     /**
      * <code>repeated .exec.shared.MinorFragmentProfile minor_fragment_profile = 2;</code>
@@ -19911,7 +19932,7 @@ public final class UserBitShared {
      * <code>repeated .exec.shared.MinorFragmentProfile minor_fragment_profile = 2;</code>
      */
     @java.lang.Override
-    public java.util.List<? extends org.apache.drill.exec.proto.UserBitShared.MinorFragmentProfileOrBuilder> 
+    public java.util.List<? extends org.apache.drill.exec.proto.UserBitShared.MinorFragmentProfileOrBuilder>
         getMinorFragmentProfileOrBuilderList() {
       return minorFragmentProfile_;
     }
@@ -20264,7 +20285,7 @@ public final class UserBitShared {
               minorFragmentProfileBuilder_ = null;
               minorFragmentProfile_ = other.minorFragmentProfile_;
               bitField0_ = (bitField0_ & ~0x00000002);
-              minorFragmentProfileBuilder_ = 
+              minorFragmentProfileBuilder_ =
                 com.google.protobuf.GeneratedMessageV3.alwaysUseFieldBuilders ?
                    getMinorFragmentProfileFieldBuilder() : null;
             } else {
@@ -20567,7 +20588,7 @@ public final class UserBitShared {
       /**
        * <code>repeated .exec.shared.MinorFragmentProfile minor_fragment_profile = 2;</code>
        */
-      public java.util.List<? extends org.apache.drill.exec.proto.UserBitShared.MinorFragmentProfileOrBuilder> 
+      public java.util.List<? extends org.apache.drill.exec.proto.UserBitShared.MinorFragmentProfileOrBuilder>
            getMinorFragmentProfileOrBuilderList() {
         if (minorFragmentProfileBuilder_ != null) {
           return minorFragmentProfileBuilder_.getMessageOrBuilderList();
@@ -20593,12 +20614,12 @@ public final class UserBitShared {
       /**
        * <code>repeated .exec.shared.MinorFragmentProfile minor_fragment_profile = 2;</code>
        */
-      public java.util.List<org.apache.drill.exec.proto.UserBitShared.MinorFragmentProfile.Builder> 
+      public java.util.List<org.apache.drill.exec.proto.UserBitShared.MinorFragmentProfile.Builder>
            getMinorFragmentProfileBuilderList() {
         return getMinorFragmentProfileFieldBuilder().getBuilderList();
       }
       private com.google.protobuf.RepeatedFieldBuilderV3<
-          org.apache.drill.exec.proto.UserBitShared.MinorFragmentProfile, org.apache.drill.exec.proto.UserBitShared.MinorFragmentProfile.Builder, org.apache.drill.exec.proto.UserBitShared.MinorFragmentProfileOrBuilder> 
+          org.apache.drill.exec.proto.UserBitShared.MinorFragmentProfile, org.apache.drill.exec.proto.UserBitShared.MinorFragmentProfile.Builder, org.apache.drill.exec.proto.UserBitShared.MinorFragmentProfileOrBuilder>
           getMinorFragmentProfileFieldBuilder() {
         if (minorFragmentProfileBuilder_ == null) {
           minorFragmentProfileBuilder_ = new com.google.protobuf.RepeatedFieldBuilderV3<
@@ -20719,7 +20740,7 @@ public final class UserBitShared {
     /**
      * <code>repeated .exec.shared.OperatorProfile operator_profile = 4;</code>
      */
-    java.util.List<org.apache.drill.exec.proto.UserBitShared.OperatorProfile> 
+    java.util.List<org.apache.drill.exec.proto.UserBitShared.OperatorProfile>
         getOperatorProfileList();
     /**
      * <code>repeated .exec.shared.OperatorProfile operator_profile = 4;</code>
@@ -20732,7 +20753,7 @@ public final class UserBitShared {
     /**
      * <code>repeated .exec.shared.OperatorProfile operator_profile = 4;</code>
      */
-    java.util.List<? extends org.apache.drill.exec.proto.UserBitShared.OperatorProfileOrBuilder> 
+    java.util.List<? extends org.apache.drill.exec.proto.UserBitShared.OperatorProfileOrBuilder>
         getOperatorProfileOrBuilderList();
     /**
      * <code>repeated .exec.shared.OperatorProfile operator_profile = 4;</code>
@@ -20941,7 +20962,7 @@ public final class UserBitShared {
      * <code>repeated .exec.shared.OperatorProfile operator_profile = 4;</code>
      */
     @java.lang.Override
-    public java.util.List<? extends org.apache.drill.exec.proto.UserBitShared.OperatorProfileOrBuilder> 
+    public java.util.List<? extends org.apache.drill.exec.proto.UserBitShared.OperatorProfileOrBuilder>
         getOperatorProfileOrBuilderList() {
       return operatorProfile_;
     }
@@ -21667,7 +21688,7 @@ public final class UserBitShared {
               operatorProfileBuilder_ = null;
               operatorProfile_ = other.operatorProfile_;
               bitField0_ = (bitField0_ & ~0x00000008);
-              operatorProfileBuilder_ = 
+              operatorProfileBuilder_ =
                 com.google.protobuf.GeneratedMessageV3.alwaysUseFieldBuilders ?
                    getOperatorProfileFieldBuilder() : null;
             } else {
@@ -21963,7 +21984,7 @@ public final class UserBitShared {
        * <code>optional .exec.shared.DrillPBError error = 2;</code>
        */
       private com.google.protobuf.SingleFieldBuilderV3<
-          org.apache.drill.exec.proto.UserBitShared.DrillPBError, org.apache.drill.exec.proto.UserBitShared.DrillPBError.Builder, org.apache.drill.exec.proto.UserBitShared.DrillPBErrorOrBuilder> 
+          org.apache.drill.exec.proto.UserBitShared.DrillPBError, org.apache.drill.exec.proto.UserBitShared.DrillPBError.Builder, org.apache.drill.exec.proto.UserBitShared.DrillPBErrorOrBuilder>
           getErrorFieldBuilder() {
         if (errorBuilder_ == null) {
           errorBuilder_ = new com.google.protobuf.SingleFieldBuilderV3<
@@ -22210,7 +22231,7 @@ public final class UserBitShared {
       /**
        * <code>repeated .exec.shared.OperatorProfile operator_profile = 4;</code>
        */
-      public java.util.List<? extends org.apache.drill.exec.proto.UserBitShared.OperatorProfileOrBuilder> 
+      public java.util.List<? extends org.apache.drill.exec.proto.UserBitShared.OperatorProfileOrBuilder>
            getOperatorProfileOrBuilderList() {
         if (operatorProfileBuilder_ != null) {
           return operatorProfileBuilder_.getMessageOrBuilderList();
@@ -22236,12 +22257,12 @@ public final class UserBitShared {
       /**
        * <code>repeated .exec.shared.OperatorProfile operator_profile = 4;</code>
        */
-      public java.util.List<org.apache.drill.exec.proto.UserBitShared.OperatorProfile.Builder> 
+      public java.util.List<org.apache.drill.exec.proto.UserBitShared.OperatorProfile.Builder>
            getOperatorProfileBuilderList() {
         return getOperatorProfileFieldBuilder().getBuilderList();
       }
       private com.google.protobuf.RepeatedFieldBuilderV3<
-          org.apache.drill.exec.proto.UserBitShared.OperatorProfile, org.apache.drill.exec.proto.UserBitShared.OperatorProfile.Builder, org.apache.drill.exec.proto.UserBitShared.OperatorProfileOrBuilder> 
+          org.apache.drill.exec.proto.UserBitShared.OperatorProfile, org.apache.drill.exec.proto.UserBitShared.OperatorProfile.Builder, org.apache.drill.exec.proto.UserBitShared.OperatorProfileOrBuilder>
           getOperatorProfileFieldBuilder() {
         if (operatorProfileBuilder_ == null) {
           operatorProfileBuilder_ = new com.google.protobuf.RepeatedFieldBuilderV3<
@@ -22518,7 +22539,7 @@ public final class UserBitShared {
        * <code>optional .exec.DrillbitEndpoint endpoint = 9;</code>
        */
       private com.google.protobuf.SingleFieldBuilderV3<
-          org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint, org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint.Builder, org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpointOrBuilder> 
+          org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint, org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint.Builder, org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpointOrBuilder>
           getEndpointFieldBuilder() {
         if (endpointBuilder_ == null) {
           endpointBuilder_ = new com.google.protobuf.SingleFieldBuilderV3<
@@ -22679,7 +22700,7 @@ public final class UserBitShared {
     /**
      * <code>repeated .exec.shared.StreamProfile input_profile = 1;</code>
      */
-    java.util.List<org.apache.drill.exec.proto.UserBitShared.StreamProfile> 
+    java.util.List<org.apache.drill.exec.proto.UserBitShared.StreamProfile>
         getInputProfileList();
     /**
      * <code>repeated .exec.shared.StreamProfile input_profile = 1;</code>
@@ -22692,7 +22713,7 @@ public final class UserBitShared {
     /**
      * <code>repeated .exec.shared.StreamProfile input_profile = 1;</code>
      */
-    java.util.List<? extends org.apache.drill.exec.proto.UserBitShared.StreamProfileOrBuilder> 
+    java.util.List<? extends org.apache.drill.exec.proto.UserBitShared.StreamProfileOrBuilder>
         getInputProfileOrBuilderList();
     /**
      * <code>repeated .exec.shared.StreamProfile input_profile = 1;</code>
@@ -22758,7 +22779,7 @@ public final class UserBitShared {
     /**
      * <code>repeated .exec.shared.MetricValue metric = 8;</code>
      */
-    java.util.List<org.apache.drill.exec.proto.UserBitShared.MetricValue> 
+    java.util.List<org.apache.drill.exec.proto.UserBitShared.MetricValue>
         getMetricList();
     /**
      * <code>repeated .exec.shared.MetricValue metric = 8;</code>
@@ -22771,7 +22792,7 @@ public final class UserBitShared {
     /**
      * <code>repeated .exec.shared.MetricValue metric = 8;</code>
      */
-    java.util.List<? extends org.apache.drill.exec.proto.UserBitShared.MetricValueOrBuilder> 
+    java.util.List<? extends org.apache.drill.exec.proto.UserBitShared.MetricValueOrBuilder>
         getMetricOrBuilderList();
     /**
      * <code>repeated .exec.shared.MetricValue metric = 8;</code>
@@ -22864,7 +22885,7 @@ public final class UserBitShared {
      * <code>repeated .exec.shared.StreamProfile input_profile = 1;</code>
      */
     @java.lang.Override
-    public java.util.List<? extends org.apache.drill.exec.proto.UserBitShared.StreamProfileOrBuilder> 
+    public java.util.List<? extends org.apache.drill.exec.proto.UserBitShared.StreamProfileOrBuilder>
         getInputProfileOrBuilderList() {
       return inputProfile_;
     }
@@ -22999,7 +23020,7 @@ public final class UserBitShared {
      * <code>repeated .exec.shared.MetricValue metric = 8;</code>
      */
     @java.lang.Override
-    public java.util.List<? extends org.apache.drill.exec.proto.UserBitShared.MetricValueOrBuilder> 
+    public java.util.List<? extends org.apache.drill.exec.proto.UserBitShared.MetricValueOrBuilder>
         getMetricOrBuilderList() {
       return metric_;
     }
@@ -23065,7 +23086,7 @@ public final class UserBitShared {
       if (ref instanceof java.lang.String) {
         return (java.lang.String) ref;
       } else {
-        com.google.protobuf.ByteString bs = 
+        com.google.protobuf.ByteString bs =
             (com.google.protobuf.ByteString) ref;
         java.lang.String s = bs.toStringUtf8();
         if (bs.isValidUtf8()) {
@@ -23083,7 +23104,7 @@ public final class UserBitShared {
         getOperatorTypeNameBytes() {
       java.lang.Object ref = operatorTypeName_;
       if (ref instanceof java.lang.String) {
-        com.google.protobuf.ByteString b = 
+        com.google.protobuf.ByteString b =
             com.google.protobuf.ByteString.copyFromUtf8(
                 (java.lang.String) ref);
         operatorTypeName_ = b;
@@ -23580,7 +23601,7 @@ public final class UserBitShared {
               inputProfileBuilder_ = null;
               inputProfile_ = other.inputProfile_;
               bitField0_ = (bitField0_ & ~0x00000001);
-              inputProfileBuilder_ = 
+              inputProfileBuilder_ =
                 com.google.protobuf.GeneratedMessageV3.alwaysUseFieldBuilders ?
                    getInputProfileFieldBuilder() : null;
             } else {
@@ -23621,7 +23642,7 @@ public final class UserBitShared {
               metricBuilder_ = null;
               metric_ = other.metric_;
               bitField0_ = (bitField0_ & ~0x00000040);
-              metricBuilder_ = 
+              metricBuilder_ =
                 com.google.protobuf.GeneratedMessageV3.alwaysUseFieldBuilders ?
                    getMetricFieldBuilder() : null;
             } else {
@@ -23936,7 +23957,7 @@ public final class UserBitShared {
       /**
        * <code>repeated .exec.shared.StreamProfile input_profile = 1;</code>
        */
-      public java.util.List<? extends org.apache.drill.exec.proto.UserBitShared.StreamProfileOrBuilder> 
+      public java.util.List<? extends org.apache.drill.exec.proto.UserBitShared.StreamProfileOrBuilder>
            getInputProfileOrBuilderList() {
         if (inputProfileBuilder_ != null) {
           return inputProfileBuilder_.getMessageOrBuilderList();
@@ -23962,12 +23983,12 @@ public final class UserBitShared {
       /**
        * <code>repeated .exec.shared.StreamProfile input_profile = 1;</code>
        */
-      public java.util.List<org.apache.drill.exec.proto.UserBitShared.StreamProfile.Builder> 
+      public java.util.List<org.apache.drill.exec.proto.UserBitShared.StreamProfile.Builder>
            getInputProfileBuilderList() {
         return getInputProfileFieldBuilder().getBuilderList();
       }
       private com.google.protobuf.RepeatedFieldBuilderV3<
-          org.apache.drill.exec.proto.UserBitShared.StreamProfile, org.apache.drill.exec.proto.UserBitShared.StreamProfile.Builder, org.apache.drill.exec.proto.UserBitShared.StreamProfileOrBuilder> 
+          org.apache.drill.exec.proto.UserBitShared.StreamProfile, org.apache.drill.exec.proto.UserBitShared.StreamProfile.Builder, org.apache.drill.exec.proto.UserBitShared.StreamProfileOrBuilder>
           getInputProfileFieldBuilder() {
         if (inputProfileBuilder_ == null) {
           inputProfileBuilder_ = new com.google.protobuf.RepeatedFieldBuilderV3<
@@ -24371,7 +24392,7 @@ public final class UserBitShared {
       /**
        * <code>repeated .exec.shared.MetricValue metric = 8;</code>
        */
-      public java.util.List<? extends org.apache.drill.exec.proto.UserBitShared.MetricValueOrBuilder> 
+      public java.util.List<? extends org.apache.drill.exec.proto.UserBitShared.MetricValueOrBuilder>
            getMetricOrBuilderList() {
         if (metricBuilder_ != null) {
           return metricBuilder_.getMessageOrBuilderList();
@@ -24397,12 +24418,12 @@ public final class UserBitShared {
       /**
        * <code>repeated .exec.shared.MetricValue metric = 8;</code>
        */
-      public java.util.List<org.apache.drill.exec.proto.UserBitShared.MetricValue.Builder> 
+      public java.util.List<org.apache.drill.exec.proto.UserBitShared.MetricValue.Builder>
            getMetricBuilderList() {
         return getMetricFieldBuilder().getBuilderList();
       }
       private com.google.protobuf.RepeatedFieldBuilderV3<
-          org.apache.drill.exec.proto.UserBitShared.MetricValue, org.apache.drill.exec.proto.UserBitShared.MetricValue.Builder, org.apache.drill.exec.proto.UserBitShared.MetricValueOrBuilder> 
+          org.apache.drill.exec.proto.UserBitShared.MetricValue, org.apache.drill.exec.proto.UserBitShared.MetricValue.Builder, org.apache.drill.exec.proto.UserBitShared.MetricValueOrBuilder>
           getMetricFieldBuilder() {
         if (metricBuilder_ == null) {
           metricBuilder_ = new com.google.protobuf.RepeatedFieldBuilderV3<
@@ -24489,7 +24510,7 @@ public final class UserBitShared {
           getOperatorTypeNameBytes() {
         java.lang.Object ref = operatorTypeName_;
         if (ref instanceof String) {
-          com.google.protobuf.ByteString b = 
+          com.google.protobuf.ByteString b =
               com.google.protobuf.ByteString.copyFromUtf8(
                   (java.lang.String) ref);
           operatorTypeName_ = b;
@@ -26019,7 +26040,7 @@ public final class UserBitShared {
     /**
      * <code>repeated .exec.shared.Jar jar = 1;</code>
      */
-    java.util.List<org.apache.drill.exec.proto.UserBitShared.Jar> 
+    java.util.List<org.apache.drill.exec.proto.UserBitShared.Jar>
         getJarList();
     /**
      * <code>repeated .exec.shared.Jar jar = 1;</code>
@@ -26032,7 +26053,7 @@ public final class UserBitShared {
     /**
      * <code>repeated .exec.shared.Jar jar = 1;</code>
      */
-    java.util.List<? extends org.apache.drill.exec.proto.UserBitShared.JarOrBuilder> 
+    java.util.List<? extends org.apache.drill.exec.proto.UserBitShared.JarOrBuilder>
         getJarOrBuilderList();
     /**
      * <code>repeated .exec.shared.Jar jar = 1;</code>
@@ -26103,7 +26124,7 @@ public final class UserBitShared {
      * <code>repeated .exec.shared.Jar jar = 1;</code>
      */
     @java.lang.Override
-    public java.util.List<? extends org.apache.drill.exec.proto.UserBitShared.JarOrBuilder> 
+    public java.util.List<? extends org.apache.drill.exec.proto.UserBitShared.JarOrBuilder>
         getJarOrBuilderList() {
       return jar_;
     }
@@ -26438,7 +26459,7 @@ public final class UserBitShared {
               jarBuilder_ = null;
               jar_ = other.jar_;
               bitField0_ = (bitField0_ & ~0x00000001);
-              jarBuilder_ = 
+              jarBuilder_ =
                 com.google.protobuf.GeneratedMessageV3.alwaysUseFieldBuilders ?
                    getJarFieldBuilder() : null;
             } else {
@@ -26697,7 +26718,7 @@ public final class UserBitShared {
       /**
        * <code>repeated .exec.shared.Jar jar = 1;</code>
        */
-      public java.util.List<? extends org.apache.drill.exec.proto.UserBitShared.JarOrBuilder> 
+      public java.util.List<? extends org.apache.drill.exec.proto.UserBitShared.JarOrBuilder>
            getJarOrBuilderList() {
         if (jarBuilder_ != null) {
           return jarBuilder_.getMessageOrBuilderList();
@@ -26723,12 +26744,12 @@ public final class UserBitShared {
       /**
        * <code>repeated .exec.shared.Jar jar = 1;</code>
        */
-      public java.util.List<org.apache.drill.exec.proto.UserBitShared.Jar.Builder> 
+      public java.util.List<org.apache.drill.exec.proto.UserBitShared.Jar.Builder>
            getJarBuilderList() {
         return getJarFieldBuilder().getBuilderList();
       }
       private com.google.protobuf.RepeatedFieldBuilderV3<
-          org.apache.drill.exec.proto.UserBitShared.Jar, org.apache.drill.exec.proto.UserBitShared.Jar.Builder, org.apache.drill.exec.proto.UserBitShared.JarOrBuilder> 
+          org.apache.drill.exec.proto.UserBitShared.Jar, org.apache.drill.exec.proto.UserBitShared.Jar.Builder, org.apache.drill.exec.proto.UserBitShared.JarOrBuilder>
           getJarFieldBuilder() {
         if (jarBuilder_ == null) {
           jarBuilder_ = new com.google.protobuf.RepeatedFieldBuilderV3<
@@ -26854,7 +26875,7 @@ public final class UserBitShared {
   /**
    * <pre>
    * Jar contains jar name and list of function signatures.
-   *Function signature is concatenation of function name and its input parameters. 
+   *Function signature is concatenation of function name and its input parameters.
    * </pre>
    *
    * Protobuf type {@code exec.shared.Jar}
@@ -26919,7 +26940,7 @@ public final class UserBitShared {
       if (ref instanceof java.lang.String) {
         return (java.lang.String) ref;
       } else {
-        com.google.protobuf.ByteString bs = 
+        com.google.protobuf.ByteString bs =
             (com.google.protobuf.ByteString) ref;
         java.lang.String s = bs.toStringUtf8();
         if (bs.isValidUtf8()) {
@@ -26937,7 +26958,7 @@ public final class UserBitShared {
         getNameBytes() {
       java.lang.Object ref = name_;
       if (ref instanceof java.lang.String) {
-        com.google.protobuf.ByteString b = 
+        com.google.protobuf.ByteString b =
             com.google.protobuf.ByteString.copyFromUtf8(
                 (java.lang.String) ref);
         name_ = b;
@@ -27161,7 +27182,7 @@ public final class UserBitShared {
     /**
      * <pre>
      * Jar contains jar name and list of function signatures.
-     *Function signature is concatenation of function name and its input parameters. 
+     *Function signature is concatenation of function name and its input parameters.
      * </pre>
      *
      * Protobuf type {@code exec.shared.Jar}
@@ -27389,7 +27410,7 @@ public final class UserBitShared {
           getNameBytes() {
         java.lang.Object ref = name_;
         if (ref instanceof String) {
-          com.google.protobuf.ByteString b = 
+          com.google.protobuf.ByteString b =
               com.google.protobuf.ByteString.copyFromUtf8(
                   (java.lang.String) ref);
           name_ = b;
@@ -27718,7 +27739,7 @@ public final class UserBitShared {
       if (ref instanceof java.lang.String) {
         return (java.lang.String) ref;
       } else {
-        com.google.protobuf.ByteString bs = 
+        com.google.protobuf.ByteString bs =
             (com.google.protobuf.ByteString) ref;
         java.lang.String s = bs.toStringUtf8();
         if (bs.isValidUtf8()) {
@@ -27736,7 +27757,7 @@ public final class UserBitShared {
         getMechanismBytes() {
       java.lang.Object ref = mechanism_;
       if (ref instanceof java.lang.String) {
-        com.google.protobuf.ByteString b = 
+        com.google.protobuf.ByteString b =
             com.google.protobuf.ByteString.copyFromUtf8(
                 (java.lang.String) ref);
         mechanism_ = b;
@@ -28212,7 +28233,7 @@ public final class UserBitShared {
           getMechanismBytes() {
         java.lang.Object ref = mechanism_;
         if (ref instanceof String) {
-          com.google.protobuf.ByteString b = 
+          com.google.protobuf.ByteString b =
               com.google.protobuf.ByteString.copyFromUtf8(
                   (java.lang.String) ref);
           mechanism_ = b;
@@ -28412,112 +28433,112 @@ public final class UserBitShared {
 
   private static final com.google.protobuf.Descriptors.Descriptor
     internal_static_exec_shared_UserCredentials_descriptor;
-  private static final 
+  private static final
     com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
       internal_static_exec_shared_UserCredentials_fieldAccessorTable;
   private static final com.google.protobuf.Descriptors.Descriptor
     internal_static_exec_shared_QueryId_descriptor;
-  private static final 
+  private static final
     com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
       internal_static_exec_shared_QueryId_fieldAccessorTable;
   private static final com.google.protobuf.Descriptors.Descriptor
     internal_static_exec_shared_DrillPBError_descriptor;
-  private static final 
+  private static final
     com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
       internal_static_exec_shared_DrillPBError_fieldAccessorTable;
   private static final com.google.protobuf.Descriptors.Descriptor
     internal_static_exec_shared_ExceptionWrapper_descriptor;
-  private static final 
+  private static final
     com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
       internal_static_exec_shared_ExceptionWrapper_fieldAccessorTable;
   private static final com.google.protobuf.Descriptors.Descriptor
     internal_static_exec_shared_StackTraceElementWrapper_descriptor;
-  private static final 
+  private static final
     com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
       internal_static_exec_shared_StackTraceElementWrapper_fieldAccessorTable;
   private static final com.google.protobuf.Descriptors.Descriptor
     internal_static_exec_shared_ParsingError_descriptor;
-  private static final 
+  private static final
     com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
       internal_static_exec_shared_ParsingError_fieldAccessorTable;
   private static final com.google.protobuf.Descriptors.Descriptor
     internal_static_exec_shared_RecordBatchDef_descriptor;
-  private static final 
+  private static final
     com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
       internal_static_exec_shared_RecordBatchDef_fieldAccessorTable;
   private static final com.google.protobuf.Descriptors.Descriptor
     internal_static_exec_shared_NamePart_descriptor;
-  private static final 
+  private static final
     com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
       internal_static_exec_shared_NamePart_fieldAccessorTable;
   private static final com.google.protobuf.Descriptors.Descriptor
     internal_static_exec_shared_SerializedField_descriptor;
-  private static final 
+  private static final
     com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
       internal_static_exec_shared_SerializedField_fieldAccessorTable;
   private static final com.google.protobuf.Descriptors.Descriptor
     internal_static_exec_shared_NodeStatus_descriptor;
-  private static final 
+  private static final
     com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
       internal_static_exec_shared_NodeStatus_fieldAccessorTable;
   private static final com.google.protobuf.Descriptors.Descriptor
     internal_static_exec_shared_QueryResult_descriptor;
-  private static final 
+  private static final
     com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
       internal_static_exec_shared_QueryResult_fieldAccessorTable;
   private static final com.google.protobuf.Descriptors.Descriptor
     internal_static_exec_shared_QueryData_descriptor;
-  private static final 
+  private static final
     com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
       internal_static_exec_shared_QueryData_fieldAccessorTable;
   private static final com.google.protobuf.Descriptors.Descriptor
     internal_static_exec_shared_QueryInfo_descriptor;
-  private static final 
+  private static final
     com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
       internal_static_exec_shared_QueryInfo_fieldAccessorTable;
   private static final com.google.protobuf.Descriptors.Descriptor
     internal_static_exec_shared_QueryProfile_descriptor;
-  private static final 
+  private static final
     com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
       internal_static_exec_shared_QueryProfile_fieldAccessorTable;
   private static final com.google.protobuf.Descriptors.Descriptor
     internal_static_exec_shared_MajorFragmentProfile_descriptor;
-  private static final 
+  private static final
     com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
       internal_static_exec_shared_MajorFragmentProfile_fieldAccessorTable;
   private static final com.google.protobuf.Descriptors.Descriptor
     internal_static_exec_shared_MinorFragmentProfile_descriptor;
-  private static final 
+  private static final
     com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
       internal_static_exec_shared_MinorFragmentProfile_fieldAccessorTable;
   private static final com.google.protobuf.Descriptors.Descriptor
     internal_static_exec_shared_OperatorProfile_descriptor;
-  private static final 
+  private static final
     com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
       internal_static_exec_shared_OperatorProfile_fieldAccessorTable;
   private static final com.google.protobuf.Descriptors.Descriptor
     internal_static_exec_shared_StreamProfile_descriptor;
-  private static final 
+  private static final
     com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
       internal_static_exec_shared_StreamProfile_fieldAccessorTable;
   private static final com.google.protobuf.Descriptors.Descriptor
     internal_static_exec_shared_MetricValue_descriptor;
-  private static final 
+  private static final
     com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
       internal_static_exec_shared_MetricValue_fieldAccessorTable;
   private static final com.google.protobuf.Descriptors.Descriptor
     internal_static_exec_shared_Registry_descriptor;
-  private static final 
+  private static final
     com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
       internal_static_exec_shared_Registry_fieldAccessorTable;
   private static final com.google.protobuf.Descriptors.Descriptor
     internal_static_exec_shared_Jar_descriptor;
-  private static final 
+  private static final
     com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
       internal_static_exec_shared_Jar_fieldAccessorTable;
   private static final com.google.protobuf.Descriptors.Descriptor
     internal_static_exec_shared_SaslMessage_descriptor;
-  private static final 
+  private static final
     com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
       internal_static_exec_shared_SaslMessage_fieldAccessorTable;
 
@@ -28533,113 +28554,114 @@ public final class UserBitShared {
       "s.proto\032\022Coordination.proto\032\017SchemaDef.p" +
       "roto\"$\n\017UserCredentials\022\021\n\tuser_name\030\001 \001" +
       "(\t\"\'\n\007QueryId\022\r\n\005part1\030\001 \001(\020\022\r\n\005part2\030\002 " +
-      "\001(\020\"\355\003\n\014DrillPBError\022\020\n\010error_id\030\001 \001(\t\022(" +
+      "\001(\020\"\371\003\n\014DrillPBError\022\020\n\010error_id\030\001 \001(\t\022(" +
       "\n\010endpoint\030\002 \001(\0132\026.exec.DrillbitEndpoint" +
       "\0227\n\nerror_type\030\003 \001(\0162#.exec.shared.Drill" +
       "PBError.ErrorType\022\017\n\007message\030\004 \001(\t\0220\n\tex" +
       "ception\030\005 \001(\0132\035.exec.shared.ExceptionWra" +
       "pper\0220\n\rparsing_error\030\006 \003(\0132\031.exec.share" +
-      "d.ParsingError\"\362\001\n\tErrorType\022\016\n\nCONNECTI" +
+      "d.ParsingError\"\376\001\n\tErrorType\022\016\n\nCONNECTI" +
       "ON\020\000\022\r\n\tDATA_READ\020\001\022\016\n\nDATA_WRITE\020\002\022\014\n\010F" +
       "UNCTION\020\003\022\t\n\005PARSE\020\004\022\016\n\nPERMISSION\020\005\022\010\n\004" +
       "PLAN\020\006\022\014\n\010RESOURCE\020\007\022\n\n\006SYSTEM\020\010\022\031\n\025UNSU" +
       "PPORTED_OPERATION\020\t\022\016\n\nVALIDATION\020\n\022\023\n\017E" +
       "XECUTION_ERROR\020\013\022\022\n\016INTERNAL_ERROR\020\014\022\025\n\021" +
-      "UNSPECIFIED_ERROR\020\r\"\246\001\n\020ExceptionWrapper" +
-      "\022\027\n\017exception_class\030\001 \001(\t\022\017\n\007message\030\002 \001" +
-      "(\t\022:\n\013stack_trace\030\003 \003(\0132%.exec.shared.St" +
-      "ackTraceElementWrapper\022,\n\005cause\030\004 \001(\0132\035." +
-      "exec.shared.ExceptionWrapper\"\205\001\n\030StackTr" +
-      "aceElementWrapper\022\022\n\nclass_name\030\001 \001(\t\022\021\n" +
-      "\tfile_name\030\002 \001(\t\022\023\n\013line_number\030\003 \001(\005\022\023\n" +
-      "\013method_name\030\004 \001(\t\022\030\n\020is_native_method\030\005" +
-      " \001(\010\"\\\n\014ParsingError\022\024\n\014start_column\030\002 \001" +
-      "(\005\022\021\n\tstart_row\030\003 \001(\005\022\022\n\nend_column\030\004 \001(" +
-      "\005\022\017\n\007end_row\030\005 \001(\005\"\233\001\n\016RecordBatchDef\022\024\n" +
-      "\014record_count\030\001 \001(\005\022+\n\005field\030\002 \003(\0132\034.exe" +
-      "c.shared.SerializedField\022)\n!carries_two_" +
-      "byte_selection_vector\030\003 \001(\010\022\033\n\023affected_" +
-      "rows_count\030\004 \001(\005\"\205\001\n\010NamePart\022(\n\004type\030\001 " +
-      "\001(\0162\032.exec.shared.NamePart.Type\022\014\n\004name\030" +
-      "\002 \001(\t\022$\n\005child\030\003 \001(\0132\025.exec.shared.NameP" +
-      "art\"\033\n\004Type\022\010\n\004NAME\020\000\022\t\n\005ARRAY\020\001\"\324\001\n\017Ser" +
-      "ializedField\022%\n\nmajor_type\030\001 \001(\0132\021.commo" +
-      "n.MajorType\022(\n\tname_part\030\002 \001(\0132\025.exec.sh" +
-      "ared.NamePart\022+\n\005child\030\003 \003(\0132\034.exec.shar" +
-      "ed.SerializedField\022\023\n\013value_count\030\004 \001(\005\022" +
-      "\027\n\017var_byte_length\030\005 \001(\005\022\025\n\rbuffer_lengt" +
-      "h\030\007 \001(\005\"7\n\nNodeStatus\022\017\n\007node_id\030\001 \001(\005\022\030" +
-      "\n\020memory_footprint\030\002 \001(\003\"\263\002\n\013QueryResult" +
-      "\0228\n\013query_state\030\001 \001(\0162#.exec.shared.Quer" +
-      "yResult.QueryState\022&\n\010query_id\030\002 \001(\0132\024.e" +
-      "xec.shared.QueryId\022(\n\005error\030\003 \003(\0132\031.exec" +
-      ".shared.DrillPBError\"\227\001\n\nQueryState\022\014\n\010S" +
-      "TARTING\020\000\022\013\n\007RUNNING\020\001\022\r\n\tCOMPLETED\020\002\022\014\n" +
-      "\010CANCELED\020\003\022\n\n\006FAILED\020\004\022\032\n\026CANCELLATION_" +
-      "REQUESTED\020\005\022\014\n\010ENQUEUED\020\006\022\r\n\tPREPARING\020\007" +
-      "\022\014\n\010PLANNING\020\010\"\215\001\n\tQueryData\022&\n\010query_id" +
-      "\030\001 \001(\0132\024.exec.shared.QueryId\022\021\n\trow_coun" +
-      "t\030\002 \001(\005\022(\n\003def\030\003 \001(\0132\033.exec.shared.Recor" +
-      "dBatchDef\022\033\n\023affected_rows_count\030\004 \001(\005\"\330" +
-      "\001\n\tQueryInfo\022\r\n\005query\030\001 \001(\t\022\r\n\005start\030\002 \001" +
-      "(\003\0222\n\005state\030\003 \001(\0162#.exec.shared.QueryRes" +
-      "ult.QueryState\022\017\n\004user\030\004 \001(\t:\001-\022\'\n\007forem" +
-      "an\030\005 \001(\0132\026.exec.DrillbitEndpoint\022\024\n\014opti" +
-      "ons_json\030\006 \001(\t\022\022\n\ntotal_cost\030\007 \001(\001\022\025\n\nqu" +
-      "eue_name\030\010 \001(\t:\001-\"\337\004\n\014QueryProfile\022 \n\002id" +
-      "\030\001 \001(\0132\024.exec.shared.QueryId\022$\n\004type\030\002 \001" +
-      "(\0162\026.exec.shared.QueryType\022\r\n\005start\030\003 \001(" +
-      "\003\022\013\n\003end\030\004 \001(\003\022\r\n\005query\030\005 \001(\t\022\014\n\004plan\030\006 " +
-      "\001(\t\022\'\n\007foreman\030\007 \001(\0132\026.exec.DrillbitEndp" +
-      "oint\0222\n\005state\030\010 \001(\0162#.exec.shared.QueryR" +
-      "esult.QueryState\022\027\n\017total_fragments\030\t \001(" +
-      "\005\022\032\n\022finished_fragments\030\n \001(\005\022;\n\020fragmen" +
-      "t_profile\030\013 \003(\0132!.exec.shared.MajorFragm" +
-      "entProfile\022\017\n\004user\030\014 \001(\t:\001-\022\r\n\005error\030\r \001" +
-      "(\t\022\024\n\014verboseError\030\016 \001(\t\022\020\n\010error_id\030\017 \001" +
-      "(\t\022\022\n\nerror_node\030\020 \001(\t\022\024\n\014options_json\030\021" +
-      " \001(\t\022\017\n\007planEnd\030\022 \001(\003\022\024\n\014queueWaitEnd\030\023 " +
-      "\001(\003\022\022\n\ntotal_cost\030\024 \001(\001\022\025\n\nqueue_name\030\025 " +
-      "\001(\t:\001-\022\017\n\007queryId\030\026 \001(\t\022\021\n\tautoLimit\030\027 \001" +
-      "(\005\022\027\n\017scanned_plugins\030\030 \003(\t\"t\n\024MajorFrag" +
-      "mentProfile\022\031\n\021major_fragment_id\030\001 \001(\005\022A" +
-      "\n\026minor_fragment_profile\030\002 \003(\0132!.exec.sh" +
-      "ared.MinorFragmentProfile\"\350\002\n\024MinorFragm" +
-      "entProfile\022)\n\005state\030\001 \001(\0162\032.exec.shared." +
-      "FragmentState\022(\n\005error\030\002 \001(\0132\031.exec.shar" +
-      "ed.DrillPBError\022\031\n\021minor_fragment_id\030\003 \001" +
-      "(\005\0226\n\020operator_profile\030\004 \003(\0132\034.exec.shar" +
-      "ed.OperatorProfile\022\022\n\nstart_time\030\005 \001(\003\022\020" +
-      "\n\010end_time\030\006 \001(\003\022\023\n\013memory_used\030\007 \001(\003\022\027\n" +
-      "\017max_memory_used\030\010 \001(\003\022(\n\010endpoint\030\t \001(\013" +
-      "2\026.exec.DrillbitEndpoint\022\023\n\013last_update\030" +
-      "\n \001(\003\022\025\n\rlast_progress\030\013 \001(\003\"\237\002\n\017Operato" +
-      "rProfile\0221\n\rinput_profile\030\001 \003(\0132\032.exec.s" +
-      "hared.StreamProfile\022\023\n\013operator_id\030\003 \001(\005" +
-      "\022\031\n\roperator_type\030\004 \001(\005B\002\030\001\022\023\n\013setup_nan" +
-      "os\030\005 \001(\003\022\025\n\rprocess_nanos\030\006 \001(\003\022#\n\033peak_" +
-      "local_memory_allocated\030\007 \001(\003\022(\n\006metric\030\010" +
-      " \003(\0132\030.exec.shared.MetricValue\022\022\n\nwait_n" +
-      "anos\030\t \001(\003\022\032\n\022operator_type_name\030\n \001(\t\"B" +
-      "\n\rStreamProfile\022\017\n\007records\030\001 \001(\003\022\017\n\007batc" +
-      "hes\030\002 \001(\003\022\017\n\007schemas\030\003 \001(\003\"J\n\013MetricValu" +
-      "e\022\021\n\tmetric_id\030\001 \001(\005\022\022\n\nlong_value\030\002 \001(\003" +
-      "\022\024\n\014double_value\030\003 \001(\001\")\n\010Registry\022\035\n\003ja" +
-      "r\030\001 \003(\0132\020.exec.shared.Jar\"/\n\003Jar\022\014\n\004name" +
-      "\030\001 \001(\t\022\032\n\022function_signature\030\002 \003(\t\"W\n\013Sa" +
-      "slMessage\022\021\n\tmechanism\030\001 \001(\t\022\014\n\004data\030\002 \001" +
-      "(\014\022\'\n\006status\030\003 \001(\0162\027.exec.shared.SaslSta" +
-      "tus*5\n\nRpcChannel\022\017\n\013BIT_CONTROL\020\000\022\014\n\010BI" +
-      "T_DATA\020\001\022\010\n\004USER\020\002*V\n\tQueryType\022\007\n\003SQL\020\001" +
-      "\022\013\n\007LOGICAL\020\002\022\014\n\010PHYSICAL\020\003\022\r\n\tEXECUTION" +
-      "\020\004\022\026\n\022PREPARED_STATEMENT\020\005*\207\001\n\rFragmentS" +
-      "tate\022\013\n\007SENDING\020\000\022\027\n\023AWAITING_ALLOCATION" +
-      "\020\001\022\013\n\007RUNNING\020\002\022\014\n\010FINISHED\020\003\022\r\n\tCANCELL" +
-      "ED\020\004\022\n\n\006FAILED\020\005\022\032\n\026CANCELLATION_REQUEST" +
-      "ED\020\006*g\n\nSaslStatus\022\020\n\014SASL_UNKNOWN\020\000\022\016\n\n" +
-      "SASL_START\020\001\022\024\n\020SASL_IN_PROGRESS\020\002\022\020\n\014SA" +
-      "SL_SUCCESS\020\003\022\017\n\013SASL_FAILED\020\004B.\n\033org.apa" +
-      "che.drill.exec.protoB\rUserBitSharedH\001"
+      "UNSPECIFIED_ERROR\020\r\022\n\n\006PLUGIN\020\016\"\246\001\n\020Exce" +
+      "ptionWrapper\022\027\n\017exception_class\030\001 \001(\t\022\017\n" +
+      "\007message\030\002 \001(\t\022:\n\013stack_trace\030\003 \003(\0132%.ex" +
+      "ec.shared.StackTraceElementWrapper\022,\n\005ca" +
+      "use\030\004 \001(\0132\035.exec.shared.ExceptionWrapper" +
+      "\"\205\001\n\030StackTraceElementWrapper\022\022\n\nclass_n" +
+      "ame\030\001 \001(\t\022\021\n\tfile_name\030\002 \001(\t\022\023\n\013line_num" +
+      "ber\030\003 \001(\005\022\023\n\013method_name\030\004 \001(\t\022\030\n\020is_nat" +
+      "ive_method\030\005 \001(\010\"\\\n\014ParsingError\022\024\n\014star" +
+      "t_column\030\002 \001(\005\022\021\n\tstart_row\030\003 \001(\005\022\022\n\nend" +
+      "_column\030\004 \001(\005\022\017\n\007end_row\030\005 \001(\005\"\233\001\n\016Recor" +
+      "dBatchDef\022\024\n\014record_count\030\001 \001(\005\022+\n\005field" +
+      "\030\002 \003(\0132\034.exec.shared.SerializedField\022)\n!" +
+      "carries_two_byte_selection_vector\030\003 \001(\010\022" +
+      "\033\n\023affected_rows_count\030\004 \001(\005\"\205\001\n\010NamePar" +
+      "t\022(\n\004type\030\001 \001(\0162\032.exec.shared.NamePart.T" +
+      "ype\022\014\n\004name\030\002 \001(\t\022$\n\005child\030\003 \001(\0132\025.exec." +
+      "shared.NamePart\"\033\n\004Type\022\010\n\004NAME\020\000\022\t\n\005ARR" +
+      "AY\020\001\"\324\001\n\017SerializedField\022%\n\nmajor_type\030\001" +
+      " \001(\0132\021.common.MajorType\022(\n\tname_part\030\002 \001" +
+      "(\0132\025.exec.shared.NamePart\022+\n\005child\030\003 \003(\013" +
+      "2\034.exec.shared.SerializedField\022\023\n\013value_" +
+      "count\030\004 \001(\005\022\027\n\017var_byte_length\030\005 \001(\005\022\025\n\r" +
+      "buffer_length\030\007 \001(\005\"7\n\nNodeStatus\022\017\n\007nod" +
+      "e_id\030\001 \001(\005\022\030\n\020memory_footprint\030\002 \001(\003\"\263\002\n" +
+      "\013QueryResult\0228\n\013query_state\030\001 \001(\0162#.exec" +
+      ".shared.QueryResult.QueryState\022&\n\010query_" +
+      "id\030\002 \001(\0132\024.exec.shared.QueryId\022(\n\005error\030" +
+      "\003 \003(\0132\031.exec.shared.DrillPBError\"\227\001\n\nQue" +
+      "ryState\022\014\n\010STARTING\020\000\022\013\n\007RUNNING\020\001\022\r\n\tCO" +
+      "MPLETED\020\002\022\014\n\010CANCELED\020\003\022\n\n\006FAILED\020\004\022\032\n\026C" +
+      "ANCELLATION_REQUESTED\020\005\022\014\n\010ENQUEUED\020\006\022\r\n" +
+      "\tPREPARING\020\007\022\014\n\010PLANNING\020\010\"\215\001\n\tQueryData" +
+      "\022&\n\010query_id\030\001 \001(\0132\024.exec.shared.QueryId" +
+      "\022\021\n\trow_count\030\002 \001(\005\022(\n\003def\030\003 \001(\0132\033.exec." +
+      "shared.RecordBatchDef\022\033\n\023affected_rows_c" +
+      "ount\030\004 \001(\005\"\330\001\n\tQueryInfo\022\r\n\005query\030\001 \001(\t\022" +
+      "\r\n\005start\030\002 \001(\003\0222\n\005state\030\003 \001(\0162#.exec.sha" +
+      "red.QueryResult.QueryState\022\017\n\004user\030\004 \001(\t" +
+      ":\001-\022\'\n\007foreman\030\005 \001(\0132\026.exec.DrillbitEndp" +
+      "oint\022\024\n\014options_json\030\006 \001(\t\022\022\n\ntotal_cost" +
+      "\030\007 \001(\001\022\025\n\nqueue_name\030\010 \001(\t:\001-\"\337\004\n\014QueryP" +
+      "rofile\022 \n\002id\030\001 \001(\0132\024.exec.shared.QueryId" +
+      "\022$\n\004type\030\002 \001(\0162\026.exec.shared.QueryType\022\r" +
+      "\n\005start\030\003 \001(\003\022\013\n\003end\030\004 \001(\003\022\r\n\005query\030\005 \001(" +
+      "\t\022\014\n\004plan\030\006 \001(\t\022\'\n\007foreman\030\007 \001(\0132\026.exec." +
+      "DrillbitEndpoint\0222\n\005state\030\010 \001(\0162#.exec.s" +
+      "hared.QueryResult.QueryState\022\027\n\017total_fr" +
+      "agments\030\t \001(\005\022\032\n\022finished_fragments\030\n \001(" +
+      "\005\022;\n\020fragment_profile\030\013 \003(\0132!.exec.share" +
+      "d.MajorFragmentProfile\022\017\n\004user\030\014 \001(\t:\001-\022" +
+      "\r\n\005error\030\r \001(\t\022\024\n\014verboseError\030\016 \001(\t\022\020\n\010" +
+      "error_id\030\017 \001(\t\022\022\n\nerror_node\030\020 \001(\t\022\024\n\014op" +
+      "tions_json\030\021 \001(\t\022\017\n\007planEnd\030\022 \001(\003\022\024\n\014que" +
+      "ueWaitEnd\030\023 \001(\003\022\022\n\ntotal_cost\030\024 \001(\001\022\025\n\nq" +
+      "ueue_name\030\025 \001(\t:\001-\022\017\n\007queryId\030\026 \001(\t\022\021\n\ta" +
+      "utoLimit\030\027 \001(\005\022\027\n\017scanned_plugins\030\030 \003(\t\"" +
+      "t\n\024MajorFragmentProfile\022\031\n\021major_fragmen" +
+      "t_id\030\001 \001(\005\022A\n\026minor_fragment_profile\030\002 \003" +
+      "(\0132!.exec.shared.MinorFragmentProfile\"\350\002" +
+      "\n\024MinorFragmentProfile\022)\n\005state\030\001 \001(\0162\032." +
+      "exec.shared.FragmentState\022(\n\005error\030\002 \001(\013" +
+      "2\031.exec.shared.DrillPBError\022\031\n\021minor_fra" +
+      "gment_id\030\003 \001(\005\0226\n\020operator_profile\030\004 \003(\013" +
+      "2\034.exec.shared.OperatorProfile\022\022\n\nstart_" +
+      "time\030\005 \001(\003\022\020\n\010end_time\030\006 \001(\003\022\023\n\013memory_u" +
+      "sed\030\007 \001(\003\022\027\n\017max_memory_used\030\010 \001(\003\022(\n\010en" +
+      "dpoint\030\t \001(\0132\026.exec.DrillbitEndpoint\022\023\n\013" +
+      "last_update\030\n \001(\003\022\025\n\rlast_progress\030\013 \001(\003" +
+      "\"\237\002\n\017OperatorProfile\0221\n\rinput_profile\030\001 " +
+      "\003(\0132\032.exec.shared.StreamProfile\022\023\n\013opera" +
+      "tor_id\030\003 \001(\005\022\031\n\roperator_type\030\004 \001(\005B\002\030\001\022" +
+      "\023\n\013setup_nanos\030\005 \001(\003\022\025\n\rprocess_nanos\030\006 " +
+      "\001(\003\022#\n\033peak_local_memory_allocated\030\007 \001(\003" +
+      "\022(\n\006metric\030\010 \003(\0132\030.exec.shared.MetricVal" +
+      "ue\022\022\n\nwait_nanos\030\t \001(\003\022\032\n\022operator_type_" +
+      "name\030\n \001(\t\"B\n\rStreamProfile\022\017\n\007records\030\001" +
+      " \001(\003\022\017\n\007batches\030\002 \001(\003\022\017\n\007schemas\030\003 \001(\003\"J" +
+      "\n\013MetricValue\022\021\n\tmetric_id\030\001 \001(\005\022\022\n\nlong" +
+      "_value\030\002 \001(\003\022\024\n\014double_value\030\003 \001(\001\")\n\010Re" +
+      "gistry\022\035\n\003jar\030\001 \003(\0132\020.exec.shared.Jar\"/\n" +
+      "\003Jar\022\014\n\004name\030\001 \001(\t\022\032\n\022function_signature" +
+      "\030\002 \003(\t\"W\n\013SaslMessage\022\021\n\tmechanism\030\001 \001(\t" +
+      "\022\014\n\004data\030\002 \001(\014\022\'\n\006status\030\003 \001(\0162\027.exec.sh" +
+      "ared.SaslStatus*5\n\nRpcChannel\022\017\n\013BIT_CON" +
+      "TROL\020\000\022\014\n\010BIT_DATA\020\001\022\010\n\004USER\020\002*V\n\tQueryT" +
+      "ype\022\007\n\003SQL\020\001\022\013\n\007LOGICAL\020\002\022\014\n\010PHYSICAL\020\003\022" +
+      "\r\n\tEXECUTION\020\004\022\026\n\022PREPARED_STATEMENT\020\005*\207" +
+      "\001\n\rFragmentState\022\013\n\007SENDING\020\000\022\027\n\023AWAITIN" +
+      "G_ALLOCATION\020\001\022\013\n\007RUNNING\020\002\022\014\n\010FINISHED\020" +
+      "\003\022\r\n\tCANCELLED\020\004\022\n\n\006FAILED\020\005\022\032\n\026CANCELLA" +
+      "TION_REQUESTED\020\006*g\n\nSaslStatus\022\020\n\014SASL_U" +
+      "NKNOWN\020\000\022\016\n\nSASL_START\020\001\022\024\n\020SASL_IN_PROG" +
+      "RESS\020\002\022\020\n\014SASL_SUCCESS\020\003\022\017\n\013SASL_FAILED\020" +
+      "\004B.\n\033org.apache.drill.exec.protoB\rUserBi" +
+      "tSharedH\001"
     };
     descriptor = com.google.protobuf.Descriptors.FileDescriptor
       .internalBuildGeneratedFileFrom(descriptorData,

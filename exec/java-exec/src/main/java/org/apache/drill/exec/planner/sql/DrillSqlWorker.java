@@ -53,6 +53,7 @@ import org.apache.drill.exec.planner.sql.parser.DrillSqlDescribeTable;
 import org.apache.drill.exec.planner.sql.parser.DrillSqlResetOption;
 import org.apache.drill.exec.planner.sql.parser.SqlSchema;
 import org.apache.drill.exec.planner.sql.conversion.SqlConverter;
+import org.apache.drill.exec.proto.UserBitShared.DrillPBError;
 import org.apache.drill.exec.testing.ControlsInjector;
 import org.apache.drill.exec.testing.ControlsInjectorFactory;
 import org.apache.drill.exec.util.Pointer;
@@ -127,19 +128,34 @@ public class DrillSqlWorker {
     try {
       return getPhysicalPlan(context, sql, textPlan, retryAttempts);
     } catch (Exception e) {
-      logger.trace("There was an error during conversion into physical plan. " +
-          "Will sync remote and local function registries if needed and retry " +
-          "in case if issue was due to missing function implementation.", e);
-      // it is prohibited to retry query planning for ANALYZE statement since it changes
+      logger.trace("There was an error during conversion into physical plan.", e);
+
+      // It is prohibited to retry query planning for ANALYZE statement since it changes
       // query-level option values and will fail when rerunning with updated values
-      if (context.getFunctionRegistry().syncWithRemoteRegistry(
-              context.getDrillOperatorTable().getFunctionRegistryVersion())
-        && context.getSQLStatementType() != SqlStatementType.ANALYZE) {
-        context.reloadDrillOperatorTable();
-        logger.trace("Local function registry was synchronized with remote. Trying to find function one more time.");
-        return getPhysicalPlan(context, sql, textPlanCopy, retryAttempts);
+      boolean syncFuncsAndRetry = context.getSQLStatementType() != SqlStatementType.ANALYZE;
+
+      // If an error has occurred in a plugin then it will not help to look for a missing
+      // function again.
+      syncFuncsAndRetry &= !(e instanceof UserException &&
+        ((UserException) e).getErrorType() == DrillPBError.ErrorType.PLUGIN);
+
+      // Attempt a function registry sync
+      logger.trace("Will sync remote and local function registries if needed.");
+      int funcRegistryVer = context.getDrillOperatorTable().getFunctionRegistryVersion();
+      syncFuncsAndRetry &= context.getFunctionRegistry().syncWithRemoteRegistry(funcRegistryVer);
+
+      if (!syncFuncsAndRetry) {
+        // We don't want to or could not sync the function registry, return to
+        // raising the original error.
+        throw e;
       }
-      throw e;
+
+      context.reloadDrillOperatorTable();
+      logger.trace(
+        "Local function registry was synchronized with remote. " +
+          "Trying to find function one more time."
+      );
+      return getPhysicalPlan(context, sql, textPlanCopy, retryAttempts);
     }
   }
 

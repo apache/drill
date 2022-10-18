@@ -95,7 +95,7 @@ public class TestSchema extends DrillTest {
       assertTrue(
         ex.getMessage()
           .split(System.lineSeparator())[0]
-          .matches("^RESOURCE ERROR: Failed to load schema.*")
+          .matches("^PLUGIN ERROR: Failed to load schema.*")
       );
 
       // The plugin should no longer be enabled because we set auto_disable to false.

@@ -125,7 +125,7 @@ message DrillPBError{
     UNSPECIFIED_ERROR = 13;
     /* Plugin exception
      * - A failure has occurred within a plugin.
-     * Indicates that plugin is misconfigured or contains a bug.
+     * Indicates that a plugin is misconfigured or contains a bug.
      */
     PLUGIN = 14;
   }

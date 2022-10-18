@@ -193,7 +193,7 @@ public class DynamicRootSchema extends DynamicSchema {
       // We can't proceed further without a schema, throw a runtime exception.
       UserException.Builder exceptBuilder =
           UserException
-              .resourceError(ex)
+              .pluginError(ex)
               .message("Failed to load schema for schema %s", schemaName)
               .addContext("%s: %s", ex.getClass().getName(), ex.getMessage())
               .addContext(UserExceptionUtils.getUserHint(ex)); //Provide hint if it exists
