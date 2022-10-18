@@ -51,7 +51,7 @@ public class ClickhouseJdbcDialect implements JdbcDialect {
     if (!dataSource.isPresent()) {
       return;
     }
-    DrillJdbcConvention convention = plugin.getConvention(dialect, config.getQueryUserCredentials().getUserName());
+    DrillJdbcConvention convention = plugin.getConvention(dialect, config.getQueryUserCredentials());
 
     ClickhouseCatalogSchema schema = new ClickhouseCatalogSchema(
       plugin.getName(),

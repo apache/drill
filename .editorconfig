@@ -24,10 +24,36 @@ root = true
 # Default, notably applicable to Java, XML, JavaScript and Shell
 [*]
 end_of_line = lf
+trim_trailing_whitespace = true
 insert_final_newline = true
 charset = utf-8
 indent_style = space
 indent_size = 2
+max_line_length = 100
+
+[*.java]
+ij_any_spaces_around_additive_operators = true
+ij_any_spaces_around_assignment_operators = true
+ij_any_spaces_around_bitwise_operators = true
+ij_any_spaces_around_equality_operators = true
+ij_any_spaces_around_lambda_arrow = true
+ij_any_spaces_around_logical_operators = true
+ij_any_spaces_around_multiplicative_operators = true
+ij_any_spaces_around_relational_operators = true
+ij_any_spaces_around_shift_operators = true
+ij_continuation_indent_size = 2
+ij_java_if_brace_force = always
+ij_java_indent_case_from_switch = false
+ij_java_space_after_colon = true
+ij_java_space_before_colon = true
+ij_java_ternary_operation_signs_on_next_line = true
+ij_java_use_single_class_imports = true
+ij_java_wrap_long_lines = true
+ij_java_align_multiline_parameters = false
+
+# Windows scripts
+[{*.bat,*.cmd}]
+end_of_line = crlf
 
 # C and C++
 [*.{c, cpp}]
@@ -42,4 +68,3 @@ indent_size = ignore
 [**.min.js]
 indent_style = ignore
 indent_size = ignore
-

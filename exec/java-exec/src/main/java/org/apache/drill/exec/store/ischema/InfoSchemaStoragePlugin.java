@@ -24,6 +24,7 @@ import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.common.logical.StoragePluginConfig;
 import org.apache.drill.common.map.CaseInsensitiveMap;
 import org.apache.drill.exec.ops.OptimizerRulesContext;
+import org.apache.drill.exec.planner.PlannerPhase;
 import org.apache.drill.exec.server.DrillbitContext;
 import org.apache.drill.exec.store.AbstractSchema;
 import org.apache.drill.exec.store.AbstractStoragePlugin;
@@ -126,9 +127,18 @@ public class InfoSchemaStoragePlugin extends AbstractStoragePlugin {
   }
 
   @Override
-  public Set<StoragePluginOptimizerRule> getPhysicalOptimizerRules(OptimizerRulesContext optimizerRulesContext) {
-    return ImmutableSet.of(
-        InfoSchemaPushFilterIntoRecordGenerator.IS_FILTER_ON_PROJECT,
-        InfoSchemaPushFilterIntoRecordGenerator.IS_FILTER_ON_SCAN);
+  public Set<StoragePluginOptimizerRule> getOptimizerRules(
+    OptimizerRulesContext optimizerRulesContext,
+    PlannerPhase phase
+  ) {
+    switch (phase) {
+      case PHYSICAL:
+        return ImmutableSet.of(
+          InfoSchemaPushFilterIntoRecordGenerator.IS_FILTER_ON_PROJECT,
+          InfoSchemaPushFilterIntoRecordGenerator.IS_FILTER_ON_SCAN
+        );
+      default:
+        return ImmutableSet.of();
+    }
   }
 }

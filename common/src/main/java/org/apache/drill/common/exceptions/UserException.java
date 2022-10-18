@@ -87,7 +87,7 @@ public class UserException extends DrillRuntimeException {
    *
    * @see org.apache.drill.exec.proto.UserBitShared.DrillPBError.ErrorType#SYSTEM
    *
-   * @param cause exception we want the user exception to wrap. If cause is, or wrap, a user exception it will be
+   * @param cause exception we want the user exception to wrap. If cause is, or wraps, a user exception it will be
    *              returned by the builder instead of creating a new user exception
    * @return user exception builder
    */
@@ -114,7 +114,7 @@ public class UserException extends DrillRuntimeException {
    *
    * @see org.apache.drill.exec.proto.UserBitShared.DrillPBError.ErrorType#CONNECTION
    *
-   * @param cause exception we want the user exception to wrap. If cause is, or wrap, a user exception it will be
+   * @param cause exception we want the user exception to wrap. If cause is, or wraps, a user exception it will be
    *              returned by the builder instead of creating a new user exception
    * @return user exception builder
    */
@@ -140,7 +140,7 @@ public class UserException extends DrillRuntimeException {
    *
    * @see org.apache.drill.exec.proto.UserBitShared.DrillPBError.ErrorType#DATA_READ
    *
-   * @param cause exception we want the user exception to wrap. If cause is, or wrap, a user exception it will be
+   * @param cause exception we want the user exception to wrap. If cause is, or wraps, a user exception it will be
    *              returned by the builder instead of creating a new user exception
    * @return user exception builder
    */
@@ -166,7 +166,7 @@ public class UserException extends DrillRuntimeException {
    *
    * @see org.apache.drill.exec.proto.UserBitShared.DrillPBError.ErrorType#DATA_WRITE
    *
-   * @param cause exception we want the user exception to wrap. If cause is, or wrap, a user exception it will be
+   * @param cause exception we want the user exception to wrap. If cause is, or wraps, a user exception it will be
    *              returned by the builder instead of creating a new user exception
    * @return user exception builder
    */
@@ -192,7 +192,7 @@ public class UserException extends DrillRuntimeException {
    *
    * @see org.apache.drill.exec.proto.UserBitShared.DrillPBError.ErrorType#FUNCTION
    *
-   * @param cause exception we want the user exception to wrap. If cause is, or wrap, a user exception it will be
+   * @param cause exception we want the user exception to wrap. If cause is, or wraps, a user exception it will be
    *              returned by the builder instead of creating a new user exception
    * @return user exception builder
    */
@@ -218,7 +218,7 @@ public class UserException extends DrillRuntimeException {
    *
    * @see org.apache.drill.exec.proto.UserBitShared.DrillPBError.ErrorType#PARSE
    *
-   * @param cause exception we want the user exception to wrap. If cause is, or wrap, a user exception it will be
+   * @param cause exception we want the user exception to wrap. If cause is, or wraps, a user exception it will be
    *              returned by the builder instead of creating a new user exception
    * @return user exception builder
    */
@@ -244,7 +244,7 @@ public class UserException extends DrillRuntimeException {
    *
    * @see org.apache.drill.exec.proto.UserBitShared.DrillPBError.ErrorType#VALIDATION
    *
-   * @param cause exception we want the user exception to wrap. If cause is, or wrap, a user exception it will be
+   * @param cause exception we want the user exception to wrap. If cause is, or wraps, a user exception it will be
    *              returned by the builder instead of creating a new user exception
    * @return user exception builder
    */
@@ -270,7 +270,7 @@ public class UserException extends DrillRuntimeException {
    *
    * @see org.apache.drill.exec.proto.UserBitShared.DrillPBError.ErrorType#PERMISSION
    *
-   * @param cause exception we want the user exception to wrap. If cause is, or wrap, a user exception it will be
+   * @param cause exception we want the user exception to wrap. If cause is, or wraps, a user exception it will be
    *              returned by the builder instead of creating a new user exception
    * @return user exception builder
    */
@@ -296,12 +296,30 @@ public class UserException extends DrillRuntimeException {
    *
    * @see org.apache.drill.exec.proto.UserBitShared.DrillPBError.ErrorType#PLAN
    *
-   * @param cause exception we want the user exception to wrap. If cause is, or wrap, a user exception it will be
+   * @param cause exception we want the user exception to wrap. If cause is, or wraps, a user exception it will be
    *              returned by the builder instead of creating a new user exception
    * @return user exception builder
    */
   public static Builder planError(final Throwable cause) {
     return new Builder(DrillPBError.ErrorType.PLAN, cause);
+  }
+
+  /**
+   * Wraps the passed exception inside a plugin error.
+   * <p>The cause message will be used unless {@link Builder#message(String, Object...)} is called.
+   * <p>If the wrapped exception is, or wraps, a user exception it will be returned by
+   * {@link Builder#build(Logger)}
+   * instead of creating a new exception. Any added context will be added to the user exception
+   * as well.
+   *
+   * @see org.apache.drill.exec.proto.UserBitShared.DrillPBError.ErrorType#PLUGIN
+   *
+   * @param cause exception we want the user exception to wrap. If cause is, or wraps, a user
+   * exception it will be returned by the builder instead of creating a new user exception
+   * @return user exception builder
+   */
+  public static Builder pluginError(final Throwable cause) {
+    return new Builder(DrillPBError.ErrorType.PLUGIN, cause);
   }
 
   /**
@@ -322,7 +340,7 @@ public class UserException extends DrillRuntimeException {
    *
    * @see org.apache.drill.exec.proto.UserBitShared.DrillPBError.ErrorType#RESOURCE
    *
-   * @param cause exception we want the user exception to wrap. If cause is, or wrap, a user exception it will be
+   * @param cause exception we want the user exception to wrap. If cause is, or wraps, a user exception it will be
    *              returned by the builder instead of creating a new user exception
    * @return user exception builder
    */
@@ -348,7 +366,7 @@ public class UserException extends DrillRuntimeException {
    *
    * @see org.apache.drill.exec.proto.UserBitShared.DrillPBError.ErrorType#UNSUPPORTED_OPERATION
    *
-   * @param cause exception we want the user exception to wrap. If cause is, or wrap, a user exception it will be
+   * @param cause exception we want the user exception to wrap. If cause is, or wraps, a user exception it will be
    *              returned by the builder instead of creating a new user exception
    * @return user exception builder
    */
@@ -376,7 +394,7 @@ public class UserException extends DrillRuntimeException {
    * Wraps an error that arises from execution due to issues in the query, in
    * the environment and so on -- anything other than "this should never occur"
    * type checks.
-   * @param cause exception we want the user exception to wrap. If cause is, or wrap, a user exception it will be
+   * @param cause exception we want the user exception to wrap. If cause is, or wraps, a user exception it will be
    *              returned by the builder instead of creating a new user exception
    * @return user exception builder
    */
@@ -389,7 +407,7 @@ public class UserException extends DrillRuntimeException {
    * Indicates an internal validation failed or similar unexpected error. Indicates
    * the problem is likely within Drill itself rather than due to the environment,
    * query, etc.
-   * @param cause exception we want the user exception to wrap. If cause is, or wrap, a user exception it will be
+   * @param cause exception we want the user exception to wrap. If cause is, or wraps, a user exception it will be
    *              returned by the builder instead of creating a new user exception
    * @return user exception builder
    */
@@ -408,7 +426,7 @@ public class UserException extends DrillRuntimeException {
    * error types. In practice, using this exception indicates that error handling
    * should be moved closer to the source of the exception so we can provide the
    * user with a better explanation than "something went wrong."
-   * @param cause exception we want the user exception to wrap. If cause is, or wrap, a user exception it will be
+   * @param cause exception we want the user exception to wrap. If cause is, or wraps, a user exception it will be
    *              returned by the builder instead of creating a new user exception
    * @return user exception builder
    */

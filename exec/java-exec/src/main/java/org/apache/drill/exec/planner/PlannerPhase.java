@@ -93,7 +93,6 @@ import org.apache.drill.exec.planner.physical.UnnestPrule;
 import org.apache.drill.exec.planner.physical.ValuesPrule;
 import org.apache.drill.exec.planner.physical.WindowPrule;
 import org.apache.drill.exec.planner.physical.WriterPrule;
-import org.apache.drill.exec.store.AbstractStoragePlugin;
 import org.apache.drill.exec.store.StoragePlugin;
 import org.apache.drill.exec.store.parquet.FilePushDownFilter;
 
@@ -250,16 +249,11 @@ public enum PlannerPhase {
 
   public abstract RuleSet getRules(OptimizerRulesContext context, Collection<StoragePlugin> plugins);
 
-  @SuppressWarnings("deprecation")
   private static RuleSet getStorageRules(OptimizerRulesContext context, Collection<StoragePlugin> plugins,
       PlannerPhase phase) {
     final Builder<RelOptRule> rules = ImmutableSet.builder();
-    for (StoragePlugin plugin : plugins) {
-      if (plugin instanceof AbstractStoragePlugin) {
-        rules.addAll(((AbstractStoragePlugin) plugin).getOptimizerRules(context, phase));
-      } else {
-        rules.addAll(plugin.getOptimizerRules(context));
-      }
+    for (StoragePlugin sp : plugins) {
+      rules.addAll(sp.getOptimizerRules(context, phase));
     }
     return RuleSets.ofList(rules.build());
   }

@@ -56,6 +56,7 @@ public class JdbcStoragePlugin extends AbstractStoragePlugin {
   private final JdbcStorageConfig jdbcStorageConfig;
   private final JdbcDialectFactory dialectFactory;
   private final JdbcConventionFactory conventionFactory;
+  private volatile SqlDialect sqlDialect;
   // DataSources for this storage config keyed on JDBC username
   private final Map<String, HikariDataSource> dataSources = new ConcurrentHashMap<>();
 
@@ -79,7 +80,7 @@ public class JdbcStoragePlugin extends AbstractStoragePlugin {
       return;
     }
 
-    SqlDialect dialect = getDialect(dataSource.get());
+    SqlDialect dialect = getDialect(userCreds);
     getJdbcDialect(dialect).registerSchemas(config, parent);
   }
 
@@ -108,19 +109,31 @@ public class JdbcStoragePlugin extends AbstractStoragePlugin {
     ));
   }
 
-  public SqlDialect getDialect(DataSource dataSource) {
-    return JdbcSchema.createDialect(
-      SqlDialectFactoryImpl.INSTANCE,
-      dataSource
-    );
+  public SqlDialect getDialect(UserCredentials userCredentials) {
+    SqlDialect sd = sqlDialect;
+    if (sd == null) {
+      // Double checked locking using a volatile member and a local var
+      // optimisation to reduce volatile accesses.
+      synchronized (this) {
+        sd = sqlDialect;
+        if (sd == null) {
+          sd = JdbcSchema.createDialect(
+            SqlDialectFactoryImpl.INSTANCE,
+            getDataSource(userCredentials).get()
+          );
+          sqlDialect = sd;
+        }
+      }
+    }
+    return sd;
   }
 
   public JdbcDialect getJdbcDialect(SqlDialect dialect) {
     return dialectFactory.getJdbcDialect(this, dialect);
   }
 
-  public DrillJdbcConvention getConvention(SqlDialect dialect, String username) {
-    return conventionFactory.getJdbcConvention(this, dialect, username);
+  public DrillJdbcConvention getConvention(SqlDialect dialect, UserCredentials userCredentials) {
+    return conventionFactory.getJdbcConvention(this, dialect, userCredentials);
   }
 
   @Override
@@ -151,9 +164,8 @@ public class JdbcStoragePlugin extends AbstractStoragePlugin {
       case PHYSICAL: {
         UserCredentials userCreds = optimizerContext.getContextInformation().getQueryUserCredentials();
 
-        String userName = userCreds.getUserName();
         return getDataSource(userCreds)
-          .map(dataSource -> getConvention(getDialect(dataSource), userName).getRules())
+          .map(dataSource -> getConvention(getDialect(userCreds), userCreds).getRules())
           .orElse(ImmutableSet.of());
       }
       case LOGICAL_PRUNE_AND_JOIN:

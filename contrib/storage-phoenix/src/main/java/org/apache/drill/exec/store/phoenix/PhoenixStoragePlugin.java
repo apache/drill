@@ -36,6 +36,7 @@ import org.apache.drill.common.logical.StoragePluginConfig;
 import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.ops.OptimizerRulesContext;
 import org.apache.drill.exec.physical.base.AbstractGroupScan;
+import org.apache.drill.exec.planner.PlannerPhase;
 import org.apache.drill.exec.server.DrillbitContext;
 import org.apache.drill.exec.store.AbstractStoragePlugin;
 import org.apache.drill.exec.store.SchemaConfig;
@@ -47,6 +48,7 @@ import org.apache.drill.shaded.guava.com.google.common.cache.CacheBuilder;
 import org.apache.drill.shaded.guava.com.google.common.cache.CacheLoader;
 import org.apache.drill.shaded.guava.com.google.common.cache.LoadingCache;
 import org.apache.hadoop.security.UserGroupInformation;
+import org.apache.tephra.shaded.com.google.common.collect.ImmutableSet;
 
 public class PhoenixStoragePlugin extends AbstractStoragePlugin {
 
@@ -88,8 +90,16 @@ public class PhoenixStoragePlugin extends AbstractStoragePlugin {
   }
 
   @Override
-  public Set<? extends RelOptRule> getPhysicalOptimizerRules(OptimizerRulesContext optimizerRulesContext) {
-    return convention.getRules();
+  public Set<? extends RelOptRule> getOptimizerRules(
+    OptimizerRulesContext optimizerRulesContext,
+    PlannerPhase phase
+  ) {
+    switch (phase) {
+      case PHYSICAL:
+        return convention.getRules();
+      default:
+        return ImmutableSet.of();
+    }
   }
 
   @Override

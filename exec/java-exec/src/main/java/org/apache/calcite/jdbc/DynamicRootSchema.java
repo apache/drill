@@ -26,6 +26,7 @@ import org.apache.calcite.util.BuiltInMethod;
 import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.common.exceptions.UserExceptionUtils;
 import org.apache.drill.common.expression.SchemaPath;
+import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.alias.AliasRegistryProvider;
 import org.apache.drill.exec.planner.sql.SchemaUtilites;
 import org.apache.drill.exec.store.AbstractSchema;
@@ -37,7 +38,6 @@ import org.apache.drill.exec.store.SubSchemaWrapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -91,9 +91,54 @@ public class DynamicRootSchema extends DynamicSchema {
 
   public SchemaPath resolveTableAlias(String alias) {
     return Optional.ofNullable(aliasRegistryProvider.getTableAliasesRegistry()
-        .getUserAliases(schemaConfig.getUserName()).get(alias))
+      .getUserAliases(schemaConfig.getUserName()).get(alias))
       .map(SchemaPath::parseFromString)
       .orElse(null);
+  }
+
+  private void registerSchemasWithRetry(StoragePlugin plugin) throws Exception {
+    long maxAttempts = 1 + schemaConfig
+      .getOption(ExecConstants.STORAGE_PLUGIN_RETRY_ATTEMPTS)
+      .num_val;
+    long retryDelayMs = schemaConfig
+      .getOption(ExecConstants.STORAGE_PLUGIN_RETRY_DELAY)
+      .num_val;
+    int attempt=0;
+    Exception lastAttemptEx = null;
+
+    while (attempt++ < maxAttempts) {
+      try {
+        plugin.registerSchemas(schemaConfig, plus());
+        return;
+      } catch (Exception ex) {
+        lastAttemptEx = ex;
+        logger.warn(
+          "Attempt {} of {} to register schemas for plugin {} failed.",
+          attempt, maxAttempts, plugin,
+          ex
+        );
+
+        if (attempt < maxAttempts) {
+          logger.info(
+            "Next attempt to register schemas for plugin {} will be made in {}ms.",
+            plugin,
+            retryDelayMs
+          );
+          try {
+            Thread.sleep(retryDelayMs);
+          } catch (InterruptedException intEx) {
+            logger.warn(
+              "Interrupted while waiting to make another attempt to register " +
+                "schemas for plugin {}.",
+              plugin,
+              intEx
+            );
+          }
+        }
+      }
+    }
+
+    throw lastAttemptEx;
   }
 
   /**
@@ -102,11 +147,12 @@ public class DynamicRootSchema extends DynamicSchema {
    * @param caseSensitive whether matching for the schema name is case sensitive
    */
   private void loadSchemaFactory(String schemaName, boolean caseSensitive) {
+    StoragePlugin plugin = null;
     try {
       SchemaPlus schemaPlus = this.plus();
-      StoragePlugin plugin = storages.getPlugin(schemaName);
+      plugin = storages.getPlugin(schemaName);
       if (plugin != null) {
-        plugin.registerSchemas(schemaConfig, schemaPlus);
+        registerSchemasWithRetry(plugin);
         return;
       }
 
@@ -122,7 +168,7 @@ public class DynamicRootSchema extends DynamicSchema {
         SchemaPlus firstLevelSchema = schemaPlus.getSubSchema(paths.get(0));
         if (firstLevelSchema == null) {
           // register schema for this storage plugin to 'this'.
-          plugin.registerSchemas(schemaConfig, schemaPlus);
+          registerSchemasWithRetry(plugin);
           firstLevelSchema = schemaPlus.getSubSchema(paths.get(0));
         }
         // Load second level schemas for this storage plugin
@@ -142,15 +188,32 @@ public class DynamicRootSchema extends DynamicSchema {
           schemaPlus.add(wrapper.getName(), wrapper);
         }
       }
-    } catch(PluginException | IOException ex) {
-      logger.warn("Failed to load schema for \"" + schemaName + "\"!", ex);
+    } catch (Exception ex) {
+      logger.error("Failed to load schema for {}", schemaName, ex);
       // We can't proceed further without a schema, throw a runtime exception.
       UserException.Builder exceptBuilder =
           UserException
-              .resourceError(ex)
-              .message("Failed to load schema for \"" + schemaName + "\"!")
-              .addContext(ex.getClass().getName() + ": " + ex.getMessage())
+              .pluginError(ex)
+              .message("Failed to load schema for schema %s", schemaName)
+              .addContext("%s: %s", ex.getClass().getName(), ex.getMessage())
               .addContext(UserExceptionUtils.getUserHint(ex)); //Provide hint if it exists
+
+      if (schemaConfig.getOption(ExecConstants.STORAGE_PLUGIN_AUTO_DISABLE).bool_val) {
+        String msg = String.format(
+          "The plugin %s will now be disabled (see SYSTEM option %s)",
+          plugin.getName(),
+          ExecConstants.STORAGE_PLUGIN_AUTO_DISABLE
+        );
+        exceptBuilder.addContext(msg);
+        logger.warn(msg);
+
+        try {
+          storages.setEnabled(plugin.getName(), false);
+        } catch (PluginException disableEx) {
+          logger.error("Could not disable {}", plugin.getName(), disableEx);
+        }
+      }
+
       throw exceptBuilder.build(logger);
     }
   }
@@ -187,4 +250,3 @@ public class DynamicRootSchema extends DynamicSchema {
     }
   }
 }
-

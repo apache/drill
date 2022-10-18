@@ -32,6 +32,7 @@ import org.apache.drill.exec.server.options.TypeValidators.EnumeratedStringValid
 import org.apache.drill.exec.server.options.TypeValidators.IntegerValidator;
 import org.apache.drill.exec.server.options.TypeValidators.LongValidator;
 import org.apache.drill.exec.server.options.TypeValidators.MaxWidthValidator;
+import org.apache.drill.exec.server.options.TypeValidators.NonNegativeLongValidator;
 import org.apache.drill.exec.server.options.TypeValidators.PositiveLongValidator;
 import org.apache.drill.exec.server.options.TypeValidators.PowerOfTwoLongValidator;
 import org.apache.drill.exec.server.options.TypeValidators.RangeDoubleValidator;
@@ -1093,6 +1094,36 @@ public final class ExecConstants {
   public static final BooleanValidator LIST_FILES_RECURSIVELY_VALIDATOR = new BooleanValidator(LIST_FILES_RECURSIVELY,
       new OptionDescription("Enables recursive files listing when querying the `INFORMATION_SCHEMA.FILES` table or executing the SHOW FILES command. " +
         "Default is false. (Drill 1.15+)"));
+
+  public static final String STORAGE_PLUGIN_RETRY_ATTEMPTS = "storage.plugin_retry_attempts";
+  public static final LongValidator STORAGE_PLUGIN_RETRY_ATTEMPTS_VALIDATOR = new NonNegativeLongValidator(
+    STORAGE_PLUGIN_RETRY_ATTEMPTS,
+    10,
+    new OptionDescription(
+      "The maximum number of retries that will be attempted to request metadata " +
+        "for query planning from a storage plugin."
+    )
+  );
+  public static final String STORAGE_PLUGIN_RETRY_DELAY = "storage.plugin_retry_attempt_delay";
+  public static final LongValidator STORAGE_PLUGIN_RETRY_DELAY_VALIDATOR = new NonNegativeLongValidator(
+    STORAGE_PLUGIN_RETRY_DELAY,
+    5 * 1000,
+    new OptionDescription(String.format(
+      "The delay in milliseconds between repeated attempts to request metadata " +
+        "for query planning from a storage plugin (see %s).",
+        STORAGE_PLUGIN_RETRY_ATTEMPTS
+    ))
+  );
+  public static final String STORAGE_PLUGIN_AUTO_DISABLE = "storage.plugin_auto_disable";
+  public static final BooleanValidator STORAGE_PLUGIN_AUTO_DISABLE_VALIDATOR = new BooleanValidator(
+    STORAGE_PLUGIN_AUTO_DISABLE,
+    new OptionDescription(String.format(
+      "Controls whether a storage plugin will automatically be disabled after " +
+        "the configured number of attempts to request metadata for query " +
+        " planning from it have failed (see %s)",
+      STORAGE_PLUGIN_RETRY_ATTEMPTS
+    ))
+  );
 
   public static final String RETURN_RESULT_SET_FOR_DDL = "exec.query.return_result_set_for_ddl";
   public static final BooleanValidator RETURN_RESULT_SET_FOR_DDL_VALIDATOR = new BooleanValidator(RETURN_RESULT_SET_FOR_DDL,

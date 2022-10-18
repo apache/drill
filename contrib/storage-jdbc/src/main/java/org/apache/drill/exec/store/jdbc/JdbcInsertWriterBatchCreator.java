@@ -49,7 +49,7 @@ public class JdbcInsertWriterBatchCreator implements BatchCreator<JdbcInsertWrit
       config,
       children.iterator().next(),
       context,
-      new JdbcTableModifyWriter(ds, config.getTableIdentifier(), config)
+      new JdbcTableModifyWriter(userCreds, config.getTableIdentifier(), config)
     );
   }
 }

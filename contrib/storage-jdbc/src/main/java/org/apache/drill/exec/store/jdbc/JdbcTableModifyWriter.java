@@ -17,15 +17,15 @@
  */
 package org.apache.drill.exec.store.jdbc;
 
+import org.apache.drill.exec.proto.UserBitShared.UserCredentials;
 import org.apache.drill.exec.record.VectorAccessible;
 
-import javax.sql.DataSource;
 import java.util.List;
 
 public class JdbcTableModifyWriter extends JdbcRecordWriter {
 
-  public JdbcTableModifyWriter(DataSource source, List<String> tableIdentifier, JdbcWriter config) {
-    super(source, tableIdentifier, config);
+  public JdbcTableModifyWriter(UserCredentials userCredentials, List<String> tableIdentifier, JdbcWriter config) {
+    super(userCredentials, tableIdentifier, config);
   }
 
   @Override

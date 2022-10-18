@@ -19,8 +19,6 @@ package org.apache.drill.exec.store.jdbc;
 
 import java.util.List;
 
-import javax.sql.DataSource;
-
 import org.apache.drill.common.exceptions.ExecutionSetupException;
 import org.apache.drill.exec.ops.ExecutorFragmentContext;
 import org.apache.drill.exec.physical.impl.BatchCreator;
@@ -38,18 +36,12 @@ public class JdbcWriterBatchCreator implements BatchCreator<JdbcWriter> {
     assert children != null && children.size() == 1;
 
     UserCredentials userCreds = context.getContextInformation().getQueryUserCredentials();
-    DataSource ds = config.getPlugin().getDataSource(userCreds)
-      .orElseThrow(() -> new ExecutionSetupException(String.format(
-        "Query user %s could obtain a connection to %s, missing credentials?",
-        userCreds.getUserName(),
-        config.getPlugin().getName()
-      )));
 
     return new WriterRecordBatch(
       config,
       children.iterator().next(),
       context,
-      new JdbcRecordWriter(ds, config.getTableIdentifier(), config)
+      new JdbcRecordWriter(userCreds, config.getTableIdentifier(), config)
     );
   }
 }

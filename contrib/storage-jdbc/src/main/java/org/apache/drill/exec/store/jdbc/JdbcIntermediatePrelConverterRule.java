@@ -27,15 +27,16 @@ import org.apache.drill.exec.planner.logical.DrillRelFactories;
 import org.apache.drill.exec.planner.logical.RelOptHelper;
 import org.apache.drill.exec.planner.physical.DrillDistributionTrait;
 import org.apache.drill.exec.planner.physical.Prel;
+import org.apache.drill.exec.proto.UserBitShared.UserCredentials;
 import org.apache.drill.exec.store.enumerable.plan.VertexDrel;
 
 class JdbcIntermediatePrelConverterRule extends RelOptRule {
 
   private final RelTrait inTrait;
   private final RelTrait outTrait;
-  private final String username;
+  private final UserCredentials userCredentials;
 
-  public JdbcIntermediatePrelConverterRule(JdbcConvention jdbcConvention, String username) {
+  public JdbcIntermediatePrelConverterRule(JdbcConvention jdbcConvention, UserCredentials userCredentials) {
     super(
         RelOptHelper.some(VertexDrel.class, DrillRel.DRILL_LOGICAL,
             RelOptHelper.any(RelNode.class, jdbcConvention)),
@@ -43,7 +44,7 @@ class JdbcIntermediatePrelConverterRule extends RelOptRule {
 
     this.inTrait = DrillRel.DRILL_LOGICAL;
     this.outTrait = Prel.DRILL_PHYSICAL;
-    this.username = username;
+    this.userCredentials = userCredentials;
   }
 
   @Override
@@ -52,7 +53,7 @@ class JdbcIntermediatePrelConverterRule extends RelOptRule {
     RelNode jdbcIntermediatePrel = new JdbcIntermediatePrel(
         in.getCluster(),
         in.getTraitSet().replace(outTrait).plus(DrillDistributionTrait.SINGLETON),
-        in.getInput(0), username);
+        in.getInput(0), userCredentials);
     call.transformTo(jdbcIntermediatePrel);
   }
 

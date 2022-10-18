@@ -320,7 +320,10 @@ public class SystemOptionManager extends BaseOptionManager implements AutoClosea
       new OptionDefinition(ExecConstants.METASTORE_RETRIEVAL_RETRY_ATTEMPTS_VALIDATOR),
       new OptionDefinition(ExecConstants.PARQUET_READER_ENABLE_MAP_SUPPORT_VALIDATOR, new OptionMetaData(OptionValue.AccessibleScopes.SYSTEM_AND_SESSION, false, false)),
       new OptionDefinition(ExecConstants.ENABLE_DYNAMIC_CREDIT_BASED_FC_VALIDATOR),
-      new OptionDefinition(ExecConstants.ENABLE_ALIASES_VALIDATOR, new OptionMetaData(OptionValue.AccessibleScopes.SYSTEM, true, false))
+      new OptionDefinition(ExecConstants.ENABLE_ALIASES_VALIDATOR, new OptionMetaData(OptionValue.AccessibleScopes.SYSTEM, true, false)),
+      new OptionDefinition(ExecConstants.STORAGE_PLUGIN_RETRY_ATTEMPTS_VALIDATOR, new OptionMetaData(OptionValue.AccessibleScopes.SYSTEM, true, false)),
+      new OptionDefinition(ExecConstants.STORAGE_PLUGIN_RETRY_DELAY_VALIDATOR, new OptionMetaData(OptionValue.AccessibleScopes.SYSTEM, true, false)),
+      new OptionDefinition(ExecConstants.STORAGE_PLUGIN_AUTO_DISABLE_VALIDATOR, new OptionMetaData(OptionValue.AccessibleScopes.SYSTEM, true, false))
     };
 
     CaseInsensitiveMap<OptionDefinition> map = Arrays.stream(definitions)

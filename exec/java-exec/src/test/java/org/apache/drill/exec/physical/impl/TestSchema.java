@@ -17,6 +17,8 @@
  */
 package org.apache.drill.exec.physical.impl;
 
+import org.apache.drill.exec.ExecConstants;
+import org.apache.drill.exec.store.mock.MockBreakageStorage;
 import org.apache.drill.test.BaseDirTestWatcher;
 import org.apache.drill.test.ClientFixture;
 import org.apache.drill.test.ClusterFixture;
@@ -28,6 +30,8 @@ import org.junit.ClassRule;
 import org.junit.Test;
 
 import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 
 public class TestSchema extends DrillTest {
 
@@ -41,21 +45,66 @@ public class TestSchema extends DrillTest {
   public static void setup() throws Exception {
     cluster = ClusterFixture.builder(dirTestWatcher).buildCustomMockStorage();
     boolean breakRegisterSchema = true;
-    // With a broken storage which will throw exception in registerSchema, every query (even on other storage)
-    // shall fail if Drill is still loading all schemas (include the broken schema) before a query.
     cluster.insertMockStorage("mock_broken", breakRegisterSchema);
     cluster.insertMockStorage("mock_good", !breakRegisterSchema);
     client = cluster.clientFixture();
   }
 
   @Test (expected = Exception.class)
-  public void testQueryBrokenStorage() throws Exception {
+  public void testQueryBrokenRegSchema() throws Exception {
+    MockBreakageStorage mbs = (MockBreakageStorage) cluster.storageRegistry().getPlugin("mock_broken");
     String sql = "SELECT id_i, name_s10 FROM `mock_broken`.`employees_5`";
+
+    client.alterSystem(ExecConstants.STORAGE_PLUGIN_AUTO_DISABLE, false);
+    client.alterSystem(ExecConstants.STORAGE_PLUGIN_RETRY_ATTEMPTS, 2);
+    client.alterSystem(ExecConstants.STORAGE_PLUGIN_RETRY_DELAY, 0);
+
+    mbs.setBreakRegister(true);
     try {
       client.queryBuilder().sql(sql).run();
     } catch (Exception ex) {
-      assertTrue(ex.getMessage().contains("RESOURCE ERROR: Failed to load schema"));
+      assertTrue(
+        ex.getMessage()
+          .split(System.lineSeparator())[0]
+          .matches("^RESOURCE ERROR: Failed to load schema.*")
+      );
+
+      assertEquals(3, mbs.registerAttemptCount);
+      // The plugin should still be enabled because we set auto_disable to false.
+      assertTrue(cluster.storageRegistry().availablePlugins().contains("mock_broken"));
       throw ex;
+    } finally {
+      client.resetSystem(ExecConstants.STORAGE_PLUGIN_AUTO_DISABLE);
+      client.resetSystem(ExecConstants.STORAGE_PLUGIN_RETRY_ATTEMPTS);
+      client.resetSystem(ExecConstants.STORAGE_PLUGIN_RETRY_DELAY);
+    }
+  }
+
+  @Test (expected = Exception.class)
+  public void testAutoDisableBrokenRegSchema() throws Exception {
+    MockBreakageStorage mbs = (MockBreakageStorage) cluster.storageRegistry().getPlugin("mock_broken");
+    String sql = "SELECT id_i, name_s10 FROM `mock_broken`.`employees_5`";
+
+    client.alterSystem(ExecConstants.STORAGE_PLUGIN_AUTO_DISABLE, true);
+    client.alterSystem(ExecConstants.STORAGE_PLUGIN_RETRY_ATTEMPTS, 0);
+
+    mbs.setBreakRegister(true);
+    try {
+      client.queryBuilder().sql(sql).run();
+    } catch (Exception ex) {
+      assertTrue(
+        ex.getMessage()
+          .split(System.lineSeparator())[0]
+          .matches("^PLUGIN ERROR: Failed to load schema.*")
+      );
+
+      // The plugin should no longer be enabled because we set auto_disable to false.
+      assertFalse(cluster.storageRegistry().availablePlugins().contains("mock_broken"));
+      throw ex;
+    } finally {
+      client.resetSystem(ExecConstants.STORAGE_PLUGIN_AUTO_DISABLE);
+      client.resetSystem(ExecConstants.STORAGE_PLUGIN_RETRY_ATTEMPTS);
+      cluster.storageRegistry().setEnabled("mock_broken", true);
     }
   }
 
@@ -75,12 +124,20 @@ public class TestSchema extends DrillTest {
 
   @Test (expected = Exception.class)
   public void testUseBrokenStorage() throws Exception {
+    MockBreakageStorage mbs = (MockBreakageStorage) cluster.storageRegistry().getPlugin("mock_broken");
+    client.alterSystem(ExecConstants.STORAGE_PLUGIN_AUTO_DISABLE, false);
+    client.alterSystem(ExecConstants.STORAGE_PLUGIN_RETRY_ATTEMPTS, 0);
+
+    mbs.setBreakRegister(true);
     try {
       String use_dfs = "use mock_broken";
       client.queryBuilder().sql(use_dfs).run();
     } catch(Exception ex) {
       assertTrue(ex.getMessage().contains("RESOURCE ERROR: Failed to load schema"));
       throw ex;
+    } finally {
+      client.resetSystem(ExecConstants.STORAGE_PLUGIN_AUTO_DISABLE);
+      client.resetSystem(ExecConstants.STORAGE_PLUGIN_RETRY_ATTEMPTS);
     }
   }
 

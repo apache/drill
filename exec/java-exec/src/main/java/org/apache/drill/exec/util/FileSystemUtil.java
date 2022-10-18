@@ -44,7 +44,7 @@ import java.util.stream.Stream;
 public class FileSystemUtil {
 
   private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(FileSystemUtil.class);
-  public static final String RECURSIVE_FILE_LISTING_MAX_SIZE = "drill.exec.recursive_file_listing_max_size";
+  public static final String RECURSIVE_LISTING_PROP_NAME = "drill.exec.recursive_file_listing_max_size";
 
   /**
    * Filter that will accept all files and directories.
@@ -253,7 +253,7 @@ public class FileSystemUtil {
   private static List<FileStatus> listRecursive(FileSystem fs, Path path, Scope scope, boolean suppressExceptions, PathFilter filter) {
     ForkJoinPool pool = new ForkJoinPool();
     AtomicInteger fileCounter = new AtomicInteger(0);
-    int recursiveListingMaxSize = fs.getConf().getInt(RECURSIVE_FILE_LISTING_MAX_SIZE, 0);
+    int recursiveListingMaxSize = fs.getConf().getInt(RECURSIVE_LISTING_PROP_NAME, 0);
 
     try {
       RecursiveListing task = new RecursiveListing(
@@ -306,7 +306,7 @@ public class FileSystemUtil {
     private final Scope scope;
     private final boolean suppressExceptions;
     private final PathFilter filter;
-    // Running count of files for comparison with RECURSIVE_FILE_LISTING_MAX_SIZE
+    // Running count of files for comparison with recursiveListingMaxSize
     private final AtomicInteger fileCounter;
     private final int recursiveListingMaxSize;
     private final ForkJoinPool pool;
@@ -343,10 +343,11 @@ public class FileSystemUtil {
             throw UserException
               .resourceError()
               .message(
-                "File listing size limit of %d exceeded recursing through path %s, see JVM system property %s",
+                "File listing size limit of %d exceeded recursing through " +
+                  "path %s, see Hadoop config property %s",
                 recursiveListingMaxSize,
                 path,
-                RECURSIVE_FILE_LISTING_MAX_SIZE
+                RECURSIVE_LISTING_PROP_NAME
               )
               .build(logger);
           } finally {

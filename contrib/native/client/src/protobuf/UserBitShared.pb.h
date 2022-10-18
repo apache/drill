@@ -168,11 +168,12 @@ enum DrillPBError_ErrorType : int {
   DrillPBError_ErrorType_VALIDATION = 10,
   DrillPBError_ErrorType_EXECUTION_ERROR = 11,
   DrillPBError_ErrorType_INTERNAL_ERROR = 12,
-  DrillPBError_ErrorType_UNSPECIFIED_ERROR = 13
+  DrillPBError_ErrorType_UNSPECIFIED_ERROR = 13,
+  DrillPBError_ErrorType_PLUGIN = 14
 };
 bool DrillPBError_ErrorType_IsValid(int value);
 constexpr DrillPBError_ErrorType DrillPBError_ErrorType_ErrorType_MIN = DrillPBError_ErrorType_CONNECTION;
-constexpr DrillPBError_ErrorType DrillPBError_ErrorType_ErrorType_MAX = DrillPBError_ErrorType_UNSPECIFIED_ERROR;
+constexpr DrillPBError_ErrorType DrillPBError_ErrorType_ErrorType_MAX = DrillPBError_ErrorType_PLUGIN;
 constexpr int DrillPBError_ErrorType_ErrorType_ARRAYSIZE = DrillPBError_ErrorType_ErrorType_MAX + 1;
 
 const ::PROTOBUF_NAMESPACE_ID::EnumDescriptor* DrillPBError_ErrorType_descriptor();
@@ -794,6 +795,8 @@ class DrillPBError PROTOBUF_FINAL :
     DrillPBError_ErrorType_INTERNAL_ERROR;
   static constexpr ErrorType UNSPECIFIED_ERROR =
     DrillPBError_ErrorType_UNSPECIFIED_ERROR;
+  static constexpr ErrorType PLUGIN =
+    DrillPBError_ErrorType_PLUGIN;
   static inline bool ErrorType_IsValid(int value) {
     return DrillPBError_ErrorType_IsValid(value);
   }

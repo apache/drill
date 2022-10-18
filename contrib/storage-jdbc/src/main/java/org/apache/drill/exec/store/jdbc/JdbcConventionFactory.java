@@ -18,7 +18,9 @@
 package org.apache.drill.exec.store.jdbc;
 
 import org.apache.calcite.sql.SqlDialect;
+import org.apache.commons.lang3.tuple.Pair;
 import org.apache.drill.common.exceptions.DrillRuntimeException;
+import org.apache.drill.exec.proto.UserBitShared.UserCredentials;
 import org.apache.drill.shaded.guava.com.google.common.cache.Cache;
 import org.apache.drill.shaded.guava.com.google.common.cache.CacheBuilder;
 
@@ -31,7 +33,7 @@ public class JdbcConventionFactory {
   public static final int CACHE_SIZE = 100;
   public static final Duration CACHE_TTL = Duration.ofHours(1);
 
-  private final Cache<SqlDialect, DrillJdbcConvention> cache = CacheBuilder.newBuilder()
+  private final Cache<Pair<SqlDialect, UserCredentials>, DrillJdbcConvention> cache = CacheBuilder.newBuilder()
       .maximumSize(CACHE_SIZE)
       .expireAfterAccess(CACHE_TTL)
       .build();
@@ -39,12 +41,12 @@ public class JdbcConventionFactory {
   public DrillJdbcConvention getJdbcConvention(
       JdbcStoragePlugin plugin,
       SqlDialect dialect,
-      String username) {
+      UserCredentials userCredentials) {
     try {
-      return cache.get(dialect, new Callable<DrillJdbcConvention>() {
+      return cache.get(Pair.of(dialect, userCredentials), new Callable<DrillJdbcConvention>() {
         @Override
         public DrillJdbcConvention call() {
-          return new DrillJdbcConvention(dialect, plugin.getName(), plugin, username);
+          return new DrillJdbcConvention(dialect, plugin.getName(), plugin, userCredentials);
         }
       });
     } catch (ExecutionException ex) {

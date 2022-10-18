@@ -38,6 +38,7 @@ import org.apache.calcite.sql.SqlDialect;
 import org.apache.drill.exec.planner.RuleInstance;
 import org.apache.drill.exec.planner.logical.DrillRel;
 import org.apache.drill.exec.planner.logical.DrillRelFactories;
+import org.apache.drill.exec.proto.UserBitShared.UserCredentials;
 import org.apache.drill.exec.store.enumerable.plan.DrillJdbcRuleBase;
 import org.apache.drill.exec.store.enumerable.plan.VertexDrelConverterRule;
 import org.apache.drill.exec.store.jdbc.rules.JdbcLimitRule;
@@ -59,7 +60,7 @@ public class DrillJdbcConvention extends JdbcConvention {
   private final ImmutableSet<RelOptRule> rules;
   private final JdbcStoragePlugin plugin;
 
-  DrillJdbcConvention(SqlDialect dialect, String name, JdbcStoragePlugin plugin, String username) {
+  DrillJdbcConvention(SqlDialect dialect, String name, JdbcStoragePlugin plugin, UserCredentials userCredentials) {
     super(dialect, ConstantUntypedNull.INSTANCE, name);
     this.plugin = plugin;
 
@@ -68,7 +69,7 @@ public class DrillJdbcConvention extends JdbcConvention {
       DrillRel.DRILL_LOGICAL);
 
     ImmutableSet.Builder<RelOptRule> builder = ImmutableSet.<RelOptRule>builder()
-      .add(new JdbcIntermediatePrelConverterRule(this, username))
+      .add(new JdbcIntermediatePrelConverterRule(this, userCredentials))
       .add(VertexDrelConverterRule.create(this))
       .add(RuleInstance.FILTER_SET_OP_TRANSPOSE_RULE)
       .add(RuleInstance.PROJECT_REMOVE_RULE);

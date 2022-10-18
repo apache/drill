@@ -33,6 +33,7 @@ import org.apache.calcite.adapter.jdbc.JdbcSchema;
 import org.apache.calcite.schema.Function;
 import org.apache.calcite.schema.SchemaPlus;
 import org.apache.calcite.schema.Table;
+import org.apache.calcite.sql.SqlCall;
 import org.apache.calcite.sql.SqlDialect;
 import org.apache.calcite.sql.SqlIdentifier;
 import org.apache.calcite.sql.SqlLiteral;
@@ -152,10 +153,12 @@ public class CapitalizingJdbcSchema extends AbstractSchema {
     }
 
     List<String> names = getFullTablePath(tableName);
-    SqlDialect dialect = plugin.getDialect(inner.getDataSource());
-    String dropTableQuery = SqlDropTable.OPERATOR.createCall(
-        SqlParserPos.ZERO, new SqlIdentifier(names, SqlParserPos.ZERO), SqlLiteral.createBoolean(false, SqlParserPos.ZERO))
-      .toSqlString(dialect).getSql();
+    SqlCall dropCall = SqlDropTable.OPERATOR.createCall(
+      SqlParserPos.ZERO,
+      new SqlIdentifier(names, SqlParserPos.ZERO),
+      SqlLiteral.createBoolean(false, SqlParserPos.ZERO)
+    );
+    String dropTableQuery = dropCall.toSqlString(inner.dialect).getSql();
 
     try (Connection conn = inner.getDataSource().getConnection();
          Statement stmt = conn.createStatement()) {

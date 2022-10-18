@@ -123,6 +123,11 @@ message DrillPBError{
      * closer to the cause.
      */
     UNSPECIFIED_ERROR = 13;
+    /* Plugin exception
+     * - A failure has occurred within a plugin.
+     * Indicates that a plugin is misconfigured or contains a bug.
+     */
+    PLUGIN = 14;
   }
   optional string error_id = 1; // for debug tracing purposes
   optional DrillbitEndpoint endpoint = 2;
