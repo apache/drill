@@ -19,11 +19,8 @@
 -->
 <#include "*/generic.ftl">
 <#macro page_head>
-    <script type="text/javascript" language="javascript"  src="/static/js/jquery.dataTables-1.10.0.min.js"> </script>
-    <script type="text/javascript" language="javascript" src="/static/js/dataTables.colVis-1.1.0.min.js"></script>
-    <link href="/static/css/dataTables.colVis-1.1.0.min.css" rel="stylesheet">
-    <link href="/static/css/dataTables.jqueryui.css" rel="stylesheet">
-    <link href="/static/css/jquery-ui-1.10.3.min.css" rel="stylesheet">
+    <script type="text/javascript" language="javascript"  src="/static/js/datatables.min.js"> </script>
+    <link href="/static/css/datatables.min.css" rel="stylesheet">
 </#macro>
 
 <#macro page_body>
@@ -91,8 +88,9 @@
         "scrollX" : true,
         "lengthMenu": [[${model.getRowsPerPageValues()},-1], [${model.getRowsPerPageValues()},"ALL"]],
         "lengthChange": true,
-        "dom": '<"H"lCfr>t<"F"ip>',
-        "jQueryUI" : true,
+        "dom": "Blfrtip",
+        "buttons": [ "colvis", "spacer" ],
+        "bJQueryUI" : false,
         "language": {
               "infoEmpty": "No records to show <#if model.isResultSetAutoLimited()> [NOTE: Results are auto-limited to max ${model.getAutoLimitedRowCount()} rows]</#if>",
               "info": "Showing _START_ to _END_ of _TOTAL_ entries <#if model.isResultSetAutoLimited()>[<b>NOTE:</b> Results are auto-limited to max ${model.getAutoLimitedRowCount()} rows]</#if>"
