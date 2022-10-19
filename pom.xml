@@ -80,11 +80,11 @@
     <logback.version>1.2.11</logback.version>
     <mockito.version>3.11.2</mockito.version>
     <!--
-      Currently, Hive storage plugin only supports Apache Hive 3.1.2 or vendor specific variants of the
+      Currently, Hive storage plugin only supports Apache Hive 3.1.3 or vendor specific variants of the
       Apache Hive 2.3.2. If the version is changed, make sure the jars and their dependencies are updated,
       for example parquet-hadoop-bundle and derby dependencies.
     -->
-    <hive.version>3.1.2</hive.version>
+    <hive.version>3.1.3</hive.version>
     <hadoop.version>3.2.4</hadoop.version>
     <hbase.version>2.4.9</hbase.version>
     <fmpp.version>1.0</fmpp.version>
