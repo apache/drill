@@ -21,6 +21,13 @@
 <#macro page_head>
     <script type="text/javascript" language="javascript"  src="/static/js/datatables.min.js"> </script>
     <link href="/static/css/datatables.min.css" rel="stylesheet">
+    <style>
+      /* See comments above DataTable initialisation. */
+      .dataTables_scroll
+      {
+          overflow:auto;
+      }
+    </style>
 </#macro>
 
 <#macro page_body>
@@ -82,20 +89,23 @@
     </table>
   </#if>
   <script charset="utf-8">
+    // DataTable's scrollX causes misalignment when colvis is used to remove
+    // columns until the table's width becomes smaller than the page's so we
+    // use our own { overflow: auto } div instead.
     $(document).ready(function() {
       $('#result').dataTable( {
         "aaSorting": [],
-        "scrollX" : true,
+        "scrollX" : false,
         "lengthMenu": [[${model.getRowsPerPageValues()},-1], [${model.getRowsPerPageValues()},"ALL"]],
         "lengthChange": true,
         "dom": "Blfrtip",
         "buttons": [ "colvis", "spacer" ],
-        "bJQueryUI" : false,
         "language": {
               "infoEmpty": "No records to show <#if model.isResultSetAutoLimited()> [NOTE: Results are auto-limited to max ${model.getAutoLimitedRowCount()} rows]</#if>",
               "info": "Showing _START_ to _END_ of _TOTAL_ entries <#if model.isResultSetAutoLimited()>[<b>NOTE:</b> Results are auto-limited to max ${model.getAutoLimitedRowCount()} rows]</#if>"
         }
       } );
+      jQuery('.dataTable').wrap('<div class="dataTables_scroll" />');
     } );
 
     //Pop out profile (needed to avoid losing query results)
