@@ -155,7 +155,7 @@ public class DateUtilFunctions {
       minute = Integer.parseInt(timestampMatcher.group(5));
       second = Integer.parseInt(timestampMatcher.group(6));
       if (StringUtils.isNotEmpty(timestampMatcher.group(7))) {
-        nanos = Integer.parseInt(timestampMatcher.group(7));
+        nanos = Integer.parseInt(timestampMatcher.group(7)) * 1000000;
       }
     }
     return LocalDateTime.of(year,month,day,hour,minute,second,nanos);

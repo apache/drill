@@ -208,4 +208,18 @@ public class TestNearestDateFunctions extends ClusterTest {
       .baselineValues(201216, 201203, 202050)
       .go();
   }
+
+  @Test
+  public void testTimestamp() throws Exception {
+    LocalDateTime ts1 = LocalDateTime.of(2020,2,4,0,0,0);
+    LocalDateTime ts2 = LocalDateTime.of(2012,6,12,12,12,45);
+    String query = "SELECT time_stamp('2020-02-04') AS ts1," +
+      "time_stamp('2012-06-12T12:12:45.123Z') AS ts2 FROM (VALUES(1))";
+    testBuilder()
+      .sqlQuery(query)
+      .unOrdered()
+      .baselineColumns("ts1", "ts2")
+      .baselineValues(ts1, ts2)
+      .go();
+  }
 }

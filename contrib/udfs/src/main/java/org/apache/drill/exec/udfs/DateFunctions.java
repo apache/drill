@@ -27,6 +27,8 @@ import org.apache.drill.exec.expr.holders.IntHolder;
 import org.apache.drill.exec.expr.holders.TimeStampHolder;
 import org.apache.drill.exec.expr.holders.VarCharHolder;
 
+import java.time.ZoneOffset;
+
 
 public class DateFunctions {
 
@@ -191,6 +193,29 @@ public class DateFunctions {
     @Override
     public void eval() {
       out.value = org.apache.drill.exec.udfs.DateUtilFunctions.getYearWeek(inputHolder.value);
+    }
+  }
+
+  @FunctionTemplate(names = {"time_stamp"},
+    scope = FunctionTemplate.FunctionScope.SIMPLE,
+    nulls = FunctionTemplate.NullHandling.NULL_IF_NULL)
+  public static class TimestampFunction implements DrillSimpleFunc {
+    @Param
+    VarCharHolder inputHolder;
+
+    @Output
+    TimeStampHolder out;
+
+    @Override
+    public void setup() {
+      // noop
+    }
+
+    @Override
+    public void eval() {
+      String input = org.apache.drill.exec.expr.fn.impl.StringFunctionHelpers.toStringFromUTF8(inputHolder.start, inputHolder.end, inputHolder.buffer);
+      java.time.LocalDateTime dt = org.apache.drill.exec.udfs.DateUtilFunctions.getTimestampFromString(input);
+      out.value = dt.toEpochSecond(java.time.ZoneOffset.UTC) * 1000;
     }
   }
 }

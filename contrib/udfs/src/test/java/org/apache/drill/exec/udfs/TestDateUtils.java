@@ -45,9 +45,9 @@ public class TestDateUtils {
   @Test
   public void testTimestampFromString() {
     LocalDateTime testNoSecondFragments = LocalDateTime.of(2022,4,19,17,3,46);
-    LocalDateTime test1Digit = LocalDateTime.of(2022,4,19,17,3,46, 1);
-    LocalDateTime test2Digit = LocalDateTime.of(2022,4,19,17,3,46, 13);
-    LocalDateTime test3Digit = LocalDateTime.of(2022,4,19,17,3,46, 342);
+    LocalDateTime test1Digit = LocalDateTime.of(2022,4,19,17,3,46, 1000000);
+    LocalDateTime test2Digit = LocalDateTime.of(2022,4,19,17,3,46, 13000000);
+    LocalDateTime test3Digit = LocalDateTime.of(2022,4,19,17,3,46, 342000000);
 
     LocalDateTime badDate = LocalDateTime.of(1970,1,1, 0, 0, 0);
 
