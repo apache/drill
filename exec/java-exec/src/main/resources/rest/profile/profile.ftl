@@ -22,7 +22,7 @@
 <script src="/static/js/d3.v3.js"></script>
 <script src="/static/js/dagre-d3.min.js"></script>
 <script src="/static/js/graph.js"></script>
-<script src="/static/js/jquery.dataTables-1.10.16.min.js"></script>
+<script src="/static/js/datatables.min.js"></script>
 <script src="/static/js/jquery.form.js"></script>
 <script src="/static/js/querySubmission.js"></script>
 <!-- Ace Libraries for Syntax Formatting -->
