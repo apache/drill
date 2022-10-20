@@ -34,7 +34,7 @@
       <link href="/static/css/bootstrap.min.css" rel="stylesheet">
       <link href="/drill-am/static/css/drill-am.css" rel="stylesheet">
 
-      <script src="/static/js/jquery-3.6.0.min.js"></script>
+      <script src="/static/js/jquery-3.6.1.min.js"></script>
       <script src="/static/js/bootstrap.min.js"></script>
 
       <!-- HTML5 shim and Respond.js IE8 support of HTML5 elements and media queries -->
