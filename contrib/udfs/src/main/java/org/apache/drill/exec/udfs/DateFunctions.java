@@ -27,8 +27,6 @@ import org.apache.drill.exec.expr.holders.IntHolder;
 import org.apache.drill.exec.expr.holders.TimeStampHolder;
 import org.apache.drill.exec.expr.holders.VarCharHolder;
 
-import java.time.ZoneOffset;
-
 
 public class DateFunctions {
 
@@ -58,7 +56,7 @@ public class DateFunctions {
    * 15SECOND
    * SECOND
    */
-  @FunctionTemplate(name = "nearestDate",
+  @FunctionTemplate(names = {"nearestDate","nearest_date"},
           scope = FunctionTemplate.FunctionScope.SIMPLE,
           nulls = FunctionTemplate.NullHandling.NULL_IF_NULL)
   public static class NearestDateFunction implements DrillSimpleFunc {
@@ -113,7 +111,7 @@ public class DateFunctions {
    * 15SECOND
    * SECOND
    */
-  @FunctionTemplate(name = "nearestDate",
+  @FunctionTemplate(names = {"nearestDate","nearest_date"},
           scope = FunctionTemplate.FunctionScope.SIMPLE,
           nulls = FunctionTemplate.NullHandling.NULL_IF_NULL)
   public static class NearestDateFunctionWithString implements DrillSimpleFunc {
@@ -196,7 +194,7 @@ public class DateFunctions {
     }
   }
 
-  @FunctionTemplate(names = {"time_stamp"},
+  @FunctionTemplate(names = {"time_stamp", "timestamp"},
     scope = FunctionTemplate.FunctionScope.SIMPLE,
     nulls = FunctionTemplate.NullHandling.NULL_IF_NULL)
   public static class TimestampFunction implements DrillSimpleFunc {
