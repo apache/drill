@@ -60,7 +60,12 @@ public class DrillDataStore<V extends Serializable> extends AbstractMemoryDataSt
     logger.debug("Saving credentials to token table");
     String accessToken = new String(keyValueMap.get(tokenTable.ACCESS_TOKEN_KEY), StandardCharsets.UTF_8);
     String refreshToken = new String(keyValueMap.get(tokenTable.REFRESH_TOKEN_KEY), StandardCharsets.UTF_8);
-    String expiresIn = new String(keyValueMap.get(tokenTable.EXPIRES_IN_KEY), StandardCharsets.UTF_8);
+
+    String expiresIn = "";
+    // Avoids an NPE if the expires_in field is not set.
+    if (keyValueMap.containsKey(tokenTable.EXPIRES_IN_KEY)) {
+      expiresIn = new String(keyValueMap.get(tokenTable.EXPIRES_IN_KEY), StandardCharsets.UTF_8);
+    }
     tokenTable.setAccessToken(accessToken);
     tokenTable.setRefreshToken(refreshToken);
     tokenTable.setExpiresIn(expiresIn);

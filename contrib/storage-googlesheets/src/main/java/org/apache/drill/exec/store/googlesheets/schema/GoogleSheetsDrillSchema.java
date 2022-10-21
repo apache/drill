@@ -39,18 +39,24 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 /**
  * This class represents the actual tab within a GoogleSheets document.
  */
 public class GoogleSheetsDrillSchema extends AbstractSchema {
   private static final Logger logger = LoggerFactory.getLogger(GoogleSheetsDrillSchema.class);
+  private static final Pattern TAB_PATTERN = Pattern.compile("^tab\\[(\\d+)\\]$");
 
   private final Map<String, DynamicDrillTable> activeTables = CaseInsensitiveMap.newHashMap();
+  private final List<DynamicDrillTable> tableList;
+
   private final GoogleSheetsStoragePlugin plugin;
   private final Sheets sheetsService;
   private final SchemaConfig schemaConfig;
@@ -67,6 +73,7 @@ public class GoogleSheetsDrillSchema extends AbstractSchema {
     this.fileToken = fileToken;
     this.parent = (GoogleSheetsRootSchema) parent;
     this.sheetsService = sheetsService;
+    this.tableList = new ArrayList<>();
   }
 
   @Override
@@ -81,6 +88,18 @@ public class GoogleSheetsDrillSchema extends AbstractSchema {
       populateActiveTables();
     }
 
+    // If the user provides the index of a tab, return the table at that index.
+    int tabIndex = getTabIndex(tableName);
+    if (tabIndex > -1) {
+      if (tabIndex > tableList.size()) {
+        throw UserException.dataReadError()
+          .message("Tab not found at index " + tabIndex)
+          .build(logger);
+      }
+      return tableList.get(tabIndex);
+    }
+
+    // Otherwise, retrieve the table from the active tables list.
     logger.debug("Getting table: {}", tableName);
     DynamicDrillTable table = activeTables.computeIfAbsent(tableName, this::getDrillTable);
     if (table != null) {
@@ -90,6 +109,22 @@ public class GoogleSheetsDrillSchema extends AbstractSchema {
       return null;
     }
     return table;
+  }
+
+  private int getTabIndex(String tableName) {
+    Matcher matcher = TAB_PATTERN.matcher(tableName);
+    if (matcher.find()) {
+      int tabIndex = Integer.parseInt(matcher.group(1));
+      if (tabIndex < 0) {
+        throw UserException.internalError()
+          .message("Google Sheets tab index must be greater than zero.")
+          .build(logger);
+      }
+
+      return tabIndex;
+    } else {
+      return -1;
+    }
   }
 
   private DynamicDrillTable getDrillTable(String tableName) {
@@ -155,8 +190,8 @@ public class GoogleSheetsDrillSchema extends AbstractSchema {
     };
   }
 
-  private DynamicDrillTable registerTable(String name, DynamicDrillTable table) {
+  private void registerTable(String name, DynamicDrillTable table) {
     activeTables.put(name, table);
-    return table;
+    tableList.add(table);
   }
 }

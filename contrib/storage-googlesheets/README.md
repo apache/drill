@@ -92,6 +92,15 @@ FROM <plugin name>.<sheet ID>.<tab name>
 ```
 Note that you must specify the tab name to successfully query Google Sheets.
 
+### Accessing Tabs by Index
+If you don't know the names of the available tabs in your GoogleSheets document, you can query the sheets by index using the `tab[n]` format.  Indexing starts at zero and every Sheets document must have at least one sheet.  Note that this must be enclosed in backticks.
+
+```sql
+SELECT * 
+FROM googlesheets.<sheet id>.`tab[0]`
+```
+
+
 ### Metadata
 You can obtain a list of available sheets by querying the `INFORMATION_SCHEMA` as shown below.  Assuming that you have a connection to Google Sheets called `googlesheets`:
 
