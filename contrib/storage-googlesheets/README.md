@@ -35,7 +35,7 @@ JSON file into your Drill configuration as shown below.  Once you've done that, 
     "authorizationURL": "https://accounts.google.com/o/oauth2/auth",
     "authorizationParams": {
       "response_type": "code",
-      "scope": "https://www.googleapis.com/auth/spreadsheets"
+      "scope": "https://www.googleapis.com/auth/spreadsheets https://www.googleapis.com/auth/drive.readonly https://www.googleapis.com/auth/drive.metadata.readonly"
     }
   },
   "credentialsProvider": {
