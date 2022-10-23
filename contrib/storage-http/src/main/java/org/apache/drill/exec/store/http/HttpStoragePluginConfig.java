@@ -17,6 +17,7 @@
  */
 package org.apache.drill.exec.store.http;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
 import org.apache.drill.common.PlanStringBuilder;
 import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.common.logical.OAuthConfig;
@@ -42,9 +43,10 @@ import java.util.concurrent.TimeUnit;
 
 
 @JsonTypeName(HttpStoragePluginConfig.NAME)
+@JsonInclude(JsonInclude.Include.NON_DEFAULT)
 public class HttpStoragePluginConfig extends StoragePluginConfig {
   private static final Logger logger = LoggerFactory.getLogger(HttpStoragePluginConfig.class);
-  protected static final int DEFAULT_RATE_LIMIT = 1000;
+  private static final int DEFAULT_RATE_LIMIT = 1000;
   public static final String NAME = "http";
 
   public final Map<String, HttpApiConfig> connections;
@@ -87,7 +89,7 @@ public class HttpStoragePluginConfig extends StoragePluginConfig {
         AuthMode.parseOrDefault(authMode, AuthMode.SHARED_USER),
       oAuthConfig);
     this.cacheResults = cacheResults != null && cacheResults;
-    this.rateLimit = rateLimit == null ? DEFAULT_RATE_LIMIT : rateLimit;
+    this.rateLimit = (rateLimit == null || rateLimit < 0) ? DEFAULT_RATE_LIMIT : rateLimit;
 
     this.connections = CaseInsensitiveMap.newHashMap();
     if (connections != null) {

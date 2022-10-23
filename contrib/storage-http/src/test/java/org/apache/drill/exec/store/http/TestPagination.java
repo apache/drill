@@ -315,6 +315,31 @@ public class TestPagination extends ClusterTest {
   }
 
   @Test
+  public void simpleJSONPaginatorQueryWith429() throws Exception {
+    String sql = "SELECT * FROM `local`.`json_paginator` LIMIT 4";
+    try (MockWebServer server = startServer()) {
+
+      server.enqueue(new MockResponse().setResponseCode(200).setBody(TEST_JSON_PAGE1));
+      server.enqueue(new MockResponse().setResponseCode(429));
+      server.enqueue(new MockResponse().setResponseCode(200).setBody(TEST_JSON_PAGE2));
+      server.enqueue(new MockResponse().setResponseCode(429));
+      server.enqueue(new MockResponse().setResponseCode(200).setBody(TEST_JSON_PAGE3));
+
+      List<QueryDataBatch> results = client.queryBuilder()
+        .sql(sql)
+        .results();
+
+      int count = 0;
+      for(QueryDataBatch b : results){
+        count += b.getHeader().getRowCount();
+        b.release();
+      }
+      assertEquals(2, results.size());
+      assertEquals(4, count);
+    }
+  }
+
+  @Test
   public void simpleJSONIndexQuery() throws Exception {
     String sql = "SELECT * FROM `local`.`json_index` LIMIT 4";
     try (MockWebServer server = startServer()) {
