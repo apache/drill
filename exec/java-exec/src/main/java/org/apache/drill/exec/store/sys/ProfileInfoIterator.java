@@ -90,6 +90,8 @@ public class ProfileInfoIterator extends ProfileIterator {
             computeDuration(profile.getPlanEnd(), assumedQueueEndTime),
             computeDuration(assumedQueueEndTime, profile.getEnd()),
             profile.getState().name(),
+            profile.getScannedPluginsCount(),
+            profile.getScannedPluginsList().toString(),
             profile.getQuery()
          );
       }
@@ -129,11 +131,13 @@ public class ProfileInfoIterator extends ProfileIterator {
     public final long executeTime;
     public final long totalTime;
     public final String state;
+    public final long pluginCount;
+    public final String pluginList;
     public final String query;
 
     public ProfileInfo(String query_id, Timestamp time, String foreman, long fragmentCount, String username,
         String queueName, long planDuration, long queueWaitDuration, long executeDuration,
-        String state, String query) {
+        String state, long pluginCount, String pluginList, String query) {
       this.queryId = query_id;
       this.startTime = time;
       this.foreman = foreman;
@@ -145,13 +149,15 @@ public class ProfileInfoIterator extends ProfileIterator {
       this.executeTime = executeDuration;
       this.totalTime = this.planTime + this.queueTime + this.executeTime;
       this.query = query;
+      this.pluginCount = pluginCount;
+      this.pluginList = pluginList;
       this.state = state;
     }
 
     private ProfileInfo() {
       this(UNKNOWN_VALUE, new Timestamp(0), UNKNOWN_VALUE, 0L,
           UNKNOWN_VALUE, UNKNOWN_VALUE, 0L, 0L,
-          0L, UNKNOWN_VALUE, UNKNOWN_VALUE);
+          0L, UNKNOWN_VALUE, 0L, UNKNOWN_VALUE, UNKNOWN_VALUE);
     }
 
     /**
