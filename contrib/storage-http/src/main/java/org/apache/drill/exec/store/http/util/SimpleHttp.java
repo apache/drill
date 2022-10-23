@@ -141,7 +141,7 @@ public class SimpleHttp implements AutoCloseable {
     this.filters = scanDefn.filters();
     this.url = url;
     this.tempDir = tempDir;
-    this.rateLimit = scanDefn.tableSpec().config().rateLimit();
+    this.rateLimit = scanDefn.tableSpec().config().retryDelay();
     this.proxyConfig = proxyConfig;
     this.errorContext = errorContext;
     this.tokenTable = scanDefn.tableSpec().getTokenTable();
@@ -1084,7 +1084,7 @@ public class SimpleHttp implements AutoCloseable {
       this.tokenTable = scanDefn.tableSpec().getTokenTable();
       this.filters = scanDefn.filters();
       this.username = scanDefn.getUserName();
-      this.rateLimit = scanDefn.tableSpec().config().rateLimit();
+      this.rateLimit = scanDefn.tableSpec().config().retryDelay();
       return this;
     }
 

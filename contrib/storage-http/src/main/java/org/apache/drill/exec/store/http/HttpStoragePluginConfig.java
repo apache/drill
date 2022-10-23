@@ -58,13 +58,13 @@ public class HttpStoragePluginConfig extends StoragePluginConfig {
    * Timeout in {@link TimeUnit#SECONDS}.
    */
   public final int timeout;
-  public final int rateLimit;
+  public final int retryDelay;
 
   @JsonCreator
   public HttpStoragePluginConfig(@JsonProperty("cacheResults") Boolean cacheResults,
                                  @JsonProperty("connections") Map<String, HttpApiConfig> connections,
                                  @JsonProperty("timeout") Integer timeout,
-                                 @JsonProperty("rateLimit") Integer rateLimit,
+                                 @JsonProperty("retryDelay") Integer retryDelay,
                                  @JsonProperty("username") String username,
                                  @JsonProperty("password") String password,
                                  @JsonProperty("proxyHost") String proxyHost,
@@ -89,7 +89,7 @@ public class HttpStoragePluginConfig extends StoragePluginConfig {
         AuthMode.parseOrDefault(authMode, AuthMode.SHARED_USER),
       oAuthConfig);
     this.cacheResults = cacheResults != null && cacheResults;
-    this.rateLimit = (rateLimit == null || rateLimit < 0) ? DEFAULT_RATE_LIMIT : rateLimit;
+    this.retryDelay = (retryDelay == null || retryDelay < 0) ? DEFAULT_RATE_LIMIT : retryDelay;
 
     this.connections = CaseInsensitiveMap.newHashMap();
     if (connections != null) {
@@ -127,7 +127,7 @@ public class HttpStoragePluginConfig extends StoragePluginConfig {
     this.proxyPort = that.proxyPort;
     this.proxyType = that.proxyType;
     this.oAuthConfig = that.oAuthConfig;
-    this.rateLimit = that.rateLimit;
+    this.retryDelay = that.retryDelay;
   }
 
   /**
@@ -146,7 +146,7 @@ public class HttpStoragePluginConfig extends StoragePluginConfig {
     this.proxyPort = that.proxyPort;
     this.proxyType = that.proxyType;
     this.oAuthConfig = that.oAuthConfig;
-    this.rateLimit = that.rateLimit;
+    this.retryDelay = that.retryDelay;
   }
 
   private static String normalize(String value) {
@@ -166,8 +166,7 @@ public class HttpStoragePluginConfig extends StoragePluginConfig {
     return new HttpStoragePluginConfig(
       cacheResults,
       configFor(connectionName),
-      timeout,
-      rateLimit,
+      timeout, retryDelay,
       username(),
       password(),
       proxyHost,
@@ -198,7 +197,7 @@ public class HttpStoragePluginConfig extends StoragePluginConfig {
     return Objects.equals(connections, thatConfig.connections) &&
       Objects.equals(cacheResults, thatConfig.cacheResults) &&
       Objects.equals(proxyHost, thatConfig.proxyHost) &&
-      Objects.equals(rateLimit, thatConfig.rateLimit) &&
+      Objects.equals(retryDelay, thatConfig.retryDelay) &&
       Objects.equals(proxyPort, thatConfig.proxyPort) &&
       Objects.equals(proxyType, thatConfig.proxyType) &&
       Objects.equals(oAuthConfig, thatConfig.oAuthConfig) &&
@@ -212,7 +211,7 @@ public class HttpStoragePluginConfig extends StoragePluginConfig {
       .field("connections", connections)
       .field("cacheResults", cacheResults)
       .field("timeout", timeout)
-      .field("rateLimit", rateLimit)
+      .field("retryDelay", retryDelay)
       .field("proxyHost", proxyHost)
       .field("proxyPort", proxyPort)
       .field("credentialsProvider", credentialsProvider)
@@ -224,7 +223,7 @@ public class HttpStoragePluginConfig extends StoragePluginConfig {
 
   @Override
   public int hashCode() {
-    return Objects.hash(connections, cacheResults, timeout, rateLimit,
+    return Objects.hash(connections, cacheResults, timeout, retryDelay,
         proxyHost, proxyPort, proxyType, oAuthConfig, credentialsProvider, authMode);
   }
 
@@ -237,9 +236,9 @@ public class HttpStoragePluginConfig extends StoragePluginConfig {
   @JsonProperty("timeout")
   public int timeout() { return timeout;}
 
-  @JsonProperty("rateLimit")
-  public int rateLimit() {
-    return rateLimit;
+  @JsonProperty("retryDelay")
+  public int retryDelay() {
+    return retryDelay;
   }
 
    @JsonProperty("proxyHost")
