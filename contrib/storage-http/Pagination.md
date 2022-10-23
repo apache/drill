@@ -12,7 +12,7 @@ When using automatic pagination, you may encounter APIs that have burst limits o
 as to the maximum number of requests in a minute or other amount of time.  Drill allows you to
 set a `retryDelay` parameter which is the number of milliseconds that Drill should wait before
 resending the request.  This defaults to 1 second.  This option is set in the configuration for
-the HTTP plugin. 
+the HTTP plugin.
 
 ## Offset Pagination
 Offset Pagination uses commands similar to SQL which has a `LIMIT` and an `OFFSET`.  With an offset paginator, let's say you want 200 records and the  page size is 50 records, the offset paginator will break up your query into 4 requests as shown below:
