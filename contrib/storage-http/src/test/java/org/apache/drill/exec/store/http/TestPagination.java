@@ -316,6 +316,8 @@ public class TestPagination extends ClusterTest {
 
   @Test
   public void simpleJSONPaginatorQueryWith429() throws Exception {
+    // This test simulates an http request that hits a burst limit.   In this situation,
+    // Drill will wait and retry the request.
     String sql = "SELECT * FROM `local`.`json_paginator` LIMIT 4";
     try (MockWebServer server = startServer()) {
 
