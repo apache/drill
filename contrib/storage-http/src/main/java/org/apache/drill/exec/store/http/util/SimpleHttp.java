@@ -250,7 +250,6 @@ public class SimpleHttp implements AutoCloseable {
     builder.connectionPool(new ConnectionPool(0, 1, TimeUnit.SECONDS));
 
     // Code to skip SSL Certificate validation
-    // Sourced from https://stackoverflow.com/questions/60110848/how-to-disable-ssl-verification
     if (! apiConfig.verifySSLCert()) {
       try {
         TrustManager[] trustAllCerts = getAllTrustingTrustManager();
@@ -1029,9 +1028,8 @@ public class SimpleHttp implements AutoCloseable {
 
   /**
    * This interceptor is used in pagination situations or elsewhere when APIs have burst throttling. The rate limit interceptor
-   * will wait a configurable number of milliseconds and retry queries if it encounters a 429 response code.
-   *
-   * Code sourced from https://stackoverflow.com/questions/35364823/okhttp-api-rate-limit
+   * will wait a configurable number of milliseconds and retry queries if it encounters a 429
+   * response code.
    */
   public static class RateLimitInterceptor implements Interceptor {
     private final int millis;
