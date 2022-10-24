@@ -123,6 +123,7 @@ public class SimpleHttp implements AutoCloseable {
   private final HttpStoragePluginConfig pluginConfig;
   private final HttpApiConfig apiConfig;
   private final OAuthConfig oAuthConfig;
+  private final int rateLimit;
   private String responseMessage;
   private int responseCode;
   private String responseProtocol;
@@ -140,6 +141,7 @@ public class SimpleHttp implements AutoCloseable {
     this.filters = scanDefn.filters();
     this.url = url;
     this.tempDir = tempDir;
+    this.rateLimit = scanDefn.tableSpec().config().retryDelay();
     this.proxyConfig = proxyConfig;
     this.errorContext = errorContext;
     this.tokenTable = scanDefn.tableSpec().getTokenTable();
@@ -162,7 +164,7 @@ public class SimpleHttp implements AutoCloseable {
    */
   public SimpleHttp(HttpUrl url, File tempDir, HttpProxyConfig proxyConfig, CustomErrorContext errorContext,
                     Paginator paginator, PersistentTokenTable tokenTable, HttpStoragePluginConfig pluginConfig,
-                    HttpApiConfig endpointConfig, String connection, Map<String, String> filters) {
+                    HttpApiConfig endpointConfig, String connection, Map<String, String> filters, int rateLimit) {
     this.url = url;
     this.tempDir = tempDir;
     this.proxyConfig = proxyConfig;
@@ -185,6 +187,7 @@ public class SimpleHttp implements AutoCloseable {
     this.apiConfig = endpointConfig;
     this.connection = connection;
     this.filters = filters;
+    this.rateLimit = rateLimit;
     this.oAuthConfig = pluginConfig.oAuthConfig();
     this.client = setupHttpClient();
   }
@@ -240,13 +243,13 @@ public class SimpleHttp implements AutoCloseable {
     builder.connectTimeout(timeout, TimeUnit.SECONDS);
     builder.writeTimeout(timeout, TimeUnit.SECONDS);
     builder.readTimeout(timeout, TimeUnit.SECONDS);
+    builder.addInterceptor(new RateLimitInterceptor(rateLimit));
     // OkHttp's connection pooling is disabled because the HTTP plugin creates
     // and discards potentially many OkHttp clients, each leaving lingering
     // CLOSE_WAIT connections around if they have pooling enabled.
     builder.connectionPool(new ConnectionPool(0, 1, TimeUnit.SECONDS));
 
     // Code to skip SSL Certificate validation
-    // Sourced from https://stackoverflow.com/questions/60110848/how-to-disable-ssl-verification
     if (! apiConfig.verifySSLCert()) {
       try {
         TrustManager[] trustAllCerts = getAllTrustingTrustManager();
@@ -1023,6 +1026,38 @@ public class SimpleHttp implements AutoCloseable {
     }
   }
 
+  /**
+   * This interceptor is used in pagination situations or elsewhere when APIs have burst throttling. The rate limit interceptor
+   * will wait a configurable number of milliseconds and retry queries if it encounters a 429
+   * response code.
+   */
+  public static class RateLimitInterceptor implements Interceptor {
+    private final int millis;
+    public RateLimitInterceptor(int millis) {
+      this.millis = millis;
+    }
+
+    @NotNull
+    @Override
+    public Response intercept(Chain chain) throws IOException {
+
+      Response response = chain.proceed(chain.request());
+      // 429 is how the api indicates a rate limit error
+      if (!response.isSuccessful() && response.code() == 429) {
+        logger.info("Received 429 Response.  Throttling API calls: {} ", response.message());
+        // Wait and retry request
+        try {
+          Thread.sleep(millis);
+        } catch (InterruptedException e) {
+          logger.error("Error retrying HTTP request: {}", e.getMessage());
+        }
+        response = chain.proceed(chain.request());
+      }
+      return response;
+    }
+  }
+
+
   public static class SimpleHttpBuilder {
     private HttpSubScan scanDefn;
     private HttpUrl url;
@@ -1037,6 +1072,7 @@ public class SimpleHttp implements AutoCloseable {
     private Map<String,String> filters;
     private String connection;
     private String username;
+    private int rateLimit;
 
     public SimpleHttpBuilder scanDefn(HttpSubScan scanDefn) {
       this.scanDefn = scanDefn;
@@ -1046,6 +1082,7 @@ public class SimpleHttp implements AutoCloseable {
       this.tokenTable = scanDefn.tableSpec().getTokenTable();
       this.filters = scanDefn.filters();
       this.username = scanDefn.getUserName();
+      this.rateLimit = scanDefn.tableSpec().config().retryDelay();
       return this;
     }
 
@@ -1079,6 +1116,11 @@ public class SimpleHttp implements AutoCloseable {
       return this;
     }
 
+    public SimpleHttpBuilder rateLimit(int rateLimit) {
+      this.rateLimit = rateLimit;
+      return this;
+    }
+
     public SimpleHttpBuilder tokenTable(PersistentTokenTable tokenTable) {
       this.tokenTable = tokenTable;
       return this;
@@ -1105,12 +1147,11 @@ public class SimpleHttp implements AutoCloseable {
       return this;
     }
 
-
     public SimpleHttp build() {
       if (this.scanDefn != null) {
         return new SimpleHttp(scanDefn, url, tempDir, proxyConfig, errorContext, paginator);
       } else {
-        return new SimpleHttp(url, tempDir, proxyConfig, errorContext, paginator, tokenTable, pluginConfig, endpointConfig, connection, filters);
+        return new SimpleHttp(url, tempDir, proxyConfig, errorContext, paginator, tokenTable, pluginConfig, endpointConfig, connection, filters, rateLimit);
       }
     }
   }

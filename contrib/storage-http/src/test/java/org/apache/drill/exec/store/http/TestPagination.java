@@ -132,7 +132,7 @@ public class TestPagination extends ClusterTest {
     configs.put("github", githubConfig);
 
     HttpStoragePluginConfig mockStorageConfigWithWorkspace =
-      new HttpStoragePluginConfig(false, configs, 10, null, null, "", 80, "", "", "", null,
+      new HttpStoragePluginConfig(false, configs, 10, 1000, null, null, "", 80, "", "", "", null,
         PlainCredentialsProvider.EMPTY_CREDENTIALS_PROVIDER, AuthMode.SHARED_USER.name());
     mockStorageConfigWithWorkspace.setEnabled(true);
     cluster.defineStoragePlugin("live", mockStorageConfigWithWorkspace);
@@ -268,7 +268,7 @@ public class TestPagination extends ClusterTest {
     configs.put("xml_paginator_url_params", mockXmlConfigWithPaginatorAndUrlParams);
 
     HttpStoragePluginConfig mockStorageConfigWithWorkspace =
-      new HttpStoragePluginConfig(false, configs, 2, null, null, "", 80, "", "", "", null,
+      new HttpStoragePluginConfig(false, configs, 2,1000, null, null, "", 80, "", "", "", null,
         PlainCredentialsProvider.EMPTY_CREDENTIALS_PROVIDER, AuthMode.SHARED_USER.name());
     mockStorageConfigWithWorkspace.setEnabled(true);
     cluster.defineStoragePlugin("local", mockStorageConfigWithWorkspace);
@@ -298,6 +298,33 @@ public class TestPagination extends ClusterTest {
 
       server.enqueue(new MockResponse().setResponseCode(200).setBody(TEST_JSON_PAGE1));
       server.enqueue(new MockResponse().setResponseCode(200).setBody(TEST_JSON_PAGE2));
+      server.enqueue(new MockResponse().setResponseCode(200).setBody(TEST_JSON_PAGE3));
+
+      List<QueryDataBatch> results = client.queryBuilder()
+        .sql(sql)
+        .results();
+
+      int count = 0;
+      for(QueryDataBatch b : results){
+        count += b.getHeader().getRowCount();
+        b.release();
+      }
+      assertEquals(2, results.size());
+      assertEquals(4, count);
+    }
+  }
+
+  @Test
+  public void simpleJSONPaginatorQueryWith429() throws Exception {
+    // This test simulates an http request that hits a burst limit.   In this situation,
+    // Drill will wait and retry the request.
+    String sql = "SELECT * FROM `local`.`json_paginator` LIMIT 4";
+    try (MockWebServer server = startServer()) {
+
+      server.enqueue(new MockResponse().setResponseCode(200).setBody(TEST_JSON_PAGE1));
+      server.enqueue(new MockResponse().setResponseCode(429));
+      server.enqueue(new MockResponse().setResponseCode(200).setBody(TEST_JSON_PAGE2));
+      server.enqueue(new MockResponse().setResponseCode(429));
       server.enqueue(new MockResponse().setResponseCode(200).setBody(TEST_JSON_PAGE3));
 
       List<QueryDataBatch> results = client.queryBuilder()

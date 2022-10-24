@@ -160,7 +160,7 @@ public class TestProvidedSchema extends ClusterTest {
     configs.put("noSchema", noSchema);
 
     HttpStoragePluginConfig mockStorageConfigWithWorkspace =
-      new HttpStoragePluginConfig(false, configs, 2, "globaluser", "globalpass", "",
+      new HttpStoragePluginConfig(false, configs, 2, 1000, "globaluser", "globalpass", "",
         80, "", "", "", null, new PlainCredentialsProvider(ImmutableMap.of(
         UsernamePasswordCredentials.USERNAME, "globaluser",
         UsernamePasswordCredentials.PASSWORD, "globalpass")), AuthMode.SHARED_USER.name());

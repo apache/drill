@@ -1,12 +1,18 @@
 # Auto Pagination in Drill
-Remote APIs frequently implement some sort of pagination as a way of limiting results.  However, if you are performing bulk data analysis, it is necessary to reassemble the 
+Remote APIs frequently implement some sort of pagination as a way of limiting results.  However, if you are performing bulk data analysis, it is necessary to reassemble the
 data into one larger dataset.  Drill's auto-pagination features allow this to happen in the background, so that the user will get clean data back.
 
-To use a paginator, you simply have to configure the paginator in the connection for the particular API.  
+To use a paginator, you simply have to configure the paginator in the connection for the particular API.
 
 ## Words of Caution
 While extremely powerful, the auto-pagination feature has the potential to run afoul of APIs rate limits and even potentially DDoS an API. Please use with extreme care.
 
+## Rate Limits
+When using automatic pagination, you may encounter APIs that have burst limits or other limits
+as to the maximum number of requests in a minute or other amount of time.  Drill allows you to
+set a `retryDelay` parameter which is the number of milliseconds that Drill should wait before
+resending the request.  This defaults to 1 second.  This option is set in the configuration for
+the HTTP plugin.
 
 ## Offset Pagination
 Offset Pagination uses commands similar to SQL which has a `LIMIT` and an `OFFSET`.  With an offset paginator, let's say you want 200 records and the  page size is 50 records, the offset paginator will break up your query into 4 requests as shown below:
@@ -17,7 +23,7 @@ Offset Pagination uses commands similar to SQL which has a `LIMIT` and an `OFFSE
 * myapi.com?limit=50&offset=150
 
 ### Configuring Offset Pagination
-To configure an offset paginator, simply add the following to the configuration for your connection. 
+To configure an offset paginator, simply add the following to the configuration for your connection.
 
 ```json
 "paginator": {
@@ -29,7 +35,7 @@ To configure an offset paginator, simply add the following to the configuration 
 ```
 
 ## Page Pagination
-Page pagination is very similar to offset pagination except instead of using an `OFFSET` it uses a page number. 
+Page pagination is very similar to offset pagination except instead of using an `OFFSET` it uses a page number.
 
 ```json
  "paginator": {
@@ -42,9 +48,9 @@ Page pagination is very similar to offset pagination except instead of using an 
 In either case, the `pageSize` parameter should be set to the maximum page size allowable by the API.  This will minimize the number of requests Drill is making.
 
 ## Index / KeySet Pagination
-Index or KeySet pagination is when the API itself returns values to generate the next page. 
+Index or KeySet pagination is when the API itself returns values to generate the next page.
 
-Consider an API that returned data like this: 
+Consider an API that returned data like this:
 
 ```json
 {
@@ -69,4 +75,4 @@ There are three possible parameters:
 * `nextPageParam`: The parameter name which returns a complete URL of the next page.
 
 
-** Note: Index / Keyset Pagination is only implemented for APIs that return JSON ** 
+** Note: Index / Keyset Pagination is only implemented for APIs that return JSON **

@@ -138,7 +138,8 @@ public class TestHttpPlugin extends ClusterTest {
     configs.put("pokemon", pokemonConfig);
 
     HttpStoragePluginConfig mockStorageConfigWithWorkspace =
-        new HttpStoragePluginConfig(false, configs, 10, null, null, "", 80, "", "", "", null, PlainCredentialsProvider.EMPTY_CREDENTIALS_PROVIDER, AuthMode.SHARED_USER.name());
+        new HttpStoragePluginConfig(false, configs, 10, 1000, null, null, "", 80, "", "", "", null, PlainCredentialsProvider.EMPTY_CREDENTIALS_PROVIDER,
+          AuthMode.SHARED_USER.name());
     mockStorageConfigWithWorkspace.setEnabled(true);
     cluster.defineStoragePlugin("live", mockStorageConfigWithWorkspace);
   }
@@ -355,7 +356,7 @@ public class TestHttpPlugin extends ClusterTest {
     configs.put("malformedJson", mockJsonWithMalformedData);
 
     HttpStoragePluginConfig mockStorageConfigWithWorkspace =
-        new HttpStoragePluginConfig(false, configs, 2, "globaluser", "globalpass", "",
+        new HttpStoragePluginConfig(false, configs, 2, 1000, "globaluser", "globalpass", "",
           80, "", "", "", null, new PlainCredentialsProvider(ImmutableMap.of(
           UsernamePasswordCredentials.USERNAME, "globaluser",
           UsernamePasswordCredentials.PASSWORD, "globalpass")), AuthMode.SHARED_USER.name());

@@ -116,7 +116,7 @@ public class TestHttpUDFWithAliases extends ClusterTest {
     configs.put("basicJson", basicJson);
 
     HttpStoragePluginConfig mockStorageConfigWithWorkspace =
-      new HttpStoragePluginConfig(false, configs, 200, "globaluser", "globalpass", "",
+      new HttpStoragePluginConfig(false, configs, 200, 1000, "globaluser", "globalpass", "",
         80, "", "", "", null, new PlainCredentialsProvider(ImmutableMap.of(
         UsernamePasswordCredentials.USERNAME, "globaluser",
         UsernamePasswordCredentials.PASSWORD, "globalpass")), AuthMode.SHARED_USER.name());
