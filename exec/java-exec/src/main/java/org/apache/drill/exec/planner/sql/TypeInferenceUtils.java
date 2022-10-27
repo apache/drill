@@ -949,6 +949,7 @@ public class TypeInferenceUtils {
     TimeUnit timeUnit = TimeUnit.valueOf(timeUnitStr);
     switch (timeUnit) {
       case YEAR:
+      case QUARTER:
       case MONTH:
       case WEEK:
       case DAY:
@@ -960,7 +961,8 @@ public class TypeInferenceUtils {
       default:
         throw UserException
             .functionError()
-            .message("extract function supports the following time units: YEAR, MONTH, WEEK, DAY, HOUR, MINUTE, SECOND")
+            .message("extract function supports the following time units: YEAR, QUARTER, MONTH, " +
+              "WEEK, DAY, HOUR, MINUTE, SECOND")
             .build(logger);
     }
   }

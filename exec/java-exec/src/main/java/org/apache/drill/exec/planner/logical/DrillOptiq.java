@@ -575,6 +575,7 @@ public class DrillOptiq {
 
           switch (timeUnit) {
             case YEAR:
+            case QUARTER:
             case MONTH:
             case WEEK:
             case DAY:
@@ -585,7 +586,8 @@ public class DrillOptiq {
               functionName += functionPostfix;
               return FunctionCallFactory.createExpression(functionName, args.subList(1, 2));
             default:
-              throw new UnsupportedOperationException("extract function supports the following time units: YEAR, MONTH, WEEK, DAY, HOUR, MINUTE, SECOND");
+              throw new UnsupportedOperationException("extract function supports the following " +
+                "time units: YEAR, QUARTER, MONTH, WEEK, DAY, HOUR, MINUTE, SECOND");
           }
         }
         case "timestampdiff": {

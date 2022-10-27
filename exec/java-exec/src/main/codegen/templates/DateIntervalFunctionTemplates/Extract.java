@@ -38,7 +38,8 @@ public class ${className} {
 <#list extract.fromTypes as fromUnit>
 <#list extract.toTypes as toUnit>
 <#if fromUnit == "Date" || fromUnit == "Time" || fromUnit == "TimeStamp">
-<#if !(fromUnit == "Time" && (toUnit == "Year" || toUnit == "Month" || toUnit == "Week" || toUnit == "Day"))>
+<#if !(fromUnit == "Time" && (toUnit == "Year" || toUnit == "Quarter" || toUnit == "Month"
+  || toUnit == "Week" || toUnit == "Day"))>
   @FunctionTemplate(name = "extract${toUnit}", scope = FunctionTemplate.FunctionScope.SIMPLE,
       nulls = FunctionTemplate.NullHandling.NULL_IF_NULL)
   public static class ${toUnit}From${fromUnit} implements DrillSimpleFunc {
@@ -71,6 +72,8 @@ public class ${className} {
       out.value = dateTime.getWeekOfWeekyear();
     <#elseif toUnit = "Month">
       out.value = dateTime.getMonthOfYear();
+    <#elseif toUnit = "Quarter">
+      out.value = ((int) dateTime.getMonthOfYear() / 4) + 1;
     <#elseif toUnit = "Year">
       out.value = dateTime.getYear();
     </#if>
@@ -95,6 +98,8 @@ public class ${className} {
   <#if fromUnit == "Interval">
     <#if toUnit == "Year">
       out.value = (in.months / org.apache.drill.exec.vector.DateUtilities.yearsToMonths);
+    <#elseif toUnit == "Quarter">
+      out.value = (in.months / org.apache.drill.exec.vector.DateUtilities.yearsToQuarter);
     <#elseif toUnit == "Month">
       out.value = (in.months % org.apache.drill.exec.vector.DateUtilities.yearsToMonths);
     <#elseif toUnit == "Week">
@@ -114,6 +119,8 @@ public class ${className} {
     <#if toUnit == "Year" || toUnit == "Month">
       out.value = 0;
     <#elseif toUnit == "Week">
+      out.value = 0;
+    <#elseif toUnit == "Quarter">
       out.value = 0;
     <#elseif toUnit == "Day">
       out.value = in.days;

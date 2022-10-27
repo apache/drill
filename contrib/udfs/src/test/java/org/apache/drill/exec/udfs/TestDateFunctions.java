@@ -37,7 +37,7 @@ import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
 @Category({UnlikelyTest.class, SqlFunctionTest.class})
-public class TestNearestDateFunctions extends ClusterTest {
+public class TestDateFunctions extends ClusterTest {
 
   @BeforeClass
   public static void setup() throws Exception {
@@ -213,8 +213,8 @@ public class TestNearestDateFunctions extends ClusterTest {
   public void testTimestamp() throws Exception {
     LocalDateTime ts1 = LocalDateTime.of(2020,2,4,0,0,0);
     LocalDateTime ts2 = LocalDateTime.of(2012,6,12,12,12,45);
-    String query = "SELECT time_stamp('2020-02-04') AS ts1," +
-      "time_stamp('2012-06-12T12:12:45.123Z') AS ts2 FROM (VALUES(1))";
+    String query = "SELECT to_timestamp('2020-02-04') AS ts1," +
+      "to_timestamp('2012-06-12T12:12:45.123Z') AS ts2 FROM (VALUES(1))";
     testBuilder()
       .sqlQuery(query)
       .unOrdered()

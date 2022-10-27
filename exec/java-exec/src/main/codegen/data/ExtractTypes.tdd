@@ -17,6 +17,6 @@
 #
 
 {
-  toTypes: [Second, Minute, Hour, Day, Week, Month, Year],
+  toTypes: [Second, Minute, Hour, Day, Week, Month, Quarter, Year],
   fromTypes: [Date, Time, TimeStamp, Interval, IntervalDay, IntervalYear]
 }

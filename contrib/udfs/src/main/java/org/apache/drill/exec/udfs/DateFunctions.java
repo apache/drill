@@ -194,7 +194,7 @@ public class DateFunctions {
     }
   }
 
-  @FunctionTemplate(names = {"time_stamp", "timestamp"},
+  @FunctionTemplate(names = {"to_timestamp"},
     scope = FunctionTemplate.FunctionScope.SIMPLE,
     nulls = FunctionTemplate.NullHandling.NULL_IF_NULL)
   public static class TimestampFunction implements DrillSimpleFunc {
