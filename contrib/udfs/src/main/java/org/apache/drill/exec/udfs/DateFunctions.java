@@ -173,27 +173,6 @@ public class DateFunctions {
     }
   }
 
-  @FunctionTemplate(names = {"yearweek","year_week"},
-    scope = FunctionTemplate.FunctionScope.SIMPLE,
-    nulls = FunctionTemplate.NullHandling.NULL_IF_NULL)
-  public static class YearWeekFromDateFunction implements DrillSimpleFunc {
-    @Param
-    DateHolder inputHolder;
-
-    @Output
-    IntHolder out;
-
-    @Override
-    public void setup() {
-      // noop
-    }
-
-    @Override
-    public void eval() {
-      out.value = org.apache.drill.exec.udfs.DateUtilFunctions.getYearWeek(inputHolder.value);
-    }
-  }
-
   @FunctionTemplate(names = {"to_timestamp"},
     scope = FunctionTemplate.FunctionScope.SIMPLE,
     nulls = FunctionTemplate.NullHandling.NULL_IF_NULL)
