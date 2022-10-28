@@ -693,7 +693,7 @@
           <configuration>
             <aggregate>true</aggregate>
             <!--suppress UnresolvedMavenProperty -->
-            <header>${maven.multiModuleProjectDirectory}/header</header>
+            <header>${session.executionRootDirectory}/header</header>
             <excludes>
               <exclude>**/clientlib/y2038/*.c</exclude> <!-- All the files here should have MIT License -->
               <exclude>**/clientlib/y2038/*.h</exclude> <!-- All the files here should have MIT License -->

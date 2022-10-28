@@ -31,6 +31,13 @@ import static org.junit.Assert.assertEquals;
 public class JarBuilder {
 
   private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(JarBuilder.class);
+  // This use of maven.multiModuleProjectDirectory cannot be changed to one of
+  // session.executionRootDirectory as has been done in /pom.xml for the sake
+  // Eclipse/m2e compatibility. Running the test class TestDynamicUDFSupport
+  // using mvn:surefire from exec/java-exec/ reveals the issues that arise if
+  // said change is attempted in this class. However, there is no need for it
+  // here since the way that maven.multiModuleProjectDirectory is used is already
+  // compatible with Eclipse/m2e.
   private static final String MAVEN_MULTI_MODULE_PROJECT_DIRECTORY = "maven.multiModuleProjectDirectory";
 
   private final MavenCli cli;
@@ -93,4 +100,3 @@ public class JarBuilder {
   }
 
 }
-
