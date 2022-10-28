@@ -603,8 +603,7 @@
               <outputDirectory>${project.build.outputDirectory}</outputDirectory>
               <resources>
                 <resource>
-                  <!--suppress UnresolvedMavenProperty -->
-                  <directory>${maven.multiModuleProjectDirectory}</directory>
+                  <directory>${session.executionRootDirectory}</directory>
                   <includes>
                     <include>git.properties</include>
                   </includes>
