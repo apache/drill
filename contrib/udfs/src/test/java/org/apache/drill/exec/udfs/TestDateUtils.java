@@ -24,22 +24,22 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNull;
 
 public class TestDateUtils {
 
   @Test
   public void testDateFromString() {
     LocalDate testDate = LocalDate.of(2022, 3,14);
-    LocalDate badDate = LocalDate.of(1970, 1, 1);
     assertEquals(testDate, DateUtilFunctions.getDateFromString("2022-03-14"));
     assertEquals(testDate, DateUtilFunctions.getDateFromString("3/14/2022"));
     assertEquals(testDate, DateUtilFunctions.getDateFromString("14/03/2022", true));
     assertEquals(testDate, DateUtilFunctions.getDateFromString("2022/3/14"));
 
     // Test bad dates
-    assertEquals(badDate, DateUtilFunctions.getDateFromString(null));
-    assertEquals(badDate, DateUtilFunctions.getDateFromString("1975-13-56"));
-    assertEquals(badDate, DateUtilFunctions.getDateFromString("1975-1s"));
+    assertNull(DateUtilFunctions.getDateFromString(null));
+    assertNull(DateUtilFunctions.getDateFromString("1975-13-56"));
+    assertNull(DateUtilFunctions.getDateFromString("1975-1s"));
   }
 
   @Test
@@ -48,8 +48,6 @@ public class TestDateUtils {
     LocalDateTime test1Digit = LocalDateTime.of(2022,4,19,17,3,46, 1000000);
     LocalDateTime test2Digit = LocalDateTime.of(2022,4,19,17,3,46, 13000000);
     LocalDateTime test3Digit = LocalDateTime.of(2022,4,19,17,3,46, 342000000);
-
-    LocalDateTime badDate = LocalDateTime.of(1970,1,1, 0, 0, 0);
 
     assertEquals(testNoSecondFragments,
       DateUtilFunctions.getTimestampFromString("2022-04-19 17:03:46"));
@@ -69,9 +67,7 @@ public class TestDateUtils {
       DateUtilFunctions.getTimestampFromString("2022-04-19 17:03:46.342Z"));
 
     // Test bad dates
-    assertEquals(badDate,
-      DateUtilFunctions.getTimestampFromString(null));
-    assertEquals(badDate,
-      DateUtilFunctions.getTimestampFromString(""));
+    assertNull(DateUtilFunctions.getTimestampFromString(null));
+    assertNull(DateUtilFunctions.getTimestampFromString(""));
   }
 }

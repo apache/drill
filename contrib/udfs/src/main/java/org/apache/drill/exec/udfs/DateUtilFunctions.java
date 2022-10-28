@@ -77,16 +77,17 @@ public class DateUtilFunctions {
    *   <li>yyyy/MM/dd</li>
    * </ul>
    *
+   * If the matcher is unable to convert the string, the function returns null.
    * @param inputString An input string containing a date.
    * @param leadingDay True if the format has the day first.
    * @return A {@link LocalDate} of the input string.
    */
   public static LocalDate getDateFromString(String inputString, boolean leadingDay) {
-    int year = 1970;
-    int month = 1;
-    int day = 1;
+    int year;
+    int month;
+    int day;
     if (StringUtils.isEmpty(inputString)) {
-      return LocalDate.of(year,month,day);
+      return null;
     }
 
     // Clean up input string:
@@ -117,25 +118,19 @@ public class DateUtilFunctions {
       day = Integer.parseInt(dateMatcher.group(3));
     } else {
       logger.warn("Unable to parse date {}.", inputString);
+      return null;
     }
     try {
-      LocalDate result = LocalDate.of(year,month,day);
-      return result;
+      return LocalDate.of(year,month,day);
     } catch (DateTimeException e) {
-      return LocalDate.of(1970,1,1);
+      logger.warn("Unable to parse date {}.", inputString);
+      return null;
     }
   }
 
   public static LocalDateTime getTimestampFromString(String inputString) {
-    int year = 1970;
-    int month = 1;
-    int day = 1;
-    int hour = 0;
-    int minute = 0;
-    int second = 0;
-    int nanos = 0;
     if (StringUtils.isEmpty(inputString)) {
-      return LocalDateTime.of(year,month,day,hour,minute,second,nanos);
+      return null;
     }
     // Clean up input string:
     inputString = inputString.trim();
@@ -148,28 +143,20 @@ public class DateUtilFunctions {
 
     Matcher timestampMatcher = TIMESTAMP_PATTERN.matcher(inputString);
     if (timestampMatcher.find()) {
-      year = Integer.parseInt(timestampMatcher.group(1));
-      month = Integer.parseInt(timestampMatcher.group(2));
-      day = Integer.parseInt(timestampMatcher.group(3));
-      hour = Integer.parseInt(timestampMatcher.group(4));
-      minute = Integer.parseInt(timestampMatcher.group(5));
-      second = Integer.parseInt(timestampMatcher.group(6));
+      int year = Integer.parseInt(timestampMatcher.group(1));
+      int month = Integer.parseInt(timestampMatcher.group(2));
+      int day = Integer.parseInt(timestampMatcher.group(3));
+      int hour = Integer.parseInt(timestampMatcher.group(4));
+      int minute = Integer.parseInt(timestampMatcher.group(5));
+      int second = Integer.parseInt(timestampMatcher.group(6));
+      int nanos = 0;
       if (StringUtils.isNotEmpty(timestampMatcher.group(7))) {
         nanos = Integer.parseInt(timestampMatcher.group(7)) * 1000000;
       }
+      return LocalDateTime.of(year,month,day,hour,minute,second,nanos);
+    } else {
+      logger.warn("Unable to parse date {}.", inputString);
+      return null;
     }
-    return LocalDateTime.of(year,month,day,hour,minute,second,nanos);
-  }
-
-  public static int getYearWeek(long inputDate) {
-    Timestamp timestamp = new Timestamp(inputDate);
-
-    LocalDate localDate = timestamp.toInstant()
-      .atZone(ZoneId.of("UTC"))
-      .toLocalDate();
-
-    int week = localDate.get(java.time.temporal.IsoFields.WEEK_OF_WEEK_BASED_YEAR);
-    int year = localDate.getYear();
-    return (year * 100) + week;
   }
 }

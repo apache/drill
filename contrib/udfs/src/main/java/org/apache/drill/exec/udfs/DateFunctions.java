@@ -22,7 +22,6 @@ import org.apache.drill.exec.expr.DrillSimpleFunc;
 import org.apache.drill.exec.expr.annotations.FunctionTemplate;
 import org.apache.drill.exec.expr.annotations.Output;
 import org.apache.drill.exec.expr.annotations.Param;
-import org.apache.drill.exec.expr.holders.DateHolder;
 import org.apache.drill.exec.expr.holders.IntHolder;
 import org.apache.drill.exec.expr.holders.TimeStampHolder;
 import org.apache.drill.exec.expr.holders.VarCharHolder;
@@ -192,7 +191,9 @@ public class DateFunctions {
     public void eval() {
       String input = org.apache.drill.exec.expr.fn.impl.StringFunctionHelpers.toStringFromUTF8(inputHolder.start, inputHolder.end, inputHolder.buffer);
       java.time.LocalDateTime dt = org.apache.drill.exec.udfs.DateUtilFunctions.getTimestampFromString(input);
-      out.value = dt.toEpochSecond(java.time.ZoneOffset.UTC) * 1000;
+      if (dt != null) {
+        out.value = dt.toEpochSecond(java.time.ZoneOffset.UTC) * 1000;
+      }
     }
   }
 }
