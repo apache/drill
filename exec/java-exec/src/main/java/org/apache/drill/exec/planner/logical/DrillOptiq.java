@@ -570,8 +570,15 @@ public class DrillOptiq {
 
           // Get the unit of time to be extracted
           String timeUnitStr = ((ValueExpressions.QuotedString) args.get(0)).value;
-
-          TimeUnit timeUnit = TimeUnit.valueOf(timeUnitStr);
+          TimeUnit timeUnit;
+          // Clean up day of XXX
+          if (timeUnitStr.contentEquals("DAYOFWEEK")) {
+            timeUnit = TimeUnit.DOW;
+          } else if (timeUnitStr.contentEquals("DAYOFYEAR")) {
+            timeUnit = TimeUnit.DOY;
+          } else {
+            timeUnit = TimeUnit.valueOf(timeUnitStr);
+          }
 
           switch (timeUnit) {
             case YEAR:
@@ -579,6 +586,9 @@ public class DrillOptiq {
             case MONTH:
             case WEEK:
             case DAY:
+            case DOW:
+            case DOY:
+            case EPOCH:
             case HOUR:
             case MINUTE:
             case SECOND:
@@ -587,7 +597,8 @@ public class DrillOptiq {
               return FunctionCallFactory.createExpression(functionName, args.subList(1, 2));
             default:
               throw new UnsupportedOperationException("extract function supports the following " +
-                "time units: YEAR, QUARTER, MONTH, WEEK, DAY, HOUR, MINUTE, SECOND");
+                "time units: YEAR, QUARTER, MONTH, WEEK, DAY, DAYOFWEEK, DAYOFYEAR, EPOCH, HOUR, " +
+                "MINUTE, SECOND");
           }
         }
         case "timestampdiff": {

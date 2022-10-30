@@ -946,12 +946,25 @@ public class TypeInferenceUtils {
    * For Extract and date_part functions, infer the return types based on timeUnit
    */
   public static SqlTypeName getSqlTypeNameForTimeUnit(String timeUnitStr) {
-    TimeUnit timeUnit = TimeUnit.valueOf(timeUnitStr);
+    TimeUnit timeUnit;
+
+    // Clean up day of XXX
+    if (timeUnitStr.contentEquals("DAYOFWEEK")) {
+      timeUnit = TimeUnit.DOW;
+    } else if (timeUnitStr.contentEquals("DAYOFYEAR")) {
+      timeUnit = TimeUnit.DOY;
+    } else {
+      timeUnit = TimeUnit.valueOf(timeUnitStr);
+    }
+
     switch (timeUnit) {
       case YEAR:
       case QUARTER:
       case MONTH:
       case WEEK:
+      case EPOCH:
+      case DOY:
+      case DOW:
       case DAY:
       case HOUR:
       case MINUTE:
@@ -962,7 +975,7 @@ public class TypeInferenceUtils {
         throw UserException
             .functionError()
             .message("extract function supports the following time units: YEAR, QUARTER, MONTH, " +
-              "WEEK, DAY, HOUR, MINUTE, SECOND")
+              "WEEK, DAY, DAYOFWEEK, DAYOFYEAR, EPOCH, HOUR, MINUTE, SECOND")
             .build(logger);
     }
   }

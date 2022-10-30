@@ -39,7 +39,8 @@ public class ${className} {
 <#list extract.toTypes as toUnit>
 <#if fromUnit == "Date" || fromUnit == "Time" || fromUnit == "TimeStamp">
 <#if !(fromUnit == "Time" && (toUnit == "Year" || toUnit == "Quarter" || toUnit == "Month"
-  || toUnit == "Week" || toUnit == "Day"))>
+  || toUnit == "Week" || toUnit == "Day" || toUnit == "Epoch"  || toUnit == "Epoch"
+  || toUnit == "Doy"  || toUnit == "Dow"))>
   @FunctionTemplate(name = "extract${toUnit}", scope = FunctionTemplate.FunctionScope.SIMPLE,
       nulls = FunctionTemplate.NullHandling.NULL_IF_NULL)
   public static class ${toUnit}From${fromUnit} implements DrillSimpleFunc {
@@ -68,6 +69,10 @@ public class ${className} {
       out.value = dateTime.getHourOfDay();
     <#elseif toUnit = "Day">
       out.value = dateTime.getDayOfMonth();
+    <#elseif toUnit = "Dow">
+      out.value = dateTime.getDayOfWeek();
+    <#elseif toUnit = "Doy">
+      out.value = dateTime.getDayOfYear();
     <#elseif toUnit = "Week">
       out.value = dateTime.getWeekOfWeekyear();
     <#elseif toUnit = "Month">
@@ -76,6 +81,8 @@ public class ${className} {
       out.value = ((int) dateTime.getMonthOfYear() / 4) + 1;
     <#elseif toUnit = "Year">
       out.value = dateTime.getYear();
+    <#elseif toUnit = "Epoch">
+      out.value = dateTime.getMillis();
     </#if>
     }
   }
