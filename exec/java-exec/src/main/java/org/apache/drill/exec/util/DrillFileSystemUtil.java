@@ -102,6 +102,24 @@ public class DrillFileSystemUtil {
     return FileSystemUtil.listFilesSafe(fs, path, recursive, FileSystemUtil.mergeFilters(DRILL_SYSTEM_FILTER, filters));
   }
 
+  /**
+   * Returns the status of any file present in given path applying custom
+   * filters if present.  Files and nested directories that start with dot or
+   * underscore are skipped.  Will also include files from nested directories.
+   *
+   * @param fs current file system
+   * @param path path to file or directory
+   * @param recursive true if files in nested directories should be included
+   * @param filters list of custom filters (optional)
+   * @return list of at most one matching file status
+   */
+  public static List<FileStatus> anyFile(
+    final FileSystem fs,
+    Path path,
+    PathFilter... filters
+  ) throws IOException {
+    return FileSystemUtil.anyFile(fs, path, FileSystemUtil.mergeFilters(DRILL_SYSTEM_FILTER, filters));
+  }
 
   /**
    * Returns statuses of all directories and files present in given path applying custom filters if present.

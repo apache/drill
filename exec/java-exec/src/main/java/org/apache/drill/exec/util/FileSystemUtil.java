@@ -128,6 +128,18 @@ public class FileSystemUtil {
   }
 
   /**
+   * Returns the statuses of at least one file present in given path applying
+   * custom filters if present.
+   * @param fs current file system
+   * @param path path to file or directory
+   * @param filters list of custom filters (optional)
+   * @return list of at most one matching file status
+   */
+  public static List<FileStatus> anyFile(FileSystem fs, Path path, PathFilter... filters) throws IOException {
+    return anyRecursive(fs, path, Scope.FILES, mergeFilters(filters));
+  }
+
+  /**
    * Returns statuses of all directories and files present in given path applying custom filters if present.
    * Will also include nested directories and their files if recursive flag is set to true.
    *
@@ -273,6 +285,39 @@ public class FileSystemUtil {
     } finally {
       pool.shutdown();
     }
+  }
+
+  /**
+   * Searches depth first for at least one file status recursively based on
+   * given file system objects {@link Scope}. A depth first search is expected
+   * to be efficient most of the time given that data files are typically
+   * stored at the leaves of a directory tree. Does not use multithreading
+   * due to its early exit nature.
+   *
+   * @param fs file system
+   * @param path path to file or directory
+   * @param scope file system objects scope
+   * @param filter filter to be applied
+   * @return list containing at most one file status
+   */
+  private static List<FileStatus> anyRecursive(
+    FileSystem fs,
+    Path path,
+    Scope scope,
+    PathFilter filter
+  ) throws IOException {
+    for (FileStatus status : fs.listStatus(path, filter)) {
+      if (isStatusApplicable(status, scope)) {
+        return Collections.singletonList(status);
+      }
+      if (status.isDirectory()) {
+        List<FileStatus> fileList = anyRecursive(fs, status.getPath(), scope, filter);
+        if (fileList.size() > 0) {
+          return fileList;
+        }
+      }
+    }
+    return Collections.emptyList();
   }
 
   /**

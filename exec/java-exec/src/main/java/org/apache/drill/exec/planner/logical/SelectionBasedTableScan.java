@@ -31,7 +31,7 @@ import java.util.Collections;
 import java.util.List;
 
 /**
- * This class extends from {@link TableScan}. It puts the file selection string into it's digest.
+ * This class extends from {@link TableScan}. It puts the file selection string into its digest.
  * When directory-based partition pruning applied, file selection could be different for the same
  * table.
  */
@@ -49,7 +49,7 @@ public class SelectionBasedTableScan extends TableScan {
     return new SelectionBasedTableScan(getCluster(), traitSet, table, digestFromSelection);
   }
 
-  /** Creates an DirPrunedTableScan. */
+  /** Creates a SelectionBasedTableScan. */
   public static TableScan create(RelOptCluster cluster,
     RelOptTable relOptTable, String digestFromSelection) {
     Table table = relOptTable.unwrap(Table.class);
