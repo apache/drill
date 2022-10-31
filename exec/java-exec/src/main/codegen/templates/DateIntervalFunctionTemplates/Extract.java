@@ -39,8 +39,8 @@ public class ${className} {
 <#list extract.toTypes as toUnit>
 <#if fromUnit == "Date" || fromUnit == "Time" || fromUnit == "TimeStamp">
 <#if !(fromUnit == "Time" && (toUnit == "Year" || toUnit == "Quarter" || toUnit == "Month"
-  || toUnit == "Week" || toUnit == "Day" || toUnit == "Epoch"  || toUnit == "Epoch"
-  || toUnit == "Doy"  || toUnit == "Dow"))>
+  || toUnit == "Week" || toUnit == "Day" || toUnit == "Epoch"
+  || toUnit == "Doy" || toUnit == "DayOfYear"  || toUnit == "Dow" || toUnit == "DayOfWeek))>
   @FunctionTemplate(name = "extract${toUnit}", scope = FunctionTemplate.FunctionScope.SIMPLE,
       nulls = FunctionTemplate.NullHandling.NULL_IF_NULL)
   public static class ${toUnit}From${fromUnit} implements DrillSimpleFunc {

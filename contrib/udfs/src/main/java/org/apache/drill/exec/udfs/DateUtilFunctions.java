@@ -135,6 +135,10 @@ public class DateUtilFunctions {
 
     if (inputString.length() <= 10) {
       LocalDate localDate = getDateFromString(inputString);
+      if (localDate == null) {
+        logger.warn("Unable to parse date {}.", inputString);
+        return null;
+      }
       LocalTime localTime = LocalTime.of(0,0,0);
       return LocalDateTime.of(localDate, localTime);
     }
