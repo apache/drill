@@ -443,10 +443,10 @@ public class UserException extends DrillRuntimeException {
   public static class Builder {
 
     private final Throwable cause;
-    private final DrillPBError.ErrorType errorType;
     private final UserException uex;
     private final UserExceptionContext context;
 
+    private DrillPBError.ErrorType errorType;
     private String message;
 
     /**
@@ -478,6 +478,19 @@ public class UserException extends DrillRuntimeException {
       errorType = uex.errorType;
       context = uex.context;
       message = uex.getOriginalMessage();
+    }
+
+    /**
+     * Sets the error type. This method is normally not needed because of
+     * the per-error-type static initialiser methods above but it may be
+     * used in conjunction with {@link rebuild()} to clone an existing
+     * UserException modified to use a different error type.
+     * @param errorType the error type to set.
+     * @return this builder.
+     */
+    public Builder errorType(DrillPBError.ErrorType errorType) {
+      this.errorType = errorType;
+      return this;
     }
 
     /**
