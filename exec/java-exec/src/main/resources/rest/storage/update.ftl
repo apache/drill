@@ -206,8 +206,14 @@
 
     function deleteFunction() {
       showConfirmationDialog('"${model.getPlugin().getName()}"' + ' plugin will be deleted. Proceed?', function() {
-        $.get("/storage/" + encodeURIComponent("${model.getPlugin().getName()}") + "/delete", serverMessage).fail(function() {
-					serverMessage({ errorMessage: "Error while trying to delete." })
+        $.ajax({
+            url: '/storage/' + encodeURIComponent('${model.getPlugin().getName()}') + '.json',
+            method: 'DELETE',
+            contentType: 'application/json',
+            success: serverMessage,
+            error: function(request,msg,error) {
+              serverMessage({ errorMessage: 'Error while trying to delete.' })
+            }
         });
       });
     }
