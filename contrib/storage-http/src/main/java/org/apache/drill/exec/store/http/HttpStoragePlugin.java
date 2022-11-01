@@ -75,7 +75,7 @@ public class HttpStoragePlugin extends AbstractStoragePlugin {
 
   @VisibleForTesting
   public void initializeOauthTokenTable(String username) {
-    OAuthTokenProvider tokenProvider = context.getoAuthTokenProvider();
+    OAuthTokenProvider tokenProvider = context.getOauthTokenProvider();
     tokenRegistry = tokenProvider.getOauthTokenRegistry(username);
     tokenRegistry.createTokenTable(getName());
   }

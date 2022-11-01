@@ -50,12 +50,12 @@ import org.apache.drill.common.logical.StoragePluginConfig;
 import org.apache.drill.common.logical.StoragePluginConfig.AuthMode;
 import org.apache.drill.exec.oauth.TokenRegistry;
 import org.apache.drill.exec.server.rest.DrillRestServer.UserAuthEnabled;
-import org.apache.drill.exec.store.AbstractStoragePlugin;
 import org.apache.drill.exec.store.StoragePluginRegistry;
 import org.apache.drill.exec.store.StoragePluginRegistry.PluginEncodingException;
 import org.apache.drill.exec.store.StoragePluginRegistry.PluginException;
 import org.apache.drill.exec.store.StoragePluginRegistry.PluginFilter;
 import org.apache.drill.exec.store.StoragePluginRegistry.PluginNotFoundException;
+import org.apache.drill.exec.work.WorkManager;
 import org.glassfish.jersey.server.mvc.Viewable;
 
 import org.slf4j.Logger;
@@ -75,6 +75,9 @@ public class StorageResources {
 
   @Inject
   StoragePluginRegistry storage;
+
+  @Inject
+  WorkManager workManager;
 
   @Inject
   SecurityContext sc;
@@ -275,10 +278,9 @@ public class StorageResources {
   @Operation(externalDocs = @ExternalDocumentation(description = "Apache Drill REST API documentation:", url = "https://drill.apache.org/docs/rest-api-introduction/"))
   public Response deletePlugin(@PathParam("name") String name) {
     try {
-      TokenRegistry tokenRegistry = ((AbstractStoragePlugin) storage.getPlugin(name))
-        .getContext()
-        .getoAuthTokenProvider()
-        .getOauthTokenRegistry(getActiveUser(storage.getPlugin(name).getConfig()));
+      TokenRegistry tokenRegistry = workManager.getContext()
+        .getOauthTokenProvider()
+        .getOauthTokenRegistry(getQueryUser(storage.getStoredConfig(name)));
 
       // Delete a token registry table if it exists
       tokenRegistry.deleteTokenTable(name);
@@ -416,11 +418,11 @@ public class StorageResources {
 
   /**
    * This function checks to see if a given storage plugin is using USER_TRANSLATION mode.
-   * If so, it will return the active user name.  If not it will return null.
+   * If so, it will return the query user name.  If not it will return null.
    * @param config {@link StoragePluginConfig} The current plugin configuration
-   * @return If USER_TRANSLATION is enabled, returns the active user.  If not, returns null.
+   * @return If USER_TRANSLATION is enabled, returns the query user.  If not, returns null.
    */
-  private String getActiveUser(StoragePluginConfig config) {
+  private String getQueryUser(StoragePluginConfig config) {
     if (config.getAuthMode() == AuthMode.USER_TRANSLATION && authEnabled.get()) {
       return sc.getUserPrincipal().getName();
     } else {
