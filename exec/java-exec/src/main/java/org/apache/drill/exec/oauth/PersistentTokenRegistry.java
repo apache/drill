@@ -32,7 +32,7 @@ import java.util.function.Supplier;
 
 /**
  * Implementation of {@link TokenRegistry} that persists token tables
- * to the pre-configured persistent store.
+ * to the preconfigured persistent store.
  */
 public class PersistentTokenRegistry implements TokenRegistry {
   private final PersistentStore<PersistentTokenTable> store;

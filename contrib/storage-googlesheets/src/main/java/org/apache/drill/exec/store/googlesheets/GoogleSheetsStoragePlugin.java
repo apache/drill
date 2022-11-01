@@ -70,7 +70,7 @@ public class GoogleSheetsStoragePlugin extends AbstractStoragePlugin {
   public GoogleSheetsStoragePlugin(GoogleSheetsStoragePluginConfig configuration, DrillbitContext context, String name) {
     super(context, name);
     this.config = configuration;
-    this.tokenProvider = context.getoAuthTokenProvider();
+    this.tokenProvider = context.getOauthTokenProvider();
     this.schemaFactory = new GoogleSheetsSchemaFactory(this);
   }
 
@@ -182,7 +182,7 @@ public class GoogleSheetsStoragePlugin extends AbstractStoragePlugin {
    */
   @VisibleForTesting
   public void initializeTokenTableForTesting() {
-    OAuthTokenProvider tokenProvider = context.getoAuthTokenProvider();
+    OAuthTokenProvider tokenProvider = context.getOauthTokenProvider();
     tokenRegistry = tokenProvider.getOauthTokenRegistry(null);
   }
 

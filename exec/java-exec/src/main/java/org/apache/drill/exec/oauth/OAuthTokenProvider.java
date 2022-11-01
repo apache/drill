@@ -22,7 +22,7 @@ import org.apache.drill.common.AutoCloseables;
 import org.apache.drill.exec.server.DrillbitContext;
 
 /**
- * Class for managing oauth tokens.  Storage plugins will have to manage obtaining the plugins, but
+ * Class for managing oauth tokens.  Storage plugins will have to manage obtaining the tokens, but
  * these classes handle the storage of access and refresh tokens.
  */
 public class OAuthTokenProvider implements AutoCloseable {

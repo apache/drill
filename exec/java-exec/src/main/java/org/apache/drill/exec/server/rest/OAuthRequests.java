@@ -63,7 +63,7 @@ public class OAuthRequests {
                                            SecurityContext sc) {
     try {
       DrillbitContext context = ((AbstractStoragePlugin) storage.getPlugin(name)).getContext();
-      OAuthTokenProvider tokenProvider = context.getoAuthTokenProvider();
+      OAuthTokenProvider tokenProvider = context.getOauthTokenProvider();
       PersistentTokenTable tokenTable = tokenProvider.getOauthTokenRegistry(getQueryUser(storage.getPlugin(name).getConfig(), authEnabled, sc)).getTokenTable(name);
 
       // Set the access token
@@ -85,7 +85,7 @@ public class OAuthRequests {
                                             SecurityContext sc) {
     try {
       DrillbitContext context = ((AbstractStoragePlugin) storage.getPlugin(name)).getContext();
-      OAuthTokenProvider tokenProvider = context.getoAuthTokenProvider();
+      OAuthTokenProvider tokenProvider = context.getOauthTokenProvider();
       PersistentTokenTable tokenTable = tokenProvider.getOauthTokenRegistry(
         getQueryUser(storage.getPlugin(name).getConfig(), authEnabled, sc)).getTokenTable(name);
 
@@ -107,7 +107,7 @@ public class OAuthRequests {
                                            UserAuthEnabled authEnabled, SecurityContext sc) {
     try {
       DrillbitContext context = ((AbstractStoragePlugin) storage.getPlugin(name)).getContext();
-      OAuthTokenProvider tokenProvider = context.getoAuthTokenProvider();
+      OAuthTokenProvider tokenProvider = context.getOauthTokenProvider();
       PersistentTokenTable tokenTable = tokenProvider
         .getOauthTokenRegistry(getQueryUser(storage.getPlugin(name).getConfig(), authEnabled, sc))
         .getTokenTable(name);
@@ -145,7 +145,7 @@ public class OAuthRequests {
       // If USER_TRANSLATION is enabled, Drill will create a token table for each user.
       TokenRegistry tokenRegistry = ((AbstractStoragePlugin) storage.getPlugin(name))
         .getContext()
-        .getoAuthTokenProvider()
+        .getOauthTokenProvider()
         .getOauthTokenRegistry(getQueryUser(storage.getPlugin(name).getConfig(), authEnabled, sc));
 
       // Add a token registry table if none exists

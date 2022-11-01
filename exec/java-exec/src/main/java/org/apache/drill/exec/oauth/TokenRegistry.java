@@ -34,8 +34,8 @@ public interface TokenRegistry extends AutoCloseable {
   PersistentTokenTable getTokenTable(String name);
 
   /**
-   * Deletes aliases table for specified {@code userName}.
-   * @param pluginName name of the user whose aliases table should be removed
+   * Deletes the token table for specified {@code pluginName}.
+   * @param pluginName name of the plugin whose token table should be removed
    */
   void deleteTokenTable(String pluginName);
 
