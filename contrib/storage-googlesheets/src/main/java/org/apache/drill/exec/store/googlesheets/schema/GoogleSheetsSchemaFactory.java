@@ -22,13 +22,12 @@ import org.apache.calcite.schema.SchemaPlus;
 import org.apache.drill.exec.store.AbstractSchemaFactory;
 import org.apache.drill.exec.store.SchemaConfig;
 import org.apache.drill.exec.store.googlesheets.GoogleSheetsStoragePlugin;
-import org.apache.drill.exec.store.googlesheets.GoogleSheetsStoragePluginConfig;
 
 public class GoogleSheetsSchemaFactory extends AbstractSchemaFactory {
   private final GoogleSheetsStoragePlugin plugin;
 
   public GoogleSheetsSchemaFactory(GoogleSheetsStoragePlugin plugin) {
-    super(GoogleSheetsStoragePluginConfig.NAME);
+    super(plugin.getName());
     this.plugin = plugin;
   }
 
