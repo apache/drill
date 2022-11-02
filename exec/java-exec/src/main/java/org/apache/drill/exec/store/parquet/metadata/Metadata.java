@@ -575,7 +575,7 @@ public class Metadata {
     try (InputStream is = fs.open(path)) {
       boolean alreadyCheckedModification;
       boolean newMetadata = false;
-      alreadyCheckedModification = metaContext.getStatus(metadataParentDirPath);
+      alreadyCheckedModification = metaContext.getStatus(metadataParentDir);
 
       if (dirsOnly) {
         parquetTableMetadataDirs = mapper.readValue(is, ParquetTableMetadataDirs.class);
