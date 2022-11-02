@@ -50,7 +50,7 @@ public class MetadataContext {
     dirModifCheckMap.put(dir,  false);
   }
 
-  public boolean getStatus(String dir) {
+  public boolean getStatus(Path dir) {
     if (dirModifCheckMap.containsKey(dir)) {
       return dirModifCheckMap.get(dir);
     }
@@ -101,5 +101,3 @@ public class MetadataContext {
   }
 
 }
-
-
