@@ -19,19 +19,17 @@ package org.apache.drill.exec.store.pcap.plugin;
 
 import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.common.logical.StoragePluginConfig;
-import org.apache.drill.common.types.TypeProtos.MinorType;
+import org.apache.drill.common.types.TypeProtos;
 import org.apache.drill.common.types.Types;
-import org.apache.drill.exec.physical.impl.scan.file.FileScanFramework.FileReaderFactory;
-import org.apache.drill.exec.physical.impl.scan.file.FileScanFramework.FileScanBuilder;
-import org.apache.drill.exec.physical.impl.scan.file.FileScanFramework.FileSchemaNegotiator;
-import org.apache.drill.exec.physical.impl.scan.framework.ManagedReader;
 import org.apache.drill.exec.physical.impl.scan.framework.ManagedScanFramework;
+import org.apache.drill.exec.physical.impl.scan.v3.file.FileReaderFactory;
+import org.apache.drill.exec.physical.impl.scan.v3.file.FileScanLifecycleBuilder;
+import org.apache.drill.exec.physical.impl.scan.v3.file.FileSchemaNegotiator;
+import org.apache.drill.exec.physical.impl.scan.v3.ManagedReader;
 import org.apache.drill.exec.server.DrillbitContext;
-import org.apache.drill.exec.server.options.OptionSet;
 import org.apache.drill.exec.store.dfs.DrillFileSystem;
 import org.apache.drill.exec.store.dfs.easy.EasyFormatPlugin;
 import org.apache.drill.exec.store.dfs.easy.EasySubScan;
-import org.apache.drill.exec.store.dfs.easy.EasyFormatPlugin.ScanFrameworkVersion;
 import org.apache.drill.exec.store.pcap.PcapBatchReader;
 import org.apache.drill.exec.store.pcap.decoder.PacketDecoder;
 import org.apache.drill.exec.store.pcapng.PcapngBatchReader;
@@ -64,7 +62,7 @@ public abstract class BasePcapFormatPlugin<T extends PcapFormatConfig> extends E
         .compressible(true)
         .extensions(pluginConfig.getExtensions())
         .fsConf(fsConf)
-        .scanVersion(ScanFrameworkVersion.EVF_V1)
+        .scanVersion(ScanFrameworkVersion.EVF_V2)
         .supportsLimitPushdown(true)
         .supportsProjectPushdown(true)
         .defaultName(PcapFormatConfig.NAME)
@@ -87,8 +85,9 @@ public abstract class BasePcapFormatPlugin<T extends PcapFormatConfig> extends E
      * @return PCAP or PCAPNG batch reader
      */
     @Override
-    public ManagedReader<? extends FileSchemaNegotiator> newReader() {
-      if (fileFramework().isPresent()) { // todo: can be simplified with java9 ifPresentOrElse
+    public ManagedReader newReader(FileSchemaNegotiator negotiator) {
+      if (negotiator.file().fileSystem() != null) { // todo: can be simplified with java9
+        // ifPresentOrElse
         Path path = scan.getWorkUnits().stream()
                 .findFirst()
                 .orElseThrow(() -> UserException.
@@ -96,7 +95,7 @@ public abstract class BasePcapFormatPlugin<T extends PcapFormatConfig> extends E
                         .addContext("There are no files for scanning")
                         .build(logger))
                 .getPath();
-        fileFormat = getFileFormat(fileFramework().get().fileSystem(), path);
+        fileFormat = getFileFormat(negotiator.file().fileSystem(), path);
         if (config.getExtensions().stream()
                 .noneMatch(f -> f.equals(fileFormat.name().toLowerCase()))) {
           logger.error("File format {} is not within plugin extensions: {}. Trying to use default PCAP format plugin to " +
@@ -106,32 +105,23 @@ public abstract class BasePcapFormatPlugin<T extends PcapFormatConfig> extends E
         logger.error("It is not possible to detect file format, because the File Framework is not initialized. " +
                 "Trying to use default PCAP format plugin to read the file");
       }
-      return createReader(scan, config);
+      return createReader(scan, config, negotiator);
     }
   }
 
-  @Override
-  public ManagedReader<? extends FileSchemaNegotiator> newBatchReader(EasySubScan scan, OptionSet options) {
-    return createReader(scan, formatConfig);
-  }
-
-  private static ManagedReader<? extends FileSchemaNegotiator> createReader(EasySubScan scan, PcapFormatConfig config) {
+  private static ManagedReader createReader(EasySubScan scan, PcapFormatConfig config,
+    FileSchemaNegotiator negotiator) {
     switch(fileFormat) {
-      case PCAPNG: return new PcapngBatchReader(config, scan);
+      case PCAPNG: return new PcapngBatchReader(config, scan, negotiator);
       case PCAP:
       case UNKNOWN:
-      default: return new PcapBatchReader(config, scan.getMaxRecords());
+      default: return new PcapBatchReader(config, negotiator);
     }
   }
-
   @Override
-  protected FileScanBuilder frameworkBuilder(EasySubScan scan, OptionSet options) {
-    FileScanBuilder builder = new FileScanBuilder();
-    builder.setReaderFactory(new PcapReaderFactory(formatConfig, scan));
-
-    initScanBuilder(builder, scan);
-    builder.nullType(Types.optional(MinorType.VARCHAR));
-    return builder;
+  protected void configureScan(FileScanLifecycleBuilder builder, EasySubScan scan) {
+    builder.nullType(Types.optional(TypeProtos.MinorType.VARCHAR));
+    builder.readerFactory(new PcapReaderFactory(formatConfig, scan));
   }
 
   /**

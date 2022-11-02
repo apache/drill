@@ -32,8 +32,9 @@ import org.apache.drill.common.exceptions.CustomErrorContext;
 import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.common.types.TypeProtos.DataMode;
-import org.apache.drill.exec.physical.impl.scan.file.FileScanFramework.FileSchemaNegotiator;
-import org.apache.drill.exec.physical.impl.scan.framework.ManagedReader;
+import org.apache.drill.exec.physical.impl.scan.v3.ManagedReader;
+import org.apache.drill.exec.physical.impl.scan.v3.file.FileDescrip;
+import org.apache.drill.exec.physical.impl.scan.v3.file.FileSchemaNegotiator;
 import org.apache.drill.exec.physical.resultSet.ResultSetLoader;
 import org.apache.drill.exec.physical.resultSet.RowSetLoader;
 import org.apache.drill.exec.record.metadata.SchemaBuilder;
@@ -51,13 +52,12 @@ import fr.bmartel.pcapdecoder.PcapDecoder;
 import fr.bmartel.pcapdecoder.structure.types.IPcapngType;
 import fr.bmartel.pcapdecoder.structure.types.inter.IEnhancedPacketBLock;
 
-public class PcapngBatchReader implements ManagedReader<FileSchemaNegotiator> {
-
+public class PcapngBatchReader implements ManagedReader {
   private static final Logger logger = LoggerFactory.getLogger(PcapngBatchReader.class);
-
   private final PcapFormatConfig config;
   private final EasySubScan scan;
-  private final int maxRecords;
+  private final FileDescrip file;
+
   private CustomErrorContext errorContext;
   private List<SchemaPath> columns;
   private List<ColumnDefn> projectedColumns;
@@ -67,20 +67,17 @@ public class PcapngBatchReader implements ManagedReader<FileSchemaNegotiator> {
   private InputStream in;
   private Path path;
 
-  public PcapngBatchReader(final PcapFormatConfig config, final EasySubScan scan) {
+  public PcapngBatchReader(final PcapFormatConfig config, final EasySubScan scan,
+    FileSchemaNegotiator negotiator) {
     this.config = config;
     this.scan = scan;
-    this.maxRecords = scan.getMaxRecords();
     this.columns = scan.getColumns();
-  }
-
-  @Override
-  public boolean open(FileSchemaNegotiator negotiator) {
+    this.file = negotiator.file();
     try {
       // init InputStream for pcap file
       errorContext = negotiator.parentErrorContext();
-      DrillFileSystem dfs = negotiator.fileSystem();
-      path = dfs.makeQualified(negotiator.split().getPath());
+      DrillFileSystem dfs = file.fileSystem();
+      path = dfs.makeQualified(file.split().getPath());
       in = dfs.openPossiblyCompressedStream(path);
       // decode the pcap file
       PcapDecoder decoder = new PcapDecoder(IOUtils.toByteArray(in));
@@ -106,7 +103,6 @@ public class PcapngBatchReader implements ManagedReader<FileSchemaNegotiator> {
     loader = resultSetLoader.writer();
     // bind the writer for columns
     bindColumns(loader);
-    return true;
   }
 
   /**
@@ -135,9 +131,6 @@ public class PcapngBatchReader implements ManagedReader<FileSchemaNegotiator> {
         continue;
       }
       processBlock();
-      if (loader.limitReached(maxRecords)) {
-        return false;
-      }
     }
     return true;
   }
