@@ -18,8 +18,9 @@
 package org.apache.drill.exec.store.pcap;
 
 import org.apache.drill.common.exceptions.UserException;
-import org.apache.drill.exec.physical.impl.scan.file.FileScanFramework.FileSchemaNegotiator;
-import org.apache.drill.exec.physical.impl.scan.framework.ManagedReader;
+import org.apache.drill.exec.physical.impl.scan.v3.ManagedReader;
+import org.apache.drill.exec.physical.impl.scan.v3.file.FileDescrip;
+import org.apache.drill.exec.physical.impl.scan.v3.file.FileSchemaNegotiator;
 import org.apache.drill.exec.physical.resultSet.ResultSetLoader;
 import org.apache.drill.exec.physical.resultSet.RowSetLoader;
 import org.apache.drill.exec.record.metadata.SchemaBuilder;
@@ -30,7 +31,6 @@ import org.apache.drill.exec.store.pcap.decoder.TcpSession;
 import org.apache.drill.exec.store.pcap.schema.Schema;
 import org.apache.drill.exec.store.pcap.plugin.PcapFormatConfig;
 import org.apache.drill.exec.vector.accessor.ScalarWriter;
-import org.apache.hadoop.mapred.FileSplit;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -42,13 +42,10 @@ import java.util.Map;
 
 import static org.apache.drill.exec.store.pcap.PcapFormatUtils.parseBytesToASCII;
 
-public class PcapBatchReader implements ManagedReader<FileSchemaNegotiator> {
-
+public class PcapBatchReader implements ManagedReader {
   protected static final int BUFFER_SIZE = 500_000;
-
   private static final Logger logger = LoggerFactory.getLogger(PcapBatchReader.class);
-
-  private FileSplit split;
+  private final FileDescrip file;
   private PacketDecoder decoder;
   private InputStream fsStream;
   private RowSetLoader rowWriter;
@@ -97,22 +94,17 @@ public class PcapBatchReader implements ManagedReader<FileSchemaNegotiator> {
   private ScalarWriter remoteDataVolumeWriter;
   private ScalarWriter hostDataWriter;
   private ScalarWriter remoteDataWriter;
-  private final int maxRecords;
   private Map<Long, TcpSession> sessionQueue;
 
 
-  public PcapBatchReader(PcapFormatConfig readerConfig, int maxRecords) {
+  public PcapBatchReader(PcapFormatConfig readerConfig, FileSchemaNegotiator negotiator) {
     this.readerConfig = readerConfig;
     if (readerConfig.getSessionizeTCPStreams()) {
       sessionQueue = new HashMap<>();
     }
-    this.maxRecords = maxRecords;
-  }
 
-  @Override
-  public boolean open(FileSchemaNegotiator negotiator) {
-    split = negotiator.split();
-    openFile(negotiator);
+    file = negotiator.file();
+    openFile();
     SchemaBuilder builder = new SchemaBuilder();
     Schema pcapSchema = new Schema(readerConfig.getSessionizeTCPStreams());
     TupleMetadata schema = pcapSchema.buildSchema(builder);
@@ -122,8 +114,6 @@ public class PcapBatchReader implements ManagedReader<FileSchemaNegotiator> {
     // Creates writers for all fields (Since schema is known)
     rowWriter = loader.writer();
     populateColumnWriters(rowWriter);
-
-    return true;
   }
 
   @Override
@@ -159,16 +149,16 @@ public class PcapBatchReader implements ManagedReader<FileSchemaNegotiator> {
     decoder = null;
   }
 
-  private void openFile(FileSchemaNegotiator negotiator) {
+  private void openFile() {
     try {
-      fsStream = negotiator.fileSystem().openPossiblyCompressedStream(split.getPath());
+      fsStream = file.fileSystem().openPossiblyCompressedStream(file.split().getPath());
       decoder = new PacketDecoder(fsStream);
       buffer = new byte[BUFFER_SIZE + decoder.getMaxLength()];
       validBytes = fsStream.read(buffer);
     } catch (IOException io) {
       throw UserException
         .dataReadError(io)
-        .addContext("File name:", split.getPath().toString())
+        .addContext("File name:", file.split().getPath().toString())
         .build(logger);
     }
   }
@@ -234,12 +224,6 @@ public class PcapBatchReader implements ManagedReader<FileSchemaNegotiator> {
   }
 
   private boolean parseNextPacket(RowSetLoader rowWriter) {
-
-    // Push down limit
-    if (rowWriter.limitReached(maxRecords)) {
-      return false;
-    }
-
     // Decode the packet
     Packet packet = new Packet();
 
