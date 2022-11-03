@@ -31,17 +31,17 @@ public class SplunkTestSplunkUtils {
 
   @Test
   public void testIsSpecialField() {
-    assertTrue(SplunkUtils.isSpecialField("sourcetype"));
-    assertTrue(SplunkUtils.isSpecialField("earliestTime"));
-    assertTrue(SplunkUtils.isSpecialField("latestTime"));
-    assertTrue(SplunkUtils.isSpecialField("spl"));
+    assertTrue(SplunkUtils.SPECIAL_FIELDS.includes("sourcetype"));
+    assertTrue(SplunkUtils.SPECIAL_FIELDS.includes("earliestTime"));
+    assertTrue(SplunkUtils.SPECIAL_FIELDS.includes("latestTime"));
+    assertTrue(SplunkUtils.SPECIAL_FIELDS.includes("spl"));
   }
 
   @Test
   public void testIsNotSpecialField() {
-    assertFalse(SplunkUtils.isSpecialField("bob"));
-    assertFalse(SplunkUtils.isSpecialField("ip_address"));
-    assertFalse(SplunkUtils.isSpecialField("mac_address"));
-    assertFalse(SplunkUtils.isSpecialField("latest_Time"));
+    assertFalse(SplunkUtils.SPECIAL_FIELDS.includes("bob"));
+    assertFalse(SplunkUtils.SPECIAL_FIELDS.includes("ip_address"));
+    assertFalse(SplunkUtils.SPECIAL_FIELDS.includes("mac_address"));
+    assertFalse(SplunkUtils.SPECIAL_FIELDS.includes("latest_Time"));
   }
 }
