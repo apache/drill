@@ -35,7 +35,6 @@ import org.apache.drill.exec.physical.resultSet.RowSetLoader;
 import org.apache.drill.exec.record.metadata.SchemaBuilder;
 import org.apache.drill.exec.record.metadata.TupleMetadata;
 import org.apache.drill.exec.store.base.filter.ExprNode;
-import org.apache.drill.exec.util.Utilities;
 import org.apache.drill.exec.vector.ValueVector;
 import org.apache.drill.exec.vector.accessor.ScalarWriter;
 import org.apache.drill.shaded.guava.com.google.common.base.Stopwatch;
@@ -214,28 +213,6 @@ public class SplunkBatchReader implements ManagedReader<SchemaNegotiator> {
   }
 
   /**
-   * Checks to see whether the query is a star query. For our purposes, the star query is
-   * anything that contains only the ** and the SPECIAL_COLUMNS which are not projected.
-   * @return true if it is a star query, false if not.
-   */
-  private boolean isStarQuery() {
-    if (Utilities.isStarQuery(projectedColumns)) {
-      return true;
-    }
-
-    List<SplunkUtils.SPECIAL_FIELDS> specialFields = Arrays.asList(SplunkUtils.SPECIAL_FIELDS.values());
-
-    for (SchemaPath path: projectedColumns) {
-      if (path.nameEquals("**")) {
-        return true;
-      } else {
-        return specialFields.contains(path.getAsNamePart());
-      }
-    }
-    return false;
-  }
-
-  /**
    * Determines whether a field is a Splunk multifield.
    * @param fieldValue The field to be tested
    * @return True if a multifield, false if not.
@@ -312,9 +289,9 @@ public class SplunkBatchReader implements ManagedReader<SchemaNegotiator> {
       filters.remove("sourcetype");
     }
 
-    // Pushdown the selected fields for non star queries.
-    if (! isStarQuery()) {
-      builder.addField(projectedColumns);
+    // Add projected columns, skipping star and specials.
+    for (SchemaPath projectedColumn: projectedColumns) {
+      builder.addField(projectedColumn.getAsUnescapedPath());
     }
 
     // Apply filters

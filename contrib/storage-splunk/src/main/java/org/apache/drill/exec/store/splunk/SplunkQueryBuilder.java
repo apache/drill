@@ -23,7 +23,6 @@ import org.apache.drill.exec.store.base.filter.ExprNode;
 import org.apache.drill.exec.store.base.filter.RelOp;
 import org.apache.drill.shaded.guava.com.google.common.base.Strings;
 
-import java.util.List;
 import java.util.Map;
 
 public class SplunkQueryBuilder {
@@ -36,7 +35,7 @@ public class SplunkQueryBuilder {
 
   private String query;
   private String sourceTypes;
-  private String fieldList;
+  private String concatenatedFields;
   private String filters;
   private int sourcetypeCount;
   private int limit;
@@ -69,35 +68,21 @@ public class SplunkQueryBuilder {
    * Splunk accepts arguments in the format | fields foo, bar, car.  This function adds these fields to the query.
    * As an error preventative measure, this function will ignore ** from Drill.
    * @param field The field to be added to the query
+   * @return true if the field was added, false if it was skipped
    */
-  public void addField (String field) {
+  public boolean addField(String field) {
     // Double Star fields cause errors and we will not add to the field list
-    if (field.equalsIgnoreCase("**") || Strings.isNullOrEmpty(field)) {
-      return;
+    if (SchemaPath.DYNAMIC_STAR.equals(field) || SplunkUtils.SPECIAL_FIELDS.includes(field)) {
+      return false;
     }
 
     // Case for first field
-    if (fieldList == null) {
-      this.fieldList = field;
+    if (concatenatedFields == null) {
+      this.concatenatedFields = field;
     } else {
-      this.fieldList += "," + field;
+      this.concatenatedFields += "," + field;
     }
-  }
-
-  /**
-   * Creates the field list of r
-   * As an error preventative measure, this function will ignore ** from Drill.
-   * @param columnList SchemaPath of columns to be added to the field list
-   */
-  public void addField (List<SchemaPath> columnList) {
-    for (SchemaPath column : columnList) {
-      String columnName = column.getAsUnescapedPath();
-      if (columnName.equalsIgnoreCase("**") || Strings.isNullOrEmpty(columnName)) {
-        continue;
-      } else {
-        addField(columnName);
-      }
-    }
+    return true;
   }
 
   /**
@@ -153,7 +138,7 @@ public class SplunkQueryBuilder {
       String value = ((ExprNode.ColRelOpConstNode)filter.getValue()).value.value.toString();
 
       // Ignore special cases
-      if (SplunkUtils.isSpecialField(fieldName)) {
+      if (SplunkUtils.SPECIAL_FIELDS.includes(fieldName)) {
         // Sourcetypes are a special case and can be added via filter pushdown
         if (fieldName.equalsIgnoreCase("sourcetype")) {
           addSourceType(value);
@@ -226,8 +211,8 @@ public class SplunkQueryBuilder {
     }
 
     // Add fields
-    if (! Strings.isNullOrEmpty(fieldList)) {
-      query += " | fields " + fieldList;
+    if (! Strings.isNullOrEmpty(concatenatedFields)) {
+      query += " | fields " + concatenatedFields;
     }
 
     // Add limit
@@ -236,10 +221,10 @@ public class SplunkQueryBuilder {
     }
 
     // Add table logic. This tells Splunk to return the data in tabular form rather than the mess that it usually generates
-    if ( Strings.isNullOrEmpty(fieldList)) {
-      fieldList = "*";
+    if ( Strings.isNullOrEmpty(concatenatedFields)) {
+      concatenatedFields = "*";
     }
-    query += " | table " + fieldList;
+    query += " | table " + concatenatedFields;
 
     return query;
   }
