@@ -18,6 +18,8 @@
 
 package org.apache.drill.exec.store.splunk;
 
+import java.util.Arrays;
+
 public class SplunkUtils {
   /**
    * These are special fields that alter the queries sent to Splunk.
@@ -46,19 +48,15 @@ public class SplunkUtils {
       this.field = field;
     }
 
-  }
-
-  /**
-   * Indicates whether the field in question is a special field and should be pushed down to the query or not.
-   * @param unknownField The field to be pushed down
-   * @return true if the field is a special field, false if not.
-   */
-  public static boolean isSpecialField (String unknownField) {
-    for (SPECIAL_FIELDS specialFieldName : SPECIAL_FIELDS.values()) {
-      if (specialFieldName.field.equalsIgnoreCase(unknownField)) {
-        return true;
-      }
+    /**
+     * Indicates whether the field in question is a special field and should be
+     * pushed down to the query or not.
+     * @param unknownField The field to be pushed down
+     * @return true if the field is a special field, false if not.
+     */
+    public static boolean includes(String field) {
+      return Arrays.stream(SplunkUtils.SPECIAL_FIELDS.values())
+        .anyMatch(special -> field.equals(special.name()));
     }
-    return false;
   }
 }
