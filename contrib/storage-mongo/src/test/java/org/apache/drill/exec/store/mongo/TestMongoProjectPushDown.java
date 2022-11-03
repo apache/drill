@@ -81,7 +81,7 @@ public class TestMongoProjectPushDown extends MongoTestBase {
 
   @Test
   public void testMultipleColumnsProject() throws Exception {
-    String query = String.format(TEST_QUERY_PROJECT_PUSH_DOWN__TEMPLATE_2, EMPLOYEE_DB, EMPINFO_COLLECTION);
+    String query = String.format(TEST_QUERY_PROJECT_PUSH_DOWN_TEMPLATE_2, EMPLOYEE_DB, EMPINFO_COLLECTION);
 
     testBuilder()
         .sqlQuery(query)
@@ -93,10 +93,23 @@ public class TestMongoProjectPushDown extends MongoTestBase {
 
   @Test
   public void testStarProject() throws Exception {
-    String query = String.format(TEST_QUERY_PROJECT_PUSH_DOWN__TEMPLATE_3, EMPLOYEE_DB, EMPINFO_COLLECTION);
+    String query = String.format(TEST_QUERY_PROJECT_PUSH_DOWN_TEMPLATE_3, EMPLOYEE_DB, EMPINFO_COLLECTION);
     testBuilder()
         .sqlQuery(query)
         .unOrdered()
+        .expectsNumRecords(19)
+        .go();
+  }
+
+  // DRILL-8238
+  @Test
+  public void testOperatorsProject() throws Exception {
+    String query = String.format(TEST_QUERY_PROJECT_PUSH_DOWN_TEMPLATE_4, EMPLOYEE_DB, EMPINFO_COLLECTION);
+
+    testBuilder()
+        .sqlQuery(query)
+        .unOrdered()
+        .baselineColumns("position_id_or_default")
         .expectsNumRecords(19)
         .go();
   }
@@ -122,5 +135,4 @@ public class TestMongoProjectPushDown extends MongoTestBase {
       .baselineValues(1194L, 1194L)
       .go();
   }
-
 }
