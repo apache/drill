@@ -139,11 +139,12 @@ class RexToMongoTranslator extends RexVisitorImpl<BsonValue> {
     if (call.getKind() == SqlKind.CAST) {
       return strings.get(0);
     }
-    String stdOperator = MONGO_OPERATORS.get(call.getOperator());
+    SqlOperator sqlOperator = call.getOperator();
+    String stdOperator = MONGO_OPERATORS.get(sqlOperator);
     if (stdOperator != null) {
       return new BsonDocument(stdOperator, new BsonArray(strings));
     }
-    if (call.getOperator() == SqlStdOperatorTable.ITEM) {
+    if (sqlOperator == SqlStdOperatorTable.ITEM) {
       RexNode op1 = call.operands.get(1);
       if (op1 instanceof RexLiteral) {
         if (op1.getType().getSqlTypeName() == SqlTypeName.INTEGER) {
@@ -154,7 +155,7 @@ class RexToMongoTranslator extends RexVisitorImpl<BsonValue> {
         }
       }
     }
-    if (call.getOperator() == SqlStdOperatorTable.CASE) {
+    if (sqlOperator == SqlStdOperatorTable.CASE) {
       // case(a, b, c)  -> $cond:[a, b, c]
       // case(a, b, c, d) -> $cond:[a, b, $cond:[c, d, null]]
       // case(a, b, c, d, e) -> $cond:[a, b, $cond:[c, d, e]]
@@ -178,6 +179,24 @@ class RexToMongoTranslator extends RexVisitorImpl<BsonValue> {
         args.add(innerDocument);
         args = innerArgs;
       }
+      return result;
+    }
+    if (sqlOperator == SqlStdOperatorTable.IS_NULL) {
+      BsonDocument result = new BsonDocument();
+      BsonArray args = new BsonArray();
+      args.add(strings.get(0));
+      args.add(BsonNull.VALUE);
+      // Perf: the $eq operator can make use of indexes in Mongo
+      result.put(MongoOp.EQUAL.getCompareOp(), args);
+      return result;
+    }
+    if (sqlOperator == SqlStdOperatorTable.IS_NOT_NULL) {
+      BsonDocument result = new BsonDocument();
+      BsonArray args = new BsonArray();
+      args.add(strings.get(0));
+      args.add(BsonNull.VALUE);
+      // Perf: the $ne operator can make use of indexes in Mongo
+      result.put(MongoOp.NOT_EQUAL.getCompareOp(), args);
       return result;
     }
     throw new IllegalArgumentException("Translation of " + call + " is not supported by MongoProject");

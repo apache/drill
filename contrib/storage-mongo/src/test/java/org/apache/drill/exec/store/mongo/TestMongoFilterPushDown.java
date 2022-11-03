@@ -60,4 +60,25 @@ public class TestMongoFilterPushDown extends MongoTestBase {
         .go();
   }
 
+  @Test
+  public void testFilterPushDownIsNull() throws Exception {
+    String queryString = String.format(TEST_FILTER_PUSH_DOWN_IS_NULL_QUERY_TEMPLATE_1, EMPLOYEE_DB, EMPINFO_COLLECTION);
+
+    testBuilder()
+        .sqlQuery(queryString)
+        .unOrdered()
+        .expectsNumRecords(2)
+        .go();
+  }
+
+  @Test
+  public void testFilterPushDownIsNotNull() throws Exception {
+    String queryString = String.format(TEST_FILTER_PUSH_DOWN_IS_NOT_NULL_QUERY_TEMPLATE_1, EMPLOYEE_DB, EMPINFO_COLLECTION);
+
+    testBuilder()
+        .sqlQuery(queryString)
+        .unOrdered()
+        .expectsNumRecords(17)
+        .go();
+  }
 }

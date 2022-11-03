@@ -67,8 +67,9 @@ public interface MongoTestConstants {
 
   // test query template1
   String TEST_QUERY_PROJECT_PUSH_DOWN_TEMPLATE_1 = "SELECT `employee_id` FROM mongo.%s.`%s`";
-  String TEST_QUERY_PROJECT_PUSH_DOWN__TEMPLATE_2 = "select `employee_id`, `rating` from mongo.%s.`%s`";
-  String TEST_QUERY_PROJECT_PUSH_DOWN__TEMPLATE_3 = "select * from mongo.%s.`%s`";
+  String TEST_QUERY_PROJECT_PUSH_DOWN_TEMPLATE_2 = "select `employee_id`, `rating`, coalesce(`full_name`, 'Bob') from mongo.%s.`%s`";
+  String TEST_QUERY_PROJECT_PUSH_DOWN_TEMPLATE_3 = "select * from mongo.%s.`%s`";
+  String TEST_QUERY_PROJECT_PUSH_DOWN_TEMPLATE_4 = "select coalesce(`position_id`, -1) position_id_or_default from mongo.%s.`%s`";
   String TEST_FILTER_PUSH_DOWN_IS_NULL_QUERY_TEMPLATE_1 = "SELECT `employee_id` FROM mongo.%s.`%s` where position_id is null";
   String TEST_FILTER_PUSH_DOWN_IS_NOT_NULL_QUERY_TEMPLATE_1 = "SELECT `employee_id` FROM mongo.%s.`%s` where position_id is not null";
   String TEST_FILTER_PUSH_DOWN_EQUAL_QUERY_TEMPLATE_1 = "SELECT `full_name` FROM mongo.%s.`%s` where rating = 52.17";
