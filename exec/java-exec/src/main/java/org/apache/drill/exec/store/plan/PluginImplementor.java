@@ -93,4 +93,12 @@ public interface PluginImplementor {
    * to ensure returning the correct rows number.
    */
   boolean artificialLimit();
+
+  /**
+   * If the plugin doesn't support native filter pushdown,
+   * but the reader can prune the number of rows to read.
+   * In this case filter operator on top of the scan should be preserved
+   * to ensure returning the correct rows number.
+   */
+  boolean artificialFilter();
 }

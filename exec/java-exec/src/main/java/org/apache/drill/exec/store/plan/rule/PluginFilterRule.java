@@ -24,6 +24,8 @@ import org.apache.calcite.rel.core.Filter;
 import org.apache.drill.exec.store.plan.PluginImplementor;
 import org.apache.drill.exec.store.plan.rel.PluginFilterRel;
 
+import java.util.Collections;
+
 /**
  * The rule that converts provided filter operator to plugin-specific implementation.
  */
@@ -36,11 +38,15 @@ public class PluginFilterRule extends PluginConverterRule {
   @Override
   public RelNode convert(RelNode rel) {
     Filter filter = (Filter) rel;
-    return new PluginFilterRel(
-        getOutConvention(),
-        rel.getCluster(),
-        filter.getTraitSet().replace(getOutConvention()),
-        convert(filter.getInput(), filter.getTraitSet().replace(getOutConvention())),
-        filter.getCondition());
+    PluginFilterRel pluginFilterRel = new PluginFilterRel(
+      getOutConvention(),
+      rel.getCluster(),
+      filter.getTraitSet().replace(getOutConvention()),
+      convert(filter.getInput(), filter.getTraitSet().replace(getOutConvention())),
+      filter.getCondition());
+    if (getPluginImplementor().artificialFilter()) {
+      return filter.copy(filter.getTraitSet(), Collections.singletonList(pluginFilterRel));
+    }
+    return pluginFilterRel;
   }
 }

@@ -663,7 +663,7 @@ public abstract class AbstractParquetGroupScan extends AbstractGroupScanWithMeta
       AbstractParquetGroupScan abstractParquetGroupScan = (AbstractParquetGroupScan) source;
 
       Map<Path, FileMetadata> filesToFilter = new HashMap<>(prunedFiles);
-      if (!abstractParquetGroupScan.rowGroups.isEmpty()) {
+      if (!abstractParquetGroupScan.getRowGroupsMetadata().isEmpty()) {
         prunedFiles.forEach((path, fileMetadata) -> {
           if (abstractParquetGroupScan.rowGroups.get(path).size() == 1) {
             omittedFiles.put(path, fileMetadata);

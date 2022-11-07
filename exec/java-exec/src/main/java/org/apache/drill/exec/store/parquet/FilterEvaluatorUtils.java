@@ -98,7 +98,7 @@ public class FilterEvaluatorUtils {
     FilterPredicate<?> parquetPredicate = FilterBuilder.buildFilterPredicate(
         materializedFilter, constantBoundaries, udfUtilities, true);
 
-    return matches(parquetPredicate, columnsStatistics, rowCount, schema, schemaPathsInExpr);
+    return matches(parquetPredicate, columnsStatistics, rowCount, schema, schemaPathsInExpr, udfUtilities);
   }
 
   @SuppressWarnings("unchecked")
@@ -106,12 +106,13 @@ public class FilterEvaluatorUtils {
                                   Map<SchemaPath, ColumnStatistics<?>> columnsStatistics,
                                   long rowCount,
                                   TupleMetadata fileMetadata,
-                                  Set<SchemaPath> schemaPathsInExpr) {
+                                  Set<SchemaPath> schemaPathsInExpr,
+                                  UdfUtilities udfUtilities) {
     if (parquetPredicate == null) {
       return RowsMatch.SOME;
     }
     @SuppressWarnings("rawtypes")
-    StatisticsProvider<T> rangeExprEvaluator = new StatisticsProvider(columnsStatistics, rowCount);
+    StatisticsProvider<T> rangeExprEvaluator = new StatisticsProvider(columnsStatistics, rowCount, udfUtilities);
     RowsMatch rowsMatch = parquetPredicate.matches(rangeExprEvaluator);
 
     if (rowsMatch == RowsMatch.ALL && isMetaNotApplicable(schemaPathsInExpr, fileMetadata)) {

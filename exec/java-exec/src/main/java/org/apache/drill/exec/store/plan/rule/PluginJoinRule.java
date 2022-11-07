@@ -31,7 +31,7 @@ import org.apache.drill.exec.store.plan.rel.PluginJoinRel;
 public class PluginJoinRule extends PluginConverterRule {
 
   public PluginJoinRule(RelTrait in, Convention out, PluginImplementor pluginImplementor) {
-    super(Join.class, in, out, "PluginProjectRule", pluginImplementor);
+    super(Join.class, in, out, "PluginJoinRule", pluginImplementor);
   }
 
   @Override

@@ -123,7 +123,7 @@ public abstract class AbstractParquetScanBatchCreator {
         String partitionColumnLabel = context.getOptions().getOption(ExecConstants.FILESYSTEM_PARTITION_COLUMN_LABEL).string_val;
         for (SchemaPath path : schemaPathsInExpr) {
           if (rowGroupScan.supportsFileImplicitColumns() &&
-            path.toString().matches(partitionColumnLabel+"\\d+")) {
+            rowGroupScan.isImplicitColumn(path, partitionColumnLabel)) {
             continue;  // skip implicit columns like dir0, dir1
           }
           columnsInExpr.add(SchemaPath.getSimplePath(path.getRootSegmentPath()));
@@ -210,7 +210,7 @@ public abstract class AbstractParquetScanBatchCreator {
                     rowGroupSchema);
               }
 
-              matchResult = FilterEvaluatorUtils.matches(filterPredicate, columnsStatistics, footerRowCount, rowGroupSchema, schemaPathsInExpr);
+              matchResult = FilterEvaluatorUtils.matches(filterPredicate, columnsStatistics, footerRowCount, rowGroupSchema, schemaPathsInExpr, context);
 
               // collect logging info
               long timeToRead = pruneTimer.elapsed(TimeUnit.MICROSECONDS);
@@ -343,15 +343,18 @@ public abstract class AbstractParquetScanBatchCreator {
         reader.getClass().getSimpleName());
     readers.add(reader);
 
-    List<String> partitionValues = rowGroupScan.getPartitionValues(rowGroup);
-    Map<String, String> implicitValues =
-        columnExplorer.populateColumns(rowGroup.getPath(), partitionValues,
-            rowGroupScan.supportsFileImplicitColumns(), fs, rowGroup.getRowGroupIndex(), rowGroup.getStart(), rowGroup.getLength());
+    Map<String, String> implicitValues = getImplicitValues(rowGroupScan, columnExplorer, rowGroup, fs);
     implicitColumns.add(implicitValues);
     if (implicitValues.size() > mapWithMaxColumns.size()) {
       mapWithMaxColumns = implicitValues;
     }
     return mapWithMaxColumns;
+  }
+
+  protected Map<String, String> getImplicitValues(AbstractParquetRowGroupScan rowGroupScan, ColumnExplorer columnExplorer, RowGroupReadEntry rowGroup, DrillFileSystem fs) {
+    List<String> partitionValues = rowGroupScan.getPartitionValues(rowGroup);
+    return columnExplorer.populateColumns(rowGroup.getPath(), partitionValues,
+        rowGroupScan.supportsFileImplicitColumns(), fs, rowGroup.getRowGroupIndex(), rowGroup.getStart(), rowGroup.getLength());
   }
 
   protected abstract AbstractDrillFileSystemManager getDrillFileSystemCreator(OperatorContext operatorContext, OptionManager optionManager);

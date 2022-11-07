@@ -127,6 +127,10 @@ public class DrillConstExecutor implements RexExecutor {
     this.plannerSettings = plannerSettings;
   }
 
+  public UdfUtilities getUdfUtilities() {
+    return udfUtilities;
+  }
+
   @Override
   @SuppressWarnings("deprecation")
   public void reduce(RexBuilder rexBuilder, List<RexNode> constExps, List<RexNode> reducedValues) {
