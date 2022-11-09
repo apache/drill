@@ -44,6 +44,7 @@ public class TestIsEmptyFunctions extends ClusterTest {
       .baselineColumns("numeric_col")
       .baselineValues(1.3)
       .baselineValues(2.3)
+      .baselineValues(1.0)
       .go();
   }
 
@@ -79,7 +80,7 @@ public class TestIsEmptyFunctions extends ClusterTest {
       .sqlQuery(sql)
       .unOrdered()
       .baselineColumns("row_count")
-      .baselineValues(2L)
+      .baselineValues(3L)
       .go();
   }
 

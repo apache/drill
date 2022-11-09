@@ -23,5 +23,7 @@
     "text_col": null,
     "list_col": [],
     "map_column": {}
+  },{
+  "numeric_col": 1
   }
 ]

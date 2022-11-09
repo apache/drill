@@ -34,7 +34,7 @@ public class IsEmptyUtils {
     if (reader.getType().getMinorType() == MinorType.MAP) {
       SingleMapReaderImpl mapReader = (SingleMapReaderImpl) reader;
 
-      // If the map reader has no fields returns nothing return true
+      // If the map reader has no fields return true
       if (!mapReader.iterator().hasNext()) {
         return true;
       }
