@@ -1,0 +1,29 @@
+[
+  {
+    "numeric_col": 1.3,
+    "text_col": "text",
+    "list_col": [
+      "v1", "v2"
+    ],
+   "map_column": {
+    "field1": "value1",
+    "field2": "value2",
+    "nested_map": {
+      "nested_field1": "nested_value1",
+      "nested_field2" : "nested_value2"
+      }
+    }
+  },{
+    "numeric_col": 2.3,
+    "text_col": "",
+    "list_col": [],
+    "map_column": {}
+  },{
+    "numeric_col": null,
+    "text_col": null,
+    "list_col": [],
+    "map_column": {}
+  },{
+  "numeric_col": 1
+  }
+]
