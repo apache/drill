@@ -62,11 +62,12 @@ public class GoogleSheetsDrillSchema extends AbstractSchema {
   private final SchemaConfig schemaConfig;
   private final GoogleSheetsRootSchema parent;
   private final String fileToken;
+  private final String fileName;
 
   public GoogleSheetsDrillSchema(AbstractSchema parent, String fileToken,
                                  GoogleSheetsStoragePlugin plugin,
                                  SchemaConfig schemaConfig,
-                                 Sheets sheetsService) {
+                                 Sheets sheetsService, String fileName) {
     super(parent.getSchemaPath(), fileToken);
     this.plugin = plugin;
     this.schemaConfig = schemaConfig;
@@ -74,6 +75,7 @@ public class GoogleSheetsDrillSchema extends AbstractSchema {
     this.parent = (GoogleSheetsRootSchema) parent;
     this.sheetsService = sheetsService;
     this.tableList = new ArrayList<>();
+    this.fileName = fileName;
   }
 
   @Override
@@ -159,7 +161,7 @@ public class GoogleSheetsDrillSchema extends AbstractSchema {
             (GoogleSheetsStoragePluginConfig) plugin.getConfig(),
             sheet.getProperties().getTitle(),
             plugin.getName(),
-            tabList.indexOf(sheet)
+            tabList.indexOf(sheet), fileName
           )
         )
       );

@@ -64,8 +64,9 @@ public class GoogleSheetsBatchReader implements ManagedReader<SchemaNegotiator> 
   // 1000 rows would throw invalid request errors.
   private static final int BATCH_SIZE = 1000;
   private static final String SHEET_COLUMN_NAME = "_sheets";
+  private static final String TITLE_COLUMN_NAME = "_title";
 
-  private static final List<String> IMPLICIT_FIELDS =  Arrays.asList(SHEET_COLUMN_NAME);
+  private static final List<String> IMPLICIT_FIELDS =  Arrays.asList(SHEET_COLUMN_NAME, TITLE_COLUMN_NAME);
 
   private final GoogleSheetsStoragePluginConfig config;
   private final GoogleSheetsSubScan subScan;
@@ -77,7 +78,7 @@ public class GoogleSheetsBatchReader implements ManagedReader<SchemaNegotiator> 
   private final List<String> sheetNames;
   private CustomErrorContext errorContext;
   private ScalarWriter sheetNameWriter;
-
+  private ScalarWriter titleNameWriter;
   private TupleMetadata schema;
   private Map<String, GoogleSheetsColumn> columnMap;
   private RowSetLoader rowWriter;
@@ -180,6 +181,12 @@ public class GoogleSheetsBatchReader implements ManagedReader<SchemaNegotiator> 
     ColumnMetadata sheetImplicitColumn = MetadataUtils.newScalar(SHEET_COLUMN_NAME, MinorType.VARCHAR, DataMode.REPEATED);
     sheetImplicitColumn.setBooleanProperty(ColumnMetadata.EXCLUDE_FROM_WILDCARD, true);
     schema.addColumn(sheetImplicitColumn);
+
+    ColumnMetadata titleImplicitColumn = MetadataUtils.newScalar(TITLE_COLUMN_NAME,
+      MinorType.VARCHAR, DataMode.OPTIONAL);
+    titleImplicitColumn.setBooleanProperty(ColumnMetadata.EXCLUDE_FROM_WILDCARD, true);
+    schema.addColumn(titleImplicitColumn);
+
 
     negotiator.tableSchema(schema, true);
     ResultSetLoader resultLoader = negotiator.build();
@@ -308,6 +315,18 @@ public class GoogleSheetsBatchReader implements ManagedReader<SchemaNegotiator> 
     for (String sheetName : sheetNames) {
       sheetNameWriter.setString(sheetName);
     }
+
+    if (titleNameWriter == null) {
+      int titleColumnIndex = rowWriter.tupleSchema().index(TITLE_COLUMN_NAME);
+      if (titleColumnIndex == -1) {
+        ColumnMetadata titleColSchema = MetadataUtils.newScalar(TITLE_COLUMN_NAME,
+          MinorType.VARCHAR,
+          DataMode.OPTIONAL);
+        titleColSchema.setBooleanProperty(ColumnMetadata.EXCLUDE_FROM_WILDCARD, true);
+      }
+      titleNameWriter = rowWriter.column(TITLE_COLUMN_NAME).scalar();
+    }
+    titleNameWriter.setString(subScan.getScanSpec().getFileName());
   }
 
   /**

@@ -203,15 +203,17 @@ public class TestGoogleSheetsQueries extends ClusterTest {
       fail(e.getMessage());
     }
 
-    String sql = String.format("SELECT _sheets FROM googlesheets.`%s`.`MixedSheet` LIMIT 1", sheetID);
+    String sql = String.format("SELECT _sheets, _title FROM googlesheets.`%s`.`MixedSheet` LIMIT 1",
+      sheetID);
     RowSet results = queryBuilder().sql(sql).rowSet();
 
     TupleMetadata expectedSchema = new SchemaBuilder()
       .addArray("_sheets", MinorType.VARCHAR)
+      .addNullable("_title", MinorType.VARCHAR)
       .buildSchema();
 
     RowSet expected = client.rowSetBuilder(expectedSchema)
-      .addRow((Object) strArray("TestSheet1", "MixedSheet"))
+      .addRow(strArray("TestSheet1", "MixedSheet"), "Drill Test Data")
       .build();
 
     new RowSetComparison(expected).verifyAndClearAll(results);
