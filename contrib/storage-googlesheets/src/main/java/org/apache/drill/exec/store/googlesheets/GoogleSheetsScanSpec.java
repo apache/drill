@@ -34,17 +34,20 @@ public class GoogleSheetsScanSpec implements DrillTableSelection {
   private final String tableName;
   private final int tabIndex;
   private final String pluginName;
+  private final String fileName;
 
   public GoogleSheetsScanSpec(@JsonProperty("sheetID") String sheetID,
                               @JsonProperty("config") GoogleSheetsStoragePluginConfig config,
                               @JsonProperty("tableName") String tableName,
                               @JsonProperty("pluginName") String pluginName,
-                              @JsonProperty("tabIndex") int tabIndex) {
+                              @JsonProperty("tabIndex") int tabIndex,
+                              @JsonProperty("fileName") String fileName) {
     this.sheetID = sheetID;
     this.config = config;
     this.pluginName = pluginName;
     this.tableName = tableName;
     this.tabIndex = tabIndex;
+    this.fileName = fileName;
   }
 
   @JsonProperty("sheetID")
@@ -70,6 +73,11 @@ public class GoogleSheetsScanSpec implements DrillTableSelection {
   @JsonProperty("tabIndex")
   public int getTabIndex() {
     return tabIndex;
+  }
+
+  @JsonProperty("fileName")
+  public String getFileName() {
+    return fileName;
   }
 
   @Override

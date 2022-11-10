@@ -74,7 +74,8 @@ public class GoogleSheetsRootSchema extends AbstractSchema {
       Sheets service = plugin.getSheetsService(schemaConfig.getUserName());
       // At this point we know we have a valid sheet because we obtained the Sheet list, so we need to
       // add the schema to the schemas list and return it.
-      schema = new GoogleSheetsDrillSchema(this, name, plugin, schemaConfig, service);
+      schema = new GoogleSheetsDrillSchema(this, name, plugin, schemaConfig, service,
+        tokenMap.get(name));
       schemas.put(name, schema);
     }
     return schema;
