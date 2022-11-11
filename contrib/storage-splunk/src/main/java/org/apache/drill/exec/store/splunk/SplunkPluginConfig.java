@@ -42,6 +42,7 @@ public class SplunkPluginConfig extends StoragePluginConfig {
   public static final String NAME = "splunk";
   public static final int DISABLED_RECONNECT_RETRIES = 1;
 
+  private final String scheme;
   private final String hostname;
   private final String earliestTime;
   private final String latestTime;
@@ -51,6 +52,7 @@ public class SplunkPluginConfig extends StoragePluginConfig {
   @JsonCreator
   public SplunkPluginConfig(@JsonProperty("username") String username,
                             @JsonProperty("password") String password,
+                            @JsonProperty("scheme") String scheme,
                             @JsonProperty("hostname") String hostname,
                             @JsonProperty("port") int port,
                             @JsonProperty("earliestTime") String earliestTime,
@@ -60,6 +62,7 @@ public class SplunkPluginConfig extends StoragePluginConfig {
                             @JsonProperty("authMode") String authMode) {
     super(CredentialProviderUtils.getCredentialsProvider(username, password, credentialsProvider),
         credentialsProvider == null, AuthMode.parseOrDefault(authMode, AuthMode.SHARED_USER));
+    this.scheme = scheme;
     this.hostname = hostname;
     this.port = port;
     this.earliestTime = earliestTime;
@@ -69,6 +72,7 @@ public class SplunkPluginConfig extends StoragePluginConfig {
 
   private SplunkPluginConfig(SplunkPluginConfig that, CredentialsProvider credentialsProvider) {
     super(getCredentialsProvider(credentialsProvider), credentialsProvider == null, that.authMode);
+    this.scheme = that.scheme;
     this.hostname = that.hostname;
     this.port = that.port;
     this.earliestTime = that.earliestTime;
@@ -119,6 +123,11 @@ public class SplunkPluginConfig extends StoragePluginConfig {
       .orElse(null);
   }
 
+  @JsonProperty("scheme")
+  public String getScheme() {
+    return scheme;
+  }
+
   @JsonProperty("hostname")
   public String getHostname() {
     return hostname;
@@ -157,6 +166,7 @@ public class SplunkPluginConfig extends StoragePluginConfig {
     }
     SplunkPluginConfig thatConfig = (SplunkPluginConfig) that;
     return Objects.equals(credentialsProvider, thatConfig.credentialsProvider) &&
+      Objects.equals(scheme, thatConfig.scheme) &&
       Objects.equals(hostname, thatConfig.hostname) &&
       Objects.equals(port, thatConfig.port) &&
       Objects.equals(earliestTime, thatConfig.earliestTime) &&
@@ -166,13 +176,14 @@ public class SplunkPluginConfig extends StoragePluginConfig {
 
   @Override
   public int hashCode() {
-    return Objects.hash(credentialsProvider, hostname, port, earliestTime, latestTime, authMode);
+    return Objects.hash(credentialsProvider, scheme, hostname, port, earliestTime, latestTime, authMode);
   }
 
   @Override
   public String toString() {
     return new PlanStringBuilder(this)
       .field("credentialsProvider", credentialsProvider)
+      .field("scheme", scheme)
       .field("hostname", hostname)
       .field("port", port)
       .field("earliestTime", earliestTime)

@@ -43,6 +43,7 @@ public class SplunkIndexesTest extends SplunkBaseTest {
     RowSet expected = new RowSetBuilder(client.allocator(), expectedSchema)
       .addRow("splunk", "summary")
       .addRow("splunk", "splunklogger")
+      .addRow("splunk", "_configtracker")
       .addRow("splunk", "_thefishbucket")
       .addRow("splunk", "_audit")
       .addRow("splunk", "_internal")

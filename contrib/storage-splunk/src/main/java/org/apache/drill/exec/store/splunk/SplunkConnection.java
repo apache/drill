@@ -42,6 +42,7 @@ public class SplunkConnection {
   private static final Logger logger = LoggerFactory.getLogger(SplunkConnection.class);
 
   private final Optional<UsernamePasswordCredentials> credentials;
+  private final String scheme;
   private final String hostname;
   private final int port;
   private final String queryUserName;
@@ -54,6 +55,7 @@ public class SplunkConnection {
     } else {
       this.credentials = config.getUsernamePasswordCredentials();
     }
+    this.scheme = config.getScheme();
     this.hostname = config.getHostname();
     this.queryUserName = queryUserName;
     this.port = config.getPort();
@@ -71,6 +73,7 @@ public class SplunkConnection {
     } else {
       this.credentials = config.getUsernamePasswordCredentials();
     }
+    this.scheme = config.getScheme();
     this.hostname = config.getHostname();
     this.port = config.getPort();
     this.queryUserName = queryUserName;
@@ -84,6 +87,7 @@ public class SplunkConnection {
   public Service connect() {
     HttpService.setSslSecurityProtocol(SSLSecurityProtocol.TLSv1_2);
     ServiceArgs loginArgs = new ServiceArgs();
+    loginArgs.setScheme(scheme);
     loginArgs.setHost(hostname);
     loginArgs.setPort(port);
     loginArgs.setPassword(credentials.map(UsernamePasswordCredentials::getPassword).orElse(null));
@@ -106,7 +110,7 @@ public class SplunkConnection {
         .addContext(e.getMessage())
         .build(logger);
     }
-    logger.debug("Successfully connected to {} on port {}", hostname, port);
+    logger.info("Successfully connected to {} on port {}", hostname, port);
     return service;
   }
 
