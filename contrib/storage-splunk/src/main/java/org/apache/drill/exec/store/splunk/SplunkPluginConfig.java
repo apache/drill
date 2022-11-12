@@ -28,16 +28,12 @@ import org.apache.drill.common.logical.security.CredentialsProvider;
 import org.apache.drill.common.logical.security.PlainCredentialsProvider;
 import org.apache.drill.exec.store.security.CredentialProviderUtils;
 import org.apache.drill.exec.store.security.UsernamePasswordCredentials;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.util.Objects;
 import java.util.Optional;
 
 @JsonTypeName(SplunkPluginConfig.NAME)
 public class SplunkPluginConfig extends StoragePluginConfig {
-
-  private static final Logger logger = LoggerFactory.getLogger(SplunkPluginConfig.class);
 
   public static final String NAME = "splunk";
   public static final int DISABLED_RECONNECT_RETRIES = 1;
@@ -46,7 +42,12 @@ public class SplunkPluginConfig extends StoragePluginConfig {
   private final String hostname;
   private final String earliestTime;
   private final String latestTime;
-  private final int port;
+  private final Integer port;
+  private final String app;
+  private final String owner;
+  private final String token;
+  private final String cookie;
+  private final Boolean validateCertificates;
   private final Integer reconnectRetries;
 
   @JsonCreator
@@ -54,7 +55,12 @@ public class SplunkPluginConfig extends StoragePluginConfig {
                             @JsonProperty("password") String password,
                             @JsonProperty("scheme") String scheme,
                             @JsonProperty("hostname") String hostname,
-                            @JsonProperty("port") int port,
+                            @JsonProperty("port") Integer port,
+                            @JsonProperty("app") String app,
+                            @JsonProperty("owner") String owner,
+                            @JsonProperty("token") String token,
+                            @JsonProperty("cookie") String cookie,
+                            @JsonProperty("validateCertificates") Boolean validateCertificates,
                             @JsonProperty("earliestTime") String earliestTime,
                             @JsonProperty("latestTime") String latestTime,
                             @JsonProperty("credentialsProvider") CredentialsProvider credentialsProvider,
@@ -65,6 +71,11 @@ public class SplunkPluginConfig extends StoragePluginConfig {
     this.scheme = scheme;
     this.hostname = hostname;
     this.port = port;
+    this.app = app;
+    this.owner = owner;
+    this.token = token;
+    this.cookie = cookie;
+    this.validateCertificates = validateCertificates;
     this.earliestTime = earliestTime;
     this.latestTime = latestTime == null ? "now" : latestTime;
     this.reconnectRetries = reconnectRetries;
@@ -75,6 +86,11 @@ public class SplunkPluginConfig extends StoragePluginConfig {
     this.scheme = that.scheme;
     this.hostname = that.hostname;
     this.port = that.port;
+    this.app = that.app;
+    this.owner = that.owner;
+    this.token = that.token;
+    this.cookie = that.cookie;
+    this.validateCertificates = that.validateCertificates;
     this.earliestTime = that.earliestTime;
     this.latestTime = that.latestTime;
     this.reconnectRetries = that.reconnectRetries;
@@ -138,6 +154,31 @@ public class SplunkPluginConfig extends StoragePluginConfig {
     return port;
   }
 
+  @JsonProperty("app")
+  public String getApp() {
+    return app;
+  }
+
+  @JsonProperty("owner")
+  public String getOwner() {
+    return owner;
+  }
+
+  @JsonProperty("token")
+  public String getToken() {
+    return token;
+  }
+
+  @JsonProperty("cookie")
+  public String getCookie() {
+    return cookie;
+  }
+
+  @JsonProperty("validateCertificates")
+  public Boolean getValidateCertificates() {
+    return validateCertificates;
+  }
+
   @JsonProperty("earliestTime")
   public String getEarliestTime() {
     return earliestTime;
@@ -169,6 +210,11 @@ public class SplunkPluginConfig extends StoragePluginConfig {
       Objects.equals(scheme, thatConfig.scheme) &&
       Objects.equals(hostname, thatConfig.hostname) &&
       Objects.equals(port, thatConfig.port) &&
+      Objects.equals(app, thatConfig.app) &&
+      Objects.equals(owner, thatConfig.owner) &&
+      Objects.equals(token, thatConfig.token) &&
+      Objects.equals(cookie, thatConfig.cookie) &&
+      Objects.equals(validateCertificates, thatConfig.validateCertificates) &&
       Objects.equals(earliestTime, thatConfig.earliestTime) &&
       Objects.equals(latestTime, thatConfig.latestTime) &&
       Objects.equals(authMode, thatConfig.authMode);
@@ -176,7 +222,20 @@ public class SplunkPluginConfig extends StoragePluginConfig {
 
   @Override
   public int hashCode() {
-    return Objects.hash(credentialsProvider, scheme, hostname, port, earliestTime, latestTime, authMode);
+    return Objects.hash(
+      credentialsProvider,
+      scheme,
+      hostname,
+      port,
+      app,
+      owner,
+      token,
+      cookie,
+      validateCertificates,
+      earliestTime,
+      latestTime,
+      authMode
+    );
   }
 
   @Override
@@ -186,6 +245,11 @@ public class SplunkPluginConfig extends StoragePluginConfig {
       .field("scheme", scheme)
       .field("hostname", hostname)
       .field("port", port)
+      .field("app", app)
+      .field("owner", owner)
+      .field("token", token)
+      .field("cookie", cookie)
+      .field("validateCertificates", validateCertificates)
       .field("earliestTime", earliestTime)
       .field("latestTime", latestTime)
       .field("Authentication Mode", authMode)

@@ -307,6 +307,10 @@ public class SplunkPluginTest extends SplunkBaseTest {
       loginArgs.setScheme(SPLUNK_STORAGE_PLUGIN_CONFIG.getScheme());
       loginArgs.setHost(SPLUNK_STORAGE_PLUGIN_CONFIG.getHostname());
       loginArgs.setPort(SPLUNK_STORAGE_PLUGIN_CONFIG.getPort());
+      loginArgs.setApp(SPLUNK_STORAGE_PLUGIN_CONFIG.getApp());
+      loginArgs.setOwner(SPLUNK_STORAGE_PLUGIN_CONFIG.getOwner());
+      loginArgs.setToken(SPLUNK_STORAGE_PLUGIN_CONFIG.getToken());
+      loginArgs.setCookie(SPLUNK_STORAGE_PLUGIN_CONFIG.getCookie());
       loginArgs.setPassword(SPLUNK_STORAGE_PLUGIN_CONFIG.getPassword());
       loginArgs.setUsername(SPLUNK_STORAGE_PLUGIN_CONFIG.getUsername());
       splunk.when(() -> Service.connect(any()))

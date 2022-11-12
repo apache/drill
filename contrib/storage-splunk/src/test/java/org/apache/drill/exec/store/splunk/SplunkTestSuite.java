@@ -90,8 +90,15 @@ public class SplunkTestSuite extends ClusterTest {
         String hostname = splunk.getHost();
         Integer port = splunk.getFirstMappedPort();
         StoragePluginRegistry pluginRegistry = cluster.drillbit().getContext().getStorage();
-        SPLUNK_STORAGE_PLUGIN_CONFIG = new SplunkPluginConfig(SPLUNK_LOGIN, SPLUNK_PASS, "http", hostname, port, "1", "now",
-                null, 4, StoragePluginConfig.AuthMode.SHARED_USER.name());
+        SPLUNK_STORAGE_PLUGIN_CONFIG = new SplunkPluginConfig(
+          SPLUNK_LOGIN, SPLUNK_PASS,
+          "http", hostname, port,
+          null, null, null, null, null, // app, owner, token, cookie, validateCertificates
+          "1", "now",
+          null,
+          4,
+          StoragePluginConfig.AuthMode.SHARED_USER.name()
+        );
         SPLUNK_STORAGE_PLUGIN_CONFIG.setEnabled(true);
         pluginRegistry.put(SplunkPluginConfig.NAME, SPLUNK_STORAGE_PLUGIN_CONFIG);
         runningSuite = true;
@@ -105,8 +112,15 @@ public class SplunkTestSuite extends ClusterTest {
         // Add unauthorized user
         credentialsProvider.setUserCredentials("nope", "no way dude", TEST_USER_2);
 
-        SPLUNK_STORAGE_PLUGIN_CONFIG_WITH_USER_TRANSLATION = new SplunkPluginConfig(null, null, "http", hostname, port, "1", "now",
-          credentialsProvider, 4, AuthMode.USER_TRANSLATION.name());
+        SPLUNK_STORAGE_PLUGIN_CONFIG_WITH_USER_TRANSLATION = new SplunkPluginConfig(
+          null, null, // username, password
+          "http", hostname, port,
+          null, null, null, null, null, // app, owner, token, cookie, validateCertificates
+          "1", "now",
+          credentialsProvider,
+          4,
+          AuthMode.USER_TRANSLATION.name()
+        );
         SPLUNK_STORAGE_PLUGIN_CONFIG_WITH_USER_TRANSLATION.setEnabled(true);
         pluginRegistry.put("ut_splunk", SPLUNK_STORAGE_PLUGIN_CONFIG_WITH_USER_TRANSLATION);
 
