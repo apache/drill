@@ -19,10 +19,8 @@ This plugin enables Drill to query Splunk.
 | cookie               | null      | A valid login cookie                                            | 2.0   |
 | validateCertificates | true      | Whether the Splunk client will validates the server's SSL cert  | 2.0   |
 
-[^1]: See [this Splunk documentation](https://docs.splunk.com/Documentation/Splunk/latest/Admin/Apparc
-hitectureandobjectownership) for more information.
-[^2]: See [this Splunk documentation](https://docs.splunk.com/Documentation/Splunk/latest/Security/CreateAuthTokens)
-for more information.
+[^1]: See [this Splunk documentation](https://docs.splunk.com/Documentation/Splunk/latest/Admin/Apparchitectureandobjectownership) for more information.
+[^2]: See [this Splunk documentation](https://docs.splunk.com/Documentation/Splunk/latest/Security/CreateAuthTokens) for more information.
 
 To connect Drill to Splunk, create a new storage plugin with the following configuration:
 ```json
