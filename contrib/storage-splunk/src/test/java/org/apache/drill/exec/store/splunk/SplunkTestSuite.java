@@ -68,10 +68,13 @@ public class SplunkTestSuite extends ClusterTest {
   private static volatile boolean runningSuite = true;
   private static AtomicInteger initCount = new AtomicInteger(0);
   @ClassRule
-  public static GenericContainer<?> splunk = new GenericContainer<>(DockerImageName.parse("splunk/splunk:8.1"))
-          .withExposedPorts(8089, 8089)
-          .withEnv("SPLUNK_START_ARGS", "--accept-license")
-          .withEnv("SPLUNK_PASSWORD", SPLUNK_PASS);
+  public static GenericContainer<?> splunk = new GenericContainer<>(
+    DockerImageName.parse("splunk/splunk:9.0.2")
+  )
+    .withExposedPorts(8089, 8089)
+    .withEnv("SPLUNK_START_ARGS", "--accept-license")
+    .withEnv("SPLUNK_PASSWORD", SPLUNK_PASS)
+    .withEnv("SPLUNKD_SSL_ENABLE", "false");
 
   @BeforeClass
   public static void initSplunk() throws Exception {
@@ -87,8 +90,15 @@ public class SplunkTestSuite extends ClusterTest {
         String hostname = splunk.getHost();
         Integer port = splunk.getFirstMappedPort();
         StoragePluginRegistry pluginRegistry = cluster.drillbit().getContext().getStorage();
-        SPLUNK_STORAGE_PLUGIN_CONFIG = new SplunkPluginConfig(SPLUNK_LOGIN, SPLUNK_PASS, hostname, port, "1", "now",
-                null, 4, StoragePluginConfig.AuthMode.SHARED_USER.name());
+        SPLUNK_STORAGE_PLUGIN_CONFIG = new SplunkPluginConfig(
+          SPLUNK_LOGIN, SPLUNK_PASS,
+          "http", hostname, port,
+          null, null, null, null, null, // app, owner, token, cookie, validateCertificates
+          "1", "now",
+          null,
+          4,
+          StoragePluginConfig.AuthMode.SHARED_USER.name()
+        );
         SPLUNK_STORAGE_PLUGIN_CONFIG.setEnabled(true);
         pluginRegistry.put(SplunkPluginConfig.NAME, SPLUNK_STORAGE_PLUGIN_CONFIG);
         runningSuite = true;
@@ -102,8 +112,15 @@ public class SplunkTestSuite extends ClusterTest {
         // Add unauthorized user
         credentialsProvider.setUserCredentials("nope", "no way dude", TEST_USER_2);
 
-        SPLUNK_STORAGE_PLUGIN_CONFIG_WITH_USER_TRANSLATION = new SplunkPluginConfig(null, null, hostname, port, "1", "now",
-          credentialsProvider, 4, AuthMode.USER_TRANSLATION.name());
+        SPLUNK_STORAGE_PLUGIN_CONFIG_WITH_USER_TRANSLATION = new SplunkPluginConfig(
+          null, null, // username, password
+          "http", hostname, port,
+          null, null, null, null, null, // app, owner, token, cookie, validateCertificates
+          "1", "now",
+          credentialsProvider,
+          4,
+          AuthMode.USER_TRANSLATION.name()
+        );
         SPLUNK_STORAGE_PLUGIN_CONFIG_WITH_USER_TRANSLATION.setEnabled(true);
         pluginRegistry.put("ut_splunk", SPLUNK_STORAGE_PLUGIN_CONFIG_WITH_USER_TRANSLATION);
 

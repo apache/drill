@@ -39,6 +39,7 @@ import static org.apache.drill.exec.store.splunk.SplunkTestSuite.SPLUNK_STORAGE_
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.times;
 
 @FixMethodOrder(MethodSorters.JVM)
@@ -76,6 +77,7 @@ public class SplunkPluginTest extends SplunkBaseTest {
     RowSet expected = new RowSetBuilder(client.allocator(), expectedSchema)
       .addRow("splunk", "summary")
       .addRow("splunk", "splunklogger")
+      .addRow("splunk", "_configtracker")
       .addRow("splunk", "_thefishbucket")
       .addRow("splunk", "_audit")
       .addRow("splunk", "_internal")
@@ -302,11 +304,16 @@ public class SplunkPluginTest extends SplunkBaseTest {
   public void testReconnectRetries() {
     try (MockedStatic<Service> splunk = Mockito.mockStatic(Service.class)) {
       ServiceArgs loginArgs = new ServiceArgs();
+      loginArgs.setScheme(SPLUNK_STORAGE_PLUGIN_CONFIG.getScheme());
       loginArgs.setHost(SPLUNK_STORAGE_PLUGIN_CONFIG.getHostname());
       loginArgs.setPort(SPLUNK_STORAGE_PLUGIN_CONFIG.getPort());
+      loginArgs.setApp(SPLUNK_STORAGE_PLUGIN_CONFIG.getApp());
+      loginArgs.setOwner(SPLUNK_STORAGE_PLUGIN_CONFIG.getOwner());
+      loginArgs.setToken(SPLUNK_STORAGE_PLUGIN_CONFIG.getToken());
+      loginArgs.setCookie(SPLUNK_STORAGE_PLUGIN_CONFIG.getCookie());
       loginArgs.setPassword(SPLUNK_STORAGE_PLUGIN_CONFIG.getPassword());
       loginArgs.setUsername(SPLUNK_STORAGE_PLUGIN_CONFIG.getUsername());
-      splunk.when(() -> Service.connect(loginArgs))
+      splunk.when(() -> Service.connect(any()))
           .thenThrow(new RuntimeException("Fail first connection to Splunk"))
           .thenThrow(new RuntimeException("Fail second connection to Splunk"))
           .thenThrow(new RuntimeException("Fail third connection to Splunk"))

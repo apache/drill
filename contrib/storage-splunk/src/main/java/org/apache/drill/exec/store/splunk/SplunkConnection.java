@@ -18,7 +18,6 @@
 
 package org.apache.drill.exec.store.splunk;
 
-import com.splunk.ConfCollection;
 import com.splunk.EntityCollection;
 import com.splunk.HttpService;
 import com.splunk.Index;
@@ -42,9 +41,20 @@ public class SplunkConnection {
   private static final Logger logger = LoggerFactory.getLogger(SplunkConnection.class);
 
   private final Optional<UsernamePasswordCredentials> credentials;
+  private final String scheme;
   private final String hostname;
-  private final int port;
-  private final String queryUserName;
+  private final Integer port;
+  // Whether the Splunk client will validate the server's SSL cert.
+  private final boolean validateCertificates;
+  // The application context of the service.
+  private final String app;
+  // The owner context of the service.
+  private final String owner;
+  // A Splunk authentication token to use for the session.
+  private final String token;
+  // A valid login cookie.
+  private final String cookie;
+
   private Service service;
   private int connectionAttempts;
 
@@ -54,12 +64,16 @@ public class SplunkConnection {
     } else {
       this.credentials = config.getUsernamePasswordCredentials();
     }
+    this.scheme = config.getScheme();
     this.hostname = config.getHostname();
-    this.queryUserName = queryUserName;
     this.port = config.getPort();
+    this.app = config.getApp();
+    this.owner = config.getOwner();
+    this.token = config.getToken();
+    this.cookie = config.getCookie();
+    this.validateCertificates = Optional.ofNullable(config.getValidateCertificates()).orElse(false);
     this.connectionAttempts = config.getReconnectRetries();
     service = connect();
-    ConfCollection confs = service.getConfs();
   }
 
   /**
@@ -71,9 +85,14 @@ public class SplunkConnection {
     } else {
       this.credentials = config.getUsernamePasswordCredentials();
     }
+    this.scheme = config.getScheme();
     this.hostname = config.getHostname();
     this.port = config.getPort();
-    this.queryUserName = queryUserName;
+    this.app = config.getApp();
+    this.owner = config.getOwner();
+    this.token = config.getToken();
+    this.cookie = config.getCookie();
+    this.validateCertificates = config.getValidateCertificates();
     this.service = service;
   }
 
@@ -83,12 +102,29 @@ public class SplunkConnection {
    */
   public Service connect() {
     HttpService.setSslSecurityProtocol(SSLSecurityProtocol.TLSv1_2);
+    HttpService.setValidateCertificates(validateCertificates);
+
     ServiceArgs loginArgs = new ServiceArgs();
-    loginArgs.setHost(hostname);
-    loginArgs.setPort(port);
+    if (scheme != null) {
+      // Fall back to the Splunk SDK default if our value is null by not setting
+      loginArgs.setScheme(scheme);
+    }
+    if (hostname != null) {
+      // Fall back to the Splunk SDK default if our value is null by not setting
+      loginArgs.setHost(hostname);
+    }
+    if (port != null) {
+      // Fall back to the Splunk SDK default if our value is null by not setting
+      loginArgs.setPort(port);
+    }
     loginArgs.setPassword(credentials.map(UsernamePasswordCredentials::getPassword).orElse(null));
     loginArgs.setUsername(credentials.map(UsernamePasswordCredentials::getUsername).orElse(null));
-    try {
+    loginArgs.setApp(app);
+    loginArgs.setOwner(owner);
+    loginArgs.setToken(token);
+    loginArgs.setCookie(cookie);
+
+     try {
       connectionAttempts--;
       service = Service.connect(loginArgs);
     } catch (Exception e) {
@@ -101,12 +137,11 @@ public class SplunkConnection {
         return connect();
       }
       throw UserException
-        .connectionError()
+        .connectionError(e)
         .message("Unable to connect to Splunk at %s:%s", hostname, port)
-        .addContext(e.getMessage())
         .build(logger);
     }
-    logger.debug("Successfully connected to {} on port {}", hostname, port);
+    logger.info("Successfully connected to {} on port {}", hostname, port);
     return service;
   }
 

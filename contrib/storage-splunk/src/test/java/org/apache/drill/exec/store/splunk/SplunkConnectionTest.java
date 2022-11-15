@@ -44,15 +44,21 @@ public class SplunkConnectionTest extends SplunkBaseTest {
   public void testConnectionFail() {
     try {
       SplunkPluginConfig invalidSplunkConfig = new SplunkPluginConfig(
-              "hacker",
-              "hacker",
-              SPLUNK_STORAGE_PLUGIN_CONFIG.getHostname(),
-              SPLUNK_STORAGE_PLUGIN_CONFIG.getPort(),
-              SPLUNK_STORAGE_PLUGIN_CONFIG.getEarliestTime(),
-              SPLUNK_STORAGE_PLUGIN_CONFIG.getLatestTime(),
-              null,
-              SPLUNK_STORAGE_PLUGIN_CONFIG.getReconnectRetries(),
-              StoragePluginConfig.AuthMode.SHARED_USER.name()
+        "hacker",
+        "hacker",
+        SPLUNK_STORAGE_PLUGIN_CONFIG.getScheme(),
+        SPLUNK_STORAGE_PLUGIN_CONFIG.getHostname(),
+        SPLUNK_STORAGE_PLUGIN_CONFIG.getPort(),
+        SPLUNK_STORAGE_PLUGIN_CONFIG.getApp(),
+        SPLUNK_STORAGE_PLUGIN_CONFIG.getOwner(),
+        SPLUNK_STORAGE_PLUGIN_CONFIG.getToken(),
+        SPLUNK_STORAGE_PLUGIN_CONFIG.getCookie(),
+        SPLUNK_STORAGE_PLUGIN_CONFIG.getValidateCertificates(),
+        SPLUNK_STORAGE_PLUGIN_CONFIG.getEarliestTime(),
+        SPLUNK_STORAGE_PLUGIN_CONFIG.getLatestTime(),
+        null,
+        SPLUNK_STORAGE_PLUGIN_CONFIG.getReconnectRetries(),
+        StoragePluginConfig.AuthMode.SHARED_USER.name()
       );
       SplunkConnection sc = new SplunkConnection(invalidSplunkConfig, null);
       sc.connect();
@@ -66,10 +72,11 @@ public class SplunkConnectionTest extends SplunkBaseTest {
   public void testGetIndexes() {
     SplunkConnection sc = new SplunkConnection(SPLUNK_STORAGE_PLUGIN_CONFIG, null);
     EntityCollection<Index> indexes = sc.getIndexes();
-    assertEquals(9, indexes.size());
+    assertEquals(10, indexes.size());
 
     List<String> expectedIndexNames = new ArrayList<>();
     expectedIndexNames.add("_audit");
+    expectedIndexNames.add("_configtracker");
     expectedIndexNames.add("_internal");
     expectedIndexNames.add("_introspection");
     expectedIndexNames.add("_telemetry");
