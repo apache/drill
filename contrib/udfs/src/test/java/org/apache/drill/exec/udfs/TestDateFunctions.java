@@ -37,7 +37,7 @@ import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
 @Category({UnlikelyTest.class, SqlFunctionTest.class})
-public class TestNearestDateFunctions extends ClusterTest {
+public class TestDateFunctions extends ClusterTest {
 
   @BeforeClass
   public static void setup() throws Exception {
@@ -149,7 +149,7 @@ public class TestNearestDateFunctions extends ClusterTest {
       run(query);
       fail();
     } catch (DrillRuntimeException e) {
-      assertTrue(e.getMessage().contains("[BAD_DATE] is not a valid time statement. Expecting: " + Arrays.asList(NearestDateUtils.TimeInterval.values())));
+      assertTrue(e.getMessage().contains("[BAD_DATE] is not a valid time statement. Expecting: " + Arrays.asList(DateConversionUtils.TimeInterval.values())));
     }
   }
 
@@ -193,5 +193,34 @@ public class TestNearestDateFunctions extends ClusterTest {
             q3, q3, q3,
             q4, q4, q4)
         .go();
+  }
+
+  @Test
+  public void testYearWeek() throws Exception {
+    String query = "SELECT yearweek('2012-04-19') as yw, yearweek(CAST('2012-01-19' AS DATE)) AS " +
+      "yw1, year_week(CAST('2020-12-12' AS TIMESTAMP)) AS yw2" +
+      " FROM (VALUES(1))";
+
+    testBuilder()
+      .sqlQuery(query)
+      .ordered()
+      .baselineColumns("yw", "yw1", "yw2")
+      .baselineValues(201216, 201203, 202050)
+      .go();
+  }
+
+  @Test
+  public void testTimestamp() throws Exception {
+    LocalDateTime ts1 = LocalDateTime.of(2020,2,4,0,0,0);
+    LocalDateTime ts2 = LocalDateTime.of(2012,6,12,12,12,45);
+    String query = "SELECT to_timestamp('2020-02-04') AS ts1," +
+      "to_timestamp('2012-06-12T12:12:45.123Z') AS ts2, to_timestamp('AAAAHHHHH') " +
+      "AS ts3 FROM (VALUES(1))";
+    testBuilder()
+      .sqlQuery(query)
+      .unOrdered()
+      .baselineColumns("ts1", "ts2", "ts3")
+      .baselineValues(ts1, ts2, null)
+      .go();
   }
 }

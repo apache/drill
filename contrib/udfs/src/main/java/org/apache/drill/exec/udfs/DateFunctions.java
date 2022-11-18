@@ -22,10 +22,13 @@ import org.apache.drill.exec.expr.DrillSimpleFunc;
 import org.apache.drill.exec.expr.annotations.FunctionTemplate;
 import org.apache.drill.exec.expr.annotations.Output;
 import org.apache.drill.exec.expr.annotations.Param;
+import org.apache.drill.exec.expr.holders.IntHolder;
+import org.apache.drill.exec.expr.holders.NullableTimeStampHolder;
 import org.apache.drill.exec.expr.holders.TimeStampHolder;
 import org.apache.drill.exec.expr.holders.VarCharHolder;
 
-public class NearestDateFunctions {
+
+public class DateFunctions {
 
   /**
    * This function takes two arguments, an input date object, and an interval and returns
@@ -53,7 +56,7 @@ public class NearestDateFunctions {
    * 15SECOND
    * SECOND
    */
-  @FunctionTemplate(name = "nearestDate",
+  @FunctionTemplate(names = {"nearestDate","nearest_date"},
           scope = FunctionTemplate.FunctionScope.SIMPLE,
           nulls = FunctionTemplate.NullHandling.NULL_IF_NULL)
   public static class NearestDateFunction implements DrillSimpleFunc {
@@ -77,7 +80,7 @@ public class NearestDateFunctions {
       String input = org.apache.drill.exec.expr.fn.impl.StringFunctionHelpers.toStringFromUTF8(interval.start, interval.end, interval.buffer);
       java.time.LocalDateTime ld = java.time.LocalDateTime.ofInstant(java.time.Instant.ofEpochMilli(inputDate.value), java.time.ZoneId.of("UTC"));
 
-      java.time.LocalDateTime td = org.apache.drill.exec.udfs.NearestDateUtils.getDate(ld, input);
+      java.time.LocalDateTime td = DateConversionUtils.getDate(ld, input);
       out.value = td.atZone(java.time.ZoneId.of("UTC")).toInstant().toEpochMilli();
     }
   }
@@ -108,7 +111,7 @@ public class NearestDateFunctions {
    * 15SECOND
    * SECOND
    */
-  @FunctionTemplate(name = "nearestDate",
+  @FunctionTemplate(names = {"nearestDate","nearest_date"},
           scope = FunctionTemplate.FunctionScope.SIMPLE,
           nulls = FunctionTemplate.NullHandling.NULL_IF_NULL)
   public static class NearestDateFunctionWithString implements DrillSimpleFunc {
@@ -140,8 +143,66 @@ public class NearestDateFunctions {
       java.time.format.DateTimeFormatter formatter = java.time.format.DateTimeFormatter.ofPattern(format);
       java.time.LocalDateTime dateTime = java.time.LocalDateTime.parse(inputDate, formatter);
 
-      java.time.LocalDateTime td = org.apache.drill.exec.udfs.NearestDateUtils.getDate(dateTime, intervalString);
+      java.time.LocalDateTime td = DateConversionUtils.getDate(dateTime, intervalString);
       out.value = td.atZone(java.time.ZoneId.of("UTC")).toInstant().toEpochMilli();
+    }
+  }
+
+  @FunctionTemplate(names = {"yearweek","year_week"},
+    scope = FunctionTemplate.FunctionScope.SIMPLE,
+    nulls = FunctionTemplate.NullHandling.NULL_IF_NULL)
+  public static class YearWeekFunction implements DrillSimpleFunc {
+    @Param
+    VarCharHolder inputHolder;
+
+    @Output
+    IntHolder out;
+
+    @Override
+    public void setup() {
+      // noop
+    }
+
+    @Override
+    public void eval() {
+      String input = org.apache.drill.exec.expr.fn.impl.StringFunctionHelpers.toStringFromUTF8(inputHolder.start, inputHolder.end, inputHolder.buffer);
+      java.time.LocalDateTime dt = org.apache.drill.exec.udfs.DateUtilFunctions.getTimestampFromString(input);
+      int week = dt.get(java.time.temporal.IsoFields.WEEK_OF_WEEK_BASED_YEAR);
+      int year = dt.getYear();
+      out.value = (year * 100) + week;
+    }
+  }
+
+  @FunctionTemplate(names = {"to_timestamp"},
+    scope = FunctionTemplate.FunctionScope.SIMPLE,
+    nulls = FunctionTemplate.NullHandling.NULL_IF_NULL)
+  public static class TimestampFunction implements DrillSimpleFunc {
+    /**
+     * This version of the TO_TIMESTAMP function converts strings into timestamps
+     * without the need for a format string.  The function will attempt to determine
+     * the date format automatically.  If it cannot, the function will return null.
+     */
+    @Param
+    VarCharHolder inputHolder;
+
+    @Output
+    NullableTimeStampHolder out;
+
+    @Override
+    public void setup() {
+      // noop
+    }
+
+    @Override
+    public void eval() {
+      String input = org.apache.drill.exec.expr.fn.impl.StringFunctionHelpers.toStringFromUTF8(inputHolder.start, inputHolder.end, inputHolder.buffer);
+      java.time.LocalDateTime dt = org.apache.drill.exec.udfs.DateUtilFunctions.getTimestampFromString(input);
+      if (dt != null) {
+        out.value = dt.toEpochSecond(java.time.ZoneOffset.UTC) * 1000;
+        out.isSet = 1;
+      } else {
+        out.isSet = 0;
+      }
     }
   }
 }

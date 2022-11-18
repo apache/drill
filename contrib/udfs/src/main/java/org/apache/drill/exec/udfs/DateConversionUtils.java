@@ -28,7 +28,7 @@ import java.time.DayOfWeek;
 import java.time.temporal.ChronoUnit;
 import java.util.Arrays;
 
-public class NearestDateUtils {
+public class DateConversionUtils {
   /**
    * Specifies the time grouping to be used with the nearest date function
    */
@@ -48,7 +48,7 @@ public class NearestDateUtils {
     SECOND
   }
 
-  private static final Logger logger = LoggerFactory.getLogger(NearestDateUtils.class);
+  private static final Logger logger = LoggerFactory.getLogger(DateConversionUtils.class);
 
   /**
    * This function takes a Java LocalDateTime object, and an interval string and returns
