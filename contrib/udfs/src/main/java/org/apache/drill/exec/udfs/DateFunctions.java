@@ -177,6 +177,11 @@ public class DateFunctions {
     scope = FunctionTemplate.FunctionScope.SIMPLE,
     nulls = FunctionTemplate.NullHandling.NULL_IF_NULL)
   public static class TimestampFunction implements DrillSimpleFunc {
+    /**
+     * This version of the TO_TIMESTAMP function converts strings into timestamps
+     * without the need for a format string.  The function will attempt to determine
+     * the date format automatically.  If it cannot, the function will return null.
+     */
     @Param
     VarCharHolder inputHolder;
 
