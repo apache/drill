@@ -1,6 +1,6 @@
 # Delta Lake format plugin
 
-This format plugin enabled Drill to query Delta Lake tables.
+This format plugin enables Drill to query Delta Lake tables.
 
 ## Supported optimizations and features
 
@@ -8,7 +8,7 @@ This format plugin enabled Drill to query Delta Lake tables.
 
 This format plugin supports project and filter pushdown optimizations.
 
-For the case of project pushdown, only columns specified in the query will be read, even they are nested columns.
+For the case of project pushdown, only columns specified in the query will be read, even when they are nested columns.
 
 ### Filter pushdown
 
@@ -18,7 +18,7 @@ to allow pruning of parquet files that do not match the filter expression.
 
 ## Configuration
 
-Format plugin has the following configuration options:
+The format plugin has the following configuration options:
 
 - `type` - format plugin type, should be `'delta'`
 

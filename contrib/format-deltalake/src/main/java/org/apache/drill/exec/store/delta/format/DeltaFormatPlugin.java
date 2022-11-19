@@ -29,6 +29,7 @@ import org.apache.drill.exec.planner.common.DrillStatsTable;
 import org.apache.drill.exec.record.metadata.TupleMetadata;
 import org.apache.drill.exec.record.metadata.schema.SchemaProvider;
 import org.apache.drill.exec.server.DrillbitContext;
+import org.apache.drill.exec.server.options.OptionManager;
 import org.apache.drill.exec.store.PluginRulesProviderImpl;
 import org.apache.drill.exec.store.StoragePluginRulesSupplier;
 import org.apache.drill.exec.store.dfs.FileSelection;
@@ -142,10 +143,25 @@ public class DeltaFormatPlugin implements FormatPlugin {
 
   @Override
   public AbstractGroupScan getGroupScan(String userName, FileSelection selection, List<SchemaPath> columns) throws IOException {
+    return getGroupScan(userName, selection, columns, (OptionManager) null);
+  }
+
+  @Override
+  public AbstractGroupScan getGroupScan(String userName, FileSelection selection, List<SchemaPath> columns, OptionManager options) throws IOException {
+    return getGroupScan(userName, selection, columns, options, null);
+  }
+
+  @Override
+  public AbstractGroupScan getGroupScan(String userName, FileSelection selection,
+    List<SchemaPath> columns, OptionManager options, MetadataProviderManager metadataProviderManager) throws IOException {
+    ParquetReaderConfig readerConfig = ParquetReaderConfig.builder()
+      .withConf(fsConf)
+      .withOptions(options)
+      .build();
     return DeltaGroupScan.builder()
       .userName(userName)
       .formatPlugin(this)
-      .readerConfig(ParquetReaderConfig.builder().withConf(fsConf).build())
+      .readerConfig(readerConfig)
       .path(selection.selectionRoot.toUri().getPath())
       .columns(columns)
       .limit(-1)

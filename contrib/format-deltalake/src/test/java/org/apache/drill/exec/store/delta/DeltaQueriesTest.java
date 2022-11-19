@@ -182,6 +182,7 @@ public class DeltaQueriesTest extends ClusterTest {
   public void testLimit() throws Exception {
     String query = "select as_int, as_string from dfs.`data-reader-partition-values` limit 1";
 
+    // Note that both of the following two limits are expected because this format plugin supports an "artificial" limit.
     queryBuilder()
       .sql(query)
       .planMatcher()
