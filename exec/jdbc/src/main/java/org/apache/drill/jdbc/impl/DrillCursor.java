@@ -20,15 +20,12 @@ package org.apache.drill.jdbc.impl;
 import static org.slf4j.LoggerFactory.getLogger;
 
 import java.sql.SQLException;
-import java.sql.SQLTimeoutException;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.List;
-import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.LinkedBlockingDeque;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicBoolean;
 
+import org.apache.drill.exec.rpc.user.BlockingResultsListener;
 import org.apache.drill.jdbc.DrillStatement;
 import org.apache.drill.shaded.guava.com.google.common.base.Stopwatch;
 import org.apache.calcite.avatica.AvaticaStatement;
@@ -40,248 +37,17 @@ import org.apache.calcite.avatica.util.Cursor;
 import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.client.DrillClient;
-import org.apache.drill.exec.proto.UserBitShared.QueryId;
-import org.apache.drill.exec.proto.UserBitShared.QueryResult.QueryState;
 import org.apache.drill.exec.proto.UserBitShared.QueryType;
 import org.apache.drill.exec.proto.UserProtos.PreparedStatement;
 import org.apache.drill.exec.proto.helper.QueryIdHelper;
 import org.apache.drill.exec.record.BatchSchema;
 import org.apache.drill.exec.record.RecordBatchLoader;
-import org.apache.drill.exec.rpc.ConnectionThrottle;
 import org.apache.drill.exec.rpc.user.QueryDataBatch;
-import org.apache.drill.exec.rpc.user.UserResultsListener;
 import org.apache.drill.exec.store.ischema.InfoSchemaConstants;
 import org.apache.drill.jdbc.SchemaChangeListener;
-import org.apache.drill.jdbc.SqlTimeoutException;
 import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import org.apache.drill.shaded.guava.com.google.common.collect.Queues;
 
 public class DrillCursor implements Cursor {
-
-  ////////////////////////////////////////
-  // ResultsListener:
-  static class ResultsListener implements UserResultsListener {
-    private static final Logger logger = LoggerFactory.getLogger(ResultsListener.class);
-
-    private static volatile int nextInstanceId = 1;
-
-    /** (Just for logging.) */
-    private final int instanceId;
-
-    private final int batchQueueThrottlingThreshold;
-
-    /** (Just for logging.) */
-    private volatile QueryId queryId;
-
-    /** (Just for logging.) */
-    private int lastReceivedBatchNumber;
-    /** (Just for logging.) */
-    private int lastDequeuedBatchNumber;
-
-    private volatile UserException executionFailureException;
-
-    // TODO:  Revisit "completed".  Determine and document exactly what it
-    // means.  Some uses imply that it means that incoming messages indicate
-    // that the _query_ has _terminated_ (not necessarily _completing_
-    // normally), while some uses imply that it's some other state of the
-    // ResultListener.  Some uses seem redundant.)
-    volatile boolean completed;
-
-    /** Whether throttling of incoming data is active. */
-    private final AtomicBoolean throttled = new AtomicBoolean(false);
-    private volatile ConnectionThrottle throttle;
-
-    private volatile boolean closed;
-
-    private final CountDownLatch firstMessageReceived = new CountDownLatch(1);
-
-    final LinkedBlockingDeque<QueryDataBatch> batchQueue =
-        Queues.newLinkedBlockingDeque();
-
-    private final DrillCursor parent;
-    Stopwatch elapsedTimer;
-
-    /**
-     * ...
-     * @param parent
-     *        reference to DrillCursor
-     * @param batchQueueThrottlingThreshold
-     *        queue size threshold for throttling server
-     */
-    ResultsListener(DrillCursor parent, int batchQueueThrottlingThreshold) {
-      this.parent = parent;
-      instanceId = nextInstanceId++;
-      this.batchQueueThrottlingThreshold = batchQueueThrottlingThreshold;
-      logger.debug("[#{}] Query listener created.", instanceId);
-    }
-
-    /**
-     * Starts throttling if not currently throttling.
-     * @param  throttle  the "throttlable" object to throttle
-     * @return  true if actually started (wasn't throttling already)
-     */
-    private boolean startThrottlingIfNot(ConnectionThrottle throttle) {
-      final boolean started = throttled.compareAndSet(false, true);
-      if (started) {
-        this.throttle = throttle;
-        throttle.setAutoRead(false);
-      }
-      return started;
-    }
-
-    /**
-     * Stops throttling if currently throttling.
-     * @return  true if actually stopped (was throttling)
-     */
-    private boolean stopThrottlingIfSo() {
-      final boolean stopped = throttled.compareAndSet(true, false);
-      if (stopped) {
-        throttle.setAutoRead(true);
-        throttle = null;
-      }
-      return stopped;
-    }
-
-    public void awaitFirstMessage() throws InterruptedException, SQLTimeoutException {
-      //Check if a non-zero timeout has been set
-      if (parent.timeoutInMilliseconds > 0) {
-        //Identifying remaining in milliseconds to maintain a granularity close to integer value of timeout
-        long timeToTimeout = parent.timeoutInMilliseconds - parent.elapsedTimer.elapsed(TimeUnit.MILLISECONDS);
-        if (timeToTimeout <= 0 || !firstMessageReceived.await(timeToTimeout, TimeUnit.MILLISECONDS)) {
-            throw new SqlTimeoutException(TimeUnit.MILLISECONDS.toSeconds(parent.timeoutInMilliseconds));
-        }
-      } else {
-        firstMessageReceived.await();
-      }
-    }
-
-    private void releaseIfFirst() {
-      firstMessageReceived.countDown();
-    }
-
-    @Override
-    public void queryIdArrived(QueryId queryId) {
-      logger.debug("[#{}] Received query ID: {}.",
-                    instanceId, QueryIdHelper.getQueryId(queryId));
-      this.queryId = queryId;
-    }
-
-    @Override
-    public void submissionFailed(UserException ex) {
-      logger.debug("Received query failure: {} {}", instanceId, ex);
-      this.executionFailureException = ex;
-      completed = true;
-      close();
-      logger.info("[#{}] Query failed: ", instanceId, ex);
-    }
-
-    @Override
-    public void dataArrived(QueryDataBatch result, ConnectionThrottle throttle) {
-      lastReceivedBatchNumber++;
-      logger.debug("[#{}] Received query data batch #{}: {}.",
-                    instanceId, lastReceivedBatchNumber, result);
-
-      // If we're in a closed state, just release the message.
-      if (closed) {
-        result.release();
-        // TODO:  Revisit member completed:  Is ResultListener really completed
-        // after only one data batch after being closed?
-        completed = true;
-        return;
-      }
-
-      // We're active; let's add to the queue.
-      batchQueue.add(result);
-
-      // Throttle server if queue size has exceed threshold.
-      if (batchQueue.size() > batchQueueThrottlingThreshold) {
-        if (startThrottlingIfNot(throttle)) {
-          logger.debug("[#{}] Throttling started at queue size {}.",
-                        instanceId, batchQueue.size());
-        }
-      }
-
-      releaseIfFirst();
-    }
-
-    @Override
-    public void queryCompleted(QueryState state) {
-      logger.debug("[#{}] Received query completion: {}.", instanceId, state);
-      releaseIfFirst();
-      completed = true;
-    }
-
-    QueryId getQueryId() {
-      return queryId;
-    }
-
-    /**
-     * Gets the next batch of query results from the queue.
-     * @return  the next batch, or {@code null} after last batch has been returned
-     * @throws UserException
-     *         if the query failed
-     * @throws InterruptedException
-     *         if waiting on the queue was interrupted
-     */
-    QueryDataBatch getNext() throws UserException, InterruptedException, SQLTimeoutException {
-      while (true) {
-        if (executionFailureException != null) {
-          logger.debug("[#{}] Dequeued query failure exception: {}.",
-                        instanceId, executionFailureException);
-          throw executionFailureException;
-        }
-        if (completed && batchQueue.isEmpty()) {
-          return null;
-        } else {
-          QueryDataBatch qdb = batchQueue.poll(50, TimeUnit.MILLISECONDS);
-          if (qdb != null) {
-            lastDequeuedBatchNumber++;
-            logger.debug("[#{}] Dequeued query data batch #{}: {}.",
-                          instanceId, lastDequeuedBatchNumber, qdb);
-
-            // Unthrottle server if queue size has dropped enough below threshold:
-            if (batchQueue.size() < batchQueueThrottlingThreshold / 2
-                 || batchQueue.size() == 0  // (in case threshold < 2)
-                ) {
-              if (stopThrottlingIfSo()) {
-                logger.debug("[#{}] Throttling stopped at queue size {}.",
-                              instanceId, batchQueue.size());
-              }
-            }
-            return qdb;
-          }
-
-          // Check and throw SQLTimeoutException
-          if (parent.timeoutInMilliseconds > 0 && parent.elapsedTimer.elapsed(TimeUnit.MILLISECONDS) >= parent.timeoutInMilliseconds) {
-            throw new SqlTimeoutException(TimeUnit.MILLISECONDS.toSeconds(parent.timeoutInMilliseconds));
-          }
-        }
-      }
-    }
-
-    void close() {
-      logger.debug("[#{}] Query listener closing.", instanceId);
-      closed = true;
-      if (stopThrottlingIfSo()) {
-        logger.debug("[#{}] Throttling stopped at close() (at queue size {}).",
-                      instanceId, batchQueue.size());
-      }
-      while (!batchQueue.isEmpty()) {
-        // Don't bother with query timeout, we're closing the cursor
-        QueryDataBatch qdb = batchQueue.poll();
-        if (qdb != null && qdb.getData() != null) {
-          qdb.getData().release();
-        }
-      }
-      // Close may be called before the first result is received and therefore
-      // when the main thread is blocked waiting for the result.  In that case
-      // we want to unblock the main thread.
-      firstMessageReceived.countDown(); // TODO:  Why not call releaseIfFirst as used elsewhere?
-      completed = true;
-    }
-  }
 
   private static final Logger logger = getLogger(DrillCursor.class);
 
@@ -295,7 +61,7 @@ public class DrillCursor implements Cursor {
   /** Holds current batch of records (none before first load). */
   private final RecordBatchLoader currentBatchHolder;
 
-  private final ResultsListener resultsListener;
+  private final BlockingResultsListener resultsListener;
   private SchemaChangeListener changeListener;
 
   private final DrillAccessorList accessors = new DrillAccessorList();
@@ -355,7 +121,9 @@ public class DrillCursor implements Cursor {
     final int batchQueueThrottlingThreshold =
         client.getConfig().getInt(
             ExecConstants.JDBC_BATCH_QUEUE_THROTTLING_THRESHOLD);
-    resultsListener = new ResultsListener(this, batchQueueThrottlingThreshold);
+    resultsListener = new BlockingResultsListener(this::getElapsedTimer,
+      this::getTimeoutInMilliseconds,
+      batchQueueThrottlingThreshold);
     currentBatchHolder = new RecordBatchLoader(client.getAllocator());
 
     // Set Query Timeout
@@ -395,7 +163,7 @@ public class DrillCursor implements Cursor {
   }
 
   synchronized void cleanup() {
-    if (resultsListener.getQueryId() != null && ! resultsListener.completed) {
+    if (resultsListener.getQueryId() != null && ! resultsListener.isCompleted()) {
       connection.getClient().cancelQuery(resultsListener.getQueryId());
     }
     resultsListener.close();

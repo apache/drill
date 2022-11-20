@@ -308,6 +308,8 @@ public final class ExecConstants {
   /** Size of JDBC batch queue (in batches) above which throttling begins. */
   public static final String JDBC_BATCH_QUEUE_THROTTLING_THRESHOLD =
       "drill.jdbc.batch_queue_throttling_threshold";
+  public static final String JDBC_QUERY_TIMEOUT =
+    "drill.jdbc.query_timeout";
   // Thread pool size for scan threads. Used by the Parquet scan.
   public static final String SCAN_THREADPOOL_SIZE = "drill.exec.scan.threadpool_size";
   // The size of the thread pool used by a scan to decode the data. Used by Parquet

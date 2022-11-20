@@ -347,7 +347,7 @@ public class PreparedStatementTest extends JdbcTestBase {
    * Test setting timeout for a query that actually times out because of lack of timely server response
    */
   @Ignore ( "Pause Injection appears broken for PreparedStatement" )
-  @Test ( expected = SqlTimeoutException.class )
+  @Test ( expected = SQLTimeoutException.class )
   public void testServerTriggeredQueryTimeout() throws Exception {
     //Setting to a very low value (2sec)
     int timeoutDuration = 2;
@@ -383,7 +383,7 @@ public class PreparedStatementTest extends JdbcTestBase {
         }
       } catch (SQLTimeoutException sqlEx) {
         logger.info("SQLTimeoutException thrown: {}", sqlEx.getMessage());
-        throw (SqlTimeoutException) sqlEx;
+        throw sqlEx;
       } finally {
         //Pause briefly to wait for server to unblock
         try {

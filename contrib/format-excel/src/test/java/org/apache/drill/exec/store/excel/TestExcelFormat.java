@@ -710,6 +710,7 @@ public class TestExcelFormat extends ClusterTest {
 
     RowSet results = client.queryBuilder().sql(sql).rowSet();
     TupleMetadata expectedSchema = new SchemaBuilder()
+      .addNullable("field_1", MinorType.FLOAT8)
       .addNullable("original_id", MinorType.VARCHAR)
       .addNullable("original_nameFirst", MinorType.VARCHAR)
       .addNullable("original_nameLast", MinorType.VARCHAR)
@@ -722,14 +723,14 @@ public class TestExcelFormat extends ClusterTest {
       .buildSchema();
 
     RowSet expected = new RowSetBuilder(client.allocator(), expectedSchema)
-      .addRow("XXXX00000001", "James", "Kushner", null, null, 10235, "US", LocalDate.parse("1957-04-18").atStartOfDay().toInstant(ZoneOffset.UTC), "NY")
-      .addRow("XXXX00000002", "Steve", "Hecht", null, null, 11213, "US", LocalDate.parse("1982-08-10").atStartOfDay().toInstant(ZoneOffset.UTC), "NY")
-      .addRow("XXXX00000003", "Ethan", "Stein", null, null, 10028, "US", LocalDate.parse("1991-04-11").atStartOfDay().toInstant(ZoneOffset.UTC), "NY")
-      .addRow("XXXX00000004", "Mohammed", "Fatima", null, "Baltimore", 21202, "US", LocalDate.parse("1990-05-15").atStartOfDay().toInstant(ZoneOffset.UTC), "MD")
-      .addRow("XXXX00000005", "Yakov", "Borodin", null, "Teaneck", 7666, "US", LocalDate.parse("1986-12-20").atStartOfDay().toInstant(ZoneOffset.UTC), "NJ")
-      .addRow("XXXX00000006", "Akhil", "Chavda", null, null, null, "US", null, null)
-      .addRow("XXXX00000007", "Mark", "Rahman", null, "Ellicott City", 21043, null, LocalDate.parse("1974-06-13").atStartOfDay().toInstant(ZoneOffset.UTC), "MD")
-      .addRow("XXXX00000008", "Henry", "Smith", "xxxx@gmail.com", null, null, null, null, null)
+      .addRow(0F, "XXXX00000001", "James", "Kushner", null, null, 10235, "US", LocalDate.parse("1957-04-18").atStartOfDay().toInstant(ZoneOffset.UTC), "NY")
+      .addRow(1F, "XXXX00000002", "Steve", "Hecht", null, null, 11213, "US", LocalDate.parse("1982-08-10").atStartOfDay().toInstant(ZoneOffset.UTC), "NY")
+      .addRow(2F, "XXXX00000003", "Ethan", "Stein", null, null, 10028, "US", LocalDate.parse("1991-04-11").atStartOfDay().toInstant(ZoneOffset.UTC), "NY")
+      .addRow(3F, "XXXX00000004", "Mohammed", "Fatima", null, "Baltimore", 21202, "US", LocalDate.parse("1990-05-15").atStartOfDay().toInstant(ZoneOffset.UTC), "MD")
+      .addRow(4F, "XXXX00000005", "Yakov", "Borodin", null, "Teaneck", 7666, "US", LocalDate.parse("1986-12-20").atStartOfDay().toInstant(ZoneOffset.UTC), "NJ")
+      .addRow(5F, "XXXX00000006", "Akhil", "Chavda", null, null, null, "US", null, null)
+      .addRow(6F, "XXXX00000007", "Mark", "Rahman", null, "Ellicott City", 21043, null, LocalDate.parse("1974-06-13").atStartOfDay().toInstant(ZoneOffset.UTC), "MD")
+      .addRow(7F, "XXXX00000008", "Henry", "Smith", "xxxx@gmail.com", null, null, null, null, null)
       .build();
 
     new RowSetComparison(expected).verifyAndClearAll(results);

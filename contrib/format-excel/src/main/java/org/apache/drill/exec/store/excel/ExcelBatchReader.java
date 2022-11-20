@@ -20,6 +20,7 @@ package org.apache.drill.exec.store.excel;
 
 import com.github.pjfanning.xlsx.StreamingReader;
 import com.github.pjfanning.xlsx.impl.StreamingWorkbook;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.drill.common.exceptions.CustomErrorContext;
 import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.common.types.TypeProtos.DataMode;
@@ -381,6 +382,9 @@ public class ExcelBatchReader implements ManagedReader {
 
             // Remove leading and trailing whitespace
             tempColumnName = tempColumnName.trim();
+            if (StringUtils.isEmpty(tempColumnName)) {
+              tempColumnName = MISSING_FIELD_NAME_HEADER + (colPosition + 1);
+            }
             tempColumnName = deconflictColumnNames(tempColumnName);
             makeColumn(builder, tempColumnName, MinorType.FLOAT8);
             excelFieldNames.add(colPosition, tempColumnName);
