@@ -31,11 +31,17 @@ import org.apache.drill.common.types.Types;
 import org.apache.drill.exec.expr.fn.DrillSimpleFuncHolder;
 import org.apache.drill.exec.expr.fn.interpreter.InterpreterEvaluator;
 import org.apache.drill.exec.expr.holders.BigIntHolder;
+import org.apache.drill.exec.expr.holders.BitHolder;
+import org.apache.drill.exec.expr.holders.DateHolder;
 import org.apache.drill.exec.expr.holders.Float4Holder;
 import org.apache.drill.exec.expr.holders.Float8Holder;
 import org.apache.drill.exec.expr.holders.IntHolder;
+import org.apache.drill.exec.expr.holders.TimeHolder;
 import org.apache.drill.exec.expr.holders.TimeStampHolder;
 import org.apache.drill.exec.expr.holders.ValueHolder;
+import org.apache.drill.exec.expr.holders.VarDecimalHolder;
+import org.apache.drill.exec.ops.UdfUtilities;
+import org.apache.drill.exec.util.DecimalUtility;
 import org.apache.drill.exec.vector.ValueHolderHelper;
 import org.apache.drill.metastore.statistics.ColumnStatistics;
 import org.apache.drill.metastore.statistics.ColumnStatisticsKind;
@@ -52,10 +58,13 @@ public class StatisticsProvider<T extends Comparable<T>> extends AbstractExprVis
 
   private final Map<SchemaPath, ColumnStatistics<?>> columnStatMap;
   private final long rowCount;
+  private final UdfUtilities udfUtilities;
 
-  public StatisticsProvider(Map<SchemaPath, ColumnStatistics<?>> columnStatMap, long rowCount) {
+  public StatisticsProvider(Map<SchemaPath, ColumnStatistics<?>> columnStatMap, long rowCount,
+    UdfUtilities udfUtilities) {
     this.columnStatMap = columnStatMap;
     this.rowCount = rowCount;
+    this.udfUtilities = udfUtilities;
   }
 
   public long getRowCount() {
@@ -154,12 +163,13 @@ public class StatisticsProvider<T extends Comparable<T>> extends AbstractExprVis
 
   private ColumnStatistics<?> evalCastFunc(FunctionHolderExpression holderExpr, ColumnStatistics<T> input) {
     try {
-      DrillSimpleFuncHolder funcHolder = (DrillSimpleFuncHolder) holderExpr.getHolder();
 
-      DrillSimpleFunc interpreter = funcHolder.createInterpreter();
-
-      ValueHolder minHolder;
-      ValueHolder maxHolder;
+      T minValue = ComparisonPredicate.getMinValue(input);
+      T maxValue = ComparisonPredicate.getMaxValue(input);
+      if (minValue == null && maxValue == null) {
+        // no need to evaluate cast for null arguments
+        return input;
+      }
 
       TypeProtos.MinorType srcType = holderExpr.args.get(0).getMajorType().getMinorType();
       TypeProtos.MinorType destType = holderExpr.getMajorType().getMinorType();
@@ -171,26 +181,33 @@ public class StatisticsProvider<T extends Comparable<T>> extends AbstractExprVis
         return null; // cast func between srcType and destType is NOT allowed.
       }
 
+      ValueHolder minHolder;
+      ValueHolder maxHolder;
+
       switch (srcType) {
         case INT :
-          minHolder = ValueHolderHelper.getIntHolder((Integer) ComparisonPredicate.getMinValue(input));
-          maxHolder = ValueHolderHelper.getIntHolder((Integer) ComparisonPredicate.getMaxValue(input));
+          minHolder = ValueHolderHelper.getIntHolder((Integer) minValue);
+          maxHolder = ValueHolderHelper.getIntHolder((Integer) maxValue);
           break;
         case BIGINT:
-          minHolder = ValueHolderHelper.getBigIntHolder((Long) ComparisonPredicate.getMinValue(input));
-          maxHolder = ValueHolderHelper.getBigIntHolder((Long) ComparisonPredicate.getMaxValue(input));
+          minHolder = ValueHolderHelper.getBigIntHolder((Long) minValue);
+          maxHolder = ValueHolderHelper.getBigIntHolder((Long) maxValue);
           break;
         case FLOAT4:
-          minHolder = ValueHolderHelper.getFloat4Holder((Float) ComparisonPredicate.getMinValue(input));
-          maxHolder = ValueHolderHelper.getFloat4Holder((Float) ComparisonPredicate.getMaxValue(input));
+          minHolder = ValueHolderHelper.getFloat4Holder((Float) minValue);
+          maxHolder = ValueHolderHelper.getFloat4Holder((Float) maxValue);
           break;
         case FLOAT8:
-          minHolder = ValueHolderHelper.getFloat8Holder((Double) ComparisonPredicate.getMinValue(input));
-          maxHolder = ValueHolderHelper.getFloat8Holder((Double) ComparisonPredicate.getMaxValue(input));
+          minHolder = ValueHolderHelper.getFloat8Holder((Double) minValue);
+          maxHolder = ValueHolderHelper.getFloat8Holder((Double) maxValue);
           break;
         case DATE:
-          minHolder = ValueHolderHelper.getDateHolder((Long) ComparisonPredicate.getMinValue(input));
-          maxHolder = ValueHolderHelper.getDateHolder((Long) ComparisonPredicate.getMaxValue(input));
+          minHolder = ValueHolderHelper.getDateHolder((Long) minValue);
+          maxHolder = ValueHolderHelper.getDateHolder((Long) maxValue);
+          break;
+        case VARCHAR:
+          minHolder = ValueHolderHelper.getVarCharHolder(udfUtilities.getManagedBuffer(), (String) minValue);
+          maxHolder = ValueHolderHelper.getVarCharHolder(udfUtilities.getManagedBuffer(), (String) maxValue);
           break;
         default:
           return null;
@@ -199,10 +216,20 @@ public class StatisticsProvider<T extends Comparable<T>> extends AbstractExprVis
       ValueHolder[] args1 = {minHolder};
       ValueHolder[] args2 = {maxHolder};
 
+      DrillSimpleFuncHolder funcHolder = (DrillSimpleFuncHolder) holderExpr.getHolder();
+
+      DrillSimpleFunc interpreter = funcHolder.createInterpreter();
+
       ValueHolder minFuncHolder = InterpreterEvaluator.evaluateFunction(interpreter, args1, holderExpr.getName());
       ValueHolder maxFuncHolder = InterpreterEvaluator.evaluateFunction(interpreter, args2, holderExpr.getName());
 
       switch (destType) {
+        case BIT:
+          return StatisticsProvider.getColumnStatistics(
+            ((BitHolder) minFuncHolder).value,
+            ((BitHolder) maxFuncHolder).value,
+            ColumnStatisticsKind.NULLS_COUNT.getFrom(input),
+            destType);
         case INT:
           return StatisticsProvider.getColumnStatistics(
               ((IntHolder) minFuncHolder).value,
@@ -227,12 +254,32 @@ public class StatisticsProvider<T extends Comparable<T>> extends AbstractExprVis
               ((Float8Holder) maxFuncHolder).value,
               ColumnStatisticsKind.NULLS_COUNT.getFrom(input),
               destType);
+        case DATE:
+          return StatisticsProvider.getColumnStatistics(
+            ((DateHolder) minFuncHolder).value,
+            ((DateHolder) maxFuncHolder).value,
+            ColumnStatisticsKind.NULLS_COUNT.getFrom(input),
+            destType);
+        case TIME:
+          return StatisticsProvider.getColumnStatistics(
+            ((TimeHolder) minFuncHolder).value,
+            ((TimeHolder) maxFuncHolder).value,
+            ColumnStatisticsKind.NULLS_COUNT.getFrom(input),
+            destType);
         case TIMESTAMP:
           return StatisticsProvider.getColumnStatistics(
               ((TimeStampHolder) minFuncHolder).value,
               ((TimeStampHolder) maxFuncHolder).value,
               ColumnStatisticsKind.NULLS_COUNT.getFrom(input),
               destType);
+        case VARDECIMAL:
+          VarDecimalHolder minVarDecimalHolder = (VarDecimalHolder) minFuncHolder;
+          VarDecimalHolder maxVarDecimalHolder = (VarDecimalHolder) maxFuncHolder;
+          return StatisticsProvider.getColumnStatistics(
+            DecimalUtility.getBigDecimalFromDrillBuf(minVarDecimalHolder.buffer, minVarDecimalHolder.start, minVarDecimalHolder.scale, minVarDecimalHolder.precision),
+            DecimalUtility.getBigDecimalFromDrillBuf(maxVarDecimalHolder.buffer, maxVarDecimalHolder.start, maxVarDecimalHolder.scale, maxVarDecimalHolder.precision),
+            ColumnStatisticsKind.NULLS_COUNT.getFrom(input),
+            destType);
         default:
           return null;
       }

@@ -143,6 +143,11 @@ public abstract class AbstractPluginImplementor implements PluginImplementor {
     return false;
   }
 
+  @Override
+  public boolean artificialFilter() {
+    return false;
+  }
+
   private UserException getUnsupported(String rel) {
     return UserException.unsupportedError()
         .message("Plugin implementor doesn't support push down for %s", rel)

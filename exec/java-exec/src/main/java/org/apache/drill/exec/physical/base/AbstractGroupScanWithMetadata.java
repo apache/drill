@@ -41,6 +41,7 @@ import org.apache.drill.exec.metastore.MetadataProviderManager;
 import org.apache.drill.exec.metastore.analyze.FileMetadataInfoCollector;
 import org.apache.drill.exec.ops.OptimizerRulesContext;
 import org.apache.drill.exec.ops.UdfUtilities;
+import org.apache.drill.exec.physical.impl.scan.v3.FixedReceiver;
 import org.apache.drill.exec.planner.physical.PlannerSettings;
 import org.apache.drill.exec.record.MaterializedField;
 import org.apache.drill.exec.record.metadata.ColumnMetadata;
@@ -1076,25 +1077,21 @@ public abstract class AbstractGroupScanWithMetadata<P extends TableMetadataProvi
       for (T metadata : metadataList) {
         TupleMetadata schema = metadata.getSchema();
         if (schema != null && !tableSchema.isEquivalent(schema)) {
+          schema = FixedReceiver.Builder.mergeSchemas(schema, tableSchema);
           filterPredicate = getFilterPredicate(filterExpression, udfUtilities,
               context, optionManager, true, true, schema);
         }
         Map<SchemaPath, ColumnStatistics<?>> columnsStatistics = metadata.getColumnsStatistics();
 
         // adds partition (dir) column statistics if it may be used during filter evaluation
-        if (metadata instanceof LocationProvider && optionManager != null) {
-          LocationProvider locationProvider = (LocationProvider) metadata;
-          columnsStatistics = ParquetTableMetadataUtils.addImplicitColumnsStatistics(columnsStatistics,
-              source.columns, source.getPartitionValues(locationProvider), optionManager,
-              locationProvider.getPath(), source.supportsFileImplicitColumns());
-        }
+        columnsStatistics = getImplicitColumnStatistics(optionManager, metadata, columnsStatistics);
 
         if (source.getNonInterestingColumnsMetadata() != null) {
           columnsStatistics.putAll(source.getNonInterestingColumnsMetadata().getColumnsStatistics());
         }
         RowsMatch match = FilterEvaluatorUtils.matches(filterPredicate,
             columnsStatistics, TableStatisticsKind.ROW_COUNT.getValue(metadata),
-            schema, schemaPathsInExpr);
+            schema, schemaPathsInExpr, udfUtilities);
         if (match == RowsMatch.NONE) {
           continue; // No file comply to the filter => drop the file
         }
@@ -1107,6 +1104,17 @@ public abstract class AbstractGroupScanWithMetadata<P extends TableMetadataProvi
         matchAllMetadata = false;
       }
       return qualifiedMetadata;
+    }
+
+    protected  <T extends Metadata> Map<SchemaPath, ColumnStatistics<?>> getImplicitColumnStatistics(
+      OptionManager optionManager, T metadata, Map<SchemaPath, ColumnStatistics<?>> columnsStatistics) {
+      if (metadata instanceof LocationProvider && optionManager != null) {
+        LocationProvider locationProvider = (LocationProvider) metadata;
+        columnsStatistics = ParquetTableMetadataUtils.addImplicitColumnsStatistics(columnsStatistics,
+            source.columns, source.getPartitionValues(locationProvider), optionManager,
+            locationProvider.getPath(), source.supportsFileImplicitColumns());
+      }
+      return columnsStatistics;
     }
 
     protected abstract B self();

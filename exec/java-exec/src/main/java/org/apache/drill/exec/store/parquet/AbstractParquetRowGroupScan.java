@@ -111,6 +111,10 @@ public abstract class AbstractParquetRowGroupScan extends AbstractBase implement
   @JsonProperty
   public TupleMetadata getSchema() { return schema; }
 
+  public boolean isImplicitColumn(SchemaPath path, String partitionColumnLabel) {
+    return path.toString().matches(partitionColumnLabel + "\\d+");
+  }
+
   public abstract AbstractParquetRowGroupScan copy(List<SchemaPath> columns);
   @JsonIgnore
   public abstract Configuration getFsConf(RowGroupReadEntry rowGroupReadEntry) throws IOException;

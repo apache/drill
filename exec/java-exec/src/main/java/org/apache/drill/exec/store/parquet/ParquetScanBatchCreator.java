@@ -51,12 +51,12 @@ public class ParquetScanBatchCreator extends AbstractParquetScanBatchCreator imp
   /**
    * Creates file system only if it was not created before, otherwise returns already created instance.
    */
-  private class ParquetDrillFileSystemManager extends AbstractDrillFileSystemManager {
+  public static class ParquetDrillFileSystemManager extends AbstractDrillFileSystemManager {
 
     private final boolean useAsyncPageReader;
     private DrillFileSystem fs;
 
-    ParquetDrillFileSystemManager(OperatorContext operatorContext, boolean useAsyncPageReader) {
+    public ParquetDrillFileSystemManager(OperatorContext operatorContext, boolean useAsyncPageReader) {
       super(operatorContext);
       this.useAsyncPageReader = useAsyncPageReader;
     }
