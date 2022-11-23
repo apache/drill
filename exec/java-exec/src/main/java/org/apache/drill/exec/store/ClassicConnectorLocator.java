@@ -271,9 +271,8 @@ public class ClassicConnectorLocator implements ConnectorLocator {
     }
     try {
       plugin = constructor.newInstance(pluginConfig, context.drillbitContext(), name);
-      plugin.start();
       return plugin;
-    } catch (ReflectiveOperationException | IOException e) {
+    } catch (ReflectiveOperationException e) {
       Throwable t = e instanceof InvocationTargetException ? ((InvocationTargetException) e).getTargetException() : e;
       if (t instanceof ExecutionSetupException) {
         throw ((ExecutionSetupException) t);
