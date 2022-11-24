@@ -48,6 +48,20 @@ public interface StoragePlugin extends SchemaFactory, AutoCloseable {
   void start() throws IOException;
 
   /**
+   * Lifecycle method allowing the plugin to perform operations when it has been enabled.
+   * @throws Exception in the event of an error. The exception will be propagated
+   * but the enabling of the plugin will _not_ be rolled back.
+   */
+  void onEnabled() throws Exception;
+
+  /**
+   * Lifecycle method allowing the plugin to perform operations when it has been disabled.
+   * @throws Exception in the event of an error. The exception will be propagated
+   * but the disabling of the plugin will _not_ be rolled back.
+   */
+  void onDisabled() throws Exception;
+
+  /**
    * Indicates if Drill can read the table from this format.
   */
   boolean supportsRead();
