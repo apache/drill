@@ -22,7 +22,7 @@ function serverMessage(data) {
         setTimeout(function() { window.location.href = "/storage"; }, 800);
         return true;
     } else {
-	    const errorMessage = data.errorMessage || data.responseJSON["result"];
+	    const errorMessage = data.errorMessage || data.responseJSON["result"] || data.responseJSON["message"];
 
         messageEl.addClass("d-none");
         // Wait a fraction of a second before showing the message again. This
