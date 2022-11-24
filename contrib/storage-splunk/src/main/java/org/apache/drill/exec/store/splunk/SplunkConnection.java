@@ -71,7 +71,7 @@ public class SplunkConnection {
     this.owner = config.getOwner();
     this.token = config.getToken();
     this.cookie = config.getCookie();
-    this.validateCertificates = Optional.ofNullable(config.getValidateCertificates()).orElse(false);
+    this.validateCertificates = Optional.ofNullable(config.getValidateCertificates()).orElse(true);
     this.connectionAttempts = config.getReconnectRetries();
     service = connect();
   }
