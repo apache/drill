@@ -18,6 +18,7 @@
 
 package org.apache.drill.exec.store.xml;
 
+import org.apache.commons.lang3.time.DateUtils;
 import org.apache.drill.common.AutoCloseables;
 import org.apache.drill.common.exceptions.CustomErrorContext;
 import org.apache.drill.common.exceptions.UserException;
@@ -31,6 +32,7 @@ import org.apache.drill.exec.record.metadata.SchemaBuilder;
 import org.apache.drill.exec.store.ImplicitColumnUtils.ImplicitColumns;
 import org.apache.drill.exec.vector.accessor.ScalarWriter;
 import org.apache.drill.exec.vector.accessor.TupleWriter;
+import org.apache.drill.shaded.guava.com.google.common.base.Strings;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -43,6 +45,14 @@ import javax.xml.stream.events.StartElement;
 import javax.xml.stream.events.XMLEvent;
 import java.io.Closeable;
 import java.io.InputStream;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.time.Instant;
+import java.time.LocalDate;
+import java.time.LocalTime;
+import java.time.ZoneId;
+import java.time.format.DateTimeFormatter;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
@@ -428,10 +438,80 @@ public class XMLReader implements Closeable {
       index = writer.addColumn(colSchema);
     }
     ScalarWriter colWriter = writer.scalar(index);
+    ColumnMetadata columnMetadata = writer.tupleSchema().metadata(index);
+    MinorType dataType = columnMetadata.schema().getType().getMinorType();
+    String dateFormat;
+
+    // Write the values depending on their data type.  This only applies to scalar fields.
     if (fieldValue != null && (currentState != xmlState.ROW_ENDED && currentState != xmlState.FIELD_ENDED)) {
-      colWriter.setString(fieldValue);
+      switch (dataType) {
+        case BIT:
+          colWriter.setBoolean(Boolean.parseBoolean(fieldValue));
+          break;
+        case TINYINT:
+        case SMALLINT:
+        case INT:
+          colWriter.setInt(Integer.parseInt(fieldValue));
+          break;
+        case BIGINT:
+          colWriter.setLong(Long.parseLong(fieldValue));
+          break;
+        case FLOAT4:
+        case FLOAT8:
+          colWriter.setDouble(Double.parseDouble(fieldValue));
+          break;
+        case DATE:
+          dateFormat = columnMetadata.property("drill.format");
+          LocalDate localDate;
+          if (Strings.isNullOrEmpty(dateFormat)) {
+            localDate = LocalDate.parse(fieldValue);
+          } else {
+            localDate = LocalDate.parse(fieldValue, DateTimeFormatter.ofPattern(dateFormat));
+          }
+          colWriter.setDate(localDate);
+          break;
+        case TIME:
+          dateFormat = columnMetadata.property("drill.format");
+          LocalTime localTime;
+          if (Strings.isNullOrEmpty(dateFormat)) {
+            localTime = LocalTime.parse(fieldValue);
+          } else {
+            localTime = LocalTime.parse(fieldValue, DateTimeFormatter.ofPattern(dateFormat));
+          }
+          colWriter.setTime(localTime);
+          break;
+        case TIMESTAMP:
+          dateFormat = columnMetadata.property("drill.format");
+          Instant timestamp = null;
+          if (Strings.isNullOrEmpty(dateFormat)) {
+            timestamp = Instant.parse(fieldValue);
+          } else {
+            try {
+              SimpleDateFormat simpleDateFormat = new SimpleDateFormat(dateFormat);
+              Date parsedDate = simpleDateFormat.parse(fieldValue);
+              timestamp = Instant.ofEpochMilli(parsedDate.getTime());
+            } catch (ParseException e) {
+              logger.error("Error parsing timestamp: " + e.getMessage());
+            }
+          }
+          colWriter.setTimestamp(timestamp);
+          break;
+      default:
+          colWriter.setString(fieldValue);
+      }
       changeState(xmlState.FIELD_ENDED);
     }
+  }
+
+  /**
+   * Converts a {@link Date} to a {@link LocalDate}
+   * @param dateToConvert The input {@link Date}
+   * @return {@link LocalDate} The LocalDate representation of the input date.
+   */
+  private LocalDate toLocalDate(Date dateToConvert) {
+    return Instant.ofEpochMilli(dateToConvert.getTime())
+      .atZone(ZoneId.systemDefault())
+      .toLocalDate();
   }
 
   /**

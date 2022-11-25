@@ -1,0 +1,208 @@
+<?xml version="1.0" standalone="yes"?>
+<response>
+    <status>
+        <result>success</result>
+    </status>
+    <request_criteria>
+        <request>
+            <type_of_data>Budget</type_of_data>
+            <records_from>1</records_from>
+            <max_records>10</max_records>
+        </request>
+    </request_criteria>
+    <result_records>
+        <record_count>2019238</record_count>
+        <budget_transactions>
+            <transaction>
+                <agency>Department of Social Services</agency>
+                <year>2022</year>
+                <department>MEDICAL ASSISTANCE - OTPS</department>
+                <expense_category>MEDICAL ASSISTANCE</expense_category>
+                <budget_code>9564</budget_code>
+                <budget_name>MMIS MEDICAL ASSISTANCE</budget_name>
+                <budget_amounts>
+                    <modified>5972433142</modified>
+                    <adopted>5584533142</adopted>
+                </budget_amounts>
+                <expenditure_amounts>
+                    <pre_encumbered>0</pre_encumbered>
+                    <encumbered>0</encumbered>
+                    <cash_expense>5587800915</cash_expense>
+                    <post_adjustment>0</post_adjustment>
+                    <accrued_expense>498473747</accrued_expense>
+                </expenditure_amounts>
+            </transaction>
+            <transaction>
+                <agency>Department of Social Services</agency>
+                <year>2020</year>
+                <department>MEDICAL ASSISTANCE - OTPS</department>
+                <expense_category>MEDICAL ASSISTANCE</expense_category>
+                <budget_code>9564</budget_code>
+                <budget_name>MMIS MEDICAL ASSISTANCE</budget_name>
+                <budget_amounts>
+                    <modified>5819588142</modified>
+                    <adopted>4953233142</adopted>
+                </budget_amounts>
+                <expenditure_amounts>
+                    <pre_encumbered>0</pre_encumbered>
+                    <encumbered>0</encumbered>
+                    <cash_expense>5916797936.47</cash_expense>
+                    <post_adjustment>0</post_adjustment>
+                    <accrued_expense>52409516.55</accrued_expense>
+                </expenditure_amounts>
+            </transaction>
+            <transaction>
+                <agency>Department of Social Services</agency>
+                <year>2014</year>
+                <department>MEDICAL ASSISTANCE - OTPS</department>
+                <expense_category>MEDICAL ASSISTANCE</expense_category>
+                <budget_code>9564</budget_code>
+                <budget_name>MMIS MEDICAL ASSISTANCE</budget_name>
+                <budget_amounts>
+                    <modified>5708101276</modified>
+                    <adopted>5231324567</adopted>
+                </budget_amounts>
+                <expenditure_amounts>
+                    <pre_encumbered>0</pre_encumbered>
+                    <encumbered>0</encumbered>
+                    <cash_expense>5869817480.98</cash_expense>
+                    <post_adjustment>0</post_adjustment>
+                    <accrued_expense>0</accrued_expense>
+                </expenditure_amounts>
+            </transaction>
+            <transaction>
+                <agency>Department of Social Services</agency>
+                <year>2015</year>
+                <department>MEDICAL ASSISTANCE - OTPS</department>
+                <expense_category>MEDICAL ASSISTANCE</expense_category>
+                <budget_code>9564</budget_code>
+                <budget_name>MMIS MEDICAL ASSISTANCE</budget_name>
+                <budget_amounts>
+                    <modified>5663673673</modified>
+                    <adopted>5312507361</adopted>
+                </budget_amounts>
+                <expenditure_amounts>
+                    <pre_encumbered>0</pre_encumbered>
+                    <encumbered>0</encumbered>
+                    <cash_expense>5929896435.16</cash_expense>
+                    <post_adjustment>0</post_adjustment>
+                    <accrued_expense>0</accrued_expense>
+                </expenditure_amounts>
+            </transaction>
+            <transaction>
+                <agency>Department of Social Services</agency>
+                <year>2023</year>
+                <department>MEDICAL ASSISTANCE - OTPS</department>
+                <expense_category>MEDICAL ASSISTANCE</expense_category>
+                <budget_code>9564</budget_code>
+                <budget_name>MMIS MEDICAL ASSISTANCE</budget_name>
+                <budget_amounts>
+                    <modified>5602133142</modified>
+                    <adopted>5602133142</adopted>
+                </budget_amounts>
+                <expenditure_amounts>
+                    <pre_encumbered>0</pre_encumbered>
+                    <encumbered>154984873.02</encumbered>
+                    <cash_expense>1875036426.98</cash_expense>
+                    <post_adjustment>0</post_adjustment>
+                    <accrued_expense>0</accrued_expense>
+                </expenditure_amounts>
+            </transaction>
+            <transaction>
+                <agency>Department of Social Services</agency>
+                <year>2013</year>
+                <department>MEDICAL ASSISTANCE - OTPS</department>
+                <expense_category>MEDICAL ASSISTANCE</expense_category>
+                <budget_code>9564</budget_code>
+                <budget_name>MMIS MEDICAL ASSISTANCE</budget_name>
+                <budget_amounts>
+                    <modified>5585120159</modified>
+                    <adopted>5149208291</adopted>
+                </budget_amounts>
+                <expenditure_amounts>
+                    <pre_encumbered>0</pre_encumbered>
+                    <encumbered>0</encumbered>
+                    <cash_expense>5647462830.8</cash_expense>
+                    <post_adjustment>0</post_adjustment>
+                    <accrued_expense>0</accrued_expense>
+                </expenditure_amounts>
+            </transaction>
+            <transaction>
+                <agency>Department of Social Services</agency>
+                <year>2019</year>
+                <department>MEDICAL ASSISTANCE - OTPS</department>
+                <expense_category>MEDICAL ASSISTANCE</expense_category>
+                <budget_code>9564</budget_code>
+                <budget_name>MMIS MEDICAL ASSISTANCE</budget_name>
+                <budget_amounts>
+                    <modified>5551859976</modified>
+                    <adopted>4953233142</adopted>
+                </budget_amounts>
+                <expenditure_amounts>
+                    <pre_encumbered>0</pre_encumbered>
+                    <encumbered>0</encumbered>
+                    <cash_expense>5801889617.86</cash_expense>
+                    <post_adjustment>0</post_adjustment>
+                    <accrued_expense>0</accrued_expense>
+                </expenditure_amounts>
+            </transaction>
+            <transaction>
+                <agency>Department of Social Services</agency>
+                <year>2018</year>
+                <department>MEDICAL ASSISTANCE - OTPS</department>
+                <expense_category>MEDICAL ASSISTANCE</expense_category>
+                <budget_code>9564</budget_code>
+                <budget_name>MMIS MEDICAL ASSISTANCE</budget_name>
+                <budget_amounts>
+                    <modified>5543733142</modified>
+                    <adopted>4953233142</adopted>
+                </budget_amounts>
+                <expenditure_amounts>
+                    <pre_encumbered>0</pre_encumbered>
+                    <encumbered>0</encumbered>
+                    <cash_expense>5655400515.64</cash_expense>
+                    <post_adjustment>0</post_adjustment>
+                    <accrued_expense>0</accrued_expense>
+                </expenditure_amounts>
+            </transaction>
+            <transaction>
+                <agency>Department of Social Services</agency>
+                <year>2017</year>
+                <department>MEDICAL ASSISTANCE - OTPS</department>
+                <expense_category>MEDICAL ASSISTANCE</expense_category>
+                <budget_code>9564</budget_code>
+                <budget_name>MMIS MEDICAL ASSISTANCE</budget_name>
+                <budget_amounts>
+                    <modified>5495054613</modified>
+                    <adopted>4953233142</adopted>
+                </budget_amounts>
+                <expenditure_amounts>
+                    <pre_encumbered>0</pre_encumbered>
+                    <encumbered>0</encumbered>
+                    <cash_expense>5578297447.24</cash_expense>
+                    <post_adjustment>0</post_adjustment>
+                    <accrued_expense>0</accrued_expense>
+                </expenditure_amounts>
+            </transaction>
+            <transaction>
+                <agency>Department of Social Services</agency>
+                <year>2012</year>
+                <department>MEDICAL ASSISTANCE - OTPS</department>
+                <expense_category>MEDICAL ASSISTANCE</expense_category>
+                <budget_code>9564</budget_code>
+                <budget_name>MMIS MEDICAL ASSISTANCE</budget_name>
+                <budget_amounts>
+                    <modified>5403109245</modified>
+                    <adopted>5050117767</adopted>
+                </budget_amounts>
+                <expenditure_amounts>
+                    <pre_encumbered>0</pre_encumbered>
+                    <encumbered>0</encumbered>
+                    <cash_expense>5412192247.79</cash_expense>
+                    <post_adjustment>0</post_adjustment>
+                    <accrued_expense>0</accrued_expense>
+                </expenditure_amounts>
+            </transaction>
+        </budget_transactions>
+    </result_records>
+</response>
