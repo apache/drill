@@ -286,6 +286,26 @@ public class TestHttpPlugin extends ClusterTest {
       .dataPath("results")
       .build();
 
+    HttpXmlOptions xmlOptions = new HttpXmlOptions.HttpXmlOptionsBuilder()
+      .dataLevel(2)
+      .build();
+
+    TupleMetadata testSchema = new SchemaBuilder()
+      .add("attributes", MinorType.MAP)
+      .addNullable("COMMON", MinorType.VARCHAR)
+      .addNullable("BOTANICAL", MinorType.VARCHAR)
+      .addNullable("ZONE", MinorType.INT)
+      .addNullable("LIGHT", MinorType.VARCHAR)
+      .addNullable("PRICE", MinorType.VARCHAR)
+      .addNullable("AVAILABILITY", MinorType.VARCHAR)
+      .buildSchema();
+
+    HttpXmlOptions xmlOptionsWithSchhema = new HttpXmlOptions.HttpXmlOptionsBuilder()
+      .dataLevel(2)
+      .schema(testSchema)
+      .build();
+
+
     HttpApiConfig mockXmlConfig = HttpApiConfig.builder()
       .url(makeUrl("http://localhost:%d/xml"))
       .method("GET")
@@ -295,8 +315,21 @@ public class TestHttpPlugin extends ClusterTest {
       .password("pass")
       .dataPath("results")
       .inputType("xml")
-      .xmlDataLevel(2)
+      .xmlOptions(xmlOptions)
       .build();
+
+    HttpApiConfig mockXmlConfigWithSchema = HttpApiConfig.builder()
+      .url(makeUrl("http://localhost:%d/xml"))
+      .method("GET")
+      .headers(headers)
+      .authType("basic")
+      .userName("user")
+      .password("pass")
+      .dataPath("results")
+      .inputType("xml")
+      .xmlOptions(xmlOptionsWithSchhema)
+      .build();
+
 
     HttpApiConfig mockGithubWithParam = HttpApiConfig.builder()
       .url(makeUrl("http://localhost:%d/orgs/{org}/repos"))
@@ -349,6 +382,7 @@ public class TestHttpPlugin extends ClusterTest {
     configs.put("mockPostPushdownWithStaticParams", mockPostPushdownWithStaticParams);
     configs.put("mockcsv", mockCsvConfig);
     configs.put("mockxml", mockXmlConfig);
+    configs.put("mockxml_with_schema", mockXmlConfigWithSchema);
     configs.put("github", mockGithubWithParam);
     configs.put("github2", mockGithubWithDuplicateParam);
     configs.put("github3", mockGithubWithParamInQuery);
@@ -385,6 +419,7 @@ public class TestHttpPlugin extends ClusterTest {
         .addRow("local.mockcsv", "http")
         .addRow("local.mockpost", "http")
         .addRow("local.mockxml", "http")
+        .addRow("local.mockxml_with_schema", "http")
         .addRow("local.nullpost", "http")
         .addRow("local.sunrise", "http")
         .build();
@@ -759,6 +794,22 @@ public class TestHttpPlugin extends ClusterTest {
   }
 
   @Test
+  public void testSerDeXML() throws Exception {
+    try (MockWebServer server = startServer()) {
+
+      server.enqueue(
+        new MockResponse().setResponseCode(200)
+          .setBody(TEST_XML_RESPONSE)
+      );
+
+      String sql = "SELECT COUNT(*) FROM local.mockxml.`xml?arg1=4` ";
+      String plan = queryBuilder().sql(sql).explainJson();
+      long cnt = queryBuilder().physical(plan).singletonLong();
+      assertEquals("Counts should match", 36L, cnt);
+    }
+  }
+
+  @Test
    public void testSerDeCSV() throws Exception {
     try (MockWebServer server = startServer()) {
 
@@ -868,6 +919,37 @@ public class TestHttpPlugin extends ClusterTest {
         .addRow(mapArray(),"Marsh Marigold", "Caltha palustris", "4", "Mostly Sunny", "$6.81", "051799")
         .addRow(mapArray(), "Cowslip", "Caltha palustris", "4", "Mostly Shady", "$9.90", "030699")
         .addRow(mapArray(), "Dutchman's-Breeches", "Dicentra cucullaria", "3", "Mostly Shady", "$6.44", "012099")
+        .build();
+
+      RowSetUtilities.verify(expected, results);
+    }
+  }
+
+  @Test
+  public void testXmlWithSchemaResponse() throws Exception {
+    String sql = "SELECT * FROM local.mockxml_with_schema.`?arg1=4` LIMIT 5";
+    try (MockWebServer server = startServer()) {
+
+      server.enqueue(new MockResponse().setResponseCode(200).setBody(TEST_XML_RESPONSE));
+
+      RowSet results = client.queryBuilder().sql(sql).rowSet();
+
+      TupleMetadata expectedSchema = new SchemaBuilder()
+        .add("attributes", MinorType.MAP)
+        .addNullable("COMMON", MinorType.VARCHAR)
+        .addNullable("BOTANICAL", MinorType.VARCHAR)
+        .addNullable("ZONE", MinorType.INT)
+        .addNullable("LIGHT", MinorType.VARCHAR)
+        .addNullable("PRICE", MinorType.VARCHAR)
+        .addNullable("AVAILABILITY", MinorType.VARCHAR)
+        .buildSchema();
+
+      RowSet expected = new RowSetBuilder(client.allocator(), expectedSchema)
+        .addRow(mapArray(), "Bloodroot", "Sanguinaria canadensis", 4, "Mostly Shady", "$2.44", "031599")
+        .addRow(mapArray(),"Columbine", "Aquilegia canadensis", 3, "Mostly Shady", "$9.37", "030699")
+        .addRow(mapArray(),"Marsh Marigold", "Caltha palustris", 4, "Mostly Sunny", "$6.81", "051799")
+        .addRow(mapArray(), "Cowslip", "Caltha palustris", 4, "Mostly Shady", "$9.90", "030699")
+        .addRow(mapArray(), "Dutchman's-Breeches", "Dicentra cucullaria", 3, "Mostly Shady", "$6.44", "012099")
         .build();
 
       RowSetUtilities.verify(expected, results);

@@ -18,7 +18,6 @@
 
 package org.apache.drill.exec.store.xml;
 
-import org.apache.commons.lang3.time.DateUtils;
 import org.apache.drill.common.AutoCloseables;
 import org.apache.drill.common.exceptions.CustomErrorContext;
 import org.apache.drill.common.exceptions.UserException;
@@ -50,7 +49,6 @@ import java.text.SimpleDateFormat;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.time.LocalTime;
-import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.util.Date;
 import java.util.HashMap;
@@ -187,7 +185,7 @@ public class XMLReader implements Closeable {
         currentEvent = nextEvent;
 
         // Process the event
-        processEvent(currentEvent, lastEvent);
+        processEvent(currentEvent, lastEvent, reader.peek());
       } catch (XMLStreamException e) {
         throw UserException
           .dataReadError(e)
@@ -205,7 +203,7 @@ public class XMLReader implements Closeable {
    * the self-closing events can cause schema issues with Drill specifically, if a self-closing event
    * is detected prior to a non-self-closing event, and that populated event contains a map or other nested data
    * Drill will throw a schema change exception.
-   *
+   * <p>
    * Since Drill uses Java's streaming XML parser, unfortunately, it does not provide a means of identifying
    * self-closing tags.  This function does that by comparing the event with the previous event and looking for
    * a condition where one event is a start and the other is an ending event.  Additionally, the column number and
@@ -239,7 +237,7 @@ public class XMLReader implements Closeable {
    * @param lastEvent The previous event which was processed
    */
   private void processEvent(XMLEvent currentEvent,
-                            XMLEvent lastEvent) {
+                            XMLEvent lastEvent, XMLEvent nextEvent) {
     String mapName;
     switch (currentEvent.getEventType()) {
 
@@ -292,7 +290,6 @@ public class XMLReader implements Closeable {
             attributePrefix = XMLUtils.addField(attributePrefix, fieldName);
           }
 
-          @SuppressWarnings("unchecked")
           Iterator<Attribute> attributes = startElement.getAttributes();
           if (attributes != null && attributes.hasNext()) {
             writeAttributes(attributePrefix, attributes);
@@ -504,17 +501,6 @@ public class XMLReader implements Closeable {
   }
 
   /**
-   * Converts a {@link Date} to a {@link LocalDate}
-   * @param dateToConvert The input {@link Date}
-   * @return {@link LocalDate} The LocalDate representation of the input date.
-   */
-  private LocalDate toLocalDate(Date dateToConvert) {
-    return Instant.ofEpochMilli(dateToConvert.getTime())
-      .atZone(ZoneId.systemDefault())
-      .toLocalDate();
-  }
-
-  /**
    * Writes a attribute. If the field does not have a corresponding ScalarWriter, this method will
    * create one.
    * @param fieldName The field name
@@ -571,7 +557,11 @@ public class XMLReader implements Closeable {
   }
 
   private TupleWriter getAttributeWriter() {
-    int attributeIndex = rootRowWriter.addColumn(SchemaBuilder.columnSchema(ATTRIBUTE_MAP_NAME, MinorType.MAP, DataMode.REQUIRED));
+    int attributeIndex = rootRowWriter.tupleSchema().index(ATTRIBUTE_MAP_NAME);
+
+    if (attributeIndex == -1) {
+      attributeIndex = rootRowWriter.addColumn(SchemaBuilder.columnSchema(ATTRIBUTE_MAP_NAME, MinorType.MAP, DataMode.REQUIRED));
+    }
     return rootRowWriter.tuple(attributeIndex);
   }
 

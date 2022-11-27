@@ -1,10 +1,10 @@
 # XML Format Reader
-This plugin enables Drill to read XML files without defining any kind of schema. 
+This plugin enables Drill to read XML files without defining any kind of schema.
 
 ## Configuration
 Aside from the file extension, there is one configuration option:
 
-* `dataLevel`: XML data often contains a considerable amount of nesting which is not necesarily useful for data analysis. This parameter allows you to set the nesting level 
+* `dataLevel`: XML data often contains a considerable amount of nesting which is not necesarily useful for data analysis. This parameter allows you to set the nesting level
   where the data actually starts.  The levels start at `1`.
 
 The default configuration is shown below:
@@ -22,6 +22,21 @@ The default configuration is shown below:
 ## Data Types
 All fields are read as strings.  Nested fields are read as maps.  Future functionality could include support for lists.
 
+## Provided Schema
+The XML Format Reader supports provided inline schemas.  An example query might be:
+
+```sql
+SELECT * FROM table(cp.`xml/simple_with_datatypes.xml`(type => 'xml',
+    schema => 'inline=(`int_field` INT, `bigint_field` BIGINT,
+    `float_field` FLOAT, `double_field` DOUBLE,
+    `boolean_field` BOOLEAN, `date_field` DATE,
+    `time_field` TIME, `timestamp_field` TIMESTAMP,
+    `string_field` VARCHAR,
+    `date2_field` DATE properties {`drill.format` = `MM/dd/yyyy`})'));
+```
+
+Current implementation only supports provided schema for scalar data types.
+
 ### Attributes
 XML events can have attributes which can also be useful.
 ```xml
@@ -33,8 +48,8 @@ XML events can have attributes which can also be useful.
 </book>
 ```
 
-In the example above, the `title` field contains two attributes, the `binding` and `subcategory`.  In order to access these fields, Drill creates a map called `attributes` and 
-adds an entry for each attribute with the field name and then the attribute name.  Every XML file will have a field called `atttributes` regardless of whether the data actually 
+In the example above, the `title` field contains two attributes, the `binding` and `subcategory`.  In order to access these fields, Drill creates a map called `attributes` and
+adds an entry for each attribute with the field name and then the attribute name.  Every XML file will have a field called `atttributes` regardless of whether the data actually
 has attributes or not.
 
 ```xml
@@ -65,7 +80,7 @@ has attributes or not.
 If you queried this data in Drill you'd get the table below:
 
 ```sql
-SELECT * 
+SELECT *
 FROM <path>.`attributes.xml`
 ```
 
@@ -82,7 +97,7 @@ apache drill> select * from dfs.test.`attributes.xml`;
 
 ## Limitations:  Malformed XML
 Drill can read properly formatted XML.  If the XML is not properly formatted, Drill will throw errors. Some issues include illegal characters in field names, or attribute names.
-Future functionality will include some degree of data cleaning and fault tolerance. 
+Future functionality will include some degree of data cleaning and fault tolerance.
 
 ## Limitations: Schema Ambiguity
 XML is a challenging format to process as the structure does not give any hints about the schema.  For example, a JSON file might have the following record:
@@ -126,13 +141,13 @@ This is no problem to parse this data. But consider what would happen if we enco
   </otherField>
 </record>
 ```
-In this example, there is no way for Drill to know whether `listField` is a `list` or a `map` because it only has one entry. 
+In this example, there is no way for Drill to know whether `listField` is a `list` or a `map` because it only has one entry.
 
 ## Future Functionality
 
 * **Build schema from XSD file or link**:  One of the major challenges of this reader is having to infer the schema of the data. XML files do provide a schema although this is not
- required.  In the future, if there is interest, we can extend this reader to use an XSD file to build the schema which will be used to parse the actual XML file. 
-  
+ required.  In the future, if there is interest, we can extend this reader to use an XSD file to build the schema which will be used to parse the actual XML file.
+
 * **Infer Date Fields**: It may be possible to add the ability to infer data fields.
 
-* **List Support**:  Future functionality may include the ability to infer lists from data structures.  
+* **List Support**:  Future functionality may include the ability to infer lists from data structures.
