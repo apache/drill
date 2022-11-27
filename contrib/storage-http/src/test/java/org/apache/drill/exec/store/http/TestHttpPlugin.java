@@ -131,11 +131,26 @@ public class TestHttpPlugin extends ClusterTest {
       .requireTail(false)
       .build();
 
+    HttpXmlOptions nycXmlOptions = HttpXmlOptions.builder()
+      .dataLevel(5)
+      .build();
+
+    HttpApiConfig nycConfig = HttpApiConfig.builder()
+      .url("https://www.checkbooknyc.com/api")
+      .method("post")
+      .inputType("xml")
+      .requireTail(false)
+      .params(Arrays.asList("type_of_data", "records_from", "max_records"))
+      .postParameterLocation("xml_body")
+      .xmlOptions(nycXmlOptions)
+      .build();
+
     Map<String, HttpApiConfig> configs = new HashMap<>();
     configs.put("stock", stockConfig);
     configs.put("sunrise", sunriseConfig);
     configs.put("sunrise2", sunriseWithParamsConfig);
     configs.put("pokemon", pokemonConfig);
+    configs.put("nyc", nycConfig);
 
     HttpStoragePluginConfig mockStorageConfigWithWorkspace =
         new HttpStoragePluginConfig(false, configs, 10, 1000, null, null, "", 80, "", "", "", null, PlainCredentialsProvider.EMPTY_CREDENTIALS_PROVIDER,
@@ -539,6 +554,35 @@ public class TestHttpPlugin extends ClusterTest {
         "WHERE `lat`=36.7201600 AND `lng`=-4.4203400 AND `date`='2019-10-02'";
     doSimpleSpecificQuery(sql);
   }
+
+  @Test
+  @Ignore("Requires Remote Server")
+  public void simpleStarQueryWithXMLParams() throws Exception {
+    String sql = "SELECT year, department, expense_category, budget_code, budget_name, modified, adopted " +
+      "FROM live.nyc WHERE type_of_data='Budget' AND records_from=1 AND max_records=5 AND year IS NOT null";
+
+    RowSet results = client.queryBuilder().sql(sql).rowSet();
+
+    TupleMetadata expectedSchema = new SchemaBuilder()
+      .add("year", TypeProtos.MinorType.VARCHAR, TypeProtos.DataMode.OPTIONAL)
+      .add("department", TypeProtos.MinorType.VARCHAR, TypeProtos.DataMode.OPTIONAL)
+      .add("expense_category", TypeProtos.MinorType.VARCHAR, TypeProtos.DataMode.OPTIONAL)
+      .add("budget_code", TypeProtos.MinorType.VARCHAR, TypeProtos.DataMode.OPTIONAL)
+      .add("budget_name", TypeProtos.MinorType.VARCHAR, TypeProtos.DataMode.OPTIONAL)
+      .add("modified", TypeProtos.MinorType.VARCHAR, TypeProtos.DataMode.OPTIONAL)
+      .add("adopted", TypeProtos.MinorType.VARCHAR, TypeProtos.DataMode.OPTIONAL)
+      .build();
+
+    RowSet expected = new RowSetBuilder(client.allocator(), expectedSchema)
+      .addRow("2022", "MEDICAL ASSISTANCE - OTPS", "MEDICAL ASSISTANCE", "9564", "MMIS MEDICAL ASSISTANCE", "5972433142", "5584533142")
+      .addRow("2020", "MEDICAL ASSISTANCE - OTPS", "MEDICAL ASSISTANCE", "9564", "MMIS MEDICAL ASSISTANCE", "5819588142", "4953233142")
+      .addRow("2014", "MEDICAL ASSISTANCE - OTPS", "MEDICAL ASSISTANCE", "9564", "MMIS MEDICAL ASSISTANCE", "5708101276", "5231324567")
+      .addRow("2015", "MEDICAL ASSISTANCE - OTPS", "MEDICAL ASSISTANCE", "9564", "MMIS MEDICAL ASSISTANCE", "5663673673", "5312507361")
+      .build();
+
+    RowSetUtilities.verify(expected, results);
+  }
+
 
   private void doSimpleSpecificQuery(String sql) throws Exception {
 

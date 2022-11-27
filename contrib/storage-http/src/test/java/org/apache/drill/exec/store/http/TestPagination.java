@@ -226,6 +226,10 @@ public class TestPagination extends ClusterTest {
     List<String> params = new ArrayList<>();
     params.add("foo");
 
+    HttpXmlOptions xmlOptions = HttpXmlOptions.builder()
+      .dataLevel(2)
+      .build();
+
     HttpApiConfig mockXmlConfigWithPaginator = HttpApiConfig.builder()
       .url("http://localhost:8092/xml")
       .method("GET")
@@ -233,7 +237,7 @@ public class TestPagination extends ClusterTest {
       .params(params)
       .paginator(pagePaginatorForXML)
       .inputType("xml")
-      .xmlDataLevel(2)
+      .xmlOptions(xmlOptions)
       .build();
 
     HttpApiConfig mockXmlConfigWithPaginatorAndUrlParams = HttpApiConfig.builder()
@@ -243,7 +247,7 @@ public class TestPagination extends ClusterTest {
       .params(params)
       .paginator(pagePaginatorForXML)
       .inputType("xml")
-      .xmlDataLevel(2)
+      .xmlOptions(xmlOptions)
       .build();
 
 

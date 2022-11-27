@@ -280,7 +280,12 @@ public class HttpApiConfig {
      * All POST parameters, both static and from the query, are pushed to the POST body
      * as a JSON object.
      */
-    JSON_BODY
+    JSON_BODY,
+    /**
+     * All POST parameters, both static and from the query, are pushed to the POST body
+     * as an XML request.
+     */
+    XML_BODY
   }
 
   public enum HttpMethod {
@@ -554,6 +559,12 @@ public class HttpApiConfig {
       return this;
     }
 
+    /**
+     * Do not use.  Use xmlOptions instead to set XML data level.
+     * @param xmlDataLevel
+     * @return
+     */
+    @Deprecated
     public HttpApiConfigBuilder xmlDataLevel(int xmlDataLevel) {
       this.xmlDataLevel = xmlDataLevel;
       return this;

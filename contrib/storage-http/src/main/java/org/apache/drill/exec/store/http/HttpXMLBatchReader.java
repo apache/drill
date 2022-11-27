@@ -46,7 +46,6 @@ public class HttpXMLBatchReader extends HttpBatchReader {
 
   private final HttpSubScan subScan;
   private final int maxRecords;
-  private final TupleMetadata schema;
   private final int dataLevel;
   private InputStream inStream;
   private XMLReader xmlReader;
@@ -55,10 +54,9 @@ public class HttpXMLBatchReader extends HttpBatchReader {
   public HttpXMLBatchReader(HttpSubScan subScan) {
     super(subScan);
     this.subScan = subScan;
-    this.schema = subScan.tableSpec().connectionConfig().xmlOptions().schema();
     this.maxRecords = subScan.maxRecords();
 
-    // TODO Deprecate the XMLDataLevel parameter.  For now, check both
+    // TODO Remove the XMLDataLevel parameter.  For now, check both
     if (subScan.tableSpec().connectionConfig().xmlOptions() == null) {
       this.dataLevel = subScan.tableSpec().connectionConfig().xmlDataLevel();
     } else {
@@ -70,7 +68,6 @@ public class HttpXMLBatchReader extends HttpBatchReader {
   public HttpXMLBatchReader(HttpSubScan subScan, Paginator paginator) {
     super(subScan, paginator);
     this.subScan = subScan;
-    this.schema = subScan.tableSpec().connectionConfig().xmlOptions().schema();
     this.maxRecords = subScan.maxRecords();
 
     if (subScan.tableSpec().connectionConfig().xmlOptions() == null) {

@@ -141,6 +141,7 @@ key2=value2"
 * `query_string`:  Parameters from the query are pushed down to the query string.  Static parameters are pushed to the post body.
 * `post_body`:  Both static and parameters from the query are pushed to the post body as key/value pairs
 * `json_body`:  Both static and parameters from the query are pushed to the post body as json.
+* `xml_body`:  Both static and parameters from the query are pushed to the post body as XML.
 
 #### Headers
 
