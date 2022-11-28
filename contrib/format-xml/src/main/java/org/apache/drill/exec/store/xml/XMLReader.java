@@ -479,7 +479,7 @@ public class XMLReader implements Closeable {
           break;
         case TIMESTAMP:
           dateFormat = columnMetadata.property("drill.format");
-          Instant timestamp = null;
+          Instant timestamp;
           if (Strings.isNullOrEmpty(dateFormat)) {
             timestamp = Instant.parse(fieldValue);
           } else {
@@ -488,7 +488,10 @@ public class XMLReader implements Closeable {
               Date parsedDate = simpleDateFormat.parse(fieldValue);
               timestamp = Instant.ofEpochMilli(parsedDate.getTime());
             } catch (ParseException e) {
-              logger.error("Error parsing timestamp: " + e.getMessage());
+              throw UserException.parseError(e)
+                .message("Cannot parse " + fieldValue + " as a timestamp. You can specify a format string in the provided schema to correct this.")
+                .addContext(errorContext)
+                .build(logger);
             }
           }
           colWriter.setTimestamp(timestamp);
