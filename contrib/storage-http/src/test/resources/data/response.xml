@@ -197,7 +197,7 @@
   <PLANT>
     <COMMON>Black-Eyed Susan</COMMON>
     <BOTANICAL>Rudbeckia hirta</BOTANICAL>
-    <ZONE>Annual</ZONE>
+    <ZONE>8</ZONE>
     <LIGHT>Sunny</LIGHT>
     <PRICE>$9.80</PRICE>
     <AVAILABILITY>061899</AVAILABILITY>
@@ -221,7 +221,7 @@
   <PLANT>
     <COMMON>Butterfly Weed</COMMON>
     <BOTANICAL>Asclepias tuberosa</BOTANICAL>
-    <ZONE>Annual</ZONE>
+    <ZONE>8</ZONE>
     <LIGHT>Sunny</LIGHT>
     <PRICE>$2.78</PRICE>
     <AVAILABILITY>063099</AVAILABILITY>
@@ -229,7 +229,7 @@
   <PLANT>
     <COMMON>Cinquefoil</COMMON>
     <BOTANICAL>Potentilla</BOTANICAL>
-    <ZONE>Annual</ZONE>
+    <ZONE>8</ZONE>
     <LIGHT>Shade</LIGHT>
     <PRICE>$7.06</PRICE>
     <AVAILABILITY>052599</AVAILABILITY>
@@ -237,7 +237,7 @@
   <PLANT>
     <COMMON>Primrose</COMMON>
     <BOTANICAL>Oenothera</BOTANICAL>
-    <ZONE>3 - 5</ZONE>
+    <ZONE>3</ZONE>
     <LIGHT>Sunny</LIGHT>
     <PRICE>$6.56</PRICE>
     <AVAILABILITY>013099</AVAILABILITY>
@@ -261,7 +261,7 @@
   <PLANT>
     <COMMON>Jacob's Ladder</COMMON>
     <BOTANICAL>Polemonium caeruleum</BOTANICAL>
-    <ZONE>Annual</ZONE>
+    <ZONE>8</ZONE>
     <LIGHT>Shade</LIGHT>
     <PRICE>$9.26</PRICE>
     <AVAILABILITY>022199</AVAILABILITY>
@@ -269,7 +269,7 @@
   <PLANT>
     <COMMON>Greek Valerian</COMMON>
     <BOTANICAL>Polemonium caeruleum</BOTANICAL>
-    <ZONE>Annual</ZONE>
+    <ZONE>8</ZONE>
     <LIGHT>Shade</LIGHT>
     <PRICE>$4.36</PRICE>
     <AVAILABILITY>071499</AVAILABILITY>
@@ -277,7 +277,7 @@
   <PLANT>
     <COMMON>California Poppy</COMMON>
     <BOTANICAL>Eschscholzia californica</BOTANICAL>
-    <ZONE>Annual</ZONE>
+    <ZONE>8</ZONE>
     <LIGHT>Sun</LIGHT>
     <PRICE>$7.89</PRICE>
     <AVAILABILITY>032799</AVAILABILITY>
@@ -285,7 +285,7 @@
   <PLANT>
     <COMMON>Shooting Star</COMMON>
     <BOTANICAL>Dodecatheon</BOTANICAL>
-    <ZONE>Annual</ZONE>
+    <ZONE>8</ZONE>
     <LIGHT>Mostly Shady</LIGHT>
     <PRICE>$8.60</PRICE>
     <AVAILABILITY>051399</AVAILABILITY>
@@ -293,7 +293,7 @@
   <PLANT>
     <COMMON>Snakeroot</COMMON>
     <BOTANICAL>Cimicifuga</BOTANICAL>
-    <ZONE>Annual</ZONE>
+    <ZONE>8</ZONE>
     <LIGHT>Shade</LIGHT>
     <PRICE>$5.63</PRICE>
     <AVAILABILITY>071199</AVAILABILITY>

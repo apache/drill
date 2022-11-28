@@ -95,6 +95,7 @@ public class HttpApiConfig {
   @JsonProperty
   private final String inputType;
   @JsonProperty
+  @Deprecated
   private final int xmlDataLevel;
   @JsonProperty
   private final String limitQueryParam;
@@ -110,6 +111,9 @@ public class HttpApiConfig {
   // Enables the user to configure JSON options at the connection level rather than globally.
   @JsonProperty
   private final HttpJsonOptions jsonOptions;
+
+  @JsonProperty
+  private final HttpXmlOptions xmlOptions;
 
   @JsonInclude
   @JsonProperty
@@ -164,6 +168,7 @@ public class HttpApiConfig {
     return this.caseSensitiveFilters;
   }
 
+  @Deprecated
   public int xmlDataLevel() {
     return this.xmlDataLevel;
   }
@@ -178,6 +183,9 @@ public class HttpApiConfig {
 
   public HttpJsonOptions jsonOptions() {
     return this.jsonOptions;
+  }
+  public HttpXmlOptions xmlOptions() {
+    return this.xmlOptions;
   }
 
   public boolean verifySSLCert() {
@@ -202,7 +210,6 @@ public class HttpApiConfig {
     }
     HttpApiConfig that = (HttpApiConfig) o;
     return requireTail == that.requireTail
-      && xmlDataLevel == that.xmlDataLevel
       && errorOn400 == that.errorOn400
       && verifySSLCert == that.verifySSLCert
       && directCredentials == that.directCredentials
@@ -218,6 +225,7 @@ public class HttpApiConfig {
       && Objects.equals(inputType, that.inputType)
       && Objects.equals(limitQueryParam, that.limitQueryParam)
       && Objects.equals(jsonOptions, that.jsonOptions)
+      && Objects.equals(xmlOptions, that.xmlOptions)
       && Objects.equals(credentialsProvider, that.credentialsProvider)
       && Objects.equals(paginator, that.paginator);
   }
@@ -225,7 +233,7 @@ public class HttpApiConfig {
   @Override
   public int hashCode() {
     return Objects.hash(url, requireTail, method, postBody, headers, params, dataPath,
-      authType, inputType, xmlDataLevel, limitQueryParam, errorOn400, jsonOptions, verifySSLCert,
+      authType, inputType, limitQueryParam, errorOn400, jsonOptions, xmlOptions, verifySSLCert,
       credentialsProvider, paginator, directCredentials, postParameterLocation, caseSensitiveFilters);
   }
 
@@ -243,10 +251,10 @@ public class HttpApiConfig {
       .field("caseSensitiveFilters", caseSensitiveFilters)
       .field("authType", authType)
       .field("inputType", inputType)
-      .field("xmlDataLevel", xmlDataLevel)
       .field("limitQueryParam", limitQueryParam)
       .field("errorOn400", errorOn400)
       .field("jsonOptions", jsonOptions)
+      .field("xmlOptions", xmlOptions)
       .field("verifySSLCert", verifySSLCert)
       .field("credentialsProvider", credentialsProvider)
       .field("paginator", paginator)
@@ -272,7 +280,12 @@ public class HttpApiConfig {
      * All POST parameters, both static and from the query, are pushed to the POST body
      * as a JSON object.
      */
-    JSON_BODY
+    JSON_BODY,
+    /**
+     * All POST parameters, both static and from the query, are pushed to the POST body
+     * as an XML request.
+     */
+    XML_BODY
   }
 
   public enum HttpMethod {
@@ -292,6 +305,7 @@ public class HttpApiConfig {
         ? HttpMethod.GET.toString() : builder.method.trim().toUpperCase();
     this.url = builder.url;
     this.jsonOptions = builder.jsonOptions;
+    this.xmlOptions = builder.xmlOptions;
 
     HttpMethod httpMethod = HttpMethod.valueOf(this.method);
     // Get the request method.  Only accept GET and POST requests.  Anything else will default to GET.
@@ -438,6 +452,7 @@ public class HttpApiConfig {
     private boolean errorOn400;
 
     private HttpJsonOptions jsonOptions;
+    private HttpXmlOptions xmlOptions;
 
     private CredentialsProvider credentialsProvider;
 
@@ -476,6 +491,11 @@ public class HttpApiConfig {
 
     public HttpApiConfigBuilder password(String password) {
       this.password = password;
+      return this;
+    }
+
+    public HttpApiConfigBuilder xmlOptions(HttpXmlOptions options) {
+      this.xmlOptions = options;
       return this;
     }
 
@@ -539,6 +559,12 @@ public class HttpApiConfig {
       return this;
     }
 
+    /**
+     * Do not use.  Use xmlOptions instead to set XML data level.
+     * @param xmlDataLevel
+     * @return
+     */
+    @Deprecated
     public HttpApiConfigBuilder xmlDataLevel(int xmlDataLevel) {
       this.xmlDataLevel = xmlDataLevel;
       return this;

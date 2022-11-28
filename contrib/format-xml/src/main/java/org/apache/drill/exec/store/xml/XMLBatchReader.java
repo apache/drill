@@ -28,6 +28,7 @@ import org.apache.drill.exec.physical.impl.scan.v3.file.FileDescrip;
 import org.apache.drill.exec.physical.impl.scan.v3.file.FileSchemaNegotiator;
 import org.apache.drill.exec.physical.resultSet.ResultSetLoader;
 import org.apache.drill.exec.physical.resultSet.RowSetLoader;
+import org.apache.drill.exec.record.metadata.TupleMetadata;
 import org.apache.drill.exec.store.dfs.easy.EasySubScan;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -58,6 +59,12 @@ public class XMLBatchReader implements ManagedReader {
     errorContext = negotiator.parentErrorContext();
     dataLevel = readerConfig.dataLevel;
     file = negotiator.file();
+
+    // Add schema if provided
+    if (negotiator.providedSchema() != null) {
+      TupleMetadata schema = negotiator.providedSchema();
+      negotiator.tableSchema(schema, false);
+    }
 
     ResultSetLoader loader = negotiator.build();
     rootRowWriter = loader.writer();

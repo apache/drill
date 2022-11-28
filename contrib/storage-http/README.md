@@ -49,23 +49,23 @@ The `connection` property can accept the following options.
 Many APIs require parameters to be passed directly in the URL instead of as query arguments.  For example, github's API allows you to query an organization's repositories with the following
 URL:  https://github.com/orgs/{org}/repos
 
-As of Drill 1.20.0, you can simply set the URL in the connection using the curly braces.  If your API includes URL parameters you must include them in the `WHERE` clause in your 
+As of Drill 1.20.0, you can simply set the URL in the connection using the curly braces.  If your API includes URL parameters you must include them in the `WHERE` clause in your
 query, or specify a default value in the configuration.
 
 As an example, the API above, you would have to query as shown below:
 
 ```sql
-SELECT * 
+SELECT *
 FROM api.github
 WHERE org = 'apache'
 ```
 
 This query would replace the `org`in the URL with the value from the `WHERE` clause, in this case `apache`.  You can specify a default value as follows:  `https://someapi.com/
-{param1}/{param2=default}`.  In this case, the default would be used if and only if there isn't a parameter supplied in the query. 
+{param1}/{param2=default}`.  In this case, the default would be used if and only if there isn't a parameter supplied in the query.
 
 #### Limitations on URL Parameters
-* Drill does not support boolean expressions of URL parameters in queries.  For instance, for the above example, if you were to include `WHERE org='apache' OR org='linux'`, 
-  these parameters could not be pushed down in the current state. 
+* Drill does not support boolean expressions of URL parameters in queries.  For instance, for the above example, if you were to include `WHERE org='apache' OR org='linux'`,
+  these parameters could not be pushed down in the current state.
 * All URL parameter clauses must be equality only.
 
 ### Passing Parameters in the Query
@@ -141,6 +141,7 @@ key2=value2"
 * `query_string`:  Parameters from the query are pushed down to the query string.  Static parameters are pushed to the post body.
 * `post_body`:  Both static and parameters from the query are pushed to the post body as key/value pairs
 * `json_body`:  Both static and parameters from the query are pushed to the post body as json.
+* `xml_body`:  Both static and parameters from the query are pushed to the post body as XML.
 
 #### Headers
 
@@ -245,12 +246,13 @@ as that shown above. Drill assumes that the server will uses HTTP status codes t
 indicate a bad request or other error.
 
 #### Input Type
-The REST plugin accepts three different types of input: `json`, `csv` and `xml`.  The default is `json`.  If you are using `XML` as a data type, there is an additional 
-configuration option called `xmlDataLevel` which reduces the level of unneeded nesting found in XML files.  You can find more information in the documentation for Drill's XML 
-format plugin. 
+The REST plugin accepts three different types of input: `json`, `csv` and `xml`.  The default is `json`.
 
 #### JSON Configuration
 [Read the documentation for configuring json options, including schema provisioning.](JSON_Options.md)
+
+#### XML Configuration
+[Read the documentation for configuring XML options, including schema provisioning.](XML_Options.md)
 
 #### Authorization
 
@@ -263,8 +265,8 @@ If the `authType` is set to `basic`, `username` and `password` must be set in th
 `password`: The password for basic authentication.
 
 ##### Global Credentials
-If you have an HTTP plugin with multiple endpoints that all use the same credentials, you can set the `authType` to `basic` and set global 
-credentials in the storage plugin configuration. 
+If you have an HTTP plugin with multiple endpoints that all use the same credentials, you can set the `authType` to `basic` and set global
+credentials in the storage plugin configuration.
 
 Simply add the following to the storage plugin configuration:
 ```json
@@ -280,12 +282,12 @@ Note that the `authType` still must be set to `basic` and that any endpoint cred
 
 #### Limiting Results
 Some APIs support a query parameter which is used to limit the number of results returned by the API.  In this case you can set the `limitQueryParam` config variable to the query parameter name and Drill will automatically include this in your query.  For instance, if you have an API which supports a limit query parameter called `maxRecords` and you set the abovementioned config variable then execute the following query:
-  
+
 ```sql
 SELECT <fields>
 FROM api.limitedApi
-LIMIT 10 
-```  
+LIMIT 10
+```
 Drill will send the following request to your API:
 ```
 https://<api>?maxRecords=10
@@ -298,12 +300,12 @@ If the API which you are querying requires OAuth2.0 for authentication [read the
 If you want to use automatic pagination in Drill, [click here to read the documentation for pagination](Pagination.md).
 
 #### errorOn400
-When a user makes HTTP calls, the response code will be from 100-599.  400 series error codes can contain useful information and in some cases you would not want Drill to throw 
-errors on 400 series errors.  This option allows you to define Drill's behavior on 400 series error codes.  When set to `true`, Drill will throw an exception and halt execution 
+When a user makes HTTP calls, the response code will be from 100-599.  400 series error codes can contain useful information and in some cases you would not want Drill to throw
+errors on 400 series errors.  This option allows you to define Drill's behavior on 400 series error codes.  When set to `true`, Drill will throw an exception and halt execution
 on 400 series errors, `false` will return an empty result set (with implicit fields populated).
 
 #### verifySSLCert
-Default is `true`, but when set to false, Drill will trust all SSL certificates.  Useful for debugging or on internal corporate networks using self-signed certificates or 
+Default is `true`, but when set to false, Drill will trust all SSL certificates.  Useful for debugging or on internal corporate networks using self-signed certificates or
 private certificate authorities.
 
 #### caseSensitiveFilters
@@ -447,7 +449,7 @@ To query this API, set the configuration as follows:
       "authType": "none",
       "userName": null,
       "password": null,
-      "postBody": null, 
+      "postBody": null,
       "inputType": "json",
        "errorOn400": true
     }
@@ -495,7 +497,7 @@ body. Set the configuration as follows:
       "authType": "none",
       "userName": null,
       "password": null,
-      "postBody": null, 
+      "postBody": null,
        "errorOn400": true
     }
   }
@@ -641,24 +643,24 @@ The HTTP plugin includes four implicit fields which can be used for debugging.  
 * `_response_code`: The response code from the HTTP request.  This field is an `INT`.
 * `_response_message`:  The response message.
 * `_response_protocol`:  The response protocol.
-* `_response_url`:  The actual URL sent to the API. 
+* `_response_url`:  The actual URL sent to the API.
 
 ## Joining Data
-There are some situations where a user might want to join data with an API result and the pushdowns prevent that from happening.  The main situation where this happens is when 
-an API has parameters which are part of the URL AND these parameters are dynamically populated via a join. 
+There are some situations where a user might want to join data with an API result and the pushdowns prevent that from happening.  The main situation where this happens is when
+an API has parameters which are part of the URL AND these parameters are dynamically populated via a join.
 
-In this case, there are two functions `http_get_url` and `http_get` which you can use to faciliate these joins. 
+In this case, there are two functions `http_get_url` and `http_get` which you can use to faciliate these joins.
 
 * `http_request('<storage_plugin_name>', <params>)`:  This function accepts a storage plugin as input and an optional list of parameters to include in a URL.
-* `http_get(<url>, <params>)`:  This function works in the same way except that it does not pull any configuration information from existing storage plugins.  The input url for 
-  the `http_get` function must be a valid URL. 
+* `http_get(<url>, <params>)`:  This function works in the same way except that it does not pull any configuration information from existing storage plugins.  The input url for
+  the `http_get` function must be a valid URL.
 
 ### Example Queries
-Let's say that you have a storage plugin called `github` with an endpoint called `repos` which points to the url: https://github.com/orgs/{org}/repos.  It is easy enough to 
+Let's say that you have a storage plugin called `github` with an endpoint called `repos` which points to the url: https://github.com/orgs/{org}/repos.  It is easy enough to
 write a query like this:
 
 ```sql
-SELECT * 
+SELECT *
 FROM github.repos
 WHERE org='apache'
 ```

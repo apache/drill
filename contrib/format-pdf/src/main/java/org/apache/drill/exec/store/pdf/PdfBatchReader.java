@@ -486,7 +486,9 @@ public class PdfBatchReader implements ManagedReader {
           Date parsedDate = simpleDateFormat.parse(cell.getText());
           timestamp = Instant.ofEpochMilli(parsedDate.getTime());
         } catch (ParseException e) {
-          logger.error("Error parsing timestamp: " + e.getMessage());
+          throw UserException.parseError(e)
+            .message("Cannot parse " + cell.getText() + " as a timestamp. You can specify a format string in the provided schema to correct this.")
+            .build(logger);
         }
       }
       writer.setTimestamp(timestamp);

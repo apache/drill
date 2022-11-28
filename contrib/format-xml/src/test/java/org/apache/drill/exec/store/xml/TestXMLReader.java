@@ -32,6 +32,9 @@ import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
 import java.nio.file.Paths;
+import java.time.Instant;
+import java.time.LocalDate;
+import java.time.LocalTime;
 
 import static org.apache.drill.test.QueryTestUtil.generateCompressedFile;
 import static org.apache.drill.test.rowSet.RowSetUtilities.mapArray;
@@ -82,6 +85,38 @@ public class TestXMLReader extends ClusterTest {
 
     new RowSetComparison(expected).verifyAndClearAll(results);
   }
+
+  @Test
+  public void testSimpleProvidedSchema() throws Exception {
+    String sql = "SELECT * FROM table(cp.`xml/simple_with_datatypes.xml` (type => 'xml', schema " +
+      "=> 'inline=(`int_field` INT, `bigint_field` BIGINT, `float_field` FLOAT, `double_field` DOUBLE, `boolean_field` " +
+      "BOOLEAN, `date_field` DATE, `time_field` TIME, `timestamp_field` TIMESTAMP, `string_field`" +
+      " VARCHAR, `date2_field` DATE properties {`drill.format` = `MM/dd/yyyy`})'))";
+    RowSet results = client.queryBuilder().sql(sql).rowSet();
+    assertEquals(2, results.rowCount());
+
+    TupleMetadata expectedSchema = new SchemaBuilder()
+      .addNullable("int_field", MinorType.INT)
+      .addNullable("bigint_field", MinorType.BIGINT)
+      .addNullable("float_field", MinorType.FLOAT4)
+      .addNullable("double_field", MinorType.FLOAT8)
+      .addNullable("boolean_field", MinorType.BIT)
+      .addNullable("date_field", MinorType.DATE)
+      .addNullable("time_field", MinorType.TIME)
+      .addNullable("timestamp_field", MinorType.TIMESTAMP)
+      .addNullable("string_field", MinorType.VARCHAR)
+      .addNullable("date2_field", MinorType.DATE)
+      .add("attributes", MinorType.MAP)
+      .buildSchema();
+
+    RowSet expected = client.rowSetBuilder(expectedSchema)
+      .addRow(1, 1000L, 1.2999999523162842, 3.3, true, LocalDate.parse("2022-01-01"), LocalTime.parse("12:04:34"), Instant.parse("2022-01-06T12:30:30Z"), "string", LocalDate.parse("2022-03-02"), mapArray())
+      .addRow(2, 2000L, 2.299999952316284, 4.3, false, LocalDate.parse("2022-02-01"), LocalTime.parse("13:04:34"), Instant.parse("2022-03-06T12:30:30Z"), null, LocalDate.parse("2022-03-01"), mapArray())
+      .build();
+
+    new RowSetComparison(expected).verifyAndClearAll(results);
+  }
+
 
   @Test
   public void testSelfClosingTags() throws Exception {

@@ -26,8 +26,10 @@ import org.apache.drill.common.exceptions.CustomErrorContext;
 import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.physical.impl.scan.framework.SchemaNegotiator;
+import org.apache.drill.exec.physical.impl.scan.v3.FixedReceiver;
 import org.apache.drill.exec.physical.resultSet.ResultSetLoader;
 import org.apache.drill.exec.physical.resultSet.RowSetLoader;
+import org.apache.drill.exec.record.metadata.TupleMetadata;
 import org.apache.drill.exec.store.ImplicitColumnUtils.ImplicitColumns;
 import org.apache.drill.exec.store.http.paginator.Paginator;
 import org.apache.drill.exec.store.http.util.SimpleHttp;
@@ -53,7 +55,13 @@ public class HttpXMLBatchReader extends HttpBatchReader {
     super(subScan);
     this.subScan = subScan;
     this.maxRecords = subScan.maxRecords();
-    this.dataLevel = subScan.tableSpec().connectionConfig().xmlDataLevel();
+
+    // TODO Remove the XMLDataLevel parameter.  For now, check both
+    if (subScan.tableSpec().connectionConfig().xmlOptions() == null) {
+      this.dataLevel = subScan.tableSpec().connectionConfig().xmlDataLevel();
+    } else {
+      this.dataLevel = subScan.tableSpec().connectionConfig().xmlOptions().getDataLevel();
+    }
   }
 
 
@@ -61,7 +69,12 @@ public class HttpXMLBatchReader extends HttpBatchReader {
     super(subScan, paginator);
     this.subScan = subScan;
     this.maxRecords = subScan.maxRecords();
-    this.dataLevel = subScan.tableSpec().connectionConfig().xmlDataLevel();
+
+    if (subScan.tableSpec().connectionConfig().xmlOptions() == null) {
+      this.dataLevel = subScan.tableSpec().connectionConfig().xmlDataLevel();
+    } else {
+      this.dataLevel = subScan.tableSpec().connectionConfig().xmlOptions().getDataLevel();
+    }
   }
 
   @Override
@@ -96,6 +109,12 @@ public class HttpXMLBatchReader extends HttpBatchReader {
     inStream = http.getInputStream();
     // Initialize the XMLReader the reader
     try {
+      // Add schema if provided
+      TupleMetadata finalSchema = getSchema(negotiator);
+      if (finalSchema != null) {
+        negotiator.tableSchema(finalSchema, false);
+      }
+
       xmlReader = new XMLReader(inStream, dataLevel);
       resultLoader = negotiator.build();
 
@@ -120,6 +139,36 @@ public class HttpXMLBatchReader extends HttpBatchReader {
     http.close();
     return true;
   }
+
+  /**
+   * This function obtains the correct schema for the {@link XMLReader}.  There are four possibilities:
+   * 1.  The schema is provided in the configuration only.  In this case, that schema will be returned.
+   * 2.  The schema is provided in both the configuration and inline.  These two schemas will be merged together.
+   * 3.  The schema is provided inline in a query.  In this case, that schema will be returned.
+   * 4.  No schema is provided.  Function returns null.
+   * @param negotiator {@link SchemaNegotiator} The schema negotiator with all the connection information
+   * @return The built {@link TupleMetadata} of the provided schema, null if none provided.
+   */
+  private TupleMetadata getSchema(SchemaNegotiator negotiator) {
+    if (subScan.tableSpec().connectionConfig().xmlOptions() != null &&
+      subScan.tableSpec().connectionConfig().xmlOptions().schema() != null) {
+      TupleMetadata configuredSchema = subScan.tableSpec().connectionConfig().xmlOptions().schema();
+
+      // If it has a provided schema both inline and in the config, merge the two, otherwise, return the config schema
+      if (negotiator.hasProvidedSchema()) {
+        TupleMetadata inlineSchema = negotiator.providedSchema();
+        return FixedReceiver.Builder.mergeSchemas(configuredSchema, inlineSchema);
+      } else {
+        return configuredSchema;
+      }
+    } else {
+      if (negotiator.hasProvidedSchema()) {
+        return negotiator.providedSchema();
+      }
+    }
+    return null;
+  }
+
 
   @Override
   public boolean next() {

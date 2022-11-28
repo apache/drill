@@ -31,6 +31,7 @@ import org.apache.drill.exec.record.metadata.SchemaBuilder;
 import org.apache.drill.exec.store.ImplicitColumnUtils.ImplicitColumns;
 import org.apache.drill.exec.vector.accessor.ScalarWriter;
 import org.apache.drill.exec.vector.accessor.TupleWriter;
+import org.apache.drill.shaded.guava.com.google.common.base.Strings;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -43,6 +44,13 @@ import javax.xml.stream.events.StartElement;
 import javax.xml.stream.events.XMLEvent;
 import java.io.Closeable;
 import java.io.InputStream;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.time.Instant;
+import java.time.LocalDate;
+import java.time.LocalTime;
+import java.time.format.DateTimeFormatter;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
@@ -177,7 +185,7 @@ public class XMLReader implements Closeable {
         currentEvent = nextEvent;
 
         // Process the event
-        processEvent(currentEvent, lastEvent);
+        processEvent(currentEvent, lastEvent, reader.peek());
       } catch (XMLStreamException e) {
         throw UserException
           .dataReadError(e)
@@ -195,7 +203,7 @@ public class XMLReader implements Closeable {
    * the self-closing events can cause schema issues with Drill specifically, if a self-closing event
    * is detected prior to a non-self-closing event, and that populated event contains a map or other nested data
    * Drill will throw a schema change exception.
-   *
+   * <p>
    * Since Drill uses Java's streaming XML parser, unfortunately, it does not provide a means of identifying
    * self-closing tags.  This function does that by comparing the event with the previous event and looking for
    * a condition where one event is a start and the other is an ending event.  Additionally, the column number and
@@ -229,7 +237,7 @@ public class XMLReader implements Closeable {
    * @param lastEvent The previous event which was processed
    */
   private void processEvent(XMLEvent currentEvent,
-                            XMLEvent lastEvent) {
+                            XMLEvent lastEvent, XMLEvent nextEvent) {
     String mapName;
     switch (currentEvent.getEventType()) {
 
@@ -282,7 +290,6 @@ public class XMLReader implements Closeable {
             attributePrefix = XMLUtils.addField(attributePrefix, fieldName);
           }
 
-          @SuppressWarnings("unchecked")
           Iterator<Attribute> attributes = startElement.getAttributes();
           if (attributes != null && attributes.hasNext()) {
             writeAttributes(attributePrefix, attributes);
@@ -428,8 +435,70 @@ public class XMLReader implements Closeable {
       index = writer.addColumn(colSchema);
     }
     ScalarWriter colWriter = writer.scalar(index);
+    ColumnMetadata columnMetadata = writer.tupleSchema().metadata(index);
+    MinorType dataType = columnMetadata.schema().getType().getMinorType();
+    String dateFormat;
+
+    // Write the values depending on their data type.  This only applies to scalar fields.
     if (fieldValue != null && (currentState != xmlState.ROW_ENDED && currentState != xmlState.FIELD_ENDED)) {
-      colWriter.setString(fieldValue);
+      switch (dataType) {
+        case BIT:
+          colWriter.setBoolean(Boolean.parseBoolean(fieldValue));
+          break;
+        case TINYINT:
+        case SMALLINT:
+        case INT:
+          colWriter.setInt(Integer.parseInt(fieldValue));
+          break;
+        case BIGINT:
+          colWriter.setLong(Long.parseLong(fieldValue));
+          break;
+        case FLOAT4:
+        case FLOAT8:
+          colWriter.setDouble(Double.parseDouble(fieldValue));
+          break;
+        case DATE:
+          dateFormat = columnMetadata.property("drill.format");
+          LocalDate localDate;
+          if (Strings.isNullOrEmpty(dateFormat)) {
+            localDate = LocalDate.parse(fieldValue);
+          } else {
+            localDate = LocalDate.parse(fieldValue, DateTimeFormatter.ofPattern(dateFormat));
+          }
+          colWriter.setDate(localDate);
+          break;
+        case TIME:
+          dateFormat = columnMetadata.property("drill.format");
+          LocalTime localTime;
+          if (Strings.isNullOrEmpty(dateFormat)) {
+            localTime = LocalTime.parse(fieldValue);
+          } else {
+            localTime = LocalTime.parse(fieldValue, DateTimeFormatter.ofPattern(dateFormat));
+          }
+          colWriter.setTime(localTime);
+          break;
+        case TIMESTAMP:
+          dateFormat = columnMetadata.property("drill.format");
+          Instant timestamp;
+          if (Strings.isNullOrEmpty(dateFormat)) {
+            timestamp = Instant.parse(fieldValue);
+          } else {
+            try {
+              SimpleDateFormat simpleDateFormat = new SimpleDateFormat(dateFormat);
+              Date parsedDate = simpleDateFormat.parse(fieldValue);
+              timestamp = Instant.ofEpochMilli(parsedDate.getTime());
+            } catch (ParseException e) {
+              throw UserException.parseError(e)
+                .message("Cannot parse " + fieldValue + " as a timestamp. You can specify a format string in the provided schema to correct this.")
+                .addContext(errorContext)
+                .build(logger);
+            }
+          }
+          colWriter.setTimestamp(timestamp);
+          break;
+      default:
+          colWriter.setString(fieldValue);
+      }
       changeState(xmlState.FIELD_ENDED);
     }
   }
@@ -491,7 +560,11 @@ public class XMLReader implements Closeable {
   }
 
   private TupleWriter getAttributeWriter() {
-    int attributeIndex = rootRowWriter.addColumn(SchemaBuilder.columnSchema(ATTRIBUTE_MAP_NAME, MinorType.MAP, DataMode.REQUIRED));
+    int attributeIndex = rootRowWriter.tupleSchema().index(ATTRIBUTE_MAP_NAME);
+
+    if (attributeIndex == -1) {
+      attributeIndex = rootRowWriter.addColumn(SchemaBuilder.columnSchema(ATTRIBUTE_MAP_NAME, MinorType.MAP, DataMode.REQUIRED));
+    }
     return rootRowWriter.tuple(attributeIndex);
   }
 

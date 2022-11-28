@@ -104,6 +104,7 @@ public class SimpleHttp implements AutoCloseable {
   private static final int DEFAULT_TIMEOUT = 1;
   private static final Pattern URL_PARAM_REGEX = Pattern.compile("\\{(\\w+)(?:=(\\w*))?}");
   public static final MediaType JSON_MEDIA_TYPE = MediaType.get("application/json; charset=utf-8");
+  public static final MediaType XML_MEDIA_TYPE = MediaType.get("application/xml");
   private static final OkHttpClient SIMPLE_CLIENT = new OkHttpClient.Builder()
     .connectTimeout(DEFAULT_TIMEOUT, TimeUnit.SECONDS)
     .writeTimeout(DEFAULT_TIMEOUT, TimeUnit.SECONDS)
@@ -365,6 +366,20 @@ public class SimpleHttp implements AutoCloseable {
 
         RequestBody requestBody = RequestBody.create(json.toJSONString(), JSON_MEDIA_TYPE);
         requestBuilder.post(requestBody);
+      } else if (apiConfig.getPostLocation() == PostLocation.XML_BODY) {
+        StringBuilder xmlRequest = new StringBuilder();
+        xmlRequest.append("<request>");
+        if (filters != null) {
+          for (Map.Entry<String, String> filter : filters.entrySet()) {
+            xmlRequest.append("<").append(filter.getKey()).append(">");
+            xmlRequest.append(filter.getValue());
+            xmlRequest.append("</").append(filter.getKey()).append(">");
+          }
+        }
+        xmlRequest.append("</request>");
+        RequestBody requestBody = RequestBody.create(xmlRequest.toString(), XML_MEDIA_TYPE);
+        requestBuilder.post(requestBody);
+
       } else {
         formBodyBuilder = buildPostBody(apiConfig.postBody());
         requestBuilder.post(formBodyBuilder.build());
