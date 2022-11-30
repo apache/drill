@@ -50,6 +50,10 @@
           <groupId>com.squareup.okio</groupId>
           <artifactId>okio-jvm</artifactId>
         </exclusion>
+        <exclusion>
+          <groupId>org.jetbrains.kotlin</groupId>
+          <artifactId>kotlin-stdlib</artifactId>
+        </exclusion>
       </exclusions>
     </dependency>
     <dependency>
@@ -103,7 +107,7 @@
         </exclusion>
         <exclusion>
           <groupId>org.jetbrains.kotlin</groupId>
-          <artifactId>kotlin-stdlib-jdk8</artifactId>
+          <artifactId>kotlin-stdlib</artifactId>
         </exclusion>
       </exclusions>
     </dependency>
