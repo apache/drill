@@ -38,8 +38,12 @@ import org.apache.drill.common.exceptions.ExecutionSetupException;
 import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.common.logical.FormatPluginConfig;
 import org.apache.drill.common.logical.StoragePluginConfig;
+import org.apache.drill.common.logical.StoragePluginConfig.AuthMode;
 import org.apache.drill.common.logical.security.CredentialsProvider;
 import org.apache.drill.exec.metastore.MetadataProviderManager;
+import org.apache.drill.exec.oauth.OAuthTokenProvider;
+import org.apache.drill.exec.oauth.PersistentTokenTable;
+import org.apache.drill.exec.oauth.TokenRegistry;
 import org.apache.drill.exec.ops.OptimizerRulesContext;
 import org.apache.drill.exec.physical.base.AbstractGroupScan;
 import org.apache.drill.exec.planner.PlannerPhase;
@@ -49,6 +53,7 @@ import org.apache.drill.exec.store.AbstractStoragePlugin;
 import org.apache.drill.exec.store.ClassPathFileSystem;
 import org.apache.drill.exec.store.LocalSyncableFileSystem;
 import org.apache.drill.exec.store.SchemaConfig;
+import org.apache.drill.shaded.guava.com.google.common.annotations.VisibleForTesting;
 import org.apache.drill.shaded.guava.com.google.common.base.Strings;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.CommonConfigurationKeys;
@@ -80,6 +85,7 @@ public class FileSystemPlugin extends AbstractStoragePlugin {
   private final Map<FormatPluginConfig, FormatPlugin> formatPluginsByConfig;
   private final FileSystemConfig config;
   private final Configuration fsConf;
+  private TokenRegistry tokenRegistry;
 
   public FileSystemPlugin(FileSystemConfig config, DrillbitContext context, String name) throws ExecutionSetupException {
     super(context, name);
@@ -93,6 +99,7 @@ public class FileSystemPlugin extends AbstractStoragePlugin {
       fsConf.set(FileSystem.FS_DEFAULT_NAME_KEY, config.getConnection());
       fsConf.set("fs.classpath.impl", ClassPathFileSystem.class.getName());
       fsConf.set("fs.dropbox.impl", DropboxFileSystem.class.getName());
+      fsConf.set("fs.box.impl", BoxFileSystem.class.getName());
       fsConf.set("fs.drill-local.impl", LocalSyncableFileSystem.class.getName());
       CredentialsProvider credentialsProvider = config.getCredentialsProvider();
       if (credentialsProvider != null) {
@@ -103,6 +110,8 @@ public class FileSystemPlugin extends AbstractStoragePlugin {
 
       if (isS3Connection(fsConf)) {
         handleS3Credentials(fsConf);
+      } else if (config.oAuthConfig() != null && config.getAuthMode() == AuthMode.SHARED_USER) {
+        initializeOauthTokenTable(null);
       }
 
       formatCreator = newFormatCreator(config, context, fsConf);
@@ -183,6 +192,31 @@ public class FileSystemPlugin extends AbstractStoragePlugin {
     }
   }
 
+  @VisibleForTesting
+  public void initializeOauthTokenTable(String username) {
+    OAuthTokenProvider tokenProvider = context.getOauthTokenProvider();
+    tokenRegistry = tokenProvider.getOauthTokenRegistry(username);
+    tokenRegistry.createTokenTable(getName());
+  }
+
+  public TokenRegistry getTokenRegistry() {
+    return tokenRegistry;
+  }
+
+  /**
+   * This method returns the {@link TokenRegistry} for a given user.  It is only used for testing user translation
+   * with OAuth 2.0.
+   * @param username A {@link String} of the current active user.
+   * @return A {@link TokenRegistry} for the given user.
+   */
+  @VisibleForTesting
+  public TokenRegistry getTokenRegistry(String username) {
+    initializeOauthTokenTable(username);
+    return tokenRegistry;
+  }
+
+  public PersistentTokenTable getTokenTable() { return tokenRegistry.getTokenTable(getName()); }
+
   /**
    * Creates a new FormatCreator instance.
    *
@@ -240,6 +274,12 @@ public class FileSystemPlugin extends AbstractStoragePlugin {
 
   @Override
   public void registerSchemas(SchemaConfig schemaConfig, SchemaPlus parent) throws IOException {
+    // For user translation mode, this is moved here because we don't have the
+    // active username in the constructor.  Removing it from the constructor makes
+    // it difficult to test, so we do the check and leave it in both places.
+    if (config.getAuthMode() == AuthMode.USER_TRANSLATION) {
+      initializeOauthTokenTable(schemaConfig.getUserName());
+    }
     schemaFactory.registerSchemas(schemaConfig, parent);
   }
 
@@ -281,5 +321,15 @@ public class FileSystemPlugin extends AbstractStoragePlugin {
 
   public Configuration getFsConf() {
     return new Configuration(fsConf);
+  }
+
+  /**
+   * This function is only used for testing and creates the necessary token tables.  Note that
+   * the token tables still need to be populated.
+   */
+  @VisibleForTesting
+  public void initializeTokenTableForTesting() {
+    OAuthTokenProvider tokenProvider = context.getOauthTokenProvider();
+    tokenRegistry = tokenProvider.getOauthTokenRegistry(null);
   }
 }

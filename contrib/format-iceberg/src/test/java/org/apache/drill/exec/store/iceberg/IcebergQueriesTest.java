@@ -92,7 +92,7 @@ public class IcebergQueriesTest extends ClusterTest {
       pluginConfig.getConnection(),
       pluginConfig.getConfig(),
       pluginConfig.getWorkspaces(),
-      formats,
+      formats, null,
       PlainCredentialsProvider.EMPTY_CREDENTIALS_PROVIDER);
     newPluginConfig.setEnabled(pluginConfig.isEnabled());
     pluginRegistry.put(DFS_PLUGIN_NAME, newPluginConfig);

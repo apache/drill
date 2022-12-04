@@ -244,6 +244,62 @@
         }
       },
       "enabled" : false
+    },
+    "box" : {
+      "type" : "file",
+      "connection" : "box:///",
+      "workspaces" : {
+        "root" : {
+          "location" : "/",
+          "writable" : false
+        }
+      },
+      "formats" : {
+        "csv" : {
+          "type" : "text",
+          "extensions" : [ "csv" ],
+          "fieldDelimiter" : ","
+        },
+        "tsv" : {
+          "type" : "text",
+          "extensions" : [ "tsv" ],
+          "fieldDelimiter" : "\t"
+        },
+        "json" : {
+          "type" : "json",
+          "extensions" : [ "json" ]
+        },
+        "parquet" : {
+          "type" : "parquet"
+        },
+        "avro" : {
+          "type" : "avro"
+        },
+        "csvh" : {
+          "type" : "text",
+          "extensions" : [ "csvh" ],
+          "fieldDelimiter" : ",",
+          "extractHeader" : true
+        }
+      },
+      "oAuthConfig": {
+        "callbackURL": "http://localhost:8047/credentials/box/update_oauth2_authtoken",
+        "authorizationURL": "https://account.box.com/api/oauth2/authorize",
+        "authorizationParams": {
+          "response_type": "code"
+        }
+      },
+      "credentialsProvider": {
+        "credentialsProviderType": "PlainCredentialsProvider",
+        "credentials": {
+          "clientID": "<YOUR CLIENT ID>",
+          "clientSecret": "<YOUR CLIENT SECRET>",
+          "tokenURI": "https://api.box.com/oauth2/token"
+        },
+        "userCredentials": {}
+      },
+      "enabled" : false,
+      "authMode": "SHARED_USER"
     }
   }
 }

@@ -88,7 +88,8 @@ public class DropboxFileSystemTest extends ClusterTest {
     FormatPluginConfig csvFormatConfig = new TextFormatConfig(csvExtensions, "\n", ",", "\"", null, null, false, true);
 
 
-    StoragePluginConfig dropboxConfig = new FileSystemConfig("dropbox:///", dropboxConfigVars, workspaces, formats, null);
+    StoragePluginConfig dropboxConfig = new FileSystemConfig("dropbox:///", dropboxConfigVars,
+      workspaces, formats, null, null);
     dropboxConfig.setEnabled(true);
 
     cluster.defineStoragePlugin("dropbox_test", dropboxConfig);
