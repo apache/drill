@@ -112,7 +112,16 @@ public class HttpScanBatchCreator implements BatchCreator<HttpSubScan> {
 
     private Paginator getPaginator() {
       HttpUrl.Builder urlBuilder;
-      HttpUrl rawUrl = HttpUrl.parse(subScan.tableSpec().connectionConfig().url());
+      HttpUrl rawUrl;
+
+      // Append table name, if present.
+      if (subScan.tableSpec().tableName() != null) {
+        rawUrl = HttpUrl.parse(subScan.tableSpec().connectionConfig().url() + subScan.tableSpec().tableName());
+      } else {
+        rawUrl = HttpUrl.parse(subScan.tableSpec().connectionConfig().url());
+      }
+
+
 
       // If the URL is not parsable or otherwise invalid
       if (rawUrl == null) {
