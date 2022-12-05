@@ -189,8 +189,8 @@ public class HttpBatchReader implements ManagedReader<SchemaNegotiator> {
     logger.debug("Building URL from {}", baseUrl);
     HttpApiConfig apiConfig = subScan.tableSpec().connectionConfig();
 
-    // Append table name, if available.
-    if (subScan.tableSpec().tableName() != null) {
+    // Append table name, if present. When pagination is used, the paginator adds this.
+    if (subScan.tableSpec().tableName() != null && paginator == null) {
       baseUrl += subScan.tableSpec().tableName();
     }
 
