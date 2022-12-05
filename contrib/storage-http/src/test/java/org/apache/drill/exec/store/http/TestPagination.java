@@ -216,6 +216,15 @@ public class TestPagination extends ClusterTest {
       .inputType("json")
       .build();
 
+    HttpApiConfig mockJsonConfigWithPaginatorAndTail = HttpApiConfig.builder()
+      .url("http://localhost:8092/json")
+      .method("get")
+      .headers(headers)
+      .requireTail(true)
+      .paginator(offsetPaginatorForJson)
+      .inputType("json")
+      .build();
+
     HttpPaginatorConfig pagePaginatorForXML = HttpPaginatorConfig.builder()
       .method("page")
       .pageParam("page")
@@ -268,6 +277,7 @@ public class TestPagination extends ClusterTest {
     configs.put("nested_keyset", mockJsonConfigWitNestedKeyset);
     configs.put("nested_keyset_and_datapath", mockJsonConfigWitNestedKeysetAndDataPath);
     configs.put("json_paginator", mockJsonConfigWithPaginator);
+    configs.put("json_tail", mockJsonConfigWithPaginatorAndTail);
     configs.put("xml_paginator", mockXmlConfigWithPaginator);
     configs.put("xml_paginator_url_params", mockXmlConfigWithPaginatorAndUrlParams);
 
@@ -315,6 +325,33 @@ public class TestPagination extends ClusterTest {
       }
       assertEquals(2, results.size());
       assertEquals(4, count);
+    }
+  }
+
+  @Test
+  public void simpleJSONPaginatorQueryWithTail() throws Exception {
+    String sql = "SELECT * FROM `local`.`json_tail`.`?arg1=foo` LIMIT 4";
+    try (MockWebServer server = startServer()) {
+
+      server.enqueue(new MockResponse().setResponseCode(200).setBody(TEST_JSON_PAGE1));
+      server.enqueue(new MockResponse().setResponseCode(200).setBody(TEST_JSON_PAGE2));
+      server.enqueue(new MockResponse().setResponseCode(200).setBody(TEST_JSON_PAGE3));
+
+      List<QueryDataBatch> results = client.queryBuilder()
+        .sql(sql)
+        .results();
+
+      int count = 0;
+      for(QueryDataBatch b : results){
+        count += b.getHeader().getRowCount();
+        b.release();
+      }
+      assertEquals(2, results.size());
+      assertEquals(4, count);
+
+      // Verify that the URLs are correct
+      RecordedRequest recordedRequest = server.takeRequest();
+      assertEquals("http://localhost:8092/json?arg1=foo&offset=0&limit=2", recordedRequest.getRequestUrl().toString());
     }
   }
 
