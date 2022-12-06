@@ -477,6 +477,7 @@ public class ParquetRecordWriter extends ParquetOutputRecordWriter {
     } finally {
       store.close();
       pageStore.close();
+      codecFactory.release();
 
       store = null;
       pageStore = null;
@@ -741,8 +742,6 @@ public class ParquetRecordWriter extends ParquetOutputRecordWriter {
   @Override
   public void cleanup() throws IOException {
     flush(true);
-
-    codecFactory.release();
   }
 
   private void createParquetFileWriter() throws IOException {
