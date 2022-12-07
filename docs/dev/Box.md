@@ -11,13 +11,19 @@ Once you have obtained the client tokens, the next step is to configure Drill to
 ## Configuring Drill to Connect to Box
 Connecting Drill with Box is basically the same as any other file system.  The default configuration below doesn't list the formats, but you can use this as as a template.
 
-The only fields that will need populate are the `clientID`, `clientSecret` and `callbackURL`.
+The only fields that will need to be populated are the `clientID`, `clientSecret` and `callbackURL`.
+
+You may also specify the connection and read timeouts as shown below.  The times are in milliseconds and will default to 5 seconds.
 
 
 ```json
 {
   "type": "file",
   "connection": "box:///",
+  "config": {
+    "boxConnectionTimeout": 5000,
+    "boxReadTimeout": 5000
+  },
   "workspaces": {
     "root": {
       "location": "/",
@@ -26,7 +32,9 @@ The only fields that will need populate are the `clientID`, `clientSecret` and `
       "allowAccessOutsideWorkspace": false
     }
   },
-  "formats": {...},
+  "formats": {
+    ...
+  },
   "oAuthConfig": {
     "callbackURL": "http://localhost:8047/credentials/<your plugin name>/update_oauth2_authtoken",
     "authorizationURL": "https://account.box.com/api/oauth2/authorize",
@@ -49,10 +57,13 @@ The only fields that will need populate are the `clientID`, `clientSecret` and `
 
 ```
 
+## User Impersonation / User Translation Support
+When using OAuth 2.0 Box supports user translation.  Simply set the `authMode` to `USER_TRANSLATION`.
+
 ## Testing
 Box's OAuth tokens are very short-lived and make testing much more difficult. The unit tests therefore use a Box developer token.  These tokens are only valid for one hour.  They should only be used for testing.  You can obtain a developer token in the same page as the `clientID` and `clientSecret`.
 
-If you wish to run interactive tests using a developer token, use the following configuration:
+If you wish to run unit tests using a developer token, use the following configuration:
 
 ```json
 "type": "file",

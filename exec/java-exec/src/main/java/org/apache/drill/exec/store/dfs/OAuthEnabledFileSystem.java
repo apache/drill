@@ -96,4 +96,20 @@ public abstract class OAuthEnabledFileSystem extends FileSystem {
       tokenTable.setRefreshToken(refreshToken);
     }
   }
+
+  /**
+   * This function must be called by the inheritor class after every operation to make sure
+   * that the tokens stay current.  This method compares the access token with the one from the
+   * persistent store.  If the incoming tokens are different, it will update the persistent store.
+   * @param accessToken The new access token
+   * @param refreshToken The new refresh token
+   * @param expiresAt  The new expires at value.
+   */
+  public void updateTokens(String accessToken, String refreshToken, String expiresAt) {
+    updateTokens(accessToken, refreshToken);
+    if (StringUtils.isNotEmpty(expiresAt)) {
+      logger.debug("Updating expires at for OAuth File System.");
+      tokenTable.setExpiresIn(expiresAt);
+    }
+  }
 }
