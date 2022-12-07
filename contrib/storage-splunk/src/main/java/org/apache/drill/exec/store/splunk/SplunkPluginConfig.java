@@ -49,6 +49,7 @@ public class SplunkPluginConfig extends StoragePluginConfig {
   private final String cookie;
   private final Boolean validateCertificates;
   private final Integer reconnectRetries;
+  private final boolean writable;
 
   @JsonCreator
   public SplunkPluginConfig(@JsonProperty("username") String username,
@@ -65,7 +66,8 @@ public class SplunkPluginConfig extends StoragePluginConfig {
                             @JsonProperty("latestTime") String latestTime,
                             @JsonProperty("credentialsProvider") CredentialsProvider credentialsProvider,
                             @JsonProperty("reconnectRetries") Integer reconnectRetries,
-                            @JsonProperty("authMode") String authMode) {
+                            @JsonProperty("authMode") String authMode,
+                            @JsonProperty("writable") boolean writable) {
     super(CredentialProviderUtils.getCredentialsProvider(username, password, credentialsProvider),
         credentialsProvider == null, AuthMode.parseOrDefault(authMode, AuthMode.SHARED_USER));
     this.scheme = scheme;
@@ -75,6 +77,7 @@ public class SplunkPluginConfig extends StoragePluginConfig {
     this.owner = owner;
     this.token = token;
     this.cookie = cookie;
+    this.writable = writable;
     this.validateCertificates = validateCertificates;
     this.earliestTime = earliestTime;
     this.latestTime = latestTime == null ? "now" : latestTime;
@@ -89,6 +92,7 @@ public class SplunkPluginConfig extends StoragePluginConfig {
     this.app = that.app;
     this.owner = that.owner;
     this.token = that.token;
+    this.writable = that.writable;
     this.cookie = that.cookie;
     this.validateCertificates = that.validateCertificates;
     this.earliestTime = that.earliestTime;
@@ -154,6 +158,10 @@ public class SplunkPluginConfig extends StoragePluginConfig {
     return port;
   }
 
+  public Boolean isWritable() {
+    return writable;
+  }
+
   @JsonProperty("app")
   public String getApp() {
     return app;
@@ -211,6 +219,7 @@ public class SplunkPluginConfig extends StoragePluginConfig {
       Objects.equals(hostname, thatConfig.hostname) &&
       Objects.equals(port, thatConfig.port) &&
       Objects.equals(app, thatConfig.app) &&
+      Objects.equals(writable, thatConfig.writable) &&
       Objects.equals(owner, thatConfig.owner) &&
       Objects.equals(token, thatConfig.token) &&
       Objects.equals(cookie, thatConfig.cookie) &&
@@ -231,6 +240,7 @@ public class SplunkPluginConfig extends StoragePluginConfig {
       owner,
       token,
       cookie,
+      writable,
       validateCertificates,
       earliestTime,
       latestTime,
@@ -245,6 +255,7 @@ public class SplunkPluginConfig extends StoragePluginConfig {
       .field("scheme", scheme)
       .field("hostname", hostname)
       .field("port", port)
+      .field("writable", writable)
       .field("app", app)
       .field("owner", owner)
       .field("token", token)

@@ -21,16 +21,23 @@ package org.apache.drill.exec.store.splunk;
 import org.apache.calcite.schema.SchemaPlus;
 import org.apache.calcite.schema.Table;
 import org.apache.drill.common.exceptions.UserException;
+import org.apache.drill.exec.physical.base.PhysicalOperator;
+import org.apache.drill.exec.physical.base.Writer;
+import org.apache.drill.exec.planner.logical.CreateTableEntry;
 import org.apache.drill.exec.planner.logical.DynamicDrillTable;
+import org.apache.drill.exec.planner.logical.ModifyTableEntry;
 import org.apache.drill.exec.store.AbstractSchema;
 import org.apache.drill.exec.store.AbstractSchemaFactory;
 import org.apache.drill.exec.store.SchemaConfig;
+import org.apache.drill.exec.store.StorageStrategy;
 import org.apache.drill.shaded.guava.com.google.common.collect.Sets;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.IOException;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -95,6 +102,36 @@ public class SplunkSchemaFactory extends AbstractSchemaFactory {
       activeTables.put(name, table);
       return table;
     }
+
+    @Override
+    public CreateTableEntry createNewTable(String tableName, List<String> partitionColumns,
+      StorageStrategy strategy) {
+      if (plugin.getConfig().isWritable() == null || (! plugin.getConfig().isWritable())) {
+        throw UserException
+          .dataWriteError()
+          .message(plugin.getName() + " is not writable.")
+          .build(logger);
+      }
+
+      return new CreateTableEntry() {
+        @Override
+        public Writer getWriter(PhysicalOperator child) throws IOException {
+          return new SplunkWriter(child, tableName, null, plugin);
+        }
+
+        @Override
+        public List<String> getPartitionColumns() {
+          return Collections.emptyList();
+        }
+      };
+    }
+
+    @Override
+    public ModifyTableEntry modifyTable(String tableName) {
+      return null;
+      //return child -> new JdbcInsertWriter(child, getFullTablePath(tableName), inner, plugin);
+    }
+
 
     @Override
     public String getTypeName() {
