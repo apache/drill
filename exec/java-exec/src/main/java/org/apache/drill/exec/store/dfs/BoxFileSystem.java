@@ -97,7 +97,7 @@ public class BoxFileSystem extends OAuthEnabledFileSystem {
 
     BoxItem item = getItem(inputPath);
     if (item instanceof BoxFile) {
-      BoxFile file = (BoxFile) getItem(inputPath);
+      BoxFile file = (BoxFile) item;
       updateTokens();
 
       file.download(out);
@@ -387,7 +387,7 @@ public class BoxFileSystem extends OAuthEnabledFileSystem {
           .message("Box file system missing refresh token. Please reauthenticate to obtain a refresh token.")
           .build(logger);
       }
-      super.updateTokens(client.getAccessToken(), client.getRefreshToken());
+      super.updateTokens(client.getAccessToken(), client.getRefreshToken(), String.valueOf(client.getExpires()));
     }
   }
 

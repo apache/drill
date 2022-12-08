@@ -62,7 +62,8 @@ The connection to Dropbox also supports using OAuth 2.0 for authorization.  See 
     "callbackURL": "http://localhost:8047/credentials/<plugin name>/update_oauth2_authtoken",
     "authorizationURL": "https:/www.dropbox.com/oauth2/authorize",
     "authorizationParams": {
-      "response_type": "code"
+      "response_type": "code",
+      "token_access_type": "offline"
     }
   },
   "authMode": "SHARED_USER",

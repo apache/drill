@@ -115,6 +115,7 @@ public class OAuthRequests {
       // Set the access and refresh token
       tokenTable.setAccessToken(tokenContainer.getAccessToken());
       tokenTable.setRefreshToken(tokenContainer.getRefreshToken());
+      tokenTable.setExpiresIn(tokenContainer.getExpiresIn());
 
       return Response.status(Status.OK)
         .entity("Access tokens have been updated.")
@@ -155,6 +156,9 @@ public class OAuthRequests {
       // Add tokens to persistent storage
       tokenTable.setAccessToken(updatedTokens.get(OAuthTokenCredentials.ACCESS_TOKEN));
       tokenTable.setRefreshToken(updatedTokens.get(OAuthTokenCredentials.REFRESH_TOKEN));
+      if (updatedTokens.containsKey(OAuthTokenCredentials.EXPIRES_IN)) {
+        tokenTable.setExpiresIn(updatedTokens.get(OAuthTokenCredentials.EXPIRES_IN));
+      }
 
       // Get success page
       String successPage = null;

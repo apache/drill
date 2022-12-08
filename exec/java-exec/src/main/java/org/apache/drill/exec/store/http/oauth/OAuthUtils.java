@@ -126,6 +126,7 @@ public class OAuthUtils {
   public static Map<String, String> getOAuthTokens(OkHttpClient client, Request request) {
     String accessToken;
     String refreshToken;
+    String expiresIn;
     Map<String, String> tokens = new HashMap<>();
     Response response = null;
 
@@ -165,6 +166,13 @@ public class OAuthUtils {
         refreshToken = (String) parsedJson.get("refresh_token");
         tokens.put(OAuthTokenCredentials.REFRESH_TOKEN, refreshToken);
       }
+
+      // If we get an updated expires in time, update that as well.
+      if (parsedJson.containsKey("expires_in")) {
+        expiresIn = String.valueOf(parsedJson.get("expires_in"));
+        tokens.put(OAuthTokenCredentials.EXPIRES_IN, expiresIn);
+      }
+
       return tokens;
 
     } catch (NullPointerException | IOException e) {

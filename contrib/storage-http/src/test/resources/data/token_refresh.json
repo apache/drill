@@ -2,5 +2,5 @@
   "access_token": "token 2.0",
   "refresh_token": "refresh 2.0",
   "token_type": "Bearer",
-  "expires": 3600
+  "expires_in": 3800
 }

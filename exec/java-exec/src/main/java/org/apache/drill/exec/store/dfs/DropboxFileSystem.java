@@ -18,6 +18,7 @@
 
 package org.apache.drill.exec.store.dfs;
 
+import com.dropbox.core.DbxDownloader;
 import com.dropbox.core.DbxException;
 import com.dropbox.core.DbxRequestConfig;
 import com.dropbox.core.oauth.DbxCredential;
@@ -31,6 +32,7 @@ import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.common.logical.security.CredentialsProvider;
 import org.apache.drill.exec.oauth.PersistentTokenTable;
 import org.apache.drill.exec.store.security.oauth.OAuthTokenCredentials;
+import org.apache.drill.exec.vector.complex.fn.SeekableBAIS;
 import org.apache.hadoop.fs.FSDataInputStream;
 import org.apache.hadoop.fs.FSDataOutputStream;
 import org.apache.hadoop.fs.FileStatus;
@@ -77,10 +79,10 @@ public class DropboxFileSystem extends OAuthEnabledFileSystem {
     String filename = getFileName(path);
     client = getClient();
     ByteArrayOutputStream out = new ByteArrayOutputStream();
-    try {
-      client.files().download(filename).download(out);
+    try (DbxDownloader<FileMetadata> downloader = client.files().download(filename)) {
+      downloader.download(out);
       updateTokens();
-      fsDataInputStream = new FSDataInputStream(new SeekableByteArrayInputStream(out.toByteArray()));
+      fsDataInputStream = new FSDataInputStream(new SeekableBAIS(out.toByteArray()));
     } catch (DbxException e) {
       throw new IOException(e.getMessage());
     }
@@ -120,7 +122,14 @@ public class DropboxFileSystem extends OAuthEnabledFileSystem {
 
     // Get files and folder metadata from Dropbox root directory
     try {
-      ListFolderResult result = client.files().listFolder("");
+      String pathString;
+      if (path.isRoot()) {
+        pathString = "";
+      } else {
+        pathString = path.toString().replace("dropbox:", "");
+      }
+
+      ListFolderResult result = client.files().listFolder(pathString);
       updateTokens();
       while (true) {
         for (Metadata metadata : result.getEntries()) {
@@ -173,6 +182,7 @@ public class DropboxFileSystem extends OAuthEnabledFileSystem {
     client = getClient();
     try {
       Metadata metadata = client.files().getMetadata(filePath);
+      updateTokens();
       return getFileInformation(metadata);
     } catch (Exception e) {
       throw new IOException("Error accessing file " + filePath + "\n" + e.getMessage());
@@ -207,8 +217,9 @@ public class DropboxFileSystem extends OAuthEnabledFileSystem {
     String clientIdentifier = this.getConf().get("clientIdentifier", APP_IDENTIFIER);
     logger.info("Creating dropbox client with client identifier: {}", clientIdentifier);
 
-    // TODO Dropbox has an auto-retry feature.  We could make this configurable in future work.
-    config = DbxRequestConfig.newBuilder(clientIdentifier).build();
+    config = DbxRequestConfig.newBuilder(clientIdentifier)
+      .withAutoRetryEnabled(5)
+      .build();
 
     // read access token from config or credentials provider
     logger.info("Reading dropbox access token from configuration or credentials provider");
@@ -251,7 +262,7 @@ public class DropboxFileSystem extends OAuthEnabledFileSystem {
         dbxCredential.refresh(config);
       } catch (DbxException e) {
         throw UserException.connectionError(e)
-          .message("Error refreshing Dropbox OAuth tokens.")
+          .message("Error refreshing Dropbox OAuth tokens: " + e.getMessage())
           .build(logger);
       }
       // Update the tokens in Drill
