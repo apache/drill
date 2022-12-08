@@ -58,7 +58,7 @@ public class DrillPluginQueriesTest extends ClusterTest {
 
     DrillStoragePluginConfig config = new DrillStoragePluginConfig(
       "jdbc:drill:drillbit=localhost:" + drill.drillbit().getUserPort(),
-      new Properties(), null);
+      new Properties(), null, null);
     config.setEnabled(true);
     cluster.defineStoragePlugin("drill", config);
     cluster.defineStoragePlugin("drill2", config);

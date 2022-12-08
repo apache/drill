@@ -24,20 +24,31 @@ import com.fasterxml.jackson.annotation.JsonTypeName;
 import org.apache.calcite.avatica.ConnectStringParser;
 import org.apache.drill.common.config.DrillConfig;
 import org.apache.drill.common.config.DrillProperties;
+import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.common.logical.StoragePluginConfig;
 import org.apache.drill.common.logical.security.CredentialsProvider;
 import org.apache.drill.common.logical.security.PlainCredentialsProvider;
 import org.apache.drill.exec.client.DrillClient;
 import org.apache.drill.exec.memory.BufferAllocator;
+import org.apache.drill.exec.proto.UserBitShared.UserCredentials;
 import org.apache.drill.exec.rpc.RpcException;
+import org.apache.drill.exec.store.security.UsernamePasswordCredentials;
+import org.apache.drill.shaded.guava.com.google.common.base.Preconditions;
+import org.apache.drill.shaded.guava.com.google.common.collect.ImmutableMap;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.sql.SQLException;
+import java.util.Collections;
+import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Properties;
 
 @JsonTypeName(DrillStoragePluginConfig.NAME)
 public class DrillStoragePluginConfig extends StoragePluginConfig {
+  private static final Logger logger = LoggerFactory.getLogger(DrillStoragePluginConfig.class);
+
   public static final String NAME = "drill";
   public static final String CONNECTION_STRING_PREFIX = "jdbc:drill:";
 
@@ -50,8 +61,10 @@ public class DrillStoragePluginConfig extends StoragePluginConfig {
   public DrillStoragePluginConfig(
       @JsonProperty("connection") String connection,
       @JsonProperty("properties") Properties properties,
-      @JsonProperty("credentialsProvider") CredentialsProvider credentialsProvider) {
-    super(getCredentialsProvider(credentialsProvider), credentialsProvider == null);
+      @JsonProperty("credentialsProvider") CredentialsProvider credentialsProvider,
+      @JsonProperty("authMode") String authMode) {
+    super(getCredentialsProvider(credentialsProvider), credentialsProvider == null,
+      AuthMode.parseOrDefault(authMode, AuthMode.SHARED_USER));
     this.connection = connection;
     this.properties = Optional.ofNullable(properties).orElse(new Properties());
   }
@@ -88,12 +101,42 @@ public class DrillStoragePluginConfig extends StoragePluginConfig {
     return new DrillStoragePluginConfig(this, credentialsProvider);
   }
 
+  private Optional<UsernamePasswordCredentials> getUsernamePasswordCredentials(
+    UserCredentials userCredentials) {
+    switch (authMode) {
+    case SHARED_USER:
+      return new UsernamePasswordCredentials.Builder()
+        .setCredentialsProvider(credentialsProvider)
+        .build();
+    case USER_TRANSLATION:
+      Preconditions.checkNotNull(
+        userCredentials,
+        "A drill query user is required for user translation auth mode."
+      );
+      return new UsernamePasswordCredentials.Builder()
+        .setCredentialsProvider(credentialsProvider)
+        .setQueryUser(userCredentials.getUserName())
+        .build();
+    default:
+      throw UserException.validationError()
+        .message("This storage plugin does not support auth mode: %s", authMode)
+        .build(logger);
+    }
+  }
+
+  private Map<String, String> getCredentials(UserCredentials userCredentials) {
+    return getUsernamePasswordCredentials(userCredentials)
+      .<Map<String, String>>map(creds -> ImmutableMap.of(DrillProperties.USER, creds.getUsername(),
+        DrillProperties.PASSWORD, creds.getPassword()))
+      .orElse(Collections.emptyMap());
+  }
+
   @JsonIgnore
   public DrillClient getDrillClient(String userName, BufferAllocator allocator) {
     try {
       String urlSuffix = connection.substring(CONNECTION_STRING_PREFIX.length());
       Properties props = ConnectStringParser.parse(urlSuffix, properties);
-      props.putAll(credentialsProvider.getUserCredentials(userName));
+      props.putAll(getCredentials(UserCredentials.newBuilder().setUserName(userName).build()));
 
       DrillConfig dConfig = DrillConfig.forClient();
       boolean isDirect = props.getProperty(DrillProperties.DRILLBIT_CONNECTION) != null;
