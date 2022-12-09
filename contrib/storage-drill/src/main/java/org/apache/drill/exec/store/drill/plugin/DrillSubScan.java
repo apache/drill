@@ -44,7 +44,7 @@ public class DrillSubScan extends AbstractBase implements SubScan {
   @JsonCreator
   public DrillSubScan(
       @JsonProperty("userName") String userName,
-      @JsonProperty("mongoPluginConfig") StoragePluginConfig pluginConfig,
+      @JsonProperty("pluginConfig") StoragePluginConfig pluginConfig,
       @JsonProperty("query") String query) {
     super(userName);
     this.pluginConfig = (DrillStoragePluginConfig) pluginConfig;
