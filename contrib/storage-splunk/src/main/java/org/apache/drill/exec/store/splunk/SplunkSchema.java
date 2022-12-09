@@ -61,10 +61,12 @@ public class SplunkSchema extends AbstractSchema {
     if (table != null) {
       // If the table was found, return it.
       return table;
-    } else {
-      // Register the table
+    } else if (activeTables.containsKey(name)) {
+      // Register the table if it is in the list of indexes.
       return registerTable(name, new DynamicDrillTable(plugin, plugin.getName(),
         new SplunkScanSpec(plugin.getName(), name, plugin.getConfig(), queryUserName)));
+    } else {
+      return null;
     }
   }
 
@@ -96,7 +98,7 @@ public class SplunkSchema extends AbstractSchema {
     return new CreateTableEntry() {
       @Override
       public Writer getWriter(PhysicalOperator child) throws IOException {
-        return new SplunkWriter(child, tableName, null, plugin);
+        return new SplunkWriter(child, Collections.singletonList(tableName),  plugin);
       }
 
       @Override
@@ -108,7 +110,7 @@ public class SplunkSchema extends AbstractSchema {
 
   /**
    * This function contains the logic to delete an index from Splunk. The Splunk SDK does not
-   * have any kind of indication whether the operation succeeded or failed,
+   * have any kind of indication whether the operation succeeded or failed.
    * @param indexName The name of the index to be deleted.
    */
   @Override
@@ -129,6 +131,10 @@ public class SplunkSchema extends AbstractSchema {
     //return child -> new JdbcInsertWriter(child, getFullTablePath(tableName), inner, plugin);
   }
 
+  @Override
+  public boolean isMutable() {
+    return plugin.getConfig().isWritable();
+  }
 
   @Override
   public String getTypeName() {
@@ -148,7 +154,7 @@ public class SplunkSchema extends AbstractSchema {
     for (String indexName : connection.getIndexes().keySet()) {
       logger.debug("Registering {}", indexName);
       registerTable(indexName, new DynamicDrillTable(plugin, plugin.getName(),
-        new SplunkScanSpec(plugin.getName(), indexName, config, queryUserName)));
+        new SplunkScanSpec(plugin.getName(), indexName, plugin.getConfig(), queryUserName)));
     }
   }
 
@@ -168,5 +174,4 @@ public class SplunkSchema extends AbstractSchema {
     }
     return connection;
   }
-
 }

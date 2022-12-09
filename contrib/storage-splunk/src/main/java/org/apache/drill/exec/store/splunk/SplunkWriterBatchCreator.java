@@ -31,18 +31,14 @@ import org.apache.drill.exec.record.RecordBatch;
 public class SplunkWriterBatchCreator implements BatchCreator<SplunkWriter> {
 
   @Override
-  public CloseableRecordBatch getBatch(ExecutorFragmentContext context, SplunkWriter config,
-    List<RecordBatch> children)
+  public CloseableRecordBatch getBatch(ExecutorFragmentContext context, SplunkWriter config, List<RecordBatch> children)
     throws ExecutionSetupException {
     assert children != null && children.size() == 1;
 
     UserCredentials userCreds = context.getContextInformation().getQueryUserCredentials();
 
-    return new WriterRecordBatch(
-      config,
-      children.iterator().next(),
-      context,
-      new SplunkRecordWriter(userCreds, config.getTableIdentifier(), config)
+    return new WriterRecordBatch(config, children.iterator().next(), context,
+      new SplunkBatchWriter(userCreds, config.getTableIdentifier(), config)
     );
   }
 }

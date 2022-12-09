@@ -20,13 +20,12 @@ package org.apache.drill.exec.store.splunk;
 
 import com.fasterxml.jackson.annotation.JacksonInject;
 import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import org.apache.calcite.adapter.jdbc.JdbcSchema;
-import org.apache.drill.common.logical.StoragePluginConfig;
+import org.apache.drill.common.PlanStringBuilder;
 import org.apache.drill.exec.physical.base.AbstractWriter;
 import org.apache.drill.exec.physical.base.PhysicalOperator;
 import org.apache.drill.exec.store.StoragePluginRegistry;
-import org.apache.drill.exec.store.splunk.SplunkSchemaFactory.SplunkSchema;
 
 import java.util.List;
 
@@ -36,36 +35,50 @@ public class SplunkWriter extends AbstractWriter {
 
   private final SplunkStoragePlugin plugin;
   private final List<String> tableIdentifier;
-  private final SplunkSchema inner;
 
   @JsonCreator
   public SplunkWriter(
     @JsonProperty("child") PhysicalOperator child,
     @JsonProperty("tableIdentifier") List<String> tableIdentifier,
-    @JsonProperty("storage") StoragePluginConfig storageConfig,
-    @JacksonInject SplunkSchema inner,
+    @JsonProperty("storage") SplunkPluginConfig storageConfig,
     @JacksonInject StoragePluginRegistry engineRegistry) {
     super(child);
     this.plugin = engineRegistry.resolve(storageConfig, SplunkStoragePlugin.class);
     this.tableIdentifier = tableIdentifier;
-    this.inner = inner;
+
   }
 
-  public SplunkWriter(PhysicalOperator child, List<String> tableIdentifier, SplunkSchema inner,
-    SplunkStoragePlugin plugin) {
+  SplunkWriter(PhysicalOperator child, List<String> tableIdentifier, SplunkStoragePlugin plugin) {
     super(child);
     this.tableIdentifier = tableIdentifier;
     this.plugin = plugin;
-    this.inner = inner;
   }
 
   @Override
   protected PhysicalOperator getNewWithChild(PhysicalOperator child) {
+    return new SplunkWriter(child, tableIdentifier, plugin);
+  }
 
+  public List<String> getTableIdentifier() {
+    return tableIdentifier;
   }
 
   @Override
   public String getOperatorType() {
-    return null;
+    return OPERATOR_TYPE;
   }
+
+  @JsonIgnore
+  public SplunkPluginConfig getPluginConfig() {
+    return this.plugin.getConfig();
+  }
+
+  @Override
+  public String toString() {
+    return new PlanStringBuilder(this)
+      .field("tableName", tableIdentifier)
+      .field("storageStrategy", getStorageStrategy())
+      .toString();
+  }
+
 }
