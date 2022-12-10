@@ -17,17 +17,17 @@ public class SplunkWriterTest extends SplunkBaseTest {
   public void testCTAS() throws Exception {
 
     // Verify that there is no index called t1 in Splunk
-    String sql = "SELECT * FROM INFORMATION_SCHEMA.`TABLES` WHERE TABLE_SCHEMA = 'splunk' AND TABLE_NAME LIKE 't1'";
-    RowSet results = client.queryBuilder().sql(sql).rowSet();
-    assertEquals(0, results.rowCount());
-    results.clear();
+    //String sql = "SELECT * FROM INFORMATION_SCHEMA.`TABLES` WHERE TABLE_SCHEMA = 'splunk' AND TABLE_NAME LIKE 't1'";
+    //RowSet results = client.queryBuilder().sql(sql).rowSet();
+    //assertEquals(0, results.rowCount());
+    //results.clear();
 
-    /*sql = "CREATE TABLE `splunk`.`t1` AS SELECT 5";
-    results = client.queryBuilder().sql(sql).rowSet();
+    String sql = "CREATE TABLE `splunk`.`t1` AS SELECT 5";
+    RowSet results = client.queryBuilder().sql(sql).rowSet();
     results.print();
     results.clear();
 
-    sql = "show tables in splunk";
+    /*sql = "show tables in splunk";
     results = client.queryBuilder().sql(sql).rowSet();
     results.print();
     results.clear();*/

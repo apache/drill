@@ -21,10 +21,15 @@ package org.apache.drill.exec.store.splunk;
 
 import com.splunk.IndexCollection;
 import com.splunk.Service;
+import org.apache.calcite.sql.SqlLiteral;
+import org.apache.calcite.sql.parser.SqlParserPos;
 import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.exec.proto.UserBitShared.UserCredentials;
 import org.apache.drill.exec.record.VectorAccessible;
 import org.apache.drill.exec.store.AbstractRecordWriter;
+import org.apache.drill.exec.store.EventBasedRecordWriter.FieldConverter;
+import org.apache.drill.exec.vector.complex.reader.FieldReader;
+import org.json.simple.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -40,6 +45,7 @@ public class SplunkBatchWriter extends AbstractRecordWriter {
   private final List<String> tableIdentifier;
   private final SplunkWriter config;
   private final Service splunkService;
+  private JSONObject splunkEvent;
 
 
   public SplunkBatchWriter(UserCredentials userCredentials, List<String> tableIdentifier, SplunkWriter config) {
@@ -80,25 +86,21 @@ public class SplunkBatchWriter extends AbstractRecordWriter {
     }
   }
 
-  /**
-   * Called before starting writing fields in a record.
-   *
-   * @throws IOException
-   */
+
   @Override
-  public void startRecord() throws IOException {
+  public void startRecord() {
     logger.debug("Starting record");
+    splunkEvent = new JSONObject();
   }
 
-  /**
-   * Called after adding all fields in a particular record are added using add{TypeHolder}
-   * (fieldId, TypeHolder) methods.
-   *
-   * @throws IOException
-   */
   @Override
   public void endRecord() throws IOException {
     logger.debug("Ending record");
+    // Write the event to the Splunk index
+
+
+    // Clear out the splunk event.
+    splunkEvent = new JSONObject();
   }
 
   @Override
@@ -109,5 +111,23 @@ public class SplunkBatchWriter extends AbstractRecordWriter {
   @Override
   public void cleanup() throws IOException {
 
+  }
+
+  @Override
+  public FieldConverter getNewVarCharConverter(int fieldId, String fieldName, FieldReader reader) {
+    return new VarCharSplunkConverter(fieldId, fieldName, reader);
+  }
+
+  public class VarCharSplunkConverter extends FieldConverter {
+
+    public VarCharSplunkConverter(int fieldID, String fieldName, FieldReader reader) {
+      super(fieldID, fieldName, reader);
+    }
+
+    @Override
+    public void writeField() {
+      byte[] bytes = reader.readText().copyBytes();
+      splunkEvent.put(fieldName, new String(bytes));
+    }
   }
 }
