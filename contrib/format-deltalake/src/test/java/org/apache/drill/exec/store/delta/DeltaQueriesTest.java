@@ -44,7 +44,7 @@ public class DeltaQueriesTest extends ClusterTest {
     StoragePluginRegistry pluginRegistry = cluster.drillbit().getContext().getStorage();
     FileSystemConfig pluginConfig = (FileSystemConfig) pluginRegistry.getPlugin(DFS_PLUGIN_NAME).getConfig();
     Map<String, FormatPluginConfig> formats = new HashMap<>(pluginConfig.getFormats());
-    formats.put("delta", new DeltaFormatPluginConfig());
+    formats.put("delta", new DeltaFormatPluginConfig(null, null));
     FileSystemConfig newPluginConfig = new FileSystemConfig(
       pluginConfig.getConnection(),
       pluginConfig.getConfig(),
@@ -192,5 +192,18 @@ public class DeltaQueriesTest extends ClusterTest {
 
     long count = queryBuilder().sql(query).run().recordCount();
     assertEquals(1, count);
+  }
+
+  @Test
+  public void testSnapshotVersion() throws Exception {
+    String query = "select as_int, as_string " +
+      "from table(dfs.`data-reader-partition-values`(type => 'delta', version => 0))  where as_long = 1";
+
+    testBuilder()
+      .sqlQuery(query)
+      .ordered()
+      .baselineColumns("as_int", "as_string")
+      .baselineValues("1", "1")
+      .go();
   }
 }
