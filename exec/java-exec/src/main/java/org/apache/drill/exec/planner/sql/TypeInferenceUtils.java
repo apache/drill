@@ -614,7 +614,7 @@ public class TypeInferenceUtils {
 
       SqlTypeName inputTypeName = inputType.getSqlTypeName();
 
-      TimeUnit qualifier = ((SqlLiteral) ((SqlCallBinding) opBinding).operand(0)).getValueAs(TimeUnit.class);
+      TimeUnit qualifier = ((SqlIntervalQualifier) ((SqlCallBinding) opBinding).operand(0)).getUnit();
 
       SqlTypeName sqlTypeName;
       int precision = 0;

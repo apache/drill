@@ -25,7 +25,6 @@ import java.util.Map;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
-import org.apache.calcite.avatica.util.TimeUnit;
 import org.apache.calcite.rel.type.RelDataType;
 import org.apache.calcite.rel.type.RelDataTypeFactory;
 import org.apache.calcite.rex.RexNode;
@@ -208,9 +207,9 @@ public class DrillConvertletTable implements SqlRexConvertletTable {
 
   private static SqlRexConvertlet timestampDiffConvertlet() {
     return (cx, call) -> {
-      SqlLiteral unitLiteral = call.operand(0);
+      SqlIntervalQualifier unitLiteral = call.operand(0);
       SqlIntervalQualifier qualifier =
-          new SqlIntervalQualifier(unitLiteral.symbolValue(TimeUnit.class), null, SqlParserPos.ZERO);
+          new SqlIntervalQualifier(unitLiteral.getUnit(), null, SqlParserPos.ZERO);
 
       List<RexNode> operands = Arrays.asList(
           cx.convertExpression(qualifier),
