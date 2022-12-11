@@ -126,6 +126,14 @@ public class DrillFileSystem extends FileSystem implements OpenFileTracker {
   }
 
   /**
+   * Returns a copy of the underlying file system.  This class implements {@link FileSystem}
+   * @return The underlying {@link FileSystem}
+   */
+  public FileSystem getUnderlyingFs() {
+    return underlyingFs;
+  }
+
+  /**
    * If OperatorStats are provided return a instrumented {@link org.apache.hadoop.fs.FSDataInputStream}.
    */
   @Override

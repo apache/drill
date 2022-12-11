@@ -77,7 +77,7 @@ public class StoragePluginTestUtils {
         pluginConfig.getConnection(),
         pluginConfig.getConfig(),
         newWorkspaces,
-        pluginConfig.getFormats(),
+        pluginConfig.getFormats(), null,
         PlainCredentialsProvider.EMPTY_CREDENTIALS_PROVIDER);
     newPluginConfig.setEnabled(pluginConfig.isEnabled());
     pluginRegistry.put(pluginName, newPluginConfig);
@@ -114,7 +114,7 @@ public class StoragePluginTestUtils {
         fileSystemConfig.getConnection(),
         fileSystemConfig.getConfig(),
         fileSystemConfig.getWorkspaces(),
-        newFormats,
+        newFormats, null,
         PlainCredentialsProvider.EMPTY_CREDENTIALS_PROVIDER);
     newFileSystemConfig.setEnabled(fileSystemConfig.isEnabled());
 

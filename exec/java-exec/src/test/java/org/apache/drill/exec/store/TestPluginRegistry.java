@@ -84,7 +84,7 @@ public class TestPluginRegistry extends BaseTest {
 
   private FileSystemConfig myConfig1() {
     FileSystemConfig config = new FileSystemConfig("myConn",
-        new HashMap<>(), new HashMap<>(), new HashMap<>(),
+        new HashMap<>(), new HashMap<>(), new HashMap<>(), null,
         PlainCredentialsProvider.EMPTY_CREDENTIALS_PROVIDER);
     config.setEnabled(true);
     return config;
@@ -94,7 +94,7 @@ public class TestPluginRegistry extends BaseTest {
     Map<String, String> props = new HashMap<>();
     props.put("foo", "bar");
     FileSystemConfig config = new FileSystemConfig("myConn",
-        props, new HashMap<>(), new HashMap<>(),
+        props, new HashMap<>(), new HashMap<>(), null,
         PlainCredentialsProvider.EMPTY_CREDENTIALS_PROVIDER);
     config.setEnabled(true);
     return config;

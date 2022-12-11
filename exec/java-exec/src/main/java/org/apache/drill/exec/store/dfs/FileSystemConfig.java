@@ -34,6 +34,7 @@ import org.apache.drill.common.logical.FormatPluginConfig;
 
 import com.fasterxml.jackson.annotation.JsonTypeName;
 
+import org.apache.drill.common.logical.OAuthConfig;
 import org.apache.drill.common.logical.StoragePluginConfig;
 import org.apache.drill.common.map.CaseInsensitiveMap;
 import org.apache.drill.common.logical.security.CredentialsProvider;
@@ -56,14 +57,36 @@ public class FileSystemConfig extends StoragePluginConfig {
   private final Map<String, String> config;
   private final Map<String, WorkspaceConfig> workspaces;
   private final Map<String, FormatPluginConfig> formats;
+  private final OAuthConfig oAuthConfig;
+
+  public FileSystemConfig(String connection,
+    Map<String, String> config,
+    Map<String, WorkspaceConfig> workspaces,
+    Map<String, FormatPluginConfig> formats,
+    OAuthConfig oAuthConfig,
+    CredentialsProvider credentialsProvider) {
+    this(connection, config, workspaces, formats, oAuthConfig, null,
+      credentialsProvider);
+  }
+
+  public FileSystemConfig(String connection,
+    Map<String, String> config,
+    Map<String, WorkspaceConfig> workspaces,
+    Map<String, FormatPluginConfig> formats,
+    CredentialsProvider credentialsProvider) {
+    this(connection, config, workspaces, formats, null, null,
+      credentialsProvider);
+  }
 
   @JsonCreator
   public FileSystemConfig(@JsonProperty("connection") String connection,
                           @JsonProperty("config") Map<String, String> config,
                           @JsonProperty("workspaces") Map<String, WorkspaceConfig> workspaces,
                           @JsonProperty("formats") Map<String, FormatPluginConfig> formats,
+                          @JsonProperty("oAuthConfig") OAuthConfig oAuthConfig,
+                          @JsonProperty("authMode") String authMode,
                           @JsonProperty("credentialsProvider") CredentialsProvider credentialsProvider) {
-    super(getCredentialsProvider(config, credentialsProvider), credentialsProvider == null);
+    super(credentialsProvider, credentialsProvider == null, AuthMode.parseOrDefault(authMode, AuthMode.SHARED_USER), oAuthConfig);
     this.connection = connection;
 
     // Force creation of an empty map so that configs compare equal
@@ -75,6 +98,7 @@ public class FileSystemConfig extends StoragePluginConfig {
     Map<String, WorkspaceConfig> caseInsensitiveWorkspaces = CaseInsensitiveMap.newHashMap();
     Optional.ofNullable(workspaces).ifPresent(caseInsensitiveWorkspaces::putAll);
     this.workspaces = caseInsensitiveWorkspaces;
+    this.oAuthConfig = oAuthConfig;
     this.formats = formats != null ? formats : new LinkedHashMap<>();
   }
 
@@ -161,7 +185,8 @@ public class FileSystemConfig extends StoragePluginConfig {
       formatsCopy.putAll(newFormats);
     }
     FileSystemConfig newConfig =
-        new FileSystemConfig(connection, configCopy, workspaces, formatsCopy, credentialsProvider);
+        new FileSystemConfig(connection, configCopy, workspaces, formatsCopy, oAuthConfig,
+          authMode.name(), credentialsProvider);
     newConfig.setEnabled(isEnabled());
     return newConfig;
   }

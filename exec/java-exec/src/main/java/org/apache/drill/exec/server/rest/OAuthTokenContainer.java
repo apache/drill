@@ -27,12 +27,15 @@ import javax.xml.bind.annotation.XmlRootElement;
 public class OAuthTokenContainer {
   private final String accessToken;
   private final String refreshToken;
+  private final String expiresIn;
 
   @JsonCreator
   public OAuthTokenContainer(@JsonProperty("accessToken") String accessToken,
-                             @JsonProperty("refreshToken") String refreshToken) {
+                             @JsonProperty("refreshToken") String refreshToken,
+                             @JsonProperty("expiresIn") String expiresIn) {
     this.accessToken = accessToken;
     this.refreshToken = refreshToken;
+    this.expiresIn = expiresIn;
   }
 
   public String getAccessToken() {
@@ -41,5 +44,9 @@ public class OAuthTokenContainer {
 
   public String getRefreshToken() {
     return refreshToken;
+  }
+
+  public String getExpiresIn() {
+    return expiresIn;
   }
 }

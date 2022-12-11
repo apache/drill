@@ -137,6 +137,7 @@ public class TestOAuthProcess extends ClusterTest {
 
       assertEquals("you_have_access", tokenTable.getAccessToken());
       assertEquals("refresh_me", tokenTable.getRefreshToken());
+      assertEquals("3600", tokenTable.getExpiresIn());
 
     } catch (Exception e) {
       logger.error(e.getMessage());
@@ -163,6 +164,8 @@ public class TestOAuthProcess extends ClusterTest {
 
       assertEquals("you_have_access", tokenTable.getAccessToken());
       assertEquals("refresh_me", tokenTable.getRefreshToken());
+      assertEquals("3600", tokenTable.getExpiresIn());
+
       // Now execute a query and get query results.
       server.enqueue(new MockResponse()
         .setResponseCode(200)
@@ -206,6 +209,7 @@ public class TestOAuthProcess extends ClusterTest {
 
       assertEquals("you_have_access", tokenTable.getAccessToken());
       assertEquals("refresh_me", tokenTable.getRefreshToken());
+      assertEquals("3600", tokenTable.getExpiresIn());
 
       // Now execute a query and get a refresh token
       // The API should return a 401 error.  This should trigger Drill to automatically
@@ -223,6 +227,7 @@ public class TestOAuthProcess extends ClusterTest {
       // Verify that the access and refresh tokens were saved
       assertEquals("token 2.0", tokenTable.getAccessToken());
       assertEquals("refresh 2.0", tokenTable.getRefreshToken());
+      assertEquals("3800", tokenTable.getExpiresIn());
 
       TupleMetadata expectedSchema = new SchemaBuilder()
         .add("col_1", MinorType.FLOAT8, DataMode.OPTIONAL)

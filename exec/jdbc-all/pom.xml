@@ -216,6 +216,10 @@
           <artifactId>dropbox-core-sdk</artifactId>
         </exclusion>
         <exclusion>
+          <groupId>com.box</groupId>
+          <artifactId>box-java-sdk</artifactId>
+        </exclusion>
+        <exclusion>
           <groupId>org.apache.commons</groupId>
           <artifactId>commons-compress</artifactId>
         </exclusion>

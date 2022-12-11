@@ -18,26 +18,30 @@
 
 package org.apache.drill.exec.store.dfs;
 
+import com.dropbox.core.DbxDownloader;
 import com.dropbox.core.DbxException;
 import com.dropbox.core.DbxRequestConfig;
+import com.dropbox.core.oauth.DbxCredential;
 import com.dropbox.core.v2.DbxClientV2;
 import com.dropbox.core.v2.files.FileMetadata;
 import com.dropbox.core.v2.files.FolderMetadata;
 import com.dropbox.core.v2.files.ListFolderResult;
 import com.dropbox.core.v2.files.Metadata;
+import org.apache.commons.lang3.StringUtils;
+import org.apache.drill.common.exceptions.UserException;
+import org.apache.drill.common.logical.security.CredentialsProvider;
+import org.apache.drill.exec.oauth.PersistentTokenTable;
+import org.apache.drill.exec.store.security.oauth.OAuthTokenCredentials;
+import org.apache.drill.exec.vector.complex.fn.SeekableBAIS;
 import org.apache.hadoop.fs.FSDataInputStream;
 import org.apache.hadoop.fs.FSDataOutputStream;
 import org.apache.hadoop.fs.FileStatus;
-import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
-import org.apache.hadoop.fs.PositionedReadable;
-import org.apache.hadoop.fs.Seekable;
 import org.apache.hadoop.fs.permission.FsPermission;
 import org.apache.hadoop.util.Progressable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.net.URI;
@@ -47,14 +51,18 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-public class DropboxFileSystem extends FileSystem {
+public class DropboxFileSystem extends OAuthEnabledFileSystem {
   private static final Logger logger = LoggerFactory.getLogger(DropboxFileSystem.class);
 
   private static final String ERROR_MSG = "Dropbox is read only.";
+  private static final String APP_IDENTIFIER = "Apache/Drill";
   private Path workingDirectory;
   private DbxClientV2 client;
+  private DbxCredential dbxCredential;
+  private DbxRequestConfig config;
   private FileStatus[] fileStatuses;
   private final Map<String,FileStatus> fileStatusCache = new HashMap<>();
+  private boolean usesDeveloperToken;
 
   @Override
   public URI getUri() {
@@ -71,9 +79,10 @@ public class DropboxFileSystem extends FileSystem {
     String filename = getFileName(path);
     client = getClient();
     ByteArrayOutputStream out = new ByteArrayOutputStream();
-    try {
-      client.files().download(filename).download(out);
-      fsDataInputStream = new FSDataInputStream(new SeekableByteArrayInputStream(out.toByteArray()));
+    try (DbxDownloader<FileMetadata> downloader = client.files().download(filename)) {
+      downloader.download(out);
+      updateTokens();
+      fsDataInputStream = new FSDataInputStream(new SeekableBAIS(out.toByteArray()));
     } catch (DbxException e) {
       throw new IOException(e.getMessage());
     }
@@ -113,7 +122,15 @@ public class DropboxFileSystem extends FileSystem {
 
     // Get files and folder metadata from Dropbox root directory
     try {
-      ListFolderResult result = client.files().listFolder("");
+      String pathString;
+      if (path.isRoot()) {
+        pathString = "";
+      } else {
+        pathString = path.toString().replace("dropbox:", "");
+      }
+
+      ListFolderResult result = client.files().listFolder(pathString);
+      updateTokens();
       while (true) {
         for (Metadata metadata : result.getEntries()) {
           fileStatusList.add(getFileInformation(metadata));
@@ -122,6 +139,7 @@ public class DropboxFileSystem extends FileSystem {
           break;
         }
         result = client.files().listFolderContinue(result.getCursor());
+        updateTokens();
       }
     } catch (DbxException e) {
       throw new IOException(e.getMessage());
@@ -164,6 +182,7 @@ public class DropboxFileSystem extends FileSystem {
     client = getClient();
     try {
       Metadata metadata = client.files().getMetadata(filePath);
+      updateTokens();
       return getFileInformation(metadata);
     } catch (Exception e) {
       throw new IOException("Error accessing file " + filePath + "\n" + e.getMessage());
@@ -195,86 +214,67 @@ public class DropboxFileSystem extends FileSystem {
     }
 
     // read preferred client identifier from config or use "Apache/Drill"
-    String clientIdentifier = this.getConf().get("clientIdentifier", "Apache/Drill");
+    String clientIdentifier = this.getConf().get("clientIdentifier", APP_IDENTIFIER);
     logger.info("Creating dropbox client with client identifier: {}", clientIdentifier);
-    DbxRequestConfig config = DbxRequestConfig.newBuilder(clientIdentifier).build();
+
+    config = DbxRequestConfig.newBuilder(clientIdentifier)
+      .withAutoRetryEnabled(5)
+      .build();
 
     // read access token from config or credentials provider
     logger.info("Reading dropbox access token from configuration or credentials provider");
     String accessToken = this.getConf().get("dropboxAccessToken", "");
 
-    this.client = new DbxClientV2(config, accessToken);
-    return this.client;
+    // If the user is using a static developer token, return a client with that.
+    if (StringUtils.isNotEmpty(accessToken)) {
+      client = new DbxClientV2(config, accessToken);
+      usesDeveloperToken = true;
+    } else {
+      // Otherwise, use OAuth tokens
+      CredentialsProvider credentialsProvider = getCredentialsProvider();
+      PersistentTokenTable tokenTable = getTokenTable();
+      OAuthTokenCredentials credentials = new OAuthTokenCredentials.Builder()
+        .setCredentialsProvider(credentialsProvider)
+        .setTokenTable(tokenTable)
+        .build()
+        .get();
+
+      long expiresIn = 0;
+      if (StringUtils.isNotEmpty(credentials.getExpiresIn())) {
+        expiresIn = Long.parseLong(credentials.getExpiresIn());
+      }
+
+      dbxCredential = new DbxCredential(credentials.getAccessToken(), expiresIn, credentials.getRefreshToken(),
+        credentials.getClientID(), credentials.getClientSecret());
+
+      client = new DbxClientV2(config, dbxCredential);
+      usesDeveloperToken = false;
+    }
+
+    return client;
+  }
+
+  private void updateTokens() {
+    if (client == null || usesDeveloperToken) {
+      return;
+    } else if (dbxCredential.aboutToExpire()) {
+      try {
+        dbxCredential.refresh(config);
+      } catch (DbxException e) {
+        throw UserException.connectionError(e)
+          .message("Error refreshing Dropbox OAuth tokens: " + e.getMessage())
+          .build(logger);
+      }
+      // Update the tokens in Drill
+      updateTokens(dbxCredential.getAccessToken(), dbxCredential.getRefreshToken(), String.valueOf(dbxCredential.getExpiresAt()));
+    }
   }
 
   private boolean isDirectory(Metadata metadata) {
     return metadata instanceof FolderMetadata;
   }
 
-  private boolean isFile(Metadata metadata) {
-    return metadata instanceof FileMetadata;
-  }
-
   private String getFileName(Path path){
     return path.toUri().getPath();
-  }
-
-  static class SeekableByteArrayInputStream extends ByteArrayInputStream implements Seekable, PositionedReadable {
-
-    public SeekableByteArrayInputStream(byte[] buf)
-    {
-      super(buf);
-    }
-    @Override
-    public long getPos() throws IOException{
-      return pos;
-    }
-
-    @Override
-    public void seek(long pos) throws IOException {
-      if (mark != 0) {
-        throw new IllegalStateException();
-      }
-
-      reset();
-      long skipped = skip(pos);
-
-      if (skipped != pos) {
-        throw new IOException();
-      }
-    }
-
-    @Override
-    public boolean seekToNewSource(long targetPos) throws IOException {
-      return false;
-    }
-
-    @Override
-    public int read(long position, byte[] buffer, int offset, int length) throws IOException {
-
-      if (position >= buf.length) {
-        throw new IllegalArgumentException();
-      }
-      if (position + length > buf.length) {
-        throw new IllegalArgumentException();
-      }
-      if (length > buffer.length) {
-        throw new IllegalArgumentException();
-      }
-
-      System.arraycopy(buf, (int) position, buffer, offset, length);
-      return length;
-    }
-
-    @Override
-    public void readFully(long position, byte[] buffer) throws IOException {
-      read(position, buffer, 0, buffer.length);
-
-    }
-
-    @Override
-    public void readFully(long position, byte[] buffer, int offset, int length) throws IOException {
-      read(position, buffer, offset, length);
-    }
   }
 }

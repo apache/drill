@@ -29,6 +29,7 @@ import org.apache.calcite.schema.Function;
 import org.apache.calcite.schema.SchemaPlus;
 import org.apache.calcite.schema.Table;
 
+import org.apache.drill.common.logical.OAuthConfig;
 import org.apache.drill.exec.store.AbstractSchemaFactory;
 import org.apache.drill.exec.store.StorageStrategy;
 import org.apache.drill.exec.planner.logical.CreateTableEntry;
@@ -82,13 +83,21 @@ public class FileSystemSchemaFactory extends AbstractSchemaFactory {
     public FileSystemSchema(String name, SchemaConfig schemaConfig) throws IOException {
       super(Collections.emptyList(), name);
       final DrillFileSystem fs = ImpersonationUtil.createFileSystem(schemaConfig.getUserName(), plugin.getFsConf());
+      // Set OAuth Information
+      OAuthConfig oAuthConfig = plugin.getConfig().oAuthConfig();
+      if (oAuthConfig != null) {
+        OAuthEnabledFileSystem underlyingFileSystem = (OAuthEnabledFileSystem) fs.getUnderlyingFs();
+        underlyingFileSystem.setPluginConfig(plugin.getConfig());
+        underlyingFileSystem.setTokenTable(plugin.getTokenTable());
+        underlyingFileSystem.setoAuthConfig(plugin.getConfig().oAuthConfig());
+      }
+
       for(WorkspaceSchemaFactory f :  factories){
         WorkspaceSchema s = f.createSchema(getSchemaPath(), schemaConfig, fs);
         if (s != null) {
           schemaMap.put(s.getName(), s);
         }
       }
-
       defaultSchema = schemaMap.get(DEFAULT_WS_NAME);
     }
 

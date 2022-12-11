@@ -48,6 +48,7 @@ public class AccessTokenRepository {
   private PersistentTokenTable tokenTable;
   private String accessToken;
   private String refreshToken;
+  private String expiresIn;
 
   public AccessTokenRepository(HttpProxyConfig proxyConfig,
                                HttpStoragePluginConfig pluginConfig,
@@ -58,6 +59,7 @@ public class AccessTokenRepository {
     this.credentialsProvider = pluginConfig.getCredentialsProvider();
     accessToken = tokenTable.getAccessToken();
     refreshToken = tokenTable.getRefreshToken();
+    expiresIn = tokenTable.getExpiresIn();
 
     this.credentials = new OAuthTokenCredentials.Builder()
       .setCredentialsProvider(credentialsProvider)
@@ -87,6 +89,10 @@ public class AccessTokenRepository {
       return refreshAccessToken();
     }
     return accessToken;
+  }
+
+  public String getExpiresIn() {
+    return this.expiresIn;
   }
 
   /**
@@ -122,6 +128,12 @@ public class AccessTokenRepository {
     if (updatedTokens.containsKey(OAuthTokenCredentials.REFRESH_TOKEN)) {
       tokenTable.setRefreshToken(updatedTokens.get(OAuthTokenCredentials.REFRESH_TOKEN));
       refreshToken = updatedTokens.get(OAuthTokenCredentials.REFRESH_TOKEN);
+    }
+
+    // If we get a new expires in value, update that also
+    if (updatedTokens.containsKey(OAuthTokenCredentials.EXPIRES_IN)) {
+      tokenTable.setExpiresIn(updatedTokens.get(OAuthTokenCredentials.EXPIRES_IN));
+      expiresIn = updatedTokens.get(OAuthTokenCredentials.EXPIRES_IN);
     }
 
     if (updatedTokens.containsKey("accessToken")) {

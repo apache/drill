@@ -583,6 +583,7 @@ public class ClusterFixture extends BaseFixture implements AutoCloseable {
       pluginConfig.getConfig(),
       newWorkspaces == null ? pluginConfig.getWorkspaces() : newWorkspaces,
       newFormats == null ? pluginConfig.getFormats() : newFormats,
+      null,
       PlainCredentialsProvider.EMPTY_CREDENTIALS_PROVIDER);
     newPluginConfig.setEnabled(pluginConfig.isEnabled());
 
