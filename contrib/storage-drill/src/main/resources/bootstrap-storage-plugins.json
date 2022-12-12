@@ -1,0 +1,9 @@
+{
+  "storage":{
+    "drill" : {
+      "type":"drill",
+      "connection":"jdbc:drill:drillbit=localhost:31010",
+      "enabled": false
+    }
+  }
+}

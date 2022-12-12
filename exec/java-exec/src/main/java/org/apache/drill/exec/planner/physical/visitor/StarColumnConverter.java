@@ -193,7 +193,8 @@ public class StarColumnConverter extends BasePrelVisitor<Prel, Void, RuntimeExce
     // Require prefix rename : there exists other expression, in addition to a star column.
     if (!prefixedForStar  // not set yet.
         && StarColumnHelper.containsStarColumn(prel.getRowType())
-        && prel.getRowType().getFieldNames().size() > 1) {
+        && prel.getRowType().getFieldNames().size() > 1
+        && !(prel instanceof LeafPrel)) {
       prefixedForStar = true;
     }
 

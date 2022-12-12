@@ -15,30 +15,24 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.drill.exec.planner.physical;
+package org.apache.drill.exec.store.drill.plugin;
 
-import org.apache.drill.exec.planner.physical.visitor.PrelVisitor;
+import org.apache.drill.common.exceptions.ExecutionSetupException;
+import org.apache.drill.exec.ops.ExecutorFragmentContext;
+import org.apache.drill.exec.physical.impl.BatchCreator;
+import org.apache.drill.exec.record.CloseableRecordBatch;
+import org.apache.drill.exec.record.RecordBatch;
+import org.apache.drill.shaded.guava.com.google.common.base.Preconditions;
 
-import java.util.Collections;
-import java.util.Iterator;
+import java.util.List;
 
-/**
- * Prel without children.
- */
-public interface LeafPrel extends Prel {
-
-  @Override
-  default boolean needsFinalColumnReordering() {
-    return true;
-  }
+@SuppressWarnings("unused")
+public class DrillScanBatchCreator implements BatchCreator<DrillSubScan> {
 
   @Override
-  default Iterator<Prel> iterator() {
-    return Collections.emptyIterator();
-  }
-
-  @Override
-  default  <T, X, E extends Throwable> T accept(PrelVisitor<T, X, E> logicalVisitor, X value) throws E {
-    return logicalVisitor.visitLeaf(this, value);
+  public CloseableRecordBatch getBatch(ExecutorFragmentContext context, DrillSubScan subScan,
+      List<RecordBatch> children) throws ExecutionSetupException {
+    Preconditions.checkArgument(children.isEmpty());
+    return new DrillRecordReader(context, subScan);
   }
 }

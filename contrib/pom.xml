@@ -58,6 +58,7 @@
     <module>format-pcapng</module>
     <module>format-iceberg</module>
     <module>format-deltalake</module>
+    <module>storage-drill</module>
     <module>storage-phoenix</module>
     <module>storage-googlesheets</module>
     <module>storage-hive</module>

@@ -30,6 +30,7 @@ import java.sql.ResultSetMetaData;
 import java.sql.RowId;
 import java.sql.SQLException;
 import java.sql.SQLFeatureNotSupportedException;
+import java.sql.SQLTimeoutException;
 import java.sql.SQLType;
 import java.sql.SQLXML;
 import java.sql.Time;
@@ -48,7 +49,6 @@ import org.apache.calcite.avatica.util.Cursor;
 import org.apache.drill.jdbc.AlreadyClosedSqlException;
 import org.apache.drill.jdbc.DrillResultSet;
 import org.apache.drill.jdbc.ExecutionCanceledSqlException;
-import org.apache.drill.jdbc.SqlTimeoutException;
 
 import org.apache.drill.shaded.guava.com.google.common.base.Stopwatch;
 
@@ -100,7 +100,7 @@ public class DrillResultSetImpl extends AvaticaResultSet implements DrillResultS
     if (elapsedTimer != null) {
       //The timer has already been started by the DrillCursor at this point
       if (elapsedTimer.elapsed(TimeUnit.MILLISECONDS) > this.queryTimeoutInMilliseconds) {
-        throw new SqlTimeoutException(TimeUnit.MILLISECONDS.toSeconds(this.queryTimeoutInMilliseconds));
+        throw new SQLTimeoutException("Query timed out in "+ TimeUnit.MILLISECONDS.toSeconds(queryTimeoutInMilliseconds) + " seconds");
       }
     }
   }

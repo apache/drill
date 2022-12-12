@@ -193,7 +193,7 @@ public class TestMemoryCalculator extends PlanTestBase {
     SimpleParallelizer parallelizer = new QueueQueryParallelizer(false, queryContext);
     PlanningSet planningSet = preparePlanningSet(activeEndpoints, DEFAULT_SLICE_TARGET, resources, sql, parallelizer);
     parallelizer.adjustMemory(planningSet, createSet(planningSet.getRootWrapper()), activeEndpoints);
-    assertTrue("memory requirement is different", Iterables.all(resources.entrySet(), (e) -> e.getValue().getMemory() == 30));
+    assertTrue("memory requirement is different", Iterables.all(resources.entrySet(), (e) -> e.getValue().getMemory() == 20));
   }
 
 

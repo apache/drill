@@ -20,6 +20,7 @@ package org.apache.drill.exec.planner.physical.visitor;
 import org.apache.calcite.rel.RelNode;
 import org.apache.calcite.rel.core.Project;
 import org.apache.calcite.rel.type.RelDataType;
+import org.apache.calcite.rel.type.RelDataTypeField;
 import org.apache.calcite.rex.RexBuilder;
 import org.apache.calcite.rex.RexNode;
 import org.apache.calcite.rex.RexUtil;
@@ -74,19 +75,20 @@ public class TopProjectVisitor extends BasePrelVisitor<Prel, Void, RuntimeExcept
 
   @Override
   public Prel visitScreen(ScreenPrel prel, Void value) {
-    // insert project under screen only if we don't have writer underneath
-    if (containsWriter(prel)) {
+    // insert project under screen only if we don't have writer underneath or dynamic star is projected
+    if (containsWriter(prel)
+      || prel.getRowType().getFieldList().stream().allMatch(RelDataTypeField::isDynamicStar)) {
       return prel;
     }
 
     Prel newChild = ((Prel) prel.getInput()).accept(this, value);
-    return prel.copy(prel.getTraitSet(), Collections.singletonList((RelNode)addTopProjectPrel(newChild, validatedRowType)));
+    return prel.copy(prel.getTraitSet(), Collections.singletonList(addTopProjectPrel(newChild, validatedRowType)));
   }
 
   @Override
   public Prel visitWriter(WriterPrel prel, Void value) {
     Prel newChild = ((Prel) prel.getInput()).accept(this, value);
-    return prel.copy(prel.getTraitSet(), Collections.singletonList((RelNode)addTopProjectPrel(newChild, validatedRowType)));
+    return prel.copy(prel.getTraitSet(), Collections.singletonList(addTopProjectPrel(newChild, validatedRowType)));
   }
 
   /**

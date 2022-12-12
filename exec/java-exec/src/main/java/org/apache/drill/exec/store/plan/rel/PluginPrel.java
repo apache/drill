@@ -25,21 +25,18 @@ import org.apache.calcite.rel.type.RelDataType;
 import org.apache.drill.common.exceptions.DrillRuntimeException;
 import org.apache.drill.exec.physical.base.GroupScan;
 import org.apache.drill.exec.physical.base.PhysicalOperator;
+import org.apache.drill.exec.planner.physical.LeafPrel;
 import org.apache.drill.exec.planner.physical.PhysicalPlanCreator;
-import org.apache.drill.exec.planner.physical.Prel;
-import org.apache.drill.exec.planner.physical.visitor.PrelVisitor;
 import org.apache.drill.exec.record.BatchSchema;
 import org.apache.drill.exec.store.SubsetRemover;
 import org.apache.drill.exec.store.plan.PluginImplementor;
 
 import java.io.IOException;
-import java.util.Collections;
-import java.util.Iterator;
 
 /**
  * Represents a plugin-specific plan once children nodes have been pushed down into group scan.
  */
-public class PluginPrel extends AbstractRelNode implements Prel {
+public class PluginPrel extends AbstractRelNode implements LeafPrel {
   private final GroupScan groupScan;
   private final RelDataType rowType;
 
@@ -62,11 +59,6 @@ public class PluginPrel extends AbstractRelNode implements Prel {
   }
 
   @Override
-  public <T, X, E extends Throwable> T accept(PrelVisitor<T, X, E> logicalVisitor, X value) throws E {
-    return logicalVisitor.visitPrel(this, value);
-  }
-
-  @Override
   public BatchSchema.SelectionVectorMode[] getSupportedEncodings() {
     return BatchSchema.SelectionVectorMode.DEFAULT;
   }
@@ -79,11 +71,6 @@ public class PluginPrel extends AbstractRelNode implements Prel {
   @Override
   public boolean needsFinalColumnReordering() {
     return false;
-  }
-
-  @Override
-  public Iterator<Prel> iterator() {
-    return Collections.emptyIterator();
   }
 
   @Override
