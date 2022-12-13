@@ -106,9 +106,8 @@ public class SplunkConnection {
 
   /**
    * Connects to Splunk instance
-   * @return an active Splunk connection.
+   * @return an active Splunk {@link Service} connection.
    */
-
   public Service connect() {
     HttpService.setSslSecurityProtocol(SSLSecurityProtocol.TLSv1_2);
     HttpService.setValidateCertificates(validateCertificates);

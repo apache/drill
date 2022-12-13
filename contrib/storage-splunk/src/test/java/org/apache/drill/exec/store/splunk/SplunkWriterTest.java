@@ -151,18 +151,20 @@ public class SplunkWriterTest extends SplunkBaseTest {
     QuerySummary summary = client.queryBuilder().sql(sql).run();
     assertTrue(summary.succeeded());
 
-    sql = "INSERT INTO `splunk`.`t1`  SELECT * FROM cp.`test_data.csvh`";
+    Thread.sleep(30000);
+
+    sql = "INSERT INTO `splunk`.`t1`  SELECT * FROM cp.`test_data2.csvh`";
     summary = client.queryBuilder().sql(sql).run();
     assertTrue(summary.succeeded());
 
     // There seems to be some delay between the Drill query writing the data and the data being made
     // accessible.
-    Thread.sleep(15000);
+    Thread.sleep(30000);
 
     // Next verify that the results arrived.
     sql = "SELECT COUNT(*) as row_count FROM splunk.`t1`";
     long resultCount = client.queryBuilder().sql(sql).singletonLong();
-    assertEquals(10L, resultCount);
+    assertEquals(15L, resultCount);
 
     // Now drop the index
     sql = "DROP TABLE splunk.`t1`";
