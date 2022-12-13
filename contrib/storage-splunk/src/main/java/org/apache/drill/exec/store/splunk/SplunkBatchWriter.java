@@ -29,6 +29,7 @@ import org.apache.drill.exec.record.VectorAccessible;
 import org.apache.drill.exec.store.AbstractRecordWriter;
 import org.apache.drill.exec.store.EventBasedRecordWriter.FieldConverter;
 import org.apache.drill.exec.vector.complex.reader.FieldReader;
+import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -45,9 +46,9 @@ public class SplunkBatchWriter extends AbstractRecordWriter {
   private final List<String> tableIdentifier;
   private final SplunkWriter config;
   private final Args eventArgs;
-  private final Service splunkService;
+  protected final Service splunkService;
   private JSONObject splunkEvent;
-  private Index destinationIndex;
+  protected Index destinationIndex;
 
 
   public SplunkBatchWriter(UserCredentials userCredentials, List<String> tableIdentifier, SplunkWriter config) {
@@ -264,4 +265,19 @@ public class SplunkBatchWriter extends AbstractRecordWriter {
       splunkEvent.put(fieldName, String.valueOf(reader.readObject()));
     }
   }
+
+  public class RepeatedScalarConverter extends FieldConverter {
+
+    private final JSONArray jsonArray;
+    public RepeatedScalarConverter(int fieldID, String fieldName, FieldReader reader) {
+      super(fieldID, fieldName, reader);
+      jsonArray = new JSONArray();
+    }
+
+    @Override
+    public void writeField() throws IOException {
+
+    }
+  }
+
 }

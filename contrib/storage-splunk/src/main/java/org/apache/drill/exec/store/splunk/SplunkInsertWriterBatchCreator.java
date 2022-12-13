@@ -15,28 +15,28 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.drill.exec.store.splunk;
 
-import java.util.List;
+package org.apache.drill.exec.store.splunk;
 
 import org.apache.drill.exec.ops.ExecutorFragmentContext;
 import org.apache.drill.exec.physical.impl.BatchCreator;
-import org.apache.drill.exec.physical.impl.WriterRecordBatch;
+import org.apache.drill.exec.physical.impl.InsertWriterRecordBatch;
 import org.apache.drill.exec.proto.UserBitShared.UserCredentials;
 import org.apache.drill.exec.record.CloseableRecordBatch;
 import org.apache.drill.exec.record.RecordBatch;
 
-@SuppressWarnings("unused")
-public class SplunkWriterBatchCreator implements BatchCreator<SplunkWriter> {
+import java.util.List;
 
+@SuppressWarnings("unused")
+public class SplunkInsertWriterBatchCreator implements BatchCreator<SplunkInsertWriter> {
   @Override
-  public CloseableRecordBatch getBatch(ExecutorFragmentContext context, SplunkWriter config, List<RecordBatch> children) {
+  public CloseableRecordBatch getBatch(ExecutorFragmentContext context, SplunkInsertWriter config, List<RecordBatch> children) {
     assert children != null && children.size() == 1;
 
     UserCredentials userCreds = context.getContextInformation().getQueryUserCredentials();
 
-    return new WriterRecordBatch(config, children.iterator().next(), context,
-      new SplunkBatchWriter(userCreds, config.getTableIdentifier(), config)
+    return new InsertWriterRecordBatch(config, children.iterator().next(), context,
+        new SplunkBatchInsertWriter(userCreds, config.getTableIdentifier(), config)
     );
   }
 }

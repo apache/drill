@@ -124,11 +124,9 @@ public class SplunkSchema extends AbstractSchema {
     indexes.remove(indexName);
   }
 
-
   @Override
   public ModifyTableEntry modifyTable(String tableName) {
-    return null;
-    //return child -> new JdbcInsertWriter(child, getFullTablePath(tableName), inner, plugin);
+    return child -> new SplunkInsertWriter(child, Collections.singletonList(tableName), plugin);
   }
 
   @Override
