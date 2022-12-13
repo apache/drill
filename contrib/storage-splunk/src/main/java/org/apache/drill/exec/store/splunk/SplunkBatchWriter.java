@@ -19,10 +19,10 @@
 package org.apache.drill.exec.store.splunk;
 
 
+import com.splunk.Args;
+import com.splunk.Index;
 import com.splunk.IndexCollection;
 import com.splunk.Service;
-import org.apache.calcite.sql.SqlLiteral;
-import org.apache.calcite.sql.parser.SqlParserPos;
 import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.exec.proto.UserBitShared.UserCredentials;
 import org.apache.drill.exec.record.VectorAccessible;
@@ -40,12 +40,14 @@ import java.util.Map;
 public class SplunkBatchWriter extends AbstractRecordWriter {
 
   private static final Logger logger = LoggerFactory.getLogger(SplunkBatchWriter.class);
-
+  private static final String DEFAULT_SOURCETYPE = "drill";
   private final UserCredentials userCredentials;
   private final List<String> tableIdentifier;
   private final SplunkWriter config;
+  private final Args eventArgs;
   private final Service splunkService;
   private JSONObject splunkEvent;
+  private Index destinationIndex;
 
 
   public SplunkBatchWriter(UserCredentials userCredentials, List<String> tableIdentifier, SplunkWriter config) {
@@ -55,6 +57,10 @@ public class SplunkBatchWriter extends AbstractRecordWriter {
 
     SplunkConnection connection = new SplunkConnection(config.getPluginConfig(), userCredentials.getUserName());
     this.splunkService = connection.connect();
+
+    // Populate event arguments
+    this.eventArgs = new Args();
+    eventArgs.put("sourcetype", DEFAULT_SOURCETYPE);
   }
 
   @Override
@@ -76,7 +82,9 @@ public class SplunkBatchWriter extends AbstractRecordWriter {
     //Get the collection of indexes
     IndexCollection indexes = splunkService.getIndexes();
     try {
-      indexes.create(tableIdentifier.get(0));
+      String indexName = tableIdentifier.get(0);
+      indexes.create(indexName);
+      destinationIndex = splunkService.getIndexes().get(indexName);
     } catch (Exception e) {
       // We have to catch a generic exception here, as Splunk's SDK does not really provide any kind of
       // failure messaging.
@@ -97,20 +105,25 @@ public class SplunkBatchWriter extends AbstractRecordWriter {
   public void endRecord() throws IOException {
     logger.debug("Ending record");
     // Write the event to the Splunk index
-
-
+    destinationIndex.submit(eventArgs, splunkEvent.toJSONString());
     // Clear out the splunk event.
     splunkEvent = new JSONObject();
   }
 
   @Override
   public void abort() throws IOException {
-
+    // No op
   }
 
   @Override
   public void cleanup() throws IOException {
+    // No op
+  }
 
+
+  @Override
+  public FieldConverter getNewNullableVarCharConverter(int fieldId, String fieldName, FieldReader reader) {
+    return new VarCharSplunkConverter(fieldId, fieldName, reader);
   }
 
   @Override
