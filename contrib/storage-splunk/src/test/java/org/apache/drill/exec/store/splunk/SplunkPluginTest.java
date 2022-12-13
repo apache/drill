@@ -152,7 +152,7 @@ public class SplunkPluginTest extends SplunkBaseTest {
 
   @Test
   public void testExplictFieldsQuery() throws Exception {
-    String sql = "SELECT component, event_message, host, _time FROM splunk._internal LIMIT 3";
+    String sql = "SELECT component, event_message, host, _time FROM splunk._introspection LIMIT 3";
 
     client.testBuilder()
       .sqlQuery(sql)
@@ -164,7 +164,7 @@ public class SplunkPluginTest extends SplunkBaseTest {
 
   @Test
   public void testExplicitFieldsWithLimitQuery() throws Exception {
-    String sql = "SELECT `group`, _sourcetype, _subsecond, _time FROM splunk._internal LIMIT 3";
+    String sql = "SELECT `group`, _sourcetype, _subsecond, _time FROM splunk._introspection LIMIT 3";
     client.testBuilder()
       .sqlQuery(sql)
       .unOrdered()
@@ -176,7 +176,7 @@ public class SplunkPluginTest extends SplunkBaseTest {
   @Test
   @Ignore("the result is not consistent on system tables")
   public void testExplicitFieldsWithSourceType() throws Exception {
-    String sql = "SELECT `group`, _sourcetype, _subsecond, _time FROM splunk._internal WHERE sourcetype='splunkd' LIMIT 3";
+    String sql = "SELECT `group`, _sourcetype, _subsecond, _time FROM splunk._introspection WHERE sourcetype='splunkd' LIMIT 3";
     client.testBuilder()
       .sqlQuery(sql)
       .unOrdered()
@@ -233,7 +233,7 @@ public class SplunkPluginTest extends SplunkBaseTest {
 
   @Test
   public void testFilterOnUnProjectedColumnQuery() throws Exception {
-    String sql = "SELECT `group`, _sourcetype, _subsecond, _time FROM splunk._internal WHERE sourcetype='splunkd' LIMIT 3";
+    String sql = "SELECT `group`, _sourcetype, _subsecond, _time FROM splunk._introspection WHERE sourcetype='splunk_disk_objects' LIMIT 3";
     client.testBuilder()
         .sqlQuery(sql)
         .unOrdered()
