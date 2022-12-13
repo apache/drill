@@ -111,15 +111,105 @@ public class SplunkBatchWriter extends AbstractRecordWriter {
   }
 
   @Override
-  public void abort() throws IOException {
+  public void abort() {
     // No op
   }
 
   @Override
-  public void cleanup() throws IOException {
+  public void cleanup() {
     // No op
   }
 
+
+  @Override
+  public FieldConverter getNewNullableIntConverter(int fieldId, String fieldName, FieldReader reader) {
+    return new ScalarSplunkConverter(fieldId, fieldName, reader);
+  }
+
+  @Override
+  public FieldConverter getNewIntConverter(int fieldId, String fieldName, FieldReader reader) {
+    return new ScalarSplunkConverter(fieldId, fieldName, reader);
+  }
+
+  @Override
+  public FieldConverter getNewNullableBigIntConverter(int fieldId, String fieldName, FieldReader reader) {
+    return new ScalarSplunkConverter(fieldId, fieldName, reader);
+  }
+
+  @Override
+  public FieldConverter getNewBigIntConverter(int fieldId, String fieldName, FieldReader reader) {
+    return new ScalarSplunkConverter(fieldId, fieldName, reader);
+  }
+
+  @Override
+  public FieldConverter getNewNullableSmallIntConverter(int fieldId, String fieldName, FieldReader reader) {
+    return new ScalarSplunkConverter(fieldId, fieldName, reader);
+  }
+
+  @Override
+  public FieldConverter getNewSmallIntConverter(int fieldId, String fieldName, FieldReader reader) {
+    return new ScalarSplunkConverter(fieldId, fieldName, reader);
+  }
+
+  @Override
+  public FieldConverter getNewNullableTinyIntConverter(int fieldId, String fieldName, FieldReader reader) {
+    return new ScalarSplunkConverter(fieldId, fieldName, reader);
+  }
+
+  @Override
+  public FieldConverter getNewTinyIntConverter(int fieldId, String fieldName, FieldReader reader) {
+    return new ScalarSplunkConverter(fieldId, fieldName, reader);
+  }
+
+  @Override
+  public FieldConverter getNewNullableFloat4Converter(int fieldId, String fieldName, FieldReader reader) {
+    return new ScalarSplunkConverter(fieldId, fieldName, reader);
+  }
+
+  @Override
+  public FieldConverter getNewFloat4Converter(int fieldId, String fieldName, FieldReader reader) {
+    return new ScalarSplunkConverter(fieldId, fieldName, reader);
+  }
+
+  @Override
+  public FieldConverter getNewNullableFloat8Converter(int fieldId, String fieldName, FieldReader reader) {
+    return new ScalarSplunkConverter(fieldId, fieldName, reader);
+  }
+
+  @Override
+  public FieldConverter getNewFloat8Converter(int fieldId, String fieldName, FieldReader reader) {
+    return new ScalarSplunkConverter(fieldId, fieldName, reader);
+  }
+
+  @Override
+  public FieldConverter getNewNullableVarDecimalConverter(int fieldId, String fieldName, FieldReader reader) {
+    return new ScalarSplunkConverter(fieldId, fieldName, reader);
+  }
+
+  @Override
+  public FieldConverter getNewVarDecimalConverter(int fieldId, String fieldName, FieldReader reader) {
+    return new ScalarSplunkConverter(fieldId, fieldName, reader);
+  }
+
+  @Override
+  public FieldConverter getNewNullableDateConverter(int fieldId, String fieldName, FieldReader reader) {
+    return new ScalarSplunkConverter(fieldId, fieldName, reader);
+  }
+
+  @Override
+  public FieldConverter getNewDateConverter(int fieldId, String fieldName, FieldReader reader) {
+    return new ScalarSplunkConverter(fieldId, fieldName, reader);
+  }
+
+  @Override
+  public FieldConverter getNewNullableTimeConverter(int fieldId, String fieldName, FieldReader reader) {
+    return new ScalarSplunkConverter(fieldId, fieldName, reader);
+  }
+
+  @Override
+  public FieldConverter getNewTimeConverter(int fieldId, String fieldName, FieldReader reader) {
+    return new ScalarSplunkConverter(fieldId, fieldName, reader);
+  }
 
   @Override
   public FieldConverter getNewNullableVarCharConverter(int fieldId, String fieldName, FieldReader reader) {
@@ -127,8 +217,28 @@ public class SplunkBatchWriter extends AbstractRecordWriter {
   }
 
   @Override
+  public FieldConverter getNewNullableTimeStampConverter(int fieldId, String fieldName, FieldReader reader) {
+    return new ScalarSplunkConverter(fieldId, fieldName, reader);
+  }
+
+  @Override
+  public FieldConverter getNewTimeStampConverter(int fieldId, String fieldName, FieldReader reader) {
+    return new ScalarSplunkConverter(fieldId, fieldName, reader);
+  }
+
+  @Override
   public FieldConverter getNewVarCharConverter(int fieldId, String fieldName, FieldReader reader) {
     return new VarCharSplunkConverter(fieldId, fieldName, reader);
+  }
+
+  @Override
+  public FieldConverter getNewNullableBitConverter(int fieldId, String fieldName, FieldReader reader) {
+    return new ScalarSplunkConverter(fieldId, fieldName, reader);
+  }
+
+  @Override
+  public FieldConverter getNewBitConverter(int fieldId, String fieldName, FieldReader reader) {
+    return new ScalarSplunkConverter(fieldId, fieldName, reader);
   }
 
   public class VarCharSplunkConverter extends FieldConverter {
@@ -141,6 +251,17 @@ public class SplunkBatchWriter extends AbstractRecordWriter {
     public void writeField() {
       byte[] bytes = reader.readText().copyBytes();
       splunkEvent.put(fieldName, new String(bytes));
+    }
+  }
+
+  public class ScalarSplunkConverter extends FieldConverter {
+    public ScalarSplunkConverter(int fieldID, String fieldName, FieldReader reader) {
+      super(fieldID, fieldName, reader);
+    }
+
+    @Override
+    public void writeField() {
+      splunkEvent.put(fieldName, String.valueOf(reader.readObject()));
     }
   }
 }
