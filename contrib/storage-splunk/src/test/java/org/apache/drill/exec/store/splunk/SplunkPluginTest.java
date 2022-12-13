@@ -152,23 +152,23 @@ public class SplunkPluginTest extends SplunkBaseTest {
 
   @Test
   public void testExplictFieldsQuery() throws Exception {
-    String sql = "SELECT acceleration_id, action, add_offset, add_timestamp FROM splunk._audit LIMIT 2";
+    String sql = "SELECT component, event_message, host, _time FROM splunk._introspection LIMIT 3";
 
     client.testBuilder()
       .sqlQuery(sql)
       .unOrdered()
-      .baselineColumns("acceleration_id", "action", "add_offset", "add_timestamp")
-      .expectsNumRecords(2)
+      .baselineColumns("component", "event_message", "host", "_time")
+      .expectsNumRecords(3)
       .go();
   }
 
   @Test
   public void testExplicitFieldsWithLimitQuery() throws Exception {
-    String sql = "SELECT action, _sourcetype, _subsecond, _time FROM splunk._audit LIMIT 3";
+    String sql = "SELECT `group`, _sourcetype, _subsecond, _time FROM splunk._introspection LIMIT 3";
     client.testBuilder()
       .sqlQuery(sql)
       .unOrdered()
-      .baselineColumns( "acceleration_id", "action", "add_offset", "add_timestamp")
+      .baselineColumns( "group", "_sourcetype", "_subsecond", "_time")
       .expectsNumRecords(3)
       .go();
   }
@@ -176,18 +176,18 @@ public class SplunkPluginTest extends SplunkBaseTest {
   @Test
   @Ignore("the result is not consistent on system tables")
   public void testExplicitFieldsWithSourceType() throws Exception {
-    String sql = "SELECT action, _sourcetype, _subsecond, _time FROM splunk._audit WHERE sourcetype='audittrail' LIMIT 5";
+    String sql = "SELECT `group`, _sourcetype, _subsecond, _time FROM splunk._introspection WHERE sourcetype='splunkd' LIMIT 3";
     client.testBuilder()
       .sqlQuery(sql)
       .unOrdered()
-      .baselineColumns( "acceleration_id", "action", "add_offset", "add_timestamp")
-      .expectsNumRecords(5)
+      .baselineColumns( "group", "_sourcetype", "_subsecond", "_time")
+      .expectsNumRecords(3)
       .go();
   }
 
   @Test
   public void testExplicitFieldsWithOneFieldLimitQuery() throws Exception {
-    String sql = "SELECT `component` FROM splunk.`_introspection` ORDER BY `component` LIMIT 2";
+    String sql = "SELECT distinct `component` FROM splunk.`_introspection` ORDER BY `component` LIMIT 2";
     RowSet results = client.queryBuilder().sql(sql).rowSet();
 
     TupleMetadata expectedSchema = new SchemaBuilder()
@@ -233,12 +233,12 @@ public class SplunkPluginTest extends SplunkBaseTest {
 
   @Test
   public void testFilterOnUnProjectedColumnQuery() throws Exception {
-    String sql = "SELECT action, _sourcetype, _subsecond, _time FROM splunk._audit WHERE sourcetype='audittrail' LIMIT 5";
+    String sql = "SELECT `group`, _sourcetype, _subsecond, _time FROM splunk._introspection WHERE sourcetype='splunk_disk_objects' LIMIT 3";
     client.testBuilder()
         .sqlQuery(sql)
         .unOrdered()
-        .baselineColumns( "acceleration_id", "action", "add_offset", "add_timestamp")
-        .expectsNumRecords(5)
+        .baselineColumns( "group", "_sourcetype", "_subsecond", "_time")
+        .expectsNumRecords(3)
         .go();
   }
 

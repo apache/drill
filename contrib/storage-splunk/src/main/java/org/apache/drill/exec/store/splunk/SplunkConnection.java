@@ -31,6 +31,15 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.concurrent.TimeUnit;
+
+import javax.net.ssl.SSLContext;
+import javax.net.ssl.SSLSocketFactory;
+import javax.net.ssl.TrustManager;
+import javax.net.ssl.X509TrustManager;
+
+import java.security.KeyManagementException;
+import java.security.NoSuchAlgorithmException;
+import java.security.cert.X509Certificate;
 import java.util.Optional;
 
 /**
@@ -71,7 +80,7 @@ public class SplunkConnection {
     this.owner = config.getOwner();
     this.token = config.getToken();
     this.cookie = config.getCookie();
-    this.validateCertificates = Optional.ofNullable(config.getValidateCertificates()).orElse(false);
+    this.validateCertificates = Optional.ofNullable(config.getValidateCertificates()).orElse(true);
     this.connectionAttempts = config.getReconnectRetries();
     service = connect();
   }
@@ -100,9 +109,19 @@ public class SplunkConnection {
    * Connects to Splunk instance
    * @return an active Splunk connection.
    */
+
   public Service connect() {
     HttpService.setSslSecurityProtocol(SSLSecurityProtocol.TLSv1_2);
     HttpService.setValidateCertificates(validateCertificates);
+    if (! validateCertificates) {
+      try {
+        HttpService.setSSLSocketFactory(createAllTrustingSSLFactory());
+      } catch (KeyManagementException e) {
+        throw UserException.connectionError(e)
+          .message("Error validating SSL Certificates: " + e.getMessage())
+          .build(logger);
+      }
+    }
 
     ServiceArgs loginArgs = new ServiceArgs();
     if (scheme != null) {
@@ -139,6 +158,7 @@ public class SplunkConnection {
       throw UserException
         .connectionError(e)
         .message("Unable to connect to Splunk at %s:%s", hostname, port)
+        .addContext(e.getMessage())
         .build(logger);
     }
     logger.info("Successfully connected to {} on port {}", hostname, port);
@@ -151,5 +171,46 @@ public class SplunkConnection {
    */
   public EntityCollection<Index> getIndexes() {
     return service.getIndexes();
+  }
+
+  /**
+   * As of version 1.8, Splunk's SDK introduced a boolean parameter which
+   * is supposed to control whether the SDK will validate SSL certificates
+   * or not.  Unfortunately the parameter does not actually seem to have
+   * any effect and the end result is that when making Splunk calls,
+   * Splunk will always attempt to verify the SSL certificates, even when
+   * the parameter is set to false.  This method does what the parameter
+   * is supposed to do in the SDK and adds and all trusting SSL Socket
+   * Factory to the HTTP client in Splunk's SDK.  In the event Splunk
+   * fixes this issue, we can remove this method.
+   *
+   * @return A {@link SSLSocketFactory} which trusts any SSL certificate,
+   *   even ones from Splunk
+   * @throws KeyManagementException Thros
+   */
+  private SSLSocketFactory createAllTrustingSSLFactory() throws KeyManagementException {
+    SSLContext context;
+    try {
+      context = SSLContext.getInstance("TLS");
+    } catch (NoSuchAlgorithmException e) {
+      throw UserException.validationError(e)
+        .message("Error establishing SSL connection: Invalid scheme: " + e.getMessage())
+        .build(logger);
+    }
+    TrustManager[] trustAll = new TrustManager[]{
+        new X509TrustManager() {
+          public X509Certificate[] getAcceptedIssuers() {
+            return null;
+          }
+          public void checkClientTrusted(X509Certificate[] certs, String authType) {
+            // No op
+          }
+          public void checkServerTrusted(X509Certificate[] certs, String authType) {
+            // No op
+          }
+        }
+    };
+    context.init(null, trustAll, null);
+    return context.getSocketFactory();
   }
 }
