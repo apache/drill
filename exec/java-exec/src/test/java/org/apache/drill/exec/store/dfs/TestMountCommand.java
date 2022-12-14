@@ -23,13 +23,13 @@ import org.apache.drill.exec.store.StoragePluginRegistry;
 import org.apache.drill.test.ClusterFixture;
 import org.apache.drill.test.ClusterFixtureBuilder;
 import org.apache.drill.test.ClusterTest;
-import org.apache.hadoop.fs.FileSystem;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
 import java.io.File;
 
+import static org.apache.drill.exec.ExecConstants.FILE_PLUGIN_MOUNT_COMMANDS;
 import static org.apache.drill.exec.util.StoragePluginTestUtils.DFS_PLUGIN_NAME;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
@@ -37,13 +37,14 @@ import static org.junit.Assert.assertTrue;
 @Category(UnlikelyTest.class)
 public class TestMountCommand extends ClusterTest {
 
-  private static FileSystem fs;
   private static File testFile;
   private static String touchCmd, rmCmd;
 
   @BeforeClass
   public static void setup() throws Exception {
-    ClusterFixtureBuilder builder = ClusterFixture.builder(dirTestWatcher);
+    ClusterFixtureBuilder builder = ClusterFixture.builder(dirTestWatcher)
+      .configProperty(FILE_PLUGIN_MOUNT_COMMANDS, true);
+
     startCluster(builder);
 
     // A file that will be created by the filesystem plugin's mount command
@@ -75,6 +76,7 @@ public class TestMountCommand extends ClusterTest {
       dfsConfig.getConfig(),
       dfsConfig.getWorkspaces(),
       dfsConfig.getFormats(),
+      null, null,
       dfsConfig.getCredentialsProvider()
     );
     dfsConfigNew.setEnabled(true);

@@ -65,6 +65,8 @@ import org.apache.hadoop.fs.FileSystem;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import static org.apache.drill.exec.ExecConstants.FILE_PLUGIN_MOUNT_COMMANDS;
+
 /**
  * A Storage engine associated with a Hadoop FileSystem Implementation. Examples
  * include HDFS, MapRFS, QuantacastFileSystem, LocalFileSystem, as well Apache
@@ -90,6 +92,7 @@ public class FileSystemPlugin extends AbstractStoragePlugin {
   private final FileSystemConfig config;
   private final Configuration fsConf;
   private TokenRegistry tokenRegistry;
+  private final boolean mountCommandsEnabled;
 
   public FileSystemPlugin(FileSystemConfig config, DrillbitContext context, String name) throws ExecutionSetupException {
     super(context, name);
@@ -146,6 +149,7 @@ public class FileSystemPlugin extends AbstractStoragePlugin {
       }
 
       this.schemaFactory = new FileSystemSchemaFactory(name, factories);
+      this.mountCommandsEnabled = context.getConfig().getBoolean(FILE_PLUGIN_MOUNT_COMMANDS);
     } catch (IOException e) {
       throw new ExecutionSetupException("Failure setting up file system plugin.", e);
     }
@@ -338,7 +342,8 @@ public class FileSystemPlugin extends AbstractStoragePlugin {
   }
 
   /**
-   * Runs the configured mount command if the mounted flag is unset
+   * Runs the configured mount command if mount commands are enabled
+   * and the command is not empty.
    * @return true if the configured mount command was executed
    */
   private synchronized boolean mount() {
@@ -346,6 +351,15 @@ public class FileSystemPlugin extends AbstractStoragePlugin {
     if (ArrayUtils.isEmpty(mountCmd)) {
       return false;
     }
+    if (!mountCommandsEnabled) {
+      throw UserException.permissionError()
+        .message(
+          "A mount command has been configured but mount commands are disabled, see %s",
+          FILE_PLUGIN_MOUNT_COMMANDS
+        )
+        .build(logger);
+    }
+
     try {
       Process proc = Runtime.getRuntime().exec(mountCmd);
       if (proc.waitFor() != 0) {
@@ -363,13 +377,22 @@ public class FileSystemPlugin extends AbstractStoragePlugin {
   }
 
   /**
-   * Runs the configured unmount command if the mounted flag is set
+   * Runs the configured unmount command if mount commands are enabled
+   * and the command is not empty.
    * @return true if the configured unmount command was executed
    */
   private synchronized boolean unmount() {
     String[] unmountCmd = config.getUnmountCommand();
     if (ArrayUtils.isEmpty(unmountCmd)) {
       return false;
+    }
+    if (!mountCommandsEnabled) {
+      throw UserException.permissionError()
+        .message(
+          "A mount command has been configured but mount commands are disabled, see %s",
+          FILE_PLUGIN_MOUNT_COMMANDS
+        )
+        .build(logger);
     }
     try {
       Process proc = Runtime.getRuntime().exec(unmountCmd);
