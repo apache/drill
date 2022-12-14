@@ -107,7 +107,7 @@
     <antlr.version>4.8-1</antlr.version>
     <maven.version>3.8.4</maven.version>
     <maven.min.version>3.6.3</maven.min.version>
-    <commons.net.version>3.6</commons.net.version>
+    <commons.net.version>3.9.0</commons.net.version>
     <commons.validator.version>1.6</commons.validator.version>
     <commons.text.version>1.10.0</commons.text.version>
     <protobuf.version>3.16.1</protobuf.version>
