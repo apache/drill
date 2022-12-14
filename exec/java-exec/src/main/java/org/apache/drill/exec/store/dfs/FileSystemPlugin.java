@@ -412,9 +412,7 @@ public class FileSystemPlugin extends AbstractStoragePlugin {
 
   @Override
   public void start() {
-    // config.isEnabled() is not a reliable way to tell if we're currently enabled
-    boolean isEnabled = getContext().getStorage().getDefinedConfig(getName()) != null;
-    if (isEnabled) {
+    if (config.isEnabled()) {
       mount();
     }
   }
@@ -431,7 +429,8 @@ public class FileSystemPlugin extends AbstractStoragePlugin {
 
   @Override
   public void close() {
-    // config.isEnabled() is not a reliable way to tell if we're currently enabled
+    // config.isEnabled() is not a reliable way to tell if we're still enabled
+    // at this stage
     boolean isEnabled = getContext().getStorage().getDefinedConfig(getName()) != null;
     if (isEnabled) {
       unmount();
