@@ -141,18 +141,17 @@ public class SplunkWriterTest extends SplunkBaseTest {
     assertTrue(dropResults.succeeded());
   }
 
-  // TODO Add field converters for repeated and complex objects
-
   @Test
   public void testInsert() throws Exception {
 
-    // Now create the table
+    // Create the table
     String sql = "CREATE TABLE `splunk`.`t1` AS SELECT * FROM cp.`test_data.csvh`";
     QuerySummary summary = client.queryBuilder().sql(sql).run();
     assertTrue(summary.succeeded());
 
     Thread.sleep(30000);
 
+    // Now insert more records
     sql = "INSERT INTO `splunk`.`t1`  SELECT * FROM cp.`test_data2.csvh`";
     summary = client.queryBuilder().sql(sql).run();
     assertTrue(summary.succeeded());
@@ -169,6 +168,17 @@ public class SplunkWriterTest extends SplunkBaseTest {
     // Now drop the index
     sql = "DROP TABLE splunk.`t1`";
     summary = client.queryBuilder().sql(sql).run();
+    assertTrue(summary.succeeded());
+  }
+
+  @Test
+  public void testComplexFields() throws Exception {
+    /*String sql = "SELECT * FROM cp.`schema_test.json`";
+    RowSet results = client.queryBuilder().sql(sql).rowSet();
+    results.print();*/
+
+    String sql = "CREATE TABLE `splunk`.`t1` AS SELECT record FROM cp.`schema_test.json`";
+    QuerySummary summary = client.queryBuilder().sql(sql).run();
     assertTrue(summary.succeeded());
   }
 }

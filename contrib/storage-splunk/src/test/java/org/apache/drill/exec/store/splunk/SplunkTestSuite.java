@@ -94,7 +94,7 @@ public class SplunkTestSuite extends ClusterTest {
         SPLUNK_STORAGE_PLUGIN_CONFIG = new SplunkPluginConfig(
           SPLUNK_LOGIN, SPLUNK_PASS,
           "http", hostname, port,
-          null, null, null, null, null, // app, owner, token, cookie, validateCertificates
+          null, null, null, null, false, // app, owner, token, cookie, validateCertificates
           "1", "now",
           null,
           4,
@@ -116,7 +116,7 @@ public class SplunkTestSuite extends ClusterTest {
         SPLUNK_STORAGE_PLUGIN_CONFIG_WITH_USER_TRANSLATION = new SplunkPluginConfig(
           null, null, // username, password
           "http", hostname, port,
-          null, null, null, null, null, // app, owner, token, cookie, validateCertificates
+          null, null, null, null, false, // app, owner, token, cookie, validateCertificates
           "1", "now",
           credentialsProvider,
           4,

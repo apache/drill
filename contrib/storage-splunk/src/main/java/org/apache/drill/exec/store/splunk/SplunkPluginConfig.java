@@ -47,7 +47,7 @@ public class SplunkPluginConfig extends StoragePluginConfig {
   private final String owner;
   private final String token;
   private final String cookie;
-  private final Boolean validateCertificates;
+  private final boolean validateCertificates;
   private final Integer reconnectRetries;
   private final boolean writable;
 
@@ -61,7 +61,7 @@ public class SplunkPluginConfig extends StoragePluginConfig {
                             @JsonProperty("owner") String owner,
                             @JsonProperty("token") String token,
                             @JsonProperty("cookie") String cookie,
-                            @JsonProperty("validateCertificates") Boolean validateCertificates,
+                            @JsonProperty("validateCertificates") boolean validateCertificates,
                             @JsonProperty("earliestTime") String earliestTime,
                             @JsonProperty("latestTime") String latestTime,
                             @JsonProperty("credentialsProvider") CredentialsProvider credentialsProvider,
@@ -183,7 +183,7 @@ public class SplunkPluginConfig extends StoragePluginConfig {
   }
 
   @JsonProperty("validateCertificates")
-  public Boolean getValidateCertificates() {
+  public boolean getValidateCertificates() {
     return validateCertificates;
   }
 

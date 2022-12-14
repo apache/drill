@@ -29,7 +29,6 @@ import org.apache.drill.exec.record.VectorAccessible;
 import org.apache.drill.exec.store.AbstractRecordWriter;
 import org.apache.drill.exec.store.EventBasedRecordWriter.FieldConverter;
 import org.apache.drill.exec.vector.complex.reader.FieldReader;
-import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -242,6 +241,36 @@ public class SplunkBatchWriter extends AbstractRecordWriter {
     return new ScalarSplunkConverter(fieldId, fieldName, reader);
   }
 
+  @Override
+  public FieldConverter getNewMapConverter(int fieldId, String fieldName, FieldReader reader) {
+    return new ComplexFieldConverter(fieldId, fieldName, reader);
+  }
+
+  @Override
+  public FieldConverter getNewUnionConverter(int fieldId, String fieldName, FieldReader reader) {
+    return new ComplexFieldConverter(fieldId, fieldName, reader);
+  }
+
+  @Override
+  public FieldConverter getNewRepeatedMapConverter(int fieldId, String fieldName, FieldReader reader) {
+    return new ComplexFieldConverter(fieldId, fieldName, reader);
+  }
+
+  @Override
+  public FieldConverter getNewRepeatedListConverter(int fieldId, String fieldName, FieldReader reader) {
+    return new ComplexFieldConverter(fieldId, fieldName, reader);
+  }
+
+  @Override
+  public FieldConverter getNewDictConverter(int fieldId, String fieldName, FieldReader reader) {
+    return new ComplexFieldConverter(fieldId, fieldName, reader);
+  }
+
+  @Override
+  public FieldConverter getNewRepeatedDictConverter(int fieldId, String fieldName, FieldReader reader) {
+    return new ComplexFieldConverter(fieldId, fieldName, reader);
+  }
+
   public class VarCharSplunkConverter extends FieldConverter {
 
     public VarCharSplunkConverter(int fieldID, String fieldName, FieldReader reader) {
@@ -266,18 +295,14 @@ public class SplunkBatchWriter extends AbstractRecordWriter {
     }
   }
 
-  public class RepeatedScalarConverter extends FieldConverter {
-
-    private final JSONArray jsonArray;
-    public RepeatedScalarConverter(int fieldID, String fieldName, FieldReader reader) {
+  public class ComplexFieldConverter extends FieldConverter {
+    public ComplexFieldConverter(int fieldID, String fieldName, FieldReader reader) {
       super(fieldID, fieldName, reader);
-      jsonArray = new JSONArray();
     }
 
     @Override
     public void writeField() throws IOException {
-
+      splunkEvent.put(fieldName, reader.readObject());
     }
   }
-
 }
