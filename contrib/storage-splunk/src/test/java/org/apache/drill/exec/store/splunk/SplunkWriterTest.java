@@ -173,12 +173,19 @@ public class SplunkWriterTest extends SplunkBaseTest {
 
   @Test
   public void testComplexFields() throws Exception {
-    /*String sql = "SELECT * FROM cp.`schema_test.json`";
-    RowSet results = client.queryBuilder().sql(sql).rowSet();
-    results.print();*/
-
     String sql = "CREATE TABLE `splunk`.`t1` AS SELECT record FROM cp.`schema_test.json`";
     QuerySummary summary = client.queryBuilder().sql(sql).run();
+    assertTrue(summary.succeeded());
+
+    Thread.sleep(30000);
+
+    sql = "SELECT COUNT(*) FROM splunk.t1";
+    long resultCount = client.queryBuilder().sql(sql).singletonLong();
+    assertEquals(1L, resultCount);
+
+    // Now drop the index
+    sql = "DROP TABLE splunk.`t1`";
+    summary = client.queryBuilder().sql(sql).run();
     assertTrue(summary.succeeded());
   }
 }
