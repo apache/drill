@@ -415,9 +415,10 @@ public class StoragePluginRegistryImpl implements StoragePluginRegistry {
   @Override
   public void validatedPut(String name, StoragePluginConfig config)
       throws PluginException {
-
+    Exception lifecycleException = null;
     name = validateName(name);
     PluginHandle oldEntry;
+
     if (config.isEnabled()) {
       PluginHandle entry = restoreFromEphemeral(name, config);
       try {
@@ -431,11 +432,40 @@ public class StoragePluginRegistryImpl implements StoragePluginRegistry {
           + "Please switch to Logs panel from the UI then check the log.", name), e);
       }
       oldEntry = pluginCache.put(entry);
+      try {
+        if (oldEntry == null || !oldEntry.config().isEnabled()) {
+          // entry has the new plugin config attached to it so is appropriate for onEnabled
+          entry.plugin().onEnabled();
+        }
+      } catch (Exception e) {
+        // Store the exception to be thrown only once we complete the validatePut logic
+        lifecycleException = e;
+      }
     } else {
       oldEntry = pluginCache.remove(name);
+      try {
+        if (oldEntry != null && oldEntry.config().isEnabled()) {
+          // oldEntry has the old plugin config attached to it so is appropriate for onDisabled
+          oldEntry.plugin().onDisabled();
+        }
+      } catch (Exception e) {
+        // Store the exception to be thrown only once we complete the validatePut logic
+        lifecycleException = e;
+      }
     }
     moveToEphemeral(oldEntry);
     pluginStore.put(name, config);
+
+    if (lifecycleException != null) {
+      throw new PluginException(
+        String.format(
+          "A lifecycle method in plugin %s failed. The initiating plugin " +
+            "config update has not been rolled back.",
+          name
+        ),
+        lifecycleException
+      );
+    }
   }
 
   @Override
@@ -881,7 +911,7 @@ public class StoragePluginRegistryImpl implements StoragePluginRegistry {
     ephemeralPlugins.invalidateAll();
     pluginCache.close();
     pluginStore.close();
-    locators.stream().forEach(loc -> loc.close());
+    locators.forEach(loc -> loc.close());
   }
 
   /**

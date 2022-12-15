@@ -93,6 +93,12 @@ public abstract class AbstractStoragePlugin implements StoragePlugin {
   public void start() throws IOException { }
 
   @Override
+  public void onEnabled() throws Exception { }
+
+  @Override
+  public void onDisabled() throws Exception { }
+
+  @Override
   public void close() throws Exception { }
 
   @Override

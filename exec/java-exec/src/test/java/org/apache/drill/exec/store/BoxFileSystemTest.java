@@ -103,7 +103,7 @@ public class BoxFileSystemTest extends ClusterTest {
 
     CredentialsProvider credentialsProvider = new PlainCredentialsProvider(credentials);
 
-    StoragePluginConfig boxConfig = new FileSystemConfig("box:///", boxConfigVars,
+    StoragePluginConfig boxConfig = new FileSystemConfig("box:///", null, null, boxConfigVars,
       workspaces, formats, oAuthConfig, AuthMode.SHARED_USER.name(), credentialsProvider);
     boxConfig.setEnabled(true);
 

@@ -19,6 +19,7 @@ package org.apache.drill.exec.store.dfs;
 
 import java.io.IOException;
 import java.net.URI;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -33,8 +34,10 @@ import java.util.stream.Collectors;
 
 import org.apache.calcite.plan.RelOptRule;
 import org.apache.calcite.schema.SchemaPlus;
+import org.apache.commons.io.IOUtils;
 import org.apache.drill.common.JSONOptions;
 import org.apache.drill.common.exceptions.ExecutionSetupException;
+import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.common.logical.FormatPluginConfig;
 import org.apache.drill.common.logical.StoragePluginConfig;
@@ -61,6 +64,8 @@ import org.apache.hadoop.fs.FileSystem;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import static org.apache.drill.exec.ExecConstants.FILE_PLUGIN_MOUNT_COMMANDS;
+
 /**
  * A Storage engine associated with a Hadoop FileSystem Implementation. Examples
  * include HDFS, MapRFS, QuantacastFileSystem, LocalFileSystem, as well Apache
@@ -86,6 +91,7 @@ public class FileSystemPlugin extends AbstractStoragePlugin {
   private final FileSystemConfig config;
   private final Configuration fsConf;
   private TokenRegistry tokenRegistry;
+  private final boolean mountCommandsEnabled;
 
   public FileSystemPlugin(FileSystemConfig config, DrillbitContext context, String name) throws ExecutionSetupException {
     super(context, name);
@@ -142,6 +148,7 @@ public class FileSystemPlugin extends AbstractStoragePlugin {
       }
 
       this.schemaFactory = new FileSystemSchemaFactory(name, factories);
+      this.mountCommandsEnabled = context.getConfig().getBoolean(FILE_PLUGIN_MOUNT_COMMANDS);
     } catch (IOException e) {
       throw new ExecutionSetupException("Failure setting up file system plugin.", e);
     }
@@ -331,5 +338,101 @@ public class FileSystemPlugin extends AbstractStoragePlugin {
   public void initializeTokenTableForTesting() {
     OAuthTokenProvider tokenProvider = context.getOauthTokenProvider();
     tokenRegistry = tokenProvider.getOauthTokenRegistry(null);
+  }
+
+  /**
+   * Runs the configured mount command if mount commands are enabled
+   * and the command is not empty.
+   * @return true if the configured mount command was executed
+   */
+  private synchronized boolean mount() {
+    List<String> mountCmd = config.getMountCommand();
+    if (mountCmd == null || mountCmd.isEmpty()) {
+      return false;
+    }
+    if (!mountCommandsEnabled) {
+      throw UserException.permissionError()
+        .message(
+          "A mount command has been configured but mount commands are disabled, see %s",
+          FILE_PLUGIN_MOUNT_COMMANDS
+        )
+        .build(logger);
+    }
+
+    try {
+      Process proc = Runtime.getRuntime().exec(mountCmd.toArray(new String[0]));
+      if (proc.waitFor() != 0) {
+        String stderrOutput = IOUtils.toString(proc.getErrorStream(), StandardCharsets.UTF_8);
+        throw new IOException(stderrOutput);
+      }
+      logger.info("The mount command for plugin {} succeeded.", getName());
+      return true;
+    } catch (IOException | InterruptedException e) {
+      logger.error("The mount command for plugin {} failed.", getName(), e);
+      throw UserException.pluginError(e)
+        .message("The mount command for plugin %s failed.", getName())
+        .build(logger);
+    }
+  }
+
+  /**
+   * Runs the configured unmount command if mount commands are enabled
+   * and the command is not empty.
+   * @return true if the configured unmount command was executed
+   */
+  private synchronized boolean unmount() {
+    List<String> unmountCmd = config.getUnmountCommand();
+    if (unmountCmd == null || unmountCmd.isEmpty()) {
+      return false;
+    }
+    if (!mountCommandsEnabled) {
+      throw UserException.permissionError()
+        .message(
+          "A mount command has been configured but mount commands are disabled, see %s",
+          FILE_PLUGIN_MOUNT_COMMANDS
+        )
+        .build(logger);
+    }
+    try {
+      Process proc = Runtime.getRuntime().exec(unmountCmd.toArray(new String[0]));
+      if (proc.waitFor() != 0) {
+        String stderrOutput = IOUtils.toString(proc.getErrorStream(), StandardCharsets.UTF_8);
+        throw new IOException(stderrOutput);
+      }
+      logger.info("The unmount command for plugin {} succeeded.", getName());
+      return true;
+    } catch (IOException | InterruptedException e) {
+      logger.error("The unmount command for plugin {} failed.", getName(), e);
+      throw UserException.pluginError(e)
+        .message("The unmount command for plugin %s failed.", getName())
+        .build(logger);
+    }
+  }
+
+  @Override
+  public void start() {
+    if (config.isEnabled()) {
+      mount();
+    }
+  }
+
+  @Override
+  public void onEnabled() {
+    mount();
+  }
+
+  @Override
+  public void onDisabled() {
+    unmount();
+  }
+
+  @Override
+  public void close() {
+    // config.isEnabled() is not a reliable way to tell if we're still enabled
+    // at this stage
+    boolean isEnabled = getContext().getStorage().getDefinedConfig(getName()) != null;
+    if (isEnabled) {
+      unmount();
+    }
   }
 }
