@@ -54,7 +54,7 @@ public class FileSystemConfig extends StoragePluginConfig {
   public static final String NAME = "file";
 
   private final String connection;
-  private final String[] mountCommand, unmountCommand;
+  private final List<String> mountCommand, unmountCommand;
   private final Map<String, String> config;
   private final Map<String, WorkspaceConfig> workspaces;
   private final Map<String, FormatPluginConfig> formats;
@@ -81,8 +81,8 @@ public class FileSystemConfig extends StoragePluginConfig {
 
   @JsonCreator
   public FileSystemConfig(@JsonProperty("connection") String connection,
-                          @JsonProperty("mountCommand") String[] mountCommand,
-                          @JsonProperty("unmountCommand") String[] unmountCommand,
+                          @JsonProperty("mountCommand") List<String> mountCommand,
+                          @JsonProperty("unmountCommand") List<String> unmountCommand,
                           @JsonProperty("config") Map<String, String> config,
                           @JsonProperty("workspaces") Map<String, WorkspaceConfig> workspaces,
                           @JsonProperty("formats") Map<String, FormatPluginConfig> formats,
@@ -113,12 +113,12 @@ public class FileSystemConfig extends StoragePluginConfig {
   }
 
   @JsonProperty
-  public String[] getMountCommand() {
+  public List<String> getMountCommand() {
     return mountCommand;
   }
 
   @JsonProperty
-  public String[] getUnmountCommand() {
+  public List<String> getUnmountCommand() {
     return unmountCommand;
   }
 
@@ -157,8 +157,8 @@ public class FileSystemConfig extends StoragePluginConfig {
     }
     FileSystemConfig other = (FileSystemConfig) obj;
     return Objects.equals(connection, other.connection) &&
-           Arrays.equals(mountCommand, other.mountCommand) &&
-           Arrays.equals(unmountCommand, other.unmountCommand) &&
+           Objects.equals(mountCommand, other.mountCommand) &&
+           Objects.equals(unmountCommand, other.unmountCommand) &&
            Objects.equals(config, other.config) &&
            Objects.equals(formats, other.formats) &&
            Objects.equals(workspaces, other.workspaces);

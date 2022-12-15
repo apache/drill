@@ -28,6 +28,7 @@ import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
 import java.io.File;
+import java.util.Arrays;
 
 import static org.apache.drill.exec.ExecConstants.FILE_PLUGIN_MOUNT_COMMANDS;
 import static org.apache.drill.exec.util.StoragePluginTestUtils.DFS_PLUGIN_NAME;
@@ -71,8 +72,8 @@ public class TestMountCommand extends ClusterTest {
 
     FileSystemConfig dfsConfigNew = new FileSystemConfig(
       dfsConfig.getConnection(),
-      String.format(touchCmd, testFile.getAbsolutePath()).split(" "),
-      String.format(rmCmd, testFile.getAbsolutePath()).split(" "),
+      Arrays.asList(String.format(touchCmd, testFile.getAbsolutePath()).split(" ")),
+      Arrays.asList(String.format(rmCmd, testFile.getAbsolutePath()).split(" ")),
       dfsConfig.getConfig(),
       dfsConfig.getWorkspaces(),
       dfsConfig.getFormats(),

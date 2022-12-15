@@ -35,7 +35,6 @@ import java.util.stream.Collectors;
 import org.apache.calcite.plan.RelOptRule;
 import org.apache.calcite.schema.SchemaPlus;
 import org.apache.commons.io.IOUtils;
-import org.apache.commons.lang3.ArrayUtils;
 import org.apache.drill.common.JSONOptions;
 import org.apache.drill.common.exceptions.ExecutionSetupException;
 import org.apache.drill.common.exceptions.UserException;
@@ -347,8 +346,8 @@ public class FileSystemPlugin extends AbstractStoragePlugin {
    * @return true if the configured mount command was executed
    */
   private synchronized boolean mount() {
-    String[] mountCmd = config.getMountCommand();
-    if (ArrayUtils.isEmpty(mountCmd)) {
+    List<String> mountCmd = config.getMountCommand();
+    if (mountCmd == null || mountCmd.isEmpty()) {
       return false;
     }
     if (!mountCommandsEnabled) {
@@ -361,7 +360,7 @@ public class FileSystemPlugin extends AbstractStoragePlugin {
     }
 
     try {
-      Process proc = Runtime.getRuntime().exec(mountCmd);
+      Process proc = Runtime.getRuntime().exec(mountCmd.toArray(new String[0]));
       if (proc.waitFor() != 0) {
         String stderrOutput = IOUtils.toString(proc.getErrorStream(), StandardCharsets.UTF_8);
         throw new IOException(stderrOutput);
@@ -382,8 +381,8 @@ public class FileSystemPlugin extends AbstractStoragePlugin {
    * @return true if the configured unmount command was executed
    */
   private synchronized boolean unmount() {
-    String[] unmountCmd = config.getUnmountCommand();
-    if (ArrayUtils.isEmpty(unmountCmd)) {
+    List<String> unmountCmd = config.getUnmountCommand();
+    if (unmountCmd == null || unmountCmd.isEmpty()) {
       return false;
     }
     if (!mountCommandsEnabled) {
@@ -395,7 +394,7 @@ public class FileSystemPlugin extends AbstractStoragePlugin {
         .build(logger);
     }
     try {
-      Process proc = Runtime.getRuntime().exec(unmountCmd);
+      Process proc = Runtime.getRuntime().exec(unmountCmd.toArray(new String[0]));
       if (proc.waitFor() != 0) {
         String stderrOutput = IOUtils.toString(proc.getErrorStream(), StandardCharsets.UTF_8);
         throw new IOException(stderrOutput);
