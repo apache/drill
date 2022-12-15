@@ -66,6 +66,7 @@ import org.apache.drill.exec.server.options.OptionManager;
 import org.apache.drill.exec.store.StoragePluginRegistry;
 import org.apache.drill.exec.store.delta.format.DeltaFormatPlugin;
 import org.apache.drill.exec.store.delta.plan.DrillExprToDeltaTranslator;
+import org.apache.drill.exec.store.delta.snapshot.DeltaSnapshotFactory;
 import org.apache.drill.exec.store.dfs.DrillFileSystem;
 import org.apache.drill.exec.store.dfs.FileSelection;
 import org.apache.drill.exec.store.dfs.ReadEntryWithPath;
@@ -217,11 +218,9 @@ public class DeltaGroupScan extends AbstractParquetGroupScan {
 
   @Override
   public DeltaGroupScan clone(List<SchemaPath> columns) {
-    try {
-      return toBuilder().columns(columns).build();
-    } catch (IOException e) {
-      throw new DrillRuntimeException(e);
-    }
+    DeltaGroupScan groupScan = new DeltaGroupScan(this);
+    groupScan.columns = columns;
+    return groupScan;
   }
 
   @Override
@@ -330,17 +329,6 @@ public class DeltaGroupScan extends AbstractParquetGroupScan {
       .field("limit", limit)
       .field("numFiles", getEntries().size())
       .toString();
-  }
-
-  public DeltaGroupScanBuilder toBuilder() {
-    return new DeltaGroupScanBuilder()
-      .userName(this.userName)
-      .formatPlugin(this.formatPlugin)
-      .schema(this.schema)
-      .path(this.path)
-      .condition(this.condition)
-      .columns(this.columns)
-      .limit(this.limit);
   }
 
   private static class DeltaParquetScanFilterer extends RowGroupScanFilterer<DeltaParquetScanFilterer> {
@@ -481,7 +469,11 @@ public class DeltaGroupScan extends AbstractParquetGroupScan {
 
     public DeltaGroupScan build() throws IOException {
       DeltaLog log = DeltaLog.forTable(formatPlugin.getFsConf(), path);
-      Snapshot snapshot = log.snapshot();
+      DeltaSnapshotFactory.SnapshotContext context = DeltaSnapshotFactory.SnapshotContext.builder()
+        .snapshotAsOfTimestamp(formatPlugin.getConfig().getTimestamp())
+        .snapshotAsOfVersion(formatPlugin.getConfig().getVersion())
+        .build();
+      Snapshot snapshot = DeltaSnapshotFactory.INSTANCE.create(context).apply(log);
       StructType structType = snapshot.getMetadata().getSchema();
       schema = toSchema(structType);
 
