@@ -34,12 +34,42 @@ public class LTSVFormatPluginConfig implements FormatPluginConfig {
   private static final List<String> DEFAULT_EXTS = ImmutableList.of("ltsv");
 
   private final List<String> extensions;
+  private final boolean lenient;
+  private final boolean strict;
+  private final String escapeCharacter;
+  private final String kvDelimiter;
 
   @JsonCreator
-  public LTSVFormatPluginConfig(
-      @JsonProperty("extensions") List<String> extensions) {
-    this.extensions = extensions == null ?
-        DEFAULT_EXTS : ImmutableList.copyOf(extensions);
+  public LTSVFormatPluginConfig(@JsonProperty("extensions") List<String> extensions,
+                                @JsonProperty("lenient") boolean lenient,
+                                @JsonProperty("strict") boolean strict,
+                                @JsonProperty("escapeCharacter") String escapeCharacter,
+                                @JsonProperty("kvDelimiter") String kvDelimiter) {
+    this.extensions = extensions == null ? DEFAULT_EXTS : ImmutableList.copyOf(extensions);
+    this.lenient = lenient;
+    this.strict = strict;
+    this.escapeCharacter = escapeCharacter;
+    this.kvDelimiter = kvDelimiter;
+  }
+
+  @JsonProperty("lenient")
+  public boolean getLenient() {
+    return lenient;
+  }
+
+  @JsonProperty("strict")
+  public boolean isStrict() {
+    return strict;
+  }
+
+  @JsonProperty("escapeCharacter")
+  public String getEscapeCharacter() {
+    return escapeCharacter;
+  }
+
+  @JsonProperty("kvDelimiter")
+  public String getKvDelimiter() {
+    return kvDelimiter;
   }
 
   @JsonInclude(JsonInclude.Include.NON_DEFAULT)
@@ -49,7 +79,7 @@ public class LTSVFormatPluginConfig implements FormatPluginConfig {
 
   @Override
   public int hashCode() {
-    return Objects.hash(extensions);
+    return Objects.hash(extensions, lenient, strict, escapeCharacter, kvDelimiter);
   }
 
   @Override
@@ -60,13 +90,21 @@ public class LTSVFormatPluginConfig implements FormatPluginConfig {
       return false;
     }
     LTSVFormatPluginConfig that = (LTSVFormatPluginConfig) obj;
-    return Objects.equals(extensions, that.extensions);
+    return Objects.equals(extensions, that.extensions) &&
+        Objects.equals(lenient, that.lenient) &&
+        Objects.equals(strict, that.strict) &&
+        Objects.equals(escapeCharacter, that.escapeCharacter) &&
+        Objects.equals(kvDelimiter, that.kvDelimiter);
   }
 
   @Override
   public String toString() {
     return new PlanStringBuilder(this)
         .field("extensions", extensions)
+        .field("lenient", lenient)
+        .field("strict", strict)
+        .field("escapeCharacter", escapeCharacter)
+        .field("kvDelimiter", kvDelimiter)
         .toString();
   }
 }

@@ -22,9 +22,14 @@ import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
 import org.apache.drill.common.exceptions.UserException;
-import org.apache.drill.exec.proto.UserBitShared;
+import org.apache.drill.common.types.TypeProtos.MinorType;
+import org.apache.drill.exec.physical.rowSet.RowSet;
+import org.apache.drill.exec.physical.rowSet.RowSetBuilder;
+import org.apache.drill.exec.record.metadata.SchemaBuilder;
+import org.apache.drill.exec.record.metadata.TupleMetadata;
 import org.apache.drill.test.ClusterFixture;
 import org.apache.drill.test.ClusterTest;
+import org.apache.drill.test.rowSet.RowSetComparison;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
@@ -37,34 +42,77 @@ public class TestLTSVRecordReader extends ClusterTest {
 
   @Test
   public void testWildcard() throws Exception {
-    testBuilder()
-      .sqlQuery("SELECT * FROM cp.`simple.ltsv`")
-      .unOrdered()
-      .baselineColumns("host", "forwardedfor", "req", "status", "size", "referer", "ua", "reqtime", "apptime", "vhost")
-      .baselineValues("xxx.xxx.xxx.xxx", "-", "GET /v1/xxx HTTP/1.1", "200", "4968", "-", "Java/1.8.0_131", "2.532", "2.532", "api.example.com")
-      .baselineValues("xxx.xxx.xxx.xxx", "-", "GET /v1/yyy HTTP/1.1", "200", "412", "-", "Java/1.8.0_201", "3.580", "3.580", "api.example.com")
-      .go();
+    String sql = "SELECT * FROM cp.`simple.ltsv`";
+    RowSet results  = client.queryBuilder().sql(sql).rowSet();
+
+    TupleMetadata expectedSchema = new SchemaBuilder()
+        .addNullable("referer", MinorType.VARCHAR)
+        .addNullable("vhost", MinorType.VARCHAR)
+        .addNullable("size", MinorType.VARCHAR)
+        .addNullable("forwardedfor", MinorType.VARCHAR)
+        .addNullable("reqtime", MinorType.VARCHAR)
+        .addNullable("apptime", MinorType.VARCHAR)
+        .addNullable("host", MinorType.VARCHAR)
+        .addNullable("ua", MinorType.VARCHAR)
+        .addNullable("req", MinorType.VARCHAR)
+        .addNullable("status", MinorType.VARCHAR)
+        .build();
+
+    RowSet expected = new RowSetBuilder(client.allocator(), expectedSchema)
+        .addRow("-", "api.example.com", "4968", "-", "2.532", "2.532", "xxx.xxx.xxx.xxx", "Java/1.8.0_131", "GET /v1/xxx HTTP/1.1", "200")
+        .addRow("-", "api.example.com", "412", "-", "3.580", "3.580", "xxx.xxx.xxx.xxx", "Java/1.8.0_201", "GET /v1/yyy HTTP/1.1", "200")
+        .build();
+    new RowSetComparison(expected).verifyAndClearAll(results);
   }
 
   @Test
   public void testSelectColumns() throws Exception {
-    testBuilder()
-      .sqlQuery("SELECT ua, reqtime FROM cp.`simple.ltsv`")
-      .unOrdered()
-      .baselineColumns("ua", "reqtime")
-      .baselineValues("Java/1.8.0_131", "2.532")
-      .baselineValues("Java/1.8.0_201", "3.580")
-      .go();
+    String sql = "SELECT ua, reqtime FROM cp.`simple.ltsv`";
+    RowSet results  = client.queryBuilder().sql(sql).rowSet();
+
+    TupleMetadata expectedSchema = new SchemaBuilder()
+        .addNullable("ua", MinorType.VARCHAR)
+        .addNullable("reqtime", MinorType.VARCHAR)
+        .build();
+
+    RowSet expected = new RowSetBuilder(client.allocator(), expectedSchema)
+        .addRow("Java/1.8.0_131", "2.532")
+        .addRow("Java/1.8.0_201", "3.580")
+        .build();
+    new RowSetComparison(expected).verifyAndClearAll(results);
   }
 
   @Test
   public void testQueryWithConditions() throws Exception {
-    testBuilder()
-      .sqlQuery("SELECT * FROM cp.`simple.ltsv` WHERE reqtime > 3.0")
-      .unOrdered()
-      .baselineColumns("host", "forwardedfor", "req", "status", "size", "referer", "ua", "reqtime", "apptime", "vhost")
-      .baselineValues("xxx.xxx.xxx.xxx", "-", "GET /v1/yyy HTTP/1.1", "200", "412", "-", "Java/1.8.0_201", "3.580", "3.580", "api.example.com")
-      .go();
+    String sql = "SELECT * FROM cp.`simple.ltsv` WHERE reqtime > 3.0";
+    RowSet results  = client.queryBuilder().sql(sql).rowSet();
+
+    TupleMetadata expectedSchema = new SchemaBuilder()
+        .addNullable("referer", MinorType.VARCHAR)
+        .addNullable("vhost", MinorType.VARCHAR)
+        .addNullable("size", MinorType.VARCHAR)
+        .addNullable("forwardedfor", MinorType.VARCHAR)
+        .addNullable("reqtime", MinorType.VARCHAR)
+        .addNullable("apptime", MinorType.VARCHAR)
+        .addNullable("host", MinorType.VARCHAR)
+        .addNullable("ua", MinorType.VARCHAR)
+        .addNullable("req", MinorType.VARCHAR)
+        .addNullable("status", MinorType.VARCHAR)
+        .build();
+
+    RowSet expected = new RowSetBuilder(client.allocator(), expectedSchema)
+        .addRow("-", "api.example.com", "412", "-", "3.580", "3.580", "xxx.xxx.xxx.xxx", "Java/1.8.0_201", "GET /v1/yyy HTTP/1.1", "200")
+        .build();
+
+    new RowSetComparison(expected).verifyAndClearAll(results);
+  }
+
+  @Test
+  public void testSerDe() throws Exception {
+    String sql = "SELECT COUNT(*) as cnt FROM cp.`simple.ltsv` ";
+    String plan = queryBuilder().sql(sql).explainJson();
+    long cnt = queryBuilder().physical(plan).singletonLong();
+    assertEquals("Counts should match", 2L, cnt);
   }
 
   @Test
@@ -78,8 +126,7 @@ public class TestLTSVRecordReader extends ClusterTest {
       run("SELECT * FROM cp.`invalid.ltsv`");
       fail();
     } catch (UserException e) {
-      assertEquals(UserBitShared.DrillPBError.ErrorType.DATA_READ, e.getErrorType());
-      assertTrue(e.getMessage().contains("Failure while reading messages from /invalid.ltsv. Record reader was at record: 1"));
+      assertTrue(e.getMessage().contains("DATA_READ ERROR: Empty key detected at line [0] position [49]"));
     }
   }
 }
