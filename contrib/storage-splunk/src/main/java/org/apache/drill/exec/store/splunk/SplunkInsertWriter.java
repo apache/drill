@@ -38,11 +38,10 @@ public class SplunkInsertWriter extends SplunkWriter {
       @JsonProperty("child") PhysicalOperator child,
       @JsonProperty("tableIdentifier") List<String> tableIdentifier,
       @JsonProperty("storage") SplunkPluginConfig storageConfig,
-      @JacksonInject StoragePluginRegistry engineRegistry) {
-    super(child, tableIdentifier, engineRegistry.resolve(storageConfig, SplunkStoragePlugin.class));
-    this.plugin = engineRegistry.resolve(storageConfig, SplunkStoragePlugin.class);
+      @JacksonInject StoragePluginRegistry pluginRegistry) {
+    super(child, tableIdentifier, pluginRegistry.resolve(storageConfig, SplunkStoragePlugin.class));
+    this.plugin = pluginRegistry.resolve(storageConfig, SplunkStoragePlugin.class);
     this.tableIdentifier = tableIdentifier;
-
   }
 
   SplunkInsertWriter(PhysicalOperator child, List<String> tableIdentifier, SplunkStoragePlugin plugin) {

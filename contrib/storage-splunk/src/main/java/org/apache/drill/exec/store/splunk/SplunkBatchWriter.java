@@ -46,7 +46,7 @@ public class SplunkBatchWriter extends AbstractRecordWriter {
   private final SplunkWriter config;
   private final Args eventArgs;
   protected final Service splunkService;
-  private JSONObject splunkEvent;
+  private final JSONObject splunkEvent;
   protected Index destinationIndex;
 
 
@@ -54,7 +54,7 @@ public class SplunkBatchWriter extends AbstractRecordWriter {
     this.config = config;
     this.tableIdentifier = tableIdentifier;
     this.userCredentials = userCredentials;
-
+    this.splunkEvent = new JSONObject();
     SplunkConnection connection = new SplunkConnection(config.getPluginConfig(), userCredentials.getUserName());
     this.splunkService = connection.connect();
 
@@ -69,7 +69,7 @@ public class SplunkBatchWriter extends AbstractRecordWriter {
   }
 
   /**
-   * Update the schema in RecordWriter. Called at least once before starting writing the records. In this case,
+   * Update the schema in RecordWriter. Called before starting writing the records. In this case,
    * we add the index to Splunk here. Splunk's API is a little sparse and doesn't really do much in the way
    * of error checking or providing feedback if the operation fails.
    *
@@ -98,7 +98,8 @@ public class SplunkBatchWriter extends AbstractRecordWriter {
   @Override
   public void startRecord() {
     logger.debug("Starting record");
-    splunkEvent = new JSONObject();
+    // Ensure that the new record is empty. This is not strictly necessary, but it is a belt and suspenders approach.
+    splunkEvent.clear();
   }
 
   @Override
@@ -107,7 +108,7 @@ public class SplunkBatchWriter extends AbstractRecordWriter {
     // Write the event to the Splunk index
     destinationIndex.submit(eventArgs, splunkEvent.toJSONString());
     // Clear out the splunk event.
-    splunkEvent = new JSONObject();
+    splunkEvent.clear();
   }
 
   @Override
