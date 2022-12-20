@@ -129,4 +129,30 @@ public class TestLTSVRecordReader extends ClusterTest {
       assertTrue(e.getMessage().contains("DATA_READ ERROR: Empty key detected at line [0] position [49]"));
     }
   }
+
+  @Test
+  public void testProvidedSchema() throws Exception {
+    String sql = "SELECT * FROM table(cp.`simple.ltsv` (type=> 'ltsv', schema => 'inline=(`referer` VARCHAR, `vhost` VARCHAR, `size` INT, `forwardedfor` VARCHAR, " +
+        "`reqtime` DOUBLE, `apptime` DOUBLE, `status` INT)'))";
+    RowSet results  = client.queryBuilder().sql(sql).rowSet();
+
+    TupleMetadata expectedSchema = new SchemaBuilder()
+        .addNullable("referer", MinorType.VARCHAR)
+        .addNullable("vhost", MinorType.VARCHAR)
+        .addNullable("size", MinorType.INT)
+        .addNullable("forwardedfor", MinorType.VARCHAR)
+        .addNullable("reqtime", MinorType.FLOAT8)
+        .addNullable("apptime", MinorType.FLOAT8)
+        .addNullable("status", MinorType.INT)
+        .addNullable("host", MinorType.VARCHAR)
+        .addNullable("ua", MinorType.VARCHAR)
+        .addNullable("req", MinorType.VARCHAR)
+        .build();
+
+    RowSet expected = new RowSetBuilder(client.allocator(), expectedSchema)
+        .addRow("-", "api.example.com", 4968, "-", 2.532, 2.532, 200, "xxx.xxx.xxx.xxx", "Java/1.8.0_131", "GET /v1/xxx HTTP/1.1")
+        .addRow("-", "api.example.com", 412, "-", 3.58, 3.58, 200, "xxx.xxx.xxx.xxx", "Java/1.8.0_201", "GET /v1/yyy HTTP/1.1")
+        .build();
+    new RowSetComparison(expected).verifyAndClearAll(results);
+  }
 }

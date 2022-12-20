@@ -48,3 +48,19 @@ Issue a SELECT statement to get the second row in the file.
 +-----------------------------+------------------+---------------+-----------------------+---------+-------+----------+-----------------+----------+----------+------------------+
 1 row selected (6.074 seconds)
 ```
+
+### Providing a Schema
+The LTSV reader does supports provided schema.  You can read about Drill's [provided schema functionality here](https://drill.apache.org/docs/plugin-configuration-basics/#specifying-the-schema-as-table-function-parameter)
+
+An example query would be:
+
+```sql
+SELECT * FROM table(cp.`simple.ltsv` (type=> 'ltsv', schema => 
+    'inline=(`referer` VARCHAR, 
+    `vhost`VARCHAR, `size` INT, 
+    `forwardedfor` VARCHAR, 
+    `reqtime` DOUBLE, 
+    `apptime` DOUBLE, 
+    `status` INT)'))
+```
+Only scalar types are supported in the LTSV reader.

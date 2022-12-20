@@ -25,6 +25,7 @@ import org.apache.drill.common.AutoCloseables;
 import org.apache.drill.common.exceptions.CustomErrorContext;
 import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.common.types.TypeProtos;
+import org.apache.drill.common.types.TypeProtos.MinorType;
 import org.apache.drill.exec.physical.impl.scan.v3.ManagedReader;
 import org.apache.drill.exec.physical.impl.scan.v3.file.FileDescrip;
 import org.apache.drill.exec.physical.impl.scan.v3.file.FileSchemaNegotiator;
@@ -34,11 +35,19 @@ import org.apache.drill.exec.record.metadata.ColumnMetadata;
 import org.apache.drill.exec.record.metadata.MetadataUtils;
 import org.apache.drill.exec.record.metadata.TupleMetadata;
 import org.apache.drill.exec.vector.accessor.ScalarWriter;
+import org.apache.drill.shaded.guava.com.google.common.base.Strings;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.time.Instant;
+import java.time.LocalDate;
+import java.time.LocalTime;
+import java.time.format.DateTimeFormatter;
+import java.util.Date;
 import java.util.Iterator;
 import java.util.Map;
 
@@ -50,12 +59,14 @@ public class LTSVBatchReader implements ManagedReader {
   private final CustomErrorContext errorContext;
   private final LtsvParser ltsvParser;
   private final RowSetLoader rowWriter;
+  private final FileSchemaNegotiator negotiator;
   private InputStream fsStream;
   private Iterator<Map<String, String>> rowIterator;
 
 
   public LTSVBatchReader(LTSVFormatPluginConfig config, FileSchemaNegotiator negotiator) {
     this.config = config;
+    this.negotiator = negotiator;
     file = negotiator.file();
     errorContext = negotiator.parentErrorContext();
     ltsvParser = buildParser();
@@ -137,6 +148,7 @@ public class LTSVBatchReader implements ManagedReader {
     // Start the row
     String key;
     String value;
+    int columnIndex;
     ScalarWriter columnWriter;
     Map<String, String> row = rowIterator.next();
 
@@ -148,8 +160,79 @@ public class LTSVBatchReader implements ManagedReader {
     for (Map.Entry<String,String> field: row.entrySet()) {
       key = field.getKey();
       value = field.getValue();
+      columnIndex = getColumnIndex(key);
       columnWriter = getColumnWriter(key);
-      columnWriter.setString(value);
+
+
+      if (negotiator.providedSchema() != null) {
+        // Check the type. LTSV will only read other data types if a schema is provided.
+        ColumnMetadata columnMetadata = rowWriter.tupleSchema().metadata(columnIndex);
+        MinorType dataType = columnMetadata.type();
+        LocalTime localTime;
+        LocalDate localDate;
+
+        switch (dataType) {
+          case BIT:
+            columnWriter.setBoolean(Boolean.parseBoolean(value));
+            break;
+          case INT:
+          case SMALLINT:
+          case TINYINT:
+            columnWriter.setInt(Integer.parseInt(value));
+            break;
+          case BIGINT:
+            columnWriter.setLong(Long.parseLong(value));
+            break;
+          case FLOAT8:
+          case FLOAT4:
+            columnWriter.setDouble(Double.parseDouble(value));
+            break;
+          case TIME:
+            columnMetadata = rowWriter.tupleSchema().metadata(key);
+            String dateFormat = columnMetadata.property("drill.format");
+
+            if (Strings.isNullOrEmpty(dateFormat)) {
+              localTime = LocalTime.parse(value);
+            } else {
+              localTime = LocalTime.parse(value, DateTimeFormatter.ofPattern(dateFormat));
+            }
+            columnWriter.setTime(localTime);
+            break;
+          case DATE:
+            dateFormat = columnMetadata.property("drill.format");
+
+            if (Strings.isNullOrEmpty(dateFormat)) {
+              localDate = LocalDate.parse(value);
+            } else {
+              localDate = LocalDate.parse(value, DateTimeFormatter.ofPattern(dateFormat));
+            }
+            columnWriter.setDate(localDate);
+            break;
+          case TIMESTAMP:
+            dateFormat = columnMetadata.property("drill.format");
+            Instant timestamp;
+            if (Strings.isNullOrEmpty(dateFormat)) {
+              timestamp = Instant.parse(value);
+            } else {
+              try {
+                SimpleDateFormat simpleDateFormat = new SimpleDateFormat(dateFormat);
+                Date parsedDate = simpleDateFormat.parse(value);
+                timestamp = Instant.ofEpochMilli(parsedDate.getTime());
+              } catch (ParseException e) {
+                throw UserException.parseError(e)
+                    .message("Cannot parse " + value + " as a timestamp. You can specify a format string in the provided schema to correct this.")
+                    .addContext(errorContext)
+                    .build(logger);
+              }
+            }
+            columnWriter.setTimestamp(timestamp);
+            break;
+          default:
+            columnWriter.setString(value);
+        }
+      } else {
+        columnWriter.setString(value);
+      }
     }
     // Finish the row
     rowWriter.save();
@@ -161,13 +244,21 @@ public class LTSVBatchReader implements ManagedReader {
     AutoCloseables.closeSilently(fsStream);
   }
 
-  private ScalarWriter getColumnWriter(String fieldName){
+  private int getColumnIndex(String fieldName) {
     // Find the TupleWriter object
     int index = rowWriter.tupleSchema().index(fieldName);
+
+    // Unknown columns are always strings.
     if (index == -1) {
       ColumnMetadata colSchema = MetadataUtils.newScalar(fieldName, TypeProtos.MinorType.VARCHAR, TypeProtos.DataMode.OPTIONAL);
       index = rowWriter.addColumn(colSchema);
     }
+    return index;
+  }
+
+  private ScalarWriter getColumnWriter(String fieldName){
+    // Find the TupleWriter object
+    int index = getColumnIndex(fieldName);
     return rowWriter.scalar(index);
   }
 }
