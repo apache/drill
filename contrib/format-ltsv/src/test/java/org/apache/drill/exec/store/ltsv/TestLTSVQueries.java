@@ -33,7 +33,7 @@ import org.apache.drill.test.rowSet.RowSetComparison;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
-public class TestLTSVRecordReader extends ClusterTest {
+public class TestLTSVQueries extends ClusterTest {
 
   @BeforeClass
   public static void setup() throws Exception {

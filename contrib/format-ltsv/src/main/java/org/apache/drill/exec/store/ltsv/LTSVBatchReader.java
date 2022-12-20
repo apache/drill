@@ -241,6 +241,7 @@ public class LTSVBatchReader implements ManagedReader {
 
   @Override
   public void close() {
+    logger.debug("Closing input stream for LTSV reader.");
     AutoCloseables.closeSilently(fsStream);
   }
 
