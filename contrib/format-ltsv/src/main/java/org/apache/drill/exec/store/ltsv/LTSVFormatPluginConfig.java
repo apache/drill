@@ -22,6 +22,7 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonTypeName;
 
+import org.apache.commons.lang3.StringUtils;
 import org.apache.drill.common.PlanStringBuilder;
 import org.apache.drill.common.logical.FormatPluginConfig;
 import org.apache.drill.shaded.guava.com.google.common.collect.ImmutableList;
@@ -34,32 +35,33 @@ public class LTSVFormatPluginConfig implements FormatPluginConfig {
   private static final List<String> DEFAULT_EXTS = ImmutableList.of("ltsv");
 
   private final List<String> extensions;
-  private final boolean lenient;
-  private final boolean strict;
+  private final String parseMode;
   private final String escapeCharacter;
   private final String kvDelimiter;
+  private final String entryDelimiter;
+  private final String lineEnding;
+  private final String quoteChar;
 
   @JsonCreator
   public LTSVFormatPluginConfig(@JsonProperty("extensions") List<String> extensions,
-                                @JsonProperty("lenient") boolean lenient,
-                                @JsonProperty("strict") boolean strict,
+                                @JsonProperty("parseMode") String parseMode,
                                 @JsonProperty("escapeCharacter") String escapeCharacter,
-                                @JsonProperty("kvDelimiter") String kvDelimiter) {
+                                @JsonProperty("kvDelimiter") String kvDelimiter,
+                                @JsonProperty("entryDelimiter") String entryDelimiter,
+                                @JsonProperty("lineEnding") String lineEnding,
+                                @JsonProperty("quoteChar") String quoteChar) {
     this.extensions = extensions == null ? DEFAULT_EXTS : ImmutableList.copyOf(extensions);
-    this.lenient = lenient;
-    this.strict = strict;
     this.escapeCharacter = escapeCharacter;
     this.kvDelimiter = kvDelimiter;
+    this.parseMode = StringUtils.isEmpty(parseMode) ? "lenient" : parseMode;
+    this.entryDelimiter = entryDelimiter;
+    this.lineEnding = lineEnding;
+    this.quoteChar = quoteChar;
   }
 
-  @JsonProperty("lenient")
-  public boolean getLenient() {
-    return lenient;
-  }
-
-  @JsonProperty("strict")
-  public boolean isStrict() {
-    return strict;
+  @JsonProperty("parseMode")
+  public String getParseMode() {
+    return parseMode;
   }
 
   @JsonProperty("escapeCharacter")
@@ -72,6 +74,21 @@ public class LTSVFormatPluginConfig implements FormatPluginConfig {
     return kvDelimiter;
   }
 
+  @JsonProperty("entryDelimiter")
+  public String getEntryDelimiter() {
+    return entryDelimiter;
+  }
+
+  @JsonProperty("lineEnding")
+  public String getLineEnding() {
+    return lineEnding;
+  }
+
+  @JsonProperty("quoteChar")
+  public String getQuoteChar() {
+    return quoteChar;
+  }
+
   @JsonInclude(JsonInclude.Include.NON_DEFAULT)
   public List<String> getExtensions() {
     return extensions;
@@ -79,7 +96,7 @@ public class LTSVFormatPluginConfig implements FormatPluginConfig {
 
   @Override
   public int hashCode() {
-    return Objects.hash(extensions, lenient, strict, escapeCharacter, kvDelimiter);
+    return Objects.hash(extensions,parseMode, escapeCharacter, kvDelimiter, entryDelimiter, lineEnding, quoteChar);
   }
 
   @Override
@@ -91,9 +108,11 @@ public class LTSVFormatPluginConfig implements FormatPluginConfig {
     }
     LTSVFormatPluginConfig that = (LTSVFormatPluginConfig) obj;
     return Objects.equals(extensions, that.extensions) &&
-        Objects.equals(lenient, that.lenient) &&
-        Objects.equals(strict, that.strict) &&
+        Objects.equals(parseMode, that.parseMode) &&
         Objects.equals(escapeCharacter, that.escapeCharacter) &&
+        Objects.equals(entryDelimiter, that.entryDelimiter) &&
+        Objects.equals(lineEnding, that.lineEnding) &&
+        Objects.equals(quoteChar, that.quoteChar) &&
         Objects.equals(kvDelimiter, that.kvDelimiter);
   }
 
@@ -101,10 +120,12 @@ public class LTSVFormatPluginConfig implements FormatPluginConfig {
   public String toString() {
     return new PlanStringBuilder(this)
         .field("extensions", extensions)
-        .field("lenient", lenient)
-        .field("strict", strict)
+        .field("parseMode", parseMode)
         .field("escapeCharacter", escapeCharacter)
         .field("kvDelimiter", kvDelimiter)
+        .field("lineEnding", lineEnding)
+        .field("quoteChar", quoteChar)
+        .field("entryDelimiter", entryDelimiter)
         .toString();
   }
 }

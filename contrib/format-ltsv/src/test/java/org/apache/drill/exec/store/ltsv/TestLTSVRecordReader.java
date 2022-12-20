@@ -123,7 +123,7 @@ public class TestLTSVRecordReader extends ClusterTest {
   @Test
   public void testReadException() throws Exception {
     try {
-      run("SELECT * FROM cp.`invalid.ltsv`");
+      run("SELECT * FROM table(cp.`invalid.ltsv` (type => 'ltsv', parseMode => 'strict'))");
       fail();
     } catch (UserException e) {
       assertTrue(e.getMessage().contains("DATA_READ ERROR: Empty key detected at line [0] position [49]"));

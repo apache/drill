@@ -101,12 +101,10 @@ public class LTSVBatchReader implements ManagedReader {
     builder.trimValues();
     builder.skipNullValues();
 
-    if (config.getLenient()) {
-      builder.lenient();
-    }
-
-    if (config.isStrict()) {
+    if (config.getParseMode().contentEquals("strict")) {
       builder.strict();
+    } else {
+      builder.lenient();
     }
 
     if (StringUtils.isNotEmpty(config.getEscapeCharacter())) {
@@ -115,6 +113,18 @@ public class LTSVBatchReader implements ManagedReader {
 
     if (StringUtils.isNotEmpty(config.getKvDelimiter())) {
       builder.withKvDelimiter(config.getKvDelimiter().charAt(0));
+    }
+
+    if (StringUtils.isNotEmpty(config.getEntryDelimiter())) {
+      builder.withEntryDelimiter(config.getEntryDelimiter().charAt(0));
+    }
+
+    if (StringUtils.isNotEmpty(config.getLineEnding())) {
+      builder.withLineEnding(config.getLineEnding().charAt(0));
+    }
+
+    if (StringUtils.isNotEmpty(config.getQuoteChar())) {
+      builder.withQuoteChar(config.getQuoteChar().charAt(0));
     }
 
     return builder.build();

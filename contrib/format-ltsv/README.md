@@ -4,6 +4,18 @@ Drill LTSV storage plugin allows you to perform interactive analysis using SQL a
 
 For more information about LTSV, please see [LTSV (Labeled Tab-separated Values)](http://ltsv.org/).
 
+## Configuration
+There are several optional configuration parameters which you can use to modify how ltsv files are read.  In general, it is not necessary to change these from the defaults.  They are:
+
+* `parseMode`: Sets the error tolerance of the LTSV parser.  Possible values are `lenient` and `strict`.  Defaults to `lenient`.
+* `escapeCharacter`: Character to be used to escape control character.
+* `kvDelimiter`: Character to delimit key/value pairs.
+* `entryDelimiter`: Character to delimit entries.
+* `lineEnding`: Character to denote line endings.
+* `quoteChar`: Character to denote quoted strings.
+
+With the exception of `parseMode`, all fields accept a single character string.
+
 ## Example of Querying an LTSV File
 
 ### About the Data
