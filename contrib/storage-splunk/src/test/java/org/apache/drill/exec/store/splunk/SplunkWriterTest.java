@@ -114,7 +114,7 @@ public class SplunkWriterTest extends SplunkBaseTest {
 
     // Query the table to see if the insertion was successful
     String testQuery = "SELECT int_field, bigint_field, float4_field, float8_field, varchar_field," +
-      "date_field, time_field, timestamp_field, boolean_field FROM  splunk.t2";
+      "date_field, time_field, timestamp_field, boolean_field FROM splunk.t2";
     DirectRowSet results = queryBuilder().sql(testQuery).rowSet();
 
     TupleMetadata expectedSchema = new SchemaBuilder()
@@ -145,14 +145,14 @@ public class SplunkWriterTest extends SplunkBaseTest {
   public void testInsert() throws Exception {
 
     // Create the table
-    String sql = "CREATE TABLE `splunk`.`t1` AS SELECT * FROM cp.`test_data.csvh`";
+    String sql = "CREATE TABLE `splunk`.`t3` AS SELECT * FROM cp.`test_data.csvh`";
     QuerySummary summary = client.queryBuilder().sql(sql).run();
     assertTrue(summary.succeeded());
 
     Thread.sleep(30000);
 
     // Now insert more records
-    sql = "INSERT INTO `splunk`.`t1`  SELECT * FROM cp.`test_data2.csvh`";
+    sql = "INSERT INTO `splunk`.`t3`  SELECT * FROM cp.`test_data2.csvh`";
     summary = client.queryBuilder().sql(sql).run();
     assertTrue(summary.succeeded());
 
@@ -161,30 +161,30 @@ public class SplunkWriterTest extends SplunkBaseTest {
     Thread.sleep(30000);
 
     // Next verify that the results arrived.
-    sql = "SELECT COUNT(*) as row_count FROM splunk.`t1`";
+    sql = "SELECT COUNT(*) as row_count FROM splunk.`t3`";
     long resultCount = client.queryBuilder().sql(sql).singletonLong();
     assertEquals(15L, resultCount);
 
     // Now drop the index
-    sql = "DROP TABLE splunk.`t1`";
+    sql = "DROP TABLE splunk.`t3`";
     summary = client.queryBuilder().sql(sql).run();
     assertTrue(summary.succeeded());
   }
 
   @Test
   public void testComplexFields() throws Exception {
-    String sql = "CREATE TABLE `splunk`.`t1` AS SELECT record FROM cp.`schema_test.json`";
+    String sql = "CREATE TABLE `splunk`.`t4` AS SELECT record FROM cp.`schema_test.json`";
     QuerySummary summary = client.queryBuilder().sql(sql).run();
     assertTrue(summary.succeeded());
 
     Thread.sleep(30000);
 
-    sql = "SELECT COUNT(*) FROM splunk.t1";
+    sql = "SELECT COUNT(*) FROM splunk.t4";
     long resultCount = client.queryBuilder().sql(sql).singletonLong();
     assertEquals(1L, resultCount);
 
     // Now drop the index
-    sql = "DROP TABLE splunk.`t1`";
+    sql = "DROP TABLE splunk.`t4`";
     summary = client.queryBuilder().sql(sql).run();
     assertTrue(summary.succeeded());
   }

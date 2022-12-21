@@ -19,21 +19,25 @@
 package org.apache.drill.exec.store.splunk;
 
 
-import com.splunk.Args;
 import com.splunk.Index;
 import com.splunk.IndexCollection;
+import com.splunk.ReceiverBehavior;
 import com.splunk.Service;
 import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.exec.proto.UserBitShared.UserCredentials;
 import org.apache.drill.exec.record.VectorAccessible;
 import org.apache.drill.exec.store.AbstractRecordWriter;
 import org.apache.drill.exec.store.EventBasedRecordWriter.FieldConverter;
+import org.apache.drill.exec.util.Text;
 import org.apache.drill.exec.vector.complex.reader.FieldReader;
 import org.json.simple.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
+import java.io.OutputStream;
+import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
@@ -44,10 +48,11 @@ public class SplunkBatchWriter extends AbstractRecordWriter {
   private final UserCredentials userCredentials;
   private final List<String> tableIdentifier;
   private final SplunkWriter config;
-  private final Args eventArgs;
   protected final Service splunkService;
-  private final JSONObject splunkEvent;
+  private JSONObject splunkEvent;
+  private final List<JSONObject> eventBuffer;
   protected Index destinationIndex;
+  private int recordCount;
 
 
   public SplunkBatchWriter(UserCredentials userCredentials, List<String> tableIdentifier, SplunkWriter config) {
@@ -55,16 +60,13 @@ public class SplunkBatchWriter extends AbstractRecordWriter {
     this.tableIdentifier = tableIdentifier;
     this.userCredentials = userCredentials;
     this.splunkEvent = new JSONObject();
+    eventBuffer = new ArrayList<>();
     SplunkConnection connection = new SplunkConnection(config.getPluginConfig(), userCredentials.getUserName());
     this.splunkService = connection.connect();
-
-    // Populate event arguments
-    this.eventArgs = new Args();
-    eventArgs.put("sourcetype", DEFAULT_SOURCETYPE);
   }
 
   @Override
-  public void init(Map<String, String> writerOptions) throws IOException {
+  public void init(Map<String, String> writerOptions) {
     // No op
   }
 
@@ -98,27 +100,69 @@ public class SplunkBatchWriter extends AbstractRecordWriter {
   @Override
   public void startRecord() {
     logger.debug("Starting record");
-    // Ensure that the new record is empty. This is not strictly necessary, but it is a belt and suspenders approach.
-    splunkEvent.clear();
+    // Ensure that the new record is empty.
+    splunkEvent = new JSONObject();
   }
 
   @Override
-  public void endRecord() throws IOException {
+  public void endRecord() {
     logger.debug("Ending record");
+    recordCount++;
+
+    // Put event in buffer
+    eventBuffer.add(splunkEvent);
+
     // Write the event to the Splunk index
-    destinationIndex.submit(eventArgs, splunkEvent.toJSONString());
-    // Clear out the splunk event.
-    splunkEvent.clear();
+    if (recordCount >= config.getPluginConfig().getWriterBatchSize()) {
+      try {
+        writeEvents();
+      } catch (IOException e) {
+        throw  UserException.dataWriteError(e)
+            .message("Error writing data to Splunk: " + e.getMessage())
+            .build(logger);
+      }
+
+      // Reset record count
+      recordCount = 0;
+    }
   }
 
+
+  /*
+  args – Optional arguments for this stream. Valid parameters are: "host", "host_regex", "source", and "sourcetype".
+   */
   @Override
   public void abort() {
+    logger.debug("Aborting writing records to Splunk.");
     // No op
   }
 
   @Override
   public void cleanup() {
-    // No op
+    try {
+      writeEvents();
+    } catch (IOException e) {
+      throw  UserException.dataWriteError(e)
+          .message("Error writing data to Splunk: " + e.getMessage())
+          .build(logger);
+    }
+  }
+
+  private void writeEvents() throws IOException {
+    // Open the socket and stream, set up a timestamp
+    destinationIndex.attachWith(new ReceiverBehavior() {
+      public void run(OutputStream stream) throws IOException {
+        String eventText;
+
+        for (JSONObject tempEvent : eventBuffer) {
+          eventText = tempEvent.toJSONString() + "'\r\n";
+          stream.write(eventText.getBytes(StandardCharsets.UTF_8));
+        }
+      }
+    });
+
+    // Clear buffer
+    eventBuffer.clear();
   }
 
 
@@ -280,8 +324,11 @@ public class SplunkBatchWriter extends AbstractRecordWriter {
 
     @Override
     public void writeField() {
-      byte[] bytes = reader.readText().copyBytes();
-      splunkEvent.put(fieldName, new String(bytes));
+      Text text = reader.readText();
+      if (text != null && text.getLength() > 0) {
+        byte[] bytes =text.copyBytes();
+        splunkEvent.put(fieldName, new String(bytes));
+      }
     }
   }
 

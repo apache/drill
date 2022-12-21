@@ -98,7 +98,7 @@ public class SplunkTestSuite extends ClusterTest {
           "1", "now",
           null,
           4,
-          StoragePluginConfig.AuthMode.SHARED_USER.name(), true
+          StoragePluginConfig.AuthMode.SHARED_USER.name(), true, null
         );
         SPLUNK_STORAGE_PLUGIN_CONFIG.setEnabled(true);
         pluginRegistry.put(SplunkPluginConfig.NAME, SPLUNK_STORAGE_PLUGIN_CONFIG);
@@ -120,7 +120,7 @@ public class SplunkTestSuite extends ClusterTest {
           "1", "now",
           credentialsProvider,
           4,
-          AuthMode.USER_TRANSLATION.name(), true
+          AuthMode.USER_TRANSLATION.name(), true, null
         );
         SPLUNK_STORAGE_PLUGIN_CONFIG_WITH_USER_TRANSLATION.setEnabled(true);
         pluginRegistry.put("ut_splunk", SPLUNK_STORAGE_PLUGIN_CONFIG_WITH_USER_TRANSLATION);
