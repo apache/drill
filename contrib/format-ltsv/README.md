@@ -4,6 +4,18 @@ Drill LTSV storage plugin allows you to perform interactive analysis using SQL a
 
 For more information about LTSV, please see [LTSV (Labeled Tab-separated Values)](http://ltsv.org/).
 
+## Configuration
+There are several optional configuration parameters which you can use to modify how ltsv files are read.  In general, it is not necessary to change these from the defaults.  They are:
+
+* `parseMode`: Sets the error tolerance of the LTSV parser.  Possible values are `lenient` and `strict`.  Defaults to `lenient`.
+* `escapeCharacter`: Character to be used to escape control character.
+* `kvDelimiter`: Character to delimit key/value pairs.
+* `entryDelimiter`: Character to delimit entries.
+* `lineEnding`: Character to denote line endings.
+* `quoteChar`: Character to denote quoted strings.
+
+With the exception of `parseMode`, all fields accept a single character string.
+
 ## Example of Querying an LTSV File
 
 ### About the Data
@@ -36,3 +48,19 @@ Issue a SELECT statement to get the second row in the file.
 +-----------------------------+------------------+---------------+-----------------------+---------+-------+----------+-----------------+----------+----------+------------------+
 1 row selected (6.074 seconds)
 ```
+
+### Providing a Schema
+The LTSV reader does supports provided schema.  You can read about Drill's [provided schema functionality here](https://drill.apache.org/docs/plugin-configuration-basics/#specifying-the-schema-as-table-function-parameter)
+
+An example query would be:
+
+```sql
+SELECT * FROM table(cp.`simple.ltsv` (type=> 'ltsv', schema => 
+    'inline=(`referer` VARCHAR, 
+    `vhost`VARCHAR, `size` INT, 
+    `forwardedfor` VARCHAR, 
+    `reqtime` DOUBLE, 
+    `apptime` DOUBLE, 
+    `status` INT)'))
+```
+Only scalar types are supported in the LTSV reader.

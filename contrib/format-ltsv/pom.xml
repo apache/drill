@@ -36,6 +36,11 @@
       <artifactId>drill-java-exec</artifactId>
       <version>${project.version}</version>
     </dependency>
+    <dependency>
+      <groupId>com.github.lonely-lockley</groupId>
+      <artifactId>ltsv-parser</artifactId>
+      <version>1.1.0</version>
+    </dependency>
     <!-- Test dependencies -->
     <dependency>
       <groupId>org.apache.drill.exec</groupId>
