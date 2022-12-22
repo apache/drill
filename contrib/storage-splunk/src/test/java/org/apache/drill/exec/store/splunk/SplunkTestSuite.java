@@ -52,7 +52,8 @@ import static org.apache.drill.exec.rpc.user.security.testing.UserAuthenticatorT
   SplunkIndexesTest.class,
   SplunkPluginTest.class,
   SplunkTestSplunkUtils.class,
-  TestSplunkUserTranslation.class
+  TestSplunkUserTranslation.class,
+  SplunkWriterTest.class
 })
 
 @Category({SlowTest.class})
@@ -93,11 +94,11 @@ public class SplunkTestSuite extends ClusterTest {
         SPLUNK_STORAGE_PLUGIN_CONFIG = new SplunkPluginConfig(
           SPLUNK_LOGIN, SPLUNK_PASS,
           "http", hostname, port,
-          null, null, null, null, null, // app, owner, token, cookie, validateCertificates
+          null, null, null, null, false, // app, owner, token, cookie, validateCertificates
           "1", "now",
           null,
           4,
-          StoragePluginConfig.AuthMode.SHARED_USER.name()
+          StoragePluginConfig.AuthMode.SHARED_USER.name(), true, null
         );
         SPLUNK_STORAGE_PLUGIN_CONFIG.setEnabled(true);
         pluginRegistry.put(SplunkPluginConfig.NAME, SPLUNK_STORAGE_PLUGIN_CONFIG);
@@ -115,11 +116,11 @@ public class SplunkTestSuite extends ClusterTest {
         SPLUNK_STORAGE_PLUGIN_CONFIG_WITH_USER_TRANSLATION = new SplunkPluginConfig(
           null, null, // username, password
           "http", hostname, port,
-          null, null, null, null, null, // app, owner, token, cookie, validateCertificates
+          null, null, null, null, false, // app, owner, token, cookie, validateCertificates
           "1", "now",
           credentialsProvider,
           4,
-          AuthMode.USER_TRANSLATION.name()
+          AuthMode.USER_TRANSLATION.name(), true, null
         );
         SPLUNK_STORAGE_PLUGIN_CONFIG_WITH_USER_TRANSLATION.setEnabled(true);
         pluginRegistry.put("ut_splunk", SPLUNK_STORAGE_PLUGIN_CONFIG_WITH_USER_TRANSLATION);

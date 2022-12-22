@@ -158,6 +158,11 @@ FROM splunk.spl
 WHERE spl='<your SPL query'
 ```
 
+# Writing Data to Splunk
+As of Drill version 2.0 you can write and append data to Splunk.  All fields are sent as strings, to include complex objects.
+
+You can create a new index with a `CREATE TABLE splunk.new_index AS ...` query.  Likewise, you can append to an existing index with an `INSERT INTO splunk.index SELECT...` query.
+
 # Testing the Plugin
 This plugin includes a series of unit tests in the `src/test/` directory, however there are a few tests for which you will need an active Splunk installation to run them.
 Simply follow the instructions below to test Splunk with Drill.

@@ -66,6 +66,16 @@ public class SplunkStoragePlugin extends AbstractStoragePlugin {
   }
 
   @Override
+  public boolean supportsWrite() {
+    return config.isWritable();
+  }
+
+  @Override
+  public boolean supportsInsert() {
+    return config.isWritable();
+  }
+
+  @Override
   public void registerSchemas(SchemaConfig schemaConfig, SchemaPlus parent) {
     // Check to see if user translation is enabled.  If so, and creds are
     // not present, then do not register any schemata.  This prevents

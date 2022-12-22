@@ -18,24 +18,21 @@
 
 package org.apache.drill.exec.store.splunk;
 
-import org.apache.calcite.schema.SchemaPlus;
-import org.apache.drill.exec.store.AbstractSchemaFactory;
-import org.apache.drill.exec.store.SchemaConfig;
+import org.apache.drill.exec.proto.UserBitShared.UserCredentials;
+import org.apache.drill.exec.record.VectorAccessible;
 
-public class SplunkSchemaFactory extends AbstractSchemaFactory {
+import java.util.List;
 
-  private final SplunkStoragePlugin plugin;
-  private String queryUserName;
+public class SplunkBatchInsertWriter extends SplunkBatchWriter {
 
-  public SplunkSchemaFactory(SplunkStoragePlugin plugin) {
-    super(plugin.getName());
-    this.plugin = plugin;
+  public SplunkBatchInsertWriter(UserCredentials userCredentials, List<String> tableIdentifier, SplunkWriter config) {
+    super(userCredentials, tableIdentifier, config);
+    String indexName = tableIdentifier.get(0);
+    destinationIndex = splunkService.getIndexes().get(indexName);
   }
 
   @Override
-  public void registerSchemas(SchemaConfig schemaConfig, SchemaPlus parent) {
-    this.queryUserName = schemaConfig.getUserName();
-    SplunkSchema schema = new SplunkSchema(plugin, queryUserName);
-    SchemaPlus plusOfThis = parent.add(schema.getName(), schema);
+  public void updateSchema(VectorAccessible batch) {
+    // No op
   }
 }

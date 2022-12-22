@@ -30,16 +30,15 @@ import org.apache.drill.exec.store.security.UsernamePasswordCredentials;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.concurrent.TimeUnit;
-
 import javax.net.ssl.SSLContext;
 import javax.net.ssl.SSLSocketFactory;
 import javax.net.ssl.TrustManager;
 import javax.net.ssl.X509TrustManager;
-
 import java.security.KeyManagementException;
 import java.security.NoSuchAlgorithmException;
 import java.security.cert.X509Certificate;
+import java.util.concurrent.TimeUnit;
+
 import java.util.Optional;
 
 /**
@@ -80,7 +79,7 @@ public class SplunkConnection {
     this.owner = config.getOwner();
     this.token = config.getToken();
     this.cookie = config.getCookie();
-    this.validateCertificates = Optional.ofNullable(config.getValidateCertificates()).orElse(true);
+    this.validateCertificates = config.getValidateCertificates();
     this.connectionAttempts = config.getReconnectRetries();
     service = connect();
   }
@@ -107,9 +106,8 @@ public class SplunkConnection {
 
   /**
    * Connects to Splunk instance
-   * @return an active Splunk connection.
+   * @return an active Splunk {@link Service} connection.
    */
-
   public Service connect() {
     HttpService.setSslSecurityProtocol(SSLSecurityProtocol.TLSv1_2);
     HttpService.setValidateCertificates(validateCertificates);

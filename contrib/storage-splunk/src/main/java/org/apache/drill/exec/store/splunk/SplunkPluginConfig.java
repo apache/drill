@@ -37,6 +37,7 @@ public class SplunkPluginConfig extends StoragePluginConfig {
 
   public static final String NAME = "splunk";
   public static final int DISABLED_RECONNECT_RETRIES = 1;
+  public static final int DEFAULT_WRITER_BATCH_SIZE = 1000;
 
   private final String scheme;
   private final String hostname;
@@ -47,8 +48,10 @@ public class SplunkPluginConfig extends StoragePluginConfig {
   private final String owner;
   private final String token;
   private final String cookie;
-  private final Boolean validateCertificates;
+  private final boolean validateCertificates;
   private final Integer reconnectRetries;
+  private final boolean writable;
+  private final Integer writerBatchSize;
 
   @JsonCreator
   public SplunkPluginConfig(@JsonProperty("username") String username,
@@ -60,12 +63,14 @@ public class SplunkPluginConfig extends StoragePluginConfig {
                             @JsonProperty("owner") String owner,
                             @JsonProperty("token") String token,
                             @JsonProperty("cookie") String cookie,
-                            @JsonProperty("validateCertificates") Boolean validateCertificates,
+                            @JsonProperty("validateCertificates") boolean validateCertificates,
                             @JsonProperty("earliestTime") String earliestTime,
                             @JsonProperty("latestTime") String latestTime,
                             @JsonProperty("credentialsProvider") CredentialsProvider credentialsProvider,
                             @JsonProperty("reconnectRetries") Integer reconnectRetries,
-                            @JsonProperty("authMode") String authMode) {
+                            @JsonProperty("authMode") String authMode,
+                            @JsonProperty("writable") boolean writable,
+                            @JsonProperty("writableBatchSize") Integer writerBatchSize) {
     super(CredentialProviderUtils.getCredentialsProvider(username, password, credentialsProvider),
         credentialsProvider == null, AuthMode.parseOrDefault(authMode, AuthMode.SHARED_USER));
     this.scheme = scheme;
@@ -75,10 +80,12 @@ public class SplunkPluginConfig extends StoragePluginConfig {
     this.owner = owner;
     this.token = token;
     this.cookie = cookie;
+    this.writable = writable;
     this.validateCertificates = validateCertificates;
     this.earliestTime = earliestTime;
     this.latestTime = latestTime == null ? "now" : latestTime;
     this.reconnectRetries = reconnectRetries;
+    this.writerBatchSize = writerBatchSize;
   }
 
   private SplunkPluginConfig(SplunkPluginConfig that, CredentialsProvider credentialsProvider) {
@@ -89,11 +96,13 @@ public class SplunkPluginConfig extends StoragePluginConfig {
     this.app = that.app;
     this.owner = that.owner;
     this.token = that.token;
+    this.writable = that.writable;
     this.cookie = that.cookie;
     this.validateCertificates = that.validateCertificates;
     this.earliestTime = that.earliestTime;
     this.latestTime = that.latestTime;
     this.reconnectRetries = that.reconnectRetries;
+    this.writerBatchSize = that.writerBatchSize;
   }
 
   /**
@@ -154,6 +163,10 @@ public class SplunkPluginConfig extends StoragePluginConfig {
     return port;
   }
 
+  public Boolean isWritable() {
+    return writable;
+  }
+
   @JsonProperty("app")
   public String getApp() {
     return app;
@@ -175,7 +188,7 @@ public class SplunkPluginConfig extends StoragePluginConfig {
   }
 
   @JsonProperty("validateCertificates")
-  public Boolean getValidateCertificates() {
+  public boolean getValidateCertificates() {
     return validateCertificates;
   }
 
@@ -192,6 +205,11 @@ public class SplunkPluginConfig extends StoragePluginConfig {
   @JsonProperty("reconnectRetries")
   public int getReconnectRetries() {
     return reconnectRetries != null ? reconnectRetries : DISABLED_RECONNECT_RETRIES;
+  }
+
+  @JsonProperty("writerBatchSize")
+  public int getWriterBatchSize() {
+    return writerBatchSize != null ? writerBatchSize : DEFAULT_WRITER_BATCH_SIZE;
   }
 
   private static CredentialsProvider getCredentialsProvider(CredentialsProvider credentialsProvider) {
@@ -211,6 +229,7 @@ public class SplunkPluginConfig extends StoragePluginConfig {
       Objects.equals(hostname, thatConfig.hostname) &&
       Objects.equals(port, thatConfig.port) &&
       Objects.equals(app, thatConfig.app) &&
+      Objects.equals(writable, thatConfig.writable) &&
       Objects.equals(owner, thatConfig.owner) &&
       Objects.equals(token, thatConfig.token) &&
       Objects.equals(cookie, thatConfig.cookie) &&
@@ -231,6 +250,7 @@ public class SplunkPluginConfig extends StoragePluginConfig {
       owner,
       token,
       cookie,
+      writable,
       validateCertificates,
       earliestTime,
       latestTime,
@@ -245,6 +265,7 @@ public class SplunkPluginConfig extends StoragePluginConfig {
       .field("scheme", scheme)
       .field("hostname", hostname)
       .field("port", port)
+      .field("writable", writable)
       .field("app", app)
       .field("owner", owner)
       .field("token", token)
