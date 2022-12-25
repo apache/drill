@@ -424,5 +424,15 @@ The functions are:
 * `entropy(<string>)`: This function calculates the Shannon Entropy of a given string of text.
 * `entropyPerByte(<string>)`: This function calculates the Shannon Entropy of a given string of text, normed for the string length.
 
+# Statistical Functions
+Drill has several functions for correlations and understanding the distribution of your data.
+
+The functions are:
+* `width_bucket`
+* `kendall_correlation`
+* `pearson_correlation`
+
+
+
 [1]: https://github.com/target/huntlib
 
