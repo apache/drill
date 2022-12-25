@@ -20,8 +20,9 @@ package org.apache.drill.exec.vector.accessor.writer;
 import java.lang.reflect.Array;
 
 import org.apache.drill.exec.record.metadata.ColumnMetadata;
-import org.apache.drill.exec.vector.accessor.ColumnWriterIndex;
 import org.apache.drill.exec.vector.accessor.ColumnAccessors.UInt1ColumnWriter;
+import org.apache.drill.exec.vector.accessor.ColumnWriterIndex;
+import org.apache.drill.exec.vector.accessor.writer.dummy.DummyScalarWriter;
 import org.apache.drill.exec.vector.complex.ListVector;
 
 import com.google.common.annotations.VisibleForTesting;
@@ -32,16 +33,19 @@ import com.google.common.annotations.VisibleForTesting;
  * their indexes since the contents of lists can change dynamically,
  * and auto-increment is meaningful only for scalar arrays.
  */
-
 public class ListWriterImpl extends ObjectArrayWriter {
 
   private final ListVector vector;
-  private final UInt1ColumnWriter isSetWriter;
+  private final AbstractScalarWriterImpl isSetWriter;
 
   public ListWriterImpl(ColumnMetadata schema, ListVector vector, AbstractObjectWriter memberWriter) {
-    super(schema, vector.getOffsetVector(), memberWriter);
+    super(schema, vector == null ? null : vector.getOffsetVector(), memberWriter);
     this.vector = vector;
-    isSetWriter = new UInt1ColumnWriter(vector.getBitsVector());
+    if (vector == null) {
+      isSetWriter = new DummyScalarWriter(null);
+    } else {
+      isSetWriter = new UInt1ColumnWriter(vector.getBitsVector());
+    }
     elementIndex = new ArrayElementWriterIndex();
   }
 

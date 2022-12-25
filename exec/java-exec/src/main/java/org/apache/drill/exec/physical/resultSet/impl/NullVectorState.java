@@ -24,7 +24,6 @@ import org.apache.drill.exec.vector.accessor.impl.HierarchicalFormatter;
  * Do-nothing vector state for a map column which has no actual vector
  * associated with it.
  */
-
 public class NullVectorState implements VectorState {
 
   /**
@@ -32,7 +31,6 @@ public class NullVectorState implements VectorState {
    * allocate or roll-over, but where we do want to at least track
    * the vector itself. (Used for map and union pseudo-vectors.)
    */
-
   public static class UnmanagedVectorState extends NullVectorState {
     ValueVector vector;
 

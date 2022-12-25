@@ -208,4 +208,9 @@ public class SimpleListShim implements UnionShim {
     colWriter.dump(format);
     format.endObject();
   }
+
+  @Override
+  public boolean isProjected() {
+    return true;
+  }
 }

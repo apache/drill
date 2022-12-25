@@ -29,7 +29,6 @@ import org.apache.drill.exec.vector.accessor.impl.HierarchicalFormatter;
 import org.apache.drill.exec.vector.accessor.writer.AbstractFixedWidthWriter.BaseFixedWidthWriter;
 import org.apache.drill.exec.vector.accessor.writer.UnionMemberShim.DummyUnionMemberShim;
 import org.apache.drill.exec.vector.accessor.writer.UnionMemberShim.UnionMemberShimImpl;
-import org.apache.drill.exec.vector.accessor.writer.UnionWriterImpl.UnionShim;
 import org.apache.drill.exec.vector.accessor.writer.dummy.DummyScalarWriter;
 import org.apache.drill.exec.vector.complex.UnionVector;
 
