@@ -13,9 +13,9 @@ import org.apache.drill.exec.physical.resultSet.RowSetLoader;
 import org.apache.drill.exec.physical.resultSet.impl.ResultSetLoaderImpl.ResultSetOptions;
 import org.apache.drill.exec.physical.resultSet.project.Projections;
 import org.apache.drill.exec.physical.rowSet.RowSet;
-import org.apache.drill.exec.physical.rowSet.RowSetTestUtils;
 import org.apache.drill.exec.physical.rowSet.RowSet.SingleRowSet;
 import org.apache.drill.exec.physical.rowSet.RowSetFormatter;
+import org.apache.drill.exec.physical.rowSet.RowSetTestUtils;
 import org.apache.drill.exec.record.metadata.SchemaBuilder;
 import org.apache.drill.exec.record.metadata.TupleMetadata;
 import org.apache.drill.exec.vector.accessor.ArrayWriter;
@@ -312,25 +312,128 @@ public class TestResultSetLoaderUnprojected  extends SubOperatorTest {
         .addRow("2")
         .build();
     RowSet actual = fixture.wrap(rsLoader.harvest());
-    RowSetFormatter.print(actual);
-    RowSetFormatter.print(expected);
     RowSetUtilities.verify(expected, actual);
     rsLoader.close();
   }
 
+  @Test
   public void testList()
   {
+    List<SchemaPath> selection = RowSetTestUtils.projectList("a");
+    TupleMetadata schema = new SchemaBuilder()
+        .addList("a")
+          .addType(MinorType.INT)
+          .resumeSchema()
+        .addList("b")
+          .addType(MinorType.INT)
+          .resumeSchema()
+        .buildSchema();
+    ResultSetOptions options = new ResultSetOptionBuilder()
+        .projection(Projections.parse(selection))
+        .readerSchema(schema)
+        .build();
+    ResultSetLoader rsLoader = new ResultSetLoaderImpl(fixture.allocator(), options);
 
+    RowSetLoader rootWriter = rsLoader.writer();
+    TupleMetadata actualSchema = rootWriter.tupleSchema();
+    assertEquals(2, actualSchema.size());
+    assertEquals("a", actualSchema.column(0).getName());
+    assertEquals("b", actualSchema.column(1).getName());
+    assertTrue(rootWriter.column("a").isProjected());
+    assertFalse(rootWriter.column("b").isProjected());
+    rsLoader.startBatch();
+    ArrayWriter aw = rootWriter.array(0);
+    ScalarWriter swa = aw.scalar();
+    ArrayWriter bw = rootWriter.array(1);
+    ScalarWriter swb = bw.scalar();
+    for (int i = 1; i < 3; i++) {
+      rootWriter.start();
+      for (int j = 0; j < 3; j++) {
+        swa.setInt(i * 10 + j);
+        swb.setInt(i * 100 + j);
+        aw.save();
+        bw.save();
+      }
+      rootWriter.save();
+    }
+    TupleMetadata expectedSchema = new SchemaBuilder()
+        .addList("a")
+          .addType(MinorType.INT)
+          .resumeSchema()
+        .buildSchema();
+    SingleRowSet expected = fixture.rowSetBuilder(expectedSchema)
+        .addSingleCol(RowSetUtilities.listValue(10, 11, 12))
+        .addSingleCol(RowSetUtilities.listValue(20, 21, 22))
+        .build();
+    RowSet actual = fixture.wrap(rsLoader.harvest());
+    RowSetUtilities.verify(expected, actual);
+    rsLoader.close();
   }
 
+  @Test
   public void test2DList()
   {
+    List<SchemaPath> selection = RowSetTestUtils.projectList("a");
+    TupleMetadata schema = new SchemaBuilder()
+        .addRepeatedList("a")
+          .addArray(MinorType.INT)
+          .resumeSchema()
+        .addRepeatedList("b")
+          .addArray(MinorType.INT)
+          .resumeSchema()
+        .buildSchema();
+    ResultSetOptions options = new ResultSetOptionBuilder()
+        .projection(Projections.parse(selection))
+        .readerSchema(schema)
+        .build();
+    ResultSetLoader rsLoader = new ResultSetLoaderImpl(fixture.allocator(), options);
 
+    RowSetLoader rootWriter = rsLoader.writer();
+    TupleMetadata actualSchema = rootWriter.tupleSchema();
+    assertEquals(2, actualSchema.size());
+    assertEquals("a", actualSchema.column(0).getName());
+    assertEquals("b", actualSchema.column(1).getName());
+    assertTrue(rootWriter.column("a").isProjected());
+    assertFalse(rootWriter.column("b").isProjected());
+    rsLoader.startBatch();
+    ArrayWriter aw = rootWriter.array(0);
+    ArrayWriter aw2 = aw.array();
+    ScalarWriter swa = aw2.scalar();
+    ArrayWriter bw = rootWriter.array(1);
+    ArrayWriter bw2 = bw.array();
+    ScalarWriter swb = bw2.scalar();
+    for (int i = 1; i < 3; i++) {
+      rootWriter.start();
+      for (int j = 0; j < 3; j++) {
+        for (int k = 0; k < 3; k++) {
+          swa.setInt(i * 10 + j * 3 + k);
+          swb.setInt(i * 100 + j * 30 + k);
+          aw2.save();
+          bw2.save();
+        }
+        aw.save();
+        bw.save();
+      }
+      rootWriter.save();
+    }
+
+    TupleMetadata expectedSchema = new SchemaBuilder()
+        .addRepeatedList("a")
+          .addArray(MinorType.INT)
+          .resumeSchema()
+        .buildSchema();
+    SingleRowSet expected = fixture.rowSetBuilder(expectedSchema)
+        .addSingleCol(RowSetUtilities.listValue(
+            RowSetUtilities.listValue(10, 11, 12),
+            RowSetUtilities.listValue(13, 14, 15),
+            RowSetUtilities.listValue(16, 17, 18)))
+        .addSingleCol(RowSetUtilities.listValue(
+            RowSetUtilities.listValue(20, 21, 22),
+            RowSetUtilities.listValue(23, 24, 25),
+            RowSetUtilities.listValue(26, 27, 28)))
+        .build();
+    RowSet actual = fixture.wrap(rsLoader.harvest());
+    RowSetUtilities.verify(expected, actual);
+    rsLoader.close();
   }
-
-  public void testDict()
-  {
-
-  }
-
 }

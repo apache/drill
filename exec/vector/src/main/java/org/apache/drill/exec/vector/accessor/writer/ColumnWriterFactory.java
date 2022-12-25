@@ -130,8 +130,7 @@ public class ColumnWriterFactory {
             return scalarWriter;
           case REPEATED:
             return new ArrayObjectWriter(
-                new DummyArrayWriter(schema,
-                  scalarWriter));
+                new DummyArrayWriter(schema, scalarWriter));
           default:
             throw new UnsupportedOperationException(schema.mode().toString());
       }

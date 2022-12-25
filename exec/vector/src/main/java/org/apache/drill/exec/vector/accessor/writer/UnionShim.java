@@ -48,6 +48,7 @@ public interface UnionShim extends WriterEvents {
   AbstractObjectWriter addMember(ColumnMetadata colSchema);
   AbstractObjectWriter addMember(MinorType type);
   void addMember(AbstractObjectWriter colWriter);
+  boolean isProjected();
 
   public abstract class AbstractUnionShim implements UnionShim {
 
