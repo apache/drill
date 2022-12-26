@@ -85,4 +85,26 @@ public class TestDistributionFunctions extends ClusterTest {
         .go();
 
   }
+
+  @Test
+  public void testRegrSlope() throws Exception {
+    String query = "SELECT regr_slope(spend,sales) AS slope FROM cp.`regr_test.csvh`";
+    testBuilder()
+        .sqlQuery(query)
+        .unOrdered()
+        .baselineColumns("slope")
+        .baselineValues(10.619633290847284)
+        .go();
+  }
+
+  @Test
+  public void testRegrIntercept() throws Exception {
+    String query = "SELECT regr_intercept(spend,sales) AS intercept FROM cp.`regr_test.csvh`";
+    testBuilder()
+        .sqlQuery(query)
+        .unOrdered()
+        .baselineColumns("intercept")
+        .baselineValues(1400.2322223740048)
+        .go();
+  }
 }

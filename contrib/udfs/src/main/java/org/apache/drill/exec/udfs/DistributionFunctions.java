@@ -229,4 +229,181 @@ public class DistributionFunctions {
       tau.value = result;
     }
   }
+
+  @FunctionTemplate(names = {"regr_slope", "regrSlope"},
+      scope = FunctionScope.POINT_AGGREGATE,
+      nulls = NullHandling.INTERNAL)
+  public static class RegrSlopeFunction implements DrillAggFunc {
+
+    @Param
+    Float8Holder xInput;
+
+    @Param
+    Float8Holder yInput;
+
+    @Workspace
+    Float8Holder sum_x;
+
+    @Workspace
+    Float8Holder sum_y;
+
+    @Workspace
+    Float8Holder avg_x;
+
+    @Workspace
+    Float8Holder avg_y;
+
+    @Workspace
+    Float8Holder diff_x;
+
+    @Workspace
+    Float8Holder diff_y;
+
+    @Workspace
+    Float8Holder ss_x;
+
+    @Workspace
+    Float8Holder ss_xy;
+
+    @Workspace
+    IntHolder recordCount;
+
+    @Output
+    Float8Holder slope;
+    @Override
+    public void setup() {
+      recordCount.value = 0;
+      sum_y.value = 0;
+      sum_x.value = 0;
+      avg_x.value = 0;
+      avg_y.value = 0;
+      diff_x.value = 0;
+      diff_y.value = 0;
+      ss_x.value = 0;
+      ss_xy.value = 0;
+    }
+
+    @Override
+    public void add() {
+      recordCount.value += 1;
+      sum_x.value += xInput.value;
+      avg_x.value = sum_x.value / recordCount.value;
+      diff_x.value = avg_x.value - xInput.value;
+      ss_x.value = (diff_x.value * diff_x.value) + ss_x.value;
+
+      // Now compute the sum of squares for the y
+      sum_y.value = sum_y.value + yInput.value;
+      avg_y.value = sum_y.value / recordCount.value;
+      diff_y.value = avg_y.value - yInput.value;
+
+      ss_xy.value = (diff_x.value * diff_y.value) + ss_xy.value;
+    }
+
+    @Override
+    public void output() {
+      slope.value = ss_xy.value / ss_x.value;
+    }
+
+    @Override
+    public void reset() {
+      recordCount.value = 0;
+      sum_y.value = 0;
+      sum_x.value = 0;
+      avg_x.value = 0;
+      avg_y.value = 0;
+      diff_x.value = 0;
+      diff_y.value = 0;
+      ss_x.value = 0;
+      ss_xy.value = 0;
+    }
+  }
+
+  @FunctionTemplate(names = {"regr_intercept", "regrIntercept"},
+      scope = FunctionScope.POINT_AGGREGATE,
+      nulls = NullHandling.INTERNAL)
+  public static class RegrInterceptFunction implements DrillAggFunc {
+
+    @Param
+    Float8Holder xInput;
+
+    @Param
+    Float8Holder yInput;
+
+    @Workspace
+    Float8Holder sum_x;
+
+    @Workspace
+    Float8Holder sum_y;
+
+    @Workspace
+    Float8Holder avg_x;
+
+    @Workspace
+    Float8Holder avg_y;
+
+    @Workspace
+    Float8Holder diff_x;
+
+    @Workspace
+    Float8Holder diff_y;
+
+    @Workspace
+    Float8Holder ss_x;
+
+    @Workspace
+    Float8Holder ss_xy;
+
+    @Workspace
+    IntHolder recordCount;
+
+    @Output
+    Float8Holder intercept;
+    @Override
+    public void setup() {
+      recordCount.value = 0;
+      sum_y.value = 0;
+      sum_x.value = 0;
+      avg_x.value = 0;
+      avg_y.value = 0;
+      diff_x.value = 0;
+      diff_y.value = 0;
+      ss_x.value = 0;
+      ss_xy.value = 0;
+    }
+
+    @Override
+    public void add() {
+      recordCount.value += 1;
+      sum_x.value += xInput.value;
+      avg_x.value = sum_x.value / recordCount.value;
+      diff_x.value = avg_x.value - xInput.value;
+      ss_x.value = (diff_x.value * diff_x.value) + ss_x.value;
+
+      // Now compute the sum of squares for the y
+      sum_y.value = sum_y.value + yInput.value;
+      avg_y.value = sum_y.value / recordCount.value;
+      diff_y.value = avg_y.value - yInput.value;
+
+      ss_xy.value = (diff_x.value * diff_y.value) + ss_xy.value;
+    }
+
+    @Override
+    public void output() {
+      double slope = ss_xy.value / ss_x.value;
+      intercept.value = avg_y.value - slope * avg_x.value;
+    }
+
+    @Override
+    public void reset() {
+      recordCount.value = 0;
+      sum_y.value = 0;
+      sum_x.value = 0;
+      avg_x.value = 0;
+      avg_y.value = 0;
+      diff_x.value = 0;
+      diff_y.value = 0;
+      ss_x.value = 0;
+      ss_xy.value = 0;
+    }
+  }
 }

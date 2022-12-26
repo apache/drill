@@ -428,9 +428,11 @@ The functions are:
 Drill has several functions for correlations and understanding the distribution of your data.
 
 The functions are:
-* `width_bucket`
-* `kendall_correlation`
-* `pearson_correlation`
+* `width_bucket(value, min, max, buckets)`
+* `kendall_correlation(col1, col2)`
+* `pearson_correlation(col1, col2)`
+* `regr_slope(x,y)`
+* `regr_intercept(x,y)`
 
 
 
