@@ -63,18 +63,6 @@ public class TestDistributionFunctions extends ClusterTest {
   }
 
   @Test
-  public void testPearson() throws Exception {
-    String query = "SELECT pearson_correlation(col1, col2) AS R FROM cp.`test_data.csvh`";
-    testBuilder()
-        .sqlQuery(query)
-        .unOrdered()
-        .baselineColumns("R")
-        .baselineValues(0.4802821322072808)
-        .go();
-
-  }
-
-  @Test
   public void testKendall() throws Exception {
     String query = "SELECT kendall_correlation(col1,col2) AS R FROM cp.`test_data.csvh`";
     testBuilder()

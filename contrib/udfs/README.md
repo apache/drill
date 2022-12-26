@@ -428,12 +428,10 @@ The functions are:
 Drill has several functions for correlations and understanding the distribution of your data.
 
 The functions are:
-* `width_bucket(value, min, max, buckets)`
-* `kendall_correlation(col1, col2)`
-* `pearson_correlation(col1, col2)`
-* `regr_slope(x,y)`
-* `regr_intercept(x,y)`
-
+* `width_bucket(value, min, max, buckets)`: Useful for crafting histograms and understanding distributions of continuous variables.
+* `kendall_correlation(col1, col2)`:  Calculates the kendall correlation coefficient of two columns within a dataset.
+* `regr_slope(x,y)`: Determines the slope of the least-squares-fit linear equation
+* `regr_intercept(x,y)`: Computes the y-intercept of the least-squares-fit linear equation
 
 
 [1]: https://github.com/target/huntlib
