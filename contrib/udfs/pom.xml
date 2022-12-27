@@ -24,7 +24,7 @@
   <parent>
     <artifactId>drill-contrib-parent</artifactId>
     <groupId>org.apache.drill.contrib</groupId>
-    <version>1.20.3</version>
+    <version>1.20.4-SNAPSHOT</version>
   </parent>
 
   <artifactId>drill-udfs</artifactId>
