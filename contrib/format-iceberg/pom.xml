@@ -23,7 +23,7 @@
   <parent>
     <artifactId>drill-contrib-parent</artifactId>
     <groupId>org.apache.drill.contrib</groupId>
-    <version>1.20.3-SNAPSHOT</version>
+    <version>1.20.3</version>
   </parent>
 
   <artifactId>drill-iceberg-format</artifactId>
