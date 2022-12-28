@@ -88,7 +88,10 @@
             1. run `mvn --encrypt-master-password` and add an encrypted master password to `security-settings.xml` file;
             2. run `mvn --encrypt-password` and add an encrypted Apache LDAP password to `settings.xml` file.
     5. Check that `NOTICE` file in sources has the current copyright year.
-    6. ~~Make sure you are using JDK 8~~. Since the completion of DRILL-8113 it is now possible to build Drill using newer JDKs while continuing to target JDK 8. Nevertheless, always test Drill under JDK 8 after building it.
+    6. ~~Make sure you are using JDK 8~~. It is now possible to build (DRILL-8113) and release
+        (DRILL-8378) Drill using newer JDKs while continuing to target JDK 8. Nevertheless, always
+        test Drill under JDK 8 after building it.
+
 3. ## Manual Release process (this section is more for information how release process is performed, release manager should use `automated release process` described later).
     1. Setup GPG Password env variable:
         ```
