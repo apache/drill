@@ -71,7 +71,7 @@ function createDirectoryIfAbsent() {
 
 function readInputAndSetup(){
 
-    read -p "JAVA_HOME of the JDK 8 to use for the release : " JAVA_HOME
+    read -p "JAVA_HOME of the JDK to use for the release : " JAVA_HOME
     export JAVA_HOME
 
     read -p "Drill Working Directory : " WORK_DIR
@@ -152,8 +152,9 @@ runCmd "Clearing release history" mvn release:clean \
   -DpushChanges=false \
   -DskipTests
 
-export MAVEN_OPTS='-Xmx4g -XX:MaxPermSize=512m'
-runCmd "Preparing the release " mvn -X release:prepare \
+# Note that -XX:MaxPermSize=512m' is not supported in new JDKs
+export MAVEN_OPTS=-Xmx4g
+runCmd "Preparing the release " mvn release:prepare \
   -Papache-release \
   -DpushChanges=false \
   -DdevelopmentVersion=${DRILL_DEV_VERSION} \

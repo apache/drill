@@ -246,8 +246,8 @@
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-javadoc-plugin</artifactId>
+        <version>3.4.1</version>
         <configuration>
-          <sourcepath>${basedir}</sourcepath>
           <sourceFileExcludes>
             <!-- Don't include codegen -->
             <exclude>**/src/main/codegen/**/*.java</exclude>
