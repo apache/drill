@@ -281,7 +281,8 @@ public class JsonReader extends BaseJsonReader {
           break;
 
         case VALUE_NULL:
-          // do nothing as we don't have a type.
+          // handle a null value as a string
+		  handleString(parser, map, fieldName);
           break;
 
         case VALUE_NUMBER_FLOAT:
@@ -413,6 +414,10 @@ public class JsonReader extends BaseJsonReader {
 
   private void handleString(JsonParser parser, MapWriter writer, String fieldName) throws IOException {
     try {
+		if (parser.nextToken() == VALUE_NULL)
+        writer.varChar(fieldName)
+          .writeVarChar(0, workingBuffer.prepareVarCharHolder("null"), workingBuffer.getBuf());
+      else
       writer.varChar(fieldName)
           .writeVarChar(0, workingBuffer.prepareVarCharHolder(parser.getText()), workingBuffer.getBuf());
     } catch (IllegalArgumentException e) {
