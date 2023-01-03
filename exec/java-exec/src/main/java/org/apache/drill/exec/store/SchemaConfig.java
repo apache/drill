@@ -40,6 +40,14 @@ public class SchemaConfig {
     this.ignoreAuthErrors = ignoreAuthErrors;
   }
 
+  public String getTemporaryTableName(String table) {
+    return provider.getTemporaryTableName(table);
+  }
+
+  public String getTemporaryWorkspace() {
+    return provider.getTemporaryWorkspace();
+  }
+
   /**
    * Create new builder.
    * @param userName Name of the user accessing the storage sources.
@@ -113,5 +121,9 @@ public class SchemaConfig {
     UserCredentials getQueryUserCredentials();
 
     OptionValue getOption(String optionKey);
+
+    String getTemporaryTableName(String table);
+
+    String getTemporaryWorkspace();
   }
 }

@@ -71,6 +71,16 @@ public class SchemaTreeProvider implements AutoCloseable {
         return options.getOption(optionKey);
       }
 
+      @Override
+      public String getTemporaryTableName(String table) {
+        throw new UnsupportedOperationException("getTemporaryTableName is not supported");
+      }
+
+      @Override
+      public String getTemporaryWorkspace() {
+        throw new UnsupportedOperationException("getTemporaryWorkspace is not supported");
+      }
+
       @Override public SchemaPlus getRootSchema(String userName) {
         return createRootSchema(userName, this);
       }

@@ -30,9 +30,10 @@ import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
 import static org.apache.drill.exec.util.StoragePluginTestUtils.CP_PLUGIN_NAME;
+import static org.hamcrest.CoreMatchers.containsString;
+import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
 @Category(SqlTest.class)
@@ -62,8 +63,8 @@ public class TestDisabledPlugin extends ClusterTest {
       fail("Query should have failed!");
     } catch (UserRemoteException e) {
       assertEquals(UserBitShared.DrillPBError.ErrorType.VALIDATION, e.getErrorType());
-      assertTrue("Incorrect error message",
-        e.getMessage().contains("VALIDATION ERROR: Schema"));
+      assertThat("Incorrect error message", e.getMessage(),
+        containsString("VALIDATION ERROR: From line 1, column 15 to line 1, column 32: Object 'cp' not found"));
     }
   }
 
@@ -74,8 +75,8 @@ public class TestDisabledPlugin extends ClusterTest {
       fail("Query should have failed!");
     } catch (UserRemoteException e) {
       assertEquals(UserBitShared.DrillPBError.ErrorType.VALIDATION, e.getErrorType());
-      assertTrue("Incorrect error message",
-        e.getMessage().contains("VALIDATION ERROR: Schema"));
+      assertThat("Incorrect error message", e.getMessage(),
+        containsString("VALIDATION ERROR: Schema"));
     }
   }
 

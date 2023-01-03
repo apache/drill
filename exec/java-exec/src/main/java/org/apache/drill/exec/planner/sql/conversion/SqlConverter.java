@@ -17,11 +17,6 @@
  */
 package org.apache.drill.exec.planner.sql.conversion;
 
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.List;
-import java.util.stream.Collectors;
-
 import org.apache.calcite.adapter.java.JavaTypeFactory;
 import org.apache.calcite.avatica.util.Casing;
 import org.apache.calcite.jdbc.DynamicSchema;
@@ -46,6 +41,8 @@ import org.apache.calcite.sql.parser.SqlParseException;
 import org.apache.calcite.sql.parser.SqlParser;
 import org.apache.calcite.sql.util.ChainedSqlOperatorTable;
 import org.apache.calcite.sql.validate.SqlConformance;
+import org.apache.calcite.sql.validate.SqlValidator;
+import org.apache.calcite.sql.validate.SqlValidatorUtil;
 import org.apache.calcite.sql2rel.SqlToRelConverter;
 import org.apache.drill.common.config.DrillConfig;
 import org.apache.drill.common.exceptions.UserException;
@@ -65,9 +62,16 @@ import org.apache.drill.exec.planner.sql.parser.impl.DrillParserWithCompoundIdCo
 import org.apache.drill.exec.planner.sql.parser.impl.DrillSqlParseException;
 import org.apache.drill.exec.planner.types.DrillRelDataTypeSystem;
 import org.apache.drill.exec.rpc.user.UserSession;
+import org.apache.drill.exec.util.ImpersonationUtil;
 import org.apache.drill.exec.util.Utilities;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import java.security.PrivilegedAction;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  * Class responsible for managing:
@@ -89,7 +93,7 @@ public class SqlConverter {
   private final SchemaPlus defaultSchema;
   private final SqlOperatorTable opTab;
   private final RelOptCostFactory costFactory;
-  private final DrillValidator validator;
+  private final SqlValidator validator;
   private final boolean isInnerQuery;
   private final boolean isExpandedView;
   private final QueryContext util;
@@ -102,6 +106,7 @@ public class SqlConverter {
   private RelOptCluster cluster;
   private VolcanoPlanner planner;
   private boolean useRootSchema = false;
+  private final boolean isImpersonationEnabled;
 
   public SqlConverter(QueryContext context) {
     this.settings = context.getPlannerSettings();
@@ -143,13 +148,15 @@ public class SqlConverter {
         typeFactory,
         drillConfig,
         session,
-        temporarySchema,
-        this::useRootSchema,
-        this::getDefaultSchema);
+        this::useRootSchema
+    );
     this.opTab = new ChainedSqlOperatorTable(Arrays.asList(context.getDrillOperatorTable(), catalog));
     this.costFactory = (settings.useDefaultCosting()) ? null : new DrillCostBase.DrillCostFactory();
-    this.validator =
-      new DrillValidator(opTab, catalog, typeFactory, parserConfig.conformance(), context.isImpersonationEnabled());
+    this.validator = SqlValidatorUtil.newValidator(opTab, catalog, typeFactory,
+        SqlValidator.Config.DEFAULT.withConformance(parserConfig.conformance())
+          .withTypeCoercionEnabled(true)
+          .withIdentifierExpansion(true));
+    this.isImpersonationEnabled = context.isImpersonationEnabled();
     cluster = null;
   }
 
@@ -169,12 +176,15 @@ public class SqlConverter {
     this.catalog = catalog;
     this.opTab = parent.opTab;
     this.planner = parent.planner;
-    this.validator =
-      new DrillValidator(opTab, catalog, typeFactory, parserConfig.conformance(), util.isImpersonationEnabled());
+    this.validator = SqlValidatorUtil.newValidator(opTab, catalog, typeFactory,
+      SqlValidator.Config.DEFAULT.withConformance(parserConfig.conformance())
+        .withTypeCoercionEnabled(true)
+        .withIdentifierExpansion(true));
     this.temporarySchema = parent.temporarySchema;
     this.session = parent.session;
     this.drillConfig = parent.drillConfig;
     this.cluster = parent.cluster;
+    this.isImpersonationEnabled = util.isImpersonationEnabled();
   }
 
   public SqlNode parse(String sql) {
@@ -195,7 +205,12 @@ public class SqlConverter {
 
   public SqlNode validate(final SqlNode parsedNode) {
     try {
-      return validator.validate(parsedNode);
+      if (isImpersonationEnabled) {
+        return ImpersonationUtil.getProcessUserUGI().doAs(
+          (PrivilegedAction<SqlNode>) () -> validator.validate(parsedNode));
+      } else {
+        return validator.validate(parsedNode);
+      }
     } catch (RuntimeException e) {
       UserException.Builder builder = UserException
           .validationError(e);
@@ -237,7 +252,7 @@ public class SqlConverter {
     return validator.getValidatedNodeType(validatedNode);
   }
 
-  public DrillValidator getValidator() {
+  public SqlValidator getValidator() {
     return validator;
   }
 

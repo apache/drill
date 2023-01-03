@@ -37,6 +37,7 @@ import org.apache.calcite.schema.SchemaPlus;
 import org.apache.drill.common.FunctionNames;
 import org.apache.drill.common.config.DrillConfig;
 import org.apache.drill.common.exceptions.ErrorHelper;
+import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.ops.ViewExpansionContext;
 import org.apache.drill.exec.proto.UserBitShared.DrillPBError;
 import org.apache.drill.exec.proto.UserBitShared.DrillPBError.ErrorType;
@@ -606,6 +607,16 @@ public class MetadataProvider {
 
       @Override public UserCredentials getQueryUserCredentials() {
         return session.getCredentials();
+      }
+
+      @Override
+      public String getTemporaryTableName(String table) {
+        return session.resolveTemporaryTableName(table);
+      }
+
+      @Override
+      public String getTemporaryWorkspace() {
+        return config.getString(ExecConstants.DEFAULT_TEMPORARY_WORKSPACE);
       }
     };
   }

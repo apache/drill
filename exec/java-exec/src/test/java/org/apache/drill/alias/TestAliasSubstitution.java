@@ -157,7 +157,7 @@ public class TestAliasSubstitution extends ClusterTest {
       fail();
     } catch (UserRemoteException e) {
       MatcherAssert.assertThat(e.getVerboseMessage(),
-        containsString("VALIDATION ERROR: Schema [[foobar]] is not valid with respect to either root schema or current default schema"));
+        containsString("Object 'foobar' not found: Object 'foobar' not found"));
     } finally {
       storageAliasesRegistry.deletePublicAliases();
       client.resetSystem(ExecConstants.ENABLE_ALIASES);
@@ -219,7 +219,7 @@ public class TestAliasSubstitution extends ClusterTest {
       fail();
     } catch (UserRemoteException e) {
       MatcherAssert.assertThat(e.getVerboseMessage(),
-        containsString("VALIDATION ERROR: Schema [[foobar]] is not valid with respect to either root schema or current default schema."));
+        containsString("Object 'foobar' not found: Object 'foobar' not found"));
     } finally {
       storageAliasesRegistry.deleteUserAliases(TEST_USER_2);
     }
