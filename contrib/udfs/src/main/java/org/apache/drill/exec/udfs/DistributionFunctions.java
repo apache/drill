@@ -51,6 +51,9 @@ public class DistributionFunctions {
     @Workspace
     double binWidth;
 
+    @Workspace
+    int bucketCount;
+
     @Output
     IntHolder bucket;
 
@@ -58,24 +61,19 @@ public class DistributionFunctions {
     public void setup() {
       double max = MaxRangeValueHolder.value;
       double min = MinRangeValueHolder.value;
-      int bucketCount = bucketCountHolder.value;
+      bucketCount = bucketCountHolder.value;
       binWidth = (max - min) / bucketCount;
     }
 
     @Override
     public void eval() {
-      // There is probably a more elegant way of doing this...
-      double binFloor = MinRangeValueHolder.value;
-      double binCeiling = binFloor + binWidth;
-
-      for (int i = 1; i <= bucketCountHolder.value; i++) {
-        if (inputValue.value <= binCeiling && inputValue.value > binFloor) {
-           bucket.value = i;
-           break;
-        } else {
-          binFloor = binCeiling;
-          binCeiling = binWidth * (i + 1);
-        }
+      if (inputValue.value < MinRangeValueHolder.value) {
+        bucket.value = 0;
+      } else if (inputValue.value > MaxRangeValueHolder.value) {
+        bucket.value = bucketCount + 1;
+      } else {
+        double f = (1 + (inputValue.value - MinRangeValueHolder.value) / binWidth);
+        bucket.value = (int) (1 + (inputValue.value - MinRangeValueHolder.value) / binWidth);
       }
     }
   }
@@ -121,18 +119,16 @@ public class DistributionFunctions {
         } else if ((xValue > prevXValue.value && yValue < prevYValue.value) || (xValue < prevXValue.value && yValue > prevYValue.value)) {
           discordantPairs.value = discordantPairs.value + 1;
         } else {
-          //Tie...
+          // Tie...
         }
-
-        prevXValue.value = xInput.value;
-        prevYValue.value = yInput.value;
         n.value = n.value + 1;
 
-      } else if(n.value == 0){
-        prevXValue.value = xValue;
-        prevYValue.value = yValue;
+      } else if (n.value == 0){
         n.value = n.value + 1;
       }
+      prevXValue.value = xValue;
+      prevYValue.value = yValue;
+
     }
 
     @Override

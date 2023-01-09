@@ -49,7 +49,7 @@ public class TestDistributionFunctions extends ClusterTest {
         .sqlQuery(query)
         .unOrdered()
         .baselineColumns("bucket")
-        .baselineValues(1)
+        .baselineValues(2)
         .go();
 
     // Test with string input
@@ -60,6 +60,16 @@ public class TestDistributionFunctions extends ClusterTest {
         .baselineColumns("bucket")
         .baselineValues(5)
         .go();
+
+    // Test with input out of range
+    query = "SELECT width_bucket(-5, 0,10,5) AS too_low_bucket, width_bucket(505, 0,10,5) AS too_high_bucket FROM (VALUES(1))";
+    testBuilder()
+        .sqlQuery(query)
+        .unOrdered()
+        .baselineColumns("too_low_bucket", "too_high_bucket")
+        .baselineValues(0, 6)
+        .go();
+
   }
 
   @Test
