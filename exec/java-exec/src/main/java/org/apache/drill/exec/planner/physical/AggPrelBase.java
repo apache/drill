@@ -17,6 +17,8 @@
  */
 package org.apache.drill.exec.planner.physical;
 
+import org.apache.drill.common.expression.IfExpression;
+import org.apache.drill.common.expression.NullExpression;
 import org.apache.drill.shaded.guava.com.google.common.collect.Lists;
 import org.apache.calcite.linq4j.Ord;
 import org.apache.calcite.util.BitSets;
@@ -199,7 +201,14 @@ public abstract class AggPrelBase extends DrillAggregateRelBase implements Prel 
   protected LogicalExpression toDrill(AggregateCall call, List<String> fn) {
     List<LogicalExpression> args = Lists.newArrayList();
     for (Integer i : call.getArgList()) {
-      args.add(FieldReference.getWithQuotedRef(fn.get(i)));
+      LogicalExpression expr = FieldReference.getWithQuotedRef(fn.get(i));
+      if (call.hasFilter()) {
+        expr = IfExpression.newBuilder()
+          .setIfCondition(new IfExpression.IfCondition(FieldReference.getWithQuotedRef(fn.get(call.filterArg)), expr))
+          .setElse(NullExpression.INSTANCE)
+          .build();
+      }
+      args.add(expr);
     }
 
     if (SqlKind.COUNT.name().equals(call.getAggregation().getName()) && args.isEmpty()) {

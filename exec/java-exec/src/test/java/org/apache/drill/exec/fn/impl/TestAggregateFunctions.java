@@ -1254,4 +1254,21 @@ public class TestAggregateFunctions extends ClusterTest {
       .baselineValues("USA", 2.0816659994661326, 8L)
       .go();
   }
+
+  @Test
+  public void testAggregateWithFilterCall() throws Exception {
+    testBuilder()
+      .sqlQuery(
+        "SELECT count(n_name) FILTER(WHERE n_regionkey = 1) AS nations_count_in_1_region," +
+          "count(n_name) FILTER(WHERE n_regionkey = 2) AS nations_count_in_2_region," +
+          "count(n_name) FILTER(WHERE n_regionkey = 3) AS nations_count_in_3_region," +
+          "count(n_name) FILTER(WHERE n_regionkey = 4) AS nations_count_in_4_region," +
+          "count(n_name) FILTER(WHERE n_regionkey = 0) AS nations_count_in_0_region\n" +
+          "FROM cp.`tpch/nation.parquet`")
+      .unOrdered()
+      .baselineColumns("nations_count_in_1_region", "nations_count_in_2_region",
+        "nations_count_in_3_region", "nations_count_in_4_region", "nations_count_in_0_region")
+      .baselineValues(5L, 5L, 5L, 5L, 5L)
+      .go();
+  }
 }
