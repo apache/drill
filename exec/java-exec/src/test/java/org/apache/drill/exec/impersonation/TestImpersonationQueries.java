@@ -17,14 +17,14 @@
  */
 package org.apache.drill.exec.impersonation;
 
-import org.apache.drill.exec.store.StoragePluginRegistry.PluginException;
-import org.apache.drill.exec.store.avro.AvroDataGenerator;
-import org.apache.drill.shaded.guava.com.google.common.collect.Maps;
 import org.apache.drill.categories.SecurityTest;
+import org.apache.drill.categories.SlowTest;
 import org.apache.drill.common.exceptions.UserRemoteException;
 import org.apache.drill.common.util.DrillFileUtils;
+import org.apache.drill.exec.store.StoragePluginRegistry.PluginException;
+import org.apache.drill.exec.store.avro.AvroDataGenerator;
 import org.apache.drill.exec.store.dfs.WorkspaceConfig;
-import org.apache.drill.categories.SlowTest;
+import org.apache.drill.shaded.guava.com.google.common.collect.Maps;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.fs.permission.FsPermission;
@@ -35,9 +35,9 @@ import org.junit.experimental.categories.Category;
 
 import java.util.Map;
 
+import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.core.StringContains.containsString;
 import static org.junit.Assert.assertNotNull;
-import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.Assert.assertNull;
 
 /**
@@ -97,9 +97,8 @@ public class TestImpersonationQueries extends BaseTestImpersonation {
 
   private static void createTestTable(String user, String group, String tableName) throws Exception {
     updateClient(user);
-    test("USE " + getWSSchema(user));
-    test("CREATE TABLE %s as SELECT * FROM cp.`tpch/%s.parquet`", tableName, tableName);
-
+    run("USE " + getWSSchema(user));
+    run("CREATE TABLE %s as SELECT * FROM cp.`tpch/%s.parquet`", tableName, tableName);
     // Change the ownership and permissions manually. Currently there is no option to specify the default permissions
     // and ownership for new tables.
     final Path tablePath = new Path(getUserHome(user), tableName);
@@ -182,7 +181,7 @@ public class TestImpersonationQueries extends BaseTestImpersonation {
     // Table lineitem is owned by "user0_1:group0_1" with permissions 750. Try to read the table as "user0_1". We
     // shouldn't expect any errors.
     updateClient(org1Users[0]);
-    test("SELECT * FROM %s.lineitem ORDER BY l_orderkey LIMIT 1", getWSSchema(org1Users[0]));
+    run("SELECT * FROM %s.lineitem ORDER BY l_orderkey LIMIT 1", getWSSchema(org1Users[0]));
   }
 
   @Test
@@ -190,7 +189,7 @@ public class TestImpersonationQueries extends BaseTestImpersonation {
     // Table lineitem is owned by "user0_1:group0_1" with permissions 750. Try to read the table as "user1_1". We
     // shouldn't expect any errors as "user1_1" is part of the "group0_1"
     updateClient(org1Users[1]);
-    test("SELECT * FROM %s.lineitem ORDER BY l_orderkey LIMIT 1", getWSSchema(org1Users[0]));
+    run("SELECT * FROM %s.lineitem ORDER BY l_orderkey LIMIT 1", getWSSchema(org1Users[0]));
   }
 
   @Test
@@ -200,7 +199,7 @@ public class TestImpersonationQueries extends BaseTestImpersonation {
       // Table lineitem is owned by "user0_1:group0_1" with permissions 750. Now try to read the table as "user2_1". We
       // should expect a permission denied error as "user2_1" is not part of the "group0_1"
       updateClient(org1Users[2]);
-      test("SELECT * FROM %s.lineitem ORDER BY l_orderkey LIMIT 1", getWSSchema(org1Users[0]));
+      run("SELECT * FROM %s.lineitem ORDER BY l_orderkey LIMIT 1", getWSSchema(org1Users[0]));
     } catch(UserRemoteException e) {
       ex = e;
     }
@@ -213,7 +212,7 @@ public class TestImpersonationQueries extends BaseTestImpersonation {
   @Test
   public void testMultiLevelImpersonationEqualToMaxUserHops() throws Exception {
     updateClient(org1Users[4]);
-    test("SELECT * from %s.u4_lineitem LIMIT 1;", getWSSchema(org1Users[4]));
+    run("SELECT * from %s.u4_lineitem LIMIT 1", getWSSchema(org1Users[4]));
   }
 
   @Test
@@ -222,7 +221,7 @@ public class TestImpersonationQueries extends BaseTestImpersonation {
 
     try {
       updateClient(org1Users[5]);
-      test("SELECT * from %s.u4_lineitem LIMIT 1;", getWSSchema(org1Users[4]));
+      run("SELECT * from %s.u4_lineitem LIMIT 1", getWSSchema(org1Users[4]));
     } catch (UserRemoteException e) {
       ex = e;
     }
@@ -236,7 +235,7 @@ public class TestImpersonationQueries extends BaseTestImpersonation {
   @Test
   public void testMultiLevelImpersonationJoinEachSideReachesMaxUserHops() throws Exception {
     updateClient(org1Users[4]);
-    test("SELECT * from %s.u4_lineitem l JOIN %s.u3_orders o ON l.l_orderkey = o.o_orderkey LIMIT 1",
+    run("SELECT * from %s.u4_lineitem l JOIN %s.u3_orders o ON l.l_orderkey = o.o_orderkey LIMIT 1",
       getWSSchema(org1Users[4]), getWSSchema(org2Users[3]));
   }
 
@@ -246,7 +245,7 @@ public class TestImpersonationQueries extends BaseTestImpersonation {
 
     try {
       updateClient(org1Users[4]);
-      test("SELECT * from %s.u4_lineitem l JOIN %s.u4_orders o ON l.l_orderkey = o.o_orderkey LIMIT 1",
+      run("SELECT * from %s.u4_lineitem l JOIN %s.u4_orders o ON l.l_orderkey = o.o_orderkey LIMIT 1",
           getWSSchema(org1Users[4]), getWSSchema(org2Users[4]));
     } catch(UserRemoteException e) {
       ex = e;
@@ -266,7 +265,7 @@ public class TestImpersonationQueries extends BaseTestImpersonation {
         new Path(getUserHome(org1Users[0]), "simple.seq")));
     try {
       updateClient(org1Users[1]);
-      test("SELECT k FROM %s.%s.%s", MINI_DFS_STORAGE_PLUGIN_NAME, "tmp", "simple_seq_view");
+      run("SELECT k FROM %s.%s.%s", MINI_DFS_STORAGE_PLUGIN_NAME, "tmp", "simple_seq_view");
     } catch (UserRemoteException e) {
       assertNull("This test should pass.", e);
     }
@@ -274,7 +273,7 @@ public class TestImpersonationQueries extends BaseTestImpersonation {
       String.format("SELECT k FROM %s.%s.%s", MINI_DFS_STORAGE_PLUGIN_NAME, "tmp", "simple_seq_view"));
     try {
       updateClient(org1Users[2]);
-      test("SELECT k FROM %s.%s.%s", MINI_DFS_STORAGE_PLUGIN_NAME, "tmp", "simple_seq_view_2");
+      run("SELECT k FROM %s.%s.%s", MINI_DFS_STORAGE_PLUGIN_NAME, "tmp", "simple_seq_view_2");
     } catch (UserRemoteException e) {
       assertNull("This test should pass.", e);
     }
@@ -287,7 +286,7 @@ public class TestImpersonationQueries extends BaseTestImpersonation {
         new Path(getUserHome(org1Users[0]), "simple.avro")));
 
     updateClient(org1Users[1]);
-    test("SELECT h_boolean FROM %s.%s.%s", MINI_DFS_STORAGE_PLUGIN_NAME, "tmp", "simple_avro_view");
+    run("SELECT h_boolean FROM %s.%s.%s", MINI_DFS_STORAGE_PLUGIN_NAME, "tmp", "simple_avro_view");
   }
 
   @Test // DRILL-7250
@@ -295,7 +294,7 @@ public class TestImpersonationQueries extends BaseTestImpersonation {
     // Table lineitem is owned by "user0_1:group0_1" with permissions 750. "user2_1" doesn't have access to it,
     // but query uses CTE with the same name as the table, so query shouldn't look for lineitem table
     updateClient(org1Users[2]);
-    test("use %s", getWSSchema(org1Users[0]));
+    run("use %s", getWSSchema(org1Users[0]));
     testBuilder()
         .sqlQuery("with lineitem as (SELECT 1 as a) select * from lineitem")
         .unOrdered()
@@ -306,7 +305,7 @@ public class TestImpersonationQueries extends BaseTestImpersonation {
 
   @AfterClass
   public static void removeMiniDfsBasedStorage() throws PluginException {
-    getDrillbitContext().getStorage().remove(MINI_DFS_STORAGE_PLUGIN_NAME);
+    cluster.storageRegistry().remove(MINI_DFS_STORAGE_PLUGIN_NAME);
     stopMiniDfsCluster();
   }
 }

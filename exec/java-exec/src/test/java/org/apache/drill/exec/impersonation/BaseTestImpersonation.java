@@ -17,16 +17,18 @@
  */
 package org.apache.drill.exec.impersonation;
 
-import org.apache.drill.shaded.guava.com.google.common.base.Preconditions;
-import org.apache.drill.shaded.guava.com.google.common.base.Strings;
 import org.apache.commons.io.FileUtils;
-import org.apache.drill.PlanTestBase;
 import org.apache.drill.common.config.DrillConfig;
 import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.dotdrill.DotDrillType;
 import org.apache.drill.exec.store.StoragePluginRegistry;
 import org.apache.drill.exec.store.dfs.FileSystemConfig;
 import org.apache.drill.exec.store.dfs.WorkspaceConfig;
+import org.apache.drill.shaded.guava.com.google.common.base.Preconditions;
+import org.apache.drill.shaded.guava.com.google.common.base.Strings;
+import org.apache.drill.test.ClusterFixture;
+import org.apache.drill.test.ClusterFixtureBuilder;
+import org.apache.drill.test.ClusterTest;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;
@@ -43,7 +45,7 @@ import java.util.Properties;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
-public class BaseTestImpersonation extends PlanTestBase {
+public class BaseTestImpersonation extends ClusterTest {
   protected static final String MINI_DFS_STORAGE_PLUGIN_NAME = "mini_dfs_plugin";
   protected static final String processUser = System.getProperty("user.name");
 
@@ -112,19 +114,28 @@ public class BaseTestImpersonation extends PlanTestBase {
   }
 
   protected static void startDrillCluster(final boolean isImpersonationEnabled) throws Exception {
-    final Properties props = cloneDefaultTestConfigProperties();
+    final Properties props = new Properties();
     props.setProperty(ExecConstants.IMPERSONATION_ENABLED, Boolean.toString(isImpersonationEnabled));
-    startDrillCluster(props);
+    startDrillCluster(1, props);
   }
 
-  protected static void startDrillCluster(final Properties props) throws Exception {
-    updateTestCluster(1, DrillConfig.create(props));
+  protected static void startDrillCluster(int newDrillbitCount, final Properties props) throws Exception {
+    startDrillCluster(newDrillbitCount, null, props);
+  }
+
+  protected static void startDrillCluster(int newDrillbitCount, final DrillConfig configs, final Properties props) throws Exception {
+    ClusterFixtureBuilder builder = ClusterFixture.builder(dirTestWatcher).clusterSize(newDrillbitCount);
+    builder.configBuilder().configProps(props);
+    if (configs != null) {
+      builder.configBuilder().configProps(configs);
+    }
+    startCluster(builder);
   }
 
   protected static void addMiniDfsBasedStorage(final Map<String, WorkspaceConfig> workspaces) throws Exception {
     // Create a HDFS based storage plugin based on local storage plugin and add it to plugin registry (connection string
     // for mini dfs is varies for each run).
-    StoragePluginRegistry pluginRegistry = getDrillbitContext().getStorage();
+    StoragePluginRegistry pluginRegistry = cluster.storageRegistry();
     FileSystemConfig lfsPluginConfig = (FileSystemConfig) pluginRegistry.getPlugin("dfs").getConfig();
 
     String connection = dfsConf.get(FileSystem.FS_DEFAULT_NAME_KEY);
@@ -178,8 +189,8 @@ public class BaseTestImpersonation extends PlanTestBase {
   protected static void createView(final String viewOwner, final String viewGroup, final short viewPerms,
                                  final String newViewName, final String fromSourceSchema, final String fromSourceTableName) throws Exception {
     updateClient(viewOwner);
-    test(String.format("ALTER SESSION SET `%s`='%o';", ExecConstants.NEW_VIEW_DEFAULT_PERMS_KEY, viewPerms));
-    test(String.format("CREATE VIEW %s.%s AS SELECT * FROM %s.%s;",
+    run(String.format("ALTER SESSION SET `%s`='%o'", ExecConstants.NEW_VIEW_DEFAULT_PERMS_KEY, viewPerms));
+    run(String.format("CREATE VIEW %s.%s AS SELECT * FROM %s.%s",
       getWSSchema(viewOwner), newViewName, fromSourceSchema, fromSourceTableName));
 
     // Verify the view file created has the expected permissions and ownership
@@ -193,8 +204,8 @@ public class BaseTestImpersonation extends PlanTestBase {
   protected static void createView(final String viewOwner, final String viewGroup, final String viewName,
                                  final String viewDef) throws Exception {
     updateClient(viewOwner);
-    test(String.format("ALTER SESSION SET `%s`='%o';", ExecConstants.NEW_VIEW_DEFAULT_PERMS_KEY, (short) 0750));
-    test("CREATE VIEW %s.%s.%s AS %s", MINI_DFS_STORAGE_PLUGIN_NAME, "tmp", viewName, viewDef);
+    run(String.format("ALTER SESSION SET `%s`='%o'", ExecConstants.NEW_VIEW_DEFAULT_PERMS_KEY, (short) 0750));
+    run("CREATE VIEW %s.%s.%s AS %s", MINI_DFS_STORAGE_PLUGIN_NAME, "tmp", viewName, viewDef);
     final Path viewFilePath = new Path("/tmp/", viewName + DotDrillType.VIEW.getEnding());
     fs.setOwner(viewFilePath, viewOwner, viewGroup);
   }

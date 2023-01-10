@@ -17,13 +17,13 @@
  */
 package org.apache.drill.exec.impersonation;
 
-import java.util.Map;
 import org.apache.drill.categories.SecurityTest;
 import org.apache.drill.categories.SlowTest;
 import org.apache.drill.categories.UnlikelyTest;
 import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.common.exceptions.UserRemoteException;
 import org.apache.drill.exec.dotdrill.DotDrillType;
+import org.apache.drill.exec.rpc.user.QueryDataBatch;
 import org.apache.drill.exec.store.StoragePluginRegistry.PluginException;
 import org.apache.drill.exec.store.dfs.WorkspaceConfig;
 import org.apache.drill.shaded.guava.com.google.common.base.Joiner;
@@ -33,15 +33,19 @@ import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.fs.permission.FsPermission;
 import org.apache.hadoop.security.UserGroupInformation;
-import static org.hamcrest.core.StringContains.containsString;
-import org.junit.AfterClass;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
-import org.junit.BeforeClass;
+import org.junit.After;
+import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.junit.rules.ExpectedException;
+
+import java.util.List;
+import java.util.Map;
+
+import static org.hamcrest.core.StringContains.containsString;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 /**
  * Tests impersonation on metadata related queries as SHOW FILES, SHOW TABLES, CREATE VIEW, CREATE TABLE and DROP TABLE
@@ -62,8 +66,8 @@ public class TestImpersonationMetadata extends BaseTestImpersonation {
   @Rule
   public ExpectedException thrown = ExpectedException.none();
 
-  @BeforeClass
-  public static void setup() throws Exception {
+  @Before
+  public void setup() throws Exception {
     startMiniDfsCluster(TestImpersonationMetadata.class.getSimpleName());
     startDrillCluster(true);
     addMiniDfsBasedStorage(createTestWorkspaces());
@@ -109,17 +113,17 @@ public class TestImpersonationMetadata extends BaseTestImpersonation {
 
     // create tables as user2
     updateClient(user2);
-    test("use `%s.user2_workspace1`", MINI_DFS_STORAGE_PLUGIN_NAME);
+    run("use `%s.user2_workspace1`", MINI_DFS_STORAGE_PLUGIN_NAME);
     // create a table that can be dropped by another user in a different group
-    test("create table parquet_table_775 as select * from cp.`employee.json`");
+    run("create table parquet_table_775 as select * from cp.`employee.json`");
 
     // create a table that cannot be dropped by another user
-    test("use `%s.user2_workspace2`", MINI_DFS_STORAGE_PLUGIN_NAME);
-    test("create table parquet_table_700 as select * from cp.`employee.json`");
+    run("use `%s.user2_workspace2`", MINI_DFS_STORAGE_PLUGIN_NAME);
+    run("create table parquet_table_700 as select * from cp.`employee.json`");
 
     // Drop tables as user1
     updateClient(user1);
-    test("use `%s.user2_workspace1`", MINI_DFS_STORAGE_PLUGIN_NAME);
+    run("use `%s.user2_workspace1`", MINI_DFS_STORAGE_PLUGIN_NAME);
     testBuilder()
         .sqlQuery("drop table parquet_table_775")
         .unOrdered()
@@ -127,10 +131,10 @@ public class TestImpersonationMetadata extends BaseTestImpersonation {
         .baselineValues(true, String.format("Table [%s] dropped", "parquet_table_775"))
         .go();
 
-    test("use `%s.user2_workspace2`", MINI_DFS_STORAGE_PLUGIN_NAME);
+    run("use `%s.user2_workspace2`", MINI_DFS_STORAGE_PLUGIN_NAME);
     boolean dropFailed = false;
     try {
-      test("drop table parquet_table_700");
+      run("drop table parquet_table_700");
     } catch (UserException e) {
       assertTrue(e.getMessage().contains("PERMISSION ERROR"));
       dropFailed = true;
@@ -146,10 +150,10 @@ public class TestImpersonationMetadata extends BaseTestImpersonation {
     // Process user start the mini dfs, he has read/write permissions by default
     final String viewName = String.format("%s.drill_test_grp_0_700.testView", MINI_DFS_STORAGE_PLUGIN_NAME);
     try {
-      test("CREATE VIEW " + viewName + " AS SELECT * FROM cp.`region.json`");
-      test("SELECT * FROM " + viewName + " LIMIT 2");
+      run("CREATE VIEW " + viewName + " AS SELECT * FROM cp.`region.json`");
+      run("SELECT * FROM " + viewName + " LIMIT 2");
     } finally {
-      test("DROP VIEW " + viewName);
+      run("DROP VIEW " + viewName);
     }
   }
 
@@ -158,28 +162,32 @@ public class TestImpersonationMetadata extends BaseTestImpersonation {
     updateClient(user1);
 
     // Try show tables in schema "drill_test_grp_1_700" which is owned by "user1"
-    int count = testSql(String.format("SHOW FILES IN %s.drill_test_grp_1_700", MINI_DFS_STORAGE_PLUGIN_NAME));
-    assertTrue(count > 0);
+    List<QueryDataBatch> results = client.queryBuilder().sql(String.format("SHOW FILES IN %s.drill_test_grp_1_700",
+      MINI_DFS_STORAGE_PLUGIN_NAME)).results();
+    assertTrue(client.countResults(results) > 0);
 
     // Try show tables in schema "drill_test_grp_0_750" which is owned by "processUser" and has group permissions for "user1"
-    count = testSql(String.format("SHOW FILES IN %s.drill_test_grp_0_750", MINI_DFS_STORAGE_PLUGIN_NAME));
-    assertTrue(count > 0);
+    results = client.queryBuilder().sql(String.format("SHOW FILES IN %s.drill_test_grp_0_750",
+      MINI_DFS_STORAGE_PLUGIN_NAME)).results();
+    assertTrue(client.countResults(results) > 0);
   }
 
   @Test
   public void testShowFilesInWSWithOtherPermissionsForQueryUser() throws Exception {
     updateClient(user2);
     // Try show tables in schema "drill_test_grp_0_755" which is owned by "processUser" and group0. "user2" is not part of the "group0"
-    int count = testSql(String.format("SHOW FILES IN %s.drill_test_grp_0_755", MINI_DFS_STORAGE_PLUGIN_NAME));
-    assertTrue(count > 0);
+    List<QueryDataBatch> results = client.queryBuilder().sql(
+      String.format("SHOW FILES IN %s.drill_test_grp_0_755", MINI_DFS_STORAGE_PLUGIN_NAME)).results();
+    assertTrue(client.countResults(results) > 0);
   }
 
   @Test
   public void testShowFilesInWSWithNoPermissionsForQueryUser() throws Exception {
     updateClient(user2);
     // Try show tables in schema "drill_test_grp_1_700" which is owned by "user1"
-    int count = testSql(String.format("SHOW FILES IN %s.drill_test_grp_1_700", MINI_DFS_STORAGE_PLUGIN_NAME));
-    assertEquals(0, count);
+    List<QueryDataBatch> results = client.queryBuilder().sql(
+      String.format("SHOW FILES IN %s.drill_test_grp_1_700", MINI_DFS_STORAGE_PLUGIN_NAME)).results();
+    assertEquals(0, client.countResults(results));
   }
 
   @Test
@@ -240,21 +248,21 @@ public class TestImpersonationMetadata extends BaseTestImpersonation {
     try {
       updateClient(user);
 
-      test("USE " + viewSchema);
+      run("USE " + viewSchema);
 
-      test("CREATE VIEW " + viewName + " AS SELECT " +
-          "c_custkey, c_nationkey FROM cp.`tpch/customer.parquet` ORDER BY c_custkey;");
+      run("CREATE VIEW " + viewName + " AS SELECT " +
+          "c_custkey, c_nationkey FROM cp.`tpch/customer.parquet` ORDER BY c_custkey");
 
-      testBuilder()
+      client.testBuilder()
           .sqlQuery("SHOW TABLES")
           .unOrdered()
           .baselineColumns("TABLE_SCHEMA", "TABLE_NAME")
           .baselineValues(viewSchema, viewName)
           .go();
 
-      test("SHOW FILES");
+      run("SHOW FILES");
 
-      testBuilder()
+      client.testBuilder()
           .sqlQuery("SELECT * FROM " + viewName + " LIMIT 1")
           .ordered()
           .baselineColumns("c_custkey", "c_nationkey")
@@ -262,7 +270,7 @@ public class TestImpersonationMetadata extends BaseTestImpersonation {
           .go();
 
     } finally {
-      test("DROP VIEW " + viewSchema + "." + viewName);
+      run("DROP VIEW " + viewSchema + "." + viewName);
     }
   }
 
@@ -275,13 +283,13 @@ public class TestImpersonationMetadata extends BaseTestImpersonation {
 
     updateClient(user2);
 
-    test("USE " + viewSchema);
+    run("USE " + viewSchema);
 
     String expErrorMsg = "PERMISSION ERROR: Permission denied: user=drillTestUser2, access=WRITE, inode=\"/" + tableWS;
     thrown.expect(UserRemoteException.class);
     thrown.expectMessage(containsString(expErrorMsg));
 
-    test("CREATE VIEW %s AS" +
+    run("CREATE VIEW %s AS" +
         " SELECT c_custkey, c_nationkey FROM cp.`tpch/customer.parquet` ORDER BY c_custkey", viewName);
 
     // SHOW TABLES is expected to return no records as view creation fails above.
@@ -290,7 +298,7 @@ public class TestImpersonationMetadata extends BaseTestImpersonation {
         .expectsEmptyResultSet()
         .go();
 
-    test("SHOW FILES");
+    run("SHOW FILES");
   }
 
   @Test
@@ -318,14 +326,14 @@ public class TestImpersonationMetadata extends BaseTestImpersonation {
     try {
       updateClient(user);
 
-      test("USE " + Joiner.on(".").join(MINI_DFS_STORAGE_PLUGIN_NAME, tableWS));
+      run("USE " + Joiner.on(".").join(MINI_DFS_STORAGE_PLUGIN_NAME, tableWS));
 
-      test("CREATE TABLE " + tableName + " AS SELECT " +
-          "c_custkey, c_nationkey FROM cp.`tpch/customer.parquet` ORDER BY c_custkey;");
+      run("CREATE TABLE " + tableName + " AS SELECT " +
+          "c_custkey, c_nationkey FROM cp.`tpch/customer.parquet` ORDER BY c_custkey");
 
-      test("SHOW FILES");
+      run("SHOW FILES");
 
-      testBuilder()
+      client.testBuilder()
           .sqlQuery("SELECT * FROM " + tableName + " LIMIT 1")
           .ordered()
           .baselineColumns("c_custkey", "c_nationkey")
@@ -348,13 +356,13 @@ public class TestImpersonationMetadata extends BaseTestImpersonation {
     String tableName = "table1";
 
     updateClient(user2);
-    test("use %s.`%s`", MINI_DFS_STORAGE_PLUGIN_NAME, tableWS);
+    run("use %s.`%s`", MINI_DFS_STORAGE_PLUGIN_NAME, tableWS);
 
     thrown.expect(UserRemoteException.class);
     thrown.expectMessage(containsString("Permission denied: user=drillTestUser2, " +
         "access=WRITE, inode=\"/" + tableWS));
 
-    test("CREATE TABLE %s AS SELECT c_custkey, c_nationkey " +
+    run("CREATE TABLE %s AS SELECT c_custkey, c_nationkey " +
         "FROM cp.`tpch/customer.parquet` ORDER BY c_custkey", tableName);
   }
 
@@ -364,20 +372,20 @@ public class TestImpersonationMetadata extends BaseTestImpersonation {
     final String tableWS = "drill_test_grp_1_700";
 
     updateClient(user1);
-    test("USE " + Joiner.on(".").join(MINI_DFS_STORAGE_PLUGIN_NAME, tableWS));
+    run("USE " + Joiner.on(".").join(MINI_DFS_STORAGE_PLUGIN_NAME, tableWS));
 
-    test("CREATE TABLE " + tableName + " partition by (n_regionkey) AS SELECT * " +
-              "FROM cp.`tpch/nation.parquet`;");
+    run("CREATE TABLE " + tableName + " partition by (n_regionkey) AS SELECT * " +
+              "FROM cp.`tpch/nation.parquet`");
 
-    test( "refresh table metadata " + tableName + ";");
+    run( "refresh table metadata " + tableName);
 
-    test("SELECT * FROM " + tableName + ";");
+    run("SELECT * FROM " + tableName);
 
     final Path tablePath = new Path(Path.SEPARATOR + tableWS + Path.SEPARATOR + tableName);
     assertTrue ( fs.exists(tablePath) && fs.isDirectory(tablePath));
     fs.mkdirs(new Path(tablePath, "tmp5"));
 
-    test("SELECT * from " + tableName + ";");
+    run("SELECT * from " + tableName);
 
   }
 
@@ -387,11 +395,11 @@ public class TestImpersonationMetadata extends BaseTestImpersonation {
     final String tableWS = "drill_test_grp_1_700";
 
     updateClient(user1);
-    test("USE " + Joiner.on(".").join(MINI_DFS_STORAGE_PLUGIN_NAME, tableWS));
-    test("ALTER SESSION SET `store.format` = 'parquet'");
-    test("CREATE TABLE " + tableName + " AS SELECT * FROM cp.`tpch/nation.parquet`;");
-    test("ANALYZE TABLE " + tableName + " COMPUTE STATISTICS;");
-    test("SELECT * FROM " + tableName + ";");
+    run("USE " + Joiner.on(".").join(MINI_DFS_STORAGE_PLUGIN_NAME, tableWS));
+    run("ALTER SESSION SET `store.format` = 'parquet'");
+    run("CREATE TABLE " + tableName + " AS SELECT * FROM cp.`tpch/nation.parquet`");
+    run("ANALYZE TABLE " + tableName + " COMPUTE STATISTICS");
+    run("SELECT * FROM " + tableName);
 
     final Path statsFilePath = new Path(Path.SEPARATOR + tableWS + Path.SEPARATOR + tableName
         + Path.SEPARATOR + DotDrillType.STATS.getEnding());
@@ -402,13 +410,13 @@ public class TestImpersonationMetadata extends BaseTestImpersonation {
 
     fs.mkdirs(new Path(statsFilePath, "tmp5"));
 
-    test("SELECT * from " + tableName + ";");
-    test("DROP TABLE " + tableName);
+    run("SELECT * from " + tableName);
+    run("DROP TABLE " + tableName);
   }
 
-  @AfterClass
-  public static void removeMiniDfsBasedStorage() throws PluginException {
-    getDrillbitContext().getStorage().remove(MINI_DFS_STORAGE_PLUGIN_NAME);
+  @After
+  public void removeMiniDfsBasedStorage() throws PluginException {
+    cluster.storageRegistry().remove(MINI_DFS_STORAGE_PLUGIN_NAME);
     stopMiniDfsCluster();
   }
 }

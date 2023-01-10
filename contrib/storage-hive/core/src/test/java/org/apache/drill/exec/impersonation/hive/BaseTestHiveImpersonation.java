@@ -26,6 +26,7 @@ import org.apache.calcite.schema.Schema.TableType;
 import org.apache.drill.exec.hive.HiveTestUtilities;
 import org.apache.drill.exec.impersonation.BaseTestImpersonation;
 import org.apache.drill.exec.store.hive.HiveStoragePluginConfig;
+import org.apache.drill.test.ClusterFixture;
 import org.apache.drill.test.TestBuilder;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
@@ -94,8 +95,8 @@ public class BaseTestHiveImpersonation extends BaseTestImpersonation {
     whDir = hiveConf.get(ConfVars.METASTOREWAREHOUSE.varname);
     FileSystem.mkdirs(fs, new Path(whDir), new FsPermission((short) 0777));
 
-    studentData = getPhysicalFileFromResource("student.txt");
-    voterData = getPhysicalFileFromResource("voter.txt");
+    studentData = ClusterFixture.getResource("student.txt");
+    voterData = ClusterFixture.getResource("voter.txt");
   }
 
   protected static void startHiveMetaStore() throws Exception {
@@ -143,7 +144,7 @@ public class BaseTestHiveImpersonation extends BaseTestImpersonation {
   }
 
   protected static void addHiveStoragePlugin(final Map<String, String> hiveConfig) throws Exception {
-    getDrillbitContext().getStorage().put(hivePluginName, createHiveStoragePlugin(hiveConfig));
+    cluster.storageRegistry().put(hivePluginName, createHiveStoragePlugin(hiveConfig));
   }
 
   protected void showTablesHelper(final String db, List<String> expectedTables) throws Exception {
@@ -192,7 +193,7 @@ public class BaseTestHiveImpersonation extends BaseTestImpersonation {
 
   static void queryView(String viewName) throws Exception {
     String query = String.format("SELECT rownum FROM %s.tmp.%s ORDER BY rownum LIMIT 1", MINI_DFS_STORAGE_PLUGIN_NAME, viewName);
-    testBuilder()
+    client.testBuilder()
         .sqlQuery(query)
         .unOrdered()
         .baselineColumns("rownum")

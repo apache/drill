@@ -872,7 +872,7 @@ public class TestStorageBasedHiveAuthorization extends BaseTestHiveImpersonation
   }
 
   private static void queryHiveTableOrView(String db, String table) throws Exception {
-    test(String.format("SELECT * FROM hive.%s.%s LIMIT 2", db, table));
+    run(String.format("SELECT * FROM hive.%s.%s LIMIT 2", db, table));
   }
 
   private static void queryTableNotFound(String db, String table) throws Exception {
