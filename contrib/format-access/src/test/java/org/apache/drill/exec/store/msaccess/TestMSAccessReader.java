@@ -32,9 +32,8 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
-import java.nio.file.Paths;
-import java.time.LocalDateTime;
 
+import static org.apache.drill.test.rowSet.RowSetUtilities.strArray;
 import static org.junit.Assert.assertEquals;
 
 @Category(RowSetTest.class)
@@ -43,9 +42,6 @@ public class TestMSAccessReader extends ClusterTest {
   @BeforeClass
   public static void setup() throws Exception {
     ClusterTest.startCluster(ClusterFixture.builder(dirTestWatcher));
-
-    // Needed for compressed file unit test
-    //dirTestWatcher.copyResourceToRoot(Paths.get("sas/"));
   }
 
   @Test
@@ -72,6 +68,55 @@ public class TestMSAccessReader extends ClusterTest {
 
     new RowSetComparison(expected).verifyAndClearAll(results);
   }
+
+  @Test
+  public void testExplicitQuery() throws Exception {
+    String sql = "SELECT ID, Field1, DateExt, DateNormal, DateExtStr, DateNormalCalc " +
+        "FROM table(cp.`data/V2019/extDateTestV2019.accdb` (type=> 'msaccess', tableName => 'Table1')) LIMIT 5";
+    RowSet results = client.queryBuilder().sql(sql).rowSet();
+
+    TupleMetadata expectedSchema = new SchemaBuilder()
+        .addNullable("ID", MinorType.INT)
+        .addNullable("Field1", MinorType.VARCHAR)
+        .addNullable("DateExt", MinorType.TIMESTAMP)
+        .addNullable("DateNormal", MinorType.TIMESTAMP)
+        .addNullable("DateExtStr", MinorType.VARCHAR)
+        .addNullable("DateNormalCalc", MinorType.TIMESTAMP)
+        .buildSchema();
+
+    RowSet expected = new RowSetBuilder(client.allocator(), expectedSchema)
+        .addRow(1, "row1", QueryTestUtil.ConvertDateToLong("2020-06-17T00:00:00Z"), QueryTestUtil.ConvertDateToLong("2020-06-17T00:00:00Z"), "6/17/2020", QueryTestUtil.ConvertDateToLong("2020-06-17T00:00:00Z"))
+        .addRow(2, "row2", QueryTestUtil.ConvertDateToLong("2021-06-14T00:00:00Z"), QueryTestUtil.ConvertDateToLong("2021-06-14T00:00:00Z"), "6/14/2021", QueryTestUtil.ConvertDateToLong("2021-06-14T00:00:00Z"))
+        .addRow(3, "row3", QueryTestUtil.ConvertDateToLong("2021-06-14T12:45:00Z"), QueryTestUtil.ConvertDateToLong("2021-06-14T12:45:00Z"), "6/14/2021 12:45:00.0000000 PM", QueryTestUtil.ConvertDateToLong("2021-06-14T12:45:00Z"))
+        .addRow(4, "row4", QueryTestUtil.ConvertDateToLong("2021-06-14T01:45:00Z"), QueryTestUtil.ConvertDateToLong("2021-06-14T01:45:00Z"), "6/14/2021 1:45:00.0000000 AM", QueryTestUtil.ConvertDateToLong("2021-06-14T01:45:00Z"))
+        .addRow(5, "row5", null, null, null, null)
+        .build();
+
+    new RowSetComparison(expected).verifyAndClearAll(results);
+  }
+
+  @Test
+  public void testMetadataStarQuery() throws Exception {
+    String sql = "SELECT * FROM cp.`data/V2019/extDateTestV2019.accdb`";
+    RowSet results = client.queryBuilder().sql(sql).rowSet();
+results.print();
+    TupleMetadata expectedSchema = new SchemaBuilder()
+        .add("table", MinorType.VARCHAR)
+        .add("created_date", MinorType.TIMESTAMP)
+        .add("updated_date", MinorType.TIMESTAMP)
+        .add("row_count", MinorType.INT)
+        .add("col_count", MinorType.INT)
+        .addArray("columns", MinorType.VARCHAR)
+        .buildSchema();
+
+    RowSet expected = new RowSetBuilder(client.allocator(), expectedSchema)
+        .addRow("Table1", QueryTestUtil.ConvertDateToLong("2021-06-03T20:09:56.993Z"),
+            QueryTestUtil.ConvertDateToLong("2021-06-03T20:09:56.993Z"), 9, 6, strArray("ID", "Field1", "DateExt", "DateNormal", "DateExtStr", "DateNormalCalc"))
+        .build();
+
+    new RowSetComparison(expected).verifyAndClearAll(results);
+  }
+
 
   @Test
   public void testSerDe() throws Exception {

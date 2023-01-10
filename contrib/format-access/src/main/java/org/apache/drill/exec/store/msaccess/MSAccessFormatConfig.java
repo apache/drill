@@ -41,7 +41,7 @@ public class MSAccessFormatConfig implements FormatPluginConfig {
   @JsonCreator
   public MSAccessFormatConfig(@JsonProperty("extensions") List<String> extensions,
                               @JsonProperty("tableName") String tableName) {
-    this.extensions = extensions == null ? Arrays.asList("accbd", "mdb") : ImmutableList.copyOf(extensions);
+    this.extensions = extensions == null ? Arrays.asList("accdb", "mdb") : ImmutableList.copyOf(extensions);
     this.tableName = tableName;
   }
 

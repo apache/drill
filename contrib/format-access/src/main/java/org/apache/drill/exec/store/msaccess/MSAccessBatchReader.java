@@ -29,6 +29,7 @@ import org.apache.drill.common.AutoCloseables;
 import org.apache.drill.common.exceptions.CustomErrorContext;
 import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.common.types.TypeProtos.MinorType;
+import org.apache.drill.exec.physical.impl.scan.v3.FixedReceiver;
 import org.apache.drill.exec.physical.impl.scan.v3.ManagedReader;
 import org.apache.drill.exec.physical.impl.scan.v3.file.FileDescrip;
 import org.apache.drill.exec.physical.impl.scan.v3.file.FileSchemaNegotiator;
@@ -36,6 +37,7 @@ import org.apache.drill.exec.physical.resultSet.ResultSetLoader;
 import org.apache.drill.exec.physical.resultSet.RowSetLoader;
 import org.apache.drill.exec.record.metadata.SchemaBuilder;
 import org.apache.drill.exec.record.metadata.TupleMetadata;
+import org.apache.drill.exec.vector.accessor.ArrayWriter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -57,38 +59,80 @@ public class MSAccessBatchReader implements ManagedReader {
 
   private final FileDescrip file;
   private final CustomErrorContext errorContext;
-  private final Database db;
-  private final Table table;
-  private final Iterator<Row> rowIterator;
   private final RowSetLoader rowWriter;
   private final File tempDir;
   private final List<MSAccessColumn> columnList;
   private final MSAccessFormatConfig config;
-  private final InputStream fsStream;
+  private final boolean metadataOnly;
+  private Set<String> tableList;
+  private Iterator<Row> rowIterator;
+  private Iterator<String> tableIterator;
+  private InputStream fsStream;
+  private Table table;
+  private Database db;
 
   public MSAccessBatchReader(FileSchemaNegotiator negotiator, File tempDir, MSAccessFormatConfig config) {
     this.tempDir = tempDir;
     this.columnList = new ArrayList<>();
     this.config = config;
+    this.file = negotiator.file();
+    this.errorContext = negotiator.parentErrorContext();
+    this.metadataOnly = StringUtils.isEmpty(config.getTableName());
 
-    file = negotiator.file();
-    errorContext = negotiator.parentErrorContext();
+    openFile();
+    buildSchema(negotiator);
 
-    try {
-      fsStream = file.fileSystem().openPossiblyCompressedStream(file.split().getPath());
-      db = DatabaseBuilder.open(convertInputStreamToFile(fsStream));
-      Set<String> x = db.getTableNames();
-    } catch (IOException e) {
-      throw UserException.dataReadError(e)
-          .message("Error reading MS Access file: " + e.getMessage())
-          .addContext(errorContext)
-          .build(logger);
+    if (metadataOnly) {
+      tableIterator = tableList.iterator();
+    } else {
+      rowIterator = table.iterator();
     }
 
-    // This is broken out into a separate try/catch block, so we get a better error message in the event the table
-    // is not found or otherwise unreadable.
+    ResultSetLoader loader = negotiator.build();
+    rowWriter = loader.writer();
+  }
+
+  /**
+   * Constructs the schema and adds it to the {@link FileSchemaNegotiator}. In the event a table is not
+   * specified, a metadata schema will be returned which will be useful for discovering the tables present in a
+   * given file.
+   * @param negotiator The {@link FileSchemaNegotiator} from the plugin.
+   */
+  private void buildSchema(FileSchemaNegotiator negotiator) {
+    // Now build the schema
+    SchemaBuilder schemaBuilder = new SchemaBuilder();
+
+    if (metadataOnly) {
+      TupleMetadata metadataSchema = buildMetadataSchema(schemaBuilder);
+      negotiator.tableSchema(metadataSchema, true);
+    } else {
+      // Add schema if provided. Users probably shouldn't use this.
+      TupleMetadata derivedSchema = buildSchemaFromTable(schemaBuilder, config.getTableName());
+      if (negotiator.providedSchema() != null) {
+        // Merge the provided schema with the schema from the file.
+        TupleMetadata mergeSchemas = FixedReceiver.Builder.mergeSchemas(negotiator.providedSchema(), derivedSchema);
+        negotiator.tableSchema(mergeSchemas, true);
+      } else {
+        negotiator.tableSchema(derivedSchema, true);
+      }
+    }
+  }
+
+  private TupleMetadata buildMetadataSchema(SchemaBuilder builder) {
+    // Adds the table name
+    builder.add("table", MinorType.VARCHAR);
+    builder.add("created_date", MinorType.TIMESTAMP);
+    builder.add("updated_date", MinorType.TIMESTAMP);
+    builder.add("row_count", MinorType.INT);
+    builder.add("col_count", MinorType.INT);
+    builder.addArray("columns", MinorType.VARCHAR);
+
+    return builder.buildSchema();
+  }
+
+  private TupleMetadata buildSchemaFromTable(SchemaBuilder builder, String tableName) {
     try {
-      table = db.getTable(config.getTableName());
+      table = db.getTable(tableName);
     } catch (IOException e) {
       throw UserException.dataReadError(e)
           .message("Table " + config.getTableName() + " not found. " + e.getMessage())
@@ -96,27 +140,6 @@ public class MSAccessBatchReader implements ManagedReader {
           .build(logger);
     }
 
-
-    // Now build the schema
-    SchemaBuilder schemaBuilder = new SchemaBuilder();
-
-    // Add schema if provided. Users probably shouldn't use this.
-    TupleMetadata schema;
-    if (negotiator.providedSchema() != null) {
-      schema = negotiator.providedSchema();
-      negotiator.tableSchema(schema, false);
-    } else {
-      schema = buildSchema(schemaBuilder);
-      negotiator.tableSchema(schema, true);
-    }
-
-    rowIterator = table.iterator();
-
-    ResultSetLoader loader = negotiator.build();
-    rowWriter = loader.writer();
-  }
-
-  private TupleMetadata buildSchema(SchemaBuilder builder) {
     List<? extends Column> columns = table.getColumns();
 
     for (Column column : columns) {
@@ -186,13 +209,69 @@ public class MSAccessBatchReader implements ManagedReader {
   @Override
   public boolean next() {
     while (!rowWriter.isFull()) {
-      if (rowIterator.hasNext()) {
-        processRow(rowIterator.next());
+      if (metadataOnly) {
+        if (tableIterator.hasNext()) {
+          try {
+            processMetadataRow(tableIterator.next());
+          } catch (IOException e) {
+            throw UserException.dataReadError(e)
+                .message("Error retrieving metadata for table: " + e.getMessage())
+                .addContext(errorContext)
+                .build(logger);
+          }
+        } else {
+          return false;
+        }
       } else {
-        return false;
+        if (rowIterator.hasNext()) {
+          processRow(rowIterator.next());
+        } else {
+          return false;
+        }
       }
     }
     return true;
+  }
+
+  private void openFile() {
+    try {
+      fsStream = file.fileSystem().openPossiblyCompressedStream(file.split().getPath());
+      db = DatabaseBuilder.open(convertInputStreamToFile(fsStream));
+      tableList = db.getTableNames();
+    } catch (IOException e) {
+      throw UserException.dataReadError(e)
+          .message("Error reading MS Access file: " + e.getMessage())
+          .addContext(errorContext)
+          .build(logger);
+    }
+  }
+
+  private void processMetadataRow(String tableName) throws IOException {
+    Table table;
+    try {
+      table = db.getTable(tableName);
+    } catch (IOException e) {
+      throw UserException.dataReadError(e)
+          .message("Error retrieving metadata for table " + tableName + ": " + e.getMessage())
+          .addContext(errorContext)
+          .build(logger);
+    }
+
+    rowWriter.start();
+    rowWriter.scalar("table").setString(tableName);
+    LocalDateTime createdDate = table.getCreatedDate();
+    rowWriter.scalar("created_date").setTimestamp(createdDate.toInstant(ZoneOffset.UTC));
+    LocalDateTime updatedDate = table.getCreatedDate();
+    rowWriter.scalar("updated_date").setTimestamp(updatedDate.toInstant(ZoneOffset.UTC));
+    rowWriter.scalar("row_count").setInt(table.getRowCount());
+    rowWriter.scalar("col_count").setInt(table.getColumnCount());
+    // Write the columns
+    ArrayWriter arrayWriter = rowWriter.array("columns");
+    for (Column column : table.getColumns()) {
+      arrayWriter.scalar().setString(column.getName());
+    }
+    arrayWriter.save();
+    rowWriter.save();
   }
 
   private void processRow(Row next) {
