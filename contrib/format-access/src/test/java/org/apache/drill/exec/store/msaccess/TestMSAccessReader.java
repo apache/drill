@@ -99,7 +99,7 @@ public class TestMSAccessReader extends ClusterTest {
   public void testMetadataStarQuery() throws Exception {
     String sql = "SELECT * FROM cp.`data/V2019/extDateTestV2019.accdb`";
     RowSet results = client.queryBuilder().sql(sql).rowSet();
-results.print();
+
     TupleMetadata expectedSchema = new SchemaBuilder()
         .add("table", MinorType.VARCHAR)
         .add("created_date", MinorType.TIMESTAMP)
