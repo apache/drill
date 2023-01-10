@@ -72,7 +72,6 @@ public class DistributionFunctions {
       } else if (inputValue.value > MaxRangeValueHolder.value) {
         bucket.value = bucketCount + 1;
       } else {
-        double f = (1 + (inputValue.value - MinRangeValueHolder.value) / binWidth);
         bucket.value = (int) (1 + (inputValue.value - MinRangeValueHolder.value) / binWidth);
       }
     }
