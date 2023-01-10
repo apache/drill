@@ -44,7 +44,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.StandardCopyOption;
-import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
 import java.util.ArrayList;
@@ -64,25 +63,39 @@ public class MSAccessBatchReader implements ManagedReader {
   private final RowSetLoader rowWriter;
   private final File tempDir;
   private final List<MSAccessColumn> columnList;
-  private InputStream fsStream;
+  private final MSAccessFormatConfig config;
+  private final InputStream fsStream;
 
-  public MSAccessBatchReader(FileSchemaNegotiator negotiator, File tempDir) {
-    file = negotiator.file();
-    errorContext = negotiator.parentErrorContext();
+  public MSAccessBatchReader(FileSchemaNegotiator negotiator, File tempDir, MSAccessFormatConfig config) {
     this.tempDir = tempDir;
     this.columnList = new ArrayList<>();
+    this.config = config;
+
+    file = negotiator.file();
+    errorContext = negotiator.parentErrorContext();
 
     try {
       fsStream = file.fileSystem().openPossiblyCompressedStream(file.split().getPath());
       db = DatabaseBuilder.open(convertInputStreamToFile(fsStream));
-      Set<String> tables = db.getTableNames();
-      table = db.getTable("MSP_PROJECTS");  // TODO Fixme
+      Set<String> x = db.getTableNames();
     } catch (IOException e) {
       throw UserException.dataReadError(e)
           .message("Error reading MS Access file: " + e.getMessage())
           .addContext(errorContext)
           .build(logger);
     }
+
+    // This is broken out into a separate try/catch block, so we get a better error message in the event the table
+    // is not found or otherwise unreadable.
+    try {
+      table = db.getTable(config.getTableName());
+    } catch (IOException e) {
+      throw UserException.dataReadError(e)
+          .message("Table " + config.getTableName() + " not found. " + e.getMessage())
+          .addContext(errorContext)
+          .build(logger);
+    }
+
 
     // Now build the schema
     SchemaBuilder schemaBuilder = new SchemaBuilder();
@@ -106,7 +119,6 @@ public class MSAccessBatchReader implements ManagedReader {
   private TupleMetadata buildSchema(SchemaBuilder builder) {
     List<? extends Column> columns = table.getColumns();
 
-    int columnIndex = 0;
     for (Column column : columns) {
       MinorType drillDataType;
       String columnName = column.getName();
@@ -166,8 +178,7 @@ public class MSAccessBatchReader implements ManagedReader {
               .message(dataType.name() + " is not supported.")
               .build(logger);
       }
-      columnList.add(new MSAccessColumn(columnName, columnIndex, drillDataType));
-      columnIndex++;
+      columnList.add(new MSAccessColumn(columnName, drillDataType));
     }
     return builder.buildSchema();
   }
@@ -272,12 +283,10 @@ public class MSAccessBatchReader implements ManagedReader {
 
   private static class MSAccessColumn {
     private final String columnName;
-    private final int columnIndex;
     private final MinorType dataType;
 
-    public MSAccessColumn(String columnName, int columnIndex, MinorType dataType) {
+    public MSAccessColumn(String columnName, MinorType dataType) {
       this.columnName = columnName;
-      this.columnIndex = columnIndex;
       this.dataType = dataType;
     }
   }

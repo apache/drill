@@ -19,14 +19,23 @@
 package org.apache.drill.exec.store.msaccess;
 
 import org.apache.drill.categories.RowSetTest;
+import org.apache.drill.common.types.TypeProtos.MinorType;
 import org.apache.drill.exec.physical.rowSet.RowSet;
+import org.apache.drill.exec.physical.rowSet.RowSetBuilder;
+import org.apache.drill.exec.record.metadata.SchemaBuilder;
+import org.apache.drill.exec.record.metadata.TupleMetadata;
 import org.apache.drill.test.ClusterFixture;
 import org.apache.drill.test.ClusterTest;
+import org.apache.drill.test.QueryTestUtil;
+import org.apache.drill.test.rowSet.RowSetComparison;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
 import java.nio.file.Paths;
+import java.time.LocalDateTime;
+
+import static org.junit.Assert.assertEquals;
 
 @Category(RowSetTest.class)
 public class TestMSAccessReader extends ClusterTest {
@@ -41,8 +50,35 @@ public class TestMSAccessReader extends ClusterTest {
 
   @Test
   public void testStarQuery() throws Exception {
-    String sql = "SELECT * FROM cp.`data/V2010/test2V2010.accdb`";
+    String sql = "SELECT * FROM table(cp.`data/V2019/extDateTestV2019.accdb` (type=> 'msaccess', tableName => 'Table1')) LIMIT 5";
     RowSet results = client.queryBuilder().sql(sql).rowSet();
-    results.print();
+
+    TupleMetadata expectedSchema = new SchemaBuilder()
+        .addNullable("ID", MinorType.INT)
+        .addNullable("Field1", MinorType.VARCHAR)
+        .addNullable("DateExt", MinorType.TIMESTAMP)
+        .addNullable("DateNormal", MinorType.TIMESTAMP)
+        .addNullable("DateExtStr", MinorType.VARCHAR)
+        .addNullable("DateNormalCalc", MinorType.TIMESTAMP)
+        .buildSchema();
+
+    RowSet expected = new RowSetBuilder(client.allocator(), expectedSchema)
+        .addRow(1, "row1", QueryTestUtil.ConvertDateToLong("2020-06-17T00:00:00Z"), QueryTestUtil.ConvertDateToLong("2020-06-17T00:00:00Z"), "6/17/2020", QueryTestUtil.ConvertDateToLong("2020-06-17T00:00:00Z"))
+        .addRow(2, "row2", QueryTestUtil.ConvertDateToLong("2021-06-14T00:00:00Z"), QueryTestUtil.ConvertDateToLong("2021-06-14T00:00:00Z"), "6/14/2021", QueryTestUtil.ConvertDateToLong("2021-06-14T00:00:00Z"))
+        .addRow(3, "row3", QueryTestUtil.ConvertDateToLong("2021-06-14T12:45:00Z"), QueryTestUtil.ConvertDateToLong("2021-06-14T12:45:00Z"), "6/14/2021 12:45:00.0000000 PM", QueryTestUtil.ConvertDateToLong("2021-06-14T12:45:00Z"))
+        .addRow(4, "row4", QueryTestUtil.ConvertDateToLong("2021-06-14T01:45:00Z"), QueryTestUtil.ConvertDateToLong("2021-06-14T01:45:00Z"), "6/14/2021 1:45:00.0000000 AM", QueryTestUtil.ConvertDateToLong("2021-06-14T01:45:00Z"))
+        .addRow(5, "row5", null, null, null, null)
+        .build();
+
+    new RowSetComparison(expected).verifyAndClearAll(results);
+  }
+
+  @Test
+  public void testSerDe() throws Exception {
+    String sql = "SELECT COUNT(*) AS cnt FROM " +
+        "table(cp.`data/V2019/extDateTestV2019.accdb` (type=> 'msaccess', tableName => 'Table1'))";
+    String plan = queryBuilder().sql(sql).explainJson();
+    long cnt = queryBuilder().physical(plan).singletonLong();
+    assertEquals("Counts should match",9L, cnt);
   }
 }

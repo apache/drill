@@ -28,7 +28,7 @@
         <version>1.21.0-SNAPSHOT</version>
     </parent>
 
-    <artifactId>drill-msaccess-format</artifactId>
+    <artifactId>drill-format-msaccess</artifactId>
 
     <name>Drill : Contrib : Format : MS Access</name>
 

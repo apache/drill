@@ -44,13 +44,15 @@ public class MSAccessFormatPlugin extends EasyFormatPlugin<MSAccessFormatConfig>
   private static class MSAccessReaderFactory extends FileReaderFactory {
 
     private final File tempDir;
-    public MSAccessReaderFactory(File tempDir) {
+    private final MSAccessFormatConfig config;
+    public MSAccessReaderFactory(File tempDir, MSAccessFormatConfig config) {
       this.tempDir = tempDir;
+      this.config = config;
     }
 
     @Override
     public ManagedReader newReader(FileSchemaNegotiator negotiator) {
-      return new MSAccessBatchReader(negotiator, tempDir);
+      return new MSAccessBatchReader(negotiator, tempDir, config);
     }
   }
 
@@ -80,7 +82,7 @@ public class MSAccessFormatPlugin extends EasyFormatPlugin<MSAccessFormatConfig>
   @Override
   protected void configureScan(FileScanLifecycleBuilder builder, EasySubScan scan) {
     builder.nullType(Types.optional(TypeProtos.MinorType.VARCHAR));
-    builder.readerFactory(new MSAccessReaderFactory(getTmpDir()));
+    builder.readerFactory(new MSAccessReaderFactory(getTmpDir(), formatConfig));
   }
 
   /**

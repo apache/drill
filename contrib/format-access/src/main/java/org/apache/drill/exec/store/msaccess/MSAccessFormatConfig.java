@@ -20,6 +20,7 @@ package org.apache.drill.exec.store.msaccess;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonInclude.Include;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import org.apache.drill.common.PlanStringBuilder;
@@ -27,7 +28,6 @@ import org.apache.drill.common.logical.FormatPluginConfig;
 import org.apache.drill.shaded.guava.com.google.common.collect.ImmutableList;
 
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 
@@ -35,16 +35,24 @@ import java.util.Objects;
 @JsonInclude(JsonInclude.Include.NON_DEFAULT)
 public class MSAccessFormatConfig implements FormatPluginConfig {
   private final List<String> extensions;
+  private final String tableName;
 
   // Omitted properties take reasonable defaults
   @JsonCreator
-  public MSAccessFormatConfig(@JsonProperty("extensions") List<String> extensions) {
+  public MSAccessFormatConfig(@JsonProperty("extensions") List<String> extensions,
+                              @JsonProperty("tableName") String tableName) {
     this.extensions = extensions == null ? Arrays.asList("accbd", "mdb") : ImmutableList.copyOf(extensions);
+    this.tableName = tableName;
   }
 
-  @JsonInclude(JsonInclude.Include.NON_DEFAULT)
+  @JsonInclude(Include.NON_DEFAULT)
   public List<String> getExtensions() {
     return extensions;
+  }
+
+  @JsonInclude(Include.NON_DEFAULT)
+  public String getTableName() {
+    return tableName;
   }
 
   @Override
@@ -56,18 +64,20 @@ public class MSAccessFormatConfig implements FormatPluginConfig {
       return false;
     }
     MSAccessFormatConfig that = (MSAccessFormatConfig) o;
-    return Objects.equals(extensions, that.extensions);
+    return Objects.equals(extensions, that.extensions) &&
+        Objects.equals(tableName, that.tableName);
   }
 
   @Override
   public int hashCode() {
-    return Objects.hash(extensions);
+    return Objects.hash(extensions, tableName);
   }
 
   @Override
   public String toString() {
     return new PlanStringBuilder(this)
         .field("extensions", extensions)
+        .field("tableName", tableName)
         .toString();
   }
 }
