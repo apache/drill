@@ -1,0 +1,37 @@
+{
+  "storage": {
+    "dfs": {
+      "type": "file",
+      "formats": {
+        "msaccess": {
+          "type": "msaccess",
+          "extensions": [
+            "mdb", "accdb"
+          ]
+        }
+      }
+    },
+    "cp": {
+      "type": "file",
+      "formats": {
+        "msaccess": {
+          "type": "msaccess",
+          "extensions": [
+            "mdb", "accdb"
+          ]
+        }
+      }
+    },
+    "s3": {
+      "type": "file",
+      "formats": {
+        "msaccess": {
+          "type": "msaccess",
+          "extensions": [
+            "mdb", "accdb"
+          ]
+        }
+      }
+    }
+  }
+}
