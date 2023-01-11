@@ -5,7 +5,7 @@ This storage plugin implementation is based on [Apache Calcite adapter for Elast
 
 For more details about supported versions please refer to [Supported versions](https://calcite.apache.org/docs/elasticsearch_adapter.html#supported-versions) page.
 
-### Supported optimizations and features
+## Supported Optimizations and Features
 
 This storage plugin supports the following optimizations:
 
@@ -19,7 +19,7 @@ This storage plugin supports the following optimizations:
 Besides these optimizations, ElasticSearch storage plugin supports the schema provisioning feature.
 For more details please refer to [Specifying the Schema as Table Function Parameter](https://drill.apache.org/docs/plugin-configuration-basics/#specifying-the-schema-as-table-function-parameter).
 
-### Plugin registration
+## Plugin Registration
 
 The plugin can be registered in Apache Drill using the drill web interface by navigating to the `storage` page.
 Following is the default registration configuration.
@@ -36,7 +36,19 @@ Following is the default registration configuration.
 }
 ```
 
-### Developer notes
+## User Translation
+The ElasticSearch plugin supports user translation, which allows each individual user to access ElasticSearch with their own credentials. 
+
+Simply add the following to the storage plugin configuration:
+```json
+  "authType": "USER_TRANSLATION",
+  "credentialsProvider": {
+    "credentialsProviderType": "PlainCredentialsProvider"
+  }
+```
+
+
+## Developer Notes
 
 Most of the common classes required for creating storage plugins based on Calcite adapters are placed in the 
 `java-exec` module, so they can be reused in future plugin implementations.

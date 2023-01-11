@@ -20,12 +20,17 @@ package org.apache.drill.exec.store.elasticsearch.schema;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import org.apache.calcite.adapter.elasticsearch.ElasticsearchSchemaFactory;
 import org.apache.calcite.schema.SchemaPlus;
+import org.apache.drill.common.exceptions.UserException;
+import org.apache.drill.common.logical.StoragePluginConfig.AuthMode;
 import org.apache.drill.exec.store.AbstractSchemaFactory;
 import org.apache.drill.exec.store.SchemaConfig;
 import org.apache.drill.exec.store.elasticsearch.ElasticsearchStoragePlugin;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class ElasticsearchDrillSchemaFactory extends AbstractSchemaFactory {
 
+  private static final Logger logger = LoggerFactory.getLogger(ElasticsearchDrillSchemaFactory.class);
   private final ElasticsearchStoragePlugin plugin;
   private final ElasticsearchSchemaFactory delegate;
 
@@ -37,8 +42,19 @@ public class ElasticsearchDrillSchemaFactory extends AbstractSchemaFactory {
 
   @Override
   public void registerSchemas(SchemaConfig schemaConfig, SchemaPlus parent) throws JsonProcessingException {
-    ElasticsearchDrillSchema schema = new ElasticsearchDrillSchema(getName(), plugin,
-        delegate.create(parent, getName(), plugin.getConfig().toConfigMap()));
+    ElasticsearchDrillSchema schema;
+    if (plugin.getConfig().getAuthMode() == AuthMode.SHARED_USER) {
+       schema = new ElasticsearchDrillSchema(getName(), plugin,
+          delegate.create(parent, getName(), plugin.getConfig().toConfigMap()));
+    } else if (plugin.getConfig().getAuthMode() == AuthMode.USER_TRANSLATION) {
+      // Get user's info
+      schema = new ElasticsearchDrillSchema(getName(), plugin,
+          delegate.create(parent, getName(), plugin.getConfig().toConfigMap(schemaConfig.getUserName())));
+    } else {
+      throw UserException.internalError()
+          .message("User Impersonation not supported as an authentication mode for ElasticSearch.  The only authentication modes supported are SHARED_USER and USER_TRANSLATION")
+          .build(logger);
+    }
     parent.add(getName(), schema);
   }
 }

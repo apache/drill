@@ -17,6 +17,7 @@
  */
 package org.apache.drill.exec.store.elasticsearch;
 
+import org.apache.drill.common.logical.StoragePluginConfig.AuthMode;
 import org.apache.drill.common.logical.security.PlainCredentialsProvider;
 import org.apache.drill.shaded.guava.com.google.common.collect.ImmutableMap;
 import org.apache.drill.test.ClusterFixture;
@@ -57,7 +58,7 @@ public class ElasticComplexTypesTest extends ClusterTest {
 
     ElasticsearchStorageConfig config = new ElasticsearchStorageConfig(
         Collections.singletonList(TestElasticsearchSuite.getAddress()),
-        null, null, null, PlainCredentialsProvider.EMPTY_CREDENTIALS_PROVIDER);
+        null, null, null, AuthMode.SHARED_USER.name(), PlainCredentialsProvider.EMPTY_CREDENTIALS_PROVIDER);
     config.setEnabled(true);
     cluster.defineStoragePlugin("elastic", config);
 

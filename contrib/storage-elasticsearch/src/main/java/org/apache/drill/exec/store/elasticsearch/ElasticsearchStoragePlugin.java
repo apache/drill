@@ -21,17 +21,23 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import org.apache.calcite.adapter.elasticsearch.CalciteUtils;
 import org.apache.calcite.plan.RelOptRule;
 import org.apache.calcite.schema.SchemaPlus;
+import org.apache.drill.common.logical.StoragePluginConfig.AuthMode;
 import org.apache.drill.exec.ops.OptimizerRulesContext;
 import org.apache.drill.exec.planner.PlannerPhase;
 import org.apache.drill.exec.server.DrillbitContext;
 import org.apache.drill.exec.store.AbstractStoragePlugin;
 import org.apache.drill.exec.store.SchemaConfig;
 import org.apache.drill.exec.store.elasticsearch.schema.ElasticsearchDrillSchemaFactory;
+import org.apache.drill.exec.store.security.UsernamePasswordCredentials;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.Collections;
+import java.util.Optional;
 import java.util.Set;
 
 public class ElasticsearchStoragePlugin extends AbstractStoragePlugin {
+  private static final Logger logger = LoggerFactory.getLogger(ElasticsearchStoragePlugin.class);
   private final ElasticsearchStorageConfig config;
   private final ElasticsearchDrillSchemaFactory schemaFactory;
 
@@ -44,6 +50,20 @@ public class ElasticsearchStoragePlugin extends AbstractStoragePlugin {
 
   @Override
   public void registerSchemas(SchemaConfig schemaConfig, SchemaPlus parent) throws JsonProcessingException {
+    // Check to see if user translation is enabled.  If so, and creds are
+    // not present, then do not register any schemata.  This prevents
+    // info schema errors.
+    if (config.getAuthMode() == AuthMode.USER_TRANSLATION) {
+      Optional<UsernamePasswordCredentials> userCreds = config.getUsernamePasswordCredentials(schemaConfig.getUserName());
+      if (! userCreds.isPresent()) {
+        logger.debug(
+            "No schemas will be registered in {} for query user {}.",
+            getName(), schemaConfig.getUserName()
+        );
+        return;
+      }
+    }
+
     schemaFactory.registerSchemas(schemaConfig, parent);
   }
 

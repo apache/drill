@@ -17,15 +17,14 @@
  */
 package org.apache.drill.exec.store.elasticsearch;
 
+import org.apache.drill.common.logical.StoragePluginConfig.AuthMode;
 import org.apache.drill.common.logical.security.PlainCredentialsProvider;
 import org.apache.drill.test.ClusterFixture;
 import org.apache.drill.test.ClusterTest;
-import org.apache.http.HttpHost;
 import org.elasticsearch.action.admin.indices.delete.DeleteIndexRequest;
 import org.elasticsearch.action.admin.indices.refresh.RefreshRequest;
 import org.elasticsearch.action.index.IndexRequest;
 import org.elasticsearch.client.RequestOptions;
-import org.elasticsearch.client.RestClient;
 import org.elasticsearch.client.RestHighLevelClient;
 import org.elasticsearch.client.indices.CreateIndexRequest;
 import org.elasticsearch.xcontent.XContentBuilder;
@@ -52,7 +51,10 @@ public class ElasticInfoSchemaTest extends ClusterTest {
 
     ElasticsearchStorageConfig config = new ElasticsearchStorageConfig(
         Collections.singletonList(TestElasticsearchSuite.getAddress()),
-        null, null, null, PlainCredentialsProvider.EMPTY_CREDENTIALS_PROVIDER);
+        TestElasticsearchSuite.ELASTICSEARCH_USERNAME, TestElasticsearchSuite.ELASTICSEARCH_PASSWORD,
+        null, AuthMode.SHARED_USER.name(),
+        PlainCredentialsProvider.EMPTY_CREDENTIALS_PROVIDER);
+
     config.setEnabled(true);
     cluster.defineStoragePlugin("elastic", config);
 
@@ -68,7 +70,7 @@ public class ElasticInfoSchemaTest extends ClusterTest {
   }
 
   private static void prepareData() throws IOException {
-    restHighLevelClient = new RestHighLevelClient(RestClient.builder(HttpHost.create(TestElasticsearchSuite.getAddress())));
+    restHighLevelClient = TestElasticsearchSuite.getClient();
 
     String indexName = "t1";
     indexNames.add(indexName);

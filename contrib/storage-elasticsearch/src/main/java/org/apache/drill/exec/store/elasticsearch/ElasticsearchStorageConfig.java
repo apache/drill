@@ -63,8 +63,10 @@ public class ElasticsearchStorageConfig extends StoragePluginConfig {
       @JsonProperty(USERNAME) String username,
       @JsonProperty(PASSWORD) String password,
       @JsonProperty(PATH_PREFIX) String pathPrefix,
+      @JsonProperty("authMode") String authMode,
       @JsonProperty(CREDENTIALS_PROVIDER) CredentialsProvider credentialsProvider) {
-    super(CredentialProviderUtils.getCredentialsProvider(username, password, credentialsProvider), credentialsProvider == null);
+    super(CredentialProviderUtils.getCredentialsProvider(username, password, credentialsProvider),
+        credentialsProvider == null, AuthMode.parseOrDefault(authMode, AuthMode.SHARED_USER));
     this.hosts = hosts;
     this.pathPrefix = pathPrefix;
   }
@@ -102,6 +104,18 @@ public class ElasticsearchStorageConfig extends StoragePluginConfig {
       .build();
   }
 
+  /**
+   * Gets the credentials. This method is used when user translation is enabled.
+   * @return An {@link Optional} containing {@link UsernamePasswordCredentials} from the config.
+   */
+  @JsonIgnore
+  public Optional<UsernamePasswordCredentials> getUsernamePasswordCredentials(String username) {
+    return new UsernamePasswordCredentials.Builder()
+        .setCredentialsProvider(credentialsProvider)
+        .setQueryUser(username)
+        .build();
+  }
+
   @JsonIgnore
   public Map<String, Object> toConfigMap()
       throws JsonProcessingException {
@@ -117,6 +131,29 @@ public class ElasticsearchStorageConfig extends StoragePluginConfig {
     builder.putAll(credentials);
     return builder.build();
   }
+
+  /**
+   * This method is used when user translation is enabled.
+   * @param queryUser The user who submitted the query
+   * @return A map of the configuration details.
+   * @throws JsonProcessingException If JSON is unparsable, throw exception
+   */
+  @JsonIgnore
+  public Map<String, Object> toConfigMap(String queryUser)
+      throws JsonProcessingException {
+    Map<String, String> credentials = new HashMap<>(credentialsProvider.getUserCredentials(queryUser));
+    ImmutableMap.Builder<String, Object> builder = ImmutableMap.builder();
+    builder.put(HOSTS, OBJECT_WRITER.writeValueAsString(hosts));
+    builder.put(PATH_PREFIX, pathPrefix != null ? pathPrefix : EMPTY_STRING);
+    builder.put(USERNAME, credentials.getOrDefault(USERNAME, EMPTY_STRING));
+    builder.put(PASSWORD, credentials.getOrDefault(PASSWORD, EMPTY_STRING));
+
+    credentials.remove(USERNAME);
+    credentials.remove(PASSWORD);
+    builder.putAll(credentials);
+    return builder.build();
+  }
+
 
   @Override
   public boolean equals(Object o) {
