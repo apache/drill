@@ -1,7 +1,0 @@
-Test1	Test2	Test3
-Foo	Bar	Ralph
-S	Mouse	Rocks
-	Partial line
-" Quoted Value"	 bazz 	" Really ""Crazy
-value"""
-buzz	"embedded	separator"	long	line
