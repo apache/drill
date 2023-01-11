@@ -64,6 +64,7 @@ public class MSAccessBatchReader implements ManagedReader {
   private final List<MSAccessColumn> columnList;
   private final MSAccessFormatConfig config;
   private final boolean metadataOnly;
+  private File tempFile;
   private Set<String> tableList;
   private Iterator<Row> rowIterator;
   private Iterator<String> tableIterator;
@@ -134,6 +135,7 @@ public class MSAccessBatchReader implements ManagedReader {
     try {
       table = db.getTable(tableName);
     } catch (IOException e) {
+      deleteTempFile();
       throw UserException.dataReadError(e)
           .message("Table " + config.getTableName() + " not found. " + e.getMessage())
           .addContext(errorContext)
@@ -197,6 +199,7 @@ public class MSAccessBatchReader implements ManagedReader {
           drillDataType = MinorType.TIMESTAMP;
           break;
         default:
+          deleteTempFile();
           throw UserException.dataReadError()
               .message(dataType.name() + " is not supported.")
               .build(logger);
@@ -214,6 +217,7 @@ public class MSAccessBatchReader implements ManagedReader {
           try {
             processMetadataRow(tableIterator.next());
           } catch (IOException e) {
+            deleteTempFile();
             throw UserException.dataReadError(e)
                 .message("Error retrieving metadata for table: " + e.getMessage())
                 .addContext(errorContext)
@@ -239,6 +243,7 @@ public class MSAccessBatchReader implements ManagedReader {
       db = DatabaseBuilder.open(convertInputStreamToFile(fsStream));
       tableList = db.getTableNames();
     } catch (IOException e) {
+      deleteTempFile();
       throw UserException.dataReadError(e)
           .message("Error reading MS Access file: " + e.getMessage())
           .addContext(errorContext)
@@ -251,6 +256,7 @@ public class MSAccessBatchReader implements ManagedReader {
     try {
       table = db.getTable(tableName);
     } catch (IOException e) {
+      deleteTempFile();
       throw UserException.dataReadError(e)
           .message("Error retrieving metadata for table " + tableName + ": " + e.getMessage())
           .addContext(errorContext)
@@ -328,6 +334,7 @@ public class MSAccessBatchReader implements ManagedReader {
   public void close() {
     AutoCloseables.closeSilently(db);
     AutoCloseables.closeSilently(fsStream);
+    deleteTempFile();
   }
 
   /**
@@ -339,14 +346,14 @@ public class MSAccessBatchReader implements ManagedReader {
    */
   private File convertInputStreamToFile(InputStream stream) {
     String tempFileName = tempDir.getPath() + "/~" + file.filePath().getName();
-    File targetFile = new File(tempFileName);
+    tempFile = new File(tempFileName);
 
     try {
-      Files.copy(stream, targetFile.toPath(), StandardCopyOption.REPLACE_EXISTING);
+      Files.copy(stream, tempFile.toPath(), StandardCopyOption.REPLACE_EXISTING);
     } catch (Exception e) {
-      if (targetFile.exists()) {
-        if (!targetFile.delete()) {
-          logger.warn("{} not deleted.", targetFile.getName());
+      if (tempFile.exists()) {
+        if (!tempFile.delete()) {
+          logger.warn("{} not deleted.", tempFile.getName());
         }
       }
       throw UserException
@@ -357,7 +364,16 @@ public class MSAccessBatchReader implements ManagedReader {
     }
 
     AutoCloseables.closeSilently(stream);
-    return targetFile;
+    return tempFile;
+  }
+
+  private void deleteTempFile() {
+    if (tempFile != null) {
+      if (!tempFile.delete()) {
+        logger.warn("{} file not deleted.", tempFile.getName());
+      }
+      tempFile = null;
+    }
   }
 
   private static class MSAccessColumn {
