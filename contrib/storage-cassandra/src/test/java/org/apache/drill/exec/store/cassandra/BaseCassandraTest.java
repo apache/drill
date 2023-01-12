@@ -17,11 +17,19 @@
  */
 package org.apache.drill.exec.store.cassandra;
 
-import org.apache.drill.test.ClusterFixture;
+import org.apache.drill.common.logical.StoragePluginConfig.AuthMode;
+import org.apache.drill.common.logical.security.PlainCredentialsProvider;
+import org.apache.drill.exec.ExecConstants;
+import org.apache.drill.test.ClusterFixtureBuilder;
 import org.apache.drill.test.ClusterTest;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.testcontainers.containers.CassandraContainer;
+
+import java.util.HashMap;
+
+import static org.apache.drill.exec.rpc.user.security.testing.UserAuthenticatorTestImpl.TEST_USER_1;
+import static org.apache.drill.exec.rpc.user.security.testing.UserAuthenticatorTestImpl.TEST_USER_2;
 
 public class BaseCassandraTest extends ClusterTest {
 
@@ -32,16 +40,36 @@ public class BaseCassandraTest extends ClusterTest {
   }
 
   private static void initCassandraPlugin(CassandraContainer<?> cassandra) throws Exception {
-    startCluster(ClusterFixture.builder(dirTestWatcher));
+    ClusterFixtureBuilder builder = new ClusterFixtureBuilder(dirTestWatcher)
+        .configProperty(ExecConstants.HTTP_ENABLE, true)
+        .configProperty(ExecConstants.HTTP_PORT_HUNT, true)
+        .configProperty(ExecConstants.IMPERSONATION_ENABLED, true);
+    startCluster(builder);
 
     CassandraStorageConfig config = new CassandraStorageConfig(
         cassandra.getHost(),
         cassandra.getMappedPort(CassandraContainer.CQL_PORT),
         cassandra.getUsername(),
         cassandra.getPassword(),
+        AuthMode.SHARED_USER.name(),
         null);
     config.setEnabled(true);
     cluster.defineStoragePlugin("cassandra", config);
+
+    PlainCredentialsProvider credentialsProvider = new PlainCredentialsProvider(new HashMap<>());
+    // Add authorized user
+    credentialsProvider.setUserCredentials(cassandra.getUsername(), cassandra.getPassword(), TEST_USER_1);
+    // Add unauthorized user
+    credentialsProvider.setUserCredentials("nope", "no way dude", TEST_USER_2);
+
+    CassandraStorageConfig ut_config = new CassandraStorageConfig(
+        cassandra.getHost(),
+        cassandra.getMappedPort(CassandraContainer.CQL_PORT),
+        null, null,
+        AuthMode.USER_TRANSLATION.name(),
+        credentialsProvider);
+    ut_config.setEnabled(true);
+    cluster.defineStoragePlugin("ut_cassandra", ut_config);
   }
 
   @AfterClass

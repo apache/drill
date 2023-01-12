@@ -22,7 +22,9 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonTypeName;
 
+import org.apache.drill.common.PlanStringBuilder;
 import org.apache.drill.common.logical.StoragePluginConfig;
+import org.apache.drill.common.logical.security.PlainCredentialsProvider;
 import org.apache.drill.exec.store.security.CredentialProviderUtils;
 import org.apache.drill.common.logical.security.CredentialsProvider;
 import org.apache.drill.exec.store.security.UsernamePasswordCredentials;
@@ -35,7 +37,6 @@ import java.util.Optional;
 @JsonTypeName(CassandraStorageConfig.NAME)
 public class CassandraStorageConfig extends StoragePluginConfig {
   public static final String NAME = "cassandra";
-
   private final String host;
   private final int port;
 
@@ -45,11 +46,18 @@ public class CassandraStorageConfig extends StoragePluginConfig {
       @JsonProperty("port") int port,
       @JsonProperty("username") String username,
       @JsonProperty("password") String password,
+      @JsonProperty("authMode") String authMode,
       @JsonProperty("credentialsProvider") CredentialsProvider credentialsProvider) {
     super(CredentialProviderUtils.getCredentialsProvider(username, password, credentialsProvider),
-        credentialsProvider == null);
+        credentialsProvider == null, AuthMode.parseOrDefault(authMode, AuthMode.SHARED_USER));
     this.host = host;
     this.port = port;
+  }
+
+  private CassandraStorageConfig(CassandraStorageConfig that, CredentialsProvider credentialsProvider) {
+    super(getCredentialsProvider(credentialsProvider), credentialsProvider == null, that.authMode);
+    this.host = that.host;
+    this.port = that.port;
   }
 
   public String getHost() {
@@ -80,6 +88,37 @@ public class CassandraStorageConfig extends StoragePluginConfig {
   }
 
   @JsonIgnore
+  public Optional<UsernamePasswordCredentials> getUsernamePasswordCredentials(String username) {
+    return new UsernamePasswordCredentials.Builder()
+        .setCredentialsProvider(credentialsProvider)
+        .setQueryUser(username)
+        .build();
+  }
+
+  @JsonIgnore
+  public Map<String, Object> toConfigMap(String username) {
+    Optional<UsernamePasswordCredentials> credentials = getUsernamePasswordCredentials(username);
+
+    Map<String, Object> result = new HashMap<>();
+    result.put("host", host);
+    result.put("port", port);
+    if (credentials.isPresent()) {
+      result.put("username", credentials.get().getUsername());
+      result.put("password", credentials.get().getPassword());
+    }
+    return result;
+  }
+
+  @Override
+  public CassandraStorageConfig updateCredentialProvider(CredentialsProvider credentialsProvider) {
+    return new CassandraStorageConfig(this, credentialsProvider);
+  }
+
+  private static CredentialsProvider getCredentialsProvider(CredentialsProvider credentialsProvider) {
+    return credentialsProvider != null ? credentialsProvider : PlainCredentialsProvider.EMPTY_CREDENTIALS_PROVIDER;
+  }
+
+  @JsonIgnore
   public Map<String, Object> toConfigMap() {
     Optional<UsernamePasswordCredentials> credentials = getUsernamePasswordCredentials();
 
@@ -102,12 +141,22 @@ public class CassandraStorageConfig extends StoragePluginConfig {
       return false;
     }
     CassandraStorageConfig that = (CassandraStorageConfig) o;
-    return Objects.equals(host, that.host)
-        && Objects.equals(credentialsProvider, that.credentialsProvider);
+    return Objects.equals(host, that.host) &&
+        Objects.equals(port, that.port) &&
+        Objects.equals(credentialsProvider, that.credentialsProvider);
   }
 
   @Override
   public int hashCode() {
-    return Objects.hash(host, credentialsProvider);
+    return Objects.hash(host, port, credentialsProvider);
+  }
+
+  @Override
+  public String toString() {
+    return new PlanStringBuilder(this)
+        .field("host", host)
+        .field("port", port)
+        .field("credentialsProvider", credentialsProvider)
+        .toString();
   }
 }

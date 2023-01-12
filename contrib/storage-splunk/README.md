@@ -42,6 +42,10 @@ Sometimes Splunk has issue in connection to it:
 https://github.com/splunk/splunk-sdk-java/issues/62 <br>
 To bypass it by Drill please specify "reconnectRetries": 3. It allows you to retry the connection several times.
 
+### User Translation
+The Splunk plugin supports user translation.  Simply set the `authMode` parameter to `USER_TRANSLATION` and use either the plain or vault credential provider for credentials.
+
+
 ## Understanding Splunk's Data Model
 Splunk's primary use case is analyzing event logs with a timestamp. As such, data is indexed by the timestamp, with the most recent data being indexed first.  By default, Splunk
  will sort the data in reverse chronological order.  Large Splunk installations will put older data into buckets of hot, warm and cold storage with the "cold" storage on the
