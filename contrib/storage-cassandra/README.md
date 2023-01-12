@@ -5,7 +5,7 @@ This storage plugin implementation is based on [Apache Calcite adapter for Cassa
 
 This storage plugin may be used for querying Scylla DB.
 
-### Supported optimizations and features
+## Supported Optimizations and Features
 
 This storage plugin supports the following optimizations:
 
@@ -16,7 +16,7 @@ This storage plugin supports the following optimizations:
 Except for these optimizations, Cassandra storage plugin supports the schema provisioning feature.
 For more details please refer to [Specifying the Schema as Table Function Parameter](https://drill.apache.org/docs/plugin-configuration-basics/#specifying-the-schema-as-table-function-parameter).
 
-### Plugin registration
+## Plugin Registration
 
 The plugin can be registered in Apache Drill using the drill web interface by navigating to the `storage` page.
 Following is the default registration configuration.
@@ -32,7 +32,10 @@ Following is the default registration configuration.
 }
 ```
 
-### Developer notes
+### User Translation
+The Cassandra plugin supports user translation, which allows each user to authenticate using their own credentials instead of using system-wide credentials.  Simply set the `authMode` parameter to `USER_TRANSLATION` and use either the plain or vault credential provider for credentials.
+
+## Developer Notes
 
 Most of the common classes required for creating storage plugins based on Calcite adapters are placed in the 
 `java-exec` module, so they can be reused in future plugin implementations.

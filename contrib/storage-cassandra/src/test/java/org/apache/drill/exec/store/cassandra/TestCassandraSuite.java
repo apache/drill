@@ -31,7 +31,7 @@ import org.testcontainers.containers.CassandraContainer;
 
 @Category(SlowTest.class)
 @RunWith(Suite.class)
-@Suite.SuiteClasses({CassandraComplexTypesTest.class, CassandraPlanTest.class, CassandraQueryTest.class})
+@Suite.SuiteClasses({CassandraComplexTypesTest.class, CassandraPlanTest.class, CassandraQueryTest.class, CassandraUserTranslationTest.class})
 public class TestCassandraSuite extends BaseTest {
 
   protected static CassandraContainer<?> cassandra;
