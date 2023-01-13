@@ -24,7 +24,9 @@ import com.fasterxml.jackson.annotation.JsonTypeName;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.ObjectWriter;
+import org.apache.drill.common.PlanStringBuilder;
 import org.apache.drill.common.logical.StoragePluginConfig;
+import org.apache.drill.common.logical.security.PlainCredentialsProvider;
 import org.apache.drill.exec.store.security.CredentialProviderUtils;
 import org.apache.drill.common.logical.security.CredentialsProvider;
 import org.apache.drill.exec.store.security.UsernamePasswordCredentials;
@@ -69,6 +71,21 @@ public class ElasticsearchStorageConfig extends StoragePluginConfig {
         credentialsProvider == null, AuthMode.parseOrDefault(authMode, AuthMode.SHARED_USER));
     this.hosts = hosts;
     this.pathPrefix = pathPrefix;
+  }
+
+  private ElasticsearchStorageConfig(ElasticsearchStorageConfig that, CredentialsProvider credentialsProvider) {
+    super(getCredentialsProvider(credentialsProvider), credentialsProvider == null, that.authMode);
+    this.hosts = that.hosts;
+    this.pathPrefix = that.getPathPrefix();
+  }
+
+  @Override
+  public ElasticsearchStorageConfig updateCredentialProvider(CredentialsProvider credentialsProvider) {
+    return new ElasticsearchStorageConfig(this, credentialsProvider);
+  }
+
+  private static CredentialsProvider getCredentialsProvider(CredentialsProvider credentialsProvider) {
+    return credentialsProvider != null ? credentialsProvider : PlainCredentialsProvider.EMPTY_CREDENTIALS_PROVIDER;
   }
 
   public List<String> getHosts() {
@@ -164,12 +181,22 @@ public class ElasticsearchStorageConfig extends StoragePluginConfig {
       return false;
     }
     ElasticsearchStorageConfig that = (ElasticsearchStorageConfig) o;
-    return Objects.equals(hosts, that.hosts)
-        && Objects.equals(credentialsProvider, that.credentialsProvider);
+    return Objects.equals(hosts, that.hosts) &&
+        Objects.equals(pathPrefix, that.pathPrefix) &&
+        Objects.equals(credentialsProvider, that.credentialsProvider);
   }
 
   @Override
   public int hashCode() {
-    return Objects.hash(hosts, credentialsProvider);
+    return Objects.hash(hosts, pathPrefix, credentialsProvider);
+  }
+
+  @Override
+  public String toString() {
+    return new PlanStringBuilder(this)
+        .field("hosts", hosts)
+        .field("pathPrefix", pathPrefix)
+        .field("credentialsProvider", credentialsProvider)
+        .toString();
   }
 }

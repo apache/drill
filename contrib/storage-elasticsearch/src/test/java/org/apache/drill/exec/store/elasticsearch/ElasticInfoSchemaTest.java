@@ -21,10 +21,12 @@ import org.apache.drill.common.logical.StoragePluginConfig.AuthMode;
 import org.apache.drill.common.logical.security.PlainCredentialsProvider;
 import org.apache.drill.test.ClusterFixture;
 import org.apache.drill.test.ClusterTest;
+import org.apache.http.HttpHost;
 import org.elasticsearch.action.admin.indices.delete.DeleteIndexRequest;
 import org.elasticsearch.action.admin.indices.refresh.RefreshRequest;
 import org.elasticsearch.action.index.IndexRequest;
 import org.elasticsearch.client.RequestOptions;
+import org.elasticsearch.client.RestClient;
 import org.elasticsearch.client.RestHighLevelClient;
 import org.elasticsearch.client.indices.CreateIndexRequest;
 import org.elasticsearch.xcontent.XContentBuilder;
@@ -36,7 +38,11 @@ import org.junit.Test;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
+
+import static org.apache.drill.exec.rpc.user.security.testing.UserAuthenticatorTestImpl.TEST_USER_1;
+import static org.apache.drill.exec.rpc.user.security.testing.UserAuthenticatorTestImpl.TEST_USER_2;
 
 public class ElasticInfoSchemaTest extends ClusterTest {
 
@@ -51,7 +57,7 @@ public class ElasticInfoSchemaTest extends ClusterTest {
 
     ElasticsearchStorageConfig config = new ElasticsearchStorageConfig(
         Collections.singletonList(TestElasticsearchSuite.getAddress()),
-        TestElasticsearchSuite.ELASTICSEARCH_USERNAME, TestElasticsearchSuite.ELASTICSEARCH_PASSWORD,
+        "elastic", "changeme",
         null, AuthMode.SHARED_USER.name(),
         PlainCredentialsProvider.EMPTY_CREDENTIALS_PROVIDER);
 
@@ -70,7 +76,7 @@ public class ElasticInfoSchemaTest extends ClusterTest {
   }
 
   private static void prepareData() throws IOException {
-    restHighLevelClient = TestElasticsearchSuite.getClient();
+    restHighLevelClient = new RestHighLevelClient(RestClient.builder(HttpHost.create(TestElasticsearchSuite.getAddress())));
 
     String indexName = "t1";
     indexNames.add(indexName);
