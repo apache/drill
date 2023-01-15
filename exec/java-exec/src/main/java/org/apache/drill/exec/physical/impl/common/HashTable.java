@@ -98,6 +98,26 @@ public interface HashTable {
    */
   int probeForKey(int incomingRowIdx, int hashCode) throws SchemaChangeException;
 
+  /**
+   * @param currentIndex The composite index of the key in the hash table (index of BatchHolder and record in Batch Holder).
+   * @return Returns -1 if the count of records for a specific key is not computed. Otherwise returns
+   * the count of records for a specific key.
+   */
+  int getRecordNumForKey(int currentIndex);
+
+  /**
+   * Set the count of records for a specific key to num.
+   * @param currentIndex The composite index of the key in the hash table (index of BatchHolder and record in Batch Holder).
+   * @param num The count of records for a specific key to be set.
+   */
+  void setRecordNumForKey(int currentIndex, int num);
+
+  /**
+   * Decrease the count of records for a specific key by one.
+   * @param currentIndex The composite index of the key in the hash table (index of BatchHolder and record in Batch Holder).
+   */
+  void decreaseRecordNumForKey(int currentIndex);
+
   void getStats(HashTableStats stats);
 
   int size();

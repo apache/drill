@@ -23,6 +23,7 @@ import java.util.List;
 import org.apache.drill.exec.planner.physical.Prel;
 import org.apache.drill.exec.planner.physical.ProjectPrel;
 import org.apache.drill.exec.planner.physical.ScreenPrel;
+import org.apache.drill.exec.planner.physical.SetOpPrel;
 import org.apache.drill.exec.planner.physical.UnionPrel;
 import org.apache.drill.exec.planner.physical.WriterPrel;
 import org.apache.calcite.rel.RelNode;
@@ -86,8 +87,8 @@ public class FinalColumnReorderer extends BasePrelVisitor<Prel, Void, RuntimeExc
 
   @Override
   public Prel visitPrel(Prel prel, Void value) throws RuntimeException {
-    if(prel instanceof UnionPrel) {
-      return addColumnOrderingBelowUnion(prel);
+    if(prel instanceof UnionPrel || prel instanceof SetOpPrel) {
+      return addColumnOrderingBelow(prel);
     }
 
     List<RelNode> children = Lists.newArrayList();
@@ -106,13 +107,13 @@ public class FinalColumnReorderer extends BasePrelVisitor<Prel, Void, RuntimeExc
     }
   }
 
-  private Prel addColumnOrderingBelowUnion(Prel prel) {
+  private Prel addColumnOrderingBelow(Prel prel) {
     List<RelNode> children = Lists.newArrayList();
     for (Prel p : prel) {
       Prel child = p.accept(this, null);
 
-      boolean needProjectBelowUnion = !(p instanceof ProjectPrel);
-      if(needProjectBelowUnion) {
+      boolean needProjectBelow = !(p instanceof ProjectPrel);
+      if(needProjectBelow) {
         child = addTrivialOrderedProjectPrel(child, false);
       }
 

@@ -18,13 +18,16 @@
 package org.apache.drill.exec.planner;
 
 import org.apache.drill.exec.planner.logical.ConvertMetadataAggregateToDirectScanRule;
+import org.apache.drill.exec.planner.logical.DrillAddAggForExceptRule;
 import org.apache.drill.exec.planner.logical.DrillDistinctJoinToSemiJoinRule;
+import org.apache.drill.exec.planner.logical.DrillSetOpRule;
 import org.apache.drill.exec.planner.logical.DrillReduceExpressionsRule;
 import org.apache.drill.exec.planner.logical.DrillTableModifyRule;
 import org.apache.drill.exec.planner.physical.MetadataAggPrule;
 import org.apache.drill.exec.planner.physical.MetadataControllerPrule;
 import org.apache.drill.exec.planner.physical.MetadataHandlerPrule;
 import org.apache.drill.exec.planner.physical.TableModifyPrule;
+import org.apache.drill.exec.planner.physical.SetOpPrule;
 import org.apache.drill.shaded.guava.com.google.common.collect.ImmutableSet;
 import org.apache.drill.shaded.guava.com.google.common.collect.ImmutableSet.Builder;
 import org.apache.drill.shaded.guava.com.google.common.collect.Lists;
@@ -187,7 +190,8 @@ public enum PlannerPhase {
       return PlannerPhase.mergedRuleSets(
           RuleSets.ofList(
               DrillReduceAggregatesRule.INSTANCE_SUM,
-              DrillReduceAggregatesRule.INSTANCE_WINDOW_SUM),
+              DrillReduceAggregatesRule.INSTANCE_WINDOW_SUM,
+              DrillAddAggForExceptRule.INSTANCE),
           getStorageRules(context, plugins, this)
           );
     }
@@ -396,6 +400,7 @@ public enum PlannerPhase {
      */
     ImmutableSet.Builder<RelOptRule> basicRules = ImmutableSet.<RelOptRule>builder()
         .addAll(staticRuleSet)
+        .addAll(DrillSetOpRule.INSTANCES)
         .add(
             DrillMergeProjectRule.getInstance(true, RelFactories.DEFAULT_PROJECT_FACTORY,
                 optimizerRulesContext.getFunctionRegistry())
@@ -534,6 +539,7 @@ public enum PlannerPhase {
     ruleList.add(PushLimitToTopN.INSTANCE);
     ruleList.add(LimitExchangeTransposeRule.INSTANCE);
     ruleList.add(UnionAllPrule.INSTANCE);
+    ruleList.add(SetOpPrule.INSTANCE);
     ruleList.add(ValuesPrule.INSTANCE);
     ruleList.add(DirectScanPrule.INSTANCE);
     ruleList.add(RowKeyJoinPrule.INSTANCE);

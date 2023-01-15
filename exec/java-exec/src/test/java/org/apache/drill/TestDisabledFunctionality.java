@@ -48,42 +48,6 @@ public class TestDisabledFunctionality extends BaseTestQuery {
   }
 
   @Test(expected = UnsupportedRelOperatorException.class) // see DRILL-1921
-  public void testDisabledIntersect() throws Exception {
-    try {
-      test("(select n_name as name from cp.`tpch/nation.parquet`) INTERSECT (select r_name as name from cp.`tpch/region.parquet`)");
-    } catch(UserException ex) {
-      throwAsUnsupportedException(ex);
-    }
-  }
-
-  @Test(expected = UnsupportedRelOperatorException.class) // see DRILL-1921
-  public void testDisabledIntersectALL() throws Exception {
-    try {
-      test("(select n_name as name from cp.`tpch/nation.parquet`) INTERSECT ALL (select r_name as name from cp.`tpch/region.parquet`)");
-    } catch(UserException ex) {
-      throwAsUnsupportedException(ex);
-    }
-  }
-
-  @Test(expected = UnsupportedRelOperatorException.class) // see DRILL-1921
-  public void testDisabledExceptALL() throws Exception {
-    try {
-      test("(select n_name as name from cp.`tpch/nation.parquet`) EXCEPT ALL (select r_name as name from cp.`tpch/region.parquet`)");
-    } catch(UserException ex) {
-      throwAsUnsupportedException(ex);
-    }
-  }
-
-  @Test(expected = UnsupportedRelOperatorException.class) // see DRILL-1921
-  public void testDisabledExcept() throws Exception {
-    try {
-      test("(select n_name as name from cp.`tpch/nation.parquet`) EXCEPT (select r_name as name from cp.`tpch/region.parquet`)");
-    } catch(UserException ex) {
-      throwAsUnsupportedException(ex);
-    }
-  }
-
-  @Test(expected = UnsupportedRelOperatorException.class) // see DRILL-1921
   public void testDisabledNaturalJoin() throws Exception {
     try {
       test("select * from cp.`tpch/nation.parquet` NATURAL JOIN cp.`tpch/region.parquet`");

@@ -782,7 +782,7 @@ public class HashJoinBatch extends AbstractBinaryRecordBatch<HashJoinPOP>
     HashTableConfig htConfig = new HashTableConfig(
         (int) context.getOptions().getOption(ExecConstants.MIN_HASH_TABLE_SIZE),
         true, HashTable.DEFAULT_LOAD_FACTOR, rightExpr, leftExpr, comparators,
-        joinControl.asInt());
+        joinControl.asInt(), false);
 
     // Create the chained hash table
     baseHashTable = new ChainedHashTable(htConfig, context, allocator,

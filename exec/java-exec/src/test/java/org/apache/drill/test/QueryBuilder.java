@@ -829,12 +829,17 @@ public class QueryBuilder {
      *  only if expected pattern was not matched or unexpected pattern was matched.
      */
     public void match() {
-      included.forEach(pattern -> match(pattern, true));
-      excluded.forEach(pattern -> match(pattern, false));
+      included.forEach(pattern -> match(pattern, true, false));
+      excluded.forEach(pattern -> match(pattern, false, false));
     }
 
-    private void match(String patternString, boolean expectedResult) {
-      Pattern pattern = Pattern.compile(patternString);
+    public void match(boolean matchMultiLine) {
+      included.forEach(pattern -> match(pattern, true, matchMultiLine));
+      excluded.forEach(pattern -> match(pattern, false, matchMultiLine));
+    }
+
+    private void match(String patternString, boolean expectedResult, boolean matchMultiLine) {
+      Pattern pattern = Pattern.compile(patternString, (matchMultiLine ? Pattern.DOTALL : 0));
       Matcher matcher = pattern.matcher(plan);
       String message = String.format("%s in plan: %s\n%s",
         expectedResult ? EXPECTED_NOT_FOUND : UNEXPECTED_FOUND, patternString, plan);

@@ -386,6 +386,18 @@ public class HashPartition implements HashJoinMemoryCalculator.PartitionStat {
     return hashTable.probeForKey(recordsProcessed, hashCode);
   }
 
+  public int getRecordNumForKey(int currentIndex) {
+    return hashTable.getRecordNumForKey(currentIndex);
+  }
+
+  public void setRecordNumForKey(int currentIndex, int num) {
+    hashTable.setRecordNumForKey(currentIndex, num);
+  }
+
+  public void decreaseRecordNumForKey(int currentIndex) {
+    hashTable.decreaseRecordNumForKey(currentIndex);
+  }
+
   public Pair<Integer, Boolean> getStartIndex(int probeIndex) {
     /* The current probe record has a key that matches. Get the index
      * of the first row in the build side that matches the current key

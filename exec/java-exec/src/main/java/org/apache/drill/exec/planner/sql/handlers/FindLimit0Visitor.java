@@ -17,6 +17,7 @@
  */
 package org.apache.drill.exec.planner.sql.handlers;
 
+import org.apache.drill.exec.planner.common.DrillSetOpRelBase;
 import org.apache.drill.shaded.guava.com.google.common.base.Preconditions;
 import org.apache.drill.shaded.guava.com.google.common.collect.ImmutableSet;
 import com.fasterxml.jackson.annotation.JsonCreator;
@@ -184,7 +185,7 @@ public class FindLimit0Visitor extends RelShuttleImpl {
     final RelShuttle unsupportedOperationsVisitor = new RelShuttleImpl() {
       @Override
       public RelNode visit(RelNode other) {
-        if (other instanceof DrillUnionRelBase) {
+        if (other instanceof DrillUnionRelBase || other instanceof DrillSetOpRelBase) {
           isUnsupported.value = true;
           return other;
         } else if (other instanceof DrillProjectRelBase) {
