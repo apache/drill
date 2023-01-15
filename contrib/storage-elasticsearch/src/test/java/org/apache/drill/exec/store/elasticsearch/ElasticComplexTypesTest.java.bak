@@ -58,7 +58,8 @@ public class ElasticComplexTypesTest extends ClusterTest {
 
     ElasticsearchStorageConfig config = new ElasticsearchStorageConfig(
         Collections.singletonList(TestElasticsearchSuite.getAddress()),
-        null, null, null, AuthMode.SHARED_USER.name(), PlainCredentialsProvider.EMPTY_CREDENTIALS_PROVIDER);
+        TestElasticsearchSuite.ELASTICSEARCH_USERNAME, TestElasticsearchSuite.ELASTICSEARCH_PASSWORD,
+        null, AuthMode.SHARED_USER.name(), PlainCredentialsProvider.EMPTY_CREDENTIALS_PROVIDER);
     config.setEnabled(true);
     cluster.defineStoragePlugin("elastic", config);
 

@@ -66,9 +66,21 @@
       <scope>test</scope>
     </dependency>
     <dependency>
+      <groupId>org.elasticsearch</groupId>
+      <artifactId>elasticsearch</artifactId>
+      <version>8.6.0</version>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
       <groupId>org.elasticsearch.client</groupId>
-      <artifactId>elasticsearch-rest-high-level-client</artifactId>
-      <version>7.17.5</version>
+      <artifactId>elasticsearch-rest-client</artifactId>
+      <version>8.6.0</version>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>co.elastic.clients</groupId>
+      <artifactId>elasticsearch-java</artifactId>
+      <version>8.6.0</version>
       <scope>test</scope>
     </dependency>
     <dependency>

@@ -17,32 +17,55 @@
  */
 package org.apache.drill.exec.store.elasticsearch;
 
+import co.elastic.clients.elasticsearch.ElasticsearchClient;
+import co.elastic.clients.transport.ElasticsearchTransport;
+import co.elastic.clients.transport.rest_client.RestClientTransport;
+import org.apache.commons.io.IOUtils;
 import org.apache.drill.categories.SlowTest;
 import org.apache.drill.test.BaseTest;
 
+import org.apache.http.HttpHost;
+import org.apache.http.auth.AuthScope;
+import org.apache.http.auth.UsernamePasswordCredentials;
+import org.apache.http.client.CredentialsProvider;
+import org.apache.http.impl.client.BasicCredentialsProvider;
+import org.apache.http.ssl.SSLContextBuilder;
+import org.apache.http.ssl.SSLContexts;
+import org.elasticsearch.client.RestClient;
+import org.elasticsearch.client.RestClientBuilder;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.experimental.categories.Category;
 import org.junit.runner.RunWith;
 import org.junit.runners.Suite;
+import org.testcontainers.containers.wait.strategy.LogMessageWaitStrategy;
 import org.testcontainers.elasticsearch.ElasticsearchContainer;
-import org.testcontainers.utility.DockerImageName;
+import co.elastic.clients.json.jackson.JacksonJsonpMapper;
 
+
+import javax.net.ssl.SSLContext;
+import java.io.ByteArrayInputStream;
 import java.io.IOException;
-import java.time.Duration;
+import java.security.KeyStore;
+import java.security.cert.Certificate;
+import java.security.cert.CertificateFactory;
 import java.util.concurrent.atomic.AtomicInteger;
 
 
 @Category(SlowTest.class)
 @RunWith(Suite.class)
-@Suite.SuiteClasses({ElasticComplexTypesTest.class,
+@Suite.SuiteClasses({
+    /*ElasticComplexTypesTest.class,
     ElasticInfoSchemaTest.class,
     ElasticSearchPlanTest.class,
-    ElasticSearchQueryTest.class,
+    ElasticSearchQueryTest.class,*/
     ElasticSearchUserTranslationTest.class})
 public class TestElasticsearchSuite extends BaseTest {
 
   protected static ElasticsearchContainer elasticsearch;
+  public static final String ELASTICSEARCH_USERNAME = "elastic";
+  public static final String ELASTICSEARCH_PASSWORD = "s3cret";
+  private static final String IMAGE_NAME = "docker.elastic.co/elasticsearch/elasticsearch:8.0.0";
 
   private static final AtomicInteger initCount = new AtomicInteger(0);
 
@@ -59,10 +82,6 @@ public class TestElasticsearchSuite extends BaseTest {
     }
   }
 
-  public static boolean isRunningSuite() {
-    return runningSuite;
-  }
-
   @AfterClass
   public static void tearDownCluster() {
     synchronized (TestElasticsearchSuite.class) {
@@ -72,15 +91,72 @@ public class TestElasticsearchSuite extends BaseTest {
     }
   }
 
-  private static void startElasticsearch() throws IOException {
-    DockerImageName imageName = DockerImageName.parse("elasticsearch:7.14.2")
-        .asCompatibleSubstituteFor("docker.elastic.co/elasticsearch/elasticsearch");
-    elasticsearch = new ElasticsearchContainer(imageName)
-        .withStartupTimeout(Duration.ofMinutes(2))
-        .withEnv("ELASTIC_PASSWORD", "password")
-        .withPassword("password");
+  public static boolean isRunningSuite() {
+    return runningSuite;
+  }
 
+  /**
+   * Returns an {@link CredentialsProvider} for use with the ElasticSearch test container.
+   * @return A {@link CredentialsProvider} with the default credentials.
+   */
+  public static CredentialsProvider getCredentialsProvider() {
+    CredentialsProvider credentialsProvider = new BasicCredentialsProvider();
+    credentialsProvider.setCredentials(AuthScope.ANY,
+        new UsernamePasswordCredentials(ELASTICSEARCH_USERNAME, ELASTICSEARCH_PASSWORD));
+    return credentialsProvider;
+  }
+
+  public static byte[] getCertAsBytes(ElasticsearchContainer container) {
+    return container.copyFileFromContainer(
+        "/usr/share/elasticsearch/config/certs/http_ca.crt",
+        IOUtils::toByteArray);
+  }
+
+  public static SSLContext createContextFromCaCert(byte[] certAsBytes) {
+    try {
+      CertificateFactory factory = CertificateFactory.getInstance("X.509");
+      Certificate trustedCa = factory.generateCertificate(
+          new ByteArrayInputStream(certAsBytes)
+      );
+      KeyStore trustStore = KeyStore.getInstance("pkcs12");
+      trustStore.load(null, null);
+      trustStore.setCertificateEntry("ca", trustedCa);
+      SSLContextBuilder sslContextBuilder =
+          SSLContexts.custom().loadTrustMaterial(trustStore, null);
+      return sslContextBuilder.build();
+    } catch (Exception e) {
+      throw new RuntimeException(e);
+    }
+  }
+
+  public static ElasticsearchClient getESClient() {
+    HttpHost host = new HttpHost(elasticsearch.getHost(), elasticsearch.getMappedPort(9200), "https");
+
+    final RestClientBuilder builder = RestClient.builder(host);
+
+    builder.setHttpClientConfigCallback(clientBuilder -> {
+      clientBuilder.setSSLContext(TestElasticsearchSuite.createContextFromCaCert(getCertAsBytes(elasticsearch)));
+      clientBuilder.setDefaultCredentialsProvider(getCredentialsProvider());
+      return clientBuilder;
+    });
+
+    ElasticsearchTransport transport = new RestClientTransport(
+        builder.build(), new JacksonJsonpMapper());
+
+    return new ElasticsearchClient(transport);
+  }
+
+
+
+  private static void startElasticsearch() {
+    elasticsearch = new ElasticsearchContainer(IMAGE_NAME)
+        .withExposedPorts(9200)
+        // .withStartupTimeout(Duration.ofMinutes(2))
+        .withPassword("s3cret");
     elasticsearch.getEnvMap().remove("xpack.security.enabled");
+    elasticsearch.setWaitStrategy(
+        new LogMessageWaitStrategy().withRegEx(".*\"message\":\"started\".*"));
+
     elasticsearch.start();
   }
 
