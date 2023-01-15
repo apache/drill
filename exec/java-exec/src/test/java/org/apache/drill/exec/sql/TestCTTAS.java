@@ -300,7 +300,7 @@ public class TestCTTAS extends BaseTestQuery {
     test("create TEMPORARY table %s as select 'A' as c1 from (values(1))", temporaryTableName);
 
     expectUserRemoteExceptionWithMessage(String.format(
-      "VALIDATION ERROR: Temporary tables usage is disallowed. Used temporary table name: [%s]", temporaryTableName));
+      "VALIDATION ERROR: A reference to temporary table [%s] was made in a context where temporary table references are not allowed.", temporaryTableName));
 
     test("create view %s.view_with_temp_table as select * from %s.%s", DFS_TMP_SCHEMA, DFS_TMP_SCHEMA, temporaryTableName);
   }
@@ -324,7 +324,7 @@ public class TestCTTAS extends BaseTestQuery {
     test("create temporary table %s as select 'TEMP' as c1 from (values(1))", tableName);
 
     expectUserRemoteExceptionWithMessage(String.format(
-      "VALIDATION ERROR: Temporary tables usage is disallowed. Used temporary table name: [%s]", tableName));
+      "VALIDATION ERROR: A reference to temporary table [%s] was made in a context where temporary table references are not allowed.", tableName));
 
     test("select * from %s", viewName);
   }

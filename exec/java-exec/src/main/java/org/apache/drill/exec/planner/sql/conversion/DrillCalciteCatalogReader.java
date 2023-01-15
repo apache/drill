@@ -120,7 +120,7 @@ class DrillCalciteCatalogReader extends CalciteCatalogReader {
     if (originalTableName != null) {
       throw UserException
           .validationError()
-          .message("Temporary tables usage is disallowed. Used temporary table name: [%s].", tableName)
+          .message("A reference to temporary table [%s] was made in a context where temporary table references are not allowed.", tableName)
           .build(logger);
     }
   }
