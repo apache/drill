@@ -55,7 +55,7 @@ public class CassandraUserTranslationTest extends BaseCassandraTest {
 
   @Test
   public void testInfoSchemaQueryWithValidCredentials() throws Exception {
-    // This test validates that the cassandra connection with user translation appears whne the user is
+    // This test validates that the cassandra connection with user translation appears when the user is
     // authenticated.
     ClientFixture client = cluster
         .clientBuilder()
@@ -71,7 +71,7 @@ public class CassandraUserTranslationTest extends BaseCassandraTest {
   }
 
   @Test
-  public void testSplunkQueryWithUserTranslation() throws Exception {
+  public void testCassandraQueryWithUserTranslation() throws Exception {
     ClientFixture client = cluster
         .clientBuilder()
         .property(DrillProperties.USER, TEST_USER_1)
@@ -85,7 +85,7 @@ public class CassandraUserTranslationTest extends BaseCassandraTest {
   }
 
   @Test
-  public void testSplunkQueryWithUserTranslationAndInvalidCredentials() throws Exception {
+  public void testCassandraQueryWithUserTranslationAndInvalidCredentials() throws Exception {
     ClientFixture client = cluster
         .clientBuilder()
         .property(DrillProperties.USER, ADMIN_USER)
