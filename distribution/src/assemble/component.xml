@@ -54,6 +54,7 @@
         <include>org.apache.drill.contrib:drill-format-httpd:jar</include>
         <include>org.apache.drill.contrib:drill-format-pdf:jar</include>
         <include>org.apache.drill.contrib:drill-format-excel:jar</include>
+        <include>org.apache.drill.contrib:drill-format-msaccess:jar</include>
         <include>org.apache.drill.contrib:drill-format-spss:jar</include>
         <include>org.apache.drill.contrib:drill-format-sas:jar</include>
         <include>org.apache.drill.contrib:drill-jdbc-storage:jar</include>

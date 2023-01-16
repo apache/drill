@@ -379,6 +379,8 @@
             <exclude>**/*.woff2</exclude>
             <exclude>**/*.ks</exclude>
             <exclude>**/*.pcap</exclude>
+            <exclude>**/*.mdb</exclude>
+            <exclude>**/*.accdb</exclude>
             <exclude>**/*.sas7bdat</exclude>
             <exclude>**/*.log1</exclude>
             <exclude>**/*.log2</exclude>
@@ -713,6 +715,8 @@
               <exclude>**/*.syslog</exclude>
               <exclude>**/*.xls</exclude>
               <exclude>**/*.xlsx</exclude>
+              <exclude>**/*.mdb</exclude>
+              <exclude>**/*.accdb</exclude>
               <exclude>**/*.syslog1</exclude>
               <exclude>**/*.ssdlog</exclude>
               <exclude>**/*.ltsv</exclude>
