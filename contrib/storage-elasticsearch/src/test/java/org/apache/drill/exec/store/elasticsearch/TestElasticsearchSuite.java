@@ -18,6 +18,7 @@
 package org.apache.drill.exec.store.elasticsearch;
 
 import co.elastic.clients.elasticsearch.ElasticsearchClient;
+import co.elastic.clients.json.jackson.JacksonJsonpMapper;
 import co.elastic.clients.transport.ElasticsearchTransport;
 import co.elastic.clients.transport.rest_client.RestClientTransport;
 import org.apache.commons.io.IOUtils;
@@ -38,18 +39,21 @@ import org.junit.BeforeClass;
 import org.junit.experimental.categories.Category;
 import org.junit.runner.RunWith;
 import org.junit.runners.Suite;
-import org.testcontainers.containers.wait.strategy.LogMessageWaitStrategy;
 import org.testcontainers.elasticsearch.ElasticsearchContainer;
-import co.elastic.clients.json.jackson.JacksonJsonpMapper;
 
 
+
+import javax.net.ssl.HttpsURLConnection;
 import javax.net.ssl.SSLContext;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
+import java.security.GeneralSecurityException;
 import java.security.KeyStore;
 import java.security.cert.Certificate;
 import java.security.cert.CertificateFactory;
+import java.time.Duration;
 import java.util.concurrent.atomic.AtomicInteger;
+import com.google.api.client.util.SslUtils;
 
 
 @Category(SlowTest.class)
@@ -65,14 +69,14 @@ public class TestElasticsearchSuite extends BaseTest {
   protected static ElasticsearchContainer elasticsearch;
   public static final String ELASTICSEARCH_USERNAME = "elastic";
   public static final String ELASTICSEARCH_PASSWORD = "s3cret";
-  private static final String IMAGE_NAME = "docker.elastic.co/elasticsearch/elasticsearch:8.0.0";
+  private static final String IMAGE_NAME = "docker.elastic.co/elasticsearch/elasticsearch:8.6.0";
 
   private static final AtomicInteger initCount = new AtomicInteger(0);
 
   private static volatile boolean runningSuite = false;
 
   @BeforeClass
-  public static void initElasticsearch() throws IOException{
+  public static void initElasticsearch() throws IOException, GeneralSecurityException {
     synchronized (TestElasticsearchSuite.class) {
       if (initCount.get() == 0) {
         startElasticsearch();
@@ -148,15 +152,16 @@ public class TestElasticsearchSuite extends BaseTest {
 
 
 
-  private static void startElasticsearch() {
+  private static void startElasticsearch() throws GeneralSecurityException {
     elasticsearch = new ElasticsearchContainer(IMAGE_NAME)
         .withExposedPorts(9200)
-        // .withStartupTimeout(Duration.ofMinutes(2))
+        .withStartupTimeout(Duration.ofMinutes(2))
+        .withStartupAttempts(5)
         .withPassword("s3cret");
-    elasticsearch.getEnvMap().remove("xpack.security.enabled");
-    elasticsearch.setWaitStrategy(
-        new LogMessageWaitStrategy().withRegEx(".*\"message\":\"started\".*"));
 
+    HttpsURLConnection.setDefaultSSLSocketFactory(SslUtils.trustAllSSLContext().getSocketFactory());
+    elasticsearch.getEnvMap().remove("xpack.security.enabled");
+    elasticsearch.getEnvMap().remove("xpack.security.transport.ssl.enabled");
     elasticsearch.start();
   }
 

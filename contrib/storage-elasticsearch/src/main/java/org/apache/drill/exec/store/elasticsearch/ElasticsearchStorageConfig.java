@@ -76,7 +76,7 @@ public class ElasticsearchStorageConfig extends StoragePluginConfig {
   private ElasticsearchStorageConfig(ElasticsearchStorageConfig that, CredentialsProvider credentialsProvider) {
     super(getCredentialsProvider(credentialsProvider), credentialsProvider == null, that.authMode);
     this.hosts = that.hosts;
-    this.pathPrefix = that.getPathPrefix();
+    this.pathPrefix = that.pathPrefix;
   }
 
   @Override
@@ -86,32 +86,6 @@ public class ElasticsearchStorageConfig extends StoragePluginConfig {
 
   private static CredentialsProvider getCredentialsProvider(CredentialsProvider credentialsProvider) {
     return credentialsProvider != null ? credentialsProvider : PlainCredentialsProvider.EMPTY_CREDENTIALS_PROVIDER;
-  }
-
-  public List<String> getHosts() {
-    return hosts;
-  }
-
-  public String getPathPrefix() {
-    return pathPrefix;
-  }
-
-  public String getUsername() {
-    if (!directCredentials) {
-      return null;
-    }
-    return getUsernamePasswordCredentials()
-      .map(UsernamePasswordCredentials::getUsername)
-      .orElse(null);
-  }
-
-  public String getPassword() {
-    if (!directCredentials) {
-      return null;
-    }
-    return getUsernamePasswordCredentials()
-      .map(UsernamePasswordCredentials::getPassword)
-      .orElse(null);
   }
 
   @JsonIgnore

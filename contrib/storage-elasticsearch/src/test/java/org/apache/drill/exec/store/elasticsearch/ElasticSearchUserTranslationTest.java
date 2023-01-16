@@ -85,16 +85,25 @@ public class ElasticSearchUserTranslationTest extends ClusterTest {
 
     ElasticsearchStorageConfig config = new ElasticsearchStorageConfig(
         Collections.singletonList(TestElasticsearchSuite.getAddress()),
-        TestElasticsearchSuite.ELASTICSEARCH_USERNAME, TestElasticsearchSuite.ELASTICSEARCH_PASSWORD,
-        null, AuthMode.SHARED_USER.name(), PlainCredentialsProvider.EMPTY_CREDENTIALS_PROVIDER);
+        TestElasticsearchSuite.ELASTICSEARCH_USERNAME,
+        TestElasticsearchSuite.ELASTICSEARCH_PASSWORD,
+        null,
+        AuthMode.SHARED_USER.name(),
+        PlainCredentialsProvider.EMPTY_CREDENTIALS_PROVIDER);
+
     config.setEnabled(true);
     cluster.defineStoragePlugin("elastic", config);
 
     ElasticsearchStorageConfig ut_config = new ElasticsearchStorageConfig(
         Collections.singletonList(TestElasticsearchSuite.getAddress()),
-        null, null, null, AuthMode.USER_TRANSLATION.name(), credentialsProvider);
+        null,
+        null,
+        null,
+        AuthMode.USER_TRANSLATION.name(),
+        credentialsProvider);
+
     ut_config.setEnabled(true);
-    cluster.defineStoragePlugin("ut_elastic", config);
+    cluster.defineStoragePlugin("ut_elastic", ut_config);
 
     elasticsearchClient = TestElasticsearchSuite.getESClient();
     prepareData();
@@ -130,16 +139,13 @@ public class ElasticSearchUserTranslationTest extends ClusterTest {
     );
 
     IndexResponse response = elasticsearchClient.index(request);
+    logger.debug("Insert response: {}", response.toString() );
 
-   /* XContentBuilder builder = XContentFactory.jsonBuilder();
-    builder.startObject();
-    builder.field("string_field", "a");
-    builder.field("int_field", 123);
-    builder.endObject();
-    IndexRequest indexRequest = new IndexRequest(indexName).source(builder);
-    elasticsearchClient.index(indexRequest, RequestOptions.DEFAULT);
-    elasticsearchClient.indices().refresh(new RefreshRequest(indexName), RequestOptions.DEFAULT);
-*/
+    RefreshRequest refreshRequest = new RefreshRequest.Builder()
+        .index(indexNames)
+        .build();
+    elasticsearchClient.indices().refresh(refreshRequest);
+
     indexName = "t2";
     indexNames.add(indexName);
     createIndexRequest = new CreateIndexRequest.Builder()
@@ -147,16 +153,22 @@ public class ElasticSearchUserTranslationTest extends ClusterTest {
         .build();
 
     elasticsearchClient.indices().create(createIndexRequest);
-/*
-    builder = XContentFactory.jsonBuilder();
-    builder.startObject();
-    builder.field("another_int_field", 321);
-    builder.field("another_string_field", "b");
-    builder.endObject();
-    indexRequest = new IndexRequest(indexName).source(builder);
-    elasticsearchClient.index(indexRequest, RequestOptions.DEFAULT);*/
 
-    RefreshRequest refreshRequest = new RefreshRequest.Builder()
+    map = new HashMap<>();
+    map.put("another_int_field", 321);
+    map.put("another_string_field", "b");
+    jsonObject = new JSONObject(map);
+
+    Reader input2 = new StringReader(jsonObject.toJSONString());
+    request = IndexRequest.of(i -> i
+        .index("t2")
+        .withJson(input2)
+    );
+
+    response = elasticsearchClient.index(request);
+    logger.debug("Insert response: {}", response.toString() );
+
+    refreshRequest = new RefreshRequest.Builder()
         .index(indexNames)
         .build();
     elasticsearchClient.indices().refresh(refreshRequest);
@@ -225,7 +237,7 @@ public class ElasticSearchUserTranslationTest extends ClusterTest {
       client.queryBuilder().sql(sql).rowSet();
       fail();
     } catch (UserRemoteException e) {
-      assertTrue(e.getMessage().contains("Schema [[ut_elastic, t1]] is not valid"));
+      assertTrue(e.getMessage().contains("Schema [[ut_elastic]] is not valid"));
     }
   }
 }
