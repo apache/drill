@@ -31,8 +31,9 @@ import static org.apache.drill.exec.rpc.user.security.testing.UserAuthenticatorT
 import static org.apache.drill.exec.rpc.user.security.testing.UserAuthenticatorTestImpl.ADMIN_USER_PASSWORD;
 import static org.apache.drill.exec.rpc.user.security.testing.UserAuthenticatorTestImpl.TEST_USER_1;
 import static org.apache.drill.exec.rpc.user.security.testing.UserAuthenticatorTestImpl.TEST_USER_1_PASSWORD;
+import static org.hamcrest.CoreMatchers.containsString;
+import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
 import static org.junit.jupiter.api.Assertions.fail;
 
 @Category({SlowTest.class})
@@ -97,7 +98,7 @@ public class TestSplunkUserTranslation extends SplunkBaseTest {
       client.queryBuilder().sql(sql).rowSet();
       fail();
     } catch (UserRemoteException e) {
-      assertTrue(e.getMessage().contains("Schema [[ut_splunk]] is not valid"));
+      assertThat(e.getMessage(), containsString("Object 'ut_splunk' not found"));
     }
   }
 }

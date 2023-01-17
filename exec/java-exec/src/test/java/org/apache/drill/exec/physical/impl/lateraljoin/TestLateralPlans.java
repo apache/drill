@@ -303,7 +303,7 @@ public class TestLateralPlans extends BaseTestQuery {
           .sql(sql)
           .run();
     } catch (UserRemoteException ex) {
-      assertTrue(ex.getMessage().contains("Alias table and column name are required for UNNEST"));
+      assertThat(ex.getMessage(), containsString("Alias table and column name are required for UNNEST"));
     }
   }
 
@@ -320,7 +320,7 @@ public class TestLateralPlans extends BaseTestQuery {
           .sql(sql)
           .run();
     } catch (UserRemoteException ex) {
-      assertTrue(ex.getMessage().contains("Alias table and column name are required for UNNEST"));
+      assertThat(ex.getMessage(), containsString("Column 'orders' not found in table 't2'"));
     }
   }
 

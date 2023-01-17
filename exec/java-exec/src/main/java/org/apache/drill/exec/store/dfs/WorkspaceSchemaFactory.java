@@ -63,6 +63,7 @@ import org.apache.drill.exec.planner.logical.DrillViewTable;
 import org.apache.drill.exec.planner.logical.DynamicDrillTable;
 import org.apache.drill.exec.planner.logical.FileSystemCreateTableEntry;
 import org.apache.drill.exec.planner.sql.ExpandingConcurrentMap;
+import org.apache.drill.exec.planner.sql.SchemaUtilites;
 import org.apache.drill.exec.record.metadata.schema.FsMetastoreSchemaProvider;
 import org.apache.drill.exec.store.AbstractSchema;
 import org.apache.drill.exec.store.PartitionNotFoundException;
@@ -403,8 +404,24 @@ public class WorkspaceSchemaFactory {
       return f.getView(mapper);
     }
 
+    private String getTemporaryName(String name) {
+      if (isTemporaryWorkspace()) {
+        String tableName = DrillStringUtils.removeLeadingSlash(name);
+        return schemaConfig.getTemporaryTableName(tableName);
+      }
+      return null;
+    }
+
+    private boolean isTemporaryWorkspace() {
+      return SchemaUtilites.getSchemaPath(schemaPath).equals(schemaConfig.getTemporaryWorkspace());
+    }
+
     @Override
     public Table getTable(String tableName) {
+      String temporaryName = getTemporaryName(tableName);
+      if (temporaryName != null) {
+        tableName = temporaryName;
+      }
       TableInstance tableKey = new TableInstance(TableSignature.of(tableName), ImmutableList.of());
       // first check existing tables.
       if (tables.alreadyContainsKey(tableKey)) {

@@ -337,7 +337,7 @@ public class CassandraQueryTest extends BaseCassandraTest {
       fail("Query didn't fail");
     } catch (UserRemoteException e) {
       assertThat(e.getMessage(), containsString("VALIDATION ERROR"));
-      assertThat(e.getMessage(), containsString("Schema [[cassandra, test_keyspace, non-existing]] is not valid with respect to either root schema or current default schema"));
+      assertThat(e.getMessage(), containsString("Object 'non-existing' not found within 'cassandra.test_keyspace'"));
     }
   }
 

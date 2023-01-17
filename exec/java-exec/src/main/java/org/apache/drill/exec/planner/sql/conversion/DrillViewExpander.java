@@ -68,9 +68,8 @@ public class DrillViewExpander implements RelOptTable.ViewExpander {
         sqlConverter.getTypeFactory(),
         sqlConverter.getDrillConfig(),
         sqlConverter.getSession(),
-        sqlConverter.getTemporarySchema(),
-        sqlConverter::useRootSchema,
-        sqlConverter::getDefaultSchema);
+        sqlConverter::useRootSchema
+    );
   }
 
   private SchemaPlus findSchema(String queryString, SchemaPlus rootSchema, List<String> schemaPath) {

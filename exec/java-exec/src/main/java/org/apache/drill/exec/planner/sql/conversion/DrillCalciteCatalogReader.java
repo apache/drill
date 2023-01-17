@@ -17,25 +17,20 @@
  */
 package org.apache.drill.exec.planner.sql.conversion;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Properties;
 import java.util.function.BooleanSupplier;
-import java.util.function.Supplier;
 
 import org.apache.calcite.adapter.java.JavaTypeFactory;
 import org.apache.calcite.config.CalciteConnectionConfigImpl;
 import org.apache.calcite.config.CalciteConnectionProperty;
-import org.apache.calcite.jdbc.CalciteSchema;
 import org.apache.calcite.jdbc.DynamicSchema;
 import org.apache.calcite.prepare.CalciteCatalogReader;
 import org.apache.calcite.prepare.Prepare;
 import org.apache.calcite.schema.SchemaPlus;
-import org.apache.calcite.sql.validate.SqlValidatorUtil;
-import org.apache.calcite.util.Util;
+import org.apache.calcite.sql.validate.SqlNameMatchers;
 import org.apache.drill.common.config.DrillConfig;
 import org.apache.drill.common.exceptions.UserException;
-import org.apache.drill.common.util.DrillStringUtils;
 import org.apache.drill.exec.metastore.MetadataProviderManager;
 import org.apache.drill.exec.planner.logical.DrillTable;
 import org.apache.drill.exec.planner.sql.SchemaUtilites;
@@ -58,10 +53,8 @@ class DrillCalciteCatalogReader extends CalciteCatalogReader {
 
   private final DrillConfig drillConfig;
   private final UserSession session;
-  private final String temporarySchema;
   private boolean allowTemporaryTables;
   private final BooleanSupplier useRootSchema;
-  private final Supplier<SchemaPlus> defaultSchemaSupplier;
 
   private final LoadingCache<DrillTableKey, MetadataProviderManager> tableCache;
 
@@ -71,11 +64,10 @@ class DrillCalciteCatalogReader extends CalciteCatalogReader {
                             JavaTypeFactory typeFactory,
                             DrillConfig drillConfig,
                             UserSession session,
-                            String temporarySchema,
-                            BooleanSupplier useRootSchema,
-                            Supplier<SchemaPlus> defaultSchemaSupplier) {
-    super(DynamicSchema.from(rootSchema), defaultSchema,
-        typeFactory, getConnectionConfig(caseSensitive));
+                            BooleanSupplier useRootSchema) {
+    super(DynamicSchema.from(rootSchema), SqlNameMatchers.withCaseSensitive(caseSensitive),
+      ImmutableList.of(defaultSchema, ImmutableList.of()),
+      typeFactory, getConnectionConfig(caseSensitive));
     this.drillConfig = drillConfig;
     this.session = session;
     this.allowTemporaryTables = true;
@@ -87,9 +79,7 @@ class DrillCalciteCatalogReader extends CalciteCatalogReader {
               return key.getMetadataProviderManager();
             }
           });
-    this.temporarySchema = temporarySchema;
     this.useRootSchema = useRootSchema;
-    this.defaultSchemaSupplier = defaultSchemaSupplier;
   }
 
   /**
@@ -97,19 +87,6 @@ class DrillCalciteCatalogReader extends CalciteCatalogReader {
    */
   void disallowTemporaryTables() {
     this.allowTemporaryTables = false;
-  }
-
-  List<String> getTemporaryNames(List<String> names) {
-    if (needsTemporaryTableCheck(names, session.getDefaultSchemaPath(), drillConfig)) {
-      String tableName = DrillStringUtils.removeLeadingSlash(names.get(names.size() - 1));
-      String temporaryTableName = session.resolveTemporaryTableName(tableName);
-      if (temporaryTableName != null) {
-        List<String> temporaryNames = new ArrayList<>(SchemaUtilites.getSchemaPathAsList(temporarySchema));
-        temporaryNames.add(temporaryTableName);
-        return temporaryNames;
-      }
-    }
-    return null;
   }
 
   /**
@@ -135,14 +112,15 @@ class DrillCalciteCatalogReader extends CalciteCatalogReader {
   }
 
   private void checkTemporaryTable(List<String> names) {
-    if (allowTemporaryTables) {
+    if (allowTemporaryTables || !needsTemporaryTableCheck(names, session.getDefaultSchemaPath(), drillConfig)) {
       return;
     }
-    String originalTableName = session.getOriginalTableNameFromTemporaryTable(names.get(names.size() - 1));
+    String tableName = names.get(names.size() - 1);
+    String originalTableName = session.resolveTemporaryTableName(tableName);
     if (originalTableName != null) {
       throw UserException
           .validationError()
-          .message("Temporary tables usage is disallowed. Used temporary table name: [%s].", originalTableName)
+          .message("A reference to temporary table [%s] was made in a context where temporary table references are not allowed.", tableName)
           .build(logger);
     }
   }
@@ -153,29 +131,6 @@ class DrillCalciteCatalogReader extends CalciteCatalogReader {
       return ImmutableList.of(ImmutableList.of());
     }
     return super.getSchemaPaths();
-  }
-
-  /**
-   * Checks if the schema provided is a valid schema:
-   * <li>schema is not indicated (only one element in the names list)<li/>
-   *
-   * @param names list of schema and table names, table name is always the last element
-   * @throws UserException if the schema is not valid.
-   */
-  void isValidSchema(List<String> names) throws UserException {
-    List<String> schemaPath = Util.skipLast(names);
-
-    for (List<String> currentSchema : getSchemaPaths()) {
-      List<String> fullSchemaPath = new ArrayList<>(currentSchema);
-      fullSchemaPath.addAll(schemaPath);
-      CalciteSchema schema = SqlValidatorUtil.getSchema(getRootSchema(),
-          fullSchemaPath, nameMatcher());
-
-      if (schema != null) {
-       return;
-      }
-    }
-    SchemaUtilites.throwSchemaNotFoundException(defaultSchemaSupplier.get(), schemaPath);
   }
 
   /**

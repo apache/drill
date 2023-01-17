@@ -727,5 +727,15 @@ public class FragmentContextImpl extends BaseFragmentContext implements Executor
     public OptionValue getOption(String optionKey) {
       return optionManager.getOption(optionKey);
     }
+
+    @Override
+    public String getTemporaryTableName(String table) {
+      throw new UnsupportedOperationException("getTemporaryTableName is not supported");
+    }
+
+    @Override
+    public String getTemporaryWorkspace() {
+      throw new UnsupportedOperationException("getTemporaryWorkspace is not supported");
+    }
   }
 }

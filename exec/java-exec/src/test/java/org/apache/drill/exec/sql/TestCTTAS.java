@@ -89,16 +89,10 @@ public class TestCTTAS extends BaseTestQuery {
         test("create TEMPORARY table %s as select 'A' as c1 from (values(1))", temporaryTableName);
 
         testBuilder()
-            .sqlQuery("select * from %s", temporaryTableName)
+            .sqlQuery("select * from %s.%s", DFS_TMP_SCHEMA, temporaryTableName)
             .unOrdered()
             .baselineColumns("c1")
             .baselineValues("A")
-            .go();
-
-        testBuilder()
-            .sqlQuery("select * from %s", temporaryTableName)
-            .unOrdered()
-            .sqlBaselineQuery("select * from %s.%s", DFS_TMP_SCHEMA, temporaryTableName)
             .go();
       }
     } finally {
@@ -117,7 +111,7 @@ public class TestCTTAS extends BaseTestQuery {
     test("create TEMPORARY table %s as select 'A' as c1 from (values(1))", temporaryTableName);
     for (String tableName : temporaryTableNames) {
       testBuilder()
-          .sqlQuery("select * from %s", tableName)
+          .sqlQuery("select * from %s.%s", DFS_TMP_SCHEMA, tableName)
           .unOrdered()
           .baselineColumns("c1")
           .baselineValues("A")
@@ -237,7 +231,8 @@ public class TestCTTAS extends BaseTestQuery {
     test("create TEMPORARY table %s as select 'A' as c1, 'C' as c2 from (values(1))", temporaryRightTableName);
 
     testBuilder()
-        .sqlQuery("select t1.c2 col1, t2.c2 col2 from %s t1 join %s t2 on t1.c1 = t2.c1", temporaryLeftTableName, temporaryRightTableName)
+        .sqlQuery("select t1.c2 col1, t2.c2 col2 from %s.%s t1 join %s.%s t2 on t1.c1 = t2.c1",
+          DFS_TMP_SCHEMA, temporaryLeftTableName, DFS_TMP_SCHEMA, temporaryRightTableName)
         .unOrdered()
         .baselineColumns("col1", "col2")
         .baselineValues("B", "C")
@@ -250,13 +245,6 @@ public class TestCTTAS extends BaseTestQuery {
     test("use %s", temp2_schema);
     test("create TEMPORARY table %s as select 'temporary_table' as c1 from (values(1))", name);
     test("create table %s as select 'persistent_table' as c1 from (values(1))", name);
-
-    testBuilder()
-        .sqlQuery("select * from %s", name)
-        .unOrdered()
-        .baselineColumns("c1")
-        .baselineValues("temporary_table")
-        .go();
 
     testBuilder()
         .sqlQuery("select * from %s.%s", temp2_schema, name)
@@ -283,7 +271,7 @@ public class TestCTTAS extends BaseTestQuery {
     test("create view %s as select 'view' as c1 from (values(1))", name);
 
     testBuilder()
-        .sqlQuery("select * from %s", name)
+        .sqlQuery("select * from %s.%s", DFS_TMP_SCHEMA, name)
         .unOrdered()
         .baselineColumns("c1")
         .baselineValues("temporary_table")
@@ -312,9 +300,9 @@ public class TestCTTAS extends BaseTestQuery {
     test("create TEMPORARY table %s as select 'A' as c1 from (values(1))", temporaryTableName);
 
     expectUserRemoteExceptionWithMessage(String.format(
-      "VALIDATION ERROR: Temporary tables usage is disallowed. Used temporary table name: [%s]", temporaryTableName));
+      "VALIDATION ERROR: A reference to temporary table [%s] was made in a context where temporary table references are not allowed.", temporaryTableName));
 
-    test("create view %s.view_with_temp_table as select * from %s", DFS_TMP_SCHEMA, temporaryTableName);
+    test("create view %s.view_with_temp_table as select * from %s.%s", DFS_TMP_SCHEMA, DFS_TMP_SCHEMA, temporaryTableName);
   }
 
   @Test
@@ -336,7 +324,7 @@ public class TestCTTAS extends BaseTestQuery {
     test("create temporary table %s as select 'TEMP' as c1 from (values(1))", tableName);
 
     expectUserRemoteExceptionWithMessage(String.format(
-      "VALIDATION ERROR: Temporary tables usage is disallowed. Used temporary table name: [%s]", tableName));
+      "VALIDATION ERROR: A reference to temporary table [%s] was made in a context where temporary table references are not allowed.", tableName));
 
     test("select * from %s", viewName);
   }
@@ -424,7 +412,7 @@ public class TestCTTAS extends BaseTestQuery {
     test("create TEMPORARY table %s as select 'A' as c1 from (values(1))", temporaryTableName);
 
     expectUserRemoteExceptionWithMessage(String.format(
-      "VALIDATION ERROR: Unknown view [%s] in schema [%s]", temporaryTableName, DFS_TMP_SCHEMA));
+      "VALIDATION ERROR: [%s] is not a VIEW in schema [%s]", temporaryTableName, DFS_TMP_SCHEMA));
 
     test("drop view %s.%s", DFS_TMP_SCHEMA, temporaryTableName);
   }
@@ -433,8 +421,8 @@ public class TestCTTAS extends BaseTestQuery {
   public void testJoinTemporaryWithPersistentTable() throws Exception {
     String temporaryTableName = "temp_tab";
     String persistentTableName = "pers_tab";
-    String query = String.format("select * from `%s` a join `%s` b on a.c1 = b.c2",
-        persistentTableName, temporaryTableName);
+    String query = String.format("select * from `%s` a join %s.`%s` b on a.c1 = b.c2",
+      persistentTableName, DFS_TMP_SCHEMA, temporaryTableName);
 
     test("use %s", temp2_schema);
     test("create TEMPORARY table %s as select '12312' as c2", temporaryTableName);
@@ -472,17 +460,17 @@ public class TestCTTAS extends BaseTestQuery {
     try {
       test("CREATE TEMPORARY TABLE %s AS SELECT * FROM cp.`region.json`", tableName);
 
-      String query = "SELECT region_id FROM `%s` LIMIT 1";
+      String query = "SELECT region_id FROM %s.`%s` LIMIT 1";
 
       testBuilder()
-          .sqlQuery(query, tableName)
+          .sqlQuery(query, DFS_TMP_SCHEMA, tableName)
           .unOrdered()
           .baselineColumns("region_id")
           .baselineValues(0L)
           .go();
 
       testBuilder()
-          .sqlQuery(query, "/" + tableName)
+          .sqlQuery(query, DFS_TMP_SCHEMA, "/" + tableName)
           .unOrdered()
           .baselineColumns("region_id")
           .baselineValues(0L)
@@ -516,11 +504,11 @@ public class TestCTTAS extends BaseTestQuery {
     String query =
         "select t1.id as id,\n" +
             "(select count(t2.id)\n" +
-            "from source t2 where t2.id = t1.id) as c\n" +
-        "from source t1";
+            "from %s.source t2 where t2.id = t1.id) as c\n" +
+        "from %s.source t1";
 
     testBuilder()
-        .sqlQuery(query)
+        .sqlQuery(query, DFS_TMP_SCHEMA, DFS_TMP_SCHEMA)
         .ordered()
         .baselineColumns("id", "c")
         .baselineValues(1, 1L)

@@ -18,13 +18,13 @@
 package org.apache.calcite.jdbc;
 
 import org.apache.calcite.DataContext;
-
 import org.apache.calcite.linq4j.tree.Expression;
 import org.apache.calcite.linq4j.tree.Expressions;
 import org.apache.calcite.schema.SchemaPlus;
 import org.apache.calcite.util.BuiltInMethod;
 import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.common.exceptions.UserExceptionUtils;
+import org.apache.drill.common.expression.PathSegment;
 import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.alias.AliasRegistryProvider;
@@ -89,7 +89,7 @@ public class DynamicRootSchema extends DynamicSchema {
     return retSchema;
   }
 
-  public SchemaPath resolveTableAlias(String alias) {
+  private SchemaPath resolveTableAlias(String alias) {
     return Optional.ofNullable(aliasRegistryProvider.getTableAliasesRegistry()
       .getUserAliases(schemaConfig.getUserName()).get(alias))
       .map(SchemaPath::parseFromString)
@@ -218,9 +218,39 @@ public class DynamicRootSchema extends DynamicSchema {
     }
   }
 
+  @Override
+  protected TableEntry getImplicitTable(String tableName, boolean caseSensitive) {
+    return Optional.ofNullable(getTemporaryTable(tableName, caseSensitive))
+      .<TableEntry>map(table -> new TableEntryImpl(this, tableName, table.getTable(), table.sqls))
+      .orElse(super.getImplicitTable(tableName, true));
+  }
+
+  private TableEntry getTemporaryTable(String tableName, boolean caseSensitive) {
+    CalciteSchema currentSchema = this;
+
+    PathSegment.NameSegment pathSegment =
+      Optional.ofNullable(resolveTableAlias(SchemaPath.getCompoundPath(tableName).toExpr()))
+        .map(SchemaPath::getRootSegment)
+        .orElse(null);
+
+    if (pathSegment == null) {
+      return null;
+    }
+
+    while (!pathSegment.isLastPath()) {
+      currentSchema = currentSchema.getImplicitSubSchema(pathSegment.getPath(), caseSensitive);
+      pathSegment = pathSegment.getChild().getNameSegment();
+    }
+
+    if (currentSchema != null) {
+      return currentSchema.getTable(pathSegment.getNameSegment().getPath(), caseSensitive);
+    }
+    return null;
+  }
+
   public static class RootSchema extends AbstractSchema {
 
-    private StoragePluginRegistry storages;
+    private final StoragePluginRegistry storages;
 
     public RootSchema(StoragePluginRegistry storages) {
       super(Collections.emptyList(), ROOT_SCHEMA_NAME);

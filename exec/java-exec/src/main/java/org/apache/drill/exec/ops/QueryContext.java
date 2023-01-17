@@ -274,6 +274,16 @@ public class QueryContext implements AutoCloseable, OptimizerRulesContext, Schem
     return getOptions().getOption(optionKey);
   }
 
+  @Override
+  public String getTemporaryTableName(String table) {
+    return session.resolveTemporaryTableName(table);
+  }
+
+  @Override
+  public String getTemporaryWorkspace() {
+    return getConfig().getString(ExecConstants.DEFAULT_TEMPORARY_WORKSPACE);
+  }
+
   public boolean isImpersonationEnabled() {
      return getConfig().getBoolean(ExecConstants.IMPERSONATION_ENABLED);
   }

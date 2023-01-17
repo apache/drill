@@ -21,6 +21,8 @@ import org.apache.drill.test.BaseTestQuery;
 import org.apache.drill.test.TestTools;
 import org.junit.Test;
 
+import static org.hamcrest.CoreMatchers.containsString;
+import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.Assert.assertTrue;
 
 public class TestSchemaNotFoundException extends BaseTestQuery {
@@ -32,10 +34,8 @@ public class TestSchemaNotFoundException extends BaseTestQuery {
         try {
             testNoResult(query);
         } catch (Exception ex) {
-            final String pattern = String.format("[[dfs1]] is not valid with respect to either root schema or current default schema").toLowerCase();
-            final boolean isSchemaNotFound = ex.getMessage().toLowerCase().contains(pattern);
-            assertTrue(isSchemaNotFound);
-            throw ex;
+          assertThat(ex.getMessage(), containsString("Object 'dfs1' not found"));
+          throw ex;
         }
     }
 
@@ -46,10 +46,8 @@ public class TestSchemaNotFoundException extends BaseTestQuery {
         try {
             testNoResult(query);
         } catch (Exception ex) {
-            final String pattern = String.format("[[dfs, tmp1]] is not valid with respect to either root schema or current default schema").toLowerCase();
-            final boolean isSchemaNotFound = ex.getMessage().toLowerCase().contains(pattern);
-            assertTrue(isSchemaNotFound);
-            throw ex;
+          assertThat(ex.getMessage(), containsString("Object 'tmp1' not found within 'dfs'"));
+          throw ex;
         }
     }
 
@@ -61,10 +59,8 @@ public class TestSchemaNotFoundException extends BaseTestQuery {
             testNoResult("use dfs");
             testNoResult(query);
         } catch (Exception ex) {
-            final String pattern = String.format("[[tmp1]] is not valid with respect to either root schema or current default schema").toLowerCase();
-            final boolean isSchemaNotFound = ex.getMessage().toLowerCase().contains(pattern);
-            assertTrue(isSchemaNotFound);
-            throw ex;
+          assertThat(ex.getMessage(), containsString("Object 'tmp1' not found"));
+          throw ex;
         }
     }
 

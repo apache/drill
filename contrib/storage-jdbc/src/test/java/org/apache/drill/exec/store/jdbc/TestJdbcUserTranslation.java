@@ -49,6 +49,8 @@ import static org.apache.drill.exec.rpc.user.security.testing.UserAuthenticatorT
 import static org.apache.drill.exec.rpc.user.security.testing.UserAuthenticatorTestImpl.TEST_USER_1_PASSWORD;
 import static org.apache.drill.exec.rpc.user.security.testing.UserAuthenticatorTestImpl.TEST_USER_2;
 import static org.apache.drill.exec.rpc.user.security.testing.UserAuthenticatorTestImpl.TEST_USER_2_PASSWORD;
+import static org.hamcrest.CoreMatchers.containsString;
+import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
@@ -163,7 +165,7 @@ public class TestJdbcUserTranslation extends ClusterTest {
       client.queryBuilder().sql(sql).rowSet();
       fail();
     } catch (Exception e) {
-      assertTrue(e.getMessage().contains("Schema [[mysql, drill_mysql_test]] is not valid"));
+      assertThat(e.getMessage(), containsString("Object 'mysql' not found"));
     }
   }
 
