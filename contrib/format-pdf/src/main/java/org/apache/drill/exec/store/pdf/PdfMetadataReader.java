@@ -25,6 +25,7 @@ import org.apache.drill.exec.record.metadata.ColumnMetadata;
 import org.apache.drill.exec.record.metadata.MetadataUtils;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.PDDocumentInformation;
+import technology.tabula.Table;
 
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
@@ -38,7 +39,7 @@ public class PdfMetadataReader {
   private RowSetLoader rowWriter;
 
 
-  public PdfMetadataReader(PDDocument document) {
+  public PdfMetadataReader(PDDocument document, int tableCount) {
     this.writers = new ArrayList<>();
     // We are using a LinkedHashMap to preserve the order
     this.metadata = new LinkedHashMap<>();
@@ -53,6 +54,7 @@ public class PdfMetadataReader {
     metadata.put("creationDate", info.getCreationDate());
     metadata.put("modificationDate", info.getModificationDate());
     metadata.put("trapped", info.getTrapped());
+    metadata.put("tableCount", tableCount);
   }
 
   public void setRowWriter(RowSetLoader rowWriter) {
@@ -71,6 +73,7 @@ public class PdfMetadataReader {
     addMetadataColumnToSchema("_creation_date", MinorType.TIMESTAMP);
     addMetadataColumnToSchema("_modification_date", MinorType.TIMESTAMP);
     addMetadataColumnToSchema("_trapped", MinorType.VARCHAR);
+    addMetadataColumnToSchema("_table_count", MinorType.INT);
   }
 
   public void writeMetadata() {

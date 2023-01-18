@@ -99,15 +99,20 @@ public class PdfBatchReader implements ManagedReader {
     builder = new SchemaBuilder();
 
     openFile();
-    metadataReader = new PdfMetadataReader(document);
-
+    tables = PdfUtils.extractTablesFromPDF(document, config.plugin.getConfig().getAlgorithm());
+    metadataReader = new PdfMetadataReader(document, tables.size());
     // Get the tables if the user set the combine pages to true
     if (config.plugin.getConfig().combinePages() ) {
-      tables = PdfUtils.extractTablesFromPDF(document, config.plugin.getConfig().getAlgorithm());
       currentTable = tables.get(0);
+      rowIterator = new PdfRowIterator(currentTable);
     } else {
-      currentTable = PdfUtils.getSpecificTable(document, startingTableIndex, config.plugin.getConfig().getAlgorithm());
-      tables = Collections.singletonList(currentTable);
+      if (tables.size() > 0) {
+        currentTable = tables.get(startingTableIndex);
+        tables = Collections.singletonList(currentTable);
+        rowIterator = new PdfRowIterator(currentTable);
+      } else {
+        rowIterator = new PdfRowIterator();
+      }
 
       // If the user specifies a table index, and that table does not exist, throw an exception.
       if (currentTable == null && startingTableIndex != 0) {
@@ -119,7 +124,6 @@ public class PdfBatchReader implements ManagedReader {
     }
 
     // Get the row iterator and grab the first row to build the schema
-    rowIterator = new PdfRowIterator(currentTable);
     if (rowIterator.hasNext()) {
       firstRow = PdfUtils.convertRowToStringArray(rowIterator.next());
     }

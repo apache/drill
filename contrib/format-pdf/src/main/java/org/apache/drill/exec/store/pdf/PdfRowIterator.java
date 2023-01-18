@@ -21,6 +21,8 @@ package org.apache.drill.exec.store.pdf;
 import technology.tabula.RectangularTextContainer;
 import technology.tabula.Table;
 
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 
@@ -32,6 +34,12 @@ public class PdfRowIterator implements Iterator<List<RectangularTextContainer>> 
     this.table = table;
     this.rowCounter = 0;
   }
+
+  public PdfRowIterator() {
+    this.table = null;
+    this.rowCounter = 0;
+  }
+
 
   @Override
   public boolean hasNext() {
