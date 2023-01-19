@@ -208,7 +208,7 @@ public class WorkspaceSchemaFactory {
     if (!accessible(fs)) {
       return null;
     }
-    return new WorkspaceSchema(parentSchemaPath, schemaName, schemaConfig, fs);
+    return new WorkspaceSchema(parentSchemaPath, schemaName, schemaConfig, fs, config);
   }
 
   public String getSchemaName() {
@@ -299,12 +299,20 @@ public class WorkspaceSchemaFactory {
     private final DrillFileSystem fs;
     // Drill Process User file-system
     private final DrillFileSystem dpsFs;
+    private final WorkspaceConfig wsConfig;
 
-    public WorkspaceSchema(List<String> parentSchemaPath, String wsName, SchemaConfig schemaConfig, DrillFileSystem fs) {
+    public WorkspaceSchema(
+      List<String> parentSchemaPath,
+      String wsName,
+      SchemaConfig schemaConfig,
+      DrillFileSystem fs,
+      WorkspaceConfig config
+    ) {
       super(parentSchemaPath, wsName);
       this.schemaConfig = schemaConfig;
       this.fs = fs;
       this.dpsFs = ImpersonationUtil.createFileSystem(ImpersonationUtil.getProcessUserName(), fsConf);
+      this.wsConfig = config;
     }
 
     DrillTable getDrillTable(TableInstance key) {
@@ -895,6 +903,13 @@ public class WorkspaceSchemaFactory {
 
         newSelection = detectEmptySelection(fileSelection, hasDirectories);
         if (newSelection.isEmptyDirectory()) {
+          if (wsConfig.getDefaultInputFormat() == null) {
+            throw UserException.validationError()
+                .message("No files were found and no default format is set on the queried workspace.")
+                .addContext("workspace", Joiner.on(".").join(getSchemaPath()))
+                .addContext("table", key.sig.getName())
+                .build(logger);
+          }
           return new DynamicDrillTable(plugin, storageEngineName, schemaConfig.getUserName(), fileSelection);
         }
 
