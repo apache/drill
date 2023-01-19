@@ -21,8 +21,6 @@ package org.apache.drill.exec.store.pdf;
 import technology.tabula.RectangularTextContainer;
 import technology.tabula.Table;
 
-import java.util.ArrayList;
-import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 

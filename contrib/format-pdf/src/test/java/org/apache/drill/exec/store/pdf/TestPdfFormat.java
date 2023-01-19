@@ -107,7 +107,7 @@ public class TestPdfFormat extends ClusterTest {
       "(type => 'pdf', combinePages => false, extractHeaders => false))";
 
     RowSet results = client.queryBuilder().sql(sql).rowSet();
-    assertEquals(31, results.rowCount());
+    assertEquals(32, results.rowCount());
     results.clear();
 
     sql = "SELECT * " +

@@ -25,7 +25,6 @@ import org.apache.drill.exec.record.metadata.ColumnMetadata;
 import org.apache.drill.exec.record.metadata.MetadataUtils;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.PDDocumentInformation;
-import technology.tabula.Table;
 
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
@@ -37,12 +36,14 @@ public class PdfMetadataReader {
   private final Map<String, Object> metadata;
   private final List<PdfBatchReader.PdfColumnWriter> writers;
   private RowSetLoader rowWriter;
+  private int tableIndex;
 
 
   public PdfMetadataReader(PDDocument document, int tableCount) {
     this.writers = new ArrayList<>();
     // We are using a LinkedHashMap to preserve the order
     this.metadata = new LinkedHashMap<>();
+    this.tableIndex = 1;
     PDDocumentInformation info = document.getDocumentInformation();
     metadata.put("pageCount", document.getNumberOfPages());
     metadata.put("title",info.getTitle());
@@ -55,10 +56,15 @@ public class PdfMetadataReader {
     metadata.put("modificationDate", info.getModificationDate());
     metadata.put("trapped", info.getTrapped());
     metadata.put("tableCount", tableCount);
+    metadata.put("tableIndex", tableIndex);
   }
 
   public void setRowWriter(RowSetLoader rowWriter) {
     this.rowWriter = rowWriter;
+  }
+  public void setTableIndex(int tableIndex) {
+    this.tableIndex = tableIndex;
+    metadata.put("tableIndex", tableIndex);
   }
 
   public void addImplicitColumnsToSchema() {
@@ -74,6 +80,7 @@ public class PdfMetadataReader {
     addMetadataColumnToSchema("_modification_date", MinorType.TIMESTAMP);
     addMetadataColumnToSchema("_trapped", MinorType.VARCHAR);
     addMetadataColumnToSchema("_table_count", MinorType.INT);
+    addMetadataColumnToSchema("_table_index", MinorType.INT);
   }
 
   public void writeMetadata() {

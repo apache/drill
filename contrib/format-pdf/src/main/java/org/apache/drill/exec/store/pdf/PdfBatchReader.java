@@ -74,6 +74,7 @@ public class PdfBatchReader implements ManagedReader {
   private PdfRowIterator rowIterator;
   private final FileSchemaNegotiator negotiator;
   private int unregisteredColumnCount;
+  private List<RectangularTextContainer> rawFirstRow;
 
   // Tables
   private List<Table> tables;
@@ -125,7 +126,8 @@ public class PdfBatchReader implements ManagedReader {
 
     // Get the row iterator and grab the first row to build the schema
     if (rowIterator.hasNext()) {
-      firstRow = PdfUtils.convertRowToStringArray(rowIterator.next());
+      rawFirstRow = rowIterator.next();
+      firstRow = PdfUtils.convertRowToStringArray(rawFirstRow);
     }
 
     // Support provided schema
@@ -160,6 +162,7 @@ public class PdfBatchReader implements ManagedReader {
         // Get the next table
         currentTableIndex++;
         currentTable = tables.get(currentTableIndex);
+        metadataReader.setTableIndex(currentTableIndex);
 
         // Update the row iterator
         rowIterator = new PdfRowIterator(currentTable);
@@ -177,10 +180,26 @@ public class PdfBatchReader implements ManagedReader {
         return false;
       }
 
+      // Edge case: If the document is not set to extract headers, we still need to process the first row which
+      // was used to build the schema.
+      if (! config.plugin.getConfig().extractHeaders()) {
+        processFirstRow();
+      }
+
       // Process the row
       processRow(rowIterator.next());
     }
     return true;
+  }
+
+  private void processFirstRow() {
+    if (rawFirstRow == null) {
+      return;
+    }
+    processRow(rawFirstRow);
+
+    // Now clear out the rawFirstRow variable so that we don't accidentally read it again.
+    rawFirstRow = null;
   }
 
   private void processRow(List<RectangularTextContainer> row) {

@@ -34,6 +34,7 @@ import technology.tabula.extractors.ExtractionAlgorithm;
 import technology.tabula.extractors.SpreadsheetExtractionAlgorithm;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 public class PdfUtils {
@@ -206,6 +207,10 @@ public class PdfUtils {
     if (table == null) {
       return values;
     }
-    return table.getRows().get(rowIndex);
+    if (table.getRowCount() > 0) {
+      return table.getRows().get(rowIndex);
+    } else {
+      return Collections.emptyList();
+    }
   }
 }
