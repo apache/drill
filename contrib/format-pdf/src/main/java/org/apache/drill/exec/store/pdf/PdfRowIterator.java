@@ -33,6 +33,12 @@ public class PdfRowIterator implements Iterator<List<RectangularTextContainer>> 
     this.rowCounter = 0;
   }
 
+  public PdfRowIterator() {
+    this.table = null;
+    this.rowCounter = 0;
+  }
+
+
   @Override
   public boolean hasNext() {
     if (table == null) {

@@ -107,7 +107,7 @@ public class TestPdfFormat extends ClusterTest {
       "(type => 'pdf', combinePages => false, extractHeaders => false))";
 
     RowSet results = client.queryBuilder().sql(sql).rowSet();
-    assertEquals(31, results.rowCount());
+    assertEquals(32, results.rowCount());
     results.clear();
 
     sql = "SELECT * " +
@@ -182,7 +182,8 @@ public class TestPdfFormat extends ClusterTest {
       "_producer," +
       "_creation_date, " +
       "_modification_date, " +
-      "_trapped " +
+      "_trapped, " +
+      "_table_count " +
       "FROM cp.`pdf/20.pdf` " +
       "LIMIT 1";
 
@@ -200,6 +201,7 @@ public class TestPdfFormat extends ClusterTest {
       .addNullable("_creation_date", MinorType.TIMESTAMP)
       .addNullable("_modification_date", MinorType.TIMESTAMP)
       .addNullable("_trapped", MinorType.VARCHAR)
+      .addNullable("_table_count", MinorType.INT)
       .buildSchema();
 
     RowSet expected = new RowSetBuilder(client.allocator(), expectedSchema)
@@ -210,7 +212,7 @@ public class TestPdfFormat extends ClusterTest {
         "Acrobat Distiller 7.0.5 (Windows)",
         857403000000L,
         1230835135000L,
-        null)
+        null, 1)
       .build();
 
     new RowSetComparison(expected).verifyAndClearAll(results);
@@ -270,7 +272,7 @@ public class TestPdfFormat extends ClusterTest {
       "_producer," +
       "_creation_date, " +
       "_modification_date, " +
-      "_trapped " +
+      "_trapped, _table_count " +
       "FROM table(cp.`pdf/labor.pdf` (type => 'pdf', extractionAlgorithm => 'spreadsheet')) LIMIT 1";
 
     RowSet results = client.queryBuilder().sql(sql).rowSet();
@@ -286,13 +288,14 @@ public class TestPdfFormat extends ClusterTest {
       .addNullable("_creation_date", MinorType.TIMESTAMP)
       .addNullable("_modification_date", MinorType.TIMESTAMP)
       .addNullable("_trapped", MinorType.VARCHAR)
+      .addNullable("_table_count", MinorType.INT)
       .buildSchema();
 
     RowSet expected = new RowSetBuilder(client.allocator(), expectedSchema)
       .addRow(1, null, null, null, null, "pdftk 2.01 - www.pdftk.com",
         "itext-paulo-155 (itextpdf.sf.net-lowagie.com)",
         QueryTestUtil.ConvertDateToLong("2015-04-25T23:09:47Z"),
-        QueryTestUtil.ConvertDateToLong("2015-04-25T23:09:47Z"), null)
+        QueryTestUtil.ConvertDateToLong("2015-04-25T23:09:47Z"), null, 0)
     .build();
     new RowSetComparison(expected).verifyAndClearAll(results);
   }

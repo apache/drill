@@ -74,6 +74,7 @@ public class PdfBatchReader implements ManagedReader {
   private PdfRowIterator rowIterator;
   private final FileSchemaNegotiator negotiator;
   private int unregisteredColumnCount;
+  private List<RectangularTextContainer> rawFirstRow;
 
   // Tables
   private List<Table> tables;
@@ -99,15 +100,20 @@ public class PdfBatchReader implements ManagedReader {
     builder = new SchemaBuilder();
 
     openFile();
-    metadataReader = new PdfMetadataReader(document);
-
+    tables = PdfUtils.extractTablesFromPDF(document, config.plugin.getConfig().getAlgorithm());
+    metadataReader = new PdfMetadataReader(document, tables.size());
     // Get the tables if the user set the combine pages to true
     if (config.plugin.getConfig().combinePages() ) {
-      tables = PdfUtils.extractTablesFromPDF(document, config.plugin.getConfig().getAlgorithm());
       currentTable = tables.get(0);
+      rowIterator = new PdfRowIterator(currentTable);
     } else {
-      currentTable = PdfUtils.getSpecificTable(document, startingTableIndex, config.plugin.getConfig().getAlgorithm());
-      tables = Collections.singletonList(currentTable);
+      if (tables.size() > 0) {
+        currentTable = tables.get(startingTableIndex);
+        tables = Collections.singletonList(currentTable);
+        rowIterator = new PdfRowIterator(currentTable);
+      } else {
+        rowIterator = new PdfRowIterator();
+      }
 
       // If the user specifies a table index, and that table does not exist, throw an exception.
       if (currentTable == null && startingTableIndex != 0) {
@@ -119,9 +125,9 @@ public class PdfBatchReader implements ManagedReader {
     }
 
     // Get the row iterator and grab the first row to build the schema
-    rowIterator = new PdfRowIterator(currentTable);
     if (rowIterator.hasNext()) {
-      firstRow = PdfUtils.convertRowToStringArray(rowIterator.next());
+      rawFirstRow = rowIterator.next();
+      firstRow = PdfUtils.convertRowToStringArray(rawFirstRow);
     }
 
     // Support provided schema
@@ -156,6 +162,7 @@ public class PdfBatchReader implements ManagedReader {
         // Get the next table
         currentTableIndex++;
         currentTable = tables.get(currentTableIndex);
+        metadataReader.setTableIndex(currentTableIndex);
 
         // Update the row iterator
         rowIterator = new PdfRowIterator(currentTable);
@@ -173,10 +180,26 @@ public class PdfBatchReader implements ManagedReader {
         return false;
       }
 
+      // Edge case: If the document is not set to extract headers, we still need to process the first row which
+      // was used to build the schema.
+      if (! config.plugin.getConfig().extractHeaders()) {
+        processFirstRow();
+      }
+
       // Process the row
       processRow(rowIterator.next());
     }
     return true;
+  }
+
+  private void processFirstRow() {
+    if (rawFirstRow == null) {
+      return;
+    }
+    processRow(rawFirstRow);
+
+    // Now clear out the rawFirstRow variable so that we don't accidentally read it again.
+    rawFirstRow = null;
   }
 
   private void processRow(List<RectangularTextContainer> row) {

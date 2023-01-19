@@ -1,4 +1,4 @@
-# Format Plugin for PDF Table Reader
+# Format Plugin for PDF Tables
 One of the most annoying tasks is when you are working on a data science project and you get data that is in a PDF file. This plugin endeavours to enable you to query data in PDF tables using Drill's SQL interface.  
 
 ## Data Model
@@ -31,7 +31,7 @@ The available options are:
 * `extractionAlgorithm`:  Allows you to choose the extraction algorithm used for extracting data from the PDF file.  Choices are `spreadsheet` and `basic`.  Depending on your data, one may work better than the other.
 
 ## Accessing Document Metadata Fields
-PDF files have a considerable amount of metadata which can be useful for analysis.  Drill will extract the following fields from every PDF file.  Note that these fields are not projected in star queries and must be selected explicitly.  The document's creator populates these fields and some or all may be empty. With the exception of `_page_count` which is an `INT` and the two date fields, all the other fields are `VARCHAR` fields.
+PDF files have a considerable amount of metadata which can be useful for analysis.  Drill will extract the following fields from every PDF file.  Note that these fields are not projected in star queries and must be selected explicitly.  The document's creator populates these fields and some or all may be empty. With the exception of `_page_count`, `_table_count` and `_table_index` which are `INT` fields and the two date fields, all the other fields are `VARCHAR` fields.
  
  The fields are:
  * `_page_count`
@@ -44,6 +44,7 @@ PDF files have a considerable amount of metadata which can be useful for analysi
  * `_modification_date`
  * `_trapped`
  * `_table_count`
+ * `_table_index`
  
  The query below will access a document's metadata:
  
