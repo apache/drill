@@ -33,7 +33,7 @@
           </div>
           </#if>
           <p><input type="text" size="30" name="j_username" placeholder="Username"></p>
-          <p><input type="password" size="30" name="j_password" placeholder="Password"></p>
+          <p><input type="password" size="30" name="j_password" placeholder="Password" autocomplete="off"></p>
           <p><button type="submit" class="btn btn-primary">Log In</button></p>
         </div>
       </fieldset>

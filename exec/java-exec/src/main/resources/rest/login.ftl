@@ -32,7 +32,7 @@
           </#if>
           <h4>Log In to Drill Web Console</h4></br>
           <p><input type="text" size="30" name="j_username" placeholder="Username" autofocus></p>
-          <p><input type="password" size="30" name="j_password" placeholder="Password"></p>
+          <p><input type="password" size="30" name="j_password" placeholder="Password" autocomplete="off"></p>
           <p><button type="submit" class="btn btn-light">Log In</button> </p>
         </div>
       </fieldset>
