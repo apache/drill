@@ -218,8 +218,16 @@ public class PdfBatchReader implements ManagedReader {
 
       if (!Strings.isNullOrEmpty(value)) {
         writers.get(rowPosition).load(row.get(rowPosition));
+
+        // If there is not a provided schema, advance the row position index only when values are found
+        if (negotiator.providedSchema() == null) {
+          rowPosition++;
+        }
       }
-      rowPosition++;
+      // Advance the row position index when there is a provided schema.
+      if (negotiator.providedSchema() != null) {
+        rowPosition++;
+      }
     }
 
     metadataReader.writeMetadata();
