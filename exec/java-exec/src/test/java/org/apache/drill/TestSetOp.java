@@ -972,7 +972,7 @@ public class TestSetOp extends ClusterTest {
       " (select o1.o_custkey from dfs.`%s` o1 inner join dfs.`%s` o2 on o1.o_orderkey = o2.o_custkey))", l, r, l);
 
     // Validate the plan
-    final String[] expectedPlan = {"(?s)UnionExchange.*SetOp.*HashJoin.*"};
+    final String[] expectedPlan = {"(?s)SetOp.*BroadcastExchange.*HashJoin.*"};
 
     try {
       client.alterSession(ExecConstants.SLICE_TARGET, 1);

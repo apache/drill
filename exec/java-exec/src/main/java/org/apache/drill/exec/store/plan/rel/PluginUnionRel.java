@@ -24,9 +24,10 @@ import org.apache.calcite.plan.RelTraitSet;
 import org.apache.calcite.rel.InvalidRelException;
 import org.apache.calcite.rel.RelNode;
 import org.apache.calcite.rel.core.SetOp;
+import org.apache.calcite.rel.core.Union;
 import org.apache.calcite.rel.metadata.RelMetadataQuery;
 import org.apache.drill.common.exceptions.DrillRuntimeException;
-import org.apache.drill.exec.planner.common.DrillUnionRelBase;
+import org.apache.drill.exec.planner.common.DrillSetOpRel;
 import org.apache.drill.exec.store.plan.PluginImplementor;
 
 import java.io.IOException;
@@ -35,11 +36,14 @@ import java.util.List;
 /**
  * Union implementation for Drill plugins.
  */
-public class PluginUnionRel extends DrillUnionRelBase implements PluginRel {
+public class PluginUnionRel extends Union implements PluginRel, DrillSetOpRel {
 
   public PluginUnionRel(RelOptCluster cluster, RelTraitSet traits, List<RelNode> inputs,
       boolean all, boolean checkCompatibility) throws InvalidRelException {
-    super(cluster, traits, inputs, all, checkCompatibility);
+    super(cluster, traits, inputs, all);
+    if (checkCompatibility && !this.isCompatible(getRowType(), getInputs())) {
+      throw new InvalidRelException("Input row types of the Union are not compatible.");
+    }
   }
 
   @Override

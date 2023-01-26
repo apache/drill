@@ -101,8 +101,7 @@ public class UnionAllPrule extends Prule {
       Preconditions.checkArgument(convertedInputList.size() >= 2, "Union list must be at least two items.");
       RelNode left = convertedInputList.get(0);
       for (int i = 1; i < convertedInputList.size(); i++) {
-        left = new UnionAllPrel(union.getCluster(), traits, ImmutableList.of(left, convertedInputList.get(i)),
-            false /* compatibility already checked during logical phase */);
+        left = new UnionAllPrel(union.getCluster(), traits, ImmutableList.of(left, convertedInputList.get(i)));
 
       }
       call.transformTo(left);

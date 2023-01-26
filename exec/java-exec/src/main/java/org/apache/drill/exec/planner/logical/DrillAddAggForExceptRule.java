@@ -22,7 +22,6 @@ import org.apache.calcite.plan.RelOptRuleCall;
 import org.apache.calcite.plan.RelOptRuleOperand;
 import org.apache.calcite.plan.hep.HepRelVertex;
 import org.apache.calcite.rel.RelNode;
-import org.apache.calcite.sql.SqlKind;
 import org.apache.calcite.util.ImmutableBitSet;
 import org.apache.calcite.util.trace.CalciteTrace;
 import org.apache.curator.shaded.com.google.common.collect.ImmutableList;
@@ -35,7 +34,7 @@ import static org.apache.drill.exec.ExecConstants.EXCEPT_ADD_AGG_BELOW;
  * Rule that try to add agg for Except set op.
  */
 public class DrillAddAggForExceptRule extends RelOptRule {
-  public static final RelOptRule INSTANCE = new DrillAddAggForExceptRule(RelOptHelper.any(DrillSetOpRel.class), "DrillAddAggForExceptRule");
+  public static final RelOptRule INSTANCE = new DrillAddAggForExceptRule(RelOptHelper.any(DrillExceptRel.class), "DrillAddAggForExceptRule");
   protected static final Logger tracer = CalciteTrace.getPlannerTracer();
 
   public DrillAddAggForExceptRule(RelOptRuleOperand operand, String description) {
@@ -44,9 +43,8 @@ public class DrillAddAggForExceptRule extends RelOptRule {
 
   @Override
   public boolean matches(RelOptRuleCall call) {
-    DrillSetOpRel setOp = call.rel(0);
-    return setOp.kind == SqlKind.EXCEPT && !setOp.all
-      && !setOp.isAggAdded() && !findAggRel(setOp.getInput(0));
+    DrillExceptRel drillExceptRel = call.rel(0);
+    return !drillExceptRel.all && !drillExceptRel.isAggAdded() && !findAggRel(drillExceptRel.getInput(0));
   }
 
   private boolean findAggRel(RelNode relNode) {
@@ -64,15 +62,15 @@ public class DrillAddAggForExceptRule extends RelOptRule {
 
   @Override
   public void onMatch(RelOptRuleCall call) {
-    final DrillSetOpRel setOp = call.rel(0);
+    final DrillExceptRel drillExceptRel = call.rel(0);
     boolean addAggBelow = PrelUtil.getPlannerSettings(call.getPlanner()).getOptions().getOption(EXCEPT_ADD_AGG_BELOW);
     if (addAggBelow) {
-      RelNode aggNode = new DrillAggregateRel(setOp.getCluster(), setOp.getTraitSet(), setOp.getInput(0),
-        ImmutableBitSet.range(0, setOp.getInput(0).getRowType().getFieldList().size()), ImmutableList.of(), ImmutableList.of());
-      call.transformTo(setOp.copy(ImmutableList.of(aggNode, setOp.getInput(1)), true));
+      RelNode aggNode = new DrillAggregateRel(drillExceptRel.getCluster(), drillExceptRel.getTraitSet(), drillExceptRel.getInput(0),
+        ImmutableBitSet.range(0, drillExceptRel.getInput(0).getRowType().getFieldList().size()), ImmutableList.of(), ImmutableList.of());
+      call.transformTo(drillExceptRel.copy(ImmutableList.of(aggNode, drillExceptRel.getInput(1)), true));
     } else {
-      call.transformTo(new DrillAggregateRel(setOp.getCluster(), setOp.getTraitSet(), setOp.copy(true),
-        ImmutableBitSet.range(0, setOp.getRowType().getFieldList().size()), ImmutableList.of(), ImmutableList.of()));
+      call.transformTo(new DrillAggregateRel(drillExceptRel.getCluster(), drillExceptRel.getTraitSet(), drillExceptRel.copy(true),
+        ImmutableBitSet.range(0, drillExceptRel.getRowType().getFieldList().size()), ImmutableList.of(), ImmutableList.of()));
     }
   }
 }

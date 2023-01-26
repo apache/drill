@@ -539,7 +539,6 @@ public enum PlannerPhase {
     ruleList.add(PushLimitToTopN.INSTANCE);
     ruleList.add(LimitExchangeTransposeRule.INSTANCE);
     ruleList.add(UnionAllPrule.INSTANCE);
-    ruleList.add(SetOpPrule.INSTANCE);
     ruleList.add(ValuesPrule.INSTANCE);
     ruleList.add(DirectScanPrule.INSTANCE);
     ruleList.add(RowKeyJoinPrule.INSTANCE);
@@ -556,6 +555,9 @@ public enum PlannerPhase {
     ruleList.add(DrillPushLimitToScanRule.LIMIT_ON_PROJECT);
     ruleList.add(DrillPushLimitToScanRule.LIMIT_ON_SCAN);
     ruleList.add(TableModifyPrule.INSTANCE);
+
+    ruleList.addAll(SetOpPrule.DIST_INSTANCES);
+    ruleList.addAll(SetOpPrule.BROADCAST_INSTANCES);
 
     if (ps.isHashAggEnabled()) {
       ruleList.add(HashAggPrule.INSTANCE);

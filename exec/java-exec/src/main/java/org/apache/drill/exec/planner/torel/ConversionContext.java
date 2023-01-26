@@ -25,8 +25,10 @@ import org.apache.calcite.rel.RelRoot;
 import org.apache.calcite.rel.hint.RelHint;
 import org.apache.drill.common.expression.LogicalExpression;
 import org.apache.drill.common.logical.LogicalPlan;
+import org.apache.drill.common.logical.data.Except;
 import org.apache.drill.common.logical.data.Filter;
 import org.apache.drill.common.logical.data.GroupingAggregate;
+import org.apache.drill.common.logical.data.Intersect;
 import org.apache.drill.common.logical.data.Join;
 import org.apache.drill.common.logical.data.Limit;
 import org.apache.drill.common.logical.data.LogicalOperator;
@@ -36,6 +38,8 @@ import org.apache.drill.common.logical.data.Scan;
 import org.apache.drill.common.logical.data.Union;
 import org.apache.drill.common.logical.data.visitors.AbstractLogicalVisitor;
 import org.apache.drill.exec.planner.logical.DrillAggregateRel;
+import org.apache.drill.exec.planner.logical.DrillExceptRel;
+import org.apache.drill.exec.planner.logical.DrillIntersectRel;
 import org.apache.drill.exec.planner.logical.DrillJoinRel;
 import org.apache.drill.exec.planner.logical.DrillLimitRel;
 import org.apache.drill.exec.planner.logical.DrillRel;
@@ -154,6 +158,16 @@ public class ConversionContext implements ToRelContext {
     @Override
     public RelNode visitUnion(Union union, ConversionContext context) throws InvalidRelException{
       return DrillUnionRel.convert(union, context);
+    }
+
+    @Override
+    public RelNode visitExcept(Except except, ConversionContext context) throws InvalidRelException{
+      return DrillExceptRel.convert(except, context);
+    }
+
+    @Override
+    public RelNode visitIntersect(Intersect intersect, ConversionContext context) throws InvalidRelException{
+      return DrillIntersectRel.convert(intersect, context);
     }
 
     @Override

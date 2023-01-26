@@ -17,7 +17,7 @@
  */
 package org.apache.drill.exec.planner.sql.handlers;
 
-import org.apache.drill.exec.planner.common.DrillSetOpRelBase;
+import org.apache.drill.exec.planner.common.DrillSetOpRel;
 import org.apache.drill.shaded.guava.com.google.common.base.Preconditions;
 import org.apache.drill.shaded.guava.com.google.common.collect.ImmutableSet;
 import com.fasterxml.jackson.annotation.JsonCreator;
@@ -66,7 +66,6 @@ import java.util.List;
 import org.apache.calcite.rex.RexBuilder;
 import org.apache.drill.exec.planner.common.DrillAggregateRelBase;
 import org.apache.drill.exec.planner.common.DrillJoinRelBase;
-import org.apache.drill.exec.planner.common.DrillUnionRelBase;
 import org.apache.drill.exec.util.Pointer;
 
 import java.math.BigDecimal;
@@ -185,7 +184,7 @@ public class FindLimit0Visitor extends RelShuttleImpl {
     final RelShuttle unsupportedOperationsVisitor = new RelShuttleImpl() {
       @Override
       public RelNode visit(RelNode other) {
-        if (other instanceof DrillUnionRelBase || other instanceof DrillSetOpRelBase) {
+        if (other instanceof DrillSetOpRel) {
           isUnsupported.value = true;
           return other;
         } else if (other instanceof DrillProjectRelBase) {
@@ -260,7 +259,7 @@ public class FindLimit0Visitor extends RelShuttleImpl {
   public RelNode visit(RelNode other) {
     if (other instanceof DrillJoinRelBase ||
         other instanceof DrillAggregateRelBase ||
-        other instanceof DrillUnionRelBase) {
+        other instanceof DrillSetOpRel) {
       return other;
     }
     if (other instanceof DrillLimitRel) {

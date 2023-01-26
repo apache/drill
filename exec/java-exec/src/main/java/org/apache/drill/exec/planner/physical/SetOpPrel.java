@@ -22,22 +22,22 @@ import org.apache.calcite.plan.RelTraitSet;
 import org.apache.calcite.rel.InvalidRelException;
 import org.apache.calcite.rel.RelNode;
 import org.apache.calcite.rel.RelWriter;
+import org.apache.calcite.rel.core.SetOp;
 import org.apache.calcite.sql.SqlKind;
 import org.apache.drill.exec.physical.base.PhysicalOperator;
 import org.apache.drill.exec.planner.physical.visitor.PrelVisitor;
 import org.apache.drill.exec.record.BatchSchema.SelectionVectorMode;
 import org.apache.drill.shaded.guava.com.google.common.collect.Lists;
-import org.apache.drill.exec.planner.common.DrillSetOpRelBase;
 
 import java.io.IOException;
 import java.util.Iterator;
 import java.util.List;
 
-public class SetOpPrel extends DrillSetOpRelBase implements Prel {
+public class SetOpPrel extends SetOp implements Prel {
 
   public SetOpPrel(RelOptCluster cluster, RelTraitSet traits, List<RelNode> inputs, SqlKind kind,
                    boolean all) throws InvalidRelException {
-    super(cluster, traits, inputs, kind, all, false);
+    super(cluster, traits, inputs, kind, all);
   }
 
   @Override public RelWriter explainTerms(RelWriter pw) {

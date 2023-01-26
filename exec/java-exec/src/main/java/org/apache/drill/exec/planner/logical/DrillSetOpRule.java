@@ -35,7 +35,8 @@ import java.util.Arrays;
 import java.util.List;
 
 /**
- * Rule that converts a {@link org.apache.calcite.rel.core.SetOp} to a {@link DrillSetOpRel}.
+ * Rule that converts {@link LogicalIntersect} or {@link LogicalMinus} to
+ * {@link DrillIntersectRel} or {@link DrillExceptRel}.
  */
 public class DrillSetOpRule extends RelOptRule {
   public static final List<RelOptRule> INSTANCES = Arrays.asList(
@@ -58,7 +59,11 @@ public class DrillSetOpRule extends RelOptRule {
       convertedInputs.add(convertedInput);
     }
     try {
-      call.transformTo(new DrillSetOpRel(setOp.getCluster(), traits, convertedInputs, setOp.kind, setOp.all, true));
+      if (setOp instanceof LogicalMinus) {
+        call.transformTo(new DrillExceptRel(setOp.getCluster(), traits, convertedInputs, setOp.all, true, false));
+      } else {
+        call.transformTo(new DrillIntersectRel(setOp.getCluster(), traits, convertedInputs, setOp.all, true));
+      }
     } catch (InvalidRelException e) {
       tracer.warn(e.toString());
     }

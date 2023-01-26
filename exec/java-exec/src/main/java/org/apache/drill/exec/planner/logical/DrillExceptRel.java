@@ -22,29 +22,27 @@ import org.apache.calcite.plan.RelOptCluster;
 import org.apache.calcite.plan.RelTraitSet;
 import org.apache.calcite.rel.InvalidRelException;
 import org.apache.calcite.rel.RelNode;
-import org.apache.calcite.sql.SqlKind;
+import org.apache.calcite.rel.core.Minus;
+import org.apache.drill.common.logical.data.Except;
 import org.apache.drill.common.logical.data.LogicalOperator;
-import org.apache.drill.common.logical.data.Union;
-import org.apache.drill.exec.planner.common.DrillSetOpRelBase;
+import org.apache.drill.exec.planner.common.DrillSetOpRel;
+import org.apache.drill.exec.planner.torel.ConversionContext;
 
 import java.util.List;
 
 /**
- * SetOp implemented in Drill.
+ * Minus implemented in Drill.
  */
-public class DrillSetOpRel extends DrillSetOpRelBase implements DrillRel {
+public class DrillExceptRel extends Minus implements DrillRel, DrillSetOpRel {
   private final boolean isAggAdded;
 
-  public DrillSetOpRel(RelOptCluster cluster, RelTraitSet traits,
-                       List<RelNode> inputs, SqlKind kind, boolean all, boolean checkCompatibility, boolean isAggAdded) throws InvalidRelException {
-    super(cluster, traits, inputs, kind, all, checkCompatibility);
+  public DrillExceptRel(RelOptCluster cluster, RelTraitSet traits,
+                       List<RelNode> inputs, boolean all, boolean checkCompatibility, boolean isAggAdded) throws InvalidRelException {
+    super(cluster, traits, inputs, all);
+    if (checkCompatibility && !this.isCompatible(getRowType(), getInputs())) {
+      throw new InvalidRelException("Input row types of the Except are not compatible.");
+    }
     this.isAggAdded = isAggAdded;
-  }
-
-  public DrillSetOpRel(RelOptCluster cluster, RelTraitSet traits,
-                       List<RelNode> inputs, SqlKind kind, boolean all, boolean checkCompatibility) throws InvalidRelException {
-    super(cluster, traits, inputs, kind, all, checkCompatibility);
-    this.isAggAdded = false;
   }
 
   public boolean isAggAdded() {
@@ -52,37 +50,41 @@ public class DrillSetOpRel extends DrillSetOpRelBase implements DrillRel {
   }
 
   @Override
-  public DrillSetOpRel copy(RelTraitSet traitSet, List<RelNode> inputs,
+  public DrillExceptRel copy(RelTraitSet traitSet, List<RelNode> inputs,
                             boolean all) {
     try {
-      return new DrillSetOpRel(getCluster(), traitSet, inputs, kind, all,
+      return new DrillExceptRel(getCluster(), traitSet, inputs, all,
           false /* don't check compatibility during copy */, isAggAdded);
     } catch (InvalidRelException e) {
       throw new AssertionError(e);
     }
   }
 
-  public DrillSetOpRel copy(List<RelNode> inputs, boolean isAggAdded) {
+  public DrillExceptRel copy(List<RelNode> inputs, boolean isAggAdded) {
     try {
-      return new DrillSetOpRel(getCluster(), traitSet, inputs, kind, all,
+      return new DrillExceptRel(getCluster(), traitSet, inputs, all,
         false, isAggAdded);
     } catch (InvalidRelException e) {
       throw new AssertionError(e);
     }
   }
 
-  public DrillSetOpRel copy(boolean isAggAdded) {
+  public DrillExceptRel copy(boolean isAggAdded) {
     try {
-      return new DrillSetOpRel(getCluster(), traitSet, inputs, kind, all,
+      return new DrillExceptRel(getCluster(), traitSet, inputs, all,
         false, isAggAdded);
     } catch (InvalidRelException e) {
       throw new AssertionError(e);
     }
+  }
+
+  public static DrillExceptRel convert(Except except, ConversionContext context) throws InvalidRelException{
+    throw new UnsupportedOperationException();
   }
 
   @Override
   public LogicalOperator implement(DrillImplementor implementor) {
-    Union.Builder builder = Union.builder();
+    Except.Builder builder = Except.builder();
     for (Ord<RelNode> input : Ord.zip(inputs)) {
       builder.addInput(implementor.visitChild(this, input.i, input.e));
     }
