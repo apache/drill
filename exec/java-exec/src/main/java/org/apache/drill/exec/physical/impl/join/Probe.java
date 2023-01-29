@@ -17,16 +17,15 @@
  */
 package org.apache.drill.exec.physical.impl.join;
 
-import org.apache.drill.exec.compile.TemplateClassDefinition;
+import org.apache.calcite.rel.core.JoinRelType;
+import org.apache.calcite.sql.SqlKind;
 import org.apache.drill.exec.exception.SchemaChangeException;
 import org.apache.drill.exec.physical.impl.common.HashPartition;
+import org.apache.drill.exec.physical.impl.setop.HashSetOpRecordBatch;
 import org.apache.drill.exec.record.RecordBatch;
-import org.apache.calcite.rel.core.JoinRelType;
 import org.apache.drill.exec.record.VectorContainer;
 
-public interface HashJoinProbe {
-  TemplateClassDefinition<HashJoinProbe> TEMPLATE_DEFINITION = new TemplateClassDefinition<HashJoinProbe>(HashJoinProbe.class, HashJoinProbeTemplate.class);
-
+public interface Probe {
   /* The probe side of the hash join can be in the following two states
    * 1. PROBE_PROJECT: Inner join case, we probe our hash table to see if we have a
    *    key match and if we do we project the record
@@ -39,11 +38,21 @@ public interface HashJoinProbe {
     PROBE_PROJECT, PROJECT_RIGHT, DONE
   }
 
-  void setupHashJoinProbe(RecordBatch probeBatch, HashJoinBatch outgoing, JoinRelType joinRelType, boolean semiJoin,
-                          RecordBatch.IterOutcome leftStartState, HashPartition[] partitions, int cycleNum,
-                          VectorContainer container, HashJoinBatch.HashJoinSpilledPartition[] spilledInners,
-                          boolean buildSideIsEmpty, int numPartitions, int rightHVColPosition);
-  int  probeAndProject() throws SchemaChangeException;
+  default void setup(RecordBatch probeBatch, HashJoinBatch outgoing, JoinRelType joinRelType, boolean semiJoin,
+    RecordBatch.IterOutcome leftStartState, HashPartition[] partitions, int cycleNum,
+    VectorContainer container, AbstractHashBinaryRecordBatch.SpilledPartition[] spilledInners,
+    boolean buildSideIsEmpty, int numPartitions, int rightHVColPosition) throws SchemaChangeException {
+    throw new UnsupportedOperationException();
+  }
+
+  default void setup(RecordBatch probeBatch, HashSetOpRecordBatch outgoing, SqlKind opType, boolean isAll,
+    RecordBatch.IterOutcome leftStartState, HashPartition[] partitions, int cycleNum,
+    VectorContainer container, AbstractHashBinaryRecordBatch.SpilledPartition[] spilledInners,
+    boolean buildSideIsEmpty, int numPartitions) throws SchemaChangeException {
+    throw new UnsupportedOperationException();
+  }
+
+  int probeAndProject() throws SchemaChangeException;
   void changeToFinalProbeState();
   void setTargetOutputCount(int targetOutputCount);
   int getOutputCount();
