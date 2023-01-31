@@ -631,6 +631,17 @@ public class TestAnalyze extends ClusterTest {
     }
   }
 
+  @Test // DRILL-8394
+  public void testTrailingSlashInTableName() throws Exception {
+    try {
+      client.alterSession(ExecConstants.OUTPUT_FORMAT_OPTION, "parquet");
+      run("create table dfs.tmp.nation as select * from cp.`tpch/orders.parquet`");
+      run("analyze table dfs.tmp.`nation/` compute statistics");
+    } finally {
+      client.resetSession(ExecConstants.OUTPUT_FORMAT_OPTION);
+    }
+  }
+
   //Helper function to verify output of ANALYZE statement
   private void verifyAnalyzeOutput(String query, String message) throws Exception {
     DirectRowSet rowSet = queryBuilder().sql(query).rowSet();
