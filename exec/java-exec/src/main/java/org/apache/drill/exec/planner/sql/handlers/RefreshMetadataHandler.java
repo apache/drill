@@ -29,7 +29,7 @@ import org.apache.drill.common.logical.FormatPluginConfig;
 import org.apache.drill.exec.physical.PhysicalPlan;
 import org.apache.drill.exec.planner.logical.DrillTable;
 import org.apache.drill.exec.planner.sql.DirectPlan;
-import org.apache.drill.exec.planner.sql.SchemaUtilites;
+import org.apache.drill.exec.planner.sql.SchemaUtilities;
 import org.apache.drill.exec.planner.sql.parser.SqlRefreshMetadata;
 import org.apache.drill.exec.store.dfs.DrillFileSystem;
 import org.apache.drill.exec.store.dfs.FileSelection;
@@ -45,7 +45,7 @@ import org.apache.hadoop.fs.Path;
 import java.util.HashSet;
 import java.util.Set;
 
-import static org.apache.drill.exec.planner.sql.SchemaUtilites.findSchema;
+import static org.apache.drill.exec.planner.sql.SchemaUtilities.findSchema;
 
 public class RefreshMetadataHandler extends DefaultSqlHandler {
   private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(RefreshMetadataHandler.class);
@@ -73,7 +73,7 @@ public class RefreshMetadataHandler extends DefaultSqlHandler {
 
       if (schema == null) {
         return direct(false, "Storage plugin or workspace does not exist [%s]",
-            SchemaUtilites.SCHEMA_PATH_JOINER.join(refreshTable.getSchemaPath()));
+            SchemaUtilities.SCHEMA_PATH_JOINER.join(refreshTable.getSchemaPath()));
       }
 
       final String tableName = refreshTable.getName();

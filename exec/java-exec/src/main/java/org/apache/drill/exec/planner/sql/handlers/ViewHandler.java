@@ -32,7 +32,7 @@ import org.apache.drill.exec.dotdrill.View;
 import org.apache.drill.exec.ops.QueryContext;
 import org.apache.drill.exec.physical.PhysicalPlan;
 import org.apache.drill.exec.planner.sql.DirectPlan;
-import org.apache.drill.exec.planner.sql.SchemaUtilites;
+import org.apache.drill.exec.planner.sql.SchemaUtilities;
 import org.apache.drill.exec.planner.sql.parser.SqlCreateView;
 import org.apache.drill.exec.planner.sql.parser.SqlDropView;
 import org.apache.drill.exec.store.AbstractSchema;
@@ -75,10 +75,10 @@ public abstract class ViewHandler extends DefaultSqlHandler {
       final RelNode newViewRelNode = SqlHandlerUtil.resolveNewTableRel(true, createView.getFieldNames(), validatedRowType, queryRelNode);
 
       final SchemaPlus defaultSchema = context.getNewDefaultSchema();
-      final AbstractSchema drillSchema = SchemaUtilites.resolveToMutableDrillSchema(defaultSchema, createView.getSchemaPath());
+      final AbstractSchema drillSchema = SchemaUtilities.resolveToMutableDrillSchema(defaultSchema, createView.getSchemaPath());
 
       final View view = new View(newViewName, viewSql, newViewRelNode.getRowType(),
-          SchemaUtilites.getSchemaPathAsList(defaultSchema));
+          SchemaUtilities.getSchemaPathAsList(defaultSchema));
       final String schemaPath = drillSchema.getFullSchemaName();
 
       // check view creation possibility
@@ -159,7 +159,7 @@ public abstract class ViewHandler extends DefaultSqlHandler {
       SqlDropView dropView = unwrap(sqlNode, SqlDropView.class);
       final String viewName = DrillStringUtils.removeLeadingSlash(dropView.getName());
       final AbstractSchema drillSchema =
-          SchemaUtilites.resolveToMutableDrillSchema(context.getNewDefaultSchema(), dropView.getSchemaPath());
+          SchemaUtilities.resolveToMutableDrillSchema(context.getNewDefaultSchema(), dropView.getSchemaPath());
 
       final String schemaPath = drillSchema.getFullSchemaName();
 

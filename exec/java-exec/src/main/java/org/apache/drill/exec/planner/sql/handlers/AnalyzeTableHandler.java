@@ -41,7 +41,7 @@ import org.apache.drill.exec.planner.logical.DrillScreenRel;
 import org.apache.drill.exec.planner.logical.DrillTable;
 import org.apache.drill.exec.planner.logical.DrillWriterRel;
 import org.apache.drill.exec.planner.physical.Prel;
-import org.apache.drill.exec.planner.sql.SchemaUtilites;
+import org.apache.drill.exec.planner.sql.SchemaUtilities;
 import org.apache.drill.exec.planner.sql.SqlSelectBuilder;
 import org.apache.drill.exec.planner.sql.parser.SqlAnalyzeTable;
 import org.apache.drill.exec.store.AbstractSchema;
@@ -84,7 +84,7 @@ public class AnalyzeTableHandler extends DefaultSqlHandler {
     RelNode relScan = convertedRelNode.getConvertedNode();
     DrillTableInfo drillTableInfo = DrillTableInfo.getTableInfoHolder(sqlAnalyzeTable.getTableRef(), config);
     String tableName = drillTableInfo.tableName();
-    AbstractSchema drillSchema = SchemaUtilites.resolveToDrillSchema(
+    AbstractSchema drillSchema = SchemaUtilities.resolveToDrillSchema(
         config.getConverter().getDefaultSchema(), drillTableInfo.schemaPath());
     Table table = SqlHandlerUtil.getTableFromSchema(drillSchema, tableName);
 

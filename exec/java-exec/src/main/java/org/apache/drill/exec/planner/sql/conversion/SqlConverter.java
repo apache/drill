@@ -57,7 +57,7 @@ import org.apache.drill.exec.planner.physical.DrillDistributionTraitDef;
 import org.apache.drill.exec.planner.physical.PlannerSettings;
 import org.apache.drill.exec.planner.sql.DrillConformance;
 import org.apache.drill.exec.planner.sql.DrillConvertletTable;
-import org.apache.drill.exec.planner.sql.SchemaUtilites;
+import org.apache.drill.exec.planner.sql.SchemaUtilities;
 import org.apache.drill.exec.planner.sql.parser.impl.DrillParserWithCompoundIdConverter;
 import org.apache.drill.exec.planner.sql.parser.impl.DrillSqlParseException;
 import org.apache.drill.exec.planner.types.DrillRelDataTypeSystem;
@@ -137,7 +137,7 @@ public class SqlConverter {
     this.isExpandedView = false;
     this.typeFactory = new JavaTypeFactoryImpl(DrillRelDataTypeSystem.DRILL_REL_DATATYPE_SYSTEM);
     this.defaultSchema = context.getNewDefaultSchema();
-    this.rootSchema = SchemaUtilites.rootSchema(defaultSchema);
+    this.rootSchema = SchemaUtilities.rootSchema(defaultSchema);
     this.temporarySchema = context.getConfig().getString(ExecConstants.DEFAULT_TEMPORARY_WORKSPACE);
     this.session = context.getSession();
     this.drillConfig = context.getConfig();

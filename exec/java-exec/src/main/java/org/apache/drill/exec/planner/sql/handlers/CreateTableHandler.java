@@ -53,7 +53,7 @@ import org.apache.drill.exec.planner.physical.ProjectPrel;
 import org.apache.drill.exec.planner.physical.WriterPrel;
 import org.apache.drill.exec.planner.physical.visitor.BasePrelVisitor;
 import org.apache.drill.exec.planner.sql.DrillSqlOperator;
-import org.apache.drill.exec.planner.sql.SchemaUtilites;
+import org.apache.drill.exec.planner.sql.SchemaUtilities;
 import org.apache.drill.exec.planner.sql.parser.SqlCreateTable;
 import org.apache.drill.exec.store.AbstractSchema;
 import org.apache.drill.exec.util.Pointer;
@@ -282,14 +282,14 @@ public class CreateTableHandler extends DefaultSqlHandler {
   private AbstractSchema resolveSchema(SqlCreateTable sqlCreateTable, SchemaPlus defaultSchema, DrillConfig config) {
     AbstractSchema resolvedSchema;
     if (sqlCreateTable.isTemporary() && sqlCreateTable.getSchemaPath().size() == 0) {
-      resolvedSchema = SchemaUtilites.getTemporaryWorkspace(defaultSchema, config);
+      resolvedSchema = SchemaUtilities.getTemporaryWorkspace(defaultSchema, config);
     } else {
-      resolvedSchema = SchemaUtilites.resolveToMutableDrillSchema(
+      resolvedSchema = SchemaUtilities.resolveToMutableDrillSchema(
           defaultSchema, sqlCreateTable.getSchemaPath());
     }
 
     if (sqlCreateTable.isTemporary()) {
-      return SchemaUtilites.resolveToValidTemporaryWorkspace(resolvedSchema, config);
+      return SchemaUtilities.resolveToValidTemporaryWorkspace(resolvedSchema, config);
     }
 
     return resolvedSchema;

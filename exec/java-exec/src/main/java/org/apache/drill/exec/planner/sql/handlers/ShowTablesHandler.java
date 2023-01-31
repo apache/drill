@@ -33,7 +33,7 @@ import org.apache.calcite.tools.ValidationException;
 import org.apache.calcite.util.NlsString;
 import org.apache.calcite.util.Util;
 import org.apache.drill.common.exceptions.UserException;
-import org.apache.drill.exec.planner.sql.SchemaUtilites;
+import org.apache.drill.exec.planner.sql.SchemaUtilities;
 import org.apache.drill.exec.planner.sql.SqlSelectBuilder;
 import org.apache.drill.exec.planner.sql.parser.DrillParserUtil;
 import org.apache.drill.exec.planner.sql.parser.SqlShowTables;
@@ -63,11 +63,11 @@ public class ShowTablesHandler extends DefaultSqlHandler {
     SchemaPlus schemaPlus;
     if (node.getDb() != null) {
       List<String> schemaNames = node.getDb().names;
-      schemaPlus = SchemaUtilites.findSchema(config.getConverter().getDefaultSchema(), schemaNames);
+      schemaPlus = SchemaUtilities.findSchema(config.getConverter().getDefaultSchema(), schemaNames);
 
       if (schemaPlus == null) {
         throw UserException.validationError()
-            .message("Invalid schema name [%s]", SchemaUtilites.getSchemaPath(schemaNames))
+            .message("Invalid schema name [%s]", SchemaUtilities.getSchemaPath(schemaNames))
             .build(logger);
       }
 
@@ -76,14 +76,14 @@ public class ShowTablesHandler extends DefaultSqlHandler {
       schemaPlus = config.getConverter().getDefaultSchema();
     }
 
-    if (SchemaUtilites.isRootSchema(schemaPlus)) {
+    if (SchemaUtilities.isRootSchema(schemaPlus)) {
       // If the default schema is a root schema, throw an error to select a default schema
       throw UserException.validationError()
           .message("No default schema selected. Select a schema using 'USE schema' command")
           .build(logger);
     }
 
-    AbstractSchema drillSchema = SchemaUtilites.unwrapAsDrillSchemaInstance(schemaPlus);
+    AbstractSchema drillSchema = SchemaUtilities.unwrapAsDrillSchemaInstance(schemaPlus);
 
     SqlNode where = DrillParserUtil.createCondition(
         new SqlIdentifier(SHRD_COL_TABLE_SCHEMA, SqlParserPos.ZERO),

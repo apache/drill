@@ -26,7 +26,7 @@ import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.physical.PhysicalPlan;
 import org.apache.drill.exec.planner.sql.DirectPlan;
-import org.apache.drill.exec.planner.sql.SchemaUtilites;
+import org.apache.drill.exec.planner.sql.SchemaUtilities;
 import org.apache.drill.exec.planner.sql.parser.SqlCreateType;
 import org.apache.drill.exec.planner.sql.parser.SqlSchema;
 import org.apache.drill.exec.record.metadata.ColumnMetadata;
@@ -72,13 +72,13 @@ public abstract class SchemaHandler extends DefaultSqlHandler {
 
   public WorkspaceSchemaFactory.WorkspaceSchema getWorkspaceSchema(List<String> tableSchema, String tableName) {
     SchemaPlus defaultSchema = config.getConverter().getDefaultSchema();
-    AbstractSchema temporarySchema = SchemaUtilites.resolveToTemporarySchema(tableSchema, defaultSchema, context.getConfig());
+    AbstractSchema temporarySchema = SchemaUtilities.resolveToTemporarySchema(tableSchema, defaultSchema, context.getConfig());
 
     if (context.getSession().isTemporaryTable(temporarySchema, context.getConfig(), tableName)) {
       produceErrorResult(String.format("Indicated table [%s] is temporary table", tableName), true);
     }
 
-    AbstractSchema drillSchema = SchemaUtilites.resolveToMutableDrillSchema(defaultSchema, tableSchema);
+    AbstractSchema drillSchema = SchemaUtilities.resolveToMutableDrillSchema(defaultSchema, tableSchema);
     Table table = SqlHandlerUtil.getTableFromSchema(drillSchema, tableName);
     if (table == null || table.getJdbcTableType() != Schema.TableType.TABLE) {
       produceErrorResult(String.format("Table [%s] was not found", tableName), true);

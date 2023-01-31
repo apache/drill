@@ -17,7 +17,7 @@
  */
 package org.apache.drill.exec.planner.sql.parser;
 
-import org.apache.drill.exec.planner.sql.SchemaUtilites;
+import org.apache.drill.exec.planner.sql.SchemaUtilities;
 import org.apache.drill.shaded.guava.com.google.common.collect.Lists;
 import org.apache.drill.exec.planner.sql.handlers.AbstractSqlHandler;
 import org.apache.drill.exec.planner.sql.handlers.SqlHandlerConfig;
@@ -106,7 +106,7 @@ public class SqlCreateView extends DrillSqlCall {
   }
 
   public List<String> getSchemaPath() {
-    return SchemaUtilites.getSchemaPath(viewName);
+    return SchemaUtilities.getSchemaPath(viewName);
   }
 
   public String getName() {

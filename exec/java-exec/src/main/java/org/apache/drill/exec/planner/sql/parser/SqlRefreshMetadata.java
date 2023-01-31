@@ -29,7 +29,7 @@ import org.apache.calcite.sql.SqlOperator;
 import org.apache.calcite.sql.SqlSpecialOperator;
 import org.apache.calcite.sql.SqlWriter;
 import org.apache.calcite.sql.parser.SqlParserPos;
-import org.apache.drill.exec.planner.sql.SchemaUtilites;
+import org.apache.drill.exec.planner.sql.SchemaUtilities;
 import org.apache.drill.exec.planner.sql.handlers.AbstractSqlHandler;
 import org.apache.drill.exec.planner.sql.handlers.RefreshMetadataHandler;
 import org.apache.drill.exec.planner.sql.handlers.SqlHandlerConfig;
@@ -104,7 +104,7 @@ public class SqlRefreshMetadata extends DrillSqlCall {
   }
 
   public List<String> getSchemaPath() {
-    return SchemaUtilites.getSchemaPath(tblName);
+    return SchemaUtilities.getSchemaPath(tblName);
   }
 
   @Override

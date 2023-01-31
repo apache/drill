@@ -33,7 +33,7 @@ import org.apache.drill.common.exceptions.DrillRuntimeException;
 import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.exec.physical.PhysicalPlan;
 import org.apache.drill.exec.planner.sql.DirectPlan;
-import org.apache.drill.exec.planner.sql.SchemaUtilites;
+import org.apache.drill.exec.planner.sql.SchemaUtilities;
 import org.apache.drill.exec.store.AbstractSchema;
 import org.apache.drill.exec.store.StoragePlugin;
 import org.apache.drill.exec.store.StoragePluginRegistry.PluginException;
@@ -76,7 +76,7 @@ public class DescribeSchemaHandler extends DefaultSqlHandler {
   @Override
   public PhysicalPlan getPlan(SqlNode sqlNode) throws ForemanSetupException {
     SqlIdentifier schema = unwrap(sqlNode, SqlDescribeSchema.class).getSchema();
-    SchemaPlus schemaPlus = SchemaUtilites.findSchema(config.getConverter().getDefaultSchema(), schema.names);
+    SchemaPlus schemaPlus = SchemaUtilities.findSchema(config.getConverter().getDefaultSchema(), schema.names);
 
     if (schemaPlus == null) {
       throw UserException.validationError()
@@ -84,7 +84,7 @@ public class DescribeSchemaHandler extends DefaultSqlHandler {
         .build(logger);
     }
 
-    AbstractSchema drillSchema = SchemaUtilites.unwrapAsDrillSchemaInstance(schemaPlus);
+    AbstractSchema drillSchema = SchemaUtilities.unwrapAsDrillSchemaInstance(schemaPlus);
     StoragePlugin storagePlugin;
     try {
       storagePlugin = context.getStorage().getPlugin(drillSchema.getSchemaPath().get(0));

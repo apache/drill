@@ -22,7 +22,7 @@ import org.apache.calcite.tools.RelConversionException;
 import org.apache.calcite.tools.ValidationException;
 import org.apache.drill.common.exceptions.DrillRuntimeException;
 import org.apache.drill.common.exceptions.UserException;
-import org.apache.drill.exec.planner.sql.SchemaUtilites;
+import org.apache.drill.exec.planner.sql.SchemaUtilities;
 import org.apache.drill.exec.store.StoragePluginRegistry;
 import org.apache.drill.exec.util.Pointer;
 import org.apache.drill.exec.work.foreman.ForemanSetupException;
@@ -43,7 +43,7 @@ public class InsertHandler extends DefaultSqlHandler {
     throws ForemanSetupException, RelConversionException, ValidationException {
     ConvertedRelNode convertedRelNode = super.validateAndConvert(sqlNode);
 
-    String storageName = SchemaUtilites.getSchemaPathAsList(
+    String storageName = SchemaUtilities.getSchemaPathAsList(
       convertedRelNode.getConvertedNode().getTable().getQualifiedName().iterator().next()).iterator().next();
     try {
       if (!context.getStorage().getPlugin(storageName).supportsInsert()) {

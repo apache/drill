@@ -31,7 +31,7 @@ import org.apache.calcite.sql.validate.SqlUserDefinedTableMacro;
 import org.apache.calcite.util.Util;
 import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.exec.planner.logical.DrillTable;
-import org.apache.drill.exec.planner.sql.SchemaUtilites;
+import org.apache.drill.exec.planner.sql.SchemaUtilities;
 import org.apache.drill.exec.store.AbstractSchema;
 import org.apache.drill.shaded.guava.com.google.common.base.Preconditions;
 import org.slf4j.Logger;
@@ -88,16 +88,16 @@ public class DrillTableInfo {
         SqlUserDefinedTableMacro tableMacro = (SqlUserDefinedTableMacro) operator;
         SqlIdentifier tableIdentifier = tableMacro.getSqlIdentifier();
 
-        AbstractSchema drillSchema = SchemaUtilites.resolveToDrillSchema(
-            config.getConverter().getDefaultSchema(), SchemaUtilites.getSchemaPath(tableIdentifier));
+        AbstractSchema drillSchema = SchemaUtilities.resolveToDrillSchema(
+            config.getConverter().getDefaultSchema(), SchemaUtilities.getSchemaPath(tableIdentifier));
 
         DrillTable table = (DrillTable) tableMacro.getTable(new SqlCallBinding(config.getConverter().getValidator(), null, call.operand(0)));
         return new DrillTableInfo(table, drillSchema.getSchemaPath(), Util.last(tableIdentifier.names));
       }
       case IDENTIFIER: {
         SqlIdentifier tableIdentifier = (SqlIdentifier) tableRef;
-        AbstractSchema drillSchema = SchemaUtilites.resolveToDrillSchema(
-            config.getConverter().getDefaultSchema(), SchemaUtilites.getSchemaPath(tableIdentifier));
+        AbstractSchema drillSchema = SchemaUtilities.resolveToDrillSchema(
+            config.getConverter().getDefaultSchema(), SchemaUtilities.getSchemaPath(tableIdentifier));
         String tableName = Util.last(tableIdentifier.names);
         DrillTable table = getDrillTable(drillSchema, tableName);
         return new DrillTableInfo(table, drillSchema.getSchemaPath(), tableName);
