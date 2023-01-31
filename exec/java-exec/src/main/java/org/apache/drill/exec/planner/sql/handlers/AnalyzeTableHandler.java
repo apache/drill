@@ -18,6 +18,7 @@
 package org.apache.drill.exec.planner.sql.handlers;
 
 import java.io.IOException;
+
 import org.apache.calcite.rel.RelNode;
 import org.apache.calcite.rel.type.RelDataType;
 import org.apache.calcite.schema.Table;
@@ -28,6 +29,7 @@ import org.apache.calcite.sql.SqlSelect;
 import org.apache.calcite.sql.parser.SqlParserPos;
 import org.apache.calcite.tools.RelConversionException;
 import org.apache.calcite.tools.ValidationException;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.common.logical.FormatPluginConfig;
@@ -116,10 +118,13 @@ public class AnalyzeTableHandler extends DefaultSqlHandler {
         formatSelection.getFormat()).getFsConf());
 
     Path selectionRoot = formatSelection.getSelection().getSelectionRoot();
-    if (!selectionRoot.toUri().getPath().endsWith(tableName) || !fs.getFileStatus(selectionRoot).isDirectory()) {
+    String tablePath = selectionRoot.toUri().getPath();
+    boolean pathMatchesTableName = tablePath.endsWith(StringUtils.stripEnd(tableName, "/"));
+
+    if (!pathMatchesTableName || !fs.getFileStatus(selectionRoot).isDirectory()) {
       return DrillStatsTable.notSupported(context, tableName);
     }
-    // Do not recompute statistics, if stale
+    // Do not recompute statistics if they already exist and are not stale.
     Path statsFilePath = new Path(selectionRoot, DotDrillType.STATS.getEnding());
     if (fs.exists(statsFilePath) && !isStatsStale(fs, statsFilePath)) {
      return DrillStatsTable.notRequired(context, tableName);
