@@ -35,7 +35,7 @@ import org.apache.drill.exec.ops.QueryContext;
 import org.apache.drill.exec.planner.PlannerPhase;
 import org.apache.drill.exec.planner.common.DrillRelOptUtil;
 import org.apache.drill.exec.planner.logical.DrillTable;
-import org.apache.drill.exec.planner.sql.SchemaUtilites;
+import org.apache.drill.exec.planner.sql.SchemaUtilities;
 import org.apache.drill.exec.planner.sql.conversion.SqlConverter;
 import org.apache.drill.exec.store.StoragePlugin;
 import org.apache.drill.exec.store.StoragePluginRegistry;
@@ -109,7 +109,7 @@ public class SqlHandlerConfig {
     }
 
     private void collectPlugins(RelNode relNode) {
-      String pluginName = SchemaUtilites.getSchemaPathAsList(
+      String pluginName = SchemaUtilities.getSchemaPathAsList(
         relNode.getTable().getQualifiedName().iterator().next()).iterator().next();
       CheckedSupplier<StoragePlugin, StoragePluginRegistry.PluginException> pluginsProvider =
         () -> storagePlugins.getPlugin(pluginName);

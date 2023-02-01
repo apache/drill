@@ -19,7 +19,7 @@ package org.apache.drill.exec.planner.sql.parser;
 
 import java.util.List;
 
-import org.apache.drill.exec.planner.sql.SchemaUtilites;
+import org.apache.drill.exec.planner.sql.SchemaUtilities;
 import org.apache.drill.shaded.guava.com.google.common.base.Preconditions;
 
 import org.apache.drill.exec.planner.sql.handlers.AbstractSqlHandler;
@@ -131,7 +131,7 @@ public class SqlCreateTable extends DrillSqlCall {
   }
 
   public List<String> getSchemaPath() {
-    return SchemaUtilites.getSchemaPath(tblName);
+    return SchemaUtilities.getSchemaPath(tblName);
   }
 
   public String getName() {

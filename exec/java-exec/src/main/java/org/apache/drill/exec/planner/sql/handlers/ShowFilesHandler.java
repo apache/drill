@@ -23,7 +23,7 @@ import org.apache.calcite.sql.SqlNode;
 import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.exec.physical.PhysicalPlan;
 import org.apache.drill.exec.planner.sql.DirectPlan;
-import org.apache.drill.exec.planner.sql.SchemaUtilites;
+import org.apache.drill.exec.planner.sql.SchemaUtilities;
 import org.apache.drill.exec.planner.sql.parser.SqlShowFiles;
 import org.apache.drill.exec.store.AbstractSchema;
 import org.apache.drill.exec.store.dfs.WorkspaceSchemaFactory.WorkspaceSchema;
@@ -59,10 +59,10 @@ public class ShowFilesHandler extends DefaultSqlHandler {
     if (from != null) {
       // We are not sure if the full from clause is just the schema or includes table name,
       // first try to see if the full path specified is a schema
-      drillSchema = SchemaUtilites.findSchema(defaultSchema, from.names);
+      drillSchema = SchemaUtilities.findSchema(defaultSchema, from.names);
       if (drillSchema == null) {
         // Entire from clause is not a schema, try to obtain the schema without the last part of the specified clause.
-        drillSchema = SchemaUtilites.findSchema(defaultSchema, from.names.subList(0, from.names.size() - 1));
+        drillSchema = SchemaUtilities.findSchema(defaultSchema, from.names.subList(0, from.names.size() - 1));
         // Listing for specific directory: show files in dfs.tmp.specific_directory
         fromDir = from.names.get((from.names.size() - 1));
       }
@@ -80,7 +80,7 @@ public class ShowFilesHandler extends DefaultSqlHandler {
     } catch (ClassCastException e) {
       throw UserException.validationError()
           .message("SHOW FILES is supported in workspace type schema only. Schema [%s] is not a workspace schema.",
-              SchemaUtilites.getSchemaPath(drillSchema))
+              SchemaUtilities.getSchemaPath(drillSchema))
           .build(logger);
     }
 

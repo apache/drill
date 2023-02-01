@@ -28,7 +28,7 @@ import org.apache.drill.common.expression.PathSegment;
 import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.alias.AliasRegistryProvider;
-import org.apache.drill.exec.planner.sql.SchemaUtilites;
+import org.apache.drill.exec.planner.sql.SchemaUtilities;
 import org.apache.drill.exec.store.AbstractSchema;
 import org.apache.drill.exec.store.SchemaConfig;
 import org.apache.drill.exec.store.StoragePlugin;
@@ -157,7 +157,7 @@ public class DynamicRootSchema extends DynamicSchema {
       }
 
       // Could not find the plugin of schemaName. The schemaName could be `dfs.tmp`, a 2nd level schema under 'dfs'
-      List<String> paths = SchemaUtilites.getSchemaPathAsList(schemaName);
+      List<String> paths = SchemaUtilities.getSchemaPathAsList(schemaName);
       if (paths.size() == 2) {
         plugin = storages.getPlugin(paths.get(0));
         if (plugin == null) {

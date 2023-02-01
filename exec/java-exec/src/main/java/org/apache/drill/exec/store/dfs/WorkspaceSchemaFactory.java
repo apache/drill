@@ -63,7 +63,7 @@ import org.apache.drill.exec.planner.logical.DrillViewTable;
 import org.apache.drill.exec.planner.logical.DynamicDrillTable;
 import org.apache.drill.exec.planner.logical.FileSystemCreateTableEntry;
 import org.apache.drill.exec.planner.sql.ExpandingConcurrentMap;
-import org.apache.drill.exec.planner.sql.SchemaUtilites;
+import org.apache.drill.exec.planner.sql.SchemaUtilities;
 import org.apache.drill.exec.record.metadata.schema.FsMetastoreSchemaProvider;
 import org.apache.drill.exec.store.AbstractSchema;
 import org.apache.drill.exec.store.PartitionNotFoundException;
@@ -413,7 +413,7 @@ public class WorkspaceSchemaFactory {
     }
 
     private boolean isTemporaryWorkspace() {
-      return SchemaUtilites.getSchemaPath(schemaPath).equals(schemaConfig.getTemporaryWorkspace());
+      return SchemaUtilities.getSchemaPath(schemaPath).equals(schemaConfig.getTemporaryWorkspace());
     }
 
     @Override

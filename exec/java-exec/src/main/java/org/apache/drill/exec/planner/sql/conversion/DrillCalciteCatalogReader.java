@@ -33,7 +33,7 @@ import org.apache.drill.common.config.DrillConfig;
 import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.exec.metastore.MetadataProviderManager;
 import org.apache.drill.exec.planner.logical.DrillTable;
-import org.apache.drill.exec.planner.sql.SchemaUtilites;
+import org.apache.drill.exec.planner.sql.SchemaUtilities;
 import org.apache.drill.exec.rpc.user.UserSession;
 import org.apache.drill.shaded.guava.com.google.common.cache.CacheBuilder;
 import org.apache.drill.shaded.guava.com.google.common.cache.CacheLoader;
@@ -152,10 +152,10 @@ class DrillCalciteCatalogReader extends CalciteCatalogReader {
     if (names.size() == 1) {
       return true;
     }
-    String schemaPath = SchemaUtilites.getSchemaPath(names.subList(0, names.size() - 1));
-    return SchemaUtilites.isTemporaryWorkspace(schemaPath, drillConfig) ||
-        SchemaUtilites.isTemporaryWorkspace(
-            SchemaUtilites.SCHEMA_PATH_JOINER.join(defaultSchemaPath, schemaPath), drillConfig);
+    String schemaPath = SchemaUtilities.getSchemaPath(names.subList(0, names.size() - 1));
+    return SchemaUtilities.isTemporaryWorkspace(schemaPath, drillConfig) ||
+        SchemaUtilities.isTemporaryWorkspace(
+            SchemaUtilities.SCHEMA_PATH_JOINER.join(defaultSchemaPath, schemaPath), drillConfig);
   }
 
   /**

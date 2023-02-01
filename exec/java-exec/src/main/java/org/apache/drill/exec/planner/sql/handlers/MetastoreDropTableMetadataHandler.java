@@ -22,7 +22,7 @@ import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.physical.PhysicalPlan;
 import org.apache.drill.exec.planner.sql.DirectPlan;
-import org.apache.drill.exec.planner.sql.SchemaUtilites;
+import org.apache.drill.exec.planner.sql.SchemaUtilities;
 import org.apache.drill.exec.planner.sql.parser.SqlDropTableMetadata;
 import org.apache.drill.exec.store.AbstractSchema;
 import org.apache.drill.exec.util.Pointer;
@@ -56,7 +56,7 @@ public class MetastoreDropTableMetadataHandler extends DefaultSqlHandler {
 
     SqlDropTableMetadata dropTableMetadata = unwrap(sqlNode, SqlDropTableMetadata.class);
 
-    AbstractSchema drillSchema = SchemaUtilites.resolveToDrillSchema(
+    AbstractSchema drillSchema = SchemaUtilities.resolveToDrillSchema(
         config.getConverter().getDefaultSchema(), dropTableMetadata.getSchemaPath());
 
     List<String> schemaPath = drillSchema.getSchemaPath();

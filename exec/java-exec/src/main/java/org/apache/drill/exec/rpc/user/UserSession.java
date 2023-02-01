@@ -35,7 +35,7 @@ import org.apache.calcite.tools.ValidationException;
 import org.apache.drill.common.config.DrillConfig;
 import org.apache.drill.common.config.DrillProperties;
 import org.apache.drill.exec.planner.physical.PlannerSettings;
-import org.apache.drill.exec.planner.sql.SchemaUtilites;
+import org.apache.drill.exec.planner.sql.SchemaUtilities;
 import org.apache.drill.exec.planner.sql.handlers.SqlHandlerUtil;
 import org.apache.drill.exec.proto.UserBitShared.UserCredentials;
 import org.apache.drill.exec.proto.UserProtos.UserProperties;
@@ -218,23 +218,23 @@ public class UserSession implements AutoCloseable {
    */
   public void setDefaultSchemaPath(String newDefaultSchemaPath, SchemaPlus currentDefaultSchema)
       throws ValidationException {
-    final List<String> newDefaultPathAsList = SchemaUtilites.getSchemaPathAsList(newDefaultSchemaPath);
+    final List<String> newDefaultPathAsList = SchemaUtilities.getSchemaPathAsList(newDefaultSchemaPath);
     SchemaPlus newDefault;
 
     // First try to find the given schema relative to the current default schema.
-    newDefault = SchemaUtilites.findSchema(currentDefaultSchema, newDefaultPathAsList);
+    newDefault = SchemaUtilities.findSchema(currentDefaultSchema, newDefaultPathAsList);
 
     if (newDefault == null) {
       // If we fail to find the schema relative to current default schema, consider the given new default schema path as
       // absolute schema path.
-      newDefault = SchemaUtilites.findSchema(currentDefaultSchema, newDefaultPathAsList);
+      newDefault = SchemaUtilities.findSchema(currentDefaultSchema, newDefaultPathAsList);
     }
 
     if (newDefault == null) {
-      SchemaUtilites.throwSchemaNotFoundException(currentDefaultSchema, newDefaultSchemaPath);
+      SchemaUtilities.throwSchemaNotFoundException(currentDefaultSchema, newDefaultSchemaPath);
     }
 
-    properties.setProperty(DrillProperties.SCHEMA, SchemaUtilites.getSchemaPath(newDefault));
+    properties.setProperty(DrillProperties.SCHEMA, SchemaUtilities.getSchemaPath(newDefault));
   }
 
   /**
@@ -256,7 +256,7 @@ public class UserSession implements AutoCloseable {
       return null;
     }
 
-    return SchemaUtilites.findSchema(rootSchema, defaultSchemaPath);
+    return SchemaUtilities.findSchema(rootSchema, defaultSchemaPath);
   }
 
   /**
@@ -292,7 +292,7 @@ public class UserSession implements AutoCloseable {
    * @throws IOException if error during session temporary location creation
    */
   public String registerTemporaryTable(AbstractSchema schema, String tableName, DrillConfig config) throws IOException {
-    addTemporaryLocation(SchemaUtilites.resolveToValidTemporaryWorkspace(schema, config));
+    addTemporaryLocation(SchemaUtilities.resolveToValidTemporaryWorkspace(schema, config));
     String temporaryTableName = new Path(sessionId, UUID.randomUUID().toString()).toUri().getPath();
     String oldTemporaryTableName = temporaryTables.putIfAbsent(tableName.toLowerCase(), temporaryTableName);
     return oldTemporaryTableName == null ? temporaryTableName : oldTemporaryTableName;
@@ -334,7 +334,7 @@ public class UserSession implements AutoCloseable {
    * @return true if temporary table exists in schema, false otherwise
    */
   public boolean isTemporaryTable(AbstractSchema drillSchema, DrillConfig config, String tableName) {
-    if (drillSchema == null || !SchemaUtilites.isTemporaryWorkspace(drillSchema.getFullSchemaName(), config)) {
+    if (drillSchema == null || !SchemaUtilities.isTemporaryWorkspace(drillSchema.getFullSchemaName(), config)) {
       return false;
     }
     String temporaryTableName = resolveTemporaryTableName(tableName);
@@ -361,7 +361,7 @@ public class UserSession implements AutoCloseable {
     if (temporaryTable == null) {
       return;
     }
-    SqlHandlerUtil.dropTableFromSchema(SchemaUtilites.resolveToValidTemporaryWorkspace(schema, config), temporaryTable);
+    SqlHandlerUtil.dropTableFromSchema(SchemaUtilities.resolveToValidTemporaryWorkspace(schema, config), temporaryTable);
     temporaryTables.remove(tableName.toLowerCase());
   }
 

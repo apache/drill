@@ -30,7 +30,7 @@ import org.apache.drill.exec.physical.impl.scan.framework.ManagedReader;
 import org.apache.drill.exec.physical.impl.scan.framework.SchemaNegotiator;
 import org.apache.drill.exec.physical.resultSet.ResultSetLoader;
 import org.apache.drill.exec.physical.resultSet.RowSetLoader;
-import org.apache.drill.exec.planner.sql.SchemaUtilites;
+import org.apache.drill.exec.planner.sql.SchemaUtilities;
 import org.apache.drill.exec.record.ColumnConverter;
 import org.apache.drill.exec.record.ColumnConverterFactory;
 import org.apache.drill.exec.record.metadata.TupleMetadata;
@@ -87,7 +87,7 @@ public class EnumerableRecordReader implements ManagedReader<SchemaNegotiator> {
   private void setup(OperatorContext context) {
     SchemaPlus rootSchema = context.getFragmentContext().getFullRootSchema();
     DataContext root = new DrillDataContext(
-        schemaPath != null ? SchemaUtilites.searchSchemaTree(rootSchema, SchemaUtilites.getSchemaPathAsList(schemaPath)) : rootSchema,
+        schemaPath != null ? SchemaUtilities.searchSchemaTree(rootSchema, SchemaUtilities.getSchemaPathAsList(schemaPath)) : rootSchema,
         new JavaTypeFactoryImpl(),
         Collections.emptyMap());
 

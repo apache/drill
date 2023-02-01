@@ -32,7 +32,7 @@ import org.apache.calcite.schema.SchemaPlus;
 import org.apache.drill.exec.physical.base.PhysicalOperator;
 import org.apache.drill.exec.planner.logical.ModifyTableEntry;
 import org.apache.drill.exec.planner.physical.visitor.PrelVisitor;
-import org.apache.drill.exec.planner.sql.SchemaUtilites;
+import org.apache.drill.exec.planner.sql.SchemaUtilities;
 import org.apache.drill.exec.record.BatchSchema;
 import org.jetbrains.annotations.NotNull;
 
@@ -67,7 +67,7 @@ public class TableModifyPrel extends TableModify implements Prel {
     String tableName = tablePath.get(tablePath.size() - 1);
     SchemaPlus schema = ((CalciteCatalogReader) getTable().getRelOptSchema()).getRootSchema().plus();
 
-    ModifyTableEntry modifyTableEntry = SchemaUtilites.resolveToDrillSchema(schema, schemaPath)
+    ModifyTableEntry modifyTableEntry = SchemaUtilities.resolveToDrillSchema(schema, schemaPath)
       .modifyTable(tableName);
 
     PhysicalOperator childPOP = child.getPhysicalOperator(creator);

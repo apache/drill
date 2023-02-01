@@ -27,7 +27,7 @@ import org.apache.drill.exec.alias.AliasTarget;
 import org.apache.drill.exec.alias.Aliases;
 import org.apache.drill.exec.physical.PhysicalPlan;
 import org.apache.drill.exec.planner.sql.DirectPlan;
-import org.apache.drill.exec.planner.sql.SchemaUtilites;
+import org.apache.drill.exec.planner.sql.SchemaUtilities;
 import org.apache.drill.exec.planner.sql.parser.SqlCreateAlias;
 import org.apache.drill.exec.work.foreman.ForemanSetupException;
 import org.slf4j.Logger;
@@ -86,12 +86,12 @@ public class CreateAliasHandler extends BaseAliasHandler {
   }
 
   private String getStorageQualifier(List<String> path) {
-    SchemaUtilites.resolveToDrillSchema(
+    SchemaUtilities.resolveToDrillSchema(
       config.getConverter().getDefaultSchema(), path);
     if (path.size() > 1) {
       throw UserException.validationError()
         .message("Storage name expected, but provided [%s]",
-          SchemaUtilites.getSchemaPath(path))
+          SchemaUtilities.getSchemaPath(path))
         .build(logger);
     }
     return SchemaPath.getCompoundPath(path.get(0)).toExpr();
@@ -103,7 +103,7 @@ public class CreateAliasHandler extends BaseAliasHandler {
     if (drillTableInfo.drillTable() == null) {
       throw UserException.validationError()
         .message("No table with given name [%s] exists in schema [%s]", drillTableInfo.tableName(),
-          SchemaUtilites.getSchemaPath(drillTableInfo.schemaPath()))
+          SchemaUtilities.getSchemaPath(drillTableInfo.schemaPath()))
         .build(logger);
     }
     String[] paths = new String[drillTableInfo.schemaPath().size() + 1];

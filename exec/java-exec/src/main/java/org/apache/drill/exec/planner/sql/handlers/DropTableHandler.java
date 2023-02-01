@@ -28,7 +28,7 @@ import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.common.util.DrillStringUtils;
 import org.apache.drill.exec.physical.PhysicalPlan;
 import org.apache.drill.exec.planner.sql.DirectPlan;
-import org.apache.drill.exec.planner.sql.SchemaUtilites;
+import org.apache.drill.exec.planner.sql.SchemaUtilities;
 import org.apache.drill.exec.planner.sql.parser.SqlDropTable;
 import org.apache.drill.exec.rpc.user.UserSession;
 import org.apache.drill.exec.store.AbstractSchema;
@@ -60,13 +60,13 @@ public class DropTableHandler extends DefaultSqlHandler {
     DrillConfig drillConfig = context.getConfig();
     UserSession session = context.getSession();
 
-    AbstractSchema temporarySchema = SchemaUtilites.resolveToTemporarySchema(tableSchema, defaultSchema, drillConfig);
+    AbstractSchema temporarySchema = SchemaUtilities.resolveToTemporarySchema(tableSchema, defaultSchema, drillConfig);
     boolean isTemporaryTable = session.isTemporaryTable(temporarySchema, drillConfig, originalTableName);
 
     if (isTemporaryTable) {
       session.removeTemporaryTable(temporarySchema, originalTableName, drillConfig);
     } else {
-      AbstractSchema drillSchema = SchemaUtilites.resolveToMutableDrillSchema(defaultSchema, tableSchema);
+      AbstractSchema drillSchema = SchemaUtilities.resolveToMutableDrillSchema(defaultSchema, tableSchema);
       Table tableToDrop = SqlHandlerUtil.getTableFromSchema(drillSchema, originalTableName);
       // TableType.OTHER started getting reported for H2 DB when it was upgraded to v2.
       if (tableToDrop == null || (tableToDrop.getJdbcTableType() != Schema.TableType.TABLE &&

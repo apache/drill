@@ -19,7 +19,7 @@ package org.apache.drill.exec.planner.sql.parser;
 
 import java.util.List;
 
-import org.apache.drill.exec.planner.sql.SchemaUtilites;
+import org.apache.drill.exec.planner.sql.SchemaUtilities;
 import org.apache.drill.exec.planner.sql.handlers.AbstractSqlHandler;
 import org.apache.drill.exec.planner.sql.handlers.DropTableHandler;
 import org.apache.drill.exec.planner.sql.handlers.SqlHandlerConfig;
@@ -88,7 +88,7 @@ public class SqlDropTable extends DrillSqlCall {
   }
 
   public List<String> getSchema() {
-    return SchemaUtilites.getSchemaPath(tableName);
+    return SchemaUtilities.getSchemaPath(tableName);
   }
 
   public String getName() {

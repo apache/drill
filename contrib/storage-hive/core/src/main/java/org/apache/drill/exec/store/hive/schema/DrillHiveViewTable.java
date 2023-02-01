@@ -26,7 +26,7 @@ import org.apache.calcite.schema.SchemaPlus;
 import org.apache.calcite.sql.type.SqlTypeFactoryImpl;
 import org.apache.drill.exec.dotdrill.View;
 import org.apache.drill.exec.planner.logical.DrillViewTable;
-import org.apache.drill.exec.planner.sql.SchemaUtilites;
+import org.apache.drill.exec.planner.sql.SchemaUtilities;
 import org.apache.drill.exec.planner.sql.conversion.DrillViewExpander;
 import org.apache.drill.exec.planner.types.DrillRelDataTypeSystem;
 import org.apache.drill.exec.planner.types.HiveToRelDataTypeConverter;
@@ -68,7 +68,7 @@ public class DrillHiveViewTable extends DrillViewTable {
   @Override
   protected RelNode expandViewForImpersonatedUser(DrillViewExpander context,
                                                   List<String> workspaceSchemaPath, SchemaPlus tokenSchemaTree) {
-    SchemaPlus drillHiveSchema = SchemaUtilites.findSchema(tokenSchemaTree, workspaceSchemaPath);
+    SchemaPlus drillHiveSchema = SchemaUtilities.findSchema(tokenSchemaTree, workspaceSchemaPath);
     workspaceSchemaPath = ImmutableList.of();
     return super.expandViewForImpersonatedUser(context, workspaceSchemaPath, drillHiveSchema);
   }

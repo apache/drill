@@ -27,7 +27,7 @@ import org.apache.calcite.sql.SqlSpecialOperator;
 import org.apache.calcite.sql.SqlWriter;
 import org.apache.calcite.sql.parser.SqlParserPos;
 import org.apache.calcite.util.Util;
-import org.apache.drill.exec.planner.sql.SchemaUtilites;
+import org.apache.drill.exec.planner.sql.SchemaUtilities;
 import org.apache.drill.exec.planner.sql.handlers.AbstractSqlHandler;
 import org.apache.drill.exec.planner.sql.handlers.MetastoreDropTableMetadataHandler;
 import org.apache.drill.exec.planner.sql.handlers.SqlHandlerConfig;
@@ -94,7 +94,7 @@ public class SqlDropTableMetadata extends DrillSqlCall {
   }
 
   public List<String> getSchemaPath() {
-    return SchemaUtilites.getSchemaPath(tableName);
+    return SchemaUtilities.getSchemaPath(tableName);
   }
 
   public String getName() {
