@@ -390,10 +390,10 @@ public class BaseTestQuery extends ExecTest {
     }
   }
 
-  protected static void testNoResult(int interation, String query, Object... args) throws Exception {
+  protected static void testNoResult(int iteration, String query, Object... args) throws Exception {
     query = String.format(query, args);
     logger.debug("Running query:\n--------------\n" + query);
-    for (int i = 0; i < interation; i++) {
+    for (int i = 0; i < iteration; i++) {
       List<QueryDataBatch> results = client.runQuery(QueryType.SQL, query);
       for (QueryDataBatch queryDataBatch : results) {
         queryDataBatch.release();
