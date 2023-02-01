@@ -29,9 +29,11 @@ import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.common.types.TypeProtos;
 import org.apache.drill.exec.record.BatchSchema;
 import org.apache.drill.exec.record.metadata.SchemaBuilder;
+import org.apache.drill.exec.util.StoragePluginTestUtils;
 import org.apache.drill.exec.work.foreman.SqlUnsupportedException;
 import org.apache.drill.exec.work.foreman.UnsupportedRelOperatorException;
-import org.apache.drill.test.BaseTestQuery;
+import org.apache.drill.test.ClusterFixture;
+import org.apache.drill.test.ClusterTest;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -41,14 +43,25 @@ import java.nio.file.Paths;
 import java.util.List;
 
 @Category({SqlTest.class, OperatorTest.class})
-public class TestUnionDistinct extends BaseTestQuery {
+public class TestUnionDistinct extends ClusterTest {
   private static final String sliceTargetSmall = "alter session set `planner.slice_target` = 1";
   private static final String sliceTargetDefault = "alter session reset `planner.slice_target`";
 
   private static final String EMPTY_DIR_NAME = "empty_directory";
 
   @BeforeClass
-  public static void setupFiles() {
+  public static void setupFiles() throws Exception {
+    startCluster(ClusterFixture.builder(dirTestWatcher));
+
+    // A tmp workspace with a default format defined for tests that need to
+    // query empty directories without encountering an error.
+    cluster.defineWorkspace(
+        StoragePluginTestUtils.DFS_PLUGIN_NAME,
+        "tmp_default_format",
+        dirTestWatcher.getDfsTestTmpDir().getAbsolutePath(),
+        "csvh"
+    );
+
     dirTestWatcher.copyResourceToRoot(Paths.get("multilevel"));
     dirTestWatcher.makeTestTmpSubDir(Paths.get(EMPTY_DIR_NAME));
   }
@@ -227,9 +240,9 @@ public class TestUnionDistinct extends BaseTestQuery {
 
   @Test
   public void testUnionDistinctViewExpandableStar() throws Exception {
-    test("use dfs.tmp");
-    test("create view nation_view_testunion as select n_name, n_nationkey from cp.`tpch/nation.parquet`;");
-    test("create view region_view_testunion as select r_name, r_regionkey from cp.`tpch/region.parquet`;");
+    run("use dfs.tmp");
+    run("create view nation_view_testunion as select n_name, n_nationkey from cp.`tpch/nation.parquet`");
+    run("create view region_view_testunion as select r_name, r_regionkey from cp.`tpch/region.parquet`");
 
     String query1 = "(select * from dfs.tmp.`nation_view_testunion`) \n" +
         "union \n" +
@@ -258,33 +271,33 @@ public class TestUnionDistinct extends BaseTestQuery {
           .build()
           .run();
     } finally {
-      test("drop view nation_view_testunion");
-      test("drop view region_view_testunion");
+      run("drop view nation_view_testunion");
+      run("drop view region_view_testunion");
     }
   }
 
   @Test(expected = UnsupportedRelOperatorException.class)
   public void testUnionDistinctViewUnExpandableStar() throws Exception {
-    test("use dfs.tmp");
-    test("create view nation_view_testunion as select * from cp.`tpch/nation.parquet`;");
+    run("use dfs.tmp");
+    run("create view nation_view_testunion as select * from cp.`tpch/nation.parquet`");
 
     try {
       String query = "(select * from dfs.tmp.`nation_view_testunion`) \n" +
           "union (select * from cp.`tpch/region.parquet`)";
-      test(query);
+      run(query);
     } catch(UserException ex) {
       SqlUnsupportedException.errorClassNameToException(ex.getOrCreatePBError(false).getException().getExceptionClass());
       throw ex;
     } finally {
-      test("drop view nation_view_testunion");
+      run("drop view nation_view_testunion");
     }
   }
 
   @Test
   public void testDiffDataTypesAndModes() throws Exception {
-    test("use dfs.tmp");
-    test("create view nation_view_testunion as select n_name, n_nationkey from cp.`tpch/nation.parquet`;");
-    test("create view region_view_testunion as select r_name, r_regionkey from cp.`tpch/region.parquet`;");
+    run("use dfs.tmp");
+    run("create view nation_view_testunion as select n_name, n_nationkey from cp.`tpch/nation.parquet`");
+    run("create view region_view_testunion as select r_name, r_regionkey from cp.`tpch/region.parquet`");
 
     String t1 = "(select n_comment, n_regionkey from cp.`tpch/nation.parquet` limit 5)";
     String t2 = "(select * from nation_view_testunion  limit 5)";
@@ -303,8 +316,8 @@ public class TestUnionDistinct extends BaseTestQuery {
           .build()
           .run();
     } finally {
-      test("drop view nation_view_testunion");
-      test("drop view region_view_testunion");
+      run("drop view nation_view_testunion");
+      run("drop view region_view_testunion");
     }
   }
 
@@ -388,7 +401,7 @@ public class TestUnionDistinct extends BaseTestQuery {
 
   @Test(expected = UserException.class)
   public void testUnionDistinctImplicitCastingFailure() throws Exception {
-    test("(select key from cp.`store/json/intData.json` " +
+    run("(select key from cp.`store/json/intData.json` " +
       "union select key from cp.`store/json/booleanData.json` )");
   }
 
@@ -720,7 +733,13 @@ public class TestUnionDistinct extends BaseTestQuery {
     final String[] expectedPlan = {"HashAgg.*\n" +
         ".*UnionAll"};
     final String[] excludedPlan = {"HashAgg.*\n.*HashAgg"};
-    PlanTestBase.testPlanMatchingPatterns(query, expectedPlan, excludedPlan);
+
+    client.queryBuilder()
+      .sql(query)
+      .planMatcher()
+      .include(expectedPlan)
+      .exclude(excludedPlan)
+      .match();
 
     // Validate the result
     testBuilder()
@@ -746,8 +765,13 @@ public class TestUnionDistinct extends BaseTestQuery {
     final String[] excludedPlan = {};
 
     try {
-      test(sliceTargetSmall);
-      PlanTestBase.testPlanMatchingPatterns(query, expectedPlan, excludedPlan);
+      run(sliceTargetSmall);
+
+      client.queryBuilder()
+        .sql(query)
+        .planMatcher()
+        .include(expectedPlan)
+        .match();
 
       testBuilder()
         .optionSettingQueriesForTestQuery(sliceTargetSmall)
@@ -758,7 +782,7 @@ public class TestUnionDistinct extends BaseTestQuery {
         .build()
         .run();
     } finally {
-      test(sliceTargetDefault);
+      run(sliceTargetDefault);
     }
   }
 
@@ -789,7 +813,7 @@ public class TestUnionDistinct extends BaseTestQuery {
       union
       select columns[0], columns[1] ... columns[1200] from dfs.`union_for_1200_columns.csv`
        */
-      test("select %1$s from dfs.`%2$s` union select %1$s from dfs.`%2$s`", columns.toString(), file.getName());
+      run("select %1$s from dfs.`%2$s` union select %1$s from dfs.`%2$s`", columns.toString(), file.getName());
     } finally {
       FileUtils.deleteQuietly(file);
     }
@@ -801,7 +825,7 @@ public class TestUnionDistinct extends BaseTestQuery {
     String rootSimple = "/store/json/booleanData.json";
 
     testBuilder()
-        .sqlQuery("SELECT key FROM cp.`%s` UNION SELECT key FROM dfs.tmp.`%s`",
+        .sqlQuery("SELECT key FROM cp.`%s` UNION SELECT key FROM dfs.tmp_default_format.`%s`",
             rootSimple, EMPTY_DIR_NAME)
         .unOrdered()
         .baselineColumns("key")
@@ -815,7 +839,7 @@ public class TestUnionDistinct extends BaseTestQuery {
     final String rootSimple = "/store/json/booleanData.json";
 
     testBuilder()
-        .sqlQuery("SELECT key FROM dfs.tmp.`%s` UNION SELECT key FROM cp.`%s`",
+        .sqlQuery("SELECT key FROM dfs.tmp_default_format.`%s` UNION SELECT key FROM cp.`%s`",
             EMPTY_DIR_NAME, rootSimple)
         .unOrdered()
         .baselineColumns("key")
@@ -834,7 +858,11 @@ public class TestUnionDistinct extends BaseTestQuery {
         .build();
 
     testBuilder()
-        .sqlQuery("SELECT key FROM dfs.tmp.`%1$s` UNION SELECT key FROM dfs.tmp.`%1$s`", EMPTY_DIR_NAME)
+        .sqlQuery(
+            "SELECT key FROM dfs.tmp_default_format.`%1$s` UNION SELECT key FROM " +
+              " dfs.tmp_default_format.`%1$s`",
+            EMPTY_DIR_NAME
+        )
         .schemaBaseLine(expectedSchema)
         .build()
         .run();
@@ -843,7 +871,7 @@ public class TestUnionDistinct extends BaseTestQuery {
   @Test
   public void testUnionMiddleEmptyDir() throws Exception {
     final String query = "SELECT n_regionkey FROM cp.`tpch/nation.parquet` UNION " +
-        "SELECT missing_key FROM dfs.tmp.`%s` UNION SELECT r_regionkey FROM cp.`tpch/region.parquet`";
+        "SELECT missing_key FROM dfs.tmp_default_format.`%s` UNION SELECT r_regionkey FROM cp.`tpch/region.parquet`";
 
     testBuilder()
         .sqlQuery(query, EMPTY_DIR_NAME)
@@ -859,8 +887,8 @@ public class TestUnionDistinct extends BaseTestQuery {
     final String rootSimple = "/store/json/booleanData.json";
 
     testBuilder()
-        .sqlQuery("SELECT key FROM dfs.tmp.`%1$s` UNION SELECT key FROM " +
-                "(SELECT key FROM dfs.tmp.`%1$s` UNION SELECT key FROM cp.`%2$s`)",
+        .sqlQuery("SELECT key FROM dfs.tmp_default_format.`%1$s` UNION SELECT key FROM " +
+                "(SELECT key FROM dfs.tmp_default_format.`%1$s` UNION SELECT key FROM cp.`%2$s`)",
             EMPTY_DIR_NAME, rootSimple)
         .unOrdered()
         .baselineColumns("key")

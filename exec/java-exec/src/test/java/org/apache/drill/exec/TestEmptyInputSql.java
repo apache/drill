@@ -17,26 +17,29 @@
  */
 package org.apache.drill.exec;
 
-import org.apache.drill.PlanTestBase;
 import org.apache.drill.exec.record.BatchSchemaBuilder;
 import org.apache.drill.shaded.guava.com.google.common.collect.Lists;
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.drill.exec.planner.physical.PlannerSettings;
-import org.apache.drill.test.BaseTestQuery;
+import org.apache.drill.test.ClusterFixture;
+import org.apache.drill.test.ClusterTest;
 import org.apache.drill.categories.UnlikelyTest;
 import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.common.types.TypeProtos;
 import org.apache.drill.exec.record.BatchSchema;
 import org.apache.drill.exec.record.metadata.SchemaBuilder;
+import org.apache.drill.exec.util.StoragePluginTestUtils;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
+
+import static org.junit.Assert.assertEquals;
 
 import java.nio.file.Paths;
 import java.util.List;
 
 @Category(UnlikelyTest.class)
-public class TestEmptyInputSql extends BaseTestQuery {
+public class TestEmptyInputSql extends ClusterTest {
 
   private static final String SINGLE_EMPTY_JSON = "/scan/emptyInput/emptyJson/empty.json";
   private static final String SINGLE_EMPTY_CSVH = "/scan/emptyInput/emptyCsvH/empty.csvh";
@@ -44,7 +47,18 @@ public class TestEmptyInputSql extends BaseTestQuery {
   private static final String EMPTY_DIR_NAME = "empty_directory";
 
   @BeforeClass
-  public static void setupTestFiles() {
+  public static void setupTestFiles() throws Exception {
+    startCluster(ClusterFixture.builder(dirTestWatcher));
+
+    // A tmp workspace with a default format defined for tests that need to
+    // query empty directories without encountering an error.
+    cluster.defineWorkspace(
+        StoragePluginTestUtils.DFS_PLUGIN_NAME,
+        "tmp_default_format",
+        dirTestWatcher.getDfsTestTmpDir().getAbsolutePath(),
+        "csvh"
+    );
+
     dirTestWatcher.makeTestTmpSubDir(Paths.get(EMPTY_DIR_NAME));
   }
 
@@ -144,11 +158,11 @@ public class TestEmptyInputSql extends BaseTestQuery {
   }
 
   private void enableV2Reader(boolean enable) throws Exception {
-    alterSession(ExecConstants.ENABLE_V2_JSON_READER_KEY, enable);
+    client.alterSession(ExecConstants.ENABLE_V2_JSON_READER_KEY, enable);
   }
 
   private void resetV2Reader() throws Exception {
-    resetSessionOption(ExecConstants.ENABLE_V2_JSON_READER_KEY);
+    client.resetSession(ExecConstants.ENABLE_V2_JSON_READER_KEY);
   }
 
   /**
@@ -160,7 +174,7 @@ public class TestEmptyInputSql extends BaseTestQuery {
   @Test
   public void testQueryConstExprEmptyJson() throws Exception {
     try {
-      alterSession(PlannerSettings.ENABLE_DECIMAL_DATA_TYPE_KEY, true);
+      client.alterSession(PlannerSettings.ENABLE_DECIMAL_DATA_TYPE_KEY, true);
       SchemaBuilder schemaBuilder = new SchemaBuilder()
           .add("key",
               TypeProtos.MajorType.newBuilder()
@@ -184,7 +198,7 @@ public class TestEmptyInputSql extends BaseTestQuery {
           .build()
           .run();
     } finally {
-      resetSessionOption(PlannerSettings.ENABLE_DECIMAL_DATA_TYPE_KEY);
+      client.resetSession(PlannerSettings.ENABLE_DECIMAL_DATA_TYPE_KEY);
     }
   }
 
@@ -230,7 +244,7 @@ public class TestEmptyInputSql extends BaseTestQuery {
         .build();
 
     testBuilder()
-        .sqlQuery("select * from dfs.tmp.`%s`", EMPTY_DIR_NAME)
+        .sqlQuery("select * from dfs.tmp_default_format.`%s`", EMPTY_DIR_NAME)
         .schemaBaseLine(expectedSchema)
         .build()
         .run();
@@ -245,7 +259,7 @@ public class TestEmptyInputSql extends BaseTestQuery {
         .build();
 
     testBuilder()
-        .sqlQuery("select key from dfs.tmp.`%s`", EMPTY_DIR_NAME)
+        .sqlQuery("select key from dfs.tmp_default_format.`%s`", EMPTY_DIR_NAME)
         .schemaBaseLine(expectedSchema)
         .build()
         .run();
@@ -262,7 +276,7 @@ public class TestEmptyInputSql extends BaseTestQuery {
 
     testBuilder()
         .sqlQuery("select WeekId, Product as ProductName from (select CAST(`dir0` as INT) AS WeekId, " +
-            "Product from dfs.tmp.`%s`)", EMPTY_DIR_NAME)
+            "Product from dfs.tmp_default_format.`%s`)", EMPTY_DIR_NAME)
         .schemaBaseLine(expectedSchema)
         .build()
         .run();
@@ -287,8 +301,12 @@ public class TestEmptyInputSql extends BaseTestQuery {
 
   @Test
   public void testEmptyDirectoryPlanSerDe() throws Exception {
-    String query = String.format("select * from dfs.tmp.`%s`", EMPTY_DIR_NAME);
-    PlanTestBase.testPhysicalPlanExecutionBasedOnQuery(query);
+    String plan = queryBuilder()
+      .sql("select * from dfs.tmp_default_format.`%s`", EMPTY_DIR_NAME)
+      .explainJson();
+
+    long count = queryBuilder().physical(plan).run().recordCount();
+    assertEquals(0, count);
   }
 
 }
