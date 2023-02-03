@@ -344,6 +344,8 @@ public class SimpleHttp implements AutoCloseable {
 
     Request.Builder requestBuilder = new Request.Builder()
       .url(url);
+    final Pattern bodyParamsKeyPattern = Pattern.compile("^body\\..+$");
+    final Pattern headerParamsKeyPattern = Pattern.compile("^header\\..+$");
 
     // The configuration does not allow for any other request types other than POST and GET.
     if (apiConfig.getMethodType() == HttpMethod.POST) {
@@ -360,7 +362,9 @@ public class SimpleHttp implements AutoCloseable {
         // Now add filters
         if (filters != null) {
           for (Map.Entry<String, String> filter : filters.entrySet()) {
-            json.put(filter.getKey(), filter.getValue());
+            if (bodyParamsKeyPattern.matcher(filter.getKey()).find()){
+              json.put(filter.getKey().substring(5), filter.getValue());
+            }
           }
         }
 
@@ -371,9 +375,11 @@ public class SimpleHttp implements AutoCloseable {
         xmlRequest.append("<request>");
         if (filters != null) {
           for (Map.Entry<String, String> filter : filters.entrySet()) {
-            xmlRequest.append("<").append(filter.getKey()).append(">");
-            xmlRequest.append(filter.getValue());
-            xmlRequest.append("</").append(filter.getKey()).append(">");
+            if (bodyParamsKeyPattern.matcher(filter.getKey()).find()){
+              xmlRequest.append("<").append(filter.getKey().substring(5)).append(">");
+              xmlRequest.append(filter.getValue());
+              xmlRequest.append("</").append(filter.getKey().substring(5)).append(">");
+            }
           }
         }
         xmlRequest.append("</request>");
@@ -395,6 +401,14 @@ public class SimpleHttp implements AutoCloseable {
     if (apiConfig.headers() != null) {
       for (Map.Entry<String, String> entry : apiConfig.headers().entrySet()) {
         requestBuilder.addHeader(entry.getKey(), entry.getValue());
+      }
+    }
+
+    if (filters != null) {
+      for (Map.Entry<String, String> filter : filters.entrySet()) {
+        if (headerParamsKeyPattern.matcher(filter.getKey()).find()){
+          requestBuilder.addHeader(filter.getKey().substring(7), filter.getValue());
+        }
       }
     }
 
@@ -652,10 +666,15 @@ public class SimpleHttp implements AutoCloseable {
   public FormBody.Builder buildPostBody(Map<String, String> filters, String postBody) {
     // Add static parameters
     FormBody.Builder builder = buildPostBody(postBody);
+    final Pattern bodyParamsKeyPattern = Pattern.compile("^body\\..+$");
 
     // Now add the filters
-    for (Map.Entry<String, String> filter : filters.entrySet()) {
-      builder.add(filter.getKey(), filter.getValue());
+    if (filters != null) {
+      for (Map.Entry<String, String> filter : filters.entrySet()) {
+        if (bodyParamsKeyPattern.matcher(filter.getKey()).find()){
+          builder.add(filter.getKey().substring(5), filter.getValue());
+        }
+      }
     }
     return builder;
   }

@@ -140,7 +140,7 @@ public class TestHttpPlugin extends ClusterTest {
       .method("post")
       .inputType("xml")
       .requireTail(false)
-      .params(Arrays.asList("type_of_data", "records_from", "max_records"))
+      .params(Arrays.asList("body.type_of_data", "body.records_from", "body.max_records","year"))
       .postParameterLocation("xml_body")
       .xmlOptions(nycXmlOptions)
       .build();
@@ -214,7 +214,7 @@ public class TestHttpPlugin extends ClusterTest {
       .method("POST")
       .headers(headers)
       .requireTail(false)
-      .params(Arrays.asList("lat", "lng", "date"))
+      .params(Arrays.asList("body.lat", "body.lng", "body.date"))
       .postBody("key1=value1\nkey2=value2")
       .postParameterLocation("post_body")
       .build();
@@ -224,7 +224,7 @@ public class TestHttpPlugin extends ClusterTest {
       .method("POST")
       .headers(headers)
       .requireTail(false)
-      .params(Arrays.asList("lat", "lng", "date"))
+      .params(Arrays.asList("body.lat", "body.lng", "body.date"))
       .postParameterLocation("post_body")
       .build();
 
@@ -233,7 +233,7 @@ public class TestHttpPlugin extends ClusterTest {
       .method("POST")
       .headers(headers)
       .requireTail(false)
-      .params(Arrays.asList("lat", "lng", "date"))
+      .params(Arrays.asList("body.lat", "body.lng", "body.date"))
       .postParameterLocation("json_body")
       .build();
 
@@ -242,7 +242,7 @@ public class TestHttpPlugin extends ClusterTest {
       .method("POST")
       .headers(headers)
       .requireTail(false)
-      .params(Arrays.asList("lat", "lng", "date"))
+      .params(Arrays.asList("body.lat", "body.lng", "body.date"))
       .postParameterLocation("json_body")
       .postBody("key1=value1\nkey2=value2")
       .build();
@@ -559,7 +559,7 @@ public class TestHttpPlugin extends ClusterTest {
   @Ignore("Requires Remote Server")
   public void simpleStarQueryWithXMLParams() throws Exception {
     String sql = "SELECT year, department, expense_category, budget_code, budget_name, modified, adopted " +
-      "FROM live.nyc WHERE type_of_data='Budget' AND records_from=1 AND max_records=5 AND year IS NOT null";
+      "FROM live.nyc WHERE `body.type_of_data`='Budget' AND `body.records_from`=1 AND `body.max_records`=5 AND year IS NOT null";
 
     RowSet results = client.queryBuilder().sql(sql).rowSet();
 
@@ -1495,7 +1495,7 @@ public class TestHttpPlugin extends ClusterTest {
           .setBody(TEST_JSON_RESPONSE)
       );
 
-      String sql = "SELECT * FROM local.mockJsonPost WHERE lat=36.7201600 AND lng=-4.4203400";
+      String sql = "SELECT * FROM local.mockJsonPost WHERE `body.lat`=36.7201600 AND `body.lng`=-4.4203400";
       RowSet results = client.queryBuilder().sql(sql).rowSet();
 
       TupleMetadata expectedSchema = new SchemaBuilder()
@@ -1536,7 +1536,7 @@ public class TestHttpPlugin extends ClusterTest {
           .setBody(TEST_JSON_RESPONSE)
       );
 
-      String sql = "SELECT * FROM local.mockJsonNullBodyPost WHERE lat=36.7201600 AND lng=-4.4203400";
+      String sql = "SELECT * FROM local.mockJsonNullBodyPost WHERE `body.lat`=36.7201600 AND `body.lng`=-4.4203400";
       RowSet results = client.queryBuilder().sql(sql).rowSet();
 
       TupleMetadata expectedSchema = new SchemaBuilder()
@@ -1577,7 +1577,7 @@ public class TestHttpPlugin extends ClusterTest {
           .setBody(TEST_JSON_RESPONSE)
       );
 
-      String sql = "SELECT * FROM local.mockPostPushdown WHERE lat=36.7201600 AND lng=-4.4203400";
+      String sql = "SELECT * FROM local.mockPostPushdown WHERE `body.lat`=36.7201600 AND `body.lng`=-4.4203400";
       RowSet results = client.queryBuilder().sql(sql).rowSet();
 
       TupleMetadata expectedSchema = new SchemaBuilder()
@@ -1618,7 +1618,7 @@ public class TestHttpPlugin extends ClusterTest {
           .setBody(TEST_JSON_RESPONSE)
       );
 
-      String sql = "SELECT * FROM local.mockPostPushdownWithStaticParams WHERE lat=36.7201600 AND lng=-4.4203400";
+      String sql = "SELECT * FROM local.mockPostPushdownWithStaticParams WHERE `body.lat`=36.7201600 AND `body.lng`=-4.4203400";
       RowSet results = client.queryBuilder().sql(sql).rowSet();
 
       TupleMetadata expectedSchema = new SchemaBuilder()
