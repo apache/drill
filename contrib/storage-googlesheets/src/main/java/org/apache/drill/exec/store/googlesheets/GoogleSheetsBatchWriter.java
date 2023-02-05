@@ -69,12 +69,12 @@ import java.util.Map;
 public class GoogleSheetsBatchWriter extends AbstractRecordWriter {
   private static final Logger logger = LoggerFactory.getLogger(GoogleSheetsBatchWriter.class);
 
-  private final Sheets service;
-  private final String tabName;
-  private final String sheetName;
-  private final List<List<Object>> values;
+  protected final Sheets service;
+  protected final String tabName;
+  protected final String sheetName;
+  protected final List<List<Object>> values;
   private List<Object> rowList;
-  private String spreadsheetID;
+  protected String spreadsheetID;
 
   public GoogleSheetsBatchWriter(OperatorContext context, String name, GoogleSheetsWriter config) {
     GoogleSheetsStoragePlugin plugin = config.getPlugin();

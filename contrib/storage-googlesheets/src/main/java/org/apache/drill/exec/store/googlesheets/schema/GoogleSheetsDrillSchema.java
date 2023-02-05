@@ -18,18 +18,28 @@
 
 package org.apache.drill.exec.store.googlesheets.schema;
 
+import com.google.api.services.drive.Drive;
 import com.google.api.services.sheets.v4.Sheets;
+import com.google.api.services.sheets.v4.model.DeleteSheetRequest;
 import com.google.api.services.sheets.v4.model.Sheet;
 import org.apache.calcite.schema.Table;
+import org.apache.calcite.sql.SqlCall;
+import org.apache.calcite.sql.SqlIdentifier;
+import org.apache.calcite.sql.SqlLiteral;
+import org.apache.calcite.sql.parser.SqlParserPos;
 import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.common.map.CaseInsensitiveMap;
 import org.apache.drill.exec.physical.base.PhysicalOperator;
 import org.apache.drill.exec.physical.base.Writer;
+import org.apache.drill.exec.planner.index.IndexCollection;
 import org.apache.drill.exec.planner.logical.CreateTableEntry;
 import org.apache.drill.exec.planner.logical.DynamicDrillTable;
+import org.apache.drill.exec.planner.logical.ModifyTableEntry;
+import org.apache.drill.exec.planner.sql.parser.SqlDropTable;
 import org.apache.drill.exec.store.AbstractSchema;
 import org.apache.drill.exec.store.SchemaConfig;
 import org.apache.drill.exec.store.StorageStrategy;
+import org.apache.drill.exec.store.googlesheets.GoogleSheetsInsertWriter;
 import org.apache.drill.exec.store.googlesheets.GoogleSheetsScanSpec;
 import org.apache.drill.exec.store.googlesheets.GoogleSheetsStoragePlugin;
 import org.apache.drill.exec.store.googlesheets.GoogleSheetsStoragePluginConfig;
@@ -39,6 +49,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
+import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -63,6 +74,8 @@ public class GoogleSheetsDrillSchema extends AbstractSchema {
   private final GoogleSheetsRootSchema parent;
   private final String fileToken;
   private final String fileName;
+
+  private List<Sheet> tabList;
 
   public GoogleSheetsDrillSchema(AbstractSchema parent, String fileToken,
                                  GoogleSheetsStoragePlugin plugin,
@@ -145,12 +158,11 @@ public class GoogleSheetsDrillSchema extends AbstractSchema {
   }
 
   private void populateActiveTables() {
-    List<Sheet> tabList;
     try {
       tabList = GoogleSheetsUtils.getTabList(sheetsService, fileToken);
     } catch (IOException e) {
       throw UserException.connectionError(e)
-        .message("Unable to obtain tab list for Google Sheet document " + fileToken)
+        .message("Unable to obtain tab list for Google Sheet document " + fileToken + ". " + e.getMessage())
         .build(logger);
     }
     // Add sub schemas to list, then create tables
@@ -191,6 +203,39 @@ public class GoogleSheetsDrillSchema extends AbstractSchema {
       }
     };
   }
+
+  @Override
+  public ModifyTableEntry modifyTable(String tableName) {
+    return child -> new GoogleSheetsInsertWriter(child, this.name, tableName, schemaConfig.getUserName(), plugin);
+  }
+
+  @Override
+  public void dropTable(String indexName) {
+    logger.debug("Index name: {}", indexName);
+
+    // The GoogleSheets API will not allow you to delete a tab if the file only has one tab.  In that case,
+    // we delete the entire file.
+    if (tabList.size() == 1) {
+      Drive driveService = plugin.getDriveService(schemaConfig.getUserName());
+      try {
+        driveService.files().delete(fileToken);
+      } catch (IOException e) {
+        throw UserException.internalError(e)
+            .message("Error deleting GoogleSheets file. " + e.getMessage())
+            .build(logger);
+      }
+    }
+
+    Sheet sheetToDrop = GoogleSheetsUtils.getSheetFromTabList(indexName, tabList);
+    try {
+      GoogleSheetsUtils.removeTabFromGoogleSheet(sheetsService, fileToken, sheetToDrop);
+    } catch (IOException e) {
+      throw UserException.internalError(e)
+          .message(e.getMessage())
+          .build(logger);
+    }
+  }
+
 
   private void registerTable(String name, DynamicDrillTable table) {
     activeTables.put(name, table);

@@ -54,7 +54,9 @@ public class TestGoogleSheetsWriter extends ClusterTest {
   private static String accessToken;
   private static String refreshToken;
 
-  // Note on testing:  Testing the writing capabilites of this plugin is challenging.
+  private static String sheetID;
+
+  // Note on testing:  Testing the writing capabilities of this plugin is challenging.
   // The primary issue is that when you execute a CTAS query, you do so using the file name.
   // However, it does not seem possible to retrieve the created file's ID which is what you
   // need to actually verify that the query successfully wrote the results.  Therefore, at this
@@ -74,6 +76,7 @@ public class TestGoogleSheetsWriter extends ClusterTest {
     String clientSecret = tokenMap.get("client_secret");
     accessToken = tokenMap.get("access_token");
     refreshToken = tokenMap.get("refresh_token");
+    sheetID = tokenMap.get("sheet_id");
 
     pluginRegistry = cluster.drillbit().getContext().getStorage();
     GoogleSheetsStoragePluginConfig config = GoogleSheetsStoragePluginConfig.builder()
@@ -102,6 +105,20 @@ public class TestGoogleSheetsWriter extends ClusterTest {
     QuerySummary insertResults = queryBuilder().sql(query).run();
     assertTrue(insertResults.succeeded());
   }
+
+  @Test
+  public void testDropTable() throws Exception {
+    try {
+      initializeTokens();
+    } catch (PluginException e) {
+      fail(e.getMessage());
+    }
+
+    String sql = String.format("DROP TABLE googlesheets.`%s`.`Sheet2`", sheetID);
+    QuerySummary insertResults = queryBuilder().sql(sql).run();
+    assertTrue(insertResults.succeeded());
+  }
+
 
   /**
    * This function is used for testing only.  It initializes a {@link PersistentTokenTable} and populates it
