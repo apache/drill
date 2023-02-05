@@ -41,7 +41,7 @@ import org.junit.runner.RunWith;
 import org.junit.runners.Suite;
 import org.testcontainers.elasticsearch.ElasticsearchContainer;
 
-
+import com.google.api.client.util.SslUtils;
 
 import javax.net.ssl.HttpsURLConnection;
 import javax.net.ssl.SSLContext;
@@ -53,16 +53,15 @@ import java.security.cert.Certificate;
 import java.security.cert.CertificateFactory;
 import java.time.Duration;
 import java.util.concurrent.atomic.AtomicInteger;
-import com.google.api.client.util.SslUtils;
 
 
 @Category(SlowTest.class)
 @RunWith(Suite.class)
 @Suite.SuiteClasses({
-    /*ElasticComplexTypesTest.class,
+    //ElasticComplexTypesTest.class,
     ElasticInfoSchemaTest.class,
-    ElasticSearchPlanTest.class,
-    ElasticSearchQueryTest.class,*/
+    //ElasticSearchPlanTest.class,
+    //ElasticSearchQueryTest.class,
     ElasticSearchUserTranslationTest.class})
 public class TestElasticsearchSuite extends BaseTest {
 
@@ -91,6 +90,7 @@ public class TestElasticsearchSuite extends BaseTest {
     synchronized (TestElasticsearchSuite.class) {
       if (initCount.decrementAndGet() == 0 && elasticsearch != null) {
         elasticsearch.stop();
+        elasticsearch.close();
       }
     }
   }
@@ -134,12 +134,16 @@ public class TestElasticsearchSuite extends BaseTest {
   }
 
   public static ElasticsearchClient getESClient() {
-    HttpHost host = new HttpHost(elasticsearch.getHost(), elasticsearch.getMappedPort(9200), "https");
+    HttpHost host = new HttpHost(
+      elasticsearch.getHost(),
+      elasticsearch.getMappedPort(9200),
+      "http"
+    );
 
     final RestClientBuilder builder = RestClient.builder(host);
 
     builder.setHttpClientConfigCallback(clientBuilder -> {
-      clientBuilder.setSSLContext(TestElasticsearchSuite.createContextFromCaCert(getCertAsBytes(elasticsearch)));
+      //clientBuilder.setSSLContext(TestElasticsearchSuite.createContextFromCaCert(getCertAsBytes(elasticsearch)));
       clientBuilder.setDefaultCredentialsProvider(getCredentialsProvider());
       return clientBuilder;
     });
@@ -157,11 +161,12 @@ public class TestElasticsearchSuite extends BaseTest {
         .withExposedPorts(9200)
         .withStartupTimeout(Duration.ofMinutes(2))
         .withStartupAttempts(5)
-        .withPassword("s3cret");
+        .withPassword(ELASTICSEARCH_PASSWORD)
+        .withEnv("xpack.security.enabled", "true")
+        .withEnv("xpack.security.transport.ssl.enabled", "false")
+        .withEnv("ES_JAVA_OPTS", "-Xmx1g"); // ES gobbles up lots of RAM under defaults.
 
     HttpsURLConnection.setDefaultSSLSocketFactory(SslUtils.trustAllSSLContext().getSocketFactory());
-    elasticsearch.getEnvMap().remove("xpack.security.enabled");
-    elasticsearch.getEnvMap().remove("xpack.security.transport.ssl.enabled");
     elasticsearch.start();
   }
 

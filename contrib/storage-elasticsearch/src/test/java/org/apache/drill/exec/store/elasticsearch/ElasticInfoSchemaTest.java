@@ -19,36 +19,35 @@ package org.apache.drill.exec.store.elasticsearch;
 
 import org.apache.drill.common.logical.StoragePluginConfig.AuthMode;
 import org.apache.drill.common.logical.security.PlainCredentialsProvider;
+import org.apache.drill.shaded.guava.com.google.common.collect.ImmutableMap;
 import org.apache.drill.test.ClusterFixture;
 import org.apache.drill.test.ClusterTest;
-import org.apache.http.HttpHost;
-import org.elasticsearch.action.admin.indices.delete.DeleteIndexRequest;
-import org.elasticsearch.action.admin.indices.refresh.RefreshRequest;
-import org.elasticsearch.action.index.IndexRequest;
-import org.elasticsearch.client.RequestOptions;
-import org.elasticsearch.client.RestClient;
-import org.elasticsearch.client.RestHighLevelClient;
-import org.elasticsearch.client.indices.CreateIndexRequest;
-import org.elasticsearch.xcontent.XContentBuilder;
-import org.elasticsearch.xcontent.XContentFactory;
+import org.json.simple.JSONObject;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import co.elastic.clients.elasticsearch.ElasticsearchClient;
+import co.elastic.clients.elasticsearch.core.IndexRequest;
+import co.elastic.clients.elasticsearch.indices.CreateIndexRequest;
+import co.elastic.clients.elasticsearch.indices.DeleteIndexRequest;
+import co.elastic.clients.elasticsearch.indices.RefreshRequest;
+import co.elastic.clients.json.JsonData;
 
 import java.io.IOException;
+import java.io.Reader;
+import java.io.StringReader;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.List;
-
-import static org.apache.drill.exec.rpc.user.security.testing.UserAuthenticatorTestImpl.TEST_USER_1;
-import static org.apache.drill.exec.rpc.user.security.testing.UserAuthenticatorTestImpl.TEST_USER_2;
 
 public class ElasticInfoSchemaTest extends ClusterTest {
 
+  private static final Logger logger = LoggerFactory.getLogger(ElasticSearchUserTranslationTest.class);
   private static final List<String> indexNames = new ArrayList<>();
-
-  public static RestHighLevelClient restHighLevelClient;
+  private static ElasticsearchClient elasticsearchClient;
 
   @BeforeClass
   public static void init() throws Exception {
@@ -57,56 +56,68 @@ public class ElasticInfoSchemaTest extends ClusterTest {
 
     ElasticsearchStorageConfig config = new ElasticsearchStorageConfig(
         Collections.singletonList(TestElasticsearchSuite.getAddress()),
-        "elastic", "changeme",
+        TestElasticsearchSuite.ELASTICSEARCH_USERNAME,
+        TestElasticsearchSuite.ELASTICSEARCH_PASSWORD,
         null, AuthMode.SHARED_USER.name(),
-        PlainCredentialsProvider.EMPTY_CREDENTIALS_PROVIDER);
+        null);
 
     config.setEnabled(true);
     cluster.defineStoragePlugin("elastic", config);
 
+    elasticsearchClient = TestElasticsearchSuite.getESClient();
     prepareData();
   }
 
   @AfterClass
   public static void cleanUp() throws IOException {
-    for (String indexName : indexNames) {
-      restHighLevelClient.indices().delete(new DeleteIndexRequest(indexName), RequestOptions.DEFAULT);
-    }
+    DeleteIndexRequest deleteIndexRequest = new DeleteIndexRequest.Builder()
+      .index(indexNames)
+      .build();
+
+    elasticsearchClient.indices().delete(deleteIndexRequest);
     TestElasticsearchSuite.tearDownCluster();
   }
 
   private static void prepareData() throws IOException {
-    restHighLevelClient = new RestHighLevelClient(RestClient.builder(HttpHost.create(TestElasticsearchSuite.getAddress())));
+    indexNames.add("t1");
+    CreateIndexRequest createIndexRequest = new CreateIndexRequest.Builder()
+        .index("t1")
+        .build();
+    elasticsearchClient.indices().create(createIndexRequest);
 
-    String indexName = "t1";
-    indexNames.add(indexName);
-    CreateIndexRequest createIndexRequest = new CreateIndexRequest(indexName);
+    final Reader input1 = new StringReader(
+      JSONObject.toJSONString(
+        ImmutableMap.of("string_field", "a", "int_field", 123)
+      )
+    );
+    IndexRequest<JsonData> request = IndexRequest.of(i -> i
+        .index("t1")
+        .withJson(input1)
+    );
+    logger.debug("Insert response {}", elasticsearchClient.index(request));
 
-    restHighLevelClient.indices().create(createIndexRequest, RequestOptions.DEFAULT);
+    indexNames.add("t2");
+    createIndexRequest = new CreateIndexRequest.Builder()
+        .index("t2")
+        .build();
+    elasticsearchClient.indices().create(createIndexRequest);
 
-    XContentBuilder builder = XContentFactory.jsonBuilder();
-    builder.startObject();
-    builder.field("string_field", "a");
-    builder.field("int_field", 123);
-    builder.endObject();
-    IndexRequest indexRequest = new IndexRequest(indexName).source(builder);
-    restHighLevelClient.index(indexRequest, RequestOptions.DEFAULT);
-    restHighLevelClient.indices().refresh(new RefreshRequest(indexName), RequestOptions.DEFAULT);
+    final Reader input2 = new StringReader(
+      JSONObject.toJSONString(
+        ImmutableMap.of("another_string_field", "b", "another_int_field", 321)
+      )
+    );
+    request = IndexRequest.of(i -> i
+        .index("t2")
+        .withJson(input2)
+    );
+    logger.debug("Insert response {}", elasticsearchClient.index(request));
 
-    indexName = "t2";
-    indexNames.add(indexName);
-    createIndexRequest = new CreateIndexRequest(indexName);
-
-    restHighLevelClient.indices().create(createIndexRequest, RequestOptions.DEFAULT);
-
-    builder = XContentFactory.jsonBuilder();
-    builder.startObject();
-    builder.field("another_int_field", 321);
-    builder.field("another_string_field", "b");
-    builder.endObject();
-    indexRequest = new IndexRequest(indexName).source(builder);
-    restHighLevelClient.index(indexRequest, RequestOptions.DEFAULT);
-    restHighLevelClient.indices().refresh(new RefreshRequest(indexName), RequestOptions.DEFAULT);
+    RefreshRequest refreshRequest = new RefreshRequest.Builder()
+        .index(indexNames)
+        .build();
+    elasticsearchClient.indices().refresh(refreshRequest);
+    logger.debug("Data preparation complete.");
   }
 
   @Test

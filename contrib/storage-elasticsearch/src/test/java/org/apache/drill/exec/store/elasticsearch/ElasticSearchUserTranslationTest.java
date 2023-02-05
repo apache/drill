@@ -89,7 +89,7 @@ public class ElasticSearchUserTranslationTest extends ClusterTest {
         TestElasticsearchSuite.ELASTICSEARCH_PASSWORD,
         null,
         AuthMode.SHARED_USER.name(),
-        PlainCredentialsProvider.EMPTY_CREDENTIALS_PROVIDER);
+        null);
 
     config.setEnabled(true);
     cluster.defineStoragePlugin("elastic", config);
