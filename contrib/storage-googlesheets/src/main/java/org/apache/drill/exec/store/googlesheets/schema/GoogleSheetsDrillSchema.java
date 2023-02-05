@@ -190,7 +190,7 @@ public class GoogleSheetsDrillSchema extends AbstractSchema {
         .message(plugin.getName() + " is not writable.")
         .build(logger);
     }
-    String documentName = this.name;
+    String documentName = this.fileToken;
     return new CreateTableEntry() {
       @Override
       public Writer getWriter(PhysicalOperator child) {
@@ -206,7 +206,7 @@ public class GoogleSheetsDrillSchema extends AbstractSchema {
 
   @Override
   public ModifyTableEntry modifyTable(String tableName) {
-    return child -> new GoogleSheetsInsertWriter(child, this.name, tableName, schemaConfig.getUserName(), plugin);
+    return child -> new GoogleSheetsInsertWriter(child, this.fileToken, tableName, schemaConfig.getUserName(), plugin);
   }
 
   @Override

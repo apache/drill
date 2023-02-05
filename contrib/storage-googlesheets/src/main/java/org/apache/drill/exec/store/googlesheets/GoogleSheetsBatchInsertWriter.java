@@ -24,7 +24,7 @@ public class GoogleSheetsBatchInsertWriter extends GoogleSheetsBatchWriter {
   @Override
   public void cleanup() {
     try {
-      GoogleSheetsUtils.appendDataToGoogleSheet(service, spreadsheetID, tabName, values);
+      GoogleSheetsUtils.appendDataToGoogleSheet(service, sheetName, tabName, values);
     } catch (IOException e) {
       throw UserException.dataWriteError(e)
           .message("Error writing to GoogleSheets " + e.getMessage())

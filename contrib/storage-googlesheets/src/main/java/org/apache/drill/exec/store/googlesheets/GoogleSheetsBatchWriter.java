@@ -100,17 +100,24 @@ public class GoogleSheetsBatchWriter extends AbstractRecordWriter {
 
   @Override
   public void updateSchema(VectorAccessible batch) throws IOException {
-    // Create the new GoogleSheet doc
-    Spreadsheet spreadsheet = new Spreadsheet()
-      .setProperties(new SpreadsheetProperties().setTitle(sheetName));
 
-    spreadsheet = service.spreadsheets().create(spreadsheet)
-      .setFields("spreadsheetId")
-      .execute();
+    // If the incoming sheetName is actually a file token then simply add a new tab to the existing document.
+    if (GoogleSheetsUtils.isProbableFileToken(sheetName)) {
+      GoogleSheetsUtils.addTabToGoogleSheet(service, sheetName, tabName);
+      spreadsheetID = sheetName;
+    } else {
+      // Otherwise, create the new GoogleSheet document and add a tab.
+      Spreadsheet spreadsheet = new Spreadsheet()
+          .setProperties(new SpreadsheetProperties().setTitle(sheetName));
 
-    this.spreadsheetID = spreadsheet.getSpreadsheetId();
-    // Now add the tab
-    GoogleSheetsUtils.addTabToGoogleSheet(service, spreadsheetID, tabName);
+      spreadsheet = service.spreadsheets().create(spreadsheet)
+          .setFields("spreadsheetId")
+          .execute();
+
+      this.spreadsheetID = spreadsheet.getSpreadsheetId();
+      // Now add the tab
+      GoogleSheetsUtils.addTabToGoogleSheet(service, spreadsheetID, tabName);
+    }
 
     // Add the column names to the values list.  GoogleSheets does not have any concept
     // of column names, so we just insert the column names as the first row of data.
