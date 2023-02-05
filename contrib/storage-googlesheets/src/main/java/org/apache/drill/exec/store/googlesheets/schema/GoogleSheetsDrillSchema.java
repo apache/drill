@@ -81,11 +81,11 @@ public class GoogleSheetsDrillSchema extends AbstractSchema {
                                  GoogleSheetsStoragePlugin plugin,
                                  SchemaConfig schemaConfig,
                                  Sheets sheetsService, String fileName) {
-    super(parent.getSchemaPath(), fileToken);
+    super(parent.getSchemaPath(), GoogleSheetsRootSchema.getFileTokenWithCorrectCase(((GoogleSheetsRootSchema) parent).getTokenMap(), fileToken));
     this.plugin = plugin;
     this.schemaConfig = schemaConfig;
-    this.fileToken = fileToken;
     this.parent = (GoogleSheetsRootSchema) parent;
+    this.fileToken = GoogleSheetsRootSchema.getFileTokenWithCorrectCase(((GoogleSheetsRootSchema) parent).getTokenMap(), fileToken);
     this.sheetsService = sheetsService;
     this.tableList = new ArrayList<>();
     this.fileName = fileName;
