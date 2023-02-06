@@ -188,7 +188,7 @@ public class BaseTestImpersonation extends ClusterTest {
 
   protected static void createView(final String viewOwner, final String viewGroup, final short viewPerms,
                                  final String newViewName, final String fromSourceSchema, final String fromSourceTableName) throws Exception {
-    updateClient(viewOwner);
+    client = client.updateClient(cluster, client, viewOwner);
     run(String.format("ALTER SESSION SET `%s`='%o'", ExecConstants.NEW_VIEW_DEFAULT_PERMS_KEY, viewPerms));
     run(String.format("CREATE VIEW %s.%s AS SELECT * FROM %s.%s",
       getWSSchema(viewOwner), newViewName, fromSourceSchema, fromSourceTableName));
@@ -203,7 +203,7 @@ public class BaseTestImpersonation extends ClusterTest {
 
   protected static void createView(final String viewOwner, final String viewGroup, final String viewName,
                                  final String viewDef) throws Exception {
-    updateClient(viewOwner);
+    client = client.updateClient(cluster, client, viewOwner);
     run(String.format("ALTER SESSION SET `%s`='%o'", ExecConstants.NEW_VIEW_DEFAULT_PERMS_KEY, (short) 0750));
     run("CREATE VIEW %s.%s.%s AS %s", MINI_DFS_STORAGE_PLUGIN_NAME, "tmp", viewName, viewDef);
     final Path viewFilePath = new Path("/tmp/", viewName + DotDrillType.VIEW.getEnding());

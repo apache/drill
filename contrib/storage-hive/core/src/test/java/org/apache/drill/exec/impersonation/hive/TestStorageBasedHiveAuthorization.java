@@ -379,13 +379,13 @@ public class TestStorageBasedHiveAuthorization extends BaseTestHiveImpersonation
    */
   @Test
   public void user0_db_general_showTables() throws Exception {
-    updateClient(org1Users[0]);
+    client = client.updateClient(cluster, client, org1Users[0]);
     showTablesHelper(db_general, all_tables_in_db_general);
   }
 
   @Test
   public void user0_db_u0_only_showTables() throws Exception {
-    updateClient(org1Users[0]);
+    client = client.updateClient(cluster, client, org1Users[0]);
     showTablesHelper(db_u0_only, all_tables_in_db_u0_only);
   }
 
@@ -395,13 +395,13 @@ public class TestStorageBasedHiveAuthorization extends BaseTestHiveImpersonation
    */
   @Test
   public void user0_db_u1g1_only_showTables() throws Exception {
-    updateClient(org1Users[0]);
+    client = client.updateClient(cluster, client, org1Users[0]);
     showTablesHelper(db_u1g1_only, all_tables_in_db_u1g1_only);
   }
 
   @Test
   public void user0_db_general_infoSchema() throws Exception {
-    updateClient(org1Users[0]);
+    client = client.updateClient(cluster, client, org1Users[0]);
     fromInfoSchemaHelper(db_general,
         all_tables_in_db_general,
         all_tables_type_in_db_general);
@@ -409,7 +409,7 @@ public class TestStorageBasedHiveAuthorization extends BaseTestHiveImpersonation
 
   @Test
   public void user0_db_u0_only_infoSchema() throws Exception {
-    updateClient(org1Users[0]);
+    client = client.updateClient(cluster, client, org1Users[0]);
     fromInfoSchemaHelper(db_u0_only,
         all_tables_in_db_u0_only,
         all_tables_type_in_db_u0_only);
@@ -417,7 +417,7 @@ public class TestStorageBasedHiveAuthorization extends BaseTestHiveImpersonation
 
   @Test
   public void user0_db_u1g1_only_infoSchema() throws Exception {
-    updateClient(org1Users[0]);
+    client = client.updateClient(cluster, client, org1Users[0]);
     fromInfoSchemaHelper(db_u1g1_only, all_tables_in_db_u1g1_only, all_tables_type_db_u1g1_only);
   }
 
@@ -426,48 +426,48 @@ public class TestStorageBasedHiveAuthorization extends BaseTestHiveImpersonation
    */
   @Test
   public void user0_allowed_g_student_u0_700() throws Exception {
-    updateClient(org1Users[0]);
+    client = client.updateClient(cluster, client, org1Users[0]);
     queryHiveTableOrView(db_general, g_student_u0_700);
   }
 
   @Test
   public void user0_allowed_g_vw_u0_700_over_g_student_u0_700() throws Exception {
-    updateClient(org1Users[0]);
+    client = client.updateClient(cluster, client, org1Users[0]);
     queryHiveTableOrView(db_general, g_vw_g_student_u0_700);
   }
 
   @Test
   public void user1_forbidden_g_vw_u0_700_over_g_student_u0_700() throws Exception {
-    updateClient(org1Users[1]);
+    client = client.updateClient(cluster, client, org1Users[1]);
     queryHiveViewFailed(db_general, g_vw_g_student_u0_700);
   }
 
   @Test
   public void user2_forbidden_g_vw_u0_700_over_g_student_u0_700() throws Exception {
-    updateClient(org1Users[2]);
+    client = client.updateClient(cluster, client, org1Users[2]);
     queryHiveViewFailed(db_general, g_vw_g_student_u0_700);
   }
 
   @Test
   public void user0_allowed_u0_vw_voter_all_755() throws Exception {
-    updateClient(org1Users[0]);
+    client = client.updateClient(cluster, client, org1Users[0]);
     queryHiveTableOrView(db_u0_only, u0_vw_voter_all_755);
   }
 
   @Test
   public void user1_forbidden_u0_vw_voter_all_755() throws Exception {
-    updateClient(org1Users[1]);
+    client = client.updateClient(cluster, client, org1Users[1]);
     queryHiveViewFailed(db_u0_only, u0_vw_voter_all_755);
   }
 
   @Test
   public void user2_forbidden_u0_vw_voter_all_755() throws Exception {
-    updateClient(org1Users[2]);
+    client = client.updateClient(cluster, client, org1Users[2]);
     queryHiveViewFailed(db_u0_only, u0_vw_voter_all_755);
   }
 
   private void queryHiveViewFailed(String db, String viewName) throws Exception {
-    errorMsgTestHelper(
+    client.errorMsgTestHelper(
         String.format("SELECT * FROM hive.%s.%s LIMIT 2", db, viewName),
         "Failure validating a view your query is dependent upon.");
   }
@@ -477,7 +477,7 @@ public class TestStorageBasedHiveAuthorization extends BaseTestHiveImpersonation
    */
   @Test
   public void user0_allowed_g_student_u0g0_750() throws Exception {
-    updateClient(org1Users[0]);
+    client = client.updateClient(cluster, client, org1Users[0]);
     queryHiveTableOrView(db_general, g_student_u0g0_750);
   }
 
@@ -487,7 +487,7 @@ public class TestStorageBasedHiveAuthorization extends BaseTestHiveImpersonation
    */
   @Test
   public void user0_allowed_g_student_all_755() throws Exception {
-    updateClient(org1Users[0]);
+    client = client.updateClient(cluster, client, org1Users[0]);
     queryHiveTableOrView(db_general, g_student_all_755);
   }
 
@@ -496,7 +496,7 @@ public class TestStorageBasedHiveAuthorization extends BaseTestHiveImpersonation
    */
   @Test
   public void user0_forbidden_g_voter_u1_700() throws Exception{
-    updateClient(org1Users[0]);
+    client = client.updateClient(cluster, client, org1Users[0]);
     queryTableNotFound(db_general, g_voter_u1_700);
   }
 
@@ -505,7 +505,7 @@ public class TestStorageBasedHiveAuthorization extends BaseTestHiveImpersonation
    */
   @Test
   public void user0_forbidden_g_voter_u2g1_750() throws Exception{
-    updateClient(org1Users[0]);
+    client = client.updateClient(cluster, client, org1Users[0]);
     queryTableNotFound(db_general, g_voter_u2g1_750);
   }
 
@@ -515,7 +515,7 @@ public class TestStorageBasedHiveAuthorization extends BaseTestHiveImpersonation
    */
   @Test
   public void user0_allowed_g_voter_all_755() throws Exception {
-    updateClient(org1Users[0]);
+    client = client.updateClient(cluster, client, org1Users[0]);
     queryHiveTableOrView(db_general, g_voter_all_755);
   }
 
@@ -524,7 +524,7 @@ public class TestStorageBasedHiveAuthorization extends BaseTestHiveImpersonation
    */
   @Test
   public void user0_allowed_u0_student_all_755() throws Exception {
-    updateClient(org1Users[0]);
+    client = client.updateClient(cluster, client, org1Users[0]);
     queryHiveTableOrView(db_u0_only, u0_student_all_755);
   }
 
@@ -533,7 +533,7 @@ public class TestStorageBasedHiveAuthorization extends BaseTestHiveImpersonation
    */
   @Test
   public void user0_allowed_u0_voter_all_755() throws Exception {
-    updateClient(org1Users[0]);
+    client = client.updateClient(cluster, client, org1Users[0]);
     queryHiveTableOrView(db_u0_only, u0_voter_all_755);
   }
 
@@ -542,7 +542,7 @@ public class TestStorageBasedHiveAuthorization extends BaseTestHiveImpersonation
    */
   @Test
   public void user0_allowed_g_partitioned_student_u0_700() throws Exception {
-    updateClient(org1Users[0]);
+    client = client.updateClient(cluster, client, org1Users[0]);
     queryHiveTableOrView(db_general, g_partitioned_student_u0_700);
   }
 
@@ -551,55 +551,55 @@ public class TestStorageBasedHiveAuthorization extends BaseTestHiveImpersonation
    */
   @Test
   public void user0_forbidden_u1g1_student_all_755() throws Exception {
-    updateClient(org1Users[0]);
+    client = client.updateClient(cluster, client, org1Users[0]);
     queryTableNotFound(db_u1g1_only, u1g1_student_all_755);
   }
 
   @Test
   public void user0_allowed_v_student_u0g0_750() throws Exception {
-    updateClient(org1Users[0]);
+    client = client.updateClient(cluster, client, org1Users[0]);
     queryView(v_student_u0g0_750);
   }
 
   @Test
   public void user0_forbidden_v_student_u1g1_750() throws Exception {
-    updateClient(org1Users[0]);
+    client = client.updateClient(cluster, client, org1Users[0]);
     queryViewNotAuthorized(v_student_u1g1_750);
   }
 
   @Test
   public void user0_allowed_v_partitioned_student_u0g0_750() throws Exception {
-    updateClient(org1Users[0]);
+    client = client.updateClient(cluster, client, org1Users[0]);
     queryView(v_partitioned_student_u0g0_750);
   }
 
   @Test
   public void user0_forbidden_v_partitioned_student_u1g1_750() throws Exception {
-    updateClient(org1Users[0]);
+    client = client.updateClient(cluster, client, org1Users[0]);
     queryViewNotAuthorized(v_partitioned_student_u1g1_750);
   }
 
   @Test
   public void user1_db_general_showTables() throws Exception {
-    updateClient(org1Users[1]);
+    client = client.updateClient(cluster, client, org1Users[1]);
     showTablesHelper(db_general, all_tables_in_db_general);
   }
 
   @Test
   public void user1_db_u1g1_only_showTables() throws Exception {
-    updateClient(org1Users[1]);
+    client = client.updateClient(cluster, client, org1Users[1]);
     showTablesHelper(db_u1g1_only, all_tables_in_db_u1g1_only);
   }
 
   @Test
   public void user1_db_u0_only_showTables() throws Exception {
-    updateClient(org1Users[1]);
+    client = client.updateClient(cluster, client, org1Users[1]);
     showTablesHelper(db_u0_only, all_tables_in_db_u0_only);
   }
 
   @Test
   public void user1_db_general_infoSchema() throws Exception {
-    updateClient(org1Users[1]);
+    client = client.updateClient(cluster, client, org1Users[1]);
     fromInfoSchemaHelper(db_general,
         all_tables_in_db_general,
         all_tables_type_in_db_general);
@@ -607,7 +607,7 @@ public class TestStorageBasedHiveAuthorization extends BaseTestHiveImpersonation
 
   @Test
   public void user1_db_u1g1_only_infoSchema() throws Exception {
-    updateClient(org1Users[1]);
+    client = client.updateClient(cluster, client, org1Users[1]);
     fromInfoSchemaHelper(db_u1g1_only,
         ImmutableList.of(
             u1g1_student_all_755,
@@ -625,7 +625,7 @@ public class TestStorageBasedHiveAuthorization extends BaseTestHiveImpersonation
 
   @Test
   public void user1_db_u0_only_infoSchema() throws Exception {
-    updateClient(org1Users[1]);
+    client = client.updateClient(cluster, client, org1Users[1]);
     fromInfoSchemaHelper(db_u0_only,
         newArrayList(u0_vw_voter_all_755, u0_student_all_755, u0_voter_all_755),
         newArrayList(TableType.VIEW, TableType.TABLE, TableType.TABLE));
@@ -636,7 +636,7 @@ public class TestStorageBasedHiveAuthorization extends BaseTestHiveImpersonation
    */
   @Test
   public void user1_forbidden_g_student_u0_700() throws Exception {
-    updateClient(org1Users[1]);
+    client = client.updateClient(cluster, client, org1Users[1]);
     queryTableNotFound(db_general, g_student_u0_700);
   }
 
@@ -645,7 +645,7 @@ public class TestStorageBasedHiveAuthorization extends BaseTestHiveImpersonation
    */
   @Test
   public void user1_allowed_g_student_u0g0_750() throws Exception {
-    updateClient(org1Users[1]);
+    client = client.updateClient(cluster, client, org1Users[1]);
     queryHiveTableOrView(db_general, g_student_u0g0_750);
   }
 
@@ -654,7 +654,7 @@ public class TestStorageBasedHiveAuthorization extends BaseTestHiveImpersonation
    */
   @Test
   public void user1_allowed_g_student_all_755() throws Exception {
-    updateClient(org1Users[1]);
+    client = client.updateClient(cluster, client, org1Users[1]);
     queryHiveTableOrView(db_general, g_student_all_755);
   }
 
@@ -663,7 +663,7 @@ public class TestStorageBasedHiveAuthorization extends BaseTestHiveImpersonation
    */
   @Test
   public void user1_allowed_g_voter_u1_700() throws Exception {
-    updateClient(org1Users[1]);
+    client = client.updateClient(cluster, client, org1Users[1]);
     queryHiveTableOrView(db_general, g_voter_u1_700);
   }
 
@@ -672,7 +672,7 @@ public class TestStorageBasedHiveAuthorization extends BaseTestHiveImpersonation
    */
   @Test
   public void user1_allowed_g_voter_u2g1_750() throws Exception {
-    updateClient(org1Users[1]);
+    client = client.updateClient(cluster, client, org1Users[1]);
     queryHiveTableOrView(db_general, g_voter_u2g1_750);
   }
 
@@ -681,7 +681,7 @@ public class TestStorageBasedHiveAuthorization extends BaseTestHiveImpersonation
    */
   @Test
   public void user1_allowed_g_voter_all_755() throws Exception {
-    updateClient(org1Users[1]);
+    client = client.updateClient(cluster, client, org1Users[1]);
     queryHiveTableOrView(db_general, g_voter_all_755);
   }
 
@@ -690,7 +690,7 @@ public class TestStorageBasedHiveAuthorization extends BaseTestHiveImpersonation
    */
   @Test
   public void user1_forbidden_u0_student_all_755() throws Exception {
-    updateClient(org1Users[1]);
+    client = client.updateClient(cluster, client, org1Users[1]);
     queryTableNotFound(db_u0_only, u0_student_all_755);
   }
 
@@ -699,55 +699,55 @@ public class TestStorageBasedHiveAuthorization extends BaseTestHiveImpersonation
    */
   @Test
   public void user1_forbidden_u0_voter_all_755() throws Exception {
-    updateClient(org1Users[1]);
+    client = client.updateClient(cluster, client, org1Users[1]);
     queryTableNotFound(db_u0_only, u0_voter_all_755);
   }
 
   @Test
   public void user1_allowed_v_student_u0g0_750() throws Exception {
-    updateClient(org1Users[1]);
+    client = client.updateClient(cluster, client, org1Users[1]);
     queryView(v_student_u0g0_750);
   }
 
   @Test
   public void user1_allowed_v_student_u1g1_750() throws Exception {
-    updateClient(org1Users[1]);
+    client = client.updateClient(cluster, client, org1Users[1]);
     queryView(v_student_u1g1_750);
   }
 
   @Test
   public void user1_allowed_v_partitioned_student_u0g0_750() throws Exception {
-    updateClient(org1Users[1]);
+    client = client.updateClient(cluster, client, org1Users[1]);
     queryView(v_partitioned_student_u0g0_750);
   }
 
   @Test
   public void user1_allowed_v_partitioned_student_u1g1_750() throws Exception {
-    updateClient(org1Users[1]);
+    client = client.updateClient(cluster, client, org1Users[1]);
     queryView(v_partitioned_student_u1g1_750);
   }
 
   @Test
   public void user2_db_general_showTables() throws Exception {
-    updateClient(org1Users[2]);
+    client = client.updateClient(cluster, client, org1Users[2]);
     showTablesHelper(db_general, all_tables_in_db_general);
   }
 
   @Test
   public void user2_db_u1g1_only_showTables() throws Exception {
-    updateClient(org1Users[2]);
+    client = client.updateClient(cluster, client, org1Users[2]);
     showTablesHelper(db_u1g1_only, all_tables_in_db_u1g1_only);
   }
 
   @Test
   public void user2_db_u0_only_showTables() throws Exception {
-    updateClient(org1Users[2]);
+    client = client.updateClient(cluster, client, org1Users[2]);
     showTablesHelper(db_u0_only, all_tables_in_db_u0_only);
   }
 
   @Test
   public void user2_db_general_infoSchema() throws Exception {
-    updateClient(org1Users[2]);
+    client = client.updateClient(cluster, client, org1Users[2]);
     fromInfoSchemaHelper(db_general,
         all_tables_in_db_general,
         all_tables_type_in_db_general);
@@ -755,7 +755,7 @@ public class TestStorageBasedHiveAuthorization extends BaseTestHiveImpersonation
 
   @Test
   public void user2_db_u1g1_only_infoSchema() throws Exception {
-    updateClient(org1Users[2]);
+    client = client.updateClient(cluster, client, org1Users[2]);
     fromInfoSchemaHelper(db_u1g1_only,
         all_tables_in_db_u1g1_only,
         all_tables_type_db_u1g1_only);
@@ -763,7 +763,7 @@ public class TestStorageBasedHiveAuthorization extends BaseTestHiveImpersonation
 
   @Test
   public void user2_db_u0_only_infoSchema() throws Exception {
-    updateClient(org1Users[2]);
+    client = client.updateClient(cluster, client, org1Users[2]);
     fromInfoSchemaHelper(db_u0_only,
         newArrayList(all_tables_in_db_u0_only),
         newArrayList(all_tables_type_in_db_u0_only));
@@ -774,7 +774,7 @@ public class TestStorageBasedHiveAuthorization extends BaseTestHiveImpersonation
    */
   @Test
   public void user2_forbidden_g_student_u0_700() throws Exception {
-    updateClient(org1Users[2]);
+    client = client.updateClient(cluster, client, org1Users[2]);
     queryTableNotFound(db_general, g_student_u0_700);
   }
 
@@ -783,7 +783,7 @@ public class TestStorageBasedHiveAuthorization extends BaseTestHiveImpersonation
    */
   @Test
   public void user2_forbidden_g_student_u0g0_750() throws Exception {
-    updateClient(org1Users[2]);
+    client = client.updateClient(cluster, client, org1Users[2]);
     queryTableNotFound(db_general, g_student_u0_700);
   }
 
@@ -792,7 +792,7 @@ public class TestStorageBasedHiveAuthorization extends BaseTestHiveImpersonation
    */
   @Test
   public void user2_allowed_g_student_all_755() throws Exception {
-    updateClient(org1Users[2]);
+    client = client.updateClient(cluster, client, org1Users[2]);
     queryHiveTableOrView(db_general, g_student_all_755);
   }
 
@@ -801,7 +801,7 @@ public class TestStorageBasedHiveAuthorization extends BaseTestHiveImpersonation
    */
   @Test
   public void user2_forbidden_g_voter_u1_700() throws Exception {
-    updateClient(org1Users[2]);
+    client = client.updateClient(cluster, client, org1Users[2]);
     queryTableNotFound(db_general, g_voter_u1_700);
   }
 
@@ -810,7 +810,7 @@ public class TestStorageBasedHiveAuthorization extends BaseTestHiveImpersonation
    */
   @Test
   public void user2_allowed_g_voter_u2g1_750() throws Exception {
-    updateClient(org1Users[2]);
+    client = client.updateClient(cluster, client, org1Users[2]);
     queryHiveTableOrView(db_general, g_voter_u2g1_750);
   }
 
@@ -819,7 +819,7 @@ public class TestStorageBasedHiveAuthorization extends BaseTestHiveImpersonation
    */
   @Test
   public void user2_allowed_g_voter_all_755() throws Exception {
-    updateClient(org1Users[2]);
+    client = client.updateClient(cluster, client, org1Users[2]);
     queryHiveTableOrView(db_general, g_voter_all_755);
   }
 
@@ -828,7 +828,7 @@ public class TestStorageBasedHiveAuthorization extends BaseTestHiveImpersonation
    */
   @Test
   public void user2_forbidden_u0_student_all_755() throws Exception {
-    updateClient(org1Users[2]);
+    client = client.updateClient(cluster, client, org1Users[2]);
     queryTableNotFound(db_u0_only, u0_student_all_755);
   }
 
@@ -837,31 +837,31 @@ public class TestStorageBasedHiveAuthorization extends BaseTestHiveImpersonation
    */
   @Test
   public void user2_forbidden_u0_voter_all_755() throws Exception {
-    updateClient(org1Users[2]);
+    client = client.updateClient(cluster, client, org1Users[2]);
     queryTableNotFound(db_u0_only, u0_voter_all_755);
   }
 
   @Test
   public void user2_forbidden_v_student_u0g0_750() throws Exception {
-    updateClient(org1Users[2]);
+    client = client.updateClient(cluster, client, org1Users[2]);
     queryViewNotAuthorized(v_student_u0g0_750);
   }
 
   @Test
   public void user2_allowed_v_student_u1g1_750() throws Exception {
-    updateClient(org1Users[2]);
+    client = client.updateClient(cluster, client, org1Users[2]);
     queryView(v_student_u1g1_750);
   }
 
   @Test
   public void user2_forbidden_v_partitioned_student_u0g0_750() throws Exception {
-    updateClient(org1Users[2]);
+    client = client.updateClient(cluster, client, org1Users[2]);
     queryViewNotAuthorized(v_partitioned_student_u0g0_750);
   }
 
   @Test
   public void user2_allowed_v_partitioned_student_u1g1_750() throws Exception {
-    updateClient(org1Users[2]);
+    client = client.updateClient(cluster, client, org1Users[2]);
     queryView(v_partitioned_student_u1g1_750);
   }
 
@@ -876,7 +876,7 @@ public class TestStorageBasedHiveAuthorization extends BaseTestHiveImpersonation
   }
 
   private static void queryTableNotFound(String db, String table) throws Exception {
-    errorMsgTestHelper(
+    client.errorMsgTestHelper(
         String.format("SELECT * FROM hive.%s.%s LIMIT 2", db, table),
         String.format("Object '%s' not found within 'hive.%s'", table, db));
   }

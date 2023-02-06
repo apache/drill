@@ -58,7 +58,7 @@ public class TestInboundImpersonation extends BaseTestImpersonation {
 
   @AfterClass
   public static void tearDown() throws Exception {
-    updateClient(UserAuthenticatorTestImpl.PROCESS_USER,
+    client = client.updateClient(cluster, client, UserAuthenticatorTestImpl.PROCESS_USER,
         UserAuthenticatorTestImpl.PROCESS_USER_PASSWORD);
     run("ALTER SYSTEM RESET `%s`", ExecConstants.IMPERSONATION_POLICIES_KEY);
   }
@@ -148,7 +148,7 @@ public class TestInboundImpersonation extends BaseTestImpersonation {
   private static void createTestData() throws Exception {
     // Create table accessible only by OWNER
     final String tableName = "lineitem";
-    updateClient(OWNER, OWNER_PASSWORD);
+    client = client.updateClient(cluster, client, OWNER, OWNER_PASSWORD);
     run("USE " + getWSSchema(OWNER));
     run("CREATE TABLE %s as SELECT * FROM cp.`tpch/%s.parquet`", tableName, tableName);
 
@@ -172,7 +172,7 @@ public class TestInboundImpersonation extends BaseTestImpersonation {
     assertEquals((short) 0750, status.getPermission().toShort());
 
     // Authorize PROXY_NAME to impersonate TARGET_NAME
-    updateClient(UserAuthenticatorTestImpl.PROCESS_USER,
+    client = client.updateClient(cluster, client, UserAuthenticatorTestImpl.PROCESS_USER,
         UserAuthenticatorTestImpl.PROCESS_USER_PASSWORD);
     run("ALTER SYSTEM SET `%s`='%s'", ExecConstants.IMPERSONATION_POLICIES_KEY,
         "[ { proxy_principals : { users: [\"" + PROXY_NAME + "\" ] },"

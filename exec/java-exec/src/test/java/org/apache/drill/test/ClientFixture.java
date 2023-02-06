@@ -28,6 +28,7 @@ import java.util.Properties;
 import java.util.concurrent.ExecutionException;
 
 import org.apache.drill.common.config.DrillProperties;
+import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.client.DrillClient;
 import org.apache.drill.exec.memory.BufferAllocator;
@@ -44,6 +45,10 @@ import org.apache.drill.test.QueryBuilder.QuerySummary;
 import org.apache.drill.exec.physical.rowSet.RowSetBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.core.StringContains.containsString;
+import static org.junit.Assert.fail;
 
 /**
  * Represents a Drill client. Provides many useful test-specific operations such
@@ -410,5 +415,50 @@ public class ClientFixture implements AutoCloseable {
     } catch (IOException e) {
       throw new IllegalStateException(e);
     }
+  }
+
+  /**
+   * Utility method which tests given query produces a {@link UserException} and the exception message contains
+   * the given message.
+   * @param testSqlQuery Test query
+   * @param expectedErrorMsg Expected error message.
+   */
+  public void errorMsgTestHelper(String testSqlQuery, String expectedErrorMsg) throws Exception {
+    try {
+      this.queryBuilder().sql(testSqlQuery).run();
+      fail("Expected a UserException when running " + testSqlQuery);
+    } catch (UserException actualException) {
+      try {
+        assertThat("message of UserException when running " + testSqlQuery, actualException.getMessage(), containsString(expectedErrorMsg));
+      } catch (AssertionError e) {
+        e.addSuppressed(actualException);
+        throw e;
+      }
+    }
+  }
+
+  public ClientFixture updateClient(final ClusterFixture cluster, final ClientFixture client, final Properties properties) {
+    client.close();
+    ClientFixture.ClientBuilder clientBuilder = cluster.clientBuilder();
+    if (properties != null) {
+      for (final String key : properties.stringPropertyNames()) {
+        final String lowerCaseKey = key.toLowerCase();
+        clientBuilder.property(lowerCaseKey, properties.getProperty(key));
+      }
+    }
+    return clientBuilder.build();
+  }
+
+  public ClientFixture updateClient(final ClusterFixture cluster, final ClientFixture client, final String user) {
+    return updateClient(cluster, client, user, null);
+  }
+
+  public ClientFixture updateClient(final ClusterFixture cluster, final ClientFixture client, final String user, final String password) {
+    final Properties properties = new Properties();
+    properties.setProperty(DrillProperties.USER, user);
+    if (password != null) {
+      properties.setProperty(DrillProperties.PASSWORD, password);
+    }
+    return updateClient(cluster, client, properties);
   }
 }

@@ -112,7 +112,7 @@ public class TestImpersonationMetadata extends BaseTestImpersonation {
   public void testDropTable() throws Exception {
 
     // create tables as user2
-    updateClient(user2);
+    client = client.updateClient(cluster, client, user2);
     run("use `%s.user2_workspace1`", MINI_DFS_STORAGE_PLUGIN_NAME);
     // create a table that can be dropped by another user in a different group
     run("create table parquet_table_775 as select * from cp.`employee.json`");
@@ -122,7 +122,7 @@ public class TestImpersonationMetadata extends BaseTestImpersonation {
     run("create table parquet_table_700 as select * from cp.`employee.json`");
 
     // Drop tables as user1
-    updateClient(user1);
+    client = client.updateClient(cluster, client, user1);
     run("use `%s.user2_workspace1`", MINI_DFS_STORAGE_PLUGIN_NAME);
     testBuilder()
         .sqlQuery("drop table parquet_table_775")
@@ -145,7 +145,7 @@ public class TestImpersonationMetadata extends BaseTestImpersonation {
   @Test // DRILL-3037
   @Category(UnlikelyTest.class)
   public void testImpersonatingProcessUser() throws Exception {
-    updateClient(processUser);
+    client = client.updateClient(cluster, client, processUser);
 
     // Process user start the mini dfs, he has read/write permissions by default
     final String viewName = String.format("%s.drill_test_grp_0_700.testView", MINI_DFS_STORAGE_PLUGIN_NAME);
@@ -159,7 +159,7 @@ public class TestImpersonationMetadata extends BaseTestImpersonation {
 
   @Test
   public void testShowFilesInWSWithUserAndGroupPermissionsForQueryUser() throws Exception {
-    updateClient(user1);
+    client = client.updateClient(cluster, client, user1);
 
     // Try show tables in schema "drill_test_grp_1_700" which is owned by "user1"
     List<QueryDataBatch> results = client.queryBuilder().sql(String.format("SHOW FILES IN %s.drill_test_grp_1_700",
@@ -174,7 +174,7 @@ public class TestImpersonationMetadata extends BaseTestImpersonation {
 
   @Test
   public void testShowFilesInWSWithOtherPermissionsForQueryUser() throws Exception {
-    updateClient(user2);
+    client = client.updateClient(cluster, client, user2);
     // Try show tables in schema "drill_test_grp_0_755" which is owned by "processUser" and group0. "user2" is not part of the "group0"
     List<QueryDataBatch> results = client.queryBuilder().sql(
       String.format("SHOW FILES IN %s.drill_test_grp_0_755", MINI_DFS_STORAGE_PLUGIN_NAME)).results();
@@ -183,7 +183,7 @@ public class TestImpersonationMetadata extends BaseTestImpersonation {
 
   @Test
   public void testShowFilesInWSWithNoPermissionsForQueryUser() throws Exception {
-    updateClient(user2);
+    client = client.updateClient(cluster, client, user2);
     // Try show tables in schema "drill_test_grp_1_700" which is owned by "user1"
     List<QueryDataBatch> results = client.queryBuilder().sql(
       String.format("SHOW FILES IN %s.drill_test_grp_1_700", MINI_DFS_STORAGE_PLUGIN_NAME)).results();
@@ -196,7 +196,7 @@ public class TestImpersonationMetadata extends BaseTestImpersonation {
     // drill_test_grp_1_700 (through ownership)
     // drill_test_grp_0_750, drill_test_grp_0_770 (through "group" category permissions)
     // drill_test_grp_0_755, drill_test_grp_0_777 (through "others" category permissions)
-    updateClient(user1);
+    client = client.updateClient(cluster, client, user1);
     testBuilder()
         .sqlQuery("SHOW SCHEMAS LIKE '%drill_test%'")
         .unOrdered()
@@ -213,7 +213,7 @@ public class TestImpersonationMetadata extends BaseTestImpersonation {
   public void testShowSchemasAsUser2() throws Exception {
     // "user2" is part of "group0", but part of "group1" and has access to following workspaces
     // drill_test_grp_0_755, drill_test_grp_0_777 (through "others" category permissions)
-    updateClient(user2);
+    client = client.updateClient(cluster, client, user2);
     testBuilder()
         .sqlQuery("SHOW SCHEMAS LIKE '%drill_test%'")
         .unOrdered()
@@ -246,7 +246,7 @@ public class TestImpersonationMetadata extends BaseTestImpersonation {
   private static void testCreateViewTestHelper(String user, String viewSchema,
       String viewName) throws Exception {
     try {
-      updateClient(user);
+      client = client.updateClient(cluster, client, user);
 
       run("USE " + viewSchema);
 
@@ -281,7 +281,7 @@ public class TestImpersonationMetadata extends BaseTestImpersonation {
     final String viewSchema = MINI_DFS_STORAGE_PLUGIN_NAME + "." + tableWS;
     final String viewName = "view1";
 
-    updateClient(user2);
+    client = client.updateClient(cluster, client, user2);
 
     run("USE " + viewSchema);
 
@@ -324,7 +324,7 @@ public class TestImpersonationMetadata extends BaseTestImpersonation {
   private static void testCreateTableTestHelper(String user, String tableWS,
       String tableName) throws Exception {
     try {
-      updateClient(user);
+      client = client.updateClient(cluster, client, user);
 
       run("USE " + Joiner.on(".").join(MINI_DFS_STORAGE_PLUGIN_NAME, tableWS));
 
@@ -355,7 +355,7 @@ public class TestImpersonationMetadata extends BaseTestImpersonation {
     String tableWS = "drill_test_grp_0_755";
     String tableName = "table1";
 
-    updateClient(user2);
+    client = client.updateClient(cluster, client, user2);
     run("use %s.`%s`", MINI_DFS_STORAGE_PLUGIN_NAME, tableWS);
 
     thrown.expect(UserRemoteException.class);
@@ -371,7 +371,7 @@ public class TestImpersonationMetadata extends BaseTestImpersonation {
     final String tableName = "nation1";
     final String tableWS = "drill_test_grp_1_700";
 
-    updateClient(user1);
+    client = client.updateClient(cluster, client, user1);
     run("USE " + Joiner.on(".").join(MINI_DFS_STORAGE_PLUGIN_NAME, tableWS));
 
     run("CREATE TABLE " + tableName + " partition by (n_regionkey) AS SELECT * " +
@@ -394,7 +394,7 @@ public class TestImpersonationMetadata extends BaseTestImpersonation {
     final String tableName = "nation1_stats";
     final String tableWS = "drill_test_grp_1_700";
 
-    updateClient(user1);
+    client = client.updateClient(cluster, client, user1);
     run("USE " + Joiner.on(".").join(MINI_DFS_STORAGE_PLUGIN_NAME, tableWS));
     run("ALTER SESSION SET `store.format` = 'parquet'");
     run("CREATE TABLE " + tableName + " AS SELECT * FROM cp.`tpch/nation.parquet`");
