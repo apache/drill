@@ -58,10 +58,10 @@ import java.util.concurrent.atomic.AtomicInteger;
 @Category(SlowTest.class)
 @RunWith(Suite.class)
 @Suite.SuiteClasses({
-    //ElasticComplexTypesTest.class,
+    ElasticComplexTypesTest.class,
     ElasticInfoSchemaTest.class,
-    //ElasticSearchPlanTest.class,
-    //ElasticSearchQueryTest.class,
+    ElasticSearchPlanTest.class,
+    ElasticSearchQueryTest.class,
     ElasticSearchUserTranslationTest.class})
 public class TestElasticsearchSuite extends BaseTest {
 
