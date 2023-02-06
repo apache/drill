@@ -34,6 +34,7 @@ import org.apache.drill.exec.physical.rowSet.RowSet;
 import org.apache.drill.test.ClientFixture;
 import org.apache.drill.test.ClusterFixtureBuilder;
 import org.apache.drill.test.ClusterTest;
+import org.hamcrest.CoreMatchers;
 import org.json.simple.JSONObject;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
@@ -44,9 +45,9 @@ import org.slf4j.LoggerFactory;
 import java.io.IOException;
 import java.io.Reader;
 import java.io.StringReader;
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
@@ -55,14 +56,14 @@ import static org.apache.drill.exec.rpc.user.security.testing.UserAuthenticatorT
 import static org.apache.drill.exec.rpc.user.security.testing.UserAuthenticatorTestImpl.TEST_USER_1;
 import static org.apache.drill.exec.rpc.user.security.testing.UserAuthenticatorTestImpl.TEST_USER_1_PASSWORD;
 import static org.apache.drill.exec.rpc.user.security.testing.UserAuthenticatorTestImpl.TEST_USER_2;
+import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
 import static org.junit.jupiter.api.Assertions.fail;
 
 
 public class ElasticSearchUserTranslationTest extends ClusterTest {
   private static final Logger logger = LoggerFactory.getLogger(ElasticSearchUserTranslationTest.class);
-  private static final List<String> indexNames = new ArrayList<>();
+  private static final List<String> indexNames = new LinkedList<>();
   private static ElasticsearchClient elasticsearchClient;
 
   @BeforeClass
@@ -89,7 +90,8 @@ public class ElasticSearchUserTranslationTest extends ClusterTest {
         TestElasticsearchSuite.ELASTICSEARCH_PASSWORD,
         null,
         AuthMode.SHARED_USER.name(),
-        null);
+        null
+    );
 
     config.setEnabled(true);
     cluster.defineStoragePlugin("elastic", config);
@@ -237,7 +239,7 @@ public class ElasticSearchUserTranslationTest extends ClusterTest {
       client.queryBuilder().sql(sql).rowSet();
       fail();
     } catch (UserRemoteException e) {
-      assertTrue(e.getMessage().contains("Schema [[ut_elastic]] is not valid"));
+      assertThat(e.getMessage(), CoreMatchers.containsString("Object 'ut_elastic' not found"));
     }
   }
 }
