@@ -24,7 +24,6 @@ import org.apache.drill.exec.physical.impl.InsertWriterRecordBatch;
 import org.apache.drill.exec.proto.UserBitShared.UserCredentials;
 import org.apache.drill.exec.record.CloseableRecordBatch;
 import org.apache.drill.exec.record.RecordBatch;
-import org.apache.drill.exec.store.googlesheets.GoogleSheetsInsertWriter;
 
 import java.util.List;
 

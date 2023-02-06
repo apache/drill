@@ -56,7 +56,6 @@ import org.apache.drill.exec.store.googlesheets.GoogleSheetsStoragePluginConfig;
 import org.apache.drill.exec.store.googlesheets.columns.GoogleSheetsColumnRange;
 import org.apache.drill.exec.util.Utilities;
 import org.apache.parquet.Strings;
-import org.bouncycastle.cert.ocsp.Req;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
