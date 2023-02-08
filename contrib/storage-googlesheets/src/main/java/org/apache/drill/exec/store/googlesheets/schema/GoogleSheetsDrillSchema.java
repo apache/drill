@@ -18,6 +18,7 @@
 
 package org.apache.drill.exec.store.googlesheets.schema;
 
+import com.google.api.services.drive.Drive;
 import com.google.api.services.sheets.v4.Sheets;
 import com.google.api.services.sheets.v4.model.Sheet;
 import org.apache.calcite.schema.Table;
@@ -27,9 +28,11 @@ import org.apache.drill.exec.physical.base.PhysicalOperator;
 import org.apache.drill.exec.physical.base.Writer;
 import org.apache.drill.exec.planner.logical.CreateTableEntry;
 import org.apache.drill.exec.planner.logical.DynamicDrillTable;
+import org.apache.drill.exec.planner.logical.ModifyTableEntry;
 import org.apache.drill.exec.store.AbstractSchema;
 import org.apache.drill.exec.store.SchemaConfig;
 import org.apache.drill.exec.store.StorageStrategy;
+import org.apache.drill.exec.store.googlesheets.GoogleSheetsInsertWriter;
 import org.apache.drill.exec.store.googlesheets.GoogleSheetsScanSpec;
 import org.apache.drill.exec.store.googlesheets.GoogleSheetsStoragePlugin;
 import org.apache.drill.exec.store.googlesheets.GoogleSheetsStoragePluginConfig;
@@ -64,15 +67,17 @@ public class GoogleSheetsDrillSchema extends AbstractSchema {
   private final String fileToken;
   private final String fileName;
 
+  private List<Sheet> tabList;
+
   public GoogleSheetsDrillSchema(AbstractSchema parent, String fileToken,
                                  GoogleSheetsStoragePlugin plugin,
                                  SchemaConfig schemaConfig,
                                  Sheets sheetsService, String fileName) {
-    super(parent.getSchemaPath(), fileToken);
+    super(parent.getSchemaPath(), GoogleSheetsRootSchema.getFileTokenWithCorrectCase(((GoogleSheetsRootSchema) parent).getTokenMap(), fileToken));
     this.plugin = plugin;
     this.schemaConfig = schemaConfig;
-    this.fileToken = fileToken;
     this.parent = (GoogleSheetsRootSchema) parent;
+    this.fileToken = GoogleSheetsRootSchema.getFileTokenWithCorrectCase(((GoogleSheetsRootSchema) parent).getTokenMap(), fileToken);
     this.sheetsService = sheetsService;
     this.tableList = new ArrayList<>();
     this.fileName = fileName;
@@ -145,12 +150,11 @@ public class GoogleSheetsDrillSchema extends AbstractSchema {
   }
 
   private void populateActiveTables() {
-    List<Sheet> tabList;
     try {
       tabList = GoogleSheetsUtils.getTabList(sheetsService, fileToken);
     } catch (IOException e) {
       throw UserException.connectionError(e)
-        .message("Unable to obtain tab list for Google Sheet document " + fileToken)
+        .message("Unable to obtain tab list for Google Sheet document " + fileToken + ". " + e.getMessage())
         .build(logger);
     }
     // Add sub schemas to list, then create tables
@@ -178,7 +182,7 @@ public class GoogleSheetsDrillSchema extends AbstractSchema {
         .message(plugin.getName() + " is not writable.")
         .build(logger);
     }
-    String documentName = this.name;
+    String documentName = this.fileToken;
     return new CreateTableEntry() {
       @Override
       public Writer getWriter(PhysicalOperator child) {
@@ -191,6 +195,39 @@ public class GoogleSheetsDrillSchema extends AbstractSchema {
       }
     };
   }
+
+  @Override
+  public ModifyTableEntry modifyTable(String tableName) {
+    return child -> new GoogleSheetsInsertWriter(child, this.fileToken, tableName, schemaConfig.getUserName(), plugin);
+  }
+
+  @Override
+  public void dropTable(String indexName) {
+    logger.debug("Index name: {}", indexName);
+
+    // The GoogleSheets API will not allow you to delete a tab if the file only has one tab.  In that case,
+    // we delete the entire file.
+    if (tabList.size() == 1) {
+      Drive driveService = plugin.getDriveService(schemaConfig.getUserName());
+      try {
+        driveService.files().delete(fileToken);
+      } catch (IOException e) {
+        throw UserException.internalError(e)
+            .message("Error deleting GoogleSheets file. " + e.getMessage())
+            .build(logger);
+      }
+    }
+
+    Sheet sheetToDrop = GoogleSheetsUtils.getSheetFromTabList(indexName, tabList);
+    try {
+      GoogleSheetsUtils.removeTabFromGoogleSheet(sheetsService, fileToken, sheetToDrop);
+    } catch (IOException e) {
+      throw UserException.internalError(e)
+          .message(e.getMessage())
+          .build(logger);
+    }
+  }
+
 
   private void registerTable(String name, DynamicDrillTable table) {
     activeTables.put(name, table);

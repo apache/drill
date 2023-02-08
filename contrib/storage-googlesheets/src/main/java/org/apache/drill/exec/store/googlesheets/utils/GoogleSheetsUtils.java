@@ -35,7 +35,9 @@ import com.google.api.services.sheets.v4.Sheets;
 import com.google.api.services.sheets.v4.Sheets.Spreadsheets.Values.BatchGet;
 import com.google.api.services.sheets.v4.SheetsScopes;
 import com.google.api.services.sheets.v4.model.AddSheetRequest;
+import com.google.api.services.sheets.v4.model.AppendValuesResponse;
 import com.google.api.services.sheets.v4.model.BatchUpdateSpreadsheetRequest;
+import com.google.api.services.sheets.v4.model.DeleteSheetRequest;
 import com.google.api.services.sheets.v4.model.Request;
 import com.google.api.services.sheets.v4.model.Sheet;
 import com.google.api.services.sheets.v4.model.SheetProperties;
@@ -266,7 +268,7 @@ public class GoogleSheetsUtils {
   /**
    * Google Sheets tokens are strings of length 44 that contain upper and lower case letters, numbers and underscores.
    * This function will attempt to identify file tokens.
-   *
+   * <p>
    * Given that Google's spec for file IDs is not officially published, and can change at any time, we will keep the
    * validation as light as possible to prevent future issues, in the event Google changes their file Id structure.
    * @param id A {@link String} containing an unknown identifier
@@ -368,6 +370,25 @@ public class GoogleSheetsUtils {
    */
   public static List<List<Object>> getDataFromRange(Sheets service, String sheetID, String range) throws IOException {
     return service.spreadsheets().values().get(sheetID, range).execute().getValues();
+  }
+
+  /**
+   * Finds a {@link Sheet} from a list of tabs with a given title.  If the sheet is not present,
+   * the function will throw a User Exception.
+   * @param tabName The name of the desired sheet.
+   * @param tabList A {@link List} of {@link Sheet} objects
+   * @return The desired Sheet.
+   */
+  public static Sheet getSheetFromTabList(String tabName, List<Sheet> tabList) {
+    for (Sheet sheet : tabList) {
+      if (sheet.getProperties().getTitle().contentEquals(tabName)) {
+        return sheet;
+      }
+    }
+
+    throw UserException.dataReadError()
+        .message("Could not find sheet " + tabName)
+        .build(logger);
   }
 
   /**
@@ -592,6 +613,24 @@ public class GoogleSheetsUtils {
   }
 
   /**
+   * Removes a sheet from an existing GoogleSheets document.  This method should only be used if the GoogleSheets
+   * document has more than one tab.
+   * @param service An authenticated GoogleSheet {@link Sheets}
+   * @param fileToken The File token of the GoogleSheet containing the sheet to be deleted
+   * @param deletedTab  A {@link Sheet} which will be removed
+   * @throws IOException If anything goes wrong.
+   */
+  public static void removeTabFromGoogleSheet(Sheets service, String fileToken, Sheet deletedTab) throws IOException {
+    List<Request> requests = new ArrayList<>();
+    requests.add(new Request()
+        .setDeleteSheet(new DeleteSheetRequest().setSheetId(deletedTab.getProperties().getSheetId()))
+    );
+
+    BatchUpdateSpreadsheetRequest body = new BatchUpdateSpreadsheetRequest().setRequests(requests);
+    service.spreadsheets().batchUpdate(fileToken, body).execute();
+  }
+
+  /**
    * Accepts a list of data and writes this data to a GoogleSheet document.
    * @param service An authenticated GoogleSheet service
    * @param sheetID The SheetID.  This can be obtained from the URL of the GoogleSheet Document
@@ -607,6 +646,26 @@ public class GoogleSheetsUtils {
       .setMajorDimension("ROWS");
 
     UpdateValuesResponse result = service.spreadsheets().values().update(sheetID, range, body)
+        .setValueInputOption("RAW")
+        .execute();
+  }
+
+  /**
+   * Accepts a list of data and writes this data to a GoogleSheet document.
+   * @param service An authenticated GoogleSheet service
+   * @param sheetID The SheetID.  This can be obtained from the URL of the GoogleSheet Document
+   * @param tabName The tab name within the aforementioned GoogleSheet
+   * @param data A list of rows of the data to be inserted.
+   * @throws IOException If anything goes wrong, throw an IO exception
+   */
+  public static void appendDataToGoogleSheet(Sheets service, String sheetID, String tabName, List<List<Object>> data)
+      throws IOException {
+    String range = tabName + "!A1";
+    ValueRange body = new ValueRange()
+        .setValues(data)
+        .setMajorDimension("ROWS");
+
+    AppendValuesResponse result = service.spreadsheets().values().append(sheetID, range, body)
         .setValueInputOption("RAW")
         .execute();
   }

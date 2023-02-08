@@ -110,6 +110,12 @@ FROM `INFORMATION_SCHEMA`.`SCHEMATA`
 WHERE SCHEMA_NAME LIKE 'googlesheets%'
 ```
 
+### Implicit Metadata Fields
+GoogleSheets has two implicit metadata fields which are:
+
+* `_sheets`: This will return a list of sheet (tab) names in a given GS document
+* `_title`: You can also access the file name with the `_title` field.  Note that the file name is NOT unique and should not be used for querying data.
+
 Due to rate limits from Google, the tabs are not reported to the `INFORMATION_SCHEMA`.  However, it is possible to obtain a list of all available tabs with the following query:
 
 ```sql
@@ -118,8 +124,6 @@ FROM googlesheets.`<token>`.`<sheet>`
 LIMIT 1
 ```
 
-You can also access the file name with the `_title` field.  Note that the file name is NOT
-unique and should not be used for querying data.
 
 ### Using Aliases
 Since the sheet IDs from Google are not human readable, one way to make your life easier is to use Drill's aliasing features to provide a better name for the actual sheet name.
@@ -150,19 +154,36 @@ When Drill reads Google Sheets, it is assumed that the first row contains column
 If this is incorrect you can set the `extractHeaders` parameter to `false`and Drill will name each field `field_n` where `n` is the column index.
 
 # Writing Data To Google Sheets
-When Drill is connected to Google Sheets, you can also write data to Google Sheets. The basic procedure is
+When Drill is connected to GoogleSheets, you can also write data to Google Sheets. The basic procedure is
 the same as with any other data source.  Simply write a `CREATE TABLE AS` (CTAS) query and your data will be
-written to Google Sheets.
+written to GoogleSheets.
 
-One challenge is that once you have created the new sheet, you will have to manually retrieve the spreadsheet ID
-from Google Sheets in order to query your new data.
-
-### Dropping Tables
-At the time of implementation, it is only possible to delete tables from within a Google Sheets document. You may encounter errors if you try to delete tables from documents
-that only have one table in them.  The format for deleting a table is:
+If you use a GoogleSheets filetoken in your CTAS query, Drill will create a new tab in that GoogleSheets document. However, if you use a file name, Drill will create a new GoogleSheets document and then create a new tab within that document.  
 
 ```sql
-DROP TABLE googlesheets.<sheet id>.<tab name>
+-- This will add a tab to an existing GoogleSheets Document
+CREATE TABLE googlesheets.`2384r7wuf2934iroeci2390ue2ur3r23948230948`.`tab_name` AS SELECT * FROM data
+
+-- This will create a new GoogleSheets Document with a single tab
+CREATE TABLE googlesheets.`new_doc`.`tab1` AS SELECT * FROM data
+
+```
+
+### Inserting (Appending) to Existing GoogleSheets Tabs
+GoogleSheets also supports inserting (appending) data to existing GoogleSheets tabs.  Syntax is:
+
+```sql
+INSERT INTO googlesheets.`<file_token>`.`<tab name>` SELECT * FROM data
+```
+
+
+### Dropping Tables
+The `DROP TABLE` command will drop a tab from a GoogleSheet document.  If the document only has one tab, the entire document will be deleted.
+
+The format for deleting a table is:
+
+```sql
+DROP TABLE googlesheets.<file_token>.<tab name>
 ```
 
 # Possible Future Work
@@ -172,10 +193,6 @@ As of Drill 1.20, Drill allows you to create user and public aliases for tables 
 requires you to use a non-human readable ID to identify the Sheet.  One possible idea to make the Drill connection to Google Sheets
 much more usable would be to automatically create an alias (either public) automatically mapping the unreadable sheetID to the document title.
 This could be accomplished after the first query or after a CTAS query.
-
-### Google Drive Integration
-Integrating with Google Drive may allow additional functionality such as getting the actual document name, deleting documents and a few other basic functions. However, the
-Google Drive permissions require additional validation from Google.
 
 ### Additional Pushdowns
 The current implementation supports pushdowns for projection and limit.

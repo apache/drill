@@ -21,6 +21,7 @@ package org.apache.drill.exec.store.googlesheets.schema;
 import com.google.api.services.drive.Drive;
 import com.google.api.services.sheets.v4.Sheets;
 import org.apache.calcite.schema.Table;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.exec.planner.logical.DynamicDrillTable;
 import org.apache.drill.exec.store.AbstractSchema;
@@ -67,6 +68,11 @@ public class GoogleSheetsRootSchema extends AbstractSchema {
 
   @Override
   public AbstractSchema getSubSchema(String name) {
+    // If the name is a file token but not mixed case, get the correct file token
+    if (GoogleSheetsUtils.isProbableFileToken(name) && !StringUtils.isMixedCase(name)) {
+      name = getFileTokenWithCorrectCase(tokenMap, name);
+    }
+
     GoogleSheetsDrillSchema schema = schemas.get(name);
     // This level here represents the actual Google document. Attempt to validate that it exists, and
     // if so, add it to the schema list.  If not, throw an exception.
@@ -101,5 +107,31 @@ public class GoogleSheetsRootSchema extends AbstractSchema {
   @Override
   public String getTypeName() {
     return GoogleSheetsStoragePluginConfig.NAME;
+  }
+
+  public Map<String, String> getTokenMap() {
+    return this.tokenMap;
+  }
+
+  /**
+   * Drill automatically converts the file token to lower case during DDL queries. Since Google is case-sensitive,
+   * this method insures that we are using the correct file token.
+   * @return A file token in the correct case.
+   */
+  public static String getFileTokenWithCorrectCase(Map<String, String> tokenMap, String lowercaseToken) {
+    if (StringUtils.isMixedCase(lowercaseToken)) {
+      return lowercaseToken;
+    }
+    Set<String> tokens = tokenMap.keySet();
+
+    for (String token : tokens) {
+      if (token.toLowerCase().contentEquals(lowercaseToken)) {
+        return token;
+      }
+    }
+
+    throw UserException.internalError()
+        .message("Could not find token: " + lowercaseToken)
+        .build(logger);
   }
 }
