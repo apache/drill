@@ -1302,13 +1302,9 @@
       </dependency>
       <dependency>
         <groupId>org.apache.calcite.avatica</groupId>
-        <artifactId>avatica</artifactId>
+        <artifactId>avatica-core</artifactId>
         <version>${avatica.version}</version>
         <exclusions>
-          <exclusion>
-            <groupId>org.apache.calcite.avatica</groupId>
-            <artifactId>avatica-core</artifactId>
-          </exclusion>
           <exclusion>
             <groupId>commons-logging</groupId>
             <artifactId>commons-logging</artifactId>
