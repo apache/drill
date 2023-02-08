@@ -515,7 +515,7 @@ public class ParquetReaderUtility {
     // as we will know from the Drill version written in the files that the dates are correct
     int rowGroupIndex = 0;
     Map<String, SchemaElement> schemaElements = ParquetReaderUtility.getColNameToSchemaElementMapping(footer);
-    findDateColWithStatsLoop : for (SchemaPath schemaPath : columns) {
+    for (SchemaPath schemaPath : columns) {
       List<ColumnDescriptor> parquetColumns = footer.getFileMetaData().getSchema().getColumns();
       for (int i = 0; i < parquetColumns.size(); ++i) {
         ColumnDescriptor column = parquetColumns.get(i);
