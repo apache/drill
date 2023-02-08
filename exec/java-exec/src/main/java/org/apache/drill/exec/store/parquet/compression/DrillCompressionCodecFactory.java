@@ -17,10 +17,9 @@
  */
 package org.apache.drill.exec.store.parquet.compression;
 
-import java.util.Arrays;
 import java.util.Deque;
+import java.util.EnumSet;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.Map;
 import java.util.Set;
@@ -51,13 +50,11 @@ public class DrillCompressionCodecFactory implements CompressionCodecFactory {
   private static final Logger logger = LoggerFactory.getLogger(DrillCompressionCodecFactory.class);
 
   // The set of codecs to be handled by aircompressor
-  private static final Set<CompressionCodecName> AIRCOMPRESSOR_CODECS = new HashSet<>(
-      Arrays.asList(
-        CompressionCodecName.LZ4,
-        CompressionCodecName.LZO,
-        CompressionCodecName.SNAPPY,
-        CompressionCodecName.ZSTD
-      )
+  private static final Set<CompressionCodecName> AIRCOMPRESSOR_CODECS = EnumSet.of(
+      CompressionCodecName.LZ4,
+      CompressionCodecName.LZO,
+      CompressionCodecName.SNAPPY,
+      CompressionCodecName.ZSTD
   );
 
   // pool of reusable thread-safe aircompressor compressors (parquet-mr's factory has its own)

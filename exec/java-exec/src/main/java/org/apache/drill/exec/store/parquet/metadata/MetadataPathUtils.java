@@ -17,10 +17,14 @@
  */
 package org.apache.drill.exec.store.parquet.metadata;
 
+import org.apache.commons.io.FileUtils;
 import org.apache.drill.common.util.DrillVersionInfo;
+import org.apache.drill.shaded.guava.com.google.common.annotations.VisibleForTesting;
 import org.apache.hadoop.fs.Path;
 
 import java.util.List;
+import java.io.File;
+import java.nio.file.Files;
 import java.util.ArrayList;
 
 import static org.apache.drill.exec.store.parquet.metadata.MetadataVersion.Constants.SUPPORTED_VERSIONS;
@@ -126,4 +130,23 @@ public class MetadataPathUtils {
     return relativeFilePath;
   }
 
+  /**
+   * Helper method for checking the metadata file existence
+   *
+   * @param basePath base path containing tables to be checked for metadata files
+   * @param table table name or table path
+   */
+  @VisibleForTesting
+  public static boolean checkForMetadataFile(String basePath, String table) {
+    for (String filename: Metadata.CURRENT_METADATA_FILENAMES) {
+      File metaFile = table.startsWith(basePath)
+        ? FileUtils.getFile(table, filename)
+        : FileUtils.getFile(basePath, table, filename);
+
+      if (!Files.exists(metaFile.toPath())) {
+        return false;
+      }
+    }
+    return true;
+  }
 }

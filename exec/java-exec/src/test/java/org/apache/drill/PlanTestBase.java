@@ -35,7 +35,6 @@ import org.apache.drill.test.QueryTestUtil;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
-import java.nio.file.Paths;
 import java.util.List;
 import java.util.Stack;
 import java.util.regex.Matcher;
@@ -494,24 +493,4 @@ public class PlanTestBase extends BaseTestQuery {
     return builder.toString();
   }
 
-  /**
-   * Create a temp metadata directory to query the metadata summary cache file
-   * @param table table name or table path
-   */
-  public static void createMetadataDir(String table) throws IOException {
-    final String tmpDir;
-    try {
-      tmpDir = dirTestWatcher.getRootDir().getCanonicalPath();
-    } catch (IOException e) {
-      throw new RuntimeException(e);
-    }
-    File metadataDir = dirTestWatcher.makeRootSubDir(Paths.get(tmpDir, table, "metadataDir"));
-    File metaFile, newFile;
-    metaFile = table.startsWith(tmpDir) ? FileUtils.getFile(table, Metadata.METADATA_SUMMARY_FILENAME)
-            : FileUtils.getFile(tmpDir, table, Metadata.METADATA_SUMMARY_FILENAME);
-    File tablefile = new File(tmpDir, table);
-    newFile = new File(tablefile, "summary_meta.json");
-    FileUtils.copyFile(metaFile, newFile);
-    FileUtils.copyFileToDirectory(newFile, metadataDir);
-  }
 }
