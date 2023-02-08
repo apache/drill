@@ -360,4 +360,13 @@ public class TestBugFixes extends ClusterTest {
         .build()
         .run();
   }
+
+  @Test
+  public void testDRILL8372() throws Exception {
+    // The 1994/ subdirectory is sufficient to exhibit the bug.
+    dirTestWatcher.copyResourceToRoot(Paths.get("multilevel", "csv", "1994"));
+    // Throws "SYSTEM ERROR: IllegalStateException: Allocator[op:0:0:4:EasySubScan]
+    // closed with outstanding buffers" when the bug is present.
+    run("select * from dfs.`multilevel/csv/1994` limit 0");
+  }
 }
