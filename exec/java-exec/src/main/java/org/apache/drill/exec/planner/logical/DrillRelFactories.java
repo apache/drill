@@ -97,7 +97,7 @@ public class DrillRelFactories {
 
     @Override
     public RelNode createProject(RelNode input, List<RelHint> hints, List<? extends RexNode> childExprs,
-      List<? extends String> fieldNames) {
+      List<? extends String> fieldNames, Set<CorrelationId> variablesSet) {
       RelOptCluster cluster = input.getCluster();
       RelDataType rowType =
         RexUtil.createStructType(cluster.getTypeFactory(), childExprs, fieldNames, null);

@@ -33,27 +33,17 @@ import java.util.Map;
 public class TestTimestampAddDiffFunctions extends ClusterTest {
 
   private final List<String> QUALIFIERS = Arrays.asList(
-      "FRAC_SECOND",
+      "MILLISECOND",
       "MICROSECOND",
       "NANOSECOND",
-      "SQL_TSI_FRAC_SECOND",
-      "SQL_TSI_MICROSECOND",
       "SECOND",
-      "SQL_TSI_SECOND",
       "MINUTE",
-      "SQL_TSI_MINUTE",
       "HOUR",
-      "SQL_TSI_HOUR",
       "DAY",
-      "SQL_TSI_DAY",
       "WEEK",
-      "SQL_TSI_WEEK",
       "MONTH",
-      "SQL_TSI_MONTH",
       "QUARTER",
-      "SQL_TSI_QUARTER",
-      "YEAR",
-      "SQL_TSI_YEAR");
+      "YEAR");
 
   @BeforeClass
   public static void setup() throws Exception {
@@ -192,11 +182,11 @@ public class TestTimestampAddDiffFunctions extends ClusterTest {
   @Test // DRILL-6967
   public void testTimestampDiffQuarter() throws Exception {
     String query =
-        "SELECT TIMESTAMPDIFF(SQL_TSI_QUARTER, date '1996-03-09', date '1998-03-09') AS col1," +
+        "SELECT TIMESTAMPDIFF(QUARTER, date '1996-03-09', date '1998-03-09') AS col1," +
                 "TIMESTAMPDIFF(QUARTER, date '2019-01-01', date '2019-01-17') AS col2," +
-                "TIMESTAMPDIFF(SQL_TSI_QUARTER, date '2019-01-01', date '2019-03-31') AS col3," +
+                "TIMESTAMPDIFF(QUARTER, date '2019-01-01', date '2019-03-31') AS col3," +
                 "TIMESTAMPDIFF(QUARTER, date '2019-01-01', date '2019-04-01') AS col4," +
-                "TIMESTAMPDIFF(SQL_TSI_QUARTER, date '1970-01-01', date '2019-01-11') AS col5";
+                "TIMESTAMPDIFF(QUARTER, date '1970-01-01', date '2019-01-11') AS col5";
 
     testBuilder()
         .sqlQuery(query)

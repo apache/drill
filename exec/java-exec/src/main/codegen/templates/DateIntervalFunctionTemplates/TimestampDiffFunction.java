@@ -58,9 +58,11 @@ public class ${className} {
 
     public void eval() {
     <#if unit == "Nanosecond">
-      out.value = (right.value - left.value) * 1000000;
+      out.value = (right.value - left.value) * 1_000_000;
     <#elseif unit == "Microsecond">
-      out.value = (right.value - left.value) * 1000;
+      out.value = (right.value - left.value) * 1_000;
+    <#elseif unit == "Millisecond">
+      out.value = right.value - left.value;
     <#elseif unit == "Second">
       out.value = (right.value - left.value) / org.apache.drill.exec.vector.DateUtilities.secondsToMillis;
     <#elseif unit == "Minute">
