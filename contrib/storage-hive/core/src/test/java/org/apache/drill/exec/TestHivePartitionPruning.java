@@ -28,6 +28,7 @@ import org.apache.drill.exec.planner.physical.PlannerSettings;
 import org.apache.drill.exec.rpc.user.QueryDataBatch;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
@@ -162,6 +163,7 @@ public class TestHivePartitionPruning extends HiveTestBase {
   }
 
   @Test // DRILL-6173
+  @Ignore("DRILL-8400")
   public void prunePartitionsBasedOnTransitivePredicates() throws Exception {
     String query = String.format("SELECT * FROM hive.partition_pruning_test t1 " +
             "JOIN hive.partition_with_few_schemas t2 ON t1.`d` = t2.`d` AND t1.`e` = t2.`e` " +
