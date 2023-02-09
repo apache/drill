@@ -239,7 +239,7 @@
     </dependency>
     <dependency>
       <groupId>org.apache.calcite.avatica</groupId>
-      <artifactId>avatica</artifactId>
+      <artifactId>avatica-core</artifactId>
     </dependency>
     <dependency>
       <groupId>net.sf.jpam</groupId>
