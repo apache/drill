@@ -48,15 +48,13 @@
     </rollingPolicy>
   </appender>
   -->
-  <logger name="org.apache.drill" additivity="false">
-    <level value="error" />
+  <logger name="org.apache.drill" additivity="false" level="error">
     <!--   <appender-ref ref="SOCKET" /> -->
     <appender-ref ref="STDOUT" />
 <!--     <appender-ref ref="FILE" /> -->
   </logger>
 
-  <root>
-    <level value="error" />
+  <root level="error">
     <!-- <appender-ref ref="SOCKET" /> -->
     <appender-ref ref="STDOUT" />
 <!--     <appender-ref ref="FILE" /> -->
