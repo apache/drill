@@ -24,16 +24,13 @@
             <pattern>%d{HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n</pattern>
         </encoder>
     </appender>
-    <logger name="org.apache.drill" additivity="false">
-        <level value="${DRILL_LOG_LEVEL:-info}" />
+    <logger name="org.apache.drill" additivity="false" level="${DRILL_LOG_LEVEL:-info}" >
         <appender-ref ref="STDOUT" />
     </logger>
-    <logger name="query.logger" additivity="false">
-        <level value="${DRILL_LOG_LEVEL:-info}" />
+    <logger name="query.logger" additivity="false" level="${DRILL_LOG_LEVEL:-info}">
         <appender-ref ref="STDOUT" />
     </logger>
-    <root>
-        <level value="${DRILL_LOG_LEVEL:-info}" />
+    <root level="${DRILL_LOG_LEVEL:-info}">
         <appender-ref ref="STDOUT" />
     </root>
 </configuration>

@@ -30,13 +30,11 @@
     <RemoteHosts>${LILITH_HOSTNAME:-localhost}</RemoteHosts>
   </appender>
 
-  <logger name="org.apache.drill" additivity="false">
-    <level value="debug"/>
+  <logger name="org.apache.drill" additivity="false" level="debug">
     <appender-ref ref="SOCKET"/>
   </logger>
 
-  <logger name="query.logger" additivity="false">
-    <level value="info"/>
+  <logger name="query.logger" additivity="false" level="info">
     <appender-ref ref="SOCKET"/>
   </logger>
   -->
@@ -49,8 +47,7 @@
     </encoder>
   </appender>
 
-  <root>
-    <level value="error"/>
+  <root level="error">
     <!-- Uncomment the next line (and the lines above) to be able to use Lilith for viewing log events -->
     <!-- <appender-ref ref="SOCKET"/>-->
     <!-- <appender-ref ref="STDOUT"/> -->
