@@ -203,8 +203,17 @@ public class BaseTestHiveImpersonation extends BaseTestImpersonation {
 
   static void queryViewNotAuthorized(String viewName) throws Exception {
     String query = String.format("SELECT rownum FROM %s.tmp.%s ORDER BY rownum LIMIT 1", MINI_DFS_STORAGE_PLUGIN_NAME, viewName);
-    client.errorMsgTestHelper(query, String.format(
-        "Not authorized to read view [%s] in schema [%s.tmp]", viewName, MINI_DFS_STORAGE_PLUGIN_NAME));
+    String expectedMsg = String.format(
+      "Not authorized to read view [%s] in schema [%s.tmp]",
+      viewName,
+      MINI_DFS_STORAGE_PLUGIN_NAME
+    );
+
+    client.queryBuilder()
+      .sql(query)
+      .userExceptionMatcher()
+      .include(expectedMsg)
+      .match();
   }
 
   static void createTableWithStoragePermissions(final Driver hiveDriver, final String db, final String tbl, final String tblDef,

@@ -222,8 +222,14 @@ public class TestSqlStdBasedAuthorization extends BaseTestHiveImpersonation {
     client = client.updateClient(cluster, client, org1Users[0]);
     run("USE " + hivePluginName + "." + db_general);
     final String query = String.format("SELECT * FROM %s ORDER BY name LIMIT 2", g_voter_role0);
-    client.errorMsgTestHelper(query, "Principal [name=user0_1, type=USER] does not have following privileges for " +
-        "operation QUERY [[SELECT] on Object [type=TABLE_OR_VIEW, name=db_general.voter_role0]]\n");
+    String expectedMsg = "Principal [name=user0_1, type=USER] does not have following privileges for " +
+        "operation QUERY [[SELECT] on Object [type=TABLE_OR_VIEW, name=db_general.voter_role0]]\n";
+
+    client.queryBuilder()
+      .sql(query)
+      .userExceptionMatcher()
+      .include(expectedMsg)
+      .match();
   }
 
   @Test
@@ -264,8 +270,14 @@ public class TestSqlStdBasedAuthorization extends BaseTestHiveImpersonation {
     client = client.updateClient(cluster, client, org1Users[1]);
     run("USE " + hivePluginName + "." + db_general);
     final String query = String.format("SELECT * FROM %s ORDER BY name LIMIT 2", g_student_user0);
-    client.errorMsgTestHelper(query, "Principal [name=user1_1, type=USER] does not have following privileges for " +
-        "operation QUERY [[SELECT] on Object [type=TABLE_OR_VIEW, name=db_general.student_user0]]\n");
+    String expectedMsg = "Principal [name=user1_1, type=USER] does not have following privileges for " +
+        "operation QUERY [[SELECT] on Object [type=TABLE_OR_VIEW, name=db_general.student_user0]]\n";
+
+    client.queryBuilder()
+      .sql(query)
+      .userExceptionMatcher()
+      .include(expectedMsg)
+      .match();
   }
 
   @Test
@@ -294,9 +306,16 @@ public class TestSqlStdBasedAuthorization extends BaseTestHiveImpersonation {
     run("USE " + hivePluginName + "." + db_general);
     final String query =
         String.format("SELECT * FROM %s v JOIN %s s on v.name = s.name limit 2;", g_voter_role0, g_student_user2);
-    client.errorMsgTestHelper(query, "Principal [name=user1_1, type=USER] does not have following privileges for " +
-        "operation QUERY [[SELECT] on Object [type=TABLE_OR_VIEW, name=db_general.student_user2]]");
+    String expectedMsg = "Principal [name=user1_1, type=USER] does not have following privileges for " +
+        "operation QUERY [[SELECT] on Object [type=TABLE_OR_VIEW, name=db_general.student_user2]]";
+
+    client.queryBuilder()
+      .sql(query)
+      .userExceptionMatcher()
+      .include(expectedMsg)
+      .match();
   }
+
 
   @Test
   public void user1_allowed_vw_voter_role0_but_forbidden_vw_student_user2() throws Exception {
@@ -306,8 +325,14 @@ public class TestSqlStdBasedAuthorization extends BaseTestHiveImpersonation {
     run("USE " + hivePluginName + "." + db_general);
     final String query =
         String.format("SELECT * FROM %s v JOIN %s s on v.name = s.name limit 2;", vw_voter_role0, vw_student_user2);
-    client.errorMsgTestHelper(query, "Principal [name=user1_1, type=USER] does not have following privileges for " +
-        "operation QUERY [[SELECT] on Object [type=TABLE_OR_VIEW, name=db_general.vw_student_user2]]");
+    String expectedMsg = "Principal [name=user1_1, type=USER] does not have following privileges for " +
+        "operation QUERY [[SELECT] on Object [type=TABLE_OR_VIEW, name=db_general.vw_student_user2]]";
+
+    client.queryBuilder()
+      .sql(query)
+      .userExceptionMatcher()
+      .include(expectedMsg)
+      .match();
   }
 
   @Test
@@ -400,7 +425,11 @@ public class TestSqlStdBasedAuthorization extends BaseTestHiveImpersonation {
             "operation QUERY [[SELECT] on Object [type=TABLE_OR_VIEW, name=db_general.%s]]\n",
         usr, viewName);
     client = client.updateClient(cluster, client, usr);
-    client.errorMsgTestHelper(query, expectedError);
+    client.queryBuilder()
+      .sql(query)
+      .userExceptionMatcher()
+      .include(expectedError)
+      .match();
   }
 
   private static void createHiveView(Driver driver, String db, String viewName, String tblName) {

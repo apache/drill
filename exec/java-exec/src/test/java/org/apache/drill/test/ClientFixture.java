@@ -46,10 +46,6 @@ import org.apache.drill.exec.physical.rowSet.RowSetBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.core.StringContains.containsString;
-import static org.junit.Assert.fail;
-
 /**
  * Represents a Drill client. Provides many useful test-specific operations such
  * as setting system options, running queries, and using the @{link TestBuilder}
@@ -414,26 +410,6 @@ public class ClientFixture implements AutoCloseable {
       return exec(in);
     } catch (IOException e) {
       throw new IllegalStateException(e);
-    }
-  }
-
-  /**
-   * Utility method which tests given query produces a {@link UserException} and the exception message contains
-   * the given message.
-   * @param testSqlQuery Test query
-   * @param expectedErrorMsg Expected error message.
-   */
-  public void errorMsgTestHelper(String testSqlQuery, String expectedErrorMsg) throws Exception {
-    try {
-      this.queryBuilder().sql(testSqlQuery).run();
-      fail("Expected a UserException when running " + testSqlQuery);
-    } catch (UserException actualException) {
-      try {
-        assertThat("message of UserException when running " + testSqlQuery, actualException.getMessage(), containsString(expectedErrorMsg));
-      } catch (AssertionError e) {
-        e.addSuppressed(actualException);
-        throw e;
-      }
     }
   }
 

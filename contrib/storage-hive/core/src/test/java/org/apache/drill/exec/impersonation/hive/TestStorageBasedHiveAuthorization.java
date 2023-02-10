@@ -467,9 +467,11 @@ public class TestStorageBasedHiveAuthorization extends BaseTestHiveImpersonation
   }
 
   private void queryHiveViewFailed(String db, String viewName) throws Exception {
-    client.errorMsgTestHelper(
-        String.format("SELECT * FROM hive.%s.%s LIMIT 2", db, viewName),
-        "Failure validating a view your query is dependent upon.");
+    client.queryBuilder()
+      .sql(String.format("SELECT * FROM hive.%s.%s LIMIT 2", db, viewName))
+      .userExceptionMatcher()
+      .include("Failure validating a view your query is dependent upon.")
+      .match();
   }
 
   /**
@@ -876,9 +878,10 @@ public class TestStorageBasedHiveAuthorization extends BaseTestHiveImpersonation
   }
 
   private static void queryTableNotFound(String db, String table) throws Exception {
-    client.errorMsgTestHelper(
-        String.format("SELECT * FROM hive.%s.%s LIMIT 2", db, table),
-        String.format("Object '%s' not found within 'hive.%s'", table, db));
+    client.queryBuilder()
+      .sql(String.format("SELECT * FROM hive.%s.%s LIMIT 2", db, table))
+      .userExceptionMatcher()
+      .include("Failure validating a view your query is dependent upon.")
+      .match();
   }
-
 }
