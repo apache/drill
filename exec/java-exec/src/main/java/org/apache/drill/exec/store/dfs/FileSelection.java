@@ -195,6 +195,20 @@ public class FileSelection implements DrillTableSelection {
     return fileSel;
   }
 
+  public FileSelection selectAnyFile(DrillFileSystem fs) throws IOException {
+    List<FileStatus> statuses = getStatuses(fs);
+    List<FileStatus> anyFile = Lists.newArrayList();
+
+    for (FileStatus status : statuses) {
+      anyFile.addAll(DrillFileSystemUtil.anyFile(fs, status.getPath()));
+
+      if (anyFile.size() > 0) {
+        break;
+      }
+    }
+    return create(anyFile, null, selectionRoot);
+  }
+
   public FileStatus getFirstPath(DrillFileSystem fs) throws IOException {
     return getStatuses(fs).get(0);
   }

@@ -31,6 +31,7 @@ import org.apache.drill.categories.SqlTest;
 import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.common.exceptions.UserRemoteException;
 import org.apache.drill.exec.ExecConstants;
+import org.apache.drill.exec.util.StoragePluginTestUtils;
 import org.apache.drill.test.ClusterFixture;
 import org.apache.drill.test.ClusterTest;
 import org.apache.drill.test.TestBuilder;
@@ -49,6 +50,15 @@ public class TestSelectWithOption extends ClusterTest {
   @BeforeClass
   public static void setUp() throws Exception {
     startCluster(ClusterFixture.builder(dirTestWatcher));
+
+    // A tmp workspace with a default format defined for tests that need to
+    // query empty directories without encountering an error.
+    cluster.defineWorkspace(
+        StoragePluginTestUtils.DFS_PLUGIN_NAME,
+        "tmp_default_format",
+        dirTestWatcher.getDfsTestTmpDir().getAbsolutePath(),
+        "csvh"
+    );
   }
 
   private File genCSVFile(String name, String... rows) throws IOException {
@@ -314,7 +324,7 @@ public class TestSelectWithOption extends ClusterTest {
     String tableName = "emptyTable";
     dirTestWatcher.makeTestTmpSubDir(Paths.get(tableName));
     testBuilder()
-      .sqlQuery("select * from table(dfs.tmp.`%s`(type=>'text', fieldDelimiter => ',', extractHeader => true))", tableName)
+      .sqlQuery("select * from table(dfs.tmp_default_format.`%s`(type=>'text', fieldDelimiter => ',', extractHeader => true))", tableName)
       .expectsEmptyResultSet()
       .go();
   }

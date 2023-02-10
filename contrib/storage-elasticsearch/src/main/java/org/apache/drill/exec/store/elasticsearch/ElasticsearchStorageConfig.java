@@ -24,7 +24,9 @@ import com.fasterxml.jackson.annotation.JsonTypeName;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.ObjectWriter;
+import org.apache.drill.common.PlanStringBuilder;
 import org.apache.drill.common.logical.StoragePluginConfig;
+import org.apache.drill.common.logical.security.PlainCredentialsProvider;
 import org.apache.drill.exec.store.security.CredentialProviderUtils;
 import org.apache.drill.common.logical.security.CredentialsProvider;
 import org.apache.drill.exec.store.security.UsernamePasswordCredentials;
@@ -63,36 +65,27 @@ public class ElasticsearchStorageConfig extends StoragePluginConfig {
       @JsonProperty(USERNAME) String username,
       @JsonProperty(PASSWORD) String password,
       @JsonProperty(PATH_PREFIX) String pathPrefix,
+      @JsonProperty("authMode") String authMode,
       @JsonProperty(CREDENTIALS_PROVIDER) CredentialsProvider credentialsProvider) {
-    super(CredentialProviderUtils.getCredentialsProvider(username, password, credentialsProvider), credentialsProvider == null);
+    super(CredentialProviderUtils.getCredentialsProvider(username, password, credentialsProvider),
+        credentialsProvider == null, AuthMode.parseOrDefault(authMode, AuthMode.SHARED_USER));
     this.hosts = hosts;
     this.pathPrefix = pathPrefix;
   }
 
-  public List<String> getHosts() {
-    return hosts;
+  private ElasticsearchStorageConfig(ElasticsearchStorageConfig that, CredentialsProvider credentialsProvider) {
+    super(getCredentialsProvider(credentialsProvider), credentialsProvider == null, that.authMode);
+    this.hosts = that.hosts;
+    this.pathPrefix = that.pathPrefix;
   }
 
-  public String getPathPrefix() {
-    return pathPrefix;
+  @Override
+  public ElasticsearchStorageConfig updateCredentialProvider(CredentialsProvider credentialsProvider) {
+    return new ElasticsearchStorageConfig(this, credentialsProvider);
   }
 
-  public String getUsername() {
-    if (!directCredentials) {
-      return null;
-    }
-    return getUsernamePasswordCredentials()
-      .map(UsernamePasswordCredentials::getUsername)
-      .orElse(null);
-  }
-
-  public String getPassword() {
-    if (!directCredentials) {
-      return null;
-    }
-    return getUsernamePasswordCredentials()
-      .map(UsernamePasswordCredentials::getPassword)
-      .orElse(null);
+  private static CredentialsProvider getCredentialsProvider(CredentialsProvider credentialsProvider) {
+    return credentialsProvider != null ? credentialsProvider : PlainCredentialsProvider.EMPTY_CREDENTIALS_PROVIDER;
   }
 
   @JsonIgnore
@@ -100,6 +93,18 @@ public class ElasticsearchStorageConfig extends StoragePluginConfig {
     return new UsernamePasswordCredentials.Builder()
       .setCredentialsProvider(credentialsProvider)
       .build();
+  }
+
+  /**
+   * Gets the credentials. This method is used when user translation is enabled.
+   * @return An {@link Optional} containing {@link UsernamePasswordCredentials} from the config.
+   */
+  @JsonIgnore
+  public Optional<UsernamePasswordCredentials> getUsernamePasswordCredentials(String username) {
+    return new UsernamePasswordCredentials.Builder()
+        .setCredentialsProvider(credentialsProvider)
+        .setQueryUser(username)
+        .build();
   }
 
   @JsonIgnore
@@ -118,6 +123,29 @@ public class ElasticsearchStorageConfig extends StoragePluginConfig {
     return builder.build();
   }
 
+  /**
+   * This method is used when user translation is enabled.
+   * @param queryUser The user who submitted the query
+   * @return A map of the configuration details.
+   * @throws JsonProcessingException If JSON is unparsable, throw exception
+   */
+  @JsonIgnore
+  public Map<String, Object> toConfigMap(String queryUser)
+      throws JsonProcessingException {
+    Map<String, String> credentials = new HashMap<>(credentialsProvider.getUserCredentials(queryUser));
+    ImmutableMap.Builder<String, Object> builder = ImmutableMap.builder();
+    builder.put(HOSTS, OBJECT_WRITER.writeValueAsString(hosts));
+    builder.put(PATH_PREFIX, pathPrefix != null ? pathPrefix : EMPTY_STRING);
+    builder.put(USERNAME, credentials.getOrDefault(USERNAME, EMPTY_STRING));
+    builder.put(PASSWORD, credentials.getOrDefault(PASSWORD, EMPTY_STRING));
+
+    credentials.remove(USERNAME);
+    credentials.remove(PASSWORD);
+    builder.putAll(credentials);
+    return builder.build();
+  }
+
+
   @Override
   public boolean equals(Object o) {
     if (this == o) {
@@ -127,12 +155,22 @@ public class ElasticsearchStorageConfig extends StoragePluginConfig {
       return false;
     }
     ElasticsearchStorageConfig that = (ElasticsearchStorageConfig) o;
-    return Objects.equals(hosts, that.hosts)
-        && Objects.equals(credentialsProvider, that.credentialsProvider);
+    return Objects.equals(hosts, that.hosts) &&
+        Objects.equals(pathPrefix, that.pathPrefix) &&
+        Objects.equals(credentialsProvider, that.credentialsProvider);
   }
 
   @Override
   public int hashCode() {
-    return Objects.hash(hosts, credentialsProvider);
+    return Objects.hash(hosts, pathPrefix, credentialsProvider);
+  }
+
+  @Override
+  public String toString() {
+    return new PlanStringBuilder(this)
+        .field("hosts", hosts)
+        .field("pathPrefix", pathPrefix)
+        .field("credentialsProvider", credentialsProvider)
+        .toString();
   }
 }

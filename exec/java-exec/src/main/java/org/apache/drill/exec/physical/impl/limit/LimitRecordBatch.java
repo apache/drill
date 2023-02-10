@@ -47,6 +47,9 @@ public class LimitRecordBatch extends AbstractSingleRecordBatch<Limit> {
   // Start offset of the records
   private int recordStartOffset;
   private int numberOfRecords;
+  // We cannot simply rely on BatchState.FIRST in our control logic because
+  // we reset when we encounter an EMIT outcome. Because of this we must keep
+  // our own, resettable, first batch indicator variable.
   private boolean first = true;
   private final List<TransferPair> transfers = Lists.newArrayList();
 
@@ -59,38 +62,37 @@ public class LimitRecordBatch extends AbstractSingleRecordBatch<Limit> {
 
   @Override
   public IterOutcome innerNext() {
-    if (!first && !needMoreRecords(numberOfRecords)) {
-      outgoingSv.setRecordCount(0);
-      incoming.cancel();
-      IterOutcome upStream = next(incoming);
-
-      while (upStream == IterOutcome.OK || upStream == IterOutcome.OK_NEW_SCHEMA) {
-        // Clear the memory for the incoming batch
-        VectorAccessibleUtilities.clear(incoming);
-
-        // clear memory for incoming sv (if any)
-        if (incomingSv != null) {
-          incomingSv.clear();
-        }
-        upStream = next(incoming);
-      }
-      // If EMIT that means leaf operator is UNNEST, in this case refresh the limit states and return EMIT.
-      if (upStream == EMIT) {
-        // Clear the memory for the incoming batch
-        VectorAccessibleUtilities.clear(incoming);
-
-        // clear memory for incoming sv (if any)
-        if (incomingSv != null) {
-          incomingSv.clear();
-        }
-
-        refreshLimitState();
-        return upStream;
-      }
-      // other leaf operator behave as before.
-      return NONE;
+    if (first || needMoreRecords(numberOfRecords)) {
+      // We still have work to do. Pass control to the parent which will obtain
+      // the next batch and call us back in doWork.
+      return super.innerNext();
     }
-    return super.innerNext();
+
+    // Our work for downstream is done but we still need to wind up affairs
+    // upstream.
+    outgoingSv.setRecordCount(0);
+    incoming.cancel();
+
+    // Spool through any incoming batches containing data.
+    IterOutcome upStream;
+    do {
+      upStream = next(incoming);
+      // Free memory allocated for the incoming batch.
+      VectorAccessibleUtilities.clear(incoming);
+      if (incomingSv != null) {
+        incomingSv.clear();
+      }
+    } while (upStream == IterOutcome.OK || upStream == IterOutcome.OK_NEW_SCHEMA);
+
+    // Special case: EMIT. This means that the leaf operator is an
+    // UNNEST and we refresh the limit states and return EMIT.
+    if (upStream == EMIT) {
+      refreshLimitState();
+      return upStream;
+    }
+
+    // Finally, we return NONE as we must since we cancelled execution.
+    return NONE;
   }
 
   @Override

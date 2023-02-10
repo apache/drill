@@ -17,38 +17,41 @@
  */
 package org.apache.drill.exec.store.elasticsearch;
 
-import org.apache.drill.common.logical.security.PlainCredentialsProvider;
+import org.apache.drill.common.logical.StoragePluginConfig.AuthMode;
 import org.apache.drill.shaded.guava.com.google.common.collect.ImmutableMap;
 import org.apache.drill.test.ClusterFixture;
 import org.apache.drill.test.ClusterTest;
-import org.apache.http.HttpHost;
-import org.elasticsearch.action.admin.indices.delete.DeleteIndexRequest;
-import org.elasticsearch.action.admin.indices.refresh.RefreshRequest;
-import org.elasticsearch.action.index.IndexRequest;
-import org.elasticsearch.client.RequestOptions;
-import org.elasticsearch.client.RestClient;
-import org.elasticsearch.client.RestHighLevelClient;
-import org.elasticsearch.client.indices.CreateIndexRequest;
-import org.elasticsearch.xcontent.XContentBuilder;
-import org.elasticsearch.xcontent.XContentFactory;
+import org.json.simple.JSONObject;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import co.elastic.clients.elasticsearch.ElasticsearchClient;
+import co.elastic.clients.elasticsearch.core.IndexRequest;
+import co.elastic.clients.elasticsearch.indices.CreateIndexRequest;
+import co.elastic.clients.elasticsearch.indices.DeleteIndexRequest;
+import co.elastic.clients.elasticsearch.indices.RefreshRequest;
+import co.elastic.clients.json.JsonData;
 
 import java.io.IOException;
-import java.util.ArrayList;
+import java.io.Reader;
+import java.io.StringReader;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 
 import static org.apache.drill.test.TestBuilder.listOf;
 import static org.apache.drill.test.TestBuilder.mapOf;
 
 public class ElasticComplexTypesTest extends ClusterTest {
 
-  private static final List<String> indexNames = new ArrayList<>();
-
-  public static RestHighLevelClient restHighLevelClient;
+  private static final Logger logger = LoggerFactory.getLogger(ElasticComplexTypesTest.class);
+  private static final List<String> indexNames = new LinkedList<>();
+  private static ElasticsearchClient elasticsearchClient;
 
   @BeforeClass
   public static void init() throws Exception {
@@ -57,57 +60,81 @@ public class ElasticComplexTypesTest extends ClusterTest {
 
     ElasticsearchStorageConfig config = new ElasticsearchStorageConfig(
         Collections.singletonList(TestElasticsearchSuite.getAddress()),
-        null, null, null, PlainCredentialsProvider.EMPTY_CREDENTIALS_PROVIDER);
+        TestElasticsearchSuite.ELASTICSEARCH_USERNAME,
+        TestElasticsearchSuite.ELASTICSEARCH_PASSWORD,
+        null, AuthMode.SHARED_USER.name(),
+        null
+    );
     config.setEnabled(true);
     cluster.defineStoragePlugin("elastic", config);
 
+    elasticsearchClient = TestElasticsearchSuite.getESClient();
     prepareData();
   }
 
   @AfterClass
   public static void cleanUp() throws IOException {
-    for (String indexName : indexNames) {
-      restHighLevelClient.indices().delete(new DeleteIndexRequest(indexName), RequestOptions.DEFAULT);
-    }
+    DeleteIndexRequest deleteIndexRequest = new DeleteIndexRequest.Builder()
+      .index(indexNames)
+      .build();
+
+    elasticsearchClient.indices().delete(deleteIndexRequest);
     TestElasticsearchSuite.tearDownCluster();
   }
 
   private static void prepareData() throws IOException {
-    restHighLevelClient = new RestHighLevelClient(
-      RestClient.builder(HttpHost.create(TestElasticsearchSuite.elasticsearch.getHttpHostAddress())));
+    {
+      indexNames.add("arr");
+      CreateIndexRequest createIndexRequest = new CreateIndexRequest.Builder()
+          .index("arr")
+          .build();
+      elasticsearchClient.indices().create(createIndexRequest);
 
-    String indexName = "arr";
-    indexNames.add(indexName);
-    CreateIndexRequest createIndexRequest = new CreateIndexRequest(indexName);
+      final Reader input1 = new StringReader(
+        JSONObject.toJSONString(ImmutableMap.of(
+          "string_arr", Arrays.asList("a", "b", "c", "d"),
+          "int_arr", Arrays.asList(1, 2, 3, 4, 0),
+          "nest_int_arr", Arrays.asList(Arrays.asList(1, 2), Arrays.asList(3, 4, 0))
+        ))
+      );
+      IndexRequest<JsonData> request = IndexRequest.of(i -> i
+          .index("arr")
+          .withJson(input1)
+      );
+      logger.debug("Insert response {}", elasticsearchClient.index(request));
+    }
+    {
+      indexNames.add("map");
+      CreateIndexRequest createIndexRequest = new CreateIndexRequest.Builder()
+          .index("map")
+          .build();
+      elasticsearchClient.indices().create(createIndexRequest);
 
-    restHighLevelClient.indices().create(createIndexRequest, RequestOptions.DEFAULT);
+      Map<String, Object> map = ImmutableMap.of("a", 123, "b", "abc");
+      Map<String, Object> nested_map = ImmutableMap.of(
+        "a", 123,
+        "b", ImmutableMap.of("c", "abc")
+      );
+      final Reader input1 = new StringReader(
+        JSONObject.toJSONString(ImmutableMap.of(
+          "prim_field", 321,
+          "nest_field", map,
+          "more_nest_field", nested_map,
+          "map_arr", Collections.singletonList(nested_map)
+        ))
+      );
+      IndexRequest<JsonData> request = IndexRequest.of(i -> i
+          .index("map")
+          .withJson(input1)
+      );
+      logger.debug("Insert response {}", elasticsearchClient.index(request));
 
-    XContentBuilder builder = XContentFactory.jsonBuilder();
-    builder.startObject();
-    builder.field("string_arr", Arrays.asList("a", "b", "c", "d"));
-    builder.field("int_arr", Arrays.asList(1, 2, 3, 4, 0));
-    builder.field("nest_int_arr", Arrays.asList(Arrays.asList(1, 2), Arrays.asList(3, 4, 0)));
-    builder.endObject();
-    IndexRequest indexRequest = new IndexRequest(indexName).source(builder);
-    restHighLevelClient.index(indexRequest, RequestOptions.DEFAULT);
-    restHighLevelClient.indices().refresh(new RefreshRequest(indexName), RequestOptions.DEFAULT);
-
-    indexName = "map";
-    indexNames.add(indexName);
-    createIndexRequest = new CreateIndexRequest(indexName);
-
-    restHighLevelClient.indices().create(createIndexRequest, RequestOptions.DEFAULT);
-
-    builder = XContentFactory.jsonBuilder();
-    builder.startObject();
-    builder.field("prim_field", 321);
-    builder.field("nest_field", ImmutableMap.of("a", 123, "b", "abc"));
-    builder.field("more_nest_field", ImmutableMap.of("a", 123, "b", ImmutableMap.of("c", "abc")));
-    builder.field("map_arr", Collections.singletonList(ImmutableMap.of("a", 123, "b", ImmutableMap.of("c", "abc"))));
-    builder.endObject();
-    indexRequest = new IndexRequest(indexName).source(builder);
-    restHighLevelClient.index(indexRequest, RequestOptions.DEFAULT);
-    restHighLevelClient.indices().refresh(new RefreshRequest(indexName), RequestOptions.DEFAULT);
+      RefreshRequest refreshRequest = new RefreshRequest.Builder()
+          .index(indexNames)
+          .build();
+      elasticsearchClient.indices().refresh(refreshRequest);
+      logger.debug("Data preparation complete.");
+    }
   }
 
   @Test

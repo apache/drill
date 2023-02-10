@@ -20,6 +20,9 @@ package org.apache.drill.exec.physical.impl.join;
 import org.apache.drill.categories.OperatorTest;
 import org.apache.drill.common.exceptions.UserRemoteException;
 import org.apache.drill.exec.planner.physical.PlannerSettings;
+import org.apache.drill.exec.store.dfs.FileSystemConfig;
+import org.apache.drill.exec.store.dfs.WorkspaceConfig;
+import org.apache.drill.exec.util.StoragePluginTestUtils;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -35,15 +38,32 @@ public class TestJoinEmptyDirTable extends JoinTestBase {
   private static final String EMPTY_DIRECTORY = "empty_directory";
 
   @BeforeClass
-  public static void setupTestFiles() {
+  public static void setupTestFiles() throws Exception {
     dirTestWatcher.makeTestTmpSubDir(Paths.get(EMPTY_DIRECTORY));
+    FileSystemConfig dfsConfig = (FileSystemConfig) getDrillbitContext()
+        .getStorage()
+        .getDefinedConfig(StoragePluginTestUtils.DFS_PLUGIN_NAME);
+
+    String tmpWorkspacePath = dfsConfig.getWorkspaces()
+        .get(StoragePluginTestUtils.TMP_SCHEMA)
+        .getLocation();
+
+    // A tmp workspace with a default format defined for tests that need to
+    // query empty directories without encountering an error.
+    WorkspaceConfig tmpDefaultFormatConfig = new WorkspaceConfig(
+        tmpWorkspacePath,
+        true,
+        "csvh",
+        false
+    );
+    dfsConfig.getWorkspaces().put("tmp_default_format", tmpDefaultFormatConfig);
   }
 
   @Test
   public void testHashInnerJoinWithLeftEmptyDirTable() throws Exception {
     try {
       String query = String.format("select t1.`employee_id`, t1.`full_name`, t2.`employee_id`, t2.`full_name` " +
-          "from dfs.tmp.`%s` t1 inner join cp.`employee.json` t2 on t1.`full_name` = t2.`full_name`", EMPTY_DIRECTORY);
+          "from dfs.tmp_default_format.`%s` t1 inner join cp.`employee.json` t2 on t1.`full_name` = t2.`full_name`", EMPTY_DIRECTORY);
       final int expectedRecordCount = 0;
 
       enableJoin(true, false, false);
@@ -59,7 +79,7 @@ public class TestJoinEmptyDirTable extends JoinTestBase {
   public void testHashInnerJoinWithRightEmptyDirTable() throws Exception {
     try {
       String query = String.format("select t1.`employee_id`, t1.`full_name`, t2.`employee_id`, t2.`full_name` " +
-          "from cp.`employee.json` t1 inner join dfs.tmp.`%s` t2 on t1.`full_name` = t2.`full_name`", EMPTY_DIRECTORY);
+          "from cp.`employee.json` t1 inner join dfs.tmp_default_format.`%s` t2 on t1.`full_name` = t2.`full_name`", EMPTY_DIRECTORY);
       final int expectedRecordCount = 0;
 
       enableJoin(true, false, false);
@@ -75,7 +95,7 @@ public class TestJoinEmptyDirTable extends JoinTestBase {
   public void testHashInnerJoinWithBothEmptyDirTables() throws Exception {
     try {
       String query = String.format("select t1.`employee_id`, t1.`full_name`, t2.`employee_id`, t2.`full_name` " +
-          "from dfs.tmp.`%1$s` t1 inner join dfs.tmp.`%1$s` t2 on t1.`full_name` = t2.`full_name`", EMPTY_DIRECTORY);
+          "from dfs.tmp_default_format.`%1$s` t1 inner join dfs.tmp_default_format.`%1$s` t2 on t1.`full_name` = t2.`full_name`", EMPTY_DIRECTORY);
       final int expectedRecordCount = 0;
 
       enableJoin(true, false, false);
@@ -91,7 +111,7 @@ public class TestJoinEmptyDirTable extends JoinTestBase {
   public void testHashLeftJoinWithRightEmptyDirTable() throws Exception {
     try {
       String query = String.format("select t1.`employee_id`, t1.`full_name`, t2.`employee_id`, t2.`full_name` " +
-          "from cp.`employee.json` t1 left join dfs.tmp.`%s` t2 on t1.`full_name` = t2.`full_name`", EMPTY_DIRECTORY);
+          "from cp.`employee.json` t1 left join dfs.tmp_default_format.`%s` t2 on t1.`full_name` = t2.`full_name`", EMPTY_DIRECTORY);
       final int expectedRecordCount = 1155;
 
       enableJoin(true, false, false);
@@ -107,7 +127,7 @@ public class TestJoinEmptyDirTable extends JoinTestBase {
   public void testHashRightJoinWithRightEmptyDirTable() throws Exception {
     try {
       String query = String.format("select t1.`employee_id`, t1.`full_name`, t2.`employee_id`, t2.`full_name` " +
-          "from cp.`employee.json` t1 right join dfs.tmp.`%s` t2 on t1.`full_name` = t2.`full_name`", EMPTY_DIRECTORY);
+          "from cp.`employee.json` t1 right join dfs.tmp_default_format.`%s` t2 on t1.`full_name` = t2.`full_name`", EMPTY_DIRECTORY);
       final int expectedRecordCount = 0;
 
       enableJoin(true, false, false);
@@ -123,7 +143,7 @@ public class TestJoinEmptyDirTable extends JoinTestBase {
   public void testMergeInnerJoinWithLeftEmptyDirTable() throws Exception {
     try {
       String query = String.format("select t1.`employee_id`, t1.`full_name`, t2.`employee_id`, t2.`full_name` " +
-          "from dfs.tmp.`%s` t1 inner join cp.`employee.json` t2 on t1.`full_name` = t2.`full_name`", EMPTY_DIRECTORY);
+          "from dfs.tmp_default_format.`%s` t1 inner join cp.`employee.json` t2 on t1.`full_name` = t2.`full_name`", EMPTY_DIRECTORY);
       final int expectedRecordCount = 0;
 
       enableJoin(false, true, false);
@@ -139,7 +159,7 @@ public class TestJoinEmptyDirTable extends JoinTestBase {
   public void testMergeInnerJoinWithRightEmptyDirTable() throws Exception {
     try {
       String query = String.format("select t1.`employee_id`, t1.`full_name`, t2.`employee_id`, t2.`full_name` " +
-          "from cp.`employee.json` t1 inner join dfs.tmp.`%s` t2 on t1.`full_name` = t2.`full_name`", EMPTY_DIRECTORY);
+          "from cp.`employee.json` t1 inner join dfs.tmp_default_format.`%s` t2 on t1.`full_name` = t2.`full_name`", EMPTY_DIRECTORY);
       final int expectedRecordCount = 0;
 
       enableJoin(false, true, false);
@@ -155,7 +175,7 @@ public class TestJoinEmptyDirTable extends JoinTestBase {
   public void testMergeInnerJoinWithBothEmptyDirTables() throws Exception {
     try {
       String query = String.format("select t1.`employee_id`, t1.`full_name`, t2.`employee_id`, t2.`full_name` " +
-          "from dfs.tmp.`%1$s` t1 inner join dfs.tmp.`%1$s` t2 on t1.`full_name` = t2.`full_name`", EMPTY_DIRECTORY);
+          "from dfs.tmp_default_format.`%1$s` t1 inner join dfs.tmp_default_format.`%1$s` t2 on t1.`full_name` = t2.`full_name`", EMPTY_DIRECTORY);
       final int expectedRecordCount = 0;
 
       enableJoin(false, true, false);
@@ -171,7 +191,7 @@ public class TestJoinEmptyDirTable extends JoinTestBase {
   public void testMergeLeftJoinWithRightEmptyDirTable() throws Exception {
     try {
       String query = String.format("select t1.`employee_id`, t1.`full_name`, t2.`employee_id`, t2.`full_name` " +
-          "from cp.`employee.json` t1 left join dfs.tmp.`%s` t2 on t1.`full_name` = t2.`full_name`", EMPTY_DIRECTORY);
+          "from cp.`employee.json` t1 left join dfs.tmp_default_format.`%s` t2 on t1.`full_name` = t2.`full_name`", EMPTY_DIRECTORY);
       final int expectedRecordCount = 1155;
 
       enableJoin(false, true, false);
@@ -187,7 +207,7 @@ public class TestJoinEmptyDirTable extends JoinTestBase {
   public void testMergeRightJoinWithRightEmptyDirTable() throws Exception {
     try {
       String query = String.format("select t1.`employee_id`, t1.`full_name`, t2.`employee_id`, t2.`full_name` " +
-          "from cp.`employee.json` t1 right join dfs.tmp.`%s` t2 on t1.`full_name` = t2.`full_name`", EMPTY_DIRECTORY);
+          "from cp.`employee.json` t1 right join dfs.tmp_default_format.`%s` t2 on t1.`full_name` = t2.`full_name`", EMPTY_DIRECTORY);
       final int expectedRecordCount = 0;
 
       enableJoin(false, true, false);
@@ -203,7 +223,7 @@ public class TestJoinEmptyDirTable extends JoinTestBase {
   public void testNestedLoopInnerJoinWithLeftEmptyDirTable() throws Exception {
     try {
       String query = String.format("select t1.`employee_id`, t1.`full_name`, t2.`employee_id`, t2.`full_name` " +
-          "from dfs.tmp.`%s` t1 inner join cp.`employee.json` t2 on t1.`full_name` = t2.`full_name`", EMPTY_DIRECTORY);
+          "from dfs.tmp_default_format.`%s` t1 inner join cp.`employee.json` t2 on t1.`full_name` = t2.`full_name`", EMPTY_DIRECTORY);
       final int expectedRecordCount = 0;
 
       enableJoin(false, false, true);
@@ -219,7 +239,7 @@ public class TestJoinEmptyDirTable extends JoinTestBase {
   public void testNestedLoopInnerJoinWithRightEmptyDirTable() throws Exception {
     try {
       String query = String.format("select t1.`employee_id`, t1.`full_name`, t2.`employee_id`, t2.`full_name` " +
-          "from cp.`employee.json` t1 inner join dfs.tmp.`%s` t2 on t1.`full_name` = t2.`full_name`", EMPTY_DIRECTORY);
+          "from cp.`employee.json` t1 inner join dfs.tmp_default_format.`%s` t2 on t1.`full_name` = t2.`full_name`", EMPTY_DIRECTORY);
       final int expectedRecordCount = 0;
 
       enableJoin(false, false, true);
@@ -235,7 +255,7 @@ public class TestJoinEmptyDirTable extends JoinTestBase {
   public void testNestedLoopInnerJoinWithBothEmptyDirTables() throws Exception {
     try {
       String query = String.format("select t1.`employee_id`, t1.`full_name`, t2.`employee_id`, t2.`full_name` " +
-          "from dfs.tmp.`%1$s` t1 inner join dfs.tmp.`%1$s` t2 on t1.`full_name` = t2.`full_name`", EMPTY_DIRECTORY);
+          "from dfs.tmp_default_format.`%1$s` t1 inner join dfs.tmp_default_format.`%1$s` t2 on t1.`full_name` = t2.`full_name`", EMPTY_DIRECTORY);
       final int expectedRecordCount = 0;
 
       enableJoin(false, false, true);
@@ -251,7 +271,7 @@ public class TestJoinEmptyDirTable extends JoinTestBase {
   public void testNestedLoopLeftJoinWithLeftEmptyDirTable() throws Exception {
     try {
       String query = String.format("select t1.`employee_id`, t1.`full_name`, t2.`employee_id`, t2.`full_name` " +
-          "from dfs.tmp.`%s` t1 left join cp.`employee.json` t2 on t1.`full_name` = t2.`full_name`", EMPTY_DIRECTORY);
+          "from dfs.tmp_default_format.`%s` t1 left join cp.`employee.json` t2 on t1.`full_name` = t2.`full_name`", EMPTY_DIRECTORY);
       final int expectedRecordCount = 0;
 
       enableJoin(false, false, true);
@@ -271,7 +291,7 @@ public class TestJoinEmptyDirTable extends JoinTestBase {
   public void testNestedLoopLeftJoinWithRightEmptyDirTable() throws Exception {
     try {
       String query = String.format("select t1.`employee_id`, t1.`full_name`, t2.`employee_id`, t2.`full_name` " +
-          "from cp.`employee.json` t1 left join dfs.tmp.`%s` t2 on t1.`full_name` = t2.`full_name`", EMPTY_DIRECTORY);
+          "from cp.`employee.json` t1 left join dfs.tmp_default_format.`%s` t2 on t1.`full_name` = t2.`full_name`", EMPTY_DIRECTORY);
       final int expectedRecordCount = 1155;
 
       enableJoin(false, false, true);
@@ -287,7 +307,7 @@ public class TestJoinEmptyDirTable extends JoinTestBase {
   public void testNestedLoopRightJoinWithLeftEmptyDirTable() throws Exception {
     try {
       String query = String.format("select t1.`employee_id`, t1.`full_name`, t2.`employee_id`, t2.`full_name` " +
-          "from dfs.tmp.`%s` t1 right join cp.`employee.json` t2 on t1.`full_name` = t2.`full_name`", EMPTY_DIRECTORY);
+          "from dfs.tmp_default_format.`%s` t1 right join cp.`employee.json` t2 on t1.`full_name` = t2.`full_name`", EMPTY_DIRECTORY);
       final int expectedRecordCount = 1155;
 
       enableJoin(false, false, true);
@@ -304,7 +324,7 @@ public class TestJoinEmptyDirTable extends JoinTestBase {
   public void testNestedLoopRightJoinWithRightEmptyDirTable() throws Exception {
     try {
       String query = String.format("select t1.`employee_id`, t1.`full_name`, t2.`employee_id`, t2.`full_name` " +
-          "from cp.`employee.json` t1 right join dfs.tmp.`%s` t2 on t1.`full_name` = t2.`full_name`", EMPTY_DIRECTORY);
+          "from cp.`employee.json` t1 right join dfs.tmp_default_format.`%s` t2 on t1.`full_name` = t2.`full_name`", EMPTY_DIRECTORY);
 
       enableJoin(false, false, true);
       // The nested loops join does not support the "RIGHT OUTER JOIN" logical join operator.

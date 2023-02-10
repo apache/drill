@@ -99,6 +99,7 @@ import org.apache.drill.exec.planner.physical.visitor.SplitUpComplexExpressions;
 import org.apache.drill.exec.planner.physical.visitor.StarColumnConverter;
 import org.apache.drill.exec.planner.physical.visitor.SwapHashJoinVisitor;
 import org.apache.drill.exec.planner.physical.visitor.TopProjectVisitor;
+import org.apache.drill.exec.planner.sql.parser.FindLimit0SqlVisitor;
 import org.apache.drill.exec.planner.sql.parser.UnsupportedOperatorsVisitor;
 import org.apache.drill.exec.server.options.OptionManager;
 import org.apache.drill.exec.store.StoragePlugin;
@@ -645,10 +646,19 @@ public class DefaultSqlHandler extends AbstractSqlHandler {
       }
       return null;
     }
-
   }
 
   protected Pair<SqlNode, RelDataType> validateNode(SqlNode sqlNode) throws ValidationException, RelConversionException, ForemanSetupException {
+    // Check for a LIMIT 0 in the root portion of the query before validation
+    // because validation of the query's FROM clauses will already trigger
+    // the recursive listing files to which FILE_LISTING_LIMIT0_OPT is meant
+    // to apply.
+    boolean rootSelectLimit0 = FindLimit0SqlVisitor.containsLimit0(sqlNode);
+    context.getOptions().setLocalOption(
+      ExecConstants.FILE_LISTING_LIMIT0_OPT_KEY,
+      rootSelectLimit0
+    );
+
     final SqlNode sqlNodeValidated = config.getConverter().validate(sqlNode);
     final Pair<SqlNode, RelDataType> typedSqlNode = new Pair<>(sqlNodeValidated, config.getConverter().getOutputType(
         sqlNodeValidated));

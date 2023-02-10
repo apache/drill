@@ -191,6 +191,11 @@ public class GoogleSheetsStoragePlugin extends AbstractStoragePlugin {
     return true;
   }
 
+  @Override
+  public boolean supportsInsert() {
+    return true;
+  }
+
   /**
    * This method gets (and caches) the Google Service needed for API calls.
    * @return An authenticated {@link Sheets} Google Sheets service.

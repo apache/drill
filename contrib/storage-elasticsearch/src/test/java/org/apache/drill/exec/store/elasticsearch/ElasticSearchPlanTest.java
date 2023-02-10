@@ -17,31 +17,33 @@
  */
 package org.apache.drill.exec.store.elasticsearch;
 
-import org.apache.drill.common.logical.security.PlainCredentialsProvider;
+import org.apache.drill.common.logical.StoragePluginConfig.AuthMode;
+import org.apache.drill.shaded.guava.com.google.common.collect.ImmutableMap;
 import org.apache.drill.test.ClusterFixture;
 import org.apache.drill.test.ClusterTest;
-import org.apache.http.HttpHost;
-import org.elasticsearch.action.admin.indices.delete.DeleteIndexRequest;
-import org.elasticsearch.action.admin.indices.refresh.RefreshRequest;
-import org.elasticsearch.action.index.IndexRequest;
-import org.elasticsearch.client.RequestOptions;
-import org.elasticsearch.client.RestClient;
-import org.elasticsearch.client.RestHighLevelClient;
-import org.elasticsearch.client.indices.CreateIndexRequest;
-import org.elasticsearch.xcontent.XContentBuilder;
-import org.elasticsearch.xcontent.XContentFactory;
+import org.json.simple.JSONObject;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
+import co.elastic.clients.elasticsearch.ElasticsearchClient;
+import co.elastic.clients.elasticsearch.core.IndexRequest;
+import co.elastic.clients.elasticsearch.indices.CreateIndexRequest;
+import co.elastic.clients.elasticsearch.indices.DeleteIndexRequest;
+import co.elastic.clients.elasticsearch.indices.RefreshRequest;
+import co.elastic.clients.json.JsonData;
+
 import java.io.IOException;
+import java.io.Reader;
+import java.io.StringReader;
 import java.util.Collections;
+import java.util.LinkedList;
+import java.util.List;
 
 public class ElasticSearchPlanTest extends ClusterTest {
 
-  public static RestHighLevelClient restHighLevelClient;
-
-  private static String indexName;
+  private static ElasticsearchClient elasticsearchClient;
+  private static final List<String> indexNames = new LinkedList<>();
 
   @BeforeClass
   public static void init() throws Exception {
@@ -49,38 +51,55 @@ public class ElasticSearchPlanTest extends ClusterTest {
     startCluster(ClusterFixture.builder(dirTestWatcher));
 
     ElasticsearchStorageConfig config = new ElasticsearchStorageConfig(
-        Collections.singletonList(TestElasticsearchSuite.getAddress()),
-        null, null, null, PlainCredentialsProvider.EMPTY_CREDENTIALS_PROVIDER);
+      Collections.singletonList(TestElasticsearchSuite.getAddress()),
+      TestElasticsearchSuite.ELASTICSEARCH_USERNAME,
+      TestElasticsearchSuite.ELASTICSEARCH_PASSWORD,
+      null,
+      AuthMode.SHARED_USER.name(),
+      null
+    );
     config.setEnabled(true);
     cluster.defineStoragePlugin("elastic", config);
 
+    elasticsearchClient = TestElasticsearchSuite.getESClient();
     prepareData();
   }
 
   @AfterClass
   public static void cleanUp() throws IOException {
-    restHighLevelClient.indices().delete(new DeleteIndexRequest(indexName), RequestOptions.DEFAULT);
+    DeleteIndexRequest deleteIndexRequest = new DeleteIndexRequest.Builder()
+      .index(indexNames)
+      .build();
+
+    elasticsearchClient.indices().delete(deleteIndexRequest);
     TestElasticsearchSuite.tearDownCluster();
   }
 
   private static void prepareData() throws IOException {
-    restHighLevelClient = new RestHighLevelClient(RestClient.builder(HttpHost.create(TestElasticsearchSuite.getAddress())));
+    indexNames.add("nation");
+    CreateIndexRequest createIndexRequest = new CreateIndexRequest.Builder()
+        .index("nation")
+        .build();
+    elasticsearchClient.indices().create(createIndexRequest);
 
-    indexName = "nation";
-    CreateIndexRequest createIndexRequest = new CreateIndexRequest(indexName);
+    final Reader input1 = new StringReader(
+      JSONObject.toJSONString(ImmutableMap.of(
+        "n_nationkey", 0,
+        "n_name", "ALGERIA",
+        "n_regionkey", 1
+      ))
+    );
+    IndexRequest<JsonData> request = IndexRequest.of(i -> i
+        .index("nation")
+        .withJson(input1)
+    );
+    elasticsearchClient.index(request);
 
-    restHighLevelClient.indices().create(createIndexRequest, RequestOptions.DEFAULT);
+    RefreshRequest refreshRequest = new RefreshRequest.Builder()
+        .index(indexNames)
+        .build();
 
-    XContentBuilder builder = XContentFactory.jsonBuilder();
-    builder.startObject();
-    builder.field("n_nationkey", 0);
-    builder.field("n_name", "ALGERIA");
-    builder.field("n_regionkey", 1);
-    builder.endObject();
-    IndexRequest indexRequest = new IndexRequest(indexName).source(builder);
-    restHighLevelClient.index(indexRequest, RequestOptions.DEFAULT);
-
-    restHighLevelClient.indices().refresh(new RefreshRequest(indexName), RequestOptions.DEFAULT);
+    elasticsearchClient.indices().refresh(refreshRequest);
   }
 
   @Test

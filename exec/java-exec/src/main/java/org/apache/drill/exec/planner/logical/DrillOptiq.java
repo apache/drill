@@ -618,6 +618,7 @@ public class DrillOptiq {
             case HOUR:
             case MINUTE:
             case SECOND:
+            case MILLISECOND:
             case QUARTER:
             case WEEK:
             case MICROSECOND:

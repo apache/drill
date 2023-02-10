@@ -18,29 +18,33 @@
 package org.apache.drill.exec.store.elasticsearch;
 
 import org.apache.drill.common.exceptions.UserRemoteException;
-import org.apache.drill.common.logical.security.PlainCredentialsProvider;
+import org.apache.drill.common.logical.StoragePluginConfig.AuthMode;
 import org.apache.drill.test.ClusterFixture;
 import org.apache.drill.test.ClusterTest;
-import org.apache.http.HttpHost;
-import org.elasticsearch.action.admin.indices.delete.DeleteIndexRequest;
-import org.elasticsearch.action.admin.indices.refresh.RefreshRequest;
-import org.elasticsearch.action.index.IndexRequest;
-import org.elasticsearch.client.RequestOptions;
-import org.elasticsearch.client.RestClient;
-import org.elasticsearch.client.RestHighLevelClient;
-import org.elasticsearch.client.indices.CreateIndexRequest;
-import org.elasticsearch.xcontent.XContentBuilder;
-import org.elasticsearch.xcontent.XContentFactory;
+import org.json.simple.JSONObject;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
+import co.elastic.clients.elasticsearch.ElasticsearchClient;
+import co.elastic.clients.elasticsearch.core.IndexRequest;
+import co.elastic.clients.elasticsearch.indices.CreateIndexRequest;
+import co.elastic.clients.elasticsearch.indices.DeleteIndexRequest;
+import co.elastic.clients.elasticsearch.indices.RefreshRequest;
+import co.elastic.clients.json.JsonData;
+
 import java.io.IOException;
+import java.io.Reader;
+import java.io.StringReader;
 import java.math.BigDecimal;
 import java.nio.charset.StandardCharsets;
 import java.time.LocalDate;
 import java.util.Base64;
 import java.util.Collections;
+import java.util.HashMap;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
 
 import static org.hamcrest.CoreMatchers.containsString;
 import static org.hamcrest.MatcherAssert.assertThat;
@@ -48,9 +52,8 @@ import static org.junit.Assert.fail;
 
 public class ElasticSearchQueryTest extends ClusterTest {
 
-  public static RestHighLevelClient restHighLevelClient;
-
-  private static String indexName;
+  private static ElasticsearchClient elasticsearchClient;
+  private static final List<String> indexNames = new LinkedList<>();
 
   @BeforeClass
   public static void init() throws Exception {
@@ -58,257 +61,311 @@ public class ElasticSearchQueryTest extends ClusterTest {
     startCluster(ClusterFixture.builder(dirTestWatcher));
 
     ElasticsearchStorageConfig config = new ElasticsearchStorageConfig(
-        Collections.singletonList(TestElasticsearchSuite.getAddress()),
-        null, null, null, PlainCredentialsProvider.EMPTY_CREDENTIALS_PROVIDER);
+      Collections.singletonList(TestElasticsearchSuite.getAddress()),
+      TestElasticsearchSuite.ELASTICSEARCH_USERNAME,
+      TestElasticsearchSuite.ELASTICSEARCH_PASSWORD,
+      null, AuthMode.SHARED_USER.name(),
+      null
+    );
     config.setEnabled(true);
     cluster.defineStoragePlugin("elastic", config);
 
+    elasticsearchClient = TestElasticsearchSuite.getESClient();
     prepareData();
   }
 
   @AfterClass
   public static void cleanUp() throws IOException {
-    restHighLevelClient.indices().delete(new DeleteIndexRequest(indexName), RequestOptions.DEFAULT);
+    DeleteIndexRequest deleteIndexRequest = new DeleteIndexRequest.Builder()
+      .index(indexNames)
+      .build();
+
+    elasticsearchClient.indices().delete(deleteIndexRequest);
     TestElasticsearchSuite.tearDownCluster();
   }
 
-  private static void prepareData() throws IOException {
-    restHighLevelClient = new RestHighLevelClient(RestClient.builder(HttpHost.create(TestElasticsearchSuite.getAddress())));
+  public static void prepareData() throws IOException {
+    indexNames.add("employee");
+    CreateIndexRequest createIndexRequest = new CreateIndexRequest.Builder()
+        .index("employee")
+        .build();
+    elasticsearchClient.indices().create(createIndexRequest);
 
-    indexName = "employee";
-    CreateIndexRequest createIndexRequest = new CreateIndexRequest(indexName);
+    {
+      Map<String, Object> inputMap = new HashMap<>();
+      inputMap.put("employee_id", 1);
+      inputMap.put("full_name", "Sheri Nowmer");
+      inputMap.put("first_name", "Sheri");
+      inputMap.put("last_name", "Nowmer");
+      inputMap.put("position_id", 1);
+      inputMap.put("position_title", "President");
+      inputMap.put("store_id", 0);
+      inputMap.put("department_id", 1);
+      inputMap.put("birth_date", "1961-08-26");
+      inputMap.put("hire_date", "1994-12-01 00:00:00.0");
+      inputMap.put("salary", 80000.0);
+      inputMap.put("supervisor_id", 0);
+      inputMap.put("education_level", "Graduate Degree");
+      inputMap.put("marital_status", "S");
+      inputMap.put("gender", "F");
+      inputMap.put("management_role", "Senior Management");
+      inputMap.put("binary_field", Base64.getEncoder().encodeToString(
+        "Senior Management".getBytes(StandardCharsets.UTF_8)
+      ));
+      inputMap.put("boolean_field", true);
+      inputMap.put("date_field", "2015/01/01 12:10:30");
+      inputMap.put("byte_field", (byte) 123);
+      inputMap.put("long_field", 123L);
+      inputMap.put("float_field", 123F);
+      inputMap.put("short_field", (short) 123);
+      inputMap.put("decimal_field", new BigDecimal("123.45"));
 
-    restHighLevelClient.indices().create(createIndexRequest, RequestOptions.DEFAULT);
+      final Reader input1 = new StringReader(JSONObject.toJSONString(inputMap));
+      IndexRequest<JsonData> request = IndexRequest.of(i -> i
+          .index("employee")
+          .withJson(input1)
+      );
+      elasticsearchClient.index(request);
+    }
+    {
+      Map<String, Object> inputMap = new HashMap<>();
+      inputMap.put("employee_id", 2);
+      inputMap.put("full_name", "Derrick Whelply");
+      inputMap.put("first_name", "Derrick");
+      inputMap.put("last_name", "Whelply");
+      inputMap.put("position_id", 2);
+      inputMap.put("position_title", "VP Country Manager");
+      inputMap.put("store_id", 0);
+      inputMap.put("department_id", 1);
+      inputMap.put("birth_date", "1915-07-03");
+      inputMap.put("hire_date", "1994-12-01 00:00:00.0");
+      inputMap.put("salary", 40000.0);
+      inputMap.put("supervisor_id", 1);
+      inputMap.put("education_level", "Graduate Degree");
+      inputMap.put("marital_status", "M");
+      inputMap.put("gender", "M");
+      inputMap.put("management_role", "Senior Management");
 
-    XContentBuilder builder = XContentFactory.jsonBuilder();
-    builder.startObject();
-    builder.field("employee_id", 1);
-    builder.field("full_name", "Sheri Nowmer");
-    builder.field("first_name", "Sheri");
-    builder.field("last_name", "Nowmer");
-    builder.field("position_id", 1);
-    builder.field("position_title", "President");
-    builder.field("store_id", 0);
-    builder.field("department_id", 1);
-    builder.field("birth_date", "1961-08-26");
-    builder.field("hire_date", "1994-12-01 00:00:00.0");
-    builder.field("salary", 80000.0);
-    builder.field("supervisor_id", 0);
-    builder.field("education_level", "Graduate Degree");
-    builder.field("marital_status", "S");
-    builder.field("gender", "F");
-    builder.field("management_role", "Senior Management");
-    builder.field("binary_field", "Senior Management".getBytes(StandardCharsets.UTF_8));
-    builder.field("boolean_field", true);
-    builder.timeField("date_field", "2015/01/01 12:10:30");
-    builder.field("byte_field", (byte) 123);
-    builder.field("long_field", 123L);
-    builder.field("float_field", 123F);
-    builder.field("short_field", (short) 123);
-    builder.field("decimal_field", new BigDecimal("123.45"));
-    builder.endObject();
-    IndexRequest indexRequest = new IndexRequest(indexName).source(builder);
-    restHighLevelClient.index(indexRequest, RequestOptions.DEFAULT);
+      final Reader input1 = new StringReader(JSONObject.toJSONString(inputMap));
+      IndexRequest<JsonData> request = IndexRequest.of(i -> i
+          .index("employee")
+          .withJson(input1)
+      );
+      elasticsearchClient.index(request);
+    }
+    {
+      Map<String, Object> inputMap = new HashMap<>();
+      inputMap.put("employee_id", 4);
+      inputMap.put("full_name", "Michael Spence");
+      inputMap.put("first_name", "Michael");
+      inputMap.put("last_name", "Spence");
+      inputMap.put("position_id", 2);
+      inputMap.put("position_title", "VP Country Manager");
+      inputMap.put("store_id", 0);
+      inputMap.put("department_id", 1);
+      inputMap.put("birth_date", "1969-06-20");
+      inputMap.put("hire_date", "1998-01-01 00:00:00.0");
+      inputMap.put("salary", 40000.0);
+      inputMap.put("supervisor_id", 1);
+      inputMap.put("education_level", "Graduate Degree");
+      inputMap.put("marital_status", "S");
+      inputMap.put("gender", "M");
+      inputMap.put("management_role", "Senior Management");
+      final Reader input1 = new StringReader(JSONObject.toJSONString(inputMap));
 
-    builder = XContentFactory.jsonBuilder();
-    builder.startObject();
-    builder.field("employee_id", 2);
-    builder.field("full_name", "Derrick Whelply");
-    builder.field("first_name", "Derrick");
-    builder.field("last_name", "Whelply");
-    builder.field("position_id", 2);
-    builder.field("position_title", "VP Country Manager");
-    builder.field("store_id", 0);
-    builder.field("department_id", 1);
-    builder.field("birth_date", "1915-07-03");
-    builder.field("hire_date", "1994-12-01 00:00:00.0");
-    builder.field("salary", 40000.0);
-    builder.field("supervisor_id", 1);
-    builder.field("education_level", "Graduate Degree");
-    builder.field("marital_status", "M");
-    builder.field("gender", "M");
-    builder.field("management_role", "Senior Management");
-    builder.endObject();
-    indexRequest = new IndexRequest(indexName).source(builder);
-    restHighLevelClient.index(indexRequest, RequestOptions.DEFAULT);
+      IndexRequest<JsonData> request = IndexRequest.of(i -> i
+          .index("employee")
+          .withJson(input1)
+      );
+      elasticsearchClient.index(request);
+    }
+    {
+      Map<String, Object> inputMap = new HashMap<>();
+      inputMap.put("employee_id", 5);
+      inputMap.put("full_name", "Maya Gutierrez");
+      inputMap.put("first_name", "Maya");
+      inputMap.put("last_name", "Gutierrez");
+      inputMap.put("position_id", 2);
+      inputMap.put("position_title", "VP Country Manager");
+      inputMap.put("store_id", 0);
+      inputMap.put("department_id", 1);
+      inputMap.put("birth_date", "1951-05-10");
+      inputMap.put("hire_date", "1998-01-01 00:00:00.0");
+      inputMap.put("salary", 35000.0);
+      inputMap.put("supervisor_id", 1);
+      inputMap.put("education_level", "Bachelors Degree");
+      inputMap.put("marital_status", "M");
+      inputMap.put("gender", "F");
+      inputMap.put("management_role", "Senior Management");
+      final Reader input1 = new StringReader(JSONObject.toJSONString(inputMap));
 
-    builder = XContentFactory.jsonBuilder();
-    builder.startObject();
-    builder.field("employee_id", 4);
-    builder.field("full_name", "Michael Spence");
-    builder.field("first_name", "Michael");
-    builder.field("last_name", "Spence");
-    builder.field("position_id", 2);
-    builder.field("position_title", "VP Country Manager");
-    builder.field("store_id", 0);
-    builder.field("department_id", 1);
-    builder.field("birth_date", "1969-06-20");
-    builder.field("hire_date", "1998-01-01 00:00:00.0");
-    builder.field("salary", 40000.0);
-    builder.field("supervisor_id", 1);
-    builder.field("education_level", "Graduate Degree");
-    builder.field("marital_status", "S");
-    builder.field("gender", "M");
-    builder.field("management_role", "Senior Management");
-    builder.endObject();
-    indexRequest = new IndexRequest(indexName).source(builder);
-    restHighLevelClient.index(indexRequest, RequestOptions.DEFAULT);
+      IndexRequest<JsonData> request = IndexRequest.of(i -> i
+          .index("employee")
+          .withJson(input1)
+      );
+      elasticsearchClient.index(request);
+    }
+    {
+      Map<String, Object> inputMap = new HashMap<>();
+      inputMap.put("employee_id", 6);
+      inputMap.put("full_name", "Roberta Damstra");
+      inputMap.put("first_name", "Roberta");
+      inputMap.put("last_name", "Damstra");
+      inputMap.put("position_id", 3);
+      inputMap.put("position_title", "VP Information Systems");
+      inputMap.put("store_id", 0);
+      inputMap.put("department_id", 2);
+      inputMap.put("birth_date", "1942-10-08");
+      inputMap.put("hire_date", "1994-12-01 00:00:00.0");
+      inputMap.put("salary", 25000.0);
+      inputMap.put("supervisor_id", 1);
+      inputMap.put("education_level", "Bachelors Degree");
+      inputMap.put("marital_status", "M");
+      inputMap.put("gender", "F");
+      inputMap.put("management_role", "Senior Management");
+      final Reader input1 = new StringReader(JSONObject.toJSONString(inputMap));
 
-    builder = XContentFactory.jsonBuilder();
-    builder.startObject();
-    builder.field("employee_id", 5);
-    builder.field("full_name", "Maya Gutierrez");
-    builder.field("first_name", "Maya");
-    builder.field("last_name", "Gutierrez");
-    builder.field("position_id", 2);
-    builder.field("position_title", "VP Country Manager");
-    builder.field("store_id", 0);
-    builder.field("department_id", 1);
-    builder.field("birth_date", "1951-05-10");
-    builder.field("hire_date", "1998-01-01 00:00:00.0");
-    builder.field("salary", 35000.0);
-    builder.field("supervisor_id", 1);
-    builder.field("education_level", "Bachelors Degree");
-    builder.field("marital_status", "M");
-    builder.field("gender", "F");
-    builder.field("management_role", "Senior Management");
-    builder.endObject();
-    indexRequest = new IndexRequest(indexName).source(builder);
-    restHighLevelClient.index(indexRequest, RequestOptions.DEFAULT);
+      IndexRequest<JsonData> request = IndexRequest.of(i -> i
+          .index("employee")
+          .withJson(input1)
+      );
+      elasticsearchClient.index(request);
+    }
+    {
+      Map<String, Object> inputMap = new HashMap<>();
+      inputMap.put("employee_id", 7);
+      inputMap.put("full_name", "Rebecca Kanagaki");
+      inputMap.put("first_name", "Rebecca");
+      inputMap.put("last_name", "Kanagaki");
+      inputMap.put("position_id", 4);
+      inputMap.put("position_title", "VP Human Resources");
+      inputMap.put("store_id", 0);
+      inputMap.put("department_id", 3);
+      inputMap.put("birth_date", "1949-03-27");
+      inputMap.put("hire_date", "1994-12-01 00:00:00.0");
+      inputMap.put("salary", 15000.0);
+      inputMap.put("supervisor_id", 1);
+      inputMap.put("education_level", "Bachelors Degree");
+      inputMap.put("marital_status", "M");
+      inputMap.put("gender", "F");
+      inputMap.put("management_role", "Senior Management");
+      final Reader input1 = new StringReader(JSONObject.toJSONString(inputMap));
 
-    builder = XContentFactory.jsonBuilder();
-    builder.startObject();
-    builder.field("employee_id", 6);
-    builder.field("full_name", "Roberta Damstra");
-    builder.field("first_name", "Roberta");
-    builder.field("last_name", "Damstra");
-    builder.field("position_id", 3);
-    builder.field("position_title", "VP Information Systems");
-    builder.field("store_id", 0);
-    builder.field("department_id", 2);
-    builder.field("birth_date", "1942-10-08");
-    builder.field("hire_date", "1994-12-01 00:00:00.0");
-    builder.field("salary", 25000.0);
-    builder.field("supervisor_id", 1);
-    builder.field("education_level", "Bachelors Degree");
-    builder.field("marital_status", "M");
-    builder.field("gender", "F");
-    builder.field("management_role", "Senior Management");
-    builder.endObject();
-    indexRequest = new IndexRequest(indexName).source(builder);
-    restHighLevelClient.index(indexRequest, RequestOptions.DEFAULT);
+      IndexRequest<JsonData> request = IndexRequest.of(i -> i
+          .index("employee")
+          .withJson(input1)
+      );
+      elasticsearchClient.index(request);
+    }
+    {
+      Map<String, Object> inputMap = new HashMap<>();
+      inputMap.put("employee_id", 8);
+      inputMap.put("full_name", "Kim Brunner");
+      inputMap.put("first_name", "Kim");
+      inputMap.put("last_name", "Brunner");
+      inputMap.put("position_id", 11);
+      inputMap.put("position_title", "Store Manager");
+      inputMap.put("store_id", 9);
+      inputMap.put("department_id", 11);
+      inputMap.put("birth_date", "1922-08-10");
+      inputMap.put("hire_date", "1998-01-01 00:00:00.0");
+      inputMap.put("salary", 10000.0);
+      inputMap.put("supervisor_id", 5);
+      inputMap.put("education_level", "Bachelors Degree");
+      inputMap.put("marital_status", "S");
+      inputMap.put("gender", "F");
+      inputMap.put("management_role", "Store Management");
+      final Reader input1 = new StringReader(JSONObject.toJSONString(inputMap));
 
-    builder = XContentFactory.jsonBuilder();
-    builder.startObject();
-    builder.field("employee_id", 7);
-    builder.field("full_name", "Rebecca Kanagaki");
-    builder.field("first_name", "Rebecca");
-    builder.field("last_name", "Kanagaki");
-    builder.field("position_id", 4);
-    builder.field("position_title", "VP Human Resources");
-    builder.field("store_id", 0);
-    builder.field("department_id", 3);
-    builder.field("birth_date", "1949-03-27");
-    builder.field("hire_date", "1994-12-01 00:00:00.0");
-    builder.field("salary", 15000.0);
-    builder.field("supervisor_id", 1);
-    builder.field("education_level", "Bachelors Degree");
-    builder.field("marital_status", "M");
-    builder.field("gender", "F");
-    builder.field("management_role", "Senior Management");
-    builder.endObject();
-    indexRequest = new IndexRequest(indexName).source(builder);
-    restHighLevelClient.index(indexRequest, RequestOptions.DEFAULT);
+      IndexRequest<JsonData> request = IndexRequest.of(i -> i
+          .index("employee")
+          .withJson(input1)
+      );
+      elasticsearchClient.index(request);
+    }
+    {
+      Map<String, Object> inputMap = new HashMap<>();
+      inputMap.put("employee_id", 9);
+      inputMap.put("full_name", "Brenda Blumberg");
+      inputMap.put("first_name", "Brenda");
+      inputMap.put("last_name", "Blumberg");
+      inputMap.put("position_id", 11);
+      inputMap.put("position_title", "Store Manager");
+      inputMap.put("store_id", 21);
+      inputMap.put("department_id", 11);
+      inputMap.put("birth_date", "1979-06-23");
+      inputMap.put("hire_date", "1998-01-01 00:00:00.0");
+      inputMap.put("salary", 17000.0);
+      inputMap.put("supervisor_id", 5);
+      inputMap.put("education_level", "Graduate Degree");
+      inputMap.put("marital_status", "M");
+      inputMap.put("gender", "F");
+      inputMap.put("management_role", "Store Management");
+      final Reader input1 = new StringReader(JSONObject.toJSONString(inputMap));
 
-    builder = XContentFactory.jsonBuilder();
-    builder.startObject();
-    builder.field("employee_id", 8);
-    builder.field("full_name", "Kim Brunner");
-    builder.field("first_name", "Kim");
-    builder.field("last_name", "Brunner");
-    builder.field("position_id", 11);
-    builder.field("position_title", "Store Manager");
-    builder.field("store_id", 9);
-    builder.field("department_id", 11);
-    builder.field("birth_date", "1922-08-10");
-    builder.field("hire_date", "1998-01-01 00:00:00.0");
-    builder.field("salary", 10000.0);
-    builder.field("supervisor_id", 5);
-    builder.field("education_level", "Bachelors Degree");
-    builder.field("marital_status", "S");
-    builder.field("gender", "F");
-    builder.field("management_role", "Store Management");
-    builder.endObject();
-    indexRequest = new IndexRequest(indexName).source(builder);
-    restHighLevelClient.index(indexRequest, RequestOptions.DEFAULT);
+      IndexRequest<JsonData> request = IndexRequest.of(i -> i
+          .index("employee")
+          .withJson(input1)
+      );
+      elasticsearchClient.index(request);
+    }
+    {
+      Map<String, Object> inputMap = new HashMap<>();
+      inputMap.put("employee_id", 10);
+      inputMap.put("full_name", "Darren Stanz");
+      inputMap.put("first_name", "Darren");
+      inputMap.put("last_name", "Stanz");
+      inputMap.put("position_id", 5);
+      inputMap.put("position_title", "VP Finance");
+      inputMap.put("store_id", 0);
+      inputMap.put("department_id", 5);
+      inputMap.put("birth_date", "1949-08-26");
+      inputMap.put("hire_date", "1994-12-01 00:00:00.0");
+      inputMap.put("salary", 50000.0);
+      inputMap.put("supervisor_id", 1);
+      inputMap.put("education_level", "Partial College");
+      inputMap.put("marital_status", "M");
+      inputMap.put("gender", "M");
+      inputMap.put("management_role", "Senior Management");
+      final Reader input1 = new StringReader(JSONObject.toJSONString(inputMap));
 
-    builder = XContentFactory.jsonBuilder();
-    builder.startObject();
-    builder.field("employee_id", 9);
-    builder.field("full_name", "Brenda Blumberg");
-    builder.field("first_name", "Brenda");
-    builder.field("last_name", "Blumberg");
-    builder.field("position_id", 11);
-    builder.field("position_title", "Store Manager");
-    builder.field("store_id", 21);
-    builder.field("department_id", 11);
-    builder.field("birth_date", "1979-06-23");
-    builder.field("hire_date", "1998-01-01 00:00:00.0");
-    builder.field("salary", 17000.0);
-    builder.field("supervisor_id", 5);
-    builder.field("education_level", "Graduate Degree");
-    builder.field("marital_status", "M");
-    builder.field("gender", "F");
-    builder.field("management_role", "Store Management");
-    builder.endObject();
-    indexRequest = new IndexRequest(indexName).source(builder);
-    restHighLevelClient.index(indexRequest, RequestOptions.DEFAULT);
+      IndexRequest<JsonData> request = IndexRequest.of(i -> i
+          .index("employee")
+          .withJson(input1)
+      );
+      elasticsearchClient.index(request);
+    }
+    {
+      Map<String, Object> inputMap = new HashMap<>();
+      inputMap.put("employee_id", 11);
+      inputMap.put("full_name", "Jonathan Murraiin");
+      inputMap.put("first_name", "Jonathan");
+      inputMap.put("last_name", "Murraiin");
+      inputMap.put("position_id", 11);
+      inputMap.put("position_title", "Store Manager");
+      inputMap.put("store_id", 1);
+      inputMap.put("department_id", 11);
+      inputMap.put("birth_date", "1967-06-20");
+      inputMap.put("hire_date", "1998-01-01 00:00:00.0");
+      inputMap.put("salary", 15000.0);
+      inputMap.put("supervisor_id", 5);
+      inputMap.put("education_level", "Graduate Degree");
+      inputMap.put("marital_status", "S");
+      inputMap.put("gender", "M");
+      inputMap.put("management_role", "Store Management");
+      final Reader input1 = new StringReader(JSONObject.toJSONString(inputMap));
 
-    builder = XContentFactory.jsonBuilder();
-    builder.startObject();
-    builder.field("employee_id", 10);
-    builder.field("full_name", "Darren Stanz");
-    builder.field("first_name", "Darren");
-    builder.field("last_name", "Stanz");
-    builder.field("position_id", 5);
-    builder.field("position_title", "VP Finance");
-    builder.field("store_id", 0);
-    builder.field("department_id", 5);
-    builder.field("birth_date", "1949-08-26");
-    builder.field("hire_date", "1994-12-01 00:00:00.0");
-    builder.field("salary", 50000.0);
-    builder.field("supervisor_id", 1);
-    builder.field("education_level", "Partial College");
-    builder.field("marital_status", "M");
-    builder.field("gender", "M");
-    builder.field("management_role", "Senior Management");
-    builder.endObject();
-    indexRequest = new IndexRequest(indexName).source(builder);
-    restHighLevelClient.index(indexRequest, RequestOptions.DEFAULT);
+      IndexRequest<JsonData> request = IndexRequest.of(i -> i
+          .index("employee")
+          .withJson(input1)
+      );
+      elasticsearchClient.index(request);
+    }
 
-    builder = XContentFactory.jsonBuilder();
-    builder.startObject();
-    builder.field("employee_id", 11);
-    builder.field("full_name", "Jonathan Murraiin");
-    builder.field("first_name", "Jonathan");
-    builder.field("last_name", "Murraiin");
-    builder.field("position_id", 11);
-    builder.field("position_title", "Store Manager");
-    builder.field("store_id", 1);
-    builder.field("department_id", 11);
-    builder.field("birth_date", "1967-06-20");
-    builder.field("hire_date", "1998-01-01 00:00:00.0");
-    builder.field("salary", 15000.0);
-    builder.field("supervisor_id", 5);
-    builder.field("education_level", "Graduate Degree");
-    builder.field("marital_status", "S");
-    builder.field("gender", "M");
-    builder.field("management_role", "Store Management");
-    builder.endObject();
-    indexRequest = new IndexRequest(indexName).source(builder);
-    restHighLevelClient.index(indexRequest, RequestOptions.DEFAULT);
-
-    restHighLevelClient.indices().refresh(new RefreshRequest(indexName), RequestOptions.DEFAULT);
+    RefreshRequest refreshRequest = new RefreshRequest.Builder()
+        .index(indexNames)
+        .build();
+    elasticsearchClient.indices().refresh(refreshRequest);
   }
 
   @Test

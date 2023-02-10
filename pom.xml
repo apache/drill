@@ -48,18 +48,18 @@
     <junit.version>5.7.2</junit.version>
     <junit4.version>4.13.2</junit4.version>
     <junit.platform.version>1.8.2</junit.platform.version>
-    <slf4j.version>1.7.26</slf4j.version>
+    <slf4j.version>2.0.6</slf4j.version>
     <shaded.guava.version>28.2-jre</shaded.guava.version>
     <guava.version>30.1.1-jre</guava.version>
     <forkCount>1</forkCount>
     <parquet.version>1.12.2</parquet.version>
     <parquet.format.version>2.8.0</parquet.format.version>
     <calcite.groupId>org.apache.calcite</calcite.groupId>
-    <calcite.version>1.32.0</calcite.version>
-    <avatica.version>1.22.0</avatica.version>
+    <calcite.version>1.33.0</calcite.version>
+    <avatica.version>1.23.0</avatica.version>
     <janino.version>3.1.8</janino.version>
     <sqlline.version>1.12.0</sqlline.version>
-    <jackson.version>2.13.4.20221013</jackson.version>
+    <jackson.version>2.14.1</jackson.version>
     <zookeeper.version>3.5.7</zookeeper.version>
     <mapr.release.version>6.1.0-mapr</mapr.release.version>
     <ojai.version>3.0-mapr-1808</ojai.version>
@@ -72,7 +72,7 @@
     <curator.version>5.2.0</curator.version>
     <wiremock.standalone.version>2.23.2</wiremock.standalone.version>
     <jmockit.version>1.47</jmockit.version>
-    <logback.version>1.2.11</logback.version>
+    <logback.version>1.3.5</logback.version>
     <mockito.version>3.11.2</mockito.version>
     <!--
       Currently, Hive storage plugin only supports Apache Hive 3.1.3 or vendor specific variants of the
@@ -87,7 +87,7 @@
     <javassist.version>3.28.0-GA</javassist.version>
     <msgpack.version>0.6.6</msgpack.version>
     <reflections.version>0.9.10</reflections.version>
-    <avro.version>1.11.0</avro.version>
+    <avro.version>1.11.1</avro.version>
     <metrics.version>4.2.10</metrics.version>
     <jetty.version>9.4.44.v20210927</jetty.version>
     <jersey.version>2.34</jersey.version>
@@ -129,7 +129,7 @@
     <commons.beanutils.version>1.9.4</commons.beanutils.version>
     <httpdlog-parser.version>5.8</httpdlog-parser.version>
     <yauaa.version>7.9.0</yauaa.version>
-    <log4j.version>2.18.0</log4j.version>
+    <log4j.version>2.19.0</log4j.version>
     <aircompressor.version>0.20</aircompressor.version>
     <iceberg.version>0.12.1</iceberg.version>
     <univocity-parsers.version>2.8.3</univocity-parsers.version>
@@ -481,9 +481,9 @@
         <artifactId>maven-checkstyle-plugin</artifactId>
         <dependencies>
           <dependency>
-            <groupId>com.puppycrawl.tools</groupId>
-            <artifactId>checkstyle</artifactId>
-            <version>8.29</version>
+            <groupId>com.github.rnveach</groupId>
+            <artifactId>checkstyle-backport-jre8</artifactId>
+            <version>checkstyle-backport-10.7.0</version>
           </dependency>
         </dependencies>
         <configuration>
@@ -1071,6 +1071,12 @@
       </plugins>
     </pluginManagement>
   </build>
+  <pluginRepositories>
+    <pluginRepository>
+      <id>jitpack.io</id>
+      <url>https://jitpack.io</url>
+    </pluginRepository>
+  </pluginRepositories>
   <dependencies>
 
     <dependency>
@@ -1202,13 +1208,8 @@
     <dependency>
       <groupId>de.huxhorn.lilith</groupId>
       <artifactId>de.huxhorn.lilith.logback.appender.multiplex-classic</artifactId>
-      <version>0.9.44</version>
+      <version>8.3.0</version>
       <scope>test</scope>
-    </dependency>
-    <dependency>
-      <groupId>org.xerial.snappy</groupId>
-      <artifactId>snappy-java</artifactId>
-      <version>1.1.2.6</version>
     </dependency>
     <dependency>
       <groupId>org.apache.kerby</groupId>
@@ -1302,13 +1303,9 @@
       </dependency>
       <dependency>
         <groupId>org.apache.calcite.avatica</groupId>
-        <artifactId>avatica</artifactId>
+        <artifactId>avatica-core</artifactId>
         <version>${avatica.version}</version>
         <exclusions>
-          <exclusion>
-            <groupId>org.apache.calcite.avatica</groupId>
-            <artifactId>avatica-core</artifactId>
-          </exclusion>
           <exclusion>
             <groupId>commons-logging</groupId>
             <artifactId>commons-logging</artifactId>

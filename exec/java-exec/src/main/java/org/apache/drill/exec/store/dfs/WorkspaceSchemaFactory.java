@@ -208,7 +208,7 @@ public class WorkspaceSchemaFactory {
     if (!accessible(fs)) {
       return null;
     }
-    return new WorkspaceSchema(parentSchemaPath, schemaName, schemaConfig, fs);
+    return new WorkspaceSchema(parentSchemaPath, schemaName, schemaConfig, fs, config);
   }
 
   public String getSchemaName() {
@@ -299,12 +299,20 @@ public class WorkspaceSchemaFactory {
     private final DrillFileSystem fs;
     // Drill Process User file-system
     private final DrillFileSystem dpsFs;
+    private final WorkspaceConfig wsConfig;
 
-    public WorkspaceSchema(List<String> parentSchemaPath, String wsName, SchemaConfig schemaConfig, DrillFileSystem fs) {
+    public WorkspaceSchema(
+      List<String> parentSchemaPath,
+      String wsName,
+      SchemaConfig schemaConfig,
+      DrillFileSystem fs,
+      WorkspaceConfig config
+    ) {
       super(parentSchemaPath, wsName);
       this.schemaConfig = schemaConfig;
       this.fs = fs;
       this.dpsFs = ImpersonationUtil.createFileSystem(ImpersonationUtil.getProcessUserName(), fsConf);
+      this.wsConfig = config;
     }
 
     DrillTable getDrillTable(TableInstance key) {
@@ -672,8 +680,18 @@ public class WorkspaceSchemaFactory {
      * @param hasDirectories flag that indicates if given file selection has directories
      * @return revisited file selection
      */
-    private FileSelection detectEmptySelection(FileSelection fileSelection, boolean hasDirectories) throws IOException {
-      FileSelection newSelection = hasDirectories ? fileSelection.minusDirectories(getFS()) : fileSelection;
+    private FileSelection expandSelection(FileSelection fileSelection, boolean hasDirectories) throws IOException {
+      FileSelection newSelection;
+
+      if (hasDirectories) {
+        newSelection = schemaConfig.getOption(ExecConstants.FILE_LISTING_LIMIT0_OPT_KEY).bool_val
+            ? fileSelection.selectAnyFile(getFS())
+            : fileSelection.minusDirectories(getFS());
+      } else {
+        // We don't bother with single-file optimisation in this case
+        newSelection = fileSelection;
+      }
+
       if (newSelection == null) {
         // empty directory / selection means that this is the empty and schemaless table
         fileSelection.setEmptyDirectoryStatus();
@@ -893,8 +911,15 @@ public class WorkspaceSchemaFactory {
           }
         }
 
-        newSelection = detectEmptySelection(fileSelection, hasDirectories);
+        newSelection = expandSelection(fileSelection, hasDirectories);
         if (newSelection.isEmptyDirectory()) {
+          if (wsConfig.getDefaultInputFormat() == null) {
+            throw UserException.validationError()
+                .message("No files were found and no default format is set on the queried workspace.")
+                .addContext("workspace", Joiner.on(".").join(getSchemaPath()))
+                .addContext("table", key.sig.getName())
+                .build(logger);
+          }
           return new DynamicDrillTable(plugin, storageEngineName, schemaConfig.getUserName(), fileSelection);
         }
 

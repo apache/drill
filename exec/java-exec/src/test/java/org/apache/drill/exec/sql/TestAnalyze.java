@@ -332,7 +332,7 @@ public class TestAnalyze extends ClusterTest {
       query = " select emp.employee_id from dfs.tmp.employeeUseStat emp join dfs.tmp.departmentUseStat dept"
               + " on emp.department_id = dept.department_id "
               + " group by emp.employee_id";
-      String[] expectedPlan8 = {"HashAgg\\(group=\\[\\{0\\}\\]\\).*rowcount = 730.2832515526484,.*",
+      String[] expectedPlan8 = {"HashAgg\\(group=\\[\\{0\\}\\]\\).*rowcount = 730.2832515526.*",
               "HashJoin\\(condition.*\\).*rowcount = 1155.0,.*",
               "Scan.*columns=\\[`department_id`, `employee_id`\\].*rowcount = 1155.0.*",
               "Scan.*columns=\\[`department_id`\\].*rowcount = 12.0.*"};
@@ -347,7 +347,7 @@ public class TestAnalyze extends ClusterTest {
               + " on emp.department_id = dept.department_id "
               + " group by emp.employee_id, emp.store_id, dept.department_description "
               + " having dept.department_description = 'FINANCE'";
-      String[] expectedPlan9 = {"HashAgg\\(group=\\[\\{0, 1, 2\\}\\]\\).*rowcount = 61.0263439444715.*",
+      String[] expectedPlan9 = {"HashAgg\\(group=\\[\\{0, 1, 2\\}\\]\\).*rowcount = 61.02634394447.*",
               "HashJoin\\(condition.*\\).*rowcount = 96.25,.*",
               "Scan.*columns=\\[`department_id`, `employee_id`, `store_id`\\].*rowcount = 1155.0.*",
               "Filter\\(condition=\\[=\\(\\$1, 'FINANCE'\\)\\]\\).*rowcount = 1.0,.*",
@@ -362,7 +362,7 @@ public class TestAnalyze extends ClusterTest {
               + " on emp.department_id = dept.department_id "
               + " group by emp.employee_id, emp.store_id "
               + " having emp.store_id = 7";
-      String[] expectedPlan10 = {"HashAgg\\(group=\\[\\{0, 1\\}\\]\\).*rowcount = 29.389586621217404.*",
+      String[] expectedPlan10 = {"HashAgg\\(group=\\[\\{0, 1\\}\\]\\).*rowcount = 29.389586621217.*",
               "HashJoin\\(condition.*\\).*rowcount = 46.2,.*",
               "Filter\\(condition=\\[=\\(\\$2, 7\\)\\]\\).*rowcount = 46.2,.*",
               "Scan.*columns=\\[`department_id`, `employee_id`, `store_id`\\].*rowcount = 1155.0.*",
