@@ -26,6 +26,7 @@ import org.apache.calcite.schema.Schema.TableType;
 import org.apache.drill.exec.hive.HiveTestUtilities;
 import org.apache.drill.exec.impersonation.BaseTestImpersonation;
 import org.apache.drill.exec.store.hive.HiveStoragePluginConfig;
+import org.apache.drill.test.ClientFixture;
 import org.apache.drill.test.ClusterFixture;
 import org.apache.drill.test.TestBuilder;
 import org.apache.hadoop.conf.Configuration;
@@ -147,9 +148,10 @@ public class BaseTestHiveImpersonation extends BaseTestImpersonation {
     cluster.storageRegistry().put(hivePluginName, createHiveStoragePlugin(hiveConfig));
   }
 
-  protected void showTablesHelper(final String db, List<String> expectedTables) throws Exception {
+  protected void showTablesHelper(final String db, List<String> expectedTables, ClientFixture
+client) throws Exception {
     final String dbQualified = hivePluginName + "." + db;
-    final TestBuilder testBuilder = testBuilder()
+    final TestBuilder testBuilder = client.testBuilder()
         .sqlQuery("SHOW TABLES IN " + dbQualified)
         .unOrdered()
         .baselineColumns("TABLE_SCHEMA", "TABLE_NAME");
@@ -165,9 +167,10 @@ public class BaseTestHiveImpersonation extends BaseTestImpersonation {
     testBuilder.go();
   }
 
-  protected void fromInfoSchemaHelper(final String db, List<String> expectedTables, List<TableType> expectedTableTypes) throws Exception {
+  protected void fromInfoSchemaHelper(final String db, List<String> expectedTables, List<TableType>
+expectedTableTypes, ClientFixture client) throws Exception {
     final String dbQualified = hivePluginName + "." + db;
-    final TestBuilder testBuilder = testBuilder()
+    final TestBuilder testBuilder = client.testBuilder()
         .sqlQuery("SELECT TABLE_SCHEMA, TABLE_NAME, TABLE_TYPE \n" +
             "FROM INFORMATION_SCHEMA.`TABLES` \n" +
             "WHERE TABLE_SCHEMA = '" + dbQualified + "'")
@@ -191,7 +194,7 @@ public class BaseTestHiveImpersonation extends BaseTestImpersonation {
     // server instances this should be ok.
   }
 
-  static void queryView(String viewName) throws Exception {
+  static void queryView(String viewName, ClientFixture client) throws Exception {
     String query = String.format("SELECT rownum FROM %s.tmp.%s ORDER BY rownum LIMIT 1", MINI_DFS_STORAGE_PLUGIN_NAME, viewName);
     client.testBuilder()
         .sqlQuery(query)
@@ -201,7 +204,7 @@ public class BaseTestHiveImpersonation extends BaseTestImpersonation {
         .go();
   }
 
-  static void queryViewNotAuthorized(String viewName) throws Exception {
+  static void queryViewNotAuthorized(String viewName, ClientFixture client) throws Exception {
     String query = String.format("SELECT rownum FROM %s.tmp.%s ORDER BY rownum LIMIT 1", MINI_DFS_STORAGE_PLUGIN_NAME, viewName);
     String expectedMsg = String.format(
       "Not authorized to read view [%s] in schema [%s.tmp]",

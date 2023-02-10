@@ -26,6 +26,7 @@ import org.apache.drill.exec.store.dfs.FileSystemConfig;
 import org.apache.drill.exec.store.dfs.WorkspaceConfig;
 import org.apache.drill.shaded.guava.com.google.common.base.Preconditions;
 import org.apache.drill.shaded.guava.com.google.common.base.Strings;
+import org.apache.drill.test.ClientFixture;
 import org.apache.drill.test.ClusterFixture;
 import org.apache.drill.test.ClusterFixtureBuilder;
 import org.apache.drill.test.ClusterTest;
@@ -188,25 +189,27 @@ public class BaseTestImpersonation extends ClusterTest {
 
   protected static void createView(final String viewOwner, final String viewGroup, final short viewPerms,
                                  final String newViewName, final String fromSourceSchema, final String fromSourceTableName) throws Exception {
-    client = client.updateClient(cluster, client, viewOwner);
-    run(String.format("ALTER SESSION SET `%s`='%o'", ExecConstants.NEW_VIEW_DEFAULT_PERMS_KEY, viewPerms));
-    run(String.format("CREATE VIEW %s.%s AS SELECT * FROM %s.%s",
-      getWSSchema(viewOwner), newViewName, fromSourceSchema, fromSourceTableName));
+    try (ClientFixture client = cluster.client(viewOwner, "")) {
+      client.run(String.format("ALTER SESSION SET `%s`='%o'", ExecConstants.NEW_VIEW_DEFAULT_PERMS_KEY, viewPerms));
+      client.run(String.format("CREATE VIEW %s.%s AS SELECT * FROM %s.%s",
+        getWSSchema(viewOwner), newViewName, fromSourceSchema, fromSourceTableName));
 
-    // Verify the view file created has the expected permissions and ownership
-    Path viewFilePath = new Path(getUserHome(viewOwner), newViewName + DotDrillType.VIEW.getEnding());
-    FileStatus status = fs.getFileStatus(viewFilePath);
-    assertEquals(viewGroup, status.getGroup());
-    assertEquals(viewOwner, status.getOwner());
-    assertEquals(viewPerms, status.getPermission().toShort());
+      // Verify the view file created has the expected permissions and ownership
+      Path viewFilePath = new Path(getUserHome(viewOwner), newViewName + DotDrillType.VIEW.getEnding());
+      FileStatus status = fs.getFileStatus(viewFilePath);
+      assertEquals(viewGroup, status.getGroup());
+      assertEquals(viewOwner, status.getOwner());
+      assertEquals(viewPerms, status.getPermission().toShort());
+    }
   }
 
   protected static void createView(final String viewOwner, final String viewGroup, final String viewName,
                                  final String viewDef) throws Exception {
-    client = client.updateClient(cluster, client, viewOwner);
-    run(String.format("ALTER SESSION SET `%s`='%o'", ExecConstants.NEW_VIEW_DEFAULT_PERMS_KEY, (short) 0750));
-    run("CREATE VIEW %s.%s.%s AS %s", MINI_DFS_STORAGE_PLUGIN_NAME, "tmp", viewName, viewDef);
-    final Path viewFilePath = new Path("/tmp/", viewName + DotDrillType.VIEW.getEnding());
-    fs.setOwner(viewFilePath, viewOwner, viewGroup);
+    try (ClientFixture client = cluster.client(viewOwner, "")) {
+      client.run(String.format("ALTER SESSION SET `%s`='%o'", ExecConstants.NEW_VIEW_DEFAULT_PERMS_KEY, (short) 0750));
+      client.run("CREATE VIEW %s.%s.%s AS %s", MINI_DFS_STORAGE_PLUGIN_NAME, "tmp", viewName, viewDef);
+      final Path viewFilePath = new Path("/tmp/", viewName + DotDrillType.VIEW.getEnding());
+      fs.setOwner(viewFilePath, viewOwner, viewGroup);
+    }
   }
 }

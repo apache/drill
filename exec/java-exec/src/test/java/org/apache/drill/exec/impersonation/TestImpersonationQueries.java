@@ -25,6 +25,7 @@ import org.apache.drill.exec.store.StoragePluginRegistry.PluginException;
 import org.apache.drill.exec.store.avro.AvroDataGenerator;
 import org.apache.drill.exec.store.dfs.WorkspaceConfig;
 import org.apache.drill.shaded.guava.com.google.common.collect.Maps;
+import org.apache.drill.test.ClientFixture;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.fs.permission.FsPermission;
@@ -96,15 +97,16 @@ public class TestImpersonationQueries extends BaseTestImpersonation {
   }
 
   private static void createTestTable(String user, String group, String tableName) throws Exception {
-    client = client.updateClient(cluster, client, user);
-    run("USE " + getWSSchema(user));
-    run("CREATE TABLE %s as SELECT * FROM cp.`tpch/%s.parquet`", tableName, tableName);
-    // Change the ownership and permissions manually. Currently there is no option to specify the default permissions
-    // and ownership for new tables.
-    final Path tablePath = new Path(getUserHome(user), tableName);
+    try (ClientFixture client = cluster.client(user, "")) {
+      client.run("USE " + getWSSchema(user));
+      client.run("CREATE TABLE %s as SELECT * FROM cp.`tpch/%s.parquet`", tableName, tableName);
+      // Change the ownership and permissions manually. Currently there is no option to specify the default permissions
+      // and ownership for new tables.
+      final Path tablePath = new Path(getUserHome(user), tableName);
 
-    fs.setOwner(tablePath, user, group);
-    fs.setPermission(tablePath, new FsPermission((short)0750));
+      fs.setOwner(tablePath, user, group);
+      fs.setPermission(tablePath, new FsPermission((short)0750));
+    }
   }
 
   private static void createNestedTestViewsOnLineItem() throws Exception {
@@ -161,35 +163,38 @@ public class TestImpersonationQueries extends BaseTestImpersonation {
 
   private static void createRecordReadersData(String user, String group) throws Exception {
     // copy sequence file
-    client = client.updateClient(cluster, client, user);
-    Path localFile = new Path(DrillFileUtils.getResourceAsFile("/sequencefiles/simple.seq").toURI().toString());
-    Path dfsFile = new Path(getUserHome(user), "simple.seq");
-    fs.copyFromLocalFile(localFile, dfsFile);
-    fs.setOwner(dfsFile, user, group);
-    fs.setPermission(dfsFile, new FsPermission((short) 0700));
+    try (ClientFixture client = cluster.client(user, "")) {
+      Path localFile = new Path(DrillFileUtils.getResourceAsFile("/sequencefiles/simple.seq").toURI().toString());
+      Path dfsFile = new Path(getUserHome(user), "simple.seq");
+      fs.copyFromLocalFile(localFile, dfsFile);
+      fs.setOwner(dfsFile, user, group);
+      fs.setPermission(dfsFile, new FsPermission((short) 0700));
 
-    AvroDataGenerator avroDataGenerator = new AvroDataGenerator(dirTestWatcher);
-    localFile = new Path(avroDataGenerator.generateSimplePrimitiveSchema_NoNullValues().getFilePath());
-    dfsFile = new Path(getUserHome(user), "simple.avro");
-    fs.copyFromLocalFile(localFile, dfsFile);
-    fs.setOwner(dfsFile, user, group);
-    fs.setPermission(dfsFile, new FsPermission((short) 0700));
+      AvroDataGenerator avroDataGenerator = new AvroDataGenerator(dirTestWatcher);
+      localFile = new Path(avroDataGenerator.generateSimplePrimitiveSchema_NoNullValues().getFilePath());
+      dfsFile = new Path(getUserHome(user), "simple.avro");
+      fs.copyFromLocalFile(localFile, dfsFile);
+      fs.setOwner(dfsFile, user, group);
+      fs.setPermission(dfsFile, new FsPermission((short) 0700));
+    }
   }
 
   @Test
   public void testDirectImpersonation_HasUserReadPermissions() throws Exception {
     // Table lineitem is owned by "user0_1:group0_1" with permissions 750. Try to read the table as "user0_1". We
     // shouldn't expect any errors.
-    client = client.updateClient(cluster, client, org1Users[0]);
-    run("SELECT * FROM %s.lineitem ORDER BY l_orderkey LIMIT 1", getWSSchema(org1Users[0]));
+    try (ClientFixture client = cluster.client(org1Users[0], "")) {
+      client.run("SELECT * FROM %s.lineitem ORDER BY l_orderkey LIMIT 1", getWSSchema(org1Users[0]));
+    }
   }
 
   @Test
   public void testDirectImpersonation_HasGroupReadPermissions() throws Exception {
     // Table lineitem is owned by "user0_1:group0_1" with permissions 750. Try to read the table as "user1_1". We
     // shouldn't expect any errors as "user1_1" is part of the "group0_1"
-    client = client.updateClient(cluster, client, org1Users[1]);
-    run("SELECT * FROM %s.lineitem ORDER BY l_orderkey LIMIT 1", getWSSchema(org1Users[0]));
+    try (ClientFixture client = cluster.client(org1Users[1], "")) {
+      client.run("SELECT * FROM %s.lineitem ORDER BY l_orderkey LIMIT 1", getWSSchema(org1Users[0]));
+    }
   }
 
   @Test
@@ -198,8 +203,9 @@ public class TestImpersonationQueries extends BaseTestImpersonation {
     try {
       // Table lineitem is owned by "user0_1:group0_1" with permissions 750. Now try to read the table as "user2_1". We
       // should expect a permission denied error as "user2_1" is not part of the "group0_1"
-      client = client.updateClient(cluster, client, org1Users[2]);
-      run("SELECT * FROM %s.lineitem ORDER BY l_orderkey LIMIT 1", getWSSchema(org1Users[0]));
+      try (ClientFixture client = cluster.client(org1Users[2], "")) {
+        client.run("SELECT * FROM %s.lineitem ORDER BY l_orderkey LIMIT 1", getWSSchema(org1Users[0]));
+      }
     } catch(UserRemoteException e) {
       ex = e;
     }
@@ -211,8 +217,9 @@ public class TestImpersonationQueries extends BaseTestImpersonation {
 
   @Test
   public void testMultiLevelImpersonationEqualToMaxUserHops() throws Exception {
-    client = client.updateClient(cluster, client, org1Users[4]);
-    run("SELECT * from %s.u4_lineitem LIMIT 1", getWSSchema(org1Users[4]));
+    try (ClientFixture client = cluster.client(org1Users[4], "")) {
+      client.run("SELECT * from %s.u4_lineitem LIMIT 1", getWSSchema(org1Users[4]));
+    }
   }
 
   @Test
@@ -220,8 +227,9 @@ public class TestImpersonationQueries extends BaseTestImpersonation {
     UserRemoteException ex = null;
 
     try {
-      client = client.updateClient(cluster, client, org1Users[5]);
-      run("SELECT * from %s.u4_lineitem LIMIT 1", getWSSchema(org1Users[4]));
+      try (ClientFixture client = cluster.client(org1Users[5], "")) {
+        client.run("SELECT * from %s.u4_lineitem LIMIT 1", getWSSchema(org1Users[4]));
+      }
     } catch (UserRemoteException e) {
       ex = e;
     }
@@ -234,9 +242,10 @@ public class TestImpersonationQueries extends BaseTestImpersonation {
 
   @Test
   public void testMultiLevelImpersonationJoinEachSideReachesMaxUserHops() throws Exception {
-    client = client.updateClient(cluster, client, org1Users[4]);
-    run("SELECT * from %s.u4_lineitem l JOIN %s.u3_orders o ON l.l_orderkey = o.o_orderkey LIMIT 1",
-      getWSSchema(org1Users[4]), getWSSchema(org2Users[3]));
+    try (ClientFixture client = cluster.client(org1Users[4], "")) {
+      client.run("SELECT * from %s.u4_lineitem l JOIN %s.u3_orders o ON l.l_orderkey = o.o_orderkey LIMIT 1",
+        getWSSchema(org1Users[4]), getWSSchema(org2Users[3]));
+    }
   }
 
   @Test
@@ -244,9 +253,10 @@ public class TestImpersonationQueries extends BaseTestImpersonation {
     UserRemoteException ex = null;
 
     try {
-      client = client.updateClient(cluster, client, org1Users[4]);
-      run("SELECT * from %s.u4_lineitem l JOIN %s.u4_orders o ON l.l_orderkey = o.o_orderkey LIMIT 1",
-          getWSSchema(org1Users[4]), getWSSchema(org2Users[4]));
+      try (ClientFixture client = cluster.client(org1Users[4], "")) {
+        client.run("SELECT * from %s.u4_lineitem l JOIN %s.u4_orders o ON l.l_orderkey = o.o_orderkey LIMIT 1",
+            getWSSchema(org1Users[4]), getWSSchema(org2Users[4]));
+      }
     } catch(UserRemoteException e) {
       ex = e;
     }
@@ -264,16 +274,18 @@ public class TestImpersonationQueries extends BaseTestImpersonation {
       String.format("SELECT convert_from(t.binary_key, 'UTF8') as k FROM %s.`%s` t", MINI_DFS_STORAGE_PLUGIN_NAME,
         new Path(getUserHome(org1Users[0]), "simple.seq")));
     try {
-      client = client.updateClient(cluster, client, org1Users[1]);
-      run("SELECT k FROM %s.%s.%s", MINI_DFS_STORAGE_PLUGIN_NAME, "tmp", "simple_seq_view");
+      try (ClientFixture client = cluster.client(org1Users[1], "")) {
+        client.run("SELECT k FROM %s.%s.%s", MINI_DFS_STORAGE_PLUGIN_NAME, "tmp", "simple_seq_view");
+      }
     } catch (UserRemoteException e) {
       assertNull("This test should pass.", e);
     }
     createView(org1Users[1], org1Groups[1], "simple_seq_view_2",
       String.format("SELECT k FROM %s.%s.%s", MINI_DFS_STORAGE_PLUGIN_NAME, "tmp", "simple_seq_view"));
     try {
-      client = client.updateClient(cluster, client, org1Users[2]);
-      run("SELECT k FROM %s.%s.%s", MINI_DFS_STORAGE_PLUGIN_NAME, "tmp", "simple_seq_view_2");
+      try (ClientFixture client = cluster.client(org1Users[2], "")) {
+        client.run("SELECT k FROM %s.%s.%s", MINI_DFS_STORAGE_PLUGIN_NAME, "tmp", "simple_seq_view_2");
+      }
     } catch (UserRemoteException e) {
       assertNull("This test should pass.", e);
     }
@@ -285,22 +297,24 @@ public class TestImpersonationQueries extends BaseTestImpersonation {
       String.format("SELECT h_boolean, e_double FROM %s.`%s` t", MINI_DFS_STORAGE_PLUGIN_NAME,
         new Path(getUserHome(org1Users[0]), "simple.avro")));
 
-    client = client.updateClient(cluster, client, org1Users[1]);
-    run("SELECT h_boolean FROM %s.%s.%s", MINI_DFS_STORAGE_PLUGIN_NAME, "tmp", "simple_avro_view");
+    try (ClientFixture client = cluster.client(org1Users[1], "")) {
+      client.run("SELECT h_boolean FROM %s.%s.%s", MINI_DFS_STORAGE_PLUGIN_NAME, "tmp", "simple_avro_view");
+    }
   }
 
   @Test // DRILL-7250
   public void testCTEWithImpersonation() throws Exception {
     // Table lineitem is owned by "user0_1:group0_1" with permissions 750. "user2_1" doesn't have access to it,
     // but query uses CTE with the same name as the table, so query shouldn't look for lineitem table
-    client = client.updateClient(cluster, client, org1Users[2]);
-    run("use %s", getWSSchema(org1Users[0]));
-    testBuilder()
-        .sqlQuery("with lineitem as (SELECT 1 as a) select * from lineitem")
-        .unOrdered()
-        .baselineColumns("a")
-        .baselineValues(1)
-        .go();
+    try (ClientFixture client = cluster.client(org1Users[2], "")) {
+      client.run("use %s", getWSSchema(org1Users[0]));
+      testBuilder()
+          .sqlQuery("with lineitem as (SELECT 1 as a) select * from lineitem")
+          .unOrdered()
+          .baselineColumns("a")
+          .baselineValues(1)
+          .go();
+    }
   }
 
   @AfterClass

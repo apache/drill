@@ -19,6 +19,7 @@ package org.apache.drill.exec.impersonation.hive;
 
 import org.apache.drill.shaded.guava.com.google.common.collect.ImmutableList;
 import org.apache.drill.shaded.guava.com.google.common.collect.Maps;
+import org.apache.drill.test.ClientFixture;
 import org.apache.drill.categories.HiveStorageTest;
 import org.apache.drill.categories.SlowTest;
 import org.apache.hadoop.hive.conf.HiveConf.ConfVars;
@@ -189,8 +190,8 @@ public class TestSqlStdBasedAuthorization extends BaseTestHiveImpersonation {
 
   @Test
   public void user0_showTables() throws Exception {
-    client = client.updateClient(cluster, client, org1Users[0]);
-    showTablesHelper(db_general,
+    try (ClientFixture client = cluster.client(org1Users[0], "")) {
+      showTablesHelper(db_general,
         // Users are expected to see all tables in a database even if they don't have permissions to read from tables.
         ImmutableList.of(
             g_student_user0,
@@ -199,15 +200,19 @@ public class TestSqlStdBasedAuthorization extends BaseTestHiveImpersonation {
             vw_student_user0,
             vw_voter_role0,
             vw_student_user2
-        ));
+        ),
+        client
+      );
+    }
   }
 
   @Test
   public void user0_allowed_g_student_user0() throws Exception {
     // SELECT on "student_user0" table is granted to user "user0"
-    client = client.updateClient(cluster, client, org1Users[0]);
-    run("USE " + hivePluginName + "." + db_general);
-    run(String.format("SELECT * FROM %s ORDER BY name LIMIT 2", g_student_user0));
+    try (ClientFixture client = cluster.client(org1Users[0], "")) {
+      run("USE " + hivePluginName + "." + db_general);
+      run(String.format("SELECT * FROM %s ORDER BY name LIMIT 2", g_student_user0));
+    }
   }
 
   @Test
@@ -219,17 +224,18 @@ public class TestSqlStdBasedAuthorization extends BaseTestHiveImpersonation {
   public void user0_forbidden_g_voter_role0() throws Exception {
     // SELECT on table "student_user0" is NOT granted to user "user0" directly or indirectly through role "role0" as
     // user "user0" is not part of role "role0"
-    client = client.updateClient(cluster, client, org1Users[0]);
-    run("USE " + hivePluginName + "." + db_general);
-    final String query = String.format("SELECT * FROM %s ORDER BY name LIMIT 2", g_voter_role0);
-    String expectedMsg = "Principal [name=user0_1, type=USER] does not have following privileges for " +
-        "operation QUERY [[SELECT] on Object [type=TABLE_OR_VIEW, name=db_general.voter_role0]]\n";
+    try (ClientFixture client = cluster.client(org1Users[0], "")) {
+      run("USE " + hivePluginName + "." + db_general);
+      final String query = String.format("SELECT * FROM %s ORDER BY name LIMIT 2", g_voter_role0);
+      String expectedMsg = "Principal [name=user0_1, type=USER] does not have following privileges for " +
+          "operation QUERY [[SELECT] on Object [type=TABLE_OR_VIEW, name=db_general.voter_role0]]\n";
 
-    client.queryBuilder()
-      .sql(query)
-      .userExceptionMatcher()
-      .include(expectedMsg)
-      .match();
+      client.queryBuilder()
+        .sql(query)
+        .userExceptionMatcher()
+        .include(expectedMsg)
+        .match();
+    }
   }
 
   @Test
@@ -239,45 +245,51 @@ public class TestSqlStdBasedAuthorization extends BaseTestHiveImpersonation {
 
   @Test
   public void user0_forbidden_v_student_u1g1_750() throws Exception {
-    client = client.updateClient(cluster, client, org1Users[0]);
-    queryViewNotAuthorized(v_student_u1g1_750);
+    try (ClientFixture client = cluster.client(org1Users[0], "")) {
+      queryViewNotAuthorized(v_student_u1g1_750, client);
+    }
   }
 
   @Test
   public void user0_allowed_v_student_u0g0_750() throws Exception {
-    client = client.updateClient(cluster, client, org1Users[0]);
-    queryView(v_student_u0g0_750);
+    try (ClientFixture client = cluster.client(org1Users[0], "")) {
+      queryView(v_student_u0g0_750, client);
+    }
   }
 
   @Test
   public void user1_showTables() throws Exception {
-    client = client.updateClient(cluster, client, org1Users[1]);
-    showTablesHelper(db_general,
-        // Users are expected to see all tables in a database even if they don't have permissions to read from tables.
-        ImmutableList.of(
-            g_student_user0,
-            g_student_user2,
-            g_voter_role0,
-            vw_student_user0,
-            vw_voter_role0,
-            vw_student_user2
-        ));
+    try (ClientFixture client = cluster.client(org1Users[1], "")) {
+      showTablesHelper(db_general,
+          // Users are expected to see all tables in a database even if they don't have permissions to read from tables.
+          ImmutableList.of(
+              g_student_user0,
+              g_student_user2,
+              g_voter_role0,
+              vw_student_user0,
+              vw_voter_role0,
+              vw_student_user2
+          ),
+          client
+      );
+    }
   }
 
   @Test
   public void user1_forbidden_g_student_user0() throws Exception {
     // SELECT on table "student_user0" is NOT granted to user "user1"
-    client = client.updateClient(cluster, client, org1Users[1]);
-    run("USE " + hivePluginName + "." + db_general);
-    final String query = String.format("SELECT * FROM %s ORDER BY name LIMIT 2", g_student_user0);
-    String expectedMsg = "Principal [name=user1_1, type=USER] does not have following privileges for " +
-        "operation QUERY [[SELECT] on Object [type=TABLE_OR_VIEW, name=db_general.student_user0]]\n";
+    try (ClientFixture client = cluster.client(org1Users[1], "")) {
+      run("USE " + hivePluginName + "." + db_general);
+      final String query = String.format("SELECT * FROM %s ORDER BY name LIMIT 2", g_student_user0);
+      String expectedMsg = "Principal [name=user1_1, type=USER] does not have following privileges for " +
+          "operation QUERY [[SELECT] on Object [type=TABLE_OR_VIEW, name=db_general.student_user0]]\n";
 
-    client.queryBuilder()
-      .sql(query)
-      .userExceptionMatcher()
-      .include(expectedMsg)
-      .match();
+      client.queryBuilder()
+        .sql(query)
+        .userExceptionMatcher()
+        .include(expectedMsg)
+        .match();
+    }
   }
 
   @Test
@@ -288,9 +300,10 @@ public class TestSqlStdBasedAuthorization extends BaseTestHiveImpersonation {
   @Test
   public void user1_allowed_g_voter_role0() throws Exception {
     // SELECT on "voter_role0" table is granted to role "role0" and user "user1" is part the role "role0"
-    client = client.updateClient(cluster, client, org1Users[1]);
-    run("USE " + hivePluginName + "." + db_general);
-    run(String.format("SELECT * FROM %s ORDER BY name LIMIT 2", g_voter_role0));
+    try (ClientFixture client = cluster.client(org1Users[1], "")) {
+      run("USE " + hivePluginName + "." + db_general);
+      run(String.format("SELECT * FROM %s ORDER BY name LIMIT 2", g_voter_role0));
+    }
   }
 
   @Test
@@ -302,18 +315,19 @@ public class TestSqlStdBasedAuthorization extends BaseTestHiveImpersonation {
   public void user1_allowed_g_voter_role0_but_forbidden_g_student_user2() throws Exception {
     // SELECT on "voter_role0" table is granted to role "role0" and user "user1" is part the role "role0"
     // SELECT on "student_user2" table is NOT granted to either role "role0" or user "user1"
-    client = client.updateClient(cluster, client, org1Users[1]);
-    run("USE " + hivePluginName + "." + db_general);
-    final String query =
-        String.format("SELECT * FROM %s v JOIN %s s on v.name = s.name limit 2;", g_voter_role0, g_student_user2);
-    String expectedMsg = "Principal [name=user1_1, type=USER] does not have following privileges for " +
-        "operation QUERY [[SELECT] on Object [type=TABLE_OR_VIEW, name=db_general.student_user2]]";
+    try (ClientFixture client = cluster.client(org1Users[1], "")) {
+      run("USE " + hivePluginName + "." + db_general);
+      final String query =
+          String.format("SELECT * FROM %s v JOIN %s s on v.name = s.name limit 2;", g_voter_role0, g_student_user2);
+      String expectedMsg = "Principal [name=user1_1, type=USER] does not have following privileges for " +
+          "operation QUERY [[SELECT] on Object [type=TABLE_OR_VIEW, name=db_general.student_user2]]";
 
-    client.queryBuilder()
-      .sql(query)
-      .userExceptionMatcher()
-      .include(expectedMsg)
-      .match();
+      client.queryBuilder()
+        .sql(query)
+        .userExceptionMatcher()
+        .include(expectedMsg)
+        .match();
+    }
   }
 
 
@@ -321,38 +335,42 @@ public class TestSqlStdBasedAuthorization extends BaseTestHiveImpersonation {
   public void user1_allowed_vw_voter_role0_but_forbidden_vw_student_user2() throws Exception {
     // SELECT on "vw_voter_role0" table is granted to role "role0" and user "user1" is part the role "role0"
     // SELECT on "vw_student_user2" table is NOT granted to either role "role0" or user "user1"
-    client = client.updateClient(cluster, client, org1Users[1]);
-    run("USE " + hivePluginName + "." + db_general);
-    final String query =
-        String.format("SELECT * FROM %s v JOIN %s s on v.name = s.name limit 2;", vw_voter_role0, vw_student_user2);
-    String expectedMsg = "Principal [name=user1_1, type=USER] does not have following privileges for " +
-        "operation QUERY [[SELECT] on Object [type=TABLE_OR_VIEW, name=db_general.vw_student_user2]]";
+    try (ClientFixture client = cluster.client(org1Users[1], "")) {
+      run("USE " + hivePluginName + "." + db_general);
+      final String query =
+          String.format("SELECT * FROM %s v JOIN %s s on v.name = s.name limit 2;", vw_voter_role0, vw_student_user2);
+      String expectedMsg = "Principal [name=user1_1, type=USER] does not have following privileges for " +
+          "operation QUERY [[SELECT] on Object [type=TABLE_OR_VIEW, name=db_general.vw_student_user2]]";
 
-    client.queryBuilder()
-      .sql(query)
-      .userExceptionMatcher()
-      .include(expectedMsg)
-      .match();
+      client.queryBuilder()
+        .sql(query)
+        .userExceptionMatcher()
+        .include(expectedMsg)
+        .match();
+    }
   }
 
   @Test
   public void user1_allowed_v_student_u0g0_750() throws Exception {
-    client = client.updateClient(cluster, client, org1Users[1]);
-    queryView(v_student_u0g0_750);
+    try (ClientFixture client = cluster.client(org1Users[1], "")) {
+      queryView(v_student_u0g0_750);
+    }
   }
 
   @Test
   public void user1_allowed_v_student_u1g1_750() throws Exception {
-    client = client.updateClient(cluster, client, org1Users[1]);
-    queryView(v_student_u1g1_750);
+    try (ClientFixture client = cluster.client(org1Users[1], "")) {
+      queryView(v_student_u1g1_750, client);
+    }
   }
 
   @Test
   public void user2_allowed_g_voter_role0() throws Exception {
     // SELECT on "voter_role0" table is granted to role "role0" and user "user2" is part the role "role0"
-    client = client.updateClient(cluster, client, org1Users[2]);
-    run("USE " + hivePluginName + "." + db_general);
-    run(String.format("SELECT * FROM %s ORDER BY name LIMIT 2", g_voter_role0));
+    try (ClientFixture client = cluster.client(org1Users[2], "")) {
+      run("USE " + hivePluginName + "." + db_general);
+      run(String.format("SELECT * FROM %s ORDER BY name LIMIT 2", g_voter_role0));
+    }
   }
 
   @Test
@@ -363,9 +381,10 @@ public class TestSqlStdBasedAuthorization extends BaseTestHiveImpersonation {
   @Test
   public void user2_allowed_g_student_user2() throws Exception {
     // SELECT on "student_user2" table is granted to user "user2"
-    client = client.updateClient(cluster, client, org1Users[2]);
-    run("USE " + hivePluginName + "." + db_general);
-    run(String.format("SELECT * FROM %s ORDER BY name LIMIT 2", g_student_user2));
+    try (ClientFixture client = cluster.client(org1Users[2], "")) {
+      run("USE " + hivePluginName + "." + db_general);
+      run(String.format("SELECT * FROM %s ORDER BY name LIMIT 2", g_student_user2));
+    }
   }
 
   @Test
@@ -377,28 +396,32 @@ public class TestSqlStdBasedAuthorization extends BaseTestHiveImpersonation {
   public void user2_allowed_g_voter_role0_and_g_student_user2() throws Exception {
     // SELECT on "voter_role0" table is granted to role "role0" and user "user2" is part the role "role0"
     // SELECT on "student_user2" table is granted to user "user2"
-    client = client.updateClient(cluster, client, org1Users[2]);
-    run("USE " + hivePluginName + "." + db_general);
-    run(String.format("SELECT * FROM %s v JOIN %s s on v.name = s.name limit 2;", g_voter_role0, g_student_user2));
+    try (ClientFixture client = cluster.client(org1Users[2], "")) {
+      run("USE " + hivePluginName + "." + db_general);
+      run(String.format("SELECT * FROM %s v JOIN %s s on v.name = s.name limit 2;", g_voter_role0, g_student_user2));
+    }
   }
 
   @Test
   public void user2_allowed_vw_voter_role0_and_vw_student_user2() throws Exception {
-    client = client.updateClient(cluster, client, org1Users[2]);
-    run("USE " + hivePluginName + "." + db_general);
-    run(String.format("SELECT * FROM %s v JOIN %s s on v.name = s.name limit 2;", vw_voter_role0, vw_student_user2));
+    try (ClientFixture client = cluster.client(org1Users[2], "")) {
+      run("USE " + hivePluginName + "." + db_general);
+      run(String.format("SELECT * FROM %s v JOIN %s s on v.name = s.name limit 2;", vw_voter_role0, vw_student_user2));
+    }
   }
 
   @Test
   public void user2_forbidden_v_student_u0g0_750() throws Exception {
-    client = client.updateClient(cluster, client, org1Users[2]);
-    queryViewNotAuthorized(v_student_u0g0_750);
+    try (ClientFixture client = cluster.client(org1Users[2], "")) {
+      queryViewNotAuthorized(v_student_u0g0_750, client);
+    }
   }
 
   @Test
   public void user2_allowed_v_student_u1g1_750() throws Exception {
-    client = client.updateClient(cluster, client, org1Users[2]);
-    queryView(v_student_u1g1_750);
+    try (ClientFixture client = cluster.client(org1Users[2], "")) {
+      queryView(v_student_u1g1_750, client);
+    }
   }
 
   @AfterClass
@@ -410,13 +433,14 @@ public class TestSqlStdBasedAuthorization extends BaseTestHiveImpersonation {
   private static void queryHiveView(String usr, String viewName) throws Exception {
     String query = String.format("SELECT COUNT(*) AS rownum FROM %s.%s.%s",
         hivePluginName, db_general, viewName);
-    client = client.updateClient(cluster, client, usr);
-    client.testBuilder()
-        .sqlQuery(query)
-        .unOrdered()
-        .baselineColumns("rownum")
-        .baselineValues(1L)
-        .go();
+    try (ClientFixture client = cluster.client(usr, "")) {
+      client.testBuilder()
+          .sqlQuery(query)
+          .unOrdered()
+          .baselineColumns("rownum")
+          .baselineValues(1L)
+          .go();
+    }
   }
 
   private static void queryHiveViewNotAuthorized(String usr, String viewName) throws Exception {
@@ -424,12 +448,13 @@ public class TestSqlStdBasedAuthorization extends BaseTestHiveImpersonation {
     final String expectedError = String.format("Principal [name=%s, type=USER] does not have following privileges for " +
             "operation QUERY [[SELECT] on Object [type=TABLE_OR_VIEW, name=db_general.%s]]\n",
         usr, viewName);
-    client = client.updateClient(cluster, client, usr);
-    client.queryBuilder()
-      .sql(query)
-      .userExceptionMatcher()
-      .include(expectedError)
-      .match();
+    try (ClientFixture client = cluster.client(usr, "")) {
+      client.queryBuilder()
+        .sql(query)
+        .userExceptionMatcher()
+        .include(expectedError)
+        .match();
+    }
   }
 
   private static void createHiveView(Driver driver, String db, String viewName, String tblName) {

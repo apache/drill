@@ -28,7 +28,6 @@ import java.util.Properties;
 import java.util.concurrent.ExecutionException;
 
 import org.apache.drill.common.config.DrillProperties;
-import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.client.DrillClient;
 import org.apache.drill.exec.memory.BufferAllocator;
@@ -152,6 +151,10 @@ public class ClientFixture implements AutoCloseable {
     runSqlSilently("ALTER SYSTEM RESET `" + key + "`");
   }
 
+  public void run(String sql, Object...args)  throws Exception {
+    queryBuilder().sql(sql, args).run();
+  }
+
   /**
    * Run SQL silently (discard results).
    *
@@ -161,7 +164,7 @@ public class ClientFixture implements AutoCloseable {
    */
   public void runSqlSilently(String sql, Object... args) {
     try {
-      queryBuilder().sql(sql, args).run();
+      run(sql, args);
     } catch (Exception e) {
       // Should not fail during tests. Convert exception to unchecked
       // to simplify test code.
@@ -413,28 +416,4 @@ public class ClientFixture implements AutoCloseable {
     }
   }
 
-  public ClientFixture updateClient(final ClusterFixture cluster, final ClientFixture client, final Properties properties) {
-    client.close();
-    ClientFixture.ClientBuilder clientBuilder = cluster.clientBuilder();
-    if (properties != null) {
-      for (final String key : properties.stringPropertyNames()) {
-        final String lowerCaseKey = key.toLowerCase();
-        clientBuilder.property(lowerCaseKey, properties.getProperty(key));
-      }
-    }
-    return clientBuilder.build();
-  }
-
-  public ClientFixture updateClient(final ClusterFixture cluster, final ClientFixture client, final String user) {
-    return updateClient(cluster, client, user, null);
-  }
-
-  public ClientFixture updateClient(final ClusterFixture cluster, final ClientFixture client, final String user, final String password) {
-    final Properties properties = new Properties();
-    properties.setProperty(DrillProperties.USER, user);
-    if (password != null) {
-      properties.setProperty(DrillProperties.PASSWORD, password);
-    }
-    return updateClient(cluster, client, properties);
-  }
 }
