@@ -120,7 +120,7 @@ public class TestMSAccessReader extends ClusterTest {
 
     new RowSetComparison(expected).verifyAndClearAll(results);
   }
-  
+
   @Test
   public void testMetadataStarQuery() throws Exception {
     String sql = "SELECT * FROM cp.`data/V2019/extDateTestV2019.accdb`";
