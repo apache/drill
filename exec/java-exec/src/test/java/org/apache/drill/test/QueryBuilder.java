@@ -47,6 +47,7 @@ import org.apache.drill.exec.proto.BitControl.PlanFragment;
 import org.apache.drill.exec.proto.UserBitShared.QueryId;
 import org.apache.drill.exec.proto.UserBitShared.QueryResult.QueryState;
 import org.apache.drill.exec.proto.UserBitShared.QueryType;
+import org.apache.drill.exec.proto.UserBitShared.DrillPBError.ErrorType;
 import org.apache.drill.exec.proto.helper.QueryIdHelper;
 import org.apache.drill.exec.record.RecordBatchLoader;
 import org.apache.drill.exec.record.VectorContainer;
@@ -876,6 +877,7 @@ public class QueryBuilder {
     private final UserException ex;
     private final List<String> included = new LinkedList<>();
     private final List<String> excluded = new LinkedList<>();
+    private ErrorType expectedType;
 
     public UserExceptionMatcher(Exception ex) {
       assertThat(ex, instanceOf(UserException.class));
@@ -892,6 +894,11 @@ public class QueryBuilder {
       return this;
     }
 
+    public UserExceptionMatcher expectedType(ErrorType expectedType) {
+      this.expectedType = expectedType;
+      return this;
+    }
+
     /**
      * Checks if stored patterns (string parts) are included or excluded in the
      * given exception's message. Will fail with {@link AssertionError}
@@ -900,16 +907,20 @@ public class QueryBuilder {
     public void match() {
       included.forEach(pattern -> match(pattern, true));
       excluded.forEach(pattern -> match(pattern, false));
+
+      if (expectedType != null) {
+        assertEquals(expectedType, ex.getErrorType());
+      }
     }
 
     private void match(String patternString, boolean expectedResult) {
       Pattern pattern = Pattern.compile(patternString);
       Matcher matcher = pattern.matcher(ex.getMessage());
       String message = String.format(
-        "%s in plan: %s\n%s",
+        "%s in UserException message: %s\n%s",
         expectedResult ? "Did not find expected pattern" : "Found unwanted pattern",
         patternString,
-        ex
+        ex.getMessage()
       );
       assertEquals(message, expectedResult, matcher.find());
     }

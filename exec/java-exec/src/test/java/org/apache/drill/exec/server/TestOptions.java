@@ -19,30 +19,35 @@ package org.apache.drill.exec.server;
 
 import static org.apache.drill.exec.ExecConstants.ENABLE_VERBOSE_ERRORS_KEY;
 import static org.apache.drill.exec.ExecConstants.SLICE_TARGET;
-import static org.apache.drill.exec.proto.UserBitShared.DrillPBError.ErrorType.VALIDATION;
 
 import org.apache.drill.categories.OptionsTest;
-import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.exec.ExecConstants;
-import org.apache.drill.test.BaseTestQuery;
-import org.apache.drill.test.UserExceptionMatcher;
-import org.hamcrest.MatcherAssert;
-import org.junit.Assert;
+import org.apache.drill.exec.proto.UserBitShared.DrillPBError.ErrorType;
+import org.apache.drill.test.ClusterFixture;
+import org.apache.drill.test.ClusterTest;
+import org.junit.BeforeClass;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
 @Category(OptionsTest.class)
-public class TestOptions extends BaseTestQuery {
+public class TestOptions extends ClusterTest {
 //  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(TestOptions.class);
 
+  @BeforeClass
+  public static void setUp() throws Exception {
+    startCluster(ClusterFixture.builder(dirTestWatcher));
+  }
+
   @Test
-  public void testDrillbits() throws Exception{
-    test("select * from sys.drillbits;");
+  public void testDrillbits() throws Exception {
+    run("select * from sys.drillbits");
   }
 
   @Test
   public void testOptions() throws Exception{
-    test(
+    // We don't make use of client.alterSystem and alterSession because ALTER
+    // statement execution is part of what we're testing in this class.
+    client.exec(
         "select * from sys.options;" +
         "ALTER SYSTEM set `planner.disable_exchanges` = true;" +
         "select * from sys.options;" +
@@ -53,14 +58,16 @@ public class TestOptions extends BaseTestQuery {
 
   @Test
   public void checkValidationException() throws Exception {
-    String query = "ALTER session SET %s = '%s';";
-    UserException userException = Assert.assertThrows(UserException.class, () -> test(query,SLICE_TARGET, "fail"));
-    MatcherAssert.assertThat(userException, new UserExceptionMatcher(VALIDATION));
+    client.queryBuilder()
+      .sql("ALTER session SET %s = '%s'", SLICE_TARGET, "fail")
+      .userExceptionMatcher()
+      .expectedType(ErrorType.VALIDATION)
+      .match();
   }
 
   @Test // DRILL-3122
   public void checkChangedColumn() throws Exception {
-    test("ALTER session SET `%s` = %d;", SLICE_TARGET,
+    run("ALTER session SET `%s` = %d", SLICE_TARGET,
       ExecConstants.SLICE_TARGET_DEFAULT);
     testBuilder()
         .sqlQuery("SELECT status FROM sys.options WHERE name = '%s' AND optionScope = 'SESSION'", SLICE_TARGET)
@@ -82,9 +89,9 @@ public class TestOptions extends BaseTestQuery {
       .run();
 
     // change option
-    test("SET `%s` = %d;", SLICE_TARGET, 10);
+    run("SET `%s` = %d", SLICE_TARGET, 10);
     // check changed
-    test("SELECT status, accessibleScopes, name FROM sys.options WHERE optionScope = 'SESSION';");
+    run("SELECT status, accessibleScopes, name FROM sys.options WHERE optionScope = 'SESSION'");
     testBuilder()
       .sqlQuery("SELECT val FROM sys.options WHERE name = '%s' AND optionScope = 'SESSION'", SLICE_TARGET)
       .unOrdered()
@@ -94,7 +101,7 @@ public class TestOptions extends BaseTestQuery {
       .run();
 
     // reset option
-    test("RESET `%s`;", SLICE_TARGET);
+    run("RESET `%s`", SLICE_TARGET);
     // check reverted
     testBuilder()
       .sqlQuery("SELECT status FROM sys.options WHERE name = '%s' AND optionScope = 'SESSION'", SLICE_TARGET)
@@ -116,7 +123,7 @@ public class TestOptions extends BaseTestQuery {
       .run();
 
     // change option
-    test("ALTER system SET `%s` = %b;", ENABLE_VERBOSE_ERRORS_KEY, true);
+    run("ALTER system SET `%s` = %b", ENABLE_VERBOSE_ERRORS_KEY, true);
     // check changed
     testBuilder()
       .sqlQuery("SELECT val FROM sys.options WHERE name = '%s' AND optionScope = 'SYSTEM'", ENABLE_VERBOSE_ERRORS_KEY)
@@ -127,7 +134,7 @@ public class TestOptions extends BaseTestQuery {
       .run();
 
     // reset option
-    test("ALTER system RESET `%s`;", ENABLE_VERBOSE_ERRORS_KEY);
+    run("ALTER system RESET `%s`", ENABLE_VERBOSE_ERRORS_KEY);
     // check reverted
     testBuilder()
       .sqlQuery("SELECT status FROM sys.options WHERE name = '%s' AND optionScope = 'BOOT'", ENABLE_VERBOSE_ERRORS_KEY)
@@ -141,7 +148,7 @@ public class TestOptions extends BaseTestQuery {
   @Test
   public void testResetAllSessionOptions() throws Exception {
     // change options
-    test("SET `%s` = %b;", ENABLE_VERBOSE_ERRORS_KEY, true);
+    run("SET `%s` = %b", ENABLE_VERBOSE_ERRORS_KEY, true);
     // check changed
     testBuilder()
       .sqlQuery("SELECT val FROM sys.options WHERE optionScope = 'SESSION' AND name = '%s'", ENABLE_VERBOSE_ERRORS_KEY)
@@ -152,7 +159,7 @@ public class TestOptions extends BaseTestQuery {
       .run();
 
     // reset all options
-    test("RESET ALL;");
+    run("RESET ALL");
     // check no session options changed
     testBuilder()
       .sqlQuery("SELECT status FROM sys.options WHERE status <> 'DEFAULT' AND optionScope = 'SESSION'")
@@ -165,8 +172,8 @@ public class TestOptions extends BaseTestQuery {
   @Test
   public void changeSessionAndSystemButRevertSession() throws Exception {
     // change options
-    test("ALTER SESSION SET `%s` = %b;", ENABLE_VERBOSE_ERRORS_KEY, true);
-    test("ALTER SYSTEM SET `%s` = %b;", ENABLE_VERBOSE_ERRORS_KEY, true);
+    run("ALTER SESSION SET `%s` = %b", ENABLE_VERBOSE_ERRORS_KEY, true);
+    run("ALTER SYSTEM SET `%s` = %b", ENABLE_VERBOSE_ERRORS_KEY, true);
     // check changed
     testBuilder()
       .sqlQuery("SELECT bool_val FROM sys.options_old WHERE optionScope = 'SESSION' AND name = '%s'", ENABLE_VERBOSE_ERRORS_KEY)
@@ -194,7 +201,7 @@ public class TestOptions extends BaseTestQuery {
 
 
     // reset session option
-    test("RESET `%s`;", ENABLE_VERBOSE_ERRORS_KEY);
+    run("RESET `%s`", ENABLE_VERBOSE_ERRORS_KEY);
     // check reverted
     testBuilder()
       .sqlQuery("SELECT status FROM sys.options WHERE name = '%s' AND optionScope = 'SESSION'", ENABLE_VERBOSE_ERRORS_KEY)
@@ -211,14 +218,14 @@ public class TestOptions extends BaseTestQuery {
       .build()
       .run();
     // reset system option
-    test("ALTER SYSTEM RESET `%s`;", ENABLE_VERBOSE_ERRORS_KEY);
+    run("ALTER SYSTEM RESET `%s`", ENABLE_VERBOSE_ERRORS_KEY);
   }
 
   @Test
   public void changeSessionAndNotSystem() throws Exception {
     // change options
-    test("ALTER SESSION SET `%s` = %b;", ENABLE_VERBOSE_ERRORS_KEY, true);
-    test("ALTER SYSTEM SET `%s` = %b;", ENABLE_VERBOSE_ERRORS_KEY, true);
+    run("ALTER SESSION SET `%s` = %b", ENABLE_VERBOSE_ERRORS_KEY, true);
+    run("ALTER SYSTEM SET `%s` = %b", ENABLE_VERBOSE_ERRORS_KEY, true);
     // check changed
     testBuilder()
       .sqlQuery("SELECT bool_val FROM sys.options_old WHERE optionScope = 'SESSION' AND name = '%s'", ENABLE_VERBOSE_ERRORS_KEY)
@@ -245,7 +252,7 @@ public class TestOptions extends BaseTestQuery {
       .run();
 
     // reset all session options
-    test("ALTER SESSION RESET ALL;");
+    run("ALTER SESSION RESET ALL");
     // check no session options changed
     testBuilder()
       .sqlQuery("SELECT status FROM sys.options WHERE status <> 'DEFAULT' AND optionScope = 'SESSION'")
@@ -266,8 +273,8 @@ public class TestOptions extends BaseTestQuery {
   @Test
   public void changeSystemAndNotSession() throws Exception {
     // change options
-    test("ALTER SESSION SET `%s` = %b;", ENABLE_VERBOSE_ERRORS_KEY, true);
-    test("ALTER SYSTEM SET `%s` = %b;", ENABLE_VERBOSE_ERRORS_KEY, true);
+    run("ALTER SESSION SET `%s` = %b", ENABLE_VERBOSE_ERRORS_KEY, true);
+    run("ALTER SYSTEM SET `%s` = %b", ENABLE_VERBOSE_ERRORS_KEY, true);
     // check changed
     testBuilder()
       .sqlQuery("SELECT bool_val FROM sys.options_old WHERE optionScope = 'SESSION' AND name = '%s'", ENABLE_VERBOSE_ERRORS_KEY)
@@ -294,7 +301,7 @@ public class TestOptions extends BaseTestQuery {
       .run();
 
     // reset option
-    test("ALTER system RESET `%s`;", ENABLE_VERBOSE_ERRORS_KEY);
+    run("ALTER system RESET `%s`", ENABLE_VERBOSE_ERRORS_KEY);
     // check reverted
     testBuilder()
       .sqlQuery("SELECT status FROM sys.options_old WHERE optionScope = 'BOOT' AND name = '%s'", ENABLE_VERBOSE_ERRORS_KEY)
@@ -315,8 +322,13 @@ public class TestOptions extends BaseTestQuery {
 
   @Test
   public void unsupportedLiteralValidation() throws Exception {
-    String query = "ALTER session SET `%s` = DATE '1995-01-01';";
-    UserException userException = Assert.assertThrows(UserException.class, () -> test(query,ENABLE_VERBOSE_ERRORS_KEY, "DATE '1995-01-01'"));
-    MatcherAssert.assertThat(userException, new UserExceptionMatcher(VALIDATION, "Drill doesn't support assigning literals of type"));
+    String query = "ALTER session SET `%s` = %s";
+
+    client.queryBuilder()
+      .sql(query, ENABLE_VERBOSE_ERRORS_KEY, "DATE '1995-01-01'")
+      .userExceptionMatcher()
+      .expectedType(ErrorType.VALIDATION)
+      .include("Drill doesn't support assigning literals of type")
+      .match();
   }
 }

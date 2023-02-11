@@ -20,7 +20,6 @@ package org.apache.drill.exec.impersonation;
 import org.apache.drill.categories.SecurityTest;
 import org.apache.drill.categories.SlowTest;
 import org.apache.drill.common.config.DrillProperties;
-import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.dotdrill.DotDrillType;
 import org.apache.drill.exec.proto.UserBitShared;
@@ -28,12 +27,9 @@ import org.apache.drill.exec.store.dfs.WorkspaceConfig;
 import org.apache.drill.shaded.guava.com.google.common.collect.Maps;
 import org.apache.drill.test.ClientFixture;
 import org.apache.drill.test.ClusterFixtureBuilder;
-import org.apache.drill.test.UserExceptionMatcher;
 import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.fs.permission.FsPermission;
-import org.hamcrest.MatcherAssert;
-import org.junit.Assert;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
@@ -123,13 +119,13 @@ public class TestInboundImpersonation extends BaseTestImpersonation {
       .configClientProperty(DrillProperties.PASSWORD, PROCESS_USER_PASSWORD);
     startCluster(builder);
 
-    UserException userException = Assert.assertThrows(
-      UserException.class,
-      () -> run("ALTER SYSTEM SET `%s`='%s'", ExecConstants.IMPERSONATION_POLICIES_KEY,
-        "[ invalid json ]"));
-    MatcherAssert.assertThat(userException,
-      new UserExceptionMatcher(UserBitShared.DrillPBError.ErrorType.VALIDATION,
-        "Invalid impersonation policies."));
+    client.queryBuilder()
+      .sql("ALTER SYSTEM SET `%s`='%s'", ExecConstants.IMPERSONATION_POLICIES_KEY,
+        "[ invalid json ]")
+      .userExceptionMatcher()
+      .expectedType(UserBitShared.DrillPBError.ErrorType.VALIDATION)
+      .include("Invalid impersonation policies.")
+      .match();
   }
 
   @Test
@@ -142,12 +138,13 @@ public class TestInboundImpersonation extends BaseTestImpersonation {
       .configClientProperty(DrillProperties.PASSWORD, PROCESS_USER_PASSWORD);
     startCluster(builder);
 
-    UserException userException = Assert.assertThrows(UserException.class,
-      () -> run("ALTER SYSTEM SET `%s`='%s'", ExecConstants.IMPERSONATION_POLICIES_KEY,
-        "[ { proxy_principals : { users: [\"*\" ] }," + "target_principals : { users : [\"" + TARGET_NAME + "\"] } } ]"));
-    MatcherAssert.assertThat(userException,
-      new UserExceptionMatcher(UserBitShared.DrillPBError.ErrorType.VALIDATION,
-        "Proxy principals cannot have a wildcard entry."));
+    client.queryBuilder()
+      .sql("ALTER SYSTEM SET `%s`='%s'", ExecConstants.IMPERSONATION_POLICIES_KEY,
+        "[ { proxy_principals : { users: [\"*\" ] }," + "target_principals : { users : [\"" + TARGET_NAME + "\"] } } ]")
+      .userExceptionMatcher()
+      .expectedType(UserBitShared.DrillPBError.ErrorType.VALIDATION)
+      .include("Proxy principals cannot have a wildcard entry.")
+      .match();
   }
 
   private static Map<String, WorkspaceConfig> createTestWorkspaces() throws Exception {

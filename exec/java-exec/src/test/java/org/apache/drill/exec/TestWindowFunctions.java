@@ -17,31 +17,29 @@
  */
 package org.apache.drill.exec;
 
-import org.apache.drill.test.BaseTestQuery;
+import org.apache.drill.test.ClusterFixture;
+import org.apache.drill.test.ClusterTest;
 import org.apache.drill.categories.UnlikelyTest;
 import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.exec.proto.UserBitShared;
 import org.apache.drill.exec.work.foreman.SqlUnsupportedException;
 import org.apache.drill.exec.work.foreman.UnsupportedFunctionException;
-import org.apache.drill.PlanTestBase;
 
-import org.apache.drill.test.UserExceptionMatcher;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
-import org.hamcrest.MatcherAssert;
-import org.junit.Assert;
 
 import java.nio.file.Paths;
 
-public class TestWindowFunctions extends BaseTestQuery {
+public class TestWindowFunctions extends ClusterTest {
   private static void throwAsUnsupportedException(UserException ex) throws Exception {
     SqlUnsupportedException.errorClassNameToException(ex.getOrCreatePBError(false).getException().getExceptionClass());
     throw ex;
   }
 
   @BeforeClass
-  public static void setupTestFiles() {
+  public static void setupTestFiles() throws Exception {
+    startCluster(ClusterFixture.builder(dirTestWatcher));
     dirTestWatcher.copyResourceToRoot(Paths.get("multilevel/parquet"));
     dirTestWatcher.copyResourceToRoot(Paths.get("window"));
   }
@@ -55,7 +53,13 @@ public class TestWindowFunctions extends BaseTestQuery {
     final String[] expectedPlan = {"Window.*partition \\{0\\} aggs .*\\[SUM\\(\\$0\\), COUNT\\(\\)",
         "Scan.*columns=\\[`n_nationKey`\\].*"};
     final String[] excludedPatterns = {"Scan.*columns=\\[`\\*`\\].*"};
-    PlanTestBase.testPlanMatchingPatterns(query, expectedPlan, excludedPatterns);
+
+    client.queryBuilder()
+      .sql(query)
+      .planMatcher()
+      .include(expectedPlan)
+      .exclude(excludedPatterns)
+      .match();
 
     testBuilder()
         .sqlQuery(query)
@@ -100,7 +104,13 @@ public class TestWindowFunctions extends BaseTestQuery {
     final String[] expectedPlan = {"Window.*partition \\{0\\} order by \\[0\\].*SUM\\(\\$0\\)",
         "Scan.*columns=\\[`n_nationKey`\\].*"};
     final String[] excludedPatterns = {"Scan.*columns=\\[`\\*`\\].*"};
-    PlanTestBase.testPlanMatchingPatterns(query, expectedPlan, excludedPatterns);
+
+    client.queryBuilder()
+      .sql(query)
+      .planMatcher()
+      .include(expectedPlan)
+      .exclude(excludedPatterns)
+      .match();
 
     testBuilder()
         .sqlQuery(query)
@@ -141,7 +151,7 @@ public class TestWindowFunctions extends BaseTestQuery {
       final String query = "explain plan for select a2, count(distinct b2) over(partition by a2) \n" +
           "from cp.`tpch/nation.parquet`";
 
-      test(query);
+      run(query);
     } catch(UserException ex) {
       throwAsUnsupportedException(ex);
       throw ex;
@@ -155,7 +165,7 @@ public class TestWindowFunctions extends BaseTestQuery {
           "from cp.`tpch/nation.parquet` t \n" +
           "order by a2";
 
-      test(query);
+      run(query);
     } catch(UserException ex) {
         throwAsUnsupportedException(ex);
         throw ex;
@@ -168,7 +178,7 @@ public class TestWindowFunctions extends BaseTestQuery {
       String query = "explain plan for SELECT sum(n_nationkey) OVER (PARTITION BY n_name ORDER BY n_name ROWS BETWEEN CURRENT ROW AND 1 FOLLOWING) as col2 \n" +
           "from cp.`tpch/nation.parquet`";
 
-      test(query);
+      run(query);
     } catch(UserException ex) {
       throwAsUnsupportedException(ex);
       throw ex;
@@ -183,7 +193,7 @@ public class TestWindowFunctions extends BaseTestQuery {
           "from cp.`tpch/nation.parquet` \n" +
           "order by n_nationKey";
 
-      test(query);
+      run(query);
     } catch(UserException ex) {
       throwAsUnsupportedException(ex);
       throw ex;
@@ -195,8 +205,11 @@ public class TestWindowFunctions extends BaseTestQuery {
     String query = "select rank() over(order by row_number() over(order by n_nationkey)) \n" +
       "from cp.`tpch/nation.parquet`";
 
-    UserException userException = Assert.assertThrows(UserException.class, () -> test(query));
-    MatcherAssert.assertThat(userException, new UserExceptionMatcher(UserBitShared.DrillPBError.ErrorType.VALIDATION));
+    client.queryBuilder()
+      .sql(query)
+      .userExceptionMatcher()
+      .expectedType(UserBitShared.DrillPBError.ErrorType.VALIDATION)
+      .match();
   }
 
   @Test // DRILL-3280
@@ -205,24 +218,33 @@ public class TestWindowFunctions extends BaseTestQuery {
       "from cp.`tpch/nation.parquet` \n" +
       "window w as (partition by n_name order by n_nationkey)";
 
-    UserException userException = Assert.assertThrows(UserException.class, () -> test(query));
-    MatcherAssert.assertThat(userException, new UserExceptionMatcher(UserBitShared.DrillPBError.ErrorType.VALIDATION));
+    client.queryBuilder()
+      .sql(query)
+      .userExceptionMatcher()
+      .expectedType(UserBitShared.DrillPBError.ErrorType.VALIDATION)
+      .match();
   }
 
   @Test // DRILL-3601
   public void testLeadMissingOver() throws Exception {
     String query = "select lead(n_nationkey) from cp.`tpch/nation.parquet`";
 
-    UserException userException = Assert.assertThrows(UserException.class, () -> test(query));
-    MatcherAssert.assertThat(userException, new UserExceptionMatcher(UserBitShared.DrillPBError.ErrorType.VALIDATION));
+    client.queryBuilder()
+      .sql(query)
+      .userExceptionMatcher()
+      .expectedType(UserBitShared.DrillPBError.ErrorType.VALIDATION)
+      .match();
   }
 
   @Test // DRILL-3649
   public void testMissingOverWithConstant() throws Exception {
     String query = "select NTILE(1) from cp.`tpch/nation.parquet`";
 
-    UserException userException = Assert.assertThrows(UserException.class, () -> test(query));
-    MatcherAssert.assertThat(userException, new UserExceptionMatcher(UserBitShared.DrillPBError.ErrorType.VALIDATION));
+    client.queryBuilder()
+      .sql(query)
+      .userExceptionMatcher()
+      .expectedType(UserBitShared.DrillPBError.ErrorType.VALIDATION)
+      .match();
   }
 
   @Test // DRILL-3344
@@ -231,8 +253,11 @@ public class TestWindowFunctions extends BaseTestQuery {
         "from cp.`tpch/nation.parquet` \n" +
         "group by n_name";
 
-    UserException userException = Assert.assertThrows(UserException.class, () -> test(query));
-    MatcherAssert.assertThat(userException, new UserExceptionMatcher(UserBitShared.DrillPBError.ErrorType.VALIDATION));
+    client.queryBuilder()
+      .sql(query)
+      .userExceptionMatcher()
+      .expectedType(UserBitShared.DrillPBError.ErrorType.VALIDATION)
+      .match();
   }
 
   @Test // DRILL-3346
@@ -245,12 +270,15 @@ public class TestWindowFunctions extends BaseTestQuery {
           "from testWindowGroupByOnView \n" +
           "group by b";
 
-      test("use dfs.tmp");
-      test(createView);
-      UserException userException = Assert.assertThrows(UserException.class, () -> test(query));
-      MatcherAssert.assertThat(userException, new UserExceptionMatcher(UserBitShared.DrillPBError.ErrorType.VALIDATION));
+      client.runSqlSilently("use dfs.tmp");
+      client.runSqlSilently(createView);
+      client.queryBuilder()
+        .sql(query)
+        .userExceptionMatcher()
+        .expectedType(UserBitShared.DrillPBError.ErrorType.VALIDATION)
+        .match();
     } finally {
-      test("drop view testWindowGroupByOnView");
+      run("drop view testWindowGroupByOnView");
     }
   }
 
@@ -274,7 +302,13 @@ public class TestWindowFunctions extends BaseTestQuery {
     final String[] expectedPlan1 = {"Window.*partition \\{0\\} order by \\[0\\].*SUM\\(\\$0\\)",
         "Scan.*columns=\\[`n_nationKey`\\].*"};
     final String[] excludedPatterns1 = {"Scan.*columns=\\[`\\*`\\].*"};
-    PlanTestBase.testPlanMatchingPatterns(query1, expectedPlan1, excludedPatterns1);
+
+    client.queryBuilder()
+      .sql(query1)
+      .planMatcher()
+      .include(expectedPlan1)
+      .exclude(excludedPatterns1)
+      .match();
 
     testBuilder()
         .sqlQuery(query1)
@@ -311,7 +345,13 @@ public class TestWindowFunctions extends BaseTestQuery {
     final String[] expectedPlan2 = {"Window.*partition \\{0\\} order by \\[0\\].*SUM\\(\\$0\\)",
         "Scan.*columns=\\[`n_nationKey`\\].*"};
     final String[] excludedPatterns2 = {"Scan.*columns=\\[`\\*`\\].*"};
-    PlanTestBase.testPlanMatchingPatterns(query2, expectedPlan2, excludedPatterns2);
+
+    client.queryBuilder()
+      .sql(query2)
+      .planMatcher()
+      .include(expectedPlan2)
+      .exclude(excludedPatterns2)
+      .match();
 
     testBuilder()
         .sqlQuery(query2)
@@ -348,7 +388,13 @@ public class TestWindowFunctions extends BaseTestQuery {
     final String[] expectedPlan3 = {"Window.*partition \\{0\\}.*SUM\\(\\$0\\)",
         "Scan.*columns=\\[`n_nationKey`\\].*"};
     final String[] excludedPatterns3 = {"Scan.*columns=\\[`\\*`\\].*"};
-    PlanTestBase.testPlanMatchingPatterns(query3, expectedPlan3, excludedPatterns3);
+
+    client.queryBuilder()
+      .sql(query3)
+      .planMatcher()
+      .include(expectedPlan3)
+      .exclude(excludedPatterns3)
+      .match();
 
     testBuilder()
         .sqlQuery(query3)
@@ -395,7 +441,13 @@ public class TestWindowFunctions extends BaseTestQuery {
         "Scan.*columns=\\[`n_nationKey`\\].*",
         "Scan.*columns=\\[`n_nationKey`\\].*"};
     final String[] excludedPatterns = {"Scan.*columns=\\[`\\*`\\].*"};
-    PlanTestBase.testPlanMatchingPatterns(query, expectedPlan, excludedPatterns);
+
+    client.queryBuilder()
+      .sql(query)
+      .planMatcher()
+      .include(expectedPlan)
+      .exclude(excludedPatterns)
+      .match();
 
     testBuilder()
         .sqlQuery(query)
@@ -418,7 +470,13 @@ public class TestWindowFunctions extends BaseTestQuery {
       final String[] expectedPlan = {"Window.*order by \\[0\\].*COUNT\\(\\)",
           "Scan.*columns=\\[`o_custkey`, `o_orderpriority`\\]"};
       final String[] excludedPatterns = {"Scan.*columns=\\[`\\*`\\]"};
-      PlanTestBase.testPlanMatchingPatterns(query, expectedPlan, excludedPatterns);
+
+      client.queryBuilder()
+        .sql(query)
+        .planMatcher()
+        .include(expectedPlan)
+        .exclude(excludedPatterns)
+        .match();
 
       testBuilder()
           .sqlQuery(query)
@@ -432,7 +490,7 @@ public class TestWindowFunctions extends BaseTestQuery {
           .build()
           .run();
     } finally {
-      test("alter session set `planner.slice_target` = " + ExecConstants.SLICE_TARGET_DEFAULT);
+      run("alter session set `planner.slice_target` = " + ExecConstants.SLICE_TARGET_DEFAULT);
     }
   }
 
@@ -450,7 +508,13 @@ public class TestWindowFunctions extends BaseTestQuery {
     final String[] expectedPlan1 = {"Window.*partition \\{0\\} aggs .*SUM\\(\\$0\\), COUNT\\(\\$0\\)",
         "Scan.*columns=\\[`n_nationkey`\\]"};
     final String[] excludedPatterns1 = {"Scan.*columns=\\[`\\*`\\]"};
-    PlanTestBase.testPlanMatchingPatterns(avgQuery, expectedPlan1, excludedPatterns1);
+
+    client.queryBuilder()
+      .sql(avgQuery)
+      .planMatcher()
+      .include(expectedPlan1)
+      .exclude(excludedPatterns1)
+      .match();
 
     testBuilder()
         .sqlQuery(avgQuery)
@@ -467,7 +531,13 @@ public class TestWindowFunctions extends BaseTestQuery {
     final String[] expectedPlan2 = {"Window.*partition \\{0\\} aggs .*SUM\\(\\$2\\), SUM\\(\\$1\\), COUNT\\(\\$1\\)",
         "Scan.*columns=\\[`n_nationkey`\\]"};
     final String[] excludedPatterns2 = {"Scan.*columns=\\[`\\*`\\]"};
-    PlanTestBase.testPlanMatchingPatterns(varianceQuery, expectedPlan2, excludedPatterns2);
+
+    client.queryBuilder()
+      .sql(varianceQuery)
+      .planMatcher()
+      .include(expectedPlan2)
+      .exclude(excludedPatterns2)
+      .match();
 
     testBuilder()
         .sqlQuery(varianceQuery)
@@ -486,7 +556,13 @@ public class TestWindowFunctions extends BaseTestQuery {
     final String[] expectedPlan1 = {"Window.*partition \\{0\\} aggs .*SUM\\(\\$1\\)",
         "Scan.*columns=\\[`col_varchar`, `col_int`\\]"};
     final String[] excludedPatterns1 = {"Scan.*columns=\\[`\\*`\\]"};
-    PlanTestBase.testPlanMatchingPatterns(query, expectedPlan1, excludedPatterns1);
+
+    client.queryBuilder()
+      .sql(query)
+      .planMatcher()
+      .include(expectedPlan1)
+      .exclude(excludedPatterns1)
+      .match();
 
     testBuilder()
         .sqlQuery(query)
@@ -502,7 +578,13 @@ public class TestWindowFunctions extends BaseTestQuery {
     final String[] expectedPlan2 = {"Window.*partition \\{0\\} aggs .*SUM\\(\\$1\\), COUNT\\(\\$1\\)",
         "Scan.*columns=\\[`col_varchar`, `col_int`\\]"};
     final String[] excludedPatterns2 = {"Scan.*columns=\\[`\\*`\\]"};
-    PlanTestBase.testPlanMatchingPatterns(avgQuery, expectedPlan2, excludedPatterns2);
+
+    client.queryBuilder()
+      .sql(avgQuery)
+      .planMatcher()
+      .include(expectedPlan2)
+      .exclude(excludedPatterns2)
+      .match();
 
     testBuilder()
         .sqlQuery(avgQuery)
@@ -523,7 +605,13 @@ public class TestWindowFunctions extends BaseTestQuery {
     final String[] expectedPlan = {"Window.*partition \\{1\\} order by \\[0 DESC\\].*COUNT\\(\\)",
         "Scan.*columns=\\[`columns`\\[0\\], `columns`\\[1\\]\\]"};
     final String[] excludedPatterns = {"Scan.*columns=\\[`\\*`\\]"};
-    PlanTestBase.testPlanMatchingPatterns(query, expectedPlan, excludedPatterns);
+
+    client.queryBuilder()
+      .sql(query)
+      .planMatcher()
+      .include(expectedPlan)
+      .exclude(excludedPatterns)
+      .match();
 
     // Validate the result
     testBuilder()
@@ -554,7 +642,13 @@ public class TestWindowFunctions extends BaseTestQuery {
     final String[] expectedPlan = {"Window.*order by \\[1\\].*DENSE_RANK\\(\\)",
         "Scan.*columns=\\[`l_partkey`, `l_suppkey`\\]"};
     final String[] excludedPatterns = {"Scan.*columns=\\[`\\*`\\]"};
-    PlanTestBase.testPlanMatchingPatterns(query, expectedPlan, excludedPatterns);
+
+    client.queryBuilder()
+      .sql(query)
+      .planMatcher()
+      .include(expectedPlan)
+      .exclude(excludedPatterns)
+      .match();
 
     testBuilder()
         .sqlQuery(query)
@@ -572,7 +666,13 @@ public class TestWindowFunctions extends BaseTestQuery {
     final String[] expectedPlan = {"Window.*partition \\{1\\} order by \\[0 ASC-nulls-first\\].*SUM\\(\\$0\\)",
         "Scan.*columns=\\[`c1`, `c2`\\]"};
     final String[] excludedPatterns = {"Scan.*columns=\\[`\\*`\\]"};
-    PlanTestBase.testPlanMatchingPatterns(query, expectedPlan, excludedPatterns);
+
+    client.queryBuilder()
+      .sql(query)
+      .planMatcher()
+      .include(expectedPlan)
+      .exclude(excludedPatterns)
+      .match();
 
     testBuilder()
       .sqlQuery(query)
@@ -595,7 +695,13 @@ public class TestWindowFunctions extends BaseTestQuery {
     final String[] expectedPlan = {"Window.*partition \\{0\\} order by \\[1\\].*RANK\\(\\), \\$SUM0\\(\\$2\\), SUM\\(\\$1\\), \\$SUM0\\(\\$3\\)",
         "Scan.*columns=\\[`position_id`, `employee_id`\\]"};
     final String[] excludedPatterns = {"Scan.*columns=\\[`\\*`\\]"};
-    PlanTestBase.testPlanMatchingPatterns(query, expectedPlan, excludedPatterns);
+
+    client.queryBuilder()
+      .sql(query)
+      .planMatcher()
+      .include(expectedPlan)
+      .exclude(excludedPatterns)
+      .match();
 
     testBuilder()
         .sqlQuery(query)
@@ -624,7 +730,13 @@ public class TestWindowFunctions extends BaseTestQuery {
         "Window.*partition \\{0\\} order by \\[1\\].*COUNT\\(\\), SUM\\(\\$2\\)",
         "Scan.*columns=\\[`b1`, `c1`, `a1`\\]"};
     final String[] excludedPatterns = {"Scan.*columns=\\[`\\*`\\]"};
-    PlanTestBase.testPlanMatchingPatterns(query, expectedPlan, excludedPatterns);
+
+    client.queryBuilder()
+      .sql(query)
+      .planMatcher()
+      .include(expectedPlan)
+      .exclude(excludedPatterns)
+      .match();
 
     testBuilder()
         .sqlQuery(query)
@@ -657,7 +769,13 @@ public class TestWindowFunctions extends BaseTestQuery {
         "Window.*partition \\{0\\} order by \\[1\\].*COUNT\\(\\), SUM\\(\\$2\\)",
         "Scan.*columns=\\[`b1`, `c1`, `a1`\\]"};
     final String[] excludedPatterns = {"Scan.*columns=\\[`\\*`\\]"};
-    PlanTestBase.testPlanMatchingPatterns(query, expectedPlan, excludedPatterns);
+
+    client.queryBuilder()
+      .sql(query)
+      .planMatcher()
+      .include(expectedPlan)
+      .exclude(excludedPatterns)
+      .match();
 
     testBuilder()
         .sqlQuery(query)
@@ -683,12 +801,18 @@ public class TestWindowFunctions extends BaseTestQuery {
     String query = String.format("select sum(a1) over(partition by b1, c1) as s1, sum(a1) over() as s2 \n" +
         "from cp.`%s` \n" +
         "order by a1", root);
-    test("alter session set `planner.slice_target` = 1");
+    run("alter session set `planner.slice_target` = 1");
 
     // Validate the plan
     final String[] expectedPlan = {"Window\\(window#0=\\[window\\(aggs .*\n" +
         ".*UnionExchange"};
-    PlanTestBase.testPlanMatchingPatterns(query, expectedPlan, new String[]{});
+
+    client.queryBuilder()
+      .sql(query)
+      .planMatcher()
+      .include(expectedPlan)
+      .exclude(new String[]{})
+      .match();
 
     testBuilder()
         .sqlQuery(query)
@@ -722,7 +846,13 @@ public class TestWindowFunctions extends BaseTestQuery {
         ".*Sort.*\n" +
         ".*Window.*\\$SUM0\\(\\$2\\).*"
     };
-    PlanTestBase.testPlanMatchingPatterns(query, expectedPlan, new String[]{});
+
+    client.queryBuilder()
+      .sql(query)
+      .planMatcher()
+      .include(expectedPlan)
+      .exclude(new String[]{})
+      .match();
 
     testBuilder()
         .sqlQuery(query)
@@ -750,7 +880,13 @@ public class TestWindowFunctions extends BaseTestQuery {
 
     // Validate the plan
     final String[] expectedPlan = {"Window\\(window#0=\\[window\\(partition \\{0\\} aggs .*\\[SUM\\(\\$1\\), SUM\\(\\$2\\)\\]"};
-    PlanTestBase.testPlanMatchingPatterns(query, expectedPlan, new String[]{});
+
+    client.queryBuilder()
+      .sql(query)
+      .planMatcher()
+      .include(expectedPlan)
+      .exclude(new String[]{})
+      .match();
 
     testBuilder()
         .sqlQuery(query)
@@ -779,7 +915,13 @@ public class TestWindowFunctions extends BaseTestQuery {
 
     // Validate the plan
     final String[] expectedPlan = {"Scan.*columns=\\[`n_nationkey`\\].*"};
-    PlanTestBase.testPlanMatchingPatterns(query, expectedPlan, new String[]{});
+
+    client.queryBuilder()
+      .sql(query)
+      .planMatcher()
+      .include(expectedPlan)
+      .exclude(new String[]{})
+      .match();
 
     testBuilder()
         .sqlQuery(query)
@@ -804,7 +946,7 @@ public class TestWindowFunctions extends BaseTestQuery {
         "          ntile(3) over(PARTITION BY n_regionkey ORDER BY n_nationkey) " +
         "       FROM cp.`tpch/nation.parquet`) " +
         " order by n_regionkey, n_nationkey";
-    test(query);
+    run(query);
 
     final String baselineQuery =
         "select n_nationkey , n_regionkey , " +
@@ -869,7 +1011,13 @@ public class TestWindowFunctions extends BaseTestQuery {
     // Validate the plan
     final String[] expectedPlan = {"Window.*partition \\{0\\} order by \\[0\\].*SUM\\(\\$1\\).*",
             "HashAgg\\(group=\\[\\{0\\}\\].*\\[MIN\\(\\$1\\)\\]\\)"};
-    PlanTestBase.testPlanMatchingPatterns(query, expectedPlan, new String[]{});
+
+    client.queryBuilder()
+      .sql(query)
+      .planMatcher()
+      .include(expectedPlan)
+      .exclude(new String[]{})
+      .match();
 
     // Validate the results
     testBuilder()
@@ -891,56 +1039,70 @@ public class TestWindowFunctions extends BaseTestQuery {
 
   @Test // DRILL-4795, DRILL-4796
   public void testNestedAggregates1() throws Exception {
-    try {
+    {
       String query = "select sum(min(l_extendedprice)) over (partition by l_suppkey)\n"
               + " from cp.`tpch/nation.parquet` where l_suppkey <= 10";
-      test(query);
-    } catch(UserException ex) {
-      assert(ex.getMessage().contains("Expression 'l_suppkey' is not being grouped"));
-    }
 
-    try {
+      client.queryBuilder()
+        .sql(query)
+        .userExceptionMatcher()
+        .include("Expression 'l_suppkey' is not being grouped")
+        .match();
+    }
+    {
       String query = "select sum(min(l_extendedprice)) over (partition by l_suppkey) as totprice\n"
           + " from cp.`tpch/nation.parquet` where l_suppkey <= 10";
-      test(query);
-    } catch(UserException ex) {
-      assert(ex.getMessage().contains("Expression 'l_suppkey' is not being grouped"));
-    }
 
-    try {
+      client.queryBuilder()
+        .sql(query)
+        .userExceptionMatcher()
+        .include("Expression 'l_suppkey' is not being grouped")
+        .match();
+    }
+    {
       String query = "select sum(min(l_extendedprice)) over w1 as totprice\n"
           + " from cp.`tpch/nation.parquet` where l_suppkey <= 10\n"
           + " window w1 as (partition by l_suppkey)";
-      test(query);
-    } catch(UserException ex) {
-      assert(ex.getMessage().contains("Expression 'l_suppkey' is not being grouped"));
-    }
 
-    try {
+      client.queryBuilder()
+        .sql(query)
+        .userExceptionMatcher()
+        .include("Expression 'l_suppkey' is not being grouped")
+        .match();
+    }
+    {
       String query = "select sum(min(l_extendedprice)) over (partition by n_nationkey)\n"
               + " from cp.`tpch/nation.parquet` where l_suppkey <= 10 group by l_suppkey";
-      test(query);
-    } catch(UserException ex) {
-      assert(ex.getMessage().contains("Expression 'n_nationkey' is not being grouped"));
-    }
 
-    try {
+      client.queryBuilder()
+        .sql(query)
+        .userExceptionMatcher()
+        .include("Expression 'n_nationkey' is not being grouped")
+        .match();
+    }
+    {
       String query = "select sum(min(l_extendedprice)) over (partition by n_nationkey) as totprice\n"
           + " from cp.`tpch/nation.parquet` where l_suppkey <= 10 group by l_suppkey";
-      test(query);
-    } catch(UserException ex) {
-      assert(ex.getMessage().contains("Expression 'n_nationkey' is not being grouped"));
-    }
 
-    try {
+      client.queryBuilder()
+        .sql(query)
+        .userExceptionMatcher()
+        .include("Expression 'n_nationkey' is not being grouped")
+        .match();
+    }
+    {
       String query = "select sum(min(l_extendedprice)) over w2 as totprice\n"
           + " from cp.`tpch/nation.parquet` where l_suppkey <= 10 group by l_suppkey\n"
           + " window w2 as (partition by n_nationkey)";
-      test(query);
-    } catch(UserException ex) {
-      assert(ex.getMessage().contains("Expression 'n_nationkey' is not being grouped"));
+
+      client.queryBuilder()
+        .sql(query)
+        .userExceptionMatcher()
+        .include("Expression 'n_nationkey' is not being grouped")
+        .match();
     }
   }
+
 
   @Test // DRILL-4469
   public void testWindowOnSubqueryWithStar() throws Exception {
@@ -950,7 +1112,13 @@ public class TestWindowFunctions extends BaseTestQuery {
         "limit 1";
 
     final String[] expectedPlan = {"Scan.*columns=\\[`n_nationkey`, `region`\\].*"};
-    PlanTestBase.testPlanMatchingPatterns(query, expectedPlan, new String[]{});
+
+    client.queryBuilder()
+      .sql(query)
+      .planMatcher()
+      .include(expectedPlan)
+      .exclude(new String[]{})
+      .match();
 
     testBuilder()
         .sqlQuery(query)
