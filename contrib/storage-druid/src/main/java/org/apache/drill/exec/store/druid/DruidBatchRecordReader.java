@@ -35,7 +35,6 @@ import org.apache.drill.exec.store.druid.druid.ScanQueryBuilder;
 import org.apache.drill.exec.store.druid.rest.DruidQueryClient;
 import org.apache.drill.exec.store.easy.json.loader.JsonLoaderImpl;
 import org.apache.drill.exec.store.easy.json.loader.JsonLoaderImpl.JsonLoaderBuilder;
-import org.apache.drill.exec.vector.BaseValueVector;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -45,6 +44,7 @@ import java.util.List;
 
 public class DruidBatchRecordReader implements ManagedReader<SchemaNegotiator> {
   private static final Logger logger = LoggerFactory.getLogger(DruidBatchRecordReader.class);
+  private static final int BATCH_SIZE = 4096;
   private static final ObjectMapper objectMapper = new ObjectMapper();
   private final DruidStoragePlugin plugin;
   private final DruidSubScan.DruidSubScanSpec scanSpec;
@@ -55,6 +55,7 @@ public class DruidBatchRecordReader implements ManagedReader<SchemaNegotiator> {
   private int maxRecordsToRead = -1;
   private JsonLoaderBuilder jsonBuilder;
   private JsonLoaderImpl jsonLoader;
+  private SchemaNegotiator negotiator;
   private ResultSetLoader resultSetLoader;
   private CustomErrorContext errorContext;
 
@@ -75,34 +76,50 @@ public class DruidBatchRecordReader implements ManagedReader<SchemaNegotiator> {
 
   @Override
   public boolean open(SchemaNegotiator negotiator) {
-    resultSetLoader = negotiator.build();
-    errorContext = negotiator.parentErrorContext();
-    negotiator.setErrorContext(errorContext);
+    this.negotiator = negotiator;
+    this.errorContext = this.negotiator.parentErrorContext();
+    this.negotiator.batchSize(BATCH_SIZE);
+    this.negotiator.setErrorContext(errorContext);
 
-    jsonBuilder = new JsonLoaderBuilder()
-      .resultSetLoader(resultSetLoader)
-      .standardOptions(negotiator.queryOptions())
-      .errorContext(errorContext);
+    resultSetLoader = this.negotiator.build();
+
 
     return true;
   }
 
   @Override
   public boolean next() {
+    jsonBuilder = new JsonLoaderBuilder()
+        .resultSetLoader(resultSetLoader)
+        .standardOptions(negotiator.queryOptions())
+        .errorContext(errorContext);
+    int eventCounter = 0;
     boolean result = false;
     try {
       String query = getQuery();
+      logger.debug("Executing query: {}", query);
       DruidScanResponse druidScanResponse = druidQueryClient.executeQuery(query);
       setNextOffset(druidScanResponse);
 
+      StringBuilder events = new StringBuilder();
       for (ObjectNode eventNode : druidScanResponse.getEvents()) {
-        jsonLoader = (JsonLoaderImpl) jsonBuilder
-          .fromString(eventNode.toString())
+        events.append(eventNode);
+        events.append("\n");
+        eventCounter++;
+      }
+
+
+      jsonLoader = (JsonLoaderImpl) jsonBuilder
+          .fromString(events.toString())
           .build();
 
-        result = jsonLoader.readBatch();
+      result = jsonLoader.readBatch();
+
+      if (eventCounter < BATCH_SIZE) {
+        return false;
+      } else {
+        return result;
       }
-      return result;
     } catch (Exception e) {
       throw UserException
         .dataReadError(e)
@@ -123,8 +140,8 @@ public class DruidBatchRecordReader implements ManagedReader<SchemaNegotiator> {
   private String getQuery() throws JsonProcessingException {
     int queryThreshold =
       maxRecordsToRead >= 0
-        ? Math.min(BaseValueVector.INITIAL_VALUE_ALLOCATION, maxRecordsToRead)
-        : BaseValueVector.INITIAL_VALUE_ALLOCATION;
+        ? Math.min(BATCH_SIZE, maxRecordsToRead)
+        : BATCH_SIZE;
     ScanQueryBuilder scanQueryBuilder = plugin.getScanQueryBuilder();
     ScanQuery scanQuery =
       scanQueryBuilder.build(
@@ -140,7 +157,6 @@ public class DruidBatchRecordReader implements ManagedReader<SchemaNegotiator> {
   }
 
   private void setNextOffset(DruidScanResponse druidScanResponse) {
-    //nextOffset = nextOffset.add(BigInteger.valueOf(druidScanResponse.getEvents().size()));
     offsetTracker.setNextOffset(BigInteger.valueOf(druidScanResponse.getEvents().size()));
   }
 }

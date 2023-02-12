@@ -17,9 +17,13 @@
  */
 package org.apache.drill.exec.store.druid;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.math.BigInteger;
 
 public class DruidOffsetTracker {
+  private static final Logger logger = LoggerFactory.getLogger(DruidOffsetTracker.class);
   private BigInteger nextOffset;
 
   public DruidOffsetTracker() {
@@ -32,5 +36,6 @@ public class DruidOffsetTracker {
 
   public void setNextOffset(BigInteger offset) {
     nextOffset = nextOffset.add(offset);
+    logger.debug("Incrementing offset by {}", offset);
   }
 }
