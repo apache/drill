@@ -15,36 +15,21 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.drill.exec.planner.physical;
+package org.apache.drill.exec.planner.common;
 
-import org.apache.calcite.plan.RelOptCluster;
-import org.apache.calcite.plan.RelTraitSet;
 import org.apache.calcite.rel.RelNode;
-import org.apache.calcite.rel.core.Union;
-import org.apache.drill.exec.planner.physical.visitor.PrelVisitor;
+import org.apache.calcite.rel.type.RelDataType;
 
-import java.util.Iterator;
 import java.util.List;
 
-public abstract class UnionPrel extends Union implements Prel{
-
-  public UnionPrel(RelOptCluster cluster, RelTraitSet traits, List<RelNode> inputs, boolean all) {
-    super(cluster, traits, inputs, all);
+public interface DrillSetOpRel {
+  default boolean isCompatible(RelDataType setOpType, List<RelNode> inputs) {
+    for (RelNode input : inputs) {
+      if (!DrillRelOptUtil.areRowTypesCompatible(
+        input.getRowType(), setOpType, false, true)) {
+        return false;
+      }
+    }
+    return true;
   }
-
-  @Override
-  public <T, X, E extends Throwable> T accept(PrelVisitor<T, X, E> logicalVisitor, X value) throws E {
-    return logicalVisitor.visitPrel(this, value);
-  }
-
-  @Override
-  public Iterator<Prel> iterator() {
-    return PrelUtil.iter(this.getInputs());
-  }
-
-  @Override
-  public boolean needsFinalColumnReordering() {
-    return false;
-  }
-
 }

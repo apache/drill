@@ -20,6 +20,8 @@ package org.apache.drill.exec.planner.logical;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.apache.calcite.rel.logical.LogicalIntersect;
+import org.apache.calcite.rel.logical.LogicalMinus;
 import org.apache.drill.shaded.guava.com.google.common.collect.Lists;
 import org.apache.calcite.rel.logical.LogicalFilter;
 import org.apache.calcite.rel.logical.LogicalJoin;
@@ -197,6 +199,35 @@ public class PreProcessLogicalRel extends RelShuttleImpl {
     }
 
     return visitChildren(union);
+  }
+
+  @Override
+  public RelNode visit(LogicalIntersect intersect) {
+    for (RelNode child : intersect.getInputs()) {
+      for (RelDataTypeField dataField : child.getRowType().getFieldList()) {
+        if (dataField.getName().contains(SchemaPath.DYNAMIC_STAR)) {
+          unsupportedOperatorCollector.setException(SqlUnsupportedException.ExceptionType.RELATIONAL,
+            "Intersect(All) over schema-less tables must specify the columns explicitly\n");
+          throw new UnsupportedOperationException();
+        }
+      }
+    }
+    return visitChildren(intersect);
+  }
+
+  @Override
+  public RelNode visit(LogicalMinus minus) {
+    for (RelNode child : minus.getInputs()) {
+      for (RelDataTypeField dataField : child.getRowType().getFieldList()) {
+        if (dataField.getName().contains(SchemaPath.DYNAMIC_STAR)) {
+          unsupportedOperatorCollector.setException(SqlUnsupportedException.ExceptionType.RELATIONAL,
+            "Except(All) over schema-less tables must specify the columns explicitly\n");
+          throw new UnsupportedOperationException();
+        }
+      }
+    }
+
+    return visitChildren(minus);
   }
 
   private UserException getConvertFunctionInvalidTypeException(final RexCall function) {

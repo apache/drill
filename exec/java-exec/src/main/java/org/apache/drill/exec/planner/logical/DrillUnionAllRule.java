@@ -31,7 +31,7 @@ import org.apache.calcite.util.trace.CalciteTrace;
 import org.slf4j.Logger;
 
 /**
- * Rule that converts a {@link LogicalUnion} to a {@link DrillUnionRelBase}, implemented by a "union" operation.
+ * Rule that converts a {@link LogicalUnion} to a {@link DrillUnionRel}, implemented by a "union" operation.
  */
 public class DrillUnionAllRule extends RelOptRule {
   public static final RelOptRule INSTANCE = new DrillUnionAllRule();

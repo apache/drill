@@ -39,9 +39,9 @@ import org.apache.drill.shaded.guava.com.google.common.collect.Lists;
 
 public class UnionAllPrel extends UnionPrel {
 
-  public UnionAllPrel(RelOptCluster cluster, RelTraitSet traits, List<RelNode> inputs,
-      boolean checkCompatibility) throws InvalidRelException {
-    super(cluster, traits, inputs, true /* all */, checkCompatibility);
+  public UnionAllPrel(RelOptCluster cluster, RelTraitSet traits, List<RelNode> inputs)
+    throws InvalidRelException {
+    super(cluster, traits, inputs, true /* all */);
 
   }
 
@@ -49,8 +49,7 @@ public class UnionAllPrel extends UnionPrel {
   @Override
   public Union copy(RelTraitSet traitSet, List<RelNode> inputs, boolean all) {
     try {
-      return new UnionAllPrel(this.getCluster(), traitSet, inputs,
-          false /* don't check compatibility during copy */);
+      return new UnionAllPrel(this.getCluster(), traitSet, inputs);
     }catch (InvalidRelException e) {
       throw new AssertionError(e);
     }

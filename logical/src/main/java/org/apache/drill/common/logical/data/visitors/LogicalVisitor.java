@@ -18,6 +18,8 @@
 package org.apache.drill.common.logical.data.visitors;
 
 
+import org.apache.drill.common.logical.data.Except;
+import org.apache.drill.common.logical.data.Intersect;
 import org.apache.drill.common.logical.data.LateralJoin;
 import org.apache.drill.common.logical.data.Unnest;
 import org.apache.drill.common.logical.data.Analyze;
@@ -62,6 +64,8 @@ public interface LogicalVisitor<RETURN, EXTRA, EXCEP extends Throwable> {
     public RETURN visitRunningAggregate(RunningAggregate runningAggregate, EXTRA value) throws EXCEP;
     public RETURN visitTransform(Transform transform, EXTRA value) throws EXCEP;
     public RETURN visitUnion(Union union, EXTRA value) throws EXCEP;
+    public RETURN visitExcept(Except except, EXTRA value) throws EXCEP;
+    public RETURN visitIntersect(Intersect intersect, EXTRA value) throws EXCEP;
     public RETURN visitWindow(Window window, EXTRA value) throws EXCEP;
     public RETURN visitWriter(Writer writer, EXTRA value) throws EXCEP;
 

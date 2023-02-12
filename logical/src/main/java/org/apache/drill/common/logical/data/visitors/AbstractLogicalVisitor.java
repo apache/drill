@@ -17,6 +17,8 @@
  */
 package org.apache.drill.common.logical.data.visitors;
 
+import org.apache.drill.common.logical.data.Except;
+import org.apache.drill.common.logical.data.Intersect;
 import org.apache.drill.common.logical.data.LateralJoin;
 import org.apache.drill.common.logical.data.Unnest;
 import org.apache.drill.common.logical.data.Analyze;
@@ -109,6 +111,16 @@ public abstract class AbstractLogicalVisitor<T, X, E extends Throwable> implemen
     @Override
     public T visitUnion(Union union, X value) throws E {
         return visitOp(union, value);
+    }
+
+    @Override
+    public T visitExcept(Except except, X value) throws E {
+      return visitOp(except, value);
+    }
+
+    @Override
+    public T visitIntersect(Intersect intersect, X value) throws E {
+      return visitOp(intersect, value);
     }
 
     @Override

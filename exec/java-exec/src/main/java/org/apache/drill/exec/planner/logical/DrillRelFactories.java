@@ -29,6 +29,7 @@ import org.apache.calcite.rel.hint.RelHint;
 import org.apache.calcite.rel.type.RelDataType;
 import org.apache.calcite.rex.RexNode;
 import org.apache.calcite.rex.RexUtil;
+import org.apache.calcite.sql.SqlKind;
 import org.apache.calcite.tools.RelBuilderFactory;
 import org.apache.calcite.util.ImmutableBitSet;
 import org.apache.drill.exec.planner.DrillRelBuilder;
@@ -52,6 +53,9 @@ import static org.apache.drill.exec.planner.logical.DrillRel.DRILL_LOGICAL;
  */
 
 public class DrillRelFactories {
+  public static final RelFactories.SetOpFactory DRILL_LOGICAL_SET_OP_FACTORY =
+    new DrillSetOpFactoryImpl();
+
   public static final RelFactories.ProjectFactory DRILL_LOGICAL_PROJECT_FACTORY =
       new DrillProjectFactoryImpl();
 
@@ -88,6 +92,25 @@ public class DrillRelFactories {
               DEFAULT_SET_OP_FACTORY,
               DEFAULT_VALUES_FACTORY,
               DEFAULT_TABLE_SCAN_FACTORY));
+
+  /**
+   * Implementation of {@link RelFactories.SetOpFactory} that returns
+   * a vanilla {@link DrillExceptRel} or {@link DrillIntersectRel}
+   * dependent on the particular kind of set operation (EXCEPT, INTERSECT)
+   */
+  private static class DrillSetOpFactoryImpl implements RelFactories.SetOpFactory {
+    @Override
+    public RelNode createSetOp(SqlKind kind, List<RelNode> inputs, boolean all) {
+      switch (kind) {
+      case EXCEPT:
+        return DrillExceptRel.create(inputs, all);
+      case INTERSECT:
+        return DrillIntersectRel.create(inputs, all);
+      default:
+        throw new AssertionError("unsupported set op: " + kind);
+      }
+    }
+  }
 
   /**
    * Implementation of {@link RelFactories.ProjectFactory} that returns a vanilla

@@ -17,55 +17,61 @@
  */
 package org.apache.drill.exec.planner.logical;
 
-import java.util.List;
-
 import org.apache.calcite.linq4j.Ord;
-
-import org.apache.calcite.rel.core.Union;
-import org.apache.calcite.rel.metadata.RelMetadataQuery;
+import org.apache.calcite.plan.RelOptCluster;
+import org.apache.calcite.plan.RelTraitSet;
+import org.apache.calcite.rel.InvalidRelException;
+import org.apache.calcite.rel.RelNode;
+import org.apache.calcite.rel.core.Intersect;
+import org.apache.calcite.util.trace.CalciteTrace;
 import org.apache.drill.common.logical.data.LogicalOperator;
 import org.apache.drill.exec.planner.common.DrillSetOpRel;
 import org.apache.drill.exec.planner.torel.ConversionContext;
-import org.apache.calcite.rel.InvalidRelException;
-import org.apache.calcite.rel.RelNode;
-import org.apache.calcite.plan.RelOptCluster;
-import org.apache.calcite.plan.RelOptCost;
-import org.apache.calcite.plan.RelOptPlanner;
-import org.apache.calcite.plan.RelTraitSet;
+import org.slf4j.Logger;
+
+import java.util.List;
 
 /**
- * Union implemented in Drill.
+ * Intersect implemented in Drill.
  */
-public class DrillUnionRel extends Union implements DrillRel, DrillSetOpRel {
-  /** Creates a DrillUnionRel. */
-  public DrillUnionRel(RelOptCluster cluster, RelTraitSet traits,
-      List<RelNode> inputs, boolean all, boolean checkCompatibility) throws InvalidRelException {
+public class DrillIntersectRel extends Intersect implements DrillRel, DrillSetOpRel {
+  private static final Logger tracer = CalciteTrace.getPlannerTracer();
+
+  public DrillIntersectRel(RelOptCluster cluster, RelTraitSet traits,
+                           List<RelNode> inputs, boolean all, boolean checkCompatibility) throws InvalidRelException {
     super(cluster, traits, inputs, all);
     if (checkCompatibility && !this.isCompatible(getRowType(), getInputs())) {
-      throw new InvalidRelException("Input row types of the Union are not compatible.");
+      throw new InvalidRelException("Input row types of the Intersect are not compatible.");
+    }
+  }
+
+  public static DrillIntersectRel create(List<RelNode> inputs, boolean all) {
+    try {
+      return new DrillIntersectRel(inputs.get(0).getCluster(), inputs.get(0).getTraitSet(), inputs, all, true);
+    } catch (InvalidRelException e) {
+      tracer.warn(e.toString());
+      return null;
     }
   }
 
   @Override
-  public DrillUnionRel copy(RelTraitSet traitSet, List<RelNode> inputs,
-      boolean all) {
+  public DrillIntersectRel copy(RelTraitSet traitSet, List<RelNode> inputs,
+                                boolean all) {
     try {
-      return new DrillUnionRel(getCluster(), traitSet, inputs, all,
+      return new DrillIntersectRel(getCluster(), traitSet, inputs, all,
           false /* don't check compatibility during copy */);
     } catch (InvalidRelException e) {
       throw new AssertionError(e);
     }
   }
 
-  @Override
-  public RelOptCost computeSelfCost(RelOptPlanner planner, RelMetadataQuery mq) {
-    // divide cost by two to ensure cheaper than EnumerableDrillRel
-    return super.computeSelfCost(planner, mq).multiplyBy(.5);
+  public static DrillIntersectRel convert(org.apache.drill.common.logical.data.Intersect intersect, ConversionContext context) throws InvalidRelException{
+    throw new UnsupportedOperationException();
   }
 
   @Override
   public LogicalOperator implement(DrillImplementor implementor) {
-    org.apache.drill.common.logical.data.Union.Builder builder = org.apache.drill.common.logical.data.Union.builder();
+    org.apache.drill.common.logical.data.Intersect.Builder builder = org.apache.drill.common.logical.data.Intersect.builder();
     for (Ord<RelNode> input : Ord.zip(inputs)) {
       builder.addInput(implementor.visitChild(this, input.i, input.e));
     }
@@ -73,11 +79,4 @@ public class DrillUnionRel extends Union implements DrillRel, DrillSetOpRel {
     return builder.build();
   }
 
-  public static DrillUnionRel convert(org.apache.drill.common.logical.data.Union union, ConversionContext context) throws InvalidRelException{
-    throw new UnsupportedOperationException();
-  }
-
-  public boolean isDistinct() {
-    return !this.all;
-  }
 }
