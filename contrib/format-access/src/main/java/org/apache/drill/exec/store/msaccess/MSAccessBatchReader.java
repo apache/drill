@@ -44,6 +44,7 @@ import org.slf4j.LoggerFactory;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+import java.math.BigDecimal;
 import java.nio.file.Files;
 import java.nio.file.StandardCopyOption;
 import java.time.LocalDateTime;
@@ -155,6 +156,9 @@ public class MSAccessBatchReader implements ManagedReader {
           drillDataType = MinorType.BIT;
           break;
         case BYTE:
+          builder.addNullable(columnName, MinorType.TINYINT);
+          drillDataType = MinorType.TINYINT;
+          break;
         case INT:
           builder.addNullable(columnName, MinorType.SMALLINT);
           drillDataType = MinorType.SMALLINT;
@@ -172,6 +176,10 @@ public class MSAccessBatchReader implements ManagedReader {
           builder.addNullable(columnName, MinorType.FLOAT4);
           drillDataType = MinorType.FLOAT4;
           break;
+        case DOUBLE:
+          builder.addNullable(columnName, MinorType.FLOAT8);
+          drillDataType = MinorType.FLOAT8;
+          break;
         case MEMO:
         case TEXT:
         case GUID:
@@ -179,10 +187,9 @@ public class MSAccessBatchReader implements ManagedReader {
           drillDataType = MinorType.VARCHAR;
           break;
         case MONEY:
-        case DOUBLE:
         case NUMERIC:
-          builder.addNullable(columnName, MinorType.FLOAT8);
-          drillDataType = MinorType.FLOAT8;
+          builder.addNullable(columnName, MinorType.VARDECIMAL);
+          drillDataType = MinorType.VARDECIMAL;
           break;
         case OLE:
         case BINARY:
@@ -292,6 +299,10 @@ public class MSAccessBatchReader implements ManagedReader {
           Short shortValue = next.getShort(col.columnName);
           rowWriter.scalar(col.columnName).setInt(shortValue);
           break;
+        case TINYINT:
+          Byte byteValue = next.getByte(col.columnName);
+          rowWriter.scalar(col.columnName).setInt(byteValue);
+          break;
         case BIGINT:
         case INT:
           Integer intValue = next.getInt(col.columnName);
@@ -309,6 +320,10 @@ public class MSAccessBatchReader implements ManagedReader {
           Double doubleValue = next.getDouble(col.columnName);
           rowWriter.scalar(col.columnName).setDouble(doubleValue);
           break;
+        case VARDECIMAL:
+          BigDecimal bigDecimal = next.getBigDecimal(col.columnName);
+          rowWriter.scalar(col.columnName).setDecimal(bigDecimal);
+          break;
         case VARCHAR:
           String stringValue = next.getString(col.columnName);
           if (StringUtils.isNotEmpty(stringValue)) {
@@ -322,8 +337,8 @@ public class MSAccessBatchReader implements ManagedReader {
           }
           break;
         case VARBINARY:
-          byte[] byteValue = next.getBytes(col.columnName);
-          rowWriter.scalar(col.columnName).setBytes(byteValue, byteValue.length);
+          byte[] byteValueArray = next.getBytes(col.columnName);
+          rowWriter.scalar(col.columnName).setBytes(byteValueArray, byteValueArray.length);
           break;
       }
     }
