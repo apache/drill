@@ -21,6 +21,7 @@ import org.apache.drill.exec.planner.physical.PlannerSettings;
 import org.apache.drill.exec.record.BatchSchema;
 import org.apache.drill.exec.record.BatchSchemaBuilder;
 import org.apache.drill.exec.record.metadata.SchemaBuilder;
+import org.apache.drill.exec.util.StoragePluginTestUtils;
 import org.apache.drill.shaded.guava.com.google.common.collect.Lists;
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.drill.categories.OperatorTest;
@@ -54,6 +55,15 @@ public class TestSetOp extends ClusterTest {
     startCluster(ClusterFixture.builder(dirTestWatcher));
     dirTestWatcher.copyResourceToRoot(Paths.get("multilevel", "parquet"));
     dirTestWatcher.makeTestTmpSubDir(Paths.get(EMPTY_DIR_NAME));
+
+    // A tmp workspace with a default format defined for tests that need to
+    // query empty directories without encountering an error.
+    cluster.defineWorkspace(
+        StoragePluginTestUtils.DFS_PLUGIN_NAME,
+        "tmp_default_format",
+        dirTestWatcher.getDfsTestTmpDir().getAbsolutePath(),
+        "csvh"
+    );
   }
 
   @Test
@@ -1031,7 +1041,7 @@ public class TestSetOp extends ClusterTest {
     String rootSimple = "/store/json/booleanData.json";
 
     testBuilder()
-      .sqlQuery("SELECT key FROM cp.`%s` EXCEPT ALL SELECT key FROM dfs.tmp.`%s`",
+      .sqlQuery("SELECT key FROM cp.`%s` EXCEPT ALL SELECT key FROM dfs.tmp_default_format.`%s`",
         rootSimple, EMPTY_DIR_NAME)
       .unOrdered()
       .baselineColumns("key")
@@ -1046,7 +1056,7 @@ public class TestSetOp extends ClusterTest {
     final String rootSimple = "/store/json/booleanData.json";
 
     testBuilder()
-      .sqlQuery("SELECT key FROM dfs.tmp.`%s` EXCEPT ALL SELECT key FROM cp.`%s`",
+      .sqlQuery("SELECT key FROM dfs.tmp_default_format.`%s` EXCEPT ALL SELECT key FROM cp.`%s`",
         EMPTY_DIR_NAME, rootSimple)
       .unOrdered()
       .baselineColumns("key")
@@ -1064,7 +1074,7 @@ public class TestSetOp extends ClusterTest {
       .build();
 
     testBuilder()
-      .sqlQuery("SELECT key FROM dfs.tmp.`%1$s` INTERSECT ALL SELECT key FROM dfs.tmp.`%1$s`", EMPTY_DIR_NAME)
+      .sqlQuery("SELECT key FROM dfs.tmp_default_format.`%1$s` INTERSECT ALL SELECT key FROM dfs.tmp_default_format.`%1$s`", EMPTY_DIR_NAME)
       .schemaBaseLine(expectedSchema)
       .build()
       .run();
@@ -1073,7 +1083,7 @@ public class TestSetOp extends ClusterTest {
   @Test
   public void testSetOpMiddleEmptyDir() throws Exception {
     final String query = "(SELECT n_regionkey FROM cp.`tpch/nation.parquet` EXCEPT ALL " +
-      "SELECT missing_key FROM dfs.tmp.`%s`) intersect all SELECT r_regionkey FROM cp.`tpch/region.parquet`";
+      "SELECT missing_key FROM dfs.tmp_default_format.`%s`) intersect all SELECT r_regionkey FROM cp.`tpch/region.parquet`";
 
     testBuilder()
       .sqlQuery(query, EMPTY_DIR_NAME)
@@ -1094,7 +1104,7 @@ public class TestSetOp extends ClusterTest {
 
     testBuilder()
       .sqlQuery("SELECT key FROM cp.`%2$s` INTERSECT ALL SELECT key FROM " +
-          "(SELECT key FROM cp.`%2$s` EXCEPT ALL SELECT key FROM dfs.tmp.`%1$s`)",
+          "(SELECT key FROM cp.`%2$s` EXCEPT ALL SELECT key FROM dfs.tmp_default_format.`%1$s`)",
         EMPTY_DIR_NAME, rootSimple)
       .unOrdered()
       .baselineColumns("key")
