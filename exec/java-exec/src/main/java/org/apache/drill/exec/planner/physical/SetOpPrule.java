@@ -22,10 +22,16 @@ import org.apache.calcite.plan.RelOptRule;
 import org.apache.calcite.plan.RelOptRuleCall;
 import org.apache.calcite.plan.RelOptRuleOperand;
 import org.apache.calcite.plan.RelTraitSet;
+import org.apache.calcite.plan.volcano.RelSubset;
 import org.apache.calcite.rel.InvalidRelException;
+import org.apache.calcite.rel.RelCollation;
+import org.apache.calcite.rel.RelCollations;
+import org.apache.calcite.rel.RelFieldCollation;
 import org.apache.calcite.rel.RelNode;
 import org.apache.calcite.rel.core.SetOp;
 import org.apache.calcite.rel.metadata.RelMetadataQuery;
+import org.apache.calcite.util.BitSets;
+import org.apache.calcite.util.ImmutableBitSet;
 import org.apache.calcite.util.trace.CalciteTrace;
 import org.apache.drill.exec.planner.logical.DrillExceptRel;
 import org.apache.drill.exec.planner.logical.DrillIntersectRel;
@@ -38,6 +44,10 @@ import org.slf4j.Logger;
 
 import java.util.Arrays;
 import java.util.List;
+import java.util.Set;
+
+import static org.apache.drill.exec.ExecConstants.EXCEPT_ADD_AGG_BELOW;
+import static org.apache.drill.exec.planner.physical.AggPruleBase.remapGroupSet;
 
 public class SetOpPrule extends Prule {
   public static final List<RelOptRule> DIST_INSTANCES = Arrays.asList(
@@ -61,10 +71,10 @@ public class SetOpPrule extends Prule {
 
     try {
       if(isDist){
-        createDistBothPlan(call, setOp, setOp.getInput(0), setOp.getInput(1));
+        createDistBothPlan(call);
       }else{
         if (checkBroadcastConditions(setOp.getCluster(), setOp.getInput(0), setOp.getInput(1))) {
-          createBroadcastPlan(call, setOp, setOp.getInput(0), setOp.getInput(1));
+          createBroadcastPlan(call);
         }
       }
     } catch (InvalidRelException e) {
@@ -72,17 +82,29 @@ public class SetOpPrule extends Prule {
     }
   }
 
-  private void createBroadcastPlan(final RelOptRuleCall call, final SetOp setOp,
-    final RelNode left, final RelNode right) throws InvalidRelException {
+  private void createDistBothPlan(RelOptRuleCall call)
+    throws InvalidRelException {
+    int i = 0;
+    int fieldCount = call.rel(0).getInput(0).getRowType().getFieldCount();
+    List<DistributionField> distFields = Lists.newArrayList();
+    while(i < fieldCount) {
+      distFields.add(new DistributionField(i));
+      i++;
+    }
+    DrillDistributionTrait distributionTrait = new DrillDistributionTrait(DrillDistributionTrait.DistributionType.HASH_DISTRIBUTED,
+      distFields);
+    createPlan(call, distributionTrait);
 
-    RelTraitSet traitsLeft = left.getTraitSet().plus(Prel.DRILL_PHYSICAL);
-    DrillDistributionTrait distBroadcastRight = new DrillDistributionTrait(DrillDistributionTrait.DistributionType.BROADCAST_DISTRIBUTED);
-    RelTraitSet traitsRight = right.getTraitSet().plus(Prel.DRILL_PHYSICAL).plus(distBroadcastRight);
-
-    final RelNode convertedLeft = convert(left, traitsLeft);
-    final RelNode convertedRight = convert(right, traitsRight);
-    final RelTraitSet traitSet = PrelUtil.removeCollation(convertedLeft.getTraitSet(), call);
-    call.transformTo(new SetOpPrel(setOp.getCluster(), traitSet, ImmutableList.of(convertedLeft, convertedRight), setOp.kind, setOp.all));
+    if (!PrelUtil.getPlannerSettings(call.getPlanner()).isHashSingleKey()) {
+      return;
+    }
+    if (fieldCount > 1) {
+      for (int j = 0; j < fieldCount; j++) {
+        distributionTrait = new DrillDistributionTrait(DrillDistributionTrait.DistributionType.HASH_DISTRIBUTED,
+          ImmutableList.of(new DistributionField(j)));
+        createPlan(call, distributionTrait);
+      }
+    }
   }
 
   private boolean checkBroadcastConditions(RelOptCluster cluster, RelNode left, RelNode right) {
@@ -91,30 +113,130 @@ public class SetOpPrule extends Prule {
       && !DrillDistributionTrait.SINGLETON.equals(left.getTraitSet().getTrait(DrillDistributionTraitDef.INSTANCE));
   }
 
-  private void createDistBothPlan(RelOptRuleCall call, SetOp setOp, RelNode left, RelNode right)
-    throws InvalidRelException {
-    int i = 0;
-    List<DistributionField> distFields = Lists.newArrayList();
-    while(i < left.getRowType().getFieldCount()) {
-        distFields.add(new DistributionField(i));
-        i++;
-    }
-    DrillDistributionTrait distributionTrait = new DrillDistributionTrait(DrillDistributionTrait.DistributionType.HASH_DISTRIBUTED,
-      distFields);
-    createDistBothPlan(call, setOp, left, right, distributionTrait);
+  private void createBroadcastPlan(final RelOptRuleCall call) throws InvalidRelException {
+    DrillDistributionTrait distBroadcastRight = new DrillDistributionTrait(DrillDistributionTrait.DistributionType.BROADCAST_DISTRIBUTED);
+    createPlan(call, distBroadcastRight);
   }
 
-  private void createDistBothPlan(RelOptRuleCall call, SetOp setOp, RelNode left, RelNode right,
-    DrillDistributionTrait distributionTrait)
-    throws InvalidRelException {
+  private void createPlan(final RelOptRuleCall call, DrillDistributionTrait setOpTrait) throws InvalidRelException {
+    if (needAddAgg(call.rel(0))) {
+      ImmutableBitSet groupSet = ImmutableBitSet.range(0, call.rel(0).getInput(0).getRowType().getFieldList().size());
 
-    RelTraitSet traitsLeft = left.getTraitSet().plus(Prel.DRILL_PHYSICAL).plus(distributionTrait);
-    RelTraitSet traitsRight = right.getTraitSet().plus(Prel.DRILL_PHYSICAL).plus(distributionTrait);
+      // hashAgg: hash distribute on all grouping keys
+      DrillDistributionTrait distOnAllKeys =
+        new DrillDistributionTrait(DrillDistributionTrait.DistributionType.HASH_DISTRIBUTED,
+          ImmutableList.copyOf(getDistributionField(groupSet, true /* get all grouping keys */)));
+      RelTraitSet aggTraits = call.getPlanner().emptyTraitSet().plus(Prel.DRILL_PHYSICAL).plus(distOnAllKeys);
+      createTransformRequest(call, aggTraits, setOpTrait, null);
 
-    final RelNode convertedLeft = convert(left, traitsLeft);
+      // hashAgg: hash distribute on single grouping key
+      DrillDistributionTrait distOnOneKey =
+        new DrillDistributionTrait(DrillDistributionTrait.DistributionType.HASH_DISTRIBUTED,
+          ImmutableList.copyOf(getDistributionField(groupSet, false /* get single grouping key */)));
+      aggTraits = call.getPlanner().emptyTraitSet().plus(Prel.DRILL_PHYSICAL).plus(distOnOneKey);
+      createTransformRequest(call, aggTraits, setOpTrait, null);
+
+      // streamAgg: hash distribute on all grouping keys
+      final RelCollation collation = getCollation(groupSet);
+      aggTraits = call.getPlanner().emptyTraitSet().plus(Prel.DRILL_PHYSICAL).plus(collation).plus(distOnAllKeys);
+      createTransformRequest(call, aggTraits, setOpTrait, collation);
+    } else {
+      call.transformTo(buildSetOpPrel(call, null, setOpTrait));
+    }
+  }
+
+  private boolean needAddAgg(SetOp setOp) {
+    if (setOp.all || !(setOp instanceof DrillExceptRel)) {
+      return false;
+    }
+    Set<ImmutableBitSet> uniqueKeys = setOp.getCluster().getMetadataQuery().getUniqueKeys(((RelSubset)setOp.getInput(0)).getBestOrOriginal());
+    if (uniqueKeys == null) {
+      return true;
+    }
+    return uniqueKeys.size() < setOp.getRowType().getFieldCount();
+  }
+
+  private void createTransformRequest(RelOptRuleCall call, RelTraitSet aggTraits, DrillDistributionTrait setOpTrait, RelCollation collation) throws InvalidRelException {
+    boolean addAggBelow = PrelUtil.getPlannerSettings(call.getPlanner()).getOptions().getOption(EXCEPT_ADD_AGG_BELOW);
+    RelNode outputRel;
+    if (addAggBelow) {
+      AggPrelBase newAgg = buildAggPrel(call, call.rel(0).getInput(0), aggTraits, collation);
+      outputRel = buildSetOpPrel(call, newAgg, setOpTrait);
+    } else {
+      SetOpPrel setOpPrel = buildSetOpPrel(call, null, setOpTrait);
+      outputRel = buildAggPrel(call, setOpPrel, aggTraits, collation);
+    }
+    call.transformTo(outputRel);
+  }
+
+  private AggPrelBase buildAggPrel(RelOptRuleCall call, RelNode input, RelTraitSet aggTraits, RelCollation collation) throws InvalidRelException {
+    final DrillExceptRel drillExceptRel = call.rel(0);
+    ImmutableBitSet groupSet = ImmutableBitSet.range(0, drillExceptRel.getInput(0).getRowType().getFieldList().size());
+    if (collation !=  null) {
+      final RelNode convertedInput = convert(input, aggTraits);
+      return new StreamAggPrel(
+        drillExceptRel.getCluster(),
+        aggTraits,
+        convertedInput,
+        groupSet,
+        ImmutableList.of(),
+        ImmutableList.of(),
+        AggPrelBase.OperatorPhase.PHASE_1of1);
+    } else {
+      RelNode convertedInput = convert(input, PrelUtil.fixTraits(call, aggTraits));
+      return new HashAggPrel(
+        drillExceptRel.getCluster(),
+        aggTraits,
+        convertedInput,
+        groupSet,
+        ImmutableList.of(),
+        ImmutableList.of(),
+        AggPrelBase.OperatorPhase.PHASE_1of1);
+    }
+  }
+
+  private SetOpPrel buildSetOpPrel(RelOptRuleCall call, RelNode convertedLeft, DrillDistributionTrait setOpTrait) throws InvalidRelException {
+    final SetOp setOp = call.rel(0);
+    final RelNode right = setOp.getInput(1);
+    RelTraitSet traitsRight = right.getTraitSet().plus(Prel.DRILL_PHYSICAL).plus(setOpTrait);
     final RelNode convertedRight = convert(right, traitsRight);
-    final RelTraitSet traitSet = PrelUtil.removeCollation(traitsLeft, call);
 
-    call.transformTo(new SetOpPrel(setOp.getCluster(), traitSet, ImmutableList.of(convertedLeft, convertedRight), setOp.kind, setOp.all));
+    if (convertedLeft == null) {
+      final RelNode left = setOp.getInput(0);
+      RelTraitSet traitsLeft = left.getTraitSet().plus(Prel.DRILL_PHYSICAL);
+      if (DrillDistributionTrait.DistributionType.HASH_DISTRIBUTED.equals(setOpTrait.getType())) {
+        traitsLeft.plus(setOpTrait);
+      }
+      convertedLeft = convert(left, traitsLeft);
+    }
+    final RelTraitSet traitSet = PrelUtil.removeCollation(convertedLeft.getTraitSet(), call);
+    return new SetOpPrel(convertedLeft.getCluster(), traitSet, ImmutableList.of(convertedLeft, convertedRight), setOp.kind, setOp.all);
+  }
+
+  private List<DistributionField> getDistributionField(ImmutableBitSet groupSet, boolean allFields) {
+    List<DistributionField> groupByFields = Lists.newArrayList();
+
+    for (int group : remapGroupSet(groupSet)) {
+      DistributionField field = new DistributionField(group);
+      groupByFields.add(field);
+
+      if (!allFields && groupByFields.size() == 1) {
+        // TODO: if we are only interested in 1 grouping field, pick the first one for now..
+        // but once we have num distinct values (NDV) statistics, we should pick the one
+        // with highest NDV.
+        break;
+      }
+    }
+
+    return groupByFields;
+  }
+
+  private RelCollation getCollation(ImmutableBitSet groupSet) {
+
+    List<RelFieldCollation> fields = Lists.newArrayList();
+    for (int group : BitSets.toIter(groupSet)) {
+      fields.add(new RelFieldCollation(group));
+    }
+    return RelCollations.of(fields);
   }
 }

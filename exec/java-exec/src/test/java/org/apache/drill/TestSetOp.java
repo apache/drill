@@ -32,6 +32,8 @@ import org.apache.drill.common.types.TypeProtos;
 import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.test.ClusterFixture;
 import org.apache.drill.test.ClusterTest;
+import org.hamcrest.CoreMatchers;
+import org.junit.Assert;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -41,8 +43,6 @@ import java.io.File;
 import java.io.FileWriter;
 import java.nio.file.Paths;
 import java.util.List;
-
-import static org.junit.Assert.assertTrue;
 
 @Category({SqlTest.class, OperatorTest.class})
 public class TestSetOp extends ClusterTest {
@@ -58,7 +58,6 @@ public class TestSetOp extends ClusterTest {
 
   @Test
   public void TestExceptionWithSchemaLessDataSource() {
-    boolean exceptionEncountered = true;
     String root = "/multilevel/csv/1994/Q1/orders_94_q1.csv";
     try {
       testBuilder()
@@ -67,13 +66,10 @@ public class TestSetOp extends ClusterTest {
         .baselineColumns("a", "b")
         .baselineValues(1, 1)
         .go();
-      exceptionEncountered = false;
+      Assert.fail("Missing expected exception on schema less data source");
     } catch (Exception ex) {
-      assertTrue(ex.getMessage(),
-        ex.getMessage().contains("schema-less tables must specify the columns explicitly"));
-    }
-    if (!exceptionEncountered) {
-      throw new RuntimeException("Missing expected exception on schema less data source");
+      Assert.assertThat(ex.getMessage(), ex.getMessage(),
+        CoreMatchers.containsString("schema-less tables must specify the columns explicitly"));
     }
 
     try {
@@ -83,13 +79,10 @@ public class TestSetOp extends ClusterTest {
         .baselineColumns("a", "b")
         .baselineValues(1, 1)
         .go();
-      exceptionEncountered = false;
+      Assert.fail("Missing expected exception on schema less data source");
     } catch (Exception ex) {
-      assertTrue(ex.getMessage(),
-        ex.getMessage().contains("schema-less tables must specify the columns explicitly"));
-    }
-    if (!exceptionEncountered) {
-      throw new RuntimeException("Missing expected exception on schema less data source");
+      Assert.assertThat(ex.getMessage(), ex.getMessage(),
+        CoreMatchers.containsString("schema-less tables must specify the columns explicitly"));
     }
   }
 
@@ -187,7 +180,7 @@ public class TestSetOp extends ClusterTest {
   }
 
   @Test
-  public void testOverAgg() throws Exception {
+  public void testExceptOverAgg() throws Exception {
     String query = "select n1.n_regionkey from cp.`tpch/nation.parquet` n1 group by n1.n_regionkey except " +
       "select r1.r_regionkey from cp.`tpch/region.parquet` r1 where r1.r_regionkey in (0, 1) group by r1.r_regionkey";
 
@@ -1160,7 +1153,6 @@ public class TestSetOp extends ClusterTest {
 
   @Test
   public void testUnsupportedComplexType() {
-    boolean exceptionEncountered = true;
     try {
       String query = "select sia from cp.`complex/json/complex.json` intersect all select sia from cp.`complex/json/complex.json`";
       testBuilder()
@@ -1171,13 +1163,10 @@ public class TestSetOp extends ClusterTest {
         .baselineValues("[2,12,102,1002]")
         .baselineValues("[3,13,103,1003]")
         .build().run();
-      exceptionEncountered = false;
+      Assert.fail("Missing expected exception on complex type");
     } catch (Exception ex) {
-      assertTrue(ex.getMessage(),
-        ex.getMessage().contains("Map, Array, Union or repeated scalar type should not be used in group by, order by or in a comparison operator"));
-    }
-    if (!exceptionEncountered) {
-      throw new RuntimeException("Missing expected exception on complex type");
+      Assert.assertThat(ex.getMessage(), ex.getMessage(),
+        CoreMatchers.containsString("Map, Array, Union or repeated scalar type should not be used in group by, order by or in a comparison operator"));
     }
   }
 }

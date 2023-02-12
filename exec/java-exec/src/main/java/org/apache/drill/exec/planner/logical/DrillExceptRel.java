@@ -23,10 +23,12 @@ import org.apache.calcite.plan.RelTraitSet;
 import org.apache.calcite.rel.InvalidRelException;
 import org.apache.calcite.rel.RelNode;
 import org.apache.calcite.rel.core.Minus;
+import org.apache.calcite.util.trace.CalciteTrace;
 import org.apache.drill.common.logical.data.Except;
 import org.apache.drill.common.logical.data.LogicalOperator;
 import org.apache.drill.exec.planner.common.DrillSetOpRel;
 import org.apache.drill.exec.planner.torel.ConversionContext;
+import org.slf4j.Logger;
 
 import java.util.List;
 
@@ -34,45 +36,46 @@ import java.util.List;
  * Minus implemented in Drill.
  */
 public class DrillExceptRel extends Minus implements DrillRel, DrillSetOpRel {
-  private final boolean isAggAdded;
+  private static final Logger tracer = CalciteTrace.getPlannerTracer();
 
   public DrillExceptRel(RelOptCluster cluster, RelTraitSet traits,
-                       List<RelNode> inputs, boolean all, boolean checkCompatibility, boolean isAggAdded) throws InvalidRelException {
+                       List<RelNode> inputs, boolean all, boolean checkCompatibility) throws InvalidRelException {
     super(cluster, traits, inputs, all);
     if (checkCompatibility && !this.isCompatible(getRowType(), getInputs())) {
       throw new InvalidRelException("Input row types of the Except are not compatible.");
     }
-    this.isAggAdded = isAggAdded;
   }
 
-  public boolean isAggAdded() {
-    return isAggAdded;
+  public static DrillExceptRel create(List<RelNode> inputs, boolean all) {
+    try {
+      return new DrillExceptRel(inputs.get(0).getCluster(), inputs.get(0).getTraitSet(), inputs, all, true);
+    } catch (InvalidRelException e) {
+      tracer.warn(e.toString());
+      return null;
+    }
   }
 
   @Override
   public DrillExceptRel copy(RelTraitSet traitSet, List<RelNode> inputs,
                             boolean all) {
     try {
-      return new DrillExceptRel(getCluster(), traitSet, inputs, all,
-          false /* don't check compatibility during copy */, isAggAdded);
+      return new DrillExceptRel(getCluster(), traitSet, inputs, all, false);
     } catch (InvalidRelException e) {
       throw new AssertionError(e);
     }
   }
 
-  public DrillExceptRel copy(List<RelNode> inputs, boolean isAggAdded) {
+  public DrillExceptRel copy(List<RelNode> inputs) {
     try {
-      return new DrillExceptRel(getCluster(), traitSet, inputs, all,
-        false, isAggAdded);
+      return new DrillExceptRel(getCluster(), traitSet, inputs, all, false);
     } catch (InvalidRelException e) {
       throw new AssertionError(e);
     }
   }
 
-  public DrillExceptRel copy(boolean isAggAdded) {
+  public DrillExceptRel copy() {
     try {
-      return new DrillExceptRel(getCluster(), traitSet, inputs, all,
-        false, isAggAdded);
+      return new DrillExceptRel(getCluster(), traitSet, inputs, all, false);
     } catch (InvalidRelException e) {
       throw new AssertionError(e);
     }

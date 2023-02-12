@@ -23,9 +23,11 @@ import org.apache.calcite.plan.RelTraitSet;
 import org.apache.calcite.rel.InvalidRelException;
 import org.apache.calcite.rel.RelNode;
 import org.apache.calcite.rel.core.Intersect;
+import org.apache.calcite.util.trace.CalciteTrace;
 import org.apache.drill.common.logical.data.LogicalOperator;
 import org.apache.drill.exec.planner.common.DrillSetOpRel;
 import org.apache.drill.exec.planner.torel.ConversionContext;
+import org.slf4j.Logger;
 
 import java.util.List;
 
@@ -33,12 +35,22 @@ import java.util.List;
  * Intersect implemented in Drill.
  */
 public class DrillIntersectRel extends Intersect implements DrillRel, DrillSetOpRel {
+  private static final Logger tracer = CalciteTrace.getPlannerTracer();
 
   public DrillIntersectRel(RelOptCluster cluster, RelTraitSet traits,
                            List<RelNode> inputs, boolean all, boolean checkCompatibility) throws InvalidRelException {
     super(cluster, traits, inputs, all);
     if (checkCompatibility && !this.isCompatible(getRowType(), getInputs())) {
       throw new InvalidRelException("Input row types of the Intersect are not compatible.");
+    }
+  }
+
+  public static DrillIntersectRel create(List<RelNode> inputs, boolean all) {
+    try {
+      return new DrillIntersectRel(inputs.get(0).getCluster(), inputs.get(0).getTraitSet(), inputs, all, true);
+    } catch (InvalidRelException e) {
+      tracer.warn(e.toString());
+      return null;
     }
   }
 

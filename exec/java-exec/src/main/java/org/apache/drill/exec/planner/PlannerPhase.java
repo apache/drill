@@ -18,7 +18,6 @@
 package org.apache.drill.exec.planner;
 
 import org.apache.drill.exec.planner.logical.ConvertMetadataAggregateToDirectScanRule;
-import org.apache.drill.exec.planner.logical.DrillAddAggForExceptRule;
 import org.apache.drill.exec.planner.logical.DrillDistinctJoinToSemiJoinRule;
 import org.apache.drill.exec.planner.logical.DrillSetOpRule;
 import org.apache.drill.exec.planner.logical.DrillReduceExpressionsRule;
@@ -190,8 +189,7 @@ public enum PlannerPhase {
       return PlannerPhase.mergedRuleSets(
           RuleSets.ofList(
               DrillReduceAggregatesRule.INSTANCE_SUM,
-              DrillReduceAggregatesRule.INSTANCE_WINDOW_SUM,
-              DrillAddAggForExceptRule.INSTANCE),
+              DrillReduceAggregatesRule.INSTANCE_WINDOW_SUM),
           getStorageRules(context, plugins, this)
           );
     }
