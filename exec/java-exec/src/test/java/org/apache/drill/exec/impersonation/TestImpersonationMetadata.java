@@ -164,16 +164,26 @@ public class TestImpersonationMetadata extends BaseTestImpersonation {
   @Test
   public void testShowFilesInWSWithUserAndGroupPermissionsForQueryUser() throws Exception {
     try (ClientFixture client = cluster.client(user1, "")) {
-
-      // Try show tables in schema "drill_test_grp_1_700" which is owned by "user1"
-      List<QueryDataBatch> results = client.queryBuilder().sql(String.format("SHOW FILES IN %s.drill_test_grp_1_700",
-        MINI_DFS_STORAGE_PLUGIN_NAME)).results();
-      assertTrue(client.countResults(results) > 0);
-
-      // Try show tables in schema "drill_test_grp_0_750" which is owned by "processUser" and has group permissions for "user1"
-      results = client.queryBuilder().sql(String.format("SHOW FILES IN %s.drill_test_grp_0_750",
-        MINI_DFS_STORAGE_PLUGIN_NAME)).results();
-      assertTrue(client.countResults(results) > 0);
+      {
+        // Try show tables in schema "drill_test_grp_1_700" which is owned by
+        // "user1"
+        List<QueryDataBatch> results = client
+          .queryBuilder()
+          .sql("SHOW FILES IN %s.drill_test_grp_1_700", MINI_DFS_STORAGE_PLUGIN_NAME)
+          .results();
+        assertTrue(client.countResults(results) > 0);
+        results.forEach(r -> r.release());
+      }
+      {
+        // Try show tables in schema "drill_test_grp_0_750" which is owned by
+        // "processUser" and has group permissions for "user1"
+        List<QueryDataBatch> results = client
+          .queryBuilder()
+          .sql("SHOW FILES IN %s.drill_test_grp_0_750", MINI_DFS_STORAGE_PLUGIN_NAME)
+          .results();
+        assertTrue(client.countResults(results) > 0);
+        results.forEach(r -> r.release());
+      }
     }
   }
 
@@ -184,6 +194,7 @@ public class TestImpersonationMetadata extends BaseTestImpersonation {
       List<QueryDataBatch> results = client.queryBuilder().sql(
         String.format("SHOW FILES IN %s.drill_test_grp_0_755", MINI_DFS_STORAGE_PLUGIN_NAME)).results();
       assertTrue(client.countResults(results) > 0);
+      results.forEach(r -> r.release());
     }
   }
 
@@ -194,6 +205,7 @@ public class TestImpersonationMetadata extends BaseTestImpersonation {
       List<QueryDataBatch> results = client.queryBuilder().sql(
         String.format("SHOW FILES IN %s.drill_test_grp_1_700", MINI_DFS_STORAGE_PLUGIN_NAME)).results();
       assertEquals(0, client.countResults(results));
+      results.forEach(r -> r.release());
     }
   }
 
