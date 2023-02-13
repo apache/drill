@@ -113,7 +113,7 @@ public class TestHttpPlugin extends ClusterTest {
     HttpApiConfig sunriseWithParamsConfig = HttpApiConfig.builder()
       .url("https://api.sunrise-sunset.org/json")
       .method("GET")
-      .params(Arrays.asList("lat", "lng", "date"))
+      .params(Arrays.asList("tail.lat", "tail.lng", "tail.date"))
       .dataPath("results")
       .requireTail(false)
       .build();
@@ -197,7 +197,7 @@ public class TestHttpPlugin extends ClusterTest {
       .authType("basic")
       .userName("user")
       .password("pass")
-      .params(Arrays.asList("lat", "lng", "date"))
+      .params(Arrays.asList("tail.lat", "tail.lng", "tail.date"))
       .dataPath("results")
       .requireTail(false)
       .build();
@@ -242,7 +242,7 @@ public class TestHttpPlugin extends ClusterTest {
       .method("POST")
       .headers(headers)
       .requireTail(false)
-      .params(Arrays.asList("body.lat", "body.lng", "body.date"))
+      .params(Arrays.asList("body.lat", "body.lng", "body.date", "header.header3"))
       .postParameterLocation("json_body")
       .postBody("key1=value1\nkey2=value2")
       .build();
@@ -350,7 +350,7 @@ public class TestHttpPlugin extends ClusterTest {
       .url(makeUrl("http://localhost:%d/orgs/{org}/repos"))
       .method("GET")
       .headers(headers)
-      .params(Arrays.asList("lat", "lng", "date"))
+      .params(Arrays.asList("tail.lat", "tail.lng", "tail.date"))
       .dataPath("results")
       .requireTail(false)
       .build();
@@ -359,7 +359,7 @@ public class TestHttpPlugin extends ClusterTest {
       .url(makeUrl("http://localhost:%d/orgs/{org}/repos"))
       .method("GET")
       .headers(headers)
-      .params(Arrays.asList("org", "lng", "date"))
+      .params(Arrays.asList("org", "tail.lng", "tail.date"))
       .dataPath("results")
       .requireTail(false)
       .build();
@@ -368,7 +368,7 @@ public class TestHttpPlugin extends ClusterTest {
       .url(makeUrl("http://localhost:%d/orgs/{org}/repos?p1={p1}"))
       .method("GET")
       .headers(headers)
-      .params(Arrays.asList("p2", "p3"))
+      .params(Arrays.asList("tail.p2", "tail.p3"))
       .dataPath("results")
       .requireTail(false)
       .build();
@@ -512,7 +512,7 @@ public class TestHttpPlugin extends ClusterTest {
   public void wildcardQueryWithParams() throws Exception {
     String sql =
         "SELECT * FROM live.sunrise2\n" +
-        "WHERE `lat`=36.7201600 AND `lng`=-4.4203400 AND `date`='2019-10-02'";
+        "WHERE `tail.lat`=36.7201600 AND `tail.lng`=-4.4203400 AND `tail.date`='2019-10-02'";
 
     RowSet results = client.queryBuilder().sql(sql).rowSet();
 
@@ -551,7 +551,7 @@ public class TestHttpPlugin extends ClusterTest {
     String sql =
         "SELECT sunrise, sunset\n" +
         "FROM live.sunrise2\n" +
-        "WHERE `lat`=36.7201600 AND `lng`=-4.4203400 AND `date`='2019-10-02'";
+        "WHERE `tail.lat`=36.7201600 AND `tail.lng`=-4.4203400 AND `tail.date`='2019-10-02'";
     doSimpleSpecificQuery(sql);
   }
 
@@ -791,7 +791,7 @@ public class TestHttpPlugin extends ClusterTest {
   @Test
   public void testUrlParamsInQueryString() throws Exception {
     String sql = "SELECT _response_url FROM local.github3\n" +
-      "WHERE `org` = 'apache' AND p1='param1' AND p2='param2'";
+      "WHERE `org` = 'apache' AND p1='param1' AND `tail.p2`='param2'";
 
     try (MockWebServer server = startServer()) {
       server.enqueue(
@@ -905,7 +905,7 @@ public class TestHttpPlugin extends ClusterTest {
   @Test
   public void simpleTestWithMockServerWithParams() throws Exception {
     String sql = "SELECT * FROM local.mocktable\n" +
-                 "WHERE `lat` = 36.7201600 AND `lng` = -4.4203400 AND `date` = '2019-10-02'";
+                 "WHERE `tail.lat` = 36.7201600 AND `tail.lng` = -4.4203400 AND `tail.date` = '2019-10-02'";
     doSimpleTestWithMockServer(sql);
   }
 
@@ -1522,6 +1522,50 @@ public class TestHttpPlugin extends ClusterTest {
 
       RecordedRequest recordedRequest = server.takeRequest();
       assertEquals("POST", recordedRequest.getMethod());
+      String resultJsonString = recordedRequest.getBody().toString();
+      assertEquals("[size=71 text={\"key1\":\"value1\",\"key2\":\"value2\",\"lng\":\"-4.4203400\",\"lat\":\"36.72…]", resultJsonString);
+    }
+  }
+
+  @Test
+  public void testJsonPostAndHeadersWithFiltersAndMockServer() throws Exception {
+    try (MockWebServer server = startServer()) {
+      server.enqueue(
+          new MockResponse()
+              .setResponseCode(200)
+              .setBody(TEST_JSON_RESPONSE)
+      );
+
+      String sql = "SELECT * FROM local.mockJsonPost WHERE `body.lat`=36.7201600 AND `body.lng`=-4.4203400 AND `header.header3`='value3'";
+      RowSet results = client.queryBuilder().sql(sql).rowSet();
+
+      TupleMetadata expectedSchema = new SchemaBuilder()
+          .addMap("results")
+          .add("sunrise", TypeProtos.MinorType.VARCHAR, TypeProtos.DataMode.OPTIONAL)
+          .add("sunset", TypeProtos.MinorType.VARCHAR, TypeProtos.DataMode.OPTIONAL)
+          .add("solar_noon", TypeProtos.MinorType.VARCHAR, TypeProtos.DataMode.OPTIONAL)
+          .add("day_length", TypeProtos.MinorType.VARCHAR, TypeProtos.DataMode.OPTIONAL)
+          .add("civil_twilight_begin", TypeProtos.MinorType.VARCHAR, TypeProtos.DataMode.OPTIONAL)
+          .add("civil_twilight_end", TypeProtos.MinorType.VARCHAR, TypeProtos.DataMode.OPTIONAL)
+          .add("nautical_twilight_begin", TypeProtos.MinorType.VARCHAR, TypeProtos.DataMode.OPTIONAL)
+          .add("nautical_twilight_end", TypeProtos.MinorType.VARCHAR, TypeProtos.DataMode.OPTIONAL)
+          .add("astronomical_twilight_begin", TypeProtos.MinorType.VARCHAR, TypeProtos.DataMode.OPTIONAL)
+          .add("astronomical_twilight_end", TypeProtos.MinorType.VARCHAR, TypeProtos.DataMode.OPTIONAL)
+          .resumeSchema()
+          .add("status", TypeProtos.MinorType.VARCHAR, TypeProtos.DataMode.OPTIONAL)
+          .build();
+
+      RowSet expected = new RowSetBuilder(client.allocator(), expectedSchema)
+          .addRow(mapValue("6:13:58 AM", "5:59:55 PM", "12:06:56 PM", "11:45:57", "5:48:14 AM", "6:25:38 PM", "5:18:16 AM", "6:55:36 PM", "4:48:07 AM", "7:25:45 PM"), "OK")
+          .build();
+
+      RowSetUtilities.verify(expected, results);
+
+      RecordedRequest recordedRequest = server.takeRequest();
+      assertEquals("POST", recordedRequest.getMethod());
+      assertEquals("value1", recordedRequest.getHeader("header1"));
+      assertEquals("value2", recordedRequest.getHeader("header2"));
+      assertEquals("value3", recordedRequest.getHeader("header3"));
       String resultJsonString = recordedRequest.getBody().toString();
       assertEquals("[size=71 text={\"key1\":\"value1\",\"key2\":\"value2\",\"lng\":\"-4.4203400\",\"lat\":\"36.72…]", resultJsonString);
     }

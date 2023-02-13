@@ -50,7 +50,7 @@ public class HttpApiConfig {
   protected static final String XML_INPUT_FORMAT = "xml";
 
   public static final String POST_BODY_POST_LOCATION = "post_body";
-  public static final String QUERY_STRING_POST_LOCATION = "query_string";
+  public static final String XML_BODY_POST_LOCATION = "xml_body";
   public static final String JSON_BODY_POST_LOCATION = "json_body";
 
   @JsonProperty
@@ -435,7 +435,7 @@ public class HttpApiConfig {
 
     private String postBody;
 
-    private String postParameterLocation = QUERY_STRING_POST_LOCATION;
+    private String postParameterLocation = JSON_BODY_POST_LOCATION;
 
     private Map<String, String> headers;
 
