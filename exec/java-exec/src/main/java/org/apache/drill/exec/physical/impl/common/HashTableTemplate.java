@@ -132,7 +132,7 @@ public abstract class HashTableTemplate implements HashTable {
 
     // Array of 'link' values
     private IntVector links;
-
+    private IntVector nums = null;
     // Array of hash values - this is useful when resizing the hash table
     private IntVector hashValues;
 
@@ -178,12 +178,18 @@ public abstract class HashTableTemplate implements HashTable {
 
         links = allocMetadataVector(newBatchHolderSize, EMPTY_SLOT);
         hashValues = allocMetadataVector(newBatchHolderSize, 0);
+        if (htConfig.isComputeKeyNum()) {
+          nums = allocMetadataVector(newBatchHolderSize, 0);
+        }
         success = true;
       } finally {
         if (!success) {
           htContainer.clear();
           if (links != null) {
             links.clear();
+          }
+          if (nums != null) {
+            nums.clear();
           }
         }
       }
@@ -199,6 +205,12 @@ public abstract class HashTableTemplate implements HashTable {
       }
       links.getMutator().setValueCount(size);
       hashValues.getMutator().setValueCount(size);
+      if (nums != null) {
+        for (int i = 0; i < size; i++) {
+          nums.getMutator().set(i, 0);
+        }
+        nums.getMutator().setValueCount(size);
+      }
     }
 
     protected void setup() throws SchemaChangeException {
@@ -242,6 +254,32 @@ public abstract class HashTableTemplate implements HashTable {
       return links.getAccessor().get(currentIndex & BATCH_MASK);
     }
 
+    private void increaseRecordNumForKey(int idxWithinBatch) {
+      if (nums != null) {
+        nums.getMutator().set(idxWithinBatch, nums.getAccessor().get(idxWithinBatch) + 1);
+      }
+    }
+
+    private void decreaseRecordNumForKey(int idxWithinBatch) {
+      if (nums != null) {
+        nums.getMutator().set(idxWithinBatch, nums.getAccessor().get(idxWithinBatch) - 1);
+      }
+    }
+
+    private int getRecordNumForKey(int idxWithinBatch) {
+      if (nums != null) {
+        return nums.getAccessor().get(idxWithinBatch);
+      } else {
+        return -1;
+      }
+    }
+
+    private void setNum(int idxWithinBatch, int num) {
+      if (nums != null) {
+        nums.getMutator().set(idxWithinBatch, num);
+      }
+    }
+
     // Insert a new <key1, key2...keyN> entry coming from the incoming batch into the hash table
     // container at the specified index
     private void insertEntry(int incomingRowIdx, int currentIdx, int hashValue, BatchHolder lastEntryBatch, int lastEntryIdxWithinBatch) throws SchemaChangeException {
@@ -259,6 +297,9 @@ public abstract class HashTableTemplate implements HashTable {
       // will point to a null (empty) slot
       links.getMutator().set(currentIdxWithinBatch, EMPTY_SLOT);
       hashValues.getMutator().set(currentIdxWithinBatch, hashValue);
+      if (nums != null) {
+        nums.getMutator().set(currentIdxWithinBatch, 1);
+      }
 
       maxOccupiedIdx = Math.max(maxOccupiedIdx, currentIdxWithinBatch);
 
@@ -400,6 +441,7 @@ public abstract class HashTableTemplate implements HashTable {
       htContainer.clear();
       if ( links != null ) { links.clear(); }
       if ( hashValues != null ) { hashValues.clear(); }
+      if ( nums != null ) { nums.clear(); }
     }
 
     // Only used for internal debugging. Get the value vector at a particular index from the htContainer.
@@ -686,6 +728,7 @@ public abstract class HashTableTemplate implements HashTable {
 
       if (lastEntryBatch.isKeyMatch(incomingRowIdx, currentIndex, false)) {
         htIdxHolder.value = currentIndex;
+        lastEntryBatch.increaseRecordNumForKey(lastEntryIdxWithinBatch);
         return PutStatus.KEY_PRESENT;
       }
     }
@@ -765,6 +808,21 @@ public abstract class HashTableTemplate implements HashTable {
       }
     }
     return -1;
+  }
+
+  public int getRecordNumForKey(int currentIndex) {
+    BatchHolder bh = batchHolders.get((currentIndex >>> 16) & BATCH_MASK);
+    return bh.getRecordNumForKey(currentIndex & BATCH_MASK);
+  }
+
+  public void setRecordNumForKey(int currentIndex, int num) {
+    BatchHolder bh = batchHolders.get((currentIndex >>> 16) & BATCH_MASK);
+    bh.setNum(currentIndex & BATCH_MASK, num);
+  }
+
+  public void decreaseRecordNumForKey(int currentIndex) {
+    BatchHolder bh = batchHolders.get((currentIndex >>> 16) & BATCH_MASK);
+    bh.decreaseRecordNumForKey(currentIndex & BATCH_MASK);
   }
 
   // Add a new BatchHolder to the list of batch holders if needed. This is based on the supplied

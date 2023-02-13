@@ -600,6 +600,10 @@ public final class ExecConstants {
   public static final BooleanValidator ENABLE_UNION_TYPE = new BooleanValidator(ENABLE_UNION_TYPE_KEY,
       new OptionDescription("Enable support for Avro union type."));
 
+  public static final String EXCEPT_ADD_AGG_BELOW_KEY = "exec.except_add_agg_below";
+  public static final BooleanValidator EXCEPT_ADD_AGG_BELOW = new BooleanValidator(EXCEPT_ADD_AGG_BELOW_KEY,
+    new OptionDescription("Add agg below setop for left input when doing except, otherwise above setop"));
+
   // Kafka plugin related options.
   public static final String KAFKA_ALL_TEXT_MODE = "store.kafka.all_text_mode";
   public static final OptionValidator KAFKA_READER_ALL_TEXT_MODE_VALIDATOR = new BooleanValidator(KAFKA_ALL_TEXT_MODE,

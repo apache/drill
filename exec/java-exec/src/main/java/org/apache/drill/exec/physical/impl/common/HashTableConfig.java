@@ -36,6 +36,7 @@ public class HashTableConfig  {
   private final List<NamedExpression> keyExprsProbe;
   private final List<Comparator> comparators;
   private final int joinControl;
+  private final boolean computeKeyNum;
 
   public HashTableConfig(
       int initialCapacity,
@@ -44,7 +45,7 @@ public class HashTableConfig  {
       List<NamedExpression> keyExprsProbe,
       List<Comparator> comparators
   ) {
-    this(initialCapacity, false, loadFactor, keyExprsBuild, keyExprsProbe, comparators, JoinControl.DEFAULT);
+    this(initialCapacity, false, loadFactor, keyExprsBuild, keyExprsProbe, comparators, JoinControl.DEFAULT, false);
   }
 
   @JsonCreator
@@ -54,7 +55,7 @@ public class HashTableConfig  {
                          @JsonProperty("keyExprsProbe") List<NamedExpression> keyExprsProbe,
                          @JsonProperty("comparators") List<Comparator> comparators,
                          @JsonProperty("joinControl") int joinControl) {
-    this(initialCapacity, false, loadFactor, keyExprsBuild, keyExprsProbe, comparators, joinControl);
+    this(initialCapacity, false, loadFactor, keyExprsBuild, keyExprsProbe, comparators, joinControl, false);
   }
 
   public HashTableConfig(
@@ -65,7 +66,7 @@ public class HashTableConfig  {
       List<NamedExpression> keyExprsProbe,
       List<Comparator> comparators
   ) {
-    this(initialCapacity, initialSizeIsFinal, loadFactor, keyExprsBuild, keyExprsProbe, comparators, JoinControl.DEFAULT);
+    this(initialCapacity, initialSizeIsFinal, loadFactor, keyExprsBuild, keyExprsProbe, comparators, JoinControl.DEFAULT, false);
   }
 
   @JsonCreator
@@ -75,7 +76,8 @@ public class HashTableConfig  {
                          @JsonProperty("keyExprsBuild") List<NamedExpression> keyExprsBuild,
                          @JsonProperty("keyExprsProbe") List<NamedExpression> keyExprsProbe,
                          @JsonProperty("comparators") List<Comparator> comparators,
-                         @JsonProperty("joinControl") int joinControl
+                         @JsonProperty("joinControl") int joinControl,
+                         @JsonProperty("computeKeyNum") boolean computeKeyNum
   ) {
     this.initialCapacity = initialCapacity;
     this.initialSizeIsFinal = initialSizeIsFinal;
@@ -84,6 +86,7 @@ public class HashTableConfig  {
     this.keyExprsProbe = keyExprsProbe;
     this.comparators = comparators;
     this.joinControl = joinControl;
+    this.computeKeyNum = computeKeyNum;
   }
 
   public HashTableConfig withInitialCapacity(int initialCapacity) {
@@ -93,7 +96,8 @@ public class HashTableConfig  {
       keyExprsBuild,
       keyExprsProbe,
       comparators,
-      JoinControl.DEFAULT
+      JoinControl.DEFAULT,
+      computeKeyNum
     );
   }
 
@@ -123,5 +127,9 @@ public class HashTableConfig  {
 
   public int getJoinControl() {
     return joinControl;
+  }
+
+  public boolean isComputeKeyNum() {
+    return computeKeyNum;
   }
 }

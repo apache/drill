@@ -19,12 +19,14 @@ package org.apache.drill.exec.planner;
 
 import org.apache.drill.exec.planner.logical.ConvertMetadataAggregateToDirectScanRule;
 import org.apache.drill.exec.planner.logical.DrillDistinctJoinToSemiJoinRule;
+import org.apache.drill.exec.planner.logical.DrillSetOpRule;
 import org.apache.drill.exec.planner.logical.DrillReduceExpressionsRule;
 import org.apache.drill.exec.planner.logical.DrillTableModifyRule;
 import org.apache.drill.exec.planner.physical.MetadataAggPrule;
 import org.apache.drill.exec.planner.physical.MetadataControllerPrule;
 import org.apache.drill.exec.planner.physical.MetadataHandlerPrule;
 import org.apache.drill.exec.planner.physical.TableModifyPrule;
+import org.apache.drill.exec.planner.physical.SetOpPrule;
 import org.apache.drill.shaded.guava.com.google.common.collect.ImmutableSet;
 import org.apache.drill.shaded.guava.com.google.common.collect.ImmutableSet.Builder;
 import org.apache.drill.shaded.guava.com.google.common.collect.Lists;
@@ -396,6 +398,7 @@ public enum PlannerPhase {
      */
     ImmutableSet.Builder<RelOptRule> basicRules = ImmutableSet.<RelOptRule>builder()
         .addAll(staticRuleSet)
+        .addAll(DrillSetOpRule.INSTANCES)
         .add(
             DrillMergeProjectRule.getInstance(true, RelFactories.DEFAULT_PROJECT_FACTORY,
                 optimizerRulesContext.getFunctionRegistry())
@@ -550,6 +553,9 @@ public enum PlannerPhase {
     ruleList.add(DrillPushLimitToScanRule.LIMIT_ON_PROJECT);
     ruleList.add(DrillPushLimitToScanRule.LIMIT_ON_SCAN);
     ruleList.add(TableModifyPrule.INSTANCE);
+
+    ruleList.addAll(SetOpPrule.DIST_INSTANCES);
+    ruleList.addAll(SetOpPrule.BROADCAST_INSTANCES);
 
     if (ps.isHashAggEnabled()) {
       ruleList.add(HashAggPrule.INSTANCE);

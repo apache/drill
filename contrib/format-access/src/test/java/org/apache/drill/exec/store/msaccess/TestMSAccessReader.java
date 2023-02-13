@@ -96,6 +96,32 @@ public class TestMSAccessReader extends ClusterTest {
   }
 
   @Test
+  public void testStarQueryWithDataTypes() throws Exception {
+    String sql = "SELECT * " +
+        "FROM table(cp.`data/V2010/testV2010.accdb` (type=> 'msaccess', tableName => 'Table1')) LIMIT 5";
+    RowSet results = client.queryBuilder().sql(sql).rowSet();
+
+    TupleMetadata expectedSchema = new SchemaBuilder()
+        .addNullable("A", MinorType.VARCHAR)
+        .addNullable("B", MinorType.VARCHAR)
+        .addNullable("C", MinorType.TINYINT)
+        .addNullable("D", MinorType.SMALLINT)
+        .addNullable("E", MinorType.INT)
+        .addNullable("F", MinorType.FLOAT8)
+        .addNullable("G", MinorType.TIMESTAMP)
+        .addNullable("H", MinorType.VARDECIMAL)
+        .addNullable("I", MinorType.BIT)
+        .buildSchema();
+
+    RowSet expected = new RowSetBuilder(client.allocator(), expectedSchema)
+        .addRow("a", "b", 0, 0, 0, 0.0, QueryTestUtil.ConvertDateToLong("1981-12-12T00:00:00Z"), 0, false)
+        .addRow("abcdefg", "hijklmnop", 2, 222, 333333333, 444.555, QueryTestUtil.ConvertDateToLong("1974-09-21T00:00:00Z"), 4, true)
+        .build();
+
+    new RowSetComparison(expected).verifyAndClearAll(results);
+  }
+
+  @Test
   public void testMetadataStarQuery() throws Exception {
     String sql = "SELECT * FROM cp.`data/V2019/extDateTestV2019.accdb`";
     RowSet results = client.queryBuilder().sql(sql).rowSet();

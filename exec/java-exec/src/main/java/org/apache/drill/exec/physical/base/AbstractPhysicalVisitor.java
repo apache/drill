@@ -33,6 +33,7 @@ import org.apache.drill.exec.physical.config.Project;
 import org.apache.drill.exec.physical.config.RangePartitionSender;
 import org.apache.drill.exec.physical.config.RowKeyJoinPOP;
 import org.apache.drill.exec.physical.config.Screen;
+import org.apache.drill.exec.physical.config.SetOp;
 import org.apache.drill.exec.physical.config.SingleSender;
 import org.apache.drill.exec.physical.config.Sort;
 import org.apache.drill.exec.physical.config.StatisticsAggregate;
@@ -57,6 +58,11 @@ public abstract class AbstractPhysicalVisitor<T, X, E extends Throwable> impleme
   @Override
   public T visitUnion(UnionAll union, X value) throws E {
     return visitOp(union, value);
+  }
+
+  @Override
+  public T visitSetOp(SetOp setOp, X value) throws E {
+    return visitOp(setOp, value);
   }
 
   @Override
