@@ -19,6 +19,7 @@ package org.apache.drill.exec.impersonation.hive;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.Paths;
 import java.util.List;
 import java.util.Map;
 
@@ -96,8 +97,10 @@ public class BaseTestHiveImpersonation extends BaseTestImpersonation {
     whDir = hiveConf.get(ConfVars.METASTOREWAREHOUSE.varname);
     FileSystem.mkdirs(fs, new Path(whDir), new FsPermission((short) 0777));
 
-    studentData = ClusterFixture.getResource("student.txt");
-    voterData = ClusterFixture.getResource("voter.txt");
+    dirTestWatcher.copyResourceToRoot(Paths.get("student.txt"));
+    dirTestWatcher.copyResourceToRoot(Paths.get("voter.txt"));
+    studentData = dirTestWatcher.getRootDir() + "/student.txt";
+    voterData = dirTestWatcher.getRootDir() + "/voter.txt";
   }
 
   protected static void startHiveMetaStore() throws Exception {

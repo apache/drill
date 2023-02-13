@@ -914,7 +914,7 @@ public class QueryBuilder {
     }
 
     private void match(String patternString, boolean expectedResult) {
-      Pattern pattern = Pattern.compile(patternString);
+      Pattern pattern = Pattern.compile(Pattern.quote(patternString));
       Matcher matcher = pattern.matcher(ex.getMessage());
       String message = String.format(
         "%s in UserException message: %s\n%s",

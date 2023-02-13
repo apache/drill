@@ -463,7 +463,7 @@ public class TestStorageBasedHiveAuthorization extends BaseTestHiveImpersonation
   @Test
   public void user0_allowed_u0_vw_voter_all_755() throws Exception {
     try (ClientFixture client = cluster.client(org1Users[0], "")) {
-      queryHiveTableOrView(db_u0_only, u0_vw_voter_all_755);
+      queryHiveTableOrView(db_u0_only, u0_vw_voter_all_755, client);
     }
   }
 
@@ -955,7 +955,7 @@ public class TestStorageBasedHiveAuthorization extends BaseTestHiveImpersonation
     client.queryBuilder()
       .sql(String.format("SELECT * FROM hive.%s.%s LIMIT 2", db, table))
       .userExceptionMatcher()
-      .include("Failure validating a view your query is dependent upon.")
+      .include(String.format("Object '%s' not found within 'hive.%s'", table, db))
       .match();
   }
 }
