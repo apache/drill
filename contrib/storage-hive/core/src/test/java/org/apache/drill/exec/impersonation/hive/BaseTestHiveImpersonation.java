@@ -28,7 +28,6 @@ import org.apache.drill.exec.hive.HiveTestUtilities;
 import org.apache.drill.exec.impersonation.BaseTestImpersonation;
 import org.apache.drill.exec.store.hive.HiveStoragePluginConfig;
 import org.apache.drill.test.ClientFixture;
-import org.apache.drill.test.ClusterFixture;
 import org.apache.drill.test.TestBuilder;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
