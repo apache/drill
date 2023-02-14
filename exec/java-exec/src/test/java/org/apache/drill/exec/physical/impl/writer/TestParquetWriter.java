@@ -1520,7 +1520,7 @@ public class TestParquetWriter extends ClusterTest {
     String fileName = "emptyMap.json";
 
     FileUtils.writeStringToFile(new File(dirTestWatcher.getRootDir(), fileName),
-      "{\"sample\": {}, \"a\": \"a\"}", Charset.defaultCharset());
+      "{\"sample\": { \"empty\": {}, \"b\": \"b\"}, \"a\": \"a\"}", Charset.defaultCharset());
 
     run("create table dfs.tmp.t1 as SELECT * from dfs.`%s` t", fileName);
 
