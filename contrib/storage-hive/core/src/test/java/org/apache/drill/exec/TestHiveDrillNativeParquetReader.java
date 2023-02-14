@@ -26,6 +26,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 import org.apache.drill.PlanTestBase;
+import org.apache.drill.categories.EasyOutOfMemory;
 import org.apache.drill.categories.HiveStorageTest;
 import org.apache.drill.categories.SlowTest;
 import org.apache.drill.common.exceptions.UserRemoteException;
@@ -40,7 +41,7 @@ import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.junit.rules.ExpectedException;
 
-@Category({SlowTest.class, HiveStorageTest.class})
+@Category({SlowTest.class, HiveStorageTest.class, EasyOutOfMemory.class})
 public class TestHiveDrillNativeParquetReader extends HiveTestBase {
 
   @BeforeClass
