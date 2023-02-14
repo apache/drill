@@ -120,6 +120,8 @@ public class TestDruidQueries extends DruidTestBase {
 
   @Test
   public void testSerDe() throws Exception {
+    // TODO Start here... filters are not deserializing properly
+
     String sql = String.format("SELECT COUNT(*) FROM druid.`%s`", TEST_DATASOURCE_WIKIPEDIA);
     String plan = queryBuilder().sql(sql).explainJson();
     long cnt = queryBuilder().physical(plan).singletonLong();
