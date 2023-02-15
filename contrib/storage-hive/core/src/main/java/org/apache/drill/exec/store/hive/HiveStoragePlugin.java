@@ -192,7 +192,7 @@ public class HiveStoragePlugin extends AbstractStoragePlugin {
   @Override
   public Set<StoragePluginOptimizerRule> getOptimizerRules(OptimizerRulesContext optimizerContext, PlannerPhase phase) {
     switch (phase) {
-      case LOGICAL:
+      case PARTITION_PRUNING:
         final String defaultPartitionValue = hiveConf.get(ConfVars.DEFAULTPARTITIONNAME.varname);
         ImmutableSet.Builder<StoragePluginOptimizerRule> ruleBuilder = ImmutableSet.builder();
         ruleBuilder.add(HivePushPartitionFilterIntoScan.getFilterOnProject(optimizerContext, defaultPartitionValue));

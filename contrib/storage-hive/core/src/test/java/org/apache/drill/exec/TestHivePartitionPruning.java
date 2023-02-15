@@ -163,9 +163,9 @@ public class TestHivePartitionPruning extends HiveTestBase {
 
   @Test // DRILL-6173
   public void prunePartitionsBasedOnTransitivePredicates() throws Exception {
-    String query = String.format("SELECT * FROM hive.partition_pruning_test t1 " +
+    String query = "SELECT * FROM hive.partition_pruning_test t1 " +
             "JOIN hive.partition_with_few_schemas t2 ON t1.`d` = t2.`d` AND t1.`e` = t2.`e` " +
-            "WHERE t2.`e` IS NOT NULL AND t1.`d` = 1");
+            "WHERE t2.`e` IS NOT NULL AND t1.`d` = 1";
 
     int actualRowCount = testSql(query);
     int expectedRowCount = 450;
