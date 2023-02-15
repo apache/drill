@@ -359,7 +359,7 @@ public class TestHttpPlugin extends ClusterTest {
       .url(makeUrl("http://localhost:%d/orgs/{org}/repos"))
       .method("GET")
       .headers(headers)
-      .params(Arrays.asList("org", "tail.lng", "tail.date"))
+      .params(Arrays.asList("org", "tail.lng", "tail.date", "tail.org"))
       .dataPath("results")
       .requireTail(false)
       .build();
@@ -765,7 +765,7 @@ public class TestHttpPlugin extends ClusterTest {
   @Test
   public void simpleTestWithMockServerWithDuplicateURLParams() throws Exception {
     String sql = "SELECT _response_url FROM local.github2\n" +
-      "WHERE `org` = 'apache'";
+      "WHERE `org` = 'apache' and `tail.org` = 'apache'";
 
     try (MockWebServer server = startServer()) {
       server.enqueue(
@@ -1229,12 +1229,12 @@ public class TestHttpPlugin extends ClusterTest {
 
   @Test
   public void testLimitPushdownWithFilter() throws Exception {
-    String sql = "SELECT sunrise, sunset FROM live.sunrise2 WHERE `date`='2019-10-02' LIMIT 5";
+    String sql = "SELECT sunrise, sunset FROM live.sunrise2 WHERE `tail.date`='2019-10-02' LIMIT 5";
 
     queryBuilder()
       .sql(sql)
       .planMatcher()
-      .include("Limit", "maxRecords=5", "filters=\\{date=2019-10-02\\}")
+      .include("Limit", "maxRecords=5", "filters=\\{tail.date=2019-10-02\\}")
       .match();
   }
 
