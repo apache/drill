@@ -22,22 +22,29 @@ import org.apache.drill.common.config.DrillConfig;
 import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.TestWithZookeeper;
 import org.apache.drill.exec.coord.zk.ZKClusterCoordinator;
+import org.hamcrest.MatcherAssert;
+import org.junit.Assert;
 import org.junit.Test;
+
+import static org.hamcrest.core.Is.is;
 
 public class DrillClientStateTest extends TestWithZookeeper {
 
   @Test
   public void testNotExistZkRoot() throws Exception {
     // There is no drillbit startup, therefore the root path is not saved in ZK.
-    thrownException.expect(NullPointerException.class);
-    thrownException.expectMessage("root path does not exist");
     DrillConfig config = DrillConfig.create();
     String connString = zkHelper.getConnectionString();
     String zkRoot = config.getString(ExecConstants.ZK_ROOT); // does not exist
-    connString = connString + ZKPaths.PATH_SEPARATOR + zkRoot;
-    try (ZKClusterCoordinator coordinator = new ZKClusterCoordinator(config, connString)) {
-      coordinator.start(10000);
-    }
+    String connStringWithZKRoot = connString + ZKPaths.PATH_SEPARATOR + zkRoot;
+
+    NullPointerException nullPointerException = Assert.assertThrows(NullPointerException.class, () -> {
+      try (ZKClusterCoordinator coordinator = new ZKClusterCoordinator(config, connStringWithZKRoot)) {
+        coordinator.start(10000);
+      }
+    });
+
+    MatcherAssert.assertThat(nullPointerException.getMessage(), is("The root path does not exist in the Zookeeper."));
   }
 
 }

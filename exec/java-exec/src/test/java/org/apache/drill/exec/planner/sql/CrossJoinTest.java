@@ -18,16 +18,20 @@
 package org.apache.drill.exec.planner.sql;
 
 import org.apache.drill.categories.SqlTest;
+import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.common.exceptions.UserRemoteException;
 import org.apache.drill.exec.planner.physical.PlannerSettings;
 import org.apache.drill.test.ClusterFixture;
 import org.apache.drill.test.ClusterTest;
+import org.hamcrest.MatcherAssert;
 import org.junit.After;
+import org.junit.Assert;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
 import static org.apache.drill.exec.physical.impl.join.JoinUtils.FAILED_TO_PLAN_CARTESIAN_JOIN;
+import static org.hamcrest.CoreMatchers.containsString;
 
 @Category(SqlTest.class)
 public class CrossJoinTest extends ClusterTest {
@@ -49,15 +53,12 @@ public class CrossJoinTest extends ClusterTest {
   @Test
   public void testCrossJoinFailsForEnabledOption() throws Exception {
     enableNlJoinForScalarOnly();
+    String sql = "SELECT l.n_name, r.n_name " +
+      "FROM cp.`tpch/nation.parquet` l " +
+      "CROSS JOIN cp.`tpch/nation.parquet` r";
 
-    thrownException.expect(UserRemoteException.class);
-    thrownException.expectMessage(FAILED_TO_PLAN_CARTESIAN_JOIN);
-
-    queryBuilder().sql(
-        "SELECT l.n_name, r.n_name " +
-            "FROM cp.`tpch/nation.parquet` l " +
-            "CROSS JOIN cp.`tpch/nation.parquet` r")
-        .run();
+    UserRemoteException UserRemoteException = Assert.assertThrows(UserRemoteException.class, () ->  queryBuilder().sql(sql).run());
+    MatcherAssert.assertThat(UserRemoteException.getMessage(), containsString(FAILED_TO_PLAN_CARTESIAN_JOIN));
   }
 
   @Test
@@ -75,13 +76,11 @@ public class CrossJoinTest extends ClusterTest {
   public void testCommaJoinFailsForEnabledOption() throws Exception {
     enableNlJoinForScalarOnly();
 
-    thrownException.expect(UserRemoteException.class);
-    thrownException.expectMessage(FAILED_TO_PLAN_CARTESIAN_JOIN);
+    String sql = "SELECT l.n_name,r.n_name " +
+      "FROM cp.`tpch/nation.parquet` l, cp.`tpch/nation.parquet` r";
 
-    queryBuilder().sql(
-        "SELECT l.n_name,r.n_name " +
-            "FROM cp.`tpch/nation.parquet` l, cp.`tpch/nation.parquet` r")
-        .run();
+    UserException UserRemoteException = Assert.assertThrows(UserRemoteException.class, () -> queryBuilder().sql(sql).run());
+    MatcherAssert.assertThat(UserRemoteException.getMessage(), containsString(FAILED_TO_PLAN_CARTESIAN_JOIN));
   }
 
   @Test
@@ -98,17 +97,15 @@ public class CrossJoinTest extends ClusterTest {
   public void testSubSelectCrossJoinFailsForEnabledOption() throws Exception {
     enableNlJoinForScalarOnly();
 
-    thrownException.expect(UserRemoteException.class);
-    thrownException.expectMessage(FAILED_TO_PLAN_CARTESIAN_JOIN);
+    String sql = "SELECT COUNT(*) c " +
+      "FROM (" +
+      "SELECT l.n_name,r.n_name " +
+      "FROM cp.`tpch/nation.parquet` l " +
+      "CROSS JOIN cp.`tpch/nation.parquet` r" +
+      ")";
 
-    queryBuilder().sql(
-        "SELECT COUNT(*) c " +
-            "FROM (" +
-            "SELECT l.n_name,r.n_name " +
-            "FROM cp.`tpch/nation.parquet` l " +
-            "CROSS JOIN cp.`tpch/nation.parquet` r" +
-            ")")
-        .run();
+    UserException UserRemoteException = Assert.assertThrows(UserRemoteException.class, () -> queryBuilder().sql(sql).run());
+    MatcherAssert.assertThat(UserRemoteException.getMessage(), containsString(FAILED_TO_PLAN_CARTESIAN_JOIN));
   }
 
   @Test
@@ -131,14 +128,12 @@ public class CrossJoinTest extends ClusterTest {
   public void textCrossAndCommaJoinFailsForEnabledOption() throws Exception {
     enableNlJoinForScalarOnly();
 
-    thrownException.expect(UserRemoteException.class);
-    thrownException.expectMessage(FAILED_TO_PLAN_CARTESIAN_JOIN);
+    String sql = "SELECT * " +
+      "FROM cp.`tpch/nation.parquet` a, cp.`tpch/nation.parquet` b " +
+      "CROSS JOIN cp.`tpch/nation.parquet` c";
 
-    queryBuilder().sql(
-        "SELECT * " +
-            "FROM cp.`tpch/nation.parquet` a, cp.`tpch/nation.parquet` b " +
-            "CROSS JOIN cp.`tpch/nation.parquet` c")
-        .run();
+    UserException UserRemoteException = Assert.assertThrows(UserRemoteException.class, () -> queryBuilder().sql(sql).run());
+    MatcherAssert.assertThat(UserRemoteException.getMessage(), containsString(FAILED_TO_PLAN_CARTESIAN_JOIN));
   }
 
   @Test
@@ -157,14 +152,12 @@ public class CrossJoinTest extends ClusterTest {
   public void testCrossApplyFailsForEnabledOption() throws Exception {
     enableNlJoinForScalarOnly();
 
-    thrownException.expect(UserRemoteException.class);
-    thrownException.expectMessage(FAILED_TO_PLAN_CARTESIAN_JOIN);
+    String sql =  "SELECT * " +
+      "FROM cp.`tpch/nation.parquet` l " +
+      "CROSS APPLY cp.`tpch/nation.parquet` r";
 
-    queryBuilder().sql(
-        "SELECT * " +
-            "FROM cp.`tpch/nation.parquet` l " +
-            "CROSS APPLY cp.`tpch/nation.parquet` r")
-        .run();
+    UserException UserRemoteException = Assert.assertThrows(UserRemoteException.class, () -> queryBuilder().sql(sql).run());
+    MatcherAssert.assertThat(UserRemoteException.getMessage(), containsString(FAILED_TO_PLAN_CARTESIAN_JOIN));
   }
 
   @Test

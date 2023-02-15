@@ -17,7 +17,7 @@
  */
 package org.apache.drill.common;
 
-import org.apache.commons.lang3.StringEscapeUtils;
+import org.apache.commons.text.StringEscapeUtils;
 
 /**
  * Builds a string in Drill's "plan string" format: that shown in the

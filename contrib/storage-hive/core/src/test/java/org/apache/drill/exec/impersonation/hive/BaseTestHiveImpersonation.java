@@ -19,6 +19,7 @@ package org.apache.drill.exec.impersonation.hive;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.Paths;
 import java.util.List;
 import java.util.Map;
 
@@ -26,6 +27,7 @@ import org.apache.calcite.schema.Schema.TableType;
 import org.apache.drill.exec.hive.HiveTestUtilities;
 import org.apache.drill.exec.impersonation.BaseTestImpersonation;
 import org.apache.drill.exec.store.hive.HiveStoragePluginConfig;
+import org.apache.drill.test.ClientFixture;
 import org.apache.drill.test.TestBuilder;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
@@ -94,8 +96,10 @@ public class BaseTestHiveImpersonation extends BaseTestImpersonation {
     whDir = hiveConf.get(ConfVars.METASTOREWAREHOUSE.varname);
     FileSystem.mkdirs(fs, new Path(whDir), new FsPermission((short) 0777));
 
-    studentData = getPhysicalFileFromResource("student.txt");
-    voterData = getPhysicalFileFromResource("voter.txt");
+    dirTestWatcher.copyResourceToRoot(Paths.get("student.txt"));
+    dirTestWatcher.copyResourceToRoot(Paths.get("voter.txt"));
+    studentData = dirTestWatcher.getRootDir() + "/student.txt";
+    voterData = dirTestWatcher.getRootDir() + "/voter.txt";
   }
 
   protected static void startHiveMetaStore() throws Exception {
@@ -143,12 +147,13 @@ public class BaseTestHiveImpersonation extends BaseTestImpersonation {
   }
 
   protected static void addHiveStoragePlugin(final Map<String, String> hiveConfig) throws Exception {
-    getDrillbitContext().getStorage().put(hivePluginName, createHiveStoragePlugin(hiveConfig));
+    cluster.storageRegistry().put(hivePluginName, createHiveStoragePlugin(hiveConfig));
   }
 
-  protected void showTablesHelper(final String db, List<String> expectedTables) throws Exception {
+  protected void showTablesHelper(final String db, List<String> expectedTables, ClientFixture
+client) throws Exception {
     final String dbQualified = hivePluginName + "." + db;
-    final TestBuilder testBuilder = testBuilder()
+    final TestBuilder testBuilder = client.testBuilder()
         .sqlQuery("SHOW TABLES IN " + dbQualified)
         .unOrdered()
         .baselineColumns("TABLE_SCHEMA", "TABLE_NAME");
@@ -164,9 +169,10 @@ public class BaseTestHiveImpersonation extends BaseTestImpersonation {
     testBuilder.go();
   }
 
-  protected void fromInfoSchemaHelper(final String db, List<String> expectedTables, List<TableType> expectedTableTypes) throws Exception {
+  protected void fromInfoSchemaHelper(final String db, List<String> expectedTables, List<TableType>
+expectedTableTypes, ClientFixture client) throws Exception {
     final String dbQualified = hivePluginName + "." + db;
-    final TestBuilder testBuilder = testBuilder()
+    final TestBuilder testBuilder = client.testBuilder()
         .sqlQuery("SELECT TABLE_SCHEMA, TABLE_NAME, TABLE_TYPE \n" +
             "FROM INFORMATION_SCHEMA.`TABLES` \n" +
             "WHERE TABLE_SCHEMA = '" + dbQualified + "'")
@@ -190,9 +196,9 @@ public class BaseTestHiveImpersonation extends BaseTestImpersonation {
     // server instances this should be ok.
   }
 
-  static void queryView(String viewName) throws Exception {
+  static void queryView(String viewName, ClientFixture client) throws Exception {
     String query = String.format("SELECT rownum FROM %s.tmp.%s ORDER BY rownum LIMIT 1", MINI_DFS_STORAGE_PLUGIN_NAME, viewName);
-    testBuilder()
+    client.testBuilder()
         .sqlQuery(query)
         .unOrdered()
         .baselineColumns("rownum")
@@ -200,10 +206,19 @@ public class BaseTestHiveImpersonation extends BaseTestImpersonation {
         .go();
   }
 
-  static void queryViewNotAuthorized(String viewName) throws Exception {
+  static void queryViewNotAuthorized(String viewName, ClientFixture client) throws Exception {
     String query = String.format("SELECT rownum FROM %s.tmp.%s ORDER BY rownum LIMIT 1", MINI_DFS_STORAGE_PLUGIN_NAME, viewName);
-    errorMsgTestHelper(query, String.format(
-        "Not authorized to read view [%s] in schema [%s.tmp]", viewName, MINI_DFS_STORAGE_PLUGIN_NAME));
+    String expectedMsg = String.format(
+      "Not authorized to read view [%s] in schema [%s.tmp]",
+      viewName,
+      MINI_DFS_STORAGE_PLUGIN_NAME
+    );
+
+    client.queryBuilder()
+      .sql(query)
+      .userExceptionMatcher()
+      .include(expectedMsg)
+      .match();
   }
 
   static void createTableWithStoragePermissions(final Driver hiveDriver, final String db, final String tbl, final String tblDef,
