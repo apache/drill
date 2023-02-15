@@ -30,7 +30,7 @@
 
   <groupId>org.apache.drill</groupId>
   <artifactId>drill-root</artifactId>
-  <version>1.21.0</version>
+  <version>1.22.0-SNAPSHOT</version>
   <packaging>pom</packaging>
 
   <name>Drill :</name>
@@ -41,7 +41,7 @@
     <maven.compiler.source>1.8</maven.compiler.source>
     <maven.compiler.target>1.8</maven.compiler.target>
     <sourceReleaseAssemblyDescriptor>source-release-zip-tar</sourceReleaseAssemblyDescriptor>
-    <project.build.outputTimestamp>1676437926</project.build.outputTimestamp>
+    <project.build.outputTimestamp>1676438963</project.build.outputTimestamp>
     <target.gen.source.path>${project.basedir}/target/generated-sources</target.gen.source.path>
     <proto.cas.path>${project.basedir}/src/main/protobuf/</proto.cas.path>
     <junit.version>5.7.2</junit.version>
@@ -141,7 +141,7 @@
     <connection>scm:git:https://gitbox.apache.org/repos/asf/drill.git</connection>
     <developerConnection>scm:git:https://gitbox.apache.org/repos/asf/drill.git</developerConnection>
     <url>https://github.com/apache/drill</url>
-    <tag>drill-1.21.0</tag>
+    <tag>HEAD</tag>
   </scm>
 
   <mailingLists>
