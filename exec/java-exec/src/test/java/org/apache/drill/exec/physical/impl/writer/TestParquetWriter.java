@@ -1515,20 +1515,27 @@ public class TestParquetWriter extends ClusterTest {
     }
   }
 
-  @Test
+  @Test // DRILL-8272
   public void testResultWithEmptyMap() throws Exception {
     String fileName = "emptyMap.json";
 
-    FileUtils.writeStringToFile(new File(dirTestWatcher.getRootDir(), fileName),
-      "{\"sample\": {}, \"a\": \"a\"}", Charset.defaultCharset());
+    // Create a test JSON object that includes two nested empty objects. The
+    // first has a string property as sibling so its parent, non_empty_child
+    // should not be eliminated from the output schema while the second has no
+    // siblings so its parent empty_child should be eliminated.
+    FileUtils.writeStringToFile(
+        new File(dirTestWatcher.getRootDir(), fileName),
+        "{\"non_empty_child\": { \"empty\": {}, \"b\": \"b\"}, \"empty_child\": { \"empty\": {} }, \"a\": \"a\"}",
+        Charset.defaultCharset()
+    );
 
     run("create table dfs.tmp.t1 as SELECT * from dfs.`%s` t", fileName);
 
     testBuilder()
       .sqlQuery("select * from dfs.tmp.t1")
       .unOrdered()
-      .baselineColumns("a")
-      .baselineValues("a")
+      .baselineColumns("a", "non_empty_child")
+      .baselineValues("a", mapOf("b", "b"))
       .go();
   }
 

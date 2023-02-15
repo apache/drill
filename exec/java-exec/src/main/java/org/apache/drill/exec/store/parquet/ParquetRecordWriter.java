@@ -253,6 +253,7 @@ public class ParquetRecordWriter extends ParquetOutputRecordWriter {
   private void newSchema() {
     List<Type> types = new ArrayList<>();
     for (MaterializedField field : batchSchema) {
+      pruneUnsupported(field);
       if (!supportsField(field)) {
         continue;
       }
@@ -296,6 +297,21 @@ public class ParquetRecordWriter extends ParquetOutputRecordWriter {
     MessageColumnIO columnIO = new ColumnIOFactory(false).getColumnIO(this.schema);
     consumer = columnIO.getRecordWriter(store);
     setUp(schema, consumer);
+  }
+
+  /**
+   * Recursively prunes childless MAPs from the field tree proceeding depth
+   * first so that fields that are rendered childless by removals of their
+   * descendants are eventually correctly removed themselves.
+   * @param field a top level field.
+   */
+  private void pruneUnsupported(MaterializedField field) {
+    for (MaterializedField child: field.getChildren()) {
+      pruneUnsupported(child);
+      if (!supportsField(child)) {
+        field.removeChild(child);
+      }
+    }
   }
 
   @Override

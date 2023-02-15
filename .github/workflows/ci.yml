@@ -41,15 +41,13 @@ jobs:
       fail-fast: false
     steps:
       - name: Checkout
-        uses: actions/checkout@v2
-      # Caches maven cache and uses hashes of pom.xml files to find the required cache
-      - name: Cache Maven Repository
-        uses: actions/cache@v2
+        uses: actions/checkout@v3
+      - name: Setup java
+        uses: actions/setup-java@v3
         with:
-          path: ~/.m2/repository
-          key: ${{ runner.os }}-maven-${{ hashFiles('**/pom.xml') }}
-          restore-keys: |
-              ${{ runner.os }}-maven-
+          distribution: 'temurin'
+          java-version: ${{ matrix.java }}
+          cache: 'maven'
       - name: Build and test
         # The total GitHub Actions memory is 7000Mb. But GitHub CI requires some memory for the container to perform tests
         run: |
@@ -69,17 +67,16 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v2
-      - name: Cache Maven Repository
-        uses: actions/cache@v2
+        uses: actions/checkout@v3
+      - name: Setup java
+        uses: actions/setup-java@v3
         with:
-          path: ~/.m2/repository
-          key: ${{ runner.os }}-maven-${{ hashFiles('**/pom.xml') }}
-          restore-keys: |
-            ${{ runner.os }}-maven-
+          distribution: 'temurin'
+          java-version: '8'
+          cache: 'maven'
       # Caches built protobuf library
       - name: Cache protobufs
-        uses: actions/cache@v2
+        uses: actions/cache@v3
         with:
           path: ~/protobuf
           key: ${{ runner.os }}-protobuf

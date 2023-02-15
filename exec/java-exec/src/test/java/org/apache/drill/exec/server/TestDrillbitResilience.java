@@ -29,6 +29,7 @@ import java.io.IOException;
 
 import ch.qos.logback.classic.Level;
 import org.apache.commons.math3.util.Pair;
+import org.apache.drill.categories.EasyOutOfMemory;
 import org.apache.drill.categories.FlakyTest;
 import org.apache.drill.exec.client.DrillClient;
 import org.apache.drill.exec.physical.impl.partitionsender.PartitionSenderRootExec;
@@ -82,12 +83,12 @@ import org.apache.drill.exec.testing.ControlsInjectionUtil;
 import org.apache.drill.exec.util.Pointer;
 import org.apache.drill.exec.work.fragment.FragmentExecutor;
 import org.apache.drill.categories.SlowTest;
+import org.junit.experimental.categories.Category;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.RepeatedTest;
 import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInfo;
 import org.junit.jupiter.api.Timeout;
@@ -105,8 +106,7 @@ import org.apache.drill.shaded.guava.com.google.common.base.Preconditions;
  * <li>specify Level.DEBUG for CURRENT_LOG_LEVEL</li>
  * <li>compare trace output for successful test case and failed</li>
  */
-@Tag(SlowTest.TAG)
-@Tag(FlakyTest.TAG)
+@Category({ SlowTest.class, FlakyTest.class, EasyOutOfMemory.class })
 public class TestDrillbitResilience extends ClusterTest {
   private static final Logger logger = org.slf4j.LoggerFactory.getLogger(TestDrillbitResilience.class);
   protected static LogFixture logFixture;
