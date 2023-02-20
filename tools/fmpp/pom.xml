@@ -24,7 +24,7 @@
   <parent>
     <artifactId>tools-parent</artifactId>
     <groupId>org.apache.drill.tools</groupId>
-    <version>1.21.0</version>
+    <version>1.21.1-SNAPSHOT</version>
   </parent>
 
   <artifactId>drill-fmpp-maven-plugin</artifactId>
