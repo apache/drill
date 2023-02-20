@@ -23,7 +23,7 @@
   <parent>
     <artifactId>drill-root</artifactId>
     <groupId>org.apache.drill</groupId>
-    <version>1.21.0</version>
+    <version>1.21.1-SNAPSHOT</version>
   </parent>
 
   <groupId>org.apache.drill.tools</groupId>
