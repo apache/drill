@@ -1,22 +1,5 @@
-# https://cwiki.apache.org/confluence/display/INFRA/.asf.yaml+features+for+git+repositories
-
+# Temporarily disable branch protection in order to undo a commit that was
+# merged during the freeze for Drill 1.21.0. This change will be completely
+# reverted with the completion of the release.
 github:
-  description: "Apache Drill is a distributed MPP query layer for self describing data"
-  homepage: https://drill.apache.org/
-  labels:
-    - drill
-    - sql
-    - big-data
-    - java
-    - hive
-    - hadoop
-    - jdbc
-    - parquet
-  
-  features:
-    # Enable wiki for documentation
-    wiki: true
-    # Enable issue management
-    issues: true
-    # Enable projects for project management boards
-    projects: true
+  protected_branches: ~
