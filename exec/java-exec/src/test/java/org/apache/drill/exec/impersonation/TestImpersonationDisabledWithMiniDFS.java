@@ -45,11 +45,11 @@ public class TestImpersonationDisabledWithMiniDFS extends BaseTestImpersonation 
 
   private static void createTestData() throws Exception {
     // Create test table in minidfs.tmp schema for use in test queries
-    test(String.format("CREATE TABLE %s.tmp.dfsRegion AS SELECT * FROM cp.`region.json`", MINI_DFS_STORAGE_PLUGIN_NAME));
+    run(String.format("CREATE TABLE %s.tmp.dfsRegion AS SELECT * FROM cp.`region.json`", MINI_DFS_STORAGE_PLUGIN_NAME));
 
     // generate a large enough file that the DFS will not fulfill requests to read a
     // page of data all at once, see notes above testReadLargeParquetFileFromDFS()
-    test(String.format(
+    run(String.format(
         "CREATE TABLE %s.tmp.large_employee AS " +
             "(SELECT employee_id, full_name FROM cp.`employee.json`) " +
             "UNION ALL (SELECT employee_id, full_name FROM cp.`employee.json`)" +
@@ -75,8 +75,8 @@ public class TestImpersonationDisabledWithMiniDFS extends BaseTestImpersonation 
    */
   @Test
   public void testReadLargeParquetFileFromDFS() throws Exception {
-    test(String.format("USE %s", MINI_DFS_STORAGE_PLUGIN_NAME));
-    test("SELECT * FROM tmp.`large_employee`");
+    run(String.format("USE %s", MINI_DFS_STORAGE_PLUGIN_NAME));
+    run("SELECT * FROM tmp.`large_employee`");
   }
 
   @Test // DRILL-3037
@@ -96,7 +96,7 @@ public class TestImpersonationDisabledWithMiniDFS extends BaseTestImpersonation 
 
   @AfterClass
   public static void removeMiniDfsBasedStorage() throws Exception {
-    getDrillbitContext().getStorage().remove(MINI_DFS_STORAGE_PLUGIN_NAME);
+    cluster.storageRegistry().remove(MINI_DFS_STORAGE_PLUGIN_NAME);
     stopMiniDfsCluster();
   }
 }

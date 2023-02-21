@@ -17,14 +17,16 @@
  */
 package org.apache.drill.test;
 
+import static org.hamcrest.CoreMatchers.instanceOf;
+import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.Assert.assertEquals;
 
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.Future;
@@ -45,6 +47,7 @@ import org.apache.drill.exec.proto.BitControl.PlanFragment;
 import org.apache.drill.exec.proto.UserBitShared.QueryId;
 import org.apache.drill.exec.proto.UserBitShared.QueryResult.QueryState;
 import org.apache.drill.exec.proto.UserBitShared.QueryType;
+import org.apache.drill.exec.proto.UserBitShared.DrillPBError.ErrorType;
 import org.apache.drill.exec.proto.helper.QueryIdHelper;
 import org.apache.drill.exec.record.RecordBatchLoader;
 import org.apache.drill.exec.record.VectorContainer;
@@ -696,6 +699,24 @@ public class QueryBuilder {
     return new PlanMatcher(plan);
   }
 
+  /**
+   * Executes the query, checks that an exception is thrown and creates a
+   * UserExceptionMatcher based on the thrown exception.
+   *
+   * @return user exception matcher
+   * @throws Exception if the query succeeds
+   */
+  public UserExceptionMatcher userExceptionMatcher() throws Exception {
+    try {
+      run();
+    } catch (Exception ex) {
+      return new UserExceptionMatcher(ex);
+    }
+    throw new AssertionError(
+      String.format("Expected an exception to be thrown when running %s", queryText)
+    );
+  }
+
   private QuerySummary produceSummary(BufferingQueryEventListener listener) throws Exception {
     long start = System.currentTimeMillis();
     int recordCount = 0;
@@ -787,8 +808,8 @@ public class QueryBuilder {
     private static final String UNEXPECTED_FOUND = "Found unwanted pattern";
 
     private final String plan;
-    private final List<String> included = new ArrayList<>();
-    private final List<String> excluded = new ArrayList<>();
+    private final List<String> included = new LinkedList<>();
+    private final List<String> excluded = new LinkedList<>();
 
     public PlanMatcher(String plan) {
       this.plan = plan;
@@ -843,6 +864,64 @@ public class QueryBuilder {
       Matcher matcher = pattern.matcher(plan);
       String message = String.format("%s in plan: %s\n%s",
         expectedResult ? EXPECTED_NOT_FOUND : UNEXPECTED_FOUND, patternString, plan);
+      assertEquals(message, expectedResult, matcher.find());
+    }
+  }
+
+  /**
+   * Collects expected and unexpected UserException message patterns.
+   * Upon {@link #match()} method call, matches given patterns to the
+   * UserException thrown by the query.
+   */
+  public static class UserExceptionMatcher {
+    private final UserException ex;
+    private final List<String> included = new LinkedList<>();
+    private final List<String> excluded = new LinkedList<>();
+    private ErrorType expectedType;
+
+    public UserExceptionMatcher(Exception ex) {
+      assertThat(ex, instanceOf(UserException.class));
+      this.ex = (UserException) ex;
+    }
+
+    public UserExceptionMatcher include(String... patterns) {
+      included.addAll(Arrays.asList(patterns));
+      return this;
+    }
+
+    public UserExceptionMatcher exclude(String... patterns) {
+      excluded.addAll(Arrays.asList(patterns));
+      return this;
+    }
+
+    public UserExceptionMatcher expectedType(ErrorType expectedType) {
+      this.expectedType = expectedType;
+      return this;
+    }
+
+    /**
+     * Checks if stored patterns (string parts) are included or excluded in the
+     * given exception's message. Will fail with {@link AssertionError}
+     * only if expected pattern was not matched or unexpected pattern was matched.
+     */
+    public void match() {
+      included.forEach(pattern -> match(pattern, true));
+      excluded.forEach(pattern -> match(pattern, false));
+
+      if (expectedType != null) {
+        assertEquals(expectedType, ex.getErrorType());
+      }
+    }
+
+    private void match(String patternString, boolean expectedResult) {
+      Pattern pattern = Pattern.compile(Pattern.quote(patternString));
+      Matcher matcher = pattern.matcher(ex.getMessage());
+      String message = String.format(
+        "%s in UserException message: %s\n%s",
+        expectedResult ? "Did not find expected pattern" : "Found unwanted pattern",
+        patternString,
+        ex.getMessage()
+      );
       assertEquals(message, expectedResult, matcher.find());
     }
   }

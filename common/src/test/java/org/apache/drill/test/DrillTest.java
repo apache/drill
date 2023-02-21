@@ -27,7 +27,6 @@ import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Rule;
 import org.junit.rules.DisableOnDebug;
-import org.junit.rules.ExpectedException;
 import org.junit.rules.TestRule;
 import org.junit.rules.TestWatcher;
 import org.junit.runner.Description;
@@ -57,13 +56,6 @@ public class DrillTest extends BaseTest {
   @Rule public final TestLogReporter logOutcome = LOG_OUTCOME;
 
   @Rule public final TestRule REPEAT_RULE = TestTools.getRepeatRule(false);
-
-  /**
-   * Rule for tests that verify {@link org.apache.drill.common.exceptions.UserException} type and message. See
-   * {@link UserExceptionMatcher} and e.g. apache.drill.exec.server.TestOptions#checkValidationException.
-   * Tests that do not use this rule are not affected.
-   */
-  @Rule public final ExpectedException thrownException = ExpectedException.none();
 
   @BeforeClass
   public static void initDrillTest() {

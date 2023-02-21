@@ -18,17 +18,16 @@
 package org.apache.drill.common.util.function;
 
 import org.apache.drill.test.BaseTest;
-import org.junit.Rule;
+import org.hamcrest.MatcherAssert;
+import org.junit.Assert;
 import org.junit.Test;
-import org.junit.rules.ExpectedException;
 
 import java.util.HashMap;
 import java.util.Map;
 
-public class TestCheckedFunction extends BaseTest {
+import static org.hamcrest.CoreMatchers.containsString;
 
-  @Rule
-  public ExpectedException thrown = ExpectedException.none();
+public class TestCheckedFunction extends BaseTest {
 
   @Test
   public void testComputeIfAbsentWithCheckedFunction() {
@@ -37,10 +36,8 @@ public class TestCheckedFunction extends BaseTest {
     String message = "Exception message";
     CheckedFunction<String, String, Exception> function = producer::failWithMessage;
 
-    thrown.expect(Exception.class);
-    thrown.expectMessage(message);
-
-    map.computeIfAbsent(message, function);
+    Exception exception = Assert.assertThrows(Exception.class, () -> map.computeIfAbsent(message, function));
+    MatcherAssert.assertThat(exception.getMessage(), containsString(message));
   }
 
   private class ExceptionProducer {
