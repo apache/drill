@@ -90,7 +90,10 @@ public class CharSequenceWrapper implements CharSequence {
    */
   @Override
   public CharSequence subSequence(int start, int end) {
-    throw new UnsupportedOperationException();
+    // throw new UnsupportedOperationException();
+    CharSequenceWrapper charSequenceWrapper = new CharSequenceWrapper();
+    charSequenceWrapper.setBuffer(start, end, buffer);
+    return charSequenceWrapper;
   }
 
   /**
@@ -212,7 +215,10 @@ public class CharSequenceWrapper implements CharSequence {
    */
   @Override
   public String toString() {
-    throw new UnsupportedOperationException();
+    StringBuilder sb = new StringBuilder();
+    for (int i = 0; i < length(); i++) {
+      sb.append(charAt(i));
+    }
+    return sb.toString();
   }
-
 }
