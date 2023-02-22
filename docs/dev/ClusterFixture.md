@@ -1,6 +1,6 @@
 # ClusterFixture
 
-Drill provides two ways to test. The original tests are based on the `BaseTestQuery` are are (or will be) described elsewhere. Limitations of this class prompted creation of a new framework, which this page describes.
+Drill provides two ways to test. The original tests are based on the `BaseTestQuery` are (or will be) described elsewhere. Limitations of this class prompted creation of a new framework, which this page describes.
 
 * A single base class `BaseTestQuery` holds a large amount of functionality, making it hard to create specialized test classes. One either starts with `BaseTestQuery`, or must replicate that functionality. Since one often has to create specialized setups, this was a bit of a limitation.
 * `BaseTestQuery` is very handy in that it starts an embedded Drillbit. But, it does so using a fixed set of boot options. To change the boot options as needed for some tests, one has to allow the initial Drillbit to start, then shut it down, create the new config, and restart. This is tedious when using tests for debugging.
@@ -125,6 +125,27 @@ In some cases, you may want to change an option in a test. Rather than writing o
 
 Again, you can pass a Java value which the test code will convert to a string, then will build the `ALTER SESSION` command.
 
+# Try-with-resource Style of Creating Single-use Client Fixtures.
+
+A benefit of the Cluster Fixture framework is the ability to define specific configs for specific clusterFixtures and clientFixtures as needed flexibly.
+
+In some cases, a clusterFixture has been initialized and we need to create several different config clients for different test cases.
+
+Using Java's try-with-resources syntax to create a single-use clientFixture is a convenient way to ensure that the clientFixture will automatically be closed once we've finished with it.
+
+```
+  @Test
+  public void testDirectImpersonation_HasUserReadPermissions() throws Exception {
+    // Table lineitem is owned by "user0_1:group0_1" with permissions 750. Try to read the table as "user0_1". We
+    // shouldn't expect any errors.
+    try (ClientFixture client = cluster.client(org1Users[0], "")) {
+      client.run("SELECT * FROM %s.lineitem ORDER BY l_orderkey LIMIT 1", getWSSchema(org1Users[0]));
+    }
+  }
+```
+
+* Use cluster.client() to create a new clientFixture with specific userName and password.
+
 # The Mock Data Source
 
 The test framework provides a [mock data source](The Mock Record Reader) that is sometimes handy, especially when you need to generate a large amount of data for, say, testing a sort or aggregation. The test framework automatically defines the required storage plugin:
@@ -155,6 +176,29 @@ It is often very handy, during development, to accumulate a collection of test f
 * The workspace name you want to use
 * The (local) file system location
 * The default format
+
+# Exception Matcher
+
+The `QueryBuilder` provides a clean and concise way to handle UserException matching which includes error type matching and error message pattern matching:
+
+```
+    @Test
+    public void unsupportedLiteralValidation() throws Exception {
+      String query = "ALTER session SET `%s` = %s";
+
+      client.queryBuilder()
+        .sql(query, ENABLE_VERBOSE_ERRORS_KEY, "DATE '1995-01-01'")
+        .userExceptionMatcher()
+        .expectedType(ErrorType.VALIDATION)
+        .include("Drill doesn't support assigning literals of type")
+        .match();
+    }
+```
+* Use `.userExceptionMatcher` to call UserExceptionMatcher
+* Use `.expectedType` to define expected Error type
+* Use `.include` to define an expected error message regex pattern
+* Use `.exclude` to define an unexpected error message regex pattern
+
 
 # Additional Query Tools
 
