@@ -332,16 +332,13 @@ public class StringFunctions{
 
       if (result) {
         org.apache.drill.exec.vector.complex.writer.VarCharWriter varCharWriter = listWriter.varChar();
-        String extractedResult;
-        for(int i = 1; i <= matcher.groupCount(); i++) {
-          extractedResult = matcher.group(i);
 
-          final byte[] strBytes = extractedResult.getBytes(com.google.common.base.Charsets.UTF_8);
+        for(int i = 1; i <= matcher.groupCount(); i++) {
+          final byte[] strBytes = matcher.group(i).getBytes(com.google.common.base.Charsets.UTF_8);
           buffer = buffer.reallocIfNeeded(strBytes.length);
           buffer.setBytes(0, strBytes);
           varCharWriter.writeVarChar(0, strBytes.length, buffer);
         }
-
       }
       listWriter.endList();
     }
@@ -389,10 +386,7 @@ public class StringFunctions{
       boolean result = matcher.find();
 
       if (result) {
-        String extractedResult;
-
-        extractedResult = matcher.group(index);
-        byte[] strBytes = extractedResult.getBytes(com.google.common.base.Charsets.UTF_8);
+        byte[] strBytes = matcher.group(index).getBytes(com.google.common.base.Charsets.UTF_8);
 
         out.buffer = buffer = buffer.reallocIfNeeded(strBytes.length);
         out.start = 0;

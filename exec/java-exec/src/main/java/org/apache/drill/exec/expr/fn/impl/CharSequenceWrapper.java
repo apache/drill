@@ -90,7 +90,6 @@ public class CharSequenceWrapper implements CharSequence {
    */
   @Override
   public CharSequence subSequence(int start, int end) {
-    // throw new UnsupportedOperationException();
     CharSequenceWrapper charSequenceWrapper = new CharSequenceWrapper();
     charSequenceWrapper.setBuffer(start, end, buffer);
     return charSequenceWrapper;
