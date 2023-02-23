@@ -1271,4 +1271,22 @@ public class TestAggregateFunctions extends ClusterTest {
       .baselineValues(5L, 5L, 5L, 5L, 5L)
       .go();
   }
+
+  @Test
+  public void testAggregateWithPivot() throws Exception {
+    String query = "SELECT * FROM (\n" +
+        "SELECT education_level, salary, marital_status, extract(year from age(birth_date)) age\n" +
+        "FROM cp.`employee.json`)\n" +
+        "PIVOT (avg(salary) avg_salary, avg(age) avg_age FOR marital_status IN ('M' married, 'S' single))";
+    testBuilder()
+      .sqlQuery(query)
+      .unOrdered()
+      .baselineColumns("education_level", "married_avg_salary", "married_avg_age", "single_avg_salary", "single_avg_age")
+      .baselineValues("Graduate Degree", 4038.470588235294, 101.98823529411764, 4747.176470588235, 98.65882352941176)
+      .baselineValues("Bachelors Degree", 4789.166666666667, 102.43055555555556, 4193.566433566433, 102.02797202797203)
+      .baselineValues("Partial College", 4281.381578947368, 99.25657894736842, 3785.294117647059, 101.04411764705883)
+      .baselineValues("High School Degree", 3459.2805755395684, 103.57553956834532, 3571.830985915493, 102.69014084507042)
+      .baselineValues("Partial High School", 3555.8064516129034, 101.14516129032258, 3469.7014925373132, 103.3731343283582)
+      .go();
+  }
 }
