@@ -73,7 +73,6 @@ public class DNSFunctions {
   }
 
   /* This function takes a host name and returns the IP address associated with that host, and "Unknown if there is an error */
-
   @FunctionTemplate(names = {"get_host_address", "host_lookup"}, scope = FunctionTemplate.FunctionScope.SIMPLE, nulls = FunctionTemplate.NullHandling.NULL_IF_NULL)
 
   public static class HostLookup implements DrillSimpleFunc {
