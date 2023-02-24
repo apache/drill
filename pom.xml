@@ -528,7 +528,6 @@
             </manifest>
             <manifestEntries>
               <Extension-Name>org.apache.drill</Extension-Name>
-              <Built-By>${user.name}</Built-By>
               <url>https://drill.apache.org/</url>
             </manifestEntries>
           </archive>
@@ -547,7 +546,7 @@
       <plugin>
         <groupId>pl.project13.maven</groupId>
         <artifactId>git-commit-id-plugin</artifactId>
-        <version>4.0.0</version>
+        <version>4.0.5</version>
         <executions>
           <execution>
             <id>for-source-tarball</id>
@@ -563,6 +562,7 @@
 
         <configuration>
           <dateFormat>dd.MM.yyyy '@' HH:mm:ss z</dateFormat>
+          <dateFormatTimeZone>UTC</dateFormatTimeZone>
           <verbose>false</verbose>
           <skipPoms>false</skipPoms>
           <generateGitPropertiesFile>true</generateGitPropertiesFile>
