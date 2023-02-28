@@ -255,9 +255,9 @@
 
 
         [1] https://issues.apache.org/jira/secure/ReleaseNote.jspa?projectId=12313820&version=12341087
-        [2] http://home.apache.org/~arina/drill/releases/1.12.0-rc0/
+        [2] https://dist.apache.org/repos/dist/dev/drill/drill-1.17.0-rc0
         [3] https://repository.apache.org/content/repositories/orgapachedrill-1043/
-        [4] https://github.com/arina-ielchiieva/drill/commits/drill-1.12.0
+        [4] https://github.com/arina-ielchiieva/drill/commits/drill-1.17.0
         ```
     3. If the vote fails, cancel RC and prepare new RC:
         1. Send an email with announcing about canceling the vote.
