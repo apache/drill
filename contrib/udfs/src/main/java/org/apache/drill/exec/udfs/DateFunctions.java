@@ -80,7 +80,7 @@ public class DateFunctions {
       String input = org.apache.drill.exec.expr.fn.impl.StringFunctionHelpers.toStringFromUTF8(interval.start, interval.end, interval.buffer);
       java.time.LocalDateTime ld = java.time.LocalDateTime.ofInstant(java.time.Instant.ofEpochMilli(inputDate.value), java.time.ZoneId.of("UTC"));
 
-      java.time.LocalDateTime td = DateConversionUtils.getDate(ld, input);
+      java.time.LocalDateTime td = org.apache.drill.exec.udfs.DateConversionUtils.getDate(ld, input);
       out.value = td.atZone(java.time.ZoneId.of("UTC")).toInstant().toEpochMilli();
     }
   }
@@ -143,7 +143,7 @@ public class DateFunctions {
       java.time.format.DateTimeFormatter formatter = java.time.format.DateTimeFormatter.ofPattern(format);
       java.time.LocalDateTime dateTime = java.time.LocalDateTime.parse(inputDate, formatter);
 
-      java.time.LocalDateTime td = DateConversionUtils.getDate(dateTime, intervalString);
+      java.time.LocalDateTime td = org.apache.drill.exec.udfs.DateConversionUtils.getDate(dateTime, intervalString);
       out.value = td.atZone(java.time.ZoneId.of("UTC")).toInstant().toEpochMilli();
     }
   }
