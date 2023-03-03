@@ -238,4 +238,21 @@ public class TestImplicitCasting extends ClusterTest {
 
     RowSetUtilities.verify(expected, results);
   }
+
+  @Test
+  public void testAvgOfStrings() throws Exception {
+    String sql = "select avg(cast(employee_id as varchar)) from cp.`employee.json`";
+
+    DirectRowSet results = queryBuilder().sql(sql).rowSet();
+
+    TupleMetadata expectedSchema = new SchemaBuilder()
+      .add("EXPR$0", TypeProtos.MinorType.FLOAT8, TypeProtos.DataMode.OPTIONAL)
+      .build();
+
+    RowSet expected = client.rowSetBuilder(expectedSchema)
+      .addRow(578.9982683982684)
+      .build();
+
+    RowSetUtilities.verify(expected, results);
+  }
 }

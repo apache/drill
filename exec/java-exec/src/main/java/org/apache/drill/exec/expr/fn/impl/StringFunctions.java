@@ -293,6 +293,109 @@ public class StringFunctions{
     }
   }
 
+  /*
+   * This function returns the capturing groups from a regex.
+   */
+  @FunctionTemplate(name = "regexp_extract", scope = FunctionScope.SIMPLE,
+      outputWidthCalculatorType = OutputWidthCalculatorType.CUSTOM_FIXED_WIDTH_DEFAULT)
+  public static class RegexpExtract implements DrillSimpleFunc {
+
+    @Param VarCharHolder input;
+    @Param(constant=true) VarCharHolder pattern;
+    @Inject
+    DrillBuf buffer;
+    @Workspace
+    java.util.regex.Matcher matcher;
+    @Workspace
+    org.apache.drill.exec.expr.fn.impl.CharSequenceWrapper charSequenceWrapper;
+    @Output
+    ComplexWriter out;
+
+    @Override
+    public void setup() {
+      matcher = java.util.regex.Pattern.compile(org.apache.drill.exec.expr.fn.impl.StringFunctionHelpers.toStringFromUTF8(pattern.start,  pattern.end,  pattern.buffer)).matcher("");
+      charSequenceWrapper = new org.apache.drill.exec.expr.fn.impl.CharSequenceWrapper();
+      matcher.reset(charSequenceWrapper);
+    }
+
+    @Override
+    public void eval() {
+      charSequenceWrapper.setBuffer(input.start, input.end, input.buffer);
+
+      // Reusing same charSequenceWrapper, no need to pass it in.
+      matcher.reset();
+      boolean result = matcher.find();
+
+      // Start the list here.  If there are no matches, we return an empty list.
+      org.apache.drill.exec.vector.complex.writer.BaseWriter.ListWriter listWriter = out.rootAsList();
+      listWriter.startList();
+
+      if (result) {
+        org.apache.drill.exec.vector.complex.writer.VarCharWriter varCharWriter = listWriter.varChar();
+
+        for(int i = 1; i <= matcher.groupCount(); i++) {
+          final byte[] strBytes = matcher.group(i).getBytes(com.google.common.base.Charsets.UTF_8);
+          buffer = buffer.reallocIfNeeded(strBytes.length);
+          buffer.setBytes(0, strBytes);
+          varCharWriter.writeVarChar(0, strBytes.length, buffer);
+        }
+      }
+      listWriter.endList();
+    }
+  }
+
+  /*
+   * This function returns a specific capturing group from a regex.
+   */
+  @FunctionTemplate(name = "regexp_extract", scope = FunctionScope.SIMPLE, nulls = NullHandling.NULL_IF_NULL)
+  public static class RegexpExtractWithIndex implements DrillSimpleFunc {
+
+    @Param VarCharHolder input;
+    @Param(constant=true) VarCharHolder pattern;
+    @Param(constant=true) IntHolder indexHolder;
+
+    @Inject
+    DrillBuf buffer;
+
+    @Workspace
+    java.util.regex.Matcher matcher;
+
+    @Workspace
+    org.apache.drill.exec.expr.fn.impl.CharSequenceWrapper charSequenceWrapper;
+
+    @Workspace
+    int index;
+
+    @Output
+    VarCharHolder out;
+
+    @Override
+    public void setup() {
+      matcher = java.util.regex.Pattern.compile(org.apache.drill.exec.expr.fn.impl.StringFunctionHelpers.toStringFromUTF8(pattern.start,  pattern.end,  pattern.buffer)).matcher("");
+      charSequenceWrapper = new org.apache.drill.exec.expr.fn.impl.CharSequenceWrapper();
+      matcher.reset(charSequenceWrapper);
+      index = indexHolder.value;
+    }
+
+    @Override
+    public void eval() {
+      charSequenceWrapper.setBuffer(input.start, input.end, input.buffer);
+
+      // Reusing same charSequenceWrapper, no need to pass it in.
+      matcher.reset();
+      boolean result = matcher.find();
+
+      if (result) {
+        byte[] strBytes = matcher.group(index).getBytes(com.google.common.base.Charsets.UTF_8);
+
+        out.buffer = buffer = buffer.reallocIfNeeded(strBytes.length);
+        out.start = 0;
+        out.end = strBytes.length;
+        out.buffer.setBytes(0, strBytes);
+      }
+    }
+  }
+
   @FunctionTemplate(names = {"char_length", "character_length", "length"}, scope = FunctionScope.SIMPLE, nulls = NullHandling.NULL_IF_NULL)
   public static class CharLength implements DrillSimpleFunc {
     @Param  VarCharHolder input;

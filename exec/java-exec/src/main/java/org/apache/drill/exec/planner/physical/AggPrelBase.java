@@ -33,6 +33,7 @@ import org.apache.drill.exec.planner.common.DrillAggregateRelBase;
 import org.apache.drill.exec.planner.physical.visitor.PrelVisitor;
 import org.apache.calcite.rel.core.AggregateCall;
 import org.apache.calcite.rel.InvalidRelException;
+import org.apache.calcite.rel.RelCollations;
 import org.apache.calcite.rel.RelNode;
 import org.apache.calcite.plan.RelOptCluster;
 import org.apache.calcite.plan.RelTraitSet;
@@ -42,6 +43,7 @@ import org.apache.calcite.sql.SqlFunctionCategory;
 import org.apache.calcite.sql.SqlKind;
 import org.apache.calcite.sql.type.OperandTypes;
 import org.apache.calcite.sql.type.ReturnTypes;
+import org.apache.calcite.util.Optionality;
 
 import java.util.Collections;
 import java.util.Iterator;
@@ -61,7 +63,7 @@ public abstract class AggPrelBase extends DrillAggregateRelBase implements Prel 
     // phase
     PHASE_2of2("2nd");
 
-    private String name;
+    private final String name;
 
     OperatorPhase(String name) {
       this.name = name;
@@ -99,7 +101,7 @@ public abstract class AggPrelBase extends DrillAggregateRelBase implements Prel 
    * creating a SUM whose return type is non-nullable.
    *
    */
-  public class SqlSumCountAggFunction extends SqlAggFunction {
+  public static class SqlSumCountAggFunction extends SqlAggFunction {
 
     private final RelDataType type;
 
@@ -112,7 +114,8 @@ public abstract class AggPrelBase extends DrillAggregateRelBase implements Prel 
           OperandTypes.NUMERIC,
           SqlFunctionCategory.NUMERIC,
           false,
-          false);
+          false,
+          Optionality.FORBIDDEN);
 
       this.type = type;
     }
@@ -175,8 +178,11 @@ public abstract class AggPrelBase extends DrillAggregateRelBase implements Prel 
                   sumAggFun,
                   aggCall.e.isDistinct(),
                   aggCall.e.isApproximate(),
+                  false,
                   Collections.singletonList(aggExprOrdinal),
                   aggCall.e.filterArg,
+                  null,
+                  RelCollations.EMPTY,
                   aggCall.e.getType(),
                   aggCall.e.getName());
 
@@ -187,8 +193,11 @@ public abstract class AggPrelBase extends DrillAggregateRelBase implements Prel 
                   aggCall.e.getAggregation(),
                   aggCall.e.isDistinct(),
                   aggCall.e.isApproximate(),
+                  false,
                   Collections.singletonList(aggExprOrdinal),
                   aggCall.e.filterArg,
+                  null,
+                  RelCollations.EMPTY,
                   aggCall.e.getType(),
                   aggCall.e.getName());
 
@@ -202,19 +211,27 @@ public abstract class AggPrelBase extends DrillAggregateRelBase implements Prel 
     List<LogicalExpression> args = Lists.newArrayList();
     for (Integer i : call.getArgList()) {
       LogicalExpression expr = FieldReference.getWithQuotedRef(fn.get(i));
-      if (call.hasFilter()) {
-        expr = IfExpression.newBuilder()
-          .setIfCondition(new IfExpression.IfCondition(FieldReference.getWithQuotedRef(fn.get(call.filterArg)), expr))
-          .setElse(NullExpression.INSTANCE)
-          .build();
-      }
+      expr = getArgumentExpression(call, fn, expr);
       args.add(expr);
     }
 
     if (SqlKind.COUNT.name().equals(call.getAggregation().getName()) && args.isEmpty()) {
-      args.add(new ValueExpressions.LongExpression(1L));
+      LogicalExpression expr = new ValueExpressions.LongExpression(1L);
+      expr = getArgumentExpression(call, fn, expr);
+      args.add(expr);
     }
     return new FunctionCall(call.getAggregation().getName().toLowerCase(), args, ExpressionPosition.UNKNOWN);
+  }
+
+  private static LogicalExpression getArgumentExpression(AggregateCall call, List<String> fn,
+      LogicalExpression expr) {
+    if (call.hasFilter()) {
+      return IfExpression.newBuilder()
+          .setIfCondition(new IfExpression.IfCondition(FieldReference.getWithQuotedRef(fn.get(call.filterArg)), expr))
+          .setElse(NullExpression.INSTANCE)
+          .build();
+    }
+    return expr;
   }
 
   @Override
@@ -249,9 +266,17 @@ public abstract class AggPrelBase extends DrillAggregateRelBase implements Prel 
       for (int arg : aggCall.getArgList()) {
         arglist.add(arg + 1);
       }
-      aggregateCalls.add(AggregateCall.create(aggCall.getAggregation(), aggCall.isDistinct(),
-              aggCall.isApproximate(), arglist, aggCall.filterArg, aggCall.type, aggCall.name));
+      aggregateCalls.add(AggregateCall.create(aggCall.getAggregation(),
+          aggCall.isDistinct(),
+          aggCall.isApproximate(),
+          false,
+          arglist,
+          aggCall.filterArg,
+          null,
+          RelCollations.EMPTY,
+          aggCall.type,
+          aggCall.name));
     }
-    return (Prel) copy(traitSet, children.get(0),indicator,groupingSet,groupingSets, aggregateCalls);
+    return (Prel) copy(traitSet, children.get(0), groupingSet, groupingSets, aggregateCalls);
   }
 }
