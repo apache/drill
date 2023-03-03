@@ -36,6 +36,7 @@ import org.apache.drill.exec.record.metadata.TupleMetadata;
 import org.apache.drill.exec.store.easy.json.loader.JsonLoader;
 import org.apache.drill.exec.store.easy.json.loader.JsonLoaderImpl.JsonLoaderBuilder;
 import org.apache.drill.exec.store.easy.json.loader.JsonLoaderOptions;
+import org.apache.drill.exec.store.http.HttpApiConfig.PostLocation;
 import org.apache.drill.exec.store.http.HttpPaginatorConfig.PaginatorMethod;
 import org.apache.drill.exec.store.http.paginator.IndexPaginator;
 import org.apache.drill.exec.store.http.paginator.Paginator;
@@ -295,11 +296,28 @@ public class HttpBatchReader implements ManagedReader<SchemaNegotiator> {
       Map<String, String> filters) {
 
     final Pattern tailParamsKeyPattern = Pattern.compile("^tail\\..+$");
-    for (String param : params) {
-      if (tailParamsKeyPattern.matcher(param).find()){
-        String value = filters.get(param);
-        if (value != null) {
-          urlBuilder.addQueryParameter(param.substring(5), value);
+    final HttpStoragePluginConfig config = subScan.tableSpec().config();
+    if (config.useLegacyRequestParamSyntax()) {
+      // If the request is a POST query and the user selected to push the filters to either JSON body
+      // or the post body, do not add to the query string.
+      if (subScan.tableSpec().connectionConfig().getMethodType() == HttpApiConfig.HttpMethod.GET ||
+          (subScan.tableSpec().connectionConfig().getMethodType() == HttpApiConfig.HttpMethod.POST
+              && subScan.tableSpec().connectionConfig().getPostLocation() == PostLocation.QUERY_STRING)
+      ) {
+        for (String param : params) {
+          String value = filters.get(param);
+          if (value != null) {
+            urlBuilder.addQueryParameter(param, value);
+          }
+        }
+      }
+    } else {
+      for (String param : params) {
+        if (tailParamsKeyPattern.matcher(param).find()){
+          String value = filters.get(param);
+          if (value != null) {
+            urlBuilder.addQueryParameter(param.substring(5), value);
+          }
         }
       }
     }
