@@ -33,7 +33,7 @@
   <repositories>
     <repository>
       <id>jabylon</id>
-      <url>http://www.jabylon.org/maven/</url>
+      <url>https://www.jabylon.org/maven/</url>
     </repository>
   </repositories>
 
