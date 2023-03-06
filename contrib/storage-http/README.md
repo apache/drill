@@ -15,6 +15,7 @@ To configure the plugin, create a new storage plugin, and add the following conf
 {
   "type": "http",
   "cacheResults": true,
+  "useLegacyRequestParamSyntax": false,
   "connections": {},
   "timeout": 0,
   "proxyHost": null,
@@ -29,6 +30,7 @@ The required options are:
 
 * `type`:  This should be `http`
 * `cacheResults`:  Enable caching of the HTTP responses.  Defaults to `false`
+* `useLegacyRequestParamSyntax`:  Enable legacy param syntax in Drill 1.22 and beyond.  Defaults to `false`
 * `timeout`:  Sets the response timeout in seconds. Defaults to `0` which is no timeout.
 * `connections`:  This field contains the details for individual connections. See the section *Configuring API Connections for Details*.
 
