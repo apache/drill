@@ -17,11 +17,14 @@
  */
 package org.apache.drill;
 
+import org.apache.drill.common.types.TypeProtos.MinorType;
 import org.apache.drill.exec.physical.rowSet.RowSet;
+import org.apache.drill.exec.physical.rowSet.RowSetBuilder;
 import org.apache.drill.exec.planner.physical.PlannerSettings;
 import org.apache.drill.exec.record.BatchSchema;
 import org.apache.drill.exec.record.BatchSchemaBuilder;
 import org.apache.drill.exec.record.metadata.SchemaBuilder;
+import org.apache.drill.exec.record.metadata.TupleMetadata;
 import org.apache.drill.exec.util.StoragePluginTestUtils;
 import org.apache.drill.shaded.guava.com.google.common.collect.Lists;
 import org.apache.commons.lang3.tuple.Pair;
@@ -34,6 +37,7 @@ import org.apache.drill.common.types.TypeProtos;
 import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.test.ClusterFixture;
 import org.apache.drill.test.ClusterTest;
+import org.apache.drill.test.rowSet.RowSetComparison;
 import org.hamcrest.CoreMatchers;
 import org.junit.Assert;
 import org.junit.BeforeClass;
@@ -446,6 +450,7 @@ public class TestSetOp extends ClusterTest {
   public void testImplicitCastingOnJoin() throws Exception {
     String rootInt = "/store/json/intData.json";
     String rootBoolean = "/store/json/booleanData.json";
+    String stringsAsInts = "/store/json/intDataAsString.json";
 
     RowSet result = client.queryBuilder()
         .sql("(select key from cp.`%s` " +
@@ -455,6 +460,22 @@ public class TestSetOp extends ClusterTest {
 
     assertEquals(0, result.rowCount());
     result.clear();
+
+    result = client.queryBuilder()
+        .sql("(select key from cp.`%s` " +
+            "intersect all " +
+            "select key from cp.`%s` )", rootInt, stringsAsInts)
+        .rowSet();
+    TupleMetadata expectedSchema = new SchemaBuilder()
+        .addNullable("key", MinorType.BIGINT)
+        .buildSchema();
+
+    RowSet expected = new RowSetBuilder(client.allocator(), expectedSchema)
+        .addRow(52459253098448904L)
+        .addRow(1116675951L)
+        .build();
+
+    new RowSetComparison(expected).verifyAndClearAll(result);
   }
 
   @Test
