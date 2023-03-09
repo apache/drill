@@ -38,7 +38,6 @@ import org.apache.drill.common.logical.data.JoinCondition;
 import org.apache.calcite.rel.RelNode;
 import org.apache.calcite.plan.RelOptUtil;
 import org.apache.calcite.plan.volcano.RelSubset;
-import org.apache.drill.common.types.Types;
 import org.apache.drill.exec.physical.impl.common.Comparator;
 import org.apache.drill.exec.planner.logical.DrillAggregateRel;
 import org.apache.drill.common.exceptions.DrillRuntimeException;
