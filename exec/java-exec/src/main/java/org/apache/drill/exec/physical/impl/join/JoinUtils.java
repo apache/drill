@@ -148,37 +148,6 @@ public class JoinUtils {
   }
 
   /**
-   * Checks if implicit cast is allowed between the two input types of the join condition. Currently we allow
-   * implicit casts in join condition only between numeric types and varchar/varbinary types.
-   * @param input1
-   * @param input2
-   * @return true if implicit cast is allowed false otherwise
-   */
-  private static boolean allowImplicitCast(TypeProtos.MinorType input1, TypeProtos.MinorType input2) {
-    // allow implicit cast if both the input types are numeric and any of them is non-decimal
-    // or both of them are decimal
-    if (TypeCastRules.isNumericType(input1) && TypeCastRules.isNumericType(input2)
-        && ((!Types.isDecimalType(input1) && !Types.isDecimalType(input2))
-          || Types.areDecimalTypes(input1, input2))) {
-      return true;
-    }
-
-    // allow implicit cast if input types are date/ timestamp
-    if ((input1 == TypeProtos.MinorType.DATE || input1 == TypeProtos.MinorType.TIMESTAMP) &&
-        (input2 == TypeProtos.MinorType.DATE || input2 == TypeProtos.MinorType.TIMESTAMP)) {
-      return true;
-    }
-
-    // allow implicit cast if both the input types are varbinary/ varchar
-    if ((input1 == TypeProtos.MinorType.VARCHAR || input1 == TypeProtos.MinorType.VARBINARY) &&
-        (input2 == TypeProtos.MinorType.VARCHAR || input2 == TypeProtos.MinorType.VARBINARY)) {
-      return true;
-    }
-
-    return false;
-  }
-
-  /**
    * Utility method used by joins to add implicit casts on one of the sides of the join condition in case the two
    * expressions have different types.
    * @param leftExpressions array of expressions from left input into the join
@@ -202,14 +171,6 @@ public class JoinUtils {
         continue;
       }
       if (rightType != leftType) {
-
-        // currently we only support implicit casts if the input types are numeric or varchar/varbinary
-        if (!allowImplicitCast(rightType, leftType)) {
-          throw new DrillRuntimeException(String.format("Join only supports implicit casts between\n" +
-              "1. Numeric data (none of types is decimal or both of them are decimal)\n" +
-              "2. Varchar, Varbinary data\n3. Date, Timestamp data\n" +
-              "Left type: %s, Right type: %s. Add explicit casts to avoid this error", leftType, rightType));
-        }
 
         // We need to add a cast to one of the expressions
         TypeProtos.MinorType result = TypeCastRules.getLeastRestrictiveType(leftType, rightType);
