@@ -302,4 +302,51 @@ public class DNSFunctions {
     }
   }
 
+  @FunctionTemplate(names = {"dns_lookup", "dnsLookup", "dns"}, scope = FunctionTemplate.FunctionScope.SIMPLE)
+  public static class DNSLookupFunctionWithResolver implements DrillSimpleFunc {
+
+    @Param
+    NullableVarCharHolder rawDomainName;
+
+    @Param
+    VarCharHolder resolverHolder;
+
+    @Output
+    BaseWriter.ComplexWriter out;
+
+    @Inject
+    DrillBuf buffer;
+
+    @Override
+    public void setup() {
+      // no op
+    }
+
+    @Override
+    public void eval() {
+      if (rawDomainName.isSet == 0) {
+        org.apache.drill.exec.vector.complex.writer.BaseWriter.ListWriter listWriter = out.rootAsList();
+        org.apache.drill.exec.vector.complex.writer.BaseWriter.MapWriter rowMapWriter = listWriter.map();
+        listWriter.startList();
+        rowMapWriter.start();
+        rowMapWriter.end();
+        listWriter.endList();
+        return;
+      }
+
+      try {
+        String domainName = org.apache.drill.exec.expr.fn.impl.StringFunctionHelpers.toStringFromUTF8(rawDomainName.start, rawDomainName.end, rawDomainName.buffer);
+        String resolver = org.apache.drill.exec.expr.fn.impl.StringFunctionHelpers.toStringFromUTF8(resolverHolder.start, resolverHolder.end, resolverHolder.buffer);
+        org.apache.drill.exec.udfs.DNSUtils.getDNS(domainName, resolver, out, buffer);
+      } catch (Exception e) {
+        org.apache.drill.exec.vector.complex.writer.BaseWriter.ListWriter listWriter = out.rootAsList();
+        org.apache.drill.exec.vector.complex.writer.BaseWriter.MapWriter rowMapWriter = listWriter.map();
+        listWriter.startList();
+        rowMapWriter.start();
+        rowMapWriter.end();
+        listWriter.endList();
+      }
+    }
+  }
+
 }

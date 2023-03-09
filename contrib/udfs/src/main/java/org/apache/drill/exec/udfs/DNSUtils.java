@@ -30,7 +30,7 @@ import org.xbill.DNS.Type;
 
 public class DNSUtils {
 
-  public static void getDNS(String domainName, ComplexWriter out, DrillBuf buffer) throws TextParseException {
+  public static void getDNS(String domainName, String resolver, ComplexWriter out, DrillBuf buffer) throws TextParseException {
     Lookup look = new Lookup(domainName, Type.ANY);
     Record[] records = look.run();
 
@@ -78,5 +78,9 @@ public class DNSUtils {
       rowMapWriter.varChar("rdata").writeVarChar(0, rdata.length, buffer);
       rowMapWriter.end();
     }
+  }
+
+  public static void getDNS(String domainName, ComplexWriter out, DrillBuf buffer) throws TextParseException {
+    getDNS(domainName, null, out, buffer);
   }
 }
