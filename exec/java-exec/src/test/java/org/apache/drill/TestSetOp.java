@@ -31,7 +31,6 @@ import org.apache.commons.lang3.tuple.Pair;
 import org.apache.drill.categories.OperatorTest;
 import org.apache.drill.categories.SqlTest;
 import org.apache.drill.categories.UnlikelyTest;
-import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.common.types.TypeProtos;
 import org.apache.drill.exec.ExecConstants;
