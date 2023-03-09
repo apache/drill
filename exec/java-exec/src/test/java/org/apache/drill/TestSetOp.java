@@ -17,6 +17,7 @@
  */
 package org.apache.drill;
 
+import org.apache.drill.exec.physical.rowSet.RowSet;
 import org.apache.drill.exec.planner.physical.PlannerSettings;
 import org.apache.drill.exec.record.BatchSchema;
 import org.apache.drill.exec.record.BatchSchemaBuilder;
@@ -44,6 +45,8 @@ import java.io.File;
 import java.io.FileWriter;
 import java.nio.file.Paths;
 import java.util.List;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 @Category({SqlTest.class, OperatorTest.class})
 public class TestSetOp extends ClusterTest {
@@ -439,15 +442,19 @@ public class TestSetOp extends ClusterTest {
       .baselineValues(20L, 3L, 5L, 5L)
       .build().run();
   }
-
-  @Test(expected = UserException.class)
-  public void testImplicitCastingFailure() throws Exception {
+  @Test
+  public void testImplicitCastingOnJoin() throws Exception {
     String rootInt = "/store/json/intData.json";
     String rootBoolean = "/store/json/booleanData.json";
 
-    run("(select key from cp.`%s` " +
-      "intersect all " +
-      "select key from cp.`%s` )", rootInt, rootBoolean);
+    RowSet result = client.queryBuilder()
+        .sql("(select key from cp.`%s` " +
+            "intersect all " +
+            "select key from cp.`%s` )", rootInt, rootBoolean)
+        .rowSet();
+
+    assertEquals(0, result.rowCount());
+    result.clear();
   }
 
   @Test
