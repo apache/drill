@@ -30,13 +30,6 @@
   <artifactId>drill-udfs</artifactId>
   <name>Drill : Contrib : UDFs</name>
 
-  <repositories>
-    <repository>
-      <id>jabylon</id>
-      <url>https://www.jabylon.org/maven/</url>
-    </repository>
-  </repositories>
-
   <dependencies>
     <dependency>
       <groupId>org.apache.drill.exec</groupId>
@@ -84,10 +77,11 @@
     </dependency>
 
     <dependency>
-      <groupId>org.xbill</groupId>
-      <artifactId>dns</artifactId>
-      <version>2.0.8</version>
+      <groupId>dnsjava</groupId>
+      <artifactId>dnsjava</artifactId>
+      <version>3.5.2</version>
     </dependency>
+
 
     <!-- Test dependencies -->
     <dependency>

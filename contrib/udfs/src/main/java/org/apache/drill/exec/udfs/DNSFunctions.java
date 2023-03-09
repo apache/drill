@@ -26,6 +26,7 @@ import org.apache.drill.exec.expr.annotations.Param;
 import org.apache.drill.exec.expr.holders.NullableVarCharHolder;
 import org.apache.drill.exec.expr.holders.VarCharHolder;
 import org.apache.drill.exec.vector.complex.writer.BaseWriter;
+import org.apache.drill.exec.vector.complex.writer.BaseWriter.MapWriter;
 
 import javax.inject.Inject;
 
@@ -205,7 +206,7 @@ public class DNSFunctions {
   }
 
   /* This function performs a complete DNS lookup */
-  @FunctionTemplate(name = "dns_lookup", scope = FunctionTemplate.FunctionScope.SIMPLE)
+ /* @FunctionTemplate(name = "dns_lookup", scope = FunctionTemplate.FunctionScope.SIMPLE)
   public static class DNSLookupFunction implements DrillSimpleFunc {
 
     @Param
@@ -255,10 +256,10 @@ public class DNSFunctions {
         e.printStackTrace(); // TODO
       }
     }
-  }
+  }*/
 
   /* This function performs a complete DNS lookup */
-  @FunctionTemplate(name = "dns_lookup", scope = FunctionTemplate.FunctionScope.SIMPLE)
+  @FunctionTemplate(names = {"dns_lookup", "dnsLookup", "dns"}, scope = FunctionTemplate.FunctionScope.SIMPLE)
   public static class DNSLookupFunctionWithNull implements DrillSimpleFunc {
 
     @Param
@@ -272,49 +273,31 @@ public class DNSFunctions {
 
     @Override
     public void setup() {
-
+      // no op
     }
 
     @Override
     public void eval() {
-      org.xbill.DNS.Record[] records = null;
-      org.xbill.DNS.Lookup look;
-
-      String domainName = org.apache.drill.exec.expr.fn.impl.StringFunctionHelpers.toStringFromUTF8(rawDomainName.start, rawDomainName.end, rawDomainName.buffer);
-
-      // Null handling
-      if (domainName == null || domainName.isEmpty()) {
+      if (rawDomainName.isSet == 0) {
         org.apache.drill.exec.vector.complex.writer.BaseWriter.ListWriter listWriter = out.rootAsList();
+        org.apache.drill.exec.vector.complex.writer.BaseWriter.MapWriter rowMapWriter = listWriter.map();
         listWriter.startList();
+        rowMapWriter.start();
+        rowMapWriter.end();
         listWriter.endList();
         return;
       }
 
       try {
-        look = new org.xbill.DNS.Lookup(domainName, org.xbill.DNS.Type.ANY);
-        records = look.run();
+        String domainName = org.apache.drill.exec.expr.fn.impl.StringFunctionHelpers.toStringFromUTF8(rawDomainName.start, rawDomainName.end, rawDomainName.buffer);
+        org.apache.drill.exec.udfs.DNSUtils.getDNS(domainName, out, buffer);
+      } catch (Exception e) {
         org.apache.drill.exec.vector.complex.writer.BaseWriter.ListWriter listWriter = out.rootAsList();
         org.apache.drill.exec.vector.complex.writer.BaseWriter.MapWriter rowMapWriter = listWriter.map();
-
-        for (int i = 0; i < records.length; i++) {
-          org.apache.drill.exec.expr.holders.VarCharHolder fieldHolder = new org.apache.drill.exec.expr.holders.VarCharHolder();
-
-          byte[] dnsType = records[i].getName().toString().getBytes();
-          buffer.reallocIfNeeded(dnsType.length);
-          buffer.setBytes(0, dnsType);
-
-          fieldHolder.start = 0;
-          fieldHolder.end = dnsType.length;
-          fieldHolder.buffer = buffer;
-
-          rowMapWriter.start();
-          rowMapWriter.varChar("field1").write(fieldHolder);
-          rowMapWriter.bigInt("ttl").writeBigInt(records[i].getTTL());
-          rowMapWriter.end();
-          System.out.println(records[i]);
-        }
-      } catch (Exception e) {
-        e.printStackTrace();
+        listWriter.startList();
+        rowMapWriter.start();
+        rowMapWriter.end();
+        listWriter.endList();
       }
     }
   }

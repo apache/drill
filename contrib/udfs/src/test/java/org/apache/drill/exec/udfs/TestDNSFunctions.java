@@ -19,6 +19,7 @@ package org.apache.drill.exec.udfs;
 
 import org.apache.drill.categories.SqlFunctionTest;
 import org.apache.drill.categories.UnlikelyTest;
+import org.apache.drill.exec.physical.rowSet.RowSet;
 import org.apache.drill.test.ClusterFixture;
 import org.apache.drill.test.ClusterFixtureBuilder;
 import org.apache.drill.test.ClusterTest;
@@ -99,8 +100,13 @@ public class TestDNSFunctions extends ClusterTest {
 
     query = "select get_mx_records('') as record from (values(1))";
     testBuilder().sqlQuery(query).ordered().baselineColumns("record").baselineValues((String)null).go();
+  }
 
-    //query = "select get_mx_records(cast(null as varchar)) as record from (values(1))";
-    //testBuilder().sqlQuery(query).ordered().baselineColumns("record").baselineValues((String)null).go();
+  @Test
+  public void testDNSLookup() throws Exception {
+    String sql = "SELECT dns_lookup('datadistillr.io') FROM (VALUES(1))";
+    RowSet results = client.queryBuilder().sql(sql).rowSet();
+
+    results.clear();
   }
 }
