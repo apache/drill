@@ -51,6 +51,8 @@ import org.apache.drill.exec.planner.logical.DrillLimitRel;
 import org.apache.drill.exec.record.VectorAccessible;
 import org.apache.drill.exec.resolver.TypeCastRules;
 import org.apache.drill.exec.work.foreman.UnsupportedRelOperatorException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
 import java.util.LinkedList;
@@ -65,7 +67,7 @@ public class JoinUtils {
     INEQUALITY,  // inequality join: <>, <, >
     CARTESIAN   // no join condition
   }
-  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(JoinUtils.class);
+  private static final Logger logger = LoggerFactory.getLogger(JoinUtils.class);
 
   public static final String FAILED_TO_PLAN_CARTESIAN_JOIN = String.format(
       "This query cannot be planned possibly due to either a cartesian join or an inequality join. %n" +
