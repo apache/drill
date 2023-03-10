@@ -19,19 +19,44 @@
 package org.apache.drill.exec.udfs;
 
 import io.netty.buffer.DrillBuf;
+import org.apache.commons.lang3.StringUtils;
+import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.exec.expr.holders.VarCharHolder;
 import org.apache.drill.exec.vector.complex.writer.BaseWriter.ComplexWriter;
 import org.apache.drill.exec.vector.complex.writer.BaseWriter.ListWriter;
 import org.apache.drill.exec.vector.complex.writer.BaseWriter.MapWriter;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.xbill.DNS.Lookup;
 import org.xbill.DNS.Record;
+import org.xbill.DNS.Resolver;
+import org.xbill.DNS.SimpleResolver;
 import org.xbill.DNS.TextParseException;
 import org.xbill.DNS.Type;
 
+import java.net.UnknownHostException;
+
 public class DNSUtils {
 
-  public static void getDNS(String domainName, String resolver, ComplexWriter out, DrillBuf buffer) throws TextParseException {
+  private static final Logger logger = LoggerFactory.getLogger(DNSUtils.class);
+  public static void getDNS(String domainName, String resolverName, ComplexWriter out, DrillBuf buffer) throws TextParseException {
+
     Lookup look = new Lookup(domainName, Type.ANY);
+
+    // Add the resolver if it is provided.
+    if (StringUtils.isNotEmpty(resolverName)) {
+      // Create a resolver
+      try {
+        SimpleResolver resolver = new SimpleResolver(resolverName);
+        look.setResolver(resolver);
+      } catch (UnknownHostException e) {
+        throw UserException.connectionError(e)
+            .message("Cannot find resolver: " + resolverName)
+            .build(logger);
+      }
+    }
+
+
     Record[] records = look.run();
 
     // Initialize writers

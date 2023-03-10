@@ -23,6 +23,7 @@ import org.apache.drill.exec.expr.DrillSimpleFunc;
 import org.apache.drill.exec.expr.annotations.FunctionTemplate;
 import org.apache.drill.exec.expr.annotations.Output;
 import org.apache.drill.exec.expr.annotations.Param;
+import org.apache.drill.exec.expr.annotations.Workspace;
 import org.apache.drill.exec.expr.holders.NullableVarCharHolder;
 import org.apache.drill.exec.expr.holders.VarCharHolder;
 import org.apache.drill.exec.vector.complex.writer.BaseWriter;
@@ -308,18 +309,21 @@ public class DNSFunctions {
     @Param
     NullableVarCharHolder rawDomainName;
 
-    @Param
+    @Param(constant = true)
     VarCharHolder resolverHolder;
 
     @Output
     BaseWriter.ComplexWriter out;
+
+    @Workspace
+    String resolver;
 
     @Inject
     DrillBuf buffer;
 
     @Override
     public void setup() {
-      // no op
+      resolver = org.apache.drill.exec.expr.fn.impl.StringFunctionHelpers.toStringFromUTF8(resolverHolder.start, resolverHolder.end, resolverHolder.buffer);
     }
 
     @Override
@@ -336,7 +340,6 @@ public class DNSFunctions {
 
       try {
         String domainName = org.apache.drill.exec.expr.fn.impl.StringFunctionHelpers.toStringFromUTF8(rawDomainName.start, rawDomainName.end, rawDomainName.buffer);
-        String resolver = org.apache.drill.exec.expr.fn.impl.StringFunctionHelpers.toStringFromUTF8(resolverHolder.start, resolverHolder.end, resolverHolder.buffer);
         org.apache.drill.exec.udfs.DNSUtils.getDNS(domainName, resolver, out, buffer);
       } catch (Exception e) {
         org.apache.drill.exec.vector.complex.writer.BaseWriter.ListWriter listWriter = out.rootAsList();
@@ -348,5 +351,4 @@ public class DNSFunctions {
       }
     }
   }
-
 }
