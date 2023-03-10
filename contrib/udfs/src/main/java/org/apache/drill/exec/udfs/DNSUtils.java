@@ -29,25 +29,70 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.xbill.DNS.Lookup;
 import org.xbill.DNS.Record;
-import org.xbill.DNS.Resolver;
 import org.xbill.DNS.SimpleResolver;
 import org.xbill.DNS.TextParseException;
 import org.xbill.DNS.Type;
 
 import java.net.UnknownHostException;
+import java.util.HashMap;
+import java.util.Map;
 
 public class DNSUtils {
 
+  /**
+   *  A list of known DNS resolvers.
+   */
+  private static final Map<String, String> KNOWN_RESOLVERS = new HashMap<>();
+  static {
+    KNOWN_RESOLVERS.put("cloudflare", "1.1.1.1");
+    KNOWN_RESOLVERS.put("cloudflare_secondary", "1.0.0.1");
+    KNOWN_RESOLVERS.put("google", "8.8.8.8");
+    KNOWN_RESOLVERS.put("google_secondary", "8.8.4.4");
+    KNOWN_RESOLVERS.put("verisign", "64.6.64.6");
+    KNOWN_RESOLVERS.put("verisign_secondary", "64.6.65.6");
+    KNOWN_RESOLVERS.put("yandex", "77.88.8.8");
+    KNOWN_RESOLVERS.put("yandex_secondary", "77.88.8.1");
+  }
+
   private static final Logger logger = LoggerFactory.getLogger(DNSUtils.class);
+
+  /**
+   * Performs the actual DNS lookup and returns the results in a {@link ComplexWriter}.  If the resolver
+   * is not null, we will use the provided resolver.  If a resolver is not provided, we'll use the local cache.
+   * <p>
+   *   Relating to the resolver, you can specify an IP or host, or you can use a name of a known resolver.  Known resolvers are:
+   *   <ul>
+   *     <li>cloudflare</li>
+   *     <li>cloudflare_secondary</li>
+   *     <li>google</li>
+   *     <li>google_secondary</li>
+   *     <li>verisign</li>
+   *     <li>verisign_secondary</li>
+   *     <li>yandex</li>
+   *     <li>yandex_secondary</li>
+   *   </ul>
+   *
+   * </p>
+   * @param domainName A {@link String} of a domain for which you want to look up.
+   * @param resolverName A {@link String} containing the resolver name.
+   * @param out The {@link ComplexWriter} to which the DNS results will be written.
+   * @param buffer The {@link DrillBuf} to which the data will be written.
+   * @throws TextParseException
+   */
   public static void getDNS(String domainName, String resolverName, ComplexWriter out, DrillBuf buffer) throws TextParseException {
 
     Lookup look = new Lookup(domainName, Type.ANY);
-
+    String resolverIP;
     // Add the resolver if it is provided.
     if (StringUtils.isNotEmpty(resolverName)) {
       // Create a resolver
+      if (KNOWN_RESOLVERS.containsKey(resolverName.toLowerCase())) {
+        resolverIP = KNOWN_RESOLVERS.get(resolverName.toLowerCase());
+      } else {
+        resolverIP = resolverName;
+      }
       try {
-        SimpleResolver resolver = new SimpleResolver(resolverName);
+        SimpleResolver resolver = new SimpleResolver(resolverIP);
         look.setResolver(resolver);
       } catch (UnknownHostException e) {
         throw UserException.connectionError(e)
@@ -55,7 +100,6 @@ public class DNSUtils {
             .build(logger);
       }
     }
-
 
     Record[] records = look.run();
 
