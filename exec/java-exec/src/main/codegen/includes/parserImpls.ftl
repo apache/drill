@@ -988,3 +988,31 @@ SqlNode SqlDropAllAliases() :
               .build();
    }
 }
+
+/**
+ * Parses a call to Drill's DATE_DIFF.
+ */
+SqlCall DrillDateDiffFunctionCall() :
+{
+    final List<SqlNode> args;
+    final Span s;
+    final SqlIdentifier funcName = SimpleIdentifier();
+    SqlNode e1, e2;
+}
+{
+    <DATE_DIFF> { s = span(); }
+    <LPAREN> e1 = Expression(ExprContext.ACCEPT_SUB_QUERY) {
+      args = startList(e1);
+    }
+    <COMMA> e2 = Expression(ExprContext.ACCEPT_SUB_QUERY) {
+      args.add(e2);
+    }
+    <RPAREN> {
+      return createCall(funcName,
+        s.end(this),
+        SqlFunctionCategory.USER_DEFINED_FUNCTION,
+        null,
+        args
+      );
+    }
+}
