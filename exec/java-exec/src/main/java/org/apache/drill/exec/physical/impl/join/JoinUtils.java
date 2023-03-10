@@ -38,6 +38,9 @@ import org.apache.drill.common.logical.data.JoinCondition;
 import org.apache.calcite.rel.RelNode;
 import org.apache.calcite.plan.RelOptUtil;
 import org.apache.calcite.plan.volcano.RelSubset;
+import org.apache.drill.common.types.TypeProtos.MinorType;
+import org.apache.drill.common.types.Types;
+import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.physical.impl.common.Comparator;
 import org.apache.drill.exec.planner.logical.DrillAggregateRel;
 import org.apache.drill.common.exceptions.DrillRuntimeException;
@@ -149,6 +152,38 @@ public class JoinUtils {
   }
 
   /**
+   * Checks if implicit cast is allowed between the two input types of the join condition. Currently, we allow
+   * implicit casts in join condition only between numeric types and varchar/varbinary types.
+   * @param input1 The {@link MinorType} of the left side of the join.
+   * @param input2 The {@link MinorType} of the right side of the join.
+   * @return true if implicit cast is allowed false otherwise
+   */
+  private static boolean allowImplicitCast(MinorType input1, MinorType input2) {
+    // allow implicit cast if both the input types are numeric and any of them is non-decimal
+    // or both of them are decimal
+    if (TypeCastRules.isNumericType(input1) && TypeCastRules.isNumericType(input2)
+        && ((!Types.isDecimalType(input1) && !Types.isDecimalType(input2))
+        || Types.areDecimalTypes(input1, input2))) {
+      return true;
+    }
+
+    // allow implicit cast if input types are date/ timestamp
+    if ((input1 == MinorType.DATE || input1 == MinorType.TIMESTAMP) &&
+        (input2 == MinorType.DATE || input2 == MinorType.TIMESTAMP)) {
+      return true;
+    }
+
+    // allow implicit cast if both the input types are varbinary/ varchar
+    if ((input1 == MinorType.VARCHAR || input1 == MinorType.VARBINARY) &&
+        (input2 == MinorType.VARCHAR || input2 == MinorType.VARBINARY)) {
+      return true;
+    }
+
+    return false;
+  }
+
+
+  /**
    * Utility method used by joins to add implicit casts on one of the sides of the join condition in case the two
    * expressions have different types.
    * @param leftExpressions array of expressions from left input into the join
@@ -173,8 +208,20 @@ public class JoinUtils {
       }
       if (rightType != leftType) {
 
+        boolean implicitCasts = context.getOptions().getBoolean(ExecConstants.IMPLICIT_CAST_FOR_JOINS_ENABLED);
+
+        if (!implicitCasts) {
+          // If implicit casts are disallowed, revert to previous Drill behavior.
+          if (!allowImplicitCast(rightType, leftType)) {
+            throw new DrillRuntimeException(String.format("Join only supports implicit casts between\n" +
+                "1. Numeric data (none of types is decimal or both of them are decimal)\n" +
+                "2. Varchar, Varbinary data\n3. Date, Timestamp data\n" +
+                "Left type: %s, Right type: %s. Add explicit casts to avoid this error", leftType, rightType));
+          }
+        }
+
         // We need to add a cast to one of the expressions
-        TypeProtos.MinorType result = TypeCastRules.getLeastRestrictiveType(leftType, rightType);
+        MinorType result = TypeCastRules.getLeastRestrictiveType(leftType, rightType);
         ErrorCollector errorCollector = new ErrorCollectorImpl();
 
         if (result == null) {

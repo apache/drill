@@ -17,6 +17,7 @@
  */
 package org.apache.drill;
 
+import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.common.types.TypeProtos.MinorType;
 import org.apache.drill.exec.physical.rowSet.RowSet;
 import org.apache.drill.exec.physical.rowSet.RowSetBuilder;
@@ -50,6 +51,8 @@ import java.nio.file.Paths;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.fail;
 
 @Category({SqlTest.class, OperatorTest.class})
 public class TestSetOp extends ClusterTest {
@@ -447,6 +450,7 @@ public class TestSetOp extends ClusterTest {
   }
   @Test
   public void testImplicitCastingOnJoin() throws Exception {
+    client.alterSession(ExecConstants.IMPLICIT_CAST_FOR_JOINS_ENABLED, true);
     String rootInt = "/store/json/intData.json";
     String rootBoolean = "/store/json/booleanData.json";
     String stringsAsInts = "/store/json/intDataAsString.json";
@@ -475,6 +479,23 @@ public class TestSetOp extends ClusterTest {
         .build();
 
     new RowSetComparison(expected).verifyAndClearAll(result);
+  }
+
+  @Test
+  public void testImplicitCastingOnJoinDisabled() throws Exception {
+    String rootInt = "/store/json/intData.json";
+    String stringsAsInts = "/store/json/intDataAsString.json";
+
+    try {
+      client.queryBuilder()
+          .sql("(select key from cp.`%s` " +
+              "intersect all " +
+              "select key from cp.`%s` )", rootInt, stringsAsInts)
+          .run();
+      fail();
+    } catch (UserException e) {
+      assertTrue(e.getMessage().contains("Join only supports implicit casts"));
+    }
   }
 
   @Test
