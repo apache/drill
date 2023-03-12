@@ -67,42 +67,6 @@ public class TestDNSFunctions extends ClusterTest {
   }
 
   @Test
-  public void testGetMXName() throws Exception {
-    String query = "select get_mx_record('gmail.com') as record from (values(1))";
-    testBuilder().sqlQuery(query).ordered().baselineColumns("record").baselineValues("gmail-smtp-in.l.google.com.").go();
-
-    query = "select get_mx_record('sdfsdfafsdfadfdsf') as record from (values(1))";
-    testBuilder().sqlQuery(query).ordered().baselineColumns("record").baselineValues("MX Record not found").go();
-
-    query = "select get_mx_record('') as record from (values(1))";
-    testBuilder().sqlQuery(query).ordered().baselineColumns("record").baselineValues("MX Record not found").go();
-
-    query = "select get_mx_record(cast(null as varchar)) as record from (values(1))";
-    testBuilder().sqlQuery(query).ordered().baselineColumns("record").baselineValues((String)null).go();
-  }
-
-  @Test
-  public void testGetMXNames() throws Exception {
-    String query =  "select flatten(get_mx_records('gmail.com')) AS mx_records FROM (VALUES(1)) order by mx_records ASC";
-    testBuilder()
-      .sqlQuery(query)
-      .unOrdered()
-      .baselineColumns("mx_records")
-      .baselineValues("alt1.gmail-smtp-in.l.google.com.")
-      .baselineValues("alt2.gmail-smtp-in.l.google.com.")
-      .baselineValues("alt3.gmail-smtp-in.l.google.com.")
-      .baselineValues("alt4.gmail-smtp-in.l.google.com.")
-      .baselineValues("gmail-smtp-in.l.google.com.")
-      .go();
-
-    query = "select get_mx_records('sdfsdfafsdfadfdsf') as record from (values(1))";
-    testBuilder().sqlQuery(query).ordered().baselineColumns("record").baselineValues((String)null).go();
-
-    query = "select get_mx_records('') as record from (values(1))";
-    testBuilder().sqlQuery(query).ordered().baselineColumns("record").baselineValues((String)null).go();
-  }
-
-  @Test
   public void testDNSLookup() throws Exception {
     String sql = "SELECT dns_lookup('datadistillr.io') FROM (VALUES(1))";
     RowSet results = client.queryBuilder().sql(sql).rowSet();
@@ -111,9 +75,9 @@ public class TestDNSFunctions extends ClusterTest {
 
   @Test
   public void testWhois() throws Exception {
-    String sql = "SELECT whois('datadistillr.com') FROM (VALUES(1))";
+    String sql = "SELECT whois('cnn.com') FROM (VALUES(1))";
     RowSet results = client.queryBuilder().sql(sql).rowSet();
+    results.print();
     results.clear();
   }
-
 }

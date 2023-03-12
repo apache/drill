@@ -110,101 +110,6 @@ public class DNSFunctions {
     }
   }
 
-  /* This function gets the host name associated with a domain */
-  @FunctionTemplate(name = "get_mx_record", scope = FunctionTemplate.FunctionScope.SIMPLE, nulls = FunctionTemplate.NullHandling.NULL_IF_NULL)
-
-  public static class MXRecordFunction implements DrillSimpleFunc {
-
-    @Param
-    VarCharHolder ipaddress;
-
-    @Output
-    VarCharHolder out;
-
-    @Inject
-    DrillBuf buffer;
-
-    @Override
-    public void setup() {
-
-    }
-
-    @Override
-    public void eval() {
-      String ipString = org.apache.drill.exec.expr.fn.impl.StringFunctionHelpers.toStringFromUTF8(ipaddress.start, ipaddress.end, ipaddress.buffer);
-      String MXRecordName = "";
-      int minPriority = 1000000000;
-      try {
-        org.xbill.DNS.Record[] records = new org.xbill.DNS.Lookup(ipString, org.xbill.DNS.Type.MX).run();
-        for (int i = 0; i < records.length; i++) {
-          org.xbill.DNS.MXRecord mx = (org.xbill.DNS.MXRecord) records[i];
-
-          //Assign the return value to the MX record with the lowest priority (the primary record)
-          if (mx.getPriority() < minPriority) {
-            minPriority = mx.getPriority();
-            MXRecordName = mx.getTarget().toString();
-          }
-          //System.out.println("Nameserver " + mx.getTarget() + " " + mx.getPriority());
-        }
-      } catch (Exception e) {
-        MXRecordName = "MX Record not found";
-      }
-
-      out.buffer = buffer;
-      out.start = 0;
-      out.end = MXRecordName.getBytes().length;
-      buffer.setBytes(0, MXRecordName.getBytes());
-    }
-  }
-
-  /* This function gets the host name associated with an IP address */
-  @FunctionTemplate(name = "get_mx_records",
-      scope = FunctionTemplate.FunctionScope.SIMPLE)
-  public static class MXRecordListFunction implements DrillSimpleFunc {
-    @Param
-    VarCharHolder ipaddress;
-
-    @Output
-    BaseWriter.ComplexWriter out;
-
-    @Inject
-    DrillBuf buffer;
-
-    @Override
-    public void setup() {
-
-    }
-
-    @Override
-    public void eval() {
-      String domainName = org.apache.drill.exec.expr.fn.impl.StringFunctionHelpers.toStringFromUTF8(ipaddress.start, ipaddress.end, ipaddress.buffer);
-
-      org.apache.drill.exec.vector.complex.writer.BaseWriter.ListWriter listWriter = out.rootAsList();
-      try {
-        org.xbill.DNS.Record[] records = new org.xbill.DNS.Lookup(domainName, org.xbill.DNS.Type.MX).run();
-        String mxRecordName;
-
-        for (int i = 0; i < records.length; i++) {
-          org.xbill.DNS.MXRecord mx = (org.xbill.DNS.MXRecord) records[i];
-          org.apache.drill.exec.expr.holders.VarCharHolder rowHolder = new org.apache.drill.exec.expr.holders.VarCharHolder();
-          mxRecordName = mx.getTarget().toString();
-
-          byte[] rowStringBytes = mxRecordName.getBytes();
-          buffer.reallocIfNeeded(rowStringBytes.length);
-          buffer.setBytes(0, rowStringBytes);
-
-          rowHolder.start = 0;
-          rowHolder.end = rowStringBytes.length;
-          rowHolder.buffer = buffer;
-
-          listWriter.varChar().write(rowHolder);
-        }
-      } catch (Exception e) {
-        System.out.println("Can't find records for " + domainName + "\n" + e.getMessage());
-      }
-    }
-  }
-
   /* This function performs a complete DNS lookup */
   @FunctionTemplate(names = {"dns_lookup", "dnsLookup", "dns"}, scope = FunctionTemplate.FunctionScope.SIMPLE)
   public static class DNSLookupFunctionWithNull implements DrillSimpleFunc {
@@ -311,13 +216,40 @@ public class DNSFunctions {
     DrillBuf buffer;
     @Override
     public void setup() {
-
+      // No op
     }
 
     @Override
     public void eval() {
       String domain = org.apache.drill.exec.expr.fn.impl.StringFunctionHelpers.toStringFromUTF8(rawDomainName.start, rawDomainName.end, rawDomainName.buffer);
       org.apache.drill.exec.udfs.DNSUtils.whois(domain, out, buffer);
+    }
+  }
+
+  @FunctionTemplate(names = {"whois"}, scope = FunctionTemplate.FunctionScope.SIMPLE)
+  public static class WhoIsFunctionWithNonDefaultServer implements DrillSimpleFunc {
+
+    @Param
+    NullableVarCharHolder rawDomainName;
+
+    @Param(constant = true)
+    VarCharHolder serverHolder;
+
+    @Output
+    BaseWriter.ComplexWriter out;
+
+    @Inject
+    DrillBuf buffer;
+    @Override
+    public void setup() {
+      // No op
+    }
+
+    @Override
+    public void eval() {
+      String domain = org.apache.drill.exec.expr.fn.impl.StringFunctionHelpers.toStringFromUTF8(rawDomainName.start, rawDomainName.end, rawDomainName.buffer);
+      String server =  org.apache.drill.exec.expr.fn.impl.StringFunctionHelpers.toStringFromUTF8(serverHolder.start, serverHolder.end, serverHolder.buffer);
+      org.apache.drill.exec.udfs.DNSUtils.whois(domain, server, out, buffer);
     }
   }
 }

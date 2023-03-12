@@ -39,9 +39,15 @@ import java.net.SocketException;
 import java.net.UnknownHostException;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
+/**
+ * Utility class which contains various methods for performing DNS resolution and WHOIS lookups in Drill UDFs.
+ */
 public class DNSUtils {
 
+  private static final Logger logger = LoggerFactory.getLogger(DNSUtils.class);
   /**
    *  A list of known DNS resolvers.
    */
@@ -57,7 +63,7 @@ public class DNSUtils {
     KNOWN_RESOLVERS.put("yandex_secondary", "77.88.8.1");
   }
 
-  private static final Logger logger = LoggerFactory.getLogger(DNSUtils.class);
+  private static final Pattern WHOIS_REGEX = Pattern.compile("([a-zA-Z0-9_ ]+):\\s(.+)");
 
   /**
    * Performs the actual DNS lookup and returns the results in a {@link ComplexWriter}.  If the resolver
@@ -89,11 +95,7 @@ public class DNSUtils {
     // Add the resolver if it is provided.
     if (StringUtils.isNotEmpty(resolverName)) {
       // Create a resolver
-      if (KNOWN_RESOLVERS.containsKey(resolverName.toLowerCase())) {
-        resolverIP = KNOWN_RESOLVERS.get(resolverName.toLowerCase());
-      } else {
-        resolverIP = resolverName;
-      }
+      resolverIP = KNOWN_RESOLVERS.getOrDefault(resolverName.toLowerCase(), resolverName);
       try {
         SimpleResolver resolver = new SimpleResolver(resolverIP);
         look.setResolver(resolver);
@@ -118,10 +120,8 @@ public class DNSUtils {
       return;
     }
 
-    for (int i = 0; i < records.length; i++) {
+    for (Record record : records) {
       VarCharHolder fieldHolder = new VarCharHolder();
-
-      Record record = records[i];
 
       rowMapWriter.start();
       byte[] name = record.getName().toString().getBytes();
@@ -164,17 +164,71 @@ public class DNSUtils {
     getDNS(domainName, null, out, buffer);
   }
 
+  /**
+   * Performs a WHOIS lookup and populates the results into a Drill map.  This method uses a default server.
+   * @param domainName The input domain name.
+   * @param out A {@link ComplexWriter} to which the results will be written
+   * @param buffer A {@link DrillBuf} which contains the output
+   */
   public static void whois(String domainName, ComplexWriter out, DrillBuf buffer) {
+    whois(domainName, WhoisClient.DEFAULT_HOST, out, buffer);
+  }
+
+  /**
+   * Performs a WHOIS lookup and populates the results into a Drill map.  This method uses a default server.
+   * @param domainName The input domain name.
+   * @param whoisServer A {@link String} containing the whois server
+   * @param out A {@link ComplexWriter} to which the results will be written
+   * @param buffer A {@link DrillBuf} which contains the output
+   */
+  public static void whois(String domainName, String whoisServer, ComplexWriter out, DrillBuf buffer) {
     WhoisClient whois = new WhoisClient();
+    MapWriter mapWriter = out.rootAsMap();
+
     try {
-      //default is internic.net
-      whois.connect("godaddy.com");
-      String whoisData = whois.query("=" + domainName);
+      whois.connect(whoisServer);
+      String whoisData = whois.query(domainName);
       whois.disconnect();
+
+      // Split the result line by line
+      String[] lines = whoisData.split("\\R");
+
+      // Now iterate over those lines
+      mapWriter.start();
+      for (String line : lines) {
+        Matcher matcher = WHOIS_REGEX.matcher(line);
+        boolean matchFound = matcher.find();
+
+        // Map to output
+        if (matchFound) {
+          String key = matcher.group(1);
+          String value = matcher.group(2);
+
+          // Skip useless keys
+          if (key.contentEquals("NOTICE") ||
+              key.contentEquals("by the following terms of use") ||
+              key.contentEquals("TERMS OF USE") ||
+              key.contentEquals("to")
+          ) {
+            continue;
+          }
+
+          // Write to output map
+          byte[] valueBytes = value.getBytes();
+          buffer = buffer.reallocIfNeeded(valueBytes.length);
+          buffer.setBytes(0, valueBytes);
+          mapWriter.varChar(key.trim()).writeVarChar(0, valueBytes.length, buffer);
+        }
+      }
+      mapWriter.end();
     } catch (SocketException e) {
-      e.printStackTrace();
+      throw UserException.connectionError(e)
+          .message("Error connecting to WHOIS server: " + e.getMessage())
+          .build(logger);
     } catch (IOException e) {
-      e.printStackTrace();
+      throw UserException.connectionError(e)
+          .message("Error retrieving WHOIS results: " + e.getMessage())
+          .build(logger);
     }
   }
 }
