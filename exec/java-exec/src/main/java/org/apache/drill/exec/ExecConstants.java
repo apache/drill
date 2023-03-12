@@ -191,6 +191,11 @@ public final class ExecConstants {
   public static final BooleanValidator HASHAGG_FALLBACK_ENABLED_VALIDATOR = new BooleanValidator(HASHAGG_FALLBACK_ENABLED_KEY,
       new OptionDescription("Hash Aggregates ignore memory limits when enabled (true). When disabled (false), Hash Aggregates fail when memory is set too low."));
 
+  public static final String IMPLICIT_CAST_FOR_JOINS_ENABLED = "drill.exec.implicit_casts.joins.enabled";
+  public static final BooleanValidator IMPLICIT_CAST_FOR_JOINS_ENABLED_VALIDATOR = new BooleanValidator(IMPLICIT_CAST_FOR_JOINS_ENABLED,
+      new OptionDescription("When true, this option enables implicit casts for joins.  This is an experimental feature in Drill 1.21.1"));
+
+
   // Partitioner options
   public static final String PARTITIONER_MEMORY_REDUCTION_THRESHOLD_KEY = "exec.partition.mem_throttle";
   public static final LongValidator PARTITIONER_MEMORY_REDUCTION_THRESHOLD_VALIDATOR =
