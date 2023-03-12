@@ -17,22 +17,27 @@
  */
 package org.apache.drill;
 
+import org.apache.drill.common.exceptions.UserException;
+import org.apache.drill.common.types.TypeProtos.MinorType;
+import org.apache.drill.exec.physical.rowSet.RowSet;
+import org.apache.drill.exec.physical.rowSet.RowSetBuilder;
 import org.apache.drill.exec.planner.physical.PlannerSettings;
 import org.apache.drill.exec.record.BatchSchema;
 import org.apache.drill.exec.record.BatchSchemaBuilder;
 import org.apache.drill.exec.record.metadata.SchemaBuilder;
+import org.apache.drill.exec.record.metadata.TupleMetadata;
 import org.apache.drill.exec.util.StoragePluginTestUtils;
 import org.apache.drill.shaded.guava.com.google.common.collect.Lists;
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.drill.categories.OperatorTest;
 import org.apache.drill.categories.SqlTest;
 import org.apache.drill.categories.UnlikelyTest;
-import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.common.types.TypeProtos;
 import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.test.ClusterFixture;
 import org.apache.drill.test.ClusterTest;
+import org.apache.drill.test.rowSet.RowSetComparison;
 import org.hamcrest.CoreMatchers;
 import org.junit.Assert;
 import org.junit.BeforeClass;
@@ -44,6 +49,10 @@ import java.io.File;
 import java.io.FileWriter;
 import java.nio.file.Paths;
 import java.util.List;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.fail;
 
 @Category({SqlTest.class, OperatorTest.class})
 public class TestSetOp extends ClusterTest {
@@ -439,15 +448,54 @@ public class TestSetOp extends ClusterTest {
       .baselineValues(20L, 3L, 5L, 5L)
       .build().run();
   }
-
-  @Test(expected = UserException.class)
-  public void testImplicitCastingFailure() throws Exception {
+  @Test
+  public void testImplicitCastingOnJoin() throws Exception {
+    client.alterSession(ExecConstants.IMPLICIT_CAST_FOR_JOINS_ENABLED, true);
     String rootInt = "/store/json/intData.json";
     String rootBoolean = "/store/json/booleanData.json";
+    String stringsAsInts = "/store/json/intDataAsString.json";
 
-    run("(select key from cp.`%s` " +
-      "intersect all " +
-      "select key from cp.`%s` )", rootInt, rootBoolean);
+    RowSet result = client.queryBuilder()
+        .sql("(select key from cp.`%s` " +
+            "intersect all " +
+            "select key from cp.`%s` )", rootInt, rootBoolean)
+        .rowSet();
+
+    assertEquals(0, result.rowCount());
+    result.clear();
+
+    result = client.queryBuilder()
+        .sql("(select key from cp.`%s` " +
+            "intersect all " +
+            "select key from cp.`%s` )", rootInt, stringsAsInts)
+        .rowSet();
+    TupleMetadata expectedSchema = new SchemaBuilder()
+        .addNullable("key", MinorType.BIGINT)
+        .buildSchema();
+
+    RowSet expected = new RowSetBuilder(client.allocator(), expectedSchema)
+        .addRow(52459253098448904L)
+        .addRow(1116675951L)
+        .build();
+
+    new RowSetComparison(expected).verifyAndClearAll(result);
+  }
+
+  @Test
+  public void testImplicitCastingOnJoinDisabled() throws Exception {
+    String rootInt = "/store/json/intData.json";
+    String stringsAsInts = "/store/json/intDataAsString.json";
+
+    try {
+      client.queryBuilder()
+          .sql("(select key from cp.`%s` " +
+              "intersect all " +
+              "select key from cp.`%s` )", rootInt, stringsAsInts)
+          .run();
+      fail();
+    } catch (UserException e) {
+      assertTrue(e.getMessage().contains("Join only supports implicit casts"));
+    }
   }
 
   @Test
