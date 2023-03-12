@@ -20,6 +20,7 @@ package org.apache.drill.exec.udfs;
 
 import io.netty.buffer.DrillBuf;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.net.whois.WhoisClient;
 import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.exec.expr.holders.VarCharHolder;
 import org.apache.drill.exec.vector.complex.writer.BaseWriter.ComplexWriter;
@@ -33,6 +34,8 @@ import org.xbill.DNS.SimpleResolver;
 import org.xbill.DNS.TextParseException;
 import org.xbill.DNS.Type;
 
+import java.io.IOException;
+import java.net.SocketException;
 import java.net.UnknownHostException;
 import java.util.HashMap;
 import java.util.Map;
@@ -77,7 +80,7 @@ public class DNSUtils {
    * @param resolverName A {@link String} containing the resolver name.
    * @param out The {@link ComplexWriter} to which the DNS results will be written.
    * @param buffer The {@link DrillBuf} to which the data will be written.
-   * @throws TextParseException
+   * @throws TextParseException If the resolver is unparsable, throw an exception.
    */
   public static void getDNS(String domainName, String resolverName, ComplexWriter out, DrillBuf buffer) throws TextParseException {
 
@@ -149,7 +152,29 @@ public class DNSUtils {
     }
   }
 
+  /**
+   * Performs the actual DNS lookup and returns the results in a {@link ComplexWriter}.  Uses the local cache as the
+   * DNS resolver.
+   * @param domainName A {@link String} of a domain for which you want to look up.
+   * @param out The {@link ComplexWriter} to which the DNS results will be written.
+   * @param buffer The {@link DrillBuf} to which the data will be written.
+   * @throws TextParseException If the domain is unparsable, throw an exception.
+   */
   public static void getDNS(String domainName, ComplexWriter out, DrillBuf buffer) throws TextParseException {
     getDNS(domainName, null, out, buffer);
+  }
+
+  public static void whois(String domainName, ComplexWriter out, DrillBuf buffer) {
+    WhoisClient whois = new WhoisClient();
+    try {
+      //default is internic.net
+      whois.connect("godaddy.com");
+      String whoisData = whois.query("=" + domainName);
+      whois.disconnect();
+    } catch (SocketException e) {
+      e.printStackTrace();
+    } catch (IOException e) {
+      e.printStackTrace();
+    }
   }
 }

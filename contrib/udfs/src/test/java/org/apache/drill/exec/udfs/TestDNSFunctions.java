@@ -106,7 +106,14 @@ public class TestDNSFunctions extends ClusterTest {
   public void testDNSLookup() throws Exception {
     String sql = "SELECT dns_lookup('datadistillr.io') FROM (VALUES(1))";
     RowSet results = client.queryBuilder().sql(sql).rowSet();
-
     results.clear();
   }
+
+  @Test
+  public void testWhois() throws Exception {
+    String sql = "SELECT whois('datadistillr.com') FROM (VALUES(1))";
+    RowSet results = client.queryBuilder().sql(sql).rowSet();
+    results.clear();
+  }
+
 }

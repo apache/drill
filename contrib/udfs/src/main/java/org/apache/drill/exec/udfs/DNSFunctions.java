@@ -27,7 +27,6 @@ import org.apache.drill.exec.expr.annotations.Workspace;
 import org.apache.drill.exec.expr.holders.NullableVarCharHolder;
 import org.apache.drill.exec.expr.holders.VarCharHolder;
 import org.apache.drill.exec.vector.complex.writer.BaseWriter;
-import org.apache.drill.exec.vector.complex.writer.BaseWriter.MapWriter;
 
 import javax.inject.Inject;
 
@@ -159,8 +158,8 @@ public class DNSFunctions {
   }
 
   /* This function gets the host name associated with an IP address */
-  @FunctionTemplate(name = "get_mx_records", scope = FunctionTemplate.FunctionScope.SIMPLE)
-
+  @FunctionTemplate(name = "get_mx_records",
+      scope = FunctionTemplate.FunctionScope.SIMPLE)
   public static class MXRecordListFunction implements DrillSimpleFunc {
     @Param
     VarCharHolder ipaddress;
@@ -205,59 +204,6 @@ public class DNSFunctions {
       }
     }
   }
-
-  /* This function performs a complete DNS lookup */
- /* @FunctionTemplate(name = "dns_lookup", scope = FunctionTemplate.FunctionScope.SIMPLE)
-  public static class DNSLookupFunction implements DrillSimpleFunc {
-
-    @Param
-    VarCharHolder rawDomainName;
-
-    @Output
-    BaseWriter.ComplexWriter out;
-
-    @Inject
-    DrillBuf buffer;
-
-    @Override
-    public void setup() {
-
-    }
-
-    @Override
-    public void eval() {
-      org.xbill.DNS.Record[] records = null;
-      org.xbill.DNS.Lookup look;
-
-      String domainName = org.apache.drill.exec.expr.fn.impl.StringFunctionHelpers.toStringFromUTF8(rawDomainName.start, rawDomainName.end, rawDomainName.buffer);
-      try {
-        look = new org.xbill.DNS.Lookup(domainName, org.xbill.DNS.Type.ANY);
-        records = look.run();
-        org.apache.drill.exec.vector.complex.writer.BaseWriter.ListWriter listWriter = out.rootAsList();
-        org.apache.drill.exec.vector.complex.writer.BaseWriter.MapWriter rowMapWriter = listWriter.map();
-        for (int i = 0; i < records.length; i++) {
-          org.apache.drill.exec.expr.holders.VarCharHolder fieldHolder = new org.apache.drill.exec.expr.holders.VarCharHolder();
-
-          // TODO, get all fields from MX record and put in a map
-          byte[] dnsType = records[i].getName().toString().getBytes();
-          buffer.reallocIfNeeded(dnsType.length);
-          buffer.setBytes(0, dnsType);
-
-          fieldHolder.start = 0;
-          fieldHolder.end = dnsType.length;
-          fieldHolder.buffer = buffer;
-
-          rowMapWriter.start();
-          rowMapWriter.varChar("field1").write(fieldHolder);
-          rowMapWriter.bigInt("ttl").writeBigInt(records[i].getTTL());
-          rowMapWriter.end();
-          System.out.println(records[i]);
-        }
-      } catch (Exception e) {
-        e.printStackTrace(); // TODO
-      }
-    }
-  }*/
 
   /* This function performs a complete DNS lookup */
   @FunctionTemplate(names = {"dns_lookup", "dnsLookup", "dns"}, scope = FunctionTemplate.FunctionScope.SIMPLE)
@@ -349,6 +295,29 @@ public class DNSFunctions {
         rowMapWriter.end();
         listWriter.endList();
       }
+    }
+  }
+
+  @FunctionTemplate(names = {"whois"}, scope = FunctionTemplate.FunctionScope.SIMPLE)
+  public static class WhoIsFunction implements DrillSimpleFunc {
+
+    @Param
+    NullableVarCharHolder rawDomainName;
+
+    @Output
+    BaseWriter.ComplexWriter out;
+
+    @Inject
+    DrillBuf buffer;
+    @Override
+    public void setup() {
+
+    }
+
+    @Override
+    public void eval() {
+      String domain = org.apache.drill.exec.expr.fn.impl.StringFunctionHelpers.toStringFromUTF8(rawDomainName.start, rawDomainName.end, rawDomainName.buffer);
+      org.apache.drill.exec.udfs.DNSUtils.whois(domain, out, buffer);
     }
   }
 }

@@ -32,9 +32,21 @@
 
   <dependencies>
     <dependency>
+      <groupId>dnsjava</groupId>
+      <artifactId>dnsjava</artifactId>
+      <version>3.5.2</version>
+    </dependency>
+
+    <dependency>
       <groupId>org.apache.drill.exec</groupId>
       <artifactId>drill-java-exec</artifactId>
       <version>${project.version}</version>
+      <exclusions>
+        <exclusion>
+          <groupId>dnsjava</groupId>
+          <artifactId>dnsjava</artifactId>
+        </exclusion>
+      </exclusions>
     </dependency>
 
     <dependency>
@@ -76,13 +88,6 @@
       </exclusions>
     </dependency>
 
-    <dependency>
-      <groupId>dnsjava</groupId>
-      <artifactId>dnsjava</artifactId>
-      <version>3.5.2</version>
-    </dependency>
-
-
     <!-- Test dependencies -->
     <dependency>
       <groupId>org.apache.drill.exec</groupId>
@@ -90,6 +95,12 @@
       <classifier>tests</classifier>
       <version>${project.version}</version>
       <scope>test</scope>
+      <exclusions>
+        <exclusion>
+          <groupId>dnsjava</groupId>
+          <artifactId>dnsjava</artifactId>
+        </exclusion>
+      </exclusions>
     </dependency>
 
     <dependency>
