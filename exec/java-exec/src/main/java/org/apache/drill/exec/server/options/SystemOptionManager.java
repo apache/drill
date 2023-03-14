@@ -251,6 +251,7 @@ public class SystemOptionManager extends BaseOptionManager implements AutoClosea
       new OptionDefinition(ExecConstants.HASHJOIN_HASH_DOUBLE_FACTOR, new OptionMetaData(OptionValue.AccessibleScopes.SYSTEM_AND_SESSION, true, true)),
       new OptionDefinition(ExecConstants.HASHJOIN_FRAGMENTATION_FACTOR, new OptionMetaData(OptionValue.AccessibleScopes.SYSTEM_AND_SESSION, true, true)),
       new OptionDefinition(ExecConstants.HASH_AGG_TABLE_FACTOR),
+      new OptionDefinition(ExecConstants.IMPLICIT_CAST_FOR_JOINS_ENABLED_VALIDATOR),
       new OptionDefinition(ExecConstants.AVERAGE_FIELD_WIDTH),
       new OptionDefinition(ExecConstants.NEW_VIEW_DEFAULT_PERMS_VALIDATOR),
       new OptionDefinition(ExecConstants.CTAS_PARTITIONING_HASH_DISTRIBUTE_VALIDATOR),
