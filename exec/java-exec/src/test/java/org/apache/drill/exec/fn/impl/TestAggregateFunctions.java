@@ -1275,7 +1275,7 @@ public class TestAggregateFunctions extends ClusterTest {
   @Test
   public void testAggregateWithPivot() throws Exception {
     String query = "SELECT * FROM (\n" +
-        "SELECT education_level, salary, marital_status, extract(year from age(birth_date)) age\n" +
+        "SELECT education_level, salary, marital_status, extract(year from age('2023-02-23', birth_date)) age\n" +
         "FROM cp.`employee.json`)\n" +
         "PIVOT (avg(salary) avg_salary, avg(age) avg_age FOR marital_status IN ('M' married, 'S' single))";
     testBuilder()
