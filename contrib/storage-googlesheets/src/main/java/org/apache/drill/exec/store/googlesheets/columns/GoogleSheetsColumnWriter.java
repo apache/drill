@@ -29,7 +29,6 @@ import java.time.Instant;
 import java.time.LocalDate;
 import java.time.LocalTime;
 import java.time.ZoneOffset;
-import java.util.TimeZone;
 
 public abstract class GoogleSheetsColumnWriter {
   protected static final Logger logger = LoggerFactory.getLogger(GoogleSheetsColumnWriter.class);
