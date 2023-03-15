@@ -558,6 +558,23 @@ public class TestGoogleSheetsQueries extends ClusterTest {
     new RowSetComparison(expected).verifyAndClearAll(results);
   }
 
+  @Test
+  public void testBigFile() throws Exception {
+    try {
+      initializeTokens("googlesheets");
+    } catch (PluginException e) {
+      fail(e.getMessage());
+    }
+
+    String sql = "SELECT *\n" +
+        "FROM googlesheets.`1fGepMXyRZ2WgaRt7v_AJtdtTvgUTTrtC33v823ncoNI`.`Contacts`";
+
+    RowSet results = queryBuilder().sql(sql).rowSet();
+    System.out.println(results.rowCount());
+    results.clear();
+  }
+
+
   /**
    * This function is used for testing only.  It initializes a {@link PersistentTokenTable} and populates it
    * with a valid access and refresh token.
