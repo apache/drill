@@ -238,6 +238,10 @@ public class GoogleSheetsRangeBuilder implements Iterator<String> {
     return buildBatchList();
   }
 
+  public int getRowCount() {
+    return rowCount;
+  }
+
   @Override
   public String toString() {
     return new PlanStringBuilder(this)
