@@ -241,7 +241,10 @@ public class GoogleSheetsBatchReader implements ManagedReader<SchemaNegotiator> 
         data = GoogleSheetsUtils.getDataFromRange(service, sheetID, range);
       } else {
         List<String> batches = rangeBuilder.nextBatch();
-        if (!batches.isEmpty()) {
+        if (batches == null) {
+          rangeBuilder.lastBatch();
+          return false;
+        } else if (!batches.isEmpty()) {
           data = GoogleSheetsUtils.getBatchData(service, sheetID, batches);
         } else {
           data = Collections.emptyList();
