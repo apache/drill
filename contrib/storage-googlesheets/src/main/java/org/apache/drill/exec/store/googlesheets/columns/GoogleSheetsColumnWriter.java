@@ -19,6 +19,7 @@
 package org.apache.drill.exec.store.googlesheets.columns;
 
 import org.apache.commons.lang3.StringUtils;
+import org.apache.drill.common.Typifier;
 import org.apache.drill.exec.physical.resultSet.RowSetLoader;
 import org.apache.drill.exec.vector.accessor.ScalarWriter;
 import org.slf4j.Logger;
@@ -27,6 +28,7 @@ import org.slf4j.LoggerFactory;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.time.LocalTime;
+import java.time.ZoneOffset;
 
 public abstract class GoogleSheetsColumnWriter {
   protected static final Logger logger = LoggerFactory.getLogger(GoogleSheetsColumnWriter.class);
@@ -106,7 +108,7 @@ public abstract class GoogleSheetsColumnWriter {
       if (StringUtils.isNotEmpty(stringValue)) {
         LocalDate finalValue;
         try {
-          finalValue = LocalDate.parse(stringValue);
+          finalValue = Typifier.stringAsDate(stringValue);
         } catch (NumberFormatException e) {
           finalValue = null;
         }
@@ -211,7 +213,7 @@ public abstract class GoogleSheetsColumnWriter {
       if (StringUtils.isNotEmpty(stringValue)) {
         Instant finalValue;
         try {
-          finalValue = Instant.parse(stringValue);
+          finalValue = Typifier.stringAsDateTime(stringValue).toInstant(ZoneOffset.UTC);
         } catch (NumberFormatException e) {
           finalValue = null;
         }
