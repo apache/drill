@@ -24,7 +24,7 @@
   <parent>
     <groupId>org.apache</groupId>
     <artifactId>apache</artifactId>
-    <version>24</version>
+    <version>29</version>
     <relativePath />
   </parent>
 
@@ -1063,10 +1063,6 @@
             <doclint>none</doclint>
           </configuration>
         </plugin>
-
-        <!--Note: apache-21.pom has the latest versions of apache-rat-plugin, maven-dependency-plugin and
-        maven-clean-plugin. Once the newer versions are needed and present in maven repo, the plugins versions can be
-        overridden here-->
       </plugins>
     </pluginManagement>
   </build>
