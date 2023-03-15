@@ -146,7 +146,7 @@ public class GoogleSheetsRangeBuilder implements Iterator<String> {
     if (!hasMore) {
       return null;
     } else if (getStartIndex() > getEndIndex()) {
-      hasMore = false;
+      lastBatch();
       return null;
     }
 
@@ -197,6 +197,9 @@ public class GoogleSheetsRangeBuilder implements Iterator<String> {
   private List<String> buildBatchList() {
     if (isStarQuery) {
       return null;
+    } else if (getStartIndex() > getEndIndex()) {
+      hasMore = false;
+      return null;
     }
 
     List<String> batchList = new ArrayList<>();
@@ -236,6 +239,10 @@ public class GoogleSheetsRangeBuilder implements Iterator<String> {
   public List<String> nextBatch() {
     batchIndex++;
     return buildBatchList();
+  }
+
+  public int getRowCount() {
+    return rowCount;
   }
 
   @Override
