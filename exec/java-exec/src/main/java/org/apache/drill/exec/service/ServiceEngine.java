@@ -97,8 +97,10 @@ public class ServiceEngine implements AutoCloseable {
 
   public DrillbitEndpoint start() throws DrillbitStartupException, UnknownHostException {
     // loopback address check
-    if (isDistributedMode && InetAddress.getByName(hostName).isLoopbackAddress()) {
-      throw new DrillbitStartupException("Drillbit is disallowed to bind to loopback address in distributed mode.");
+    if (isDistributedMode && InetAddress.getByName(bindAddr).isLoopbackAddress()) {
+      throw new DrillbitStartupException(
+        "Drillbit may not bind to a loopback address in distributed mode."
+      );
     }
 
     userPort = userServer.bind(bindAddr, intialUserPort, allowPortHunting);
