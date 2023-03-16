@@ -31,6 +31,7 @@ public class SqlSelectBuilder {
   private SqlNodeList groupBy;
   private SqlNode having;
   private SqlNodeList windowDecls;
+  private SqlNode qualify;
   private SqlNodeList orderBy;
   private SqlNode offset;
   private SqlNode fetch;
@@ -76,6 +77,11 @@ public class SqlSelectBuilder {
     return this;
   }
 
+  public SqlSelectBuilder qualify(SqlNode qualify) {
+    this.qualify = qualify;
+    return this;
+  }
+
   public SqlSelectBuilder orderBy(SqlNodeList orderBy) {
     this.orderBy = orderBy;
     return this;
@@ -98,7 +104,7 @@ public class SqlSelectBuilder {
 
   public SqlSelect build() {
     return new SqlSelect(parserPosition, keywordList, selectList, from,
-      where, groupBy, having, windowDecls, orderBy, offset, fetch, hints);
+      where, groupBy, having, windowDecls, qualify, orderBy, offset, fetch, hints);
   }
 
 }
