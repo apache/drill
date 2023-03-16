@@ -818,6 +818,51 @@
         </dependency>
       </dependencies>
     </profile>
+    <profile>
+      <!-- If Drill has not provided its own parser grammar at the location
+      below then we default to Calcite's. You'd have hoped that a simple
+      overWrite=false setting in the relevant maven-dependency-plugin unpack
+      goal in this pom would have been sufficient but alas this whole new
+      profile is required. -->
+      <id>calcite-parser-grammar</id>
+      <activation>
+        <file>
+          <missing>${basedir}/src/main/codegen/templates/Parser.jj</missing>
+        </file>
+      </activation>
+      <build>
+        <plugins>
+          <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-dependency-plugin</artifactId>
+            <executions>
+             <!-- Extract parser grammar template from calcite-core.jar and put
+          it under ${project.build.directory}/codegen/templates where all freemarker templates are. -->
+              <execution>
+                <id>unpack-parser-template</id>
+                <phase>initialize</phase>
+                <goals>
+                  <goal>unpack</goal>
+                </goals>
+                <configuration>
+                  <overWrite>false</overWrite>
+                  <artifactItems>
+                    <artifactItem>
+                      <groupId>${calcite.groupId}</groupId>
+                      <artifactId>calcite-core</artifactId>
+                      <type>jar</type>
+                      <overWrite>false</overWrite>
+                      <outputDirectory>${project.build.directory}/</outputDirectory>
+                      <includes>codegen/templates/Parser.jj</includes>
+                    </artifactItem>
+                  </artifactItems>
+                </configuration>
+              </execution>
+            </executions>
+          </plugin>
+        </plugins>
+      </build>
+    </profile>
   </profiles>
   <build>
     <plugins>
@@ -849,28 +894,6 @@
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-dependency-plugin</artifactId>
         <executions>
-        <!-- Extract parser grammar template from calcite-core.jar and put
-          it under ${project.build.directory}/codegen/templates where all freemarker templates are. -->
-          <execution>
-            <id>unpack-parser-template</id>
-            <phase>initialize</phase>
-            <goals>
-              <goal>unpack</goal>
-            </goals>
-            <configuration>
-              <artifactItems>
-                <artifactItem>
-                  <groupId>${calcite.groupId}</groupId>
-                  <artifactId>calcite-core</artifactId>
-                  <type>jar</type>
-                  <overWrite>true</overWrite>
-                  <outputDirectory>${project.build.directory}/</outputDirectory>
-                  <includes>codegen/templates/Parser.jj</includes>
-                </artifactItem>
-              </artifactItems>
-            </configuration>
-          </execution>
-
         <!-- Extract ValueVectorTypes.tdd from drill-vector.jar and put
           it under ${project.build.directory}/codegen/data where all freemarker data files are. -->
           <execution>
