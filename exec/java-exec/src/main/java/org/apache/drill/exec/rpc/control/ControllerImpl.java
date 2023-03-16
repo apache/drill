@@ -20,6 +20,7 @@ package org.apache.drill.exec.rpc.control;
 import java.util.List;
 
 import org.apache.drill.common.AutoCloseables;
+import org.apache.drill.common.config.DrillConfig;
 import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.exception.DrillbitStartupException;
 import org.apache.drill.exec.memory.BufferAllocator;
@@ -56,8 +57,10 @@ public class ControllerImpl implements Controller {
   @Override
   public DrillbitEndpoint start(DrillbitEndpoint partialEndpoint, final boolean allowPortHunting) {
     server = new ControlServer(config, connectionRegistry);
-    int port = config.getBootstrapContext().getConfig().getInt(ExecConstants.INITIAL_BIT_PORT);
-    port = server.bind(port, allowPortHunting);
+    DrillConfig drillConfig = config.getBootstrapContext().getConfig();
+    String bindAddr = drillConfig.getString(ExecConstants.RPC_BIND_ADDR);
+    int port = drillConfig.getInt(ExecConstants.INITIAL_BIT_PORT);
+    port = server.bind(bindAddr, port, allowPortHunting);
     DrillbitEndpoint completeEndpoint = partialEndpoint.toBuilder().setControlPort(port).build();
     connectionRegistry.setLocalEndpoint(completeEndpoint);
     handlerRegistry.setEndpoint(completeEndpoint);
