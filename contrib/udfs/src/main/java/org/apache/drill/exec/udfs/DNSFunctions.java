@@ -36,8 +36,9 @@ public class DNSFunctions {
   }
 
   /* This function gets the host name associated with an IP address */
-  @FunctionTemplate(names = {"get_host_name", "reverse_ip_lookup"}, scope = FunctionTemplate.FunctionScope.SIMPLE, nulls = FunctionTemplate.NullHandling.NULL_IF_NULL)
-
+  @FunctionTemplate(names = {"get_host_name", "getHostName", "reverse_ip_lookup"},
+      scope = FunctionTemplate.FunctionScope.SIMPLE,
+      nulls = FunctionTemplate.NullHandling.NULL_IF_NULL)
   public static class ReverseIPLookup implements DrillSimpleFunc {
 
     @Param
@@ -74,8 +75,9 @@ public class DNSFunctions {
   }
 
   /* This function takes a host name and returns the IP address associated with that host, and "Unknown if there is an error */
-  @FunctionTemplate(names = {"get_host_address", "host_lookup"}, scope = FunctionTemplate.FunctionScope.SIMPLE, nulls = FunctionTemplate.NullHandling.NULL_IF_NULL)
-
+  @FunctionTemplate(names = {"get_host_address", "getHostAddress", "host_lookup", "hostLookup"},
+      scope = FunctionTemplate.FunctionScope.SIMPLE,
+      nulls = FunctionTemplate.NullHandling.NULL_IF_NULL)
   public static class HostLookup implements DrillSimpleFunc {
 
     @Param
@@ -203,7 +205,8 @@ public class DNSFunctions {
     }
   }
 
-  @FunctionTemplate(names = {"whois"}, scope = FunctionTemplate.FunctionScope.SIMPLE)
+  @FunctionTemplate(names = {"whois"},
+      scope = FunctionTemplate.FunctionScope.SIMPLE)
   public static class WhoIsFunction implements DrillSimpleFunc {
 
     @Param

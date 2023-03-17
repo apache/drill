@@ -38,8 +38,8 @@ public class TestDNSFunctions extends ClusterTest {
 
   @Test
   public void testGetHostAddress() throws Exception {
-    String query = "select get_host_address('gtkcyber.com') as hostname from (values(1))";
-    testBuilder().sqlQuery(query).ordered().baselineColumns("hostname").baselineValues("35.224.172.16").go();
+    String query = "select get_host_address('apache.org') as hostname from (values(1))";
+    testBuilder().sqlQuery(query).ordered().baselineColumns("hostname").baselineValues("151.101.2.132").go();
 
     query = "select get_host_address('google') as hostname from (values(1))";
     testBuilder().sqlQuery(query).ordered().baselineColumns("hostname").baselineValues("Unknown").go();
@@ -53,8 +53,8 @@ public class TestDNSFunctions extends ClusterTest {
 
   @Test
   public void testGetHostName() throws Exception {
-    String query = "select get_host_name('216.239.36.21') as hostname from (values(1))";
-    testBuilder().sqlQuery(query).ordered().baselineColumns("hostname").baselineValues("any-in-2415.1e100.net").go();
+    String query = "select get_host_name('142.251.16.102') as hostname from (values(1))";
+    testBuilder().sqlQuery(query).ordered().baselineColumns("hostname").baselineValues("bl-in-f102.1e100.net").go();
 
     query = "select get_host_name('sdfsdfafsdfadfdsf') as hostname from (values(1))";
     testBuilder().sqlQuery(query).ordered().baselineColumns("hostname").baselineValues("Unknown host").go();
@@ -68,16 +68,13 @@ public class TestDNSFunctions extends ClusterTest {
 
   @Test
   public void testDNSLookup() throws Exception {
-    String sql = "SELECT dns_lookup('datadistillr.io') FROM (VALUES(1))";
-    RowSet results = client.queryBuilder().sql(sql).rowSet();
-    results.clear();
+    String sql = "SELECT dns_lookup('google.com') AS dns_info FROM (VALUES(1))";
+    testBuilder().sqlQuery(sql).ordered().baselineColumns("dns_info").go();
   }
 
   @Test
   public void testWhois() throws Exception {
-    String sql = "SELECT whois('cnn.com') FROM (VALUES(1))";
-    RowSet results = client.queryBuilder().sql(sql).rowSet();
-    results.print();
-    results.clear();
+    String sql = "SELECT whois('google.com') AS whois FROM (VALUES(1))";
+    testBuilder().sqlQuery(sql).ordered().baselineColumns("whois").go();
   }
 }
