@@ -19,7 +19,6 @@ package org.apache.drill.exec.udfs;
 
 import org.apache.drill.categories.SqlFunctionTest;
 import org.apache.drill.categories.UnlikelyTest;
-import org.apache.drill.exec.physical.rowSet.RowSet;
 import org.apache.drill.test.ClusterFixture;
 import org.apache.drill.test.ClusterFixtureBuilder;
 import org.apache.drill.test.ClusterTest;
