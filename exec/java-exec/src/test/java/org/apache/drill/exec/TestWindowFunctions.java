@@ -19,9 +19,14 @@ package org.apache.drill.exec;
 
 import org.apache.drill.test.ClusterFixture;
 import org.apache.drill.test.ClusterTest;
+import org.apache.drill.test.rowSet.RowSetComparison;
 import org.apache.drill.categories.UnlikelyTest;
 import org.apache.drill.common.exceptions.UserException;
+import org.apache.drill.common.types.TypeProtos.MinorType;
+import org.apache.drill.exec.physical.rowSet.RowSet;
 import org.apache.drill.exec.proto.UserBitShared;
+import org.apache.drill.exec.record.metadata.SchemaBuilder;
+import org.apache.drill.exec.record.metadata.TupleMetadata;
 import org.apache.drill.exec.work.foreman.SqlUnsupportedException;
 import org.apache.drill.exec.work.foreman.UnsupportedFunctionException;
 
@@ -1127,5 +1132,41 @@ public class TestWindowFunctions extends ClusterTest {
         .baselineValues(0L)
         .build()
         .run();
+  }
+
+  @Test
+  public void testWindowFunctionWithQualifyClause() throws Exception {
+    String query = "select employee_id, full_name, birth_date " +
+        "from cp.`employee.json` " +
+        "qualify row_number() over (order by employee_id) between 5 and 7";
+
+    String[] expectedPlan = {
+      "Filter\\(condition=\\[SEARCH\\(\\$\\d, Sarg\\[\\[5..7\\]\\]\\)\\]\\)",
+      "Window\\(.*?\\[window\\(order by \\[\\d\\] rows between UNBOUNDED PRECEDING and CURRENT ROW aggs \\[ROW_NUMBER\\(\\)\\]\\)\\]\\)"
+    };
+
+    client.queryBuilder()
+      .sql(query)
+      .planMatcher()
+      .include(expectedPlan)
+      .exclude(new String[]{})
+      .match();
+
+    RowSet results = queryBuilder().sql(query).rowSet();
+
+    TupleMetadata expectedSchema = new SchemaBuilder()
+      .addNullable("employee_id", MinorType.BIGINT)
+      .addNullable("full_name", MinorType.VARCHAR)
+      .addNullable("birth_date", MinorType.VARCHAR)
+      .buildSchema();
+
+    RowSet expected = client.rowSetBuilder(expectedSchema)
+       .addRow(6, "Roberta Damstra", "1942-10-08")
+       .addRow(7, "Rebecca Kanagaki", "1949-03-27")
+       .addRow(8, "Kim Brunner", "1922-08-10")
+       .build();
+
+    new RowSetComparison(expected).verifyAndClearAll(results);
+
   }
 }

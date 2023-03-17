@@ -62,7 +62,7 @@ public class GoogleSheetsBatchReader implements ManagedReader<SchemaNegotiator> 
   // The default batch size is 1k rows.  It appears that Google sets the maximum batch size at 1000
   // rows. There is conflicting information about this online, but during testing, ranges with more than
   // 1000 rows would throw invalid request errors.
-  private static final int BATCH_SIZE = 1000;
+  protected static final int BATCH_SIZE = 1000;
   private static final String SHEET_COLUMN_NAME = "_sheets";
   private static final String TITLE_COLUMN_NAME = "_title";
 
@@ -225,12 +225,7 @@ public class GoogleSheetsBatchReader implements ManagedReader<SchemaNegotiator> 
   @Override
   public boolean next() {
     logger.debug("Processing batch.");
-    while (!rowWriter.isFull()) {
-      if (!processRow()) {
-        return false;
-      }
-    }
-    return true;
+    return processRow();
   }
 
   private boolean processRow() {
@@ -240,12 +235,16 @@ public class GoogleSheetsBatchReader implements ManagedReader<SchemaNegotiator> 
         // Get next range
         String range = rangeBuilder.next();
         if (range == null) {
+          rangeBuilder.lastBatch();
           return false;
         }
         data = GoogleSheetsUtils.getDataFromRange(service, sheetID, range);
       } else {
         List<String> batches = rangeBuilder.nextBatch();
-        if (!batches.isEmpty()) {
+        if (batches == null) {
+          rangeBuilder.lastBatch();
+          return false;
+        } else if (!batches.isEmpty()) {
           data = GoogleSheetsUtils.getBatchData(service, sheetID, batches);
         } else {
           data = Collections.emptyList();
@@ -293,12 +292,14 @@ public class GoogleSheetsBatchReader implements ManagedReader<SchemaNegotiator> 
       rowWriter.save();
     }
 
-    // If the results contained less than the batch size, stop iterating.
-    if (rowWriter.rowCount() < BATCH_SIZE) {
+    // If there is another batch, return true
+    if (rowWriter.rowCount() + BATCH_SIZE < rangeBuilder.getRowCount()) {
+      return true;
+    } else {
+      // If the results contained less than the batch size, stop iterating.
       rangeBuilder.lastBatch();
       return false;
     }
-    return true;
   }
 
   private void projectMetadata() {

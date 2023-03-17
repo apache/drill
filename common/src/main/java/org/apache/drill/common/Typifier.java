@@ -272,7 +272,7 @@ public class Typifier {
    * @param date Input date string
    * @return LocalDateTime representation of the input String.
    */
-  private static LocalDateTime stringAsDateTime(String date) {
+  public static LocalDateTime stringAsDateTime(String date) {
     for (DateTimeFormatter format : formats) {
       try {
         return LocalDateTime.parse(date, format);
@@ -289,7 +289,7 @@ public class Typifier {
    * @param date Input date string
    * @return LocalDateTime representation of the input String.
    */
-  private static LocalDate stringAsDate(String date) {
+  public static LocalDate stringAsDate(String date) {
     for (DateTimeFormatter format : dateFormats) {
       try {
         return LocalDate.parse(date, format);
