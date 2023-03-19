@@ -394,7 +394,9 @@ public class HttpBatchReader implements ManagedReader<SchemaNegotiator> {
         }
       } else {
         // Case when the next page field is used.
-        if ((!paginationFields.containsKey(indexPaginator.getNextPageParam())) || paginationFields.get(indexPaginator.getNextPageParam()) == null) {
+        if ((!paginationFields.containsKey(indexPaginator.getNextPageParam()))
+            || paginationFields.get(indexPaginator.getNextPageParam()) == null
+            || paginationFields.get(indexPaginator.getNextPageParam()) == "true") {
           // End pagination
           paginator.notifyPartialPage();
         } else {
