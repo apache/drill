@@ -543,9 +543,6 @@ public class TestPagination extends ClusterTest {
   }
 
   @Test
-  public void nextPagePaginationWithPathAndHasMore() throws Exception {}
-
-  @Test
   public void nextPagePaginationWithPathAndNoHasMore() throws Exception {
     String sql = "SELECT * FROM `local`.`next_page2`";
     try (MockWebServer server = startServer()) {
