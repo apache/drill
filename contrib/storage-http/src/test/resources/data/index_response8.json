@@ -1,0 +1,14 @@
+{
+  "offset": 115279791,
+  "nextPage": "http://localhost:8092/json?page=2",
+  "companies": [
+    {
+      "portalId": 62515,
+      "companyId": 115200636
+    },
+    {
+      "portalId": 62515,
+      "companyId": 115279791
+    }
+  ]
+}
