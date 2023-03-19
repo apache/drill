@@ -436,3 +436,11 @@ The functions are:
 
 [1]: https://github.com/target/huntlib
 
+
+# DNS Functions
+These functions enable DNS research using Drill.
+
+* `getHostName(<IP address>)`:  Returns the host name associated with an IP address.
+* `getHostAddress(<host>)`:  Returns an IP address associated with a host name.
+* `dnsLookup(<host>, [<Resolver>])`:  Performs a DNS lookup on a given host.  You can optionally provide a resolver.  Possible resolver values are: `cloudflare`,  `cloudflare_secondary`, `google`, `google_secondary`, `verisign`, `verisign_secondary`, `yandex`, `yandex_secondary`.
+* `whois(<host>, [<Resolver>])`:  Performs a whois lookup on the given host name.  You can optionally provide a resolver URL. Note that not all providers allow bulk automated whois lookups, so please follow the terms fo service for your provider.
