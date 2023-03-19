@@ -70,6 +70,9 @@ public class TestPagination extends ClusterTest {
   private static String TEST_JSON_INDEX_PAGE7;
   private static String TEST_JSON_INDEX_PAGE8;
   private static String TEST_JSON_INDEX_PAGE9;
+  private static String TEST_JSON_INDEX_PAGE10;
+  private static String TEST_JSON_INDEX_PAGE11;
+  private static String TEST_JSON_INDEX_PAGE12;
   private static String TEST_JSON_NESTED_INDEX;
   private static String TEST_JSON_NESTED_INDEX2;
   private static String TEST_XML_PAGE1;
@@ -99,6 +102,9 @@ public class TestPagination extends ClusterTest {
     TEST_JSON_INDEX_PAGE7 = Files.asCharSource(DrillFileUtils.getResourceAsFile("/data/index_response7.json"), Charsets.UTF_8).read();
     TEST_JSON_INDEX_PAGE8 = Files.asCharSource(DrillFileUtils.getResourceAsFile("/data/index_response8.json"), Charsets.UTF_8).read();
     TEST_JSON_INDEX_PAGE9 = Files.asCharSource(DrillFileUtils.getResourceAsFile("/data/index_response9.json"), Charsets.UTF_8).read();
+    TEST_JSON_INDEX_PAGE10 = Files.asCharSource(DrillFileUtils.getResourceAsFile("/data/index_response10.json"), Charsets.UTF_8).read();
+    TEST_JSON_INDEX_PAGE11 = Files.asCharSource(DrillFileUtils.getResourceAsFile("/data/index_response11.json"), Charsets.UTF_8).read();
+    TEST_JSON_INDEX_PAGE12 = Files.asCharSource(DrillFileUtils.getResourceAsFile("/data/index_response12.json"), Charsets.UTF_8).read();
 
     TEST_JSON_NESTED_INDEX = Files.asCharSource(DrillFileUtils.getResourceAsFile("/data/nested_pagination_fields.json"), Charsets.UTF_8).read();
     TEST_JSON_NESTED_INDEX2 = Files.asCharSource(DrillFileUtils.getResourceAsFile("/data/nested_pagination_fields2.json"), Charsets.UTF_8).read();
@@ -540,7 +546,27 @@ public class TestPagination extends ClusterTest {
   public void nextPagePaginationWithPathAndHasMore() throws Exception {}
 
   @Test
-  public void nextPagePaginationWithPathAndNoHasMore() throws Exception {}
+  public void nextPagePaginationWithPathAndNoHasMore() throws Exception {
+    String sql = "SELECT * FROM `local`.`next_page2`";
+    try (MockWebServer server = startServer()) {
+
+      server.enqueue(new MockResponse().setResponseCode(200).setBody(TEST_JSON_INDEX_PAGE10));
+      server.enqueue(new MockResponse().setResponseCode(200).setBody(TEST_JSON_INDEX_PAGE11));
+      server.enqueue(new MockResponse().setResponseCode(200).setBody(TEST_JSON_INDEX_PAGE12));
+
+      List<QueryDataBatch> results = client.queryBuilder()
+          .sql(sql)
+          .results();
+
+      int count = 0;
+      for(QueryDataBatch b : results){
+        count += b.getHeader().getRowCount();
+        b.release();
+      }
+      assertEquals(3, results.size());
+      assertEquals(6, count);
+    }
+  }
 
   @Test
   public void jsonQueryWithoutHasMore() throws Exception {

@@ -1,6 +1,6 @@
 {
   "offset": 115279791,
-  "nextPage": "http://localhost:8092/json?page=2",
+  "nextPage": "/json/services/data/v37.0/query/01gp000000AJ51VAAT-800",
   "companies": [
     {
       "portalId": 62515,

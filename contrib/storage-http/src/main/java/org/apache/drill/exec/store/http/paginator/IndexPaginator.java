@@ -131,9 +131,25 @@ public class IndexPaginator extends Paginator {
         pageCount++;
         return nextPageValue;
       } else {
-        // If the next page just contains the path, we have to construct a URL from the incoming path.
-        logger.debug("Here");
+        // If the next page just contains the path, we have to reconstruct a URL from the incoming path.
+        int segmentIndex = 0;
 
+        // Remove leading slash in path to avoid double slashes in URL
+        if (nextPageValue.startsWith("/")) {
+          nextPageValue = nextPageValue.substring(1);
+        }
+
+        // Now remove the path segments and replace with the updated ones from the URL.
+        for (String segment : builder.build().pathSegments()) {
+          if (nextPageValue.contains(segment)) {
+            for (int i = builder.build().pathSegments().size() - 1 ; i >= segmentIndex; i--) {
+              builder.removePathSegment(i);
+            }
+            break;
+          }
+          segmentIndex++;
+        }
+        builder.addPathSegments(nextPageValue);
       }
 
     }
