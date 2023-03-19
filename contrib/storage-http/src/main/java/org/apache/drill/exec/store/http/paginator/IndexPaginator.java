@@ -142,7 +142,7 @@ public class IndexPaginator extends Paginator {
         // Now remove the path segments and replace with the updated ones from the URL.
         for (String segment : builder.build().pathSegments()) {
           if (nextPageValue.contains(segment)) {
-            for (int i = builder.build().pathSegments().size() - 1 ; i >= segmentIndex; i--) {
+            for (int i = builder.build().pathSegments().size() - 1; i >= segmentIndex; i--) {
               builder.removePathSegment(i);
             }
             break;
