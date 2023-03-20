@@ -357,31 +357,58 @@ public class HttpBatchReader implements ManagedReader<SchemaNegotiator> {
 
       // At this point we know that there are more pages to come.  Send the data to the paginator and
       // use that to generate the next page.
-      if (StringUtils.isNotEmpty(indexPaginator.getIndexParam())) {
+      if (StringUtils.isNotEmpty(indexPaginator.getIndexParam()) && paginationFields.containsKey(indexPaginator.getIndexParam())) {
         indexPaginator.setIndexValue(paginationFields.get(indexPaginator.getIndexParam()).toString());
       }
 
-      if (StringUtils.isNotEmpty(indexPaginator.getNextPageParam())) {
-        indexPaginator.setNextPageValue(paginationFields.get(indexPaginator.getNextPageParam()).toString());
+      if (StringUtils.isNotEmpty(indexPaginator.getNextPageParam()) && paginationFields.containsKey(indexPaginator.getNextPageParam())) {
+        Object nextPageValue = paginationFields.get(indexPaginator.getNextPageParam());
+        if (nextPageValue != null) {
+          indexPaginator.setNextPageValue(nextPageValue.toString());
+        } else {
+          // If the next URL is null, notify the paginator and stop paginating
+          paginator.notifyPartialPage();
+          indexPaginator.setNextPageValue(null);
+        }
       }
     } else {
       // This covers the case of keyset/index pagination where there isn't a boolean parameter to indicate whether there are more results.
       // In this case, we will interpret the absence of the pagination field, receiving the same value, or a null value as the marker to stop pagination.
-      if ( (!paginationFields.containsKey(indexPaginator.getIndexParam())) ||
-        paginationFields.get(indexPaginator.getIndexParam()) == null
-      ) {
-        // End pagination
-        paginator.notifyPartialPage();
-      } else {
-        // Otherwise, check to see if the field is present but empty, or contains the value from the last page.
-        // This will prevent runaway pagination calls.
-        String indexParameter = paginationFields.get(indexPaginator.getIndexParam()).toString();
-        // Empty value or the last value is the same as the current one.
-        if (StringUtils.isEmpty(indexParameter) || (StringUtils.equals(indexParameter, indexPaginator.getLastIndexValue()))) {
+
+      // This represents the case when the index field is being used.
+      if (StringUtils.isNotEmpty(indexPaginator.getIndexParam())) {
+        if ((!paginationFields.containsKey(indexPaginator.getIndexParam())) || paginationFields.get(indexPaginator.getIndexParam()) == null) {
+          // End pagination
           paginator.notifyPartialPage();
         } else {
-          // Whew!  We made it... get the next page.
-          indexPaginator.setIndexValue(indexParameter);
+          // Otherwise, check to see if the field is present but empty, or contains the value from the last page.
+          // This will prevent runaway pagination calls.
+          String indexParameter = paginationFields.get(indexPaginator.getIndexParam()).toString();
+          // Empty value or the last value is the same as the current one.
+          if (StringUtils.isEmpty(indexParameter) || (StringUtils.equals(indexParameter, indexPaginator.getLastIndexValue()))) {
+            paginator.notifyPartialPage();
+          } else {
+            // Whew!  We made it... get the next page.
+            indexPaginator.setIndexValue(indexParameter);
+          }
+        }
+      } else {
+        // Case when the next page field is used.
+        if ((!paginationFields.containsKey(indexPaginator.getNextPageParam()))
+            || paginationFields.get(indexPaginator.getNextPageParam()) == null
+            || paginationFields.get(indexPaginator.getNextPageParam()) == "true") {
+          // End pagination
+          paginator.notifyPartialPage();
+        } else {
+          // Get the next page
+          String nextURL = paginationFields.get(indexPaginator.getNextPageParam()).toString();
+          // Empty value or the last value is the same as the current one.
+          if (StringUtils.isEmpty(nextURL) || (StringUtils.equals(nextURL, indexPaginator.getLastNextPageValue()))) {
+            paginator.notifyPartialPage();
+          } else {
+            // Whew!  We made it... get the next page.
+            indexPaginator.setNextPageValue(nextURL);
+          }
         }
       }
     }

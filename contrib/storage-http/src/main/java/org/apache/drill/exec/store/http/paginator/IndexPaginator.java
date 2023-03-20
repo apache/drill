@@ -39,6 +39,7 @@ public class IndexPaginator extends Paginator {
 
   private String indexValue;
   private String lastIndexValue;
+  private String lastNextPageValue;
   private Boolean hasMoreValue;
   private String nextPageValue;
   private int pageCount;
@@ -48,13 +49,14 @@ public class IndexPaginator extends Paginator {
     this.hasMoreParam = hasMoreParam;
     this.indexParam = indexParam;
     this.nextPageParam = nextPageParam;
+    this.lastNextPageValue = "";
+    this.lastIndexValue = "";
     pageCount = 0;
   }
 
   @Override
   public boolean hasNext() {
     return !partialPageReceived;
-
   }
 
   public String getIndexParam() {
@@ -81,12 +83,16 @@ public class IndexPaginator extends Paginator {
   }
 
   public void setNextPageValue(String nextPageValue) {
-    this.lastIndexValue = this.nextPageValue;
+    this.lastNextPageValue = this.nextPageValue;
     this.nextPageValue = nextPageValue;
   }
 
   public String getLastIndexValue() {
     return lastIndexValue;
+  }
+
+  public String getLastNextPageValue() {
+    return lastNextPageValue;
   }
 
   public boolean isFirstPage() {
@@ -116,6 +122,36 @@ public class IndexPaginator extends Paginator {
       }
       builder.removeAllEncodedQueryParameters(indexParam);
       builder.addQueryParameter(indexParam, indexValue);
+    } else if (StringUtils.isNotEmpty(nextPageValue)) {
+      // Case when we're using the next page URL.  We have two cases here:
+      // 1.  The nextPage contains the full URL of the next page.
+      // 2.  The next page contains the path but lacks the base URL.
+      if (StringUtils.startsWith(nextPageValue, "http://") ||
+          StringUtils.startsWith(nextPageValue, "https://")) {
+        pageCount++;
+        return nextPageValue;
+      } else {
+        // If the next page just contains the path, we have to reconstruct a URL from the incoming path.
+        int segmentIndex = 0;
+
+        // Remove leading slash in path to avoid double slashes in URL
+        if (nextPageValue.startsWith("/")) {
+          nextPageValue = nextPageValue.substring(1);
+        }
+
+        // Now remove the path segments and replace with the updated ones from the URL.
+        for (String segment : builder.build().pathSegments()) {
+          if (nextPageValue.contains(segment)) {
+            for (int i = builder.build().pathSegments().size() - 1; i >= segmentIndex; i--) {
+              builder.removePathSegment(i);
+            }
+            break;
+          }
+          segmentIndex++;
+        }
+        builder.addPathSegments(nextPageValue);
+      }
+
     }
     pageCount++;
     return builder.build().url().toString();
