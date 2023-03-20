@@ -65,6 +65,14 @@ public class TestPagination extends ClusterTest {
   private static String TEST_JSON_INDEX_PAGE2;
   private static String TEST_JSON_INDEX_PAGE3;
   private static String TEST_JSON_INDEX_PAGE4;
+  private static String TEST_JSON_INDEX_PAGE5;
+  private static String TEST_JSON_INDEX_PAGE6;
+  private static String TEST_JSON_INDEX_PAGE7;
+  private static String TEST_JSON_INDEX_PAGE8;
+  private static String TEST_JSON_INDEX_PAGE9;
+  private static String TEST_JSON_INDEX_PAGE10;
+  private static String TEST_JSON_INDEX_PAGE11;
+  private static String TEST_JSON_INDEX_PAGE12;
   private static String TEST_JSON_NESTED_INDEX;
   private static String TEST_JSON_NESTED_INDEX2;
   private static String TEST_XML_PAGE1;
@@ -89,6 +97,14 @@ public class TestPagination extends ClusterTest {
 
     TEST_JSON_INDEX_PAGE3 = Files.asCharSource(DrillFileUtils.getResourceAsFile("/data/index_response3.json"), Charsets.UTF_8).read();
     TEST_JSON_INDEX_PAGE4 = Files.asCharSource(DrillFileUtils.getResourceAsFile("/data/index_response4.json"), Charsets.UTF_8).read();
+    TEST_JSON_INDEX_PAGE5 = Files.asCharSource(DrillFileUtils.getResourceAsFile("/data/index_response5.json"), Charsets.UTF_8).read();
+    TEST_JSON_INDEX_PAGE6 = Files.asCharSource(DrillFileUtils.getResourceAsFile("/data/index_response6.json"), Charsets.UTF_8).read();
+    TEST_JSON_INDEX_PAGE7 = Files.asCharSource(DrillFileUtils.getResourceAsFile("/data/index_response7.json"), Charsets.UTF_8).read();
+    TEST_JSON_INDEX_PAGE8 = Files.asCharSource(DrillFileUtils.getResourceAsFile("/data/index_response8.json"), Charsets.UTF_8).read();
+    TEST_JSON_INDEX_PAGE9 = Files.asCharSource(DrillFileUtils.getResourceAsFile("/data/index_response9.json"), Charsets.UTF_8).read();
+    TEST_JSON_INDEX_PAGE10 = Files.asCharSource(DrillFileUtils.getResourceAsFile("/data/index_response10.json"), Charsets.UTF_8).read();
+    TEST_JSON_INDEX_PAGE11 = Files.asCharSource(DrillFileUtils.getResourceAsFile("/data/index_response11.json"), Charsets.UTF_8).read();
+    TEST_JSON_INDEX_PAGE12 = Files.asCharSource(DrillFileUtils.getResourceAsFile("/data/index_response12.json"), Charsets.UTF_8).read();
 
     TEST_JSON_NESTED_INDEX = Files.asCharSource(DrillFileUtils.getResourceAsFile("/data/nested_pagination_fields.json"), Charsets.UTF_8).read();
     TEST_JSON_NESTED_INDEX2 = Files.asCharSource(DrillFileUtils.getResourceAsFile("/data/nested_pagination_fields2.json"), Charsets.UTF_8).read();
@@ -170,6 +186,37 @@ public class TestPagination extends ClusterTest {
       .paginator(indexPaginator)
       .inputType("json")
       .build();
+
+    HttpPaginatorConfig nextPagePaginator = HttpPaginatorConfig.builder()
+        .nextPageParam("nextPage")
+        .hasMoreParam("has-more")
+        .method("index")
+        .build();
+
+    HttpApiConfig mockJsonConfigWithNextPagePaginator = HttpApiConfig.builder()
+        .url("http://localhost:8092/json")
+        .method("get")
+        .headers(headers)
+        .requireTail(false)
+        .dataPath("companies")
+        .paginator(nextPagePaginator)
+        .inputType("json")
+        .build();
+
+    HttpPaginatorConfig nextPagePaginatorNoHasMore = HttpPaginatorConfig.builder()
+        .nextPageParam("nextPage")
+        .method("index")
+        .build();
+
+    HttpApiConfig mockJsonConfigWithNextPagePaginatorNoHasMore = HttpApiConfig.builder()
+        .url("http://localhost:8092/json")
+        .method("get")
+        .headers(headers)
+        .requireTail(false)
+        .dataPath("companies")
+        .paginator(nextPagePaginatorNoHasMore)
+        .inputType("json")
+        .build();
 
     HttpPaginatorConfig nestedIndexPaginator = HttpPaginatorConfig.builder()
       .indexParam("after")
@@ -274,6 +321,8 @@ public class TestPagination extends ClusterTest {
     configs.put("csv_paginator", mockCsvConfigWithPaginator);
     configs.put("json_index", mockJsonConfigWithKeyset);
     configs.put("json_index_datapath", mockJsonConfigWithKeysetAndDataPath);
+    configs.put("next_page", mockJsonConfigWithNextPagePaginator);
+    configs.put("next_page2", mockJsonConfigWithNextPagePaginatorNoHasMore);
     configs.put("nested_keyset", mockJsonConfigWitNestedKeyset);
     configs.put("nested_keyset_and_datapath", mockJsonConfigWitNestedKeysetAndDataPath);
     configs.put("json_paginator", mockJsonConfigWithPaginator);
@@ -447,6 +496,75 @@ public class TestPagination extends ClusterTest {
       assertEquals(4, count);
     }
   }
+
+  @Test
+  public void nextPagePaginationWithURLAndHasMore() throws Exception {
+    String sql = "SELECT * FROM `local`.`next_page`";
+    try (MockWebServer server = startServer()) {
+
+      server.enqueue(new MockResponse().setResponseCode(200).setBody(TEST_JSON_INDEX_PAGE5));
+      server.enqueue(new MockResponse().setResponseCode(200).setBody(TEST_JSON_INDEX_PAGE6));
+      server.enqueue(new MockResponse().setResponseCode(200).setBody(TEST_JSON_INDEX_PAGE7));
+
+      List<QueryDataBatch> results = client.queryBuilder()
+          .sql(sql)
+          .results();
+
+      int count = 0;
+      for(QueryDataBatch b : results){
+        count += b.getHeader().getRowCount();
+        b.release();
+      }
+      assertEquals(3, results.size());
+      assertEquals(6, count);
+    }
+  }
+
+  @Test
+  public void nextPagePaginationWithURLAndNoHasMore() throws Exception {
+    String sql = "SELECT * FROM `local`.`next_page2`";
+    try (MockWebServer server = startServer()) {
+
+      server.enqueue(new MockResponse().setResponseCode(200).setBody(TEST_JSON_INDEX_PAGE8));
+      server.enqueue(new MockResponse().setResponseCode(200).setBody(TEST_JSON_INDEX_PAGE9));
+
+      List<QueryDataBatch> results = client.queryBuilder()
+          .sql(sql)
+          .results();
+
+      int count = 0;
+      for(QueryDataBatch b : results){
+        count += b.getHeader().getRowCount();
+        b.release();
+      }
+      assertEquals(2, results.size());
+      assertEquals(4, count);
+    }
+  }
+
+  @Test
+  public void nextPagePaginationWithPathAndNoHasMore() throws Exception {
+    String sql = "SELECT * FROM `local`.`next_page2`";
+    try (MockWebServer server = startServer()) {
+
+      server.enqueue(new MockResponse().setResponseCode(200).setBody(TEST_JSON_INDEX_PAGE10));
+      server.enqueue(new MockResponse().setResponseCode(200).setBody(TEST_JSON_INDEX_PAGE11));
+      server.enqueue(new MockResponse().setResponseCode(200).setBody(TEST_JSON_INDEX_PAGE12));
+
+      List<QueryDataBatch> results = client.queryBuilder()
+          .sql(sql)
+          .results();
+
+      int count = 0;
+      for(QueryDataBatch b : results){
+        count += b.getHeader().getRowCount();
+        b.release();
+      }
+      assertEquals(3, results.size());
+      assertEquals(6, count);
+    }
+  }
+
   @Test
   public void jsonQueryWithoutHasMore() throws Exception {
     String sql = "SELECT * FROM `local`.`nested_keyset` LIMIT 4";
