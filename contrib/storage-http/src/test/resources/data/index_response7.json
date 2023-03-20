@@ -1,0 +1,15 @@
+{
+  "has-more": false,
+  "offset": 115279791,
+  "nextPage": null,
+  "companies": [
+    {
+      "portalId": 625155,
+      "companyId": 1152005636
+    },
+    {
+      "portalId": 625315,
+      "companyId": 1152479791
+    }
+  ]
+}
