@@ -34,9 +34,11 @@ import org.apache.ws.commons.schema.walker.XmlSchemaVisitor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.Locale;
 import java.util.Stack;
 
+/**
+ * This class transforms an XSD schema into a Drill Schema.
+ */
 public class DrillXSDSchemaVisitor implements XmlSchemaVisitor {
   private static final Logger logger = LoggerFactory.getLogger(DrillXSDSchemaVisitor.class);
   private final SchemaBuilder builder;
@@ -64,12 +66,15 @@ public class DrillXSDSchemaVisitor implements XmlSchemaVisitor {
       mapBuilderStack.push(currentMapBuilder);
       nestingLevel++;
     } else {
+      // If the field is a scalar, simply add it to the schema.
       MinorType dataType = XSDSchemaUtils.getDrillDataType(xmlSchemaTypeInfo.getBaseType().name());
       if (currentMapBuilder == null) {
         // If the current map is null, it means we are not in a nested construct
+        logger.debug("Adding {} to root element.", xmlSchemaElement.getName());
         builder.addNullable(xmlSchemaElement.getName(), dataType);
       } else {
         // Otherwise, write to the current map builder
+        logger.debug("Adding {} to map.", xmlSchemaElement.getName());
         currentMapBuilder.addNullable(xmlSchemaElement.getName(), dataType);
       }
     }
@@ -127,17 +132,16 @@ public class DrillXSDSchemaVisitor implements XmlSchemaVisitor {
 
   @Override
   public void onExitSequenceGroup(XmlSchemaSequence xmlSchemaSequence) {
-    logger.debug("Leaving map: {}", xmlSchemaSequence);
+    logger.debug("Leaving map: {} {}", currentMapBuilder.toString(), nestingLevel);
     if (currentMapBuilder != null) {
       if (nestingLevel > 1) {
         currentMapBuilder.resumeMap();
         currentMapBuilder = mapBuilderStack.pop();
       } else {
-        // Root level
-        currentMapBuilder.resumeSchema();
-
         // Stack should be empty at this point.
         currentMapBuilder = mapBuilderStack.pop();
+        // Root level
+        currentMapBuilder.resumeSchema();
       }
       nestingLevel--;
     }

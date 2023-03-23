@@ -74,9 +74,8 @@ public class XSDSchemaUtils {
     schemaCollection.read(new StreamSource(inputStream));
 
     DrillXSDSchemaVisitor schemaVisitor = new DrillXSDSchemaVisitor(new SchemaBuilder());
-    XmlSchemaWalker walker = new XmlSchemaWalker(schemaCollection, schemaVisitor);
-
     XmlSchema[] schemas = schemaCollection.getXmlSchemas();
+    XmlSchemaWalker walker = new XmlSchemaWalker(schemaCollection, schemaVisitor);
     walker.walk((XmlSchemaElement) schemas[0].getItems().get(0));
 
     return schemaVisitor.getDrillSchema();
@@ -113,7 +112,6 @@ public class XSDSchemaUtils {
           XmlSchemaElement element = (XmlSchemaElement) schemaObject;
           System.out.println(element.getName());
         }
-
       }
     }
   }
