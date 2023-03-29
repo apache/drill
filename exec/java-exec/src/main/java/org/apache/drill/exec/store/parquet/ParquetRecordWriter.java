@@ -30,6 +30,7 @@ import java.util.NoSuchElementException;
 import java.util.stream.Collectors;
 
 import org.apache.commons.collections4.CollectionUtils;
+import org.apache.drill.common.AutoCloseables;
 import org.apache.drill.common.exceptions.DrillRuntimeException;
 import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.common.types.TypeProtos;
@@ -491,8 +492,16 @@ public class ParquetRecordWriter extends ParquetOutputRecordWriter {
         flushParquetFileWriter();
       }
     } finally {
-      store.close();
-      pageStore.close();
+      AutoCloseables.closeSilently(pageStore);
+
+      // ColumnWriteStore doesn't implement AutoCloseable so a manual safe
+      // closure must be written.
+      try {
+        store.close();
+      } catch (Exception e) {
+        logger.warn("Error closing {}", store, e);
+      }
+
       codecFactory.release();
 
       store = null;

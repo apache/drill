@@ -59,6 +59,7 @@ public final class ExecConstants {
   public static final String BIT_RETRY_DELAY = "drill.exec.rpc.bit.server.retry.delay";
   public static final String BIT_TIMEOUT = "drill.exec.bit.timeout";
   public static final String SERVICE_NAME = "drill.exec.cluster-id";
+  public static final String RPC_BIND_ADDR = "drill.exec.rpc.bind_addr";
   public static final String INITIAL_BIT_PORT = "drill.exec.rpc.bit.server.port";
   public static final String INITIAL_DATA_PORT = "drill.exec.rpc.bit.server.dataport";
   public static final String BIT_RPC_TIMEOUT = "drill.exec.rpc.bit.timeout";
@@ -222,6 +223,7 @@ public final class ExecConstants {
   public static final String HTTP_ENABLE = "drill.exec.http.enabled";
   public static final String HTTP_MAX_PROFILES = "drill.exec.http.max_profiles";
   public static final String HTTP_PROFILES_PER_PAGE = "drill.exec.http.profiles_per_page";
+  public static final String HTTP_BIND_ADDR = "drill.exec.http.bind_addr";
   public static final String HTTP_PORT = "drill.exec.http.port";
   public static final String HTTP_PORT_HUNT = "drill.exec.http.porthunt";
   public static final String HTTP_JETTY_SERVER_DUMP_AFTER_START = "drill.exec.http.jetty.server.dumpAfterStart";

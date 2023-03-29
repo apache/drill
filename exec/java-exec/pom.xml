@@ -936,7 +936,7 @@
           </execution>
         </executions>
       </plugin>
-      <plugin> <!-- generate the parser (Parser.jj is itself generated wit fmpp above) -->
+      <plugin> <!-- generate the parser (Parser.jj is itself generated with fmpp above) -->
         <groupId>org.codehaus.mojo</groupId>
         <artifactId>javacc-maven-plugin</artifactId>
         <version>2.6</version>

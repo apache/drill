@@ -61,6 +61,9 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 public class TestBitRpc extends ExecTest {
+
+  private static final String BIND_ADDR = "127.0.0.1";
+
   @Test
   public void testConnectionBackpressure() throws Exception {
     final WorkerBee bee = mock(WorkerBee.class);
@@ -80,7 +83,7 @@ public class TestBitRpc extends ExecTest {
         new DataServerRequestHandler(workBus, bee));
     DataServer server = new DataServer(config);
 
-    port = server.bind(port, true);
+    port = server.bind(BIND_ADDR, port, true);
     DrillbitEndpoint ep = DrillbitEndpoint.newBuilder().setAddress("localhost").setDataPort(port).build();
     DataConnectionManager manager = new DataConnectionManager(ep, config);
     DataTunnel tunnel = new DataTunnel(manager);
@@ -113,7 +116,7 @@ public class TestBitRpc extends ExecTest {
             new DataServerRequestHandler(workBus, bee));
     DataServer server = new DataServer(config);
 
-    port = server.bind(port, true);
+    port = server.bind(BIND_ADDR, port, true);
     DrillbitEndpoint ep = DrillbitEndpoint.newBuilder().setAddress("localhost").setDataPort(port).build();
     DataConnectionManager manager = new DataConnectionManager(ep, config);
     DataTunnel tunnel = new DataTunnel(manager);
