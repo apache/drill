@@ -189,11 +189,11 @@ public abstract class BasicServer<T extends EnumLite, SC extends ServerConnectio
     return null;
   }
 
-  public int bind(final int initialPort, boolean allowPortHunting) {
+  public int bind(String bindAddr, final int initialPort, boolean allowPortHunting) {
     int port = initialPort - 1;
     while (true) {
       try {
-        b.bind(++port).sync();
+        b.bind(bindAddr, ++port).sync();
         break;
       } catch (Exception e) {
         // TODO(DRILL-3026):  Revisit:  Exception is not (always) BindException.

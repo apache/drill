@@ -81,6 +81,7 @@ import static org.mockito.Mockito.when;
 @Category(SecurityTest.class)
 public class TestBitBitKerberos extends ClusterTest {
   private static KerberosHelper krbHelper;
+  private static final String BIND_ADDR = "127.0.0.1";
 
   private int port = 1234;
 
@@ -172,7 +173,7 @@ public class TestBitBitKerberos extends ClusterTest {
         new DataServerRequestHandler(workBus, bee));
     DataServer server = new DataServer(config);
 
-    port = server.bind(port, true);
+    port = server.bind(BIND_ADDR, port, true);
     DrillbitEndpoint ep = DrillbitEndpoint.newBuilder().setAddress("localhost").setDataPort(port).build();
     DataConnectionManager connectionManager = new DataConnectionManager(ep, config);
     DataTunnel tunnel = new DataTunnel(connectionManager);
@@ -218,7 +219,7 @@ public class TestBitBitKerberos extends ClusterTest {
         new DataConnectionConfig(c2.getAllocator(), c2, new DataServerRequestHandler(workBus, bee));
       final DataServer server = new DataServer(config);
 
-      port = server.bind(port, true);
+      port = server.bind(BIND_ADDR, port, true);
       DrillbitEndpoint ep = DrillbitEndpoint.newBuilder().setAddress("localhost").setDataPort(port).build();
       final DataConnectionManager connectionManager = new DataConnectionManager(ep, config);
       final DataTunnel tunnel = new DataTunnel(connectionManager);
@@ -265,7 +266,7 @@ public class TestBitBitKerberos extends ClusterTest {
         new DataServerRequestHandler(workBus, bee));
       final DataServer server = new DataServer(config);
 
-      port = server.bind(port, true);
+      port = server.bind(BIND_ADDR, port, true);
       final DrillbitEndpoint ep = DrillbitEndpoint.newBuilder().setAddress("localhost").setDataPort(port).build();
       final DataConnectionManager connectionManager = new DataConnectionManager(ep, config);
       final DataTunnel tunnel = new DataTunnel(connectionManager);
