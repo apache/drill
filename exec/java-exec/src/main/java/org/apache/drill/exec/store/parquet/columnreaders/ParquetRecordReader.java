@@ -231,7 +231,14 @@ public class ParquetRecordReader extends CommonParquetRecordReader {
         "\nRow group index: " + rowGroupIndex +
         "\nRecords to read: " + numRecordsToRead, e);
     } finally {
-      parquetReaderStats.timeProcess.addAndGet(timer.elapsed(TimeUnit.NANOSECONDS));
+      if (parquetReaderStats != null) {
+        parquetReaderStats.timeProcess.addAndGet(timer.elapsed(TimeUnit.NANOSECONDS));
+      } else {
+        logger.warn(
+          "Cannot log batch read timing because no Parquet reader stats tracker " +
+          "is available (probably due to an earlier error during query execution)."
+        );
+      }
     }
   }
 

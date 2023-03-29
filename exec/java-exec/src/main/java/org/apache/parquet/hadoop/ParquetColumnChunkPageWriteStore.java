@@ -57,7 +57,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 @InterfaceAudience.Private
-public class ParquetColumnChunkPageWriteStore implements PageWriteStore, BloomFilterWriteStore, Closeable {
+public class ParquetColumnChunkPageWriteStore implements PageWriteStore, BloomFilterWriteStore,
+AutoCloseable {
   private static final Logger LOG = LoggerFactory.getLogger(ParquetColumnChunkPageWriteStore.class);
 
   private static ParquetMetadataConverter parquetMetadataConverter = new ParquetMetadataConverter();
