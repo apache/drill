@@ -70,7 +70,7 @@ import org.slf4j.LoggerFactory;
  * invariant here is that there is space for at least one more page in the queue before the Future read task
  * is submitted to the pool). This sequence is important. Not doing so can lead to deadlocks - producer
  * threads may block on putting data into the queue which is full while the consumer threads might be
- * blocked trying to read from a queue that has no data.
+ * blocked trying to read from a queue that has no /data.
  * The first request to the page reader can be either to load a dictionary page or a data page; this leads
  * to the rather odd looking code in the constructor since the parent PageReader calls
  * loadDictionaryIfExists in the constructor.
@@ -305,6 +305,7 @@ class AsyncPageReader extends PageReader {
           pageHeader.compressed_page_size
         );
         skip(pageHeader.compressed_page_size);
+        readStatus.getPageData().release();
         return;
       }
 
@@ -325,6 +326,7 @@ class AsyncPageReader extends PageReader {
         default:
           logger.warn("skipping page of type {} of size {}", pageHeader.getType(), pageHeader.compressed_page_size);
           skip(pageHeader.compressed_page_size);
+          readStatus.getPageData().release();
       }
     } catch (InterruptedException e) {
       Thread.currentThread().interrupt();
