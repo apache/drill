@@ -18,11 +18,15 @@
 
 package org.apache.drill.exec.store.xml.xsd;
 
+import org.apache.drill.common.types.TypeProtos.MinorType;
 import org.apache.drill.common.util.DrillFileUtils;
+import org.apache.drill.exec.record.metadata.SchemaBuilder;
 import org.apache.drill.exec.record.metadata.TupleMetadata;
 import org.junit.Test;
 
 import java.io.File;
+
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class TestXSDSchema {
 
@@ -30,7 +34,25 @@ public class TestXSDSchema {
   public void testSimpleXSD() throws Exception {
     File simple_xsd = DrillFileUtils.getResourceAsFile("/xsd/simple.xsd");
     TupleMetadata schema = XSDSchemaUtils.getSchema(simple_xsd.getPath());
-    System.out.println(schema);
 
+    TupleMetadata expectedSchema  = new SchemaBuilder()
+        .addMap("shiporder")
+          .addNullable("orderperson", MinorType.VARCHAR)
+          .addMap("shipto")
+            .addNullable("name", MinorType.VARCHAR)
+            .addNullable("address", MinorType.VARCHAR)
+            .addNullable("city", MinorType.VARCHAR)
+            .addNullable("country", MinorType.VARCHAR)
+          .resumeMap()
+          .addMap("item")
+            .addNullable("title", MinorType.VARCHAR)
+            .addNullable("note", MinorType.VARCHAR)
+            .addNullable("quantity", MinorType.INT)
+            .addNullable("price", MinorType.VARDECIMAL)
+          .resumeMap()
+        .resumeSchema().buildSchema();
+    System.out.println(expectedSchema);
+    System.out.println(schema);
+    assertTrue(expectedSchema.isEquivalent(schema));
   }
 }

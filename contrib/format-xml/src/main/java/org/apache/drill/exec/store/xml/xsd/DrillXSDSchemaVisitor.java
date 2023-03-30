@@ -18,6 +18,7 @@
 
 package org.apache.drill.exec.store.xml.xsd;
 
+import org.apache.drill.common.types.TypeProtos.DataMode;
 import org.apache.drill.common.types.TypeProtos.MinorType;
 import org.apache.drill.exec.record.metadata.MapBuilder;
 import org.apache.drill.exec.record.metadata.SchemaBuilder;
@@ -58,23 +59,24 @@ public class DrillXSDSchemaVisitor implements XmlSchemaVisitor {
 
   @Override
   public void onEnterElement(XmlSchemaElement xmlSchemaElement, XmlSchemaTypeInfo xmlSchemaTypeInfo, boolean b) {
-    logger.debug("Entering element: {}", xmlSchemaElement.getName());
     if (xmlSchemaTypeInfo.getType().name().equalsIgnoreCase("COMPLEX")) {
       // Start a map here.
-      logger.debug("Found map in opening element: {}", xmlSchemaElement.getName());
       currentMapBuilder = builder.addMap(xmlSchemaElement.getName());
       mapBuilderStack.push(currentMapBuilder);
       nestingLevel++;
     } else {
       // If the field is a scalar, simply add it to the schema.
+      boolean isRepeated = xmlSchemaElement.getMaxOccurs() > 1;
       MinorType dataType = XSDSchemaUtils.getDrillDataType(xmlSchemaTypeInfo.getBaseType().name());
       if (currentMapBuilder == null) {
         // If the current map is null, it means we are not in a nested construct
-        logger.debug("Adding {} to root element.", xmlSchemaElement.getName());
-        builder.addNullable(xmlSchemaElement.getName(), dataType);
+        if (isRepeated) {
+          builder.add(xmlSchemaElement.getName(), dataType, DataMode.REPEATED);
+        } else {
+          builder.addNullable(xmlSchemaElement.getName(), dataType);
+        }
       } else {
         // Otherwise, write to the current map builder
-        logger.debug("Adding {} to map.", xmlSchemaElement.getName());
         currentMapBuilder.addNullable(xmlSchemaElement.getName(), dataType);
       }
     }
@@ -97,32 +99,32 @@ public class DrillXSDSchemaVisitor implements XmlSchemaVisitor {
 
   @Override
   public void onEnterSubstitutionGroup(XmlSchemaElement xmlSchemaElement) {
-    logger.debug("Enter substitution group: {}", xmlSchemaElement.getName());
+    // no op
   }
 
   @Override
   public void onExitSubstitutionGroup(XmlSchemaElement xmlSchemaElement) {
-    logger.debug("Leaving substitution group: {}", xmlSchemaElement.getName());
+    // no op
   }
 
   @Override
   public void onEnterAllGroup(XmlSchemaAll xmlSchemaAll) {
-    logger.debug("Enter all group");
+    // no op
   }
 
   @Override
   public void onExitAllGroup(XmlSchemaAll xmlSchemaAll) {
-    logger.debug("Leaving all group");
+    // no op
   }
 
   @Override
   public void onEnterChoiceGroup(XmlSchemaChoice xmlSchemaChoice) {
-
+    // no op
   }
 
   @Override
   public void onExitChoiceGroup(XmlSchemaChoice xmlSchemaChoice) {
-
+    // no op
   }
 
   @Override

@@ -25,26 +25,17 @@ import org.apache.drill.shaded.guava.com.google.common.collect.ImmutableMap;
 import org.apache.ws.commons.schema.XmlSchema;
 import org.apache.ws.commons.schema.XmlSchemaCollection;
 import org.apache.ws.commons.schema.XmlSchemaElement;
-import org.apache.ws.commons.schema.XmlSchemaObject;
+
 import org.apache.ws.commons.schema.walker.XmlSchemaWalker;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import javax.xml.transform.stream.StreamSource;
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.UnsupportedEncodingException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
-import java.util.List;
 
 public class XSDSchemaUtils {
-  private static final Logger logger = LoggerFactory.getLogger(XSDSchemaUtils.class);
-
   private static final MinorType DEFAULT_TYPE = MinorType.VARCHAR;
-
 
   public static final ImmutableMap<String, MinorType> XML_TYPE_MAPPINGS = ImmutableMap.<String, MinorType>builder()
     .put("BASE64BINARY", MinorType.VARBINARY)
@@ -60,11 +51,22 @@ public class XSDSchemaUtils {
     .put("TIME", MinorType.TIME)
     .build();
 
+  /**
+   * This function is used for testing, but accepts a XSD file as input
+   * @param filename A {@link String} containing an XSD file.
+   * @return A {@link TupleMetadata} containing a Drill representation of the XSD schema.
+   * @throws IOException If anything goes wrong.
+   */
   public static TupleMetadata getSchema(String filename) throws IOException {
     InputStream inputStream = Files.newInputStream(Paths.get(filename));
     return processSchema(inputStream);
   }
 
+  /**
+   * Returns a {@link TupleMetadata} of the schema from an XSD file from an InputStream.
+   * @param inputStream A {@link InputStream} containing an XSD file.
+   * @return A {@link TupleMetadata} of the schema from the XSD file.
+   */
   public static TupleMetadata getSchema(InputStream inputStream) {
     return processSchema(inputStream);
   }
@@ -96,23 +98,6 @@ public class XSDSchemaUtils {
       }
     } catch (NullPointerException e) {
       return DEFAULT_TYPE;
-    }
-  }
-
-
-  public static void getDrillSchema(XmlSchema[] schema) throws UnsupportedEncodingException {
-    SchemaBuilder drillSchemaBuilder = new SchemaBuilder();
-
-    // Iterate over schema elements
-    for (XmlSchema currentElement : schema) {
-      List<XmlSchemaObject> schemaObjects = currentElement.getItems();
-
-      for (XmlSchemaObject schemaObject : schemaObjects) {
-        if (schemaObject instanceof XmlSchemaElement) {
-          XmlSchemaElement element = (XmlSchemaElement) schemaObject;
-          System.out.println(element.getName());
-        }
-      }
     }
   }
 }
