@@ -21,6 +21,7 @@ import static org.apache.parquet.column.Encoding.valueOf;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
+import java.util.Optional;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.ExecutionException;
@@ -305,7 +306,7 @@ class AsyncPageReader extends PageReader {
           pageHeader.compressed_page_size
         );
         skip(pageHeader.compressed_page_size);
-        readStatus.getPageData().release();
+        Optional.ofNullable(readStatus.getPageData()).map(DrillBuf::release);
         return;
       }
 
@@ -326,7 +327,7 @@ class AsyncPageReader extends PageReader {
         default:
           logger.warn("skipping page of type {} of size {}", pageHeader.getType(), pageHeader.compressed_page_size);
           skip(pageHeader.compressed_page_size);
-          readStatus.getPageData().release();
+          Optional.ofNullable(readStatus.getPageData()).map(DrillBuf::release);
       }
     } catch (InterruptedException e) {
       Thread.currentThread().interrupt();

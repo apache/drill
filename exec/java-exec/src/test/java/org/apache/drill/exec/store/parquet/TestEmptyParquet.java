@@ -416,10 +416,9 @@ public class TestEmptyParquet extends ClusterTest {
   }
 
   /**
-   * Test a Parquet file containing a zero-byte dictionary page, c.f.
-   * DRILL-8023.
+   * Test a Parquet file containing a zero-byte dictionary page.
    */
-  @Test
+  @Test // DRILL-8023
   public void testEmptyDictPage() throws Exception {
     try {
       client.alterSession(ExecConstants.PARQUET_NEW_RECORD_READER, false);
