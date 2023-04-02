@@ -178,7 +178,7 @@
     <repository>
       <id>conjars</id>
       <name>Conjars</name>
-      <url>https://conjars.org/repo</url>
+      <url>https://conjars.wensel.net/repo/</url>
       <layout>default</layout>
       <releases>
         <enabled>true</enabled>
