@@ -156,8 +156,9 @@ public class WebServer implements AutoCloseable {
 
     final int acceptors = config.getInt(ExecConstants.HTTP_JETTY_SERVER_ACCEPTORS);
     final int selectors = config.getInt(ExecConstants.HTTP_JETTY_SERVER_SELECTORS);
+    String bindAddr = config.getString(ExecConstants.HTTP_BIND_ADDR);
     int port = config.getInt(ExecConstants.HTTP_PORT);
-    ServerConnector connector = createConnector(port, acceptors, selectors);
+    ServerConnector connector = createConnector(bindAddr, port, acceptors, selectors);
 
     final int handlers = config.getInt(ExecConstants.HTTP_JETTY_SERVER_HANDLERS);
     threadPool.setMaxThreads(handlers + connector.getAcceptors() + connector.getSelectorManager().getSelectorCount());
@@ -310,7 +311,7 @@ public class WebServer implements AutoCloseable {
 
   public int getPort() {
     if (!isRunning()) {
-      throw new UnsupportedOperationException("Http is not enabled");
+      throw new UnsupportedOperationException("HTTP server is not enabled");
     }
     return ((ServerConnector)embeddedJetty.getConnectors()[0]).getPort();
   }
@@ -319,16 +320,21 @@ public class WebServer implements AutoCloseable {
     return (embeddedJetty != null && embeddedJetty.getConnectors().length == 1);
   }
 
-  private ServerConnector createConnector(int port, int acceptors, int selectors) throws Exception {
+  private ServerConnector createConnector(
+      String bindAddr,
+      int port,
+      int acceptors,
+      int selectors
+  ) throws Exception {
     final ServerConnector serverConnector;
     if (config.getBoolean(ExecConstants.HTTP_ENABLE_SSL)) {
       try {
-        serverConnector = createHttpsConnector(port, acceptors, selectors);
+        serverConnector = createHttpsConnector(bindAddr, port, acceptors, selectors);
       } catch (DrillException e) {
         throw new DrillbitStartupException(e.getMessage(), e);
       }
     } else {
-      serverConnector = createHttpConnector(port, acceptors, selectors);
+      serverConnector = createHttpConnector(bindAddr, port, acceptors, selectors);
     }
 
     return serverConnector;
@@ -341,8 +347,13 @@ public class WebServer implements AutoCloseable {
    *
    * @return Initialized {@link ServerConnector} for HTTPS connections.
    */
-  private ServerConnector createHttpsConnector(int port, int acceptors, int selectors) throws Exception {
-    logger.info("Setting up HTTPS connector for web server");
+  private ServerConnector createHttpsConnector(
+      String bindAddr,
+      int port,
+      int acceptors,
+      int selectors
+  ) throws Exception {
+    logger.info("Setting up HTTPS connector for web server at {}:{}", bindAddr, port);
     SslContextFactory sslContextFactory = new SslContextFactoryConfigurator(config,
         workManager.getContext().getEndpoint().getAddress())
         .configureNewSslContextFactory();
@@ -354,6 +365,7 @@ public class WebServer implements AutoCloseable {
         null, null, null, acceptors, selectors,
         new SslConnectionFactory(sslContextFactory, HttpVersion.HTTP_1_1.asString()),
         new HttpConnectionFactory(httpsConfig));
+    sslConnector.setHost(bindAddr);
     sslConnector.setPort(port);
 
     return sslConnector;
@@ -364,10 +376,11 @@ public class WebServer implements AutoCloseable {
    *
    * @return Initialized {@link ServerConnector} instance for HTTP connections.
    */
-  private ServerConnector createHttpConnector(int port, int acceptors, int selectors) {
-    logger.info("Setting up HTTP connector for web server");
+  private ServerConnector createHttpConnector(String bindAddr, int port, int acceptors, int selectors) {
+    logger.info("Setting up HTTP connector for web server at {}:{}", bindAddr, port);
     final ServerConnector httpConnector =
         new ServerConnector(embeddedJetty, null, null, null, acceptors, selectors, new HttpConnectionFactory(baseHttpConfig()));
+    httpConnector.setHost(bindAddr);
     httpConnector.setPort(port);
 
     return httpConnector;
