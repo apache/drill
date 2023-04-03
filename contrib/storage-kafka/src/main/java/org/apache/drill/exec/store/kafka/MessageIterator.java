@@ -33,7 +33,7 @@ import org.apache.kafka.common.TopicPartition;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import org.apache.drill.shaded.guava.com.google.common.base.Stopwatch;
+import com.google.common.base.Stopwatch;
 
 
 public class MessageIterator implements Iterator<ConsumerRecord<byte[], byte[]>>, AutoCloseable {

@@ -23,7 +23,7 @@ import org.apache.drill.exec.exception.DrillbitStartupException;
 import org.apache.drill.exec.server.Drillbit;
 import org.slf4j.Logger;
 
-import org.apache.drill.shaded.guava.com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableList;
 
 /**
  * Base class for Drill system tests.

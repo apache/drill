@@ -29,8 +29,8 @@ import org.apache.drill.exec.store.parquet.ParquetReaderConfig;
 import org.apache.drill.exec.util.DrillFileSystemUtil;
 import org.apache.drill.metastore.metadata.RowGroupMetadata;
 import org.apache.drill.metastore.metadata.TableMetadataProvider;
-import org.apache.drill.shaded.guava.com.google.common.collect.LinkedListMultimap;
-import org.apache.drill.shaded.guava.com.google.common.collect.Multimap;
+import com.google.common.collect.LinkedListMultimap;
+import com.google.common.collect.Multimap;
 import org.apache.hadoop.fs.Path;
 
 import java.io.IOException;

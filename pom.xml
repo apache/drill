@@ -1069,11 +1069,6 @@
     </dependency>
 
     <dependency>
-      <groupId>org.apache.drill</groupId>
-      <artifactId>drill-shaded-guava</artifactId>
-    </dependency>
-
-    <dependency>
       <groupId>org.slf4j</groupId>
       <artifactId>slf4j-api</artifactId>
       <version>${slf4j.version}</version>
@@ -1288,11 +1283,6 @@
             <groupId>com.google.protobuf</groupId>
           </exclusion>
         </exclusions>
-      </dependency>
-      <dependency>
-        <groupId>org.apache.drill</groupId>
-        <artifactId>drill-shaded-guava</artifactId>
-        <version>${shaded.guava.version}</version>
       </dependency>
       <dependency>
         <groupId>com.google.guava</groupId>

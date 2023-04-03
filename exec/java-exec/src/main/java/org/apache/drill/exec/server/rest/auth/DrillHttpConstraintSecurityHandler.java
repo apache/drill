@@ -18,7 +18,7 @@
 package org.apache.drill.exec.server.rest.auth;
 
 import org.apache.drill.exec.rpc.security.plain.PlainFactory;
-import org.apache.drill.shaded.guava.com.google.common.collect.ImmutableSet;
+import com.google.common.collect.ImmutableSet;
 import org.apache.drill.common.exceptions.DrillException;
 import org.apache.drill.exec.server.DrillbitContext;
 import org.eclipse.jetty.security.ConstraintMapping;

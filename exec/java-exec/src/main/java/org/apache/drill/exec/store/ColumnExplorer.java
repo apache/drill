@@ -40,8 +40,8 @@ import org.apache.drill.exec.util.Utilities;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 
-import org.apache.drill.shaded.guava.com.google.common.collect.Lists;
-import org.apache.drill.shaded.guava.com.google.common.io.Files;
+import com.google.common.collect.Lists;
+import com.google.common.io.Files;
 
 public class ColumnExplorer {
 

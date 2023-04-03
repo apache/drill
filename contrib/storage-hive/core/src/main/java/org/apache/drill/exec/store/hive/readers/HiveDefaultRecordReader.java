@@ -51,7 +51,7 @@ import org.apache.drill.exec.store.hive.writers.HiveValueWriterFactory;
 import org.apache.drill.exec.vector.AllocationHelper;
 import org.apache.drill.exec.vector.ValueVector;
 import org.apache.drill.exec.vector.complex.impl.VectorContainerWriter;
-import org.apache.drill.shaded.guava.com.google.common.util.concurrent.ListenableFuture;
+import com.google.common.util.concurrent.ListenableFuture;
 import org.apache.hadoop.hive.conf.HiveConf;
 import org.apache.hadoop.hive.metastore.api.FieldSchema;
 import org.apache.hadoop.hive.metastore.api.StorageDescriptor;

@@ -33,7 +33,7 @@ import org.junit.Assert;
 import org.junit.Assume;
 import org.junit.BeforeClass;
 
-import org.apache.drill.shaded.guava.com.google.common.collect.Maps;
+import com.google.common.collect.Maps;
 
 import static org.apache.drill.exec.store.kafka.KafkaMessageGenerator.SCHEMA_REGISTRY_URL;
 

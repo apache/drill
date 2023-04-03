@@ -17,7 +17,7 @@
  */
 package org.apache.drill.exec.store.iceberg.snapshot;
 
-import org.apache.drill.shaded.guava.com.google.common.base.Preconditions;
+import com.google.common.base.Preconditions;
 
 public class SnapshotFactory {
 

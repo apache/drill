@@ -23,7 +23,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.ObjectReader;
 import com.fasterxml.jackson.databind.ObjectWriter;
 import org.apache.drill.common.util.JacksonUtils;
-import org.apache.drill.shaded.guava.com.google.common.base.Objects;
+import com.google.common.base.Objects;
 
 public class JacksonSerializer<T> implements InstanceSerializer<T> {
   private static final ObjectMapper DEFAULT_MAPPER = JacksonUtils.createObjectMapper();

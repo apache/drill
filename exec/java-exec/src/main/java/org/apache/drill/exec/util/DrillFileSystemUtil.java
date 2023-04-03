@@ -18,7 +18,7 @@
 package org.apache.drill.exec.util;
 
 import org.apache.drill.exec.store.dfs.DrillFileSystem;
-import org.apache.drill.shaded.guava.com.google.common.base.Strings;
+import com.google.common.base.Strings;
 import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;

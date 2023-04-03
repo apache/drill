@@ -24,9 +24,9 @@ import java.util.concurrent.TimeUnit;
 
 import org.apache.calcite.schema.Schema;
 import org.apache.drill.exec.store.hive.HiveReadEntry;
-import org.apache.drill.shaded.guava.com.google.common.base.Strings;
-import org.apache.drill.shaded.guava.com.google.common.cache.CacheBuilder;
-import org.apache.drill.shaded.guava.com.google.common.cache.LoadingCache;
+import com.google.common.base.Strings;
+import com.google.common.cache.CacheBuilder;
+import com.google.common.cache.LoadingCache;
 import org.apache.hadoop.hive.conf.HiveConf;
 import org.apache.thrift.TException;
 import org.slf4j.Logger;

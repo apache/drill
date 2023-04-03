@@ -20,7 +20,7 @@ package org.apache.drill.metastore.iceberg.schema;
 import org.apache.drill.metastore.MetastoreColumn;
 import org.apache.drill.metastore.MetastoreFieldDefinition;
 import org.apache.drill.metastore.iceberg.exceptions.IcebergMetastoreException;
-import org.apache.drill.shaded.guava.com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableMap;
 import org.apache.iceberg.PartitionSpec;
 import org.apache.iceberg.Schema;
 import org.apache.iceberg.types.Types;

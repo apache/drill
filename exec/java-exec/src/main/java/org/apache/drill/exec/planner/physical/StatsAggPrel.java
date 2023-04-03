@@ -29,7 +29,7 @@ import org.apache.drill.exec.physical.config.StatisticsAggregate;
 import org.apache.drill.exec.planner.common.DrillRelNode;
 import org.apache.drill.exec.planner.physical.visitor.PrelVisitor;
 import org.apache.drill.exec.record.BatchSchema.SelectionVectorMode;
-import org.apache.drill.shaded.guava.com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableList;
 
 public class StatsAggPrel extends SingleRel implements DrillRelNode, Prel {
 

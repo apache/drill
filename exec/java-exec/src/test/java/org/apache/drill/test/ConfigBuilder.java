@@ -27,7 +27,7 @@ import org.apache.drill.exec.memory.BoundsChecking;
 import org.apache.drill.exec.physical.impl.BaseRootExec;
 import org.apache.drill.exec.server.options.OptionDefinition;
 import org.apache.drill.exec.server.options.SystemOptionManager;
-import org.apache.drill.shaded.guava.com.google.common.primitives.Primitives;
+import com.google.common.primitives.Primitives;
 
 import java.util.Map.Entry;
 import java.util.Properties;

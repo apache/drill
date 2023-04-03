@@ -23,7 +23,7 @@ import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
 import org.apache.drill.exec.store.mock.MockSubScanPOP;
-import org.apache.drill.shaded.guava.com.google.common.collect.Lists;
+import com.google.common.collect.Lists;
 
 import org.apache.drill.categories.VectorTest;
 import org.apache.drill.common.config.DrillConfig;
@@ -47,8 +47,8 @@ import org.apache.drill.exec.server.DrillbitContext;
 import org.apache.drill.exec.vector.ValueVector;
 import org.junit.Test;
 
-import org.apache.drill.shaded.guava.com.google.common.base.Charsets;
-import org.apache.drill.shaded.guava.com.google.common.io.Files;
+import com.google.common.base.Charsets;
+import com.google.common.io.Files;
 import org.junit.experimental.categories.Category;
 import org.mockito.Mockito;
 

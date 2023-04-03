@@ -44,7 +44,7 @@ import org.apache.hadoop.hbase.client.Connection;
 import org.apache.hadoop.hbase.client.ConnectionFactory;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import org.apache.drill.shaded.guava.com.google.common.collect.ImmutableSet;
+import com.google.common.collect.ImmutableSet;
 import com.mapr.db.index.IndexDesc;
 import com.mapr.fs.tables.TableProperties;
 import org.slf4j.Logger;

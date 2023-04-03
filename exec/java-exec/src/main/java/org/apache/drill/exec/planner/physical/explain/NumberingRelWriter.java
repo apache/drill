@@ -37,7 +37,7 @@ import org.apache.drill.exec.planner.physical.Prel;
 import org.apache.drill.exec.planner.physical.UnnestPrel;
 import org.apache.drill.exec.planner.physical.explain.PrelSequencer.OpId;
 
-import org.apache.drill.shaded.guava.com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableList;
 
 /**
  * Copied mostly from RelWriterImpl but customized to create user useful ids.

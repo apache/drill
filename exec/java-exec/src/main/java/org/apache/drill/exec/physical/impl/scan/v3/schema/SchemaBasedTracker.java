@@ -23,7 +23,7 @@ import org.apache.drill.exec.physical.impl.scan.v3.schema.DynamicSchemaFilter.Ro
 import org.apache.drill.exec.physical.resultSet.impl.ProjectionFilter;
 import org.apache.drill.exec.record.metadata.ColumnMetadata;
 import org.apache.drill.exec.record.metadata.TupleMetadata;
-import org.apache.drill.shaded.guava.com.google.common.base.Preconditions;
+import com.google.common.base.Preconditions;
 
 /**
  * Simple "tracker" based on a defined, fixed schema. The only resolution

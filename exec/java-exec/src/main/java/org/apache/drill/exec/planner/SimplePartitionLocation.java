@@ -17,7 +17,7 @@
  */
 package org.apache.drill.exec.planner;
 
-import org.apache.drill.shaded.guava.com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableList;
 import org.apache.hadoop.fs.Path;
 
 import java.util.List;

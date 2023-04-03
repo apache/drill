@@ -37,10 +37,10 @@ import org.apache.drill.exec.store.SchemaFactory;
 import org.apache.drill.exec.store.StoragePluginRegistry;
 import org.apache.drill.jdbc.impl.DrillConnectionImpl;
 import org.apache.drill.jdbc.impl.DrillConnectionUtils;
-import org.apache.drill.shaded.guava.com.google.common.base.Function;
-import org.apache.drill.shaded.guava.com.google.common.base.Strings;
+import com.google.common.base.Function;
+import com.google.common.base.Strings;
 
-import org.apache.drill.shaded.guava.com.google.common.collect.ImmutableSet;
+import com.google.common.collect.ImmutableSet;
 import org.apache.calcite.linq4j.Ord;
 import org.apache.drill.categories.JdbcTest;
 import org.apache.drill.common.config.DrillConfig;

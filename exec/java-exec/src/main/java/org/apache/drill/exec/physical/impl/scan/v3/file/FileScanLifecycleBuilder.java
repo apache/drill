@@ -25,7 +25,7 @@ import org.apache.drill.exec.physical.impl.scan.v3.ScanLifecycleBuilder;
 import org.apache.drill.exec.physical.impl.scan.v3.lifecycle.ScanLifecycle;
 import org.apache.drill.exec.store.dfs.easy.FileWork;
 import org.apache.drill.exec.store.schedule.CompleteFileWork.FileWorkImpl;
-import org.apache.drill.shaded.guava.com.google.common.base.Preconditions;
+import com.google.common.base.Preconditions;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.Path;
 

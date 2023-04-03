@@ -20,7 +20,7 @@ package org.apache.drill.exec.expr.fn;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.apache.drill.shaded.guava.com.google.common.collect.Lists;
+import com.google.common.collect.Lists;
 import org.apache.drill.common.FunctionNames;
 import org.apache.drill.common.expression.ErrorCollector;
 import org.apache.drill.common.expression.ErrorCollectorImpl;

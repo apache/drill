@@ -21,7 +21,7 @@ import java.util.Iterator;
 import java.util.List;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
-import org.apache.drill.shaded.guava.com.google.common.collect.Lists;
+import com.google.common.collect.Lists;
 
 import org.apache.calcite.rex.RexNode;
 import org.apache.drill.common.expression.SchemaPath;

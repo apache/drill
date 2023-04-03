@@ -19,7 +19,7 @@
 package org.apache.drill.exec.store.jdbc.writers;
 
 import org.apache.drill.exec.physical.resultSet.RowSetLoader;
-import org.apache.drill.shaded.guava.com.google.common.base.Strings;
+import com.google.common.base.Strings;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;

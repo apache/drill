@@ -36,8 +36,8 @@ import org.apache.drill.exec.vector.UInt4Vector;
 import org.apache.drill.exec.vector.ValueVector;
 import org.apache.drill.exec.vector.VectorDescriptor;
 import org.apache.drill.exec.vector.ZeroVector;
-import org.apache.drill.shaded.guava.com.google.common.base.Preconditions;
-import org.apache.drill.shaded.guava.com.google.common.collect.ObjectArrays;
+import com.google.common.base.Preconditions;
+import com.google.common.collect.ObjectArrays;
 
 import io.netty.buffer.DrillBuf;
 

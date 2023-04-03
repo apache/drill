@@ -20,7 +20,6 @@ package com.mapr.drill.maprdb.tests.index;
 
 import com.mapr.db.Admin;
 import com.mapr.db.MapRDB;
-import org.apache.drill.common.util.GuavaPatcher;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -78,8 +77,6 @@ public class TableIndexCmd {
 
 
   public static void main(String[] args) {
-    GuavaPatcher.patch();
-
     String inHost = "localhost";
     String inPort = "5181";
     String inTable = "/tmp/population";

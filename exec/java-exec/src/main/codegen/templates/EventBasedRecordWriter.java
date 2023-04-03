@@ -22,8 +22,8 @@
 
 package org.apache.drill.exec.store;
 
-import org.apache.drill.shaded.guava.com.google.common.collect.Lists;
-import org.apache.drill.shaded.guava.com.google.common.collect.Maps;
+import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
 
 import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.exec.record.VectorAccessible;

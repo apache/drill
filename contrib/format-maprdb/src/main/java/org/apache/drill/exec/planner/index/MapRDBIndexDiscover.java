@@ -60,7 +60,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import org.apache.drill.shaded.guava.com.google.common.collect.Maps;
+import com.google.common.collect.Maps;
 
 public class MapRDBIndexDiscover extends IndexDiscoverBase implements IndexDiscover {
 

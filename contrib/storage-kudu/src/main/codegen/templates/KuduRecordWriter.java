@@ -39,7 +39,7 @@ import org.apache.drill.exec.util.DecimalUtility;
 import org.apache.drill.exec.vector.*;
 import org.apache.drill.exec.vector.complex.reader.FieldReader;
 import org.apache.drill.exec.vector.complex.fn.JsonOutput;
-import org.apache.drill.shaded.guava.com.google.common.collect.Lists;
+import com.google.common.collect.Lists;
 
 import org.apache.kudu.client.*;
 import org.apache.parquet.io.api.RecordConsumer;

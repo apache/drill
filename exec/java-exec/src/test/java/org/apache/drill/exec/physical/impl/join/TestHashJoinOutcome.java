@@ -18,7 +18,7 @@
 package org.apache.drill.exec.physical.impl.join;
 
 import org.apache.drill.exec.record.metadata.TupleMetadata;
-import org.apache.drill.shaded.guava.com.google.common.collect.Lists;
+import com.google.common.collect.Lists;
 import org.apache.calcite.rel.core.JoinRelType;
 import org.apache.calcite.sql.SqlKind;
 import org.apache.drill.categories.OperatorTest;

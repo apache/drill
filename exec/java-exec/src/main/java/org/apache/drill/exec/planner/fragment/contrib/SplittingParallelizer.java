@@ -46,8 +46,8 @@ import org.apache.drill.exec.work.QueryWorkUnit;
 import org.apache.drill.exec.work.QueryWorkUnit.MinorFragmentDefn;
 import org.apache.drill.exec.work.foreman.ForemanSetupException;
 
-import org.apache.drill.shaded.guava.com.google.common.base.Preconditions;
-import org.apache.drill.shaded.guava.com.google.common.collect.Lists;
+import com.google.common.base.Preconditions;
+import com.google.common.collect.Lists;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

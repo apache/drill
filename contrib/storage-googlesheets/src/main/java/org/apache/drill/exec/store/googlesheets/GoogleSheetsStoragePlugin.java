@@ -44,8 +44,8 @@ import org.apache.drill.exec.store.SchemaConfig;
 import org.apache.drill.exec.store.base.filter.FilterPushDownUtils;
 import org.apache.drill.exec.store.googlesheets.schema.GoogleSheetsSchemaFactory;
 import org.apache.drill.exec.store.googlesheets.utils.GoogleSheetsUtils;
-import org.apache.drill.shaded.guava.com.google.common.annotations.VisibleForTesting;
-import org.apache.drill.shaded.guava.com.google.common.collect.ImmutableSet;
+import com.google.common.annotations.VisibleForTesting;
+import com.google.common.collect.ImmutableSet;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

@@ -46,8 +46,8 @@ import org.apache.drill.exec.expr.ExpressionTreeMaterializer;
 import org.apache.drill.exec.expr.fn.FunctionImplementationRegistry;
 import org.junit.Test;
 
-import org.apache.drill.shaded.guava.com.google.common.collect.ImmutableList;
-import org.apache.drill.shaded.guava.com.google.common.collect.Range;
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Range;
 import org.junit.experimental.categories.Category;
 import org.slf4j.Logger;
 

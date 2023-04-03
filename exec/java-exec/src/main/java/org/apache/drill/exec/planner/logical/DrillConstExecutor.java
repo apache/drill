@@ -18,7 +18,7 @@
 package org.apache.drill.exec.planner.logical;
 
 import org.apache.calcite.rel.type.RelDataType;
-import org.apache.drill.shaded.guava.com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableList;
 import io.netty.buffer.DrillBuf;
 import org.apache.calcite.rex.RexExecutor;
 import org.apache.calcite.util.DateString;

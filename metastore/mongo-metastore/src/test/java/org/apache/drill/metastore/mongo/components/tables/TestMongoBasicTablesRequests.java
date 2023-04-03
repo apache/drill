@@ -18,7 +18,7 @@
 package org.apache.drill.metastore.mongo.components.tables;
 
 import com.clearspring.analytics.util.Lists;
-import org.apache.drill.shaded.guava.com.google.common.collect.Maps;
+import com.google.common.collect.Maps;
 import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.exec.record.SchemaUtil;
 import org.apache.drill.metastore.components.tables.BasicTablesTransformer;

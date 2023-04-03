@@ -48,8 +48,8 @@ import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.junit.rules.ExpectedException;
 
-import org.apache.drill.shaded.guava.com.google.common.collect.Lists;
-import org.apache.drill.shaded.guava.com.google.common.collect.Maps;
+import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
 
 import static org.apache.drill.common.types.TypeProtos.MinorType.BIGINT;
 import static org.apache.drill.common.types.TypeProtos.MinorType.BIT;

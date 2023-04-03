@@ -17,7 +17,7 @@
  */
 package org.apache.drill.exec.physical.impl.join;
 
-import org.apache.drill.shaded.guava.com.google.common.collect.Lists;
+import com.google.common.collect.Lists;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

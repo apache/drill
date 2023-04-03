@@ -30,7 +30,7 @@ import org.apache.calcite.sql.SqlSelect;
 import org.apache.calcite.sql.util.SqlShuttle;
 import org.apache.calcite.sql.util.SqlVisitor;
 
-import org.apache.drill.shaded.guava.com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableMap;
 
 /**
  * Implementation of {@link SqlVisitor} that converts bracketed compound {@link SqlIdentifier}

@@ -23,8 +23,8 @@ import java.util.List;
 import java.util.Map;
 
 import org.apache.drill.common.map.CaseInsensitiveMap;
-import org.apache.drill.shaded.guava.com.google.common.base.Preconditions;
-import org.apache.drill.shaded.guava.com.google.common.collect.ImmutableList;
+import com.google.common.base.Preconditions;
+import com.google.common.collect.ImmutableList;
 
 /**
  * Implementation of a tuple name space. Tuples allow both indexed and

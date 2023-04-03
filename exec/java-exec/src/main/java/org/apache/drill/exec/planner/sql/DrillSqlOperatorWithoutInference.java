@@ -18,7 +18,7 @@
 package org.apache.drill.exec.planner.sql;
 
 import org.apache.calcite.sql.type.OperandTypes;
-import org.apache.drill.shaded.guava.com.google.common.base.Preconditions;
+import com.google.common.base.Preconditions;
 import org.apache.calcite.rel.type.RelDataType;
 import org.apache.calcite.rel.type.RelDataTypeFactory;
 import org.apache.calcite.sql.SqlCall;

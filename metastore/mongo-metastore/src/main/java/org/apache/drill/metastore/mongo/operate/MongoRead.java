@@ -23,7 +23,7 @@ import org.apache.drill.metastore.mongo.transform.FilterTransformer;
 import org.apache.drill.metastore.operate.AbstractRead;
 import org.apache.drill.metastore.operate.MetadataTypeValidator;
 import org.apache.drill.metastore.operate.Read;
-import org.apache.drill.shaded.guava.com.google.common.collect.Lists;
+import com.google.common.collect.Lists;
 import org.bson.Document;
 import org.bson.conversions.Bson;
 

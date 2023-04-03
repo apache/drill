@@ -33,7 +33,7 @@ import org.apache.drill.metastore.statistics.ColumnStatistics;
 import org.apache.drill.metastore.statistics.ColumnStatisticsKind;
 import org.apache.drill.metastore.statistics.Statistic;
 import org.apache.drill.metastore.statistics.TableStatisticsKind;
-import org.apache.drill.shaded.guava.com.google.common.base.MoreObjects;
+import com.google.common.base.MoreObjects;
 import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.Path;
 import org.slf4j.Logger;

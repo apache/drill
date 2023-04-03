@@ -18,7 +18,7 @@
 package org.apache.drill.exec.store.easy.json.parser;
 
 import org.apache.drill.exec.store.easy.json.parser.MessageParser.MessageContextException;
-import org.apache.drill.shaded.guava.com.google.common.base.Preconditions;
+import com.google.common.base.Preconditions;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

@@ -32,7 +32,7 @@ import com.carrotsearch.hppc.cursors.IntLongCursor;
 import com.carrotsearch.hppc.procedures.IntDoubleProcedure;
 import com.carrotsearch.hppc.procedures.IntLongProcedure;
 import org.apache.drill.exec.server.rest.profile.CoreOperatorType;
-import org.apache.drill.shaded.guava.com.google.common.annotations.VisibleForTesting;
+import com.google.common.annotations.VisibleForTesting;
 
 public class OperatorStats {
   protected final int operatorId;

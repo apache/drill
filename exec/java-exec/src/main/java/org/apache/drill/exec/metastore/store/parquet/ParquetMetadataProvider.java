@@ -20,7 +20,7 @@ package org.apache.drill.exec.metastore.store.parquet;
 import org.apache.drill.exec.store.dfs.ReadEntryWithPath;
 import org.apache.drill.metastore.metadata.RowGroupMetadata;
 import org.apache.drill.metastore.metadata.TableMetadataProvider;
-import org.apache.drill.shaded.guava.com.google.common.collect.Multimap;
+import com.google.common.collect.Multimap;
 import org.apache.hadoop.fs.Path;
 
 import java.util.List;

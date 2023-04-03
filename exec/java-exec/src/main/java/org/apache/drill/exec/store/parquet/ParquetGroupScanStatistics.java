@@ -30,8 +30,8 @@ import org.apache.hadoop.fs.Path;
 import org.apache.drill.metastore.statistics.ColumnStatistics;
 import org.apache.drill.metastore.statistics.ColumnStatisticsKind;
 import org.apache.drill.metastore.metadata.LocationProvider;
-import org.apache.drill.shaded.guava.com.google.common.collect.HashBasedTable;
-import org.apache.drill.shaded.guava.com.google.common.collect.Table;
+import com.google.common.collect.HashBasedTable;
+import com.google.common.collect.Table;
 
 import java.util.ArrayList;
 import java.util.Collection;

@@ -17,7 +17,7 @@
  */
 package org.apache.drill.exec.physical.impl.join;
 
-import org.apache.drill.shaded.guava.com.google.common.base.Preconditions;
+import com.google.common.base.Preconditions;
 
 /**
  * This calculator class is used when the Hash-Join_helper is not used (i.e., return size of zero)

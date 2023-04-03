@@ -31,9 +31,9 @@ import org.apache.drill.exec.record.CloseableRecordBatch;
 import org.apache.drill.exec.store.ColumnExplorer;
 import org.apache.drill.exec.store.RecordReader;
 import org.apache.drill.exec.store.dfs.DrillFileSystem;
-import org.apache.drill.shaded.guava.com.google.common.base.Functions;
-import org.apache.drill.shaded.guava.com.google.common.collect.Lists;
-import org.apache.drill.shaded.guava.com.google.common.collect.Maps;
+import com.google.common.base.Functions;
+import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
 
 /**
  * Build the original scanner based on the {@link RecordReader} interface.

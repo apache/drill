@@ -28,7 +28,7 @@ import org.apache.drill.exec.planner.physical.AggPrelBase.OperatorPhase;
 import org.apache.drill.exec.planner.physical.visitor.PrelVisitor;
 import org.apache.drill.exec.metastore.analyze.MetadataAggregateContext;
 import org.apache.drill.exec.record.BatchSchema;
-import org.apache.drill.shaded.guava.com.google.common.base.Preconditions;
+import com.google.common.base.Preconditions;
 
 import java.io.IOException;
 import java.util.Iterator;

@@ -24,7 +24,7 @@ import java.util.Map;
 import org.apache.drill.exec.physical.base.AbstractSingle;
 import org.apache.drill.exec.physical.base.PhysicalOperator;
 import org.apache.drill.exec.physical.base.PhysicalVisitor;
-import org.apache.drill.shaded.guava.com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableMap;
 
 @JsonTypeName("statistics-merge")
 public class StatisticsMerge extends AbstractSingle {

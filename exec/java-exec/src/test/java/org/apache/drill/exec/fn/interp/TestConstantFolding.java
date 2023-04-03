@@ -17,8 +17,8 @@
  */
 package org.apache.drill.exec.fn.interp;
 
-import org.apache.drill.shaded.guava.com.google.common.base.Joiner;
-import org.apache.drill.shaded.guava.com.google.common.collect.Lists;
+import com.google.common.base.Joiner;
+import com.google.common.collect.Lists;
 import org.apache.drill.PlanTestBase;
 import org.apache.drill.categories.SqlTest;
 import org.apache.drill.exec.planner.physical.PlannerSettings;
