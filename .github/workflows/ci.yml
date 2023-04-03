@@ -28,7 +28,7 @@ on: [push, pull_request]
 jobs:
   build:
     name: Main Build
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-latest
     timeout-minutes: 150
     strategy:
       matrix:
