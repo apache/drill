@@ -51,8 +51,8 @@
     <shaded.guava.version>28.2-jre</shaded.guava.version>
     <guava.version>30.1.1-jre</guava.version>
     <forkCount>1</forkCount>
-    <parquet.version>1.12.2</parquet.version>
-    <parquet.format.version>2.8.0</parquet.format.version>
+    <parquet.version>1.12.3</parquet.version>
+    <parquet.format.version>2.9.0</parquet.format.version>
     <calcite.groupId>org.apache.calcite</calcite.groupId>
     <calcite.version>1.34.0</calcite.version>
     <avatica.version>1.23.0</avatica.version>
@@ -176,21 +176,6 @@
 
   <repositories>
     <repository>
-      <id>conjars</id>
-      <name>Conjars</name>
-      <url>https://conjars.org/repo</url>
-      <layout>default</layout>
-      <releases>
-        <enabled>true</enabled>
-        <updatePolicy>never</updatePolicy>
-        <checksumPolicy>fail</checksumPolicy>
-      </releases>
-      <snapshots>
-        <enabled>false</enabled>
-      </snapshots>
-    </repository>
-
-    <repository>
       <id>mapr-releases</id>
       <url>https://repository.mapr.com/maven/</url>
       <releases>
@@ -217,11 +202,6 @@
     <repository>
       <id>jitpack.io</id>
       <url>https://jitpack.io</url>
-    </repository>
-    <repository>
-      <id>splunk-artifactory</id>
-      <name>Splunk Releases</name>
-      <url>https://splunk.jfrog.io/artifactory/ext-releases-local</url>
     </repository>
   </repositories>
 
