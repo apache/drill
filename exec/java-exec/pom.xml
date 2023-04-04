@@ -663,9 +663,7 @@
     <profile>
       <id>default-hadoop</id>
       <activation>
-        <property>
-          <name>!alt-hadoop</name>
-        </property>
+        <activeByDefault>true</activeByDefault>
       </activation>
     </profile>
     <profile>

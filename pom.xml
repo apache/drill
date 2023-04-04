@@ -819,7 +819,7 @@
         <plugin>
           <groupId>org.apache.maven.plugins</groupId>
           <artifactId>maven-compiler-plugin</artifactId>
-          <version>3.8.1</version>
+          <version>3.11.0</version>
         </plugin>
         <plugin>
           <artifactId>maven-enforcer-plugin</artifactId>
@@ -2072,9 +2072,7 @@
     <profile>
       <id>default-hadoop</id>
       <activation>
-        <property>
-          <name>!alt-hadoop</name>
-        </property>
+        <activeByDefault>true</activeByDefault>
       </activation>
       <dependencyManagement>
         <dependencies>
@@ -3884,13 +3882,9 @@
     </profile>
     <profile>
       <id>hadoop-2</id>
-      <activation>
-        <property>
-          <name>hadoop-2</name>
-        </property>
-      </activation>
       <properties>
         <hadoop.version>2.10.2</hadoop.version>
+        <alt-hadoop>hadoop-2</alt-hadoop>
       </properties>
       <dependencyManagement>
         <dependencies>
