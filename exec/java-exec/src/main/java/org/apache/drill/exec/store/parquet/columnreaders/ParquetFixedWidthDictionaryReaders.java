@@ -168,13 +168,13 @@ public class ParquetFixedWidthDictionaryReaders {
       if (recordsRequireDecoding()) {
         ValuesReader valReader = usingDictionary ? pageReader.getDictionaryValueReader() : pageReader.getValueReader();
         for (int i = 0; i < recordsReadInThisIteration; i++) {
-          valueVec.getMutator().setSafe(valuesReadInCurrentPass + i, valReader.readInteger() / 1000);
+          valueVec.getMutator().setSafe(valuesReadInCurrentPass + i, (int) (valReader.readLong() / 1000));
         }
       } else {
         int dataTypeLengthInBytes = (int) Math.ceil(dataTypeLengthInBits / 8.0);
         for (int i = 0; i < recordsReadInThisIteration; i++) {
-          int value = pageReader.pageData.getInt((int) readStartInBytes + i * dataTypeLengthInBytes);
-          valueVec.getMutator().setSafe(valuesReadInCurrentPass + i, value / 1000);
+          long value = pageReader.pageData.getLong((int) readStartInBytes + i * dataTypeLengthInBytes);
+          valueVec.getMutator().setSafe(valuesReadInCurrentPass + i, (int) (value / 1000));
         }
       }
     }
