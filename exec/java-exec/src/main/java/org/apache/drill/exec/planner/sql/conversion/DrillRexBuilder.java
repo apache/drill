@@ -65,9 +65,9 @@ class DrillRexBuilder extends RexBuilder {
    * @return Call to CAST operator
    */
   @Override
-  public RexNode makeCast(RelDataType type, RexNode exp, boolean matchNullability) {
+  public RexNode makeCast(RelDataType type, RexNode exp, boolean matchNullability, boolean safe) {
     if (matchNullability) {
-      return makeAbstractCast(type, exp);
+      return makeAbstractCast(type, exp, safe);
     }
     // for the case when BigDecimal literal has a scale or precision
     // that differs from the value from specified RelDataType, cast cannot be removed
@@ -81,11 +81,11 @@ class DrillRexBuilder extends RexBuilder {
         BigDecimal bigDecimal = (BigDecimal) value;
         DecimalUtility.checkValueOverflow(bigDecimal, precision, scale);
         if (bigDecimal.precision() != precision || bigDecimal.scale() != scale) {
-          return makeAbstractCast(type, exp);
+          return makeAbstractCast(type, exp, safe);
         }
       }
     }
-    return super.makeCast(type, exp, false);
+    return super.makeCast(type, exp, false, safe);
   }
 
   private void validatePrecisionAndScale(int precision, int scale) {
