@@ -344,10 +344,11 @@ public class ParquetTableMetadataUtils {
         case INT64:
           if (originalType == OriginalType.DECIMAL) {
             return BigInteger.valueOf(getLong(value));
+          } else if (originalType == OriginalType.TIME_MICROS) {
+            return getInt(value);
           } else {
             return getLong(value);
           }
-
         case FLOAT:
           return getFloat(value);
 
