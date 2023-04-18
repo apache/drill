@@ -5,6 +5,7 @@
 .checkstyle
 .settings/
 .idea/
+.mvn/maven.config
 TAGS
 *.log
 *.lck
@@ -28,4 +29,3 @@ exec/jdbc-all/dependency-reduced-pom.xml
 .*.html
 venv/
 tools/venv/
-

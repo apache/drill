@@ -667,10 +667,10 @@ public class TestCastFunctions extends ClusterTest {
 
   @Test
   public void testCastFloatDecimalOverflow() throws Exception {
-    String query = "select cast(i1 as DECIMAL(4, 0)) as s1 from (select cast(123456.123 as float) as i1)";
+    String query = "select cast(i1 as DECIMAL(4, 0)) as s1 from (select cast(12345.123 as float) as i1)";
 
     thrown.expect(UserRemoteException.class);
-    thrown.expectMessage(containsString("VALIDATION ERROR: Value 123456.123 overflows specified precision 4 with scale 0"));
+    thrown.expectMessage(containsString("VALIDATION ERROR: Value 12345.123 overflows specified precision 4 with scale 0"));
 
     run(query);
   }

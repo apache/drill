@@ -15,9 +15,13 @@
  * limitations under the License.
  */
 
-// TODO: Delete this file to reinstate its extraction from calcite-core.jar
-// once CALCITE-5579 is resolved and the incompatible grammar changes introduced
-// by CALCITE-5469 have been backed out. Also see: exec/java-exec/pom.xml.
+// To have Drill use this parser grammar instead of Calcite's (normally
+// in order to exclude incompatibilities that have been introduced
+// upstream), rename this file to Parser.jj, otherwise use the name
+// Parser.jj.disabled. Currently this parser grammar is in effect because of
+// CALCITE-5469 which should be resolved by CALCITE-5579 after which it can be
+// disabled. Also see the calcite-parser-grammar profile in
+// exec/java-exec/pom.xml.
 
 <@pp.dropOutputFile />
 
@@ -59,6 +63,7 @@ import org.apache.calcite.sql.SqlDynamicParam;
 import org.apache.calcite.sql.SqlExplain;
 import org.apache.calcite.sql.SqlExplainFormat;
 import org.apache.calcite.sql.SqlExplainLevel;
+import org.apache.calcite.sql.SqlFunction;
 import org.apache.calcite.sql.SqlFunctionCategory;
 import org.apache.calcite.sql.SqlHint;
 import org.apache.calcite.sql.SqlIdentifier;
@@ -5131,6 +5136,8 @@ SqlIntervalQualifier TimeUnit() : {
 |   <MINUTE> { return new SqlIntervalQualifier(TimeUnit.MINUTE, null, getPos()); }
 |   <HOUR> { return new SqlIntervalQualifier(TimeUnit.HOUR, null, getPos()); }
 |   <DAY> { return new SqlIntervalQualifier(TimeUnit.DAY, null, getPos()); }
+|   <DAYOFWEEK> { return new SqlIntervalQualifier(TimeUnit.DOW, null, getPos()); }
+|   <DAYOFYEAR> { return new SqlIntervalQualifier(TimeUnit.DOY, null, getPos()); }
 |   <DOW> { return new SqlIntervalQualifier(TimeUnit.DOW, null, getPos()); }
 |   <DOY> { return new SqlIntervalQualifier(TimeUnit.DOY, null, getPos()); }
 |   <ISODOW> { return new SqlIntervalQualifier(TimeUnit.ISODOW, null, getPos()); }
@@ -5998,11 +6005,16 @@ SqlNode BuiltinFunctionCall() :
     SqlDataTypeSpec dt;
     final SqlIntervalQualifier unit;
     final SqlNode node;
+    final SqlLiteral style; // mssql convert 'style' operand
+    final SqlFunction f;
 }
 {
     //~ FUNCTIONS WITH SPECIAL SYNTAX ---------------------------------------
     (
-        <CAST> { s = span(); }
+        (  <CAST> { f = SqlStdOperatorTable.CAST; }
+        | <SAFE_CAST> { f = SqlLibraryOperators.SAFE_CAST; }
+        )
+        { s = span(); }
         <LPAREN> AddExpression(args, ExprContext.ACCEPT_SUB_QUERY)
         <AS>
         (
@@ -6011,7 +6023,7 @@ SqlNode BuiltinFunctionCall() :
             <INTERVAL> e = IntervalQualifier() { args.add(e); }
         )
         <RPAREN> {
-            return SqlStdOperatorTable.CAST.createCall(s.end(this), args);
+            return f.createCall(s.end(this), args);
         }
     |
         <EXTRACT> { s = span(); }
@@ -6039,11 +6051,38 @@ SqlNode BuiltinFunctionCall() :
     |
         <CONVERT> { s = span(); }
         <LPAREN>
-        AddExpression(args, ExprContext.ACCEPT_SUB_QUERY)
-        <USING> name = SimpleIdentifier() { args.add(name); }
-        <RPAREN> {
-            return SqlStdOperatorTable.CONVERT.createCall(s.end(this), args);
-        }
+        (
+          // CONVERT in the form of CONVERT(x USING y)
+
+          // "AddExpression" matches INTERVAL,
+          // which can also be 1st token in args of MSSQL CONVERT
+          // So lookahead another token (to match <USING> vs. <COMMA>)
+          LOOKAHEAD(2)
+          AddExpression(args, ExprContext.ACCEPT_SUB_QUERY)
+          <USING> name = SimpleIdentifier() { args.add(name); }
+          <RPAREN> {
+              return SqlStdOperatorTable.CONVERT.createCall(s.end(this), args);
+          }
+        | // mssql CONVERT(type, val [,style])
+          (
+            dt = DataType() { args.add(dt); }
+            |
+            <INTERVAL> e = IntervalQualifier() { args.add(e); }
+          )
+          <COMMA>
+          AddExpression(args, ExprContext.ACCEPT_SUB_QUERY)
+          [
+            <COMMA>
+            (
+              style = UnsignedNumericLiteral() { args.add(style); }
+              |
+              <NULL> { args.add(SqlLiteral.createNull(getPos())); }
+            )
+          ]
+          <RPAREN> {
+            return SqlLibraryOperators.MSSQL_CONVERT.createCall(s.end(this), args);
+          }
+        )
     |
         <TRANSLATE> { s = span(); }
         <LPAREN>
@@ -7727,6 +7766,8 @@ SqlPostfixOperator PostfixRowOperator() :
 |   < DATETIME_INTERVAL_CODE: "DATETIME_INTERVAL_CODE" >
 |   < DATETIME_INTERVAL_PRECISION: "DATETIME_INTERVAL_PRECISION" >
 |   < DAY: "DAY" >
+|   < DAYOFWEEK: "DAYOFWEEK" >
+|   < DAYOFYEAR: "DAYOFYEAR" >
 |   < DAYS: "DAYS" >
 |   < DEALLOCATE: "DEALLOCATE" >
 |   < DEC: "DEC" >
@@ -8076,6 +8117,7 @@ SqlPostfixOperator PostfixRowOperator() :
 |   < ROW_NUMBER: "ROW_NUMBER" >
 |   < ROWS: "ROWS" >
 |   < RUNNING: "RUNNING" >
+|   < SAFE_CAST: "SAFE_CAST" >
 |   < SATURDAY: "SATURDAY" >
 |   < SAVEPOINT: "SAVEPOINT" >
 |   < SCALAR: "SCALAR" >
