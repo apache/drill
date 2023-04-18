@@ -208,6 +208,12 @@ public class FileMetadataCollector {
           minValue = ParquetReaderUtility.autoCorrectCorruptedDate((Integer) minValue);
           maxValue = ParquetReaderUtility.autoCorrectCorruptedDate((Integer) maxValue);
         }
+        if (isMicrosecondColumnType(columnTypeMetadata.originalType)) {
+          // DRILL-8241: truncate the min/max of microsecond columns to milliseconds, otherwise the
+          // initial scanning of files when filtering will compare to the wrong values.
+          minValue = truncateMicros(minValue);
+          maxValue = truncateMicros(maxValue);
+        }
       }
       long numNulls = stats.getNumNulls();
       Metadata_V4.ColumnMetadata_v4 columnMetadata = new Metadata_V4.ColumnMetadata_v4(columnTypeMetadata.name,
@@ -216,6 +222,18 @@ public class FileMetadataCollector {
       columnTypeMetadata.isInteresting = true;
     }
     columnTypeInfo.put(columnTypeMetadataKey, columnTypeMetadata);
+  }
+
+  private static boolean isMicrosecondColumnType(OriginalType columnType) {
+    return columnType == OriginalType.TIME_MICROS || columnType == OriginalType.TIMESTAMP_MICROS;
+  }
+
+  private static Object truncateMicros(Object microSeconds) {
+    if (microSeconds instanceof Number) {
+      return Long.valueOf(((Number) microSeconds).longValue() / 1000);
+    } else {
+      return microSeconds;
+    }
   }
 
   /**
