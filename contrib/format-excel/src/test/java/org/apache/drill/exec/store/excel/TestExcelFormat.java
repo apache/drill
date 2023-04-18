@@ -333,7 +333,7 @@ public class TestExcelFormat extends ClusterTest {
   @Test
   public void testErrorOnFormulaQuery() throws RpcException {
     String sql = "SELECT * FROM  table(cp.`excel/text-formula.xlsx` (type => 'excel', sheetName " +
-        "=> 'Sheet with Errors'))";
+        "=> 'Sheet with Errors', ignoreErrors => True))";
 
     RowSet results = client.queryBuilder().sql(sql).rowSet();
     TupleMetadata expectedSchema = new SchemaBuilder()
