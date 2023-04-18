@@ -175,6 +175,7 @@ public class ExcelBatchReader implements ManagedReader {
     final int firstColumn;
     final int lastColumn;
     final boolean allTextMode;
+    final boolean ignoreErrors;
     final String sheetName;
     final int maxArraySize;
     final int thresholdBytesForTempFiles;
@@ -187,6 +188,7 @@ public class ExcelBatchReader implements ManagedReader {
       firstColumn = plugin.getConfig().getFirstColumn();
       lastColumn = plugin.getConfig().getLastColumn();
       allTextMode = plugin.getConfig().getAllTextMode();
+      ignoreErrors = plugin.getConfig().getIgnoreErrors();
       sheetName = plugin.getConfig().getSheetName();
       maxArraySize = plugin.getConfig().getMaxArraySize();
       thresholdBytesForTempFiles = plugin.getConfig().getThresholdBytesForTempFiles();
@@ -420,7 +422,7 @@ public class ExcelBatchReader implements ManagedReader {
 
   /**
    * Helper function to get the selected sheet from the configuration
-   * @return Sheet The selected sheet
+   * @return {@link Sheet} The selected sheet
    */
   private Sheet getSheet() {
     int sheetIndex = 0;
@@ -520,7 +522,20 @@ public class ExcelBatchReader implements ManagedReader {
 
       populateColumnArray(cell, colPosition);
       if (colWriterIndex < cellWriterArray.size()) {
-        cellWriterArray.get(colWriterIndex).load(cell);
+        CellWriter writer = cellWriterArray.get(colWriterIndex);
+        try {
+          writer.load(cell);
+        } catch (NumberFormatException e) {
+          if (readerConfig.ignoreErrors) {
+            logger.warn("Error writing cell: {} {}", cell.getStringCellValue(), e.getMessage());
+            writer.writeNull();
+          } else {
+            throw UserException.dataReadError()
+                .message("Error writing data: " + e.getMessage())
+                .addContext(errorContext)
+                .build(logger);
+          }
+        }
       }
 
       colPosition++;
@@ -785,6 +800,10 @@ public class ExcelBatchReader implements ManagedReader {
     }
 
     public void load(Cell cell) {}
+
+    public void writeNull() {
+      columnWriter.setNull();
+    }
   }
 
   public class StringCellWriter extends ExcelBatchReader.CellWriter {

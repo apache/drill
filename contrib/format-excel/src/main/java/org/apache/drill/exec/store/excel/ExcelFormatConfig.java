@@ -51,6 +51,7 @@ public class ExcelFormatConfig implements FormatPluginConfig {
   private final int firstColumn;
   private final int lastColumn;
   private final boolean allTextMode;
+  private final boolean ignoreErrors;
   private final String sheetName;
   private final int maxArraySize;
   private final int thresholdBytesForTempFiles;
@@ -65,6 +66,7 @@ public class ExcelFormatConfig implements FormatPluginConfig {
       @JsonProperty("firstColumn") Integer firstColumn,
       @JsonProperty("lastColumn") Integer lastColumn,
       @JsonProperty("allTextMode") Boolean allTextMode,
+      @JsonProperty("ignoreErrors") Boolean ignoreErrors,
       @JsonProperty("sheetName") String sheetName,
       @JsonProperty("maxArraySize") Integer maxArraySize,
       @JsonProperty("thresholdBytesForTempFiles") Integer thresholdBytesForTempFiles,
@@ -79,6 +81,7 @@ public class ExcelFormatConfig implements FormatPluginConfig {
     this.firstColumn = firstColumn == null ? 0 : firstColumn;
     this.lastColumn = lastColumn == null ? 0 : lastColumn;
     this.allTextMode = allTextMode == null ? false : allTextMode;
+    this.ignoreErrors = ignoreErrors == null ? true : ignoreErrors;
     this.sheetName = sheetName == null ? "" : sheetName;
     this.maxArraySize = maxArraySize == null ? -1 : maxArraySize;
     this.thresholdBytesForTempFiles = thresholdBytesForTempFiles == null ? -1 : thresholdBytesForTempFiles;
@@ -109,6 +112,9 @@ public class ExcelFormatConfig implements FormatPluginConfig {
 
   public boolean getAllTextMode() {
     return allTextMode;
+  }
+  public boolean getIgnoreErrors() {
+    return ignoreErrors;
   }
 
   public String getSheetName() {
@@ -151,7 +157,7 @@ public class ExcelFormatConfig implements FormatPluginConfig {
   @Override
   public int hashCode() {
     return Objects.hash(extensions, headerRow, lastRow,
-        firstColumn, lastColumn, allTextMode, sheetName);
+        firstColumn, lastColumn, allTextMode, ignoreErrors, sheetName);
   }
 
   @Override
@@ -169,6 +175,7 @@ public class ExcelFormatConfig implements FormatPluginConfig {
       && Objects.equals(firstColumn, other.firstColumn)
       && Objects.equals(lastColumn, other.lastColumn)
       && Objects.equals(allTextMode, other.allTextMode)
+      && Objects.equals(ignoreErrors, other.ignoreErrors)
       && Objects.equals(sheetName, other.sheetName)
       && Objects.equals(maxArraySize, other.maxArraySize)
       && Objects.equals(thresholdBytesForTempFiles, other.thresholdBytesForTempFiles)
@@ -185,6 +192,7 @@ public class ExcelFormatConfig implements FormatPluginConfig {
         .field("firstColumn", firstColumn)
         .field("lastColumn", lastColumn)
         .field("allTextMode", allTextMode)
+        .field("ignoreErrors", ignoreErrors)
         .field("maxArraySize", maxArraySize)
         .field("thresholdBytesForTempFiles", thresholdBytesForTempFiles)
         .field("useTempFilePackageParts", useTempFilePackageParts)
