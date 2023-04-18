@@ -20,6 +20,7 @@ package org.apache.drill.exec.store.excel;
 
 import org.apache.drill.categories.RowSetTest;
 import org.apache.drill.common.exceptions.DrillRuntimeException;
+import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.common.types.TypeProtos;
 import org.apache.drill.common.types.TypeProtos.MinorType;
 import org.apache.drill.exec.physical.rowSet.RowSet;
@@ -328,6 +329,43 @@ public class TestExcelFormat extends ClusterTest {
 
     new RowSetComparison(expected).verifyAndClearAll(results);
   }
+
+  @Test
+  public void testErrorOnFormulaQuery() throws RpcException {
+    String sql = "SELECT * FROM  table(cp.`excel/text-formula.xlsx` (type => 'excel', sheetName " +
+        "=> 'Sheet with Errors', ignoreErrors => True))";
+
+    RowSet results = client.queryBuilder().sql(sql).rowSet();
+    TupleMetadata expectedSchema = new SchemaBuilder()
+        .addNullable("field1", MinorType.FLOAT8)
+        .addNullable("field2", MinorType.FLOAT8)
+        .addNullable("result", MinorType.FLOAT8)
+        .buildSchema();
+
+    RowSet expected = new RowSetBuilder(client.allocator(), expectedSchema)
+        .addRow(1,2,0.5)
+        .addRow(2,3,0.6666667)
+        .addRow(3,4,0.75)
+        .addRow(4,0, null)
+        .addRow(5,6,0.8333333)
+        .build();
+
+    new RowSetComparison(expected).verifyAndClearAll(results);
+  }
+
+  @Test
+  public void testErrorOnFormulaQueryWithoutIgnoreErrors() throws RpcException {
+    String sql = "SELECT * FROM  table(cp.`excel/text-formula.xlsx` (type => 'excel', " +
+        "ignoreErrors => False, sheetName => 'Sheet with Errors'))";
+    try {
+      client.queryBuilder().sql(sql).rowSet();
+      fail();
+    } catch (UserException e) {
+      assertTrue(e.getMessage().contains("DATA_READ ERROR: Error writing data: For input string: " +
+          "\"#DIV/0!\""));
+    }
+  }
+
 
   @Test
   public void testExplicitNonDefaultSheetQuery() throws RpcException {
