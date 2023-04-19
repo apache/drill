@@ -24,7 +24,7 @@
   <parent>
     <artifactId>metastore-parent</artifactId>
     <groupId>org.apache.drill.metastore</groupId>
-    <version>1.21.1</version>
+    <version>1.21.2-SNAPSHOT</version>
   </parent>
 
   <artifactId>drill-rdbms-metastore</artifactId>

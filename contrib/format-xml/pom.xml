@@ -24,7 +24,7 @@
   <parent>
     <artifactId>drill-contrib-parent</artifactId>
     <groupId>org.apache.drill.contrib</groupId>
-    <version>1.21.1</version>
+    <version>1.21.2-SNAPSHOT</version>
   </parent>
 
   <artifactId>drill-format-xml</artifactId>
