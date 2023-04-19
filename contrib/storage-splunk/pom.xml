@@ -33,6 +33,14 @@
     <okhttp.version>4.5.0</okhttp.version>
   </properties>
 
+  <repositories>
+    <repository>
+      <id>splunk-artifactory</id>
+      <name>Splunk Releases</name>
+      <url>https://splunk.jfrog.io/artifactory/ext-releases-local</url>
+    </repository>
+  </repositories>
+
   <dependencies>
     <dependency>
       <groupId>org.apache.drill.exec</groupId>

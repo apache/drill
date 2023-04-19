@@ -1358,4 +1358,27 @@ public class TestDrillParquetReader extends BaseTestQuery {
     testRunAndPrint(UserBitShared.QueryType.SQL, "select * from cp.`parquet2/allTypes.parquet`");
   }
 
+  @Test // DRILL-8416
+  public void testEmptyDictPages() throws Exception {
+    String query = "select " +
+        "`name`, `type`, `begin`, `end` " +
+        "from cp.`parquet/empty_dict_pages.parquet` t";
+    String[] columns = {"`name`", "`type`", "`begin`", "`end`"};
+    testBuilder()
+        .sqlQuery(query)
+        .unOrdered()
+        .baselineColumns(columns)
+        .baselineValues("TP_001", "TP", null, null)
+        .baselineValues("TP_002", "TP", null, null)
+        .baselineValues("TP_003", "TP", null, null)
+        .baselineValues("TP_004", "TP", null, null)
+        .baselineValues("TP_005", "TP", null, null)
+        .baselineValues("TP_006", "TP", null, null)
+        .baselineValues("TP_007", "TP", null, null)
+        .baselineValues("TP_008", "TP", null, null)
+        .baselineValues("TP_009", "TP", null, null)
+        .baselineValues("TP_010", "TP", null, null)
+        .build()
+        .run();
+  }
 }

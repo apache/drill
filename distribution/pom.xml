@@ -245,7 +245,7 @@
         <executions>
           <execution>
             <id>distro-assembly</id>
-            <phase>package</phase>
+            <phase>install</phase>
             <goals>
               <goal>single</goal>
             </goals>
