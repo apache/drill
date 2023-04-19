@@ -15,7 +15,7 @@ To configure the plugin, create a new storage plugin, and add the following conf
 {
   "type": "http",
   "cacheResults": true,
-  "useLegacyRequestParamSyntax": false,
+  "enhanced": false,
   "connections": {},
   "timeout": 0,
   "proxyHost": null,
@@ -30,7 +30,7 @@ The required options are:
 
 * `type`:  This should be `http`
 * `cacheResults`:  Enable caching of the HTTP responses.  Defaults to `false`
-* `useLegacyRequestParamSyntax`:  Enable legacy param syntax in Drill 1.22 and beyond.  Defaults to `false`
+* `enhanced`:  Enable enhanced param syntax in Drill 1.22 and beyond. The enhanced mode allows the user to send the request header through the `WHERE` clause. Defaults to `false`
 * `timeout`:  Sets the response timeout in seconds. Defaults to `0` which is no timeout.
 * `connections`:  This field contains the details for individual connections. See the section *Configuring API Connections for Details*.
 
@@ -114,6 +114,7 @@ if the parameters specify which data sets to return:
 ```json
 url: "https://api.sunrise-sunset.org/json",
 requireTail: false,
+enhanced: true,
 params: ["tail.lat", "tail.lng", "tail.date"]
 ```
 
@@ -140,7 +141,7 @@ key2=value2"
 ```
 
 `postParameterLocation`:  If the API uses the `POST` method, you can send parameters in several different ways:
-* `query_string`:  Parameters from the query are pushed down to the query string.  Static parameters are pushed to the post body.
+* `query_string`:  Parameters from the query are pushed down to the query string.  Static parameters are pushed to the post body. This option is abandoned in enhanced mode.
 * `post_body`:  Both static and parameters from the query are pushed to the post body as key/value pairs
 * `json_body`:  Both static and parameters from the query are pushed to the post body as json.
 * `xml_body`:  Both static and parameters from the query are pushed to the post body as XML.
@@ -148,7 +149,8 @@ key2=value2"
 ```json
 url: "https://api.sunrise-sunset.org/json",
 requireTail: false,
-postBodyLocation: "json_body",
+enhanced: true,
+postParameterLocation: "json_body",
 params: ["body.lat", "body.lng", "body.date"]
 ```
 
@@ -178,7 +180,8 @@ You can also pass the request headers through the where clause.
 ```json
 url: "https://api.sunrise-sunset.org/json",
 requireTail: false,
-postBodyLocation: "json_body",
+enhanced: true,
+postParameterLocation: "json_body",
 params: ["body.lat", "body.lng", "body.date", "header.header1"]
 ```
 

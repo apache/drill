@@ -436,7 +436,7 @@ public class HttpApiConfig {
 
     private String postBody;
 
-    private String postParameterLocation = JSON_BODY_POST_LOCATION;
+    private String postParameterLocation = QUERY_STRING_POST_LOCATION;
 
     private Map<String, String> headers;
 

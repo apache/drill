@@ -154,7 +154,7 @@ public class TestHttpPlugin extends ClusterTest {
     configs.put("nyc", nycConfig);
 
     HttpStoragePluginConfig mockStorageConfigWithWorkspace =
-        new HttpStoragePluginConfig(false, false, configs, 10, 1000, null, null, "", 80, "", "", "", null, PlainCredentialsProvider.EMPTY_CREDENTIALS_PROVIDER,
+        new HttpStoragePluginConfig(false, true, configs, 10, 1000, null, null, "", 80, "", "", "", null, PlainCredentialsProvider.EMPTY_CREDENTIALS_PROVIDER,
           AuthMode.SHARED_USER.name());
     mockStorageConfigWithWorkspace.setEnabled(true);
     cluster.defineStoragePlugin("live", mockStorageConfigWithWorkspace);
@@ -406,7 +406,7 @@ public class TestHttpPlugin extends ClusterTest {
     configs.put("malformedJson", mockJsonWithMalformedData);
 
     HttpStoragePluginConfig mockStorageConfigWithWorkspace =
-        new HttpStoragePluginConfig(false, false, configs, 2, 1000, "globaluser", "globalpass", "",
+        new HttpStoragePluginConfig(false, true, configs, 2, 1000, "globaluser", "globalpass", "",
           80, "", "", "", null, new PlainCredentialsProvider(ImmutableMap.of(
           UsernamePasswordCredentials.USERNAME, "globaluser",
           UsernamePasswordCredentials.PASSWORD, "globalpass")), AuthMode.SHARED_USER.name());
@@ -446,7 +446,7 @@ public class TestHttpPlugin extends ClusterTest {
     configs.put("nyc", nycConfig);
 
     HttpStoragePluginConfig mockStorageConfigWithWorkspace =
-        new HttpStoragePluginConfig(false, true, configs, 10, 1000, null, null, "", 80, "", "", "", null, PlainCredentialsProvider.EMPTY_CREDENTIALS_PROVIDER,
+        new HttpStoragePluginConfig(false, false, configs, 10, 1000, null, null, "", 80, "", "", "", null, PlainCredentialsProvider.EMPTY_CREDENTIALS_PROVIDER,
             AuthMode.SHARED_USER.name());
     mockStorageConfigWithWorkspace.setEnabled(true);
     cluster.defineStoragePlugin("live2", mockStorageConfigWithWorkspace);

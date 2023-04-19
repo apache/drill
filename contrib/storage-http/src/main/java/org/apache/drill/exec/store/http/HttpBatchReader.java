@@ -297,7 +297,7 @@ public class HttpBatchReader implements ManagedReader<SchemaNegotiator> {
 
     final Pattern tailParamsKeyPattern = Pattern.compile("^tail\\..+$");
     final HttpStoragePluginConfig config = subScan.tableSpec().config();
-    if (config.useLegacyRequestParamSyntax()) {
+    if (!config.enableEnhancedParamSyntax()) {
       // If the request is a POST query and the user selected to push the filters to either JSON body
       // or the post body, do not add to the query string.
       if (subScan.tableSpec().connectionConfig().getMethodType() == HttpApiConfig.HttpMethod.GET ||
