@@ -32,6 +32,7 @@ Following is the default registration configuration.
   ],
   "username": null,
   "password": null,
+  "disableSSLVerification": false,
   "enabled": false
 }
 ```

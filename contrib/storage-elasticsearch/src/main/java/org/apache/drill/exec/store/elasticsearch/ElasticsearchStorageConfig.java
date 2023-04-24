@@ -54,7 +54,11 @@ public class ElasticsearchStorageConfig extends StoragePluginConfig {
 
   public static final String CREDENTIALS_PROVIDER = "credentialsProvider";
 
+  private static final String DISABLE_SSL_VERIFICATION = "disableSSLVerification";
+
   private static final String EMPTY_STRING = "";
+
+  private final boolean disableSSLVerification;
 
   private final List<String> hosts;
   private final String pathPrefix;
@@ -66,17 +70,20 @@ public class ElasticsearchStorageConfig extends StoragePluginConfig {
       @JsonProperty(PASSWORD) String password,
       @JsonProperty(PATH_PREFIX) String pathPrefix,
       @JsonProperty("authMode") String authMode,
+      @JsonProperty("disableSSLVerification") Boolean disableSSLVerification,
       @JsonProperty(CREDENTIALS_PROVIDER) CredentialsProvider credentialsProvider) {
     super(CredentialProviderUtils.getCredentialsProvider(username, password, credentialsProvider),
         credentialsProvider == null, AuthMode.parseOrDefault(authMode, AuthMode.SHARED_USER));
     this.hosts = hosts;
     this.pathPrefix = pathPrefix;
+    this.disableSSLVerification = disableSSLVerification == null ? false : disableSSLVerification;
   }
 
   private ElasticsearchStorageConfig(ElasticsearchStorageConfig that, CredentialsProvider credentialsProvider) {
     super(getCredentialsProvider(credentialsProvider), credentialsProvider == null, that.authMode);
     this.hosts = that.hosts;
     this.pathPrefix = that.pathPrefix;
+    this.disableSSLVerification = that.disableSSLVerification;
   }
 
   @Override
@@ -138,6 +145,7 @@ public class ElasticsearchStorageConfig extends StoragePluginConfig {
     builder.put(PATH_PREFIX, pathPrefix != null ? pathPrefix : EMPTY_STRING);
     builder.put(USERNAME, credentials.getOrDefault(USERNAME, EMPTY_STRING));
     builder.put(PASSWORD, credentials.getOrDefault(PASSWORD, EMPTY_STRING));
+    builder.put(DISABLE_SSL_VERIFICATION, Boolean.valueOf(disableSSLVerification).toString());
 
     credentials.remove(USERNAME);
     credentials.remove(PASSWORD);
@@ -157,12 +165,13 @@ public class ElasticsearchStorageConfig extends StoragePluginConfig {
     ElasticsearchStorageConfig that = (ElasticsearchStorageConfig) o;
     return Objects.equals(hosts, that.hosts) &&
         Objects.equals(pathPrefix, that.pathPrefix) &&
-        Objects.equals(credentialsProvider, that.credentialsProvider);
+        Objects.equals(credentialsProvider, that.credentialsProvider) &&
+        Objects.equals(disableSSLVerification, that.disableSSLVerification);
   }
 
   @Override
   public int hashCode() {
-    return Objects.hash(hosts, pathPrefix, credentialsProvider);
+    return Objects.hash(hosts, pathPrefix, disableSSLVerification, credentialsProvider);
   }
 
   @Override
@@ -170,6 +179,7 @@ public class ElasticsearchStorageConfig extends StoragePluginConfig {
     return new PlanStringBuilder(this)
         .field("hosts", hosts)
         .field("pathPrefix", pathPrefix)
+        .field("disableSSLVerification", disableSSLVerification)
         .field("credentialsProvider", credentialsProvider)
         .toString();
   }
