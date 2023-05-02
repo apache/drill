@@ -33,10 +33,13 @@ import org.apache.drill.common.collections.ImmutableEntry;
 import org.apache.drill.common.exceptions.DrillRuntimeException;
 import org.apache.drill.exec.exception.VersionMismatchException;
 import org.apache.drill.exec.store.sys.store.DataChangeVersion;
+import org.apache.jute.BinaryInputArchive;
 import org.apache.zookeeper.CreateMode;
 import org.apache.zookeeper.KeeperException;
 import org.apache.zookeeper.KeeperException.NodeExistsException;
 import org.apache.zookeeper.data.Stat;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * A namespace aware Zookeeper client.
@@ -46,10 +49,12 @@ import org.apache.zookeeper.data.Stat;
  * Note that instance of this class holds onto resources that must be released via {@code #close()}.
  */
 public class ZookeeperClient implements AutoCloseable {
+  private static final Logger logger = LoggerFactory.getLogger(ZookeeperClient.class);
   private final CuratorFramework curator;
   private final String root;
   private final PathChildrenCache cache;
   private final CreateMode mode;
+  private final int MAX_DATA_LENGTH = BinaryInputArchive.maxBuffer;
 
   public ZookeeperClient(final CuratorFramework curator, final String root, final CreateMode mode) {
     this.curator = Preconditions.checkNotNull(curator, "curator is required");
@@ -241,6 +246,7 @@ public class ZookeeperClient implements AutoCloseable {
    *
    * @param path  target path
    * @param data  data to store
+   * @throws java.lang.IllegalArgumentException if data size is bigger that jute.maxbuffer value
    */
   public void put(final String path, final byte[] data) {
     put(path, data, null);
@@ -248,9 +254,9 @@ public class ZookeeperClient implements AutoCloseable {
 
   /**
    * Puts the given byte sequence into the given path.
-   *
+   * <p>
    * If path does not exists, this call creates it.
-   *
+   * <p>
    * If version holder is not null and path already exists, passes given version for comparison.
    * Zookeeper maintains stat structure that holds version number which increases each time znode data change is performed.
    * If we pass version that doesn't match the actual version of the data,
@@ -258,13 +264,19 @@ public class ZookeeperClient implements AutoCloseable {
    * We catch such exception and re-throw it as {@link VersionMismatchException}.
    * Link to documentation - https://zookeeper.apache.org/doc/r3.2.2/zookeeperProgrammers.html#sc_zkDataModel_znodes
    *
-   * @param path  target path
-   * @param data  data to store
+   * @param path    target path
+   * @param data    data to store
    * @param version version holder
+   * @throws java.lang.IllegalArgumentException if data size is bigger that jute.maxbuffer value
    */
   public void put(final String path, final byte[] data, DataChangeVersion version) {
     Preconditions.checkNotNull(path, "path is required");
     Preconditions.checkNotNull(data, "data is required");
+    if (data.length > MAX_DATA_LENGTH) {
+      throw new IllegalArgumentException(
+        String.format("Can't put this data. Data size %d bytes is bigger than jute.maxbuffer %d", data.length, MAX_DATA_LENGTH)
+      );
+    }
 
     final String target = PathUtils.join(root, path);
     try {
@@ -297,6 +309,8 @@ public class ZookeeperClient implements AutoCloseable {
     } catch (final VersionMismatchException e) {
       throw e;
     } catch (final Exception e) {
+      logger.info("Data size to persist is: {} bytes, client jute.maxbuffer value is: {}. Make sure that the client " +
+        "jute.maxbuffer value corresponds to the zookeeper server value.", data.length, MAX_DATA_LENGTH);
       throw new DrillRuntimeException("unable to put ", e);
     }
   }
@@ -311,6 +325,11 @@ public class ZookeeperClient implements AutoCloseable {
   public byte[] putIfAbsent(final String path, final byte[] data) {
     Preconditions.checkNotNull(path, "path is required");
     Preconditions.checkNotNull(data, "data is required");
+    if (data.length > MAX_DATA_LENGTH) {
+      throw new IllegalArgumentException(
+        String.format("Can't put this data. Data size %d bytes is bigger than jute.maxbuffer %d", data.length, MAX_DATA_LENGTH)
+      );
+    }
 
     final String target = PathUtils.join(root, path);
     try {
@@ -323,6 +342,8 @@ public class ZookeeperClient implements AutoCloseable {
       }
       return curator.getData().forPath(target);
     } catch (final Exception e) {
+      logger.info("Data size to persist is: {} bytes, client jute.maxbuffer value is: {}. Make sure that the client " +
+        "jute.maxbuffer value corresponds to the zookeeper server value.", data.length, MAX_DATA_LENGTH);
       throw new DrillRuntimeException("unable to put ", e);
     }
   }

@@ -252,9 +252,8 @@ public class Foreman implements Runnable {
     }
 
     queryText = queryRequest.getPlan();
-    queryStateProcessor.moveToState(QueryState.PLANNING, null);
-
     try {
+      queryStateProcessor.moveToState(QueryState.PLANNING, null);
       injector.injectChecked(queryContext.getExecutionControls(), "run-try-beginning", ForemanException.class);
 
       // convert a run query request into action

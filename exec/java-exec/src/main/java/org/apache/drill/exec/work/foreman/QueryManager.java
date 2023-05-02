@@ -297,8 +297,14 @@ public class QueryManager implements AutoCloseable {
       case STARTING:
       case RUNNING:
       case CANCELLATION_REQUESTED:
-        runningProfileStore.put(stringQueryId, getQueryInfo());  // store as ephemeral query profile.
-        inTransientStore = true;
+        try {
+          runningProfileStore.put(stringQueryId, getQueryInfo());  // store as ephemeral query profile.
+          inTransientStore = true;
+        } catch (IllegalArgumentException e) {
+          throw UserException.executionError(e)
+            .message("Failed to persist query info. Query length is too big.", e)
+            .build(logger);
+        }
         break;
       case COMPLETED:
       case CANCELED:
