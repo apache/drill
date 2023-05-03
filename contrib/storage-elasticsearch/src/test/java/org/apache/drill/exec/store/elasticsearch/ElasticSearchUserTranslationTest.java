@@ -89,7 +89,7 @@ public class ElasticSearchUserTranslationTest extends ClusterTest {
         TestElasticsearchSuite.ELASTICSEARCH_USERNAME,
         TestElasticsearchSuite.ELASTICSEARCH_PASSWORD,
         null,
-        AuthMode.SHARED_USER.name(),
+        AuthMode.SHARED_USER.name(), false,
         null
     );
 
@@ -101,7 +101,7 @@ public class ElasticSearchUserTranslationTest extends ClusterTest {
         null,
         null,
         null,
-        AuthMode.USER_TRANSLATION.name(),
+        AuthMode.USER_TRANSLATION.name(), false,
         credentialsProvider);
 
     ut_config.setEnabled(true);
