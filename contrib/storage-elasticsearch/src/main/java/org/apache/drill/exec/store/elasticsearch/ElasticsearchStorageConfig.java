@@ -19,6 +19,8 @@ package org.apache.drill.exec.store.elasticsearch;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonInclude.Include;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -39,6 +41,7 @@ import java.util.Objects;
 import java.util.Optional;
 
 @JsonTypeName(ElasticsearchStorageConfig.NAME)
+@JsonInclude(Include.NON_EMPTY)
 public class ElasticsearchStorageConfig extends StoragePluginConfig {
   public static final String NAME = "elastic";
 
@@ -65,18 +68,18 @@ public class ElasticsearchStorageConfig extends StoragePluginConfig {
 
   @JsonCreator
   public ElasticsearchStorageConfig(
-      @JsonProperty(HOSTS) List<String> hosts,
+      @JsonProperty("hosts") List<String> hosts,
       @JsonProperty(USERNAME) String username,
       @JsonProperty(PASSWORD) String password,
-      @JsonProperty(PATH_PREFIX) String pathPrefix,
+      @JsonProperty("pathPrefix") String pathPrefix,
       @JsonProperty("authMode") String authMode,
-      @JsonProperty("disableSSLVerification") Boolean disableSSLVerification,
+      @JsonProperty("disableSSLVerification") boolean disableSSLVerification,
       @JsonProperty(CREDENTIALS_PROVIDER) CredentialsProvider credentialsProvider) {
     super(CredentialProviderUtils.getCredentialsProvider(username, password, credentialsProvider),
         credentialsProvider == null, AuthMode.parseOrDefault(authMode, AuthMode.SHARED_USER));
     this.hosts = hosts;
     this.pathPrefix = pathPrefix;
-    this.disableSSLVerification = disableSSLVerification == null ? false : disableSSLVerification;
+    this.disableSSLVerification = disableSSLVerification;
   }
 
   private ElasticsearchStorageConfig(ElasticsearchStorageConfig that, CredentialsProvider credentialsProvider) {
@@ -89,6 +92,21 @@ public class ElasticsearchStorageConfig extends StoragePluginConfig {
   @Override
   public ElasticsearchStorageConfig updateCredentialProvider(CredentialsProvider credentialsProvider) {
     return new ElasticsearchStorageConfig(this, credentialsProvider);
+  }
+
+  @JsonProperty("hosts")
+  public List<String> getHosts() {
+    return hosts;
+  }
+
+  @JsonProperty("pathPrefix")
+  public String getPathPrefix() {
+    return pathPrefix;
+  }
+
+  @JsonProperty("disableSSLVerification")
+  public boolean getDisableSSLVerification() {
+    return disableSSLVerification;
   }
 
   private static CredentialsProvider getCredentialsProvider(CredentialsProvider credentialsProvider) {
@@ -123,6 +141,7 @@ public class ElasticsearchStorageConfig extends StoragePluginConfig {
     builder.put(PATH_PREFIX, pathPrefix != null ? pathPrefix : EMPTY_STRING);
     builder.put(USERNAME, credentials.getOrDefault(USERNAME, EMPTY_STRING));
     builder.put(PASSWORD, credentials.getOrDefault(PASSWORD, EMPTY_STRING));
+    builder.put(DISABLE_SSL_VERIFICATION, Boolean.valueOf(disableSSLVerification).toString());
 
     credentials.remove(USERNAME);
     credentials.remove(PASSWORD);
