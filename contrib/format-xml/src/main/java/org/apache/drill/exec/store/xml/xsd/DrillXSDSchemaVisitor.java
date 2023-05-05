@@ -44,7 +44,7 @@ public class DrillXSDSchemaVisitor implements XmlSchemaVisitor {
   private static final Logger logger = LoggerFactory.getLogger(DrillXSDSchemaVisitor.class);
   private final SchemaBuilder builder;
   private MapBuilder currentMapBuilder;
-  private Stack<MapBuilder> mapBuilderStack;
+  private final Stack<MapBuilder> mapBuilderStack;
   private int nestingLevel;
 
   public DrillXSDSchemaVisitor(SchemaBuilder builder) {
