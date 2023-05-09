@@ -20,6 +20,7 @@ package org.apache.drill.metastore.rdbms.util;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.apache.drill.common.util.JacksonUtils;
 import org.apache.drill.metastore.rdbms.exception.RdbmsMetastoreException;
 
 import java.io.IOException;
@@ -31,7 +32,7 @@ import java.util.Map;
  */
 public class ConverterUtil {
 
-  private static final ObjectMapper MAPPER = new ObjectMapper();
+  private static final ObjectMapper MAPPER = JacksonUtils.createObjectMapper();
 
   private static final TypeReference<List<String>> LIST_STRING_TYPE_REF = new TypeReference<List<String>>() {
   };

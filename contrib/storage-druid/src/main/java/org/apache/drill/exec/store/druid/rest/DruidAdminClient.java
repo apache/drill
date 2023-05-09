@@ -20,6 +20,7 @@ package org.apache.drill.exec.store.druid.rest;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.drill.common.exceptions.UserException;
+import org.apache.drill.common.util.JacksonUtils;
 import org.apache.drill.exec.store.druid.druid.SimpleDatasourceInfo;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -34,7 +35,7 @@ public class DruidAdminClient {
   private static final Logger logger = LoggerFactory.getLogger(DruidAdminClient.class);
 
   private static final String DATASOURCES_BASE_URI = "/druid/coordinator/v1/datasources?simple";
-  private static final ObjectMapper mapper = new ObjectMapper();
+  private static final ObjectMapper mapper = JacksonUtils.createObjectMapper();
 
   private final String coordinatorAddress;
   private final RestClient restClient;

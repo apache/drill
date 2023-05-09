@@ -69,8 +69,8 @@ public abstract class AbstractDynamicBean {
 
 
   private static synchronized ObjectMapper getMapper(){
-    if(MAPPER == null){
-      ObjectMapper mapper = new ObjectMapper();
+    if (MAPPER == null) {
+      ObjectMapper mapper = JacksonUtils.createObjectMapper();
       mapper.enable(SerializationFeature.INDENT_OUTPUT);
       mapper.configure(Feature.ALLOW_UNQUOTED_FIELD_NAMES, true);
       mapper.configure(Feature.ALLOW_COMMENTS, true);

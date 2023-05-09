@@ -22,6 +22,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import org.apache.drill.common.util.JacksonUtils;
 import org.apache.drill.exec.store.druid.common.DruidFilter;
 
 import java.math.BigInteger;
@@ -33,7 +34,7 @@ import java.util.stream.Stream;
 import static org.apache.drill.exec.store.druid.common.DruidConstants.INTERVAL_DIMENSION_NAME;
 
 public class ScanQueryBuilder {
-  private static final ObjectMapper objectMapper = new ObjectMapper();
+  private static final ObjectMapper objectMapper = JacksonUtils.createObjectMapper();
 
   public ScanQueryBuilder() {}
 

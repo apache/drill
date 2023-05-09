@@ -29,6 +29,7 @@ import org.apache.drill.categories.RowSetTest;
 import org.apache.drill.common.exceptions.ExecutionSetupException;
 import org.apache.drill.common.logical.FormatPluginConfig;
 import org.apache.drill.common.types.TypeProtos.MinorType;
+import org.apache.drill.common.util.JacksonUtils;
 import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.record.metadata.SchemaBuilder;
 import org.apache.drill.exec.record.metadata.TupleMetadata;
@@ -735,7 +736,7 @@ public class TestLogReader extends ClusterTest {
    */
   @Test
   public void testPluginSerialization() throws IOException {
-    ObjectMapper mapper = new ObjectMapper();
+    ObjectMapper mapper = JacksonUtils.createObjectMapper();
     assertTrue(mapper.canSerialize(LogFormatPlugin.class));
 
     LogFormatConfig sampleConfig = dateOnlyConfig();

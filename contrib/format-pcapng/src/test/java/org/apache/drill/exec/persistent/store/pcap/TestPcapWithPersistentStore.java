@@ -17,7 +17,6 @@
  */
 package org.apache.drill.exec.persistent.store.pcap;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.drill.shaded.guava.com.google.common.collect.ImmutableList;
 import org.apache.drill.shaded.guava.com.google.common.collect.ImmutableSet;
 import org.apache.curator.framework.CuratorFramework;
@@ -54,10 +53,9 @@ public class TestPcapWithPersistentStore extends TestWithZookeeper {
 
         try (CuratorFramework curator = createCurator()) {
             curator.start();
-            ObjectMapper objectMapper = new ObjectMapper();
             objectMapper.registerSubtypes(PcapFormatConfig.class, PcapngFormatConfig.class);
             PersistentStoreConfig<FileSystemConfig> storeConfig =
-                    PersistentStoreConfig.newJacksonBuilder(objectMapper, FileSystemConfig.class).name("type").build();
+                    PersistentStoreConfig.newJacksonBuilder(FileSystemConfig.class).name("type").build();
 
 
             try (ZookeeperClient zkClient = new ZookeeperClient(curator,

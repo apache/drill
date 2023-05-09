@@ -51,7 +51,7 @@ public class TestLocalPersistentStore extends BaseTest {
   public TemporaryFolder root = new TemporaryFolder();
 
   private static final PersistentStoreConfig<String> DEFAULT_STORE_CONFIG = PersistentStoreConfig
-    .newJacksonBuilder(new ObjectMapper(), String.class)
+    .newJacksonBuilder(String.class)
     .name("local-test-store")
     .build();
 

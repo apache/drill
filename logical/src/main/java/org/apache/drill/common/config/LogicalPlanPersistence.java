@@ -28,6 +28,7 @@ import org.apache.drill.common.logical.StoragePluginConfig;
 import org.apache.drill.common.logical.data.LogicalOperator;
 import org.apache.drill.common.scanner.persistence.ScanResult;
 import org.apache.drill.common.logical.security.CredentialsProvider;
+import org.apache.drill.common.util.JacksonUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -45,7 +46,7 @@ public class LogicalPlanPersistence {
   private final ObjectMapper mapper;
 
   public LogicalPlanPersistence(DrillConfig conf, ScanResult scanResult) {
-    this(conf, scanResult, new ObjectMapper());
+    this(conf, scanResult, JacksonUtils.createObjectMapper());
   }
 
   public LogicalPlanPersistence(DrillConfig conf, ScanResult scanResult, ObjectMapper mapper) {

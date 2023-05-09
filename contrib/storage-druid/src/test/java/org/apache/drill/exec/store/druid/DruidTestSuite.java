@@ -22,6 +22,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.drill.categories.DruidStorageTest;
 import org.apache.drill.categories.SlowTest;
+import org.apache.drill.common.util.JacksonUtils;
 import org.apache.drill.exec.store.druid.rest.DruidQueryClientTest;
 import org.apache.drill.shaded.guava.com.google.common.io.Resources;
 import org.junit.BeforeClass;
@@ -46,7 +47,7 @@ import java.io.File;
 public class DruidTestSuite {
   private static final Logger logger = LoggerFactory.getLogger(DruidTestSuite.class);
 
-  private static final ObjectMapper mapper = new ObjectMapper();
+  private static final ObjectMapper mapper = JacksonUtils.createObjectMapper();
 
   private static DruidStoragePluginConfig druidStoragePluginConfig = null;
 

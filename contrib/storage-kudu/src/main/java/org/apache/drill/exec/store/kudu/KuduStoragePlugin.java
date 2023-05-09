@@ -27,7 +27,6 @@ import org.apache.drill.exec.store.SchemaConfig;
 import org.apache.kudu.client.KuduClient;
 
 import com.fasterxml.jackson.core.type.TypeReference;
-import com.fasterxml.jackson.databind.ObjectMapper;
 
 public class KuduStoragePlugin extends AbstractStoragePlugin {
 
@@ -60,7 +59,7 @@ public class KuduStoragePlugin extends AbstractStoragePlugin {
 
   @Override
   public KuduGroupScan getPhysicalScan(String userName, JSONOptions selection) throws IOException {
-    KuduScanSpec scanSpec = selection.getListWith(new ObjectMapper(), new TypeReference<KuduScanSpec>() {});
+    KuduScanSpec scanSpec = selection.getListWith(new TypeReference<KuduScanSpec>() {});
     return new KuduGroupScan(this, scanSpec, null);
   }
 

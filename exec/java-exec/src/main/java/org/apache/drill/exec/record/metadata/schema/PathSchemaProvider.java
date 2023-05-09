@@ -23,6 +23,7 @@ import com.fasterxml.jackson.core.util.DefaultPrettyPrinter;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.ObjectReader;
 import com.fasterxml.jackson.databind.ObjectWriter;
+import org.apache.drill.common.util.JacksonUtils;
 import org.apache.drill.exec.util.ImpersonationUtil;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
@@ -52,7 +53,8 @@ public class PathSchemaProvider implements SchemaProvider {
   public static final ObjectWriter WRITER;
 
   static {
-    ObjectMapper mapper = new ObjectMapper().enable(INDENT_OUTPUT).configure(JsonParser.Feature.ALLOW_COMMENTS, true);
+    ObjectMapper mapper = JacksonUtils.createObjectMapper().enable(INDENT_OUTPUT)
+        .configure(JsonParser.Feature.ALLOW_COMMENTS, true);
 
     READER = mapper.readerFor(SchemaContainer.class);
 
