@@ -17,7 +17,6 @@
  */
 package org.apache.drill.exec.store.sys;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.drill.categories.UnlikelyTest;
 import org.apache.drill.common.exceptions.DrillRuntimeException;
 import org.apache.drill.exec.store.dfs.DrillFileSystem;
