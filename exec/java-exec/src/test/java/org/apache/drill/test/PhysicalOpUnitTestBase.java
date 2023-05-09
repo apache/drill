@@ -375,7 +375,7 @@ public class PhysicalOpUnitTestBase extends ExecTest {
    * @return The {@link org.apache.drill.exec.store.easy.json.JSONRecordReader} corresponding to each given jsonBatch.
    */
   public static Iterator<RecordReader> getJsonReadersFromBatchString(List<String> jsonBatches, FragmentContext fragContext, List<SchemaPath> columnsToRead) {
-    ObjectMapper mapper = JacksonUtils.createObjectMapper()
+    ObjectMapper mapper = JacksonUtils.createObjectMapper();
     List<RecordReader> readers = new ArrayList<>();
     for (String batchJason : jsonBatches) {
       JsonNode records;
