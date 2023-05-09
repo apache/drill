@@ -38,7 +38,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 
 public class DrillTest extends BaseTest {
 
-  protected static final ObjectMapper objectMapper = JacksonUtils.createObjectMapper();
+  private static final ObjectMapper objectMapper = JacksonUtils.createObjectMapper();
 
   static {
     System.setProperty("line.separator", "\n");
