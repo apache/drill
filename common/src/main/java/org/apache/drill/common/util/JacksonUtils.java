@@ -21,7 +21,12 @@ import com.fasterxml.jackson.core.JsonFactory;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.json.JsonMapper;
 
+/**
+ * Utility class which contain methods for interacting with Jackson.
+ */
 public final class JacksonUtils {
+
+  private JacksonUtils() {}
 
   /**
    * Creates a new instance of the Jackson {@link ObjectMapper}.
