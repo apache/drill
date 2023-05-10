@@ -1,6 +1,6 @@
 # Drill User Defined Functions
 
-This `README` documents functions which users have submitted to Apache Drill.  
+This `README` documents functions which users have submitted to Apache Drill.
 
 ## Geospatial Functions
 
@@ -201,7 +201,7 @@ There are two versions of the function, one which accepts a date and interval, a
 
 ### Time Bucket Functions
 These functions are useful for doing time series analysis by grouping the data into arbitrary intervals.  See: https://blog.timescale.com/blog/simplified-time-series-analytics
--using-the-time_bucket-function/ for more examples. 
+-using-the-time_bucket-function/ for more examples.
 
 There are two versions of the function:
 * `time_bucket(<timestamp>, <interval>)`
@@ -225,7 +225,7 @@ Drill UDF for parsing User Agent Strings.
 This function is based on Niels Basjes Java library for parsing user agent strings which is available here: <https://github.com/nielsbasjes/yauaa>.
 
 ### Basic usage
-The function `parse_user_agent()` takes a user agent string as an argument and returns a map of the available fields. Note that not every field will be present in every user agent string. 
+The function `parse_user_agent()` takes a user agent string as an argument and returns a map of the available fields. Note that not every field will be present in every user agent string.
 
 The basic function signature looks like this
 
@@ -243,7 +243,7 @@ or the variant which requires the presence of a `User-Agent` header.
 ### Analyzing the User-Agent
 
 ```
-SELECT parse_user_agent( columns[0] ) as ua 
+SELECT parse_user_agent( columns[0] ) as ua
 FROM dfs.`/tmp/data/drill-httpd/ua.csv`;
 ```
 The query above returns:
@@ -287,7 +287,7 @@ The function can also be called with an optional field as an argument. IE:
 ```sql
 SELECT parse_user_agent( `user_agent`, 'AgentName` ) as AgentName ...
 ```
-which will just return the requested field. If the user agent string is empty, all fields will have the value of `Hacker`.  
+which will just return the requested field. If the user agent string is empty, all fields will have the value of `Hacker`.
 
 ### Analyzing the User-Agent Client Hints
 
@@ -380,7 +380,7 @@ which produces
 The improvement after adding the Client Hints is evident.
 
 ## Map Schema Function
-This function allows you to drill down into the schema of maps.  The REST API and JDBC interfaces will only return `MAP`, `LIST` for the MAP, however, it is not possible to get 
+This function allows you to drill down into the schema of maps.  The REST API and JDBC interfaces will only return `MAP`, `LIST` for the MAP, however, it is not possible to get
 the schema of the inner map. The function `getMapSchema(<MAP>)` will return a `MAP` of the fields and datatypes.
 
 ### Example Usage
@@ -419,7 +419,7 @@ The function returns an empty map if the row is `null`.
 # Threat Hunting Functions
 These functions are useful for doing threat hunting with Apache Drill.  These were inspired by huntlib.[1]
 
-The functions are: 
+The functions are:
 * `punctuation_pattern(<string>)`:  Extracts the pattern of punctuation in text.
 * `entropy(<string>)`: This function calculates the Shannon Entropy of a given string of text.
 * `entropyPerByte(<string>)`: This function calculates the Shannon Entropy of a given string of text, normed for the string length.
@@ -431,7 +431,9 @@ The functions are:
 * `width_bucket(value, min, max, buckets)`: Useful for crafting histograms and understanding distributions of continuous variables.
 * `kendall_correlation(col1, col2)`:  Calculates the kendall correlation coefficient of two columns within a dataset.
 * `regr_slope(x,y)`: Determines the slope of the least-squares-fit linear equation
-* `regr_intercept(x,y)`: Computes the y-intercept of the least-squares-fit linear equation
+* `regr_intercept(x,y)`: Computes the y-intercept of they least-squares-fit linear equation
+* `percent_change(x,y)`:  Computes the percent change between `x` and `y`.  Handles nulls and
+  zero values.
 
 
 [1]: https://github.com/target/huntlib
