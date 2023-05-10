@@ -105,4 +105,63 @@ public class TestDistributionFunctions extends ClusterTest {
         .baselineValues(1400.2322223740048)
         .go();
   }
+
+  @Test
+  public void testPercentChange() throws Exception {
+    String query = "SELECT percent_change(100, 150) as delta";
+    testBuilder()
+        .sqlQuery(query)
+        .unOrdered()
+        .baselineColumns("delta")
+        .baselineValues(50.0)
+        .go();
+
+    query = "SELECT percent_change(200, 100) as delta";
+    testBuilder()
+        .sqlQuery(query)
+        .unOrdered()
+        .baselineColumns("delta")
+        .baselineValues(-50.0)
+        .go();
+
+    query = "SELECT percent_change(200, null) as delta";
+    testBuilder()
+        .sqlQuery(query)
+        .unOrdered()
+        .baselineColumns("delta")
+        .baselineValues(null)
+        .go();
+
+    query = "SELECT percent_change(null, null) as delta";
+    testBuilder()
+        .sqlQuery(query)
+        .unOrdered()
+        .baselineColumns("delta")
+        .baselineValues(null)
+        .go();
+
+    query = "SELECT percent_change(null, 200) as delta";
+    testBuilder()
+        .sqlQuery(query)
+        .unOrdered()
+        .baselineColumns("delta")
+        .baselineValues(null)
+        .go();
+
+    query = "SELECT percent_change(200, 0) as delta";
+    testBuilder()
+        .sqlQuery(query)
+        .unOrdered()
+        .baselineColumns("delta")
+        .baselineValues(0.0)
+        .go();
+
+    query = "SELECT percent_change(0, 34) as delta";
+    testBuilder()
+        .sqlQuery(query)
+        .unOrdered()
+        .baselineColumns("delta")
+        .baselineValues(0.0)
+        .go();
+  }
 }
