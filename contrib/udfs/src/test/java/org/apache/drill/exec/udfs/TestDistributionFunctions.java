@@ -164,4 +164,18 @@ public class TestDistributionFunctions extends ClusterTest {
         .baselineValues(0.0)
         .go();
   }
+
+  @Test
+  public void testMedian() throws Exception {
+
+    // Test as String from CSV
+    String query = "SELECT median(value) AS med FROM cp.`orgs.csvh`";
+    testBuilder()
+        .sqlQuery(query)
+        .unOrdered()
+        .baselineColumns("med")
+        .baselineValues(50.0)
+        .go();
+
+  }
 }

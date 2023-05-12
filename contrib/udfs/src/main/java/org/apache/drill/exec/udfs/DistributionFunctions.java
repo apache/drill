@@ -28,9 +28,11 @@ import org.apache.drill.exec.expr.annotations.Param;
 import org.apache.drill.exec.expr.annotations.Workspace;
 import org.apache.drill.exec.expr.holders.Float8Holder;
 import org.apache.drill.exec.expr.holders.IntHolder;
+import org.apache.drill.exec.expr.holders.NullableFloat8Holder;
+import org.apache.drill.exec.expr.holders.ObjectHolder;
 
 public class DistributionFunctions {
-
+  @SuppressWarnings("unused")
   @FunctionTemplate(names = {"width_bucket", "widthBucket"},
       scope = FunctionScope.SIMPLE,
       nulls = NullHandling.NULL_IF_NULL)
@@ -150,7 +152,7 @@ public class DistributionFunctions {
       tau.value = result;
     }
   }
-
+  @SuppressWarnings("unused")
   @FunctionTemplate(names = {"regr_slope", "regrSlope"},
       scope = FunctionScope.POINT_AGGREGATE,
       nulls = NullHandling.INTERNAL)
@@ -238,7 +240,7 @@ public class DistributionFunctions {
       ss_xy.value = 0;
     }
   }
-
+  @SuppressWarnings("unused")
   @FunctionTemplate(names = {"regr_intercept", "regrIntercept"},
       scope = FunctionScope.POINT_AGGREGATE,
       nulls = NullHandling.INTERNAL)
@@ -331,6 +333,7 @@ public class DistributionFunctions {
   /**
    * This UDF calculates the percent change between two numeric columns.
    */
+  @SuppressWarnings("unused")
   @FunctionTemplate(names = {"percentChange", "percent_change"},
       scope = FunctionScope.SIMPLE,
       nulls = NullHandling.NULL_IF_NULL)
@@ -361,6 +364,47 @@ public class DistributionFunctions {
       } else {
         resultHolder.value = (v2 - v1) * 100.0 / v1;
       }
+    }
+  }
+  @SuppressWarnings("unused")
+  @FunctionTemplate(name = "median",
+      scope = FunctionTemplate.FunctionScope.POINT_AGGREGATE,
+      nulls = FunctionTemplate.NullHandling.INTERNAL)
+  public static class MedianFunctionFloat implements DrillAggFunc {
+
+    @Param
+    NullableFloat8Holder input;
+
+    @Output
+    Float8Holder median;
+
+    @Workspace
+    ObjectHolder utils;
+
+    @Override
+    public void setup() {
+      utils = new ObjectHolder();
+      utils.obj = new org.apache.drill.exec.udfs.median.StreamingMedianHelper();
+    }
+
+    @Override
+    public void add() {
+      org.apache.drill.exec.udfs.median.StreamingMedianHelper medianHelper = (org.apache.drill.exec.udfs.median.StreamingMedianHelper) utils.obj;
+      if (input != null) {
+        medianHelper.addNextNumber(input.value);
+      }
+    }
+
+    @Override
+    public void output() {
+      org.apache.drill.exec.udfs.median.StreamingMedianHelper medianHelper = (org.apache.drill.exec.udfs.median.StreamingMedianHelper) utils.obj;
+      median.value = medianHelper.getMedian();
+    }
+
+    @Override
+    public void reset() {
+      org.apache.drill.exec.udfs.median.StreamingMedianHelper medianHelper = (org.apache.drill.exec.udfs.median.StreamingMedianHelper) utils.obj;
+      medianHelper.reset();
     }
   }
 }
