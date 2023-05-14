@@ -390,7 +390,7 @@ public class DistributionFunctions {
     @Override
     public void add() {
       org.apache.drill.exec.udfs.median.StreamingMedianHelper medianHelper = (org.apache.drill.exec.udfs.median.StreamingMedianHelper) utils.obj;
-      if (input != null) {
+      if (input != null && input.isSet == 1) {
         medianHelper.addNextNumber(input.value);
       }
     }

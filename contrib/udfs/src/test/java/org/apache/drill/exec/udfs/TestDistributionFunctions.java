@@ -168,13 +168,23 @@ public class TestDistributionFunctions extends ClusterTest {
   @Test
   public void testMedian() throws Exception {
 
-    // Test as String from CSV
+    // Test as String from CSV and aggregate
     String query = "SELECT category, median(`value`) AS med FROM cp.`orgs.csvh` GROUP BY category";
     testBuilder()
         .sqlQuery(query)
         .unOrdered()
         .baselineColumns("category", "med")
-        .baselineValues(50.0)
+        .baselineValues("cat1", 5.0)
+        .baselineValues("cat2", 5.0)
+        .go();
+
+    // Test with missing values
+    query = "SELECT median(`col4`) AS med FROM cp.`test_data.csvh`";
+    testBuilder()
+        .sqlQuery(query)
+        .unOrdered()
+        .baselineColumns( "med")
+        .baselineValues(0.0)
         .go();
 
   }
