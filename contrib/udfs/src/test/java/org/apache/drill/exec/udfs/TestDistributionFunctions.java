@@ -169,11 +169,11 @@ public class TestDistributionFunctions extends ClusterTest {
   public void testMedian() throws Exception {
 
     // Test as String from CSV
-    String query = "SELECT median(value) AS med FROM cp.`orgs.csvh`";
+    String query = "SELECT category, median(`value`) AS med FROM cp.`orgs.csvh` GROUP BY category";
     testBuilder()
         .sqlQuery(query)
         .unOrdered()
-        .baselineColumns("med")
+        .baselineColumns("category", "med")
         .baselineValues(50.0)
         .go();
 
