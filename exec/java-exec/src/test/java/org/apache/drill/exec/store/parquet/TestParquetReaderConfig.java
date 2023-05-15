@@ -21,6 +21,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.drill.categories.ParquetTest;
 import org.apache.drill.categories.UnlikelyTest;
 import org.apache.drill.common.config.DrillConfig;
+import org.apache.drill.common.util.JacksonUtils;
 import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.server.options.SessionOptionManager;
 import org.apache.drill.exec.server.options.SystemOptionManager;
@@ -40,7 +41,7 @@ public class TestParquetReaderConfig extends BaseTest {
 
   @Test
   public void testDefaultsDeserialization() throws Exception {
-    ObjectMapper mapper = new ObjectMapper();
+    ObjectMapper mapper = JacksonUtils.createObjectMapper();
     ParquetReaderConfig readerConfig = ParquetReaderConfig.builder().build(); // all defaults
     String value = mapper.writeValueAsString(readerConfig);
     assertEquals(ParquetReaderConfig.getDefaultInstance(), readerConfig); // compare with default instance

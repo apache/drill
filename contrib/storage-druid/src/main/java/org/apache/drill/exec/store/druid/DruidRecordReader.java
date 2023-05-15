@@ -22,6 +22,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.common.expression.SchemaPath;
+import org.apache.drill.common.util.JacksonUtils;
 import org.apache.drill.exec.ops.FragmentContext;
 import org.apache.drill.exec.ops.OperatorContext;
 import org.apache.drill.exec.physical.impl.OutputMutator;
@@ -51,7 +52,7 @@ import java.util.concurrent.TimeUnit;
 public class DruidRecordReader extends AbstractRecordReader {
 
   private static final Logger logger = LoggerFactory.getLogger(DruidRecordReader.class);
-  private static final ObjectMapper objectMapper = new ObjectMapper();
+  private static final ObjectMapper objectMapper = JacksonUtils.createObjectMapper();
   private final DruidStoragePlugin plugin;
   private final DruidSubScan.DruidSubScanSpec scanSpec;
   private final List<String> columns;

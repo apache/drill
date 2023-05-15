@@ -23,6 +23,7 @@ import java.lang.management.MemoryMXBean;
 import java.util.List;
 
 import org.apache.drill.common.util.DrillStringUtils;
+import org.apache.drill.common.util.JacksonUtils;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Rule;
@@ -37,11 +38,10 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 
 public class DrillTest extends BaseTest {
 
-  protected static final ObjectMapper objectMapper;
+  private static final ObjectMapper objectMapper = JacksonUtils.createObjectMapper();
 
   static {
     System.setProperty("line.separator", "\n");
-    objectMapper = new ObjectMapper();
   }
 
   static final SystemManager manager = new SystemManager();

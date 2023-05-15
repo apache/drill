@@ -20,7 +20,9 @@ package org.apache.drill.exec.work;
 import java.util.ArrayList;
 import java.util.List;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.apache.drill.common.util.JacksonUtils;
 import org.apache.drill.exec.physical.base.FragmentRoot;
 import org.apache.drill.exec.planner.PhysicalPlanReader;
 import org.apache.drill.exec.planner.fragment.Wrapper;
@@ -29,11 +31,11 @@ import org.apache.drill.exec.proto.CoordinationProtos;
 import org.apache.drill.exec.proto.ExecProtos;
 import org.apache.drill.exec.server.options.OptionList;
 import org.apache.drill.exec.work.foreman.ForemanSetupException;
-
-import com.fasterxml.jackson.core.JsonProcessingException;
 import org.apache.drill.shaded.guava.com.google.common.base.Preconditions;
 
 public class QueryWorkUnit {
+
+  private static final ObjectMapper MAPPER = JacksonUtils.createObjectMapper();
 
   /**
    * Definition of a minor fragment that contains the (unserialized) fragment operator
@@ -149,10 +151,9 @@ public class QueryWorkUnit {
 
       String jsonString = "<<malformed JSON>>";
       stringBuilder.append("  fragment_json: ");
-      final ObjectMapper objectMapper = new ObjectMapper();
       try {
-        final Object json = objectMapper.readValue(planFragment.getFragmentJson(), Object.class);
-        jsonString = objectMapper.writerWithDefaultPrettyPrinter().writeValueAsString(json);
+        final Object json = MAPPER.readValue(planFragment.getFragmentJson(), Object.class);
+        jsonString = MAPPER.writerWithDefaultPrettyPrinter().writeValueAsString(json);
       } catch (final Exception e) {
         // we've already set jsonString to a fallback value
       }

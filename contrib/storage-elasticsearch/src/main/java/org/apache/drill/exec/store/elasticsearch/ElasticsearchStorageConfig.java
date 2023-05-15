@@ -24,11 +24,11 @@ import com.fasterxml.jackson.annotation.JsonInclude.Include;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.ObjectWriter;
 import org.apache.drill.common.PlanStringBuilder;
 import org.apache.drill.common.logical.StoragePluginConfig;
 import org.apache.drill.common.logical.security.PlainCredentialsProvider;
+import org.apache.drill.common.util.JacksonUtils;
 import org.apache.drill.exec.store.security.CredentialProviderUtils;
 import org.apache.drill.common.logical.security.CredentialsProvider;
 import org.apache.drill.exec.store.security.UsernamePasswordCredentials;
@@ -45,7 +45,7 @@ import java.util.Optional;
 public class ElasticsearchStorageConfig extends StoragePluginConfig {
   public static final String NAME = "elastic";
 
-  private static final ObjectWriter OBJECT_WRITER = new ObjectMapper().writerFor(List.class);
+  private static final ObjectWriter OBJECT_WRITER = JacksonUtils.createObjectMapper().writerFor(List.class);
 
   private static final String HOSTS = "hosts";
 

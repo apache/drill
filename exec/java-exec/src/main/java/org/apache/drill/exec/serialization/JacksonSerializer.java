@@ -22,11 +22,18 @@ import java.io.IOException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.ObjectReader;
 import com.fasterxml.jackson.databind.ObjectWriter;
+import org.apache.drill.common.util.JacksonUtils;
 import org.apache.drill.shaded.guava.com.google.common.base.Objects;
 
 public class JacksonSerializer<T> implements InstanceSerializer<T> {
+  private static final ObjectMapper DEFAULT_MAPPER = JacksonUtils.createObjectMapper();
   private final ObjectReader reader;
   private final ObjectWriter writer;
+
+  public JacksonSerializer(final Class<T> klazz) {
+    this.reader = DEFAULT_MAPPER.readerFor(klazz);
+    this.writer = DEFAULT_MAPPER.writer();
+  }
 
   public JacksonSerializer(final ObjectMapper mapper, final Class<T> klazz) {
     this.reader = mapper.readerFor(klazz);
