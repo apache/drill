@@ -20,6 +20,7 @@ package org.apache.drill.exec.store;
 import org.apache.drill.common.config.DrillConfig;
 import org.apache.drill.common.config.LogicalPlanPersistence;
 import org.apache.drill.common.scanner.persistence.ScanResult;
+import org.apache.drill.common.util.JacksonUtils;
 import org.apache.drill.exec.server.DrillbitContext;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -44,7 +45,7 @@ public class DrillbitPluginRegistryContext implements PluginRegistryContext {
     // to handle HOCON format in the override file
     LogicalPlanPersistence persistence = new LogicalPlanPersistence(drillbitContext.getConfig(),
         drillbitContext.getClasspathScan(),
-        new ObjectMapper(new HoconFactory()));
+        JacksonUtils.createObjectMapper(new HoconFactory()));
     hoconMapper = persistence.getMapper();
   }
 

@@ -21,6 +21,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import org.apache.drill.common.exceptions.UserException;
+import org.apache.drill.common.util.JacksonUtils;
 import org.apache.drill.exec.store.druid.druid.DruidScanResponse;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -35,7 +36,7 @@ public class DruidQueryClient {
   private static final Logger logger = LoggerFactory.getLogger(DruidQueryClient.class);
 
   private static final String QUERY_BASE_URI = "/druid/v2";
-  private static final ObjectMapper mapper = new ObjectMapper();
+  private static final ObjectMapper mapper = JacksonUtils.createObjectMapper();
 
   private final RestClient restClient;
   private final String queryUrl;

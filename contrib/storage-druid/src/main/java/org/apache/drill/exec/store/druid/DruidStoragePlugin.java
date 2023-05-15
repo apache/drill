@@ -18,7 +18,6 @@
 package org.apache.drill.exec.store.druid;
 
 import com.fasterxml.jackson.core.type.TypeReference;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.calcite.schema.SchemaPlus;
 import org.apache.drill.common.JSONOptions;
 import org.apache.drill.exec.ops.OptimizerRulesContext;
@@ -59,7 +58,7 @@ public class DruidStoragePlugin extends AbstractStoragePlugin {
 
   @Override
   public DruidGroupScan getPhysicalScan(String userName, JSONOptions selection) throws IOException {
-    DruidScanSpec scanSpec = selection.getListWith(new ObjectMapper(), new TypeReference<DruidScanSpec>() {});
+    DruidScanSpec scanSpec = selection.getListWith(new TypeReference<DruidScanSpec>() {});
     return new DruidGroupScan(userName, this, scanSpec, null, -1);
   }
 
