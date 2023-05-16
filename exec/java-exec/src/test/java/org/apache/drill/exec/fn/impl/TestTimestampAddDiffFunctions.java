@@ -21,7 +21,6 @@ import org.apache.drill.test.ClusterFixture;
 import org.apache.drill.test.ClusterFixtureBuilder;
 import org.apache.drill.test.ClusterTest;
 import org.junit.BeforeClass;
-import org.junit.Ignore;
 import org.junit.Test;
 
 import java.time.LocalDateTime;
@@ -52,7 +51,6 @@ public class TestTimestampAddDiffFunctions extends ClusterTest {
     startCluster(builder);
   }
 
-  @Ignore
   @Test // DRILL-3610
   public void testTimestampAddDiffLiteralTypeInference() throws Exception {
     Map<String, String> dateTypes = new HashMap<>();
