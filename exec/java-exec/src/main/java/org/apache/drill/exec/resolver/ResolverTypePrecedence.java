@@ -118,7 +118,7 @@ public class ResolverTypePrecedence {
     .putEdgeValue(MinorType.INTERVALYEAR, MinorType.INTERVAL, 10f)
     // interval conversions
     // prefer the cast in the opposite direction
-    .putEdgeValue(MinorType.INTERVAL, MinorType.VARCHAR, 100f)
+    .putEdgeValue(MinorType.INTERVAL, MinorType.VARCHAR, 1000f)
 
     // dict widening
     .putEdgeValue(MinorType.DICT, MinorType.MAP, 10f)
@@ -138,15 +138,16 @@ public class ResolverTypePrecedence {
     .putEdgeValue(MinorType.FIXEDCHAR, MinorType.VARCHAR, 10f)
     .putEdgeValue(MinorType.FIXEDBINARY, MinorType.VARBINARY, 10f)
     // char and binary conversions
-    .putEdgeValue(MinorType.VARCHAR, MinorType.INT, 10f)
-    .putEdgeValue(MinorType.VARCHAR, MinorType.FLOAT8, 20f)
-    .putEdgeValue(MinorType.VARCHAR, MinorType.FLOAT4, 21f)
-    .putEdgeValue(MinorType.VARCHAR, MinorType.VARDECIMAL, 30f)
-    .putEdgeValue(MinorType.VARCHAR, MinorType.TIMESTAMP, 40f)
-    .putEdgeValue(MinorType.VARCHAR, MinorType.INTERVALDAY, 50f)
-    .putEdgeValue(MinorType.VARCHAR, MinorType.BIT, 60f)
-    .putEdgeValue(MinorType.VARCHAR, MinorType.VARBINARY, 70f)
-    .putEdgeValue(MinorType.VARBINARY, MinorType.VARCHAR, 80f)
+    .putEdgeValue(MinorType.VARCHAR, MinorType.BIGINT, 100f)
+    .putEdgeValue(MinorType.VARCHAR, MinorType.INT, 101f)
+    .putEdgeValue(MinorType.VARCHAR, MinorType.FLOAT8, 102f)
+    .putEdgeValue(MinorType.VARCHAR, MinorType.FLOAT4, 103f)
+    .putEdgeValue(MinorType.VARCHAR, MinorType.VARDECIMAL, 104f)
+    .putEdgeValue(MinorType.VARCHAR, MinorType.TIMESTAMP, 105f)
+    .putEdgeValue(MinorType.VARCHAR, MinorType.INTERVALDAY, 106f)
+    .putEdgeValue(MinorType.VARCHAR, MinorType.BIT, 107f)
+    .putEdgeValue(MinorType.VARCHAR, MinorType.VARBINARY, 108f)
+    .putEdgeValue(MinorType.VARBINARY, MinorType.VARCHAR, 109f)
 
     // union type sink vertex
     .putEdgeValue(MinorType.LIST, MinorType.UNION, 10f)
