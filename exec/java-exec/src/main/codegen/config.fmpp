@@ -36,6 +36,7 @@ data: {
     decimalaggrtypes3:        tdd(../data/DecimalAggrTypes3.tdd),
     aggrtypes2:               tdd(../data/AggrTypes2.tdd),
     aggrtypes3:               tdd(../data/AggrTypes3.tdd),
+    aggrtypes4:               tdd(../data/AggrTypes4.tdd),
     covarTypes:               tdd(../data/CovarTypes.tdd),
     corrTypes:                tdd(../data/CorrelationTypes.tdd),
     logicalTypes:             tdd(../data/AggrBitwiseLogicalTypes.tdd),

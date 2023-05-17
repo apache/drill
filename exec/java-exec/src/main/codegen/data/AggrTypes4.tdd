@@ -1,0 +1,19 @@
+# See the License for the specific language governing permissions and
+# limitations under the License.
+#
+
+{
+  aggrtypes: [
+    {className: "Median", funcName: "median",  aliasName: "", types: [
+      {inputType: "Int", outputType: "NullableBigInt", major: "Numeric", java: "Long", medianHelper: "StreamingIntMedianHelper"},
+      {inputType: "BigInt", outputType: "NullableBigInt",  major: "Numeric", java: "Long", medianHelper: "StreamingIntMedianHelper"},
+      {inputType: "NullableInt", outputType: "NullableBigInt", major: "Numeric", java: "Long", medianHelper: "StreamingIntMedianHelper"},
+      {inputType: "NullableBigInt", outputType: "NullableBigInt", major: "Numeric", java: "Long", medianHelper: "StreamingIntMedianHelper"},
+      {inputType: "Float4", outputType: "NullableFloat8", major: "Numeric", java: "Double", medianHelper: "StreamingDoubleMedianHelper"},
+      {inputType: "Float8", outputType: "NullableFloat8", major: "Numeric", java: "Double", medianHelper: "StreamingDoubleMedianHelper"},
+      {inputType: "NullableFloat4", outputType: "NullableFloat8", major: "Numeric", java: "Double", medianHelper: "StreamingDoubleMedianHelper"},
+      {inputType: "NullableFloat8", outputType: "NullableFloat8", major: "Numeric", java: "Double", medianHelper: "StreamingDoubleMedianHelper"},
+     ]
+   }
+  ]
+}
