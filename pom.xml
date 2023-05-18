@@ -54,7 +54,7 @@
     <parquet.version>1.12.3</parquet.version>
     <parquet.format.version>2.9.0</parquet.format.version>
     <calcite.groupId>org.apache.calcite</calcite.groupId>
-    <calcite.version>1.35.0-SNAPSHOT</calcite.version>
+    <calcite.version>1.34.0</calcite.version>
     <avatica.version>1.23.0</avatica.version>
     <janino.version>3.1.8</janino.version>
     <sqlline.version>1.12.0</sqlline.version>
@@ -83,7 +83,7 @@
     <hbase.version>2.4.9</hbase.version>
     <fmpp.version>1.0</fmpp.version>
     <freemarker.version>2.3.30</freemarker.version>
-    <javassist.version>3.28.0-GA</javassist.version>
+    <javassist.version>3.29.2-GA</javassist.version>
     <msgpack.version>0.6.6</msgpack.version>
     <reflections.version>0.9.10</reflections.version>
     <avro.version>1.11.1</avro.version>
