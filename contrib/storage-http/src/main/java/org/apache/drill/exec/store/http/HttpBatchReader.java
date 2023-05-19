@@ -51,6 +51,7 @@ import org.slf4j.LoggerFactory;
 
 import java.io.File;
 import java.io.InputStream;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -118,6 +119,7 @@ public class HttpBatchReader implements ManagedReader<SchemaNegotiator> {
       .scanDefn(subScan)
       .url(url)
       .tempDir(new File(tempDirPath))
+      .paginator(paginator)
       .proxyConfig(proxySettings(negotiator.drillConfig(), url))
       .errorContext(errorContext)
       .build();
@@ -225,7 +227,7 @@ public class HttpBatchReader implements ManagedReader<SchemaNegotiator> {
 
   protected Map<String, Object> generatePaginationFieldMap() {
     if (paginator == null || paginator.getMode() != PaginatorMethod.INDEX) {
-      return null;
+      return Collections.emptyMap();
     }
 
     Map<String, Object> fieldMap = new HashMap<>();

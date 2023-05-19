@@ -76,3 +76,15 @@ There are three possible parameters:
 
 
 ** Note: Index / Keyset Pagination is only implemented for APIs that return JSON **
+
+## Header Index Pagination
+Header index pagination is used when the API in question returns a link to the next page in the response header.  Shopify is one such example of an API that does this. 
+
+The only configuration option is the `nextPageParam` which is the parameter that Drill should look for in the response header.
+
+```json
+ "paginator": {
+        "nextPageParam": "page",
+        "method": "HEADER_INDEX"
+      }
+```
