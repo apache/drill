@@ -26,6 +26,7 @@ import org.apache.drill.common.types.Types;
  * This holder can be used only as workspace variables in aggregate functions.
  * Using this holder should be avoided and we should stick to native holder types.
  */
+@Deprecated
 public class ObjectHolder implements ValueHolder {
   public static final TypeProtos.MajorType TYPE = Types.required(TypeProtos.MinorType.GENERIC_OBJECT);
 
