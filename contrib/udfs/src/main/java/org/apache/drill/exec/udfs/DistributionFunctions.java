@@ -29,6 +29,7 @@ import org.apache.drill.exec.expr.annotations.Workspace;
 import org.apache.drill.exec.expr.holders.Float8Holder;
 import org.apache.drill.exec.expr.holders.IntHolder;
 
+@SuppressWarnings("unused")
 public class DistributionFunctions {
 
   @FunctionTemplate(names = {"width_bucket", "widthBucket"},
@@ -150,7 +151,6 @@ public class DistributionFunctions {
       tau.value = result;
     }
   }
-
   @FunctionTemplate(names = {"regr_slope", "regrSlope"},
       scope = FunctionScope.POINT_AGGREGATE,
       nulls = NullHandling.INTERNAL)
