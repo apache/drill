@@ -41,7 +41,6 @@ public class HeaderIndexPaginator extends Paginator {
   private final String nextPageParam;
   private final String firstPageURL;
   private Headers headers;
-  private String nextUrl;
   private boolean firstPage;
   private int pageCount;
 
@@ -75,6 +74,11 @@ public class HeaderIndexPaginator extends Paginator {
   public void setResponseHeaders(Headers headers) {
     logger.debug("Setting response headers. ");
     this.headers = headers;
+
+    // If the next page URL is empty or otherwise undefined, halt pagination.
+    if (StringUtils.isEmpty(headers.get(nextPageParam))) {
+      notifyPartialPage();
+    }
   }
 
   @Override

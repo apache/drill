@@ -112,8 +112,7 @@ public class SimpleHttp implements AutoCloseable {
     .writeTimeout(DEFAULT_TIMEOUT, TimeUnit.SECONDS)
     .readTimeout(DEFAULT_TIMEOUT, TimeUnit.SECONDS)
     .build();
-
-
+  
   private final OkHttpClient client;
   private final File tempDir;
   private final HttpProxyConfig proxyConfig;
