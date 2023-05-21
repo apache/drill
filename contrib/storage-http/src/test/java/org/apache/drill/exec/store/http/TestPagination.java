@@ -18,7 +18,6 @@
 
 package org.apache.drill.exec.store.http;
 
-import okhttp3.Headers;
 import okhttp3.mockwebserver.MockResponse;
 import okhttp3.mockwebserver.MockWebServer;
 import okhttp3.mockwebserver.RecordedRequest;
