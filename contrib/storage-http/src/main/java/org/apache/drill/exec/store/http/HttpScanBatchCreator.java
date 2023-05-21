@@ -34,6 +34,7 @@ import org.apache.drill.exec.record.CloseableRecordBatch;
 import org.apache.drill.exec.record.RecordBatch;
 import org.apache.drill.exec.server.options.OptionManager;
 import org.apache.drill.exec.store.http.HttpPaginatorConfig.PaginatorMethod;
+import org.apache.drill.exec.store.http.paginator.HeaderIndexPaginator;
 import org.apache.drill.exec.store.http.paginator.IndexPaginator;
 import org.apache.drill.exec.store.http.paginator.OffsetPaginator;
 import org.apache.drill.exec.store.http.paginator.PagePaginator;
@@ -92,7 +93,7 @@ public class HttpScanBatchCreator implements BatchCreator<HttpSubScan> {
   private static class HttpReaderFactory implements ReaderFactory {
     private final HttpSubScan subScan;
     private final HttpPaginatorConfig paginatorConfig;
-    private Paginator paginator;
+    private final Paginator paginator;
 
     private int count;
 
@@ -105,6 +106,8 @@ public class HttpScanBatchCreator implements BatchCreator<HttpSubScan> {
 
         // Initialize the paginator and generate the base URLs
         this.paginator = getPaginator();
+      } else {
+        this.paginator = null;
       }
     }
 
@@ -119,8 +122,6 @@ public class HttpScanBatchCreator implements BatchCreator<HttpSubScan> {
         rawUrl = HttpUrl.parse(subScan.tableSpec().connectionConfig().url());
       }
 
-
-
       // If the URL is not parsable or otherwise invalid
       if (rawUrl == null) {
         throw UserException.validationError()
@@ -130,28 +131,33 @@ public class HttpScanBatchCreator implements BatchCreator<HttpSubScan> {
 
       urlBuilder = rawUrl.newBuilder();
 
-      Paginator paginator = null;
       if (paginatorConfig.getMethodType() == PaginatorMethod.OFFSET) {
-        paginator = new OffsetPaginator(urlBuilder,
+        return new OffsetPaginator(urlBuilder,
           subScan.maxRecords(),
           paginatorConfig.pageSize(),
           paginatorConfig.limitParam(),
           paginatorConfig.offsetParam());
       } else if (paginatorConfig.getMethodType() == PaginatorMethod.PAGE) {
-        paginator = new PagePaginator(urlBuilder,
+        return new PagePaginator(urlBuilder,
           subScan.maxRecords(),
           paginatorConfig.pageSize(),
           paginatorConfig.pageParam(),
           paginatorConfig.pageSizeParam());
       } else if (paginatorConfig.getMethodType() == PaginatorMethod.INDEX) {
-        paginator = new IndexPaginator(urlBuilder,
+        return new IndexPaginator(urlBuilder,
           0,  // Page size not used for Index/Keyset pagination
           subScan.maxRecords(),
           paginatorConfig.hasMoreParam(),
           paginatorConfig.indexParam(),
           paginatorConfig.nextPageParam());
+      } else if (paginatorConfig.getMethodType() == PaginatorMethod.HEADER_INDEX) {
+        return new HeaderIndexPaginator(urlBuilder,
+            subScan.maxRecords(),
+            paginatorConfig.pageSize(),
+            paginatorConfig.nextPageParam(),
+            subScan.tableSpec().connectionConfig().url());
       }
-      return paginator;
+      return null;
     }
 
     @Override
@@ -181,6 +187,7 @@ public class HttpScanBatchCreator implements BatchCreator<HttpSubScan> {
         * the group scan such that the calls could be sent to different drillbits.
         */
         if (!paginator.hasNext()) {
+          logger.debug("Ending Batch Generation.");
           return null;
         }
 

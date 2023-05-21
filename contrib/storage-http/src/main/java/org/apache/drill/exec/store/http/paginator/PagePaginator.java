@@ -28,7 +28,7 @@ import java.util.NoSuchElementException;
 
 public class PagePaginator extends Paginator {
 
-  private static final Logger logger = LoggerFactory.getLogger(OffsetPaginator.class);
+  private static final Logger logger = LoggerFactory.getLogger(PagePaginator.class);
 
   private final int limit;
   private final String pageParam;

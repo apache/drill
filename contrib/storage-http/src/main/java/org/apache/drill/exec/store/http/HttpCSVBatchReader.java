@@ -99,6 +99,7 @@ public class HttpCSVBatchReader extends HttpBatchReader {
       .scanDefn(subScan)
       .url(url)
       .tempDir(new File(tempDirPath))
+      .paginator(paginator)
       .proxyConfig(proxySettings(negotiator.drillConfig(), url))
       .errorContext(errorContext)
       .build();
