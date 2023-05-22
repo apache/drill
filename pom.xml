@@ -562,7 +562,6 @@
             <includeOnlyProperty>^git\.commit\..*$</includeOnlyProperty>
             <includeOnlyProperty>^git\.dirty$</includeOnlyProperty>
             <includeOnlyProperty>^git\.tags$</includeOnlyProperty>
-            <includeOnlyProperty>^git\.total\.commit\.count$</includeOnlyProperty>
           </includeOnlyProperties>
         </configuration>
       </plugin>
