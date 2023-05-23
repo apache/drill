@@ -68,12 +68,6 @@
       <groupId>nl.basjes.parse.useragent</groupId>
       <artifactId>yauaa</artifactId>
       <version>${yauaa.version}</version>
-      <exclusions>
-        <exclusion>
-          <groupId>com.github.ben-manes.caffeine</groupId>
-          <artifactId>caffeine</artifactId>
-        </exclusion>
-      </exclusions>
     </dependency>
 
     <!-- Test dependencies -->
