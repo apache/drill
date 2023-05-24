@@ -52,7 +52,7 @@ public class TestXSDSchema {
           .resumeMap()
         .resumeSchema().buildSchema();
     System.out.println(expectedSchema);
-    System.out.println(schema);
+    System.out.println("ACTUAL: " + schema);
     assertTrue(expectedSchema.isEquivalent(schema));
   }
 }

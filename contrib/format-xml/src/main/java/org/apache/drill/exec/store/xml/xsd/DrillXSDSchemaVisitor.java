@@ -61,8 +61,12 @@ public class DrillXSDSchemaVisitor implements XmlSchemaVisitor {
   public void onEnterElement(XmlSchemaElement xmlSchemaElement, XmlSchemaTypeInfo xmlSchemaTypeInfo, boolean b) {
     if (xmlSchemaTypeInfo.getType().name().equalsIgnoreCase("COMPLEX")) {
       // Start a map here.
+      logger.debug("Starting map: {}", xmlSchemaElement.getName());
+      if (currentMapBuilder != null) {
+        logger.debug("Pushing {} on stack.", xmlSchemaElement.getName());
+        mapBuilderStack.push(currentMapBuilder);
+      }
       currentMapBuilder = builder.addMap(xmlSchemaElement.getName());
-      mapBuilderStack.push(currentMapBuilder);
       nestingLevel++;
     } else {
       // If the field is a scalar, simply add it to the schema.
@@ -134,7 +138,7 @@ public class DrillXSDSchemaVisitor implements XmlSchemaVisitor {
 
   @Override
   public void onExitSequenceGroup(XmlSchemaSequence xmlSchemaSequence) {
-    logger.debug("Leaving map: {} {}", currentMapBuilder.toString(), nestingLevel);
+    logger.debug("Leaving map");
     if (currentMapBuilder != null) {
       if (nestingLevel > 1) {
         currentMapBuilder.resumeMap();

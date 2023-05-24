@@ -52,7 +52,7 @@ public class XSDSchemaUtils {
     .build();
 
   /**
-   * This function is used for testing, but accepts a XSD file as input
+   * This function is only used for testing, but accepts a XSD file as input
    * @param filename A {@link String} containing an XSD file.
    * @return A {@link TupleMetadata} containing a Drill representation of the XSD schema.
    * @throws IOException If anything goes wrong.
