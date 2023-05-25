@@ -50,9 +50,10 @@ public class TestXSDSchema {
             .addNullable("quantity", MinorType.INT)
             .addNullable("price", MinorType.VARDECIMAL)
           .resumeMap()
-        .resumeSchema().buildSchema();
-    System.out.println(expectedSchema);
-    System.out.println("ACTUAL: " + schema);
+        .resumeSchema()
+      .buildSchema();
+    System.out.println("E" + expectedSchema);
+    System.out.println("A" + schema);
     assertTrue(expectedSchema.isEquivalent(schema));
   }
 }
