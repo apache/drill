@@ -19,6 +19,7 @@ package org.apache.drill.exec.store.delta;
 
 import org.apache.drill.common.logical.FormatPluginConfig;
 import org.apache.drill.common.logical.security.PlainCredentialsProvider;
+import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.store.StoragePluginRegistry;
 import org.apache.drill.exec.store.delta.format.DeltaFormatPluginConfig;
 import org.apache.drill.exec.store.dfs.FileSystemConfig;
@@ -61,7 +62,8 @@ public class DeltaQueriesTest extends ClusterTest {
 
   @Test
   public void testSerDe() throws Exception {
-    String plan = queryBuilder().sql("select * from dfs.`data-reader-partition-values`").explainJson();
+    client.alterSession(ExecConstants.SLICE_TARGET, 1);
+    String plan = queryBuilder().sql("select * from table(dfs.`data-reader-partition-values` (type => 'delta'))").explainJson();
     long count = queryBuilder().physical(plan).run().recordCount();
     assertEquals(3, count);
   }
