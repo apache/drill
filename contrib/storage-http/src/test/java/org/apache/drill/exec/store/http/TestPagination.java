@@ -346,7 +346,7 @@ public class TestPagination extends ClusterTest {
     configs.put("customers", mockJsonConfigWithHeaderIndex);
 
     HttpStoragePluginConfig mockStorageConfigWithWorkspace =
-      new HttpStoragePluginConfig(false, true, configs, 2,1000, null, null, "", 80, "", "", "", null,
+      new HttpStoragePluginConfig(false, false, configs, 2,1000, null, null, "", 80, "", "", "", null,
         PlainCredentialsProvider.EMPTY_CREDENTIALS_PROVIDER, AuthMode.SHARED_USER.name());
     mockStorageConfigWithWorkspace.setEnabled(true);
     cluster.defineStoragePlugin("local", mockStorageConfigWithWorkspace);
