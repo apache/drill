@@ -29,6 +29,7 @@ import org.apache.commons.lang3.tuple.Pair;
 import org.apache.drill.common.collections.Collectors;
 import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.common.util.DrillVersionInfo;
+import org.apache.drill.common.util.JacksonUtils;
 import org.apache.drill.exec.serialization.PathSerDe;
 import org.apache.drill.exec.store.TimedCallable;
 import org.apache.drill.exec.store.dfs.MetadataContext;
@@ -531,13 +532,14 @@ public class Metadata {
     JsonFactory jsonFactory = new JsonFactory();
     jsonFactory.configure(Feature.AUTO_CLOSE_TARGET, false);
     jsonFactory.configure(JsonParser.Feature.AUTO_CLOSE_SOURCE, false);
-    ObjectMapper mapper = new ObjectMapper(jsonFactory);
     SimpleModule module = new SimpleModule();
     module.addSerializer(Path.class, new PathSerDe.Se());
     if (parquetMetadata instanceof Metadata_V4.FileMetadata) {
       module.addSerializer(ColumnMetadata_v4.class, new ColumnMetadata_v4.Serializer());
     }
-    mapper.registerModule(module);
+    ObjectMapper mapper = JacksonUtils.createJsonMapperBuilder(jsonFactory)
+        .addModule(module)
+        .build();
     OutputStream os = fs.create(p);
     mapper.writerWithDefaultPrettyPrinter().writeValue(os, parquetMetadata);
     os.flush();
@@ -556,7 +558,7 @@ public class Metadata {
     Stopwatch timer = logger.isDebugEnabled() ? Stopwatch.createStarted() : null;
     Path metadataParentDir = Path.getPathWithoutSchemeAndAuthority(path.getParent());
     String metadataParentDirPath = metadataParentDir.toUri().getPath();
-    ObjectMapper mapper = new ObjectMapper();
+    ObjectMapper mapper = JacksonUtils.createObjectMapper();
 
     final SimpleModule serialModule = new SimpleModule();
     serialModule.addDeserializer(SchemaPath.class, new SchemaPath.De());
@@ -729,14 +731,15 @@ public class Metadata {
           }
         }
         // Read the existing metadataSummary cache file to get the metadataSummary
-        ObjectMapper mapper = new ObjectMapper();
         final SimpleModule serialModule = new SimpleModule();
         serialModule.addDeserializer(SchemaPath.class, new SchemaPath.De());
         serialModule.addKeyDeserializer(ColumnTypeMetadata_v4.Key.class, new ColumnTypeMetadata_v4.Key.DeSerializer());
         AfterburnerModule module = new AfterburnerModule();
         module.setUseOptimizedBeanDeserializer(true);
-        mapper.registerModule(serialModule);
-        mapper.registerModule(module);
+        ObjectMapper mapper = JacksonUtils.createJsonMapperBuilder()
+            .addModule(serialModule)
+            .addModule(module)
+            .build();
         mapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
         InputStream is = fs.open(summaryFile);
         return mapper.readValue(is, Metadata_V4.MetadataSummary.class);

@@ -50,9 +50,11 @@ import org.apache.drill.exec.store.StoragePluginRegistry.PluginException;
 import org.apache.drill.exec.store.http.HttpApiConfig;
 import org.apache.drill.exec.store.http.HttpApiConfig.HttpMethod;
 import org.apache.drill.exec.store.http.HttpApiConfig.PostLocation;
+import org.apache.drill.exec.store.http.HttpPaginatorConfig.PaginatorMethod;
 import org.apache.drill.exec.store.http.HttpStoragePlugin;
 import org.apache.drill.exec.store.http.HttpStoragePluginConfig;
 import org.apache.drill.exec.store.http.HttpSubScan;
+import org.apache.drill.exec.store.http.paginator.HeaderIndexPaginator;
 import org.apache.drill.exec.store.http.paginator.Paginator;
 import org.apache.drill.exec.store.http.oauth.AccessTokenAuthenticator;
 import org.apache.drill.exec.store.http.oauth.AccessTokenInterceptor;
@@ -110,8 +112,6 @@ public class SimpleHttp implements AutoCloseable {
     .writeTimeout(DEFAULT_TIMEOUT, TimeUnit.SECONDS)
     .readTimeout(DEFAULT_TIMEOUT, TimeUnit.SECONDS)
     .build();
-
-
   private final OkHttpClient client;
   private final File tempDir;
   private final HttpProxyConfig proxyConfig;
@@ -461,6 +461,11 @@ public class SimpleHttp implements AutoCloseable {
       }
       logger.debug("HTTP Request for {} successful.", url());
       logger.debug("Response Headers: {} ", response.headers());
+
+      // In the case of Header Index Pagination, send the header(s) to the paginator
+      if (paginator != null && paginator.getMode() == PaginatorMethod.HEADER_INDEX) {
+        ((HeaderIndexPaginator)paginator).setResponseHeaders(response.headers());
+      }
 
       // Return the InputStream of the response. Note that it is necessary and
       // and sufficient that the caller invokes close() on the returned stream.

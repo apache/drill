@@ -35,6 +35,7 @@ import org.apache.calcite.rex.RexLiteral;
 import org.apache.calcite.util.NlsString;
 import org.apache.drill.common.exceptions.DrillRuntimeException;
 import org.apache.drill.common.util.GuavaUtils;
+import org.apache.drill.common.util.JacksonUtils;
 import org.apache.drill.exec.vector.complex.fn.BasicJsonOutput;
 import org.apache.drill.exec.vector.complex.fn.JsonOutput;
 import org.joda.time.DateTime;
@@ -50,7 +51,7 @@ import com.fasterxml.jackson.databind.util.TokenBuffer;
  */
 public abstract class DrillValuesRelBase extends Values implements DrillRelNode {
 
-  private static final ObjectMapper MAPPER = new ObjectMapper();
+  private static final ObjectMapper MAPPER = JacksonUtils.createObjectMapper();
 
   protected final String content;
 

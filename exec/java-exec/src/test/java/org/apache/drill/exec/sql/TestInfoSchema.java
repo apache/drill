@@ -21,6 +21,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.drill.categories.SqlTest;
 import org.apache.drill.common.exceptions.UserRemoteException;
 import org.apache.drill.common.types.TypeProtos;
+import org.apache.drill.common.util.JacksonUtils;
 import org.apache.drill.exec.physical.rowSet.DirectRowSet;
 import org.apache.drill.exec.physical.rowSet.RowSet;
 import org.apache.drill.exec.physical.rowSet.RowSetBuilder;
@@ -63,7 +64,7 @@ import static org.junit.Assert.assertTrue;
 @Category(SqlTest.class)
 public class TestInfoSchema extends ClusterTest {
   private static final String TEST_SUB_DIR = "testSubDir";
-  private static final ObjectMapper mapper = new ObjectMapper().enable(INDENT_OUTPUT);
+  private static final ObjectMapper mapper = JacksonUtils.createObjectMapper().enable(INDENT_OUTPUT);
 
   @BeforeClass
   public static void setupFiles() throws Exception {

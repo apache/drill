@@ -133,10 +133,18 @@ public class HttpPaginatorConfig {
             .build(logger);
         }
         break;
+      case HEADER_INDEX:
+        if (StringUtils.isEmpty(this.nextPageParam)) {
+          throw UserException
+              .validationError()
+              .message("Invalid paginator configuration.  For HEADER_INDEX pagination, the nextPageParam must be defined.")
+              .build(logger);
+        }
+        break;
       default:
         throw UserException
           .validationError()
-          .message("Invalid paginator method: %s.  Drill supports 'OFFSET', 'INDEX' and 'PAGE'", method)
+          .message("Invalid paginator method: %s.  Drill supports 'OFFSET', 'INDEX', 'HEADER_INDEX' and 'PAGE'", method)
           .build(logger);
     }
   }
@@ -230,7 +238,8 @@ public class HttpPaginatorConfig {
   public enum PaginatorMethod {
     OFFSET,
     PAGE,
-    INDEX
+    INDEX,
+    HEADER_INDEX
   }
 
   @JsonIgnore

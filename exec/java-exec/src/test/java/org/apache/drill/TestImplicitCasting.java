@@ -99,9 +99,9 @@ public class TestImplicitCasting extends ClusterTest {
       ResolverTypePrecedence.computeCost(TypeProtos.MinorType.MAP, TypeProtos.MinorType.FLOAT8),
       0f
     );
-    // VARCHAR -> INT -> BIGINT
+    // VARCHAR -> BIGINT
     assertEquals(
-      10f+10f,
+      100f,
       ResolverTypePrecedence.computeCost(TypeProtos.MinorType.VARCHAR, TypeProtos.MinorType.BIGINT),
       0f
     );
@@ -154,6 +154,10 @@ public class TestImplicitCasting extends ClusterTest {
     assertThat(
       ResolverTypePrecedence.computeCost(TypeProtos.MinorType.VARCHAR, TypeProtos.MinorType.BIGINT),
       lessThan(ResolverTypePrecedence.computeCost(TypeProtos.MinorType.VARCHAR, TypeProtos.MinorType.TIMESTAMP))
+    );
+    assertThat(
+      ResolverTypePrecedence.computeCost(TypeProtos.MinorType.VARCHAR, TypeProtos.MinorType.BIGINT),
+      lessThan(ResolverTypePrecedence.computeCost(TypeProtos.MinorType.VARCHAR, TypeProtos.MinorType.FLOAT8))
     );
     assertThat(
       ResolverTypePrecedence.computeCost(TypeProtos.MinorType.VARCHAR, TypeProtos.MinorType.FLOAT8),

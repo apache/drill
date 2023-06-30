@@ -29,6 +29,7 @@ import org.apache.drill.exec.expr.annotations.Workspace;
 import org.apache.drill.exec.expr.holders.Float8Holder;
 import org.apache.drill.exec.expr.holders.IntHolder;
 
+@SuppressWarnings("unused")
 public class DistributionFunctions {
 
   @FunctionTemplate(names = {"width_bucket", "widthBucket"},
@@ -150,7 +151,6 @@ public class DistributionFunctions {
       tau.value = result;
     }
   }
-
   @FunctionTemplate(names = {"regr_slope", "regrSlope"},
       scope = FunctionScope.POINT_AGGREGATE,
       nulls = NullHandling.INTERNAL)
@@ -325,6 +325,42 @@ public class DistributionFunctions {
       diff_y.value = 0;
       ss_x.value = 0;
       ss_xy.value = 0;
+    }
+  }
+
+  /**
+   * This UDF calculates the percent change between two numeric columns.
+   */
+  @FunctionTemplate(names = {"percentChange", "percent_change"},
+      scope = FunctionScope.SIMPLE,
+      nulls = NullHandling.NULL_IF_NULL)
+  public static class PercentChangeFunction implements DrillSimpleFunc {
+    @Param
+    Float8Holder oldHolder;
+
+    @Param
+    Float8Holder newHolder;
+
+    @Output
+    Float8Holder resultHolder;
+
+    @Override
+    public void setup() {
+      // No op
+    }
+
+    @Override
+    public void eval() {
+      double v1 = oldHolder.value;
+      double v2 = newHolder.value;
+
+      if (v2 == 0) {
+        resultHolder.value = 0;
+      } else if (v1 == 0) {
+        // No op
+      } else {
+        resultHolder.value = (v2 - v1) * 100.0 / v1;
+      }
     }
   }
 }

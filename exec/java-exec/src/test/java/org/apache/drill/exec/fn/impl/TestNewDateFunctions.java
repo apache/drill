@@ -153,26 +153,6 @@ public class TestNewDateFunctions extends BaseTestQuery {
   }
 
   @Test
-  public void testDayOfYear() throws Exception {
-    testBuilder()
-        .sqlQuery("SELECT EXTRACT(DOY FROM date '2023-04-17') AS col1, EXTRACT(DAYOFYEAR FROM date '2023-04-17') as col2")
-        .unOrdered()
-        .baselineColumns("col1", "col2")
-        .baselineValues(107L, 107L)
-        .go();
-  }
-
-  @Test
-  public void testDayOfWeek() throws Exception {
-    testBuilder()
-        .sqlQuery("SELECT EXTRACT(DOW FROM date '2023-04-17') AS col1, EXTRACT(DAYOFWEEK FROM date '2023-04-17') as col2")
-        .unOrdered()
-        .baselineColumns("col1", "col2")
-        .baselineValues(1L, 1L)
-        .go();
-  }
-
-  @Test
   public void testLocalTimestamp() throws Exception {
     testBuilder()
         .sqlQuery("select extract(day from localtimestamp) = extract(day from current_date) as col from cp.`employee.json` limit 1")

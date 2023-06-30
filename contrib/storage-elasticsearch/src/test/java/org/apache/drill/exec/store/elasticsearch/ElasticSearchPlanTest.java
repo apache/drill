@@ -55,7 +55,7 @@ public class ElasticSearchPlanTest extends ClusterTest {
       TestElasticsearchSuite.ELASTICSEARCH_USERNAME,
       TestElasticsearchSuite.ELASTICSEARCH_PASSWORD,
       null,
-      AuthMode.SHARED_USER.name(),
+      AuthMode.SHARED_USER.name(), true,
       null
     );
     config.setEnabled(true);

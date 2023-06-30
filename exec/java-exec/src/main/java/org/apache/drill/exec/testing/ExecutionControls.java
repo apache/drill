@@ -22,6 +22,7 @@ import com.fasterxml.jackson.annotation.JsonSubTypes.Type;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import org.apache.drill.common.util.JacksonUtils;
 import org.apache.drill.shaded.guava.com.google.common.annotations.VisibleForTesting;
 import org.apache.drill.common.exceptions.DrillRuntimeException;
 import org.apache.drill.common.exceptions.UserException;
@@ -47,7 +48,7 @@ public final class ExecutionControls {
   private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(ExecutionControls.class);
 
   // used to map JSON specified injections to POJOs
-  public static final ObjectMapper controlsOptionMapper = new ObjectMapper();
+  public static final ObjectMapper controlsOptionMapper = JacksonUtils.createObjectMapper();
 
   static {
     controlsOptionMapper.addMixInAnnotations(Injection.class, InjectionMixIn.class);

@@ -164,6 +164,20 @@ public class TestPagination extends ClusterTest {
     headers.put("header1", "value1");
     headers.put("header2", "value2");
 
+    HttpPaginatorConfig headerIndexPaginator = HttpPaginatorConfig.builder()
+        .nextPageParam("link")
+        .pageSize(10)
+        .method("header_index")
+        .build();
+
+    HttpApiConfig mockJsonConfigWithHeaderIndex = HttpApiConfig.builder()
+        .url("http://localhost:8092/json")
+        .method("get")
+        .requireTail(false)
+        .paginator(headerIndexPaginator)
+        .inputType("json")
+        .build();
+
 
     HttpPaginatorConfig offsetPaginatorForJson = HttpPaginatorConfig.builder()
       .limitParam("limit")
@@ -329,6 +343,7 @@ public class TestPagination extends ClusterTest {
     configs.put("json_tail", mockJsonConfigWithPaginatorAndTail);
     configs.put("xml_paginator", mockXmlConfigWithPaginator);
     configs.put("xml_paginator_url_params", mockXmlConfigWithPaginatorAndUrlParams);
+    configs.put("customers", mockJsonConfigWithHeaderIndex);
 
     HttpStoragePluginConfig mockStorageConfigWithWorkspace =
       new HttpStoragePluginConfig(false, true, configs, 2,1000, null, null, "", 80, "", "", "", null,
@@ -337,6 +352,28 @@ public class TestPagination extends ClusterTest {
     cluster.defineStoragePlugin("local", mockStorageConfigWithWorkspace);
   }
 
+
+  @Test
+  public void testPagePaginationWithHeaderIndex() throws Exception {
+    String sql = "SELECT col1, _response_url FROM `local`.`customers`";
+    try (MockWebServer server = startServer()) {
+      server.enqueue(new MockResponse().setResponseCode(200).setBody(TEST_JSON_PAGE1).setHeader("link", "http://localhost:8092/json?page=2"));
+      server.enqueue(new MockResponse().setResponseCode(200).setBody(TEST_JSON_PAGE2).setHeader("link", "http://localhost:8092/json?page=3"));
+      server.enqueue(new MockResponse().setResponseCode(200).setBody(TEST_JSON_PAGE3));
+
+      List<QueryDataBatch> results = client.queryBuilder()
+          .sql(sql)
+          .results();
+
+      int count = 0;
+      for(QueryDataBatch b : results){
+        count += b.getHeader().getRowCount();
+        b.release();
+      }
+
+      assertEquals(3, results.size());
+    }
+  }
 
   @Test
   @Ignore("Requires Live Connection to Github")

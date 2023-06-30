@@ -24,6 +24,7 @@ import java.util.Map;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.joda.JodaModule;
+import org.apache.drill.common.util.JacksonUtils;
 
 /*
  * Simple class that extends the regular java.util.HashMap but overrides the
@@ -31,7 +32,7 @@ import com.fasterxml.jackson.datatype.joda.JodaModule;
  */
 public class JsonStringHashMap<K, V> extends LinkedHashMap<K, V> {
 
-  private static final ObjectMapper mapper = new ObjectMapper()
+  private static final ObjectMapper mapper = JacksonUtils.createObjectMapper()
       .registerModule(SerializationModule.getModule())
       .registerModule(new JodaModule());
 

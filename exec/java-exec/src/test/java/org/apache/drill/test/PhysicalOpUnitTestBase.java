@@ -20,6 +20,7 @@ package org.apache.drill.test;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.calcite.rel.RelFieldCollation;
+import org.apache.drill.common.util.JacksonUtils;
 import org.apache.drill.exec.coord.ClusterCoordinator;
 import org.apache.drill.exec.memory.BufferAllocator;
 import org.apache.drill.exec.ops.AccountingDataTunnel;
@@ -374,7 +375,7 @@ public class PhysicalOpUnitTestBase extends ExecTest {
    * @return The {@link org.apache.drill.exec.store.easy.json.JSONRecordReader} corresponding to each given jsonBatch.
    */
   public static Iterator<RecordReader> getJsonReadersFromBatchString(List<String> jsonBatches, FragmentContext fragContext, List<SchemaPath> columnsToRead) {
-    ObjectMapper mapper = new ObjectMapper();
+    ObjectMapper mapper = JacksonUtils.createObjectMapper();
     List<RecordReader> readers = new ArrayList<>();
     for (String batchJason : jsonBatches) {
       JsonNode records;

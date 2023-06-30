@@ -18,7 +18,6 @@
 package org.apache.drill.exec.store.drill.plugin;
 
 import com.fasterxml.jackson.core.type.TypeReference;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.calcite.plan.Convention;
 import org.apache.calcite.plan.RelOptRule;
 import org.apache.calcite.schema.SchemaPlus;
@@ -96,7 +95,7 @@ public class DrillStoragePlugin extends AbstractStoragePlugin {
 
   @Override
   public AbstractGroupScan getPhysicalScan(String userName, JSONOptions selection) throws IOException {
-    DrillScanSpec scanSpec = selection.getListWith(new ObjectMapper(), new TypeReference<DrillScanSpec>() {
+    DrillScanSpec scanSpec = selection.getListWith(new TypeReference<DrillScanSpec>() {
     });
     return new DrillGroupScan(userName, drillConfig, scanSpec);
   }

@@ -18,7 +18,9 @@
 package org.apache.drill.exec;
 
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.module.SimpleModule;
+import org.apache.drill.common.util.JacksonUtils;
 import org.apache.drill.exec.serialization.PathSerDe;
 import org.apache.drill.exec.store.schedule.CompleteFileWork;
 import org.apache.drill.test.DrillTest;
@@ -39,9 +41,10 @@ public class TestPathSerialization extends DrillTest {
 
     SimpleModule module = new SimpleModule();
     module.addSerializer(Path.class, new PathSerDe.Se());
-    objectMapper.registerModule(module);
+    ObjectMapper testMapper = JacksonUtils.createObjectMapper();
+    testMapper.registerModule(module);
 
-    CompleteFileWork.FileWorkImpl bean = objectMapper.readValue(jsonString, CompleteFileWork.FileWorkImpl.class);
+    CompleteFileWork.FileWorkImpl bean = testMapper.readValue(jsonString, CompleteFileWork.FileWorkImpl.class);
 
     assertThat(bean.getStart() == 1,  equalTo( true ));
     assertThat(bean.getLength() == 2, equalTo( true ));
@@ -53,10 +56,11 @@ public class TestPathSerialization extends DrillTest {
     CompleteFileWork.FileWorkImpl fileWork = new CompleteFileWork.FileWorkImpl(5, 6, new Path("/tmp"));
     SimpleModule module = new SimpleModule();
     module.addSerializer(Path.class, new PathSerDe.Se());
-    objectMapper.registerModule(module);
+    ObjectMapper testMapper = JacksonUtils.createObjectMapper();
+    testMapper.registerModule(module);
 
     CompleteFileWork.FileWorkImpl bean =
-        objectMapper.readValue(objectMapper.writeValueAsString(fileWork), CompleteFileWork.FileWorkImpl.class);
+        testMapper.readValue(testMapper.writeValueAsString(fileWork), CompleteFileWork.FileWorkImpl.class);
 
     assertThat(bean.getStart() == 5,  equalTo( true ));
     assertThat(bean.getLength() == 6, equalTo( true ));

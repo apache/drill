@@ -31,6 +31,7 @@ import com.google.protobuf.MessageLite;
 import com.google.protobuf.Parser;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.DrillBuf;
+import org.apache.drill.common.util.JacksonUtils;
 import org.apache.drill.exec.proto.BitControl.CustomMessage;
 import org.apache.drill.exec.proto.BitControl.FinishedReceiver;
 import org.apache.drill.exec.proto.BitControl.FragmentStatus;
@@ -465,17 +466,18 @@ public class ControlTunnel {
     private final ObjectReader reader;
 
     public JacksonSerDe(Class<MSG> clazz) {
-      ObjectMapper mapper = new ObjectMapper();
+      ObjectMapper mapper = JacksonUtils.createObjectMapper();
       writer = mapper.writerFor(clazz);
       reader = mapper.readerFor(clazz);
     }
 
     public JacksonSerDe(Class<MSG> clazz, JsonSerializer<MSG> serializer, JsonDeserializer<MSG> deserializer) {
-      ObjectMapper mapper = new ObjectMapper();
       SimpleModule module = new SimpleModule();
-      mapper.registerModule(module);
       module.addSerializer(clazz, serializer);
       module.addDeserializer(clazz, deserializer);
+      ObjectMapper mapper = JacksonUtils.createJsonMapperBuilder()
+          .addModule(module)
+          .build();
       writer = mapper.writerFor(clazz);
       reader = mapper.readerFor(clazz);
     }

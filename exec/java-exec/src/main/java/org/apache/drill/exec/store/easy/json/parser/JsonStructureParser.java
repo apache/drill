@@ -25,6 +25,7 @@ import java.util.Map;
 import java.util.function.Function;
 
 import org.apache.commons.collections4.IterableUtils;
+import org.apache.drill.common.util.JacksonUtils;
 import org.apache.drill.exec.store.easy.json.parser.MessageParser.MessageContextException;
 import org.apache.drill.exec.store.easy.json.parser.RootParser.EmbeddedArrayParser;
 import org.apache.drill.exec.store.easy.json.parser.RootParser.EmbeddedObjectParser;
@@ -160,7 +161,7 @@ public class JsonStructureParser {
   private JsonStructureParser(JsonStructureParserBuilder builder) {
     this.options = Preconditions.checkNotNull(builder.options);
     this.errorFactory = Preconditions.checkNotNull(builder.errorFactory);
-    ObjectMapper mapper = new ObjectMapper()
+    ObjectMapper mapper = JacksonUtils.createObjectMapper()
         .configure(JsonParser.Feature.ALLOW_COMMENTS, true)
         .configure(JsonParser.Feature.ALLOW_UNQUOTED_FIELD_NAMES, true)
         .configure(JsonReadFeature.ALLOW_NON_NUMERIC_NUMBERS.mappedFeature(),

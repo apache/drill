@@ -1289,4 +1289,46 @@ public class TestAggregateFunctions extends ClusterTest {
       .baselineValues("Partial High School", 3555.8064516129034, 101.14516129032258, 3469.7014925373132, 103.3731343283582)
       .go();
   }
+
+  @Test
+  public void testMedian() throws Exception {
+
+    // Test as String from CSV and aggregate
+    String query = "SELECT category, median(`value`) AS med FROM cp.`orgs.csvh` GROUP BY category";
+    testBuilder()
+        .sqlQuery(query)
+        .unOrdered()
+        .baselineColumns("category", "med")
+        .baselineValues("cat1", 5L)
+        .baselineValues("cat2", 5L)
+        .go();
+
+    query = "SELECT category, median(CAST(`value` AS DOUBLE)) AS med FROM cp.`orgs.csvh` GROUP BY category";
+    testBuilder()
+        .sqlQuery(query)
+        .unOrdered()
+        .baselineColumns("category", "med")
+        .baselineValues("cat1", 5.0)
+        .baselineValues("cat2", 5.0)
+        .go();
+
+  }
+
+  @Test
+  public void testMedianWithPivot() throws Exception {
+    String query = "SELECT * FROM (\n" +
+        "SELECT education_level, salary, marital_status, extract(year from age('2023-02-23', birth_date)) age\n" +
+        "FROM cp.`employee.json`)\n" +
+        "PIVOT (median(salary) med_salary, median(age) med_age FOR marital_status IN ('M' married, 'S' single))";
+    testBuilder()
+        .sqlQuery(query)
+        .unOrdered()
+        .baselineColumns("education_level", "married_med_salary", "married_med_age", "single_med_salary", "single_med_age")
+        .baselineValues("Graduate Degree", 4400.0, 109L, 20.0, 109L)
+        .baselineValues("Bachelors Degree", 4400.0,109L, 4400.0, 109L)
+        .baselineValues("Partial College", 4500.0, 109L, 4400.0, 109L)
+        .baselineValues("High School Degree", 3700.0, 109L, 4400.0, 109L)
+        .baselineValues("Partial High School", 4400.0, 109L, 20.0, 109L)
+        .go();
+  }
 }
