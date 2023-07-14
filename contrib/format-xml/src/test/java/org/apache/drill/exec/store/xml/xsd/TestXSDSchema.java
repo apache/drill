@@ -33,7 +33,7 @@ public class TestXSDSchema {
   @Test
   public void testSimpleXSD() throws Exception {
     File simple_xsd = DrillFileUtils.getResourceAsFile("/xsd/simple.xsd");
-    TupleMetadata schema = XSDSchemaUtils.getSchema(simple_xsd.getPath());
+    TupleMetadata schema = DrillXSDSchemaUtils.getSchema(simple_xsd.getPath());
 
     TupleMetadata expectedSchema  = new SchemaBuilder()
         .addMap("shiporder")
@@ -44,16 +44,59 @@ public class TestXSDSchema {
             .addNullable("city", MinorType.VARCHAR)
             .addNullable("country", MinorType.VARCHAR)
           .resumeMap()
-          .addMap("item")
+          .addMapArray("item")
             .addNullable("title", MinorType.VARCHAR)
             .addNullable("note", MinorType.VARCHAR)
-            .addNullable("quantity", MinorType.INT)
+            .addNullable("quantity", MinorType.VARDECIMAL)
             .addNullable("price", MinorType.VARDECIMAL)
           .resumeMap()
         .resumeSchema()
       .buildSchema();
-    System.out.println("E" + expectedSchema);
-    System.out.println("A" + schema);
+    assertTrue(expectedSchema.isEquivalent(schema));
+  }
+
+
+  @Test
+  public void testComplexXSD() throws Exception {
+    File complex_xsd = DrillFileUtils.getResourceAsFile("/xsd/complex.xsd");
+    TupleMetadata schema = DrillXSDSchemaUtils.getSchema(complex_xsd.getPath());
+
+    TupleMetadata expectedSchema = new SchemaBuilder()
+        .addNullable("comment", MinorType.VARCHAR)
+        .addMap("purchaseOrder")
+          .addMap("shipTo")
+            .addNullable("name", MinorType.VARCHAR)
+            .addNullable("street", MinorType.VARCHAR)
+            .addNullable("city", MinorType.VARCHAR)
+            .addNullable("state", MinorType.VARCHAR)
+            .addNullable("zip", MinorType.VARDECIMAL)
+          .resumeMap()
+          .addMap("billTo")
+            .addNullable("name", MinorType.VARCHAR)
+            .addNullable("street", MinorType.VARCHAR)
+            .addNullable("city", MinorType.VARCHAR)
+            .addNullable("state", MinorType.VARCHAR)
+            .addNullable("zip", MinorType.VARDECIMAL)
+          .resumeMap()
+        .addNullable("comment", MinorType.VARCHAR)
+        .resumeSchema()
+
+        .addMap("items")
+          .addMapArray("item")
+            .addNullable("productName", MinorType.VARCHAR)
+            .addNullable("quantity", MinorType.VARDECIMAL)
+            .addNullable("USPrice", MinorType.VARDECIMAL)
+            .addNullable("comment", MinorType.VARCHAR)
+
+          .resumeMap()
+        .addNullable("shipDate", MinorType.DATE)
+        .resumeSchema()
+
+      .build();
+
+    System.out.println(schema);
+    System.out.println(expectedSchema);
+
     assertTrue(expectedSchema.isEquivalent(schema));
   }
 }

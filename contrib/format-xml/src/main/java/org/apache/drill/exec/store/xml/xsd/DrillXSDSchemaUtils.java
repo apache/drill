@@ -26,7 +26,10 @@ import org.apache.ws.commons.schema.XmlSchema;
 import org.apache.ws.commons.schema.XmlSchemaCollection;
 import org.apache.ws.commons.schema.XmlSchemaElement;
 
+import org.apache.ws.commons.schema.XmlSchemaObject;
 import org.apache.ws.commons.schema.walker.XmlSchemaWalker;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.xml.transform.stream.StreamSource;
 import java.io.IOException;
@@ -34,9 +37,13 @@ import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 
-public class XSDSchemaUtils {
+public class DrillXSDSchemaUtils {
   private static final MinorType DEFAULT_TYPE = MinorType.VARCHAR;
+  private static final Logger logger = LoggerFactory.getLogger(DrillXSDSchemaUtils.class);
 
+  /**
+   * This map maps the data types defined by the XSD definition to Drill data types.
+   */
   public static final ImmutableMap<String, MinorType> XML_TYPE_MAPPINGS = ImmutableMap.<String, MinorType>builder()
     .put("BASE64BINARY", MinorType.VARBINARY)
     .put("BOOLEAN", MinorType.BIT)
@@ -52,10 +59,10 @@ public class XSDSchemaUtils {
     .build();
 
   /**
-   * This function is only used for testing, but accepts a XSD file as input
+   * This function is only used for testing, but accepts a XSD file as input rather than a {@link InputStream}
    * @param filename A {@link String} containing an XSD file.
    * @return A {@link TupleMetadata} containing a Drill representation of the XSD schema.
-   * @throws IOException If anything goes wrong.
+   * @throws IOException If anything goes wrong or the file is not found.
    */
   public static TupleMetadata getSchema(String filename) throws IOException {
     InputStream inputStream = Files.newInputStream(Paths.get(filename));
@@ -78,8 +85,15 @@ public class XSDSchemaUtils {
     DrillXSDSchemaVisitor schemaVisitor = new DrillXSDSchemaVisitor(new SchemaBuilder());
     XmlSchema[] schemas = schemaCollection.getXmlSchemas();
     XmlSchemaWalker walker = new XmlSchemaWalker(schemaCollection, schemaVisitor);
-    walker.walk((XmlSchemaElement) schemas[0].getItems().get(0));
 
+    // Walk all the schemata.
+    for (XmlSchema schema : schemas) {
+      for (XmlSchemaObject schemaObject : schema.getItems()) {
+        if (schemaObject instanceof XmlSchemaElement) {
+          walker.walk((XmlSchemaElement) schemaObject);
+        }
+      }
+    }
     return schemaVisitor.getDrillSchema();
   }
 
@@ -90,13 +104,14 @@ public class XSDSchemaUtils {
    */
   public static MinorType getDrillDataType(String xmlType) {
     try {
-      MinorType type = XSDSchemaUtils.XML_TYPE_MAPPINGS.get(xmlType);
+      MinorType type = DrillXSDSchemaUtils.XML_TYPE_MAPPINGS.get(xmlType);
       if (type == null) {
         return DEFAULT_TYPE;
       } else {
         return type;
       }
     } catch (NullPointerException e) {
+      logger.warn("Unknown data type found in XSD reader: {}.  Returning VARCHAR.", xmlType);
       return DEFAULT_TYPE;
     }
   }

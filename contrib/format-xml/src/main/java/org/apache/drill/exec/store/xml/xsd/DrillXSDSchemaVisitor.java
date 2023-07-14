@@ -35,7 +35,6 @@ import org.apache.ws.commons.schema.walker.XmlSchemaVisitor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.Stack;
 
 /**
  * This class transforms an XSD schema into a Drill Schema.
@@ -44,54 +43,68 @@ public class DrillXSDSchemaVisitor implements XmlSchemaVisitor {
   private static final Logger logger = LoggerFactory.getLogger(DrillXSDSchemaVisitor.class);
   private SchemaBuilder builder;
   private MapBuilder currentMapBuilder;
-  private final Stack<MapBuilder> mapBuilderStack;
-  private final Stack<String> stringStack;
   private int nestingLevel;
 
   public DrillXSDSchemaVisitor(SchemaBuilder builder) {
     this.builder = builder;
-    this.mapBuilderStack = new Stack<>();
-    this.stringStack = new Stack<>();
     this.nestingLevel = -1;
   }
 
+  /**
+   * Returns a {@link TupleMetadata} representation of the schema contained in an XSD file. This method should only
+   * be called after the walk method of XmlSchemaWalker has been called.
+   * @return A {@link TupleMetadata} representation of the XSD schema.
+   */
   public TupleMetadata getDrillSchema() {
     return builder.build();
   }
 
   @Override
   public void onEnterElement(XmlSchemaElement xmlSchemaElement, XmlSchemaTypeInfo xmlSchemaTypeInfo, boolean b) {
+    boolean isRepeated = xmlSchemaElement.getMaxOccurs() > 1;
+    String fieldName = xmlSchemaElement.getName();
     if (xmlSchemaTypeInfo.getType().name().equalsIgnoreCase("COMPLEX")) {
       // Start a map here.
-      logger.debug("Pushing {} on stack.", xmlSchemaElement.getName());
+      logger.debug("Starting map {}.", xmlSchemaElement.getName());
 
+      // There are two cases, if the element belongs to a complex object or not.  If it does not, the currentMapBuilder
+      // will be null. We therefore have to get a MapBuilder object from the SchemaBuilder and save it as the
+      // current MapBuilder.
+      //
+      // In either case, we also need to determine whether the element in question is an array or not.  If it is,
+      // we set the data mode to repeated.
       if (currentMapBuilder == null) {
-        currentMapBuilder = builder.addMap(xmlSchemaElement.getName());
+        // If the current schema element is repeated (IE an array) record it as such.
+        if (isRepeated) {
+          currentMapBuilder = builder.addMapArray(fieldName);
+        } else {
+          currentMapBuilder = builder.addMap(fieldName);
+        }
       } else {
-        currentMapBuilder = currentMapBuilder.addMap(xmlSchemaElement.getName());
+        // If the current schema element is repeated (IE an array) record it as such.
+        if (isRepeated) {
+          currentMapBuilder = currentMapBuilder.addMapArray(fieldName);
+        } else {
+          currentMapBuilder = currentMapBuilder.addMap(fieldName);
+        }
       }
-      mapBuilderStack.push(currentMapBuilder);
-
-      // TODO Remove this
-      stringStack.push(xmlSchemaElement.getName());
       nestingLevel++;
     } else {
       // If the field is a scalar, simply add it to the schema.
-      boolean isRepeated = xmlSchemaElement.getMaxOccurs() > 1;
-      MinorType dataType = XSDSchemaUtils.getDrillDataType(xmlSchemaTypeInfo.getBaseType().name());
+      MinorType dataType = DrillXSDSchemaUtils.getDrillDataType(xmlSchemaTypeInfo.getBaseType().name());
       if (currentMapBuilder == null) {
         // If the current map is null, it means we are not in a nested construct
         if (isRepeated) {
-          builder.add(xmlSchemaElement.getName(), dataType, DataMode.REPEATED);
+          builder.add(fieldName, dataType, DataMode.REPEATED);
         } else {
-          builder.addNullable(xmlSchemaElement.getName(), dataType);
+          builder.addNullable(fieldName, dataType);
         }
       } else {
         // Otherwise, write to the current map builder
         if (isRepeated) {
-          currentMapBuilder.add(xmlSchemaElement.getName(), dataType, DataMode.REPEATED);
+          currentMapBuilder.add(fieldName, dataType, DataMode.REPEATED);
         } else {
-          currentMapBuilder.addNullable(xmlSchemaElement.getName(), dataType);
+          currentMapBuilder.addNullable(fieldName, dataType);
         }
       }
     }
@@ -149,7 +162,9 @@ public class DrillXSDSchemaVisitor implements XmlSchemaVisitor {
 
   @Override
   public void onExitSequenceGroup(XmlSchemaSequence xmlSchemaSequence) {
-    // Case for nesting
+    // This section closes out a nested object. If the nesting level is greater than 0, we make a call to
+    // resumeMap which gets us the parent map.  If we have arrived at the root level, then we need to get a
+    // schema builder and clear out the currentMapBuilder by setting it to null.
     if (currentMapBuilder != null) {
       if (nestingLevel > 0) {
         currentMapBuilder = currentMapBuilder.resumeMap();
@@ -157,31 +172,6 @@ public class DrillXSDSchemaVisitor implements XmlSchemaVisitor {
         builder = currentMapBuilder.resumeSchema();
         currentMapBuilder = null;
       }
-
-
-      /*logger.debug("Leaving map {}", stringStack.peek());
-      if (nestingLevel >= 0) {
-        String field = stringStack.pop();
-
-
-        if (mapBuilderStack.size() >= 1) {
-          currentMapBuilder.resumeMap();
-        } else {
-          currentMapBuilder.resumeSchema();
-        }
-
-        logger.debug("Popping {} from stack.", field);
-        currentMapBuilder = mapBuilderStack.pop();
-      } else {
-        String finalField = stringStack.pop();
-        logger.debug("Removing final field: {}", finalField);
-        // Stack should be empty at this point.
-        currentMapBuilder = mapBuilderStack.pop();
-
-        logger.debug("Just cleaned it out with {}", finalField);
-        // Root level
-        currentMapBuilder.resumeSchema();
-      }*/
       nestingLevel--;
     }
   }
