@@ -23,6 +23,7 @@ import org.apache.drill.common.types.TypeProtos.MinorType;
 import org.apache.drill.common.types.Types;
 
 public interface DrillHBaseConstants {
+
   String ROW_KEY = "row_key";
 
   SchemaPath ROW_KEY_PATH = SchemaPath.getSimplePath(ROW_KEY);
@@ -35,7 +36,15 @@ public interface DrillHBaseConstants {
 
   MajorType COLUMN_TYPE = Types.optional(MinorType.VARBINARY);
 
+  String SYS_STORE_PROVIDER_HBASE_NAMESPACE = "drill.exec.sys.store.provider.hbase.namespace";
+
   String SYS_STORE_PROVIDER_HBASE_TABLE = "drill.exec.sys.store.provider.hbase.table";
 
+  String SYS_STORE_PROVIDER_HBASE_FAMILY = "drill.exec.sys.store.provider.hbase.family";
+
   String SYS_STORE_PROVIDER_HBASE_CONFIG = "drill.exec.sys.store.provider.hbase.config";
+
+  String SYS_STORE_PROVIDER_HBASE_TABLE_CONFIG = "drill.exec.sys.store.provider.hbase.table_config";
+
+  String SYS_STORE_PROVIDER_HBASE_COLUMN_CONFIG = "drill.exec.sys.store.provider.hbase.column_config";
 }

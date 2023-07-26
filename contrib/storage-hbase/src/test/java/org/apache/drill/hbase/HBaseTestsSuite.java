@@ -76,7 +76,7 @@ public class HBaseTestsSuite extends BaseTest {
 
   private static Configuration conf;
 
-  private static Connection conn;
+  protected static Connection conn;
   private static Admin admin;
 
   private static HBaseTestingUtility UTIL;

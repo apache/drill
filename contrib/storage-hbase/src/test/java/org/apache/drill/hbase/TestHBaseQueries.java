@@ -22,7 +22,7 @@ import java.util.Arrays;
 import java.util.List;
 
 import org.apache.drill.PlanTestBase;
-import org.apache.drill.categories.HbaseStorageTest;
+import org.apache.drill.categories.HBaseStorageTest;
 import org.apache.drill.categories.SlowTest;
 import org.apache.drill.exec.rpc.user.QueryDataBatch;
 import org.apache.hadoop.hbase.HColumnDescriptor;
@@ -35,7 +35,7 @@ import org.apache.hadoop.hbase.client.Table;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
-@Category({SlowTest.class, HbaseStorageTest.class})
+@Category({SlowTest.class, HBaseStorageTest.class})
 public class TestHBaseQueries extends BaseHBaseTest {
 
   @Test
