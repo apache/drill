@@ -954,6 +954,12 @@
   builtinFunctionCallMethods: [
   ]
 
+  # List of methods for parsing extensions to "TRUNCATE" calls.
+  # Each must accept arguments "(SqlParserPos pos)".
+  # Example: "SqlTruncate".
+  truncateStatementParserMethods: [
+  ]
+
   includePosixOperators: false,
   includeCompoundIdentifier: false,
   includeBraces: true,
