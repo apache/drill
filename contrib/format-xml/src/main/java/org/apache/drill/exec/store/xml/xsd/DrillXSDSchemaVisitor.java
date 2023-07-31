@@ -117,7 +117,9 @@ public class DrillXSDSchemaVisitor implements XmlSchemaVisitor {
 
   @Override
   public void onVisitAttribute(XmlSchemaElement xmlSchemaElement, XmlSchemaAttrInfo xmlSchemaAttrInfo) {
-    // no op
+    String fieldName = xmlSchemaAttrInfo.getAttribute().getName();
+    MinorType dataType = DrillXSDSchemaUtils.getDrillDataType(xmlSchemaAttrInfo.getType().getBaseType().name());
+    currentMapBuilder.addNullable(fieldName, dataType);
   }
 
   @Override

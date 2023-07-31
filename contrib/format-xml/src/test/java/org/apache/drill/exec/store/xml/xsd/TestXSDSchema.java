@@ -66,7 +66,10 @@ public class TestXSDSchema {
     MapBuilder sb2 = sb1
         .addNullable("comment", MinorType.VARCHAR) // global comment element
         .addMap("purchaseOrder") // global purchaseOrder element
+          .addNullable("orderDate", MinorType.DATE) // an attribute
+          .addNullable("confirmDate", MinorType.DATE) // an attribute
           .addMap("shipTo")
+            .addNullable("country", MinorType.VARCHAR) // an attribute
             .addNullable("name", MinorType.VARCHAR)
             .addNullable("street", MinorType.VARCHAR)
             .addNullable("city", MinorType.VARCHAR)
@@ -75,6 +78,7 @@ public class TestXSDSchema {
           .resumeMap(); // end shipTo
     MapBuilder sb3 = sb2
           .addMap("billTo")
+            .addNullable("country", MinorType.VARCHAR) // an attribute
             .addNullable("name", MinorType.VARCHAR)
             .addNullable("street", MinorType.VARCHAR)
              .addNullable("city", MinorType.VARCHAR)
@@ -85,15 +89,13 @@ public class TestXSDSchema {
           .addNullable("comment", MinorType.VARCHAR)
           .addMap("items")
             .addMapArray("item")
+              .addNullable("partNum", MinorType.VARCHAR) // an attribute
               .addNullable("productName", MinorType.VARCHAR)
               .addNullable("quantity", MinorType.VARDECIMAL)
               .addNullable("USPrice", MinorType.VARDECIMAL)
               .addNullable("comment", MinorType.VARCHAR)
               .addNullable("shipDate", MinorType.DATE)
-//              .addNullable("partNum", MinorType.VARCHAR) // attributes are not being added yet
             .resumeMap() // end item
-//            .addNullable("orderDate", MinorType.DATE) // attributes are not being added yet
-//            .add("confirmDate", MinorType.DATE) // attributes are not being added yet
           .resumeMap(); // end items
 
     TupleMetadata expectedSchema = sb4.resumeSchema().build();

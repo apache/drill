@@ -6,6 +6,12 @@
 
     <xsd:element name='purchaseOrder' type='tns:PurchaseOrderType'/>
 
+    <!-- global attribute and attributeGroups are ignored unless referenced from within
+     an element declaration -->
+
+    <xsd:attribute name="aGlobalAttribute" type="xsd:string"/>
+
+
     <xsd:complexType name='USAddress'>
         <xsd:annotation>
             <xsd:documentation>
@@ -59,7 +65,11 @@
             <xsd:element ref='tns:comment' minOccurs='0'/>
             <xsd:element name='items'  type='tns:Items'/>
         </xsd:sequence>
-        <xsd:attribute name='orderDate' type='xsd:date'/>
-        <xsd:attribute name='confirmDate' type='xsd:date' use='required'/>
+        <xsd:attributeGroup ref="tns:dates"/>
     </xsd:complexType>
+
+  <xsd:attributeGroup name="dates">
+    <xsd:attribute name='orderDate' type='xsd:date'/>
+    <xsd:attribute name='confirmDate' type='xsd:date' use='required'/>
+  </xsd:attributeGroup>
 </xsd:schema>
