@@ -20,6 +20,7 @@ package org.apache.drill.exec.store.xml.xsd;
 
 import org.apache.drill.common.types.TypeProtos.MinorType;
 import org.apache.drill.common.util.DrillFileUtils;
+import org.apache.drill.exec.record.metadata.MapBuilder;
 import org.apache.drill.exec.record.metadata.SchemaBuilder;
 import org.apache.drill.exec.record.metadata.TupleMetadata;
 import org.junit.Test;
@@ -61,38 +62,41 @@ public class TestXSDSchema {
     File complex_xsd = DrillFileUtils.getResourceAsFile("/xsd/complex.xsd");
     TupleMetadata schema = DrillXSDSchemaUtils.getSchema(complex_xsd.getPath());
 
-    TupleMetadata expectedSchema = new SchemaBuilder()
-        .addNullable("comment", MinorType.VARCHAR)
-        .addMap("purchaseOrder")
+    SchemaBuilder sb1 = new SchemaBuilder();
+    MapBuilder sb2 = sb1
+        .addNullable("comment", MinorType.VARCHAR) // global comment element
+        .addMap("purchaseOrder") // global purchaseOrder element
           .addMap("shipTo")
             .addNullable("name", MinorType.VARCHAR)
             .addNullable("street", MinorType.VARCHAR)
             .addNullable("city", MinorType.VARCHAR)
             .addNullable("state", MinorType.VARCHAR)
             .addNullable("zip", MinorType.VARDECIMAL)
-          .resumeMap()
+          .resumeMap(); // end shipTo
+    MapBuilder sb3 = sb2
           .addMap("billTo")
             .addNullable("name", MinorType.VARCHAR)
             .addNullable("street", MinorType.VARCHAR)
-            .addNullable("city", MinorType.VARCHAR)
+             .addNullable("city", MinorType.VARCHAR)
             .addNullable("state", MinorType.VARCHAR)
             .addNullable("zip", MinorType.VARDECIMAL)
-          .resumeMap()
-        .addNullable("comment", MinorType.VARCHAR)
-        .resumeSchema()
+          .resumeMap();
+    MapBuilder sb4 = sb3
+          .addNullable("comment", MinorType.VARCHAR)
+          .addMap("items")
+            .addMapArray("item")
+              .addNullable("productName", MinorType.VARCHAR)
+              .addNullable("quantity", MinorType.VARDECIMAL)
+              .addNullable("USPrice", MinorType.VARDECIMAL)
+              .addNullable("comment", MinorType.VARCHAR)
+              .addNullable("shipDate", MinorType.DATE)
+//              .addNullable("partNum", MinorType.VARCHAR) // attributes are not being added yet
+            .resumeMap() // end item
+//            .addNullable("orderDate", MinorType.DATE) // attributes are not being added yet
+//            .add("confirmDate", MinorType.DATE) // attributes are not being added yet
+          .resumeMap(); // end items
 
-        .addMap("items")
-          .addMapArray("item")
-            .addNullable("productName", MinorType.VARCHAR)
-            .addNullable("quantity", MinorType.VARDECIMAL)
-            .addNullable("USPrice", MinorType.VARDECIMAL)
-            .addNullable("comment", MinorType.VARCHAR)
-
-          .resumeMap()
-        .addNullable("shipDate", MinorType.DATE)
-        .resumeSchema()
-
-      .build();
+    TupleMetadata expectedSchema = sb4.resumeSchema().build();
 
     System.out.println(schema);
     System.out.println(expectedSchema);
