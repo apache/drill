@@ -38,6 +38,7 @@ public class TestXSDSchema {
 
     TupleMetadata expectedSchema  = new SchemaBuilder()
         .addMap("shiporder")
+          .addNullable("orderid", MinorType.VARCHAR)
           .addNullable("orderperson", MinorType.VARCHAR)
           .addMap("shipto")
             .addNullable("name", MinorType.VARCHAR)
