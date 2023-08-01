@@ -2,7 +2,23 @@
             xmlns:tns="http://tempuri.org/PurchaseOrderSchema.xsd"
             targetNamespace="http://tempuri.org/PurchaseOrderSchema.xsd"
             elementFormDefault="qualified">
+
+  <!-- example of global simple type element -->
     <xsd:element name='comment' type='xsd:string'/>
+
+  <!-- example of complex type with ONLY attributes -->
+    <xsd:element name='infoType'>
+      <xsd:complexType>
+        <xsd:attribute name="kind">
+          <xsd:simpleType>
+            <xsd:restriction base="xsd:token">
+              <xsd:enumeration value="byte"/>
+              <xsd:enumeration value="bit"/>
+            </xsd:restriction>
+          </xsd:simpleType>
+        </xsd:attribute>
+      </xsd:complexType>
+    </xsd:element>
 
     <xsd:element name='purchaseOrder' type='tns:PurchaseOrderType'/>
 
@@ -10,7 +26,6 @@
      an element declaration -->
 
     <xsd:attribute name="aGlobalAttribute" type="xsd:string"/>
-
 
     <xsd:complexType name='USAddress'>
         <xsd:annotation>

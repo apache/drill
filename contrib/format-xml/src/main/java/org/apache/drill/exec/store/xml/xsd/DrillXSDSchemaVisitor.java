@@ -35,6 +35,13 @@ import org.apache.ws.commons.schema.walker.XmlSchemaVisitor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.LinkedHashMap;
+import java.util.List;
+
+import static org.apache.drill.exec.store.xml.XMLReader.ATTRIBUTE_MAP_NAME;
+
 
 /**
  * This class transforms an XSD schema into a Drill Schema.
@@ -45,9 +52,20 @@ public class DrillXSDSchemaVisitor implements XmlSchemaVisitor {
   private MapBuilder currentMapBuilder;
   private int nestingLevel;
 
+  /**
+   * Table to hold attribute info as it is traversed. We construct the
+   * attributes map for all the attributes when the walker tells us we're
+   * at the end of all the element decl's attributes.
+   * <b/>
+   * Uses LinkedHashMap to ensure deterministic behavior which facilitates testability.
+   * In this situation it probably does not matter, but it's a good practice.
+   */
+  private HashMap<XmlSchemaElement, List<XmlSchemaAttrInfo>> attributeInfoTable =
+      new LinkedHashMap<>();
+
   public DrillXSDSchemaVisitor(SchemaBuilder builder) {
     this.builder = builder;
-    this.nestingLevel = -1;
+    this.nestingLevel = 0;
   }
 
   /**
@@ -59,10 +77,34 @@ public class DrillXSDSchemaVisitor implements XmlSchemaVisitor {
     return builder.build();
   }
 
+  /**
+   * Handles global elements establishing a map for the child elements and attributes (if any).
+   * <p/>
+   * TBD: Does not handle case where multiple elements have the same name as in:
+   * <pre>{@code
+   * <element name="a" .../>
+   * <element name="b" .../>
+   * <element name="a" .../>
+   * }</pre>
+   * There is also the case where they are ambiguous unless namespaces are used:
+   * <pre>{@code
+   * <element name="a" .../>
+   * <element ref="pre:a" .../> <!-- without namespace, ambiguous with prior "a" -->
+   * }</pre>
+   */
   @Override
   public void onEnterElement(XmlSchemaElement xmlSchemaElement, XmlSchemaTypeInfo xmlSchemaTypeInfo, boolean b) {
+    assert nestingLevel >= 0;
     boolean isRepeated = xmlSchemaElement.getMaxOccurs() > 1;
     String fieldName = xmlSchemaElement.getName();
+    //
+    // Note that the child name in constant ATTRIBUTE_MAP_NAME is reserved and cannot be used
+    // by any child element.
+    //
+    // TODO: How to issue this error, and refuse to generate the Drill schema?
+    // TODO: There are many other things we want to refuse. E.g., if there are mixed content elements.
+    //
+    assert !fieldName.equals(ATTRIBUTE_MAP_NAME);
     if (xmlSchemaTypeInfo.getType().name().equalsIgnoreCase("COMPLEX")) {
       // Start a map here.
       logger.debug("Starting map {}.", xmlSchemaElement.getName());
@@ -74,13 +116,13 @@ public class DrillXSDSchemaVisitor implements XmlSchemaVisitor {
       // In either case, we also need to determine whether the element in question is an array or not.  If it is,
       // we set the data mode to repeated.
       if (currentMapBuilder == null) {
-        // If the current schema element is repeated (IE an array) record it as such.
-        if (isRepeated) {
-          currentMapBuilder = builder.addMapArray(fieldName);
-        } else {
-          currentMapBuilder = builder.addMap(fieldName);
-        }
+        // global element declaration
+        assert nestingLevel == 0;
+        assert xmlSchemaElement.getMaxOccurs() == 1;
+        assert xmlSchemaElement.getMinOccurs() == 1;
+        currentMapBuilder = builder.addMap(fieldName);
       } else {
+        // local element decl or element reference
         // If the current schema element is repeated (IE an array) record it as such.
         if (isRepeated) {
           currentMapBuilder = currentMapBuilder.addMapArray(fieldName);
@@ -90,41 +132,95 @@ public class DrillXSDSchemaVisitor implements XmlSchemaVisitor {
       }
       nestingLevel++;
     } else {
-      // If the field is a scalar, simply add it to the schema.
+      // If the field is a simple type, simply add it to the schema.
       MinorType dataType = DrillXSDSchemaUtils.getDrillDataType(xmlSchemaTypeInfo.getBaseType().name());
       if (currentMapBuilder == null) {
+        // global element decl case
+        // Now, strictly speaking an XML document cannot just be a single simple type
+        // element, but for testing reasons, it is convenient to allow this.
         // If the current map is null, it means we are not in a nested construct
-        if (isRepeated) {
-          builder.add(fieldName, dataType, DataMode.REPEATED);
-        } else {
-          builder.addNullable(fieldName, dataType);
-        }
+        assert nestingLevel == 0;
+        assert xmlSchemaElement.getMaxOccurs() == 1;
+        assert xmlSchemaElement.getMinOccurs() == 1;
+        builder.addNullable(fieldName, dataType);
       } else {
         // Otherwise, write to the current map builder
         if (isRepeated) {
           currentMapBuilder.add(fieldName, dataType, DataMode.REPEATED);
+          logger.debug("Adding array {}.", xmlSchemaElement.getName());
+
         } else {
           currentMapBuilder.addNullable(fieldName, dataType);
+          logger.debug("Adding field {}.", xmlSchemaElement.getName());
         }
       }
+      // For simple types, nestingLevel is not increased.
     }
   }
 
   @Override
   public void onExitElement(XmlSchemaElement xmlSchemaElement, XmlSchemaTypeInfo xmlSchemaTypeInfo, boolean b) {
-    // no op
+    assert nestingLevel >= 0;
+    if (xmlSchemaTypeInfo.getType().name().equalsIgnoreCase("COMPLEX")) {
+      assert nestingLevel >= 1;
+      // This section closes out a nested object. If the nesting level is greater than 0, we make a call to
+      // resumeMap which gets us the parent map.  If we have arrived at the root level, then we need to get a
+      // schema builder and clear out the currentMapBuilder by setting it to null.
+      assert currentMapBuilder != null;
+      logger.debug("Ending map {}.", xmlSchemaElement.getName());
+      if (nestingLevel > 1) {
+        currentMapBuilder = currentMapBuilder.resumeMap();
+      } else {
+        builder = currentMapBuilder.resumeSchema();
+        currentMapBuilder = null;
+      }
+      nestingLevel--;
+    }
   }
 
+  /**
+   * This method just gathers the elements up into a table.
+   */
   @Override
   public void onVisitAttribute(XmlSchemaElement xmlSchemaElement, XmlSchemaAttrInfo xmlSchemaAttrInfo) {
-    String fieldName = xmlSchemaAttrInfo.getAttribute().getName();
-    MinorType dataType = DrillXSDSchemaUtils.getDrillDataType(xmlSchemaAttrInfo.getType().getBaseType().name());
-    currentMapBuilder.addNullable(fieldName, dataType);
+    List<XmlSchemaAttrInfo> list =
+        attributeInfoTable.getOrDefault(xmlSchemaElement, new ArrayList<>());
+    list.add(xmlSchemaAttrInfo);
+    attributeInfoTable.put(xmlSchemaElement, list);
   }
 
+  /**
+   * Called for each element decl once all its attributes have been previously
+   * processed by onVisitAttribute.
+   * <b/>
+   * Constructs the map for the special attributes child element of each element.
+   * Note: does not construct an attribute child map if there are no attributes.
+   * <b/>
+   * Only supports attributes with no-namespace on their qnames.
+   * Or rather, ignores namespaces. Only deals with local names.
+   * <b/>
+   * TBD: needs to check for attributes with namespaced names
+   * and at minimum reject them.
+   */
   @Override
   public void onEndAttributes(XmlSchemaElement xmlSchemaElement, XmlSchemaTypeInfo xmlSchemaTypeInfo) {
-    // no op
+    List<XmlSchemaAttrInfo> attrs = attributeInfoTable.get(xmlSchemaElement);
+    attributeInfoTable.remove(xmlSchemaElement); // clean up the table
+    // the currentMapBuilder can be null for a global element decl of simple type.
+    if (attrs != null && currentMapBuilder != null) {
+      logger.debug("Starting map {}.", xmlSchemaElement.getName() + "/attributes");
+      assert attrs.size() >= 1;
+      currentMapBuilder = currentMapBuilder.addMap(ATTRIBUTE_MAP_NAME);
+      attrs.forEach(attr -> {
+        String attrName = attr.getAttribute().getName();
+        MinorType dataType = DrillXSDSchemaUtils.getDrillDataType(attr.getType().getBaseType().name());
+        currentMapBuilder = currentMapBuilder.addNullable(attrName, dataType);
+        logger.debug("Adding attribute {}.", attrName);
+
+      });
+      logger.debug("Ending map {}.", xmlSchemaElement.getName() + "/attributes");
+      currentMapBuilder = currentMapBuilder.resumeMap();
+    }
   }
 
   @Override
@@ -164,18 +260,7 @@ public class DrillXSDSchemaVisitor implements XmlSchemaVisitor {
 
   @Override
   public void onExitSequenceGroup(XmlSchemaSequence xmlSchemaSequence) {
-    // This section closes out a nested object. If the nesting level is greater than 0, we make a call to
-    // resumeMap which gets us the parent map.  If we have arrived at the root level, then we need to get a
-    // schema builder and clear out the currentMapBuilder by setting it to null.
-    if (currentMapBuilder != null) {
-      if (nestingLevel > 0) {
-        currentMapBuilder = currentMapBuilder.resumeMap();
-      } else {
-        builder = currentMapBuilder.resumeSchema();
-        currentMapBuilder = null;
-      }
-      nestingLevel--;
-    }
+    // no op
   }
 
   @Override

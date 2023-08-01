@@ -38,14 +38,16 @@ public class TestXSDSchema {
 
     TupleMetadata expectedSchema  = new SchemaBuilder()
         .addMap("shiporder")
-          .addNullable("orderid", MinorType.VARCHAR)
+          .addMap("attributes")
+            .addNullable("orderid", MinorType.VARCHAR)
+          .resumeMap()
           .addNullable("orderperson", MinorType.VARCHAR)
           .addMap("shipto")
             .addNullable("name", MinorType.VARCHAR)
             .addNullable("address", MinorType.VARCHAR)
             .addNullable("city", MinorType.VARCHAR)
             .addNullable("country", MinorType.VARCHAR)
-          .resumeMap()
+        .resumeMap()
           .addMapArray("item")
             .addNullable("title", MinorType.VARCHAR)
             .addNullable("note", MinorType.VARCHAR)
@@ -66,11 +68,20 @@ public class TestXSDSchema {
     SchemaBuilder sb1 = new SchemaBuilder();
     MapBuilder sb2 = sb1
         .addNullable("comment", MinorType.VARCHAR) // global comment element
+        .addMap("infoType")
+          .addMap("attributes")
+            .addNullable("kind", MinorType.VARCHAR)
+          .resumeMap()
+        .resumeSchema()
         .addMap("purchaseOrder") // global purchaseOrder element
-          .addNullable("orderDate", MinorType.DATE) // an attribute
-          .addNullable("confirmDate", MinorType.DATE) // an attribute
+          .addMap("attributes")
+            .addNullable("orderDate", MinorType.DATE) // an attribute
+            .addNullable("confirmDate", MinorType.DATE) // an attribute
+          .resumeMap()
           .addMap("shipTo")
-            .addNullable("country", MinorType.VARCHAR) // an attribute
+            .addMap("attributes")
+              .addNullable("country", MinorType.VARCHAR) // an attribute
+            .resumeMap()
             .addNullable("name", MinorType.VARCHAR)
             .addNullable("street", MinorType.VARCHAR)
             .addNullable("city", MinorType.VARCHAR)
@@ -79,7 +90,9 @@ public class TestXSDSchema {
           .resumeMap(); // end shipTo
     MapBuilder sb3 = sb2
           .addMap("billTo")
-            .addNullable("country", MinorType.VARCHAR) // an attribute
+            .addMap("attributes")
+              .addNullable("country", MinorType.VARCHAR) // an attribute
+            .resumeMap()
             .addNullable("name", MinorType.VARCHAR)
             .addNullable("street", MinorType.VARCHAR)
              .addNullable("city", MinorType.VARCHAR)
@@ -90,7 +103,9 @@ public class TestXSDSchema {
           .addNullable("comment", MinorType.VARCHAR)
           .addMap("items")
             .addMapArray("item")
-              .addNullable("partNum", MinorType.VARCHAR) // an attribute
+              .addMap("attributes")
+                .addNullable("partNum", MinorType.VARCHAR) // an attribute
+             .resumeMap()
               .addNullable("productName", MinorType.VARCHAR)
               .addNullable("quantity", MinorType.VARDECIMAL)
               .addNullable("USPrice", MinorType.VARDECIMAL)
