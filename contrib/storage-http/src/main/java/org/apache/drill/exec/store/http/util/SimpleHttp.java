@@ -344,6 +344,8 @@ public class SimpleHttp implements AutoCloseable {
 
     Request.Builder requestBuilder = new Request.Builder()
       .url(url);
+    final Pattern bodyParamsKeyPattern = Pattern.compile("^body\\..+$");
+    final Pattern headerParamsKeyPattern = Pattern.compile("^header\\..+$");
 
     // The configuration does not allow for any other request types other than POST and GET.
     if (apiConfig.getMethodType() == HttpMethod.POST) {
@@ -354,11 +356,19 @@ public class SimpleHttp implements AutoCloseable {
       if (apiConfig.getPostLocation() == PostLocation.POST_BODY) {
         formBodyBuilder = buildPostBody(filters, apiConfig.postBody());
         requestBuilder.post(formBodyBuilder.build());
-      } else if (apiConfig.getPostLocation() == PostLocation.JSON_BODY) {
+      } else if (apiConfig.getPostLocation() == PostLocation.JSON_BODY
+          || (apiConfig.getPostLocation() == PostLocation.QUERY_STRING
+          && pluginConfig.enableEnhancedParamSyntax())) {
         // Add static parameters from postBody
         JSONObject json = buildJsonPostBody(apiConfig.postBody());
         // Now add filters
-        if (filters != null) {
+        if (filters != null && pluginConfig.enableEnhancedParamSyntax()) {
+          for (Map.Entry<String, String> filter : filters.entrySet()) {
+            if (bodyParamsKeyPattern.matcher(filter.getKey()).find()){
+              json.put(filter.getKey().substring(5), filter.getValue());
+            }
+          }
+        } else if (filters != null && !pluginConfig.enableEnhancedParamSyntax()) {
           for (Map.Entry<String, String> filter : filters.entrySet()) {
             json.put(filter.getKey(), filter.getValue());
           }
@@ -369,7 +379,15 @@ public class SimpleHttp implements AutoCloseable {
       } else if (apiConfig.getPostLocation() == PostLocation.XML_BODY) {
         StringBuilder xmlRequest = new StringBuilder();
         xmlRequest.append("<request>");
-        if (filters != null) {
+        if (filters != null && pluginConfig.enableEnhancedParamSyntax()) {
+          for (Map.Entry<String, String> filter : filters.entrySet()) {
+            if (bodyParamsKeyPattern.matcher(filter.getKey()).find()){
+              xmlRequest.append("<").append(filter.getKey().substring(5)).append(">");
+              xmlRequest.append(filter.getValue());
+              xmlRequest.append("</").append(filter.getKey().substring(5)).append(">");
+            }
+          }
+        } else if (filters != null && !pluginConfig.enableEnhancedParamSyntax()) {
           for (Map.Entry<String, String> filter : filters.entrySet()) {
             xmlRequest.append("<").append(filter.getKey()).append(">");
             xmlRequest.append(filter.getValue());
@@ -395,6 +413,14 @@ public class SimpleHttp implements AutoCloseable {
     if (apiConfig.headers() != null) {
       for (Map.Entry<String, String> entry : apiConfig.headers().entrySet()) {
         requestBuilder.addHeader(entry.getKey(), entry.getValue());
+      }
+    }
+
+    if (filters != null && pluginConfig.enableEnhancedParamSyntax()) {
+      for (Map.Entry<String, String> filter : filters.entrySet()) {
+        if (headerParamsKeyPattern.matcher(filter.getKey()).find()){
+          requestBuilder.addHeader(filter.getKey().substring(7), filter.getValue());
+        }
       }
     }
 
@@ -657,10 +683,19 @@ public class SimpleHttp implements AutoCloseable {
   public FormBody.Builder buildPostBody(Map<String, String> filters, String postBody) {
     // Add static parameters
     FormBody.Builder builder = buildPostBody(postBody);
+    final Pattern bodyParamsKeyPattern = Pattern.compile("^body\\..+$");
 
     // Now add the filters
-    for (Map.Entry<String, String> filter : filters.entrySet()) {
-      builder.add(filter.getKey(), filter.getValue());
+    if (filters != null && pluginConfig.enableEnhancedParamSyntax()) {
+      for (Map.Entry<String, String> filter : filters.entrySet()) {
+        if (bodyParamsKeyPattern.matcher(filter.getKey()).find()){
+          builder.add(filter.getKey().substring(5), filter.getValue());
+        }
+      }
+    } else if (filters != null && !pluginConfig.enableEnhancedParamSyntax()) {
+      for (Map.Entry<String, String> filter : filters.entrySet()) {
+        builder.add(filter.getKey(), filter.getValue());
+      }
     }
     return builder;
   }

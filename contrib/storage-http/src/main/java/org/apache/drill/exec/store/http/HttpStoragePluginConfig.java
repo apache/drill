@@ -54,6 +54,7 @@ public class HttpStoragePluginConfig extends StoragePluginConfig {
   public final String proxyHost;
   public final int proxyPort;
   public final String proxyType;
+  public final boolean enableEnhancedParamSyntax;
   /**
    * Timeout in {@link TimeUnit#SECONDS}.
    */
@@ -62,6 +63,7 @@ public class HttpStoragePluginConfig extends StoragePluginConfig {
 
   @JsonCreator
   public HttpStoragePluginConfig(@JsonProperty("cacheResults") Boolean cacheResults,
+                                 @JsonProperty("enhanced") Boolean enableEnhancedParamSyntax,
                                  @JsonProperty("connections") Map<String, HttpApiConfig> connections,
                                  @JsonProperty("timeout") Integer timeout,
                                  @JsonProperty("retryDelay") Integer retryDelay,
@@ -89,6 +91,7 @@ public class HttpStoragePluginConfig extends StoragePluginConfig {
         AuthMode.parseOrDefault(authMode, AuthMode.SHARED_USER),
       oAuthConfig);
     this.cacheResults = cacheResults != null && cacheResults;
+    this.enableEnhancedParamSyntax = enableEnhancedParamSyntax != null && enableEnhancedParamSyntax;
     this.retryDelay = (retryDelay == null || retryDelay < 0) ? DEFAULT_RATE_LIMIT : retryDelay;
 
     this.connections = CaseInsensitiveMap.newHashMap();
@@ -121,6 +124,7 @@ public class HttpStoragePluginConfig extends StoragePluginConfig {
   private HttpStoragePluginConfig(HttpStoragePluginConfig that, CredentialsProvider credentialsProvider) {
     super(credentialsProvider, credentialsProvider == null, that.authMode);
     this.cacheResults = that.cacheResults;
+    this.enableEnhancedParamSyntax = that.enableEnhancedParamSyntax;
     this.connections = that.connections;
     this.timeout = that.timeout;
     this.proxyHost = that.proxyHost;
@@ -140,6 +144,7 @@ public class HttpStoragePluginConfig extends StoragePluginConfig {
       that.credentialsProvider == null);
 
     this.cacheResults = that.cacheResults;
+    this.enableEnhancedParamSyntax = that.enableEnhancedParamSyntax;
     this.connections = that.connections;
     this.timeout = that.timeout;
     this.proxyHost = that.proxyHost;
@@ -165,6 +170,7 @@ public class HttpStoragePluginConfig extends StoragePluginConfig {
     Optional<UsernamePasswordWithProxyCredentials> creds = getUsernamePasswordCredentials();
     return new HttpStoragePluginConfig(
       cacheResults,
+      enableEnhancedParamSyntax,
       configFor(connectionName),
       timeout, retryDelay,
       username(),
@@ -196,6 +202,7 @@ public class HttpStoragePluginConfig extends StoragePluginConfig {
     HttpStoragePluginConfig thatConfig = (HttpStoragePluginConfig) that;
     return Objects.equals(connections, thatConfig.connections) &&
       Objects.equals(cacheResults, thatConfig.cacheResults) &&
+      Objects.equals(enableEnhancedParamSyntax, thatConfig.enableEnhancedParamSyntax) &&
       Objects.equals(proxyHost, thatConfig.proxyHost) &&
       Objects.equals(retryDelay, thatConfig.retryDelay) &&
       Objects.equals(proxyPort, thatConfig.proxyPort) &&
@@ -210,6 +217,7 @@ public class HttpStoragePluginConfig extends StoragePluginConfig {
     return new PlanStringBuilder(this)
       .field("connections", connections)
       .field("cacheResults", cacheResults)
+      .field("enhanced", enableEnhancedParamSyntax)
       .field("timeout", timeout)
       .field("retryDelay", retryDelay)
       .field("proxyHost", proxyHost)
@@ -223,12 +231,15 @@ public class HttpStoragePluginConfig extends StoragePluginConfig {
 
   @Override
   public int hashCode() {
-    return Objects.hash(connections, cacheResults, timeout, retryDelay,
+    return Objects.hash(connections, cacheResults, enableEnhancedParamSyntax, timeout, retryDelay,
         proxyHost, proxyPort, proxyType, oAuthConfig, credentialsProvider, authMode);
   }
 
   @JsonProperty("cacheResults")
   public boolean cacheResults() { return cacheResults; }
+
+  @JsonProperty("enhanced")
+  public boolean enableEnhancedParamSyntax() { return enableEnhancedParamSyntax; }
 
   @JsonProperty("connections")
   public Map<String, HttpApiConfig> connections() { return connections; }

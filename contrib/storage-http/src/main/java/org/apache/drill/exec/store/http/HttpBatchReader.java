@@ -56,6 +56,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.regex.Pattern;
 
 public class HttpBatchReader implements ManagedReader<SchemaNegotiator> {
 
@@ -296,18 +297,30 @@ public class HttpBatchReader implements ManagedReader<SchemaNegotiator> {
   protected void addFilters(Builder urlBuilder, List<String> params,
       Map<String, String> filters) {
 
-    // If the request is a POST query and the user selected to push the filters to either JSON body
-    // or the post body, do not add to the query string.
-    if (subScan.tableSpec().connectionConfig().getMethodType() == HttpApiConfig.HttpMethod.POST &&
-      (subScan.tableSpec().connectionConfig().getPostLocation() == PostLocation.POST_BODY ||
-        subScan.tableSpec().connectionConfig().getPostLocation() == PostLocation.JSON_BODY)
-    ) {
-      return;
-    }
-    for (String param : params) {
-      String value = filters.get(param);
-      if (value != null) {
-        urlBuilder.addQueryParameter(param, value);
+    final Pattern tailParamsKeyPattern = Pattern.compile("^tail\\..+$");
+    final HttpStoragePluginConfig config = subScan.tableSpec().config();
+    if (!config.enableEnhancedParamSyntax()) {
+      // If the request is a POST query and the user selected to push the filters to either JSON body
+      // or the post body, do not add to the query string.
+      if (subScan.tableSpec().connectionConfig().getMethodType() == HttpApiConfig.HttpMethod.GET ||
+          (subScan.tableSpec().connectionConfig().getMethodType() == HttpApiConfig.HttpMethod.POST
+              && subScan.tableSpec().connectionConfig().getPostLocation() == PostLocation.QUERY_STRING)
+      ) {
+        for (String param : params) {
+          String value = filters.get(param);
+          if (value != null) {
+            urlBuilder.addQueryParameter(param, value);
+          }
+        }
+      }
+    } else {
+      for (String param : params) {
+        if (tailParamsKeyPattern.matcher(param).find()){
+          String value = filters.get(param);
+          if (value != null) {
+            urlBuilder.addQueryParameter(param.substring(5), value);
+          }
+        }
       }
     }
   }
