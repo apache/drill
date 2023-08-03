@@ -15,6 +15,7 @@ To configure the plugin, create a new storage plugin, and add the following conf
 {
   "type": "http",
   "cacheResults": true,
+  "enhanced": false,
   "connections": {},
   "timeout": 0,
   "proxyHost": null,
@@ -29,6 +30,7 @@ The required options are:
 
 * `type`:  This should be `http`
 * `cacheResults`:  Enable caching of the HTTP responses.  Defaults to `false`
+* `enhanced`:  Enable enhanced param syntax in Drill 1.22 and beyond. The enhanced mode allows the user to send the request header through the `WHERE` clause. Defaults to `false`
 * `timeout`:  Sets the response timeout in seconds. Defaults to `0` which is no timeout.
 * `connections`:  This field contains the details for individual connections. See the section *Configuring API Connections for Details*.
 
@@ -112,17 +114,18 @@ if the parameters specify which data sets to return:
 ```json
 url: "https://api.sunrise-sunset.org/json",
 requireTail: false,
-params: ["lat", "lng", "date"]
+enhanced: true,
+params: ["tail.lat", "tail.lng", "tail.date"]
 ```
 
 SQL query:
 
 ```sql
 SELECT * FROM api.sunrise
-WHERE `lat` = 36.7201600 AND `lng` = -4.4203400 AND `date` = '2019-10-02'
+WHERE `tail.lat` = 36.7201600 AND `tail.lng` = -4.4203400 AND `tail.date` = '2019-10-02'
 ```
 
-In this case, Drill appends the parameters to the URL, adding a question mark
+In this case, Drill appends the `tail` prefixed parameters to the URL, adding a question mark
 to separate the two.
 
 #### Method
@@ -138,10 +141,27 @@ key2=value2"
 ```
 
 `postParameterLocation`:  If the API uses the `POST` method, you can send parameters in several different ways:
-* `query_string`:  Parameters from the query are pushed down to the query string.  Static parameters are pushed to the post body.
+* `query_string`:  Parameters from the query are pushed down to the query string.  Static parameters are pushed to the post body. This option is abandoned in enhanced mode.
 * `post_body`:  Both static and parameters from the query are pushed to the post body as key/value pairs
 * `json_body`:  Both static and parameters from the query are pushed to the post body as json.
 * `xml_body`:  Both static and parameters from the query are pushed to the post body as XML.
+
+```json
+url: "https://api.sunrise-sunset.org/json",
+requireTail: false,
+enhanced: true,
+postParameterLocation: "json_body",
+params: ["body.lat", "body.lng", "body.date"]
+```
+
+SQL query:
+
+```sql
+SELECT * FROM api.sunrise
+WHERE `body.lat` = 36.7201600 AND `body.lng` = -4.4203400 AND `body.date` = '2019-10-02'
+```
+
+In this case, Drill appends the `body` prefixed parameters to the post body as json.
 
 #### Headers
 
@@ -155,20 +175,43 @@ headers: {
    }
 ```
 
-#### Query Parmeters as Filters
-
-* `params`: Allows you to map SQL `WHERE` clause conditions to query parameters.
+You can also pass the request headers through the where clause.
 
 ```json
 url: "https://api.sunrise-sunset.org/json",
-params: ["lat", "lng", "date"]
+requireTail: false,
+enhanced: true,
+postParameterLocation: "json_body",
+params: ["body.lat", "body.lng", "body.date", "header.header1"]
 ```
 
 SQL query:
 
 ```sql
 SELECT * FROM api.sunrise
-WHERE `lat` = 36.7201600 AND `lng` = -4.4203400 AND `date` = '2019-10-02'
+WHERE `body.lat` = 36.7201600 AND `body.lng` = -4.4203400 AND `body.date` = '2019-10-02'
+AND `header.header1` = 'value1'
+```
+
+In this case, Drill appends the `header` prefixed parameters to the headers.
+
+#### Query Parmeters as Filters
+
+* `params`: Allows you to map SQL `WHERE` clause conditions to query parameters, request bodies, and
+request headers. The `tail` prefixed params maps to the query parameters at the end of the URL, the
+`body` prefixed params maps to the request bodies, and the `header` prefixed params maps to the
+request headers.
+
+```json
+url: "https://api.sunrise-sunset.org/json",
+params: ["tail.lat", "tail.lng", "tail.date"]
+```
+
+SQL query:
+
+```sql
+SELECT * FROM api.sunrise
+WHERE `tail.lat` = 36.7201600 AND `tail.lng` = -4.4203400 AND `tail.date` = '2019-10-02'
 ```
 
 HTTP parameters are untyped; Drill converts any value you provide into a string.
@@ -493,7 +536,7 @@ body. Set the configuration as follows:
       "method": "GET",
       "dataPath": "results",
       "headers": null,
-      "params": [ "lat", "lng", "date" ],
+      "params": [ "tail.lat", "tail.lng", "tail.date" ],
       "authType": "none",
       "userName": null,
       "password": null,
@@ -508,7 +551,7 @@ Then, to execute a query:
 ```sql
 SELECT sunrise, sunset
 FROM   http.sunrise
-WHERE  `lat` = 36.7201600 AND `lng` = -4.4203400 AND `date` = 'today'
+WHERE  `tail.lat` = 36.7201600 AND `tail.lng` = -4.4203400 AND `tail.date` = 'today'
 ```
 
 Which yields the same results as before.
