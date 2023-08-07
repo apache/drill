@@ -69,7 +69,7 @@
       <p class="lead">No result found.</p>
     </div>
   <#else>
-    <table id="result" class="table table-striped table-bordered table-condensed" style="table-layout: auto; width=100%; white-space: pre;">
+    <table id="result" class="table table-striped table-bordered table-condensed" style="table-layout: auto; width: 100%; white-space: pre;">
       <thead>
         <tr>
           <#list model.getColumns() as value>
