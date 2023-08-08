@@ -115,7 +115,8 @@ public class HttpXMLBatchReader extends HttpBatchReader {
         negotiator.tableSchema(finalSchema, false);
       }
 
-      xmlReader = new XMLReader(inStream, dataLevel);
+      // TODO Add the all text mode.
+      xmlReader = new XMLReader(inStream, dataLevel, false);
       resultLoader = negotiator.build();
 
       if (implicitColumnsAreProjected()) {

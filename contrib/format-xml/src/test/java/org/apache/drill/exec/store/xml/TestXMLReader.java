@@ -49,7 +49,7 @@ public class TestXMLReader extends ClusterTest {
   public static void setup() throws Exception {
     ClusterTest.startCluster(ClusterFixture.builder(dirTestWatcher));
 
-    XMLFormatConfig formatConfig = new XMLFormatConfig(null, 2);
+    XMLFormatConfig formatConfig = new XMLFormatConfig(null, 2, true);
     cluster.defineFormat("cp", "xml", formatConfig);
     cluster.defineFormat("dfs", "xml", formatConfig);
 
@@ -82,6 +82,40 @@ public class TestXMLReader extends ClusterTest {
       .addRow(mapArray(),"org.apache.drill.exec", "drill-java-exec", "${project.version}", "tests", "test")
       .addRow(mapArray(),"org.apache.drill", "drill-common", "${project.version}", "tests", "test")
       .build();
+
+    new RowSetComparison(expected).verifyAndClearAll(results);
+  }
+
+  @Test
+  public void testAllTextMode() throws Exception {
+    String sql = "SELECT * FROM table(cp.`xml/simple_with_datatypes.xml` (type => 'xml', " +
+        "allTextMode => 'false'))";
+    RowSet results = client.queryBuilder().sql(sql).rowSet();
+    assertEquals(2, results.rowCount());
+
+    TupleMetadata expectedSchema = new SchemaBuilder()
+        .add("attributes", MinorType.MAP)
+        .addNullable("int_field", MinorType.FLOAT8)
+        .addNullable("bigint_field", MinorType.FLOAT8)
+        .addNullable("float_field", MinorType.FLOAT8)
+        .addNullable("double_field", MinorType.FLOAT8)
+        .addNullable("boolean_field", MinorType.BIT)
+        .addNullable("date_field", MinorType.DATE)
+        .addNullable("date2_field", MinorType.DATE)
+        .addNullable("time_field", MinorType.VARCHAR)
+        .addNullable("timestamp_field", MinorType.TIMESTAMP)
+        .addNullable("string_field", MinorType.VARCHAR)
+        .buildSchema();
+    
+    RowSet expected = client.rowSetBuilder(expectedSchema)
+        .addRow(mapArray(),  1.0, 1000.0, 1.3, 3.3, true, LocalDate.parse("2022-01-01"),
+                    LocalDate.parse("2022-02-03"), "12:04:34", Instant.parse("2022-01-06T12:30" +
+                ":30Z"),
+            "string")
+        .addRow(mapArray(), 2.0, 2000.0, 2.3, 4.3, false, LocalDate.parse("2022-02-01"),
+            LocalDate.parse("2022-01-03"),
+            "13:04:34", Instant.parse("2022-03-06T12:30:30Z"), null)
+        .build();
 
     new RowSetComparison(expected).verifyAndClearAll(results);
   }

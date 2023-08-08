@@ -18,6 +18,9 @@
 
 package org.apache.drill.common;
 
+import org.apache.commons.lang3.StringUtils;
+import org.apache.drill.common.types.TypeProtos.MinorType;
+
 import java.nio.CharBuffer;
 
 import java.time.LocalDate;
@@ -45,6 +48,11 @@ public class Typifier {
       DateTimeFormatter.ofPattern("yyyy/MM/dd HH:mm:ss.SS", defaultLocale),
       DateTimeFormatter.ofPattern("MM/dd/yyyy hh:mm:ss a", defaultLocale),
       DateTimeFormatter.ofPattern("M/d/yy H:mm", defaultLocale),
+        DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss",  defaultLocale),
+        DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss.SSSXXX",  defaultLocale),
+        DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss.SSSXXX",  defaultLocale),
+        DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss.SSSVV",  defaultLocale),
+        DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ssVV",  defaultLocale),
       DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm:ss", defaultLocale)));
 
   private static final HashSet<DateTimeFormatter> dateFormats = new HashSet<>(
@@ -87,6 +95,40 @@ public class Typifier {
 
   // If a String contains any of these, try to evaluate it as an equation
   private static final char[] MathCharacters = new char[]{'+', '-', '/', '*', '='};
+
+  /**
+   * This function infers the Drill data type of unknown data.
+   * @param data The input text of unknown data type.
+   * @return A {@link MinorType} of the Drill data type.
+   */
+  public static MinorType typifyToDrill (String data) {
+    Entry<Class, String> result = Typifier.typify(data);
+    String dataType = result.getKey().getSimpleName();
+
+    // If the string is empty, return UNKNOWN
+    if (StringUtils.isEmpty(data)) {
+      return MinorType.VARCHAR;
+    } else if (dataType.equalsIgnoreCase("Float")) {
+      return MinorType.FLOAT4;
+    } else if (dataType.equalsIgnoreCase("Double")) {
+      return MinorType.FLOAT8;
+    } else if (dataType.equalsIgnoreCase("Integer")) {
+      return MinorType.INT;
+    } else if (dataType.equalsIgnoreCase("Boolean")) {
+      return MinorType.BIT;
+    } else if (dataType.equalsIgnoreCase("Long")) {
+      return MinorType.BIGINT;
+    } else if(dataType.equalsIgnoreCase("LocalDateTime")) {
+      return MinorType.TIMESTAMP;
+    } else if (dataType.equalsIgnoreCase("LocalDate")) {
+      return MinorType.DATE;
+    } else if (dataType.equalsIgnoreCase("LocalTime")) {
+      return MinorType.TIME;
+    } else {
+      return MinorType.VARCHAR;
+    }
+  }
+
 
   // default is:
   //   > don't interpret "0" and "1" as true and false

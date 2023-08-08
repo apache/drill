@@ -15,12 +15,15 @@ The default configuration is shown below:
   "extensions": [
     "xml"
   ],
+  "allTextMode": true,
   "dataLevel": 2
 }
 ```
 
 ## Data Types
-All fields are read as strings.  Nested fields are read as maps.  Future functionality could include support for lists.
+The XML reader has an `allTextMode` which, when set to `true` reads all data fields as strings.
+When set to `false`, Drill will attempt to infer data types.
+Nested fields are read as maps.  Future functionality could include support for lists.
 
 ## Provided Schema
 The XML Format Reader supports provided inline schemas.  An example query might be:
