@@ -106,7 +106,7 @@ public class TestXMLReader extends ClusterTest {
         .addNullable("timestamp_field", MinorType.TIMESTAMP)
         .addNullable("string_field", MinorType.VARCHAR)
         .buildSchema();
-    
+
     RowSet expected = client.rowSetBuilder(expectedSchema)
         .addRow(mapArray(),  1.0, 1000.0, 1.3, 3.3, true, LocalDate.parse("2022-01-01"),
                     LocalDate.parse("2022-02-03"), "12:04:34", Instant.parse("2022-01-06T12:30" +
