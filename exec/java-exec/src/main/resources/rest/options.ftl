@@ -91,7 +91,7 @@
   </div>
   <#include "*/alertModals.ftl">
   <div class="table-responsive">
-    <table id='optionsTbl' class="table table-striped table-condensed display sortable" style="table-layout: auto; width=100%;">
+    <table id='optionsTbl' class="table table-striped table-condensed display sortable" style="table-layout: auto; width: 100%;">
       <thead>
         <tr>
           <th style="width:30%">OPTION</th>
