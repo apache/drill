@@ -69,7 +69,6 @@
     <!-- List of Option Descriptions -->
     <script src="/dynamic/options.describe.js"></script>
     <link href="/static/css/datatables.min.css" rel="stylesheet">
-    <link href="/static/css/drill-dataTables.sortable.css" rel="stylesheet">
 </#macro>
 
 <#macro page_body>
@@ -91,12 +90,12 @@
   </div>
   <#include "*/alertModals.ftl">
   <div class="table-responsive">
-    <table id='optionsTbl' class="table table-striped table-condensed display sortable" style="table-layout: auto; width: 100%;">
+    <table id='optionsTbl' class="table table-striped table-condensed display" style="table-layout: auto; width: 100%;">
       <thead>
         <tr>
-          <th style="width:30%">OPTION</th>
-          <th style="width:25%">VALUE</th>
-          <th style="width:45%">DESCRIPTION</th>
+          <th class="option" style="width:30%">OPTION</th>
+          <th class="value" style="width:25%">VALUE</th>
+          <th class="description" style="width:45%">DESCRIPTION</th>
         </tr>
       </thead>
       <tbody><#assign i = 1><#list model.getOptions() as option>
@@ -140,6 +139,10 @@
         "dom": 'lrit',
         "jQueryUI" : true,
         "searching": true,
+        "columnDefs": [ {
+            "targets": [ "value", "description" ],
+            "orderable": false
+        } ],
         "language": {
             "lengthMenu": "Display _MENU_ records per page",
             "zeroRecords": "No matching options found. Check search entry",
