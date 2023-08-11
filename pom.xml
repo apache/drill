@@ -88,7 +88,7 @@
     <reflections.version>0.9.10</reflections.version>
     <avro.version>1.11.2</avro.version>
     <metrics.version>4.2.19</metrics.version>
-    <jetty.version>9.4.44.v20210927</jetty.version>
+    <jetty.version>9.4.51.v20230217</jetty.version>
     <jersey.version>2.40</jersey.version>
     <javax.validation.api>2.0.1.Final</javax.validation.api>
     <asm.version>9.5</asm.version>
@@ -1403,8 +1403,12 @@
         <version>${avro.version}</version>
         <exclusions>
           <exclusion>
-            <groupId>org.mortbay.jetty</groupId>
-            <artifactId>servlet-api</artifactId>
+            <groupId>org.eclipse.jetty</groupId>
+            <artifactId>jetty-server</artifactId>
+          </exclusion>
+          <exclusion>
+            <groupId>org.eclipse.jetty</groupId>
+            <artifactId>jetty-servlet</artifactId>
           </exclusion>
         </exclusions>
       </dependency>
@@ -1415,8 +1419,12 @@
         <scope>compile</scope>
         <exclusions>
           <exclusion>
-            <groupId>org.mortbay.jetty</groupId>
-            <artifactId>servlet-api</artifactId>
+            <groupId>org.eclipse.jetty</groupId>
+            <artifactId>jetty-server</artifactId>
+          </exclusion>
+          <exclusion>
+            <groupId>org.eclipse.jetty</groupId>
+            <artifactId>jetty-servlet</artifactId>
           </exclusion>
           <exclusion>
             <groupId>commons-logging</groupId>
@@ -1471,10 +1479,6 @@
             <artifactId>servlet-api</artifactId>
           </exclusion>
           <exclusion>
-            <groupId>org.mortbay.jetty</groupId>
-            <artifactId>servlet-api-2.5</artifactId>
-          </exclusion>
-          <exclusion>
             <groupId>org.apache.hadoop</groupId>
             <artifactId>hadoop-mapreduce-client-core</artifactId>
           </exclusion>
@@ -1522,8 +1526,12 @@
             <artifactId>commons-logging-api</artifactId>
           </exclusion>
           <exclusion>
-            <groupId>org.mortbay.jetty</groupId>
-            <artifactId>servlet-api</artifactId>
+            <groupId>org.eclipse.jetty</groupId>
+            <artifactId>jetty-server</artifactId>
+          </exclusion>
+          <exclusion>
+            <groupId>org.eclipse.jetty</groupId>
+            <artifactId>jetty-servlet</artifactId>
           </exclusion>
           <exclusion>
             <groupId>org.apache.hive</groupId>
@@ -1696,8 +1704,12 @@
             <artifactId>asm</artifactId>
           </exclusion>
           <exclusion>
-            <groupId>org.mortbay.jetty</groupId>
-            <artifactId>servlet-api-2.5</artifactId>
+            <groupId>org.eclipse.jetty</groupId>
+            <artifactId>jetty-server</artifactId>
+          </exclusion>
+          <exclusion>
+            <groupId>org.eclipse.jetty</groupId>
+            <artifactId>jetty-servlet</artifactId>
           </exclusion>
           <exclusion>
             <groupId>org.json</groupId>
@@ -2106,23 +2118,15 @@
             <version>${hadoop.version}</version>
             <exclusions>
               <exclusion>
-                <groupId>org.mortbay.jetty</groupId>
-                <artifactId>servlet-api</artifactId>
+                <groupId>org.eclipse.jetty</groupId>
+                <artifactId>jetty-server</artifactId>
               </exclusion>
               <exclusion>
-                <groupId>org.mortbay.jetty</groupId>
-                <artifactId>servlet-api-2.5</artifactId>
+                <groupId>org.eclipse.jetty</groupId>
+                <artifactId>jetty-servlet</artifactId>
               </exclusion>
               <exclusion>
-                <groupId>org.mortbay.jetty</groupId>
-                <artifactId>servlet-api-2.5</artifactId>
-              </exclusion>
-              <exclusion>
-                <groupId>javax.servlet</groupId>
-                <artifactId>servlet-api</artifactId>
-              </exclusion>
-              <exclusion>
-                <groupId>org.mortbay.jetty</groupId>
+                <groupId>org.eclipse.jetty</groupId>
                 <artifactId>jetty-util</artifactId>
               </exclusion>
               <exclusion>
@@ -2277,23 +2281,19 @@
             <classifier>tests</classifier>
             <exclusions>
               <exclusion>
-                <groupId>org.mortbay.jetty</groupId>
-                <artifactId>servlet-api</artifactId>
+                <groupId>org.eclipse.jetty</groupId>
+                <artifactId>jetty-server</artifactId>
               </exclusion>
               <exclusion>
-                <groupId>org.mortbay.jetty</groupId>
-                <artifactId>servlet-api-2.5</artifactId>
-              </exclusion>
-              <exclusion>
-                <groupId>org.mortbay.jetty</groupId>
-                <artifactId>servlet-api-2.5</artifactId>
+                <groupId>org.eclipse.jetty</groupId>
+                <artifactId>jetty-servlet</artifactId>
               </exclusion>
               <exclusion>
                 <groupId>javax.servlet</groupId>
                 <artifactId>servlet-api</artifactId>
               </exclusion>
               <exclusion>
-                <groupId>org.mortbay.jetty</groupId>
+                <groupId>org.eclipse.jetty</groupId>
                 <artifactId>jetty-util</artifactId>
               </exclusion>
               <exclusion>
@@ -2384,8 +2384,12 @@
                 <artifactId>commons-logging</artifactId>
               </exclusion>
               <exclusion>
-                <groupId>org.mortbay.jetty</groupId>
-                <artifactId>servlet-api</artifactId>
+                <groupId>org.eclipse.jetty</groupId>
+                <artifactId>jetty-server</artifactId>
+              </exclusion>
+              <exclusion>
+                <groupId>org.eclipse.jetty</groupId>
+                <artifactId>jetty-servlet</artifactId>
               </exclusion>
               <exclusion>
                 <groupId>javax.servlet</groupId>
@@ -2420,8 +2424,12 @@
                 <artifactId>commons-logging</artifactId>
               </exclusion>
               <exclusion>
-                <groupId>org.mortbay.jetty</groupId>
-                <artifactId>servlet-api</artifactId>
+                <groupId>org.eclipse.jetty</groupId>
+                <artifactId>jetty-server</artifactId>
+              </exclusion>
+              <exclusion>
+                <groupId>org.eclipse.jetty</groupId>
+                <artifactId>jetty-servlet</artifactId>
               </exclusion>
               <exclusion>
                 <groupId>javax.servlet</groupId>
@@ -2464,15 +2472,15 @@
                 <artifactId>servlet-api</artifactId>
               </exclusion>
               <exclusion>
-                <groupId>org.mortbay.jetty</groupId>
-                <artifactId>servlet-api</artifactId>
+                <groupId>org.eclipse.jetty</groupId>
+                <artifactId>jetty-server</artifactId>
               </exclusion>
               <exclusion>
-                <groupId>org.mortbay.jetty</groupId>
-                <artifactId>servlet-api-2.5</artifactId>
+                <groupId>org.eclipse.jetty</groupId>
+                <artifactId>jetty-servlet</artifactId>
               </exclusion>
               <exclusion>
-                <groupId>org.mortbay.jetty</groupId>
+                <groupId>org.eclipse.jetty</groupId>
                 <artifactId>jetty-util</artifactId>
               </exclusion>
               <exclusion>
@@ -2615,8 +2623,12 @@
                 <groupId>io.netty</groupId>
               </exclusion>
               <exclusion>
-                <groupId>org.mortbay.jetty</groupId>
-                <artifactId>servlet-api-2.5</artifactId>
+                <groupId>org.eclipse.jetty</groupId>
+                <artifactId>jetty-server</artifactId>
+              </exclusion>
+              <exclusion>
+                <groupId>org.eclipse.jetty</groupId>
+                <artifactId>jetty-servlet</artifactId>
               </exclusion>
               <exclusion>
                 <artifactId>slf4j-log4j12</artifactId>
@@ -2749,20 +2761,12 @@
                 <artifactId>servlet-api</artifactId>
               </exclusion>
               <exclusion>
-                <artifactId>servlet-api-2.5</artifactId>
-                <groupId>org.mortbay.jetty</groupId>
+                <groupId>org.eclipse.jetty</groupId>
+                <artifactId>jetty-server</artifactId>
               </exclusion>
               <exclusion>
-                <artifactId>jsp-2.1</artifactId>
-                <groupId>org.mortbay.jetty</groupId>
-              </exclusion>
-              <exclusion>
-                <artifactId>jsp-api-2.1</artifactId>
-                <groupId>org.mortbay.jetty</groupId>
-              </exclusion>
-              <exclusion>
-                <artifactId>jetty-sslengine</artifactId>
-                <groupId>org.mortbay.jetty</groupId>
+                <groupId>org.eclipse.jetty</groupId>
+                <artifactId>jetty-servlet</artifactId>
               </exclusion>
               <exclusion>
                 <artifactId>jamon-runtime</artifactId>
@@ -2814,8 +2818,12 @@
                 <artifactId>servlet-api</artifactId>
               </exclusion>
               <exclusion>
-                <groupId>org.mortbay.jetty</groupId>
-                <artifactId>servlet-api-2.5</artifactId>
+                <groupId>org.eclipse.jetty</groupId>
+                <artifactId>jetty-server</artifactId>
+              </exclusion>
+              <exclusion>
+                <groupId>org.eclipse.jetty</groupId>
+                <artifactId>jetty-servlet</artifactId>
               </exclusion>
               <exclusion>
                 <artifactId>commons-logging</artifactId>
@@ -2948,20 +2956,19 @@
                 <groupId>commons-logging</groupId>
               </exclusion>
               <exclusion>
-                <groupId>org.mortbay.jetty</groupId>
-                <artifactId>servlet-api</artifactId>
+                <groupId>org.eclipse.jetty</groupId>
+                <artifactId>jetty-server</artifactId>
               </exclusion>
               <exclusion>
-                <groupId>org.mortbay.jetty</groupId>
-                <artifactId>servlet-api-2.5</artifactId>
+                <groupId>org.eclipse.jetty</groupId>
+                <artifactId>jetty-servlet</artifactId>
               </exclusion>
               <exclusion>
                 <groupId>javax.servlet</groupId>
                 <artifactId>servlet-api</artifactId>
               </exclusion>
-
               <exclusion>
-                <groupId>org.mortbay.jetty</groupId>
+                <groupId>org.eclipse.jetty</groupId>
                 <artifactId>jetty-util</artifactId>
               </exclusion>
               <exclusion>
@@ -3048,19 +3055,19 @@
                 <groupId>commons-logging</groupId>
               </exclusion>
               <exclusion>
-                <groupId>org.mortbay.jetty</groupId>
-                <artifactId>servlet-api</artifactId>
+                <groupId>org.eclipse.jetty</groupId>
+                <artifactId>jetty-server</artifactId>
               </exclusion>
               <exclusion>
-                <groupId>org.mortbay.jetty</groupId>
-                <artifactId>servlet-api-2.5</artifactId>
+                <groupId>org.eclipse.jetty</groupId>
+                <artifactId>jetty-servlet</artifactId>
               </exclusion>
               <exclusion>
                 <groupId>javax.servlet</groupId>
                 <artifactId>servlet-api</artifactId>
               </exclusion>
               <exclusion>
-                <groupId>org.mortbay.jetty</groupId>
+                <groupId>org.eclipse.jetty</groupId>
                 <artifactId>jetty-util</artifactId>
               </exclusion>
               <exclusion>
@@ -3275,8 +3282,12 @@
                 <artifactId>commons-logging</artifactId>
               </exclusion>
               <exclusion>
-                <groupId>org.mortbay.jetty</groupId>
-                <artifactId>servlet-api</artifactId>
+                <groupId>org.eclipse.jetty</groupId>
+                <artifactId>jetty-server</artifactId>
+              </exclusion>
+              <exclusion>
+                <groupId>org.eclipse.jetty</groupId>
+                <artifactId>jetty-servlet</artifactId>
               </exclusion>
               <exclusion>
                 <groupId>javax.servlet</groupId>
@@ -3298,8 +3309,12 @@
                 <artifactId>servlet-api</artifactId>
               </exclusion>
               <exclusion>
-                <artifactId>servlet-api-2.5</artifactId>
-                <groupId>org.mortbay.jetty</groupId>
+                <groupId>org.eclipse.jetty</groupId>
+                <artifactId>jetty-server</artifactId>
+              </exclusion>
+              <exclusion>
+                <groupId>org.eclipse.jetty</groupId>
+                <artifactId>jetty-servlet</artifactId>
               </exclusion>
               <exclusion>
                 <groupId>commons-logging</groupId>
@@ -3361,20 +3376,16 @@
                 <artifactId>servlet-api</artifactId>
               </exclusion>
               <exclusion>
-                <artifactId>servlet-api-2.5</artifactId>
-                <groupId>org.mortbay.jetty</groupId>
+                <groupId>org.eclipse.jetty</groupId>
+                <artifactId>jetty-server</artifactId>
               </exclusion>
               <exclusion>
-                <artifactId>jsp-2.1</artifactId>
-                <groupId>org.mortbay.jetty</groupId>
+                <groupId>org.eclipse.jetty</groupId>
+                <artifactId>jetty-servlet</artifactId>
               </exclusion>
               <exclusion>
-                <artifactId>jsp-api-2.1</artifactId>
-                <groupId>org.mortbay.jetty</groupId>
-              </exclusion>
-              <exclusion>
-                <artifactId>jetty-sslengine</artifactId>
-                <groupId>org.mortbay.jetty</groupId>
+                <artifactId>jetty-jsp</artifactId>
+                <groupId>org.eclipse.jetty</groupId>
               </exclusion>
               <exclusion>
                 <artifactId>jamon-runtime</artifactId>
@@ -3426,8 +3437,12 @@
                 <artifactId>servlet-api</artifactId>
               </exclusion>
               <exclusion>
-                <groupId>org.mortbay.jetty</groupId>
-                <artifactId>servlet-api-2.5</artifactId>
+                <groupId>org.eclipse.jetty</groupId>
+                <artifactId>jetty-server</artifactId>
+              </exclusion>
+              <exclusion>
+                <groupId>org.eclipse.jetty</groupId>
+                <artifactId>jetty-servlet</artifactId>
               </exclusion>
               <exclusion>
                 <artifactId>commons-logging</artifactId>
@@ -3536,12 +3551,12 @@
                 <groupId>commons-logging</groupId>
               </exclusion>
               <exclusion>
-                <groupId>org.mortbay.jetty</groupId>
-                <artifactId>servlet-api</artifactId>
+                <groupId>org.eclipse.jetty</groupId>
+                <artifactId>jetty-server</artifactId>
               </exclusion>
               <exclusion>
-                <groupId>org.mortbay.jetty</groupId>
-                <artifactId>servlet-api-2.5</artifactId>
+                <groupId>org.eclipse.jetty</groupId>
+                <artifactId>jetty-servlet</artifactId>
               </exclusion>
               <exclusion>
                 <groupId>dnsjava</groupId>
@@ -3563,12 +3578,12 @@
                 <groupId>commons-logging</groupId>
               </exclusion>
               <exclusion>
-                <groupId>org.mortbay.jetty</groupId>
-                <artifactId>servlet-api</artifactId>
+                <groupId>org.eclipse.jetty</groupId>
+                <artifactId>jetty-server</artifactId>
               </exclusion>
               <exclusion>
-                <groupId>org.mortbay.jetty</groupId>
-                <artifactId>servlet-api-2.5</artifactId>
+                <groupId>org.eclipse.jetty</groupId>
+                <artifactId>jetty-servlet</artifactId>
               </exclusion>
             </exclusions>
           </dependency>
@@ -3660,12 +3675,12 @@
                 <groupId>commons-logging</groupId>
               </exclusion>
               <exclusion>
-                <groupId>org.mortbay.jetty</groupId>
-                <artifactId>servlet-api</artifactId>
+                <groupId>org.eclipse.jetty</groupId>
+                <artifactId>jetty-server</artifactId>
               </exclusion>
               <exclusion>
-                <groupId>org.mortbay.jetty</groupId>
-                <artifactId>servlet-api-2.5</artifactId>
+                <groupId>org.eclipse.jetty</groupId>
+                <artifactId>jetty-servlet</artifactId>
               </exclusion>
               <exclusion>
                 <groupId>dnsjava</groupId>
@@ -3687,12 +3702,12 @@
                 <groupId>commons-logging</groupId>
               </exclusion>
               <exclusion>
-                <groupId>org.mortbay.jetty</groupId>
-                <artifactId>servlet-api</artifactId>
+                <groupId>org.eclipse.jetty</groupId>
+                <artifactId>jetty-server</artifactId>
               </exclusion>
               <exclusion>
-                <groupId>org.mortbay.jetty</groupId>
-                <artifactId>servlet-api-2.5</artifactId>
+                <groupId>org.eclipse.jetty</groupId>
+                <artifactId>jetty-servlet</artifactId>
               </exclusion>
             </exclusions>
           </dependency>
@@ -3927,19 +3942,19 @@
                 <groupId>commons-logging</groupId>
               </exclusion>
               <exclusion>
-                <groupId>org.mortbay.jetty</groupId>
-                <artifactId>servlet-api</artifactId>
+                <groupId>org.eclipse.jetty</groupId>
+                <artifactId>jetty-server</artifactId>
               </exclusion>
               <exclusion>
-                <groupId>org.mortbay.jetty</groupId>
-                <artifactId>servlet-api-2.5</artifactId>
+                <groupId>org.eclipse.jetty</groupId>
+                <artifactId>jetty-servlet</artifactId>
               </exclusion>
               <exclusion>
                 <groupId>javax.servlet</groupId>
                 <artifactId>servlet-api</artifactId>
               </exclusion>
               <exclusion>
-                <groupId>org.mortbay.jetty</groupId>
+                <groupId>org.eclipse.jetty</groupId>
                 <artifactId>jetty-util</artifactId>
               </exclusion>
               <exclusion>
@@ -4018,19 +4033,19 @@
                 <groupId>commons-logging</groupId>
               </exclusion>
               <exclusion>
-                <groupId>org.mortbay.jetty</groupId>
-                <artifactId>servlet-api</artifactId>
+                <groupId>org.eclipse.jetty</groupId>
+                <artifactId>jetty-server</artifactId>
               </exclusion>
               <exclusion>
-                <groupId>org.mortbay.jetty</groupId>
-                <artifactId>servlet-api-2.5</artifactId>
+                <groupId>org.eclipse.jetty</groupId>
+                <artifactId>jetty-servlet</artifactId>
               </exclusion>
               <exclusion>
                 <groupId>javax.servlet</groupId>
                 <artifactId>servlet-api</artifactId>
               </exclusion>
               <exclusion>
-                <groupId>org.mortbay.jetty</groupId>
+                <groupId>org.eclipse.jetty</groupId>
                 <artifactId>jetty-util</artifactId>
               </exclusion>
               <exclusion>
@@ -4316,12 +4331,12 @@
                 <artifactId>commons-logging</artifactId>
               </exclusion>
               <exclusion>
-                <groupId>org.mortbay.jetty</groupId>
-                <artifactId>servlet-api</artifactId>
+                <groupId>org.eclipse.jetty</groupId>
+                <artifactId>jetty-server</artifactId>
               </exclusion>
               <exclusion>
-                <groupId>javax.servlet</groupId>
-                <artifactId>servlet-api</artifactId>
+                <groupId>org.eclipse.jetty</groupId>
+                <artifactId>jetty-servlet</artifactId>
               </exclusion>
               <exclusion>
                 <groupId>log4j</groupId>
@@ -4335,12 +4350,12 @@
             <version>${hbase.version}</version>
             <exclusions>
               <exclusion>
-                <groupId>javax.servlet</groupId>
-                <artifactId>servlet-api</artifactId>
+                <groupId>org.eclipse.jetty</groupId>
+                <artifactId>jetty-server</artifactId>
               </exclusion>
               <exclusion>
-                <artifactId>servlet-api-2.5</artifactId>
-                <groupId>org.mortbay.jetty</groupId>
+                <groupId>org.eclipse.jetty</groupId>
+                <artifactId>jetty-servlet</artifactId>
               </exclusion>
               <exclusion>
                 <groupId>commons-logging</groupId>
@@ -4402,20 +4417,16 @@
                 <artifactId>servlet-api</artifactId>
               </exclusion>
               <exclusion>
-                <artifactId>servlet-api-2.5</artifactId>
-                <groupId>org.mortbay.jetty</groupId>
+                <groupId>org.eclipse.jetty</groupId>
+                <artifactId>jetty-server</artifactId>
               </exclusion>
               <exclusion>
-                <artifactId>jsp-2.1</artifactId>
-                <groupId>org.mortbay.jetty</groupId>
+                <groupId>org.eclipse.jetty</groupId>
+                <artifactId>jetty-servlet</artifactId>
               </exclusion>
               <exclusion>
-                <artifactId>jsp-api-2.1</artifactId>
-                <groupId>org.mortbay.jetty</groupId>
-              </exclusion>
-              <exclusion>
-                <artifactId>jetty-sslengine</artifactId>
-                <groupId>org.mortbay.jetty</groupId>
+                <artifactId>jetty-jsp</artifactId>
+                <groupId>org.eclipse.jetty</groupId>
               </exclusion>
               <exclusion>
                 <artifactId>jamon-runtime</artifactId>
@@ -4467,8 +4478,12 @@
                 <artifactId>servlet-api</artifactId>
               </exclusion>
               <exclusion>
-                <groupId>org.mortbay.jetty</groupId>
-                <artifactId>servlet-api-2.5</artifactId>
+                <groupId>org.eclipse.jetty</groupId>
+                <artifactId>jetty-server</artifactId>
+              </exclusion>
+              <exclusion>
+                <groupId>org.eclipse.jetty</groupId>
+                <artifactId>jetty-servlet</artifactId>
               </exclusion>
               <exclusion>
                 <artifactId>commons-logging</artifactId>
