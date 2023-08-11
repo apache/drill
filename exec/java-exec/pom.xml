@@ -173,10 +173,12 @@
           <artifactId>jetty-http</artifactId>
           <groupId>org.eclipse.jetty</groupId>
         </exclusion>
+        <!--
         <exclusion>
           <artifactId>jetty-util</artifactId>
           <groupId>org.eclipse.jetty</groupId>
         </exclusion>
+        -->
         <exclusion>
           <artifactId>javax.servlet-api</artifactId>
           <groupId>javax.servlet</groupId>
@@ -445,10 +447,12 @@
           <groupId>org.eclipse.jetty</groupId>
           <artifactId>jetty-security</artifactId>
         </exclusion>
+        <!--
         <exclusion>
           <groupId>org.eclipse.jetty</groupId>
           <artifactId>jetty-util</artifactId>
         </exclusion>
+        -->
       </exclusions>
     </dependency>
     <dependency>
@@ -573,6 +577,12 @@
       <artifactId>netty-tcnative</artifactId>
       <classifier>${netty.tcnative.classifier}</classifier>
     </dependency>
+    <dependency>
+      <groupId>io.netty</groupId>
+      <artifactId>netty-codec-http</artifactId>
+      <scope>test</scope>
+    </dependency>
+
     <dependency>
       <groupId>io.airlift</groupId>
       <artifactId>aircompressor</artifactId>
