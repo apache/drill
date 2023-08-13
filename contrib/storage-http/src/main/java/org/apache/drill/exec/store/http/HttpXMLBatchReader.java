@@ -47,6 +47,7 @@ public class HttpXMLBatchReader extends HttpBatchReader {
   private final HttpSubScan subScan;
   private final int maxRecords;
   private final int dataLevel;
+  private final boolean allTextMode;
   private InputStream inStream;
   private XMLReader xmlReader;
   private ResultSetLoader resultLoader;
@@ -55,12 +56,17 @@ public class HttpXMLBatchReader extends HttpBatchReader {
     super(subScan);
     this.subScan = subScan;
     this.maxRecords = subScan.maxRecords();
-
     // TODO Remove the XMLDataLevel parameter.  For now, check both
     if (subScan.tableSpec().connectionConfig().xmlOptions() == null) {
       this.dataLevel = subScan.tableSpec().connectionConfig().xmlDataLevel();
     } else {
       this.dataLevel = subScan.tableSpec().connectionConfig().xmlOptions().getDataLevel();
+    }
+
+    if (subScan.tableSpec().connectionConfig().xmlOptions() != null) {
+      this.allTextMode = subScan.tableSpec().connectionConfig().xmlOptions().allTextMode();
+    } else {
+      this.allTextMode = true;
     }
   }
 
@@ -74,6 +80,12 @@ public class HttpXMLBatchReader extends HttpBatchReader {
       this.dataLevel = subScan.tableSpec().connectionConfig().xmlDataLevel();
     } else {
       this.dataLevel = subScan.tableSpec().connectionConfig().xmlOptions().getDataLevel();
+    }
+
+    if (subScan.tableSpec().connectionConfig().xmlOptions() != null) {
+      this.allTextMode = subScan.tableSpec().connectionConfig().xmlOptions().allTextMode();
+    } else {
+      this.allTextMode = true;
     }
   }
 
@@ -115,8 +127,7 @@ public class HttpXMLBatchReader extends HttpBatchReader {
         negotiator.tableSchema(finalSchema, false);
       }
 
-      // TODO Add the all text mode.
-      xmlReader = new XMLReader(inStream, dataLevel, false);
+      xmlReader = new XMLReader(inStream, dataLevel, allTextMode);
       resultLoader = negotiator.build();
 
       if (implicitColumnsAreProjected()) {
