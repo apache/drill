@@ -63,7 +63,7 @@
     <mapr.release.version>6.1.0-mapr</mapr.release.version>
     <ojai.version>3.0-mapr-1808</ojai.version>
     <kerby.version>1.0.0</kerby.version>
-    <findbugs.version>3.0.0</findbugs.version>
+    <findbugs.version>3.0.5</findbugs.version>
     <netty.tcnative.classifier />
     <commons.io.version>2.7</commons.io.version>
     <commons.collections.version>4.4</commons.collections.version>
@@ -80,56 +80,56 @@
     -->
     <hive.version>3.1.3</hive.version>
     <hadoop.version>3.2.4</hadoop.version>
-    <hbase.version>2.4.9</hbase.version>
+    <hbase.version>2.5.5-hadoop3</hbase.version>
     <fmpp.version>1.0</fmpp.version>
     <freemarker.version>2.3.30</freemarker.version>
     <javassist.version>3.29.2-GA</javassist.version>
     <msgpack.version>0.6.6</msgpack.version>
     <reflections.version>0.9.10</reflections.version>
-    <avro.version>1.11.1</avro.version>
-    <metrics.version>4.2.10</metrics.version>
+    <avro.version>1.11.2</avro.version>
+    <metrics.version>4.2.19</metrics.version>
     <jetty.version>9.4.44.v20210927</jetty.version>
-    <jersey.version>2.34</jersey.version>
+    <jersey.version>2.40</jersey.version>
     <javax.validation.api>2.0.1.Final</javax.validation.api>
-    <asm.version>9.2</asm.version>
+    <asm.version>9.5</asm.version>
     <excludedGroups />
     <memoryMb>2500</memoryMb>
     <directMemoryMb>4500</directMemoryMb>
     <rat.skip>true</rat.skip>
     <license.skip>true</license.skip>
     <docker.repository>apache/drill</docker.repository>
-    <antlr.version>4.8-1</antlr.version>
+    <antlr.version>4.9.3</antlr.version>
     <maven.version>3.8.4</maven.version>
     <maven.min.version>3.6.3</maven.min.version>
     <commons.net.version>3.9.0</commons.net.version>
-    <commons.validator.version>1.6</commons.validator.version>
+    <commons.validator.version>1.7</commons.validator.version>
     <commons.text.version>1.10.0</commons.text.version>
     <protobuf.version>3.16.3</protobuf.version>
-    <protostuff.version>1.7.1</protostuff.version>
+    <protostuff.version>1.8.0</protostuff.version>
     <codemodel.version>2.6</codemodel.version>
-    <joda.version>2.10.14</joda.version>
+    <joda.version>2.12.5</joda.version>
     <javax.el.version>3.0.0</javax.el.version>
-    <surefire.version>3.0.0-M8</surefire.version>
-    <jna.version>5.8.0</jna.version>
-    <commons.compress.version>1.21</commons.compress.version>
+    <surefire.version>3.1.2</surefire.version>
+    <jna.version>5.13.0</jna.version>
+    <commons.compress.version>1.23.0</commons.compress.version>
     <hikari.version>4.0.3</hikari.version>
     <netty.version>4.1.73.Final</netty.version>
-    <httpclient.version>4.5.13</httpclient.version>
-    <libthrift.version>0.14.0</libthrift.version>
+    <httpclient.version>4.5.14</httpclient.version>
+    <libthrift.version>0.18.1</libthrift.version>
     <derby.version>10.14.2.0</derby.version>
     <commons.cli.version>1.4</commons.cli.version>
-    <snakeyaml.version>2.0</snakeyaml.version>
+    <snakeyaml.version>2.1</snakeyaml.version>
     <commons.lang3.version>3.10</commons.lang3.version>
-    <testcontainers.version>1.17.3</testcontainers.version>
+    <testcontainers.version>1.18.3</testcontainers.version>
     <typesafe.config.version>1.4.2</typesafe.config.version>
     <commons.codec.version>1.14</commons.codec.version>
     <xerces.version>2.12.2</xerces.version>
     <commons.configuration.version>1.10</commons.configuration.version>
     <commons.beanutils.version>1.9.4</commons.beanutils.version>
-    <httpdlog-parser.version>5.8</httpdlog-parser.version>
+    <httpdlog-parser.version>5.10.0</httpdlog-parser.version>
     <yauaa.version>7.19.2</yauaa.version>
-    <log4j.version>2.19.0</log4j.version>
-    <aircompressor.version>0.20</aircompressor.version>
+    <log4j.version>2.20.0</log4j.version>
+    <aircompressor.version>0.25</aircompressor.version>
     <iceberg.version>0.12.1</iceberg.version>
     <univocity-parsers.version>2.8.3</univocity-parsers.version>
     <mongo.version>4.3.3</mongo.version>
@@ -225,7 +225,6 @@
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-javadoc-plugin</artifactId>
-        <version>3.4.1</version>
         <configuration>
           <sourceFileExcludes>
             <!-- Don't include codegen -->
@@ -659,6 +658,7 @@
         <plugin>
           <groupId>org.apache.maven.plugins</groupId>
           <artifactId>maven-jar-plugin</artifactId>
+          <version>3.3.0</version>
           <executions>
             <execution>
               <goals>
@@ -668,9 +668,19 @@
           </executions>
         </plugin>
         <plugin>
+          <groupId>org.apache.maven.plugins</groupId>
+          <artifactId>maven-resources-plugin</artifactId>
+          <version>3.3.1</version>
+        </plugin>
+        <plugin>
+          <groupId>pl.project13.maven</groupId>
+          <artifactId>git-commit-id-plugin</artifactId>
+          <version>4.0.5</version>
+        </plugin>
+        <plugin>
           <groupId>com.mycila</groupId>
           <artifactId>license-maven-plugin</artifactId>
-          <version>3.0</version>
+          <version>4.2</version>
           <configuration>
             <aggregate>true</aggregate>
             <!--suppress UnresolvedMavenProperty -->
@@ -820,21 +830,21 @@
         <plugin>
           <groupId>org.apache.maven.plugins</groupId>
           <artifactId>maven-compiler-plugin</artifactId>
-          <version>3.8.1</version>
+          <version>3.11.0</version>
         </plugin>
         <plugin>
           <artifactId>maven-enforcer-plugin</artifactId>
-          <version>3.0.0-M2</version>
+          <version>3.3.0</version>
         </plugin>
         <plugin>
           <groupId>org.codehaus.mojo</groupId>
           <artifactId>build-helper-maven-plugin</artifactId>
-          <version>3.0.0</version>
+          <version>3.4.0</version>
         </plugin>
         <plugin> <!-- classpath scanning  -->
           <groupId>org.codehaus.mojo</groupId>
           <artifactId>exec-maven-plugin</artifactId>
-          <version>1.6.0</version>
+          <version>3.1.0</version>
           <executions>
             <execution>
               <phase>process-classes</phase>
@@ -915,7 +925,7 @@
         <plugin>
           <groupId>org.codehaus.mojo</groupId>
           <artifactId>xml-maven-plugin</artifactId>
-          <version>1.0</version>
+          <version>1.1.0</version>
         </plugin>
 
         <!--This plugin's configuration is used to store Eclipse m2e settings
@@ -1001,7 +1011,7 @@
         <plugin>
           <groupId>org.apache.maven.plugins</groupId>
           <artifactId>maven-shade-plugin</artifactId>
-          <version>3.2.4</version>
+          <version>3.5.0</version>
           <executions>
             <execution>
               <phase>package</phase>
@@ -1027,17 +1037,17 @@
         <plugin>
           <groupId>org.apache.maven.plugins</groupId>
           <artifactId>maven-assembly-plugin</artifactId>
-          <version>3.2.0</version>
+          <version>3.6.0</version>
         </plugin>
         <plugin>
           <groupId>org.apache.maven.plugins</groupId>
           <artifactId>maven-checkstyle-plugin</artifactId>
-          <version>3.1.1</version>
+          <version>3.3.0</version>
         </plugin>
         <plugin>
           <groupId>org.apache.maven.plugins</groupId>
           <artifactId>maven-javadoc-plugin</artifactId>
-          <version>3.1.1</version>
+          <version>3.5.0</version>
           <configuration>
             <doclint>none</doclint>
           </configuration>
@@ -3902,6 +3912,7 @@
       </activation>
       <properties>
         <hadoop.version>2.10.2</hadoop.version>
+        <hbase.version>2.5.5</hbase.version>
       </properties>
       <dependencyManagement>
         <dependencies>
