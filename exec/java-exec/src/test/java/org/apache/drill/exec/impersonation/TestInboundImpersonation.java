@@ -92,6 +92,8 @@ public class TestInboundImpersonation extends BaseTestImpersonation {
             .go();
       }
       adminClient.resetSystem(ExecConstants.IMPERSONATION_POLICIES_KEY);
+    } finally {
+      stopMiniDfsCluster();
     }
   }
 
