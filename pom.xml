@@ -2162,12 +2162,16 @@
                 <artifactId>jersey-server</artifactId>
               </exclusion>
               <exclusion>
-                <groupId>com.sun.jersey</groupId>
+                <groupId>com.github.pjfanning</groupId>
                 <artifactId>jersey-json</artifactId>
               </exclusion>
               <exclusion>
                 <groupId>com.sun.jersey</groupId>
                 <artifactId>jersey-client</artifactId>
+              </exclusion>
+              <exclusion>
+                <groupId>com.sun.jersey</groupId>
+                <artifactId>jersey-servlet</artifactId>
               </exclusion>
               <exclusion>
                 <artifactId>core</artifactId>
@@ -2329,7 +2333,7 @@
                 <artifactId>jersey-server</artifactId>
               </exclusion>
               <exclusion>
-                <groupId>com.sun.jersey</groupId>
+                <groupId>com.github.pjfanning</groupId>
                 <artifactId>jersey-json</artifactId>
               </exclusion>
               <exclusion>
@@ -2412,8 +2416,20 @@
             <classifier>tests</classifier>
             <exclusions>
               <exclusion>
+                <groupId>ch.qos.reload4j</groupId>
+                <artifactId>reload4j</artifactId>
+              </exclusion>
+              <exclusion>
+                <groupId>commons-codec</groupId>
+                <artifactId>commons-codec</artifactId>
+              </exclusion>
+              <exclusion>
                 <groupId>commons-logging</groupId>
                 <artifactId>commons-logging</artifactId>
+              </exclusion>
+              <exclusion>
+                <groupId>com.sun.jersey</groupId>
+                <artifactId>jersey-core</artifactId>
               </exclusion>
               <exclusion>
                 <groupId>org.eclipse.jetty</groupId>
@@ -2430,10 +2446,6 @@
               <exclusion>
                 <groupId>log4j</groupId>
                 <artifactId>log4j</artifactId>
-              </exclusion>
-              <exclusion>
-                <groupId>com.sun.jersey</groupId>
-                <artifactId>jersey-core</artifactId>
               </exclusion>
               <exclusion>
                 <groupId>org.codehaus.jackson</groupId>
@@ -2516,7 +2528,7 @@
                 <artifactId>jersey-server</artifactId>
               </exclusion>
               <exclusion>
-                <groupId>com.sun.jersey</groupId>
+                <groupId>com.github.pjfanning</groupId>
                 <artifactId>jersey-json</artifactId>
               </exclusion>
               <exclusion>
@@ -2568,7 +2580,7 @@
                 <artifactId>jersey-server</artifactId>
               </exclusion>
               <exclusion>
-                <groupId>com.sun.jersey</groupId>
+                <groupId>com.github.pjfanning</groupId>
                 <artifactId>jersey-json</artifactId>
               </exclusion>
               <exclusion>
@@ -4283,8 +4295,24 @@
             <scope>test</scope>
             <exclusions>
               <exclusion>
+                <groupId>commons-codec</groupId>
+                <artifactId>commons-codec</artifactId>
+              </exclusion>
+              <exclusion>
                 <groupId>commons-logging</groupId>
                 <artifactId>commons-logging</artifactId>
+              </exclusion>
+              <exclusion>
+                <groupId>com.sun.jersey</groupId>
+                <artifactId>jersey-core</artifactId>
+              </exclusion>
+              <exclusion>
+                <groupId>com.sun.jersey</groupId>
+                <artifactId>jersey-server</artifactId>
+              </exclusion>
+              <exclusion>
+                <groupId>com.sun.jersey</groupId>
+                <artifactId>jersey-json</artifactId>
               </exclusion>
               <exclusion>
                 <groupId>javax.servlet</groupId>
