@@ -43,11 +43,11 @@ public class KafkaTestBase extends ClusterTest {
   @BeforeClass
   public static void setUpBeforeClass() throws Exception {
     // Make sure this test is only running as part of the suit
-    Assume.assumeTrue(TestKafkaSuit.isRunningSuite());
+    Assume.assumeTrue(TestKafkaSuite.isRunningSuite());
     ClusterFixtureBuilder builder = ClusterFixture.builder(dirTestWatcher);
     startCluster(builder);
-    TestKafkaSuit.initKafka();
-    initKafkaStoragePlugin(TestKafkaSuit.embeddedKafkaCluster);
+    TestKafkaSuite.initKafka();
+    initKafkaStoragePlugin(TestKafkaSuite.embeddedKafkaCluster);
   }
 
   public static void initKafkaStoragePlugin(EmbeddedKafkaCluster embeddedKafkaCluster) throws Exception {
@@ -76,8 +76,8 @@ public class KafkaTestBase extends ClusterTest {
 
   @AfterClass
   public static void tearDownKafkaTestBase() {
-    if (TestKafkaSuit.isRunningSuite()) {
-      TestKafkaSuit.tearDownCluster();
+    if (TestKafkaSuite.isRunningSuite()) {
+      TestKafkaSuite.tearDownCluster();
     }
   }
 }

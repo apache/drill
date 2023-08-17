@@ -48,7 +48,7 @@ public class MessageIteratorTest extends KafkaTestBase {
     consumerProps.put(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, ByteArrayDeserializer.class);
     consumerProps.put(ConsumerConfig.MAX_POLL_RECORDS_CONFIG, "4");
     kafkaConsumer = new KafkaConsumer<>(consumerProps);
-    subScanSpec = new KafkaPartitionScanSpec(TestQueryConstants.JSON_TOPIC, 0, 0, TestKafkaSuit.NUM_JSON_MSG);
+    subScanSpec = new KafkaPartitionScanSpec(TestQueryConstants.JSON_TOPIC, 0, 0, TestKafkaSuite.NUM_JSON_MSG);
   }
 
   @After
@@ -105,6 +105,6 @@ public class MessageIteratorTest extends KafkaTestBase {
       Assert.assertNotNull(consumerRecord);
       ++messageCount;
     }
-    Assert.assertEquals(TestKafkaSuit.NUM_JSON_MSG, messageCount);
+    Assert.assertEquals(TestKafkaSuite.NUM_JSON_MSG, messageCount);
   }
 }

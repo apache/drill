@@ -24,8 +24,8 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
-import static org.apache.drill.exec.store.kafka.TestKafkaSuit.NUM_JSON_MSG;
-import static org.apache.drill.exec.store.kafka.TestKafkaSuit.embeddedKafkaCluster;
+import static org.apache.drill.exec.store.kafka.TestKafkaSuite.NUM_JSON_MSG;
+import static org.apache.drill.exec.store.kafka.TestKafkaSuite.embeddedKafkaCluster;
 import static org.junit.Assert.assertEquals;
 
 @Category({KafkaStorageTest.class, SlowTest.class})
@@ -36,7 +36,7 @@ public class KafkaFilterPushdownTest extends KafkaTestBase {
 
   @BeforeClass
   public static void setup() throws Exception {
-    TestKafkaSuit.createTopicHelper(TestQueryConstants.JSON_PUSHDOWN_TOPIC, NUM_PARTITIONS);
+    TestKafkaSuite.createTopicHelper(TestQueryConstants.JSON_PUSHDOWN_TOPIC, NUM_PARTITIONS);
     KafkaMessageGenerator generator = new KafkaMessageGenerator(embeddedKafkaCluster.getKafkaBrokerList(),
       StringSerializer.class);
     generator.populateJsonMsgWithTimestamps(TestQueryConstants.JSON_PUSHDOWN_TOPIC, NUM_JSON_MSG);

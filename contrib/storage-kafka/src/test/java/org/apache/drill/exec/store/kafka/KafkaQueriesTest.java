@@ -41,7 +41,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
 
-import static org.apache.drill.exec.store.kafka.TestKafkaSuit.embeddedKafkaCluster;
+import static org.apache.drill.exec.store.kafka.TestKafkaSuite.embeddedKafkaCluster;
 import static org.junit.Assert.fail;
 
 @FixMethodOrder(MethodSorters.JVM)
@@ -76,7 +76,7 @@ public class KafkaQueriesTest extends KafkaTestBase {
   @Test
   public void testResultCount() {
     String queryString = String.format(TestQueryConstants.MSG_SELECT_QUERY, TestQueryConstants.JSON_TOPIC);
-    runKafkaSQLVerifyCount(queryString, TestKafkaSuit.NUM_JSON_MSG);
+    runKafkaSQLVerifyCount(queryString, TestKafkaSuite.NUM_JSON_MSG);
   }
 
   @Test
@@ -91,7 +91,7 @@ public class KafkaQueriesTest extends KafkaTestBase {
               KafkaAvroDeserializer.class.getName());
 
       String queryString = String.format(TestQueryConstants.MSG_SELECT_QUERY, TestQueryConstants.AVRO_TOPIC);
-      runKafkaSQLVerifyCount(queryString, TestKafkaSuit.NUM_JSON_MSG);
+      runKafkaSQLVerifyCount(queryString, TestKafkaSuite.NUM_JSON_MSG);
     } finally {
       client.resetSession(ExecConstants.KAFKA_RECORD_READER);
     }
@@ -209,7 +209,7 @@ public class KafkaQueriesTest extends KafkaTestBase {
   @Test
   public void testOneMessageTopic() throws Exception {
     String topicName = "topicWithOneMessage";
-    TestKafkaSuit.createTopicHelper(topicName, 1);
+    TestKafkaSuite.createTopicHelper(topicName, 1);
     KafkaMessageGenerator generator = new KafkaMessageGenerator(embeddedKafkaCluster.getKafkaBrokerList(), StringSerializer.class);
     generator.populateMessages(topicName, "{\"index\": 1}");
 
@@ -224,7 +224,7 @@ public class KafkaQueriesTest extends KafkaTestBase {
   @Test
   public void testMalformedRecords() throws Exception {
     String topicName = "topicWithMalFormedMessages";
-    TestKafkaSuit.createTopicHelper(topicName, 1);
+    TestKafkaSuite.createTopicHelper(topicName, 1);
     try {
       KafkaMessageGenerator generator = new KafkaMessageGenerator(embeddedKafkaCluster.getKafkaBrokerList(), StringSerializer.class);
       generator.populateMessages(topicName, "Test");
@@ -259,7 +259,7 @@ public class KafkaQueriesTest extends KafkaTestBase {
   @Test
   public void testNanInf() throws Exception {
     String topicName = "topicWithNanInf";
-    TestKafkaSuit.createTopicHelper(topicName, 1);
+    TestKafkaSuite.createTopicHelper(topicName, 1);
     try {
       KafkaMessageGenerator generator = new KafkaMessageGenerator(embeddedKafkaCluster.getKafkaBrokerList(), StringSerializer.class);
       generator.populateMessages(topicName, "{\"nan_col\":NaN, \"inf_col\":Infinity}");
@@ -287,7 +287,7 @@ public class KafkaQueriesTest extends KafkaTestBase {
   @Test
   public void testEscapeAnyChar() throws Exception {
     String topicName = "topicWithEscapeAnyChar";
-    TestKafkaSuit.createTopicHelper(topicName, 1);
+    TestKafkaSuite.createTopicHelper(topicName, 1);
     try {
       KafkaMessageGenerator generator = new KafkaMessageGenerator(embeddedKafkaCluster.getKafkaBrokerList(), StringSerializer.class);
       generator.populateMessages(topicName, "{\"name\": \"AB\\\"\\C\"}");
