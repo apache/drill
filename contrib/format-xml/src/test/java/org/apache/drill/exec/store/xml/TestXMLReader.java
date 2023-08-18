@@ -107,13 +107,15 @@ public class TestXMLReader extends ClusterTest {
         .addNullable("string_field", MinorType.VARCHAR)
         .buildSchema();
 
+    //DateUtility.parseLocalDateTime
+
     RowSet expected = client.rowSetBuilder(expectedSchema)
         .addRow(mapArray(),  1.0, 1000.0, 1.3, 3.3, true, LocalDate.parse("2022-01-01"),
-                    LocalDate.parse("2022-02-03"), "12:04:34", Instant.parse("2022-01-06T12:30" +
+                    LocalDate.parse("2022-03-02"), "12:04:34", Instant.parse("2022-01-06T12:30" +
                 ":30Z"),
             "string")
         .addRow(mapArray(), 2.0, 2000.0, 2.3, 4.3, false, LocalDate.parse("2022-02-01"),
-            LocalDate.parse("2022-01-03"),
+            LocalDate.parse("2022-03-01"),
             "13:04:34", Instant.parse("2022-03-06T12:30:30Z"), null)
         .build();
 
@@ -139,13 +141,17 @@ public class TestXMLReader extends ClusterTest {
       .addNullable("time_field", MinorType.TIME)
       .addNullable("timestamp_field", MinorType.TIMESTAMP)
       .addNullable("string_field", MinorType.VARCHAR)
-      .addNullable("date2_field", MinorType.DATE)
+        .addNullable("date2_field", MinorType.DATE)
       .add("attributes", MinorType.MAP)
       .buildSchema();
 
     RowSet expected = client.rowSetBuilder(expectedSchema)
-      .addRow(1, 1000L, 1.2999999523162842, 3.3, true, LocalDate.parse("2022-01-01"), LocalTime.parse("12:04:34"), Instant.parse("2022-01-06T12:30:30Z"), "string", LocalDate.parse("2022-03-02"), mapArray())
-      .addRow(2, 2000L, 2.299999952316284, 4.3, false, LocalDate.parse("2022-02-01"), LocalTime.parse("13:04:34"), Instant.parse("2022-03-06T12:30:30Z"), null, LocalDate.parse("2022-03-01"), mapArray())
+      .addRow(1, 1000L, 1.2999999523162842, 3.3, true, LocalDate.parse("2022-01-01"),
+          LocalTime.parse("12:04:34"), Instant.parse("2022-01-06T12:30:30Z"), "string",
+          LocalDate.parse("2022-03-02"), mapArray())
+      .addRow(2, 2000L, 2.299999952316284, 4.3, false, LocalDate.parse("2022-02-01"),
+          LocalTime.parse("13:04:34"), Instant.parse("2022-03-06T12:30:30Z"), null,
+          LocalDate.parse("2022-03-01"), mapArray())
       .build();
 
     new RowSetComparison(expected).verifyAndClearAll(results);
