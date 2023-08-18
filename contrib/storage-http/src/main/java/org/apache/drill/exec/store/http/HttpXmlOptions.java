@@ -56,7 +56,7 @@ public class HttpXmlOptions {
   public HttpXmlOptions(HttpXmlOptionsBuilder builder) {
     this.dataLevel = builder.dataLevel;
     this.schema = builder.schema;
-    this.allTextMode = builder.allTextMode;
+    this.allTextMode = builder.allTextMode == null || builder.allTextMode;
   }
 
 
@@ -111,7 +111,7 @@ public class HttpXmlOptions {
   public static class HttpXmlOptionsBuilder {
 
     private int dataLevel;
-    private boolean allTextMode;
+    private Boolean allTextMode;
     private TupleMetadata schema;
 
     public HttpXmlOptions.HttpXmlOptionsBuilder dataLevel(int dataLevel) {
