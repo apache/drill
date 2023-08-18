@@ -453,17 +453,6 @@
           <artifactId>drill-format-esri</artifactId>
           <version>${project.version}</version>
         </dependency>
-        <!--
-         drill-format-mapr is intentionally excluded from distribution for the default profile
-         to avoid adding mapr-specific jars into jars/3rdparty folder and inflation of the target jar.
-         For more details please see DRILL-7213 and DRILL-6929.
-
-         <dependency>
-           <groupId>org.apache.drill.contrib</groupId>
-           <artifactId>drill-format-mapr</artifactId>
-           <version>${project.version}</version>
-         </dependency>
-         -->
         <dependency>
           <groupId>org.apache.drill.contrib</groupId>
           <artifactId>drill-format-excel</artifactId>
@@ -499,6 +488,7 @@
           <artifactId>drill-storage</artifactId>
           <version>${project.version}</version>
         </dependency>
+
       </dependencies>
     </profile>
 
@@ -528,90 +518,6 @@
                       <filtering>false</filtering>
                     </resource>
                   </resources>
-                </configuration>
-              </execution>
-            </executions>
-          </plugin>
-        </plugins>
-      </build>
-    </profile>
-    <profile>
-      <id>mapr</id>
-      <dependencies>
-        <dependency>
-          <groupId>org.apache.drill.contrib</groupId>
-          <artifactId>drill-format-mapr</artifactId>
-          <version>${project.version}</version>
-          <exclusions>
-            <exclusion>
-              <groupId>com.mapr</groupId>
-              <artifactId>mapr-test-annotations</artifactId>
-            </exclusion>
-          </exclusions>
-        </dependency>
-        <dependency>
-          <groupId>org.apache.hbase</groupId>
-          <artifactId>hbase-client</artifactId>
-        </dependency>
-        <dependency>
-          <groupId>org.apache.hbase</groupId>
-          <artifactId>hbase-annotations</artifactId>
-        </dependency>
-        <dependency>
-          <groupId>org.apache.hbase</groupId>
-          <artifactId>hbase-common</artifactId>
-        </dependency>
-        <dependency>
-          <groupId>org.apache.hbase</groupId>
-          <artifactId>hbase-protocol</artifactId>
-        </dependency>
-        <dependency>
-          <groupId>org.apache.hive</groupId>
-          <artifactId>hive-maprdb-json-handler</artifactId>
-        </dependency>
-        <dependency>
-          <groupId>com.mapr.db</groupId>
-          <artifactId>maprdb-mapreduce</artifactId>
-        </dependency>
-        <dependency>
-          <groupId>com.mapr.security</groupId>
-          <artifactId>mapr-security-web</artifactId>
-        </dependency>
-      </dependencies>
-      <build>
-        <plugins>
-          <plugin>
-            <artifactId>maven-resources-plugin</artifactId>
-            <executions>
-              <execution>
-                <id>copy-winutils</id>
-                <phase>none</phase>
-              </execution>
-            </executions>
-          </plugin>
-          <plugin>
-            <groupId>org.apache.maven.plugins</groupId>
-            <artifactId>maven-dependency-plugin</artifactId>
-            <version>3.6.0</version>
-            <executions>
-              <execution>
-                <id>unpack-winutils</id>
-                <goals>
-                  <goal>unpack</goal>
-                </goals>
-                <phase>process-resources</phase>
-                <configuration>
-                  <artifactItems>
-                    <artifactItem>
-                      <groupId>org.apache.hadoop</groupId>
-                      <artifactId>hadoop-winutils</artifactId>
-                      <version>2.7.0-mapr-1506</version>
-                      <type>zip</type>
-                      <overWrite>true</overWrite>
-                      <outputDirectory>${project.build.directory}/winutils</outputDirectory>
-                      <excludes>**/*.pdb,**/*.lib,**/*.exp</excludes>
-                    </artifactItem>
-                  </artifactItems>
                 </configuration>
               </execution>
             </executions>
@@ -868,6 +774,7 @@
         </plugins>
       </build>
     </profile>
+
   </profiles>
 
 </project>

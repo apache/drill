@@ -25,53 +25,53 @@
     <dependencySet>
       <!-- Now, select which projects to include in this module-set. -->
       <includes>
-        <include>org.apache.drill.exec:drill-jdbc:jar</include>
-        <include>org.apache.drill:drill-protocol:jar</include>
-        <include>org.apache.drill:drill-common:jar</include>
-        <include>org.apache.drill:drill-logical:jar</include>
-        <include>org.apache.drill.exec:vector:jar</include>
-        <include>org.apache.drill.memory:drill-memory-base:jar</include>
-        <include>org.apache.drill.exec:drill-rpc:jar</include>
-        <include>org.apache.drill.exec:drill-java-exec:jar</include>
-        <include>org.apache.drill.metastore:drill-metastore-api:jar</include>
-        <include>org.apache.drill.metastore:drill-iceberg-metastore:jar</include>
-        <include>org.apache.drill.metastore:drill-rdbms-metastore:jar</include>
-        <include>org.apache.drill.metastore:drill-mongo-metastore:jar</include>
-        <include>org.apache.drill.contrib.storage-hive:drill-storage-hive-core:jar</include>
-        <include>org.apache.drill.contrib.storage-hive:drill-hive-exec-shaded:jar</include>
+        <!-- Please keep this list sorted. -->
         <include>org.apache.drill.contrib.data:tpch-sample-data:jar</include>
-        <include>org.apache.drill.contrib:drill-mongo-storage:jar</include>
-        <include>org.apache.drill.contrib:drill-storage-hbase:jar</include>
-        <include>org.apache.drill.contrib:drill-format-mapr:jar</include>
-        <include>org.apache.drill.contrib:drill-format-syslog:jar</include>
+        <include>org.apache.drill.contrib:drill-deltalake-format:jar</include>
+        <include>org.apache.drill.contrib:drill-druid-storage:jar</include>
         <include>org.apache.drill.contrib:drill-format-esri:jar</include>
-        <include>org.apache.drill.contrib:drill-format-xml:jar</include>
-        <include>org.apache.drill.contrib:drill-format-image:jar</include>
-        <include>org.apache.drill.contrib:drill-format-pcapng:jar</include>
+        <include>org.apache.drill.contrib:drill-format-excel:jar</include>
         <include>org.apache.drill.contrib:drill-format-hdf5:jar</include>
+        <include>org.apache.drill.contrib:drill-format-httpd:jar</include>
+        <include>org.apache.drill.contrib:drill-format-image:jar</include>
         <include>org.apache.drill.contrib:drill-format-log:jar</include>
         <include>org.apache.drill.contrib:drill-format-ltsv:jar</include>
-        <include>org.apache.drill.contrib:drill-format-httpd:jar</include>
-        <include>org.apache.drill.contrib:drill-format-pdf:jar</include>
-        <include>org.apache.drill.contrib:drill-format-excel:jar</include>
         <include>org.apache.drill.contrib:drill-format-msaccess:jar</include>
-        <include>org.apache.drill.contrib:drill-format-spss:jar</include>
+        <include>org.apache.drill.contrib:drill-format-pcapng:jar</include>
+        <include>org.apache.drill.contrib:drill-format-pdf:jar</include>
         <include>org.apache.drill.contrib:drill-format-sas:jar</include>
+        <include>org.apache.drill.contrib:drill-format-spss:jar</include>
+        <include>org.apache.drill.contrib:drill-format-syslog:jar</include>
+        <include>org.apache.drill.contrib:drill-format-xml:jar</include>
+        <include>org.apache.drill.contrib:drill-iceberg-format:jar</include>
         <include>org.apache.drill.contrib:drill-jdbc-storage:jar</include>
         <include>org.apache.drill.contrib:drill-kudu-storage:jar</include>
+        <include>org.apache.drill.contrib:drill-mongo-storage:jar</include>
+        <include>org.apache.drill.contrib:drill-opentsdb-storage:jar</include>
+        <include>org.apache.drill.contrib:drill-storage-cassandra:jar</include>
+        <include>org.apache.drill.contrib:drill-storage-elasticsearch:jar</include>
+        <include>org.apache.drill.contrib:drill-storage-googlesheets:jar</include>
+        <include>org.apache.drill.contrib:drill-storage-hbase:jar</include>
+        <include>org.apache.drill.contrib:drill-storage-http:jar</include>
+        <include>org.apache.drill.contrib:drill-storage:jar</include>
+        <include>org.apache.drill.contrib:drill-storage-kafka:jar</include>
         <include>org.apache.drill.contrib:drill-storage-phoenix:jar</include>
         <include>org.apache.drill.contrib:drill-storage-splunk:jar</include>
-        <include>org.apache.drill.contrib:drill-storage-googlesheets:jar</include>
-        <include>org.apache.drill.contrib:drill-storage-kafka:jar</include>
-        <include>org.apache.drill.contrib:drill-storage-elasticsearch:jar</include>
-        <include>org.apache.drill.contrib:drill-storage-cassandra:jar</include>
-        <include>org.apache.drill.contrib:drill-storage-http:jar</include>
-        <include>org.apache.drill.contrib:drill-opentsdb-storage:jar</include>
         <include>org.apache.drill.contrib:drill-udfs:jar</include>
-        <include>org.apache.drill.contrib:drill-druid-storage:jar</include>
-        <include>org.apache.drill.contrib:drill-iceberg-format:jar</include>
-        <include>org.apache.drill.contrib:drill-deltalake-format:jar</include>
-        <include>org.apache.drill.contrib:drill-storage:jar</include>
+        <include>org.apache.drill.contrib.storage-hive:drill-hive-exec-shaded:jar</include>
+        <include>org.apache.drill.contrib.storage-hive:drill-storage-hive-core:jar</include>
+        <include>org.apache.drill:drill-common:jar</include>
+        <include>org.apache.drill:drill-logical:jar</include>
+        <include>org.apache.drill:drill-protocol:jar</include>
+        <include>org.apache.drill.exec:drill-java-exec:jar</include>
+        <include>org.apache.drill.exec:drill-jdbc:jar</include>
+        <include>org.apache.drill.exec:drill-rpc:jar</include>
+        <include>org.apache.drill.exec:vector:jar</include>
+        <include>org.apache.drill.memory:drill-memory-base:jar</include>
+        <include>org.apache.drill.metastore:drill-iceberg-metastore:jar</include>
+        <include>org.apache.drill.metastore:drill-metastore-api:jar</include>
+        <include>org.apache.drill.metastore:drill-mongo-metastore:jar</include>
+        <include>org.apache.drill.metastore:drill-rdbms-metastore:jar</include>
       </includes>
       <outputDirectory>jars</outputDirectory>
       <useProjectArtifact>false</useProjectArtifact>
@@ -101,25 +101,26 @@
       <unpack>false</unpack>
       <useProjectArtifact>false</useProjectArtifact>
       <includes>
-        <include>org.glassfish.jersey.containers</include>
-        <include>org.glassfish.jersey.core</include>
-        <include>org.reflections</include>
-        <include>org.glassfish.hk2.external</include>
-        <include>org.eclipse.jetty</include>
+        <!-- Please keep this list sorted. -->
+        <include>ch.qos.logback</include>
+        <include>ch.qos.logback</include>
+        <include>com.sun.codemodel</include>
         <include>javax.activation</include>
         <include>javax.annotation</include>
+        <include>javax.servlet</include>
+        <include>javax.ws.rs</include>
+        <include>javax.xml.bind</include>
+        <include>org.eclipse.jetty</include>
+        <include>org.glassfish.hk2.external</include>
+        <include>org.glassfish.hk2</include>
         <include>org.glassfish.jersey.containers</include>
+        <include>org.glassfish.jersey.containers</include>
+        <include>org.glassfish.jersey.core</include>
         <include>org.glassfish.jersey.core</include>
         <include>org.glassfish.jersey.ext</include>
         <include>org.glassfish.jersey.media</include>
-        <include>org.glassfish.hk2</include>
-        <include>javax.servlet</include>
-        <include>javax.ws.rs</include>
         <include>org.jvnet.mimepull</include>
-        <include>com.sun.codemodel</include>
-        <include>javax.xml.bind</include>
-        <include>ch.qos.logback</include>
-        <include>ch.qos.logback</include>
+        <include>org.reflections</include>
       </includes>
       <scope>test</scope>
     </dependencySet>
@@ -128,40 +129,39 @@
       <unpack>false</unpack>
       <useProjectArtifact>false</useProjectArtifact>
       <excludes>
-        <exclude>org.apache.zookeeper</exclude>
-        <exclude>org.apache.drill</exclude>
-        <exclude>org.apache.drill.exec</exclude>
-        <exclude>org.apache.drill.contrib</exclude>
-        <exclude>org.apache.drill.contrib.data</exclude>
-        <exclude>org.apache.drill.contrib.storage-hive</exclude>
-        <exclude>org.apache.drill.memory</exclude>
-        <exclude>org.apache.drill.metastore</exclude>
-        <exclude>org.junit.jupiter:*:jar</exclude>
-        <exclude>org.junit.platform:*:jar</exclude>
-        <exclude>org.junit.vintage:*:jar</exclude>
-        <!-- Below Hive jars are already included in drill-hive-exec-shaded.jar -->
-        <exclude>junit:junit:jar</exclude>
-        <!-- exclude or sqlline has problems -->
-        <exclude>org.glassfish.jersey.containers</exclude>
-        <exclude>org.glassfish.jersey.core</exclude>
-        <exclude>org.reflections</exclude>
-        <exclude>org.glassfish.hk2.external</exclude>
-        <exclude>org.eclipse.jetty</exclude>
+        <!-- Please keep this list sorted. -->
+        <exclude>ch.qos.logback </exclude>
+        <exclude>ch.qos.logback</exclude>
+        <exclude>com.sun.codemodel</exclude>
+        <exclude>io.netty:netty-tcnative</exclude>
         <exclude>javax.activation</exclude>
         <exclude>javax.annotation</exclude>
+        <exclude>javax.servlet</exclude>
+        <exclude>javax.ws.rs </exclude>
+        <exclude>javax.xml.bind</exclude>
+        <exclude>junit:junit:jar</exclude>
+        <exclude>org.apache.drill.contrib.data</exclude>
+        <exclude>org.apache.drill.contrib</exclude>
+        <exclude>org.apache.drill.contrib.storage-hive</exclude>
+        <exclude>org.apache.drill</exclude>
+        <exclude>org.apache.drill.exec</exclude>
+        <exclude>org.apache.drill.memory</exclude>
+        <exclude>org.apache.drill.metastore</exclude>
+        <exclude>org.apache.zookeeper</exclude>
+        <exclude>org.eclipse.jetty</exclude>
+        <exclude>org.glassfish.hk2</exclude>
+        <exclude>org.glassfish.hk2.external</exclude>
         <exclude>org.glassfish.jersey.containers</exclude>
+        <exclude>org.glassfish.jersey.containers</exclude>
+        <exclude>org.glassfish.jersey.core</exclude>
         <exclude>org.glassfish.jersey.core</exclude>
         <exclude>org.glassfish.jersey.ext</exclude>
         <exclude>org.glassfish.jersey.media</exclude>
-        <exclude>org.glassfish.hk2</exclude>
-        <exclude>javax.servlet</exclude>
-        <exclude>javax.ws.rs </exclude>
+        <exclude>org.junit.jupiter:*:jar</exclude>
+        <exclude>org.junit.platform:*:jar</exclude>
+        <exclude>org.junit.vintage:*:jar</exclude>
         <exclude>org.jvnet.mimepull</exclude>
-        <exclude>com.sun.codemodel</exclude>
-        <exclude>javax.xml.bind</exclude>
-        <exclude>ch.qos.logback </exclude>
-        <exclude>ch.qos.logback</exclude>
-        <exclude>io.netty:netty-tcnative</exclude>
+        <exclude>org.reflections</exclude>
       </excludes>
       <scope>test</scope>
     </dependencySet>

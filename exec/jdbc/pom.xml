@@ -124,30 +124,6 @@
       </dependencies>
     </profile>
     <profile>
-      <id>mapr</id>
-      <dependencies>
-        <dependency>
-          <groupId>org.apache.hadoop</groupId>
-          <artifactId>hadoop-common</artifactId>
-          <scope>test</scope>
-          <exclusions>
-            <exclusion>
-              <artifactId>commons-logging</artifactId>
-              <groupId>commons-logging</groupId>
-            </exclusion>
-            <exclusion>
-              <groupId>org.eclipse.jetty</groupId>
-              <artifactId>jetty-server</artifactId>
-            </exclusion>
-            <exclusion>
-              <groupId>org.eclipse.jetty</groupId>
-              <artifactId>jetty-servlet</artifactId>
-            </exclusion>
-          </exclusions>
-        </dependency>
-      </dependencies>
-    </profile>
-    <profile>
       <id>cdh4</id>
       <dependencies>
         <dependency>
