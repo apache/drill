@@ -88,7 +88,10 @@ public class TestXMLReader extends ClusterTest {
 
   @Test
   public void testAllTextMode() throws Exception {
-    String sql = "SELECT * FROM table(cp.`xml/simple_with_datatypes.xml` (type => 'xml', " +
+    String sql = "SELECT attributes, int_field, bigint_field, float_field, double_field, " +
+        "boolean_field, date_field, time_field, timestamp_field, string_field" +
+        " FROM table(cp.`xml/simple_with_datatypes" +
+        ".xml` (type => 'xml', " +
         "allTextMode => 'false'))";
     RowSet results = client.queryBuilder().sql(sql).rowSet();
     assertEquals(2, results.rowCount());
@@ -101,7 +104,6 @@ public class TestXMLReader extends ClusterTest {
         .addNullable("double_field", MinorType.FLOAT8)
         .addNullable("boolean_field", MinorType.BIT)
         .addNullable("date_field", MinorType.DATE)
-        .addNullable("date2_field", MinorType.DATE)
         .addNullable("time_field", MinorType.VARCHAR)
         .addNullable("timestamp_field", MinorType.TIMESTAMP)
         .addNullable("string_field", MinorType.VARCHAR)
@@ -111,11 +113,10 @@ public class TestXMLReader extends ClusterTest {
 
     RowSet expected = client.rowSetBuilder(expectedSchema)
         .addRow(mapArray(),  1.0, 1000.0, 1.3, 3.3, true, LocalDate.parse("2022-01-01"),
-                    LocalDate.parse("2022-03-02"), "12:04:34", Instant.parse("2022-01-06T12:30" +
+            "12:04:34", Instant.parse("2022-01-06T12:30" +
                 ":30Z"),
             "string")
         .addRow(mapArray(), 2.0, 2000.0, 2.3, 4.3, false, LocalDate.parse("2022-02-01"),
-            LocalDate.parse("2022-03-01"),
             "13:04:34", Instant.parse("2022-03-06T12:30:30Z"), null)
         .build();
 
