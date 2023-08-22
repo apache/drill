@@ -5,6 +5,11 @@ Drill has a several XML configuration options to allow you to configure how Dril
 XML data often contains a considerable amount of nesting which is not necessarily useful for data analysis. This parameter allows you to set the nesting level
   where the data actually starts.  The levels start at `1`.
 
+## AllTextMode
+Drill's XML reader can infer data types.  Similar to the JSON reader, there is an option called
+`allTextMode` which can be set to `true` to disable data type inference.  This is useful if your
+data has inconsistent schema.
+
 ## Schema Provisioning
 One of the challenges of querying APIs is inconsistent data.  Drill allows you to provide a schema for individual endpoints.  You can do this in one of three ways:
 
@@ -26,6 +31,7 @@ Or,
 ```json
 "xmlOptions": {
   "dataLevel": 2,
+  "allTextMode": true,
   "schema": {
     "type": "tuple_schema",
       "columns": [

@@ -35,14 +35,17 @@ public class HttpXmlOptions {
 
   @JsonProperty
   private final int dataLevel;
-
+  @JsonProperty
+  private final boolean allTextMode;
   @JsonProperty
   private final TupleMetadata schema;
 
   @JsonCreator
   public HttpXmlOptions(@JsonProperty("dataLevel") Integer dataLevel,
+                        @JsonProperty("allTextMode") Boolean allTextMode,
                         @JsonProperty("schema") TupleMetadata schema) {
     this.schema = schema;
+    this.allTextMode = allTextMode == null || allTextMode;
     if (dataLevel == null || dataLevel < 1) {
       this.dataLevel = 1;
     } else {
@@ -53,6 +56,7 @@ public class HttpXmlOptions {
   public HttpXmlOptions(HttpXmlOptionsBuilder builder) {
     this.dataLevel = builder.dataLevel;
     this.schema = builder.schema;
+    this.allTextMode = builder.allTextMode == null || builder.allTextMode;
   }
 
 
@@ -70,6 +74,10 @@ public class HttpXmlOptions {
     return this.schema;
   }
 
+  @JsonProperty("allTextMode")
+  public boolean allTextMode() {
+    return this.allTextMode;
+  }
 
   @Override
   public boolean equals(Object o) {
@@ -81,18 +89,20 @@ public class HttpXmlOptions {
     }
     HttpXmlOptions that = (HttpXmlOptions) o;
     return Objects.equals(dataLevel, that.dataLevel)
-      && Objects.equals(schema, that.schema);
+        && Objects.equals(allTextMode, that.allTextMode)
+        && Objects.equals(schema, that.schema);
   }
 
   @Override
   public int hashCode() {
-    return Objects.hash(dataLevel, schema);
+    return Objects.hash(dataLevel, schema, allTextMode);
   }
 
   @Override
   public String toString() {
     return new PlanStringBuilder(this)
       .field("dataLevel", dataLevel)
+        .field("allTextMode", allTextMode)
       .field("schema", schema)
       .toString();
   }
@@ -101,10 +111,16 @@ public class HttpXmlOptions {
   public static class HttpXmlOptionsBuilder {
 
     private int dataLevel;
+    private Boolean allTextMode;
     private TupleMetadata schema;
 
     public HttpXmlOptions.HttpXmlOptionsBuilder dataLevel(int dataLevel) {
       this.dataLevel = dataLevel;
+      return this;
+    }
+
+    public HttpXmlOptions.HttpXmlOptionsBuilder allTextMode(boolean allTextMode) {
+      this.allTextMode = allTextMode;
       return this;
     }
 

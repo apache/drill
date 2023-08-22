@@ -49,7 +49,7 @@ public class TestXMLReader extends ClusterTest {
   public static void setup() throws Exception {
     ClusterTest.startCluster(ClusterFixture.builder(dirTestWatcher));
 
-    XMLFormatConfig formatConfig = new XMLFormatConfig(null, 2);
+    XMLFormatConfig formatConfig = new XMLFormatConfig(null, 2, true);
     cluster.defineFormat("cp", "xml", formatConfig);
     cluster.defineFormat("dfs", "xml", formatConfig);
 
@@ -87,6 +87,43 @@ public class TestXMLReader extends ClusterTest {
   }
 
   @Test
+  public void testAllTextMode() throws Exception {
+    String sql = "SELECT attributes, int_field, bigint_field, float_field, double_field, " +
+        "boolean_field, date_field, time_field, timestamp_field, string_field" +
+        " FROM table(cp.`xml/simple_with_datatypes" +
+        ".xml` (type => 'xml', " +
+        "allTextMode => 'false'))";
+    RowSet results = client.queryBuilder().sql(sql).rowSet();
+    assertEquals(2, results.rowCount());
+
+    TupleMetadata expectedSchema = new SchemaBuilder()
+        .add("attributes", MinorType.MAP)
+        .addNullable("int_field", MinorType.FLOAT8)
+        .addNullable("bigint_field", MinorType.FLOAT8)
+        .addNullable("float_field", MinorType.FLOAT8)
+        .addNullable("double_field", MinorType.FLOAT8)
+        .addNullable("boolean_field", MinorType.BIT)
+        .addNullable("date_field", MinorType.DATE)
+        .addNullable("time_field", MinorType.VARCHAR)
+        .addNullable("timestamp_field", MinorType.TIMESTAMP)
+        .addNullable("string_field", MinorType.VARCHAR)
+        .buildSchema();
+
+    //DateUtility.parseLocalDateTime
+
+    RowSet expected = client.rowSetBuilder(expectedSchema)
+        .addRow(mapArray(),  1.0, 1000.0, 1.3, 3.3, true, LocalDate.parse("2022-01-01"),
+            "12:04:34", Instant.parse("2022-01-06T12:30" +
+                ":30Z"),
+            "string")
+        .addRow(mapArray(), 2.0, 2000.0, 2.3, 4.3, false, LocalDate.parse("2022-02-01"),
+            "13:04:34", Instant.parse("2022-03-06T12:30:30Z"), null)
+        .build();
+
+    new RowSetComparison(expected).verifyAndClearAll(results);
+  }
+
+  @Test
   public void testSimpleProvidedSchema() throws Exception {
     String sql = "SELECT * FROM table(cp.`xml/simple_with_datatypes.xml` (type => 'xml', schema " +
       "=> 'inline=(`int_field` INT, `bigint_field` BIGINT, `float_field` FLOAT, `double_field` DOUBLE, `boolean_field` " +
@@ -105,13 +142,17 @@ public class TestXMLReader extends ClusterTest {
       .addNullable("time_field", MinorType.TIME)
       .addNullable("timestamp_field", MinorType.TIMESTAMP)
       .addNullable("string_field", MinorType.VARCHAR)
-      .addNullable("date2_field", MinorType.DATE)
+        .addNullable("date2_field", MinorType.DATE)
       .add("attributes", MinorType.MAP)
       .buildSchema();
 
     RowSet expected = client.rowSetBuilder(expectedSchema)
-      .addRow(1, 1000L, 1.2999999523162842, 3.3, true, LocalDate.parse("2022-01-01"), LocalTime.parse("12:04:34"), Instant.parse("2022-01-06T12:30:30Z"), "string", LocalDate.parse("2022-03-02"), mapArray())
-      .addRow(2, 2000L, 2.299999952316284, 4.3, false, LocalDate.parse("2022-02-01"), LocalTime.parse("13:04:34"), Instant.parse("2022-03-06T12:30:30Z"), null, LocalDate.parse("2022-03-01"), mapArray())
+      .addRow(1, 1000L, 1.2999999523162842, 3.3, true, LocalDate.parse("2022-01-01"),
+          LocalTime.parse("12:04:34"), Instant.parse("2022-01-06T12:30:30Z"), "string",
+          LocalDate.parse("2022-03-02"), mapArray())
+      .addRow(2, 2000L, 2.299999952316284, 4.3, false, LocalDate.parse("2022-02-01"),
+          LocalTime.parse("13:04:34"), Instant.parse("2022-03-06T12:30:30Z"), null,
+          LocalDate.parse("2022-03-01"), mapArray())
       .build();
 
     new RowSetComparison(expected).verifyAndClearAll(results);

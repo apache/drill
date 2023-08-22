@@ -19,6 +19,7 @@
 package org.apache.drill.exec.store.xml;
 
 import org.apache.drill.common.AutoCloseables;
+import org.apache.drill.common.Typifier;
 import org.apache.drill.common.exceptions.CustomErrorContext;
 import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.common.types.TypeProtos;
@@ -64,7 +65,7 @@ public class XMLReader implements Closeable {
   private final Stack<TupleWriter> rowWriterStack;
   private final int dataLevel;
   private final Map<String, XMLMap> nestedMapCollection;
-
+  private final boolean allTextmode;
   private TupleWriter attributeWriter;
   private CustomErrorContext errorContext;
   private RowSetLoader rootRowWriter;
@@ -96,7 +97,7 @@ public class XMLReader implements Closeable {
     ROW_ENDED
   }
 
-  public XMLReader(InputStream fsStream, int dataLevel) throws XMLStreamException {
+  public XMLReader(InputStream fsStream, int dataLevel, boolean allTextMode) throws XMLStreamException {
     this.fsStream = fsStream;
     XMLInputFactory inputFactory = XMLInputFactory.newInstance();
     reader = inputFactory.createXMLEventReader(fsStream);
@@ -105,6 +106,7 @@ public class XMLReader implements Closeable {
     nestedMapCollection = new HashMap<>();
     this.dataLevel = dataLevel;
     isSelfClosingEvent = false;
+    this.allTextmode = allTextMode;
   }
 
   public void open(RowSetLoader rootRowWriter, CustomErrorContext errorContext ) {
@@ -431,8 +433,12 @@ public class XMLReader implements Closeable {
     // Find the TupleWriter object
     int index = writer.tupleSchema().index(fieldName);
     if (index == -1) {
-      ColumnMetadata colSchema = MetadataUtils.newScalar(fieldName, TypeProtos.MinorType.VARCHAR, TypeProtos.DataMode.OPTIONAL);
-      index = writer.addColumn(colSchema);
+      if (allTextmode) {
+        ColumnMetadata colSchema = MetadataUtils.newScalar(fieldName, TypeProtos.MinorType.VARCHAR, TypeProtos.DataMode.OPTIONAL);
+        index = writer.addColumn(colSchema);
+      } else {
+        index = addNewScalarColumn(fieldName, fieldValue, writer);
+      }
     }
     ScalarWriter colWriter = writer.scalar(index);
     ColumnMetadata columnMetadata = writer.tupleSchema().metadata(index);
@@ -461,7 +467,12 @@ public class XMLReader implements Closeable {
           dateFormat = columnMetadata.property("drill.format");
           LocalDate localDate;
           if (Strings.isNullOrEmpty(dateFormat)) {
-            localDate = LocalDate.parse(fieldValue);
+            // Use typifier if all text mode is disabled.
+            if (!allTextmode) {
+              localDate = Typifier.stringAsDate(fieldValue);
+            } else {
+              localDate = LocalDate.parse(fieldValue);
+            }
           } else {
             localDate = LocalDate.parse(fieldValue, DateTimeFormatter.ofPattern(dateFormat));
           }
@@ -501,6 +512,26 @@ public class XMLReader implements Closeable {
       }
       changeState(xmlState.FIELD_ENDED);
     }
+  }
+
+  /**
+   * Adds a new scalar column to the schema. If the data type is unknown, it will default to
+   * VARCHAR.
+   * @param fieldName The field name.
+   * @param fieldValue The field value
+   * @param writer A {@link TupleWriter} of the current Drill schema
+   * @return A int of the index of the new column.
+   */
+  private int addNewScalarColumn(String fieldName, String fieldValue, TupleWriter writer) {
+    MinorType dataType;
+    if (Strings.isNullOrEmpty(fieldValue)) {
+      dataType = MinorType.VARCHAR;
+    } else {
+      dataType = Typifier.typifyToDrill(fieldValue);
+    }
+
+    ColumnMetadata colSchema = MetadataUtils.newScalar(fieldName, dataType, DataMode.OPTIONAL);
+    return writer.addColumn(colSchema);
   }
 
   /**

@@ -37,10 +37,10 @@ import org.slf4j.LoggerFactory;
 public class XMLBatchReader implements ManagedReader {
 
   private static final Logger logger = LoggerFactory.getLogger(XMLBatchReader.class);
-
   private final FileDescrip file;
   private final RowSetLoader rootRowWriter;
   private final CustomErrorContext errorContext;
+  private final XMLReaderConfig readerConfig;
 
   private XMLReader reader;
   private final int dataLevel;
@@ -48,16 +48,19 @@ public class XMLBatchReader implements ManagedReader {
   static class XMLReaderConfig {
     final XMLFormatPlugin plugin;
     final int dataLevel;
+    final boolean allTextMode;
 
     XMLReaderConfig(XMLFormatPlugin plugin) {
       this.plugin = plugin;
       dataLevel = plugin.getConfig().dataLevel;
+      allTextMode = plugin.getConfig().allTextMode();
     }
   }
 
   public XMLBatchReader(XMLReaderConfig readerConfig, EasySubScan scan, FileSchemaNegotiator negotiator) {
     errorContext = negotiator.parentErrorContext();
     dataLevel = readerConfig.dataLevel;
+    this.readerConfig = readerConfig;
     file = negotiator.file();
 
     // Add schema if provided
@@ -68,7 +71,6 @@ public class XMLBatchReader implements ManagedReader {
 
     ResultSetLoader loader = negotiator.build();
     rootRowWriter = loader.writer();
-
     openFile();
   }
 
@@ -85,7 +87,7 @@ public class XMLBatchReader implements ManagedReader {
   private void openFile() {
     try {
       InputStream fsStream = file.fileSystem().openPossiblyCompressedStream(file.split().getPath());
-      reader = new XMLReader(fsStream, dataLevel);
+      reader = new XMLReader(fsStream, dataLevel, readerConfig.allTextMode);
       reader.open(rootRowWriter, errorContext);
     } catch (Exception e) {
       throw UserException
