@@ -36,10 +36,18 @@ public class XMLFormatConfig implements FormatPluginConfig {
   public final List<String> extensions;
   public final int dataLevel;
 
+  @JsonProperty
+  public final boolean allTextMode;
+
   public XMLFormatConfig(@JsonProperty("extensions") List<String> extensions,
-                         @JsonProperty("dataLevel") int dataLevel) {
+                        @JsonProperty("dataLevel") int dataLevel,
+                        @JsonProperty("allTextMode") Boolean allTextMode
+      ) {
     this.extensions = extensions == null ? Collections.singletonList("xml") : ImmutableList.copyOf(extensions);
     this.dataLevel = Math.max(dataLevel, 1);
+
+    // Default to true
+    this.allTextMode = allTextMode == null || allTextMode;
   }
 
   @JsonInclude(JsonInclude.Include.NON_DEFAULT)
@@ -47,9 +55,14 @@ public class XMLFormatConfig implements FormatPluginConfig {
     return extensions;
   }
 
+  @JsonProperty("allTextMode")
+  public boolean allTextMode() {
+    return allTextMode;
+  }
+
   @Override
   public int hashCode() {
-    return Objects.hash(extensions, dataLevel);
+    return Objects.hash(extensions, dataLevel, allTextMode);
   }
 
   public XMLBatchReader.XMLReaderConfig getReaderConfig(XMLFormatPlugin plugin) {
@@ -66,14 +79,16 @@ public class XMLFormatConfig implements FormatPluginConfig {
     }
     XMLFormatConfig other = (XMLFormatConfig) obj;
     return Objects.equals(extensions, other.extensions)
-      && Objects.equals(dataLevel, other.dataLevel);
+        && Objects.equals(dataLevel, other.dataLevel)
+        && Objects.equals(allTextMode, other.allTextMode);
   }
 
   @Override
   public String toString() {
     return new PlanStringBuilder(this)
-      .field("extensions", extensions)
-      .field("dataLevel", dataLevel)
+        .field("extensions", extensions)
+        .field("dataLevel", dataLevel)
+        .field("allTextMode", allTextMode)
       .toString();
   }
 }

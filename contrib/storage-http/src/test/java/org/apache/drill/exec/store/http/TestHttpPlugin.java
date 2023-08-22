@@ -135,6 +135,7 @@ public class TestHttpPlugin extends ClusterTest {
 
     HttpXmlOptions nycXmlOptions = HttpXmlOptions.builder()
       .dataLevel(5)
+        .allTextMode(true)
       .build();
 
     HttpApiConfig nycConfig = HttpApiConfig.builder()
@@ -305,6 +306,7 @@ public class TestHttpPlugin extends ClusterTest {
 
     HttpXmlOptions xmlOptions = new HttpXmlOptions.HttpXmlOptionsBuilder()
       .dataLevel(2)
+        .allTextMode(true)
       .build();
 
     TupleMetadata testSchema = new SchemaBuilder()
@@ -319,6 +321,7 @@ public class TestHttpPlugin extends ClusterTest {
 
     HttpXmlOptions xmlOptionsWithSchhema = new HttpXmlOptions.HttpXmlOptionsBuilder()
       .dataLevel(2)
+        .allTextMode(true)
       .schema(testSchema)
       .build();
 
@@ -448,6 +451,7 @@ public class TestHttpPlugin extends ClusterTest {
 
     HttpXmlOptions nycXmlOptions = HttpXmlOptions.builder()
         .dataLevel(5)
+        .allTextMode(true)
         .build();
 
     HttpApiConfig nycConfig = HttpApiConfig.builder()
@@ -618,6 +622,7 @@ public class TestHttpPlugin extends ClusterTest {
 
     HttpXmlOptions xmlOptions = new HttpXmlOptions.HttpXmlOptionsBuilder()
         .dataLevel(2)
+        .allTextMode(true)
         .build();
 
     TupleMetadata testSchema = new SchemaBuilder()
