@@ -366,6 +366,7 @@
             <exclude>**/*.sqllog</exclude>
             <exclude>**/*.sqllog2</exclude>
             <exclude>**/*.syslog</exclude>
+            <exclude>**/*.xsd</exclude>
             <exclude>**/*.xls</exclude>
             <exclude>**/*.xlsx</exclude>
             <exclude>**/*.syslog1</exclude>
@@ -689,6 +690,34 @@
               <exclude>**/*.accdb</exclude>
               <exclude>**/*.access_log</exclude>
               <exclude>**/.asf.yaml</exclude>
+              <exclude>**/*.woff2</exclude>
+              <exclude>**/*.ks</exclude>
+              <exclude>**/*.pcap</exclude>
+              <exclude>**/*.sas7bdat</exclude>
+              <exclude>**/*.sav</exclude>
+              <exclude>**/*.log1</exclude>
+              <exclude>**/*.log2</exclude>
+              <exclude>**/*.h5</exclude>
+              <exclude>**/*.sqllog</exclude>
+              <exclude>**/*.sqllog2</exclude>
+              <exclude>**/*.syslog</exclude>
+              <exclude>**/*.xsd</exclude>
+              <exclude>**/*.xls</exclude>
+              <exclude>**/*.xlsx</exclude>
+              <exclude>**/*.mdb</exclude>
+              <exclude>**/*.accdb</exclude>
+              <exclude>**/*.syslog1</exclude>
+              <exclude>**/*.ssdlog</exclude>
+              <exclude>**/*.ltsv</exclude>
+              <exclude>**/*.log</exclude>
+              <exclude>**/*.css</exclude>
+              <exclude>**/*.js</exclude>
+              <exclude>**/*.map</exclude>
+              <exclude>**/*.md</exclude>
+              <exclude>**/*.eps</exclude>
+              <exclude>**/*.json</exclude>
+              <exclude>**/*.seq</exclude>
+              <exclude>**/*.parquet</exclude>
               <exclude>**/*.autotools</exclude>
               <exclude>**/*.avi</exclude>
               <exclude>**/*.avro</exclude>

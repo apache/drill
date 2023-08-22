@@ -115,10 +115,6 @@ public class TestXSDSchema {
           .resumeMap(); // end items
 
     TupleMetadata expectedSchema = sb4.resumeSchema().build();
-
-    System.out.println(schema);
-    System.out.println(expectedSchema);
-
     assertTrue(expectedSchema.isEquivalent(schema));
   }
 }

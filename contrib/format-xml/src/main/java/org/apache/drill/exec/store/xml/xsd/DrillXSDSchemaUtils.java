@@ -21,6 +21,7 @@ package org.apache.drill.exec.store.xml.xsd;
 import org.apache.drill.common.types.TypeProtos.MinorType;
 import org.apache.drill.exec.record.metadata.SchemaBuilder;
 import org.apache.drill.exec.record.metadata.TupleMetadata;
+import org.apache.drill.shaded.guava.com.google.common.annotations.VisibleForTesting;
 import org.apache.drill.shaded.guava.com.google.common.collect.ImmutableMap;
 import org.apache.ws.commons.schema.XmlSchema;
 import org.apache.ws.commons.schema.XmlSchemaCollection;
@@ -64,6 +65,7 @@ public class DrillXSDSchemaUtils {
    * @return A {@link TupleMetadata} containing a Drill representation of the XSD schema.
    * @throws IOException If anything goes wrong or the file is not found.
    */
+  @VisibleForTesting
   public static TupleMetadata getSchema(String filename) throws IOException {
     InputStream inputStream = Files.newInputStream(Paths.get(filename));
     return processSchema(inputStream);
