@@ -54,11 +54,11 @@ import java.util.concurrent.atomic.AtomicInteger;
 @Category({KafkaStorageTest.class, SlowTest.class})
 @RunWith(Suite.class)
 @SuiteClasses({KafkaQueriesTest.class, MessageIteratorTest.class, MessageReaderFactoryTest.class, KafkaFilterPushdownTest.class})
-public class TestKafkaSuit extends BaseTest {
+public class TestKafkaSuite extends BaseTest {
 
-  private static final Logger logger = LoggerFactory.getLogger(TestKafkaSuit.class);
+  private static final Logger logger = LoggerFactory.getLogger(TestKafkaSuite.class);
 
-  private static final String LOGIN_CONF_RESOURCE_PATHNAME = "login.conf";
+  private static final String LOGIN_CONF_RESOURCE_PATHNAME = "login.jaasconf";
 
   public static EmbeddedKafkaCluster embeddedKafkaCluster;
 
@@ -76,7 +76,7 @@ public class TestKafkaSuit extends BaseTest {
 
   @BeforeClass
   public static void initKafka() throws Exception {
-    synchronized (TestKafkaSuit.class) {
+    synchronized (TestKafkaSuite.class) {
       if (initCount.get() == 0) {
         ZookeeperTestUtil.setZookeeperSaslTestConfigProps();
         System.setProperty(JaasUtils.JAVA_LOGIN_CONFIG_PARAM, ClassLoader.getSystemResource(LOGIN_CONF_RESOURCE_PATHNAME).getFile());
@@ -104,7 +104,7 @@ public class TestKafkaSuit extends BaseTest {
 
   @AfterClass
   public static void tearDownCluster() {
-    synchronized (TestKafkaSuit.class) {
+    synchronized (TestKafkaSuite.class) {
       if (initCount.decrementAndGet() == 0) {
         if (zkClient != null) {
           zkClient.close();

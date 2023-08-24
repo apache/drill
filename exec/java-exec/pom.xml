@@ -359,9 +359,8 @@
       <artifactId>protobuf-java</artifactId>
     </dependency>
     <dependency>
-      <groupId>org.mortbay.jetty</groupId>
+      <groupId>org.eclipse.jetty</groupId>
       <artifactId>jetty-util</artifactId>
-      <version>6.1.26</version>
     </dependency>
     <dependency>
       <groupId>joda-time</groupId>
@@ -441,10 +440,6 @@
         <exclusion>
           <groupId>org.eclipse.jetty</groupId>
           <artifactId>jetty-servlet</artifactId>
-        </exclusion>
-        <exclusion>
-          <groupId>org.eclipse.jetty</groupId>
-          <artifactId>jetty-servlets</artifactId>
         </exclusion>
         <exclusion>
           <groupId>org.eclipse.jetty</groupId>
@@ -845,9 +840,9 @@
                   <goal>unpack</goal>
                 </goals>
                 <configuration>
-                  <overWrite>false</overWrite>
                   <artifactItems>
                     <artifactItem>
+                      <overWrite>false</overWrite>
                       <groupId>${calcite.groupId}</groupId>
                       <artifactId>calcite-core</artifactId>
                       <type>jar</type>

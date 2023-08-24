@@ -114,7 +114,7 @@
         <include>org.glassfish.jersey.core</include>
         <include>org.reflections</include>
         <include>org.glassfish.hk2.external</include>
-        <include>org.mortbay.jetty</include>
+        <include>org.eclipse.jetty</include>
         <include>javax.activation</include>
         <include>javax.annotation</include>
         <include>org.glassfish.jersey.containers</include>
@@ -155,7 +155,7 @@
         <exclude>org.glassfish.jersey.core</exclude>
         <exclude>org.reflections</exclude>
         <exclude>org.glassfish.hk2.external</exclude>
-        <exclude>org.mortbay.jetty</exclude>
+        <exclude>org.eclipse.jetty</exclude>
         <exclude>javax.activation</exclude>
         <exclude>javax.annotation</exclude>
         <exclude>org.glassfish.jersey.containers</exclude>

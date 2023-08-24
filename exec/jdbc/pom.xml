@@ -42,7 +42,7 @@
       <groupId>org.apache.drill</groupId>
       <artifactId>drill-logical</artifactId>
       <version>${project.version}</version>
-    </dependency>    
+    </dependency>
     <dependency>
       <groupId>org.apache.drill.exec</groupId>
       <artifactId>drill-java-exec</artifactId>
@@ -66,7 +66,6 @@
       <artifactId>foodmart-data-json</artifactId>
       <version>0.4</version>
     </dependency>
-
     <dependency>
       <groupId>sqlline</groupId>
       <artifactId>sqlline</artifactId>
@@ -137,8 +136,12 @@
               <groupId>commons-logging</groupId>
             </exclusion>
             <exclusion>
-              <groupId>org.mortbay.jetty</groupId>
-              <artifactId>servlet-api-2.5</artifactId>
+              <groupId>org.eclipse.jetty</groupId>
+              <artifactId>jetty-server</artifactId>
+            </exclusion>
+            <exclusion>
+              <groupId>org.eclipse.jetty</groupId>
+              <artifactId>jetty-servlet</artifactId>
             </exclusion>
           </exclusions>
         </dependency>
