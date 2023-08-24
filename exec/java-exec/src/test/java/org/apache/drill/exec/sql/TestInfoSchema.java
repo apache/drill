@@ -111,7 +111,7 @@ public class TestInfoSchema extends ClusterTest {
         .unOrdered()
         .baselineColumns("TABLE_SCHEMA", "TABLE_NAME");
     for (String[] expectedRow : expected) {
-      t1.baselineValues(expectedRow);
+      t1.baselineValues((Object[]) expectedRow);
     }
     t1.go();
 
@@ -120,7 +120,7 @@ public class TestInfoSchema extends ClusterTest {
         .unOrdered()
         .baselineColumns("TABLE_SCHEMA", "TABLE_NAME");
     for (String[] expectedRow : expected) {
-      t2.baselineValues(expectedRow);
+      t2.baselineValues((Object[]) expectedRow);
     }
     t2.go();
   }

@@ -62,7 +62,7 @@ public class SslContextFactoryConfiguratorTest extends ClusterTest {
 
   @Test
   public void configureNewSslContextFactory() throws Exception {
-    SslContextFactory sslContextFactory = sslContextFactoryConfigurator.configureNewSslContextFactory();
+    SslContextFactory.Server sslContextFactory = sslContextFactoryConfigurator.configureNewSslContextFactory();
 
     assertEquals(30, sslContextFactory.getSslSessionTimeout());
     assertTrue(sslContextFactory.getWantClientAuth());
