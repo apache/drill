@@ -68,8 +68,8 @@ import org.apache.drill.metastore.exceptions.MetastoreException;
 import org.apache.drill.metastore.metadata.MetadataInfo;
 import org.apache.drill.metastore.metadata.MetadataType;
 import org.apache.drill.metastore.metadata.TableInfo;
-import org.apache.drill.shaded.guava.com.google.common.collect.ArrayListMultimap;
-import org.apache.drill.shaded.guava.com.google.common.collect.Multimap;
+import com.google.common.collect.ArrayListMultimap;
+import com.google.common.collect.Multimap;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

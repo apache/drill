@@ -22,7 +22,7 @@ package org.apache.drill.exec.planner;
 
 
 import org.apache.drill.exec.util.DrillFileSystemUtil;
-import org.apache.drill.shaded.guava.com.google.common.collect.Lists;
+import com.google.common.collect.Lists;
 import org.apache.hadoop.fs.Path;
 
 import java.util.Collection;

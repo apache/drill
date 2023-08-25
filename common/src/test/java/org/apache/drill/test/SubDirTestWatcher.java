@@ -17,8 +17,8 @@
  */
 package org.apache.drill.test;
 
-import org.apache.drill.shaded.guava.com.google.common.base.Preconditions;
-import org.apache.drill.shaded.guava.com.google.common.collect.Lists;
+import com.google.common.base.Preconditions;
+import com.google.common.collect.Lists;
 import org.apache.commons.io.FileUtils;
 import org.junit.rules.TestWatcher;
 import org.junit.runner.Description;

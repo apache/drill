@@ -28,7 +28,7 @@ import org.apache.drill.exec.store.hive.HiveTableWrapper.HivePartitionWrapper;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import org.apache.drill.shaded.guava.com.google.common.collect.Lists;
+import com.google.common.collect.Lists;
 
 public class HiveReadEntry implements DrillTableSelection {
 

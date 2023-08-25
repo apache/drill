@@ -18,7 +18,7 @@
 package org.apache.drill.exec.planner.logical;
 
 import org.apache.drill.common.parser.LogicalExpressionParser;
-import org.apache.drill.shaded.guava.com.google.common.base.Preconditions;
+import com.google.common.base.Preconditions;
 import org.apache.calcite.rel.RelFieldCollation;
 import org.apache.drill.common.expression.FieldReference;
 import org.apache.drill.common.expression.PathSegment;

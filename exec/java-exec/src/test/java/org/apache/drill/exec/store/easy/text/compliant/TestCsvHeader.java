@@ -25,7 +25,7 @@ import java.nio.file.Paths;
 import java.util.List;
 
 import org.apache.drill.categories.EvfTest;
-import org.apache.drill.shaded.guava.com.google.common.collect.Lists;
+import com.google.common.collect.Lists;
 import org.apache.drill.test.BaseTestQuery;
 import org.apache.drill.test.TestBuilder;
 import org.junit.Before;

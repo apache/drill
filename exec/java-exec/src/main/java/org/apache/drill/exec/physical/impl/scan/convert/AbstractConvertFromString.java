@@ -23,7 +23,7 @@ import java.util.function.Function;
 import org.apache.drill.common.types.Types;
 import org.apache.drill.exec.record.metadata.ColumnMetadata;
 import org.apache.drill.exec.vector.accessor.ScalarWriter;
-import org.apache.drill.shaded.guava.com.google.common.base.Charsets;
+import com.google.common.base.Charsets;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

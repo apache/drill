@@ -34,8 +34,8 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import org.apache.drill.common.expression.fn.FunctionReplacementUtils;
-import org.apache.drill.shaded.guava.com.google.common.base.Preconditions;
-import org.apache.drill.shaded.guava.com.google.common.collect.Sets;
+import com.google.common.base.Preconditions;
+import com.google.common.collect.Sets;
 import com.typesafe.config.ConfigFactory;
 import org.apache.commons.io.FileUtils;
 import org.apache.drill.common.config.ConfigConstants;
@@ -65,8 +65,8 @@ import org.apache.drill.exec.resolver.FunctionResolverFactory;
 import org.apache.drill.exec.server.options.OptionManager;
 import org.apache.drill.exec.server.options.OptionSet;
 
-import org.apache.drill.shaded.guava.com.google.common.annotations.VisibleForTesting;
-import org.apache.drill.shaded.guava.com.google.common.base.Stopwatch;
+import com.google.common.annotations.VisibleForTesting;
+import com.google.common.base.Stopwatch;
 import org.apache.drill.exec.store.sys.store.DataChangeVersion;
 import org.apache.drill.exec.util.JarUtil;
 import org.apache.hadoop.fs.FileSystem;

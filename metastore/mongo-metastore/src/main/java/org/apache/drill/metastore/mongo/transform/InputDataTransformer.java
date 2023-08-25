@@ -21,7 +21,7 @@ import com.google.gson.Gson;
 import org.apache.drill.metastore.MetastoreColumn;
 import org.apache.drill.metastore.mongo.config.MongoConfigConstants;
 import org.apache.drill.metastore.mongo.exception.MongoMetastoreException;
-import org.apache.drill.shaded.guava.com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableMap;
 import org.bson.Document;
 
 import java.lang.invoke.MethodHandle;

@@ -24,7 +24,7 @@ import java.util.List;
 
 import org.apache.drill.common.util.DrillStringUtils;
 import org.apache.drill.exec.util.DrillFileSystemUtil;
-import org.apache.drill.shaded.guava.com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableList;
 import org.apache.drill.test.BaseTestQuery;
 import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.Path;

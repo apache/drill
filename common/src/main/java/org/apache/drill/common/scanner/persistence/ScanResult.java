@@ -17,7 +17,7 @@
  */
 package org.apache.drill.common.scanner.persistence;
 
-import static org.apache.drill.shaded.guava.com.google.common.base.Preconditions.checkNotNull;
+import static com.google.common.base.Preconditions.checkNotNull;
 import static java.lang.String.format;
 import static java.util.Arrays.asList;
 import static java.util.Collections.unmodifiableList;
@@ -38,9 +38,9 @@ import org.apache.drill.common.exceptions.DrillRuntimeException;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
-import org.apache.drill.shaded.guava.com.google.common.base.Stopwatch;
-import org.apache.drill.shaded.guava.com.google.common.collect.HashMultimap;
-import org.apache.drill.shaded.guava.com.google.common.collect.Multimap;
+import com.google.common.base.Stopwatch;
+import com.google.common.collect.HashMultimap;
+import com.google.common.collect.Multimap;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

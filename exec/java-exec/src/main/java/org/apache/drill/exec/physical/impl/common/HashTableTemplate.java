@@ -25,7 +25,7 @@ import javax.inject.Named;
 
 import org.apache.drill.exec.expr.ClassGenerator;
 import org.apache.drill.exec.ops.FragmentContext;
-import org.apache.drill.shaded.guava.com.google.common.collect.Sets;
+import com.google.common.collect.Sets;
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.drill.common.types.TypeProtos.MinorType;
 import org.apache.drill.common.types.Types;

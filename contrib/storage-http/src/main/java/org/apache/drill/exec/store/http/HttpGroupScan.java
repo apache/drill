@@ -44,7 +44,7 @@ import org.apache.drill.exec.store.http.util.SimpleHttp;
 import org.apache.drill.exec.util.Utilities;
 import org.apache.drill.metastore.metadata.TableMetadata;
 import org.apache.drill.metastore.metadata.TableMetadataProvider;
-import org.apache.drill.shaded.guava.com.google.common.base.Preconditions;
+import com.google.common.base.Preconditions;
 
 
 @JsonTypeName("http-scan")

@@ -27,7 +27,7 @@ import java.util.concurrent.TimeUnit;
 
 import org.apache.drill.exec.rpc.user.BlockingResultsListener;
 import org.apache.drill.jdbc.DrillStatement;
-import org.apache.drill.shaded.guava.com.google.common.base.Stopwatch;
+import com.google.common.base.Stopwatch;
 import org.apache.calcite.avatica.AvaticaStatement;
 import org.apache.calcite.avatica.ColumnMetaData;
 import org.apache.calcite.avatica.Meta;

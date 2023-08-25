@@ -39,8 +39,8 @@ import org.apache.drill.exec.record.MaterializedField;
 import org.apache.drill.exec.record.metadata.ColumnMetadata;
 import org.apache.drill.exec.record.metadata.TupleMetadata;
 import org.apache.drill.exec.record.metadata.TupleSchema;
-import org.apache.drill.shaded.guava.com.google.common.collect.ImmutableList;
-import org.apache.drill.shaded.guava.com.google.common.collect.Lists;
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Lists;
 import org.apache.drill.test.OperatorFixture;
 
 public class ScanTestUtils {

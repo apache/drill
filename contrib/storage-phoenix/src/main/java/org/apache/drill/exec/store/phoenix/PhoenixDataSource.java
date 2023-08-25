@@ -33,7 +33,7 @@ import javax.sql.DataSource;
 import org.apache.drill.common.exceptions.DrillRuntimeException;
 import org.apache.drill.common.util.function.CheckedSupplier;
 import org.apache.drill.exec.util.ImpersonationUtil;
-import org.apache.drill.shaded.guava.com.google.common.base.Preconditions;
+import com.google.common.base.Preconditions;
 import org.apache.hadoop.security.UserGroupInformation;
 import org.slf4j.LoggerFactory;
 

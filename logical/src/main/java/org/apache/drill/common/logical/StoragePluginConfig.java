@@ -28,7 +28,7 @@ import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.common.logical.security.CredentialsProvider;
 import org.apache.drill.common.logical.security.PlainCredentialsProvider;
-import org.apache.drill.shaded.guava.com.google.common.base.Strings;
+import com.google.common.base.Strings;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

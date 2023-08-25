@@ -24,8 +24,8 @@ import java.util.Set;
 import java.util.TreeSet;
 
 import org.apache.drill.common.types.TypeProtos.MinorType;
-import org.apache.drill.shaded.guava.com.google.common.graph.ImmutableValueGraph;
-import org.apache.drill.shaded.guava.com.google.common.graph.ValueGraphBuilder;
+import com.google.common.graph.ImmutableValueGraph;
+import com.google.common.graph.ValueGraphBuilder;
 
 public class ResolverTypePrecedence {
 

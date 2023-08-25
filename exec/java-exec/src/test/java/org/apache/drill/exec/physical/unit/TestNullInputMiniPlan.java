@@ -18,7 +18,7 @@
 package org.apache.drill.exec.physical.unit;
 
 import org.apache.drill.exec.record.BatchSchemaBuilder;
-import org.apache.drill.shaded.guava.com.google.common.collect.Lists;
+import com.google.common.collect.Lists;
 import org.apache.calcite.rel.RelFieldCollation;
 import org.apache.calcite.rel.core.JoinRelType;
 import org.apache.drill.common.expression.SchemaPath;

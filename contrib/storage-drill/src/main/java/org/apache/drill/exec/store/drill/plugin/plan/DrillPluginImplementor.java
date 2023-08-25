@@ -45,7 +45,7 @@ import org.apache.drill.exec.store.plan.rel.PluginProjectRel;
 import org.apache.drill.exec.store.plan.rel.PluginSortRel;
 import org.apache.drill.exec.store.plan.rel.PluginUnionRel;
 import org.apache.drill.exec.store.plan.rel.StoragePluginTableScan;
-import org.apache.drill.shaded.guava.com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableList;
 
 import java.io.IOException;
 import java.util.List;

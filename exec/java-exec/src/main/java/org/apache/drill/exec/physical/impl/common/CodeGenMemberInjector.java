@@ -23,7 +23,7 @@ import org.apache.calcite.util.Pair;
 import org.apache.drill.exec.expr.ClassGenerator;
 import org.apache.drill.exec.expr.holders.ValueHolder;
 import org.apache.drill.exec.ops.FragmentContext;
-import org.apache.drill.shaded.guava.com.google.common.base.Function;
+import com.google.common.base.Function;
 
 import java.lang.reflect.Field;
 import java.util.HashMap;

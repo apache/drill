@@ -44,9 +44,9 @@ import org.apache.drill.exec.store.phoenix.rules.PhoenixConvention;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import org.apache.drill.exec.util.ImpersonationUtil;
-import org.apache.drill.shaded.guava.com.google.common.cache.CacheBuilder;
-import org.apache.drill.shaded.guava.com.google.common.cache.CacheLoader;
-import org.apache.drill.shaded.guava.com.google.common.cache.LoadingCache;
+import com.google.common.cache.CacheBuilder;
+import com.google.common.cache.CacheLoader;
+import com.google.common.cache.LoadingCache;
 import org.apache.hadoop.security.UserGroupInformation;
 import org.apache.tephra.shaded.com.google.common.collect.ImmutableSet;
 

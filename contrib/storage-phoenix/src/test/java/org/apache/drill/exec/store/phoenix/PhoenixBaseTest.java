@@ -38,7 +38,7 @@ import java.util.UUID;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import org.apache.drill.exec.store.StoragePluginRegistry;
-import org.apache.drill.shaded.guava.com.google.common.collect.Maps;
+import com.google.common.collect.Maps;
 import org.apache.drill.test.ClusterFixture;
 import org.apache.drill.test.ClusterFixtureBuilder;
 import org.apache.drill.test.ClusterTest;

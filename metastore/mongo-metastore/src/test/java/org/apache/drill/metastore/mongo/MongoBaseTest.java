@@ -23,7 +23,7 @@ import org.apache.drill.categories.MetastoreTest;
 import org.apache.drill.common.config.DrillConfig;
 import org.apache.drill.metastore.components.tables.AbstractBasicTablesRequestsTest;
 import org.apache.drill.metastore.mongo.config.MongoConfigConstants;
-import org.apache.drill.shaded.guava.com.google.common.collect.Lists;
+import com.google.common.collect.Lists;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.experimental.categories.Category;

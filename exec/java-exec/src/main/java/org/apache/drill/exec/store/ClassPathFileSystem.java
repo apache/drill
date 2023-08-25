@@ -32,7 +32,7 @@ import org.apache.hadoop.fs.permission.FsPermission;
 import org.apache.hadoop.util.Progressable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.apache.drill.shaded.guava.com.google.common.io.Resources;
+import com.google.common.io.Resources;
 
 
 public class ClassPathFileSystem extends FileSystem {

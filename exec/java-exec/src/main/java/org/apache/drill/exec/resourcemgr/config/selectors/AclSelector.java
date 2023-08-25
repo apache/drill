@@ -17,12 +17,12 @@
  */
 package org.apache.drill.exec.resourcemgr.config.selectors;
 
-import org.apache.drill.shaded.guava.com.google.common.annotations.VisibleForTesting;
+import com.google.common.annotations.VisibleForTesting;
 import com.typesafe.config.Config;
 import org.apache.drill.exec.ops.QueryContext;
 import org.apache.drill.exec.resourcemgr.config.exception.RMConfigException;
 import org.apache.drill.exec.util.ImpersonationUtil;
-import org.apache.drill.shaded.guava.com.google.common.collect.Sets;
+import com.google.common.collect.Sets;
 import org.apache.hadoop.security.UserGroupInformation;
 
 import java.util.List;

@@ -18,7 +18,7 @@
 package org.apache.drill;
 
 import org.apache.drill.exec.record.BatchSchemaBuilder;
-import org.apache.drill.shaded.guava.com.google.common.collect.Lists;
+import com.google.common.collect.Lists;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.tuple.Pair;

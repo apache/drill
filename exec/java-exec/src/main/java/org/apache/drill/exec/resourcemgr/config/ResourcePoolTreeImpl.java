@@ -25,7 +25,7 @@ import org.apache.drill.exec.resourcemgr.config.exception.RMConfigException;
 import org.apache.drill.exec.resourcemgr.config.selectionpolicy.QueueSelectionPolicy;
 import org.apache.drill.exec.resourcemgr.config.selectionpolicy.QueueSelectionPolicy.SelectionPolicy;
 import org.apache.drill.exec.resourcemgr.config.selectionpolicy.QueueSelectionPolicyFactory;
-import org.apache.drill.shaded.guava.com.google.common.collect.Maps;
+import com.google.common.collect.Maps;
 
 import java.util.List;
 import java.util.Map;

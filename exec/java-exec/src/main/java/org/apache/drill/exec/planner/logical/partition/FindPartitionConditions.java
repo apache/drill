@@ -40,7 +40,7 @@ import org.apache.calcite.sql.SqlSyntax;
 import org.apache.calcite.sql.fun.SqlRowOperator;
 import org.apache.calcite.util.Util;
 
-import org.apache.drill.shaded.guava.com.google.common.collect.Lists;
+import com.google.common.collect.Lists;
 
 
 public class FindPartitionConditions extends RexVisitorImpl<Void> {

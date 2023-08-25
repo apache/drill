@@ -20,7 +20,7 @@ package org.apache.drill.exec.store.parquet;
 import org.apache.calcite.rel.core.Filter;
 import org.apache.drill.exec.physical.base.AbstractGroupScanWithMetadata;
 import org.apache.drill.exec.expr.FilterPredicate;
-import org.apache.drill.shaded.guava.com.google.common.base.Stopwatch;
+import com.google.common.base.Stopwatch;
 import org.apache.calcite.plan.RelOptRule;
 import org.apache.calcite.plan.RelOptRuleCall;
 import org.apache.calcite.plan.RelOptRuleOperand;

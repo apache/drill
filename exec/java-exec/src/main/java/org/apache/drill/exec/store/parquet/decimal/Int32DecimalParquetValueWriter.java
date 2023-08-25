@@ -17,7 +17,7 @@
  */
 package org.apache.drill.exec.store.parquet.decimal;
 
-import org.apache.drill.shaded.guava.com.google.common.primitives.Ints;
+import com.google.common.primitives.Ints;
 import io.netty.buffer.DrillBuf;
 import org.apache.parquet.io.api.RecordConsumer;
 

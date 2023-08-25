@@ -32,7 +32,7 @@ import org.apache.drill.common.util.JacksonUtils;
 import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.proto.UserBitShared.QueryType;
 import org.apache.drill.exec.store.easy.text.TextFormatConfig;
-import org.apache.drill.shaded.guava.com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableMap;
 import org.apache.drill.test.ClusterFixtureBuilder;
 import org.apache.drill.test.ClusterTest;
 import org.junit.BeforeClass;

@@ -18,7 +18,7 @@
 package org.apache.drill.exec.store.elasticsearch;
 
 import org.apache.drill.common.logical.StoragePluginConfig.AuthMode;
-import org.apache.drill.shaded.guava.com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableMap;
 import org.apache.drill.test.ClusterFixture;
 import org.apache.drill.test.ClusterTest;
 import org.json.simple.JSONObject;

@@ -24,7 +24,7 @@ import java.nio.file.Paths;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.drill.exec.store.StoragePluginRegistry;
-import org.apache.drill.shaded.guava.com.google.common.base.Charsets;
+import com.google.common.base.Charsets;
 import org.junit.runner.Description;
 
 /**

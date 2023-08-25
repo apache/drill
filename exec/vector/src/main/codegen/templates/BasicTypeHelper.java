@@ -38,7 +38,7 @@ import org.apache.drill.exec.vector.complex.RepeatedMapVector;
 import org.apache.drill.exec.vector.complex.DictVector;
 import org.apache.drill.exec.util.CallBack;
 import org.apache.drill.common.types.Types;
-import org.apache.drill.shaded.guava.com.google.common.annotations.VisibleForTesting;
+import com.google.common.annotations.VisibleForTesting;
 
 import java.util.List;
 

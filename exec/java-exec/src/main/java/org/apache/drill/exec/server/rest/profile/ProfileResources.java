@@ -66,10 +66,10 @@ import org.glassfish.jersey.media.multipart.FormDataParam;
 import org.glassfish.jersey.server.mvc.Viewable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.apache.drill.shaded.guava.com.google.common.base.Joiner;
-import org.apache.drill.shaded.guava.com.google.common.collect.Lists;
-import org.apache.drill.shaded.guava.com.google.common.cache.Cache;
-import org.apache.drill.shaded.guava.com.google.common.cache.CacheBuilder;
+import com.google.common.base.Joiner;
+import com.google.common.collect.Lists;
+import com.google.common.cache.Cache;
+import com.google.common.cache.CacheBuilder;
 
 import static org.owasp.encoder.Encode.forHtml;
 

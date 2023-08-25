@@ -27,7 +27,7 @@ import org.apache.drill.exec.vector.complex.AbstractMapVector;
 import org.apache.drill.exec.vector.complex.AbstractRepeatedMapVector;
 import org.apache.drill.common.map.CaseInsensitiveMap;
 
-import org.apache.drill.shaded.guava.com.google.common.annotations.VisibleForTesting;
+import com.google.common.annotations.VisibleForTesting;
 
 /**
  * Prototype mechanism to allocate vectors based on expected

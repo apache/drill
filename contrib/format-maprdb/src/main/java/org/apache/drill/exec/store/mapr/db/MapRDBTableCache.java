@@ -29,11 +29,11 @@ import org.apache.hadoop.security.UserGroupInformation;
 import java.io.IOException;
 import java.security.PrivilegedExceptionAction;
 import java.util.concurrent.TimeUnit;
-import org.apache.drill.shaded.guava.com.google.common.cache.CacheBuilder;
-import org.apache.drill.shaded.guava.com.google.common.cache.CacheLoader;
-import org.apache.drill.shaded.guava.com.google.common.cache.LoadingCache;
-import org.apache.drill.shaded.guava.com.google.common.cache.RemovalListener;
-import org.apache.drill.shaded.guava.com.google.common.cache.RemovalNotification;
+import com.google.common.cache.CacheBuilder;
+import com.google.common.cache.CacheLoader;
+import com.google.common.cache.LoadingCache;
+import com.google.common.cache.RemovalListener;
+import com.google.common.cache.RemovalNotification;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

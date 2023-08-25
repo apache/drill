@@ -19,7 +19,7 @@ package org.apache.drill.exec.store.parquet.metadata;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.drill.common.util.DrillVersionInfo;
-import org.apache.drill.shaded.guava.com.google.common.annotations.VisibleForTesting;
+import com.google.common.annotations.VisibleForTesting;
 import org.apache.hadoop.fs.Path;
 
 import java.util.List;

@@ -25,7 +25,7 @@ import java.io.IOException;
 import org.apache.drill.exec.physical.resultSet.util.JsonWriter;
 import org.apache.drill.exec.physical.rowSet.RowSet;
 import org.apache.drill.exec.physical.rowSet.RowSetReader;
-import org.apache.drill.shaded.guava.com.google.common.base.Preconditions;
+import com.google.common.base.Preconditions;
 
 /**
  * <h4>Overview</h4>

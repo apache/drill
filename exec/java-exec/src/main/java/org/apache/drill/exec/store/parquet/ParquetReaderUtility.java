@@ -28,7 +28,7 @@ import org.apache.drill.exec.store.parquet.metadata.MetadataBase;
 import org.apache.drill.exec.store.parquet.metadata.MetadataVersion;
 import org.apache.drill.exec.util.Utilities;
 import org.apache.drill.exec.work.ExecErrorConstants;
-import org.apache.drill.shaded.guava.com.google.common.base.Stopwatch;
+import com.google.common.base.Stopwatch;
 import org.apache.hadoop.util.VersionUtil;
 import org.apache.parquet.SemanticVersion;
 import org.apache.parquet.VersionParser;

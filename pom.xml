@@ -48,8 +48,7 @@
     <junit4.version>4.13.2</junit4.version>
     <junit.platform.version>1.8.2</junit.platform.version>
     <slf4j.version>2.0.6</slf4j.version>
-    <shaded.guava.version>28.2-jre</shaded.guava.version>
-    <guava.version>30.1.1-jre</guava.version>
+    <guava.version>32.1.2-jre</guava.version>
     <forkCount>1</forkCount>
     <parquet.version>1.12.3</parquet.version>
     <parquet.format.version>2.9.0</parquet.format.version>
@@ -475,6 +474,7 @@
           <includeTestSourceDirectory>true</includeTestSourceDirectory>
           <configLocation>src/main/resources/checkstyle-config.xml</configLocation>
           <suppressionsLocation>src/main/resources/checkstyle-suppressions.xml</suppressionsLocation>
+          <linkXRef>false</linkXRef>
         </configuration>
         <executions>
           <execution>
@@ -1081,11 +1081,6 @@
     </dependency>
 
     <dependency>
-      <groupId>org.apache.drill</groupId>
-      <artifactId>drill-shaded-guava</artifactId>
-    </dependency>
-
-    <dependency>
       <groupId>org.slf4j</groupId>
       <artifactId>slf4j-api</artifactId>
       <version>${slf4j.version}</version>
@@ -1300,11 +1295,6 @@
             <groupId>com.google.protobuf</groupId>
           </exclusion>
         </exclusions>
-      </dependency>
-      <dependency>
-        <groupId>org.apache.drill</groupId>
-        <artifactId>drill-shaded-guava</artifactId>
-        <version>${shaded.guava.version}</version>
       </dependency>
       <dependency>
         <groupId>com.google.guava</groupId>

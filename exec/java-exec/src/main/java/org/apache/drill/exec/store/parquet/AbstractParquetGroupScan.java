@@ -65,11 +65,11 @@ import org.apache.drill.metastore.statistics.ExactStatisticsConstants;
 import org.apache.drill.metastore.statistics.Statistic;
 import org.apache.drill.metastore.statistics.TableStatisticsKind;
 import org.apache.drill.metastore.util.TableMetadataUtils;
-import org.apache.drill.shaded.guava.com.google.common.base.Preconditions;
-import org.apache.drill.shaded.guava.com.google.common.collect.ArrayListMultimap;
-import org.apache.drill.shaded.guava.com.google.common.collect.LinkedListMultimap;
-import org.apache.drill.shaded.guava.com.google.common.collect.ListMultimap;
-import org.apache.drill.shaded.guava.com.google.common.collect.Multimap;
+import com.google.common.base.Preconditions;
+import com.google.common.collect.ArrayListMultimap;
+import com.google.common.collect.LinkedListMultimap;
+import com.google.common.collect.ListMultimap;
+import com.google.common.collect.Multimap;
 import org.apache.hadoop.fs.Path;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;

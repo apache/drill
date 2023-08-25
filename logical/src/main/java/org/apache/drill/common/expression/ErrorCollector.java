@@ -19,7 +19,7 @@ package org.apache.drill.common.expression;
 
 import org.apache.drill.common.types.TypeProtos.MajorType;
 
-import org.apache.drill.shaded.guava.com.google.common.collect.Range;
+import com.google.common.collect.Range;
 import org.slf4j.Logger;
 
 public interface ErrorCollector {

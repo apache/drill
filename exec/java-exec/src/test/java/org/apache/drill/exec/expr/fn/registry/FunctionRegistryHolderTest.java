@@ -17,8 +17,8 @@
  */
 package org.apache.drill.exec.expr.fn.registry;
 
-import org.apache.drill.shaded.guava.com.google.common.collect.ArrayListMultimap;
-import org.apache.drill.shaded.guava.com.google.common.collect.ListMultimap;
+import com.google.common.collect.ArrayListMultimap;
+import com.google.common.collect.ListMultimap;
 import org.apache.drill.categories.SqlFunctionTest;
 import org.apache.drill.exec.expr.fn.DrillFuncHolder;
 import org.apache.drill.test.BaseTest;

@@ -50,7 +50,7 @@ import org.apache.drill.exec.store.ColumnExplorer.ImplicitFileColumn;
 import org.apache.drill.exec.store.ColumnExplorer.ImplicitFileColumns;
 import org.apache.drill.exec.store.ColumnExplorer.ImplicitInternalFileColumns;
 import org.apache.drill.exec.store.dfs.DrillFileSystem;
-import org.apache.drill.shaded.guava.com.google.common.base.Strings;
+import com.google.common.base.Strings;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

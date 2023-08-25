@@ -44,7 +44,7 @@ import org.apache.drill.exec.rpc.user.UserServer;
 import org.apache.drill.exec.server.BootStrapContext;
 import org.apache.drill.exec.work.WorkManager;
 
-import org.apache.drill.shaded.guava.com.google.common.base.Stopwatch;
+import com.google.common.base.Stopwatch;
 
 public class ServiceEngine implements AutoCloseable {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(ServiceEngine.class);

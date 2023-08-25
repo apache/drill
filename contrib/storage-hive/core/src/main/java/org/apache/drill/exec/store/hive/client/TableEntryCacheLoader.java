@@ -26,7 +26,7 @@ import org.apache.drill.exec.store.hive.HiveReadEntry;
 import org.apache.drill.exec.store.hive.HiveTableWithColumnCache;
 import org.apache.drill.exec.store.hive.HiveTableWrapper;
 import org.apache.drill.exec.store.hive.HiveUtilities;
-import org.apache.drill.shaded.guava.com.google.common.cache.CacheLoader;
+import com.google.common.cache.CacheLoader;
 import org.apache.hadoop.hive.metastore.api.MetaException;
 import org.apache.hadoop.hive.metastore.api.NoSuchObjectException;
 import org.apache.hadoop.hive.metastore.api.Partition;

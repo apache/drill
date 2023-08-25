@@ -28,7 +28,7 @@ import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.proto.UserBitShared;
 import org.apache.drill.exec.rpc.user.QueryDataBatch;
 import org.apache.drill.exec.store.StorageStrategy;
-import org.apache.drill.shaded.guava.com.google.common.collect.Maps;
+import com.google.common.collect.Maps;
 import org.apache.drill.test.BaseTestQuery;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;

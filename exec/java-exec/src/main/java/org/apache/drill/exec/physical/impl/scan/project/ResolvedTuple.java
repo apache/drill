@@ -33,7 +33,7 @@ import org.apache.drill.exec.vector.complex.MapVector;
 import org.apache.drill.exec.vector.complex.RepeatedDictVector;
 import org.apache.drill.exec.vector.complex.RepeatedMapVector;
 
-import org.apache.drill.shaded.guava.com.google.common.annotations.VisibleForTesting;
+import com.google.common.annotations.VisibleForTesting;
 
 /**
  * Drill rows are made up of a tree of tuples, with the row being the root

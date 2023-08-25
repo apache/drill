@@ -17,7 +17,7 @@
  */
 package org.apache.drill.exec.store.openTSDB;
 
-import org.apache.drill.shaded.guava.com.google.common.collect.MapMaker;
+import com.google.common.collect.MapMaker;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

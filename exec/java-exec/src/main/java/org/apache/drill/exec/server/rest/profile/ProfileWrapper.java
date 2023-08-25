@@ -42,7 +42,7 @@ import org.apache.drill.exec.server.options.OptionList;
 import org.apache.drill.exec.server.options.OptionValue;
 import org.apache.drill.exec.server.rest.WebServer;
 import org.apache.drill.exec.server.rest.WebUtils;
-import org.apache.drill.shaded.guava.com.google.common.base.CaseFormat;
+import com.google.common.base.CaseFormat;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 

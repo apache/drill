@@ -41,10 +41,10 @@ import org.apache.drill.exec.server.DrillbitContext;
 import org.apache.drill.exec.store.PluginHandle.PluginType;
 import org.apache.drill.exec.store.dfs.FileSystemConfig;
 import org.apache.drill.exec.store.dfs.FormatPlugin;
-import org.apache.drill.shaded.guava.com.google.common.cache.CacheBuilder;
-import org.apache.drill.shaded.guava.com.google.common.cache.CacheLoader;
-import org.apache.drill.shaded.guava.com.google.common.cache.LoadingCache;
-import org.apache.drill.shaded.guava.com.google.common.cache.RemovalListener;
+import com.google.common.cache.CacheBuilder;
+import com.google.common.cache.CacheLoader;
+import com.google.common.cache.LoadingCache;
+import com.google.common.cache.RemovalListener;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

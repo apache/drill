@@ -24,8 +24,8 @@ import org.apache.drill.exec.resourcemgr.config.exception.RMConfigException;
 import org.apache.drill.exec.resourcemgr.config.selectors.DefaultSelector;
 import org.apache.drill.exec.resourcemgr.config.selectors.ResourcePoolSelector;
 import org.apache.drill.exec.resourcemgr.config.selectors.ResourcePoolSelectorFactory;
-import org.apache.drill.shaded.guava.com.google.common.base.Preconditions;
-import org.apache.drill.shaded.guava.com.google.common.collect.Lists;
+import com.google.common.base.Preconditions;
+import com.google.common.collect.Lists;
 
 import java.util.List;
 import java.util.Map;

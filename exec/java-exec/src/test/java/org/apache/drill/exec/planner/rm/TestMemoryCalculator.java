@@ -35,7 +35,7 @@ import org.apache.drill.exec.proto.UserProtos;
 import org.apache.drill.exec.rpc.user.UserSession;
 import org.apache.drill.exec.server.DrillbitContext;
 import org.apache.drill.exec.work.foreman.rm.EmbeddedQueryQueue;
-import org.apache.drill.shaded.guava.com.google.common.collect.Iterables;
+import com.google.common.collect.Iterables;
 import org.apache.drill.test.ClientFixture;
 import org.apache.drill.test.ClusterFixture;
 import org.apache.drill.test.ClusterFixtureBuilder;

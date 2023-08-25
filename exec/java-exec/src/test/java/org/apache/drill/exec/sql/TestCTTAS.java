@@ -34,7 +34,7 @@ import org.apache.drill.exec.store.StoragePluginRegistry;
 import org.apache.drill.exec.store.dfs.FileSystemConfig;
 import org.apache.drill.exec.store.dfs.WorkspaceConfig;
 import org.apache.drill.common.logical.security.PlainCredentialsProvider;
-import org.apache.drill.shaded.guava.com.google.common.collect.Lists;
+import com.google.common.collect.Lists;
 import org.apache.drill.test.BaseTestQuery;
 import org.junit.BeforeClass;
 import org.junit.Rule;

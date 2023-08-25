@@ -31,7 +31,7 @@ import org.apache.drill.exec.physical.resultSet.project.RequestedTuple;
 import org.apache.drill.exec.physical.resultSet.project.RequestedColumn;
 import org.apache.drill.exec.record.metadata.ColumnMetadata;
 import org.apache.drill.exec.record.metadata.TupleMetadata;
-import org.apache.drill.shaded.guava.com.google.common.annotations.VisibleForTesting;
+import com.google.common.annotations.VisibleForTesting;
 
 /**
  * Parses and analyzes the projection list passed to the scanner. The

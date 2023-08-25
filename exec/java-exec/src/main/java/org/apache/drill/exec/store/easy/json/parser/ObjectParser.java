@@ -20,7 +20,7 @@ package org.apache.drill.exec.store.easy.json.parser;
 import java.util.Map;
 
 import org.apache.drill.common.map.CaseInsensitiveMap;
-import org.apache.drill.shaded.guava.com.google.common.annotations.VisibleForTesting;
+import com.google.common.annotations.VisibleForTesting;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

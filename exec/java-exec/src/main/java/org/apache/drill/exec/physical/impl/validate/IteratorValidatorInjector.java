@@ -27,7 +27,7 @@ import org.apache.drill.exec.physical.base.PhysicalOperator;
 import org.apache.drill.exec.physical.config.IteratorValidator;
 import org.apache.drill.exec.physical.config.RowKeyJoinPOP;
 
-import org.apache.drill.shaded.guava.com.google.common.collect.Lists;
+import com.google.common.collect.Lists;
 
 public class IteratorValidatorInjector extends
     AbstractPhysicalVisitor<PhysicalOperator, FragmentContext, ExecutionSetupException> {

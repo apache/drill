@@ -18,7 +18,7 @@
 
 package org.apache.drill.exec.store.msaccess;
 
-import org.apache.drill.shaded.guava.com.google.common.io.Files;
+import com.google.common.io.Files;
 import org.apache.drill.common.config.DrillConfig;
 import org.apache.drill.common.logical.StoragePluginConfig;
 import org.apache.drill.common.types.TypeProtos;

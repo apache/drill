@@ -50,8 +50,8 @@ import org.apache.drill.exec.store.sys.store.provider.LocalPersistentStoreProvid
 import org.apache.drill.common.util.GuavaPatcher;
 import org.apache.drill.common.util.ProtobufPatcher;
 import org.apache.drill.exec.work.WorkManager;
-import org.apache.drill.shaded.guava.com.google.common.annotations.VisibleForTesting;
-import org.apache.drill.shaded.guava.com.google.common.base.Stopwatch;
+import com.google.common.annotations.VisibleForTesting;
+import com.google.common.base.Stopwatch;
 import org.apache.zookeeper.Environment;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

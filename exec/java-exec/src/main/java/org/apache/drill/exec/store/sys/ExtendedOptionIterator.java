@@ -32,7 +32,7 @@ import org.apache.drill.exec.server.options.OptionValue.Kind;
 import org.apache.drill.exec.server.options.OptionValue.OptionScope;
 import org.apache.drill.exec.store.pojo.NonNullable;
 
-import org.apache.drill.shaded.guava.com.google.common.collect.Lists;
+import com.google.common.collect.Lists;
 
 /**
  * Extends the original Option iterator. The idea is to hide the implementation details and present the

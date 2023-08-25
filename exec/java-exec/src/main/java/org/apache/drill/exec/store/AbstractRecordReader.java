@@ -21,7 +21,7 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 
-import org.apache.drill.shaded.guava.com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableList;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.apache.drill.common.expression.PathSegment;
@@ -31,7 +31,7 @@ import org.apache.drill.exec.physical.base.GroupScan;
 import org.apache.drill.exec.util.Utilities;
 import org.apache.drill.exec.vector.ValueVector;
 
-import org.apache.drill.shaded.guava.com.google.common.base.Preconditions;
+import com.google.common.base.Preconditions;
 
 public abstract class AbstractRecordReader implements RecordReader {
   private static final Logger logger = LoggerFactory.getLogger(AbstractRecordReader.class);

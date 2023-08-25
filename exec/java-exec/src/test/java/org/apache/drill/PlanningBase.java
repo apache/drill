@@ -23,7 +23,7 @@ import java.net.URL;
 import org.apache.calcite.jdbc.DynamicSchema;
 import org.apache.drill.exec.alias.AliasRegistryProvider;
 import org.apache.drill.exec.ops.ViewExpansionContext;
-import org.apache.drill.shaded.guava.com.google.common.base.Function;
+import com.google.common.base.Function;
 import io.netty.buffer.DrillBuf;
 import org.apache.calcite.schema.SchemaPlus;
 import org.apache.drill.common.config.DrillConfig;
@@ -58,9 +58,9 @@ import org.junit.Rule;
 import org.junit.rules.TestRule;
 
 import com.codahale.metrics.MetricRegistry;
-import org.apache.drill.shaded.guava.com.google.common.base.Charsets;
-import org.apache.drill.shaded.guava.com.google.common.collect.ImmutableList;
-import org.apache.drill.shaded.guava.com.google.common.io.Resources;
+import com.google.common.base.Charsets;
+import com.google.common.collect.ImmutableList;
+import com.google.common.io.Resources;
 import org.mockito.Matchers;
 
 import static org.mockito.ArgumentMatchers.anyString;

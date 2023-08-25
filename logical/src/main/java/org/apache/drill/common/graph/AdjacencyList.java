@@ -17,9 +17,9 @@
  */
 package org.apache.drill.common.graph;
 
-import org.apache.drill.shaded.guava.com.google.common.collect.ArrayListMultimap;
-import org.apache.drill.shaded.guava.com.google.common.collect.ListMultimap;
-import org.apache.drill.shaded.guava.com.google.common.collect.Multimaps;
+import com.google.common.collect.ArrayListMultimap;
+import com.google.common.collect.ListMultimap;
+import com.google.common.collect.Multimaps;
 
 import java.util.ArrayList;
 import java.util.Collection;

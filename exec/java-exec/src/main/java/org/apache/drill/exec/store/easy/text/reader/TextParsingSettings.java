@@ -20,7 +20,7 @@ package org.apache.drill.exec.store.easy.text.reader;
 import org.apache.drill.exec.record.metadata.TupleMetadata;
 import org.apache.drill.exec.store.easy.text.TextFormatPlugin;
 import org.apache.drill.exec.store.easy.text.TextFormatConfig;
-import org.apache.drill.shaded.guava.com.google.common.base.Charsets;
+import com.google.common.base.Charsets;
 
 import java.nio.charset.StandardCharsets;
 

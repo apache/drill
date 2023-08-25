@@ -81,8 +81,8 @@ import org.apache.drill.exec.util.ImpersonationUtil;
 import org.apache.drill.exec.work.batch.IncomingBuffers;
 import org.apache.drill.exec.work.filter.RuntimeFilterWritable;
 import org.apache.drill.metastore.MetastoreRegistry;
-import org.apache.drill.shaded.guava.com.google.common.base.Function;
-import org.apache.drill.shaded.guava.com.google.common.base.Preconditions;
+import com.google.common.base.Function;
+import com.google.common.base.Preconditions;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

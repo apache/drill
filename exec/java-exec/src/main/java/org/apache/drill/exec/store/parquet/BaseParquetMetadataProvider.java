@@ -36,11 +36,11 @@ import org.apache.drill.metastore.metadata.NonInterestingColumnsMetadata;
 import org.apache.drill.metastore.statistics.StatisticsHolder;
 import org.apache.drill.metastore.metadata.TableMetadata;
 import org.apache.drill.metastore.util.TableMetadataUtils;
-import org.apache.drill.shaded.guava.com.google.common.collect.HashBasedTable;
-import org.apache.drill.shaded.guava.com.google.common.collect.HashMultimap;
-import org.apache.drill.shaded.guava.com.google.common.collect.LinkedListMultimap;
-import org.apache.drill.shaded.guava.com.google.common.collect.Multimap;
-import org.apache.drill.shaded.guava.com.google.common.collect.Table;
+import com.google.common.collect.HashBasedTable;
+import com.google.common.collect.HashMultimap;
+import com.google.common.collect.LinkedListMultimap;
+import com.google.common.collect.Multimap;
+import com.google.common.collect.Table;
 
 import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.common.types.TypeProtos;

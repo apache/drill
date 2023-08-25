@@ -33,8 +33,8 @@ import org.apache.drill.common.expression.ValueExpressions.LongExpression;
 import org.apache.drill.common.expression.ValueExpressions.QuotedString;
 import org.apache.drill.common.expression.ValueExpressions.TimeExpression;
 
-import org.apache.drill.shaded.guava.com.google.common.collect.ImmutableMap;
-import org.apache.drill.shaded.guava.com.google.common.collect.ImmutableSet;
+import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSet;
 
 public class DruidCompareFunctionProcessor extends
   AbstractExprVisitor<Boolean, LogicalExpression, RuntimeException> {

@@ -22,7 +22,7 @@ import org.apache.drill.metastore.components.tables.TableMetadataUnit;
 import org.apache.drill.metastore.rdbms.transform.AbstractMetadataMapper;
 import org.apache.drill.metastore.rdbms.transform.RdbmsFilterExpressionVisitor;
 import org.apache.drill.metastore.rdbms.util.ConverterUtil;
-import org.apache.drill.shaded.guava.com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableMap;
 import org.jooq.Condition;
 import org.jooq.Field;
 import org.jooq.Record;

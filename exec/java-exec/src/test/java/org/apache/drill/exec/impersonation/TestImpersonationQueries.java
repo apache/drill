@@ -24,7 +24,7 @@ import org.apache.drill.common.util.DrillFileUtils;
 import org.apache.drill.exec.store.StoragePluginRegistry.PluginException;
 import org.apache.drill.exec.store.avro.AvroDataGenerator;
 import org.apache.drill.exec.store.dfs.WorkspaceConfig;
-import org.apache.drill.shaded.guava.com.google.common.collect.Maps;
+import com.google.common.collect.Maps;
 import org.apache.drill.test.ClientFixture;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;

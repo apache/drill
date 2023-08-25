@@ -42,7 +42,7 @@ import org.apache.drill.exec.store.mapr.db.MapRDBFormatPlugin;
 import org.apache.drill.exec.store.mapr.db.MapRDBSubScanSpec;
 import org.apache.drill.exec.store.mapr.db.RestrictedMapRDBSubScanSpec;
 
-import org.apache.drill.shaded.guava.com.google.common.base.Stopwatch;
+import com.google.common.base.Stopwatch;
 import com.mapr.db.impl.IdCodec;
 import com.mapr.db.ojai.DBDocumentReaderBase;
 

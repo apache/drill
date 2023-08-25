@@ -55,7 +55,7 @@ import java.util.Map.Entry;
 import java.util.Set;
 import java.util.concurrent.ExecutorService;
 
-import static org.apache.drill.shaded.guava.com.google.common.base.Preconditions.checkNotNull;
+import static com.google.common.base.Preconditions.checkNotNull;
 
 public class DrillbitContext implements AutoCloseable {
 

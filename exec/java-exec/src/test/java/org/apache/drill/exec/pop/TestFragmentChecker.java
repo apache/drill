@@ -35,7 +35,7 @@ import org.apache.drill.exec.util.Utilities;
 import org.apache.drill.exec.work.QueryWorkUnit;
 import org.junit.Test;
 
-import org.apache.drill.shaded.guava.com.google.common.collect.Lists;
+import com.google.common.collect.Lists;
 import org.junit.experimental.categories.Category;
 
 import static org.junit.Assert.assertEquals;

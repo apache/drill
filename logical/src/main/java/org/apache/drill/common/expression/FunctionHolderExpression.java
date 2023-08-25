@@ -21,7 +21,7 @@ import java.util.List;
 
 import org.apache.drill.common.expression.fn.FuncHolder;
 import org.apache.drill.common.expression.visitors.ExprVisitor;
-import org.apache.drill.shaded.guava.com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableList;
 
 /**
  * Represents an actual call (a reference) to a declared function.

@@ -30,8 +30,8 @@ import org.apache.drill.exec.store.druid.DruidScanSpec;
 import org.apache.drill.exec.store.druid.DruidStoragePlugin;
 import org.apache.drill.exec.store.druid.DruidStoragePluginConfig;
 import org.apache.drill.exec.store.druid.druid.SimpleDatasourceInfo;
-import org.apache.drill.shaded.guava.com.google.common.collect.ImmutableList;
-import org.apache.drill.shaded.guava.com.google.common.collect.Maps;
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Maps;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

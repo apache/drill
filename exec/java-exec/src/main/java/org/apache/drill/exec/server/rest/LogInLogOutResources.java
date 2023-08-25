@@ -23,7 +23,7 @@ import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.server.rest.auth.AuthDynamicFeature;
 import org.apache.drill.exec.server.rest.auth.DrillHttpSecurityHandlerProvider;
 import org.apache.drill.exec.work.WorkManager;
-import org.apache.drill.shaded.guava.com.google.common.annotations.VisibleForTesting;
+import com.google.common.annotations.VisibleForTesting;
 import org.eclipse.jetty.security.authentication.FormAuthenticator;
 import org.eclipse.jetty.security.authentication.SessionAuthentication;
 import org.eclipse.jetty.util.security.Constraint;

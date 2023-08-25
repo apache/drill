@@ -31,7 +31,7 @@ import org.ojai.DocumentConstants;
 import org.ojai.DocumentReader.EventType;
 import org.ojai.util.DocumentReaderWithProjection;
 import org.ojai.util.FieldProjector;
-import org.apache.drill.shaded.guava.com.google.common.base.Preconditions;
+import com.google.common.base.Preconditions;
 import com.mapr.db.DBConstants;
 import com.mapr.db.ojai.DBDocumentReaderBase;
 

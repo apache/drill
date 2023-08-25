@@ -17,7 +17,7 @@
  */
 package org.apache.drill.exec.planner.index;
 
-import org.apache.drill.shaded.guava.com.google.common.collect.Maps;
+import com.google.common.collect.Maps;
 import org.apache.calcite.rel.RelNode;
 import org.apache.calcite.rex.RexBuilder;
 import org.apache.calcite.rex.RexCall;

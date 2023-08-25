@@ -19,7 +19,7 @@ package org.apache.drill.test;
 
 import com.fasterxml.jackson.jaxrs.json.JacksonJsonProvider;
 import org.apache.drill.exec.server.rest.PluginConfigWrapper;
-import org.apache.drill.shaded.guava.com.google.common.base.Preconditions;
+import com.google.common.base.Preconditions;
 import org.apache.drill.exec.server.rest.StatusResources;
 import org.glassfish.jersey.client.ClientConfig;
 import org.glassfish.jersey.client.JerseyClientBuilder;

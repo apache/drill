@@ -20,7 +20,7 @@ package org.apache.drill.exec.physical.impl.common;
 import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.exec.ops.OperatorStats;
 import org.apache.drill.exec.physical.impl.join.HashJoinBatch;
-import org.apache.drill.shaded.guava.com.google.common.base.Preconditions;
+import com.google.common.base.Preconditions;
 
 import java.util.LinkedList;
 import java.util.Queue;

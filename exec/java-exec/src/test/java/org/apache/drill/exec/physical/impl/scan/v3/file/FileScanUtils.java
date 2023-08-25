@@ -21,7 +21,7 @@ import java.util.List;
 
 import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.exec.physical.rowSet.RowSetTestUtils;
-import org.apache.drill.shaded.guava.com.google.common.collect.Lists;
+import com.google.common.collect.Lists;
 
 public class FileScanUtils {
 

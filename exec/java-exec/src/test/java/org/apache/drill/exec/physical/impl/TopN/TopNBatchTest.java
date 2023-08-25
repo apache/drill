@@ -24,7 +24,7 @@ import java.util.Random;
 import org.apache.drill.exec.ops.FragmentContextImpl;
 import org.apache.drill.exec.proto.BitControl;
 import org.apache.drill.exec.server.DrillbitContext;
-import org.apache.drill.shaded.guava.com.google.common.collect.Lists;
+import com.google.common.collect.Lists;
 import org.apache.drill.test.BaseDirTestWatcher;
 import org.apache.drill.test.ClusterFixtureBuilder;
 import org.apache.drill.test.TestBuilder;

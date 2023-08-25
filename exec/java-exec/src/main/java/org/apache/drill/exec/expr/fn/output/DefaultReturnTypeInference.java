@@ -25,7 +25,7 @@ import org.apache.drill.common.types.TypeProtos;
 import org.apache.drill.exec.expr.fn.FunctionAttributes;
 import org.apache.drill.exec.expr.fn.FunctionUtils;
 import org.apache.drill.exec.expr.fn.ValueReference;
-import org.apache.drill.shaded.guava.com.google.common.collect.Sets;
+import com.google.common.collect.Sets;
 
 /**
  * Return type calculation implementation for functions with return type set as

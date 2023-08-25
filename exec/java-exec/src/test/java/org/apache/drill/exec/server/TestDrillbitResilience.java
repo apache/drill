@@ -95,7 +95,7 @@ import org.junit.jupiter.api.Timeout;
 import org.junit.jupiter.api.extension.TestInstantiationException;
 import org.slf4j.Logger;
 
-import org.apache.drill.shaded.guava.com.google.common.base.Preconditions;
+import com.google.common.base.Preconditions;
 
 /**
  * <p>Test how resilient drillbits are to throwing exceptions during various phases of query

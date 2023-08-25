@@ -26,7 +26,7 @@ import org.apache.drill.exec.store.easy.json.parser.FieldParserFactory;
 import org.apache.drill.exec.store.easy.json.parser.ValueParser;
 import org.apache.drill.exec.store.easy.json.values.VarCharListener;
 import org.apache.drill.exec.vector.accessor.ObjectWriter;
-import org.apache.drill.shaded.guava.com.google.common.base.Preconditions;
+import com.google.common.base.Preconditions;
 
 /**
  * Create a Drill field listener based on a provided schema. The schema

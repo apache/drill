@@ -26,7 +26,7 @@ import javax.annotation.Nullable;
 import javax.inject.Inject;
 
 import org.apache.drill.exec.expr.BasicTypeHelper;
-import org.apache.drill.shaded.guava.com.google.common.base.Function;
+import com.google.common.base.Function;
 import org.apache.drill.common.FunctionNames;
 import org.apache.drill.common.exceptions.DrillRuntimeException;
 import org.apache.drill.common.expression.BooleanOperator;
@@ -59,7 +59,7 @@ import org.apache.drill.exec.record.VectorAccessible;
 import org.apache.drill.exec.vector.ValueHolderHelper;
 import org.apache.drill.exec.vector.ValueVector;
 
-import org.apache.drill.shaded.guava.com.google.common.base.Preconditions;
+import com.google.common.base.Preconditions;
 
 import io.netty.buffer.DrillBuf;
 

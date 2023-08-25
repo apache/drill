@@ -26,7 +26,7 @@ import java.util.Set;
 import org.apache.drill.common.logical.StoragePluginConfig;
 import org.apache.drill.common.map.CaseInsensitiveMap;
 import org.apache.drill.exec.store.StoragePluginRegistry.PluginException;
-import org.apache.drill.shaded.guava.com.google.common.base.Preconditions;
+import com.google.common.base.Preconditions;
 
 /**
  * Holds maps to storage plugins. Supports name => plugin and config => plugin

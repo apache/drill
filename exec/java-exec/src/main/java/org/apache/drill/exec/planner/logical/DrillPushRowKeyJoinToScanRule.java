@@ -38,7 +38,7 @@ import org.apache.drill.exec.physical.base.DbGroupScan;
 import org.apache.drill.exec.planner.index.rules.MatchFunction;
 import org.apache.drill.exec.planner.physical.PrelUtil;
 
-import org.apache.drill.shaded.guava.com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableList;
 
 import java.util.ArrayList;
 import java.util.List;

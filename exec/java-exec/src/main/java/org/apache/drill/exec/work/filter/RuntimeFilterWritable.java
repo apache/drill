@@ -22,7 +22,7 @@ import io.netty.buffer.DrillBuf;
 import org.apache.drill.common.AutoCloseables;
 import org.apache.drill.exec.memory.BufferAllocator;
 import org.apache.drill.exec.proto.BitData;
-import org.apache.drill.shaded.guava.com.google.common.base.Preconditions;
+import com.google.common.base.Preconditions;
 
 import java.util.ArrayList;
 import java.util.List;
