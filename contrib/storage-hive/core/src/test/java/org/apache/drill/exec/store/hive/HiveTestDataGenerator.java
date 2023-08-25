@@ -26,7 +26,7 @@ import java.sql.Timestamp;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.drill.exec.hive.HiveTestUtilities;
-import org.apache.drill.shaded.guava.com.google.common.io.Resources;
+import com.google.common.io.Resources;
 import org.apache.drill.test.BaseDirTestWatcher;
 import org.apache.drill.test.BaseTestQuery;
 import org.apache.hadoop.hive.ql.Driver;

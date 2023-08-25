@@ -31,7 +31,7 @@ import org.apache.drill.exec.physical.base.SubScan;
 import org.apache.drill.exec.planner.fragment.Materializer;
 import org.apache.drill.exec.planner.fragment.Materializer.IndexedFragmentNode;
 
-import org.apache.drill.shaded.guava.com.google.common.collect.Lists;
+import com.google.common.collect.Lists;
 
 /**
  * Materializer visitor to remove exchange(s)

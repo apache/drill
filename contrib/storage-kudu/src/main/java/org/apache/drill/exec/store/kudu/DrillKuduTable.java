@@ -27,7 +27,7 @@ import org.apache.kudu.ColumnSchema;
 import org.apache.kudu.Schema;
 import org.apache.kudu.Type;
 
-import org.apache.drill.shaded.guava.com.google.common.collect.Lists;
+import com.google.common.collect.Lists;
 
 public class DrillKuduTable extends DynamicDrillTable {
 

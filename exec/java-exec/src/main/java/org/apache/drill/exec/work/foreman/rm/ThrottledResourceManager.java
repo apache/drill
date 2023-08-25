@@ -39,8 +39,8 @@ import org.apache.drill.exec.work.foreman.rm.QueryQueue.QueryQueueException;
 import org.apache.drill.exec.work.foreman.rm.QueryQueue.QueueLease;
 import org.apache.drill.exec.work.foreman.rm.QueryQueue.QueueTimeoutException;
 
-import org.apache.drill.shaded.guava.com.google.common.collect.ArrayListMultimap;
-import org.apache.drill.shaded.guava.com.google.common.collect.Multimap;
+import com.google.common.collect.ArrayListMultimap;
+import com.google.common.collect.Multimap;
 
 /**
  * Global resource manager that provides basic admission control (AC) via a

@@ -17,7 +17,7 @@
  */
 package org.apache.drill.exec.store;
 
-import org.apache.drill.shaded.guava.com.google.common.collect.Lists;
+import com.google.common.collect.Lists;
 import org.apache.drill.common.util.DrillFileUtils;
 import org.apache.drill.exec.ExecTest;
 import org.apache.drill.test.BaseTest;

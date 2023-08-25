@@ -44,12 +44,12 @@ import org.apache.drill.exec.store.plan.rel.PluginRel;
 import org.apache.drill.exec.store.security.HadoopCredentialsProvider;
 import org.apache.drill.common.logical.security.PlainCredentialsProvider;
 import org.apache.drill.exec.store.security.UsernamePasswordCredentials;
-import org.apache.drill.shaded.guava.com.google.common.cache.Cache;
-import org.apache.drill.shaded.guava.com.google.common.cache.CacheBuilder;
-import org.apache.drill.shaded.guava.com.google.common.cache.RemovalListener;
-import org.apache.drill.shaded.guava.com.google.common.cache.RemovalNotification;
-import org.apache.drill.shaded.guava.com.google.common.collect.ImmutableMap;
-import org.apache.drill.shaded.guava.com.google.common.collect.Lists;
+import com.google.common.cache.Cache;
+import com.google.common.cache.CacheBuilder;
+import com.google.common.cache.RemovalListener;
+import com.google.common.cache.RemovalNotification;
+import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.Lists;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

@@ -23,7 +23,7 @@ import java.util.List;
 import java.util.Set;
 
 import org.apache.drill.common.config.ConfigConstants;
-import org.apache.drill.shaded.guava.com.google.common.collect.Lists;
+import com.google.common.collect.Lists;
 import org.apache.drill.common.config.DrillConfig;
 import org.apache.drill.common.scanner.persistence.ScanResult;
 

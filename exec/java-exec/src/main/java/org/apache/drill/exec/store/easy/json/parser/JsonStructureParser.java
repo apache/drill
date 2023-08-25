@@ -32,7 +32,7 @@ import org.apache.drill.exec.store.easy.json.parser.RootParser.EmbeddedObjectPar
 import org.apache.drill.exec.store.easy.json.parser.RootParser.RootArrayParser;
 import org.apache.drill.exec.store.easy.json.parser.RootParser.RootObjectParser;
 import org.apache.drill.exec.store.easy.json.parser.TokenIterator.RecoverableJsonException;
-import org.apache.drill.shaded.guava.com.google.common.base.Preconditions;
+import com.google.common.base.Preconditions;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

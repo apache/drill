@@ -22,7 +22,7 @@ import java.io.OutputStream;
 import java.io.StringWriter;
 import java.io.Writer;
 
-import org.apache.drill.shaded.guava.com.google.common.base.Preconditions;
+import com.google.common.base.Preconditions;
 import com.sun.codemodel.CodeWriter;
 import com.sun.codemodel.JPackage;
 

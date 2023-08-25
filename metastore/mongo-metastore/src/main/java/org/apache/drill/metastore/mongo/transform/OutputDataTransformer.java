@@ -17,8 +17,8 @@
  */
 package org.apache.drill.metastore.mongo.transform;
 
-import org.apache.drill.shaded.guava.com.google.common.collect.Maps;
-import org.apache.drill.shaded.guava.com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
+import com.google.common.collect.Lists;
 import org.bson.Document;
 
 import java.lang.invoke.MethodHandle;

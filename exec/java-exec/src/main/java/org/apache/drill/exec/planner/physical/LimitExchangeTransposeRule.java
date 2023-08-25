@@ -17,7 +17,7 @@
  */
 package org.apache.drill.exec.planner.physical;
 
-import org.apache.drill.shaded.guava.com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableList;
 import org.apache.calcite.plan.RelOptRule;
 import org.apache.calcite.plan.RelOptRuleCall;
 import org.apache.calcite.plan.hep.HepRelVertex;

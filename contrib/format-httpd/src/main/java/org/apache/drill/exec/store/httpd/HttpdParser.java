@@ -26,7 +26,7 @@ import org.apache.drill.exec.physical.resultSet.RowSetLoader;
 import org.apache.drill.exec.record.metadata.SchemaBuilder;
 import org.apache.drill.exec.record.metadata.TupleMetadata;
 import org.apache.drill.exec.store.dfs.easy.EasySubScan;
-import org.apache.drill.shaded.guava.com.google.common.base.Preconditions;
+import com.google.common.base.Preconditions;
 import nl.basjes.parse.core.Casts;
 import nl.basjes.parse.core.Parser;
 import nl.basjes.parse.core.exceptions.DissectionFailure;

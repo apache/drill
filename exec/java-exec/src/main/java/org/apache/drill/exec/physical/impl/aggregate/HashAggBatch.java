@@ -31,7 +31,7 @@ import org.apache.drill.exec.record.VectorContainer;
 import org.apache.drill.exec.vector.UntypedNullHolder;
 import org.apache.drill.exec.vector.UntypedNullVector;
 import org.apache.drill.exec.vector.complex.writer.BaseWriter;
-import org.apache.drill.shaded.guava.com.google.common.collect.Lists;
+import com.google.common.collect.Lists;
 import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.common.expression.ErrorCollector;
 import org.apache.drill.common.expression.ErrorCollectorImpl;

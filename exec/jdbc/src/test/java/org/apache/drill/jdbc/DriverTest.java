@@ -38,7 +38,7 @@ import org.junit.BeforeClass;
 import org.junit.Ignore;
 import org.junit.Test;
 
-import org.apache.drill.shaded.guava.com.google.common.io.Resources;
+import com.google.common.io.Resources;
 import org.junit.experimental.categories.Category;
 
 /**

@@ -20,7 +20,7 @@ package org.apache.drill.exec.physical.impl.protocol;
 import org.apache.drill.exec.record.RecordBatch;
 import org.apache.drill.exec.record.selection.SelectionVector2;
 import org.apache.drill.exec.record.selection.SelectionVector4;
-import org.apache.drill.shaded.guava.com.google.common.base.Preconditions;
+import com.google.common.base.Preconditions;
 
 /**
  * Extension of the container accessor that holds an optional selection

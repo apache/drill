@@ -37,7 +37,7 @@ import org.apache.drill.exec.record.CloseableRecordBatch;
 import org.apache.drill.exec.record.RecordBatch;
 import org.apache.drill.exec.store.RecordReader;
 import org.apache.drill.exec.store.mock.MockTableDef.MockScanEntry;
-import org.apache.drill.shaded.guava.com.google.common.base.Preconditions;
+import com.google.common.base.Preconditions;
 
 public class MockScanBatchCreator implements BatchCreator<MockSubScanPOP> {
 

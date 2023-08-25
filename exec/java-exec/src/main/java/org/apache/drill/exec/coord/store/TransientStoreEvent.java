@@ -17,8 +17,8 @@
  */
 package org.apache.drill.exec.coord.store;
 
-import org.apache.drill.shaded.guava.com.google.common.base.Objects;
-import org.apache.drill.shaded.guava.com.google.common.base.Preconditions;
+import com.google.common.base.Objects;
+import com.google.common.base.Preconditions;
 
 /**
  * Represents an event created as a result of an operation over a particular (key, value) entry in a

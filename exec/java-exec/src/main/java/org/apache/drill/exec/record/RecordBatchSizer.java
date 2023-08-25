@@ -42,7 +42,7 @@ import org.apache.drill.exec.vector.complex.RepeatedListVector;
 import org.apache.drill.exec.vector.complex.RepeatedValueVector;
 import org.apache.drill.exec.vector.VariableWidthVector;
 
-import org.apache.drill.shaded.guava.com.google.common.collect.Sets;
+import com.google.common.collect.Sets;
 import org.apache.drill.exec.vector.complex.RepeatedVariableWidthVectorLike;
 import org.bouncycastle.util.Strings;
 

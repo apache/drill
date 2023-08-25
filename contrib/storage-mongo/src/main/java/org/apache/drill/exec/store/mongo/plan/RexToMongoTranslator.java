@@ -30,7 +30,7 @@ import org.apache.calcite.sql.SqlOperator;
 import org.apache.calcite.sql.fun.SqlStdOperatorTable;
 import org.apache.calcite.sql.type.SqlTypeName;
 import org.apache.drill.exec.store.mongo.common.MongoOp;
-import org.apache.drill.shaded.guava.com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableMap;
 import org.bson.BsonArray;
 import org.bson.BsonDocument;
 import org.bson.BsonInt32;

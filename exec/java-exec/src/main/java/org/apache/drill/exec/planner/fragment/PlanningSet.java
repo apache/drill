@@ -20,7 +20,7 @@ package org.apache.drill.exec.planner.fragment;
 import java.util.Iterator;
 import java.util.Map;
 
-import org.apache.drill.shaded.guava.com.google.common.collect.Maps;
+import com.google.common.collect.Maps;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

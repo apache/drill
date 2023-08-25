@@ -33,7 +33,7 @@ import org.apache.drill.exec.physical.base.SubScan;
 import org.apache.drill.exec.record.metadata.TupleMetadata;
 import org.apache.drill.exec.store.StoragePluginRegistry;
 import org.apache.drill.exec.store.iceberg.format.IcebergFormatPlugin;
-import org.apache.drill.shaded.guava.com.google.common.base.Preconditions;
+import com.google.common.base.Preconditions;
 import org.apache.iceberg.TableScan;
 
 import java.util.Collections;

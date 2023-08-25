@@ -32,7 +32,7 @@ import org.apache.drill.exec.store.parquet.AbstractParquetRowGroupScan;
 import org.apache.drill.exec.store.parquet.AbstractParquetScanBatchCreator;
 import org.apache.drill.exec.store.parquet.ParquetScanBatchCreator;
 import org.apache.drill.exec.store.parquet.RowGroupReadEntry;
-import org.apache.drill.shaded.guava.com.google.common.base.Preconditions;
+import com.google.common.base.Preconditions;
 
 import java.util.List;
 import java.util.Map;

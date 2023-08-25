@@ -29,7 +29,7 @@ import org.apache.drill.exec.store.StoragePluginRegistry;
 import org.apache.drill.exec.store.phoenix.PhoenixDataSource;
 import org.apache.drill.exec.store.phoenix.PhoenixStoragePluginConfig;
 import org.apache.drill.exec.util.ImpersonationUtil;
-import org.apache.drill.shaded.guava.com.google.common.collect.Lists;
+import com.google.common.collect.Lists;
 import org.apache.drill.test.ClusterFixture;
 import org.apache.drill.test.ClusterFixtureBuilder;
 import org.apache.drill.test.ClusterTest;

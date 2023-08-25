@@ -35,7 +35,7 @@ import org.apache.drill.exec.proto.UserBitShared.NamePart.Type;
 import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.databind.DeserializationContext;
 import com.fasterxml.jackson.databind.deser.std.StdDeserializer;
-import org.apache.drill.shaded.guava.com.google.common.base.Preconditions;
+import com.google.common.base.Preconditions;
 
 /**
  * This is the path for the column in the table

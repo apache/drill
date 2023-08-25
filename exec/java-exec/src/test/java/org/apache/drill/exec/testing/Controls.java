@@ -21,7 +21,7 @@ import java.util.List;
 
 import org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint;
 
-import org.apache.drill.shaded.guava.com.google.common.collect.Lists;
+import com.google.common.collect.Lists;
 
 import static org.apache.drill.exec.testing.ExecutionControls.EMPTY_CONTROLS;
 

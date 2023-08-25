@@ -33,7 +33,7 @@ import org.apache.drill.exec.planner.types.HiveToRelDataTypeConverter;
 import org.apache.drill.exec.store.SchemaConfig;
 import org.apache.drill.exec.store.hive.HiveReadEntry;
 import org.apache.drill.exec.store.hive.HiveTableWithColumnCache;
-import org.apache.drill.shaded.guava.com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableList;
 
 import static java.util.stream.Collectors.toList;
 

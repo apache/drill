@@ -33,8 +33,8 @@ import io.netty.util.concurrent.GenericFutureListener;
 import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.exec.proto.GeneralRPCProtos.RpcMode;
 import org.apache.drill.exec.proto.UserBitShared.DrillPBError;
-import org.apache.drill.shaded.guava.com.google.common.base.Preconditions;
-import org.apache.drill.shaded.guava.com.google.common.base.Stopwatch;
+import com.google.common.base.Preconditions;
+import com.google.common.base.Stopwatch;
 
 import java.io.Closeable;
 import java.net.SocketAddress;

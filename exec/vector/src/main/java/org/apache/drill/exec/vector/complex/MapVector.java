@@ -41,9 +41,9 @@ import org.apache.drill.exec.vector.ValueVector;
 import org.apache.drill.exec.vector.complex.RepeatedMapVector.MapSingleCopier;
 import org.apache.drill.exec.vector.complex.impl.SingleMapReaderImpl;
 import org.apache.drill.exec.vector.complex.reader.FieldReader;
-import org.apache.drill.shaded.guava.com.google.common.base.Preconditions;
-import org.apache.drill.shaded.guava.com.google.common.collect.Ordering;
-import org.apache.drill.shaded.guava.com.google.common.primitives.Ints;
+import com.google.common.base.Preconditions;
+import com.google.common.collect.Ordering;
+import com.google.common.primitives.Ints;
 
 import io.netty.buffer.DrillBuf;
 

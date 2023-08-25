@@ -19,7 +19,7 @@ package org.apache.drill.metastore.operate;
 
 import org.apache.drill.metastore.expressions.FilterExpression;
 import org.apache.drill.metastore.metadata.MetadataType;
-import org.apache.drill.shaded.guava.com.google.common.collect.Sets;
+import com.google.common.collect.Sets;
 
 import java.util.HashSet;
 import java.util.Set;

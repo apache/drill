@@ -59,8 +59,8 @@ import org.apache.hadoop.security.token.Token;
 import org.apache.hadoop.util.Progressable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.apache.drill.shaded.guava.com.google.common.annotations.VisibleForTesting;
-import org.apache.drill.shaded.guava.com.google.common.collect.Maps;
+import com.google.common.annotations.VisibleForTesting;
+import com.google.common.collect.Maps;
 
 /**
  * DrillFileSystem is the wrapper around the actual FileSystem implementation. The {@link DrillFileSystem} is

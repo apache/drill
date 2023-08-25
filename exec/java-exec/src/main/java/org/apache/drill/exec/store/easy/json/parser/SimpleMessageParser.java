@@ -17,7 +17,7 @@
  */
 package org.apache.drill.exec.store.easy.json.parser;
 
-import org.apache.drill.shaded.guava.com.google.common.base.Preconditions;
+import com.google.common.base.Preconditions;
 
 import com.fasterxml.jackson.core.JsonToken;
 

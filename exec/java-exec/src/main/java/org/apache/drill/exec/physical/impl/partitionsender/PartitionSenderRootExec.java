@@ -54,7 +54,7 @@ import org.apache.drill.exec.server.options.OptionManager;
 import org.apache.drill.exec.vector.CopyUtil;
 
 import com.carrotsearch.hppc.IntArrayList;
-import org.apache.drill.shaded.guava.com.google.common.annotations.VisibleForTesting;
+import com.google.common.annotations.VisibleForTesting;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

@@ -44,7 +44,7 @@ import org.apache.drill.exec.expr.holders.VarDecimalHolder;
 import org.apache.drill.exec.memory.BufferAllocator;
 import org.apache.drill.exec.util.DecimalUtility;
 
-import org.apache.drill.shaded.guava.com.google.common.base.Charsets;
+import com.google.common.base.Charsets;
 
 public class ValueHolderHelper {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(ValueHolderHelper.class);

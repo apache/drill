@@ -27,7 +27,7 @@ import org.apache.drill.exec.planner.physical.FilterPrel;
 import org.apache.drill.exec.planner.physical.PrelUtil;
 import org.apache.drill.exec.planner.physical.ScanPrel;
 import org.apache.drill.exec.store.StoragePluginOptimizerRule;
-import org.apache.drill.shaded.guava.com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableList;
 
 public class DruidPushDownFilterForScan extends StoragePluginOptimizerRule {
 

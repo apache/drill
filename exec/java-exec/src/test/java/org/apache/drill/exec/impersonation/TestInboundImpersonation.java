@@ -24,7 +24,7 @@ import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.dotdrill.DotDrillType;
 import org.apache.drill.exec.proto.UserBitShared;
 import org.apache.drill.exec.store.dfs.WorkspaceConfig;
-import org.apache.drill.shaded.guava.com.google.common.collect.Maps;
+import com.google.common.collect.Maps;
 import org.apache.drill.test.ClientFixture;
 import org.apache.drill.test.ClusterFixtureBuilder;
 import org.apache.hadoop.fs.FileStatus;

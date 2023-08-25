@@ -35,10 +35,10 @@ import org.apache.drill.exec.metastore.MetadataProviderManager;
 import org.apache.drill.exec.planner.logical.DrillTable;
 import org.apache.drill.exec.planner.sql.SchemaUtilities;
 import org.apache.drill.exec.rpc.user.UserSession;
-import org.apache.drill.shaded.guava.com.google.common.cache.CacheBuilder;
-import org.apache.drill.shaded.guava.com.google.common.cache.CacheLoader;
-import org.apache.drill.shaded.guava.com.google.common.cache.LoadingCache;
-import org.apache.drill.shaded.guava.com.google.common.collect.ImmutableList;
+import com.google.common.cache.CacheBuilder;
+import com.google.common.cache.CacheLoader;
+import com.google.common.cache.LoadingCache;
+import com.google.common.collect.ImmutableList;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

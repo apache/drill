@@ -19,7 +19,7 @@ package org.apache.drill.exec.store;
 
 import org.apache.calcite.plan.Convention;
 import org.apache.calcite.plan.RelOptRule;
-import org.apache.drill.shaded.guava.com.google.common.collect.ImmutableSet;
+import com.google.common.collect.ImmutableSet;
 
 import java.util.Set;
 

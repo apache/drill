@@ -37,7 +37,7 @@ import org.apache.drill.exec.record.VectorWrapper;
 import org.apache.drill.exec.record.selection.SelectionVector2;
 import org.apache.drill.exec.record.selection.SelectionVector4;
 
-import org.apache.drill.shaded.guava.com.google.common.annotations.VisibleForTesting;
+import com.google.common.annotations.VisibleForTesting;
 import org.apache.drill.exec.vector.ValueVector;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

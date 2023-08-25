@@ -50,8 +50,8 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
-import org.apache.drill.shaded.guava.com.google.common.base.Charsets;
-import org.apache.drill.shaded.guava.com.google.common.io.Resources;
+import com.google.common.base.Charsets;
+import com.google.common.io.Resources;
 
 import io.netty.buffer.DrillBuf;
 

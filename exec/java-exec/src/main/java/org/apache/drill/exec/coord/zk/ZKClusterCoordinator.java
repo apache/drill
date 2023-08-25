@@ -17,7 +17,7 @@
  */
 package org.apache.drill.exec.coord.zk;
 
-import static org.apache.drill.shaded.guava.com.google.common.collect.Collections2.transform;
+import static com.google.common.collect.Collections2.transform;
 import java.io.IOException;
 import java.util.Collection;
 import java.util.Collections;
@@ -32,7 +32,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import org.apache.curator.framework.imps.DefaultACLProvider;
-import org.apache.drill.shaded.guava.com.google.common.base.Throwables;
+import com.google.common.base.Throwables;
 import org.apache.zookeeper.data.Stat;
 import org.apache.commons.collections.keyvalue.MultiKey;
 import org.apache.curator.RetryPolicy;
@@ -60,7 +60,7 @@ import org.apache.drill.exec.coord.store.TransientStoreConfig;
 import org.apache.drill.exec.coord.store.TransientStoreFactory;
 import org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint;
 import org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint.State;
-import org.apache.drill.shaded.guava.com.google.common.base.Function;
+import com.google.common.base.Function;
 
 /**
  * Manages cluster coordination utilizing zookeeper. *

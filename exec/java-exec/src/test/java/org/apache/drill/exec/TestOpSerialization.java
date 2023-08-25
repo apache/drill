@@ -49,7 +49,7 @@ import org.junit.Before;
 import org.junit.Test;
 
 import com.fasterxml.jackson.databind.ObjectWriter;
-import org.apache.drill.shaded.guava.com.google.common.collect.Lists;
+import com.google.common.collect.Lists;
 
 public class TestOpSerialization extends BaseTest {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(TestOpSerialization.class);

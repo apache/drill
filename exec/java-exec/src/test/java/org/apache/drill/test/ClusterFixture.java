@@ -60,10 +60,10 @@ import org.apache.drill.exec.store.mock.MockStorageEngineConfig;
 import org.apache.drill.common.logical.security.PlainCredentialsProvider;
 import org.apache.drill.exec.store.sys.store.provider.ZookeeperPersistentStoreProvider;
 import org.apache.drill.exec.util.StoragePluginTestUtils;
-import org.apache.drill.shaded.guava.com.google.common.base.Charsets;
-import org.apache.drill.shaded.guava.com.google.common.base.Preconditions;
-import org.apache.drill.shaded.guava.com.google.common.collect.ImmutableMap;
-import org.apache.drill.shaded.guava.com.google.common.io.Resources;
+import com.google.common.base.Charsets;
+import com.google.common.base.Preconditions;
+import com.google.common.collect.ImmutableMap;
+import com.google.common.io.Resources;
 import org.apache.drill.test.DrillTestWrapper.TestServices;
 import org.apache.hadoop.fs.FileSystem;
 

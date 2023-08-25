@@ -32,7 +32,7 @@ import org.apache.drill.exec.planner.PlannerPhase;
 import org.apache.drill.exec.metastore.MetadataProviderManager;
 import org.apache.drill.exec.server.options.SessionOptionManager;
 import org.apache.drill.exec.store.dfs.FormatPlugin;
-import org.apache.drill.shaded.guava.com.google.common.collect.ImmutableSet;
+import com.google.common.collect.ImmutableSet;
 
 /** Interface for all implementations of the storage plugins. Different implementations of the storage
  * formats will implement methods that indicate if Drill can write or read its tables from that format,

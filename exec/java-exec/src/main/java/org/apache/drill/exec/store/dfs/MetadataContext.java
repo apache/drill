@@ -20,7 +20,7 @@ package org.apache.drill.exec.store.dfs;
 import java.util.List;
 import java.util.Map;
 
-import org.apache.drill.shaded.guava.com.google.common.collect.Maps;
+import com.google.common.collect.Maps;
 import org.apache.hadoop.fs.Path;
 
 /**

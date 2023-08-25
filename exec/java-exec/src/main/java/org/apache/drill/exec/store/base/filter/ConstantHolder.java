@@ -21,7 +21,7 @@ import java.math.BigDecimal;
 
 import org.apache.drill.common.PlanStringBuilder;
 import org.apache.drill.common.types.TypeProtos.MinorType;
-import org.apache.drill.shaded.guava.com.google.common.base.Preconditions;
+import com.google.common.base.Preconditions;
 import org.joda.time.DateTimeZone;
 import org.joda.time.format.DateTimeFormatter;
 import org.joda.time.format.ISODateTimeFormat;

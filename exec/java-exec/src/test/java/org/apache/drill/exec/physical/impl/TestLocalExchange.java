@@ -18,9 +18,9 @@
 package org.apache.drill.exec.physical.impl;
 
 import org.apache.drill.exec.planner.fragment.DefaultQueryParallelizer;
-import org.apache.drill.shaded.guava.com.google.common.collect.ArrayListMultimap;
-import org.apache.drill.shaded.guava.com.google.common.collect.ImmutableSet;
-import org.apache.drill.shaded.guava.com.google.common.collect.Lists;
+import com.google.common.collect.ArrayListMultimap;
+import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.Lists;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.drill.PlanTestBase;

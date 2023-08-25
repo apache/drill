@@ -24,7 +24,7 @@ import static org.apache.drill.exec.ExecConstants.ZK_APPLY_SECURE_ACL;
 import org.apache.drill.common.scanner.persistence.ScanResult;
 import org.apache.drill.exec.exception.DrillbitStartupException;
 import org.apache.drill.exec.server.BootStrapContext;
-import org.apache.drill.shaded.guava.com.google.common.base.Strings;
+import com.google.common.base.Strings;
 
 import java.lang.reflect.Constructor;
 import java.util.Collection;

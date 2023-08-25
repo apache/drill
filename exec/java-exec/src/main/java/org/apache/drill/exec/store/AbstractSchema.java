@@ -36,7 +36,7 @@ import org.apache.drill.exec.record.metadata.schema.SchemaProviderFactory;
 import org.apache.drill.exec.store.table.function.TableParamDef;
 import org.apache.drill.exec.store.table.function.TableSignature;
 import org.apache.drill.exec.store.table.function.WithOptionsTableMacro;
-import org.apache.drill.shaded.guava.com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableMap;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.apache.calcite.linq4j.tree.DefaultExpression;
@@ -51,7 +51,7 @@ import org.apache.commons.lang3.tuple.Pair;
 import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.exec.dotdrill.View;
 import org.apache.drill.exec.planner.logical.CreateTableEntry;
-import org.apache.drill.shaded.guava.com.google.common.base.Joiner;
+import com.google.common.base.Joiner;
 
 public abstract class AbstractSchema implements Schema, SchemaPartitionExplorer, AutoCloseable {
   static final Logger logger = LoggerFactory.getLogger(AbstractSchema.class);

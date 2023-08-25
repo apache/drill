@@ -23,8 +23,8 @@ import org.apache.drill.metastore.rdbms.exception.RdbmsMetastoreException;
 import org.apache.drill.metastore.rdbms.operate.RdbmsOperation;
 import org.apache.drill.metastore.rdbms.transform.AbstractTransformer;
 import org.apache.drill.metastore.rdbms.transform.MetadataMapper;
-import org.apache.drill.shaded.guava.com.google.common.collect.ImmutableMap;
-import org.apache.drill.shaded.guava.com.google.common.collect.Sets;
+import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.Sets;
 import org.jooq.Record;
 
 import java.util.List;

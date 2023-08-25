@@ -46,8 +46,8 @@ import org.apache.drill.exec.rpc.ResponseSender;
 import org.apache.drill.exec.rpc.user.UserSession;
 import org.apache.drill.exec.server.DrillbitContext;
 
-import org.apache.drill.shaded.guava.com.google.common.base.Splitter;
-import org.apache.drill.shaded.guava.com.google.common.collect.ImmutableList;
+import com.google.common.base.Splitter;
+import com.google.common.collect.ImmutableList;
 
 /**
  * Contains worker {@link Runnable} for returning server meta information

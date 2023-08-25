@@ -45,7 +45,7 @@ import org.apache.parquet.format.PageType;
 import org.apache.parquet.format.Util;
 import org.apache.parquet.hadoop.metadata.CompressionCodecName;
 
-import org.apache.drill.shaded.guava.com.google.common.base.Stopwatch;
+import com.google.common.base.Stopwatch;
 
 import io.netty.buffer.DrillBuf;
 import org.slf4j.Logger;

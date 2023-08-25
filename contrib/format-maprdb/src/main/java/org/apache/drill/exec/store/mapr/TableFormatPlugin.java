@@ -36,7 +36,7 @@ import org.apache.drill.exec.store.dfs.FormatPlugin;
 import org.apache.hadoop.conf.Configuration;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import org.apache.drill.shaded.guava.com.google.common.collect.ImmutableSet;
+import com.google.common.collect.ImmutableSet;
 import com.mapr.fs.MapRFileSystem;
 
 public abstract class TableFormatPlugin implements FormatPlugin {

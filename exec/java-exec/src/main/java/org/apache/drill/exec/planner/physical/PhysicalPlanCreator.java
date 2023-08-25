@@ -34,7 +34,7 @@ import org.apache.drill.exec.planner.cost.DrillCostBase;
 import org.apache.drill.exec.planner.cost.PrelCostEstimates;
 import org.apache.drill.exec.planner.physical.explain.PrelSequencer.OpId;
 
-import org.apache.drill.shaded.guava.com.google.common.collect.Lists;
+import com.google.common.collect.Lists;
 
 
 public class PhysicalPlanCreator {

@@ -22,7 +22,7 @@ import java.util.Iterator;
 import org.apache.drill.common.logical.UnexpectedOperatorType;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
-import org.apache.drill.shaded.guava.com.google.common.collect.Iterators;
+import com.google.common.collect.Iterators;
 
 /**
  * SimpleOperator is an operator that has one inputs at most.

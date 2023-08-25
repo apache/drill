@@ -17,7 +17,7 @@
  */
 package org.apache.drill.exec.util;
 
-import org.apache.drill.shaded.guava.com.google.common.base.Strings;
+import com.google.common.base.Strings;
 import org.apache.commons.io.FileUtils;
 import org.apache.drill.common.util.DrillFileUtils;
 import org.apache.drill.exec.ExecTest;

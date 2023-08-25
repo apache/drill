@@ -59,7 +59,7 @@ import org.apache.drill.exec.testing.ControlsInjectorFactory;
 import org.apache.drill.exec.util.Pointer;
 import org.apache.drill.exec.work.foreman.ForemanSetupException;
 import org.apache.drill.exec.work.foreman.SqlUnsupportedException;
-import org.apache.drill.shaded.guava.com.google.common.base.Throwables;
+import com.google.common.base.Throwables;
 import org.apache.hadoop.security.AccessControlException;
 
 public class DrillSqlWorker {

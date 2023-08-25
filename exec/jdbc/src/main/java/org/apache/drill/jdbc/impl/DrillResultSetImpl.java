@@ -50,7 +50,7 @@ import org.apache.drill.jdbc.AlreadyClosedSqlException;
 import org.apache.drill.jdbc.DrillResultSet;
 import org.apache.drill.jdbc.ExecutionCanceledSqlException;
 
-import org.apache.drill.shaded.guava.com.google.common.base.Stopwatch;
+import com.google.common.base.Stopwatch;
 
 /**
  * Drill's implementation of {@link java.sql.ResultSet}.

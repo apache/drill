@@ -19,8 +19,8 @@ package org.apache.drill.exec.server.rest.profile;
 
 import org.apache.drill.exec.proto.UserBitShared.MinorFragmentProfile;
 
-import org.apache.drill.shaded.guava.com.google.common.base.Predicate;
-import org.apache.drill.shaded.guava.com.google.common.base.Predicates;
+import com.google.common.base.Predicate;
+import com.google.common.base.Predicates;
 
 interface Filters {
   final static Predicate<MinorFragmentProfile> hasOperators = new Predicate<MinorFragmentProfile>() {

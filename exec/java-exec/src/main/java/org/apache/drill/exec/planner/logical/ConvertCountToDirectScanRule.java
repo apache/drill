@@ -48,7 +48,7 @@ import org.apache.drill.exec.store.parquet.ParquetReaderConfig;
 import org.apache.drill.exec.store.parquet.metadata.Metadata;
 import org.apache.drill.exec.store.parquet.metadata.Metadata_V4;
 import org.apache.drill.exec.store.pojo.DynamicPojoRecordReader;
-import org.apache.drill.shaded.guava.com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableMap;
 import org.apache.hadoop.fs.Path;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

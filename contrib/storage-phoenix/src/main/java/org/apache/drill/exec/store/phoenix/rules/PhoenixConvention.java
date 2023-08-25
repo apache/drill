@@ -41,7 +41,7 @@ import org.apache.drill.exec.planner.logical.DrillRelFactories;
 import org.apache.drill.exec.store.enumerable.plan.DrillJdbcRuleBase;
 import org.apache.drill.exec.store.enumerable.plan.VertexDrelConverterRule;
 import org.apache.drill.exec.store.phoenix.PhoenixStoragePlugin;
-import org.apache.drill.shaded.guava.com.google.common.collect.ImmutableSet;
+import com.google.common.collect.ImmutableSet;
 
 public class PhoenixConvention extends JdbcConvention {
 

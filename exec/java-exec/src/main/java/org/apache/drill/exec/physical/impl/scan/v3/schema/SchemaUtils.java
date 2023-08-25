@@ -32,7 +32,7 @@ import org.apache.drill.exec.record.metadata.PrimitiveColumnMetadata;
 import org.apache.drill.exec.record.metadata.Propertied;
 import org.apache.drill.exec.record.metadata.TupleMetadata;
 import org.apache.drill.exec.record.metadata.TupleSchema;
-import org.apache.drill.shaded.guava.com.google.common.base.Preconditions;
+import com.google.common.base.Preconditions;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

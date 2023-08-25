@@ -20,7 +20,7 @@ package org.apache.drill.exec.rpc;
 import io.netty.buffer.ByteBuf;
 
 import org.apache.drill.common.concurrent.AbstractCheckedFuture;
-import org.apache.drill.shaded.guava.com.google.common.util.concurrent.AbstractFuture;
+import com.google.common.util.concurrent.AbstractFuture;
 
 class DrillRpcFutureImpl<V> extends AbstractCheckedFuture<V, RpcException>
     implements DrillRpcFuture<V>, RpcOutcomeListener<V> {

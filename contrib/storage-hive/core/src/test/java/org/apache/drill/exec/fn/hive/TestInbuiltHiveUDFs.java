@@ -36,7 +36,7 @@ import org.apache.drill.test.TestBuilder;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
-import org.apache.drill.shaded.guava.com.google.common.collect.Lists;
+import com.google.common.collect.Lists;
 
 @Category({SlowTest.class, HiveStorageTest.class})
 public class TestInbuiltHiveUDFs extends HiveTestBase {

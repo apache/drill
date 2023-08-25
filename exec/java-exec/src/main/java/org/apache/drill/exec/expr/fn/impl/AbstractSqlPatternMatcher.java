@@ -23,7 +23,7 @@ import java.nio.charset.CharacterCodingException;
 import java.nio.charset.CharsetEncoder;
 
 import org.apache.drill.common.exceptions.UserException;
-import org.apache.drill.shaded.guava.com.google.common.base.Charsets;
+import com.google.common.base.Charsets;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

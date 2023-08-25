@@ -21,7 +21,7 @@ import static org.apache.drill.exec.memory.BoundsChecking.rangeCheck;
 
 import org.apache.drill.exec.expr.holders.NullableVarCharHolder;
 import org.apache.drill.exec.expr.holders.VarCharHolder;
-import org.apache.drill.shaded.guava.com.google.common.base.Charsets;
+import com.google.common.base.Charsets;
 import org.joda.time.chrono.ISOChronology;
 
 import io.netty.buffer.DrillBuf;

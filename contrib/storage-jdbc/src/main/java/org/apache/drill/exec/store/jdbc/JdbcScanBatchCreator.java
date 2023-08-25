@@ -31,7 +31,7 @@ import org.apache.drill.exec.proto.UserBitShared.UserCredentials;
 import org.apache.drill.exec.physical.impl.scan.framework.SchemaNegotiator;
 import org.apache.drill.exec.record.CloseableRecordBatch;
 import org.apache.drill.exec.record.RecordBatch;
-import org.apache.drill.shaded.guava.com.google.common.base.Preconditions;
+import com.google.common.base.Preconditions;
 
 import java.util.Collections;
 import java.util.List;

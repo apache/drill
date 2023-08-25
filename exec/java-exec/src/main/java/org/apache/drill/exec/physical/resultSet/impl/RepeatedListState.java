@@ -32,7 +32,7 @@ import org.apache.drill.exec.vector.accessor.impl.HierarchicalFormatter;
 import org.apache.drill.exec.vector.accessor.writer.AbstractObjectWriter;
 import org.apache.drill.exec.vector.accessor.writer.RepeatedListWriter;
 import org.apache.drill.exec.vector.complex.RepeatedListVector;
-import org.apache.drill.shaded.guava.com.google.common.collect.Lists;
+import com.google.common.collect.Lists;
 
 /**
  * Represents the internal state of a RepeatedList vector. The repeated list

@@ -21,8 +21,8 @@ package org.apache.drill.exec.planner.index.generators;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.apache.drill.shaded.guava.com.google.common.collect.ImmutableList;
-import org.apache.drill.shaded.guava.com.google.common.collect.Lists;
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Lists;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.apache.calcite.plan.RelTrait;

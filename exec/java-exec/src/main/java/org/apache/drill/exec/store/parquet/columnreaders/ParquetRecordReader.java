@@ -18,8 +18,8 @@
 package org.apache.drill.exec.store.parquet.columnreaders;
 
 import org.apache.drill.exec.store.CommonParquetRecordReader;
-import org.apache.drill.shaded.guava.com.google.common.base.Stopwatch;
-import org.apache.drill.shaded.guava.com.google.common.collect.ImmutableList;
+import com.google.common.base.Stopwatch;
+import com.google.common.collect.ImmutableList;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;

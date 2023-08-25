@@ -18,7 +18,7 @@
 package org.apache.drill.exec.store.dfs;
 
 import org.apache.drill.exec.ops.OperatorStats;
-import org.apache.drill.shaded.guava.com.google.common.io.ByteStreams;
+import com.google.common.io.ByteStreams;
 import org.apache.hadoop.classification.InterfaceAudience.LimitedPrivate;
 import org.apache.hadoop.fs.FSDataInputStream;
 import org.apache.hadoop.fs.PositionedReadable;

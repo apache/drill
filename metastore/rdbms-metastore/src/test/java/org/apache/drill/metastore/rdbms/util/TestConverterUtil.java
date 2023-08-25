@@ -20,7 +20,7 @@ package org.apache.drill.metastore.rdbms.util;
 import com.fasterxml.jackson.core.type.TypeReference;
 import org.apache.drill.metastore.rdbms.RdbmsBaseTest;
 import org.apache.drill.metastore.rdbms.exception.RdbmsMetastoreException;
-import org.apache.drill.shaded.guava.com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableMap;
 import org.junit.Test;
 
 import java.util.Arrays;

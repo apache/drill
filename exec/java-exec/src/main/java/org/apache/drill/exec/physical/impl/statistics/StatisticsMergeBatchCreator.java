@@ -24,7 +24,7 @@ import org.apache.drill.exec.physical.config.StatisticsMerge;
 import org.apache.drill.exec.physical.impl.BatchCreator;
 import org.apache.drill.exec.record.CloseableRecordBatch;
 import org.apache.drill.exec.record.RecordBatch;
-import org.apache.drill.shaded.guava.com.google.common.base.Preconditions;
+import com.google.common.base.Preconditions;
 
 @SuppressWarnings("unused")
 public class StatisticsMergeBatchCreator implements BatchCreator<StatisticsMerge>{

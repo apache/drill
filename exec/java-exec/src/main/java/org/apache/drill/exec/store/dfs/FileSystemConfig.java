@@ -39,8 +39,8 @@ import org.apache.drill.common.logical.StoragePluginConfig;
 import org.apache.drill.common.map.CaseInsensitiveMap;
 import org.apache.drill.common.logical.security.CredentialsProvider;
 import org.apache.drill.common.logical.security.PlainCredentialsProvider;
-import org.apache.drill.shaded.guava.com.google.common.collect.ImmutableMap;
-import org.apache.drill.shaded.guava.com.google.common.collect.ImmutableMap.Builder;
+import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableMap.Builder;
 import org.apache.hadoop.fs.CommonConfigurationKeysPublic;
 
 @JsonTypeName(FileSystemConfig.NAME)

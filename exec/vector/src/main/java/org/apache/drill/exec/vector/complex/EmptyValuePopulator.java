@@ -18,7 +18,7 @@
 package org.apache.drill.exec.vector.complex;
 
 import org.apache.drill.exec.vector.UInt4Vector;
-import org.apache.drill.shaded.guava.com.google.common.base.Preconditions;
+import com.google.common.base.Preconditions;
 
 /**
  * Tracks and populate empty values in repeated value vectors.

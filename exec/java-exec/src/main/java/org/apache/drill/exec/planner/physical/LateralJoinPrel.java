@@ -18,8 +18,8 @@
 package org.apache.drill.exec.planner.physical;
 
 import org.apache.calcite.rel.core.JoinRelType;
-import org.apache.drill.shaded.guava.com.google.common.base.Preconditions;
-import org.apache.drill.shaded.guava.com.google.common.collect.Lists;
+import com.google.common.base.Preconditions;
+import com.google.common.collect.Lists;
 import org.apache.calcite.plan.RelOptCluster;
 import org.apache.calcite.plan.RelTraitSet;
 import org.apache.calcite.rel.RelNode;

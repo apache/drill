@@ -44,7 +44,7 @@ import org.apache.drill.exec.planner.physical.PrelUtil;
 import org.apache.drill.exec.store.StoragePluginOptimizerRule;
 import org.apache.drill.exec.store.base.filter.ExprNode.AndNode;
 import org.apache.drill.exec.store.base.filter.FilterPushDownListener.ScanPushDownListener;
-import org.apache.drill.shaded.guava.com.google.common.collect.ImmutableSet;
+import com.google.common.collect.ImmutableSet;
 
 /**
  * Generalized filter push-down strategy which performs all the tree-walking

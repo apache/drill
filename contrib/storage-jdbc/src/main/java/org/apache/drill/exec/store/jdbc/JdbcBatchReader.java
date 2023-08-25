@@ -41,7 +41,7 @@ import org.apache.drill.exec.store.jdbc.writers.JdbcTimestampWriter;
 import org.apache.drill.exec.store.jdbc.writers.JdbcVarbinaryWriter;
 import org.apache.drill.exec.store.jdbc.writers.JdbcVarcharWriter;
 import org.apache.drill.exec.store.jdbc.writers.JdbcVardecimalWriter;
-import org.apache.drill.shaded.guava.com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableMap;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

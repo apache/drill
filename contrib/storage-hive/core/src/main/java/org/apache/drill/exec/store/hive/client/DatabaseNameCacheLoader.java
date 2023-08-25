@@ -20,7 +20,7 @@ package org.apache.drill.exec.store.hive.client;
 import java.util.List;
 
 import org.apache.drill.common.AutoCloseables;
-import org.apache.drill.shaded.guava.com.google.common.cache.CacheLoader;
+import com.google.common.cache.CacheLoader;
 import org.apache.hadoop.hive.metastore.api.MetaException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

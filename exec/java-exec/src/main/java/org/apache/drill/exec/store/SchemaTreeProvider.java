@@ -31,7 +31,7 @@ import org.apache.drill.exec.server.options.OptionValue;
 import org.apache.drill.exec.store.SchemaConfig.SchemaConfigInfoProvider;
 import org.apache.drill.exec.util.ImpersonationUtil;
 
-import org.apache.drill.shaded.guava.com.google.common.collect.Lists;
+import com.google.common.collect.Lists;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

@@ -22,7 +22,7 @@ import com.carrotsearch.hppc.cursors.ObjectFloatCursor;
 import com.carrotsearch.hppc.cursors.ObjectLongCursor;
 import org.apache.drill.exec.physical.EndpointAffinity;
 import org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint;
-import org.apache.drill.shaded.guava.com.google.common.base.Stopwatch;
+import com.google.common.base.Stopwatch;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

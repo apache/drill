@@ -34,9 +34,9 @@ import org.apache.calcite.rel.logical.LogicalProject;
 import org.apache.calcite.rex.RexNode;
 
 import org.apache.drill.exec.planner.common.DrillLimitRelBase;
-import org.apache.drill.shaded.guava.com.google.common.cache.CacheBuilder;
-import org.apache.drill.shaded.guava.com.google.common.cache.CacheLoader;
-import org.apache.drill.shaded.guava.com.google.common.cache.LoadingCache;
+import com.google.common.cache.CacheBuilder;
+import com.google.common.cache.CacheLoader;
+import com.google.common.cache.LoadingCache;
 import org.apache.drill.exec.planner.logical.DrillRelFactories;
 
 public abstract class DrillJdbcRuleBase extends ConverterRule {

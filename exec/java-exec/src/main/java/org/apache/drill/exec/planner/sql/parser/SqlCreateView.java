@@ -18,7 +18,7 @@
 package org.apache.drill.exec.planner.sql.parser;
 
 import org.apache.drill.exec.planner.sql.SchemaUtilities;
-import org.apache.drill.shaded.guava.com.google.common.collect.Lists;
+import com.google.common.collect.Lists;
 import org.apache.drill.exec.planner.sql.handlers.AbstractSqlHandler;
 import org.apache.drill.exec.planner.sql.handlers.SqlHandlerConfig;
 import org.apache.drill.exec.planner.sql.handlers.SqlHandlerUtil;

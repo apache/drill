@@ -24,7 +24,7 @@ import org.apache.drill.exec.physical.impl.ScanBatch;
 import org.apache.drill.exec.physical.impl.protocol.BatchAccessor;
 import org.apache.drill.exec.physical.impl.protocol.OperatorExec;
 import org.apache.drill.exec.physical.impl.protocol.VectorContainerAccessor;
-import org.apache.drill.shaded.guava.com.google.common.annotations.VisibleForTesting;
+import com.google.common.annotations.VisibleForTesting;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

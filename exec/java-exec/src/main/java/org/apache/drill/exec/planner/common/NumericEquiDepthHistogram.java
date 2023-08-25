@@ -32,10 +32,10 @@ import org.apache.calcite.rex.RexLiteral;
 import com.tdunning.math.stats.MergingDigest;
 import org.apache.calcite.sql.SqlOperator;
 import org.apache.drill.metastore.statistics.Histogram;
-import org.apache.drill.shaded.guava.com.google.common.annotations.VisibleForTesting;
-import org.apache.drill.shaded.guava.com.google.common.base.Preconditions;
-import org.apache.drill.shaded.guava.com.google.common.collect.BoundType;
-import org.apache.drill.shaded.guava.com.google.common.collect.Range;
+import com.google.common.annotations.VisibleForTesting;
+import com.google.common.base.Preconditions;
+import com.google.common.collect.BoundType;
+import com.google.common.collect.Range;
 
 /**
  * A column specific equi-depth histogram which is meant for numeric data types

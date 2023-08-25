@@ -33,7 +33,7 @@ import org.apache.drill.exec.planner.logical.RelOptHelper;
 import org.apache.drill.exec.planner.physical.AggPrelBase.OperatorPhase;
 import org.apache.drill.exec.planner.physical.DrillDistributionTrait.NamedDistributionField;
 import org.apache.drill.exec.store.parquet.FilterEvaluatorUtils.FieldReferenceFinder;
-import org.apache.drill.shaded.guava.com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableList;
 
 import java.util.ArrayList;
 import java.util.Collections;

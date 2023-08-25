@@ -42,7 +42,7 @@ import org.apache.drill.exec.planner.common.CountToDirectScanUtils;
 import org.apache.drill.exec.store.ColumnExplorer;
 import org.apache.drill.exec.store.direct.MetadataDirectGroupScan;
 import org.apache.drill.exec.store.pojo.DynamicPojoRecordReader;
-import org.apache.drill.shaded.guava.com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableMap;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

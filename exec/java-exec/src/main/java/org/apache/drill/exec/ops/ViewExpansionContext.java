@@ -28,7 +28,7 @@ import org.apache.drill.exec.proto.UserBitShared.UserCredentials;
 import org.apache.drill.exec.store.SchemaConfig.SchemaConfigInfoProvider;
 
 import com.carrotsearch.hppc.ObjectIntHashMap;
-import org.apache.drill.shaded.guava.com.google.common.base.Preconditions;
+import com.google.common.base.Preconditions;
 
 /**
  * Contains context information about view expansion(s) in a query. Part of {@link org.apache.drill.exec.ops

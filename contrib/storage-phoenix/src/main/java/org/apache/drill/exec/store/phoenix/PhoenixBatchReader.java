@@ -50,7 +50,7 @@ import org.apache.drill.exec.store.phoenix.PhoenixReader.GenericDefn;
 import org.apache.drill.exec.store.phoenix.PhoenixReader.GenericTimeDefn;
 import org.apache.drill.exec.store.phoenix.PhoenixReader.GenericTimestampDefn;
 import org.apache.drill.exec.util.ImpersonationUtil;
-import org.apache.drill.shaded.guava.com.google.common.base.Stopwatch;
+import com.google.common.base.Stopwatch;
 import org.apache.hadoop.security.UserGroupInformation;
 import org.slf4j.LoggerFactory;
 

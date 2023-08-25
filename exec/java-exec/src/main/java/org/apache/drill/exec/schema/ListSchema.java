@@ -17,16 +17,16 @@
  */
 package org.apache.drill.exec.schema;
 
-import static org.apache.drill.shaded.guava.com.google.common.base.Preconditions.checkArgument;
+import static com.google.common.base.Preconditions.checkArgument;
 
 import java.util.List;
 import java.util.Objects;
 
 import org.apache.drill.common.types.TypeProtos.DataMode;
 
-import org.apache.drill.shaded.guava.com.google.common.base.Predicate;
-import org.apache.drill.shaded.guava.com.google.common.collect.Iterables;
-import org.apache.drill.shaded.guava.com.google.common.collect.Lists;
+import com.google.common.base.Predicate;
+import com.google.common.collect.Iterables;
+import com.google.common.collect.Lists;
 
 public class ListSchema implements RecordSchema {
     private List<Field> fields;

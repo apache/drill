@@ -19,7 +19,7 @@
 package org.apache.drill.exec.store.pdf;
 
 import org.apache.drill.exec.record.MaterializedField;
-import org.apache.drill.shaded.guava.com.google.common.base.Strings;
+import com.google.common.base.Strings;
 import org.apache.drill.common.AutoCloseables;
 import org.apache.drill.common.exceptions.CustomErrorContext;
 import org.apache.drill.common.exceptions.UserException;
