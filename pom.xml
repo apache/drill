@@ -475,6 +475,7 @@
           <includeTestSourceDirectory>true</includeTestSourceDirectory>
           <configLocation>src/main/resources/checkstyle-config.xml</configLocation>
           <suppressionsLocation>src/main/resources/checkstyle-suppressions.xml</suppressionsLocation>
+          <linkXRef>false</linkXRef>
         </configuration>
         <executions>
           <execution>
