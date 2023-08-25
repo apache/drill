@@ -45,6 +45,9 @@ import java.util.stream.Collectors;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 
+// Note: this test cannot be run under surefire (or in IDEs). Execute
+// `mvn integration-test` in this module's directory to run it locally. See the
+// maven-failsafe-plugin config in this module's pom.xml for more information.
 public class ITTestShadedJar extends BaseTest {
   private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(ITTestShadedJar.class);
 

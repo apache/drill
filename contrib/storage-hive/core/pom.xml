@@ -103,6 +103,10 @@
           <groupId>org.apache.hadoop</groupId>
         </exclusion>
         <exclusion>
+          <artifactId>hadoop-hdfs-client</artifactId>
+          <groupId>org.apache.hadoop</groupId>
+        </exclusion>
+        <exclusion>
           <groupId>commons-codec</groupId>
           <artifactId>commons-codec</artifactId>
         </exclusion>
@@ -284,14 +288,6 @@
         <exclusion>
           <groupId>org.codehaus.jackson</groupId>
           <artifactId>jackson-xc</artifactId>
-        </exclusion>
-        <exclusion>
-          <artifactId>netty-all</artifactId>
-          <groupId>io.netty</groupId>
-        </exclusion>
-        <exclusion>
-          <artifactId>netty</artifactId>
-          <groupId>io.netty</groupId>
         </exclusion>
         <exclusion>
           <groupId>com.zaxxer</groupId>

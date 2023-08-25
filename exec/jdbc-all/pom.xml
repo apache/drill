@@ -103,6 +103,14 @@
           <artifactId>commons-codec</artifactId>
         </exclusion>
         <exclusion>
+          <groupId>com.sun.jersey</groupId>
+          <artifactId>jersey-core</artifactId>
+        </exclusion>
+        <exclusion>
+          <groupId>com.sun.jersey</groupId>
+          <artifactId>jersey-server</artifactId>
+        </exclusion>
+        <exclusion>
           <groupId>org.glassfish.jersey.core</groupId>
           <artifactId>jersey-common</artifactId>
         </exclusion>
@@ -335,7 +343,7 @@
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-failsafe-plugin</artifactId>
-        <version>3.0.0-M3</version>
+        <version>3.1.2</version>
         <executions>
           <execution>
             <goals>
@@ -388,51 +396,52 @@
               <include>*:*</include>
             </includes>
             <excludes>
-              <exclude>io.protostuff:*</exclude>
-              <exclude>org.pentaho:*</exclude>
-              <exclude>org.msgpack:*</exclude>
-              <exclude>xerces:*</exclude>
-              <exclude>xalan:*</exclude>
-              <exclude>org.apache.avro:*</exclude>
-              <exclude>org.mongodb:*</exclude>
-              <exclude>com.googlecode.json-simple:*</exclude>
-              <exclude>dom4j:*</exclude>
-              <exclude>org.hibernate:*</exclude>
               <exclude>antlr:*</exclude>
+              <exclude>com.beust:*</exclude>
               <exclude>com.dropbox.*</exclude>
               <exclude>com.github.stefanbirkner</exclude>
-              <exclude>org.ow2.asm:*</exclude>
-              <exclude>com.univocity:*</exclude>
-              <exclude>com.twitter:*</exclude>
-              <exclude>org.apache.parquet:*</exclude>
-              <exclude>javax.inject:*</exclude>
-              <exclude>com.beust:*</exclude>
-              <exclude>jline:*</exclude>
-              <exclude>org.xerial.snappy:*</exclude>
-              <exclude>org.apache.avro:*</exclude>
-              <exclude>org.tukaani:*</exclude>
-              <exclude>org.apache.velocity:*</exclude>
-              <exclude>net.hydromatic:linq4j</exclude>
-              <exclude>org.eclipse.jetty:*</exclude>
-              <exclude>org.slf4j:jul-to-slf4j</exclude>
-              <exclude>org.hamcrest:hamcrest-core</exclude>
-              <exclude>org.mockito:mockito-core</exclude>
-              <exclude>org.objenesis:objenesis</exclude>
-              <exclude>org.eclipse.jetty:*</exclude>
-              <exclude>javax.xml.bind:jaxb-api</exclude>
-              <exclude>javax.xml.stream:stax-api</exclude>
-              <exclude>javax.activation:activation</exclude>
-              <exclude>commons-cli:commons-cli</exclude>
-              <exclude>org.apache.commons:commons-collections4</exclude>
-              <exclude>commons-io:commons-io</exclude>
+              <exclude>com.google.code.findbugs:jsr305:*</exclude>
+              <exclude>com.googlecode.json-simple:*</exclude>
               <exclude>commons-beanutils:commons-beanutils-core:jar:*</exclude>
               <exclude>commons-beanutils:commons-beanutils:jar:*</exclude>
-              <exclude>com.google.code.findbugs:jsr305:*</exclude>
-              <exclude>dnsjava:dnsjava:jar:*</exclude>
-              <exclude>io.netty:netty-tcnative:jar:*</exclude>
-              <exclude>io.netty:netty-tcnative-classes:jar:*</exclude>
+              <exclude>commons-cli:commons-cli</exclude>
+              <exclude>commons-io:commons-io</exclude>
               <exclude>com.nimbusds:*</exclude>
+              <exclude>com.twitter:*</exclude>
+              <exclude>com.univocity:*</exclude>
+              <exclude>dnsjava:dnsjava:jar:*</exclude>
+              <exclude>dom4j:*</exclude>
+              <exclude>io.netty:netty-tcnative-classes:jar:*</exclude>
+              <exclude>io.netty:netty-tcnative:jar:*</exclude>
+              <exclude>io.protostuff:*</exclude>
+              <exclude>javax.activation:activation</exclude>
+              <exclude>javax.inject:*</exclude>
+              <exclude>javax.xml.bind:jaxb-api</exclude>
+              <exclude>javax.xml.stream:stax-api</exclude>
+              <exclude>jline:*</exclude>
+              <exclude>net.hydromatic:linq4j</exclude>
+              <exclude>org.apache.avro:*</exclude>
+              <exclude>org.apache.avro:*</exclude>
+              <exclude>org.apache.commons:commons-collections4</exclude>
+              <exclude>org.apache.hadoop:hadoop-yarn-client</exclude>
+              <exclude>org.apache.parquet:*</exclude>
+              <exclude>org.apache.velocity:*</exclude>
               <exclude>org.apache.yetus:*</exclude>
+              <exclude>org.eclipse.jetty:*</exclude>
+              <exclude>org.eclipse.jetty.websocket:*</exclude>
+              <exclude>org.hamcrest:hamcrest-core</exclude>
+              <exclude>org.hibernate:*</exclude>
+              <exclude>org.mockito:mockito-core</exclude>
+              <exclude>org.mongodb:*</exclude>
+              <exclude>org.msgpack:*</exclude>
+              <exclude>org.objenesis:objenesis</exclude>
+              <exclude>org.ow2.asm:*</exclude>
+              <exclude>org.pentaho:*</exclude>
+              <exclude>org.slf4j:jul-to-slf4j</exclude>
+              <exclude>org.tukaani:*</exclude>
+              <exclude>org.xerial.snappy:*</exclude>
+              <exclude>xalan:*</exclude>
+              <exclude>xerces:*</exclude>
             </excludes>
           </artifactSet>
           <relocations>
@@ -679,65 +688,65 @@
             <filter>
               <artifact>*:*</artifact>
               <excludes>
-                <exclude>**/logback.xml</exclude>
-                <exclude>**/LICENSE.txt</exclude>
-                <exclude>**/*.java</exclude>
-                <exclude>META-INF/ASL2.0</exclude>
-                <exclude>META-INF/NOTICE.txt</exclude>
-                <exclude>META-INF/drill-module-scan/**</exclude>
-                <exclude>META-INF/jboss-beans.xml</exclude>
-                <exclude>META-INF/license/**</exclude>
-                <exclude>META-INF/maven/**</exclude>
-                <exclude>META-INF/native/**</exclude>
-                <exclude>META-INF/services/com.fasterxml.*</exclude>
-                <exclude>META-INF/services/javax.ws.*</exclude>
-                <exclude>META-INF/**/*.properties</exclude>
-                <exclude>**/org.codehaus.commons.compiler.properties</exclude>
-                <exclude>module-info.class</exclude>
-                <exclude>**/*.SF</exclude>
-                <exclude>**/*.RSA</exclude>
-                <exclude>**/*.DSA</exclude>
-                <exclude>javax/*</exclude>
-                <exclude>javax/activation/**</exclude>
-                <exclude>javax/annotation-api/**</exclude>
-                <exclude>javax/inject/**</exclude>
-                <exclude>javax/servlet-api/**</exclude>
-                <exclude>javax/json/**</exclude>
-                <exclude>javax/ws/**</exclude>
-                <exclude>rest/**</exclude>
-                <exclude>*.tokens</exclude>
-                <exclude>codegen/**</exclude>
                 <exclude>bootstrap-storage-plugins.json</exclude>
-                <exclude>org/apache/parquet</exclude>
-                <exclude>org/apache/drill/shaded/guava/com/google/common/escape/**</exclude>
-                <exclude>org/apache/drill/shaded/guava/com/google/common/eventbus/**</exclude>
-                <exclude>org/apache/drill/shaded/guava/com/google/common/html/**</exclude>
-                <exclude>org/apache/drill/shaded/guava/com/google/common/net/**</exclude>
-                <exclude>org/apache/drill/shaded/guava/com/google/common/xml/**</exclude>
-                <exclude>org/apache/drill/shaded/guava/com/google/common/graph/**</exclude>
-                <exclude>org/apache/drill/shaded/guava/com/google/common/collect/Tree*</exclude>
-                <exclude>org/apache/drill/shaded/guava/com/google/common/collect/Standard*</exclude>
-                <exclude>org/apache/drill/shaded/guava/com/google/common/io/BaseEncoding*</exclude>
-                <exclude>org/apache/drill/shaded/guava/com/google/common/graph/**</exclude>
+                <exclude>codegen/**</exclude>
+                <exclude>com/google/common/cache</exclude>
+                <exclude>com/google/common/collect/Standard*</exclude>
+                <exclude>com/google/common/collect/Tree*</exclude>
                 <exclude>com/google/common/math</exclude>
                 <exclude>com/google/common/net</exclude>
                 <exclude>com/google/common/primitives</exclude>
                 <exclude>com/google/common/reflect</exclude>
                 <exclude>com/google/common/util</exclude>
-                <exclude>com/google/common/cache</exclude>
-                <exclude>com/google/common/collect/Tree*</exclude>
-                <exclude>com/google/common/collect/Standard*</exclude>
+                <exclude>com/jcraft/**</exclude>
+                <exclude>**/*.DSA</exclude>
+                <exclude>hello/**</exclude>
+                <exclude>**/*.java</exclude>
+                <exclude>javax/activation/**</exclude>
+                <exclude>javax/annotation-api/**</exclude>
+                <exclude>javax/*</exclude>
+                <exclude>javax/inject/**</exclude>
+                <exclude>javax/json/**</exclude>
+                <exclude>javax/servlet/**</exclude>
+                <exclude>javax/ws/**</exclude>
+                <exclude>**/LICENSE.txt</exclude>
+                <exclude>**/logback.xml</exclude>
+                <exclude>**/mapr/**</exclude>
+                <exclude>META-INF/ASL2.0</exclude>
+                <exclude>META-INF/drill-module-scan/**</exclude>
+                <exclude>META-INF/jboss-beans.xml</exclude>
+                <exclude>META-INF/license/**</exclude>
+                <exclude>META-INF/maven/**</exclude>
+                <exclude>META-INF/native/**</exclude>
+                <exclude>META-INF/NOTICE.txt</exclude>
+                <exclude>META-INF/**/*.properties</exclude>
+                <exclude>META-INF/services/com.fasterxml.*</exclude>
+                <exclude>META-INF/services/javax.ws.*</exclude>
+                <exclude>module-info.class</exclude>
+                <exclude>org/apache/commons/pool2/**</exclude>
+                <exclude>org/apache/directory/**</exclude>
+                <exclude>org/apache/drill/exec/compile/**</exclude>
                 <exclude>org/apache/drill/exec/expr/annotations/**</exclude>
                 <exclude>org/apache/drill/exec/expr/fn/**</exclude>
-                <exclude>org/apache/drill/exec/proto/beans/**</exclude>
-                <exclude>org/apache/drill/exec/compile/**</exclude>
-                <exclude>org/apache/drill/exec/planner/**</exclude>
                 <exclude>org/apache/drill/exec/physical/**</exclude>
-                <exclude>org/apache/drill/exec/store/**</exclude>
-                <exclude>org/apache/drill/exec/server/rest/**</exclude>
-                <exclude>org/apache/drill/exec/rpc/data/**</exclude>
+                <exclude>org/apache/drill/exec/planner/**</exclude>
+                <exclude>org/apache/drill/exec/proto/beans/**</exclude>
                 <exclude>org/apache/drill/exec/rpc/control/**</exclude>
+                <exclude>org/apache/drill/exec/rpc/data/**</exclude>
+                <exclude>org/apache/drill/exec/server/rest/**</exclude>
+                <exclude>org/apache/drill/exec/store/**</exclude>
                 <exclude>org/apache/drill/exec/work/**</exclude>
+                <exclude>org/apache/drill/metastore/**</exclude>
+                <exclude>org/apache/drill/shaded/guava/com/google/common/collect/Standard*</exclude>
+                <exclude>org/apache/drill/shaded/guava/com/google/common/collect/Tree*</exclude>
+                <exclude>org/apache/drill/shaded/guava/com/google/common/escape/**</exclude>
+                <exclude>org/apache/drill/shaded/guava/com/google/common/eventbus/**</exclude>
+                <exclude>org/apache/drill/shaded/guava/com/google/common/graph/**</exclude>
+                <exclude>org/apache/drill/shaded/guava/com/google/common/graph/**</exclude>
+                <exclude>org/apache/drill/shaded/guava/com/google/common/html/**</exclude>
+                <exclude>org/apache/drill/shaded/guava/com/google/common/io/BaseEncoding*</exclude>
+                <exclude>org/apache/drill/shaded/guava/com/google/common/net/**</exclude>
+                <exclude>org/apache/drill/shaded/guava/com/google/common/xml/**</exclude>
                 <exclude>org/apache/hadoop/crypto/**</exclude>
                 <exclude>org/apache/hadoop/ha/**</exclude>
                 <exclude>org/apache/hadoop/http/**</exclude>
@@ -745,20 +754,19 @@
                 <exclude>org/apache/hadoop/jmx/**</exclude>
                 <exclude>org/apache/hadoop/log/**</exclude>
                 <exclude>org/apache/hadoop/metrics/**</exclude>
-                <exclude>org/apache/hadoop/net/**</exclude>
                 <exclude>org/apache/hadoop/record/**</exclude>
                 <exclude>org/apache/hadoop/service/**</exclude>
-                <exclude>org/apache/hadoop/tracing/**</exclude>
                 <exclude>org/apache/hadoop/tools/**</exclude>
+                <exclude>org/apache/hadoop/tracing/**</exclude>
                 <exclude>org/apache/hadoop/yarn/**</exclude>
-                <exclude>org/apache/commons/pool2/**</exclude>
                 <exclude>org/apache/http/**</exclude>
-                <exclude>org/apache/directory/**</exclude>
-                <exclude>org/apache/drill/metastore/**</exclude>
-                <exclude>com/jcraft/**</exclude>
-                <exclude>**/mapr/**</exclude>
+                <exclude>org/apache/parquet</exclude>
+                <exclude>**/org.codehaus.commons.compiler.properties</exclude>
                 <exclude>org/yaml/**</exclude>
-                <exclude>hello/**</exclude>
+                <exclude>rest/**</exclude>
+                <exclude>**/*.RSA</exclude>
+                <exclude>**/*.SF</exclude>
+                <exclude>*.tokens</exclude>
                 <exclude>webapps/**</exclude>
               </excludes>
             </filter>

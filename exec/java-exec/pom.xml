@@ -174,10 +174,6 @@
           <groupId>org.eclipse.jetty</groupId>
         </exclusion>
         <exclusion>
-          <artifactId>jetty-util</artifactId>
-          <groupId>org.eclipse.jetty</groupId>
-        </exclusion>
-        <exclusion>
           <artifactId>javax.servlet-api</artifactId>
           <groupId>javax.servlet</groupId>
         </exclusion>
@@ -445,10 +441,6 @@
           <groupId>org.eclipse.jetty</groupId>
           <artifactId>jetty-security</artifactId>
         </exclusion>
-        <exclusion>
-          <groupId>org.eclipse.jetty</groupId>
-          <artifactId>jetty-util</artifactId>
-        </exclusion>
       </exclusions>
     </dependency>
     <dependency>
@@ -497,32 +489,6 @@
       <groupId>org.apache.hadoop</groupId>
       <artifactId>hadoop-hdfs</artifactId>
       <scope>test</scope>
-      <exclusions>
-        <exclusion>
-          <groupId>commons-codec</groupId>
-          <artifactId>commons-codec</artifactId>
-        </exclusion>
-        <exclusion>
-          <groupId>com.sun.jersey</groupId>
-          <artifactId>jersey-core</artifactId>
-        </exclusion>
-        <exclusion>
-          <groupId>com.sun.jersey</groupId>
-          <artifactId>jersey-server</artifactId>
-        </exclusion>
-        <exclusion>
-          <groupId>com.sun.jersey</groupId>
-          <artifactId>jersey-json</artifactId>
-        </exclusion>
-        <exclusion>
-          <groupId>log4j</groupId>
-          <artifactId>log4j</artifactId>
-        </exclusion>
-        <exclusion>
-          <groupId>ch.qos.reload4j</groupId>
-          <artifactId>reload4j</artifactId>
-        </exclusion>
-      </exclusions>
     </dependency>
     <dependency>
       <groupId>org.apache.hadoop</groupId>
@@ -573,6 +539,12 @@
       <artifactId>netty-tcnative</artifactId>
       <classifier>${netty.tcnative.classifier}</classifier>
     </dependency>
+    <dependency>
+      <groupId>io.netty</groupId>
+      <artifactId>netty-codec-http</artifactId>
+      <scope>test</scope>
+    </dependency>
+
     <dependency>
       <groupId>io.airlift</groupId>
       <artifactId>aircompressor</artifactId>
