@@ -19,7 +19,7 @@ package org.apache.drill.metastore.iceberg.write;
 
 import org.apache.drill.metastore.iceberg.IcebergBaseTest;
 import org.apache.drill.metastore.iceberg.exceptions.IcebergMetastoreException;
-import org.apache.drill.shaded.guava.com.google.common.collect.Lists;
+import com.google.common.collect.Lists;
 import org.apache.hadoop.fs.Path;
 import org.apache.iceberg.FileFormat;
 import org.apache.iceberg.Schema;

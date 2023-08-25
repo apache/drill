@@ -36,7 +36,7 @@ import org.apache.drill.exec.physical.impl.scan.v3.schema.ScanSchemaTracker;
 import org.apache.drill.exec.record.metadata.TupleMetadata;
 import org.apache.drill.exec.server.options.OptionSet;
 import org.apache.drill.exec.vector.ValueVector;
-import org.apache.drill.shaded.guava.com.google.common.annotations.VisibleForTesting;
+import com.google.common.annotations.VisibleForTesting;
 
 /**
  * Gathers options for the {@link ScanLifecycle} then builds a scan lifecycle

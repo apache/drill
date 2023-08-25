@@ -33,7 +33,7 @@ import org.apache.drill.categories.UnlikelyTest;
 import org.apache.drill.exec.fn.interp.TestConstantFolding;
 import org.apache.drill.exec.store.easy.json.JSONRecordReader;
 import org.apache.drill.exec.util.JsonStringHashMap;
-import org.apache.drill.shaded.guava.com.google.common.collect.Lists;
+import com.google.common.collect.Lists;
 import org.apache.drill.test.BaseTestQuery;
 import org.apache.drill.test.SubDirTestWatcher;
 import org.apache.drill.test.TestBuilder;

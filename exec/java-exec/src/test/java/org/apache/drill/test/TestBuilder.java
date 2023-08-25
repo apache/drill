@@ -49,8 +49,8 @@ import org.apache.drill.exec.util.Text;
 import org.apache.drill.test.DrillTestWrapper.TestServices;
 import org.joda.time.DateTimeZone;
 
-import org.apache.drill.shaded.guava.com.google.common.base.Joiner;
-import org.apache.drill.shaded.guava.com.google.common.base.Preconditions;
+import com.google.common.base.Joiner;
+import com.google.common.base.Preconditions;
 
 public class TestBuilder {
 

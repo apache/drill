@@ -21,8 +21,8 @@ import org.apache.calcite.sql.SqlDialect;
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.drill.common.exceptions.DrillRuntimeException;
 import org.apache.drill.exec.proto.UserBitShared.UserCredentials;
-import org.apache.drill.shaded.guava.com.google.common.cache.Cache;
-import org.apache.drill.shaded.guava.com.google.common.cache.CacheBuilder;
+import com.google.common.cache.Cache;
+import com.google.common.cache.CacheBuilder;
 
 import java.time.Duration;
 

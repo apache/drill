@@ -23,7 +23,7 @@ import org.apache.drill.metastore.iceberg.transform.FilterTransformer;
 import org.apache.drill.metastore.operate.AbstractRead;
 import org.apache.drill.metastore.operate.MetadataTypeValidator;
 import org.apache.drill.metastore.operate.Read;
-import org.apache.drill.shaded.guava.com.google.common.collect.Lists;
+import com.google.common.collect.Lists;
 import org.apache.iceberg.data.IcebergGenerics;
 import org.apache.iceberg.data.Record;
 import org.apache.iceberg.expressions.Expression;

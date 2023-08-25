@@ -24,8 +24,8 @@ import org.apache.drill.exec.physical.resultSet.ResultSetLoader;
 import org.apache.drill.exec.server.DrillbitContext;
 import org.apache.drill.exec.server.options.OptionManager;
 import org.apache.drill.exec.store.PartitionExplorer;
-import org.apache.drill.shaded.guava.com.google.common.base.Function;
-import org.apache.drill.shaded.guava.com.google.common.collect.ImmutableMap;
+import com.google.common.base.Function;
+import com.google.common.collect.ImmutableMap;
 
 /**
  * Defines the query state and shared resources available to UDFs through

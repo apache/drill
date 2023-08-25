@@ -27,7 +27,7 @@ import java.util.stream.Collectors;
 
 import org.apache.calcite.schema.Schema.TableType;
 import org.apache.drill.common.AutoCloseables;
-import org.apache.drill.shaded.guava.com.google.common.cache.CacheLoader;
+import com.google.common.cache.CacheLoader;
 import org.apache.hadoop.hive.metastore.api.MetaException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

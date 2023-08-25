@@ -17,7 +17,7 @@
  */
 package org.apache.drill.exec.compile;
 
-import org.apache.drill.shaded.guava.com.google.common.base.Preconditions;
+import com.google.common.base.Preconditions;
 
 /**
  * Maintains state while traversing a finite state machine described by

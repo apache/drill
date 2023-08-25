@@ -51,7 +51,7 @@ import org.apache.drill.exec.store.mock.MockScanBatchCreator;
 import org.apache.drill.exec.store.mock.MockSubScanPOP;
 import org.apache.drill.exec.store.mock.MockTableDef;
 import org.apache.drill.exec.vector.ValueVector;
-import org.apache.drill.shaded.guava.com.google.common.collect.Lists;
+import com.google.common.collect.Lists;
 import org.joda.time.DateTimeZone;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;

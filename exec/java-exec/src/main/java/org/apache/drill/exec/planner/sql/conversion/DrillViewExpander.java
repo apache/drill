@@ -25,7 +25,7 @@ import org.apache.calcite.rel.type.RelDataType;
 import org.apache.calcite.schema.SchemaPlus;
 import org.apache.calcite.sql.SqlNode;
 import org.apache.drill.common.exceptions.UserException;
-import org.apache.drill.shaded.guava.com.google.common.base.Joiner;
+import com.google.common.base.Joiner;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

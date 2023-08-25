@@ -39,10 +39,10 @@ import org.apache.drill.exec.record.metadata.TupleSchema;
 import org.apache.drill.exec.vector.ValueVector;
 import org.apache.drill.exec.vector.complex.UnionVector;
 
-import org.apache.drill.shaded.guava.com.google.common.base.Preconditions;
-import org.apache.drill.shaded.guava.com.google.common.collect.Lists;
-import org.apache.drill.shaded.guava.com.google.common.collect.Maps;
-import org.apache.drill.shaded.guava.com.google.common.collect.Sets;
+import com.google.common.base.Preconditions;
+import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
+import com.google.common.collect.Sets;
 
 /**
  * Utility class for dealing with changing schemas

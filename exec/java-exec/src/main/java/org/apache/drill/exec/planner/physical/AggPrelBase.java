@@ -19,7 +19,7 @@ package org.apache.drill.exec.planner.physical;
 
 import org.apache.drill.common.expression.IfExpression;
 import org.apache.drill.common.expression.NullExpression;
-import org.apache.drill.shaded.guava.com.google.common.collect.Lists;
+import com.google.common.collect.Lists;
 import org.apache.calcite.linq4j.Ord;
 import org.apache.calcite.util.BitSets;
 import org.apache.calcite.util.ImmutableBitSet;

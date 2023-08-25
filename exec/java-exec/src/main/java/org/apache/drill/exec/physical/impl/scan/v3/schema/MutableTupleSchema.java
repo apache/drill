@@ -28,7 +28,7 @@ import org.apache.drill.exec.physical.impl.scan.v3.schema.ScanSchemaTracker.Proj
 import org.apache.drill.exec.record.metadata.ColumnMetadata;
 import org.apache.drill.exec.record.metadata.TupleMetadata;
 import org.apache.drill.exec.record.metadata.TupleSchema;
-import org.apache.drill.shaded.guava.com.google.common.base.Preconditions;
+import com.google.common.base.Preconditions;
 
 /**
  * A mutable form of a tuple schema. Allows insertions (at the wildcard position),

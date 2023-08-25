@@ -26,7 +26,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 import org.apache.drill.exec.store.sys.BasePersistentStore;
 import org.apache.drill.exec.store.sys.PersistentStoreMode;
 
-import org.apache.drill.shaded.guava.com.google.common.collect.Iterables;
+import com.google.common.collect.Iterables;
 
 public class InMemoryStore<V> extends BasePersistentStore<V> {
 

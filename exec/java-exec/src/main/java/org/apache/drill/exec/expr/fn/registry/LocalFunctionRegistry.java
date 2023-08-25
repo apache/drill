@@ -28,9 +28,9 @@ import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import org.apache.drill.exec.store.sys.store.DataChangeVersion;
-import org.apache.drill.shaded.guava.com.google.common.collect.ImmutableMap;
-import org.apache.drill.shaded.guava.com.google.common.collect.ListMultimap;
-import org.apache.drill.shaded.guava.com.google.common.collect.Lists;
+import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ListMultimap;
+import com.google.common.collect.Lists;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.apache.calcite.sql.SqlOperator;
@@ -48,7 +48,7 @@ import org.apache.drill.exec.planner.sql.DrillSqlAggOperator;
 import org.apache.drill.exec.planner.sql.DrillSqlAggOperatorWithoutInference;
 import org.apache.drill.exec.planner.sql.DrillSqlOperator;
 
-import org.apache.drill.shaded.guava.com.google.common.collect.ArrayListMultimap;
+import com.google.common.collect.ArrayListMultimap;
 import org.apache.drill.exec.planner.sql.DrillSqlOperatorWithoutInference;
 
 /**

@@ -31,7 +31,7 @@ import org.apache.drill.exec.physical.base.PhysicalVisitor;
 import org.apache.drill.exec.physical.base.SubScan;
 import org.apache.drill.exec.store.StoragePluginRegistry;
 import org.apache.drill.exec.store.druid.common.DruidFilter;
-import org.apache.drill.shaded.guava.com.google.common.base.Preconditions;
+import com.google.common.base.Preconditions;
 
 import java.util.Iterator;
 import java.util.LinkedList;

@@ -17,8 +17,8 @@
  */
 package org.apache.drill.common.map;
 
-import org.apache.drill.shaded.guava.com.google.common.collect.ImmutableMap;
-import org.apache.drill.shaded.guava.com.google.common.collect.Maps;
+import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.Maps;
 
 import java.util.Collection;
 import java.util.Map;

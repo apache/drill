@@ -27,7 +27,7 @@ import org.apache.drill.exec.record.BatchSchemaBuilder;
 import org.apache.drill.exec.record.metadata.SchemaBuilder;
 import org.apache.drill.exec.record.metadata.TupleMetadata;
 import org.apache.drill.exec.util.StoragePluginTestUtils;
-import org.apache.drill.shaded.guava.com.google.common.collect.Lists;
+import com.google.common.collect.Lists;
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.drill.categories.OperatorTest;
 import org.apache.drill.categories.SqlTest;

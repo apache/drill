@@ -30,7 +30,7 @@
 package org.apache.drill.exec.vector;
 
 <#include "/@includes/vv_imports.ftl" />
-import org.apache.drill.shaded.guava.com.google.common.annotations.VisibleForTesting;
+import com.google.common.annotations.VisibleForTesting;
 
 /**
  * Nullable${minor.class} implements a vector of values which could be null.  Elements in the vector

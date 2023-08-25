@@ -32,7 +32,7 @@ import org.apache.drill.exec.record.SchemaUtil;
 import org.apache.drill.exec.record.TransferPair;
 import org.apache.drill.exec.record.VectorContainer;
 import org.apache.drill.exec.record.VectorWrapper;
-import org.apache.drill.shaded.guava.com.google.common.base.Stopwatch;
+import com.google.common.base.Stopwatch;
 
 /**
  * Holds a set of spilled batches, represented by a file on disk.

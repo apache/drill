@@ -19,7 +19,7 @@ package org.apache.drill.metastore.components.tables;
 
 import org.apache.drill.metastore.metadata.MetadataType;
 import org.apache.drill.metastore.operate.MetadataTypeValidator;
-import org.apache.drill.shaded.guava.com.google.common.collect.ImmutableSet;
+import com.google.common.collect.ImmutableSet;
 
 import java.util.Set;
 

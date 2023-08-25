@@ -41,8 +41,8 @@ import org.apache.drill.exec.planner.sql.DrillOperatorTable;
 import org.apache.drill.exec.planner.sql.HiveUDFOperator;
 import org.apache.drill.exec.planner.sql.HiveUDFOperatorWithoutInference;
 import org.apache.drill.exec.planner.sql.TypeInferenceUtils;
-import org.apache.drill.shaded.guava.com.google.common.collect.ImmutableMap;
-import org.apache.drill.shaded.guava.com.google.common.collect.Multimap;
+import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.Multimap;
 import org.apache.hadoop.hive.ql.exec.Description;
 import org.apache.hadoop.hive.ql.exec.UDF;
 import org.apache.hadoop.hive.ql.udf.UDFType;
@@ -51,8 +51,8 @@ import org.apache.hadoop.hive.ql.udf.generic.GenericUDFBridge;
 import org.apache.hadoop.hive.serde2.objectinspector.ObjectInspector;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.apache.drill.shaded.guava.com.google.common.collect.ArrayListMultimap;
-import org.apache.drill.shaded.guava.com.google.common.collect.Sets;
+import com.google.common.collect.ArrayListMultimap;
+import com.google.common.collect.Sets;
 
 public class HiveFunctionRegistry implements PluggableFunctionRegistry {
   private static final Logger logger = LoggerFactory.getLogger(HiveFunctionRegistry.class);

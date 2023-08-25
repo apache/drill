@@ -43,7 +43,7 @@ import org.apache.calcite.sql2rel.SqlRexConvertlet;
 import org.apache.calcite.sql2rel.SqlRexConvertletTable;
 import org.apache.calcite.sql2rel.StandardConvertletTable;
 import org.apache.drill.exec.planner.sql.parser.DrillCalciteWrapperUtility;
-import org.apache.drill.shaded.guava.com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableMap;
 
 /**
  * Convertlet table which allows to plug-in custom rex conversion of calls to

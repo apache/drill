@@ -27,8 +27,8 @@ import org.apache.drill.common.FunctionNames;
 import org.apache.drill.exec.expr.fn.impl.RegexpUtil;
 import org.apache.drill.exec.expr.fn.impl.RegexpUtil.SqlPatternType;
 import org.apache.drill.exec.store.ischema.InfoSchemaFilter.ExprNode.Type;
-import org.apache.drill.shaded.guava.com.google.common.base.Joiner;
-import org.apache.drill.shaded.guava.com.google.common.base.Strings;
+import com.google.common.base.Joiner;
+import com.google.common.base.Strings;
 
 import java.util.List;
 import java.util.Map;

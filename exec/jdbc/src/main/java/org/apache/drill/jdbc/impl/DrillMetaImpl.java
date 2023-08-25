@@ -62,7 +62,7 @@ import org.apache.drill.exec.proto.UserProtos.TableMetadata;
 import org.apache.drill.exec.rpc.DrillRpcFuture;
 import org.apache.drill.exec.rpc.RpcException;
 
-import org.apache.drill.shaded.guava.com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableMap;
 
 public class DrillMetaImpl extends MetaImpl {
   private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(DrillMetaImpl.class);

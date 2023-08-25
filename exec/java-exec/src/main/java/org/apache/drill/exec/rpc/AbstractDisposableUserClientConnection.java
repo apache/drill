@@ -17,7 +17,7 @@
  */
 package org.apache.drill.exec.rpc;
 
-import org.apache.drill.shaded.guava.com.google.common.base.Preconditions;
+import com.google.common.base.Preconditions;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.apache.drill.exec.proto.GeneralRPCProtos.Ack;

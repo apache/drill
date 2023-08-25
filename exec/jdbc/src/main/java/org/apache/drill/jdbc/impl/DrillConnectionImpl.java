@@ -65,7 +65,7 @@ import org.apache.drill.jdbc.InvalidParameterSqlException;
 import org.apache.drill.jdbc.JdbcApiSqlException;
 import org.slf4j.Logger;
 
-import org.apache.drill.shaded.guava.com.google.common.base.Throwables;
+import com.google.common.base.Throwables;
 import org.slf4j.LoggerFactory;
 
 /**

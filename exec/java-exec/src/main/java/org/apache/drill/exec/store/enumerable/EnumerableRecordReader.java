@@ -35,7 +35,7 @@ import org.apache.drill.exec.record.ColumnConverter;
 import org.apache.drill.exec.record.ColumnConverterFactory;
 import org.apache.drill.exec.record.metadata.TupleMetadata;
 import org.apache.drill.exec.record.metadata.TupleSchema;
-import org.apache.drill.shaded.guava.com.google.common.base.Throwables;
+import com.google.common.base.Throwables;
 import org.codehaus.commons.compiler.CompileException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

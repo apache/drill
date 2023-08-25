@@ -31,9 +31,9 @@ import java.util.List;
 
 import org.apache.drill.exec.physical.rowSet.RowSet;
 import org.apache.drill.exec.physical.rowSet.RowSetReader;
-import org.apache.drill.shaded.guava.com.google.common.base.Optional;
-import org.apache.drill.shaded.guava.com.google.common.collect.HashMultiset;
-import org.apache.drill.shaded.guava.com.google.common.collect.Multiset;
+import com.google.common.base.Optional;
+import com.google.common.collect.HashMultiset;
+import com.google.common.collect.Multiset;
 import org.apache.drill.exec.vector.accessor.ArrayReader;
 import org.apache.drill.exec.vector.accessor.ObjectReader;
 import org.apache.drill.exec.vector.accessor.ScalarReader;

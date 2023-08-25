@@ -36,7 +36,7 @@ import org.apache.drill.exec.physical.config.HashJoinPOP;
 import org.apache.drill.exec.proto.UserBitShared.MetricValue;
 import org.apache.drill.exec.proto.UserBitShared.OperatorProfile;
 import org.apache.drill.exec.proto.UserBitShared.StreamProfile;
-import org.apache.drill.shaded.guava.com.google.common.base.Preconditions;
+import com.google.common.base.Preconditions;
 
 /**
  * Wrapper class for profiles of ALL operator instances of the same operator type within a major fragment.

@@ -17,8 +17,8 @@
  */
 package org.apache.drill.exec.expr.fn.registry;
 
-import org.apache.drill.shaded.guava.com.google.common.collect.ArrayListMultimap;
-import org.apache.drill.shaded.guava.com.google.common.collect.ListMultimap;
+import com.google.common.collect.ArrayListMultimap;
+import com.google.common.collect.ListMultimap;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.apache.drill.common.AutoCloseables.Closeable;

@@ -67,7 +67,7 @@
   </build>
 
   <modules>
-    <module>drill-shaded-guava</module>
+    <!-- None since Drill's shaded Guava was removed, see DRILL-8420. -->
   </modules>
 
 </project>

@@ -21,8 +21,8 @@ import java.util.List;
 
 import org.apache.drill.common.types.Types;
 import org.apache.drill.exec.ExecConstants;
-import org.apache.drill.shaded.guava.com.google.common.collect.ImmutableList;
-import org.apache.drill.shaded.guava.com.google.common.collect.Lists;
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Lists;
 import org.junit.Test;
 
 public class TestLimit0VsRegularQueriesMetadata extends PreparedStatementTestBase {

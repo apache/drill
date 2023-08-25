@@ -42,7 +42,7 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.drill.exec.server.rest.CsrfTokenInjectFilter;
 import org.apache.drill.exec.server.rest.CsrfTokenValidateFilter;
-import org.apache.drill.shaded.guava.com.google.common.collect.ImmutableSet;
+import com.google.common.collect.ImmutableSet;
 import org.apache.drill.yarn.appMaster.Dispatcher;
 import org.apache.drill.yarn.core.DrillOnYarnConfig;
 import org.bouncycastle.asn1.x500.X500NameBuilder;

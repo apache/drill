@@ -26,7 +26,7 @@ import org.apache.drill.metastore.statistics.ColumnStatistics;
 import org.apache.drill.metastore.statistics.ColumnStatisticsKind;
 import org.apache.drill.metastore.statistics.StatisticsHolder;
 import org.apache.drill.metastore.statistics.TableStatisticsKind;
-import org.apache.drill.shaded.guava.com.google.common.primitives.UnsignedBytes;
+import com.google.common.primitives.UnsignedBytes;
 
 import java.util.ArrayList;
 import java.util.Collection;

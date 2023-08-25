@@ -22,8 +22,8 @@ import java.util.List;
 
 import org.apache.drill.common.PlanStringBuilder;
 import org.apache.drill.common.logical.FormatPluginConfig;
-import org.apache.drill.shaded.guava.com.google.common.base.Objects;
-import org.apache.drill.shaded.guava.com.google.common.collect.ImmutableList;
+import com.google.common.base.Objects;
+import com.google.common.collect.ImmutableList;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnore;

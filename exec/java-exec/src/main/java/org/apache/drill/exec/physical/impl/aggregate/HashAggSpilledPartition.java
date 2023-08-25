@@ -18,7 +18,7 @@
 package org.apache.drill.exec.physical.impl.aggregate;
 
 import org.apache.drill.exec.physical.impl.common.AbstractSpilledPartitionMetadata;
-import org.apache.drill.shaded.guava.com.google.common.base.Preconditions;
+import com.google.common.base.Preconditions;
 
 public class HashAggSpilledPartition extends AbstractSpilledPartitionMetadata {
   private final int spilledBatches;

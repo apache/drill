@@ -32,7 +32,7 @@ import org.apache.drill.exec.store.druid.rest.DruidQueryClient;
 import org.apache.drill.exec.store.druid.rest.RestClient;
 import org.apache.drill.exec.store.druid.rest.RestClientWrapper;
 import org.apache.drill.exec.store.druid.schema.DruidSchemaFactory;
-import org.apache.drill.shaded.guava.com.google.common.collect.ImmutableSet;
+import com.google.common.collect.ImmutableSet;
 
 import java.io.IOException;
 import java.util.Set;

@@ -32,7 +32,7 @@ import org.apache.drill.exec.vector.accessor.ColumnAccessors.VarCharColumnWriter
 import org.apache.drill.exec.vector.accessor.ScalarWriter;
 import org.apache.drill.exec.vector.accessor.ValueType;
 import org.apache.drill.exec.vector.accessor.writer.WriterEvents.ColumnWriterListener;
-import org.apache.drill.shaded.guava.com.google.common.base.Charsets;
+import com.google.common.base.Charsets;
 import org.apache.drill.test.SubOperatorTest;
 import org.bouncycastle.util.Arrays;
 import org.junit.Test;

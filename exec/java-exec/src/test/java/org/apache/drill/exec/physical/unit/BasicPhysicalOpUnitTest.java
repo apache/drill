@@ -43,7 +43,7 @@ import org.apache.drill.test.PhysicalOpUnitTestBase;
 import org.junit.Ignore;
 import org.junit.Test;
 
-import org.apache.drill.shaded.guava.com.google.common.collect.Lists;
+import com.google.common.collect.Lists;
 
 public class BasicPhysicalOpUnitTest extends PhysicalOpUnitTestBase {
 

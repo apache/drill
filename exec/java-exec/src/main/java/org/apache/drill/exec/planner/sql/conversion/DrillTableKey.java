@@ -23,7 +23,7 @@ import java.util.Objects;
 import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.exec.metastore.MetadataProviderManager;
 import org.apache.drill.exec.planner.logical.DrillTable;
-import org.apache.drill.shaded.guava.com.google.common.cache.LoadingCache;
+import com.google.common.cache.LoadingCache;
 
 /**
  * Key for storing / obtaining {@link MetadataProviderManager} instance from {@link LoadingCache}.

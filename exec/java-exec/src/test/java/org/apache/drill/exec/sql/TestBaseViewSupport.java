@@ -18,7 +18,7 @@
 package org.apache.drill.exec.sql;
 
 import org.apache.drill.PlanTestBase;
-import org.apache.drill.shaded.guava.com.google.common.base.Strings;
+import com.google.common.base.Strings;
 import org.apache.drill.test.TestBuilder;
 
 import java.util.Arrays;

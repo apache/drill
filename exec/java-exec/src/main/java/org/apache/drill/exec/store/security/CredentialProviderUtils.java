@@ -20,7 +20,7 @@ package org.apache.drill.exec.store.security;
 import org.apache.drill.common.logical.security.CredentialsProvider;
 import org.apache.drill.common.logical.security.PlainCredentialsProvider;
 import org.apache.drill.exec.store.security.oauth.OAuthTokenCredentials;
-import org.apache.drill.shaded.guava.com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableMap;
 
 public class CredentialProviderUtils {
 

@@ -29,7 +29,7 @@ import org.apache.drill.metastore.metadata.MetadataInfo;
 import org.apache.drill.metastore.metadata.MetadataType;
 import org.apache.drill.metastore.metadata.TableInfo;
 import org.apache.drill.metastore.operate.Delete;
-import org.apache.drill.shaded.guava.com.google.common.collect.Sets;
+import com.google.common.collect.Sets;
 import org.apache.drill.test.BaseTest;
 import org.junit.After;
 import org.junit.ClassRule;

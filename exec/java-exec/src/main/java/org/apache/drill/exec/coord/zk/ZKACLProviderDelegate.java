@@ -18,7 +18,7 @@
 package org.apache.drill.exec.coord.zk;
 
 import org.apache.curator.framework.api.ACLProvider;
-import org.apache.drill.shaded.guava.com.google.common.annotations.VisibleForTesting;
+import com.google.common.annotations.VisibleForTesting;
 import org.apache.zookeeper.data.ACL;
 
 import java.util.List;

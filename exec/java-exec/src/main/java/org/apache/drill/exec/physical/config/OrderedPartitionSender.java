@@ -29,7 +29,7 @@ import org.apache.drill.exec.physical.base.PhysicalVisitor;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonTypeName;
-import org.apache.drill.shaded.guava.com.google.common.collect.Lists;
+import com.google.common.collect.Lists;
 
 @JsonTypeName("OrderedPartitionSender")
 public class OrderedPartitionSender extends AbstractSender {

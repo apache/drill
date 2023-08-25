@@ -26,7 +26,7 @@ import org.apache.drill.exec.metastore.MetadataProviderManager;
 import org.apache.drill.exec.record.metadata.TupleMetadata;
 import org.apache.drill.exec.store.parquet.ParquetReaderConfig;
 import org.apache.drill.metastore.metadata.LocationProvider;
-import org.apache.drill.shaded.guava.com.google.common.base.Preconditions;
+import com.google.common.base.Preconditions;
 import org.apache.drill.common.expression.LogicalExpression;
 import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.common.expression.ValueExpressions;

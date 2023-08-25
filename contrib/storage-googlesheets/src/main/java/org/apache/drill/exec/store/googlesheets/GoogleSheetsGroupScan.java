@@ -39,7 +39,7 @@ import org.apache.drill.exec.store.base.filter.ExprNode;
 import org.apache.drill.exec.util.Utilities;
 import org.apache.drill.metastore.metadata.TableMetadata;
 import org.apache.drill.metastore.metadata.TableMetadataProvider;
-import org.apache.drill.shaded.guava.com.google.common.base.Preconditions;
+import com.google.common.base.Preconditions;
 
 import java.io.IOException;
 import java.util.List;

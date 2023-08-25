@@ -29,7 +29,7 @@ import org.apache.drill.exec.store.easy.json.parser.ValueDefFactory;
 import org.apache.drill.exec.vector.accessor.ObjectWriter;
 import org.apache.drill.exec.vector.accessor.ScalarWriter;
 import org.apache.drill.exec.vector.accessor.TupleWriter;
-import org.apache.drill.shaded.guava.com.google.common.base.Preconditions;
+import com.google.common.base.Preconditions;
 
 /**
  * Describes a new field within an object. Allows the listener to control

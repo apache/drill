@@ -30,7 +30,7 @@ import org.apache.calcite.rel.metadata.RelMetadataQuery;
 import org.apache.drill.exec.planner.common.DrillRelOptUtil;
 import org.apache.drill.exec.planner.logical.SelectionBasedTableScan;
 import org.apache.drill.exec.util.DrillFileSystemUtil;
-import org.apache.drill.shaded.guava.com.google.common.base.Stopwatch;
+import com.google.common.base.Stopwatch;
 import org.apache.calcite.plan.RelTraitSet;
 import org.apache.calcite.rel.core.Aggregate;
 import org.apache.calcite.rel.core.Filter;

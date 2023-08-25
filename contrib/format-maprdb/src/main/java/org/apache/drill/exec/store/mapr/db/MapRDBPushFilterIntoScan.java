@@ -38,7 +38,7 @@ import org.apache.drill.exec.store.mapr.db.json.JsonConditionBuilder;
 import org.apache.drill.exec.store.mapr.db.json.JsonScanSpec;
 import org.apache.drill.exec.store.mapr.db.json.JsonTableGroupScan;
 
-import org.apache.drill.shaded.guava.com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableList;
 
 public abstract class MapRDBPushFilterIntoScan extends StoragePluginOptimizerRule {
 

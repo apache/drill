@@ -18,7 +18,7 @@
 package org.apache.drill.exec.store.easy.text.reader;
 
 import org.apache.drill.common.exceptions.UserException;
-import org.apache.drill.shaded.guava.com.google.common.base.Charsets;
+import com.google.common.base.Charsets;
 import org.apache.hadoop.fs.Path;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

@@ -30,7 +30,7 @@ import org.apache.drill.exec.physical.base.PhysicalVisitor;
 import org.apache.drill.exec.record.metadata.TupleMetadata;
 import org.apache.drill.exec.store.base.filter.ExprNode;
 import org.apache.drill.exec.store.base.filter.ExprNode.ColRelOpConstNode;
-import org.apache.drill.shaded.guava.com.google.common.collect.ImmutableSet;
+import com.google.common.collect.ImmutableSet;
 
 import java.util.Iterator;
 import java.util.List;

@@ -37,11 +37,11 @@ import org.apache.drill.exec.server.options.OptionSet;
 import org.apache.drill.exec.store.ColumnExplorer;
 import org.apache.drill.exec.store.ColumnExplorer.ImplicitFileColumn;
 import org.apache.drill.exec.vector.ValueVector;
-import org.apache.drill.shaded.guava.com.google.common.base.Strings;
+import com.google.common.base.Strings;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 
-import org.apache.drill.shaded.guava.com.google.common.annotations.VisibleForTesting;
+import com.google.common.annotations.VisibleForTesting;
 
 /**
  * Manages the insertion of file metadata (AKA "implicit" and partition) columns.

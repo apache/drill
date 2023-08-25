@@ -26,7 +26,7 @@ import org.apache.drill.test.DrillTest;
 import org.apache.hadoop.fs.Path;
 import org.junit.Test;
 
-import org.apache.drill.shaded.guava.com.google.common.base.Charsets;
+import com.google.common.base.Charsets;
 
 /**
  * Test the mechanism that builds column names from a set of CSV

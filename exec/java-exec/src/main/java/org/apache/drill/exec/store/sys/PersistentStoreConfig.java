@@ -18,8 +18,8 @@
 package org.apache.drill.exec.store.sys;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import org.apache.drill.shaded.guava.com.google.common.base.Objects;
-import org.apache.drill.shaded.guava.com.google.common.base.Preconditions;
+import com.google.common.base.Objects;
+import com.google.common.base.Preconditions;
 import com.google.protobuf.Message;
 import com.google.protobuf.Message.Builder;
 import io.protostuff.Schema;

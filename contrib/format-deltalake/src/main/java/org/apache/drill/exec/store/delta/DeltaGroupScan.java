@@ -78,8 +78,8 @@ import org.apache.drill.metastore.metadata.LocationProvider;
 import org.apache.drill.metastore.metadata.Metadata;
 import org.apache.drill.metastore.statistics.ColumnStatistics;
 import org.apache.drill.metastore.statistics.TableStatisticsKind;
-import org.apache.drill.shaded.guava.com.google.common.base.Preconditions;
-import org.apache.drill.shaded.guava.com.google.common.collect.Lists;
+import com.google.common.base.Preconditions;
+import com.google.common.collect.Lists;
 import org.apache.hadoop.fs.Path;
 
 import java.io.IOException;

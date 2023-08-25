@@ -17,8 +17,8 @@
  */
 package org.apache.drill.exec.planner.index.rules;
 
-import org.apache.drill.shaded.guava.com.google.common.base.Preconditions;
-import org.apache.drill.shaded.guava.com.google.common.base.Stopwatch;
+import com.google.common.base.Preconditions;
+import com.google.common.base.Stopwatch;
 import org.apache.calcite.plan.RelOptRule;
 import org.apache.calcite.plan.RelOptRuleCall;
 import org.apache.calcite.plan.RelOptRuleOperand;
@@ -44,7 +44,7 @@ import org.apache.drill.exec.planner.common.OrderedRel;
 import org.apache.drill.exec.planner.physical.Prel;
 import org.apache.drill.exec.planner.physical.HashToRandomExchangePrel;
 import org.apache.calcite.rel.RelNode;
-import org.apache.drill.shaded.guava.com.google.common.collect.Lists;
+import com.google.common.collect.Lists;
 
 import java.util.List;
 import java.util.concurrent.TimeUnit;

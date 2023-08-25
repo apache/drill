@@ -21,7 +21,7 @@ package org.apache.drill.exec.store.splunk;
 import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.exec.store.base.filter.ExprNode;
 import org.apache.drill.exec.store.base.filter.RelOp;
-import org.apache.drill.shaded.guava.com.google.common.base.Strings;
+import com.google.common.base.Strings;
 
 import java.util.Map;
 

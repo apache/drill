@@ -34,7 +34,7 @@ import org.apache.calcite.util.Pair;
 import org.apache.drill.common.logical.data.Join;
 import org.apache.drill.common.logical.data.LogicalOperator;
 import org.apache.drill.exec.planner.torel.ConversionContext;
-import org.apache.drill.shaded.guava.com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableList;
 
 public class RowKeyJoinRel extends DrillJoinRel implements DrillRel {
 

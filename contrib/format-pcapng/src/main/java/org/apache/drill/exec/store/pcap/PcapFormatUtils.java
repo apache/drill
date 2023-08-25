@@ -17,8 +17,8 @@
  */
 package org.apache.drill.exec.store.pcap;
 
-import org.apache.drill.shaded.guava.com.google.common.primitives.Ints;
-import org.apache.drill.shaded.guava.com.google.common.primitives.Shorts;
+import com.google.common.primitives.Ints;
+import com.google.common.primitives.Shorts;
 
 import java.nio.charset.StandardCharsets;
 

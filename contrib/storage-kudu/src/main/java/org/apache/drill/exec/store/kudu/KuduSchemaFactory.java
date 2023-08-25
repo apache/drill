@@ -36,7 +36,7 @@ import org.apache.kudu.client.KuduTable;
 import org.apache.kudu.client.ListTablesResponse;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.apache.drill.shaded.guava.com.google.common.collect.Sets;
+import com.google.common.collect.Sets;
 
 public class KuduSchemaFactory extends AbstractSchemaFactory {
   private static final Logger logger = LoggerFactory.getLogger(KuduSchemaFactory.class);

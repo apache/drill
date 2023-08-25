@@ -17,7 +17,7 @@
  */
 package org.apache.drill.exec.rpc;
 
-import org.apache.drill.shaded.guava.com.google.common.util.concurrent.SettableFuture;
+import com.google.common.util.concurrent.SettableFuture;
 import com.google.protobuf.Internal.EnumLite;
 import com.google.protobuf.MessageLite;
 import io.netty.buffer.ByteBuf;

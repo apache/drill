@@ -24,7 +24,7 @@ import org.apache.drill.categories.DruidStorageTest;
 import org.apache.drill.categories.SlowTest;
 import org.apache.drill.common.util.JacksonUtils;
 import org.apache.drill.exec.store.druid.rest.DruidQueryClientTest;
-import org.apache.drill.shaded.guava.com.google.common.io.Resources;
+import com.google.common.io.Resources;
 import org.junit.BeforeClass;
 import org.junit.experimental.categories.Category;
 import org.junit.runner.RunWith;
