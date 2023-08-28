@@ -231,6 +231,14 @@
           <artifactId>commons-compress</artifactId>
         </exclusion>
         <exclusion>
+          <groupId>org.apache.ws.xmlschema</groupId>
+          <artifactId>xmlschema-core</artifactId>
+        </exclusion>
+        <exclusion>
+          <groupId>org.apache.ws.xmlschema</groupId>
+          <artifactId>xmlschema-walker</artifactId>
+        </exclusion>
+        <exclusion>
           <groupId>io.airlift</groupId>
           <artifactId>aircompressor</artifactId>
         </exclusion>
