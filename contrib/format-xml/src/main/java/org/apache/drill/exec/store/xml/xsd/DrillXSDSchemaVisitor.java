@@ -18,6 +18,8 @@
 
 package org.apache.drill.exec.store.xml.xsd;
 
+import org.apache.commons.lang3.StringUtils;
+import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.common.types.TypeProtos.DataMode;
 import org.apache.drill.common.types.TypeProtos.MinorType;
 import org.apache.drill.exec.record.metadata.MapBuilder;
@@ -57,7 +59,7 @@ public class DrillXSDSchemaVisitor implements XmlSchemaVisitor {
    * attributes map for all the attributes when the walker tells us we're
    * at the end of all the element decl's attributes.
    * <b/>
-   * Uses LinkedHashMap to ensure deterministic behavior which facilitates testability.
+   * Uses {@link LinkedHashMap} to ensure deterministic behavior which facilitates testability.
    * In this situation it probably does not matter, but it's a good practice.
    */
   private HashMap<XmlSchemaElement, List<XmlSchemaAttrInfo>> attributeInfoTable =
@@ -100,11 +102,15 @@ public class DrillXSDSchemaVisitor implements XmlSchemaVisitor {
     //
     // Note that the child name in constant ATTRIBUTE_MAP_NAME is reserved and cannot be used
     // by any child element.
-    //
-    // TODO: How to issue this error, and refuse to generate the Drill schema?
     // TODO: There are many other things we want to refuse. E.g., if there are mixed content elements.
     //
-    assert !fieldName.equals(ATTRIBUTE_MAP_NAME);
+    if (StringUtils.equals(ATTRIBUTE_MAP_NAME, fieldName)) {
+      throw UserException.dataReadError()
+          .message("XML schema contains a field named " + ATTRIBUTE_MAP_NAME + " which is a " +
+              "reserved word for XML schemata.")
+          .build(logger);
+    }
+
     if (xmlSchemaTypeInfo.getType().name().equalsIgnoreCase("COMPLEX")) {
       // Start a map here.
       logger.debug("Starting map {}.", xmlSchemaElement.getName());
@@ -148,7 +154,6 @@ public class DrillXSDSchemaVisitor implements XmlSchemaVisitor {
         if (isRepeated) {
           currentMapBuilder.add(fieldName, dataType, DataMode.REPEATED);
           logger.debug("Adding array {}.", xmlSchemaElement.getName());
-
         } else {
           currentMapBuilder.addNullable(fieldName, dataType);
           logger.debug("Adding field {}.", xmlSchemaElement.getName());
