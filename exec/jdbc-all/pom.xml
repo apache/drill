@@ -33,7 +33,7 @@
        "package.namespace.prefix" equals to "oadd.". It can be overridden if necessary within any profile -->
   <properties>
     <package.namespace.prefix>oadd.</package.namespace.prefix>
-    <jdbc-all-jar.maxsize>40500000</jdbc-all-jar.maxsize>
+    <jdbc-all-jar.maxsize>44500000</jdbc-all-jar.maxsize>
   </properties>
 
   <dependencies>
@@ -229,6 +229,14 @@
         <exclusion>
           <groupId>org.apache.commons</groupId>
           <artifactId>commons-compress</artifactId>
+        </exclusion>
+        <exclusion>
+          <groupId>org.apache.ws.xmlschema</groupId>
+          <artifactId>xmlschema-core</artifactId>
+        </exclusion>
+        <exclusion>
+          <groupId>org.apache.ws.xmlschema</groupId>
+          <artifactId>xmlschema-walker</artifactId>
         </exclusion>
         <exclusion>
           <groupId>io.airlift</groupId>

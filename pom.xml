@@ -366,6 +366,7 @@
             <exclude>**/*.sqllog</exclude>
             <exclude>**/*.sqllog2</exclude>
             <exclude>**/*.syslog</exclude>
+            <exclude>**/*.xsd</exclude>
             <exclude>**/*.xls</exclude>
             <exclude>**/*.xlsx</exclude>
             <exclude>**/*.syslog1</exclude>
@@ -686,7 +687,7 @@
             <!--suppress UnresolvedMavenProperty -->
             <header>${maven.multiModuleProjectDirectory}/header</header>
             <excludes>
-              <exclude>**/*.accdb</exclude>
+<exclude>**/*.accdb</exclude>
               <exclude>**/*.access_log</exclude>
               <exclude>**/.asf.yaml</exclude>
               <exclude>**/*.autotools</exclude>
@@ -777,6 +778,7 @@
               <exclude>**/*.woff2</exclude>
               <exclude>**/*.xls</exclude>
               <exclude>**/*.xlsx</exclude>
+              <exclude>**/*.xsd</exclude>
             </excludes>
             <mapping>
               <boost>SLASHSTAR_STYLE</boost>
