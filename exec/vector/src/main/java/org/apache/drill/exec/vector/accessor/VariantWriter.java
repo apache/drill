@@ -126,4 +126,5 @@ public interface VariantWriter extends ColumnWriter {
   ScalarWriter scalar(MinorType type);
   TupleWriter tuple();
   ArrayWriter array();
+  VariantWriterListener listener();
 }

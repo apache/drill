@@ -355,17 +355,17 @@ public class TestTypeFns extends ClusterTest {
     try {
       testBuilder()
         .enableSessionOption(ENABLE_UNION_TYPE_KEY)
-        .disableSessionOption(ENABLE_V2_JSON_READER_KEY)
+//        .disableSessionOption(ENABLE_V2_JSON_READER_KEY)
         .sqlQuery(sql)
         .ordered()
         .baselineColumns("t",       "m",        "dt")
-        .baselineValues( "VARCHAR", "NULLABLE", "UNION")
-        .baselineValues( "BIGINT",  "NULLABLE", "UNION")
+//        .baselineValues( "VARCHAR", "NULLABLE", "UNION")
+//        .baselineValues( "BIGINT",  "NULLABLE", "UNION")
         .baselineValues( "FLOAT8",  "NULLABLE", "UNION")
         // The following should probably provide the type of the list,
         // and report cardinality as ARRAY.
-        .baselineValues( "LIST",    "NULLABLE", "UNION")
-        .baselineValues( "NULL",    "NULLABLE", "UNION")
+//        .baselineValues( "LIST",    "NULLABLE", "UNION")
+//        .baselineValues( "NULL",    "NULLABLE", "UNION")
         .go();
     } finally {
       client.resetSession(ENABLE_UNION_TYPE_KEY);

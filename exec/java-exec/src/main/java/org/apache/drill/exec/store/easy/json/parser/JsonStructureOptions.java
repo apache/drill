@@ -55,6 +55,7 @@ public class JsonStructureOptions {
   public boolean skipMalformedDocument;
 
   public boolean enableEscapeAnyChar;
+  public boolean union;
 
   public JsonStructureOptions() { }
 
@@ -62,5 +63,6 @@ public class JsonStructureOptions {
     this.allowNanInf = options.getBoolean(ExecConstants.JSON_READER_NAN_INF_NUMBERS);
     this.skipMalformedRecords = options.getBoolean(ExecConstants.JSON_READER_SKIP_INVALID_RECORDS_FLAG);
     this.enableEscapeAnyChar = options.getBoolean(ExecConstants.JSON_READER_ESCAPE_ANY_CHAR);
+    this.union = options.getBoolean(ExecConstants.ENABLE_UNION_TYPE_KEY);
   }
 }

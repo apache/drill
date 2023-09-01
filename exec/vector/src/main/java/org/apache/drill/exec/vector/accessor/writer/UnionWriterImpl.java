@@ -154,6 +154,7 @@ public class UnionWriterImpl implements VariantWriter, WriterEvents {
 
   public State state() { return state; }
   public ColumnWriterIndex index() { return index; }
+  @Override
   public VariantWriterListener listener() { return listener; }
   public UnionShim shim() { return shim; }
   public WriterPosition elementPosition() { return elementPosition; }

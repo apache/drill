@@ -36,29 +36,29 @@ public abstract class FullValueParser extends AbstractElementParser {
   public void parse(TokenIterator tokenizer) {
     JsonToken token = tokenizer.requireNext();
     switch (token) {
-    case START_OBJECT:
-      // Position: { ^
-      if (objectParser == null) {
-        // No object parser yet. May be that the value was null,
-        // or may be that it changed types.
-        objectParser = buildObjectParser(tokenizer);
-      }
-      objectParser.parse(tokenizer);
-      break;
+      case START_OBJECT:
+        // Position: { ^
+        if (objectParser == null) {
+          // No object parser yet. May be that the value was null,
+          // or may be that it changed types.
+          objectParser = buildObjectParser(tokenizer);
+        }
+        objectParser.parse(tokenizer);
+        break;
 
-    case START_ARRAY:
-      // Position: [ ^
-      if (arrayParser == null) {
-        // No array parser yet. May be that the value was null,
-        // or may be that it changed types.
-        arrayParser = buildArrayParser(tokenizer);
-      }
-      arrayParser.parse(tokenizer);
-      break;
+      case START_ARRAY:
+        // Position: [ ^
+        if (arrayParser == null) {
+          // No array parser yet. May be that the value was null,
+          // or may be that it changed types.
+          arrayParser = buildArrayParser(tokenizer);
+        }
+        arrayParser.parse(tokenizer);
+        break;
 
-    default:
-      onValue(token, tokenizer);
-    }
+      default:
+        onValue(token, tokenizer);
+      }
   }
 
   protected abstract void onValue(JsonToken token, TokenIterator tokenizer);

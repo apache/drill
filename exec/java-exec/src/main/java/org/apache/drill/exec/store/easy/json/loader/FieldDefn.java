@@ -119,6 +119,10 @@ public class FieldDefn {
     return MetadataUtils.newScalar(key, type, mode(isArray), forUnknownSchema);
   }
 
+  public ColumnMetadata schemaForUnion() {
+    return MetadataUtils.newVariant(key, DataMode.OPTIONAL);
+  }
+
   public DataMode mode(boolean isArray) {
     return isArray ? DataMode.REPEATED : DataMode.OPTIONAL;
   }

@@ -29,8 +29,7 @@ public class ArrayValueParser extends AbstractElementParser {
   }
 
   /**
-   * Parses <code>true | false | null | integer | float | string|
-   *              embedded-object | [ ... ]</code>
+   * Parses <code>true | false | null | integer | float | string | embedded-object | [ ... ]</code>
    */
   @Override
   public void parse(TokenIterator tokenizer) {

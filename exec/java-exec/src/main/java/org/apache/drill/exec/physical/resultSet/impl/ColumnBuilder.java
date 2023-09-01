@@ -101,7 +101,6 @@ public class ColumnBuilder {
    * @return writer for the new column
    */
   public ColumnState buildColumn(ContainerState parent, ColumnMetadata columnSchema) {
-
     switch (columnSchema.structureType()) {
       case DICT:
         return buildDict(parent, columnSchema);
@@ -282,8 +281,7 @@ public class ColumnBuilder {
     return new MapColumnState(mapState, writer, mapVectorState, parent.isVersioned());
   }
 
-  private ColumnState buildVariant(ContainerState parent,
-      ColumnMetadata columnSchema) {
+  private ColumnState buildVariant(ContainerState parent, ColumnMetadata columnSchema) {
     // Variant: UNION or (non-repeated) LIST
     if (columnSchema.isArray()) {
       // (non-repeated) LIST (somewhat like a repeated UNION)
