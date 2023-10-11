@@ -72,6 +72,7 @@
     <commons.validator.version>1.7</commons.validator.version>
     <curator.version>5.5.0</curator.version>
     <derby.version>10.17.1.0</derby.version>
+    <daffodil.version>3.7.0</daffodil.version>
     <directMemoryMb>3072</directMemoryMb>
     <docker.repository>apache/drill</docker.repository>
     <excludedGroups />
