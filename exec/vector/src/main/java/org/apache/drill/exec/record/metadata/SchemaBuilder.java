@@ -61,7 +61,7 @@ import org.apache.drill.exec.record.MaterializedField;
  * </code</pre>
  */
 
-public class SchemaBuilder implements SchemaContainer {
+public class SchemaBuilder implements MapBuilderLike, SchemaContainer {
 
   /**
    * Actual tuple schema builder. The odd layered structure is needed
@@ -114,6 +114,7 @@ public class SchemaBuilder implements SchemaContainer {
     return this;
   }
 
+  @Override
   public SchemaBuilder add(String name, MinorType type) {
     tupleBuilder.add(name, type);
     return this;
@@ -128,6 +129,7 @@ public class SchemaBuilder implements SchemaContainer {
     return addDecimal(name, type, DataMode.REQUIRED, precision, scale);
   }
 
+  @Override
   public SchemaBuilder addNullable(String name, MinorType type) {
     tupleBuilder.addNullable(name,  type);
     return this;
@@ -142,6 +144,7 @@ public class SchemaBuilder implements SchemaContainer {
     return addDecimal(name, type, DataMode.OPTIONAL, precision, scale);
   }
 
+  @Override
   public SchemaBuilder addArray(String name, MinorType type) {
     tupleBuilder.addArray(name, type);
     return this;
@@ -157,7 +160,7 @@ public class SchemaBuilder implements SchemaContainer {
   }
 
   /**
-   * Add a multi-dimensional array, implemented as a repeated vector
+   * Add a multidimensional array, implemented as a repeated vector
    * along with 0 or more repeated list vectors.
    *
    * @param name column name
@@ -191,10 +194,12 @@ public class SchemaBuilder implements SchemaContainer {
    * @param name the name of the map column
    * @return a builder for the map
    */
+  @Override
   public MapBuilder addMap(String name) {
     return tupleBuilder.addMap(this, name);
   }
 
+  @Override
   public MapBuilder addMapArray(String name) {
     return tupleBuilder.addMapArray(this, name);
   }
@@ -236,5 +241,10 @@ public class SchemaBuilder implements SchemaContainer {
 
   public TupleMetadata build() {
     return tupleBuilder.schema();
+  }
+
+  @Override
+  public void resume() {
+    // do nothing. There is nothing else to resume.
   }
 }
