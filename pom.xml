@@ -64,7 +64,7 @@
     <kerby.version>1.0.0</kerby.version>
     <findbugs.version>3.0.5</findbugs.version>
     <netty.tcnative.classifier />
-    <commons.io.version>2.7</commons.io.version>
+    <commons.io.version>2.14.0</commons.io.version>
     <commons.collections.version>4.4</commons.collections.version>
     <hamcrest.version>2.2</hamcrest.version>
     <curator.version>5.2.0</curator.version>
@@ -110,7 +110,7 @@
     <javax.el.version>3.0.0</javax.el.version>
     <surefire.version>3.1.2</surefire.version>
     <jna.version>5.13.0</jna.version>
-    <commons.compress.version>1.23.0</commons.compress.version>
+    <commons.compress.version>1.24.0</commons.compress.version>
     <hikari.version>4.0.3</hikari.version>
     <netty.version>4.1.73.Final</netty.version>
     <httpclient.version>4.5.14</httpclient.version>
