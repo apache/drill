@@ -17,22 +17,12 @@
  */
 package org.apache.drill.exec.ssl;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import java.util.Optional;
 import java.util.function.BiFunction;
 
 /**
- * Provides an implementation of credentials provider depending on "useMapRSSLConfig" option value
- * and whether Drill was built with mapr profile or not.
+ * Provides an implementation of credentials provider.
  */
 abstract class SSLCredentialsProvider {
-
-  private static final String MAPR_CREDENTIALS_PROVIDER_CLIENT = "org.apache.drill.exec.ssl.SSLCredentialsProviderMaprClient";
-  private static final String MAPR_CREDENTIALS_PROVIDER_SERVER = "org.apache.drill.exec.ssl.SSLCredentialsProviderMaprServer";
-
-  private static final Logger logger = LoggerFactory.getLogger(SSLCredentialsProvider.class);
 
   /**
    * Provides a concrete implementation of {@link SSLCredentialsProvider}.
@@ -48,34 +38,11 @@ abstract class SSLCredentialsProvider {
    *                          using Hadoop's CredentialProvider API with fallback
    *                          to standard means as is used for {@code getPropertyMethod}
    * @param mode              CLIENT or SERVER
-   * @param useMapRSSLConfig  use a MapR credential provider
    * @return concrete implementation of SSLCredentialsProvider
    */
   static SSLCredentialsProvider getSSLCredentialsProvider(BiFunction<String, String, String> getPropertyMethod,
-      BiFunction<String, String, String> getPasswordPropertyMethod, SSLConfig.Mode mode, boolean useMapRSSLConfig) {
-    return useMapRSSLConfig ? getMaprCredentialsProvider(mode)
-        .orElseGet(() -> new SSLCredentialsProviderImpl(getPropertyMethod, getPasswordPropertyMethod)) :
-        new SSLCredentialsProviderImpl(getPropertyMethod, getPasswordPropertyMethod);
-  }
-
-  private static Optional<SSLCredentialsProvider> getMaprCredentialsProvider(SSLConfig.Mode mode) {
-    String maprCredentialsProviderClass = "";
-    switch (mode) {
-      case SERVER:
-        maprCredentialsProviderClass = MAPR_CREDENTIALS_PROVIDER_SERVER;
-        break;
-      case CLIENT:
-        maprCredentialsProviderClass = MAPR_CREDENTIALS_PROVIDER_CLIENT;
-        break;
-      default:
-        throw new IllegalStateException("Should never occur.");
-    }
-    try {
-      return Optional.of((SSLCredentialsProvider) Class.forName(maprCredentialsProviderClass).newInstance());
-    } catch (ClassNotFoundException | InstantiationException | IllegalAccessException e) {
-      logger.warn("Trying to use MapR credentials provider on a non-MapR platform", e);
-      return Optional.empty();
-    }
+      BiFunction<String, String, String> getPasswordPropertyMethod, SSLConfig.Mode mode) {
+    return new SSLCredentialsProviderImpl(getPropertyMethod, getPasswordPropertyMethod);
   }
 
   abstract String getTrustStoreType(String propertyName, String defaultValue);
