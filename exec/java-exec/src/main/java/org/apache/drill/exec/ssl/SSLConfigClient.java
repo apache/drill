@@ -59,8 +59,7 @@ public class SSLConfigClient extends SSLConfig {
     SSLCredentialsProvider credentialsProvider = SSLCredentialsProvider.getSSLCredentialsProvider(
         this::getStringProperty,
         this::getPasswordStringProperty,
-        getMode(),
-        getBooleanProperty(DrillProperties.USE_MAPR_SSL_CONFIG)
+        getMode()
     );
     trustStoreType = credentialsProvider.getTrustStoreType(DrillProperties.TRUSTSTORE_TYPE, "JKS");
     trustStorePath = credentialsProvider.getTrustStoreLocation(DrillProperties.TRUSTSTORE_PATH, "");

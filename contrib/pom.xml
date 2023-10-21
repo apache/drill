@@ -39,40 +39,40 @@
   </dependencies>
 
   <modules>
+    <!-- Please keep this list sorted. -->
     <module>data</module>
-    <module>udfs</module>
-    <module>storage-hbase</module>
-    <module>format-maprdb</module>
-    <module>format-syslog</module>
-    <module>format-ltsv</module>
-    <module>format-excel</module>
-    <module>format-httpd</module>
-    <module>format-esri</module>
-    <module>format-log</module>
     <module>format-access</module>
-    <module>format-pdf</module>
+    <module>format-deltalake</module>
+    <module>format-esri</module>
+    <module>format-excel</module>
     <module>format-hdf5</module>
+    <module>format-httpd</module>
+    <module>format-iceberg</module>
+    <module>format-image</module>
+    <module>format-log</module>
+    <module>format-ltsv</module>
+    <module>format-pcapng</module>
+    <module>format-pdf</module>
     <module>format-sas</module>
     <module>format-spss</module>
+    <module>format-syslog</module>
     <module>format-xml</module>
-    <module>format-image</module>
-    <module>format-pcapng</module>
-    <module>format-iceberg</module>
-    <module>format-deltalake</module>
+    <module>storage-cassandra</module>
     <module>storage-drill</module>
-    <module>storage-phoenix</module>
+    <module>storage-druid</module>
+    <module>storage-elasticsearch</module>
     <module>storage-googlesheets</module>
+    <module>storage-hbase</module>
     <module>storage-hive</module>
-    <module>storage-mongo</module>
+    <module>storage-http</module>
     <module>storage-jdbc</module>
     <module>storage-kafka</module>
     <module>storage-kudu</module>
+    <module>storage-mongo</module>
     <module>storage-opentsdb</module>
+    <module>storage-phoenix</module>
     <module>storage-splunk</module>
-    <module>storage-http</module>
-    <module>storage-druid</module>
-    <module>storage-elasticsearch</module>
-    <module>storage-cassandra</module>
+    <module>udfs</module>
   </modules>
 
 </project>

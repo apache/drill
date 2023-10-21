@@ -78,8 +78,8 @@ public class SSLConfigServer extends SSLConfig {
     SSLCredentialsProvider credentialsProvider = SSLCredentialsProvider.getSSLCredentialsProvider(
         this::getConfigParam,
         this::getPasswordConfigParam,
-        Mode.SERVER,
-        config.getBoolean(ExecConstants.SSL_USE_MAPR_CONFIG));
+        Mode.SERVER
+    );
     trustStoreType = credentialsProvider.getTrustStoreType(
         ExecConstants.SSL_TRUSTSTORE_TYPE, resolveHadoopPropertyName(HADOOP_SSL_TRUSTSTORE_TYPE_TPL_KEY, mode));
     trustStorePath = credentialsProvider.getTrustStoreLocation(
