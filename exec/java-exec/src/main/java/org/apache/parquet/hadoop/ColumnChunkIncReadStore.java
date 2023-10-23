@@ -217,13 +217,13 @@ public class ColumnChunkIncReadStore implements PageReadStore {
               int pageBufOffset = 0;
               ByteBuffer bb = (ByteBuffer) pageBuf.position(pageBufOffset);
               BytesInput repLevelBytes = BytesInput.from(
-                (ByteBuffer) bb.slice().limit(pageBufOffset + repLevelSize)
+                (ByteBuffer) bb.slice().limit(repLevelSize)
               );
               pageBufOffset += repLevelSize;
 
               bb = (ByteBuffer) pageBuf.position(pageBufOffset);
               final BytesInput defLevelBytes = BytesInput.from(
-                (ByteBuffer) bb.slice().limit(pageBufOffset + defLevelSize)
+                (ByteBuffer) bb.slice().limit(defLevelSize)
               );
               pageBufOffset += defLevelSize;
 
