@@ -48,8 +48,17 @@ jobs:
           distribution: 'temurin'
           java-version: ${{ matrix.java }}
           cache: 'maven'
+      - name: Set up swap space
+        # Linux Action Runners come with 7GB of RAM which isn't quite enoough
+        # to run the test suite. Two workarounds are used below: a swap file is
+        # added to the Runner and memory hungry tests are run separately.
+        run: |
+          sudo sh -c "
+            fallocate -l 2G /tmp/swapfile
+            mkswap /tmp/swapfile
+            swapon /tmp/swapfile
+          "
       - name: Build and test
-        # The total GitHub Actions memory is 7000Mb. But GitHub CI requires some memory for the container to perform tests
         run: |
           MAVEN_OPTS="-XX:+UseG1GC"
           sudo sh -c 'echo 1 > /proc/sys/vm/drop_caches' && \
@@ -62,6 +71,9 @@ jobs:
           mvn -P${{ matrix.profile }} test -pl org.apache.drill.exec:drill-java-exec \
           -Dgroups=org.apache.drill.categories.EasyOutOfMemory \
           -Dhttp.keepAlive=false -Dmaven.wagon.http.pool=false -Dmaven.wagon.httpconnectionManager.ttlSeconds=120
+      - name: Remove swap space
+        run : |
+          sudo swapoff /tmp/swapfile
   checkstyle_protobuf:
     name: Run checkstyle and generate protobufs
     runs-on: ubuntu-latest
