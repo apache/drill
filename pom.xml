@@ -93,8 +93,8 @@
     <javax.validation.api>2.0.1.Final</javax.validation.api>
     <asm.version>9.5</asm.version>
     <excludedGroups />
-    <memoryMb>2500</memoryMb>
-    <directMemoryMb>4500</directMemoryMb>
+    <memoryMb>2560</memoryMb>
+    <directMemoryMb>2560</directMemoryMb>
     <rat.skip>true</rat.skip>
     <license.skip>true</license.skip>
     <docker.repository>apache/drill</docker.repository>
