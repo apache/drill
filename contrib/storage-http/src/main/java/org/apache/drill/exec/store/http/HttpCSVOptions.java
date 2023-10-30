@@ -23,6 +23,7 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonPOJOBuilder;
+import org.apache.drill.common.PlanStringBuilder;
 
 import java.util.Objects;
 
@@ -159,7 +160,19 @@ public class HttpCSVOptions {
       return false;
     }
     HttpCSVOptions that = (HttpCSVOptions) o;
-    return quote == that.quote && quoteEscape == that.quoteEscape && numberOfRowsToSkip == that.numberOfRowsToSkip && numberOfRecordsToRead == that.numberOfRecordsToRead && lineSeparatorDetectionEnabled == that.lineSeparatorDetectionEnabled && maxColumns == that.maxColumns && maxCharsPerColumn == that.maxCharsPerColumn && skipEmptyLines == that.skipEmptyLines && ignoreLeadingWhitespaces == that.ignoreLeadingWhitespaces && ignoreTrailingWhitespaces == that.ignoreTrailingWhitespaces && delimiter.equals(that.delimiter) && lineSeparator.equals(that.lineSeparator) && Objects.equals(headerExtractionEnabled, that.headerExtractionEnabled) && nullValue.equals(that.nullValue);
+    return quote == that.quote
+        && quoteEscape == that.quoteEscape
+        && numberOfRowsToSkip == that.numberOfRowsToSkip
+        && numberOfRecordsToRead == that.numberOfRecordsToRead
+        && lineSeparatorDetectionEnabled == that.lineSeparatorDetectionEnabled
+        && maxColumns == that.maxColumns && maxCharsPerColumn == that.maxCharsPerColumn
+        && skipEmptyLines == that.skipEmptyLines
+        && ignoreLeadingWhitespaces == that.ignoreLeadingWhitespaces
+        && ignoreTrailingWhitespaces == that.ignoreTrailingWhitespaces
+        && delimiter.equals(that.delimiter)
+        && lineSeparator.equals(that.lineSeparator)
+        && Objects.equals(headerExtractionEnabled, that.headerExtractionEnabled)
+        && nullValue.equals(that.nullValue);
   }
 
   @Override
@@ -172,9 +185,22 @@ public class HttpCSVOptions {
 
   @Override
   public String toString() {
-    return "HttpCSVOptions{" + "delimiter='" + delimiter + '\'' + ", quote=" + quote + ", " +
-        "quoteEscape=" + quoteEscape + ", lineSeparator='" + lineSeparator + '\'' + ", " +
-        "headerExtractionEnabled=" + headerExtractionEnabled + ", numberOfRowsToSkip=" + numberOfRowsToSkip + ", numberOfRecordsToRead=" + numberOfRecordsToRead + ", lineSeparatorDetectionEnabled=" + lineSeparatorDetectionEnabled + ", maxColumns=" + maxColumns + ", maxCharsPerColumn=" + maxCharsPerColumn + ", skipEmptyLines=" + skipEmptyLines + ", ignoreLeadingWhitespaces=" + ignoreLeadingWhitespaces + ", ignoreLeadingWhitespacess=" + ignoreTrailingWhitespaces + ", nullValue='" + nullValue + '\'' + '}';
+    return new PlanStringBuilder(this)
+        .field("delimiter", delimiter)
+        .field("quote", quote)
+        .field("quoteEscape", quoteEscape)
+        .field("lineSeparator", lineSeparator)
+        .field("headerExtractionEnabled", headerExtractionEnabled)
+        .field("numberOfRowsToSkip", numberOfRowsToSkip)
+        .field("numberOfRecordsToRead", numberOfRecordsToRead)
+        .field("lineSeparatorDetectionEnabled", lineSeparatorDetectionEnabled)
+        .field("maxColumns", maxColumns)
+        .field("maxCharsPerColumn", maxCharsPerColumn)
+        .field("skipEmptyLines", skipEmptyLines)
+        .field("ignoreLeadingWhitespaces", ignoreLeadingWhitespaces)
+        .field("ignoreTrailingWhitespaces", ignoreTrailingWhitespaces)
+        .field("nullValue", nullValue)
+        .toString();
   }
 
 
