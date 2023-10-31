@@ -901,4 +901,16 @@ public class TestParquetComplex extends BaseTestQuery {
             .baselineValues(firstValue, null, secondValue)
             .go();
   }
+
+
+  @Test
+  public void testSelectRepeatedInt() throws Exception {
+    // DRILL-8458
+    String query = "select repeatedInt as r from %s";
+    testBuilder()
+        .sqlQuery(query, "cp.`parquet/parquet_v2_repeated_int.parquet`")
+        .unOrdered()
+        .expectsNumRecords(100)
+        .go();
+  }
 }
