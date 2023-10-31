@@ -18,6 +18,7 @@
 
 package org.apache.drill.exec.store.http;
 
+import com.univocity.parsers.csv.CsvFormat;
 import com.univocity.parsers.csv.CsvParser;
 import com.univocity.parsers.csv.CsvParserSettings;
 import okhttp3.HttpUrl;
@@ -44,10 +45,10 @@ import java.io.File;
 import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 public class HttpCSVBatchReader extends HttpBatchReader {
   private final HttpSubScan subScan;
-  private final CsvParserSettings csvSettings;
   private final int maxRecords;
   private CsvParser csvReader;
   private List<StringColumnWriter> columnWriters;
@@ -63,18 +64,43 @@ public class HttpCSVBatchReader extends HttpBatchReader {
     super(subScan);
     this.subScan = subScan;
     this.maxRecords = subScan.maxRecords();
-
-    this.csvSettings = new CsvParserSettings();
-    csvSettings.setLineSeparatorDetectionEnabled(true);
   }
 
   public HttpCSVBatchReader(HttpSubScan subScan, Paginator paginator) {
     super(subScan, paginator);
     this.subScan = subScan;
     this.maxRecords = subScan.maxRecords();
+  }
 
-    this.csvSettings = new CsvParserSettings();
-    csvSettings.setLineSeparatorDetectionEnabled(true);
+  private CsvParserSettings buildCsvSettings() {
+    CsvParserSettings settings = new CsvParserSettings();
+    CsvFormat format = settings.getFormat();
+    HttpCSVOptions csvOptions = subScan.tableSpec().connectionConfig().csvOptions();
+
+    if (Objects.isNull(csvOptions)) {
+      settings.setLineSeparatorDetectionEnabled(true);
+      return settings;
+    }
+
+    format.setDelimiter(csvOptions.getDelimiter());
+    format.setQuote(csvOptions.getQuote());
+    format.setQuoteEscape(csvOptions.getQuoteEscape());
+    format.setLineSeparator(csvOptions.getLineSeparator());
+
+    settings.setLineSeparatorDetectionEnabled(csvOptions.isLineSeparatorDetectionEnabled());
+    if (!Objects.isNull(csvOptions.getHeaderExtractionEnabled())) {
+      settings.setHeaderExtractionEnabled(csvOptions.getHeaderExtractionEnabled());
+    }
+    settings.setNullValue(csvOptions.getNullValue());
+    settings.setNumberOfRowsToSkip(csvOptions.getNumberOfRowsToSkip());
+    settings.setNumberOfRecordsToRead(csvOptions.getNumberOfRecordsToRead());
+    settings.setMaxColumns(csvOptions.getMaxColumns());
+    settings.setMaxCharsPerColumn(csvOptions.getMaxCharsPerColumn());
+    settings.setSkipEmptyLines(csvOptions.isSkipEmptyLines());
+    settings.setIgnoreLeadingWhitespaces(csvOptions.isIgnoreLeadingWhitespaces());
+    settings.setIgnoreTrailingWhitespaces(csvOptions.isIgnoreTrailingWhitespaces());
+
+    return settings;
   }
 
   @Override
@@ -96,17 +122,18 @@ public class HttpCSVBatchReader extends HttpBatchReader {
 
     // Http client setup
     SimpleHttp http = SimpleHttp.builder()
-      .scanDefn(subScan)
-      .url(url)
-      .tempDir(new File(tempDirPath))
-      .paginator(paginator)
-      .proxyConfig(proxySettings(negotiator.drillConfig(), url))
-      .errorContext(errorContext)
-      .build();
+        .scanDefn(subScan)
+        .url(url)
+        .tempDir(new File(tempDirPath))
+        .paginator(paginator)
+        .proxyConfig(proxySettings(negotiator.drillConfig(), url))
+        .errorContext(errorContext)
+        .build();
 
     // CSV loader setup
     inStream = http.getInputStream();
 
+    CsvParserSettings csvSettings = buildCsvSettings();
     this.csvReader = new CsvParser(csvSettings);
     csvReader.beginParsing(inStream);
 
@@ -181,7 +208,7 @@ public class HttpCSVBatchReader extends HttpBatchReader {
     if (nextRow == null) {
 
       if (paginator != null &&
-        maxRecords < 0 && (resultLoader.totalRowCount()) < paginator.getPageSize()) {
+          maxRecords < 0 && (resultLoader.totalRowCount()) < paginator.getPageSize()) {
         paginator.notifyPartialPage();
       }
       return false;
@@ -211,7 +238,8 @@ public class HttpCSVBatchReader extends HttpBatchReader {
       this.columnIndex = columnIndex;
     }
 
-    public void load(String[] record) {}
+    public void load(String[] record) {
+    }
   }
 
   public static class StringColumnWriter extends ColumnWriter {

@@ -22,6 +22,7 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonPOJOBuilder;
+import com.google.common.collect.ImmutableList;
 import okhttp3.HttpUrl;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -31,7 +32,6 @@ import org.apache.drill.common.logical.security.CredentialsProvider;
 import org.apache.drill.exec.store.security.CredentialProviderUtils;
 import org.apache.drill.exec.store.security.UsernamePasswordCredentials;
 import org.apache.drill.exec.store.security.UsernamePasswordWithProxyCredentials;
-import com.google.common.collect.ImmutableList;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -39,6 +39,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
+
 
 @JsonInclude(JsonInclude.Include.NON_DEFAULT)
 @JsonDeserialize(builder = HttpApiConfig.HttpApiConfigBuilder.class)
@@ -116,6 +117,9 @@ public class HttpApiConfig {
   @JsonProperty
   private final HttpXmlOptions xmlOptions;
 
+  @JsonProperty
+  private final HttpCSVOptions csvOptions;
+
   @JsonInclude
   @JsonProperty
   private final boolean verifySSLCert;
@@ -185,8 +189,13 @@ public class HttpApiConfig {
   public HttpJsonOptions jsonOptions() {
     return this.jsonOptions;
   }
+
   public HttpXmlOptions xmlOptions() {
     return this.xmlOptions;
+  }
+
+  public HttpCSVOptions csvOptions() {
+    return this.csvOptions;
   }
 
   public boolean verifySSLCert() {
@@ -211,56 +220,59 @@ public class HttpApiConfig {
     }
     HttpApiConfig that = (HttpApiConfig) o;
     return requireTail == that.requireTail
-      && errorOn400 == that.errorOn400
-      && verifySSLCert == that.verifySSLCert
-      && directCredentials == that.directCredentials
-      && caseSensitiveFilters == that.caseSensitiveFilters
-      && Objects.equals(url, that.url)
-      && Objects.equals(method, that.method)
-      && Objects.equals(postBody, that.postBody)
-      && Objects.equals(headers, that.headers)
-      && Objects.equals(params, that.params)
-      && Objects.equals(postParameterLocation, that.postParameterLocation)
-      && Objects.equals(dataPath, that.dataPath)
-      && Objects.equals(authType, that.authType)
-      && Objects.equals(inputType, that.inputType)
-      && Objects.equals(limitQueryParam, that.limitQueryParam)
-      && Objects.equals(jsonOptions, that.jsonOptions)
-      && Objects.equals(xmlOptions, that.xmlOptions)
-      && Objects.equals(credentialsProvider, that.credentialsProvider)
-      && Objects.equals(paginator, that.paginator);
+        && errorOn400 == that.errorOn400
+        && verifySSLCert == that.verifySSLCert
+        && directCredentials == that.directCredentials
+        && caseSensitiveFilters == that.caseSensitiveFilters
+        && Objects.equals(url, that.url)
+        && Objects.equals(method, that.method)
+        && Objects.equals(postBody, that.postBody)
+        && Objects.equals(headers, that.headers)
+        && Objects.equals(params, that.params)
+        && Objects.equals(postParameterLocation, that.postParameterLocation)
+        && Objects.equals(dataPath, that.dataPath)
+        && Objects.equals(authType, that.authType)
+        && Objects.equals(inputType, that.inputType)
+        && Objects.equals(limitQueryParam, that.limitQueryParam)
+        && Objects.equals(jsonOptions, that.jsonOptions)
+        && Objects.equals(xmlOptions, that.xmlOptions)
+        && Objects.equals(credentialsProvider, that.credentialsProvider)
+        && Objects.equals(paginator, that.paginator)
+        && Objects.equals(csvOptions, that.csvOptions);
   }
 
   @Override
   public int hashCode() {
     return Objects.hash(url, requireTail, method, postBody, headers, params, dataPath,
-      authType, inputType, limitQueryParam, errorOn400, jsonOptions, xmlOptions, verifySSLCert,
-      credentialsProvider, paginator, directCredentials, postParameterLocation, caseSensitiveFilters);
+        authType, inputType, limitQueryParam, errorOn400, jsonOptions, xmlOptions, verifySSLCert,
+        credentialsProvider, paginator, directCredentials, postParameterLocation,
+        caseSensitiveFilters, csvOptions);
   }
 
   @Override
   public String toString() {
     return new PlanStringBuilder(this)
-      .field("url", url)
-      .field("requireTail", requireTail)
-      .field("method", method)
-      .field("postBody", postBody)
-      .field("postParameterLocation", postParameterLocation)
-      .field("headers", headers)
-      .field("params", params)
-      .field("dataPath", dataPath)
-      .field("caseSensitiveFilters", caseSensitiveFilters)
-      .field("authType", authType)
-      .field("inputType", inputType)
-      .field("limitQueryParam", limitQueryParam)
-      .field("errorOn400", errorOn400)
-      .field("jsonOptions", jsonOptions)
-      .field("xmlOptions", xmlOptions)
-      .field("verifySSLCert", verifySSLCert)
-      .field("credentialsProvider", credentialsProvider)
-      .field("paginator", paginator)
-      .field("directCredentials", directCredentials)
-      .toString();
+        .field("url", url)
+        .field("requireTail", requireTail)
+        .field("method", method)
+        .field("postBody", postBody)
+        .field("postParameterLocation", postParameterLocation)
+        .field("headers", headers)
+        .field("params", params)
+        .field("dataPath", dataPath)
+        .field("caseSensitiveFilters", caseSensitiveFilters)
+        .field("authType", authType)
+        .field("inputType", inputType)
+        .field("limitQueryParam", limitQueryParam)
+        .field("errorOn400", errorOn400)
+        .field("jsonOptions", jsonOptions)
+        .field("xmlOptions", xmlOptions)
+        .field("verifySSLCert", verifySSLCert)
+        .field("credentialsProvider", credentialsProvider)
+        .field("paginator", paginator)
+        .field("directCredentials", directCredentials)
+        .field("csvOptions", csvOptions)
+        .toString();
   }
 
   /**
@@ -307,39 +319,50 @@ public class HttpApiConfig {
     this.url = builder.url;
     this.jsonOptions = builder.jsonOptions;
     this.xmlOptions = builder.xmlOptions;
+    this.csvOptions = builder.csvOptions;
 
-    HttpMethod httpMethod = HttpMethod.valueOf(this.method);
-    // Get the request method.  Only accept GET and POST requests.  Anything else will default to GET.
+    final HttpMethod httpMethod;
+    try {
+      httpMethod = HttpMethod.valueOf(this.method);
+    } catch (IllegalArgumentException e) {
+      throw UserException
+          .validationError()
+          .message("Invalid HTTP method: %s.  Drill supports 'GET' and , 'POST'.", method)
+          .build(logger);
+    }
+
+    // Get the request method.  Only accept GET and POST requests.  Anything else will default to
+    // GET.
     switch (httpMethod) {
-      case GET:
-      case POST:
-        break;
-      default:
-        throw UserException
+    case GET:
+    case POST:
+      break;
+    default:
+      throw UserException
           .validationError()
           .message("Invalid HTTP method: %s.  Drill supports 'GET' and , 'POST'.", method)
           .build(logger);
     }
     if (StringUtils.isEmpty(url)) {
       throw UserException
-        .validationError()
-        .message("URL is required for the HTTP storage plugin.")
-        .build(logger);
+          .validationError()
+          .message("URL is required for the HTTP storage plugin.")
+          .build(logger);
     }
 
     // Default to query string to avoid breaking changes
     this.postParameterLocation = StringUtils.isEmpty(builder.postParameterLocation) ?
-      PostLocation.QUERY_STRING.toString() : builder.postParameterLocation.trim().toUpperCase();
+        PostLocation.QUERY_STRING.toString() : builder.postParameterLocation.trim().toUpperCase();
 
-    // Get the authentication method. Future functionality will include OAUTH2 authentication but for now
+    // Get the authentication method. Future functionality will include OAUTH2 authentication but
+    // for now
     // Accept either basic or none.  The default is none.
     this.authType = StringUtils.defaultIfEmpty(builder.authType, "none");
     this.postBody = builder.postBody;
 
 
-
     this.params = CollectionUtils.isEmpty(builder.params) ? null :
-      ImmutableList.copyOf(builder.params);
+        ImmutableList.copyOf(builder.params);
     this.dataPath = StringUtils.defaultIfEmpty(builder.dataPath, null);
 
     // Default to true for backward compatibility with first PR.
@@ -353,7 +376,8 @@ public class HttpApiConfig {
     this.xmlDataLevel = Math.max(1, builder.xmlDataLevel);
     this.errorOn400 = builder.errorOn400;
     this.caseSensitiveFilters = builder.caseSensitiveFilters;
-    this.credentialsProvider = CredentialProviderUtils.getCredentialsProvider(builder.userName, builder.password, builder.credentialsProvider);
+    this.credentialsProvider = CredentialProviderUtils.getCredentialsProvider(builder.userName,
+        builder.password, builder.credentialsProvider);
     this.directCredentials = builder.credentialsProvider == null;
 
     this.limitQueryParam = builder.limitQueryParam;
@@ -366,8 +390,8 @@ public class HttpApiConfig {
       return null;
     }
     return getUsernamePasswordCredentials()
-      .map(UsernamePasswordCredentials::getUsername)
-      .orElse(null);
+        .map(UsernamePasswordCredentials::getUsername)
+        .orElse(null);
   }
 
   @JsonProperty
@@ -376,8 +400,8 @@ public class HttpApiConfig {
       return null;
     }
     return getUsernamePasswordCredentials()
-      .map(UsernamePasswordCredentials::getPassword)
-      .orElse(null);
+        .map(UsernamePasswordCredentials::getPassword)
+        .orElse(null);
   }
 
   @JsonIgnore
@@ -398,16 +422,16 @@ public class HttpApiConfig {
   @JsonIgnore
   public Optional<UsernamePasswordWithProxyCredentials> getUsernamePasswordCredentials() {
     return new UsernamePasswordWithProxyCredentials.Builder()
-      .setCredentialsProvider(credentialsProvider)
-      .build();
+        .setCredentialsProvider(credentialsProvider)
+        .build();
   }
 
   @JsonIgnore
   public Optional<UsernamePasswordWithProxyCredentials> getUsernamePasswordCredentials(String username) {
     return new UsernamePasswordWithProxyCredentials.Builder()
-      .setCredentialsProvider(credentialsProvider)
-      .setQueryUser(username)
-      .build();
+        .setCredentialsProvider(credentialsProvider)
+        .setQueryUser(username)
+        .build();
   }
 
   @JsonProperty
@@ -455,6 +479,8 @@ public class HttpApiConfig {
     private HttpJsonOptions jsonOptions;
     private HttpXmlOptions xmlOptions;
 
+    private HttpCSVOptions csvOptions;
+
     private CredentialsProvider credentialsProvider;
 
     private HttpPaginatorConfig paginator;
@@ -479,6 +505,10 @@ public class HttpApiConfig {
 
     public boolean verifySSLCert() {
       return this.verifySSLCert;
+    }
+
+    public HttpCSVOptions csvOptions() {
+      return this.csvOptions;
     }
 
     public String inputType() {
@@ -562,6 +592,7 @@ public class HttpApiConfig {
 
     /**
      * Do not use.  Use xmlOptions instead to set XML data level.
+     *
      * @param xmlDataLevel
      * @return
      */
@@ -583,6 +614,11 @@ public class HttpApiConfig {
 
     public HttpApiConfigBuilder jsonOptions(HttpJsonOptions jsonOptions) {
       this.jsonOptions = jsonOptions;
+      return this;
+    }
+
+    public HttpApiConfigBuilder csvOptions(HttpCSVOptions options) {
+      this.csvOptions = options;
       return this;
     }
 

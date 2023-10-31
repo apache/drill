@@ -79,6 +79,8 @@ public class TestHttpPlugin extends ClusterTest {
   private static String TEST_XML_RESPONSE;
   private static String TEST_JSON_RESPONSE_WITH_DATATYPES;
 
+  private static String TEST_TSV_RESPONSE;
+
   public static String makeUrl(String url) {
     return String.format(url, MOCK_SERVER_PORT);
   }
@@ -92,6 +94,7 @@ public class TestHttpPlugin extends ClusterTest {
     TEST_CSV_RESPONSE = Files.asCharSource(DrillFileUtils.getResourceAsFile("/data/response.csv"), Charsets.UTF_8).read();
     TEST_XML_RESPONSE = Files.asCharSource(DrillFileUtils.getResourceAsFile("/data/response.xml"), Charsets.UTF_8).read();
     TEST_JSON_RESPONSE_WITH_DATATYPES = Files.asCharSource(DrillFileUtils.getResourceAsFile("/data/response2.json"), Charsets.UTF_8).read();
+    TEST_TSV_RESPONSE = Files.asCharSource(DrillFileUtils.getResourceAsFile("/data/response.tsv"), Charsets.UTF_8).read();
 
     dirTestWatcher.copyResourceToRoot(Paths.get("data/"));
     makeEnhancedLiveConfig();
@@ -611,6 +614,22 @@ public class TestHttpPlugin extends ClusterTest {
         .inputType("csv")
         .build();
 
+    HttpCSVOptions tsvOptions = HttpCSVOptions.builder()
+        .delimiter("\t")
+        .quote('"')
+        .build();
+    HttpApiConfig mockTsvConfig = HttpApiConfig.builder()
+        .url(makeUrl("http://localhost:%d/csv"))
+        .method("GET")
+        .headers(headers)
+        .authType("basic")
+        .userName("user")
+        .password("pass")
+        .dataPath("results")
+        .inputType("csv")
+        .csvOptions(tsvOptions)
+        .build();
+
     HttpApiConfig mockCsvConfigWithPaginator = HttpApiConfig.builder()
         .url(makeUrl("http://localhost:%d/csv"))
         .method("get")
@@ -715,6 +734,7 @@ public class TestHttpPlugin extends ClusterTest {
     configs.put("mockJsonNullBodyPost", mockJsonNullBodyPost);
     configs.put("mockPostPushdown", mockPostPushdown);
     configs.put("mockPostPushdownWithStaticParams", mockPostPushdownWithStaticParams);
+    configs.put("mocktsv", mockTsvConfig);
     configs.put("mockcsv", mockCsvConfig);
     configs.put("mockxml", mockXmlConfig);
     configs.put("mockxml_with_schema", mockXmlConfigWithSchema);
@@ -756,6 +776,7 @@ public class TestHttpPlugin extends ClusterTest {
         .addRow("local", "http")
         .addRow("local.mockcsv", "http")
         .addRow("local.mockpost", "http")
+        .addRow("local.mocktsv", "http")
         .addRow("local.mockxml", "http")
         .addRow("local.mockxml_with_schema", "http")
         .addRow("local.nullpost", "http")
@@ -1675,6 +1696,36 @@ public class TestHttpPlugin extends ClusterTest {
       assertEquals("Basic dXNlcjpwYXNz", recordedRequest.getHeader("Authorization"));
     }
   }
+
+  @Test
+  public void testTsvResponse() throws Exception {
+    String sql = "SELECT * FROM local.mocktsv.`tsv?arg1=4`";
+    try (MockWebServer server = startServer()) {
+
+      server.enqueue(new MockResponse().setResponseCode(200).setBody(TEST_TSV_RESPONSE));
+
+      RowSet results = client.queryBuilder().sql(sql).rowSet();
+
+      TupleMetadata expectedSchema = new SchemaBuilder()
+          .add("col1", TypeProtos.MinorType.VARCHAR, TypeProtos.DataMode.OPTIONAL)
+          .add("col2", TypeProtos.MinorType.VARCHAR, TypeProtos.DataMode.OPTIONAL)
+          .add("col3", TypeProtos.MinorType.VARCHAR, TypeProtos.DataMode.OPTIONAL)
+          .build();
+
+      RowSet expected = new RowSetBuilder(client.allocator(), expectedSchema)
+          .addRow("1", "2", "3")
+          .addRow("4", "5", "6")
+          .build();
+
+      RowSetUtilities.verify(expected, results);
+
+      // Verify correct username/password from endpoint configuration
+      RecordedRequest recordedRequest = server.takeRequest();
+      assertNotNull(recordedRequest.getHeader("Authorization"));
+      assertEquals("Basic dXNlcjpwYXNz", recordedRequest.getHeader("Authorization"));
+    }
+  }
+
 
   @Test
   public void testCsvResponseWithEnhancedMode() throws Exception {
