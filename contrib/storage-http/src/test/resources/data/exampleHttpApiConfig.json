@@ -1,0 +1,1 @@
+{"url":"http://example.com","requireTail":true,"method":"GET","postBody":"testBody","headers":{"Authorization":"Bearer token"},"params":["param1","param2"],"dataPath":"/data/path","authType":"none","inputType":"json","xmlDataLevel":1,"limitQueryParam":"limit","postParameterLocation":"POST_BODY","errorOn400":true,"caseSensitiveFilters":true,"verifySSLCert":true}

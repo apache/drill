@@ -1,0 +1,1 @@
+{"delimiter":";","quote":"'","quoteEscape":"\\","lineSeparator":"\r\n","numberOfRowsToSkip":5,"numberOfRecordsToRead":10,"maxColumns":1024,"maxCharsPerColumn":8192,"nullValue":"NULL"}

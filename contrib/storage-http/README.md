@@ -294,6 +294,9 @@ The REST plugin accepts three different types of input: `json`, `csv` and `xml`.
 #### JSON Configuration
 [Read the documentation for configuring json options, including schema provisioning.](JSON_Options.md)
 
+#### CSV Configuration
+[Read the documentation for configuring csv options.](CSV_Options.md)
+
 #### XML Configuration
 [Read the documentation for configuring XML options, including schema provisioning.](XML_Options.md)
 
