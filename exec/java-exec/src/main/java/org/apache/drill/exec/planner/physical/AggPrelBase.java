@@ -182,11 +182,10 @@ public abstract class AggPrelBase extends DrillAggregateRelBase implements Prel 
                   aggCall.e.rexList,
                   Collections.singletonList(aggExprOrdinal),
                   aggCall.e.filterArg,
-                  null,
                   RelCollations.EMPTY,
                   aggCall.e.getType(),
-                  aggCall.e.getName());
-
+                  aggCall.e.getName()
+              );
           phase2AggCallList.add(newAggCall);
         } else {
           AggregateCall newAggCall =
@@ -198,7 +197,6 @@ public abstract class AggPrelBase extends DrillAggregateRelBase implements Prel 
                   aggCall.e.rexList,
                   Collections.singletonList(aggExprOrdinal),
                   aggCall.e.filterArg,
-                  null,
                   RelCollations.EMPTY,
                   aggCall.e.getType(),
                   aggCall.e.getName());
@@ -275,10 +273,10 @@ public abstract class AggPrelBase extends DrillAggregateRelBase implements Prel 
           aggCall.rexList,
           arglist,
           aggCall.filterArg,
-          null,
           RelCollations.EMPTY,
           aggCall.type,
           aggCall.name));
+
     }
     return (Prel) copy(traitSet, children.get(0), groupingSet, groupingSets, aggregateCalls);
   }
