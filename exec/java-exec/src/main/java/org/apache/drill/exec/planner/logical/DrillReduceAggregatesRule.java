@@ -419,8 +419,10 @@ public class DrillReduceAggregatesRule extends RelOptRule {
         oldCall.isDistinct(),
         oldCall.isApproximate(),
         oldCall.ignoreNulls(),
+        oldCall.rexList,
         oldCall.getArgList(),
         oldCall.filterArg,
+        oldCall.distinctKeys,
         oldCall.getCollation(),
         sumType,
         null);
@@ -560,8 +562,10 @@ public class DrillReduceAggregatesRule extends RelOptRule {
             oldCall.isDistinct(),
             oldCall.isApproximate(),
             oldCall.ignoreNulls(),
-            ImmutableIntList.of(argOrdinal),
+            oldCall.rexList,
+            oldCall.getArgList(),
             oldCall.filterArg,
+            oldCall.distinctKeys,
             oldCall.getCollation(),
             sumType,
             null);
@@ -736,8 +740,10 @@ public class DrillReduceAggregatesRule extends RelOptRule {
                   oldAggregateCall.isDistinct(),
                   oldAggregateCall.isApproximate(),
                   oldAggregateCall.ignoreNulls(),
+                  oldAggregateCall.rexList,
                   oldAggregateCall.getArgList(),
                   oldAggregateCall.filterArg,
+                  oldAggregateCall.distinctKeys,
                   oldAggregateCall.getCollation(),
                   sumType,
                   oldAggregateCall.getName());
