@@ -175,17 +175,17 @@ public abstract class AggPrelBase extends DrillAggregateRelBase implements Prel 
           SqlAggFunction sumAggFun = new SqlSumCountAggFunction(aggCall.e.getType());
           AggregateCall newAggCall =
               AggregateCall.create(
-                  sumAggFun,
+                  aggCall.e.getAggregation(),
                   aggCall.e.isDistinct(),
                   aggCall.e.isApproximate(),
                   false,
                   aggCall.e.rexList,
                   Collections.singletonList(aggExprOrdinal),
                   aggCall.e.filterArg,
+                  null,
                   RelCollations.EMPTY,
                   aggCall.e.getType(),
-                  aggCall.e.getName()
-              );
+                  aggCall.e.getName());
           phase2AggCallList.add(newAggCall);
         } else {
           AggregateCall newAggCall =
@@ -197,6 +197,7 @@ public abstract class AggPrelBase extends DrillAggregateRelBase implements Prel 
                   aggCall.e.rexList,
                   Collections.singletonList(aggExprOrdinal),
                   aggCall.e.filterArg,
+                  null,
                   RelCollations.EMPTY,
                   aggCall.e.getType(),
                   aggCall.e.getName());
@@ -273,6 +274,7 @@ public abstract class AggPrelBase extends DrillAggregateRelBase implements Prel 
           aggCall.rexList,
           arglist,
           aggCall.filterArg,
+          null,
           RelCollations.EMPTY,
           aggCall.type,
           aggCall.name));

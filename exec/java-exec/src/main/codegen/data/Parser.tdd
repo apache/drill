@@ -955,10 +955,17 @@
   ]
 
   # List of methods for parsing extensions to "TRUNCATE" calls.
+<<<<<<< HEAD
   # Each must accept arguments "(SqlParserPos pos)".
   # Example: "SqlTruncate".
   truncateStatementParserMethods: [
   ]
+=======
+    # Each must accept arguments "(SqlParserPos pos)".
+    # Example: "SqlTruncate".
+    truncateStatementParserMethods: [
+    ]
+>>>>>>> 5c8cb1d28 (Merge commits from @vvysotskyi)
 
   includePosixOperators: false,
   includeCompoundIdentifier: false,
