@@ -616,7 +616,7 @@ public class TypeInferenceUtils {
 
       TimeUnit qualifier = ((SqlIntervalQualifier) ((SqlCallBinding) opBinding).operand(0)).getUnit();
 
-      SqlTypeName sqlTypeName;
+      SqlTypeName sqlTypeName = inputTypeName == SqlTypeName.DATE ? SqlTypeName.TIMESTAMP : inputTypeName;
       int precision = 0;
 
       // follow up with type inference of reduced expression
@@ -629,22 +629,15 @@ public class TypeInferenceUtils {
         case NANOSECOND:  // NANOSECOND is not supported by Calcite SqlTimestampAddFunction.
                           // Once it is fixed, NANOSECOND should be moved to the group below.
           precision = 3;
-          sqlTypeName = inputTypeName;
           break;
         case MICROSECOND:
         case MILLISECOND:
-          // precision should be specified for MICROSECOND and MILLISECOND
-          precision = 3;
-          sqlTypeName = SqlTypeName.TIMESTAMP;
-          break;
         case SECOND:
         case MINUTE:
         case HOUR:
           precision = 3;
           if (inputTypeName == SqlTypeName.TIME) {
             sqlTypeName = SqlTypeName.TIME;
-          } else {
-            sqlTypeName = SqlTypeName.TIMESTAMP;
           }
           break;
         default:

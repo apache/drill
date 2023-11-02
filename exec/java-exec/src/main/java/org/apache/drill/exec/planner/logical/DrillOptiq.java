@@ -601,11 +601,12 @@ public class DrillOptiq {
                 "MINUTE, SECOND");
           }
         }
+        case "timestampadd":
         case "timestampdiff": {
 
           // Assert that the first argument to extract is a QuotedString
           Preconditions.checkArgument(args.get(0) instanceof ValueExpressions.QuotedString,
-            "The first argument of TIMESTAMPDIFF function should be QuotedString");
+            String.format("The first argument of %s function should be QuotedString", functionName.toUpperCase()));
 
           String timeUnitStr = ((ValueExpressions.QuotedString) args.get(0)).value;
 
@@ -627,8 +628,8 @@ public class DrillOptiq {
               functionName += functionPostfix;
               return FunctionCallFactory.createExpression(functionName, args.subList(1, 3));
             default:
-              throw new UnsupportedOperationException("TIMESTAMPDIFF function supports the following time units: " +
-                  "YEAR, MONTH, DAY, HOUR, MINUTE, SECOND, QUARTER, WEEK, MICROSECOND, NANOSECOND");
+              throw new UnsupportedOperationException(String.format("%s function supports the following time units: " +
+                  "YEAR, MONTH, DAY, HOUR, MINUTE, SECOND, QUARTER, WEEK, MICROSECOND, NANOSECOND", functionName.toUpperCase()));
           }
         }
         case "trim": {

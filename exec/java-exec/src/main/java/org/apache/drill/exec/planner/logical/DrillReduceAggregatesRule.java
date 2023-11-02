@@ -542,6 +542,7 @@ public class DrillReduceAggregatesRule extends RelOptRule {
             oldCall.isDistinct(),
             oldCall.isApproximate(),
             oldCall.ignoreNulls(),
+            oldCall.rexList,
             ImmutableIntList.of(argSquaredOrdinal),
             oldCall.filterArg,
             oldCall.getCollation(),

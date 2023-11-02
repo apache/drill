@@ -71,6 +71,7 @@ public class DrillConvertletTable implements SqlRexConvertletTable {
         .put(SqlStdOperatorTable.SUBSTRING, substringConvertlet())
         .put(SqlStdOperatorTable.COALESCE, coalesceConvertlet())
         .put(SqlStdOperatorTable.TIMESTAMP_DIFF, timestampDiffConvertlet())
+        .put(SqlStdOperatorTable.TIMESTAMP_ADD, timestampAddConvertlet())
         .put(SqlStdOperatorTable.ROW, rowConvertlet())
         .put(SqlStdOperatorTable.RAND, randConvertlet())
         .put(SqlStdOperatorTable.AVG, avgVarianceConvertlet(DrillConvertletTable::expandAvg))
@@ -225,6 +226,32 @@ public class DrillConvertletTable implements SqlRexConvertletTable {
 
       return cx.getRexBuilder().makeCall(returnType,
           SqlStdOperatorTable.TIMESTAMP_DIFF, operands);
+    };
+  }
+
+  private static SqlRexConvertlet timestampAddConvertlet() {
+    return (cx, call) -> {
+      SqlIntervalQualifier unitLiteral = call.operand(0);
+      SqlIntervalQualifier qualifier =
+          new SqlIntervalQualifier(unitLiteral.getUnit(), null, SqlParserPos.ZERO);
+
+      List<RexNode> operands = Arrays.asList(
+          cx.convertExpression(qualifier),
+          cx.convertExpression(call.operand(1)),
+          cx.convertExpression(call.operand(2)));
+
+      RelDataTypeFactory typeFactory = cx.getTypeFactory();
+
+      RelDataType type = cx.getValidator().getValidatedNodeType(call.operand(2)).getSqlTypeName() == SqlTypeName.TIME
+          ? typeFactory.createSqlType(SqlTypeName.TIME)
+          : typeFactory.createSqlType(SqlTypeName.TIMESTAMP);
+      RelDataType returnType = typeFactory.createTypeWithNullability(
+          type,
+          cx.getValidator().getValidatedNodeType(call.operand(1)).isNullable()
+              || cx.getValidator().getValidatedNodeType(call.operand(2)).isNullable());
+
+      return cx.getRexBuilder().makeCall(returnType,
+          SqlStdOperatorTable.TIMESTAMP_ADD, operands);
     };
   }
 
