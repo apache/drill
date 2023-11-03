@@ -20,7 +20,6 @@ package org.apache.drill.exec.store.xml;
 
 import org.apache.drill.categories.RowSetTest;
 import org.apache.drill.common.exceptions.UserException;
-import org.apache.drill.common.exceptions.UserRemoteException;
 import org.apache.drill.common.types.TypeProtos.DataMode;
 import org.apache.drill.common.types.TypeProtos.MinorType;
 import org.apache.drill.exec.physical.rowSet.RowSet;
