@@ -19,6 +19,7 @@
 package org.apache.drill.exec.store.xml;
 
 import org.apache.drill.categories.RowSetTest;
+import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.common.types.TypeProtos.DataMode;
 import org.apache.drill.common.types.TypeProtos.MinorType;
 import org.apache.drill.exec.physical.rowSet.RowSet;
@@ -41,6 +42,8 @@ import static org.apache.drill.test.rowSet.RowSetUtilities.mapArray;
 import static org.apache.drill.test.rowSet.RowSetUtilities.objArray;
 import static org.apache.drill.test.rowSet.RowSetUtilities.strArray;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
 @Category(RowSetTest.class)
 public class TestXMLReader extends ClusterTest {
@@ -87,6 +90,16 @@ public class TestXMLReader extends ClusterTest {
   }
 
   @Test
+  public void testXXE() throws Exception {
+    String sql = "SELECT * FROM cp.`xml/bad.xml`";
+    try {
+      client.queryBuilder().sql(sql).rowSet();
+      fail();
+    } catch (UserException e) {
+       assertTrue(e.getMessage().contains("DATA_READ ERROR: Error parsing XML file"));
+    }
+  }
+
   public void testSimpleProvidedSchema() throws Exception {
     String sql = "SELECT * FROM table(cp.`xml/simple_with_datatypes.xml` (type => 'xml', schema " +
       "=> 'inline=(`int_field` INT, `bigint_field` BIGINT, `float_field` FLOAT, `double_field` DOUBLE, `boolean_field` " +

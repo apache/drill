@@ -99,6 +99,9 @@ public class XMLReader implements Closeable {
   public XMLReader(InputStream fsStream, int dataLevel) throws XMLStreamException {
     this.fsStream = fsStream;
     XMLInputFactory inputFactory = XMLInputFactory.newInstance();
+
+    // This property prevents XXE attacks by disallowing DTD.
+    inputFactory.setProperty(XMLInputFactory.SUPPORT_DTD, false);
     reader = inputFactory.createXMLEventReader(fsStream);
     fieldNameStack = new Stack<>();
     rowWriterStack = new Stack<>();
