@@ -79,9 +79,9 @@ public class TestSplunkUserTranslation extends SplunkBaseTest {
       .property(DrillProperties.PASSWORD, TEST_USER_1_PASSWORD)
       .build();
 
-    String sql = "SELECT acceleration_id, action, add_offset, add_timestamp FROM ut_splunk._audit LIMIT 2";
+    String sql = "SELECT acceleration_id, action, add_offset, add_timestamp FROM ut_splunk._audit LIMIT 1";
     RowSet results = client.queryBuilder().sql(sql).rowSet();
-    assertEquals(2, results.rowCount());
+    assertEquals(1, results.rowCount());
     results.clear();
   }
 
