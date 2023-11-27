@@ -65,7 +65,7 @@
     <kerby.version>1.0.0</kerby.version>
     <findbugs.version>3.0.5</findbugs.version>
     <netty.tcnative.classifier />
-    <commons.io.version>2.14.0</commons.io.version>
+    <commons.io.version>2.15.0</commons.io.version>
     <commons.collections.version>4.4</commons.collections.version>
     <hamcrest.version>2.2</hamcrest.version>
     <curator.version>5.2.0</curator.version>
@@ -111,7 +111,7 @@
     <javax.el.version>3.0.0</javax.el.version>
     <surefire.version>3.1.2</surefire.version>
     <jna.version>5.13.0</jna.version>
-    <commons.compress.version>1.24.0</commons.compress.version>
+    <commons.compress.version>1.25.0</commons.compress.version>
     <hikari.version>4.0.3</hikari.version>
     <netty.version>4.1.73.Final</netty.version>
     <httpclient.version>4.5.14</httpclient.version>
@@ -122,13 +122,13 @@
     <commons.lang3.version>3.10</commons.lang3.version>
     <testcontainers.version>1.18.3</testcontainers.version>
     <typesafe.config.version>1.4.2</typesafe.config.version>
-    <commons.codec.version>1.14</commons.codec.version>
+    <commons.codec.version>1.16.0</commons.codec.version>
     <xerces.version>2.12.2</xerces.version>
     <commons.configuration.version>1.10</commons.configuration.version>
     <commons.beanutils.version>1.9.4</commons.beanutils.version>
     <httpdlog-parser.version>5.10.0</httpdlog-parser.version>
     <yauaa.version>7.19.2</yauaa.version>
-    <log4j.version>2.20.0</log4j.version>
+    <log4j.version>2.22.0</log4j.version>
     <aircompressor.version>0.25</aircompressor.version>
     <iceberg.version>0.12.1</iceberg.version>
     <univocity-parsers.version>2.8.3</univocity-parsers.version>
