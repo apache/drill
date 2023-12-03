@@ -45,6 +45,8 @@ public class IcebergFormatPluginConfig implements FormatPluginConfig {
 
   private final Boolean ignoreResiduals;
 
+  private final Boolean allowAnyClassToBeLoaded;
+
   private final Long snapshotId;
 
   private final Long snapshotAsOfTime;
@@ -60,6 +62,7 @@ public class IcebergFormatPluginConfig implements FormatPluginConfig {
     this.caseSensitive = builder.caseSensitive;
     this.includeColumnStats = builder.includeColumnStats;
     this.ignoreResiduals = builder.ignoreResiduals;
+    this.allowAnyClassToBeLoaded = builder.allowAnyClassToBeLoaded;
     this.snapshotId = builder.snapshotId;
     this.snapshotAsOfTime = builder.snapshotAsOfTime;
     this.fromSnapshotId = builder.fromSnapshotId;
@@ -100,6 +103,10 @@ public class IcebergFormatPluginConfig implements FormatPluginConfig {
     return this.ignoreResiduals;
   }
 
+  public Boolean getAllowAnyClassToBeLoaded() {
+    return this.allowAnyClassToBeLoaded;
+  }
+
   public Long getSnapshotId() {
     return this.snapshotId;
   }
@@ -130,6 +137,7 @@ public class IcebergFormatPluginConfig implements FormatPluginConfig {
       && Objects.equals(caseSensitive, that.caseSensitive)
       && Objects.equals(includeColumnStats, that.includeColumnStats)
       && Objects.equals(ignoreResiduals, that.ignoreResiduals)
+      && Objects.equals(allowAnyClassToBeLoaded, that.allowAnyClassToBeLoaded)
       && Objects.equals(snapshotId, that.snapshotId)
       && Objects.equals(snapshotAsOfTime, that.snapshotAsOfTime)
       && Objects.equals(fromSnapshotId, that.fromSnapshotId)
@@ -138,8 +146,8 @@ public class IcebergFormatPluginConfig implements FormatPluginConfig {
 
   @Override
   public int hashCode() {
-    return Objects.hash(properties, snapshot, caseSensitive, includeColumnStats,
-      ignoreResiduals, snapshotId, snapshotAsOfTime, fromSnapshotId, toSnapshotId);
+    return Objects.hash(properties, snapshot, caseSensitive, includeColumnStats, ignoreResiduals,
+        allowAnyClassToBeLoaded, snapshotId, snapshotAsOfTime, fromSnapshotId, toSnapshotId);
   }
 
   @JsonPOJOBuilder(withPrefix = "")
@@ -151,6 +159,8 @@ public class IcebergFormatPluginConfig implements FormatPluginConfig {
     private Boolean includeColumnStats;
 
     private Boolean ignoreResiduals;
+
+    private Boolean allowAnyClassToBeLoaded;
 
     private Long snapshotId;
 
@@ -177,6 +187,11 @@ public class IcebergFormatPluginConfig implements FormatPluginConfig {
 
     public IcebergFormatPluginConfigBuilder ignoreResiduals(Boolean ignoreResiduals) {
       this.ignoreResiduals = ignoreResiduals;
+      return this;
+    }
+
+    public IcebergFormatPluginConfigBuilder allowAnyClassToBeLoaded(Boolean allowAnyClassToBeLoaded) {
+      this.allowAnyClassToBeLoaded = allowAnyClassToBeLoaded;
       return this;
     }
 

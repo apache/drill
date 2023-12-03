@@ -27,7 +27,6 @@ import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import com.fasterxml.jackson.databind.deser.std.StdDeserializer;
 import com.fasterxml.jackson.databind.ser.std.StdSerializer;
 import org.apache.iceberg.CombinedScanTask;
-import org.apache.iceberg.ScanTask;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -122,19 +121,17 @@ public class IcebergWork {
       final Class<?> resolvedClass = super.resolveClass(cls);
       if ((resolvedClass.isArray() &&
           (resolvedClass.getComponentType().isPrimitive() ||
-              isValidPackage(resolvedClass.getComponentType().getName()) ||
-              ScanTask.class.isAssignableFrom(resolvedClass.getComponentType())))
-          || resolvedClass.isPrimitive()
-          || ScanTask.class.isAssignableFrom(resolvedClass)) {
+              isValidPackage(resolvedClass.getComponentType().getName())))
+          || resolvedClass.isPrimitive()) {
         return resolvedClass;
       }
       throw new IOException("Rejected deserialization of unexpected class: " + className);
     }
 
     private boolean isValidPackage(final String className) {
-      return className.startsWith("org.apache.iceberg") ||
-          className.startsWith("org.apache.drill") ||
-          className.startsWith("java");
+      return className.startsWith("org.apache.iceberg.") ||
+          className.startsWith("org.apache.drill.") ||
+          className.startsWith("java.");
     }
   }
 
