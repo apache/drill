@@ -29,7 +29,6 @@ import org.apache.drill.exec.store.sys.PersistentStore;
 import org.apache.drill.exec.store.sys.PersistentStoreConfig;
 import org.apache.drill.exec.store.sys.PersistentStoreProvider;
 import org.apache.drill.exec.store.sys.store.provider.InMemoryStoreProvider;
-import org.apache.drill.exec.util.AssertionUtil;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
 import org.slf4j.Logger;
@@ -323,7 +322,8 @@ public class SystemOptionManager extends BaseOptionManager implements AutoClosea
       new OptionDefinition(ExecConstants.ENABLE_ALIASES_VALIDATOR, new OptionMetaData(OptionValue.AccessibleScopes.SYSTEM, true, false)),
       new OptionDefinition(ExecConstants.STORAGE_PLUGIN_RETRY_ATTEMPTS_VALIDATOR, new OptionMetaData(OptionValue.AccessibleScopes.SYSTEM, true, false)),
       new OptionDefinition(ExecConstants.STORAGE_PLUGIN_RETRY_DELAY_VALIDATOR, new OptionMetaData(OptionValue.AccessibleScopes.SYSTEM, true, false)),
-      new OptionDefinition(ExecConstants.STORAGE_PLUGIN_AUTO_DISABLE_VALIDATOR, new OptionMetaData(OptionValue.AccessibleScopes.SYSTEM, true, false))
+      new OptionDefinition(ExecConstants.STORAGE_PLUGIN_AUTO_DISABLE_VALIDATOR, new OptionMetaData(OptionValue.AccessibleScopes.SYSTEM, true, false)),
+      new OptionDefinition(ExecConstants.DRILLBIT_CONTROLS_VALIDATOR)
     };
 
     CaseInsensitiveMap<OptionDefinition> map = Arrays.stream(definitions)
@@ -332,11 +332,6 @@ public class SystemOptionManager extends BaseOptionManager implements AutoClosea
         Function.identity(),
         (o, n) -> n,
         CaseInsensitiveMap::newHashMap));
-
-
-    if (AssertionUtil.isAssertionsEnabled()) {
-      map.put(ExecConstants.DRILLBIT_CONTROL_INJECTIONS, new OptionDefinition(ExecConstants.DRILLBIT_CONTROLS_VALIDATOR));
-    }
 
     return map;
   }
