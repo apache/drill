@@ -90,7 +90,14 @@ public class PooledByteBufAllocatorL {
 
     @SuppressWarnings("unchecked")
     public InnerAllocator() {
-      super(true);
+      super(true,
+          PooledByteBufAllocator.defaultNumHeapArena(),
+          PooledByteBufAllocator.defaultNumDirectArena(),
+          PooledByteBufAllocator.defaultPageSize(),
+          Integer.getInteger("io.netty.allocator.maxOrder", 11),
+          PooledByteBufAllocator.defaultSmallCacheSize(),
+          PooledByteBufAllocator.defaultNormalCacheSize(),
+          Boolean.parseBoolean(System.getProperty("io.netty.allocator.useCacheForAllThreads", "true")));
 
       try {
         Field f = PooledByteBufAllocator.class.getDeclaredField("directArenas");
