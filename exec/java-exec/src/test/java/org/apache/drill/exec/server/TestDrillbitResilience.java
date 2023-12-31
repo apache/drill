@@ -29,7 +29,6 @@ import java.io.IOException;
 
 import ch.qos.logback.classic.Level;
 import org.apache.commons.math3.util.Pair;
-import org.apache.drill.categories.EasyOutOfMemory;
 import org.apache.drill.categories.FlakyTest;
 import org.apache.drill.exec.client.DrillClient;
 import org.apache.drill.exec.physical.impl.partitionsender.PartitionSenderRootExec;
@@ -106,7 +105,7 @@ import com.google.common.base.Preconditions;
  * <li>specify Level.DEBUG for CURRENT_LOG_LEVEL</li>
  * <li>compare trace output for successful test case and failed</li>
  */
-@Category({ SlowTest.class, FlakyTest.class, EasyOutOfMemory.class })
+@Category({ SlowTest.class, FlakyTest.class })
 public class TestDrillbitResilience extends ClusterTest {
   private static final Logger logger = org.slf4j.LoggerFactory.getLogger(TestDrillbitResilience.class);
   protected static LogFixture logFixture;
