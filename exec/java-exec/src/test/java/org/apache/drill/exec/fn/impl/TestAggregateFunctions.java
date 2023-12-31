@@ -31,7 +31,6 @@ import org.apache.drill.exec.planner.physical.PlannerSettings;
 import org.apache.drill.exec.record.RecordBatchLoader;
 import org.apache.drill.exec.record.VectorWrapper;
 import org.apache.drill.exec.util.Text;
-import org.apache.drill.categories.EasyOutOfMemory;
 import org.apache.drill.categories.OperatorTest;
 import org.apache.drill.categories.PlannerTest;
 import org.apache.drill.categories.SqlFunctionTest;
@@ -69,7 +68,7 @@ import static org.hamcrest.CoreMatchers.containsString;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
-@Category({ SqlFunctionTest.class, OperatorTest.class, PlannerTest.class, EasyOutOfMemory.class })
+@Category({ SqlFunctionTest.class, OperatorTest.class, PlannerTest.class })
 public class TestAggregateFunctions extends ClusterTest {
 
   @Rule
