@@ -130,7 +130,7 @@
     <aircompressor.version>0.25</aircompressor.version>
     <iceberg.version>0.12.1</iceberg.version>
     <univocity-parsers.version>2.8.3</univocity-parsers.version>
-    <mongo.version>4.3.3</mongo.version>
+    <mongo.version>4.11.1</mongo.version>
     <swagger.version>2.1.12</swagger.version>
     <junit.args />
   </properties>
