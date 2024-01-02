@@ -114,7 +114,7 @@
     <jna.version>5.13.0</jna.version>
     <commons.compress.version>1.25.0</commons.compress.version>
     <hikari.version>4.0.3</hikari.version>
-    <netty.version>4.1.73.Final</netty.version>
+    <netty.version>4.1.101.Final</netty.version>
     <httpclient.version>4.5.14</httpclient.version>
     <libthrift.version>0.18.1</libthrift.version>
     <derby.version>10.14.2.0</derby.version>
