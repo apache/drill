@@ -103,19 +103,20 @@
       <includes>
         <!-- Please keep this list sorted. -->
         <include>ch.qos.logback</include>
-        <include>ch.qos.logback</include>
         <include>com.sun.codemodel</include>
+        <include>jakarta.activation</include>
+        <include>jakarta.annotation</include>
+        <include>jakarta.ws.rs</include>
+        <include>jakarta.xml.bind</include>
         <include>javax.activation</include>
         <include>javax.annotation</include>
         <include>javax.servlet</include>
-        <include>javax.ws.rs</include>
+        <include>javax.servlet.*</include>
         <include>javax.xml.bind</include>
         <include>org.eclipse.jetty</include>
         <include>org.glassfish.hk2.external</include>
         <include>org.glassfish.hk2</include>
         <include>org.glassfish.jersey.containers</include>
-        <include>org.glassfish.jersey.containers</include>
-        <include>org.glassfish.jersey.core</include>
         <include>org.glassfish.jersey.core</include>
         <include>org.glassfish.jersey.ext</include>
         <include>org.glassfish.jersey.media</include>
@@ -130,14 +131,17 @@
       <useProjectArtifact>false</useProjectArtifact>
       <excludes>
         <!-- Please keep this list sorted. -->
-        <exclude>ch.qos.logback </exclude>
         <exclude>ch.qos.logback</exclude>
         <exclude>com.sun.codemodel</exclude>
         <exclude>io.netty:netty-tcnative</exclude>
+        <exclude>jakarta.activation</exclude>
+        <exclude>jakarta.annotation</exclude>
+        <exclude>jakarta.ws.rs</exclude>
+        <exclude>jakarta.xml.bind</exclude>
         <exclude>javax.activation</exclude>
         <exclude>javax.annotation</exclude>
         <exclude>javax.servlet</exclude>
-        <exclude>javax.ws.rs </exclude>
+        <exclude>javax.servlet.*</exclude>
         <exclude>javax.xml.bind</exclude>
         <exclude>junit:junit:jar</exclude>
         <exclude>org.apache.drill.contrib.data</exclude>
@@ -152,8 +156,6 @@
         <exclude>org.glassfish.hk2</exclude>
         <exclude>org.glassfish.hk2.external</exclude>
         <exclude>org.glassfish.jersey.containers</exclude>
-        <exclude>org.glassfish.jersey.containers</exclude>
-        <exclude>org.glassfish.jersey.core</exclude>
         <exclude>org.glassfish.jersey.core</exclude>
         <exclude>org.glassfish.jersey.ext</exclude>
         <exclude>org.glassfish.jersey.media</exclude>
