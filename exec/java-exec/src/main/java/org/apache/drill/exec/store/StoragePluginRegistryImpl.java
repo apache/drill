@@ -291,16 +291,14 @@ public class StoragePluginRegistryImpl implements StoragePluginRegistry {
     try {
       for (ConnectorLocator locator : locators) {
         StoragePlugins locatorPlugins = locator.bootstrapPlugins();
-        if (locatorPlugins != null) {
-          bootstrapPlugins.putAll(locatorPlugins);
-        }
+        bootstrapPlugins.putAll(locatorPlugins);
       }
     } catch (IOException e) {
       throw new IllegalStateException(
           "Failure initializing the plugin store. Drillbit exiting.", e);
     }
     pluginStore.putAll(bootstrapPlugins);
-    locators.stream().forEach(loc -> loc.onUpgrade());
+    locators.forEach(ConnectorLocator::onUpgrade);
   }
 
   /**
@@ -311,9 +309,7 @@ public class StoragePluginRegistryImpl implements StoragePluginRegistry {
     StoragePlugins upgraded = new StoragePlugins();
     for (ConnectorLocator locator : locators) {
       StoragePlugins locatorPlugins = locator.updatedPlugins();
-      if (upgraded != null) {
-        upgraded.putAll(locatorPlugins);
-      }
+      upgraded.putAll(locatorPlugins);
     }
     if (upgraded.isEmpty()) {
       return;
@@ -325,6 +321,7 @@ public class StoragePluginRegistryImpl implements StoragePluginRegistry {
       }
       pluginStore.put(newPlugin.getKey(), newPlugin.getValue());
     }
+    locators.forEach(ConnectorLocator::onUpgrade);
   }
 
   /**
