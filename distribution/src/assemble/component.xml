@@ -110,25 +110,27 @@
       <unpack>false</unpack>
       <useProjectArtifact>false</useProjectArtifact>
       <includes>
-        <include>org.glassfish.jersey.containers</include>
-        <include>org.glassfish.jersey.core</include>
-        <include>org.reflections</include>
-        <include>org.glassfish.hk2.external</include>
-        <include>org.eclipse.jetty</include>
+        <!-- Please keep this list sorted. -->
+        <include>ch.qos.logback</include>
+        <include>com.sun.codemodel</include>
+        <include>jakarta.activation</include>
+        <include>jakarta.annotation</include>
+        <include>jakarta.ws.rs</include>
+        <include>jakarta.xml.bind</include>
         <include>javax.activation</include>
         <include>javax.annotation</include>
+        <include>javax.servlet</include>
+        <include>javax.servlet.*</include>
+        <include>javax.xml.bind</include>
+        <include>org.eclipse.jetty</include>
+        <include>org.glassfish.hk2.external</include>
+        <include>org.glassfish.hk2</include>
         <include>org.glassfish.jersey.containers</include>
         <include>org.glassfish.jersey.core</include>
         <include>org.glassfish.jersey.ext</include>
         <include>org.glassfish.jersey.media</include>
-        <include>org.glassfish.hk2</include>
-        <include>javax.servlet</include>
-        <include>javax.ws.rs</include>
         <include>org.jvnet.mimepull</include>
-        <include>com.sun.codemodel</include>
-        <include>javax.xml.bind</include>
-        <include>ch.qos.logback</include>
-        <include>ch.qos.logback</include>
+        <include>org.reflections</include>
       </includes>
       <scope>test</scope>
     </dependencySet>
@@ -137,40 +139,40 @@
       <unpack>false</unpack>
       <useProjectArtifact>false</useProjectArtifact>
       <excludes>
-        <exclude>org.apache.zookeeper</exclude>
-        <exclude>org.apache.drill</exclude>
-        <exclude>org.apache.drill.exec</exclude>
-        <exclude>org.apache.drill.contrib</exclude>
-        <exclude>org.apache.drill.contrib.data</exclude>
-        <exclude>org.apache.drill.contrib.storage-hive</exclude>
-        <exclude>org.apache.drill.memory</exclude>
-        <exclude>org.apache.drill.metastore</exclude>
-        <exclude>org.junit.jupiter:*:jar</exclude>
-        <exclude>org.junit.platform:*:jar</exclude>
-        <exclude>org.junit.vintage:*:jar</exclude>
-        <!-- Below Hive jars are already included in drill-hive-exec-shaded.jar -->
-        <exclude>junit:junit:jar</exclude>
-        <!-- exclude or sqlline has problems -->
-        <exclude>org.glassfish.jersey.containers</exclude>
-        <exclude>org.glassfish.jersey.core</exclude>
-        <exclude>org.reflections</exclude>
-        <exclude>org.glassfish.hk2.external</exclude>
-        <exclude>org.eclipse.jetty</exclude>
+        <!-- Please keep this list sorted. -->
+        <exclude>ch.qos.logback</exclude>
+        <exclude>com.sun.codemodel</exclude>
+        <exclude>io.netty:netty-tcnative</exclude>
+        <exclude>jakarta.activation</exclude>
+        <exclude>jakarta.annotation</exclude>
+        <exclude>jakarta.ws.rs</exclude>
+        <exclude>jakarta.xml.bind</exclude>
         <exclude>javax.activation</exclude>
         <exclude>javax.annotation</exclude>
+        <exclude>javax.servlet</exclude>
+        <exclude>javax.servlet.*</exclude>
+        <exclude>javax.xml.bind</exclude>
+        <exclude>junit:junit:jar</exclude>
+        <exclude>org.apache.drill.contrib.data</exclude>
+        <exclude>org.apache.drill.contrib</exclude>
+        <exclude>org.apache.drill.contrib.storage-hive</exclude>
+        <exclude>org.apache.drill</exclude>
+        <exclude>org.apache.drill.exec</exclude>
+        <exclude>org.apache.drill.memory</exclude>
+        <exclude>org.apache.drill.metastore</exclude>
+        <exclude>org.apache.zookeeper</exclude>
+        <exclude>org.eclipse.jetty</exclude>
+        <exclude>org.glassfish.hk2</exclude>
+        <exclude>org.glassfish.hk2.external</exclude>
         <exclude>org.glassfish.jersey.containers</exclude>
         <exclude>org.glassfish.jersey.core</exclude>
         <exclude>org.glassfish.jersey.ext</exclude>
         <exclude>org.glassfish.jersey.media</exclude>
-        <exclude>org.glassfish.hk2</exclude>
-        <exclude>javax.servlet</exclude>
-        <exclude>javax.ws.rs </exclude>
+        <exclude>org.junit.jupiter:*:jar</exclude>
+        <exclude>org.junit.platform:*:jar</exclude>
+        <exclude>org.junit.vintage:*:jar</exclude>
         <exclude>org.jvnet.mimepull</exclude>
-        <exclude>com.sun.codemodel</exclude>
-        <exclude>javax.xml.bind</exclude>
-        <exclude>ch.qos.logback </exclude>
-        <exclude>ch.qos.logback</exclude>
-        <exclude>io.netty:netty-tcnative</exclude>
+        <exclude>org.reflections</exclude>
       </excludes>
       <scope>test</scope>
     </dependencySet>
