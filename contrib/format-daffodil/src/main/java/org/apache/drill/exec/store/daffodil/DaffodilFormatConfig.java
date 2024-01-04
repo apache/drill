@@ -25,7 +25,6 @@ import com.fasterxml.jackson.annotation.JsonTypeName;
 import com.google.common.collect.ImmutableList;
 import org.apache.drill.common.PlanStringBuilder;
 import org.apache.drill.common.logical.FormatPluginConfig;
-import org.apache.drill.exec.store.daffodil.DaffodilBatchReader.DaffodilReaderConfig;
 
 import java.util.Collections;
 import java.util.List;
@@ -84,8 +83,7 @@ public class DaffodilFormatConfig implements FormatPluginConfig {
   }
 
   public DaffodilReaderConfig getReaderConfig(DaffodilFormatPlugin plugin) {
-    DaffodilReaderConfig readerConfig = new DaffodilReaderConfig(plugin);
-    return readerConfig;
+    return new DaffodilReaderConfig(plugin);
   }
 
   @Override

@@ -56,11 +56,11 @@ public class DaffodilFormatPlugin extends EasyFormatPlugin<DaffodilFormatConfig>
   }
 
   public static class DaffodilReaderFactory extends FileReaderFactory {
-    private final DaffodilBatchReader.DaffodilReaderConfig readerConfig;
+    private final DaffodilReaderConfig readerConfig;
 
     private final EasySubScan scan;
 
-    public DaffodilReaderFactory(DaffodilBatchReader.DaffodilReaderConfig config,
+    public DaffodilReaderFactory(DaffodilReaderConfig config,
         EasySubScan scan) {
       this.readerConfig = config;
       this.scan = scan;

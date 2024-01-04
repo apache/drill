@@ -65,16 +65,10 @@ public class DaffodilDataProcessorFactory {
    * @return the DataProcessor
    * @throws CompileFailure
    *     - if schema compilation fails
-   * @throws IOException
-   *     - if the schemaFileURI cannot be opened or is not found.
-   * @throws URISyntaxException
-   *     - if the schemaFileURI is not legal syntax.
-   * @throws InvalidParserException
-   *     - if the reloading of the parser from pre-compiled binary fails.
    */
   public DataProcessor getDataProcessor(URI schemaFileURI, boolean validationMode, String rootName,
       String rootNS)
-      throws CompileFailure, IOException, URISyntaxException, InvalidParserException {
+      throws CompileFailure {
 
     DaffodilDataProcessorFactory dmp = new DaffodilDataProcessorFactory();
     boolean isPrecompiled = schemaFileURI.toString().endsWith(".bin");
@@ -85,10 +79,19 @@ public class DaffodilDataProcessorFactory {
         logger.warn("Root element name '{}' is ignored when used with precompiled DFDL schema.",
             rootName);
       }
-      dmp.loadSchema(schemaFileURI);
+      try {
+        dmp.loadSchema(schemaFileURI);
+      } catch (IOException | InvalidParserException e) {
+        throw new CompileFailure(e);
+      }
       dmp.setupDP(validationMode, null);
     } else {
-      List<Diagnostic> pfDiags = dmp.compileSchema(schemaFileURI, rootName, rootNS);
+      List<Diagnostic> pfDiags;
+      try {
+        pfDiags = dmp.compileSchema(schemaFileURI, rootName, rootNS);
+      } catch (URISyntaxException | IOException e) {
+        throw new CompileFailure(e);
+      }
       dmp.setupDP(validationMode, pfDiags);
     }
     return dmp.dp;
@@ -99,7 +102,6 @@ public class DaffodilDataProcessorFactory {
     dp = c.reload(Channels.newChannel(schemaFileURI.toURL().openStream()));
   }
 
-  @SuppressWarnings("ReassignedVariable")
   private List<Diagnostic> compileSchema(URI schemaFileURI, String rootName, String rootNS)
       throws URISyntaxException, IOException, CompileFailure {
     Compiler c = Daffodil.compiler();
@@ -143,7 +145,8 @@ public class DaffodilDataProcessorFactory {
   /**
    * Thrown if schema compilation fails.
    * <p/>
-   * Contains diagnostic objects which give the cause(s) of the failure.
+   * Contains diagnostic objects which give the cause(s) of the failure, or
+   * contains a cause Throwable providing the reason.
    */
   public static class CompileFailure extends Exception {
     List<Diagnostic> diags;
@@ -151,6 +154,9 @@ public class DaffodilDataProcessorFactory {
     CompileFailure(List<Diagnostic> diagnostics) {
       super("DFDL Schema Compile Failure");
       diags = diagnostics;
+    }
+    CompileFailure(Throwable cause) {
+      super(cause);
     }
   }
 }

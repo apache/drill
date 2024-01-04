@@ -34,17 +34,18 @@ import org.apache.hadoop.fs.Path;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.IOException;
 import java.io.InputStream;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.Objects;
 
+import static org.apache.drill.exec.store.daffodil.schema.DaffodilDataProcessorFactory.*;
 import static org.apache.drill.exec.store.daffodil.schema.DrillDaffodilSchemaUtils.daffodilDataProcessorToDrillSchema;
 
 public class DaffodilBatchReader implements ManagedReader {
 
   private static final Logger logger = LoggerFactory.getLogger(DaffodilBatchReader.class);
-  private final DaffodilFormatConfig dafConfig;
   private final RowSetLoader rowSetLoader;
   private final CustomErrorContext errorContext;
   private final DaffodilMessageParser dafParser;
@@ -54,7 +55,7 @@ public class DaffodilBatchReader implements ManagedReader {
       FileSchemaNegotiator negotiator) {
 
     errorContext = negotiator.parentErrorContext();
-    this.dafConfig = readerConfig.plugin.getConfig();
+    DaffodilFormatConfig dafConfig = readerConfig.plugin.getConfig();
 
     String schemaURIString = dafConfig.getSchemaURI(); // "schema/complexArray1.dfdl.xsd";
     String rootName = dafConfig.getRootName();
@@ -76,7 +77,7 @@ public class DaffodilBatchReader implements ManagedReader {
     DataProcessor dp;
     try {
       dp = dpf.getDataProcessor(fsSchemaURI, validationMode, rootName, rootNamespace);
-    } catch (Exception e) {
+    } catch (CompileFailure e) {
       throw UserException.dataReadError(e)
           .message(String.format("Failed to get Daffodil DFDL processor for: %s", fsSchemaURI))
           .addContext(errorContext).addContext(e.getMessage()).build(logger);
@@ -99,7 +100,7 @@ public class DaffodilBatchReader implements ManagedReader {
     // convert infoset event calls to fill in a Drill row via a rowSetLoader.
     DaffodilDrillInfosetOutputter outputter = new DaffodilDrillInfosetOutputter(rowSetLoader);
 
-    // Now we can setup the dafParser with the outputter it will drive with
+    // Now we can set up the dafParser with the outputter it will drive with
     // the parser-produced infoset.
     dafParser = new DaffodilMessageParser(dp); // needs further initialization after this.
     dafParser.setInfosetOutputter(outputter);
@@ -108,7 +109,7 @@ public class DaffodilBatchReader implements ManagedReader {
     // Lastly, we open the data stream
     try {
       dataInputStream = fs.openPossiblyCompressedStream(dataPath);
-    } catch (Exception e) {
+    } catch (IOException e) {
       throw UserException.dataReadError(e)
           .message(String.format("Failed to open input file: %s", dataPath.toString()))
           .addContext(errorContext).addContext(e.getMessage()).build(logger);
@@ -146,21 +147,16 @@ public class DaffodilBatchReader implements ManagedReader {
     }
     while (rowSetLoader.start() && !dafParser.isEOF()) { // we never zero-trip this loop.
       // the predicate is always true once.
-      try {
-        dafParser.parse();
-        if (dafParser.isProcessingError()) {
-          assert (Objects.nonNull(dafParser.getDiagnostics()));
-          throw UserException.dataReadError().message(dafParser.getDiagnosticsAsString())
-              .addContext(errorContext).build(logger);
-        }
-        if (dafParser.isValidationError()) {
-          logger.warn(dafParser.getDiagnosticsAsString());
-          // Note that even if daffodil is set to not validate, validation errors may still occur
-          // from DFDL's "recoverableError" assertions.
-        }
-      } catch (Exception e) {
-        throw UserException.dataReadError(e).message("Error parsing file: " + e.getMessage())
+      dafParser.parse();
+      if (dafParser.isProcessingError()) {
+        assert (Objects.nonNull(dafParser.getDiagnostics()));
+        throw UserException.dataReadError().message(dafParser.getDiagnosticsAsString())
             .addContext(errorContext).build(logger);
+      }
+      if (dafParser.isValidationError()) {
+        logger.warn(dafParser.getDiagnosticsAsString());
+        // Note that even if daffodil is set to not validate, validation errors may still occur
+        // from DFDL's "recoverableError" assertions.
       }
       rowSetLoader.save();
     }
@@ -174,12 +170,12 @@ public class DaffodilBatchReader implements ManagedReader {
   public void close() {
     AutoCloseables.closeSilently(dataInputStream);
   }
+}
 
-  static class DaffodilReaderConfig {
-    final DaffodilFormatPlugin plugin;
+class DaffodilReaderConfig {
+  final DaffodilFormatPlugin plugin;
 
-    DaffodilReaderConfig(DaffodilFormatPlugin plugin) {
-      this.plugin = plugin;
-    }
+  DaffodilReaderConfig(DaffodilFormatPlugin plugin) {
+    this.plugin = plugin;
   }
 }

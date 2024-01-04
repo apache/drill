@@ -75,7 +75,6 @@ public class TestDaffodilReader extends ClusterTest {
     QueryBuilder qb = client.queryBuilder();
     QueryBuilder query = qb.sql(selectRow("simple", "data01Int.dat.gz"));
     RowSet results = query.rowSet();
-    results.print();
     assertEquals(1, results.rowCount());
 
     // create the expected metadata and data for this test
@@ -94,7 +93,6 @@ public class TestDaffodilReader extends ClusterTest {
     QueryBuilder qb = client.queryBuilder();
     QueryBuilder query = qb.sql(selectRow("simple", "data06Int.dat"));
     RowSet results = query.rowSet();
-    results.print();
     assertEquals(6, results.rowCount());
 
     // create the expected metadata and data for this test
@@ -113,7 +111,6 @@ public class TestDaffodilReader extends ClusterTest {
     QueryBuilder qb = client.queryBuilder();
     QueryBuilder query = qb.sql(selectRow("complex1", "data02Int.dat"));
     RowSet results = query.rowSet();
-    results.print();
     assertEquals(1, results.rowCount());
 
     RowSetReader rdr = results.reader();
@@ -130,7 +127,6 @@ public class TestDaffodilReader extends ClusterTest {
     QueryBuilder qb = client.queryBuilder();
     QueryBuilder query = qb.sql(selectRow("complex1", "data06Int.dat"));
     RowSet results = query.rowSet();
-    results.print();
     assertEquals(3, results.rowCount());
 
     RowSetReader rdr = results.reader();
@@ -150,16 +146,13 @@ public class TestDaffodilReader extends ClusterTest {
   /**
    * Tests data which is rows of two ints and an array containing a map containing two ints. Each
    * row can be visualized like this: "{257, 258, [{259, 260},...]}"
-   *
-   * @throws Exception
    */
   @Test
-  public void testComplexArrayQuery1() throws Exception {
+  public void testComplexArrayQuery1() throws Exception  {
 
     QueryBuilder qb = client.queryBuilder();
     QueryBuilder query = qb.sql(selectRow("complexArray1", "data12Int.dat"));
     RowSet results = query.rowSet();
-    results.print();
     assertEquals(1, results.rowCount());
 
     RowSetReader rdr = results.reader();
@@ -172,8 +165,6 @@ public class TestDaffodilReader extends ClusterTest {
 
   /**
    * Tests data which is an array of ints in one column of the row set
-   *
-   * @throws Exception
    */
   @Test
   public void testSimpleArrayQuery1() throws Exception {
@@ -181,7 +172,6 @@ public class TestDaffodilReader extends ClusterTest {
     QueryBuilder qb = client.queryBuilder();
     QueryBuilder query = qb.sql(selectRow("simpleArrayField1", "data12Int.dat"));
     RowSet results = query.rowSet();
-    results.print();
     assertEquals(1, results.rowCount());
 
     RowSetReader rdr = results.reader();
@@ -196,8 +186,6 @@ public class TestDaffodilReader extends ClusterTest {
    * Tests data which is rows of two ints and an array containing a map containing an int and a
    * vector of ints. Each row can be visualized like this: "{257, 258, [{259, [260, 261,
    * 262]},...]}"
-   *
-   * @throws Exception
    */
   @Test
   public void testComplexArrayQuery2() throws Exception {
@@ -205,7 +193,6 @@ public class TestDaffodilReader extends ClusterTest {
     QueryBuilder qb = client.queryBuilder();
     QueryBuilder query = qb.sql(selectRow("complexArray2", "data12Int.dat"));
     RowSet results = query.rowSet();
-    results.print();
     assertEquals(1, results.rowCount());
 
     RowSetReader rdr = results.reader();
@@ -222,7 +209,6 @@ public class TestDaffodilReader extends ClusterTest {
     QueryBuilder qb = client.queryBuilder();
     QueryBuilder query = qb.sql(selectRow("moreTypes1", "moreTypes1.txt.dat"));
     RowSet results = query.rowSet();
-    results.print();
     assertEquals(2, results.rowCount());
 
     RowSetReader rdr = results.reader();
@@ -248,7 +234,6 @@ public class TestDaffodilReader extends ClusterTest {
     QueryBuilder qb = client.queryBuilder();
     QueryBuilder query = qb.sql(selectRow("moreTypes2", "moreTypes2.txt.dat"));
     RowSet results = query.rowSet();
-    results.print();
     assertEquals(1, results.rowCount());
 
     RowSetReader rdr = results.reader();
