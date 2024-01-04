@@ -18,11 +18,6 @@
 
 package org.apache.drill.exec.store.daffodil;
 
-import java.io.InputStream;
-import java.net.URI;
-import java.net.URISyntaxException;
-import java.util.Objects;
-
 import org.apache.daffodil.japi.DataProcessor;
 import org.apache.drill.common.AutoCloseables;
 import org.apache.drill.common.exceptions.CustomErrorContext;
@@ -39,8 +34,12 @@ import org.apache.hadoop.fs.Path;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import static org.apache.drill.exec.store.daffodil.schema.DrillDaffodilSchemaUtils.daffodilDataProcessorToDrillSchema;
+import java.io.InputStream;
+import java.net.URI;
+import java.net.URISyntaxException;
+import java.util.Objects;
 
+import static org.apache.drill.exec.store.daffodil.schema.DrillDaffodilSchemaUtils.daffodilDataProcessorToDrillSchema;
 
 public class DaffodilBatchReader implements ManagedReader {
 
@@ -51,14 +50,8 @@ public class DaffodilBatchReader implements ManagedReader {
   private final DaffodilMessageParser dafParser;
   private final InputStream dataInputStream;
 
-  static class DaffodilReaderConfig {
-    final DaffodilFormatPlugin plugin;
-    DaffodilReaderConfig(DaffodilFormatPlugin plugin) {
-      this.plugin = plugin;
-    }
-  }
-
-  public DaffodilBatchReader (DaffodilReaderConfig readerConfig, EasySubScan scan, FileSchemaNegotiator negotiator) {
+  public DaffodilBatchReader(DaffodilReaderConfig readerConfig, EasySubScan scan,
+      FileSchemaNegotiator negotiator) {
 
     errorContext = negotiator.parentErrorContext();
     this.dafConfig = readerConfig.plugin.getConfig();
@@ -72,14 +65,12 @@ public class DaffodilBatchReader implements ManagedReader {
     try {
       dfdlSchemaURI = new URI(schemaURIString);
     } catch (URISyntaxException e) {
-      throw UserException.validationError(e)
-          .build(logger);
+      throw UserException.validationError(e).build(logger);
     }
 
     FileDescrip file = negotiator.file();
     DrillFileSystem fs = file.fileSystem();
     URI fsSchemaURI = fs.getUri().resolve(dfdlSchemaURI);
-
 
     DaffodilDataProcessorFactory dpf = new DaffodilDataProcessorFactory();
     DataProcessor dp;
@@ -126,22 +117,23 @@ public class DaffodilBatchReader implements ManagedReader {
     dafParser.setInputStream(dataInputStream);
   }
 
-
   /**
    * This is the core of actual processing - data movement from Daffodil to Drill.
    * <p>
-   * If there is space in the batch, and there is data available to parse
-   * then this calls the daffodil parser, which parses data, delivering it to the rowWriter
-   * by way of the infoset outputter.
+   * If there is space in the batch, and there is data available to parse then this calls the
+   * daffodil parser, which parses data, delivering it to the rowWriter by way of the infoset
+   * outputter.
    * <p>
-   * Repeats until the rowWriter is full (a batch is full), or there is no more data, or
-   * a parse error ends execution with a throw.
+   * Repeats until the rowWriter is full (a batch is full), or there is no more data, or a parse
+   * error ends execution with a throw.
    * <p>
-   * Validation errors and other warnings are not errors and are logged but do not cause
-   * parsing to fail/throw.
-   * @return true if there are rows retrieved, false if no rows were retrieved, which means
-   * no more will ever be retrieved (end of data).
-   * @throws RuntimeException on parse errors.
+   * Validation errors and other warnings are not errors and are logged but do not cause parsing to
+   * fail/throw.
+   *
+   * @return true if there are rows retrieved, false if no rows were retrieved, which means no more
+   *     will ever be retrieved (end of data).
+   * @throws RuntimeException
+   *     on parse errors.
    */
   @Override
   public boolean next() {
@@ -157,7 +149,7 @@ public class DaffodilBatchReader implements ManagedReader {
       try {
         dafParser.parse();
         if (dafParser.isProcessingError()) {
-          assert(Objects.nonNull(dafParser.getDiagnostics()));
+          assert (Objects.nonNull(dafParser.getDiagnostics()));
           throw UserException.dataReadError().message(dafParser.getDiagnosticsAsString())
               .addContext(errorContext).build(logger);
         }
@@ -173,12 +165,21 @@ public class DaffodilBatchReader implements ManagedReader {
       rowSetLoader.save();
     }
     int nRows = rowSetLoader.rowCount();
-    assert nRows > 0; // This cannot be zero. If the parse failed we will have already thrown out of here.
+    assert nRows > 0; // This cannot be zero. If the parse failed we will have already thrown out
+    // of here.
     return true;
   }
 
   @Override
   public void close() {
     AutoCloseables.closeSilently(dataInputStream);
+  }
+
+  static class DaffodilReaderConfig {
+    final DaffodilFormatPlugin plugin;
+
+    DaffodilReaderConfig(DaffodilFormatPlugin plugin) {
+      this.plugin = plugin;
+    }
   }
 }

@@ -37,39 +37,35 @@ import java.util.Stack;
 /**
  * This class transforms a DFDL/Daffodil schema into a Drill Schema.
  */
-public class DrillDaffodilSchemaVisitor
-     extends MetadataHandler {
+public class DrillDaffodilSchemaVisitor extends MetadataHandler {
   private static final Logger logger = LoggerFactory.getLogger(DrillDaffodilSchemaVisitor.class);
-
+  /**
+   * Unfortunately, SchemaBuilder and MapBuilder, while similar, do not share a base class so we
+   * have a stack of MapBuilders, and when empty we use the SchemaBuilder
+   */
+  private final SchemaBuilder builder = new SchemaBuilder();
+  private final Stack<MapBuilder> mapBuilderStack = new Stack<>();
   /**
    * Changes to false after the very first invocation for the root element.
    */
   private boolean isOriginalRoot = true;
 
-  /**
-   * Unfortunately, SchemaBuilder and MapBuilder, while similar, do not share a base class
-   * so we have a stack of MapBuilders, and when empty we use the SchemaBuilder
-   */
-  private final SchemaBuilder builder = new SchemaBuilder();
-
-  private final Stack<MapBuilder> mapBuilderStack = new Stack<>();
+  public static String makeColumnName(ElementMetadata md) {
+    return md.toQName().replace(":", "_");
+  }
 
   private MapBuilder mapBuilder() {
     return mapBuilderStack.peek();
   }
 
   /**
-   * Returns a {@link TupleMetadata} representation of the DFDL schema.
-   * Should only be called after the walk of the DFDL schema with this visitor has been called.
+   * Returns a {@link TupleMetadata} representation of the DFDL schema. Should only be called after
+   * the walk of the DFDL schema with this visitor has been called.
    *
    * @return A {@link TupleMetadata} representation of the DFDL schema.
    */
   public TupleMetadata getDrillSchema() {
     return builder.build();
-  }
-
-  public static String makeColumnName(ElementMetadata md) {
-    return md.toQName().replace(":", "_");
   }
 
   @Override
@@ -90,12 +86,13 @@ public class DrillDaffodilSchemaVisitor
     //
     // below code adds to the schema builder directly, not a map builder
     //
-    if (md.isArray())
+    if (md.isArray()) {
       builder.addArray(colName, drillType);
-    else if (md.isOptional() || md.isNillable())
+    } else if (md.isOptional() || md.isNillable()) {
       builder.addNullable(colName, drillType);
-    else
+    } else {
       builder.add(colName, drillType);
+    }
   }
 
   private void simpleElementWithinComplexElementMetadata(SimpleElementMetadata md) {
@@ -127,25 +124,26 @@ public class DrillDaffodilSchemaVisitor
   }
 
   /**
-   * The original root given to Drill needs to be a schema element corresponding
-   * to one row of data.
+   * The original root given to Drill needs to be a schema element corresponding to one row of
+   * data.
    * <p>
-   * Drill will call daffodil parse() to parse one such element. The
-   * children elements of this element will become the column contents of the
-   * row.
+   * Drill will call daffodil parse() to parse one such element. The children elements of this
+   * element will become the column contents of the row.
    * <p>
-   * So the metadata for this row, to drill, is ONLY the columns of this
-   * top level element type.
+   * So the metadata for this row, to drill, is ONLY the columns of this top level element type.
+   *
    * @param md
    */
   private void startComplexOriginalRootMetadata(ComplexElementMetadata md) {
     assert (isOriginalRoot);
     assert (mapBuilderStack.isEmpty());
     isOriginalRoot = false;
-    if (md instanceof InfosetSimpleElement)
+    if (md instanceof InfosetSimpleElement) {
       DFDLSchemaError("Row as a simple type element is not supported.");
-    if (md.isArray())
+    }
+    if (md.isArray()) {
       DFDLSchemaError("Row element must not be an array.");
+    }
     //
     // We do nothing else here. Essentially the name of this top level element
     // is not relevant to drill metadata. Think of it as a table name, or a name for the
@@ -154,11 +152,12 @@ public class DrillDaffodilSchemaVisitor
 
   /**
    * This complex type element becomes a column of the row set which is itself a map.
+   *
    * @param md
    */
   private void startComplexElementAsRowSetColumnMetadata(ComplexElementMetadata md) {
-    assert(!isOriginalRoot);
-    assert(mapBuilderStack.isEmpty());
+    assert (!isOriginalRoot);
+    assert (mapBuilderStack.isEmpty());
     String colName = makeColumnName(md);
     //
     // This directly adds to the builder, as this complex element itself is a column
@@ -166,10 +165,11 @@ public class DrillDaffodilSchemaVisitor
     //
     // Then it creates a map builder for recursively adding the contents.
     //
-    if (md.isArray())
+    if (md.isArray()) {
       mapBuilderStack.push(builder.addMapArray(colName));
-    else
+    } else {
       mapBuilderStack.push(builder.addMap(colName)); // also handles optional complex elements
+    }
   }
 
   private void startComplexChildElementMetadata(ComplexElementMetadata md) {
@@ -208,16 +208,20 @@ public class DrillDaffodilSchemaVisitor
   }
 
   @Override
-  public void startSequenceMetadata(SequenceMetadata m) {}
+  public void startSequenceMetadata(SequenceMetadata m) {
+  }
 
   @Override
-  public void endSequenceMetadata(SequenceMetadata m) {}
+  public void endSequenceMetadata(SequenceMetadata m) {
+  }
 
   @Override
-  public void startChoiceMetadata(ChoiceMetadata m) {}
+  public void startChoiceMetadata(ChoiceMetadata m) {
+  }
 
   @Override
-  public void endChoiceMetadata(ChoiceMetadata m) {}
+  public void endChoiceMetadata(ChoiceMetadata m) {
+  }
 
   private void DFDLSchemaError(String s) {
     throw new RuntimeException(s);

@@ -19,11 +19,11 @@ package org.apache.drill.exec.store.daffodil;
 
 import com.ibm.icu.util.Calendar;
 import com.ibm.icu.util.TimeZone;
+import org.apache.daffodil.japi.infoset.InfosetOutputter;
 import org.apache.daffodil.runtime1.api.ComplexElementMetadata;
 import org.apache.daffodil.runtime1.api.ElementMetadata;
 import org.apache.daffodil.runtime1.api.InfosetArray;
 import org.apache.daffodil.runtime1.api.InfosetComplexElement;
-import org.apache.daffodil.japi.infoset.InfosetOutputter;
 import org.apache.daffodil.runtime1.api.InfosetSimpleElement;
 import org.apache.daffodil.runtime1.api.PrimitiveType;
 import org.apache.drill.common.types.TypeProtos;
@@ -32,11 +32,9 @@ import org.apache.drill.exec.record.metadata.ColumnMetadata;
 import org.apache.drill.exec.store.daffodil.schema.DrillDaffodilSchemaUtils;
 import org.apache.drill.exec.store.daffodil.schema.DrillDaffodilSchemaVisitor;
 import org.apache.drill.exec.vector.accessor.ArrayWriter;
-import org.apache.drill.exec.vector.accessor.ColumnWriter;
 import org.apache.drill.exec.vector.accessor.ObjectType;
 import org.apache.drill.exec.vector.accessor.ScalarWriter;
 import org.apache.drill.exec.vector.accessor.TupleWriter;
-import org.apache.drill.exec.vector.complex.writer.BaseWriter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -48,33 +46,46 @@ import java.time.ZoneId;
 import java.util.Stack;
 
 /**
- * Adapts Daffodil parser infoset event calls to Drill writer calls
- * to fill in Drill data rows.
+ * Adapts Daffodil parser infoset event calls to Drill writer calls to fill in Drill data rows.
  */
-public class DaffodilDrillInfosetOutputter
-    extends InfosetOutputter {
+public class DaffodilDrillInfosetOutputter extends InfosetOutputter {
+
+  private static final Logger logger = LoggerFactory.getLogger(DaffodilDrillInfosetOutputter.class);
+  /**
+   * Stack that is used only if we have sub-structures that are not simple-type fields of the row.
+   */
+  private final Stack<TupleWriter> tupleWriterStack = new Stack<>();
+  private final Stack<ArrayWriter> arrayWriterStack = new Stack<>();
+  /**
+   * True if the next startComplex call will be for the DFDL infoset root element whose children are
+   * the columns of the row set.
+   */
+  private boolean isRootElement = true;
+  private RowSetLoader rowSetWriter;
+
+  private DaffodilDrillInfosetOutputter() {
+  } // no default constructor
+
+  public DaffodilDrillInfosetOutputter(RowSetLoader writer) {
+    this.rowSetWriter = writer;
+    this.tupleWriterStack.push(writer);
+  }
+
+  private static void nyi() {
+    throw new IllegalStateException("not yet implemented.");
+  }
+
+  private static void fatalError(String s) {
+    throw new IllegalStateException(s);
+  }
 
   private boolean isOriginalRoot() {
     boolean result = currentTupleWriter() == rowSetWriter;
-    if (result)
-      assert(tupleWriterStack.size() == 1);
+    if (result) {
+      assert (tupleWriterStack.size() == 1);
+    }
     return result;
   }
-
-  /**
-   * True if the next startComplex call will be for the
-   * DFDL infoset root element whose children are the columns of
-   * the row set.
-   */
-  private boolean isRootElement = true;
-
-  /**
-   * Stack that is used only if we have sub-structures that are not
-   * simple-type fields of the row.
-   */
-  private final Stack<TupleWriter> tupleWriterStack = new Stack<>();
-
-  private final Stack<ArrayWriter> arrayWriterStack = new Stack<>();
 
   private TupleWriter currentTupleWriter() {
     return tupleWriterStack.peek();
@@ -82,18 +93,6 @@ public class DaffodilDrillInfosetOutputter
 
   private ArrayWriter currentArrayWriter() {
     return arrayWriterStack.peek();
-  }
-
-
-  private static final Logger logger = LoggerFactory.getLogger(DaffodilDrillInfosetOutputter.class);
-
-  private DaffodilDrillInfosetOutputter() {} // no default constructor
-
-  private RowSetLoader rowSetWriter;
-
-  public DaffodilDrillInfosetOutputter(RowSetLoader writer) {
-    this.rowSetWriter = writer;
-    this.tupleWriterStack.push(writer);
   }
 
   @Override
@@ -106,9 +105,9 @@ public class DaffodilDrillInfosetOutputter
   }
 
   private void checkCleanState() {
-    assert(isOriginalRoot());
-    assert(arrayWriterStack.isEmpty());
-    assert(isRootElement);
+    assert (isOriginalRoot());
+    assert (arrayWriterStack.isEmpty());
+    assert (isRootElement);
   }
 
   @Override
@@ -133,7 +132,7 @@ public class DaffodilDrillInfosetOutputter
     ScalarWriter cw;
     if (md.isArray()) {
       // A simple type array
-      assert(!arrayWriterStack.isEmpty());
+      assert (!arrayWriterStack.isEmpty());
       cw = currentArrayWriter().scalar();
     } else {
       // A simple element within a map
@@ -142,7 +141,7 @@ public class DaffodilDrillInfosetOutputter
       cw = currentTupleWriter().scalar(colName);
     }
     ColumnMetadata cm = cw.schema();
-    assert(cm.isScalar());
+    assert (cm.isScalar());
     if (md.isNillable() && ise.isNilled()) {
       assert cm.isNullable();
       cw.setNull();
@@ -162,7 +161,7 @@ public class DaffodilDrillInfosetOutputter
     ComplexElementMetadata md = ce.metadata();
     String colName = colName(ce.metadata());
     if (isRootElement) {
-      assert(isOriginalRoot());
+      assert (isOriginalRoot());
       // This complex element's corresponds to the root element of the
       // DFDL schema. We don't treat this as a column of the row set.
       // Rather, it's children are the columns of the row set.
@@ -173,7 +172,7 @@ public class DaffodilDrillInfosetOutputter
       return;
     }
     if (md.isArray()) {
-      assert(!arrayWriterStack.isEmpty());
+      assert (!arrayWriterStack.isEmpty());
       // FIXME: is this the way to add a complex array child item (i.e., each array item is a map)
       tupleWriterStack.push(currentArrayWriter().tuple());
     } else {
@@ -202,9 +201,10 @@ public class DaffodilDrillInfosetOutputter
   public void startArray(InfosetArray diArray) {
     ElementMetadata md = diArray.metadata();
     assert (md.isArray());
-    // DFDL has no notion of an array directly within another array. A named field (map) is necessary
-    // before you can have another array.
-    assert (currentTupleWriter().type() == ObjectType.TUPLE); // parent is a map, or the top level row.
+    // DFDL has no notion of an array directly within another array. A named field (map) is
+    // necessary before you can have another array.
+    assert (currentTupleWriter().type() == ObjectType.TUPLE); // parent is a map, or the top
+    // level row.
     String colName = colName(md);
     TupleWriter enclosingParentTupleWriter = currentTupleWriter();
     ArrayWriter aw = enclosingParentTupleWriter.array(colName);
@@ -225,16 +225,19 @@ public class DaffodilDrillInfosetOutputter
   }
 
   private void invariantFailed(String dafTypeName, ColumnMetadata cm) {
-    String msg = String.format("Daffodil to Drill Conversion Invariant Failed: dafType %s, drill type %s.", dafTypeName, cm.typeString());
+    String msg = String.format(
+        "Daffodil to Drill Conversion Invariant Failed: dafType %s, drill type %s.", dafTypeName,
+        cm.typeString());
     logger.error(msg);
     fatalError(msg);
   }
 
-  private void convertDaffodilValueToDrillValue(InfosetSimpleElement ise, ColumnMetadata cm, ScalarWriter cw) {
+  private void convertDaffodilValueToDrillValue(InfosetSimpleElement ise, ColumnMetadata cm,
+      ScalarWriter cw) {
     PrimitiveType dafType = ise.metadata().primitiveType();
     String dafTypeName = dafType.name();
     TypeProtos.MinorType drillType = DrillDaffodilSchemaUtils.getDrillDataType(dafType);
-    assert(drillType == cm.type());
+    assert (drillType == cm.type());
     switch (drillType) {
     case BIGINT: { // not a bignum, BIGINT is a signed 8-byte long in Drill.
       switch (dafTypeName) {
@@ -246,7 +249,8 @@ public class DaffodilDrillInfosetOutputter
         cw.setLong(ise.getLong());
         break;
       }
-      default: invariantFailed(dafTypeName, cm);
+      default:
+        invariantFailed(dafTypeName, cm);
       }
       break;
     }
@@ -290,7 +294,8 @@ public class DaffodilDrillInfosetOutputter
         cw.setDecimal(new BigDecimal(ise.getNonNegativeInteger()));
         break;
       }
-      default: invariantFailed(dafTypeName, cm);
+      default:
+        invariantFailed(dafTypeName, cm);
       }
       break;
     }
@@ -377,20 +382,13 @@ public class DaffodilDrillInfosetOutputter
       cw.setTimestamp(instant);
       break;
     }
-    default: invariantFailed(dafTypeName, cm);
+    default:
+      invariantFailed(dafTypeName, cm);
     }
   }
 
   private void DFDLParseError(String s) {
     throw new RuntimeException(s);
-  }
-
-  private static void nyi() {
-    throw new IllegalStateException("not yet implemented.");
-  }
-
-  private static void fatalError(String s) {
-    throw new IllegalStateException(s);
   }
 }
 

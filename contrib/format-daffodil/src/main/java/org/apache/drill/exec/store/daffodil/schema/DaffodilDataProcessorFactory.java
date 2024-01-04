@@ -17,7 +17,6 @@
  */
 package org.apache.drill.exec.store.daffodil.schema;
 
-
 import org.apache.daffodil.japi.Compiler;
 import org.apache.daffodil.japi.Daffodil;
 import org.apache.daffodil.japi.DataProcessor;
@@ -37,9 +36,9 @@ import java.util.List;
 import java.util.Objects;
 
 /**
- * Compiles a DFDL schema (mostly for tests) or loads a pre-compiled DFDL schema so
- * that one can obtain a DataProcessor for use with DaffodilMessageParser.
- * <br/>
+ * Compiles a DFDL schema (mostly for tests) or loads a pre-compiled DFDL schema so that one can
+ * obtain a DataProcessor for use with DaffodilMessageParser.
+ * <p/>
  * TODO: Needs to use a cache to avoid reloading/recompiling every time.
  */
 public class DaffodilDataProcessorFactory {
@@ -50,39 +49,30 @@ public class DaffodilDataProcessorFactory {
   private DataProcessor dp;
 
   /**
-   * Thrown if schema compilation fails.
-   * <br/>
-   * Contains diagnostic objects which give the cause(s) of the failure.
-   */
-  public static class CompileFailure extends Exception {
-    List<Diagnostic> diags;
-
-    CompileFailure(List<Diagnostic> diagnostics) {
-      super("DFDL Schema Compile Failure");
-      diags = diagnostics;
-    }
-  }
-
-  /**
    * Gets a Daffodil DataProcessor given the necessary arguments to compile or reload it.
-   * @param schemaFileURI pre-compiled dfdl schema (.bin extension) or DFDL schema source (.xsd extension)
-   * @param validationMode Use true to request Daffodil built-in 'limited' validation.
-   *                       Use false for no validation.
-   * @param rootName Local name of root element of the message. Can be null to use the first element
-   *                 declaration of the primary schema file. Ignored if reloading a pre-compiled schema.
-   * @param rootNS Namespace URI as a string. Can be null to use the target namespace
-   *               of the primary schema file or if it is unambiguous what element is the rootName.
-   *               Ignored if reloading a pre-compiled schema.
+   *
+   * @param schemaFileURI
+   *     pre-compiled dfdl schema (.bin extension) or DFDL schema source (.xsd extension)
+   * @param validationMode
+   *     Use true to request Daffodil built-in 'limited' validation. Use false for no validation.
+   * @param rootName
+   *     Local name of root element of the message. Can be null to use the first element declaration
+   *     of the primary schema file. Ignored if reloading a pre-compiled schema.
+   * @param rootNS
+   *     Namespace URI as a string. Can be null to use the target namespace of the primary schema
+   *     file or if it is unambiguous what element is the rootName. Ignored if reloading a
+   *     pre-compiled schema.
    * @return the DataProcessor
-   * @throws CompileFailure - if schema compilation fails
-   * @throws IOException - if the schemaFileURI cannot be opened or is not found.
-   * @throws URISyntaxException - if the schemaFileURI is not legal syntax.
-   * @throws InvalidParserException - if the reloading of the parser from pre-compiled binary fails.
+   * @throws CompileFailure
+   *     - if schema compilation fails
+   * @throws IOException
+   *     - if the schemaFileURI cannot be opened or is not found.
+   * @throws URISyntaxException
+   *     - if the schemaFileURI is not legal syntax.
+   * @throws InvalidParserException
+   *     - if the reloading of the parser from pre-compiled binary fails.
    */
-   public DataProcessor getDataProcessor(
-      URI schemaFileURI,
-      boolean validationMode,
-      String rootName,
+  public DataProcessor getDataProcessor(URI schemaFileURI, boolean validationMode, String rootName,
       String rootNS)
       throws CompileFailure, IOException, URISyntaxException, InvalidParserException {
 
@@ -92,7 +82,8 @@ public class DaffodilDataProcessorFactory {
       if (Objects.nonNull(rootName) && !rootName.isEmpty()) {
         // A usage error. You shouldn't supply the name and optionally namespace if loading
         // precompiled schema because those are built into it. Should be null or "".
-        logger.warn("Root element name '{}' is ignored when used with precompiled DFDL schema.", rootName);
+        logger.warn("Root element name '{}' is ignored when used with precompiled DFDL schema.",
+            rootName);
       }
       dmp.loadSchema(schemaFileURI);
       dmp.setupDP(validationMode, null);
@@ -103,8 +94,7 @@ public class DaffodilDataProcessorFactory {
     return dmp.dp;
   }
 
-  private void loadSchema(URI schemaFileURI)
-      throws IOException, InvalidParserException {
+  private void loadSchema(URI schemaFileURI) throws IOException, InvalidParserException {
     Compiler c = Daffodil.compiler();
     dp = c.reload(Channels.newChannel(schemaFileURI.toURL().openStream()));
   }
@@ -116,9 +106,7 @@ public class DaffodilDataProcessorFactory {
     ProcessorFactory pf = c.compileSource(schemaFileURI, rootName, rootNS);
     List<Diagnostic> pfDiags = pf.getDiagnostics();
     if (pf.isError()) {
-      pfDiags.forEach(diag ->
-          logger.error(diag.getSomeMessage())
-      );
+      pfDiags.forEach(diag -> logger.error(diag.getSomeMessage()));
       throw new CompileFailure(pfDiags);
     }
     dp = pf.onPath("/");
@@ -149,6 +137,20 @@ public class DaffodilDataProcessorFactory {
       compilationWarnings.addAll(dpDiags); // dpDiags might be empty. That's ok.
     } else {
       compilationWarnings = dpDiags; // dpDiags might be empty. That's ok.
+    }
+  }
+
+  /**
+   * Thrown if schema compilation fails.
+   * <p/>
+   * Contains diagnostic objects which give the cause(s) of the failure.
+   */
+  public static class CompileFailure extends Exception {
+    List<Diagnostic> diags;
+
+    CompileFailure(List<Diagnostic> diagnostics) {
+      super("DFDL Schema Compile Failure");
+      diags = diagnostics;
     }
   }
 }

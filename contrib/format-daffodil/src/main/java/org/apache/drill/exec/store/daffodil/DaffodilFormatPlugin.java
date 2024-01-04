@@ -18,7 +18,6 @@
 
 package org.apache.drill.exec.store.daffodil;
 
-
 import org.apache.drill.common.logical.StoragePluginConfig;
 import org.apache.drill.common.types.TypeProtos.MinorType;
 import org.apache.drill.common.types.Types;
@@ -31,18 +30,38 @@ import org.apache.drill.exec.store.dfs.easy.EasyFormatPlugin;
 import org.apache.drill.exec.store.dfs.easy.EasySubScan;
 import org.apache.hadoop.conf.Configuration;
 
-
 public class DaffodilFormatPlugin extends EasyFormatPlugin<DaffodilFormatConfig> {
 
   public static final String DEFAULT_NAME = "daffodil";
   public static final String OPERATOR_TYPE = "DAFFODIL_SUB_SCAN";
+
+  public DaffodilFormatPlugin(String name, DrillbitContext context, Configuration fsConf,
+      StoragePluginConfig storageConfig, DaffodilFormatConfig formatConfig) {
+    super(name, easyConfig(fsConf, formatConfig), context, storageConfig, formatConfig);
+  }
+
+  private static EasyFormatConfig easyConfig(Configuration fsConf,
+      DaffodilFormatConfig pluginConfig) {
+    return EasyFormatConfig.builder().readable(true).writable(false).blockSplittable(false)
+        .compressible(true).extensions(pluginConfig.getExtensions()).fsConf(fsConf)
+        .readerOperatorType(OPERATOR_TYPE).scanVersion(ScanFrameworkVersion.EVF_V2)
+        .supportsLimitPushdown(true).supportsProjectPushdown(true)
+        .defaultName(DaffodilFormatPlugin.DEFAULT_NAME).build();
+  }
+
+  @Override
+  protected void configureScan(FileScanLifecycleBuilder builder, EasySubScan scan) {
+    builder.nullType(Types.optional(MinorType.VARCHAR));
+    builder.readerFactory(new DaffodilReaderFactory(formatConfig.getReaderConfig(this), scan));
+  }
 
   public static class DaffodilReaderFactory extends FileReaderFactory {
     private final DaffodilBatchReader.DaffodilReaderConfig readerConfig;
 
     private final EasySubScan scan;
 
-    public DaffodilReaderFactory(DaffodilBatchReader.DaffodilReaderConfig config, EasySubScan scan) {
+    public DaffodilReaderFactory(DaffodilBatchReader.DaffodilReaderConfig config,
+        EasySubScan scan) {
       this.readerConfig = config;
       this.scan = scan;
     }
@@ -51,33 +70,5 @@ public class DaffodilFormatPlugin extends EasyFormatPlugin<DaffodilFormatConfig>
     public ManagedReader newReader(FileSchemaNegotiator negotiator) {
       return new DaffodilBatchReader(readerConfig, scan, negotiator);
     }
-  }
-
-   public DaffodilFormatPlugin(String name, DrillbitContext context,
-       Configuration fsConf, StoragePluginConfig storageConfig,
-       DaffodilFormatConfig formatConfig) {
-     super(name, easyConfig(fsConf, formatConfig), context, storageConfig, formatConfig);
-   }
-
-    private static EasyFormatConfig easyConfig(Configuration fsConf, DaffodilFormatConfig pluginConfig) {
-    return EasyFormatConfig.builder()
-        .readable(true)
-        .writable(false)
-        .blockSplittable(false)
-        .compressible(true)
-        .extensions(pluginConfig.getExtensions())
-        .fsConf(fsConf)
-        .readerOperatorType(OPERATOR_TYPE)
-        .scanVersion(ScanFrameworkVersion.EVF_V2)
-        .supportsLimitPushdown(true)
-        .supportsProjectPushdown(true)
-        .defaultName(DaffodilFormatPlugin.DEFAULT_NAME)
-        .build();
-  }
-
-  @Override
-  protected void configureScan(FileScanLifecycleBuilder builder, EasySubScan scan) {
-    builder.nullType(Types.optional(MinorType.VARCHAR));
-    builder.readerFactory(new DaffodilReaderFactory(formatConfig.getReaderConfig(this), scan));
   }
 }

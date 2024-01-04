@@ -41,17 +41,13 @@ import static org.junit.Assert.assertFalse;
 public class TestDaffodilReader extends ClusterTest {
 
   String schemaURIRoot = "file:///opt/drill/contrib/format-daffodil/src/test/resources/";
+
   @BeforeClass
   public static void setup() throws Exception {
     // boilerplate call to start test rig
     ClusterTest.startCluster(ClusterFixture.builder(dirTestWatcher));
 
-    DaffodilFormatConfig formatConfig =
-        new DaffodilFormatConfig(null,
-            "",
-            "",
-            "",
-            false);
+    DaffodilFormatConfig formatConfig = new DaffodilFormatConfig(null, "", "", "", false);
 
     cluster.defineFormat("dfs", "daffodil", formatConfig);
 
@@ -62,19 +58,16 @@ public class TestDaffodilReader extends ClusterTest {
   }
 
   private String selectRow(String schema, String file) {
-    return "SELECT * FROM table(dfs.`data/" + file + "` " +
-        " (type => 'daffodil'," +
-        " validationMode => 'true', " +
-        " schemaURI => '" + schemaURIRoot + "schema/" + schema + ".dfdl.xsd'," +
-        " rootName => 'row'," +
-        " rootNamespace => null " +
-        "))";
+    return "SELECT * FROM table(dfs.`data/" + file + "` " + " (type => 'daffodil'," + " " +
+        "validationMode => 'true', " + " schemaURI => '" + schemaURIRoot + "schema/" + schema +
+        ".dfdl.xsd'," + " rootName => 'row'," + " rootNamespace => null " + "))";
   }
 
   /**
    * This unit test tests a simple data file
    *
-   * @throws Exception Throw exception if anything goes wrong
+   * @throws Exception
+   *     Throw exception if anything goes wrong
    */
   @Test
   public void testSimpleQuery1() throws Exception {
@@ -87,12 +80,9 @@ public class TestDaffodilReader extends ClusterTest {
 
     // create the expected metadata and data for this test
     // metadata first
-    TupleMetadata expectedSchema = new SchemaBuilder()
-        .add("col", MinorType.INT)
-        .buildSchema();
+    TupleMetadata expectedSchema = new SchemaBuilder().add("col", MinorType.INT).buildSchema();
 
-    RowSet expected = client.rowSetBuilder(expectedSchema)
-        .addRow(0x00000101) // aka 257
+    RowSet expected = client.rowSetBuilder(expectedSchema).addRow(0x00000101) // aka 257
         .build();
 
     new RowSetComparison(expected).verifyAndClearAll(results);
@@ -102,25 +92,17 @@ public class TestDaffodilReader extends ClusterTest {
   public void testSimpleQuery2() throws Exception {
 
     QueryBuilder qb = client.queryBuilder();
-    QueryBuilder query = qb.sql(selectRow("simple","data06Int.dat"));
+    QueryBuilder query = qb.sql(selectRow("simple", "data06Int.dat"));
     RowSet results = query.rowSet();
     results.print();
     assertEquals(6, results.rowCount());
 
     // create the expected metadata and data for this test
     // metadata first
-    TupleMetadata expectedSchema = new SchemaBuilder()
-            .add("col", MinorType.INT)
-            .buildSchema();
+    TupleMetadata expectedSchema = new SchemaBuilder().add("col", MinorType.INT).buildSchema();
 
-    RowSet expected = client.rowSetBuilder(expectedSchema)
-            .addRow(0x00000101)
-            .addRow(0x00000102)
-            .addRow(0x00000103)
-            .addRow(0x00000104)
-            .addRow(0x00000105)
-            .addRow(0x00000106)
-            .build();
+    RowSet expected = client.rowSetBuilder(expectedSchema).addRow(0x00000101).addRow(0x00000102)
+        .addRow(0x00000103).addRow(0x00000104).addRow(0x00000105).addRow(0x00000106).build();
 
     new RowSetComparison(expected).verifyAndClearAll(results);
   }
@@ -166,9 +148,9 @@ public class TestDaffodilReader extends ClusterTest {
   }
 
   /**
-   * Tests data which is rows of two ints and an array containing a
-   * map containing two ints.
-   * Each row can be visualized like this: "{257, 258, [{259, 260},...]}"
+   * Tests data which is rows of two ints and an array containing a map containing two ints. Each
+   * row can be visualized like this: "{257, 258, [{259, 260},...]}"
+   *
    * @throws Exception
    */
   @Test
@@ -190,6 +172,7 @@ public class TestDaffodilReader extends ClusterTest {
 
   /**
    * Tests data which is an array of ints in one column of the row set
+   *
    * @throws Exception
    */
   @Test
@@ -210,9 +193,10 @@ public class TestDaffodilReader extends ClusterTest {
   }
 
   /**
-   * Tests data which is rows of two ints and an array containing a
-   * map containing an int and a vector of ints.
-   * Each row can be visualized like this: "{257, 258, [{259, [260, 261, 262]},...]}"
+   * Tests data which is rows of two ints and an array containing a map containing an int and a
+   * vector of ints. Each row can be visualized like this: "{257, 258, [{259, [260, 261,
+   * 262]},...]}"
+   *
    * @throws Exception
    */
   @Test
@@ -244,12 +228,16 @@ public class TestDaffodilReader extends ClusterTest {
     RowSetReader rdr = results.reader();
     rdr.next();
     String map = rdr.getAsString();
-    assertEquals("{2147483647, 9223372036854775807, 32767, 127, true, " +
-        "1.7976931348623157E308, 3.4028235E38, [31, 32, 33, 34, 35, 36, 37, 38], \"daffodil\"}", map);
+    assertEquals(
+        "{2147483647, 9223372036854775807, 32767, 127, true, " + "1.7976931348623157E308, 3" +
+            ".4028235E38, [31, 32, 33, 34, 35, 36, 37, 38], \"daffodil\"}",
+        map);
     rdr.next();
     map = rdr.getAsString();
-    assertEquals("{-2147483648, -9223372036854775808, -32768, -128, false, " +
-        "-1.7976931348623157E308, -3.4028235E38, [38, 37, 36, 35, 34, 33, 32, 31], \"drill\"}", map);
+    assertEquals(
+        "{-2147483648, -9223372036854775808, -32768, -128, false, " + "-1.7976931348623157E308, " +
+            "-3.4028235E38, [38, 37, 36, 35, 34, 33, 32, 31], \"drill\"}",
+        map);
     assertFalse(rdr.next());
     results.clear();
   }
@@ -266,10 +254,11 @@ public class TestDaffodilReader extends ClusterTest {
     RowSetReader rdr = results.reader();
     rdr.next();
     String map = rdr.getAsString();
-    assertEquals("{4294967295, 18446744073709551615, 65535, 255, " +
-        "-18446744073709551616, 18446744073709551616, " +
-        "\"0.18446744073709551616\", " + // xs:decimal is modeled as VARCHAR i.e., a string. So needs quotation marks.
-        "1970-01-01, 00:00, 1970-01-01T00:00:00Z}", map);
+    assertEquals(
+        "{4294967295, 18446744073709551615, 65535, 255, " + "-18446744073709551616, " +
+            "18446744073709551616, " + "\"0.18446744073709551616\", " + // xs:decimal is modeled
+            // as VARCHAR i.e., a string. So needs quotation marks.
+            "1970-01-01, 00:00, 1970-01-01T00:00:00Z}", map);
     assertFalse(rdr.next());
     results.clear();
   }
