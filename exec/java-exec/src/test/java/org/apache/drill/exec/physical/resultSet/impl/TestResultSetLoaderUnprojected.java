@@ -14,7 +14,6 @@ import org.apache.drill.exec.physical.resultSet.impl.ResultSetLoaderImpl.ResultS
 import org.apache.drill.exec.physical.resultSet.project.Projections;
 import org.apache.drill.exec.physical.rowSet.RowSet;
 import org.apache.drill.exec.physical.rowSet.RowSet.SingleRowSet;
-import org.apache.drill.exec.physical.rowSet.RowSetFormatter;
 import org.apache.drill.exec.physical.rowSet.RowSetTestUtils;
 import org.apache.drill.exec.record.metadata.SchemaBuilder;
 import org.apache.drill.exec.record.metadata.TupleMetadata;

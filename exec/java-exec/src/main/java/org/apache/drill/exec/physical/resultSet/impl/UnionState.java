@@ -25,7 +25,6 @@ import org.apache.drill.common.types.TypeProtos.MinorType;
 import org.apache.drill.exec.physical.resultSet.ResultVectorCache;
 import org.apache.drill.exec.physical.resultSet.impl.ColumnState.BaseContainerColumnState;
 import org.apache.drill.exec.physical.resultSet.impl.SingleVectorState.FixedWidthVectorState;
-import org.apache.drill.exec.physical.resultSet.impl.SingleVectorState.SimpleVectorState;
 import org.apache.drill.exec.record.metadata.ColumnMetadata;
 import org.apache.drill.exec.record.metadata.VariantMetadata;
 import org.apache.drill.exec.record.metadata.VariantSchema;

@@ -34,7 +34,7 @@ import java.util.function.Function;
  */
 public class WithOptionsTableMacro implements TableMacro {
 
-  private static final Logger logger = LoggerFactory.getLogger(WithOptionsTableMacro.class);
+  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(WithOptionsTableMacro.class);
 
   private final TableSignature sig;
   private final Function<List<Object>, DrillTable> function;
