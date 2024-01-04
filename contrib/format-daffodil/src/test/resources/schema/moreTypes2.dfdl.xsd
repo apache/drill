@@ -48,17 +48,16 @@
 
   <complexType name="rowType">
     <sequence dfdl:separator="%SP;" dfdl:terminator="%NL;">
-      <element name="int" type="xs:int"/>
-      <element name="long" type="xs:long"/>
-      <element name="short" type="xs:short"/>
-      <element name="byte" type="xs:byte"/>
-      <element name="boolean" type="xs:boolean"
-        dfdl:textBooleanTrueRep="T" dfdl:textBooleanFalseRep="F"/>
-      <element name="double" type="xs:double" />
-      <element name="float" type="xs:float" />
-      <element name="hexBinary" type="xs:hexBinary" dfdl:encoding="iso-8859-1"/>
-      <element name="string" type="xs:string"
-         dfdl:initiator="'" dfdl:terminator="'"/>
+      <element name="uint" type="xs:unsignedInt"/>
+      <element name="ulong" type="xs:unsignedLong"/>
+      <element name="ushort" type="xs:unsignedShort"/>
+      <element name="ubyte" type="xs:unsignedByte"/>
+      <element name="integer" type="xs:integer" />
+      <element name="nonNegativeInteger" type="xs:nonNegativeInteger"/>
+      <element name="decimal" type="xs:decimal"/>
+      <element name="date" type="xs:date"/>
+      <element name="time" type="xs:time"/>
+      <element name="dateTime" type="xs:dateTime"/>
     </sequence>
   </complexType>
 

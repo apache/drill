@@ -253,4 +253,24 @@ public class TestDaffodilReader extends ClusterTest {
     assertFalse(rdr.next());
     results.clear();
   }
+
+  @Test
+  public void testMoreTypes2() throws Exception {
+
+    QueryBuilder qb = client.queryBuilder();
+    QueryBuilder query = qb.sql(selectRow("moreTypes2", "moreTypes2.txt.dat"));
+    RowSet results = query.rowSet();
+    results.print();
+    assertEquals(1, results.rowCount());
+
+    RowSetReader rdr = results.reader();
+    rdr.next();
+    String map = rdr.getAsString();
+    assertEquals("{4294967295, 18446744073709551615, 65535, 255, " +
+        "-18446744073709551616, 18446744073709551616, " +
+        "\"0.18446744073709551616\", " + // xs:decimal is modeled as VARCHAR i.e., a string. So needs quotation marks.
+        "1970-01-01, 00:00, 1970-01-01T00:00:00Z}", map);
+    assertFalse(rdr.next());
+    results.clear();
+  }
 }

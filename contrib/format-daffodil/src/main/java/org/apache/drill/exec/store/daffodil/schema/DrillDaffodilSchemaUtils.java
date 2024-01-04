@@ -47,18 +47,29 @@ public class DrillDaffodilSchemaUtils {
           .put("INT", MinorType.INT)
           .put("SHORT", MinorType.SMALLINT)
           .put("BYTE", MinorType.TINYINT)
-          .put("UNSIGNEDLONG", MinorType.UINT8)
-          .put("UNSIGNEDINT", MinorType.UINT4)
+          // daffodil unsigned longs are modeled as DECIMAL(38, 0) which is the default for VARDECIMAL
+          .put("UNSIGNEDLONG", MinorType.VARDECIMAL)
+          .put("UNSIGNEDINT", MinorType.BIGINT)
           .put("UNSIGNEDSHORT", MinorType.UINT2)
           .put("UNSIGNEDBYTE", MinorType.UINT1)
-          .put("INTEGER", MinorType.BIGINT)
-          .put("NONNEGATIVEINTEGER", MinorType.BIGINT)
+          // daffodil integer, nonNegativeInteger, are modeled as DECIMAL(38, 0) which is the default for VARDECIMAL
+          .put("INTEGER", MinorType.VARDECIMAL)
+          .put("NONNEGATIVEINTEGER", MinorType.VARDECIMAL)
+          // decimal has to be modeled as string since we really have no idea what to set the
+          // scale to.
+          .put("DECIMAL", MinorType.VARCHAR)
           .put("BOOLEAN", MinorType.BIT)
           .put("DATE", MinorType.DATE) // requires conversion
           .put("DATETIME", MinorType.TIMESTAMP) // requires conversion
-          .put("DECIMAL", MinorType.VARDECIMAL) // requires conversion (maybe)
           .put("DOUBLE", MinorType.FLOAT8)
-          .put("FLOAT", MinorType.FLOAT4)
+          //
+          // daffodil float type is mapped to double aka Float8 in drill because there
+          // seems to be bugs in FLOAT4. Float.MaxValue in a Float4 column displays as
+          // 3.4028234663852886E38 not 3.4028235E38.
+          //
+          // We don't really care about single float precision, so we just use double precision.
+          //
+          .put("FLOAT", MinorType.FLOAT8)
           .put("HEXBINARY", MinorType.VARBINARY)
           .put("STRING", MinorType.VARCHAR)
           .put("TIME", MinorType.TIME) // requires conversion

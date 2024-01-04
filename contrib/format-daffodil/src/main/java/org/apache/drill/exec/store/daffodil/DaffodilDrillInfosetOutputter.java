@@ -17,6 +17,8 @@
  */
 package org.apache.drill.exec.store.daffodil;
 
+import com.ibm.icu.util.Calendar;
+import com.ibm.icu.util.TimeZone;
 import org.apache.daffodil.runtime1.api.ComplexElementMetadata;
 import org.apache.daffodil.runtime1.api.ElementMetadata;
 import org.apache.daffodil.runtime1.api.InfosetArray;
@@ -32,11 +34,17 @@ import org.apache.drill.exec.store.daffodil.schema.DrillDaffodilSchemaVisitor;
 import org.apache.drill.exec.vector.accessor.ArrayWriter;
 import org.apache.drill.exec.vector.accessor.ColumnWriter;
 import org.apache.drill.exec.vector.accessor.ObjectType;
+import org.apache.drill.exec.vector.accessor.ScalarWriter;
 import org.apache.drill.exec.vector.accessor.TupleWriter;
 import org.apache.drill.exec.vector.complex.writer.BaseWriter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.math.BigDecimal;
+import java.time.Instant;
+import java.time.LocalDate;
+import java.time.LocalTime;
+import java.time.ZoneId;
 import java.util.Stack;
 
 /**
@@ -122,7 +130,7 @@ public class DaffodilDrillInfosetOutputter
     assert (!isRootElement);
     ElementMetadata md = ise.metadata();
     String colName = colName(md);
-    ColumnWriter cw;
+    ScalarWriter cw;
     if (md.isArray()) {
       // A simple type array
       assert(!arrayWriterStack.isEmpty());
@@ -131,7 +139,7 @@ public class DaffodilDrillInfosetOutputter
       // A simple element within a map
       // Note the map itself might be an array
       // but we don't care about that here.
-      cw = currentTupleWriter().column(colName);
+      cw = currentTupleWriter().scalar(colName);
     }
     ColumnMetadata cm = cw.schema();
     assert(cm.isScalar());
@@ -216,68 +224,160 @@ public class DaffodilDrillInfosetOutputter
     arrayWriterStack.pop();
   }
 
-  private void convertDaffodilValueToDrillValue(InfosetSimpleElement ise, ColumnMetadata cm, ColumnWriter cw) {
+  private void invariantFailed(String dafTypeName, ColumnMetadata cm) {
+    String msg = String.format("Daffodil to Drill Conversion Invariant Failed: dafType %s, drill type %s.", dafTypeName, cm.typeString());
+    logger.error(msg);
+    fatalError(msg);
+  }
+
+  private void convertDaffodilValueToDrillValue(InfosetSimpleElement ise, ColumnMetadata cm, ScalarWriter cw) {
     PrimitiveType dafType = ise.metadata().primitiveType();
+    String dafTypeName = dafType.name();
     TypeProtos.MinorType drillType = DrillDaffodilSchemaUtils.getDrillDataType(dafType);
     assert(drillType == cm.type());
     switch (drillType) {
-    case INT: {
-      //
-      // FIXME: Javadoc for setObject says "primarily for testing"
-      // So how are we supposed to assign the column value then?
-      // Is there a way to get from a ColumnWriter to a typed scalar writer (downcast perhaps?)
-      cw.setObject(ise.getInt());
+    case BIGINT: { // not a bignum, BIGINT is a signed 8-byte long in Drill.
+      switch (dafTypeName) {
+      case "unsignedInt": {
+        cw.setLong(ise.getUnsignedInt());
+        break;
+      }
+      case "long": {
+        cw.setLong(ise.getLong());
+        break;
+      }
+      default: invariantFailed(dafTypeName, cm);
+      }
       break;
     }
-    case BIGINT: {
-      cw.setObject(ise.getLong());
+    case INT: {
+      cw.setInt(ise.getInt());
       break;
     }
     case SMALLINT: {
-      cw.setObject(ise.getShort());
+      cw.setInt(ise.getShort()); // there is no setShort
       break;
     }
     case TINYINT: {
-      cw.setObject(ise.getByte());
+      cw.setInt(ise.getByte()); // there is no setByte
       break;
     }
-//        .put("UNSIGNEDLONG", TypeProtos.MinorType.UINT8)
-//        .put("UNSIGNEDINT", TypeProtos.MinorType.UINT4)
-//        .put("UNSIGNEDSHORT", TypeProtos.MinorType.UINT2)
-//        .put("UNSIGNEDBYTE", TypeProtos.MinorType.UINT1)
-//        .put("INTEGER", TypeProtos.MinorType.BIGINT)
-//        .put("NONNEGATIVEINTEGER", TypeProtos.MinorType.BIGINT)
+    case UINT4: {
+      // daffodil represents unsigned int as long.
+      // drill represents unsigned int as int.
+      cw.setInt(ise.getUnsignedInt().intValue());
+      break;
+    }
+    case UINT2: {
+      cw.setInt(ise.getUnsignedShort());
+      break;
+    }
+    case UINT1: {
+      cw.setInt(ise.getUnsignedByte());
+      break;
+    }
+    case VARDECIMAL: {
+      switch (dafTypeName) {
+      case "unsignedLong": {
+        cw.setDecimal(new BigDecimal(ise.getUnsignedLong()));
+        break;
+      }
+      case "integer": {
+        cw.setDecimal(new BigDecimal(ise.getInteger()));
+        break;
+      }
+      case "nonNegativeInteger": {
+        cw.setDecimal(new BigDecimal(ise.getNonNegativeInteger()));
+        break;
+      }
+      default: invariantFailed(dafTypeName, cm);
+      }
+      break;
+    }
     case BIT: {
-      cw.setObject(ise.getBoolean());
+      cw.setBoolean(ise.getBoolean());
       break;
     }
-//        .put("DATE", TypeProtos.MinorType.DATE) // requires conversion
-//        .put("DATETIME", TypeProtos.MinorType.TIMESTAMP) // requires conversion
-//        .put("DECIMAL", TypeProtos.MinorType.VARDECIMAL) // requires conversion (maybe)
     case FLOAT8: {
-      cw.setObject(ise.getDouble());
+      switch (dafTypeName) {
+      case "double": {
+        cw.setDouble(ise.getDouble());
+        break;
+      }
+      case "float": {
+        // converting a float to a double by doubleValue() fails here
+        // Float.MaxValue converted to a double via doubleValue()
+        // then placed in a FLOAT8 column displays as
+        // 3.4028234663852886E38 not 3.4028235E38.
+        // But converting to string first, then to double works properly.
+        cw.setDouble(Double.valueOf(ise.getFloat().toString()));
+        break;
+      }
+      default:
+        invariantFailed(dafTypeName, cm);
+      }
       break;
     }
     case FLOAT4: {
-      cw.setObject(ise.getFloat());
+      // we don't use float4, we always use float8.
+      invariantFailed(dafTypeName, cm);
+      // cw.setFloat(ise.getFloat());
       break;
     }
     case VARBINARY: {
-      cw.setObject(ise.getHexBinary());
+      byte[] hexBinary = ise.getHexBinary();
+      cw.setBytes(hexBinary, hexBinary.length);
       break;
     }
     case VARCHAR: {
-      //
-      // FIXME: VARCHAR is defined in drill as utf8 string.
-      // Is Drill expecting something other than a Java string in this setObject call?
-      // Should we be mapping Daffodil strings to Drill VAR16CHAR type?
-      //
-      String s = ise.getString();
-      cw.setObject(s);
+      switch (dafTypeName) {
+      case "decimal": {
+        BigDecimal decimal = ise.getDecimal();
+        cw.setString(decimal.toString());
+        break;
+      }
+      case "string": {
+        String s = ise.getString();
+        cw.setString(s);
+        break;
+      }
+      default:
+        invariantFailed(dafTypeName, cm);
+      }
       break;
     }
-//        .put("TIME", TypeProtos.MinorType.TIME) // requires conversion
-
+    case TIME: {
+      Calendar icuCal = ise.getTime();
+      Instant instant = Instant.ofEpochMilli(icuCal.getTimeInMillis());
+      TimeZone icuZone = icuCal.getTimeZone();
+      String zoneString = icuZone.getID();
+      ZoneId zoneId = ZoneId.of(zoneString);
+      LocalTime localTime = instant.atZone(zoneId).toLocalTime();
+      cw.setTime(localTime);
+      break;
+    }
+    case DATE: {
+      Calendar icuCalendar = ise.getDate();
+      // Extract year, month, and day from ICU Calendar
+      int year = icuCalendar.get(Calendar.YEAR);
+      // Note: ICU Calendar months are zero-based, similar to java.util.Calendar
+      int month = icuCalendar.get(Calendar.MONTH) + 1;
+      int day = icuCalendar.get(Calendar.DAY_OF_MONTH);
+      // Create a LocalDate
+      LocalDate localDate = LocalDate.of(year, month, day);
+      cw.setDate(localDate);
+      break;
+    }
+    case TIMESTAMP: {
+      Calendar icuCalendar = ise.getDateTime();
+      // Get time in milliseconds from the epoch
+      long millis = icuCalendar.getTimeInMillis();
+      // Create an Instant from milliseconds
+      Instant instant = Instant.ofEpochMilli(millis);
+      cw.setTimestamp(instant);
+      break;
+    }
+    default: invariantFailed(dafTypeName, cm);
     }
   }
 
@@ -286,11 +386,11 @@ public class DaffodilDrillInfosetOutputter
   }
 
   private static void nyi() {
-    throw new RuntimeException("not yet implemented.");
+    throw new IllegalStateException("not yet implemented.");
   }
 
   private static void fatalError(String s) {
-    throw new RuntimeException(s);
+    throw new IllegalStateException(s);
   }
 }
 
