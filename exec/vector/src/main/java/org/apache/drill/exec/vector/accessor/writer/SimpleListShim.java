@@ -22,7 +22,6 @@ import org.apache.drill.exec.record.metadata.ColumnMetadata;
 import org.apache.drill.exec.vector.accessor.ColumnWriterIndex;
 import org.apache.drill.exec.vector.accessor.ObjectWriter;
 import org.apache.drill.exec.vector.accessor.impl.HierarchicalFormatter;
-import org.apache.drill.exec.vector.accessor.writer.UnionWriter.UnionShim;
 import com.google.common.base.Preconditions;
 
 /**
