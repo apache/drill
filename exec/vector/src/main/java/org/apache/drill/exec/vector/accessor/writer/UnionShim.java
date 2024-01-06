@@ -89,3 +89,4 @@ public interface UnionShim extends WriterEvents {
     }
   }
 }
+
