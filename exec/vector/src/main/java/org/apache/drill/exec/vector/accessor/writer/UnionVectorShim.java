@@ -323,3 +323,4 @@ public class UnionVectorShim implements UnionShim {
   @Override
   public boolean isProjected() { return unionMemberShim.isProjected(); }
 }
+
