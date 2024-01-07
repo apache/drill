@@ -21,29 +21,12 @@ package org.apache.drill.exec.expr.fn.impl.conv;
 
 import org.apache.drill.exec.physical.resultSet.ResultSetLoader;
 import org.apache.drill.exec.server.options.OptionManager;
+import org.apache.drill.exec.store.easy.json.loader.ClosingStreamIterator;
 import org.apache.drill.exec.store.easy.json.loader.JsonLoaderImpl;
 import org.apache.drill.exec.store.easy.json.loader.JsonLoaderImpl.JsonLoaderBuilder;
-import org.apache.drill.exec.store.easy.json.loader.SingleElementIterator;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
-import java.io.InputStream;
 
 public class JsonConverterUtils {
-
-  private static final Logger logger = LoggerFactory.getLogger(JsonConverterUtils.class);
-
-  /*
-  public static InputStream convertStringToInputStream(String input) {
-    try (InputStream stream = IOUtils.toInputStream(input, Charset.defaultCharset())) {
-      return stream;
-    } catch (IOException e) {
-      throw UserException.dataReadError(e)
-        .message("Unable to read JSON string")
-        .build(logger);
-    }
-  }
-  */
 
   /**
    * Creates a {@link JsonLoaderImpl} for use in JSON conversion UDFs.
@@ -54,7 +37,7 @@ public class JsonConverterUtils {
    */
   public static JsonLoaderImpl createJsonLoader(ResultSetLoader rsLoader,
                                                 OptionManager options,
-                                                SingleElementIterator<InputStream> stream) {
+                                                ClosingStreamIterator stream) {
     // Add JSON configuration from Storage plugin, if present.
     JsonLoaderBuilder jsonLoaderBuilder = new JsonLoaderBuilder()
         .resultSetLoader(rsLoader)
@@ -63,5 +46,4 @@ public class JsonConverterUtils {
 
     return (JsonLoaderImpl) jsonLoaderBuilder.build();
   }
-
 }

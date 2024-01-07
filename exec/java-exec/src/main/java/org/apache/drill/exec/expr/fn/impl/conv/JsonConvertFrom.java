@@ -18,8 +18,6 @@
 package org.apache.drill.exec.expr.fn.impl.conv;
 
 
-import javax.inject.Inject;
-
 import org.apache.drill.exec.expr.DrillSimpleFunc;
 import org.apache.drill.exec.expr.annotations.FunctionTemplate;
 import org.apache.drill.exec.expr.annotations.FunctionTemplate.FunctionScope;
@@ -33,6 +31,8 @@ import org.apache.drill.exec.physical.resultSet.ResultSetLoader;
 import org.apache.drill.exec.server.options.OptionManager;
 import org.apache.drill.exec.vector.complex.writer.BaseWriter;
 import org.apache.drill.exec.vector.complex.writer.BaseWriter.ComplexWriter;
+
+import javax.inject.Inject;
 @SuppressWarnings("unused")
 public class JsonConvertFrom {
 
@@ -55,14 +55,14 @@ public class JsonConvertFrom {
     ResultSetLoader rsLoader;
 
     @Workspace
-    org.apache.drill.exec.store.easy.json.loader.SingleElementIterator<java.io.InputStream> streamIter;
+    org.apache.drill.exec.store.easy.json.loader.ClosingStreamIterator streamIter;
 
     @Workspace
     org.apache.drill.exec.store.easy.json.loader.JsonLoaderImpl jsonLoader;
 
     @Override
     public void setup() {
-      streamIter = new org.apache.drill.exec.store.easy.json.loader.SingleElementIterator<>();
+      streamIter = new org.apache.drill.exec.store.easy.json.loader.ClosingStreamIterator();
       rsLoader.startBatch();
     }
 
@@ -109,7 +109,7 @@ public class JsonConvertFrom {
     ComplexWriter writer;
 
     @Workspace
-    org.apache.drill.exec.store.easy.json.loader.SingleElementIterator<java.io.InputStream> streamIter;
+    org.apache.drill.exec.store.easy.json.loader.ClosingStreamIterator streamIter;
 
     @Inject
     OptionManager options;
@@ -122,7 +122,7 @@ public class JsonConvertFrom {
 
     @Override
     public void setup() {
-      streamIter = new org.apache.drill.exec.store.easy.json.loader.SingleElementIterator<>();
+      streamIter = new org.apache.drill.exec.store.easy.json.loader.ClosingStreamIterator();
       rsLoader.startBatch();
     }
 

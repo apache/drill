@@ -20,14 +20,19 @@ package org.apache.drill.exec.store.json;
 
 
 import ch.qos.logback.classic.Level;
+import org.apache.drill.common.types.TypeProtos.MinorType;
 import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.physical.impl.project.ProjectRecordBatch;
 import org.apache.drill.exec.physical.impl.validate.IteratorValidatorBatchIterator;
 import org.apache.drill.exec.physical.rowSet.RowSet;
+import org.apache.drill.exec.physical.rowSet.RowSetBuilder;
+import org.apache.drill.exec.record.metadata.SchemaBuilder;
+import org.apache.drill.exec.record.metadata.TupleMetadata;
 import org.apache.drill.exec.store.easy.json.loader.JsonLoaderImpl;
 import org.apache.drill.test.ClusterFixture;
 import org.apache.drill.test.ClusterTest;
 import org.apache.drill.test.LogFixture;
+import org.apache.drill.test.rowSet.RowSetComparison;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
@@ -61,61 +66,27 @@ public class TestJsonConversionUDF extends ClusterTest {
 
   @Test
   public void testConvertFromJsonVarChar() throws Exception {
-    // String sql = "SELECT *, convert_FromJSON('{\"foo\":\"bar\"}') FROM cp.`jsoninput/allTypes.csv`";
-    String sql = "SELECT convert_FromJSON('{\"foo\":\"bar\"}') FROM (VALUES(1))";
+    String sql = "SELECT json_data['foo'] AS foo, json_data['num'] AS num FROM " +
+        "(SELECT convert_FromJSON('{\"foo\":\"bar\", \"num\":10}') as json_data FROM (VALUES(1)))";
     RowSet results = client.queryBuilder().sql(sql).rowSet();
-    results.clear();
-  }
 
-/*
-  private void doTestConvertToJsonFunction() throws Exception {
-    String table = "nan_test.csv";
-    File file = new File(dirTestWatcher.getRootDir(), table);
-    String csv = "col_0, {\"nan_col\":NaN}";
-    String query = String.format("select string_binary(convert_toJSON(convert_fromJSON(columns[1]))) as col " +
-      "from dfs.`%s` where columns[0]='col_0'", table);
-    try {
-      FileUtils.writeStringToFile(file, csv,  Charset.defaultCharset());
-      List<QueryDataBatch> results = testSqlWithResults(query);
-      RecordBatchLoader batchLoader = new RecordBatchLoader(getAllocator());
-      assertEquals("Query result must contain 1 row", 1, results.size());
-      QueryDataBatch batch = results.get(0);
+    TupleMetadata expectedSchema = new SchemaBuilder()
+        .addNullable("foo", MinorType.VARCHAR)
+        .addNullable("num", MinorType.BIGINT)
+        .buildSchema();
 
-      batchLoader.load(batch.getHeader().getDef(), batch.getData());
-      VectorWrapper<?> vw = batchLoader.getValueAccessorById(VarCharVector.class, batchLoader.getValueVectorId(SchemaPath.getCompoundPath("col")).getFieldIds());
-      // ensuring that `NaN` token ARE NOT enclosed with double quotes
-      String resultJson = vw.getValueVector().getAccessor().getObject(0).toString();
-      int nanIndex = resultJson.indexOf("NaN");
-      assertNotEquals("`NaN` must not be enclosed with \"\" ", '"', resultJson.charAt(nanIndex - 1));
-      assertNotEquals("`NaN` must not be enclosed with \"\" ", '"', resultJson.charAt(nanIndex + "NaN".length()));
-      batch.release();
-      batchLoader.clear();
-    } finally {
-      FileUtils.deleteQuietly(file);
-    }
+    RowSet expected = new RowSetBuilder(client.allocator(), expectedSchema)
+        .addRow("bar", 10L)
+        .build();
+
+    new RowSetComparison(expected).verifyAndClearAll(results);
   }
 
   @Test
-  public void testConvertFromJsonFunction() throws Exception {
-    //runBoth(this::doTestConvertFromJsonFunction);
-  }
+  public void testMultipleRows() throws Exception {
+    String sql = "SELECT string_binary(convert_toJSON(`name`)) FROM cp.`jsoninput/multirow.csvh`";
 
-  private void doTestConvertFromJsonFunction() throws Exception {
-    String table = "nan_test.csv";
-    File file = new File(dirTestWatcher.getRootDir(), table);
-    String csv = "col_0, {\"nan_col\":NaN}";
-    try {
-      FileUtils.writeStringToFile(file, csv);
-      testBuilder()
-        .sqlQuery(String.format("select convert_fromJSON(columns[1]) as col from dfs.`%s`", table))
-        .unOrdered()
-        .baselineColumns("col")
-        .baselineValues(mapOf("nan_col", Double.NaN))
-        .go();
-    } finally {
-      FileUtils.deleteQuietly(file);
-    }
+    RowSet results = client.queryBuilder().sql(sql).rowSet();
+    results.print();
   }
-  */
-
 }
