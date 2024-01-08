@@ -17,9 +17,6 @@
  */
 package org.apache.drill.exec.physical.impl.scan.v3;
 
-import static org.apache.drill.test.rowSet.RowSetUtilities.intArray;
-import static org.apache.drill.test.rowSet.RowSetUtilities.listIntArray;
-import static org.apache.drill.test.rowSet.RowSetUtilities.listLongArray;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
