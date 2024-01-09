@@ -21,7 +21,6 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
 import org.apache.drill.categories.EvfTest;
-import org.apache.drill.common.types.TypeProtos;
 import org.apache.drill.common.types.TypeProtos.MinorType;
 import org.apache.drill.common.types.Types;
 import org.apache.drill.exec.physical.impl.scan.ScanOperatorExec;
@@ -34,8 +33,6 @@ import org.apache.drill.exec.record.metadata.ColumnMetadata;
 import org.apache.drill.exec.record.metadata.SchemaBuilder;
 import org.apache.drill.exec.record.metadata.TupleMetadata;
 import org.apache.drill.exec.record.metadata.TupleNameSpace;
-import org.apache.drill.exec.vector.accessor.ArrayWriter;
-import org.apache.drill.exec.vector.accessor.ScalarWriter;
 import org.apache.drill.exec.vector.accessor.ValueWriter;
 import org.apache.drill.test.rowSet.RowSetUtilities;
 import org.junit.Test;
@@ -53,34 +50,19 @@ public class TestScanOuputSchema extends BaseScanTest {
 
     private final ResultSetLoader tableLoader;
     private final TupleNameSpace<ValueWriter> writers = new TupleNameSpace<>();
-    private final TupleNameSpace<ArrayWriter> arrayWriters = new TupleNameSpace<>();
-    private final boolean hasArray;
 
     public MockSimpleReader(SchemaNegotiator schemaNegotiator) {
-      this(schemaNegotiator, false);
-    }
-
-    public MockSimpleReader(SchemaNegotiator schemaNegotiator, boolean hasArray) {
-      this.hasArray = hasArray;
       TupleMetadata providedSchema = schemaNegotiator.providedSchema();
       schemaNegotiator.tableSchema(providedSchema);
       tableLoader = schemaNegotiator.build();
-      SchemaBuilder schemaBuilder = new SchemaBuilder()
+      TupleMetadata schema = new SchemaBuilder()
           // Schema provided in test
           .add("a", MinorType.VARCHAR)
           // No schema provided
           .add("b", MinorType.VARCHAR)
           // No schema and not projected in test
-          .add("c", MinorType.VARCHAR);
-
-      if (hasArray) {
-        schemaBuilder
-        .addRepeatedList("int_list")
-          .addArray(MinorType.INT)
-        .resumeSchema();
-      }
-
-      TupleMetadata schema = schemaBuilder.buildSchema();
+          .add("c", MinorType.VARCHAR)
+          .buildSchema();
       buildWriters(providedSchema, schema);
     }
 
@@ -108,24 +90,7 @@ public class TestScanOuputSchema extends BaseScanTest {
         }
         if (providedCol == null) {
           int colIndex = rowWriter.addColumn(colSchema);
-          if (colSchema.isMultiList()) { // Array
-            // Already exist
-            ArrayWriter intListWriter = rowWriter.column(colIndex).array();
-            arrayWriters.add(colSchema.name(), intListWriter);
-            // Newly created
-            final String LONG_LIST_NAME = "long_list";
-            final TupleMetadata appendMetadata = new SchemaBuilder()
-                .addRepeatedList(LONG_LIST_NAME)
-                  .addArray(TypeProtos.MinorType.BIGINT)
-                  .resumeSchema()
-                .buildSchema();
-
-            int index = rowWriter.addColumn(appendMetadata.column(LONG_LIST_NAME));
-            ArrayWriter longArrayWriter = rowWriter.column(index).array();
-            arrayWriters.add(LONG_LIST_NAME, longArrayWriter);
-          } else { // Scalar
-            writers.add(colSchema.name(), rowWriter.scalar(colIndex));
-          }
+          writers.add(colSchema.name(), rowWriter.scalar(colIndex));
         } else {
           writers.add(colSchema.name(),
               conversions.converterFor(rowWriter.scalar(colSchema.name()), colSchema));
@@ -141,19 +106,9 @@ public class TestScanOuputSchema extends BaseScanTest {
       }
       RowSetLoader writer = tableLoader.writer();
       writer.start();
-      // Scalar
       writers.get(0).setString("10");
       writers.get(1).setString("foo");
       writers.get(2).setString("bar");
-      // Array
-      if (hasArray) {
-        ArrayWriter intListWriter = arrayWriters.get(0);
-        ScalarWriter intArrayWriter = intListWriter.array().scalar();
-        intArrayWriter.setInt(1);
-        intArrayWriter.setInt(2);
-        intArrayWriter.setInt(3);
-        intListWriter.save();
-      }
       writer.save();
       return true;
     }
@@ -203,7 +158,7 @@ public class TestScanOuputSchema extends BaseScanTest {
     assertTrue(scan.buildSchema());
     {
       SingleRowSet expected = fixture.rowSetBuilder(expectedSchema)
-           .build();
+          .build();
       RowSetUtilities.verify(expected,
           fixture.wrap(scan.batchAccessor().container()));
     }
@@ -256,7 +211,7 @@ public class TestScanOuputSchema extends BaseScanTest {
     assertTrue(scan.buildSchema());
     {
       SingleRowSet expected = fixture.rowSetBuilder(expectedSchema)
-           .build();
+          .build();
       RowSetUtilities.verify(expected,
           fixture.wrap(scan.batchAccessor().container()));
     }
@@ -299,13 +254,13 @@ public class TestScanOuputSchema extends BaseScanTest {
         .add("a", MinorType.INT)
         .add("d", MinorType.BIGINT)
         .add("e", MinorType.BIGINT)
-         .buildSchema();
+        .buildSchema();
 
     // Initial schema
     assertTrue(scan.buildSchema());
     {
       SingleRowSet expected = fixture.rowSetBuilder(expectedSchema)
-           .build();
+          .build();
       RowSetUtilities.verify(expected,
           fixture.wrap(scan.batchAccessor().container()));
     }
@@ -348,13 +303,13 @@ public class TestScanOuputSchema extends BaseScanTest {
     TupleMetadata expectedSchema = new SchemaBuilder()
         .add("d", MinorType.BIGINT)
         .add("e", MinorType.BIGINT)
-         .buildSchema();
+        .buildSchema();
 
     // Initial schema
     assertTrue(scan.buildSchema());
     {
       SingleRowSet expected = fixture.rowSetBuilder(expectedSchema)
-           .build();
+          .build();
       RowSetUtilities.verify(expected,
           fixture.wrap(scan.batchAccessor().container()));
     }
