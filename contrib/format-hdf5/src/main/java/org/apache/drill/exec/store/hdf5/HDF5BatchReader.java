@@ -18,53 +18,8 @@
 
 package org.apache.drill.exec.store.hdf5;
 
-import io.jhdf.HdfFile;
-import io.jhdf.api.Attribute;
-import io.jhdf.api.Dataset;
-import io.jhdf.api.Group;
-import io.jhdf.api.Node;
-import io.jhdf.exceptions.HdfException;
-import io.jhdf.links.SoftLink;
-import io.jhdf.object.datatype.CompoundDataType;
-import io.jhdf.object.datatype.CompoundDataType.CompoundDataMember;
-import org.apache.drill.common.AutoCloseables;
-import org.apache.drill.common.exceptions.CustomErrorContext;
-import org.apache.drill.common.exceptions.UserException;
-import org.apache.drill.common.types.TypeProtos;
-import org.apache.drill.common.types.TypeProtos.DataMode;
-import org.apache.drill.common.types.TypeProtos.MinorType;
-import org.apache.drill.exec.physical.impl.scan.file.FileScanFramework.FileSchemaNegotiator;
-import org.apache.drill.exec.physical.impl.scan.framework.ManagedReader;
-import org.apache.drill.exec.physical.resultSet.ResultSetLoader;
-import org.apache.drill.exec.physical.resultSet.RowSetLoader;
-import org.apache.drill.exec.record.metadata.ColumnMetadata;
-import org.apache.drill.exec.record.metadata.MapBuilder;
-import org.apache.drill.exec.record.metadata.MetadataUtils;
-import org.apache.drill.exec.record.metadata.SchemaBuilder;
-import org.apache.drill.exec.record.metadata.TupleMetadata;
-import org.apache.drill.exec.store.hdf5.writers.HDF5DataWriter;
-import org.apache.drill.exec.store.hdf5.writers.HDF5DoubleDataWriter;
-import org.apache.drill.exec.store.hdf5.writers.HDF5FloatDataWriter;
-import org.apache.drill.exec.store.hdf5.writers.HDF5IntDataWriter;
-import org.apache.drill.exec.store.hdf5.writers.HDF5LongDataWriter;
-import org.apache.drill.exec.store.hdf5.writers.HDF5MapDataWriter;
-import org.apache.drill.exec.store.hdf5.writers.HDF5StringDataWriter;
-import org.apache.drill.exec.store.hdf5.writers.HDF5TimestampDataWriter;
-import org.apache.drill.exec.vector.ValueVector;
-import org.apache.drill.exec.store.hdf5.writers.WriterSpec;
-import org.apache.drill.exec.vector.accessor.ArrayWriter;
-import org.apache.drill.exec.vector.accessor.ScalarWriter;
-import org.apache.drill.exec.vector.accessor.TupleWriter;
-
-import org.apache.hadoop.mapred.FileSplit;
-import org.jvnet.libpam.impl.CLibrary.group;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.InputStreamReader;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -74,7 +29,50 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
-public class HDF5BatchReader implements ManagedReader<FileSchemaNegotiator> {
+import org.apache.drill.common.AutoCloseables;
+import org.apache.drill.common.exceptions.CustomErrorContext;
+import org.apache.drill.common.exceptions.UserException;
+import org.apache.drill.common.types.TypeProtos;
+import org.apache.drill.common.types.TypeProtos.DataMode;
+import org.apache.drill.common.types.TypeProtos.MinorType;
+import org.apache.drill.exec.physical.impl.scan.v3.ManagedReader;
+import org.apache.drill.exec.physical.impl.scan.v3.file.FileDescrip;
+import org.apache.drill.exec.physical.impl.scan.v3.file.FileSchemaNegotiator;
+import org.apache.drill.exec.physical.resultSet.ResultSetLoader;
+import org.apache.drill.exec.physical.resultSet.RowSetLoader;
+import org.apache.drill.exec.record.metadata.ColumnMetadata;
+import org.apache.drill.exec.record.metadata.MapBuilder;
+import org.apache.drill.exec.record.metadata.MetadataUtils;
+import org.apache.drill.exec.record.metadata.SchemaBuilder;
+import org.apache.drill.exec.record.metadata.TupleMetadata;
+import org.apache.drill.exec.store.dfs.easy.EasySubScan;
+import org.apache.drill.exec.store.hdf5.writers.HDF5DataWriter;
+import org.apache.drill.exec.store.hdf5.writers.HDF5DoubleDataWriter;
+import org.apache.drill.exec.store.hdf5.writers.HDF5FloatDataWriter;
+import org.apache.drill.exec.store.hdf5.writers.HDF5IntDataWriter;
+import org.apache.drill.exec.store.hdf5.writers.HDF5LongDataWriter;
+import org.apache.drill.exec.store.hdf5.writers.HDF5MapDataWriter;
+import org.apache.drill.exec.store.hdf5.writers.HDF5StringDataWriter;
+import org.apache.drill.exec.store.hdf5.writers.HDF5TimestampDataWriter;
+import org.apache.drill.exec.store.hdf5.writers.WriterSpec;
+import org.apache.drill.exec.vector.ValueVector;
+import org.apache.drill.exec.vector.accessor.ArrayWriter;
+import org.apache.drill.exec.vector.accessor.ScalarWriter;
+import org.apache.drill.exec.vector.accessor.TupleWriter;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import io.jhdf.HdfFile;
+import io.jhdf.api.Attribute;
+import io.jhdf.api.Dataset;
+import io.jhdf.api.Group;
+import io.jhdf.api.Node;
+import io.jhdf.exceptions.HdfException;
+import io.jhdf.links.SoftLink;
+import io.jhdf.object.datatype.CompoundDataType;
+import io.jhdf.object.datatype.CompoundDataType.CompoundDataMember;
+
+public class HDF5BatchReader implements ManagedReader {
   private static final Logger logger = LoggerFactory.getLogger(HDF5BatchReader.class);
 
   private static final String PATH_COLUMN_NAME = "path";
@@ -119,49 +117,44 @@ public class HDF5BatchReader implements ManagedReader<FileSchemaNegotiator> {
 
   private final List<HDF5DataWriter> dataWriters;
 
-  private final int maxRecords;
+  private final String fileName;
 
-  private String fileName;
+  private final FileDescrip file;
 
-  private FileSplit split;
+  private final HdfFile hdfFile;
 
-  private HdfFile hdfFile;
+  private final RowSetLoader rowWriter;
 
-  private BufferedReader reader;
+  private final WriterSpec writerSpec;
 
-  private RowSetLoader rowWriter;
+  private final Iterator<HDF5DrillMetadata> metadataIterator;
 
-  private WriterSpec writerSpec;
+  private final ScalarWriter pathWriter;
 
-  private Iterator<HDF5DrillMetadata> metadataIterator;
+  private final ScalarWriter dataTypeWriter;
 
-  private ScalarWriter pathWriter;
+  private final ScalarWriter fileNameWriter;
 
-  private ScalarWriter dataTypeWriter;
+  private final ScalarWriter linkWriter;
 
-  private ScalarWriter fileNameWriter;
+  private final ScalarWriter dataSizeWriter;
 
-  private ScalarWriter linkWriter;
+  private final ScalarWriter elementCountWriter;
 
-  private ScalarWriter dataSizeWriter;
+  private final ScalarWriter datasetTypeWriter;
 
-  private ScalarWriter elementCountWriter;
+  private final ScalarWriter dimensionsWriter;
 
-  private ScalarWriter datasetTypeWriter;
+  private final CustomErrorContext errorContext;
 
-  private ScalarWriter dimensionsWriter;
+  private final boolean showMetadataPreview;
 
-  private CustomErrorContext errorContext;
-
-  private boolean showMetadataPreview;
-
-  private int[] dimensions;
+  private final int[] dimensions;
 
   public static class HDF5ReaderConfig {
+
     final HDF5FormatPlugin plugin;
-
     final String defaultPath;
-
     final HDF5FormatConfig formatConfig;
 
     public HDF5ReaderConfig(HDF5FormatPlugin plugin, HDF5FormatConfig formatConfig) {
@@ -171,107 +164,104 @@ public class HDF5BatchReader implements ManagedReader<FileSchemaNegotiator> {
     }
   }
 
-  public HDF5BatchReader(HDF5ReaderConfig readerConfig, int maxRecords) {
-    this.readerConfig = readerConfig;
-    this.maxRecords = maxRecords;
-    dataWriters = new ArrayList<>();
-    this.showMetadataPreview = readerConfig.formatConfig.showPreview();
-  }
-
-  @Override
-  public boolean open(FileSchemaNegotiator negotiator) {
-    split = negotiator.split();
+  public HDF5BatchReader(HDF5ReaderConfig config, EasySubScan scan, FileSchemaNegotiator negotiator) {
     errorContext = negotiator.parentErrorContext();
+    file = negotiator.file();
+    readerConfig = config;
+    dataWriters = new ArrayList<>();
+    showMetadataPreview = readerConfig.formatConfig.showPreview();
+
     // Since the HDF file reader uses a stream to actually read the file, the file name from the
     // module is incorrect.
-    fileName = split.getPath().getName();
-    try {
-      openFile(negotiator);
-    } catch (IOException e) {
-      throw UserException
-        .dataReadError(e)
-        .addContext("Failed to close input file: %s", split.getPath())
-        .addContext(errorContext)
-        .build(logger);
-    }
+    fileName = file.split().getPath().getName();
 
-    ResultSetLoader loader;
-    if (readerConfig.defaultPath == null) {
-      // Get file metadata
-      List<HDF5DrillMetadata> metadata = getFileMetadata(hdfFile, new ArrayList<>());
-      metadataIterator = metadata.iterator();
-
-      // Schema for Metadata query
-      SchemaBuilder builder = new SchemaBuilder()
-        .addNullable(PATH_COLUMN_NAME, MinorType.VARCHAR)
-        .addNullable(DATA_TYPE_COLUMN_NAME, MinorType.VARCHAR)
-        .addNullable(FILE_NAME_COLUMN_NAME, MinorType.VARCHAR)
-        .addNullable(DATA_SIZE_COLUMN_NAME, MinorType.BIGINT)
-        .addNullable(IS_LINK_COLUMN_NAME, MinorType.BIT)
-        .addNullable(ELEMENT_COUNT_NAME, MinorType.BIGINT)
-        .addNullable(DATASET_DATA_TYPE_NAME, MinorType.VARCHAR)
-        .addNullable(DIMENSIONS_FIELD_NAME, MinorType.VARCHAR);
-
-      negotiator.tableSchema(builder.buildSchema(), false);
-
-      loader = negotiator.build();
-      dimensions = new int[0];
-      rowWriter = loader.writer();
-
-    } else {
-      // This is the case when the default path is specified. Since the user is explicitly asking for a dataset
-      // Drill can obtain the schema by getting the datatypes below and ultimately mapping that schema to columns
-      Dataset dataSet = hdfFile.getDatasetByPath(readerConfig.defaultPath);
-      dimensions = dataSet.getDimensions();
-
-      loader = negotiator.build();
-      rowWriter = loader.writer();
-      writerSpec = new WriterSpec(rowWriter, negotiator.providedSchema(),
-          negotiator.parentErrorContext());
-      if (dimensions.length <= 1) {
-        buildSchemaFor1DimensionalDataset(dataSet);
-      } else if (dimensions.length == 2) {
-        buildSchemaFor2DimensionalDataset(dataSet);
-      } else {
-        // Case for datasets of greater than 2D
-        // These are automatically flattened
-        buildSchemaFor2DimensionalDataset(dataSet);
+    { // Opens an HDF5 file
+      try (InputStream in = file.fileSystem().openPossiblyCompressedStream(file.split().getPath())) {
+        /*
+         * As a possible future improvement, the jhdf reader has the ability to read hdf5 files from
+         * a byte array or byte buffer. This implementation is better in that it does not require creating
+         * a temporary file which must be deleted later.  However, it could result in memory issues in the
+         * event of large files.
+         */
+        hdfFile = HdfFile.fromInputStream(in);
+      } catch (IOException e) {
+        throw UserException
+          .dataReadError(e)
+          .message("Failed to open input file: %s", file.split().getPath())
+          .addContext(errorContext)
+          .build(logger);
       }
     }
-    if (readerConfig.defaultPath == null) {
-      pathWriter = rowWriter.scalar(PATH_COLUMN_NAME);
-      dataTypeWriter = rowWriter.scalar(DATA_TYPE_COLUMN_NAME);
-      fileNameWriter = rowWriter.scalar(FILE_NAME_COLUMN_NAME);
-      dataSizeWriter = rowWriter.scalar(DATA_SIZE_COLUMN_NAME);
-      linkWriter = rowWriter.scalar(IS_LINK_COLUMN_NAME);
-      elementCountWriter = rowWriter.scalar(ELEMENT_COUNT_NAME);
-      datasetTypeWriter = rowWriter.scalar(DATASET_DATA_TYPE_NAME);
-      dimensionsWriter = rowWriter.scalar(DIMENSIONS_FIELD_NAME);
-    }
-    return true;
-  }
 
-  /**
-   * This function is called when the default path is set and the data set is a single dimension.
-   * This function will create an array of one dataWriter of the
-   * correct datatype
-   * @param dataset The HDF5 dataset
-   */
-  private void buildSchemaFor1DimensionalDataset(Dataset dataset) {
-    MinorType currentDataType = HDF5Utils.getDataType(dataset.getDataType());
+    { // Build the schema and initial the writer
+      ResultSetLoader loader;
+      if (readerConfig.defaultPath == null) {
+        // Get file metadata
+        List<HDF5DrillMetadata> metadata = getFileMetadata(hdfFile, new ArrayList<>());
+        metadataIterator = metadata.iterator();
 
-    // Case for null or unknown data types:
-    if (currentDataType == null) {
-      logger.warn("Couldn't add {}", dataset.getJavaType().getName());
-      return;
+        // Schema for Metadata query
+        SchemaBuilder builder = new SchemaBuilder()
+          .addNullable(PATH_COLUMN_NAME, MinorType.VARCHAR)
+          .addNullable(DATA_TYPE_COLUMN_NAME, MinorType.VARCHAR)
+          .addNullable(FILE_NAME_COLUMN_NAME, MinorType.VARCHAR)
+          .addNullable(DATA_SIZE_COLUMN_NAME, MinorType.BIGINT)
+          .addNullable(IS_LINK_COLUMN_NAME, MinorType.BIT)
+          .addNullable(ELEMENT_COUNT_NAME, MinorType.BIGINT)
+          .addNullable(DATASET_DATA_TYPE_NAME, MinorType.VARCHAR)
+          .addNullable(DIMENSIONS_FIELD_NAME, MinorType.VARCHAR);
+
+        negotiator.tableSchema(builder.buildSchema(), false);
+
+        loader = negotiator.build();
+        rowWriter = loader.writer();
+
+        dimensions = null;
+        writerSpec = null;
+        pathWriter = rowWriter.scalar(PATH_COLUMN_NAME);
+        dataTypeWriter = rowWriter.scalar(DATA_TYPE_COLUMN_NAME);
+        fileNameWriter = rowWriter.scalar(FILE_NAME_COLUMN_NAME);
+        dataSizeWriter = rowWriter.scalar(DATA_SIZE_COLUMN_NAME);
+        linkWriter = rowWriter.scalar(IS_LINK_COLUMN_NAME);
+        elementCountWriter = rowWriter.scalar(ELEMENT_COUNT_NAME);
+        datasetTypeWriter = rowWriter.scalar(DATASET_DATA_TYPE_NAME);
+        dimensionsWriter = rowWriter.scalar(DIMENSIONS_FIELD_NAME);
+      } else {
+        // This is the case when the default path is specified. Since the user is explicitly asking for a dataset
+        // Drill can obtain the schema by getting the datatypes below and ultimately mapping that schema to columns
+        Dataset dataSet = hdfFile.getDatasetByPath(readerConfig.defaultPath);
+        dimensions = dataSet.getDimensions();
+
+        loader = negotiator.build();
+        rowWriter = loader.writer();
+        writerSpec = new WriterSpec(rowWriter, negotiator.providedSchema(), negotiator.parentErrorContext());
+        if (dimensions.length <= 1) {
+          buildSchemaFor1DimensionalDataset(dataSet);
+        } else if (dimensions.length == 2) {
+          buildSchemaFor2DimensionalDataset(dataSet);
+        } else {
+          // Case for datasets of greater than 2D
+          // These are automatically flattened
+          buildSchemaFor2DimensionalDataset(dataSet);
+        }
+        // Initial the final fields
+        metadataIterator = null;
+        pathWriter = null;
+        dataTypeWriter = null;
+        fileNameWriter = null;
+        dataSizeWriter = null;
+        linkWriter = null;
+        elementCountWriter = null;
+        datasetTypeWriter = null;
+        dimensionsWriter = null;
+      }
     }
-    dataWriters.add(buildWriter(currentDataType));
   }
 
   private HDF5DataWriter buildWriter(MinorType dataType) {
     switch (dataType) {
-      /*case GENERIC_OBJECT:
-        return new HDF5EnumDataWriter(hdfFile, writerSpec, readerConfig.defaultPath);*/
+      /* case GENERIC_OBJECT:
+        return new HDF5EnumDataWriter(hdfFile, writerSpec, readerConfig.defaultPath); */
       case VARCHAR:
         return new HDF5StringDataWriter(hdfFile, writerSpec, readerConfig.defaultPath);
       case TIMESTAMP:
@@ -292,13 +282,29 @@ public class HDF5BatchReader implements ManagedReader<FileSchemaNegotiator> {
   }
 
   /**
+   * This function is called when the default path is set and the data set is a single dimension.
+   * This function will create an array of one dataWriter of the correct datatype.
+   *
+   * @param dataset The HDF5 dataset
+   */
+  private void buildSchemaFor1DimensionalDataset(Dataset dataset) {
+    MinorType currentDataType = HDF5Utils.getDataType(dataset.getDataType());
+
+    // Case for null or unknown data types:
+    if (currentDataType == null) {
+      logger.warn("Couldn't add {}", dataset.getJavaType().getName());
+      return;
+    }
+    dataWriters.add(buildWriter(currentDataType));
+  }
+
+  /**
    * Builds a Drill schema from a dataset with 2 or more dimensions. HDF5 only
    * supports INT, LONG, DOUBLE and FLOAT for >2 data types so this function is
    * not as inclusive as the 1D function. This function will build the schema
    * by adding DataWriters to the dataWriters array.
    *
-   * @param dataset
-   *          The dataset which Drill will use to build a schema
+   * @param dataset The dataset which Drill will use to build a schema
    */
   private void buildSchemaFor2DimensionalDataset(Dataset dataset) {
     MinorType currentDataType = HDF5Utils.getDataType(dataset.getDataType());
@@ -333,43 +339,9 @@ public class HDF5BatchReader implements ManagedReader<FileSchemaNegotiator> {
       }
     }
   }
-  /**
-   * Opens an HDF5 file.
-   * @param negotiator The negotiator represents Drill's interface with the file system
-   */
-  private void openFile(FileSchemaNegotiator negotiator) throws IOException {
-    InputStream in = null;
-    try {
-      /*
-       * As a possible future improvement, the jhdf reader has the ability to read hdf5 files from
-       * a byte array or byte buffer. This implementation is better in that it does not require creating
-       * a temporary file which must be deleted later.  However, it could result in memory issues in the
-       * event of large files.
-       */
-
-      in = negotiator.fileSystem().openPossiblyCompressedStream(split.getPath());
-      hdfFile = HdfFile.fromInputStream(in);
-    } catch (Exception e) {
-      if (in != null) {
-        in.close();
-      }
-      throw UserException
-        .dataReadError(e)
-        .message("Failed to open input file: %s", split.getPath())
-        .addContext(errorContext)
-        .build(logger);
-    }
-    reader = new BufferedReader(new InputStreamReader(in));
-  }
 
   @Override
   public boolean next() {
-
-    // Limit pushdown
-    if (rowWriter.limitReached(maxRecords)) {
-      return false;
-    }
-
     while (!rowWriter.isFull()) {
       if (readerConfig.defaultPath == null || readerConfig.defaultPath.isEmpty()) {
         if (!metadataIterator.hasNext()){
@@ -395,7 +367,6 @@ public class HDF5BatchReader implements ManagedReader<FileSchemaNegotiator> {
         int currentRowCount = 0;
         HDF5DataWriter currentDataWriter;
         rowWriter.start();
-
         for (int i = 0; i < dimensions[1]; i++) {
           currentDataWriter = dataWriters.get(i);
           currentDataWriter.write();
@@ -410,8 +381,23 @@ public class HDF5BatchReader implements ManagedReader<FileSchemaNegotiator> {
     return true;
   }
 
+  @Override
+  public void close() {
+    AutoCloseables.closeSilently(hdfFile);
+    /*
+     * The current implementation of the HDF5 reader creates a temp file,
+     * these files are deleted only before application exits.
+     * The temporary file needs to be removed when the batch reader is closed.
+     */
+    boolean result = hdfFile.getFile().delete();
+    if (!result) {
+      logger.warn("Failed to delete HDF5 temp file {}", hdfFile.getFile().getName());
+    }
+  }
+
   /**
    * Writes one row of HDF5 metadata.
+   *
    * @param rowWriter The input rowWriter object
    */
   private void projectMetadataRow(RowSetLoader rowWriter) {
@@ -423,7 +409,7 @@ public class HDF5BatchReader implements ManagedReader<FileSchemaNegotiator> {
     fileNameWriter.setString(fileName);
     linkWriter.setBoolean(metadataRow.isLink());
 
-    //Write attributes if present
+    // Write attributes if present
     if (metadataRow.getAttributes().size() > 0) {
       writeAttributes(rowWriter, metadataRow);
     }
@@ -448,9 +434,9 @@ public class HDF5BatchReader implements ManagedReader<FileSchemaNegotiator> {
    * Gets the file metadata from a given HDF5 file. It will extract the file
    * name the path, and adds any information to the metadata List.
    *
-   * @param group A list of paths from which the metadata will be extracted
-   * @param metadata The HDF5 metadata object from which the metadata will be extracted
-   * @return A list of metadata from the given file paths
+   * @param group     A list of paths from which the metadata will be extracted
+   * @param metadata  The HDF5 metadata object from which the metadata will be extracted
+   * @return          A list of metadata from the given file paths
    */
   private List<HDF5DrillMetadata> getFileMetadata(Group group, List<HDF5DrillMetadata> metadata) {
     Map<String, HDF5Attribute> attribs;
@@ -495,10 +481,10 @@ public class HDF5BatchReader implements ManagedReader<FileSchemaNegotiator> {
   }
 
   /**
-   * Gets the attributes of a HDF5 dataset and returns them into a HashMap
+   * Gets the attributes of a HDF5 dataset and returns them into a HashMap.
    *
    * @param path The path for which you wish to retrieve attributes
-   * @return Map The attributes for the given path.  Empty Map if no attributes present
+   * @return Map The attributes for the given path. Empty Map if no attributes present
    */
   private Map<String, HDF5Attribute> getAttributes(String path) {
     Map<String, Attribute> attributeList;
@@ -543,13 +529,11 @@ public class HDF5BatchReader implements ManagedReader<FileSchemaNegotiator> {
    * Writes one row of data in a metadata query. The number of dimensions here
    * is n+1. So if the actual dataset is a 1D column, it will be written as a list.
    * This is function is only called in metadata queries as the schema is not
-   * known in advance. If the datasize is greater than 16MB, the function does
-   * not project the dataset
+   * known in advance. If the data size is greater than 16MB, the function does
+   * not project the dataset.
    *
-   * @param rowWriter
-   *          The rowWriter to which the data will be written
-   * @param datapath
-   *          The datapath from which the data will be read
+   * @param rowWriter The rowWriter to which the data will be written
+   * @param datapath  The data path from which the data will be read
    */
 
   private void projectDataset(RowSetLoader rowWriter, String datapath) {
@@ -562,7 +546,7 @@ public class HDF5BatchReader implements ManagedReader<FileSchemaNegotiator> {
     }
 
     int[] dimensions = dataset.getDimensions();
-    //Case for single dimensional data
+    // Case for single dimensional data
     if (dimensions.length == 1) {
       MinorType currentDataType = HDF5Utils.getDataType(dataset.getDataType());
 
@@ -632,7 +616,7 @@ public class HDF5BatchReader implements ManagedReader<FileSchemaNegotiator> {
           logger.warn("{} not implemented.", currentDataType.name());
       }
     } else if (dimensions.length == 2) {
-      // Case for 2D data sets.  These are projected as lists of lists or maps of maps
+      // Case for 2D data sets. These are projected as lists of lists or maps of maps
       int cols = dimensions[1];
       int rows = dimensions[0];
 
@@ -685,22 +669,23 @@ public class HDF5BatchReader implements ManagedReader<FileSchemaNegotiator> {
   }
 
   /**
-   * Helper function to write a 1D boolean column
+   * Helper function to write a 1D boolean column.
    *
    * @param rowWriter The row to which the data will be written
-   * @param name The column name
-   * @param value The value to be written
+   * @param name      The column name
+   * @param value     The value to be written
    */
+  @SuppressWarnings("unused")
   private void writeBooleanColumn(TupleWriter rowWriter, String name, int value) {
     writeBooleanColumn(rowWriter, name, value != 0);
   }
 
   /**
-   * Helper function to write a 1D boolean column
+   * Helper function to write a 1D boolean column.
    *
    * @param rowWriter The row to which the data will be written
-   * @param name The column name
-   * @param value The value to be written
+   * @param name      The column name
+   * @param value     The value to be written
    */
   private void writeBooleanColumn(TupleWriter rowWriter, String name, boolean value) {
     ScalarWriter colWriter = getColWriter(rowWriter, name, TypeProtos.MinorType.BIT);
@@ -708,11 +693,11 @@ public class HDF5BatchReader implements ManagedReader<FileSchemaNegotiator> {
   }
 
   /**
-   * Helper function to write a 1D short column
+   * Helper function to write a 1D short column.
    *
    * @param rowWriter The row to which the data will be written
-   * @param name The column name
-   * @param value The value to be written
+   * @param name      The column name
+   * @param value     The value to be written
    */
   private void writeSmallIntColumn(TupleWriter rowWriter, String name, short value) {
     ScalarWriter colWriter = getColWriter(rowWriter, name, MinorType.SMALLINT);
@@ -720,10 +705,11 @@ public class HDF5BatchReader implements ManagedReader<FileSchemaNegotiator> {
   }
 
   /**
-   * Helper function to write a 2D short list
-   * @param rowWriter the row to which the data will be written
-   * @param name the name of the outer list
-   * @param list the list of data
+   * Helper function to write a 2D short list.
+   *
+   * @param rowWriter The row to which the data will be written
+   * @param name      The name of the outer list
+   * @param list      The list of data
    */
   private void writeSmallIntColumn(TupleWriter rowWriter, String name, short[] list) {
     int index = rowWriter.tupleSchema().index(name);
@@ -740,11 +726,11 @@ public class HDF5BatchReader implements ManagedReader<FileSchemaNegotiator> {
   }
 
   /**
-   * Helper function to write a 1D byte column
+   * Helper function to write a 1D byte column.
    *
    * @param rowWriter The row to which the data will be written
-   * @param name The column name
-   * @param value The value to be written
+   * @param name      The column name
+   * @param value     The value to be written
    */
   private void writeByteColumn(TupleWriter rowWriter, String name, byte value) {
     ScalarWriter colWriter = getColWriter(rowWriter, name, MinorType.TINYINT);
@@ -752,10 +738,11 @@ public class HDF5BatchReader implements ManagedReader<FileSchemaNegotiator> {
   }
 
   /**
-   * Helper function to write a 2D byte list
-   * @param rowWriter the row to which the data will be written
-   * @param name the name of the outer list
-   * @param list the list of data
+   * Helper function to write a 2D byte list.
+   *
+   * @param rowWriter The row to which the data will be written
+   * @param name      The name of the outer list
+   * @param list      The list of data
    */
   private void writeByteListColumn(TupleWriter rowWriter, String name, byte[] list) {
     int index = rowWriter.tupleSchema().index(name);
@@ -772,11 +759,11 @@ public class HDF5BatchReader implements ManagedReader<FileSchemaNegotiator> {
   }
 
   /**
-   * Helper function to write a 1D int column
+   * Helper function to write a 1D integer column.
    *
    * @param rowWriter The row to which the data will be written
-   * @param name The column name
-   * @param value The value to be written
+   * @param name      The column name
+   * @param value     The value to be written
    */
   private void writeIntColumn(TupleWriter rowWriter, String name, int value) {
     ScalarWriter colWriter = getColWriter(rowWriter, name, TypeProtos.MinorType.INT);
@@ -784,10 +771,11 @@ public class HDF5BatchReader implements ManagedReader<FileSchemaNegotiator> {
   }
 
   /**
-   * Helper function to write a 2D int list
-   * @param rowWriter the row to which the data will be written
-   * @param name the name of the outer list
-   * @param list the list of data
+   * Helper function to write a 2D integer list.
+   *
+   * @param rowWriter The row to which the data will be written
+   * @param name      The name of the outer list
+   * @param list      The list of data
    */
   private void writeIntListColumn(TupleWriter rowWriter, String name, int[] list) {
     int index = rowWriter.tupleSchema().index(name);
@@ -945,7 +933,7 @@ public class HDF5BatchReader implements ManagedReader<FileSchemaNegotiator> {
   }
 
   private void floatMatrixHelper(float[][] colData, int cols, int rows, RowSetLoader rowWriter) {
-    // This is the case where a dataset is projected in a metadata query.  The result should be a list of lists
+    // This is the case where a dataset is projected in a metadata query. The result should be a list of lists
 
     TupleMetadata nestedSchema = new SchemaBuilder()
       .addRepeatedList(FLOAT_COLUMN_NAME)
@@ -992,7 +980,7 @@ public class HDF5BatchReader implements ManagedReader<FileSchemaNegotiator> {
   }
 
   private void doubleMatrixHelper(double[][] colData, int cols, int rows, RowSetLoader rowWriter) {
-    // This is the case where a dataset is projected in a metadata query.  The result should be a list of lists
+    // This is the case where a dataset is projected in a metadata query. The result should be a list of lists
 
     TupleMetadata nestedSchema = new SchemaBuilder()
       .addRepeatedList(DOUBLE_COLUMN_NAME)
@@ -1040,7 +1028,7 @@ public class HDF5BatchReader implements ManagedReader<FileSchemaNegotiator> {
   }
 
   private void bigIntMatrixHelper(long[][] colData, int cols, int rows, RowSetLoader rowWriter) {
-    // This is the case where a dataset is projected in a metadata query.  The result should be a list of lists
+    // This is the case where a dataset is projected in a metadata query. The result should be a list of lists
 
     TupleMetadata nestedSchema = new SchemaBuilder()
       .addRepeatedList(LONG_COLUMN_NAME)
@@ -1099,13 +1087,11 @@ public class HDF5BatchReader implements ManagedReader<FileSchemaNegotiator> {
   }
 
   /**
-   * Gets the attributes for an HDF5 datapath. These attributes are projected as
+   * Gets the attributes for an HDF5 data path. These attributes are projected as
    * a map in select * queries when the defaultPath is null.
    *
-   * @param rowWriter
-   *          the row to which the data will be written
-   * @param record
-   *          the record for the attributes
+   * @param rowWriter The row to which the data will be written
+   * @param record    The record for the attributes
    */
   private void writeAttributes(TupleWriter rowWriter, HDF5DrillMetadata record) {
     Map<String, HDF5Attribute> attribs = getAttributes(record.getPath());
@@ -1152,7 +1138,7 @@ public class HDF5BatchReader implements ManagedReader<FileSchemaNegotiator> {
           writeTimestampColumn(mapWriter, key, (Long) attrib.getValue());
           break;
         case GENERIC_OBJECT:
-          //This is the case for HDF5 enums
+          // This is the case for HDF5 enums
           String enumText = attrib.getValue().toString();
           writeStringColumn(mapWriter, key, enumText);
           break;
@@ -1166,9 +1152,9 @@ public class HDF5BatchReader implements ManagedReader<FileSchemaNegotiator> {
    * Processes the MAP data type which can be found in HDF5 files.
    * It automatically flattens anything greater than 2 dimensions.
    *
-   * @param path the HDF5 path tp the compound data
-   * @param reader the HDF5 reader for the data file
-   * @param rowWriter the rowWriter to write the data
+   * @param path      The HDF5 path of the compound data
+   * @param reader    The HDF5 reader for the data file
+   * @param rowWriter The rowWriter to write the data
    */
   private void getAndMapCompoundData(String path, HdfFile reader, RowSetLoader rowWriter) {
 
@@ -1227,7 +1213,8 @@ public class HDF5BatchReader implements ManagedReader<FileSchemaNegotiator> {
       String dataType = dataMember.getDataType().getJavaType().getName();
       String fieldName = dataMember.getName();
       int[] dataLength = reader.getDatasetByPath(path).getDimensions();
-      Object rawData = ((LinkedHashMap<String, ?>)reader.getDatasetByPath(path).getData()).get(fieldName);
+      @SuppressWarnings("rawtypes")
+      Object rawData = ((LinkedHashMap) reader.getDatasetByPath(path).getData()).get(fieldName);
 
       ArrayWriter innerWriter = listWriter.array(fieldName);
       for (int i = 0; i < dataLength[0]; i++) {
@@ -1266,22 +1253,5 @@ public class HDF5BatchReader implements ManagedReader<FileSchemaNegotiator> {
         }
       }
     }
-  }
-
-  @Override
-  public void close() {
-    AutoCloseables.closeSilently(hdfFile);
-    /*
-     * The current implementation of the HDF5 reader creates a temp file which needs to be removed
-     * when the batch reader is closed.  A possible future functionality might be to use the
-     */
-    boolean result = hdfFile.getFile().delete();
-    if (!result) {
-      logger.warn("Failed to delete HDF5 temp file {}", hdfFile.getFile().getName());
-    }
-    hdfFile = null;
-
-    AutoCloseables.closeSilently(reader);
-    reader = null;
   }
 }

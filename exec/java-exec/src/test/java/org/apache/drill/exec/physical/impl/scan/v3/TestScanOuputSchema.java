@@ -158,7 +158,7 @@ public class TestScanOuputSchema extends BaseScanTest {
     assertTrue(scan.buildSchema());
     {
       SingleRowSet expected = fixture.rowSetBuilder(expectedSchema)
-           .build();
+          .build();
       RowSetUtilities.verify(expected,
           fixture.wrap(scan.batchAccessor().container()));
     }
@@ -211,7 +211,7 @@ public class TestScanOuputSchema extends BaseScanTest {
     assertTrue(scan.buildSchema());
     {
       SingleRowSet expected = fixture.rowSetBuilder(expectedSchema)
-           .build();
+          .build();
       RowSetUtilities.verify(expected,
           fixture.wrap(scan.batchAccessor().container()));
     }
@@ -254,13 +254,13 @@ public class TestScanOuputSchema extends BaseScanTest {
         .add("a", MinorType.INT)
         .add("d", MinorType.BIGINT)
         .add("e", MinorType.BIGINT)
-         .buildSchema();
+        .buildSchema();
 
     // Initial schema
     assertTrue(scan.buildSchema());
     {
       SingleRowSet expected = fixture.rowSetBuilder(expectedSchema)
-           .build();
+          .build();
       RowSetUtilities.verify(expected,
           fixture.wrap(scan.batchAccessor().container()));
     }
@@ -303,13 +303,13 @@ public class TestScanOuputSchema extends BaseScanTest {
     TupleMetadata expectedSchema = new SchemaBuilder()
         .add("d", MinorType.BIGINT)
         .add("e", MinorType.BIGINT)
-         .buildSchema();
+        .buildSchema();
 
     // Initial schema
     assertTrue(scan.buildSchema());
     {
       SingleRowSet expected = fixture.rowSetBuilder(expectedSchema)
-           .build();
+          .build();
       RowSetUtilities.verify(expected,
           fixture.wrap(scan.batchAccessor().container()));
     }

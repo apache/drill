@@ -19,7 +19,9 @@ package org.apache.drill.exec.physical.impl.scan.v3.lifecycle;
 
 import static org.apache.drill.test.rowSet.RowSetUtilities.mapArray;
 import static org.apache.drill.test.rowSet.RowSetUtilities.mapValue;
-
+import static org.apache.drill.test.rowSet.RowSetUtilities.intArray;
+import static org.apache.drill.test.rowSet.RowSetUtilities.listIntArray;
+import static org.apache.drill.test.rowSet.RowSetUtilities.listLongArray;
 import java.util.Arrays;
 import java.util.Collections;
 
@@ -319,6 +321,33 @@ public class TestOutputBatchBuilder extends SubOperatorTest {
     final OutputBatchBuilder builder = new OutputBatchBuilder(schema,
         Collections.singletonList(new BatchSource(schema, input)),
         fixture.allocator());
+    builder.load(input.getRecordCount());
+    VectorContainer output = builder.outputContainer();
+
+    RowSetUtilities.verify(fixture.wrap(input), fixture.wrap(output));
+  }
+
+  @Test
+  public void testListArray() {
+    final TupleMetadata schema = new SchemaBuilder()
+        .addRepeatedList("int_list")
+          .addArray(MinorType.INT)
+          .resumeSchema()
+        .addRepeatedList("long_list")
+          .addArray(MinorType.BIGINT)
+          .resumeSchema()
+        .buildSchema();
+
+    final VectorContainer input = fixture.rowSetBuilder(schema)
+    .addRow(listIntArray(intArray(1, 2, 3)), listLongArray(new long[] { 1l, 2l, 3l }))
+    .addRow(listIntArray(intArray(10, 20, 30)), listLongArray(new long[] { 10l, 20l, 30l }))
+    .build()
+    .container();
+
+    final OutputBatchBuilder builder = new OutputBatchBuilder(schema,
+        Collections.singletonList(new BatchSource(schema, input)),
+        fixture.allocator());
+
     builder.load(input.getRecordCount());
     VectorContainer output = builder.outputContainer();
 

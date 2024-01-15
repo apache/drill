@@ -276,6 +276,14 @@ public class RowSetUtilities {
     return elements;
   }
 
+  public static int[][] listIntArray(int[]... elements) {
+    return elements;
+  }
+
+  public static long[][] listLongArray(long[]... elements) {
+    return elements;
+  }
+
   public static Object[] singleList(Object element) {
     return new Object[] { element };
   }

@@ -253,7 +253,7 @@ public class UnionVectorShim implements UnionShim {
         variants[i].events().saveRow();
       }
     }
-   }
+  }
 
   @Override
   public void preRollover() {
@@ -323,4 +323,3 @@ public class UnionVectorShim implements UnionShim {
   @Override
   public boolean isProjected() { return unionMemberShim.isProjected(); }
 }
-

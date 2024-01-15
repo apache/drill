@@ -29,7 +29,7 @@
 
   <artifactId>drill-format-hdf5</artifactId>
   <name>Drill : Contrib : Format : HDF5</name>
-  
+
   <dependencies>
     <dependency>
       <groupId>org.apache.drill.exec</groupId>
@@ -39,7 +39,7 @@
     <dependency>
       <groupId>io.jhdf</groupId>
       <artifactId>jhdf</artifactId>
-      <version>0.6.2</version>
+      <version>0.6.10</version>
     </dependency>
 
     <!-- Test dependencies -->
