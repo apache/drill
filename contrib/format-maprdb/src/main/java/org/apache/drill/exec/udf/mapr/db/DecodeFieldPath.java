@@ -52,7 +52,7 @@ public class DecodeFieldPath implements DrillSimpleFunc {
       sb.append(", ").append(org.ojai.FieldPath.parseFrom(decodedPath).asPathString());
     }
     String outputString = "[" + sb.substring(2) + "]";
-    final byte[] strBytes = outputString.getBytes(StandardCharsets.UTF_8);
+    final byte[] strBytes = outputString.getBytes(java.nio.charset.StandardCharsets.UTF_8);
     buffer.setBytes(0, strBytes);
     buffer.setIndex(0, strBytes.length);
 

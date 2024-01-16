@@ -40,7 +40,6 @@ import org.apache.drill.exec.vector.complex.writer.BaseWriter.ComplexWriter;
 
 import javax.inject.Inject;
 import java.nio.charset.Charset;
-import java.nio.charset.StandardCharsets;
 
 public class StringFunctions{
 
@@ -335,7 +334,7 @@ public class StringFunctions{
         org.apache.drill.exec.vector.complex.writer.VarCharWriter varCharWriter = listWriter.varChar();
 
         for(int i = 1; i <= matcher.groupCount(); i++) {
-          final byte[] strBytes = matcher.group(i).getBytes(StandardCharsets.UTF_8);
+          final byte[] strBytes = matcher.group(i).getBytes(java.nio.charset.StandardCharsets.UTF_8);
           buffer = buffer.reallocIfNeeded(strBytes.length);
           buffer.setBytes(0, strBytes);
           varCharWriter.writeVarChar(0, strBytes.length, buffer);
@@ -387,7 +386,7 @@ public class StringFunctions{
       boolean result = matcher.find();
 
       if (result) {
-        byte[] strBytes = matcher.group(index).getBytes(StandardCharsets.UTF_8);
+        byte[] strBytes = matcher.group(index).getBytes(java.nio.charset.StandardCharsets.UTF_8);
 
         out.buffer = buffer = buffer.reallocIfNeeded(strBytes.length);
         out.start = 0;
@@ -540,7 +539,7 @@ public class StringFunctions{
         result =
             com.google.common.collect.Iterables.get(splitter.split(inputString), arrayIndex, "");
       }
-      byte[] strBytes = result.getBytes(StandardCharsets.UTF_8);
+      byte[] strBytes = result.getBytes(java.nio.charset.StandardCharsets.UTF_8);
 
       out.buffer = buffer = buffer.reallocIfNeeded(strBytes.length);
       out.start = 0;
@@ -628,7 +627,7 @@ public class StringFunctions{
             .split(inputString), arrayIndex), end.value - start.value + 1)
           .iterator();
       }
-      byte[] strBytes = joiner.join(iterator).getBytes(StandardCharsets.UTF_8);
+      byte[] strBytes = joiner.join(iterator).getBytes(java.nio.charset.StandardCharsets.UTF_8);
       out.buffer = buffer = buffer.reallocIfNeeded(strBytes.length);
       out.start = 0;
       out.end = strBytes.length;
@@ -682,7 +681,7 @@ public class StringFunctions{
     @Override
     public void eval() {
       String str = org.apache.drill.exec.expr.fn.impl.StringFunctionHelpers.toStringFromUTF8(input.start, input.end, input.buffer);
-      byte[] result = str.toLowerCase().getBytes(StandardCharsets.UTF_8);
+      byte[] result = str.toLowerCase().getBytes(java.nio.charset.StandardCharsets.UTF_8);
 
       out.buffer = buffer = buffer.reallocIfNeeded(result.length);
       out.start = 0;
@@ -712,7 +711,7 @@ public class StringFunctions{
     @Override
     public void eval() {
       String str = org.apache.drill.exec.expr.fn.impl.StringFunctionHelpers.toStringFromUTF8(input.start, input.end, input.buffer);
-      byte[] result = str.toUpperCase().getBytes(StandardCharsets.UTF_8);
+      byte[] result = str.toUpperCase().getBytes(java.nio.charset.StandardCharsets.UTF_8);
 
       out.buffer = buffer = buffer.reallocIfNeeded(result.length);
       out.start = 0;
@@ -971,7 +970,7 @@ public class StringFunctions{
     public void eval() {
       String source = org.apache.drill.exec.expr.fn.impl.StringFunctionHelpers.toStringFromUTF8(input.start, input.end, input.buffer);
       String result = org.apache.drill.exec.expr.fn.impl.StringFunctionHelpers.initCap(source);
-      byte[] bytes = result.getBytes(StandardCharsets.UTF_8);
+      byte[] bytes = result.getBytes(java.nio.charset.StandardCharsets.UTF_8);
       out.buffer = buffer = buffer.reallocIfNeeded(bytes.length);
       out.start = 0;
       out.end = bytes.length;
@@ -1600,7 +1599,7 @@ public class StringFunctions{
       list.startList();
       org.apache.drill.exec.vector.complex.writer.VarCharWriter varCharWriter = list.varChar();
       for (Object token : tokens) {
-        final byte[] strBytes = ((String) token).getBytes(StandardCharsets.UTF_8);
+        final byte[] strBytes = ((String) token).getBytes(java.nio.charset.StandardCharsets.UTF_8);
         buffer = buffer.reallocIfNeeded(strBytes.length);
         buffer.setBytes(0, strBytes);
         varCharWriter.writeVarChar(0, strBytes.length, buffer);
@@ -1932,7 +1931,7 @@ public class StringFunctions{
       for (int i = in.start; i < in.end; i++, index++) {
         bytea[index] = in.buffer.getByte(i);
       }
-      final byte[] outBytea = new String(bytea, inCharset).getBytes(StandardCharsets.UTF_8);
+      final byte[] outBytea = new String(bytea, inCharset).getBytes(java.nio.charset.StandardCharsets.UTF_8);
       out.buffer = buffer = buffer.reallocIfNeeded(outBytea.length);
       out.buffer.setBytes(0, outBytea);
       out.start = 0;
