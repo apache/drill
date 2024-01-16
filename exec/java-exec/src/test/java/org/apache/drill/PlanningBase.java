@@ -19,6 +19,7 @@ package org.apache.drill;
 
 import java.io.IOException;
 import java.net.URL;
+import java.nio.charset.StandardCharsets;
 
 import org.apache.calcite.jdbc.DynamicSchema;
 import org.apache.drill.exec.alias.AliasRegistryProvider;

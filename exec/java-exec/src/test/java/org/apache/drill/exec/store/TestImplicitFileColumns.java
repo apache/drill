@@ -18,6 +18,7 @@
 package org.apache.drill.exec.store;
 
 import java.io.File;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 

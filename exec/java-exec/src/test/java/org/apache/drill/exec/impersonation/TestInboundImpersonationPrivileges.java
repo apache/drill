@@ -29,6 +29,7 @@ import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 
 import static org.junit.Assert.assertEquals;
 

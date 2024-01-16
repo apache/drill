@@ -37,6 +37,8 @@ import org.bouncycastle.util.Arrays;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
+import java.nio.charset.StandardCharsets;
+
 @Category(RowSetTest.class)
 public class TestVariableWidthWriter extends SubOperatorTest {
 

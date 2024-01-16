@@ -17,6 +17,7 @@
  */
 package org.apache.drill.exec.physical.resultSet.impl;
 
+import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 
 import org.apache.drill.categories.RowSetTest;

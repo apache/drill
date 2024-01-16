@@ -55,6 +55,7 @@ import com.google.common.io.Resources;
 
 import java.io.File;
 import java.math.BigDecimal;
+import java.nio.charset.StandardCharsets;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;

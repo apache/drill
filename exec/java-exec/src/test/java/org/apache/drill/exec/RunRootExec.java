@@ -18,6 +18,7 @@
 package org.apache.drill.exec;
 
 import java.io.File;
+import java.nio.charset.StandardCharsets;
 import java.util.concurrent.TimeUnit;
 
 import org.apache.drill.common.config.DrillConfig;

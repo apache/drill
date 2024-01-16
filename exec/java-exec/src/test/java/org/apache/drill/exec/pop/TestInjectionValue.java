@@ -19,6 +19,7 @@ package org.apache.drill.exec.pop;
 
 import static org.junit.Assert.assertEquals;
 
+import java.nio.charset.StandardCharsets;
 import java.util.List;
 
 import org.apache.drill.categories.PlannerTest;
@@ -51,7 +52,8 @@ public class TestInjectionValue extends ExecTest {
   @Test
   public void testInjected() throws Exception{
     PhysicalPlanReader r = PhysicalPlanReaderTestFactory.defaultPhysicalPlanReader(config);
-    PhysicalPlan p = r.readPhysicalPlan(Files.asCharSource(DrillFileUtils.getResourceAsFile("/physical_screen.json"), StandardCharsets.UTF_8).read());
+    PhysicalPlan p = r.readPhysicalPlan(Files.asCharSource(DrillFileUtils.getResourceAsFile("/physical_screen.json"),
+        StandardCharsets.UTF_8).read());
 
     List<PhysicalOperator> o = p.getSortedOperators(false);
 

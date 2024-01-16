@@ -18,6 +18,7 @@
 package org.apache.drill.exec.pop;
 
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.util.Properties;
 
 import org.apache.drill.common.config.DrillConfig;
@@ -67,7 +68,8 @@ public abstract class PopUnitTestBase  extends ExecTest{
 
   public static Fragment getRootFragment(PhysicalPlanReader reader, String file) throws FragmentSetupException,
       IOException, ForemanSetupException {
-    return getRootFragmentFromPlanString(reader, Files.asCharSource(DrillFileUtils.getResourceAsFile(file), StandardCharsets.UTF_8).read());
+    return getRootFragmentFromPlanString(reader, Files.asCharSource(DrillFileUtils.getResourceAsFile(file),
+        StandardCharsets.UTF_8).read());
   }
 
 

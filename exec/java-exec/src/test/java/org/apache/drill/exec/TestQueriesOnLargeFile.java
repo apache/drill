@@ -21,6 +21,7 @@ import static org.junit.Assert.assertEquals;
 
 import java.io.File;
 import java.io.PrintWriter;
+import java.nio.charset.StandardCharsets;
 import java.util.List;
 
 import org.apache.drill.categories.SlowTest;

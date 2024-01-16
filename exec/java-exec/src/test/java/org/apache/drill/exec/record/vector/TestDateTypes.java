@@ -20,6 +20,7 @@ package org.apache.drill.exec.record.vector;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
+import java.nio.charset.StandardCharsets;
 import java.util.Iterator;
 import java.util.List;
 
@@ -157,7 +158,8 @@ public class TestDateTypes extends PopUnitTestBase {
       bit.run();
       client.connect();
       List<QueryDataBatch> results = client.runQuery(org.apache.drill.exec.proto.UserBitShared.QueryType.PHYSICAL,
-              Files.asCharSource(DrillFileUtils.getResourceAsFile("/record/vector/test_interval.json"), StandardCharsets.UTF_8).read()
+              Files.asCharSource(DrillFileUtils.getResourceAsFile("/record/vector/test_interval.json"),
+                      StandardCharsets.UTF_8).read()
                       .replace("#{TEST_FILE}", "/test_simple_interval.json"));
 
       RecordBatchLoader batchLoader = new RecordBatchLoader(bit.getContext().getAllocator());

@@ -34,6 +34,8 @@ import com.fasterxml.jackson.databind.ObjectWriter;
 import com.google.common.io.Files;
 import org.junit.experimental.categories.Category;
 
+import java.nio.charset.StandardCharsets;
+
 @Category(PlannerTest.class)
 public class TestParsePhysicalPlan extends ExecTest {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(TestParsePhysicalPlan.class);

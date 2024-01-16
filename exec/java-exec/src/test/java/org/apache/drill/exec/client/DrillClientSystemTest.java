@@ -18,6 +18,8 @@
 package org.apache.drill.exec.client;
 
 import static org.junit.Assert.assertFalse;
+
+import java.nio.charset.StandardCharsets;
 import java.util.List;
 
 import org.apache.drill.exec.DrillSystemTestBase;
