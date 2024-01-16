@@ -19,6 +19,7 @@ package org.apache.drill.exec.vector.complex.fn;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.charset.StandardCharsets;
 import java.util.List;
 
 import org.apache.drill.common.exceptions.UserException;

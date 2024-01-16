@@ -17,6 +17,7 @@
  */
 package org.apache.drill.exec.expr.fn.impl;
 
+import java.nio.charset.StandardCharsets;
 import java.util.Iterator;
 
 import org.apache.drill.common.exceptions.DrillRuntimeException;

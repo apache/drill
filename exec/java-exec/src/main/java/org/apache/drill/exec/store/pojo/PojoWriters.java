@@ -20,6 +20,7 @@ package org.apache.drill.exec.store.pojo;
 import io.netty.buffer.DrillBuf;
 
 import java.math.BigDecimal;
+import java.nio.charset.StandardCharsets;
 import java.sql.Timestamp;
 
 import org.apache.drill.common.exceptions.ExecutionSetupException;

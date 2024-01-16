@@ -17,6 +17,7 @@
  */
 package org.apache.drill.exec.physical.impl.scan.convert;
 
+import java.nio.charset.StandardCharsets;
 import java.util.Map;
 import java.util.function.Function;
 

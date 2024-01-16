@@ -19,6 +19,7 @@ package org.apache.drill.exec.store.mock;
 
 import java.io.IOException;
 import java.net.URL;
+import java.nio.charset.StandardCharsets;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;

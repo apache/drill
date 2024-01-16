@@ -20,6 +20,7 @@ package org.apache.drill.exec.vector.complex.fn;
 import io.netty.buffer.DrillBuf;
 
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 
 import org.apache.drill.exec.expr.holders.VarBinaryHolder;
 import org.apache.drill.exec.expr.holders.VarCharHolder;
