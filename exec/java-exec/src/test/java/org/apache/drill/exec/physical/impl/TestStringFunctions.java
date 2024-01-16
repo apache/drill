@@ -41,6 +41,8 @@ import com.google.common.io.Resources;
 import org.junit.experimental.categories.Category;
 import org.mockito.Mockito;
 
+import java.nio.charset.StandardCharsets;
+
 @Category({UnlikelyTest.class})
 public class TestStringFunctions extends ExecTest {
   private final DrillConfig c = DrillConfig.create();

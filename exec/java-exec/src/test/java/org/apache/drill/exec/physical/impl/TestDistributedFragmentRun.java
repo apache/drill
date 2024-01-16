@@ -19,6 +19,7 @@ package org.apache.drill.exec.physical.impl;
 
 import static org.junit.Assert.assertEquals;
 
+import java.nio.charset.StandardCharsets;
 import java.util.List;
 
 import org.apache.drill.categories.SlowTest;
@@ -46,7 +47,8 @@ public class TestDistributedFragmentRun extends PopUnitTestBase{
          DrillClient client = new DrillClient(CONFIG, serviceSet.getCoordinator())) {
       bit1.run();
       client.connect();
-      List<QueryDataBatch> results = client.runQuery(QueryType.PHYSICAL, Files.asCharSource(DrillFileUtils.getResourceAsFile("/physical_single_exchange.json"), StandardCharsets.UTF_8).read());
+      List<QueryDataBatch> results = client.runQuery(QueryType.PHYSICAL, Files.asCharSource(DrillFileUtils.getResourceAsFile("/physical_single_exchange.json"),
+          StandardCharsets.UTF_8).read());
       int count = 0;
       for(QueryDataBatch b : results){
         count += b.getHeader().getRowCount();

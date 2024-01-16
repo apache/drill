@@ -38,6 +38,8 @@ import com.google.common.io.Resources;
 
 import org.mockito.Mockito;
 
+import java.nio.charset.StandardCharsets;
+
 public class TestImplicitCastFunctions extends ExecTest {
   private final DrillConfig c = DrillConfig.create();
   private PhysicalPlanReader reader;

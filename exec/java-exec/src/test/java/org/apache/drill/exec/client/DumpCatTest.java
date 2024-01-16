@@ -21,6 +21,7 @@ import static org.apache.drill.exec.planner.PhysicalPlanReaderTestFactory.defaul
 import static org.junit.Assert.assertTrue;
 
 import java.io.FileInputStream;
+import java.nio.charset.StandardCharsets;
 
 import org.apache.drill.common.config.DrillConfig;
 import org.apache.drill.common.util.DrillFileUtils;

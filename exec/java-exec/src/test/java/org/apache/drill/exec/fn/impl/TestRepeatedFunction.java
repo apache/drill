@@ -46,6 +46,8 @@ import com.google.common.io.Files;
 import org.junit.experimental.categories.Category;
 import org.mockito.Mockito;
 
+import java.nio.charset.StandardCharsets;
+
 @Category(OperatorTest.class)
 public class TestRepeatedFunction extends ExecTest {
   private final DrillConfig c = DrillConfig.create();

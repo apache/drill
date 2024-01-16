@@ -21,6 +21,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
+import java.nio.charset.StandardCharsets;
 import java.util.List;
 
 import org.apache.drill.common.util.DrillFileUtils;
@@ -51,7 +52,8 @@ public class TestSimpleFragmentRun extends PopUnitTestBase {
     bit.run();
     client.connect();
     final String path = "/physical_test2.json";
-    final List<QueryDataBatch> results = client.runQuery(QueryType.PHYSICAL, Files.asCharSource(DrillFileUtils.getResourceAsFile(path), StandardCharsets.UTF_8).read());
+    final List<QueryDataBatch> results = client.runQuery(QueryType.PHYSICAL, Files.asCharSource(DrillFileUtils.getResourceAsFile(path),
+        StandardCharsets.UTF_8).read());
 
     // look at records
     final RecordBatchLoader batchLoader = new RecordBatchLoader(client.getAllocator());

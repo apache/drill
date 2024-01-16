@@ -37,6 +37,8 @@ import com.google.common.io.Resources;
 
 import org.mockito.Mockito;
 
+import java.nio.charset.StandardCharsets;
+
 public class TestComparisonFunctions extends ExecTest {
   private final DrillConfig c = DrillConfig.create();
   private final String COMPARISON_TEST_PHYSICAL_PLAN = "functions/comparisonTest.json";
