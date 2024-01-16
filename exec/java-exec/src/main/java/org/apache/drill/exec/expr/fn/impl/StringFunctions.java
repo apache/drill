@@ -537,7 +537,7 @@ public class StringFunctions{
       } else {
         int arrayIndex = index.value - 1;
         result =
-            com.google.common.collect.Iterables.get(splitter.split(inputString), arrayIndex, "");
+          (String) com.google.common.collect.Iterables.get(splitter.split(inputString), arrayIndex, "");
       }
       byte[] strBytes = result.getBytes(java.nio.charset.StandardCharsets.UTF_8);
 
