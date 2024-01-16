@@ -19,6 +19,7 @@ package org.apache.drill.exec.work.batch;
 
 import static org.junit.Assert.assertEquals;
 
+import java.nio.charset.StandardCharsets;
 import java.util.List;
 
 import org.apache.drill.test.BaseTestQuery;
