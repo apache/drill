@@ -30,6 +30,8 @@ import org.apache.drill.exec.expr.holders.BigIntHolder;
 import org.apache.drill.exec.expr.holders.BitHolder;
 import org.apache.drill.exec.expr.holders.VarCharHolder;
 
+import java.nio.charset.StandardCharsets;
+
 
 public class SimpleCastFunctions {
 
@@ -46,7 +48,7 @@ public class SimpleCastFunctions {
     public void eval() {
       byte[] buf = new byte[in.end - in.start];
       in.buffer.getBytes(in.start, buf, 0, in.end - in.start);
-      String input = new String(buf, com.google.common.base.Charsets.UTF_8);
+      String input = new String(buf, StandardCharsets.UTF_8);
       out.value = org.apache.drill.common.types.BooleanType.get(input).getNumericValue();
     }
   }

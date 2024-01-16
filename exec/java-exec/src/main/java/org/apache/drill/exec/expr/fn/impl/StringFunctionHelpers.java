@@ -86,13 +86,13 @@ public class StringFunctionHelpers {
   private static NumberFormatException nfeL(int start, int end, DrillBuf buffer) {
     byte[] buf = new byte[end - start];
     buffer.getBytes(start, buf, 0, end - start);
-    return new NumberFormatException(new String(buf, com.google.common.base.Charsets.UTF_8));
+    return new NumberFormatException(new String(buf, StandardCharsets.UTF_8));
   }
 
   private static NumberFormatException nfeI(int start, int end, DrillBuf buffer) {
     byte[] buf = new byte[end - start];
     buffer.getBytes(start, buf, 0, end - start);
-    return new NumberFormatException(new String(buf, com.google.common.base.Charsets.UTF_8));
+    return new NumberFormatException(new String(buf, StandardCharsets.UTF_8));
   }
 
   public static int varTypesToInt(final int start, final int end, DrillBuf buffer) {
