@@ -46,7 +46,6 @@ import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.google.common.base.Charsets;
 import com.google.common.collect.ImmutableList;
 import com.google.common.io.Resources;
 
@@ -152,7 +151,7 @@ public class MockStorageEngine extends AbstractStoragePlugin {
       }
       MockTableDef mockTableDefn;
       try {
-        String json = Resources.toString(url, Charsets.UTF_8);
+        String json = Resources.toString(url, StandardCharsets.UTF_8);
         final ObjectMapper mapper = JacksonUtils.createObjectMapper();
         mapper.configure(JsonParser.Feature.ALLOW_UNQUOTED_FIELD_NAMES, true);
         mockTableDefn = mapper.readValue(json, MockTableDef.class);

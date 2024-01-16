@@ -38,7 +38,6 @@ import org.apache.drill.exec.physical.rowSet.RowSetBuilder;
 import org.apache.drill.exec.record.metadata.SchemaBuilder;
 import org.apache.drill.exec.record.metadata.TupleMetadata;
 import org.apache.drill.exec.store.security.oauth.OAuthTokenCredentials;
-import com.google.common.base.Charsets;
 import com.google.common.io.Files;
 import org.apache.drill.test.ClusterFixtureBuilder;
 import org.apache.drill.test.ClusterTest;
@@ -49,6 +48,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
@@ -75,9 +75,12 @@ public class TestOAuthProcess extends ClusterTest {
 
   @BeforeClass
   public static void setup() throws Exception {
-    ACCESS_TOKEN_RESPONSE = Files.asCharSource(DrillFileUtils.getResourceAsFile("/data/oauth_access_token_response.json"), Charsets.UTF_8).read();
-    REFRESH_TOKEN_RESPONSE = Files.asCharSource(DrillFileUtils.getResourceAsFile("/data/token_refresh.json"), Charsets.UTF_8).read();
-    TEST_JSON_RESPONSE_WITH_DATATYPES = Files.asCharSource(DrillFileUtils.getResourceAsFile("/data/response2.json"), Charsets.UTF_8).read();
+    ACCESS_TOKEN_RESPONSE = Files.asCharSource(DrillFileUtils.getResourceAsFile("/data/oauth_access_token_response.json"),
+        StandardCharsets.UTF_8).read();
+    REFRESH_TOKEN_RESPONSE = Files.asCharSource(DrillFileUtils.getResourceAsFile("/data/token_refresh.json"),
+        StandardCharsets.UTF_8).read();
+    TEST_JSON_RESPONSE_WITH_DATATYPES = Files.asCharSource(DrillFileUtils.getResourceAsFile("/data/response2.json"),
+        StandardCharsets.UTF_8).read();
 
     ClusterFixtureBuilder builder = new ClusterFixtureBuilder(dirTestWatcher)
       .configProperty(ExecConstants.HTTP_ENABLE, true)

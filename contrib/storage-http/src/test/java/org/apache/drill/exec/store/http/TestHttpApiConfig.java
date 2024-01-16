@@ -21,13 +21,13 @@ package org.apache.drill.exec.store.http;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.google.common.base.Charsets;
 import com.google.common.io.Files;
 import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.common.util.DrillFileUtils;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
+import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
@@ -48,7 +48,7 @@ public class TestHttpApiConfig {
   @BeforeAll
   public static void setup() throws Exception {
     EXAMPLE_HTTP_API_CONFIG_JSON = Files.asCharSource(
-        DrillFileUtils.getResourceAsFile("/data/exampleHttpApiConfig.json"), Charsets.UTF_8
+        DrillFileUtils.getResourceAsFile("/data/exampleHttpApiConfig.json"), StandardCharsets.UTF_8
     ).read().trim();
 
     EXAMPLE_HEADERS = new HashMap<>();

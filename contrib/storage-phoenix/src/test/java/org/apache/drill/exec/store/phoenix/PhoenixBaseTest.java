@@ -264,6 +264,6 @@ public class PhoenixBaseTest extends ClusterTest {
   }
 
   private static Reader getReader(String path) throws Exception {
-    return new InputStreamReader(new FileInputStream(path), "UTF-8");
+    return new InputStreamReader(new FileInputStream(path), StandardCharsets.UTF_8);
   }
 }

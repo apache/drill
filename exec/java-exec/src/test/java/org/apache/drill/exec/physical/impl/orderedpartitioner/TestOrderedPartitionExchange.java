@@ -44,7 +44,6 @@ import org.junit.Assert;
 import org.junit.Ignore;
 import org.junit.Test;
 
-import com.google.common.base.Charsets;
 import com.google.common.collect.Lists;
 import com.google.common.io.Files;
 import org.junit.experimental.categories.Category;
@@ -78,7 +77,7 @@ public class TestOrderedPartitionExchange extends PopUnitTestBase {
       client.connect();
       List<QueryDataBatch> results = client.runQuery(org.apache.drill.exec.proto.UserBitShared.QueryType.PHYSICAL,
           Files.asCharSource(DrillFileUtils.getResourceAsFile("/sender/ordered_exchange.json"),
-              Charsets.UTF_8).read());
+              StandardCharsets.UTF_8).read());
       int count = 0;
       List<Integer> partitionRecordCounts = Lists.newArrayList();
       for(QueryDataBatch b : results) {

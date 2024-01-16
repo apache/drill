@@ -36,7 +36,6 @@ import org.apache.drill.exec.proto.UserBitShared;
 import org.apache.drill.exec.store.easy.json.JSONRecordReader;
 import org.apache.drill.exec.util.JsonStringHashMap;
 import org.apache.drill.exec.util.Text;
-import com.google.common.base.Charsets;
 import com.google.common.io.Files;
 import org.apache.drill.test.BaseTestQuery;
 import org.junit.BeforeClass;
@@ -151,7 +150,7 @@ public class TestJsonReader extends BaseTestQuery {
     logger.debug("===================");
     logger.debug("source data in json");
     logger.debug("===================");
-    logger.debug(Files.asCharSource(DrillFileUtils.getResourceAsFile(filename), Charsets.UTF_8).read());
+    logger.debug(Files.asCharSource(DrillFileUtils.getResourceAsFile(filename), StandardCharsets.UTF_8).read());
 
     int i = 0;
     for (String query : queries) {

@@ -19,7 +19,6 @@ package org.apache.drill.exec.rpc.user.security;
 
 import org.apache.commons.codec.digest.DigestUtils;
 import org.apache.commons.codec.digest.Md5Crypt;
-import org.apache.commons.io.Charsets;
 import org.apache.drill.common.config.DrillConfig;
 import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.exception.DrillbitStartupException;
@@ -29,6 +28,7 @@ import org.slf4j.LoggerFactory;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
+import java.nio.charset.StandardCharsets;
 import java.text.MessageFormat;
 import java.util.Base64;
 import java.util.HashMap;
@@ -80,7 +80,7 @@ public class HtpasswdFileUserAuthenticator implements UserAuthenticator {
     if (hash.startsWith("$apr1$")) {
       return hash.equals(Md5Crypt.apr1Crypt(password, hash));
     } else if (hash.startsWith("$1$")) {
-      return hash.equals(Md5Crypt.md5Crypt(password.getBytes(Charsets.UTF_8), hash));
+      return hash.equals(Md5Crypt.md5Crypt(password.getBytes(StandardCharsets.UTF_8), hash));
     } else if (hash.startsWith("{SHA}")) {
       return hash.substring(5).equals(Base64.getEncoder().encodeToString(DigestUtils.sha1(password)));
     } else if (hash.startsWith("$2y$")) {

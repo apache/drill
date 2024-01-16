@@ -21,8 +21,8 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.net.URL;
+import java.nio.charset.StandardCharsets;
 
-import com.google.common.base.Charsets;
 import com.google.common.io.Files;
 
 public class DrillFileUtils {
@@ -41,7 +41,7 @@ public class DrillFileUtils {
   }
 
   public static String getResourceAsString(String fileName) throws IOException {
-    return Files.asCharSource(getResourceAsFile(fileName), Charsets.UTF_8).read();
+    return Files.asCharSource(getResourceAsFile(fileName), StandardCharsets.UTF_8).read();
   }
 
   /**

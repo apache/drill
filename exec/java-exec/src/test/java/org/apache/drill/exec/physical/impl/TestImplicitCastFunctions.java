@@ -34,7 +34,6 @@ import org.apache.drill.exec.server.DrillbitContext;
 import org.apache.drill.exec.vector.ValueVector;
 import org.junit.Test;
 
-import com.google.common.base.Charsets;
 import com.google.common.io.Resources;
 
 import org.mockito.Mockito;
@@ -63,7 +62,7 @@ public class TestImplicitCastFunctions extends ExecTest {
     final DrillbitContext bitContext = mockDrillbitContext();
     final UserClientConnection connection = Mockito.mock(UserClientConnection.class);
 
-    final String planString = Resources.toString(Resources.getResource(planPath), Charsets.UTF_8);
+    final String planString = Resources.toString(Resources.getResource(planPath), StandardCharsets.UTF_8);
     if (reader == null) {
       reader = PhysicalPlanReaderTestFactory.defaultPhysicalPlanReader(c);
     }

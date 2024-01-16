@@ -21,11 +21,12 @@ import static org.apache.drill.exec.memory.BoundsChecking.rangeCheck;
 
 import org.apache.drill.exec.expr.holders.NullableVarCharHolder;
 import org.apache.drill.exec.expr.holders.VarCharHolder;
-import com.google.common.base.Charsets;
 import org.joda.time.chrono.ISOChronology;
 
 import io.netty.buffer.DrillBuf;
 import io.netty.util.internal.PlatformDependent;
+
+import java.nio.charset.StandardCharsets;
 
 public class StringFunctionHelpers {
 
@@ -190,14 +191,14 @@ public class StringFunctionHelpers {
   public static String toStringFromUTF8(int start, int end, DrillBuf buffer) {
     byte[] buf = new byte[end - start];
     buffer.getBytes(start, buf, 0, end - start);
-    String s = new String(buf, Charsets.UTF_8);
+    String s = new String(buf, StandardCharsets.UTF_8);
     return s;
   }
 
   public static String toStringFromUTF16(int start, int end, DrillBuf buffer) {
     byte[] buf = new byte[end - start];
     buffer.getBytes(start, buf, 0, end - start);
-    return new String(buf, Charsets.UTF_16);
+    return new String(buf, StandardCharsets.UTF_16);
   }
 
   private static final ISOChronology CHRONOLOGY = org.joda.time.chrono.ISOChronology.getInstanceUTC();

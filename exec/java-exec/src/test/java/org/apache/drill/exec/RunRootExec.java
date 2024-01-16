@@ -35,7 +35,6 @@ import org.apache.drill.exec.server.DrillbitContext;
 import org.apache.drill.exec.server.RemoteServiceSet;
 import org.apache.drill.exec.vector.ValueVector;
 
-import com.google.common.base.Charsets;
 import com.google.common.base.Stopwatch;
 import com.google.common.io.Files;
 
@@ -51,7 +50,7 @@ public class RunRootExec {
     bit.run();
     DrillbitContext bitContext = bit.getContext();
     PhysicalPlanReader reader = bitContext.getPlanReader();
-    PhysicalPlan plan = reader.readPhysicalPlan(Files.asCharSource(new File(path), Charsets.UTF_8).read());
+    PhysicalPlan plan = reader.readPhysicalPlan(Files.asCharSource(new File(path), StandardCharsets.UTF_8).read());
     FunctionImplementationRegistry registry = bitContext.getFunctionImplementationRegistry();
     FragmentContextImpl context = new FragmentContextImpl(bitContext, PlanFragment.getDefaultInstance(), null, registry);
     SimpleRootExec exec;

@@ -36,7 +36,6 @@ import org.apache.drill.exec.vector.ValueVector;
 import org.apache.drill.exec.vector.VarCharVector;
 import org.junit.Test;
 
-import com.google.common.base.Charsets;
 import com.google.common.io.Resources;
 
 import org.junit.experimental.categories.Category;
@@ -59,7 +58,7 @@ public class TestStringFunctions extends ExecTest {
     int i = 0;
     for (final ValueVector v : exec) {
       if  (v instanceof VarCharVector) {
-        res[i++] = new String( ((VarCharVector) v).getAccessor().get(0), Charsets.UTF_8);
+        res[i++] = new String( ((VarCharVector) v).getAccessor().get(0), StandardCharsets.UTF_8);
       } else {
         res[i++] =  v.getAccessor().getObject(0);
       }
@@ -71,7 +70,7 @@ public class TestStringFunctions extends ExecTest {
     final DrillbitContext bitContext = mockDrillbitContext();
     final UserClientConnection connection = Mockito.mock(UserClientConnection.class);
 
-    final String planString = Resources.toString(Resources.getResource(planPath), Charsets.UTF_8);
+    final String planString = Resources.toString(Resources.getResource(planPath), StandardCharsets.UTF_8);
     if (reader == null) {
       reader = PhysicalPlanReaderTestFactory.defaultPhysicalPlanReader(c);
     }

@@ -39,7 +39,6 @@ import org.apache.drill.exec.vector.NullableIntVector;
 import org.apache.drill.exec.vector.NullableTimeStampVector;
 import org.apache.drill.exec.vector.NullableVarCharVector;
 
-import com.google.common.base.Charsets;
 import org.apache.drill.exec.vector.VarDecimalVector;
 
 public class PojoWriters {
@@ -204,7 +203,7 @@ public class PojoWriters {
 
     public void writeString(String s, int outboundIndex) {
       holder.isSet = 1;
-      byte[] bytes = s.getBytes(Charsets.UTF_8);
+      byte[] bytes = s.getBytes(StandardCharsets.UTF_8);
       ensureLength(bytes.length);
       data.clear();
       data.writeBytes(bytes);

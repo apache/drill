@@ -33,7 +33,6 @@ import org.apache.drill.exec.rpc.UserClientConnection;
 import org.apache.drill.exec.server.DrillbitContext;
 import org.junit.Test;
 
-import com.google.common.base.Charsets;
 import com.google.common.io.Resources;
 
 import org.mockito.Mockito;
@@ -48,7 +47,7 @@ public class TestComparisonFunctions extends ExecTest {
     final DrillbitContext bitContext = mockDrillbitContext();
     final UserClientConnection connection = Mockito.mock(UserClientConnection.class);
 
-    final String planString = Resources.toString(Resources.getResource(COMPARISON_TEST_PHYSICAL_PLAN), Charsets.UTF_8).replaceAll("EXPRESSION", expression);
+    final String planString = Resources.toString(Resources.getResource(COMPARISON_TEST_PHYSICAL_PLAN), StandardCharsets.UTF_8).replaceAll("EXPRESSION", expression);
     if (reader == null) {
       reader = PhysicalPlanReaderTestFactory.defaultPhysicalPlanReader(c);
     }

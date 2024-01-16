@@ -31,7 +31,6 @@ import org.apache.drill.exec.physical.rowSet.RowSetBuilder;
 import org.apache.drill.exec.record.metadata.SchemaBuilder;
 import org.apache.drill.exec.record.metadata.TupleMetadata;
 import org.apache.drill.exec.rpc.user.QueryDataBatch;
-import com.google.common.base.Charsets;
 import com.google.common.io.Files;
 import org.apache.drill.test.ClusterFixture;
 import org.apache.drill.test.ClusterTest;
@@ -42,6 +41,7 @@ import org.junit.Ignore;
 import org.junit.Test;
 
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -83,35 +83,35 @@ public class TestPagination extends ClusterTest {
   public static void setup() throws Exception {
     startCluster(ClusterFixture.builder(dirTestWatcher));
 
-    TEST_CSV_RESPONSE = Files.asCharSource(DrillFileUtils.getResourceAsFile("/data/response.csv"), Charsets.UTF_8).read();
-    TEST_CSV_RESPONSE_2 = Files.asCharSource(DrillFileUtils.getResourceAsFile("/data/response_2.csv"), Charsets.UTF_8).read();
-    TEST_CSV_RESPONSE_3 = Files.asCharSource(DrillFileUtils.getResourceAsFile("/data/response_3.csv"), Charsets.UTF_8).read();
-    TEST_CSV_RESPONSE_4 = Files.asCharSource(DrillFileUtils.getResourceAsFile("/data/response_4.csv"), Charsets.UTF_8).read();
+    TEST_CSV_RESPONSE = Files.asCharSource(DrillFileUtils.getResourceAsFile("/data/response.csv"), StandardCharsets.UTF_8).read();
+    TEST_CSV_RESPONSE_2 = Files.asCharSource(DrillFileUtils.getResourceAsFile("/data/response_2.csv"), StandardCharsets.UTF_8).read();
+    TEST_CSV_RESPONSE_3 = Files.asCharSource(DrillFileUtils.getResourceAsFile("/data/response_3.csv"), StandardCharsets.UTF_8).read();
+    TEST_CSV_RESPONSE_4 = Files.asCharSource(DrillFileUtils.getResourceAsFile("/data/response_4.csv"), StandardCharsets.UTF_8).read();
 
-    TEST_JSON_PAGE1 = Files.asCharSource(DrillFileUtils.getResourceAsFile("/data/p1.json"), Charsets.UTF_8).read();
-    TEST_JSON_PAGE2 = Files.asCharSource(DrillFileUtils.getResourceAsFile("/data/p2.json"), Charsets.UTF_8).read();
-    TEST_JSON_PAGE3 = Files.asCharSource(DrillFileUtils.getResourceAsFile("/data/p3.json"), Charsets.UTF_8).read();
+    TEST_JSON_PAGE1 = Files.asCharSource(DrillFileUtils.getResourceAsFile("/data/p1.json"), StandardCharsets.UTF_8).read();
+    TEST_JSON_PAGE2 = Files.asCharSource(DrillFileUtils.getResourceAsFile("/data/p2.json"), StandardCharsets.UTF_8).read();
+    TEST_JSON_PAGE3 = Files.asCharSource(DrillFileUtils.getResourceAsFile("/data/p3.json"), StandardCharsets.UTF_8).read();
 
-    TEST_JSON_INDEX_PAGE1 = Files.asCharSource(DrillFileUtils.getResourceAsFile("/data/index_response1.json"), Charsets.UTF_8).read();
-    TEST_JSON_INDEX_PAGE2 = Files.asCharSource(DrillFileUtils.getResourceAsFile("/data/index_response2.json"), Charsets.UTF_8).read();
+    TEST_JSON_INDEX_PAGE1 = Files.asCharSource(DrillFileUtils.getResourceAsFile("/data/index_response1.json"), StandardCharsets.UTF_8).read();
+    TEST_JSON_INDEX_PAGE2 = Files.asCharSource(DrillFileUtils.getResourceAsFile("/data/index_response2.json"), StandardCharsets.UTF_8).read();
 
-    TEST_JSON_INDEX_PAGE3 = Files.asCharSource(DrillFileUtils.getResourceAsFile("/data/index_response3.json"), Charsets.UTF_8).read();
-    TEST_JSON_INDEX_PAGE4 = Files.asCharSource(DrillFileUtils.getResourceAsFile("/data/index_response4.json"), Charsets.UTF_8).read();
-    TEST_JSON_INDEX_PAGE5 = Files.asCharSource(DrillFileUtils.getResourceAsFile("/data/index_response5.json"), Charsets.UTF_8).read();
-    TEST_JSON_INDEX_PAGE6 = Files.asCharSource(DrillFileUtils.getResourceAsFile("/data/index_response6.json"), Charsets.UTF_8).read();
-    TEST_JSON_INDEX_PAGE7 = Files.asCharSource(DrillFileUtils.getResourceAsFile("/data/index_response7.json"), Charsets.UTF_8).read();
-    TEST_JSON_INDEX_PAGE8 = Files.asCharSource(DrillFileUtils.getResourceAsFile("/data/index_response8.json"), Charsets.UTF_8).read();
-    TEST_JSON_INDEX_PAGE9 = Files.asCharSource(DrillFileUtils.getResourceAsFile("/data/index_response9.json"), Charsets.UTF_8).read();
-    TEST_JSON_INDEX_PAGE10 = Files.asCharSource(DrillFileUtils.getResourceAsFile("/data/index_response10.json"), Charsets.UTF_8).read();
-    TEST_JSON_INDEX_PAGE11 = Files.asCharSource(DrillFileUtils.getResourceAsFile("/data/index_response11.json"), Charsets.UTF_8).read();
-    TEST_JSON_INDEX_PAGE12 = Files.asCharSource(DrillFileUtils.getResourceAsFile("/data/index_response12.json"), Charsets.UTF_8).read();
+    TEST_JSON_INDEX_PAGE3 = Files.asCharSource(DrillFileUtils.getResourceAsFile("/data/index_response3.json"), StandardCharsets.UTF_8).read();
+    TEST_JSON_INDEX_PAGE4 = Files.asCharSource(DrillFileUtils.getResourceAsFile("/data/index_response4.json"), StandardCharsets.UTF_8).read();
+    TEST_JSON_INDEX_PAGE5 = Files.asCharSource(DrillFileUtils.getResourceAsFile("/data/index_response5.json"), StandardCharsets.UTF_8).read();
+    TEST_JSON_INDEX_PAGE6 = Files.asCharSource(DrillFileUtils.getResourceAsFile("/data/index_response6.json"), StandardCharsets.UTF_8).read();
+    TEST_JSON_INDEX_PAGE7 = Files.asCharSource(DrillFileUtils.getResourceAsFile("/data/index_response7.json"), StandardCharsets.UTF_8).read();
+    TEST_JSON_INDEX_PAGE8 = Files.asCharSource(DrillFileUtils.getResourceAsFile("/data/index_response8.json"), StandardCharsets.UTF_8).read();
+    TEST_JSON_INDEX_PAGE9 = Files.asCharSource(DrillFileUtils.getResourceAsFile("/data/index_response9.json"), StandardCharsets.UTF_8).read();
+    TEST_JSON_INDEX_PAGE10 = Files.asCharSource(DrillFileUtils.getResourceAsFile("/data/index_response10.json"), StandardCharsets.UTF_8).read();
+    TEST_JSON_INDEX_PAGE11 = Files.asCharSource(DrillFileUtils.getResourceAsFile("/data/index_response11.json"), StandardCharsets.UTF_8).read();
+    TEST_JSON_INDEX_PAGE12 = Files.asCharSource(DrillFileUtils.getResourceAsFile("/data/index_response12.json"), StandardCharsets.UTF_8).read();
 
-    TEST_JSON_NESTED_INDEX = Files.asCharSource(DrillFileUtils.getResourceAsFile("/data/nested_pagination_fields.json"), Charsets.UTF_8).read();
-    TEST_JSON_NESTED_INDEX2 = Files.asCharSource(DrillFileUtils.getResourceAsFile("/data/nested_pagination_fields2.json"), Charsets.UTF_8).read();
+    TEST_JSON_NESTED_INDEX = Files.asCharSource(DrillFileUtils.getResourceAsFile("/data/nested_pagination_fields.json"), StandardCharsets.UTF_8).read();
+    TEST_JSON_NESTED_INDEX2 = Files.asCharSource(DrillFileUtils.getResourceAsFile("/data/nested_pagination_fields2.json"), StandardCharsets.UTF_8).read();
 
-    TEST_XML_PAGE1 = Files.asCharSource(DrillFileUtils.getResourceAsFile("/data/response_1.xml"), Charsets.UTF_8).read();
-    TEST_XML_PAGE2 = Files.asCharSource(DrillFileUtils.getResourceAsFile("/data/response_2.xml"), Charsets.UTF_8).read();
-    TEST_XML_PAGE3 = Files.asCharSource(DrillFileUtils.getResourceAsFile("/data/response_3.xml"), Charsets.UTF_8).read();
+    TEST_XML_PAGE1 = Files.asCharSource(DrillFileUtils.getResourceAsFile("/data/response_1.xml"), StandardCharsets.UTF_8).read();
+    TEST_XML_PAGE2 = Files.asCharSource(DrillFileUtils.getResourceAsFile("/data/response_2.xml"), StandardCharsets.UTF_8).read();
+    TEST_XML_PAGE3 = Files.asCharSource(DrillFileUtils.getResourceAsFile("/data/response_3.xml"), StandardCharsets.UTF_8).read();
 
     dirTestWatcher.copyResourceToRoot(Paths.get("data/"));
     makeMockConfig(cluster);

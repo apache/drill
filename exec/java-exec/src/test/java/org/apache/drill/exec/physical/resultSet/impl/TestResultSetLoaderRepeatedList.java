@@ -43,7 +43,6 @@ import org.apache.drill.exec.vector.accessor.ScalarReader;
 import org.apache.drill.exec.vector.accessor.ScalarWriter;
 import org.apache.drill.exec.vector.accessor.ValueType;
 import org.apache.drill.exec.vector.accessor.writer.RepeatedListWriter;
-import com.google.common.base.Charsets;
 import org.apache.drill.test.SubOperatorTest;
 import org.apache.drill.test.rowSet.RowSetUtilities;
 import org.junit.Test;
@@ -286,7 +285,7 @@ public class TestResultSetLoaderRepeatedList extends SubOperatorTest {
     final int strLength = ValueVector.MAX_BUFFER_SIZE / ValueVector.MAX_ROW_COUNT / outerSize / innerSize + 20;
     final byte value[] = new byte[strLength - 6];
     Arrays.fill(value, (byte) 'X');
-    final String strValue = new String(value, Charsets.UTF_8);
+    final String strValue = new String(value, StandardCharsets.UTF_8);
     int rowCount = 0;
     int elementCount = 0;
 

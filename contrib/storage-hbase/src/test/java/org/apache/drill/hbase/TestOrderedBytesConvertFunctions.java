@@ -36,7 +36,6 @@ import org.apache.drill.exec.vector.ValueVector;
 import org.apache.drill.exec.vector.VarCharVector;
 import org.junit.Test;
 
-import com.google.common.base.Charsets;
 import com.google.common.io.Resources;
 import org.junit.experimental.categories.Category;
 
@@ -62,7 +61,7 @@ public class TestOrderedBytesConvertFunctions extends BaseTestQuery {
     expression = expression.replace("\\", "\\\\\\\\"); // "\\\\\\\\" => Java => "\\\\" => JsonParser => "\\" => AntlrParser "\"
 
     if (textFileContent == null) {
-      textFileContent = Resources.toString(Resources.getResource(CONVERSION_TEST_PHYSICAL_PLAN), Charsets.UTF_8);
+      textFileContent = Resources.toString(Resources.getResource(CONVERSION_TEST_PHYSICAL_PLAN), StandardCharsets.UTF_8);
     }
     String planString = textFileContent.replace("__CONVERT_EXPRESSION__", expression);
 

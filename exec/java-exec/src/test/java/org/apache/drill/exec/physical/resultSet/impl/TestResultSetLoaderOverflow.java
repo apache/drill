@@ -42,7 +42,6 @@ import org.apache.drill.exec.vector.ValueVector;
 import org.apache.drill.exec.vector.accessor.ArrayReader;
 import org.apache.drill.exec.vector.accessor.ScalarReader;
 import org.apache.drill.exec.vector.accessor.ScalarWriter;
-import com.google.common.base.Charsets;
 import org.apache.drill.test.SubOperatorTest;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -302,7 +301,7 @@ public class TestResultSetLoaderOverflow extends SubOperatorTest {
     rsLoader.startBatch();
     byte[] value = new byte[473];
     Arrays.fill(value, (byte) 'X');
-    String strValue = new String(value, Charsets.UTF_8);
+    String strValue = new String(value, StandardCharsets.UTF_8);
     int valuesPerArray = 13;
     int count = 0;
 
@@ -415,7 +414,7 @@ public class TestResultSetLoaderOverflow extends SubOperatorTest {
 
     byte[] value = new byte[512];
     Arrays.fill(value, (byte) 'X');
-    String strValue = new String(value, Charsets.UTF_8);
+    String strValue = new String(value, StandardCharsets.UTF_8);
 
     int aCount = 3;
     int bCount = 11;
@@ -764,9 +763,9 @@ public class TestResultSetLoaderOverflow extends SubOperatorTest {
     byte[] tail = new byte[523];
     Arrays.fill(tail, (byte) 'X');
 
-    String expected = new String(head, Charsets.UTF_8);
-    expected += new String(tail, Charsets.UTF_8);
-    expected += new String(tail, Charsets.UTF_8);
+    String expected = new String(head, StandardCharsets.UTF_8);
+    expected += new String(tail, StandardCharsets.UTF_8);
+    expected += new String(tail, StandardCharsets.UTF_8);
 
     int count = 0;
     ScalarWriter colWriter = rootWriter.scalar(0);

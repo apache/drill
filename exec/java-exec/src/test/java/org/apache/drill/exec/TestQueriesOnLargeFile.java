@@ -32,7 +32,6 @@ import org.apache.drill.exec.vector.BigIntVector;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
-import com.google.common.base.Charsets;
 import com.google.common.io.Files;
 import org.junit.experimental.categories.Category;
 
@@ -84,7 +83,7 @@ public class TestQueriesOnLargeFile extends BaseTestQuery {
   @Test
   public void testMergingReceiver() throws Exception {
     String plan = Files.asCharSource(DrillFileUtils.getResourceAsFile("/largefiles/merging_receiver_large_data.json"),
-        Charsets.UTF_8).read().replace("#{TEST_FILE}", escapeJsonString(dataFile.getPath()));
+        StandardCharsets.UTF_8).read().replace("#{TEST_FILE}", escapeJsonString(dataFile.getPath()));
     List<QueryDataBatch> results = testPhysicalWithResults(plan);
 
     int recordsInOutput = 0;

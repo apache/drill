@@ -58,7 +58,6 @@ import org.junit.Rule;
 import org.junit.rules.TestRule;
 
 import com.codahale.metrics.MetricRegistry;
-import com.google.common.base.Charsets;
 import com.google.common.collect.ImmutableList;
 import com.google.common.io.Resources;
 import org.mockito.Matchers;
@@ -155,6 +154,6 @@ public class PlanningBase extends ExecTest {
     if (url == null) {
       throw new IOException(String.format("Unable to find path %s.", resource));
     }
-    return Resources.toString(url, Charsets.UTF_8);
+    return Resources.toString(url, StandardCharsets.UTF_8);
   }
 }

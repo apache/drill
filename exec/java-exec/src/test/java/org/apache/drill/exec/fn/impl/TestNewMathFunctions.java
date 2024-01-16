@@ -51,7 +51,6 @@ import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mockito.Mockito;
 
-import com.google.common.base.Charsets;
 import com.google.common.io.Resources;
 
 import java.io.File;
@@ -90,7 +89,7 @@ public class TestNewMathFunctions extends BaseTestQuery {
     final DrillbitContext bitContext = mockDrillbitContext();
     final UserClientConnection connection = Mockito.mock(UserClientConnection.class);
 
-    final String planString = Resources.toString(Resources.getResource(planPath), Charsets.UTF_8);
+    final String planString = Resources.toString(Resources.getResource(planPath), StandardCharsets.UTF_8);
     if (reader == null) {
       reader = PhysicalPlanReaderTestFactory.defaultPhysicalPlanReader(c);
     }

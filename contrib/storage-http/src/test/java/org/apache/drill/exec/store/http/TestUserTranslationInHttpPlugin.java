@@ -42,7 +42,6 @@ import org.apache.drill.exec.record.metadata.TupleMetadata;
 import org.apache.drill.exec.store.StoragePlugin;
 import org.apache.drill.exec.store.StoragePluginRegistry;
 import org.apache.drill.exec.store.security.oauth.OAuthTokenCredentials;
-import com.google.common.base.Charsets;
 import com.google.common.io.Files;
 import org.apache.drill.test.BaseDirTestWatcher;
 import org.apache.drill.test.ClientFixture;
@@ -91,8 +90,8 @@ public class TestUserTranslationInHttpPlugin extends ClusterTest {
 
   @BeforeClass
   public static void setup() throws Exception {
-    TEST_JSON_RESPONSE_WITH_DATATYPES = Files.asCharSource(DrillFileUtils.getResourceAsFile("/data/response2.json"), Charsets.UTF_8).read();
-    ACCESS_TOKEN_RESPONSE = Files.asCharSource(DrillFileUtils.getResourceAsFile("/data/oauth_access_token_response.json"), Charsets.UTF_8).read();
+    TEST_JSON_RESPONSE_WITH_DATATYPES = Files.asCharSource(DrillFileUtils.getResourceAsFile("/data/response2.json"), StandardCharsets.UTF_8).read();
+    ACCESS_TOKEN_RESPONSE = Files.asCharSource(DrillFileUtils.getResourceAsFile("/data/oauth_access_token_response.json"), StandardCharsets.UTF_8).read();
 
     ClusterFixtureBuilder builder = new ClusterFixtureBuilder(dirTestWatcher)
       .configProperty(ExecConstants.HTTP_ENABLE, true)

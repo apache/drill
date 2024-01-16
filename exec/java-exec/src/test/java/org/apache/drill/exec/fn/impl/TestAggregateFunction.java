@@ -35,7 +35,6 @@ import org.apache.drill.exec.server.RemoteServiceSet;
 import org.apache.drill.exec.vector.ValueVector;
 import org.junit.Test;
 
-import com.google.common.base.Charsets;
 import com.google.common.io.Files;
 import org.junit.experimental.categories.Category;
 
@@ -52,7 +51,7 @@ public class TestAggregateFunction extends PopUnitTestBase {
       bit.run();
       client.connect();
       List<QueryDataBatch> results = client.runQuery(QueryType.PHYSICAL,
-          Files.asCharSource(DrillFileUtils.getResourceAsFile(planPath), Charsets.UTF_8).read().replace("#{TEST_FILE}", dataPath));
+          Files.asCharSource(DrillFileUtils.getResourceAsFile(planPath), StandardCharsets.UTF_8).read().replace("#{TEST_FILE}", dataPath));
 
       RecordBatchLoader batchLoader = new RecordBatchLoader(bit.getContext().getAllocator());
 

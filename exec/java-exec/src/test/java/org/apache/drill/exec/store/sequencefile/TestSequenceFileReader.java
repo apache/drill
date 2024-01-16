@@ -112,7 +112,7 @@ public class TestSequenceFileReader extends ClusterTest {
   private static String byteWritableString(String input) throws Exception {
     final ByteArrayOutputStream bout = new ByteArrayOutputStream();
     DataOutputStream out = new DataOutputStream(bout);
-    final BytesWritable writable = new BytesWritable(input.getBytes("UTF-8"));
+    final BytesWritable writable = new BytesWritable(input.getBytes(StandardCharsets.UTF_8));
     writable.write(out);
     return new String(bout.toByteArray());
   }

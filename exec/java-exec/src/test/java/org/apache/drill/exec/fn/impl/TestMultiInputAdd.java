@@ -34,7 +34,6 @@ import org.apache.drill.exec.server.RemoteServiceSet;
 import org.apache.drill.exec.vector.ValueVector;
 import org.junit.Test;
 
-import com.google.common.base.Charsets;
 import com.google.common.io.Files;
 import org.junit.experimental.categories.Category;
 
@@ -51,7 +50,7 @@ public class TestMultiInputAdd extends PopUnitTestBase {
       bit.run();
       client.connect();
       List<QueryDataBatch> results = client.runQuery(org.apache.drill.exec.proto.UserBitShared.QueryType.PHYSICAL,
-        Files.asCharSource(DrillFileUtils.getResourceAsFile("/functions/multi_input_add_test.json"), Charsets.UTF_8).read());
+        Files.asCharSource(DrillFileUtils.getResourceAsFile("/functions/multi_input_add_test.json"), StandardCharsets.UTF_8).read());
 
       RecordBatchLoader batchLoader = new RecordBatchLoader(bit.getContext().getAllocator());
 

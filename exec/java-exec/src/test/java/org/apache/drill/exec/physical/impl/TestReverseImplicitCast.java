@@ -34,7 +34,6 @@ import org.apache.drill.exec.server.RemoteServiceSet;
 import org.apache.drill.exec.vector.ValueVector;
 import org.junit.Test;
 
-import com.google.common.base.Charsets;
 import com.google.common.io.Files;
 
 public class TestReverseImplicitCast extends PopUnitTestBase {
@@ -51,7 +50,7 @@ public class TestReverseImplicitCast extends PopUnitTestBase {
       bit.run();
       client.connect();
       List<QueryDataBatch> results = client.runQuery(org.apache.drill.exec.proto.UserBitShared.QueryType.PHYSICAL,
-          Files.asCharSource(DrillFileUtils.getResourceAsFile("/functions/cast/two_way_implicit_cast.json"), Charsets.UTF_8).read());
+          Files.asCharSource(DrillFileUtils.getResourceAsFile("/functions/cast/two_way_implicit_cast.json"), StandardCharsets.UTF_8).read());
 
       RecordBatchLoader batchLoader = new RecordBatchLoader(bit.getContext().getAllocator());
 

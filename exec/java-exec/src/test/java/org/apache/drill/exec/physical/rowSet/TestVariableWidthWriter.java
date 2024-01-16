@@ -32,7 +32,6 @@ import org.apache.drill.exec.vector.accessor.ColumnAccessors.VarCharColumnWriter
 import org.apache.drill.exec.vector.accessor.ScalarWriter;
 import org.apache.drill.exec.vector.accessor.ValueType;
 import org.apache.drill.exec.vector.accessor.writer.WriterEvents.ColumnWriterListener;
-import com.google.common.base.Charsets;
 import org.apache.drill.test.SubOperatorTest;
 import org.bouncycastle.util.Arrays;
 import org.junit.Test;
@@ -189,7 +188,7 @@ public class TestVariableWidthWriter extends SubOperatorTest {
       for (int i = 1; i < 15; i++) {
         vector.getOffsetVector().getMutator().set(i, 0xdeadbeef);
       }
-      vector.getMutator().setSafe(0, overflowValue.getBytes(Charsets.UTF_8));
+      vector.getMutator().setSafe(0, overflowValue.getBytes(StandardCharsets.UTF_8));
 
       writer.postRollover();
       index.index = 0;
@@ -398,7 +397,7 @@ public class TestVariableWidthWriter extends SubOperatorTest {
   }
 
   private String stringAt(VarCharVector vector, int i) {
-    return new String(vector.getAccessor().get(i), Charsets.UTF_8);
+    return new String(vector.getAccessor().get(i), StandardCharsets.UTF_8);
   }
 
   private VarCharVector allocVector(int size) {

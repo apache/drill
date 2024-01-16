@@ -35,7 +35,6 @@ import org.apache.drill.exec.server.Drillbit;
 import org.apache.drill.exec.work.foreman.ForemanSetupException;
 import org.junit.BeforeClass;
 
-import com.google.common.base.Charsets;
 import com.google.common.io.Files;
 
 public abstract class PopUnitTestBase  extends ExecTest{
@@ -68,7 +67,7 @@ public abstract class PopUnitTestBase  extends ExecTest{
 
   public static Fragment getRootFragment(PhysicalPlanReader reader, String file) throws FragmentSetupException,
       IOException, ForemanSetupException {
-    return getRootFragmentFromPlanString(reader, Files.asCharSource(DrillFileUtils.getResourceAsFile(file), Charsets.UTF_8).read());
+    return getRootFragmentFromPlanString(reader, Files.asCharSource(DrillFileUtils.getResourceAsFile(file), StandardCharsets.UTF_8).read());
   }
 
 

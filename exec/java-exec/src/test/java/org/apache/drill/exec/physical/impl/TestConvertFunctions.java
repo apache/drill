@@ -50,7 +50,6 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
-import com.google.common.base.Charsets;
 import com.google.common.io.Resources;
 
 import io.netty.buffer.DrillBuf;
@@ -530,7 +529,7 @@ public class TestConvertFunctions extends BaseTestQuery {
   @Test // DRILL-2326
   public void testBigIntVarCharReturnTripConvertLogical() throws Exception {
     String logicalPlan = Resources.toString(
-        Resources.getResource(CONVERSION_TEST_LOGICAL_PLAN), Charsets.UTF_8);
+        Resources.getResource(CONVERSION_TEST_LOGICAL_PLAN), StandardCharsets.UTF_8);
 
     List<String> compilers = Arrays.asList(ClassCompilerSelector.CompilerPolicy.JANINO.name(),
       ClassCompilerSelector.CompilerPolicy.JDK.name());
@@ -630,7 +629,7 @@ public class TestConvertFunctions extends BaseTestQuery {
     expression = expression.replace("\\", "\\\\\\\\"); // "\\\\\\\\" => Java => "\\\\" => JsonParser => "\\" => AntlrParser "\"
 
     if (textFileContent == null) {
-      textFileContent = Resources.toString(Resources.getResource(CONVERSION_TEST_PHYSICAL_PLAN), Charsets.UTF_8);
+      textFileContent = Resources.toString(Resources.getResource(CONVERSION_TEST_PHYSICAL_PLAN), StandardCharsets.UTF_8);
     }
     String planString = textFileContent.replace("__CONVERT_EXPRESSION__", expression);
 

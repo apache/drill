@@ -28,7 +28,7 @@ import org.apache.drill.exec.planner.physical.PlannerSettings;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.io.UnsupportedEncodingException;
+import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Iterator;
@@ -71,27 +71,11 @@ public class EncodedSchemaPathSet {
 
 
   private static byte[] encodeUTF(String input) {
-    try {
-      return input.getBytes(UTF_8);
-    } catch (UnsupportedEncodingException e) {
-      throw new DrillRuntimeException(e); // should never come to this
-    }
-  }
-
-  private static String decodeUTF(byte[] input) {
-    try {
-      return new String(input, UTF_8);
-    } catch (UnsupportedEncodingException e) {
-      throw new DrillRuntimeException(e); // should never come to this
-    }
+    return input.getBytes(StandardCharsets.UTF_8);
   }
 
   private static String decodeUTF(byte[] input, int offset, int length) {
-    try {
-      return new String(input, offset, length, UTF_8);
-    } catch (UnsupportedEncodingException e) {
-      throw new DrillRuntimeException(e); // should never come to this
-    }
+    return new String(input, offset, length, StandardCharsets.UTF_8);
   }
 
   /**

@@ -38,7 +38,6 @@ import org.apache.drill.exec.record.metadata.ColumnMetadata;
 import org.apache.drill.exec.record.metadata.TupleMetadata;
 import org.apache.drill.exec.vector.accessor.TupleWriter;
 import org.apache.drill.exec.vector.accessor.ValueWriter;
-import com.google.common.base.Charsets;
 import org.joda.time.DateTimeConstants;
 import org.joda.time.Period;
 
@@ -74,7 +73,7 @@ public class AvroColumnConverterFactory extends ColumnConverterFactory {
             binary = utf8.getBytes();
             length = utf8.getByteLength();
           } else {
-            binary = value.toString().getBytes(Charsets.UTF_8);
+            binary = value.toString().getBytes(StandardCharsets.UTF_8);
             length = binary.length;
           }
           writer.setBytes(binary, length);

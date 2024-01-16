@@ -27,7 +27,6 @@ import org.apache.drill.exec.vector.complex.MapUtility;
 import org.apache.drill.exec.vector.complex.reader.FieldReader;
 import org.apache.drill.exec.vector.complex.writer.BaseWriter;
 
-import com.google.common.base.Charsets;
 
 import io.netty.buffer.DrillBuf;
 
@@ -70,7 +69,7 @@ public class MappifyUtility {
 
       // write "key":"columnname" into the map
       VarCharHolder vh = new VarCharHolder();
-      byte[] b = str.getBytes(Charsets.UTF_8);
+      byte[] b = str.getBytes(StandardCharsets.UTF_8);
       buffer = buffer.reallocIfNeeded(b.length);
       buffer.setBytes(0, b);
       vh.start = 0;

@@ -60,7 +60,6 @@ import org.apache.drill.exec.store.mock.MockStorageEngineConfig;
 import org.apache.drill.common.logical.security.PlainCredentialsProvider;
 import org.apache.drill.exec.store.sys.store.provider.ZookeeperPersistentStoreProvider;
 import org.apache.drill.exec.util.StoragePluginTestUtils;
-import com.google.common.base.Charsets;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.io.Resources;
@@ -706,7 +705,7 @@ public class ClusterFixture extends BaseFixture implements AutoCloseable {
       throw new IOException(
           String.format("Unable to find resource %s.", resource));
     }
-    return Resources.toString(url, Charsets.UTF_8);
+    return Resources.toString(url, StandardCharsets.UTF_8);
   }
 
   /**

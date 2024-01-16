@@ -37,7 +37,6 @@ import org.apache.drill.exec.planner.logical.StoragePlugins;
 import org.apache.drill.exec.store.dfs.FileSystemConfig;
 import org.apache.drill.exec.util.ActionOnFile;
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.Charsets;
 import com.google.common.io.Resources;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -331,7 +330,7 @@ public class PluginBootstrapLoaderImpl implements PluginBootstrapLoader {
   }
 
   private StoragePlugins getPluginsFromResource(URL resource) throws IOException {
-    String pluginsData = Resources.toString(resource, Charsets.UTF_8);
+    String pluginsData = Resources.toString(resource, StandardCharsets.UTF_8);
     return context.hoconMapper().readValue(pluginsData, StoragePlugins.class);
   }
 }

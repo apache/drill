@@ -33,7 +33,6 @@ import org.apache.drill.exec.server.RemoteServiceSet;
 import org.apache.drill.exec.vector.ValueVector;
 import org.junit.Test;
 
-import com.google.common.base.Charsets;
 import com.google.common.io.Files;
 
 
@@ -50,7 +49,7 @@ public class TestCastVarCharToBigInt extends PopUnitTestBase {
             bit.run();
             client.connect();
             List<QueryDataBatch> results = client.runQuery(org.apache.drill.exec.proto.UserBitShared.QueryType.PHYSICAL,
-                    Files.asCharSource(DrillFileUtils.getResourceAsFile("/functions/cast/test_cast_varchar_to_bigint.json"), Charsets.UTF_8)
+                    Files.asCharSource(DrillFileUtils.getResourceAsFile("/functions/cast/test_cast_varchar_to_bigint.json"), StandardCharsets.UTF_8)
                             .read().replace("#{TEST_FILE}", "/scan_json_test_cast.json")
             );
 

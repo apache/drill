@@ -67,7 +67,6 @@ import org.apache.drill.exec.physical.rowSet.RowSetReader;
 import org.apache.drill.test.rowSet.RowSetUtilities;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
-import com.google.common.base.Charsets;
 
 /**
  * Tests the result set loader support for union vectors. Union vectors
@@ -215,7 +214,7 @@ public class TestResultSetLoaderUnions extends SubOperatorTest {
     final int strLength = 600;
     final byte[] value = new byte[strLength - 6];
     Arrays.fill(value, (byte) 'X');
-    final String strValue = new String(value, Charsets.UTF_8);
+    final String strValue = new String(value, StandardCharsets.UTF_8);
     int count = 0;
 
     rsLoader.startBatch();

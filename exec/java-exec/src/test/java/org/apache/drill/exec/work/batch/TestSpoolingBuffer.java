@@ -30,7 +30,6 @@ import org.apache.drill.exec.server.Drillbit;
 import org.apache.drill.exec.server.RemoteServiceSet;
 import org.junit.Test;
 
-import com.google.common.base.Charsets;
 import com.google.common.io.Files;
 
 public class TestSpoolingBuffer extends BaseTestQuery {
@@ -48,7 +47,7 @@ public class TestSpoolingBuffer extends BaseTestQuery {
       client.connect();
       List<QueryDataBatch> results = client.runQuery(org.apache.drill.exec.proto.UserBitShared.QueryType.PHYSICAL,
               Files.asCharSource(DrillFileUtils.getResourceAsFile("/work/batch/multiple_exchange.json"),
-                      Charsets.UTF_8).read());
+                      StandardCharsets.UTF_8).read());
       int count = 0;
       for(QueryDataBatch b : results) {
         if (b.getHeader().getRowCount() != 0) {
