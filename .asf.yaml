@@ -1,6 +1,15 @@
 # https://cwiki.apache.org/confluence/display/INFRA/.asf.yaml+features+for+git+repositories
 
 github:
+  protected_branches:
+    master:
+      required_status_checks:
+        # strict means "Require branches to be up to date before merging".
+        strict: false
+      required_pull_request_reviews:
+        dismiss_stale_reviews: false
+        require_code_owner_reviews: false
+        required_approving_review_count: 1
   description: "Apache Drill is a distributed MPP query layer for self describing data"
   homepage: https://drill.apache.org/
   labels:
@@ -12,7 +21,7 @@ github:
     - hadoop
     - jdbc
     - parquet
-  
+
   features:
     # Enable wiki for documentation
     wiki: true
@@ -20,3 +29,15 @@ github:
     issues: true
     # Enable projects for project management boards
     projects: true
+
+  # Attempt to make the auto-generated github emails more easily readable in email clients.
+  custom_subjects:
+    new_pr: "[PR] {title} ({repository})"
+    close_pr: "Re: [PR] {title} ({repository})"
+    comment_pr: "Re: [PR] {title} ({repository})"
+    diffcomment: "Re: [PR] {title} ({repository})"
+    merge_pr: "Re: [PR] {title} ({repository})"
+    new_issue: "[I] {title} ({repository})"
+    comment_issue: "Re: [I] {title} ({repository})"
+    close_issue: "Re: [I] {title} ({repository})"
+    catchall: "[GH] {title} ({repository})"
