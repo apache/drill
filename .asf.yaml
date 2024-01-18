@@ -1,6 +1,15 @@
 # https://cwiki.apache.org/confluence/display/INFRA/Git+-+.asf.yaml+features#Git.asf.yamlfeatures-CustomsubjectlinesforGitHubevents
 
 github:
+  protected_branches:
+    master:
+      required_status_checks:
+        # strict means "Require branches to be up to date before merging".
+        strict: false
+      required_pull_request_reviews:
+        dismiss_stale_reviews: false
+        require_code_owner_reviews: false
+        required_approving_review_count: 1
   description: "Apache Drill is a distributed MPP query layer for self describing data"
   homepage: https://drill.apache.org/
   labels:
@@ -12,7 +21,7 @@ github:
     - hadoop
     - jdbc
     - parquet
-  
+
   features:
     # Enable wiki for documentation
     wiki: true
@@ -32,4 +41,3 @@ github:
     comment_issue: "Re: [I] {title} ({repository})"
     close_issue: "Re: [I] {title} ({repository})"
     catchall: "[GH] {title} ({repository})"
-    

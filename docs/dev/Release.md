@@ -316,8 +316,8 @@
               https://dist.apache.org/repos/dist/release/drill/drill-1.17.0
 
             svn delete \
-              -m "Deleting drill-1.15.0 to keep only last two versions" \
-              https://dist.apache.org/repos/dist/release/drill/drill-1.15.0
+              -m "Deleting drill-1.17.0 to keep only last two versions" \
+              https://dist.apache.org/repos/dist/release/drill/drill-1.17.0
             ```
         3. Go to the [Apache Maven staging repo](https://repository.apache.org/) and promote the release to the production.
         4. Create branch and tag for this release and update Drill version in master (if used automated scripts, tag will be like this `drill-1.11.0`. Branch should be named as `1.11.0`).
@@ -334,14 +334,14 @@
                 2. Write the blog post and push it out to the Apache Drill website so it can be referenced in the announcement.
                     As an example, may be used [this commit](https://github.com/apache/drill/commit/374f55c619f5b7aea5d5161ea21b6e341a682c3f#diff-dfd4d960a68ac8b9a8d6af52c1bcbe4a).
                 3. Update the data in `_data/version.json` - making sure to either match your release notes url to the one
-                    below (`docs/apache-drill-1-6-0-release-notes`) or update it with the different URL:
+                    below (`docs/apache-drill-1-17-0-release-notes`) or update it with the different URL:
                     ```
                     {
-                      "display_version": "1.6",
-                      "full_version": "1.6.0",
+                      "display_version": "1.17",
+                      "full_version": "1.17.0",
                       "release_date": "February 16, 2016",
-                      "blog_post":"/blog/2016/02/16/drill-1.6-released",
-                      "release_notes": "https://drill.apache.org/docs/apache-drill-1-6-0-release-notes/"
+                      "blog_post":"/blog/2016/02/16/drill-1.17-released",
+                      "release_notes": "https://drill.apache.org/docs/apache-drill-1-17-0-release-notes/"
                     }
                     ```
                     As an example, may be used [this commit](https://github.com/apache/drill/commit/374f55c619f5b7aea5d5161ea21b6e341a682c3f#diff-25d705dfbe4caa6041b61ece80270bc1)
@@ -349,27 +349,21 @@
                     1. Checkout to the release version: `git checkout drill-1.17.0`
                     2. Run the following command to generate Javadocs in `target/site/apidocs` directory:
                         ```
-                        mvn install javadoc:aggregate -DskipTests
+                        mvn javadoc:aggregate
                         ```
-                    3. Checkout to the `gh-pages` branch where sources for site are placed:
-                        ```
-                        git checkout gh-pages
-                        ```
-                    4. Remove JavaDocs for previous version:
-                        ```
-                        rm -rf apidocs
-                        ```
-                    5. Copy new JavaDocs and commit changes:
-                        ```
-                        mv target/site/apidocs .
-                        ```
-                    6. Commit changes with the commit message `Publish JavaDocs for the Apache Drill 1.17.0`
-                5. Instructions how to build and deploy Web site may be found here:
-                    https://github.com/apache/drill-site
-            3. Post the announcement about new release on [Apache Drill Twitter](https://twitter.com/apachedrill]).
-            4. A PMC member needs to update the release date for new release here:
+                    3. Replace /apidocs in your clone of drill-site, here assumed to be at ../drill-site.
+                       ```
+                       rm -rf ../drill-site/apidocs
+                       cp -r target/site/apidocs ../drill-site
+                       ```
+                    4. Commit and push the changes to drill-site with the commit message "Publish JavaDocs for the Apache
+Drill 1.17.0".
+                    5. The website CI will automatically publish changes to http://drill.apache.org but more detailed information is also available at
+https://github.com/apache/drill-site.
+            4. Post the announcement about new release on [Apache Drill Twitter](https://twitter.com/apachedrill]).
+            5. A PMC member needs to update the release date for new release here:
                 https://reporter.apache.org/addrelease.html?drill
-            5. Send the announcement to the `dev@drill.apache.org` and `announce@apache.org` mailing lists.
+            6. Send the announcement to the `dev@drill.apache.org` and `announce@apache.org` mailing lists.
 
                 Example:
 
