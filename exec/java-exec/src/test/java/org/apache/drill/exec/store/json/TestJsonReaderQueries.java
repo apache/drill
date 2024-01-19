@@ -33,6 +33,7 @@ import java.io.FileOutputStream;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Paths;
 import java.util.zip.GZIPOutputStream;
 
@@ -45,7 +46,6 @@ import org.apache.drill.exec.physical.rowSet.DirectRowSet;
 import org.apache.drill.exec.physical.rowSet.RowSet;
 import org.apache.drill.exec.record.metadata.SchemaBuilder;
 import org.apache.drill.exec.record.metadata.TupleMetadata;
-import com.google.common.base.Charsets;
 import com.google.common.io.Files;
 import org.apache.drill.test.ClusterFixture;
 import org.apache.drill.test.QueryBuilder.QuerySummary;
@@ -510,7 +510,7 @@ public class TestJsonReaderQueries extends BaseTestJsonReader {
       client.alterSession(ExecConstants.JSON_ALL_TEXT_MODE, false);
       String plan = Files.asCharSource(DrillFileUtils.getResourceAsFile(
           "/store/json/project_pushdown_json_physical_plan.json"),
-          Charsets.UTF_8).read();
+          StandardCharsets.UTF_8).read();
 //      client.queryBuilder().physical(plan).printCsv();
       DirectRowSet results = client.queryBuilder().physical(plan).rowSet();
 //      results.print();

@@ -18,11 +18,11 @@
 <@pp.dropOutputFile />
 
 <#macro doError>
-  { 
+  {
     byte[] buf = new byte[in.end - in.start];
-    in.buffer.getBytes(in.start, buf, 0, in.end - in.start);  
-    throw new NumberFormatException(new String(buf, com.google.common.base.Charsets.UTF_8));
-  }  
+    in.buffer.getBytes(in.start, buf, 0, in.end - in.start);
+    throw new NumberFormatException(new String(buf, java.nio.charset.StandardCharsets.UTF_8));
+  }
 </#macro>
 
 <#list cast.types as type>
@@ -58,16 +58,16 @@ public class Cast${type.from}${type.to} implements DrillSimpleFunc{
 
   public void eval() {
     <#if type.to == "Float4" || type.to == "Float8">
-      
+
       byte[] buf = new byte[in.end - in.start];
       in.buffer.getBytes(in.start, buf, 0, in.end - in.start);
-    
+
       //TODO: need capture format exception, and issue SQLERR code.
-      out.value = ${type.javaType}.parse${type.parse}(new String(buf, com.google.common.base.Charsets.UTF_8));
-      
+      out.value = ${type.javaType}.parse${type.parse}(new String(buf, java.nio.charset.StandardCharsets.UTF_8));
+
     <#elseif type.to=="Int" >
       out.value = org.apache.drill.exec.expr.fn.impl.StringFunctionHelpers.varTypesToInt(in.start, in.end, in.buffer);
-    
+
     <#elseif type.to == "BigInt">
       out.value = org.apache.drill.exec.expr.fn.impl.StringFunctionHelpers.varTypesToLong(in.start, in.end, in.buffer);
     </#if>

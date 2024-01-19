@@ -20,7 +20,6 @@ package org.apache.drill.exec.store.easy.text.reader;
 import org.apache.drill.exec.record.metadata.TupleMetadata;
 import org.apache.drill.exec.store.easy.text.TextFormatPlugin;
 import org.apache.drill.exec.store.easy.text.TextFormatConfig;
-import com.google.common.base.Charsets;
 
 import java.nio.charset.StandardCharsets;
 
@@ -72,7 +71,7 @@ public class TextParsingSettings {
     byte commentChar = bSafe(config.getComment(), "comment");
     byte quoteChar = bSafe(config.getQuote(), "quote");
     byte quoteEscapeChar = bSafe(config.getEscape(), "escape");
-    byte[] newlineDelim = config.getLineDelimiter().getBytes(Charsets.UTF_8);
+    byte[] newlineDelim = config.getLineDelimiter().getBytes(StandardCharsets.UTF_8);
     if (providedSchema != null) {
       extractHeaders = providedSchema.booleanProperty(
           TextFormatPlugin.HAS_HEADERS_PROP, extractHeaders);

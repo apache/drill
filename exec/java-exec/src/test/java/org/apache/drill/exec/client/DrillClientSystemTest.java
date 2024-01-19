@@ -18,6 +18,8 @@
 package org.apache.drill.exec.client;
 
 import static org.junit.Assert.assertFalse;
+
+import java.nio.charset.StandardCharsets;
 import java.util.List;
 
 import org.apache.drill.exec.DrillSystemTestBase;
@@ -28,7 +30,6 @@ import org.junit.BeforeClass;
 import org.junit.Ignore;
 import org.junit.Test;
 
-import com.google.common.base.Charsets;
 import com.google.common.io.Resources;
 
 
@@ -40,7 +41,7 @@ public class DrillClientSystemTest extends DrillSystemTestBase {
   @BeforeClass
   public void setUp() throws Exception {
     this.setUp();
-    plan = Resources.toString(Resources.getResource("simple_plan.json"), Charsets.UTF_8);
+    plan = Resources.toString(Resources.getResource("simple_plan.json"), StandardCharsets.UTF_8);
 
   }
 

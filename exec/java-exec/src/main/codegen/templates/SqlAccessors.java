@@ -174,7 +174,7 @@ public class ${name}Accessor extends AbstractSqlAccessor {
         return null;
       }
      </#if>
-      return new InputStreamReader(getStream(index), Charsets.UTF_8);
+      return new InputStreamReader(getStream(index), StandardCharsets.UTF_8);
     }
 
     @Override
@@ -184,7 +184,7 @@ public class ${name}Accessor extends AbstractSqlAccessor {
         return null;
       }
      </#if>
-      return new String(getBytes(index), Charsets.UTF_8);
+      return new String(getBytes(index), StandardCharsets.UTF_8);
     }
       <#break>
 
@@ -197,7 +197,7 @@ public class ${name}Accessor extends AbstractSqlAccessor {
         return null;
       }
      </#if>
-      return new InputStreamReader(getStream(index), Charsets.UTF_16);
+      return new InputStreamReader(getStream(index), StandardCharsets.UTF_16);
     }
 
     @Override
@@ -207,7 +207,7 @@ public class ${name}Accessor extends AbstractSqlAccessor {
         return null;
       }
      </#if>
-      return new String(getBytes(index), Charsets.UTF_16);
+      return new String(getBytes(index), StandardCharsets.UTF_16);
     }
       <#break>
 

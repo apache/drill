@@ -18,6 +18,7 @@
 package org.apache.drill.exec.store.mongo;
 
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -50,7 +51,6 @@ import org.bson.conversions.Bson;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.base.Charsets;
 import com.google.common.base.Stopwatch;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
@@ -223,7 +223,7 @@ public class MongoRecordReader extends AbstractRecordReader {
           bsonReader.write(writer, new BsonDocumentReader(bsonDocument));
         } else {
           String doc = cursor.next().toJson();
-          jsonReader.setSource(doc.getBytes(Charsets.UTF_8));
+          jsonReader.setSource(doc.getBytes(StandardCharsets.UTF_8));
           jsonReader.write(writer);
         }
         docCount++;

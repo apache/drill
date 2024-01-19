@@ -27,8 +27,8 @@ import static org.junit.Assert.assertSame;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
-import java.io.UnsupportedEncodingException;
 import java.math.BigDecimal;
+import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 import java.util.Map;
 
@@ -1201,14 +1201,9 @@ public class TestRowSet extends SubOperatorTest {
         .add("b", MinorType.VARCHAR)
         .buildSchema();
 
-    String varCharValue;
-    try {
-      final byte rawValue[] = new byte[512];
-      Arrays.fill(rawValue, (byte) 'X');
-      varCharValue = new String(rawValue, "UTF-8");
-    } catch (final UnsupportedEncodingException e) {
-      throw new IllegalStateException(e);
-    }
+    final byte rawValue[] = new byte[512];
+    Arrays.fill(rawValue, (byte) 'X');
+    String varCharValue = new String(rawValue, StandardCharsets.UTF_8);
 
     final ExtendableRowSet rs = fixture.rowSet(schema);
     final RowSetWriter writer = rs.writer();

@@ -1,3 +1,5 @@
+import java.nio.charset.StandardCharsets;
+
 <#macro copyright>
 /*
  * Licensed to the Apache Software Foundation (ASF) under one
@@ -124,6 +126,7 @@ package org.apache.drill.exec.vector.accessor;
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.math.RoundingMode;
+import java.nio.charset.StandardCharsets;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.time.LocalTime;
@@ -141,8 +144,6 @@ import org.apache.drill.exec.vector.accessor.reader.VectorAccessor;
 import org.apache.drill.exec.vector.accessor.writer.AbstractFixedWidthWriter.BaseFixedWidthWriter;
 import org.apache.drill.exec.vector.accessor.writer.AbstractFixedWidthWriter.BaseIntWriter;
 import org.apache.drill.exec.vector.accessor.writer.BaseVarWidthWriter;
-
-import com.google.common.base.Charsets;
 
 import io.netty.buffer.DrillBuf;
 
@@ -306,13 +307,13 @@ public class ColumnAccessors {
 
     @Override
     public String getString() {
-      return new String(getBytes(${indexVar}), Charsets.UTF_8);
+      return new String(getBytes(${indexVar}), StandardCharsets.UTF_8);
     }
     <#elseif drillType == "Var16Char">
 
     @Override
     public String getString() {
-      return new String(getBytes(${indexVar}), Charsets.UTF_16);
+      return new String(getBytes(${indexVar}), StandardCharsets.UTF_16);
     }
     <#elseif drillType == "VarDecimal">
 
@@ -431,14 +432,14 @@ public class ColumnAccessors {
 
     @Override
     public final void setString(final String value) {
-      final byte bytes[] = value.getBytes(Charsets.UTF_8);
+      final byte bytes[] = value.getBytes(StandardCharsets.UTF_8);
       setBytes(bytes, bytes.length);
     }
     <#elseif drillType == "Var16Char">
 
     @Override
     public final void setString(final String value) {
-      final byte bytes[] = value.getBytes(Charsets.UTF_16);
+      final byte bytes[] = value.getBytes(StandardCharsets.UTF_16);
       setBytes(bytes, bytes.length);
     }
     <#elseif drillType == "BigInt">
@@ -599,9 +600,9 @@ public class ColumnAccessors {
     <#if drillType == "VarBinary">
       emptyValue = (byte[]) value;
     <#elseif drillType == "VarChar">
-      emptyValue = ((String) value).getBytes(Charsets.UTF_8);
+      emptyValue = ((String) value).getBytes(StandardCharsets.UTF_8);
     <#elseif drillType == "Var16Char">
-      emptyValue = ((String) value).getBytes(Charsets.UTF_16);
+      emptyValue = ((String) value).getBytes(StandardCharsets.UTF_16);
     <#elseif drillType == "VarDecimal">
       final BigDecimal rounded = ((BigDecimal) value).setScale(scale, RoundingMode.HALF_UP);
       DecimalUtility.checkValueOverflow(rounded, precision, scale);

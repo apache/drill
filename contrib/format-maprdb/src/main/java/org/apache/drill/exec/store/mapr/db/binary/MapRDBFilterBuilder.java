@@ -40,8 +40,6 @@ import org.apache.hadoop.hbase.filter.RegexStringComparator;
 import org.apache.hadoop.hbase.filter.RowFilter;
 import org.apache.hadoop.hbase.filter.SingleColumnValueFilter;
 
-import com.google.common.base.Charsets;
-
 public class MapRDBFilterBuilder extends AbstractExprVisitor<HBaseScanSpec, Void, RuntimeException> implements DrillHBaseConstants {
 
   final private BinaryTableGroupScan groupScan;
@@ -295,7 +293,7 @@ public class MapRDBFilterBuilder extends AbstractExprVisitor<HBaseScanSpec, Void
             startRow = stopRow = fieldValue;
             compareOp = null;
           } else {
-            startRow = prefix.getBytes(Charsets.UTF_8);
+            startRow = prefix.getBytes(StandardCharsets.UTF_8);
             stopRow = startRow.clone();
             boolean isMaxVal = true;
             for (int i = stopRow.length - 1; i >= 0; --i) {

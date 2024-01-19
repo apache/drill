@@ -18,6 +18,7 @@
 package org.apache.drill.exec.compile;
 
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Map;
@@ -32,7 +33,6 @@ import javax.tools.ToolProvider;
 import org.apache.drill.exec.compile.ClassTransformer.ClassNames;
 import org.codehaus.commons.compiler.CompileException;
 
-import com.google.common.base.Charsets;
 import com.google.common.collect.Lists;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -76,7 +76,8 @@ class JDKClassCompiler extends AbstractClassCompiler {
   private DrillJavaFileObject doCompile(final ClassNames className, final String sourceCode)
       throws CompileException, IOException, ClassNotFoundException {
     // JavaFileManager should be closed after its usage to release all resources opened by this file manager
-    try (JavaFileManager fileManager = new DrillJavaFileManager(compiler.getStandardFileManager(listener, null, Charsets.UTF_8), classLoader)) {
+    try (JavaFileManager fileManager = new DrillJavaFileManager(
+        compiler.getStandardFileManager(listener, null, StandardCharsets.UTF_8), classLoader)) {
       // Create one Java source file in memory, which will be compiled later.
       DrillJavaFileObject compilationUnit = new DrillJavaFileObject(className.dot, sourceCode);
 

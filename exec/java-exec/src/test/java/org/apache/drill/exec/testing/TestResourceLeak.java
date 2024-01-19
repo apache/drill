@@ -22,6 +22,7 @@ import io.netty.buffer.DrillBuf;
 
 import java.io.IOException;
 import java.net.URL;
+import java.nio.charset.StandardCharsets;
 import java.util.Properties;
 
 import javax.inject.Inject;
@@ -48,7 +49,6 @@ import org.junit.BeforeClass;
 import org.junit.Ignore;
 import org.junit.Test;
 
-import com.google.common.base.Charsets;
 import com.google.common.io.Resources;
 
 /*
@@ -109,7 +109,7 @@ public class TestResourceLeak extends DrillTest {
     if (url == null) {
       throw new IOException(String.format("Unable to find path %s.", resource));
     }
-    return Resources.toString(url, Charsets.UTF_8);
+    return Resources.toString(url, StandardCharsets.UTF_8);
   }
 
   @AfterClass

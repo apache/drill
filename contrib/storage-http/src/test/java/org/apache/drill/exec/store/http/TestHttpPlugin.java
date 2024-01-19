@@ -33,7 +33,6 @@ import org.apache.drill.exec.physical.rowSet.RowSetBuilder;
 import org.apache.drill.exec.record.metadata.SchemaBuilder;
 import org.apache.drill.exec.record.metadata.TupleMetadata;
 import org.apache.drill.exec.store.security.UsernamePasswordCredentials;
-import com.google.common.base.Charsets;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.io.Files;
 import org.apache.drill.test.ClusterFixture;
@@ -44,6 +43,7 @@ import org.junit.Ignore;
 import org.junit.Test;
 
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Paths;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -89,12 +89,12 @@ public class TestHttpPlugin extends ClusterTest {
   public static void setup() throws Exception {
     startCluster(ClusterFixture.builder(dirTestWatcher));
 
-    TEST_JSON_RESPONSE = Files.asCharSource(DrillFileUtils.getResourceAsFile("/data/response.json"), Charsets.UTF_8).read();
-    TEST_MALFORMED_JSON_RESPONSE = Files.asCharSource(DrillFileUtils.getResourceAsFile("/data/malformed.json"), Charsets.UTF_8).read();
-    TEST_CSV_RESPONSE = Files.asCharSource(DrillFileUtils.getResourceAsFile("/data/response.csv"), Charsets.UTF_8).read();
-    TEST_XML_RESPONSE = Files.asCharSource(DrillFileUtils.getResourceAsFile("/data/response.xml"), Charsets.UTF_8).read();
-    TEST_JSON_RESPONSE_WITH_DATATYPES = Files.asCharSource(DrillFileUtils.getResourceAsFile("/data/response2.json"), Charsets.UTF_8).read();
-    TEST_TSV_RESPONSE = Files.asCharSource(DrillFileUtils.getResourceAsFile("/data/response.tsv"), Charsets.UTF_8).read();
+    TEST_JSON_RESPONSE = Files.asCharSource(DrillFileUtils.getResourceAsFile("/data/response.json"), StandardCharsets.UTF_8).read();
+    TEST_MALFORMED_JSON_RESPONSE = Files.asCharSource(DrillFileUtils.getResourceAsFile("/data/malformed.json"), StandardCharsets.UTF_8).read();
+    TEST_CSV_RESPONSE = Files.asCharSource(DrillFileUtils.getResourceAsFile("/data/response.csv"), StandardCharsets.UTF_8).read();
+    TEST_XML_RESPONSE = Files.asCharSource(DrillFileUtils.getResourceAsFile("/data/response.xml"), StandardCharsets.UTF_8).read();
+    TEST_JSON_RESPONSE_WITH_DATATYPES = Files.asCharSource(DrillFileUtils.getResourceAsFile("/data/response2.json"), StandardCharsets.UTF_8).read();
+    TEST_TSV_RESPONSE = Files.asCharSource(DrillFileUtils.getResourceAsFile("/data/response.tsv"), StandardCharsets.UTF_8).read();
 
     dirTestWatcher.copyResourceToRoot(Paths.get("data/"));
     makeEnhancedLiveConfig();

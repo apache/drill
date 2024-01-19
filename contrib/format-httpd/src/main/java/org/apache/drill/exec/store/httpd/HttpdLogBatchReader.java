@@ -31,7 +31,6 @@ import org.apache.drill.exec.record.metadata.ColumnMetadata;
 import org.apache.drill.exec.record.metadata.MetadataUtils;
 import org.apache.drill.exec.store.dfs.easy.EasySubScan;
 import org.apache.drill.exec.vector.accessor.ScalarWriter;
-import com.google.common.base.Charsets;
 import org.apache.hadoop.fs.Path;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -40,6 +39,7 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.nio.charset.StandardCharsets;
 
 public class HttpdLogBatchReader implements ManagedReader {
 
@@ -168,7 +168,7 @@ public class HttpdLogBatchReader implements ManagedReader {
         .addContext(e.getMessage())
         .build(logger);
     }
-    reader = new BufferedReader(new InputStreamReader(fsStream, Charsets.UTF_8));
+    reader = new BufferedReader(new InputStreamReader(fsStream, StandardCharsets.UTF_8));
   }
 
   private ScalarWriter addImplicitColumn(String colName, MinorType type) {

@@ -51,7 +51,7 @@ import io.netty.buffer.DrillBuf;
  */
 @SuppressWarnings("unused")
 <#if type.major == "VarCharDate" || type.major == "VarBinaryDate">
-@FunctionTemplate(names = {"cast${type.to?upper_case}", "${type.alias}"}, scope = FunctionTemplate.FunctionScope.SIMPLE, nulls=NullHandling.NULL_IF_NULL, 
+@FunctionTemplate(names = {"cast${type.to?upper_case}", "${type.alias}"}, scope = FunctionTemplate.FunctionScope.SIMPLE, nulls=NullHandling.NULL_IF_NULL,
   costCategory = FunctionCostCategory.COMPLEX)
 public class Cast${type.from}To${type.to} implements DrillSimpleFunc {
 <#elseif type.major == "NullableVarCharDate">
@@ -64,7 +64,7 @@ public class GCast${type.from}To${type.to} implements DrillSimpleFunc {
 
   @Param ${type.from}Holder in;
   @Output ${type.to}Holder out;
-  
+
   public void setup() { }
 
   public void eval() {
@@ -79,7 +79,7 @@ public class GCast${type.from}To${type.to} implements DrillSimpleFunc {
     <#if type.to != "Date" && type.to != "NullableDate">
     byte[] buf = new byte[in.end - in.start];
     in.buffer.getBytes(in.start, buf, 0, in.end - in.start);
-    String input = new String(buf, com.google.common.base.Charsets.UTF_8);
+    String input = new String(buf, java.nio.charset.StandardCharsets.UTF_8);
     </#if>
 
     <#if type.to == "Date" || type.to == "NullableDate">

@@ -39,7 +39,6 @@ import org.bson.BsonType;
 import org.joda.time.DateTime;
 
 import java.io.IOException;
-import java.io.UnsupportedEncodingException;
 import java.math.BigDecimal;
 import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
@@ -264,14 +263,8 @@ public class BsonRecordReader {
   }
 
   private void writeString(String readString, final MapOrListWriterImpl writer, String fieldName, boolean isList) {
-    int length;
-    byte[] strBytes;
-    try {
-      strBytes = readString.getBytes("UTF-8");
-    } catch (UnsupportedEncodingException e) {
-      throw new DrillRuntimeException("Unable to read string value for field: " + fieldName, e);
-    }
-    length = strBytes.length;
+    byte[] strBytes = readString.getBytes(StandardCharsets.UTF_8);
+    int length = strBytes.length;
     ensure(length);
     workBuf.setBytes(0, strBytes);
     final VarCharHolder vh = new VarCharHolder();

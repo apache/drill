@@ -24,6 +24,7 @@ import static org.junit.Assert.assertNotNull;
 
 import java.io.UnsupportedEncodingException;
 import java.lang.reflect.Array;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -777,7 +778,8 @@ public class DrillTestWrapper {
     }
     if (actual instanceof byte[]) {
       throw new Exception("at position " + counter + " column '" + column + "' mismatched values, expected: "
-        + new String((byte[])expected, "UTF-8") + " but received " + new String((byte[])actual, "UTF-8"));
+        + new String((byte[])expected, StandardCharsets.UTF_8) +
+          " but received " + new String((byte[])actual, StandardCharsets.UTF_8));
     }
     if (!expected.equals(actual)) {
       throw new Exception("at position " + counter + " column '" + column + "' mismatched values, expected: "

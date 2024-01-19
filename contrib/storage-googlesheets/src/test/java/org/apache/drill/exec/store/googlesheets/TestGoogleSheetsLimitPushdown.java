@@ -25,7 +25,6 @@ import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.oauth.PersistentTokenTable;
 import org.apache.drill.exec.store.StoragePluginRegistry;
 import org.apache.drill.exec.store.StoragePluginRegistry.PluginException;
-import com.google.common.base.Charsets;
 import com.google.common.io.Files;
 import org.apache.drill.test.ClusterFixtureBuilder;
 import org.apache.drill.test.ClusterTest;
@@ -33,6 +32,7 @@ import org.junit.BeforeClass;
 import org.junit.Ignore;
 import org.junit.Test;
 
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -55,7 +55,8 @@ public class TestGoogleSheetsLimitPushdown extends ClusterTest {
   @BeforeClass
   public static void init() throws Exception {
 
-    String oauthJson = Files.asCharSource(DrillFileUtils.getResourceAsFile("/tokens/oauth_tokens.json"), Charsets.UTF_8).read();
+    String oauthJson = Files.asCharSource(DrillFileUtils.getResourceAsFile("/tokens/oauth_tokens.json"),
+        StandardCharsets.UTF_8).read();
 
     ObjectMapper mapper = JacksonUtils.createObjectMapper();
     Map<String,String> tokenMap = mapper.readValue(oauthJson, Map.class);

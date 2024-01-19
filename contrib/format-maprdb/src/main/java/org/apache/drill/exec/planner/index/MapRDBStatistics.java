@@ -54,7 +54,6 @@ import java.util.List;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
-import com.google.common.base.Charsets;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
@@ -829,7 +828,7 @@ public class MapRDBStatistics implements Statistics {
           // WILDCARD present. This turns the LIKE predicate to RANGE predicate
           byte[] startKey = HConstants.EMPTY_START_ROW;
           byte[] stopKey = HConstants.EMPTY_END_ROW;
-          startKey = prefix.getBytes(Charsets.UTF_8);
+          startKey = prefix.getBytes(StandardCharsets.UTF_8);
           stopKey = startKey.clone();
           boolean isMaxVal = true;
           for (int i = stopKey.length - 1; i >= 0; --i) {
@@ -848,9 +847,9 @@ public class MapRDBStatistics implements Statistics {
           // TODO: This maybe a potential bug since we assume UTF-8 encoding. However, we follow the
           // current DB implementation. See HBaseFilterBuilder.createHBaseScanSpec "like" CASE statement
           RexLiteral startKeyLiteral = builder.makeLiteral(new String(startKey,
-              Charsets.UTF_8));
+              StandardCharsets.UTF_8));
           RexLiteral stopKeyLiteral = builder.makeLiteral(new String(stopKey,
-              Charsets.UTF_8));
+              StandardCharsets.UTF_8));
           if (arg != null) {
             RexNode startPred = builder.makeCall(SqlStdOperatorTable.GREATER_THAN_OR_EQUAL,
                 arg, startKeyLiteral);

@@ -33,7 +33,6 @@ import org.apache.drill.exec.record.metadata.SchemaBuilder;
 import org.apache.drill.exec.record.metadata.TupleMetadata;
 import org.apache.drill.exec.rpc.user.security.testing.UserAuthenticatorTestImpl;
 import org.apache.drill.exec.store.security.UsernamePasswordCredentials;
-import com.google.common.base.Charsets;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.io.Files;
 import org.apache.drill.test.ClientFixture;
@@ -44,6 +43,7 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -69,7 +69,8 @@ public class TestHttpUDFWithAliases extends ClusterTest {
   @BeforeClass
   public static void setUpBeforeClass() throws Exception {
 
-    TEST_JSON_PAGE1 = Files.asCharSource(DrillFileUtils.getResourceAsFile("/data/p1.json"), Charsets.UTF_8).read();
+    TEST_JSON_PAGE1 = Files.asCharSource(DrillFileUtils.getResourceAsFile("/data/p1.json"),
+        StandardCharsets.UTF_8).read();
 
     cluster = ClusterFixture.bareBuilder(dirTestWatcher)
       .configProperty(ExecConstants.USER_AUTHENTICATION_ENABLED, true)

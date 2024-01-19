@@ -21,9 +21,9 @@ import java.nio.ByteBuffer;
 import java.nio.CharBuffer;
 import java.nio.charset.CharacterCodingException;
 import java.nio.charset.CharsetEncoder;
+import java.nio.charset.StandardCharsets;
 
 import org.apache.drill.common.exceptions.UserException;
-import com.google.common.base.Charsets;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -53,7 +53,7 @@ public abstract class AbstractSqlPatternMatcher implements SqlPatternMatcher {
   public AbstractSqlPatternMatcher(String patternString) {
     this.patternString = patternString;
 
-    CharsetEncoder charsetEncoder = Charsets.UTF_8.newEncoder();
+    CharsetEncoder charsetEncoder = StandardCharsets.UTF_8.newEncoder();
     CharBuffer patternCharBuffer = CharBuffer.wrap(patternString);
 
     try {

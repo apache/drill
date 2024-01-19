@@ -17,13 +17,13 @@
  */
 package org.apache.drill.exec.physical.impl.scan.convert;
 
+import java.nio.charset.StandardCharsets;
 import java.util.Map;
 import java.util.function.Function;
 
 import org.apache.drill.common.types.Types;
 import org.apache.drill.exec.record.metadata.ColumnMetadata;
 import org.apache.drill.exec.vector.accessor.ScalarWriter;
-import com.google.common.base.Charsets;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -219,6 +219,6 @@ public abstract class AbstractConvertFromString extends DirectConverter {
 
   @Override
   public void setBytes(byte[] bytes, int length) {
-    setString(new String(bytes, 0, length, Charsets.UTF_8));
+    setString(new String(bytes, 0, length, StandardCharsets.UTF_8));
   }
 }

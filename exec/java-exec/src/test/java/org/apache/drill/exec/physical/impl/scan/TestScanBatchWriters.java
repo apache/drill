@@ -39,6 +39,8 @@ import org.junit.experimental.categories.Category;
 
 import io.netty.buffer.DrillBuf;
 
+import java.nio.charset.StandardCharsets;
+
 /**
  * Test of the "legacy" scan batch writers to ensure that the revised
  * set follows the same semantics as the original set.
@@ -77,7 +79,7 @@ public class TestScanBatchWriters extends SubOperatorTest {
       // Write one record (10, "Fred", [100, 110, 120] )
 
       map.integer("a").writeInt(10);
-      byte[] bytes = "Fred".getBytes("UTF-8");
+      byte[] bytes = "Fred".getBytes(StandardCharsets.UTF_8);
       buffer.setBytes(0, bytes, 0, bytes.length);
       map.varChar("b").writeVarChar(0, bytes.length, buffer);
       try (ListWriter list = map.list("c")) {
@@ -91,7 +93,7 @@ public class TestScanBatchWriters extends SubOperatorTest {
 
         writer.setPosition(1);
         map.integer("a").writeInt(20);
-        bytes = "Wilma".getBytes("UTF-8");
+        bytes = "Wilma".getBytes(StandardCharsets.UTF_8);
         buffer.setBytes(0, bytes, 0, bytes.length);
         map.varChar("b").writeVarChar(0, bytes.length, buffer);
         writer.setValueCount(2);

@@ -30,7 +30,6 @@ import org.apache.drill.exec.record.metadata.TupleMetadata;
 import org.apache.drill.exec.vector.accessor.ScalarWriter;
 import org.apache.drill.exec.vector.accessor.TupleWriter;
 import org.apache.drill.exec.vector.accessor.ValueWriter;
-import com.google.common.base.Charsets;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -38,6 +37,7 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.nio.charset.StandardCharsets;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -193,7 +193,7 @@ public class LogBatchReader implements ManagedReader {
           .addContext(loader.errorContext())
           .build(logger);
     }
-    reader = new BufferedReader(new InputStreamReader(in, Charsets.UTF_8));
+    reader = new BufferedReader(new InputStreamReader(in, StandardCharsets.UTF_8));
   }
 
   @Override

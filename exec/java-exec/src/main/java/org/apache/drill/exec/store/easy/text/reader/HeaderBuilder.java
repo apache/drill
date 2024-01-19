@@ -18,13 +18,13 @@
 package org.apache.drill.exec.store.easy.text.reader;
 
 import org.apache.drill.common.exceptions.UserException;
-import com.google.common.base.Charsets;
 import org.apache.hadoop.fs.Path;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.nio.BufferOverflowException;
 import java.nio.ByteBuffer;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -87,7 +87,7 @@ public class HeaderBuilder implements TextOutput {
 
   @Override
   public boolean endField() {
-    String header = new String(currentField.array(), 0, currentField.position(), Charsets.UTF_8);
+    String header = new String(currentField.array(), 0, currentField.position(), StandardCharsets.UTF_8);
     header = validateSymbol(header);
     headers.add(header);
     return true;

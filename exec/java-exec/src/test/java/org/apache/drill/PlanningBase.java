@@ -19,6 +19,7 @@ package org.apache.drill;
 
 import java.io.IOException;
 import java.net.URL;
+import java.nio.charset.StandardCharsets;
 
 import org.apache.calcite.jdbc.DynamicSchema;
 import org.apache.drill.exec.alias.AliasRegistryProvider;
@@ -58,7 +59,6 @@ import org.junit.Rule;
 import org.junit.rules.TestRule;
 
 import com.codahale.metrics.MetricRegistry;
-import com.google.common.base.Charsets;
 import com.google.common.collect.ImmutableList;
 import com.google.common.io.Resources;
 import org.mockito.Matchers;
@@ -155,6 +155,6 @@ public class PlanningBase extends ExecTest {
     if (url == null) {
       throw new IOException(String.format("Unable to find path %s.", resource));
     }
-    return Resources.toString(url, Charsets.UTF_8);
+    return Resources.toString(url, StandardCharsets.UTF_8);
   }
 }

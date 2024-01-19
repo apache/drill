@@ -20,11 +20,12 @@ package org.apache.drill.exec.store.http;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.google.common.base.Charsets;
 import com.google.common.io.Files;
 import org.apache.drill.common.util.DrillFileUtils;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
+
+import java.nio.charset.StandardCharsets;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
@@ -41,7 +42,7 @@ public class TestHttpCSVOptions {
   @BeforeAll
   public static void setup() throws Exception {
     CSV_OPTIONS_JSON = Files.asCharSource(
-        DrillFileUtils.getResourceAsFile("/data/csvOptions.json"), Charsets.UTF_8
+        DrillFileUtils.getResourceAsFile("/data/csvOptions.json"), StandardCharsets.UTF_8
     ).read().trim();
   }
 

@@ -17,6 +17,7 @@
  */
 package org.apache.drill.exec.planner;
 
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.BitSet;
@@ -29,7 +30,6 @@ import java.util.Map;
 import org.apache.calcite.plan.RelOptTable;
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.drill.common.util.GuavaUtils;
-import com.google.common.base.Charsets;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
 
@@ -122,7 +122,7 @@ public class FileSystemPartitionDescriptor extends AbstractPartitionDescriptor {
           // set null if dirX does not exist for the location.
           ((NullableVarCharVector) vectors[partitionColumnIndex]).getMutator().setNull(record);
         } else {
-          byte[] bytes = (partitionLocation.getPartitionValue(partitionColumnIndex)).getBytes(Charsets.UTF_8);
+          byte[] bytes = (partitionLocation.getPartitionValue(partitionColumnIndex)).getBytes(StandardCharsets.UTF_8);
           ((NullableVarCharVector) vectors[partitionColumnIndex]).getMutator().setSafe(record, bytes, 0, bytes.length);
         }
       }

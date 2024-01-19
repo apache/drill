@@ -513,7 +513,7 @@ public final class ${minor.class}Vector extends BaseDataValueVector implements V
     <#case "Var16Char">
     @Override
     public ${friendlyType} getObject(int index) {
-      return new String(get(index), Charsets.UTF_16);
+      return new String(get(index), StandardCharsets.UTF_16);
     }
     <#break>
     <#default>
@@ -767,7 +767,7 @@ public final class ${minor.class}Vector extends BaseDataValueVector implements V
      * not including the given current write position. Used by nullable
      * vectors to allow skipping values. The <tt>set()</tt> and
      * <tt>setSafe()</tt> <b>do not</b> fill empties. See DRILL-5529.
-     * 
+     *
      * @param lastWrite
      *          the position of the last valid write: the offset to be copied
      *          forward
@@ -868,11 +868,11 @@ public final class ${minor.class}Vector extends BaseDataValueVector implements V
       boolean even = true;
       <#switch minor.class>
       <#case "Var16Char">
-      java.nio.charset.Charset charset = Charsets.UTF_16;
+      java.nio.charset.Charset charset = StandardCharsets.UTF_16;
       <#break>
       <#case "VarChar">
       <#default>
-      java.nio.charset.Charset charset = Charsets.UTF_8;
+      java.nio.charset.Charset charset = StandardCharsets.UTF_8;
       </#switch>
       byte[] evenValue = "aaaaa".getBytes(charset);
       byte[] oddValue = "bbbbbbbbbb".getBytes(charset);

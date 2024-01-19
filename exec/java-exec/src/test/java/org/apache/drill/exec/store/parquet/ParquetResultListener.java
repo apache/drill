@@ -20,7 +20,7 @@ package org.apache.drill.exec.store.parquet;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
-import java.io.UnsupportedEncodingException;
+import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 import java.util.HashMap;
 
@@ -183,11 +183,7 @@ public class ParquetResultListener implements UserResultsListener {
       if (logger.isDebugEnabled()) {
         Object o = vv.getAccessor().getObject(j);
         if (o instanceof byte[]) {
-          try {
-            o = new String((byte[])o, "UTF-8");
-          } catch (UnsupportedEncodingException e) {
-            throw new RuntimeException(e);
-          }
+          o = new String((byte[])o, StandardCharsets.UTF_8);
         }
         sb.append(Strings.padStart(o + "", 20, ' ') + " ");
         sb.append(", " + (j % 25 == 0 ? "\n batch:" + batchCounter + " v:" + j + " - " : ""));
@@ -217,22 +213,18 @@ public class ParquetResultListener implements UserResultsListener {
         final ValueVector v = vw.getValueVector();
         Object o = v.getAccessor().getObject(i);
         if (o instanceof byte[]) {
-          try {
-            // TODO - in the dictionary read error test there is some data that does not look correct
-            // the output of our reader matches the values of the parquet-mr cat/head tools (no full comparison was made,
-            // but from a quick check of a few values it looked consistent
-            // this might have gotten corrupted by pig somehow, or maybe this is just how the data is supposed ot look
-            // TODO - check this!!
+          // TODO - in the dictionary read error test there is some data that does not look correct
+          // the output of our reader matches the values of the parquet-mr cat/head tools (no full comparison was made,
+          // but from a quick check of a few values it looked consistent
+          // this might have gotten corrupted by pig somehow, or maybe this is just how the data is supposed ot look
+          // TODO - check this!!
 //              for (int k = 0; k < ((byte[])o).length; k++ ) {
 //                // check that the value at each position is a valid single character ascii value.
 //
 //                if (((byte[])o)[k] > 128) {
 //                }
 //              }
-            o = new String((byte[])o, "UTF-8");
-          } catch (UnsupportedEncodingException e) {
-            throw new RuntimeException(e);
-          }
+            o = new String((byte[])o, StandardCharsets.UTF_8);
         }
 
         sb.append(Strings.padStart(o + "", 20, ' ') + " ");
