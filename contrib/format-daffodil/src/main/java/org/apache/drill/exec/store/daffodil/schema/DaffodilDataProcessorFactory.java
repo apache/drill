@@ -122,6 +122,9 @@ public class DaffodilDataProcessorFactory {
     Objects.requireNonNull(dp); // true because failure to produce a dp throws CompileFailure.
     if (validationMode) {
       try {
+        // We don't have the DFDL schema text, and we're not creating XML as an intermediate form,
+        // we're taking data direct from Daffodil into Drill rows, so using any Xerces-based
+        // XML Validator is not possible.
         dp = dp.withValidationMode(ValidationMode.Limited);
       } catch (InvalidUsageException e) {
         // impossible

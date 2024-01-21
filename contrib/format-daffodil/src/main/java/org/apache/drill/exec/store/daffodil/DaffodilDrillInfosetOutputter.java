@@ -136,7 +136,7 @@ public class DaffodilDrillInfosetOutputter extends InfosetOutputter {
       cw = currentArrayWriter().scalar();
     } else {
       // A simple element within a map
-      // Note the map itself might be an array
+      // Note the map itself might be an array,
       // but we don't care about that here.
       cw = currentTupleWriter().scalar(colName);
     }
@@ -167,13 +167,12 @@ public class DaffodilDrillInfosetOutputter extends InfosetOutputter {
       // Rather, it's children are the columns of the row set.
       //
       // If we do nothing at all here, then we'll start getting
-      // even calls for the children.
+      // event calls for the children.
       isRootElement = false;
       return;
     }
     if (md.isArray()) {
       assert (!arrayWriterStack.isEmpty());
-      // FIXME: is this the way to add a complex array child item (i.e., each array item is a map)
       tupleWriterStack.push(currentArrayWriter().tuple());
     } else {
       tupleWriterStack.push(currentTupleWriter().tuple(colName));
@@ -239,7 +238,7 @@ public class DaffodilDrillInfosetOutputter extends InfosetOutputter {
     TypeProtos.MinorType drillType = DrillDaffodilSchemaUtils.getDrillDataType(dafType);
     assert (drillType == cm.type());
     switch (drillType) {
-    case BIGINT: { // not a bignum, BIGINT is a signed 8-byte long in Drill.
+    case BIGINT: { // BIGINT type is not a Java BigInteger, BIGINT is a signed 8-byte long in Drill.
       switch (dafTypeName) {
       case "unsignedInt": {
         cw.setLong(ise.getUnsignedInt());
@@ -315,7 +314,7 @@ public class DaffodilDrillInfosetOutputter extends InfosetOutputter {
         // then placed in a FLOAT8 column displays as
         // 3.4028234663852886E38 not 3.4028235E38.
         // But converting to string first, then to double works properly.
-        cw.setDouble(Double.valueOf(ise.getFloat().toString()));
+        cw.setDouble(Double.parseDouble(ise.getFloat().toString()));
         break;
       }
       default:

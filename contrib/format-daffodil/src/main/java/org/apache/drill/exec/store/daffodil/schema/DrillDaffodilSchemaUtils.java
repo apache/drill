@@ -81,7 +81,8 @@ public class DrillDaffodilSchemaUtils {
       throws IOException, DaffodilDataProcessorFactory.CompileFailure,
       URISyntaxException, InvalidParserException {
     DaffodilDataProcessorFactory dpf = new DaffodilDataProcessorFactory();
-    DataProcessor dp = dpf.getDataProcessor(dfdlSchemaURI, true, rootName, namespace);
+    boolean validationMode = true; // use Daffodil's limited validation always
+    DataProcessor dp = dpf.getDataProcessor(dfdlSchemaURI, validationMode, rootName, namespace);
     return daffodilDataProcessorToDrillSchema(dp);
   }
 
