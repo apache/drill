@@ -26,13 +26,11 @@ import java.util.Iterator;
 import java.util.Map;
 import java.util.Map.Entry;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-
 public class PStoreTestUtil {
 
   public static void test(PersistentStoreProvider provider) throws Exception {
     PersistentStore<String> store = provider.getOrCreateStore(
-      PersistentStoreConfig.newJacksonBuilder(new ObjectMapper(), String.class)
+      PersistentStoreConfig.newJacksonBuilder(String.class)
         .name("sys.test")
         .build()
     );

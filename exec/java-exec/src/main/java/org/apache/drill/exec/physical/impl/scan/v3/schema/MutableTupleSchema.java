@@ -173,7 +173,14 @@ public class MutableTupleSchema {
   }
 
   public ColumnHandle insert(ColumnMetadata col) {
-    return insert(insertPoint++, col);
+    switch (projType) {
+    case SOME:
+      return insert(columns.size(), col);
+    case ALL:
+      return insert(insertPoint++, col);
+    default:
+      throw new IllegalArgumentException("No projection, should not have materialized: " + col.name());
+    }
   }
 
   /**

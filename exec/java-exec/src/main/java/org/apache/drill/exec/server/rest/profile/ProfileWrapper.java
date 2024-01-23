@@ -30,6 +30,7 @@ import java.util.stream.Collectors;
 
 import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.apache.drill.common.config.DrillConfig;
+import org.apache.drill.common.util.JacksonUtils;
 import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.proto.UserBitShared.MajorFragmentProfile;
 import org.apache.drill.exec.proto.UserBitShared.MinorFragmentProfile;
@@ -54,7 +55,7 @@ public class ProfileWrapper {
   private static final String ESTIMATED_LABEL = " (Estimated)";
   private static final String NOT_AVAILABLE_LABEL = "Not Available";
   private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(ProfileWrapper.class);
-  private static final ObjectMapper mapper = new ObjectMapper().enable(INDENT_OUTPUT);
+  private static final ObjectMapper mapper = JacksonUtils.createObjectMapper().enable(INDENT_OUTPUT);
 
   private final QueryProfile profile;
   private final String id;

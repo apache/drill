@@ -36,9 +36,6 @@ import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.ObjectWriter;
-
 public class TestRepeated extends BaseTest {
   // private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(TestRepeated.class);
 
@@ -237,8 +234,6 @@ public class TestRepeated extends BaseTest {
 
       map.end();
     }
-
-    final ObjectWriter ow = new ObjectMapper().writer().withDefaultPrettyPrinter();
 
     final ByteArrayOutputStream stream = new ByteArrayOutputStream();
     final JsonWriter jsonWriter = new JsonWriter(stream, true, true);

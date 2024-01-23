@@ -25,6 +25,7 @@ import org.apache.drill.common.JSONOptions.De;
 import org.apache.drill.common.JSONOptions.Se;
 import org.apache.drill.common.config.LogicalPlanPersistence;
 import org.apache.drill.common.exceptions.LogicalPlanParsingException;
+import org.apache.drill.common.util.JacksonUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -51,6 +52,7 @@ import org.apache.drill.shaded.guava.com.google.common.base.Preconditions;
 public class JSONOptions {
 
   private final static Logger logger = LoggerFactory.getLogger(JSONOptions.class);
+  private final static ObjectMapper DEFAULT_MAPPER = JacksonUtils.createObjectMapper();
 
   private JsonNode root;
   private JsonLocation location;
@@ -128,6 +130,10 @@ public class JSONOptions {
       return null;
     }
     return mapper.treeAsTokens(root).readValueAs(t);
+  }
+
+  public <T> T getListWith(TypeReference<T> t) throws IOException {
+    return getListWith(DEFAULT_MAPPER, t);
   }
 
   public JsonNode path(String name) {

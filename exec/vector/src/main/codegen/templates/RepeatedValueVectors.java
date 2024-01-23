@@ -22,7 +22,7 @@ import org.apache.drill.common.types.TypeProtos.MajorType;
 import org.apache.drill.exec.record.MaterializedField;
 import org.apache.drill.exec.record.TransferPair;
 import org.apache.drill.exec.vector.complex.BaseRepeatedValueVector;
-import org.mortbay.jetty.servlet.Holder;
+import org.eclipse.jetty.servlet.Holder;
 
 <@pp.dropOutputFile />
 <#list vv.types as type>

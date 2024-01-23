@@ -24,6 +24,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import org.apache.drill.common.types.TypeProtos;
+import org.apache.drill.common.util.JacksonUtils;
 import org.apache.drill.exec.record.MajorTypeSerDe;
 import org.apache.drill.exec.vector.NullableFloat8Vector;
 import org.apache.drill.exec.vector.ValueVector;
@@ -128,10 +129,11 @@ public class AvgWidthMergedStatistic extends AbstractMergedStatistic {
   private long getRowCount(String colName) {
     byte[] typeAsBytes = types.getStat(colName);
     int type  = -1;
-    ObjectMapper mapper = new ObjectMapper();
-    SimpleModule deModule = new SimpleModule("StatisticsSerDeModeule") //
-            .addDeserializer(TypeProtos.MajorType.class, new MajorTypeSerDe.De());
-    mapper.registerModule(deModule);
+    SimpleModule deModule = new SimpleModule("StatisticsSerDeModule") //
+        .addDeserializer(TypeProtos.MajorType.class, new MajorTypeSerDe.De());
+    ObjectMapper mapper = JacksonUtils.createJsonMapperBuilder()
+        .addModule(deModule)
+        .build();
     try {
       type = mapper.readValue(typeAsBytes, TypeProtos.MajorType.class).getMinorType().getNumber();
     } catch (IOException ex) {

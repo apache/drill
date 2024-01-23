@@ -20,6 +20,7 @@ package org.apache.drill.exec.store.googlesheets;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.drill.common.util.DrillFileUtils;
+import org.apache.drill.common.util.JacksonUtils;
 import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.oauth.PersistentTokenTable;
 import org.apache.drill.exec.store.StoragePluginRegistry;
@@ -56,7 +57,7 @@ public class TestGoogleSheetsLimitPushdown extends ClusterTest {
 
     String oauthJson = Files.asCharSource(DrillFileUtils.getResourceAsFile("/tokens/oauth_tokens.json"), Charsets.UTF_8).read();
 
-    ObjectMapper mapper = new ObjectMapper();
+    ObjectMapper mapper = JacksonUtils.createObjectMapper();
     Map<String,String> tokenMap = mapper.readValue(oauthJson, Map.class);
 
     String clientID = tokenMap.get("client_id");

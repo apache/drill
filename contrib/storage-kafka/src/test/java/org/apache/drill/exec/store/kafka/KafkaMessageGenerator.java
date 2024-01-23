@@ -87,7 +87,7 @@ public class KafkaMessageGenerator {
       String key1Schema = "{\"type\":\"record\"," +
               "\"name\":\"key1record\"," +
               "\"fields\":[" +
-              "{\"name\":\"key1\",\"type\":\"string\"}]}\"";
+              "{\"name\":\"key1\",\"type\":\"string\"}]}";
       Schema keySchema = parser.parse(key1Schema);
       GenericRecordBuilder keyBuilder = new GenericRecordBuilder(keySchema);
 

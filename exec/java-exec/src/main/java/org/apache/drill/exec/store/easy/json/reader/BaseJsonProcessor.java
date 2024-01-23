@@ -22,6 +22,7 @@ import io.netty.buffer.DrillBuf;
 import java.io.IOException;
 import java.io.InputStream;
 
+import org.apache.drill.common.util.JacksonUtils;
 import org.apache.drill.exec.store.easy.json.JsonProcessor;
 
 import com.fasterxml.jackson.core.JsonLocation;
@@ -69,7 +70,7 @@ public abstract class BaseJsonProcessor implements JsonProcessor {
    * @return Default json mapper
    */
   public static ObjectMapper getDefaultMapper() {
-    return new ObjectMapper().configure(
+    return JacksonUtils.createObjectMapper().configure(
         JsonParser.Feature.ALLOW_COMMENTS, true).configure(
         JsonParser.Feature.ALLOW_UNQUOTED_FIELD_NAMES, true);
   }

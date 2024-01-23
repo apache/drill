@@ -107,6 +107,16 @@
       <groupId>com.box</groupId>
       <artifactId>box-java-sdk</artifactId>
       <version>3.7.1</version>
+      <exclusions>
+        <exclusion>
+          <groupId>org.bouncycastle</groupId>
+          <artifactId>bcprov-jdk15on</artifactId>
+        </exclusion>
+        <exclusion>
+          <groupId>org.bouncycastle</groupId>
+          <artifactId>bcpkix-jdk15on</artifactId>
+        </exclusion>
+      </exclusions>
     </dependency>
     <dependency>
       <groupId>org.apache.drill.contrib.data</groupId>
@@ -247,7 +257,11 @@
     </dependency>
     <dependency>
       <groupId>org.bouncycastle</groupId>
-      <artifactId>bcpkix-jdk15on</artifactId>
+      <artifactId>bcprov-jdk18on</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.bouncycastle</groupId>
+      <artifactId>bcpkix-jdk18on</artifactId>
     </dependency>
     <dependency>
       <groupId>org.freemarker</groupId>
@@ -359,9 +373,8 @@
       <artifactId>protobuf-java</artifactId>
     </dependency>
     <dependency>
-      <groupId>org.mortbay.jetty</groupId>
+      <groupId>org.eclipse.jetty</groupId>
       <artifactId>jetty-util</artifactId>
-      <version>6.1.26</version>
     </dependency>
     <dependency>
       <groupId>joda-time</groupId>
@@ -441,10 +454,6 @@
         <exclusion>
           <groupId>org.eclipse.jetty</groupId>
           <artifactId>jetty-servlet</artifactId>
-        </exclusion>
-        <exclusion>
-          <groupId>org.eclipse.jetty</groupId>
-          <artifactId>jetty-servlets</artifactId>
         </exclusion>
         <exclusion>
           <groupId>org.eclipse.jetty</groupId>
@@ -845,9 +854,9 @@
                   <goal>unpack</goal>
                 </goals>
                 <configuration>
-                  <overWrite>false</overWrite>
                   <artifactItems>
                     <artifactItem>
+                      <overWrite>false</overWrite>
                       <groupId>${calcite.groupId}</groupId>
                       <artifactId>calcite-core</artifactId>
                       <type>jar</type>

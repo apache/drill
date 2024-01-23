@@ -53,7 +53,7 @@ public class DeltaRowGroupScan extends AbstractParquetRowGroupScan {
   @JsonCreator
   public DeltaRowGroupScan(@JacksonInject StoragePluginRegistry registry,
     @JsonProperty("userName") String userName,
-    @JsonProperty("storage") StoragePluginConfig storageConfig,
+    @JsonProperty("storageConfig") StoragePluginConfig storageConfig,
     @JsonProperty("formatPluginConfig") FormatPluginConfig formatPluginConfig,
     @JsonProperty("rowGroupReadEntries") List<RowGroupReadEntry> rowGroupReadEntries,
     @JsonProperty("columns") List<SchemaPath> columns,
@@ -83,6 +83,11 @@ public class DeltaRowGroupScan extends AbstractParquetRowGroupScan {
     this.formatPlugin = formatPlugin;
     this.formatPluginConfig = formatPlugin.getConfig();
     this.partitions = partitions;
+  }
+
+  @JsonProperty
+  public StoragePluginConfig getStorageConfig() {
+    return formatPlugin.getStorageConfig();
   }
 
   @JsonProperty

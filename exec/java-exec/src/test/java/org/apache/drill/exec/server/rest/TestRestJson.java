@@ -28,6 +28,7 @@ import java.util.concurrent.TimeUnit;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.drill.common.util.JacksonUtils;
 import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.proto.UserBitShared.QueryType;
 import org.apache.drill.exec.store.easy.text.TextFormatConfig;
@@ -81,7 +82,7 @@ public class TestRestJson extends ClusterTest {
       .readTimeout(TIMEOUT, TimeUnit.SECONDS)
       .build();
 
-  private final ObjectMapper mapper = new ObjectMapper();
+  private final ObjectMapper mapper = JacksonUtils.createObjectMapper();
   private final FileVerifier verifier = new FileVerifier("/rest");
 
   @BeforeClass

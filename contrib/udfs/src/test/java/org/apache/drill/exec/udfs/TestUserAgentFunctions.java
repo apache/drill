@@ -157,7 +157,7 @@ public class TestUserAgentFunctions extends ClusterTest {
   @Test
   public void testNullUserAgent() throws Exception {
     // If a null value is provided then the UserAgentAnalyzer will classify this as a Hacker because all requests normally have a User-Agent.
-    UserAgentAnalyzer analyzer = UserAgentAnalyzer.newBuilder().showMinimalVersion().withoutCache().dropTests().immediateInitialization().build();
+    UserAgentAnalyzer analyzer = UserAgentAnalyzer.newBuilder().showMinimalVersion().withoutCache().withoutClientHintsCache().dropTests().immediateInitialization().build();
     Map<String, String> expected = analyzer.parse((String)null).toMap(analyzer.getAllPossibleFieldNamesSorted());
 
     Map<String, Text> expectedRecord = new TreeMap<>();

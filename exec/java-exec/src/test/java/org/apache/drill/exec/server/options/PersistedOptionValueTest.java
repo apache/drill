@@ -19,7 +19,6 @@ package org.apache.drill.exec.server.options;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.drill.common.util.DrillFileUtils;
 import org.apache.drill.exec.serialization.JacksonSerializer;
 import org.apache.drill.test.BaseTest;
@@ -46,7 +45,7 @@ public class PersistedOptionValueTest extends BaseTest {
 
   private void testHelper(String booleanOptionFile, String doubleOptionFile,
                           String longOptionFile, String stringOptionFile) throws IOException {
-    JacksonSerializer serializer = new JacksonSerializer<>(new ObjectMapper(), PersistedOptionValue.class);
+    JacksonSerializer serializer = new JacksonSerializer<>(PersistedOptionValue.class);
     String booleanOptionJson = DrillFileUtils.getResourceAsString(booleanOptionFile);
     String doubleOptionJson = DrillFileUtils.getResourceAsString(doubleOptionFile);
     String longOptionJson = DrillFileUtils.getResourceAsString(longOptionFile);
@@ -97,8 +96,8 @@ public class PersistedOptionValueTest extends BaseTest {
   public void testForwardCompatibility() throws IOException {
     final String name = "myOption";
 
-    JacksonSerializer realSerializer = new JacksonSerializer<>(new ObjectMapper(), PersistedOptionValue.class);
-    JacksonSerializer mockSerializer = new JacksonSerializer<>(new ObjectMapper(), MockPersistedOptionValue.class);
+    JacksonSerializer realSerializer = new JacksonSerializer<>(PersistedOptionValue.class);
+    JacksonSerializer mockSerializer = new JacksonSerializer<>(MockPersistedOptionValue.class);
 
     final String stringContent = "val1";
     PersistedOptionValue stringValue =

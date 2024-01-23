@@ -25,6 +25,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.ObjectReader;
 import com.fasterxml.jackson.databind.ObjectWriter;
+import org.apache.drill.common.util.JacksonUtils;
 
 import java.io.IOException;
 import java.util.Objects;
@@ -38,8 +39,9 @@ import java.util.StringJoiner;
 @JsonInclude(JsonInclude.Include.NON_DEFAULT)
 public class StatisticsHolder<T> {
 
-  private static final ObjectWriter OBJECT_WRITER = new ObjectMapper().writerFor(StatisticsHolder.class);
-  private static final ObjectReader OBJECT_READER = new ObjectMapper().readerFor(StatisticsHolder.class);
+  private static final ObjectMapper OBJECT_MAPPER = JacksonUtils.createObjectMapper();
+  private static final ObjectWriter OBJECT_WRITER = OBJECT_MAPPER.writerFor(StatisticsHolder.class);
+  private static final ObjectReader OBJECT_READER = OBJECT_MAPPER.readerFor(StatisticsHolder.class);
 
   private final T statisticsValue;
   private final BaseStatisticsKind<?> statisticsKind;

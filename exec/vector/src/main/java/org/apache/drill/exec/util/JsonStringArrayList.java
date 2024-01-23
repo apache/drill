@@ -21,15 +21,13 @@ import java.util.ArrayList;
 import java.util.List;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.apache.drill.common.util.JacksonUtils;
 
 public class JsonStringArrayList<E> extends ArrayList<E> {
 
-  private static ObjectMapper mapper;
-
-  static {
-    mapper = new ObjectMapper();
-    mapper.registerModule(SerializationModule.getModule());
-  }
+  private static final ObjectMapper mapper = JacksonUtils.createJsonMapperBuilder()
+      .addModule(SerializationModule.getModule())
+      .build();
 
   @Override
   public boolean equals(Object obj) {

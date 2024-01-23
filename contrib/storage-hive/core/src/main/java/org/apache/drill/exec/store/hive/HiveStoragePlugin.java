@@ -28,7 +28,6 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 
 import com.fasterxml.jackson.core.type.TypeReference;
-import com.fasterxml.jackson.databind.ObjectMapper;
 
 import org.apache.calcite.schema.SchemaPlus;
 import org.apache.commons.lang3.StringEscapeUtils;
@@ -99,7 +98,7 @@ public class HiveStoragePlugin extends AbstractStoragePlugin {
 
   @Override
   public HiveScan getPhysicalScan(String userName, JSONOptions selection, List<SchemaPath> columns, SessionOptionManager options) throws IOException {
-    HiveReadEntry hiveReadEntry = selection.getListWith(new ObjectMapper(), new TypeReference<HiveReadEntry>(){});
+    HiveReadEntry hiveReadEntry = selection.getListWith(new TypeReference<HiveReadEntry>(){});
     try {
       Map<String, String> confProperties = new HashMap<>();
       if (options != null) {

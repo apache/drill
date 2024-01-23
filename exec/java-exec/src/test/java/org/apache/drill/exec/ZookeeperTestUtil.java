@@ -25,7 +25,7 @@ import static org.apache.zookeeper.Environment.JAAS_CONF_KEY;
 
 public class ZookeeperTestUtil {
 
-  private static final String LOGIN_CONF_RESOURCE_PATHNAME = "login.conf";
+  private static final String LOGIN_CONF_RESOURCE_PATHNAME = "login.jaasconf";
 
   /**
    * Sets zookeeper server and client SASL test config properties.

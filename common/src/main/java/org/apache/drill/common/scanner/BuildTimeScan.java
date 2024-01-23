@@ -32,6 +32,7 @@ import org.apache.drill.common.config.ConfigConstants;
 import org.apache.drill.common.config.DrillConfig;
 import org.apache.drill.common.exceptions.DrillRuntimeException;
 import org.apache.drill.common.scanner.persistence.ScanResult;
+import org.apache.drill.common.util.JacksonUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -47,7 +48,7 @@ public class BuildTimeScan {
   private static final Logger logger = LoggerFactory.getLogger(BuildTimeScan.class);
   private static final String REGISTRY_FILE = "META-INF/drill-module-scan/registry.json";
 
-  private static final ObjectMapper mapper = new ObjectMapper().enable(INDENT_OUTPUT);
+  private static final ObjectMapper mapper = JacksonUtils.createObjectMapper().enable(INDENT_OUTPUT);
   private static final ObjectReader reader = mapper.readerFor(ScanResult.class);
   private static final ObjectWriter writer = mapper.writerFor(ScanResult.class);
 

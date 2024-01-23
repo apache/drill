@@ -132,7 +132,7 @@ public class TestOutputBatchSize extends PhysicalOpUnitTestBase {
 
     Long[] baseLineValues = {(5l + 100l)}; // a + c.amount
     for (int i = 0; i < numRows; i++) {
-      opTestBuilder.baselineValues(baseLineValues);
+      opTestBuilder.baselineValues((Object[]) baseLineValues);
     }
     opTestBuilder.go();
   }
@@ -208,7 +208,7 @@ public class TestOutputBatchSize extends PhysicalOpUnitTestBase {
 
       String[] baseLineValues = {operationResult}; //operation(a, a)
       for (int i = 0; i < numRows; i++) {
-        opTestBuilder.baselineValues(baseLineValues);
+        opTestBuilder.baselineValues((Object[]) baseLineValues);
       }
       opTestBuilder.go();
     }

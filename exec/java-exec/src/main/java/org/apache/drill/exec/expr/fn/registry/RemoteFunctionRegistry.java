@@ -18,6 +18,7 @@
 package org.apache.drill.exec.expr.fn.registry;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.apache.drill.common.util.JacksonUtils;
 import org.apache.drill.shaded.guava.com.google.common.base.Preconditions;
 import org.apache.drill.shaded.guava.com.google.common.collect.Sets;
 import org.apache.drill.common.AutoCloseables;
@@ -87,7 +88,7 @@ public class RemoteFunctionRegistry implements AutoCloseable {
 
   private static final String REGISTRY_PATH = "registry";
   private static final Logger logger = LoggerFactory.getLogger(RemoteFunctionRegistry.class);
-  private static final ObjectMapper mapper = new ObjectMapper().enable(INDENT_OUTPUT);
+  private static final ObjectMapper mapper = JacksonUtils.createObjectMapper().enable(INDENT_OUTPUT);
 
   private final TransientStoreListener unregistrationListener;
   private int retryAttempts;

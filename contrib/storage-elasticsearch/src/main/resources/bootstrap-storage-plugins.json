@@ -3,6 +3,7 @@
     "elastic" : {
       "type" : "elastic",
       "hosts": ["http://localhost:9200"],
+      "disableSSLVerification": false,
       "username" : null,
       "password" : null
     }

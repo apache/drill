@@ -19,9 +19,10 @@ package org.apache.drill.exec.store.druid.common;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.apache.drill.common.util.JacksonUtils;
 
 public class DruidFilterBase implements DruidFilter {
-  private static final ObjectMapper objectMapper = new ObjectMapper();
+  private static final ObjectMapper objectMapper = JacksonUtils.createObjectMapper();
 
   public String toJson() {
     try {

@@ -32,6 +32,7 @@ import org.apache.calcite.schema.Table;
 import org.apache.drill.common.JSONOptions;
 import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.common.logical.StoragePluginConfig;
+import org.apache.drill.common.util.JacksonUtils;
 import org.apache.drill.exec.physical.base.AbstractGroupScan;
 import org.apache.drill.exec.planner.logical.DynamicDrillTable;
 import org.apache.drill.exec.server.DrillbitContext;
@@ -65,7 +66,7 @@ public class MockStorageEngine extends AbstractStoragePlugin {
       throws IOException {
 
     MockTableSelection tableSelection = selection.getWith(
-      new ObjectMapper(),
+      JacksonUtils.createObjectMapper(),
       MockTableSelection.class
     );
     List<MockScanEntry> readEntries = tableSelection.getEntries();
@@ -152,7 +153,7 @@ public class MockStorageEngine extends AbstractStoragePlugin {
       MockTableDef mockTableDefn;
       try {
         String json = Resources.toString(url, Charsets.UTF_8);
-        final ObjectMapper mapper = new ObjectMapper();
+        final ObjectMapper mapper = JacksonUtils.createObjectMapper();
         mapper.configure(JsonParser.Feature.ALLOW_UNQUOTED_FIELD_NAMES, true);
         mockTableDefn = mapper.readValue(json, MockTableDef.class);
       } catch (JsonParseException e) {

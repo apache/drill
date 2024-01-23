@@ -33,8 +33,10 @@
 <script src="/static/js/ace-code-editor/theme-sqlserver.js" type="text/javascript" charset="utf-8"></script>
 <script src="/static/js/ace-code-editor/snippets/sql.js" type="text/javascript" charset="utf-8"></script>
 <script src="/static/js/ace-code-editor/mode-snippets.js" type="text/javascript" charset="utf-8"></script>
-<link href="/static/css/drill-dataTables.sortable.css" rel="stylesheet">
-
+<link href="/static/css/datatables.min.css" rel="stylesheet">
+<style>
+  table.dataTable th {background-color: transparent}
+</style>
 <script>
     var globalconfig = {
         "queryid" : "${model.getQueryId()}"
@@ -45,7 +47,12 @@
         "searching": false,
         "lengthChange": false,
         "paging": false,
-        "info": false
+        "info": false,
+        "sDom": '<"top"lftip><"bottom"><"clear">',
+        "columnDefs": [ {
+          "targets": "_all",
+          "className": "dt-right"
+        } ]
       });
       //Enable Warnings by making it visible
       checkForWarnings();

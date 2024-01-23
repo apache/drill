@@ -28,4 +28,4 @@ exec/jdbc-all/dependency-reduced-pom.xml
 .*.html
 venv/
 tools/venv/
-
+.vscode/*

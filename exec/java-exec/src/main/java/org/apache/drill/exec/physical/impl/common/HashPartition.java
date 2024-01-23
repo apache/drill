@@ -147,6 +147,11 @@ public class HashPartition implements HashJoinMemoryCalculator.PartitionStat {
 
     try {
       this.hashTable = baseHashTable.createAndSetupHashTable(null);
+      this.hjHelper = semiJoin ? null : new HashJoinHelper(context, allocator);
+      tmpBatchesList = new ArrayList<>();
+      if (numPartitions > 1) {
+        allocateNewCurrentBatchAndHV();
+      }
     } catch (ClassTransformationException e) {
       throw UserException.unsupportedError(e)
         .message("Code generation error - likely an error in the code.")
@@ -157,11 +162,11 @@ public class HashPartition implements HashJoinMemoryCalculator.PartitionStat {
         .build(logger);
     } catch (SchemaChangeException sce) {
       throw new IllegalStateException("Unexpected Schema Change while creating a hash table",sce);
-    }
-    this.hjHelper = semiJoin ? null : new HashJoinHelper(context, allocator);
-    tmpBatchesList = new ArrayList<>();
-    if (numPartitions > 1) {
-      allocateNewCurrentBatchAndHV();
+    } catch (OutOfMemoryException oom) {
+      close();
+      throw UserException.memoryError(oom)
+          .message("Failed to allocate hash partition.")
+          .build(logger);
     }
   }
 

@@ -103,6 +103,13 @@ public class BaseTestImpersonation extends ClusterTest {
       // Set the proxyuser settings so that the user who is running the Drillbits/MiniDfs can impersonate other users.
       dfsConf.set(String.format("hadoop.proxyuser.%s.hosts", processUser), "*");
       dfsConf.set(String.format("hadoop.proxyuser.%s.groups", processUser), "*");
+
+      // It isn't clear exactly when or why the following reinitialisation is
+      // needed, but without it the test subclasses of this class may crash
+      // when run in the GitHub CI with Mini DFS stating "Running in secure
+      // mode, but config doesn't have a keytab".
+      dfsConf.set("hadoop.security.authentication", "simple");
+      UserGroupInformation.setConfiguration(dfsConf);
     }
 
     // Start the MiniDfs cluster

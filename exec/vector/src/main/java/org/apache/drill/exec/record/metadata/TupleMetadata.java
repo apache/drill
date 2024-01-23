@@ -23,9 +23,9 @@ import java.util.List;
 import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.ObjectReader;
 import com.fasterxml.jackson.databind.ObjectWriter;
+import org.apache.drill.common.util.JacksonUtils;
 import org.apache.drill.exec.record.MaterializedField;
 
 /**
@@ -56,8 +56,8 @@ import org.apache.drill.exec.record.MaterializedField;
 })
 public interface TupleMetadata extends Propertied, Iterable<ColumnMetadata> {
 
-  ObjectWriter WRITER = new ObjectMapper().writerFor(TupleMetadata.class);
-  ObjectReader READER = new ObjectMapper().readerFor(TupleMetadata.class);
+  ObjectWriter WRITER = JacksonUtils.createObjectMapper().writerFor(TupleMetadata.class);
+  ObjectReader READER = JacksonUtils.createObjectMapper().readerFor(TupleMetadata.class);
 
   String IS_STRICT_SCHEMA_PROP = DRILL_PROP_PREFIX + "strict";
 

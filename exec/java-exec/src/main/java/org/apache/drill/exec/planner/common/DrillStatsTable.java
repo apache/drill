@@ -41,6 +41,7 @@ import java.util.Set;
 import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.common.logical.FormatPluginConfig;
 import org.apache.drill.common.types.TypeProtos;
+import org.apache.drill.common.util.JacksonUtils;
 import org.apache.drill.exec.ops.QueryContext;
 import org.apache.drill.exec.physical.PhysicalPlan;
 import org.apache.drill.exec.planner.logical.DrillTable;
@@ -465,12 +466,13 @@ public class DrillStatsTable {
    * {@link TableStatistics} from/to JSON
    */
   public static ObjectMapper getMapper() {
-    ObjectMapper mapper = new ObjectMapper();
     SimpleModule deModule = new SimpleModule("StatisticsSerDeModule")
         .addSerializer(TypeProtos.MajorType.class, new MajorTypeSerDe.Se())
         .addDeserializer(TypeProtos.MajorType.class, new MajorTypeSerDe.De())
         .addDeserializer(SchemaPath.class, new SchemaPath.De());
-    mapper.registerModule(deModule);
+    ObjectMapper mapper = JacksonUtils.createJsonMapperBuilder()
+        .addModule(deModule)
+        .build();
     mapper.registerSubtypes(new NamedType(NumericEquiDepthHistogram.class, "numeric-equi-depth"));
     return mapper;
   }

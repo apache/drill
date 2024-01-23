@@ -24,7 +24,6 @@ import java.util.Random;
 import java.util.Set;
 import java.util.concurrent.Semaphore;
 
-import org.apache.drill.categories.EasyOutOfMemory;
 import org.apache.drill.categories.SlowTest;
 import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.exec.ExecConstants;
@@ -56,7 +55,7 @@ import static org.junit.Assert.assertNull;
  * unstable from running a lot of queries concurrently -- it's not about
  * any particular order of execution. We ignore the results.
  */
-@Category({SlowTest.class, EasyOutOfMemory.class})
+@Category({SlowTest.class})
 public class TestTpchDistributedConcurrent extends ClusterTest {
   private static final Logger logger = LoggerFactory.getLogger(TestTpchDistributedConcurrent.class);
 

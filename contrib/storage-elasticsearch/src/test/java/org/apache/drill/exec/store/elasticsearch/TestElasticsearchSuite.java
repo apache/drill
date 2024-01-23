@@ -68,7 +68,7 @@ public class TestElasticsearchSuite extends BaseTest {
   protected static ElasticsearchContainer elasticsearch;
   public static final String ELASTICSEARCH_USERNAME = "elastic";
   public static final String ELASTICSEARCH_PASSWORD = "s3cret";
-  private static final String IMAGE_NAME = "docker.elastic.co/elasticsearch/elasticsearch:8.6.0";
+  private static final String IMAGE_NAME = "docker.elastic.co/elasticsearch/elasticsearch:8.9.1";
 
   private static final AtomicInteger initCount = new AtomicInteger(0);
 
@@ -164,7 +164,8 @@ public class TestElasticsearchSuite extends BaseTest {
         .withPassword(ELASTICSEARCH_PASSWORD)
         .withEnv("xpack.security.enabled", "true")
         .withEnv("xpack.security.transport.ssl.enabled", "false")
-        .withEnv("ES_JAVA_OPTS", "-Xmx1g"); // ES gobbles up lots of RAM under defaults.
+        .withEnv("discovery.type", "single-node")
+        .withEnv("ES_JAVA_OPTS", "-Xmx2g"); // ES gobbles up lots of RAM under defaults.
 
     HttpsURLConnection.setDefaultSSLSocketFactory(SslUtils.trustAllSSLContext().getSocketFactory());
     elasticsearch.start();

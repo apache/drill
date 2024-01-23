@@ -284,7 +284,6 @@ public class ResultSetLoaderImpl implements ResultSetLoader, LoaderInternals {
     columnBuilder = new ColumnBuilder();
 
     // Determine the root vector cache
-
     ResultVectorCache vectorCache;
     if (options.vectorCache == null) {
       vectorCache = new NullResultVectorCacheImpl(allocator);
@@ -293,20 +292,18 @@ public class ResultSetLoaderImpl implements ResultSetLoader, LoaderInternals {
     }
 
     // Build the row set model depending on whether a schema is provided.
-
     rootState = new RowState(this, vectorCache);
     rootWriter = rootState.rootWriter();
 
     // If no schema, columns will be added incrementally as they
     // are discovered. Start with an empty model.
-
     if (options.schema != null) {
 
       // Schema provided. Populate a model (and create vectors) for the
       // provided schema. The schema can be extended later, but normally
       // won't be if known up front.
 
-      logger.debug("Schema: " + options.schema);
+      logger.debug("Schema: " + options.schema.toString());
       BuildFromSchema.instance().buildTuple(rootWriter, options.schema);
     }
 

@@ -17,7 +17,6 @@
  */
 package org.apache.drill.exec.store.sys;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.drill.categories.UnlikelyTest;
 import org.apache.drill.common.exceptions.DrillRuntimeException;
 import org.apache.drill.exec.store.dfs.DrillFileSystem;
@@ -51,7 +50,7 @@ public class TestLocalPersistentStore extends BaseTest {
   public TemporaryFolder root = new TemporaryFolder();
 
   private static final PersistentStoreConfig<String> DEFAULT_STORE_CONFIG = PersistentStoreConfig
-    .newJacksonBuilder(new ObjectMapper(), String.class)
+    .newJacksonBuilder(String.class)
     .name("local-test-store")
     .build();
 

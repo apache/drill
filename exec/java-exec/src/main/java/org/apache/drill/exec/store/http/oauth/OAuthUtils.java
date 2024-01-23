@@ -26,6 +26,7 @@ import okhttp3.RequestBody;
 import okhttp3.Response;
 import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.common.logical.security.CredentialsProvider;
+import org.apache.drill.common.util.JacksonUtils;
 import org.apache.drill.exec.store.security.oauth.OAuthTokenCredentials;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -36,6 +37,7 @@ import java.util.Map;
 
 public class OAuthUtils {
   private static final Logger logger = LoggerFactory.getLogger(OAuthUtils.class);
+  private static final ObjectMapper MAPPER = JacksonUtils.createObjectMapper();
 
   /**
    * Crafts a POST request to obtain an access token.
@@ -144,8 +146,7 @@ public class OAuthUtils {
       }
 
       logger.debug("Response: {}", responseBody);
-      ObjectMapper mapper = new ObjectMapper();
-      Map<String, Object> parsedJson = mapper.readValue(responseBody, Map.class);
+      Map<String, Object> parsedJson = MAPPER.readValue(responseBody, Map.class);
 
       if (parsedJson.containsKey("access_token")) {
         accessToken = (String) parsedJson.get("access_token");

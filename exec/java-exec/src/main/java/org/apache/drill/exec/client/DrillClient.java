@@ -42,6 +42,7 @@ import org.apache.drill.common.config.DrillConfig;
 import org.apache.drill.common.config.DrillProperties;
 import org.apache.drill.common.exceptions.DrillRuntimeException;
 import org.apache.drill.common.exceptions.UserException;
+import org.apache.drill.common.util.JacksonUtils;
 import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.coord.ClusterCoordinator;
 import org.apache.drill.exec.coord.zk.ZKClusterCoordinator;
@@ -107,7 +108,7 @@ import io.netty.channel.EventLoopGroup;
 public class DrillClient implements Closeable, ConnectionThrottle {
   private static Logger logger = LoggerFactory.getLogger(DrillClient.class);
   public static final String DEFAULT_CLIENT_NAME = "Apache Drill Java client";
-  private static final ObjectMapper objectMapper = new ObjectMapper();
+  private static final ObjectMapper objectMapper = JacksonUtils.createObjectMapper();
 
   private final DrillConfig config;
   private UserClient client;

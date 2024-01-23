@@ -2,11 +2,11 @@
   "Format" : "JPEG",
   "PixelWidth" : "600",
   "PixelHeight" : "400",
-  "BitsPerPixel" : "24",
+  "Orientation" : "Top, left side (Horizontal / normal)",
   "DPIWidth" : "300",
   "DPIHeight" : "300",
-  "Orientation" : "Top, left side (Horizontal / normal)",
   "ColorMode" : "RGB",
+  "BitsPerPixel" : "24",
   "HasAlpha" : "false",
   "Duration" : "00:00:00",
   "VideoCodec" : "Unknown",
@@ -87,7 +87,7 @@
     "XResolution" : "72 dots per inch",
     "YResolution" : "72 dots per inch",
     "ResolutionUnit" : "Inch",
-    "ThumbnailOffset" : "1038 bytes",
+    "ThumbnailOffset" : "1044 bytes",
     "ThumbnailLength" : "3662 bytes"
   },
   "XMP" : {

@@ -156,8 +156,7 @@ public class ColumnBuilder {
     } else if (columnSchema.isArray()) {
       vectorState = new RepeatedVectorState(colWriter.array(), (RepeatedValueVector) vector);
     } else if (columnSchema.isNullable()) {
-      vectorState = new NullableVectorState(
-          colWriter, (NullableVector) vector);
+      vectorState = new NullableVectorState(colWriter, (NullableVector) vector);
     } else {
       vectorState = SimpleVectorState.vectorState(columnSchema,
             colWriter.events(), vector);
@@ -319,7 +318,14 @@ public class ColumnBuilder {
     // have content that varies from batch to batch. Only the leaf
     // vectors can be cached.
     assert columnSchema.variantSchema().size() == 0;
-    final UnionVector vector = new UnionVector(columnSchema.schema(), parent.loader().allocator(), null);
+    final UnionVector vector;
+    if (parent.projection().projection(columnSchema).isProjected || allowCreation(parent)) {
+      vector = new UnionVector(columnSchema.schema(), parent.loader().allocator(), null);
+    } else {
+
+      // Column is not projected. No materialized backing for the column.
+      vector = null;
+    }
 
     // Then the union writer.
     final UnionWriterImpl unionWriter = new UnionWriterImpl(columnSchema, vector, null);
@@ -330,7 +336,8 @@ public class ColumnBuilder {
 
     // Create the manager for the columns within the union.
     final UnionState unionState = new UnionState(parent.loader(),
-        parent.vectorCache().childCache(columnSchema.name()));
+        parent.vectorCache().childCache(columnSchema.name()),
+        vector == null ? ProjectionFilter.PROJECT_NONE : ProjectionFilter.PROJECT_ALL);
 
     // Bind the union state to the union writer to handle column additions.
     unionWriter.bindListener(unionState);
@@ -372,7 +379,10 @@ public class ColumnBuilder {
    */
   private ColumnState buildSimpleList(ContainerState parent, ColumnMetadata columnSchema) {
 
-    // The variant must have the one and only type.
+    final ProjectionFilter projFilter = parent.projection();
+    final ProjResult projResult = projFilter.projection(columnSchema);
+
+   // The variant must have the one and only type.
     assert columnSchema.variantSchema().size() == 1;
     assert columnSchema.variantSchema().isSimple();
 
@@ -386,9 +396,16 @@ public class ColumnBuilder {
     listState.setSubColumn(memberState);
 
     // Create the list vector. Contains a single type.
-    final ListVector listVector = new ListVector(columnSchema.schema().cloneEmpty(),
-        parent.loader().allocator(), null);
-    listVector.setChildVector(memberState.vector());
+    final ListVector listVector;
+    if (projResult.isProjected) {
+      listVector= new ListVector(columnSchema.schema().cloneEmpty(),
+          parent.loader().allocator(), null);
+      listVector.setChildVector(memberState.vector());
+    } else {
+
+      // Column is not projected. No materialized backing for the column.
+      listVector = null;
+    }
 
     // Create the list writer: an array of the one type.
     final ListWriterImpl listWriter = new ListWriterImpl(columnSchema,
@@ -396,8 +413,13 @@ public class ColumnBuilder {
     final AbstractObjectWriter listObjWriter = new ArrayObjectWriter(listWriter);
 
     // Create the list vector state that tracks the list vector lifecycle.
-    final ListVectorState vectorState = new ListVectorState(listWriter,
-        memberState.writer().events(), listVector);
+    final VectorState vectorState;
+    if (listVector == null) {
+      vectorState = new NullVectorState();
+    } else {
+      vectorState= new ListVectorState(listWriter,
+          memberState.writer().events(), listVector);
+    }
 
     // Assemble it all into a union column state.
     return new UnionColumnState(parent.loader(),
@@ -468,17 +490,24 @@ public class ColumnBuilder {
     // the element type after creating the repeated writer itself.
     assert columnSchema.childSchema() == null;
 
+    final ProjectionFilter projFilter = parent.projection();
+    final ProjResult projResult = projFilter.projection(columnSchema);
+
     // Build the repeated vector.
-    final RepeatedListVector vector = new RepeatedListVector(
+    final RepeatedListVector vector;
+    if (projResult.isProjected) {
+      vector = new RepeatedListVector(
         columnSchema.emptySchema(), parent.loader().allocator(), null);
+    } else {
+      vector = null;
+    }
 
     // No inner type yet. The result set loader builds the subtype
     // incrementally because it might be complex (a map or another
     // repeated list.) To start, use a dummy to avoid need for if-statements
     // everywhere.
     final ColumnMetadata dummyElementSchema = new PrimitiveColumnMetadata(
-        MaterializedField.create(columnSchema.name(),
-            Types.repeated(MinorType.NULL)));
+        MaterializedField.create(columnSchema.name(), Types.repeated(MinorType.NULL)));
     final AbstractObjectWriter dummyElement = ColumnWriterFactory.buildDummyColumnWriter(dummyElementSchema);
 
     // Create the list writer: an array of arrays.
@@ -486,9 +515,7 @@ public class ColumnBuilder {
         columnSchema, vector, dummyElement);
 
     // Create the list vector state that tracks the list vector lifecycle.
-
-    final RepeatedListVectorState vectorState = new RepeatedListVectorState(
-        arrayWriter, vector);
+    final VectorState vectorState = new RepeatedListVectorState(arrayWriter, vector);
 
     // Build the container that tracks the array contents
     final RepeatedListState listState = new RepeatedListState(

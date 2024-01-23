@@ -1312,7 +1312,9 @@ public abstract class AbstractHashBinaryRecordBatch<T extends PhysicalOperator> 
     }
     // clean (and deallocate) each partition, and delete its spill file
     for (HashPartition partn : partitions) {
-      partn.close();
+      if (partn != null) {
+        partn.close();
+      }
     }
 
     // delete any spill file left in unread spilled partitions

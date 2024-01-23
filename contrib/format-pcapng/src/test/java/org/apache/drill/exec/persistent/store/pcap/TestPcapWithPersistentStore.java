@@ -18,6 +18,7 @@
 package org.apache.drill.exec.persistent.store.pcap;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.apache.drill.common.util.JacksonUtils;
 import org.apache.drill.shaded.guava.com.google.common.collect.ImmutableList;
 import org.apache.drill.shaded.guava.com.google.common.collect.ImmutableSet;
 import org.apache.curator.framework.CuratorFramework;
@@ -43,6 +44,7 @@ import java.util.Map;
 import static org.junit.Assert.assertTrue;
 
 public class TestPcapWithPersistentStore extends TestWithZookeeper {
+
     /**
      * DRILL-7828
      * Note: If this test breaks you are probably breaking backward and forward compatibility. Verify with the community
@@ -54,10 +56,10 @@ public class TestPcapWithPersistentStore extends TestWithZookeeper {
 
         try (CuratorFramework curator = createCurator()) {
             curator.start();
-            ObjectMapper objectMapper = new ObjectMapper();
-            objectMapper.registerSubtypes(PcapFormatConfig.class, PcapngFormatConfig.class);
+            ObjectMapper testMapper = JacksonUtils.createObjectMapper();
+            testMapper.registerSubtypes(PcapFormatConfig.class, PcapngFormatConfig.class);
             PersistentStoreConfig<FileSystemConfig> storeConfig =
-                    PersistentStoreConfig.newJacksonBuilder(objectMapper, FileSystemConfig.class).name("type").build();
+                    PersistentStoreConfig.newJacksonBuilder(testMapper, FileSystemConfig.class).name("type").build();
 
 
             try (ZookeeperClient zkClient = new ZookeeperClient(curator,

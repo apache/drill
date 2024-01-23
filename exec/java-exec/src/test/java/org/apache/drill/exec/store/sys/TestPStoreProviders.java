@@ -17,7 +17,6 @@
  */
 package org.apache.drill.exec.store.sys;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.curator.framework.CuratorFramework;
 import org.apache.drill.categories.FlakyTest;
 import org.apache.drill.categories.SlowTest;
@@ -123,7 +122,7 @@ public class TestPStoreProviders extends TestWithZookeeper {
       curator.start();
 
       PersistentStoreConfig<PersistedOptionValue> storeConfig =
-        PersistentStoreConfig.newJacksonBuilder(new ObjectMapper(), PersistedOptionValue.class).name("sys.test").build();
+        PersistentStoreConfig.newJacksonBuilder(PersistedOptionValue.class).name("sys.test").build();
 
       try (ZookeeperClient zkClient = new ZookeeperClient(curator,
         PathUtils.join("/", storeConfig.getName()), CreateMode.PERSISTENT)) {

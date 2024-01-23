@@ -60,33 +60,33 @@ public class ObjectDictWriter extends ObjectArrayWriter implements DictWriter {
     }
   }
 
-  public static ObjectDictWriter.DictObjectWriter buildDict(ColumnMetadata metadata, DictVector vector,
+  public static DictObjectWriter buildDict(ColumnMetadata metadata, DictVector vector,
                                                             List<AbstractObjectWriter> keyValueWriters) {
     DictEntryWriter.DictEntryObjectWriter entryObjectWriter =
         DictEntryWriter.buildDictEntryWriter(metadata, keyValueWriters, vector);
     DictWriter objectDictWriter;
-    if (vector != null) {
-      objectDictWriter = new ObjectDictWriter(metadata, vector.getOffsetVector(), entryObjectWriter);
-    } else {
+    if (vector == null) {
       objectDictWriter = new DummyDictWriter(metadata, entryObjectWriter);
+    } else {
+      objectDictWriter = new ObjectDictWriter(metadata, vector.getOffsetVector(), entryObjectWriter);
     }
-    return new ObjectDictWriter.DictObjectWriter(objectDictWriter);
+    return new DictObjectWriter(objectDictWriter);
   }
 
   public static ArrayObjectWriter buildDictArray(ColumnMetadata metadata, RepeatedDictVector vector,
                                                  List<AbstractObjectWriter> keyValueWriters) {
     final DictVector dataVector;
-    if (vector != null) {
-      dataVector = (DictVector) vector.getDataVector();
-    } else {
+    if (vector == null) {
       dataVector = null;
+    } else {
+      dataVector = (DictVector) vector.getDataVector();
     }
     ObjectDictWriter.DictObjectWriter dictWriter = buildDict(metadata, dataVector, keyValueWriters);
     AbstractArrayWriter arrayWriter;
-    if (vector != null) {
-      arrayWriter = new ObjectArrayWriter(metadata, vector.getOffsetVector(), dictWriter);
-    } else {
+    if (vector == null) {
       arrayWriter = new DummyArrayWriter(metadata, dictWriter);
+    } else {
+      arrayWriter = new ObjectArrayWriter(metadata, vector.getOffsetVector(), dictWriter);
     }
     return new ArrayObjectWriter(arrayWriter);
   }

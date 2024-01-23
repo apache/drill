@@ -83,6 +83,10 @@ public class PersistentStoreConfig<V> {
     return new StoreConfigBuilder<>(new ProtoSerializer<>(readSchema, writeSchema));
   }
 
+  public static <V> StoreConfigBuilder<V> newJacksonBuilder(Class<V> clazz) {
+    return new StoreConfigBuilder<>(new JacksonSerializer<>(clazz));
+  }
+
   public static <V> StoreConfigBuilder<V> newJacksonBuilder(ObjectMapper mapper, Class<V> clazz) {
     return new StoreConfigBuilder<>(new JacksonSerializer<>(mapper, clazz));
   }

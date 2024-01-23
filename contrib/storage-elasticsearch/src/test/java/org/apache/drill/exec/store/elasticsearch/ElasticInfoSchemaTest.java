@@ -54,7 +54,7 @@ public class ElasticInfoSchemaTest extends ClusterTest {
         Collections.singletonList(TestElasticsearchSuite.getAddress()),
         TestElasticsearchSuite.ELASTICSEARCH_USERNAME,
         TestElasticsearchSuite.ELASTICSEARCH_PASSWORD,
-        null, AuthMode.SHARED_USER.name(),
+        null, AuthMode.SHARED_USER.name(), false,
         null
     );
 

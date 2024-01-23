@@ -60,10 +60,6 @@
           <groupId>nl.basjes.parse.httpdlog</groupId>
           <artifactId>httpdlog-parser</artifactId>
         </exclusion>
-        <exclusion>
-          <groupId>com.github.ben-manes.caffeine</groupId>
-          <artifactId>caffeine</artifactId>
-        </exclusion>
       </exclusions>
     </dependency>
 

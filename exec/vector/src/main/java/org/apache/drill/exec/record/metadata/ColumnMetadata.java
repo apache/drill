@@ -79,9 +79,9 @@ public interface ColumnMetadata extends Propertied {
    * columns may be available only when explicitly requested. For example,
    * the log reader has a "_raw" column which includes the entire input
    * line before parsing. This column can be requested explicitly:<br>
-   * <tt>SELECT foo, bar, _raw FROM ...</tt><br>
+   * {@code SELECT foo, bar, _raw FROM ...}<br>
    * but the column will <i>not</i> be included when using the wildcard:<br>
-   * <tt>SELECT * FROM ...</tt>
+   * {@code SELECT * FROM ...}
    * <p>
    * Marking a column (either in the provided schema or the reader schema)
    * will prevent that column from appearing in a wildcard expansion.
@@ -192,25 +192,25 @@ public interface ColumnMetadata extends Propertied {
   StructureType structureType();
 
   /**
-   * Schema for <tt>TUPLE</tt> columns.
+   * Schema for {@code TUPLE} columns.
    *
    * @return the tuple schema
    */
   TupleMetadata tupleSchema();
 
   /**
-   * Schema for <tt>VARIANT</tt> columns.
+   * Schema for {@code VARIANT} columns.
    *
    * @return the variant schema
    */
   VariantMetadata variantSchema();
 
   /**
-   * Schema of inner dimension for <tt>MULTI_ARRAY<tt> columns.
+   * Schema of inner dimension for <code>MULTI_ARRAY</code> columns.
    * If an array is 3D, the outer column represents all 3 dimensions.
-   * <tt>outer.childSchema()</tt> gives another <tt>MULTI_ARRAY</tt>
+   * {@code outer.childSchema()} gives another {@code MULTI_ARRAY}
    * for the inner 2D array.
-   * <tt>outer.childSchema().childSchema()</tt> gives a column
+   * {@code outer.childSchema().childSchema()} gives a column
    * of some other type (but repeated) for the 1D array.
    * <p>
    * Sorry for the mess, but it is how the code works and we are not

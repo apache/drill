@@ -182,6 +182,8 @@ public class ScalarArrayWriter extends BaseArrayWriter {
         setByteObjectArray((Byte[]) array);
       } else if (memberClassName.equals(Boolean.class.getName())) {
         setBooleanObjectArray((Boolean[]) array);
+      } else if (memberClassName.equals(Object.class.getName())) {
+        setObjectArray((Object[]) array);
       } else {
         throw new IllegalArgumentException( "Unknown Java array type: " + memberClassName );
       }

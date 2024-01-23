@@ -17,10 +17,12 @@
  */
 package org.apache.drill.exec.planner.sql.handlers;
 
+import com.fasterxml.jackson.core.JsonFactory;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.SerializableString;
 import com.fasterxml.jackson.core.io.CharacterEscapes;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.apache.drill.common.util.JacksonUtils;
 import org.apache.drill.exec.store.SchemaFactory;
 import org.apache.drill.shaded.guava.com.google.common.base.Joiner;
 import org.slf4j.Logger;
@@ -50,8 +52,8 @@ public class DescribeSchemaHandler extends DefaultSqlHandler {
   private static final Logger logger = LoggerFactory.getLogger(DescribeSchemaHandler.class);
 
   @SuppressWarnings("serial")
-  private static final ObjectMapper mapper = new ObjectMapper(
-      new ObjectMapper().getFactory().setCharacterEscapes(new CharacterEscapes() {
+  private static final ObjectMapper mapper = JacksonUtils.createObjectMapper(
+      new JsonFactory().setCharacterEscapes(new CharacterEscapes() {
     @Override
     public int[] getEscapeCodesForAscii() {
       // add standard set of escaping characters

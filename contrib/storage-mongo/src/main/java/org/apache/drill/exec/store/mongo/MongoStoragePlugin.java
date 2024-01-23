@@ -18,7 +18,6 @@
 package org.apache.drill.exec.store.mongo;
 
 import com.fasterxml.jackson.core.type.TypeReference;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.mongodb.ConnectionString;
 import com.mongodb.MongoClientSettings;
 import com.mongodb.client.MongoClient;
@@ -155,7 +154,7 @@ public class MongoStoragePlugin extends AbstractStoragePlugin {
 
   @Override
   public AbstractGroupScan getPhysicalScan(String userName, JSONOptions selection) throws IOException {
-    MongoScanSpec mongoScanSpec = selection.getListWith(new ObjectMapper(), new TypeReference<MongoScanSpec>() {
+    MongoScanSpec mongoScanSpec = selection.getListWith(new TypeReference<MongoScanSpec>() {
     });
     return new MongoGroupScan(userName, this, mongoScanSpec, null, false);
   }

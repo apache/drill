@@ -22,13 +22,17 @@ import java.util.List;
 import java.util.Map;
 
 import org.apache.drill.yarn.appMaster.TaskSpec;
-import org.mortbay.log.Log;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.typesafe.config.Config;
 import com.typesafe.config.ConfigList;
 import com.typesafe.config.ConfigValue;
 
 public class ClusterDef {
+
+  private static Logger logger = LoggerFactory.getLogger(ClusterDef.class);
+
   // The following keys are relative to the cluster group definition
 
   public static final String GROUP_NAME = "name";
@@ -139,7 +143,7 @@ public class ClusterDef {
       super(pool, index, GroupType.LABELED);
       drillbitLabelExpr = (String) pool.get(DRILLBIT_LABEL);
       if (drillbitLabelExpr == null) {
-        Log.warn("Labeled pool is missing the drillbit label expression ("
+        logger.warn("Labeled pool is missing the drillbit label expression ("
             + DRILLBIT_LABEL + "), will treat pool as basic.");
       }
     }

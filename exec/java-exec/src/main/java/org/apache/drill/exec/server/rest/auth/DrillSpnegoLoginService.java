@@ -28,7 +28,6 @@ import org.apache.hadoop.security.UserGroupInformation;
 import org.eclipse.jetty.security.DefaultIdentityService;
 import org.eclipse.jetty.security.SpnegoLoginService;
 import org.eclipse.jetty.server.UserIdentity;
-import org.eclipse.jetty.util.B64Code;
 import org.ietf.jgss.GSSContext;
 import org.ietf.jgss.GSSCredential;
 import org.ietf.jgss.GSSException;
@@ -42,6 +41,7 @@ import java.io.IOException;
 import java.lang.reflect.Field;
 import java.security.Principal;
 import java.security.PrivilegedExceptionAction;
+import java.util.Base64;
 
 /**
  * Custom implementation of DrillSpnegoLoginService to avoid the need of passing targetName in a config file,
@@ -94,7 +94,7 @@ public class DrillSpnegoLoginService extends SpnegoLoginService {
   private UserIdentity spnegoLogin(Object credentials, ServletRequest request) {
 
     String encodedAuthToken = (String) credentials;
-    byte[] authToken = B64Code.decode(encodedAuthToken);
+    byte[] authToken = Base64.getDecoder().decode(encodedAuthToken);
     GSSManager manager = GSSManager.getInstance();
 
     try {
@@ -149,4 +149,3 @@ public class DrillSpnegoLoginService extends SpnegoLoginService {
     return null;
   }
 }
-
