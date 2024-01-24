@@ -297,7 +297,14 @@ public class MergeJoinBatch extends AbstractBinaryRecordBatch<MergeJoinPOP> {
       batchMemoryManager.getAvgOutputRowWidth(), batchMemoryManager.getTotalOutputRecords());
 
     super.close();
-    leftIterator.close();
+    try {
+      leftIterator.close();
+    } catch (Exception e) {
+      rightIterator.close();
+      throw UserException.executionError(e)
+          .message("Failed to close Iterator.")
+          .build(logger);
+    }
     rightIterator.close();
   }
 
