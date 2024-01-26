@@ -333,101 +333,96 @@
         </executions>
         <configuration>
           <excludes>
-            <!-- Types log1, log2, sqllog and sqllog2, ssdlog are used to test he logRegex format plugin. -->
-            <!-- Type sas7bdat files are SAS file and are used to test the SAS format plugin -->
-            <exclude>**/clientlib/y2038/*.c</exclude> <!-- All the files here should have MIT License -->
-            <exclude>**/clientlib/y2038/*.h</exclude> <!-- All the files here should have MIT License -->
-            <exclude>**/resources/parquet/**/*</exclude>
-            <exclude>**/.asf.yaml</exclude>
-            <exclude>**/*.woff2</exclude>
-            <exclude>**/*.ks</exclude>
-            <exclude>**/*.pcap</exclude>
-            <exclude>**/*.mdb</exclude>
+            <!-- Please keep this list sorted. -->
             <exclude>**/*.accdb</exclude>
-            <exclude>**/*.sas7bdat</exclude>
-            <exclude>**/*.log1</exclude>
-            <exclude>**/*.log2</exclude>
-            <exclude>**/*.sav</exclude>
-            <exclude>**/*.h5</exclude>
-            <exclude>**/*.sqllog</exclude>
-            <exclude>**/*.sqllog2</exclude>
-            <exclude>**/*.syslog</exclude>
-            <exclude>**/*.xsd</exclude>
-            <exclude>**/*.xls</exclude>
-            <exclude>**/*.xlsx</exclude>
-            <exclude>**/*.syslog1</exclude>
-            <exclude>**/*.ssdlog</exclude>
-            <exclude>**/*.ltsv</exclude>
-            <exclude>**/*.log</exclude>
-            <exclude>**/*.css</exclude>
-            <exclude>**/*.js</exclude>
-            <exclude>**/*.map</exclude>
-            <exclude>**/*.md</exclude>
-            <exclude>**/*.eps</exclude>
-            <exclude>**/*.json</exclude>
-            <exclude>**/*.seq</exclude>
-            <exclude>**/*.parquet</exclude>
+            <exclude>**/*.access_log</exclude>
+            <exclude>**/*.access_log</exclude>
+            <exclude>**/.asf.yaml</exclude>
+            <exclude>**/*.autotools</exclude>
+            <exclude>**/*.avi</exclude>
             <exclude>**/*.avro</exclude>
-            <exclude>**/*.sql</exclude>
-            <exclude>**/git.properties</exclude>
-            <exclude>**/*.csv</exclude>
-            <exclude>**/*.csvh</exclude>
-            <exclude>**/*.pdf</exclude>
-            <exclude>**/*.csvh-test</exclude>
-            <exclude>**/*.tsv</exclude>
-            <exclude>**/*.txt</exclude>
-            <exclude>**/*.ssv</exclude>
             <exclude>**/.buildpath</exclude>
-            <exclude>**/target/**</exclude>
-            <exclude>**/*.iml</exclude>
-            <exclude>**/.idea/**</exclude>
-            <exclude>**/*.project</exclude>
-            <exclude>**/TAGS</exclude>
             <exclude>**/*.checkstyle</exclude>
             <exclude>**/.classpath</exclude>
-            <exclude>**/.settings/**</exclude>
+            <exclude>**/client/*build*/**</exclude>
+            <exclude>**/clientlib/y2038/*.c</exclude> <!-- All the files here should have MIT License -->
+            <exclude>**/clientlib/y2038/*.h</exclude> <!-- All the files here should have MIT License -->
+            <exclude>**/client/tags</exclude>
+            <exclude>**/cmake_install.cmake</exclude>
+            <exclude>**/*.cnf</exclude>
+            <exclude>**/control</exclude>
+            <exclude>**/*.cproject</exclude>
+            <exclude>**/*.css</exclude>
+            <exclude>**/*.csv</exclude>
+            <exclude>**/*.csvh</exclude>
+            <exclude>**/*.csvh-test</exclude>
+            <exclude>**/*.dbf</exclude>
+            <!-- TODO DRILL-4336: try to avoid the need to add this -->
+            <exclude>dependency-reduced-pom.xml</exclude>
+            <exclude>**/*.drill</exclude>
+            <exclude>**/.drill.parquet_metadata</exclude>
+            <exclude>**/*.eps</exclude>
+            <exclude>**/git.properties</exclude>
+            <exclude>**/*.h5</exclude>
+            <exclude>header</exclude>
+            <exclude>**/*.httpd</exclude>
+            <exclude>**/.idea/**</exclude>
+            <exclude>**/*.iml</exclude>
+            <exclude>**/*.js</exclude>
+            <exclude>**/*.json</exclude>
+            <exclude>KEYS</exclude>
+            <exclude>**/*.ks</exclude>
+            <exclude>**/LICENSE</exclude>
+            <exclude>**/*.log1</exclude> <!-- logRefex format plugin -->
+            <exclude>**/*.log2</exclude> <!-- logRefex format plugin -->
+            <exclude>**/*.log</exclude>
+            <exclude>**/*.ltsv</exclude>
+            <exclude>**/*.ltsv</exclude>
+            <exclude>**/*.map</exclude>
+            <exclude>**/*.mdb</exclude>
+            <exclude>**/*.md</exclude>
+            <exclude>**/*.mov</exclude>
+            <exclude>**/*.mp4</exclude>
+            <exclude>**/NOTICE</exclude>
+            <exclude>**/*.parquet</exclude>
             <exclude>**/*.patch</exclude>
             <exclude>**/*.pb.cc</exclude>
             <exclude>**/*.pb.h</exclude>
-            <exclude>**/client/*build*/**</exclude>
-            <exclude>**/client/tags</exclude>
-            <exclude>**/cmake_install.cmake</exclude>
-            <exclude>**/ssl/*.csr</exclude>
-            <exclude>**/ssl/*.pem</exclude>
-            <exclude>**/ssl/*.p12</exclude>
-            <exclude>**/*.tbl</exclude>
-            <exclude>**/*.httpd</exclude>
-            <exclude>**/*.access_log</exclude>
-            <exclude>**/*.autotools</exclude>
-            <exclude>**/*.cproject</exclude>
-            <exclude>**/*.drill</exclude>
-            <exclude>**/LICENSE</exclude>
-            <exclude>**/NOTICE</exclude>
-            <exclude>KEYS</exclude>
-            <exclude>header</exclude>
-            <exclude>**/.drill.parquet_metadata</exclude>
-            <exclude>**/*.mov</exclude>
-            <exclude>**/*.mp4</exclude>
-            <exclude>**/*.avi</exclude>
-            <exclude>**/*.pcx</exclude>
-            <exclude>**/*.webp</exclude>
+            <exclude>**/*.pcap</exclude>
             <exclude>**/*.pcapng</exclude>
-            <exclude>**/*.psd</exclude>
             <exclude>**/*.pcx</exclude>
-            <exclude>**/*.log1</exclude>
-            <exclude>**/*.log2</exclude>
-            <exclude>**/*.sqllog</exclude>
-            <exclude>**/*.sqllog2</exclude>
-            <exclude>**/*.ltsv</exclude>
-            <exclude>**/*.wav</exclude>
-            <exclude>**/control</exclude>
-            <!-- TODO DRILL-4336: try to avoid the need to add this -->
-            <exclude>dependency-reduced-pom.xml</exclude>
+            <exclude>**/*.pcx</exclude>
+            <exclude>**/*.pdf</exclude>
             <exclude>**/*.prj</exclude>
+            <exclude>**/*.project</exclude>
+            <exclude>**/*.psd</exclude>
+            <exclude>**/resources/parquet/**/*</exclude>
+            <exclude>**/*.sas7bdat</exclude> <!-- SAS format plugin -->
+            <exclude>**/*.sav</exclude>
+            <exclude>**/*.seq</exclude>
+            <exclude>**/.settings/**</exclude>
             <exclude>**/*.shp</exclude>
-            <exclude>**/*.dbf</exclude>
-            <exclude>**/*.cnf</exclude>
-            <exclude>**/*.access_log</exclude>
+            <exclude>**/*.sql</exclude>
+            <exclude>**/*.sqllog2</exclude> <!-- logRefex format plugin -->
+            <exclude>**/*.sqllog</exclude> <!-- logRefex format plugin -->
+            <exclude>**/*.ssdlog</exclude> <!-- logRefex format plugin -->
+            <exclude>**/ssl/*.csr</exclude>
+            <exclude>**/ssl/*.p12</exclude>
+            <exclude>**/ssl/*.pem</exclude>
+            <exclude>**/*.ssv</exclude>
+            <exclude>**/*.syslog1</exclude> <!-- logRefex format plugin -->
+            <exclude>**/*.syslog</exclude> <!-- logRefex format plugin -->
+            <exclude>**/TAGS</exclude>
+            <exclude>**/target/**</exclude>
+            <exclude>**/*.tbl</exclude>
+            <exclude>**/*.tsv</exclude>
+            <exclude>**/*.txt</exclude>
+            <exclude>**/*.wav</exclude>
+            <exclude>**/*.webp</exclude>
+            <exclude>**/*.woff2</exclude>
+            <exclude>**/*.xls</exclude>
+            <exclude>**/*.xlsx</exclude>
+            <exclude>**/*.xsd</exclude>
           </excludes>
         </configuration>
       </plugin>
