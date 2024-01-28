@@ -36,6 +36,16 @@
   <name>Drill :</name>
   <description>Apache Drill is an open source, low latency SQL query engine for Hadoop and NoSQL.</description>
   <url>https://drill.apache.org/</url>
+  <organization>
+    <name>Apache Software Foundation</name>
+    <url>https://www.apache.org</url>
+  </organization>
+  <licenses>
+    <license>
+      <name>Apache-2.0</name>
+      <url>https://www.apache.org/licenses/LICENSE-2.0.txt</url>
+    </license>
+  </licenses>
 
   <properties>
     <maven.compiler.source>1.8</maven.compiler.source>
@@ -426,15 +436,6 @@
           </excludes>
         </configuration>
       </plugin>
-      <!--
-        DRILL-6320: The license-maven-plugin does a better job of checking headers than
-        the apache-rat-plugin. However, it is standard to include the apache-rat-plugin
-        in apache projects so both are used.
-      -->
-      <plugin>
-        <groupId>com.mycila</groupId>
-        <artifactId>license-maven-plugin</artifactId>
-      </plugin>
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-checkstyle-plugin</artifactId>
@@ -658,158 +659,6 @@
           <groupId>pl.project13.maven</groupId>
           <artifactId>git-commit-id-plugin</artifactId>
           <version>4.0.5</version>
-        </plugin>
-        <plugin>
-          <groupId>com.mycila</groupId>
-          <artifactId>license-maven-plugin</artifactId>
-          <version>4.2</version>
-          <configuration>
-            <aggregate>true</aggregate>
-            <!--suppress UnresolvedMavenProperty -->
-            <header>${maven.multiModuleProjectDirectory}/header</header>
-            <excludes>
-<exclude>**/*.accdb</exclude>
-              <exclude>**/*.access_log</exclude>
-              <exclude>**/.asf.yaml</exclude>
-              <exclude>**/*.autotools</exclude>
-              <exclude>**/*.avi</exclude>
-              <exclude>**/*.avro</exclude>
-              <exclude>**/.buildpath</exclude>
-              <exclude>**/*.checkstyle</exclude>
-              <exclude>**/.classpath</exclude>
-              <exclude>**/client/*build*/**</exclude>
-              <exclude>**/clientlib/y2038/*.c</exclude> <!-- All the files here should have MIT License -->
-              <exclude>**/clientlib/y2038/*.h</exclude> <!-- All the files here should have MIT License -->
-              <exclude>**/client/tags</exclude>
-              <exclude>**/cmake_install.cmake</exclude>
-              <exclude>**/control</exclude>
-              <exclude>**/*.cproject</exclude>
-              <exclude>**/.*.crc</exclude>
-              <exclude>**/*.css</exclude>
-              <exclude>**/*.csv</exclude>
-              <exclude>**/*.csvh</exclude>
-              <exclude>**/*.csvh-test</exclude>
-              <exclude>**/*.dbf</exclude>
-              <!-- TODO DRILL-4336: try to avoid the need to add this -->
-              <exclude>dependency-reduced-pom.xml</exclude>
-              <exclude>**/*.drill</exclude>
-              <exclude>**/.drill.parquet_metadata</exclude>
-              <exclude>**/*.eps</exclude>
-              <exclude>**/git.properties</exclude>
-              <exclude>**/*.h5</exclude>
-              <exclude>header</exclude>
-              <exclude>**/*.httpd</exclude>
-              <exclude>**/.idea/**</exclude>
-              <exclude>**/*.iml</exclude>
-              <exclude>**/*.js</exclude>
-              <exclude>**/*.json</exclude>
-              <exclude>KEYS</exclude>
-              <exclude>**/*.ks</exclude>
-              <exclude>**/LICENSE</exclude>
-              <exclude>**/*.log1</exclude>
-              <exclude>**/*.log1</exclude>
-              <exclude>**/*.log2</exclude>
-              <exclude>**/*.log2</exclude>
-              <exclude>**/*.log</exclude>
-              <exclude>**/*.ltsv</exclude>
-              <exclude>**/*.ltsv</exclude>
-              <exclude>**/*.map</exclude>
-              <exclude>**/*.mdb</exclude>
-              <exclude>**/*.md</exclude>
-              <exclude>**/*.mov</exclude>
-              <exclude>**/*.mp4</exclude>
-              <exclude>**/NOTICE</exclude>
-              <exclude>**/*.parquet</exclude>
-              <exclude>**/*.patch</exclude>
-              <exclude>**/*.pb.cc</exclude>
-              <exclude>**/*.pb.h</exclude>
-              <exclude>**/*.pcap</exclude>
-              <exclude>**/*.pcapng</exclude>
-              <exclude>**/*.pcx</exclude>
-              <exclude>**/*.pcx</exclude>
-              <exclude>**/*.pdf</exclude>
-              <exclude>**/*.prj</exclude>
-              <exclude>**/*.project</exclude>
-              <exclude>**/*.psd</exclude>
-              <exclude>**/resources/parquet/**/*</exclude>
-              <exclude>**/*.sas7bdat</exclude>
-              <exclude>**/*.sav</exclude>
-              <exclude>**/*.seq</exclude>
-              <exclude>**/.settings/**</exclude>
-              <exclude>**/*.shp</exclude>
-              <exclude>**/*.sql</exclude>
-              <exclude>**/*.sqllog2</exclude>
-              <exclude>**/*.sqllog2</exclude>
-              <exclude>**/*.sqllog</exclude>
-              <exclude>**/*.sqllog</exclude>
-              <exclude>**/*.ssdlog</exclude>
-              <exclude>**/ssl/*.csr</exclude>
-              <exclude>**/ssl/*.p12</exclude>
-              <exclude>**/ssl/*.pem</exclude>
-              <exclude>**/*.ssv</exclude>
-              <exclude>**/*.syslog1</exclude>
-              <exclude>**/*.syslog</exclude>
-              <exclude>**/TAGS</exclude>
-              <exclude>**/target/**</exclude>
-              <exclude>**/*.tbl</exclude>
-              <exclude>**/*.tsv</exclude>
-              <exclude>**/*.txt</exclude>
-              <exclude>**/*.wav</exclude>
-              <exclude>**/*.webp</exclude>
-              <exclude>**/*.woff2</exclude>
-              <exclude>**/*.xls</exclude>
-              <exclude>**/*.xlsx</exclude>
-              <exclude>**/*.xsd</exclude>
-            </excludes>
-            <mapping>
-              <boost>SLASHSTAR_STYLE</boost>
-              <build>SCRIPT_STYLE</build>
-              <cmake>SCRIPT_STYLE</cmake>
-              <cnf>SCRIPT_STYLE</cnf>
-              <conf>SCRIPT_STYLE</conf>
-              <conffiles>SCRIPT_STYLE</conffiles>
-              <config>SCRIPT_STYLE</config>
-              <cpp>SLASHSTAR_STYLE</cpp>
-              <cql>SLASHSTAR_STYLE</cql>
-              <dockerignore>SCRIPT_STYLE</dockerignore>
-              <drillbit>SCRIPT_STYLE</drillbit>
-              <drill-conf>SCRIPT_STYLE</drill-conf>
-              <drill-embedded>SCRIPT_STYLE</drill-embedded>
-              <drill-localhost>SCRIPT_STYLE</drill-localhost>
-              <dumpcat>SCRIPT_STYLE</dumpcat>
-              <env>SCRIPT_STYLE</env>
-              <fmpp>SCRIPT_STYLE</fmpp>
-              <g4>SLASHSTAR_STYLE</g4>
-              <hcl>DOUBLESLASH_STYLE</hcl>
-              <hpp>SLASHSTAR_STYLE</hpp>
-              <in>SLASHSTAR_STYLE</in>
-              <ipp>SLASHSTAR_STYLE</ipp>
-              <jaasconf>SLASHSTAR_STYLE</jaasconf>
-              <java>SLASHSTAR_STYLE</java>
-              <jj>SLASHSTAR_STYLE</jj>
-              <linux>SLASHSTAR_STYLE</linux>
-              <macos>SLASHSTAR_STYLE</macos>
-              <plist>XML_STYLE</plist>
-              <props>SCRIPT_STYLE</props>
-              <proto>DOUBLESLASH_STYLE</proto>
-              <push>SCRIPT_STYLE</push>
-              <runbit>SCRIPT_STYLE</runbit>
-              <runexec>SCRIPT_STYLE</runexec>
-              <sasl>SLASHSTAR_STYLE</sasl>
-              <sqlline>SCRIPT_STYLE</sqlline>
-              <ssl>SLASHSTAR_STYLE</ssl>
-              <submit_plan>SCRIPT_STYLE</submit_plan>
-              <tdd>SCRIPT_STYLE</tdd>
-              <txt>SLASHSTAR_STYLE</txt>
-            </mapping>
-          </configuration>
-          <executions>
-            <execution>
-              <goals>
-                <goal>check</goal>
-              </goals>
-            </execution>
-          </executions>
         </plugin>
         <plugin>
           <groupId>org.apache.maven.plugins</groupId>
@@ -3117,7 +2966,7 @@
           <plugin>
             <groupId>org.codehaus.mojo</groupId>
             <artifactId>findbugs-maven-plugin</artifactId>
-            <version>3.0.0</version>
+            <version>3.0.1</version>
             <configuration>
               <!--
                Enables analysis which takes more memory but finds more bugs.
