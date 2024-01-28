@@ -2,7 +2,7 @@
 
 ## Prerequisites
 
-Currently, the Apache Drill build process is known to work on Linux, Windows and OSX.  To build, you need to have the following software installed on your system to successfully complete a build. 
+Currently, the Apache Drill build process is known to work on Linux, Windows and OSX.  To build, you need to have the following software installed on your system to successfully complete a build.
   * Java 8
   * Maven 3.6.3 or greater
 
@@ -31,37 +31,38 @@ Setting up IDE formatters is recommended and can be done by importing the follow
 ## Checkout
 
     git clone https://github.com/apache/drill.git
-    
+
 ## Build
 
     cd drill
     mvn clean install -DskipTests
 
 ## Build Quickly
-This command works to build Drill in about 2 minutes for quick testing. 
+This command works to build Drill in about 2 minutes for quick testing. The `-o` (offline) argument
+prevents Maven from downloading snapshot artifacts from the snapshot repo.
 
-    mvn install -T 4 -Dmaven.test.skip=true -Dmaven.javadoc.skip=true -Drat.skip=true -Dlicense.skip=true -Dcheckstyle.skip=true -Dfindbugs.skip=true -Dmaven.site.skip=true -Denforcer.skip=true -DskipIfEmpty=true -Dmaven.compiler.optimize=true
+    mvn install -o -T1C -Dmaven.test.skip=true -Dmaven.javadoc.skip=true -Drat.skip=true -Dlicense.skip=true -Dcheckstyle.skip=true -Dfindbugs.skip=true -Dmaven.site.skip=true -Denforcer.skip=true -DskipIfEmpty=true -Dmaven.compiler.optimize=true
 
 ## Generate Dependency Report
     mvn clean site
 
 ## Explode tarball in installation directory
-   
+
     mkdir /opt/drill
-    tar xvzf distribution/target/*.tar.gz --strip=1 -C /opt/drill 
+    tar xvzf distribution/target/*.tar.gz --strip=1 -C /opt/drill
 
 ## Start SQLLine (which starts Drill in embedded mode)
-    
+
     cd /opt/drill
     bin/sqlline -u jdbc:drill:zk=local -n admin -p admin
 
 ## Run a query
 
-    SELECT 
-      employee_id, 
+    SELECT
+      employee_id,
       first_name
-    FROM cp.`employee.json`; 
-    
-## More information 
+    FROM cp.`employee.json`;
+
+## More information
 
 For more information including how to run a Apache Drill cluster, visit the [Apache Drill Documentation](http://drill.apache.org/docs/)
