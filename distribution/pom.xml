@@ -289,6 +289,27 @@
           </excludes>
         </configuration>
       </plugin>
+      <plugin>
+        <!--
+        Invoke manually with mvn license:add-third-party to genereate the list
+        of binary dependency licenses src/main/resources/LICENSE.
+        -->
+        <groupId>org.codehaus.mojo</groupId>
+        <artifactId>license-maven-plugin</artifactId>
+        <version>2.4.0</version>
+        <configuration>
+          <outputDirectory>src/main/resources</outputDirectory>
+          <thirdPartyFilename>LICENSE</thirdPartyFilename>
+          <excludedScopes>test,provided</excludedScopes>
+          <!-- Makes the scope exclusions above transitive. -->
+          <excludeTransitiveDependencies>true</excludeTransitiveDependencies>
+          <fileTemplate>${maven.multiModuleProjectDirectory}/distribution/src/main/resources/licenses/LICENSE-template.ftl</fileTemplate>
+          <missingFile>${maven.multiModuleProjectDirectory}/distribution/src/main/resources/licenses/MISSING.properties</missingFile>
+          <failOnMissing>true</failOnMissing>
+          <acceptPomPackaging>true</acceptPomPackaging>
+          <force>true</force>
+        </configuration>
+      </plugin>
     </plugins>
   </build>
   <profiles>

@@ -1,17 +1,8 @@
 # License Headers
 
-Drill uses two license header checkers:
+Drill uses the standadrd Apache license header checker:
 
 * [Apache RAT Plugin](http://creadur.apache.org/rat/apache-rat-plugin/)
-* [License Maven Plugin](http://code.mycila.com/license-maven-plugin/)
-
-## Why Two?
-
-[Apache RAT Plugin](http://creadur.apache.org/rat/apache-rat-plugin/) is used because it is the standard license header
-checker for Apache projects. 
-
-[License Maven Plugin](http://code.mycila.com/license-maven-plugin/) performs stricter license checks and supports disallowing license headers wrapped in `/**` and `**/`. This
-allows us to inforce requiring all license headers to be wrapped only in `/*` and `*/`.
 
 ## Doing License Checks
 
@@ -24,6 +15,9 @@ license checks locally you can do the following:
 
 ## Auto Formatting Headers
 
+The Maven build does not do automatic insertion of license headers to avoid
+mislicensing code under other open source licenses that may have been brought
+into the Drill codebase.
 If the license checks fail and you can't figure out what's wrong with your headers, you can auto-format
 your license headers with the following command:
 

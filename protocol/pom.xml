@@ -135,7 +135,7 @@
               <skip>false</skip>
               <licenseSets>
                 <licenseSet>
-                  <header>${maven.multiModuleProjectDirectory}/header</header>
+                  <header>${maven.multiModuleProjectDirectory}/HEADER-2.0.txt</header>
                   <includes>
                     <include>src/main/java/**/*.java</include>
                   </includes>

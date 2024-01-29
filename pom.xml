@@ -48,101 +48,103 @@
   </licenses>
 
   <properties>
-    <maven.compiler.source>1.8</maven.compiler.source>
-    <maven.compiler.target>1.8</maven.compiler.target>
-    <sourceReleaseAssemblyDescriptor>source-release-zip-tar</sourceReleaseAssemblyDescriptor>
-    <project.build.outputTimestamp>1676438963</project.build.outputTimestamp>
-    <target.gen.source.path>${project.basedir}/target/generated-sources</target.gen.source.path>
-    <proto.cas.path>${project.basedir}/src/main/protobuf/</proto.cas.path>
-    <junit.version>5.7.2</junit.version>
-    <junit4.version>4.13.2</junit4.version>
-    <junit.platform.version>1.8.2</junit.platform.version>
-    <slf4j.version>2.0.6</slf4j.version>
-    <guava.version>32.1.2-jre</guava.version>
-    <forkCount>1</forkCount>
-    <parquet.version>1.12.3</parquet.version>
-    <parquet.format.version>2.9.0</parquet.format.version>
+    <!-- Please keep this list sorted. -->
+    <aircompressor.version>0.25</aircompressor.version>
+    <antlr.version>4.9.3</antlr.version>
+    <asm.version>9.5</asm.version>
+    <avatica.version>1.23.0</avatica.version>
+    <avro.version>1.11.3</avro.version>
+    <bouncycastle.version>1.77</bouncycastle.version>
     <calcite.groupId>org.apache.calcite</calcite.groupId>
     <calcite.version>1.34.0</calcite.version>
-    <avatica.version>1.23.0</avatica.version>
-    <janino.version>3.1.11</janino.version>
-    <sqlline.version>1.12.0</sqlline.version>
-    <jackson.version>2.16.1</jackson.version>
-    <zookeeper.version>3.5.10</zookeeper.version>
-    <kerby.version>1.0.0</kerby.version>
-    <findbugs.version>3.0.5</findbugs.version>
-    <netty.tcnative.classifier />
-    <commons.io.version>2.15.0</commons.io.version>
+    <codemodel.version>2.6</codemodel.version>
+    <commons.beanutils.version>1.9.4</commons.beanutils.version>
+    <commons.cli.version>1.4</commons.cli.version>
+    <commons.codec.version>1.16.0</commons.codec.version>
     <commons.collections.version>4.4</commons.collections.version>
-    <hamcrest.version>2.2</hamcrest.version>
+    <commons.compress.version>1.25.0</commons.compress.version>
+    <commons.configuration.version>1.10</commons.configuration.version>
+    <commons.io.version>2.15.0</commons.io.version>
+    <commons.lang3.version>3.10</commons.lang3.version>
+    <commons.net.version>3.9.0</commons.net.version>
+    <commons.text.version>1.10.0</commons.text.version>
+    <commons.validator.version>1.7</commons.validator.version>
     <curator.version>5.5.0</curator.version>
-    <wiremock.standalone.version>2.23.2</wiremock.standalone.version>
-    <jmockit.version>1.47</jmockit.version>
-    <logback.version>1.3.14</logback.version>
-    <mockito.version>3.11.2</mockito.version>
+    <derby.version>10.14.2.0</derby.version>
+    <directMemoryMb>3072</directMemoryMb>
+    <docker.repository>apache/drill</docker.repository>
+    <excludedGroups />
+    <findbugs.version>3.0.5</findbugs.version>
+    <fmpp.version>1.0</fmpp.version>
+    <forkCount>1</forkCount>
+    <freemarker.version>2.3.30</freemarker.version>
+    <guava.version>32.1.2-jre</guava.version>
+    <hadoop.version>3.3.6</hadoop.version>
+    <hamcrest.version>2.2</hamcrest.version>
+    <hbase.version>2.5.5-hadoop3</hbase.version>
+    <hikari.version>4.0.3</hikari.version>
     <!--
       Currently, Hive storage plugin only supports Apache Hive 3.1.3 or vendor specific variants of the
       Apache Hive 2.3.2. If the version is changed, make sure the jars and their dependencies are updated,
       for example parquet-hadoop-bundle and derby dependencies.
     -->
     <hive.version>3.1.3</hive.version>
-    <hadoop.version>3.3.6</hadoop.version>
-    <hbase.version>2.5.5-hadoop3</hbase.version>
-    <fmpp.version>1.0</fmpp.version>
-    <freemarker.version>2.3.30</freemarker.version>
-    <javassist.version>3.29.2-GA</javassist.version>
-    <msgpack.version>0.6.6</msgpack.version>
-    <reflections.version>0.9.10</reflections.version>
-    <avro.version>1.11.3</avro.version>
-    <bouncycastle.version>1.77</bouncycastle.version>
-    <metrics.version>4.2.19</metrics.version>
-    <jetty.version>9.4.51.v20230217</jetty.version>
-    <jersey.version>2.40</jersey.version>
-    <javax.validation.api>2.0.1.Final</javax.validation.api>
-    <asm.version>9.5</asm.version>
-    <excludedGroups />
-    <memoryMb>3072</memoryMb>
-    <directMemoryMb>3072</directMemoryMb>
-    <rat.skip>true</rat.skip>
-    <license.skip>true</license.skip>
-    <docker.repository>apache/drill</docker.repository>
-    <antlr.version>4.9.3</antlr.version>
-    <maven.version>3.8.4</maven.version>
-    <maven.min.version>3.6.3</maven.min.version>
-    <commons.net.version>3.9.0</commons.net.version>
-    <commons.validator.version>1.7</commons.validator.version>
-    <commons.text.version>1.10.0</commons.text.version>
-    <protobuf.version>3.16.3</protobuf.version>
-    <protostuff.version>1.8.0</protostuff.version>
-    <codemodel.version>2.6</codemodel.version>
-    <joda.version>2.12.5</joda.version>
-    <javax.el.version>3.0.0</javax.el.version>
-    <surefire.version>3.1.2</surefire.version>
-    <jna.version>5.13.0</jna.version>
-    <commons.compress.version>1.25.0</commons.compress.version>
-    <hikari.version>4.0.3</hikari.version>
-    <netty.version>4.1.101.Final</netty.version>
     <httpclient.version>4.5.14</httpclient.version>
+    <httpdlog-parser.version>5.10.0</httpdlog-parser.version>
+    <iceberg.version>0.12.1</iceberg.version>
+    <jackson.version>2.16.1</jackson.version>
+    <janino.version>3.1.11</janino.version>
+    <javassist.version>3.29.2-GA</javassist.version>
+    <javax.el.version>3.0.0</javax.el.version>
+    <javax.validation.api>2.0.1.Final</javax.validation.api>
+    <jersey.version>2.40</jersey.version>
+    <jetty.version>9.4.51.v20230217</jetty.version>
+    <jmockit.version>1.47</jmockit.version>
+    <jna.version>5.13.0</jna.version>
+    <joda.version>2.12.5</joda.version>
+    <junit4.version>4.13.2</junit4.version>
+    <junit.args />
+    <junit.platform.version>1.8.2</junit.platform.version>
+    <junit.version>5.7.2</junit.version>
+    <kerby.version>1.0.1</kerby.version>
     <libthrift.version>0.18.1</libthrift.version>
-    <derby.version>10.14.2.0</derby.version>
-    <commons.cli.version>1.4</commons.cli.version>
+    <license.skip>true</license.skip>
+    <log4j.version>2.22.0</log4j.version>
+    <logback.version>1.4.14</logback.version>
+    <maven.compiler.source>1.8</maven.compiler.source>
+    <maven.compiler.target>1.8</maven.compiler.target>
+    <maven.min.version>3.6.3</maven.min.version>
+    <maven.version>3.8.4</maven.version>
+    <memoryMb>3072</memoryMb>
+    <metrics.version>4.2.19</metrics.version>
+    <mockito.version>3.11.2</mockito.version>
+    <mongo.version>4.11.1</mongo.version>
+    <msgpack.version>0.6.6</msgpack.version>
+    <netty.tcnative.classifier />
+    <netty.tcnative.version>2.0.62.Final</netty.tcnative.version>
+    <netty.version>4.1.101.Final</netty.version>
+    <parquet.format.version>2.9.0</parquet.format.version>
+    <parquet.version>1.12.3</parquet.version>
+    <project.build.outputTimestamp>1676438963</project.build.outputTimestamp>
+    <protobuf.version>3.16.3</protobuf.version>
+    <proto.cas.path>${project.basedir}/src/main/protobuf/</proto.cas.path>
+    <protostuff.version>1.8.0</protostuff.version>
+    <rat.skip>true</rat.skip>
+    <reflections.version>0.9.10</reflections.version>
+    <slf4j.version>2.0.6</slf4j.version>
     <snakeyaml.version>2.1</snakeyaml.version>
-    <commons.lang3.version>3.10</commons.lang3.version>
+    <sourceReleaseAssemblyDescriptor>source-release-zip-tar</sourceReleaseAssemblyDescriptor>
+    <sqlline.version>1.12.0</sqlline.version>
+    <surefire.version>3.1.2</surefire.version>
+    <swagger.version>2.1.12</swagger.version>
+    <target.gen.source.path>${project.basedir}/target/generated-sources</target.gen.source.path>
     <testcontainers.version>1.18.3</testcontainers.version>
     <typesafe.config.version>1.4.2</typesafe.config.version>
-    <commons.codec.version>1.16.0</commons.codec.version>
-    <xerces.version>2.12.2</xerces.version>
-    <commons.configuration.version>1.10</commons.configuration.version>
-    <commons.beanutils.version>1.9.4</commons.beanutils.version>
-    <httpdlog-parser.version>5.10.0</httpdlog-parser.version>
-    <yauaa.version>7.19.2</yauaa.version>
-    <log4j.version>2.22.0</log4j.version>
-    <aircompressor.version>0.25</aircompressor.version>
-    <iceberg.version>0.12.1</iceberg.version>
     <univocity-parsers.version>2.8.3</univocity-parsers.version>
-    <mongo.version>4.11.1</mongo.version>
-    <swagger.version>2.1.12</swagger.version>
-    <junit.args />
+    <wiremock.standalone.version>2.23.2</wiremock.standalone.version>
+    <xerces.version>2.12.2</xerces.version>
+    <yauaa.version>7.19.2</yauaa.version>
+    <zookeeper.version>3.5.10</zookeeper.version>
   </properties>
 
   <scm>
@@ -435,6 +437,23 @@
             <exclude>**/*.xsd</exclude>
           </excludes>
         </configuration>
+      </plugin>
+      <plugin>
+        <groupId>org.jasig.maven</groupId>
+        <artifactId>maven-notice-plugin</artifactId>
+        <version>1.0.6.1</version>
+        <dependencies>
+          <dependency>
+              <groupId>jakarta.xml.bind</groupId>
+              <artifactId>jakarta.xml.bind-api</artifactId>
+              <version>2.3.3</version>
+          </dependency>
+          <dependency>
+              <groupId>org.glassfish.jaxb</groupId>
+              <artifactId>jaxb-runtime</artifactId>
+              <version>2.3.3</version>
+          </dependency>
+        </dependencies>
       </plugin>
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
@@ -937,6 +956,19 @@
     </dependency>
 
     <dependency>
+      <groupId>ch.qos.logback</groupId>
+      <artifactId>logback-classic</artifactId>
+      <version>${logback.version}</version>
+      <scope>runtime</scope>
+    </dependency>
+    <dependency>
+      <groupId>ch.qos.logback</groupId>
+      <artifactId>logback-core</artifactId>
+      <version>${logback.version}</version>
+      <scope>runtime</scope>
+    </dependency>
+
+    <dependency>
       <groupId>commons-io</groupId>
       <artifactId>commons-io</artifactId>
       <version>${commons.io.version}</version>
@@ -1004,19 +1036,6 @@
       <version>${mockito.version}</version>
       <scope>test</scope>
     </dependency>
-    <dependency>
-      <groupId>ch.qos.logback</groupId>
-      <artifactId>logback-classic</artifactId>
-      <version>${logback.version}</version>
-      <scope>test</scope>
-    </dependency>
-    <dependency>
-      <groupId>ch.qos.logback</groupId>
-      <artifactId>logback-core</artifactId>
-      <version>${logback.version}</version>
-      <scope>test</scope>
-    </dependency>
-
     <dependency>
       <groupId>de.huxhorn.lilith</groupId>
       <artifactId>de.huxhorn.lilith.logback.appender.multiplex-classic</artifactId>
@@ -1478,7 +1497,7 @@
       <dependency>
         <groupId>io.netty</groupId>
         <artifactId>netty-tcnative</artifactId>
-        <version>2.0.48.Final</version>
+        <version>${netty.tcnative.version}</version>
         <classifier>${netty.tcnative.classifier}</classifier>
         <scope>runtime</scope>
         <optional>true</optional>
