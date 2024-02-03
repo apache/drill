@@ -123,7 +123,6 @@
         <include>org.jvnet.mimepull</include>
         <include>org.reflections</include>
       </includes>
-      <scope>test</scope>
     </dependencySet>
     <dependencySet>
       <outputDirectory>jars/3rdparty/</outputDirectory>
@@ -165,7 +164,6 @@
         <exclude>org.jvnet.mimepull</exclude>
         <exclude>org.reflections</exclude>
       </excludes>
-      <scope>test</scope>
     </dependencySet>
     <dependencySet>
       <outputDirectory>jars/ext</outputDirectory>
@@ -175,7 +173,6 @@
         <include>org.apache.zookeeper:zookeeper</include>
         <include>org.apache.zookeeper:zookeeper-jute</include>
       </includes>
-      <scope>runtime</scope>
     </dependencySet>
     <dependencySet>
       <outputDirectory>jars/3rdparty/linux</outputDirectory>
@@ -184,7 +181,6 @@
       <includes>
         <include>io.netty:netty-tcnative:jar:linux-x86_64:${netty.tcnative.version}</include>
       </includes>
-      <scope>test</scope>
     </dependencySet>
     <dependencySet>
       <outputDirectory>jars/3rdparty/fedora</outputDirectory>
@@ -193,7 +189,6 @@
       <includes>
         <include>io.netty:netty-tcnative:jar:linux-x86_64-fedora:${netty.tcnative.version}</include>
       </includes>
-      <scope>test</scope>
     </dependencySet>
     <dependencySet>
       <outputDirectory>jars/3rdparty/windows</outputDirectory>
@@ -202,7 +197,6 @@
       <includes>
         <include>io.netty:netty-tcnative:jar:windows-x86_64:${netty.tcnative.version}</include>
       </includes>
-      <scope>test</scope>
     </dependencySet>
     <dependencySet>
       <outputDirectory>jars/3rdparty/osx</outputDirectory>
@@ -211,7 +205,6 @@
       <includes>
         <include>io.netty:netty-tcnative:jar:osx-x86_64:${netty.tcnative.version}</include>
       </includes>
-      <scope>test</scope>
     </dependencySet>
   </dependencySets>
 
