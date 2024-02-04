@@ -309,6 +309,14 @@
           <acceptPomPackaging>true</acceptPomPackaging>
           <force>true</force>
         </configuration>
+        <executions>
+          <execution>
+            <id>generate-binary-license</id>
+            <goals>
+              <goal>add-third-party</goal>
+            </goals>
+          </execution>
+        </executions>
       </plugin>
     </plugins>
   </build>
