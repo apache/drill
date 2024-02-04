@@ -195,7 +195,8 @@
       <unpack>false</unpack>
       <useProjectArtifact>false</useProjectArtifact>
       <includes>
-        <include>io.netty:netty-tcnative:jar:windows-x86_64:${netty.tcnative.version}</include>
+        <!-- 2.0.36.Final was last release of netty-tcnative to include a Windows binary -->
+        <include>io.netty:netty-tcnative:jar:windows-x86_64:2.0.36.Final</include>
       </includes>
     </dependencySet>
     <dependencySet>
