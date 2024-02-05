@@ -424,6 +424,7 @@
               <include>*:*</include>
             </includes>
             <excludes>
+              <!-- Please keep this list sorted. -->
               <exclude>antlr:*</exclude>
               <exclude>com.beust:*</exclude>
               <exclude>com.dropbox.*</exclude>
@@ -448,7 +449,6 @@
               <exclude>javax.xml.stream:stax-api</exclude>
               <exclude>jline:*</exclude>
               <exclude>net.hydromatic:linq4j</exclude>
-              <exclude>org.apache.avro:*</exclude>
               <exclude>org.apache.avro:*</exclude>
               <exclude>org.apache.commons:commons-collections4</exclude>
               <exclude>org.apache.hadoop:hadoop-yarn-client</exclude>
