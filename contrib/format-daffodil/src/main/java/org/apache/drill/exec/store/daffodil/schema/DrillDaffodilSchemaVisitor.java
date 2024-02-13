@@ -73,7 +73,7 @@ public class DrillDaffodilSchemaVisitor extends MetadataHandler {
   public void simpleElementMetadata(SimpleElementMetadata md) {
     assert (!mapBuilderStack.isEmpty());
     String colName = makeColumnName(md);
-    MinorType drillType = DrillDaffodilSchemaUtils.getDrillDataType(md.primitiveType());
+    MinorType drillType = DrillDaffodilSchemaUtils.getDrillDataType(md.jPrimType());
     if (md.isArray()) {
       mapBuilder().addArray(colName, drillType);
     } else if (md.isOptional() || md.isNillable()) {

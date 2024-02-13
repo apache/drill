@@ -25,7 +25,7 @@ import org.apache.daffodil.runtime1.api.ElementMetadata;
 import org.apache.daffodil.runtime1.api.InfosetArray;
 import org.apache.daffodil.runtime1.api.InfosetComplexElement;
 import org.apache.daffodil.runtime1.api.InfosetSimpleElement;
-import org.apache.daffodil.runtime1.api.PrimitiveType;
+import org.apache.daffodil.runtime1.api.JPrimType;
 import org.apache.drill.common.types.TypeProtos;
 import org.apache.drill.exec.physical.resultSet.RowSetLoader;
 import org.apache.drill.exec.record.metadata.ColumnMetadata;
@@ -233,18 +233,18 @@ public class DaffodilDrillInfosetOutputter extends InfosetOutputter {
 
   private void convertDaffodilValueToDrillValue(InfosetSimpleElement ise, ColumnMetadata cm,
       ScalarWriter cw) {
-    PrimitiveType dafType = ise.metadata().primitiveType();
+    JPrimType dafType = ise.metadata().jPrimType();
     String dafTypeName = dafType.name();
     TypeProtos.MinorType drillType = DrillDaffodilSchemaUtils.getDrillDataType(dafType);
     assert (drillType == cm.type());
     switch (drillType) {
     case BIGINT: { // BIGINT type is not a Java BigInteger, BIGINT is a signed 8-byte long in Drill.
-      switch (dafTypeName) {
-      case "unsignedInt": {
+      switch (dafType) {
+      case UnsignedInt: {
         cw.setLong(ise.getUnsignedInt());
         break;
       }
-      case "long": {
+      case Long: {
         cw.setLong(ise.getLong());
         break;
       }
@@ -280,16 +280,16 @@ public class DaffodilDrillInfosetOutputter extends InfosetOutputter {
       break;
     }
     case VARDECIMAL: {
-      switch (dafTypeName) {
-      case "unsignedLong": {
+      switch (dafType) {
+      case UnsignedLong: {
         cw.setDecimal(new BigDecimal(ise.getUnsignedLong()));
         break;
       }
-      case "integer": {
+      case Integer: {
         cw.setDecimal(new BigDecimal(ise.getInteger()));
         break;
       }
-      case "nonNegativeInteger": {
+      case NonNegativeInteger: {
         cw.setDecimal(new BigDecimal(ise.getNonNegativeInteger()));
         break;
       }
@@ -303,12 +303,12 @@ public class DaffodilDrillInfosetOutputter extends InfosetOutputter {
       break;
     }
     case FLOAT8: {
-      switch (dafTypeName) {
-      case "double": {
+      switch (dafType) {
+      case Double: {
         cw.setDouble(ise.getDouble());
         break;
       }
-      case "float": {
+      case Float: {
         // converting a float to a double by doubleValue() fails here
         // Float.MaxValue converted to a double via doubleValue()
         // then placed in a FLOAT8 column displays as
@@ -334,13 +334,13 @@ public class DaffodilDrillInfosetOutputter extends InfosetOutputter {
       break;
     }
     case VARCHAR: {
-      switch (dafTypeName) {
-      case "decimal": {
+      switch (dafType) {
+      case Decimal: {
         BigDecimal decimal = ise.getDecimal();
         cw.setString(decimal.toString());
         break;
       }
-      case "string": {
+      case String: {
         String s = ise.getString();
         cw.setString(s);
         break;
