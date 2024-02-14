@@ -25,7 +25,7 @@ import org.apache.daffodil.runtime1.api.ElementMetadata;
 import org.apache.daffodil.runtime1.api.InfosetArray;
 import org.apache.daffodil.runtime1.api.InfosetComplexElement;
 import org.apache.daffodil.runtime1.api.InfosetSimpleElement;
-import org.apache.daffodil.runtime1.api.JPrimType;
+import org.apache.daffodil.runtime1.api.DFDLPrimType;
 import org.apache.drill.common.types.TypeProtos;
 import org.apache.drill.exec.physical.resultSet.RowSetLoader;
 import org.apache.drill.exec.record.metadata.ColumnMetadata;
@@ -233,7 +233,7 @@ public class DaffodilDrillInfosetOutputter extends InfosetOutputter {
 
   private void convertDaffodilValueToDrillValue(InfosetSimpleElement ise, ColumnMetadata cm,
       ScalarWriter cw) {
-    JPrimType dafType = ise.metadata().jPrimType();
+    DFDLPrimType dafType = ise.metadata().dfdlType();
     String dafTypeName = dafType.name();
     TypeProtos.MinorType drillType = DrillDaffodilSchemaUtils.getDrillDataType(dafType);
     assert (drillType == cm.type());

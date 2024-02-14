@@ -20,7 +20,7 @@ package org.apache.drill.exec.store.daffodil.schema;
 
 import org.apache.daffodil.japi.InvalidParserException;
 import org.apache.daffodil.japi.DataProcessor;
-import org.apache.daffodil.runtime1.api.JPrimType;
+import org.apache.daffodil.runtime1.api.DFDLPrimType;
 import org.apache.drill.common.types.TypeProtos.MinorType;
 import org.apache.drill.exec.record.metadata.TupleMetadata;
 import com.google.common.annotations.VisibleForTesting;
@@ -41,27 +41,27 @@ public class DrillDaffodilSchemaUtils {
   /**
    * This map maps the data types defined by the DFDL definition to Drill data types.
    */
-  public static final ImmutableMap<JPrimType, MinorType> DFDL_TYPE_MAPPINGS =
-      ImmutableMap.<JPrimType, MinorType>builder()
-          .put(JPrimType.Long, MinorType.BIGINT)
-          .put(JPrimType.Int, MinorType.INT)
-          .put(JPrimType.Short, MinorType.SMALLINT)
-          .put(JPrimType.Byte, MinorType.TINYINT)
+  public static final ImmutableMap<DFDLPrimType, MinorType> DFDL_TYPE_MAPPINGS =
+      ImmutableMap.<DFDLPrimType, MinorType>builder()
+          .put(DFDLPrimType.Long, MinorType.BIGINT)
+          .put(DFDLPrimType.Int, MinorType.INT)
+          .put(DFDLPrimType.Short, MinorType.SMALLINT)
+          .put(DFDLPrimType.Byte, MinorType.TINYINT)
           // daffodil unsigned longs are modeled as DECIMAL(38, 0) which is the default for VARDECIMAL
-          .put(JPrimType.UnsignedLong, MinorType.VARDECIMAL)
-          .put(JPrimType.UnsignedInt, MinorType.BIGINT)
-          .put(JPrimType.UnsignedShort, MinorType.UINT2)
-          .put(JPrimType.UnsignedByte, MinorType.UINT1)
+          .put(DFDLPrimType.UnsignedLong, MinorType.VARDECIMAL)
+          .put(DFDLPrimType.UnsignedInt, MinorType.BIGINT)
+          .put(DFDLPrimType.UnsignedShort, MinorType.UINT2)
+          .put(DFDLPrimType.UnsignedByte, MinorType.UINT1)
           // daffodil integer, nonNegativeInteger, are modeled as DECIMAL(38, 0) which is the default for VARDECIMAL
-          .put(JPrimType.Integer, MinorType.VARDECIMAL)
-          .put(JPrimType.NonNegativeInteger, MinorType.VARDECIMAL)
+          .put(DFDLPrimType.Integer, MinorType.VARDECIMAL)
+          .put(DFDLPrimType.NonNegativeInteger, MinorType.VARDECIMAL)
           // decimal has to be modeled as string since we really have no idea what to set the
           // scale to.
-          .put(JPrimType.Decimal, MinorType.VARCHAR)
-          .put(JPrimType.Boolean, MinorType.BIT)
-          .put(JPrimType.Date, MinorType.DATE) // requires conversion
-          .put(JPrimType.DateTime, MinorType.TIMESTAMP) // requires conversion
-          .put(JPrimType.Double, MinorType.FLOAT8)
+          .put(DFDLPrimType.Decimal, MinorType.VARCHAR)
+          .put(DFDLPrimType.Boolean, MinorType.BIT)
+          .put(DFDLPrimType.Date, MinorType.DATE) // requires conversion
+          .put(DFDLPrimType.DateTime, MinorType.TIMESTAMP) // requires conversion
+          .put(DFDLPrimType.Double, MinorType.FLOAT8)
           //
           // daffodil float type is mapped to double aka Float8 in drill because there
           // seems to be bugs in FLOAT4. Float.MaxValue in a Float4 column displays as
@@ -69,10 +69,10 @@ public class DrillDaffodilSchemaUtils {
           //
           // We don't really care about single float precision, so we just use double precision.
           //
-          .put(JPrimType.Float, MinorType.FLOAT8)
-          .put(JPrimType.HexBinary, MinorType.VARBINARY)
-          .put(JPrimType.String, MinorType.VARCHAR)
-          .put(JPrimType.Time, MinorType.TIME) // requires conversion
+          .put(DFDLPrimType.Float, MinorType.FLOAT8)
+          .put(DFDLPrimType.HexBinary, MinorType.VARBINARY)
+          .put(DFDLPrimType.String, MinorType.VARCHAR)
+          .put(DFDLPrimType.Time, MinorType.TIME) // requires conversion
           .build();
 
 
@@ -98,7 +98,7 @@ public class DrillDaffodilSchemaUtils {
    * @param dfdlType The type as provided by Daffodil.
    * @return A {@link MinorType} of the Drill data type.
    */
-  public static MinorType getDrillDataType(JPrimType dfdlType) {
+  public static MinorType getDrillDataType(DFDLPrimType dfdlType) {
     try {
       MinorType type = DrillDaffodilSchemaUtils.DFDL_TYPE_MAPPINGS.get(dfdlType);
       if (type == null) {
