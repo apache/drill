@@ -22,6 +22,8 @@ import org.apache.drill.common.types.TypeProtos.MajorType;
 import org.apache.drill.common.types.TypeProtos.MinorType;
 import org.apache.drill.exec.record.MaterializedField;
 
+import java.util.Objects;
+
 /**
  * Internal structure for building a map. A map is just a schema,
  * but one that is part of a parent column.
@@ -33,7 +35,7 @@ import org.apache.drill.exec.record.MaterializedField;
  * All <tt>resumeXXX</tt> methods do not produce any action and return null.
  * To access built column {@link #buildColumn()} should be used.
  */
-public class MapBuilder implements SchemaContainer {
+public class MapBuilder implements MapBuilderLike, SchemaContainer {
   private final SchemaContainer parent;
   private final TupleBuilder tupleBuilder = new TupleBuilder();
   private final String memberName;
@@ -68,6 +70,7 @@ public class MapBuilder implements SchemaContainer {
     return this;
   }
 
+  @Override
   public MapBuilder add(String name, MinorType type) {
     tupleBuilder.add(name, type);
     return this;
@@ -82,6 +85,7 @@ public class MapBuilder implements SchemaContainer {
     return addDecimal(name, type, DataMode.REQUIRED, precision, scale);
   }
 
+  @Override
   public MapBuilder addNullable(String name, MinorType type) {
     tupleBuilder.addNullable(name,  type);
     return this;
@@ -96,6 +100,7 @@ public class MapBuilder implements SchemaContainer {
     return addDecimal(name, type, DataMode.OPTIONAL, precision, scale);
   }
 
+  @Override
   public MapBuilder addArray(String name, MinorType type) {
     tupleBuilder.addArray(name, type);
     return this;
@@ -129,10 +134,12 @@ public class MapBuilder implements SchemaContainer {
    * @param name the name of the map column
    * @return a builder for the map
    */
+  @Override
   public MapBuilder addMap(String name) {
     return tupleBuilder.addMap(this, name);
   }
 
+  @Override
   public MapBuilder addMapArray(String name) {
     return tupleBuilder.addMapArray(this, name);
   }
@@ -183,6 +190,26 @@ public class MapBuilder implements SchemaContainer {
   public MapBuilder resumeMap() {
     build();
     return (MapBuilder) parent;
+  }
+
+  /**
+   * Depending on whether the parent is a schema builder or map builder
+   * we resume appropriately.
+   */
+  @Override
+  public void resume() {
+    if (Objects.isNull(parent))
+      throw new IllegalStateException("Call to resume() on MapBuilder with no parent.");
+    if (parent instanceof MapBuilder)
+      resumeMap();
+    else {
+      assert(parent instanceof SchemaBuilder);
+      //
+      // This would be extended for other kinds of possible containers of a Map.
+      // First version only needed SchemaBuilder parents
+      //
+      resumeSchema();
+    }
   }
 
   public RepeatedListBuilder resumeList() {
