@@ -125,8 +125,23 @@
             </executions>
           </plugin>
           <plugin>
+            <!-- The org.codehaus.mojo.license-maven-plugin already present in the parent POM
+            can also add license headers but not without contaminating them with tags that it uses
+            to orient itself. So we are forced to use a different license-maven-plugin here. -->
             <groupId>com.mycila</groupId>
             <artifactId>license-maven-plugin</artifactId>
+            <version>4.3</version>
+            <configuration>
+              <skip>false</skip>
+              <licenseSets>
+                <licenseSet>
+                  <header>${maven.multiModuleProjectDirectory}/HEADER-2.0.txt</header>
+                  <includes>
+                    <include>src/main/java/**/*.java</include>
+                  </includes>
+                </licenseSet>
+              </licenseSets>
+            </configuration>
             <executions>
               <execution>
                 <id>proto-format</id>
@@ -144,7 +159,7 @@
 
   <build>
     <plugins>
-    <plugin>
+      <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-checkstyle-plugin</artifactId>
         <configuration>

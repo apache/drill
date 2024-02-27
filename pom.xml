@@ -24,7 +24,7 @@
   <parent>
     <groupId>org.apache</groupId>
     <artifactId>apache</artifactId>
-    <version>29</version>
+    <version>31</version>
     <relativePath />
   </parent>
 
@@ -36,103 +36,116 @@
   <name>Drill :</name>
   <description>Apache Drill is an open source, low latency SQL query engine for Hadoop and NoSQL.</description>
   <url>https://drill.apache.org/</url>
+  <organization>
+    <name>Apache Software Foundation</name>
+    <url>https://www.apache.org</url>
+  </organization>
+  <licenses>
+    <license>
+      <name>Apache-2.0</name>
+      <url>https://www.apache.org/licenses/LICENSE-2.0.txt</url>
+    </license>
+  </licenses>
 
   <properties>
-    <maven.compiler.source>1.8</maven.compiler.source>
-    <maven.compiler.target>1.8</maven.compiler.target>
-    <sourceReleaseAssemblyDescriptor>source-release-zip-tar</sourceReleaseAssemblyDescriptor>
-    <project.build.outputTimestamp>1676438963</project.build.outputTimestamp>
-    <target.gen.source.path>${project.basedir}/target/generated-sources</target.gen.source.path>
-    <proto.cas.path>${project.basedir}/src/main/protobuf/</proto.cas.path>
-    <junit.version>5.7.2</junit.version>
-    <junit4.version>4.13.2</junit4.version>
-    <junit.platform.version>1.8.2</junit.platform.version>
-    <slf4j.version>2.0.6</slf4j.version>
-    <guava.version>32.1.2-jre</guava.version>
-    <forkCount>1</forkCount>
-    <parquet.version>1.12.3</parquet.version>
-    <parquet.format.version>2.9.0</parquet.format.version>
+    <!-- Please keep this list sorted. -->
+    <aircompressor.version>0.25</aircompressor.version>
+    <antlr.version>4.9.3</antlr.version>
+    <asm.version>9.5</asm.version>
+    <avatica.version>1.23.0</avatica.version>
+    <avro.version>1.11.3</avro.version>
+    <bouncycastle.version>1.77</bouncycastle.version>
     <calcite.groupId>org.apache.calcite</calcite.groupId>
     <calcite.version>1.34.0</calcite.version>
-    <avatica.version>1.23.0</avatica.version>
-    <janino.version>3.1.11</janino.version>
-    <sqlline.version>1.12.0</sqlline.version>
-    <jackson.version>2.16.1</jackson.version>
-    <zookeeper.version>3.5.10</zookeeper.version>
-    <kerby.version>1.0.0</kerby.version>
-    <findbugs.version>3.0.5</findbugs.version>
-    <netty.tcnative.classifier />
-    <commons.io.version>2.15.0</commons.io.version>
+    <codemodel.version>2.6</codemodel.version>
+    <commons.beanutils.version>1.9.4</commons.beanutils.version>
+    <commons.cli.version>1.4</commons.cli.version>
+    <commons.codec.version>1.16.0</commons.codec.version>
     <commons.collections.version>4.4</commons.collections.version>
-    <hamcrest.version>2.2</hamcrest.version>
+    <commons.compress.version>1.25.0</commons.compress.version>
+    <commons.configuration.version>1.10</commons.configuration.version>
+    <commons.io.version>2.15.0</commons.io.version>
+    <commons.lang3.version>3.10</commons.lang3.version>
+    <commons.net.version>3.9.0</commons.net.version>
+    <commons.text.version>1.10.0</commons.text.version>
+    <commons.validator.version>1.7</commons.validator.version>
     <curator.version>5.5.0</curator.version>
-    <wiremock.standalone.version>2.23.2</wiremock.standalone.version>
-    <jmockit.version>1.47</jmockit.version>
-    <logback.version>1.3.14</logback.version>
-    <mockito.version>3.11.2</mockito.version>
+    <derby.version>10.14.2.0</derby.version>
+    <directMemoryMb>3072</directMemoryMb>
+    <docker.repository>apache/drill</docker.repository>
+    <excludedGroups />
+    <findbugs.version>3.0.5</findbugs.version>
+    <fmpp.version>1.0</fmpp.version>
+    <forkCount>1</forkCount>
+    <freemarker.version>2.3.30</freemarker.version>
+    <guava.version>32.1.2-jre</guava.version>
+    <hadoop.version>3.3.6</hadoop.version>
+    <hamcrest.version>2.2</hamcrest.version>
+    <hbase.version>2.5.5-hadoop3</hbase.version>
+    <hikari.version>4.0.3</hikari.version>
     <!--
       Currently, Hive storage plugin only supports Apache Hive 3.1.3 or vendor specific variants of the
       Apache Hive 2.3.2. If the version is changed, make sure the jars and their dependencies are updated,
       for example parquet-hadoop-bundle and derby dependencies.
     -->
     <hive.version>3.1.3</hive.version>
-    <hadoop.version>3.3.6</hadoop.version>
-    <hbase.version>2.5.5-hadoop3</hbase.version>
-    <fmpp.version>1.0</fmpp.version>
-    <freemarker.version>2.3.30</freemarker.version>
-    <javassist.version>3.29.2-GA</javassist.version>
-    <msgpack.version>0.6.6</msgpack.version>
-    <reflections.version>0.9.10</reflections.version>
-    <avro.version>1.11.3</avro.version>
-    <bouncycastle.version>1.77</bouncycastle.version>
-    <metrics.version>4.2.19</metrics.version>
-    <jetty.version>9.4.51.v20230217</jetty.version>
-    <jersey.version>2.40</jersey.version>
-    <javax.validation.api>2.0.1.Final</javax.validation.api>
-    <asm.version>9.5</asm.version>
-    <excludedGroups />
-    <memoryMb>3072</memoryMb>
-    <directMemoryMb>3072</directMemoryMb>
-    <rat.skip>true</rat.skip>
-    <license.skip>true</license.skip>
-    <docker.repository>apache/drill</docker.repository>
-    <antlr.version>4.9.3</antlr.version>
-    <maven.version>3.8.4</maven.version>
-    <maven.min.version>3.6.3</maven.min.version>
-    <commons.net.version>3.9.0</commons.net.version>
-    <commons.validator.version>1.7</commons.validator.version>
-    <commons.text.version>1.10.0</commons.text.version>
-    <protobuf.version>3.16.3</protobuf.version>
-    <protostuff.version>1.8.0</protostuff.version>
-    <codemodel.version>2.6</codemodel.version>
-    <joda.version>2.12.5</joda.version>
-    <javax.el.version>3.0.0</javax.el.version>
-    <surefire.version>3.1.2</surefire.version>
-    <jna.version>5.13.0</jna.version>
-    <commons.compress.version>1.25.0</commons.compress.version>
-    <hikari.version>4.0.3</hikari.version>
-    <netty.version>4.1.101.Final</netty.version>
     <httpclient.version>4.5.14</httpclient.version>
+    <httpdlog-parser.version>5.10.0</httpdlog-parser.version>
+    <iceberg.version>0.12.1</iceberg.version>
+    <jackson.version>2.16.1</jackson.version>
+    <janino.version>3.1.11</janino.version>
+    <javassist.version>3.29.2-GA</javassist.version>
+    <javax.el.version>3.0.0</javax.el.version>
+    <javax.validation.api>2.0.1.Final</javax.validation.api>
+    <jersey.version>2.40</jersey.version>
+    <jetty.version>9.4.51.v20230217</jetty.version>
+    <jmockit.version>1.47</jmockit.version>
+    <jna.version>5.13.0</jna.version>
+    <joda.version>2.12.5</joda.version>
+    <junit4.version>4.13.2</junit4.version>
+    <junit.args />
+    <junit.platform.version>1.8.2</junit.platform.version>
+    <junit.version>5.7.2</junit.version>
+    <kerby.version>1.0.1</kerby.version>
     <libthrift.version>0.18.1</libthrift.version>
-    <derby.version>10.14.2.0</derby.version>
-    <commons.cli.version>1.4</commons.cli.version>
+    <license.skip>true</license.skip>
+    <log4j.version>2.22.0</log4j.version>
+    <!-- Upgrading logback further breaks JDK 8 build compatibility -->
+    <logback.version>1.3.14</logback.version>
+    <maven.compiler.source>1.8</maven.compiler.source>
+    <maven.compiler.target>1.8</maven.compiler.target>
+    <maven.min.version>3.6.3</maven.min.version>
+    <maven.version>3.8.4</maven.version>
+    <memoryMb>3072</memoryMb>
+    <metrics.version>4.2.19</metrics.version>
+    <mockito.version>3.11.2</mockito.version>
+    <mongo.version>4.11.1</mongo.version>
+    <msgpack.version>0.6.6</msgpack.version>
+    <netty.tcnative.classifier />
+    <netty.tcnative.version>2.0.62.Final</netty.tcnative.version>
+    <netty.version>4.1.101.Final</netty.version>
+    <parquet.format.version>2.9.0</parquet.format.version>
+    <parquet.version>1.12.3</parquet.version>
+    <project.build.outputTimestamp>1676438963</project.build.outputTimestamp>
+    <protobuf.version>3.16.3</protobuf.version>
+    <proto.cas.path>${project.basedir}/src/main/protobuf/</proto.cas.path>
+    <protostuff.version>1.8.0</protostuff.version>
+    <rat.skip>true</rat.skip>
+    <reflections.version>0.9.10</reflections.version>
+    <slf4j.version>2.0.6</slf4j.version>
     <snakeyaml.version>2.1</snakeyaml.version>
-    <commons.lang3.version>3.10</commons.lang3.version>
+    <sourceReleaseAssemblyDescriptor>source-release-zip-tar</sourceReleaseAssemblyDescriptor>
+    <sqlline.version>1.12.0</sqlline.version>
+    <surefire.version>3.1.2</surefire.version>
+    <swagger.version>2.1.12</swagger.version>
+    <target.gen.source.path>${project.basedir}/target/generated-sources</target.gen.source.path>
     <testcontainers.version>1.18.3</testcontainers.version>
     <typesafe.config.version>1.4.2</typesafe.config.version>
-    <commons.codec.version>1.16.0</commons.codec.version>
-    <xerces.version>2.12.2</xerces.version>
-    <commons.configuration.version>1.10</commons.configuration.version>
-    <commons.beanutils.version>1.9.4</commons.beanutils.version>
-    <httpdlog-parser.version>5.10.0</httpdlog-parser.version>
-    <yauaa.version>7.19.2</yauaa.version>
-    <log4j.version>2.22.0</log4j.version>
-    <aircompressor.version>0.25</aircompressor.version>
-    <iceberg.version>0.12.1</iceberg.version>
     <univocity-parsers.version>2.8.3</univocity-parsers.version>
-    <mongo.version>4.11.1</mongo.version>
-    <swagger.version>2.1.12</swagger.version>
-    <junit.args />
+    <wiremock.standalone.version>2.23.2</wiremock.standalone.version>
+    <xerces.version>2.12.2</xerces.version>
+    <yauaa.version>7.19.2</yauaa.version>
+    <zookeeper.version>3.5.10</zookeeper.version>
   </properties>
 
   <scm>
@@ -218,112 +231,11 @@
             <!-- Don't include target -->
             <exclude>**/target/**/*.java</exclude>
           </sourceFileExcludes>
-          <additionalDependencies>
-            <!-- These dependencies are required for javadoc in order to properly resolve class references in some javadocs. -->
-            <dependency>
-              <groupId>org.apache.hbase</groupId>
-              <artifactId>hbase-server</artifactId>
-              <version>${hbase.version}</version>
-              <classifier>tests</classifier>
-            </dependency>
-            <dependency>
-              <groupId>org.apache.avro</groupId>
-              <artifactId>avro</artifactId>
-              <version>${avro.version}</version>
-              <classifier>tests</classifier>
-            </dependency>
-            <dependency>
-              <groupId>org.apache.kerby</groupId>
-              <artifactId>kerb-core</artifactId>
-              <version>${kerby.version}</version>
-            </dependency>
-            <dependency>
-              <groupId>org.apache.kerby</groupId>
-              <artifactId>kerb-client</artifactId>
-              <version>${kerby.version}</version>
-            </dependency>
-            <dependency>
-              <groupId>org.apache.kerby</groupId>
-              <artifactId>kerb-simplekdc</artifactId>
-              <version>${kerby.version}</version>
-            </dependency>
-            <dependency>
-              <groupId>org.apache.maven</groupId>
-              <artifactId>maven-embedder</artifactId>
-              <version>${maven.version}</version>
-            </dependency>
-            <dependency>
-              <groupId>org.apache.curator</groupId>
-              <artifactId>curator-test</artifactId>
-              <version>${curator.version}</version>
-            </dependency>
-            <dependency>
-              <groupId>org.apache.hadoop</groupId>
-              <artifactId>hadoop-hdfs</artifactId>
-              <version>${hadoop.version}</version>
-              <classifier>tests</classifier>
-            </dependency>
-            <!--  Remove dependency on tests - see DRILL-6637
-                       <dependency>
-                         <groupId>org.apache.drill.exec</groupId>
-                         <artifactId>drill-java-exec</artifactId>
-                         <version>${project.version}</version>
-                         <classifier>tests</classifier>
-                       </dependency>
-                       <dependency>
-                         <groupId>org.apache.drill</groupId>
-                         <artifactId>drill-common</artifactId>
-                         <version>${project.version}</version>
-                         <classifier>tests</classifier>
-                       </dependency>
-            -->
-            <dependency>
-              <groupId>com.github.tomakehurst</groupId>
-              <artifactId>wiremock-standalone</artifactId>
-              <version>${wiremock.standalone.version}</version>
-            </dependency>
-            <dependency>
-              <groupId>org.apache.kerby</groupId>
-              <artifactId>kerb-client</artifactId>
-              <version>${kerby.version}</version>
-            </dependency>
-            <dependency>
-              <groupId>org.apache.parquet</groupId>
-              <artifactId>parquet-hadoop</artifactId>
-              <version>${parquet.version}</version>
-            </dependency>
-            <dependency>
-              <groupId>org.jmockit</groupId>
-              <artifactId>jmockit</artifactId>
-              <version>${jmockit.version}</version>
-            </dependency>
-            <additionalDependency>
-              <groupId>org.hamcrest</groupId>
-              <artifactId>hamcrest</artifactId>
-              <version>${hamcrest.version}</version>
-            </additionalDependency>
-            <dependency>
-              <groupId>org.mockito</groupId>
-              <artifactId>mockito-core</artifactId>
-              <version>${mockito.version}</version>
-            </dependency>
-            <dependency>
-              <groupId>ch.qos.logback</groupId>
-              <artifactId>logback-classic</artifactId>
-              <version>${logback.version}</version>
-            </dependency>
-            <dependency>
-              <groupId>ch.qos.logback</groupId>
-              <artifactId>logback-core</artifactId>
-              <version>${logback.version}</version>
-            </dependency>
-          </additionalDependencies>
         </configuration>
       </plugin>
       <plugin>
         <groupId>org.apache.rat</groupId>
         <artifactId>apache-rat-plugin</artifactId>
-        <version>0.15</version>
         <executions>
           <execution>
             <id>rat-checks</id>
@@ -334,112 +246,98 @@
         </executions>
         <configuration>
           <excludes>
-            <!-- Types log1, log2, sqllog and sqllog2, ssdlog are used to test he logRegex format plugin. -->
-            <!-- Type sas7bdat files are SAS file and are used to test the SAS format plugin -->
-            <exclude>**/clientlib/y2038/*.c</exclude> <!-- All the files here should have MIT License -->
-            <exclude>**/clientlib/y2038/*.h</exclude> <!-- All the files here should have MIT License -->
-            <exclude>**/resources/parquet/**/*</exclude>
-            <exclude>**/.asf.yaml</exclude>
-            <exclude>**/*.woff2</exclude>
-            <exclude>**/*.ks</exclude>
-            <exclude>**/*.pcap</exclude>
-            <exclude>**/*.mdb</exclude>
+            <!-- Please keep this list sorted. -->
             <exclude>**/*.accdb</exclude>
-            <exclude>**/*.sas7bdat</exclude>
-            <exclude>**/*.log1</exclude>
-            <exclude>**/*.log2</exclude>
-            <exclude>**/*.sav</exclude>
-            <exclude>**/*.h5</exclude>
-            <exclude>**/*.sqllog</exclude>
-            <exclude>**/*.sqllog2</exclude>
-            <exclude>**/*.syslog</exclude>
-            <exclude>**/*.xsd</exclude>
-            <exclude>**/*.xls</exclude>
-            <exclude>**/*.xlsx</exclude>
-            <exclude>**/*.syslog1</exclude>
-            <exclude>**/*.ssdlog</exclude>
-            <exclude>**/*.ltsv</exclude>
-            <exclude>**/*.log</exclude>
-            <exclude>**/*.css</exclude>
-            <exclude>**/*.js</exclude>
-            <exclude>**/*.map</exclude>
-            <exclude>**/*.md</exclude>
-            <exclude>**/*.eps</exclude>
-            <exclude>**/*.json</exclude>
-            <exclude>**/*.seq</exclude>
-            <exclude>**/*.parquet</exclude>
+            <exclude>**/*.access_log</exclude>
+            <exclude>**/*.access_log</exclude>
+            <exclude>**/.asf.yaml</exclude>
+            <exclude>**/*.autotools</exclude>
+            <exclude>**/*.avi</exclude>
             <exclude>**/*.avro</exclude>
-            <exclude>**/*.sql</exclude>
-            <exclude>**/git.properties</exclude>
-            <exclude>**/*.csv</exclude>
-            <exclude>**/*.csvh</exclude>
-            <exclude>**/*.pdf</exclude>
-            <exclude>**/*.csvh-test</exclude>
-            <exclude>**/*.tsv</exclude>
-            <exclude>**/*.txt</exclude>
-            <exclude>**/*.ssv</exclude>
             <exclude>**/.buildpath</exclude>
-            <exclude>**/target/**</exclude>
-            <exclude>**/*.iml</exclude>
-            <exclude>**/.idea/**</exclude>
-            <exclude>**/*.project</exclude>
-            <exclude>**/TAGS</exclude>
             <exclude>**/*.checkstyle</exclude>
             <exclude>**/.classpath</exclude>
-            <exclude>**/.settings/**</exclude>
+            <exclude>**/client/*build*/**</exclude>
+            <exclude>**/clientlib/y2038/*.c</exclude> <!-- All the files here should have MIT License -->
+            <exclude>**/clientlib/y2038/*.h</exclude> <!-- All the files here should have MIT License -->
+            <exclude>**/client/tags</exclude>
+            <exclude>**/cmake_install.cmake</exclude>
+            <exclude>**/*.cnf</exclude>
+            <exclude>**/control</exclude>
+            <exclude>**/*.cproject</exclude>
+            <exclude>**/*.css</exclude>
+            <exclude>**/*.csv</exclude>
+            <exclude>**/*.csvh</exclude>
+            <exclude>**/*.csvh-test</exclude>
+            <exclude>**/*.dbf</exclude>
+            <!-- TODO DRILL-4336: try to avoid the need to add this -->
+            <exclude>dependency-reduced-pom.xml</exclude>
+            <exclude>**/*.drill</exclude>
+            <exclude>**/.drill.parquet_metadata</exclude>
+            <exclude>**/*.eps</exclude>
+            <exclude>**/git.properties</exclude>
+            <exclude>**/*.h5</exclude>
+            <exclude>header</exclude>
+            <exclude>**/*.httpd</exclude>
+            <exclude>**/.idea/**</exclude>
+            <exclude>**/*.iml</exclude>
+            <exclude>**/*.js</exclude>
+            <exclude>**/*.json</exclude>
+            <exclude>KEYS</exclude>
+            <exclude>**/*.ks</exclude>
+            <exclude>**/LICENSE</exclude>
+            <exclude>**/*.log1</exclude> <!-- logRefex format plugin -->
+            <exclude>**/*.log2</exclude> <!-- logRefex format plugin -->
+            <exclude>**/*.log</exclude>
+            <exclude>**/*.ltsv</exclude>
+            <exclude>**/*.ltsv</exclude>
+            <exclude>**/*.map</exclude>
+            <exclude>**/*.mdb</exclude>
+            <exclude>**/*.md</exclude>
+            <exclude>**/*.mov</exclude>
+            <exclude>**/*.mp4</exclude>
+            <exclude>**/NOTICE</exclude>
+            <exclude>**/*.parquet</exclude>
             <exclude>**/*.patch</exclude>
             <exclude>**/*.pb.cc</exclude>
             <exclude>**/*.pb.h</exclude>
-            <exclude>**/client/*build*/**</exclude>
-            <exclude>**/client/tags</exclude>
-            <exclude>**/cmake_install.cmake</exclude>
-            <exclude>**/ssl/*.csr</exclude>
-            <exclude>**/ssl/*.pem</exclude>
-            <exclude>**/ssl/*.p12</exclude>
-            <exclude>**/*.tbl</exclude>
-            <exclude>**/*.httpd</exclude>
-            <exclude>**/*.access_log</exclude>
-            <exclude>**/*.autotools</exclude>
-            <exclude>**/*.cproject</exclude>
-            <exclude>**/*.drill</exclude>
-            <exclude>**/LICENSE</exclude>
-            <exclude>**/NOTICE</exclude>
-            <exclude>KEYS</exclude>
-            <exclude>header</exclude>
-            <exclude>**/.drill.parquet_metadata</exclude>
-            <exclude>**/*.mov</exclude>
-            <exclude>**/*.mp4</exclude>
-            <exclude>**/*.avi</exclude>
-            <exclude>**/*.pcx</exclude>
-            <exclude>**/*.webp</exclude>
+            <exclude>**/*.pcap</exclude>
             <exclude>**/*.pcapng</exclude>
-            <exclude>**/*.psd</exclude>
             <exclude>**/*.pcx</exclude>
-            <exclude>**/*.log1</exclude>
-            <exclude>**/*.log2</exclude>
-            <exclude>**/*.sqllog</exclude>
-            <exclude>**/*.sqllog2</exclude>
-            <exclude>**/*.ltsv</exclude>
-            <exclude>**/*.wav</exclude>
-            <exclude>**/control</exclude>
-            <!-- TODO DRILL-4336: try to avoid the need to add this -->
-            <exclude>dependency-reduced-pom.xml</exclude>
+            <exclude>**/*.pcx</exclude>
+            <exclude>**/*.pdf</exclude>
             <exclude>**/*.prj</exclude>
+            <exclude>**/*.project</exclude>
+            <exclude>**/*.psd</exclude>
+            <exclude>**/resources/parquet/**/*</exclude>
+            <exclude>**/*.sas7bdat</exclude> <!-- SAS format plugin -->
+            <exclude>**/*.sav</exclude>
+            <exclude>**/*.seq</exclude>
+            <exclude>**/.settings/**</exclude>
             <exclude>**/*.shp</exclude>
-            <exclude>**/*.dbf</exclude>
-            <exclude>**/*.cnf</exclude>
-            <exclude>**/*.access_log</exclude>
+            <exclude>**/*.sql</exclude>
+            <exclude>**/*.sqllog2</exclude> <!-- logRefex format plugin -->
+            <exclude>**/*.sqllog</exclude> <!-- logRefex format plugin -->
+            <exclude>**/*.ssdlog</exclude> <!-- logRefex format plugin -->
+            <exclude>**/ssl/*.csr</exclude>
+            <exclude>**/ssl/*.p12</exclude>
+            <exclude>**/ssl/*.pem</exclude>
+            <exclude>**/*.ssv</exclude>
+            <exclude>**/*.syslog1</exclude> <!-- logRefex format plugin -->
+            <exclude>**/*.syslog</exclude> <!-- logRefex format plugin -->
+            <exclude>**/TAGS</exclude>
+            <exclude>**/target/**</exclude>
+            <exclude>**/*.tbl</exclude>
+            <exclude>**/*.tsv</exclude>
+            <exclude>**/*.txt</exclude>
+            <exclude>**/*.wav</exclude>
+            <exclude>**/*.webp</exclude>
+            <exclude>**/*.woff2</exclude>
+            <exclude>**/*.xls</exclude>
+            <exclude>**/*.xlsx</exclude>
+            <exclude>**/*.xsd</exclude>
           </excludes>
         </configuration>
-      </plugin>
-      <!--
-        DRILL-6320: The license-maven-plugin does a better job of checking headers than
-        the apache-rat-plugin. However, it is standard to include the apache-rat-plugin
-        in apache projects so both are used.
-      -->
-      <plugin>
-        <groupId>com.mycila</groupId>
-        <artifactId>license-maven-plugin</artifactId>
       </plugin>
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
@@ -666,158 +564,6 @@
           <version>4.0.5</version>
         </plugin>
         <plugin>
-          <groupId>com.mycila</groupId>
-          <artifactId>license-maven-plugin</artifactId>
-          <version>4.2</version>
-          <configuration>
-            <aggregate>true</aggregate>
-            <!--suppress UnresolvedMavenProperty -->
-            <header>${maven.multiModuleProjectDirectory}/header</header>
-            <excludes>
-<exclude>**/*.accdb</exclude>
-              <exclude>**/*.access_log</exclude>
-              <exclude>**/.asf.yaml</exclude>
-              <exclude>**/*.autotools</exclude>
-              <exclude>**/*.avi</exclude>
-              <exclude>**/*.avro</exclude>
-              <exclude>**/.buildpath</exclude>
-              <exclude>**/*.checkstyle</exclude>
-              <exclude>**/.classpath</exclude>
-              <exclude>**/client/*build*/**</exclude>
-              <exclude>**/clientlib/y2038/*.c</exclude> <!-- All the files here should have MIT License -->
-              <exclude>**/clientlib/y2038/*.h</exclude> <!-- All the files here should have MIT License -->
-              <exclude>**/client/tags</exclude>
-              <exclude>**/cmake_install.cmake</exclude>
-              <exclude>**/control</exclude>
-              <exclude>**/*.cproject</exclude>
-              <exclude>**/.*.crc</exclude>
-              <exclude>**/*.css</exclude>
-              <exclude>**/*.csv</exclude>
-              <exclude>**/*.csvh</exclude>
-              <exclude>**/*.csvh-test</exclude>
-              <exclude>**/*.dbf</exclude>
-              <!-- TODO DRILL-4336: try to avoid the need to add this -->
-              <exclude>dependency-reduced-pom.xml</exclude>
-              <exclude>**/*.drill</exclude>
-              <exclude>**/.drill.parquet_metadata</exclude>
-              <exclude>**/*.eps</exclude>
-              <exclude>**/git.properties</exclude>
-              <exclude>**/*.h5</exclude>
-              <exclude>header</exclude>
-              <exclude>**/*.httpd</exclude>
-              <exclude>**/.idea/**</exclude>
-              <exclude>**/*.iml</exclude>
-              <exclude>**/*.js</exclude>
-              <exclude>**/*.json</exclude>
-              <exclude>KEYS</exclude>
-              <exclude>**/*.ks</exclude>
-              <exclude>**/LICENSE</exclude>
-              <exclude>**/*.log1</exclude>
-              <exclude>**/*.log1</exclude>
-              <exclude>**/*.log2</exclude>
-              <exclude>**/*.log2</exclude>
-              <exclude>**/*.log</exclude>
-              <exclude>**/*.ltsv</exclude>
-              <exclude>**/*.ltsv</exclude>
-              <exclude>**/*.map</exclude>
-              <exclude>**/*.mdb</exclude>
-              <exclude>**/*.md</exclude>
-              <exclude>**/*.mov</exclude>
-              <exclude>**/*.mp4</exclude>
-              <exclude>**/NOTICE</exclude>
-              <exclude>**/*.parquet</exclude>
-              <exclude>**/*.patch</exclude>
-              <exclude>**/*.pb.cc</exclude>
-              <exclude>**/*.pb.h</exclude>
-              <exclude>**/*.pcap</exclude>
-              <exclude>**/*.pcapng</exclude>
-              <exclude>**/*.pcx</exclude>
-              <exclude>**/*.pcx</exclude>
-              <exclude>**/*.pdf</exclude>
-              <exclude>**/*.prj</exclude>
-              <exclude>**/*.project</exclude>
-              <exclude>**/*.psd</exclude>
-              <exclude>**/resources/parquet/**/*</exclude>
-              <exclude>**/*.sas7bdat</exclude>
-              <exclude>**/*.sav</exclude>
-              <exclude>**/*.seq</exclude>
-              <exclude>**/.settings/**</exclude>
-              <exclude>**/*.shp</exclude>
-              <exclude>**/*.sql</exclude>
-              <exclude>**/*.sqllog2</exclude>
-              <exclude>**/*.sqllog2</exclude>
-              <exclude>**/*.sqllog</exclude>
-              <exclude>**/*.sqllog</exclude>
-              <exclude>**/*.ssdlog</exclude>
-              <exclude>**/ssl/*.csr</exclude>
-              <exclude>**/ssl/*.p12</exclude>
-              <exclude>**/ssl/*.pem</exclude>
-              <exclude>**/*.ssv</exclude>
-              <exclude>**/*.syslog1</exclude>
-              <exclude>**/*.syslog</exclude>
-              <exclude>**/TAGS</exclude>
-              <exclude>**/target/**</exclude>
-              <exclude>**/*.tbl</exclude>
-              <exclude>**/*.tsv</exclude>
-              <exclude>**/*.txt</exclude>
-              <exclude>**/*.wav</exclude>
-              <exclude>**/*.webp</exclude>
-              <exclude>**/*.woff2</exclude>
-              <exclude>**/*.xls</exclude>
-              <exclude>**/*.xlsx</exclude>
-              <exclude>**/*.xsd</exclude>
-            </excludes>
-            <mapping>
-              <boost>SLASHSTAR_STYLE</boost>
-              <build>SCRIPT_STYLE</build>
-              <cmake>SCRIPT_STYLE</cmake>
-              <cnf>SCRIPT_STYLE</cnf>
-              <conf>SCRIPT_STYLE</conf>
-              <conffiles>SCRIPT_STYLE</conffiles>
-              <config>SCRIPT_STYLE</config>
-              <cpp>SLASHSTAR_STYLE</cpp>
-              <cql>SLASHSTAR_STYLE</cql>
-              <dockerignore>SCRIPT_STYLE</dockerignore>
-              <drillbit>SCRIPT_STYLE</drillbit>
-              <drill-conf>SCRIPT_STYLE</drill-conf>
-              <drill-embedded>SCRIPT_STYLE</drill-embedded>
-              <drill-localhost>SCRIPT_STYLE</drill-localhost>
-              <dumpcat>SCRIPT_STYLE</dumpcat>
-              <env>SCRIPT_STYLE</env>
-              <fmpp>SCRIPT_STYLE</fmpp>
-              <g4>SLASHSTAR_STYLE</g4>
-              <hcl>DOUBLESLASH_STYLE</hcl>
-              <hpp>SLASHSTAR_STYLE</hpp>
-              <in>SLASHSTAR_STYLE</in>
-              <ipp>SLASHSTAR_STYLE</ipp>
-              <jaasconf>SLASHSTAR_STYLE</jaasconf>
-              <java>SLASHSTAR_STYLE</java>
-              <jj>SLASHSTAR_STYLE</jj>
-              <linux>SLASHSTAR_STYLE</linux>
-              <macos>SLASHSTAR_STYLE</macos>
-              <plist>XML_STYLE</plist>
-              <props>SCRIPT_STYLE</props>
-              <proto>DOUBLESLASH_STYLE</proto>
-              <push>SCRIPT_STYLE</push>
-              <runbit>SCRIPT_STYLE</runbit>
-              <runexec>SCRIPT_STYLE</runexec>
-              <sasl>SLASHSTAR_STYLE</sasl>
-              <sqlline>SCRIPT_STYLE</sqlline>
-              <ssl>SLASHSTAR_STYLE</ssl>
-              <submit_plan>SCRIPT_STYLE</submit_plan>
-              <tdd>SCRIPT_STYLE</tdd>
-              <txt>SLASHSTAR_STYLE</txt>
-            </mapping>
-          </configuration>
-          <executions>
-            <execution>
-              <goals>
-                <goal>check</goal>
-              </goals>
-            </execution>
-          </executions>
-        </plugin>
-        <plugin>
           <groupId>org.apache.maven.plugins</groupId>
           <artifactId>maven-compiler-plugin</artifactId>
           <version>3.11.0</version>
@@ -1037,7 +783,7 @@
         <plugin>
           <groupId>org.apache.maven.plugins</groupId>
           <artifactId>maven-javadoc-plugin</artifactId>
-          <version>3.5.0</version>
+          <version>3.6.3</version>
           <configuration>
             <doclint>none</doclint>
           </configuration>
@@ -1091,6 +837,19 @@
       <groupId>org.slf4j</groupId>
       <artifactId>log4j-over-slf4j</artifactId>
       <version>${slf4j.version}</version>
+    </dependency>
+
+    <dependency>
+      <groupId>ch.qos.logback</groupId>
+      <artifactId>logback-classic</artifactId>
+      <version>${logback.version}</version>
+      <scope>runtime</scope>
+    </dependency>
+    <dependency>
+      <groupId>ch.qos.logback</groupId>
+      <artifactId>logback-core</artifactId>
+      <version>${logback.version}</version>
+      <scope>runtime</scope>
     </dependency>
 
     <dependency>
@@ -1162,51 +921,10 @@
       <scope>test</scope>
     </dependency>
     <dependency>
-      <groupId>ch.qos.logback</groupId>
-      <artifactId>logback-classic</artifactId>
-      <version>${logback.version}</version>
-      <scope>test</scope>
-    </dependency>
-    <dependency>
-      <groupId>ch.qos.logback</groupId>
-      <artifactId>logback-core</artifactId>
-      <version>${logback.version}</version>
-      <scope>test</scope>
-    </dependency>
-
-    <dependency>
       <groupId>de.huxhorn.lilith</groupId>
       <artifactId>de.huxhorn.lilith.logback.appender.multiplex-classic</artifactId>
       <version>8.3.0</version>
       <scope>test</scope>
-    </dependency>
-    <dependency>
-      <groupId>org.apache.kerby</groupId>
-      <artifactId>kerb-client</artifactId>
-      <scope>test</scope>
-      <version>${kerby.version}</version>
-      <exclusions>
-        <exclusion>
-          <artifactId>log4j</artifactId>
-          <groupId>log4j</groupId>
-        </exclusion>
-        <exclusion>
-          <artifactId>slf4j-log4j12</artifactId>
-          <groupId>org.slf4j</groupId>
-        </exclusion>
-      </exclusions>
-    </dependency>
-    <dependency>
-      <groupId>org.apache.kerby</groupId>
-      <artifactId>kerb-core</artifactId>
-      <scope>test</scope>
-      <version>${kerby.version}</version>
-    </dependency>
-    <dependency>
-      <groupId>org.apache.kerby</groupId>
-      <artifactId>kerb-simplekdc</artifactId>
-      <scope>test</scope>
-      <version>${kerby.version}</version>
     </dependency>
 
   </dependencies>
@@ -1267,6 +985,10 @@
           <exclusion>
             <groupId>commons-logging</groupId>
             <artifactId>commons-logging</artifactId>
+          </exclusion>
+          <exclusion>
+            <groupId>org.apiguardian</groupId>
+            <artifactId>apiguardian-api</artifactId>
           </exclusion>
         </exclusions>
       </dependency>
@@ -1635,7 +1357,7 @@
       <dependency>
         <groupId>io.netty</groupId>
         <artifactId>netty-tcnative</artifactId>
-        <version>2.0.48.Final</version>
+        <version>${netty.tcnative.version}</version>
         <classifier>${netty.tcnative.classifier}</classifier>
         <scope>runtime</scope>
         <optional>true</optional>
@@ -3123,7 +2845,7 @@
           <plugin>
             <groupId>org.codehaus.mojo</groupId>
             <artifactId>findbugs-maven-plugin</artifactId>
-            <version>3.0.0</version>
+            <version>3.0.1</version>
             <configuration>
               <!--
                Enables analysis which takes more memory but finds more bugs.

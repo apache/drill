@@ -123,7 +123,6 @@
         <include>org.jvnet.mimepull</include>
         <include>org.reflections</include>
       </includes>
-      <scope>test</scope>
     </dependencySet>
     <dependencySet>
       <outputDirectory>jars/3rdparty/</outputDirectory>
@@ -165,7 +164,6 @@
         <exclude>org.jvnet.mimepull</exclude>
         <exclude>org.reflections</exclude>
       </excludes>
-      <scope>test</scope>
     </dependencySet>
     <dependencySet>
       <outputDirectory>jars/ext</outputDirectory>
@@ -175,43 +173,39 @@
         <include>org.apache.zookeeper:zookeeper</include>
         <include>org.apache.zookeeper:zookeeper-jute</include>
       </includes>
-      <scope>runtime</scope>
     </dependencySet>
     <dependencySet>
       <outputDirectory>jars/3rdparty/linux</outputDirectory>
       <unpack>false</unpack>
       <useProjectArtifact>false</useProjectArtifact>
       <includes>
-        <include>io.netty:netty-tcnative:jar:linux-x86_64:2.0.48.Final</include>
+        <include>io.netty:netty-tcnative:jar:linux-x86_64:${netty.tcnative.version}</include>
       </includes>
-      <scope>test</scope>
     </dependencySet>
     <dependencySet>
       <outputDirectory>jars/3rdparty/fedora</outputDirectory>
       <unpack>false</unpack>
       <useProjectArtifact>false</useProjectArtifact>
       <includes>
-        <include>io.netty:netty-tcnative:jar:linux-x86_64-fedora:2.0.48.Final</include>
+        <include>io.netty:netty-tcnative:jar:linux-x86_64-fedora:${netty.tcnative.version}</include>
       </includes>
-      <scope>test</scope>
     </dependencySet>
     <dependencySet>
       <outputDirectory>jars/3rdparty/windows</outputDirectory>
       <unpack>false</unpack>
       <useProjectArtifact>false</useProjectArtifact>
       <includes>
+        <!-- 2.0.36.Final was last release of netty-tcnative to include a Windows binary -->
         <include>io.netty:netty-tcnative:jar:windows-x86_64:2.0.36.Final</include>
       </includes>
-      <scope>test</scope>
     </dependencySet>
     <dependencySet>
       <outputDirectory>jars/3rdparty/osx</outputDirectory>
       <unpack>false</unpack>
       <useProjectArtifact>false</useProjectArtifact>
       <includes>
-        <include>io.netty:netty-tcnative:jar:osx-x86_64:2.0.48.Final</include>
+        <include>io.netty:netty-tcnative:jar:osx-x86_64:${netty.tcnative.version}</include>
       </includes>
-      <scope>test</scope>
     </dependencySet>
   </dependencySets>
 

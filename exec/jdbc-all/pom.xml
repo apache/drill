@@ -67,12 +67,12 @@
       <version>${project.version}</version>
       <exclusions>
         <exclusion>
-          <artifactId>javassist</artifactId>
-          <groupId>javassist</groupId>
-        </exclusion>
-        <exclusion>
           <groupId>io.dropwizard.metrics</groupId>
           <artifactId>metrics-servlets</artifactId>
+        </exclusion>
+        <exclusion>
+          <groupId>org.eclipse.jetty</groupId>
+          <artifactId>*</artifactId>
         </exclusion>
       </exclusions>
     </dependency>
@@ -135,7 +135,7 @@
           <artifactId>jersey-hk2</artifactId>
         </exclusion>
         <exclusion>
-          <artifactId>jetty-server</artifactId>
+          <artifactId>*</artifactId>
           <groupId>org.eclipse.jetty</groupId>
         </exclusion>
         <exclusion>
@@ -145,10 +145,6 @@
         <exclusion>
           <groupId>org.apache.avro</groupId>
           <artifactId>avro-mapred</artifactId>
-        </exclusion>
-        <exclusion>
-          <artifactId>jetty-servlet</artifactId>
-          <groupId>org.eclipse.jetty</groupId>
         </exclusion>
         <exclusion>
           <artifactId>parquet-hadoop</artifactId>
@@ -282,6 +278,30 @@
           <groupId>net.sf.jpam</groupId>
           <artifactId>jpam</artifactId>
         </exclusion>
+        <exclusion>
+          <groupId>com.beust</groupId>
+          <artifactId>jcommander</artifactId>
+        </exclusion>
+        <exclusion>
+          <groupId>org.codehaus.janino</groupId>
+          <artifactId>*</artifactId>
+        </exclusion>
+        <exclusion>
+          <groupId>com.thoughtworks.paranamer</groupId>
+          <artifactId>paranamer</artifactId>
+        </exclusion>
+        <exclusion>
+          <groupId>javax.servlet</groupId>
+          <artifactId>*</artifactId>
+        </exclusion>
+        <exclusion>
+          <groupId>javax.servlet.jsp</groupId>
+          <artifactId>*</artifactId>
+        </exclusion>
+        <exclusion>
+          <groupId>org.apache.kerby</groupId>
+          <artifactId>*</artifactId>
+        </exclusion>
       </exclusions>
     </dependency>
     <dependency>
@@ -404,6 +424,7 @@
               <include>*:*</include>
             </includes>
             <excludes>
+              <!-- Please keep this list sorted. -->
               <exclude>antlr:*</exclude>
               <exclude>com.beust:*</exclude>
               <exclude>com.dropbox.*</exclude>
@@ -428,7 +449,6 @@
               <exclude>javax.xml.stream:stax-api</exclude>
               <exclude>jline:*</exclude>
               <exclude>net.hydromatic:linq4j</exclude>
-              <exclude>org.apache.avro:*</exclude>
               <exclude>org.apache.avro:*</exclude>
               <exclude>org.apache.commons:commons-collections4</exclude>
               <exclude>org.apache.hadoop:hadoop-yarn-client</exclude>
