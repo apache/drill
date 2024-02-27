@@ -67,12 +67,12 @@
       <version>${project.version}</version>
       <exclusions>
         <exclusion>
-          <artifactId>javassist</artifactId>
-          <groupId>javassist</groupId>
-        </exclusion>
-        <exclusion>
           <groupId>io.dropwizard.metrics</groupId>
           <artifactId>metrics-servlets</artifactId>
+        </exclusion>
+        <exclusion>
+          <groupId>org.eclipse.jetty</groupId>
+          <artifactId>*</artifactId>
         </exclusion>
       </exclusions>
     </dependency>
@@ -127,7 +127,7 @@
           <artifactId>jersey-hk2</artifactId>
         </exclusion>
         <exclusion>
-          <artifactId>jetty-server</artifactId>
+          <artifactId>*</artifactId>
           <groupId>org.eclipse.jetty</groupId>
         </exclusion>
         <exclusion>
@@ -137,10 +137,6 @@
         <exclusion>
           <groupId>org.apache.avro</groupId>
           <artifactId>avro-mapred</artifactId>
-        </exclusion>
-        <exclusion>
-          <artifactId>jetty-servlet</artifactId>
-          <groupId>org.eclipse.jetty</groupId>
         </exclusion>
         <exclusion>
           <artifactId>parquet-hadoop</artifactId>
@@ -266,6 +262,30 @@
           <groupId>net.sf.jpam</groupId>
           <artifactId>jpam</artifactId>
         </exclusion>
+        <exclusion>
+          <groupId>com.beust</groupId>
+          <artifactId>jcommander</artifactId>
+        </exclusion>
+        <exclusion>
+          <groupId>org.codehaus.janino</groupId>
+          <artifactId>*</artifactId>
+        </exclusion>
+        <exclusion>
+          <groupId>com.thoughtworks.paranamer</groupId>
+          <artifactId>paranamer</artifactId>
+        </exclusion>
+        <exclusion>
+          <groupId>javax.servlet</groupId>
+          <artifactId>*</artifactId>
+        </exclusion>
+        <exclusion>
+          <groupId>javax.servlet.jsp</groupId>
+          <artifactId>*</artifactId>
+        </exclusion>
+        <exclusion>
+          <groupId>org.apache.kerby</groupId>
+          <artifactId>*</artifactId>
+        </exclusion>
       </exclusions>
     </dependency>
     <dependency>
@@ -388,51 +408,52 @@
               <include>*:*</include>
             </includes>
             <excludes>
-              <exclude>io.protostuff:*</exclude>
-              <exclude>org.pentaho:*</exclude>
-              <exclude>org.msgpack:*</exclude>
-              <exclude>xerces:*</exclude>
-              <exclude>xalan:*</exclude>
-              <exclude>org.apache.avro:*</exclude>
-              <exclude>org.mongodb:*</exclude>
-              <exclude>com.googlecode.json-simple:*</exclude>
-              <exclude>dom4j:*</exclude>
-              <exclude>org.hibernate:*</exclude>
+              <!-- Please keep this list sorted. -->
               <exclude>antlr:*</exclude>
+              <exclude>com.beust:*</exclude>
               <exclude>com.dropbox.*</exclude>
               <exclude>com.github.stefanbirkner</exclude>
-              <exclude>org.ow2.asm:*</exclude>
-              <exclude>com.univocity:*</exclude>
-              <exclude>com.twitter:*</exclude>
-              <exclude>org.apache.parquet:*</exclude>
-              <exclude>javax.inject:*</exclude>
-              <exclude>com.beust:*</exclude>
-              <exclude>jline:*</exclude>
-              <exclude>org.xerial.snappy:*</exclude>
-              <exclude>org.apache.avro:*</exclude>
-              <exclude>org.tukaani:*</exclude>
-              <exclude>org.apache.velocity:*</exclude>
-              <exclude>net.hydromatic:linq4j</exclude>
-              <exclude>org.eclipse.jetty:*</exclude>
-              <exclude>org.slf4j:jul-to-slf4j</exclude>
-              <exclude>org.hamcrest:hamcrest-core</exclude>
-              <exclude>org.mockito:mockito-core</exclude>
-              <exclude>org.objenesis:objenesis</exclude>
-              <exclude>org.eclipse.jetty:*</exclude>
-              <exclude>javax.xml.bind:jaxb-api</exclude>
-              <exclude>javax.xml.stream:stax-api</exclude>
-              <exclude>javax.activation:activation</exclude>
-              <exclude>commons-cli:commons-cli</exclude>
-              <exclude>org.apache.commons:commons-collections4</exclude>
-              <exclude>commons-io:commons-io</exclude>
+              <exclude>com.google.code.findbugs:jsr305:*</exclude>
+              <exclude>com.googlecode.json-simple:*</exclude>
               <exclude>commons-beanutils:commons-beanutils-core:jar:*</exclude>
               <exclude>commons-beanutils:commons-beanutils:jar:*</exclude>
-              <exclude>com.google.code.findbugs:jsr305:*</exclude>
-              <exclude>dnsjava:dnsjava:jar:*</exclude>
-              <exclude>io.netty:netty-tcnative:jar:*</exclude>
-              <exclude>io.netty:netty-tcnative-classes:jar:*</exclude>
+              <exclude>commons-cli:commons-cli</exclude>
+              <exclude>commons-io:commons-io</exclude>
               <exclude>com.nimbusds:*</exclude>
+              <exclude>com.twitter:*</exclude>
+              <exclude>com.univocity:*</exclude>
+              <exclude>dnsjava:dnsjava:jar:*</exclude>
+              <exclude>dom4j:*</exclude>
+              <exclude>io.netty:netty-tcnative-classes:jar:*</exclude>
+              <exclude>io.netty:netty-tcnative:jar:*</exclude>
+              <exclude>io.protostuff:*</exclude>
+              <exclude>javax.activation:activation</exclude>
+              <exclude>javax.inject:*</exclude>
+              <exclude>javax.xml.bind:jaxb-api</exclude>
+              <exclude>javax.xml.stream:stax-api</exclude>
+              <exclude>jline:*</exclude>
+              <exclude>net.hydromatic:linq4j</exclude>
+              <exclude>org.apache.avro:*</exclude>
+              <exclude>org.apache.avro:*</exclude>
+              <exclude>org.apache.commons:commons-collections4</exclude>
+              <exclude>org.apache.parquet:*</exclude>
+              <exclude>org.apache.velocity:*</exclude>
               <exclude>org.apache.yetus:*</exclude>
+              <exclude>org.eclipse.jetty:*</exclude>
+              <exclude>org.eclipse.jetty:*</exclude>
+              <exclude>org.hamcrest:hamcrest-core</exclude>
+              <exclude>org.hibernate:*</exclude>
+              <exclude>org.mockito:mockito-core</exclude>
+              <exclude>org.mongodb:*</exclude>
+              <exclude>org.msgpack:*</exclude>
+              <exclude>org.objenesis:objenesis</exclude>
+              <exclude>org.ow2.asm:*</exclude>
+              <exclude>org.pentaho:*</exclude>
+              <exclude>org.slf4j:jul-to-slf4j</exclude>
+              <exclude>org.tukaani:*</exclude>
+              <exclude>org.xerial.snappy:*</exclude>
+              <exclude>xalan:*</exclude>
+              <exclude>xerces:*</exclude>
             </excludes>
           </artifactSet>
           <relocations>

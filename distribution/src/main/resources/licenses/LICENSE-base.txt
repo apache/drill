@@ -201,25 +201,36 @@
    See the License for the specific language governing permissions and
    limitations under the License.
 
----------------------------------------------------------------------------
-This product includes source licensed under the MIT license.
+================================================================================
 
-The source files are located at contrib/native/client/src/clientlib/y2038/
-in the source distribution. The files that carry this license are:
-time64.c
-time64.h
-time64_config.h
-time64_limits.h
+This product bundles
 
-Copyright (c) 2007-2010  Michael G Schwern
+  Bootstrap (http://getbootstrap.com)
 
-This software originally derived from Paul Sheer's pivotal_gmtime_r.c.
+  which is available under the MIT license (https://github.com/twbs/bootstrap/blob/master/LICENSE)
 
----------------------------------------------------------------------------
-This product includes source licensed under the BSD 3-clause license.
+  The MIT License (MIT)
 
-The source files are located at exec/java-exec/src/main/java/org/apache/drill/exec/compile/
-in the source distribution. The files that carry this license are:
-ClassBodyBuilder.java
+  Copyright (c) 2011-2014 Twitter, Inc
 
-Copyright (c) 2001-2010, Arno Unkrig
+--------------------------------------------------------------------------------
+
+This product includes
+
+  jQuery (https://jquery.org)
+
+  which is available under the MIT license (https://github.com/jquery/jquery/blob/master/LICENSE.txt)
+
+  Copyright 2005, 2014 jQuery Foundation and other contributors,
+  https://jquery.org/
+
+--------------------------------------------------------------------------------
+
+This product bundles
+  jQuery Form Plugin (http://malsup.github.io/jquery.form.js)
+
+  which is available under the MIT license (http://malsup.github.io/mit-license.txt)
+
+  Copyright 2006-2013 (c) M. Alsup
+
+================================================================================
