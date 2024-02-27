@@ -1,6 +1,6 @@
 # License headers and notices
 
-Drill uses the standadrd Apache license header checker:
+Drill uses the standard Apache license header checker:
 
 * [Apache RAT Plugin](http://creadur.apache.org/rat/apache-rat-plugin/)
 
@@ -40,6 +40,6 @@ cd distribution
 mvn license:add-third-party
 ```
 
-If a depdedency that the plugin cannot lookup a license for has been introduced
+If a dependency that the plugin cannot lookup a license for has been introduced
 then it will fail with an instruction to add determine the license manually
 and add it to the MISSING.properties file.
