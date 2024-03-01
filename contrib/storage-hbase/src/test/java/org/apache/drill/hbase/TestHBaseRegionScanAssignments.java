@@ -189,6 +189,34 @@ public class TestHBaseRegionScanAssignments extends BaseHBaseTest {
   }
 
   @Test
+  public void testHBaseGroupScanAssignmentSomeAfinedAndSomeWithOrphans() throws Exception {
+    NavigableMap<HRegionInfo,ServerName> regionsToScan = Maps.newTreeMap();
+    regionsToScan.put(new HRegionInfo(TABLE_NAME, splits[0], splits[1]), SERVER_A);
+    regionsToScan.put(new HRegionInfo(TABLE_NAME, splits[1], splits[2]), SERVER_A);
+    regionsToScan.put(new HRegionInfo(TABLE_NAME, splits[2], splits[3]), SERVER_B);
+    regionsToScan.put(new HRegionInfo(TABLE_NAME, splits[3], splits[4]), SERVER_B);
+    regionsToScan.put(new HRegionInfo(TABLE_NAME, splits[6], splits[7]), SERVER_D);
+    regionsToScan.put(new HRegionInfo(TABLE_NAME, splits[7], splits[8]), SERVER_D);
+    regionsToScan.put(new HRegionInfo(TABLE_NAME, splits[8], splits[9]), SERVER_D);
+    regionsToScan.put(new HRegionInfo(TABLE_NAME, splits[9], splits[10]), SERVER_D);
+    final List<DrillbitEndpoint> endpoints = Lists.newArrayList();
+    endpoints.add(DrillbitEndpoint.newBuilder().setAddress(HOST_A).setControlPort(1234).build());
+    endpoints.add(DrillbitEndpoint.newBuilder().setAddress(HOST_B).setControlPort(1234).build());
+    endpoints.add(DrillbitEndpoint.newBuilder().setAddress(HOST_C).setControlPort(1234).build());
+
+    HBaseGroupScan scan = new HBaseGroupScan();
+    scan.setRegionsToScan(regionsToScan);
+    scan.setHBaseScanSpec(new HBaseScanSpec(TABLE_NAME_STR, splits[0], splits[0], null));
+    scan.applyAssignments(endpoints);
+
+    int i = 0;
+    assertEquals(3, scan.getSpecificScan(i++).getRegionScanSpecList().size()); // 'A'
+    assertEquals(2, scan.getSpecificScan(i++).getRegionScanSpecList().size()); // 'B'
+    assertEquals(3, scan.getSpecificScan(i++).getRegionScanSpecList().size()); // 'C'
+    testParallelizationWidth(scan, i);
+  }
+
+  @Test
   public void testHBaseGroupScanAssignmentOneEach() throws Exception {
     NavigableMap<HRegionInfo,ServerName> regionsToScan = Maps.newTreeMap();
     regionsToScan.put(new HRegionInfo(TABLE_NAME, splits[0], splits[1]), SERVER_A);
