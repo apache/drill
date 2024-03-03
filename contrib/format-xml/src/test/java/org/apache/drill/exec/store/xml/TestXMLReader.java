@@ -90,6 +90,34 @@ public class TestXMLReader extends ClusterTest {
   }
 
   @Test
+  public void testAttributesOnRoot() throws Exception {
+    String sql = "SELECT * FROM table(cp.`xml/no_nest.xml` (type => 'xml', dataLevel => 1))";
+    RowSet results = client.queryBuilder().sql(sql).rowSet();
+    assertEquals(1, results.rowCount());
+    TupleMetadata expectedSchema = new SchemaBuilder()
+        .addMap("attributes")
+          .addNullable("PPP_Version", MinorType.VARCHAR)
+          .addNullable("PPP_TimeStamp", MinorType.VARCHAR)
+          .addNullable("P1_SubVersion", MinorType.VARCHAR)
+          .addNullable("P1_MID", MinorType.VARCHAR)
+          .addNullable("P1_PN", MinorType.VARCHAR)
+          .addNullable("P1_SL", MinorType.VARCHAR)
+          .addNullable("P2_SubVersion", MinorType.VARCHAR)
+        .resumeSchema()
+        .addNullable("P1", MinorType.VARCHAR)
+        .addMap("P2")
+        .addNullable("Color", MinorType.VARCHAR)
+        .resumeSchema()
+        .buildSchema();
+
+    RowSet expected = client.rowSetBuilder(expectedSchema)
+        .addRow(strArray("2023-001", "2023-06-09T21:17:14.416+02:00", "a1", "XX003", "156", "3", "b1"), null, strArray("blue"))
+        .build();
+
+    new RowSetComparison(expected).verifyAndClearAll(results);
+  }
+
+  @Test
   public void testXXE() throws Exception {
     String sql = "SELECT * FROM cp.`xml/bad.xml`";
     try {
@@ -136,9 +164,14 @@ public class TestXMLReader extends ClusterTest {
     String sql = "SELECT * FROM cp.`xml/weather.xml`";
     RowSet results = client.queryBuilder().sql(sql).rowSet();
     assertEquals(1, results.rowCount());
-
       TupleMetadata expectedSchema = new SchemaBuilder()
         .addMap("attributes")
+          .addNullable("weather_module_id", MinorType.VARCHAR)
+          .addNullable("weather_tab_id", MinorType.VARCHAR)
+          .addNullable("weather_mobile_row", MinorType.VARCHAR)
+          .addNullable("weather_mobile_zipped", MinorType.VARCHAR)
+          .addNullable("weather_row", MinorType.VARCHAR)
+          .addNullable("weather_section", MinorType.VARCHAR)
           .addNullable("forecast_information_city_data", MinorType.VARCHAR)
           .addNullable("forecast_information_postal_code_data", MinorType.VARCHAR)
           .addNullable("forecast_information_latitude_e6_data", MinorType.VARCHAR)
@@ -169,7 +202,8 @@ public class TestXMLReader extends ClusterTest {
         .build();
 
     RowSet expected = client.rowSetBuilder(expectedSchema)
-      .addRow(strArray("Seattle, WA", "Seattle WA", "", "", "2011-09-29", "2011-09-29 17:53:00 +0000", "US", "Clear", "62", "17", "Humidity: 62%", "/ig/images/weather" +
+      .addRow(strArray("0", "0", "0", "1", "0", "0","Seattle, WA", "Seattle WA", "", "", "2011-09-29", "2011-09-29 17:53:00 +0000", "US", "Clear",
+          "62", "17", "Humidity: 62%", "/ig/images/weather" +
         "/sunny.gif", "Wind: N at 4 mph"), null, null, null, null, null, null, null, null, null, null, null, null, null)
       .build();
 
