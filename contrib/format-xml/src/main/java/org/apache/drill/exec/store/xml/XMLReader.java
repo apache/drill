@@ -277,6 +277,13 @@ public class XMLReader implements Closeable {
 
         if (!rowStarted) {
           currentTupleWriter = startRow(rootRowWriter);
+
+          Iterator<Attribute> attributes = startElement.getAttributes();
+          if (attributes != null && attributes.hasNext()) {
+            // This would be the root element, so the attribute prefix would simply be the field name.
+            writeAttributes(fieldName, attributes);
+          }
+
         } else {
           if (lastEvent != null &&
             lastEvent.getEventType() == XMLStreamConstants.START_ELEMENT) {
@@ -330,6 +337,7 @@ public class XMLReader implements Closeable {
 
         // Get the field value
         fieldValue = currentEvent.asCharacters().getData().trim();
+        changeState(xmlState.GETTING_DATA);
         changeState(xmlState.GETTING_DATA);
         break;
 
