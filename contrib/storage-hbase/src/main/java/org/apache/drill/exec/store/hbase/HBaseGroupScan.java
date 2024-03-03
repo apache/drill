@@ -267,7 +267,7 @@ public class HBaseGroupScan extends AbstractGroupScan implements DrillHBaseConst
     PriorityQueue<List<HBaseSubScanSpec>> minHeap = new PriorityQueue<>(numSlots, LIST_SIZE_COMPARATOR);
     PriorityQueue<List<HBaseSubScanSpec>> maxHeap = new PriorityQueue<>(numSlots, LIST_SIZE_COMPARATOR_REV);
     for(List<HBaseSubScanSpec> listOfScan : endpointFragmentMapping.values()) {
-      if (listOfScan.size() < minPerEndpointSlot) {
+      if (listOfScan.size() < maxPerEndpointSlot) {
         minHeap.offer(listOfScan);
       } else if (listOfScan.size() > minPerEndpointSlot) {
         maxHeap.offer(listOfScan);
