@@ -71,7 +71,7 @@ public class DruidFilterBuilderTest {
       when(logicalExpression.accept(any(), any())).thenReturn(druidScanSpecRight);
     } catch (Exception ignored) { }
 
-    DruidGroupScan druidGroupScan = new DruidGroupScan("some username", null, druidScanSpecLeft, null, 5);
+    DruidGroupScan druidGroupScan = new DruidGroupScan("some username", null, druidScanSpecLeft, null, 5, null);
     druidFilterBuilder = new DruidFilterBuilder(druidGroupScan, logicalExpression);
   }
 

@@ -29,6 +29,7 @@ import org.apache.drill.exec.physical.base.AbstractBase;
 import org.apache.drill.exec.physical.base.PhysicalOperator;
 import org.apache.drill.exec.physical.base.PhysicalVisitor;
 import org.apache.drill.exec.physical.base.SubScan;
+import org.apache.drill.exec.record.metadata.TupleMetadata;
 import org.apache.drill.exec.store.StoragePluginRegistry;
 import org.apache.drill.exec.store.druid.common.DruidFilter;
 import com.google.common.base.Preconditions;
@@ -53,30 +54,36 @@ public class DruidSubScan extends AbstractBase implements SubScan {
   private final List<SchemaPath> columns;
   private final int maxRecordsToRead;
 
+  private final TupleMetadata schema;
+
   @JsonCreator
   public DruidSubScan(@JacksonInject StoragePluginRegistry registry,
                       @JsonProperty("userName") String userName,
                       @JsonProperty("config") StoragePluginConfig config,
                       @JsonProperty("scanSpec") LinkedList<DruidSubScanSpec> datasourceScanSpecList,
                       @JsonProperty("columns") List<SchemaPath> columns,
-                      @JsonProperty("maxRecordsToRead") int maxRecordsToRead) {
+                      @JsonProperty("maxRecordsToRead") int maxRecordsToRead,
+                      @JsonProperty("schema") TupleMetadata schema) {
     super(userName);
     druidStoragePlugin = registry.resolve(config, DruidStoragePlugin.class);
     this.scanSpec = datasourceScanSpecList;
     this.columns = columns;
     this.maxRecordsToRead = maxRecordsToRead;
+    this.schema = schema;
   }
 
   public DruidSubScan(String userName,
                       DruidStoragePlugin plugin,
                       List<DruidSubScanSpec> dataSourceInfoList,
                       List<SchemaPath> columns,
-                      int maxRecordsToRead) {
+                      int maxRecordsToRead,
+                      TupleMetadata schema) {
     super(userName);
     this.druidStoragePlugin = plugin;
     this.scanSpec = dataSourceInfoList;
     this.columns = columns;
     this.maxRecordsToRead = maxRecordsToRead;
+    this.schema = schema;
   }
 
   @Override
@@ -91,6 +98,10 @@ public class DruidSubScan extends AbstractBase implements SubScan {
 
   public List<SchemaPath> getColumns() {
     return columns;
+  }
+
+  public TupleMetadata getSchema() {
+    return schema;
   }
 
   public int getMaxRecordsToRead() { return maxRecordsToRead; }
@@ -109,7 +120,7 @@ public class DruidSubScan extends AbstractBase implements SubScan {
   @Override
   public PhysicalOperator getNewWithChildren(List<PhysicalOperator> children) {
     Preconditions.checkArgument(children.isEmpty());
-    return new DruidSubScan(getUserName(), druidStoragePlugin, scanSpec, columns, maxRecordsToRead);
+    return new DruidSubScan(getUserName(), druidStoragePlugin, scanSpec, columns, maxRecordsToRead, schema);
   }
 
   @JsonIgnore
@@ -131,17 +142,21 @@ public class DruidSubScan extends AbstractBase implements SubScan {
     protected final String maxTime;
     protected final String minTime;
 
+    protected final TupleMetadata schema;
+
     @JsonCreator
     public DruidSubScanSpec(@JsonProperty("dataSourceName") String dataSourceName,
                             @JsonProperty("filter") DruidFilter filter,
                             @JsonProperty("dataSourceSize") long dataSourceSize,
                             @JsonProperty("minTime") String minTime,
-                            @JsonProperty("maxTime") String maxTime) {
+                            @JsonProperty("maxTime") String maxTime,
+                            @JsonProperty("schema") TupleMetadata schema) {
       this.dataSourceName = dataSourceName;
       this.filter = filter;
       this.dataSourceSize = dataSourceSize;
       this.minTime = minTime;
       this.maxTime = maxTime;
+      this.schema = schema;
     }
 
     public String getDataSourceName() {
@@ -158,6 +173,10 @@ public class DruidSubScan extends AbstractBase implements SubScan {
       return minTime;
     }
 
+    public TupleMetadata getSchema() {
+      return schema;
+    }
+
     public String getMaxTime() {
       return maxTime;
     }
@@ -170,6 +189,7 @@ public class DruidSubScan extends AbstractBase implements SubScan {
         .field("dataSourceSize", dataSourceSize)
         .field("minTime", minTime)
         .field("maxTime", maxTime)
+        .field("schema", schema)
         .toString();
     }
   }
