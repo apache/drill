@@ -145,7 +145,7 @@
     <wiremock.standalone.version>2.23.2</wiremock.standalone.version>
     <xerces.version>2.12.2</xerces.version>
     <yauaa.version>7.19.2</yauaa.version>
-    <zookeeper.version>3.5.10</zookeeper.version>
+    <zookeeper.version>3.8.4</zookeeper.version>
   </properties>
 
   <scm>
@@ -1441,6 +1441,16 @@
         <groupId>org.apache.zookeeper</groupId>
         <artifactId>zookeeper</artifactId>
         <version>${zookeeper.version}</version>
+        <exclusions>
+          <exclusion>
+            <groupId>ch.qos.logback</groupId>
+            <artifactId>logback-core</artifactId>
+          </exclusion>
+          <exclusion>
+            <groupId>ch.qos.logback</groupId>
+            <artifactId>logback-classic</artifactId>
+          </exclusion>
+        </exclusions>
       </dependency>
       <dependency>
         <groupId>org.apache.commons</groupId>
