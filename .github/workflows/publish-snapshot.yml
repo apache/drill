@@ -27,11 +27,12 @@ jobs:
   publish:
     name: Publish snapshot artifacts
     runs-on: ubuntu-latest
+    if: github.repository == 'apache/drill'
     steps:
       - name: Checkout
         uses: actions/checkout@v4
       - name: Cache Maven Repository
-        uses: actions/cache@v2
+        uses: actions/cache@v4
         with:
           path: ~/.m2/repository
           key: ${{ runner.os }}-maven-${{ hashFiles('**/pom.xml') }}
