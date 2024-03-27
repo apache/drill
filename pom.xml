@@ -60,7 +60,7 @@
     <codemodel.version>2.6</codemodel.version>
     <commons.codec.version>1.16.0</commons.codec.version>
     <commons.collections.version>4.4</commons.collections.version>
-    <commons.compress.version>1.25.0</commons.compress.version>
+    <commons.compress.version>1.26.1</commons.compress.version>
     <commons.configuration.version>1.10</commons.configuration.version>
     <commons.io.version>2.15.0</commons.io.version>
     <commons.lang3.version>3.10</commons.lang3.version>
