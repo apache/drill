@@ -25,6 +25,7 @@ import java.io.OutputStream;
 import java.util.List;
 
 import org.apache.drill.common.exceptions.UserException;
+import org.apache.drill.exec.exception.OutOfMemoryException;
 import org.apache.drill.exec.expr.TypeHelper;
 import org.apache.drill.exec.memory.BufferAllocator;
 import org.apache.drill.exec.metrics.DrillMetrics;
@@ -164,14 +165,22 @@ public class VectorAccessibleSerializable extends AbstractStreamSerializable {
     for (SerializedField metaData : fieldList) {
       final int dataLength = metaData.getBufferLength();
       final MaterializedField field = MaterializedField.create(metaData);
-      final DrillBuf buf = allocator.buffer(dataLength);
-      final ValueVector vector;
+      DrillBuf buf = null;
+      ValueVector vector = null;
       try {
+        buf = allocator.buffer(dataLength);
         buf.writeBytes(input, dataLength);
         vector = TypeHelper.getNewVector(field, allocator);
         vector.load(metaData, buf);
+      } catch (OutOfMemoryException oom) {
+        for (ValueVector valueVector : vectorList) {
+          valueVector.clear();
+        }
+        throw UserException.memoryError(oom).message("Allocator memory failed").build(logger);
       } finally {
-        buf.release();
+        if (buf != null) {
+          buf.release();
+        }
       }
       vectorList.add(vector);
     }
