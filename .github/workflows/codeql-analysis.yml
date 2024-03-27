@@ -42,6 +42,7 @@ jobs:
   analyze:
     name: Analyze
     runs-on: ubuntu-latest
+    if: github.repository == 'apache/drill'
     permissions:
       actions: read
       contents: read
