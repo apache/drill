@@ -43,7 +43,7 @@ final class VarLenEntryReader extends VarLenAbstractPageEntryReader {
     if (bulkProcess()) {
       return getEntryBulk(valuesToRead);
     }
-    return getEntrySingle(valuesToRead);
+    return getEntrySingle();
   }
 
   private final VarLenColumnBulkEntry getEntryBulk(int valuesToRead) {
@@ -92,7 +92,7 @@ final class VarLenEntryReader extends VarLenAbstractPageEntryReader {
     // We're here either because a) the Parquet metadata is wrong (advertises more values than the real count)
     // or the first value being processed ended up to be too long for the buffer.
     if (numValues == 0) {
-      return getEntrySingle(valuesToRead);
+      return getEntrySingle();
     }
 
     // Update the page data buffer offset
@@ -109,7 +109,7 @@ final class VarLenEntryReader extends VarLenAbstractPageEntryReader {
     return entry;
   }
 
-  private final VarLenColumnBulkEntry getEntrySingle(int valuesToRead) {
+  private VarLenColumnBulkEntry getEntrySingle() {
 
     if (remainingPageData() < 4) {
       final String message = String.format("Invalid Parquet page metadata; cannot process advertised page count..");

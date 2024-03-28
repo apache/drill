@@ -44,7 +44,7 @@ final class VarLenEntryDictionaryReader extends VarLenAbstractPageEntryReader {
     if (bulkProcess()) {
       return getEntryBulk(valuesToRead);
     }
-    return getEntrySingle(valuesToRead);
+    return getEntrySingle();
   }
 
   private final VarLenColumnBulkEntry getEntryBulk(int valuesToRead) {
@@ -82,7 +82,7 @@ final class VarLenEntryDictionaryReader extends VarLenAbstractPageEntryReader {
     // We're here either because a) the Parquet metadata is wrong (advertises more values than the real count)
     // or the first value being processed ended up to be too long for the buffer.
     if (numValues == 0) {
-      return getEntrySingle(valuesToRead);
+      return getEntrySingle();
     }
 
     // Now set the bulk entry
@@ -91,7 +91,7 @@ final class VarLenEntryDictionaryReader extends VarLenAbstractPageEntryReader {
     return entry;
   }
 
-  private final VarLenColumnBulkEntry getEntrySingle(int valsToReadWithinPage) {
+  private VarLenColumnBulkEntry getEntrySingle() {
     final ValuesReaderWrapper valueReader = pageInfo.encodedValueReader;
     final int[] valueLengths = entry.getValuesLength();
     final Binary currEntry = valueReader.getEntry();
@@ -99,6 +99,7 @@ final class VarLenEntryDictionaryReader extends VarLenAbstractPageEntryReader {
 
     // Is there enough memory to handle this large value?
     if (batchMemoryConstraintsReached(0, 4, dataLen)) {
+      valueReader.pushBack(currEntry);
       entry.set(0, 0, 0, 0); // no data to be consumed
       return entry;
     }

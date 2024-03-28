@@ -18,26 +18,32 @@
 package org.apache.drill.exec.store.parquet.columnreaders;
 
 import com.google.common.base.Preconditions;
+
 import java.nio.ByteBuffer;
+
 import org.apache.drill.exec.store.parquet.columnreaders.VarLenColumnBulkInput.ColumnPrecisionInfo;
 import org.apache.drill.exec.store.parquet.columnreaders.VarLenColumnBulkInput.ValuesReaderWrapper;
 import org.apache.drill.exec.store.parquet.columnreaders.VarLenColumnBulkInput.PageDataInfo;
 import org.apache.drill.exec.store.parquet.columnreaders.VarLenColumnBulkInput.VarLenColumnBulkInputCallback;
 import org.apache.parquet.io.api.Binary;
 
-/** Handles nullable variable data types using a dictionary */
+/**
+ * Handles nullable variable data types using a dictionary
+ */
 final class VarLenNullableDictionaryReader extends VarLenAbstractPageEntryReader {
 
   VarLenNullableDictionaryReader(ByteBuffer buffer,
-    PageDataInfo pageInfo,
-    ColumnPrecisionInfo columnPrecInfo,
-    VarLenColumnBulkEntry entry,
-    VarLenColumnBulkInputCallback containerCallback) {
+                                 PageDataInfo pageInfo,
+                                 ColumnPrecisionInfo columnPrecInfo,
+                                 VarLenColumnBulkEntry entry,
+                                 VarLenColumnBulkInputCallback containerCallback) {
 
     super(buffer, pageInfo, columnPrecInfo, entry, containerCallback);
   }
 
-  /** {@inheritDoc} */
+  /**
+   * {@inheritDoc}
+   */
   @Override
   final VarLenColumnBulkEntry getEntry(int valuesToRead) {
     assert valuesToRead > 0;
@@ -46,7 +52,7 @@ final class VarLenNullableDictionaryReader extends VarLenAbstractPageEntryReader
     if (bulkProcess()) {
       return getEntryBulk(valuesToRead);
     }
-    return getEntrySingle(valuesToRead);
+    return getEntrySingle();
   }
 
   private final VarLenColumnBulkEntry getEntryBulk(int valuesToRead) {
@@ -66,7 +72,7 @@ final class VarLenNullableDictionaryReader extends VarLenAbstractPageEntryReader
     // Initialize the reader if needed
     pageInfo.definitionLevels.readFirstIntegerIfNeeded();
 
-    for (int idx = 0; idx < readBatch; ++idx ) {
+    for (int idx = 0; idx < readBatch; ++idx) {
       if (pageInfo.definitionLevels.readCurrInteger() == 1) {
         final Binary currEntry = valueReader.getEntry();
         final int dataLen = currEntry.length();
@@ -97,7 +103,7 @@ final class VarLenNullableDictionaryReader extends VarLenAbstractPageEntryReader
     // We're here either because a) the Parquet metadata is wrong (advertises more values than the real count)
     // or the first value being processed ended up to be too long for the buffer.
     if (numValues == 0) {
-      return getEntrySingle(valuesToRead);
+      return getEntrySingle();
     }
 
     entry.set(0, tgtPos, numValues, numValues - numNulls);
@@ -105,7 +111,7 @@ final class VarLenNullableDictionaryReader extends VarLenAbstractPageEntryReader
     return entry;
   }
 
-  private final VarLenColumnBulkEntry getEntrySingle(int valsToReadWithinPage) {
+  private VarLenColumnBulkEntry getEntrySingle() {
     final int[] valueLengths = entry.getValuesLength();
     final ValuesReaderWrapper valueReader = pageInfo.encodedValueReader;
 
@@ -118,6 +124,7 @@ final class VarLenNullableDictionaryReader extends VarLenAbstractPageEntryReader
 
       // Is there enough memory to handle this large value?
       if (batchMemoryConstraintsReached(1, 4, dataLen)) {
+        valueReader.pushBack(currEntry);
         entry.set(0, 0, 0, 0); // no data to be consumed
         return entry;
       }
