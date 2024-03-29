@@ -532,6 +532,8 @@ public abstract class AbstractHashBinaryRecordBatch<T extends PhysicalOperator> 
       return rightUpstream;
     }
 
+    boolean isExistException = false;
+
     try {
       /*
        * If we are here for the first time, execute the build phase of the hash
@@ -687,6 +689,24 @@ public abstract class AbstractHashBinaryRecordBatch<T extends PhysicalOperator> 
       return IterOutcome.NONE;
     } catch (SchemaChangeException e) {
       throw UserException.schemaChangeError(e).build(logger);
+    } catch (OutOfMemoryException oom) {
+      isExistException = true;
+      throw UserException.memoryError(oom).build(logger);
+    } catch (Exception e) {
+      //Internal catch OutOfMemoryException, resulting in throwing other exceptions or others
+      isExistException = true;
+      throw UserException.executionError(e).build(logger);
+    } finally {
+      boolean isReleaseBuildBatch = buildBatch != null && buildBatch instanceof SpilledRecordBatch;
+      boolean isReleaseProbeBatch = probeBatch != null && probeBatch instanceof SpilledRecordBatch;
+      //release buildBatch spill memory
+      if (isExistException && isReleaseBuildBatch) {
+        buildBatch.cancel();
+      }
+      //release probeBatch spill memory
+      if (isExistException && isReleaseProbeBatch) {
+        probeBatch.cancel();
+      }
     }
   }
 
