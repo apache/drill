@@ -45,7 +45,7 @@ final class VarLenNullableEntryReader extends VarLenAbstractPageEntryReader {
     if (bulkProcess()) {
       return getEntryBulk(valuesToRead);
     }
-    return getEntrySingle(valuesToRead);
+    return getEntrySingle();
   }
 
   VarLenColumnBulkEntry getEntryBulk(int valuesToRead) {
@@ -108,7 +108,7 @@ final class VarLenNullableEntryReader extends VarLenAbstractPageEntryReader {
     // We're here either because a) the Parquet metadata is wrong (advertises more values than the real count)
     // or the first value being processed ended up to be too long for the buffer.
     if (numValues == 0) {
-      return getEntrySingle(valuesToRead);
+      return getEntrySingle();
     }
 
     // Update the page data buffer offset
@@ -126,7 +126,7 @@ final class VarLenNullableEntryReader extends VarLenAbstractPageEntryReader {
     return entry;
   }
 
-  VarLenColumnBulkEntry getEntrySingle(int valuesToRead) {
+  VarLenColumnBulkEntry getEntrySingle() {
 
     // Initialize the reader if needed
     pageInfo.definitionLevels.readFirstIntegerIfNeeded();
