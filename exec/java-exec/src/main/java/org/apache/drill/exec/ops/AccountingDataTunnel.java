@@ -43,6 +43,7 @@ public class AccountingDataTunnel {
 
   public void sendRecordBatch(FragmentWritableBatch batch) {
     sendingAccountor.increment();
+    sendingAccountor.incrementComplete();
     tunnel.sendRecordBatch(statusHandler, batch);
   }
 

@@ -120,6 +120,7 @@ public abstract class RpcBus<T extends EnumLite, C extends RemoteConnection> imp
       completed = true;
     } catch (Exception | AssertionError e) {
       listener.failed(new RpcException("Failure sending message.", e));
+      listener.complete();
     } finally {
 
       if (!completed) {

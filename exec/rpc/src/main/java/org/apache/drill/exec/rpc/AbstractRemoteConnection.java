@@ -77,7 +77,7 @@ public abstract class AbstractRemoteConnection implements RemoteConnection, Encr
       return true;
     } catch (final InterruptedException e) {
       listener.interrupted(e);
-
+      listener.complete();
       // Preserve evidence that the interruption occurred so that code higher up
       // on the call stack can learn of the
       // interruption and respond to it if it wants to.
