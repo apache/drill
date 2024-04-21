@@ -41,11 +41,11 @@ public abstract class AbstractDynamicBean {
 
   private static volatile ObjectMapper MAPPER;
 
-  private ObjectNode objectNode = new ObjectNode(null);
+  private final ObjectNode objectNode = new ObjectNode(null);
 
   @JsonAnySetter
   public void _anySetter(String name, JsonNode value){
-    objectNode.put(name, value);
+    objectNode.replace(name, value);
   }
 
   @JsonAnyGetter
