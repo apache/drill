@@ -51,6 +51,8 @@ public class ParquetReaderConfig {
   private boolean enableTimeReadCounter = false;
   private boolean autoCorrectCorruptedDates = true;
   private boolean enableStringsSignedMinMax = false;
+  private boolean readTimeMicrosAsInt64 = false;
+  private boolean readTimestampMicrosAsInt64 = false;
 
   public static ParquetReaderConfig.Builder builder() {
     return new ParquetReaderConfig.Builder();
@@ -100,6 +102,16 @@ public class ParquetReaderConfig {
     return enableStringsSignedMinMax;
   }
 
+  @JsonProperty("readTimeMicrosAsInt64")
+  public boolean readTimeMicrosAsInt64() {
+    return readTimeMicrosAsInt64;
+  }
+
+  @JsonProperty("readTimestampMicrosAsInt64")
+  public boolean readTimestampMicrosAsInt64() {
+    return readTimestampMicrosAsInt64;
+  }
+
   public ParquetReadOptions toReadOptions() {
     return ParquetReadOptions.builder()
       .useSignedStringMinMax(enableStringsSignedMinMax)
@@ -120,7 +132,9 @@ public class ParquetReaderConfig {
       enableBytesTotalCounter,
       enableTimeReadCounter,
       autoCorrectCorruptedDates,
-      enableStringsSignedMinMax);
+      enableStringsSignedMinMax,
+      readTimeMicrosAsInt64,
+      readTimestampMicrosAsInt64);
   }
 
   @Override
@@ -136,7 +150,9 @@ public class ParquetReaderConfig {
       && enableBytesTotalCounter == that.enableBytesTotalCounter
       && enableTimeReadCounter == that.enableTimeReadCounter
       && autoCorrectCorruptedDates == that.autoCorrectCorruptedDates
-      && enableStringsSignedMinMax == that.enableStringsSignedMinMax;
+      && enableStringsSignedMinMax == that.enableStringsSignedMinMax
+      && readTimeMicrosAsInt64 == that.readTimeMicrosAsInt64
+      && readTimestampMicrosAsInt64 == that.readTimestampMicrosAsInt64;
   }
 
   @Override
@@ -147,6 +163,8 @@ public class ParquetReaderConfig {
       + ", enableTimeReadCounter=" + enableTimeReadCounter
       + ", autoCorrectCorruptedDates=" + autoCorrectCorruptedDates
       + ", enableStringsSignedMinMax=" + enableStringsSignedMinMax
+      + ", readTimeMicrosAsInt64=" + readTimeMicrosAsInt64
+      + ", readTimestampMicrosAsInt64=" + readTimestampMicrosAsInt64
       + '}';
   }
 
@@ -195,6 +213,10 @@ public class ParquetReaderConfig {
         if (optVal != null && !optVal.isEmpty()) {
           readerConfig.enableStringsSignedMinMax = Boolean.valueOf(optVal);
         }
+
+        // The read*MicrosAsInt64 config values are set from any option scope.
+        readerConfig.readTimeMicrosAsInt64 = options.getBoolean(ExecConstants.PARQUET_READER_TIME_MICROS_AS_INT64);
+        readerConfig.readTimestampMicrosAsInt64 = options.getBoolean(ExecConstants.PARQUET_READER_TIMESTAMP_MICROS_AS_INT64);
       }
 
       return readerConfig;

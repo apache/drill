@@ -20,14 +20,19 @@ package org.apache.drill.exec.store.parquet;
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
+import java.time.ZoneId;
 import java.time.ZoneOffset;
 import java.time.format.DateTimeFormatter;
+import java.util.Arrays;
 
 import org.apache.drill.categories.ParquetTest;
 import org.apache.drill.categories.UnlikelyTest;
+import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.test.ClusterFixture;
 import org.apache.drill.test.ClusterTest;
+import org.apache.drill.test.TestBuilder;
 
+import org.junit.After;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -43,8 +48,9 @@ public class TestMicrosecondColumns extends ClusterTest {
   private static final String TO_TIMESTAMP_TEMPLATE = "TO_TIMESTAMP('%s', 'yyy-MM-dd''T''HH:mm:ss.SSS')";
   private static final DateTimeFormatter TIMESTAMP_FORMATTER = DateTimeFormatter.ofPattern(TIMESTAMP_FORMAT);
 
-  // The parquet file used in the test cases, created by ParquetSimpleTestFileGenerator.
+  // The parquet files used in the test cases, created by ParquetSimpleTestFileGenerator.
   private static final String DATAFILE = "cp.`parquet/microseconds.parquet`";
+  private static final String DATAFILE_SMALL_DIFF = "cp.`parquet/microseconds_small_diff.parquet`";
 
   // Test values for the _TIME_MICROS_int64 field. Will be written to the test parquet file by
   // ParquetSimpleTestFileGenerator.
@@ -62,10 +68,36 @@ public class TestMicrosecondColumns extends ClusterTest {
       toMicrosecondTimestamp(2023, 2, 10, 0, 32, 58, 174711)
   };
 
+  // Test values with small differences (less than a millisecond) for the _TIME_MICROS_int64 field.
+  // Used for testing ORDER BY. Written to the test parquet file by ParquetSimpleTestFileGenerator.
+  static final long[] TIME_MICROS_SMALL_DIFF_VALUES = {
+      toMicrosecondTime(10, 11, 12, 336804),
+      toMicrosecondTime(10, 11, 12, 336587),
+      toMicrosecondTime(10, 11, 12, 336172),
+      toMicrosecondTime(10, 11, 12, 336991),
+      toMicrosecondTime(10, 11, 12, 336336)
+  };
+
+  // Test values with small differences (less than a millisecond) for the _TIMESTAMP_MICROS_int64
+  // field. Used for testing ORDER BY. Written to the test parquet file by ParquetSimpleTestFileGenerator.
+  static final long[] TIMESTAMP_MICROS_SMALL_DIFF_VALUES = {
+      toMicrosecondTimestamp(2024, 3, 16, 19, 1, 54, 182665),
+      toMicrosecondTimestamp(2024, 3, 16, 19, 1, 54, 182429),
+      toMicrosecondTimestamp(2024, 3, 16, 19, 1, 54, 182707),
+      toMicrosecondTimestamp(2024, 3, 16, 19, 1, 54, 182003),
+      toMicrosecondTimestamp(2024, 3, 16, 19, 1, 54, 182860)
+  };
 
   @BeforeClass
   public static void setUp() throws Exception {
     startCluster(ClusterFixture.builder(dirTestWatcher));
+  }
+
+
+  @After
+  public void restoreSession() {
+    client.alterSession(ExecConstants.PARQUET_READER_TIME_MICROS_AS_INT64, false);
+    client.alterSession(ExecConstants.PARQUET_READER_TIMESTAMP_MICROS_AS_INT64, false);
   }
 
 
@@ -147,6 +179,100 @@ public class TestMicrosecondColumns extends ClusterTest {
     String lower = createToTimeFragment(TIME_MICROS_VALUES[0]);
     String upper = createToTimeFragment(TIME_MICROS_VALUES[2]);
     executeFilterQuery("_TIME_MICROS_int64 > " + lower + " and _TIME_MICROS_int64 < " + upper, expectedCount);
+  }
+
+
+  @Test
+  public void testSelectTimeColumnAsBigInt() throws Exception {
+    String query = "select _TIME_MICROS_int64 as t from %s";
+    testBuilder()
+        .enableSessionOption(ExecConstants.PARQUET_READER_TIME_MICROS_AS_INT64)
+        .sqlQuery(query, DATAFILE)
+        .unOrdered()
+        .baselineColumns("t")
+        .baselineValues(TIME_MICROS_VALUES[0])
+        .baselineValues(TIME_MICROS_VALUES[1])
+        .baselineValues(TIME_MICROS_VALUES[2])
+        .go();
+  }
+
+
+  @Test
+  public void testSelectStarTimeColumnAsBigInt() throws Exception {
+    // PARQUET_READER_TIME_MICROS_AS_INT64 should only affect time_micros columns, not
+    // timestamp_micros columns.
+    String query = "select * from %s";
+    testBuilder()
+        .enableSessionOption(ExecConstants.PARQUET_READER_TIME_MICROS_AS_INT64)
+        .sqlQuery(query, DATAFILE)
+        .unOrdered()
+        .baselineColumns("rowKey","_TIME_MICROS_int64","_TIMESTAMP_MICROS_int64")
+        .baselineValues(1, TIME_MICROS_VALUES[0], toLocalDateTime(TIMESTAMP_MICROS_VALUES[0]))
+        .baselineValues(2, TIME_MICROS_VALUES[1], toLocalDateTime(TIMESTAMP_MICROS_VALUES[1]))
+        .baselineValues(3, TIME_MICROS_VALUES[2], toLocalDateTime(TIMESTAMP_MICROS_VALUES[2]))
+        .go();
+  }
+
+
+  @Test
+  public void testSelectTimeColumnAsBigIntWithBigIntFilter() throws Exception {
+    String query = "select _TIME_MICROS_int64 as t from %s where _TIME_MICROS_int64 > " + TIME_MICROS_VALUES[0];
+    testBuilder()
+        .enableSessionOption(ExecConstants.PARQUET_READER_TIME_MICROS_AS_INT64)
+        .sqlQuery(query, DATAFILE)
+        .unOrdered()
+        .baselineColumns("t")
+        .baselineValues(TIME_MICROS_VALUES[1])
+        .baselineValues(TIME_MICROS_VALUES[2])
+        .go();
+  }
+
+
+  @Test
+  public void testSelectTimeColumnAsBigIntWithTimeFilter() throws Exception {
+    String query = "select _TIME_MICROS_int64 as t from %s where TO_TIME(_TIME_MICROS_int64/1000) > " + createToTimeFragment(TIME_MICROS_VALUES[0]);
+    testBuilder()
+        .enableSessionOption(ExecConstants.PARQUET_READER_TIME_MICROS_AS_INT64)
+        .sqlQuery(query, DATAFILE)
+        .unOrdered()
+        .baselineColumns("t")
+        .baselineValues(TIME_MICROS_VALUES[1])
+        .baselineValues(TIME_MICROS_VALUES[2])
+        .go();
+  }
+
+
+  @Test
+  public void testOrderByTimeColumnAsBigInt() throws Exception {
+    long[] sortedValues = Arrays.copyOf(TIME_MICROS_SMALL_DIFF_VALUES, TIME_MICROS_SMALL_DIFF_VALUES.length);
+    Arrays.sort(sortedValues);
+    String query = "select _TIME_MICROS_int64 as t from %s ORDER BY t";
+    TestBuilder builder = testBuilder()
+        .enableSessionOption(ExecConstants.PARQUET_READER_TIME_MICROS_AS_INT64)
+        .sqlQuery(query, DATAFILE_SMALL_DIFF)
+        .ordered()
+        .baselineColumns("t");
+    for (long expectedValue : sortedValues) {
+      builder.baselineValues(expectedValue);
+    }
+    builder.go();
+  }
+
+
+  @Test
+  public void testOrderByDescTimeColumnAsBigInt() throws Exception {
+    long[] sortedValues = Arrays.copyOf(TIME_MICROS_SMALL_DIFF_VALUES, TIME_MICROS_SMALL_DIFF_VALUES.length);
+    Arrays.sort(sortedValues);
+    String query = "select _TIME_MICROS_int64 as t from %s ORDER BY t DESC";
+    TestBuilder builder = testBuilder()
+        .enableSessionOption(ExecConstants.PARQUET_READER_TIME_MICROS_AS_INT64)
+        .sqlQuery(query, DATAFILE_SMALL_DIFF)
+        .ordered()
+        .baselineColumns("t");
+    for (int i=sortedValues.length-1; i>= 0; i--) {
+      builder.baselineValues(sortedValues[i]);
+    }
+    builder.go();
   }
 
 
@@ -250,6 +376,103 @@ public class TestMicrosecondColumns extends ClusterTest {
   }
 
 
+  @Test
+  public void testSelectTimestampColumnAsBigInt() throws Exception {
+    String query = "select _TIMESTAMP_MICROS_int64 as t from %s";
+    testBuilder()
+        .enableSessionOption(ExecConstants.PARQUET_READER_TIMESTAMP_MICROS_AS_INT64)
+        .sqlQuery(query, DATAFILE)
+        .unOrdered()
+        .baselineColumns("t")
+        .baselineValues(TIMESTAMP_MICROS_VALUES[0])
+        .baselineValues(TIMESTAMP_MICROS_VALUES[1])
+        .baselineValues(TIMESTAMP_MICROS_VALUES[2])
+        .go();
+  }
+
+
+  @Test
+  public void testSelectStarTimestampColumnAsBigInt() throws Exception {
+    // PARQUET_READER_TIMESTAMP_MICROS_AS_INT64 should only affect timestamp_micros columns, not
+    // time_micros columns.
+    String query = "select * from %s";
+    testBuilder()
+        .enableSessionOption(ExecConstants.PARQUET_READER_TIMESTAMP_MICROS_AS_INT64)
+        .sqlQuery(query, DATAFILE)
+        .unOrdered()
+        .baselineColumns("rowKey","_TIME_MICROS_int64","_TIMESTAMP_MICROS_int64")
+        .baselineValues(1, toLocalTime(TIME_MICROS_VALUES[0]), TIMESTAMP_MICROS_VALUES[0])
+        .baselineValues(2, toLocalTime(TIME_MICROS_VALUES[1]), TIMESTAMP_MICROS_VALUES[1])
+        .baselineValues(3, toLocalTime(TIME_MICROS_VALUES[2]), TIMESTAMP_MICROS_VALUES[2])
+        .go();
+  }
+
+
+  @Test
+  public void testSelectTimestampColumnAsBigIntWithBigIntFilter() throws Exception {
+    String query = "select _TIMESTAMP_MICROS_int64 as t from %s where _TIMESTAMP_MICROS_int64 > " + TIMESTAMP_MICROS_VALUES[0];
+    testBuilder()
+        .enableSessionOption(ExecConstants.PARQUET_READER_TIMESTAMP_MICROS_AS_INT64)
+        .sqlQuery(query, DATAFILE)
+        .unOrdered()
+        .baselineColumns("t")
+        .baselineValues(TIMESTAMP_MICROS_VALUES[1])
+        .baselineValues(TIMESTAMP_MICROS_VALUES[2])
+        .go();
+  }
+
+
+  @Test
+  public void testSelectTimestampColumnAsBigIntWithTimestampFilter() throws Exception {
+    // TO_TIMESTAMP(double) creates a timestamp in the system default timezone, must compare to
+    // a TO_TIMESTAMP(string ,format) in the same timezone.
+    String toTimestampTerm = createToTimestampFragment(TIMESTAMP_MICROS_VALUES[0], ZoneId.systemDefault());
+    String query = "select _TIMESTAMP_MICROS_int64 as t from %s where TO_TIMESTAMP(_TIMESTAMP_MICROS_int64/1000000) > " + toTimestampTerm;
+    testBuilder()
+        .enableSessionOption(ExecConstants.PARQUET_READER_TIMESTAMP_MICROS_AS_INT64)
+        .sqlQuery(query, DATAFILE)
+        .unOrdered()
+        .baselineColumns("t")
+        .baselineValues(TIMESTAMP_MICROS_VALUES[1])
+        .baselineValues(TIMESTAMP_MICROS_VALUES[2])
+        .go();
+  }
+
+
+  @Test
+  public void testOrderByTimestampColumnAsBigInt() throws Exception {
+    long[] sortedValues = Arrays.copyOf(TIMESTAMP_MICROS_SMALL_DIFF_VALUES, TIMESTAMP_MICROS_SMALL_DIFF_VALUES.length);
+    Arrays.sort(sortedValues);
+    String query = "select _TIMESTAMP_MICROS_int64 as t from %s ORDER BY t";
+    TestBuilder builder = testBuilder()
+        .enableSessionOption(ExecConstants.PARQUET_READER_TIMESTAMP_MICROS_AS_INT64)
+        .sqlQuery(query, DATAFILE_SMALL_DIFF)
+        .ordered()
+        .baselineColumns("t");
+    for (long expectedValue : sortedValues) {
+      builder.baselineValues(expectedValue);
+    }
+    builder.go();
+  }
+
+
+  @Test
+  public void testOrderByDescTimestampColumnAsBigInt() throws Exception {
+    long[] sortedValues = Arrays.copyOf(TIMESTAMP_MICROS_SMALL_DIFF_VALUES, TIMESTAMP_MICROS_SMALL_DIFF_VALUES.length);
+    Arrays.sort(sortedValues);
+    String query = "select _TIMESTAMP_MICROS_int64 as t from %s ORDER BY t DESC";
+    TestBuilder builder = testBuilder()
+        .enableSessionOption(ExecConstants.PARQUET_READER_TIMESTAMP_MICROS_AS_INT64)
+        .sqlQuery(query, DATAFILE_SMALL_DIFF)
+        .ordered()
+        .baselineColumns("t");
+    for (int i=sortedValues.length-1; i>= 0; i--) {
+      builder.baselineValues(sortedValues[i]);
+    }
+    builder.go();
+  }
+
+
   private void executeFilterQuery(String whereClause, long expectedCount) throws Exception {
     String query = "select count(*) as c from %s where " + whereClause;
     testBuilder()
@@ -271,13 +494,23 @@ public class TestMicrosecondColumns extends ClusterTest {
   }
 
 
+  private static String createToTimestampFragment(long micros, ZoneId timeZone) {
+    return String.format(TO_TIMESTAMP_TEMPLATE, TIMESTAMP_FORMATTER.format(toLocalDateTime(micros, timeZone)));
+  }
+
+
   private static LocalTime toLocalTime(long micros) {
     return LocalTime.ofNanoOfDay((micros/1000L) * 1000_000L);
   }
 
 
   private static LocalDateTime toLocalDateTime(long micros) {
-    return LocalDateTime.ofInstant(Instant.ofEpochMilli(micros/1000L), ZoneOffset.ofHours(0));
+    return toLocalDateTime(micros, ZoneOffset.ofHours(0));
+  }
+
+
+  private static LocalDateTime toLocalDateTime(long micros, ZoneId timeZone) {
+    return LocalDateTime.ofInstant(Instant.ofEpochMilli(micros/1000L), timeZone);
   }
 
 

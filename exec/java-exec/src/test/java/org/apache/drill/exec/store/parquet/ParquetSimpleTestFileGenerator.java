@@ -533,6 +533,7 @@ public class ParquetSimpleTestFileGenerator {
     ParquetWriter<Group> complexNullableNoDictWriter = initWriter(complexNullableSchema, "drill/parquet_test_file_complex_nullable_nodict", false);
     ParquetWriter<Group> repeatedIntV2Writer = initWriter(repeatedIntSchema, "drill/parquet_v2_repeated_int.parquet", ParquetProperties.WriterVersion.PARQUET_2_0, true);
     ParquetWriter<Group> microsecondWriter = initWriter(microsecondColumnsSchema, "drill/microseconds.parquet", false);
+    ParquetWriter<Group> microsecondSmallDiffWriter = initWriter(microsecondColumnsSchema, "drill/microseconds_small_diff.parquet", false);
 
     ParquetSimpleTestFileGenerator.writeSimpleValues(sgf, simpleWriter, false);
     ParquetSimpleTestFileGenerator.writeSimpleValues(sngf, simpleNullableWriter, true);
@@ -548,6 +549,11 @@ public class ParquetSimpleTestFileGenerator {
         microsecondWriter,
         TestMicrosecondColumns.TIME_MICROS_VALUES,
         TestMicrosecondColumns.TIMESTAMP_MICROS_VALUES);
+    ParquetSimpleTestFileGenerator.writeMicrosecondValues(
+        microsecondGroupFactory,
+        microsecondSmallDiffWriter,
+        TestMicrosecondColumns.TIME_MICROS_SMALL_DIFF_VALUES,
+        TestMicrosecondColumns.TIMESTAMP_MICROS_SMALL_DIFF_VALUES);
 
     simpleWriter.close();
     complexWriter.close();
@@ -559,6 +565,7 @@ public class ParquetSimpleTestFileGenerator {
     complexNullableNoDictWriter.close();
     repeatedIntV2Writer.close();
     microsecondWriter.close();
+    microsecondSmallDiffWriter.close();
   }
 
 }
