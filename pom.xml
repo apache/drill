@@ -133,7 +133,7 @@
     <mongo.version>4.3.3</mongo.version>
     <swagger.version>2.1.12</swagger.version>
     <junit.args />
-    <daffodil.version>3.7.0-SNAPSHOT</daffodil.version>
+    <daffodil.version>3.7.0</daffodil.version>
   </properties>
 
   <scm>
