@@ -40,7 +40,7 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.Objects;
 
-import static org.apache.drill.exec.store.daffodil.schema.DaffodilDataProcessorFactory.*;
+import static org.apache.drill.exec.store.daffodil.schema.DaffodilDataProcessorFactory.CompileFailure;
 import static org.apache.drill.exec.store.daffodil.schema.DrillDaffodilSchemaUtils.daffodilDataProcessorToDrillSchema;
 
 public class DaffodilBatchReader implements ManagedReader {
