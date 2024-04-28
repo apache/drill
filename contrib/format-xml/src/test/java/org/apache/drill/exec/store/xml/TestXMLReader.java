@@ -118,6 +118,30 @@ public class TestXMLReader extends ClusterTest {
   }
 
   @Test
+  public void testAttributesOnRootWithNamespace() throws Exception {
+    String sql = "SELECT * FROM table(cp.`xml/sitemap.xml` (type => 'xml', dataLevel => 2))";
+    RowSet results = client.queryBuilder().sql(sql).rowSet();
+
+    TupleMetadata expectedSchema = new SchemaBuilder()
+        .add("attributes", MinorType.MAP, DataMode.REQUIRED)
+        .addNullable("loc", MinorType.VARCHAR)
+        .addNullable("lastmod", MinorType.VARCHAR)
+        .addNullable("changefreq", MinorType.VARCHAR)
+        .addNullable("priority", MinorType.VARCHAR)
+        .build();
+
+    RowSet expected = client.rowSetBuilder(expectedSchema)
+        .addRow(mapArray(), "https://www.govinfo.gov/bulkdata/PLAW/118/public/PLAW-118publ1.xml", "2024-03-28T00:10:00.074Z", "monthly", "1.0")
+        .addRow(mapArray(), "https://www.govinfo.gov/bulkdata/PLAW/118/public/PLAW-118publ2.xml", "2023-06-20T23:44:00.215Z", "monthly", "1.0")
+        .addRow(mapArray(), "https://www.govinfo.gov/bulkdata/PLAW/118/public/PLAW-118publ3.xml", "2023-07-03T14:32:01.529Z", "monthly", "1.0")
+        .build();
+
+    assertEquals(3, results.rowCount());
+    new RowSetComparison(expected).verifyAndClearAll(results);
+  }
+
+
+  @Test
   public void testXXE() throws Exception {
     String sql = "SELECT * FROM cp.`xml/bad.xml`";
     try {

@@ -81,6 +81,7 @@ public class XMLReader implements Closeable {
   private XMLEventReader reader;
   private ImplicitColumns metadata;
   private boolean isSelfClosingEvent;
+  private Iterator<Attribute> rootAttributeIterator;
 
   /**
    * This field indicates the various states in which the reader operates. The names should be self-explanatory,
@@ -102,6 +103,11 @@ public class XMLReader implements Closeable {
 
     // This property prevents XXE attacks by disallowing DTD.
     inputFactory.setProperty(XMLInputFactory.SUPPORT_DTD, false);
+
+    // When reading some documents with XML Namespaces, Drill seems to ignore the rest of the
+    // document. Setting this parameter to false solves this issue.  However, when we introduce
+    // XSD support, it will likely be necessary to make this a configurable parameter.
+    inputFactory.setProperty(XMLInputFactory.IS_NAMESPACE_AWARE, false);
     reader = inputFactory.createXMLEventReader(fsStream);
     fieldNameStack = new Stack<>();
     rowWriterStack = new Stack<>();
@@ -338,7 +344,6 @@ public class XMLReader implements Closeable {
         // Get the field value
         fieldValue = currentEvent.asCharacters().getData().trim();
         changeState(xmlState.GETTING_DATA);
-        changeState(xmlState.GETTING_DATA);
         break;
 
       case XMLStreamConstants.END_ELEMENT:
@@ -365,11 +370,11 @@ public class XMLReader implements Closeable {
         } else if (currentState == xmlState.FIELD_ENDED && currentNestingLevel >= dataLevel) {
           // Case to end nested maps
           // Pop tupleWriter off stack
-          if (rowWriterStack.size() > 0) {
+          if (!rowWriterStack.isEmpty()) {
             currentTupleWriter = rowWriterStack.pop();
           }
           // Pop field name
-          if (fieldNameStack.size() > 0) {
+          if (!fieldNameStack.isEmpty()) {
             fieldNameStack.pop();
           }
 
@@ -383,7 +388,7 @@ public class XMLReader implements Closeable {
           attributePrefix = XMLUtils.removeField(attributePrefix, fieldName);
 
           // Pop field name
-          if (fieldNameStack.size() > 0) {
+          if (!fieldNameStack.isEmpty()) {
             fieldNameStack.pop();
           }
           fieldName = null;
