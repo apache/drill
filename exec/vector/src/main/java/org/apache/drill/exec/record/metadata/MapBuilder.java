@@ -198,11 +198,12 @@ public class MapBuilder implements MapBuilderLike, SchemaContainer {
    */
   @Override
   public void resume() {
-    if (Objects.isNull(parent))
+    if (Objects.isNull(parent)) {
       throw new IllegalStateException("Call to resume() on MapBuilder with no parent.");
-    if (parent instanceof MapBuilder)
+    }
+    if (parent instanceof MapBuilder) {
       resumeMap();
-    else {
+    } else {
       assert(parent instanceof SchemaBuilder);
       //
       // This would be extended for other kinds of possible containers of a Map.
