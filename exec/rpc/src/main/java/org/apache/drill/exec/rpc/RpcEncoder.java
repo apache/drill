@@ -61,7 +61,7 @@ class RpcEncoder extends MessageToMessageEncoder<OutboundRpcMessage>{
       msg.release();
       return;
     }
-
+    boolean encodeSucess = false;
     try{
       if (RpcConstants.EXTRA_DEBUGGING) {
         logger.debug("Encoding outbound message {}", msg);
@@ -131,9 +131,13 @@ class RpcEncoder extends MessageToMessageEncoder<OutboundRpcMessage>{
       if (RpcConstants.EXTRA_DEBUGGING) {
         logger.debug("Sent message.  Ending writer index was {}.", buf.writerIndex());
       }
+      encodeSucess = true;
     } finally {
       // make sure to release Rpc Messages underlying byte buffers.
-      //msg.release();
+      //if msg instanceof ReferenceCounted,netty can release msg.
+      if (!encodeSucess) {
+        msg.release();
+      }
     }
   }
 
