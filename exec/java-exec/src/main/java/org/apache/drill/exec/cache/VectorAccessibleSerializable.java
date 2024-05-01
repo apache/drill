@@ -133,7 +133,7 @@ public class VectorAccessibleSerializable extends AbstractStreamSerializable {
         vector.load(metaData, buf);
         buf.release(); // Vector now owns the buffer
         vectorList.add(vector);
-      } catch (OutOfMemoryError oom) {
+      } catch (OutOfMemoryException oom) {
         for (ValueVector valueVector : vectorList) {
           valueVector.clear();
         }
