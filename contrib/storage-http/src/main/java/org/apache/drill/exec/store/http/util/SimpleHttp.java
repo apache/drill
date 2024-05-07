@@ -973,7 +973,7 @@ public class SimpleHttp implements AutoCloseable {
 
   /**
    *
-   * @param url
+   * @param url The input URL
    * @return an input stream which the caller is responsible for closing.
    */
   public static InputStream getRequestAndStreamResponse(String url) {
@@ -989,9 +989,9 @@ public class SimpleHttp implements AutoCloseable {
 
   /**
    *
-   * @param url
+   * @param url The input URL
    * @return response body which the caller is responsible for closing.
-   * @throws IOException
+   * @throws IOException If anything goes wrong, throws an IOException
    */
   public static ResponseBody makeSimpleGetRequest(String url) throws IOException {
     Request.Builder requestBuilder = new Request.Builder()
@@ -1007,14 +1007,9 @@ public class SimpleHttp implements AutoCloseable {
 
   @Override
   public void close() {
-    Cache cache;
     try {
-      cache = client.cache();
-      if (cache != null) {
-        cache.close();
-      }
       client.connectionPool().evictAll();
-    } catch (IOException e) {
+    } catch (Exception e) {
       logger.warn("Error closing cache. {}", e.getMessage());
     }
   }
