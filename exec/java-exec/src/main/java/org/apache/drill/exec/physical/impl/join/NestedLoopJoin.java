@@ -19,6 +19,7 @@ package org.apache.drill.exec.physical.impl.join;
 
 import org.apache.calcite.rel.core.JoinRelType;
 import org.apache.drill.exec.compile.TemplateClassDefinition;
+import org.apache.drill.exec.exception.SchemaChangeException;
 import org.apache.drill.exec.ops.FragmentContext;
 import org.apache.drill.exec.record.ExpandableHyperContainer;
 import org.apache.drill.exec.record.RecordBatch;
@@ -33,7 +34,9 @@ public interface NestedLoopJoin {
   public static TemplateClassDefinition<NestedLoopJoin> TEMPLATE_DEFINITION =
       new TemplateClassDefinition<>(NestedLoopJoin.class, NestedLoopJoinTemplate.class);
 
-  public void setupNestedLoopJoin(FragmentContext context, RecordBatch left,
+  public void setupNestedLoopJoin(FragmentContext context,
+                                  RecordBatch left,
+                                  RecordBatch.IterOutcome leftOutcome,
                                   ExpandableHyperContainer rightContainer,
                                   LinkedList<Integer> rightCounts,
                                   NestedLoopJoinBatch outgoing);
@@ -41,7 +44,7 @@ public interface NestedLoopJoin {
   void setTargetOutputCount(int targetOutputCount);
 
   // Produce output records taking into account join type
-  public int outputRecords(JoinRelType joinType);
+  public int outputRecords(JoinRelType joinType) throws SchemaChangeException;
 
   // Project the record at offset 'leftIndex' in the left input batch into the output container at offset 'outIndex'
   public void emitLeft(int leftIndex, int outIndex);

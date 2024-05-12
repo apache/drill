@@ -22,6 +22,7 @@ import java.util.LinkedList;
 import java.util.Map;
 
 import org.apache.drill.shaded.guava.com.google.common.collect.ImmutableMap;
+import org.apache.drill.common.exceptions.UserException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.apache.calcite.rel.core.JoinRelType;
@@ -183,7 +184,7 @@ public class NestedLoopJoinBatch extends AbstractBinaryRecordBatch<NestedLoopJoi
           default:
         }
       }
-      nljWorker.setupNestedLoopJoin(context, left, rightContainer, rightCounts, this);
+      nljWorker.setupNestedLoopJoin(context, left, leftUpstream, rightContainer, rightCounts, this);
       state = BatchState.NOT_FIRST;
     }
 
@@ -193,7 +194,11 @@ public class NestedLoopJoinBatch extends AbstractBinaryRecordBatch<NestedLoopJoi
     nljWorker.setTargetOutputCount(batchMemoryManager.getOutputRowCount());
 
     // invoke the runtime generated method to emit records in the output batch
-    outputRecords = nljWorker.outputRecords(popConfig.getJoinType());
+    try {
+      outputRecords = nljWorker.outputRecords(popConfig.getJoinType());
+    } catch (SchemaChangeException e) {
+      throw UserException.schemaChangeError(e).build(logger);
+    }
 
     // Set the record count
     container.setValueCount(outputRecords);
