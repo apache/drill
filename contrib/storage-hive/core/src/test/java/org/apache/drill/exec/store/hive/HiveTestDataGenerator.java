@@ -23,6 +23,7 @@ import java.nio.file.Paths;
 import java.sql.Date;
 import java.sql.Timestamp;
 
+import com.google.common.base.Strings;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.drill.exec.hive.HiveTestUtilities;
@@ -98,6 +99,9 @@ public class HiveTestDataGenerator {
     if (emptyTableLocation.exists()) {
       FileUtils.forceDelete(emptyTableLocation);
     }
+
+    // generate table with variable length columns and populate if with different size data
+    generateTableWithVariableLengthColumns(hiveDriver);
 
     // create a Hive table that has columns with data types which are supported for reading in Drill.
     testDataFile = generateAllTypesDataFile();
@@ -608,5 +612,23 @@ public class HiveTestDataGenerator {
     sb.append(StringUtils.repeat("('key_footer', 'value_footer')", ",", footerLines));
 
     return sb.toString();
+  }
+
+  private void generateTableWithVariableLengthColumns(Driver hiveDriver) {
+    executeQuery(hiveDriver, "CREATE TABLE IF NOT EXISTS 256_bytes_plus_table (" +
+        "  char_col CHAR(255)," +
+        "  varchar_col VARCHAR(1500)," +
+        "  binary_col BINARY," +
+        "  string_col STRING" +
+        ")");
+
+    String insertQuery = String.format("INSERT INTO 256_bytes_plus_table VALUES\n" +
+            "  ('%s', '%s', '%s', '%s')",
+        Strings.repeat("A", 255),
+        Strings.repeat("B", 1200),
+        Strings.repeat("C", 320),
+        Strings.repeat("D", 2200));
+
+    executeQuery(hiveDriver, insertQuery);
   }
 }
