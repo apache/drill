@@ -238,7 +238,7 @@ public class HiveDefaultRecordReader extends AbstractRecordReader {
     this.proxyUserGroupInfo = proxyUgi;
     this.empty = inputSplits == null || inputSplits.isEmpty();
     this.inputSplitsIterator = empty ? Collections.emptyIterator() : inputSplits.iterator();
-    this.drillBuf = context.getManagedBuffer().reallocIfNeeded(256);
+    this.drillBuf = context.getManagedBuffer();
     this.partitionVectors = new ValueVector[0];
     this.partitionValues = new Object[0];
     setColumns(projectedColumns);
