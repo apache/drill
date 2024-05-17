@@ -30,7 +30,7 @@
 
   <groupId>org.apache.drill</groupId>
   <artifactId>drill-root</artifactId>
-  <version>1.21.3-SNAPSHOT</version>
+  <version>1.21.2</version>
   <packaging>pom</packaging>
 
   <name>Drill :</name>
@@ -153,7 +153,7 @@
     <connection>scm:git:https://gitbox.apache.org/repos/asf/drill.git</connection>
     <developerConnection>scm:git:https://gitbox.apache.org/repos/asf/drill.git</developerConnection>
     <url>https://github.com/apache/drill</url>
-    <tag>drill-1.21.1-SNAPSHOT</tag>
+    <tag>drill-1.21.2</tag>
   </scm>
 
   <mailingLists>

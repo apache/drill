@@ -24,7 +24,7 @@
   <parent>
     <artifactId>drill-contrib-parent</artifactId>
     <groupId>org.apache.drill.contrib</groupId>
-    <version>1.21.3-SNAPSHOT</version>
+    <version>1.21.2</version>
   </parent>
 
   <artifactId>drill-format-pcapng</artifactId>
