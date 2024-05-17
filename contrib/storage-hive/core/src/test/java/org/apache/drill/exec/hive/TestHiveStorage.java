@@ -17,6 +17,7 @@
  */
 package org.apache.drill.exec.hive;
 
+import static com.google.common.base.Strings.repeat;
 import static org.hamcrest.CoreMatchers.containsString;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
@@ -460,6 +461,24 @@ public class TestHiveStorage extends HiveTestBase {
       .sqlQuery("select name from hive.`table_with_empty_parquet` where id = 1")
       .expectsEmptyResultSet()
       .go();
+  }
+
+  @Test // see DRILL-8495
+  public void testReadingHiveDataBiggerThan256Bytes() throws Exception {
+    testBuilder()
+        .sqlQuery("select * from hive.`256_bytes_plus_table`")
+        .unOrdered()
+        .baselineColumns(
+            "char_col",
+            "varchar_col",
+            "binary_col",
+            "string_col")
+        .baselineValues(
+            repeat("A", 255),
+            repeat("B", 1200),
+            repeat("C", 320).getBytes(),
+            repeat("D", 2200))
+        .go();
   }
 
   private void verifyColumnsMetadata(List<UserProtos.ResultColumnMetadata> columnsList, Map<String, Integer> expectedResult) {
