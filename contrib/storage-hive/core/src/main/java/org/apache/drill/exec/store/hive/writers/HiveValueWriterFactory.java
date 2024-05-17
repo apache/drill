@@ -21,8 +21,8 @@ import java.util.List;
 import java.util.function.BiFunction;
 import java.util.function.Function;
 
-import io.netty.buffer.DrillBuf;
 import org.apache.drill.common.exceptions.UserException;
+import org.apache.drill.exec.ops.BufferManager;
 import org.apache.drill.exec.store.hive.writers.complex.HiveListWriter;
 import org.apache.drill.exec.store.hive.writers.complex.HiveMapWriter;
 import org.apache.drill.exec.store.hive.writers.complex.HiveStructWriter;
@@ -97,18 +97,18 @@ public final class HiveValueWriterFactory {
   private static final Logger logger = LoggerFactory.getLogger(HiveValueWriterFactory.class);
 
   /**
-   * Buffer shared across created Hive writers. May be used by writer for reading data
-   * to buffer than from buffer to vector.
+   * Buffer manager used to create buffers for Hive writers for reading data
+   * to buffer than from buffer to vector if needed.
    */
-  private final DrillBuf drillBuf;
+  private final BufferManager bufferManager;
 
   /**
    * Used to manage and create column writers.
    */
   private final SingleMapWriter rootWriter;
 
-  public HiveValueWriterFactory(DrillBuf drillBuf, SingleMapWriter rootWriter) {
-    this.drillBuf = drillBuf;
+  public HiveValueWriterFactory(BufferManager bufferManager, SingleMapWriter rootWriter) {
+    this.bufferManager = bufferManager;
     this.rootWriter = rootWriter;
   }
 
@@ -200,7 +200,7 @@ public final class HiveValueWriterFactory {
       case BINARY: {
         VarBinaryWriter writer = extractWriter(name, parentWriter,
             MapWriter::varBinary, ListWriter::varBinary, UnionVectorWriter::varBinary);
-        return new HiveBinaryWriter((BinaryObjectInspector) inspector, writer, drillBuf);
+        return new HiveBinaryWriter((BinaryObjectInspector) inspector, writer, bufferManager.getManagedBuffer());
       }
       case BOOLEAN: {
         BitWriter writer = extractWriter(name, parentWriter,
@@ -240,12 +240,12 @@ public final class HiveValueWriterFactory {
       case STRING: {
         VarCharWriter writer = extractWriter(name, parentWriter,
             MapWriter::varChar, ListWriter::varChar, UnionVectorWriter::varChar);
-        return new HiveStringWriter((StringObjectInspector) inspector, writer, drillBuf);
+        return new HiveStringWriter((StringObjectInspector) inspector, writer, bufferManager.getManagedBuffer());
       }
       case VARCHAR: {
         VarCharWriter writer = extractWriter(name, parentWriter,
             MapWriter::varChar, ListWriter::varChar, UnionVectorWriter::varChar);
-        return new HiveVarCharWriter((HiveVarcharObjectInspector) inspector, writer, drillBuf);
+        return new HiveVarCharWriter((HiveVarcharObjectInspector) inspector, writer, bufferManager.getManagedBuffer());
       }
       case TIMESTAMP: {
         TimeStampWriter writer = extractWriter(name, parentWriter,
@@ -260,7 +260,7 @@ public final class HiveValueWriterFactory {
       case CHAR: {
         VarCharWriter writer = extractWriter(name, parentWriter,
             MapWriter::varChar, ListWriter::varChar, UnionVectorWriter::varChar);
-        return new HiveCharWriter((HiveCharObjectInspector) inspector, writer, drillBuf);
+        return new HiveCharWriter((HiveCharObjectInspector) inspector, writer, bufferManager.getManagedBuffer());
       }
       case DECIMAL: {
         DecimalTypeInfo decimalType = (DecimalTypeInfo) typeInfo;

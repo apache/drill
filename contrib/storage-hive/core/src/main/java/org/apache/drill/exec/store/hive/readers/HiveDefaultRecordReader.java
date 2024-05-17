@@ -168,7 +168,7 @@ public class HiveDefaultRecordReader extends AbstractRecordReader {
   protected boolean empty;
 
   /**
-   * Buffer used for population of partition vectors  and to fill in data into vectors via writers
+   * Buffer used for population of partition vectors
    */
   private final DrillBuf drillBuf;
 
@@ -238,7 +238,7 @@ public class HiveDefaultRecordReader extends AbstractRecordReader {
     this.proxyUserGroupInfo = proxyUgi;
     this.empty = inputSplits == null || inputSplits.isEmpty();
     this.inputSplitsIterator = empty ? Collections.emptyIterator() : inputSplits.iterator();
-    this.drillBuf = context.getManagedBuffer().reallocIfNeeded(256);
+    this.drillBuf = context.getManagedBuffer();
     this.partitionVectors = new ValueVector[0];
     this.partitionValues = new Object[0];
     setColumns(projectedColumns);
@@ -333,7 +333,7 @@ public class HiveDefaultRecordReader extends AbstractRecordReader {
       this.selectedStructFieldRefs = new StructField[selectedColumnNames.size()];
       this.columnValueWriters = new HiveValueWriter[selectedColumnNames.size()];
       this.outputWriter = new VectorContainerWriter(output, /*enabled union*/ false);
-      HiveValueWriterFactory hiveColumnValueWriterFactory = new HiveValueWriterFactory(drillBuf, outputWriter.getWriter());
+      HiveValueWriterFactory hiveColumnValueWriterFactory = new HiveValueWriterFactory(fragmentContext.getManagedBufferManager(), outputWriter.getWriter());
       for (int refIdx = 0; refIdx < selectedStructFieldRefs.length; refIdx++) {
         String columnName = selectedColumnNames.get(refIdx);
         StructField fieldRef = finalObjInspector.getStructFieldRef(columnName);
