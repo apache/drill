@@ -56,6 +56,7 @@ public class TestInfoSchemaOnHiveStorage extends HiveTestBase {
         .baselineValues("hive.default", "hive_view_m")
         .baselineValues("hive.default", "view_over_hive_view")
         .baselineValues("hive.default", "table_with_empty_parquet")
+        .baselineValues("hive.default", "256_bytes_plus_table")
         .go();
 
     testBuilder()
@@ -268,6 +269,7 @@ public class TestInfoSchemaOnHiveStorage extends HiveTestBase {
         .baselineValues("DRILL", "hive.default", "hive_view_m", "TABLE")
         .baselineValues("DRILL", "hive.default", "view_over_hive_view", "VIEW")
         .baselineValues("DRILL", "hive.default", "table_with_empty_parquet", "TABLE")
+        .baselineValues("DRILL", "hive.default", "256_bytes_plus_table", "TABLE")
         .baselineValues("DRILL", "hive.skipper", "kv_text_small", "TABLE")
         .baselineValues("DRILL", "hive.skipper", "kv_text_large", "TABLE")
         .baselineValues("DRILL", "hive.skipper", "kv_incorrect_skip_header", "TABLE")

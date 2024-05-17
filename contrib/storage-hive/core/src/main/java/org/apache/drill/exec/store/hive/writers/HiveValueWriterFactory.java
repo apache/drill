@@ -21,7 +21,6 @@ import java.util.List;
 import java.util.function.BiFunction;
 import java.util.function.Function;
 
-import io.netty.buffer.DrillBuf;
 import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.exec.ops.BufferManager;
 import org.apache.drill.exec.store.hive.writers.complex.HiveListWriter;
