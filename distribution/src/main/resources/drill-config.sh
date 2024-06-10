@@ -305,18 +305,21 @@ export DRILLBIT_OPTS="$DRILLBIT_OPTS -XX:ReservedCodeCacheSize=$DRILLBIT_CODE_CA
 # This option prevents the PDF Format Plugin from opening unnecessary Java windows
 export DRILLBIT_OPTS="$DRILLBIT_OPTS -Djava.awt.headless=true"
 
+REF_ACC_OPTS=""
 # Check that java is newer than 1.8
 "$JAVA" -version 2>&1 | grep "version" | egrep -e "1\.8" > /dev/null
 if [ $? -gt 0 ]; then
   # Allow reflective access on Java 9+
-  export DRILLBIT_OPTS="$DRILLBIT_OPTS --add-opens java.base/java.lang=ALL-UNNAMED"
-  export DRILLBIT_OPTS="$DRILLBIT_OPTS --add-opens=java.base/java.util=ALL-UNNAMED"
-  export DRILLBIT_OPTS="$DRILLBIT_OPTS --add-opens java.base/sun.nio.ch=ALL-UNNAMED"
-  export DRILLBIT_OPTS="$DRILLBIT_OPTS --add-opens java.base/java.net=ALL-UNNAMED"
-  export DRILLBIT_OPTS="$DRILLBIT_OPTS --add-opens java.base/java.nio=ALL-UNNAMED"
-  export DRILLBIT_OPTS="$DRILLBIT_OPTS --add-opens java.security.jgss/sun.security.krb5=ALL-UNNAMED"
-fi
+  REF_ACC_OPTS="$REF_ACC_OPTS --add-opens java.base/java.lang=ALL-UNNAMED"
+  REF_ACC_OPTS="$REF_ACC_OPTS --add-opens=java.base/java.util=ALL-UNNAMED"
+  REF_ACC_OPTS="$REF_ACC_OPTS --add-opens java.base/sun.nio.ch=ALL-UNNAMED"
+  REF_ACC_OPTS="$REF_ACC_OPTS --add-opens java.base/java.net=ALL-UNNAMED"
+  REF_ACC_OPTS="$REF_ACC_OPTS --add-opens java.base/java.nio=ALL-UNNAMED"
+  REF_ACC_OPTS="$REF_ACC_OPTS --add-opens java.security.jgss/sun.security.krb5=ALL-UNNAMED"
+  export REF_ACC_OPTS
 
+  export DRILLBIT_OPTS="$DRILLBIT_OPTS $REF_ACC_OPTS"
+fi
 
 # Under YARN, the log directory is usually YARN-provided. Replace any
 # value that may have been set in drill-env.sh.
