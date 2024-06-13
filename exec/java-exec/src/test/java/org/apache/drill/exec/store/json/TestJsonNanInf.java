@@ -15,33 +15,25 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package org.apache.drill.exec.store.json;
 
-import static org.apache.drill.test.TestBuilder.mapOf;
 import static org.hamcrest.CoreMatchers.containsString;
-import static org.junit.Assert.assertEquals;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.fail;
 
 import java.io.File;
-import java.util.List;
+import java.nio.charset.Charset;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.drill.common.exceptions.UserRemoteException;
-import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.physical.impl.join.JoinTestBase;
-import org.apache.drill.exec.record.RecordBatchLoader;
-import org.apache.drill.exec.record.VectorWrapper;
-import org.apache.drill.exec.rpc.user.QueryDataBatch;
-import org.apache.drill.exec.vector.VarCharVector;
 import org.apache.drill.exec.store.json.TestJsonReader.TestWrapper;
 import org.apache.drill.test.BaseTestQuery;
-import org.junit.Ignore;
 import org.junit.Test;
 
-// TODO: Split or rename: this tests mor than NanInf
 public class TestJsonNanInf extends BaseTestQuery {
 
   public void runBoth(TestWrapper wrapper) throws Exception {
@@ -66,7 +58,7 @@ public class TestJsonNanInf extends BaseTestQuery {
     String json = "{\"nan_col\":NaN, \"inf_col\":Infinity}";
     String query = String.format("select * from dfs.`%s`",table);
     try {
-      FileUtils.writeStringToFile(file, json);
+      FileUtils.writeStringToFile(file, json, Charset.defaultCharset());
       testBuilder()
         .sqlQuery(query)
         .unOrdered()
@@ -79,7 +71,6 @@ public class TestJsonNanInf extends BaseTestQuery {
   }
 
   @Test
-  @Ignore // see DRILL-6018
   public void testExcludePositiveInfinity() throws Exception {
     runBoth(this::doTestExcludePositiveInfinity);
   }
@@ -91,7 +82,7 @@ public class TestJsonNanInf extends BaseTestQuery {
         "{\"nan_col\":5.0, \"inf_col\":5.0}]";
     String query = String.format("select inf_col from dfs.`%s` where inf_col <> cast('Infinity' as double)",table);
     try {
-      FileUtils.writeStringToFile(file, json);
+      FileUtils.writeStringToFile(file, json, Charset.defaultCharset());
       testBuilder()
         .sqlQuery(query)
         .unOrdered()
@@ -104,7 +95,6 @@ public class TestJsonNanInf extends BaseTestQuery {
   }
 
   @Test
-  @Ignore // see DRILL-6018
   public void testExcludeNegativeInfinity() throws Exception {
     runBoth(this::doTestExcludeNegativeInfinity);
   }
@@ -116,7 +106,7 @@ public class TestJsonNanInf extends BaseTestQuery {
         "{\"nan_col\":5.0, \"inf_col\":5.0}]";
     String query = String.format("select inf_col from dfs.`%s` where inf_col <> cast('-Infinity' as double)",table);
     try {
-      FileUtils.writeStringToFile(file, json);
+      FileUtils.writeStringToFile(file, json, Charset.defaultCharset());
       testBuilder()
         .sqlQuery(query)
         .unOrdered()
@@ -129,7 +119,6 @@ public class TestJsonNanInf extends BaseTestQuery {
   }
 
   @Test
-  @Ignore // see DRILL-6018
   public void testIncludePositiveInfinity() throws Exception {
     runBoth(this::doTestIncludePositiveInfinity);
   }
@@ -141,7 +130,7 @@ public class TestJsonNanInf extends BaseTestQuery {
         "{\"nan_col\":5.0, \"inf_col\":5.0}]";
     String query = String.format("select inf_col from dfs.`%s` where inf_col = cast('Infinity' as double)",table);
     try {
-      FileUtils.writeStringToFile(file, json);
+      FileUtils.writeStringToFile(file, json, Charset.defaultCharset());
       testBuilder()
           .sqlQuery(query)
           .unOrdered()
@@ -166,7 +155,7 @@ public class TestJsonNanInf extends BaseTestQuery {
         "{\"nan_col\":5.0, \"inf_col\":5.0}]";
     String query = String.format("select nan_col from dfs.`%s` where cast(nan_col as varchar) <> 'NaN'",table);
     try {
-      FileUtils.writeStringToFile(file, json);
+      FileUtils.writeStringToFile(file, json, Charset.defaultCharset());
       testBuilder()
           .sqlQuery(query)
           .unOrdered()
@@ -190,7 +179,7 @@ public class TestJsonNanInf extends BaseTestQuery {
         "{\"nan_col\":5.0, \"inf_col\":5.0}]";
     String query = String.format("select nan_col from dfs.`%s` where cast(nan_col as varchar) = 'NaN'",table);
     try {
-      FileUtils.writeStringToFile(file, json);
+      FileUtils.writeStringToFile(file, json, Charset.defaultCharset());
       testBuilder()
           .sqlQuery(query)
           .unOrdered()
@@ -213,7 +202,7 @@ public class TestJsonNanInf extends BaseTestQuery {
     test("alter session set `%s` = false", ExecConstants.JSON_READER_NAN_INF_NUMBERS);
     String json = "{\"nan_col\":NaN, \"inf_col\":Infinity}";
     try {
-      FileUtils.writeStringToFile(file, json);
+      FileUtils.writeStringToFile(file, json, Charset.defaultCharset());
       test("select * from dfs.`%s`;", table);
       fail();
     } catch (UserRemoteException e) {
@@ -235,13 +224,13 @@ public class TestJsonNanInf extends BaseTestQuery {
     String json = "{\"nan_col\":NaN, \"inf_col\":Infinity}";
     String newTable = "ctas_test";
     try {
-      FileUtils.writeStringToFile(file, json);
+      FileUtils.writeStringToFile(file, json, Charset.defaultCharset());
       test("alter session set `store.format`='json'");
       test("create table dfs.`%s` as select * from dfs.`%s`;", newTable, table);
 
       // ensuring that `NaN` and `Infinity` tokens ARE NOT enclosed with double quotes
       File resultFile = new File(new File(file.getParent(), newTable),"0_0_0.json");
-      String resultJson = FileUtils.readFileToString(resultFile);
+      String resultJson = FileUtils.readFileToString(resultFile, Charset.defaultCharset());
       int nanIndex = resultJson.indexOf("NaN");
       assertNotEquals("`NaN` must not be enclosed with \"\" ", '"', resultJson.charAt(nanIndex - 1));
       assertNotEquals("`NaN` must not be enclosed with \"\" ", '"', resultJson.charAt(nanIndex + "NaN".length()));
@@ -250,28 +239,6 @@ public class TestJsonNanInf extends BaseTestQuery {
       assertNotEquals("`Infinity` must not be enclosed with \"\" ", '"', resultJson.charAt(infIndex + "Infinity".length()));
     } finally {
       test("drop table if exists dfs.`%s`", newTable);
-      FileUtils.deleteQuietly(file);
-    }
-  }
-
-  @Test
-  public void testConvertFromJsonFunction() throws Exception {
-    runBoth(this::doTestConvertFromJsonFunction);
-  }
-
-  private void doTestConvertFromJsonFunction() throws Exception {
-    String table = "nan_test.csv";
-    File file = new File(dirTestWatcher.getRootDir(), table);
-    String csv = "col_0, {\"nan_col\":NaN}";
-    try {
-      FileUtils.writeStringToFile(file, csv);
-      testBuilder()
-          .sqlQuery(String.format("select convert_fromJSON(columns[1]) as col from dfs.`%s`", table))
-          .unOrdered()
-          .baselineColumns("col")
-          .baselineValues(mapOf("nan_col", Double.NaN))
-          .go();
-    } finally {
       FileUtils.deleteQuietly(file);
     }
   }
@@ -292,39 +259,6 @@ public class TestJsonNanInf extends BaseTestQuery {
  }
 
   @Test
-  public void testConvertToJsonFunction() throws Exception {
-    runBoth(() -> doTestConvertToJsonFunction());
-  }
-
-  private void doTestConvertToJsonFunction() throws Exception {
-    String table = "nan_test.csv";
-    File file = new File(dirTestWatcher.getRootDir(), table);
-    String csv = "col_0, {\"nan_col\":NaN}";
-    String query = String.format("select string_binary(convert_toJSON(convert_fromJSON(columns[1]))) as col " +
-        "from dfs.`%s` where columns[0]='col_0'", table);
-    try {
-      FileUtils.writeStringToFile(file, csv);
-      List<QueryDataBatch> results = testSqlWithResults(query);
-      RecordBatchLoader batchLoader = new RecordBatchLoader(getAllocator());
-      assertEquals("Query result must contain 1 row", 1, results.size());
-      QueryDataBatch batch = results.get(0);
-
-      batchLoader.load(batch.getHeader().getDef(), batch.getData());
-      VectorWrapper<?> vw = batchLoader.getValueAccessorById(VarCharVector.class, batchLoader.getValueVectorId(SchemaPath.getCompoundPath("col")).getFieldIds());
-      // ensuring that `NaN` token ARE NOT enclosed with double quotes
-      String resultJson = vw.getValueVector().getAccessor().getObject(0).toString();
-      int nanIndex = resultJson.indexOf("NaN");
-      assertNotEquals("`NaN` must not be enclosed with \"\" ", '"', resultJson.charAt(nanIndex - 1));
-      assertNotEquals("`NaN` must not be enclosed with \"\" ", '"', resultJson.charAt(nanIndex + "NaN".length()));
-      batch.release();
-      batchLoader.clear();
-    } finally {
-      FileUtils.deleteQuietly(file);
-    }
-  }
-
-  @Test
-  @Ignore("DRILL-6018")
   public void testNanInfLiterals() throws Exception {
       testBuilder()
           .sqlQuery("  select sin(cast('NaN' as double)) as sin_col, " +
@@ -350,7 +284,7 @@ public class TestJsonNanInf extends BaseTestQuery {
 
     File file = new File(dirTestWatcher.getRootDir(), table_name);
     try {
-      FileUtils.writeStringToFile(file, json);
+      FileUtils.writeStringToFile(file, json, Charset.defaultCharset());
       test("alter session set `%s` = true", ExecConstants.JSON_READ_NUMBERS_AS_DOUBLE);
       testBuilder()
           .sqlQuery(query)
@@ -391,7 +325,7 @@ public class TestJsonNanInf extends BaseTestQuery {
 
     File file = new File(dirTestWatcher.getRootDir(), table_name);
     try {
-      FileUtils.writeStringToFile(file, json);
+      FileUtils.writeStringToFile(file, json, Charset.defaultCharset());
       test("alter session set `%s` = true", ExecConstants.JSON_READ_NUMBERS_AS_DOUBLE);
       testBuilder()
           .sqlQuery(query)
@@ -426,7 +360,7 @@ public class TestJsonNanInf extends BaseTestQuery {
 
     File file = new File(dirTestWatcher.getRootDir(), table_name);
     try {
-      FileUtils.writeStringToFile(file, json);
+      FileUtils.writeStringToFile(file, json, Charset.defaultCharset());
       test("alter session set `%s` = true", ExecConstants.JSON_READ_NUMBERS_AS_DOUBLE);
       testBuilder()
           .sqlQuery(query)
@@ -459,7 +393,7 @@ public class TestJsonNanInf extends BaseTestQuery {
 
     File file = new File(dirTestWatcher.getRootDir(), table_name);
     try {
-      FileUtils.writeStringToFile(file, json);
+      FileUtils.writeStringToFile(file, json, Charset.defaultCharset());
       test("alter session set `%s` = true", ExecConstants.JSON_READ_NUMBERS_AS_DOUBLE);
       testBuilder()
           .sqlQuery(query)
@@ -475,11 +409,11 @@ public class TestJsonNanInf extends BaseTestQuery {
     }
   }
 
-  private void enableV2Reader(boolean enable) throws Exception {
+  private void enableV2Reader(boolean enable) {
     alterSession(ExecConstants.ENABLE_V2_JSON_READER_KEY, enable);
   }
 
-  private void resetV2Reader() throws Exception {
+  private void resetV2Reader() {
     resetSessionOption(ExecConstants.ENABLE_V2_JSON_READER_KEY);
   }
 }
