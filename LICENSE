@@ -202,6 +202,15 @@
    limitations under the License.
 
 ---------------------------------------------------------------------------
+This product includes code from Apache Commons Lang3, licensed under the
+Apache License 2.0.
+
+Apache Commons Lang
+Copyright 2001-2024 The Apache Software Foundation
+
+- exec/java-exec/src/main/java/org/apache/drill/exec/util/SecureRandomStringUtils.java
+
+---------------------------------------------------------------------------
 This product includes source licensed under the MIT license.
 
 The source files are located at contrib/native/client/src/clientlib/y2038/
