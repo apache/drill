@@ -34,4 +34,10 @@ public interface RpcOutcomeListener<V> {
    * is cancelled due to query cancellations or failures.
    */
   void interrupted(final InterruptedException e);
+
+  /**
+   * Called when an operator complete for waiting msg release
+   */
+  default void complete() {
+  }
 }

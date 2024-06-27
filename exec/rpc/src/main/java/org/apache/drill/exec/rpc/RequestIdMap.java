@@ -115,6 +115,7 @@ class RequestIdMap {
 
     @Override
     public void operationComplete(ChannelFuture future) throws Exception {
+      handler.complete();
       if (!future.isSuccess()) {
         try {
           removeFromMap(coordinationId);

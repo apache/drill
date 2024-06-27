@@ -84,7 +84,7 @@ public class DataTunnel {
       }
 
       outcomeListener.interrupted(e);
-
+      outcomeListener.complete();
       // Preserve evidence that the interruption occurred so that code higher up on the call stack can learn of the
       // interruption and respond to it if it wants to.
       Thread.currentThread().interrupt();
@@ -140,6 +140,11 @@ public class DataTunnel {
     public void interrupted(InterruptedException e) {
       sendingSemaphore.release();
       inner.interrupted(e);
+    }
+
+    @Override
+    public void complete() {
+      inner.complete();
     }
   }
 
