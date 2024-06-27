@@ -415,6 +415,12 @@ public final class ExecConstants {
   public static final String PARQUET_READER_INT96_AS_TIMESTAMP = "store.parquet.reader.int96_as_timestamp";
   public static final OptionValidator PARQUET_READER_INT96_AS_TIMESTAMP_VALIDATOR = new BooleanValidator(PARQUET_READER_INT96_AS_TIMESTAMP,
       new OptionDescription("Enables Drill to implicitly interpret the INT96 timestamp data type in Parquet files."));
+  public static final String PARQUET_READER_TIME_MICROS_AS_INT64 = "store.parquet.reader.time_micros_as_int64";
+  public static final OptionValidator PARQUET_READER_TIME_MICROS_AS_INT64_VALIDATOR = new BooleanValidator(PARQUET_READER_TIME_MICROS_AS_INT64,
+      new OptionDescription("Enables Drill to implicitly interpret the TIME_MICROS data type in Parquet files as 64-bit integers instead of SQL times truncated to milliseconds."));
+  public static final String PARQUET_READER_TIMESTAMP_MICROS_AS_INT64 = "store.parquet.reader.timestamp_micros_as_int64";
+  public static final OptionValidator PARQUET_READER_TIMESTAMP_MICROS_AS_INT64_VALIDATOR = new BooleanValidator(PARQUET_READER_TIMESTAMP_MICROS_AS_INT64,
+      new OptionDescription("Enables Drill to implicitly interpret the TIMESTAMP_MICROS data type in Parquet files as 64-bit integers instead of SQL timestamps truncated to milliseconds."));
 
   public static final String PARQUET_READER_STRINGS_SIGNED_MIN_MAX = "store.parquet.reader.strings_signed_min_max";
   public static final StringValidator PARQUET_READER_STRINGS_SIGNED_MIN_MAX_VALIDATOR = new EnumeratedStringValidator(PARQUET_READER_STRINGS_SIGNED_MIN_MAX,

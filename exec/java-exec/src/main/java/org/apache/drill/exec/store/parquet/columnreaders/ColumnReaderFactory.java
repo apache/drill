@@ -180,11 +180,21 @@ public class ColumnReaderFactory {
             return new ParquetFixedWidthDictionaryReaders.DictionaryBigIntReader(recordReader, descriptor,
               columnChunkMetaData, fixedLength, (BigIntVector) v, schemaElement);
           case TIMESTAMP_MICROS:
-            return new ParquetFixedWidthDictionaryReaders.DictionaryTimeStampMicrosReader(recordReader, descriptor,
-                columnChunkMetaData, fixedLength, (TimeStampVector) v, schemaElement);
+            if (recordReader.getFragmentContext().getOptions().getBoolean(ExecConstants.PARQUET_READER_TIMESTAMP_MICROS_AS_INT64)) {
+              return new ParquetFixedWidthDictionaryReaders.DictionaryBigIntReader(recordReader, descriptor,
+                  columnChunkMetaData, fixedLength, (BigIntVector) v, schemaElement);
+            } else {
+              return new ParquetFixedWidthDictionaryReaders.DictionaryTimeStampMicrosReader(recordReader, descriptor,
+                  columnChunkMetaData, fixedLength, (TimeStampVector) v, schemaElement);
+            }
           case TIME_MICROS:
-            return new ParquetFixedWidthDictionaryReaders.DictionaryTimeMicrosReader(recordReader, descriptor,
-              columnChunkMetaData, fixedLength, (TimeVector) v, schemaElement);
+            if (recordReader.getFragmentContext().getOptions().getBoolean(ExecConstants.PARQUET_READER_TIME_MICROS_AS_INT64)) {
+              return new ParquetFixedWidthDictionaryReaders.DictionaryBigIntReader(recordReader, descriptor,
+                  columnChunkMetaData, fixedLength, (BigIntVector) v, schemaElement);
+            } else {
+              return new ParquetFixedWidthDictionaryReaders.DictionaryTimeMicrosReader(recordReader, descriptor,
+                  columnChunkMetaData, fixedLength, (TimeVector) v, schemaElement);
+            }
           case UINT_64:
             return new ParquetFixedWidthDictionaryReaders.DictionaryUInt8Reader(recordReader, descriptor,
                 columnChunkMetaData, fixedLength, (UInt8Vector) v, schemaElement);
@@ -299,10 +309,21 @@ public class ColumnReaderFactory {
           case TIMESTAMP_MILLIS:
             return new NullableFixedByteAlignedReaders.NullableDictionaryTimeStampReader(parentReader, columnDescriptor, columnChunkMetaData, fixedLength, (NullableTimeStampVector)valueVec, schemaElement);
           case TIME_MICROS:
-            return new NullableFixedByteAlignedReaders.NullableDictionaryTimeMicrosReader(parentReader, columnDescriptor, columnChunkMetaData, fixedLength, (NullableTimeVector) valueVec, schemaElement);
+            if (parentReader.getFragmentContext().getOptions().getBoolean(ExecConstants.PARQUET_READER_TIME_MICROS_AS_INT64)) {
+              return new NullableFixedByteAlignedReaders.NullableDictionaryBigIntReader(parentReader,
+                columnDescriptor, columnChunkMetaData, fixedLength, (NullableBigIntVector) valueVec, schemaElement);
+            } else {
+              return new NullableFixedByteAlignedReaders.NullableDictionaryTimeMicrosReader(parentReader,
+                columnDescriptor, columnChunkMetaData, fixedLength, (NullableTimeVector) valueVec, schemaElement);
+            }
           case TIMESTAMP_MICROS:
-            return new NullableFixedByteAlignedReaders.NullableDictionaryTimeStampMicrosReader(parentReader,
-              columnDescriptor, columnChunkMetaData, fixedLength, (NullableTimeStampVector) valueVec, schemaElement);
+            if (parentReader.getFragmentContext().getOptions().getBoolean(ExecConstants.PARQUET_READER_TIMESTAMP_MICROS_AS_INT64)) {
+              return new NullableFixedByteAlignedReaders.NullableDictionaryBigIntReader(parentReader,
+                columnDescriptor, columnChunkMetaData, fixedLength, (NullableBigIntVector) valueVec, schemaElement);
+            } else {
+              return new NullableFixedByteAlignedReaders.NullableDictionaryTimeStampMicrosReader(parentReader,
+                columnDescriptor, columnChunkMetaData, fixedLength, (NullableTimeStampVector) valueVec, schemaElement);
+            }
           case INT_64:
             return new NullableFixedByteAlignedReaders.NullableDictionaryBigIntReader(parentReader,
               columnDescriptor, columnChunkMetaData, fixedLength, (NullableBigIntVector) valueVec, schemaElement);

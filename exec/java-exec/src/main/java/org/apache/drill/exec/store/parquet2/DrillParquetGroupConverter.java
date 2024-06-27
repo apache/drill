@@ -260,14 +260,22 @@ public class DrillParquetGroupConverter extends GroupConverter {
           case INT_64:
             return getBigIntConverter(name, type);
           case TIMESTAMP_MICROS: {
-            TimeStampWriter writer = getTimeStampWriter(name, type);
-            return new DrillTimeStampMicrosConverter(writer);
+            if (options.getBoolean(ExecConstants.PARQUET_READER_TIMESTAMP_MICROS_AS_INT64)) {
+              return getBigIntConverter(name, type);
+            } else {
+              TimeStampWriter writer = getTimeStampWriter(name, type);
+              return new DrillTimeStampMicrosConverter(writer);
+            }
           }
           case TIME_MICROS: {
-            TimeWriter writer = type.isRepetition(Repetition.REPEATED)
-              ? getWriter(name, (m, f) -> m.list(f).time(), l -> l.list().time())
-              : getWriter(name, MapWriter::time, ListWriter::time);
-            return new DrillTimeMicrosConverter(writer);
+            if (options.getBoolean(ExecConstants.PARQUET_READER_TIME_MICROS_AS_INT64)) {
+              return getBigIntConverter(name, type);
+            } else {
+              TimeWriter writer = type.isRepetition(Repetition.REPEATED)
+                  ? getWriter(name, (m, f) -> m.list(f).time(), l -> l.list().time())
+                  : getWriter(name, MapWriter::time, ListWriter::time);
+              return new DrillTimeMicrosConverter(writer);
+            }
           }
           case DECIMAL: {
             ParquetReaderUtility.checkDecimalTypeEnabled(options);
