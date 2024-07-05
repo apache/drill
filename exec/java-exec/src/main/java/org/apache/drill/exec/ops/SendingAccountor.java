@@ -35,6 +35,9 @@ public class SendingAccountor {
 
   private final AtomicInteger batchesSent = new AtomicInteger(0);
   private final Semaphore wait = new Semaphore(0);
+  //batch release util data send complete
+  private final AtomicInteger batchesComplete = new AtomicInteger(0);
+  private final Semaphore waitComplete = new Semaphore(0);
 
   void increment() {
     batchesSent.incrementAndGet();
@@ -42,6 +45,14 @@ public class SendingAccountor {
 
   void decrement() {
     wait.release();
+  }
+
+  void incrementComplete() {
+    batchesComplete.incrementAndGet();
+  }
+
+  void decrementComplete() {
+    waitComplete.release();
   }
 
   public synchronized void waitForSendComplete() {
@@ -61,11 +72,31 @@ public class SendingAccountor {
           isInterrupted = true;
         }
       }
-
+      isInterrupted = isInterrupted || waitForOperatorComplete();
       if (isInterrupted) {
         // Preserve evidence that the interruption occurred so that code higher up on the call stack can learn of the
         // interruption and respond to it if it wants to.
         Thread.currentThread().interrupt();
       }
+  }
+
+  public synchronized boolean waitForOperatorComplete() {
+    int waitForBatches = batchesComplete.get();
+    boolean isInterrupted = false;
+    while(waitForBatches != 0) {
+      try {
+        waitComplete.acquire(waitForBatches);
+        waitForBatches = batchesComplete.addAndGet(-1 * waitForBatches);
+      } catch (InterruptedException e) {
+        // We should always wait for send complete. If we don't, we'll leak memory or have a memory miss when we try
+        // to send. This should be safe because: network connections should get disconnected and fail a send if a
+        // node goes down, otherwise, the receiving side connection should always consume from the rpc layer
+        // (blocking is cooperative and will get triggered before this)
+        logger.warn("Interrupted while waiting for send complete. Continuing to wait.", e);
+
+        isInterrupted = true;
+      }
+    }
+    return isInterrupted;
   }
 }

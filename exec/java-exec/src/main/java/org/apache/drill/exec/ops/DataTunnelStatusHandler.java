@@ -62,4 +62,9 @@ public class DataTunnelStatusHandler implements RpcOutcomeListener<BitData.AckWi
     sendingAccountor.decrement();
     consumer.interrupt(e);
   }
+
+  @Override
+  public void complete() {
+    sendingAccountor.decrementComplete();
+  }
 }
