@@ -83,6 +83,52 @@ public class JsonConvertFrom {
   }
 
   @FunctionTemplate(name = "convert_fromJSON", scope = FunctionScope.SIMPLE, isRandom = true)
+  public static class ConvertFromJsonWithArgs implements DrillSimpleFunc {
+
+    @Param
+    VarBinaryHolder in;
+
+    @Param
+    BitHolder allTextModeHolder;
+
+    @Param
+    BitHolder readNumbersAsDoubleHolder;
+
+    @Inject
+    DrillBuf buffer;
+
+    @Workspace
+    org.apache.drill.exec.vector.complex.fn.JsonReader jsonReader;
+
+    @Output
+    ComplexWriter writer;
+
+    @Override
+    public void setup() {
+      boolean allTextMode = allTextModeHolder.value == 1;
+      boolean readNumbersAsDouble = readNumbersAsDoubleHolder.value == 1;
+
+      jsonReader = new org.apache.drill.exec.vector.complex.fn.JsonReader.Builder(buffer)
+          .defaultSchemaPathColumns()
+          .allTextMode(allTextMode)
+          .readNumbersAsDouble(readNumbersAsDouble)
+          .build();
+    }
+
+    @Override
+    public void eval() {
+      try {
+        jsonReader.setSource(in.start, in.end, in.buffer);
+        jsonReader.write(writer);
+        buffer = jsonReader.getWorkBuf();
+      } catch (Exception e) {
+        throw new org.apache.drill.common.exceptions.DrillRuntimeException("Error while converting from JSON. ", e);
+      }
+    }
+  }
+
+
+  @FunctionTemplate(name = "convert_fromJSON", scope = FunctionScope.SIMPLE, isRandom = true)
   public static class ConvertFromJsonVarchar implements DrillSimpleFunc {
 
     @Param
@@ -169,8 +215,6 @@ public class JsonConvertFrom {
     }
   }
 
-
-
   @FunctionTemplate(name = "convert_fromJSON", scope = FunctionScope.SIMPLE, isRandom = true)
   public static class ConvertFromJsonNullableInput implements DrillSimpleFunc {
 
@@ -193,6 +237,59 @@ public class JsonConvertFrom {
     public void setup() {
       boolean allTextMode = options.getBoolean(org.apache.drill.exec.ExecConstants.JSON_ALL_TEXT_MODE);
       boolean readNumbersAsDouble = options.getBoolean(org.apache.drill.exec.ExecConstants.JSON_READ_NUMBERS_AS_DOUBLE);
+
+      jsonReader = new org.apache.drill.exec.vector.complex.fn.JsonReader.Builder(buffer)
+          .defaultSchemaPathColumns()
+          .allTextMode(allTextMode)
+          .readNumbersAsDouble(readNumbersAsDouble)
+          .build();
+    }
+
+    @Override
+    public void eval() {
+      if (in.isSet == 0) {
+        // Return empty map
+        org.apache.drill.exec.vector.complex.writer.BaseWriter.MapWriter mapWriter = writer.rootAsMap();
+        mapWriter.start();
+        mapWriter.end();
+        return;
+      }
+
+      try {
+        jsonReader.setSource(in.start, in.end, in.buffer);
+        jsonReader.write(writer);
+        buffer = jsonReader.getWorkBuf();
+      } catch (Exception e) {
+        throw new org.apache.drill.common.exceptions.DrillRuntimeException("Error while converting from JSON. ", e);
+      }
+    }
+  }
+
+  @FunctionTemplate(name = "convert_fromJSON", scope = FunctionScope.SIMPLE, isRandom = true)
+  public static class ConvertFromJsonNullableInputWithArgs implements DrillSimpleFunc {
+
+    @Param
+    NullableVarBinaryHolder in;
+
+    @Param
+    BitHolder allTextModeHolder;
+
+    @Param
+    BitHolder readNumbersAsDoubleHolder;
+
+    @Inject
+    DrillBuf buffer;
+
+    @Workspace
+    org.apache.drill.exec.vector.complex.fn.JsonReader jsonReader;
+
+    @Output
+    ComplexWriter writer;
+
+    @Override
+    public void setup() {
+      boolean allTextMode = allTextModeHolder.value == 1;
+      boolean readNumbersAsDouble = readNumbersAsDoubleHolder.value == 1;
 
       jsonReader = new org.apache.drill.exec.vector.complex.fn.JsonReader.Builder(buffer)
           .defaultSchemaPathColumns()
