@@ -123,6 +123,38 @@ public class TestJsonConversionUDF extends BaseTestQuery {
   }
 
   @Test
+  public void testAllTextModeFromArgs() throws Exception {
+    // Set the system options to make sure that the UDF is using the provided options rather than
+    // the system options.
+    alterSession(ExecConstants.JSON_ALL_TEXT_MODE, false);
+    alterSession(ExecConstants.JSON_READ_NUMBERS_AS_DOUBLE, true);
+
+    String sql = "SELECT \n" +
+        "typeof(jsonMap['bi']) AS bi, \n" +
+        "typeof(jsonMap['fl']) AS fl, \n" +
+        "typeof(jsonMap['st']) AS st, \n" +
+        "typeof(jsonMap['mp']) AS mp, \n" +
+        "typeof(jsonMap['ar']) AS ar, \n" +
+        "typeof(jsonMap['nu']) AS nu\n" +
+        "FROM(\n" +
+        "SELECT convert_fromJSON(col1, true, false) AS jsonMap, \n" +
+        "col2 \n" +
+        "FROM cp.`jsoninput/allTypes.csvh`\n" +
+        ")";
+
+    testBuilder()
+        .sqlQuery(sql)
+        .unOrdered()
+        .baselineColumns("bi", "fl", "st", "mp", "ar", "nu")
+        .baselineValues("VARCHAR", "VARCHAR", "VARCHAR", "MAP", "VARCHAR", "NULL")
+        .go();
+
+    resetSessionOption(ExecConstants.JSON_ALL_TEXT_MODE);
+    resetSessionOption(ExecConstants.JSON_READ_NUMBERS_AS_DOUBLE);
+  }
+
+
+  @Test
   public void testReadNumbersAsDouble() throws Exception {
     alterSession(ExecConstants.JSON_ALL_TEXT_MODE, false);
     alterSession(ExecConstants.JSON_READ_NUMBERS_AS_DOUBLE, true);
@@ -148,6 +180,36 @@ public class TestJsonConversionUDF extends BaseTestQuery {
         .go();
 
     alterSession(ExecConstants.JSON_READ_NUMBERS_AS_DOUBLE, true);
+    testBuilder()
+        .sqlQuery(sql)
+        .unOrdered()
+        .baselineColumns("bi", "fl", "st", "mp", "ar", "nu")
+        .baselineValues("FLOAT8", "FLOAT8", "VARCHAR", "MAP", "FLOAT8", "NULL")
+        .go();
+
+    resetSessionOption(ExecConstants.JSON_ALL_TEXT_MODE);
+    resetSessionOption(ExecConstants.JSON_READ_NUMBERS_AS_DOUBLE);
+  }
+
+  @Test
+  public void testReadNumbersAsDoubleFromArgs() throws Exception {
+    // Set the system options to make sure that the UDF is using the provided options rather than
+    // the system options.
+    alterSession(ExecConstants.JSON_ALL_TEXT_MODE, true);
+    alterSession(ExecConstants.JSON_READ_NUMBERS_AS_DOUBLE, true);
+    String sql = "SELECT \n" +
+        "typeof(jsonMap['bi']) AS bi, \n" +
+        "typeof(jsonMap['fl']) AS fl, \n" +
+        "typeof(jsonMap['st']) AS st, \n" +
+        "typeof(jsonMap['mp']) AS mp, \n" +
+        "typeof(jsonMap['ar']) AS ar, \n" +
+        "typeof(jsonMap['nu']) AS nu\n" +
+        "FROM(\n" +
+        "SELECT convert_fromJSON(col1, false, true) AS jsonMap, \n" +
+        "col2 \n" +
+        "FROM cp.`jsoninput/allTypes.csvh`\n" +
+        ")";
+
     testBuilder()
         .sqlQuery(sql)
         .unOrdered()
