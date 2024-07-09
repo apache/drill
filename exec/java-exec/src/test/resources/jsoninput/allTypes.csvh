@@ -1,0 +1,2 @@
+col1,col2
+"{bi: 123,fl: 123.4,st: ""foo"",mp: { a: 10, b: ""bar"" },ar: [ 10, 20 ],nu: null}", 2
