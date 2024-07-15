@@ -28,7 +28,7 @@ import org.mockito.Mock;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.Assert.assertEquals;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
@@ -80,7 +80,7 @@ public class DruidFilterBuilderTest {
     DruidScanSpec parsedSpec = druidFilterBuilder.parseTree();
     String expectedFilterJson = "{\"type\":\"and\",\"fields\":[{\"type\":\"selector\",\"dimension\":\"some dimension\",\"value\":\"some value\"},{\"type\":\"selector\",\"dimension\":\"some other dimension\",\"value\":\"some other value\"}]}";
     String actual = parsedSpec.getFilter().toJson();
-    assertThat(actual).isEqualTo(expectedFilterJson);
+    assertEquals(expectedFilterJson, actual);
   }
 
   @Test
@@ -99,7 +99,7 @@ public class DruidFilterBuilderTest {
         druidFilterBuilder.visitBooleanOperator(booleanOperator, null);
     String expectedFilterJson = "{\"type\":\"and\",\"fields\":[{\"type\":\"selector\",\"dimension\":\"some dimension\",\"value\":\"some value\"},{\"type\":\"selector\",\"dimension\":\"some other dimension\",\"value\":\"some other value\"}]}";
     String actual = druidScanSpec.getFilter().toJson();
-    assertThat(actual).isEqualTo(expectedFilterJson);
+    assertEquals(expectedFilterJson, actual);
   }
 
   @Test
@@ -118,6 +118,6 @@ public class DruidFilterBuilderTest {
         druidFilterBuilder.visitBooleanOperator(booleanOperator, null);
     String expectedFilterJson = "{\"type\":\"or\",\"fields\":[{\"type\":\"selector\",\"dimension\":\"some dimension\",\"value\":\"some value\"},{\"type\":\"selector\",\"dimension\":\"some other dimension\",\"value\":\"some other value\"}]}";
     String actual = druidScanSpec.getFilter().toJson();
-    assertThat(actual).isEqualTo(expectedFilterJson);
+    assertEquals(actual, expectedFilterJson);
   }
 }

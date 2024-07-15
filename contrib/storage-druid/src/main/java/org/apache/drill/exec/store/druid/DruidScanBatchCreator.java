@@ -32,9 +32,6 @@ import org.apache.drill.exec.physical.impl.scan.framework.SchemaNegotiator;
 import org.apache.drill.exec.record.CloseableRecordBatch;
 import org.apache.drill.exec.record.RecordBatch;
 import org.apache.drill.exec.server.options.OptionManager;
-import org.apache.drill.exec.store.RecordReader;
-import com.google.common.base.Preconditions;
-import com.google.common.collect.Lists;
 import org.apache.drill.exec.store.druid.DruidSubScan.DruidSubScanSpec;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -55,8 +52,6 @@ public class DruidScanBatchCreator implements BatchCreator<DruidSubScan> {
       ScanFrameworkBuilder builder = createBuilder(context.getOptions(), subScan);
       return builder.buildScanOperator(context, subScan);
     } catch (UserException e) {
-      throw e;
-    } catch (Throwable e) {
       throw e;
     }
   }

@@ -18,13 +18,15 @@
 package org.apache.drill.exec.store.druid;
 
 import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.common.collect.ImmutableSet;
 import org.apache.calcite.schema.SchemaPlus;
 import org.apache.drill.common.JSONOptions;
 import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.exec.metastore.MetadataProviderManager;
 import org.apache.drill.exec.ops.OptimizerRulesContext;
-import org.apache.drill.exec.planner.PlannerPhase;
 import org.apache.drill.exec.physical.base.AbstractGroupScan;
+import org.apache.drill.exec.planner.PlannerPhase;
 import org.apache.drill.exec.server.DrillbitContext;
 import org.apache.drill.exec.server.options.SessionOptionManager;
 import org.apache.drill.exec.store.AbstractStoragePlugin;
@@ -36,7 +38,6 @@ import org.apache.drill.exec.store.druid.rest.DruidQueryClient;
 import org.apache.drill.exec.store.druid.rest.RestClient;
 import org.apache.drill.exec.store.druid.rest.RestClientWrapper;
 import org.apache.drill.exec.store.druid.schema.DruidSchemaFactory;
-import com.google.common.collect.ImmutableSet;
 
 import java.io.IOException;
 import java.util.List;

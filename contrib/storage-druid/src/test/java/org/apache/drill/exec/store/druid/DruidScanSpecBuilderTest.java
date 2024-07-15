@@ -22,8 +22,9 @@ import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.exec.store.druid.common.DruidConstants;
 import org.junit.Before;
 import org.junit.Test;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
 
-import static org.assertj.core.api.Assertions.assertThat;
 
 public class DruidScanSpecBuilderTest {
 
@@ -54,8 +55,8 @@ public class DruidScanSpecBuilderTest {
           FunctionNames.EQ,
           schemaPath,
           SOME_VALUE);
-
-    assertThat(druidScanSpec.getFilter().toJson()).isEqualTo("{\"type\":\"selector\",\"dimension\":\"some field\",\"value\":\"some value\"}");
+    String actual = "{\"type\":\"selector\",\"dimension\":\"some field\",\"value\":\"some value\"}";
+    assertEquals(druidScanSpec.getFilter().toJson(), actual);
   }
 
   @Test
@@ -70,8 +71,8 @@ public class DruidScanSpecBuilderTest {
         FunctionNames.EQ,
         schemaPath,
         SOME_VALUE);
-
-    assertThat(druidScanSpec.getFilter().toJson()).isEqualTo("{\"eventInterval\":\"some value\"}");
+    String actual = "{\"eventInterval\":\"some value\"}";
+    assertEquals(druidScanSpec.getFilter().toJson(), actual);
   }
 
   @Test
@@ -86,8 +87,8 @@ public class DruidScanSpecBuilderTest {
         FunctionNames.NE,
         schemaPath, SOME_VALUE
       );
-
-    assertThat(druidScanSpec.getFilter().toJson()).isEqualTo("{\"type\":\"not\",\"field\":{\"type\":\"selector\",\"dimension\":\"some field\",\"value\":\"some value\"}}");
+    String actual = "{\"type\":\"not\",\"field\":{\"type\":\"selector\",\"dimension\":\"some field\",\"value\":\"some value\"}}";
+    assertEquals(druidScanSpec.getFilter().toJson(), actual);
   }
 
   @Test
@@ -103,8 +104,8 @@ public class DruidScanSpecBuilderTest {
         schemaPath,
         SOME_VALUE
       );
-
-    assertThat(druidScanSpec.getFilter().toJson()).isEqualTo("{\"type\":\"bound\",\"dimension\":\"some field\",\"lower\":\"some value\",\"ordering\":\"lexicographic\"}");
+    String actual = "{\"type\":\"bound\",\"dimension\":\"some field\",\"lower\":\"some value\",\"ordering\":\"lexicographic\"}";
+    assertEquals(druidScanSpec.getFilter().toJson(), actual);
   }
 
   @Test
@@ -120,8 +121,8 @@ public class DruidScanSpecBuilderTest {
         schemaPath,
         SOME_VALUE
       );
-
-    assertThat(druidScanSpec.getFilter().toJson()).isEqualTo("{\"type\":\"bound\",\"dimension\":\"some field\",\"lower\":\"some value\",\"lowerStrict\":true,\"ordering\":\"lexicographic\"}");
+    String actual = "{\"type\":\"bound\",\"dimension\":\"some field\",\"lower\":\"some value\",\"lowerStrict\":true,\"ordering\":\"lexicographic\"}";
+    assertEquals(druidScanSpec.getFilter().toJson(), actual);
   }
 
   @Test
@@ -138,7 +139,8 @@ public class DruidScanSpecBuilderTest {
         "1"
       );
 
-    assertThat(druidScanSpec.getFilter().toJson()).isEqualTo("{\"type\":\"bound\",\"dimension\":\"some field\",\"lower\":\"1\",\"lowerStrict\":true,\"ordering\":\"numeric\"}");
+    String actual = "{\"type\":\"bound\",\"dimension\":\"some field\",\"lower\":\"1\",\"lowerStrict\":true,\"ordering\":\"numeric\"}";
+    assertEquals(druidScanSpec.getFilter().toJson(), actual);
   }
 
   @Test
@@ -154,7 +156,8 @@ public class DruidScanSpecBuilderTest {
         schemaPath,
         SOME_VALUE);
 
-    assertThat(druidScanSpec.getFilter().toJson()).isEqualTo("{\"type\":\"bound\",\"dimension\":\"some field\",\"upper\":\"some value\",\"ordering\":\"lexicographic\"}");
+    String actual = "{\"type\":\"bound\",\"dimension\":\"some field\",\"upper\":\"some value\",\"ordering\":\"lexicographic\"}";
+    assertEquals(druidScanSpec.getFilter().toJson(), actual);
   }
 
   @Test
@@ -169,7 +172,8 @@ public class DruidScanSpecBuilderTest {
         schemaPath,
         SOME_VALUE);
 
-    assertThat(druidScanSpec.getFilter().toJson()).isEqualTo("{\"type\":\"bound\",\"dimension\":\"some field\",\"upper\":\"some value\",\"upperStrict\":true,\"ordering\":\"lexicographic\"}");
+    String actual = "{\"type\":\"bound\",\"dimension\":\"some field\",\"upper\":\"some value\",\"upperStrict\":true,\"ordering\":\"lexicographic\"}";
+    assertEquals(druidScanSpec.getFilter().toJson(), actual);
   }
 
   @Test
@@ -184,7 +188,8 @@ public class DruidScanSpecBuilderTest {
         schemaPath,
         "1");
 
-    assertThat(druidScanSpec.getFilter().toJson()).isEqualTo("{\"type\":\"bound\",\"dimension\":\"some field\",\"upper\":\"1\",\"upperStrict\":true,\"ordering\":\"numeric\"}");
+    String actual = "{\"type\":\"bound\",\"dimension\":\"some field\",\"upper\":\"1\",\"upperStrict\":true,\"ordering\":\"numeric\"}";
+    assertEquals(druidScanSpec.getFilter().toJson(), actual);
   }
 
   @Test
@@ -199,8 +204,9 @@ public class DruidScanSpecBuilderTest {
         FunctionNames.IS_NULL,
         schemaPath,
         null);
-    assertThat(druidScanSpec).isNotNull();
-    assertThat(druidScanSpec.getFilter().toJson()).isEqualTo("{\"type\":\"selector\",\"dimension\":\"some field\",\"value\":null}");
+    assertNotNull(druidScanSpec);
+    String actual = "{\"type\":\"selector\",\"dimension\":\"some field\",\"value\":null}";
+    assertEquals(druidScanSpec.getFilter().toJson(), actual);
   }
 
   @Test
@@ -215,8 +221,9 @@ public class DruidScanSpecBuilderTest {
         FunctionNames.IS_NOT_NULL,
         schemaPath,
         null);
-    assertThat(druidScanSpec).isNotNull();
-    assertThat(druidScanSpec.getFilter().toJson()).isEqualTo("{\"type\":\"not\",\"field\":{\"type\":\"selector\",\"dimension\":\"some field\",\"value\":null}}");
+    assertNotNull(druidScanSpec);
+    String actual = "{\"type\":\"not\",\"field\":{\"type\":\"selector\",\"dimension\":\"some field\",\"value\":null}}";
+    assertEquals(druidScanSpec.getFilter().toJson(), actual);
   }
 
   @Test
@@ -232,7 +239,8 @@ public class DruidScanSpecBuilderTest {
           schemaPath,
           "$regex$_some_regular_expression");
 
-    assertThat(druidScanSpec.getFilter().toJson()).isEqualTo("{\"type\":\"regex\",\"dimension\":\"some field\",\"pattern\":\"some_regular_expression\"}");
+    String actual = "{\"type\":\"regex\",\"dimension\":\"some field\",\"pattern\":\"some_regular_expression\"}";
+    assertEquals(druidScanSpec.getFilter().toJson(), actual);
   }
 
   @Test
@@ -247,7 +255,7 @@ public class DruidScanSpecBuilderTest {
           FunctionNames.LIKE,
           schemaPath,
           "some search string");
-
-    assertThat(druidScanSpec.getFilter().toJson()).isEqualTo("{\"type\":\"search\",\"dimension\":\"some field\",\"query\":{\"type\":\"contains\",\"value\":\"some search string\",\"caseSensitive\":false}}");
+    String actual = "{\"type\":\"search\",\"dimension\":\"some field\",\"query\":{\"type\":\"contains\",\"value\":\"some search string\",\"caseSensitive\":false}}";
+    assertEquals(druidScanSpec.getFilter().toJson(), actual);
   }
 }
