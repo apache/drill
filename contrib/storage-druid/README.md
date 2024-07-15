@@ -4,7 +4,7 @@ Drill druid storage plugin allows you to perform SQL queries against Druid datas
 This storage plugin is part of [Apache Drill](https://github.com/apache/drill)
 
 ### Tested with Druid version
-[0.22.0](https://github.com/apache/druid/releases/tag/druid-0.22.0)
+[30.0.0](https://github.com/apache/druid/releases/tag/druid-0.22.0)
 
 ### Druid API
 
@@ -33,27 +33,27 @@ Following is the default registration configuration.
 
 ### Druid storage plugin developer notes.
 
-* Building the plugin 
+* Building the plugin
 
     `mvn install -pl contrib/storage-druid`
 
 * Building DRILL
 
     `mvn clean install -DskipTests`
-    
+
 * Start Drill In Embedded Mode (mac)
 
     ```shell script
     distribution/target/apache-drill-1.20.0-SNAPSHOT/apache-drill-1.20.0-SNAPSHOT/bin/drill-embedded
     ```
-  
+
 * Starting Druid (Docker and Docker Compose required)
     ```
     cd contrib/storage-druid/src/test/resources/druid
     docker-compose up -d
     ```
-  
+
   * There is an `Indexing Task Json` in the same folder as the docker compose file. It can be used to ingest the wikipedia datasource.
-  
+
   * Make sure the druid storage plugin is enabled in Drill.
 
