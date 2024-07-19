@@ -42,6 +42,7 @@ import fmpp.util.MiscUtil;
 /**
  * a maven plugin to run the freemarker generation incrementally
  * (if output has not changed, the files are not touched)
+ * @threadSafe
  * @goal generate
  * @phase generate-sources
  */
