@@ -118,7 +118,7 @@ public class SplunkConnection {
   public Service connect() {
     HttpService.setValidateCertificates(validateCertificates);
     HttpService.setSslSecurityProtocol(SSLSecurityProtocol.TLSv1_2);
-    
+
     if (! validateCertificates) {
       try {
         HttpService.setSSLSocketFactory(createAllTrustingSSLFactory());
