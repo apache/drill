@@ -20,6 +20,8 @@ package org.apache.drill.exec.store.splunk;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonInclude.Include;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import org.apache.drill.common.PlanStringBuilder;
@@ -49,6 +51,7 @@ public class SplunkPluginConfig extends StoragePluginConfig {
   private final String token;
   private final String cookie;
   private final boolean validateCertificates;
+  private final boolean validateHostname;
   private final Integer reconnectRetries;
   private final boolean writable;
   private final Integer writerBatchSize;
@@ -64,6 +67,7 @@ public class SplunkPluginConfig extends StoragePluginConfig {
                             @JsonProperty("token") String token,
                             @JsonProperty("cookie") String cookie,
                             @JsonProperty("validateCertificates") boolean validateCertificates,
+                            @JsonProperty("validateHostname") boolean validateHostname,
                             @JsonProperty("earliestTime") String earliestTime,
                             @JsonProperty("latestTime") String latestTime,
                             @JsonProperty("credentialsProvider") CredentialsProvider credentialsProvider,
@@ -82,6 +86,7 @@ public class SplunkPluginConfig extends StoragePluginConfig {
     this.cookie = cookie;
     this.writable = writable;
     this.validateCertificates = validateCertificates;
+    this.validateHostname = validateHostname;
     this.earliestTime = earliestTime;
     this.latestTime = latestTime == null ? "now" : latestTime;
     this.reconnectRetries = reconnectRetries;
@@ -99,6 +104,7 @@ public class SplunkPluginConfig extends StoragePluginConfig {
     this.writable = that.writable;
     this.cookie = that.cookie;
     this.validateCertificates = that.validateCertificates;
+    this.validateHostname = that.validateHostname;
     this.earliestTime = that.earliestTime;
     this.latestTime = that.latestTime;
     this.reconnectRetries = that.reconnectRetries;
@@ -188,8 +194,15 @@ public class SplunkPluginConfig extends StoragePluginConfig {
   }
 
   @JsonProperty("validateCertificates")
+  @JsonInclude(Include.NON_DEFAULT)
   public boolean getValidateCertificates() {
     return validateCertificates;
+  }
+
+  @JsonProperty("validateHostname")
+  @JsonInclude(Include.NON_DEFAULT)
+  public boolean getValidateHostname() {
+    return validateHostname;
   }
 
   @JsonProperty("earliestTime")
@@ -234,6 +247,7 @@ public class SplunkPluginConfig extends StoragePluginConfig {
       Objects.equals(token, thatConfig.token) &&
       Objects.equals(cookie, thatConfig.cookie) &&
       Objects.equals(validateCertificates, thatConfig.validateCertificates) &&
+      Objects.equals(validateHostname, thatConfig.validateHostname) &&
       Objects.equals(earliestTime, thatConfig.earliestTime) &&
       Objects.equals(latestTime, thatConfig.latestTime) &&
       Objects.equals(authMode, thatConfig.authMode);
@@ -252,6 +266,7 @@ public class SplunkPluginConfig extends StoragePluginConfig {
       cookie,
       writable,
       validateCertificates,
+      validateHostname,
       earliestTime,
       latestTime,
       authMode
@@ -271,6 +286,7 @@ public class SplunkPluginConfig extends StoragePluginConfig {
       .field("token", token)
       .field("cookie", cookie)
       .field("validateCertificates", validateCertificates)
+      .field("validateHostname", validateHostname)
       .field("earliestTime", earliestTime)
       .field("latestTime", latestTime)
       .field("Authentication Mode", authMode)

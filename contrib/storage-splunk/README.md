@@ -3,21 +3,22 @@ This plugin enables Drill to query Splunk.
 
 ## Configuration
 
-| Option               | Default   | Description                                                     | Since |
-| -------------------- | --------- | --------------------------------------------------------------- | ----- |
-| type                 | (none)    | Set to "splunk" to use this plugin                              | 1.19  |
-| username             | null      | Splunk username to be used by Drill                             | 1.19  |
-| password             | null      | Splunk password to be used by Drill                             | 1.19  |
-| scheme               | https     | The scheme with which to access the Splunk host                 | 2.0   |
-| hostname             | localhost | Splunk host to be queried by Drill                              | 1.19  |
-| port                 | 8089      | TCP port over which Drill will connect to Splunk                | 1.19  |
-| earliestTime         | null      | Global earliest record timestamp default                        | 1.19  |
-| latestTime           | null      | Global latest record timestamp default                          | 1.19  |
-| app                  | null      | The application context of the service[^1]                      | 2.0   |
-| owner                | null      | The owner context of the service[^1]                            | 2.0   |
-| token                | null      | A Splunk authentication token to use for the session[^2]        | 2.0   |
-| cookie               | null      | A valid login cookie                                            | 2.0   |
-| validateCertificates | true      | Whether the Splunk client will validates the server's SSL cert  | 2.0   |
+| Option                | Default   | Description                                                     | Since |
+|-----------------------| --------- | --------------------------------------------------------------- | ----- |
+| type                  | (none)    | Set to "splunk" to use this plugin                              | 1.19  |
+| username              | null      | Splunk username to be used by Drill                             | 1.19  |
+| password              | null      | Splunk password to be used by Drill                             | 1.19  |
+| scheme                | https     | The scheme with which to access the Splunk host                 | 2.0   |
+| hostname              | localhost | Splunk host to be queried by Drill                              | 1.19  |
+| port                  | 8089      | TCP port over which Drill will connect to Splunk                | 1.19  |
+| earliestTime          | null      | Global earliest record timestamp default                        | 1.19  |
+| latestTime            | null      | Global latest record timestamp default                          | 1.19  |
+| app                   | null      | The application context of the service[^1]                      | 2.0   |
+| owner                 | null      | The owner context of the service[^1]                            | 2.0   |
+| token                 | null      | A Splunk authentication token to use for the session[^2]        | 2.0   |
+| cookie                | null      | A valid login cookie                                            | 2.0   |
+| validateCertificates  | true      | Whether the Splunk client will validates the server's SSL cert  | 2.0   |
+| validateHostname      | true      | Whether the Splunk client will validate the server's host name  | 1.22  |
 
 [^1]: See [this Splunk documentation](https://docs.splunk.com/Documentation/Splunk/latest/Admin/Apparchitectureandobjectownership) for more information.
 [^2]: See [this Splunk documentation](https://docs.splunk.com/Documentation/Splunk/latest/Security/CreateAuthTokens) for more information.

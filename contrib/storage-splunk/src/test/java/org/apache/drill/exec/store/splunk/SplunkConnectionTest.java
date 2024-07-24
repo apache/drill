@@ -54,6 +54,7 @@ public class SplunkConnectionTest extends SplunkBaseTest {
         SPLUNK_STORAGE_PLUGIN_CONFIG.getToken(),
         SPLUNK_STORAGE_PLUGIN_CONFIG.getCookie(),
         SPLUNK_STORAGE_PLUGIN_CONFIG.getValidateCertificates(),
+        SPLUNK_STORAGE_PLUGIN_CONFIG.getValidateHostname(),
         SPLUNK_STORAGE_PLUGIN_CONFIG.getEarliestTime(),
         SPLUNK_STORAGE_PLUGIN_CONFIG.getLatestTime(),
         null,
