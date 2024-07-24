@@ -58,7 +58,7 @@ public class SplunkSchema extends AbstractSchema {
     // TODO Add Configuration Parameters for the schema cache
     this.cache = Caffeine.newBuilder()
         .expireAfterAccess(90, TimeUnit.MINUTES)
-        .maximumSize(100)
+        .maximumSize(1000)
         .build();
 
     registerIndexes();
