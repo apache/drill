@@ -30,6 +30,8 @@ import org.apache.drill.exec.store.security.UsernamePasswordCredentials;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.net.ssl.HostnameVerifier;
+import javax.net.ssl.HttpsURLConnection;
 import javax.net.ssl.SSLContext;
 import javax.net.ssl.SSLSocketFactory;
 import javax.net.ssl.TrustManager;
@@ -37,9 +39,8 @@ import javax.net.ssl.X509TrustManager;
 import java.security.KeyManagementException;
 import java.security.NoSuchAlgorithmException;
 import java.security.cert.X509Certificate;
-import java.util.concurrent.TimeUnit;
-
 import java.util.Optional;
+import java.util.concurrent.TimeUnit;
 
 /**
  * This class wraps the functionality of the Splunk connection for Drill.
@@ -54,6 +55,10 @@ public class SplunkConnection {
   private final Integer port;
   // Whether the Splunk client will validate the server's SSL cert.
   private final boolean validateCertificates;
+
+  // Whether or not to validate the server's hostname.
+  private final boolean validateHostnames;
+
   // The application context of the service.
   private final String app;
   // The owner context of the service.
@@ -80,6 +85,7 @@ public class SplunkConnection {
     this.token = config.getToken();
     this.cookie = config.getCookie();
     this.validateCertificates = config.getValidateCertificates();
+    this.validateHostnames = config.getValidateHostname();
     this.connectionAttempts = config.getReconnectRetries();
     service = connect();
   }
@@ -101,6 +107,7 @@ public class SplunkConnection {
     this.token = config.getToken();
     this.cookie = config.getCookie();
     this.validateCertificates = config.getValidateCertificates();
+    this.validateHostnames = config.getValidateHostname();
     this.service = service;
   }
 
@@ -109,8 +116,9 @@ public class SplunkConnection {
    * @return an active Splunk {@link Service} connection.
    */
   public Service connect() {
-    HttpService.setSslSecurityProtocol(SSLSecurityProtocol.TLSv1_2);
     HttpService.setValidateCertificates(validateCertificates);
+    HttpService.setSslSecurityProtocol(SSLSecurityProtocol.TLSv1_2);
+    
     if (! validateCertificates) {
       try {
         HttpService.setSSLSocketFactory(createAllTrustingSSLFactory());
@@ -119,6 +127,16 @@ public class SplunkConnection {
           .message("Error validating SSL Certificates: " + e.getMessage())
           .build(logger);
       }
+    }
+
+    if (! this.validateHostnames) {
+      // Disable hostname verification
+      // This verification does not work with Splunk self-signed certificates
+      HttpsURLConnection.setDefaultHostnameVerifier(new HostnameVerifier() {
+        public boolean verify(String hostname, javax.net.ssl.SSLSession sslSession) {
+          return true;
+        }
+      });
     }
 
     ServiceArgs loginArgs = new ServiceArgs();
