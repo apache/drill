@@ -103,6 +103,8 @@ public class SplunkSchema extends AbstractSchema {
         .message(plugin.getName() + " is not writable.")
         .build(logger);
     }
+    // Clear the index cache.
+    cache.invalidate(getNameForCache());
 
     return new CreateTableEntry() {
       @Override
@@ -131,6 +133,11 @@ public class SplunkSchema extends AbstractSchema {
 
     // Drop the index
     indexes.remove(indexName);
+
+    // Update the cache
+    String cacheKey = getNameForCache();
+    cache.invalidate(cacheKey);
+    cache.put(cacheKey, indexes.keySet());
   }
 
   @Override
@@ -148,6 +155,14 @@ public class SplunkSchema extends AbstractSchema {
     return SplunkPluginConfig.NAME;
   }
 
+  /**
+   * Returns the name for the cache.
+   * @return A String containing a combination of the queryUsername and sourceType (table name)
+   */
+  private String getNameForCache() {
+    return queryUserName + "-" + plugin.getName();
+  }
+
   private void registerIndexes() {
     // Verify that the connection is successful.  If not, don't register any indexes,
     // and throw an exception.
@@ -160,7 +175,7 @@ public class SplunkSchema extends AbstractSchema {
     Set<String> indexList;
     // Retrieve and add all other Splunk indexes
     // First check the cache to see if we have a list of indexes.
-    String nameKey = queryUserName + "-" + plugin.getName();
+    String nameKey = getNameForCache();
     indexList = cache.getIfPresent(nameKey);
 
     // If the index list is not in the cache, query Splunk, retrieve the index list and add it to the cache.
