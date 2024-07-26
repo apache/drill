@@ -59,7 +59,7 @@ public class SplunkConnectionTest extends SplunkBaseTest {
         SPLUNK_STORAGE_PLUGIN_CONFIG.getLatestTime(),
         null,
         SPLUNK_STORAGE_PLUGIN_CONFIG.getReconnectRetries(),
-        StoragePluginConfig.AuthMode.SHARED_USER.name(), true, null
+        StoragePluginConfig.AuthMode.SHARED_USER.name(), true, null, null, null, null
       );
       SplunkConnection sc = new SplunkConnection(invalidSplunkConfig, null);
       sc.connect();

@@ -70,7 +70,7 @@ public class SplunkTestSuite extends ClusterTest {
   private static AtomicInteger initCount = new AtomicInteger(0);
   @ClassRule
   public static GenericContainer<?> splunk = new GenericContainer<>(
-    DockerImageName.parse("splunk/splunk:9.0.2")
+    DockerImageName.parse("splunk/splunk:9.2")
   )
     .withExposedPorts(8089, 8089)
     .withEnv("SPLUNK_START_ARGS", "--accept-license")
@@ -98,7 +98,7 @@ public class SplunkTestSuite extends ClusterTest {
           "1", "now",
           null,
           4,
-          StoragePluginConfig.AuthMode.SHARED_USER.name(), true, null
+          StoragePluginConfig.AuthMode.SHARED_USER.name(), true, null, null, null, null
         );
         SPLUNK_STORAGE_PLUGIN_CONFIG.setEnabled(true);
         pluginRegistry.put(SplunkPluginConfig.NAME, SPLUNK_STORAGE_PLUGIN_CONFIG);
@@ -120,7 +120,7 @@ public class SplunkTestSuite extends ClusterTest {
           "1", "now",
           credentialsProvider,
           4,
-          AuthMode.USER_TRANSLATION.name(), true, null
+          AuthMode.USER_TRANSLATION.name(), true, null, null, null, null
         );
         SPLUNK_STORAGE_PLUGIN_CONFIG_WITH_USER_TRANSLATION.setEnabled(true);
         pluginRegistry.put("ut_splunk", SPLUNK_STORAGE_PLUGIN_CONFIG_WITH_USER_TRANSLATION);
