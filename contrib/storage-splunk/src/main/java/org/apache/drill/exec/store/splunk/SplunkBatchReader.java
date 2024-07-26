@@ -56,8 +56,6 @@ public class SplunkBatchReader implements ManagedReader<SchemaNegotiator> {
   private static final List<String> TS_COLS = new ArrayList<>(Arrays.asList("_indextime", "_time"));
   private static final String EARLIEST_TIME_COLUMN = "earliestTime";
   private static final String LATEST_TIME_COLUMN = "latestTime";
-  private static final int MAX_COLUMNS = 1024;
-
   private final SplunkPluginConfig config;
   private final SplunkSubScan subScan;
   private final List<SchemaPath> projectedColumns;
@@ -89,8 +87,8 @@ public class SplunkBatchReader implements ManagedReader<SchemaNegotiator> {
     RowListProcessor rowProcessor = new RowListProcessor();
     csvSettings.setProcessor(rowProcessor);
     csvSettings.setMaxCharsPerColumn(ValueVector.MAX_BUFFER_SIZE);
-    // Splunk can produce a lot of columns. The default maximum is 512.
-    csvSettings.setMaxColumns(MAX_COLUMNS);
+    // Splunk can produce a lot of columns. The SDK default maximum is 512.
+    csvSettings.setMaxColumns(config.getMaxColumns());
   }
 
   @Override
