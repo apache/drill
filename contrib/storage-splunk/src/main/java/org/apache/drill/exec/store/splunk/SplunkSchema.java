@@ -55,10 +55,9 @@ public class SplunkSchema extends AbstractSchema {
     this.plugin = plugin;
     this.queryUserName = queryUserName;
 
-    // TODO Add Configuration Parameters for the schema cache
     this.cache = Caffeine.newBuilder()
-        .expireAfterAccess(90, TimeUnit.MINUTES)
-        .maximumSize(1000)
+        .expireAfterAccess(plugin.getConfig().getCacheExpiration(), TimeUnit.MINUTES)
+        .maximumSize(plugin.getConfig().getMaxCacheSize())
         .build();
 
     registerIndexes();
