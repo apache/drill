@@ -22,6 +22,7 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonTypeName;
+import com.google.common.collect.ImmutableSet;
 import org.apache.drill.common.PlanStringBuilder;
 import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.exec.physical.base.AbstractBase;
@@ -29,7 +30,6 @@ import org.apache.drill.exec.physical.base.PhysicalOperator;
 import org.apache.drill.exec.physical.base.PhysicalVisitor;
 import org.apache.drill.exec.physical.base.SubScan;
 import org.apache.drill.exec.store.base.filter.ExprNode;
-import com.google.common.collect.ImmutableSet;
 
 import java.util.Iterator;
 import java.util.List;
@@ -38,6 +38,8 @@ import java.util.Objects;
 
 @JsonTypeName("splunk-sub-scan")
 public class SplunkSubScan extends AbstractBase implements SubScan {
+  private static final String EARLIEST_TIME_COLUMN = "earliestTime";
+  private static final String LATEST_TIME_COLUMN = "latestTime";
 
   private final SplunkPluginConfig config;
   private final SplunkScanSpec splunkScanSpec;
@@ -115,7 +117,71 @@ public class SplunkSubScan extends AbstractBase implements SubScan {
       .field("columns", columns)
       .field("filters", filters)
       .field("maxRecords", maxRecords)
+      .field("spl", generateQuery())
       .toString();
+  }
+
+  /**
+   * Generates the query which will be sent to Splunk. This method exists for debugging purposes so
+   * that the actual SPL will be recorded in the query plan.
+   */
+  private String generateQuery() {
+    String earliestTime = null;
+    String latestTime = null;
+    Map<String, ExprNode.ColRelOpConstNode> filters = getFilters();
+
+    // Splunk searches perform best when they are time bound.  This allows the user to set
+    // default time boundaries in the config.  These will be overwritten in filter pushdowns
+    if (filters != null && filters.containsKey(EARLIEST_TIME_COLUMN)) {
+      earliestTime = filters.get(EARLIEST_TIME_COLUMN).value.value.toString();
+
+      // Remove from map
+      filters.remove(EARLIEST_TIME_COLUMN);
+    }
+
+    if (filters != null && filters.containsKey(LATEST_TIME_COLUMN)) {
+      latestTime = filters.get(LATEST_TIME_COLUMN).value.value.toString();
+
+      // Remove from map so they are not pushed down into the query
+      filters.remove(LATEST_TIME_COLUMN);
+    }
+
+    if (earliestTime == null) {
+      earliestTime = config.getEarliestTime();
+    }
+
+    if (latestTime == null) {
+      latestTime = config.getLatestTime();
+    }
+
+    // Special case: If the user wishes to send arbitrary SPL to Splunk, the user can use the "SPL"
+    // Index and spl filter
+    if (splunkScanSpec.getIndexName().equalsIgnoreCase("spl")) {
+      return filters.get("spl").value.value.toString();
+    }
+
+    SplunkQueryBuilder builder = new SplunkQueryBuilder(splunkScanSpec.getIndexName());
+
+    // Set the sourcetype
+    if (filters != null && filters.containsKey("sourcetype")) {
+      String sourcetype = filters.get("sourcetype").value.value.toString();
+      builder.addSourceType(sourcetype);
+      filters.remove("sourcetype");
+    }
+
+    // Add projected columns, skipping star and specials.
+    for (SchemaPath projectedColumn: columns) {
+      builder.addField(projectedColumn.getAsUnescapedPath());
+    }
+
+    // Apply filters
+    builder.addFilters(filters);
+
+    // Apply limits
+    if (getMaxRecords() > 0) {
+      builder.addLimit(getMaxRecords());
+    }
+    return builder.build();
   }
 
   @Override
