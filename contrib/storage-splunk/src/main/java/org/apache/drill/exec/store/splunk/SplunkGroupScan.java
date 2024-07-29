@@ -321,16 +321,10 @@ public class SplunkGroupScan extends AbstractGroupScan {
     // default time boundaries in the config.  These will be overwritten in filter pushdowns
     if (filters != null && filters.containsKey(SplunkUtils.EARLIEST_TIME_COLUMN)) {
       earliestTime = filters.get(SplunkUtils.EARLIEST_TIME_COLUMN).value.value.toString();
-
-      // Remove from map
-      filters.remove(SplunkUtils.EARLIEST_TIME_COLUMN);
     }
 
     if (filters != null && filters.containsKey(SplunkUtils.LATEST_TIME_COLUMN)) {
       latestTime = filters.get(SplunkUtils.LATEST_TIME_COLUMN).value.value.toString();
-
-      // Remove from map so they are not pushed down into the query
-      filters.remove(SplunkUtils.LATEST_TIME_COLUMN);
     }
 
     if (earliestTime == null) {
@@ -355,7 +349,6 @@ public class SplunkGroupScan extends AbstractGroupScan {
     if (filters != null && filters.containsKey("sourcetype")) {
       String sourcetype = filters.get("sourcetype").value.value.toString();
       builder.addSourceType(sourcetype);
-      filters.remove("sourcetype");
     }
 
     // Add projected columns, skipping star and specials.

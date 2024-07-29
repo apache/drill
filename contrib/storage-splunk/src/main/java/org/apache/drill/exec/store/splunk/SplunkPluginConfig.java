@@ -327,9 +327,9 @@ public class SplunkPluginConfig extends StoragePluginConfig {
       .field("earliestTime", earliestTime)
       .field("latestTime", latestTime)
       .field("Authentication Mode", authMode)
-        .field("maxColumns", maxColumns)
-        .field("maxCacheSize", maxCacheSize)
-        .field("cacheExpiration", cacheExpiration)
+      .field("maxColumns", maxColumns)
+      .field("maxCacheSize", maxCacheSize)
+      .field("cacheExpiration", cacheExpiration)
       .toString();
   }
 
