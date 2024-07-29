@@ -309,6 +309,70 @@ public class SplunkGroupScan extends AbstractGroupScan {
     return new SplunkGroupScan(this, columns);
   }
 
+  /**
+   * Generates the query which will be sent to Splunk. This method exists for debugging purposes so
+   * that the actual SPL will be recorded in the query plan.
+   */
+  private String generateQuery() {
+    String earliestTime = null;
+    String latestTime = null;
+
+    // Splunk searches perform best when they are time bound.  This allows the user to set
+    // default time boundaries in the config.  These will be overwritten in filter pushdowns
+    if (filters != null && filters.containsKey(SplunkUtils.EARLIEST_TIME_COLUMN)) {
+      earliestTime = filters.get(SplunkUtils.EARLIEST_TIME_COLUMN).value.value.toString();
+
+      // Remove from map
+      filters.remove(SplunkUtils.EARLIEST_TIME_COLUMN);
+    }
+
+    if (filters != null && filters.containsKey(SplunkUtils.LATEST_TIME_COLUMN)) {
+      latestTime = filters.get(SplunkUtils.LATEST_TIME_COLUMN).value.value.toString();
+
+      // Remove from map so they are not pushed down into the query
+      filters.remove(SplunkUtils.LATEST_TIME_COLUMN);
+    }
+
+    if (earliestTime == null) {
+      earliestTime = config.getEarliestTime();
+    }
+
+    if (latestTime == null) {
+      latestTime = config.getLatestTime();
+    }
+
+    // Special case: If the user wishes to send arbitrary SPL to Splunk, the user can use the "SPL"
+    // Index and spl filter
+    if (splunkScanSpec.getIndexName().equalsIgnoreCase("spl")) {
+      if (filters != null && filters.containsKey("spl")) {
+        return filters.get("spl").value.value.toString();
+      }
+    }
+
+    SplunkQueryBuilder builder = new SplunkQueryBuilder(splunkScanSpec.getIndexName());
+
+    // Set the sourcetype
+    if (filters != null && filters.containsKey("sourcetype")) {
+      String sourcetype = filters.get("sourcetype").value.value.toString();
+      builder.addSourceType(sourcetype);
+      filters.remove("sourcetype");
+    }
+
+    // Add projected columns, skipping star and specials.
+    for (SchemaPath projectedColumn: columns) {
+      builder.addField(projectedColumn.getAsUnescapedPath());
+    }
+
+    // Apply filters
+    builder.addFilters(filters);
+
+    // Apply limits
+    if (maxRecords > 0) {
+      builder.addLimit(maxRecords);
+    }
+    return builder.build();
+  }
+
   @Override
   public int hashCode() {
 
@@ -344,6 +408,7 @@ public class SplunkGroupScan extends AbstractGroupScan {
       .field("scan spec", splunkScanSpec)
       .field("columns", columns)
       .field("maxRecords", maxRecords)
+      .field("spl", generateQuery())
       .toString();
   }
 }
