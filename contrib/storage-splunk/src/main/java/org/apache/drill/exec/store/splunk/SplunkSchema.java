@@ -49,16 +49,23 @@ public class SplunkSchema extends AbstractSchema {
   private final SplunkStoragePlugin plugin;
   private final String queryUserName;
   private final Cache<String, Set<String>> cache;
+  private final boolean useCache;
 
   public SplunkSchema(SplunkStoragePlugin plugin, String queryUserName) {
     super(Collections.emptyList(), plugin.getName());
     this.plugin = plugin;
     this.queryUserName = queryUserName;
+    this.useCache = plugin.getConfig().getCacheExpiration() >= 0;
 
-    this.cache = Caffeine.newBuilder()
-        .expireAfterAccess(plugin.getConfig().getCacheExpiration(), TimeUnit.MINUTES)
-        .maximumSize(plugin.getConfig().getMaxCacheSize())
-        .build();
+    if (useCache) {
+      logger.debug("Using splunk schema cache for {}", plugin.getName());
+      this.cache = Caffeine.newBuilder()
+          .expireAfterAccess(plugin.getConfig().getCacheExpiration(), TimeUnit.MINUTES)
+          .maximumSize(plugin.getConfig().getMaxCacheSize())
+          .build();
+    } else {
+      this.cache = null;
+    }
 
     registerIndexes();
   }
@@ -103,7 +110,9 @@ public class SplunkSchema extends AbstractSchema {
         .build(logger);
     }
     // Clear the index cache.
-    cache.invalidate(getNameForCache());
+    if (useCache) {
+      cache.invalidate(getNameForCache());
+    }
 
     return new CreateTableEntry() {
       @Override
@@ -133,10 +142,12 @@ public class SplunkSchema extends AbstractSchema {
     // Drop the index
     indexes.remove(indexName);
 
-    // Update the cache
-    String cacheKey = getNameForCache();
-    cache.invalidate(cacheKey);
-    cache.put(cacheKey, indexes.keySet());
+    if (useCache) {
+      // Update the cache
+      String cacheKey = getNameForCache();
+      cache.invalidate(cacheKey);
+      cache.put(cacheKey, indexes.keySet());
+    }
   }
 
   @Override
@@ -171,17 +182,21 @@ public class SplunkSchema extends AbstractSchema {
     registerTable(SPL_TABLE_NAME, new DynamicDrillTable(plugin, plugin.getName(),
       new SplunkScanSpec(plugin.getName(), SPL_TABLE_NAME, plugin.getConfig(), queryUserName)));
 
-    Set<String> indexList;
+    Set<String> indexList = null;
     // Retrieve and add all other Splunk indexes
     // First check the cache to see if we have a list of indexes.
     String nameKey = getNameForCache();
-    indexList = cache.getIfPresent(nameKey);
+    if (useCache) {
+      indexList = cache.getIfPresent(nameKey);
+    }
 
     // If the index list is not in the cache, query Splunk, retrieve the index list and add it to the cache.
     if (indexList == null) {
       logger.debug("Index list not in Splunk schema cache.  Retrieving from Splunk.");
       indexList = connection.getIndexes().keySet();
-      cache.put(nameKey, indexList);
+      if (useCache) {
+        cache.put(nameKey, indexList);
+      }
     }
 
     for (String indexName : indexList) {
