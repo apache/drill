@@ -58,6 +58,8 @@ public class FileMetadataCollector {
   private final FileSystem fs;
   private final boolean allColumnsInteresting;
   private final boolean skipNonInteresting;
+  private final boolean truncateTimeMicros;
+  private final boolean truncateTimestampMicros;
   private final Set<SchemaPath> columnSet;
 
   private final MessageType schema;
@@ -89,6 +91,9 @@ public class FileMetadataCollector {
       ParquetReaderUtility.detectCorruptDates(metadata, Collections.singletonList(SchemaPath.STAR_COLUMN),
         readerConfig.autoCorrectCorruptedDates());
     logger.debug("Contains corrupt dates: {}.", containsCorruptDates);
+
+    this.truncateTimeMicros = !readerConfig.readTimeMicrosAsInt64();
+    this.truncateTimestampMicros = !readerConfig.readTimestampMicrosAsInt64();
 
     this.colTypeInfoMap = new HashMap<>();
     for (String[] path : schema.getPaths()) {
@@ -208,7 +213,7 @@ public class FileMetadataCollector {
           minValue = ParquetReaderUtility.autoCorrectCorruptedDate((Integer) minValue);
           maxValue = ParquetReaderUtility.autoCorrectCorruptedDate((Integer) maxValue);
         }
-        if (isMicrosecondColumnType(columnTypeMetadata.originalType)) {
+        if (shouldTruncateMicros(columnTypeMetadata)) {
           // DRILL-8241: truncate the min/max of microsecond columns to milliseconds, otherwise the
           // initial scanning of files when filtering will compare to the wrong values.
           minValue = truncateMicros(minValue);
@@ -224,8 +229,10 @@ public class FileMetadataCollector {
     columnTypeInfo.put(columnTypeMetadataKey, columnTypeMetadata);
   }
 
-  private static boolean isMicrosecondColumnType(OriginalType columnType) {
-    return columnType == OriginalType.TIME_MICROS || columnType == OriginalType.TIMESTAMP_MICROS;
+  private boolean shouldTruncateMicros(Metadata_V4.ColumnTypeMetadata_v4 columnTypeMetadata) {
+    return (truncateTimeMicros && columnTypeMetadata.originalType == OriginalType.TIME_MICROS)
+           ||
+           (truncateTimestampMicros && columnTypeMetadata.originalType == OriginalType.TIMESTAMP_MICROS);
   }
 
   private static Object truncateMicros(Object microSeconds) {
