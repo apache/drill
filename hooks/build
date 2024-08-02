@@ -21,7 +21,6 @@ docker build \
 	--build-arg BUILD_BASE_IMAGE=maven:3-openjdk-8 \
 	--build-arg BASE_IMAGE=openjdk:8 \
 	-t apache/drill:$DOCKER_TAG-openjdk-8 \
-	-t apache/drill:$DOCKER_TAG \
 	.
 
 docker build \
@@ -34,4 +33,5 @@ docker build \
 	--build-arg BUILD_BASE_IMAGE=maven:3-openjdk-17 \
 	--build-arg BASE_IMAGE=openjdk:17-slim-bullseye \
 	-t apache/drill:$DOCKER_TAG-openjdk-17 \
+	-t apache/drill:$DOCKER_TAG \
 	.
