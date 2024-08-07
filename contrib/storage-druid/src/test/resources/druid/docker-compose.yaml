@@ -16,8 +16,6 @@
 # limitations under the License.
 #
 
-version: "2.2"
-
 volumes:
   metadata_data: {}
   middle_var: {}
