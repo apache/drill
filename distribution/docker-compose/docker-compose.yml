@@ -16,7 +16,6 @@
 # limitations under the License.
 #
 
-version: "3.9"
 services:
   zookeeper:
     container_name: zookeeper
