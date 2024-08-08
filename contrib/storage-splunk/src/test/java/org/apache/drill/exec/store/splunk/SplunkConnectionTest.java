@@ -59,7 +59,7 @@ public class SplunkConnectionTest extends SplunkBaseTest {
         SPLUNK_STORAGE_PLUGIN_CONFIG.getLatestTime(),
         null,
         SPLUNK_STORAGE_PLUGIN_CONFIG.getReconnectRetries(),
-        StoragePluginConfig.AuthMode.SHARED_USER.name(), true, null
+        StoragePluginConfig.AuthMode.SHARED_USER.name(), true, null, null, null, null
       );
       SplunkConnection sc = new SplunkConnection(invalidSplunkConfig, null);
       sc.connect();
@@ -73,11 +73,14 @@ public class SplunkConnectionTest extends SplunkBaseTest {
   public void testGetIndexes() {
     SplunkConnection sc = new SplunkConnection(SPLUNK_STORAGE_PLUGIN_CONFIG, null);
     EntityCollection<Index> indexes = sc.getIndexes();
-    assertEquals(10, indexes.size());
+    assertEquals(13, indexes.size());
 
     List<String> expectedIndexNames = new ArrayList<>();
     expectedIndexNames.add("_audit");
     expectedIndexNames.add("_configtracker");
+    expectedIndexNames.add("_dsappevent");
+    expectedIndexNames.add("_dsclient");
+    expectedIndexNames.add("_dsphonehome");
     expectedIndexNames.add("_internal");
     expectedIndexNames.add("_introspection");
     expectedIndexNames.add("_telemetry");
@@ -92,7 +95,7 @@ public class SplunkConnectionTest extends SplunkBaseTest {
       indexNames.add(index.getName());
     }
 
-    assertEquals(indexNames, expectedIndexNames);
+    assertEquals(expectedIndexNames, indexNames);
 
   }
 }
