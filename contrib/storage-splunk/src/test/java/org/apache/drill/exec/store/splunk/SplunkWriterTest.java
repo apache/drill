@@ -76,10 +76,10 @@ public class SplunkWriterTest extends SplunkBaseTest {
       .buildSchema();
 
     RowSet expected = new RowSetBuilder(client.allocator(), expectedSchema)
-      .addRow("198.35.2.120", "ACCESSORIES")
-      .addRow("198.35.2.120", null)
-      .addRow("198.35.2.120", null)
       .addRow("198.35.2.120", "STRATEGY")
+      .addRow("198.35.2.120", null)
+      .addRow("198.35.2.120", null)
+      .addRow("198.35.2.120", "ACCESSORIES")
       .addRow("198.35.2.120", "NULL")
       .build();
     RowSetUtilities.verify(expected, results);
