@@ -70,7 +70,7 @@ public class SplunkTestSuite extends ClusterTest {
   private static AtomicInteger initCount = new AtomicInteger(0);
   @ClassRule
   public static GenericContainer<?> splunk = new GenericContainer<>(
-    DockerImageName.parse("splunk/splunk:9.2")
+    DockerImageName.parse("splunk/splunk:9.3")
   )
     .withExposedPorts(8089, 8089)
     .withEnv("SPLUNK_START_ARGS", "--accept-license")
