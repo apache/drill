@@ -88,6 +88,17 @@ public class SplunkTestSuite extends ClusterTest {
         startCluster(builder);
 
         splunk.start();
+        splunk.execInContainer("if ! sudo grep -q 'minFileSize' /opt/splunk/etc/system/local/server.conf; then " +
+            "sudo chmod a+w /opt/splunk/etc/system/local/server.conf; " +
+            "sudo echo \"# disk usage processor settings\" >> /opt/splunk/etc/system/local/server.conf; " +
+            "sudo echo \"[diskUsage]\" >> /opt/splunk/etc/system/local/server.conf; " +
+            "sudo echo \"minFreeSpace = 2000\" >> /opt/splunk/etc/system/local/server.conf; " +
+            "sudo echo \"pollingFrequency = 100000\" >> /opt/splunk/etc/system/local/server.conf; " +
+            "sudo echo \"pollingTimerFrequency = 10\" >> /opt/splunk/etc/system/local/server.conf; " +
+            "sudo chmod 600 /opt/splunk/etc/system/local/server.conf; " +
+            "sudo /opt/splunk/bin/splunk restart; " +
+            "fi");
+
         String hostname = splunk.getHost();
         Integer port = splunk.getFirstMappedPort();
         StoragePluginRegistry pluginRegistry = cluster.drillbit().getContext().getStorage();
