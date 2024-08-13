@@ -238,8 +238,8 @@ public abstract class ObjectParser extends AbstractElementParser {
    */
   private ElementParser detectValueParser(String key, TokenIterator tokenizer) {
     if (key.isEmpty()) {
-      throw errorFactory().structureError(
-          "Drill does not allow empty keys in JSON key/value pairs");
+      logger.warn("Ignoring empty key: {}", key);
+      return DummyValueParser.INSTANCE;
     }
     ElementParser fieldParser = onField(key, tokenizer);
     if (fieldParser == null) {
