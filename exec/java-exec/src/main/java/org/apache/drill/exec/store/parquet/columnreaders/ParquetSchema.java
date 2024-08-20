@@ -228,8 +228,7 @@ public final class ParquetSchema {
    */
 
   private NullableIntVector createMissingColumn(SchemaPath col, OutputMutator output) throws SchemaChangeException {
-    // col.toExpr() is used here as field name since we don't want to see these fields in the existing maps
-    MaterializedField field = MaterializedField.create(col.toExpr(),
+    MaterializedField field = MaterializedField.create(col.getAsUnescapedPath(),
                                                     Types.optional(TypeProtos.MinorType.INT));
     return (NullableIntVector) output.addField(field,
               TypeHelper.getValueVectorClass(TypeProtos.MinorType.INT, DataMode.OPTIONAL));
