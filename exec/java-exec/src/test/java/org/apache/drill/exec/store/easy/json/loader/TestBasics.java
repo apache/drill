@@ -17,12 +17,6 @@
  */
 package org.apache.drill.exec.store.easy.json.loader;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
-
 import org.apache.drill.categories.JsonTest;
 import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.common.types.TypeProtos.MinorType;
@@ -34,6 +28,12 @@ import org.apache.drill.exec.record.metadata.TupleMetadata;
 import org.apache.drill.test.rowSet.RowSetUtilities;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
 @Category(JsonTest.class)
 public class TestBasics extends BaseJsonLoaderTest {
@@ -176,12 +176,22 @@ public class TestBasics extends BaseJsonLoaderTest {
 
   @Test
   public void testEmptyKey() {
-    expectError("{\"\": 10}", "does not allow empty keys");
+    JsonLoaderFixture loader = new JsonLoaderFixture();
+    loader.jsonOptions.skipMalformedRecords = true;
+    loader.open("{\"\": 10}");
+    RowSet results = loader.next();
+    assertNotNull(results);
+    assertEquals(1, results.rowCount());
   }
 
   @Test
   public void testBlankKey() {
-    expectError("{\"  \": 10}", "does not allow empty keys");
+    JsonLoaderFixture loader = new JsonLoaderFixture();
+    loader.jsonOptions.skipMalformedRecords = true;
+    loader.open("{\"  \": 10}");
+    RowSet results = loader.next();
+    assertNotNull(results);
+    assertEquals(1, results.rowCount());
   }
 
   @Test
