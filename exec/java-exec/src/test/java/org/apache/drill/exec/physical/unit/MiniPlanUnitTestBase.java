@@ -460,7 +460,8 @@ public class MiniPlanUnitTestBase extends PhysicalOpUnitTestBase {
               ccf,
               footer,
               columnsToRead,
-              ParquetReaderUtility.DateCorruptionStatus.META_SHOWS_NO_CORRUPTION));
+              ParquetReaderUtility.DateCorruptionStatus.META_SHOWS_NO_CORRUPTION,
+              null));
         }
       }
 

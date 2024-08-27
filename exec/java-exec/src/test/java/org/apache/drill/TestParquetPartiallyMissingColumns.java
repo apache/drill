@@ -14,11 +14,11 @@ import java.nio.file.Paths;
 
 /**
  * Covers querying a table in which some parquet files do contain selected columns, and
- * others do not.
+ * others do not (or have them as OPTIONALs).
  *
- * TODO: Expand this test to assert this behavior:
- * TODO: 1) If at least 1 parquet file to be read has the column, take the minor type from there.
- * TODO: Otherwise, default to INT.
+ * Expected behavior for the missing columns is following:
+ * 1) If at least 1 parquet file to be read has the column, take the minor type from there.
+ * Otherwise, default to INT.
  * TODO: 2) If at least 1 parquet file to be read doesn't have the column, or has it as OPTIONAL,
  * TODO: enforce the overall scan output schema to have it as OPTIONAL
  *
@@ -28,11 +28,15 @@ import java.nio.file.Paths;
  * (not guaranteed though, but seems to work). We use such tables for such scenarios:
  *
  * - parquet/partially_missing/o_m -- optional, then missing
+ * - parquet/partially_missing/m_o -- missing, then optional
  *
  * These tables have these parquet files with such schemas:
  *
  * - parquet/partially_missing/o_m/0.parquet: id<INT(REQUIRED)> | name<VARCHAR(OPTIONAL)> | age<INT(OPTIONAL)>
  * - parquet/partially_missing/o_m/1.parquet: id<INT(REQUIRED)>
+ *
+ * - parquet/partially_missing/m_0/0.parquet: id<INT(REQUIRED)>
+ * - parquet/partially_missing/m_0/1.parquet: id<INT(REQUIRED)> | name<VARCHAR(OPTIONAL)> | age<INT(OPTIONAL)>
  *
  * So, by querying "age" or "name" columns we would trigger both 0.parquet reader to read the data and
  * 1.parquet reader to create the missing column vector.
@@ -41,6 +45,8 @@ public class TestParquetPartiallyMissingColumns extends ClusterTest {
 
   private static final SchemaBuilder ageSchema =
       new SchemaBuilder().add("age", Types.optional(TypeProtos.MinorType.INT));
+  private static final SchemaBuilder nameSchema =
+      new SchemaBuilder().add("name", Types.optional(TypeProtos.MinorType.VARCHAR));
 
   @BeforeClass
   public static void setup() throws Exception {
@@ -61,6 +67,21 @@ public class TestParquetPartiallyMissingColumns extends ClusterTest {
   @Test
   public void testMissingColumnNamingWithUnionAll() throws Exception {
     test("SELECT age FROM dfs.`parquet/partially_missing/o_m` UNION ALL (VALUES (1))", ageSchema);
+  }
+
+  /*
+  If at least 1 file in the table has the selected column, the overall scan output schema should
+  take the MinorType for the column from there (and not default to Int)
+   */
+
+  @Test
+  public void testMissingColumnTypeGuessWithOrderBy() throws Exception {
+    test("SELECT name FROM dfs.`parquet/partially_missing/o_m` ORDER BY name", nameSchema);
+  }
+
+  @Test
+  public void testMissingColumnTypeGuessWithUnionAll() throws Exception {
+    test("SELECT name FROM dfs.`parquet/partially_missing/m_o` UNION ALL (VALUES ('Bob'))", nameSchema);
   }
 
   // Runs the query and verifies the result schema against the expected schema
