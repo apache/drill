@@ -19,8 +19,8 @@ import java.nio.file.Paths;
  * Expected behavior for the missing columns is following:
  * 1) If at least 1 parquet file to be read has the column, take the minor type from there.
  * Otherwise, default to INT.
- * TODO: 2) If at least 1 parquet file to be read doesn't have the column, or has it as OPTIONAL,
- * TODO: enforce the overall scan output schema to have it as OPTIONAL
+ * 2) If at least 1 parquet file to be read doesn't have the column, or has it as OPTIONAL,
+ * enforce the overall scan output schema to have it as OPTIONAL
  *
  * We need to control ordering of scanning batches to cover different erroneous cases, and we assume
  * that parquet files in a table would be read in alphabetic order (not a real use case though). So
@@ -29,6 +29,8 @@ import java.nio.file.Paths;
  *
  * - parquet/partially_missing/o_m -- optional, then missing
  * - parquet/partially_missing/m_o -- missing, then optional
+ * - parquet/partially_missing/r_m -- required, then missing
+ * - parquet/partially_missing/r_o -- required, then optional
  *
  * These tables have these parquet files with such schemas:
  *
@@ -37,6 +39,12 @@ import java.nio.file.Paths;
  *
  * - parquet/partially_missing/m_0/0.parquet: id<INT(REQUIRED)>
  * - parquet/partially_missing/m_0/1.parquet: id<INT(REQUIRED)> | name<VARCHAR(OPTIONAL)> | age<INT(OPTIONAL)>
+ *
+ * - parquet/partially_missing/r_m/0.parquet: id<INT(REQUIRED)> | name<VARCHAR(REQUIRED)> | age<INT(REQUIRED)>
+ * - parquet/partially_missing/r_m/1.parquet: id<INT(REQUIRED)>
+ *
+ * - parquet/partially_missing/r_o/0.parquet: id<INT(REQUIRED)> | name<VARCHAR(REQUIRED)> | age<INT(REQUIRED)>
+ * - parquet/partially_missing/r_o/1.parquet: id<INT(REQUIRED)> | name<VARCHAR(OPTIONAL)> | age<INT(OPTIONAL)>
  *
  * So, by querying "age" or "name" columns we would trigger both 0.parquet reader to read the data and
  * 1.parquet reader to create the missing column vector.
@@ -82,6 +90,27 @@ public class TestParquetPartiallyMissingColumns extends ClusterTest {
   @Test
   public void testMissingColumnTypeGuessWithUnionAll() throws Exception {
     test("SELECT name FROM dfs.`parquet/partially_missing/m_o` UNION ALL (VALUES ('Bob'))", nameSchema);
+  }
+
+  /*
+  If at least 1 file in the table doesn't have the selected column, or has it as OPTIONAL,
+  the overall scan output schema should have this column as OPTIONAL
+   */
+
+  @Test
+  public void testEnforcingOptionalWithOrderBy() throws Exception {
+    test("SELECT age FROM dfs.`parquet/partially_missing/r_o` ORDER BY age", ageSchema);
+    test("SELECT age FROM dfs.`parquet/partially_missing/r_m` ORDER BY age", ageSchema);
+    test("SELECT name FROM dfs.`parquet/partially_missing/r_o` ORDER BY name", nameSchema);
+    test("SELECT name FROM dfs.`parquet/partially_missing/r_m` ORDER BY name", nameSchema);
+  }
+
+  @Test
+  public void testEnforcingOptionalWithUnionAll() throws Exception {
+    test("SELECT age FROM dfs.`parquet/partially_missing/r_o` UNION ALL (VALUES (1))", ageSchema);
+    test("SELECT age FROM dfs.`parquet/partially_missing/r_m` UNION ALL (VALUES (1))", ageSchema);
+    test("SELECT name FROM dfs.`parquet/partially_missing/r_o` UNION ALL (VALUES ('Bob'))", nameSchema);
+    test("SELECT name FROM dfs.`parquet/partially_missing/r_m` UNION ALL (VALUES ('Bob'))", nameSchema);
   }
 
   // Runs the query and verifies the result schema against the expected schema

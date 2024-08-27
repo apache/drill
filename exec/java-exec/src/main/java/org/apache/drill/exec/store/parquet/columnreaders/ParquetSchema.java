@@ -70,6 +70,11 @@ public final class ParquetSchema {
    * If we don't find a selected column in our parquet file, type for the null-filled vector
    * to create would be tried to find in this schema. That is, if some other parquet file contains
    * the column, we'll take their type. Otherwise, default to Nullable Int.
+   * Also, if at least 1 file does not contain the selected column, then the overall table schema
+   * should have this field with OPTIONAL data mode. GroupScan catches this case and sets the
+   * appropriate data mode in this schema. Our mission here is to enforce that OPTIONAL mode in our
+   * output schema, even if the particular parquet file we're reading from has this field REQUIRED,
+   * to provide consistency across all scan batches.
    */
   private final TupleMetadata tableSchema;
 
@@ -137,12 +142,21 @@ public final class ParquetSchema {
     // loop to add up the length of the fixed width columns and build the schema
     for (ColumnDescriptor column : footer.getFileMetaData().getSchema().getColumns()) {
       ParquetColumnMetadata columnMetadata = new ParquetColumnMetadata(column);
-      columnMetadata.resolveDrillType(schemaElements, options);
+      columnMetadata.resolveDrillType(schemaElements, options, shouldEnforceOptional(column));
       if (!columnSelected(column)) {
         continue;
       }
       selectedColumnMetadata.add(columnMetadata);
     }
+  }
+
+  private boolean shouldEnforceOptional(ColumnDescriptor column) {
+    String columnName = SchemaPath.getCompoundPath(column.getPath()).getAsUnescapedPath();
+    MaterializedField tableField;
+    if (tableSchema == null || (tableField = tableSchema.column(columnName)) == null) {
+      return false;
+    }
+    return tableField.getDataMode() == DataMode.OPTIONAL;
   }
 
   /**
