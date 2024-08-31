@@ -67,6 +67,7 @@ jobs:
       - name: Remove swap space
         run : |
           sudo sh -c "
+            free -h
             swapoff /tmp/swapfile
             rm /tmp/swapfile
           "
