@@ -84,7 +84,7 @@ public class BitColumnWriter extends AbstractFixedWidthWriter {
 
   @Override
   public void setValueCount(int valueCount) {
-    prepareWrite(valueCount);
+    prepareWrite(valueCount - 1);
     mutator.setValueCount(valueCount);
   }
 
