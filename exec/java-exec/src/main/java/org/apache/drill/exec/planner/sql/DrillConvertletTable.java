@@ -17,14 +17,7 @@
  */
 package org.apache.drill.exec.planner.sql;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
-import java.util.function.Function;
-import java.util.stream.Collectors;
-
+import com.google.common.collect.ImmutableMap;
 import org.apache.calcite.rel.type.RelDataType;
 import org.apache.calcite.rel.type.RelDataTypeFactory;
 import org.apache.calcite.rex.RexNode;
@@ -35,7 +28,7 @@ import org.apache.calcite.sql.SqlLiteral;
 import org.apache.calcite.sql.SqlNode;
 import org.apache.calcite.sql.SqlNumericLiteral;
 import org.apache.calcite.sql.SqlOperator;
-import org.apache.calcite.sql.fun.SqlRandFunction;
+import org.apache.calcite.sql.fun.SqlRandIntegerFunction;
 import org.apache.calcite.sql.fun.SqlStdOperatorTable;
 import org.apache.calcite.sql.parser.SqlParserPos;
 import org.apache.calcite.sql.type.SqlTypeName;
@@ -43,7 +36,14 @@ import org.apache.calcite.sql2rel.SqlRexConvertlet;
 import org.apache.calcite.sql2rel.SqlRexConvertletTable;
 import org.apache.calcite.sql2rel.StandardConvertletTable;
 import org.apache.drill.exec.planner.sql.parser.DrillCalciteWrapperUtility;
-import com.google.common.collect.ImmutableMap;
+
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
 /**
  * Convertlet table which allows to plug-in custom rex conversion of calls to
@@ -159,7 +159,7 @@ public class DrillConvertletTable implements SqlRexConvertletTable {
       List<RexNode> operands = call.getOperandList().stream()
         .map(cx::convertExpression)
         .collect(Collectors.toList());
-      return cx.getRexBuilder().makeCall(new SqlRandFunction() {
+      return cx.getRexBuilder().makeCall(new SqlRandIntegerFunction() {
         @Override
         public boolean isDeterministic() {
           return false;

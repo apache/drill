@@ -418,13 +418,11 @@ public class DrillReduceAggregatesRule extends RelOptRule {
     return AggregateCall.create(aggFunction,
         oldCall.isDistinct(),
         oldCall.isApproximate(),
-        oldCall.ignoreNulls(),
         oldCall.getArgList(),
         oldCall.filterArg,
-        oldCall.distinctKeys,
-        oldCall.getCollation(),
+        oldCall.collation,
         sumType,
-        null);
+        oldCall.name);
   }
 
   private RexNode reduceSum(
@@ -541,6 +539,7 @@ public class DrillReduceAggregatesRule extends RelOptRule {
             oldCall.isDistinct(),
             oldCall.isApproximate(),
             oldCall.ignoreNulls(),
+            ImmutableList.of(),
             ImmutableIntList.of(argSquaredOrdinal),
             oldCall.filterArg,
             oldCall.distinctKeys,
@@ -562,6 +561,7 @@ public class DrillReduceAggregatesRule extends RelOptRule {
             oldCall.isDistinct(),
             oldCall.isApproximate(),
             oldCall.ignoreNulls(),
+            ImmutableList.of(),
             ImmutableIntList.of(argOrdinal),
             oldCall.filterArg,
             oldCall.distinctKeys,
@@ -739,6 +739,7 @@ public class DrillReduceAggregatesRule extends RelOptRule {
                   oldAggregateCall.isDistinct(),
                   oldAggregateCall.isApproximate(),
                   oldAggregateCall.ignoreNulls(),
+                  ImmutableList.of(),
                   oldAggregateCall.getArgList(),
                   oldAggregateCall.filterArg,
                   oldAggregateCall.distinctKeys,
@@ -837,7 +838,7 @@ public class DrillReduceAggregatesRule extends RelOptRule {
         && !type.isNullable()) {
       // If SUM(x) is not nullable, the validator must have determined that
       // nulls are impossible (because the group is never empty and x is never
-      // null). Therefore we translate to SUM0(x).
+      // null). Therefore, we translate to SUM0(x).
       return true;
     }
     return false;
