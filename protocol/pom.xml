@@ -120,8 +120,6 @@
                 <configuration>
                   <cleanOutputFolder>false</cleanOutputFolder>
                   <outputDirectory>${basedir}/src/main/java</outputDirectory>
-                  <!-- this plugin is old and doesn't handle the fact that
-                   protobuf-java (3.25.5) and protoc (25.5) version format now differs. -->
                   <ignoreVersions>true</ignoreVersions>
                 </configuration>
               </execution>
