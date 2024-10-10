@@ -4,7 +4,7 @@ This plugin enables Drill to query Splunk.
 ## Configuration
 
 | Option                | Default   | Description                                                     | Since |
-|-----------------------| --------- | --------------------------------------------------------------- | ----- |
+|-----------------------| --------- | --------------------------------------------------------------- |-------|
 | type                  | (none)    | Set to "splunk" to use this plugin                              | 1.19  |
 | username              | null      | Splunk username to be used by Drill                             | 1.19  |
 | password              | null      | Splunk password to be used by Drill                             | 1.19  |
@@ -13,12 +13,15 @@ This plugin enables Drill to query Splunk.
 | port                  | 8089      | TCP port over which Drill will connect to Splunk                | 1.19  |
 | earliestTime          | null      | Global earliest record timestamp default                        | 1.19  |
 | latestTime            | null      | Global latest record timestamp default                          | 1.19  |
-| app                   | null      | The application context of the service[^1]                      | 2.0   |
-| owner                 | null      | The owner context of the service[^1]                            | 2.0   |
-| token                 | null      | A Splunk authentication token to use for the session[^2]        | 2.0   |
-| cookie                | null      | A valid login cookie                                            | 2.0   |
-| validateCertificates  | true      | Whether the Splunk client will validates the server's SSL cert  | 2.0   |
+| app                   | null      | The application context of the service[^1]                      | 1.21  |
+| owner                 | null      | The owner context of the service[^1]                            | 1.21  |
+| token                 | null      | A Splunk authentication token to use for the session[^2]        | 1.21  |
+| cookie                | null      | A valid login cookie                                            | 1.21  |
+| validateCertificates  | true      | Whether the Splunk client will validates the server's SSL cert  | 1.21  |
 | validateHostname      | true      | Whether the Splunk client will validate the server's host name  | 1.22  |
+| maxColumns            | 1024      | The maximum number of columns Drill will accept from Splunk     | 1.22  |
+| maxCacheSize          | 10000     | The size (in bytes) of Splunk's schema cache.                   | 1.22  |
+| cacheExpiration       | 1024      | The number of minutes for Drill to persist the schema cache.    | 1.22  |
 
 [^1]: See [this Splunk documentation](https://docs.splunk.com/Documentation/Splunk/latest/Admin/Apparchitectureandobjectownership) for more information.
 [^2]: See [this Splunk documentation](https://docs.splunk.com/Documentation/Splunk/latest/Security/CreateAuthTokens) for more information.
@@ -46,6 +49,10 @@ To bypass it by Drill please specify "reconnectRetries": 3. It allows you to ret
 ### User Translation
 The Splunk plugin supports user translation.  Simply set the `authMode` parameter to `USER_TRANSLATION` and use either the plain or vault credential provider for credentials.
 
+## Schema Caching
+For every query that you send to Splunk from Drill, Drill will have to pull schema information from Splunk.  If you have a lot of indexes, this process can cause slow planning time.  To improve planning time, you can configure Drill to cache the index names so that it does not need to make additional calls to Splunk.
+
+There are two configuration parameters for the schema caching: `maxCacheSize` and `cacheExpiration`.  The maxCacheSize defaults to 10k bytes and the `cacheExpiration` defaults to 1024 minutes.  To disable schema caching simply set the `cacheExpiration` parameter to a value less than zero.
 
 ## Understanding Splunk's Data Model
 Splunk's primary use case is analyzing event logs with a timestamp. As such, data is indexed by the timestamp, with the most recent data being indexed first.  By default, Splunk

@@ -54,9 +54,6 @@ public class SplunkBatchReader implements ManagedReader<SchemaNegotiator> {
   private static final Logger logger = LoggerFactory.getLogger(SplunkBatchReader.class);
   private static final List<String> INT_COLS = new ArrayList<>(Arrays.asList("date_hour", "date_mday", "date_minute", "date_second", "date_year", "linecount"));
   private static final List<String> TS_COLS = new ArrayList<>(Arrays.asList("_indextime", "_time"));
-  private static final String EARLIEST_TIME_COLUMN = "earliestTime";
-  private static final String LATEST_TIME_COLUMN = "latestTime";
-
   private final SplunkPluginConfig config;
   private final SplunkSubScan subScan;
   private final List<SchemaPath> projectedColumns;
@@ -88,6 +85,8 @@ public class SplunkBatchReader implements ManagedReader<SchemaNegotiator> {
     RowListProcessor rowProcessor = new RowListProcessor();
     csvSettings.setProcessor(rowProcessor);
     csvSettings.setMaxCharsPerColumn(ValueVector.MAX_BUFFER_SIZE);
+    // Splunk can produce a lot of columns. The SDK default maximum is 512.
+    csvSettings.setMaxColumns(config.getMaxColumns());
   }
 
   @Override
@@ -174,7 +173,7 @@ public class SplunkBatchReader implements ManagedReader<SchemaNegotiator> {
         }
       }
     }
-    logger.debug("Time to build schmea: {} milliseconds", timer.elapsed().getNano() / 100000);
+    logger.debug("Time to build schema: {} milliseconds", timer.elapsed().getNano() / 100000);
     return builder.buildSchema();
   }
 
@@ -241,18 +240,18 @@ public class SplunkBatchReader implements ManagedReader<SchemaNegotiator> {
 
     // Splunk searches perform best when they are time bound.  This allows the user to set
     // default time boundaries in the config.  These will be overwritten in filter pushdowns
-    if (filters != null && filters.containsKey(EARLIEST_TIME_COLUMN)) {
-      earliestTime = filters.get(EARLIEST_TIME_COLUMN).value.value.toString();
+    if (filters != null && filters.containsKey(SplunkUtils.EARLIEST_TIME_COLUMN)) {
+      earliestTime = filters.get(SplunkUtils.EARLIEST_TIME_COLUMN).value.value.toString();
 
       // Remove from map
-      filters.remove(EARLIEST_TIME_COLUMN);
+      filters.remove(SplunkUtils.EARLIEST_TIME_COLUMN);
     }
 
-    if (filters != null && filters.containsKey(LATEST_TIME_COLUMN)) {
-      latestTime = filters.get(LATEST_TIME_COLUMN).value.value.toString();
+    if (filters != null && filters.containsKey(SplunkUtils.LATEST_TIME_COLUMN)) {
+      latestTime = filters.get(SplunkUtils.LATEST_TIME_COLUMN).value.value.toString();
 
       // Remove from map so they are not pushed down into the query
-      filters.remove(LATEST_TIME_COLUMN);
+      filters.remove(SplunkUtils.LATEST_TIME_COLUMN);
     }
 
     if (earliestTime == null) {
