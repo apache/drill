@@ -37,4 +37,16 @@ public class DrillWindowRelBase extends Window implements DrillRelNode {
       List<Group> windows) {
     super(cluster, traits, child, constants, DrillRelOptUtil.uniqifyFieldName(rowType, cluster.getTypeFactory()), windows);
   }
+
+  @Override
+  public Window copy(List<RexLiteral> constants) {
+    return new DrillWindowRelBase(
+        super.getCluster(),
+        super.getTraitSet(),
+        super.getInput(),
+        constants,
+        super.getRowType(),
+        super.groups
+    );
+  }
 }
