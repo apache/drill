@@ -58,7 +58,7 @@ public class SplunkSchema extends AbstractSchema {
     this.useCache = plugin.getConfig().getCacheExpiration() >= 0;
 
     if (useCache) {
-      logger.debug("Using splunk schema cache for {}", plugin.getName());
+      logger.info("Using splunk schema cache for {}", plugin.getName());
       this.cache = Caffeine.newBuilder()
           .expireAfterAccess(plugin.getConfig().getCacheExpiration(), TimeUnit.MINUTES)
           .maximumSize(plugin.getConfig().getMaxCacheSize())
@@ -101,8 +101,9 @@ public class SplunkSchema extends AbstractSchema {
   }
 
   @Override
-  public CreateTableEntry createNewTable(String tableName, List<String> partitionColumns,
-    StorageStrategy strategy) {
+  public CreateTableEntry createNewTable(String tableName,
+      List<String> partitionColumns,
+      StorageStrategy strategy) {
     if (plugin.getConfig().isWritable() == null || (! plugin.getConfig().isWritable())) {
       throw UserException
         .dataWriteError()
