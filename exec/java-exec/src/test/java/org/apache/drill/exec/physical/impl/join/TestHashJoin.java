@@ -106,6 +106,11 @@ public class TestHashJoin extends PopUnitTestBase {
   }
 
   @Test
+  public void emptyLeftSideOnRightJoin() throws Throwable {
+    testHJMockScanCommon("/join/hj_right_outer_empty_left_input.json", 5);
+  }
+
+  @Test
   public void simpleEqualityJoin() throws Throwable {
     // Function checks hash join with single equality condition
     try (RemoteServiceSet serviceSet = RemoteServiceSet.getLocalServiceSet();
