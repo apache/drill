@@ -98,7 +98,7 @@
     <javax.el.version>3.0.0</javax.el.version>
     <javax.validation.api>2.0.1.Final</javax.validation.api>
     <jersey.version>2.40</jersey.version>
-    <jetty.version>9.4.51.v20230217</jetty.version>
+    <jetty.version>9.4.56.v20240826</jetty.version>
     <jmockit.version>1.47</jmockit.version>
     <jna.version>5.13.0</jna.version>
     <joda.version>2.12.5</joda.version>
