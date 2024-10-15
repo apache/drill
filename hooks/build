@@ -17,22 +17,24 @@
 # limitations under the License.
 #
 
-docker build \
-	--platform linux/amd64,linux/arm64 \
+docker buildx create --name drill_builder --use --bootstrap
+
+docker buildx build \
+	--platform linux/amd64 \
 	--build-arg BUILD_BASE_IMAGE=maven:3-openjdk-8 \
 	--build-arg BASE_IMAGE=openjdk:8 \
 	-t apache/drill:$DOCKER_TAG-openjdk-8 \
 	.
 
-docker build \
-	--platform linux/amd64,linux/arm64 \
+docker buildx build \
+	--platform linux/amd64 \
 	--build-arg BUILD_BASE_IMAGE=maven:3-openjdk-11 \
 	--build-arg BASE_IMAGE=openjdk:11 \
 	-t apache/drill:$DOCKER_TAG-openjdk-11 \
 	.
 
-docker build \
-	--platform linux/amd64,linux/arm64 \
+docker buildx build \
+	--platform linux/arm64 \
 	--build-arg BUILD_BASE_IMAGE=maven:3-openjdk-17 \
 	--build-arg BASE_IMAGE=openjdk:17-slim-bullseye \
 	-t apache/drill:$DOCKER_TAG-openjdk-17 \
