@@ -17,33 +17,32 @@
  */
 package org.apache.drill.exec.planner.physical;
 
-import org.apache.drill.common.expression.IfExpression;
-import org.apache.drill.common.expression.NullExpression;
 import com.google.common.collect.Lists;
 import org.apache.calcite.linq4j.Ord;
-import org.apache.calcite.util.BitSets;
-import org.apache.calcite.util.ImmutableBitSet;
-import org.apache.drill.common.expression.ExpressionPosition;
-import org.apache.drill.common.expression.FieldReference;
-import org.apache.drill.common.expression.FunctionCall;
-import org.apache.drill.common.expression.LogicalExpression;
-import org.apache.drill.common.expression.ValueExpressions;
-import org.apache.drill.common.logical.data.NamedExpression;
-import org.apache.drill.exec.planner.common.DrillAggregateRelBase;
-import org.apache.drill.exec.planner.physical.visitor.PrelVisitor;
-import org.apache.calcite.rel.core.AggregateCall;
-import org.apache.calcite.rel.InvalidRelException;
-import org.apache.calcite.rel.RelCollations;
-import org.apache.calcite.rel.RelNode;
 import org.apache.calcite.plan.RelOptCluster;
 import org.apache.calcite.plan.RelTraitSet;
+import org.apache.calcite.rel.InvalidRelException;
+import org.apache.calcite.rel.RelNode;
+import org.apache.calcite.rel.core.AggregateCall;
 import org.apache.calcite.rel.type.RelDataType;
 import org.apache.calcite.sql.SqlAggFunction;
 import org.apache.calcite.sql.SqlFunctionCategory;
 import org.apache.calcite.sql.SqlKind;
 import org.apache.calcite.sql.type.OperandTypes;
 import org.apache.calcite.sql.type.ReturnTypes;
+import org.apache.calcite.util.BitSets;
+import org.apache.calcite.util.ImmutableBitSet;
 import org.apache.calcite.util.Optionality;
+import org.apache.drill.common.expression.ExpressionPosition;
+import org.apache.drill.common.expression.FieldReference;
+import org.apache.drill.common.expression.FunctionCall;
+import org.apache.drill.common.expression.IfExpression;
+import org.apache.drill.common.expression.LogicalExpression;
+import org.apache.drill.common.expression.NullExpression;
+import org.apache.drill.common.expression.ValueExpressions;
+import org.apache.drill.common.logical.data.NamedExpression;
+import org.apache.drill.exec.planner.common.DrillAggregateRelBase;
+import org.apache.drill.exec.planner.physical.visitor.PrelVisitor;
 
 import java.util.Collections;
 import java.util.Iterator;
@@ -182,7 +181,6 @@ public abstract class AggPrelBase extends DrillAggregateRelBase implements Prel 
                   Collections.singletonList(aggExprOrdinal),
                   aggCall.e.filterArg,
                   null,
-                  RelCollations.EMPTY,
                   aggCall.e.getType(),
                   aggCall.e.getName());
 
@@ -197,7 +195,6 @@ public abstract class AggPrelBase extends DrillAggregateRelBase implements Prel 
                   Collections.singletonList(aggExprOrdinal),
                   aggCall.e.filterArg,
                   null,
-                  RelCollations.EMPTY,
                   aggCall.e.getType(),
                   aggCall.e.getName());
 
@@ -273,7 +270,6 @@ public abstract class AggPrelBase extends DrillAggregateRelBase implements Prel 
           arglist,
           aggCall.filterArg,
           null,
-          RelCollations.EMPTY,
           aggCall.type,
           aggCall.name));
     }
