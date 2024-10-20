@@ -168,6 +168,7 @@ public class WindowPrule extends Prule {
           windowBase.isRows,
           windowBase.lowerBound,
           windowBase.upperBound,
+          windowBase.exclude,
           windowBase.orderKeys,
           newWinAggCalls
       );
