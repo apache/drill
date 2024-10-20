@@ -197,11 +197,6 @@
         <checksumPolicy>fail</checksumPolicy>
       </snapshots>
     </repository>
-
-    <repository>
-      <id>jitpack.io</id>
-      <url>https://jitpack.io</url>
-    </repository>
   </repositories>
 
   <issueManagement>
@@ -791,12 +786,6 @@
       </plugins>
     </pluginManagement>
   </build>
-  <pluginRepositories>
-    <pluginRepository>
-      <id>jitpack.io</id>
-      <url>https://jitpack.io</url>
-    </pluginRepository>
-  </pluginRepositories>
   <dependencies>
 
     <dependency>
