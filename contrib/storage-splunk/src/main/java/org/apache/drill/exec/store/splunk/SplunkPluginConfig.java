@@ -40,6 +40,9 @@ public class SplunkPluginConfig extends StoragePluginConfig {
   public static final String NAME = "splunk";
   public static final int DISABLED_RECONNECT_RETRIES = 1;
   public static final int DEFAULT_WRITER_BATCH_SIZE = 1000;
+  public static final int DEFAULT_MAX_READER_COLUMNS = 1024;
+  public static final int DEFAULT_MAX_CACHE_SIZE = 10000;
+  public static final int DEFAULT_CACHE_EXPIRATION = 1024;
 
   private final String scheme;
   private final String hostname;
@@ -55,6 +58,9 @@ public class SplunkPluginConfig extends StoragePluginConfig {
   private final Integer reconnectRetries;
   private final boolean writable;
   private final Integer writerBatchSize;
+  private final Integer maxColumns;
+  private final Integer maxCacheSize;
+  private final Integer cacheExpiration;
 
   @JsonCreator
   public SplunkPluginConfig(@JsonProperty("username") String username,
@@ -74,7 +80,11 @@ public class SplunkPluginConfig extends StoragePluginConfig {
                             @JsonProperty("reconnectRetries") Integer reconnectRetries,
                             @JsonProperty("authMode") String authMode,
                             @JsonProperty("writable") boolean writable,
-                            @JsonProperty("writableBatchSize") Integer writerBatchSize) {
+                            @JsonProperty("writableBatchSize") Integer writerBatchSize,
+                            @JsonProperty("maxColumns") Integer maxColumns,
+                            @JsonProperty("maxCacheSize") Integer maxCacheSize,
+                            @JsonProperty("cacheExpiration") Integer cacheExpiration
+      ) {
     super(CredentialProviderUtils.getCredentialsProvider(username, password, credentialsProvider),
         credentialsProvider == null, AuthMode.parseOrDefault(authMode, AuthMode.SHARED_USER));
     this.scheme = scheme;
@@ -91,6 +101,9 @@ public class SplunkPluginConfig extends StoragePluginConfig {
     this.latestTime = latestTime == null ? "now" : latestTime;
     this.reconnectRetries = reconnectRetries;
     this.writerBatchSize = writerBatchSize;
+    this.maxColumns = maxColumns;
+    this.maxCacheSize = maxCacheSize;
+    this.cacheExpiration = cacheExpiration;
   }
 
   private SplunkPluginConfig(SplunkPluginConfig that, CredentialsProvider credentialsProvider) {
@@ -109,6 +122,9 @@ public class SplunkPluginConfig extends StoragePluginConfig {
     this.latestTime = that.latestTime;
     this.reconnectRetries = that.reconnectRetries;
     this.writerBatchSize = that.writerBatchSize;
+    this.maxColumns = that.maxColumns;
+    this.maxCacheSize = that.maxCacheSize;
+    this.cacheExpiration = that.cacheExpiration;
   }
 
   /**
@@ -225,6 +241,21 @@ public class SplunkPluginConfig extends StoragePluginConfig {
     return writerBatchSize != null ? writerBatchSize : DEFAULT_WRITER_BATCH_SIZE;
   }
 
+  @JsonProperty("maxColumns")
+  public int getMaxColumns() {
+    return maxColumns != null ? maxColumns : DEFAULT_MAX_READER_COLUMNS;
+  }
+
+  @JsonProperty("maxCacheSize")
+  public int getMaxCacheSize() {
+    return maxCacheSize != null ? maxCacheSize : DEFAULT_MAX_CACHE_SIZE;
+  }
+
+  @JsonProperty("cacheExpiration")
+  public int getCacheExpiration() {
+    return cacheExpiration != null ? cacheExpiration : DEFAULT_CACHE_EXPIRATION;
+  }
+
   private static CredentialsProvider getCredentialsProvider(CredentialsProvider credentialsProvider) {
     return credentialsProvider != null ? credentialsProvider : PlainCredentialsProvider.EMPTY_CREDENTIALS_PROVIDER;
   }
@@ -250,26 +281,32 @@ public class SplunkPluginConfig extends StoragePluginConfig {
       Objects.equals(validateHostname, thatConfig.validateHostname) &&
       Objects.equals(earliestTime, thatConfig.earliestTime) &&
       Objects.equals(latestTime, thatConfig.latestTime) &&
-      Objects.equals(authMode, thatConfig.authMode);
+      Objects.equals(authMode, thatConfig.authMode) &&
+        Objects.equals(maxCacheSize, thatConfig.maxCacheSize) &&
+        Objects.equals(maxColumns, thatConfig.maxColumns) &&
+        Objects.equals(cacheExpiration, thatConfig.cacheExpiration);
   }
 
   @Override
   public int hashCode() {
     return Objects.hash(
-      credentialsProvider,
-      scheme,
-      hostname,
-      port,
-      app,
-      owner,
-      token,
-      cookie,
-      writable,
-      validateCertificates,
-      validateHostname,
-      earliestTime,
-      latestTime,
-      authMode
+        credentialsProvider,
+        scheme,
+        hostname,
+        port,
+        app,
+        owner,
+        token,
+        cookie,
+        writable,
+        validateCertificates,
+        validateHostname,
+        earliestTime,
+        latestTime,
+        authMode,
+        cacheExpiration,
+        maxCacheSize,
+        maxColumns
     );
   }
 
@@ -290,6 +327,9 @@ public class SplunkPluginConfig extends StoragePluginConfig {
       .field("earliestTime", earliestTime)
       .field("latestTime", latestTime)
       .field("Authentication Mode", authMode)
+      .field("maxColumns", maxColumns)
+      .field("maxCacheSize", maxCacheSize)
+      .field("cacheExpiration", cacheExpiration)
       .toString();
   }
 
