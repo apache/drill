@@ -42,13 +42,13 @@ public class HashJoinProbeTemplate extends ProbeTemplate<HashJoinPOP> {
                                  IterOutcome leftStartState, HashPartition[] partitions, int cycleNum,
                                  VectorContainer container, AbstractHashBinaryRecordBatch.SpilledPartition[] spilledInners,
                                  boolean buildSideIsEmpty, int numPartitions, int rightHVColPosition) throws SchemaChangeException {
-    super.setup(probeBatch, leftStartState, partitions, cycleNum, container, spilledInners,
-      buildSideIsEmpty, numPartitions);
     this.outgoingBatch = outgoing;
     this.joinType = joinRelType;
     this.joinControl = new JoinControl(outgoing.getPopConfig().getJoinControl());
     this.semiJoin = semiJoin;
     this.numberOfBuildSideColumns = semiJoin ? 0 : rightHVColPosition; // position (0 based) of added column == #columns
+    super.setup(probeBatch, leftStartState, partitions, cycleNum, container, spilledInners,
+      buildSideIsEmpty, numPartitions);
   }
 
   @Override

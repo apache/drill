@@ -1,0 +1,42 @@
+{
+  head:{
+    type:"APACHE_DRILL_PHYSICAL",
+    version:"1",
+    generator:{
+      type:"manual"
+    }
+  },
+  graph:[
+    {
+      @id:1,
+      pop:"mock-sub-scan",
+      entries:[
+        {records: 0, types: [
+          {name: "id", type: "INT", mode: "REQUIRED"}
+        ]}
+      ]
+    },
+    {
+      @id:2,
+      pop:"mock-sub-scan",
+      entries:[
+        {records: 5, types: [
+          {name: "id1", type: "INT", mode: "REQUIRED"}
+        ]}
+      ]
+    },
+    {
+      @id: 3,
+      left: 1,
+      right: 2,
+      pop: "hash-join",
+      joinType: "RIGHT",
+      conditions: [ {relationship: "==", left: "id", right: "id1"} ]
+    },
+    {
+      @id: 4,
+      child: 3,
+      pop: "screen"
+    }
+  ]
+}
