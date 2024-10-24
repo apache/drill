@@ -19,6 +19,9 @@
 package org.apache.drill.exec.store.splunk;
 
 public class SplunkUtils {
+  public static final String EARLIEST_TIME_COLUMN = "earliestTime";
+  public static final String LATEST_TIME_COLUMN = "latestTime";
+
   /**
    * These are special fields that alter the queries sent to Splunk.
    */
