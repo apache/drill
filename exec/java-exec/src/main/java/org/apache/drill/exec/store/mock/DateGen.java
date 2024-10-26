@@ -44,13 +44,16 @@ public class DateGen extends AbstractFieldGen {
   public DateGen() {
     // Start a year ago.
     baseTime = System.currentTimeMillis() - ONE_YEAR;
-    fmt = new SimpleDateFormat("yyyy-mm-DD");
+    fmt = new SimpleDateFormat("yyyy-MM-dd");
   }
 
   @Override
   public void setValue() {
-    long randTime = baseTime + baseTime + rand.nextInt(365) * ONE_DAY;
-    String str = fmt.format(new Date(randTime));
-    colWriter.setString(str);
+    final long randTime = baseTime + baseTime + rand.nextInt(365) * ONE_DAY;
+    final Date date = new Date(randTime);
+    // SimpleDateFormat is not thread safe
+    synchronized(fmt) {
+      colWriter.setString(fmt.format(date));
+    }
   }
 }
