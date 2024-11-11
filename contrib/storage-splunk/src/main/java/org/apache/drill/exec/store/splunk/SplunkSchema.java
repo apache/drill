@@ -43,7 +43,7 @@ import java.util.Set;
 import java.util.concurrent.TimeUnit;
 
 public class SplunkSchema extends AbstractSchema {
-  private final static Logger logger = LoggerFactory.getLogger(SplunkSchema.class);
+  private static final Logger logger = LoggerFactory.getLogger(SplunkSchema.class);
   private static final String SPL_TABLE_NAME = "spl";
   private final Map<String, DynamicDrillTable> activeTables = new HashMap<>();
   private final SplunkStoragePlugin plugin;
