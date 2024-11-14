@@ -17,19 +17,18 @@
  */
 package org.apache.drill.common.types;
 
-import static org.apache.drill.common.types.TypeProtos.DataMode.REPEATED;
+import com.google.protobuf.TextFormat;
+import org.apache.drill.common.exceptions.DrillRuntimeException;
+import org.apache.drill.common.types.TypeProtos.DataMode;
+import org.apache.drill.common.types.TypeProtos.MajorType;
+import org.apache.drill.common.types.TypeProtos.MinorType;
 
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
-import org.apache.drill.common.exceptions.DrillRuntimeException;
-import org.apache.drill.common.types.TypeProtos.DataMode;
-import org.apache.drill.common.types.TypeProtos.MajorType;
-import org.apache.drill.common.types.TypeProtos.MinorType;
-
-import com.google.protobuf.TextFormat;
+import static org.apache.drill.common.types.TypeProtos.DataMode.REPEATED;
 
 public class Types {
   private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(Types.class);
@@ -816,7 +815,7 @@ public class Types {
       return typeBuilder.setPrecision(Math.max(leftType.getPrecision(), rightType.getPrecision()));
     }
 
-    MinorType minorType = leftType.getMinorType();
+    MinorType minorType = leftType.getMinorType();s
     if (isDecimalType(leftType)) {
       int scale = Math.max(leftType.getScale(), rightType.getScale());
       // resulting precision should take into account resulting scale value and be calculated as
@@ -936,11 +935,10 @@ public class Types {
       return 28;
     case DECIMAL38DENSE:
     case DECIMAL38SPARSE:
+    case VARDECIMAL:
       return 38;
     case DECIMAL9:
       return 9;
-    case VARDECIMAL:
-      return 38;
     default:
       return 0;
     }
