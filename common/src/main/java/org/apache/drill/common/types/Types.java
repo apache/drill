@@ -815,7 +815,7 @@ public class Types {
       return typeBuilder.setPrecision(Math.max(leftType.getPrecision(), rightType.getPrecision()));
     }
 
-    MinorType minorType = leftType.getMinorType();s
+    MinorType minorType = leftType.getMinorType();
     if (isDecimalType(leftType)) {
       int scale = Math.max(leftType.getScale(), rightType.getScale());
       // resulting precision should take into account resulting scale value and be calculated as
