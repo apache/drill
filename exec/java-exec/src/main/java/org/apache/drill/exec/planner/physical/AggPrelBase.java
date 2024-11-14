@@ -17,6 +17,7 @@
  */
 package org.apache.drill.exec.planner.physical;
 
+import com.google.common.collect.ImmutableList;
 import org.apache.drill.common.expression.IfExpression;
 import org.apache.drill.common.expression.NullExpression;
 import com.google.common.collect.Lists;
@@ -179,12 +180,47 @@ public abstract class AggPrelBase extends DrillAggregateRelBase implements Prel 
                   aggCall.e.isDistinct(),
                   aggCall.e.isApproximate(),
                   false,
+                  ImmutableList.of(),
                   Collections.singletonList(aggExprOrdinal),
                   aggCall.e.filterArg,
                   null,
                   RelCollations.EMPTY,
                   aggCall.e.getType(),
                   aggCall.e.getName());
+
+          /*
+          SqlAggFunction aggFunction,
+      boolean distinct,
+      boolean approximate,
+      boolean ignoreNulls,
+      List<Integer> argList,
+      int filterArg,
+      @Nullable ImmutableBitSet distinctKeys,
+      RelCollation collation,
+      RelDataType type,
+      @Nullable String name
+
+SqlAggFunction aggFunction,
+      boolean distinct,
+       boolean approximate,
+        boolean ignoreNulls,
+      List<RexNode> rexList,
+      List<Integer> argList,
+      int filterArg,
+      @Nullable ImmutableBitSet distinctKeys, RelCollation collation,
+      RelDataType type, @Nullable String name
+
+      public static AggregateCall create(SqlAggFunction aggFunction, boolean distinct, boolean approximate, boolean ignoreNulls,
+      List<Integer> argList, int filterArg,
+      @Nullable ImmutableBitSet distinctKeys, RelCollation collation,
+      RelDataType type, @Nullable String name) {
+    final boolean distinct2 = distinct
+        && (aggFunction.getDistinctOptionality() != Optionality.IGNORED);
+    return new AggregateCall(aggFunction, distinct2, approximate, ignoreNulls,
+        argList, filterArg, distinctKeys, collation, type, name);
+  }
+
+           */
 
           phase2AggCallList.add(newAggCall);
         } else {
@@ -194,6 +230,7 @@ public abstract class AggPrelBase extends DrillAggregateRelBase implements Prel 
                   aggCall.e.isDistinct(),
                   aggCall.e.isApproximate(),
                   false,
+                  ImmutableList.of(),
                   Collections.singletonList(aggExprOrdinal),
                   aggCall.e.filterArg,
                   null,
@@ -270,6 +307,7 @@ public abstract class AggPrelBase extends DrillAggregateRelBase implements Prel 
           aggCall.isDistinct(),
           aggCall.isApproximate(),
           false,
+          ImmutableList.of(),
           arglist,
           aggCall.filterArg,
           null,
