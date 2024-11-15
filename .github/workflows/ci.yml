@@ -55,7 +55,7 @@ jobs:
         # added to the Runner and memory hungry tests are run separately.
         run: |
           sudo sh -c "
-            fallocate -l 4G /tmp/swapfile
+            fallocate -l 2G /tmp/swapfile
             chmod 0600 /tmp/swapfile
             mkswap /tmp/swapfile
             swapon /tmp/swapfile
