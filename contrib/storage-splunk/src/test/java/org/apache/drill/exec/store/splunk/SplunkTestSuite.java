@@ -70,7 +70,7 @@ public class SplunkTestSuite extends ClusterTest {
   private static AtomicInteger initCount = new AtomicInteger(0);
   @ClassRule
   public static GenericContainer<?> splunk = new GenericContainer<>(
-    DockerImageName.parse("splunk/splunk:9.0.2")
+    DockerImageName.parse("splunk/splunk:9.3")
   )
     .withExposedPorts(8089, 8089)
     .withEnv("SPLUNK_START_ARGS", "--accept-license")
@@ -88,6 +88,17 @@ public class SplunkTestSuite extends ClusterTest {
         startCluster(builder);
 
         splunk.start();
+        splunk.execInContainer("if ! sudo grep -q 'minFileSize' /opt/splunk/etc/system/local/server.conf; then " +
+            "sudo chmod a+w /opt/splunk/etc/system/local/server.conf; " +
+            "sudo echo \"# disk usage processor settings\" >> /opt/splunk/etc/system/local/server.conf; " +
+            "sudo echo \"[diskUsage]\" >> /opt/splunk/etc/system/local/server.conf; " +
+            "sudo echo \"minFreeSpace = 2000\" >> /opt/splunk/etc/system/local/server.conf; " +
+            "sudo echo \"pollingFrequency = 100000\" >> /opt/splunk/etc/system/local/server.conf; " +
+            "sudo echo \"pollingTimerFrequency = 10\" >> /opt/splunk/etc/system/local/server.conf; " +
+            "sudo chmod 600 /opt/splunk/etc/system/local/server.conf; " +
+            "sudo /opt/splunk/bin/splunk restart; " +
+            "fi");
+
         String hostname = splunk.getHost();
         Integer port = splunk.getFirstMappedPort();
         StoragePluginRegistry pluginRegistry = cluster.drillbit().getContext().getStorage();
@@ -98,7 +109,7 @@ public class SplunkTestSuite extends ClusterTest {
           "1", "now",
           null,
           4,
-          StoragePluginConfig.AuthMode.SHARED_USER.name(), true, null
+          StoragePluginConfig.AuthMode.SHARED_USER.name(), true, null, null, null, null
         );
         SPLUNK_STORAGE_PLUGIN_CONFIG.setEnabled(true);
         pluginRegistry.put(SplunkPluginConfig.NAME, SPLUNK_STORAGE_PLUGIN_CONFIG);
@@ -120,7 +131,7 @@ public class SplunkTestSuite extends ClusterTest {
           "1", "now",
           credentialsProvider,
           4,
-          AuthMode.USER_TRANSLATION.name(), true, null
+          AuthMode.USER_TRANSLATION.name(), true, null, null, null, null
         );
         SPLUNK_STORAGE_PLUGIN_CONFIG_WITH_USER_TRANSLATION.setEnabled(true);
         pluginRegistry.put("ut_splunk", SPLUNK_STORAGE_PLUGIN_CONFIG_WITH_USER_TRANSLATION);

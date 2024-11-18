@@ -18,6 +18,9 @@
 
 package org.apache.drill.exec.store.splunk;
 
+import com.github.benmanes.caffeine.cache.Cache;
+import com.github.benmanes.caffeine.cache.Caffeine;
+import com.google.common.collect.Sets;
 import com.splunk.IndexCollection;
 import org.apache.calcite.schema.Table;
 import org.apache.drill.common.exceptions.UserException;
@@ -28,7 +31,6 @@ import org.apache.drill.exec.planner.logical.DynamicDrillTable;
 import org.apache.drill.exec.planner.logical.ModifyTableEntry;
 import org.apache.drill.exec.store.AbstractSchema;
 import org.apache.drill.exec.store.StorageStrategy;
-import com.google.common.collect.Sets;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -38,19 +40,32 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.TimeUnit;
 
 public class SplunkSchema extends AbstractSchema {
-  private final static Logger logger = LoggerFactory.getLogger(SplunkSchema.class);
+  private static final Logger logger = LoggerFactory.getLogger(SplunkSchema.class);
   private static final String SPL_TABLE_NAME = "spl";
   private final Map<String, DynamicDrillTable> activeTables = new HashMap<>();
   private final SplunkStoragePlugin plugin;
   private final String queryUserName;
+  private final Cache<String, Set<String>> cache;
+  private final boolean useCache;
 
   public SplunkSchema(SplunkStoragePlugin plugin, String queryUserName) {
     super(Collections.emptyList(), plugin.getName());
     this.plugin = plugin;
     this.queryUserName = queryUserName;
+    this.useCache = plugin.getConfig().getCacheExpiration() >= 0;
 
+    if (useCache) {
+      logger.info("Using splunk schema cache for {}", plugin.getName());
+      this.cache = Caffeine.newBuilder()
+          .expireAfterAccess(plugin.getConfig().getCacheExpiration(), TimeUnit.MINUTES)
+          .maximumSize(plugin.getConfig().getMaxCacheSize())
+          .build();
+    } else {
+      this.cache = null;
+    }
 
     registerIndexes();
   }
@@ -86,13 +101,18 @@ public class SplunkSchema extends AbstractSchema {
   }
 
   @Override
-  public CreateTableEntry createNewTable(String tableName, List<String> partitionColumns,
-    StorageStrategy strategy) {
+  public CreateTableEntry createNewTable(String tableName,
+      List<String> partitionColumns,
+      StorageStrategy strategy) {
     if (plugin.getConfig().isWritable() == null || (! plugin.getConfig().isWritable())) {
       throw UserException
         .dataWriteError()
         .message(plugin.getName() + " is not writable.")
         .build(logger);
+    }
+    // Clear the index cache.
+    if (useCache) {
+      cache.invalidate(getNameForCache());
     }
 
     return new CreateTableEntry() {
@@ -122,6 +142,13 @@ public class SplunkSchema extends AbstractSchema {
 
     // Drop the index
     indexes.remove(indexName);
+
+    if (useCache) {
+      // Update the cache
+      String cacheKey = getNameForCache();
+      cache.invalidate(cacheKey);
+      cache.put(cacheKey, indexes.keySet());
+    }
   }
 
   @Override
@@ -139,6 +166,14 @@ public class SplunkSchema extends AbstractSchema {
     return SplunkPluginConfig.NAME;
   }
 
+  /**
+   * Returns the name for the cache.
+   * @return A String containing a combination of the queryUsername and sourceType (table name)
+   */
+  private String getNameForCache() {
+    return queryUserName + "-" + plugin.getName();
+  }
+
   private void registerIndexes() {
     // Verify that the connection is successful.  If not, don't register any indexes,
     // and throw an exception.
@@ -148,8 +183,24 @@ public class SplunkSchema extends AbstractSchema {
     registerTable(SPL_TABLE_NAME, new DynamicDrillTable(plugin, plugin.getName(),
       new SplunkScanSpec(plugin.getName(), SPL_TABLE_NAME, plugin.getConfig(), queryUserName)));
 
+    Set<String> indexList = null;
     // Retrieve and add all other Splunk indexes
-    for (String indexName : connection.getIndexes().keySet()) {
+    // First check the cache to see if we have a list of indexes.
+    String nameKey = getNameForCache();
+    if (useCache) {
+      indexList = cache.getIfPresent(nameKey);
+    }
+
+    // If the index list is not in the cache, query Splunk, retrieve the index list and add it to the cache.
+    if (indexList == null) {
+      logger.debug("Index list not in Splunk schema cache.  Retrieving from Splunk.");
+      indexList = connection.getIndexes().keySet();
+      if (useCache) {
+        cache.put(nameKey, indexList);
+      }
+    }
+
+    for (String indexName : indexList) {
       logger.debug("Registering {}", indexName);
       registerTable(indexName, new DynamicDrillTable(plugin, plugin.getName(),
         new SplunkScanSpec(plugin.getName(), indexName, plugin.getConfig(), queryUserName)));

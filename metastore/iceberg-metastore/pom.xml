@@ -30,10 +30,6 @@
   <artifactId>drill-iceberg-metastore</artifactId>
   <name>Drill : Metastore : Iceberg</name>
 
-  <properties>
-    <caffeine.version>2.7.0</caffeine.version>
-  </properties>
-
   <dependencies>
     <dependency>
       <groupId>org.apache.drill</groupId>

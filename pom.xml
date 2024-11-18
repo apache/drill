@@ -55,6 +55,7 @@
     <avatica.version>1.23.0</avatica.version>
     <avro.version>1.11.4</avro.version>
     <bouncycastle.version>1.78.1</bouncycastle.version>
+    <caffeine.version>2.9.3</caffeine.version>
     <calcite.groupId>org.apache.calcite</calcite.groupId>
     <calcite.version>1.34.0</calcite.version>
     <codemodel.version>2.6</codemodel.version>
