@@ -197,7 +197,7 @@ public class TestVarlenDecimal extends ClusterTest {
     // A union of VARDECIMALs that requires a widening to an unsupported
     // DECIMAL(40, 6). The resulting column should be limited DECIMAL(38, 6)
     // and a precision loss warning logged.
-    String query = "SELECT CAST('10' AS DECIMAL(38, 4)) AS `Col1` " +
+    String query = "SELECT CAST(10 AS DECIMAL(38, 4)) AS `Col1` " +
       "UNION ALL " +
       "SELECT CAST(22 AS DECIMAL(29, 6)) AS `Col1`";
 
