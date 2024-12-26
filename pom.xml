@@ -82,7 +82,7 @@
     <guava.version>32.1.2-jre</guava.version>
     <hadoop.version>3.3.6</hadoop.version>
     <hamcrest.version>2.2</hamcrest.version>
-    <hbase.version>2.5.5-hadoop3</hbase.version>
+    <hbase.version>2.6.1-hadoop3</hbase.version>
     <hikari.version>4.0.3</hikari.version>
     <!--
       Currently, Hive storage plugin only supports Apache Hive 3.1.3 or vendor specific variants of the
@@ -2943,7 +2943,7 @@
       </activation>
       <properties>
         <hadoop.version>2.10.2</hadoop.version>
-        <hbase.version>2.5.5</hbase.version>
+        <hbase.version>2.6.1</hbase.version>
       </properties>
       <dependencyManagement>
         <dependencies>
