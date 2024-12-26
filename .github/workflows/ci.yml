@@ -73,7 +73,7 @@ jobs:
           "
   checkstyle_protobuf:
     name: Run checkstyle and generate protobufs
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
     if: github.repository == 'apache/drill'
     steps:
       - name: Checkout
