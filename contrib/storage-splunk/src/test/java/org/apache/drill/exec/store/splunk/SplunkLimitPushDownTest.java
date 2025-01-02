@@ -64,6 +64,7 @@ public class SplunkLimitPushDownTest extends SplunkBaseTest {
       .sql(sql)
       .planMatcher()
       .include("Limit", "maxRecords=4")
+      .include("spl", "search index=_audit rating=52.17 | fields rating | head 5 | table rating")
       .match();
   }
 }

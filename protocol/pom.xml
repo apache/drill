@@ -120,6 +120,7 @@
                 <configuration>
                   <cleanOutputFolder>false</cleanOutputFolder>
                   <outputDirectory>${basedir}/src/main/java</outputDirectory>
+                  <ignoreVersions>true</ignoreVersions>
                 </configuration>
               </execution>
             </executions>

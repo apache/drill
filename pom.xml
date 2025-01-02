@@ -55,6 +55,7 @@
     <avatica.version>1.23.0</avatica.version>
     <avro.version>1.11.4</avro.version>
     <bouncycastle.version>1.78.1</bouncycastle.version>
+    <caffeine.version>2.9.3</caffeine.version>
     <calcite.groupId>org.apache.calcite</calcite.groupId>
     <calcite.version>1.34.0</calcite.version>
     <codemodel.version>2.6</codemodel.version>
@@ -81,7 +82,7 @@
     <guava.version>32.1.2-jre</guava.version>
     <hadoop.version>3.3.6</hadoop.version>
     <hamcrest.version>2.2</hamcrest.version>
-    <hbase.version>2.5.5-hadoop3</hbase.version>
+    <hbase.version>2.6.1-hadoop3</hbase.version>
     <hikari.version>4.0.3</hikari.version>
     <!--
       Currently, Hive storage plugin only supports Apache Hive 3.1.3 or vendor specific variants of the
@@ -111,7 +112,7 @@
     <license.skip>true</license.skip>
     <log4j.version>2.23.1</log4j.version>
     <!-- Upgrading logback further breaks JDK 8 build compatibility -->
-    <logback.version>1.3.14</logback.version>
+    <logback.version>1.3.15</logback.version>
     <maven.compiler.source>1.8</maven.compiler.source>
     <maven.compiler.target>1.8</maven.compiler.target>
     <maven.min.version>3.6.3</maven.min.version>
@@ -123,11 +124,11 @@
     <msgpack.version>0.6.6</msgpack.version>
     <netty.tcnative.classifier />
     <netty.tcnative.version>2.0.65.Final</netty.tcnative.version>
-    <netty.version>4.1.109.Final</netty.version>
+    <netty.version>4.1.115.Final</netty.version>
     <parquet.format.version>2.9.0</parquet.format.version>
     <parquet.version>1.12.3</parquet.version>
     <project.build.outputTimestamp>1676438963</project.build.outputTimestamp>
-    <protobuf.version>3.16.3</protobuf.version>
+    <protobuf.version>3.25.5</protobuf.version>
     <proto.cas.path>${project.basedir}/src/main/protobuf/</proto.cas.path>
     <protostuff.version>1.8.0</protostuff.version>
     <rat.skip>true</rat.skip>
@@ -2942,7 +2943,7 @@
       </activation>
       <properties>
         <hadoop.version>2.10.2</hadoop.version>
-        <hbase.version>2.5.5</hbase.version>
+        <hbase.version>2.6.1</hbase.version>
       </properties>
       <dependencyManagement>
         <dependencies>
