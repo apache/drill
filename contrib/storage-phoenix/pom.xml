@@ -122,11 +122,6 @@
     </dependency>
     <dependency>
       <groupId>org.apache.phoenix</groupId>
-      <artifactId>phoenix-hbase-compat-2.4.1</artifactId>
-      <version>${phoenix.version}</version>
-    </dependency>
-    <dependency>
-      <groupId>org.apache.phoenix</groupId>
       <artifactId>phoenix-core</artifactId>
       <version>${phoenix.version}</version>
       <exclusions>
@@ -198,7 +193,7 @@
     </dependency>
     <dependency>
       <groupId>org.apache.phoenix</groupId>
-      <artifactId>phoenix-hbase-compat-2.4.0</artifactId>
+      <artifactId>phoenix-hbase-compat-2.4.1</artifactId>
       <version>${phoenix.version}</version>
       <scope>test</scope>
     </dependency>
