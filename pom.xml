@@ -128,7 +128,7 @@
     <parquet.format.version>2.9.0</parquet.format.version>
     <parquet.version>1.12.3</parquet.version>
     <project.build.outputTimestamp>1676438963</project.build.outputTimestamp>
-    <protobuf.version>3.25.5</protobuf.version>
+    <protobuf.version>3.25.6</protobuf.version>
     <proto.cas.path>${project.basedir}/src/main/protobuf/</proto.cas.path>
     <protostuff.version>1.8.0</protostuff.version>
     <rat.skip>true</rat.skip>
