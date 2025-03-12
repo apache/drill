@@ -750,6 +750,7 @@
                 <exclude>META-INF/**/*.properties</exclude>
                 <exclude>META-INF/services/com.fasterxml.*</exclude>
                 <exclude>META-INF/services/javax.ws.*</exclude>
+                <exclude>META-INF/versions/22/**</exclude>
                 <exclude>module-info.class</exclude>
                 <exclude>org/apache/commons/pool2/**</exclude>
                 <exclude>org/apache/directory/**</exclude>
