@@ -49,7 +49,7 @@ public class DateGen extends AbstractFieldGen {
 
   @Override
   public void setValue() {
-    final long randTime = baseTime + baseTime + rand.nextInt(365) * ONE_DAY;
+    final long randTime = baseTime + rand.nextInt(365) * ONE_DAY;
     final Date date = new Date(randTime);
     // SimpleDateFormat is not thread safe
     synchronized(fmt) {
