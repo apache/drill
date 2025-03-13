@@ -216,6 +216,7 @@
               <artifact>com.fasterxml.jackson.core:*</artifact>
               <excludes>
                 <exclude>module-info.class</exclude>
+                <exclude>META-INF/versions/22/**</exclude>
               </excludes>
             </filter>
           </filters>
