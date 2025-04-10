@@ -17,13 +17,7 @@
  */
 package org.apache.parquet.hadoop;
 
-import java.io.IOException;
-import java.nio.ByteBuffer;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-
+import io.netty.buffer.ByteBuf;
 import org.apache.drill.common.exceptions.DrillRuntimeException;
 import org.apache.drill.exec.exception.OutOfMemoryException;
 import org.apache.drill.exec.memory.BufferAllocator;
@@ -47,10 +41,15 @@ import org.apache.parquet.format.Util;
 import org.apache.parquet.format.converter.ParquetMetadataConverter;
 import org.apache.parquet.hadoop.metadata.ColumnChunkMetaData;
 import org.apache.parquet.hadoop.util.HadoopStreams;
-
-import io.netty.buffer.ByteBuf;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import java.io.IOException;
+import java.nio.ByteBuffer;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 
 public class ColumnChunkIncReadStore implements PageReadStore {
@@ -295,9 +294,13 @@ public class ColumnChunkIncReadStore implements PageReadStore {
     columns.put(descriptor, reader);
   }
 
-  public void close() throws IOException {
+  public void close() {
     for (FSDataInputStream stream : streams) {
-      stream.close();
+      try {
+        stream.close();
+      } catch (IOException e) {
+        logger.warn("Error closing stream: {}", e.getMessage(), e);
+      }
     }
     for (ColumnChunkIncPageReader reader : columns.values()) {
       reader.close();

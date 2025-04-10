@@ -125,8 +125,8 @@
     <netty.tcnative.classifier />
     <netty.tcnative.version>2.0.65.Final</netty.tcnative.version>
     <netty.version>4.1.115.Final</netty.version>
-    <parquet.format.version>2.9.0</parquet.format.version>
-    <parquet.version>1.12.3</parquet.version>
+    <parquet.format.version>2.11.0</parquet.format.version>
+    <parquet.version>1.15.1</parquet.version>
     <project.build.outputTimestamp>1676438963</project.build.outputTimestamp>
     <protobuf.version>3.25.5</protobuf.version>
     <proto.cas.path>${project.basedir}/src/main/protobuf/</proto.cas.path>
