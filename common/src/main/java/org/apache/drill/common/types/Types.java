@@ -22,6 +22,8 @@ import org.apache.drill.common.exceptions.DrillRuntimeException;
 import org.apache.drill.common.types.TypeProtos.DataMode;
 import org.apache.drill.common.types.TypeProtos.MajorType;
 import org.apache.drill.common.types.TypeProtos.MinorType;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -31,7 +33,7 @@ import java.util.List;
 import static org.apache.drill.common.types.TypeProtos.DataMode.REPEATED;
 
 public class Types {
-  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(Types.class);
+  private static final Logger logger = LoggerFactory.getLogger(Types.class);
 
   public static final int MAX_VARCHAR_LENGTH = 65535;
   public static final int DEFAULT_TIMESTAMP_PRECISION = 3;

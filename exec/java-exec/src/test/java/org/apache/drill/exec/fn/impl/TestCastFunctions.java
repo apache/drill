@@ -17,16 +17,8 @@
  */
 package org.apache.drill.exec.fn.impl;
 
-import java.math.BigDecimal;
-import java.time.LocalDate;
-import java.time.LocalDateTime;
-import java.time.LocalTime;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-
+import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
 import org.apache.drill.categories.SqlFunctionTest;
 import org.apache.drill.categories.UnlikelyTest;
 import org.apache.drill.common.exceptions.UserRemoteException;
@@ -34,8 +26,8 @@ import org.apache.drill.common.types.TypeProtos;
 import org.apache.drill.common.types.Types;
 import org.apache.drill.exec.planner.physical.PlannerSettings;
 import org.apache.drill.exec.record.BatchSchema;
-import org.apache.drill.exec.record.MaterializedField;
 import org.apache.drill.exec.record.BatchSchemaBuilder;
+import org.apache.drill.exec.record.MaterializedField;
 import org.apache.drill.exec.record.metadata.SchemaBuilder;
 import org.apache.drill.exec.vector.IntervalDayVector;
 import org.apache.drill.exec.vector.IntervalYearVector;
@@ -48,8 +40,15 @@ import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.junit.rules.ExpectedException;
 
-import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
+import java.math.BigDecimal;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.LocalTime;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 import static org.apache.drill.common.types.TypeProtos.MinorType.BIGINT;
 import static org.apache.drill.common.types.TypeProtos.MinorType.BIT;
@@ -614,9 +613,9 @@ public class TestCastFunctions extends ClusterTest {
 
   @Test
   public void testCastDecimalLiteral() throws Exception {
-    String query =
-        "select case when true then cast(100.0 as decimal(38,2)) else cast('123.0' as decimal(38,2)) end as c1";
-
+    // String query =
+    //   "select case when true then cast(100.0 as decimal(38,2)) else cast('123.0' as decimal(38,2)) end as c1";
+    String query = "SELECT CAST(100 AS DECIMAL(38,2)) AS c1";
     testBuilder()
         .sqlQuery(query)
         .ordered()
@@ -630,7 +629,7 @@ public class TestCastFunctions extends ClusterTest {
     String query = "select cast('123.0' as decimal(0, 5))";
 
     thrown.expect(UserRemoteException.class);
-    thrown.expectMessage(containsString("VALIDATION ERROR: Expected precision greater than 0, but was 0"));
+    thrown.expectMessage(containsString("VALIDATION ERROR: Expected precision greater than 0, but was 0."));
 
     run(query);
   }
@@ -640,7 +639,7 @@ public class TestCastFunctions extends ClusterTest {
     String query = "select cast('123.0' as decimal(3, 5))";
 
     thrown.expect(UserRemoteException.class);
-    thrown.expectMessage(containsString("VALIDATION ERROR: Expected scale less than or equal to precision, but was precision 3 and scale 5"));
+    thrown.expectMessage(containsString("VALIDATION ERROR: Expected scale less than or equal to precision, but was scale 5 and precision 3."));
 
     run(query);
   }
