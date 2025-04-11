@@ -166,7 +166,7 @@ AutoCloseable {
         throws IOException {
       writePage(bytesInput, valueCount, rowCount, statistics, rlEncoding, dlEncoding, valuesEncoding);
     }
-    
+
     @Override
     public void writePage(BytesInput bytes,
                           int valueCount,
