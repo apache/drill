@@ -295,9 +295,13 @@ public class ColumnChunkIncReadStore implements PageReadStore {
     columns.put(descriptor, reader);
   }
 
-  public void close() throws IOException {
+  public void close() {
     for (FSDataInputStream stream : streams) {
-      stream.close();
+      try {
+        stream.close();
+      } catch (IOException e) {
+        logger.warn("Error closing stream: {}", e.getMessage(), e);
+      }
     }
     for (ColumnChunkIncPageReader reader : columns.values()) {
       reader.close();
