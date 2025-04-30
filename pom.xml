@@ -113,8 +113,8 @@
     <log4j.version>2.23.1</log4j.version>
     <!-- Upgrading logback further breaks JDK 8 build compatibility -->
     <logback.version>1.3.15</logback.version>
-    <maven.compiler.source>1.8</maven.compiler.source>
-    <maven.compiler.target>1.8</maven.compiler.target>
+    <maven.compiler.source>11</maven.compiler.source>
+    <maven.compiler.target>11</maven.compiler.target>
     <maven.min.version>3.6.3</maven.min.version>
     <maven.version>3.8.4</maven.version>
     <memoryMb>3072</memoryMb>
@@ -163,27 +163,27 @@
       <subscribe>user-subscribe@drill.apache.org</subscribe>
       <unsubscribe>user-unsubscribe@drill.apache.org</unsubscribe>
       <post>user@drill.apache.org</post>
-      <archive>http://mail-archives.apache.org/mod_mbox/drill-user/</archive>
+      <archive>https://mail-archives.apache.org/mod_mbox/drill-user/</archive>
     </mailingList>
     <mailingList>
       <name>Developer List</name>
       <subscribe>dev-subscribe@drill.apache.org</subscribe>
       <unsubscribe>dev-unsubscribe@drill.apache.org</unsubscribe>
       <post>dev@drill.apache.org</post>
-      <archive>http://mail-archives.apache.org/mod_mbox/drill-dev/</archive>
+      <archive>https://mail-archives.apache.org/mod_mbox/drill-dev/</archive>
     </mailingList>
     <mailingList>
       <name>Commits List</name>
       <subscribe>commits-subscribe@drill.apache.org</subscribe>
       <unsubscribe>commits-unsubscribe@drill.apache.org</unsubscribe>
       <post>commits@drill.apache.org</post>
-      <archive>http://mail-archives.apache.org/mod_mbox/drill-commits/</archive>
+      <archive>https://mail-archives.apache.org/mod_mbox/drill-commits/</archive>
     </mailingList>
     <mailingList>
       <name>Issues List</name>
       <subscribe>issues-subscribe@drill.apache.org</subscribe>
       <unsubscribe>issues-unsubscribe@drill.apache.org</unsubscribe>
-      <archive>http://mail-archives.apache.org/mod_mbox/drill-issues/</archive>
+      <archive>https://mail-archives.apache.org/mod_mbox/drill-issues/</archive>
     </mailingList>
   </mailingLists>
 
@@ -914,6 +914,12 @@
       <groupId>org.mockito</groupId>
       <artifactId>mockito-core</artifactId>
       <version>${mockito.version}</version>
+      <exclusions>
+        <exclusion>
+          <groupId>org.mockito</groupId>
+          <artifactId>mockito-core</artifactId>
+        </exclusion>
+      </exclusions>
       <scope>test</scope>
     </dependency>
     <dependency>
