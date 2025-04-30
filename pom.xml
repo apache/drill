@@ -119,7 +119,7 @@
     <maven.version>3.8.4</maven.version>
     <memoryMb>3072</memoryMb>
     <metrics.version>4.2.19</metrics.version>
-    <mockito.version>3.11.2</mockito.version>
+    <mockito.version>5.17.0</mockito.version>
     <mongo.version>4.11.1</mongo.version>
     <msgpack.version>0.6.6</msgpack.version>
     <netty.tcnative.classifier />
