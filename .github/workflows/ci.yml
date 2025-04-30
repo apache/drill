@@ -79,7 +79,7 @@ jobs:
         uses: actions/setup-java@v4
         with:
           distribution: 'temurin'
-          java-version: '8'
+          java-version: '11'
           cache: 'maven'
       # Caches built protobuf library
       - name: Cache protobufs
