@@ -17,29 +17,26 @@
  */
 package org.apache.drill;
 
-import java.io.IOException;
-import java.net.URL;
-import java.nio.charset.StandardCharsets;
-
-import org.apache.calcite.jdbc.DynamicSchema;
-import org.apache.drill.exec.alias.AliasRegistryProvider;
-import org.apache.drill.exec.ops.ViewExpansionContext;
+import com.codahale.metrics.MetricRegistry;
 import com.google.common.base.Function;
+import com.google.common.collect.ImmutableList;
+import com.google.common.io.Resources;
 import io.netty.buffer.DrillBuf;
+import org.apache.calcite.jdbc.DynamicSchema;
 import org.apache.calcite.schema.SchemaPlus;
 import org.apache.drill.common.config.DrillConfig;
 import org.apache.drill.common.config.LogicalPlanPersistence;
 import org.apache.drill.common.scanner.ClassPathScanner;
 import org.apache.drill.common.scanner.persistence.ScanResult;
 import org.apache.drill.common.types.TypeProtos;
-import org.apache.drill.exec.expr.holders.ValueHolder;
-import org.apache.drill.exec.vector.ValueHolderHelper;
-import org.apache.drill.test.TestTools;
 import org.apache.drill.exec.ExecTest;
+import org.apache.drill.exec.alias.AliasRegistryProvider;
 import org.apache.drill.exec.expr.fn.FunctionImplementationRegistry;
+import org.apache.drill.exec.expr.holders.ValueHolder;
 import org.apache.drill.exec.memory.BufferAllocator;
 import org.apache.drill.exec.memory.RootAllocatorFactory;
 import org.apache.drill.exec.ops.QueryContext;
+import org.apache.drill.exec.ops.ViewExpansionContext;
 import org.apache.drill.exec.physical.PhysicalPlan;
 import org.apache.drill.exec.planner.physical.PlannerSettings;
 import org.apache.drill.exec.planner.sql.DrillOperatorTable;
@@ -55,16 +52,18 @@ import org.apache.drill.exec.store.StoragePluginRegistry;
 import org.apache.drill.exec.store.StoragePluginRegistryImpl;
 import org.apache.drill.exec.store.sys.store.provider.LocalPersistentStoreProvider;
 import org.apache.drill.exec.testing.ExecutionControls;
+import org.apache.drill.exec.vector.ValueHolderHelper;
+import org.apache.drill.test.TestTools;
 import org.junit.Rule;
 import org.junit.rules.TestRule;
+import org.mockito.ArgumentMatchers;
 
-import com.codahale.metrics.MetricRegistry;
-import com.google.common.collect.ImmutableList;
-import com.google.common.io.Resources;
-import org.mockito.Matchers;
+import java.io.IOException;
+import java.net.URL;
+import java.nio.charset.StandardCharsets;
 
 import static org.mockito.ArgumentMatchers.anyString;
-import static org.mockito.Matchers.eq;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -131,11 +130,11 @@ public class PlanningBase extends ExecTest {
     when(context.getManagedBuffer()).thenReturn(allocator.buffer(4));
     when(context.getConstantValueHolder(eq("0.03"),
         eq(TypeProtos.MinorType.VARDECIMAL),
-        Matchers.<Function<DrillBuf, ValueHolder>>any()))
+        ArgumentMatchers.<Function<DrillBuf, ValueHolder>>any()))
       .thenReturn(ValueHolderHelper.getVarDecimalHolder(allocator.buffer(4), "0.03"));
     when(context.getConstantValueHolder(eq("0.01"),
         eq(TypeProtos.MinorType.VARDECIMAL),
-        Matchers.<Function<DrillBuf, ValueHolder>>any()))
+        ArgumentMatchers.<Function<DrillBuf, ValueHolder>>any()))
       .thenReturn(ValueHolderHelper.getVarDecimalHolder(allocator.buffer(4), "0.01"));
     when(context.getOption(anyString())).thenCallRealMethod();
     when(context.getViewExpansionContext()).thenReturn(viewExpansionContext);
