@@ -53,7 +53,7 @@
     <antlr.version>4.9.3</antlr.version>
     <asm.version>9.5</asm.version>
     <avatica.version>1.23.0</avatica.version>
-    <avro.version>1.12.0</avro.version>
+    <avro.version>1.11.4</avro.version>
     <bouncycastle.version>1.78.1</bouncycastle.version>
     <caffeine.version>2.9.3</caffeine.version>
     <calcite.groupId>org.apache.calcite</calcite.groupId>
