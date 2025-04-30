@@ -34,11 +34,8 @@ jobs:
     strategy:
       matrix:
         # Java versions to run unit tests
-        java: [ '8', '11', '17' ]
+        java: [ '11', '17', '21' ]
         profile: ['default-hadoop']
-        include:
-          - java: '8'
-            profile: 'hadoop-2'
       fail-fast: false
     steps:
       - name: Checkout
