@@ -100,7 +100,7 @@ import org.slf4j.LoggerFactory;
 /**
  * Internal implementation of the Parquet file writer as a block container<br>
  * Note: this is temporary Drill-Parquet class needed to write empty parquet files.
- * This is a full copy of the Parquet library implementation with the lines that throw an error 
+ * This is a full copy of the Parquet library implementation with the lines that throw an error
  * on writing empty Parquet files commented out. See details in:
  * <a href="https://issues.apache.org/jira/browse/PARQUET-2026">PARQUET-2026</a> and
  * <a href="https://issues.apache.org/jira/browse/DRILL-7907">DRILL-7907</a>
@@ -213,7 +213,6 @@ public class ParquetFileWriter implements AutoCloseable {
       STATE endColumn() {
         return BLOCK;
       }
-      ;
 
       STATE write() {
         return this;
@@ -1813,7 +1812,9 @@ public class ParquetFileWriter implements AutoCloseable {
       BlockMetaData block = blocks.get(bIndex);
       List<ColumnChunkMetaData> columns = block.getColumns();
       Map<String, BloomFilter> blockBloomFilters = bloomFilters.get(bIndex);
-      if (blockBloomFilters.isEmpty()) continue;
+      if (blockBloomFilters.isEmpty()) {
+        continue;
+      }
       for (int cIndex = 0, cSize = columns.size(); cIndex < cSize; ++cIndex) {
         ColumnChunkMetaData column = columns.get(cIndex);
         BloomFilter bloomFilter = blockBloomFilters.get(column.getPath().toDotString());
