@@ -17,6 +17,16 @@
  */
 package org.apache.drill.exec.physical.impl;
 
+import org.apache.drill.categories.FlakyTest;
+import org.apache.drill.exec.expr.fn.impl.DateUtility;
+import org.apache.drill.exec.rpc.user.QueryDataBatch;
+import org.apache.drill.test.BaseTestQuery;
+import org.apache.drill.test.TestBuilder;
+import org.junit.Assert;
+import org.junit.BeforeClass;
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
+
 import java.time.Instant;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -27,16 +37,8 @@ import java.time.ZonedDateTime;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
+import java.util.TimeZone;
 import java.util.TreeMap;
-
-import org.apache.drill.categories.FlakyTest;
-import org.apache.drill.exec.expr.fn.impl.DateUtility;
-import org.apache.drill.exec.rpc.user.QueryDataBatch;
-import org.apache.drill.test.BaseTestQuery;
-import org.apache.drill.test.TestBuilder;
-import org.junit.Assert;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
 
 /**
  * For DRILL-6242, output for Date, Time, Timestamp should use different classes
@@ -45,6 +47,13 @@ import org.junit.experimental.categories.Category;
 public class TestNestedDateTimeTimestamp extends BaseTestQuery {
   private static final String              DATAFILE       = "cp.`datetime.parquet`";
   private static final Map<String, Object> expectedRecord = new TreeMap<String, Object>();
+
+  @BeforeClass
+  public static void setUpTimeZone() {
+    // Certain tests in this class fail if your machine is not set to UTC.  This method
+    // sets the default timezone to UTC when these tests are run.
+    TimeZone.setDefault(TimeZone.getTimeZone("UTC"));
+  }
 
   static {
     /**

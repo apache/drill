@@ -94,7 +94,7 @@
     <httpdlog-parser.version>5.10.0</httpdlog-parser.version>
     <iceberg.version>0.12.1</iceberg.version>
     <jackson.version>2.18.3</jackson.version>
-    <janino.version>3.1.11</janino.version>
+    <janino.version>3.1.12</janino.version>
     <javassist.version>3.29.2-GA</javassist.version>
     <javax.el.version>3.0.0</javax.el.version>
     <javax.validation.api>2.0.1.Final</javax.validation.api>
@@ -118,7 +118,7 @@
     <maven.compiler.target>11</maven.compiler.target>
     <maven.min.version>3.6.3</maven.min.version>
     <maven.version>3.8.4</maven.version>
-    <memoryMb>3072</memoryMb>
+    <memoryMb>4096</memoryMb>
     <metrics.version>4.2.19</metrics.version>
     <mockito.version>5.17.0</mockito.version>
     <mockito_inline.version>5.2.0</mockito_inline.version>
@@ -629,6 +629,7 @@
               -XX:MaxDirectMemorySize=${directMemoryMb}M
               -Djava.net.preferIPv4Stack=true
               -Djava.awt.headless=true
+              -Duser.timezone=UTC
               -ea
               ${junit.args}
               -Djdk.attach.allowAttachSelf=true
