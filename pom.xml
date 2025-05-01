@@ -354,7 +354,6 @@
         </dependencies>
         <configuration>
           <includes>**/*.java</includes>
-          <encoding>UTF-8</encoding>
           <failsOnError>true</failsOnError>
           <consoleOutput>true</consoleOutput>
           <includeResources>true</includeResources>
@@ -886,6 +885,7 @@
       <version>${junit.platform.version}</version>
       <scope>test</scope>
     </dependency>
+
     <dependency>
       <groupId>org.junit.platform</groupId>
       <artifactId>junit-platform-suite-engine</artifactId>
@@ -929,6 +929,12 @@
       <artifactId>mockito-inline</artifactId>
       <version>${mockito_inline.version}</version>
       <scope>test</scope>
+      <exclusions>
+        <exclusion>
+          <artifactId>mockito-core</artifactId>
+          <groupId>org.mockito</groupId>
+        </exclusion>
+      </exclusions>
     </dependency>
     <dependency>
       <groupId>de.huxhorn.lilith</groupId>
