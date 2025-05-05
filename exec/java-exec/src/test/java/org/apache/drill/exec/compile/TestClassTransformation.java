@@ -17,15 +17,10 @@
  */
 package org.apache.drill.exec.compile;
 
-import java.io.IOException;
-import java.util.Arrays;
-import java.util.List;
-
 import org.apache.drill.common.util.DrillFileUtils;
 import org.apache.drill.exec.ExecConstants;
-import org.apache.drill.exec.compile.bytecode.ValueHolderReplacementVisitor;
-import org.apache.drill.test.BaseTestQuery;
 import org.apache.drill.exec.compile.ClassTransformer.ClassSet;
+import org.apache.drill.exec.compile.bytecode.ValueHolderReplacementVisitor;
 import org.apache.drill.exec.compile.sig.GeneratorMapping;
 import org.apache.drill.exec.compile.sig.MappingSet;
 import org.apache.drill.exec.exception.ClassTransformationException;
@@ -33,6 +28,7 @@ import org.apache.drill.exec.expr.ClassGenerator;
 import org.apache.drill.exec.expr.CodeGenerator;
 import org.apache.drill.exec.rpc.user.UserSession;
 import org.apache.drill.exec.server.options.SessionOptionManager;
+import org.apache.drill.test.BaseTestQuery;
 import org.codehaus.commons.compiler.CompileException;
 import org.junit.Assert;
 import org.junit.BeforeClass;
@@ -40,9 +36,15 @@ import org.junit.Test;
 import org.objectweb.asm.ClassReader;
 import org.objectweb.asm.ClassWriter;
 import org.objectweb.asm.tree.ClassNode;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import java.io.IOException;
+import java.util.Arrays;
+import java.util.List;
 
 public class TestClassTransformation extends BaseTestQuery {
-  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(TestClassTransformation.class);
+  private static final Logger logger = LoggerFactory.getLogger(TestClassTransformation.class);
 
   private static final int ITERATION_COUNT = Integer.parseInt(System.getProperty("TestClassTransformation.iteration", "1"));
 

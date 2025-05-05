@@ -17,10 +17,6 @@
  */
 package org.apache.drill.exec.compile;
 
-import java.io.IOException;
-import java.util.Arrays;
-import java.util.Map;
-
 import org.apache.drill.common.config.DrillConfig;
 import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.exec.compile.ClassTransformer.ClassNames;
@@ -34,6 +30,12 @@ import org.apache.drill.exec.server.options.TypeValidators.BooleanValidator;
 import org.apache.drill.exec.server.options.TypeValidators.LongValidator;
 import org.apache.drill.exec.server.options.TypeValidators.StringValidator;
 import org.codehaus.commons.compiler.CompileException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import java.io.IOException;
+import java.util.Arrays;
+import java.util.Map;
 
 /**
  * Selects between the two supported Java compilers: Janino and
@@ -65,7 +67,7 @@ import org.codehaus.commons.compiler.CompileException;
  */
 
 public class ClassCompilerSelector {
-  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(ClassCompilerSelector.class);
+  private static final Logger logger = LoggerFactory.getLogger(ClassCompilerSelector.class);
 
   public enum CompilerPolicy {
     DEFAULT, JDK, JANINO;
