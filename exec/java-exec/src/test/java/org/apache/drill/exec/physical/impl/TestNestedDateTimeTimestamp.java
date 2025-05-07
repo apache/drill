@@ -23,7 +23,6 @@ import org.apache.drill.exec.rpc.user.QueryDataBatch;
 import org.apache.drill.test.BaseTestQuery;
 import org.apache.drill.test.TestBuilder;
 import org.junit.Assert;
-import org.junit.BeforeClass;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
@@ -37,23 +36,21 @@ import java.time.ZonedDateTime;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
-import java.util.TimeZone;
 import java.util.TreeMap;
 
 /**
  * For DRILL-6242, output for Date, Time, Timestamp should use different classes
+ *
+ * Note that Drill treats all timestanps as naive (without timezone information).  When running tests locally,
+ * these tests may fail if the local timezone is not UTC.  To run tests on a machine with a non-UTC timezone,
+ * you should run the tests with the following command:
+ *
+ * mvn test -Duser.timezone=UTC
  */
 @Category(FlakyTest.class)
 public class TestNestedDateTimeTimestamp extends BaseTestQuery {
   private static final String              DATAFILE       = "cp.`datetime.parquet`";
   private static final Map<String, Object> expectedRecord = new TreeMap<String, Object>();
-
-  @BeforeClass
-  public static void setUpTimeZone() {
-    // Certain tests in this class fail if your machine is not set to UTC.  This method
-    // sets the default timezone to UTC when these tests are run.
-    TimeZone.setDefault(TimeZone.getTimeZone("UTC"));
-  }
 
   static {
     /**
