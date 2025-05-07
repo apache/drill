@@ -59,19 +59,11 @@ class DrillRexBuilder extends RexBuilder {
    * {@link RexLiteral} if {@code matchNullability} is false.
    *
    * @param type             Type to cast to
-   * @param exp              Expression being cast
-   * @param matchNullability Whether to ensure the result has the same
-   *                         nullability as {@code type}
+   * @param exp              Expression being castnullability as {@code type}
    * @return Call to CAST operator
    */
   @Override
-  public RexNode makeCast(RelDataType type, RexNode exp, boolean matchNullability) {
-    if (matchNullability) {
-      return makeAbstractCast(type, exp);
-    }
-    // for the case when BigDecimal literal has a scale or precision
-    // that differs from the value from specified RelDataType, cast cannot be removed
-    // TODO: remove this code when CALCITE-1468 is fixed
+  public RexNode makeCast(RelDataType type, RexNode exp) {
     if (type.getSqlTypeName() == SqlTypeName.DECIMAL && exp instanceof RexLiteral) {
       int precision = type.getPrecision();
       int scale = type.getScale();
@@ -85,7 +77,7 @@ class DrillRexBuilder extends RexBuilder {
         }
       }
     }
-    return super.makeCast(type, exp, false);
+    return super.makeCast(type, exp);
   }
 
   private void validatePrecisionAndScale(int precision, int scale) {

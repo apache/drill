@@ -21,6 +21,7 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import org.apache.drill.categories.SqlFunctionTest;
 import org.apache.drill.categories.UnlikelyTest;
+import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.common.exceptions.UserRemoteException;
 import org.apache.drill.common.types.TypeProtos;
 import org.apache.drill.common.types.Types;
@@ -41,6 +42,7 @@ import org.junit.experimental.categories.Category;
 import org.junit.rules.ExpectedException;
 
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
@@ -620,7 +622,7 @@ public class TestCastFunctions extends ClusterTest {
         .sqlQuery(query)
         .ordered()
         .baselineColumns("c1")
-        .baselineValues(new BigDecimal("100.00"))
+        .baselineValues(new BigDecimal("100.00").setScale(2, RoundingMode.HALF_UP))
         .go();
   }
 
@@ -638,8 +640,8 @@ public class TestCastFunctions extends ClusterTest {
   public void testCastDecimalGreaterScaleThanPrecision() throws Exception {
     String query = "select cast('123.0' as decimal(3, 5))";
 
-    thrown.expect(UserRemoteException.class);
-    thrown.expectMessage(containsString("VALIDATION ERROR: Expected scale less than or equal to precision, but was scale 5 and precision 3."));
+    thrown.expect(UserException.class);
+    thrown.expectMessage(containsString("VALIDATION ERROR: Expected scale less than or equal to precision, but was precision 3 and scale 5."));
 
     run(query);
   }
