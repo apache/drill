@@ -73,7 +73,7 @@ class DrillRexBuilder extends RexBuilder {
         BigDecimal bigDecimal = (BigDecimal) value;
         DecimalUtility.checkValueOverflow(bigDecimal, precision, scale);
         if (bigDecimal.precision() != precision || bigDecimal.scale() != scale) {
-          return makeAbstractCast(type, exp);
+          return makeAbstractCast(type, exp, false);
         }
       }
     }

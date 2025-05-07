@@ -451,22 +451,4 @@ public class DecimalUtility {
           .build(logger);
     }
   }
-
-  /**
-   * Ensures that a BigDecimal value conforms to the specified precision and scale.
-   *
-   * @param value the BigDecimal to be adjusted
-   * @param precision the desired precision
-   * @param scale the desired scale
-   * @return the adjusted BigDecimal value
-   */
-  public static BigDecimal enforcePrecisionAndScale(BigDecimal value, int precision, int scale) {
-    // Log values being checked
-    logger.debug("Adjusting value: {}, desired precision: {}, desired scale: {}", value, precision, scale);
-    if (value.precision() > precision) {
-      throw new IllegalArgumentException("Precision overflow: value = " + value);
-    }
-    return value.setScale(scale, RoundingMode.HALF_UP);
-  }
-
 }
