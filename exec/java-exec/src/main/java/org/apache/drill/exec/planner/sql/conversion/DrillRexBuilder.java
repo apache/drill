@@ -39,7 +39,7 @@ class DrillRexBuilder extends RexBuilder {
   }
 
   /**
-   * Since Drill has different mechanism and rules for implicit casting,
+   * Since Drill has a different mechanism and rules for implicit casting,
    * ensureType() is overridden to avoid conflicting cast functions being added to the expressions.
    */
   @Override
