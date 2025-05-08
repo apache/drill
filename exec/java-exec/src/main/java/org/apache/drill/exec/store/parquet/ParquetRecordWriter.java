@@ -69,7 +69,7 @@ import org.apache.parquet.column.values.factory.DefaultV1ValuesWriterFactory;
 import org.apache.parquet.column.values.factory.DefaultV2ValuesWriterFactory;
 import org.apache.parquet.column.values.factory.ValuesWriterFactory;
 import org.apache.parquet.compression.CompressionCodecFactory;
-import org.apache.parquet.hadoop.ParquetColumnChunkPageWriteStore;
+import org.apache.parquet.hadoop.ColumnChunkPageWriteStore;
 import org.apache.parquet.hadoop.ParquetFileWriter;
 import org.apache.parquet.hadoop.metadata.CompressionCodecName;
 import org.apache.parquet.io.ColumnIOFactory;
@@ -120,7 +120,7 @@ public class ParquetRecordWriter extends ParquetOutputRecordWriter {
   private long recordCountForNextMemCheck = MINIMUM_RECORD_COUNT_FOR_CHECK;
 
   private ColumnWriteStore store;
-  private ParquetColumnChunkPageWriteStore pageStore;
+  private ColumnChunkPageWriteStore pageStore;
 
   private RecordConsumer consumer;
   private BatchSchema batchSchema;
@@ -285,10 +285,7 @@ public class ParquetRecordWriter extends ParquetOutputRecordWriter {
         .withWriterVersion(writerVersion)
         .build();
 
-    // TODO: Replace ParquetColumnChunkPageWriteStore with ColumnChunkPageWriteStore from parquet library
-    //   once DRILL-7906 (PARQUET-1006) will be resolved
-    pageStore = new ParquetColumnChunkPageWriteStore(codecFactory.getCompressor(codec), schema,
-            parquetProperties.getInitialSlabSize(), pageSize, parquetProperties.getAllocator(),
+    pageStore = new ColumnChunkPageWriteStore(codecFactory.getCompressor(codec), schema, parquetProperties.getAllocator(),
             parquetProperties.getColumnIndexTruncateLength(), parquetProperties.getPageWriteChecksumEnabled());
 
     store = writerVersion == WriterVersion.PARQUET_1_0

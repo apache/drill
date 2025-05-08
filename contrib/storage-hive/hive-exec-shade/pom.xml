@@ -32,7 +32,7 @@
   <name>Drill : Contrib : Storage : Hive : Exec Shaded</name>
 
   <properties>
-    <hive.parquet.version>1.8.3</hive.parquet.version>
+    <hive.parquet.version>1.15.1</hive.parquet.version>
   </properties>
 
   <dependencyManagement>
@@ -216,6 +216,12 @@
               <artifact>com.fasterxml.jackson.core:*</artifact>
               <excludes>
                 <exclude>module-info.class</exclude>
+                <exclude>META-INF/versions/22/**</exclude>
+              </excludes>
+            </filter>
+	    <filter>
+              <artifact>org.apache.parquet:parquet-hadoop-bundle</artifact>
+              <excludes>
                 <exclude>META-INF/versions/22/**</exclude>
               </excludes>
             </filter>

@@ -55,7 +55,6 @@ import org.apache.parquet.schema.Types;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -417,13 +416,9 @@ public class DrillParquetReader extends CommonParquetRecordReader {
     recordReader = null;
     recordMaterializer = null;
     nullFilledVectors = null;
-    try {
-      if (pageReadStore != null) {
-        pageReadStore.close();
-        pageReadStore = null;
-      }
-    } catch (IOException e) {
-      logger.warn("Failure while closing PageReadStore", e);
+    if (pageReadStore != null) {
+      pageReadStore.close();
+      pageReadStore = null;
     }
   }
 
