@@ -17,32 +17,33 @@
  */
 package org.apache.drill.exec.compile;
 
+import com.google.common.collect.MapMaker;
+import org.apache.drill.common.config.DrillConfig;
+import org.apache.drill.exec.compile.ClassTransformer.ClassNames;
+import org.apache.drill.exec.exception.ClassTransformationException;
+import org.apache.drill.exec.server.options.OptionSet;
+import org.codehaus.commons.compiler.CompileException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.io.IOException;
 import java.net.URL;
 import java.net.URLClassLoader;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.atomic.AtomicLong;
 
-import org.apache.drill.common.config.DrillConfig;
-import org.apache.drill.exec.compile.ClassTransformer.ClassNames;
-import org.apache.drill.exec.exception.ClassTransformationException;
-import org.apache.drill.exec.server.options.OptionSet;
-import org.codehaus.commons.compiler.CompileException;
-
-import com.google.common.collect.MapMaker;
-
 /**
  * Per-compilation unit class loader that holds both caching and compilation
  * steps. */
 
 public class QueryClassLoader extends URLClassLoader {
-  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(QueryClassLoader.class);
+  static final Logger logger = LoggerFactory.getLogger(QueryClassLoader.class);
 
-  private ClassCompilerSelector compilerSelector;
+  private final ClassCompilerSelector compilerSelector;
 
   private AtomicLong index = new AtomicLong(0);
 
-  private ConcurrentMap<String, byte[]> customClasses = new MapMaker().concurrencyLevel(4).makeMap();
+  private final ConcurrentMap<String, byte[]> customClasses = new MapMaker().concurrencyLevel(4).makeMap();
 
   public QueryClassLoader(DrillConfig config, OptionSet sessionOptions) {
     super(new URL[0], Thread.currentThread().getContextClassLoader());

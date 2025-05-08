@@ -17,11 +17,11 @@
  */
 package org.apache.drill.exec.compile;
 
-import java.io.IOException;
-import java.util.LinkedList;
-import java.util.Map;
-import java.util.Set;
-
+import com.google.common.annotations.VisibleForTesting;
+import com.google.common.base.Preconditions;
+import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
+import com.google.common.collect.Sets;
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.drill.common.config.DrillConfig;
 import org.apache.drill.common.util.DrillFileUtils;
@@ -35,11 +35,10 @@ import org.codehaus.commons.compiler.CompileException;
 import org.objectweb.asm.ClassReader;
 import org.objectweb.asm.tree.ClassNode;
 
-import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.Preconditions;
-import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
-import com.google.common.collect.Sets;
+import java.io.IOException;
+import java.util.LinkedList;
+import java.util.Map;
+import java.util.Set;
 
 /**
  * Compiles generated code, merges the resulting class with the
@@ -52,7 +51,7 @@ import com.google.common.collect.Sets;
 public class ClassTransformer {
   private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(ClassTransformer.class);
 
-  private static final int MAX_SCALAR_REPLACE_CODE_SIZE = 2*1024*1024; // 2meg
+  private static final int MAX_SCALAR_REPLACE_CODE_SIZE = 2 * 1024 * 1024; // 2meg
 
   private final ByteCodeLoader byteCodeLoader = new ByteCodeLoader();
   private final DrillConfig config;
@@ -72,7 +71,7 @@ public class ClassTransformer {
      * @throws IllegalArgumentException if the string doesn't match any of the enum values
      */
     public static ScalarReplacementOption fromString(final String s) {
-      switch(s) {
+      switch (s) {
       case "off":
         return OFF;
       case "try":
@@ -228,8 +227,11 @@ public class ClassTransformer {
       final TemplateClassDefinition<?> templateDefinition,
       final String entireClass,
       final String materializedClassName) throws ClassTransformationException {
-    // unfortunately, this hasn't been set up at construction time, so we have to do it here
-    final ScalarReplacementOption scalarReplacementOption = ScalarReplacementOption.fromString(optionManager.getOption(ExecConstants.SCALAR_REPLACEMENT_VALIDATOR));
+    final ScalarReplacementOption scalarReplacementOption =
+        ScalarReplacementOption.fromString(optionManager.getOption(ExecConstants.SCALAR_REPLACEMENT_VALIDATOR));
+
+    // Track injected class names to avoid duplicates
+    Set<String> injectedClassNames = new java.util.HashSet<>();
 
     try {
       final long t1 = System.nanoTime();
@@ -251,7 +253,7 @@ public class ClassTransformer {
       final Set<ClassSet> namesCompleted = Sets.newHashSet();
       names.add(set);
 
-      while ( !names.isEmpty() ) {
+      while (!names.isEmpty()) {
         final ClassSet nextSet = names.removeFirst();
         if (namesCompleted.contains(nextSet)) {
           continue;
@@ -259,45 +261,24 @@ public class ClassTransformer {
         final ClassNames nextPrecompiled = nextSet.precompiled;
         final byte[] precompiledBytes = byteCodeLoader.getClassByteCodeFromPath(nextPrecompiled.clazz);
         final ClassNames nextGenerated = nextSet.generated;
-        // keeps only classes that have not be merged
+        // keeps only classes that have not been merged
         Pair<byte[], ClassNode> classNodePair = classesToMerge.remove(nextGenerated.slash);
-        final ClassNode generatedNode;
-        if (classNodePair != null) {
-          generatedNode = classNodePair.getValue();
-        } else {
-          generatedNode = null;
-        }
+        final ClassNode generatedNode = (classNodePair != null) ? classNodePair.getValue() : null;
 
-        /*
-         * TODO
-         * We're having a problem with some cases of scalar replacement, but we want to get
-         * the code in so it doesn't rot anymore.
-         *
-         *  Here, we use the specified replacement option. The loop will allow us to retry if
-         *  we're using TRY.
-         */
         MergedClassResult result = null;
-        boolean scalarReplace = scalarReplacementOption != ScalarReplacementOption.OFF && entireClass.length() < MAX_SCALAR_REPLACE_CODE_SIZE;
-        while(true) {
+        boolean scalarReplace = scalarReplacementOption != ScalarReplacementOption.OFF
+            && entireClass.length() < MAX_SCALAR_REPLACE_CODE_SIZE;
+        while (true) {
           try {
             result = MergeAdapter.getMergedClass(nextSet, precompiledBytes, generatedNode, scalarReplace);
             break;
-          } catch(RuntimeException e) {
-            // if we had a problem without using scalar replacement, then rethrow
+          } catch (RuntimeException e) {
             if (!scalarReplace) {
               throw e;
             }
-
-            // if we did try to use scalar replacement, decide if we need to retry or not
             if (scalarReplacementOption == ScalarReplacementOption.ON) {
-              // option is forced on, so this is a hard error
               throw e;
             }
-
-            /*
-             * We tried to use scalar replacement, with the option to fall back to not using it.
-             * Log this failure before trying again without scalar replacement.
-             */
             logger.info("scalar replacement failure (retrying)\n", e);
             scalarReplace = false;
           }
@@ -307,26 +288,38 @@ public class ClassTransformer {
           s = s.replace(DrillFileUtils.SEPARATOR_CHAR, '.');
           names.add(nextSet.getChild(s));
         }
-        classLoader.injectByteCode(nextGenerated.dot, result.bytes);
+
+        // Only inject bytecode if not already injected
+        if (!injectedClassNames.contains(nextGenerated.dot)) {
+          classLoader.injectByteCode(nextGenerated.dot, result.bytes);
+          injectedClassNames.add(nextGenerated.dot);
+        }
+
         namesCompleted.add(nextSet);
       }
 
       // adds byte code of the classes that have not been merged to make them accessible for outer class
       for (Map.Entry<String, Pair<byte[], ClassNode>> clazz : classesToMerge.entrySet()) {
-        classLoader.injectByteCode(clazz.getKey().replace(DrillFileUtils.SEPARATOR_CHAR, '.'), clazz.getValue().getKey());
+        String classNameDot = clazz.getKey().replace(DrillFileUtils.SEPARATOR_CHAR, '.');
+        if (!injectedClassNames.contains(classNameDot)) {
+          classLoader.injectByteCode(classNameDot, clazz.getValue().getKey());
+          injectedClassNames.add(classNameDot);
+        }
       }
+
       Class<?> c = classLoader.findClass(set.generated.dot);
       if (templateDefinition.getExternalInterface().isAssignableFrom(c)) {
         logger.debug("Compiled and merged {}: bytecode size = {}, time = {} ms.",
-             c.getSimpleName(),
-             DrillStringUtils.readable(totalBytecodeSize),
-             (System.nanoTime() - t1 + 500_000) / 1_000_000);
+            c.getSimpleName(),
+            DrillStringUtils.readable(totalBytecodeSize),
+            (System.nanoTime() - t1 + 500_000) / 1_000_000);
         return c;
       }
 
       throw new ClassTransformationException("The requested class did not implement the expected interface.");
     } catch (CompileException | IOException | ClassNotFoundException e) {
-      throw new ClassTransformationException(String.format("Failure generating transformation classes for value: \n %s", entireClass), e);
+      throw new ClassTransformationException(
+          String.format("Failure generating transformation classes for value: \n %s", entireClass), e);
     }
   }
 }

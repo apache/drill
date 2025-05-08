@@ -17,6 +17,8 @@
  */
 package org.apache.drill.exec.physical.impl.writer;
 
+import com.google.common.base.Joiner;
+import com.google.common.collect.ImmutableList;
 import org.apache.calcite.util.Pair;
 import org.apache.commons.io.FileUtils;
 import org.apache.drill.categories.ParquetTest;
@@ -30,8 +32,6 @@ import org.apache.drill.exec.planner.physical.PlannerSettings;
 import org.apache.drill.exec.store.dfs.FileSystemConfig;
 import org.apache.drill.exec.store.parquet.ParquetFormatConfig;
 import org.apache.drill.exec.util.JsonStringArrayList;
-import com.google.common.base.Joiner;
-import com.google.common.collect.ImmutableList;
 import org.apache.drill.test.ClusterFixture;
 import org.apache.drill.test.ClusterTest;
 import org.apache.drill.test.TestBuilder;
@@ -41,16 +41,18 @@ import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.parquet.hadoop.ParquetFileReader;
 import org.apache.parquet.hadoop.metadata.ParquetMetadata;
-import org.apache.parquet.schema.MessageType;
 import org.apache.parquet.schema.LogicalTypeAnnotation;
+import org.apache.parquet.schema.MessageType;
 import org.apache.parquet.schema.PrimitiveType;
 import org.joda.time.Period;
-
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
+import org.junit.jupiter.api.condition.DisabledOnOs;
+import org.junit.jupiter.api.condition.EnabledIfSystemProperty;
+import org.junit.jupiter.api.condition.OS;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 
@@ -1002,6 +1004,8 @@ public class TestParquetWriter extends ClusterTest {
   // Only attempt this test on Linux / amd64 because com.rdblue.brotli-codec
   // only bundles natives for Mac and Linux on AMD64.  See PARQUET-1975.
   @Test
+  @EnabledIfSystemProperty(named = "os.arch", matches = "(amd64|x86_64)")
+  @DisabledOnOs({ OS.WINDOWS, OS.MAC })
   public void testTPCHReadWriteBrotli() throws Exception {
     try {
       client.alterSession(ExecConstants.PARQUET_WRITER_COMPRESSION_TYPE, "brotli");

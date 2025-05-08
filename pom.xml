@@ -94,7 +94,7 @@
     <httpdlog-parser.version>5.10.0</httpdlog-parser.version>
     <iceberg.version>0.12.1</iceberg.version>
     <jackson.version>2.18.3</jackson.version>
-    <janino.version>3.1.11</janino.version>
+    <janino.version>3.1.12</janino.version>
     <javassist.version>3.29.2-GA</javassist.version>
     <javax.el.version>3.0.0</javax.el.version>
     <javax.validation.api>2.0.1.Final</javax.validation.api>
@@ -113,13 +113,15 @@
     <log4j.version>2.23.1</log4j.version>
     <!-- Upgrading logback further breaks JDK 8 build compatibility -->
     <logback.version>1.3.15</logback.version>
-    <maven.compiler.source>1.8</maven.compiler.source>
-    <maven.compiler.target>1.8</maven.compiler.target>
+    <maven.compiler.release>11</maven.compiler.release>
+    <maven.compiler.source>11</maven.compiler.source>
+    <maven.compiler.target>11</maven.compiler.target>
     <maven.min.version>3.6.3</maven.min.version>
     <maven.version>3.8.4</maven.version>
-    <memoryMb>3072</memoryMb>
+    <memoryMb>4096</memoryMb>
     <metrics.version>4.2.19</metrics.version>
-    <mockito.version>3.11.2</mockito.version>
+    <mockito.version>5.17.0</mockito.version>
+    <mockito_inline.version>5.2.0</mockito_inline.version>
     <mongo.version>4.11.1</mongo.version>
     <msgpack.version>0.6.6</msgpack.version>
     <netty.tcnative.classifier />
@@ -162,27 +164,27 @@
       <subscribe>user-subscribe@drill.apache.org</subscribe>
       <unsubscribe>user-unsubscribe@drill.apache.org</unsubscribe>
       <post>user@drill.apache.org</post>
-      <archive>http://mail-archives.apache.org/mod_mbox/drill-user/</archive>
+      <archive>https://mail-archives.apache.org/mod_mbox/drill-user/</archive>
     </mailingList>
     <mailingList>
       <name>Developer List</name>
       <subscribe>dev-subscribe@drill.apache.org</subscribe>
       <unsubscribe>dev-unsubscribe@drill.apache.org</unsubscribe>
       <post>dev@drill.apache.org</post>
-      <archive>http://mail-archives.apache.org/mod_mbox/drill-dev/</archive>
+      <archive>https://mail-archives.apache.org/mod_mbox/drill-dev/</archive>
     </mailingList>
     <mailingList>
       <name>Commits List</name>
       <subscribe>commits-subscribe@drill.apache.org</subscribe>
       <unsubscribe>commits-unsubscribe@drill.apache.org</unsubscribe>
       <post>commits@drill.apache.org</post>
-      <archive>http://mail-archives.apache.org/mod_mbox/drill-commits/</archive>
+      <archive>https://mail-archives.apache.org/mod_mbox/drill-commits/</archive>
     </mailingList>
     <mailingList>
       <name>Issues List</name>
       <subscribe>issues-subscribe@drill.apache.org</subscribe>
       <unsubscribe>issues-unsubscribe@drill.apache.org</unsubscribe>
-      <archive>http://mail-archives.apache.org/mod_mbox/drill-issues/</archive>
+      <archive>https://mail-archives.apache.org/mod_mbox/drill-issues/</archive>
     </mailingList>
   </mailingLists>
 
@@ -215,7 +217,7 @@
       <plugin>
         <groupId>org.owasp</groupId>
         <artifactId>dependency-check-maven</artifactId>
-        <version>6.4.1</version>
+        <version>12.1.1</version>
       </plugin>
     </plugins>
   </reporting>
@@ -352,7 +354,6 @@
         </dependencies>
         <configuration>
           <includes>**/*.java</includes>
-          <encoding>UTF-8</encoding>
           <failsOnError>true</failsOnError>
           <consoleOutput>true</consoleOutput>
           <includeResources>true</includeResources>
@@ -505,7 +506,7 @@
                   <version>[${maven.version.min},4)</version>
                 </requireMavenVersion>
                 <requireJavaVersion>
-                  <version>[1.8,18)</version>
+                  <version>[1.8,22)</version>
                 </requireJavaVersion>
               </rules>
             </configuration>
@@ -627,6 +628,7 @@
               -XX:MaxDirectMemorySize=${directMemoryMb}M
               -Djava.net.preferIPv4Stack=true
               -Djava.awt.headless=true
+              -Duser.timezone=UTC
               -ea
               ${junit.args}
               -Djdk.attach.allowAttachSelf=true
@@ -883,6 +885,7 @@
       <version>${junit.platform.version}</version>
       <scope>test</scope>
     </dependency>
+
     <dependency>
       <groupId>org.junit.platform</groupId>
       <artifactId>junit-platform-suite-engine</artifactId>
@@ -913,13 +916,25 @@
       <groupId>org.mockito</groupId>
       <artifactId>mockito-core</artifactId>
       <version>${mockito.version}</version>
+      <exclusions>
+        <exclusion>
+          <groupId>org.mockito</groupId>
+          <artifactId>mockito-core</artifactId>
+        </exclusion>
+      </exclusions>
       <scope>test</scope>
     </dependency>
     <dependency>
       <groupId>org.mockito</groupId>
       <artifactId>mockito-inline</artifactId>
-      <version>${mockito.version}</version>
+      <version>${mockito_inline.version}</version>
       <scope>test</scope>
+      <exclusions>
+        <exclusion>
+          <artifactId>mockito-core</artifactId>
+          <groupId>org.mockito</groupId>
+        </exclusion>
+      </exclusions>
     </dependency>
     <dependency>
       <groupId>de.huxhorn.lilith</groupId>
@@ -2923,7 +2938,9 @@
         <jdk>[9,)</jdk>
       </activation>
       <properties>
-        <maven.compiler.release>8</maven.compiler.release>
+        <maven.compiler.source>11</maven.compiler.source>
+        <maven.compiler.target>11</maven.compiler.target>
+        <maven.compiler.release>11</maven.compiler.release>
         <junit.args>
           --add-opens java.base/java.lang=ALL-UNNAMED
           --add-opens java.base/java.net=ALL-UNNAMED
