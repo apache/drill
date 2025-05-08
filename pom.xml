@@ -52,12 +52,12 @@
     <aircompressor.version>0.25</aircompressor.version>
     <antlr.version>4.9.3</antlr.version>
     <asm.version>9.5</asm.version>
-    <avatica.version>1.23.0</avatica.version>
+    <avatica.version>1.26.0</avatica.version>
     <avro.version>1.11.4</avro.version>
     <bouncycastle.version>1.78.1</bouncycastle.version>
     <caffeine.version>2.9.3</caffeine.version>
     <calcite.groupId>org.apache.calcite</calcite.groupId>
-    <calcite.version>1.34.0</calcite.version>
+    <calcite.version>1.35.0</calcite.version>
     <codemodel.version>2.6</codemodel.version>
     <commons.beanutils.version>1.9.4</commons.beanutils.version>
     <commons.cli.version>1.4</commons.cli.version>

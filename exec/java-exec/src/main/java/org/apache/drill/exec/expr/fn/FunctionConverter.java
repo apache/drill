@@ -17,16 +17,11 @@
  */
 package org.apache.drill.exec.expr.fn;
 
-import java.lang.annotation.Annotation;
-import java.lang.reflect.Field;
-import java.util.Arrays;
-import java.util.List;
-
-import javax.inject.Inject;
-
+import com.google.common.base.Joiner;
+import com.google.common.collect.Lists;
 import org.apache.drill.common.exceptions.DrillRuntimeException;
-import org.apache.drill.common.scanner.persistence.FieldDescriptor;
 import org.apache.drill.common.scanner.persistence.AnnotatedClassDescriptor;
+import org.apache.drill.common.scanner.persistence.FieldDescriptor;
 import org.apache.drill.common.types.TypeProtos.MajorType;
 import org.apache.drill.exec.expr.DrillFunc;
 import org.apache.drill.exec.expr.annotations.FunctionTemplate;
@@ -38,11 +33,14 @@ import org.apache.drill.exec.expr.holders.ValueHolder;
 import org.apache.drill.exec.ops.UdfUtilities;
 import org.apache.drill.exec.vector.complex.reader.FieldReader;
 import org.apache.drill.exec.vector.complex.writer.BaseWriter.ComplexWriter;
-
-import com.google.common.base.Joiner;
-import com.google.common.collect.Lists;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import javax.inject.Inject;
+import java.lang.annotation.Annotation;
+import java.lang.reflect.Field;
+import java.util.Arrays;
+import java.util.List;
 
 /**
  * Converts FunctionCalls to Java Expressions.
@@ -100,11 +98,11 @@ public class FunctionConverter {
           fieldClass = fieldClass.getComponentType();
           varArgsCount++;
         } else if (varArgsCount > 0 && param != null) {
-          return failure("Vararg should be the last argument in the function.", func, field);
+          return failure("Vararg should be the last argument in the function {}.  Field: {}", func, field);
         }
 
         if (varArgsCount > 1) {
-          return failure("Function should contain single vararg argument", func, field);
+          return failure("Function {} should contain single vararg argument.  Only contains {}", func, field);
         }
 
         // Special processing for @Param FieldReader

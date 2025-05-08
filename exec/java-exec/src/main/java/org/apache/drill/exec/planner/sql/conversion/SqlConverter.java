@@ -120,6 +120,7 @@ public class SqlConverter {
       .withConformance(DRILL_CONFORMANCE)
       .withUnquotedCasing(Casing.UNCHANGED)
       .withQuotedCasing(Casing.UNCHANGED);
+    // TODO Should we add more of these optimizations?
     this.sqlToRelConverterConfig = SqlToRelConverter.config()
         .withInSubQueryThreshold((int) settings.getInSubqueryThreshold())
         .withRemoveSortInSubQuery(false)

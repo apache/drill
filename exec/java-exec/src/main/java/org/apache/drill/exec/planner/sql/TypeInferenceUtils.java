@@ -17,12 +17,9 @@
  */
 package org.apache.drill.exec.planner.sql;
 
-import org.apache.calcite.sql.fun.SqlStdOperatorTable;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Lists;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.apache.calcite.avatica.util.TimeUnit;
 import org.apache.calcite.rel.type.RelDataType;
 import org.apache.calcite.rel.type.RelDataTypeFactory;
@@ -35,17 +32,18 @@ import org.apache.calcite.sql.SqlLiteral;
 import org.apache.calcite.sql.SqlNode;
 import org.apache.calcite.sql.SqlNumericLiteral;
 import org.apache.calcite.sql.SqlOperatorBinding;
+import org.apache.calcite.sql.fun.SqlStdOperatorTable;
 import org.apache.calcite.sql.parser.SqlParserPos;
 import org.apache.calcite.sql.type.SqlReturnTypeInference;
 import org.apache.calcite.sql.type.SqlTypeFamily;
 import org.apache.calcite.sql.type.SqlTypeName;
-
+import org.apache.calcite.util.NlsString;
+import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.common.expression.ExpressionPosition;
 import org.apache.drill.common.expression.FunctionCall;
 import org.apache.drill.common.expression.FunctionCallFactory;
 import org.apache.drill.common.expression.LogicalExpression;
 import org.apache.drill.common.expression.MajorTypeInLogicalExpression;
-import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.common.types.TypeProtos;
 import org.apache.drill.common.types.Types;
 import org.apache.drill.exec.expr.annotations.FunctionTemplate;
@@ -54,6 +52,8 @@ import org.apache.drill.exec.planner.types.DrillRelDataTypeSystem;
 import org.apache.drill.exec.resolver.FunctionResolver;
 import org.apache.drill.exec.resolver.FunctionResolverFactory;
 import org.apache.drill.exec.resolver.TypeCastRules;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.List;
 import java.util.Optional;
@@ -744,7 +744,7 @@ public class TypeInferenceUtils {
       }
 
       final String part = ((SqlCharStringLiteral) ((SqlCallBinding) opBinding).operand(0))
-          .getNlsString()
+          .getValueAs(NlsString.class)
           .getValue()
           .toUpperCase();
 
@@ -1023,14 +1023,19 @@ public class TypeInferenceUtils {
   public static RelDataType convertToCalciteType(RelDataTypeFactory typeFactory,
                                                  TypeProtos.MajorType drillType, boolean isNullable) {
     SqlTypeName sqlTypeName = getCalciteTypeFromDrillType(drillType.getMinorType());
+    int precision;
+    int scale;
+
     switch (sqlTypeName) {
       case DECIMAL:
+        precision = drillType.getPrecision();
+        scale = drillType.getScale();
         return typeFactory.createTypeWithNullability(
-          typeFactory.createSqlType(sqlTypeName, drillType.getPrecision(),
-              drillType.getScale()), isNullable);
+          typeFactory.createSqlType(sqlTypeName, precision,
+              scale), isNullable);
       case TIME:
       case TIMESTAMP:
-        int precision = drillType.hasPrecision()
+        precision = drillType.hasPrecision()
           ? drillType.getPrecision()
           : typeFactory.getTypeSystem().getDefaultPrecision(sqlTypeName);
         return typeFactory.createTypeWithNullability(

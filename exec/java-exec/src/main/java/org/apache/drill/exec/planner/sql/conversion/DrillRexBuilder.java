@@ -17,8 +17,6 @@
  */
 package org.apache.drill.exec.planner.sql.conversion;
 
-import java.math.BigDecimal;
-
 import org.apache.calcite.rel.type.RelDataType;
 import org.apache.calcite.rel.type.RelDataTypeFactory;
 import org.apache.calcite.rex.RexBuilder;
@@ -30,6 +28,8 @@ import org.apache.drill.exec.util.DecimalUtility;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.math.BigDecimal;
+
 class DrillRexBuilder extends RexBuilder {
 
   private static final Logger logger = LoggerFactory.getLogger(DrillRexBuilder.class);
@@ -39,7 +39,7 @@ class DrillRexBuilder extends RexBuilder {
   }
 
   /**
-   * Since Drill has different mechanism and rules for implicit casting,
+   * Since Drill has a different mechanism and rules for implicit casting,
    * ensureType() is overridden to avoid conflicting cast functions being added to the expressions.
    */
   @Override
@@ -59,19 +59,11 @@ class DrillRexBuilder extends RexBuilder {
    * {@link RexLiteral} if {@code matchNullability} is false.
    *
    * @param type             Type to cast to
-   * @param exp              Expression being cast
-   * @param matchNullability Whether to ensure the result has the same
-   *                         nullability as {@code type}
+   * @param exp              Expression being castnullability as {@code type}
    * @return Call to CAST operator
    */
   @Override
-  public RexNode makeCast(RelDataType type, RexNode exp, boolean matchNullability) {
-    if (matchNullability) {
-      return makeAbstractCast(type, exp);
-    }
-    // for the case when BigDecimal literal has a scale or precision
-    // that differs from the value from specified RelDataType, cast cannot be removed
-    // TODO: remove this code when CALCITE-1468 is fixed
+  public RexNode makeCast(RelDataType type, RexNode exp) {
     if (type.getSqlTypeName() == SqlTypeName.DECIMAL && exp instanceof RexLiteral) {
       int precision = type.getPrecision();
       int scale = type.getScale();
@@ -81,11 +73,11 @@ class DrillRexBuilder extends RexBuilder {
         BigDecimal bigDecimal = (BigDecimal) value;
         DecimalUtility.checkValueOverflow(bigDecimal, precision, scale);
         if (bigDecimal.precision() != precision || bigDecimal.scale() != scale) {
-          return makeAbstractCast(type, exp);
+          return makeAbstractCast(type, exp, false);
         }
       }
     }
-    return super.makeCast(type, exp, false);
+    return super.makeCast(type, exp);
   }
 
   private void validatePrecisionAndScale(int precision, int scale) {

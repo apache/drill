@@ -21,15 +21,14 @@ import com.google.common.math.BigIntegerMath;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.DrillBuf;
 import io.netty.buffer.UnpooledByteBufAllocator;
-
-import java.math.BigDecimal;
-import java.math.BigInteger;
-import java.math.RoundingMode;
-
 import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.common.types.TypeProtos;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import java.math.BigDecimal;
+import java.math.BigInteger;
+import java.math.RoundingMode;
 
 @SuppressWarnings("WeakerAccess")
 public class DecimalUtility {
@@ -433,6 +432,18 @@ public class DecimalUtility {
    * @param desiredScale     scale for the resulting value
    */
   public static void checkValueOverflow(BigDecimal value, int desiredPrecision, int desiredScale) {
+    if (desiredPrecision < 1) {
+      throw UserException.validationError()
+          .message("Expected precision greater than 0, but was %s.", desiredPrecision)
+          .build(logger);
+    }
+    if (desiredScale > desiredPrecision) {
+      throw UserException.validationError()
+          .message("Expected scale less than or equal to precision, " +
+              "but was scale %s and precision %s.", desiredScale, desiredPrecision)
+          .build(logger);
+    }
+
     if (value.precision() - value.scale() > desiredPrecision - desiredScale) {
       throw UserException.validationError()
           .message("Value %s overflows specified precision %s with scale %s.",
