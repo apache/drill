@@ -32,6 +32,7 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
+import java.net.URISyntaxException;
 import java.nio.file.Paths;
 
 import static org.junit.Assert.assertEquals;
@@ -40,7 +41,14 @@ import static org.junit.Assert.assertFalse;
 @Category(RowSetTest.class)
 public class TestDaffodilReader extends ClusterTest {
 
-  String schemaURIRoot = "file:///opt/drill/contrib/format-daffodil/src/test/resources/";
+  final String SCHEMA_URI_ROOT = getClass()
+      .getClassLoader()
+      .getResource("schema/")
+      .toURI()
+      .toString();
+
+  public TestDaffodilReader() throws URISyntaxException {
+  }
 
   @BeforeClass
   public static void setup() throws Exception {
@@ -59,7 +67,7 @@ public class TestDaffodilReader extends ClusterTest {
 
   private String selectRow(String schema, String file) {
     return "SELECT * FROM table(dfs.`data/" + file + "` " + " (type => 'daffodil'," + " " +
-        "validationMode => 'true', " + " schemaURI => '" + schemaURIRoot + "schema/" + schema +
+        "validationMode => 'true', " + " schemaURI => '" + SCHEMA_URI_ROOT + schema +
         ".dfdl.xsd'," + " rootName => 'row'," + " rootNamespace => null " + "))";
   }
 
