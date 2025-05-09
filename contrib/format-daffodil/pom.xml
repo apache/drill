@@ -31,10 +31,6 @@
   <artifactId>drill-format-daffodil</artifactId>
   <name>Drill : Contrib : Format : Daffodil</name>
 
-  <properties>
-    <daffodil.version>3.10.0</daffodil.version>
-  </properties>
-
   <dependencies>
     <dependency>
       <groupId>org.apache.drill.exec</groupId>
