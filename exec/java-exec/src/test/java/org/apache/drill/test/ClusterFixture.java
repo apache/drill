@@ -17,9 +17,34 @@
  */
 package org.apache.drill.test;
 
-import static org.apache.drill.exec.util.StoragePluginTestUtils.DFS_TMP_SCHEMA;
-import static org.apache.drill.exec.util.StoragePluginTestUtils.ROOT_SCHEMA;
-import static org.apache.drill.exec.util.StoragePluginTestUtils.TMP_SCHEMA;
+import com.google.common.base.Preconditions;
+import com.google.common.collect.ImmutableMap;
+import com.google.common.io.Resources;
+import org.apache.drill.common.config.DrillProperties;
+import org.apache.drill.common.logical.FormatPluginConfig;
+import org.apache.drill.common.logical.StoragePluginConfig;
+import org.apache.drill.common.logical.security.PlainCredentialsProvider;
+import org.apache.drill.exec.ExecConstants;
+import org.apache.drill.exec.ZookeeperHelper;
+import org.apache.drill.exec.client.DrillClient;
+import org.apache.drill.exec.memory.BufferAllocator;
+import org.apache.drill.exec.memory.RootAllocatorFactory;
+import org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint;
+import org.apache.drill.exec.proto.UserBitShared.QueryType;
+import org.apache.drill.exec.rpc.user.QueryDataBatch;
+import org.apache.drill.exec.server.Drillbit;
+import org.apache.drill.exec.server.RemoteServiceSet;
+import org.apache.drill.exec.store.SchemaFactory;
+import org.apache.drill.exec.store.StoragePluginRegistry;
+import org.apache.drill.exec.store.StoragePluginRegistry.PluginException;
+import org.apache.drill.exec.store.StoragePluginRegistryImpl;
+import org.apache.drill.exec.store.dfs.FileSystemConfig;
+import org.apache.drill.exec.store.dfs.WorkspaceConfig;
+import org.apache.drill.exec.store.mock.MockStorageEngineConfig;
+import org.apache.drill.exec.store.sys.store.provider.ZookeeperPersistentStoreProvider;
+import org.apache.drill.exec.util.StoragePluginTestUtils;
+import org.apache.drill.test.DrillTestWrapper.TestServices;
+import org.apache.hadoop.fs.FileSystem;
 
 import java.io.File;
 import java.io.IOException;
@@ -38,34 +63,9 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Properties;
 
-import org.apache.drill.common.config.DrillProperties;
-import org.apache.drill.common.logical.FormatPluginConfig;
-import org.apache.drill.common.logical.StoragePluginConfig;
-import org.apache.drill.exec.ExecConstants;
-import org.apache.drill.exec.ZookeeperHelper;
-import org.apache.drill.exec.client.DrillClient;
-import org.apache.drill.exec.memory.BufferAllocator;
-import org.apache.drill.exec.memory.RootAllocatorFactory;
-import org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint;
-import org.apache.drill.exec.proto.UserBitShared.QueryType;
-import org.apache.drill.exec.rpc.user.QueryDataBatch;
-import org.apache.drill.exec.server.Drillbit;
-import org.apache.drill.exec.server.RemoteServiceSet;
-import org.apache.drill.exec.store.SchemaFactory;
-import org.apache.drill.exec.store.StoragePluginRegistry;
-import org.apache.drill.exec.store.StoragePluginRegistry.PluginException;
-import org.apache.drill.exec.store.StoragePluginRegistryImpl;
-import org.apache.drill.exec.store.dfs.FileSystemConfig;
-import org.apache.drill.exec.store.dfs.WorkspaceConfig;
-import org.apache.drill.exec.store.mock.MockStorageEngineConfig;
-import org.apache.drill.common.logical.security.PlainCredentialsProvider;
-import org.apache.drill.exec.store.sys.store.provider.ZookeeperPersistentStoreProvider;
-import org.apache.drill.exec.util.StoragePluginTestUtils;
-import com.google.common.base.Preconditions;
-import com.google.common.collect.ImmutableMap;
-import com.google.common.io.Resources;
-import org.apache.drill.test.DrillTestWrapper.TestServices;
-import org.apache.hadoop.fs.FileSystem;
+import static org.apache.drill.exec.util.StoragePluginTestUtils.DFS_TMP_SCHEMA;
+import static org.apache.drill.exec.util.StoragePluginTestUtils.ROOT_SCHEMA;
+import static org.apache.drill.exec.util.StoragePluginTestUtils.TMP_SCHEMA;
 
 /**
  * Test fixture to start a Drillbit with provide options, create a client, and
@@ -615,8 +615,10 @@ public class ClusterFixture extends BaseFixture implements AutoCloseable {
     props.putAll(ClusterFixture.TEST_CONFIGURATIONS);
     props.setProperty(ExecConstants.DRILL_TMP_DIR, dirTestWatcher.getTmpDir().getAbsolutePath());
     props.setProperty(ExecConstants.UDF_DIRECTORY_ROOT, dirTestWatcher.getHomeDir().getAbsolutePath());
+    props.setProperty(ExecConstants.DFDL_DIRECTORY_ROOT, dirTestWatcher.getHomeDir().getAbsolutePath());
     props.setProperty(ExecConstants.SYS_STORE_PROVIDER_LOCAL_PATH, dirTestWatcher.getStoreDir().getAbsolutePath());
     props.setProperty(ExecConstants.UDF_DIRECTORY_FS, FileSystem.DEFAULT_FS);
+    props.setProperty(ExecConstants.DFDL_DIRECTORY_FS, FileSystem.DEFAULT_FS);
     // ALTER SESSION profiles are seldom interesting
     props.setProperty(ExecConstants.SKIP_ALTER_SESSION_QUERY_PROFILE, Boolean.TRUE.toString());
 
