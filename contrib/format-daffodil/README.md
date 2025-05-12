@@ -1,25 +1,35 @@
-# Daffodil 'Format' Reader
+# Daffodil Format Reader
 This plugin enables Drill to read DFDL-described data from files by way of the Apache Daffodil DFDL implementation.
 
-## Validation
+## Configuration:
+To use Daffodil schemata, simply add the following to the `formats` section of a file-based storage plugin:
 
-Data read by Daffodil is always validated using Daffodil's Limited Validation mode.
+```json
+"daffodil": {
+          "type": "daffodil",
+          "extensions": [
+            "dat"
+          ]
+        }
+```
+There are four other optional parameters which you can specify:
+* `schemaURI`: Pre-compiled dfdl schema (.bin extension) or DFDL schema source (.xsd extension)
+* `validationMode`: Use `true` to request Daffodil built-in limited validation. Use `false` for no validation.
+* `rootName`: Local name of root element of the message. Can be null to use the first element declaration of the primary schema file. Ignored if reloading a pre-compiled schema.
+* `rootNameSpace`:  Namespace URI as a string. Can be `null` to use the target namespace of the primary schema file or if it is unambiguous what element is the rootName. Ignored if reloading a pre-compiled schema.
 
-TBD: do we need an option to control escalating validation errors to fatal? Currently this is not provided.
+## Usage:
 
-## Limitations:  TBD
 
+
+## Limitations:
 At the moment, the DFDL schema is found on the local file system, which won't support Drill's distributed architecture.
 
-There are restrictions on the DFDL schemas that this can handle.
-
-In particular, all element children must have distinct element names, including across choice branches.
-(This rules out a number of large DFDL schemas.)
+There are restrictions on the DFDL schemas that this can handle.  In particular, all element children must have distinct element names, including across choice branches.  Unfortunately, this rules out a number of large DFDL schemas.
 
 TBD: Auto renaming as part of the Daffodil-to-Drill metadata mapping?
 
-The data is parsed fully from its native form into a Drill data structure held in memory.
-No attempt is made to avoid access to parts of the DFDL-described data that are not needed to answer the query.
+The data is parsed fully from its native form into a Drill data structure held in memory. No attempt is made to avoid access to parts of the DFDL-described data that are not needed to answer the query.
 
 If the data is not well-formed, an error occurs and the query fails.
 
