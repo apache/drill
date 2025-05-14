@@ -44,12 +44,11 @@ public class Driver implements java.sql.Driver {
 
   static {
     ProtobufPatcher.patch();
-    GuavaPatcher.patch();
     // Upon loading of class, register an instance with DriverManager.
     try {
       DriverManager.registerDriver(new Driver());
     } catch (Error | SQLException e) {
-      logger.warn("Error in registering Drill JDBC driver {}: {}", Driver.class, e, e);
+      logger.error("Error in registering Drill JDBC driver {}: {}", Driver.class, e, e);
     }
   }
 
