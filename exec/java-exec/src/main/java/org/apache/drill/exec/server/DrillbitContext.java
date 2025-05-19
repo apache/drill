@@ -42,6 +42,7 @@ import org.apache.drill.exec.rpc.security.AuthenticatorProvider;
 import org.apache.drill.exec.rpc.user.UserServer;
 import org.apache.drill.exec.rpc.user.UserServer.BitToUserConnection;
 import org.apache.drill.exec.rpc.user.UserServer.BitToUserConnectionConfig;
+import org.apache.drill.exec.schema.daffodil.DaffodilSchemaRegistry;
 import org.apache.drill.exec.server.options.SystemOptionManager;
 import org.apache.drill.exec.store.SchemaFactory;
 import org.apache.drill.exec.store.StoragePluginRegistry;
@@ -82,6 +83,7 @@ public class DrillbitContext implements AutoCloseable {
   private ResourceManager resourceManager;
   private final MetastoreRegistry metastoreRegistry;
   private final DrillCounters counters;
+  private final DaffodilSchemaRegistry daffodilSchemaRegistry;
 
   public DrillbitContext(
       DrillbitEndpoint endpoint,
@@ -132,6 +134,9 @@ public class DrillbitContext implements AutoCloseable {
     this.metastoreRegistry = new MetastoreRegistry(config);
     this.aliasRegistryProvider = new AliasRegistryProvider(this);
     this.oAuthTokenProvider = new OAuthTokenProvider(this);
+
+    // TODO Start here and complete the initialization process
+    this.daffodilSchemaRegistry = new DaffodilSchemaRegistry(config, classpathScan, systemOptions);
 
     this.counters = DrillCounters.getInstance();
   }
@@ -282,6 +287,10 @@ public class DrillbitContext implements AutoCloseable {
 
   public RemoteFunctionRegistry getRemoteFunctionRegistry() {
     return functionRegistry.getRemoteFunctionRegistry();
+  }
+
+  public DaffodilSchemaRegistry getDaffodilSchemaRegistry() {
+    return daffodilSchemaRegistry;
   }
 
   /**
