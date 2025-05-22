@@ -31,7 +31,7 @@ import java.util.stream.Collectors;
 
 import com.mongodb.client.MongoIterable;
 import com.mongodb.client.model.Aggregates;
-import org.apache.commons.collections.CollectionUtils;
+import org.apache.commons.collections4.CollectionUtils;
 import org.apache.drill.common.exceptions.DrillRuntimeException;
 import org.apache.drill.common.exceptions.ExecutionSetupException;
 import org.apache.drill.common.expression.SchemaPath;
