@@ -62,7 +62,7 @@
     <commons.beanutils.version>1.9.4</commons.beanutils.version>
     <commons.cli.version>1.4</commons.cli.version>
     <commons.codec.version>1.17.0</commons.codec.version>
-    <commons.collections.version>4.4</commons.collections.version>
+    <commons.collections.version>4.5.0</commons.collections.version>
     <commons.compress.version>1.26.2</commons.compress.version>
     <commons.configuration.version>1.10</commons.configuration.version>
     <commons.io.version>2.16.1</commons.io.version>
