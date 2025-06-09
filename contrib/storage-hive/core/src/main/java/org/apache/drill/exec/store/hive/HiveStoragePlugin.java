@@ -51,6 +51,7 @@ import org.apache.drill.exec.store.AbstractStoragePlugin;
 import org.apache.drill.exec.store.SchemaConfig;
 import org.apache.drill.exec.store.StoragePluginOptimizerRule;
 import org.apache.drill.exec.store.dfs.FormatPlugin;
+import org.apache.drill.exec.store.hive.readers.filter.HivePushFilterIntoScan;
 import org.apache.drill.exec.store.hive.schema.HiveSchemaFactory;
 import org.apache.drill.shaded.guava.com.google.common.collect.ImmutableSet;
 
@@ -220,6 +221,8 @@ public class HiveStoragePlugin extends AbstractStoragePlugin {
             "Please disable {} option", ExecConstants.HIVE_OPTIMIZE_MAPRDB_JSON_SCAN_WITH_NATIVE_READER);
       }
     }
+    ruleBuilder.add(HivePushFilterIntoScan.FILTER_ON_PROJECT);
+    ruleBuilder.add(HivePushFilterIntoScan.FILTER_ON_SCAN);
     return ruleBuilder.build();
   }
 
