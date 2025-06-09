@@ -70,7 +70,7 @@ public class HiveScan extends AbstractGroupScan {
   private List<LogicalInputSplit> inputSplits;
 
   protected List<SchemaPath> columns;
-
+  private boolean filterPushedDown = false;
   @JsonCreator
   public HiveScan(@JsonProperty("userName") final String userName,
                   @JsonProperty("hiveReadEntry") final HiveReadEntry hiveReadEntry,
@@ -152,6 +152,16 @@ public class HiveScan extends AbstractGroupScan {
   public boolean supportsPartitionFilterPushdown() {
     List<FieldSchema> partitionKeys = hiveReadEntry.getTable().getPartitionKeys();
     return !(partitionKeys == null || partitionKeys.size() == 0);
+  }
+
+  @JsonIgnore
+  public void setFilterPushedDown(boolean isPushedDown) {
+    this.filterPushedDown = isPushedDown;
+  }
+
+  @JsonIgnore
+  public boolean isFilterPushedDown() {
+    return filterPushedDown;
   }
 
   @Override
