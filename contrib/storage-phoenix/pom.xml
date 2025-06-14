@@ -23,7 +23,7 @@
   <parent>
     <groupId>org.apache.drill.contrib</groupId>
     <artifactId>drill-contrib-parent</artifactId>
-    <version>1.22.0-SNAPSHOT</version>
+    <version>1.22.0</version>
   </parent>
   <artifactId>drill-storage-phoenix</artifactId>
   <name>Drill : Contrib : Storage : Phoenix</name>
