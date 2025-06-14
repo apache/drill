@@ -24,7 +24,7 @@
   <parent>
     <artifactId>drill-contrib-parent</artifactId>
     <groupId>org.apache.drill.contrib</groupId>
-    <version>1.22.0</version>
+    <version>1.22.1-SNAPSHOT</version>
   </parent>
 
   <artifactId>drill-format-ltsv</artifactId>
