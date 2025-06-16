@@ -4,7 +4,7 @@ Drill druid storage plugin allows you to perform SQL queries against Druid datas
 This storage plugin is part of [Apache Drill](https://github.com/apache/drill)
 
 ### Tested with Druid version
-[0.22.0](https://github.com/apache/druid/releases/tag/druid-0.22.0)
+[30.0.0](https://github.com/apache/druid/releases/tag/druid-0.22.0)
 
 ### Druid API
 
