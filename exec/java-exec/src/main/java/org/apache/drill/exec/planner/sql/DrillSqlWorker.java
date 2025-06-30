@@ -18,6 +18,9 @@
 package org.apache.drill.exec.planner.sql;
 
 import java.io.IOException;
+import java.util.Objects;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
 
 import org.apache.calcite.sql.SqlDescribeSchema;
 import org.apache.calcite.sql.SqlKind;
@@ -29,12 +32,14 @@ import org.apache.calcite.sql.SqlOrderBy;
 import org.apache.calcite.sql.parser.SqlParserPos;
 import org.apache.calcite.tools.RelConversionException;
 import org.apache.calcite.tools.ValidationException;
+import org.apache.calcite.util.Litmus;
 import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.exception.MetadataException;
 import org.apache.drill.exec.ops.QueryContext;
 import org.apache.drill.exec.ops.QueryContext.SqlStatementType;
 import org.apache.drill.exec.physical.PhysicalPlan;
+import org.apache.drill.exec.planner.sql.conversion.SqlConverter;
 import org.apache.drill.exec.planner.sql.handlers.AbstractSqlHandler;
 import org.apache.drill.exec.planner.sql.handlers.AnalyzeTableHandler;
 import org.apache.drill.exec.planner.sql.handlers.DefaultSqlHandler;
@@ -52,7 +57,6 @@ import org.apache.drill.exec.planner.sql.parser.DrillSqlCall;
 import org.apache.drill.exec.planner.sql.parser.DrillSqlDescribeTable;
 import org.apache.drill.exec.planner.sql.parser.DrillSqlResetOption;
 import org.apache.drill.exec.planner.sql.parser.SqlSchema;
-import org.apache.drill.exec.planner.sql.conversion.SqlConverter;
 import org.apache.drill.exec.proto.UserBitShared.DrillPBError;
 import org.apache.drill.exec.testing.ControlsInjector;
 import org.apache.drill.exec.testing.ControlsInjectorFactory;
@@ -128,6 +132,8 @@ public class DrillSqlWorker {
     try {
       return getPhysicalPlan(context, sql, textPlan, retryAttempts);
     } catch (Exception e) {
+logger.info("DrillSqlWorker.convertPlan() retrying???: attempt # {}", retryAttempts);
+e.printStackTrace(System.out);
       logger.trace("There was an error during conversion into physical plan.", e);
 
       // It is prohibited to retry query planning for ANALYZE statement since it changes
@@ -176,9 +182,11 @@ public class DrillSqlWorker {
   private static PhysicalPlan getPhysicalPlan(QueryContext context, String sql, Pointer<String> textPlan,
       long retryAttempts) throws ForemanSetupException, RelConversionException, IOException, ValidationException {
     try {
+    	logger.info("DrillSqlWorker.getPhysicalPlan() is called {}", retryAttempts);
       return getQueryPlan(context, sql, textPlan);
     } catch (Exception e) {
       Throwable rootCause = Throwables.getRootCause(e);
+      logger.info("DrillSqlWorker.getPhysicalPlan() is called {}", rootCause.getMessage());
       // Calcite wraps exceptions thrown during planning, so checks whether original exception is OutdatedMetadataException
       if (rootCause instanceof MetadataException) {
         // resets SqlStatementType to avoid errors when it is set during further attempts
@@ -216,12 +224,21 @@ public class DrillSqlWorker {
    * @param textPlan text plan
    * @return query physical plan
    */
+  
+  private static ConcurrentMap<QueryPlanCacheKey, PhysicalPlan> getQueryPlanCache = new ConcurrentHashMap<>();
+  
   private static PhysicalPlan getQueryPlan(QueryContext context, String sql, Pointer<String> textPlan)
       throws ForemanSetupException, RelConversionException, IOException, ValidationException {
 
     final SqlConverter parser = new SqlConverter(context);
     injector.injectChecked(context.getExecutionControls(), "sql-parsing", ForemanSetupException.class);
     final SqlNode sqlNode = checkAndApplyAutoLimit(parser, context, sql);
+    QueryPlanCacheKey queryPlanCacheKey =  new QueryPlanCacheKey(sqlNode);
+    
+    if(getQueryPlanCache.containsKey(queryPlanCacheKey)) {
+    	logger.info("Using getQueryPlanCache");
+    	return getQueryPlanCache.get(queryPlanCacheKey);
+    }
     final AbstractSqlHandler handler;
     final SqlHandlerConfig config = new SqlHandlerConfig(context, parser);
 
@@ -286,6 +303,8 @@ public class DrillSqlWorker {
         handler = new DefaultSqlHandler(config, textPlan);
         context.setSQLStatementType(SqlStatementType.OTHER);
     }
+    
+    
 
     // Determines whether result set should be returned for the query based on return result set option and sql node kind.
     // Overrides the option on a query level if it differs from the current value.
@@ -295,7 +314,31 @@ public class DrillSqlWorker {
       context.getOptions().setLocalOption(ExecConstants.RETURN_RESULT_SET_FOR_DDL, true);
     }
 
-    return handler.getPlan(sqlNode);
+    PhysicalPlan physicalPlan = handler.getPlan(sqlNode);
+    getQueryPlanCache.put(queryPlanCacheKey, physicalPlan);
+    return physicalPlan;
+  }
+  
+  private static class QueryPlanCacheKey {
+      private final SqlNode sqlNode;
+
+      public QueryPlanCacheKey(SqlNode sqlNode) {
+          this.sqlNode = sqlNode;
+      }
+
+      @Override
+      public boolean equals(Object o) {
+          if (this == o) return true;
+          if (o == null || getClass() != o.getClass()) return false;
+          QueryPlanCacheKey cacheKey = (QueryPlanCacheKey) o;
+          return  sqlNode.equalsDeep(cacheKey.sqlNode, Litmus.IGNORE);
+      }
+      
+      @Override
+	    public int hashCode() {
+	    	return Objects.hash(sqlNode);
+	    }
+
   }
 
   private static boolean isAutoLimitShouldBeApplied(SqlNode sqlNode, int queryMaxRows) {
