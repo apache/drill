@@ -17,23 +17,23 @@
  */
 package org.apache.drill.exec.store.druid.rest;
 
+import okhttp3.Response;
+import okhttp3.ResponseBody;
 import org.apache.drill.exec.store.druid.druid.DruidScanResponse;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mock;
-
-import okhttp3.Response;
-import okhttp3.ResponseBody;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
-import static org.assertj.core.api.Assertions.assertThat;
 
 public class DruidQueryClientTest {
 
@@ -79,7 +79,7 @@ public class DruidQueryClientTest {
     when(httpResponseBody.byteStream()).thenReturn(inputStream);
 
     DruidScanResponse response = druidQueryClient.executeQuery(QUERY);
-    assertThat(response.getEvents()).isEmpty();
+    assertEquals(0, response.getEvents().size());
   }
 
   @Test
@@ -91,9 +91,9 @@ public class DruidQueryClientTest {
     when(httpResponseBody.byteStream()).thenReturn(inputStream);
 
     DruidScanResponse response = druidQueryClient.executeQuery(QUERY);
-    assertThat(response.getEvents()).isNotEmpty();
-    assertThat(response.getEvents().size()).isEqualTo(1);
-    assertThat(response.getEvents().get(0).get("user").textValue()).isEqualTo("Dansker");
-    assertThat(response.getEvents().get(0).get("sum_deleted").intValue()).isEqualTo(133);
+    assertFalse(response.getEvents().isEmpty());
+    assertEquals(response.getEvents().size(), 1);
+    assertEquals(response.getEvents().get(0).get("user").textValue(), "Dansker");
+    assertEquals(response.getEvents().get(0).get("sum_deleted").intValue(), 133);
   }
 }
