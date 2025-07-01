@@ -58,8 +58,8 @@ public class HiveTextRecordReader extends HiveDefaultRecordReader {
    */
   public HiveTextRecordReader(HiveTableWithColumnCache table, HivePartition partition,
                               Collection<InputSplit> inputSplits, List<SchemaPath> projectedColumns,
-                              FragmentContext context, HiveConf hiveConf, UserGroupInformation proxyUgi) {
-    super(table, partition, inputSplits, projectedColumns, context, hiveConf, proxyUgi);
+                              FragmentContext context, HiveConf hiveConf, UserGroupInformation proxyUgi, int maxRecords) {
+    super(table, partition, inputSplits, projectedColumns, context, hiveConf, proxyUgi, maxRecords);
   }
 
   @Override

@@ -113,7 +113,7 @@ public class HiveStoragePlugin extends AbstractStoragePlugin {
         }
       }
 
-      return new HiveScan(userName, hiveReadEntry, this, columns, null, confProperties);
+      return new HiveScan(userName, hiveReadEntry, this, columns, null, confProperties, -1);
     } catch (ExecutionSetupException e) {
       throw new IOException(e);
     }
