@@ -58,7 +58,7 @@ public class HiveSubScan extends AbstractBase implements SubScan {
   private final List<HivePartition> partitions;
   private final List<SchemaPath> columns;
   private final Map<String, String> confProperties;
-
+  private final int maxRecords;
   @JsonCreator
   public HiveSubScan(@JacksonInject StoragePluginRegistry registry,
                      @JsonProperty("userName") String userName,
@@ -67,6 +67,7 @@ public class HiveSubScan extends AbstractBase implements SubScan {
                      @JsonProperty("splitClasses") List<String> splitClasses,
                      @JsonProperty("columns") List<SchemaPath> columns,
                      @JsonProperty("hiveStoragePluginConfig") HiveStoragePluginConfig hiveStoragePluginConfig,
+                     @JsonProperty("maxRecords") int maxRecords,
                      @JsonProperty("confProperties") Map<String, String> confProperties)
       throws IOException, ExecutionSetupException, ReflectiveOperationException {
     this(userName,
@@ -75,6 +76,7 @@ public class HiveSubScan extends AbstractBase implements SubScan {
         splitClasses,
         columns,
         registry.resolve(hiveStoragePluginConfig, HiveStoragePlugin.class),
+        maxRecords,
         confProperties);
   }
 
@@ -84,6 +86,7 @@ public class HiveSubScan extends AbstractBase implements SubScan {
                      final List<String> splitClasses,
                      final List<SchemaPath> columns,
                      final HiveStoragePlugin hiveStoragePlugin,
+                     final Integer maxRecords,
                      final Map<String, String> confProperties)
     throws IOException, ReflectiveOperationException {
     super(userName);
@@ -94,6 +97,7 @@ public class HiveSubScan extends AbstractBase implements SubScan {
     this.splitClasses = splitClasses;
     this.columns = columns;
     this.hiveStoragePlugin = hiveStoragePlugin;
+    this.maxRecords = maxRecords;
     this.confProperties = confProperties;
 
     for (int i = 0; i < splits.size(); i++) {
@@ -119,6 +123,10 @@ public class HiveSubScan extends AbstractBase implements SubScan {
   @JsonProperty
   public List<SchemaPath> getColumns() {
     return columns;
+  }
+
+  public int getMaxRecords() {
+    return maxRecords;
   }
 
   @JsonProperty
@@ -164,7 +172,7 @@ public class HiveSubScan extends AbstractBase implements SubScan {
   @Override
   public PhysicalOperator getNewWithChildren(List<PhysicalOperator> children) throws ExecutionSetupException {
     try {
-      return new HiveSubScan(getUserName(), splits, hiveReadEntry, splitClasses, columns, hiveStoragePlugin, confProperties);
+      return new HiveSubScan(getUserName(), splits, hiveReadEntry, splitClasses, columns, hiveStoragePlugin, maxRecords, confProperties);
     } catch (IOException | ReflectiveOperationException e) {
       throw new ExecutionSetupException(e);
     }
