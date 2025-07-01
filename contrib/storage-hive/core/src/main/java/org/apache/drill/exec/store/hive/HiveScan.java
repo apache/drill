@@ -65,7 +65,7 @@ public class HiveScan extends AbstractGroupScan {
   private final HiveReadEntry hiveReadEntry;
   private final HiveMetadataProvider metadataProvider;
   private final Map<String, String> confProperties;
-
+  private final int maxRecords;
   private List<List<LogicalInputSplit>> mappings;
   private List<LogicalInputSplit> inputSplits;
 
@@ -77,21 +77,23 @@ public class HiveScan extends AbstractGroupScan {
                   @JsonProperty("hiveStoragePluginConfig") final HiveStoragePluginConfig hiveStoragePluginConfig,
                   @JsonProperty("columns") final List<SchemaPath> columns,
                   @JsonProperty("confProperties") final Map<String, String> confProperties,
+                  @JsonProperty("maxRecords") final int maxRecords,
                   @JacksonInject final StoragePluginRegistry pluginRegistry) throws ExecutionSetupException {
     this(userName,
         hiveReadEntry,
         pluginRegistry.resolve(hiveStoragePluginConfig, HiveStoragePlugin.class),
         columns,
-        null, confProperties);
+        null, confProperties, maxRecords);
   }
 
   public HiveScan(final String userName, final HiveReadEntry hiveReadEntry, final HiveStoragePlugin hiveStoragePlugin,
-                  final List<SchemaPath> columns, final HiveMetadataProvider metadataProvider, final Map<String, String> confProperties) throws ExecutionSetupException {
+                  final List<SchemaPath> columns, final HiveMetadataProvider metadataProvider, final Map<String, String> confProperties, int maxRecords) throws ExecutionSetupException {
     super(userName);
     this.hiveReadEntry = hiveReadEntry;
     this.columns = columns;
     this.hiveStoragePlugin = hiveStoragePlugin;
     this.confProperties = confProperties;
+    this.maxRecords = maxRecords;
     if (metadataProvider == null) {
       this.metadataProvider = new HiveMetadataProvider(userName, hiveReadEntry, getHiveConf());
     } else {
@@ -106,10 +108,20 @@ public class HiveScan extends AbstractGroupScan {
     this.hiveStoragePlugin = that.hiveStoragePlugin;
     this.metadataProvider = that.metadataProvider;
     this.confProperties = that.confProperties;
+    this.maxRecords = that.maxRecords;
+  }
+  public HiveScan(final HiveScan that, int maxRecords) {
+    super(that);
+    this.columns = that.columns;
+    this.hiveReadEntry = that.hiveReadEntry;
+    this.hiveStoragePlugin = that.hiveStoragePlugin;
+    this.metadataProvider = that.metadataProvider;
+    this.confProperties = that.confProperties;
+    this.maxRecords = maxRecords;
   }
 
   public HiveScan clone(final HiveReadEntry hiveReadEntry) throws ExecutionSetupException {
-    return new HiveScan(getUserName(), hiveReadEntry, hiveStoragePlugin, columns, metadataProvider, confProperties);
+    return new HiveScan(getUserName(), hiveReadEntry, hiveStoragePlugin, columns, metadataProvider, confProperties, maxRecords);
   }
 
   @JsonProperty
@@ -131,6 +143,11 @@ public class HiveScan extends AbstractGroupScan {
   @JsonProperty
   public Map<String, String> getConfProperties() {
     return confProperties;
+  }
+
+  @JsonProperty
+  public int getMaxRecords() {
+    return maxRecords;
   }
 
   @JsonIgnore
@@ -168,6 +185,19 @@ public class HiveScan extends AbstractGroupScan {
   }
 
   @Override
+  public GroupScan applyLimit(int maxRecords) {
+    if (maxRecords == this.maxRecords){
+      return null;
+    }
+      return new HiveScan(this, maxRecords);
+  }
+
+  @Override
+  public boolean supportsLimitPushdown() {
+    return true;
+  }
+
+  @Override
   public SubScan getSpecificScan(final int minorFragmentId) throws ExecutionSetupException {
     try {
       final List<LogicalInputSplit> splits = mappings.get(minorFragmentId);
@@ -189,7 +219,7 @@ public class HiveScan extends AbstractGroupScan {
       }
 
       final HiveReadEntry subEntry = new HiveReadEntry(hiveReadEntry.getTableWrapper(), parts);
-      return new HiveSubScan(getUserName(), encodedInputSplits, subEntry, splitTypes, columns, hiveStoragePlugin, confProperties);
+      return new HiveSubScan(getUserName(), encodedInputSplits, subEntry, splitTypes, columns, hiveStoragePlugin, maxRecords, confProperties);
     } catch (IOException | ReflectiveOperationException e) {
       throw new ExecutionSetupException(e);
     }
@@ -271,6 +301,7 @@ public class HiveScan extends AbstractGroupScan {
         + ", partitions= " + partitions
         + ", inputDirectories=" + metadataProvider.getInputDirectories(hiveReadEntry)
         + ", confProperties=" + confProperties
+        + ", maxRecords=" + maxRecords
         + "]";
   }
 

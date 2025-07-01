@@ -217,7 +217,7 @@ public class HiveDefaultRecordReader extends AbstractRecordReader {
    */
   private StructField[] selectedStructFieldRefs;
 
-
+  private final int maxRecords;
   /**
    * Readers constructor called by initializer.
    *
@@ -231,7 +231,7 @@ public class HiveDefaultRecordReader extends AbstractRecordReader {
    */
   public HiveDefaultRecordReader(HiveTableWithColumnCache table, HivePartition partition,
                                  Collection<InputSplit> inputSplits, List<SchemaPath> projectedColumns,
-                                 FragmentContext context, HiveConf hiveConf, UserGroupInformation proxyUgi) {
+                                 FragmentContext context, HiveConf hiveConf, UserGroupInformation proxyUgi, int maxRecords) {
     this.hiveTable = table;
     this.partition = partition;
     this.hiveConf = hiveConf;
@@ -243,6 +243,7 @@ public class HiveDefaultRecordReader extends AbstractRecordReader {
     this.partitionValues = new Object[0];
     setColumns(projectedColumns);
     this.fragmentContext = context;
+    this.maxRecords = maxRecords;
   }
 
   @Override
@@ -396,7 +397,8 @@ public class HiveDefaultRecordReader extends AbstractRecordReader {
 
     try {
       int recordCount;
-      for (recordCount = 0; (recordCount < TARGET_RECORD_COUNT && hasNextValue(valueHolder)); recordCount++) {
+      int record = maxRecords > 0 ? maxRecords : TARGET_RECORD_COUNT;
+      for (recordCount = 0; (recordCount < record && hasNextValue(valueHolder)); recordCount++) {
         Object deserializedHiveRecord = partitionToTableSchemaConverter.convert(partitionDeserializer.deserialize((Writable) valueHolder));
         outputWriter.setPosition(recordCount);
         readHiveRecordAndInsertIntoRecordBatch(deserializedHiveRecord);
