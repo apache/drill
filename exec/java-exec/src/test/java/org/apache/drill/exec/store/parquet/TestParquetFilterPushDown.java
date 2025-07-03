@@ -550,7 +550,7 @@ public class TestParquetFilterPushDown extends PlanTestBase {
     final String queryNotEqualFalse = "select col_bln from dfs.`parquetFilterPush/blnTbl` where not col_bln = false";
     testParquetFilterPD(queryNotEqualFalse, 4, 2, false);
 
-    final String queryEqualTrueWithAnd = "select col_bln from dfs.`parquetFilterPush/blnTbl` where col_bln = true and unk_col = 'a'";
+    final String queryEqualTrueWithAnd = "select col_bln from dfs.`parquetFilterPush/blnTbl` where col_bln = true and convert_to(unk_col, 'UTF8') = 'a'";
     testParquetFilterPD(queryEqualTrueWithAnd, 0, 2, false);
 
     // File ff1.parquet has column with the values: false, null, false.
