@@ -319,7 +319,7 @@ public class QueryContext implements AutoCloseable, OptimizerRulesContext, Schem
   }
 
   public DaffodilSchemaRegistry getDaffodilSchemaRegistry() {
-    return drillbitContext.getDaffodilSchemaRegistry();
+    return drillbitContext.getDaffodilSchemaProvider();
   }
 
   @Override
