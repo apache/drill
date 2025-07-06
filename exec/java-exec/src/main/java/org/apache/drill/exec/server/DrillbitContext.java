@@ -42,7 +42,7 @@ import org.apache.drill.exec.rpc.security.AuthenticatorProvider;
 import org.apache.drill.exec.rpc.user.UserServer;
 import org.apache.drill.exec.rpc.user.UserServer.BitToUserConnection;
 import org.apache.drill.exec.rpc.user.UserServer.BitToUserConnectionConfig;
-import org.apache.drill.exec.schema.daffodil.DaffodilSchemaRegistry;
+import org.apache.drill.exec.schema.daffodil.DaffodilSchemaProvider;
 import org.apache.drill.exec.server.options.SystemOptionManager;
 import org.apache.drill.exec.store.SchemaFactory;
 import org.apache.drill.exec.store.StoragePluginRegistry;
@@ -83,7 +83,7 @@ public class DrillbitContext implements AutoCloseable {
   private ResourceManager resourceManager;
   private final MetastoreRegistry metastoreRegistry;
   private final DrillCounters counters;
-  private final DaffodilSchemaRegistry daffodilSchemaRegistry;
+  private final DaffodilSchemaProvider daffodilSchemaProvider;
 
   public DrillbitContext(
       DrillbitEndpoint endpoint,
@@ -136,7 +136,7 @@ public class DrillbitContext implements AutoCloseable {
     this.oAuthTokenProvider = new OAuthTokenProvider(this);
 
     // TODO Start here and complete the initialization process
-    this.daffodilSchemaRegistry = new DaffodilSchemaRegistry(config, classpathScan, systemOptions);
+    this.daffodilSchemaProvider = new DaffodilSchemaProvider(config, classpathScan, systemOptions);
 
     this.counters = DrillCounters.getInstance();
   }
@@ -289,8 +289,8 @@ public class DrillbitContext implements AutoCloseable {
     return functionRegistry.getRemoteFunctionRegistry();
   }
 
-  public DaffodilSchemaRegistry getDaffodilSchemaRegistry() {
-    return daffodilSchemaRegistry;
+  public DaffodilSchemaProvider getDaffodilSchemaProvider() {
+    return daffodilSchemaProvider;
   }
 
   /**
@@ -327,6 +327,7 @@ public class DrillbitContext implements AutoCloseable {
     getMetastoreRegistry().close();
     getAliasRegistryProvider().close();
     getOauthTokenProvider().close();
+    getDaffodilSchemaProvider().close();
   }
 
   public ResourceManager getResourceManager() {
