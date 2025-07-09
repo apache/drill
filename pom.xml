@@ -71,7 +71,7 @@
     <commons.text.version>1.10.0</commons.text.version>
     <commons.validator.version>1.7</commons.validator.version>
     <curator.version>5.5.0</curator.version>
-    <derby.version>10.14.2.0</derby.version>
+    <derby.version>10.17.1.0</derby.version>
     <directMemoryMb>3072</directMemoryMb>
     <docker.repository>apache/drill</docker.repository>
     <excludedGroups />
@@ -89,7 +89,7 @@
       Apache Hive 2.3.2. If the version is changed, make sure the jars and their dependencies are updated,
       for example parquet-hadoop-bundle and derby dependencies.
     -->
-    <hive.version>3.1.3</hive.version>
+    <hive.version>4.0.1</hive.version>
     <httpclient.version>4.5.14</httpclient.version>
     <httpdlog-parser.version>5.10.0</httpdlog-parser.version>
     <iceberg.version>0.12.1</iceberg.version>

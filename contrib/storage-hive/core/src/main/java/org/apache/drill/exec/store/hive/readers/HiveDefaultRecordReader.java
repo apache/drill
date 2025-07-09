@@ -17,19 +17,7 @@
  */
 package org.apache.drill.exec.store.hive.readers;
 
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
-import java.util.Properties;
-import java.util.concurrent.Callable;
-import java.util.concurrent.ExecutionException;
-import java.util.stream.Collectors;
-import java.util.stream.IntStream;
-
+import com.google.common.util.concurrent.ListenableFuture;
 import io.netty.buffer.DrillBuf;
 import org.apache.drill.common.exceptions.DrillRuntimeException;
 import org.apache.drill.common.exceptions.ExecutionSetupException;
@@ -51,10 +39,10 @@ import org.apache.drill.exec.store.hive.writers.HiveValueWriterFactory;
 import org.apache.drill.exec.vector.AllocationHelper;
 import org.apache.drill.exec.vector.ValueVector;
 import org.apache.drill.exec.vector.complex.impl.VectorContainerWriter;
-import com.google.common.util.concurrent.ListenableFuture;
 import org.apache.hadoop.hive.conf.HiveConf;
 import org.apache.hadoop.hive.metastore.api.FieldSchema;
 import org.apache.hadoop.hive.metastore.api.StorageDescriptor;
+import org.apache.hadoop.hive.serde2.AbstractSerDe;
 import org.apache.hadoop.hive.serde2.ColumnProjectionUtils;
 import org.apache.hadoop.hive.serde2.Deserializer;
 import org.apache.hadoop.hive.serde2.SerDeException;
@@ -74,6 +62,19 @@ import org.apache.hadoop.security.UserGroupInformation;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+import java.util.Properties;
+import java.util.concurrent.Callable;
+import java.util.concurrent.ExecutionException;
+import java.util.stream.Collectors;
+import java.util.stream.IntStream;
+
 /**
  * Reader which uses complex writer underneath to fill in value vectors with data read from Hive.
  * At first glance initialization code in the writer looks cumbersome, but in the end it's main aim is to prepare list of key
@@ -81,7 +82,7 @@ import org.slf4j.LoggerFactory;
  * <p>
  * In a nutshell, the reader is used in two stages:
  * 1) Setup stage configures mapredReader, partitionObjInspector, partitionDeserializer, list of {@link HiveValueWriter}s for each column in record
- * batch, partition vectors and values
+ * batch, partition vectors, and values
  * 2) Reading stage uses objects configured previously to get rows from InputSplits, represent each row as Struct of columns values,
  * and write each row value of column into Drill's value vectors using HiveValueWriter for each specific column
  */
@@ -326,7 +327,7 @@ public class HiveDefaultRecordReader extends AbstractRecordReader {
       List<String> nestedColumnPaths = getColumns().stream()
           .map(SchemaPath::getRootSegmentPath)
           .collect(Collectors.toList());
-      ColumnProjectionUtils.appendReadColumns(job, idsOfProjectedColumns, selectedColumnNames, nestedColumnPaths);
+      ColumnProjectionUtils.appendReadColumns(job, idsOfProjectedColumns);
 
       // Initialize selectedStructFieldRefs and columnValueWriters, which are two key collections of
       // objects used to read and save columns row data into Drill's value vectors
@@ -345,7 +346,7 @@ public class HiveDefaultRecordReader extends AbstractRecordReader {
       if (partition != null && selectedPartitionColumnNames.size() > 0) {
         List<ValueVector> partitionVectorList = new ArrayList<>(selectedPartitionColumnNames.size());
         List<Object> partitionValueList = new ArrayList<>(selectedPartitionColumnNames.size());
-        String defaultPartitionValue = hiveConf.get(HiveConf.ConfVars.DEFAULTPARTITIONNAME.varname);
+        String defaultPartitionValue = hiveConf.get(HiveConf.ConfVars.DEFAULT_PARTITION_NAME.varname);
         OptionManager options = fragmentContext.getOptions();
         for (int i = 0; i < partitionKeyFields.size(); i++) {
           FieldSchema field = partitionKeyFields.get(i);
@@ -450,7 +451,7 @@ public class HiveDefaultRecordReader extends AbstractRecordReader {
   private static Deserializer createDeserializer(JobConf job, StorageDescriptor sd, Properties properties) throws Exception {
     final Class<? extends Deserializer> c = Class.forName(sd.getSerdeInfo().getSerializationLib()).asSubclass(Deserializer.class);
     final Deserializer deserializer = c.getConstructor().newInstance();
-    deserializer.initialize(job, properties);
+   ((AbstractSerDe)deserializer).initialize(job, properties, null);
 
     return deserializer;
   }

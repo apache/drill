@@ -45,7 +45,7 @@ import static org.apache.hadoop.hive.conf.HiveConf.ConfVars.HIVE_AUTHORIZATION_E
 import static org.apache.hadoop.hive.conf.HiveConf.ConfVars.HIVE_AUTHORIZATION_MANAGER;
 import static org.apache.hadoop.hive.conf.HiveConf.ConfVars.HIVE_CBO_ENABLED;
 import static org.apache.hadoop.hive.conf.HiveConf.ConfVars.HIVE_SERVER2_ENABLE_DOAS;
-import static org.apache.hadoop.hive.conf.HiveConf.ConfVars.METASTOREURIS;
+import static org.apache.hadoop.hive.conf.HiveConf.ConfVars.METASTORE_URIS;
 import static org.apache.hadoop.hive.conf.HiveConf.ConfVars.METASTORE_AUTO_CREATE_ALL;
 import static org.apache.hadoop.hive.conf.HiveConf.ConfVars.METASTORE_EXECUTE_SET_UGI;
 import static org.apache.hadoop.hive.conf.HiveConf.ConfVars.METASTORE_SCHEMA_VERIFICATION;
@@ -100,7 +100,7 @@ public class TestSqlStdBasedAuthorization extends BaseTestHiveImpersonation {
 
   private static Map<String, String> getHivePluginConfig() {
     final Map<String, String> hiveConfig = Maps.newHashMap();
-    hiveConfig.put(METASTOREURIS.varname, hiveConf.get(METASTOREURIS.varname));
+    hiveConfig.put(METASTORE_URIS.varname, hiveConf.get(METASTORE_URIS.varname));
     hiveConfig.put(FS_DEFAULT_NAME_KEY, dfsConf.get(FS_DEFAULT_NAME_KEY));
     hiveConfig.put(HIVE_SERVER2_ENABLE_DOAS.varname, hiveConf.get(HIVE_SERVER2_ENABLE_DOAS.varname));
     hiveConfig.put(METASTORE_EXECUTE_SET_UGI.varname, hiveConf.get(METASTORE_EXECUTE_SET_UGI.varname));

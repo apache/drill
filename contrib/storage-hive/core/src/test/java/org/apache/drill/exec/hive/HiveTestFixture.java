@@ -17,15 +17,6 @@
  */
 package org.apache.drill.exec.hive;
 
-import java.io.Closeable;
-import java.io.File;
-import java.io.IOException;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Objects;
-import java.util.function.Consumer;
-
 import org.apache.drill.exec.server.Drillbit;
 import org.apache.drill.exec.store.StoragePluginRegistry;
 import org.apache.drill.exec.store.StoragePluginRegistry.PluginException;
@@ -37,6 +28,15 @@ import org.apache.hadoop.hive.conf.HiveConf;
 import org.apache.hadoop.hive.conf.HiveConf.ConfVars;
 import org.apache.hadoop.hive.ql.Driver;
 import org.apache.hadoop.hive.ql.session.SessionState;
+
+import java.io.Closeable;
+import java.io.File;
+import java.io.IOException;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Objects;
+import java.util.function.Consumer;
 
 import static java.util.Objects.nonNull;
 import static java.util.Objects.requireNonNull;
@@ -133,8 +133,8 @@ public class HiveTestFixture {
    *         from pluginConf or driverConf
    */
   public String getWarehouseDir() {
-    String warehouseDir = pluginConf.get(ConfVars.METASTOREWAREHOUSE.varname);
-    return nonNull(warehouseDir) ? warehouseDir : driverConf.get(ConfVars.METASTOREWAREHOUSE.varname);
+    String warehouseDir = pluginConf.get(ConfVars.METASTORE_WAREHOUSE.varname);
+    return nonNull(warehouseDir) ? warehouseDir : driverConf.get(ConfVars.METASTORE_WAREHOUSE.varname);
   }
 
   public static class Builder {
@@ -153,22 +153,22 @@ public class HiveTestFixture {
       String warehouseDir = new File(baseDir, "warehouse").getAbsolutePath();
       // Drill Hive Storage plugin defaults
       pluginName("hive");
-      pluginOption(ConfVars.METASTOREURIS, "");
-      pluginOption(ConfVars.METASTORECONNECTURLKEY, jdbcUrl);
-      pluginOption(ConfVars.METASTOREWAREHOUSE, warehouseDir);
+      pluginOption(ConfVars.METASTORE_URIS, "");
+      pluginOption(ConfVars.METASTORE_CONNECT_URL_KEY, jdbcUrl);
+      pluginOption(ConfVars.METASTORE_WAREHOUSE, warehouseDir);
       pluginOption(FileSystem.FS_DEFAULT_NAME_KEY, FileSystem.DEFAULT_FS);
       // Hive Driver defaults
-      driverOption(ConfVars.METASTORECONNECTURLKEY, jdbcUrl);
+      driverOption(ConfVars.METASTORE_CONNECT_URL_KEY, jdbcUrl);
       driverOption(FileSystem.FS_DEFAULT_NAME_KEY, FileSystem.DEFAULT_FS);
-      driverOption(ConfVars.METASTOREWAREHOUSE, warehouseDir);
+      driverOption(ConfVars.METASTORE_WAREHOUSE, warehouseDir);
       driverOption("mapred.job.tracker", "local");
-      driverOption(ConfVars.SCRATCHDIR, createDirWithPosixPermissions(baseDir, "scratch_dir").getAbsolutePath());
-      driverOption(ConfVars.LOCALSCRATCHDIR, createDirWithPosixPermissions(baseDir, "local_scratch_dir").getAbsolutePath());
-      driverOption(ConfVars.DYNAMICPARTITIONINGMODE, "nonstrict");
+      driverOption(ConfVars.SCRATCH_DIR, createDirWithPosixPermissions(baseDir, "scratch_dir").getAbsolutePath());
+      driverOption(ConfVars.LOCAL_SCRATCH_DIR, createDirWithPosixPermissions(baseDir, "local_scratch_dir").getAbsolutePath());
+      driverOption(ConfVars.DYNAMIC_PARTITIONING_MODE, "nonstrict");
       driverOption(ConfVars.METASTORE_AUTO_CREATE_ALL, Boolean.toString(true));
       driverOption(ConfVars.METASTORE_SCHEMA_VERIFICATION, Boolean.toString(false));
       driverOption(ConfVars.HIVE_MATERIALIZED_VIEW_ENABLE_AUTO_REWRITING, Boolean.toString(false));
-      driverOption(HiveConf.ConfVars.HIVESESSIONSILENT, Boolean.toString(true));
+      driverOption(HiveConf.ConfVars.HIVE_SESSION_SILENT, Boolean.toString(true));
       driverOption(ConfVars.HIVE_CBO_ENABLED, Boolean.toString(false));
     }
 

@@ -17,12 +17,6 @@
  */
 package org.apache.drill.exec.impersonation.hive;
 
-import java.io.File;
-import java.io.IOException;
-import java.nio.file.Paths;
-import java.util.List;
-import java.util.Map;
-
 import org.apache.calcite.schema.Schema.TableType;
 import org.apache.drill.exec.hive.HiveTestUtilities;
 import org.apache.drill.exec.impersonation.BaseTestImpersonation;
@@ -38,10 +32,16 @@ import org.apache.hadoop.hive.conf.HiveConf.ConfVars;
 import org.apache.hadoop.hive.ql.Driver;
 import org.junit.BeforeClass;
 
+import java.io.File;
+import java.io.IOException;
+import java.nio.file.Paths;
+import java.util.List;
+import java.util.Map;
+
 import static org.apache.drill.exec.hive.HiveTestUtilities.createDirWithPosixPermissions;
 import static org.apache.drill.exec.hive.HiveTestUtilities.executeQuery;
 import static org.apache.hadoop.fs.FileSystem.FS_DEFAULT_NAME_KEY;
-import static org.apache.hadoop.hive.conf.HiveConf.ConfVars.METASTOREURIS;
+import static org.apache.hadoop.hive.conf.HiveConf.ConfVars.METASTORE_URIS;
 
 public class BaseTestHiveImpersonation extends BaseTestImpersonation {
   protected static final String hivePluginName = "hive";
@@ -79,21 +79,20 @@ public class BaseTestHiveImpersonation extends BaseTestImpersonation {
 
     // Configure metastore persistence db location on local filesystem
     final String dbUrl = String.format("jdbc:derby:;databaseName=%s;create=true",  metaStoreDBDir.getAbsolutePath());
-    hiveConf.set(ConfVars.METASTORECONNECTURLKEY.varname, dbUrl);
-
-    hiveConf.set(ConfVars.SCRATCHDIR.varname, "file://" + scratchDir.getAbsolutePath());
-    hiveConf.set(ConfVars.LOCALSCRATCHDIR.varname, localScratchDir.getAbsolutePath());
+    hiveConf.set(ConfVars.METASTORE_CONNECT_URL_KEY.varname, dbUrl);
+    hiveConf.set(ConfVars.SCRATCH_DIR.varname, "file://" + scratchDir.getAbsolutePath());
+    hiveConf.set(ConfVars.LOCAL_SCRATCH_DIR.varname, localScratchDir.getAbsolutePath());
     hiveConf.set(ConfVars.METASTORE_SCHEMA_VERIFICATION.varname, "false");
     hiveConf.set(ConfVars.METASTORE_AUTO_CREATE_ALL.varname, "true");
     hiveConf.set(ConfVars.HIVE_CBO_ENABLED.varname, "false");
     hiveConf.set(ConfVars.HIVESTATSAUTOGATHER.varname, "false");
     hiveConf.set(ConfVars.HIVESTATSCOLAUTOGATHER.varname, "false");
-    hiveConf.set(ConfVars.HIVESESSIONSILENT.varname, "true");
+    hiveConf.set(ConfVars.HIVE_SESSION_SILENT.varname, "true");
 
     // Set MiniDFS conf in HiveConf
     hiveConf.set(FS_DEFAULT_NAME_KEY, dfsConf.get(FS_DEFAULT_NAME_KEY));
 
-    whDir = hiveConf.get(ConfVars.METASTOREWAREHOUSE.varname);
+    whDir = hiveConf.get(ConfVars.METASTORE_WAREHOUSE.varname);
     FileSystem.mkdirs(fs, new Path(whDir), new FsPermission((short) 0777));
 
     dirTestWatcher.copyResourceToRoot(Paths.get("student.txt"));
@@ -122,7 +121,7 @@ public class BaseTestHiveImpersonation extends BaseTestImpersonation {
     }
     final int port = (int) metaStoreUtilsClass.getDeclaredMethod("findFreePort").invoke(null);
 
-    hiveConf.set(METASTOREURIS.varname, "thrift://localhost:" + port);
+    hiveConf.set(METASTORE_URIS.varname, "thrift://localhost:" + port);
 
     metaStoreUtilsClass.getDeclaredMethod("startMetaStore", int.class, hadoopThriftAuthBridgeClass, confClass)
         .invoke(null, port, hadoopThriftAuthBridge, hiveConf);
@@ -238,5 +237,4 @@ expectedTableTypes, ClientFixture client) throws Exception {
     executeQuery(driver, String.format(tblDef, db, tbl));
     executeQuery(driver, String.format("LOAD DATA LOCAL INPATH '%s' INTO TABLE %s.%s", data, db, tbl));
   }
-
 }

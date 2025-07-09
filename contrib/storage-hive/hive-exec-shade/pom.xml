@@ -32,7 +32,7 @@
   <name>Drill : Contrib : Storage : Hive : Exec Shaded</name>
 
   <properties>
-    <hive.parquet.version>1.15.1</hive.parquet.version>
+    <hive.parquet.version>1.15.2</hive.parquet.version>
   </properties>
 
   <dependencyManagement>
@@ -91,6 +91,10 @@
         <exclusion>
           <groupId>org.apache.logging.log4j</groupId>
           <artifactId>log4j-web</artifactId>
+        </exclusion>
+        <exclusion>
+          <groupId>org.apache.logging.log4j</groupId>
+          <artifactId>log4j-core</artifactId>
         </exclusion>
         <exclusion>
           <groupId>tomcat</groupId>
@@ -202,16 +206,6 @@
             </relocation>
           </relocations>
           <filters>
-            <filter>
-              <artifact>org.apache.hive:hive-exec</artifact>
-              <excludes>
-                <!-- This exclusion can be removed once hive-exec uses parquet-hadoop-bundle 1.8.2 or higher.
-                 It can be so, for example, after upgrading Hive to 3.0. To check if it's safe to remove the exclusion
-                 you can use TestHiveStorage.readFromAlteredPartitionedTableWithEmptyGroupType() test case. -->
-                <exclude>org/apache/parquet/**</exclude>
-                <exclude>shaded/parquet/org/**</exclude>
-              </excludes>
-            </filter>
             <filter>
               <artifact>com.fasterxml.jackson.core:*</artifact>
               <excludes>
