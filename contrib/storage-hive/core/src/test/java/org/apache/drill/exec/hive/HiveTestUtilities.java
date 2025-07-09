@@ -125,7 +125,7 @@ public class HiveTestUtilities {
   }
 
   /**
-   * Current Hive version doesn't support JDK 9+.
+   * Current Hive version doesn't support Jmvn DK 9+.
    * Checks if current version is supported by Hive.
    *
    * @return {@code true} if current version is supported by Hive, {@code false} otherwise
