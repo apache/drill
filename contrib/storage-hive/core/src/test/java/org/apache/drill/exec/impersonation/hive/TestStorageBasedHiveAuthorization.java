@@ -43,7 +43,7 @@ import java.util.Map;
 import static com.google.common.collect.Lists.newArrayList;
 import static org.apache.drill.exec.hive.HiveTestUtilities.executeQuery;
 import static org.apache.hadoop.fs.FileSystem.FS_DEFAULT_NAME_KEY;
-import static org.apache.hadoop.hive.conf.HiveConf.ConfVars.DYNAMIC_PARTITIONING_MODE;
+import static org.apache.hadoop.hive.conf.HiveConf.ConfVars.DYNAMICPARTITIONINGMODE;
 import static org.apache.hadoop.hive.conf.HiveConf.ConfVars.HIVE_CBO_ENABLED;
 import static org.apache.hadoop.hive.conf.HiveConf.ConfVars.HIVE_METASTORE_AUTHENTICATOR_MANAGER;
 import static org.apache.hadoop.hive.conf.HiveConf.ConfVars.HIVE_METASTORE_AUTHORIZATION_AUTH_READS;
@@ -53,7 +53,7 @@ import static org.apache.hadoop.hive.conf.HiveConf.ConfVars.METASTORE_AUTO_CREAT
 import static org.apache.hadoop.hive.conf.HiveConf.ConfVars.METASTORE_EXECUTE_SET_UGI;
 import static org.apache.hadoop.hive.conf.HiveConf.ConfVars.METASTORE_PRE_EVENT_LISTENERS;
 import static org.apache.hadoop.hive.conf.HiveConf.ConfVars.METASTORE_SCHEMA_VERIFICATION;
-import static org.apache.hadoop.hive.conf.HiveConf.ConfVars.METASTORE_URIS;
+import static org.apache.hadoop.hive.conf.HiveConf.ConfVars.METASTOREURIS;
 
 @Category({SlowTest.class, HiveStorageTest.class})
 public class TestStorageBasedHiveAuthorization extends BaseTestHiveImpersonation {
@@ -184,12 +184,12 @@ public class TestStorageBasedHiveAuthorization extends BaseTestHiveImpersonation
     hiveConf.set(HIVE_METASTORE_AUTHORIZATION_MANAGER.varname, StorageBasedAuthorizationProvider.class.getName());
     hiveConf.set(HIVE_METASTORE_AUTHORIZATION_AUTH_READS.varname, "true");
     hiveConf.set(METASTORE_EXECUTE_SET_UGI.varname, "true");
-    hiveConf.set(DYNAMIC_PARTITIONING_MODE.varname, "nonstrict");
+    hiveConf.set(DYNAMICPARTITIONINGMODE.varname, "nonstrict");
   }
 
   private static Map<String, String> getHivePluginConfig() {
     final Map<String, String> hiveConfig = Maps.newHashMap();
-    hiveConfig.put(METASTORE_URIS.varname, hiveConf.get(METASTORE_URIS.varname));
+    hiveConfig.put(METASTOREURIS.varname, hiveConf.get(METASTOREURIS.varname));
     hiveConfig.put(FS_DEFAULT_NAME_KEY, dfsConf.get(FS_DEFAULT_NAME_KEY));
     hiveConfig.put(HIVE_SERVER2_ENABLE_DOAS.varname, hiveConf.get(HIVE_SERVER2_ENABLE_DOAS.varname));
     hiveConfig.put(METASTORE_EXECUTE_SET_UGI.varname, hiveConf.get(METASTORE_EXECUTE_SET_UGI.varname));

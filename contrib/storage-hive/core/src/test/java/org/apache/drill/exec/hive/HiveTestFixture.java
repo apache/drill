@@ -133,8 +133,8 @@ public class HiveTestFixture {
    *         from pluginConf or driverConf
    */
   public String getWarehouseDir() {
-    String warehouseDir = pluginConf.get(ConfVars.METASTORE_WAREHOUSE.varname);
-    return nonNull(warehouseDir) ? warehouseDir : driverConf.get(ConfVars.METASTORE_WAREHOUSE.varname);
+    String warehouseDir = pluginConf.get(ConfVars.METASTOREWAREHOUSE.varname);
+    return nonNull(warehouseDir) ? warehouseDir : driverConf.get(ConfVars.METASTOREWAREHOUSE.varname);
   }
 
   public static class Builder {
@@ -153,22 +153,22 @@ public class HiveTestFixture {
       String warehouseDir = new File(baseDir, "warehouse").getAbsolutePath();
       // Drill Hive Storage plugin defaults
       pluginName("hive");
-      pluginOption(ConfVars.METASTORE_URIS, "");
-      pluginOption(ConfVars.METASTORE_CONNECT_URL_KEY, jdbcUrl);
-      pluginOption(ConfVars.METASTORE_WAREHOUSE, warehouseDir);
+      pluginOption(ConfVars.METASTOREURIS, "");
+      pluginOption(ConfVars.METASTORECONNECTURLKEY, jdbcUrl);
+      pluginOption(ConfVars.METASTOREWAREHOUSE, warehouseDir);
       pluginOption(FileSystem.FS_DEFAULT_NAME_KEY, FileSystem.DEFAULT_FS);
       // Hive Driver defaults
-      driverOption(ConfVars.METASTORE_CONNECT_URL_KEY, jdbcUrl);
+      driverOption(ConfVars.METASTORECONNECTURLKEY, jdbcUrl);
       driverOption(FileSystem.FS_DEFAULT_NAME_KEY, FileSystem.DEFAULT_FS);
-      driverOption(ConfVars.METASTORE_WAREHOUSE, warehouseDir);
+      driverOption(ConfVars.METASTOREWAREHOUSE, warehouseDir);
       driverOption("mapred.job.tracker", "local");
-      driverOption(ConfVars.SCRATCH_DIR, createDirWithPosixPermissions(baseDir, "scratch_dir").getAbsolutePath());
-      driverOption(ConfVars.LOCAL_SCRATCH_DIR, createDirWithPosixPermissions(baseDir, "local_scratch_dir").getAbsolutePath());
-      driverOption(ConfVars.DYNAMIC_PARTITIONING_MODE, "nonstrict");
+      driverOption(ConfVars.SCRATCHDIR, createDirWithPosixPermissions(baseDir, "scratch_dir").getAbsolutePath());
+      driverOption(ConfVars.LOCALSCRATCHDIR, createDirWithPosixPermissions(baseDir, "local_scratch_dir").getAbsolutePath());
+      driverOption(ConfVars.DYNAMICPARTITIONINGMODE, "nonstrict");
       driverOption(ConfVars.METASTORE_AUTO_CREATE_ALL, Boolean.toString(true));
       driverOption(ConfVars.METASTORE_SCHEMA_VERIFICATION, Boolean.toString(false));
       driverOption(ConfVars.HIVE_MATERIALIZED_VIEW_ENABLE_AUTO_REWRITING, Boolean.toString(false));
-      driverOption(HiveConf.ConfVars.HIVE_SESSION_SILENT, Boolean.toString(true));
+      driverOption(HiveConf.ConfVars.HIVESESSIONSILENT, Boolean.toString(true));
       driverOption(ConfVars.HIVE_CBO_ENABLED, Boolean.toString(false));
     }
 

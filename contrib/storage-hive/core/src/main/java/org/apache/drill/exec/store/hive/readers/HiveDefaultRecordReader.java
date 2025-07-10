@@ -40,6 +40,7 @@ import org.apache.drill.exec.vector.AllocationHelper;
 import org.apache.drill.exec.vector.ValueVector;
 import org.apache.drill.exec.vector.complex.impl.VectorContainerWriter;
 import org.apache.hadoop.hive.conf.HiveConf;
+import org.apache.hadoop.hive.conf.HiveConf.ConfVars;
 import org.apache.hadoop.hive.metastore.api.FieldSchema;
 import org.apache.hadoop.hive.metastore.api.StorageDescriptor;
 import org.apache.hadoop.hive.serde2.AbstractSerDe;
@@ -346,7 +347,7 @@ public class HiveDefaultRecordReader extends AbstractRecordReader {
       if (partition != null && selectedPartitionColumnNames.size() > 0) {
         List<ValueVector> partitionVectorList = new ArrayList<>(selectedPartitionColumnNames.size());
         List<Object> partitionValueList = new ArrayList<>(selectedPartitionColumnNames.size());
-        String defaultPartitionValue = hiveConf.get(HiveConf.ConfVars.DEFAULT_PARTITION_NAME.varname);
+        String defaultPartitionValue = hiveConf.get(ConfVars.DEFAULTPARTITIONNAME.varname);
         OptionManager options = fragmentContext.getOptions();
         for (int i = 0; i < partitionKeyFields.size(); i++) {
           FieldSchema field = partitionKeyFields.get(i);

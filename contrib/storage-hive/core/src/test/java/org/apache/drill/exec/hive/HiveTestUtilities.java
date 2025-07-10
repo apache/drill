@@ -20,7 +20,6 @@ package org.apache.drill.exec.hive;
 import org.apache.drill.test.QueryBuilder;
 import org.apache.drill.test.TestTools;
 import org.apache.hadoop.hive.ql.Driver;
-import org.apache.hadoop.hive.ql.processors.CommandProcessorException;
 import org.apache.hadoop.hive.ql.processors.CommandProcessorResponse;
 import org.apache.hadoop.util.ComparableVersion;
 import org.apache.hive.common.util.HiveVersionInfo;
@@ -54,12 +53,10 @@ public class HiveTestUtilities {
     CommandProcessorResponse response;
     try {
       response = hiveDriver.run(query);
-    } catch (CommandProcessorException cpe) {
-      throw new RuntimeException(String.format("Failed to execute command '%s', errorMsg = '%s'",
-          query, cpe.getMessage()));
     }
     catch (Exception e) {
-       throw new RuntimeException(e);
+      throw new RuntimeException(String.format("Failed to execute command '%s', errorMsg = '%s'",
+          query, e.getMessage()));
     }
   }
 
