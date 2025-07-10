@@ -17,14 +17,11 @@
  */
 package org.apache.drill.exec.store.hive;
 
-import org.apache.calcite.rel.type.RelDataType;
-import org.apache.drill.exec.physical.impl.scan.v3.schema.SchemaUtils;
-import org.apache.drill.exec.planner.types.HiveToRelDataTypeConverter;
-import org.apache.drill.exec.record.metadata.ColumnMetadata;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
 import io.netty.buffer.DrillBuf;
 import org.apache.calcite.plan.RelOptRuleCall;
+import org.apache.calcite.rel.type.RelDataType;
 import org.apache.drill.common.exceptions.DrillRuntimeException;
 import org.apache.drill.common.exceptions.ExecutionSetupException;
 import org.apache.drill.common.exceptions.UserException;
@@ -36,8 +33,11 @@ import org.apache.drill.exec.expr.holders.Decimal18Holder;
 import org.apache.drill.exec.expr.holders.Decimal28SparseHolder;
 import org.apache.drill.exec.expr.holders.Decimal38SparseHolder;
 import org.apache.drill.exec.expr.holders.Decimal9Holder;
+import org.apache.drill.exec.physical.impl.scan.v3.schema.SchemaUtils;
 import org.apache.drill.exec.planner.logical.DrillScanRel;
 import org.apache.drill.exec.planner.physical.PlannerSettings;
+import org.apache.drill.exec.planner.types.HiveToRelDataTypeConverter;
+import org.apache.drill.exec.record.metadata.ColumnMetadata;
 import org.apache.drill.exec.server.options.OptionSet;
 import org.apache.drill.exec.util.DecimalUtility;
 import org.apache.drill.exec.vector.NullableBigIntVector;
@@ -56,15 +56,14 @@ import org.apache.drill.exec.vector.NullableVarCharVector;
 import org.apache.drill.exec.vector.NullableVarDecimalVector;
 import org.apache.drill.exec.vector.ValueVector;
 import org.apache.drill.exec.work.ExecErrorConstants;
-
 import org.apache.hadoop.hive.common.type.HiveDecimal;
+import org.apache.hadoop.hive.conf.HiveConf;
 import org.apache.hadoop.hive.metastore.api.FieldSchema;
 import org.apache.hadoop.hive.metastore.api.Partition;
 import org.apache.hadoop.hive.metastore.api.StorageDescriptor;
 import org.apache.hadoop.hive.metastore.api.Table;
+import org.apache.hadoop.hive.metastore.api.hive_metastoreConstants;
 import org.apache.hadoop.hive.ql.exec.Utilities;
-import org.apache.hadoop.hive.conf.HiveConf;
-import org.apache.hadoop.hive.ql.io.AcidUtils;
 import org.apache.hadoop.hive.ql.io.IOConstants;
 import org.apache.hadoop.hive.ql.metadata.HiveException;
 import org.apache.hadoop.hive.ql.metadata.HiveStorageHandler;
@@ -572,6 +571,14 @@ public class HiveUtilities {
     return skipHeader > 0 || skipFooter > 0;
   }
 
+  public static boolean isTablePropertyTransactional(JobConf parameters) {
+    String resultStr = parameters.get(hive_metastoreConstants.TABLE_IS_TRANSACTIONAL);
+    if (resultStr == null) {
+      resultStr = parameters.get(hive_metastoreConstants.TABLE_IS_TRANSACTIONAL.toUpperCase());
+    }
+    return Boolean.parseBoolean(resultStr);
+  }
+
   /**
    * This method checks whether the table is transactional and set necessary properties in {@link JobConf}.<br>
    * If schema evolution properties aren't set in job conf for the input format, method sets the column names
@@ -581,8 +588,7 @@ public class HiveUtilities {
    * @param sd storage descriptor
    */
   public static void verifyAndAddTransactionalProperties(JobConf job, StorageDescriptor sd) {
-
-    if (AcidUtils.isTablePropertyTransactional(job)) {
+    if (isTablePropertyTransactional(job)) {
       HiveConf.setBoolVar(job, HiveConf.ConfVars.HIVE_TRANSACTIONAL_TABLE_SCAN, true);
 
       // No work is needed, if schema evolution is used
