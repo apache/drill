@@ -34,7 +34,7 @@
     <dependency>
       <groupId>dnsjava</groupId>
       <artifactId>dnsjava</artifactId>
-      <version>3.6.0</version>
+      <version>3.6.3</version>
     </dependency>
 
     <dependency>
@@ -67,7 +67,7 @@
     <dependency>
       <groupId>com.esri.geometry</groupId>
       <artifactId>esri-geometry-api</artifactId>
-      <version>2.2.2</version>
+      <version>2.2.4</version>
     </dependency>
 
     <dependency>

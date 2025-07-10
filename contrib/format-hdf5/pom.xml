@@ -39,7 +39,7 @@
     <dependency>
       <groupId>io.jhdf</groupId>
       <artifactId>jhdf</artifactId>
-      <version>0.6.10</version>
+      <version>0.9.4</version>
     </dependency>
 
     <!-- Test dependencies -->
