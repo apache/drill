@@ -35,6 +35,7 @@ import java.util.Set;
 import java.util.TreeMap;
 import java.util.concurrent.TimeUnit;
 
+import org.apache.drill.common.PlanStringBuilder;
 import org.apache.drill.common.exceptions.DrillRuntimeException;
 import org.apache.drill.common.exceptions.ExecutionSetupException;
 import org.apache.drill.common.expression.SchemaPath;
@@ -99,22 +100,26 @@ public class HBaseGroupScan extends AbstractGroupScan implements DrillHBaseConst
 
   private long scanSizeInBytes = 0;
 
+  private final int maxRecords;
+
   @JsonCreator
   public HBaseGroupScan(@JsonProperty("userName") String userName,
                         @JsonProperty("hbaseScanSpec") HBaseScanSpec hbaseScanSpec,
                         @JsonProperty("storage") HBaseStoragePluginConfig storagePluginConfig,
                         @JsonProperty("columns") List<SchemaPath> columns,
+                        @JsonProperty("maxRecords") int maxRecords,
                         @JacksonInject StoragePluginRegistry pluginRegistry) throws IOException, ExecutionSetupException {
-    this (userName, pluginRegistry.resolve(storagePluginConfig, HBaseStoragePlugin.class), hbaseScanSpec, columns);
+    this (userName, pluginRegistry.resolve(storagePluginConfig, HBaseStoragePlugin.class), hbaseScanSpec, columns, maxRecords);
   }
 
   public HBaseGroupScan(String userName, HBaseStoragePlugin storagePlugin, HBaseScanSpec scanSpec,
-      List<SchemaPath> columns) {
+      List<SchemaPath> columns, int maxRecords) {
     super(userName);
     this.storagePlugin = storagePlugin;
     this.storagePluginConfig = storagePlugin.getConfig();
     this.hbaseScanSpec = scanSpec;
     this.columns = columns == null ? ALL_COLUMNS : columns;
+    this.maxRecords = maxRecords;
     init();
   }
 
@@ -134,6 +139,22 @@ public class HBaseGroupScan extends AbstractGroupScan implements DrillHBaseConst
     this.filterPushedDown = that.filterPushedDown;
     this.statsCalculator = that.statsCalculator;
     this.scanSizeInBytes = that.scanSizeInBytes;
+    this.maxRecords = that.maxRecords;
+  }
+
+  private HBaseGroupScan(HBaseGroupScan that, int maxRecords) {
+    super(that);
+    this.columns = that.columns == null ? ALL_COLUMNS : that.columns;
+    this.hbaseScanSpec = that.hbaseScanSpec;
+    this.endpointFragmentMapping = that.endpointFragmentMapping;
+    this.regionsToScan = that.regionsToScan;
+    this.storagePlugin = that.storagePlugin;
+    this.storagePluginConfig = that.storagePluginConfig;
+    this.hTableDesc = that.hTableDesc;
+    this.filterPushedDown = that.filterPushedDown;
+    this.statsCalculator = that.statsCalculator;
+    this.scanSizeInBytes = that.scanSizeInBytes;
+    this.maxRecords = maxRecords;
   }
 
   @Override
@@ -329,7 +350,7 @@ public class HBaseGroupScan extends AbstractGroupScan implements DrillHBaseConst
     assert minorFragmentId < endpointFragmentMapping.size() : String.format(
         "Mappings length [%d] should be greater than minor fragment id [%d] but it isn't.", endpointFragmentMapping.size(),
         minorFragmentId);
-    return new HBaseSubScan(getUserName(), storagePlugin, endpointFragmentMapping.get(minorFragmentId), columns);
+    return new HBaseSubScan(getUserName(), storagePlugin, endpointFragmentMapping.get(minorFragmentId), columns, maxRecords);
   }
 
   @Override
@@ -380,9 +401,11 @@ public class HBaseGroupScan extends AbstractGroupScan implements DrillHBaseConst
 
   @Override
   public String toString() {
-    return "HBaseGroupScan [HBaseScanSpec="
-        + hbaseScanSpec + ", columns="
-        + columns + "]";
+    return new PlanStringBuilder(this)
+        .field("hbaseScanSpec", hbaseScanSpec)
+        .field("columns", columns)
+        .field("maxRecords", maxRecords)
+        .toString();
   }
 
   @JsonProperty("storage")
@@ -394,6 +417,31 @@ public class HBaseGroupScan extends AbstractGroupScan implements DrillHBaseConst
   @JsonProperty
   public List<SchemaPath> getColumns() {
     return columns;
+  }
+
+  @JsonProperty("maxRecords")
+  public int getMaxRecords() {
+    return maxRecords;
+  }
+
+  /**
+   * Default is not to support limit pushdown.
+   */
+  @Override
+  public boolean supportsLimitPushdown() {
+    return true;
+  }
+
+  /**
+   * By default, return null to indicate row count based prune is not supported.
+   * Each group scan subclass should override, if it supports row count based prune.
+   */
+  @Override
+  public GroupScan applyLimit(int maxRecords) {
+    if (maxRecords == this.maxRecords){
+      return null;
+    }
+    return new HBaseGroupScan(this, maxRecords);
   }
 
   @JsonProperty
@@ -423,6 +471,7 @@ public class HBaseGroupScan extends AbstractGroupScan implements DrillHBaseConst
   @VisibleForTesting
   public HBaseGroupScan() {
     super((String)null);
+    maxRecords = -1;
   }
 
   /**
