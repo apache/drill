@@ -61,7 +61,7 @@ public class HBaseStoragePlugin extends AbstractStoragePlugin {
   @Override
   public HBaseGroupScan getPhysicalScan(String userName, JSONOptions selection) throws IOException {
     HBaseScanSpec scanSpec = selection.getListWith(new TypeReference<HBaseScanSpec>() {});
-    return new HBaseGroupScan(userName, this, scanSpec, null);
+    return new HBaseGroupScan(userName, this, scanSpec, null, -1);
   }
 
   @Override
