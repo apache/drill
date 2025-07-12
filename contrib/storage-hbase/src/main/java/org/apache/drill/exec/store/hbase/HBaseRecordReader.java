@@ -84,13 +84,15 @@ public class HBaseRecordReader extends AbstractRecordReader implements DrillHBas
 
   private final Connection connection;
 
-  public HBaseRecordReader(Connection connection, HBaseSubScan.HBaseSubScanSpec subScanSpec, List<SchemaPath> projectedColumns) {
+  public HBaseRecordReader(Connection connection, HBaseSubScan.HBaseSubScanSpec subScanSpec, List<SchemaPath> projectedColumns, int maxRecords) {
     this.connection = connection;
     hbaseTableName = TableName.valueOf(
         Preconditions.checkNotNull(subScanSpec, "HBase reader needs a sub-scan spec").getTableName());
     hbaseScan = new Scan(subScanSpec.getStartRow(), subScanSpec.getStopRow());
     hbaseScanColumnsOnly = new Scan();
+    // Set the limit of rows for this scan. We will terminate the scan if the number of returned rows reaches this value.
     hbaseScan
+        .setLimit(maxRecords)
         .setFilter(subScanSpec.getScanFilter())
         .setCaching(TARGET_RECORD_COUNT);
 
