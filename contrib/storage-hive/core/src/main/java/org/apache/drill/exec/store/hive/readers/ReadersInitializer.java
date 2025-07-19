@@ -56,10 +56,10 @@ public class ReadersInitializer {
     final UserGroupInformation proxyUgi = ImpersonationUtil.createProxyUgi(config.getUserName(), ctx.getQueryUserName());
     final List<List<InputSplit>> inputSplits = config.getInputSplits();
     final HiveConf hiveConf = config.getHiveConf();
-
+    final int maxRecords = config.getMaxRecords();
     if (inputSplits.isEmpty()) {
       return Collections.singletonList(
-          readerFactory.createReader(config.getTable(), null /*partition*/, null /*split*/, config.getColumns(), ctx, hiveConf, proxyUgi)
+          readerFactory.createReader(config.getTable(), null /*partition*/, null /*split*/, config.getColumns(), ctx, hiveConf, proxyUgi, maxRecords)
       );
     } else {
       IndexedPartitions partitions = getPartitions(config);
@@ -70,7 +70,7 @@ public class ReadersInitializer {
                   partitions.get(idx),
                   inputSplits.get(idx),
                   config.getColumns(),
-                  ctx, hiveConf, proxyUgi))
+                  ctx, hiveConf, proxyUgi, maxRecords))
           .collect(Collectors.toList());
     }
   }
@@ -109,8 +109,7 @@ public class ReadersInitializer {
 
     RecordReader createReader(HiveTableWithColumnCache table, HivePartition partition,
                               Collection<InputSplit> inputSplits, List<SchemaPath> projectedColumns,
-                              FragmentContext context, HiveConf hiveConf, UserGroupInformation proxyUgi);
-
+                              FragmentContext context, HiveConf hiveConf, UserGroupInformation proxyUgi, int maxRecords);
   }
 
   /**
