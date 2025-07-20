@@ -45,6 +45,54 @@ public class TestHBaseFilterPushDown extends BaseHBaseTest {
   }
 
   @Test
+  public void testLimitPushDown() throws Exception {
+    final String sql = "SELECT\n"
+        + "  *\n"
+        + "FROM\n"
+        + "  hbase.`[TABLE_NAME]` tableName\n"
+        + "LIMIT 3\n";
+
+    runHBaseSQLVerifyCount(sql, 3);
+
+    final String[] expectedPlan = {"Limit\\(fetch\\=\\[3\\]\\)", "maxRecords\\=3"};
+    final String[] excludedPlan ={};
+    final String sqlHBase = canonizeHBaseSQL(sql);
+    PlanTestBase.testPlanMatchingPatterns(sqlHBase, expectedPlan, excludedPlan);
+  }
+
+  @Test
+  public void testLimitPushDownWithSpecial() throws Exception {
+    final String sql = "SELECT\n"
+        + "  *\n"
+        + "FROM\n"
+        + "  hbase.`[TABLE_NAME]` tableName\n"
+        + "LIMIT 0\n";
+
+    runHBaseSQLVerifyCount(sql, 0);
+
+    final String[] expectedPlan = {"Limit\\(fetch\\=\\[0\\]\\)", "Limit\\(offset\\=\\[0\\]\\, fetch\\=\\[0\\]\\)", "maxRecords\\=0"};
+    final String[] excludedPlan ={};
+    final String sqlHBase = canonizeHBaseSQL(sql);
+    PlanTestBase.testPlanMatchingPatterns(sqlHBase, expectedPlan, excludedPlan);
+  }
+
+  @Test
+  public void testLimitPushDownWithOffset() throws Exception {
+    final String sql = "SELECT\n"
+        + "  *\n"
+        + "FROM\n"
+        + "  hbase.`[TABLE_NAME]` tableName\n"
+        + "LIMIT 2 offset 2\n";
+
+    runHBaseSQLVerifyCount(sql, 2);
+
+    final String[] expectedPlan = {"Limit\\(offset\\=\\[2\\]\\, fetch\\=\\[2\\]\\)", "maxRecords\\=4"};
+    final String[] excludedPlan ={};
+    final String sqlHBase = canonizeHBaseSQL(sql);
+    PlanTestBase.testPlanMatchingPatterns(sqlHBase, expectedPlan, excludedPlan);
+  }
+
+  @Test
   public void testFilterPushDownRowKeyNotEqual() throws Exception {
     setColumnWidths(new int[] {8, 38, 38});
     final String sql = "SELECT\n"

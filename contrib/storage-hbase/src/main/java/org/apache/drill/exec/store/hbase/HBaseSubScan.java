@@ -50,27 +50,30 @@ public class HBaseSubScan extends AbstractBase implements SubScan {
   private final HBaseStoragePlugin hbaseStoragePlugin;
   private final List<HBaseSubScanSpec> regionScanSpecList;
   private final List<SchemaPath> columns;
+  private final int maxRecords;
 
   @JsonCreator
   public HBaseSubScan(@JacksonInject StoragePluginRegistry registry,
                       @JsonProperty("userName") String userName,
                       @JsonProperty("hbaseStoragePluginConfig") HBaseStoragePluginConfig hbaseStoragePluginConfig,
                       @JsonProperty("regionScanSpecList") LinkedList<HBaseSubScanSpec> regionScanSpecList,
-                      @JsonProperty("columns") List<SchemaPath> columns) throws ExecutionSetupException {
+                      @JsonProperty("columns") List<SchemaPath> columns,
+                      @JsonProperty("maxRecords") int maxRecords) throws ExecutionSetupException {
     this(userName,
         registry.resolve(hbaseStoragePluginConfig, HBaseStoragePlugin.class),
         regionScanSpecList,
-        columns);
+        columns, maxRecords);
   }
 
   public HBaseSubScan(String userName,
                       HBaseStoragePlugin hbaseStoragePlugin,
                       List<HBaseSubScanSpec> regionInfoList,
-                      List<SchemaPath> columns) {
+                      List<SchemaPath> columns, int maxRecords) {
     super(userName);
     this.hbaseStoragePlugin = hbaseStoragePlugin;
     this.regionScanSpecList = regionInfoList;
     this.columns = columns;
+    this.maxRecords = maxRecords;
   }
 
   @JsonProperty
@@ -98,6 +101,11 @@ public class HBaseSubScan extends AbstractBase implements SubScan {
     return hbaseStoragePlugin;
   }
 
+  @JsonIgnore
+  public int getMaxRecords() {
+    return maxRecords;
+  }
+
   @Override
   public <T, X, E extends Throwable> T accept(PhysicalVisitor<T, X, E> physicalVisitor, X value) throws E {
     return physicalVisitor.visitSubScan(this, value);
@@ -106,7 +114,7 @@ public class HBaseSubScan extends AbstractBase implements SubScan {
   @Override
   public PhysicalOperator getNewWithChildren(List<PhysicalOperator> children) {
     Preconditions.checkArgument(children.isEmpty());
-    return new HBaseSubScan(getUserName(), hbaseStoragePlugin, regionScanSpecList, columns);
+    return new HBaseSubScan(getUserName(), hbaseStoragePlugin, regionScanSpecList, columns, maxRecords);
   }
 
   @Override
