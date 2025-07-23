@@ -39,7 +39,7 @@ jobs:
         uses: actions/checkout@v2
       # Caches maven cache and uses hashes of pom.xml files to find the required cache
       - name: Cache Maven Repository
-        uses: actions/cache@v1
+        uses: actions/cache@v4
         with:
           path: ~/.m2/repository
           key: ${{ runner.os }}-maven-${{ hashFiles('**/pom.xml') }}
@@ -47,7 +47,7 @@ jobs:
               ${{ runner.os }}-maven-
       # Caches MySQL directory used for JDBC storage plugin tests
       - name: Cache MySQL
-        uses: actions/cache@v1
+        uses: actions/cache@v4
         with:
           path: ~/.embedmysql
           key: ${{ runner.os }}-mysql
@@ -65,7 +65,7 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v2
       - name: Cache Maven Repository
-        uses: actions/cache@v1
+        uses: actions/cache@v4
         with:
           path: ~/.m2/repository
           key: ${{ runner.os }}-maven-${{ hashFiles('**/pom.xml') }}
@@ -73,7 +73,7 @@ jobs:
             ${{ runner.os }}-maven-
       # Caches built protobuf library
       - name: Cache protobufs
-        uses: actions/cache@v1
+        uses: actions/cache@v4
         with:
           path: ~/protobuf
           key: ${{ runner.os }}-protobuf
