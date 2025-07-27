@@ -91,7 +91,7 @@
     -->
     <hive.version>3.1.3</hive.version>
     <httpclient.version>4.5.14</httpclient.version>
-    <httpdlog-parser.version>5.10.0</httpdlog-parser.version>
+    <httpdlog-parser.version>5.11.0</httpdlog-parser.version>
     <iceberg.version>0.12.1</iceberg.version>
     <jackson.version>2.18.3</jackson.version>
     <janino.version>3.1.12</janino.version>
@@ -147,7 +147,7 @@
     <univocity-parsers.version>2.8.3</univocity-parsers.version>
     <wiremock.standalone.version>2.23.2</wiremock.standalone.version>
     <xerces.version>2.12.2</xerces.version>
-    <yauaa.version>7.19.2</yauaa.version>
+    <yauaa.version>7.31.0</yauaa.version>
     <zookeeper.version>3.5.10</zookeeper.version>
   </properties>
 
