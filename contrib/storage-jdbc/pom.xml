@@ -31,7 +31,7 @@
   <name>Drill : Contrib : Storage : JDBC</name>
 
   <properties>
-    <mysql.connector.version>8.0.28</mysql.connector.version>
+    <mysql.connector.version>8.4.0</mysql.connector.version>
     <clickhouse.jdbc.version>0.3.1</clickhouse.jdbc.version>
     <h2.version>2.2.220</h2.version>
     <postgresql.version>42.4.4</postgresql.version>
@@ -76,8 +76,8 @@
       <scope>test</scope>
     </dependency>
     <dependency>
-      <groupId>mysql</groupId>
-      <artifactId>mysql-connector-java</artifactId>
+      <groupId>com.mysql</groupId>
+      <artifactId>mysql-connector-j</artifactId>
       <version>${mysql.connector.version}</version>
       <scope>test</scope>
     </dependency>
