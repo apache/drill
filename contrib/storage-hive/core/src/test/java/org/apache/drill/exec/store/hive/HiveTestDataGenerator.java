@@ -454,7 +454,20 @@ public class HiveTestDataGenerator {
         "INNER JOIN kv ON kv.key = dk.key");
 
     createTableWithEmptyParquet(hiveDriver);
+    createTestDataForDrillORCPushDownReaderTests(hiveDriver);
   }
+
+  private void createTestDataForDrillORCPushDownReaderTests(Driver hiveDriver) {
+    // Hive managed table that has data qualified for Drill orc filter push down
+    executeQuery(hiveDriver, "create table orc_push_down(key int, int_key int, var_key varchar(10), dec_key decimal(5, 2), boolean_key boolean) stored as orc");
+    // each insert is created in separate file
+    executeQuery(hiveDriver, "insert into table orc_push_down values (1, 1, 'var_1', 1.11,true), (1, 2, 'var_2', 2.22,false)");
+    executeQuery(hiveDriver, "insert into table orc_push_down values (1, 3, 'var_3', 3.33,true), (1, 4, 'var_4', 4.44,true)");
+    executeQuery(hiveDriver, "insert into table orc_push_down values (2, 5, 'var_5', 5.55,false), (2, 6, 'var_6', 6.66,true)");
+    executeQuery(hiveDriver, "insert into table orc_push_down values (null, 7, 'var_7', 7.77,false), (null, 8, 'var_8', 8.88,false)");
+  }
+
+
 
   private void createTestDataForDrillNativeParquetReaderTests(Driver hiveDriver) {
     // Hive managed table that has data qualified for Drill native filter push down
