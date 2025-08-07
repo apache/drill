@@ -69,12 +69,12 @@
     <dependency>
       <groupId>com.google.apis</groupId>
       <artifactId>google-api-services-sheets</artifactId>
-      <version>v4-rev612-1.25.0</version>
+      <version>v4-rev20250616-2.0.0</version>
     </dependency>
     <dependency>
       <groupId>com.google.apis</groupId>
       <artifactId>google-api-services-drive</artifactId>
-      <version>v3-rev197-1.25.0</version>
+      <version>v3-rev20250723-2.0.0</version>
     </dependency>
 
     <dependency>
