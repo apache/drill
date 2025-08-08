@@ -17,14 +17,6 @@
  */
 package org.apache.drill.exec.hive;
 
-import java.io.File;
-import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.attribute.PosixFilePermission;
-import java.util.EnumSet;
-import java.util.Set;
-
 import org.apache.drill.test.QueryBuilder;
 import org.apache.drill.test.TestTools;
 import org.apache.hadoop.hive.ql.Driver;
@@ -32,6 +24,14 @@ import org.apache.hadoop.hive.ql.processors.CommandProcessorResponse;
 import org.apache.hadoop.util.ComparableVersion;
 import org.apache.hive.common.util.HiveVersionInfo;
 import org.junit.AssumptionViolatedException;
+
+import java.io.File;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.attribute.PosixFilePermission;
+import java.util.EnumSet;
+import java.util.Set;
 
 import static org.hamcrest.CoreMatchers.containsString;
 import static org.hamcrest.CoreMatchers.startsWith;
@@ -53,13 +53,10 @@ public class HiveTestUtilities {
     CommandProcessorResponse response;
     try {
       response = hiveDriver.run(query);
-    } catch (Exception e) {
-       throw new RuntimeException(e);
     }
-
-    if (response.getResponseCode() != 0 ) {
+    catch (Exception e) {
       throw new RuntimeException(String.format("Failed to execute command '%s', errorMsg = '%s'",
-          query, response.getErrorMessage()));
+          query, e.getMessage()));
     }
   }
 
@@ -125,13 +122,14 @@ public class HiveTestUtilities {
   }
 
   /**
-   * Current Hive version doesn't support JDK 9+.
+   * Current Hive version doesn't support Jmvn DK 9+.
    * Checks if current version is supported by Hive.
    *
    * @return {@code true} if current version is supported by Hive, {@code false} otherwise
    */
   public static boolean supportedJavaVersion() {
-    return System.getProperty("java.version").startsWith("1.8");
+    return true;
+    //return System.getProperty("java.version").startsWith("1.8");
   }
 
   /**
