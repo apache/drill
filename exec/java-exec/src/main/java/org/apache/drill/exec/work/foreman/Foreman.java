@@ -415,9 +415,7 @@ public class Foreman implements Runnable {
   }
 
   private void runPhysicalPlan(final PhysicalPlan plan, Pointer<String> textPlan) throws ExecutionSetupException {
-    logger.info("validatePlan(plan); before");
 	  validatePlan(plan);
-	  logger.info("validatePlan(plan); after");
 
     queryRM.visitAbstractPlan(plan);
     final QueryWorkUnit work = getQueryWorkUnit(plan, queryRM);
@@ -599,7 +597,6 @@ public class Foreman implements Runnable {
 
 	private void runSQL(final String sql) throws ExecutionSetupException {
 		final Pointer<String> textPlan = new Pointer<>();
-		logger.info("DrillSqlWorker.getPlan( before");
 
 		PhysicalPlan plan = CustomCacheManager.getQueryPlan(sql);
 
@@ -615,7 +612,6 @@ public class Foreman implements Runnable {
 			CustomCacheManager.logCacheStats();
 		}
 
-		logger.info("DrillSqlWorker.getPlan( after");
 		runPhysicalPlan(plan, textPlan);
 	}
 
