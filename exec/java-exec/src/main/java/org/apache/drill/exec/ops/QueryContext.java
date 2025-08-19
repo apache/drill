@@ -214,8 +214,8 @@ public class QueryContext implements AutoCloseable, OptimizerRulesContext, Schem
   }
 
   /**
-   * Get the user name of the user who issued the query that is managed by this QueryContext.
-   * @return The user name of the user who issued the query that is managed by this QueryContext.
+   * Get the username of the user who issued the query that is managed by this QueryContext.
+   * @return The username of the user who issued the query that is managed by this QueryContext.
    */
   @Override
   public String getQueryUserName() {

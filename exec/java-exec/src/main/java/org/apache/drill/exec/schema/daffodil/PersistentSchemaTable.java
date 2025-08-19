@@ -21,11 +21,8 @@ package org.apache.drill.exec.schema.daffodil;
 
 import com.fasterxml.jackson.annotation.JacksonInject;
 import com.fasterxml.jackson.annotation.JsonCreator;
-
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import org.apache.drill.exec.oauth.PersistentTokenRegistry;
-import org.apache.drill.exec.oauth.Tokens;
 import org.apache.drill.exec.record.metadata.TupleMetadata;
 import org.apache.drill.exec.store.sys.PersistentStore;
 
@@ -37,11 +34,8 @@ import java.util.Map;
  */
 public class PersistentSchemaTable implements DaffodilSchemata {
   public final String SCHEMA_KEY = "schema";
-
   private final Map<String, TupleMetadata> schemata;
-
   private final String key;
-
   private final PersistentStore<org.apache.drill.exec.schema.daffodil.PersistentSchemaTable> store;
 
   @JsonCreator
@@ -80,7 +74,7 @@ public class PersistentSchemaTable implements DaffodilSchemata {
   @JsonIgnore
   public boolean put(String token, String value, boolean replace) {
     if (replace || ! schemata.containsKey(token)) {
-      schemata.put(token, value);
+      schemata.put(token, TupleMetadata.of(value));
       store.put(key, this);
       return true;
     }

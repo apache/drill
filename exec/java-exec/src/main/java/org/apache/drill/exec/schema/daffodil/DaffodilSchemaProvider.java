@@ -19,6 +19,9 @@ package org.apache.drill.exec.schema.daffodil;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.drill.common.AutoCloseables;
+import org.apache.drill.common.config.DrillConfig;
+import org.apache.drill.common.scanner.ClassPathScanner;
+import org.apache.drill.common.scanner.persistence.ScanResult;
 import org.apache.drill.exec.oauth.PersistentTokenRegistry;
 import org.apache.drill.exec.oauth.TokenRegistry;
 import org.apache.drill.exec.server.DrillbitContext;
@@ -34,7 +37,15 @@ public class DaffodilSchemaProvider implements AutoCloseable {
   private PersistentTokenRegistry daffodilSchemaRegistry;
 
   public DaffodilSchemaProvider(DrillbitContext context) {
-    this.context = context;
+    this(context.getConfig(), ClassPathScanner.fromPrescan(context.getConfig()));
+  }
+
+  public DaffodilSchemaProvider(DrillConfig config, ScanResult classpathScan) {
+    this(config, classpathScan, null);
+  }
+
+  public DaffodilSchemaProvider(DrillConfig config, ScanResult classpathScan, String username) {
+
   }
 
   public TokenRegistry getDaffodilSchemaRegistry(String username) {
