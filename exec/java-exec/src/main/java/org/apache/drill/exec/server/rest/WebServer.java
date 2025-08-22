@@ -42,6 +42,7 @@ import org.apache.drill.exec.server.rest.auth.DrillHttpSecurityHandlerProvider;
 import org.apache.drill.exec.server.rest.header.ResponseHeadersSettingFilter;
 import org.apache.drill.exec.server.rest.ssl.SslContextFactoryConfigurator;
 import org.apache.drill.exec.work.WorkManager;
+import org.eclipse.jetty.http.HttpCookie;
 import org.eclipse.jetty.http.HttpVersion;
 import org.eclipse.jetty.security.SecurityHandler;
 import org.eclipse.jetty.security.authentication.SessionAuthentication;
@@ -276,7 +277,14 @@ public class WebServer implements AutoCloseable {
     //SessionManager sessionManager = new HashSessionManager();
     sessionHandler.setMaxInactiveInterval(config.getInt(ExecConstants.HTTP_SESSION_MAX_IDLE_SECS));
     // response cookie will be returned with HttpOnly flag
-    sessionHandler.getSessionCookieConfig().setHttpOnly(true);
+    sessionHandler.setHttpOnly(true);
+    sessionHandler.setSameSite(HttpCookie.SameSite.STRICT);
+
+    if(config.getBoolean(ExecConstants.HTTP_ENABLE_SSL)) {
+      sessionHandler.setSessionCookie("__Secure-Drill-Session-Id");
+    } else {
+      sessionHandler.setSessionCookie("Drill-Session-Id");
+    }
     sessionHandler.addEventListener(new HttpSessionListener() {
       @Override
       public void sessionCreated(HttpSessionEvent se) { }

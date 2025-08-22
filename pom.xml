@@ -30,7 +30,7 @@
 
   <groupId>org.apache.drill</groupId>
   <artifactId>drill-root</artifactId>
-  <version>1.22.0-SNAPSHOT</version>
+  <version>1.23.0-SNAPSHOT</version>
   <packaging>pom</packaging>
 
   <name>Drill :</name>
@@ -53,20 +53,20 @@
     <antlr.version>4.9.3</antlr.version>
     <asm.version>9.5</asm.version>
     <avatica.version>1.23.0</avatica.version>
-    <avro.version>1.11.4</avro.version>
+    <avro.version>1.12.0</avro.version>
     <bouncycastle.version>1.78.1</bouncycastle.version>
     <caffeine.version>2.9.3</caffeine.version>
     <calcite.groupId>org.apache.calcite</calcite.groupId>
     <calcite.version>1.34.0</calcite.version>
     <codemodel.version>2.6</codemodel.version>
-    <commons.beanutils.version>1.9.4</commons.beanutils.version>
+    <commons.beanutils.version>1.11.0</commons.beanutils.version>
     <commons.cli.version>1.4</commons.cli.version>
     <commons.codec.version>1.17.0</commons.codec.version>
-    <commons.collections.version>4.4</commons.collections.version>
+    <commons.collections.version>4.5.0</commons.collections.version>
     <commons.compress.version>1.26.2</commons.compress.version>
     <commons.configuration.version>1.10</commons.configuration.version>
     <commons.io.version>2.16.1</commons.io.version>
-    <commons.lang3.version>3.14.0</commons.lang3.version>
+    <commons.lang3.version>3.18.0</commons.lang3.version>
     <commons.net.version>3.9.0</commons.net.version>
     <commons.text.version>1.10.0</commons.text.version>
     <commons.validator.version>1.7</commons.validator.version>
@@ -91,10 +91,10 @@
     -->
     <hive.version>3.1.3</hive.version>
     <httpclient.version>4.5.14</httpclient.version>
-    <httpdlog-parser.version>5.10.0</httpdlog-parser.version>
+    <httpdlog-parser.version>5.11.0</httpdlog-parser.version>
     <iceberg.version>0.12.1</iceberg.version>
-    <jackson.version>2.16.1</jackson.version>
-    <janino.version>3.1.11</janino.version>
+    <jackson.version>2.18.3</jackson.version>
+    <janino.version>3.1.12</janino.version>
     <javassist.version>3.29.2-GA</javassist.version>
     <javax.el.version>3.0.0</javax.el.version>
     <javax.validation.api>2.0.1.Final</javax.validation.api>
@@ -113,21 +113,23 @@
     <log4j.version>2.23.1</log4j.version>
     <!-- Upgrading logback further breaks JDK 8 build compatibility -->
     <logback.version>1.3.15</logback.version>
-    <maven.compiler.source>1.8</maven.compiler.source>
-    <maven.compiler.target>1.8</maven.compiler.target>
+    <maven.compiler.release>11</maven.compiler.release>
+    <maven.compiler.source>11</maven.compiler.source>
+    <maven.compiler.target>11</maven.compiler.target>
     <maven.min.version>3.6.3</maven.min.version>
     <maven.version>3.8.4</maven.version>
-    <memoryMb>3072</memoryMb>
+    <memoryMb>4096</memoryMb>
     <metrics.version>4.2.19</metrics.version>
-    <mockito.version>3.11.2</mockito.version>
-    <mongo.version>4.11.1</mongo.version>
+    <mockito.version>5.17.0</mockito.version>
+    <mockito_inline.version>5.2.0</mockito_inline.version>
+    <mongo.version>5.5.1</mongo.version>
     <msgpack.version>0.6.6</msgpack.version>
     <netty.tcnative.classifier />
     <netty.tcnative.version>2.0.65.Final</netty.tcnative.version>
-    <netty.version>4.1.115.Final</netty.version>
-    <parquet.format.version>2.9.0</parquet.format.version>
-    <parquet.version>1.12.3</parquet.version>
-    <project.build.outputTimestamp>1676438963</project.build.outputTimestamp>
+    <netty.version>4.1.118.Final</netty.version>
+    <parquet.format.version>2.11.0</parquet.format.version>
+    <parquet.version>1.15.1</parquet.version>
+    <project.build.outputTimestamp>1750144553</project.build.outputTimestamp>
     <protobuf.version>3.25.5</protobuf.version>
     <proto.cas.path>${project.basedir}/src/main/protobuf/</proto.cas.path>
     <protostuff.version>1.8.0</protostuff.version>
@@ -145,7 +147,7 @@
     <univocity-parsers.version>2.8.3</univocity-parsers.version>
     <wiremock.standalone.version>2.23.2</wiremock.standalone.version>
     <xerces.version>2.12.2</xerces.version>
-    <yauaa.version>7.19.2</yauaa.version>
+    <yauaa.version>7.31.0</yauaa.version>
     <zookeeper.version>3.9.3</zookeeper.version>
   </properties>
 
@@ -162,27 +164,27 @@
       <subscribe>user-subscribe@drill.apache.org</subscribe>
       <unsubscribe>user-unsubscribe@drill.apache.org</unsubscribe>
       <post>user@drill.apache.org</post>
-      <archive>http://mail-archives.apache.org/mod_mbox/drill-user/</archive>
+      <archive>https://mail-archives.apache.org/mod_mbox/drill-user/</archive>
     </mailingList>
     <mailingList>
       <name>Developer List</name>
       <subscribe>dev-subscribe@drill.apache.org</subscribe>
       <unsubscribe>dev-unsubscribe@drill.apache.org</unsubscribe>
       <post>dev@drill.apache.org</post>
-      <archive>http://mail-archives.apache.org/mod_mbox/drill-dev/</archive>
+      <archive>https://mail-archives.apache.org/mod_mbox/drill-dev/</archive>
     </mailingList>
     <mailingList>
       <name>Commits List</name>
       <subscribe>commits-subscribe@drill.apache.org</subscribe>
       <unsubscribe>commits-unsubscribe@drill.apache.org</unsubscribe>
       <post>commits@drill.apache.org</post>
-      <archive>http://mail-archives.apache.org/mod_mbox/drill-commits/</archive>
+      <archive>https://mail-archives.apache.org/mod_mbox/drill-commits/</archive>
     </mailingList>
     <mailingList>
       <name>Issues List</name>
       <subscribe>issues-subscribe@drill.apache.org</subscribe>
       <unsubscribe>issues-unsubscribe@drill.apache.org</unsubscribe>
-      <archive>http://mail-archives.apache.org/mod_mbox/drill-issues/</archive>
+      <archive>https://mail-archives.apache.org/mod_mbox/drill-issues/</archive>
     </mailingList>
   </mailingLists>
 
@@ -215,7 +217,7 @@
       <plugin>
         <groupId>org.owasp</groupId>
         <artifactId>dependency-check-maven</artifactId>
-        <version>6.4.1</version>
+        <version>12.1.1</version>
       </plugin>
     </plugins>
   </reporting>
@@ -352,7 +354,6 @@
         </dependencies>
         <configuration>
           <includes>**/*.java</includes>
-          <encoding>UTF-8</encoding>
           <failsOnError>true</failsOnError>
           <consoleOutput>true</consoleOutput>
           <includeResources>true</includeResources>
@@ -505,7 +506,7 @@
                   <version>[${maven.version.min},4)</version>
                 </requireMavenVersion>
                 <requireJavaVersion>
-                  <version>[1.8,18)</version>
+                  <version>[1.8,22)</version>
                 </requireJavaVersion>
               </rules>
             </configuration>
@@ -627,6 +628,7 @@
               -XX:MaxDirectMemorySize=${directMemoryMb}M
               -Djava.net.preferIPv4Stack=true
               -Djava.awt.headless=true
+              -Duser.timezone=UTC
               -ea
               ${junit.args}
               -Djdk.attach.allowAttachSelf=true
@@ -883,6 +885,7 @@
       <version>${junit.platform.version}</version>
       <scope>test</scope>
     </dependency>
+
     <dependency>
       <groupId>org.junit.platform</groupId>
       <artifactId>junit-platform-suite-engine</artifactId>
@@ -913,13 +916,25 @@
       <groupId>org.mockito</groupId>
       <artifactId>mockito-core</artifactId>
       <version>${mockito.version}</version>
+      <exclusions>
+        <exclusion>
+          <groupId>org.mockito</groupId>
+          <artifactId>mockito-core</artifactId>
+        </exclusion>
+      </exclusions>
       <scope>test</scope>
     </dependency>
     <dependency>
       <groupId>org.mockito</groupId>
       <artifactId>mockito-inline</artifactId>
-      <version>${mockito.version}</version>
+      <version>${mockito_inline.version}</version>
       <scope>test</scope>
+      <exclusions>
+        <exclusion>
+          <artifactId>mockito-core</artifactId>
+          <groupId>org.mockito</groupId>
+        </exclusion>
+      </exclusions>
     </dependency>
     <dependency>
       <groupId>de.huxhorn.lilith</groupId>
@@ -2923,7 +2938,9 @@
         <jdk>[9,)</jdk>
       </activation>
       <properties>
-        <maven.compiler.release>8</maven.compiler.release>
+        <maven.compiler.source>11</maven.compiler.source>
+        <maven.compiler.target>11</maven.compiler.target>
+        <maven.compiler.release>11</maven.compiler.release>
         <junit.args>
           --add-opens java.base/java.lang=ALL-UNNAMED
           --add-opens java.base/java.net=ALL-UNNAMED

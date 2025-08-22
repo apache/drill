@@ -34,7 +34,7 @@ import java.util.regex.Pattern;
 import org.apache.curator.framework.imps.DefaultACLProvider;
 import com.google.common.base.Throwables;
 import org.apache.zookeeper.data.Stat;
-import org.apache.commons.collections.keyvalue.MultiKey;
+import org.apache.commons.collections4.keyvalue.MultiKey;
 import org.apache.curator.RetryPolicy;
 import org.apache.curator.framework.CuratorFramework;
 import org.apache.curator.framework.CuratorFrameworkFactory;

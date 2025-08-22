@@ -48,6 +48,7 @@ import org.apache.drill.exec.server.options.SessionOptionManager;
 import org.apache.drill.exec.store.AbstractStoragePlugin;
 import org.apache.drill.exec.store.SchemaConfig;
 import org.apache.drill.exec.store.StoragePluginOptimizerRule;
+import org.apache.drill.exec.store.hive.readers.filter.HivePushFilterIntoScan;
 import org.apache.drill.exec.store.hive.schema.HiveSchemaFactory;
 import com.google.common.collect.ImmutableSet;
 
@@ -113,7 +114,7 @@ public class HiveStoragePlugin extends AbstractStoragePlugin {
         }
       }
 
-      return new HiveScan(userName, hiveReadEntry, this, columns, null, confProperties);
+      return new HiveScan(userName, hiveReadEntry, this, columns, null, confProperties, -1);
     } catch (ExecutionSetupException e) {
       throw new IOException(e);
     }
@@ -200,6 +201,8 @@ public class HiveStoragePlugin extends AbstractStoragePlugin {
             options.getBoolean(ExecConstants.HIVE_OPTIMIZE_PARQUET_SCAN_WITH_NATIVE_READER)) {
           ruleBuilder.add(ConvertHiveParquetScanToDrillParquetScan.INSTANCE);
         }
+        ruleBuilder.add(HivePushFilterIntoScan.FILTER_ON_PROJECT);
+        ruleBuilder.add(HivePushFilterIntoScan.FILTER_ON_SCAN);
         return ruleBuilder.build();
       }
       default:

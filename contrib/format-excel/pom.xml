@@ -24,14 +24,14 @@
   <parent>
     <artifactId>drill-contrib-parent</artifactId>
     <groupId>org.apache.drill.contrib</groupId>
-    <version>1.22.0-SNAPSHOT</version>
+    <version>1.23.0-SNAPSHOT</version>
   </parent>
 
   <artifactId>drill-format-excel</artifactId>
   <name>Drill : Contrib : Format : Excel</name>
 
   <properties>
-    <poi.version>5.3.0</poi.version>
+    <poi.version>5.4.1</poi.version>
   </properties>
   <dependencies>
     <dependency>
@@ -52,7 +52,7 @@
     <dependency>
       <groupId>com.github.pjfanning</groupId>
       <artifactId>excel-streaming-reader</artifactId>
-      <version>5.0.2</version>
+      <version>5.1.0</version>
     </dependency>
     <dependency>
       <groupId>org.apache.commons</groupId>

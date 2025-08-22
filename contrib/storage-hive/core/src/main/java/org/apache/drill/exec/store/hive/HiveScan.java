@@ -23,6 +23,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.drill.common.PlanStringBuilder;
 import org.apache.drill.common.exceptions.DrillRuntimeException;
 import org.apache.drill.common.exceptions.ExecutionSetupException;
 import org.apache.drill.common.expression.SchemaPath;
@@ -39,11 +40,13 @@ import org.apache.drill.exec.store.StoragePluginRegistry;
 import org.apache.drill.exec.store.hive.HiveMetadataProvider.HiveStats;
 import org.apache.drill.exec.store.hive.HiveMetadataProvider.LogicalInputSplit;
 import org.apache.drill.exec.store.hive.HiveTableWrapper.HivePartitionWrapper;
+import org.apache.drill.exec.store.hive.readers.filter.HiveFilter;
 import org.apache.drill.exec.util.Utilities;
 import org.apache.hadoop.hive.conf.HiveConf;
 import org.apache.hadoop.hive.metastore.api.FieldSchema;
 import org.apache.hadoop.hive.metastore.api.Partition;
 import org.apache.hadoop.hive.metastore.api.Table;
+import org.apache.hadoop.hive.ql.io.sarg.SearchArgument;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -54,6 +57,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonTypeName;
 
 import static org.apache.drill.exec.store.hive.HiveUtilities.createPartitionWithSpecColumns;
+import static org.apache.hadoop.hive.ql.io.sarg.ConvertAstToSearchArg.SARG_PUSHDOWN;
 
 @JsonTypeName("hive-scan")
 public class HiveScan extends AbstractGroupScan {
@@ -65,33 +69,35 @@ public class HiveScan extends AbstractGroupScan {
   private final HiveReadEntry hiveReadEntry;
   private final HiveMetadataProvider metadataProvider;
   private final Map<String, String> confProperties;
-
+  private final int maxRecords;
   private List<List<LogicalInputSplit>> mappings;
   private List<LogicalInputSplit> inputSplits;
 
   protected List<SchemaPath> columns;
-
+  private boolean filterPushedDown = false;
   @JsonCreator
   public HiveScan(@JsonProperty("userName") final String userName,
                   @JsonProperty("hiveReadEntry") final HiveReadEntry hiveReadEntry,
                   @JsonProperty("hiveStoragePluginConfig") final HiveStoragePluginConfig hiveStoragePluginConfig,
                   @JsonProperty("columns") final List<SchemaPath> columns,
                   @JsonProperty("confProperties") final Map<String, String> confProperties,
+                  @JsonProperty("maxRecords") final int maxRecords,
                   @JacksonInject final StoragePluginRegistry pluginRegistry) throws ExecutionSetupException {
     this(userName,
         hiveReadEntry,
         pluginRegistry.resolve(hiveStoragePluginConfig, HiveStoragePlugin.class),
         columns,
-        null, confProperties);
+        null, confProperties, maxRecords);
   }
 
   public HiveScan(final String userName, final HiveReadEntry hiveReadEntry, final HiveStoragePlugin hiveStoragePlugin,
-                  final List<SchemaPath> columns, final HiveMetadataProvider metadataProvider, final Map<String, String> confProperties) throws ExecutionSetupException {
+                  final List<SchemaPath> columns, final HiveMetadataProvider metadataProvider, final Map<String, String> confProperties, int maxRecords) throws ExecutionSetupException {
     super(userName);
     this.hiveReadEntry = hiveReadEntry;
     this.columns = columns;
     this.hiveStoragePlugin = hiveStoragePlugin;
     this.confProperties = confProperties;
+    this.maxRecords = maxRecords;
     if (metadataProvider == null) {
       this.metadataProvider = new HiveMetadataProvider(userName, hiveReadEntry, getHiveConf());
     } else {
@@ -106,10 +112,20 @@ public class HiveScan extends AbstractGroupScan {
     this.hiveStoragePlugin = that.hiveStoragePlugin;
     this.metadataProvider = that.metadataProvider;
     this.confProperties = that.confProperties;
+    this.maxRecords = that.maxRecords;
+  }
+  public HiveScan(final HiveScan that, int maxRecords) {
+    super(that);
+    this.columns = that.columns;
+    this.hiveReadEntry = that.hiveReadEntry;
+    this.hiveStoragePlugin = that.hiveStoragePlugin;
+    this.metadataProvider = that.metadataProvider;
+    this.confProperties = that.confProperties;
+    this.maxRecords = maxRecords;
   }
 
   public HiveScan clone(final HiveReadEntry hiveReadEntry) throws ExecutionSetupException {
-    return new HiveScan(getUserName(), hiveReadEntry, hiveStoragePlugin, columns, metadataProvider, confProperties);
+    return new HiveScan(getUserName(), hiveReadEntry, hiveStoragePlugin, columns, metadataProvider, confProperties, maxRecords);
   }
 
   @JsonProperty
@@ -133,6 +149,11 @@ public class HiveScan extends AbstractGroupScan {
     return confProperties;
   }
 
+  @JsonProperty
+  public int getMaxRecords() {
+    return maxRecords;
+  }
+
   @JsonIgnore
   public HiveStoragePlugin getStoragePlugin() {
     return hiveStoragePlugin;
@@ -154,6 +175,16 @@ public class HiveScan extends AbstractGroupScan {
     return !(partitionKeys == null || partitionKeys.size() == 0);
   }
 
+  @JsonIgnore
+  public void setFilterPushedDown(boolean isPushedDown) {
+    this.filterPushedDown = isPushedDown;
+  }
+
+  @JsonIgnore
+  public boolean isFilterPushedDown() {
+    return filterPushedDown;
+  }
+
   @Override
   public void applyAssignments(final List<CoordinationProtos.DrillbitEndpoint> endpoints) {
     mappings = new ArrayList<>();
@@ -165,6 +196,19 @@ public class HiveScan extends AbstractGroupScan {
     for (int i = 0; i < inputSplits.size(); i++) {
       mappings.get(i % count).add(inputSplits.get(i));
     }
+  }
+
+  @Override
+  public GroupScan applyLimit(int maxRecords) {
+    if (maxRecords == this.maxRecords){
+      return null;
+    }
+      return new HiveScan(this, maxRecords);
+  }
+
+  @Override
+  public boolean supportsLimitPushdown() {
+    return true;
   }
 
   @Override
@@ -189,7 +233,7 @@ public class HiveScan extends AbstractGroupScan {
       }
 
       final HiveReadEntry subEntry = new HiveReadEntry(hiveReadEntry.getTableWrapper(), parts);
-      return new HiveSubScan(getUserName(), encodedInputSplits, subEntry, splitTypes, columns, hiveStoragePlugin, confProperties);
+      return new HiveSubScan(getUserName(), encodedInputSplits, subEntry, splitTypes, columns, hiveStoragePlugin, maxRecords, confProperties);
     } catch (IOException | ReflectiveOperationException e) {
       throw new ExecutionSetupException(e);
     }
@@ -265,13 +309,17 @@ public class HiveScan extends AbstractGroupScan {
   public String toString() {
     List<HivePartitionWrapper> partitions = hiveReadEntry.getHivePartitionWrappers();
     int numPartitions = partitions == null ? 0 : partitions.size();
-    return "HiveScan [table=" + hiveReadEntry.getHiveTableWrapper()
-        + ", columns=" + columns
-        + ", numPartitions=" + numPartitions
-        + ", partitions= " + partitions
-        + ", inputDirectories=" + metadataProvider.getInputDirectories(hiveReadEntry)
-        + ", confProperties=" + confProperties
-        + "]";
+    String SearchArgumentString = confProperties.get(SARG_PUSHDOWN);
+    SearchArgument searchArgument = SearchArgumentString == null ? null : HiveFilter.create(SearchArgumentString);
+
+    return new PlanStringBuilder(this)
+            .field("table", hiveReadEntry.getHiveTableWrapper())
+            .field("columns", columns)
+            .field("numPartitions", numPartitions)
+            .field("inputDirectories", metadataProvider.getInputDirectories(hiveReadEntry))
+            .field("confProperties", confProperties)
+            .field("SearchArgument", searchArgument)
+            .toString();
   }
 
   @Override

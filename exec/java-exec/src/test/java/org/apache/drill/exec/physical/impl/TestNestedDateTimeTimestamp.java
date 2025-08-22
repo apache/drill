@@ -17,6 +17,15 @@
  */
 package org.apache.drill.exec.physical.impl;
 
+import org.apache.drill.categories.FlakyTest;
+import org.apache.drill.exec.expr.fn.impl.DateUtility;
+import org.apache.drill.exec.rpc.user.QueryDataBatch;
+import org.apache.drill.test.BaseTestQuery;
+import org.apache.drill.test.TestBuilder;
+import org.junit.Assert;
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
+
 import java.time.Instant;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -29,17 +38,14 @@ import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
 
-import org.apache.drill.categories.FlakyTest;
-import org.apache.drill.exec.expr.fn.impl.DateUtility;
-import org.apache.drill.exec.rpc.user.QueryDataBatch;
-import org.apache.drill.test.BaseTestQuery;
-import org.apache.drill.test.TestBuilder;
-import org.junit.Assert;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
-
 /**
  * For DRILL-6242, output for Date, Time, Timestamp should use different classes
+ *
+ * Note that Drill treats all timestanps as naive (without timezone information).  When running tests locally,
+ * these tests may fail if the local timezone is not UTC.  To run tests on a machine with a non-UTC timezone,
+ * you should run the tests with the following command:
+ *
+ * mvn test -Duser.timezone=UTC
  */
 @Category(FlakyTest.class)
 public class TestNestedDateTimeTimestamp extends BaseTestQuery {

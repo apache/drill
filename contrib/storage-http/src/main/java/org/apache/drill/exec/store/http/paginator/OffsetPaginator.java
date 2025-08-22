@@ -73,11 +73,8 @@ public class OffsetPaginator extends Paginator {
       throw new NoSuchElementException();
     }
 
-    builder.removeAllEncodedQueryParameters(offsetParam);
-    builder.removeAllEncodedQueryParameters(limitParam);
-
-    builder.addQueryParameter(offsetParam, String.valueOf(offset));
-    builder.addQueryParameter(limitParam, String.valueOf(pageSize));
+    builder.setEncodedQueryParameter(offsetParam, String.valueOf(offset));
+    builder.setEncodedQueryParameter(limitParam, String.valueOf(pageSize));
     offset += pageSize;
 
     return builder.build().url().toString();

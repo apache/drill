@@ -24,14 +24,14 @@
   <parent>
     <artifactId>drill-contrib-parent</artifactId>
     <groupId>org.apache.drill.contrib</groupId>
-    <version>1.22.0-SNAPSHOT</version>
+    <version>1.23.0-SNAPSHOT</version>
   </parent>
 
   <artifactId>drill-storage-http</artifactId>
   <name>Drill : Contrib : Storage : HTTP</name>
 
   <properties>
-    <okhttp.version>4.9.3</okhttp.version>
+    <okhttp.version>4.12.0</okhttp.version>
   </properties>
 
   <dependencies>

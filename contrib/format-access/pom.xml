@@ -23,7 +23,7 @@
     <parent>
         <artifactId>drill-contrib-parent</artifactId>
         <groupId>org.apache.drill.contrib</groupId>
-        <version>1.22.0-SNAPSHOT</version>
+        <version>1.23.0-SNAPSHOT</version>
     </parent>
 
     <artifactId>drill-format-msaccess</artifactId>
@@ -39,7 +39,7 @@
         <dependency>
             <groupId>com.healthmarketscience.jackcess</groupId>
             <artifactId>jackcess</artifactId>
-            <version>4.0.4</version>
+            <version>4.0.8</version>
             <exclusions>
                 <exclusion>
                     <groupId>commons-logging</groupId>

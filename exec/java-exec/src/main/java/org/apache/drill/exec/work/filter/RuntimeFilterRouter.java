@@ -17,7 +17,7 @@
  */
 package org.apache.drill.exec.work.filter;
 
-import org.apache.commons.collections.CollectionUtils;
+import org.apache.commons.collections4.CollectionUtils;
 import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.exec.ops.SendingAccountor;
 import org.apache.drill.exec.physical.base.AbstractPhysicalVisitor;
