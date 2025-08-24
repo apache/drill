@@ -148,7 +148,7 @@
     <wiremock.standalone.version>2.23.2</wiremock.standalone.version>
     <xerces.version>2.12.2</xerces.version>
     <yauaa.version>7.31.0</yauaa.version>
-    <zookeeper.version>3.7.2</zookeeper.version>
+    <zookeeper.version>3.9.3</zookeeper.version>
   </properties>
 
   <scm>
