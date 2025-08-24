@@ -127,11 +127,6 @@
     </dependency>
     <dependency>
       <groupId>org.apache.phoenix</groupId>
-      <artifactId>phoenix-hbase-compat-2.4.1</artifactId>
-      <version>${phoenix.version}</version>
-    </dependency>
-    <dependency>
-      <groupId>org.apache.phoenix</groupId>
       <artifactId>phoenix-core</artifactId>
       <version>${phoenix.version}</version>
       <exclusions>
@@ -280,16 +275,6 @@
     </dependency>
     <dependency>
       <groupId>org.apache.hbase</groupId>
-      <artifactId>hbase-client</artifactId>
-      <version>${hbase.minicluster.version}</version>
-    </dependency>
-    <dependency>
-      <groupId>org.apache.hbase</groupId>
-      <artifactId>hbase-server</artifactId>
-      <version>${hbase.minicluster.version}</version>
-    </dependency>
-    <dependency>
-      <groupId>org.apache.hbase</groupId>
       <artifactId>hbase-common</artifactId>
       <version>${hbase.minicluster.version}</version>
     </dependency>
@@ -300,7 +285,27 @@
     </dependency>
     <dependency>
       <groupId>org.apache.hbase</groupId>
+      <artifactId>hbase-metrics</artifactId>
+      <version>${hbase.minicluster.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.hbase</groupId>
+      <artifactId>hbase-metrics-api</artifactId>
+      <version>${hbase.minicluster.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.hbase</groupId>
       <artifactId>hbase-protocol</artifactId>
+      <version>${hbase.minicluster.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.hbase</groupId>
+      <artifactId>hbase-hadoop2-compat</artifactId>
+      <version>${hbase.minicluster.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.hbase</groupId>
+      <artifactId>hbase-mapreduce</artifactId>
       <version>${hbase.minicluster.version}</version>
     </dependency>
     <dependency>
