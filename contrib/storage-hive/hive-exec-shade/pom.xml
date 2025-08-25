@@ -32,7 +32,7 @@
   <name>Drill : Contrib : Storage : Hive : Exec Shaded</name>
 
   <properties>
-    <hive.parquet.version>1.15.1</hive.parquet.version>
+    <hive.parquet.version>1.15.2</hive.parquet.version>
   </properties>
 
   <dependencyManagement>
