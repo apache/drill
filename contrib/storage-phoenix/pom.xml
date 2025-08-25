@@ -169,6 +169,19 @@
     <!-- Needed by secured tests: provides org.apache.hadoop.minikdc.MiniKdc -->
     <dependency>
       <groupId>org.apache.hadoop</groupId>
+      <artifactId>hadoop-hdfs-client</artifactId>
+      <version>${hadoop.version}</version>
+      <exclusions>
+        <exclusion>
+            <artifactId>commons-logging</artifactId>
+            <groupId>commons-logging</groupId>
+          </exclusion>
+      </exclusions>
+      <scope>test</scope>
+    </dependency>
+    <!-- Needed by secured tests: provides org.apache.hadoop.minikdc.MiniKdc -->
+    <dependency>
+      <groupId>org.apache.hadoop</groupId>
       <artifactId>hadoop-minikdc</artifactId>
       <version>${hadoop.version}</version>
       <scope>test</scope>
