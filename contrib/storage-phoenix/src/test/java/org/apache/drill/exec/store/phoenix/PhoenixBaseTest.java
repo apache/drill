@@ -17,7 +17,18 @@
  */
 package org.apache.drill.exec.store.phoenix;
 
-import static org.junit.Assert.assertFalse;
+import com.google.common.collect.Maps;
+import com.univocity.parsers.csv.CsvParser;
+import com.univocity.parsers.csv.CsvParserSettings;
+import org.apache.drill.exec.store.StoragePluginRegistry;
+import org.apache.drill.test.ClusterFixture;
+import org.apache.drill.test.ClusterFixtureBuilder;
+import org.apache.drill.test.ClusterTest;
+import org.apache.hadoop.fs.Path;
+import org.junit.AfterClass;
+import org.junit.BeforeClass;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.FileInputStream;
 import java.io.InputStreamReader;
@@ -37,22 +48,11 @@ import java.util.TimeZone;
 import java.util.UUID;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import org.apache.drill.exec.store.StoragePluginRegistry;
-import com.google.common.collect.Maps;
-import org.apache.drill.test.ClusterFixture;
-import org.apache.drill.test.ClusterFixtureBuilder;
-import org.apache.drill.test.ClusterTest;
-import org.apache.hadoop.fs.Path;
-import org.junit.AfterClass;
-import org.junit.BeforeClass;
-import org.slf4j.LoggerFactory;
-
-import com.univocity.parsers.csv.CsvParser;
-import com.univocity.parsers.csv.CsvParserSettings;
+import static org.junit.Assert.assertFalse;
 
 public class PhoenixBaseTest extends ClusterTest {
 
-  private static final org.slf4j.Logger logger = LoggerFactory.getLogger(PhoenixBaseTest.class);
+  private static final Logger logger = LoggerFactory.getLogger(PhoenixBaseTest.class);
 
   public final static String U_U_I_D = UUID.randomUUID().toString();
   private final static AtomicInteger initCount = new AtomicInteger(0);

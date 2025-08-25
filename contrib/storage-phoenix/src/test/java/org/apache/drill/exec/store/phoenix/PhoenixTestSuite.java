@@ -17,9 +17,6 @@
  */
 package org.apache.drill.exec.store.phoenix;
 
-import java.util.TimeZone;
-import java.util.concurrent.atomic.AtomicInteger;
-
 import org.apache.drill.categories.SlowTest;
 import org.apache.drill.test.BaseTest;
 import org.junit.AfterClass;
@@ -28,7 +25,11 @@ import org.junit.experimental.categories.Category;
 import org.junit.runner.RunWith;
 import org.junit.runners.Suite;
 import org.junit.runners.Suite.SuiteClasses;
+import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import java.util.TimeZone;
+import java.util.concurrent.atomic.AtomicInteger;
 
 
 @RunWith(Suite.class)
@@ -40,7 +41,7 @@ import org.slf4j.LoggerFactory;
 @Category({ SlowTest.class })
 public class PhoenixTestSuite extends BaseTest {
 
-  private static final org.slf4j.Logger logger = LoggerFactory.getLogger(PhoenixTestSuite.class);
+  private static final Logger logger = LoggerFactory.getLogger(PhoenixTestSuite.class);
 
   private static volatile boolean runningSuite = false;
   private static final AtomicInteger initCount = new AtomicInteger(0);

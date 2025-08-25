@@ -26,6 +26,7 @@ import org.junit.BeforeClass;
 import org.junit.experimental.categories.Category;
 import org.junit.runner.RunWith;
 import org.junit.runners.Suite;
+import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.TimeZone;
@@ -41,7 +42,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 @Category({ SlowTest.class, RowSetTest.class })
 public class SecuredPhoenixTestSuite extends BaseTest {
 
-  private static final org.slf4j.Logger logger = LoggerFactory.getLogger(SecuredPhoenixTestSuite.class);
+  private static final Logger logger = LoggerFactory.getLogger(SecuredPhoenixTestSuite.class);
 
   private static volatile boolean runningSuite = false;
   private static final AtomicInteger initCount = new AtomicInteger(0);
