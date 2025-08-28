@@ -66,8 +66,8 @@ import org.apache.drill.exec.work.filter.RuntimeFilterRouter;
 import org.apache.drill.exec.work.foreman.rm.QueryQueue.QueryQueueException;
 import org.apache.drill.exec.work.foreman.rm.QueryQueue.QueueTimeoutException;
 import org.apache.drill.exec.work.foreman.rm.QueryResourceManager;
-import org.apache.drill.shaded.guava.com.google.common.base.Preconditions;
-import org.apache.drill.shaded.guava.com.google.common.collect.Lists;
+import com.google.common.base.Preconditions;
+import com.google.common.collect.Lists;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -606,7 +606,7 @@ public class Foreman implements Runnable {
 		} else {
 			logger.info("Using cached plan");
 		}
-		
+
 		if(sql.trim().startsWith("SELECT")) {
 			CustomCacheManager.putQueryPlan(sql, plan);
 			CustomCacheManager.logCacheStats();

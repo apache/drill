@@ -105,11 +105,11 @@ import org.apache.drill.exec.util.Pointer;
 import org.apache.drill.exec.util.Utilities;
 import org.apache.drill.exec.work.foreman.ForemanSetupException;
 import org.apache.drill.exec.work.foreman.SqlUnsupportedException;
-import org.apache.drill.shaded.guava.com.google.common.base.Preconditions;
-import org.apache.drill.shaded.guava.com.google.common.base.Stopwatch;
-import org.apache.drill.shaded.guava.com.google.common.collect.ImmutableList;
-import org.apache.drill.shaded.guava.com.google.common.collect.Lists;
-import org.apache.drill.shaded.guava.com.google.common.collect.Sets;
+import com.google.common.base.Preconditions;
+import com.google.common.base.Stopwatch;
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Lists;
+import com.google.common.collect.Sets;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -365,7 +365,7 @@ public class DefaultSqlHandler extends AbstractSqlHandler {
    * @param log Whether to log the planning phase.
    * @return The transformed relnode.
    */
-  
+
 
   // A simple cache key class that uses the relevant parameters
   public static class CacheKey {
@@ -389,12 +389,12 @@ public class DefaultSqlHandler extends AbstractSqlHandler {
           logger.info("Compare phase {} {} ,{} ", phase.equals(cacheKey.phase), phase.name(), cacheKey.phase.name());
           logger.info("Compare plannerType {} {} {}", plannerType.equals(cacheKey.plannerType), plannerType.name() , cacheKey.plannerType.name());
           logger.info("Compare input {}", input.deepEquals(cacheKey.input));
-          return  phase.name().equals(cacheKey.phase.name()) && 
+          return  phase.name().equals(cacheKey.phase.name()) &&
         		  plannerType.name().equals(cacheKey.plannerType.name()) &&
-        		  input.deepEquals(cacheKey.input) && 
+        		  input.deepEquals(cacheKey.input) &&
         		  targetTraits.equals(cacheKey.targetTraits);
       }
-      
+
       @Override
 	    public int hashCode() {
 	    	return Objects.hash(phase.name(), plannerType.name(), input.deepHashCode(), targetTraits);
@@ -402,13 +402,13 @@ public class DefaultSqlHandler extends AbstractSqlHandler {
 
   }
 
-  
+
   protected RelNode transform(PlannerType plannerType, PlannerPhase phase, RelNode input, RelTraitSet targetTraits,
       boolean log) {
     final Stopwatch watch = Stopwatch.createStarted();
     final RuleSet rules = config.getRules(phase, input);
     final RelTraitSet toTraits = targetTraits.simplify();
-    
+
     // Create a cache key based on the input parameters
     CacheKey key = new CacheKey(plannerType, phase, input, targetTraits);
 
@@ -417,7 +417,7 @@ public class DefaultSqlHandler extends AbstractSqlHandler {
         CustomCacheManager.logCacheStats();
         return cachedResult;
     }
- 
+
     final RelNode output;
     switch (plannerType) {
     case HEP_BOTTOM_UP:
