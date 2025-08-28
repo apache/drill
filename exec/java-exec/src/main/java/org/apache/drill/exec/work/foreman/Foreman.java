@@ -415,7 +415,7 @@ public class Foreman implements Runnable {
   }
 
   private void runPhysicalPlan(final PhysicalPlan plan, Pointer<String> textPlan) throws ExecutionSetupException {
-	  validatePlan(plan);
+    validatePlan(plan);
 
     queryRM.visitAbstractPlan(plan);
     final QueryWorkUnit work = getQueryWorkUnit(plan, queryRM);
@@ -486,7 +486,7 @@ public class Foreman implements Runnable {
    * Moves query to RUNNING state.
    */
   private void startQueryProcessing() {
-	  logger.info("Starting query processing");
+    logger.info("Starting query processing");
     enqueue();
     runFragments();
     queryStateProcessor.moveToState(QueryState.RUNNING, null);
@@ -595,25 +595,25 @@ public class Foreman implements Runnable {
         queryId, queryWorkUnit.stringifyFragments()));
   }
 
-	private void runSQL(final String sql) throws ExecutionSetupException {
-		final Pointer<String> textPlan = new Pointer<>();
+  private void runSQL(final String sql) throws ExecutionSetupException {
+    final Pointer<String> textPlan = new Pointer<>();
 
-		PhysicalPlan plan = CustomCacheManager.getQueryPlan(sql);
+    PhysicalPlan plan = CustomCacheManager.getQueryPlan(sql);
 
-		if (plan == null) {
-			logger.info("Cache miss, generating new plan");
-			plan = DrillSqlWorker.getPlan(queryContext, sql, textPlan);
-		} else {
-			logger.info("Using cached plan");
-		}
+    if (plan == null) {
+      logger.info("Cache miss, generating new plan");
+      plan = DrillSqlWorker.getPlan(queryContext, sql, textPlan);
+    } else {
+      logger.info("Using cached plan");
+    }
 
-		if(sql.trim().startsWith("SELECT")) {
-			CustomCacheManager.putQueryPlan(sql, plan);
-			CustomCacheManager.logCacheStats();
-		}
+    if(sql.trim().startsWith("SELECT")) {
+      CustomCacheManager.putQueryPlan(sql, plan);
+      CustomCacheManager.logCacheStats();
+    }
 
-		runPhysicalPlan(plan, textPlan);
-	}
+    runPhysicalPlan(plan, textPlan);
+  }
 
   private PhysicalPlan convert(final LogicalPlan plan) throws OptimizerException {
     if (logger.isDebugEnabled()) {

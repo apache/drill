@@ -182,7 +182,7 @@ e.printStackTrace(System.out);
   private static PhysicalPlan getPhysicalPlan(QueryContext context, String sql, Pointer<String> textPlan,
       long retryAttempts) throws ForemanSetupException, RelConversionException, IOException, ValidationException {
     try {
-    	logger.info("DrillSqlWorker.getPhysicalPlan() is called {}", retryAttempts);
+      logger.info("DrillSqlWorker.getPhysicalPlan() is called {}", retryAttempts);
       return getQueryPlan(context, sql, textPlan);
     } catch (Exception e) {
       Throwable rootCause = Throwables.getRootCause(e);
@@ -224,9 +224,9 @@ e.printStackTrace(System.out);
    * @param textPlan text plan
    * @return query physical plan
    */
-  
+
   private static ConcurrentMap<QueryPlanCacheKey, PhysicalPlan> getQueryPlanCache = new ConcurrentHashMap<>();
-  
+
   private static PhysicalPlan getQueryPlan(QueryContext context, String sql, Pointer<String> textPlan)
       throws ForemanSetupException, RelConversionException, IOException, ValidationException {
 
@@ -234,10 +234,10 @@ e.printStackTrace(System.out);
     injector.injectChecked(context.getExecutionControls(), "sql-parsing", ForemanSetupException.class);
     final SqlNode sqlNode = checkAndApplyAutoLimit(parser, context, sql);
     QueryPlanCacheKey queryPlanCacheKey =  new QueryPlanCacheKey(sqlNode);
-    
+
     if(getQueryPlanCache.containsKey(queryPlanCacheKey)) {
-    	logger.info("Using getQueryPlanCache");
-    	return getQueryPlanCache.get(queryPlanCacheKey);
+      logger.info("Using getQueryPlanCache");
+      return getQueryPlanCache.get(queryPlanCacheKey);
     }
     final AbstractSqlHandler handler;
     final SqlHandlerConfig config = new SqlHandlerConfig(context, parser);
@@ -303,8 +303,8 @@ e.printStackTrace(System.out);
         handler = new DefaultSqlHandler(config, textPlan);
         context.setSQLStatementType(SqlStatementType.OTHER);
     }
-    
-    
+
+
 
     // Determines whether result set should be returned for the query based on return result set option and sql node kind.
     // Overrides the option on a query level if it differs from the current value.
@@ -318,7 +318,7 @@ e.printStackTrace(System.out);
     getQueryPlanCache.put(queryPlanCacheKey, physicalPlan);
     return physicalPlan;
   }
-  
+
   private static class QueryPlanCacheKey {
       private final SqlNode sqlNode;
 
@@ -328,17 +328,20 @@ e.printStackTrace(System.out);
 
       @Override
       public boolean equals(Object o) {
-          if (this == o) return true;
-          if (o == null || getClass() != o.getClass()) return false;
+          if (this == o) {
+            return true;
+          }
+          if (o == null || getClass() != o.getClass()) {
+            return false;
+          }
           QueryPlanCacheKey cacheKey = (QueryPlanCacheKey) o;
           return  sqlNode.equalsDeep(cacheKey.sqlNode, Litmus.IGNORE);
       }
-      
-      @Override
-	    public int hashCode() {
-	    	return Objects.hash(sqlNode);
-	    }
 
+      @Override
+      public int hashCode() {
+        return Objects.hash(sqlNode);
+      }
   }
 
   private static boolean isAutoLimitShouldBeApplied(SqlNode sqlNode, int queryMaxRows) {
