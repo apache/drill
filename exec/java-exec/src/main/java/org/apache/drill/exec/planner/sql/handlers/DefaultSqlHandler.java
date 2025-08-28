@@ -21,8 +21,6 @@ import java.io.IOException;
 import java.util.Collection;
 import java.util.List;
 import java.util.Objects;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
@@ -383,22 +381,26 @@ public class DefaultSqlHandler extends AbstractSqlHandler {
 
       @Override
       public boolean equals(Object o) {
-          if (this == o) return true;
-          if (o == null || getClass() != o.getClass()) return false;
+          if (this == o) {
+            return true;
+          }
+          if (o == null || getClass() != o.getClass()) {
+            return false;
+          }
           CacheKey cacheKey = (CacheKey) o;
-          logger.info("Compare phase {} {} ,{} ", phase.equals(cacheKey.phase), phase.name(), cacheKey.phase.name());
-          logger.info("Compare plannerType {} {} {}", plannerType.equals(cacheKey.plannerType), plannerType.name() , cacheKey.plannerType.name());
+          logger.info("Compare phase {} {}, {} ", phase.equals(cacheKey.phase), phase.name(), cacheKey.phase.name());
+          logger.info("Compare plannerType {} {} {}", plannerType.equals(cacheKey.plannerType), plannerType.name(), cacheKey.plannerType.name());
           logger.info("Compare input {}", input.deepEquals(cacheKey.input));
           return  phase.name().equals(cacheKey.phase.name()) &&
-        		  plannerType.name().equals(cacheKey.plannerType.name()) &&
-        		  input.deepEquals(cacheKey.input) &&
-        		  targetTraits.equals(cacheKey.targetTraits);
+              plannerType.name().equals(cacheKey.plannerType.name()) &&
+              input.deepEquals(cacheKey.input) &&
+              targetTraits.equals(cacheKey.targetTraits);
       }
 
       @Override
-	    public int hashCode() {
-	    	return Objects.hash(phase.name(), plannerType.name(), input.deepHashCode(), targetTraits);
-	    }
+      public int hashCode() {
+        return Objects.hash(phase.name(), plannerType.name(), input.deepHashCode(), targetTraits);
+      }
 
   }
 
@@ -422,7 +424,7 @@ public class DefaultSqlHandler extends AbstractSqlHandler {
     switch (plannerType) {
     case HEP_BOTTOM_UP:
     case HEP: {
-    	logger.info("DefaultSqlHandler.transform()");
+      logger.info("DefaultSqlHandler.transform()");
       final HepProgramBuilder hepPgmBldr = new HepProgramBuilder();
       if (plannerType == PlannerType.HEP_BOTTOM_UP) {
         hepPgmBldr.addMatchOrder(HepMatchOrder.BOTTOM_UP);
