@@ -39,7 +39,6 @@
   </properties>
 
   <dependencies>
-    <!-- Drill -->
     <dependency>
       <groupId>org.apache.drill.exec</groupId>
       <artifactId>drill-java-exec</artifactId>
@@ -232,6 +231,8 @@
             -Xms2048m -Xmx2048m
             --add-opens=java.base/java.lang=ALL-UNNAMED
             --add-opens=java.base/java.util=ALL-UNNAMED
+            -Dhbase.security.authentication=simple
+            -Dhadoop.security.authentication=simple
           </argLine>
         </configuration>
       </plugin>
