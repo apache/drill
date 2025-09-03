@@ -387,22 +387,6 @@
   </build>
   <profiles>
     <profile>
-      <id>hadoop-2</id>
-      <properties>
-        <skipTests>true</skipTests>
-      </properties>
-      <build>
-        <plugins>
-          <plugin>
-            <groupId>org.apache.felix</groupId>
-            <artifactId>maven-bundle-plugin</artifactId>
-            <version>5.1.9</version>
-            <extensions>true</extensions>
-          </plugin>
-        </plugins>
-      </build>
-    </profile>
-    <profile>
       <!-- Disable unit tests for JDK 14+ until Phoenix 5.2.0+ is released.
       See PHOENIX-6723 for details.-->
       <id>jdk14+</id>
