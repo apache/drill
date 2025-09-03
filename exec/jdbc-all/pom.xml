@@ -900,12 +900,6 @@
         </plugins>
       </build>
     </profile>
-    <profile>
-      <id>hadoop-2</id>
-      <properties>
-        <jdbc-all-jar.maxsize>55000000</jdbc-all-jar.maxsize>
-      </properties>
-    </profile>
   </profiles>
 
 </project>
