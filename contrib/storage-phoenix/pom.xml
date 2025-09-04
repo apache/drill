@@ -194,28 +194,102 @@
           <groupId>log4j</groupId>
           <artifactId>log4j</artifactId>
         </exclusion>
+        <!-- Exclude old Kerby versions to avoid conflicts -->
+        <exclusion>
+          <groupId>org.apache.kerby</groupId>
+          <artifactId>kerb-simplekdc</artifactId>
+        </exclusion>
+        <exclusion>
+          <groupId>org.apache.kerby</groupId>
+          <artifactId>kerb-client</artifactId>
+        </exclusion>
+        <exclusion>
+          <groupId>org.apache.kerby</groupId>
+          <artifactId>kerb-common</artifactId>
+        </exclusion>
+        <exclusion>
+          <groupId>org.apache.kerby</groupId>
+          <artifactId>kerb-core</artifactId>
+        </exclusion>
+        <exclusion>
+          <groupId>org.apache.kerby</groupId>
+          <artifactId>kerb-crypto</artifactId>
+        </exclusion>
+        <exclusion>
+          <groupId>org.apache.kerby</groupId>
+          <artifactId>kerb-util</artifactId>
+        </exclusion>
       </exclusions>
     </dependency>
 
-    <!-- Helpful for JAAS/Kerberos bits used by secured tests -->
+    <!-- Explicitly add compatible Kerby dependencies for Hadoop 3.4.1 -->
     <dependency>
-      <groupId>org.apache.hadoop</groupId>
-      <artifactId>hadoop-auth</artifactId>
-      <version>${hadoop.version}</version>
+      <groupId>org.apache.kerby</groupId>
+      <artifactId>kerb-simplekdc</artifactId>
+      <version>${kerby.version}</version>
       <scope>test</scope>
-      <exclusions>
-        <exclusion>
-          <groupId>commons-logging</groupId>
-          <artifactId>commons-logging</artifactId>
-        </exclusion>
-        <exclusion>
-          <groupId>log4j</groupId>
-          <artifactId>log4j</artifactId>
-        </exclusion>
-      </exclusions>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.kerby</groupId>
+      <artifactId>kerb-client</artifactId>
+      <version>${kerby.version}</version>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.kerby</groupId>
+      <artifactId>kerb-common</artifactId>
+      <version>${kerby.version}</version>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.kerby</groupId>
+      <artifactId>kerb-core</artifactId>
+      <version>${kerby.version}</version>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.kerby</groupId>
+      <artifactId>kerb-crypto</artifactId>
+      <version>${kerby.version}</version>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.kerby</groupId>
+      <artifactId>kerb-util</artifactId>
+      <version>${kerby.version}</version>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.kerby</groupId>
+      <artifactId>kerby-config</artifactId>
+      <version>${kerby.version}</version>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.kerby</groupId>
+      <artifactId>kerby-asn1</artifactId>
+      <version>${kerby.version}</version>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.kerby</groupId>
+      <artifactId>kerby-pkix</artifactId>
+      <version>${kerby.version}</version>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.kerby</groupId>
+      <artifactId>kerby-util</artifactId>
+      <version>${kerby.version}</version>
+      <scope>test</scope>
     </dependency>
 
-
+    <dependency>
+      <groupId>org.bouncycastle</groupId>
+      <artifactId>bcprov-jdk18on</artifactId>
+      <version>1.78.1</version>
+      <scope>test</scope>
+    </dependency>
   </dependencies>
 
   <build>
@@ -231,8 +305,9 @@
             -Xms2048m -Xmx2048m
             --add-opens=java.base/java.lang=ALL-UNNAMED
             --add-opens=java.base/java.util=ALL-UNNAMED
-            -Dhbase.security.authentication=simple
-            -Dhadoop.security.authentication=simple
+            -Djava.net.preferIPv4Stack=true
+            -Dsun.security.krb5.debug=true
+            -Dsun.security.krb5.allowUdp=false
           </argLine>
         </configuration>
       </plugin>

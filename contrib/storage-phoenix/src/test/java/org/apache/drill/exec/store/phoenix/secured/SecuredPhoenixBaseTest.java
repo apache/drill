@@ -18,6 +18,7 @@
 package org.apache.drill.exec.store.phoenix.secured;
 
 import ch.qos.logback.classic.Level;
+import com.google.common.collect.Lists;
 import com.sun.security.auth.module.Krb5LoginModule;
 import org.apache.drill.common.config.DrillProperties;
 import org.apache.drill.common.exceptions.UserRemoteException;
@@ -29,7 +30,6 @@ import org.apache.drill.exec.store.StoragePluginRegistry;
 import org.apache.drill.exec.store.phoenix.PhoenixDataSource;
 import org.apache.drill.exec.store.phoenix.PhoenixStoragePluginConfig;
 import org.apache.drill.exec.util.ImpersonationUtil;
-import com.google.common.collect.Lists;
 import org.apache.drill.test.ClusterFixture;
 import org.apache.drill.test.ClusterFixtureBuilder;
 import org.apache.drill.test.ClusterTest;
@@ -69,6 +69,8 @@ public abstract class SecuredPhoenixBaseTest extends ClusterTest {
 
   private final static AtomicInteger initCount = new AtomicInteger(0);
 
+
+
   @BeforeClass
   public static void setUpBeforeClass() throws Exception {
     TimeZone.setDefault(TimeZone.getTimeZone("UTC"));
@@ -92,6 +94,17 @@ public abstract class SecuredPhoenixBaseTest extends ClusterTest {
     Map.Entry<String, File> user3 = environment.getUser(3);
 
     dirTestWatcher.start(SecuredPhoenixTestSuite.class); // until DirTestWatcher ClassRule is implemented for JUnit5
+    //udfDir = dirTestWatcher.makeSubDir(Paths.get("udf"));
+
+    // Create a UDF directory with proper permissions in the test directory
+    //File udfRoot = new File(dirTestWatcher.getRootDir(), "drill/udf");
+    //udfRoot.mkdirs();
+
+    // Set proper permissions on the UDF directory and all parent directories
+    //setDirectoryPermissions(udfRoot);
+    //setDirectoryPermissions(udfRoot.getParentFile()); // drill directory
+    setDirectoryPermissions(dirTestWatcher.getRootDir()); // root directory
+
     ClusterFixtureBuilder builder = ClusterFixture.builder(dirTestWatcher)
         .configProperty(ExecConstants.USER_AUTHENTICATION_ENABLED, true)
         .configProperty(ExecConstants.USER_AUTHENTICATOR_IMPL, UserAuthenticatorTestImpl.TYPE)
@@ -101,6 +114,11 @@ public abstract class SecuredPhoenixBaseTest extends ClusterTest {
         .configProperty(ExecConstants.BIT_AUTHENTICATION_MECHANISM, "kerberos")
         .configProperty(ExecConstants.SERVICE_PRINCIPAL, HBaseKerberosUtils.getPrincipalForTesting())
         .configProperty(ExecConstants.SERVICE_KEYTAB_LOCATION, environment.getServiceKeytab().getAbsolutePath())
+        // Set UDF directory to a location we control with proper permissions
+        .configProperty(ExecConstants.DYNAMIC_UDF_SUPPORT_ENABLED, false)
+        //.configProperty(ExecConstants.UDF_DIRECTORY_ROOT, udfDir.getAbsolutePath())
+        //.configProperty(ExecConstants.UDF_DIRECTORY_FS, getLocalFileSystem().getUri())
+        .configProperty(ExecConstants.UDF_DISABLE_DYNAMIC, true)
         .configClientProperty(DrillProperties.SERVICE_PRINCIPAL, HBaseKerberosUtils.getPrincipalForTesting())
         .configClientProperty(DrillProperties.USER, user1.getKey())
         .configClientProperty(DrillProperties.KEYTAB, user1.getValue().getAbsolutePath());
@@ -124,6 +142,16 @@ public abstract class SecuredPhoenixBaseTest extends ClusterTest {
     registry.put(PhoenixStoragePluginConfig.NAME + "123", config);
   }
 
+  /**
+   * Set proper permissions on a directory to ensure it's writable and executable
+   */
+  private static void setDirectoryPermissions(File dir) {
+    if (dir != null && dir.exists()) {
+      dir.setWritable(true, false); // writable by all
+      dir.setExecutable(true, false); // executable by all
+      dir.setReadable(true, false); // readable by all
+    }
+  }
 
   /**
    * Initialize HBase via Phoenix
