@@ -70,7 +70,7 @@ public class EmbeddedKafkaCluster implements TestQueryConstants {
     }
 
     this.props.put("metadata.broker.list", sb.toString());
-    this.props.put(KafkaConfig.ZkConnectProp(), this.zkHelper.getConnectionString());
+    this.props.put("zookeeper.connect", this.zkHelper.getConnectionString());
     logger.info("Initialized Kafka Server");
     this.closer = new KafkaAsyncCloser();
   }
@@ -78,21 +78,20 @@ public class EmbeddedKafkaCluster implements TestQueryConstants {
   private void addBroker(Properties props, int brokerID, int ephemeralBrokerPort) {
     Properties properties = new Properties();
     properties.putAll(props);
-    properties.put(KafkaConfig.LeaderImbalanceCheckIntervalSecondsProp(), String.valueOf(1));
-    properties.put(KafkaConfig.OffsetsTopicPartitionsProp(), String.valueOf(1));
-    properties.put(KafkaConfig.OffsetsTopicReplicationFactorProp(), String.valueOf(1));
-    properties.put(KafkaConfig.DefaultReplicationFactorProp(), String.valueOf(1));
-    properties.put(KafkaConfig.GroupMinSessionTimeoutMsProp(), String.valueOf(100));
-    properties.put(KafkaConfig.AutoCreateTopicsEnableProp(), Boolean.FALSE);
-    properties.put(KafkaConfig.ZkConnectProp(), zkHelper.getConnectionString());
-    properties.put(KafkaConfig.BrokerIdProp(), String.valueOf(brokerID + 1));
-    properties.put(KafkaConfig.HostNameProp(), LOCAL_HOST);
-    properties.put(KafkaConfig.AdvertisedHostNameProp(), LOCAL_HOST);
-    properties.put(KafkaConfig.PortProp(), String.valueOf(ephemeralBrokerPort));
-    properties.put(KafkaConfig.AdvertisedPortProp(), String.valueOf(ephemeralBrokerPort));
-    properties.put(KafkaConfig.DeleteTopicEnableProp(), Boolean.TRUE);
-    properties.put(KafkaConfig.LogDirsProp(), getTemporaryDir().getAbsolutePath());
-    properties.put(KafkaConfig.LogFlushIntervalMessagesProp(), String.valueOf(1));
+    properties.put("leader.imbalance.check.interval.seconds", String.valueOf(1));
+    properties.put("offsets.topic.num.partitions", String.valueOf(1));
+    properties.put("offsets.topic.replication.factor", String.valueOf(1));
+    properties.put("default.replication.factor", String.valueOf(1));
+    properties.put("group.min.session.timeout.ms", String.valueOf(100));
+    properties.put("auto.create.topics.enable", Boolean.FALSE);
+    properties.put("zookeeper.connect", zkHelper.getConnectionString());
+    properties.put("broker.id", String.valueOf(brokerID + 1));
+    properties.put("listeners", "PLAINTEXT://" + LOCAL_HOST + ":" + ephemeralBrokerPort);
+    properties.put("advertised.listeners", "PLAINTEXT://" + LOCAL_HOST + ":" + ephemeralBrokerPort);
+    properties.put("port", String.valueOf(ephemeralBrokerPort));
+    properties.put("delete.topic.enable", Boolean.TRUE);
+    properties.put("log.dirs", getTemporaryDir().getAbsolutePath());
+    properties.put("log.flush.interval.messages", String.valueOf(1));
     brokers.add(getBroker(properties));
   }
 
@@ -119,7 +118,7 @@ public class EmbeddedKafkaCluster implements TestQueryConstants {
 
   public void shutDownBroker(int brokerId) {
     brokers.stream()
-        .filter(broker -> Integer.parseInt(broker.config().getString(KafkaConfig.BrokerIdProp())) == brokerId)
+        .filter(broker -> Integer.parseInt(broker.config().getString("broker.id")) == brokerId)
         .findAny()
         .ifPresent(KafkaServer::shutdown);
   }
@@ -145,7 +144,19 @@ public class EmbeddedKafkaCluster implements TestQueryConstants {
   public String getKafkaBrokerList() {
     return brokers.stream()
         .map(KafkaServer::config)
-        .map(serverConfig -> serverConfig.hostName() + ":" + serverConfig.port())
+        .map(serverConfig -> {
+          // Try modern listeners first, fall back to legacy host.name/port
+          try {
+            String listeners = serverConfig.getString("listeners");
+            // Extract host:port from listeners (format: PLAINTEXT://host:port)
+            return listeners.replaceAll("^[A-Z]+://", "");
+          } catch (Exception e) {
+            // Fall back to legacy approach using advertised properties or default host/port
+            String host = LOCAL_HOST;
+            int port = serverConfig.getInt("port");
+            return host + ":" + port;
+          }
+        })
         .collect(Collectors.joining(","));
   }
 
