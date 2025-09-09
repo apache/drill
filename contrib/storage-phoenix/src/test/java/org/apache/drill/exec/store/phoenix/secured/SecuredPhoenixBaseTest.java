@@ -97,18 +97,16 @@ public abstract class SecuredPhoenixBaseTest extends ClusterTest {
 
     // Create a UDF directory with proper permissions in the test directory
     File udfDir = dirTestWatcher.makeSubDir(Paths.get("udf"));
-    
     // Pre-create all subdirectories that Drill will need with proper permissions
     File drillDir = new File(udfDir, "drill");
-    File happyDir = new File(drillDir, "happy");  
+    File happyDir = new File(drillDir, "happy");
     File udfSubDir = new File(happyDir, "udf");
     File registryDir = new File(udfSubDir, "registry");
     File stagingDir = new File(udfSubDir, "staging");
     File tmpDir = new File(udfSubDir, "tmp");
-    
     // Create all directories and set permissions
     registryDir.mkdirs();
-    stagingDir.mkdirs();  
+    stagingDir.mkdirs();
     tmpDir.mkdirs();
     setDirectoryPermissions(udfDir);
 
@@ -131,11 +129,11 @@ public abstract class SecuredPhoenixBaseTest extends ClusterTest {
         .configClientProperty(DrillProperties.USER, user1.getKey())
         .configClientProperty(DrillProperties.KEYTAB, user1.getValue().getAbsolutePath());
     startCluster(builder);
-    
+
     // After cluster starts, Drill creates subdirectories in the UDF area
     // Set permissions recursively on all created subdirectories
     setDirectoryPermissions(udfDir);
-    
+
     Properties user2ClientProperties = new Properties();
     user2ClientProperties.setProperty(DrillProperties.SERVICE_PRINCIPAL, HBaseKerberosUtils.getPrincipalForTesting());
     user2ClientProperties.setProperty(DrillProperties.USER, user2.getKey());
@@ -163,9 +161,8 @@ public abstract class SecuredPhoenixBaseTest extends ClusterTest {
     if (dir != null && dir.exists()) {
       // Set permissions on the directory itself
       dir.setWritable(true, false); // writable by all
-      dir.setExecutable(true, false); // executable by all  
+      dir.setExecutable(true, false); // executable by all
       dir.setReadable(true, false); // readable by all
-      
       // Recursively set permissions on subdirectories
       if (dir.isDirectory()) {
         File[] children = dir.listFiles();
