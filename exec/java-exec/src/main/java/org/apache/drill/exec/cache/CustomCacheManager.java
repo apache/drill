@@ -30,14 +30,14 @@ public class CustomCacheManager {
   private static void loadConfig() {
     DrillConfig config = DrillConfig.create();
 
-    queryMaxEntries = getConfigInt(config, "custom.cache.query.max_entries", 100);
-    queryTtlMinutes = getConfigInt(config, "custom.cache.query.ttl_minutes", 300);
-    transformMaxEntries = getConfigInt(config, "custom.cache.transform.max_entries", 100);
-    transformTtlMinutes = getConfigInt(config, "custom.cache.transform.ttl_minutes", 300);
+    queryMaxEntries = getConfigInt(config, "planner.query.cache.max_entries_amount", 100);
+    queryTtlMinutes = getConfigInt(config, "planner.query.cache.plan_cache_ttl_minutes", 300);
+    transformMaxEntries = getConfigInt(config, "planner.transform.cache.max_entries_amount", 100);
+    transformTtlMinutes = getConfigInt(config, "planner.transform.plan_cache_ttl_minutes", 300);
 
     queryCache = Caffeine.newBuilder()
         .maximumSize(queryMaxEntries)
-        .expireAfterWrite(queryTtlMinutes, TimeUnit.MINUTES)
+        .expireAfterWrite(queryTtlMinutes, TimeUnit.MILLISECONDS)
         .recordStats()
         .build();
 
