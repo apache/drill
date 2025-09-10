@@ -410,14 +410,20 @@ public class DefaultSqlHandler extends AbstractSqlHandler {
     final Stopwatch watch = Stopwatch.createStarted();
     final RuleSet rules = config.getRules(phase, input);
     final RelTraitSet toTraits = targetTraits.simplify();
+    final OptionManager options = context.getOptions();
+    final boolean planCacheEnabled = options.getOption(PlannerSettings.PLAN_CACHE);
 
-    // Create a cache key based on the input parameters
-    CacheKey key = new CacheKey(plannerType, phase, input, targetTraits);
+    CacheKey key = null;
 
-    RelNode cachedResult = CustomCacheManager.getTransformedPlan(key);
-    if (cachedResult != null) {
+    if (planCacheEnabled) {
+      // Create a cache key based on the input parameters
+      key = new CacheKey(plannerType, phase, input, targetTraits);
+
+      RelNode cachedResult = CustomCacheManager.getTransformedPlan(key);
+      if (cachedResult != null) {
         CustomCacheManager.logCacheStats();
         return cachedResult;
+      }
     }
 
     final RelNode output;
@@ -465,9 +471,14 @@ public class DefaultSqlHandler extends AbstractSqlHandler {
     }
     }
 
-    // Store the result in the cache before returning
-    CustomCacheManager.putTransformedPlan(key, output);
-    CustomCacheManager.logCacheStats();
+    if (planCacheEnabled) {
+      logger.info("planCache enabled, storing transformedplan");
+      // Store the result in the cache before returning
+      CustomCacheManager.putTransformedPlan(key, output);
+      CustomCacheManager.logCacheStats();
+    } else {
+      logger.info("planCache disabled, not storing transformedplan");
+    }
 
     if (log) {
       log(plannerType, phase, output, logger, watch);
