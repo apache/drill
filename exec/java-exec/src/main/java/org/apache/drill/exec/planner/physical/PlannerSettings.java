@@ -132,6 +132,20 @@ public class PlannerSettings implements Context{
   public static final String UNIONALL_DISTRIBUTE_KEY = "planner.enable_unionall_distribute";
   public static final BooleanValidator UNIONALL_DISTRIBUTE = new BooleanValidator(UNIONALL_DISTRIBUTE_KEY, null);
 
+  public static final BooleanValidator PLAN_CACHE = new BooleanValidator("planner.cache.enable",
+      new OptionDescription("Enables caching of generated query plans in memory, so repeated queries can bypass the planning phase and execute faster.")
+  );
+
+  // Only settable in config, due to pub-sub requirements for recreating the cache on value change
+  //  public static final RangeLongValidator PLAN_CACHE_TTL = new RangeLongValidator("planner.cache.ttl_minutes",
+  //      0, Long.MAX_VALUE,
+  //      new OptionDescription("Time-to-live for cached query plans in minutes. Plans older than this are evicted. Default is 0 (disabled)")
+  //  );
+  //  public static final RangeLongValidator MAX_CACHE_ENTRIES = new RangeLongValidator("planner.cache.max_entries",
+  //      1, Long.MAX_VALUE,
+  //      new OptionDescription("Maximum total number of entries for cached query plans. When exceeded, least recently used plans are evicted.")
+  //  );
+
   // ------------------------------------------- Index planning related options BEGIN --------------------------------------------------------------
   public static final String USE_SIMPLE_OPTIMIZER_KEY = "planner.use_simple_optimizer";
   public static final BooleanValidator USE_SIMPLE_OPTIMIZER = new BooleanValidator(USE_SIMPLE_OPTIMIZER_KEY,
@@ -414,6 +428,10 @@ public class PlannerSettings implements Context{
 
   public boolean isUnionAllDistributeEnabled() {
     return options.getOption(UNIONALL_DISTRIBUTE);
+  }
+
+  public boolean isPlanCacheEnabled() {
+    return options.getOption(PLAN_CACHE);
   }
 
   public boolean isParquetRowGroupFilterPushdownPlanningEnabled() {
