@@ -31,7 +31,9 @@
   <name>Drill : Packaging and Distribution Assembly</name>
 
   <properties>
-    <aws.java.sdk.version>1.12.261</aws.java.sdk.version>
+    <aws.java.sdk.version>2.32.24</aws.java.sdk.version>
+    <!-- Hadoop has old AWS Jars. We are explicitly including the V1 libraries for Hadoop-S3 and using the V2 libraries for Drill. -->
+    <aws.java.sdk.v1.version>1.12.367</aws.java.sdk.v1.version>
     <oci.hdfs.version>3.3.1.0.3.6</oci.hdfs.version>
   </properties>
 
@@ -131,8 +133,8 @@
       </exclusions>
     </dependency>
     <dependency>
-      <groupId>com.amazonaws</groupId>
-      <artifactId>aws-java-sdk-core</artifactId>
+      <groupId>software.amazon.awssdk</groupId>
+      <artifactId>aws-core</artifactId>
       <version>${aws.java.sdk.version}</version>
       <exclusions>
         <exclusion>
@@ -142,19 +144,31 @@
       </exclusions>
     </dependency>
     <dependency>
-      <groupId>com.amazonaws</groupId>
-      <artifactId>aws-java-sdk-dynamodb</artifactId>
+      <groupId>software.amazon.awssdk</groupId>
+      <artifactId>dynamodb</artifactId>
       <version>${aws.java.sdk.version}</version>
     </dependency>
     <dependency>
-      <groupId>com.amazonaws</groupId>
-      <artifactId>aws-java-sdk-sts</artifactId>
+      <groupId>software.amazon.awssdk</groupId>
+      <artifactId>sts</artifactId>
       <version>${aws.java.sdk.version}</version>
     </dependency>
+    <dependency>
+      <groupId>software.amazon.awssdk</groupId>
+      <artifactId>s3</artifactId>
+      <version>${aws.java.sdk.version}</version>
+    </dependency>
+    <!-- Hadoop -S3 requires this to be included -->
     <dependency>
       <groupId>com.amazonaws</groupId>
       <artifactId>aws-java-sdk-s3</artifactId>
-      <version>${aws.java.sdk.version}</version>
+      <version>${aws.java.sdk.v1.version}</version>
+      <exclusions>
+        <exclusion>
+          <artifactId>commons-logging</artifactId>
+          <groupId>commons-logging</groupId>
+        </exclusion>
+      </exclusions>
     </dependency>
     <dependency>
       <groupId>com.oracle.oci.sdk</groupId>
