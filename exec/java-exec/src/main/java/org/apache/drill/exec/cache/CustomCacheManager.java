@@ -33,11 +33,11 @@ public class CustomCacheManager {
     queryMaxEntries = getConfigInt(config, "planner.query.cache.max_entries_amount", 100);
     queryTtlMinutes = getConfigInt(config, "planner.query.cache.plan_cache_ttl_minutes", 300);
     transformMaxEntries = getConfigInt(config, "planner.transform.cache.max_entries_amount", 100);
-    transformTtlMinutes = getConfigInt(config, "planner.transform.plan_cache_ttl_minutes", 300);
+    transformTtlMinutes = getConfigInt(config, "planner.transform.cache.plan_cache_ttl_minutes", 300);
 
     queryCache = Caffeine.newBuilder()
         .maximumSize(queryMaxEntries)
-        .expireAfterWrite(queryTtlMinutes, TimeUnit.MILLISECONDS)
+        .expireAfterWrite(queryTtlMinutes, TimeUnit.MINUTES)
         .recordStats()
         .build();
 
@@ -49,7 +49,15 @@ public class CustomCacheManager {
   }
 
   private static int getConfigInt(DrillConfig config, String path, int defaultValue) {
-    return config.hasPath(path) ? config.getInt(path) : defaultValue;
+    logger.info("Fetching: " + path);
+    Boolean pathFound = config.hasPath(path);
+    int value = pathFound ? config.getInt(path) : defaultValue;
+    if (!pathFound) {
+      logger.info("Using default value: " + defaultValue);
+    } else {
+      logger.info("Using found value: " + value);
+    }
+    return value;
   }
 
   public static PhysicalPlan getQueryPlan(String sql) {
