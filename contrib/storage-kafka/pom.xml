@@ -31,7 +31,8 @@
   <name>Drill : Contrib : Storage : Kafka</name>
 
   <properties>
-    <kafka.version>2.8.2</kafka.version>
+    <kafka.version>3.9.0</kafka.version>
+    <kafka_scala.version>3.9.0</kafka_scala.version>
     <kafka.TestSuite>**/TestKafkaSuite.class</kafka.TestSuite>
   </properties>
 
@@ -80,7 +81,7 @@
     <dependency>
       <groupId>org.apache.kafka</groupId>
       <artifactId>kafka_2.13</artifactId>
-      <version>${kafka.version}</version>
+      <version>${kafka_scala.version}</version>
       <scope>test</scope>
       <exclusions>
         <exclusion>

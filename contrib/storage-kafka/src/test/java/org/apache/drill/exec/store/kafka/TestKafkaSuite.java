@@ -42,7 +42,6 @@ import org.junit.runners.Suite;
 import org.junit.runners.Suite.SuiteClasses;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import scala.Option;
 
 import java.util.Collections;
 import java.util.HashMap;
@@ -83,8 +82,8 @@ public class TestKafkaSuite extends BaseTest {
         embeddedKafkaCluster = new EmbeddedKafkaCluster();
         zkClient = KafkaZkClient.apply(embeddedKafkaCluster.getZkServer().getConnectionString(),
             false, SESSION_TIMEOUT, CONN_TIMEOUT, 0, Time.SYSTEM,
-            "kafka.server", "SessionExpireListener",
-            Option.<String>empty(), Option.<ZKClientConfig>empty());
+            "kafka.server", new ZKClientConfig(),
+            "kafka.server", "SessionExpireListener", false, false);
         createTopicHelper(TestQueryConstants.JSON_TOPIC, 1);
         createTopicHelper(TestQueryConstants.AVRO_TOPIC, 1);
         KafkaMessageGenerator generator = new KafkaMessageGenerator(embeddedKafkaCluster.getKafkaBrokerList(), StringSerializer.class);
