@@ -31,8 +31,8 @@
   <name>Drill : Contrib : Storage : Kafka</name>
 
   <properties>
-    <kafka.version>3.9.0</kafka.version>
-    <kafka_scala.version>3.9.0</kafka_scala.version>
+    <kafka.version>3.9.1</kafka.version>
+    <kafka_scala.version>3.9.1</kafka_scala.version>
     <kafka.TestSuite>**/TestKafkaSuite.class</kafka.TestSuite>
   </properties>
 
