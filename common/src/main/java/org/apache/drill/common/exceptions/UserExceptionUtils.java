@@ -33,7 +33,8 @@ public class UserExceptionUtils {
     return String.format("[Hint: %s]", text);
   }
   public static String getUserHint(final Throwable ex) {
-    if (ex.getMessage().startsWith("Error getting user info for current user")) {
+    final String message = ex.getMessage();
+    if (message != null && message.startsWith("Error getting user info for current user")) {
       //User does not exist hint
       return decorateHint(USER_DOES_NOT_EXIST);
     } else {

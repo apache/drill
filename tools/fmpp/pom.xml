@@ -70,6 +70,18 @@
           <artifactId>bsh</artifactId>
           <groupId>org.beanshell</groupId>
         </exclusion>
+        <exclusion>
+          <artifactId>maven-plugin-api</artifactId>
+          <groupId>org.apache.maven</groupId>
+        </exclusion>
+        <exclusion>
+          <artifactId>maven-compat</artifactId>
+          <groupId>org.apache.maven</groupId>
+        </exclusion>
+        <exclusion>
+          <artifactId>maven-model</artifactId>
+          <groupId>org.apache.maven</groupId>
+        </exclusion>
       </exclusions>
     </dependency>
     <dependency>

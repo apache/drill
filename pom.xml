@@ -71,7 +71,7 @@
     <commons.text.version>1.10.0</commons.text.version>
     <commons.validator.version>1.7</commons.validator.version>
     <curator.version>5.5.0</curator.version>
-    <derby.version>10.14.2.0</derby.version>
+    <derby.version>10.17.1.0</derby.version>
     <directMemoryMb>3072</directMemoryMb>
     <docker.repository>apache/drill</docker.repository>
     <excludedGroups />
@@ -107,7 +107,7 @@
     <junit.args />
     <junit.platform.version>1.8.2</junit.platform.version>
     <junit.version>5.7.2</junit.version>
-    <kerby.version>1.0.1</kerby.version>
+    <kerby.version>2.0.3</kerby.version>
     <libthrift.version>0.18.1</libthrift.version>
     <license.skip>true</license.skip>
     <log4j.version>2.23.1</log4j.version>
@@ -128,7 +128,7 @@
     <netty.tcnative.version>2.0.65.Final</netty.tcnative.version>
     <netty.version>4.1.118.Final</netty.version>
     <parquet.format.version>2.11.0</parquet.format.version>
-    <parquet.version>1.15.1</parquet.version>
+    <parquet.version>1.15.2</parquet.version>
     <project.build.outputTimestamp>1750144553</project.build.outputTimestamp>
     <protobuf.version>3.25.5</protobuf.version>
     <proto.cas.path>${project.basedir}/src/main/protobuf/</proto.cas.path>
@@ -148,7 +148,7 @@
     <wiremock.standalone.version>2.23.2</wiremock.standalone.version>
     <xerces.version>2.12.2</xerces.version>
     <yauaa.version>7.31.0</yauaa.version>
-    <zookeeper.version>3.5.10</zookeeper.version>
+    <zookeeper.version>3.9.3</zookeeper.version>
   </properties>
 
   <scm>

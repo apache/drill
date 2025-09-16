@@ -17,6 +17,9 @@
  */
 package org.apache.drill.common;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 
@@ -24,7 +27,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
 
 public final class KerberosUtil {
-  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(KerberosUtil.class);
+  private static final Logger logger = LoggerFactory.getLogger(KerberosUtil.class);
 
   // Per this link http://docs.oracle.com/javase/jndi/tutorial/ldap/security/gssapi.html
   // "... GSS-API SASL mechanism was retrofitted to mean only Kerberos v5 ..."
