@@ -1,0 +1,2 @@
+# Directory to store oauth tokens for testing Googlesheets Storage plugin
+/src/test/resources/logback-test.xml
