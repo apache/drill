@@ -17,19 +17,19 @@
  */
 package org.apache.drill.exec.work.foreman;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import org.apache.drill.common.util.JacksonUtils;
-import org.apache.drill.exec.work.filter.RuntimeFilterRouter;
-import com.google.common.base.Preconditions;
-import com.google.common.collect.Lists;
-import com.google.protobuf.InvalidProtocolBufferException;
-import io.netty.util.concurrent.Future;
-import io.netty.util.concurrent.GenericFutureListener;
+import static org.apache.drill.exec.server.FailureUtils.EXIT_CODE_HEAP_OOM;
+
+import java.io.IOException;
+import java.util.Date;
+import java.util.List;
+
 import org.apache.drill.common.exceptions.ExecutionSetupException;
 import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.common.logical.LogicalPlan;
 import org.apache.drill.common.logical.PlanProperties.Generator.ResultMode;
+import org.apache.drill.common.util.JacksonUtils;
 import org.apache.drill.exec.ExecConstants;
+import org.apache.drill.exec.cache.CustomCacheManager;
 import org.apache.drill.exec.exception.OptimizerException;
 import org.apache.drill.exec.exception.OutOfMemoryException;
 import org.apache.drill.exec.ops.QueryContext;
@@ -39,6 +39,7 @@ import org.apache.drill.exec.physical.base.FragmentRoot;
 import org.apache.drill.exec.physical.base.PhysicalOperator;
 import org.apache.drill.exec.planner.fragment.Fragment;
 import org.apache.drill.exec.planner.fragment.MakeFragmentsVisitor;
+import org.apache.drill.exec.planner.physical.PlannerSettings;
 import org.apache.drill.exec.planner.sql.DirectPlan;
 import org.apache.drill.exec.planner.sql.DrillSqlWorker;
 import org.apache.drill.exec.proto.BitControl.PlanFragment;
@@ -56,23 +57,27 @@ import org.apache.drill.exec.rpc.RpcException;
 import org.apache.drill.exec.rpc.UserClientConnection;
 import org.apache.drill.exec.server.DrillbitContext;
 import org.apache.drill.exec.server.FailureUtils;
+import org.apache.drill.exec.server.options.OptionManager;
 import org.apache.drill.exec.server.options.OptionSet;
 import org.apache.drill.exec.testing.ControlsInjector;
 import org.apache.drill.exec.testing.ControlsInjectorFactory;
 import org.apache.drill.exec.util.Pointer;
 import org.apache.drill.exec.work.QueryWorkUnit;
 import org.apache.drill.exec.work.WorkManager.WorkerBee;
-import org.apache.drill.exec.work.foreman.rm.QueryQueue.QueueTimeoutException;
+import org.apache.drill.exec.work.filter.RuntimeFilterRouter;
 import org.apache.drill.exec.work.foreman.rm.QueryQueue.QueryQueueException;
+import org.apache.drill.exec.work.foreman.rm.QueryQueue.QueueTimeoutException;
 import org.apache.drill.exec.work.foreman.rm.QueryResourceManager;
+import com.google.common.base.Preconditions;
+import com.google.common.collect.Lists;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.IOException;
-import java.util.Date;
-import java.util.List;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.protobuf.InvalidProtocolBufferException;
 
-import static org.apache.drill.exec.server.FailureUtils.EXIT_CODE_HEAP_OOM;
+import io.netty.util.concurrent.Future;
+import io.netty.util.concurrent.GenericFutureListener;
 
 /**
  * Foreman manages all the fragments (local and remote) for a single query where this
@@ -269,9 +274,11 @@ public class Foreman implements Runnable {
         final String sql = queryRequest.getPlan();
         // log query id, username and query text before starting any real work. Also, put
         // them together such that it is easy to search based on query id
+        long start = new Date().getTime();
         logger.info("Query text for query with id {} issued by {}: {}", queryIdString,
             queryContext.getQueryUserName(), sql);
         runSQL(sql);
+        logger.info("RunSQL is executed within {}", new Date().getTime() - start);
         break;
       case EXECUTION:
         runFragment(queryRequest.getFragmentsList());
@@ -481,6 +488,7 @@ public class Foreman implements Runnable {
    * Moves query to RUNNING state.
    */
   private void startQueryProcessing() {
+    logger.info("Starting query processing");
     enqueue();
     runFragments();
     queryStateProcessor.moveToState(QueryState.RUNNING, null);
@@ -589,9 +597,50 @@ public class Foreman implements Runnable {
         queryId, queryWorkUnit.stringifyFragments()));
   }
 
+  private PhysicalPlan getOrBuildPlan(String sql, Pointer<String> textPlan, boolean planCacheEnabled)
+      throws ExecutionSetupException {
+
+    PhysicalPlan plan = null;
+
+    if (planCacheEnabled) {
+      logger.info("Cache enabled, checking entries");
+      plan = CustomCacheManager.getQueryPlan(sql);
+
+      if (plan == null) {
+        logger.info("Cache miss, generating new plan");
+        plan = DrillSqlWorker.getPlan(queryContext, sql, textPlan);
+
+        if (isCacheableQuery(sql)) {
+          CustomCacheManager.putQueryPlan(sql, plan);
+          CustomCacheManager.logCacheStats();
+        }
+      } else {
+        logger.info("Using cached plan");
+      }
+
+    } else {
+      plan = DrillSqlWorker.getPlan(queryContext, sql, textPlan);
+    }
+
+    return plan;
+  }
+
+  private boolean isCacheableQuery(String sql) {
+    return sql.trim().toUpperCase().startsWith("SELECT");
+  }
+
   private void runSQL(final String sql) throws ExecutionSetupException {
     final Pointer<String> textPlan = new Pointer<>();
-    final PhysicalPlan plan = DrillSqlWorker.getPlan(queryContext, sql, textPlan);
+    final OptionManager options = queryContext.getOptions();
+    final boolean planCacheEnabled = options.getOption(PlannerSettings.PLAN_CACHE);
+    if (planCacheEnabled) {
+      logger.info("PlanCache is enabled");
+    } else {
+      logger.info("PlanCache is disabled");
+    }
+
+    PhysicalPlan plan = getOrBuildPlan(sql, textPlan, planCacheEnabled);
+
     runPhysicalPlan(plan, textPlan);
   }
 
