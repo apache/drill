@@ -24,6 +24,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 
+import org.apache.calcite.sql.type.SqlTypeName;
 import org.apache.drill.common.expression.LogicalExpression;
 import org.apache.drill.common.expression.MajorTypeInLogicalExpression;
 import org.apache.drill.common.types.TypeProtos.DataMode;
@@ -736,6 +737,12 @@ public class TypeCastRules {
         continue;
       }
 
+      // Special handling for DECIMAL types - promote to VARDECIMAL when mixing different DECIMAL types
+      if (isDecimalType(result) && isDecimalType(next) && result != next) {
+        result = MinorType.VARDECIMAL;
+        continue;
+      }
+
       float resultCastCost = ResolverTypePrecedence.computeCost(next, result);
       float nextCastCost = ResolverTypePrecedence.computeCost(result, next);
 
@@ -749,6 +756,16 @@ public class TypeCastRules {
     }
 
     return result;
+  }
+
+  /**
+   * Helper method to check if a MinorType is a DECIMAL type
+   */
+  private static boolean isDecimalType(MinorType type) {
+    return type == MinorType.DECIMAL9 || type == MinorType.DECIMAL18 ||
+           type == MinorType.DECIMAL28DENSE || type == MinorType.DECIMAL28SPARSE ||
+           type == MinorType.DECIMAL38DENSE || type == MinorType.DECIMAL38SPARSE ||
+           type == MinorType.VARDECIMAL;
   }
 
   /**
@@ -808,7 +825,7 @@ public class TypeCastRules {
             new MajorTypeInLogicalExpression(majorType));
       }
 
-      if (DRILL_REL_DATATYPE_SYSTEM.getMaxNumericPrecision() <
+      if (DRILL_REL_DATATYPE_SYSTEM.getMaxPrecision(SqlTypeName.DECIMAL) <
           holder.getReturnType(logicalExpressions).getPrecision()) {
         return Float.POSITIVE_INFINITY;
       }

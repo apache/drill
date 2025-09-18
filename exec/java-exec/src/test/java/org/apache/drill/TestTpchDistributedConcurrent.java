@@ -102,7 +102,7 @@ public class TestTpchDistributedConcurrent extends ClusterTest {
   @BeforeClass
   public static void setUp() throws Exception {
     ClusterFixtureBuilder builder = ClusterFixture.builder(dirTestWatcher)
-        .configProperty(ExecConstants.USER_RPC_TIMEOUT, 5_000);
+        .configProperty(ExecConstants.USER_RPC_TIMEOUT, 30_000); // Increased for Calcite 1.40 compatibility
     startCluster(builder);
   }
 

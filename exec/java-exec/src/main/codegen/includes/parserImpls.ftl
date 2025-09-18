@@ -988,3 +988,4 @@ SqlNode SqlDropAllAliases() :
               .build();
    }
 }
+

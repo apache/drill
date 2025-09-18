@@ -25,6 +25,7 @@ import com.google.common.collect.Lists;
 import org.apache.calcite.linq4j.Ord;
 import org.apache.calcite.rel.RelCollations;
 import org.apache.calcite.rel.core.Window;
+import org.apache.calcite.rex.RexWindowExclusion;
 import org.apache.calcite.util.BitSets;
 import org.apache.drill.exec.planner.logical.DrillRel;
 import org.apache.drill.exec.planner.logical.DrillWindowRel;
@@ -168,6 +169,7 @@ public class WindowPrule extends Prule {
           windowBase.isRows,
           windowBase.lowerBound,
           windowBase.upperBound,
+          RexWindowExclusion.EXCLUDE_CURRENT_ROW,
           windowBase.orderKeys,
           newWinAggCalls
       );

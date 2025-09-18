@@ -35,7 +35,6 @@ import org.apache.calcite.sql.SqlLiteral;
 import org.apache.calcite.sql.SqlNode;
 import org.apache.calcite.sql.SqlNumericLiteral;
 import org.apache.calcite.sql.SqlOperator;
-import org.apache.calcite.sql.fun.SqlRandFunction;
 import org.apache.calcite.sql.fun.SqlStdOperatorTable;
 import org.apache.calcite.sql.parser.SqlParserPos;
 import org.apache.calcite.sql.type.SqlTypeName;
@@ -159,12 +158,7 @@ public class DrillConvertletTable implements SqlRexConvertletTable {
       List<RexNode> operands = call.getOperandList().stream()
         .map(cx::convertExpression)
         .collect(Collectors.toList());
-      return cx.getRexBuilder().makeCall(new SqlRandFunction() {
-        @Override
-        public boolean isDeterministic() {
-          return false;
-        }
-      }, operands);
+      return cx.getRexBuilder().makeCall(SqlStdOperatorTable.RAND, operands);
     };
   }
 

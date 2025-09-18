@@ -29,9 +29,11 @@ import org.apache.drill.exec.memory.BufferAllocator;
 import org.apache.drill.exec.memory.RootAllocatorFactory;
 
 import com.google.common.collect.Lists;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class TestMemoryRetention {
-  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(TestMemoryRetention.class);
+  private static final Logger logger = LoggerFactory.getLogger(TestMemoryRetention.class);
 
   private static final int SMALL_AVERAGE_BYTES = 1024 * 32;
   private static final int LARGE_BYTES = 32 * 1024 * 1024;

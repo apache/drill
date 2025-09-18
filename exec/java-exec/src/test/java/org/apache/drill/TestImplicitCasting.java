@@ -242,7 +242,6 @@ public class TestImplicitCasting extends ClusterTest {
 
     RowSetUtilities.verify(expected, results);
   }
-
   @Test
   public void testAvgOfStrings() throws Exception {
     String sql = "select avg(cast(employee_id as varchar)) from cp.`employee.json`";

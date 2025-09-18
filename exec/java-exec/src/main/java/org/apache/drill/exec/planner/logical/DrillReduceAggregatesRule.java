@@ -30,6 +30,7 @@ import org.apache.calcite.rel.RelNode;
 import org.apache.calcite.rel.core.Aggregate;
 import org.apache.calcite.rel.core.AggregateCall;
 import org.apache.calcite.rel.core.Window;
+import org.apache.calcite.rel.RelCollations;
 import org.apache.calcite.rel.logical.LogicalAggregate;
 import org.apache.calcite.rel.type.RelDataType;
 import org.apache.calcite.rel.type.RelDataTypeFactory;
@@ -37,6 +38,7 @@ import org.apache.calcite.rel.type.RelDataTypeField;
 import org.apache.calcite.rex.RexBuilder;
 import org.apache.calcite.rex.RexLiteral;
 import org.apache.calcite.rex.RexNode;
+import org.apache.calcite.rex.RexWindowExclusion;
 import org.apache.calcite.sql.SqlAggFunction;
 import org.apache.calcite.sql.SqlKind;
 import org.apache.calcite.sql.SqlOperator;
@@ -49,7 +51,6 @@ import org.apache.calcite.sql.fun.SqlSumEmptyIsZeroAggFunction;
 import org.apache.calcite.sql.type.SqlReturnTypeInference;
 import org.apache.calcite.sql.type.SqlTypeName;
 import org.apache.calcite.util.CompositeList;
-import org.apache.calcite.util.ImmutableIntList;
 import org.apache.calcite.util.Util;
 import org.apache.drill.exec.planner.physical.PlannerSettings;
 import org.apache.drill.exec.planner.sql.DrillCalciteSqlAggFunctionWrapper;
@@ -419,12 +420,13 @@ public class DrillReduceAggregatesRule extends RelOptRule {
         oldCall.isDistinct(),
         oldCall.isApproximate(),
         oldCall.ignoreNulls(),
-        oldCall.getArgList(),
+        ImmutableList.of(),
+        oldCall.getArgList() != null ? oldCall.getArgList() : ImmutableList.of(),
         oldCall.filterArg,
-        oldCall.distinctKeys,
-        oldCall.getCollation(),
+        null,
+        RelCollations.EMPTY,
         sumType,
-        null);
+        oldCall.getName());
   }
 
   private RexNode reduceSum(
@@ -541,12 +543,13 @@ public class DrillReduceAggregatesRule extends RelOptRule {
             oldCall.isDistinct(),
             oldCall.isApproximate(),
             oldCall.ignoreNulls(),
-            ImmutableIntList.of(argSquaredOrdinal),
+            ImmutableList.of(),
+            Collections.singletonList(argSquaredOrdinal),
             oldCall.filterArg,
-            oldCall.distinctKeys,
-            oldCall.getCollation(),
+            null,
+            RelCollations.EMPTY,
             sumType,
-            null);
+            "sum_squared");
     final RexNode sumArgSquared =
         rexBuilder.addAggCall(
             sumArgSquaredAggCall,
@@ -562,12 +565,13 @@ public class DrillReduceAggregatesRule extends RelOptRule {
             oldCall.isDistinct(),
             oldCall.isApproximate(),
             oldCall.ignoreNulls(),
-            ImmutableIntList.of(argOrdinal),
+            ImmutableList.of(),
+            Collections.singletonList(argOrdinal),
             oldCall.filterArg,
-            oldCall.distinctKeys,
-            oldCall.getCollation(),
+            null,
+            RelCollations.EMPTY,
             sumType,
-            null);
+            oldCall.getName());
     final RexNode sumArg =
           rexBuilder.addAggCall(
               sumArgAggCall,
@@ -739,10 +743,11 @@ public class DrillReduceAggregatesRule extends RelOptRule {
                   oldAggregateCall.isDistinct(),
                   oldAggregateCall.isApproximate(),
                   oldAggregateCall.ignoreNulls(),
+                  ImmutableList.of(),
                   oldAggregateCall.getArgList(),
                   oldAggregateCall.filterArg,
-                  oldAggregateCall.distinctKeys,
-                  oldAggregateCall.getCollation(),
+                  null,
+                  RelCollations.EMPTY,
                   sumType,
                   oldAggregateCall.getName());
           oldAggRel.getCluster().getRexBuilder()
@@ -816,6 +821,7 @@ public class DrillReduceAggregatesRule extends RelOptRule {
             group.isRows,
             group.lowerBound,
             group.upperBound,
+            RexWindowExclusion.EXCLUDE_CURRENT_ROW,
             group.orderKeys,
             aggCalls);
         builder.add(newGroup);

@@ -19,6 +19,7 @@ package org.apache.drill.exec.planner.physical;
 
 import org.apache.drill.common.expression.IfExpression;
 import org.apache.drill.common.expression.NullExpression;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 import org.apache.calcite.linq4j.Ord;
 import org.apache.calcite.util.BitSets;
@@ -178,7 +179,8 @@ public abstract class AggPrelBase extends DrillAggregateRelBase implements Prel 
                   sumAggFun,
                   aggCall.e.isDistinct(),
                   aggCall.e.isApproximate(),
-                  false,
+                  aggCall.e.ignoreNulls(),
+                  ImmutableList.of(),
                   Collections.singletonList(aggExprOrdinal),
                   aggCall.e.filterArg,
                   null,
@@ -193,7 +195,8 @@ public abstract class AggPrelBase extends DrillAggregateRelBase implements Prel 
                   aggCall.e.getAggregation(),
                   aggCall.e.isDistinct(),
                   aggCall.e.isApproximate(),
-                  false,
+                  aggCall.e.ignoreNulls(),
+                  ImmutableList.of(),
                   Collections.singletonList(aggExprOrdinal),
                   aggCall.e.filterArg,
                   null,
@@ -269,7 +272,8 @@ public abstract class AggPrelBase extends DrillAggregateRelBase implements Prel 
       aggregateCalls.add(AggregateCall.create(aggCall.getAggregation(),
           aggCall.isDistinct(),
           aggCall.isApproximate(),
-          false,
+          aggCall.ignoreNulls(),
+          ImmutableList.of(),
           arglist,
           aggCall.filterArg,
           null,

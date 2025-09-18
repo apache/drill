@@ -777,7 +777,7 @@ void LimitClause(Span s, SqlNode[] offsetFetch) :
         <COMMA> offsetFetch[1] = UnsignedNumericLiteralOrParam() {
             if (!this.conformance.isLimitStartCountAllowed()) {
                 throw SqlUtil.newContextException(s.end(this),
-                    RESOURCE.limitStartCountNotAllowed());
+                    RESOURCE.limitStartCountOrAllNotAllowed("LIMIT start, count"));
             }
         }
     |
@@ -6128,7 +6128,7 @@ SqlNode BuiltinFunctionCall() :
                 <FROM> {
                     if (null == flag && null == trimChars) {
                         throw SqlUtil.newContextException(getPos(),
-                            RESOURCE.illegalFromEmpty());
+                            RESOURCE.validationError("Invalid TRIM syntax"));
                     }
                 }
             |

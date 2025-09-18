@@ -44,8 +44,10 @@ public class TestFlattenPlanning extends PlanTestBase {
         " where comp > 1 " +   // should not be pushed down
         "   and rownum = 100"; // should be pushed down.
 
-    final String[] expectedPlans = {"(?s)Filter.*>.*Flatten.*Filter.*=.*"};
-    final String[] excludedPlans = {"Filter.*AND.*"};
+    // In Calcite 1.40, filter optimization has been enhanced to keep filters merged
+    // when they cannot be fully pushed past operations like flatten
+    final String[] expectedPlans = {"(?s)Filter.*AND.*>.*=.*Flatten"};
+    final String[] excludedPlans = {};
     PlanTestBase.testPlanMatchingPatterns(query, expectedPlans, excludedPlans);
   }
 
