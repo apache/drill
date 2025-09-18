@@ -698,7 +698,7 @@ public class TestPushDownAndPruningForDecimal extends ClusterTest {
         .sqlQuery(query)
         .unOrdered()
         .baselineColumns("part", "val")
-        .baselineValues(new BigDecimal("2.00"), new BigDecimal("20.00"))
+        .baselineValues(new BigDecimal("2.00"), new BigDecimal("20"))
         .go();
     }
   }
