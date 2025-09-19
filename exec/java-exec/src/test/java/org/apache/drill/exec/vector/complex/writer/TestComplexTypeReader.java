@@ -330,7 +330,7 @@ public class TestComplexTypeReader extends BaseTestQuery {
           "where employee_id = 1")
         .unOrdered()
         .baselineColumns("employee_id", "complex_field")
-        .baselineValues(1L, null)
+        .baselineValues(1, null)
         .build()
         .run();
   }

@@ -324,6 +324,7 @@ public enum PlannerPhase {
       /*
        Filter push-down related rules
        */
+      RuleInstance.FILTER_MERGE_RULE,
       DrillPushFilterPastProjectRule.LOGICAL,
       DrillPushFilterPastProjectRule.DRILL_INSTANCE,
       // Due to infinite loop in planning (DRILL-3257/CALCITE-1271), temporarily use this rule in Hep planner
@@ -331,7 +332,6 @@ public enum PlannerPhase {
       DrillFilterAggregateTransposeRule.INSTANCE,
       DrillProjectLateralJoinTransposeRule.INSTANCE,
       DrillProjectPushIntoLateralJoinRule.INSTANCE,
-      RuleInstance.FILTER_MERGE_RULE,
       RuleInstance.FILTER_CORRELATE_RULE,
       RuleInstance.AGGREGATE_REMOVE_RULE,
       RuleInstance.PROJECT_REMOVE_RULE,

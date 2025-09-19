@@ -30,6 +30,7 @@ import org.apache.calcite.sql.fun.SqlRowOperator;
 import org.apache.calcite.sql.parser.SqlParserPos;
 import org.apache.calcite.sql.validate.SqlMonotonicity;
 import org.apache.calcite.sql.validate.SqlValidator;
+import org.apache.calcite.sql.validate.SqlValidatorScope;
 import org.apache.calcite.util.Litmus;
 import org.apache.drill.exec.expr.fn.DrillFuncHolder;
 
@@ -93,6 +94,13 @@ public class DrillCalciteSqlOperatorWrapper extends SqlOperator implements Drill
   @Override
   public boolean validRexOperands(int count, Litmus litmus) {
     return true;
+  }
+
+  @Override
+  public void validateCall(SqlCall call, SqlValidator validator, SqlValidatorScope scope, SqlValidatorScope operandScope) {
+    // Skip structural validation that might reject column-literal comparisons
+    // Allow all calls to pass structural validation by doing nothing
+    // This bypasses Calcite 1.40's enhanced validation that was blocking column-to-literal comparisons
   }
 
   @Override

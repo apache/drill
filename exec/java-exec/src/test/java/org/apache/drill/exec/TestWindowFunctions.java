@@ -696,8 +696,8 @@ public class TestWindowFunctions extends ClusterTest {
         "where position_id = 2 \n" +
         "window w as(partition by position_id order by employee_id)";
 
-    // Validate the plan
-    final String[] expectedPlan = {"Window.*partition \\{0\\} order by \\[1\\].*RANK\\(\\), \\$SUM0\\(\\$2\\), SUM\\(\\$1\\), \\$SUM0\\(\\$3\\)",
+    // Validate the plan - Calcite 1.40 changed the order of window function aggregates
+    final String[] expectedPlan = {"Window.*partition \\{0\\} order by \\[1\\].*RANK\\(\\), \\$SUM0\\(\\$3\\), SUM\\(\\$1\\), \\$SUM0\\(\\$2\\)",
         "Scan.*columns=\\[`position_id`, `employee_id`\\]"};
     final String[] excludedPatterns = {"Scan.*columns=\\[`\\*`\\]"};
 
@@ -1142,7 +1142,7 @@ public class TestWindowFunctions extends ClusterTest {
 
     String[] expectedPlan = {
       "Filter\\(condition=\\[SEARCH\\(\\$\\d, Sarg\\[\\[5..7\\]\\]\\)\\]\\)",
-      "Window\\(.*?\\[window\\(order by \\[\\d\\] rows between UNBOUNDED PRECEDING and CURRENT ROW aggs \\[ROW_NUMBER\\(\\)\\]\\)\\]\\)"
+      "Window\\(.*?window.*?\\[.*?order by \\[\\d\\].*?rows between UNBOUNDED PRECEDING and CURRENT ROW.*?aggs \\[ROW_NUMBER\\(\\)\\].*?\\)"
     };
 
     client.queryBuilder()

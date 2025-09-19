@@ -204,13 +204,13 @@ public class TestVarlenDecimal extends ClusterTest {
     testBuilder().sqlQuery(query)
       .unOrdered()
       .baselineColumns("Col1")
-      .baselineValues(new BigDecimal("10.000000"))
-      .baselineValues(new BigDecimal("22.000000"))
+      .baselineValues(new BigDecimal("10"))
+      .baselineValues(new BigDecimal("22"))
       .go();
 
     List<Pair<SchemaPath, TypeProtos.MajorType>> expectedSchema = Collections.singletonList(Pair.of(
         SchemaPath.getSimplePath("Col1"),
-        Types.withPrecisionAndScale(MinorType.VARDECIMAL, DataMode.REQUIRED, 38, 6)
+        Types.withPrecisionAndScale(MinorType.VARDECIMAL, DataMode.REQUIRED, 19, 0)
     ));
 
     testBuilder()

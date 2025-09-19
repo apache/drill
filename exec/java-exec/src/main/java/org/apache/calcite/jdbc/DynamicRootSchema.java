@@ -21,6 +21,9 @@ import org.apache.calcite.DataContext;
 import org.apache.calcite.linq4j.tree.Expression;
 import org.apache.calcite.linq4j.tree.Expressions;
 import org.apache.calcite.schema.SchemaPlus;
+import org.apache.calcite.schema.lookup.Lookup;
+import org.apache.calcite.schema.lookup.LikePattern;
+import org.apache.calcite.schema.lookup.Named;
 import org.apache.calcite.util.BuiltInMethod;
 import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.common.exceptions.UserExceptionUtils;
@@ -41,6 +44,7 @@ import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
@@ -67,14 +71,58 @@ public class DynamicRootSchema extends DynamicSchema {
   }
 
   @Override
-  protected CalciteSchema getImplicitSubSchema(String schemaName,
-                                               boolean caseSensitive) {
-    String actualSchemaName = aliasRegistryProvider.getStorageAliasesRegistry()
-      .getUserAliases(schemaConfig.getUserName()).get(SchemaPath.getSimplePath(schemaName).toExpr());
-    return getSchema(actualSchemaName != null
-        ? SchemaPath.parseFromString(actualSchemaName).getRootSegmentPath()
-        : schemaName,
-      caseSensitive);
+  public Lookup<CalciteSchema> subSchemas() {
+    Lookup<CalciteSchema> baseLookup = super.subSchemas();
+    return new StoragePluginLookup(baseLookup);
+  }
+
+  private class StoragePluginLookup implements Lookup<CalciteSchema> {
+    private final Lookup<CalciteSchema> baseLookup;
+
+    StoragePluginLookup(Lookup<CalciteSchema> baseLookup) {
+      this.baseLookup = baseLookup;
+    }
+
+    @Override
+    public CalciteSchema get(String schemaName) {
+      // First check the base lookup for existing schemas
+      CalciteSchema existing = baseLookup.get(schemaName);
+      if (existing != null) {
+        return existing;
+      }
+
+      // Then try to resolve through storage plugin
+      String actualSchemaName = aliasRegistryProvider.getStorageAliasesRegistry()
+        .getUserAliases(schemaConfig.getUserName()).get(SchemaPath.getSimplePath(schemaName).toExpr());
+      return getSchema(actualSchemaName != null
+          ? SchemaPath.parseFromString(actualSchemaName).getRootSegmentPath()
+          : schemaName,
+        false);
+    }
+
+    @Override
+    public Named<CalciteSchema> getIgnoreCase(String schemaName) {
+      Named<CalciteSchema> existing = baseLookup.getIgnoreCase(schemaName);
+      if (existing != null) {
+        return existing;
+      }
+
+      CalciteSchema schema = get(schemaName);
+      return schema != null ? new Named<>(schemaName, schema) : null;
+    }
+
+    @Override
+    public Set<String> getNames(LikePattern pattern) {
+      Set<String> names = new HashSet<>(baseLookup.getNames(pattern));
+      // Add storage plugin names that match the pattern
+      Set<String> pluginNames = storages.availablePlugins();
+      for (String pluginName : pluginNames) {
+        if (pattern.matcher().apply(pluginName)) {
+          names.add(pluginName);
+        }
+      }
+      return names;
+    }
   }
 
   private CalciteSchema getSchema(String schemaName, boolean caseSensitive) {
@@ -230,10 +278,10 @@ public class DynamicRootSchema extends DynamicSchema {
   }
 
   @Override
-  protected TableEntry getImplicitTable(String tableName, boolean caseSensitive) {
+  protected TableEntry getImplicitTableBasedOnNullaryFunction(String tableName, boolean caseSensitive) {
     return Optional.ofNullable(getTemporaryTable(tableName, caseSensitive))
       .<TableEntry>map(table -> new TableEntryImpl(this, tableName, table.getTable(), table.sqls))
-      .orElse(super.getImplicitTable(tableName, true));
+      .orElse(super.getImplicitTableBasedOnNullaryFunction(tableName, true));
   }
 
   private TableEntry getTemporaryTable(String tableName, boolean caseSensitive) {
@@ -249,7 +297,7 @@ public class DynamicRootSchema extends DynamicSchema {
     }
 
     while (!pathSegment.isLastPath()) {
-      currentSchema = currentSchema.getImplicitSubSchema(pathSegment.getPath(), caseSensitive);
+      currentSchema = currentSchema.getSubSchema(pathSegment.getPath(), caseSensitive);
       pathSegment = pathSegment.getChild().getNameSegment();
     }
 

@@ -33,6 +33,8 @@ import org.apache.calcite.rex.RexSubQuery;
 import org.apache.calcite.rex.RexTableInputRef;
 import org.apache.calcite.rex.RexVisitor;
 import org.apache.calcite.rex.RexWindow;
+import org.apache.calcite.rex.RexLambdaRef;
+import org.apache.calcite.rex.RexLambda;
 import org.apache.drill.exec.planner.sql.DrillSqlOperator;
 
 /**
@@ -130,6 +132,16 @@ class JdbcExpressionCheck implements RexVisitor<Boolean> {
 
   @Override
   public Boolean visitPatternFieldRef(RexPatternFieldRef fieldRef) {
+    return false;
+  }
+
+  @Override
+  public Boolean visitLambdaRef(RexLambdaRef lambdaRef) {
+    return false;
+  }
+
+  @Override
+  public Boolean visitLambda(RexLambda lambda) {
     return false;
   }
 }

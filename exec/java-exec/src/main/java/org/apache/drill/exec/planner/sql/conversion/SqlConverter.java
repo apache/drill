@@ -239,7 +239,7 @@ public class SqlConverter {
 
       RelNode relNode = rel.rel;
       List<RexNode> expressions = rel.fields.stream()
-          .map(f -> builder.makeInputRef(relNode, f.left))
+          .map(f -> (RexNode)builder.makeInputRef(relNode, f.getKey()))
           .collect(Collectors.toList());
 
       RelNode project = LogicalProject.create(rel.rel, Collections.emptyList(), expressions, rel.validatedRowType);

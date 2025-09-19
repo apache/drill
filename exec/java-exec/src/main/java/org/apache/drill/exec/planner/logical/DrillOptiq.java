@@ -316,7 +316,16 @@ public class DrillOptiq {
           if (isMap) {
             return handleMapNumericKey(literal, operand, dataType, left);
           }
-          return left.getChild(((BigDecimal) literal.getValue()).intValue());
+          Object indexValue = literal.getValue();
+          int index;
+          if (indexValue instanceof BigDecimal) {
+            index = ((BigDecimal) indexValue).intValue();
+          } else if (indexValue instanceof Integer) {
+            index = (Integer) indexValue;
+          } else {
+            index = ((Number) indexValue).intValue();
+          }
+          return left.getChild(index);
         case CHAR:
         case TIMESTAMP:
         case TIME:
@@ -818,7 +827,15 @@ public class DrillOptiq {
         if (isLiteralNull(literal)) {
           return createNullExpr(MinorType.BIGINT);
         }
-        long l = (((BigDecimal) literal.getValue()).setScale(0, BigDecimal.ROUND_HALF_UP)).longValue();
+        long l;
+        Object longValue = literal.getValue();
+        if (longValue instanceof BigDecimal) {
+          l = ((BigDecimal) longValue).setScale(0, BigDecimal.ROUND_HALF_UP).longValue();
+        } else if (longValue instanceof Long) {
+          l = (Long) longValue;
+        } else {
+          l = ((Number) longValue).longValue();
+        }
         return ValueExpressions.getBigInt(l);
       case BOOLEAN:
         if (isLiteralNull(literal)) {
@@ -834,19 +851,43 @@ public class DrillOptiq {
         if (isLiteralNull(literal)){
           return createNullExpr(MinorType.FLOAT8);
         }
-        double d = ((BigDecimal) literal.getValue()).doubleValue();
+        double d;
+        Object doubleValue = literal.getValue();
+        if (doubleValue instanceof BigDecimal) {
+          d = ((BigDecimal) doubleValue).doubleValue();
+        } else if (doubleValue instanceof Double) {
+          d = (Double) doubleValue;
+        } else {
+          d = ((Number) doubleValue).doubleValue();
+        }
         return ValueExpressions.getFloat8(d);
       case FLOAT:
         if (isLiteralNull(literal)) {
           return createNullExpr(MinorType.FLOAT4);
         }
-        float f = ((BigDecimal) literal.getValue()).floatValue();
+        float f;
+        Object floatValue = literal.getValue();
+        if (floatValue instanceof BigDecimal) {
+          f = ((BigDecimal) floatValue).floatValue();
+        } else if (floatValue instanceof Float) {
+          f = (Float) floatValue;
+        } else {
+          f = ((Number) floatValue).floatValue();
+        }
         return ValueExpressions.getFloat4(f);
       case INTEGER:
         if (isLiteralNull(literal)) {
           return createNullExpr(MinorType.INT);
         }
-        int a = (((BigDecimal) literal.getValue()).setScale(0, BigDecimal.ROUND_HALF_UP)).intValue();
+        int a;
+        Object intValue = literal.getValue();
+        if (intValue instanceof BigDecimal) {
+          a = ((BigDecimal) intValue).setScale(0, BigDecimal.ROUND_HALF_UP).intValue();
+        } else if (intValue instanceof Integer) {
+          a = (Integer) intValue;
+        } else {
+          a = ((Number) intValue).intValue();
+        }
         return ValueExpressions.getInt(a);
 
       case DECIMAL:
@@ -900,7 +941,16 @@ public class DrillOptiq {
         if (isLiteralNull(literal)) {
           return createNullExpr(MinorType.INTERVALYEAR);
         }
-        return (ValueExpressions.getIntervalYear(((BigDecimal) (literal.getValue())).intValue()));
+        Object intervalYearValue = literal.getValue();
+        int intervalYear;
+        if (intervalYearValue instanceof BigDecimal) {
+          intervalYear = ((BigDecimal) intervalYearValue).intValue();
+        } else if (intervalYearValue instanceof Integer) {
+          intervalYear = (Integer) intervalYearValue;
+        } else {
+          intervalYear = ((Number) intervalYearValue).intValue();
+        }
+        return (ValueExpressions.getIntervalYear(intervalYear));
       case INTERVAL_DAY:
       case INTERVAL_DAY_HOUR:
       case INTERVAL_DAY_MINUTE:
@@ -914,7 +964,16 @@ public class DrillOptiq {
         if (isLiteralNull(literal)) {
           return createNullExpr(MinorType.INTERVALDAY);
         }
-        return (ValueExpressions.getIntervalDay(((BigDecimal) (literal.getValue())).longValue()));
+        Object intervalDayValue = literal.getValue();
+        long intervalDay;
+        if (intervalDayValue instanceof BigDecimal) {
+          intervalDay = ((BigDecimal) intervalDayValue).longValue();
+        } else if (intervalDayValue instanceof Long) {
+          intervalDay = (Long) intervalDayValue;
+        } else {
+          intervalDay = ((Number) intervalDayValue).longValue();
+        }
+        return (ValueExpressions.getIntervalDay(intervalDay));
       case NULL:
         return NullExpression.INSTANCE;
       case ANY:

@@ -28,6 +28,8 @@ import org.apache.calcite.sql.SqlOperator;
 import org.apache.calcite.sql.fun.SqlStdOperatorTable;
 import org.apache.calcite.sql.parser.SqlParserPos;
 import org.apache.calcite.sql.validate.SqlUserDefinedTableMacro;
+import org.apache.calcite.sql.validate.SqlValidator;
+import org.apache.calcite.sql.validate.SqlValidatorScope;
 import org.apache.calcite.util.Util;
 import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.exec.planner.logical.DrillTable;
@@ -91,7 +93,25 @@ public class DrillTableInfo {
         AbstractSchema drillSchema = SchemaUtilities.resolveToDrillSchema(
             config.getConverter().getDefaultSchema(), SchemaUtilities.getSchemaPath(tableIdentifier));
 
-        DrillTable table = (DrillTable) tableMacro.getTable(new SqlCallBinding(config.getConverter().getValidator(), null, call.operand(0)));
+        // For Calcite 1.40 compatibility: handle the scope requirement with fallback
+        SqlValidator validator = config.getConverter().getValidator();
+        DrillTable table;
+        try {
+          // Try to create the SqlCallBinding with a proper scope
+          SqlValidatorScope scope;
+          try {
+            scope = validator.getOverScope(call.operand(0));
+          } catch (Exception e) {
+            // If getOverScope fails, use null scope as fallback
+            scope = null;
+          }
+          table = (DrillTable) tableMacro.getTable(new SqlCallBinding(validator, scope, call.operand(0)));
+        } catch (Exception e) {
+          // If all attempts fail, provide a more informative error message
+          throw UserException.parseError(e)
+              .message("Unable to resolve table macro. This may be due to Calcite 1.40 compatibility changes. Error: %s", e.getMessage())
+              .build();
+        }
         return new DrillTableInfo(table, drillSchema.getSchemaPath(), Util.last(tableIdentifier.names));
       }
       case IDENTIFIER: {

@@ -27,6 +27,7 @@ import org.apache.calcite.rel.core.Filter;
 import org.apache.calcite.rel.core.Project;
 import org.apache.calcite.rel.logical.LogicalFilter;
 import org.apache.calcite.rel.logical.LogicalProject;
+import org.apache.calcite.rex.RexCall;
 import org.apache.calcite.rex.RexNode;
 import org.apache.calcite.rex.RexUtil;
 import org.apache.calcite.tools.RelBuilder;
@@ -73,9 +74,9 @@ public class DrillPushFilterPastProjectRule extends RelOptRule {
     final List<RexNode> qualifiedPredList = Lists.newArrayList();
     final List<RexNode> unqualifiedPredList = Lists.newArrayList();
 
-
     for (final RexNode pred : predList) {
-      if (DrillRelOptUtil.findOperators(pred, projRel.getProjects(), BANNED_OPERATORS) == null) {
+      RexCall foundOp = DrillRelOptUtil.findOperators(pred, projRel.getProjects(), BANNED_OPERATORS);
+      if (foundOp == null) {
         qualifiedPredList.add(pred);
       } else {
         unqualifiedPredList.add(pred);
@@ -83,7 +84,9 @@ public class DrillPushFilterPastProjectRule extends RelOptRule {
     }
 
     final RexNode qualifedPred = RexUtil.composeConjunction(filterRel.getCluster().getRexBuilder(), qualifiedPredList, true);
+    final RexNode unqualifiedPred = RexUtil.composeConjunction(filterRel.getCluster().getRexBuilder(), unqualifiedPredList, true);
 
+    // If there are no predicates to push, don't proceed
     if (qualifedPred == null) {
       return;
     }
@@ -104,9 +107,8 @@ public class DrillPushFilterPastProjectRule extends RelOptRule {
             .projectNamed(Pair.left(projRel.getNamedProjects()), Pair.right(projRel.getNamedProjects()), true)
             .build();
 
-    final RexNode unqualifiedPred = RexUtil.composeConjunction(filterRel.getCluster().getRexBuilder(), unqualifiedPredList, true);
-
     if (unqualifiedPred == null) {
+      // All predicates can be pushed down
       call.transformTo(newProjRel);
     } else {
       // if there are filters not qualified to be pushed down, then we have to put those filters on top of

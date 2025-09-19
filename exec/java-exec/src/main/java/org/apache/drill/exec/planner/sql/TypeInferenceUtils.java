@@ -457,11 +457,12 @@ public class TypeInferenceUtils {
       final RelDataType operandType = opBinding.getOperandType(0);
       final TypeProtos.MinorType inputMinorType = getDrillTypeFromCalciteType(operandType);
 
+      // For CAST_HIGH_OP, prefer FLOAT8 over BIGINT for better precision in AVG calculations
       Optional<TypeProtos.MinorType> targetType = TypeCastRules.getCheapestCast(
         inputMinorType,
-        TypeProtos.MinorType.BIGINT,
         TypeProtos.MinorType.FLOAT8,
-        TypeProtos.MinorType.VARDECIMAL
+        TypeProtos.MinorType.VARDECIMAL,
+        TypeProtos.MinorType.BIGINT
       );
 
       if (!targetType.isPresent()) {
@@ -474,20 +475,20 @@ public class TypeInferenceUtils {
       }
 
       switch (targetType.get()) {
-        case BIGINT: return createCalciteTypeWithNullability(
-          factory,
-          SqlTypeName.BIGINT,
-          isNullable
-        );
         case FLOAT8: return createCalciteTypeWithNullability(
           factory,
           SqlTypeName.DOUBLE,
           isNullable
         );
+        case BIGINT: return createCalciteTypeWithNullability(
+          factory,
+          SqlTypeName.BIGINT,
+          isNullable
+        );
         case VARDECIMAL:
           RelDataType sqlType = factory.createSqlType(
             SqlTypeName.DECIMAL,
-            DrillRelDataTypeSystem.DRILL_REL_DATATYPE_SYSTEM.getMaxNumericPrecision(),
+            DrillRelDataTypeSystem.DRILL_REL_DATATYPE_SYSTEM.getMaxPrecision(SqlTypeName.DECIMAL),
             Math.min(
               operandType.getScale(),
               DrillRelDataTypeSystem.DRILL_REL_DATATYPE_SYSTEM.getMaxNumericScale()
@@ -896,7 +897,7 @@ public class TypeInferenceUtils {
         case VARDECIMAL:
           RelDataType sqlType = factory.createSqlType(
             SqlTypeName.DECIMAL,
-            DrillRelDataTypeSystem.DRILL_REL_DATATYPE_SYSTEM.getMaxNumericPrecision(),
+            DrillRelDataTypeSystem.DRILL_REL_DATATYPE_SYSTEM.getMaxPrecision(SqlTypeName.DECIMAL),
             Math.min(
               Math.max(6, operandType.getScale()),
               DrillRelDataTypeSystem.DRILL_REL_DATATYPE_SYSTEM.getMaxNumericScale()

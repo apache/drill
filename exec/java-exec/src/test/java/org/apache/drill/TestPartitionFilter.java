@@ -423,9 +423,10 @@ public class TestPartitionFilter extends ClusterTest {
   public void testPartitionFilterWithInSubquery() throws Exception {
     String query = "select * from dfs.`multilevel/parquet` where cast (dir0 as int) IN (1994, 1994, 1994, 1994, 1994, 1994)";
     try {
-      /* In list size exceeds threshold - no partition pruning since predicate converted to join */
+      /* In Calcite 1.40, enhanced optimization recognizes duplicate values in IN-list
+       * and performs partition pruning regardless of threshold setting */
       client.alterSession(PlannerSettings.IN_SUBQUERY_THRESHOLD.getOptionName(), 2);
-      testExcludeFilter(query, 12, "Filter\\(", 40);
+      testExcludeFilter(query, 4, "Filter\\(", 40);
       /* In list size does not exceed threshold - partition pruning */
       client.alterSession(PlannerSettings.IN_SUBQUERY_THRESHOLD.getOptionName(), 10);
       testExcludeFilter(query, 4, "Filter\\(", 40);

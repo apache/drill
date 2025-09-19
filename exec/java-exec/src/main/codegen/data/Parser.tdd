@@ -960,6 +960,10 @@
   includeAdditionalDeclarations: false,
   includeParsingStringLiteralAsArrayLiteral: false,
 
-  identifierMaxLength: 1024
+  identifierMaxLength: 1024,
+
+  # Configuration for Calcite 1.40 parser template
+  setOptionParserMethod: "DrillSqlSetOption",
+  truncateStatementParserMethods: []
 
 }
