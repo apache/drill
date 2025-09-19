@@ -168,7 +168,12 @@ public abstract class AggPrelBase extends DrillAggregateRelBase implements Prel 
       FieldReference ref = FieldReference.getWithQuotedRef(fields.get(aggExprOrdinal));
       LogicalExpression expr = toDrill(aggCall.e, childFields);
       NamedExpression ne = new NamedExpression(expr, ref);
-      aggExprs.add(ne);
+
+      // Skip LITERAL_AGG expressions from aggExprs as they don't need workspace variables
+      // LITERAL_AGG is handled at query planning time and returns constant values
+      if (!"LITERAL_AGG".equals(aggCall.e.getAggregation().getName())) {
+        aggExprs.add(ne);
+      }
 
       if (getOperatorPhase() == OperatorPhase.PHASE_1of2) {
         if (aggCall.e.getAggregation().getName().equals("COUNT")) {

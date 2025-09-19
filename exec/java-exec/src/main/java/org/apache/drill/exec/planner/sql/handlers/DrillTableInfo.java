@@ -93,24 +93,24 @@ public class DrillTableInfo {
         AbstractSchema drillSchema = SchemaUtilities.resolveToDrillSchema(
             config.getConverter().getDefaultSchema(), SchemaUtilities.getSchemaPath(tableIdentifier));
 
-        // For Calcite 1.40 compatibility: handle the scope requirement
+        // For Calcite 1.40 compatibility: handle the scope requirement with fallback
         SqlValidator validator = config.getConverter().getValidator();
         DrillTable table;
         try {
           // Try to create the SqlCallBinding with a proper scope
-          SqlValidatorScope scope = validator.getOverScope(call.operand(0));
+          SqlValidatorScope scope;
+          try {
+            scope = validator.getOverScope(call.operand(0));
+          } catch (Exception e) {
+            // If getOverScope fails, use null scope as fallback
+            scope = null;
+          }
           table = (DrillTable) tableMacro.getTable(new SqlCallBinding(validator, scope, call.operand(0)));
         } catch (Exception e) {
-          // If scope-based approach fails, try to get the table without scope validation
-          // This is a fallback for Calcite 1.40 compatibility where scope requirements changed
-          try {
-            // Try with null scope as fallback - this may work in some cases
-            table = (DrillTable) tableMacro.getTable(new SqlCallBinding(validator, null, call.operand(0)));
-          } catch (Exception e2) {
-            throw UserException.parseError(e)
-                .message("Unable to resolve table macro due to Calcite 1.40 scope validation changes: %s", e.getMessage())
-                .build();
-          }
+          // If all attempts fail, provide a more informative error message
+          throw UserException.parseError(e)
+              .message("Unable to resolve table macro. This may be due to Calcite 1.40 compatibility changes. Error: %s", e.getMessage())
+              .build();
         }
         return new DrillTableInfo(table, drillSchema.getSchemaPath(), Util.last(tableIdentifier.names));
       }

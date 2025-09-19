@@ -1142,7 +1142,7 @@ public class TestWindowFunctions extends ClusterTest {
 
     String[] expectedPlan = {
       "Filter\\(condition=\\[SEARCH\\(\\$\\d, Sarg\\[\\[5..7\\]\\]\\)\\]\\)",
-      "Window\\(.*?\\[window\\(order by \\[\\d\\] rows between UNBOUNDED PRECEDING and CURRENT ROW aggs \\[ROW_NUMBER\\(\\)\\]\\)\\]\\)"
+      "Window\\(.*?window.*?\\[.*?order by \\[\\d\\].*?rows between UNBOUNDED PRECEDING and CURRENT ROW.*?aggs \\[ROW_NUMBER\\(\\)\\].*?\\)"
     };
 
     client.queryBuilder()

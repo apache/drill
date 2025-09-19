@@ -39,6 +39,8 @@ public class DrillRelDataTypeSystem extends RelDataTypeSystemImpl {
       case TIMESTAMP:
       case TIME:
         return Types.DEFAULT_TIMESTAMP_PRECISION;
+      case DECIMAL:
+        return 38;
       default:
         return super.getDefaultPrecision(typeName);
     }
