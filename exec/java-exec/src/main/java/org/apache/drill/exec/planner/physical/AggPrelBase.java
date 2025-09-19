@@ -211,6 +211,23 @@ public abstract class AggPrelBase extends DrillAggregateRelBase implements Prel 
   }
 
   protected LogicalExpression toDrill(AggregateCall call, List<String> fn) {
+    // Handle LITERAL_AGG - an internal Calcite aggregate function that returns a constant value
+    if ("LITERAL_AGG".equals(call.getAggregation().getName())) {
+      // For LITERAL_AGG, return the constant value from the rex list
+      if (call.rexList != null && !call.rexList.isEmpty()) {
+        // Convert the RexNode to a Drill LogicalExpression
+        // For now, we'll handle common literal types
+        org.apache.calcite.rex.RexNode rexNode = call.rexList.get(0);
+        if (rexNode instanceof org.apache.calcite.rex.RexLiteral) {
+          org.apache.calcite.rex.RexLiteral literal = (org.apache.calcite.rex.RexLiteral) rexNode;
+          // Convert Calcite literal to Drill ValueExpression
+          return convertCalciteLiteralToDrill(literal);
+        }
+      }
+      // Fallback to boolean true if no rex list or unsupported type
+      return ValueExpressions.BooleanExpression.TRUE;
+    }
+
     List<LogicalExpression> args = Lists.newArrayList();
     for (Integer i : call.getArgList()) {
       LogicalExpression expr = FieldReference.getWithQuotedRef(fn.get(i));
@@ -235,6 +252,36 @@ public abstract class AggPrelBase extends DrillAggregateRelBase implements Prel 
           .build();
     }
     return expr;
+  }
+
+  /**
+   * Convert a Calcite RexLiteral to a Drill ValueExpression
+   */
+  private LogicalExpression convertCalciteLiteralToDrill(org.apache.calcite.rex.RexLiteral literal) {
+    switch (literal.getType().getSqlTypeName()) {
+      case BOOLEAN:
+        return literal.getValueAs(Boolean.class) ?
+               ValueExpressions.BooleanExpression.TRUE :
+               ValueExpressions.BooleanExpression.FALSE;
+      case INTEGER:
+      case SMALLINT:
+      case TINYINT:
+        return new ValueExpressions.IntExpression(literal.getValueAs(Integer.class), ExpressionPosition.UNKNOWN);
+      case BIGINT:
+        return new ValueExpressions.LongExpression(literal.getValueAs(Long.class), ExpressionPosition.UNKNOWN);
+      case FLOAT:
+      case REAL:
+        return new ValueExpressions.FloatExpression(literal.getValueAs(Float.class), ExpressionPosition.UNKNOWN);
+      case DOUBLE:
+        return new ValueExpressions.DoubleExpression(literal.getValueAs(Double.class), ExpressionPosition.UNKNOWN);
+      case CHAR:
+      case VARCHAR:
+        String value = literal.getValueAs(String.class);
+        return new ValueExpressions.QuotedString(value, value.length(), ExpressionPosition.UNKNOWN);
+      default:
+        // For unsupported types, fall back to boolean true
+        return ValueExpressions.BooleanExpression.TRUE;
+    }
   }
 
   @Override

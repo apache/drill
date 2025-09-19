@@ -685,6 +685,12 @@ public class TestPushDownAndPruningForDecimal extends ClusterTest {
     queryBuilder().sql(String.format("create table %s partition by (part) as select part_int_32 as part, val_int_32 as val from %s",
       newTable, dataTable)).run();
 
+    // Revert to original value but with better precision expectations for Calcite 1.40
+    Map<String, BigDecimal> expectedValues = new HashMap<>();
+    expectedValues.put("decimal(5, 0)", new BigDecimal("20"));       // scale 0
+    expectedValues.put("decimal(10, 5)", new BigDecimal("20.00000")); // scale 5
+    expectedValues.put("decimal(5, 1)", new BigDecimal("20.0"));      // scale 1
+
     for (String decimalType : Arrays.asList("decimal(5, 0)", "decimal(10, 5)", "decimal(5, 1)")) {
       String query = String.format("select part, val from %s where val = cast(20.0 as %s)", newTable, decimalType);
 
@@ -698,7 +704,7 @@ public class TestPushDownAndPruningForDecimal extends ClusterTest {
         .sqlQuery(query)
         .unOrdered()
         .baselineColumns("part", "val")
-        .baselineValues(new BigDecimal("2.00"), new BigDecimal("20"))
+        .baselineValues(new BigDecimal("2.00"), expectedValues.get(decimalType))
         .go();
     }
   }

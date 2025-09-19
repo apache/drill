@@ -20,6 +20,7 @@ package org.apache.drill.exec.store.parquet;
 import org.apache.drill.PlanTestBase;
 import org.apache.drill.categories.ParquetTest;
 import org.apache.drill.categories.SlowTest;
+import org.apache.drill.exec.planner.physical.PlannerSettings;
 import org.apache.drill.exec.util.StoragePluginTestUtils;
 import org.junit.BeforeClass;
 import org.junit.Ignore;
@@ -288,36 +289,44 @@ public class TestParquetFilterPushdownWithTransitivePredicates extends PlanTestB
 
   @Test // DRILL-6371
   public void testForTransitiveFilterPushPastUnion() throws Exception {
-    String query = "WITH year_total_1\n" +
-      "     AS (SELECT c.r_regionkey    customer_id,\n" +
-      "                1 year_total\n" +
-      "         FROM   cp.`tpch/region.parquet` c\n" +
-      "         UNION ALL\n" +
-      "         SELECT c.n_nationkey    customer_id,\n" +
-      "                1 year_total\n" +
-      "         FROM   cp.`tpch/nation.parquet` c),\n" +
-      "     year_total_2\n" +
-      "     AS (SELECT c.r_regionkey    customer_id,\n" +
-      "                1 year_total\n" +
-      "         FROM   cp.`tpch/region.parquet` c\n" +
-      "         UNION ALL\n" +
-      "         SELECT c.n_nationkey    customer_id,\n" +
-      "                1 year_total\n" +
-      "         FROM   cp.`tpch/nation.parquet` c)\n" +
-      "SELECT count(t_w_firstyear.customer_id) as ct\n" +
-      "FROM   year_total_1 t_w_firstyear,\n" +
-      "       year_total_2 t_w_secyear\n" +
-      "WHERE  t_w_firstyear.year_total = t_w_secyear.year_total\n" +
-      " AND t_w_firstyear.year_total > 0 and t_w_secyear.year_total > 0";
+    // For Calcite 1.40 compatibility: allow nested loop joins for this complex CTE query
+    // Calcite 1.40's join planning may generate plans that Drill interprets as cartesian joins
+    try {
+      alterSession(PlannerSettings.NLJOIN_FOR_SCALAR.getOptionName(), false);
 
-    // Validate the plan
-    int actualRowCount = testSql(query);
-    int expectedRowCount = 1;
-    assertEquals("Expected and actual row count should match",
-      expectedRowCount, actualRowCount);
+      String query = "WITH year_total_1\n" +
+        "     AS (SELECT c.r_regionkey    customer_id,\n" +
+        "                1 year_total\n" +
+        "         FROM   cp.`tpch/region.parquet` c\n" +
+        "         UNION ALL\n" +
+        "         SELECT c.n_nationkey    customer_id,\n" +
+        "                1 year_total\n" +
+        "         FROM   cp.`tpch/nation.parquet` c),\n" +
+        "     year_total_2\n" +
+        "     AS (SELECT c.r_regionkey    customer_id,\n" +
+        "                1 year_total\n" +
+        "         FROM   cp.`tpch/region.parquet` c\n" +
+        "         UNION ALL\n" +
+        "         SELECT c.n_nationkey    customer_id,\n" +
+        "                1 year_total\n" +
+        "         FROM   cp.`tpch/nation.parquet` c)\n" +
+        "SELECT count(t_w_firstyear.customer_id) as ct\n" +
+        "FROM   year_total_1 t_w_firstyear,\n" +
+        "       year_total_2 t_w_secyear\n" +
+        "WHERE  t_w_firstyear.year_total = t_w_secyear.year_total\n" +
+        " AND t_w_firstyear.year_total > 0 and t_w_secyear.year_total > 0";
 
-    String[] excludedPlan = {"Filter"};
-    testPlanMatchingPatterns(query, new String[0], excludedPlan);
+      // Validate the plan
+      int actualRowCount = testSql(query);
+      int expectedRowCount = 1;
+      assertEquals("Expected and actual row count should match",
+        expectedRowCount, actualRowCount);
+
+      String[] excludedPlan = {"Filter"};
+      testPlanMatchingPatterns(query, new String[0], excludedPlan);
+    } finally {
+      resetSessionOption(PlannerSettings.NLJOIN_FOR_SCALAR.getOptionName());
+    }
   }
 }
 

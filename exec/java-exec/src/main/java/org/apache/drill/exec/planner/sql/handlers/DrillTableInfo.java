@@ -28,6 +28,8 @@ import org.apache.calcite.sql.SqlOperator;
 import org.apache.calcite.sql.fun.SqlStdOperatorTable;
 import org.apache.calcite.sql.parser.SqlParserPos;
 import org.apache.calcite.sql.validate.SqlUserDefinedTableMacro;
+import org.apache.calcite.sql.validate.SqlValidator;
+import org.apache.calcite.sql.validate.SqlValidatorScope;
 import org.apache.calcite.util.Util;
 import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.exec.planner.logical.DrillTable;
@@ -91,7 +93,25 @@ public class DrillTableInfo {
         AbstractSchema drillSchema = SchemaUtilities.resolveToDrillSchema(
             config.getConverter().getDefaultSchema(), SchemaUtilities.getSchemaPath(tableIdentifier));
 
-        DrillTable table = (DrillTable) tableMacro.getTable(new SqlCallBinding(config.getConverter().getValidator(), null, call.operand(0)));
+        // For Calcite 1.40 compatibility: handle the scope requirement
+        SqlValidator validator = config.getConverter().getValidator();
+        DrillTable table;
+        try {
+          // Try to create the SqlCallBinding with a proper scope
+          SqlValidatorScope scope = validator.getOverScope(call.operand(0));
+          table = (DrillTable) tableMacro.getTable(new SqlCallBinding(validator, scope, call.operand(0)));
+        } catch (Exception e) {
+          // If scope-based approach fails, try to get the table without scope validation
+          // This is a fallback for Calcite 1.40 compatibility where scope requirements changed
+          try {
+            // Try with null scope as fallback - this may work in some cases
+            table = (DrillTable) tableMacro.getTable(new SqlCallBinding(validator, null, call.operand(0)));
+          } catch (Exception e2) {
+            throw UserException.parseError(e)
+                .message("Unable to resolve table macro due to Calcite 1.40 scope validation changes: %s", e.getMessage())
+                .build();
+          }
+        }
         return new DrillTableInfo(table, drillSchema.getSchemaPath(), Util.last(tableIdentifier.names));
       }
       case IDENTIFIER: {
