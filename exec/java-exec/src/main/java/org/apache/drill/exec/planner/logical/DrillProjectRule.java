@@ -40,7 +40,7 @@ public class DrillProjectRule extends RelOptRule {
   public void onMatch(RelOptRuleCall call) {
     final Project project = call.rel(0);
     final RelNode input = project.getInput();
-    final RelTraitSet traits = project.getTraitSet().plus(DrillRel.DRILL_LOGICAL);
+    final RelTraitSet traits = project.getTraitSet().plus(DrillRel.DRILL_LOGICAL).simplify();
     final RelNode convertedInput = convert(input, input.getTraitSet().plus(DrillRel.DRILL_LOGICAL).simplify());
     call.transformTo(new DrillProjectRel(
         project.getCluster(), traits, convertedInput, project.getProjects(), project.getRowType()));
