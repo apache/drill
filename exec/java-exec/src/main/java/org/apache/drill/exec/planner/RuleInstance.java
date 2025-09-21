@@ -40,6 +40,7 @@ import org.apache.calcite.rel.rules.SortRemoveRule;
 import org.apache.calcite.rel.rules.SubQueryRemoveRule;
 import org.apache.calcite.rel.rules.UnionToDistinctRule;
 import org.apache.drill.exec.planner.logical.DrillConditions;
+import org.apache.drill.exec.planner.logical.DrillSubQueryRemoveRule;
 import org.apache.drill.exec.planner.logical.DrillRelFactories;
 import com.google.common.base.Preconditions;
 
@@ -184,17 +185,11 @@ public interface RuleInstance {
       .toRule();
 
   RelOptRule SUB_QUERY_FILTER_REMOVE_RULE =
-      SubQueryRemoveRule.Config.FILTER
-        .withRelBuilderFactory(DrillRelFactories.LOGICAL_BUILDER)
-        .toRule();
+      new DrillSubQueryRemoveRule(DrillSubQueryRemoveRule.FILTER_CONFIG);
 
   RelOptRule SUB_QUERY_PROJECT_REMOVE_RULE =
-    SubQueryRemoveRule.Config.PROJECT
-      .withRelBuilderFactory(DrillRelFactories.LOGICAL_BUILDER)
-      .toRule();
+      new DrillSubQueryRemoveRule(DrillSubQueryRemoveRule.PROJECT_CONFIG);
 
   RelOptRule SUB_QUERY_JOIN_REMOVE_RULE =
-    SubQueryRemoveRule.Config.JOIN
-      .withRelBuilderFactory(DrillRelFactories.LOGICAL_BUILDER)
-      .toRule();
+      new DrillSubQueryRemoveRule(DrillSubQueryRemoveRule.JOIN_CONFIG);
 }
