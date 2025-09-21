@@ -52,6 +52,7 @@ import org.apache.drill.exec.planner.logical.DrillMergeProjectRule;
 import org.apache.drill.exec.planner.logical.DrillProjectLateralJoinTransposeRule;
 import org.apache.drill.exec.planner.logical.DrillProjectPushIntoLateralJoinRule;
 import org.apache.drill.exec.planner.logical.DrillProjectRule;
+import org.apache.drill.exec.planner.logical.DrillLogicalProjectRule;
 import org.apache.drill.exec.planner.logical.DrillPushFilterPastProjectRule;
 import org.apache.drill.exec.planner.logical.DrillPushLimitToScanRule;
 import org.apache.drill.exec.planner.logical.DrillPushProjectIntoScanRule;
@@ -359,6 +360,7 @@ public enum PlannerPhase {
       DrillScanRule.INSTANCE,
       DrillFilterRule.INSTANCE,
       DrillProjectRule.INSTANCE,
+      DrillLogicalProjectRule.INSTANCE,
       DrillWindowRule.INSTANCE,
       DrillAggregateRule.INSTANCE,
 

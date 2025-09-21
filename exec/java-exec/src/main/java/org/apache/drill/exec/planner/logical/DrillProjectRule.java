@@ -32,17 +32,30 @@ public class DrillProjectRule extends RelOptRule {
   public static final RelOptRule INSTANCE = new DrillProjectRule();
 
   private DrillProjectRule() {
-    super(RelOptHelper.any(LogicalProject.class, Convention.NONE),
+    super(operand(LogicalProject.class, Convention.NONE, any()),
         DrillRelFactories.LOGICAL_BUILDER, "DrillProjectRule");
+  }
+
+  @Override
+  public boolean matches(RelOptRuleCall call) {
+    final LogicalProject project = call.rel(0);
+    // Match any LogicalProject with NONE convention, regardless of other traits including collation
+    return project.getConvention() == Convention.NONE;
   }
 
   @Override
   public void onMatch(RelOptRuleCall call) {
     final Project project = call.rel(0);
     final RelNode input = project.getInput();
-    final RelTraitSet traits = project.getTraitSet().plus(DrillRel.DRILL_LOGICAL).simplify();
+
+    // Replace NONE convention with DRILL_LOGICAL, preserve other traits including collation
+    final RelTraitSet traits = project.getTraitSet().replace(DrillRel.DRILL_LOGICAL).simplify();
     final RelNode convertedInput = convert(input, input.getTraitSet().plus(DrillRel.DRILL_LOGICAL).simplify());
-    call.transformTo(new DrillProjectRel(
-        project.getCluster(), traits, convertedInput, project.getProjects(), project.getRowType()));
+
+    // Create DrillProjectRel with properly mapped collation
+    final DrillProjectRel drillProject = new DrillProjectRel(
+        project.getCluster(), traits, convertedInput, project.getProjects(), project.getRowType());
+
+    call.transformTo(drillProject);
   }
 }
