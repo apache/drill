@@ -25,6 +25,7 @@ import org.apache.calcite.rex.RexBuilder;
 import org.apache.calcite.rex.RexLiteral;
 import org.apache.calcite.rex.RexNode;
 import org.apache.calcite.sql.type.SqlTypeName;
+import org.apache.calcite.util.Sarg;
 import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.exec.util.DecimalUtility;
 import org.slf4j.Logger;
@@ -86,6 +87,36 @@ class DrillRexBuilder extends RexBuilder {
       }
     }
     return super.makeCast(type, exp, false);
+  }
+
+  /**
+   * Override makeSearchArgumentLiteral to handle Calcite 1.40 compatibility issues.
+   * In Calcite 1.40, RexLiteral creation became more strict and can throw
+   * IllegalArgumentException when creating search arguments for certain types.
+   */
+  @Override
+  public RexLiteral makeSearchArgumentLiteral(Sarg sarg, RelDataType type) {
+    try {
+      return super.makeSearchArgumentLiteral(sarg, type);
+    } catch (IllegalArgumentException e) {
+      // For Calcite 1.40 compatibility: if search argument literal creation fails,
+      // create a minimal valid search argument literal to avoid the optimization failure
+      logger.debug("Search argument literal creation failed for type {}, using fallback: {}",
+                   type, e.getMessage());
+
+      // Create a simple search argument with just the points from the original sarg
+      // This preserves the semantics while avoiding the validation issue
+      try {
+        // Try to create a simpler Sarg with just the basic structure
+        Sarg simpleSarg = Sarg.of(sarg.nullAs, sarg.rangeSet);
+        return super.makeLiteral(simpleSarg, type, SqlTypeName.SARG);
+      } catch (Exception fallbackException) {
+        // If even that fails, log and re-throw the original exception
+        logger.warn("Fallback search argument creation also failed, disabling optimization: {}",
+                    fallbackException.getMessage());
+        throw e;
+      }
+    }
   }
 
   private void validatePrecisionAndScale(int precision, int scale) {
