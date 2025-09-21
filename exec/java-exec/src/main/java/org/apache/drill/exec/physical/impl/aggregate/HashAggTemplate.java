@@ -44,6 +44,7 @@ import org.apache.drill.exec.exception.OutOfMemoryException;
 import org.apache.drill.exec.exception.SchemaChangeException;
 import org.apache.drill.exec.expr.ClassGenerator;
 import org.apache.drill.exec.expr.TypeHelper;
+import org.apache.drill.exec.expr.ValueVectorWriteExpression;
 import org.apache.drill.exec.memory.BaseAllocator;
 import org.apache.drill.exec.memory.BufferAllocator;
 import org.apache.drill.exec.ops.FragmentContext;
@@ -308,7 +309,29 @@ public abstract class HashAggTemplate implements HashAggregator {
       throw new IllegalArgumentException("Invalid aggr value exprs or workspace variables.");
     }
     if (valueFieldIds.size() < valueExprs.length) {
-      throw new IllegalArgumentException("Wrong number of workspace variables.");
+      // For Calcite 1.40 compatibility: LITERAL_AGG functions are constants that don't need workspace variables
+      // Count how many LITERAL_AGG (constant) expressions we have that don't require workspace variables
+      int constantExprCount = 0;
+      for (LogicalExpression expr : valueExprs) {
+        if (expr instanceof ValueVectorWriteExpression) {
+          ValueVectorWriteExpression vvwe = (ValueVectorWriteExpression) expr;
+          LogicalExpression child = vvwe.getChild();
+          // LITERAL_AGG expressions are converted to ValueExpressions (constants) in AggPrelBase.toDrill()
+          if (child instanceof org.apache.drill.common.expression.ValueExpressions.BooleanExpression ||
+              child instanceof org.apache.drill.common.expression.ValueExpressions.IntExpression ||
+              child instanceof org.apache.drill.common.expression.ValueExpressions.LongExpression ||
+              child instanceof org.apache.drill.common.expression.ValueExpressions.FloatExpression ||
+              child instanceof org.apache.drill.common.expression.ValueExpressions.DoubleExpression ||
+              child instanceof org.apache.drill.common.expression.ValueExpressions.QuotedString) {
+            constantExprCount++;
+          }
+        }
+      }
+
+      // Allow the mismatch if it's exactly equal to the number of constant expressions (LITERAL_AGG)
+      if (valueFieldIds.size() + constantExprCount != valueExprs.length) {
+        throw new IllegalArgumentException("Wrong number of workspace variables.");
+      }
     }
 
     this.context = context;

@@ -93,7 +93,7 @@ public class DrillTableInfo {
         AbstractSchema drillSchema = SchemaUtilities.resolveToDrillSchema(
             config.getConverter().getDefaultSchema(), SchemaUtilities.getSchemaPath(tableIdentifier));
 
-        // For Calcite 1.40 compatibility: handle the scope requirement with fallback
+        // For Calcite 1.40 compatibility: create minimal scope for SqlCallBinding
         SqlValidator validator = config.getConverter().getValidator();
         DrillTable table;
         try {
@@ -102,8 +102,8 @@ public class DrillTableInfo {
           try {
             scope = validator.getOverScope(call.operand(0));
           } catch (Exception e) {
-            // If getOverScope fails, use null scope as fallback
-            scope = null;
+            // If getOverScope fails, use empty scope for Calcite 1.40 compatibility
+            scope = validator.getEmptyScope();
           }
           table = (DrillTable) tableMacro.getTable(new SqlCallBinding(validator, scope, call.operand(0)));
         } catch (Exception e) {
