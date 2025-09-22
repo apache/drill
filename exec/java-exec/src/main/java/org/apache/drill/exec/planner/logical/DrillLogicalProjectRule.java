@@ -45,16 +45,16 @@ public class DrillLogicalProjectRule extends RelOptRule {
   public static final RelOptRule INSTANCE = new DrillLogicalProjectRule();
 
   private DrillLogicalProjectRule() {
-    super(operand(LogicalProject.class, Convention.LOGICAL, any()),
+    super(operand(LogicalProject.class, any()),
         DrillRelFactories.LOGICAL_BUILDER, "DrillLogicalProjectRule");
   }
 
   @Override
   public boolean matches(RelOptRuleCall call) {
     final LogicalProject project = call.rel(0);
-    // Only match LogicalProject nodes with LOGICAL convention that need conversion to DRILL_LOGICAL
+    // Only match LogicalProject nodes that are NOT NONE convention and NOT already DRILL_LOGICAL
     // Avoid overlap with DrillProjectRule which handles NONE convention
-    return project.getConvention() == Convention.LOGICAL &&
+    return project.getConvention() != Convention.NONE &&
            project.getConvention() != DrillRel.DRILL_LOGICAL;
   }
 
