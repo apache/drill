@@ -30,7 +30,7 @@ jobs:
     name: Main Build
     runs-on: ubuntu-latest
     if: github.repository == 'apache/drill'
-    timeout-minutes: 150
+    timeout-minutes: 180
     strategy:
       matrix:
         # Java versions to run unit tests

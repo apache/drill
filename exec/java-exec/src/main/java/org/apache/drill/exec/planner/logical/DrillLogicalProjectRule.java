@@ -18,6 +18,7 @@
 package org.apache.drill.exec.planner.logical;
 
 import org.apache.calcite.rel.RelNode;
+import org.apache.calcite.plan.Convention;
 import org.apache.calcite.plan.RelOptRule;
 import org.apache.calcite.plan.RelOptRuleCall;
 import org.apache.calcite.plan.RelTraitSet;
@@ -44,15 +45,17 @@ public class DrillLogicalProjectRule extends RelOptRule {
   public static final RelOptRule INSTANCE = new DrillLogicalProjectRule();
 
   private DrillLogicalProjectRule() {
-    super(operand(LogicalProject.class, any()),
+    super(operand(LogicalProject.class, Convention.LOGICAL, any()),
         DrillRelFactories.LOGICAL_BUILDER, "DrillLogicalProjectRule");
   }
 
   @Override
   public boolean matches(RelOptRuleCall call) {
     final LogicalProject project = call.rel(0);
-    // Match LogicalProject nodes that need conversion to DRILL_LOGICAL
-    return project.getConvention() != DrillRel.DRILL_LOGICAL;
+    // Only match LogicalProject nodes with LOGICAL convention that need conversion to DRILL_LOGICAL
+    // Avoid overlap with DrillProjectRule which handles NONE convention
+    return project.getConvention() == Convention.LOGICAL &&
+           project.getConvention() != DrillRel.DRILL_LOGICAL;
   }
 
   @Override
