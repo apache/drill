@@ -511,6 +511,19 @@ public class DrillOptiq {
           int precision = call.getType().getPrecision();
           int scale = call.getType().getScale();
 
+          // Validate precision and scale
+          if (precision < 1) {
+            throw UserException.validationError()
+                .message("Expected precision greater than 0, but was %s.", precision)
+                .build(logger);
+          }
+          if (scale > precision) {
+            throw UserException.validationError()
+                .message("Expected scale less than or equal to precision, " +
+                    "but was precision %s and scale %s.", precision, scale)
+                .build(logger);
+          }
+
           castType = TypeProtos.MajorType.newBuilder()
                 .setMinorType(MinorType.VARDECIMAL)
                 .setPrecision(precision)
@@ -863,14 +876,27 @@ public class DrillOptiq {
           }
           // Calcite 1.35+ may return BigDecimal with scale=0 even for typed decimals.
           // We need to ensure the BigDecimal has the correct scale from the type.
-          BigDecimal value = (BigDecimal) literal.getValue();
+          int precision = literal.getType().getPrecision();
           int targetScale = literal.getType().getScale();
+
+          // Validate precision and scale before processing
+          if (precision < 1) {
+            throw UserException.validationError()
+                .message("Expected precision greater than 0, but was %s.", precision)
+                .build(logger);
+          }
+          if (targetScale > precision) {
+            throw UserException.validationError()
+                .message("Expected scale less than or equal to precision, " +
+                    "but was precision %s and scale %s.", precision, targetScale)
+                .build(logger);
+          }
+
+          BigDecimal value = (BigDecimal) literal.getValue();
           if (value.scale() != targetScale) {
             value = value.setScale(targetScale, java.math.RoundingMode.HALF_UP);
           }
-          return ValueExpressions.getVarDecimal(value,
-              literal.getType().getPrecision(),
-              literal.getType().getScale());
+          return ValueExpressions.getVarDecimal(value, precision, targetScale);
         }
         double dbl = ((BigDecimal) literal.getValue()).doubleValue();
         logger.warn("Converting exact decimal into approximate decimal.\n" +
