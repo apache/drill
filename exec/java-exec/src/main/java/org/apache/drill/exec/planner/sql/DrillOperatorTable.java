@@ -59,8 +59,10 @@ public class DrillOperatorTable extends SqlStdOperatorTable {
   private int functionRegistryVersion;
 
   private final OptionManager systemOptionManager;
+  private final FunctionImplementationRegistry functionRegistry;
 
   public DrillOperatorTable(FunctionImplementationRegistry registry, OptionManager systemOptionManager) {
+    this.functionRegistry = registry;
     registry.register(this);
     calciteOperators.addAll(inner.getOperatorList());
     populateWrappedCalciteOperators();
@@ -113,6 +115,27 @@ public class DrillOperatorTable extends SqlStdOperatorTable {
 
   private void populateFromTypeInference(SqlIdentifier opName, SqlFunctionCategory category,
                                          SqlSyntax syntax, List<SqlOperator> operatorList, SqlNameMatcher nameMatcher) {
+    // Check Drill UDFs first (including dynamic UDFs from FunctionImplementationRegistry)
+    // This allows UDFs to override built-in Calcite functions
+    if ((syntax == SqlSyntax.FUNCTION || syntax == SqlSyntax.FUNCTION_ID) && opName.isSimple()) {
+      String funcName = opName.getSimple().toLowerCase();
+
+      // First check static UDFs from the map
+      List<SqlOperator> drillOps = drillOperatorsWithInferenceMap.get(funcName);
+      if (drillOps != null && !drillOps.isEmpty()) {
+        operatorList.addAll(drillOps);
+        return;
+      }
+
+      // Then check dynamic UDFs from FunctionImplementationRegistry
+      List<SqlOperator> dynamicOps = functionRegistry.getSqlOperators(funcName);
+      if (dynamicOps != null && !dynamicOps.isEmpty()) {
+        operatorList.addAll(dynamicOps);
+        return;
+      }
+    }
+
+    // If no Drill UDF found, check Calcite built-in operators
     final List<SqlOperator> calciteOperatorList = Lists.newArrayList();
     inner.lookupOperatorOverloads(opName, category, syntax, calciteOperatorList, nameMatcher);
     if (!calciteOperatorList.isEmpty()) {
@@ -123,26 +146,33 @@ public class DrillOperatorTable extends SqlStdOperatorTable {
           operatorList.add(calciteOperator);
         }
       }
-    } else {
-      // if no function is found, check in Drill UDFs
-      if (operatorList.isEmpty() && (syntax == SqlSyntax.FUNCTION || syntax == SqlSyntax.FUNCTION_ID) && opName.isSimple()) {
-        List<SqlOperator> drillOps = drillOperatorsWithInferenceMap.get(opName.getSimple().toLowerCase());
-        if (drillOps != null && !drillOps.isEmpty()) {
-          operatorList.addAll(drillOps);
-        }
-      }
     }
   }
 
   private void populateFromWithoutTypeInference(SqlIdentifier opName, SqlFunctionCategory category,
                                                 SqlSyntax syntax, List<SqlOperator> operatorList, SqlNameMatcher nameMatcher) {
-    inner.lookupOperatorOverloads(opName, category, syntax, operatorList, nameMatcher);
-    if (operatorList.isEmpty() && (syntax == SqlSyntax.FUNCTION || syntax == SqlSyntax.FUNCTION_ID) && opName.isSimple()) {
-      List<SqlOperator> drillOps = drillOperatorsWithoutInferenceMap.get(opName.getSimple().toLowerCase());
-      if (drillOps != null) {
+    // Check Drill UDFs first (including dynamic UDFs from FunctionImplementationRegistry)
+    // This allows UDFs to override built-in Calcite functions
+    if ((syntax == SqlSyntax.FUNCTION || syntax == SqlSyntax.FUNCTION_ID) && opName.isSimple()) {
+      String funcName = opName.getSimple().toLowerCase();
+
+      // First check static UDFs from the map
+      List<SqlOperator> drillOps = drillOperatorsWithoutInferenceMap.get(funcName);
+      if (drillOps != null && !drillOps.isEmpty()) {
         operatorList.addAll(drillOps);
+        return;
+      }
+
+      // Then check dynamic UDFs from FunctionImplementationRegistry
+      List<SqlOperator> dynamicOps = functionRegistry.getSqlOperators(funcName);
+      if (dynamicOps != null && !dynamicOps.isEmpty()) {
+        operatorList.addAll(dynamicOps);
+        return;
       }
     }
+
+    // If no Drill UDF found, check Calcite built-in operators
+    inner.lookupOperatorOverloads(opName, category, syntax, operatorList, nameMatcher);
   }
 
   @Override
@@ -170,6 +200,7 @@ public class DrillOperatorTable extends SqlStdOperatorTable {
   private void populateWrappedCalciteOperators() {
     for (SqlOperator calciteOperator : inner.getOperatorList()) {
       final SqlOperator wrapper;
+
       if (calciteOperator instanceof SqlSumEmptyIsZeroAggFunction) {
         wrapper = new DrillCalciteSqlSumEmptyIsZeroAggFunctionWrapper(
           (SqlSumEmptyIsZeroAggFunction) calciteOperator,
