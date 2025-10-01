@@ -866,7 +866,7 @@ public class DrillOptiq {
           BigDecimal value = (BigDecimal) literal.getValue();
           int targetScale = literal.getType().getScale();
           if (value.scale() != targetScale) {
-            value = value.setScale(targetScale, java.math.RoundingMode.UNNECESSARY);
+            value = value.setScale(targetScale, java.math.RoundingMode.HALF_UP);
           }
           return ValueExpressions.getVarDecimal(value,
               literal.getType().getPrecision(),
