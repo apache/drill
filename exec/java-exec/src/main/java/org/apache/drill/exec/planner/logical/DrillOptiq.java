@@ -861,7 +861,14 @@ public class DrillOptiq {
                     literal.getType().getScale()
                 ));
           }
-          return ValueExpressions.getVarDecimal((BigDecimal) literal.getValue(),
+          // Calcite 1.35+ may return BigDecimal with scale=0 even for typed decimals.
+          // We need to ensure the BigDecimal has the correct scale from the type.
+          BigDecimal value = (BigDecimal) literal.getValue();
+          int targetScale = literal.getType().getScale();
+          if (value.scale() != targetScale) {
+            value = value.setScale(targetScale, java.math.RoundingMode.UNNECESSARY);
+          }
+          return ValueExpressions.getVarDecimal(value,
               literal.getType().getPrecision(),
               literal.getType().getScale());
         }
