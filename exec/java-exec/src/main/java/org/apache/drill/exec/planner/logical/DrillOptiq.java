@@ -484,6 +484,24 @@ public class DrillOptiq {
     }
 
     private LogicalExpression getDrillCastFunctionFromOptiq(RexCall call){
+      // Validate DATE literals before casting - check year range for SQL standard compliance
+      if (call.getType().getSqlTypeName() == SqlTypeName.DATE &&
+          call.getOperands().get(0) instanceof RexLiteral) {
+        RexLiteral literal = (RexLiteral) call.getOperands().get(0);
+        if (literal.getTypeName() == SqlTypeName.CHAR || literal.getTypeName() == SqlTypeName.VARCHAR) {
+          // For string literals being cast to DATE, Calcite 1.35+ validates the format
+          // but may accept years outside SQL standard range (1-9999).
+          // We need to validate before the CAST is applied.
+          String dateStr = literal.getValueAs(String.class);
+          if (dateStr != null && dateStr.matches("\\d{5,}-.*")) {
+            // Date string has 5+ digit year, likely out of range
+            throw UserException.validationError()
+                .message("Year out of range for DATE literal '%s'. Year must be between 1 and 9999.", dateStr)
+                .build(logger);
+          }
+        }
+      }
+
       LogicalExpression arg = call.getOperands().get(0).accept(this);
       MajorType castType;
 
@@ -916,7 +934,17 @@ public class DrillOptiq {
         if (isLiteralNull(literal)) {
           return createNullExpr(MinorType.DATE);
         }
-        return (ValueExpressions.getDate((GregorianCalendar)literal.getValue()));
+        // Validate date year is within SQL standard range (0001 to 9999)
+        // Calcite 1.35+ may accept dates outside this range, but SQL:2011 spec
+        // requires year to be between 0001 and 9999
+        GregorianCalendar dateValue = (GregorianCalendar) literal.getValue();
+        int year = dateValue.get(java.util.Calendar.YEAR);
+        if (year < 1 || year > 9999) {
+          throw UserException.validationError()
+              .message("Year out of range for DATE literal. Year must be between 1 and 9999, but was %d.", year)
+              .build(logger);
+        }
+        return (ValueExpressions.getDate(dateValue));
       case TIME:
         if (isLiteralNull(literal)) {
           return createNullExpr(MinorType.TIME);

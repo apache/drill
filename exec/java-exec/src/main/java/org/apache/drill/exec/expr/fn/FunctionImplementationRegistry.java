@@ -305,6 +305,17 @@ public class FunctionImplementationRegistry implements FunctionLookupContext, Au
   }
 
   /**
+   * Get SQL operators for a given function name from the local function registry.
+   * This includes dynamically loaded UDFs.
+   *
+   * @param name function name
+   * @return list of SQL operators, or null if not found
+   */
+  public List<org.apache.calcite.sql.SqlOperator> getSqlOperators(String name) {
+    return localFunctionRegistry.getSqlOperators(name, this.optionManager);
+  }
+
+  /**
    * Using given local path to jar creates unique class loader for this jar.
    * Class loader is closed to release opened connection to jar when validation is finished.
    * Scan jar content to receive list of all scanned classes

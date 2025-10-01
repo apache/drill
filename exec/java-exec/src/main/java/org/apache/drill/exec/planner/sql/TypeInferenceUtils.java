@@ -652,7 +652,8 @@ public class TypeInferenceUtils {
       }
 
       // preserves precision of input type if it was specified
-      if (inputType.getSqlTypeName().allowsPrecNoScale()) {
+      // NOTE: DATE doesn't support precision in SQL standard, so skip precision for DATE
+      if (inputType.getSqlTypeName().allowsPrecNoScale() && sqlTypeName != SqlTypeName.DATE) {
         RelDataType type = factory.createSqlType(sqlTypeName, precision);
         return factory.createTypeWithNullability(type, isNullable);
       }

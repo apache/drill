@@ -193,7 +193,7 @@ public class TestBugFixes extends ClusterTest {
       String query = "select count(*) cnt, avg(distinct emp.department_id) avd\n"
           + " from cp.`employee.json` emp";
       String[] expectedPlans = {
-          ".*Agg\\(group=\\[\\{\\}\\], cnt=\\[\\$SUM0\\(\\$1\\)\\], agg#1=\\[\\$SUM0\\(\\$0\\)\\], agg#2=\\[COUNT\\(\\$0\\)\\]\\)",
+          ".*Agg\\(group=\\[\\{\\}\\], cnt=\\[\\$SUM0\\(\\$1\\)\\], agg#1=\\[\\$SUM0\\(\\$0\\)( WITHIN DISTINCT \\(\\))?\\], agg#2=\\[COUNT\\(\\$0\\)( WITHIN DISTINCT \\(\\))?\\]\\)",
           ".*Agg\\(group=\\[\\{0\\}\\], cnt=\\[COUNT\\(\\)\\]\\)"};
       String[] excludedPlans = {".*Join\\(condition=\\[true\\], joinType=\\[inner\\]\\).*"};
 
@@ -216,7 +216,7 @@ public class TestBugFixes extends ClusterTest {
               + " from cp.`employee.json` emp\n"
               + " group by gender";
       String[] expectedPlans = {
-              ".*Agg\\(group=\\[\\{0\\}\\], cnt=\\[\\$SUM0\\(\\$2\\)\\], agg#1=\\[\\$SUM0\\(\\$1\\)\\], agg#2=\\[COUNT\\(\\$1\\)\\]\\)",
+              ".*Agg\\(group=\\[\\{0\\}\\], cnt=\\[\\$SUM0\\(\\$2\\)\\], agg#1=\\[\\$SUM0\\(\\$1\\)( WITHIN DISTINCT \\(\\))?\\], agg#2=\\[COUNT\\(\\$1\\)( WITHIN DISTINCT \\(\\))?\\]\\)",
               ".*Agg\\(group=\\[\\{0, 1\\}\\], cnt=\\[COUNT\\(\\)\\]\\)"};
       String[] excludedPlans = {".*Join\\(condition=\\[true\\], joinType=\\[inner\\]\\).*"};
 
