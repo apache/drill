@@ -66,8 +66,15 @@ public class ReduceAndSimplifyExpressionsRules {
     public void onMatch(RelOptRuleCall call) {
       try {
         super.onMatch(call);
-      } catch (ClassCastException e) {
-        // noop
+      } catch (ClassCastException | IllegalArgumentException e) {
+        // noop - Calcite 1.35+ may throw IllegalArgumentException for type mismatches
+      } catch (RuntimeException e) {
+        // Calcite 1.35+ wraps IllegalArgumentException in RuntimeException during transformTo
+        if (e.getCause() instanceof IllegalArgumentException) {
+          // noop - ignore type mismatch errors
+        } else {
+          throw e;
+        }
       }
     }
   }
@@ -98,8 +105,15 @@ public class ReduceAndSimplifyExpressionsRules {
     public void onMatch(RelOptRuleCall call) {
       try {
         super.onMatch(call);
-      } catch (ClassCastException e) {
-        // noop
+      } catch (ClassCastException | IllegalArgumentException e) {
+        // noop - Calcite 1.35+ may throw IllegalArgumentException for type mismatches
+      } catch (RuntimeException e) {
+        // Calcite 1.35+ wraps IllegalArgumentException in RuntimeException during transformTo
+        if (e.getCause() instanceof IllegalArgumentException) {
+          // noop - ignore type mismatch errors
+        } else {
+          throw e;
+        }
       }
     }
   }
@@ -119,8 +133,15 @@ public class ReduceAndSimplifyExpressionsRules {
     public void onMatch(RelOptRuleCall call) {
       try {
         super.onMatch(call);
-      } catch (ClassCastException e) {
-        // noop
+      } catch (ClassCastException | IllegalArgumentException e) {
+        // noop - Calcite 1.35+ may throw IllegalArgumentException for type mismatches
+      } catch (RuntimeException e) {
+        // Calcite 1.35+ wraps IllegalArgumentException in RuntimeException during transformTo
+        if (e.getCause() instanceof IllegalArgumentException) {
+          // noop - ignore type mismatch errors
+        } else {
+          throw e;
+        }
       }
     }
   }
