@@ -115,22 +115,22 @@ public class DrillOperatorTable extends SqlStdOperatorTable {
 
   private void populateFromTypeInference(SqlIdentifier opName, SqlFunctionCategory category,
                                          SqlSyntax syntax, List<SqlOperator> operatorList, SqlNameMatcher nameMatcher) {
-    // Check Drill UDFs first (including dynamic UDFs from FunctionImplementationRegistry)
-    // This allows UDFs to override built-in Calcite functions
+    // Check dynamic UDFs FIRST - they should be able to override both built-in Drill functions and Calcite functions
     if ((syntax == SqlSyntax.FUNCTION || syntax == SqlSyntax.FUNCTION_ID) && opName.isSimple()) {
       String funcName = opName.getSimple().toLowerCase();
 
-      // First check static UDFs from the map
-      List<SqlOperator> drillOps = drillOperatorsWithInferenceMap.get(funcName);
-      if (drillOps != null && !drillOps.isEmpty()) {
-        operatorList.addAll(drillOps);
-        return;
-      }
-
-      // Then check dynamic UDFs from FunctionImplementationRegistry
+      // First check dynamic UDFs from FunctionImplementationRegistry
+      // This allows dynamic UDFs to override built-in functions
       List<SqlOperator> dynamicOps = functionRegistry.getSqlOperators(funcName);
       if (dynamicOps != null && !dynamicOps.isEmpty()) {
         operatorList.addAll(dynamicOps);
+        return;
+      }
+
+      // Then check static UDFs from the map
+      List<SqlOperator> drillOps = drillOperatorsWithInferenceMap.get(funcName);
+      if (drillOps != null && !drillOps.isEmpty()) {
+        operatorList.addAll(drillOps);
         return;
       }
     }
@@ -151,22 +151,22 @@ public class DrillOperatorTable extends SqlStdOperatorTable {
 
   private void populateFromWithoutTypeInference(SqlIdentifier opName, SqlFunctionCategory category,
                                                 SqlSyntax syntax, List<SqlOperator> operatorList, SqlNameMatcher nameMatcher) {
-    // Check Drill UDFs first (including dynamic UDFs from FunctionImplementationRegistry)
-    // This allows UDFs to override built-in Calcite functions
+    // Check dynamic UDFs FIRST - they should be able to override both built-in Drill functions and Calcite functions
     if ((syntax == SqlSyntax.FUNCTION || syntax == SqlSyntax.FUNCTION_ID) && opName.isSimple()) {
       String funcName = opName.getSimple().toLowerCase();
 
-      // First check static UDFs from the map
-      List<SqlOperator> drillOps = drillOperatorsWithoutInferenceMap.get(funcName);
-      if (drillOps != null && !drillOps.isEmpty()) {
-        operatorList.addAll(drillOps);
-        return;
-      }
-
-      // Then check dynamic UDFs from FunctionImplementationRegistry
+      // First check dynamic UDFs from FunctionImplementationRegistry
+      // This allows dynamic UDFs to override built-in functions
       List<SqlOperator> dynamicOps = functionRegistry.getSqlOperators(funcName);
       if (dynamicOps != null && !dynamicOps.isEmpty()) {
         operatorList.addAll(dynamicOps);
+        return;
+      }
+
+      // Then check static UDFs from the map
+      List<SqlOperator> drillOps = drillOperatorsWithoutInferenceMap.get(funcName);
+      if (drillOps != null && !drillOps.isEmpty()) {
+        operatorList.addAll(drillOps);
         return;
       }
     }

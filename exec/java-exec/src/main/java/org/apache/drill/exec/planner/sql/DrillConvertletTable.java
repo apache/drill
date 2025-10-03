@@ -70,6 +70,7 @@ public class DrillConvertletTable implements SqlRexConvertletTable {
         .put(SqlStdOperatorTable.SQRT, sqrtConvertlet())
         .put(SqlStdOperatorTable.SUBSTRING, substringConvertlet())
         .put(SqlStdOperatorTable.COALESCE, coalesceConvertlet())
+        .put(SqlStdOperatorTable.TIMESTAMP_ADD, timestampAddConvertlet())
         .put(SqlStdOperatorTable.TIMESTAMP_DIFF, timestampDiffConvertlet())
         .put(SqlStdOperatorTable.ROW, rowConvertlet())
         .put(SqlStdOperatorTable.RAND, randConvertlet())
@@ -202,6 +203,89 @@ public class DrillConvertletTable implements SqlRexConvertletTable {
         caseOperands.add(cx.convertExpression(call.operand(operandsCount - 1)));
         return cx.getRexBuilder().makeCall(SqlStdOperatorTable.CASE, caseOperands);
       }
+    };
+  }
+
+  /**
+   * Custom convertlet for TIMESTAMP_ADD to fix Calcite 1.35 type inference bug.
+   * Calcite's SqlTimestampAddFunction.deduceType() incorrectly returns DATE instead of TIMESTAMP
+   * when adding intervals to DATE literals. This convertlet uses correct type inference:
+   * - Adding sub-day intervals (HOUR, MINUTE, SECOND, etc.) to DATE should return TIMESTAMP
+   * - Adding day-or-larger intervals (DAY, MONTH, YEAR) to DATE returns DATE
+   * - TIMESTAMP inputs always return TIMESTAMP
+   */
+  private static SqlRexConvertlet timestampAddConvertlet() {
+    return (cx, call) -> {
+      SqlIntervalQualifier unitLiteral = call.operand(0);
+      SqlIntervalQualifier qualifier =
+          new SqlIntervalQualifier(unitLiteral.getUnit(), null, SqlParserPos.ZERO);
+
+      List<RexNode> operands = Arrays.asList(
+          cx.convertExpression(qualifier),
+          cx.convertExpression(call.operand(1)),
+          cx.convertExpression(call.operand(2)));
+
+      RelDataTypeFactory typeFactory = cx.getTypeFactory();
+
+      // Determine return type based on interval unit and operand type
+      // This fixes Calcite 1.35's bug where DATE + sub-day interval incorrectly returns DATE
+      RelDataType operandType = operands.get(2).getType();
+      SqlTypeName returnTypeName;
+      int precision = -1;
+
+      // Get the time unit from the interval qualifier
+      org.apache.calcite.avatica.util.TimeUnit timeUnit = unitLiteral.getUnit();
+
+      // Determine return type based on input type and interval unit
+      // This must match DrillTimestampAddTypeInference.inferReturnType() logic
+      // Rules from DrillTimestampAddTypeInference:
+      // - NANOSECOND, DAY, WEEK, MONTH, QUARTER, YEAR: preserve input type
+      // - MICROSECOND, MILLISECOND: always TIMESTAMP
+      // - SECOND, MINUTE, HOUR: TIMESTAMP except TIME input stays TIME
+      switch (timeUnit) {
+        case DAY:
+        case WEEK:
+        case MONTH:
+        case QUARTER:
+        case YEAR:
+        case NANOSECOND:  // NANOSECOND preserves input type per DrillTimestampAddTypeInference
+          returnTypeName = operandType.getSqlTypeName();
+          precision = 3;
+          break;
+        case MICROSECOND:
+        case MILLISECOND:
+          returnTypeName = SqlTypeName.TIMESTAMP;
+          precision = 3;
+          break;
+        case SECOND:
+        case MINUTE:
+        case HOUR:
+          if (operandType.getSqlTypeName() == SqlTypeName.TIME) {
+            returnTypeName = SqlTypeName.TIME;
+          } else {
+            returnTypeName = SqlTypeName.TIMESTAMP;
+          }
+          precision = 3;
+          break;
+        default:
+          returnTypeName = operandType.getSqlTypeName();
+          precision = operandType.getPrecision();
+      }
+
+      RelDataType returnType;
+      if (precision >= 0 && returnTypeName == SqlTypeName.TIMESTAMP) {
+        returnType = typeFactory.createSqlType(returnTypeName, precision);
+      } else {
+        returnType = typeFactory.createSqlType(returnTypeName);
+      }
+
+      // Apply nullability: result is nullable if ANY operand (count or datetime) is nullable
+      boolean isNullable = operands.get(1).getType().isNullable() ||
+                          operands.get(2).getType().isNullable();
+      returnType = typeFactory.createTypeWithNullability(returnType, isNullable);
+
+      return cx.getRexBuilder().makeCall(returnType,
+          SqlStdOperatorTable.TIMESTAMP_ADD, operands);
     };
   }
 
