@@ -306,13 +306,21 @@ public class FunctionImplementationRegistry implements FunctionLookupContext, Au
 
   /**
    * Get SQL operators for a given function name from the local function registry.
-   * This includes dynamically loaded UDFs.
+   * This includes dynamically loaded UDFs. Syncs with remote registry if needed to pick up
+   * any newly registered dynamic UDFs that might override built-in functions.
    *
    * @param name function name
    * @return list of SQL operators, or null if not found
    */
   public List<org.apache.calcite.sql.SqlOperator> getSqlOperators(String name) {
-    return localFunctionRegistry.getSqlOperators(name, this.optionManager);
+    // Sync with remote registry to ensure we have the latest dynamic UDFs
+    // Dynamic UDFs can override built-in functions, so we always sync if dynamic UDFs are enabled
+    // This ensures that newly registered dynamic UDFs are available during SQL validation
+    if (useDynamicUdfs && isRegistrySyncNeeded()) {
+      syncWithRemoteRegistry(localFunctionRegistry.getVersion());
+    }
+
+    return localFunctionRegistry.getSqlOperators(name);
   }
 
   /**

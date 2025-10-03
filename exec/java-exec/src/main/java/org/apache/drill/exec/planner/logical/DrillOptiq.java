@@ -632,6 +632,36 @@ public class DrillOptiq {
                 "MINUTE, SECOND");
           }
         }
+        case "timestampadd": {
+
+          // Assert that the first argument is a QuotedString
+          Preconditions.checkArgument(args.get(0) instanceof ValueExpressions.QuotedString,
+            "The first argument of TIMESTAMPADD function should be QuotedString");
+
+          String timeUnitStr = ((ValueExpressions.QuotedString) args.get(0)).value;
+
+          TimeUnit timeUnit = TimeUnit.valueOf(timeUnitStr);
+
+          switch (timeUnit) {
+            case YEAR:
+            case MONTH:
+            case DAY:
+            case HOUR:
+            case MINUTE:
+            case SECOND:
+            case MILLISECOND:
+            case QUARTER:
+            case WEEK:
+            case MICROSECOND:
+            case NANOSECOND:
+              String functionPostfix = StringUtils.capitalize(timeUnitStr.toLowerCase());
+              functionName += functionPostfix;
+              return FunctionCallFactory.createExpression(functionName, args.subList(1, 3));
+            default:
+              throw new UnsupportedOperationException("TIMESTAMPADD function supports the following time units: " +
+                  "YEAR, MONTH, DAY, HOUR, MINUTE, SECOND, QUARTER, WEEK, MICROSECOND, NANOSECOND");
+          }
+        }
         case "timestampdiff": {
 
           // Assert that the first argument to extract is a QuotedString

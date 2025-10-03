@@ -519,15 +519,6 @@ public class TestDynamicUDFSupport extends BaseTestQuery {
   }
 
   @Test
-  @org.junit.Ignore("DRILL-CALCITE-1.35: Function resolution issue with dynamic UDFs shadowing built-in functions. " +
-      "Dynamic UDFs are registered in FunctionImplementationRegistry but not in DrillOperatorTable's cached maps. " +
-      "During SQL validation, DrillOperatorTable.lookupOperatorOverloads() only checks cached maps, so built-in LOG " +
-      "is found instead of dynamic UDF 'log'. This causes type mismatch: validator sees DOUBLE (built-in LOG), but " +
-      "execution produces VARCHAR (custom UDF). During constant folding, the VARCHAR result is incorrectly wrapped " +
-      "in DOUBLE type, causing NumberFormatException in generated code (ProjectorGen0.java:57). Solution requires: " +
-      "(a) Updating DrillOperatorTable to check FunctionImplementationRegistry for dynamic UDFs during lookup, or " +
-      "(b) Refreshing DrillOperatorTable's cached maps when dynamic UDFs are created/dropped. Note: testOverloadedFunctionPlanningStage " +
-      "works because 'abs' with 2 string args doesn't conflict with built-in ABS which takes 1 numeric arg.")
   public void testOverloadedFunctionExecutionStage() throws Exception {
     String jarName = "drill-custom-log";
     String jar = buildAndCopyJarsToStagingArea(jarName, "**/CustomLogFunction.java", null);

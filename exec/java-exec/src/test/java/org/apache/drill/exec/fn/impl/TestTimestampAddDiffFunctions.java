@@ -23,6 +23,7 @@ import org.apache.drill.test.ClusterTest;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.util.Arrays;
@@ -52,15 +53,6 @@ public class TestTimestampAddDiffFunctions extends ClusterTest {
   }
 
   @Test // DRILL-3610
-  @org.junit.Ignore("DRILL-CALCITE-1.35: Calcite 1.35 SqlTimestampAddFunction.deduceType() tries to create DATE type " +
-      "with precision which violates SQL standard (DATE has no precision). The issue occurs in " +
-      "StandardConvertletTable$TimestampAddConvertlet line 2052 during SQL-to-Rex conversion, which internally " +
-      "uses SqlDatetimePlusOperator that calls SqlTimestampAddFunction.deduceType() at BasicSqlType line 118. " +
-      "Attempted fixes: (1) DrillTimestampAddTypeInference fix - not used during convertlet phase, " +
-      "(2) Custom TIMESTAMPADD convertlet - too complex with constant folding issues, " +
-      "(3) DrillCalciteSqlFunctionWrapper - not invoked during convertlet phase. " +
-      "Solution requires either: (a) Custom TypeFactory wrapper to intercept DATE creation with precision, or " +
-      "(b) Implement Drill native timestampadd function to bypass Calcite's broken implementation.")
   public void testTimestampAddDiffLiteralTypeInference() throws Exception {
     Map<String, String> dateTypes = new HashMap<>();
     dateTypes.put("DATE", "2013-03-31");
@@ -125,7 +117,7 @@ public class TestTimestampAddDiffFunctions extends ClusterTest {
         .baselineColumns("dateReq", "timeReq", "timestampReq", "dateOpt", "timeOpt", "timestampOpt")
         .baselineValues(
             LocalDateTime.parse("1970-01-11T00:00:01"), LocalTime.parse("00:00:03.600"), LocalDateTime.parse("2018-03-24T17:40:52.123"),
-            LocalDateTime.parse("1970-02-11T00:00"), LocalTime.parse("01:00:03.600"), LocalDateTime.parse("2019-03-23T17:40:52.123"))
+            LocalDate.parse("1970-02-11"), LocalTime.parse("01:00:03.600"), LocalDateTime.parse("2019-03-23T17:40:52.123"))
         .go();
   }
 

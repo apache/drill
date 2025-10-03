@@ -243,43 +243,52 @@ public class LocalFunctionRegistry implements AutoCloseable {
    * built-in functions during SQL validation.
    *
    * @param name function name
-   * @param optionManager option manager to check if type inference is enabled
    * @return list of SQL operators, or null if not found
    */
-  public List<org.apache.calcite.sql.SqlOperator> getSqlOperators(String name, org.apache.drill.exec.server.options.OptionManager optionManager) {
+  public List<org.apache.calcite.sql.SqlOperator> getSqlOperators(String name) {
     List<DrillFuncHolder> holders = getMethods(name);
     if (holders == null || holders.isEmpty()) {
       return null;
     }
 
-    // Check if type inference is enabled
-    boolean typeInferenceEnabled = optionManager != null &&
-        optionManager.getOption(org.apache.drill.exec.planner.physical.PlannerSettings.TYPE_INFERENCE);
-
     // Create SqlOperator from function holders
-    // We create either DrillSqlOperator or DrillSqlAggOperator depending on the function type
     List<org.apache.calcite.sql.SqlOperator> operators = new java.util.ArrayList<>();
 
-    // Check if this is an aggregate function
+    // Calculate min/max arg counts
+    int argCountMin = Integer.MAX_VALUE;
+    int argCountMax = Integer.MIN_VALUE;
     boolean isAggregate = false;
+    boolean isDeterministic = true;
+
     for (DrillFuncHolder holder : holders) {
       if (holder.isAggregating()) {
         isAggregate = true;
-        break;
       }
+      if (!holder.isDeterministic()) {
+        isDeterministic = false;
+      }
+      argCountMin = Math.min(argCountMin, holder.getParamCount());
+      argCountMax = Math.max(argCountMax, holder.getParamCount());
     }
 
     if (isAggregate) {
-      // Create aggregate operator
+      // Create aggregate operator using builder
       org.apache.drill.exec.planner.sql.DrillSqlAggOperator op =
-          org.apache.drill.exec.planner.sql.DrillSqlAggOperator.createOperator(
-              name.toUpperCase(), holders, 0, Integer.MAX_VALUE, typeInferenceEnabled);
+          new org.apache.drill.exec.planner.sql.DrillSqlAggOperator.DrillSqlAggOperatorBuilder()
+              .setName(name.toUpperCase())
+              .addFunctions(holders)
+              .setArgumentCount(argCountMin, argCountMax)
+              .build();
       operators.add(op);
     } else {
-      // Create regular operator
+      // Create regular operator using builder
       org.apache.drill.exec.planner.sql.DrillSqlOperator op =
-          org.apache.drill.exec.planner.sql.DrillSqlOperator.createOperator(
-              name.toUpperCase(), holders, 0, Integer.MAX_VALUE, typeInferenceEnabled);
+          new org.apache.drill.exec.planner.sql.DrillSqlOperator.DrillSqlOperatorBuilder()
+              .setName(name.toUpperCase())
+              .addFunctions(holders)
+              .setArgumentCount(argCountMin, argCountMax)
+              .setDeterministic(isDeterministic)
+              .build();
       operators.add(op);
     }
 
