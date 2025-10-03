@@ -57,6 +57,7 @@ import org.apache.drill.exec.planner.physical.DrillDistributionTraitDef;
 import org.apache.drill.exec.planner.physical.PlannerSettings;
 import org.apache.drill.exec.planner.sql.DrillConformance;
 import org.apache.drill.exec.planner.sql.DrillConvertletTable;
+import org.apache.drill.exec.planner.sql.DrillSqlValidator;
 import org.apache.drill.exec.planner.sql.SchemaUtilities;
 import org.apache.drill.exec.planner.sql.parser.impl.DrillParserWithCompoundIdConverter;
 import org.apache.drill.exec.planner.sql.parser.impl.DrillSqlParseException;
@@ -152,7 +153,8 @@ public class SqlConverter {
     );
     this.opTab = new ChainedSqlOperatorTable(Arrays.asList(context.getDrillOperatorTable(), catalog));
     this.costFactory = (settings.useDefaultCosting()) ? null : new DrillCostBase.DrillCostFactory();
-    this.validator = SqlValidatorUtil.newValidator(opTab, catalog, typeFactory,
+    // Use custom DrillSqlValidator for Calcite 1.35+ compatibility with star identifiers
+    this.validator = new DrillSqlValidator(opTab, catalog, typeFactory,
         SqlValidator.Config.DEFAULT.withConformance(parserConfig.conformance())
           .withTypeCoercionEnabled(true)
           .withIdentifierExpansion(true));
@@ -176,7 +178,8 @@ public class SqlConverter {
     this.catalog = catalog;
     this.opTab = parent.opTab;
     this.planner = parent.planner;
-    this.validator = SqlValidatorUtil.newValidator(opTab, catalog, typeFactory,
+    // Use custom DrillSqlValidator for Calcite 1.35+ compatibility with star identifiers
+    this.validator = new DrillSqlValidator(opTab, catalog, typeFactory,
       SqlValidator.Config.DEFAULT.withConformance(parserConfig.conformance())
         .withTypeCoercionEnabled(true)
         .withIdentifierExpansion(true));
@@ -205,11 +208,14 @@ public class SqlConverter {
 
   public SqlNode validate(final SqlNode parsedNode) {
     try {
+      // Rewrite COUNT() to COUNT(*) for Calcite 1.35+ compatibility
+      final SqlNode rewritten = parsedNode.accept(new org.apache.drill.exec.planner.sql.parser.CountFunctionRewriter());
+
       if (isImpersonationEnabled) {
         return ImpersonationUtil.getProcessUserUGI().doAs(
-          (PrivilegedAction<SqlNode>) () -> validator.validate(parsedNode));
+          (PrivilegedAction<SqlNode>) () -> validator.validate(rewritten));
       } else {
-        return validator.validate(parsedNode);
+        return validator.validate(rewritten);
       }
     } catch (RuntimeException e) {
       UserException.Builder builder = UserException
