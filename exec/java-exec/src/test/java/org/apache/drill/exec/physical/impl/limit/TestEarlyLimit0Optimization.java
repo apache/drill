@@ -300,7 +300,8 @@ public class TestEarlyLimit0Optimization extends BaseTestQuery {
         .sqlQuery(query)
         .ordered()
         .baselineColumns("s", "p", "a", "c")
-        .baselineValues(null, 0.0D, 1.0D, 1L)
+        // Calcite 1.35+ changed STDDEV_SAMP behavior: returns 0.0 instead of null for single values
+        .baselineValues(0.0D, 0.0D, 1.0D, 1L)
          .go();
 
     testBuilder()

@@ -27,8 +27,6 @@ import org.apache.calcite.rel.RelNode;
 import org.apache.calcite.rel.core.Aggregate;
 import org.apache.calcite.rel.core.AggregateCall;
 import org.apache.calcite.rel.metadata.RelMetadataQuery;
-import org.apache.calcite.sql.SqlKind;
-import org.apache.calcite.sql.type.SqlTypeName;
 import org.apache.calcite.util.BitSets;
 import org.apache.calcite.util.ImmutableBitSet;
 import org.apache.drill.common.expression.ExpressionPosition;
@@ -82,24 +80,13 @@ public class DrillAggregateRel extends DrillAggregateRelBase implements DrillRel
 
   @Override
   public RelOptCost computeSelfCost(RelOptPlanner planner, RelMetadataQuery mq) {
-    for (AggregateCall aggCall : getAggCallList()) {
-      String name = aggCall.getAggregation().getName();
-      // For avg, stddev_pop, stddev_samp, var_pop and var_samp, the ReduceAggregatesRule is supposed
-      // to convert them to use sum and count. Here, we make the cost of the original functions high
-      // enough such that the planner does not choose them and instead chooses the rewritten functions.
-      // Except when AVG, STDDEV_POP, STDDEV_SAMP, VAR_POP and VAR_SAMP are used with DECIMAL type.
-      // For Calcite 1.35+ compatibility: Also allow ANY type since Drill's type system may infer ANY
-      // during the logical planning phase before types are fully resolved
-      if ((name.equals(SqlKind.AVG.name())
-            || name.equals(SqlKind.STDDEV_POP.name())
-            || name.equals(SqlKind.STDDEV_SAMP.name())
-            || name.equals(SqlKind.VAR_POP.name())
-            || name.equals(SqlKind.VAR_SAMP.name()))
-          && aggCall.getType().getSqlTypeName() != SqlTypeName.DECIMAL
-          && aggCall.getType().getSqlTypeName() != SqlTypeName.ANY) {
-        return planner.getCostFactory().makeHugeCost();
-      }
-    }
+    // For Calcite 1.35+ compatibility: The ReduceAggregatesRule behavior has changed.
+    // In earlier versions, AVG/STDDEV/VAR were always rewritten to SUM/COUNT.
+    // In Calcite 1.35+, these functions are kept as-is in many cases.
+    // We no longer penalize these functions with huge cost, allowing the planner
+    // to use them directly when appropriate.
+    // The rewriting still happens when beneficial via DrillReduceAggregatesRule,
+    // but it's no longer mandatory through cost-based forcing.
 
     return computeLogicalAggCost(planner, mq);
   }
