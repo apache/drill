@@ -140,6 +140,15 @@ public class DrillConstExecutor implements RexExecutor {
       ErrorCollectorImpl errors = new ErrorCollectorImpl();
       LogicalExpression materializedExpr = ExpressionTreeMaterializer.materialize(logEx, null, errors, funcImplReg);
       if (errors.getErrorCount() != 0) {
+        // For Calcite 1.35+ compatibility: Check if error is due to complex writer functions
+        // Complex writer functions (like regexp_extract with ComplexWriter output) cannot be
+        // constant-folded because they require a ProjectRecordBatch context. Skip folding them.
+        String errorMsg = errors.toString();
+        if (errorMsg.contains("complex writer function")) {
+          logger.debug("Constant expression not folded due to complex writer function: {}", newCall.toString());
+          reducedValues.add(newCall);
+          continue;
+        }
         String message = String.format(
             "Failure while materializing expression in constant expression evaluator [%s].  Errors: %s",
             newCall.toString(), errors.toString());

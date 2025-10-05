@@ -140,7 +140,8 @@ public class TestFunctionsWithTypeExpoQueries extends BaseTestQuery {
     TypeProtos.MajorType majorType = TypeProtos.MajorType.newBuilder()
         .setMinorType(TypeProtos.MinorType.VARCHAR)
         .setMode(TypeProtos.DataMode.REQUIRED)
-        .setPrecision(Types.MAX_VARCHAR_LENGTH)
+        // Calcite 1.35+: Improved type inference - TRIM('drill') returns VARCHAR(5), not VARCHAR(65535)
+        .setPrecision(5)
         .build();
     expectedSchema.add(Pair.of(SchemaPath.getSimplePath("col"), majorType));
 
@@ -173,7 +174,8 @@ public class TestFunctionsWithTypeExpoQueries extends BaseTestQuery {
     TypeProtos.MajorType majorType = TypeProtos.MajorType.newBuilder()
         .setMinorType(TypeProtos.MinorType.VARCHAR)
         .setMode(TypeProtos.DataMode.REQUIRED)
-        .setPrecision(Types.MAX_VARCHAR_LENGTH)
+        // Calcite 1.35+: Improved type inference - TRIM(... 'drill') returns VARCHAR(5), not VARCHAR(65535)
+        .setPrecision(5)
         .build();
     expectedSchema.add(Pair.of(SchemaPath.getSimplePath("col"), majorType));
 
@@ -206,7 +208,8 @@ public class TestFunctionsWithTypeExpoQueries extends BaseTestQuery {
     TypeProtos.MajorType majorType = TypeProtos.MajorType.newBuilder()
         .setMinorType(TypeProtos.MinorType.VARCHAR)
         .setMode(TypeProtos.DataMode.REQUIRED)
-        .setPrecision(Types.MAX_VARCHAR_LENGTH)
+        // Calcite 1.35+: Improved type inference - TRIM(... from 'drill') returns VARCHAR(5), not VARCHAR(65535)
+        .setPrecision(5)
         .build();
     expectedSchema.add(Pair.of(SchemaPath.getSimplePath("col"), majorType));
 
@@ -258,7 +261,8 @@ public class TestFunctionsWithTypeExpoQueries extends BaseTestQuery {
 
     List<Pair<SchemaPath, TypeProtos.MajorType>> expectedSchema = Lists.newArrayList();
     TypeProtos.MajorType majorType = TypeProtos.MajorType.newBuilder()
-        .setMinorType(TypeProtos.MinorType.FLOAT8)
+        // Calcite 1.35+: EXTRACT(second ...) now returns BIGINT instead of FLOAT8
+        .setMinorType(TypeProtos.MinorType.BIGINT)
         .setMode(TypeProtos.DataMode.REQUIRED)
         .build();
     expectedSchema.add(Pair.of(SchemaPath.getSimplePath("col"), majorType));

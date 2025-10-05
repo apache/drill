@@ -17,9 +17,9 @@
  */
 package org.apache.drill.exec.planner.sql.parser;
 
+import org.apache.calcite.sql.SqlBasicCall;
 import org.apache.calcite.sql.SqlIdentifier;
 import org.apache.calcite.sql.SqlNode;
-import org.apache.calcite.sql.SqlOperator;
 import org.apache.calcite.sql.fun.SqlStdOperatorTable;
 import org.apache.calcite.sql.parser.SqlParserPos;
 import org.apache.calcite.sql.util.SqlShuttle;
@@ -50,7 +50,8 @@ public class SpecialFunctionRewriter extends SqlShuttle {
       "USER",
       "CURRENT_PATH",
       "CURRENT_ROLE",
-      "CURRENT_SCHEMA"
+      "CURRENT_SCHEMA",
+      "SESSION_ID"  // Drill-specific niladic function
   ));
 
   @Override
@@ -58,49 +59,26 @@ public class SpecialFunctionRewriter extends SqlShuttle {
     if (id.isSimple()) {
       String name = id.getSimple().toUpperCase();
       if (SPECIAL_FUNCTIONS.contains(name)) {
-        SqlOperator operator = getOperatorFromName(name);
-        if (operator != null) {
-          // Create the function call
-          SqlNode functionCall = operator.createCall(id.getParserPosition(), new SqlNode[0]);
-
-          // Wrap with AS alias to preserve the original identifier name
-          // This ensures SELECT session_user returns a column named "session_user" not "EXPR$0"
-          SqlParserPos pos = id.getParserPosition();
-          return SqlStdOperatorTable.AS.createCall(pos, functionCall, id);
-        }
+        // For Calcite 1.35+ compatibility: Create unresolved function calls for all niladic functions
+        // This allows Drill's operator table lookup to find Drill UDFs that may shadow Calcite built-ins
+        // (like user, session_user, system_user, current_schema)
+        SqlParserPos pos = id.getParserPosition();
+        SqlIdentifier functionId = new SqlIdentifier(name, pos);
+        SqlNode functionCall = new SqlBasicCall(
+            new org.apache.calcite.sql.SqlUnresolvedFunction(
+                functionId,
+                null,
+                null,
+                null,
+                null,
+                org.apache.calcite.sql.SqlFunctionCategory.USER_DEFINED_FUNCTION),
+            new SqlNode[0],
+            pos);
+        // Wrap with AS alias to preserve the original identifier name
+        // This ensures SELECT session_user returns a column named "session_user" not "EXPR$0"
+        return SqlStdOperatorTable.AS.createCall(pos, functionCall, id);
       }
     }
     return id;
-  }
-
-  private static SqlOperator getOperatorFromName(String name) {
-    switch (name) {
-      case "CURRENT_TIMESTAMP":
-        return SqlStdOperatorTable.CURRENT_TIMESTAMP;
-      case "CURRENT_TIME":
-        return SqlStdOperatorTable.CURRENT_TIME;
-      case "CURRENT_DATE":
-        return SqlStdOperatorTable.CURRENT_DATE;
-      case "LOCALTIME":
-        return SqlStdOperatorTable.LOCALTIME;
-      case "LOCALTIMESTAMP":
-        return SqlStdOperatorTable.LOCALTIMESTAMP;
-      case "CURRENT_USER":
-        return SqlStdOperatorTable.CURRENT_USER;
-      case "SESSION_USER":
-        return SqlStdOperatorTable.SESSION_USER;
-      case "SYSTEM_USER":
-        return SqlStdOperatorTable.SYSTEM_USER;
-      case "USER":
-        return SqlStdOperatorTable.USER;
-      case "CURRENT_PATH":
-        return SqlStdOperatorTable.CURRENT_PATH;
-      case "CURRENT_ROLE":
-        return SqlStdOperatorTable.CURRENT_ROLE;
-      case "CURRENT_SCHEMA":
-        return SqlStdOperatorTable.CURRENT_SCHEMA;
-      default:
-        return null;
-    }
   }
 }

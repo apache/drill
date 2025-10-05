@@ -80,14 +80,10 @@ public class DrillAggregateRel extends DrillAggregateRelBase implements DrillRel
 
   @Override
   public RelOptCost computeSelfCost(RelOptPlanner planner, RelMetadataQuery mq) {
-    // For Calcite 1.35+ compatibility: The ReduceAggregatesRule behavior has changed.
-    // In earlier versions, AVG/STDDEV/VAR were always rewritten to SUM/COUNT.
-    // In Calcite 1.35+, these functions are kept as-is in many cases.
-    // We no longer penalize these functions with huge cost, allowing the planner
-    // to use them directly when appropriate.
-    // The rewriting still happens when beneficial via DrillReduceAggregatesRule,
-    // but it's no longer mandatory through cost-based forcing.
-
+    // For Calcite 1.35+ compatibility: In earlier versions, AVG/STDDEV/VAR were always rewritten to SUM/COUNT
+    // by returning a huge cost to force the rewrite. In Calcite 1.35+, these functions work correctly as-is,
+    // so we no longer apply the cost penalty. The ReduceAggregatesRule may still rewrite them when beneficial,
+    // but it's no longer mandatory.
     return computeLogicalAggCost(planner, mq);
   }
 
