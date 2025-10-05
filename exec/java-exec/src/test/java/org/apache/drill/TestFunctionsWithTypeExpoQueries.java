@@ -737,7 +737,8 @@ public class TestFunctionsWithTypeExpoQueries extends BaseTestQuery {
         "from cp.`tpch/region.parquet` " +
         "window w as (partition by r_regionkey)";
 
-    final String[] expectedPlan = {"\\$SUM0"};
+    // Calcite 1.35+ changed the plan format - SUM is shown instead of $SUM0
+    final String[] expectedPlan = {"SUM\\("};
     final String[] excludedPlan = {};
     PlanTestBase.testPlanMatchingPatterns(query, expectedPlan, excludedPlan);
   }

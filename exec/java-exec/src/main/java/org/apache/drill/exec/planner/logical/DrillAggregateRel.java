@@ -88,12 +88,15 @@ public class DrillAggregateRel extends DrillAggregateRelBase implements DrillRel
       // to convert them to use sum and count. Here, we make the cost of the original functions high
       // enough such that the planner does not choose them and instead chooses the rewritten functions.
       // Except when AVG, STDDEV_POP, STDDEV_SAMP, VAR_POP and VAR_SAMP are used with DECIMAL type.
+      // For Calcite 1.35+ compatibility: Also allow ANY type since Drill's type system may infer ANY
+      // during the logical planning phase before types are fully resolved
       if ((name.equals(SqlKind.AVG.name())
             || name.equals(SqlKind.STDDEV_POP.name())
             || name.equals(SqlKind.STDDEV_SAMP.name())
             || name.equals(SqlKind.VAR_POP.name())
             || name.equals(SqlKind.VAR_SAMP.name()))
-          && aggCall.getType().getSqlTypeName() != SqlTypeName.DECIMAL) {
+          && aggCall.getType().getSqlTypeName() != SqlTypeName.DECIMAL
+          && aggCall.getType().getSqlTypeName() != SqlTypeName.ANY) {
         return planner.getCostFactory().makeHugeCost();
       }
     }

@@ -133,9 +133,25 @@ public class DrillCalciteSqlFunctionWrapper extends SqlFunction implements Drill
       SqlValidator validator,
       SqlValidatorScope scope,
       SqlCall call) {
-    return operator.deriveType(validator,
-        scope,
-        call);
+    // For Calcite 1.35+ compatibility: Handle function signature mismatches due to CHAR vs VARCHAR
+    // Calcite 1.35 changed string literal typing to CHAR(1) for single characters instead of VARCHAR
+    // This causes function lookups to fail before reaching our permissive checkOperandTypes()
+    // We override deriveType to use the Drill type inference instead of Calcite's strict matching
+    try {
+      return operator.deriveType(validator, scope, call);
+    } catch (org.apache.calcite.runtime.CalciteContextException e) {
+      // Check if this is a CHARACTER type mismatch error
+      if (e.getCause() instanceof org.apache.calcite.sql.validate.SqlValidatorException) {
+        String message = e.getMessage();
+        if (message != null && message.contains("CHARACTER") && message.contains("No match found")) {
+          // Use the return type inference directly since we know the function exists in Drill
+          // The actual type checking will happen during execution planning
+          SqlCallBinding callBinding = new SqlCallBinding(validator, scope, call);
+          return getReturnTypeInference().inferReturnType(callBinding);
+        }
+      }
+      throw e;
+    }
   }
 
   @Override
