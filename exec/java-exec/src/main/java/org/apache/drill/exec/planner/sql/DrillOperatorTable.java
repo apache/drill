@@ -209,8 +209,14 @@ public class DrillOperatorTable extends SqlStdOperatorTable {
         wrapper = new DrillCalciteSqlAggFunctionWrapper((SqlAggFunction) calciteOperator,
             getFunctionListWithInference(calciteOperator.getName()));
       } else if (calciteOperator instanceof SqlFunction) {
-        wrapper = new DrillCalciteSqlFunctionWrapper((SqlFunction) calciteOperator,
-            getFunctionListWithInference(calciteOperator.getName()));
+        List<DrillFuncHolder> functions = getFunctionListWithInference(calciteOperator.getName());
+        // For Calcite 1.35+: Don't wrap functions with no Drill implementation
+        // This allows Calcite standard functions like USER, CURRENT_USER to use their native validation
+        if (functions.isEmpty()) {
+          wrapper = calciteOperator;
+        } else {
+          wrapper = new DrillCalciteSqlFunctionWrapper((SqlFunction) calciteOperator, functions);
+        }
       } else if (calciteOperator instanceof SqlBetweenOperator) {
         // During the procedure of converting to RexNode,
         // StandardConvertletTable.convertBetween expects the SqlOperator to be a subclass of SqlBetweenOperator
