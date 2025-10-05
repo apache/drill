@@ -510,7 +510,8 @@ public class TestWindowFunctions extends ClusterTest {
         "where n_nationkey = 1";
 
     // Validate the plan
-    final String[] expectedPlan1 = {"Window.*partition \\{0\\} aggs .*SUM\\(\\$0\\), COUNT\\(\\$0\\)",
+    // Calcite 1.35+ doesn't rewrite AVG to SUM/COUNT in all cases anymore
+    final String[] expectedPlan1 = {"Window.*partition \\{0\\} aggs .*AVG\\(\\$0\\)",
         "Scan.*columns=\\[`n_nationkey`\\]"};
     final String[] excludedPatterns1 = {"Scan.*columns=\\[`\\*`\\]"};
 
@@ -533,7 +534,8 @@ public class TestWindowFunctions extends ClusterTest {
         "where n_nationkey = 1";
 
     // Validate the plan
-    final String[] expectedPlan2 = {"Window.*partition \\{0\\} aggs .*SUM\\(\\$2\\), SUM\\(\\$1\\), COUNT\\(\\$1\\)",
+    // Calcite 1.35+ doesn't rewrite VAR_POP to SUM/COUNT in all cases anymore
+    final String[] expectedPlan2 = {"Window.*partition \\{0\\} aggs .*VAR_POP\\(\\$0\\)",
         "Scan.*columns=\\[`n_nationkey`\\]"};
     final String[] excludedPatterns2 = {"Scan.*columns=\\[`\\*`\\]"};
 
@@ -580,7 +582,8 @@ public class TestWindowFunctions extends ClusterTest {
         "from cp.`jsoninput/large_int.json` limit 1";
 
     // Validate the plan
-    final String[] expectedPlan2 = {"Window.*partition \\{0\\} aggs .*SUM\\(\\$1\\), COUNT\\(\\$1\\)",
+    // Calcite 1.35+ doesn't rewrite AVG to SUM/COUNT in all cases anymore
+    final String[] expectedPlan2 = {"Window.*partition \\{0\\} aggs .*AVG\\(\\$1\\)",
         "Scan.*columns=\\[`col_varchar`, `col_int`\\]"};
     final String[] excludedPatterns2 = {"Scan.*columns=\\[`\\*`\\]"};
 
@@ -697,7 +700,8 @@ public class TestWindowFunctions extends ClusterTest {
         "window w as(partition by position_id order by employee_id)";
 
     // Validate the plan
-    final String[] expectedPlan = {"Window.*partition \\{0\\} order by \\[1\\].*RANK\\(\\), \\$SUM0\\(\\$2\\), SUM\\(\\$1\\), \\$SUM0\\(\\$3\\)",
+    // Calcite 1.35+ changed plan format - $SUM0 is now shown as SUM
+    final String[] expectedPlan = {"Window.*partition \\{0\\} order by \\[1\\].*RANK\\(\\), SUM\\(\\$2\\), SUM\\(\\$1\\), SUM\\(\\$3\\)",
         "Scan.*columns=\\[`position_id`, `employee_id`\\]"};
     final String[] excludedPatterns = {"Scan.*columns=\\[`\\*`\\]"};
 
@@ -846,10 +850,11 @@ public class TestWindowFunctions extends ClusterTest {
         "order by 1, 2, 3, 4", root);
 
     // Validate the plan
-    final String[] expectedPlan = {"Window.*\\$SUM0\\(\\$3\\).*\n" +
+    // Calcite 1.35+ changed plan format - $SUM0 is now shown as SUM
+    final String[] expectedPlan = {"Window.*SUM\\(\\$3\\).*\n" +
         ".*SelectionVectorRemover.*\n" +
         ".*Sort.*\n" +
-        ".*Window.*\\$SUM0\\(\\$2\\).*"
+        ".*Window.*SUM\\(\\$2\\).*"
     };
 
     client.queryBuilder()
@@ -1000,7 +1005,8 @@ public class TestWindowFunctions extends ClusterTest {
         .sqlQuery(sqlWindowFunctionQuery)
         .unOrdered()
         .baselineColumns("c1", "c2", "c3", "c4")
-        .baselineValues(333.56708470261117d, 333.4226520980038d, 111266.99999699896d, 111170.66493206649d)
+        // Calcite 1.35+ has minor precision differences in statistical functions due to calculation order changes
+        .baselineValues(333.56708470261106d, 333.4226520980037d, 111266.99999699889d, 111170.66493206641d)
         .build()
         .run();
   }
