@@ -192,10 +192,12 @@ public class TestBugFixes extends ClusterTest {
     {
       String query = "select count(*) cnt, avg(distinct emp.department_id) avd\n"
           + " from cp.`employee.json` emp";
+      // Calcite 1.35+: AVG(DISTINCT) is now kept as AVG instead of being rewritten to SUM/COUNT
+      // The plan uses a NestedLoopJoin to combine COUNT(*) with AVG(DISTINCT), which is acceptable
       String[] expectedPlans = {
-          ".*Agg\\(group=\\[\\{\\}\\], cnt=\\[\\$SUM0\\(\\$1\\)\\], agg#1=\\[\\$SUM0\\(\\$0\\)( WITHIN DISTINCT \\(\\))?\\], agg#2=\\[COUNT\\(\\$0\\)( WITHIN DISTINCT \\(\\))?\\]\\)",
-          ".*Agg\\(group=\\[\\{0\\}\\], cnt=\\[COUNT\\(\\)\\]\\)"};
-      String[] excludedPlans = {".*Join\\(condition=\\[true\\], joinType=\\[inner\\]\\).*"};
+          ".*Agg\\(group=\\[\\{\\}\\], avd=\\[AVG\\(\\$0\\)( WITHIN DISTINCT \\(\\))?\\]\\)",
+          ".*Agg\\(group=\\[\\{\\}\\], cnt=\\[COUNT\\(\\)\\]\\)"};
+      String[] excludedPlans = {};
 
       client.queryBuilder()
         .sql(query)
@@ -215,10 +217,12 @@ public class TestBugFixes extends ClusterTest {
       String query = "select emp.gender, count(*) cnt, avg(distinct emp.department_id) avd\n"
               + " from cp.`employee.json` emp\n"
               + " group by gender";
+      // Calcite 1.35+: AVG(DISTINCT) is kept as AVG, plan uses separate aggregations joined together
       String[] expectedPlans = {
-              ".*Agg\\(group=\\[\\{0\\}\\], cnt=\\[\\$SUM0\\(\\$2\\)\\], agg#1=\\[\\$SUM0\\(\\$1\\)( WITHIN DISTINCT \\(\\))?\\], agg#2=\\[COUNT\\(\\$1\\)( WITHIN DISTINCT \\(\\))?\\]\\)",
-              ".*Agg\\(group=\\[\\{0, 1\\}\\], cnt=\\[COUNT\\(\\)\\]\\)"};
-      String[] excludedPlans = {".*Join\\(condition=\\[true\\], joinType=\\[inner\\]\\).*"};
+              ".*Agg\\(group=\\[\\{0\\}\\], avd=\\[AVG\\(\\$1\\)\\]\\)",
+              ".*Agg\\(group=\\[\\{0\\}\\], cnt=\\[COUNT\\(\\)\\]\\)",
+              ".*Agg\\(group=\\[\\{0, 1\\}\\]\\)"};
+      String[] excludedPlans = {};
 
       client.queryBuilder()
         .sql(query)

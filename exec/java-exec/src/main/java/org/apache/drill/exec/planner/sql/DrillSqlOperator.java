@@ -124,22 +124,26 @@ public class DrillSqlOperator extends SqlFunction {
       org.apache.calcite.sql.validate.SqlValidator validator,
       org.apache.calcite.sql.validate.SqlValidatorScope scope,
       org.apache.calcite.sql.SqlCall call) {
-    // For Calcite 1.35+ compatibility: Handle function signature mismatches due to CHAR vs VARCHAR
+    // For Calcite 1.35+ compatibility: Handle function signature mismatches
     // Calcite 1.35 changed string literal typing to CHAR(1) for single characters instead of VARCHAR
-    // This causes function lookups to fail before reaching our permissive operand type checker
-    // We override deriveType to use the Drill type inference instead of Calcite's strict matching
+    // and has stricter type checking that occurs before reaching our permissive operand type checker
+    // We override deriveType to use Drill's type inference instead of Calcite's strict matching
     try {
       return super.deriveType(validator, scope, call);
-    } catch (org.apache.calcite.runtime.CalciteContextException e) {
-      // Check if this is a CHARACTER type mismatch error
-      if (e.getCause() instanceof org.apache.calcite.sql.validate.SqlValidatorException) {
-        String message = e.getMessage();
-        if (message != null && message.contains("CHARACTER") && message.contains("No match found")) {
-          // Use the return type inference directly since we know the function exists in Drill
-          // The actual type checking will happen during execution planning
+    } catch (RuntimeException e) {
+      // Check if this is a "No match found" type mismatch error
+      // This can occur at any level of the call stack during type derivation
+      String message = e.getMessage();
+      if (message != null && message.contains("No match found for function signature")) {
+        // Use the return type inference directly since we know the function exists in Drill
+        // The actual type checking will happen during execution planning
+        try {
           org.apache.calcite.sql.SqlCallBinding callBinding =
               new org.apache.calcite.sql.SqlCallBinding(validator, scope, call);
           return getReturnTypeInference().inferReturnType(callBinding);
+        } catch (Exception ex) {
+          // If type inference also fails, re-throw the original exception
+          throw e;
         }
       }
       throw e;

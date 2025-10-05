@@ -55,7 +55,11 @@ public class DrillCalciteSqlFunctionWrapper extends SqlFunction implements Drill
             wrappedFunction.getName(),
             functions),
         wrappedFunction.getOperandTypeInference(),
-        Checker.ANY_CHECKER,
+        // For Calcite 1.35+: Use wrapped function's operand type checker if no Drill functions exist
+        // This allows Calcite standard functions like USER to work with their original type checking
+        functions.isEmpty() && wrappedFunction.getOperandTypeChecker() != null
+            ? wrappedFunction.getOperandTypeChecker()
+            : Checker.ANY_CHECKER,
         wrappedFunction.getParamTypes(),
         wrappedFunction.getFunctionType());
     this.operator = wrappedFunction;
@@ -133,21 +137,38 @@ public class DrillCalciteSqlFunctionWrapper extends SqlFunction implements Drill
       SqlValidator validator,
       SqlValidatorScope scope,
       SqlCall call) {
-    // For Calcite 1.35+ compatibility: Handle function signature mismatches due to CHAR vs VARCHAR
+    // For Calcite 1.35+ compatibility: Handle function signature mismatches
     // Calcite 1.35 changed string literal typing to CHAR(1) for single characters instead of VARCHAR
-    // This causes function lookups to fail before reaching our permissive checkOperandTypes()
-    // We override deriveType to use the Drill type inference instead of Calcite's strict matching
+    // and has stricter type checking that occurs before reaching our permissive checkOperandTypes()
+    // We override deriveType to use Drill's type inference instead of Calcite's strict matching
     try {
       return operator.deriveType(validator, scope, call);
-    } catch (org.apache.calcite.runtime.CalciteContextException e) {
-      // Check if this is a CHARACTER type mismatch error
-      if (e.getCause() instanceof org.apache.calcite.sql.validate.SqlValidatorException) {
-        String message = e.getMessage();
-        if (message != null && message.contains("CHARACTER") && message.contains("No match found")) {
-          // Use the return type inference directly since we know the function exists in Drill
-          // The actual type checking will happen during execution planning
+    } catch (RuntimeException e) {
+      // Check if this is a "No match found" type mismatch error
+      // This can occur at any level of the call stack during type derivation
+      String message = e.getMessage();
+      Throwable cause = e.getCause();
+      // Check both the main exception and the cause for the signature mismatch message
+      boolean isSignatureMismatch = (message != null && message.contains("No match found for function signature"))
+          || (cause != null && cause.getMessage() != null && cause.getMessage().contains("No match found for function signature"));
+
+      if (isSignatureMismatch) {
+        // For Calcite standard functions with no Drill equivalent (like USER, CURRENT_USER),
+        // try to get the return type from Calcite's own type system
+        try {
           SqlCallBinding callBinding = new SqlCallBinding(validator, scope, call);
-          return getReturnTypeInference().inferReturnType(callBinding);
+          // First try Drill's type inference
+          RelDataType drillType = getReturnTypeInference().inferReturnType(callBinding);
+          if (drillType != null) {
+            return drillType;
+          }
+          // If Drill type inference returns null, try the wrapped operator's return type inference
+          if (operator.getReturnTypeInference() != null) {
+            return operator.getReturnTypeInference().inferReturnType(callBinding);
+          }
+        } catch (Exception ex) {
+          // If type inference also fails, re-throw the original exception
+          throw e;
         }
       }
       throw e;
