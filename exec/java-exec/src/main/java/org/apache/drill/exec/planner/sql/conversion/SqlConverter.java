@@ -42,7 +42,6 @@ import org.apache.calcite.sql.parser.SqlParser;
 import org.apache.calcite.sql.util.ChainedSqlOperatorTable;
 import org.apache.calcite.sql.validate.SqlConformance;
 import org.apache.calcite.sql.validate.SqlValidator;
-import org.apache.calcite.sql.validate.SqlValidatorUtil;
 import org.apache.calcite.sql2rel.SqlToRelConverter;
 import org.apache.drill.common.config.DrillConfig;
 import org.apache.drill.common.exceptions.UserException;
@@ -209,13 +208,18 @@ public class SqlConverter {
   public SqlNode validate(final SqlNode parsedNode) {
     try {
       // Rewrite COUNT() to COUNT(*) for Calcite 1.35+ compatibility
-      final SqlNode rewritten = parsedNode.accept(new org.apache.drill.exec.planner.sql.parser.CountFunctionRewriter());
+      SqlNode rewritten = parsedNode.accept(new org.apache.drill.exec.planner.sql.parser.CountFunctionRewriter());
 
+      // Rewrite special function identifiers (CURRENT_TIMESTAMP, SESSION_USER, etc.) to function calls
+      // for Calcite 1.35+ compatibility
+      rewritten = rewritten.accept(new org.apache.drill.exec.planner.sql.parser.SpecialFunctionRewriter());
+
+      final SqlNode finalRewritten = rewritten;
       if (isImpersonationEnabled) {
         return ImpersonationUtil.getProcessUserUGI().doAs(
-          (PrivilegedAction<SqlNode>) () -> validator.validate(rewritten));
+          (PrivilegedAction<SqlNode>) () -> validator.validate(finalRewritten));
       } else {
-        return validator.validate(rewritten);
+        return validator.validate(finalRewritten);
       }
     } catch (RuntimeException e) {
       UserException.Builder builder = UserException

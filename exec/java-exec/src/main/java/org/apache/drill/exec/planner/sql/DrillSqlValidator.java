@@ -19,7 +19,6 @@ package org.apache.drill.exec.planner.sql;
 
 import org.apache.calcite.rel.type.RelDataType;
 import org.apache.calcite.rel.type.RelDataTypeFactory;
-import org.apache.calcite.sql.SqlCallBinding;
 import org.apache.calcite.sql.SqlIdentifier;
 import org.apache.calcite.sql.SqlNode;
 import org.apache.calcite.sql.SqlOperatorTable;
@@ -31,8 +30,10 @@ import org.apache.calcite.sql.validate.SqlValidatorScope;
  * Custom SqlValidator for Drill that extends Calcite's SqlValidatorImpl.
  *
  * This validator provides Drill-specific validation behavior, particularly
- * for handling star identifiers (*) in aggregate function contexts, which
- * changed behavior in Calcite 1.35+.
+ * for handling star identifiers (*) in aggregate function contexts.
+ *
+ * Note: Special SQL functions like CURRENT_TIMESTAMP, SESSION_USER, etc. are
+ * rewritten to function calls before validation in SqlConverter.validate().
  */
 public class DrillSqlValidator extends SqlValidatorImpl {
 
@@ -59,6 +60,23 @@ public class DrillSqlValidator extends SqlValidatorImpl {
       }
     }
 
-    return super.deriveType(scope, operand);
+    // For Calcite 1.35+ compatibility: Try to derive type, and if it fails due to
+    // function signature mismatch, it might be because CHARACTER literals need
+    // to be coerced to VARCHAR
+    try {
+      return super.deriveType(scope, operand);
+    } catch (org.apache.calcite.runtime.CalciteContextException e) {
+      // Check if this is a function signature mismatch error
+      if (e.getCause() instanceof org.apache.calcite.sql.validate.SqlValidatorException) {
+        String message = e.getMessage();
+        // If the error mentions CHARACTER type in function signature, retry with type coercion
+        if (message != null && message.contains("CHARACTER") && message.contains("No match found")) {
+          // Let Calcite handle this through implicit casting/coercion
+          // by enabling type coercion in the config (already done in SqlConverter)
+          // Just rethrow for now - the real fix is in the type coercion system
+        }
+      }
+      throw e;
+    }
   }
 }
