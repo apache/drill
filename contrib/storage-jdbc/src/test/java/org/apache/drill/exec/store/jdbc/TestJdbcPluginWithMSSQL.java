@@ -231,7 +231,7 @@ public class TestJdbcPluginWithMSSQL extends ClusterTest {
       .sqlQuery(query)
       .unOrdered()
       .baselineColumns("EXPR$1", "EXPR$0", "EXPR$2")
-      .baselineValues(1.618033988749895, 88, 4)
+      .baselineValues(1.618033988749895, 88, 4L)
       .go();
   }
 
