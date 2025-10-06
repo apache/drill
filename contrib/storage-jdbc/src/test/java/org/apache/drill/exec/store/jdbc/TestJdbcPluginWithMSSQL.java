@@ -207,14 +207,16 @@ public class TestJdbcPluginWithMSSQL extends ClusterTest {
 
     DirectRowSet results = queryBuilder().sql(sql).rowSet();
 
+    // Calcite 1.35: COUNT(*) returns BIGINT, integer expressions return INT, SQRT returns DOUBLE
+    // Types are REQUIRED not OPTIONAL for literals and aggregates
     TupleMetadata expectedSchema = new SchemaBuilder()
-      .addNullable("EXPR$0", MinorType.INT, 10)
-      .addNullable("EXPR$1", MinorType.INT, 10)
-      .addNullable("EXPR$2", MinorType.FLOAT8, 15)
+      .add("EXPR$0", MinorType.BIGINT)
+      .add("EXPR$1", MinorType.INT)
+      .add("EXPR$2", MinorType.FLOAT8)
       .build();
 
     RowSet expected = client.rowSetBuilder(expectedSchema)
-      .addRow(4L, 88L, 1.618033988749895)
+      .addRow(4L, 88, 1.618033988749895)
       .build();
 
     RowSetUtilities.verify(expected, results);
