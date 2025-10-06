@@ -261,8 +261,8 @@ public class TestFunctionsWithTypeExpoQueries extends BaseTestQuery {
 
     List<Pair<SchemaPath, TypeProtos.MajorType>> expectedSchema = Lists.newArrayList();
     TypeProtos.MajorType majorType = TypeProtos.MajorType.newBuilder()
-        // Calcite 1.35+: EXTRACT(second ...) now returns BIGINT instead of FLOAT8
-        .setMinorType(TypeProtos.MinorType.BIGINT)
+        // EXTRACT(SECOND ...) returns FLOAT8 (DOUBLE) to support fractional seconds
+        .setMinorType(TypeProtos.MinorType.FLOAT8)
         .setMode(TypeProtos.DataMode.REQUIRED)
         .build();
     expectedSchema.add(Pair.of(SchemaPath.getSimplePath("col"), majorType));

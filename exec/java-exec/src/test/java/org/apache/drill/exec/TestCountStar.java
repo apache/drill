@@ -18,13 +18,12 @@
 package org.apache.drill.exec;
 
 import org.junit.Test;
-import org.apache.drill.test.ClusterTest;
+import org.apache.drill.PlanTestBase;
 
-public class TestCountStar extends ClusterTest {
+public class TestCountStar extends PlanTestBase {
   @Test
   public void testCountStar() throws Exception {
     String sql = "select count(*) from cp.`employee.json`";
-    long result = queryBuilder().sql(sql).singletonLong();
-    System.out.println("COUNT(*) result: " + result);
+    test(sql);
   }
 }
