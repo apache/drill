@@ -336,7 +336,8 @@ public class UnsupportedOperatorsVisitor extends SqlShuttle {
       }
     }
 
-    if (DrillCalciteWrapperUtility.extractSqlOperatorFromWrapper(sqlCall.getOperator()) instanceof SqlCountAggFunction) {
+    // DRILL-2181: Check for FLATTEN in ANY aggregate function, not just COUNT
+    if (DrillCalciteWrapperUtility.extractSqlOperatorFromWrapper(sqlCall.getOperator()) instanceof SqlAggFunction) {
       for (SqlNode sqlNode : sqlCall.getOperandList()) {
         if (containsFlatten(sqlNode)) {
           unsupportedOperatorCollector.setException(SqlUnsupportedException.ExceptionType.FUNCTION,

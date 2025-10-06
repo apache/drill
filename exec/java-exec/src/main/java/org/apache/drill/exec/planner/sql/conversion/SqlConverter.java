@@ -202,6 +202,31 @@ public class SqlConverter {
         builder.message("Failure parsing a view your query is dependent upon.");
       }
       throw builder.build(logger);
+    } catch (Exception e) {
+      // For Calcite 1.35+ compatibility: Catch any other parsing exceptions that may be wrapped
+      // Check if this is actually a parse error by examining the cause chain
+      Throwable cause = e;
+      while (cause != null) {
+        if (cause instanceof SqlParseException) {
+          DrillSqlParseException dex = new DrillSqlParseException(sql, (SqlParseException) cause);
+          UserException.Builder builder = UserException
+              .parseError(dex)
+              .addContext(dex.getSqlWithErrorPointer());
+          if (isInnerQuery) {
+            builder.message("Failure parsing a view your query is dependent upon.");
+          }
+          throw builder.build(logger);
+        }
+        cause = cause.getCause();
+      }
+      // Not a parse error - treat as validation error since it happened during SQL parsing
+      UserException.Builder builder = UserException
+          .validationError(e)
+          .message("Error parsing SQL");
+      if (isInnerQuery) {
+        builder.message("Failure parsing a view your query is dependent upon.");
+      }
+      throw builder.build(logger);
     }
   }
 

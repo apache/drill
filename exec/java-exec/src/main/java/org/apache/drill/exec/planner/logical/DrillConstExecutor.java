@@ -143,8 +143,9 @@ public class DrillConstExecutor implements RexExecutor {
         // For Calcite 1.35+ compatibility: Check if error is due to complex writer functions
         // Complex writer functions (like regexp_extract with ComplexWriter output) cannot be
         // constant-folded because they require a ProjectRecordBatch context. Skip folding them.
+        // However, we must still enforce that FLATTEN cannot be used in aggregates (DRILL-2181).
         String errorMsg = errors.toString();
-        if (errorMsg.contains("complex writer function")) {
+        if (errorMsg.contains("complex writer function") && !errorMsg.toLowerCase().contains("flatten")) {
           logger.debug("Constant expression not folded due to complex writer function: {}", newCall.toString());
           reducedValues.add(newCall);
           continue;

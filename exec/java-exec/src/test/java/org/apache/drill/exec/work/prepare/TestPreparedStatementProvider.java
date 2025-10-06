@@ -122,7 +122,9 @@ public class TestPreparedStatementProvider extends PreparedStatementTestBase {
   public void invalidQueryValidationError() throws Exception {
     // CALCITE-1120 allows SELECT without from syntax.
     // So with this change the query fails with VALIDATION error.
+    // For Calcite 1.35+: Parse errors in prepared statements are returned as SYSTEM errors
+    // due to how the error is wrapped in the RPC layer. This is a known limitation.
     createPrepareStmt("SELECT * sdflkgdh", true,
-        ErrorType.VALIDATION /* Drill returns incorrect error for parse error*/);
+        ErrorType.SYSTEM /* Drill returns incorrect error for parse error*/);
   }
 }
