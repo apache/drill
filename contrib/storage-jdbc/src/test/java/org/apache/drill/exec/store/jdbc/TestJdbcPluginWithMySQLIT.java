@@ -277,7 +277,8 @@ public class TestJdbcPluginWithMySQLIT extends ClusterTest {
         .sqlQuery(query)
         .unOrdered()
         .baselineColumns("EXPR$0", "EXPR$1", "EXPR$2")
-        .baselineValues(4L, 88, BigDecimal.valueOf(1.618033988749895))
+        // Calcite 1.35: SQRT returns DOUBLE, so (1+sqrt(5))/2 returns DOUBLE not DECIMAL
+        .baselineValues(4L, 88, 1.618033988749895)
         .go();
   }
 
@@ -290,7 +291,8 @@ public class TestJdbcPluginWithMySQLIT extends ClusterTest {
         .sqlQuery(query)
         .ordered()
         .baselineColumns("EXPR$1", "EXPR$0", "EXPR$2")
-        .baselineValues(BigDecimal.valueOf(1.618033988749895), 88, 4L)
+        // Calcite 1.35: SQRT returns DOUBLE, so (1+sqrt(5))/2 returns DOUBLE not DECIMAL
+        .baselineValues(1.618033988749895, 88, 4L)
         .go();
   }
 
