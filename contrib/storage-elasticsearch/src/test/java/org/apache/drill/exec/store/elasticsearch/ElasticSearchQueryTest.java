@@ -466,7 +466,7 @@ public class ElasticSearchQueryTest extends ClusterTest {
         .sqlQuery("select stddev_samp(salary) as standard_deviation from elastic.`employee`")
         .unOrdered()
         .baselineColumns("standard_deviation")
-        .baselineValues(21333.593748410563)
+        .baselineValues(21333.59374841056)
         .go();
   }
 
