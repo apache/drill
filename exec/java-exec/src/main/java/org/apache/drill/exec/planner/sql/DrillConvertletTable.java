@@ -127,17 +127,11 @@ public class DrillConvertletTable implements SqlRexConvertletTable {
         exprs.add(cx.convertExpression(node));
       }
 
-      RelDataType returnType;
-      if (call.getOperator() == SqlStdOperatorTable.EXTRACT) {
-        // Legacy code:
-        // The return type is wrong!
-        // Legacy code choose SqlTypeName.BIGINT simply to avoid conflicting against Calcite's inference mechanism
-        // (which chose BIGINT in validation phase already)
-        returnType = typeFactory.createSqlType(SqlTypeName.BIGINT);
-      } else {
-        String timeUnit = ((SqlIntervalQualifier) operands.get(0)).timeUnitRange.toString();
-        returnType = typeFactory.createSqlType(TypeInferenceUtils.getSqlTypeNameForTimeUnit(timeUnit));
-      }
+      // Determine return type based on time unit (fixes Calcite 1.35 compatibility)
+      // SECOND returns DOUBLE to support fractional seconds, others return BIGINT
+      String timeUnit = ((SqlIntervalQualifier) operands.get(0)).timeUnitRange.toString();
+      RelDataType returnType = typeFactory.createSqlType(
+          TypeInferenceUtils.getSqlTypeNameForTimeUnit(timeUnit));
       // Determine nullability using 2nd argument.
       returnType = typeFactory.createTypeWithNullability(returnType, exprs.get(1).getType().isNullable());
       return cx.getRexBuilder().makeCall(returnType, call.getOperator(), exprs);
@@ -250,7 +244,10 @@ public class DrillConvertletTable implements SqlRexConvertletTable {
         case YEAR:
         case NANOSECOND:  // NANOSECOND preserves input type per DrillTimestampAddTypeInference
           returnTypeName = operandType.getSqlTypeName();
-          precision = 3;
+          // Only set precision for types that support it (TIMESTAMP, TIME)
+          if (returnTypeName == SqlTypeName.TIMESTAMP || returnTypeName == SqlTypeName.TIME) {
+            precision = 3;
+          }
           break;
         case MICROSECOND:
         case MILLISECOND:
@@ -273,7 +270,7 @@ public class DrillConvertletTable implements SqlRexConvertletTable {
       }
 
       RelDataType returnType;
-      if (precision >= 0 && returnTypeName == SqlTypeName.TIMESTAMP) {
+      if (precision >= 0 && (returnTypeName == SqlTypeName.TIMESTAMP || returnTypeName == SqlTypeName.TIME)) {
         returnType = typeFactory.createSqlType(returnTypeName, precision);
       } else {
         returnType = typeFactory.createSqlType(returnTypeName);
@@ -302,6 +299,7 @@ public class DrillConvertletTable implements SqlRexConvertletTable {
 
       RelDataTypeFactory typeFactory = cx.getTypeFactory();
 
+      // Calcite validation uses BIGINT, so convertlet must match
       RelDataType returnType = typeFactory.createTypeWithNullability(
           typeFactory.createSqlType(SqlTypeName.BIGINT),
           cx.getValidator().getValidatedNodeType(call.operand(1)).isNullable()

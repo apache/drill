@@ -201,7 +201,16 @@ public class DrillOperatorTable extends SqlStdOperatorTable {
     for (SqlOperator calciteOperator : inner.getOperatorList()) {
       final SqlOperator wrapper;
 
-      if (calciteOperator instanceof SqlSumEmptyIsZeroAggFunction) {
+      // Special handling for EXTRACT - needs custom type inference for SECOND returning DOUBLE
+      if (calciteOperator == SqlStdOperatorTable.EXTRACT) {
+        wrapper = new DrillCalciteSqlExtractWrapper((SqlFunction) calciteOperator);
+      } else if (calciteOperator == SqlStdOperatorTable.TIMESTAMP_ADD) {
+        // Special handling for TIMESTAMPADD - needs custom type inference to avoid precision on DATE
+        wrapper = new DrillCalciteSqlTimestampAddWrapper((SqlFunction) calciteOperator);
+      } else if (calciteOperator == SqlStdOperatorTable.TIMESTAMP_DIFF) {
+        // Special handling for TIMESTAMPDIFF - needs custom type inference
+        wrapper = new DrillCalciteSqlTimestampDiffWrapper((SqlFunction) calciteOperator);
+      } else if (calciteOperator instanceof SqlSumEmptyIsZeroAggFunction) {
         wrapper = new DrillCalciteSqlSumEmptyIsZeroAggFunctionWrapper(
           (SqlSumEmptyIsZeroAggFunction) calciteOperator,
           getFunctionListWithInference(calciteOperator.getName()));
