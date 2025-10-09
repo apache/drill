@@ -83,21 +83,4 @@ public class TestGroupingSets extends ClusterTest {
       throw ex;
     }
   }
-
-  // GROUPING() function not yet implemented - test commented out
-  // @Test
-  // public void testGroupingSetsWithGroupingFunction() throws Exception {
-  //   try {
-  //     String query = "select n_regionkey, GROUPING(n_regionkey) as grp, count(*) as cnt " +
-  //         "from cp.`tpch/nation.parquet` " +
-  //         "group by grouping sets ((n_regionkey), ())";
-  //
-  //     queryBuilder().sql(query).run();
-  //   } catch (UserException ex) {
-  //     System.out.println("Exception message: " + ex.getMessage());
-  //     System.out.println("Exception type: " + ex.getClass().getName());
-  //     ex.printStackTrace();
-  //     throw ex;
-  //   }
-  // }
 }

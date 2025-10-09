@@ -48,6 +48,12 @@ import java.util.List;
  *   SELECT null, null, SUM(c), 3 AS $g FROM t GROUP BY ()
  *
  * The $g column is the grouping ID that can be used by GROUPING() and GROUPING_ID() functions.
+ * Currently, the $g column is generated internally but stripped from the final output.
+ *
+ * TODO: Implement GROUPING() and GROUPING_ID() functions by:
+ * 1. Detecting these functions in the SELECT list during expansion
+ * 2. Rewriting them to reference the $g column (e.g., GROUPING(a) becomes bit extraction from $g)
+ * 3. Preserving the $g column in the output when these functions are used
  */
 public class DrillAggregateExpandGroupingSetsRule extends RelOptRule {
 
@@ -81,6 +87,11 @@ public class DrillAggregateExpandGroupingSetsRule extends RelOptRule {
     final List<ImmutableBitSet> groupSets = aggregate.getGroupSets();
     final ImmutableBitSet fullGroupSet = aggregate.getGroupSet();
     final List<AggregateCall> aggCalls = aggregate.getAggCallList();
+
+    // Check if we have GROUPING or GROUPING_ID functions (they would appear as aggregate calls)
+    // For now, we always generate the $g column but strip it at the end
+    // TODO: Detect actual GROUPING function usage and preserve $g when needed
+    boolean hasGroupingFunctions = false;
 
     // Create a separate aggregate for each grouping set
     // Process grouping sets in order of decreasing cardinality (more columns first)
@@ -142,6 +153,19 @@ public class DrillAggregateExpandGroupingSetsRule extends RelOptRule {
         aggOutputIdx++;
       }
 
+      // Add grouping ID column ($g)
+      // The grouping ID is a bitmap where bit i is 1 if column i is NOT in the grouping set
+      int groupingId = 0;
+      int bitPosition = 0;
+      for (int col : fullGroupSet) {
+        if (!groupSet.get(col)) {
+          groupingId |= (1 << bitPosition);
+        }
+        bitPosition++;
+      }
+      projects.add(rexBuilder.makeLiteral(groupingId, typeFactory.createSqlType(org.apache.calcite.sql.type.SqlTypeName.INTEGER), true));
+      fieldNames.add("$g");
+
       // Create the project
       RelNode project = call.builder()
           .push(newAggregate)
@@ -161,6 +185,19 @@ public class DrillAggregateExpandGroupingSetsRule extends RelOptRule {
           .union(true, aggregates.size())
           .build();
     }
+
+    // Add a final project to remove the $g column (it's only needed internally for GROUPING functions)
+    // Project all columns except the last one ($g)
+    List<RexNode> finalProjects = new ArrayList<>();
+    List<String> finalFieldNames = new ArrayList<>();
+    for (int i = 0; i < aggregate.getRowType().getFieldCount(); i++) {
+      finalProjects.add(rexBuilder.makeInputRef(result, i));
+      finalFieldNames.add(aggregate.getRowType().getFieldList().get(i).getName());
+    }
+    result = call.builder()
+        .push(result)
+        .project(finalProjects, finalFieldNames)
+        .build();
 
     call.transformTo(result);
   }
