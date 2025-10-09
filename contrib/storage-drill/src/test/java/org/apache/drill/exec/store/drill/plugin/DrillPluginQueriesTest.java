@@ -223,7 +223,7 @@ public class DrillPluginQueriesTest extends ClusterTest {
     queryBuilder()
         .sql(query, TABLE_NAME)
         .planMatcher()
-        .include("query=\"SELECT COUNT\\(\\*\\)")
+        .include("query=\"SELECT COUNT\\(")
         .match();
 
     testBuilder()

@@ -135,11 +135,10 @@ public class ElasticSearchPlanTest extends ClusterTest {
 
   @Test
   public void testAggregationPushDown() throws Exception {
-    // Calcite 1.35: Aggregate pushdown behavior changed, aggregates are handled by Drill
     queryBuilder()
         .sql("select count(*) from elastic.`nation`")
         .planMatcher()
-        .include("StreamAgg")
+        .include("ElasticsearchAggregate")
         .match();
   }
 
@@ -154,11 +153,10 @@ public class ElasticSearchPlanTest extends ClusterTest {
 
   @Test
   public void testAggregationWithGroupByPushDown() throws Exception {
-    // Calcite 1.35: Aggregate pushdown behavior changed, aggregates are handled by Drill
     queryBuilder()
         .sql("select sum(n_nationkey) from elastic.`nation` group by n_regionkey")
         .planMatcher()
-        .include("HashAgg")
+        .include("ElasticsearchAggregate")
         .match();
   }
 }
