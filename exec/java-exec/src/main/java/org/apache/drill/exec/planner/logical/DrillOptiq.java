@@ -917,6 +917,11 @@ public class DrillOptiq {
         return (ValueExpressions.getIntervalDay(((BigDecimal) (literal.getValue())).longValue()));
       case NULL:
         return NullExpression.INSTANCE;
+      case UNKNOWN:
+        // UNKNOWN type is used for NULL literals where the type should be inferred later
+        // This is used by GROUPING SETS expansion where NULL placeholders need type inference
+        // from the other branch of UNION ALL
+        return NullExpression.INSTANCE;
       case ANY:
         if (isLiteralNull(literal)) {
           return NullExpression.INSTANCE;

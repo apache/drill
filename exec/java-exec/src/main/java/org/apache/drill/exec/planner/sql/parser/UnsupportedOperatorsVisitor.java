@@ -17,10 +17,21 @@
  */
 package org.apache.drill.exec.planner.sql.parser;
 
+import com.google.common.collect.Lists;
+import org.apache.calcite.sql.SqlCall;
+import org.apache.calcite.sql.SqlDataTypeSpec;
+import org.apache.calcite.sql.SqlIdentifier;
+import org.apache.calcite.sql.SqlJoin;
+import org.apache.calcite.sql.SqlKind;
+import org.apache.calcite.sql.SqlNode;
 import org.apache.calcite.sql.SqlNumericLiteral;
-import org.apache.calcite.sql.SqlOperator;
-import org.apache.calcite.sql.fun.SqlStdOperatorTable;
+import org.apache.calcite.sql.SqlSelect;
+import org.apache.calcite.sql.SqlSelectKeyword;
+import org.apache.calcite.sql.SqlWindow;
+import org.apache.calcite.sql.fun.SqlCountAggFunction;
+import org.apache.calcite.sql.type.SqlTypeName;
 import org.apache.calcite.sql.util.SqlBasicVisitor;
+import org.apache.calcite.sql.util.SqlShuttle;
 import org.apache.calcite.util.Litmus;
 import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.exception.UnsupportedOperatorCollector;
@@ -28,22 +39,7 @@ import org.apache.drill.exec.ops.QueryContext;
 import org.apache.drill.exec.planner.physical.PlannerSettings;
 import org.apache.drill.exec.work.foreman.SqlUnsupportedException;
 
-import org.apache.calcite.sql.SqlSelectKeyword;
-import org.apache.calcite.sql.SqlIdentifier;
-import org.apache.calcite.sql.SqlSelect;
-import org.apache.calcite.sql.SqlWindow;
-import org.apache.calcite.sql.fun.SqlCountAggFunction;
-import org.apache.calcite.sql.SqlCall;
-import org.apache.calcite.sql.SqlKind;
-import org.apache.calcite.sql.SqlJoin;
-import org.apache.calcite.sql.SqlNode;
-import org.apache.calcite.sql.type.SqlTypeName;
-import org.apache.calcite.sql.util.SqlShuttle;
-import org.apache.calcite.sql.SqlDataTypeSpec;
-
 import java.util.List;
-
-import com.google.common.collect.Lists;
 
 public class UnsupportedOperatorsVisitor extends SqlShuttle {
   private QueryContext context;
@@ -96,10 +92,6 @@ public class UnsupportedOperatorsVisitor extends SqlShuttle {
     // Inspect the window functions
     if (sqlCall instanceof SqlSelect) {
       SqlSelect sqlSelect = (SqlSelect) sqlCall;
-
-      checkGrouping((sqlSelect));
-
-      checkRollupCubeGrpSets(sqlSelect);
 
       for (SqlNode nodeInSelectList : sqlSelect.getSelectList()) {
         // If the window function is used with an alias,
@@ -358,27 +350,6 @@ public class UnsupportedOperatorsVisitor extends SqlShuttle {
     return sqlCall.getOperator().acceptCall(this, sqlCall);
   }
 
-  private void checkRollupCubeGrpSets(SqlSelect sqlSelect) {
-    final ExprFinder rollupCubeGrpSetsFinder = new ExprFinder(RollupCubeGrpSets);
-    sqlSelect.accept(rollupCubeGrpSetsFinder);
-    if (rollupCubeGrpSetsFinder.find()) {
-      unsupportedOperatorCollector.setException(SqlUnsupportedException.ExceptionType.FUNCTION,
-          "Rollup, Cube, Grouping Sets are not supported in GROUP BY clause.\n" +
-              "See Apache Drill JIRA: DRILL-3962");
-      throw new UnsupportedOperationException();
-    }
-  }
-
-  private void checkGrouping(SqlSelect sqlSelect) {
-    final ExprFinder groupingFinder = new ExprFinder(GroupingID);
-    sqlSelect.accept(groupingFinder);
-    if (groupingFinder.find()) {
-      unsupportedOperatorCollector.setException(SqlUnsupportedException.ExceptionType.FUNCTION,
-          "Grouping, Grouping_ID, Group_ID are not supported.\n" +
-              "See Apache Drill JIRA: DRILL-3962");
-      throw new UnsupportedOperationException();
-    }
-  }
 
   private boolean checkDirExplorers(SqlNode sqlNode) {
     final ExprFinder dirExplorersFinder = new ExprFinder(DirExplorersCondition);
@@ -401,41 +372,6 @@ public class UnsupportedOperatorsVisitor extends SqlShuttle {
     boolean test(SqlNode sqlNode);
   }
 
-  /**
-   * A condition that returns true if SqlNode has rollup, cube, grouping_sets.
-   * */
-  private final SqlNodeCondition RollupCubeGrpSets = new SqlNodeCondition() {
-    @Override
-    public boolean test(SqlNode sqlNode) {
-      if (sqlNode instanceof SqlCall) {
-        final SqlOperator operator = DrillCalciteWrapperUtility.extractSqlOperatorFromWrapper(((SqlCall) sqlNode).getOperator());
-        if (operator == SqlStdOperatorTable.ROLLUP
-            || operator == SqlStdOperatorTable.CUBE
-            || operator == SqlStdOperatorTable.GROUPING_SETS) {
-          return true;
-        }
-      }
-      return false;
-    }
-  };
-
-  /**
-   * A condition that returns true if SqlNode has Grouping, Grouping_ID, GROUP_ID.
-   */
-  private final SqlNodeCondition GroupingID = new SqlNodeCondition() {
-    @Override
-    public boolean test(SqlNode sqlNode) {
-      if (sqlNode instanceof SqlCall) {
-        final SqlOperator operator = DrillCalciteWrapperUtility.extractSqlOperatorFromWrapper(((SqlCall) sqlNode).getOperator());
-          if (operator == SqlStdOperatorTable.GROUPING
-              || operator == SqlStdOperatorTable.GROUPING_ID
-              || operator == SqlStdOperatorTable.GROUP_ID) {
-          return true;
-        }
-      }
-      return false;
-    }
-  };
 
   /**
    * A condition that returns true if SqlNode has Directory Explorers.

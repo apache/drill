@@ -64,6 +64,12 @@ public class StreamAggPrule extends AggPruleBase {
       return;
     }
 
+    if (aggregate.getGroupSets().size() > 1) {
+      // Don't use StreamingAggregate for aggregates with multiple grouping sets (GROUPING SETS/ROLLUP/CUBE)
+      // These should be expanded into UNION ALL by DrillAggregateExpandGroupingSetsRule first
+      return;
+    }
+
     try {
       if (aggregate.getGroupSet().isEmpty()) {
         DrillDistributionTrait singleDist = DrillDistributionTrait.SINGLETON;

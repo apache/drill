@@ -246,37 +246,10 @@ public class TestDisabledFunctionality extends BaseTestQuery {
     }
   }
 
-  @Test (expected = UnsupportedFunctionException.class) //DRILL-3802
-  public void testDisableRollup() throws Exception{
-    try {
-      test("select n_regionkey, count(*) as cnt from cp.`tpch/nation.parquet` group by rollup(n_regionkey, n_name)");
-    } catch(UserException ex) {
-      throwAsUnsupportedException(ex);
-      throw ex;
-    }
-  }
+  // ROLLUP, CUBE, and GROUPING SETS are now supported as of DRILL-3802 implementation
+  // Tests moved to TestGroupingSets.java
 
-  @Test (expected = UnsupportedFunctionException.class) //DRILL-3802
-  public void testDisableCube() throws Exception{
-    try {
-      test("select n_regionkey, count(*) as cnt from cp.`tpch/nation.parquet` group by cube(n_regionkey, n_name)");
-    } catch(UserException ex) {
-      throwAsUnsupportedException(ex);
-      throw ex;
-    }
-  }
-
-  @Test (expected = UnsupportedFunctionException.class) //DRILL-3802
-  public void testDisableGroupingSets() throws Exception{
-    try {
-      test("select n_regionkey, count(*) as cnt from cp.`tpch/nation.parquet` group by grouping sets(n_regionkey, n_name)");
-    } catch(UserException ex) {
-      throwAsUnsupportedException(ex);
-      throw ex;
-    }
-  }
-
-  @Test (expected = UnsupportedFunctionException.class) //DRILL-3802
+  @Test (expected = UnsupportedFunctionException.class) //DRILL-3802 - GROUPING functions not yet implemented
   public void testDisableGrouping() throws Exception{
     try {
       test("select n_regionkey, count(*), GROUPING(n_regionkey) from cp.`tpch/nation.parquet` group by n_regionkey;");

@@ -278,10 +278,13 @@ public class UnionAllRecordBatch extends AbstractBinaryRecordBatch<UnionAll> {
     final Iterator<MaterializedField> leftIter = leftSchema.iterator();
     final Iterator<MaterializedField> rightIter = rightSchema.iterator();
 
+    logger.debug("UNION ALL inferring output schema from left and right schemas");
     int index = 1;
     while (leftIter.hasNext() && rightIter.hasNext()) {
       MaterializedField leftField  = leftIter.next();
       MaterializedField rightField = rightIter.next();
+      logger.debug("Column {}: left='{}' ({}), right='{}' ({})",
+          index, leftField.getName(), leftField.getType(), rightField.getName(), rightField.getType());
 
       if (Types.isSameTypeAndMode(leftField.getType(), rightField.getType())) {
         MajorType.Builder builder = MajorType.newBuilder()
@@ -301,15 +304,34 @@ public class UnionAllRecordBatch extends AbstractBinaryRecordBatch<UnionAll> {
           builder.setMinorType(leftField.getType().getMinorType());
           builder = Types.calculateTypePrecisionAndScale(leftField.getType(), rightField.getType(), builder);
         } else {
-          TypeProtos.MinorType outputMinorType = TypeCastRules.getLeastRestrictiveType(
-            leftField.getType().getMinorType(),
-            rightField.getType().getMinorType()
-          );
-          if (outputMinorType == null) {
-            throw new DrillRuntimeException("Type mismatch between " + leftField.getType().getMinorType().toString() +
-                " on the left side and " + rightField.getType().getMinorType().toString() +
-                " on the right side in column " + index + " of UNION ALL");
+          logger.debug("UNION ALL type mismatch in column {}: left={}, right={}",
+              index, leftField.getType().getMinorType(), rightField.getType().getMinorType());
+
+          // Handle type mismatches with special case for INT
+          // INT is Drill's default type for unknown/NULL columns, especially in JSON queries.
+          // When INT appears with another type, prefer the non-INT type as INT is likely a placeholder.
+          TypeProtos.MinorType leftType = leftField.getType().getMinorType();
+          TypeProtos.MinorType rightType = rightField.getType().getMinorType();
+          TypeProtos.MinorType outputMinorType;
+
+          if (leftType == TypeProtos.MinorType.INT && rightType != TypeProtos.MinorType.INT) {
+            // Left is INT, right is not - prefer right type
+            outputMinorType = rightType;
+            logger.debug("UNION ALL: preferring {} over INT (INT is likely a placeholder NULL)", rightType);
+          } else if (rightType == TypeProtos.MinorType.INT && leftType != TypeProtos.MinorType.INT) {
+            // Right is INT, left is not - prefer left type
+            outputMinorType = leftType;
+            logger.debug("UNION ALL: preferring {} over INT (INT is likely a placeholder NULL)", leftType);
+          } else {
+            // Normal case: use type cast rules
+            outputMinorType = TypeCastRules.getLeastRestrictiveType(leftType, rightType);
+            if (outputMinorType == null) {
+              throw new DrillRuntimeException("Type mismatch between " + leftType.toString() +
+                  " on the left side and " + rightType.toString() +
+                  " on the right side in column " + index + " of UNION ALL");
+            }
           }
+          logger.debug("UNION ALL chose output type: {}", outputMinorType);
           builder.setMinorType(outputMinorType);
         }
 

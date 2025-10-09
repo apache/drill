@@ -49,6 +49,12 @@ public class DrillAggregateRule extends RelOptRule {
       return;
     }
 
+    if (aggregate.getGroupSets().size() > 1) {
+      // Don't convert aggregates with multiple grouping sets (GROUPING SETS/ROLLUP/CUBE) to DrillAggregateRel
+      // These should be expanded into UNION ALL by DrillAggregateExpandGroupingSetsRule first
+      return;
+    }
+
     final RelTraitSet traits = aggregate.getTraitSet().plus(DrillRel.DRILL_LOGICAL);
     final RelNode convertedInput = convert(input, input.getTraitSet().plus(DrillRel.DRILL_LOGICAL).simplify());
     call.transformTo(new DrillAggregateRel(aggregate.getCluster(), traits, convertedInput,

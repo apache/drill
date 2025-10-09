@@ -37,13 +37,25 @@ import org.apache.calcite.plan.RelTraitSet;
  * Union implemented in Drill.
  */
 public class DrillUnionRel extends Union implements DrillRel, DrillSetOpRel {
+  private final boolean isGroupingSetsExpansion;
+
   /** Creates a DrillUnionRel. */
   public DrillUnionRel(RelOptCluster cluster, RelTraitSet traits,
       List<RelNode> inputs, boolean all, boolean checkCompatibility) throws InvalidRelException {
+    this(cluster, traits, inputs, all, checkCompatibility, false);
+  }
+
+  public DrillUnionRel(RelOptCluster cluster, RelTraitSet traits,
+      List<RelNode> inputs, boolean all, boolean checkCompatibility, boolean isGroupingSetsExpansion) throws InvalidRelException {
     super(cluster, traits, inputs, all);
+    this.isGroupingSetsExpansion = isGroupingSetsExpansion;
     if (checkCompatibility && !this.isCompatible(getRowType(), getInputs())) {
       throw new InvalidRelException("Input row types of the Union are not compatible.");
     }
+  }
+
+  public boolean isGroupingSetsExpansion() {
+    return isGroupingSetsExpansion;
   }
 
   @Override
@@ -51,7 +63,7 @@ public class DrillUnionRel extends Union implements DrillRel, DrillSetOpRel {
       boolean all) {
     try {
       return new DrillUnionRel(getCluster(), traitSet, inputs, all,
-          false /* don't check compatibility during copy */);
+          false /* don't check compatibility during copy */, isGroupingSetsExpansion);
     } catch (InvalidRelException e) {
       throw new AssertionError(e);
     }

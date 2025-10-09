@@ -64,6 +64,12 @@ public class HashAggPrule extends AggPruleBase {
       return;
     }
 
+    if (aggregate.getGroupSets().size() > 1) {
+      // Don't use HashAggregate for aggregates with multiple grouping sets (GROUPING SETS/ROLLUP/CUBE)
+      // These should be expanded into UNION ALL by DrillAggregateExpandGroupingSetsRule first
+      return;
+    }
+
     RelTraitSet traits;
 
     try {
