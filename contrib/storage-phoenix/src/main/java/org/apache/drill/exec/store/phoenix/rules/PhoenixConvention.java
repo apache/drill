@@ -24,6 +24,7 @@ import java.util.stream.Collectors;
 
 import org.apache.calcite.adapter.jdbc.JdbcConvention;
 import org.apache.calcite.adapter.jdbc.JdbcRules;
+import org.apache.calcite.adapter.jdbc.JdbcRules.JdbcAggregateRule;
 import org.apache.calcite.adapter.jdbc.JdbcRules.JdbcFilterRule;
 import org.apache.calcite.adapter.jdbc.JdbcRules.JdbcJoinRule;
 import org.apache.calcite.adapter.jdbc.JdbcRules.JdbcProjectRule;
@@ -50,7 +51,8 @@ public class PhoenixConvention extends JdbcConvention {
           JdbcProjectRule.class,
           JdbcFilterRule.class,
           JdbcSortRule.class,
-          JdbcJoinRule.class);
+          JdbcJoinRule.class,
+          JdbcAggregateRule.class);
 
   private final ImmutableSet<RelOptRule> rules;
   private final PhoenixStoragePlugin plugin;
@@ -72,7 +74,9 @@ public class PhoenixConvention extends JdbcConvention {
       .add(new PhoenixIntermediatePrelConverterRule(this))
       .add(VertexDrelConverterRule.create(this))
       .add(RuleInstance.FILTER_SET_OP_TRANSPOSE_RULE)
-      .add(RuleInstance.PROJECT_REMOVE_RULE);
+      .add(RuleInstance.PROJECT_REMOVE_RULE)
+      .add(PhoenixAggregateRule.create(Convention.NONE, this))
+      .add(PhoenixAggregateRule.create(DrillRel.DRILL_LOGICAL, this));
     for (RelTrait inputTrait : inputTraits) {
       builder
         .add(new DrillJdbcRuleBase.DrillJdbcProjectRule(inputTrait, this))
