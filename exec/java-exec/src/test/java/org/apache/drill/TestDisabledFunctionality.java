@@ -245,13 +245,4 @@ public class TestDisabledFunctionality extends BaseTestQuery {
       resetSessionOption(PlannerSettings.ENABLE_DECIMAL_DATA_TYPE_KEY);
     }
   }
-
-  // ROLLUP, CUBE, and GROUPING SETS are now supported as of DRILL-3802 implementation
-  // Tests moved to TestGroupingSets.java
-
-  // NOTE: GROUPING(), GROUPING_ID(), and GROUP_ID() functions are NOT yet implemented.
-  // While GROUPING SETS syntax is supported, these auxiliary functions that would help
-  // distinguish between real NULLs and grouping NULLs are not available.
-  // Tests for these unsupported functions have been removed from this file.
-
 }

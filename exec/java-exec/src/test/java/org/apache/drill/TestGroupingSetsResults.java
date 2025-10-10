@@ -262,4 +262,66 @@ public class TestGroupingSetsResults extends ClusterTest {
         .sql(query)
         .run();
   }
+
+  // Tests for GROUPING() and GROUPING_ID() functions
+  // These functions help distinguish between NULL values that are actual data
+  // versus NULL values inserted by GROUPING SETS/ROLLUP/CUBE operations.
+
+  @Test
+  public void testGroupingFunction() throws Exception {
+    // Test GROUPING function with ROLLUP
+    // GROUPING returns 1 if the column is aggregated (NULL in output), 0 otherwise
+    String query = "select education_level, " +
+        "GROUPING(education_level) as grp, " +
+        "count(*) as cnt " +
+        "from cp.`employee.json` " +
+        "where education_level in ('Graduate Degree', 'Bachelors Degree') " +
+        "group by rollup(education_level)";
+
+    testBuilder()
+        .sqlQuery(query)
+        .unOrdered()
+        .baselineColumns("education_level", "grp", "cnt")
+        .baselineValues("Graduate Degree", 0, 170L)  // Not aggregated: grp=0
+        .baselineValues("Bachelors Degree", 0, 287L) // Not aggregated: grp=0
+        .baselineValues(null, 1, 457L)               // Aggregated (grand total): grp=1
+        .go();
+  }
+
+  @Test
+  public void testGroupingIdFunction() throws Exception {
+    // Test GROUPING_ID function with CUBE
+    // GROUPING_ID returns a bitmap where bit i is 1 if column i is aggregated
+    // For CUBE(marital_status, education_level), we get grouping sets:
+    // (marital_status, education_level), (marital_status), (education_level), ()
+    String query = "select marital_status, education_level, " +
+        "GROUPING_ID(marital_status, education_level) as grp_id, " +
+        "count(*) as cnt " +
+        "from cp.`employee.json` " +
+        "where marital_status in ('S', 'M') " +
+        "and education_level in ('Graduate Degree', 'Bachelors Degree') " +
+        "group by cube(marital_status, education_level)";
+
+    testBuilder()
+        .sqlQuery(query)
+        .unOrdered()
+        .baselineColumns("marital_status", "education_level", "grp_id", "cnt")
+        // (marital_status, education_level) - neither aggregated: grp_id = 0
+        .baselineValues("S", "Graduate Degree", 0, 85L)
+        .baselineValues("S", "Bachelors Degree", 0, 143L)
+        .baselineValues("M", "Graduate Degree", 0, 85L)
+        .baselineValues("M", "Bachelors Degree", 0, 144L)
+        // (marital_status) - education_level aggregated: grp_id = 1 (bit 0 set)
+        .baselineValues("S", null, 1, 228L)
+        .baselineValues("M", null, 1, 229L)
+        // (education_level) - marital_status aggregated: grp_id = 2 (bit 1 set)
+        .baselineValues(null, "Graduate Degree", 2, 170L)
+        .baselineValues(null, "Bachelors Degree", 2, 287L)
+        // () - both aggregated: grp_id = 3 (both bits set)
+        .baselineValues(null, null, 3, 457L)
+        .go();
+  }
+
+  // GROUP_ID function test not included because duplicate grouping sets
+  // are currently not fully supported (they get deduplicated during expansion)
 }
