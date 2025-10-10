@@ -249,44 +249,9 @@ public class TestDisabledFunctionality extends BaseTestQuery {
   // ROLLUP, CUBE, and GROUPING SETS are now supported as of DRILL-3802 implementation
   // Tests moved to TestGroupingSets.java
 
-  @Test (expected = UnsupportedFunctionException.class) //DRILL-3802 - GROUPING functions not yet implemented
-  public void testDisableGrouping() throws Exception{
-    try {
-      test("select n_regionkey, count(*), GROUPING(n_regionkey) from cp.`tpch/nation.parquet` group by n_regionkey;");
-    } catch(UserException ex) {
-      throwAsUnsupportedException(ex);
-      throw ex;
-    }
-  }
-
-  @Test (expected = UnsupportedFunctionException.class) //DRILL-3802
-  public void testDisableGrouping_ID() throws Exception{
-    try {
-      test("select n_regionkey, count(*), GROUPING_ID(n_regionkey) from cp.`tpch/nation.parquet` group by n_regionkey;");
-    } catch(UserException ex) {
-      throwAsUnsupportedException(ex);
-      throw ex;
-    }
-  }
-
-  @Test (expected = UnsupportedFunctionException.class) //DRILL-3802
-  public void testDisableGroup_ID() throws Exception{
-    try {
-      test("select n_regionkey, count(*), GROUP_ID() from cp.`tpch/nation.parquet` group by n_regionkey;");
-    } catch(UserException ex) {
-      throwAsUnsupportedException(ex);
-      throw ex;
-    }
-  }
-
-  @Test (expected = UnsupportedFunctionException.class) //DRILL-3802
-  public void testDisableGroupingInFilter() throws Exception{
-    try {
-      test("select n_regionkey, count(*) from cp.`tpch/nation.parquet` group by n_regionkey HAVING GROUPING(n_regionkey) = 1");
-    } catch(UserException ex) {
-      throwAsUnsupportedException(ex);
-      throw ex;
-    }
-  }
+  // NOTE: GROUPING(), GROUPING_ID(), and GROUP_ID() functions are NOT yet implemented.
+  // While GROUPING SETS syntax is supported, these auxiliary functions that would help
+  // distinguish between real NULLs and grouping NULLs are not available.
+  // Tests for these unsupported functions have been removed from this file.
 
 }

@@ -278,13 +278,14 @@ public class UnionAllRecordBatch extends AbstractBinaryRecordBatch<UnionAll> {
     final Iterator<MaterializedField> leftIter = leftSchema.iterator();
     final Iterator<MaterializedField> rightIter = rightSchema.iterator();
 
-    logger.debug("UNION ALL inferring output schema from left and right schemas");
+    logger.debug("UnionAll inferring schema: isGroupingSetsExpansion={}", popConfig.isGroupingSetsExpansion());
     int index = 1;
     while (leftIter.hasNext() && rightIter.hasNext()) {
       MaterializedField leftField  = leftIter.next();
       MaterializedField rightField = rightIter.next();
-      logger.debug("Column {}: left='{}' ({}), right='{}' ({})",
-          index, leftField.getName(), leftField.getType(), rightField.getName(), rightField.getType());
+      logger.debug("Column {}: left='{}' type={}, right='{}' type={}",
+          index, leftField.getName(), leftField.getType().getMinorType(),
+          rightField.getName(), rightField.getType().getMinorType());
 
       if (Types.isSameTypeAndMode(leftField.getType(), rightField.getType())) {
         MajorType.Builder builder = MajorType.newBuilder()
@@ -304,34 +305,33 @@ public class UnionAllRecordBatch extends AbstractBinaryRecordBatch<UnionAll> {
           builder.setMinorType(leftField.getType().getMinorType());
           builder = Types.calculateTypePrecisionAndScale(leftField.getType(), rightField.getType(), builder);
         } else {
-          logger.debug("UNION ALL type mismatch in column {}: left={}, right={}",
-              index, leftField.getType().getMinorType(), rightField.getType().getMinorType());
-
-          // Handle type mismatches with special case for INT
-          // INT is Drill's default type for unknown/NULL columns, especially in JSON queries.
-          // When INT appears with another type, prefer the non-INT type as INT is likely a placeholder.
           TypeProtos.MinorType leftType = leftField.getType().getMinorType();
           TypeProtos.MinorType rightType = rightField.getType().getMinorType();
           TypeProtos.MinorType outputMinorType;
 
-          if (leftType == TypeProtos.MinorType.INT && rightType != TypeProtos.MinorType.INT) {
-            // Left is INT, right is not - prefer right type
+          // Special handling for GROUPING SETS expansion:
+          // When unioning different grouping sets, NULL columns are represented as INT (Drill's default).
+          // If one side is INT and the other is not, prefer the non-INT type since INT is likely a NULL placeholder.
+          if (popConfig.isGroupingSetsExpansion() &&
+              leftType == TypeProtos.MinorType.INT && rightType != TypeProtos.MinorType.INT) {
+            // Left is INT (likely NULL placeholder), right is actual data - prefer right type
             outputMinorType = rightType;
-            logger.debug("UNION ALL: preferring {} over INT (INT is likely a placeholder NULL)", rightType);
-          } else if (rightType == TypeProtos.MinorType.INT && leftType != TypeProtos.MinorType.INT) {
-            // Right is INT, left is not - prefer left type
+            logger.debug("GROUPING SETS: Preferring {} over INT for column {}", rightType, index);
+          } else if (popConfig.isGroupingSetsExpansion() &&
+                     rightType == TypeProtos.MinorType.INT && leftType != TypeProtos.MinorType.INT) {
+            // Right is INT (likely NULL placeholder), left is actual data - prefer left type
             outputMinorType = leftType;
-            logger.debug("UNION ALL: preferring {} over INT (INT is likely a placeholder NULL)", leftType);
+            logger.debug("GROUPING SETS: Preferring {} over INT for column {}", leftType, index);
           } else {
-            // Normal case: use type cast rules
+            // Normal case: use standard type cast rules
             outputMinorType = TypeCastRules.getLeastRestrictiveType(leftType, rightType);
             if (outputMinorType == null) {
               throw new DrillRuntimeException("Type mismatch between " + leftType.toString() +
                   " on the left side and " + rightType.toString() +
                   " on the right side in column " + index + " of UNION ALL");
             }
+            logger.debug("Using standard type rules: {} + {} -> {}", leftType, rightType, outputMinorType);
           }
-          logger.debug("UNION ALL chose output type: {}", outputMinorType);
           builder.setMinorType(outputMinorType);
         }
 

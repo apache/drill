@@ -57,9 +57,25 @@ public class DrillUnionAllRule extends RelOptRule {
       final RelNode convertedInput = convert(input, input.getTraitSet().plus(DrillRel.DRILL_LOGICAL).simplify());
       convertedInputs.add(convertedInput);
     }
+
+    // Detect if this union is from GROUPING SETS expansion by checking if ANY input has a $g column
+    // The $g column is the grouping ID that we add during expansion
+    // Check all inputs because the union tree may be built incrementally (binary tree structure)
+    boolean isGroupingSetsExpansion = false;
+    for (RelNode input : convertedInputs) {
+      org.apache.calcite.rel.type.RelDataType inputType = input.getRowType();
+      if (inputType.getFieldCount() > 0) {
+        String lastFieldName = inputType.getFieldList().get(inputType.getFieldCount() - 1).getName();
+        if ("$g".equals(lastFieldName)) {
+          isGroupingSetsExpansion = true;
+          break;
+        }
+      }
+    }
+
     try {
       call.transformTo(new DrillUnionRel(union.getCluster(), traits, convertedInputs, union.all,
-          true /* check compatibility */));
+          true /* check compatibility */, isGroupingSetsExpansion));
     } catch (InvalidRelException e) {
       tracer.warn(e.toString());
     }

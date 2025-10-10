@@ -138,9 +138,13 @@ public class DrillAggregateExpandGroupingSetsRule extends RelOptRule {
           projects.add(inputRef);
           aggOutputIdx++;
         } else {
-          // Column is NOT in this grouping set - project a NULL literal
-          // Use constantNull() which should produce an untyped NULL
-          projects.add(rexBuilder.constantNull());
+          // Column is NOT in this grouping set - project a typed NULL literal
+          // Use the expected output type from the original aggregate to create a properly typed NULL
+          // This prevents type inference issues in the UNION ALL
+          org.apache.calcite.rel.type.RelDataType nullType =
+              aggregate.getRowType().getFieldList().get(outputColIdx).getType();
+          // Use makeLiteral with null value and explicit type to create a typed NULL
+          projects.add(rexBuilder.makeNullLiteral(nullType));
         }
         fieldNames.add(aggregate.getRowType().getFieldList().get(outputColIdx).getName());
         outputColIdx++;
@@ -176,27 +180,46 @@ public class DrillAggregateExpandGroupingSetsRule extends RelOptRule {
     }
 
     // Union all the aggregates
-    RelNode result;
+    RelNode unionResult;
     if (aggregates.size() == 1) {
-      result = aggregates.get(0);
+      unionResult = aggregates.get(0);
     } else {
-      result = call.builder()
-          .pushAll(aggregates)
-          .union(true, aggregates.size())
-          .build();
+      // Create DrillUnionRel directly instead of LogicalUnion
+      // This allows us to set the isGroupingSetsExpansion flag immediately
+      try {
+        List<RelNode> convertedInputs = new ArrayList<>();
+        for (RelNode agg : aggregates) {
+          // Convert each input to Drill logical convention
+          RelNode converted = convert(agg, agg.getTraitSet().plus(DrillRel.DRILL_LOGICAL).simplify());
+          convertedInputs.add(converted);
+        }
+
+        unionResult = new DrillUnionRel(cluster,
+            cluster.traitSet().plus(DrillRel.DRILL_LOGICAL),
+            convertedInputs,
+            true /* all */,
+            true /* check compatibility */,
+            true /* isGroupingSetsExpansion */);
+      } catch (org.apache.calcite.rel.InvalidRelException e) {
+        throw new RuntimeException("Failed to create DrillUnionRel for grouping sets expansion", e);
+      }
     }
 
-    // Add a final project to remove the $g column (it's only needed internally for GROUPING functions)
-    // Project all columns except the last one ($g)
+    // Now strip the $g column from the final output to match the expected schema
+    // We needed it in the union branches for type inference, but it shouldn't be in the final result
+    // Create a project that excludes the last column ($g)
     List<RexNode> finalProjects = new ArrayList<>();
     List<String> finalFieldNames = new ArrayList<>();
-    for (int i = 0; i < aggregate.getRowType().getFieldCount(); i++) {
-      finalProjects.add(rexBuilder.makeInputRef(result, i));
+
+    int numFields = unionResult.getRowType().getFieldCount();
+    for (int i = 0; i < numFields - 1; i++) {  // Exclude last field ($g)
+      finalProjects.add(rexBuilder.makeInputRef(unionResult, i));
       finalFieldNames.add(aggregate.getRowType().getFieldList().get(i).getName());
     }
-    result = call.builder()
-        .push(result)
-        .project(finalProjects, finalFieldNames)
+
+    RelNode result = call.builder()
+        .push(unionResult)
+        .project(finalProjects, finalFieldNames, false)
         .build();
 
     call.transformTo(result);
