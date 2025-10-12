@@ -114,13 +114,25 @@ public class DrillAggregateExpandGroupingSetsRule extends RelOptRule {
     // Process grouping sets in order of decreasing cardinality (more columns first)
     // This ensures that for UNION ALL, branches with actual data types come before
     // branches with NULL placeholders, helping with type inference
+    //
+    // For GROUP_ID support, we need to track duplicate grouping sets and assign sequence numbers
     List<RelNode> aggregates = new ArrayList<>();
     List<ImmutableBitSet> sortedGroupSets = new ArrayList<>(groupSets);
     // Sort by cardinality descending (more grouping columns first)
     sortedGroupSets.sort((a, b) -> Integer.compare(b.cardinality(), a.cardinality()));
 
+    // Track GROUP_ID for duplicate grouping sets
+    // Map from grouping set to the count of times we've seen it so far
+    java.util.Map<ImmutableBitSet, Integer> groupSetOccurrences = new java.util.HashMap<>();
+    List<Integer> groupIds = new ArrayList<>();  // GROUP_ID value for each position in sortedGroupSets
+
     for (int i = 0; i < sortedGroupSets.size(); i++) {
       ImmutableBitSet groupSet = sortedGroupSets.get(i);
+
+      // Track GROUP_ID: how many times have we seen this grouping set before?
+      int groupId = groupSetOccurrences.getOrDefault(groupSet, 0);
+      groupIds.add(groupId);
+      groupSetOccurrences.put(groupSet, groupId + 1);
 
       // Create the aggregate for this grouping set
       // Use regularAggCalls (without GROUPING functions) because GROUPING functions
@@ -192,6 +204,11 @@ public class DrillAggregateExpandGroupingSetsRule extends RelOptRule {
       projects.add(rexBuilder.makeLiteral(groupingId, typeFactory.createSqlType(org.apache.calcite.sql.type.SqlTypeName.INTEGER), true));
       fieldNames.add("$g");
 
+      // Add GROUP_ID column ($group_id) - sequence number for duplicate grouping sets
+      int currentGroupId = groupIds.get(i);
+      projects.add(rexBuilder.makeLiteral(currentGroupId, typeFactory.createSqlType(org.apache.calcite.sql.type.SqlTypeName.INTEGER), true));
+      fieldNames.add("$group_id");
+
       // Create the project
       RelNode project = call.builder()
           .push(newAggregate)
@@ -232,8 +249,8 @@ public class DrillAggregateExpandGroupingSetsRule extends RelOptRule {
     // 1. Add grouping columns
     // 2. Add aggregate results in their ORIGINAL order, inserting GROUPING function
     //    expressions at their original positions
-    // 3. Do NOT include the $g column itself
-    // If there are NO GROUPING functions, just strip the $g column
+    // 3. Do NOT include the $g and $group_id columns themselves
+    // If there are NO GROUPING functions, just strip the $g and $group_id columns
     List<RexNode> finalProjects = new ArrayList<>();
     List<String> finalFieldNames = new ArrayList<>();
 
@@ -249,8 +266,9 @@ public class DrillAggregateExpandGroupingSetsRule extends RelOptRule {
     // in their original positions
     if (hasGroupingFunctions) {
       // Each GROUPING function call needs to be converted to an expression that
-      // extracts the appropriate bits from the $g column
-      RexNode gColumnRef = rexBuilder.makeInputRef(unionResult, numFields - 1); // $g is the last column
+      // extracts the appropriate bits from the $g column or references $group_id column
+      RexNode gColumnRef = rexBuilder.makeInputRef(unionResult, numFields - 2); // $g is second to last
+      RexNode groupIdColumnRef = rexBuilder.makeInputRef(unionResult, numFields - 1); // $group_id is last
 
       // Build a map from original positions to GROUPING function calls
       java.util.Map<Integer, AggregateCall> groupingFuncMap = new java.util.HashMap<>();
@@ -377,9 +395,10 @@ public class DrillAggregateExpandGroupingSetsRule extends RelOptRule {
 
           } else if ("GROUP_ID".equals(funcName)) {
             // GROUP_ID() - returns sequence number for duplicate grouping sets
-            // This requires tracking duplicate grouping sets, which are currently deduplicated
-            throw new UnsupportedOperationException(
-                "GROUP_ID function is not yet implemented because duplicate grouping sets are currently deduplicated.");
+            // Simply reference the $group_id column we added earlier
+            finalProjects.add(groupIdColumnRef);
+            String fieldName = groupingCall.getName() != null ? groupingCall.getName() : "EXPR$" + finalFieldNames.size();
+            finalFieldNames.add(fieldName);
           }
         } else {
           // This position had a regular aggregate - reference it from unionResult
@@ -390,7 +409,8 @@ public class DrillAggregateExpandGroupingSetsRule extends RelOptRule {
       }
     } else {
       // No GROUPING functions - just add all regular aggregate columns
-      for (int i = fullGroupSet.cardinality(); i < numFields - 1; i++) {
+      // Strip both $g (numFields - 2) and $group_id (numFields - 1) columns
+      for (int i = fullGroupSet.cardinality(); i < numFields - 2; i++) {
         finalProjects.add(rexBuilder.makeInputRef(unionResult, i));
         finalFieldNames.add(unionResult.getRowType().getFieldList().get(i).getName());
       }

@@ -322,6 +322,51 @@ public class TestGroupingSetsResults extends ClusterTest {
         .go();
   }
 
-  // GROUP_ID function test not included because duplicate grouping sets
-  // are currently not fully supported (they get deduplicated during expansion)
+  @Test
+  public void testGroupIdFunction() throws Exception {
+    // Test GROUP_ID function with duplicate grouping sets
+    // GROUP_ID() returns 0 for first occurrence, 1 for second, etc.
+    String query = "select n_regionkey, " +
+        "GROUP_ID() as grp_id, " +
+        "count(*) as cnt " +
+        "from cp.`tpch/nation.parquet` " +
+        "where n_regionkey < 2 " +
+        "group by grouping sets ((n_regionkey), (n_regionkey), ()) " +
+        "order by grp_id, n_regionkey nulls last";
+
+    testBuilder()
+        .sqlQuery(query)
+        .ordered()
+        .baselineColumns("n_regionkey", "grp_id", "cnt")
+        // First occurrence of (n_regionkey): grp_id = 0
+        .baselineValues(0, 0L, 5L)   // Region 0
+        .baselineValues(1, 0L, 5L)   // Region 1
+        .baselineValues(null, 0L, 10L)  // Empty grouping set
+        // Second occurrence of (n_regionkey): grp_id = 1
+        .baselineValues(0, 1L, 5L)   // Region 0
+        .baselineValues(1, 1L, 5L)   // Region 1
+        .go();
+  }
+
+  @Test
+  public void testGroupIdNoDuplicates() throws Exception {
+    // Test GROUP_ID when there are no duplicate grouping sets
+    // All GROUP_ID values should be 0
+    String query = "select n_regionkey, " +
+        "GROUP_ID() as grp_id, " +
+        "count(*) as cnt " +
+        "from cp.`tpch/nation.parquet` " +
+        "where n_regionkey < 2 " +
+        "group by grouping sets ((n_regionkey), ()) " +
+        "order by n_regionkey nulls last";
+
+    testBuilder()
+        .sqlQuery(query)
+        .ordered()
+        .baselineColumns("n_regionkey", "grp_id", "cnt")
+        .baselineValues(0, 0L, 5L)
+        .baselineValues(1, 0L, 5L)
+        .baselineValues(null, 0L, 10L)
+        .go();
+  }
 }
