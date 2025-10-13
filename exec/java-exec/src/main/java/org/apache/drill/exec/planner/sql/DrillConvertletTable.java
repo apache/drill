@@ -34,8 +34,8 @@ import org.apache.calcite.sql.SqlIntervalQualifier;
 import org.apache.calcite.sql.SqlLiteral;
 import org.apache.calcite.sql.SqlNode;
 import org.apache.calcite.sql.SqlNumericLiteral;
+import org.apache.calcite.sql.SqlBasicFunction;
 import org.apache.calcite.sql.SqlOperator;
-import org.apache.calcite.sql.fun.SqlRandFunction;
 import org.apache.calcite.sql.fun.SqlStdOperatorTable;
 import org.apache.calcite.sql.parser.SqlParserPos;
 import org.apache.calcite.sql.type.SqlTypeName;
@@ -154,12 +154,9 @@ public class DrillConvertletTable implements SqlRexConvertletTable {
       List<RexNode> operands = call.getOperandList().stream()
         .map(cx::convertExpression)
         .collect(Collectors.toList());
-      return cx.getRexBuilder().makeCall(new SqlRandFunction() {
-        @Override
-        public boolean isDeterministic() {
-          return false;
-        }
-      }, operands);
+      // In Calcite 1.37+, RAND is a SqlBasicFunction, use withDeterministic(false) to mark it as non-deterministic
+      SqlBasicFunction nonDeterministicRand = ((SqlBasicFunction) SqlStdOperatorTable.RAND).withDeterministic(false);
+      return cx.getRexBuilder().makeCall(nonDeterministicRand, operands);
     };
   }
 
