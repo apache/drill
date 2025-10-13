@@ -777,7 +777,7 @@ void LimitClause(Span s, SqlNode[] offsetFetch) :
         <COMMA> offsetFetch[1] = UnsignedNumericLiteralOrParam() {
             if (!this.conformance.isLimitStartCountAllowed()) {
                 throw SqlUtil.newContextException(s.end(this),
-                    RESOURCE.limitStartCountNotAllowed());
+                    RESOURCE.limitStartCountOrAllNotAllowed("count"));
             }
         }
     |
