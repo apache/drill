@@ -299,14 +299,14 @@ public class TestJdbcPluginWithMySQLIT extends ClusterTest {
   @Test // DRILL-6734
   public void testExpressionsWithAliases() throws Exception {
     String query = "select person_id as ID, 1+1+2+3+5+8+13+21+34 as FIBONACCI_SUM, (1+sqrt(5))/2 as golden_ratio\n" +
-        "from mysql.`drill_mysql_test`.person limit 2";
+        "from mysql.`drill_mysql_test`.person order by person_id limit 2";
 
     testBuilder()
         .sqlQuery(query)
-        .unOrdered()
+        .ordered()
         .baselineColumns("ID", "FIBONACCI_SUM", "golden_ratio")
-        .baselineValues(1, 88, BigDecimal.valueOf(1.618033988749895))
-        .baselineValues(2, 88, BigDecimal.valueOf(1.618033988749895))
+        .baselineValues(1, 88, 1.618033988749895)
+        .baselineValues(2, 88, 1.618033988749895)
         .go();
   }
 
