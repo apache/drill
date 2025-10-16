@@ -136,27 +136,42 @@ public class DrillRelFactories {
    * returns a vanilla {@link DrillFilterRel}.
    */
   private static class DrillFilterFactoryImpl implements RelFactories.FilterFactory {
+    // ThreadLocal to track if we're already normalizing to prevent infinite recursion
+    private static final ThreadLocal<Boolean> normalizing = ThreadLocal.withInitial(() -> false);
+
     @Override
     public RelNode createFilter(RelNode child, RexNode condition, Set<CorrelationId> variablesSet) {
-      // Normalize nullability of RexInputRef nodes to match the input's row type
-      // This is necessary for Calcite 1.37+ which has stricter type checking
-      RexNode normalizedCondition = condition.accept(new RexShuttle() {
-        @Override
-        public RexNode visitInputRef(RexInputRef inputRef) {
-          int index = inputRef.getIndex();
-          if (index >= child.getRowType().getFieldCount()) {
+      // Normalize nullability in filter conditions to match input row types
+      // This is needed because JoinPushTransitivePredicatesRule in Calcite 1.37+
+      // can create RexInputRef nodes with different nullability than the input row type
+
+      // Prevent recursive normalization
+      if (normalizing.get()) {
+        return DrillFilterRel.create(child, condition);
+      }
+
+      try {
+        normalizing.set(true);
+
+        // Apply normalization using RexShuttle
+        RexNode normalizedCondition = condition.accept(new RexShuttle() {
+          @Override
+          public RexNode visitInputRef(RexInputRef inputRef) {
+            if (inputRef.getIndex() >= child.getRowType().getFieldCount()) {
+              return inputRef;
+            }
+            RelDataType inputType = child.getRowType().getFieldList().get(inputRef.getIndex()).getType();
+            if (inputRef.getType().isNullable() != inputType.isNullable()) {
+              return new RexInputRef(inputRef.getIndex(), inputType);
+            }
             return inputRef;
           }
-          RelDataType actualType = child.getRowType().getFieldList().get(index).getType();
-          // If nullability differs, create a new RexInputRef with correct nullability
-          if (inputRef.getType().isNullable() != actualType.isNullable() ||
-              !inputRef.getType().equals(actualType)) {
-            return new RexInputRef(index, actualType);
-          }
-          return inputRef;
-        }
-      });
-      return DrillFilterRel.create(child, normalizedCondition);
+        });
+
+        return DrillFilterRel.create(child, normalizedCondition);
+      } finally {
+        normalizing.set(false);
+      }
     }
   }
 
