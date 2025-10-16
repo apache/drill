@@ -49,16 +49,13 @@ import java.util.List;
  *
  * The $g column is the grouping ID that can be used by GROUPING() and GROUPING_ID() functions.
  * Currently, the $g column is generated internally but stripped from the final output.
- *
- * TODO: Implement GROUPING() and GROUPING_ID() functions by:
- * 1. Detecting these functions in the SELECT list during expansion
- * 2. Rewriting them to reference the $g column (e.g., GROUPING(a) becomes bit extraction from $g)
- * 3. Preserving the $g column in the output when these functions are used
  */
 public class DrillAggregateExpandGroupingSetsRule extends RelOptRule {
 
   public static final DrillAggregateExpandGroupingSetsRule INSTANCE =
       new DrillAggregateExpandGroupingSetsRule();
+  public static String GROUPING_ID_COLUMN_NAME = "$g";
+  public static String GROUP_ID_COLUMN_NAME = "$group_id";
 
   private DrillAggregateExpandGroupingSetsRule() {
     super(operand(Aggregate.class, any()), DrillRelFactories.LOGICAL_BUILDER,
@@ -202,12 +199,12 @@ public class DrillAggregateExpandGroupingSetsRule extends RelOptRule {
         bitPosition++;
       }
       projects.add(rexBuilder.makeLiteral(groupingId, typeFactory.createSqlType(org.apache.calcite.sql.type.SqlTypeName.INTEGER), true));
-      fieldNames.add("$g");
+      fieldNames.add(GROUPING_ID_COLUMN_NAME);
 
       // Add GROUP_ID column ($group_id) - sequence number for duplicate grouping sets
       int currentGroupId = groupIds.get(i);
       projects.add(rexBuilder.makeLiteral(currentGroupId, typeFactory.createSqlType(org.apache.calcite.sql.type.SqlTypeName.INTEGER), true));
-      fieldNames.add("$group_id");
+      fieldNames.add(GROUP_ID_COLUMN_NAME);
 
       // Create the project
       RelNode project = call.builder()
