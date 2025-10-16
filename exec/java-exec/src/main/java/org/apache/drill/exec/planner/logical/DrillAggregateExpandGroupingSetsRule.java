@@ -21,6 +21,7 @@ import com.google.common.collect.ImmutableList;
 import org.apache.calcite.plan.RelOptCluster;
 import org.apache.calcite.plan.RelOptRule;
 import org.apache.calcite.plan.RelOptRuleCall;
+import org.apache.calcite.rel.InvalidRelException;
 import org.apache.calcite.rel.RelNode;
 import org.apache.calcite.rel.core.Aggregate;
 import org.apache.calcite.rel.core.AggregateCall;
@@ -28,6 +29,9 @@ import org.apache.calcite.rel.logical.LogicalAggregate;
 import org.apache.calcite.rel.type.RelDataTypeFactory;
 import org.apache.calcite.rex.RexBuilder;
 import org.apache.calcite.rex.RexNode;
+import org.apache.calcite.sql.SqlKind;
+import org.apache.calcite.sql.fun.SqlStdOperatorTable;
+import org.apache.calcite.sql.type.SqlTypeName;
 import org.apache.calcite.util.ImmutableBitSet;
 
 import java.util.ArrayList;
@@ -56,6 +60,7 @@ public class DrillAggregateExpandGroupingSetsRule extends RelOptRule {
       new DrillAggregateExpandGroupingSetsRule();
   public static String GROUPING_ID_COLUMN_NAME = "$g";
   public static String GROUP_ID_COLUMN_NAME = "$group_id";
+  public static String EXPRESSION_COLUMN_PLACEHOLDER = "EXPR$";
 
   private DrillAggregateExpandGroupingSetsRule() {
     super(operand(Aggregate.class, any()), DrillRelFactories.LOGICAL_BUILDER,
@@ -95,10 +100,10 @@ public class DrillAggregateExpandGroupingSetsRule extends RelOptRule {
 
     for (int i = 0; i < aggCalls.size(); i++) {
       AggregateCall aggCall = aggCalls.get(i);
-      org.apache.calcite.sql.SqlKind kind = aggCall.getAggregation().getKind();
-      if (kind == org.apache.calcite.sql.SqlKind.GROUPING ||
-          kind == org.apache.calcite.sql.SqlKind.GROUPING_ID ||
-          kind == org.apache.calcite.sql.SqlKind.GROUP_ID) {
+      SqlKind kind = aggCall.getAggregation().getKind();
+      if (kind == SqlKind.GROUPING ||
+          kind == SqlKind.GROUPING_ID ||
+          kind == SqlKind.GROUP_ID) {
         hasGroupingFunctions = true;
         groupingFunctionPositions.add(i);
         groupingFunctionCalls.add(aggCall);
@@ -236,7 +241,7 @@ public class DrillAggregateExpandGroupingSetsRule extends RelOptRule {
             true /* all */,
             true /* check compatibility */,
             true /* isGroupingSetsExpansion */);
-      } catch (org.apache.calcite.rel.InvalidRelException e) {
+      } catch (InvalidRelException e) {
         throw new RuntimeException("Failed to create DrillUnionRel for grouping sets expansion", e);
       }
     }
@@ -283,118 +288,14 @@ public class DrillAggregateExpandGroupingSetsRule extends RelOptRule {
           String funcName = groupingCall.getAggregation().getName();
 
           if ("GROUPING".equals(funcName)) {
-            // GROUPING(column) - extracts a single bit from $g
-            // Returns 1 if the column is aggregated (NULL in output), 0 otherwise
-            if (groupingCall.getArgList().size() != 1) {
-              throw new RuntimeException("GROUPING function expects exactly 1 argument");
-            }
-
-            int columnIndex = groupingCall.getArgList().get(0);
-            // Find the position of this column in the full group set
-            int bitPosition = 0;
-            for (int col : fullGroupSet) {
-              if (col == columnIndex) {
-                break;
-              }
-              bitPosition++;
-            }
-
-            // Extract the bit: (g / 2^bitPosition) % 2
-            // This is equivalent to (g >> bitPosition) & 1 but uses operators available in Calcite
-            RexNode divisor = rexBuilder.makeLiteral(
-                1 << bitPosition,  // 2^bitPosition
-                typeFactory.createSqlType(org.apache.calcite.sql.type.SqlTypeName.INTEGER),
-                true);
-
-            RexNode divided = rexBuilder.makeCall(
-                org.apache.calcite.sql.fun.SqlStdOperatorTable.DIVIDE,
-                gColumnRef,
-                divisor);
-
-            RexNode extractBit = rexBuilder.makeCall(
-                org.apache.calcite.sql.fun.SqlStdOperatorTable.MOD,
-                divided,
-                rexBuilder.makeLiteral(2, typeFactory.createSqlType(org.apache.calcite.sql.type.SqlTypeName.INTEGER), true));
-
-            finalProjects.add(extractBit);
-            String fieldName = groupingCall.getName() != null ? groupingCall.getName() : "EXPR$" + finalFieldNames.size();
-            finalFieldNames.add(fieldName);
-
+            processGrouping(groupingCall, fullGroupSet, rexBuilder, typeFactory, gColumnRef, finalProjects, finalFieldNames);
           } else if ("GROUPING_ID".equals(funcName)) {
-            // GROUPING_ID(col1, col2, ...) - combines multiple bits from $g
-            // Returns a bitmap where bit i corresponds to column i
-            if (groupingCall.getArgList().isEmpty()) {
-              throw new RuntimeException("GROUPING_ID function expects at least 1 argument");
-            }
-
-            // Create a mask and shift expression to extract the relevant bits
-            RexNode result = null;
-            for (int i = 0; i < groupingCall.getArgList().size(); i++) {
-              int columnIndex = groupingCall.getArgList().get(i);
-
-              // Find the position of this column in the full group set
-              int bitPosition = 0;
-              for (int col : fullGroupSet) {
-                if (col == columnIndex) {
-                  break;
-                }
-                bitPosition++;
-              }
-
-              // Extract the bit: (g / 2^bitPosition) % 2
-              // This is equivalent to (g >> bitPosition) & 1 but uses operators available in Calcite
-              RexNode divisor = rexBuilder.makeLiteral(
-                  1 << bitPosition,  // 2^bitPosition
-                  typeFactory.createSqlType(org.apache.calcite.sql.type.SqlTypeName.INTEGER),
-                  true);
-
-              RexNode divided = rexBuilder.makeCall(
-                  org.apache.calcite.sql.fun.SqlStdOperatorTable.DIVIDE,
-                  gColumnRef,
-                  divisor);
-
-              RexNode extractBit = rexBuilder.makeCall(
-                  org.apache.calcite.sql.fun.SqlStdOperatorTable.MOD,
-                  divided,
-                  rexBuilder.makeLiteral(2, typeFactory.createSqlType(org.apache.calcite.sql.type.SqlTypeName.INTEGER), true));
-
-              // Shift to correct position in result: bit * 2^(args.size() - 1 - i)
-              // This is equivalent to bit << (args.size() - 1 - i)
-              int resultBitPos = groupingCall.getArgList().size() - 1 - i;
-              RexNode bitInPosition;
-              if (resultBitPos > 0) {
-                RexNode multiplier = rexBuilder.makeLiteral(
-                    1 << resultBitPos,  // 2^resultBitPos
-                    typeFactory.createSqlType(org.apache.calcite.sql.type.SqlTypeName.INTEGER),
-                    true);
-                bitInPosition = rexBuilder.makeCall(
-                    org.apache.calcite.sql.fun.SqlStdOperatorTable.MULTIPLY,
-                    extractBit,
-                    multiplier);
-              } else {
-                bitInPosition = extractBit;
-              }
-
-              // Combine with previous bits using addition (instead of OR, since bits don't overlap)
-              if (result == null) {
-                result = bitInPosition;
-              } else {
-                result = rexBuilder.makeCall(
-                    org.apache.calcite.sql.fun.SqlStdOperatorTable.PLUS,
-                    result,
-                    bitInPosition);
-              }
-            }
-
-            finalProjects.add(result);
-            String fieldName = groupingCall.getName() != null ? groupingCall.getName() : "EXPR$" + finalFieldNames.size();
-            finalFieldNames.add(fieldName);
-
+            processGroupingId(groupingCall, fullGroupSet, rexBuilder, typeFactory, gColumnRef, finalProjects, finalFieldNames);
           } else if ("GROUP_ID".equals(funcName)) {
             // GROUP_ID() - returns sequence number for duplicate grouping sets
             // Simply reference the $group_id column we added earlier
             finalProjects.add(groupIdColumnRef);
-            String fieldName = groupingCall.getName() != null ? groupingCall.getName() : "EXPR$" + finalFieldNames.size();
+            String fieldName = groupingCall.getName() != null ? groupingCall.getName() : EXPRESSION_COLUMN_PLACEHOLDER + finalFieldNames.size();
             finalFieldNames.add(fieldName);
           }
         } else {
@@ -419,5 +320,156 @@ public class DrillAggregateExpandGroupingSetsRule extends RelOptRule {
         .build();
 
     call.transformTo(result);
+  }
+
+  /**
+   * Processes the GROUPING_ID function by computing a bitmap representation
+   * for the grouping columns of an aggregate. This method calculates the
+   * bitmap where each bit corresponds to whether a particular column is in
+   * scope for the grouping keys and adds the result to the final projection list.
+   *
+   * @param groupingCall The aggregate function call representing GROUPING_ID.
+   * @param fullGroupSet The complete set of grouping keys for the aggregate operation.
+   * @param rexBuilder A utility for creating RexNode objects within the query.
+   * @param typeFactory A factory for creating type instances used in expression generation.
+   * @param gColumnRef The column reference to the grouping ID column in the aggregate query.
+   * @param finalProjects The list of RexNode objects representing the final projection computations.
+   * @param finalFieldNames The list of field names corresponding to the final projection computations.
+   */
+  private void processGroupingId(AggregateCall groupingCall,
+      ImmutableBitSet fullGroupSet,
+      RexBuilder rexBuilder,
+      RelDataTypeFactory typeFactory,
+      RexNode gColumnRef,
+      List<RexNode> finalProjects,
+      List<String> finalFieldNames
+      ) {
+      // GROUPING_ID(col1, col2, ...) - combines multiple bits from $g
+      // Returns a bitmap where bit i corresponds to column i
+      if (groupingCall.getArgList().isEmpty()) {
+        throw new RuntimeException("GROUPING_ID function expects at least 1 argument");
+      }
+
+      // Create a mask and shift expression to extract the relevant bits
+      RexNode result = null;
+      for (int i = 0; i < groupingCall.getArgList().size(); i++) {
+        int columnIndex = groupingCall.getArgList().get(i);
+
+        // Find the position of this column in the full group set
+        int bitPosition = 0;
+        for (int col : fullGroupSet) {
+          if (col == columnIndex) {
+            break;
+          }
+          bitPosition++;
+        }
+
+        // Extract the bit: (g / 2^bitPosition) % 2
+        // This is equivalent to (g >> bitPosition) & 1 but uses operators available in Calcite
+        RexNode divisor = rexBuilder.makeLiteral(
+            1 << bitPosition,  // 2^bitPosition
+            typeFactory.createSqlType(SqlTypeName.INTEGER),
+            true);
+
+        RexNode divided = rexBuilder.makeCall(
+            SqlStdOperatorTable.DIVIDE,
+            gColumnRef,
+            divisor);
+
+        RexNode extractBit = rexBuilder.makeCall(
+            SqlStdOperatorTable.MOD,
+            divided,
+            rexBuilder.makeLiteral(2, typeFactory.createSqlType(SqlTypeName.INTEGER), true));
+
+        // Shift to correct position in result: bit * 2^(args.size() - 1 - i)
+        // This is equivalent to bit << (args.size() - 1 - i)
+        int resultBitPos = groupingCall.getArgList().size() - 1 - i;
+        RexNode bitInPosition;
+        if (resultBitPos > 0) {
+          RexNode multiplier = rexBuilder.makeLiteral(
+              1 << resultBitPos,  // 2^resultBitPos
+              typeFactory.createSqlType(SqlTypeName.INTEGER),
+              true);
+          bitInPosition = rexBuilder.makeCall(
+              SqlStdOperatorTable.MULTIPLY,
+              extractBit,
+              multiplier);
+        } else {
+          bitInPosition = extractBit;
+        }
+
+        // Combine with previous bits using addition (instead of OR, since bits don't overlap)
+        if (result == null) {
+          result = bitInPosition;
+        } else {
+          result = rexBuilder.makeCall(
+              SqlStdOperatorTable.PLUS,
+              result,
+              bitInPosition);
+        }
+      }
+
+      finalProjects.add(result);
+      String fieldName = groupingCall.getName() != null ? groupingCall.getName() : "EXPR$" + finalFieldNames.size();
+      finalFieldNames.add(fieldName);
+    }
+
+  /**
+   * Processes the GROUPING function by determining whether a given column in
+   * the grouping set is aggregated or not. It calculates the result by extracting
+   * the corresponding bit from the grouping ID column and adds the computed
+   * result to the final projection list as a new field.
+   *
+   * @param groupingCall The aggregate function call representing GROUPING.
+   * @param fullGroupSet The complete set of grouping keys for the aggregate operation.
+   * @param rexBuilder A utility for creating RexNode objects within the query.
+   * @param typeFactory A factory for creating type instances used in expression generation.
+   * @param gColumnRef The column reference to the grouping ID column in the aggregate query.
+   * @param finalProjects The list of RexNode objects representing the final projection computations.
+   * @param finalFieldNames The list of field names corresponding to the final projection computations.
+   */
+  private void processGrouping(AggregateCall groupingCall,
+      ImmutableBitSet fullGroupSet,
+      RexBuilder rexBuilder,
+      RelDataTypeFactory typeFactory,
+      RexNode gColumnRef,
+      List<RexNode> finalProjects,
+      List<String> finalFieldNames) {
+      // GROUPING(column) - extracts a single bit from $g
+      // Returns 1 if the column is aggregated (NULL in output), 0 otherwise
+      if (groupingCall.getArgList().size() != 1) {
+        throw new RuntimeException("GROUPING function expects exactly 1 argument");
+      }
+
+      int columnIndex = groupingCall.getArgList().get(0);
+      // Find the position of this column in the full group set
+      int bitPosition = 0;
+      for (int col : fullGroupSet) {
+        if (col == columnIndex) {
+          break;
+        }
+        bitPosition++;
+      }
+
+      // Extract the bit: (g / 2^bitPosition) % 2
+      // This is equivalent to (g >> bitPosition) & 1 but uses operators available in Calcite
+      RexNode divisor = rexBuilder.makeLiteral(
+          1 << bitPosition,  // 2^bitPosition
+          typeFactory.createSqlType(org.apache.calcite.sql.type.SqlTypeName.INTEGER),
+          true);
+
+      RexNode divided = rexBuilder.makeCall(
+          org.apache.calcite.sql.fun.SqlStdOperatorTable.DIVIDE,
+          gColumnRef,
+          divisor);
+
+      RexNode extractBit = rexBuilder.makeCall(
+          org.apache.calcite.sql.fun.SqlStdOperatorTable.MOD,
+          divided,
+          rexBuilder.makeLiteral(2, typeFactory.createSqlType(org.apache.calcite.sql.type.SqlTypeName.INTEGER), true));
+
+      finalProjects.add(extractBit);
+      String fieldName = groupingCall.getName() != null ? groupingCall.getName() : "EXPR$" + finalFieldNames.size();
+      finalFieldNames.add(fieldName);
   }
 }
