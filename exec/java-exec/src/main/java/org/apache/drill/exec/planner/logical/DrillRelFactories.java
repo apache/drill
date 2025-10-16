@@ -27,7 +27,9 @@ import org.apache.calcite.rel.core.JoinRelType;
 import org.apache.calcite.rel.core.RelFactories;
 import org.apache.calcite.rel.hint.RelHint;
 import org.apache.calcite.rel.type.RelDataType;
+import org.apache.calcite.rex.RexInputRef;
 import org.apache.calcite.rex.RexNode;
+import org.apache.calcite.rex.RexShuttle;
 import org.apache.calcite.rex.RexUtil;
 import org.apache.calcite.sql.SqlKind;
 import org.apache.calcite.tools.RelBuilderFactory;
@@ -136,7 +138,25 @@ public class DrillRelFactories {
   private static class DrillFilterFactoryImpl implements RelFactories.FilterFactory {
     @Override
     public RelNode createFilter(RelNode child, RexNode condition, Set<CorrelationId> variablesSet) {
-      return DrillFilterRel.create(child, condition);
+      // Normalize nullability of RexInputRef nodes to match the input's row type
+      // This is necessary for Calcite 1.37+ which has stricter type checking
+      RexNode normalizedCondition = condition.accept(new RexShuttle() {
+        @Override
+        public RexNode visitInputRef(RexInputRef inputRef) {
+          int index = inputRef.getIndex();
+          if (index >= child.getRowType().getFieldCount()) {
+            return inputRef;
+          }
+          RelDataType actualType = child.getRowType().getFieldList().get(index).getType();
+          // If nullability differs, create a new RexInputRef with correct nullability
+          if (inputRef.getType().isNullable() != actualType.isNullable() ||
+              !inputRef.getType().equals(actualType)) {
+            return new RexInputRef(index, actualType);
+          }
+          return inputRef;
+        }
+      });
+      return DrillFilterRel.create(child, normalizedCondition);
     }
   }
 
