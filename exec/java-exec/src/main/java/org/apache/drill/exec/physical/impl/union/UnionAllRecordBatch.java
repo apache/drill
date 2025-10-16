@@ -339,7 +339,7 @@ public class UnionAllRecordBatch extends AbstractBinaryRecordBatch<UnionAll> {
    * @return The resolved output type
    * @throws DrillRuntimeException if types are incompatible
    */
-  private TypeProtos.MinorType resolveUnionColumnType(MaterializedField leftField ,
+  private TypeProtos.MinorType resolveUnionColumnType(MaterializedField leftField,
       MaterializedField rightField,
       int index) {
     TypeProtos.MinorType leftType = leftField.getType().getMinorType();
