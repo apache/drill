@@ -1119,8 +1119,9 @@ public class DatabaseMetaDataGetColumnsTest extends JdbcTestBase {
 
   @Test
   public void test_COLUMN_SIZE_hasRightValue_mdrReqINTERVAL_3H() throws SQLException {
+    // Calcite 1.37 changed interval precision calculation: was 5, now 13
     assertThat( getIntOrNull( mdrReqINTERVAL_H, "COLUMN_SIZE" ),
-                equalTo( 5 ) );  // "PT12H"
+                equalTo( 13 ) );  // "PT12H" - Calcite 1.37 reports precision including all fields
   }
 
   @Test
