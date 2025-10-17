@@ -37,6 +37,7 @@ import org.apache.calcite.rel.type.RelDataTypeField;
 import org.apache.calcite.rex.RexBuilder;
 import org.apache.calcite.rex.RexLiteral;
 import org.apache.calcite.rex.RexNode;
+import org.apache.calcite.rex.RexWindowExclusion;
 import org.apache.calcite.sql.SqlAggFunction;
 import org.apache.calcite.sql.SqlKind;
 import org.apache.calcite.sql.SqlOperator;
@@ -820,6 +821,7 @@ public class DrillReduceAggregatesRule extends RelOptRule {
             group.isRows,
             group.lowerBound,
             group.upperBound,
+            RexWindowExclusion.EXCLUDE_NO_OTHER,  // Default: no exclusion (Calcite 1.38+)
             group.orderKeys,
             aggCalls);
         builder.add(newGroup);

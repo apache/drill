@@ -43,13 +43,19 @@ public class DrillRelDataTypeSystem extends RelDataTypeSystemImpl {
   }
 
   @Override
-  public int getMaxNumericScale() {
-    return 38;
+  public int getMaxScale(SqlTypeName typeName) {
+    if (typeName == SqlTypeName.DECIMAL) {
+      return 38;
+    }
+    return super.getMaxScale(typeName);
   }
 
   @Override
-  public int getMaxNumericPrecision() {
-    return 38;
+  public int getMaxPrecision(SqlTypeName typeName) {
+    if (typeName == SqlTypeName.DECIMAL) {
+      return 38;
+    }
+    return super.getMaxPrecision(typeName);
   }
 
   @Override
