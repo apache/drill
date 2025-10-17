@@ -41,6 +41,7 @@ import org.apache.calcite.rel.type.RelDataTypeField;
 import org.apache.calcite.rel.type.RelRecordType;
 import org.apache.calcite.rex.RexInputRef;
 import org.apache.calcite.rex.RexNode;
+import org.apache.calcite.rex.RexWindowExclusion;
 import org.apache.calcite.sql.SqlAggFunction;
 
 import java.util.List;
@@ -168,6 +169,7 @@ public class WindowPrule extends Prule {
           windowBase.isRows,
           windowBase.lowerBound,
           windowBase.upperBound,
+          RexWindowExclusion.EXCLUDE_NO_OTHER,  // Default: no exclusion (Calcite 1.38+)
           windowBase.orderKeys,
           newWinAggCalls
       );
