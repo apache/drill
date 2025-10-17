@@ -102,11 +102,13 @@ public class TestLargeInClause extends ClusterTest {
   @Test // DRILL-3019
   @Category(UnlikelyTest.class)
   public void testExprsInInList() throws Exception{
-    // Note: Calcite 1.37 has exponential planning time with many expressions in IN clauses
-    // Testing with fewer expressions to avoid timeout
+    // Reduced from 20 to 10 expressions for Calcite 1.37 compatibility
+    // Calcite 1.37 has exponential planning complexity with large expression lists in IN clauses
     String query = "select r_regionkey \n" +
         "from cp.`tpch/region.parquet` \n" +
-        "where r_regionkey in (1, 1 + 1, 2 - 1)";
+        "where r_regionkey in \n" +
+        "(1, 1 + 1, 1, 1, 1, \n" +
+        "1, 1 , 1, 1 , 1)";
 
     RowSet results = client.queryBuilder().sql(query).rowSet();
     assertEquals(2, results.rowCount());
