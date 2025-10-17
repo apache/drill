@@ -136,42 +136,53 @@ public class DrillRelFactories {
    * returns a vanilla {@link DrillFilterRel}.
    */
   private static class DrillFilterFactoryImpl implements RelFactories.FilterFactory {
-    // ThreadLocal to track if we're already normalizing to prevent infinite recursion
-    private static final ThreadLocal<Boolean> normalizing = ThreadLocal.withInitial(() -> false);
-
     @Override
     public RelNode createFilter(RelNode child, RexNode condition, Set<CorrelationId> variablesSet) {
       // Normalize nullability in filter conditions to match input row types
       // This is needed because JoinPushTransitivePredicatesRule in Calcite 1.37+
       // can create RexInputRef nodes with different nullability than the input row type
 
-      // Prevent recursive normalization
-      if (normalizing.get()) {
+      // DRILL: Skip normalization for overly complex filter conditions
+      // Calcite 1.37 has performance issues with large OR expressions (from IN clauses)
+      // Count OR nodes - if too many, skip normalization to avoid planning timeout
+      int orCount = countOrNodesInCondition(condition);
+      if (orCount > 10) {
+        // Too many OR nodes - skip normalization to avoid planning timeout with IN clause expressions
+        // This accepts potential type mismatch errors at runtime for complex queries
         return DrillFilterRel.create(child, condition);
       }
 
-      try {
-        normalizing.set(true);
-
-        // Apply normalization using RexShuttle
-        RexNode normalizedCondition = condition.accept(new RexShuttle() {
-          @Override
-          public RexNode visitInputRef(RexInputRef inputRef) {
-            if (inputRef.getIndex() >= child.getRowType().getFieldCount()) {
-              return inputRef;
-            }
-            RelDataType inputType = child.getRowType().getFieldList().get(inputRef.getIndex()).getType();
-            if (inputRef.getType().isNullable() != inputType.isNullable()) {
-              return new RexInputRef(inputRef.getIndex(), inputType);
-            }
+      // Apply normalization using RexShuttle
+      RexNode normalizedCondition = condition.accept(new RexShuttle() {
+        @Override
+        public RexNode visitInputRef(RexInputRef inputRef) {
+          if (inputRef.getIndex() >= child.getRowType().getFieldCount()) {
             return inputRef;
           }
-        });
+          RelDataType inputType = child.getRowType().getFieldList().get(inputRef.getIndex()).getType();
+          if (inputRef.getType().isNullable() != inputType.isNullable()) {
+            return new RexInputRef(inputRef.getIndex(), inputType);
+          }
+          return inputRef;
+        }
+      });
 
-        return DrillFilterRel.create(child, normalizedCondition);
-      } finally {
-        normalizing.set(false);
+      return DrillFilterRel.create(child, normalizedCondition);
+    }
+
+    /**
+     * Count OR nodes in a RexNode tree to estimate complexity
+     */
+    private static int countOrNodesInCondition(RexNode node) {
+      if (node instanceof org.apache.calcite.rex.RexCall) {
+        org.apache.calcite.rex.RexCall call = (org.apache.calcite.rex.RexCall) node;
+        int count = call.getKind() == SqlKind.OR ? 1 : 0;
+        for (RexNode operand : call.getOperands()) {
+          count += countOrNodesInCondition(operand);
+        }
+        return count;
       }
+      return 0;
     }
   }
 

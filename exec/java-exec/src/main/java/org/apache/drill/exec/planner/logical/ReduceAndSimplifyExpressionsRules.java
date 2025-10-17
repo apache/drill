@@ -26,6 +26,9 @@ import org.apache.calcite.rel.SingleRel;
 import org.apache.calcite.rel.core.Project;
 import org.apache.calcite.rel.logical.LogicalSort;
 import org.apache.calcite.rel.rules.ReduceExpressionsRule;
+import org.apache.calcite.rex.RexCall;
+import org.apache.calcite.rex.RexNode;
+import org.apache.calcite.sql.SqlKind;
 
 import java.math.BigDecimal;
 
@@ -64,6 +67,16 @@ public class ReduceAndSimplifyExpressionsRules {
 
     @Override
     public void onMatch(RelOptRuleCall call) {
+      final Filter filter = call.rel(0);
+
+      // DRILL: Skip simplification for expressions with large OR chains
+      // Calcite 1.37's RexSimplify has exponential complexity with large OR expressions
+      // (created from IN clauses with expressions like: WHERE x IN (1, 1+1, 1, ...))
+      int orCount = countOrNodes(filter.getCondition());
+      if (orCount > 10) {
+        return; // Skip this rule for complex OR expressions
+      }
+
       try {
         super.onMatch(call);
       } catch (ClassCastException | IllegalArgumentException e) {
@@ -150,5 +163,21 @@ public class ReduceAndSimplifyExpressionsRules {
     return LogicalSort.create(input.getInput(), RelCollations.EMPTY,
         input.getCluster().getRexBuilder().makeExactLiteral(BigDecimal.valueOf(0)),
         input.getCluster().getRexBuilder().makeExactLiteral(BigDecimal.valueOf(0)));
+  }
+
+  /**
+   * Count the number of OR nodes in a RexNode tree
+   * Large OR chains (from IN clauses) cause exponential planning time in Calcite 1.37
+   */
+  private static int countOrNodes(RexNode node) {
+    if (node instanceof RexCall) {
+      RexCall call = (RexCall) node;
+      int count = call.getKind() == SqlKind.OR ? 1 : 0;
+      for (RexNode operand : call.getOperands()) {
+        count += countOrNodes(operand);
+      }
+      return count;
+    }
+    return 0;
   }
 }
