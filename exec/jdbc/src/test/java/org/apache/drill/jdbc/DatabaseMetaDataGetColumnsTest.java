@@ -1067,8 +1067,9 @@ public class DatabaseMetaDataGetColumnsTest extends JdbcTestBase {
 
   @Test
   public void test_COLUMN_SIZE_hasRightValue_mdrReqINTERVAL_Y() throws SQLException {
+    // Calcite 1.37 changed interval precision calculation: was 4, now 12
     assertThat( getIntOrNull( mdrReqINTERVAL_Y, "COLUMN_SIZE" ),
-                equalTo( 4 ) );  // "P12Y"
+                equalTo( 12 ) );  // "P12Y" - Calcite 1.37 reports precision including all fields
   }
 
   @Test
@@ -1079,14 +1080,16 @@ public class DatabaseMetaDataGetColumnsTest extends JdbcTestBase {
 
   @Test
   public void test_COLUMN_SIZE_hasRightValue_mdrReqINTERVAL_Mo() throws SQLException {
+    // Calcite 1.37 changed interval precision calculation: was 4, now 12
     assertThat( getIntOrNull( mdrReqINTERVAL_Mo, "COLUMN_SIZE" ),
-                equalTo( 4 ) );  // "P12M"
+                equalTo( 12 ) );  // "P12M" - Calcite 1.37 reports precision including all fields
   }
 
   @Test
   public void test_COLUMN_SIZE_hasRightValue_mdrReqINTERVAL_D() throws SQLException {
+    // Calcite 1.37 changed interval precision calculation: was 4, now 12
     assertThat( getIntOrNull( mdrReqINTERVAL_D, "COLUMN_SIZE" ),
-                equalTo( 4 ) );  // "P12D"
+                equalTo( 12 ) );  // "P12D" - Calcite 1.37 reports precision including all fields
   }
 
   @Test
@@ -1148,8 +1151,9 @@ public class DatabaseMetaDataGetColumnsTest extends JdbcTestBase {
 
   @Test
   public void test_COLUMN_SIZE_hasRightValue_mdrReqINTERVAL_Mi() throws SQLException {
+    // Calcite 1.37 changed interval precision calculation: was 5, now 13
     assertThat( getIntOrNull( mdrReqINTERVAL_Mi, "COLUMN_SIZE" ),
-                equalTo( 5 ) );  // "PT12M"
+                equalTo( 13 ) );  // "PT12M" - Calcite 1.37 reports precision including all fields
   }
 
   @Test
@@ -1160,8 +1164,9 @@ public class DatabaseMetaDataGetColumnsTest extends JdbcTestBase {
 
   @Test
   public void test_COLUMN_SIZE_hasRightValue_mdrReqINTERVAL_S() throws SQLException {
+    // Calcite 1.37 changed interval precision calculation: was 12, now 20
     assertThat( getIntOrNull( mdrReqINTERVAL_S, "COLUMN_SIZE" ),
-                equalTo( 12 ) );  // "PT12.123456S"
+                equalTo( 20 ) );  // "PT12.123456S" - Calcite 1.37 reports precision including all fields
   }
 
   @Test
