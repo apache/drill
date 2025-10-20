@@ -895,13 +895,20 @@ public class TypeInferenceUtils {
           isNullable
         );
         case VARDECIMAL:
+          // For Calcite 1.38+ compatibility: Variance/stddev functions use double precision/scale
+          // internally (CALCITE-6427), which can exceed Drill's DECIMAL(38,38) limit.
+          // We need to ensure scale doesn't exceed precision.
+          int maxPrecision = DrillRelDataTypeSystem.DRILL_REL_DATATYPE_SYSTEM.getMaxNumericPrecision();
+          int maxScale = DrillRelDataTypeSystem.DRILL_REL_DATATYPE_SYSTEM.getMaxNumericScale();
+          int desiredScale = Math.max(6, operandType.getScale());
+
+          // Ensure scale doesn't exceed maxPrecision (invalid DECIMAL type)
+          int finalScale = Math.min(desiredScale, Math.min(maxScale, maxPrecision));
+
           RelDataType sqlType = factory.createSqlType(
             SqlTypeName.DECIMAL,
-            DrillRelDataTypeSystem.DRILL_REL_DATATYPE_SYSTEM.getMaxNumericPrecision(),
-            Math.min(
-              Math.max(6, operandType.getScale()),
-              DrillRelDataTypeSystem.DRILL_REL_DATATYPE_SYSTEM.getMaxNumericScale()
-            )
+            maxPrecision,
+            finalScale
           );
           return factory.createTypeWithNullability(sqlType, isNullable);
         default:
