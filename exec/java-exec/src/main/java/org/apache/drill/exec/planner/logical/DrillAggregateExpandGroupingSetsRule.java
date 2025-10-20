@@ -26,6 +26,7 @@ import org.apache.calcite.rel.RelNode;
 import org.apache.calcite.rel.core.Aggregate;
 import org.apache.calcite.rel.core.AggregateCall;
 import org.apache.calcite.rel.logical.LogicalAggregate;
+import org.apache.calcite.rel.type.RelDataType;
 import org.apache.calcite.rel.type.RelDataTypeFactory;
 import org.apache.calcite.rex.RexBuilder;
 import org.apache.calcite.rex.RexNode;
@@ -35,22 +36,24 @@ import org.apache.calcite.sql.type.SqlTypeName;
 import org.apache.calcite.util.ImmutableBitSet;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 /**
  * Planner rule that expands GROUPING SETS, ROLLUP, and CUBE into a UNION ALL
  * of multiple aggregates, each with a single grouping set.
- *
+ * <p>
  * This rule converts:
  *   SELECT a, b, SUM(c) FROM t GROUP BY GROUPING SETS ((a, b), (a), ())
- *
+ * <p>
  * Into:
  *   SELECT a, b, SUM(c), 0 AS $g FROM t GROUP BY a, b
  *   UNION ALL
  *   SELECT a, null, SUM(c), 1 AS $g FROM t GROUP BY a
  *   UNION ALL
  *   SELECT null, null, SUM(c), 3 AS $g FROM t GROUP BY ()
- *
+ * <p>
  * The $g column is the grouping ID that can be used by GROUPING() and GROUPING_ID() functions.
  * Currently, the $g column is generated internally but stripped from the final output.
  */
@@ -58,9 +61,9 @@ public class DrillAggregateExpandGroupingSetsRule extends RelOptRule {
 
   public static final DrillAggregateExpandGroupingSetsRule INSTANCE =
       new DrillAggregateExpandGroupingSetsRule();
-  public static String GROUPING_ID_COLUMN_NAME = "$g";
-  public static String GROUP_ID_COLUMN_NAME = "$group_id";
-  public static String EXPRESSION_COLUMN_PLACEHOLDER = "EXPR$";
+  public static final String GROUPING_ID_COLUMN_NAME = "$g";
+  public static final String GROUP_ID_COLUMN_NAME = "$group_id";
+  public static final String EXPRESSION_COLUMN_PLACEHOLDER = "EXPR$";
 
   private DrillAggregateExpandGroupingSetsRule() {
     super(operand(Aggregate.class, any()), DrillRelFactories.LOGICAL_BUILDER,
@@ -70,9 +73,6 @@ public class DrillAggregateExpandGroupingSetsRule extends RelOptRule {
   @Override
   public boolean matches(RelOptRuleCall call) {
     final Aggregate aggregate = call.rel(0);
-
-    // Only match aggregates with multiple grouping sets
-    // Also only match logical aggregates (not physical ones)
     return aggregate.getGroupSets().size() > 1
         && (aggregate instanceof DrillAggregateRel || aggregate instanceof LogicalAggregate);
   }
@@ -81,352 +81,305 @@ public class DrillAggregateExpandGroupingSetsRule extends RelOptRule {
   public void onMatch(RelOptRuleCall call) {
     final Aggregate aggregate = call.rel(0);
     final RelOptCluster cluster = aggregate.getCluster();
-    final RexBuilder rexBuilder = cluster.getRexBuilder();
-    final RelDataTypeFactory typeFactory = cluster.getTypeFactory();
 
-    // Get the input
-    final RelNode input = aggregate.getInput();
-    final List<ImmutableBitSet> groupSets = aggregate.getGroupSets();
-    final ImmutableBitSet fullGroupSet = aggregate.getGroupSet();
-    final List<AggregateCall> aggCalls = aggregate.getAggCallList();
+    GroupingFunctionAnalysis analysis = analyzeGroupingFunctions(aggregate.getAggCallList());
+    GroupingSetOrderingResult ordering = sortAndAssignGroupIds(aggregate.getGroupSets());
 
-    // Check if we have GROUPING, GROUPING_ID, or GROUP_ID functions
-    // These functions need the $g column to be preserved in the output
-    // We need to separate them from regular aggregate functions but preserve their original positions
+    List<RelNode> perGroupAggregates = new ArrayList<>();
+    for (int i = 0; i < ordering.sortedGroupSets.size(); i++) {
+      perGroupAggregates.add(
+          createAggregateForGroupingSet(call, aggregate, ordering.sortedGroupSets.get(i),
+              ordering.groupIds.get(i), analysis.regularAggCalls));
+    }
+
+    RelNode unionResult = buildUnion(cluster, perGroupAggregates);
+    RelNode result = buildFinalProject(call, unionResult, aggregate, analysis);
+
+    call.transformTo(result);
+  }
+
+  /**
+   * Encapsulates analysis results of aggregate calls to determine
+   * which are regular aggregates and which are grouping-related
+   * functions (GROUPING, GROUPING_ID, GROUP_ID).
+   */
+  private static class GroupingFunctionAnalysis {
+    final boolean hasGroupingFunctions;
+    final List<AggregateCall> regularAggCalls;
+    final List<AggregateCall> groupingFunctionCalls;
+    final List<Integer> groupingFunctionPositions;
+
+    GroupingFunctionAnalysis(List<AggregateCall> regularAggCalls,
+        List<AggregateCall> groupingFunctionCalls,
+        List<Integer> groupingFunctionPositions) {
+      this.hasGroupingFunctions = !groupingFunctionPositions.isEmpty();
+      this.regularAggCalls = regularAggCalls;
+      this.groupingFunctionCalls = groupingFunctionCalls;
+      this.groupingFunctionPositions = groupingFunctionPositions;
+    }
+  }
+
+  /**
+   * Holds the sorted grouping sets (largest first) and their assigned group IDs.
+   */
+  private static class GroupingSetOrderingResult {
+    final List<ImmutableBitSet> sortedGroupSets;
+    final List<Integer> groupIds;
+    GroupingSetOrderingResult(List<ImmutableBitSet> sortedGroupSets, List<Integer> groupIds) {
+      this.sortedGroupSets = sortedGroupSets;
+      this.groupIds = groupIds;
+    }
+  }
+
+  /**
+   * Analyzes aggregate calls to identify which ones are GROUPING-related functions.
+   *
+   * @param aggCalls list of aggregate calls in the original aggregate
+   * @return structure classifying grouping and non-grouping calls
+   */
+  private GroupingFunctionAnalysis analyzeGroupingFunctions(List<AggregateCall> aggCalls) {
     List<AggregateCall> regularAggCalls = new ArrayList<>();
-    List<Integer> groupingFunctionPositions = new ArrayList<>();  // Original positions in aggCalls
     List<AggregateCall> groupingFunctionCalls = new ArrayList<>();
-    boolean hasGroupingFunctions = false;
+    List<Integer> groupingFunctionPositions = new ArrayList<>();
 
     for (int i = 0; i < aggCalls.size(); i++) {
       AggregateCall aggCall = aggCalls.get(i);
       SqlKind kind = aggCall.getAggregation().getKind();
-      if (kind == SqlKind.GROUPING ||
-          kind == SqlKind.GROUPING_ID ||
-          kind == SqlKind.GROUP_ID) {
-        hasGroupingFunctions = true;
+      switch (kind) {
+      case GROUPING:
+      case GROUPING_ID:
+      case GROUP_ID:
         groupingFunctionPositions.add(i);
         groupingFunctionCalls.add(aggCall);
-      } else {
+        break;
+      default:
         regularAggCalls.add(aggCall);
       }
     }
 
-    // Create a separate aggregate for each grouping set
-    // Process grouping sets in order of decreasing cardinality (more columns first)
-    // This ensures that for UNION ALL, branches with actual data types come before
-    // branches with NULL placeholders, helping with type inference
-    //
-    // For GROUP_ID support, we need to track duplicate grouping sets and assign sequence numbers
-    List<RelNode> aggregates = new ArrayList<>();
+    return new GroupingFunctionAnalysis(regularAggCalls,
+        groupingFunctionCalls, groupingFunctionPositions);
+  }
+
+  /**
+   * Sorts the given grouping sets in descending order of their cardinality
+   * and assigns group IDs to each grouping set based on their occurrences.
+   *
+   * @param groupSets a list of grouping sets represented as ImmutableBitSet instances
+   * @return a GroupingSetOrderingResult containing the sorted grouping sets and their assigned group IDs
+   */
+  private GroupingSetOrderingResult sortAndAssignGroupIds(List<ImmutableBitSet> groupSets) {
     List<ImmutableBitSet> sortedGroupSets = new ArrayList<>(groupSets);
-    // Sort by cardinality descending (more grouping columns first)
     sortedGroupSets.sort((a, b) -> Integer.compare(b.cardinality(), a.cardinality()));
 
-    // Track GROUP_ID for duplicate grouping sets
-    // Map from grouping set to the count of times we've seen it so far
-    java.util.Map<ImmutableBitSet, Integer> groupSetOccurrences = new java.util.HashMap<>();
-    List<Integer> groupIds = new ArrayList<>();  // GROUP_ID value for each position in sortedGroupSets
+    Map<ImmutableBitSet, Integer> groupSetOccurrences = new HashMap<>();
+    List<Integer> groupIds = new ArrayList<>();
 
-    for (int i = 0; i < sortedGroupSets.size(); i++) {
-      ImmutableBitSet groupSet = sortedGroupSets.get(i);
-
-      // Track GROUP_ID: how many times have we seen this grouping set before?
+    for (ImmutableBitSet groupSet : sortedGroupSets) {
       int groupId = groupSetOccurrences.getOrDefault(groupSet, 0);
       groupIds.add(groupId);
       groupSetOccurrences.put(groupSet, groupId + 1);
-
-      // Create the aggregate for this grouping set
-      // Use regularAggCalls (without GROUPING functions) because GROUPING functions
-      // will be evaluated later using the $g column
-      Aggregate newAggregate;
-      if (aggregate instanceof DrillAggregateRel) {
-        newAggregate = new DrillAggregateRel(
-            cluster,
-            aggregate.getTraitSet(),
-            input,
-            groupSet,
-            ImmutableList.of(groupSet),
-            regularAggCalls);
-      } else {
-        newAggregate = aggregate.copy(
-            aggregate.getTraitSet(),
-            input,
-            groupSet,
-            ImmutableList.of(groupSet),
-            regularAggCalls);
-      }
-
-      // Create a project to add NULLs for missing grouping columns
-      List<RexNode> projects = new ArrayList<>();
-      List<String> fieldNames = new ArrayList<>();
-
-      // Add grouping columns (with NULLs for columns not in this grouping set)
-      int aggOutputIdx = 0;
-      int outputColIdx = 0; // Index in the final output row type
-      for (int col : fullGroupSet) {
-        if (groupSet.get(col)) {
-          // Column is in this grouping set - project it directly from the aggregate output
-          RexNode inputRef = rexBuilder.makeInputRef(newAggregate, aggOutputIdx);
-          projects.add(inputRef);
-          aggOutputIdx++;
-        } else {
-          // Column is NOT in this grouping set - project a typed NULL literal
-          // Use the expected output type from the original aggregate to create a properly typed NULL
-          // This prevents type inference issues in the UNION ALL
-          org.apache.calcite.rel.type.RelDataType nullType =
-              aggregate.getRowType().getFieldList().get(outputColIdx).getType();
-          // Use makeLiteral with null value and explicit type to create a typed NULL
-          projects.add(rexBuilder.makeNullLiteral(nullType));
-        }
-        fieldNames.add(aggregate.getRowType().getFieldList().get(outputColIdx).getName());
-        outputColIdx++;
-      }
-
-      // Add aggregate result columns (only regular aggregates, not GROUPING functions)
-      // We'll use the alias from the original aggregate call
-      for (int j = 0; j < regularAggCalls.size(); j++) {
-        projects.add(rexBuilder.makeInputRef(newAggregate, aggOutputIdx));
-        AggregateCall regCall = regularAggCalls.get(j);
-        String fieldName = regCall.getName() != null ? regCall.getName() : ("$f" + (fullGroupSet.cardinality() + j));
-        fieldNames.add(fieldName);
-        aggOutputIdx++;
-      }
-
-      // Add grouping ID column ($g)
-      // The grouping ID is a bitmap where bit i is 1 if column i is NOT in the grouping set
-      int groupingId = 0;
-      int bitPosition = 0;
-      for (int col : fullGroupSet) {
-        if (!groupSet.get(col)) {
-          groupingId |= (1 << bitPosition);
-        }
-        bitPosition++;
-      }
-      projects.add(rexBuilder.makeLiteral(groupingId, typeFactory.createSqlType(org.apache.calcite.sql.type.SqlTypeName.INTEGER), true));
-      fieldNames.add(GROUPING_ID_COLUMN_NAME);
-
-      // Add GROUP_ID column ($group_id) - sequence number for duplicate grouping sets
-      int currentGroupId = groupIds.get(i);
-      projects.add(rexBuilder.makeLiteral(currentGroupId, typeFactory.createSqlType(org.apache.calcite.sql.type.SqlTypeName.INTEGER), true));
-      fieldNames.add(GROUP_ID_COLUMN_NAME);
-
-      // Create the project
-      RelNode project = call.builder()
-          .push(newAggregate)
-          .project(projects, fieldNames, false)  // false = don't force alias names
-          .build();
-
-      aggregates.add(project);
     }
 
-    // Union all the aggregates
-    RelNode unionResult;
-    if (aggregates.size() == 1) {
-      unionResult = aggregates.get(0);
+    return new GroupingSetOrderingResult(sortedGroupSets, groupIds);
+  }
+
+  /**
+   * Creates a new aggregate relational node for a specific grouping set. This method constructs
+   * the necessary aggregation logic and ensures proper handling of grouping columns, aggregate
+   * calls, and additional metadata such as grouping and group IDs.
+   *
+   * @param call the RelOptRuleCall instance being processed
+   * @param originalAgg the original aggregate relational expression
+   * @param groupSet the grouping set to be handled in the new aggregate
+   * @param groupId the unique identifier associated with this specific grouping set
+   * @param regularAggCalls the list of regular aggregate calls to be included in the aggregate
+   * @return a RelNode representing the newly created aggregate for the specified grouping set
+   */
+  private RelNode createAggregateForGroupingSet(
+      RelOptRuleCall call,
+      Aggregate originalAgg,
+      ImmutableBitSet groupSet,
+      int groupId,
+      List<AggregateCall> regularAggCalls) {
+
+    ImmutableBitSet fullGroupSet = originalAgg.getGroupSet();
+    RelOptCluster cluster = originalAgg.getCluster();
+    RexBuilder rexBuilder = cluster.getRexBuilder();
+    RelDataTypeFactory typeFactory = cluster.getTypeFactory();
+    RelNode input = originalAgg.getInput();
+
+    Aggregate newAggregate;
+    if (originalAgg instanceof DrillAggregateRel) {
+      newAggregate = new DrillAggregateRel(cluster, originalAgg.getTraitSet(), input,
+          groupSet, ImmutableList.of(groupSet), regularAggCalls);
     } else {
-      // Create DrillUnionRel directly instead of LogicalUnion
-      // This allows us to set the isGroupingSetsExpansion flag immediately
-      try {
-        List<RelNode> convertedInputs = new ArrayList<>();
-        for (RelNode agg : aggregates) {
-          // Convert each input to Drill logical convention
-          RelNode converted = convert(agg, agg.getTraitSet().plus(DrillRel.DRILL_LOGICAL).simplify());
-          convertedInputs.add(converted);
-        }
-
-        unionResult = new DrillUnionRel(cluster,
-            cluster.traitSet().plus(DrillRel.DRILL_LOGICAL),
-            convertedInputs,
-            true /* all */,
-            true /* check compatibility */,
-            true /* isGroupingSetsExpansion */);
-      } catch (InvalidRelException e) {
-        throw new RuntimeException("Failed to create DrillUnionRel for grouping sets expansion", e);
-      }
+      newAggregate = originalAgg.copy(originalAgg.getTraitSet(), input, groupSet,
+          ImmutableList.of(groupSet), regularAggCalls);
     }
 
-    // Create final project
-    // If there are GROUPING functions, we need to:
-    // 1. Add grouping columns
-    // 2. Add aggregate results in their ORIGINAL order, inserting GROUPING function
-    //    expressions at their original positions
-    // 3. Do NOT include the $g and $group_id columns themselves
-    // If there are NO GROUPING functions, just strip the $g and $group_id columns
+    List<RexNode> projects = new ArrayList<>();
+    List<String> fieldNames = new ArrayList<>();
+    int aggOutputIdx = 0;
+    int outputColIdx = 0;
+
+    // Populate grouping columns (nulls for omitted columns)
+    for (int col : fullGroupSet) {
+      if (groupSet.get(col)) {
+        projects.add(rexBuilder.makeInputRef(newAggregate, aggOutputIdx++));
+      } else {
+        RelDataType nullType = originalAgg.getRowType().getFieldList().get(outputColIdx).getType();
+        projects.add(rexBuilder.makeNullLiteral(nullType));
+      }
+      fieldNames.add(originalAgg.getRowType().getFieldList().get(outputColIdx++).getName());
+    }
+
+    // Add regular aggregates
+    for (AggregateCall regCall : regularAggCalls) {
+      projects.add(rexBuilder.makeInputRef(newAggregate, aggOutputIdx++));
+      fieldNames.add(regCall.getName() != null ? regCall.getName() : "agg$" + aggOutputIdx);
+    }
+
+    // Add grouping ID ($g)
+    int groupingId = computeGroupingId(fullGroupSet, groupSet);
+    projects.add(rexBuilder.makeLiteral(groupingId,
+        typeFactory.createSqlType(SqlTypeName.INTEGER), true));
+    fieldNames.add(GROUPING_ID_COLUMN_NAME);
+
+    // Add group ID ($group_id)
+    projects.add(rexBuilder.makeLiteral(groupId,
+        typeFactory.createSqlType(SqlTypeName.INTEGER), true));
+    fieldNames.add(GROUP_ID_COLUMN_NAME);
+
+    return call.builder().push(newAggregate).project(projects, fieldNames, false).build();
+  }
+
+  private int computeGroupingId(ImmutableBitSet fullGroupSet, ImmutableBitSet groupSet) {
+    int id = 0;
+    int bit = 0;
+    for (int col : fullGroupSet) {
+      if (!groupSet.get(col)) {
+        id |= (1 << bit);
+      }
+      bit++;
+    }
+    return id;
+  }
+
+  /**
+   * Builds a union of the given aggregate relational nodes. If there is only one
+   * aggregate node, it returns that node directly. Otherwise, it constructs a
+   * union relational expression containing all the provided aggregate nodes.
+   *
+   * @param cluster the optimization cluster in which the relational node resides
+   * @param aggregates a list of aggregate relational nodes to be combined into a union
+   * @return the resultant union relational node if multiple nodes are provided;
+   *         otherwise, the single aggregate node from the input list
+   * @throws RuntimeException if union creation fails due to invalid relational state
+   */
+  private RelNode buildUnion(RelOptCluster cluster, List<RelNode> aggregates) {
+    if (aggregates.size() == 1) {
+      return aggregates.get(0);
+    }
+    try {
+      List<RelNode> convertedInputs = new ArrayList<>();
+      for (RelNode agg : aggregates) {
+        convertedInputs.add(convert(agg, agg.getTraitSet().plus(DrillRel.DRILL_LOGICAL).simplify()));
+      }
+      return new DrillUnionRel(cluster,
+          cluster.traitSet().plus(DrillRel.DRILL_LOGICAL),
+          convertedInputs,
+          true,
+          true,
+          true);
+    } catch (InvalidRelException e) {
+      throw new RuntimeException("Failed to create DrillUnionRel", e);
+    }
+  }
+
+  /**
+   * Builds the final projection for the result of the aggregation, incorporating the necessary
+   * output columns such as the grouping functions and the aggregation results.
+   *
+   * @param call the RelOptRuleCall instance being processed
+   * @param unionResult the relational expression resulting from the union of partial aggregates
+   * @param aggregate the original Aggregate relational expression
+   * @param analysis the analysis results classifying regular and grouping-related aggregate calls
+   * @return the relational expression with the final projection applied
+   */
+  private RelNode buildFinalProject(
+      RelOptRuleCall call,
+      RelNode unionResult,
+      Aggregate aggregate,
+      GroupingFunctionAnalysis analysis) {
+
+    RexBuilder rexBuilder = aggregate.getCluster().getRexBuilder();
+    RelDataTypeFactory typeFactory = aggregate.getCluster().getTypeFactory();
+    ImmutableBitSet fullGroupSet = aggregate.getGroupSet();
     List<RexNode> finalProjects = new ArrayList<>();
     List<String> finalFieldNames = new ArrayList<>();
-
     int numFields = unionResult.getRowType().getFieldCount();
 
-    // Add grouping columns (they come first in the output)
     for (int i = 0; i < fullGroupSet.cardinality(); i++) {
       finalProjects.add(rexBuilder.makeInputRef(unionResult, i));
       finalFieldNames.add(unionResult.getRowType().getFieldList().get(i).getName());
     }
 
-    // If we have GROUPING functions, we need to interleave regular aggregates and GROUPING functions
-    // in their original positions
-    if (hasGroupingFunctions) {
-      // Each GROUPING function call needs to be converted to an expression that
-      // extracts the appropriate bits from the $g column or references $group_id column
-      RexNode gColumnRef = rexBuilder.makeInputRef(unionResult, numFields - 2); // $g is second to last
-      RexNode groupIdColumnRef = rexBuilder.makeInputRef(unionResult, numFields - 1); // $group_id is last
-
-      // Build a map from original positions to GROUPING function calls
-      java.util.Map<Integer, AggregateCall> groupingFuncMap = new java.util.HashMap<>();
-      for (int i = 0; i < groupingFunctionPositions.size(); i++) {
-        groupingFuncMap.put(groupingFunctionPositions.get(i), groupingFunctionCalls.get(i));
+    if (analysis.hasGroupingFunctions) {
+      RexNode gColumnRef = rexBuilder.makeInputRef(unionResult, numFields - 2);
+      RexNode groupIdColumnRef = rexBuilder.makeInputRef(unionResult, numFields - 1);
+      Map<Integer, AggregateCall> groupingFuncMap = new HashMap<>();
+      for (int i = 0; i < analysis.groupingFunctionPositions.size(); i++) {
+        groupingFuncMap.put(analysis.groupingFunctionPositions.get(i),
+            analysis.groupingFunctionCalls.get(i));
       }
 
-      // Now add aggregate columns in their original order
-      int regularAggIndex = fullGroupSet.cardinality(); // Index in unionResult for next regular aggregate
-      for (int origPos = 0; origPos < aggCalls.size(); origPos++) {
+      int regularAggIndex = fullGroupSet.cardinality();
+      for (int origPos = 0; origPos < aggregate.getAggCallList().size(); origPos++) {
         if (groupingFuncMap.containsKey(origPos)) {
-          // This position had a GROUPING function - create the expression
           AggregateCall groupingCall = groupingFuncMap.get(origPos);
-          org.apache.calcite.sql.SqlKind kind = groupingCall.getAggregation().getKind();
           String funcName = groupingCall.getAggregation().getName();
-
           if ("GROUPING".equals(funcName)) {
-            processGrouping(groupingCall, fullGroupSet, rexBuilder, typeFactory, gColumnRef, finalProjects, finalFieldNames);
+            processGrouping(groupingCall, fullGroupSet, rexBuilder, typeFactory,
+                gColumnRef, finalProjects, finalFieldNames);
           } else if ("GROUPING_ID".equals(funcName)) {
-            processGroupingId(groupingCall, fullGroupSet, rexBuilder, typeFactory, gColumnRef, finalProjects, finalFieldNames);
+            processGroupingId(groupingCall, fullGroupSet, rexBuilder, typeFactory,
+                gColumnRef, finalProjects, finalFieldNames);
           } else if ("GROUP_ID".equals(funcName)) {
-            // GROUP_ID() - returns sequence number for duplicate grouping sets
-            // Simply reference the $group_id column we added earlier
             finalProjects.add(groupIdColumnRef);
-            String fieldName = groupingCall.getName() != null ? groupingCall.getName() : EXPRESSION_COLUMN_PLACEHOLDER + finalFieldNames.size();
+            String fieldName = groupingCall.getName() != null
+                ? groupingCall.getName()
+                : EXPRESSION_COLUMN_PLACEHOLDER + finalFieldNames.size();
             finalFieldNames.add(fieldName);
           }
         } else {
-          // This position had a regular aggregate - reference it from unionResult
           finalProjects.add(rexBuilder.makeInputRef(unionResult, regularAggIndex));
           finalFieldNames.add(unionResult.getRowType().getFieldList().get(regularAggIndex).getName());
           regularAggIndex++;
         }
       }
     } else {
-      // No GROUPING functions - just add all regular aggregate columns
-      // Strip both $g (numFields - 2) and $group_id (numFields - 1) columns
       for (int i = fullGroupSet.cardinality(); i < numFields - 2; i++) {
         finalProjects.add(rexBuilder.makeInputRef(unionResult, i));
         finalFieldNames.add(unionResult.getRowType().getFieldList().get(i).getName());
       }
     }
 
-    RelNode result = call.builder()
-        .push(unionResult)
-        .project(finalProjects, finalFieldNames, false)
-        .build();
-
-    call.transformTo(result);
+    return call.builder().push(unionResult).project(finalProjects, finalFieldNames, false).build();
   }
 
   /**
-   * Processes the GROUPING_ID function by computing a bitmap representation
-   * for the grouping columns of an aggregate. This method calculates the
-   * bitmap where each bit corresponds to whether a particular column is in
-   * scope for the grouping keys and adds the result to the final projection list.
+   * Processes the GROUPING aggregate function by extracting the bit representing
+   * whether each column is aggregated or not and appends the computed RexNode
+   * projection and the corresponding field name to the provided lists.
    *
-   * @param groupingCall The aggregate function call representing GROUPING_ID.
-   * @param fullGroupSet The complete set of grouping keys for the aggregate operation.
-   * @param rexBuilder A utility for creating RexNode objects within the query.
-   * @param typeFactory A factory for creating type instances used in expression generation.
-   * @param gColumnRef The column reference to the grouping ID column in the aggregate query.
-   * @param finalProjects The list of RexNode objects representing the final projection computations.
-   * @param finalFieldNames The list of field names corresponding to the final projection computations.
-   */
-  private void processGroupingId(AggregateCall groupingCall,
-      ImmutableBitSet fullGroupSet,
-      RexBuilder rexBuilder,
-      RelDataTypeFactory typeFactory,
-      RexNode gColumnRef,
-      List<RexNode> finalProjects,
-      List<String> finalFieldNames
-      ) {
-      // GROUPING_ID(col1, col2, ...) - combines multiple bits from $g
-      // Returns a bitmap where bit i corresponds to column i
-      if (groupingCall.getArgList().isEmpty()) {
-        throw new RuntimeException("GROUPING_ID function expects at least 1 argument");
-      }
-
-      // Create a mask and shift expression to extract the relevant bits
-      RexNode result = null;
-      for (int i = 0; i < groupingCall.getArgList().size(); i++) {
-        int columnIndex = groupingCall.getArgList().get(i);
-
-        // Find the position of this column in the full group set
-        int bitPosition = 0;
-        for (int col : fullGroupSet) {
-          if (col == columnIndex) {
-            break;
-          }
-          bitPosition++;
-        }
-
-        // Extract the bit: (g / 2^bitPosition) % 2
-        // This is equivalent to (g >> bitPosition) & 1 but uses operators available in Calcite
-        RexNode divisor = rexBuilder.makeLiteral(
-            1 << bitPosition,  // 2^bitPosition
-            typeFactory.createSqlType(SqlTypeName.INTEGER),
-            true);
-
-        RexNode divided = rexBuilder.makeCall(
-            SqlStdOperatorTable.DIVIDE,
-            gColumnRef,
-            divisor);
-
-        RexNode extractBit = rexBuilder.makeCall(
-            SqlStdOperatorTable.MOD,
-            divided,
-            rexBuilder.makeLiteral(2, typeFactory.createSqlType(SqlTypeName.INTEGER), true));
-
-        // Shift to correct position in result: bit * 2^(args.size() - 1 - i)
-        // This is equivalent to bit << (args.size() - 1 - i)
-        int resultBitPos = groupingCall.getArgList().size() - 1 - i;
-        RexNode bitInPosition;
-        if (resultBitPos > 0) {
-          RexNode multiplier = rexBuilder.makeLiteral(
-              1 << resultBitPos,  // 2^resultBitPos
-              typeFactory.createSqlType(SqlTypeName.INTEGER),
-              true);
-          bitInPosition = rexBuilder.makeCall(
-              SqlStdOperatorTable.MULTIPLY,
-              extractBit,
-              multiplier);
-        } else {
-          bitInPosition = extractBit;
-        }
-
-        // Combine with previous bits using addition (instead of OR, since bits don't overlap)
-        if (result == null) {
-          result = bitInPosition;
-        } else {
-          result = rexBuilder.makeCall(
-              SqlStdOperatorTable.PLUS,
-              result,
-              bitInPosition);
-        }
-      }
-
-      finalProjects.add(result);
-      String fieldName = groupingCall.getName() != null ? groupingCall.getName() : "EXPR$" + finalFieldNames.size();
-      finalFieldNames.add(fieldName);
-    }
-
-  /**
-   * Processes the GROUPING function by determining whether a given column in
-   * the grouping set is aggregated or not. It calculates the result by extracting
-   * the corresponding bit from the grouping ID column and adds the computed
-   * result to the final projection list as a new field.
-   *
-   * @param groupingCall The aggregate function call representing GROUPING.
-   * @param fullGroupSet The complete set of grouping keys for the aggregate operation.
-   * @param rexBuilder A utility for creating RexNode objects within the query.
-   * @param typeFactory A factory for creating type instances used in expression generation.
-   * @param gColumnRef The column reference to the grouping ID column in the aggregate query.
-   * @param finalProjects The list of RexNode objects representing the final projection computations.
-   * @param finalFieldNames The list of field names corresponding to the final projection computations.
+   * @param groupingCall the GROUPING aggregate function call to process
+   * @param fullGroupSet the complete set of grouping keys for the aggregation
+   * @param rexBuilder the RexBuilder instance used to construct RexNode expressions
+   * @param typeFactory the data type factory used for creating type-specific literals
+   * @param gColumnRef the RexNode reference to the grouping column
+   * @param finalProjects the list to store the constructed RexNode projections
+   * @param finalFieldNames the list to store the corresponding field names
    */
   private void processGrouping(AggregateCall groupingCall,
       ImmutableBitSet fullGroupSet,
@@ -435,14 +388,63 @@ public class DrillAggregateExpandGroupingSetsRule extends RelOptRule {
       RexNode gColumnRef,
       List<RexNode> finalProjects,
       List<String> finalFieldNames) {
-      // GROUPING(column) - extracts a single bit from $g
-      // Returns 1 if the column is aggregated (NULL in output), 0 otherwise
-      if (groupingCall.getArgList().size() != 1) {
-        throw new RuntimeException("GROUPING function expects exactly 1 argument");
-      }
 
-      int columnIndex = groupingCall.getArgList().get(0);
-      // Find the position of this column in the full group set
+    if (groupingCall.getArgList().size() != 1) {
+      throw new RuntimeException("GROUPING() expects exactly 1 argument");
+    }
+
+    int columnIndex = groupingCall.getArgList().get(0);
+    int bitPosition = 0;
+    for (int col : fullGroupSet) {
+      if (col == columnIndex) {
+        break;
+      }
+      bitPosition++;
+    }
+
+    RexNode divisor = rexBuilder.makeLiteral(
+        1 << bitPosition, typeFactory.createSqlType(SqlTypeName.INTEGER), true);
+
+    RexNode divided = rexBuilder.makeCall(SqlStdOperatorTable.DIVIDE, gColumnRef, divisor);
+    RexNode extractBit = rexBuilder.makeCall(SqlStdOperatorTable.MOD, divided,
+        rexBuilder.makeLiteral(2, typeFactory.createSqlType(SqlTypeName.INTEGER), true));
+
+    finalProjects.add(extractBit);
+    String fieldName = groupingCall.getName() != null
+        ? groupingCall.getName()
+        : "EXPR$" + finalFieldNames.size();
+    finalFieldNames.add(fieldName);
+  }
+
+  /**
+   * Processes the GROUPING_ID aggregate function by computing a bitmask
+   * based on the provided grouping columns and full group set. Constructs
+   * the corresponding RexNode representation for the GROUPING_ID function
+   * and appends it to the final projection and field names list.
+   *
+   * @param groupingCall the GROUPING_ID aggregate function call to process
+   * @param fullGroupSet the complete set of grouping keys for the aggregation
+   * @param rexBuilder the RexBuilder instance used to construct RexNode expressions
+   * @param typeFactory the data type factory for creating type-specific literals
+   * @param gColumnRef the RexNode reference to the group column
+   * @param finalProjects the list to which the computed RexNode is added
+   * @param finalFieldNames the list to which the corresponding field name is added
+   */
+  private void processGroupingId(AggregateCall groupingCall,
+      ImmutableBitSet fullGroupSet,
+      RexBuilder rexBuilder,
+      RelDataTypeFactory typeFactory,
+      RexNode gColumnRef,
+      List<RexNode> finalProjects,
+      List<String> finalFieldNames) {
+
+    if (groupingCall.getArgList().isEmpty()) {
+      throw new RuntimeException("GROUPING_ID() expects at least one argument");
+    }
+
+    RexNode result = null;
+    for (int i = 0; i < groupingCall.getArgList().size(); i++) {
+      int columnIndex = groupingCall.getArgList().get(i);
       int bitPosition = 0;
       for (int col : fullGroupSet) {
         if (col == columnIndex) {
@@ -451,25 +453,29 @@ public class DrillAggregateExpandGroupingSetsRule extends RelOptRule {
         bitPosition++;
       }
 
-      // Extract the bit: (g / 2^bitPosition) % 2
-      // This is equivalent to (g >> bitPosition) & 1 but uses operators available in Calcite
-      RexNode divisor = rexBuilder.makeLiteral(
-          1 << bitPosition,  // 2^bitPosition
-          typeFactory.createSqlType(org.apache.calcite.sql.type.SqlTypeName.INTEGER),
-          true);
+      RexNode divisor = rexBuilder.makeLiteral(1 << bitPosition,
+          typeFactory.createSqlType(SqlTypeName.INTEGER), true);
 
-      RexNode divided = rexBuilder.makeCall(
-          org.apache.calcite.sql.fun.SqlStdOperatorTable.DIVIDE,
-          gColumnRef,
-          divisor);
+      RexNode divided = rexBuilder.makeCall(SqlStdOperatorTable.DIVIDE, gColumnRef, divisor);
+      RexNode extractBit = rexBuilder.makeCall(SqlStdOperatorTable.MOD, divided,
+          rexBuilder.makeLiteral(2, typeFactory.createSqlType(SqlTypeName.INTEGER), true));
 
-      RexNode extractBit = rexBuilder.makeCall(
-          org.apache.calcite.sql.fun.SqlStdOperatorTable.MOD,
-          divided,
-          rexBuilder.makeLiteral(2, typeFactory.createSqlType(org.apache.calcite.sql.type.SqlTypeName.INTEGER), true));
+      int resultBitPos = groupingCall.getArgList().size() - 1 - i;
+      RexNode bitInPosition = (resultBitPos > 0)
+          ? rexBuilder.makeCall(SqlStdOperatorTable.MULTIPLY, extractBit,
+          rexBuilder.makeLiteral(1 << resultBitPos,
+              typeFactory.createSqlType(SqlTypeName.INTEGER), true))
+          : extractBit;
 
-      finalProjects.add(extractBit);
-      String fieldName = groupingCall.getName() != null ? groupingCall.getName() : "EXPR$" + finalFieldNames.size();
-      finalFieldNames.add(fieldName);
+      result = (result == null)
+          ? bitInPosition
+          : rexBuilder.makeCall(SqlStdOperatorTable.PLUS, result, bitInPosition);
+    }
+
+    finalProjects.add(result);
+    String fieldName = groupingCall.getName() != null
+        ? groupingCall.getName()
+        : "EXPR$" + finalFieldNames.size();
+    finalFieldNames.add(fieldName);
   }
 }
