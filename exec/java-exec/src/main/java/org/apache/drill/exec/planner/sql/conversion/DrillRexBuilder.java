@@ -18,12 +18,15 @@
 package org.apache.drill.exec.planner.sql.conversion;
 
 import java.math.BigDecimal;
+import java.util.List;
 
 import org.apache.calcite.rel.type.RelDataType;
 import org.apache.calcite.rel.type.RelDataTypeFactory;
 import org.apache.calcite.rex.RexBuilder;
 import org.apache.calcite.rex.RexLiteral;
 import org.apache.calcite.rex.RexNode;
+import org.apache.calcite.sql.SqlOperator;
+import org.apache.calcite.sql.fun.SqlStdOperatorTable;
 import org.apache.calcite.sql.type.SqlTypeName;
 import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.exec.util.DecimalUtility;
@@ -36,6 +39,97 @@ class DrillRexBuilder extends RexBuilder {
 
   DrillRexBuilder(RelDataTypeFactory typeFactory) {
     super(typeFactory);
+  }
+
+  /**
+   * Override makeCall to fix DECIMAL precision/scale issues in Calcite 1.38.
+   * CALCITE-6427 can create invalid DECIMAL types where scale > precision.
+   * This version intercepts calls WITH explicit return type.
+   */
+  @Override
+  public RexNode makeCall(RelDataType returnType, SqlOperator op, List<RexNode> exprs) {
+    // Fix DECIMAL return types for arithmetic operations
+    if (returnType.getSqlTypeName() == SqlTypeName.DECIMAL) {
+      int precision = returnType.getPrecision();
+      int scale = returnType.getScale();
+
+      // If scale exceeds precision, fix it
+      if (scale > precision) {
+        System.out.println("DrillRexBuilder.makeCall(with type): fixing invalid DECIMAL type for " + op.getName() +
+                         ": precision=" + precision + ", scale=" + scale);
+
+        // Cap precision at Drill's max (38)
+        int maxPrecision = 38;
+        if (precision > maxPrecision) {
+          precision = maxPrecision;
+        }
+
+        // Ensure scale doesn't exceed precision
+        if (scale > precision) {
+          scale = precision;
+        }
+
+        System.out.println("DrillRexBuilder.makeCall(with type): corrected to precision=" + precision + ", scale=" + scale);
+
+        // Create corrected type
+        returnType = typeFactory.createSqlType(SqlTypeName.DECIMAL, precision, scale);
+      }
+    }
+
+    return super.makeCall(returnType, op, exprs);
+  }
+
+  /**
+   * Override makeCall to fix DECIMAL precision/scale issues in Calcite 1.38.
+   * CALCITE-6427 can create invalid DECIMAL types where scale > precision.
+   * This version intercepts calls WITHOUT explicit return type (type is inferred).
+   * NOTE: Cannot override makeCall(SqlOperator, RexNode...) because it's final in RexBuilder.
+   * Instead, override the List version which the varargs version calls internally.
+   */
+  @Override
+  public RexNode makeCall(SqlOperator op, List<? extends RexNode> exprs) {
+    System.out.println("DrillRexBuilder.makeCall(no type): op=" + op.getName() + ", exprs=" + exprs.size());
+
+    // Call super to get the result with inferred type
+    RexNode result = super.makeCall(op, exprs);
+
+    // Check if the inferred type has invalid DECIMAL precision/scale
+    if (result.getType().getSqlTypeName() == SqlTypeName.DECIMAL) {
+      int precision = result.getType().getPrecision();
+      int scale = result.getType().getScale();
+
+      System.out.println("DrillRexBuilder.makeCall(no type): inferred DECIMAL type: precision=" + precision + ", scale=" + scale);
+
+      // If scale exceeds precision, recreate the call with fixed type
+      if (scale > precision) {
+        System.out.println("DrillRexBuilder.makeCall(no type): fixing invalid DECIMAL type for " + op.getName() +
+                         ": precision=" + precision + ", scale=" + scale);
+
+        // Cap precision at Drill's max (38)
+        int maxPrecision = 38;
+        if (precision > maxPrecision) {
+          precision = maxPrecision;
+        }
+
+        // Ensure scale doesn't exceed precision
+        if (scale > precision) {
+          scale = precision;
+        }
+
+        System.out.println("DrillRexBuilder.makeCall(no type): corrected to precision=" + precision + ", scale=" + scale);
+
+        // Create corrected type and recreate the call with fixed type
+        RelDataType fixedType = typeFactory.createSqlType(SqlTypeName.DECIMAL, precision, scale);
+        // Convert to List<RexNode> to call the 3-arg version with explicit type
+        List<RexNode> exprList = new java.util.ArrayList<>();
+        for (RexNode expr : exprs) {
+          exprList.add(expr);
+        }
+        result = super.makeCall(fixedType, op, exprList);
+      }
+    }
+
+    return result;
   }
 
   /**

@@ -124,7 +124,25 @@ public class DrillReduceAggregatesRule extends RelOptRule {
    */
   private boolean containsAvgStddevVarCall(List<AggregateCall> aggCallList) {
     for (AggregateCall call : aggCallList) {
+      // Check the aggregate function name directly
+      String aggName = call.getAggregation().getName();
+      if (aggName.equalsIgnoreCase("AVG") ||
+          aggName.equalsIgnoreCase("STDDEV_POP") || aggName.equalsIgnoreCase("STDDEV_SAMP") ||
+          aggName.equalsIgnoreCase("VAR_POP") || aggName.equalsIgnoreCase("VAR_SAMP") ||
+          aggName.equalsIgnoreCase("SUM") || aggName.equalsIgnoreCase("SUM0") ||
+          aggName.equalsIgnoreCase("$SUM0")) {
+        return true;
+      }
+
+      // Fallback: check by SqlKind and instanceof for standard Calcite functions
       SqlAggFunction sqlAggFunction = DrillCalciteWrapperUtility.extractSqlOperatorFromWrapper(call.getAggregation());
+      SqlKind kind = sqlAggFunction.getKind();
+      if (kind == SqlKind.AVG ||
+          kind == SqlKind.STDDEV_POP || kind == SqlKind.STDDEV_SAMP ||
+          kind == SqlKind.VAR_POP || kind == SqlKind.VAR_SAMP ||
+          kind == SqlKind.SUM || kind == SqlKind.SUM0) {
+        return true;
+      }
       if (sqlAggFunction instanceof SqlAvgAggFunction
           || sqlAggFunction instanceof SqlSumAggFunction) {
         return true;
@@ -229,16 +247,48 @@ public class DrillReduceAggregatesRule extends RelOptRule {
       Map<AggregateCall, RexNode> aggCallMapping,
       List<RexNode> inputExprs) {
     final SqlAggFunction sqlAggFunction = DrillCalciteWrapperUtility.extractSqlOperatorFromWrapper(oldCall.getAggregation());
-    if (sqlAggFunction instanceof SqlSumAggFunction) {
+    final SqlKind sqlKind = sqlAggFunction.getKind();
+
+    // Handle SUM
+    if (sqlKind == SqlKind.SUM || sqlKind == SqlKind.SUM0 ||
+        sqlAggFunction instanceof SqlSumAggFunction) {
       // replace original SUM(x) with
       // case COUNT(x) when 0 then null else SUM0(x) end
       return reduceSum(oldAggRel, oldCall, newCalls, aggCallMapping);
     }
-    if (sqlAggFunction instanceof SqlAvgAggFunction) {
-      // for DECIMAL data types does not produce rewriting of complex calls,
-      // since SUM returns value with 38 precision and further handling of the value
-      // causes the loss of the scale
-      if (oldCall.getType().getSqlTypeName() == SqlTypeName.DECIMAL) {
+
+    // Handle AVG, VAR_*, STDDEV_* - check by SqlKind or by name for Drill-wrapped functions
+    String aggName = oldCall.getAggregation().getName();
+    boolean isVarianceOrAvg = (sqlKind == SqlKind.AVG || sqlKind == SqlKind.STDDEV_POP || sqlKind == SqlKind.STDDEV_SAMP ||
+                               sqlKind == SqlKind.VAR_POP || sqlKind == SqlKind.VAR_SAMP ||
+                               sqlAggFunction instanceof SqlAvgAggFunction ||
+                               aggName.equalsIgnoreCase("AVG") || aggName.equalsIgnoreCase("VAR_POP") ||
+                               aggName.equalsIgnoreCase("VAR_SAMP") || aggName.equalsIgnoreCase("STDDEV_POP") ||
+                               aggName.equalsIgnoreCase("STDDEV_SAMP"));
+    if (isVarianceOrAvg) {
+
+      // Determine the subtype from name if SqlKind is OTHER_FUNCTION (Drill-wrapped)
+      SqlKind subtype = sqlKind;
+      if (sqlKind == SqlKind.OTHER_FUNCTION || sqlKind == SqlKind.OTHER) {
+        // Use aggName already declared above
+        if (aggName.equalsIgnoreCase("AVG")) {
+          subtype = SqlKind.AVG;
+        } else if (aggName.equalsIgnoreCase("VAR_POP")) {
+          subtype = SqlKind.VAR_POP;
+        } else if (aggName.equalsIgnoreCase("VAR_SAMP")) {
+          subtype = SqlKind.VAR_SAMP;
+        } else if (aggName.equalsIgnoreCase("STDDEV_POP")) {
+          subtype = SqlKind.STDDEV_POP;
+        } else if (aggName.equalsIgnoreCase("STDDEV_SAMP")) {
+          subtype = SqlKind.STDDEV_SAMP;
+        }
+      }
+
+      // For DECIMAL data types, only skip reduction for AVG (not for VAR_*/STDDEV_*)
+      // AVG reduction causes loss of scale, but variance/stddev MUST be reduced
+      // to avoid Calcite 1.38 CALCITE-6427 bug that creates invalid DECIMAL types
+      if (oldCall.getType().getSqlTypeName() == SqlTypeName.DECIMAL &&
+          subtype == SqlKind.AVG) {
         return oldAggRel.getCluster().getRexBuilder().addAggCall(
             oldCall,
             oldAggRel.getGroupCount(),
@@ -248,7 +298,6 @@ public class DrillReduceAggregatesRule extends RelOptRule {
                 oldAggRel.getInput(),
                 oldCall.getArgList().get(0))));
       }
-      final SqlKind subtype = sqlAggFunction.getKind();
       switch (subtype) {
       case AVG:
         // replace original AVG(x) with SUM(x) / COUNT(x)
@@ -526,9 +575,19 @@ public class DrillReduceAggregatesRule extends RelOptRule {
     RexNode argRef = rexBuilder.makeCall(CastHighOp, inputExprs.get(argOrdinal));
     inputExprs.set(argOrdinal, argRef);
 
-    final RexNode argSquared =
+    // Create argSquared (x * x) and fix its type if invalid
+    RexNode argSquared =
         rexBuilder.makeCall(
             SqlStdOperatorTable.MULTIPLY, argRef, argRef);
+
+    // Fix DECIMAL type if Calcite 1.38 created invalid type (scale > precision)
+    RelDataType argSquaredType = fixDecimalType(typeFactory, argSquared.getType());
+    if (!argSquaredType.equals(argSquared.getType())) {
+      // Recreate the call with the fixed type
+      argSquared = rexBuilder.makeCall(argSquaredType, SqlStdOperatorTable.MULTIPLY,
+          java.util.Arrays.asList(argRef, argRef));
+    }
+
     final int argSquaredOrdinal = lookupOrAdd(inputExprs, argSquared);
 
     RelDataType sumType =
@@ -536,6 +595,9 @@ public class DrillReduceAggregatesRule extends RelOptRule {
             ImmutableList.of())
           .inferReturnType(oldCall.createBinding(oldAggRel));
     sumType = typeFactory.createTypeWithNullability(sumType, true);
+
+    // Fix sumType if Calcite 1.38 created invalid DECIMAL type (scale > precision)
+    sumType = fixDecimalType(typeFactory, sumType);
     final AggregateCall sumArgSquaredAggCall =
         AggregateCall.create(
             new DrillCalciteSqlAggFunctionWrapper(
@@ -580,9 +642,18 @@ public class DrillReduceAggregatesRule extends RelOptRule {
               aggCallMapping,
               ImmutableList.of(argType));
 
-    final RexNode sumSquaredArg =
+    // Create sumSquaredArg (SUM(x) * SUM(x)) and fix its type if invalid
+    RexNode sumSquaredArg =
           rexBuilder.makeCall(
               SqlStdOperatorTable.MULTIPLY, sumArg, sumArg);
+
+    // Fix DECIMAL type if Calcite 1.38 created invalid type (scale > precision)
+    RelDataType sumSquaredArgType = fixDecimalType(typeFactory, sumSquaredArg.getType());
+    if (!sumSquaredArgType.equals(sumSquaredArg.getType())) {
+      // Recreate the call with the fixed type
+      sumSquaredArg = rexBuilder.makeCall(sumSquaredArgType, SqlStdOperatorTable.MULTIPLY,
+          java.util.Arrays.asList(sumArg, sumArg));
+    }
 
     final SqlCountAggFunction countAgg = (SqlCountAggFunction) SqlStdOperatorTable.COUNT;
     final RelDataType countType = countAgg.getReturnType(typeFactory);
@@ -680,6 +751,44 @@ public class DrillReduceAggregatesRule extends RelOptRule {
       list.add(element);
     }
     return ordinal;
+  }
+
+  /**
+   * Fix invalid DECIMAL types where scale > precision.
+   * This can happen with Calcite 1.38 CALCITE-6427 where variance functions
+   * use DECIMAL(2*p, 2*s) for intermediate calculations.
+   *
+   * @param typeFactory Type factory to create corrected types
+   * @param type        Type to check and potentially fix
+   * @return Fixed type if invalid, original type otherwise
+   */
+  private static RelDataType fixDecimalType(RelDataTypeFactory typeFactory, RelDataType type) {
+    if (type.getSqlTypeName() != SqlTypeName.DECIMAL) {
+      return type;
+    }
+
+    int precision = type.getPrecision();
+    int scale = type.getScale();
+
+    // Check if type is invalid (scale > precision)
+    if (scale <= precision && precision <= 38) {
+      return type; // Type is valid
+    }
+
+    // Fix the type
+    int maxPrecision = 38; // Drill's maximum DECIMAL precision
+
+    // First, cap precision at Drill's max
+    if (precision > maxPrecision) {
+      precision = maxPrecision;
+    }
+
+    // Then ensure scale doesn't exceed precision
+    if (scale > precision) {
+      scale = precision;
+    }
+
+    return typeFactory.createSqlType(SqlTypeName.DECIMAL, precision, scale);
   }
 
   /**
