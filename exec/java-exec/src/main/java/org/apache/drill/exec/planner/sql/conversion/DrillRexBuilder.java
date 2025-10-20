@@ -17,21 +17,20 @@
  */
 package org.apache.drill.exec.planner.sql.conversion;
 
-import java.math.BigDecimal;
-import java.util.List;
-
 import org.apache.calcite.rel.type.RelDataType;
 import org.apache.calcite.rel.type.RelDataTypeFactory;
 import org.apache.calcite.rex.RexBuilder;
 import org.apache.calcite.rex.RexLiteral;
 import org.apache.calcite.rex.RexNode;
 import org.apache.calcite.sql.SqlOperator;
-import org.apache.calcite.sql.fun.SqlStdOperatorTable;
 import org.apache.calcite.sql.type.SqlTypeName;
 import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.exec.util.DecimalUtility;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import java.math.BigDecimal;
+import java.util.List;
 
 class DrillRexBuilder extends RexBuilder {
 
