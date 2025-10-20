@@ -260,11 +260,13 @@ public class SqlConverter {
     initCluster(initPlanner());
     DrillViewExpander viewExpander = new DrillViewExpander(this);
     util.getViewExpansionContext().setViewExpander(viewExpander);
-    final SqlToRelConverter sqlToRelConverter = new SqlToRelConverter(
+    // Use DrillSqlToRelConverter for Calcite 1.38+ DECIMAL type checking compatibility
+    final SqlToRelConverter sqlToRelConverter = new DrillSqlToRelConverter(
         viewExpander, validator, catalog, cluster,
         DrillConvertletTable.INSTANCE, sqlToRelConverterConfig);
 
     boolean topLevelQuery = !isInnerQuery || isExpandedView;
+
     RelRoot rel = sqlToRelConverter.convertQuery(validatedNode, false, topLevelQuery);
 
     // If extra expressions used in ORDER BY were added to the project list,

@@ -17,6 +17,8 @@
  */
 package org.apache.drill.exec.planner.types;
 
+import org.apache.calcite.rel.type.RelDataType;
+import org.apache.calcite.rel.type.RelDataTypeFactory;
 import org.apache.calcite.rel.type.RelDataTypeSystem;
 import org.apache.calcite.rel.type.RelDataTypeSystemImpl;
 import org.apache.calcite.sql.type.SqlTypeName;
@@ -62,6 +64,13 @@ public class DrillRelDataTypeSystem extends RelDataTypeSystemImpl {
   public boolean isSchemaCaseSensitive() {
     // Drill uses case-insensitive policy
     return false;
+  }
+
+  @Override
+  public RelDataType deriveDecimalMultiplyType(RelDataTypeFactory typeFactory,
+                                                RelDataType type1,
+                                                RelDataType type2) {
+    return super.deriveDecimalMultiplyType(typeFactory, type1, type2);
   }
 
 }

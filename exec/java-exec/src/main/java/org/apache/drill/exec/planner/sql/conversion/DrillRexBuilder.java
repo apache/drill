@@ -51,12 +51,7 @@ class DrillRexBuilder extends RexBuilder {
   }
 
   /**
-   * Creates a call to the CAST operator, expanding if possible, and optionally
-   * also preserving nullability.
-   *
-   * <p>Tries to expand the cast, and therefore the result may be something
-   * other than a {@link org.apache.calcite.rex.RexCall} to the CAST operator, such as a
-   * {@link RexLiteral} if {@code matchNullability} is false.
+   * Override makeCast to handle DECIMAL literal precision/scale validation.
    *
    * @param type             Type to cast to
    * @param exp              Expression being cast
@@ -69,6 +64,7 @@ class DrillRexBuilder extends RexBuilder {
     if (matchNullability) {
       return makeAbstractCast(type, exp);
     }
+
     // for the case when BigDecimal literal has a scale or precision
     // that differs from the value from specified RelDataType, cast cannot be removed
     // TODO: remove this code when CALCITE-1468 is fixed
