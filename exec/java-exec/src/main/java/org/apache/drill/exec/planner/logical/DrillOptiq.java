@@ -895,13 +895,19 @@ public class DrillOptiq {
         if (isLiteralNull(literal)){
           return createNullExpr(MinorType.FLOAT8);
         }
-        double d = ((BigDecimal) literal.getValue()).doubleValue();
+        // Calcite 1.38+ stores DOUBLE as java.lang.Double instead of BigDecimal
+        double d = literal.getValue() instanceof Double ?
+            (Double) literal.getValue() :
+            ((BigDecimal) literal.getValue()).doubleValue();
         return ValueExpressions.getFloat8(d);
       case FLOAT:
         if (isLiteralNull(literal)) {
           return createNullExpr(MinorType.FLOAT4);
         }
-        float f = ((BigDecimal) literal.getValue()).floatValue();
+        // Calcite 1.38+ stores FLOAT as java.lang.Double instead of BigDecimal
+        float f = literal.getValue() instanceof Double ?
+            ((Double) literal.getValue()).floatValue() :
+            ((BigDecimal) literal.getValue()).floatValue();
         return ValueExpressions.getFloat4(f);
       case INTEGER:
         if (isLiteralNull(literal)) {
