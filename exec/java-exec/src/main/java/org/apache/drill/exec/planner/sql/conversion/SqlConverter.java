@@ -20,7 +20,6 @@ package org.apache.drill.exec.planner.sql.conversion;
 import org.apache.calcite.adapter.java.JavaTypeFactory;
 import org.apache.calcite.avatica.util.Casing;
 import org.apache.calcite.jdbc.DynamicSchema;
-import org.apache.calcite.jdbc.JavaTypeFactoryImpl;
 import org.apache.calcite.plan.ConventionTraitDef;
 import org.apache.calcite.plan.RelOptCluster;
 import org.apache.calcite.plan.RelOptCostFactory;
@@ -120,8 +119,17 @@ public class SqlConverter {
       .withConformance(DRILL_CONFORMANCE)
       .withUnquotedCasing(Casing.UNCHANGED)
       .withQuotedCasing(Casing.UNCHANGED);
+    // CALCITE-6427 workaround: Increase IN threshold to avoid Sarg-based joins for moderate-sized IN lists
+    // Calcite 1.38 has bugs with ANY types in Sargs that cause infinite loops
+    // Use OR expansion (via convertInToOr) instead of Sarg joins for lists up to 100 values
+    long inThreshold = settings.getInSubqueryThreshold();
+    if (inThreshold < 100) {
+      logger.warn("Increasing IN subquery threshold from {} to 100 to work around CALCITE-6427. " +
+          "Queries with IN lists larger than 100 values may experience performance degradation.", inThreshold);
+      inThreshold = 100;  // Increase from default 20 to avoid CALCITE-6427 issues
+    }
     this.sqlToRelConverterConfig = SqlToRelConverter.config()
-        .withInSubQueryThreshold((int) settings.getInSubqueryThreshold())
+        .withInSubQueryThreshold((int) inThreshold)
         .withRemoveSortInSubQuery(false)
         .withRelBuilderConfigTransform(t -> t
           .withSimplify(false)

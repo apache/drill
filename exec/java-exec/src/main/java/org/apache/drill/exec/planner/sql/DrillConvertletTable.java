@@ -72,6 +72,7 @@ public class DrillConvertletTable implements SqlRexConvertletTable {
         .put(SqlStdOperatorTable.COALESCE, coalesceConvertlet())
         .put(SqlStdOperatorTable.TIMESTAMP_ADD, timestampAddConvertlet())
         .put(SqlStdOperatorTable.TIMESTAMP_DIFF, timestampDiffConvertlet())
+        .put(SqlStdOperatorTable.PLUS, plusConvertlet())
         .put(SqlStdOperatorTable.ROW, rowConvertlet())
         .put(SqlStdOperatorTable.RAND, randConvertlet())
         .put(SqlStdOperatorTable.AVG, avgVarianceConvertlet(DrillConvertletTable::expandAvg))
@@ -304,6 +305,24 @@ public class DrillConvertletTable implements SqlRexConvertletTable {
 
       return cx.getRexBuilder().makeCall(returnType,
           SqlStdOperatorTable.TIMESTAMP_DIFF, operands);
+    };
+  }
+
+  /**
+   * Custom convertlet for PLUS to fix Calcite 1.38 date + interval type inference.
+   * Calcite 1.38 incorrectly casts intervals to DATE in some expressions.
+   * This convertlet ensures interval types are preserved when used with dates.
+   */
+  private static SqlRexConvertlet plusConvertlet() {
+    return (cx, call) -> {
+      // Convert operands without going through standard convertlet
+      // to prevent Calcite from adding incorrect casts
+      RexNode left = cx.convertExpression(call.operand(0));
+      RexNode right = cx.convertExpression(call.operand(1));
+
+      // Just use makeCall with the PLUS operator and converted operands
+      // Let Drill's function resolver handle the rest
+      return cx.getRexBuilder().makeCall(SqlStdOperatorTable.PLUS, left, right);
     };
   }
 

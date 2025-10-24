@@ -31,6 +31,9 @@ import org.slf4j.LoggerFactory;
 
 import java.math.BigDecimal;
 import java.util.List;
+import org.apache.calcite.util.Sarg;
+import org.apache.calcite.rex.RexUtil;
+import org.apache.calcite.sql.fun.SqlStdOperatorTable;
 
 class DrillRexBuilder extends RexBuilder {
 
@@ -38,6 +41,45 @@ class DrillRexBuilder extends RexBuilder {
 
   DrillRexBuilder(RelDataTypeFactory typeFactory) {
     super(typeFactory);
+  }
+
+  /**
+   * Override makeIn to prevent Sarg creation for large IN lists in Calcite 1.38.
+   * CALCITE-6427 causes infinite loops with large IN clauses due to ANY type issues.
+   * For large IN lists (>50 values), disable Sarg optimization and use traditional OR chain.
+   */
+  @Override
+  public RexNode makeIn(RexNode arg, List<? extends RexNode> ranges) {
+    // NOTE: This method is kept as a safety valve but should not be needed with the
+    // increased IN subquery threshold in SqlConverter. The threshold prevents large IN
+    // lists from reaching this code path.
+
+    // If somehow a large IN list reaches here, skip Sarg optimization
+    if (ranges.size() > 50) {
+      logger.warn("Skipping Sarg optimization for large IN clause with {} values - " +
+          "this should not happen with increased threshold", ranges.size());
+      // Build traditional OR chain: arg=val1 OR arg=val2 OR ...
+      List<RexNode> orTerms = new java.util.ArrayList<>();
+      for (RexNode range : ranges) {
+        orTerms.add(makeCall(SqlStdOperatorTable.EQUALS, arg, range));
+      }
+      return RexUtil.composeDisjunction(this, orTerms);
+    }
+
+    // For small IN lists, use super (Sarg optimization)
+    return super.makeIn(arg, ranges);
+  }
+
+  /**
+   * Override makeSearchArgumentLiteral to handle ANY types in Calcite 1.38.
+   * CALCITE-6427 can create Sargs with ANY type during type inference.
+   * Since RexLiteral has been patched to allow ANY types, just pass through.
+   * Do NOT convert ANY to another type as it triggers infinite optimizer loops!
+   */
+  @Override
+  public RexLiteral makeSearchArgumentLiteral(Sarg s, RelDataType type) {
+    // Just call super - the patched RexLiteral will handle ANY types
+    return super.makeSearchArgumentLiteral(s, type);
   }
 
   /**
@@ -54,9 +96,6 @@ class DrillRexBuilder extends RexBuilder {
 
       // If scale exceeds precision, fix it
       if (scale > precision) {
-        System.out.println("DrillRexBuilder.makeCall(with type): fixing invalid DECIMAL type for " + op.getName() +
-                         ": precision=" + precision + ", scale=" + scale);
-
         // Cap precision at Drill's max (38)
         int maxPrecision = 38;
         if (precision > maxPrecision) {
@@ -67,8 +106,6 @@ class DrillRexBuilder extends RexBuilder {
         if (scale > precision) {
           scale = precision;
         }
-
-        System.out.println("DrillRexBuilder.makeCall(with type): corrected to precision=" + precision + ", scale=" + scale);
 
         // Create corrected type
         returnType = typeFactory.createSqlType(SqlTypeName.DECIMAL, precision, scale);
@@ -87,8 +124,6 @@ class DrillRexBuilder extends RexBuilder {
    */
   @Override
   public RexNode makeCall(SqlOperator op, List<? extends RexNode> exprs) {
-    System.out.println("DrillRexBuilder.makeCall(no type): op=" + op.getName() + ", exprs=" + exprs.size());
-
     // Call super to get the result with inferred type
     RexNode result = super.makeCall(op, exprs);
 
@@ -97,13 +132,8 @@ class DrillRexBuilder extends RexBuilder {
       int precision = result.getType().getPrecision();
       int scale = result.getType().getScale();
 
-      System.out.println("DrillRexBuilder.makeCall(no type): inferred DECIMAL type: precision=" + precision + ", scale=" + scale);
-
       // If scale exceeds precision, recreate the call with fixed type
       if (scale > precision) {
-        System.out.println("DrillRexBuilder.makeCall(no type): fixing invalid DECIMAL type for " + op.getName() +
-                         ": precision=" + precision + ", scale=" + scale);
-
         // Cap precision at Drill's max (38)
         int maxPrecision = 38;
         if (precision > maxPrecision) {
@@ -114,8 +144,6 @@ class DrillRexBuilder extends RexBuilder {
         if (scale > precision) {
           scale = precision;
         }
-
-        System.out.println("DrillRexBuilder.makeCall(no type): corrected to precision=" + precision + ", scale=" + scale);
 
         // Create corrected type and recreate the call with fixed type
         RelDataType fixedType = typeFactory.createSqlType(SqlTypeName.DECIMAL, precision, scale);
