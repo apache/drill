@@ -17,13 +17,7 @@
  */
 package org.apache.drill.exec.physical.impl.union;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Iterator;
-import java.util.List;
-import java.util.NoSuchElementException;
-import java.util.Stack;
-
+import com.google.common.base.Preconditions;
 import org.apache.calcite.util.Pair;
 import org.apache.drill.common.exceptions.DrillRuntimeException;
 import org.apache.drill.common.expression.ErrorCollector;
@@ -59,9 +53,15 @@ import org.apache.drill.exec.util.record.RecordBatchStats.RecordBatchIOType;
 import org.apache.drill.exec.vector.FixedWidthVector;
 import org.apache.drill.exec.vector.SchemaChangeCallBack;
 import org.apache.drill.exec.vector.ValueVector;
-import com.google.common.base.Preconditions;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Iterator;
+import java.util.List;
+import java.util.NoSuchElementException;
+import java.util.Stack;
 
 public class UnionAllRecordBatch extends AbstractBinaryRecordBatch<UnionAll> {
   private static final Logger logger = LoggerFactory.getLogger(UnionAllRecordBatch.class);
@@ -278,10 +278,14 @@ public class UnionAllRecordBatch extends AbstractBinaryRecordBatch<UnionAll> {
     final Iterator<MaterializedField> leftIter = leftSchema.iterator();
     final Iterator<MaterializedField> rightIter = rightSchema.iterator();
 
+    logger.debug("UnionAll inferring schema: isGroupingSetsExpansion={}", popConfig.isGroupingSetsExpansion());
     int index = 1;
     while (leftIter.hasNext() && rightIter.hasNext()) {
       MaterializedField leftField  = leftIter.next();
       MaterializedField rightField = rightIter.next();
+      logger.debug("Column {}: left='{}' type={}, right='{}' type={}",
+          index, leftField.getName(), leftField.getType().getMinorType(),
+          rightField.getName(), rightField.getType().getMinorType());
 
       if (Types.isSameTypeAndMode(leftField.getType(), rightField.getType())) {
         MajorType.Builder builder = MajorType.newBuilder()
@@ -301,15 +305,7 @@ public class UnionAllRecordBatch extends AbstractBinaryRecordBatch<UnionAll> {
           builder.setMinorType(leftField.getType().getMinorType());
           builder = Types.calculateTypePrecisionAndScale(leftField.getType(), rightField.getType(), builder);
         } else {
-          TypeProtos.MinorType outputMinorType = TypeCastRules.getLeastRestrictiveType(
-            leftField.getType().getMinorType(),
-            rightField.getType().getMinorType()
-          );
-          if (outputMinorType == null) {
-            throw new DrillRuntimeException("Type mismatch between " + leftField.getType().getMinorType().toString() +
-                " on the left side and " + rightField.getType().getMinorType().toString() +
-                " on the right side in column " + index + " of UNION ALL");
-          }
+          TypeProtos.MinorType outputMinorType = resolveUnionColumnType(leftField, rightField, index);
           builder.setMinorType(outputMinorType);
         }
 
@@ -326,6 +322,46 @@ public class UnionAllRecordBatch extends AbstractBinaryRecordBatch<UnionAll> {
 
     assert !leftIter.hasNext() && ! rightIter.hasNext() :
       "Mismatch of column count should have been detected when validating sqlNode at planning";
+  }
+
+  /**
+   * Determines the output type for a UNION ALL column when combining two types.
+   * <p>
+   * Special handling is applied for GROUPING SETS expansion:
+   * - Drill represents NULL columns as INT during grouping sets expansion.
+   * - If one side is INT (likely a NULL placeholder) and the other is not, prefer the non-INT type.
+   * <p>
+   * For all other cases, the least restrictive type according to Drill's type cast rules is returned.
+   *
+   * @param leftField  The type of the left column
+   * @param rightField The type of the right column
+   * @param index     The column index (for logging)
+   * @return The resolved output type
+   * @throws DrillRuntimeException if types are incompatible
+   */
+  private TypeProtos.MinorType resolveUnionColumnType(MaterializedField leftField,
+      MaterializedField rightField,
+      int index) {
+    TypeProtos.MinorType leftType = leftField.getType().getMinorType();
+    TypeProtos.MinorType rightType = rightField.getType().getMinorType();
+
+    boolean isGroupingSets = popConfig.isGroupingSetsExpansion();
+    boolean leftIsPlaceholder = leftType == TypeProtos.MinorType.INT && rightType != TypeProtos.MinorType.INT;
+    boolean rightIsPlaceholder = rightType == TypeProtos.MinorType.INT && leftType != TypeProtos.MinorType.INT;
+
+    if (isGroupingSets && (leftIsPlaceholder || rightIsPlaceholder)) {
+      TypeProtos.MinorType outputType = leftIsPlaceholder ? rightType : leftType;
+      logger.debug("GROUPING SETS: Preferring {} over INT for column {}", outputType, index);
+      return outputType;
+    }
+
+    TypeProtos.MinorType outputType = TypeCastRules.getLeastRestrictiveType(leftType, rightType);
+    if (outputType == null) {
+      throw new DrillRuntimeException("Type mismatch between " + leftType +
+          " and " + rightType + " in column " + index + " of UNION ALL");
+    }
+    logger.debug("Using standard type rules: {} + {} -> {}", leftType, rightType, outputType);
+    return outputType;
   }
 
   private void inferOutputFieldsOneSide(final BatchSchema schema) {

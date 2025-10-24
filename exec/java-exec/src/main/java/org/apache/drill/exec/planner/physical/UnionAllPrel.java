@@ -39,17 +39,24 @@ import com.google.common.collect.Lists;
 
 public class UnionAllPrel extends UnionPrel {
 
+  private final boolean isGroupingSetsExpansion;
+
   public UnionAllPrel(RelOptCluster cluster, RelTraitSet traits, List<RelNode> inputs)
     throws InvalidRelException {
-    super(cluster, traits, inputs, true /* all */);
+    this(cluster, traits, inputs, false);
+  }
 
+  public UnionAllPrel(RelOptCluster cluster, RelTraitSet traits, List<RelNode> inputs, boolean isGroupingSetsExpansion)
+    throws InvalidRelException {
+    super(cluster, traits, inputs, true /* all */);
+    this.isGroupingSetsExpansion = isGroupingSetsExpansion;
   }
 
 
   @Override
   public Union copy(RelTraitSet traitSet, List<RelNode> inputs, boolean all) {
     try {
-      return new UnionAllPrel(this.getCluster(), traitSet, inputs);
+      return new UnionAllPrel(this.getCluster(), traitSet, inputs, isGroupingSetsExpansion);
     }catch (InvalidRelException e) {
       throw new AssertionError(e);
     }
@@ -78,7 +85,7 @@ public class UnionAllPrel extends UnionPrel {
       inputPops.add( ((Prel)this.getInputs().get(i)).getPhysicalOperator(creator));
     }
 
-    UnionAll unionall = new UnionAll(inputPops);
+    UnionAll unionall = new UnionAll(inputPops, isGroupingSetsExpansion);
     return creator.addMetadata(this, unionall);
   }
 

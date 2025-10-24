@@ -39,6 +39,7 @@ import org.apache.calcite.rel.rules.SemiJoinRule;
 import org.apache.calcite.rel.rules.SortRemoveRule;
 import org.apache.calcite.rel.rules.SubQueryRemoveRule;
 import org.apache.calcite.rel.rules.UnionToDistinctRule;
+import org.apache.drill.exec.planner.logical.DrillAggregateExpandGroupingSetsRule;
 import org.apache.drill.exec.planner.logical.DrillConditions;
 import org.apache.drill.exec.planner.logical.DrillRelFactories;
 import com.google.common.base.Preconditions;
@@ -106,6 +107,9 @@ public interface RuleInstance {
     AggregateExpandDistinctAggregatesRule.Config.JOIN
       .withRelBuilderFactory(DrillRelFactories.LOGICAL_BUILDER)
       .toRule();
+
+  RelOptRule AGGREGATE_EXPAND_GROUPING_SETS_RULE =
+    DrillAggregateExpandGroupingSetsRule.INSTANCE;
 
   /**
    * Instance of the rule that works on logical joins only, and pushes to the

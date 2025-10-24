@@ -33,9 +33,22 @@ public class UnionAll extends AbstractMultiple {
 
   public static final String OPERATOR_TYPE = "UNION";
 
+  private final boolean isGroupingSetsExpansion;
+
   @JsonCreator
-  public UnionAll(@JsonProperty("children") List<PhysicalOperator> children) {
+  public UnionAll(@JsonProperty("children") List<PhysicalOperator> children,
+                  @JsonProperty("isGroupingSetsExpansion") Boolean isGroupingSetsExpansion) {
     super(children);
+    this.isGroupingSetsExpansion = isGroupingSetsExpansion != null ? isGroupingSetsExpansion : false;
+  }
+
+  public UnionAll(List<PhysicalOperator> children) {
+    this(children, false);
+  }
+
+  @JsonProperty("isGroupingSetsExpansion")
+  public boolean isGroupingSetsExpansion() {
+    return isGroupingSetsExpansion;
   }
 
   @Override
@@ -45,7 +58,7 @@ public class UnionAll extends AbstractMultiple {
 
   @Override
   public PhysicalOperator getNewWithChildren(List<PhysicalOperator> children) {
-    return new UnionAll(children);
+    return new UnionAll(children, isGroupingSetsExpansion);
   }
 
   @Override

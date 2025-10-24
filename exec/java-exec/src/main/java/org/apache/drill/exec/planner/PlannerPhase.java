@@ -356,6 +356,11 @@ public enum PlannerPhase {
        Convert from Calcite Logical to Drill Logical Rules.
        */
       RuleInstance.EXPAND_CONVERSION_RULE,
+
+      // Expand GROUPING SETS, ROLLUP, and CUBE BEFORE converting aggregates to Drill logical operators
+      // This prevents multi-grouping-set aggregates from being converted to DrillAggregateRel
+      RuleInstance.AGGREGATE_EXPAND_GROUPING_SETS_RULE,
+
       DrillScanRule.INSTANCE,
       DrillFilterRule.INSTANCE,
       DrillProjectRule.INSTANCE,
