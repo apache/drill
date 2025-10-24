@@ -298,11 +298,29 @@ public class DrillReduceAggregatesRule extends RelOptRule {
                 oldAggRel.getInput(),
                 oldCall.getArgList().get(0))));
       }
+      // CALCITE-1.38 WORKAROUND: Disable AVG reduction entirely
+      // Calcite 1.38's RexSimplify has a regression where it gets into infinite recursion
+      // when simplifying CASE statements wrapped in CastHighOp (created by AVG expansion).
+      // The issue occurs in Strong.policy() null analysis during expression simplification.
+      // This test passes in Calcite 1.37 but fails in 1.38 with StackOverflowError.
+      // See: org.apache.drill.TestCorrelation.testScalarAggAndFilterCorrelatedSubquery
+      // TODO: Re-enable AVG reduction when Calcite fixes the RexSimplify regression
+      if (subtype == SqlKind.AVG) {
+        // Preserve original AVG aggregate to avoid Calcite 1.38 RexSimplify bug
+        return oldAggRel.getCluster().getRexBuilder().addAggCall(
+            oldCall,
+            oldAggRel.getGroupCount(),
+            newCalls,
+            aggCallMapping,
+            ImmutableList.of(getFieldType(
+                oldAggRel.getInput(),
+                oldCall.getArgList().get(0))));
+      }
+
       switch (subtype) {
       case AVG:
-        // replace original AVG(x) with SUM(x) / COUNT(x)
-        return reduceAvg(
-            oldAggRel, oldCall, newCalls, aggCallMapping);
+        // AVG reduction disabled due to Calcite 1.38 RexSimplify bug (see above)
+        throw new AssertionError("AVG should have been handled above");
       case STDDEV_POP:
         // replace original STDDEV_POP(x) with
         //   SQRT(
@@ -367,6 +385,17 @@ public class DrillReduceAggregatesRule extends RelOptRule {
   }
 
   private RexNode reduceAvg(
+      Aggregate oldAggRel,
+      AggregateCall oldCall,
+      List<AggregateCall> newCalls,
+      Map<AggregateCall, RexNode> aggCallMapping) {
+    // NOTE: This method should never be called in Calcite 1.38 due to workaround in reduceAgg()
+    // AVG reduction is disabled to avoid RexSimplify StackOverflowError regression
+    throw new AssertionError("AVG reduction should be disabled in Calcite 1.38");
+  }
+
+  @Deprecated  // Disabled for Calcite 1.38 - see reduceAgg()
+  private RexNode reduceAvg_DISABLED_FOR_CALCITE_138(
       Aggregate oldAggRel,
       AggregateCall oldCall,
       List<AggregateCall> newCalls,
