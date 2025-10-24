@@ -135,7 +135,7 @@ public class SqlConverter {
         .withRelBuilderFactory(DrillRelFactories.LOGICAL_BUILDER);
     this.isInnerQuery = false;
     this.isExpandedView = false;
-    this.typeFactory = new JavaTypeFactoryImpl(DrillRelDataTypeSystem.DRILL_REL_DATATYPE_SYSTEM);
+    this.typeFactory = new org.apache.drill.exec.planner.types.DrillTypeFactory(DrillRelDataTypeSystem.DRILL_REL_DATATYPE_SYSTEM);
     this.defaultSchema = context.getNewDefaultSchema();
     this.rootSchema = SchemaUtilities.rootSchema(defaultSchema);
     this.temporarySchema = context.getConfig().getString(ExecConstants.DEFAULT_TEMPORARY_WORKSPACE);
