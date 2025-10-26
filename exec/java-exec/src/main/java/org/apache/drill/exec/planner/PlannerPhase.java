@@ -641,15 +641,21 @@ public enum PlannerPhase {
 
   /**
    * RuleSet for join transitive closure, used only in HepPlanner.<p>
-   * TODO: {@link RuleInstance#DRILL_JOIN_PUSH_TRANSITIVE_PREDICATES_RULE} should be moved into {@link #staticRuleSet},
-   * (with using {@link DrillRelFactories#LOGICAL_BUILDER}) once CALCITE-1048 is solved. This block can be removed then.
+   *
+   * NOTE: DRILL_JOIN_PUSH_TRANSITIVE_PREDICATES_RULE is disabled due to CALCITE-6432
+   * (infinite loop bug in Calcite 1.38 that was fixed in 1.40). This rule can be re-enabled when:
+   * 1. Drill upgrades to Calcite 1.40+ (requires fixing API compatibility issues), OR
+   * 2. The fix from CALCITE-6432 is backported to Calcite 1.38
+   *
+   * Original TODO: Once CALCITE-1048 is solved (still open as of 2025), this rule should be moved
+   * into {@link #staticRuleSet} with {@link DrillRelFactories#LOGICAL_BUILDER}.
    *
    * @return set of planning rules
    */
   static RuleSet getJoinTransitiveClosureRules() {
     return RuleSets.ofList(ImmutableSet.<RelOptRule> builder()
         .add(
-            RuleInstance.DRILL_JOIN_PUSH_TRANSITIVE_PREDICATES_RULE,
+            // RuleInstance.DRILL_JOIN_PUSH_TRANSITIVE_PREDICATES_RULE,  // Disabled: CALCITE-6432 infinite loop in 1.38
             DrillFilterJoinRules.DRILL_FILTER_INTO_JOIN,
             RuleInstance.REMOVE_IS_NOT_DISTINCT_FROM_RULE,
             DrillFilterAggregateTransposeRule.DRILL_LOGICAL_INSTANCE,
