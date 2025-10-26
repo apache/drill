@@ -119,17 +119,8 @@ public class SqlConverter {
       .withConformance(DRILL_CONFORMANCE)
       .withUnquotedCasing(Casing.UNCHANGED)
       .withQuotedCasing(Casing.UNCHANGED);
-    // CALCITE-6427 workaround: Increase IN threshold to avoid Sarg-based joins for moderate-sized IN lists
-    // Calcite 1.38 has bugs with ANY types in Sargs that cause infinite loops
-    // Use OR expansion (via convertInToOr) instead of Sarg joins for lists up to 100 values
-    long inThreshold = settings.getInSubqueryThreshold();
-    if (inThreshold < 100) {
-      logger.warn("Increasing IN subquery threshold from {} to 100 to work around CALCITE-6427. " +
-          "Queries with IN lists larger than 100 values may experience performance degradation.", inThreshold);
-      inThreshold = 100;  // Increase from default 20 to avoid CALCITE-6427 issues
-    }
     this.sqlToRelConverterConfig = SqlToRelConverter.config()
-        .withInSubQueryThreshold((int) inThreshold)
+        .withInSubQueryThreshold((int) settings.getInSubqueryThreshold())
         .withRemoveSortInSubQuery(false)
         .withRelBuilderConfigTransform(t -> t
           .withSimplify(false)
