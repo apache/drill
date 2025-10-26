@@ -21,6 +21,7 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import org.apache.calcite.rex.RexWindowBound;
+import org.apache.calcite.rex.RexWindowExclusion;
 import org.apache.drill.common.logical.data.NamedExpression;
 import org.apache.drill.common.logical.data.Order;
 import org.apache.drill.exec.physical.base.AbstractSingle;
@@ -40,6 +41,7 @@ public class WindowPOP extends AbstractSingle {
   private final boolean frameUnitsRows;
   private final Bound start;
   private final Bound end;
+  private final Exclusion exclude;
 
   public WindowPOP(@JsonProperty("child") PhysicalOperator child,
                    @JsonProperty("within") List<NamedExpression> withins,
@@ -47,7 +49,8 @@ public class WindowPOP extends AbstractSingle {
                    @JsonProperty("orderings") List<Order.Ordering> orderings,
                    @JsonProperty("frameUnitsRows") boolean frameUnitsRows,
                    @JsonProperty("start") Bound start,
-                   @JsonProperty("end") Bound end) {
+                   @JsonProperty("end") Bound end,
+                   @JsonProperty("exclude") Exclusion exclude) {
     super(child);
     this.withins = withins;
     this.aggregations = aggregations;
@@ -55,11 +58,12 @@ public class WindowPOP extends AbstractSingle {
     this.frameUnitsRows = frameUnitsRows;
     this.start = start;
     this.end = end;
+    this.exclude = exclude != null ? exclude : Exclusion.EXCLUDE_NO_OTHER;
   }
 
   @Override
   protected PhysicalOperator getNewWithChild(PhysicalOperator child) {
-    return new WindowPOP(child, withins, aggregations, orderings, frameUnitsRows, start, end);
+    return new WindowPOP(child, withins, aggregations, orderings, frameUnitsRows, start, end, exclude);
   }
 
   @Override
@@ -96,6 +100,10 @@ public class WindowPOP extends AbstractSingle {
     return frameUnitsRows;
   }
 
+  public Exclusion getExclude() {
+    return exclude;
+  }
+
   @Override
   public String toString() {
     return "WindowPOP[withins=" + withins
@@ -104,6 +112,7 @@ public class WindowPOP extends AbstractSingle {
         + ", frameUnitsRows=" + frameUnitsRows
         + ", start=" + start
         + ", end=" + end
+        + ", exclude=" + exclude
         + "]";
   }
 
@@ -138,5 +147,38 @@ public class WindowPOP extends AbstractSingle {
 
   public static Bound newBound(RexWindowBound windowBound) {
     return new Bound(windowBound.isUnbounded(), windowBound.isCurrentRow() ? 0 : Long.MIN_VALUE); //TODO: Get offset to work
+  }
+
+  /**
+   * Window frame exclusion mode. Corresponds to Calcite's RexWindowExclusion.
+   * Determines which rows to exclude from the window frame during aggregation.
+   */
+  public enum Exclusion {
+    /** Do not exclude any rows from the frame (default behavior) */
+    EXCLUDE_NO_OTHER,
+    /** Exclude the current row from the frame */
+    EXCLUDE_CURRENT_ROW,
+    /** Exclude the current row and its ordering peers from the frame */
+    EXCLUDE_GROUP,
+    /** Exclude all ordering peers of the current row, but not the current row itself */
+    EXCLUDE_TIES;
+
+    public static Exclusion fromCalciteExclusion(RexWindowExclusion calciteExclusion) {
+      if (calciteExclusion == null) {
+        return EXCLUDE_NO_OTHER;
+      }
+      switch (calciteExclusion) {
+        case EXCLUDE_NO_OTHER:
+          return EXCLUDE_NO_OTHER;
+        case EXCLUDE_CURRENT_ROW:
+          return EXCLUDE_CURRENT_ROW;
+        case EXCLUDE_GROUP:
+          return EXCLUDE_GROUP;
+        case EXCLUDE_TIES:
+          return EXCLUDE_TIES;
+        default:
+          return EXCLUDE_NO_OTHER;
+      }
+    }
   }
 }

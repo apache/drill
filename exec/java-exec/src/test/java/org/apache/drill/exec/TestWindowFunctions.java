@@ -1175,4 +1175,138 @@ public class TestWindowFunctions extends ClusterTest {
     new RowSetComparison(expected).verifyAndClearAll(results);
 
   }
+
+  // Tests for EXCLUDE clause (Calcite 1.38 feature)
+
+  @Test
+  public void testSimpleUnbounded() throws Exception {
+    // Test like testWindowFrameEquivalentToDefault - partition by same column as aggregation
+    final String query = "SELECT " +
+        "SUM(position_id) OVER(PARTITION BY position_id " +
+        "ROWS BETWEEN UNBOUNDED PRECEDING AND UNBOUNDED FOLLOWING) AS sum_all " +
+        "FROM cp.`employee.json` WHERE position_id = 2";
+
+    testBuilder()
+        .sqlQuery(query)
+        .unOrdered()
+        .baselineColumns("sum_all")
+        .baselineValues(12L) // 6 rows * 2
+        .baselineValues(12L)
+        .baselineValues(12L)
+        .baselineValues(12L)
+        .baselineValues(12L)
+        .baselineValues(12L)
+        .build()
+        .run();
+  }
+
+  @Test
+  public void testExcludeNoOthers() throws Exception {
+    // EXCLUDE NO OTHERS is the default - should include all rows in frame
+    final String query = "SELECT " +
+        "SUM(n_nationkey) OVER(PARTITION BY n_nationkey ORDER BY n_nationkey " +
+        "ROWS BETWEEN UNBOUNDED PRECEDING AND UNBOUNDED FOLLOWING EXCLUDE NO OTHERS) AS sum_all " +
+        "FROM cp.`tpch/nation.parquet`";
+
+    testBuilder()
+        .sqlQuery(query)
+        .unOrdered()
+        .baselineColumns("sum_all")
+        .baselineValues(0L)
+        .baselineValues(1L)
+        .baselineValues(2L)
+        .baselineValues(3L)
+        .baselineValues(4L)
+        .baselineValues(5L)
+        .baselineValues(6L)
+        .baselineValues(7L)
+        .baselineValues(8L)
+        .baselineValues(9L)
+        .baselineValues(10L)
+        .baselineValues(11L)
+        .baselineValues(12L)
+        .baselineValues(13L)
+        .baselineValues(14L)
+        .baselineValues(15L)
+        .baselineValues(16L)
+        .baselineValues(17L)
+        .baselineValues(18L)
+        .baselineValues(19L)
+        .baselineValues(20L)
+        .baselineValues(21L)
+        .baselineValues(22L)
+        .baselineValues(23L)
+        .baselineValues(24L)
+        .build()
+        .run();
+  }
+
+  @Test
+  public void testExcludeCurrentRow() throws Exception {
+    // EXCLUDE CURRENT ROW should exclude only the current row from the aggregation
+    // Use region partition (multiple nations per region) to test proper exclusion
+    // For region 0 (5 nations): each nation excludes itself from count
+    final String query = "SELECT " +
+        "COUNT(*) OVER(PARTITION BY n_regionkey ORDER BY n_regionkey " +
+        "RANGE BETWEEN UNBOUNDED PRECEDING AND UNBOUNDED FOLLOWING EXCLUDE CURRENT ROW) AS count_exclude_current " +
+        "FROM cp.`tpch/nation.parquet` WHERE n_regionkey = 0";
+
+    testBuilder()
+        .sqlQuery(query)
+        .unOrdered()
+        .baselineColumns("count_exclude_current")
+        .baselineValues(4L)  // 5 total - 1 (self) = 4
+        .baselineValues(4L)
+        .baselineValues(4L)
+        .baselineValues(4L)
+        .baselineValues(4L)
+        .build()
+        .run();
+  }
+
+  @Test
+  public void testExcludeTies() throws Exception {
+    // EXCLUDE TIES should exclude peer rows but NOT the current row
+    // Use RANGE frame with nation.parquet grouped by region (multiple nations per region are peers)
+    // For region 0 (5 nations): EXCLUDE TIES means each nation sees only itself (count=1)
+    final String query = "SELECT " +
+        "COUNT(*) OVER(PARTITION BY n_regionkey ORDER BY n_regionkey " +
+        "RANGE BETWEEN UNBOUNDED PRECEDING AND UNBOUNDED FOLLOWING EXCLUDE TIES) AS count_self " +
+        "FROM cp.`tpch/nation.parquet` WHERE n_regionkey = 0";
+
+    testBuilder()
+        .sqlQuery(query)
+        .unOrdered()
+        .baselineColumns("count_self")
+        .baselineValues(1L)  // Each row excludes 4 peers, sees only itself
+        .baselineValues(1L)
+        .baselineValues(1L)
+        .baselineValues(1L)
+        .baselineValues(1L)
+        .build()
+        .run();
+  }
+
+  @Test
+  public void testExcludeGroup() throws Exception {
+    // EXCLUDE GROUP should exclude current row AND all peer rows
+    // For region 0 (5 nations): EXCLUDE GROUP means each nation sees nothing (count=0)
+    final String query = "SELECT " +
+        "COUNT(*) OVER(PARTITION BY n_regionkey ORDER BY n_regionkey " +
+        "RANGE BETWEEN UNBOUNDED PRECEDING AND UNBOUNDED FOLLOWING EXCLUDE GROUP) AS count_exclude_group " +
+        "FROM cp.`tpch/nation.parquet` WHERE n_regionkey = 0";
+
+    testBuilder()
+        .sqlQuery(query)
+        .unOrdered()
+        .baselineColumns("count_exclude_group")
+        .baselineValues(0L)  // Each row excludes self and all 4 peers = 0
+        .baselineValues(0L)
+        .baselineValues(0L)
+        .baselineValues(0L)
+        .baselineValues(0L)
+        .build()
+        .run();
+  }
+
 }
