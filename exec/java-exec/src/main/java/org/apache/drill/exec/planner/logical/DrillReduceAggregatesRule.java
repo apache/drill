@@ -37,7 +37,6 @@ import org.apache.calcite.rel.type.RelDataTypeField;
 import org.apache.calcite.rex.RexBuilder;
 import org.apache.calcite.rex.RexLiteral;
 import org.apache.calcite.rex.RexNode;
-import org.apache.calcite.rex.RexWindowExclusion;
 import org.apache.calcite.sql.SqlAggFunction;
 import org.apache.calcite.sql.SqlKind;
 import org.apache.calcite.sql.SqlOperator;
@@ -317,40 +316,41 @@ public class DrillReduceAggregatesRule extends RelOptRule {
                 oldCall.getArgList().get(0))));
       }
 
+      // CALCITE-1.38 WORKAROUND: Disable STDDEV/VAR reduction entirely
+      // Calcite 1.38's RexChecker gets into infinite recursion when checking the deeply
+      // nested expressions created by STDDEV/VAR expansion (SQRT, SUM, COUNT, multiplication, etc).
+      // The recursion happens in RexChecker.visitCall() causing OutOfMemoryError with LIMIT 0.
+      // See: TestEarlyLimit0Optimization.measures() takes 3+ hours and OOMs
+      // TODO: Re-enable STDDEV/VAR reduction when Calcite fixes the RexChecker regression
+      if (subtype == SqlKind.STDDEV_POP || subtype == SqlKind.STDDEV_SAMP ||
+          subtype == SqlKind.VAR_POP || subtype == SqlKind.VAR_SAMP) {
+        // Preserve original STDDEV/VAR aggregate to avoid Calcite 1.38 RexChecker bug
+        return oldAggRel.getCluster().getRexBuilder().addAggCall(
+            oldCall,
+            oldAggRel.getGroupCount(),
+            newCalls,
+            aggCallMapping,
+            ImmutableList.of(getFieldType(
+                oldAggRel.getInput(),
+                oldCall.getArgList().get(0))));
+      }
+
       switch (subtype) {
       case AVG:
         // AVG reduction disabled due to Calcite 1.38 RexSimplify bug (see above)
         throw new AssertionError("AVG should have been handled above");
       case STDDEV_POP:
-        // replace original STDDEV_POP(x) with
-        //   SQRT(
-        //     (SUM(x * x) - SUM(x) * SUM(x) / COUNT(x))
-        //     / COUNT(x))
-        return reduceStddev(
-            oldAggRel, oldCall, true, true, newCalls, aggCallMapping,
-            inputExprs);
+        // STDDEV_POP reduction disabled due to Calcite 1.38 RexChecker bug (see above)
+        throw new AssertionError("STDDEV_POP should have been handled above");
       case STDDEV_SAMP:
-        // replace original STDDEV_SAMP(x) with
-        //   SQRT(
-        //     (SUM(x * x) - SUM(x) * SUM(x) / COUNT(x))
-        //     / CASE COUNT(x) WHEN 1 THEN NULL ELSE COUNT(x) - 1 END)
-        return reduceStddev(
-            oldAggRel, oldCall, false, true, newCalls, aggCallMapping,
-            inputExprs);
+        // STDDEV_SAMP reduction disabled due to Calcite 1.38 RexChecker bug (see above)
+        throw new AssertionError("STDDEV_SAMP should have been handled above");
       case VAR_POP:
-        // replace original VAR_POP(x) with
-        //     (SUM(x * x) - SUM(x) * SUM(x) / COUNT(x))
-        //     / COUNT(x)
-        return reduceStddev(
-            oldAggRel, oldCall, true, false, newCalls, aggCallMapping,
-            inputExprs);
+        // VAR_POP reduction disabled due to Calcite 1.38 RexChecker bug (see above)
+        throw new AssertionError("VAR_POP should have been handled above");
       case VAR_SAMP:
-        // replace original VAR_SAMP(x) with
-        //     (SUM(x * x) - SUM(x) * SUM(x) / COUNT(x))
-        //     / CASE COUNT(x) WHEN 1 THEN NULL ELSE COUNT(x) - 1 END
-        return reduceStddev(
-            oldAggRel, oldCall, false, false, newCalls, aggCallMapping,
-            inputExprs);
+        // VAR_SAMP reduction disabled due to Calcite 1.38 RexChecker bug (see above)
+        throw new AssertionError("VAR_SAMP should have been handled above");
       default:
         throw Util.unexpected(subtype);
       }
@@ -959,7 +959,7 @@ public class DrillReduceAggregatesRule extends RelOptRule {
             group.isRows,
             group.lowerBound,
             group.upperBound,
-            RexWindowExclusion.EXCLUDE_NO_OTHER,  // Default: no exclusion (Calcite 1.38+)
+            group.exclude,  // Preserve exclude clause from Calcite (CALCITE-5855)
             group.orderKeys,
             aggCalls);
         builder.add(newGroup);
