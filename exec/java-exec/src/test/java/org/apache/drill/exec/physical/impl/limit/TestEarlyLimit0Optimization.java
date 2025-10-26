@@ -557,7 +557,9 @@ public class TestEarlyLimit0Optimization extends BaseTestQuery {
 
   @Test
   public void concatOp() throws Exception {
-    concatTest("SELECT full_name || education_level AS c FROM " + viewName, 85, true);
+    // Calcite 1.38 changed VARCHAR precision inference for || operator
+    // VARCHAR(25) || VARCHAR(60) now produces VARCHAR(120) instead of VARCHAR(85)
+    concatTest("SELECT full_name || education_level AS c FROM " + viewName, 120, true);
   }
 
   @Test
@@ -604,7 +606,8 @@ public class TestEarlyLimit0Optimization extends BaseTestQuery {
     @SuppressWarnings("unchecked")
     final List<Pair<SchemaPath, TypeProtos.MajorType>> expectedSchema = Lists.newArrayList(
         Pair.of(SchemaPath.getSimplePath("b"), Types.required(TypeProtos.MinorType.BIT)),
-        Pair.of(SchemaPath.getSimplePath("c"), Types.withPrecision(TypeProtos.MinorType.VARCHAR, TypeProtos.DataMode.OPTIONAL, 85)),
+        // Calcite 1.38 changed VARCHAR precision inference for || operator from 85 to 120
+        Pair.of(SchemaPath.getSimplePath("c"), Types.withPrecision(TypeProtos.MinorType.VARCHAR, TypeProtos.DataMode.OPTIONAL, 120)),
         Pair.of(SchemaPath.getSimplePath("d"), Types.optional(TypeProtos.MinorType.INT)),
         Pair.of(SchemaPath.getSimplePath("e"), Types.optional(TypeProtos.MinorType.BIT)),
         Pair.of(SchemaPath.getSimplePath("g"), Types.optional(TypeProtos.MinorType.BIT)),

@@ -2699,6 +2699,7 @@ SqlWindow WindowSpecification() :
     final SqlNode lowerBound, upperBound;
     final Span s, s1, s2;
     final SqlLiteral allowPartial;
+    final SqlLiteral exclude;
 }
 {
     <LPAREN> { s = span(); }
@@ -2736,6 +2737,27 @@ SqlWindow WindowSpecification() :
         }
     )
     (
+        <EXCLUDE> { final Span s3 = span(); }
+        (
+            <CURRENT> <ROW> {
+                exclude = SqlWindow.createExcludeCurrentRow(s3.end(this));
+            }
+        |
+            <GROUP> {
+                exclude = SqlWindow.createExcludeGroup(s3.end(this));
+            }
+        |
+            <TIES> {
+                exclude = SqlWindow.createExcludeTies(s3.end(this));
+            }
+        |
+            <NO> <OTHERS> {
+                exclude = SqlWindow.createExcludeNoOthers(s3.end(this));
+            }
+        )
+    |   { exclude = SqlWindow.createExcludeNoOthers(s.pos()); }
+    )
+    (
         <ALLOW> { s2 = span(); } <PARTIAL> {
             allowPartial = SqlLiteral.createBoolean(true, s2.end(this));
         }
@@ -2748,7 +2770,7 @@ SqlWindow WindowSpecification() :
     <RPAREN>
     {
         return SqlWindow.create(null, id, partitionList, orderList,
-            isRows, lowerBound, upperBound, allowPartial, s.end(this));
+            isRows, lowerBound, upperBound, allowPartial, exclude, s.end(this));
     }
 }
 

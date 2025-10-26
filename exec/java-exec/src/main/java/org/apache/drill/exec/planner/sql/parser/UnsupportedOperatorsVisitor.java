@@ -188,10 +188,11 @@ public class UnsupportedOperatorsVisitor extends SqlShuttle {
       }
 
       // ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW
-      // is supported with and without the ORDER BY clause
+      // ROWS BETWEEN UNBOUNDED PRECEDING AND UNBOUNDED FOLLOWING
+      // are supported with and without the ORDER BY clause
       if (window.isRows()
           && SqlWindow.isUnboundedPreceding(lowerBound)
-          && (upperBound == null || SqlWindow.isCurrentRow(upperBound))) {
+          && (upperBound == null || SqlWindow.isCurrentRow(upperBound) || SqlWindow.isUnboundedFollowing(upperBound))) {
         isSupported = true;
       }
 
@@ -218,6 +219,9 @@ public class UnsupportedOperatorsVisitor extends SqlShuttle {
             "See Apache Drill JIRA: DRILL-3188");
         throw new UnsupportedOperationException();
       }
+
+      // Check EXCLUDE clause support - for now, all EXCLUDE modes are supported with supported frame types
+      // EXCLUDE functionality is implemented in FrameSupportTemplate.shouldExcludeRow()
 
       // DRILL-3189: Disable DISALLOW PARTIAL
       if (!window.isAllowPartial()) {
