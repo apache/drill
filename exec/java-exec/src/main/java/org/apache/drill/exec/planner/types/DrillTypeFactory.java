@@ -21,16 +21,21 @@ import org.apache.calcite.jdbc.JavaTypeFactoryImpl;
 import org.apache.calcite.rel.type.RelDataType;
 import org.apache.calcite.rel.type.RelDataTypeSystem;
 import org.apache.calcite.sql.type.SqlTypeName;
+import org.apache.drill.common.exceptions.UserException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * Drill's type factory that wraps Calcite's JavaTypeFactoryImpl and fixes
- * invalid DECIMAL types created by Calcite 1.38's CALCITE-6427 regression.
+ * Drill's type factory that wraps Calcite's JavaTypeFactoryImpl and validates
+ * DECIMAL types to ensure they have valid precision and scale specifications.
  *
- * This factory ensures that all DECIMAL types have valid precision and scale
- * where scale <= precision and precision >= 1, preventing IllegalArgumentException
- * in RexLiteral constructor.
+ * This factory enforces Drill's DECIMAL constraints:
+ * - Precision must be >= 1
+ * - Scale must be <= precision
+ * - Maximum precision is 38
+ *
+ * Invalid specifications are rejected with validation errors as expected by
+ * Drill's SQL semantics and test suite.
  */
 public class DrillTypeFactory extends JavaTypeFactoryImpl {
 
@@ -58,39 +63,40 @@ public class DrillTypeFactory extends JavaTypeFactoryImpl {
   }
 
   /**
-   * Override createSqlType to fix invalid DECIMAL types before they're created.
+   * Override createSqlType to validate DECIMAL precision and scale.
    * This is the primary entry point for DECIMAL type creation with both precision and scale.
+   *
+   * Calcite 1.38 allows creation of invalid DECIMAL types in some intermediate operations,
+   * but we need to reject obviously invalid user-specified types.
    */
   @Override
   public RelDataType createSqlType(SqlTypeName typeName, int precision, int scale) {
-    // System.out.println("DrillTypeFactory.createSqlType(typeName=" + typeName + ", precision=" + precision + ", scale=" + scale + ")");
-
-    // Fix invalid DECIMAL types before creating them
+    // Validate DECIMAL precision and scale
     if (typeName == SqlTypeName.DECIMAL) {
-      // Validate and fix precision/scale
-      if (scale > precision || precision < 1) {
-        int originalPrecision = precision;
-        int originalScale = scale;
+      // Reject precision < 1
+      if (precision < 1) {
+        throw UserException.validationError()
+            .message("Expected precision greater than 0, but was %s.", precision)
+            .build(logger);
+      }
 
-        // Ensure precision is at least as large as scale
-        precision = Math.max(precision, scale);
+      // Reject scale > precision
+      if (scale > precision) {
+        throw UserException.validationError()
+            .message("Expected scale less than or equal to precision, " +
+                "but was precision %s and scale %s.", precision, scale)
+            .build(logger);
+      }
 
-        // Cap precision at Drill's maximum
-        precision = Math.min(precision, DRILL_MAX_NUMERIC_PRECISION);
-
-        // Ensure scale doesn't exceed the corrected precision
-        scale = Math.min(scale, precision);
-
-        // Ensure precision is at least 1
-        precision = Math.max(precision, 1);
-
-        // System.out.println("DrillTypeFactory: FIXED invalid DECIMAL type: " +
-        //     "precision=" + originalPrecision + " scale=" + originalScale +
-        //     " -> precision=" + precision + " scale=" + scale);
-
-        logger.warn("DrillTypeFactory: Fixed invalid DECIMAL type: " +
-            "precision={} scale={} -> precision={} scale={}",
-            originalPrecision, originalScale, precision, scale);
+      // Cap at Drill's maximum precision
+      if (precision > DRILL_MAX_NUMERIC_PRECISION) {
+        logger.warn("DECIMAL precision {} exceeds Drill maximum {}, capping to maximum",
+            precision, DRILL_MAX_NUMERIC_PRECISION);
+        precision = DRILL_MAX_NUMERIC_PRECISION;
+        // Also cap scale if needed
+        if (scale > precision) {
+          scale = precision;
+        }
       }
     }
 
@@ -98,21 +104,11 @@ public class DrillTypeFactory extends JavaTypeFactoryImpl {
   }
 
   /**
-   * Override createTypeWithNullability to intercept all type creation.
+   * Override createTypeWithNullability to pass through without modifications.
+   * Validation happens in createSqlType().
    */
   @Override
   public RelDataType createTypeWithNullability(RelDataType type, boolean nullable) {
-    // Check if the type being wrapped is an invalid DECIMAL
-    if (type.getSqlTypeName() == SqlTypeName.DECIMAL) {
-      int precision = type.getPrecision();
-      int scale = type.getScale();
-      if (scale > precision || precision < 1) {
-        // System.out.println("DrillTypeFactory.createTypeWithNullability: Found invalid DECIMAL type: " +
-        //     "precision=" + precision + " scale=" + scale + ", recreating with fix");
-        // Recreate the type with fixed precision/scale
-        type = createSqlType(SqlTypeName.DECIMAL, precision, scale);
-      }
-    }
     return super.createTypeWithNullability(type, nullable);
   }
 }
