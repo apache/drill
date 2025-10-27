@@ -40,11 +40,21 @@ public class DrillRelDataTypeSystem extends RelDataTypeSystemImpl {
       case TIME:
         return Types.DEFAULT_TIMESTAMP_PRECISION;
       case DECIMAL:
-        // Calcite 1.38 changed default from 38 to 19, but Drill uses 38
+        // Calcite 1.38 changed default from 19 to variable, but Drill uses 38
         return 38;
       default:
         return super.getDefaultPrecision(typeName);
     }
+  }
+
+  @Override
+  public int getDefaultScale(SqlTypeName typeName) {
+    // Calcite 1.38 may compute negative default scales in some cases.
+    // Drill requires non-negative scales, so we enforce scale 0 as default for DECIMAL.
+    if (typeName == SqlTypeName.DECIMAL) {
+      return 0;
+    }
+    return super.getDefaultScale(typeName);
   }
 
   @Override

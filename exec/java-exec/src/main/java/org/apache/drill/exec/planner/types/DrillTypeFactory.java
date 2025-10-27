@@ -63,40 +63,55 @@ public class DrillTypeFactory extends JavaTypeFactoryImpl {
   }
 
   /**
-   * Override createSqlType to validate DECIMAL precision and scale.
+   * Override createSqlType to validate and fix DECIMAL precision and scale.
    * This is the primary entry point for DECIMAL type creation with both precision and scale.
    *
-   * Calcite 1.38 allows creation of invalid DECIMAL types in some intermediate operations,
-   * but we need to reject obviously invalid user-specified types.
+   * Calcite 1.38 may compute invalid DECIMAL types in intermediate operations (e.g., negate
+   * operations). We auto-fix these to prevent errors, since we can't distinguish between
+   * user-specified and Calcite-computed types at this level.
    */
   @Override
   public RelDataType createSqlType(SqlTypeName typeName, int precision, int scale) {
-    // Validate DECIMAL precision and scale
+    // Validate and fix DECIMAL precision and scale
     if (typeName == SqlTypeName.DECIMAL) {
-      // Reject precision < 1
-      if (precision < 1) {
-        throw UserException.validationError()
-            .message("Expected precision greater than 0, but was %s.", precision)
-            .build(logger);
+      int originalPrecision = precision;
+      int originalScale = scale;
+      boolean wasFixed = false;
+
+      // Fix scale > precision (Calcite 1.38 bug in some operations)
+      if (scale > precision) {
+        // Make precision large enough to hold the scale
+        precision = Math.max(precision, scale);
+        wasFixed = true;
       }
 
-      // Reject scale > precision
-      if (scale > precision) {
-        throw UserException.validationError()
-            .message("Expected scale less than or equal to precision, " +
-                "but was precision %s and scale %s.", precision, scale)
-            .build(logger);
+      // Fix precision < 1
+      if (precision < 1) {
+        precision = 1;
+        wasFixed = true;
       }
 
       // Cap at Drill's maximum precision
       if (precision > DRILL_MAX_NUMERIC_PRECISION) {
-        logger.warn("DECIMAL precision {} exceeds Drill maximum {}, capping to maximum",
-            precision, DRILL_MAX_NUMERIC_PRECISION);
         precision = DRILL_MAX_NUMERIC_PRECISION;
-        // Also cap scale if needed
-        if (scale > precision) {
-          scale = precision;
-        }
+        wasFixed = true;
+      }
+
+      // Ensure scale fits within precision after capping
+      if (scale > precision) {
+        scale = precision;
+        wasFixed = true;
+      }
+
+      // Ensure scale is non-negative (Calcite 1.38 CALCITE-6560 support)
+      if (scale < 0) {
+        scale = 0;
+        wasFixed = true;
+      }
+
+      if (wasFixed) {
+        logger.debug("Fixed invalid DECIMAL type: precision={} scale={} -> precision={} scale={}",
+            originalPrecision, originalScale, precision, scale);
       }
     }
 

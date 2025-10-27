@@ -161,7 +161,7 @@ public class TestDecimal extends PopUnitTestBase {
             // Multiplication results now include decimal scale in string representation.
             String addOutput[] = {"123456888.0", "22.2", "0.2", "-0.2", "-987654444.2","-3.0"};
             String subtractOutput[] = {"123456690.0", "0.0", "0.0", "0.0", "-987654198.0", "-1.0"};
-            String multiplyOutput[] = {"12222222111.00", "123.00", "0.00", "0.00",  "121580246927.00", "2.00"};
+            String multiplyOutput[] = {"12222222111.00", "123.21", "0.01", "0.01",  "121580246926.01", "2.03"};
 
             Iterator<VectorWrapper<?>> itr = batchLoader.iterator();
 
@@ -212,8 +212,8 @@ public class TestDecimal extends PopUnitTestBase {
 
             // NOTE: Calcite 1.38 changed DECIMAL arithmetic behavior affecting precision and scale in results.
             // Results may now include more decimal places in string representation.
-            String addOutput[] = {"-99999998877.700000000", "11", "123456789", "0", "100000000112", "-99999999880", "123456789123456801"};
-            String subtractOutput[] = {"-100000001124", "11", "-123456789", "0", "99999999890", "-100000000122", "123456789123456777"};
+            String addOutput[] = {"-99999998877.700000000", "11.423456789", "123456789.100000000", "-0.119998000", "100000000112.423456789", "-99999999879.907000000", "123456789123456801.300000000"};
+            String subtractOutput[] = {"-100000001124.300000000", "10.823456789", "-123456788.899999999", "-0.120002000", "99999999889.823456789", "-100000000122.093000000", "123456789123456776.700000000"};
 
             Iterator<VectorWrapper<?>> itr = batchLoader.iterator();
 
