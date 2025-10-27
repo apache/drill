@@ -17,6 +17,7 @@
  */
 package org.apache.drill.exec.planner.types.decimal;
 
+import org.apache.calcite.sql.type.SqlTypeName;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -25,7 +26,8 @@ import static org.apache.drill.exec.planner.types.DrillRelDataTypeSystem.DRILL_R
 public abstract class DrillBaseComputeScalePrecision {
   private static final Logger logger = LoggerFactory.getLogger(DrillBaseComputeScalePrecision.class);
 
-  protected final static int MAX_NUMERIC_PRECISION = DRILL_REL_DATATYPE_SYSTEM.getMaxNumericPrecision();
+  // Use getMaxPrecision(DECIMAL) instead of deprecated getMaxNumericPrecision()
+  protected final static int MAX_NUMERIC_PRECISION = DRILL_REL_DATATYPE_SYSTEM.getMaxPrecision(SqlTypeName.DECIMAL);
 
   protected int outputScale = 0;
   protected int outputPrecision = 0;
