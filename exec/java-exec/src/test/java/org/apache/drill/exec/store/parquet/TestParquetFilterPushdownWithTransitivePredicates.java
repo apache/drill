@@ -30,6 +30,17 @@ import java.nio.file.Paths;
 
 import static org.junit.Assert.assertEquals;
 
+/**
+ * Tests for transitive predicate pushdown optimization in Parquet scans.
+ *
+ * DISABLED: These tests are temporarily disabled due to CALCITE-6432, an infinite loop
+ * bug in Calcite 1.38's JoinPushTransitivePredicatesRule. The rule has been disabled in
+ * PlannerPhase.getJoinTransitiveClosureRules() to prevent hangs. These tests can be
+ * re-enabled when Drill upgrades to Calcite 1.40+ where the bug is fixed.
+ *
+ * See: https://issues.apache.org/jira/browse/CALCITE-6432
+ */
+@Ignore("Disabled due to CALCITE-6432 - transitive predicate pushdown rule causes infinite loops in Calcite 1.38")
 @Category({ParquetTest.class, SlowTest.class})
 public class TestParquetFilterPushdownWithTransitivePredicates extends PlanTestBase {
 

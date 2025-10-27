@@ -56,6 +56,16 @@ public class DrillRelDataTypeSystem extends RelDataTypeSystemImpl {
   }
 
   @Override
+  public int getMinScale(SqlTypeName typeName) {
+    // Calcite 1.38 (CALCITE-6560) added support for negative scales,
+    // but Drill does not support them. Override to enforce min scale of 0.
+    if (typeName == SqlTypeName.DECIMAL) {
+      return 0;
+    }
+    return super.getMinScale(typeName);
+  }
+
+  @Override
   public int getMaxPrecision(SqlTypeName typeName) {
     if (typeName == SqlTypeName.DECIMAL) {
       return 38;
