@@ -655,7 +655,9 @@ public enum PlannerPhase {
   static RuleSet getJoinTransitiveClosureRules() {
     return RuleSets.ofList(ImmutableSet.<RelOptRule> builder()
         .add(
-            RuleInstance.DRILL_JOIN_PUSH_TRANSITIVE_PREDICATES_RULE,  // Re-enabled tentatively - testing for CALCITE-6432
+            // CALCITE-6432: Disabled due to infinite loop bug in Calcite 1.38 with large IN clauses/semi-joins
+            // Re-enable when upgrading to Calcite 1.40+
+            // RuleInstance.DRILL_JOIN_PUSH_TRANSITIVE_PREDICATES_RULE,
             DrillFilterJoinRules.DRILL_FILTER_INTO_JOIN,
             RuleInstance.REMOVE_IS_NOT_DISTINCT_FROM_RULE,
             DrillFilterAggregateTransposeRule.DRILL_LOGICAL_INSTANCE,
