@@ -487,7 +487,7 @@ public class TypeInferenceUtils {
         case VARDECIMAL:
           RelDataType sqlType = factory.createSqlType(
             SqlTypeName.DECIMAL,
-            DrillRelDataTypeSystem.DRILL_REL_DATATYPE_SYSTEM.getMaxNumericPrecision(),
+            DrillRelDataTypeSystem.DRILL_REL_DATATYPE_SYSTEM.getMaxPrecision(SqlTypeName.DECIMAL),
             Math.min(
               operandType.getScale(),
               DrillRelDataTypeSystem.DRILL_REL_DATATYPE_SYSTEM.getMaxNumericScale()
@@ -898,7 +898,7 @@ public class TypeInferenceUtils {
           // For Calcite 1.38+ compatibility: Variance/stddev functions use double precision/scale
           // internally (CALCITE-6427), which can exceed Drill's DECIMAL(38,38) limit.
           // We need to ensure scale doesn't exceed precision.
-          int maxPrecision = DrillRelDataTypeSystem.DRILL_REL_DATATYPE_SYSTEM.getMaxNumericPrecision();
+          int maxPrecision = DrillRelDataTypeSystem.DRILL_REL_DATATYPE_SYSTEM.getMaxPrecision(SqlTypeName.DECIMAL);
           int maxScale = DrillRelDataTypeSystem.DRILL_REL_DATATYPE_SYSTEM.getMaxNumericScale();
           int desiredScale = Math.max(6, operandType.getScale());
 
