@@ -28,6 +28,7 @@ import org.apache.drill.exec.planner.physical.PlannerSettings;
 import org.apache.drill.test.ClusterFixture;
 import org.apache.drill.test.ClusterTest;
 import org.junit.BeforeClass;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
@@ -420,6 +421,9 @@ public class TestPartitionFilter extends ClusterTest {
   }
 
   @Test //DRILL-3710 Partition pruning should occur with varying IN-LIST size
+  @Ignore("CALCITE-6432: Disabled in Calcite 1.38 - JoinPushTransitivePredicatesRule causes infinite loop. " +
+          "Queries still produce correct results but scan more files than optimal. " +
+          "Re-enable when upgrading to Calcite 1.40+. See docs/dev/calcite_upgrades/")
   public void testPartitionFilterWithInSubquery() throws Exception {
     String query = "select * from dfs.`multilevel/parquet` where cast (dir0 as int) IN (1994, 1994, 1994, 1994, 1994, 1994)";
     try {
@@ -482,6 +486,9 @@ public class TestPartitionFilter extends ClusterTest {
   }
 
   @Test // DRILL-6173
+  @Ignore("CALCITE-6432: Disabled in Calcite 1.38 - JoinPushTransitivePredicatesRule causes infinite loop. " +
+          "Queries still produce correct results but scan more files than optimal. " +
+          "Re-enable when upgrading to Calcite 1.40+. See docs/dev/calcite_upgrades/")
   public void testDirPruningTransitivePredicates() throws Exception {
     final String query = "select * from dfs.`multilevel/parquet` t1 join dfs.`multilevel/parquet2` t2 on " +
         " t1.dir0 = t2.dir0 where t1.dir0 = '1994' and t1.dir1 = 'Q1'";
