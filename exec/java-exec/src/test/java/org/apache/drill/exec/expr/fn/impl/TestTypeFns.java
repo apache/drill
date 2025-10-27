@@ -113,9 +113,10 @@ public class TestTypeFns extends ClusterTest {
 
       // These should include precision and scale: DECIMAL(p, s)
       // But, see DRILL-6378
-      // Calcite 1.38 changed default DECIMAL precision from 38 to 19
+      // Calcite 1.38 changed default DECIMAL precision to 19, but Drill
+      // overrides it back to 38 in DrillRelDataTypeSystem
 
-      doSqlTypeOfTestSpecial("CAST(a AS DECIMAL)", "1", "DECIMAL(19, 0)");
+      doSqlTypeOfTestSpecial("CAST(a AS DECIMAL)", "1", "DECIMAL(38, 0)");
       doSqlTypeOfTestSpecial("CAST(a AS DECIMAL(6, 3))", "1", "DECIMAL(6, 3)");
     } finally {
       client.resetSession(PlannerSettings.ENABLE_DECIMAL_DATA_TYPE_KEY);

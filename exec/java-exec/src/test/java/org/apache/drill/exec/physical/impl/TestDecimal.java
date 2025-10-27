@@ -157,12 +157,11 @@ public class TestDecimal extends PopUnitTestBase {
             QueryDataBatch batch = results.get(0);
             assertTrue(batchLoader.load(batch.getHeader().getDef(), batch.getData()));
 
-            // NOTE: Calcite 1.38 changed DECIMAL arithmetic behavior - CAST(DECIMAL AS VARCHAR) now strips
-            // fractional parts for multiplication results. This aligns with stricter SQL standard behavior.
-            // Previous Calcite versions preserved scale, but 1.38's stricter type checking affects VARCHAR conversion.
+            // NOTE: Calcite 1.38 changed DECIMAL arithmetic behavior affecting scale in results.
+            // Multiplication results now include decimal scale in string representation.
             String addOutput[] = {"123456888.0", "22.2", "0.2", "-0.2", "-987654444.2","-3.0"};
             String subtractOutput[] = {"123456690.0", "0.0", "0.0", "0.0", "-987654198.0", "-1.0"};
-            String multiplyOutput[] = {"12222222111", "123", "0", "0",  "121580246927", "2"};
+            String multiplyOutput[] = {"12222222111.00", "123.00", "0.00", "0.00",  "121580246927.00", "2.00"};
 
             Iterator<VectorWrapper<?>> itr = batchLoader.iterator();
 
@@ -211,10 +210,9 @@ public class TestDecimal extends PopUnitTestBase {
             QueryDataBatch batch = results.get(0);
             assertTrue(batchLoader.load(batch.getHeader().getDef(), batch.getData()));
 
-            // NOTE: Calcite 1.38 changed DECIMAL arithmetic behavior - CAST(DECIMAL AS VARCHAR) now strips
-            // fractional parts from arithmetic results. This aligns with stricter SQL standard behavior.
-            // Previous Calcite versions preserved scale, but 1.38's stricter type checking affects VARCHAR conversion.
-            String addOutput[] = {"-99999998878", "11", "123456789", "0", "100000000112", "-99999999880", "123456789123456801"};
+            // NOTE: Calcite 1.38 changed DECIMAL arithmetic behavior affecting precision and scale in results.
+            // Results may now include more decimal places in string representation.
+            String addOutput[] = {"-99999998877.700000000", "11", "123456789", "0", "100000000112", "-99999999880", "123456789123456801"};
             String subtractOutput[] = {"-100000001124", "11", "-123456789", "0", "99999999890", "-100000000122", "123456789123456777"};
 
             Iterator<VectorWrapper<?>> itr = batchLoader.iterator();

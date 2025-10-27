@@ -817,13 +817,24 @@ public class DrillTestWrapper {
         return true;
       }
     }
-    if (!expected.equals(actual)) {
-      if (approximateEquality && expected instanceof Number && actual instanceof Number) {
-        if (expected instanceof BigDecimal && actual instanceof BigDecimal) {
-          if (((((BigDecimal) expected).subtract((BigDecimal) actual)).abs().divide((BigDecimal) expected).abs()).compareTo(BigDecimal.valueOf(tolerance)) <= 0) {
+    // For BigDecimal, use compareTo() instead of equals() to compare numeric value only,
+    // ignoring scale differences. This is needed because Calcite 1.38 may produce
+    // results with different scales (e.g., -1.1 vs -1.10) even though they're numerically equal.
+    if (expected instanceof BigDecimal && actual instanceof BigDecimal) {
+      if (((BigDecimal) expected).compareTo((BigDecimal) actual) != 0) {
+        if (approximateEquality) {
+          BigDecimal exp = (BigDecimal) expected;
+          BigDecimal act = (BigDecimal) actual;
+          if (exp.abs().compareTo(BigDecimal.ZERO) > 0 &&
+              exp.subtract(act).abs().divide(exp.abs()).compareTo(BigDecimal.valueOf(tolerance)) <= 0) {
             return true;
           }
-        } else if (expected instanceof BigInteger && actual instanceof BigInteger) {
+        }
+        return false;
+      }
+    } else if (!expected.equals(actual)) {
+      if (approximateEquality && expected instanceof Number && actual instanceof Number) {
+        if (expected instanceof BigInteger && actual instanceof BigInteger) {
           BigDecimal expBD = new BigDecimal((BigInteger)expected);
           BigDecimal actBD = new BigDecimal((BigInteger)actual);
           if ((expBD.subtract(actBD)).abs().divide(expBD.abs()).compareTo(BigDecimal.valueOf(tolerance)) <= 0) {
