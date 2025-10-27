@@ -168,7 +168,7 @@ public class ParquetTypeHelper {
       case INT64:
         return 18;
       case FIXED_LEN_BYTE_ARRAY:
-        return DrillRelDataTypeSystem.DRILL_REL_DATATYPE_SYSTEM.getMaxNumericPrecision();
+        return DrillRelDataTypeSystem.DRILL_REL_DATATYPE_SYSTEM.getMaxPrecision(org.apache.calcite.sql.type.SqlTypeName.DECIMAL);
       default:
         throw new UnsupportedOperationException(String.format(
           "Specified PrimitiveTypeName %s cannot be used to determine max precision",

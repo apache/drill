@@ -39,6 +39,9 @@ public class DrillRelDataTypeSystem extends RelDataTypeSystemImpl {
       case TIMESTAMP:
       case TIME:
         return Types.DEFAULT_TIMESTAMP_PRECISION;
+      case DECIMAL:
+        // Calcite 1.38 changed default from 38 to 19, but Drill uses 38
+        return 38;
       default:
         return super.getDefaultPrecision(typeName);
     }
@@ -212,6 +215,52 @@ public class DrillRelDataTypeSystem extends RelDataTypeSystemImpl {
     }
 
     return covarType;
+  }
+
+  @Override
+  public RelDataType deriveDecimalPlusType(RelDataTypeFactory typeFactory,
+                                            RelDataType type1,
+                                            RelDataType type2) {
+    // For Calcite 1.38 compatibility: Compute our own type instead of calling super
+    // Calcite's super implementation uses its own getMaxPrecision() which returns 19
+    // We need to use Drill's max precision of 38
+
+    if (type1.getSqlTypeName() != SqlTypeName.DECIMAL || type2.getSqlTypeName() != SqlTypeName.DECIMAL) {
+      return null; // Not a DECIMAL operation
+    }
+
+    int p1 = type1.getPrecision();
+    int s1 = type1.getScale();
+    int p2 = type2.getPrecision();
+    int s2 = type2.getScale();
+
+    // Result scale is max of the two scales
+    int scale = Math.max(s1, s2);
+
+    // Calculate integer digits needed (before decimal point)
+    int integerDigits = Math.max(p1 - s1, p2 - s2) + 1; // +1 for potential carry
+
+    // Result precision
+    int precision = integerDigits + scale;
+
+    // Drill's max precision is 38
+    int maxPrecision = 38;
+
+    // If precision exceeds max, we need to reduce scale while preserving integer digits
+    if (precision > maxPrecision) {
+      // Ensure integer digits fit, reduce scale if necessary
+      if (integerDigits >= maxPrecision) {
+        // All available precision goes to integer part
+        precision = maxPrecision;
+        scale = 0;
+      } else {
+        // We have room for some scale
+        precision = maxPrecision;
+        scale = maxPrecision - integerDigits;
+      }
+    }
+
+    return typeFactory.createSqlType(SqlTypeName.DECIMAL, precision, scale);
   }
 
 }
