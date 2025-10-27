@@ -64,6 +64,22 @@ public class DrillRelDataTypeSystem extends RelDataTypeSystemImpl {
   }
 
   @Override
+  @Deprecated
+  public int getMaxNumericPrecision() {
+    // Override deprecated method for compatibility with Calcite internals that still call it
+    // Calcite 1.38 changed this from 38 to 19, but Drill needs 38
+    return 38;
+  }
+
+  @Override
+  @Deprecated
+  public int getMaxNumericScale() {
+    // Override deprecated method for compatibility with Calcite internals that still call it
+    // Drill needs max scale of 38 for DECIMAL
+    return 38;
+  }
+
+  @Override
   public boolean isSchemaCaseSensitive() {
     // Drill uses case-insensitive policy
     return false;
@@ -73,68 +89,79 @@ public class DrillRelDataTypeSystem extends RelDataTypeSystemImpl {
   public RelDataType deriveDecimalMultiplyType(RelDataTypeFactory typeFactory,
                                                 RelDataType type1,
                                                 RelDataType type2) {
-    // For Calcite 1.38 compatibility: ensure multiplication result has valid precision/scale
-    RelDataType multiplyType = super.deriveDecimalMultiplyType(typeFactory, type1, type2);
+    // For Calcite 1.38 compatibility: Compute our own type instead of calling super
+    // Calcite's super implementation uses its own getMaxPrecision() which returns 19
 
-    if (multiplyType == null) {
-      return null; // Not a DECIMAL multiplication (e.g., ANY * ANY)
+    if (type1.getSqlTypeName() != SqlTypeName.DECIMAL || type2.getSqlTypeName() != SqlTypeName.DECIMAL) {
+      return null; // Not a DECIMAL operation
     }
 
-    if (multiplyType.getSqlTypeName() == SqlTypeName.DECIMAL) {
-      int precision = multiplyType.getPrecision();
-      int scale = multiplyType.getScale();
+    int p1 = type1.getPrecision();
+    int s1 = type1.getScale();
+    int p2 = type2.getPrecision();
+    int s2 = type2.getScale();
 
-      // Drill's max precision is 38
-      int maxPrecision = 38;
+    // SQL:2003 standard formula for multiplication
+    int precision = p1 + p2;
+    int scale = s1 + s2;
 
-      // First, cap precision at Drill's maximum
-      if (precision > maxPrecision) {
-        precision = maxPrecision;
-      }
+    // Drill's max precision is 38
+    int maxPrecision = 38;
 
-      // Then ensure scale doesn't exceed the (possibly capped) precision
-      if (scale > precision) {
-        scale = precision;
-      }
-
-      return typeFactory.createSqlType(SqlTypeName.DECIMAL, precision, scale);
+    // Cap precision at maximum
+    if (precision > maxPrecision) {
+      precision = maxPrecision;
     }
 
-    return multiplyType;
+    // Ensure scale doesn't exceed precision
+    if (scale > precision) {
+      scale = precision;
+    }
+
+    return typeFactory.createSqlType(SqlTypeName.DECIMAL, precision, scale);
   }
 
   @Override
   public RelDataType deriveDecimalDivideType(RelDataTypeFactory typeFactory,
                                               RelDataType type1,
                                               RelDataType type2) {
-    // For Calcite 1.38 compatibility: ensure division result has valid precision/scale
-    RelDataType divideType = super.deriveDecimalDivideType(typeFactory, type1, type2);
+    // For Calcite 1.38 compatibility: Compute our own type instead of calling super
+    // Calcite's super implementation uses its own getMaxPrecision() which returns 19
 
-    if (divideType == null) {
-      return null; // Not a DECIMAL division (e.g., ANY / ANY)
+    if (type1.getSqlTypeName() != SqlTypeName.DECIMAL || type2.getSqlTypeName() != SqlTypeName.DECIMAL) {
+      return null; // Not a DECIMAL operation
     }
 
-    if (divideType.getSqlTypeName() == SqlTypeName.DECIMAL) {
-      int precision = divideType.getPrecision();
-      int scale = divideType.getScale();
+    int p1 = type1.getPrecision();
+    int s1 = type1.getScale();
+    int p2 = type2.getPrecision();
+    int s2 = type2.getScale();
 
-      // Drill's max precision is 38
-      int maxPrecision = 38;
+    // SQL:2003 standard formula for division
+    int integerDigits = p1 - s1 + s2;  // Whole digits
+    int scale = Math.max(6, s1 + p2 + 1);  // Scale (minimum 6)
+    int precision = integerDigits + scale;
 
-      // First, cap precision at Drill's maximum
-      if (precision > maxPrecision) {
+    // Drill's max precision is 38
+    int maxPrecision = 38;
+
+    // If precision exceeds max, reduce scale while preserving integer digits
+    if (precision > maxPrecision) {
+      if (integerDigits >= maxPrecision) {
         precision = maxPrecision;
+        scale = 0;
+      } else {
+        precision = maxPrecision;
+        scale = maxPrecision - integerDigits;
       }
-
-      // Then ensure scale doesn't exceed the (possibly capped) precision
-      if (scale > precision) {
-        scale = precision;
-      }
-
-      return typeFactory.createSqlType(SqlTypeName.DECIMAL, precision, scale);
     }
 
-    return divideType;
+    // Ensure scale doesn't exceed precision
+    if (scale > precision) {
+      scale = precision;
+    }
+
+    return typeFactory.createSqlType(SqlTypeName.DECIMAL, precision, scale);
   }
 
   @Override
