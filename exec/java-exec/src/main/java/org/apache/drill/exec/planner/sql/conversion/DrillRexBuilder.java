@@ -144,19 +144,24 @@ class DrillRexBuilder extends RexBuilder {
       return makeAbstractCast(type, exp);
     }
 
-    // for the case when BigDecimal literal has a scale or precision
-    // that differs from the value from specified RelDataType, cast cannot be removed
-    // TODO: remove this code when CALCITE-1468 is fixed
-    if (type.getSqlTypeName() == SqlTypeName.DECIMAL && exp instanceof RexLiteral) {
+    // Validate DECIMAL precision and scale for all DECIMAL casts
+    // This catches user-specified invalid types before DrillTypeFactory auto-fixes them
+    if (type.getSqlTypeName() == SqlTypeName.DECIMAL) {
       int precision = type.getPrecision();
       int scale = type.getScale();
       validatePrecisionAndScale(precision, scale);
-      Comparable<?> value = ((RexLiteral) exp).getValueAs(Comparable.class);
-      if (value instanceof BigDecimal) {
-        BigDecimal bigDecimal = (BigDecimal) value;
-        DecimalUtility.checkValueOverflow(bigDecimal, precision, scale);
-        if (bigDecimal.precision() != precision || bigDecimal.scale() != scale) {
-          return makeAbstractCast(type, exp);
+
+      // for the case when BigDecimal literal has a scale or precision
+      // that differs from the value from specified RelDataType, cast cannot be removed
+      // TODO: remove this code when CALCITE-1468 is fixed
+      if (exp instanceof RexLiteral) {
+        Comparable<?> value = ((RexLiteral) exp).getValueAs(Comparable.class);
+        if (value instanceof BigDecimal) {
+          BigDecimal bigDecimal = (BigDecimal) value;
+          DecimalUtility.checkValueOverflow(bigDecimal, precision, scale);
+          if (bigDecimal.precision() != precision || bigDecimal.scale() != scale) {
+            return makeAbstractCast(type, exp);
+          }
         }
       }
     }
