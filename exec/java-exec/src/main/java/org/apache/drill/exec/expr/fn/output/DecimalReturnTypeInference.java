@@ -336,7 +336,8 @@ public class DecimalReturnTypeInference {
       return TypeProtos.MajorType.newBuilder()
           .setMinorType(TypeProtos.MinorType.VARDECIMAL)
           .setScale(Math.min(Math.max(6, scale),
-              DRILL_REL_DATATYPE_SYSTEM.getMaxNumericScale()))
+              // Use getMaxScale(DECIMAL) instead of deprecated getMaxNumericScale()
+              DRILL_REL_DATATYPE_SYSTEM.getMaxScale(SqlTypeName.DECIMAL)))
           .setPrecision(DRILL_REL_DATATYPE_SYSTEM.getMaxPrecision(SqlTypeName.DECIMAL))
           .setMode(mode)
           .build();

@@ -490,7 +490,8 @@ public class TypeInferenceUtils {
             DrillRelDataTypeSystem.DRILL_REL_DATATYPE_SYSTEM.getMaxPrecision(SqlTypeName.DECIMAL),
             Math.min(
               operandType.getScale(),
-              DrillRelDataTypeSystem.DRILL_REL_DATATYPE_SYSTEM.getMaxNumericScale()
+              // Use getMaxScale(DECIMAL) instead of deprecated getMaxNumericScale()
+              DrillRelDataTypeSystem.DRILL_REL_DATATYPE_SYSTEM.getMaxScale(SqlTypeName.DECIMAL)
             )
           );
           return factory.createTypeWithNullability(sqlType, isNullable);
@@ -899,7 +900,8 @@ public class TypeInferenceUtils {
           // internally (CALCITE-6427), which can exceed Drill's DECIMAL(38,38) limit.
           // We need to ensure scale doesn't exceed precision.
           int maxPrecision = DrillRelDataTypeSystem.DRILL_REL_DATATYPE_SYSTEM.getMaxPrecision(SqlTypeName.DECIMAL);
-          int maxScale = DrillRelDataTypeSystem.DRILL_REL_DATATYPE_SYSTEM.getMaxNumericScale();
+          // Use getMaxScale(DECIMAL) instead of deprecated getMaxNumericScale()
+          int maxScale = DrillRelDataTypeSystem.DRILL_REL_DATATYPE_SYSTEM.getMaxScale(SqlTypeName.DECIMAL);
           int desiredScale = Math.max(6, operandType.getScale());
 
           // Ensure scale doesn't exceed maxPrecision (invalid DECIMAL type)
