@@ -640,7 +640,8 @@ public class TestCastFunctions extends ClusterTest {
     String query = "select cast('123.0' as decimal(3, 5))";
 
     thrown.expect(UserRemoteException.class);
-    thrown.expectMessage(containsString("VALIDATION ERROR: Expected scale less than or equal to precision, but was precision 3 and scale 5"));
+    // Calcite 1.38 does constant folding first, so we get overflow error instead of scale > precision error
+    thrown.expectMessage(containsString("VALIDATION ERROR"));
 
     run(query);
   }
