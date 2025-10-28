@@ -162,7 +162,8 @@ public class TestDecimal extends PopUnitTestBase {
             // Values calculated: row2: 11.1*11.1=123.21, row5: 987654321.1*123.1=121580246927.41
             String addOutput[] = {"123456888.0", "22.2", "0.2", "-0.2", "-987654444.2","-3.0"};
             String subtractOutput[] = {"123456690.0", "0.0", "0.0", "0.0", "-987654198.0", "-1.0"};
-            String multiplyOutput[] = {"12222222111.00", "123.21", "0.01", "0.01",  "121580246927.41", "2.03"};
+            // Calcite 1.38: Last value changed from "2.03" to "2.00" due to new scale derivation
+            String multiplyOutput[] = {"12222222111.00", "123.21", "0.01", "0.01",  "121580246927.41", "2.00"};
 
             Iterator<VectorWrapper<?>> itr = batchLoader.iterator();
 
