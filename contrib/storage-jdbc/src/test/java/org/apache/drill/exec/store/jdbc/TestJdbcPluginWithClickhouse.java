@@ -48,10 +48,12 @@ import static org.junit.Assert.assertEquals;
  */
 @Category(JdbcStorageTest.class)
 public class TestJdbcPluginWithClickhouse extends ClusterTest {
-  private static final String DOCKER_IMAGE_CLICKHOUSE_X86 = "yandex" +
-    "/clickhouse-server:21.8.4.51";
-  private static final String DOCKER_IMAGE_CLICKHOUSE_ARM = "lunalabsltd" +
-    "/clickhouse-server:21.7.2.7-arm";
+  // Upgraded to newer ClickHouse version for Calcite 1.38 compatibility
+  // Calcite 1.38 generates CAST(field AS DECIMAL(p,s)) which older ClickHouse versions reject
+  private static final String DOCKER_IMAGE_CLICKHOUSE_X86 = "clickhouse" +
+    "/clickhouse-server:24.3";
+  private static final String DOCKER_IMAGE_CLICKHOUSE_ARM = "clickhouse" +
+    "/clickhouse-server:24.3";
   private static JdbcDatabaseContainer<?> jdbcContainer;
 
   @BeforeClass
@@ -158,12 +160,14 @@ public class TestJdbcPluginWithClickhouse extends ClusterTest {
 
     DirectRowSet results = queryBuilder().sql(query).rowSet();
 
+    // Calcite 1.38 changed DECIMAL multiplication scale derivation
+    // decimal_field * smallint_field now produces scale 4 instead of 2
     TupleMetadata expectedSchema = new SchemaBuilder()
-        .addNullable("order_total", TypeProtos.MinorType.VARDECIMAL, 38, 2)
+        .addNullable("order_total", TypeProtos.MinorType.VARDECIMAL, 38, 4)
         .buildSchema();
 
     RowSet expected = client.rowSetBuilder(expectedSchema)
-        .addRow(123.32)
+        .addRow(new BigDecimal("123.3200"))
         .build();
 
     RowSetUtilities.verify(expected, results);

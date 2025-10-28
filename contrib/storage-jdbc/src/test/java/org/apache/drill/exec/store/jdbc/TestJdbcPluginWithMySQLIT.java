@@ -221,12 +221,14 @@ public class TestJdbcPluginWithMySQLIT extends ClusterTest {
 
     DirectRowSet results = queryBuilder().sql(query).rowSet();
 
+    // Calcite 1.38 changed DECIMAL multiplication scale derivation
+    // decimal_field * smallint_field now produces scale 4 instead of 2
     TupleMetadata expectedSchema = new SchemaBuilder()
-        .addNullable("order_total", TypeProtos.MinorType.VARDECIMAL, 38, 2)
+        .addNullable("order_total", TypeProtos.MinorType.VARDECIMAL, 38, 4)
         .buildSchema();
 
     RowSet expected = client.rowSetBuilder(expectedSchema)
-        .addRow(123.32)
+        .addRow(new BigDecimal("123.3200"))
         .build();
 
     RowSetUtilities.verify(expected, results);
