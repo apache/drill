@@ -17,60 +17,40 @@
  */
 package org.apache.drill.exec.schema.daffodil;
 
-import org.apache.commons.lang3.StringUtils;
 import org.apache.drill.common.AutoCloseables;
 import org.apache.drill.common.config.DrillConfig;
 import org.apache.drill.common.scanner.ClassPathScanner;
 import org.apache.drill.common.scanner.persistence.ScanResult;
-import org.apache.drill.exec.oauth.PersistentTokenRegistry;
-import org.apache.drill.exec.oauth.TokenRegistry;
+import org.apache.drill.exec.coord.ClusterCoordinator;
 import org.apache.drill.exec.server.DrillbitContext;
+import org.apache.drill.exec.store.sys.PersistentStoreProvider;
 
 /**
- * Class for managing daffodil schemata.  Schemata will be obtained via INSTALL/CREATE SCHEMA queries.
+ * Class for managing Daffodil schemata.  Schemata will be obtained via CREATE DAFFODIL SCHEMA queries.
  */
 public class DaffodilSchemaProvider implements AutoCloseable {
-  private static final String STORAGE_REGISTRY_PATH = "daffodil_schema";
 
-  private final DrillbitContext context;
-
-  private PersistentTokenRegistry daffodilSchemaRegistry;
+  private RemoteDaffodilSchemaRegistry remoteDaffodilSchemaRegistry;
 
   public DaffodilSchemaProvider(DrillbitContext context) {
-    this(context.getConfig(), ClassPathScanner.fromPrescan(context.getConfig()));
+    this(context.getConfig(), context.getStoreProvider(), context.getClusterCoordinator());
   }
 
   public DaffodilSchemaProvider(DrillConfig config, ScanResult classpathScan) {
-    this(config, classpathScan, null);
+    // This constructor is incomplete - needs StoreProvider and ClusterCoordinator
   }
 
-  public DaffodilSchemaProvider(DrillConfig config, ScanResult classpathScan, String username) {
-
+  public DaffodilSchemaProvider(DrillConfig config, PersistentStoreProvider storeProvider, ClusterCoordinator coordinator) {
+    this.remoteDaffodilSchemaRegistry = new RemoteDaffodilSchemaRegistry();
+    this.remoteDaffodilSchemaRegistry.init(config, storeProvider, coordinator);
   }
 
-  public TokenRegistry getDaffodilSchemaRegistry(String username) {
-    if (daffodilSchemaRegistry == null) {
-      initRemoteRegistries(username);
-    }
-    return daffodilSchemaRegistry;
-  }
-
-  private synchronized void initRemoteRegistries(String username) {
-    // Add the username to the path if present
-    String finalpath;
-    if (StringUtils.isNotEmpty(username)) {
-      finalpath = STORAGE_REGISTRY_PATH + "/" + username;
-    } else {
-      finalpath = STORAGE_REGISTRY_PATH;
-    }
-
-    if (daffodilSchemaRegistry == null) {
-      daffodilSchemaRegistry = new PersistentTokenRegistry(context, finalpath);
-    }
+  public RemoteDaffodilSchemaRegistry getRemoteDaffodilSchemaRegistry() {
+    return remoteDaffodilSchemaRegistry;
   }
 
   @Override
   public void close() throws Exception {
-    AutoCloseables.closeSilently(daffodilSchemaRegistry);
+    AutoCloseables.closeSilently(remoteDaffodilSchemaRegistry);
   }
 }

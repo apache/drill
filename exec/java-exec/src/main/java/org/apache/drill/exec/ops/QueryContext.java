@@ -35,7 +35,7 @@ import org.apache.drill.exec.memory.BufferAllocator;
 import org.apache.drill.exec.physical.resultSet.ResultSetLoader;
 import org.apache.drill.exec.physical.resultSet.impl.ResultSetLoaderImpl;
 import org.apache.drill.exec.physical.resultSet.impl.ResultSetLoaderImpl.ResultSetOptions;
-import org.apache.drill.exec.planner.common.DaffodilSchemaRegistry;
+import org.apache.drill.exec.schema.daffodil.RemoteDaffodilSchemaRegistry;
 import org.apache.drill.exec.planner.physical.PlannerSettings;
 import org.apache.drill.exec.planner.sql.DrillOperatorTable;
 import org.apache.drill.exec.proto.BitControl.QueryContextInformation;
@@ -318,8 +318,8 @@ public class QueryContext implements AutoCloseable, OptimizerRulesContext, Schem
     return drillbitContext.getRemoteFunctionRegistry();
   }
 
-  public DaffodilSchemaRegistry getDaffodilSchemaRegistry() {
-    return drillbitContext.getDaffodilSchemaProvider();
+  public RemoteDaffodilSchemaRegistry getDaffodilSchemaRegistry() {
+    return drillbitContext.getRemoteDaffodilSchemaRegistry();
   }
 
   @Override

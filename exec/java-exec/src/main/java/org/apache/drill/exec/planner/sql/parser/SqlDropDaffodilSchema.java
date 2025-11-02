@@ -27,7 +27,7 @@ import org.apache.calcite.sql.SqlSpecialOperator;
 import org.apache.calcite.sql.SqlWriter;
 import org.apache.calcite.sql.parser.SqlParserPos;
 import org.apache.drill.exec.planner.sql.handlers.AbstractSqlHandler;
-import org.apache.drill.exec.planner.sql.handlers.DropFunctionHandler;
+import org.apache.drill.exec.planner.sql.handlers.DropDaffodilSchemaHandler;
 import org.apache.drill.exec.planner.sql.handlers.SqlHandlerConfig;
 
 import java.util.List;
@@ -72,7 +72,7 @@ public class SqlDropDaffodilSchema extends DrillSqlCall {
 
   @Override
   public AbstractSqlHandler getSqlHandler(SqlHandlerConfig config) {
-    return new DropFunctionHandler(config);
+    return new DropDaffodilSchemaHandler(config);
   }
 
   public SqlNode getJar() { return jar; }

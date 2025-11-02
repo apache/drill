@@ -43,6 +43,7 @@ import org.apache.drill.exec.rpc.user.UserServer;
 import org.apache.drill.exec.rpc.user.UserServer.BitToUserConnection;
 import org.apache.drill.exec.rpc.user.UserServer.BitToUserConnectionConfig;
 import org.apache.drill.exec.schema.daffodil.DaffodilSchemaProvider;
+import org.apache.drill.exec.schema.daffodil.RemoteDaffodilSchemaRegistry;
 import org.apache.drill.exec.server.options.SystemOptionManager;
 import org.apache.drill.exec.store.SchemaFactory;
 import org.apache.drill.exec.store.StoragePluginRegistry;
@@ -136,7 +137,7 @@ public class DrillbitContext implements AutoCloseable {
     this.oAuthTokenProvider = new OAuthTokenProvider(this);
 
     // TODO Start here and complete the initialization process
-    this.daffodilSchemaProvider = new DaffodilSchemaProvider(config, classpathScan, systemOptions);
+    this.daffodilSchemaProvider = new DaffodilSchemaProvider(config, provider, coord);
 
     this.counters = DrillCounters.getInstance();
   }
@@ -291,6 +292,10 @@ public class DrillbitContext implements AutoCloseable {
 
   public DaffodilSchemaProvider getDaffodilSchemaProvider() {
     return daffodilSchemaProvider;
+  }
+
+  public RemoteDaffodilSchemaRegistry getRemoteDaffodilSchemaRegistry() {
+    return daffodilSchemaProvider.getRemoteDaffodilSchemaRegistry();
   }
 
   /**
