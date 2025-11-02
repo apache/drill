@@ -19,7 +19,6 @@ package org.apache.drill.exec.schema.daffodil;
 
 import org.apache.drill.common.AutoCloseables;
 import org.apache.drill.common.config.DrillConfig;
-import org.apache.drill.common.scanner.ClassPathScanner;
 import org.apache.drill.common.scanner.persistence.ScanResult;
 import org.apache.drill.exec.coord.ClusterCoordinator;
 import org.apache.drill.exec.server.DrillbitContext;

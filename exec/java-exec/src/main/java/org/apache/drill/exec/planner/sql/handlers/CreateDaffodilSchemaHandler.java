@@ -21,9 +21,7 @@ package org.apache.drill.exec.planner.sql.handlers;
 import com.google.common.collect.Lists;
 import org.apache.calcite.sql.SqlCharStringLiteral;
 import org.apache.calcite.sql.SqlNode;
-import org.apache.commons.io.FileUtils;
 import org.apache.drill.common.exceptions.DrillRuntimeException;
-import org.apache.drill.common.util.DrillFileUtils;
 import org.apache.drill.exec.exception.JarValidationException;
 import org.apache.drill.exec.exception.VersionMismatchException;
 import org.apache.drill.exec.physical.PhysicalPlan;
@@ -40,7 +38,6 @@ import org.apache.hadoop.fs.Path;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.File;
 import java.io.IOException;
 import java.util.List;
 import java.util.UUID;
