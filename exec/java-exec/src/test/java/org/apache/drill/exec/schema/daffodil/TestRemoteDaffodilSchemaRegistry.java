@@ -21,6 +21,7 @@ import org.apache.drill.categories.SlowTest;
 import org.apache.drill.common.config.DrillConfig;
 import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.test.BaseDirTestWatcher;
+import org.apache.drill.test.ClusterTest;
 import org.apache.drill.test.ConfigBuilder;
 import org.junit.After;
 import org.junit.Before;
@@ -36,7 +37,7 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 
 @Category({SlowTest.class})
-public class TestRemoteDaffodilSchemaRegistry {
+public class TestRemoteDaffodilSchemaRegistry extends ClusterTest {
 
   @Rule
   public final BaseDirTestWatcher dirTestWatcher = new BaseDirTestWatcher();
