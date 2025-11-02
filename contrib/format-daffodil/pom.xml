@@ -39,12 +39,12 @@
     </dependency>
     <dependency>
       <groupId>org.apache.daffodil</groupId>
-      <artifactId>daffodil-japi_2.12</artifactId>
+      <artifactId>daffodil-japi_2.13</artifactId>
       <version>${daffodil.version}</version>
     </dependency>
     <dependency>
       <groupId>org.apache.daffodil</groupId>
-      <artifactId>daffodil-runtime1_2.12</artifactId>
+      <artifactId>daffodil-runtime1_2.13</artifactId>
       <version>${daffodil.version}</version>
     </dependency>
     <!-- Test dependencies -->
