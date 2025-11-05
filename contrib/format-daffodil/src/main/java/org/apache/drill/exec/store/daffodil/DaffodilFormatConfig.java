@@ -36,6 +36,7 @@ public class DaffodilFormatConfig implements FormatPluginConfig {
 
   public final List<String> extensions;
   public final String schemaURI;
+  public final String schemaFile;
   public final boolean validationMode;
   public final String rootName;
   public final String rootNamespace;
@@ -45,8 +46,11 @@ public class DaffodilFormatConfig implements FormatPluginConfig {
    * It creates problems with defaulting them (they default to null) which cannot be unboxed.
    */
   @JsonCreator
-  public DaffodilFormatConfig(@JsonProperty("extensions") List<String> extensions,
-      @JsonProperty("schemaURI") String schemaURI, @JsonProperty("rootName") String rootName,
+  public DaffodilFormatConfig(
+      @JsonProperty("extensions") List<String> extensions,
+      @JsonProperty("schemaURI") String schemaURI,
+      @JsonProperty("schemaFile") String schemaFile,
+      @JsonProperty("rootName") String rootName,
       @JsonProperty("rootNamespace") String rootNamespace,
       @JsonProperty("validationMode") boolean validationMode) {
 
@@ -56,6 +60,7 @@ public class DaffodilFormatConfig implements FormatPluginConfig {
     this.rootName = rootName;
     this.rootNamespace = rootNamespace;
     this.schemaURI = schemaURI;
+    this.schemaFile = schemaFile;
     // no default. Users must pick.
     this.validationMode = validationMode;
   }
@@ -67,6 +72,10 @@ public class DaffodilFormatConfig implements FormatPluginConfig {
 
   public String getSchemaURI() {
     return schemaURI;
+  }
+
+  public String getSchemaFile() {
+    return schemaFile;
   }
 
   public String getRootName() {
@@ -88,7 +97,7 @@ public class DaffodilFormatConfig implements FormatPluginConfig {
 
   @Override
   public int hashCode() {
-    return Objects.hash(schemaURI, validationMode, rootName, rootNamespace);
+    return Objects.hash(schemaURI, schemaFile, validationMode, rootName, rootNamespace);
   }
 
   @Override
@@ -100,14 +109,21 @@ public class DaffodilFormatConfig implements FormatPluginConfig {
       return false;
     }
     DaffodilFormatConfig other = (DaffodilFormatConfig) obj;
-    return Objects.equals(schemaURI, other.schemaURI) && Objects.equals(rootName,
-        other.rootName) && Objects.equals(rootNamespace, other.rootNamespace) && Objects.equals(
-        validationMode, other.validationMode);
+    return Objects.equals(schemaURI, other.schemaURI)
+        && Objects.equals(schemaFile, other.schemaFile)
+        && Objects.equals(rootName, other.rootName)
+        && Objects.equals(rootNamespace, other.rootNamespace)
+        && Objects.equals(validationMode, other.validationMode);
   }
 
   @Override
   public String toString() {
-    return new PlanStringBuilder(this).field("schemaURI", schemaURI).field("rootName", rootName)
-        .field("rootNamespace", rootNamespace).field("validationMode", validationMode).toString();
+    return new PlanStringBuilder(this)
+        .field("schemaURI", schemaURI)
+        .field("schemaFile", schemaFile)
+        .field("rootName", rootName)
+        .field("rootNamespace", rootNamespace)
+        .field("validationMode", validationMode)
+        .toString();
   }
 }

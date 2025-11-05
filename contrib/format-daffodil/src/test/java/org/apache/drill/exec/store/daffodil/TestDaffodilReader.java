@@ -55,7 +55,7 @@ public class TestDaffodilReader extends ClusterTest {
     // boilerplate call to start test rig
     ClusterTest.startCluster(ClusterFixture.builder(dirTestWatcher));
 
-    DaffodilFormatConfig formatConfig = new DaffodilFormatConfig(null, "", "", "", false);
+    DaffodilFormatConfig formatConfig = new DaffodilFormatConfig(null, "", "", "", "", false);
 
     cluster.defineFormat("dfs", "daffodil", formatConfig);
 

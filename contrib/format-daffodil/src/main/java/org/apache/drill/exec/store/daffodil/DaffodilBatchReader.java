@@ -57,14 +57,30 @@ public class DaffodilBatchReader implements ManagedReader {
     errorContext = negotiator.parentErrorContext();
     DaffodilFormatConfig dafConfig = readerConfig.plugin.getConfig();
 
-    String schemaURIString = dafConfig.getSchemaURI(); // "schema/complexArray1.dfdl.xsd";
+    String schemaFile = dafConfig.getSchemaFile();
+    String schemaURIString = dafConfig.getSchemaURI();
     String rootName = dafConfig.getRootName();
     String rootNamespace = dafConfig.getRootNamespace();
     boolean validationMode = dafConfig.getValidationMode();
 
+    // Determine the schema URI:
+    // - If schemaFile is provided, it takes precedence and is looked up in the registry area
+    // - Otherwise, use schemaURI (full path)
     URI dfdlSchemaURI;
     try {
-      dfdlSchemaURI = new URI(schemaURIString);
+      if (schemaFile != null && !schemaFile.isEmpty()) {
+        // schemaFile takes precedence - construct path from registry area
+        Path registryArea = readerConfig.plugin.getContext()
+            .getRemoteDaffodilSchemaRegistry().getRegistryArea();
+        Path schemaPath = new Path(registryArea, schemaFile);
+        dfdlSchemaURI = schemaPath.toUri();
+      } else if (schemaURIString != null && !schemaURIString.isEmpty()) {
+        // Use the provided schemaURI
+        dfdlSchemaURI = new URI(schemaURIString);
+      } else {
+        // Neither provided - will result in empty URI
+        dfdlSchemaURI = new URI("");
+      }
     } catch (URISyntaxException e) {
       throw UserException.validationError(e).build(logger);
     }
