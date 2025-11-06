@@ -428,6 +428,7 @@
               <exclude>antlr:*</exclude>
               <exclude>com.beust:*</exclude>
               <exclude>com.dropbox.*</exclude>
+              <exclude>com.github.ben-manes.caffeine:caffeine</exclude>
               <exclude>com.github.stefanbirkner</exclude>
               <exclude>com.google.code.findbugs:jsr305:*</exclude>
               <exclude>com.googlecode.json-simple:*</exclude>
