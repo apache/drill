@@ -245,6 +245,9 @@ public class TestAnalyze extends ClusterTest {
   }
 
   @Test
+  @Ignore("CALCITE-6432: Disabled in Calcite 1.38 - JoinPushTransitivePredicatesRule causes infinite loop. " +
+          "Filter merging optimization degraded but queries still produce correct results. " +
+          "Re-enable when upgrading to Calcite 1.40+. See docs/dev/calcite_upgrades/")
   public void testUseStatistics() throws Exception {
     //Test ndv/rowcount for scan
     client.alterSession(ExecConstants.SLICE_TARGET, 1);

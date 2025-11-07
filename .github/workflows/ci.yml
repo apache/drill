@@ -36,7 +36,7 @@ jobs:
         # Java versions to run unit tests
         java: [ '11', '17', '21' ]
         profile: ['default-hadoop']
-      fail-fast: false
+      fail-fast: true
     steps:
       - name: Checkout
         uses: actions/checkout@v4
