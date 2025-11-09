@@ -17,6 +17,7 @@
  */
 package org.apache.drill.exec.server.rest;
 
+import jakarta.ws.rs.WebApplicationException;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
 import jakarta.ws.rs.ext.ExceptionMapper;
@@ -28,6 +29,15 @@ public class GenericExceptionMapper implements ExceptionMapper<Throwable> {
 
   @Override
   public Response toResponse(Throwable throwable) {
+    // Don't intercept WebApplicationExceptions (including NotFoundException) - let Jersey handle them
+    // These are normal HTTP responses, not internal errors
+    if (throwable instanceof WebApplicationException) {
+      WebApplicationException webAppException = (WebApplicationException) throwable;
+      logger.debug("WebApplicationException: {} - returning status {}",
+          throwable.getMessage(), webAppException.getResponse().getStatus());
+      return webAppException.getResponse();
+    }
+
     String errorMessage = throwable.getMessage();
     if (errorMessage == null) {
       errorMessage = throwable.getClass().getSimpleName();

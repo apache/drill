@@ -63,7 +63,7 @@ import org.glassfish.jersey.server.mvc.freemarker.FreemarkerMvcFeature;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.inject.Inject;
+import jakarta.inject.Inject;
 import jakarta.servlet.ServletContext;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpSession;
@@ -84,6 +84,11 @@ public class DrillRestServer extends ResourceConfig {
   static final Logger logger = LoggerFactory.getLogger(DrillRestServer.class);
 
   public DrillRestServer(final WorkManager workManager, final ServletContext servletContext, final Drillbit drillbit) {
+    logger.info("Initializing DrillRestServer with workManager: {}, servletContext: {}, drillbit: {}",
+        workManager != null ? "NOT NULL" : "NULL",
+        servletContext != null ? "NOT NULL" : "NULL",
+        drillbit != null ? "NOT NULL" : "NULL");
+
     register(DrillRoot.class);
     register(StatusResources.class);
     register(StorageResources.class);
@@ -93,6 +98,8 @@ public class DrillRestServer extends ResourceConfig {
     register(MetricsResources.class);
     register(ThreadsResources.class);
     register(LogsResources.class);
+
+    logger.info("Registered {} resource classes", 9);
 
     property(FreemarkerMvcFeature.TEMPLATE_OBJECT_FACTORY, getFreemarkerConfiguration(servletContext));
     register(FreemarkerMvcFeature.class);

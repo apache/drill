@@ -192,25 +192,17 @@ public class WebServer implements AutoCloseable {
     servletContextHandler.setErrorHandler(errorHandler);
     servletContextHandler.setContextPath("/");
 
-    // Store the dependencies in the holder BEFORE creating the servlet
-    // When Jersey instantiates DrillRestServerApplication (which extends DrillRestServer),
-    // it will retrieve these dependencies and pass them to the parent constructor
-    DrillRestServerHolder.setDependencies(workManager, servletContextHandler.getServletContext(), drillbit);
+    // Add Local path resource (This will allow access to dynamically created files like JavaScript)
+    // In Jetty 11, register static servlets BEFORE the Jersey servlet to ensure proper path resolution
+    final ServletHolder dynamicHolder = new ServletHolder("dynamic", DefaultServlet.class);
 
-    ServletHolder servletHolder = new ServletHolder(ServletContainer.class);
-    servletHolder.setName("jersey");
-    // In Jersey 3.x, use 'jakarta.ws.rs.Application' subclass parameter with wrapper that can be instantiated with no-arg constructor
-    // DrillRestServerApplication will retrieve dependencies from the holder and instantiate itself
-    servletHolder.setInitParameter("jakarta.ws.rs.Application",
-        DrillRestServerApplication.class.getCanonicalName());
-    servletHolder.setInitOrder(1);
-    servletHolder.setAsyncSupported(true);
-    servletContextHandler.addServlet(servletHolder, "/*");
-
-    // Note: Metrics and ThreadDump servlets from codahale-metrics library
-    // still use javax.servlet and are not compatible with Jetty 11's Jakarta Servlet API.
-    // These could be ported or replaced with a Jakarta-compatible metrics library in the future.
-    // For now, skipping their registration as Drill's core functionality doesn't depend on them.
+    // Skip if unable to get a temp directory (e.g. during Unit tests)
+    if (getOrCreateTmpJavaScriptDir() != null) {
+      dynamicHolder.setInitParameter("resourceBase", getOrCreateTmpJavaScriptDir().getAbsolutePath());
+      dynamicHolder.setInitParameter("dirAllowed", "true");
+      dynamicHolder.setInitParameter("pathInfoOnly", "true");
+      servletContextHandler.addServlet(dynamicHolder, "/dynamic/*");
+    }
 
     final ServletHolder staticHolder = new ServletHolder("static", DefaultServlet.class);
 
@@ -223,16 +215,26 @@ public class WebServer implements AutoCloseable {
     staticHolder.setInitParameter("pathInfoOnly", "true");
     servletContextHandler.addServlet(staticHolder, "/static/*");
 
-    // Add Local path resource (This will allow access to dynamically created files like JavaScript)
-    final ServletHolder dynamicHolder = new ServletHolder("dynamic", DefaultServlet.class);
+    // Store the dependencies in the holder BEFORE creating the servlet
+    // When Jersey instantiates DrillRestServerApplication (which extends DrillRestServer),
+    // it will retrieve these dependencies and pass them to the parent constructor
+    DrillRestServerHolder.setDependencies(workManager, servletContextHandler.getServletContext(), drillbit);
 
-    // Skip if unable to get a temp directory (e.g. during Unit tests)
-    if (getOrCreateTmpJavaScriptDir() != null) {
-      dynamicHolder.setInitParameter("resourceBase", getOrCreateTmpJavaScriptDir().getAbsolutePath());
-      dynamicHolder.setInitParameter("dirAllowed", "true");
-      dynamicHolder.setInitParameter("pathInfoOnly", "true");
-      servletContextHandler.addServlet(dynamicHolder, "/dynamic/*");
-    }
+    // Note: Metrics and ThreadDump servlets from codahale-metrics library
+    // still use javax.servlet and are not compatible with Jetty 11's Jakarta Servlet API.
+    // These could be ported or replaced with a Jakarta-compatible metrics library in the future.
+    // For now, skipping their registration as Drill's core functionality doesn't depend on them.
+
+    // Register Jersey servlet with explicit init order
+    ServletHolder servletHolder = new ServletHolder(ServletContainer.class);
+    servletHolder.setName("jersey");
+    // In Jersey 3.x, use 'jakarta.ws.rs.Application' subclass parameter with wrapper that can be instantiated with no-arg constructor
+    // DrillRestServerApplication will retrieve dependencies from the holder and instantiate itself
+    servletHolder.setInitParameter("jakarta.ws.rs.Application",
+        DrillRestServerApplication.class.getCanonicalName());
+    servletHolder.setInitOrder(1);
+    servletHolder.setAsyncSupported(true);
+    servletContextHandler.addServlet(servletHolder, "/*");
 
     if (authEnabled) {
       // DrillSecurityHandler is used to support SPNEGO and FORM authentication together
