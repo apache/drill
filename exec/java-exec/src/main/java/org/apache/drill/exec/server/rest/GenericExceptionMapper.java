@@ -17,16 +17,27 @@
  */
 package org.apache.drill.exec.server.rest;
 
-import javax.ws.rs.core.MediaType;
-import javax.ws.rs.core.Response;
-import javax.ws.rs.ext.ExceptionMapper;
+import jakarta.ws.rs.core.MediaType;
+import jakarta.ws.rs.core.Response;
+import jakarta.ws.rs.ext.ExceptionMapper;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class GenericExceptionMapper implements ExceptionMapper<Throwable> {
+  private static final Logger logger = LoggerFactory.getLogger(GenericExceptionMapper.class);
+
   @Override
   public Response toResponse(Throwable throwable) {
+    String errorMessage = throwable.getMessage();
+    if (errorMessage == null) {
+      errorMessage = throwable.getClass().getSimpleName();
+    }
+
+    logger.error("REST API error - returning 500 response", throwable);
+
     return Response
         .status(Response.Status.INTERNAL_SERVER_ERROR.getStatusCode())
-        .entity(new GenericErrorMessage(throwable.getMessage()))
+        .entity(new GenericErrorMessage(errorMessage))
         .type(MediaType.APPLICATION_JSON_TYPE).build();
   }
 

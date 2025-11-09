@@ -22,7 +22,7 @@ import org.apache.drill.exec.server.rest.auth.AuthDynamicFeature;
 import org.apache.drill.exec.server.rest.auth.DrillUserPrincipal;
 import org.glassfish.jersey.server.mvc.Viewable;
 
-import javax.ws.rs.core.SecurityContext;
+import jakarta.ws.rs.core.SecurityContext;
 import java.util.Map;
 
 /**

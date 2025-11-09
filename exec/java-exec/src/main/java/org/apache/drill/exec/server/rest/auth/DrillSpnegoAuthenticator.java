@@ -25,29 +25,35 @@ import org.eclipse.jetty.http.HttpVersion;
 import org.eclipse.jetty.security.ServerAuthException;
 import org.eclipse.jetty.security.UserAuthentication;
 import org.eclipse.jetty.security.authentication.DeferredAuthentication;
+import org.eclipse.jetty.security.authentication.LoginAuthenticator;
 import org.eclipse.jetty.security.authentication.SessionAuthentication;
-import org.eclipse.jetty.security.authentication.SpnegoAuthenticator;
 import org.eclipse.jetty.server.Authentication;
+import org.eclipse.jetty.server.Authentication.User;
 import org.eclipse.jetty.server.Request;
 import org.eclipse.jetty.server.UserIdentity;
 
-import javax.servlet.ServletRequest;
-import javax.servlet.ServletResponse;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-import javax.servlet.http.HttpSession;
+
+import jakarta.servlet.ServletRequest;
+import jakarta.servlet.ServletResponse;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+import jakarta.servlet.http.HttpSession;
 import java.io.IOException;
 
 /**
  * Custom SpnegoAuthenticator for Drill
+ *
+ * This class extends LoginAuthenticator and provides SPNEGO authentication support.
  */
-public class DrillSpnegoAuthenticator extends SpnegoAuthenticator {
+public class DrillSpnegoAuthenticator extends LoginAuthenticator {
 
   private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(DrillSpnegoAuthenticator.class);
+  private static final String AUTH_METHOD = "SPNEGO";
 
-  public DrillSpnegoAuthenticator(String authMethod) {
-    super(authMethod);
+  public DrillSpnegoAuthenticator() {
+    super();
   }
+
 
   /**
    * Updated logic as compared to default implementation in
@@ -161,7 +167,7 @@ public class DrillSpnegoAuthenticator extends SpnegoAuthenticator {
 
         logger.debug("DrillSpnegoAuthenticator: Successfully authenticated this client session: {}",
             user.getUserPrincipal().getName());
-        return new UserAuthentication(this.getAuthMethod(), user);
+        return new UserAuthentication(AUTH_METHOD, user);
       }
     }
 
@@ -170,12 +176,25 @@ public class DrillSpnegoAuthenticator extends SpnegoAuthenticator {
 
   }
 
+  @Override
+  public String getAuthMethod() {
+    return AUTH_METHOD;
+  }
+
+  @Override
+  public boolean secureResponse(ServletRequest request, ServletResponse response, boolean mandatory, User user)
+      throws ServerAuthException {
+    // For SPNEGO authentication, we don't need to do anything special on the response
+    // The response is handled by the authenticateSession method
+    return true;
+  }
+
   public UserIdentity login(String username, Object password, ServletRequest request) {
     final UserIdentity user = super.login(username, password, request);
 
     if (user != null) {
       final HttpSession session = ((HttpServletRequest) request).getSession(true);
-      final Authentication cached = new SessionAuthentication(this.getAuthMethod(), user, password);
+      final Authentication cached = new SessionAuthentication(AUTH_METHOD, user, password);
       session.setAttribute(SessionAuthentication.__J_AUTHENTICATED, cached);
     }
 

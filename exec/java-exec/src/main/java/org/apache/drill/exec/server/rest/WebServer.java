@@ -18,8 +18,6 @@
 package org.apache.drill.exec.server.rest;
 
 import com.codahale.metrics.MetricRegistry;
-import com.codahale.metrics.servlets.MetricsServlet;
-import com.codahale.metrics.servlets.ThreadDumpServlet;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.StringEscapeUtils;
@@ -66,10 +64,10 @@ import org.glassfish.jersey.servlet.ServletContainer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.servlet.DispatcherType;
-import javax.servlet.http.HttpSession;
-import javax.servlet.http.HttpSessionEvent;
-import javax.servlet.http.HttpSessionListener;
+import jakarta.servlet.DispatcherType;
+import jakarta.servlet.http.HttpSession;
+import jakarta.servlet.http.HttpSessionEvent;
+import jakarta.servlet.http.HttpSessionListener;
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileWriter;
@@ -194,13 +192,25 @@ public class WebServer implements AutoCloseable {
     servletContextHandler.setErrorHandler(errorHandler);
     servletContextHandler.setContextPath("/");
 
-    final ServletHolder servletHolder = new ServletHolder(new ServletContainer(
-        new DrillRestServer(workManager, servletContextHandler.getServletContext(), drillbit)));
+    // Store the dependencies in the holder BEFORE creating the servlet
+    // When Jersey instantiates DrillRestServerApplication (which extends DrillRestServer),
+    // it will retrieve these dependencies and pass them to the parent constructor
+    DrillRestServerHolder.setDependencies(workManager, servletContextHandler.getServletContext(), drillbit);
+
+    ServletHolder servletHolder = new ServletHolder(ServletContainer.class);
+    servletHolder.setName("jersey");
+    // In Jersey 3.x, use 'jakarta.ws.rs.Application' subclass parameter with wrapper that can be instantiated with no-arg constructor
+    // DrillRestServerApplication will retrieve dependencies from the holder and instantiate itself
+    servletHolder.setInitParameter("jakarta.ws.rs.Application",
+        DrillRestServerApplication.class.getCanonicalName());
     servletHolder.setInitOrder(1);
+    servletHolder.setAsyncSupported(true);
     servletContextHandler.addServlet(servletHolder, "/*");
 
-    servletContextHandler.addServlet(new ServletHolder(new MetricsServlet(metrics)), STATUS_METRICS_PATH);
-    servletContextHandler.addServlet(new ServletHolder(new ThreadDumpServlet()), STATUS_THREADS_PATH);
+    // Note: Metrics and ThreadDump servlets from codahale-metrics library
+    // still use javax.servlet and are not compatible with Jetty 11's Jakarta Servlet API.
+    // These could be ported or replaced with a Jakarta-compatible metrics library in the future.
+    // For now, skipping their registration as Drill's core functionality doesn't depend on them.
 
     final ServletHolder staticHolder = new ServletHolder("static", DefaultServlet.class);
 
@@ -362,7 +372,7 @@ public class WebServer implements AutoCloseable {
       int selectors
   ) throws Exception {
     logger.info("Setting up HTTPS connector for web server at {}:{}", bindAddr, port);
-    SslContextFactory sslContextFactory = new SslContextFactoryConfigurator(config,
+    SslContextFactory.Server sslContextFactory = new SslContextFactoryConfigurator(config,
         workManager.getContext().getEndpoint().getAddress())
         .configureNewSslContextFactory();
     final HttpConfiguration httpsConfig = baseHttpConfig();

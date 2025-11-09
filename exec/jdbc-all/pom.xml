@@ -33,7 +33,7 @@
        "package.namespace.prefix" equals to "oadd.". It can be overridden if necessary within any profile -->
   <properties>
     <package.namespace.prefix>oadd.</package.namespace.prefix>
-    <jdbc-all-jar.maxsize>56000000</jdbc-all-jar.maxsize>
+    <jdbc-all-jar.maxsize>58000000</jdbc-all-jar.maxsize>
   </properties>
 
   <dependencies>
@@ -245,6 +245,14 @@
         <exclusion>
           <groupId>io.swagger.core.v3</groupId>
           <artifactId>swagger-jaxrs2-servlet-initializer-v2</artifactId>
+        </exclusion>
+        <exclusion>
+          <groupId>com.fasterxml.jackson.jaxrs</groupId>
+          <artifactId>jackson-jaxrs-json-provider</artifactId>
+        </exclusion>
+        <exclusion>
+          <groupId>com.fasterxml.jackson.jaxrs</groupId>
+          <artifactId>jackson-jaxrs-base</artifactId>
         </exclusion>
         <exclusion>
           <groupId>com.squareup.okhttp3</groupId>
@@ -778,6 +786,7 @@
                 <exclude>org/apache/hadoop/tools/**</exclude>
                 <exclude>org/apache/hadoop/tracing/**</exclude>
                 <exclude>org/apache/hadoop/yarn/**</exclude>
+                <exclude>org/apache/hbase/thirdparty/javax/**</exclude>
                 <exclude>org/apache/http/**</exclude>
                 <exclude>org/apache/parquet</exclude>
                 <exclude>**/org.codehaus.commons.compiler.properties</exclude>

@@ -31,7 +31,7 @@ import org.eclipse.jetty.security.LoginService;
 import org.eclipse.jetty.server.UserIdentity;
 
 import javax.security.auth.Subject;
-import javax.servlet.ServletRequest;
+import jakarta.servlet.ServletRequest;
 import java.security.Principal;
 
 /**
@@ -94,11 +94,17 @@ public class DrillRestLoginService implements LoginService {
       subject.getPrivateCredentials().add(credentials);
 
       if (isAdmin) {
-        subject.getPrincipals().addAll(DrillUserPrincipal.ADMIN_PRINCIPALS);
-        return identityService.newUserIdentity(subject, userPrincipal, DrillUserPrincipal.ADMIN_USER_ROLES);
+        String[] adminRoles = DrillUserPrincipal.ADMIN_USER_ROLES;
+        for (String role : adminRoles) {
+          subject.getPrincipals().add(new RolePrincipal(role));
+        }
+        return identityService.newUserIdentity(subject, userPrincipal, adminRoles);
       } else {
-        subject.getPrincipals().addAll(DrillUserPrincipal.NON_ADMIN_PRINCIPALS);
-        return identityService.newUserIdentity(subject, userPrincipal, DrillUserPrincipal.NON_ADMIN_USER_ROLES);
+        String[] nonAdminRoles = DrillUserPrincipal.NON_ADMIN_USER_ROLES;
+        for (String role : nonAdminRoles) {
+          subject.getPrincipals().add(new RolePrincipal(role));
+        }
+        return identityService.newUserIdentity(subject, userPrincipal, nonAdminRoles);
       }
     } catch (final Exception e) {
       if (e instanceof UserAuthenticationException) {

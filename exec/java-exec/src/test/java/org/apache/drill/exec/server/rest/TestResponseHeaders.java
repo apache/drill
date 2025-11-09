@@ -17,7 +17,7 @@
  */
 package org.apache.drill.exec.server.rest;
 
-import javax.ws.rs.core.MultivaluedMap;
+import jakarta.ws.rs.core.MultivaluedMap;
 import java.util.HashMap;
 
 import org.apache.drill.exec.ExecConstants;

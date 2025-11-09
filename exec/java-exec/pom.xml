@@ -36,10 +36,17 @@
   </properties>
 
   <dependencies>
+    <!-- Jakarta RS API to ensure it's loaded before any old javax.ws.rs from HBase, etc. -->
+    <dependency>
+      <groupId>jakarta.ws.rs</groupId>
+      <artifactId>jakarta.ws.rs-api</artifactId>
+    </dependency>
+
     <dependency>
       <groupId>org.hamcrest</groupId>
       <artifactId>hamcrest</artifactId>
     </dependency>
+
     <dependency>
       <groupId>org.apache.httpcomponents</groupId>
       <artifactId>httpasyncclient</artifactId>
@@ -228,8 +235,8 @@
       <artifactId>jersey-hk2</artifactId>
     </dependency>
     <dependency>
-      <groupId>com.fasterxml.jackson.jaxrs</groupId>
-      <artifactId>jackson-jaxrs-json-provider</artifactId>
+      <groupId>com.fasterxml.jackson.jakarta.rs</groupId>
+      <artifactId>jackson-jakarta-rs-json-provider</artifactId>
     </dependency>
     <dependency>
       <groupId>com.fasterxml.jackson.module</groupId>
@@ -473,6 +480,15 @@
           <groupId>ch.qos.reload4j</groupId>
           <artifactId>reload4j</artifactId>
         </exclusion>
+        <!-- Exclude old javax-based jackson-jaxrs from hadoop-yarn-common -->
+        <exclusion>
+          <groupId>com.fasterxml.jackson.jaxrs</groupId>
+          <artifactId>jackson-jaxrs-json-provider</artifactId>
+        </exclusion>
+        <exclusion>
+          <groupId>com.fasterxml.jackson.jaxrs</groupId>
+          <artifactId>jackson-jaxrs-base</artifactId>
+        </exclusion>
       </exclusions>
     </dependency>
     <dependency>
@@ -618,12 +634,18 @@
     </dependency>
     <dependency>
       <groupId>io.swagger.core.v3</groupId>
-      <artifactId>swagger-jaxrs2</artifactId>
+      <artifactId>swagger-jaxrs2-jakarta</artifactId>
       <version>${swagger.version}</version>
+      <exclusions>
+        <exclusion>
+          <groupId>com.fasterxml.jackson.jaxrs</groupId>
+          <artifactId>jackson-jaxrs-json-provider</artifactId>
+        </exclusion>
+      </exclusions>
     </dependency>
     <dependency>
       <groupId>io.swagger.core.v3</groupId>
-      <artifactId>swagger-jaxrs2-servlet-initializer-v2</artifactId>
+      <artifactId>swagger-jaxrs2-servlet-initializer-v2-jakarta</artifactId>
       <version>${swagger.version}</version>
     </dependency>
   </dependencies>

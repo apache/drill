@@ -52,10 +52,13 @@ import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mockito.Mockito;
 
+import jakarta.servlet.ServletRequest;
+import jakarta.servlet.ServletResponse;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+import jakarta.servlet.http.HttpSession;
+
 import javax.security.auth.Subject;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-import javax.servlet.http.HttpSession;
 import java.lang.reflect.Field;
 import java.security.PrivilegedExceptionAction;
 
@@ -115,7 +118,7 @@ public class TestDrillSpnegoAuthenticator extends BaseTest {
 
     Authenticator.AuthConfiguration authConfiguration = Mockito.mock(Authenticator.AuthConfiguration.class);
 
-    spnegoAuthenticator = new DrillSpnegoAuthenticator("SPNEGO");
+    spnegoAuthenticator = new DrillSpnegoAuthenticator();
     DrillSpnegoLoginService spnegoLoginService = new DrillSpnegoLoginService(drillbitContext);
 
     Mockito.when(authConfiguration.getLoginService()).thenReturn(spnegoLoginService);
@@ -144,7 +147,7 @@ public class TestDrillSpnegoAuthenticator extends BaseTest {
     Mockito.when(request.getSession(true)).thenReturn(session);
     Mockito.when(request.getRequestURI()).thenReturn(WebServerConstants.SPENGO_LOGIN_RESOURCE_PATH);
 
-    final Authentication authentication = spnegoAuthenticator.validateRequest(request, response, false);
+    final Authentication authentication = spnegoAuthenticator.validateRequest((ServletRequest)request, (ServletResponse)response, false);
 
     assertEquals(authentication, Authentication.SEND_CONTINUE);
     verify(response).sendError(401);
@@ -168,7 +171,7 @@ public class TestDrillSpnegoAuthenticator extends BaseTest {
     Mockito.when(session.getAttribute(SessionAuthentication.__J_AUTHENTICATED)).thenReturn(authentication);
 
     final UserAuthentication returnedAuthentication = (UserAuthentication) spnegoAuthenticator.validateRequest
-        (request, response, false);
+        ((ServletRequest)request, (ServletResponse)response, false);
     assertEquals(authentication, returnedAuthentication);
     verify(response, never()).sendError(401);
     verify(response, never()).setHeader(HttpHeader.WWW_AUTHENTICATE.asString(), HttpHeader.NEGOTIATE.asString());
@@ -192,7 +195,7 @@ public class TestDrillSpnegoAuthenticator extends BaseTest {
     Mockito.when(session.getAttribute(SessionAuthentication.__J_AUTHENTICATED)).thenReturn(authentication);
 
     final UserAuthentication returnedAuthentication = (UserAuthentication) spnegoAuthenticator.validateRequest
-        (request, response, false);
+        ((ServletRequest)request, (ServletResponse)response, false);
     assertEquals(authentication, returnedAuthentication);
     verify(response, never()).sendError(401);
     verify(response, never()).setHeader(HttpHeader.WWW_AUTHENTICATE.asString(), HttpHeader.NEGOTIATE.asString());
@@ -216,7 +219,7 @@ public class TestDrillSpnegoAuthenticator extends BaseTest {
     Mockito.when(session.getAttribute(SessionAuthentication.__J_AUTHENTICATED)).thenReturn(authentication);
 
     final UserAuthentication returnedAuthentication = (UserAuthentication) spnegoAuthenticator.validateRequest
-        (request, response, false);
+        ((ServletRequest)request, (ServletResponse)response, false);
     assertNull(returnedAuthentication);
     verify(session).removeAttribute(SessionAuthentication.__J_AUTHENTICATED);
     verify(response, never()).sendError(401);
@@ -269,7 +272,7 @@ public class TestDrillSpnegoAuthenticator extends BaseTest {
     Mockito.when(request.getHeader(HttpHeader.AUTHORIZATION.asString())).thenReturn(httpReqAuthHeader);
     Mockito.when(request.getRequestURI()).thenReturn(WebServerConstants.SPENGO_LOGIN_RESOURCE_PATH);
 
-    assertEquals(spnegoAuthenticator.validateRequest(request, response, false), Authentication.UNAUTHENTICATED);
+    assertEquals(spnegoAuthenticator.validateRequest((ServletRequest)request, (ServletResponse)response, false), Authentication.UNAUTHENTICATED);
 
     verify(session, never()).setAttribute(SessionAuthentication.__J_AUTHENTICATED, null);
     verify(response, never()).sendError(401);

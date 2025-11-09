@@ -31,11 +31,11 @@ import java.util.Date;
 import java.util.EnumSet;
 import java.util.Set;
 
-import javax.servlet.DispatcherType;
-import javax.servlet.ServletRequest;
-import javax.servlet.http.HttpSession;
-import javax.servlet.http.HttpSessionEvent;
-import javax.servlet.http.HttpSessionListener;
+import jakarta.servlet.DispatcherType;
+import jakarta.servlet.ServletRequest;
+import jakarta.servlet.http.HttpSession;
+import jakarta.servlet.http.HttpSessionEvent;
+import jakarta.servlet.http.HttpSessionListener;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -159,13 +159,17 @@ public class WebServer implements AutoCloseable {
     // The servlet container comes from Jersey, and manages the servlet
     // lifecycle.
 
-    final ServletHolder servletHolder = new ServletHolder(
-        new ServletContainer(new WebUiPageTree(dispatcher)));
+    // In Jersey 3.x with Jakarta, instantiate ServletContainer with the application class
+    // and let Jersey auto-discover resources
+    final ServletHolder servletHolder = new ServletHolder(ServletContainer.class);
+    servletHolder.setInitParameter("jakarta.ws.rs.Application",
+        WebUiPageTree.class.getCanonicalName());
     servletHolder.setInitOrder(1);
     servletContextHandler.addServlet(servletHolder, "/*");
 
-    final ServletHolder restHolder = new ServletHolder(
-        new ServletContainer(new AmRestApi(dispatcher)));
+    final ServletHolder restHolder = new ServletHolder(ServletContainer.class);
+    restHolder.setInitParameter("jakarta.ws.rs.Application",
+        AmRestApi.class.getCanonicalName());
     restHolder.setInitOrder(2);
     servletContextHandler.addServlet(restHolder, "/rest/*");
 
@@ -270,6 +274,11 @@ public class WebServer implements AutoCloseable {
     }
 
     @Override
+    public void logout(UserIdentity user) {
+      // No-op for this simple login service
+    }
+
+    @Override
     public IdentityService getIdentityService() {
       return identityService;
     }
@@ -277,10 +286,6 @@ public class WebServer implements AutoCloseable {
     @Override
     public void setIdentityService(IdentityService service) {
       this.identityService = service;
-    }
-
-    @Override
-    public void logout(UserIdentity user) {
     }
   }
 
@@ -371,7 +376,7 @@ public class WebServer implements AutoCloseable {
   private ServerConnector createHttpsConnector(Config config) throws Exception {
     LOG.info("Setting up HTTPS connector for web server");
 
-    final SslContextFactory sslContextFactory = new SslContextFactory();
+    final SslContextFactory.Server sslContextFactory = new SslContextFactory.Server();
 
     // if (config.hasPath(ExecConstants.HTTP_KEYSTORE_PATH) &&
     // !Strings.isNullOrEmpty(config.getString(ExecConstants.HTTP_KEYSTORE_PATH)))

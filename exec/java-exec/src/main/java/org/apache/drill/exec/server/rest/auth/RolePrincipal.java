@@ -17,20 +17,39 @@
  */
 package org.apache.drill.exec.server.rest.auth;
 
-import org.apache.drill.common.exceptions.DrillException;
-import org.apache.drill.exec.server.DrillbitContext;
-import org.eclipse.jetty.util.security.Constraint;
+import java.io.Serializable;
+import java.security.Principal;
 
-@SuppressWarnings({"rawtypes", "unchecked"})
-public class SpnegoSecurityHandler extends DrillHttpConstraintSecurityHandler {
+/**
+ * Role principal implementation for Jetty 11+.
+ * Replaced the removed RolePrincipal from AbstractLoginService.
+ */
+public class RolePrincipal implements Principal, Serializable {
+  private static final long serialVersionUID = 1L;
 
-  @Override
-  public String getImplName() {
-    return Constraint.__SPNEGO_AUTH;
+  private final String _roleName;
+
+  public RolePrincipal(String roleName) {
+    _roleName = roleName;
   }
 
   @Override
-  public void doSetup(DrillbitContext dbContext) throws DrillException {
-    setup(new DrillSpnegoAuthenticator(), new DrillSpnegoLoginService(dbContext));
+  public String getName() {
+    return _roleName;
+  }
+
+  @Override
+  public int hashCode() {
+    return _roleName.hashCode();
+  }
+
+  @Override
+  public boolean equals(Object o) {
+    return o instanceof RolePrincipal && _roleName.equals(((RolePrincipal) o)._roleName);
+  }
+
+  @Override
+  public String toString() {
+    return "RolePrincipal[" + _roleName + "]";
   }
 }
