@@ -42,6 +42,8 @@ import org.apache.drill.exec.rpc.security.AuthenticatorProvider;
 import org.apache.drill.exec.rpc.user.UserServer;
 import org.apache.drill.exec.rpc.user.UserServer.BitToUserConnection;
 import org.apache.drill.exec.rpc.user.UserServer.BitToUserConnectionConfig;
+import org.apache.drill.exec.schema.daffodil.DaffodilSchemaProvider;
+import org.apache.drill.exec.schema.daffodil.RemoteDaffodilSchemaRegistry;
 import org.apache.drill.exec.server.options.SystemOptionManager;
 import org.apache.drill.exec.store.SchemaFactory;
 import org.apache.drill.exec.store.StoragePluginRegistry;
@@ -82,6 +84,7 @@ public class DrillbitContext implements AutoCloseable {
   private ResourceManager resourceManager;
   private final MetastoreRegistry metastoreRegistry;
   private final DrillCounters counters;
+  private final DaffodilSchemaProvider daffodilSchemaProvider;
 
   public DrillbitContext(
       DrillbitEndpoint endpoint,
@@ -132,6 +135,9 @@ public class DrillbitContext implements AutoCloseable {
     this.metastoreRegistry = new MetastoreRegistry(config);
     this.aliasRegistryProvider = new AliasRegistryProvider(this);
     this.oAuthTokenProvider = new OAuthTokenProvider(this);
+
+    // TODO Start here and complete the initialization process
+    this.daffodilSchemaProvider = new DaffodilSchemaProvider(config, provider, coord);
 
     this.counters = DrillCounters.getInstance();
   }
@@ -284,6 +290,14 @@ public class DrillbitContext implements AutoCloseable {
     return functionRegistry.getRemoteFunctionRegistry();
   }
 
+  public DaffodilSchemaProvider getDaffodilSchemaProvider() {
+    return daffodilSchemaProvider;
+  }
+
+  public RemoteDaffodilSchemaRegistry getRemoteDaffodilSchemaRegistry() {
+    return daffodilSchemaProvider.getRemoteDaffodilSchemaRegistry();
+  }
+
   /**
    * Use the operator table built during startup when "exec.udf.use_dynamic" option
    * is set to false.
@@ -318,6 +332,7 @@ public class DrillbitContext implements AutoCloseable {
     getMetastoreRegistry().close();
     getAliasRegistryProvider().close();
     getOauthTokenProvider().close();
+    getDaffodilSchemaProvider().close();
   }
 
   public ResourceManager getResourceManager() {
