@@ -107,8 +107,11 @@ public class DrillRestServer extends ResourceConfig {
     register(MultiPartFeature.class);
     property(ServerProperties.METAINF_SERVICES_LOOKUP_DISABLE, true);
 
-    // Register Jackson JSON provider explicitly since METAINF_SERVICES_LOOKUP_DISABLE is true
-    register(JacksonJsonProvider.class);
+    // Register Jackson JSON provider with Drill's custom ObjectMapper
+    // This is critical for proper serialization/deserialization of storage plugins and other Drill objects
+    JacksonJsonProvider provider = new JacksonJsonProvider();
+    provider.setMapper(workManager.getContext().getLpPersistence().getMapper());
+    register(provider);
 
     final boolean isAuthEnabled =
       workManager.getContext().getConfig().getBoolean(ExecConstants.USER_AUTHENTICATION_ENABLED);

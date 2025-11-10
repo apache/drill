@@ -19,16 +19,40 @@ package org.apache.drill.exec.server.rest.auth;
 
 import org.apache.drill.exec.server.rest.WebServerConstants;
 import org.eclipse.jetty.ee10.servlet.ErrorPageErrorHandler;
+import org.eclipse.jetty.server.Request;
+import org.eclipse.jetty.util.Callback;
 
 import jakarta.servlet.http.HttpServletRequest;
 import java.io.IOException;
 import java.io.Writer;
 
 /**
- * Custom ErrorHandler class for Drill's WebServer to have better error message in case when SPNEGO login failed and
- * what to do next. In all other cases this would use the generic error page.
+ * Custom ErrorHandler class for Drill's WebServer to handle errors appropriately based on the request type.
+ * - For JSON API endpoints (*.json), returns JSON error responses
+ * - For SPNEGO login failures, provides helpful HTML error page
+ * - For all other cases, returns standard HTML error page
  */
 public class DrillErrorHandler extends ErrorPageErrorHandler {
+
+  @Override
+  public boolean handle(Request target, org.eclipse.jetty.server.Response response, Callback callback) throws Exception {
+    // Check if this is a JSON API request
+    String pathInContext = Request.getPathInContext(target);
+    if (pathInContext != null && pathInContext.endsWith(".json")) {
+      // For JSON API endpoints, return JSON error response instead of HTML
+      response.getHeaders().put("Content-Type", "application/json");
+
+      String jsonError = "{\n  \"errorMessage\" : \"Query submission failed\"\n}";
+
+      // Write the JSON response
+      response.write(true, java.nio.ByteBuffer.wrap(
+          jsonError.getBytes(java.nio.charset.StandardCharsets.UTF_8)), callback);
+      return true;
+    }
+
+    // For non-JSON requests, use default HTML error handling
+    return super.handle(target, response, callback);
+  }
 
   @Override
   protected void writeErrorPageMessage(HttpServletRequest request, Writer writer,
