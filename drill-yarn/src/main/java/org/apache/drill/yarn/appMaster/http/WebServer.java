@@ -17,7 +17,52 @@
  */
 package org.apache.drill.yarn.appMaster.http;
 
-import static org.apache.drill.exec.server.rest.auth.DrillUserPrincipal.ADMIN_ROLE;
+import com.google.common.collect.ImmutableSet;
+import com.typesafe.config.Config;
+import jakarta.servlet.DispatcherType;
+import jakarta.servlet.http.HttpSession;
+import jakarta.servlet.http.HttpSessionEvent;
+import jakarta.servlet.http.HttpSessionListener;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+import org.apache.drill.exec.server.rest.CsrfTokenInjectFilter;
+import org.apache.drill.exec.server.rest.CsrfTokenValidateFilter;
+import org.apache.drill.exec.util.SecureRandomStringUtils;
+import org.apache.drill.yarn.appMaster.Dispatcher;
+import org.apache.drill.yarn.core.DrillOnYarnConfig;
+import org.bouncycastle.asn1.x500.X500NameBuilder;
+import org.bouncycastle.asn1.x500.style.BCStyle;
+import org.bouncycastle.cert.X509v3CertificateBuilder;
+import org.bouncycastle.cert.jcajce.JcaX509CertificateConverter;
+import org.bouncycastle.cert.jcajce.JcaX509v3CertificateBuilder;
+import org.bouncycastle.operator.ContentSigner;
+import org.bouncycastle.operator.jcajce.JcaContentSignerBuilder;
+import org.eclipse.jetty.ee10.servlet.DefaultServlet;
+import org.eclipse.jetty.ee10.servlet.ServletContextHandler;
+import org.eclipse.jetty.ee10.servlet.ServletHolder;
+import org.eclipse.jetty.ee10.servlet.SessionHandler;
+import org.eclipse.jetty.ee10.servlet.security.ConstraintSecurityHandler;
+import org.eclipse.jetty.http.HttpVersion;
+import org.eclipse.jetty.security.DefaultIdentityService;
+import org.eclipse.jetty.security.IdentityService;
+import org.eclipse.jetty.security.LoginService;
+import org.eclipse.jetty.security.SecurityHandler;
+import org.eclipse.jetty.security.UserIdentity;
+import org.eclipse.jetty.security.authentication.FormAuthenticator;
+import org.eclipse.jetty.security.authentication.SessionAuthentication;
+import org.eclipse.jetty.server.HttpConfiguration;
+import org.eclipse.jetty.server.HttpConnectionFactory;
+import org.eclipse.jetty.server.Request;
+import org.eclipse.jetty.server.SecureRequestCustomizer;
+import org.eclipse.jetty.server.Server;
+import org.eclipse.jetty.server.ServerConnector;
+import org.eclipse.jetty.server.Session;
+import org.eclipse.jetty.server.SslConnectionFactory;
+import org.eclipse.jetty.server.handler.ErrorHandler;
+import org.eclipse.jetty.util.resource.ResourceFactory;
+import org.eclipse.jetty.util.ssl.SslContextFactory;
+import org.glassfish.jersey.servlet.ServletContainer;
+import org.joda.time.DateTime;
 
 import java.math.BigInteger;
 import java.security.KeyPair;
@@ -31,54 +76,7 @@ import java.util.Date;
 import java.util.EnumSet;
 import java.util.Set;
 
-import jakarta.servlet.DispatcherType;
-import jakarta.servlet.ServletRequest;
-import jakarta.servlet.http.HttpSession;
-import jakarta.servlet.http.HttpSessionEvent;
-import jakarta.servlet.http.HttpSessionListener;
-
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
-import org.apache.drill.exec.server.rest.CsrfTokenInjectFilter;
-import org.apache.drill.exec.server.rest.CsrfTokenValidateFilter;
-import com.google.common.collect.ImmutableSet;
-import org.apache.drill.exec.util.SecureRandomStringUtils;
-import org.apache.drill.yarn.appMaster.Dispatcher;
-import org.apache.drill.yarn.core.DrillOnYarnConfig;
-import org.bouncycastle.asn1.x500.X500NameBuilder;
-import org.bouncycastle.asn1.x500.style.BCStyle;
-import org.bouncycastle.cert.X509v3CertificateBuilder;
-import org.bouncycastle.cert.jcajce.JcaX509CertificateConverter;
-import org.bouncycastle.cert.jcajce.JcaX509v3CertificateBuilder;
-import org.bouncycastle.operator.ContentSigner;
-import org.bouncycastle.operator.jcajce.JcaContentSignerBuilder;
-import org.eclipse.jetty.http.HttpVersion;
-import org.eclipse.jetty.security.ConstraintSecurityHandler;
-import org.eclipse.jetty.security.DefaultIdentityService;
-import org.eclipse.jetty.security.DefaultUserIdentity;
-import org.eclipse.jetty.security.IdentityService;
-import org.eclipse.jetty.security.LoginService;
-import org.eclipse.jetty.security.SecurityHandler;
-import org.eclipse.jetty.security.authentication.FormAuthenticator;
-import org.eclipse.jetty.security.authentication.SessionAuthentication;
-import org.eclipse.jetty.server.HttpConfiguration;
-import org.eclipse.jetty.server.HttpConnectionFactory;
-import org.eclipse.jetty.server.SecureRequestCustomizer;
-import org.eclipse.jetty.server.Server;
-import org.eclipse.jetty.server.ServerConnector;
-import org.eclipse.jetty.server.SslConnectionFactory;
-import org.eclipse.jetty.server.UserIdentity;
-import org.eclipse.jetty.server.handler.ErrorHandler;
-import org.eclipse.jetty.server.session.SessionHandler;
-import org.eclipse.jetty.servlet.DefaultServlet;
-import org.eclipse.jetty.servlet.ServletContextHandler;
-import org.eclipse.jetty.servlet.ServletHolder;
-import org.eclipse.jetty.util.resource.Resource;
-import org.eclipse.jetty.util.ssl.SslContextFactory;
-import org.glassfish.jersey.servlet.ServletContainer;
-import org.joda.time.DateTime;
-
-import com.typesafe.config.Config;
+import static org.apache.drill.exec.server.rest.auth.DrillUserPrincipal.ADMIN_ROLE;
 
 /**
  * Wrapper around the Jetty web server.
@@ -95,7 +93,7 @@ import com.typesafe.config.Config;
 public class WebServer implements AutoCloseable {
   private static final Log LOG = LogFactory.getLog(WebServer.class);
   private final Server jettyServer;
-  private Dispatcher dispatcher;
+  private final Dispatcher dispatcher;
 
   public WebServer(Dispatcher dispatcher) {
     this.dispatcher = dispatcher;
@@ -148,9 +146,9 @@ public class WebServer implements AutoCloseable {
    */
   private void buildServlets(Config config) {
 
-    final ServletContextHandler servletContextHandler = new ServletContextHandler(
-        null, "/");
+    final ServletContextHandler servletContextHandler = new ServletContextHandler(ServletContextHandler.SESSIONS);
     servletContextHandler.setErrorHandler(createErrorHandler());
+    servletContextHandler.setContextPath("/");
     jettyServer.setHandler(servletContextHandler);
 
     // Servlet holder for the pages of the Drill AM web app. The web app is a
@@ -217,10 +215,12 @@ public class WebServer implements AutoCloseable {
     // non-Servlet
     // version.)
 
+    ResourceFactory resourceFactory = ResourceFactory.of(servletContextHandler);
+
     final ServletHolder staticHolder = new ServletHolder("static",
         DefaultServlet.class);
     staticHolder.setInitParameter("resourceBase",
-        Resource.newClassPathResource("/rest/static").toString());
+        resourceFactory.newClassLoaderResource("/rest/static").getURI().toString());
     staticHolder.setInitParameter("dirAllowed", "false");
     staticHolder.setInitParameter("pathInfoOnly", "true");
     servletContextHandler.addServlet(staticHolder, "/static/*");
@@ -228,7 +228,7 @@ public class WebServer implements AutoCloseable {
     final ServletHolder amStaticHolder = new ServletHolder("am-static",
         DefaultServlet.class);
     amStaticHolder.setInitParameter("resourceBase",
-        Resource.newClassPathResource("/drill-am/static").toString());
+        resourceFactory.newClassLoaderResource("/drill-am/static").getURI().toString());
     amStaticHolder.setInitParameter("dirAllowed", "false");
     amStaticHolder.setInitParameter("pathInfoOnly", "true");
     servletContextHandler.addServlet(amStaticHolder, "/drill-am/static/*");
@@ -261,11 +261,21 @@ public class WebServer implements AutoCloseable {
     }
 
     @Override
-    public UserIdentity login(String username, Object credentials, ServletRequest request) {
+    public UserIdentity login(String username, Object credentials, Request request, java.util.function.Function<Boolean, Session> getOrCreateSession) {
+      if (!(credentials instanceof String)) {
+        return null;
+      }
       if (!securityMgr.login(username, (String) credentials)) {
         return null;
       }
-      return new DefaultUserIdentity(null, new AMUserPrincipal(username), new String[] { ADMIN_ROLE });
+
+      // Create a Subject with the user principal
+      javax.security.auth.Subject subject = new javax.security.auth.Subject();
+      Principal userPrincipal = new AMUserPrincipal(username);
+      subject.getPrincipals().add(userPrincipal);
+
+      String[] roles = new String[] { ADMIN_ROLE };
+      return identityService.newUserIdentity(subject, userPrincipal, roles);
     }
 
     @Override
@@ -334,11 +344,11 @@ public class WebServer implements AutoCloseable {
         }
 
         final Object authCreds = session
-            .getAttribute(SessionAuthentication.__J_AUTHENTICATED);
+            .getAttribute(SessionAuthentication.AUTHENTICATED_ATTRIBUTE);
         if (authCreds != null) {
           final SessionAuthentication sessionAuth = (SessionAuthentication) authCreds;
-          securityHandler.logout(sessionAuth);
-          session.removeAttribute(SessionAuthentication.__J_AUTHENTICATED);
+          // In Jetty 12, logout is handled differently - we just remove the attribute
+          session.removeAttribute(SessionAuthentication.AUTHENTICATED_ATTRIBUTE);
         }
       }
     });

@@ -19,14 +19,13 @@ package org.apache.drill.exec.server.rest.auth;
 
 import org.apache.drill.common.exceptions.DrillException;
 import org.apache.drill.exec.server.DrillbitContext;
-import org.eclipse.jetty.util.security.Constraint;
 
 @SuppressWarnings({"rawtypes", "unchecked"})
 public class SpnegoSecurityHandler extends DrillHttpConstraintSecurityHandler {
 
   @Override
   public String getImplName() {
-    return Constraint.__SPNEGO_AUTH;
+    return "SPNEGO";
   }
 
   @Override

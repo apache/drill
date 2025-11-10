@@ -22,12 +22,11 @@ import org.apache.drill.exec.rpc.security.plain.PlainFactory;
 import org.apache.drill.exec.server.DrillbitContext;
 import org.apache.drill.exec.server.rest.WebServerConstants;
 import org.eclipse.jetty.security.authentication.FormAuthenticator;
-import org.eclipse.jetty.util.security.Constraint;
 
 public class FormSecurityHandler extends DrillHttpConstraintSecurityHandler {
   @Override
   public String getImplName() {
-    return Constraint.__FORM_AUTH;
+    return "FORM";
   }
 
   @Override

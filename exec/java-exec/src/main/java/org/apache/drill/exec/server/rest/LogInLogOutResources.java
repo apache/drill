@@ -26,7 +26,6 @@ import org.apache.drill.exec.work.WorkManager;
 import com.google.common.annotations.VisibleForTesting;
 import org.eclipse.jetty.security.authentication.FormAuthenticator;
 import org.eclipse.jetty.security.authentication.SessionAuthentication;
-import org.eclipse.jetty.util.security.Constraint;
 import org.glassfish.jersey.server.mvc.Viewable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -125,7 +124,7 @@ public class LogInLogOutResources {
   public void logout(@Context HttpServletRequest req, @Context HttpServletResponse resp) throws Exception {
     final HttpSession session = req.getSession();
     if (session != null) {
-      final Object authCreds = session.getAttribute(SessionAuthentication.__J_AUTHENTICATED);
+      final Object authCreds = session.getAttribute(SessionAuthentication.AUTHENTICATED_ATTRIBUTE);
       if (authCreds != null) {
         final SessionAuthentication sessionAuth = (SessionAuthentication) authCreds;
         logger.info("WebUser {} logged out from {}:{}", sessionAuth.getUserIdentity().getUserPrincipal().getName(), req
@@ -168,11 +167,11 @@ public class LogInLogOutResources {
     }
 
     public boolean isSpnegoEnabled() {
-      return authEnabled && configuredMechs.contains(Constraint.__SPNEGO_AUTH);
+      return authEnabled && configuredMechs.contains("SPNEGO");
     }
 
     public boolean isFormEnabled() {
-      return authEnabled && configuredMechs.contains(Constraint.__FORM_AUTH);
+      return authEnabled && configuredMechs.contains("FORM");
     }
 
     public String getError() {

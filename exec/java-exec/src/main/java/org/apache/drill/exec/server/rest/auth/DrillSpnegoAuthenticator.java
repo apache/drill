@@ -20,28 +20,25 @@ package org.apache.drill.exec.server.rest.auth;
 
 import org.apache.drill.exec.server.rest.WebServerConstants;
 import org.apache.parquet.Strings;
+import org.eclipse.jetty.ee10.servlet.ServletContextRequest;
+import org.eclipse.jetty.http.HttpField;
+import org.eclipse.jetty.http.HttpFields;
 import org.eclipse.jetty.http.HttpHeader;
-import org.eclipse.jetty.http.HttpVersion;
+import org.eclipse.jetty.http.HttpStatus;
+import org.eclipse.jetty.security.AuthenticationState;
 import org.eclipse.jetty.security.ServerAuthException;
-import org.eclipse.jetty.security.UserAuthentication;
-import org.eclipse.jetty.security.authentication.DeferredAuthentication;
+import org.eclipse.jetty.security.UserIdentity;
 import org.eclipse.jetty.security.authentication.LoginAuthenticator;
 import org.eclipse.jetty.security.authentication.SessionAuthentication;
-import org.eclipse.jetty.server.Authentication;
-import org.eclipse.jetty.server.Authentication.User;
 import org.eclipse.jetty.server.Request;
-import org.eclipse.jetty.server.UserIdentity;
+import org.eclipse.jetty.server.Response;
+import org.eclipse.jetty.util.Callback;
 
-
-import jakarta.servlet.ServletRequest;
-import jakarta.servlet.ServletResponse;
 import jakarta.servlet.http.HttpServletRequest;
-import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
-import java.io.IOException;
 
 /**
- * Custom SpnegoAuthenticator for Drill
+ * Custom SpnegoAuthenticator for Drill - Jetty 12 version
  *
  * This class extends LoginAuthenticator and provides SPNEGO authentication support.
  */
@@ -56,148 +53,109 @@ public class DrillSpnegoAuthenticator extends LoginAuthenticator {
 
 
   /**
-   * Updated logic as compared to default implementation in
-   * {@link SpnegoAuthenticator#validateRequest(ServletRequest, ServletResponse, boolean)} to handle below cases:
-   * 1) Perform SPNEGO authentication only when spnegoLogin resource is requested. This helps to avoid authentication
-   *    for each and every resource which the JETTY provided authenticator does.
-   * 2) Helps to redirect to the target URL after authentication is done successfully.
-   * 3) Clear-Up in memory session information once LogOut is triggered such that any future request also triggers SPNEGO
-   *    authentication.
-   * @param request
-   * @param response
-   * @param mandatoryAuth
-   * @return
-   * @throws ServerAuthException
+   * Jetty 12 validateRequest implementation using core Request/Response/Callback API.
+   * Handles:
+   * 1) Perform SPNEGO authentication only when spnegoLogin resource is requested
+   * 2) Redirect to target URL after authentication
+   * 3) Clear session information on logout
    */
   @Override
-  public Authentication validateRequest(ServletRequest request, ServletResponse response, boolean mandatoryAuth)
+  public AuthenticationState validateRequest(Request request, Response response, Callback callback)
       throws ServerAuthException {
 
-    final HttpServletRequest req = (HttpServletRequest) request;
-    final HttpSession session = req.getSession(true);
-    final Authentication authentication = (Authentication) session.getAttribute(SessionAuthentication.__J_AUTHENTICATED);
-    final String uri = req.getRequestURI();
+    // Get the servlet request from the core request
+    ServletContextRequest servletContextRequest = Request.as(request, ServletContextRequest.class);
+    if (servletContextRequest == null) {
+      return AuthenticationState.CHALLENGE;
+    }
+
+    HttpServletRequest httpReq = servletContextRequest.getServletApiRequest();
+    final HttpSession session = httpReq.getSession(true);
+    final String uri = httpReq.getRequestURI();
+
+    // Check if already authenticated
+    final AuthenticationState authentication = (AuthenticationState) session.getAttribute(SessionAuthentication.AUTHENTICATED_ATTRIBUTE);
 
     // If the Request URI is for /spnegoLogin then perform login
-    final boolean mandatory = mandatoryAuth || uri.equals(WebServerConstants.SPENGO_LOGIN_RESOURCE_PATH);
+    final boolean mandatory = uri.equals(WebServerConstants.SPENGO_LOGIN_RESOURCE_PATH);
 
-    // For logout the attribute from the session that holds UserIdentity will be removed when session is getting
-    // invalidated
-    if (authentication != null) {
+    // For logout, clear authentication
+    if (authentication instanceof AuthenticationState.Succeeded) {
       if (uri.equals(WebServerConstants.LOGOUT_RESOURCE_PATH)) {
         return null;
       }
-
-      // Already logged in so just return the session attribute.
+      // Already logged in
       return authentication;
     }
 
-    // Try to authenticate an unauthenticated session.
-    return authenticateSession(request, response, mandatory);
+    // Try to authenticate
+    return authenticateSession(request, response, callback, servletContextRequest, httpReq, session, mandatory);
   }
 
   /**
    * Method to authenticate a user session using the SPNEGO token passed in AUTHORIZATION header of request.
-   * @param request
-   * @param response
-   * @param mandatory
-   * @return
-   * @throws ServerAuthException
    */
-  private Authentication authenticateSession(ServletRequest request, ServletResponse response, boolean mandatory)
+  private AuthenticationState authenticateSession(Request request, Response response, Callback callback,
+                                                    ServletContextRequest servletContextRequest,
+                                                    HttpServletRequest httpReq, HttpSession session, boolean mandatory)
       throws ServerAuthException {
 
-    final HttpServletRequest req = (HttpServletRequest) request;
-    final HttpServletResponse res = (HttpServletResponse) response;
-    final HttpSession session = req.getSession(true);
-
-    // Defer the authentication if not mandatory.
+    // Defer the authentication if not mandatory
     if (!mandatory) {
-      return new DeferredAuthentication(this);
+      return AuthenticationState.CHALLENGE;
     }
 
     // Authentication is mandatory, get the Authorization header
-    final String header = req.getHeader(HttpHeader.AUTHORIZATION.asString());
+    final HttpFields fields = request.getHeaders();
+    final HttpField authField = fields.getField(HttpHeader.AUTHORIZATION);
+    final String header = authField != null ? authField.getValue() : null;
 
-    // Authorization header is null, so send the 401 error code to client along with negotiate header
+    // Authorization header is null, send 401 challenge
     if (header == null) {
-      try {
-        if (DeferredAuthentication.isDeferred(res)) {
-          return Authentication.UNAUTHENTICATED;
-        } else {
-          res.setHeader(HttpHeader.WWW_AUTHENTICATE.asString(), HttpHeader.NEGOTIATE.asString());
-          res.sendError(401);
-          logger.debug("DrillSpnegoAuthenticator: Sending challenge to client {}", req.getRemoteAddr());
-          return Authentication.SEND_CONTINUE;
-        }
-      } catch (IOException e) {
-        logger.error("DrillSpnegoAuthenticator: Failed while sending challenge to client {}", req.getRemoteAddr(), e);
-        throw new ServerAuthException(e);
-      }
+      response.getHeaders().put(HttpHeader.WWW_AUTHENTICATE, HttpHeader.NEGOTIATE.asString());
+      Response.writeError(request, response, callback, HttpStatus.UNAUTHORIZED_401);
+      logger.debug("DrillSpnegoAuthenticator: Sending challenge to client {}", httpReq.getRemoteAddr());
+      return new UserAuthenticationSent(AUTH_METHOD, null);
     }
 
     // Valid Authorization header received. Get the SPNEGO token sent by client and try to authenticate
-    logger.debug("DrillSpnegoAuthenticator: Received NEGOTIATE Response back from client {}", req.getRemoteAddr());
+    logger.debug("DrillSpnegoAuthenticator: Received NEGOTIATE Response back from client {}", httpReq.getRemoteAddr());
     final String negotiateString = HttpHeader.NEGOTIATE.asString();
 
     if (header.startsWith(negotiateString)) {
       final String spnegoToken = header.substring(negotiateString.length() + 1);
-      final UserIdentity user = this.login(null, spnegoToken, request);
+      final UserIdentity user = this.login(null, spnegoToken, request, response);
 
-      //redirect the request to the desired page after successful login
+      // Redirect the request to the desired page after successful login
       if (user != null) {
         String newUri = (String) session.getAttribute("org.eclipse.jetty.security.form_URI");
         if (Strings.isNullOrEmpty(newUri)) {
-          newUri = req.getContextPath();
+          newUri = httpReq.getContextPath();
           if (Strings.isNullOrEmpty(newUri)) {
             newUri = WebServerConstants.WEBSERVER_ROOT_PATH;
           }
         }
-        response.setContentLength(0);
-        Request baseRequest = Request.getBaseRequest(req);
-        int redirectCode =
-            baseRequest.getHttpVersion().getVersion() < HttpVersion.HTTP_1_1.getVersion() ? 302 : 303;
-        try {
-          baseRequest.getResponse().sendRedirect(redirectCode, res.encodeRedirectURL(newUri));
-        } catch (IOException e) {
-          logger.error("DrillSpnegoAuthenticator: Failed while using the redirect URL {} from client {}", newUri,
-              req.getRemoteAddr(), e);
-          throw new ServerAuthException(e);
-        }
+
+        // Send redirect
+        Response.sendRedirect(request, response, callback, newUri);
 
         logger.debug("DrillSpnegoAuthenticator: Successfully authenticated this client session: {}",
             user.getUserPrincipal().getName());
-        return new UserAuthentication(AUTH_METHOD, user);
+
+        // Store authentication in session
+        final SessionAuthentication cached = new SessionAuthentication(AUTH_METHOD, user, spnegoToken);
+        session.setAttribute(SessionAuthentication.AUTHENTICATED_ATTRIBUTE, cached);
+
+        return new UserAuthenticationSucceeded(AUTH_METHOD, user);
       }
     }
 
-    logger.debug("DrillSpnegoAuthenticator: Authentication failed for client session: {}", req.getRemoteAddr());
-    return Authentication.UNAUTHENTICATED;
-
+    logger.debug("DrillSpnegoAuthenticator: Authentication failed for client session: {}", httpReq.getRemoteAddr());
+    return AuthenticationState.CHALLENGE;
   }
 
   @Override
-  public String getAuthMethod() {
+  public String getAuthenticationType() {
     return AUTH_METHOD;
-  }
-
-  @Override
-  public boolean secureResponse(ServletRequest request, ServletResponse response, boolean mandatory, User user)
-      throws ServerAuthException {
-    // For SPNEGO authentication, we don't need to do anything special on the response
-    // The response is handled by the authenticateSession method
-    return true;
-  }
-
-  public UserIdentity login(String username, Object password, ServletRequest request) {
-    final UserIdentity user = super.login(username, password, request);
-
-    if (user != null) {
-      final HttpSession session = ((HttpServletRequest) request).getSession(true);
-      final Authentication cached = new SessionAuthentication(AUTH_METHOD, user, password);
-      session.setAttribute(SessionAuthentication.__J_AUTHENTICATED, cached);
-    }
-
-    return user;
   }
 }

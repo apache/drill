@@ -28,11 +28,13 @@ import org.apache.drill.exec.util.ImpersonationUtil;
 import org.eclipse.jetty.security.DefaultIdentityService;
 import org.eclipse.jetty.security.IdentityService;
 import org.eclipse.jetty.security.LoginService;
-import org.eclipse.jetty.server.UserIdentity;
+import org.eclipse.jetty.security.UserIdentity;
+import org.eclipse.jetty.server.Request;
+import org.eclipse.jetty.server.Session;
 
 import javax.security.auth.Subject;
-import jakarta.servlet.ServletRequest;
 import java.security.Principal;
+import java.util.function.Function;
 
 /**
  * LoginService used when user authentication is enabled in Drillbit. It validates the user against the user
@@ -63,7 +65,7 @@ public class DrillRestLoginService implements LoginService {
   }
 
   @Override
-  public UserIdentity login(String username, Object credentials, ServletRequest request) {
+  public UserIdentity login(String username, Object credentials, Request request, Function<Boolean, Session> getOrCreateSession) {
     if (!(credentials instanceof String)) {
       return null;
     }
@@ -78,7 +80,11 @@ public class DrillRestLoginService implements LoginService {
       // Authenticate the user with configured Authenticator
       userAuthenticator.authenticate(username, credentials.toString());
 
-      logger.info("WebUser {} logged in from {}:{}", username, request.getRemoteHost(), request.getRemotePort());
+      // Get remote host and port from the Request
+      String remoteHost = Request.getRemoteAddr(request);
+      int remotePort = Request.getRemotePort(request);
+
+      logger.info("WebUser {} logged in from {}:{}", username, remoteHost, remotePort);
 
       final SystemOptionManager sysOptions = drillbitContext.getOptionManager();
 

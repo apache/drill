@@ -28,7 +28,9 @@ import org.apache.hadoop.security.UserGroupInformation;
 import org.eclipse.jetty.security.DefaultIdentityService;
 import org.eclipse.jetty.security.IdentityService;
 import org.eclipse.jetty.security.LoginService;
-import org.eclipse.jetty.server.UserIdentity;
+import org.eclipse.jetty.security.UserIdentity;
+import org.eclipse.jetty.server.Request;
+import org.eclipse.jetty.server.Session;
 import org.ietf.jgss.GSSContext;
 import org.ietf.jgss.GSSCredential;
 import org.ietf.jgss.GSSException;
@@ -37,11 +39,11 @@ import org.ietf.jgss.GSSName;
 import org.ietf.jgss.Oid;
 
 import javax.security.auth.Subject;
-import jakarta.servlet.ServletRequest;
 import java.io.IOException;
 import java.security.Principal;
 import java.security.PrivilegedExceptionAction;
 import java.util.Base64;
+import java.util.function.Function;
 
 /**
  * Custom implementation of DrillSpnegoLoginService to avoid the need of passing targetName in a config file,
@@ -94,7 +96,7 @@ public class DrillSpnegoLoginService implements LoginService {
   }
 
   @Override
-  public UserIdentity login(final String username, final Object credentials, ServletRequest request) {
+  public UserIdentity login(final String username, final Object credentials, Request request, Function<Boolean, Session> getOrCreateSession) {
 
     UserIdentity identity = null;
     try {
@@ -106,7 +108,7 @@ public class DrillSpnegoLoginService implements LoginService {
     return identity;
   }
 
-  private UserIdentity spnegoLogin(Object credentials, ServletRequest request) {
+  private UserIdentity spnegoLogin(Object credentials, Request request) {
 
     String encodedAuthToken = (String) credentials;
     byte[] authToken = Base64.getDecoder().decode(encodedAuthToken);
@@ -137,8 +139,12 @@ public class DrillSpnegoLoginService implements LoginService {
 
           // Get the client user short name
           final String userShortName = new HadoopKerberosName(clientName).getShortName();
-          logger.info("WebUser {} logged in from {}:{}", userShortName, request.getRemoteHost(),
-            request.getRemotePort());
+
+          // Get remote host and port from the Request
+          String remoteHost = Request.getRemoteAddr(request);
+          int remotePort = Request.getRemotePort(request);
+
+          logger.info("WebUser {} logged in from {}:{}", userShortName, remoteHost, remotePort);
           logger.debug("Client Name: {}, realm: {} and shortName: {}", clientName, realm, userShortName);
           final SystemOptionManager sysOptions = drillContext.getOptionManager();
           final boolean isAdmin = ImpersonationUtil.hasAdminPrivileges(userShortName,
