@@ -19,3 +19,7 @@ For more info about generating and using javadocs see [Javadocs.md](Javadocs.md)
 ## Building with Maven
 
 For more info about the use of maven see [Maven.md](Maven.md)
+
+## Jetty 12 Migration
+
+For information about the Jetty 12 upgrade, known limitations, and developer guidelines see [Jetty12Migration.md](Jetty12Migration.md)
