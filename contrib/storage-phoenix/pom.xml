@@ -43,6 +43,17 @@
       <groupId>org.apache.drill.exec</groupId>
       <artifactId>drill-java-exec</artifactId>
       <version>${project.version}</version>
+      <exclusions>
+        <!-- Exclude Jetty 9 from Hadoop transitives to avoid conflicts with Jetty 12 -->
+        <exclusion>
+          <groupId>org.eclipse.jetty</groupId>
+          <artifactId>jetty-webapp</artifactId>
+        </exclusion>
+        <exclusion>
+          <groupId>org.eclipse.jetty.websocket</groupId>
+          <artifactId>*</artifactId>
+        </exclusion>
+      </exclusions>
     </dependency>
     <dependency>
       <groupId>org.apache.drill.exec</groupId>
@@ -128,6 +139,15 @@
           <groupId>org.apache.hadoop</groupId>
           <artifactId>hadoop-yarn-server-tests</artifactId>
         </exclusion>
+        <!-- Exclude Jetty 9 from Hadoop to avoid conflicts with Jetty 12 -->
+        <exclusion>
+          <groupId>org.eclipse.jetty</groupId>
+          <artifactId>*</artifactId>
+        </exclusion>
+        <exclusion>
+          <groupId>org.eclipse.jetty.websocket</groupId>
+          <artifactId>*</artifactId>
+        </exclusion>
       </exclusions>
     </dependency>
 
@@ -136,6 +156,17 @@
       <artifactId>hbase-server</artifactId>
       <version>${hbase.version}</version>
       <scope>test</scope>
+      <exclusions>
+        <!-- Exclude Jetty 9 from Hadoop to avoid conflicts with Jetty 12 -->
+        <exclusion>
+          <groupId>org.eclipse.jetty</groupId>
+          <artifactId>*</artifactId>
+        </exclusion>
+        <exclusion>
+          <groupId>org.eclipse.jetty.websocket</groupId>
+          <artifactId>*</artifactId>
+        </exclusion>
+      </exclusions>
     </dependency>
     <dependency>
       <groupId>org.apache.hbase</groupId>
@@ -288,6 +319,14 @@
       <groupId>org.bouncycastle</groupId>
       <artifactId>bcprov-jdk18on</artifactId>
       <version>1.78.1</version>
+      <scope>test</scope>
+    </dependency>
+
+    <!-- Jakarta Bean Validation API needed by HBase shaded Jetty/Jersey -->
+    <dependency>
+      <groupId>javax.validation</groupId>
+      <artifactId>validation-api</artifactId>
+      <version>2.0.1.Final</version>
       <scope>test</scope>
     </dependency>
   </dependencies>
