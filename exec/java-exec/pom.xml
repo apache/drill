@@ -424,6 +424,11 @@
           <groupId>ch.qos.reload4j</groupId>
           <artifactId>reload4j</artifactId>
         </exclusion>
+        <!-- Exclude Jetty 9 from compile scope, we use Jetty 12 -->
+        <exclusion>
+          <groupId>org.eclipse.jetty</groupId>
+          <artifactId>jetty-webapp</artifactId>
+        </exclusion>
       </exclusions>
     </dependency>
     <dependency>
@@ -490,6 +495,11 @@
         <exclusion>
           <groupId>com.fasterxml.jackson.jaxrs</groupId>
           <artifactId>jackson-jaxrs-base</artifactId>
+        </exclusion>
+        <!-- Exclude Jetty 9 websocket from compile scope, we use Jetty 12 -->
+        <exclusion>
+          <groupId>org.eclipse.jetty.websocket</groupId>
+          <artifactId>*</artifactId>
         </exclusion>
       </exclusions>
     </dependency>
