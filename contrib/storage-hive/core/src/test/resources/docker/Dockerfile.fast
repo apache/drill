@@ -1,0 +1,20 @@
+# Fast Dockerfile for Hive testing - skips test data initialization
+# Test data will be created by tests via JDBC connections
+FROM apache/hive:3.1.3
+
+USER root
+
+# Install beeline for connection testing
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    netcat \
+    && rm -rf /var/lib/apt/lists/*
+
+# Copy fast entrypoint script
+COPY entrypoint-fast.sh /opt/entrypoint.sh
+RUN chmod +x /opt/entrypoint.sh
+
+# Expose ports
+EXPOSE 9083 10000 10002
+
+# Set entrypoint
+ENTRYPOINT ["/opt/entrypoint.sh"]

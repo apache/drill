@@ -1306,7 +1306,7 @@ public class TestHiveArrays extends HiveTestBase {
 
   @Test
   public void arrayViewDefinedInDrill() throws Exception {
-    test(
+    queryBuilder().sql(
         "CREATE VIEW " + StoragePluginTestUtils.DFS_TMP_SCHEMA + ".`dfs_arr_vw` AS " +
             "SELECT " +
             "   t1.rid as vwrid," +
@@ -1363,7 +1363,7 @@ public class TestHiveArrays extends HiveTestBase {
             "   t1.rid=t11.rid AND" +
             "   t1.rid=t12.rid AND" +
             "   t1.rid=t13.rid "
-    );
+    ).run();
 
     testBuilder()
         .sqlQuery("SELECT * FROM " + StoragePluginTestUtils.DFS_TMP_SCHEMA + ".`dfs_arr_vw` WHERE vwrid=1")
@@ -1438,7 +1438,7 @@ public class TestHiveArrays extends HiveTestBase {
 
   @Test
   public void structArrayN0ByIdxP1() throws Exception {
-    // HiveTestUtilities.assertNativeScanUsed(queryBuilder(), "struct_array_p");
+    HiveTestUtilities.assertNativeScanUsed(queryBuilder(), "struct_array_p");
     testBuilder()
         .sqlQuery("SELECT rid, arr_n_0[1].c p1 FROM hive.struct_array_p")
         .unOrdered()
@@ -1450,7 +1450,7 @@ public class TestHiveArrays extends HiveTestBase {
 
   @Test
   public void structArrayN0ByIdxP2() throws Exception {
-    // HiveTestUtilities.assertNativeScanUsed(queryBuilder(), "struct_array_p");
+    HiveTestUtilities.assertNativeScanUsed(queryBuilder(), "struct_array_p");
     testBuilder()
         .sqlQuery("SELECT rid, arr_n_0[2] p2 FROM hive.struct_array_p")
         .unOrdered()
