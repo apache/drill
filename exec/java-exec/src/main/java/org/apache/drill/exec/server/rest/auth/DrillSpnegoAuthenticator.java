@@ -26,6 +26,7 @@ import org.eclipse.jetty.http.HttpFields;
 import org.eclipse.jetty.http.HttpHeader;
 import org.eclipse.jetty.http.HttpStatus;
 import org.eclipse.jetty.security.AuthenticationState;
+import org.eclipse.jetty.security.Authenticator;
 import org.eclipse.jetty.security.ServerAuthException;
 import org.eclipse.jetty.security.UserIdentity;
 import org.eclipse.jetty.security.authentication.LoginAuthenticator;
@@ -45,7 +46,6 @@ import jakarta.servlet.http.HttpSession;
 public class DrillSpnegoAuthenticator extends LoginAuthenticator {
 
   private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(DrillSpnegoAuthenticator.class);
-  private static final String AUTH_METHOD = "SPNEGO";
 
   public DrillSpnegoAuthenticator() {
     super();
@@ -115,7 +115,7 @@ public class DrillSpnegoAuthenticator extends LoginAuthenticator {
       response.getHeaders().put(HttpHeader.WWW_AUTHENTICATE, HttpHeader.NEGOTIATE.asString());
       Response.writeError(request, response, callback, HttpStatus.UNAUTHORIZED_401);
       logger.debug("DrillSpnegoAuthenticator: Sending challenge to client {}", httpReq.getRemoteAddr());
-      return new UserAuthenticationSent(AUTH_METHOD, null);
+      return new UserAuthenticationSent(Authenticator.SPNEGO_AUTH, null);
     }
 
     // Valid Authorization header received. Get the SPNEGO token sent by client and try to authenticate
@@ -143,10 +143,10 @@ public class DrillSpnegoAuthenticator extends LoginAuthenticator {
             user.getUserPrincipal().getName());
 
         // Store authentication in session
-        final SessionAuthentication cached = new SessionAuthentication(AUTH_METHOD, user, spnegoToken);
+        final SessionAuthentication cached = new SessionAuthentication(Authenticator.SPNEGO_AUTH, user, spnegoToken);
         session.setAttribute(SessionAuthentication.AUTHENTICATED_ATTRIBUTE, cached);
 
-        return new UserAuthenticationSucceeded(AUTH_METHOD, user);
+        return new UserAuthenticationSucceeded(Authenticator.SPNEGO_AUTH, user);
       }
     }
 
@@ -156,6 +156,6 @@ public class DrillSpnegoAuthenticator extends LoginAuthenticator {
 
   @Override
   public String getAuthenticationType() {
-    return AUTH_METHOD;
+    return Authenticator.SPNEGO_AUTH;
   }
 }

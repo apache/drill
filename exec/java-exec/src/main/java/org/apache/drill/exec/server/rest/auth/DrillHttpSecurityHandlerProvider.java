@@ -29,6 +29,7 @@ import org.apache.drill.exec.rpc.security.AuthStringUtil;
 import org.apache.drill.exec.server.DrillbitContext;
 import org.apache.drill.exec.server.rest.WebServerConstants;
 import org.eclipse.jetty.http.HttpHeader;
+import org.eclipse.jetty.security.Authenticator;
 import org.eclipse.jetty.security.authentication.SessionAuthentication;
 import org.eclipse.jetty.server.Handler;
 import org.eclipse.jetty.server.Request;
@@ -147,13 +148,13 @@ public class DrillHttpSecurityHandlerProvider extends Handler.Wrapper {
       // 3) If both but uri doesn't equals spnegoLogin then use FORMSecurity
       // 4) If only FORMSecurity handler then use FORMSecurity
       if (isSpnegoEnabled() && (!isFormEnabled() || uri.equals(WebServerConstants.SPENGO_LOGIN_RESOURCE_PATH))) {
-        securityHandler = securityHandlers.get("SPNEGO");
+        securityHandler = securityHandlers.get(Authenticator.SPNEGO_AUTH);
         return securityHandler.handle(request, response, callback);
       } else if(isBasicEnabled() && httpServletRequest.getHeader(HttpHeader.AUTHORIZATION.asString()) != null) {
         securityHandler = securityHandlers.get("BASIC");
         return securityHandler.handle(request, response, callback);
       } else if (isFormEnabled()) {
-        securityHandler = securityHandlers.get("FORM");
+        securityHandler = securityHandlers.get(Authenticator.FORM_AUTH);
         return securityHandler.handle(request, response, callback);
       }
 
@@ -185,11 +186,11 @@ public class DrillHttpSecurityHandlerProvider extends Handler.Wrapper {
   }
 
   public boolean isSpnegoEnabled() {
-    return securityHandlers.containsKey("SPNEGO");
+    return securityHandlers.containsKey(Authenticator.SPNEGO_AUTH);
   }
 
   public boolean isFormEnabled() {
-    return securityHandlers.containsKey("FORM");
+    return securityHandlers.containsKey(Authenticator.FORM_AUTH);
   }
 
   public boolean isBasicEnabled() {
@@ -212,7 +213,7 @@ public class DrillHttpSecurityHandlerProvider extends Handler.Wrapper {
             AuthStringUtil.asSet(config.getStringList(ExecConstants.HTTP_AUTHENTICATION_MECHANISMS)));
       } else {
         // For backward compatibility
-        configuredMechs.add("FORM");
+        configuredMechs.add(Authenticator.FORM_AUTH);
       }
     }
     return configuredMechs;

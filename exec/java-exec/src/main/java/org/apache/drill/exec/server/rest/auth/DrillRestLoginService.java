@@ -28,6 +28,7 @@ import org.apache.drill.exec.util.ImpersonationUtil;
 import org.eclipse.jetty.security.DefaultIdentityService;
 import org.eclipse.jetty.security.IdentityService;
 import org.eclipse.jetty.security.LoginService;
+import org.eclipse.jetty.security.RolePrincipal;
 import org.eclipse.jetty.security.UserIdentity;
 import org.eclipse.jetty.server.Request;
 import org.eclipse.jetty.server.Session;

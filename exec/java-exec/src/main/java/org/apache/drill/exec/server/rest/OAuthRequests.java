@@ -35,7 +35,6 @@ import org.apache.drill.exec.store.StoragePluginRegistry;
 import org.apache.drill.exec.store.StoragePluginRegistry.PluginException;
 import org.apache.drill.exec.store.http.oauth.OAuthUtils;
 import org.apache.drill.exec.store.security.oauth.OAuthTokenCredentials;
-import org.eclipse.jetty.util.resource.ResourceFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -162,7 +161,7 @@ public class OAuthRequests {
 
       // Get success page
       String successPage = null;
-      try (InputStream inputStream = ResourceFactory.root().newClassLoaderResource(OAUTH_SUCCESS_PAGE).newInputStream()) {
+      try (InputStream inputStream = OAuthRequests.class.getClassLoader().getResourceAsStream(OAUTH_SUCCESS_PAGE)) {
         InputStreamReader reader = new InputStreamReader(inputStream, StandardCharsets.UTF_8);
         BufferedReader bufferedReader = new BufferedReader(reader);
         successPage = bufferedReader.lines()

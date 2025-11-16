@@ -456,8 +456,8 @@ public class WebServer implements AutoCloseable {
     int numLeftToWrite = options.size();
 
     // Template source Javascript file
-    ResourceFactory rf = ResourceFactory.root();
-    InputStream optionsDescribeTemplateStream = rf.newClassLoaderResource(OPTIONS_DESCRIBE_TEMPLATE_JS).newInputStream();
+    InputStream optionsDescribeTemplateStream = getClass().getClassLoader()
+        .getResourceAsStream(OPTIONS_DESCRIBE_TEMPLATE_JS);
     // Generated file
     File optionsDescriptionFile = new File(getOrCreateTmpJavaScriptDir(), OPTIONS_DESCRIBE_JS);
     final String file_content_footer = "};";
@@ -513,8 +513,8 @@ public class WebServer implements AutoCloseable {
     // Generated file
     File functionsListFile = new File(getOrCreateTmpJavaScriptDir(), ACE_MODE_SQL_JS);
     // Template source Javascript file
-    ResourceFactory resourceFactory2 = ResourceFactory.root();
-    try (InputStream aceModeSqlTemplateStream = resourceFactory2.newClassLoaderResource(ACE_MODE_SQL_TEMPLATE_JS).newInputStream()) {
+    try (InputStream aceModeSqlTemplateStream = getClass().getClassLoader()
+        .getResourceAsStream(ACE_MODE_SQL_TEMPLATE_JS)) {
       // Create a copy of a template and write with that!
       java.nio.file.Files.copy(aceModeSqlTemplateStream, functionsListFile.toPath());
     }

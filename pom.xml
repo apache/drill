@@ -523,6 +523,10 @@
                   <excludes>
                     <exclude>commons-logging</exclude>
                     <exclude>javax.servlet:servlet-api</exclude>
+                    <exclude>javax.servlet:javax.servlet-api</exclude>
+                    <exclude>javax.servlet.jsp:jsp-api</exclude>
+                    <exclude>javax.servlet.jsp:javax.servlet.jsp-api</exclude>
+                    <exclude>javax.websocket:javax.websocket-api</exclude>
                     <exclude>org.mortbay.jetty:servlet-api</exclude>
                     <exclude>org.mortbay.jetty:servlet-api-2.5</exclude>
                     <exclude>log4j:log4j</exclude>

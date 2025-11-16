@@ -120,6 +120,14 @@
           <groupId>org.codehaus.jackson</groupId>
           <artifactId>jackson-xc</artifactId>
         </exclusion>
+        <exclusion>
+          <groupId>javax.servlet</groupId>
+          <artifactId>javax.servlet-api</artifactId>
+        </exclusion>
+        <exclusion>
+          <groupId>javax.servlet.jsp</groupId>
+          <artifactId>jsp-api</artifactId>
+        </exclusion>
       </exclusions>
     </dependency>
   </dependencies>

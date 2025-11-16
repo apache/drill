@@ -24,6 +24,7 @@ import org.apache.drill.exec.server.rest.auth.AuthDynamicFeature;
 import org.apache.drill.exec.server.rest.auth.DrillHttpSecurityHandlerProvider;
 import org.apache.drill.exec.work.WorkManager;
 import com.google.common.annotations.VisibleForTesting;
+import org.eclipse.jetty.security.Authenticator;
 import org.eclipse.jetty.security.authentication.FormAuthenticator;
 import org.eclipse.jetty.security.authentication.SessionAuthentication;
 import org.glassfish.jersey.server.mvc.Viewable;
@@ -167,11 +168,11 @@ public class LogInLogOutResources {
     }
 
     public boolean isSpnegoEnabled() {
-      return authEnabled && configuredMechs.contains("SPNEGO");
+      return authEnabled && configuredMechs.contains(Authenticator.SPNEGO_AUTH);
     }
 
     public boolean isFormEnabled() {
-      return authEnabled && configuredMechs.contains("FORM");
+      return authEnabled && configuredMechs.contains(Authenticator.FORM_AUTH);
     }
 
     public String getError() {
