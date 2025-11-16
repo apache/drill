@@ -161,7 +161,10 @@ public class OAuthRequests {
 
       // Get success page
       String successPage = null;
-      try (InputStream inputStream = OAuthRequests.class.getClassLoader().getResourceAsStream(OAUTH_SUCCESS_PAGE)) {
+      try (InputStream inputStream = OAuthRequests.class.getResourceAsStream(OAUTH_SUCCESS_PAGE)) {
+        if (inputStream == null) {
+          return Response.status(Status.OK).entity("You may close this window.").build();
+        }
         InputStreamReader reader = new InputStreamReader(inputStream, StandardCharsets.UTF_8);
         BufferedReader bufferedReader = new BufferedReader(reader);
         successPage = bufferedReader.lines()
