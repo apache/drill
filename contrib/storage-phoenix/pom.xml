@@ -353,6 +353,14 @@
       <version>2.0.1.Final</version>
       <scope>test</scope>
     </dependency>
+
+    <!-- Needed by HBase mini cluster for embedded Jetty server -->
+    <dependency>
+      <groupId>javax.servlet</groupId>
+      <artifactId>javax.servlet-api</artifactId>
+      <version>3.1.0</version>
+      <scope>test</scope>
+    </dependency>
   </dependencies>
 
   <build>
@@ -373,6 +381,28 @@
             -Dsun.security.krb5.allowUdp=false
           </argLine>
         </configuration>
+      </plugin>
+      <plugin>
+        <artifactId>maven-enforcer-plugin</artifactId>
+        <executions>
+          <execution>
+            <id>avoid_bad_dependencies</id>
+            <phase>verify</phase>
+            <goals>
+              <goal>enforce</goal>
+            </goals>
+            <configuration>
+              <rules>
+                <bannedDependencies>
+                  <includes>
+                    <!-- Needed by HBase mini cluster for embedded Jetty server -->
+                    <include>javax.servlet:javax.servlet-api:*:jar:test</include>
+                  </includes>
+                </bannedDependencies>
+              </rules>
+            </configuration>
+          </execution>
+        </executions>
       </plugin>
     </plugins>
   </build>

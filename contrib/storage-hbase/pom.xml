@@ -81,6 +81,13 @@
       <version>1.2</version>
       <scope>provided</scope>
     </dependency>
+    <dependency>
+      <!-- Needed by HBase mini cluster for embedded Jetty server -->
+      <groupId>javax.servlet</groupId>
+      <artifactId>javax.servlet-api</artifactId>
+      <version>3.1.0</version>
+      <scope>test</scope>
+    </dependency>
   </dependencies>
 
   <build>
@@ -149,6 +156,8 @@
                   <includes>
                     <!-- Needed by HBase test cluster -->
                     <include>commons-logging:commons-logging:*:jar:provided</include>
+                    <!-- Needed by HBase mini cluster for embedded Jetty server -->
+                    <include>javax.servlet:javax.servlet-api:*:jar:test</include>
                   </includes>
                 </bannedDependencies>
               </rules>
