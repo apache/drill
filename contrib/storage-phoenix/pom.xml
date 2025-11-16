@@ -139,19 +139,6 @@
           <groupId>org.apache.hadoop</groupId>
           <artifactId>hadoop-yarn-server-tests</artifactId>
         </exclusion>
-        <!-- Exclude Jetty 9 from Hadoop to avoid conflicts with Jetty 12 -->
-        <exclusion>
-          <groupId>org.eclipse.jetty</groupId>
-          <artifactId>*</artifactId>
-        </exclusion>
-        <exclusion>
-          <groupId>org.eclipse.jetty.websocket</groupId>
-          <artifactId>*</artifactId>
-        </exclusion>
-        <exclusion>
-          <groupId>javax.servlet</groupId>
-          <artifactId>javax.servlet-api</artifactId>
-        </exclusion>
         <exclusion>
           <groupId>javax.servlet.jsp</groupId>
           <artifactId>jsp-api</artifactId>
@@ -168,29 +155,6 @@
       <artifactId>hbase-server</artifactId>
       <version>${hbase.version}</version>
       <scope>test</scope>
-      <exclusions>
-        <!-- Exclude Jetty 9 from Hadoop to avoid conflicts with Jetty 12 -->
-        <exclusion>
-          <groupId>org.eclipse.jetty</groupId>
-          <artifactId>*</artifactId>
-        </exclusion>
-        <exclusion>
-          <groupId>org.eclipse.jetty.websocket</groupId>
-          <artifactId>*</artifactId>
-        </exclusion>
-        <exclusion>
-          <groupId>javax.servlet</groupId>
-          <artifactId>javax.servlet-api</artifactId>
-        </exclusion>
-        <exclusion>
-          <groupId>javax.servlet.jsp</groupId>
-          <artifactId>jsp-api</artifactId>
-        </exclusion>
-        <exclusion>
-          <groupId>javax.servlet.jsp</groupId>
-          <artifactId>javax.servlet.jsp-api</artifactId>
-        </exclusion>
-      </exclusions>
     </dependency>
     <dependency>
       <groupId>org.apache.hbase</groupId>
@@ -353,14 +317,6 @@
       <version>2.0.1.Final</version>
       <scope>test</scope>
     </dependency>
-
-    <!-- Needed by HBase mini cluster for embedded Jetty server -->
-    <dependency>
-      <groupId>javax.servlet</groupId>
-      <artifactId>javax.servlet-api</artifactId>
-      <version>3.1.0</version>
-      <scope>test</scope>
-    </dependency>
   </dependencies>
 
   <build>
@@ -395,8 +351,12 @@
               <rules>
                 <bannedDependencies>
                   <includes>
-                    <!-- Needed by HBase mini cluster for embedded Jetty server -->
-                    <include>javax.servlet:javax.servlet-api:*:jar:test</include>
+                    <!-- Needed by HBase mini cluster (test scope) for embedded Jetty/web server -->
+                    <include>javax.servlet:*</include>
+                    <include>javax.servlet.jsp:*</include>
+                    <include>javax.websocket:*</include>
+                    <include>org.eclipse.jetty:*</include>
+                    <include>org.eclipse.jetty.websocket:*</include>
                   </includes>
                 </bannedDependencies>
               </rules>
