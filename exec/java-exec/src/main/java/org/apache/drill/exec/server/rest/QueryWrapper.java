@@ -19,7 +19,7 @@ package org.apache.drill.exec.server.rest;
 
 import java.util.Map;
 
-import javax.xml.bind.annotation.XmlRootElement;
+import jakarta.xml.bind.annotation.XmlRootElement;
 
 import org.apache.drill.common.PlanStringBuilder;
 import org.apache.drill.exec.proto.UserBitShared.QueryType;

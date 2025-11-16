@@ -17,6 +17,9 @@
  */
 package org.apache.drill.exec.server.rest.ssl;
 
+import java.io.File;
+import java.io.FileOutputStream;
+import java.security.KeyStore;
 import java.util.Arrays;
 
 import org.apache.drill.categories.OptionsTest;
@@ -40,6 +43,26 @@ public class SslContextFactoryConfiguratorTest extends ClusterTest {
 
   @BeforeClass
   public static void setUpClass() throws Exception {
+    // Create dummy keystore and truststore files for Jetty 12 validation
+    // Jetty 12's SslContextFactory validates that keystore paths exist
+    File sslDir = new File("/tmp/ssl");
+    sslDir.mkdirs();
+
+    // Create empty keystores - we're only testing configuration, not actual SSL
+    char[] password = "passphrase".toCharArray();
+    KeyStore keyStore = KeyStore.getInstance(KeyStore.getDefaultType());
+    keyStore.load(null, password);
+
+    File keystoreFile = new File("/tmp/ssl/keystore.jks");
+    try (FileOutputStream fos = new FileOutputStream(keystoreFile)) {
+      keyStore.store(fos, password);
+    }
+
+    File truststoreFile = new File("/tmp/ssl/cacerts.jks");
+    try (FileOutputStream fos = new FileOutputStream(truststoreFile)) {
+      keyStore.store(fos, password);
+    }
+
     ClusterFixtureBuilder fixtureBuilder = ClusterFixture.builder(dirTestWatcher)
         // imitate proper ssl config for embedded web
         .configProperty(ExecConstants.SSL_PROTOCOL, "TLSv1.3")

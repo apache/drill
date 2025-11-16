@@ -17,7 +17,7 @@
  */
 package org.apache.drill.exec.server.options;
 
-import javax.validation.constraints.NotNull;
+import jakarta.validation.constraints.NotNull;
 
 /**
  * Manager for Drill {@link OptionValue options}. Implementations must be case-insensitive to the name of an option.

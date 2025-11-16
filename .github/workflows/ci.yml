@@ -33,8 +33,8 @@ jobs:
     timeout-minutes: 150
     strategy:
       matrix:
-        # Java versions to run unit tests
-        java: [ '11', '17', '21' ]
+        # Java versions to run unit tests (Jetty 12 requires Java 17+)
+        java: [ '17', '21' ]
         profile: ['default-hadoop']
       fail-fast: false
     steps:
@@ -79,7 +79,7 @@ jobs:
         uses: actions/setup-java@v4
         with:
           distribution: 'temurin'
-          java-version: '11'
+          java-version: '17'
           cache: 'maven'
       # Caches built protobuf library
       - name: Cache protobufs

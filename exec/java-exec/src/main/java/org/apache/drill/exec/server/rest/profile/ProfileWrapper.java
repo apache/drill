@@ -46,7 +46,7 @@ import com.google.common.base.CaseFormat;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 
-import javax.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletRequest;
 
 /**
  * Wrapper class for a {@link #profile query profile}, so it to be presented through web UI.
