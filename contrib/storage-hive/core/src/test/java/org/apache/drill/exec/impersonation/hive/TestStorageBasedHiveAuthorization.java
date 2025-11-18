@@ -53,7 +53,7 @@ public class TestStorageBasedHiveAuthorization extends HiveTestBase {
       stmt.execute("USE db_general");
       stmt.execute("CREATE TABLE IF NOT EXISTS student(name STRING, age INT, gpa DOUBLE)");
       stmt.execute("INSERT INTO student VALUES ('Alice', 20, 3.5), ('Bob', 22, 3.8)");
-      
+
       stmt.execute("CREATE TABLE IF NOT EXISTS voter(name STRING, age INT, registration_date DATE)");
       stmt.execute("INSERT INTO voter VALUES ('Carol', 25, CAST('2020-01-15' AS DATE))");
 

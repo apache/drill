@@ -32,7 +32,6 @@ import org.apache.drill.categories.HiveStorageTest;
 import org.apache.drill.categories.SlowTest;
 import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.hive.HiveTestBase;
-import org.apache.drill.exec.hive.HiveTestUtilities;
 import org.apache.drill.exec.util.StoragePluginTestUtils;
 import org.apache.drill.exec.util.Text;
 import org.apache.drill.test.TestBuilder;
@@ -66,16 +65,16 @@ public class TestHiveArrays extends HiveTestBase {
       for (String type : TYPES) {
         String tableName = getTableNameFromType(type);
         String hiveType = type.toUpperCase();
-        
+
         // Create table
         String ddl = String.format(
             "CREATE TABLE IF NOT EXISTS %s(rid INT, arr_n_0 ARRAY<%s>, arr_n_1 ARRAY<ARRAY<%s>>, arr_n_2 ARRAY<ARRAY<ARRAY<%s>>>) STORED AS ORC",
             tableName, hiveType, hiveType, hiveType);
         stmt.execute(ddl);
-        
+
         // Insert data based on type
         insertArrayData(stmt, tableName, type);
-        
+
         // Create Parquet table
         String parquetTable = tableName + "_p";
         String ddlP = String.format(
@@ -105,7 +104,7 @@ public class TestHiveArrays extends HiveTestBase {
           "(1, array(named_struct('a',1,'b',true,'c','x')), " +
           "array(array(named_struct('x',1.0,'y',2.0))), " +
           "array(array(array(named_struct('t',1,'d',CAST('2020-01-01' AS DATE))))))");
-      
+
       stmt.execute("CREATE TABLE IF NOT EXISTS struct_array_p(" +
           "rid INT, arr_n_0 ARRAY<STRUCT<a:INT,b:BOOLEAN,c:STRING>>," +
           "arr_n_1 ARRAY<ARRAY<STRUCT<x:DOUBLE,y:DOUBLE>>>, " +
@@ -125,7 +124,7 @@ public class TestHiveArrays extends HiveTestBase {
       // Create union_array table
       stmt.execute("CREATE TABLE IF NOT EXISTS dummy_arr(d INT)");
       stmt.execute("INSERT INTO dummy_arr VALUES (1)");
-      
+
       stmt.execute("CREATE TABLE IF NOT EXISTS union_array(" +
           "rid INT, un_arr ARRAY<UNIONTYPE<INT,STRING,BOOLEAN,FLOAT>>) " +
           "ROW FORMAT DELIMITED FIELDS TERMINATED BY ',' " +
