@@ -1,0 +1,111 @@
+# Example GitHub Actions workflow for Apache Drill Hive tests
+# Place this in .github/workflows/hive-tests.yml in your repository
+
+name: Hive Storage Tests
+
+on:
+  push:
+    branches: [ master, main ]
+    paths:
+      - 'contrib/storage-hive/**'
+  pull_request:
+    branches: [ master, main ]
+    paths:
+      - 'contrib/storage-hive/**'
+
+jobs:
+  hive-tests:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45  # Includes build time + test time
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v3
+
+    - name: Set up JDK 11
+      uses: actions/setup-java@v3
+      with:
+        java-version: '11'
+        distribution: 'temurin'
+        cache: 'maven'
+
+    - name: Set up Docker Buildx
+      uses: docker/setup-buildx-action@v2
+
+    # Strategy 1: Cache the pre-initialized Docker image (RECOMMENDED)
+    # This makes subsequent runs much faster (~1 minute vs 15-20 minutes)
+    - name: Cache pre-initialized Hive image
+      id: cache-hive
+      uses: actions/cache@v3
+      with:
+        path: /tmp/hive-image.tar
+        key: drill-hive-preinitialized-${{ hashFiles('contrib/storage-hive/core/src/test/resources/docker/**') }}
+        restore-keys: |
+          drill-hive-preinitialized-
+
+    - name: Load cached Hive image
+      if: steps.cache-hive.outputs.cache-hit == 'true'
+      run: |
+        docker load -i /tmp/hive-image.tar
+        echo "Loaded cached pre-initialized Hive image"
+
+    - name: Build pre-initialized Hive image
+      if: steps.cache-hive.outputs.cache-hit != 'true'
+      run: |
+        cd contrib/storage-hive/core/src/test/resources/docker
+        ./build-preinitialized-image.sh
+        echo "Built new pre-initialized Hive image"
+        docker save drill-hive-test:preinitialized -o /tmp/hive-image.tar
+      timeout-minutes: 30  # Allows up to 30 min for image build
+
+    # Strategy 2: Build Maven with Hive tests
+    - name: Build with Maven
+      run: mvn clean install -pl contrib/storage-hive/core -am -DskipTests
+
+    - name: Run Hive tests with pre-initialized image
+      run: |
+        cd contrib/storage-hive/core
+        mvn test -Dhive.image=drill-hive-test:preinitialized
+      timeout-minutes: 15
+
+    - name: Upload test results
+      if: always()
+      uses: actions/upload-artifact@v3
+      with:
+        name: hive-test-results
+        path: |
+          contrib/storage-hive/core/target/surefire-reports/
+          contrib/storage-hive/core/target/*.log
+
+# Alternative: Use standard image (simpler but slower - 15-20 min startup)
+# Replace the "Run Hive tests" step with:
+#
+#    - name: Build standard Hive image
+#      run: |
+#        cd contrib/storage-hive/core/src/test/resources/docker
+#        docker build -t drill-hive-test:latest .
+#
+#    - name: Run Hive tests with standard image
+#      run: |
+#        cd contrib/storage-hive/core
+#        mvn test
+#      timeout-minutes: 35
+
+---
+
+# Performance comparison:
+#
+# Without caching (first run):
+# - Build pre-initialized image: ~20 minutes
+# - Run tests: ~2 minutes
+# - Total: ~22 minutes
+#
+# With caching (subsequent runs):
+# - Load cached image: ~30 seconds
+# - Run tests: ~2 minutes
+# - Total: ~2.5 minutes
+#
+# Using standard image (no pre-initialization):
+# - Build standard image: ~2 minutes
+# - Run tests: ~17 minutes
+# - Total: ~19 minutes (every time, no benefit from caching)
