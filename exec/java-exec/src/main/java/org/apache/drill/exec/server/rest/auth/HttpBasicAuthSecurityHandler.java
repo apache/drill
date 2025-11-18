@@ -20,6 +20,7 @@ package org.apache.drill.exec.server.rest.auth;
 import org.apache.drill.common.exceptions.DrillException;
 import org.apache.drill.exec.rpc.security.plain.PlainFactory;
 import org.apache.drill.exec.server.DrillbitContext;
+import org.eclipse.jetty.security.Authenticator;
 import org.eclipse.jetty.security.authentication.BasicAuthenticator;
 
 /**
@@ -28,7 +29,7 @@ import org.eclipse.jetty.security.authentication.BasicAuthenticator;
 public class HttpBasicAuthSecurityHandler extends DrillHttpConstraintSecurityHandler {
   @Override
   public String getImplName() {
-    return "BASIC";
+    return Authenticator.BASIC_AUTH;
   }
 
   @Override

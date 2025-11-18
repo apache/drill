@@ -32,6 +32,8 @@ import org.eclipse.jetty.security.RolePrincipal;
 import org.eclipse.jetty.security.UserIdentity;
 import org.eclipse.jetty.server.Request;
 import org.eclipse.jetty.server.Session;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.security.auth.Subject;
 import java.security.Principal;
@@ -42,7 +44,7 @@ import java.util.function.Function;
  * authenticator set in BOOT config.
  */
 public class DrillRestLoginService implements LoginService {
-  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(DrillRestLoginService.class);
+  private static final Logger logger = LoggerFactory.getLogger(DrillRestLoginService.class);
 
   private final DrillbitContext drillbitContext;
 

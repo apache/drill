@@ -37,6 +37,8 @@ import org.ietf.jgss.GSSException;
 import org.ietf.jgss.GSSManager;
 import org.ietf.jgss.GSSName;
 import org.ietf.jgss.Oid;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.security.auth.Subject;
 import java.io.IOException;
@@ -50,7 +52,7 @@ import java.util.function.Function;
  * to include the SPNEGO OID and the way UserIdentity is created.
  */
 public class DrillSpnegoLoginService implements LoginService {
-  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(DrillSpnegoLoginService.class);
+  private static final Logger logger = LoggerFactory.getLogger(DrillSpnegoLoginService.class);
 
   private final DrillbitContext drillContext;
 

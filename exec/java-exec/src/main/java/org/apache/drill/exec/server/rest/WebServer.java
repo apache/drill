@@ -238,9 +238,9 @@ public class WebServer implements AutoCloseable {
     if (authEnabled) {
       // DrillSecurityHandler is used to support SPNEGO and FORM authentication together
       DrillHttpSecurityHandlerProvider drillSecurityHandler = new DrillHttpSecurityHandlerProvider(config, workManager.getContext());
-      // In Jetty 12, we wrap the context handler with our custom security handler
-      servletContextHandler.insertHandler(drillSecurityHandler);
+      // DrillHttpSecurityHandlerProvider now extends ee10.ConstraintSecurityHandler for proper session management
       servletContextHandler.setSessionHandler(createSessionHandler(drillSecurityHandler));
+      servletContextHandler.setSecurityHandler(drillSecurityHandler);
     }
 
     // Applying filters for CSRF protection.

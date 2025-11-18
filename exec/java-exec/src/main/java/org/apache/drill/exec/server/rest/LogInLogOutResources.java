@@ -48,6 +48,7 @@ import jakarta.ws.rs.core.UriBuilder;
 import jakarta.ws.rs.core.UriInfo;
 import java.net.URI;
 import java.net.URLDecoder;
+import java.nio.charset.StandardCharsets;
 import java.util.Set;
 
 @Path(WebServerConstants.WEBSERVER_ROOT_PATH)
@@ -73,7 +74,7 @@ public class LogInLogOutResources {
       // If the URL has redirect in it, set the redirect URI in session, so that after the login is successful, request
       // is forwarded to the redirect page.
       final HttpSession session = request.getSession(true);
-      final URI destURI = UriBuilder.fromUri(URLDecoder.decode(redirect, "UTF-8")).build();
+      final URI destURI = UriBuilder.fromUri(URLDecoder.decode(redirect, StandardCharsets.UTF_8)).build();
       session.setAttribute(FormAuthenticator.__J_URI, destURI.getPath());
     }
   }

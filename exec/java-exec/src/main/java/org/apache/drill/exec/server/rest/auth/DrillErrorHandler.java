@@ -19,39 +19,65 @@ package org.apache.drill.exec.server.rest.auth;
 
 import org.apache.drill.exec.server.rest.WebServerConstants;
 import org.eclipse.jetty.ee10.servlet.ErrorPageErrorHandler;
-import org.eclipse.jetty.server.Request;
-import org.eclipse.jetty.util.Callback;
+import org.eclipse.jetty.ee10.servlet.ServletContextRequest;
+import org.eclipse.jetty.http.MimeTypes;
 
 import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.io.Writer;
+import java.nio.charset.StandardCharsets;
 
 /**
- * Custom ErrorHandler class for Drill's WebServer to handle errors appropriately based on the request type.
- * - For JSON API endpoints (*.json), returns JSON error responses
- * - For SPNEGO login failures, provides helpful HTML error page
- * - For all other cases, returns standard HTML error page
+ * Custom ErrorHandler class for Drill's WebServer to handle errors appropriately based on content negotiation.
+ * <p>
+ * This handler extends Jetty's ErrorPageErrorHandler to provide:
+ * <ul>
+ *   <li>JSON error responses when the client's Accept header indicates JSON is acceptable</li>
+ *   <li>Custom HTML error pages for SPNEGO login failures with helpful guidance</li>
+ *   <li>Standard HTML error pages for all other error conditions</li>
+ * </ul>
+ * <p>
+ * Content negotiation is handled by Jetty's ErrorHandler framework, which evaluates the Accept header
+ * and calls {@link #generateAcceptableResponse} with the appropriate content type.
  */
-public class DrillErrorHandler extends ErrorPageErrorHandler {
+public class  DrillErrorHandler extends ErrorPageErrorHandler {
 
+  /**
+   * Generates an error response for the negotiated content type.
+   * <p>
+   * This method is called by Jetty's error handling framework after content negotiation has been performed
+   * based on the client's Accept header. It provides custom formatting for JSON responses while delegating
+   * to the parent class for HTML and other content types.
+   *
+   * @param baseRequest the base request object
+   * @param request the HTTP servlet request
+   * @param response the HTTP servlet response
+   * @param code the HTTP error status code
+   * @param message the error message to display
+   * @param contentType the negotiated content type (e.g., "application/json", "text/html")
+   * @throws IOException if an I/O error occurs while writing the response
+   */
   @Override
-  public boolean handle(Request target, org.eclipse.jetty.server.Response response, Callback callback) throws Exception {
-    // Check if this is a JSON API request
-    String pathInContext = Request.getPathInContext(target);
-    if (pathInContext != null && pathInContext.endsWith(".json")) {
-      // For JSON API endpoints, return JSON error response instead of HTML
-      response.getHeaders().put("Content-Type", "application/json");
+  protected void generateAcceptableResponse(ServletContextRequest baseRequest,
+                                           HttpServletRequest request,
+                                           HttpServletResponse response,
+                                           int code,
+                                           String message,
+                                           String contentType) throws IOException {
+    // Handle JSON error responses when client accepts JSON
+    if (contentType != null && (contentType.startsWith(MimeTypes.Type.APPLICATION_JSON.asString()) ||
+                                contentType.startsWith(MimeTypes.Type.TEXT_JSON.asString()))) {
+      response.setContentType(MimeTypes.Type.APPLICATION_JSON.asString());
+      response.setCharacterEncoding(StandardCharsets.UTF_8.name());
 
-      String jsonError = "{\n  \"errorMessage\" : \"Query submission failed\"\n}";
-
-      // Write the JSON response
-      response.write(true, java.nio.ByteBuffer.wrap(
-          jsonError.getBytes(java.nio.charset.StandardCharsets.UTF_8)), callback);
-      return true;
+      String jsonError = "{\n  \"errorMessage\" : \"" + message + "\"\n}";
+      response.getWriter().write(jsonError);
+      return;
     }
 
-    // For non-JSON requests, use default HTML error handling
-    return super.handle(target, response, callback);
+    // For all other content types (HTML, plain text, etc.), use default error handling
+    super.generateAcceptableResponse(baseRequest, request, response, code, message, contentType);
   }
 
   @Override

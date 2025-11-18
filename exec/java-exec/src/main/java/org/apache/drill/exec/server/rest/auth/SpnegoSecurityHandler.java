@@ -17,9 +17,17 @@
  */
 package org.apache.drill.exec.server.rest.auth;
 
+import com.google.common.collect.ImmutableSet;
 import org.apache.drill.common.exceptions.DrillException;
 import org.apache.drill.exec.server.DrillbitContext;
+import org.eclipse.jetty.ee10.servlet.security.ConstraintMapping;
 import org.eclipse.jetty.security.Authenticator;
+import org.eclipse.jetty.security.Constraint;
+
+import java.util.Collections;
+
+import static org.apache.drill.exec.server.rest.auth.DrillUserPrincipal.ADMIN_ROLE;
+import static org.apache.drill.exec.server.rest.auth.DrillUserPrincipal.AUTHENTICATED_ROLE;
 
 @SuppressWarnings({"rawtypes", "unchecked"})
 public class SpnegoSecurityHandler extends DrillHttpConstraintSecurityHandler {
@@ -31,6 +39,27 @@ public class SpnegoSecurityHandler extends DrillHttpConstraintSecurityHandler {
 
   @Override
   public void doSetup(DrillbitContext dbContext) throws DrillException {
-    setup(new DrillSpnegoAuthenticator(), new DrillSpnegoLoginService(dbContext));
+    // Use custom DrillSpnegoAuthenticator with Drill-specific configuration
+    DrillSpnegoAuthenticator authenticator = new DrillSpnegoAuthenticator();
+    DrillSpnegoLoginService loginService = new DrillSpnegoLoginService(dbContext);
+
+    // Create constraint that requires authentication
+    Constraint constraint = new Constraint.Builder()
+        .name("SPNEGO")
+        .roles(AUTHENTICATED_ROLE)
+        .build();
+
+    // Apply constraint to all paths (/*)
+    ConstraintMapping mapping = new ConstraintMapping();
+    mapping.setPathSpec("/*");
+    mapping.setConstraint(constraint);
+
+    // Set up the security handler with constraint mappings
+    setConstraintMappings(Collections.singletonList(mapping), ImmutableSet.of(AUTHENTICATED_ROLE, ADMIN_ROLE));
+    setAuthenticator(authenticator);
+    setLoginService(loginService);
+
+    // Enable session management for authentication caching
+    setSessionRenewedOnAuthentication(true); // Renew session ID on auth for security
   }
 }

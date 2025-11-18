@@ -2,135 +2,127 @@
 
 ## Overview
 
-Apache Drill has been upgraded from Jetty 9 to Jetty 12 to address security vulnerabilities and maintain compatibility with modern Java versions. This document describes the changes made, known limitations, and guidance for developers.
+Apache Drill has been upgraded from Jetty 9 to Jetty 12 to address security vulnerabilities and maintain compatibility with modern Java versions.
 
 ## What Changed
 
 ### Core API Changes
 
-Jetty 12 introduced significant API changes as part of the Jakarta EE 10 migration:
-
 1. **Servlet API Migration**: `javax.servlet.*` → `jakarta.servlet.*`
 2. **Package Restructuring**: Servlet components moved to `org.eclipse.jetty.ee10.servlet.*`
 3. **Handler API Redesign**: New `org.eclipse.jetty.server.Handler` interface
-4. **Resource Loading**: New `ResourceFactory` API replaces old `Resource` API
-5. **Authentication APIs**: `LoginService.login()` signature changed
+4. **Authentication APIs**: New `LoginService.login()` and authenticator signatures
 
 ### Modified Files
 
-#### Production Code
+#### Key Changes
 
-- **exec/java-exec/src/main/java/org/apache/drill/exec/server/rest/WebServer.java**
-  - Updated to use `ResourceFactory.root()` for resource loading
-  - Fixed null pointer issues when HTTP server is disabled
+- **WebServer.java**: Updated resource loading, handler configuration, and security handler setup
+- **DrillHttpSecurityHandlerProvider.java**: Refactored from `Handler.Wrapper` to extend `ee10.servlet.security.ConstraintSecurityHandler` for proper session management
+- **DrillSpnegoAuthenticator.java**: Updated to Jetty 12 APIs with new `validateRequest(Request, Response, Callback)` signature
+- **DrillSpnegoLoginService.java**: Updated `login()` method signature
+- **DrillErrorHandler.java**: Migrated to use `generateAcceptableResponse()` for content negotiation
+- **YARN WebServer.java**: Updated for Jetty 12 APIs and `IdentityService.newUserIdentity()`
 
-- **drill-yarn/src/main/java/org/apache/drill/yarn/appMaster/http/WebServer.java**
-  - Updated all imports to `org.eclipse.jetty.ee10.servlet.*`
-  - Modified `LoginService.login()` to new signature with `Function<Boolean, Session>` parameter
-  - Changed to use `IdentityService.newUserIdentity()` for user identity creation
-  - Updated `ResourceFactory` API usage
-  - Updated `SessionAuthentication` constants
-  - Fixed `ServletContextHandler` constructor usage
+#### Authentication Architecture
 
-#### Test Code
+The authentication system was redesigned for Jetty 12:
 
-The following test classes are temporarily disabled (see Known Limitations below):
-- `TestImpersonationDisabledWithMiniDFS.java`
-- `TestImpersonationMetadata.java`
-- `TestImpersonationQueries.java`
-- `TestInboundImpersonation.java`
+- **DrillHttpSecurityHandlerProvider** now extends `ConstraintSecurityHandler` (previously `Handler.Wrapper`)
+- Implements a `RoutingAuthenticator` that delegates to child authenticators (SPNEGO, FORM, BASIC)
+- Handles session caching manually since delegated authenticators require explicit session management
+- Properly integrated with `ServletContextHandler` via `setSecurityHandler()`
 
 ## Known Limitations
 
 ### Hadoop MiniDFSCluster Test Incompatibility
 
-**Issue**: Tests using Hadoop's MiniDFSCluster cannot run due to Jetty version conflicts.
+**Issue**: Tests using Hadoop's MiniDFSCluster cannot run due to Jetty version conflicts (Hadoop 3.x uses Jetty 9).
 
-**Root Cause**: Apache Hadoop 3.x depends on Jetty 9, while Drill now uses Jetty 12. When tests attempt to start both:
-- Drill's embedded web server (Jetty 12)
-- Hadoop's MiniDFSCluster (Jetty 9)
+**Affected Tests** (temporarily disabled):
+- `TestImpersonationDisabledWithMiniDFS.java`
+- `TestImpersonationMetadata.java`
+- `TestImpersonationQueries.java`
+- `TestInboundImpersonation.java`
 
-The conflicting Jetty versions on the classpath cause `NoClassDefFoundError` exceptions.
-
-**Affected Tests**:
-- Impersonation tests with HDFS
-- Any tests requiring MiniDFSCluster with Drill's HTTP server enabled
-
-**Resolution Timeline**: These tests will be re-enabled when:
-- Apache Hadoop 4.x is released with Jetty 12 support
-- A Hadoop 3.x maintenance release upgrades to Jetty 12 (tracked in [HADOOP-19625](https://issues.apache.org/jira/browse/HADOOP-19625))
-
-**Current Status**: HADOOP-19625 is open and targets Jetty 12 EE10, but requires Java 17 baseline (tracked in HADOOP-17177). No specific release version or timeline is available yet.
-
-### Why Alternative Solutions Failed
-
-Several approaches were attempted to resolve the Jetty conflict:
-
-1. **Dual Jetty versions in test scope**: Failed because Maven cannot have two different versions of the same artifact on the classpath simultaneously, and the Jetty BOM forces all Jetty artifacts to the same version.
-
-2. **Disabling Drill's HTTP server in tests**: Failed because drill-java-exec classes are compiled against Jetty 12, and the bytecode contains hard references to Jetty 12 classes that fail to load even when the HTTP server is disabled.
-
-3. **Separate test module with Jetty 9**: Failed because depending on the drill-java-exec JAR (compiled with Jetty 12) brings Jetty 12 class references into the test classpath.
-
-### Workarounds for Developers
-
-If you need to test HDFS impersonation functionality:
-
-1. **Integration tests**: Use a real Hadoop cluster instead of MiniDFSCluster
-2. **Manual testing**: Test in HDFS-enabled environments
-3. **Alternative tests**: Use tests with local filesystem instead of MiniDFSCluster (see other impersonation tests that don't require HDFS)
+**Resolution**: Tests will be re-enabled when Apache Hadoop 4.x or a Hadoop 3.x maintenance release upgrades to Jetty 12 (tracked in [HADOOP-19625](https://issues.apache.org/jira/browse/HADOOP-19625)).
 
 ## Developer Guidelines
 
 ### Writing New Web Server Code
 
-When adding new HTTP/servlet functionality:
-
 1. Use Jakarta EE 10 imports:
    ```java
    import jakarta.servlet.http.HttpServletRequest;
-   import jakarta.servlet.http.HttpServletResponse;
-   ```
-
-2. Use Jetty 12 EE10 servlet packages:
-   ```java
    import org.eclipse.jetty.ee10.servlet.ServletContextHandler;
-   import org.eclipse.jetty.ee10.servlet.ServletHolder;
    ```
 
-3. Use `ResourceFactory.root()` for resource loading:
+2. Use Jetty constants:
    ```java
-   ResourceFactory rf = ResourceFactory.root();
-   InputStream stream = rf.newClassLoaderResource("/path/to/resource").newInputStream();
+   import org.eclipse.jetty.security.Authenticator;
+   String authMethod = Authenticator.SPNEGO_AUTH;  // Not "SPNEGO"
    ```
 
-4. Use new `ServletContextHandler` constructor pattern:
+3. For custom error handling, use `generateAcceptableResponse()`:
    ```java
-   ServletContextHandler handler = new ServletContextHandler(ServletContextHandler.SESSIONS);
-   handler.setContextPath("/");
+   @Override
+   protected void generateAcceptableResponse(ServletContextRequest baseRequest,
+                                            HttpServletRequest request,
+                                            HttpServletResponse response,
+                                            int code, String message,
+                                            String contentType) {
+     // Use contentType parameter, not request path
+   }
    ```
+
+### Writing Authentication Code
+
+When implementing custom authenticators:
+
+1. Extend `LoginAuthenticator` and implement `validateRequest(Request, Response, Callback)`
+2. Use `Request.as(request, ServletContextRequest.class)` to access servlet APIs from core Request
+3. Return `AuthenticationState` (CHALLENGE, SEND_SUCCESS, or UserAuthenticationSucceeded)
+4. Use `Response.writeError()` to properly send challenges with callback completion
+
+Example:
+```java
+public class CustomAuthenticator extends LoginAuthenticator {
+  @Override
+  public AuthenticationState validateRequest(Request request, Response response, Callback callback) {
+    ServletContextRequest servletRequest = Request.as(request, ServletContextRequest.class);
+    // ... authentication logic ...
+    if (authFailed) {
+      response.getHeaders().put(HttpHeader.WWW_AUTHENTICATE, "Bearer");
+      Response.writeError(request, response, callback, HttpStatus.UNAUTHORIZED_401);
+      return AuthenticationState.CHALLENGE;
+    }
+    return new UserAuthenticationSucceeded(getAuthenticationType(), userIdentity);
+  }
+}
+```
 
 ### Writing Tests
 
-1. Tests that start Drill's HTTP server should **not** use Hadoop MiniDFSCluster
-2. If HDFS testing is required, use local filesystem or mark test with `@Ignore` and add comprehensive documentation
-3. When adding `@Ignore` for Jetty conflicts, reference `TestImpersonationDisabledWithMiniDFS` for standard explanation
+1. **Use integration tests**: Test with real Drill server and `OkHttpClient`, not mocked servlets
+   ```java
+   public class MyWebTest extends ClusterTest {
+     @Test
+     public void testEndpoint() throws Exception {
+       String url = String.format("http://localhost:%d/api/endpoint", port);
+       Request request = new Request.Builder().url(url).build();
+       try (Response response = httpClient.newCall(request).execute()) {
+         assertEquals(200, response.code());
+       }
+     }
+   }
+   ```
 
-### Debugging Jetty Issues
-
-Common issues and solutions:
-
-- **NoClassDefFoundError for Jetty classes**: Check that all Jetty dependencies are Jetty 12, not Jetty 9
-- **ClassNotFoundException for javax.servlet**: Should be `jakarta.servlet` with Jetty 12
-- **NullPointerException in ResourceFactory**: Use `ResourceFactory.root()` instead of `ResourceFactory.of(server)`
-- **Incompatible types in ServletContextHandler**: Use new constructor pattern with `SESSIONS` constant
+2. **Avoid MiniDFSCluster** in tests that start Drill's HTTP server
+3. **Session cookie names**: Tests should accept both "JSESSIONID" and "Drill-Session-Id"
 
 ## Dependency Management
 
-### Maven BOM
-
 Drill's parent POM includes the Jetty 12 BOM:
-
 ```xml
 <dependencyManagement>
   <dependencies>
@@ -145,39 +137,16 @@ Drill's parent POM includes the Jetty 12 BOM:
 </dependencyManagement>
 ```
 
-This ensures all Jetty dependencies use version 12.0.16.
-
-### Key Dependencies
-
-Production dependencies include:
-- `jetty-server` - Core server functionality
-- `jetty-ee10-servlet` - Servlet support
-- `jetty-ee10-servlets` - Standard servlet implementations
-- `jetty-security` - Security handlers
-- `jetty-util` - Utility classes
-
 ## Migration Checklist for Future Updates
 
-When upgrading Jetty versions in the future:
-
-- [ ] Check Jetty release notes for API changes
 - [ ] Update Jetty BOM version in parent POM
 - [ ] Run full test suite including integration tests
-- [ ] Check for deprecation warnings in web server code
 - [ ] Verify checkstyle compliance
-- [ ] Check HADOOP-19625 status to see if MiniDFSCluster tests can be re-enabled
-- [ ] Update this document with any new changes or limitations
+- [ ] Check HADOOP-19625 status for MiniDFSCluster test re-enablement
+- [ ] Update this document with any new changes
 
 ## References
 
 - [Jetty 12 Migration Guide](https://eclipse.dev/jetty/documentation/jetty-12/migration-guide/index.html)
 - [Jakarta EE 10 Documentation](https://jakarta.ee/specifications/platform/10/)
 - [HADOOP-19625: Upgrade Jetty to 12.x](https://issues.apache.org/jira/browse/HADOOP-19625)
-- [HADOOP-17177: Java 17 Support](https://issues.apache.org/jira/browse/HADOOP-17177)
-
-## Support
-
-For questions or issues related to Jetty 12 migration:
-1. Check existing test classes for examples
-2. Review this document and referenced Jetty documentation
-3. File an issue on the Apache Drill JIRA with component "Web Server"
