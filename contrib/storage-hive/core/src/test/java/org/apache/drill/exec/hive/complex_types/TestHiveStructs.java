@@ -39,7 +39,6 @@ import org.junit.experimental.categories.Category;
 import static java.util.Arrays.asList;
 import static org.apache.drill.exec.expr.fn.impl.DateUtility.parseBest;
 import static org.apache.drill.exec.expr.fn.impl.DateUtility.parseLocalDate;
-import static org.apache.drill.test.TestBuilder.listOf;
 import static org.apache.drill.test.TestBuilder.mapOf;
 import static org.apache.drill.test.TestBuilder.mapOfObject;
 
