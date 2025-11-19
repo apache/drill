@@ -56,7 +56,6 @@ import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 import java.util.Map;
@@ -74,10 +73,11 @@ import static org.junit.Assert.fail;
 public class TestUserTranslationInHttpPlugin extends ClusterTest {
   private static final Logger logger = LoggerFactory.getLogger(TestUserTranslationInHttpPlugin.class);
 
-  private static final int MOCK_SERVER_PORT = 47778;
   private static String TEST_JSON_RESPONSE_WITH_DATATYPES;
   private static String ACCESS_TOKEN_RESPONSE;
   private static int portNumber;
+  private static MockWebServer server;
+  private static int mockServerPort;
 
 
   @ClassRule
@@ -92,6 +92,11 @@ public class TestUserTranslationInHttpPlugin extends ClusterTest {
   public static void setup() throws Exception {
     TEST_JSON_RESPONSE_WITH_DATATYPES = Files.asCharSource(DrillFileUtils.getResourceAsFile("/data/response2.json"), StandardCharsets.UTF_8).read();
     ACCESS_TOKEN_RESPONSE = Files.asCharSource(DrillFileUtils.getResourceAsFile("/data/oauth_access_token_response.json"), StandardCharsets.UTF_8).read();
+
+    // Start MockWebServer with dynamic port allocation
+    server = new MockWebServer();
+    server.start(0); // Use port 0 for dynamic allocation
+    mockServerPort = server.getPort();
 
     ClusterFixtureBuilder builder = new ClusterFixtureBuilder(dirTestWatcher)
       .configProperty(ExecConstants.HTTP_ENABLE, true)
@@ -117,7 +122,7 @@ public class TestUserTranslationInHttpPlugin extends ClusterTest {
     Map<String, String> oauthCreds = new HashMap<>();
     oauthCreds.put("clientID", "12345");
     oauthCreds.put("clientSecret", "54321");
-    oauthCreds.put(OAuthTokenCredentials.TOKEN_URI, "http://localhost:" + MOCK_SERVER_PORT + "/get_access_token");
+    oauthCreds.put(OAuthTokenCredentials.TOKEN_URI, "http://localhost:" + mockServerPort + "/get_access_token");
 
     CredentialsProvider oauthCredentialProvider = new PlainCredentialsProvider(oauthCreds);
 
@@ -171,19 +176,17 @@ public class TestUserTranslationInHttpPlugin extends ClusterTest {
       .property(DrillProperties.PASSWORD, TEST_USER_2_PASSWORD)
       .build();
 
-    try (MockWebServer server = startServer()) {
-      server.enqueue(new MockResponse().setResponseCode(200).setBody(TEST_JSON_RESPONSE_WITH_DATATYPES));
+    server.enqueue(new MockResponse().setResponseCode(200).setBody(TEST_JSON_RESPONSE_WITH_DATATYPES));
 
-      String sql = "SELECT * FROM local.sharedEndpoint";
-      RowSet results = client.queryBuilder().sql(sql).rowSet();
-      assertEquals(results.rowCount(), 2);
-      results.clear();
+    String sql = "SELECT * FROM local.sharedEndpoint";
+    RowSet results = client.queryBuilder().sql(sql).rowSet();
+    assertEquals(results.rowCount(), 2);
+    results.clear();
 
-      // Verify correct username/password from endpoint configuration
-      RecordedRequest recordedRequest = server.takeRequest();
-      Headers headers = recordedRequest.getHeaders();
-      assertEquals(headers.get("Authorization"), createEncodedText("user2user", "user2pass"));
-    }
+    // Verify correct username/password from endpoint configuration
+    RecordedRequest recordedRequest = server.takeRequest();
+    Headers headers = recordedRequest.getHeaders();
+    assertEquals(headers.get("Authorization"), createEncodedText("user2user", "user2pass"));
   }
 
   @Test
@@ -195,16 +198,14 @@ public class TestUserTranslationInHttpPlugin extends ClusterTest {
       .property(DrillProperties.PASSWORD, TEST_USER_1_PASSWORD)
       .build();
 
-    try (MockWebServer server = startServer()) {
-      server.enqueue(new MockResponse().setResponseCode(200).setBody(TEST_JSON_RESPONSE_WITH_DATATYPES));
+    server.enqueue(new MockResponse().setResponseCode(200).setBody(TEST_JSON_RESPONSE_WITH_DATATYPES));
 
-      String sql = "SELECT * FROM local.sharedEndpoint";
-      try {
-        client.queryBuilder().sql(sql).run();
-        fail();
-      } catch (UserException e) {
-        assertTrue(e.getMessage().contains("You do not have valid credentials for this API."));
-      }
+    String sql = "SELECT * FROM local.sharedEndpoint";
+    try {
+      client.queryBuilder().sql(sql).run();
+      fail();
+    } catch (UserException e) {
+      assertTrue(e.getMessage().contains("You do not have valid credentials for this API."));
     }
   }
 
@@ -216,49 +217,44 @@ public class TestUserTranslationInHttpPlugin extends ClusterTest {
       .property(DrillProperties.PASSWORD, TEST_USER_2_PASSWORD)
       .build();
 
-    try (MockWebServer server = startServer()) {
-      // Get the token table for test user 2, which should be empty
-      PersistentTokenTable tokenTable = ((HttpStoragePlugin) cluster.storageRegistry()
-        .getPlugin("oauth"))
-        .getTokenRegistry(TEST_USER_2)
-        .getTokenTable("oauth");
+    // Get the token table for test user 2, which should be empty
+    PersistentTokenTable tokenTable = ((HttpStoragePlugin) cluster.storageRegistry()
+      .getPlugin("oauth"))
+      .getTokenRegistry(TEST_USER_2)
+      .getTokenTable("oauth");
 
-      // Add the access tokens for user 2
-      tokenTable.setAccessToken("you_have_access_2");
-      tokenTable.setRefreshToken("refresh_me_2");
+    // Add the access tokens for user 2
+    tokenTable.setAccessToken("you_have_access_2");
+    tokenTable.setRefreshToken("refresh_me_2");
 
-      assertEquals("you_have_access_2", tokenTable.getAccessToken());
-      assertEquals("refresh_me_2", tokenTable.getRefreshToken());
+    assertEquals("you_have_access_2", tokenTable.getAccessToken());
+    assertEquals("refresh_me_2", tokenTable.getRefreshToken());
 
-      // Now execute a query and get query results.
-      server.enqueue(new MockResponse()
-        .setResponseCode(200)
-        .setBody(TEST_JSON_RESPONSE_WITH_DATATYPES));
+    // Now execute a query and get query results.
+    server.enqueue(new MockResponse()
+      .setResponseCode(200)
+      .setBody(TEST_JSON_RESPONSE_WITH_DATATYPES));
 
-      String sql = "SELECT * FROM oauth.sharedEndpoint";
-      RowSet results = queryBuilder().sql(sql).rowSet();
+    String sql = "SELECT * FROM oauth.sharedEndpoint";
+    RowSet results = queryBuilder().sql(sql).rowSet();
 
-      TupleMetadata expectedSchema = new SchemaBuilder()
-        .add("col_1", MinorType.FLOAT8, DataMode.OPTIONAL)
-        .add("col_2", MinorType.BIGINT, DataMode.OPTIONAL)
-        .add("col_3", MinorType.VARCHAR, DataMode.OPTIONAL)
-        .build();
+    TupleMetadata expectedSchema = new SchemaBuilder()
+      .add("col_1", MinorType.FLOAT8, DataMode.OPTIONAL)
+      .add("col_2", MinorType.BIGINT, DataMode.OPTIONAL)
+      .add("col_3", MinorType.VARCHAR, DataMode.OPTIONAL)
+      .build();
 
-      RowSet expected = new RowSetBuilder(client.allocator(), expectedSchema)
-        .addRow(1.0, 2, "3.0")
-        .addRow(4.0, 5, "6.0")
-        .build();
+    RowSet expected = new RowSetBuilder(client.allocator(), expectedSchema)
+      .addRow(1.0, 2, "3.0")
+      .addRow(4.0, 5, "6.0")
+      .build();
 
-      RowSetUtilities.verify(expected, results);
+    RowSetUtilities.verify(expected, results);
 
-      // Verify the correct tokens were passed
-      RecordedRequest recordedRequest = server.takeRequest();
-      String authToken = recordedRequest.getHeader("Authorization");
-      assertEquals("you_have_access_2", authToken);
-    } catch (Exception e) {
-      logger.debug(e.getMessage());
-      fail();
-    }
+    // Verify the correct tokens were passed
+    RecordedRequest recordedRequest = server.takeRequest();
+    String authToken = recordedRequest.getHeader("Authorization");
+    assertEquals("you_have_access_2", authToken);
   }
 
   @Test
@@ -276,20 +272,8 @@ public class TestUserTranslationInHttpPlugin extends ClusterTest {
     assertTrue(result.succeeded());
   }
 
-  /**
-   * Helper function to start the MockHTTPServer
-   *
-   * @return Started Mock server
-   * @throws IOException If the server cannot start, throws IOException
-   */
-  private static MockWebServer startServer() throws IOException {
-    MockWebServer server = new MockWebServer();
-    server.start(MOCK_SERVER_PORT);
-    return server;
-  }
-
   private static String makeUrl(String url) {
-    return String.format(url, MOCK_SERVER_PORT);
+    return String.format(url, mockServerPort);
   }
 
   private static String createEncodedText(String username, String password) {
