@@ -142,6 +142,14 @@ public class SplunkBatchReader implements ManagedReader<SchemaNegotiator> {
       AutoCloseables.closeSilently(searchResults);
       searchResults = null;
     }
+    // Logout from Splunk service to properly cleanup session
+    if (splunkService != null) {
+      try {
+        splunkService.logout();
+      } catch (Exception e) {
+        logger.warn("Error logging out from Splunk service", e);
+      }
+    }
   }
 
   /**

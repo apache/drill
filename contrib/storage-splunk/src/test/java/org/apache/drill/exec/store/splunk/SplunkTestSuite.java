@@ -88,16 +88,40 @@ public class SplunkTestSuite extends ClusterTest {
         startCluster(builder);
 
         splunk.start();
-        splunk.execInContainer("if ! sudo grep -q 'minFreeSpace' /opt/splunk/etc/system/local/server.conf; then " +
-            "sudo chmod a+w /opt/splunk/etc/system/local/server.conf; " +
-            "sudo echo \"# disk usage processor settings\" >> /opt/splunk/etc/system/local/server.conf; " +
-            "sudo echo \"[diskUsage]\" >> /opt/splunk/etc/system/local/server.conf; " +
-            "sudo echo \"minFreeSpace = 50\" >> /opt/splunk/etc/system/local/server.conf; " +
-            "sudo echo \"pollingFrequency = 100000\" >> /opt/splunk/etc/system/local/server.conf; " +
-            "sudo echo \"pollingTimerFrequency = 10\" >> /opt/splunk/etc/system/local/server.conf; " +
-            "sudo chmod 600 /opt/splunk/etc/system/local/server.conf; " +
-            "sudo /opt/splunk/bin/splunk restart; " +
-            "fi");
+
+        // Clean up any existing dispatch files from previous runs
+        logger.info("Cleaning up Splunk dispatch directory...");
+        try {
+          splunk.execInContainer("sudo", "rm", "-rf", "/opt/splunk/var/run/splunk/dispatch/*");
+        } catch (Exception e) {
+          logger.warn("Could not clean dispatch directory (may not exist yet): " + e.getMessage());
+        }
+
+        // Configure Splunk to use minimal disk space for tests
+        logger.info("Configuring Splunk disk usage settings...");
+        splunk.execInContainer("sudo", "chmod", "a+w", "/opt/splunk/etc/system/local/server.conf");
+
+        // Remove any existing [diskUsage] section
+        splunk.execInContainer("sudo", "sed", "-i", "/\\[diskUsage\\]/,/^$/d", "/opt/splunk/etc/system/local/server.conf");
+
+        // Add new [diskUsage] section with minimal requirements
+        splunk.execInContainer("sudo", "sh", "-c",
+            "echo '' >> /opt/splunk/etc/system/local/server.conf && " +
+            "echo '# disk usage processor settings for testing' >> /opt/splunk/etc/system/local/server.conf && " +
+            "echo '[diskUsage]' >> /opt/splunk/etc/system/local/server.conf && " +
+            "echo 'minFreeSpace = 50' >> /opt/splunk/etc/system/local/server.conf && " +
+            "echo 'pollingFrequency = 100000' >> /opt/splunk/etc/system/local/server.conf && " +
+            "echo 'pollingTimerFrequency = 10' >> /opt/splunk/etc/system/local/server.conf");
+
+        splunk.execInContainer("sudo", "chmod", "600", "/opt/splunk/etc/system/local/server.conf");
+
+        // Restart Splunk to apply changes
+        logger.info("Restarting Splunk to apply disk usage settings...");
+        splunk.execInContainer("sudo", "/opt/splunk/bin/splunk", "restart");
+
+        // Wait for Splunk to fully restart
+        Thread.sleep(15000);
+        logger.info("Splunk restarted with minimal disk usage requirements");
 
         String hostname = splunk.getHost();
         Integer port = splunk.getFirstMappedPort();
