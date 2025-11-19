@@ -92,7 +92,7 @@ public class SplunkTestSuite extends ClusterTest {
             "sudo chmod a+w /opt/splunk/etc/system/local/server.conf; " +
             "sudo echo \"# disk usage processor settings\" >> /opt/splunk/etc/system/local/server.conf; " +
             "sudo echo \"[diskUsage]\" >> /opt/splunk/etc/system/local/server.conf; " +
-            "sudo echo \"minFreeSpace = 2000\" >> /opt/splunk/etc/system/local/server.conf; " +
+            "sudo echo \"minFreeSpace = 1000\" >> /opt/splunk/etc/system/local/server.conf; " +
             "sudo echo \"pollingFrequency = 100000\" >> /opt/splunk/etc/system/local/server.conf; " +
             "sudo echo \"pollingTimerFrequency = 10\" >> /opt/splunk/etc/system/local/server.conf; " +
             "sudo chmod 600 /opt/splunk/etc/system/local/server.conf; " +
@@ -147,6 +147,15 @@ public class SplunkTestSuite extends ClusterTest {
   public static void tearDownCluster() {
     synchronized (SplunkTestSuite.class) {
       if (initCount.decrementAndGet() == 0) {
+        // Clean up Splunk dispatch files to free disk space before shutdown
+        try {
+          logger.info("Cleaning up Splunk dispatch files...");
+          splunk.execInContainer("sudo rm -rf /opt/splunk/var/run/splunk/dispatch/*");
+          logger.info("Splunk dispatch files cleaned up successfully");
+        } catch (Exception e) {
+          logger.warn("Failed to clean up Splunk dispatch files", e);
+        }
+
         splunk.close();
       }
     }
