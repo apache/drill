@@ -28,18 +28,23 @@ import org.apache.drill.exec.util.ImpersonationUtil;
 import org.eclipse.jetty.security.DefaultIdentityService;
 import org.eclipse.jetty.security.IdentityService;
 import org.eclipse.jetty.security.LoginService;
-import org.eclipse.jetty.server.UserIdentity;
+import org.eclipse.jetty.security.RolePrincipal;
+import org.eclipse.jetty.security.UserIdentity;
+import org.eclipse.jetty.server.Request;
+import org.eclipse.jetty.server.Session;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.security.auth.Subject;
-import javax.servlet.ServletRequest;
 import java.security.Principal;
+import java.util.function.Function;
 
 /**
  * LoginService used when user authentication is enabled in Drillbit. It validates the user against the user
  * authenticator set in BOOT config.
  */
 public class DrillRestLoginService implements LoginService {
-  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(DrillRestLoginService.class);
+  private static final Logger logger = LoggerFactory.getLogger(DrillRestLoginService.class);
 
   private final DrillbitContext drillbitContext;
 
@@ -63,7 +68,7 @@ public class DrillRestLoginService implements LoginService {
   }
 
   @Override
-  public UserIdentity login(String username, Object credentials, ServletRequest request) {
+  public UserIdentity login(String username, Object credentials, Request request, Function<Boolean, Session> getOrCreateSession) {
     if (!(credentials instanceof String)) {
       return null;
     }
@@ -78,7 +83,11 @@ public class DrillRestLoginService implements LoginService {
       // Authenticate the user with configured Authenticator
       userAuthenticator.authenticate(username, credentials.toString());
 
-      logger.info("WebUser {} logged in from {}:{}", username, request.getRemoteHost(), request.getRemotePort());
+      // Get remote host and port from the Request
+      String remoteHost = Request.getRemoteAddr(request);
+      int remotePort = Request.getRemotePort(request);
+
+      logger.info("WebUser {} logged in from {}:{}", username, remoteHost, remotePort);
 
       final SystemOptionManager sysOptions = drillbitContext.getOptionManager();
 
@@ -94,11 +103,17 @@ public class DrillRestLoginService implements LoginService {
       subject.getPrivateCredentials().add(credentials);
 
       if (isAdmin) {
-        subject.getPrincipals().addAll(DrillUserPrincipal.ADMIN_PRINCIPALS);
-        return identityService.newUserIdentity(subject, userPrincipal, DrillUserPrincipal.ADMIN_USER_ROLES);
+        String[] adminRoles = DrillUserPrincipal.ADMIN_USER_ROLES;
+        for (String role : adminRoles) {
+          subject.getPrincipals().add(new RolePrincipal(role));
+        }
+        return identityService.newUserIdentity(subject, userPrincipal, adminRoles);
       } else {
-        subject.getPrincipals().addAll(DrillUserPrincipal.NON_ADMIN_PRINCIPALS);
-        return identityService.newUserIdentity(subject, userPrincipal, DrillUserPrincipal.NON_ADMIN_USER_ROLES);
+        String[] nonAdminRoles = DrillUserPrincipal.NON_ADMIN_USER_ROLES;
+        for (String role : nonAdminRoles) {
+          subject.getPrincipals().add(new RolePrincipal(role));
+        }
+        return identityService.newUserIdentity(subject, userPrincipal, nonAdminRoles);
       }
     } catch (final Exception e) {
       if (e instanceof UserAuthenticationException) {

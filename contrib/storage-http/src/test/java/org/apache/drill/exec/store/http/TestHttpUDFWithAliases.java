@@ -42,7 +42,6 @@ import org.apache.drill.test.rowSet.RowSetUtilities;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
-import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 import java.util.Map;
@@ -62,15 +61,20 @@ public class TestHttpUDFWithAliases extends ClusterTest {
 
   private static AliasRegistry storageAliasesRegistry;
   private static AliasRegistry tableAliasesRegistry;
-  private static final int MOCK_SERVER_PORT = 47778;
   private static String TEST_JSON_PAGE1;
-  private static final String DUMMY_URL = "http://localhost:" + MOCK_SERVER_PORT;
+  private static MockWebServer server;
+  private static String mockServerUrl;
 
   @BeforeClass
   public static void setUpBeforeClass() throws Exception {
 
     TEST_JSON_PAGE1 = Files.asCharSource(DrillFileUtils.getResourceAsFile("/data/p1.json"),
         StandardCharsets.UTF_8).read();
+
+    // Start MockWebServer with dynamic port allocation
+    server = new MockWebServer();
+    server.start(0); // Use port 0 for dynamic allocation
+    mockServerUrl = server.url("/").toString().replaceAll("/$", "");
 
     cluster = ClusterFixture.bareBuilder(dirTestWatcher)
       .configProperty(ExecConstants.USER_AUTHENTICATION_ENABLED, true)
@@ -106,7 +110,7 @@ public class TestHttpUDFWithAliases extends ClusterTest {
       .build();
 
     HttpApiConfig basicJson = HttpApiConfig.builder()
-      .url(String.format("%s/json", DUMMY_URL))
+      .url(String.format("%s/json", mockServerUrl))
       .method("get")
       .jsonOptions(jsonOptions)
       .requireTail(false)
@@ -131,7 +135,7 @@ public class TestHttpUDFWithAliases extends ClusterTest {
     storageAliasesRegistry.getPublicAliases().put("`foobar`", "`local`", false);
 
     String sql = "SELECT http_request('foobar.basicJson', `col1`) as data FROM cp.`/data/p4.json`";
-    try (MockWebServer server = startServer()) {
+    try {
       server.enqueue(new MockResponse().setResponseCode(200).setBody(TEST_JSON_PAGE1));
       server.enqueue(new MockResponse().setResponseCode(200).setBody(TEST_JSON_PAGE1));
 
@@ -161,8 +165,7 @@ public class TestHttpUDFWithAliases extends ClusterTest {
   @Test
   public void testSeveralRowsAndRequestsAndUserStorageAlias() throws Exception {
     String sql = "SELECT http_request('foobar.basicJson', `col1`) as data FROM cp.`/data/p4.json`";
-    try (MockWebServer server = startServer()) {
-
+    try {
       ClientFixture client = cluster.clientBuilder()
         .property(DrillProperties.USER, TEST_USER_2)
         .property(DrillProperties.PASSWORD, TEST_USER_2_PASSWORD)
@@ -203,7 +206,7 @@ public class TestHttpUDFWithAliases extends ClusterTest {
     tableAliasesRegistry.getPublicAliases().put("`foobar`", "`basicJson`", false);
 
     String sql = "SELECT http_request('local.foobar', `col1`) as data FROM cp.`/data/p4.json`";
-    try (MockWebServer server = startServer()) {
+    try {
       server.enqueue(new MockResponse().setResponseCode(200).setBody(TEST_JSON_PAGE1));
       server.enqueue(new MockResponse().setResponseCode(200).setBody(TEST_JSON_PAGE1));
 
@@ -233,8 +236,7 @@ public class TestHttpUDFWithAliases extends ClusterTest {
   @Test
   public void testSeveralRowsAndRequestsAndUserTableAlias() throws Exception {
     String sql = "SELECT http_request('local.foobar', `col1`) as data FROM cp.`/data/p4.json`";
-    try (MockWebServer server = startServer()) {
-
+    try {
       ClientFixture client = cluster.clientBuilder()
         .property(DrillProperties.USER, TEST_USER_2)
         .property(DrillProperties.PASSWORD, TEST_USER_2_PASSWORD)
@@ -267,11 +269,5 @@ public class TestHttpUDFWithAliases extends ClusterTest {
     } finally {
       tableAliasesRegistry.deleteUserAliases(TEST_USER_2);
     }
-  }
-
-  public static MockWebServer startServer() throws IOException {
-    MockWebServer server = new MockWebServer();
-    server.start(MOCK_SERVER_PORT);
-    return server;
   }
 }

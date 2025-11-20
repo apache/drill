@@ -68,6 +68,45 @@ public class SplunkTestSuite extends ClusterTest {
 
   private static volatile boolean runningSuite = true;
   private static AtomicInteger initCount = new AtomicInteger(0);
+
+  /**
+   * Creates a Splunk default.yml configuration file with minimal disk space requirements.
+   * This is the proper way to configure Splunk in Docker - the settings are applied at startup.
+   */
+  private static java.io.File createDefaultYmlFile() {
+    try {
+      java.io.File tempFile = java.io.File.createTempFile("splunk-default", ".yml");
+      tempFile.deleteOnExit();
+
+      String content = "---\n" +
+             "splunk:\n" +
+             "  conf:\n" +
+             "    - key: server\n" +
+             "      value:\n" +
+             "        directory: /opt/splunk/etc/system/local\n" +
+             "        content:\n" +
+             "          diskUsage:\n" +
+             "            minFreeSpace: 50\n" +
+             "            pollingFrequency: 30\n" +
+             "            pollingTimerFrequency: 5\n" +
+             "    - key: limits\n" +
+             "      value:\n" +
+             "        directory: /opt/splunk/etc/system/local\n" +
+             "        content:\n" +
+             "          search:\n" +
+             "            ttl: 60\n" +
+             "            default_save_ttl: 60\n" +
+             "            auto_cancel: 60\n" +
+             "            auto_finalize_ec: 60\n" +
+             "            auto_pause: 30\n";
+
+      java.nio.file.Files.write(tempFile.toPath(), content.getBytes(java.nio.charset.StandardCharsets.UTF_8));
+      return tempFile;
+    } catch (java.io.IOException e) {
+      throw new RuntimeException("Failed to create Splunk default.yml", e);
+    }
+  }
+
   @ClassRule
   public static GenericContainer<?> splunk = new GenericContainer<>(
     DockerImageName.parse("splunk/splunk:9.3")
@@ -75,7 +114,13 @@ public class SplunkTestSuite extends ClusterTest {
     .withExposedPorts(8089, 8089)
     .withEnv("SPLUNK_START_ARGS", "--accept-license")
     .withEnv("SPLUNK_PASSWORD", SPLUNK_PASS)
-    .withEnv("SPLUNKD_SSL_ENABLE", "false");
+    .withEnv("SPLUNKD_SSL_ENABLE", "false")
+    .withCopyFileToContainer(
+      org.testcontainers.utility.MountableFile.forHostPath(
+        createDefaultYmlFile().toPath()
+      ),
+      "/tmp/defaults/default.yml"
+    );
 
   @BeforeClass
   public static void initSplunk() throws Exception {
@@ -88,16 +133,26 @@ public class SplunkTestSuite extends ClusterTest {
         startCluster(builder);
 
         splunk.start();
-        splunk.execInContainer("if ! sudo grep -q 'minFileSize' /opt/splunk/etc/system/local/server.conf; then " +
-            "sudo chmod a+w /opt/splunk/etc/system/local/server.conf; " +
-            "sudo echo \"# disk usage processor settings\" >> /opt/splunk/etc/system/local/server.conf; " +
-            "sudo echo \"[diskUsage]\" >> /opt/splunk/etc/system/local/server.conf; " +
-            "sudo echo \"minFreeSpace = 2000\" >> /opt/splunk/etc/system/local/server.conf; " +
-            "sudo echo \"pollingFrequency = 100000\" >> /opt/splunk/etc/system/local/server.conf; " +
-            "sudo echo \"pollingTimerFrequency = 10\" >> /opt/splunk/etc/system/local/server.conf; " +
-            "sudo chmod 600 /opt/splunk/etc/system/local/server.conf; " +
-            "sudo /opt/splunk/bin/splunk restart; " +
-            "fi");
+
+        // Wait for Splunk to start and apply configuration from default.yml
+        logger.info("Waiting for Splunk to start with custom configuration...");
+        Thread.sleep(60000);
+
+        // Clean up any existing dispatch files
+        logger.info("Cleaning up existing dispatch directory...");
+        cleanDispatchDirectory();
+
+        // Verify configuration was applied
+        logger.info("Verifying Splunk configuration...");
+        try {
+          var result = splunk.execInContainer("cat", "/opt/splunk/etc/system/local/server.conf");
+          logger.info("Server.conf contents:\n" + result.getStdout());
+
+          result = splunk.execInContainer("cat", "/opt/splunk/etc/system/local/limits.conf");
+          logger.info("Limits.conf contents:\n" + result.getStdout());
+        } catch (Exception e) {
+          logger.warn("Could not verify config: " + e.getMessage());
+        }
 
         String hostname = splunk.getHost();
         Integer port = splunk.getFirstMappedPort();
@@ -143,10 +198,26 @@ public class SplunkTestSuite extends ClusterTest {
     logger.info("Initialized Splunk in Docker container");
   }
 
+  /**
+   * Cleans up the Splunk dispatch directory to free disk space.
+   * This should be called between test classes to prevent disk space exhaustion.
+   */
+  public static void cleanDispatchDirectory() {
+    try {
+      logger.info("Cleaning up Splunk dispatch directory...");
+      splunk.execInContainer("sh", "-c", "rm -rf /opt/splunk/var/run/splunk/dispatch/*");
+      logger.debug("Splunk dispatch directory cleaned up successfully");
+    } catch (Exception e) {
+      logger.warn("Failed to clean up Splunk dispatch directory: " + e.getMessage());
+    }
+  }
+
   @AfterClass
   public static void tearDownCluster() {
     synchronized (SplunkTestSuite.class) {
       if (initCount.decrementAndGet() == 0) {
+        // Clean up Splunk dispatch files to free disk space before shutdown
+        cleanDispatchDirectory();
         splunk.close();
       }
     }

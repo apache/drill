@@ -35,14 +35,13 @@ import org.apache.drill.exec.store.StoragePluginRegistry;
 import org.apache.drill.exec.store.StoragePluginRegistry.PluginException;
 import org.apache.drill.exec.store.http.oauth.OAuthUtils;
 import org.apache.drill.exec.store.security.oauth.OAuthTokenCredentials;
-import org.eclipse.jetty.util.resource.Resource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.servlet.http.HttpServletRequest;
-import javax.ws.rs.core.Response;
-import javax.ws.rs.core.Response.Status;
-import javax.ws.rs.core.SecurityContext;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.ws.rs.core.Response;
+import jakarta.ws.rs.core.Response.Status;
+import jakarta.ws.rs.core.SecurityContext;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
@@ -162,7 +161,10 @@ public class OAuthRequests {
 
       // Get success page
       String successPage = null;
-      try (InputStream inputStream = Resource.newClassPathResource(OAUTH_SUCCESS_PAGE).getInputStream()) {
+      try (InputStream inputStream = OAuthRequests.class.getResourceAsStream(OAUTH_SUCCESS_PAGE)) {
+        if (inputStream == null) {
+          return Response.status(Status.OK).entity("You may close this window.").build();
+        }
         InputStreamReader reader = new InputStreamReader(inputStream, StandardCharsets.UTF_8);
         BufferedReader bufferedReader = new BufferedReader(reader);
         successPage = bufferedReader.lines()

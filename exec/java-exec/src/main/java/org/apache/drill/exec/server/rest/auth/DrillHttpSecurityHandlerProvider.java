@@ -17,6 +17,7 @@
  */
 package org.apache.drill.exec.server.rest.auth;
 
+import jakarta.servlet.http.HttpServletRequest;
 import org.apache.drill.exec.server.rest.header.ResponseHeadersSettingFilter;
 import com.google.common.base.Preconditions;
 import org.apache.drill.common.config.DrillConfig;
@@ -28,22 +29,20 @@ import org.apache.drill.exec.exception.DrillbitStartupException;
 import org.apache.drill.exec.rpc.security.AuthStringUtil;
 import org.apache.drill.exec.server.DrillbitContext;
 import org.apache.drill.exec.server.rest.WebServerConstants;
+import org.eclipse.jetty.ee10.servlet.ServletContextRequest;
+import org.eclipse.jetty.ee10.servlet.security.ConstraintSecurityHandler;
 import org.eclipse.jetty.http.HttpHeader;
-import org.eclipse.jetty.security.ConstraintSecurityHandler;
-import org.eclipse.jetty.security.authentication.SessionAuthentication;
-import org.eclipse.jetty.server.Handler;
+import org.eclipse.jetty.security.Authenticator;
+import org.eclipse.jetty.security.AuthenticationState;
+import org.eclipse.jetty.security.Authenticator.Configuration;
+import org.eclipse.jetty.security.ServerAuthException;
 import org.eclipse.jetty.server.Request;
-import org.eclipse.jetty.util.security.Constraint;
+import org.eclipse.jetty.server.Response;
+import org.eclipse.jetty.util.Callback;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.servlet.ServletException;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-import javax.servlet.http.HttpSession;
-import java.io.IOException;
 import java.lang.reflect.Constructor;
-import java.util.Collection;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
@@ -57,7 +56,7 @@ public class DrillHttpSecurityHandlerProvider extends ConstraintSecurityHandler 
 
   private final Map<String, String> responseHeaders;
 
-  @SuppressWarnings("unchecked")
+  @SuppressWarnings({"unchecked", "rawtypes"})
   public DrillHttpSecurityHandlerProvider(DrillConfig config, DrillbitContext drillContext)
       throws DrillbitStartupException {
 
@@ -66,11 +65,12 @@ public class DrillHttpSecurityHandlerProvider extends ConstraintSecurityHandler 
     final Set<String> configuredMechanisms = getHttpAuthMechanisms(config);
 
     final ScanResult scan = drillContext.getClasspathScan();
-    final Collection<Class<? extends DrillHttpConstraintSecurityHandler>> factoryImpls =
-        scan.getImplementations(DrillHttpConstraintSecurityHandler.class);
-    logger.debug("Found DrillHttpConstraintSecurityHandler implementations: {}", factoryImpls);
+    final Set factoryImplsRaw = scan.getImplementations(DrillHttpConstraintSecurityHandler.class);
+    logger.debug("Found DrillHttpConstraintSecurityHandler implementations: {}", factoryImplsRaw);
 
-    for (final Class<? extends DrillHttpConstraintSecurityHandler> clazz : factoryImpls) {
+    for (final Object obj : factoryImplsRaw) {
+      final Class<? extends DrillHttpConstraintSecurityHandler> clazz =
+          (Class<? extends DrillHttpConstraintSecurityHandler>) obj;
 
       // If all the configured mechanisms handler is added then break out of this loop
       if (configuredMechanisms.isEmpty()) {
@@ -110,70 +110,152 @@ public class DrillHttpSecurityHandlerProvider extends ConstraintSecurityHandler 
           "was configured properly. Please verify the configurations and try again.");
     }
 
+    // Configure this security handler with the routing authenticator
+    setAuthenticator(new RoutingAuthenticator());
+
+    // Use the login service from one of the child handlers (they should all use the same one for a given auth method)
+    // For SPNEGO or FORM, get the first available login service
+    for (DrillHttpConstraintSecurityHandler handler : securityHandlers.values()) {
+      if (handler.getLoginService() != null) {
+        setLoginService(handler.getLoginService());
+        break;
+      }
+    }
+
+    // Set up constraint mappings to require authentication for all paths
+    org.eclipse.jetty.security.Constraint constraint = new org.eclipse.jetty.security.Constraint.Builder()
+        .name("AUTH")
+        .roles(DrillUserPrincipal.AUTHENTICATED_ROLE)
+        .build();
+
+    org.eclipse.jetty.ee10.servlet.security.ConstraintMapping mapping = new org.eclipse.jetty.ee10.servlet.security.ConstraintMapping();
+    mapping.setPathSpec("/*");
+    mapping.setConstraint(constraint);
+
+    setConstraintMappings(java.util.Collections.singletonList(mapping),
+        com.google.common.collect.ImmutableSet.of(DrillUserPrincipal.AUTHENTICATED_ROLE, DrillUserPrincipal.ADMIN_ROLE));
+
+    // Enable session management for authentication caching
+    setSessionRenewedOnAuthentication(true);
+
     logger.info("Configure auth mechanisms for WebServer are: {}", securityHandlers.keySet());
   }
 
   @Override
-  public void doStart() throws Exception {
+  protected void doStart() throws Exception {
     super.doStart();
     for (DrillHttpConstraintSecurityHandler securityHandler : securityHandlers.values()) {
       securityHandler.doStart();
     }
   }
 
-  @Override
-  public void handle(String target, Request baseRequest, HttpServletRequest request, HttpServletResponse response)
-      throws IOException, ServletException {
+  /**
+   * Custom authenticator that routes to the appropriate child authenticator
+   * based on the request URI and authentication type.
+   */
+  private class RoutingAuthenticator implements Authenticator {
+    @Override
+    public String getAuthenticationType() {
+      return "ROUTING";
+    }
 
-    Preconditions.checkState(securityHandlers.size() > 0);
-    responseHeaders.forEach(response::setHeader);
-    HttpSession session = request.getSession(true);
-    SessionAuthentication authentication =
-        (SessionAuthentication) session.getAttribute(SessionAuthentication.__J_AUTHENTICATED);
-    String uri = request.getRequestURI();
-    final DrillHttpConstraintSecurityHandler securityHandler;
+    @Override
+    public void setConfiguration(Configuration configuration) {
+      // No-op - configuration is handled by child authenticators
+    }
 
-    // Before authentication, all requests go through the FormAuthenticator if configured except for /spnegoLogin
-    // request. For SPNEGO authentication all requests will be forced going via /spnegoLogin before authentication is
-    // done, this is to ensure that we don't have to authenticate same client session multiple times for each resource.
-    //
-    // If this authentication is null, user hasn't logged in yet
-    if (authentication == null) {
+    @Override
+    public AuthenticationState validateRequest(Request request, Response response, Callback callback) throws ServerAuthException {
+      try {
+        // Get servlet request for routing decisions
+        ServletContextRequest servletContextRequest = Request.as(request, ServletContextRequest.class);
+        if (servletContextRequest == null) {
+          return AuthenticationState.SEND_SUCCESS;
+        }
 
-      // 1) If only SPNEGOSecurity handler then use SPNEGOSecurity
-      // 2) If both but uri equals spnegoLogin then use SPNEGOSecurity
-      // 3) If both but uri doesn't equals spnegoLogin then use FORMSecurity
-      // 4) If only FORMSecurity handler then use FORMSecurity
-      if (isSpnegoEnabled() && (!isFormEnabled() || uri.equals(WebServerConstants.SPENGO_LOGIN_RESOURCE_PATH))) {
-        securityHandler = securityHandlers.get(Constraint.__SPNEGO_AUTH);
-        securityHandler.handle(target, baseRequest, request, response);
-      } else if(isBasicEnabled() && request.getHeader(HttpHeader.AUTHORIZATION.asString()) != null) {
-        securityHandler = securityHandlers.get(Constraint.__BASIC_AUTH);
-        securityHandler.handle(target, baseRequest, request, response);
-      } else if (isFormEnabled()) {
-        securityHandler = securityHandlers.get(Constraint.__FORM_AUTH);
-        securityHandler.handle(target, baseRequest, request, response);
+        HttpServletRequest httpReq = servletContextRequest.getServletApiRequest();
+        String uri = httpReq.getRequestURI();
+        String authHeader = httpReq.getHeader(HttpHeader.AUTHORIZATION.asString());
+
+        logger.debug("Routing authentication for URI: {}", uri);
+
+        // Check for existing authentication in session first
+        try {
+          jakarta.servlet.http.HttpSession session = httpReq.getSession(false);
+          if (session != null) {
+            org.eclipse.jetty.security.authentication.SessionAuthentication sessionAuth =
+                (org.eclipse.jetty.security.authentication.SessionAuthentication)
+                    session.getAttribute(org.eclipse.jetty.security.authentication.SessionAuthentication.AUTHENTICATED_ATTRIBUTE);
+            if (sessionAuth != null) {
+              logger.debug("Using cached authentication for: {}", sessionAuth.getUserIdentity().getUserPrincipal().getName());
+              return sessionAuth;
+            }
+          }
+        } catch (Exception e) {
+          logger.debug("Could not check session for existing authentication", e);
+        }
+
+        final DrillHttpConstraintSecurityHandler securityHandler;
+
+        // Route to the appropriate security handler based on URI and configuration
+        // SPNEGO authentication for /spnegoLogin path
+        if (isSpnegoEnabled() && uri.endsWith(WebServerConstants.SPENGO_LOGIN_RESOURCE_PATH)) {
+          securityHandler = securityHandlers.get(Authenticator.SPNEGO_AUTH);
+        }
+        // Basic authentication if Authorization header is present
+        else if (isBasicEnabled() && authHeader != null) {
+          securityHandler = securityHandlers.get(Authenticator.BASIC_AUTH);
+        }
+        // Form authentication for all other paths (if enabled)
+        else if (isFormEnabled()) {
+          securityHandler = securityHandlers.get(Authenticator.FORM_AUTH);
+        }
+        // SPNEGO-only mode - route all requests through SPNEGO
+        else if (isSpnegoEnabled()) {
+          securityHandler = securityHandlers.get(Authenticator.SPNEGO_AUTH);
+        }
+        else {
+          logger.debug("No authenticator matched for URI: {}", uri);
+          return AuthenticationState.SEND_SUCCESS;
+        }
+
+        // Get the authenticator from the selected security handler and delegate to it
+        Authenticator authenticator = securityHandler.getAuthenticator();
+        if (authenticator != null) {
+          AuthenticationState authState = authenticator.validateRequest(request, response, callback);
+
+          // If authentication succeeded, manually cache it in the session
+          // (Jetty's ConstraintSecurityHandler doesn't auto-cache when using delegated authenticators)
+          if (authState instanceof org.eclipse.jetty.security.authentication.LoginAuthenticator.UserAuthenticationSucceeded) {
+            try {
+              jakarta.servlet.http.HttpSession session = httpReq.getSession(true);
+              if (session != null) {
+                org.eclipse.jetty.security.UserIdentity userIdentity =
+                    ((org.eclipse.jetty.security.authentication.LoginAuthenticator.UserAuthenticationSucceeded) authState).getUserIdentity();
+                org.eclipse.jetty.security.authentication.SessionAuthentication sessionAuth =
+                    new org.eclipse.jetty.security.authentication.SessionAuthentication(
+                        authenticator.getAuthenticationType(), userIdentity, null);
+                session.setAttribute(org.eclipse.jetty.security.authentication.SessionAuthentication.AUTHENTICATED_ATTRIBUTE, sessionAuth);
+                logger.debug("Cached authentication in session for: {}", userIdentity.getUserPrincipal().getName());
+              }
+            } catch (Exception e) {
+              logger.warn("Could not cache authentication in session", e);
+            }
+          }
+
+          return authState;
+        }
+
+        return AuthenticationState.SEND_SUCCESS;
+      } catch (Exception e) {
+        logger.error("EXCEPTION in RoutingAuthenticator: " + e.getClass().getName() + ": " + e.getMessage(), e);
+        throw new ServerAuthException(e);
       }
-
-    }
-    // If user has logged in, use the corresponding handler to handle the request
-    else {
-      final String authMethod = authentication.getAuthMethod();
-      securityHandler = securityHandlers.get(authMethod);
-      securityHandler.handle(target, baseRequest, request, response);
     }
   }
 
   @Override
-  public void setHandler(Handler handler) {
-    super.setHandler(handler);
-    for (DrillHttpConstraintSecurityHandler securityHandler : securityHandlers.values()) {
-      securityHandler.setHandler(handler);
-    }
-  }
-
-  @Override
-  public void doStop() throws Exception {
+  protected void doStop() throws Exception {
     super.doStop();
     for (DrillHttpConstraintSecurityHandler securityHandler : securityHandlers.values()) {
       securityHandler.doStop();
@@ -181,15 +263,15 @@ public class DrillHttpSecurityHandlerProvider extends ConstraintSecurityHandler 
   }
 
   public boolean isSpnegoEnabled() {
-    return securityHandlers.containsKey(Constraint.__SPNEGO_AUTH);
+    return securityHandlers.containsKey(Authenticator.SPNEGO_AUTH);
   }
 
   public boolean isFormEnabled() {
-    return securityHandlers.containsKey(Constraint.__FORM_AUTH);
+    return securityHandlers.containsKey(Authenticator.FORM_AUTH);
   }
 
   public boolean isBasicEnabled() {
-    return securityHandlers.containsKey(Constraint.__BASIC_AUTH);
+    return securityHandlers.containsKey(Authenticator.BASIC_AUTH);
   }
 
   /**
@@ -208,7 +290,7 @@ public class DrillHttpSecurityHandlerProvider extends ConstraintSecurityHandler 
             AuthStringUtil.asSet(config.getStringList(ExecConstants.HTTP_AUTHENTICATION_MECHANISMS)));
       } else {
         // For backward compatibility
-        configuredMechs.add(Constraint.__FORM_AUTH);
+        configuredMechs.add(Authenticator.FORM_AUTH);
       }
     }
     return configuredMechs;

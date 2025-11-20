@@ -24,30 +24,31 @@ import org.apache.drill.exec.server.rest.auth.AuthDynamicFeature;
 import org.apache.drill.exec.server.rest.auth.DrillHttpSecurityHandlerProvider;
 import org.apache.drill.exec.work.WorkManager;
 import com.google.common.annotations.VisibleForTesting;
+import org.eclipse.jetty.security.Authenticator;
 import org.eclipse.jetty.security.authentication.FormAuthenticator;
 import org.eclipse.jetty.security.authentication.SessionAuthentication;
-import org.eclipse.jetty.util.security.Constraint;
 import org.glassfish.jersey.server.mvc.Viewable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.annotation.security.PermitAll;
-import javax.inject.Inject;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-import javax.servlet.http.HttpSession;
-import javax.ws.rs.GET;
-import javax.ws.rs.POST;
-import javax.ws.rs.Path;
-import javax.ws.rs.Produces;
-import javax.ws.rs.QueryParam;
-import javax.ws.rs.core.Context;
-import javax.ws.rs.core.MediaType;
-import javax.ws.rs.core.SecurityContext;
-import javax.ws.rs.core.UriBuilder;
-import javax.ws.rs.core.UriInfo;
+import jakarta.annotation.security.PermitAll;
+import jakarta.inject.Inject;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+import jakarta.servlet.http.HttpSession;
+import jakarta.ws.rs.GET;
+import jakarta.ws.rs.POST;
+import jakarta.ws.rs.Path;
+import jakarta.ws.rs.Produces;
+import jakarta.ws.rs.QueryParam;
+import jakarta.ws.rs.core.Context;
+import jakarta.ws.rs.core.MediaType;
+import jakarta.ws.rs.core.SecurityContext;
+import jakarta.ws.rs.core.UriBuilder;
+import jakarta.ws.rs.core.UriInfo;
 import java.net.URI;
 import java.net.URLDecoder;
+import java.nio.charset.StandardCharsets;
 import java.util.Set;
 
 @Path(WebServerConstants.WEBSERVER_ROOT_PATH)
@@ -73,7 +74,7 @@ public class LogInLogOutResources {
       // If the URL has redirect in it, set the redirect URI in session, so that after the login is successful, request
       // is forwarded to the redirect page.
       final HttpSession session = request.getSession(true);
-      final URI destURI = UriBuilder.fromUri(URLDecoder.decode(redirect, "UTF-8")).build();
+      final URI destURI = UriBuilder.fromUri(URLDecoder.decode(redirect, StandardCharsets.UTF_8)).build();
       session.setAttribute(FormAuthenticator.__J_URI, destURI.getPath());
     }
   }
@@ -125,7 +126,7 @@ public class LogInLogOutResources {
   public void logout(@Context HttpServletRequest req, @Context HttpServletResponse resp) throws Exception {
     final HttpSession session = req.getSession();
     if (session != null) {
-      final Object authCreds = session.getAttribute(SessionAuthentication.__J_AUTHENTICATED);
+      final Object authCreds = session.getAttribute(SessionAuthentication.AUTHENTICATED_ATTRIBUTE);
       if (authCreds != null) {
         final SessionAuthentication sessionAuth = (SessionAuthentication) authCreds;
         logger.info("WebUser {} logged out from {}:{}", sessionAuth.getUserIdentity().getUserPrincipal().getName(), req
@@ -168,11 +169,11 @@ public class LogInLogOutResources {
     }
 
     public boolean isSpnegoEnabled() {
-      return authEnabled && configuredMechs.contains(Constraint.__SPNEGO_AUTH);
+      return authEnabled && configuredMechs.contains(Authenticator.SPNEGO_AUTH);
     }
 
     public boolean isFormEnabled() {
-      return authEnabled && configuredMechs.contains(Constraint.__FORM_AUTH);
+      return authEnabled && configuredMechs.contains(Authenticator.FORM_AUTH);
     }
 
     public String getError() {

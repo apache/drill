@@ -15,25 +15,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.drill.exec.server;
 
-import javax.inject.Inject;
-import jakarta.ws.rs.GET;
-import jakarta.ws.rs.Path;
-import jakarta.ws.rs.Produces;
-
-import org.apache.drill.exec.client.DrillClient;
-
-@Path("hello")
-public class HelloResource {
-  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(HelloResource.class);
-
-  @Inject DrillClient client;
-
-  @GET
-  @Produces("text/plain")
-  public String getHello() {
-    return "hello world" + client;
-  }
-
-}
+/**
+ * REST authentication classes for Drill.
+ *
+ * This package contains Jetty 11 compatibility code including SPNEGO authentication.
+ */
+package org.apache.drill.exec.server.rest.auth;

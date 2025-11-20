@@ -40,7 +40,7 @@ import org.apache.drill.test.BaseTest;
 import org.apache.hadoop.security.authentication.util.KerberosName;
 import org.apache.hadoop.security.authentication.util.KerberosUtil;
 import org.apache.kerby.kerberos.kerb.client.JaasKrbUtil;
-import org.eclipse.jetty.server.UserIdentity;
+import org.eclipse.jetty.security.UserIdentity;
 import org.ietf.jgss.GSSContext;
 import org.ietf.jgss.GSSManager;
 import org.ietf.jgss.GSSName;
@@ -304,12 +304,15 @@ public class TestSpnegoAuthentication extends BaseTest {
     final DrillSpnegoLoginService loginService = new DrillSpnegoLoginService(drillbitContext);
 
     // Authenticate the client using its SPNEGO token
-    final UserIdentity user = loginService.login(null, token, null);
+    // In Jetty 12, login requires Request and Function<Boolean, Session> parameters
+    // For this test, we can pass null for both since they're not used in the actual login logic
+    final UserIdentity user = loginService.login(null, token, null, null);
 
     // Validate the UserIdentity of authenticated client
     assertNotNull(user);
     assertEquals(user.getUserPrincipal().getName(), spnegoHelper.CLIENT_SHORT_NAME);
-    assertTrue(user.isUserInRole("authenticated", null));
+    // In Jetty 12, isUserInRole only takes the role name, not a UserIdentity.Scope
+    assertTrue(user.isUserInRole("authenticated"));
   }
 
   @AfterClass
