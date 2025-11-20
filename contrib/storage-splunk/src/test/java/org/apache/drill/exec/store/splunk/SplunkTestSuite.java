@@ -89,16 +89,22 @@ public class SplunkTestSuite extends ClusterTest {
 
         splunk.start();
 
-        // Disable disk usage monitoring in Splunk to prevent "minimum free disk space" errors in CI
-        logger.info("Configuring Splunk to disable disk usage monitoring...");
+        // Configure Splunk to use minimal disk space for tests (based on Splunk community solution)
+        // Reference: https://community.splunk.com/t5/Monitoring-Splunk/How-to-resolve-this-error-quot-The-minimum-free-disk-space/m-p/351154
+        logger.info("Configuring Splunk minFreeSpace setting...");
+
+        // First, check if [diskUsage] section exists and update it, otherwise add it
         splunk.execInContainer("sh", "-c",
-            "echo '' >> /opt/splunk/etc/system/local/server.conf && " +
-            "echo '[diskUsage]' >> /opt/splunk/etc/system/local/server.conf && " +
-            "echo 'minFreeSpace = 50' >> /opt/splunk/etc/system/local/server.conf && " +
-            "echo 'disabled = false' >> /opt/splunk/etc/system/local/server.conf");
+            "if grep -q '\\[diskUsage\\]' /opt/splunk/etc/system/local/server.conf; then " +
+            "  sed -i 's/minFreeSpace = .*/minFreeSpace = 50/' /opt/splunk/etc/system/local/server.conf; " +
+            "else " +
+            "  echo '' >> /opt/splunk/etc/system/local/server.conf && " +
+            "  echo '[diskUsage]' >> /opt/splunk/etc/system/local/server.conf && " +
+            "  echo 'minFreeSpace = 50' >> /opt/splunk/etc/system/local/server.conf; " +
+            "fi");
 
         // Restart Splunk to apply configuration
-        logger.info("Restarting Splunk with updated configuration...");
+        logger.info("Restarting Splunk with updated minFreeSpace configuration...");
         splunk.execInContainer("/opt/splunk/bin/splunk", "restart", "--accept-license", "--answer-yes", "--no-prompt");
 
         // Wait for Splunk to fully restart and be ready
