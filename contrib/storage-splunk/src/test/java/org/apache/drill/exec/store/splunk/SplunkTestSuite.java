@@ -68,6 +68,45 @@ public class SplunkTestSuite extends ClusterTest {
 
   private static volatile boolean runningSuite = true;
   private static AtomicInteger initCount = new AtomicInteger(0);
+
+  /**
+   * Creates a Splunk default.yml configuration file with minimal disk space requirements.
+   * This is the proper way to configure Splunk in Docker - the settings are applied at startup.
+   */
+  private static java.io.File createDefaultYmlFile() {
+    try {
+      java.io.File tempFile = java.io.File.createTempFile("splunk-default", ".yml");
+      tempFile.deleteOnExit();
+
+      String content = "---\n" +
+             "splunk:\n" +
+             "  conf:\n" +
+             "    - key: server\n" +
+             "      value:\n" +
+             "        directory: /opt/splunk/etc/system/local\n" +
+             "        content:\n" +
+             "          diskUsage:\n" +
+             "            minFreeSpace: 50\n" +
+             "            pollingFrequency: 30\n" +
+             "            pollingTimerFrequency: 5\n" +
+             "    - key: limits\n" +
+             "      value:\n" +
+             "        directory: /opt/splunk/etc/system/local\n" +
+             "        content:\n" +
+             "          search:\n" +
+             "            ttl: 60\n" +
+             "            default_save_ttl: 60\n" +
+             "            auto_cancel: 60\n" +
+             "            auto_finalize_ec: 60\n" +
+             "            auto_pause: 30\n";
+
+      java.nio.file.Files.write(tempFile.toPath(), content.getBytes(java.nio.charset.StandardCharsets.UTF_8));
+      return tempFile;
+    } catch (java.io.IOException e) {
+      throw new RuntimeException("Failed to create Splunk default.yml", e);
+    }
+  }
+
   @ClassRule
   public static GenericContainer<?> splunk = new GenericContainer<>(
     DockerImageName.parse("splunk/splunk:9.3")
@@ -75,7 +114,13 @@ public class SplunkTestSuite extends ClusterTest {
     .withExposedPorts(8089, 8089)
     .withEnv("SPLUNK_START_ARGS", "--accept-license")
     .withEnv("SPLUNK_PASSWORD", SPLUNK_PASS)
-    .withEnv("SPLUNKD_SSL_ENABLE", "false");
+    .withEnv("SPLUNKD_SSL_ENABLE", "false")
+    .withCopyFileToContainer(
+      org.testcontainers.utility.MountableFile.forHostPath(
+        createDefaultYmlFile().toPath()
+      ),
+      "/tmp/defaults/default.yml"
+    );
 
   @BeforeClass
   public static void initSplunk() throws Exception {
@@ -89,56 +134,22 @@ public class SplunkTestSuite extends ClusterTest {
 
         splunk.start();
 
-        // Wait for initial startup to complete
-        logger.info("Waiting for Splunk initial startup...");
-        Thread.sleep(30000);
-
-        // Clean up any existing dispatch files from previous container runs
-        logger.info("Cleaning up existing dispatch directory...");
-        try {
-          splunk.execInContainer("sh", "-c", "rm -rf /opt/splunk/var/run/splunk/dispatch/*");
-        } catch (Exception e) {
-          logger.warn("Could not clean dispatch directory: " + e.getMessage());
-        }
-
-        // Configure Splunk to use minimal disk space for tests
-        // We need to set multiple parameters to ensure aggressive cleanup
-        logger.info("Configuring Splunk disk usage settings...");
-
-        // Remove any existing [diskUsage] section to avoid duplicates
-        splunk.execInContainer("sh", "-c",
-            "sed -i '/\\[diskUsage\\]/,/^$/d' /opt/splunk/etc/system/local/server.conf 2>/dev/null || true");
-
-        // Add new [diskUsage] configuration with aggressive cleanup settings
-        splunk.execInContainer("sh", "-c",
-            "echo '' >> /opt/splunk/etc/system/local/server.conf && " +
-            "echo '[diskUsage]' >> /opt/splunk/etc/system/local/server.conf && " +
-            "echo 'minFreeSpace = 50' >> /opt/splunk/etc/system/local/server.conf && " +
-            "echo 'pollingFrequency = 30' >> /opt/splunk/etc/system/local/server.conf && " +
-            "echo 'pollingTimerFrequency = 5' >> /opt/splunk/etc/system/local/server.conf");
-
-        // Also configure search job TTL to be short for tests
-        splunk.execInContainer("sh", "-c",
-            "sed -i '/\\[search\\]/,/^$/d' /opt/splunk/etc/system/local/limits.conf 2>/dev/null || true");
-        splunk.execInContainer("sh", "-c",
-            "echo '' >> /opt/splunk/etc/system/local/limits.conf && " +
-            "echo '[search]' >> /opt/splunk/etc/system/local/limits.conf && " +
-            "echo 'ttl = 60' >> /opt/splunk/etc/system/local/limits.conf && " +
-            "echo 'default_save_ttl = 60' >> /opt/splunk/etc/system/local/limits.conf");
-
-        // Restart Splunk to apply configuration
-        logger.info("Restarting Splunk with updated configuration...");
-        splunk.execInContainer("/opt/splunk/bin/splunk", "restart", "--accept-license", "--answer-yes", "--no-prompt");
-
-        // Wait for Splunk to fully restart and be ready
-        logger.info("Waiting for Splunk to be ready after restart...");
+        // Wait for Splunk to start and apply configuration from default.yml
+        logger.info("Waiting for Splunk to start with custom configuration...");
         Thread.sleep(60000);
+
+        // Clean up any existing dispatch files
+        logger.info("Cleaning up existing dispatch directory...");
+        cleanDispatchDirectory();
 
         // Verify configuration was applied
         logger.info("Verifying Splunk configuration...");
         try {
-          var result = splunk.execInContainer("grep", "-A", "3", "[diskUsage]", "/opt/splunk/etc/system/local/server.conf");
-          logger.info("Disk usage config: " + result.getStdout());
+          var result = splunk.execInContainer("cat", "/opt/splunk/etc/system/local/server.conf");
+          logger.info("Server.conf contents:\n" + result.getStdout());
+
+          result = splunk.execInContainer("cat", "/opt/splunk/etc/system/local/limits.conf");
+          logger.info("Limits.conf contents:\n" + result.getStdout());
         } catch (Exception e) {
           logger.warn("Could not verify config: " + e.getMessage());
         }
