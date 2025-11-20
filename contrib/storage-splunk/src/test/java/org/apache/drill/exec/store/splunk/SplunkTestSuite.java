@@ -89,27 +89,59 @@ public class SplunkTestSuite extends ClusterTest {
 
         splunk.start();
 
-        // Configure Splunk to use minimal disk space for tests (based on Splunk community solution)
-        // Reference: https://community.splunk.com/t5/Monitoring-Splunk/How-to-resolve-this-error-quot-The-minimum-free-disk-space/m-p/351154
-        logger.info("Configuring Splunk minFreeSpace setting...");
+        // Wait for initial startup to complete
+        logger.info("Waiting for Splunk initial startup...");
+        Thread.sleep(30000);
 
-        // First, check if [diskUsage] section exists and update it, otherwise add it
+        // Clean up any existing dispatch files from previous container runs
+        logger.info("Cleaning up existing dispatch directory...");
+        try {
+          splunk.execInContainer("sh", "-c", "rm -rf /opt/splunk/var/run/splunk/dispatch/*");
+        } catch (Exception e) {
+          logger.warn("Could not clean dispatch directory: " + e.getMessage());
+        }
+
+        // Configure Splunk to use minimal disk space for tests
+        // We need to set multiple parameters to ensure aggressive cleanup
+        logger.info("Configuring Splunk disk usage settings...");
+
+        // Remove any existing [diskUsage] section to avoid duplicates
         splunk.execInContainer("sh", "-c",
-            "if grep -q '\\[diskUsage\\]' /opt/splunk/etc/system/local/server.conf; then " +
-            "  sed -i 's/minFreeSpace = .*/minFreeSpace = 50/' /opt/splunk/etc/system/local/server.conf; " +
-            "else " +
-            "  echo '' >> /opt/splunk/etc/system/local/server.conf && " +
-            "  echo '[diskUsage]' >> /opt/splunk/etc/system/local/server.conf && " +
-            "  echo 'minFreeSpace = 50' >> /opt/splunk/etc/system/local/server.conf; " +
-            "fi");
+            "sed -i '/\\[diskUsage\\]/,/^$/d' /opt/splunk/etc/system/local/server.conf 2>/dev/null || true");
+
+        // Add new [diskUsage] configuration with aggressive cleanup settings
+        splunk.execInContainer("sh", "-c",
+            "echo '' >> /opt/splunk/etc/system/local/server.conf && " +
+            "echo '[diskUsage]' >> /opt/splunk/etc/system/local/server.conf && " +
+            "echo 'minFreeSpace = 50' >> /opt/splunk/etc/system/local/server.conf && " +
+            "echo 'pollingFrequency = 30' >> /opt/splunk/etc/system/local/server.conf && " +
+            "echo 'pollingTimerFrequency = 5' >> /opt/splunk/etc/system/local/server.conf");
+
+        // Also configure search job TTL to be short for tests
+        splunk.execInContainer("sh", "-c",
+            "sed -i '/\\[search\\]/,/^$/d' /opt/splunk/etc/system/local/limits.conf 2>/dev/null || true");
+        splunk.execInContainer("sh", "-c",
+            "echo '' >> /opt/splunk/etc/system/local/limits.conf && " +
+            "echo '[search]' >> /opt/splunk/etc/system/local/limits.conf && " +
+            "echo 'ttl = 60' >> /opt/splunk/etc/system/local/limits.conf && " +
+            "echo 'default_save_ttl = 60' >> /opt/splunk/etc/system/local/limits.conf");
 
         // Restart Splunk to apply configuration
-        logger.info("Restarting Splunk with updated minFreeSpace configuration...");
+        logger.info("Restarting Splunk with updated configuration...");
         splunk.execInContainer("/opt/splunk/bin/splunk", "restart", "--accept-license", "--answer-yes", "--no-prompt");
 
         // Wait for Splunk to fully restart and be ready
-        logger.info("Waiting for Splunk to be ready...");
-        Thread.sleep(45000);
+        logger.info("Waiting for Splunk to be ready after restart...");
+        Thread.sleep(60000);
+
+        // Verify configuration was applied
+        logger.info("Verifying Splunk configuration...");
+        try {
+          var result = splunk.execInContainer("grep", "-A", "3", "[diskUsage]", "/opt/splunk/etc/system/local/server.conf");
+          logger.info("Disk usage config: " + result.getStdout());
+        } catch (Exception e) {
+          logger.warn("Could not verify config: " + e.getMessage());
+        }
 
         String hostname = splunk.getHost();
         Integer port = splunk.getFirstMappedPort();
@@ -155,19 +187,26 @@ public class SplunkTestSuite extends ClusterTest {
     logger.info("Initialized Splunk in Docker container");
   }
 
+  /**
+   * Cleans up the Splunk dispatch directory to free disk space.
+   * This should be called between test classes to prevent disk space exhaustion.
+   */
+  public static void cleanDispatchDirectory() {
+    try {
+      logger.info("Cleaning up Splunk dispatch directory...");
+      splunk.execInContainer("sh", "-c", "rm -rf /opt/splunk/var/run/splunk/dispatch/*");
+      logger.debug("Splunk dispatch directory cleaned up successfully");
+    } catch (Exception e) {
+      logger.warn("Failed to clean up Splunk dispatch directory: " + e.getMessage());
+    }
+  }
+
   @AfterClass
   public static void tearDownCluster() {
     synchronized (SplunkTestSuite.class) {
       if (initCount.decrementAndGet() == 0) {
         // Clean up Splunk dispatch files to free disk space before shutdown
-        try {
-          logger.info("Cleaning up Splunk dispatch files...");
-          splunk.execInContainer("sudo rm -rf /opt/splunk/var/run/splunk/dispatch/*");
-          logger.info("Splunk dispatch files cleaned up successfully");
-        } catch (Exception e) {
-          logger.warn("Failed to clean up Splunk dispatch files", e);
-        }
-
+        cleanDispatchDirectory();
         splunk.close();
       }
     }
