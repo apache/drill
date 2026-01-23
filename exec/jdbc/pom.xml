@@ -76,6 +76,17 @@
       <groupId>org.openjdk.nashorn</groupId>
       <artifactId>nashorn-core</artifactId>
       <scope>test</scope>
+      <exclusions>
+        <!-- Exclude ASM dependencies - Drill uses ASM 9.2 -->
+        <exclusion>
+          <groupId>org.ow2.asm</groupId>
+          <artifactId>asm</artifactId>
+        </exclusion>
+        <exclusion>
+          <groupId>org.ow2.asm</groupId>
+          <artifactId>asm-tree</artifactId>
+        </exclusion>
+      </exclusions>
     </dependency>
     <!-- Specify xerces versions to avoid setXIncludeAware error. -->
     <dependency>
