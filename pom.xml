@@ -124,6 +124,7 @@
     <mockito_inline.version>5.2.0</mockito_inline.version>
     <mongo.version>5.5.1</mongo.version>
     <msgpack.version>0.6.6</msgpack.version>
+    <nashorn.version>15.4</nashorn.version>
     <netty.tcnative.classifier />
     <netty.tcnative.version>2.0.65.Final</netty.tcnative.version>
     <netty.version>4.1.118.Final</netty.version>
@@ -1524,6 +1525,23 @@
         <groupId>sqlline</groupId>
         <artifactId>sqlline</artifactId>
         <version>${sqlline.version}</version>
+      </dependency>
+      <!-- Nashorn script engine for Java 15+ compatibility with sqlline -->
+      <dependency>
+        <groupId>org.openjdk.nashorn</groupId>
+        <artifactId>nashorn-core</artifactId>
+        <version>${nashorn.version}</version>
+        <exclusions>
+          <!-- Exclude ASM dependencies - Drill uses ASM 9.2 -->
+          <exclusion>
+            <groupId>org.ow2.asm</groupId>
+            <artifactId>asm</artifactId>
+          </exclusion>
+          <exclusion>
+            <groupId>org.ow2.asm</groupId>
+            <artifactId>asm-tree</artifactId>
+          </exclusion>
+        </exclusions>
       </dependency>
       <dependency>
         <groupId>commons-net</groupId>
