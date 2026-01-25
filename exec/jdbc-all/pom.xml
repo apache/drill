@@ -34,7 +34,6 @@
   <properties>
     <package.namespace.prefix>oadd.</package.namespace.prefix>
     <jdbc-all-jar.maxsize>59000000</jdbc-all-jar.maxsize>
-
   </properties>
 
   <dependencies>
