@@ -141,7 +141,7 @@
     <sourceReleaseAssemblyDescriptor>source-release-zip-tar</sourceReleaseAssemblyDescriptor>
     <sqlline.version>1.12.0</sqlline.version>
     <surefire.version>3.1.2</surefire.version>
-    <swagger.version>2.2.1</swagger.version>
+    <swagger.version>2.2.42</swagger.version>
     <target.gen.source.path>${project.basedir}/target/generated-sources</target.gen.source.path>
     <testcontainers.version>1.20.0</testcontainers.version>
     <typesafe.config.version>1.4.2</typesafe.config.version>
