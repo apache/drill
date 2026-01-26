@@ -38,16 +38,32 @@ echo "Starting Hive Metastore on port 9083..."
 METASTORE_PID=$!
 echo "Metastore started (PID: $METASTORE_PID)"
 
-# Wait for metastore to be ready (simple time-based wait + log check)
+# Wait for metastore to be ready
 echo "Waiting for Metastore to be ready..."
-sleep 30
-if grep -q "Starting Hive Metastore Server" /tmp/metastore.log; then
-    echo "✓ Metastore is starting"
-else
-    echo "ERROR: Metastore failed to start"
-    cat /tmp/metastore.log
-    exit 1
-fi
+MAX_WAIT=120  # 2 minutes max
+WAIT_COUNT=0
+while [ $WAIT_COUNT -lt $MAX_WAIT ]; do
+    WAIT_COUNT=$((WAIT_COUNT+5))
+    # Check for various success indicators in the log
+    if grep -qE "(Starting Hive Metastore Server|Started the new metaserver|Metastore.*started)" /tmp/metastore.log 2>/dev/null; then
+        echo "Metastore is starting"
+        break
+    fi
+    # Also check if the process is still running
+    if ! kill -0 $METASTORE_PID 2>/dev/null; then
+        echo "ERROR: Metastore process died"
+        cat /tmp/metastore.log
+        exit 1
+    fi
+    if [ $WAIT_COUNT -ge $MAX_WAIT ]; then
+        echo "WARNING: Could not confirm metastore startup from logs, continuing anyway..."
+        echo "Metastore log:"
+        tail -20 /tmp/metastore.log
+    fi
+    sleep 5
+done
+# Extra wait for metastore to fully initialize
+sleep 10
 
 # Start HiveServer2 in background
 echo "Starting HiveServer2 on port 10000..."
@@ -57,23 +73,30 @@ echo "HiveServer2 started (PID: $HIVESERVER2_PID)"
 
 # Wait for HiveServer2 to accept JDBC connections
 echo "Waiting for HiveServer2 to accept JDBC connections..."
-echo "This should take 1-3 minutes..."
-MAX_RETRIES=60  # 60 attempts × 5 seconds = 5 minutes max
+echo "This may take 3-10 minutes..."
+MAX_RETRIES=120  # 120 attempts x 5 seconds = 10 minutes max
 RETRY_COUNT=0
 while [ $RETRY_COUNT -lt $MAX_RETRIES ]; do
     RETRY_COUNT=$((RETRY_COUNT+1))
     if beeline -u jdbc:hive2://localhost:10000 -e "show databases;" > /dev/null 2>&1; then
-        echo "✓ HiveServer2 is ready and accepting connections!"
+        echo "HiveServer2 is ready and accepting connections!"
         break
     fi
-    if [ $RETRY_COUNT -ge $MAX_RETRIES ]; then
-        echo "ERROR: HiveServer2 failed to accept connections after 5 minutes"
+    # Check if process is still running
+    if ! kill -0 $HIVESERVER2_PID 2>/dev/null; then
+        echo "ERROR: HiveServer2 process died"
         cat /tmp/hiveserver2.log
         exit 1
     fi
-    # Show progress every 30 seconds
-    if [ $((RETRY_COUNT % 6)) -eq 0 ]; then
-        echo "Waiting for HiveServer2... ($((RETRY_COUNT * 5)) seconds elapsed)"
+    if [ $RETRY_COUNT -ge $MAX_RETRIES ]; then
+        echo "ERROR: HiveServer2 failed to accept connections after 10 minutes"
+        echo "HiveServer2 log:"
+        tail -50 /tmp/hiveserver2.log
+        exit 1
+    fi
+    # Show progress every minute
+    if [ $((RETRY_COUNT % 12)) -eq 0 ]; then
+        echo "Waiting for HiveServer2... ($((RETRY_COUNT * 5 / 60)) minutes elapsed)"
     fi
     sleep 5
 done
