@@ -239,6 +239,63 @@ public class LocalFunctionRegistry implements AutoCloseable {
   }
 
   /**
+   * Get SQL operators for a given function name. This is used to allow dynamic UDFs to override
+   * built-in functions during SQL validation.
+   *
+   * @param name function name
+   * @return list of SQL operators, or null if not found
+   */
+  public List<org.apache.calcite.sql.SqlOperator> getSqlOperators(String name) {
+    List<DrillFuncHolder> holders = getMethods(name);
+    if (holders == null || holders.isEmpty()) {
+      return null;
+    }
+
+    // Create SqlOperator from function holders
+    List<org.apache.calcite.sql.SqlOperator> operators = new java.util.ArrayList<>();
+
+    // Calculate min/max arg counts
+    int argCountMin = Integer.MAX_VALUE;
+    int argCountMax = Integer.MIN_VALUE;
+    boolean isAggregate = false;
+    boolean isDeterministic = true;
+
+    for (DrillFuncHolder holder : holders) {
+      if (holder.isAggregating()) {
+        isAggregate = true;
+      }
+      if (!holder.isDeterministic()) {
+        isDeterministic = false;
+      }
+      argCountMin = Math.min(argCountMin, holder.getParamCount());
+      argCountMax = Math.max(argCountMax, holder.getParamCount());
+    }
+
+    if (isAggregate) {
+      // Create aggregate operator using builder
+      org.apache.drill.exec.planner.sql.DrillSqlAggOperator op =
+          new org.apache.drill.exec.planner.sql.DrillSqlAggOperator.DrillSqlAggOperatorBuilder()
+              .setName(name.toUpperCase())
+              .addFunctions(holders)
+              .setArgumentCount(argCountMin, argCountMax)
+              .build();
+      operators.add(op);
+    } else {
+      // Create regular operator using builder
+      org.apache.drill.exec.planner.sql.DrillSqlOperator op =
+          new org.apache.drill.exec.planner.sql.DrillSqlOperator.DrillSqlOperatorBuilder()
+              .setName(name.toUpperCase())
+              .addFunctions(holders)
+              .setArgumentCount(argCountMin, argCountMax)
+              .setDeterministic(isDeterministic)
+              .build();
+      operators.add(op);
+    }
+
+    return operators;
+  }
+
+  /**
    * Returns a map of all function holders mapped by source jars
    * @return all functions organized by source jars
    */

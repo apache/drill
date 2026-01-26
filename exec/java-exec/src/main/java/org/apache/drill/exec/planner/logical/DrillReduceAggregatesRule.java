@@ -123,7 +123,25 @@ public class DrillReduceAggregatesRule extends RelOptRule {
    */
   private boolean containsAvgStddevVarCall(List<AggregateCall> aggCallList) {
     for (AggregateCall call : aggCallList) {
+      // Check the aggregate function name directly
+      String aggName = call.getAggregation().getName();
+      if (aggName.equalsIgnoreCase("AVG") ||
+          aggName.equalsIgnoreCase("STDDEV_POP") || aggName.equalsIgnoreCase("STDDEV_SAMP") ||
+          aggName.equalsIgnoreCase("VAR_POP") || aggName.equalsIgnoreCase("VAR_SAMP") ||
+          aggName.equalsIgnoreCase("SUM") || aggName.equalsIgnoreCase("SUM0") ||
+          aggName.equalsIgnoreCase("$SUM0")) {
+        return true;
+      }
+
+      // Fallback: check by SqlKind and instanceof for standard Calcite functions
       SqlAggFunction sqlAggFunction = DrillCalciteWrapperUtility.extractSqlOperatorFromWrapper(call.getAggregation());
+      SqlKind kind = sqlAggFunction.getKind();
+      if (kind == SqlKind.AVG ||
+          kind == SqlKind.STDDEV_POP || kind == SqlKind.STDDEV_SAMP ||
+          kind == SqlKind.VAR_POP || kind == SqlKind.VAR_SAMP ||
+          kind == SqlKind.SUM || kind == SqlKind.SUM0) {
+        return true;
+      }
       if (sqlAggFunction instanceof SqlAvgAggFunction
           || sqlAggFunction instanceof SqlSumAggFunction) {
         return true;
@@ -228,16 +246,48 @@ public class DrillReduceAggregatesRule extends RelOptRule {
       Map<AggregateCall, RexNode> aggCallMapping,
       List<RexNode> inputExprs) {
     final SqlAggFunction sqlAggFunction = DrillCalciteWrapperUtility.extractSqlOperatorFromWrapper(oldCall.getAggregation());
-    if (sqlAggFunction instanceof SqlSumAggFunction) {
+    final SqlKind sqlKind = sqlAggFunction.getKind();
+
+    // Handle SUM
+    if (sqlKind == SqlKind.SUM || sqlKind == SqlKind.SUM0 ||
+        sqlAggFunction instanceof SqlSumAggFunction) {
       // replace original SUM(x) with
       // case COUNT(x) when 0 then null else SUM0(x) end
       return reduceSum(oldAggRel, oldCall, newCalls, aggCallMapping);
     }
-    if (sqlAggFunction instanceof SqlAvgAggFunction) {
-      // for DECIMAL data types does not produce rewriting of complex calls,
-      // since SUM returns value with 38 precision and further handling of the value
-      // causes the loss of the scale
-      if (oldCall.getType().getSqlTypeName() == SqlTypeName.DECIMAL) {
+
+    // Handle AVG, VAR_*, STDDEV_* - check by SqlKind or by name for Drill-wrapped functions
+    String aggName = oldCall.getAggregation().getName();
+    boolean isVarianceOrAvg = (sqlKind == SqlKind.AVG || sqlKind == SqlKind.STDDEV_POP || sqlKind == SqlKind.STDDEV_SAMP ||
+                               sqlKind == SqlKind.VAR_POP || sqlKind == SqlKind.VAR_SAMP ||
+                               sqlAggFunction instanceof SqlAvgAggFunction ||
+                               aggName.equalsIgnoreCase("AVG") || aggName.equalsIgnoreCase("VAR_POP") ||
+                               aggName.equalsIgnoreCase("VAR_SAMP") || aggName.equalsIgnoreCase("STDDEV_POP") ||
+                               aggName.equalsIgnoreCase("STDDEV_SAMP"));
+    if (isVarianceOrAvg) {
+
+      // Determine the subtype from name if SqlKind is OTHER_FUNCTION (Drill-wrapped)
+      SqlKind subtype = sqlKind;
+      if (sqlKind == SqlKind.OTHER_FUNCTION || sqlKind == SqlKind.OTHER) {
+        // Use aggName already declared above
+        if (aggName.equalsIgnoreCase("AVG")) {
+          subtype = SqlKind.AVG;
+        } else if (aggName.equalsIgnoreCase("VAR_POP")) {
+          subtype = SqlKind.VAR_POP;
+        } else if (aggName.equalsIgnoreCase("VAR_SAMP")) {
+          subtype = SqlKind.VAR_SAMP;
+        } else if (aggName.equalsIgnoreCase("STDDEV_POP")) {
+          subtype = SqlKind.STDDEV_POP;
+        } else if (aggName.equalsIgnoreCase("STDDEV_SAMP")) {
+          subtype = SqlKind.STDDEV_SAMP;
+        }
+      }
+
+      // For DECIMAL data types, only skip reduction for AVG (not for VAR_*/STDDEV_*)
+      // AVG reduction causes loss of scale, but variance/stddev MUST be reduced
+      // to avoid Calcite 1.38 CALCITE-6427 bug that creates invalid DECIMAL types
+      if (oldCall.getType().getSqlTypeName() == SqlTypeName.DECIMAL &&
+          subtype == SqlKind.AVG) {
         return oldAggRel.getCluster().getRexBuilder().addAggCall(
             oldCall,
             oldAggRel.getGroupCount(),
@@ -247,42 +297,60 @@ public class DrillReduceAggregatesRule extends RelOptRule {
                 oldAggRel.getInput(),
                 oldCall.getArgList().get(0))));
       }
-      final SqlKind subtype = sqlAggFunction.getKind();
+      // CALCITE-1.38 WORKAROUND: Disable AVG reduction entirely
+      // Calcite 1.38's RexSimplify has a regression where it gets into infinite recursion
+      // when simplifying CASE statements wrapped in CastHighOp (created by AVG expansion).
+      // The issue occurs in Strong.policy() null analysis during expression simplification.
+      // This test passes in Calcite 1.37 but fails in 1.38 with StackOverflowError.
+      // See: org.apache.drill.TestCorrelation.testScalarAggAndFilterCorrelatedSubquery
+      // TODO: Re-enable AVG reduction when Calcite fixes the RexSimplify regression
+      if (subtype == SqlKind.AVG) {
+        // Preserve original AVG aggregate to avoid Calcite 1.38 RexSimplify bug
+        return oldAggRel.getCluster().getRexBuilder().addAggCall(
+            oldCall,
+            oldAggRel.getGroupCount(),
+            newCalls,
+            aggCallMapping,
+            ImmutableList.of(getFieldType(
+                oldAggRel.getInput(),
+                oldCall.getArgList().get(0))));
+      }
+
+      // CALCITE-1.38 WORKAROUND: Disable STDDEV/VAR reduction entirely
+      // Calcite 1.38's RexChecker gets into infinite recursion when checking the deeply
+      // nested expressions created by STDDEV/VAR expansion (SQRT, SUM, COUNT, multiplication, etc).
+      // The recursion happens in RexChecker.visitCall() causing OutOfMemoryError with LIMIT 0.
+      // See: TestEarlyLimit0Optimization.measures() takes 3+ hours and OOMs
+      // TODO: Re-enable STDDEV/VAR reduction when Calcite fixes the RexChecker regression
+      if (subtype == SqlKind.STDDEV_POP || subtype == SqlKind.STDDEV_SAMP ||
+          subtype == SqlKind.VAR_POP || subtype == SqlKind.VAR_SAMP) {
+        // Preserve original STDDEV/VAR aggregate to avoid Calcite 1.38 RexChecker bug
+        return oldAggRel.getCluster().getRexBuilder().addAggCall(
+            oldCall,
+            oldAggRel.getGroupCount(),
+            newCalls,
+            aggCallMapping,
+            ImmutableList.of(getFieldType(
+                oldAggRel.getInput(),
+                oldCall.getArgList().get(0))));
+      }
+
       switch (subtype) {
       case AVG:
-        // replace original AVG(x) with SUM(x) / COUNT(x)
-        return reduceAvg(
-            oldAggRel, oldCall, newCalls, aggCallMapping);
+        // AVG reduction disabled due to Calcite 1.38 RexSimplify bug (see above)
+        throw new AssertionError("AVG should have been handled above");
       case STDDEV_POP:
-        // replace original STDDEV_POP(x) with
-        //   SQRT(
-        //     (SUM(x * x) - SUM(x) * SUM(x) / COUNT(x))
-        //     / COUNT(x))
-        return reduceStddev(
-            oldAggRel, oldCall, true, true, newCalls, aggCallMapping,
-            inputExprs);
+        // STDDEV_POP reduction disabled due to Calcite 1.38 RexChecker bug (see above)
+        throw new AssertionError("STDDEV_POP should have been handled above");
       case STDDEV_SAMP:
-        // replace original STDDEV_SAMP(x) with
-        //   SQRT(
-        //     (SUM(x * x) - SUM(x) * SUM(x) / COUNT(x))
-        //     / CASE COUNT(x) WHEN 1 THEN NULL ELSE COUNT(x) - 1 END)
-        return reduceStddev(
-            oldAggRel, oldCall, false, true, newCalls, aggCallMapping,
-            inputExprs);
+        // STDDEV_SAMP reduction disabled due to Calcite 1.38 RexChecker bug (see above)
+        throw new AssertionError("STDDEV_SAMP should have been handled above");
       case VAR_POP:
-        // replace original VAR_POP(x) with
-        //     (SUM(x * x) - SUM(x) * SUM(x) / COUNT(x))
-        //     / COUNT(x)
-        return reduceStddev(
-            oldAggRel, oldCall, true, false, newCalls, aggCallMapping,
-            inputExprs);
+        // VAR_POP reduction disabled due to Calcite 1.38 RexChecker bug (see above)
+        throw new AssertionError("VAR_POP should have been handled above");
       case VAR_SAMP:
-        // replace original VAR_SAMP(x) with
-        //     (SUM(x * x) - SUM(x) * SUM(x) / COUNT(x))
-        //     / CASE COUNT(x) WHEN 1 THEN NULL ELSE COUNT(x) - 1 END
-        return reduceStddev(
-            oldAggRel, oldCall, false, false, newCalls, aggCallMapping,
-            inputExprs);
+        // VAR_SAMP reduction disabled due to Calcite 1.38 RexChecker bug (see above)
+        throw new AssertionError("VAR_SAMP should have been handled above");
       default:
         throw Util.unexpected(subtype);
       }
@@ -317,6 +385,17 @@ public class DrillReduceAggregatesRule extends RelOptRule {
   }
 
   private RexNode reduceAvg(
+      Aggregate oldAggRel,
+      AggregateCall oldCall,
+      List<AggregateCall> newCalls,
+      Map<AggregateCall, RexNode> aggCallMapping) {
+    // NOTE: This method should never be called in Calcite 1.38 due to workaround in reduceAgg()
+    // AVG reduction is disabled to avoid RexSimplify StackOverflowError regression
+    throw new AssertionError("AVG reduction should be disabled in Calcite 1.38");
+  }
+
+  @Deprecated  // Disabled for Calcite 1.38 - see reduceAgg()
+  private RexNode reduceAvg_DISABLED_FOR_CALCITE_138(
       Aggregate oldAggRel,
       AggregateCall oldCall,
       List<AggregateCall> newCalls,
@@ -419,9 +498,10 @@ public class DrillReduceAggregatesRule extends RelOptRule {
         oldCall.isDistinct(),
         oldCall.isApproximate(),
         oldCall.ignoreNulls(),
+        oldCall.rexList != null ? oldCall.rexList : com.google.common.collect.ImmutableList.of(),
         oldCall.getArgList(),
         oldCall.filterArg,
-        oldCall.distinctKeys,
+        oldCall.distinctKeys != null ? oldCall.distinctKeys : org.apache.calcite.util.ImmutableBitSet.of(),
         oldCall.getCollation(),
         sumType,
         null);
@@ -524,9 +604,19 @@ public class DrillReduceAggregatesRule extends RelOptRule {
     RexNode argRef = rexBuilder.makeCall(CastHighOp, inputExprs.get(argOrdinal));
     inputExprs.set(argOrdinal, argRef);
 
-    final RexNode argSquared =
+    // Create argSquared (x * x) and fix its type if invalid
+    RexNode argSquared =
         rexBuilder.makeCall(
             SqlStdOperatorTable.MULTIPLY, argRef, argRef);
+
+    // Fix DECIMAL type if Calcite 1.38 created invalid type (scale > precision)
+    RelDataType argSquaredType = fixDecimalType(typeFactory, argSquared.getType());
+    if (!argSquaredType.equals(argSquared.getType())) {
+      // Recreate the call with the fixed type
+      argSquared = rexBuilder.makeCall(argSquaredType, SqlStdOperatorTable.MULTIPLY,
+          java.util.Arrays.asList(argRef, argRef));
+    }
+
     final int argSquaredOrdinal = lookupOrAdd(inputExprs, argSquared);
 
     RelDataType sumType =
@@ -534,6 +624,9 @@ public class DrillReduceAggregatesRule extends RelOptRule {
             ImmutableList.of())
           .inferReturnType(oldCall.createBinding(oldAggRel));
     sumType = typeFactory.createTypeWithNullability(sumType, true);
+
+    // Fix sumType if Calcite 1.38 created invalid DECIMAL type (scale > precision)
+    sumType = fixDecimalType(typeFactory, sumType);
     final AggregateCall sumArgSquaredAggCall =
         AggregateCall.create(
             new DrillCalciteSqlAggFunctionWrapper(
@@ -541,9 +634,10 @@ public class DrillReduceAggregatesRule extends RelOptRule {
             oldCall.isDistinct(),
             oldCall.isApproximate(),
             oldCall.ignoreNulls(),
+            oldCall.rexList != null ? oldCall.rexList : com.google.common.collect.ImmutableList.of(),
             ImmutableIntList.of(argSquaredOrdinal),
             oldCall.filterArg,
-            oldCall.distinctKeys,
+            oldCall.distinctKeys != null ? oldCall.distinctKeys : org.apache.calcite.util.ImmutableBitSet.of(),
             oldCall.getCollation(),
             sumType,
             null);
@@ -562,9 +656,10 @@ public class DrillReduceAggregatesRule extends RelOptRule {
             oldCall.isDistinct(),
             oldCall.isApproximate(),
             oldCall.ignoreNulls(),
+            oldCall.rexList != null ? oldCall.rexList : com.google.common.collect.ImmutableList.of(),
             ImmutableIntList.of(argOrdinal),
             oldCall.filterArg,
-            oldCall.distinctKeys,
+            oldCall.distinctKeys != null ? oldCall.distinctKeys : org.apache.calcite.util.ImmutableBitSet.of(),
             oldCall.getCollation(),
             sumType,
             null);
@@ -576,9 +671,18 @@ public class DrillReduceAggregatesRule extends RelOptRule {
               aggCallMapping,
               ImmutableList.of(argType));
 
-    final RexNode sumSquaredArg =
+    // Create sumSquaredArg (SUM(x) * SUM(x)) and fix its type if invalid
+    RexNode sumSquaredArg =
           rexBuilder.makeCall(
               SqlStdOperatorTable.MULTIPLY, sumArg, sumArg);
+
+    // Fix DECIMAL type if Calcite 1.38 created invalid type (scale > precision)
+    RelDataType sumSquaredArgType = fixDecimalType(typeFactory, sumSquaredArg.getType());
+    if (!sumSquaredArgType.equals(sumSquaredArg.getType())) {
+      // Recreate the call with the fixed type
+      sumSquaredArg = rexBuilder.makeCall(sumSquaredArgType, SqlStdOperatorTable.MULTIPLY,
+          java.util.Arrays.asList(sumArg, sumArg));
+    }
 
     final SqlCountAggFunction countAgg = (SqlCountAggFunction) SqlStdOperatorTable.COUNT;
     final RelDataType countType = countAgg.getReturnType(typeFactory);
@@ -679,6 +783,44 @@ public class DrillReduceAggregatesRule extends RelOptRule {
   }
 
   /**
+   * Fix invalid DECIMAL types where scale > precision.
+   * This can happen with Calcite 1.38 CALCITE-6427 where variance functions
+   * use DECIMAL(2*p, 2*s) for intermediate calculations.
+   *
+   * @param typeFactory Type factory to create corrected types
+   * @param type        Type to check and potentially fix
+   * @return Fixed type if invalid, original type otherwise
+   */
+  private static RelDataType fixDecimalType(RelDataTypeFactory typeFactory, RelDataType type) {
+    if (type.getSqlTypeName() != SqlTypeName.DECIMAL) {
+      return type;
+    }
+
+    int precision = type.getPrecision();
+    int scale = type.getScale();
+
+    // Check if type is invalid (scale > precision)
+    if (scale <= precision && precision <= 38) {
+      return type; // Type is valid
+    }
+
+    // Fix the type
+    int maxPrecision = 38; // Drill's maximum DECIMAL precision
+
+    // First, cap precision at Drill's max
+    if (precision > maxPrecision) {
+      precision = maxPrecision;
+    }
+
+    // Then ensure scale doesn't exceed precision
+    if (scale > precision) {
+      scale = precision;
+    }
+
+    return typeFactory.createSqlType(SqlTypeName.DECIMAL, precision, scale);
+  }
+
+  /**
    * Do a shallow clone of oldAggRel and update aggCalls. Could be refactored
    * into Aggregate and subclasses - but it's only needed for some
    * subclasses.
@@ -739,9 +881,10 @@ public class DrillReduceAggregatesRule extends RelOptRule {
                   oldAggregateCall.isDistinct(),
                   oldAggregateCall.isApproximate(),
                   oldAggregateCall.ignoreNulls(),
+                  oldAggregateCall.rexList != null ? oldAggregateCall.rexList : com.google.common.collect.ImmutableList.of(),
                   oldAggregateCall.getArgList(),
                   oldAggregateCall.filterArg,
-                  oldAggregateCall.distinctKeys,
+                  oldAggregateCall.distinctKeys != null ? oldAggregateCall.distinctKeys : org.apache.calcite.util.ImmutableBitSet.of(),
                   oldAggregateCall.getCollation(),
                   sumType,
                   oldAggregateCall.getName());
@@ -816,6 +959,7 @@ public class DrillReduceAggregatesRule extends RelOptRule {
             group.isRows,
             group.lowerBound,
             group.upperBound,
+            group.exclude,  // Preserve exclude clause from Calcite (CALCITE-5855)
             group.orderKeys,
             aggCalls);
         builder.add(newGroup);

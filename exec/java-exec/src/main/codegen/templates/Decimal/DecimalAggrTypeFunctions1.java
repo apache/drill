@@ -93,7 +93,7 @@ public class Decimal${aggrtype.className}Functions {
         outputScale.value = in.scale;
       }
       org.apache.drill.exec.util.DecimalUtility.checkValueOverflow((java.math.BigDecimal) value.obj,
-          org.apache.drill.exec.planner.types.DrillRelDataTypeSystem.DRILL_REL_DATATYPE_SYSTEM.getMaxNumericPrecision(), outputScale.value);
+          org.apache.drill.exec.planner.types.DrillRelDataTypeSystem.DRILL_REL_DATATYPE_SYSTEM.getMaxPrecision(org.apache.calcite.sql.type.SqlTypeName.DECIMAL), outputScale.value);
       <#if type.inputType?starts_with("Nullable")>
       } // end of sout block
       </#if>
@@ -106,7 +106,7 @@ public class Decimal${aggrtype.className}Functions {
         out.start  = 0;
         out.scale = outputScale.value;
         out.precision =
-            org.apache.drill.exec.planner.types.DrillRelDataTypeSystem.DRILL_REL_DATATYPE_SYSTEM.getMaxNumericPrecision();
+            org.apache.drill.exec.planner.types.DrillRelDataTypeSystem.DRILL_REL_DATATYPE_SYSTEM.getMaxPrecision(org.apache.calcite.sql.type.SqlTypeName.DECIMAL);
         value.obj = ((java.math.BigDecimal) value.obj).setScale(out.scale, java.math.BigDecimal.ROUND_HALF_UP);
         byte[] bytes = ((java.math.BigDecimal) value.obj).unscaledValue().toByteArray();
         int len = bytes.length;

@@ -487,10 +487,11 @@ public class TypeInferenceUtils {
         case VARDECIMAL:
           RelDataType sqlType = factory.createSqlType(
             SqlTypeName.DECIMAL,
-            DrillRelDataTypeSystem.DRILL_REL_DATATYPE_SYSTEM.getMaxNumericPrecision(),
+            DrillRelDataTypeSystem.DRILL_REL_DATATYPE_SYSTEM.getMaxPrecision(SqlTypeName.DECIMAL),
             Math.min(
               operandType.getScale(),
-              DrillRelDataTypeSystem.DRILL_REL_DATATYPE_SYSTEM.getMaxNumericScale()
+              // Use getMaxScale(DECIMAL) instead of deprecated getMaxNumericScale()
+              DrillRelDataTypeSystem.DRILL_REL_DATATYPE_SYSTEM.getMaxScale(SqlTypeName.DECIMAL)
             )
           );
           return factory.createTypeWithNullability(sqlType, isNullable);
@@ -652,7 +653,8 @@ public class TypeInferenceUtils {
       }
 
       // preserves precision of input type if it was specified
-      if (inputType.getSqlTypeName().allowsPrecNoScale()) {
+      // NOTE: DATE doesn't support precision in SQL standard, so skip precision for DATE
+      if (inputType.getSqlTypeName().allowsPrecNoScale() && sqlTypeName != SqlTypeName.DATE) {
         RelDataType type = factory.createSqlType(sqlTypeName, precision);
         return factory.createTypeWithNullability(type, isNullable);
       }
@@ -894,13 +896,21 @@ public class TypeInferenceUtils {
           isNullable
         );
         case VARDECIMAL:
+          // For Calcite 1.38+ compatibility: Variance/stddev functions use double precision/scale
+          // internally (CALCITE-6427), which can exceed Drill's DECIMAL(38,38) limit.
+          // We need to ensure scale doesn't exceed precision.
+          int maxPrecision = DrillRelDataTypeSystem.DRILL_REL_DATATYPE_SYSTEM.getMaxPrecision(SqlTypeName.DECIMAL);
+          // Use getMaxScale(DECIMAL) instead of deprecated getMaxNumericScale()
+          int maxScale = DrillRelDataTypeSystem.DRILL_REL_DATATYPE_SYSTEM.getMaxScale(SqlTypeName.DECIMAL);
+          int desiredScale = Math.max(6, operandType.getScale());
+
+          // Ensure scale doesn't exceed maxPrecision (invalid DECIMAL type)
+          int finalScale = Math.min(desiredScale, Math.min(maxScale, maxPrecision));
+
           RelDataType sqlType = factory.createSqlType(
             SqlTypeName.DECIMAL,
-            DrillRelDataTypeSystem.DRILL_REL_DATATYPE_SYSTEM.getMaxNumericPrecision(),
-            Math.min(
-              Math.max(6, operandType.getScale()),
-              DrillRelDataTypeSystem.DRILL_REL_DATATYPE_SYSTEM.getMaxNumericScale()
-            )
+            maxPrecision,
+            finalScale
           );
           return factory.createTypeWithNullability(sqlType, isNullable);
         default:

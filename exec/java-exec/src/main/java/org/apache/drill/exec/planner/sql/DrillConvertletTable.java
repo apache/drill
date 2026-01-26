@@ -34,8 +34,8 @@ import org.apache.calcite.sql.SqlIntervalQualifier;
 import org.apache.calcite.sql.SqlLiteral;
 import org.apache.calcite.sql.SqlNode;
 import org.apache.calcite.sql.SqlNumericLiteral;
+import org.apache.calcite.sql.SqlBasicFunction;
 import org.apache.calcite.sql.SqlOperator;
-import org.apache.calcite.sql.fun.SqlRandFunction;
 import org.apache.calcite.sql.fun.SqlStdOperatorTable;
 import org.apache.calcite.sql.parser.SqlParserPos;
 import org.apache.calcite.sql.type.SqlTypeName;
@@ -70,7 +70,9 @@ public class DrillConvertletTable implements SqlRexConvertletTable {
         .put(SqlStdOperatorTable.SQRT, sqrtConvertlet())
         .put(SqlStdOperatorTable.SUBSTRING, substringConvertlet())
         .put(SqlStdOperatorTable.COALESCE, coalesceConvertlet())
+        .put(SqlStdOperatorTable.TIMESTAMP_ADD, timestampAddConvertlet())
         .put(SqlStdOperatorTable.TIMESTAMP_DIFF, timestampDiffConvertlet())
+        .put(SqlStdOperatorTable.PLUS, plusConvertlet())
         .put(SqlStdOperatorTable.ROW, rowConvertlet())
         .put(SqlStdOperatorTable.RAND, randConvertlet())
         .put(SqlStdOperatorTable.AVG, avgVarianceConvertlet(DrillConvertletTable::expandAvg))
@@ -126,17 +128,11 @@ public class DrillConvertletTable implements SqlRexConvertletTable {
         exprs.add(cx.convertExpression(node));
       }
 
-      RelDataType returnType;
-      if (call.getOperator() == SqlStdOperatorTable.EXTRACT) {
-        // Legacy code:
-        // The return type is wrong!
-        // Legacy code choose SqlTypeName.BIGINT simply to avoid conflicting against Calcite's inference mechanism
-        // (which chose BIGINT in validation phase already)
-        returnType = typeFactory.createSqlType(SqlTypeName.BIGINT);
-      } else {
-        String timeUnit = ((SqlIntervalQualifier) operands.get(0)).timeUnitRange.toString();
-        returnType = typeFactory.createSqlType(TypeInferenceUtils.getSqlTypeNameForTimeUnit(timeUnit));
-      }
+      // Determine return type based on time unit (fixes Calcite 1.35 compatibility)
+      // SECOND returns DOUBLE to support fractional seconds, others return BIGINT
+      String timeUnit = ((SqlIntervalQualifier) operands.get(0)).timeUnitRange.toString();
+      RelDataType returnType = typeFactory.createSqlType(
+          TypeInferenceUtils.getSqlTypeNameForTimeUnit(timeUnit));
       // Determine nullability using 2nd argument.
       returnType = typeFactory.createTypeWithNullability(returnType, exprs.get(1).getType().isNullable());
       return cx.getRexBuilder().makeCall(returnType, call.getOperator(), exprs);
@@ -159,12 +155,9 @@ public class DrillConvertletTable implements SqlRexConvertletTable {
       List<RexNode> operands = call.getOperandList().stream()
         .map(cx::convertExpression)
         .collect(Collectors.toList());
-      return cx.getRexBuilder().makeCall(new SqlRandFunction() {
-        @Override
-        public boolean isDeterministic() {
-          return false;
-        }
-      }, operands);
+      // In Calcite 1.37+, RAND is a SqlBasicFunction, use withDeterministic(false) to mark it as non-deterministic
+      SqlBasicFunction nonDeterministicRand = ((SqlBasicFunction) SqlStdOperatorTable.RAND).withDeterministic(false);
+      return cx.getRexBuilder().makeCall(nonDeterministicRand, operands);
     };
   }
 
@@ -205,6 +198,92 @@ public class DrillConvertletTable implements SqlRexConvertletTable {
     };
   }
 
+  /**
+   * Custom convertlet for TIMESTAMP_ADD to fix Calcite 1.35 type inference bug.
+   * Calcite's SqlTimestampAddFunction.deduceType() incorrectly returns DATE instead of TIMESTAMP
+   * when adding intervals to DATE literals. This convertlet uses correct type inference:
+   * - Adding sub-day intervals (HOUR, MINUTE, SECOND, etc.) to DATE should return TIMESTAMP
+   * - Adding day-or-larger intervals (DAY, MONTH, YEAR) to DATE returns DATE
+   * - TIMESTAMP inputs always return TIMESTAMP
+   */
+  private static SqlRexConvertlet timestampAddConvertlet() {
+    return (cx, call) -> {
+      SqlIntervalQualifier unitLiteral = call.operand(0);
+      SqlIntervalQualifier qualifier =
+          new SqlIntervalQualifier(unitLiteral.getUnit(), null, SqlParserPos.ZERO);
+
+      List<RexNode> operands = Arrays.asList(
+          cx.convertExpression(qualifier),
+          cx.convertExpression(call.operand(1)),
+          cx.convertExpression(call.operand(2)));
+
+      RelDataTypeFactory typeFactory = cx.getTypeFactory();
+
+      // Determine return type based on interval unit and operand type
+      // This fixes Calcite 1.35's bug where DATE + sub-day interval incorrectly returns DATE
+      RelDataType operandType = operands.get(2).getType();
+      SqlTypeName returnTypeName;
+      int precision = -1;
+
+      // Get the time unit from the interval qualifier
+      org.apache.calcite.avatica.util.TimeUnit timeUnit = unitLiteral.getUnit();
+
+      // Determine return type based on input type and interval unit
+      // This must match DrillTimestampAddTypeInference.inferReturnType() logic
+      // Rules from DrillTimestampAddTypeInference:
+      // - NANOSECOND, DAY, WEEK, MONTH, QUARTER, YEAR: preserve input type
+      // - MICROSECOND, MILLISECOND: always TIMESTAMP
+      // - SECOND, MINUTE, HOUR: TIMESTAMP except TIME input stays TIME
+      switch (timeUnit) {
+        case DAY:
+        case WEEK:
+        case MONTH:
+        case QUARTER:
+        case YEAR:
+        case NANOSECOND:  // NANOSECOND preserves input type per DrillTimestampAddTypeInference
+          returnTypeName = operandType.getSqlTypeName();
+          // Only set precision for types that support it (TIMESTAMP, TIME)
+          if (returnTypeName == SqlTypeName.TIMESTAMP || returnTypeName == SqlTypeName.TIME) {
+            precision = 3;
+          }
+          break;
+        case MICROSECOND:
+        case MILLISECOND:
+          returnTypeName = SqlTypeName.TIMESTAMP;
+          precision = 3;
+          break;
+        case SECOND:
+        case MINUTE:
+        case HOUR:
+          if (operandType.getSqlTypeName() == SqlTypeName.TIME) {
+            returnTypeName = SqlTypeName.TIME;
+          } else {
+            returnTypeName = SqlTypeName.TIMESTAMP;
+          }
+          precision = 3;
+          break;
+        default:
+          returnTypeName = operandType.getSqlTypeName();
+          precision = operandType.getPrecision();
+      }
+
+      RelDataType returnType;
+      if (precision >= 0 && (returnTypeName == SqlTypeName.TIMESTAMP || returnTypeName == SqlTypeName.TIME)) {
+        returnType = typeFactory.createSqlType(returnTypeName, precision);
+      } else {
+        returnType = typeFactory.createSqlType(returnTypeName);
+      }
+
+      // Apply nullability: result is nullable if ANY operand (count or datetime) is nullable
+      boolean isNullable = operands.get(1).getType().isNullable() ||
+                          operands.get(2).getType().isNullable();
+      returnType = typeFactory.createTypeWithNullability(returnType, isNullable);
+
+      return cx.getRexBuilder().makeCall(returnType,
+          SqlStdOperatorTable.TIMESTAMP_ADD, operands);
+    };
+  }
+
   private static SqlRexConvertlet timestampDiffConvertlet() {
     return (cx, call) -> {
       SqlIntervalQualifier unitLiteral = call.operand(0);
@@ -218,6 +297,7 @@ public class DrillConvertletTable implements SqlRexConvertletTable {
 
       RelDataTypeFactory typeFactory = cx.getTypeFactory();
 
+      // Calcite validation uses BIGINT, so convertlet must match
       RelDataType returnType = typeFactory.createTypeWithNullability(
           typeFactory.createSqlType(SqlTypeName.BIGINT),
           cx.getValidator().getValidatedNodeType(call.operand(1)).isNullable()
@@ -225,6 +305,24 @@ public class DrillConvertletTable implements SqlRexConvertletTable {
 
       return cx.getRexBuilder().makeCall(returnType,
           SqlStdOperatorTable.TIMESTAMP_DIFF, operands);
+    };
+  }
+
+  /**
+   * Custom convertlet for PLUS to fix Calcite 1.38 date + interval type inference.
+   * Calcite 1.38 incorrectly casts intervals to DATE in some expressions.
+   * This convertlet ensures interval types are preserved when used with dates.
+   */
+  private static SqlRexConvertlet plusConvertlet() {
+    return (cx, call) -> {
+      // Convert operands without going through standard convertlet
+      // to prevent Calcite from adding incorrect casts
+      RexNode left = cx.convertExpression(call.operand(0));
+      RexNode right = cx.convertExpression(call.operand(1));
+
+      // Just use makeCall with the PLUS operator and converted operands
+      // Let Drill's function resolver handle the rest
+      return cx.getRexBuilder().makeCall(SqlStdOperatorTable.PLUS, left, right);
     };
   }
 
