@@ -35,6 +35,8 @@ public class SplunkBaseTest extends ClusterTest {
   @AfterClass
   public static void shutdown() {
     if (SplunkTestSuite.isRunningSuite()) {
+      // Clean dispatch directory after each test class to prevent accumulation
+      SplunkTestSuite.cleanDispatchDirectory();
       SplunkTestSuite.tearDownCluster();
     }
   }

@@ -20,8 +20,8 @@ package org.apache.drill.yarn.appMaster.http;
 import java.util.HashMap;
 import java.util.Map;
 
-import javax.servlet.http.HttpServletRequest;
-import javax.ws.rs.core.SecurityContext;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.ws.rs.core.SecurityContext;
 
 import org.apache.drill.exec.server.rest.auth.DrillUserPrincipal;
 import org.apache.drill.yarn.appMaster.Dispatcher;

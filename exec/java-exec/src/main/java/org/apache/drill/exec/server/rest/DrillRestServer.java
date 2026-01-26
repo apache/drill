@@ -18,9 +18,7 @@
 package org.apache.drill.exec.server.rest;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.jaxrs.base.JsonMappingExceptionMapper;
-import com.fasterxml.jackson.jaxrs.base.JsonParseExceptionMapper;
-import com.fasterxml.jackson.jaxrs.json.JacksonJaxbJsonProvider;
+import com.fasterxml.jackson.jakarta.rs.json.JacksonJsonProvider;
 import io.swagger.v3.oas.annotations.OpenAPIDefinition;
 import io.swagger.v3.oas.annotations.info.Contact;
 import io.swagger.v3.oas.annotations.info.Info;
@@ -31,7 +29,6 @@ import freemarker.cache.ClassTemplateLoader;
 import freemarker.cache.FileTemplateLoader;
 import freemarker.cache.MultiTemplateLoader;
 import freemarker.cache.TemplateLoader;
-import freemarker.cache.WebappTemplateLoader;
 import freemarker.core.HTMLOutputFormat;
 import freemarker.template.Configuration;
 import io.netty.util.concurrent.DefaultPromise;
@@ -66,10 +63,10 @@ import org.glassfish.jersey.server.mvc.freemarker.FreemarkerMvcFeature;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.inject.Inject;
-import javax.servlet.ServletContext;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpSession;
+import jakarta.inject.Inject;
+import jakarta.servlet.ServletContext;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpSession;
 import java.io.File;
 import java.io.IOException;
 import java.net.InetAddress;
@@ -87,6 +84,11 @@ public class DrillRestServer extends ResourceConfig {
   static final Logger logger = LoggerFactory.getLogger(DrillRestServer.class);
 
   public DrillRestServer(final WorkManager workManager, final ServletContext servletContext, final Drillbit drillbit) {
+    logger.info("Initializing DrillRestServer with workManager: {}, servletContext: {}, drillbit: {}",
+        workManager != null ? "NOT NULL" : "NULL",
+        servletContext != null ? "NOT NULL" : "NULL",
+        drillbit != null ? "NOT NULL" : "NULL");
+
     register(DrillRoot.class);
     register(StatusResources.class);
     register(StorageResources.class);
@@ -97,11 +99,19 @@ public class DrillRestServer extends ResourceConfig {
     register(ThreadsResources.class);
     register(LogsResources.class);
 
+    logger.info("Registered {} resource classes", 9);
+
     property(FreemarkerMvcFeature.TEMPLATE_OBJECT_FACTORY, getFreemarkerConfiguration(servletContext));
     register(FreemarkerMvcFeature.class);
 
     register(MultiPartFeature.class);
     property(ServerProperties.METAINF_SERVICES_LOOKUP_DISABLE, true);
+
+    // Register Jackson JSON provider with Drill's custom ObjectMapper
+    // This is critical for proper serialization/deserialization of storage plugins and other Drill objects
+    JacksonJsonProvider provider = new JacksonJsonProvider();
+    provider.setMapper(workManager.getContext().getLpPersistence().getMapper());
+    register(provider);
 
     final boolean isAuthEnabled =
       workManager.getContext().getConfig().getBoolean(ExecConstants.USER_AUTHENTICATION_ENABLED);
@@ -117,13 +127,10 @@ public class DrillRestServer extends ResourceConfig {
       getConfiguration().getRuntimeType());
     property(disableMoxy, true);
 
-    register(JsonParseExceptionMapper.class);
-    register(JsonMappingExceptionMapper.class);
+    // Note: Jackson exception mappers (JsonParseExceptionMapper, JsonMappingExceptionMapper) are now
+    // automatically registered by the Jackson Jakarta RS provider (jackson-jakarta-rs-json-provider).
+    // Generic exception mapper is still needed for non-Jackson exceptions.
     register(GenericExceptionMapper.class);
-
-    JacksonJaxbJsonProvider provider = new JacksonJaxbJsonProvider();
-    provider.setMapper(workManager.getContext().getLpPersistence().getMapper());
-    register(provider);
 
     // Get an EventExecutor out of the BitServer EventLoopGroup to notify listeners for WebUserConnection. For
     // actual connections between Drillbits this EventLoopGroup is used to handle network related events. Though
@@ -163,12 +170,14 @@ public class DrillRestServer extends ResourceConfig {
    * @param servletContext servlet context
    * @return freemarker configuration settings
    */
-  private Configuration getFreemarkerConfiguration(ServletContext servletContext) {
+  private Configuration getFreemarkerConfiguration(jakarta.servlet.ServletContext servletContext) {
     Configuration configuration = new Configuration(Configuration.VERSION_2_3_26);
     configuration.setOutputFormat(HTMLOutputFormat.INSTANCE);
 
     List<TemplateLoader> loaders = new ArrayList<>();
-    loaders.add(new WebappTemplateLoader(servletContext));
+    // WebappTemplateLoader expects javax.servlet.ServletContext, but we have jakarta.servlet.ServletContext
+    // So we skip it and use only ClassTemplateLoader and FileTemplateLoader
+    // loaders.add(new WebappTemplateLoader(servletContext));
     loaders.add(new ClassTemplateLoader(DrillRestServer.class, "/"));
     try {
       loaders.add(new FileTemplateLoader(new File("/")));

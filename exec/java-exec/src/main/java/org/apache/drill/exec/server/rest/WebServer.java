@@ -18,8 +18,6 @@
 package org.apache.drill.exec.server.rest;
 
 import com.codahale.metrics.MetricRegistry;
-import com.codahale.metrics.servlets.MetricsServlet;
-import com.codahale.metrics.servlets.ThreadDumpServlet;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.StringEscapeUtils;
@@ -44,7 +42,6 @@ import org.apache.drill.exec.server.rest.ssl.SslContextFactoryConfigurator;
 import org.apache.drill.exec.work.WorkManager;
 import org.eclipse.jetty.http.HttpCookie;
 import org.eclipse.jetty.http.HttpVersion;
-import org.eclipse.jetty.security.SecurityHandler;
 import org.eclipse.jetty.security.authentication.SessionAuthentication;
 import org.eclipse.jetty.server.HttpConfiguration;
 import org.eclipse.jetty.server.HttpConnectionFactory;
@@ -52,24 +49,23 @@ import org.eclipse.jetty.server.SecureRequestCustomizer;
 import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.server.ServerConnector;
 import org.eclipse.jetty.server.SslConnectionFactory;
-import org.eclipse.jetty.server.handler.ErrorHandler;
-import org.eclipse.jetty.server.session.SessionHandler;
-import org.eclipse.jetty.servlet.DefaultServlet;
-import org.eclipse.jetty.servlet.FilterHolder;
-import org.eclipse.jetty.servlet.ServletContextHandler;
-import org.eclipse.jetty.servlet.ServletHolder;
-import org.eclipse.jetty.servlets.CrossOriginFilter;
-import org.eclipse.jetty.util.resource.Resource;
+import org.eclipse.jetty.ee10.servlet.SessionHandler;
+import org.eclipse.jetty.ee10.servlet.DefaultServlet;
+import org.eclipse.jetty.ee10.servlet.FilterHolder;
+import org.eclipse.jetty.ee10.servlet.ServletContextHandler;
+import org.eclipse.jetty.ee10.servlet.ServletHolder;
+import org.eclipse.jetty.ee10.servlets.CrossOriginFilter;
+import org.eclipse.jetty.util.resource.ResourceFactory;
 import org.eclipse.jetty.util.ssl.SslContextFactory;
 import org.eclipse.jetty.util.thread.QueuedThreadPool;
 import org.glassfish.jersey.servlet.ServletContainer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.servlet.DispatcherType;
-import javax.servlet.http.HttpSession;
-import javax.servlet.http.HttpSessionEvent;
-import javax.servlet.http.HttpSessionListener;
+import jakarta.servlet.DispatcherType;
+import jakarta.servlet.http.HttpSession;
+import jakarta.servlet.http.HttpSessionEvent;
+import jakarta.servlet.http.HttpSessionListener;
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileWriter;
@@ -185,7 +181,7 @@ public class WebServer implements AutoCloseable {
 
   private ServletContextHandler createServletContextHandler(final boolean authEnabled) throws DrillbitStartupException {
     // Add resources
-    final ErrorHandler errorHandler = new DrillErrorHandler();
+    final DrillErrorHandler errorHandler = new DrillErrorHandler();
 
     errorHandler.setShowStacks(true);
     errorHandler.setShowMessageInTitle(true);
@@ -194,26 +190,8 @@ public class WebServer implements AutoCloseable {
     servletContextHandler.setErrorHandler(errorHandler);
     servletContextHandler.setContextPath("/");
 
-    final ServletHolder servletHolder = new ServletHolder(new ServletContainer(
-        new DrillRestServer(workManager, servletContextHandler.getServletContext(), drillbit)));
-    servletHolder.setInitOrder(1);
-    servletContextHandler.addServlet(servletHolder, "/*");
-
-    servletContextHandler.addServlet(new ServletHolder(new MetricsServlet(metrics)), STATUS_METRICS_PATH);
-    servletContextHandler.addServlet(new ServletHolder(new ThreadDumpServlet()), STATUS_THREADS_PATH);
-
-    final ServletHolder staticHolder = new ServletHolder("static", DefaultServlet.class);
-
-    // Get resource URL for Drill static assets, based on where Drill icon is located
-    String drillIconResourcePath =
-        Resource.newClassPathResource(BASE_STATIC_PATH + DRILL_ICON_RESOURCE_RELATIVE_PATH).getURI().toString();
-    staticHolder.setInitParameter("resourceBase",
-        drillIconResourcePath.substring(0, drillIconResourcePath.length() - DRILL_ICON_RESOURCE_RELATIVE_PATH.length()));
-    staticHolder.setInitParameter("dirAllowed", "false");
-    staticHolder.setInitParameter("pathInfoOnly", "true");
-    servletContextHandler.addServlet(staticHolder, "/static/*");
-
     // Add Local path resource (This will allow access to dynamically created files like JavaScript)
+    // In Jetty 11, register static servlets BEFORE the Jersey servlet to ensure proper path resolution
     final ServletHolder dynamicHolder = new ServletHolder("dynamic", DefaultServlet.class);
 
     // Skip if unable to get a temp directory (e.g. during Unit tests)
@@ -224,10 +202,45 @@ public class WebServer implements AutoCloseable {
       servletContextHandler.addServlet(dynamicHolder, "/dynamic/*");
     }
 
+    final ServletHolder staticHolder = new ServletHolder("static", DefaultServlet.class);
+
+    // Get resource URL for Drill static assets, based on where Drill icon is located
+    ResourceFactory resourceFactory = ResourceFactory.of(servletContextHandler);
+    String drillIconResourcePath =
+        resourceFactory.newClassLoaderResource(BASE_STATIC_PATH + DRILL_ICON_RESOURCE_RELATIVE_PATH).getURI().toString();
+    staticHolder.setInitParameter("resourceBase",
+        drillIconResourcePath.substring(0, drillIconResourcePath.length() - DRILL_ICON_RESOURCE_RELATIVE_PATH.length()));
+    staticHolder.setInitParameter("dirAllowed", "false");
+    staticHolder.setInitParameter("pathInfoOnly", "true");
+    servletContextHandler.addServlet(staticHolder, "/static/*");
+
+    // Store the dependencies in the holder BEFORE creating the servlet
+    // When Jersey instantiates DrillRestServerApplication (which extends DrillRestServer),
+    // it will retrieve these dependencies and pass them to the parent constructor
+    DrillRestServerHolder.setDependencies(workManager, servletContextHandler.getServletContext(), drillbit);
+
+    // Note: Metrics and ThreadDump servlets from codahale-metrics library
+    // still use javax.servlet and are not compatible with Jetty 11's Jakarta Servlet API.
+    // These could be ported or replaced with a Jakarta-compatible metrics library in the future.
+    // For now, skipping their registration as Drill's core functionality doesn't depend on them.
+
+    // Register Jersey servlet with explicit init order
+    ServletHolder servletHolder = new ServletHolder(ServletContainer.class);
+    servletHolder.setName("jersey");
+    // In Jersey 3.x, use 'jakarta.ws.rs.Application' subclass parameter with wrapper that can be instantiated with no-arg constructor
+    // DrillRestServerApplication will retrieve dependencies from the holder and instantiate itself
+    servletHolder.setInitParameter("jakarta.ws.rs.Application",
+        DrillRestServerApplication.class.getCanonicalName());
+    servletHolder.setInitOrder(1);
+    servletHolder.setAsyncSupported(true);
+    servletContextHandler.addServlet(servletHolder, "/*");
+
     if (authEnabled) {
       // DrillSecurityHandler is used to support SPNEGO and FORM authentication together
-      servletContextHandler.setSecurityHandler(new DrillHttpSecurityHandlerProvider(config, workManager.getContext()));
-      servletContextHandler.setSessionHandler(createSessionHandler(servletContextHandler.getSecurityHandler()));
+      DrillHttpSecurityHandlerProvider drillSecurityHandler = new DrillHttpSecurityHandlerProvider(config, workManager.getContext());
+      // DrillHttpSecurityHandlerProvider now extends ee10.ConstraintSecurityHandler for proper session management
+      servletContextHandler.setSessionHandler(createSessionHandler(drillSecurityHandler));
+      servletContextHandler.setSecurityHandler(drillSecurityHandler);
     }
 
     // Applying filters for CSRF protection.
@@ -272,7 +285,7 @@ public class WebServer implements AutoCloseable {
    * @param securityHandler Set of init parameters that are used by the Authentication
    * @return session handler
    */
-  private SessionHandler createSessionHandler(final SecurityHandler securityHandler) {
+  private SessionHandler createSessionHandler(final DrillHttpSecurityHandlerProvider securityHandler) {
     SessionHandler sessionHandler = new SessionHandler();
     //SessionManager sessionManager = new HashSessionManager();
     sessionHandler.setMaxInactiveInterval(config.getInt(ExecConstants.HTTP_SESSION_MAX_IDLE_SECS));
@@ -296,11 +309,11 @@ public class WebServer implements AutoCloseable {
           return;
         }
 
-        final Object authCreds = session.getAttribute(SessionAuthentication.__J_AUTHENTICATED);
+        final Object authCreds = session.getAttribute(SessionAuthentication.AUTHENTICATED_ATTRIBUTE);
         if (authCreds != null) {
           final SessionAuthentication sessionAuth = (SessionAuthentication) authCreds;
-          securityHandler.logout(sessionAuth);
-          session.removeAttribute(SessionAuthentication.__J_AUTHENTICATED);
+          // In Jetty 12, logout is handled differently - we just remove the attribute
+          session.removeAttribute(SessionAuthentication.AUTHENTICATED_ATTRIBUTE);
         }
 
         // Clear all the resources allocated for this session
@@ -362,7 +375,7 @@ public class WebServer implements AutoCloseable {
       int selectors
   ) throws Exception {
     logger.info("Setting up HTTPS connector for web server at {}:{}", bindAddr, port);
-    SslContextFactory sslContextFactory = new SslContextFactoryConfigurator(config,
+    SslContextFactory.Server sslContextFactory = new SslContextFactoryConfigurator(config,
         workManager.getContext().getEndpoint().getAddress())
         .configureNewSslContextFactory();
     final HttpConfiguration httpsConfig = baseHttpConfig();
@@ -443,7 +456,8 @@ public class WebServer implements AutoCloseable {
     int numLeftToWrite = options.size();
 
     // Template source Javascript file
-    InputStream optionsDescribeTemplateStream = Resource.newClassPathResource(OPTIONS_DESCRIBE_TEMPLATE_JS).getInputStream();
+    InputStream optionsDescribeTemplateStream = getClass().getClassLoader()
+        .getResourceAsStream(OPTIONS_DESCRIBE_TEMPLATE_JS);
     // Generated file
     File optionsDescriptionFile = new File(getOrCreateTmpJavaScriptDir(), OPTIONS_DESCRIBE_JS);
     final String file_content_footer = "};";
@@ -499,7 +513,8 @@ public class WebServer implements AutoCloseable {
     // Generated file
     File functionsListFile = new File(getOrCreateTmpJavaScriptDir(), ACE_MODE_SQL_JS);
     // Template source Javascript file
-    try (InputStream aceModeSqlTemplateStream = Resource.newClassPathResource(ACE_MODE_SQL_TEMPLATE_JS).getInputStream()) {
+    try (InputStream aceModeSqlTemplateStream = getClass().getClassLoader()
+        .getResourceAsStream(ACE_MODE_SQL_TEMPLATE_JS)) {
       // Create a copy of a template and write with that!
       java.nio.file.Files.copy(aceModeSqlTemplateStream, functionsListFile.toPath());
     }

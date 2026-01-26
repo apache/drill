@@ -98,8 +98,8 @@
     <javassist.version>3.29.2-GA</javassist.version>
     <javax.el.version>3.0.0</javax.el.version>
     <javax.validation.api>2.0.1.Final</javax.validation.api>
-    <jersey.version>2.40</jersey.version>
-    <jetty.version>9.4.56.v20240826</jetty.version>
+    <jersey.version>3.1.9</jersey.version>
+    <jetty.version>12.0.15</jetty.version>
     <jmockit.version>1.47</jmockit.version>
     <jna.version>5.13.0</jna.version>
     <joda.version>2.12.5</joda.version>
@@ -141,7 +141,7 @@
     <sourceReleaseAssemblyDescriptor>source-release-zip-tar</sourceReleaseAssemblyDescriptor>
     <sqlline.version>1.12.0</sqlline.version>
     <surefire.version>3.1.2</surefire.version>
-    <swagger.version>2.1.12</swagger.version>
+    <swagger.version>2.2.42</swagger.version>
     <target.gen.source.path>${project.basedir}/target/generated-sources</target.gen.source.path>
     <testcontainers.version>1.20.0</testcontainers.version>
     <typesafe.config.version>1.4.2</typesafe.config.version>
@@ -507,7 +507,7 @@
                   <version>[${maven.version.min},4)</version>
                 </requireMavenVersion>
                 <requireJavaVersion>
-                  <version>[1.8,22)</version>
+                  <version>[17,24)</version>
                 </requireJavaVersion>
               </rules>
             </configuration>
@@ -524,6 +524,10 @@
                   <excludes>
                     <exclude>commons-logging</exclude>
                     <exclude>javax.servlet:servlet-api</exclude>
+                    <exclude>javax.servlet:javax.servlet-api</exclude>
+                    <exclude>javax.servlet.jsp:jsp-api</exclude>
+                    <exclude>javax.servlet.jsp:javax.servlet.jsp-api</exclude>
+                    <exclude>javax.websocket:javax.websocket-api</exclude>
                     <exclude>org.mortbay.jetty:servlet-api</exclude>
                     <exclude>org.mortbay.jetty:servlet-api-2.5</exclude>
                     <exclude>log4j:log4j</exclude>
@@ -1670,6 +1674,30 @@
         <scope>import</scope>
       </dependency>
 
+      <!-- Use Jakarta-native version of swagger-jaxrs2 to avoid javax.ws.rs conflicts -->
+      <dependency>
+        <groupId>io.swagger.core.v3</groupId>
+        <artifactId>swagger-jaxrs2-jakarta</artifactId>
+        <version>${swagger.version}</version>
+        <exclusions>
+          <exclusion>
+            <groupId>com.fasterxml.jackson.jaxrs</groupId>
+            <artifactId>jackson-jaxrs-json-provider</artifactId>
+          </exclusion>
+          <exclusion>
+            <groupId>com.fasterxml.jackson.jaxrs</groupId>
+            <artifactId>jackson-jaxrs-base</artifactId>
+          </exclusion>
+        </exclusions>
+      </dependency>
+
+      <!-- Jakarta RS API to override old javax.ws.rs from HBase and other dependencies -->
+      <dependency>
+        <groupId>jakarta.ws.rs</groupId>
+        <artifactId>jakarta.ws.rs-api</artifactId>
+        <version>3.1.0</version>
+      </dependency>
+
     </dependencies>
   </dependencyManagement>
 
@@ -1805,6 +1833,10 @@
               <exclusion>
                 <groupId>com.sun.jersey</groupId>
                 <artifactId>jersey-servlet</artifactId>
+              </exclusion>
+              <exclusion>
+                <groupId>javax.ws.rs</groupId>
+                <artifactId>jsr311-api</artifactId>
               </exclusion>
               <exclusion>
                 <artifactId>core</artifactId>
@@ -1974,6 +2006,10 @@
                 <artifactId>jersey-client</artifactId>
               </exclusion>
               <exclusion>
+                <groupId>javax.ws.rs</groupId>
+                <artifactId>jsr311-api</artifactId>
+              </exclusion>
+              <exclusion>
                 <artifactId>core</artifactId>
                 <groupId>org.eclipse.jdt</groupId>
               </exclusion>
@@ -2036,6 +2072,14 @@
                 <groupId>io.netty</groupId>
                 <artifactId>netty</artifactId>
               </exclusion>
+              <exclusion>
+                <groupId>com.sun.jersey</groupId>
+                <artifactId>jersey-core</artifactId>
+              </exclusion>
+              <exclusion>
+                <groupId>javax.ws.rs</groupId>
+                <artifactId>jsr311-api</artifactId>
+              </exclusion>
             </exclusions>
           </dependency>
 
@@ -2063,6 +2107,10 @@
               <exclusion>
                 <groupId>com.sun.jersey</groupId>
                 <artifactId>jersey-core</artifactId>
+              </exclusion>
+              <exclusion>
+                <groupId>javax.ws.rs</groupId>
+                <artifactId>jsr311-api</artifactId>
               </exclusion>
               <exclusion>
                 <groupId>org.eclipse.jetty</groupId>
@@ -2167,6 +2215,10 @@
               <exclusion>
                 <groupId>com.sun.jersey</groupId>
                 <artifactId>jersey-client</artifactId>
+              </exclusion>
+              <exclusion>
+                <groupId>javax.ws.rs</groupId>
+                <artifactId>jsr311-api</artifactId>
               </exclusion>
               <exclusion>
                 <artifactId>core</artifactId>

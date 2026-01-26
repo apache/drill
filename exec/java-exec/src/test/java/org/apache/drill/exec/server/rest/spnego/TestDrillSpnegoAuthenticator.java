@@ -19,111 +19,91 @@ package org.apache.drill.exec.server.rest.spnego;
 
 import com.google.common.collect.Lists;
 import com.typesafe.config.ConfigValueFactory;
+import okhttp3.OkHttpClient;
+import okhttp3.Request;
+import okhttp3.Response;
 import org.apache.commons.codec.binary.Base64;
 import org.apache.drill.categories.SecurityTest;
-import org.apache.drill.common.config.DrillConfig;
 import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.rpc.security.KerberosHelper;
-import org.apache.drill.exec.server.DrillbitContext;
-import org.apache.drill.exec.server.options.SystemOptionManager;
+import org.apache.drill.exec.rpc.user.security.testing.UserAuthenticatorTestImpl;
 import org.apache.drill.exec.server.rest.WebServerConstants;
-import org.apache.drill.exec.server.rest.auth.DrillSpnegoAuthenticator;
-import org.apache.drill.exec.server.rest.auth.DrillSpnegoLoginService;
 import org.apache.drill.exec.server.rest.auth.SpnegoConfig;
 import org.apache.drill.test.BaseDirTestWatcher;
-import org.apache.drill.test.BaseTest;
+import org.apache.drill.test.ClusterFixtureBuilder;
+import org.apache.drill.test.ClusterTest;
 import org.apache.hadoop.security.authentication.util.KerberosName;
 import org.apache.hadoop.security.authentication.util.KerberosUtil;
 import org.apache.kerby.kerberos.kerb.client.JaasKrbUtil;
-import org.eclipse.jetty.http.HttpHeader;
-import org.eclipse.jetty.security.Authenticator;
-import org.eclipse.jetty.security.DefaultIdentityService;
-import org.eclipse.jetty.security.UserAuthentication;
-import org.eclipse.jetty.security.authentication.SessionAuthentication;
-import org.eclipse.jetty.server.Authentication;
 import org.ietf.jgss.GSSContext;
 import org.ietf.jgss.GSSManager;
 import org.ietf.jgss.GSSName;
 import org.ietf.jgss.Oid;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
-import org.mockito.Mockito;
 
 import javax.security.auth.Subject;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-import javax.servlet.http.HttpSession;
 import java.lang.reflect.Field;
 import java.security.PrivilegedExceptionAction;
+import java.util.concurrent.TimeUnit;
 
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNull;
-import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.verify;
+import static org.junit.Assert.assertTrue;
 
 /**
- * Test for validating {@link DrillSpnegoAuthenticator}
+ * Integration test for validating SPNEGO authentication using a real Drill server and HTTP client.
+ * This test starts a real Drill cluster with SPNEGO enabled and uses OkHttpClient to make actual HTTP requests.
  */
 @Category(SecurityTest.class)
-public class TestDrillSpnegoAuthenticator extends BaseTest {
+public class TestDrillSpnegoAuthenticator extends ClusterTest {
 
   private static KerberosHelper spnegoHelper;
-
   private static final String primaryName = "HTTP";
+  private static int portNumber;
+  private static final int TIMEOUT = 3000;
 
-  private static DrillSpnegoAuthenticator spnegoAuthenticator;
-
-  private static final BaseDirTestWatcher dirTestWatcher = new BaseDirTestWatcher();
+  private static final OkHttpClient httpClient = new OkHttpClient.Builder()
+      .connectTimeout(TIMEOUT, TimeUnit.MILLISECONDS)
+      .writeTimeout(TIMEOUT, TimeUnit.MILLISECONDS)
+      .readTimeout(TIMEOUT, TimeUnit.MILLISECONDS)
+      .followRedirects(false) // Don't follow redirects automatically for SPNEGO testing
+      .build();
 
   @BeforeClass
   public static void setupTest() throws Exception {
     spnegoHelper = new KerberosHelper(TestDrillSpnegoAuthenticator.class.getSimpleName(), primaryName);
     spnegoHelper.setupKdc(BaseDirTestWatcher.createTempDir(dirTestWatcher.getTmpDir()));
 
-    // (1) Refresh Kerberos config.
-    // This disabled call to an unsupported internal API does not appear to be
-    // required and it prevents compiling with a target of JDK 8 on newer JDKs.
-    // sun.security.krb5.Config.refresh();
-
-    // (2) Reset the default realm.
+    // Reset the default realm
     final Field defaultRealm = KerberosName.class.getDeclaredField("defaultRealm");
     defaultRealm.setAccessible(true);
     defaultRealm.set(null, KerberosUtil.getDefaultRealm());
 
-    // Create a DrillbitContext with service principal and keytab for DrillSpnegoLoginService
-    final DrillConfig newConfig = new DrillConfig(DrillConfig.create()
-        .withValue(ExecConstants.HTTP_AUTHENTICATION_MECHANISMS,
+    // Start Drill cluster with SPNEGO authentication enabled for HTTP
+    // We also need to enable user authentication and provide an RPC authenticator
+    // even though we're only testing HTTP authentication
+    ClusterFixtureBuilder builder = new ClusterFixtureBuilder(dirTestWatcher)
+        .configProperty(ExecConstants.HTTP_ENABLE, true)
+        .configProperty(ExecConstants.HTTP_PORT_HUNT, true)
+        .configProperty(ExecConstants.USER_AUTHENTICATION_ENABLED, true)
+        .configProperty(ExecConstants.USER_AUTHENTICATOR_IMPL, UserAuthenticatorTestImpl.TYPE)
+        .configNonStringProperty(ExecConstants.HTTP_AUTHENTICATION_MECHANISMS,
             ConfigValueFactory.fromIterable(Lists.newArrayList("spnego")))
-        .withValue(ExecConstants.HTTP_SPNEGO_PRINCIPAL,
-            ConfigValueFactory.fromAnyRef(spnegoHelper.SERVER_PRINCIPAL))
-        .withValue(ExecConstants.HTTP_SPNEGO_KEYTAB,
-            ConfigValueFactory.fromAnyRef(spnegoHelper.serverKeytab.toString())));
+        .configProperty(ExecConstants.HTTP_SPNEGO_PRINCIPAL, spnegoHelper.SERVER_PRINCIPAL)
+        .configProperty(ExecConstants.HTTP_SPNEGO_KEYTAB, spnegoHelper.serverKeytab.toString());
 
-    // Create mock objects for optionManager and AuthConfiguration
-    final SystemOptionManager optionManager = Mockito.mock(SystemOptionManager.class);
-    Mockito.when(optionManager.getOption(ExecConstants.ADMIN_USERS_VALIDATOR))
-        .thenReturn(ExecConstants.ADMIN_USERS_VALIDATOR.DEFAULT_ADMIN_USERS);
-    Mockito.when(optionManager.getOption(ExecConstants.ADMIN_USER_GROUPS_VALIDATOR))
-        .thenReturn(ExecConstants.ADMIN_USER_GROUPS_VALIDATOR.DEFAULT_ADMIN_USER_GROUPS);
+    // Build the cluster
+    cluster = builder.build();
+    portNumber = cluster.drillbit().getWebServerPort();
 
-    final DrillbitContext drillbitContext = Mockito.mock(DrillbitContext.class);
-    Mockito.when(drillbitContext.getConfig()).thenReturn(newConfig);
-    Mockito.when(drillbitContext.getOptionManager()).thenReturn(optionManager);
-
-    Authenticator.AuthConfiguration authConfiguration = Mockito.mock(Authenticator.AuthConfiguration.class);
-
-    spnegoAuthenticator = new DrillSpnegoAuthenticator("SPNEGO");
-    DrillSpnegoLoginService spnegoLoginService = new DrillSpnegoLoginService(drillbitContext);
-
-    Mockito.when(authConfiguration.getLoginService()).thenReturn(spnegoLoginService);
-    Mockito.when(authConfiguration.getIdentityService()).thenReturn(new DefaultIdentityService());
-    Mockito.when(authConfiguration.isSessionRenewedOnAuthentication()).thenReturn(true);
-
-    // Set the login service and identity service inside SpnegoAuthenticator
-    spnegoAuthenticator.setConfiguration(authConfiguration);
+    // Create a client with authentication credentials
+    // UserAuthenticatorTestImpl accepts specific hardcoded username/password combinations
+    client = cluster.clientBuilder()
+        .property(org.apache.drill.common.config.DrillProperties.USER, UserAuthenticatorTestImpl.TEST_USER_1)
+        .property(org.apache.drill.common.config.DrillProperties.PASSWORD, UserAuthenticatorTestImpl.TEST_USER_1_PASSWORD)
+        .build();
   }
 
   @AfterClass
@@ -132,115 +112,13 @@ public class TestDrillSpnegoAuthenticator extends BaseTest {
   }
 
   /**
-   * Test to verify response when request is sent for {@link WebServerConstants#SPENGO_LOGIN_RESOURCE_PATH} from
-   * unauthenticated session. Expectation is client will receive response with Negotiate header.
+   * Helper method to generate a valid SPNEGO token for authentication.
    */
-  @Test
-  public void testNewSessionReqForSpnegoLogin() throws Exception {
-    final HttpServletRequest request = Mockito.mock(HttpServletRequest.class);
-    final HttpServletResponse response = Mockito.mock(HttpServletResponse.class);
-    final HttpSession session = Mockito.mock(HttpSession.class);
-
-    Mockito.when(request.getSession(true)).thenReturn(session);
-    Mockito.when(request.getRequestURI()).thenReturn(WebServerConstants.SPENGO_LOGIN_RESOURCE_PATH);
-
-    final Authentication authentication = spnegoAuthenticator.validateRequest(request, response, false);
-
-    assertEquals(authentication, Authentication.SEND_CONTINUE);
-    verify(response).sendError(401);
-    verify(response).setHeader(HttpHeader.WWW_AUTHENTICATE.asString(), HttpHeader.NEGOTIATE.asString());
-  }
-
-  /**
-   * Test to verify response when request is sent for {@link WebServerConstants#SPENGO_LOGIN_RESOURCE_PATH} from
-   * authenticated session. Expectation is server will find the authenticated UserIdentity.
-   */
-  @Test
-  public void testAuthClientRequestForSpnegoLoginResource() throws Exception {
-
-    final HttpServletRequest request = Mockito.mock(HttpServletRequest.class);
-    final HttpServletResponse response = Mockito.mock(HttpServletResponse.class);
-    final HttpSession session = Mockito.mock(HttpSession.class);
-    final Authentication authentication = Mockito.mock(UserAuthentication.class);
-
-    Mockito.when(request.getSession(true)).thenReturn(session);
-    Mockito.when(request.getRequestURI()).thenReturn(WebServerConstants.SPENGO_LOGIN_RESOURCE_PATH);
-    Mockito.when(session.getAttribute(SessionAuthentication.__J_AUTHENTICATED)).thenReturn(authentication);
-
-    final UserAuthentication returnedAuthentication = (UserAuthentication) spnegoAuthenticator.validateRequest
-        (request, response, false);
-    assertEquals(authentication, returnedAuthentication);
-    verify(response, never()).sendError(401);
-    verify(response, never()).setHeader(HttpHeader.WWW_AUTHENTICATE.asString(), HttpHeader.NEGOTIATE.asString());
-  }
-
-  /**
-   * Test to verify response when request is sent for any other resource other than
-   * {@link WebServerConstants#SPENGO_LOGIN_RESOURCE_PATH} from authenticated session. Expectation is server will
-   * find the authenticated UserIdentity and will not perform the authentication again for new resource.
-   */
-  @Test
-  public void testAuthClientRequestForOtherPage() throws Exception {
-
-    final HttpServletRequest request = Mockito.mock(HttpServletRequest.class);
-    final HttpServletResponse response = Mockito.mock(HttpServletResponse.class);
-    final HttpSession session = Mockito.mock(HttpSession.class);
-    final Authentication authentication = Mockito.mock(UserAuthentication.class);
-
-    Mockito.when(request.getSession(true)).thenReturn(session);
-    Mockito.when(request.getRequestURI()).thenReturn(WebServerConstants.WEBSERVER_ROOT_PATH);
-    Mockito.when(session.getAttribute(SessionAuthentication.__J_AUTHENTICATED)).thenReturn(authentication);
-
-    final UserAuthentication returnedAuthentication = (UserAuthentication) spnegoAuthenticator.validateRequest
-        (request, response, false);
-    assertEquals(authentication, returnedAuthentication);
-    verify(response, never()).sendError(401);
-    verify(response, never()).setHeader(HttpHeader.WWW_AUTHENTICATE.asString(), HttpHeader.NEGOTIATE.asString());
-  }
-
-  /**
-   * Test to verify that when request is sent for {@link WebServerConstants#LOGOUT_RESOURCE_PATH} then the UserIdentity
-   * will be removed from the session and returned authentication will be null from
-   * {@link DrillSpnegoAuthenticator#validateRequest(javax.servlet.ServletRequest, javax.servlet.ServletResponse, boolean)}
-   */
-  @Test
-  @Ignore("See DRILL-5387")
-  public void testAuthClientRequestForLogOut() throws Exception {
-    final HttpServletRequest request = Mockito.mock(HttpServletRequest.class);
-    final HttpServletResponse response = Mockito.mock(HttpServletResponse.class);
-    final HttpSession session = Mockito.mock(HttpSession.class);
-    final Authentication authentication = Mockito.mock(UserAuthentication.class);
-
-    Mockito.when(request.getSession(true)).thenReturn(session);
-    Mockito.when(request.getRequestURI()).thenReturn(WebServerConstants.LOGOUT_RESOURCE_PATH);
-    Mockito.when(session.getAttribute(SessionAuthentication.__J_AUTHENTICATED)).thenReturn(authentication);
-
-    final UserAuthentication returnedAuthentication = (UserAuthentication) spnegoAuthenticator.validateRequest
-        (request, response, false);
-    assertNull(returnedAuthentication);
-    verify(session).removeAttribute(SessionAuthentication.__J_AUTHENTICATED);
-    verify(response, never()).sendError(401);
-    verify(response, never()).setHeader(HttpHeader.WWW_AUTHENTICATE.asString(), HttpHeader.NEGOTIATE.asString());
-  }
-
-  /**
-   * Test to verify authentication fails when client sends invalid SPNEGO token for the
-   * {@link WebServerConstants#SPENGO_LOGIN_RESOURCE_PATH} resource.
-   */
-  @Test
-  public void testSpnegoLoginInvalidToken() throws Exception {
-
-    final HttpServletRequest request = Mockito.mock(HttpServletRequest.class);
-    final HttpServletResponse response = Mockito.mock(HttpServletResponse.class);
-    final HttpSession session = Mockito.mock(HttpSession.class);
-
-    // Create client subject using it's principal and keytab
+  private String generateSpnegoToken() throws Exception {
     final Subject clientSubject = JaasKrbUtil.loginUsingKeytab(spnegoHelper.CLIENT_PRINCIPAL,
         spnegoHelper.clientKeytab.getAbsoluteFile());
 
-    // Generate a SPNEGO token for the peer SERVER_PRINCIPAL from this CLIENT_PRINCIPAL
-    final String token = Subject.doAs(clientSubject, (PrivilegedExceptionAction<String>) () -> {
-
+    return Subject.doAs(clientSubject, (PrivilegedExceptionAction<String>) () -> {
       final GSSManager gssManager = GSSManager.getInstance();
       GSSContext gssContext = null;
       try {
@@ -254,25 +132,193 @@ public class TestDrillSpnegoAuthenticator extends BaseTest {
         byte[] outToken = new byte[0];
         outToken = gssContext.initSecContext(outToken, 0, outToken.length);
         return Base64.encodeBase64String(outToken);
-
       } finally {
         if (gssContext != null) {
           gssContext.dispose();
         }
       }
     });
+  }
 
-    Mockito.when(request.getSession(true)).thenReturn(session);
+  /**
+   * Test to verify response when request is sent for {@link WebServerConstants#SPENGO_LOGIN_RESOURCE_PATH} from
+   * an unauthenticated session. Expectation is client will receive 401 response with WWW-Authenticate: Negotiate header.
+   */
+  @Test
+  public void testNewSessionReqForSpnegoLogin() throws Exception {
+    // Send request without authentication header
+    String url = String.format("http://localhost:%d%s", portNumber, WebServerConstants.SPENGO_LOGIN_RESOURCE_PATH);
+    Request request = new Request.Builder()
+        .url(url)
+        .build();
 
-    final String httpReqAuthHeader = String.format("%s:%s", HttpHeader.NEGOTIATE.asString(), String.format
-        ("%s%s","1234", token));
-    Mockito.when(request.getHeader(HttpHeader.AUTHORIZATION.asString())).thenReturn(httpReqAuthHeader);
-    Mockito.when(request.getRequestURI()).thenReturn(WebServerConstants.SPENGO_LOGIN_RESOURCE_PATH);
+    try (Response response = httpClient.newCall(request).execute()) {
+      // Verify server challenges for authentication
+      assertEquals("Expected 401 Unauthorized for unauthenticated request",
+          401, response.code());
 
-    assertEquals(spnegoAuthenticator.validateRequest(request, response, false), Authentication.UNAUTHENTICATED);
+      // Verify the server sends back a WWW-Authenticate header with Negotiate challenge
+      String wwwAuthenticate = response.header("WWW-Authenticate");
+      assertTrue("Expected WWW-Authenticate: Negotiate header",
+          wwwAuthenticate != null && wwwAuthenticate.contains("Negotiate"));
+    }
+  }
 
-    verify(session, never()).setAttribute(SessionAuthentication.__J_AUTHENTICATED, null);
-    verify(response, never()).sendError(401);
-    verify(response, never()).setHeader(HttpHeader.WWW_AUTHENTICATE.asString(), HttpHeader.NEGOTIATE.asString());
+  /**
+   * Test to verify response when request is sent for {@link WebServerConstants#SPENGO_LOGIN_RESOURCE_PATH} with
+   * valid SPNEGO credentials. Expectation is server will authenticate successfully and return 200 OK.
+   */
+  @Test
+  public void testAuthClientRequestForSpnegoLoginResource() throws Exception {
+    // Generate valid SPNEGO token
+    String token = generateSpnegoToken();
+
+    // Send authenticated request to SPNEGO login endpoint
+    String url = String.format("http://localhost:%d%s", portNumber, WebServerConstants.SPENGO_LOGIN_RESOURCE_PATH);
+    Request request = new Request.Builder()
+        .url(url)
+        .header("Authorization", "Negotiate " + token)
+        .build();
+
+    try (Response response = httpClient.newCall(request).execute()) {
+      // Verify successful authentication
+      assertEquals("Expected 200 OK for valid SPNEGO authentication",
+          200, response.code());
+
+      // Verify we received a Set-Cookie header to establish a session
+      String setCookie = response.header("Set-Cookie");
+      assertTrue("Expected Set-Cookie header to establish session, but got: " + setCookie,
+          setCookie != null && (setCookie.contains("JSESSIONID") || setCookie.contains("Drill-Session-Id")));
+    }
+  }
+
+  /**
+   * Test to verify that once authenticated via SPNEGO, the session can be used to access other resources
+   * without re-authenticating. This validates session persistence after initial SPNEGO authentication.
+   */
+  @Test
+  public void testAuthClientRequestForOtherPage() throws Exception {
+    // First, authenticate via SPNEGO login endpoint
+    String token = generateSpnegoToken();
+    String loginUrl = String.format("http://localhost:%d%s", portNumber, WebServerConstants.SPENGO_LOGIN_RESOURCE_PATH);
+    Request loginRequest = new Request.Builder()
+        .url(loginUrl)
+        .header("Authorization", "Negotiate " + token)
+        .build();
+
+    String sessionCookie;
+    try (Response loginResponse = httpClient.newCall(loginRequest).execute()) {
+      assertEquals("Expected successful authentication", 200, loginResponse.code());
+
+      // Extract the session cookie
+      sessionCookie = loginResponse.header("Set-Cookie");
+      assertTrue("Expected session cookie, but got: " + sessionCookie,
+          sessionCookie != null && (sessionCookie.contains("JSESSIONID") || sessionCookie.contains("Drill-Session-Id")));
+
+      // Extract just the session cookie part (either JSESSIONID or Drill-Session-Id)
+      sessionCookie = sessionCookie.split(";")[0];
+    }
+
+    // Now access a different resource using the session cookie (no SPNEGO token needed)
+    String otherUrl = String.format("http://localhost:%d/", portNumber);
+    Request otherRequest = new Request.Builder()
+        .url(otherUrl)
+        .header("Cookie", sessionCookie)
+        .build();
+
+    try (Response otherResponse = httpClient.newCall(otherRequest).execute()) {
+      // Verify we can access the resource with just the session cookie
+      assertEquals("Expected 200 OK when accessing resource with valid session",
+          200, otherResponse.code());
+    }
+  }
+
+  /**
+   * Test to verify that logout properly invalidates the session. After logout, attempts to access
+   * protected resources with the old session cookie should fail with 401 Unauthorized.
+   */
+  @Test
+  public void testAuthClientRequestForLogOut() throws Exception {
+    // First, authenticate via SPNEGO
+    String token = generateSpnegoToken();
+    String loginUrl = String.format("http://localhost:%d%s", portNumber, WebServerConstants.SPENGO_LOGIN_RESOURCE_PATH);
+    Request loginRequest = new Request.Builder()
+        .url(loginUrl)
+        .header("Authorization", "Negotiate " + token)
+        .build();
+
+    String sessionCookie;
+    try (Response loginResponse = httpClient.newCall(loginRequest).execute()) {
+      assertEquals("Expected successful authentication", 200, loginResponse.code());
+      sessionCookie = loginResponse.header("Set-Cookie");
+      assertTrue("Expected session cookie, but got: " + sessionCookie,
+          sessionCookie != null && (sessionCookie.contains("JSESSIONID") || sessionCookie.contains("Drill-Session-Id")));
+      sessionCookie = sessionCookie.split(";")[0];
+    }
+
+    // Verify we can access a protected resource with the session
+    String protectedUrl = String.format("http://localhost:%d/", portNumber);
+    Request beforeLogoutRequest = new Request.Builder()
+        .url(protectedUrl)
+        .header("Cookie", sessionCookie)
+        .build();
+
+    try (Response beforeLogoutResponse = httpClient.newCall(beforeLogoutRequest).execute()) {
+      assertEquals("Expected 200 OK before logout", 200, beforeLogoutResponse.code());
+    }
+
+    // Now logout
+    String logoutUrl = String.format("http://localhost:%d%s", portNumber, WebServerConstants.LOGOUT_RESOURCE_PATH);
+    Request logoutRequest = new Request.Builder()
+        .url(logoutUrl)
+        .header("Cookie", sessionCookie)
+        .build();
+
+    try (Response logoutResponse = httpClient.newCall(logoutRequest).execute()) {
+      // Logout should succeed
+      assertTrue("Expected successful logout (200 or redirect)",
+          logoutResponse.code() == 200 || logoutResponse.code() == 302 || logoutResponse.code() == 303);
+    }
+
+    // Try to access protected resource with the old session cookie - should fail
+    Request afterLogoutRequest = new Request.Builder()
+        .url(protectedUrl)
+        .header("Cookie", sessionCookie)
+        .build();
+
+    try (Response afterLogoutResponse = httpClient.newCall(afterLogoutRequest).execute()) {
+      // After logout, the session should be invalidated
+      assertEquals("Expected 401 Unauthorized after logout with old session",
+          401, afterLogoutResponse.code());
+    }
+  }
+
+  /**
+   * Test to verify authentication fails when client sends an invalid SPNEGO token.
+   * This test uses a real HTTP client to send a malformed token and verifies the server returns 401 Unauthorized.
+   */
+  @Test
+  public void testSpnegoLoginInvalidToken() throws Exception {
+    // Generate a valid token and then corrupt it
+    String validToken = generateSpnegoToken();
+    String invalidToken = validToken + "INVALID_SUFFIX";
+
+    // Send HTTP request with the corrupted token
+    String url = String.format("http://localhost:%d%s", portNumber, WebServerConstants.SPENGO_LOGIN_RESOURCE_PATH);
+    Request request = new Request.Builder()
+        .url(url)
+        .header("Authorization", "Negotiate " + invalidToken)
+        .build();
+
+    try (Response response = httpClient.newCall(request).execute()) {
+      // Verify authentication failed with 401 Unauthorized
+      assertEquals("Expected 401 Unauthorized for invalid SPNEGO token",
+          401, response.code());
+
+      // Verify the server sends back a WWW-Authenticate header with Negotiate challenge
+      String wwwAuthenticate = response.header("WWW-Authenticate");
+      assertTrue("Expected WWW-Authenticate header with Negotiate challenge",
+          wwwAuthenticate != null && wwwAuthenticate.startsWith("Negotiate"));
+    }
   }
 }

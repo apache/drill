@@ -257,6 +257,7 @@ public class TestRestJson extends ClusterTest {
     String url = String.format("http://localhost:%d/query.json", portNumber);
     Request request = new Request.Builder()
         .url(url)
+        .header("Accept", "application/json")
         .post(RequestBody.create(json, JSON_MEDIA_TYPE))
         .build();
     try (Response response = httpClient.newCall(request).execute()) {
@@ -272,6 +273,7 @@ public class TestRestJson extends ClusterTest {
     String url = String.format("http://localhost:%d/query.json", portNumber);
     Request request = new Request.Builder()
         .url(url)
+        .header("Accept", "application/json")
         .post(RequestBody.create(json, JSON_MEDIA_TYPE))
         .build();
     try (Response response = httpClient.newCall(request).execute()) {

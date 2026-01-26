@@ -149,6 +149,12 @@
                   <includes>
                     <!-- Needed by HBase test cluster -->
                     <include>commons-logging:commons-logging:*:jar:provided</include>
+                    <!-- Needed by HBase mini cluster (test scope) for embedded Jetty/web server -->
+                    <include>javax.servlet:*</include>
+                    <include>javax.servlet.jsp:*</include>
+                    <include>javax.websocket:*</include>
+                    <include>org.eclipse.jetty:*</include>
+                    <include>org.eclipse.jetty.websocket:*</include>
                   </includes>
                 </bannedDependencies>
               </rules>
@@ -253,6 +259,14 @@
             <exclusion>
               <groupId>commons-codec</groupId>
               <artifactId>commons-codec</artifactId>
+            </exclusion>
+            <exclusion>
+              <groupId>javax.servlet</groupId>
+              <artifactId>javax.servlet-api</artifactId>
+            </exclusion>
+            <exclusion>
+              <groupId>javax.servlet.jsp</groupId>
+              <artifactId>jsp-api</artifactId>
             </exclusion>
           </exclusions>
         </dependency>
