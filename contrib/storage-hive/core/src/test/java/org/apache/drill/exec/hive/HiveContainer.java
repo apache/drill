@@ -21,6 +21,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testcontainers.containers.GenericContainer;
 import org.testcontainers.containers.wait.strategy.Wait;
+import org.testcontainers.containers.wait.strategy.WaitAllStrategy;
 import org.testcontainers.utility.DockerImageName;
 
 import java.time.Duration;
@@ -93,16 +94,22 @@ public class HiveContainer extends GenericContainer<HiveContainer> {
       waitingFor(Wait.forLogMessage(".*Hive container ready \\(pre-initialized\\)!.*", 1)
           .withStartupTimeout(Duration.ofMinutes(2)));
     } else if (useFallbackImage) {
-      // Fallback to apache/hive:3.1.3 - wait for HiveServer2 to be ready
-      // This image uses a different startup sequence
-      waitingFor(Wait.forLogMessage(".*Starting HiveServer2.*", 1)
-          .withStartupTimeout(Duration.ofMinutes(5)));
+      // Fallback to apache/hive:3.1.3 - wait for both metastore port AND HiveServer2 to be ready
+      // The metastore must be accepting connections before Drill can use it
+      WaitAllStrategy waitStrategy = new WaitAllStrategy()
+          .withStrategy(Wait.forListeningPort())  // Wait for metastore port 9083 to be listening
+          .withStrategy(Wait.forLogMessage(".*Starting HiveServer2.*", 1))
+          .withStartupTimeout(Duration.ofMinutes(10));  // Allow up to 10 minutes for full startup
+      waitingFor(waitStrategy);
     } else {
-      // Custom image: wait for both HiveServer2 to start AND test data to be initialized
+      // Custom image: wait for metastore port AND test data initialization message
       // Allow up to 20 minutes: Metastore + HiveServer2 startup (~5-10 min) + data initialization (~5-10 min)
       // This is only on first run; container reuse makes subsequent tests fast (~1 second)
-      waitingFor(Wait.forLogMessage(".*Test data loaded and ready for queries.*", 1)
-          .withStartupTimeout(Duration.ofMinutes(20)));
+      WaitAllStrategy waitStrategy = new WaitAllStrategy()
+          .withStrategy(Wait.forListeningPort())  // Wait for metastore port 9083 to be listening
+          .withStrategy(Wait.forLogMessage(".*Test data loaded and ready for queries.*", 1))
+          .withStartupTimeout(Duration.ofMinutes(20));
+      waitingFor(waitStrategy);
     }
 
     // Enable reuse for faster test execution
@@ -175,6 +182,11 @@ public class HiveContainer extends GenericContainer<HiveContainer> {
     System.out.println("Pulling Docker image and starting container...");
     long startTime = System.currentTimeMillis();
     container.start();
+
+    // Additional wait for metastore to stabilize
+    System.out.println("Waiting for metastore to stabilize...");
+    waitForMetastoreReady(container);
+
     long elapsedSeconds = (System.currentTimeMillis() - startTime) / 1000;
 
     System.out.println("========================================");
@@ -190,6 +202,39 @@ public class HiveContainer extends GenericContainer<HiveContainer> {
     logger.info("Hive container started and ready for tests");
 
     return container;
+  }
+
+  /**
+   * Waits for the metastore to be fully ready by attempting socket connections.
+   * This ensures the Thrift service is actually accepting connections.
+   */
+  private static void waitForMetastoreReady(HiveContainer container) {
+    int maxAttempts = 30;
+    int attemptDelayMs = 2000;
+    String host = container.getHost();
+    int port = container.getMetastorePort();
+
+    for (int i = 1; i <= maxAttempts; i++) {
+      try (java.net.Socket socket = new java.net.Socket()) {
+        socket.connect(new java.net.InetSocketAddress(host, port), 1000);
+        // Connection successful - wait a bit more for service to fully initialize
+        Thread.sleep(3000);
+        System.out.println("Metastore is ready and accepting connections");
+        return;
+      } catch (Exception e) {
+        if (i < maxAttempts) {
+          logger.debug("Metastore not ready yet (attempt {}/{}): {}", i, maxAttempts, e.getMessage());
+          try {
+            Thread.sleep(attemptDelayMs);
+          } catch (InterruptedException ie) {
+            Thread.currentThread().interrupt();
+            throw new RuntimeException("Interrupted while waiting for metastore", ie);
+          }
+        } else {
+          throw new RuntimeException("Metastore failed to become ready after " + maxAttempts + " attempts", e);
+        }
+      }
+    }
   }
 
   /**
