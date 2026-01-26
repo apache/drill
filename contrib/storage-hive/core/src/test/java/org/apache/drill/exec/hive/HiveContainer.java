@@ -39,16 +39,20 @@ public class HiveContainer extends GenericContainer<HiveContainer> {
   // For 10-20 minute startup: use "drill-hive-test:latest" (build with docker build)
   private static final String HIVE_IMAGE = System.getProperty("hive.image", "drill-hive-test:fast");
   private static final String FALLBACK_IMAGE = "apache/hive:3.1.3";
-  private static final boolean USE_PREINITIALIZED = HIVE_IMAGE.contains("preinitialized");
   private static final int METASTORE_PORT = 9083;
   private static final int HIVESERVER2_PORT = 10000;
   private static final int HIVESERVER2_HTTP_PORT = 10002;
 
   private static HiveContainer instance;
-  private boolean dataInitialized = false;
+  private static String initializationError = null;
+  private final boolean usePreinitialized;
+  private final boolean useFallbackImage;
 
-  private HiveContainer() {
-    this(getHiveImage());
+  private HiveContainer(String dockerImageName, boolean useFallback) {
+    super(DockerImageName.parse(dockerImageName).asCompatibleSubstituteFor("apache/hive"));
+    this.useFallbackImage = useFallback;
+    this.usePreinitialized = dockerImageName.contains("preinitialized");
+    configureContainer();
   }
 
   private static String getHiveImage() {
@@ -57,9 +61,26 @@ public class HiveContainer extends GenericContainer<HiveContainer> {
     return HIVE_IMAGE;
   }
 
-  private HiveContainer(String dockerImageName) {
-    super(DockerImageName.parse(dockerImageName).asCompatibleSubstituteFor("apache/hive"));
+  /**
+   * Checks if Docker is available on the system.
+   */
+  public static boolean isDockerAvailable() {
+    try {
+      org.testcontainers.DockerClientFactory.instance().client();
+      return true;
+    } catch (Exception e) {
+      return false;
+    }
+  }
 
+  /**
+   * Returns any initialization error that occurred.
+   */
+  public static String getInitializationError() {
+    return initializationError;
+  }
+
+  private void configureContainer() {
     withExposedPorts(METASTORE_PORT, HIVESERVER2_PORT, HIVESERVER2_HTTP_PORT);
 
     // Set environment variables for Hive configuration
@@ -67,14 +88,17 @@ public class HiveContainer extends GenericContainer<HiveContainer> {
     // Don't set IS_RESUME - let the entrypoint initialize the schema
 
     // Wait strategy depends on image type:
-    // - Standard image: Wait for data initialization to complete (20 minutes)
-    // - Pre-initialized image: Wait for services to start only (2 minutes)
-    if (USE_PREINITIALIZED) {
+    if (usePreinitialized) {
       // Pre-initialized image: schema and data already exist, just wait for services
       waitingFor(Wait.forLogMessage(".*Hive container ready \\(pre-initialized\\)!.*", 1)
           .withStartupTimeout(Duration.ofMinutes(2)));
+    } else if (useFallbackImage) {
+      // Fallback to apache/hive:3.1.3 - wait for HiveServer2 to be ready
+      // This image uses a different startup sequence
+      waitingFor(Wait.forLogMessage(".*Starting HiveServer2.*", 1)
+          .withStartupTimeout(Duration.ofMinutes(5)));
     } else {
-      // Standard image: wait for both HiveServer2 to start AND test data to be initialized
+      // Custom image: wait for both HiveServer2 to start AND test data to be initialized
       // Allow up to 20 minutes: Metastore + HiveServer2 startup (~5-10 min) + data initialization (~5-10 min)
       // This is only on first run; container reuse makes subsequent tests fast (~1 second)
       waitingFor(Wait.forLogMessage(".*Test data loaded and ready for queries.*", 1)
@@ -84,49 +108,88 @@ public class HiveContainer extends GenericContainer<HiveContainer> {
     // Enable reuse for faster test execution
     withReuse(true);
 
-    logger.info("Hive container configured with image: {}", dockerImageName);
+    logger.info("Hive container configured with image: {}", getDockerImageName());
   }
 
   /**
    * Gets the singleton instance of HiveContainer.
    * Container is started on first access and reused for all subsequent tests.
+   * If the custom image is not available, falls back to apache/hive:3.1.3.
    *
-   * @return Shared HiveContainer instance
+   * @return Shared HiveContainer instance, or null if Docker is unavailable
+   * @throws RuntimeException if container fails to start
    */
   public static synchronized HiveContainer getInstance() {
-    if (instance == null) {
-      System.out.println("========================================");
-      System.out.println("Starting Hive Docker container...");
-      if (USE_PREINITIALIZED) {
-        System.out.println("Using pre-initialized image (~1 minute startup)");
-      } else {
-        System.out.println("Using standard image (~15 minute startup on first run)");
-      }
-      System.out.println("Image: " + HIVE_IMAGE);
-      System.out.println("========================================");
-      logger.info("Creating new Hive container instance");
-      instance = new HiveContainer();
-
-      System.out.println("Pulling Docker image and starting container...");
-      long startTime = System.currentTimeMillis();
-      instance.start();
-      long elapsedSeconds = (System.currentTimeMillis() - startTime) / 1000;
-
-      System.out.println("========================================");
-      System.out.println("Hive container started successfully!");
-      System.out.println("Startup time: " + elapsedSeconds + " seconds");
-      System.out.println("Metastore: " + instance.getMetastoreUri());
-      System.out.println("JDBC: " + instance.getJdbcUrl());
-      System.out.println("Container will be reused for all tests");
-      if (USE_PREINITIALIZED) {
-        System.out.println("Tip: Build pre-initialized image with build-preinitialized-image.sh");
-      }
-      System.out.println("========================================");
-      logger.info("Hive container started and ready for tests");
-    } else {
+    if (instance != null) {
       logger.debug("Reusing existing Hive container instance");
+      return instance;
     }
-    return instance;
+
+    // Check if Docker is available
+    if (!isDockerAvailable()) {
+      initializationError = "Docker is not available. Please install and start Docker to run Hive tests.";
+      logger.error(initializationError);
+      throw new RuntimeException(initializationError);
+    }
+
+    System.out.println("========================================");
+    System.out.println("Starting Hive Docker container...");
+    System.out.println("Requested image: " + HIVE_IMAGE);
+    System.out.println("========================================");
+
+    // Try the requested image first
+    try {
+      instance = tryStartContainer(HIVE_IMAGE, false);
+      return instance;
+    } catch (Exception e) {
+      logger.warn("Failed to start container with image '{}': {}", HIVE_IMAGE, e.getMessage());
+      System.out.println("Failed to start with " + HIVE_IMAGE + ", trying fallback image...");
+    }
+
+    // Fall back to apache/hive:3.1.3
+    System.out.println("Falling back to: " + FALLBACK_IMAGE);
+    try {
+      instance = tryStartContainer(FALLBACK_IMAGE, true);
+      return instance;
+    } catch (Exception e) {
+      initializationError = "Failed to start Hive container with both custom and fallback images: " + e.getMessage();
+      logger.error(initializationError, e);
+      throw new RuntimeException(initializationError, e);
+    }
+  }
+
+  private static HiveContainer tryStartContainer(String imageName, boolean isFallback) {
+    boolean usePreinit = imageName.contains("preinitialized");
+    if (usePreinit) {
+      System.out.println("Using pre-initialized image (~1 minute startup)");
+    } else if (isFallback) {
+      System.out.println("Using fallback apache/hive image (~5 minute startup)");
+    } else {
+      System.out.println("Using custom image (~15 minute startup on first run)");
+    }
+    System.out.println("Image: " + imageName);
+
+    logger.info("Creating Hive container with image: {}", imageName);
+    HiveContainer container = new HiveContainer(imageName, isFallback);
+
+    System.out.println("Pulling Docker image and starting container...");
+    long startTime = System.currentTimeMillis();
+    container.start();
+    long elapsedSeconds = (System.currentTimeMillis() - startTime) / 1000;
+
+    System.out.println("========================================");
+    System.out.println("Hive container started successfully!");
+    System.out.println("Startup time: " + elapsedSeconds + " seconds");
+    System.out.println("Metastore: " + container.getMetastoreUri());
+    System.out.println("JDBC: " + container.getJdbcUrl());
+    System.out.println("Container will be reused for all tests");
+    if (isFallback) {
+      System.out.println("NOTE: Using fallback image - test data must be created via JDBC");
+    }
+    System.out.println("========================================");
+    logger.info("Hive container started and ready for tests");
+
+    return container;
   }
 
   /**
@@ -177,6 +240,25 @@ public class HiveContainer extends GenericContainer<HiveContainer> {
    */
   public Integer getHiveServer2Port() {
     return getMappedPort(HIVESERVER2_PORT);
+  }
+
+  /**
+   * Checks if this container is using the fallback image (apache/hive:3.1.3).
+   * When using the fallback image, test data must be created via JDBC.
+   *
+   * @return true if using fallback image
+   */
+  public boolean isUsingFallbackImage() {
+    return useFallbackImage;
+  }
+
+  /**
+   * Checks if this container is using a pre-initialized image.
+   *
+   * @return true if using pre-initialized image
+   */
+  public boolean isUsingPreinitializedImage() {
+    return usePreinitialized;
   }
 
   @Override
