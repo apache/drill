@@ -17,14 +17,17 @@
  */
 package org.apache.drill.exec.planner.logical;
 
-import org.apache.calcite.rel.type.RelDataType;
 import com.google.common.collect.ImmutableList;
 import io.netty.buffer.DrillBuf;
+import org.apache.calcite.rel.type.RelDataType;
+import org.apache.calcite.rel.type.RelDataTypeFactory;
+import org.apache.calcite.rex.RexBuilder;
 import org.apache.calcite.rex.RexExecutor;
+import org.apache.calcite.rex.RexNode;
+import org.apache.calcite.sql.type.SqlTypeName;
 import org.apache.calcite.util.DateString;
 import org.apache.calcite.util.TimeString;
 import org.apache.calcite.util.TimestampString;
-import org.apache.calcite.rel.RelNode;
 import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.common.expression.ErrorCollectorImpl;
 import org.apache.drill.common.expression.ExpressionStringBuilder;
@@ -69,10 +72,6 @@ import org.apache.drill.exec.expr.holders.ValueHolder;
 import org.apache.drill.exec.expr.holders.VarCharHolder;
 import org.apache.drill.exec.expr.holders.VarDecimalHolder;
 import org.apache.drill.exec.ops.UdfUtilities;
-import org.apache.calcite.rel.type.RelDataTypeFactory;
-import org.apache.calcite.rex.RexBuilder;
-import org.apache.calcite.rex.RexNode;
-import org.apache.calcite.sql.type.SqlTypeName;
 import org.apache.drill.exec.planner.physical.PlannerSettings;
 import org.apache.drill.exec.planner.sql.TypeInferenceUtils;
 import org.apache.drill.exec.vector.DateUtilities;
@@ -135,7 +134,7 @@ public class DrillConstExecutor implements RexExecutor {
   @SuppressWarnings("deprecation")
   public void reduce(RexBuilder rexBuilder, List<RexNode> constExps, List<RexNode> reducedValues) {
     for (RexNode newCall : constExps) {
-      LogicalExpression logEx = DrillOptiq.toDrill(new DrillParseContext(plannerSettings), (RelNode) null /* input rel */, newCall);
+      LogicalExpression logEx = DrillOptiq.toDrill(new DrillParseContext(plannerSettings), newCall.getType(), rexBuilder, newCall);
 
       ErrorCollectorImpl errors = new ErrorCollectorImpl();
       LogicalExpression materializedExpr = ExpressionTreeMaterializer.materialize(logEx, null, errors, funcImplReg);
