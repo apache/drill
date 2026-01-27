@@ -44,6 +44,7 @@
         <include>org.apache.drill.contrib:drill-format-syslog:jar</include>
         <include>org.apache.drill.contrib:drill-format-xml:jar</include>
         <include>org.apache.drill.contrib:drill-iceberg-format:jar</include>
+        <include>org.apache.drill.contrib:drill-paimon-format:jar</include>
         <include>org.apache.drill.contrib:drill-jdbc-storage:jar</include>
         <include>org.apache.drill.contrib:drill-kudu-storage:jar</include>
         <include>org.apache.drill.contrib:drill-mongo-storage:jar</include>
