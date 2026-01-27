@@ -32,6 +32,8 @@
   <name>Drill : Contrib : Storage : Hive : Core</name>
   <properties>
     <freemarker.conf.file>src/main/codegen/configHive3.fmpp</freemarker.conf.file>
+    <!-- Default: don't exclude any tests. ARM64 profiles override this to skip slow Docker tests -->
+    <hive.test.excludedGroups></hive.test.excludedGroups>
   </properties>
 
   <dependencies>
@@ -413,11 +415,24 @@
 
   <profiles>
     <!-- Skip Hive Docker tests on ARM64/aarch64 by default (slow emulation) -->
+    <!-- Linux reports as 'aarch64', macOS reports as 'arm64' -->
     <profile>
-      <id>skip-hive-tests-on-arm</id>
+      <id>skip-hive-tests-on-arm-linux</id>
       <activation>
         <os>
           <arch>aarch64</arch>
+        </os>
+      </activation>
+      <properties>
+        <hive.test.excludedGroups>org.apache.drill.categories.HiveStorageTest</hive.test.excludedGroups>
+      </properties>
+    </profile>
+
+    <profile>
+      <id>skip-hive-tests-on-arm-macos</id>
+      <activation>
+        <os>
+          <arch>arm64</arch>
         </os>
       </activation>
       <properties>

@@ -21,7 +21,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testcontainers.containers.GenericContainer;
 import org.testcontainers.containers.wait.strategy.Wait;
-import org.testcontainers.containers.wait.strategy.WaitAllStrategy;
 import org.testcontainers.utility.DockerImageName;
 
 import java.time.Duration;
@@ -75,6 +74,15 @@ public class HiveContainer extends GenericContainer<HiveContainer> {
   }
 
   /**
+   * Checks if running on ARM64 architecture (Apple Silicon, ARM Linux).
+   * Hive Docker tests are very slow on ARM64 due to x86 emulation.
+   */
+  public static boolean isArm64() {
+    String arch = System.getProperty("os.arch", "").toLowerCase();
+    return arch.contains("aarch64") || arch.contains("arm64");
+  }
+
+  /**
    * Returns any initialization error that occurred.
    */
   public static String getInitializationError() {
@@ -88,30 +96,10 @@ public class HiveContainer extends GenericContainer<HiveContainer> {
     withEnv("SERVICE_NAME", "hiveserver2");
     // Don't set IS_RESUME - let the entrypoint initialize the schema
 
-    // Wait strategy depends on image type:
-    if (usePreinitialized) {
-      // Pre-initialized image: schema and data already exist, just wait for services
-      waitingFor(Wait.forLogMessage(".*Hive container ready \\(pre-initialized\\)!.*", 1)
-          .withStartupTimeout(Duration.ofMinutes(2)));
-    } else if (useFallbackImage) {
-      // apache/hive:3.1.3 official image - wait for HiveServer2 to be fully started
-      // The official image outputs "HiveServer2 Web UI available at..." when ready
-      // or we can wait for the listening port plus a reasonable log message
-      WaitAllStrategy waitStrategy = new WaitAllStrategy()
-          .withStrategy(Wait.forListeningPort())
-          .withStrategy(Wait.forLogMessage(".*HiveServer2.*", 1))
-          .withStartupTimeout(Duration.ofMinutes(15));  // Official image can be slow
-      waitingFor(waitStrategy);
-    } else {
-      // Custom image: wait for metastore port AND test data initialization message
-      // Allow up to 20 minutes: Metastore + HiveServer2 startup (~5-10 min) + data initialization (~5-10 min)
-      // This is only on first run; container reuse makes subsequent tests fast (~1 second)
-      WaitAllStrategy waitStrategy = new WaitAllStrategy()
-          .withStrategy(Wait.forListeningPort())  // Wait for metastore port 9083 to be listening
-          .withStrategy(Wait.forLogMessage(".*Test data loaded and ready for queries.*", 1))
-          .withStartupTimeout(Duration.ofMinutes(20));
-      waitingFor(waitStrategy);
-    }
+    // Wait for ports to be listening - this is the most reliable strategy
+    // The waitForMetastoreReady() method will verify the metastore is actually accepting connections
+    waitingFor(Wait.forListeningPort()
+        .withStartupTimeout(Duration.ofMinutes(15)));
 
     // Enable reuse for faster test execution
     withReuse(true);

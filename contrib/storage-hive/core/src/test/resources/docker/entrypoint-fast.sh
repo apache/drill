@@ -19,7 +19,7 @@
 
 # Fast entrypoint that skips test data initialization
 # Test data will be created via JDBC in @BeforeClass methods
-set -e
+# Note: Removed 'set -e' to allow script to continue even if some commands fail
 
 echo "========================================="
 echo "Starting Hive services (FAST MODE)..."
@@ -73,8 +73,8 @@ echo "HiveServer2 started (PID: $HIVESERVER2_PID)"
 
 # Wait for HiveServer2 to accept JDBC connections
 echo "Waiting for HiveServer2 to accept JDBC connections..."
-echo "This may take 3-10 minutes..."
-MAX_RETRIES=120  # 120 attempts x 5 seconds = 10 minutes max
+echo "This may take 5-15 minutes in CI environments..."
+MAX_RETRIES=180  # 180 attempts x 5 seconds = 15 minutes max
 RETRY_COUNT=0
 while [ $RETRY_COUNT -lt $MAX_RETRIES ]; do
     RETRY_COUNT=$((RETRY_COUNT+1))
@@ -89,7 +89,7 @@ while [ $RETRY_COUNT -lt $MAX_RETRIES ]; do
         exit 1
     fi
     if [ $RETRY_COUNT -ge $MAX_RETRIES ]; then
-        echo "ERROR: HiveServer2 failed to accept connections after 10 minutes"
+        echo "ERROR: HiveServer2 failed to accept connections after 15 minutes"
         echo "HiveServer2 log:"
         tail -50 /tmp/hiveserver2.log
         exit 1

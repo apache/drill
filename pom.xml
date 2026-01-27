@@ -122,8 +122,8 @@
     <maven.version>3.8.4</maven.version>
     <memoryMb>4096</memoryMb>
     <metrics.version>4.2.19</metrics.version>
-    <mockito.version>5.17.0</mockito.version>
-    <mockito_inline.version>5.2.0</mockito_inline.version>
+    <mockito.version>5.21.0</mockito.version>
+    <mockito_inline.version>5.21.0</mockito_inline.version>
     <mongo.version>5.5.1</mongo.version>
     <msgpack.version>0.6.6</msgpack.version>
     <nashorn.version>15.4</nashorn.version>
@@ -931,18 +931,7 @@
       </exclusions>
       <scope>test</scope>
     </dependency>
-    <dependency>
-      <groupId>org.mockito</groupId>
-      <artifactId>mockito-inline</artifactId>
-      <version>${mockito_inline.version}</version>
-      <scope>test</scope>
-      <exclusions>
-        <exclusion>
-          <artifactId>mockito-core</artifactId>
-          <groupId>org.mockito</groupId>
-        </exclusion>
-      </exclusions>
-    </dependency>
+    <!-- mockito-inline was merged into mockito-core in Mockito 5.x, no longer needed separately -->
     <dependency>
       <groupId>de.huxhorn.lilith</groupId>
       <artifactId>de.huxhorn.lilith.logback.appender.multiplex-classic</artifactId>
