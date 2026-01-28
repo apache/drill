@@ -19,12 +19,18 @@ package org.apache.drill.exec.store.paimon;
 
 import org.apache.drill.common.logical.FormatPluginConfig;
 import org.apache.drill.common.logical.security.PlainCredentialsProvider;
+import org.apache.drill.common.types.TypeProtos;
+import org.apache.drill.exec.physical.rowSet.RowSet;
+import org.apache.drill.exec.physical.rowSet.RowSetBuilder;
+import org.apache.drill.exec.record.metadata.SchemaBuilder;
+import org.apache.drill.exec.record.metadata.TupleMetadata;
 import org.apache.drill.exec.store.StoragePluginRegistry;
 import org.apache.drill.exec.store.dfs.FileSystemConfig;
 import org.apache.drill.exec.store.paimon.format.PaimonFormatPluginConfig;
 import org.apache.drill.common.exceptions.UserRemoteException;
 import org.apache.drill.test.ClusterFixture;
 import org.apache.drill.test.ClusterTest;
+import org.apache.drill.test.rowSet.RowSetComparison;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.paimon.CoreOptions;
 import org.apache.paimon.catalog.Catalog;
@@ -62,6 +68,7 @@ public class PaimonQueriesTest extends ClusterTest {
   private static final String DB_NAME = "default";
   private static final String TABLE_NAME = "append_table";
   private static final String PK_TABLE_NAME = "pk_table";
+  private static final String PAIMON_SCAN_PATTERN = "(PAIMON_GROUP_SCAN|PaimonGroupScan)";
   private static String tableRelativePath;
   private static String pkTableRelativePath;
 
@@ -89,26 +96,40 @@ public class PaimonQueriesTest extends ClusterTest {
   @Test
   public void testReadAppendTable() throws Exception {
     String query = String.format("select id, name from dfs.tmp.`%s`", tableRelativePath);
-    testBuilder()
-      .sqlQuery(query)
-      .unOrdered()
-      .baselineColumns("id", "name")
-      .baselineValues(1, "alice")
-      .baselineValues(2, "bob")
-      .baselineValues(3, "carol")
-      .go();
+    RowSet results = queryBuilder().sql(query).rowSet();
+    TupleMetadata actualSchema = results.schema();
+    assertEquals(TypeProtos.MinorType.INT, actualSchema.metadata("id").type());
+    assertEquals(TypeProtos.MinorType.VARCHAR, actualSchema.metadata("name").type());
+
+    TupleMetadata expectedSchema = new SchemaBuilder()
+      .add("id", TypeProtos.MinorType.INT, actualSchema.metadata("id").mode())
+      .add("name", TypeProtos.MinorType.VARCHAR, actualSchema.metadata("name").mode())
+      .buildSchema();
+    RowSet expected = new RowSetBuilder(client.allocator(), expectedSchema)
+      .addRow(1, "alice")
+      .addRow(2, "bob")
+      .addRow(3, "carol")
+      .build();
+    new RowSetComparison(expected).unorderedVerifyAndClearAll(results);
   }
 
   @Test
   public void testReadPrimaryKeyTable() throws Exception {
     String query = String.format("select id, name from dfs.tmp.`%s`", pkTableRelativePath);
-    testBuilder()
-      .sqlQuery(query)
-      .unOrdered()
-      .baselineColumns("id", "name")
-      .baselineValues(1, "dave")
-      .baselineValues(2, "erin")
-      .go();
+    RowSet results = queryBuilder().sql(query).rowSet();
+    TupleMetadata actualSchema = results.schema();
+    assertEquals(TypeProtos.MinorType.INT, actualSchema.metadata("id").type());
+    assertEquals(TypeProtos.MinorType.VARCHAR, actualSchema.metadata("name").type());
+
+    TupleMetadata expectedSchema = new SchemaBuilder()
+      .add("id", TypeProtos.MinorType.INT, actualSchema.metadata("id").mode())
+      .add("name", TypeProtos.MinorType.VARCHAR, actualSchema.metadata("name").mode())
+      .buildSchema();
+    RowSet expected = new RowSetBuilder(client.allocator(), expectedSchema)
+      .addRow(1, "dave")
+      .addRow(2, "erin")
+      .build();
+    new RowSetComparison(expected).unorderedVerifyAndClearAll(results);
   }
 
   @Test
@@ -118,31 +139,42 @@ public class PaimonQueriesTest extends ClusterTest {
     queryBuilder()
       .sql(query)
       .planMatcher()
-      .include("columns=\\[.*name.*\\]")
-      .match();
+      .include(PAIMON_SCAN_PATTERN + ".*columns=\\[.*name.*\\]")
+      .match(true);
 
-    testBuilder()
-      .sqlQuery(query)
-      .unOrdered()
-      .baselineColumns("name")
-      .baselineValues("alice")
-      .baselineValues("bob")
-      .baselineValues("carol")
-      .go();
+    RowSet results = queryBuilder().sql(query).rowSet();
+    TupleMetadata actualSchema = results.schema();
+    assertEquals(TypeProtos.MinorType.VARCHAR, actualSchema.metadata("name").type());
+
+    TupleMetadata expectedSchema = new SchemaBuilder()
+      .add("name", TypeProtos.MinorType.VARCHAR, actualSchema.metadata("name").mode())
+      .buildSchema();
+    RowSet expected = new RowSetBuilder(client.allocator(), expectedSchema)
+      .addRow("alice")
+      .addRow("bob")
+      .addRow("carol")
+      .build();
+    new RowSetComparison(expected).unorderedVerifyAndClearAll(results);
   }
 
   @Test
   public void testMultiColumnProjection() throws Exception {
     String query = String.format("select id, name from dfs.tmp.`%s`", tableRelativePath);
+    RowSet results = queryBuilder().sql(query).rowSet();
+    TupleMetadata actualSchema = results.schema();
+    assertEquals(TypeProtos.MinorType.INT, actualSchema.metadata("id").type());
+    assertEquals(TypeProtos.MinorType.VARCHAR, actualSchema.metadata("name").type());
 
-    testBuilder()
-      .sqlQuery(query)
-      .ordered()
-      .baselineColumns("id", "name")
-      .baselineValues(1, "alice")
-      .baselineValues(2, "bob")
-      .baselineValues(3, "carol")
-      .go();
+    TupleMetadata expectedSchema = new SchemaBuilder()
+      .add("id", TypeProtos.MinorType.INT, actualSchema.metadata("id").mode())
+      .add("name", TypeProtos.MinorType.VARCHAR, actualSchema.metadata("name").mode())
+      .buildSchema();
+    RowSet expected = new RowSetBuilder(client.allocator(), expectedSchema)
+      .addRow(1, "alice")
+      .addRow(2, "bob")
+      .addRow(3, "carol")
+      .build();
+    new RowSetComparison(expected).verifyAndClearAll(results);
   }
 
   @Test
@@ -152,118 +184,229 @@ public class PaimonQueriesTest extends ClusterTest {
     queryBuilder()
       .sql(query)
       .planMatcher()
-      .include("condition=.*equal.*id.*2")
-      .match();
+      .include(PAIMON_SCAN_PATTERN + ".*condition=.*id.*2")
+      .match(true);
 
-    testBuilder()
-      .sqlQuery(query)
-      .ordered()
-      .baselineColumns("id", "name")
-      .baselineValues(2, "bob")
-      .go();
+    RowSet results = queryBuilder().sql(query).rowSet();
+    TupleMetadata actualSchema = results.schema();
+    assertEquals(TypeProtos.MinorType.INT, actualSchema.metadata("id").type());
+    assertEquals(TypeProtos.MinorType.VARCHAR, actualSchema.metadata("name").type());
+
+    TupleMetadata expectedSchema = new SchemaBuilder()
+      .add("id", TypeProtos.MinorType.INT, actualSchema.metadata("id").mode())
+      .add("name", TypeProtos.MinorType.VARCHAR, actualSchema.metadata("name").mode())
+      .buildSchema();
+    RowSet expected = new RowSetBuilder(client.allocator(), expectedSchema)
+      .addRow(2, "bob")
+      .build();
+    new RowSetComparison(expected).verifyAndClearAll(results);
   }
 
   @Test
   public void testFilterPushdownGT() throws Exception {
     String query = String.format("select id, name from dfs.tmp.`%s` where id > 1", tableRelativePath);
 
-    testBuilder()
-      .sqlQuery(query)
-      .ordered()
-      .baselineColumns("id", "name")
-      .baselineValues(2, "bob")
-      .baselineValues(3, "carol")
-      .go();
+    queryBuilder()
+      .sql(query)
+      .planMatcher()
+      .include(PAIMON_SCAN_PATTERN + ".*condition=.*id.*1")
+      .match(true);
+
+    RowSet results = queryBuilder().sql(query).rowSet();
+    TupleMetadata actualSchema = results.schema();
+    assertEquals(TypeProtos.MinorType.INT, actualSchema.metadata("id").type());
+    assertEquals(TypeProtos.MinorType.VARCHAR, actualSchema.metadata("name").type());
+
+    TupleMetadata expectedSchema = new SchemaBuilder()
+      .add("id", TypeProtos.MinorType.INT, actualSchema.metadata("id").mode())
+      .add("name", TypeProtos.MinorType.VARCHAR, actualSchema.metadata("name").mode())
+      .buildSchema();
+    RowSet expected = new RowSetBuilder(client.allocator(), expectedSchema)
+      .addRow(2, "bob")
+      .addRow(3, "carol")
+      .build();
+    new RowSetComparison(expected).verifyAndClearAll(results);
   }
 
   @Test
   public void testFilterPushdownLT() throws Exception {
     String query = String.format("select id, name from dfs.tmp.`%s` where id < 3", tableRelativePath);
 
-    testBuilder()
-      .sqlQuery(query)
-      .ordered()
-      .baselineColumns("id", "name")
-      .baselineValues(1, "alice")
-      .baselineValues(2, "bob")
-      .go();
+    queryBuilder()
+      .sql(query)
+      .planMatcher()
+      .include(PAIMON_SCAN_PATTERN + ".*condition=.*id.*3")
+      .match(true);
+
+    RowSet results = queryBuilder().sql(query).rowSet();
+    TupleMetadata actualSchema = results.schema();
+    assertEquals(TypeProtos.MinorType.INT, actualSchema.metadata("id").type());
+    assertEquals(TypeProtos.MinorType.VARCHAR, actualSchema.metadata("name").type());
+
+    TupleMetadata expectedSchema = new SchemaBuilder()
+      .add("id", TypeProtos.MinorType.INT, actualSchema.metadata("id").mode())
+      .add("name", TypeProtos.MinorType.VARCHAR, actualSchema.metadata("name").mode())
+      .buildSchema();
+    RowSet expected = new RowSetBuilder(client.allocator(), expectedSchema)
+      .addRow(1, "alice")
+      .addRow(2, "bob")
+      .build();
+    new RowSetComparison(expected).verifyAndClearAll(results);
   }
 
   @Test
   public void testFilterPushdownGE() throws Exception {
     String query = String.format("select id, name from dfs.tmp.`%s` where id >= 2", tableRelativePath);
 
-    testBuilder()
-      .sqlQuery(query)
-      .ordered()
-      .baselineColumns("id", "name")
-      .baselineValues(2, "bob")
-      .baselineValues(3, "carol")
-      .go();
+    queryBuilder()
+      .sql(query)
+      .planMatcher()
+      .include(PAIMON_SCAN_PATTERN + ".*condition=.*id.*2")
+      .match(true);
+
+    RowSet results = queryBuilder().sql(query).rowSet();
+    TupleMetadata actualSchema = results.schema();
+    assertEquals(TypeProtos.MinorType.INT, actualSchema.metadata("id").type());
+    assertEquals(TypeProtos.MinorType.VARCHAR, actualSchema.metadata("name").type());
+
+    TupleMetadata expectedSchema = new SchemaBuilder()
+      .add("id", TypeProtos.MinorType.INT, actualSchema.metadata("id").mode())
+      .add("name", TypeProtos.MinorType.VARCHAR, actualSchema.metadata("name").mode())
+      .buildSchema();
+    RowSet expected = new RowSetBuilder(client.allocator(), expectedSchema)
+      .addRow(2, "bob")
+      .addRow(3, "carol")
+      .build();
+    new RowSetComparison(expected).verifyAndClearAll(results);
   }
 
   @Test
   public void testFilterPushdownLE() throws Exception {
     String query = String.format("select id, name from dfs.tmp.`%s` where id <= 2", tableRelativePath);
 
-    testBuilder()
-      .sqlQuery(query)
-      .ordered()
-      .baselineColumns("id", "name")
-      .baselineValues(1, "alice")
-      .baselineValues(2, "bob")
-      .go();
+    queryBuilder()
+      .sql(query)
+      .planMatcher()
+      .include(PAIMON_SCAN_PATTERN + ".*condition=.*id.*2")
+      .match(true);
+
+    RowSet results = queryBuilder().sql(query).rowSet();
+    TupleMetadata actualSchema = results.schema();
+    assertEquals(TypeProtos.MinorType.INT, actualSchema.metadata("id").type());
+    assertEquals(TypeProtos.MinorType.VARCHAR, actualSchema.metadata("name").type());
+
+    TupleMetadata expectedSchema = new SchemaBuilder()
+      .add("id", TypeProtos.MinorType.INT, actualSchema.metadata("id").mode())
+      .add("name", TypeProtos.MinorType.VARCHAR, actualSchema.metadata("name").mode())
+      .buildSchema();
+    RowSet expected = new RowSetBuilder(client.allocator(), expectedSchema)
+      .addRow(1, "alice")
+      .addRow(2, "bob")
+      .build();
+    new RowSetComparison(expected).verifyAndClearAll(results);
   }
 
   @Test
   public void testFilterPushdownNE() throws Exception {
     String query = String.format("select id, name from dfs.tmp.`%s` where id <> 2", tableRelativePath);
 
-    testBuilder()
-      .sqlQuery(query)
-      .ordered()
-      .baselineColumns("id", "name")
-      .baselineValues(1, "alice")
-      .baselineValues(3, "carol")
-      .go();
+    queryBuilder()
+      .sql(query)
+      .planMatcher()
+      .include(PAIMON_SCAN_PATTERN + ".*condition=.*id.*2")
+      .match(true);
+
+    RowSet results = queryBuilder().sql(query).rowSet();
+    TupleMetadata actualSchema = results.schema();
+    assertEquals(TypeProtos.MinorType.INT, actualSchema.metadata("id").type());
+    assertEquals(TypeProtos.MinorType.VARCHAR, actualSchema.metadata("name").type());
+
+    TupleMetadata expectedSchema = new SchemaBuilder()
+      .add("id", TypeProtos.MinorType.INT, actualSchema.metadata("id").mode())
+      .add("name", TypeProtos.MinorType.VARCHAR, actualSchema.metadata("name").mode())
+      .buildSchema();
+    RowSet expected = new RowSetBuilder(client.allocator(), expectedSchema)
+      .addRow(1, "alice")
+      .addRow(3, "carol")
+      .build();
+    new RowSetComparison(expected).verifyAndClearAll(results);
   }
 
   @Test
   public void testFilterPushdownAnd() throws Exception {
     String query = String.format("select id, name from dfs.tmp.`%s` where id > 1 and id < 3", tableRelativePath);
 
-    testBuilder()
-      .sqlQuery(query)
-      .ordered()
-      .baselineColumns("id", "name")
-      .baselineValues(2, "bob")
-      .go();
+    queryBuilder()
+      .sql(query)
+      .planMatcher()
+      .include(PAIMON_SCAN_PATTERN + ".*condition=.*booleanAnd")
+      .match(true);
+
+    RowSet results = queryBuilder().sql(query).rowSet();
+    TupleMetadata actualSchema = results.schema();
+    assertEquals(TypeProtos.MinorType.INT, actualSchema.metadata("id").type());
+    assertEquals(TypeProtos.MinorType.VARCHAR, actualSchema.metadata("name").type());
+
+    TupleMetadata expectedSchema = new SchemaBuilder()
+      .add("id", TypeProtos.MinorType.INT, actualSchema.metadata("id").mode())
+      .add("name", TypeProtos.MinorType.VARCHAR, actualSchema.metadata("name").mode())
+      .buildSchema();
+    RowSet expected = new RowSetBuilder(client.allocator(), expectedSchema)
+      .addRow(2, "bob")
+      .build();
+    new RowSetComparison(expected).verifyAndClearAll(results);
   }
 
   @Test
   public void testFilterPushdownOr() throws Exception {
     String query = String.format("select id, name from dfs.tmp.`%s` where id = 1 or id = 3", tableRelativePath);
 
-    testBuilder()
-      .sqlQuery(query)
-      .unOrdered()
-      .baselineColumns("id", "name")
-      .baselineValues(1, "alice")
-      .baselineValues(3, "carol")
-      .go();
+    queryBuilder()
+      .sql(query)
+      .planMatcher()
+      .include(PAIMON_SCAN_PATTERN + ".*condition=.*booleanOr")
+      .match(true);
+
+    RowSet results = queryBuilder().sql(query).rowSet();
+    TupleMetadata actualSchema = results.schema();
+    assertEquals(TypeProtos.MinorType.INT, actualSchema.metadata("id").type());
+    assertEquals(TypeProtos.MinorType.VARCHAR, actualSchema.metadata("name").type());
+
+    TupleMetadata expectedSchema = new SchemaBuilder()
+      .add("id", TypeProtos.MinorType.INT, actualSchema.metadata("id").mode())
+      .add("name", TypeProtos.MinorType.VARCHAR, actualSchema.metadata("name").mode())
+      .buildSchema();
+    RowSet expected = new RowSetBuilder(client.allocator(), expectedSchema)
+      .addRow(1, "alice")
+      .addRow(3, "carol")
+      .build();
+    new RowSetComparison(expected).unorderedVerifyAndClearAll(results);
   }
 
   @Test
   public void testFilterPushdownNot() throws Exception {
     String query = String.format("select id, name from dfs.tmp.`%s` where not (id = 2)", tableRelativePath);
 
-    testBuilder()
-      .sqlQuery(query)
-      .unOrdered()
-      .baselineColumns("id", "name")
-      .baselineValues(1, "alice")
-      .baselineValues(3, "carol")
-      .go();
+    queryBuilder()
+      .sql(query)
+      .planMatcher()
+      .include(PAIMON_SCAN_PATTERN + ".*condition=.*id.*2")
+      .match(true);
+
+    RowSet results = queryBuilder().sql(query).rowSet();
+    TupleMetadata actualSchema = results.schema();
+    assertEquals(TypeProtos.MinorType.INT, actualSchema.metadata("id").type());
+    assertEquals(TypeProtos.MinorType.VARCHAR, actualSchema.metadata("name").type());
+
+    TupleMetadata expectedSchema = new SchemaBuilder()
+      .add("id", TypeProtos.MinorType.INT, actualSchema.metadata("id").mode())
+      .add("name", TypeProtos.MinorType.VARCHAR, actualSchema.metadata("name").mode())
+      .buildSchema();
+    RowSet expected = new RowSetBuilder(client.allocator(), expectedSchema)
+      .addRow(1, "alice")
+      .addRow(3, "carol")
+      .build();
+    new RowSetComparison(expected).unorderedVerifyAndClearAll(results);
   }
 
   @Test
@@ -273,50 +416,79 @@ public class PaimonQueriesTest extends ClusterTest {
     queryBuilder()
       .sql(query)
       .planMatcher()
-      .include("maxRecords=2")
-      .match();
-
-    assertEquals(2, queryBuilder().sql(query).run().recordCount());
+      .include(PAIMON_SCAN_PATTERN + ".*maxRecords=2")
+      .match(true);
+    RowSet results = queryBuilder().sql(query).rowSet();
+    TupleMetadata actualSchema = results.schema();
+    assertEquals(TypeProtos.MinorType.INT, actualSchema.metadata("id").type());
+    assertEquals(2, results.rowCount());
+    results.clear();
   }
 
   @Test
   public void testCombinedPushdownFilterProjectionLimit() throws Exception {
     String query = String.format("select id, name from dfs.tmp.`%s` where id > 1 limit 1", tableRelativePath);
 
-    testBuilder()
-      .sqlQuery(query)
-      .ordered()
-      .baselineColumns("id", "name")
-      .baselineValues(2, "bob")
-      .go();
+    queryBuilder()
+      .sql(query)
+      .planMatcher()
+      .include(PAIMON_SCAN_PATTERN + ".*condition=.*id.*1")
+      .include(PAIMON_SCAN_PATTERN + ".*maxRecords=1")
+      .match(true);
+
+    RowSet results = queryBuilder().sql(query).rowSet();
+    TupleMetadata actualSchema = results.schema();
+    assertEquals(TypeProtos.MinorType.INT, actualSchema.metadata("id").type());
+    assertEquals(TypeProtos.MinorType.VARCHAR, actualSchema.metadata("name").type());
+
+    TupleMetadata expectedSchema = new SchemaBuilder()
+      .add("id", TypeProtos.MinorType.INT, actualSchema.metadata("id").mode())
+      .add("name", TypeProtos.MinorType.VARCHAR, actualSchema.metadata("name").mode())
+      .buildSchema();
+    RowSet expected = new RowSetBuilder(client.allocator(), expectedSchema)
+      .addRow(2, "bob")
+      .build();
+    new RowSetComparison(expected).verifyAndClearAll(results);
   }
 
   @Test
   public void testSelectWildcard() throws Exception {
     String query = String.format("select * from dfs.tmp.`%s`", tableRelativePath);
+    RowSet results = queryBuilder().sql(query).rowSet();
+    TupleMetadata actualSchema = results.schema();
+    assertEquals(TypeProtos.MinorType.INT, actualSchema.metadata("id").type());
+    assertEquals(TypeProtos.MinorType.VARCHAR, actualSchema.metadata("name").type());
 
-    testBuilder()
-      .sqlQuery(query)
-      .unOrdered()
-      .baselineColumns("id", "name")
-      .baselineValues(1, "alice")
-      .baselineValues(2, "bob")
-      .baselineValues(3, "carol")
-      .go();
+    TupleMetadata expectedSchema = new SchemaBuilder()
+      .add("id", TypeProtos.MinorType.INT, actualSchema.metadata("id").mode())
+      .add("name", TypeProtos.MinorType.VARCHAR, actualSchema.metadata("name").mode())
+      .buildSchema();
+    RowSet expected = new RowSetBuilder(client.allocator(), expectedSchema)
+      .addRow(1, "alice")
+      .addRow(2, "bob")
+      .addRow(3, "carol")
+      .build();
+    new RowSetComparison(expected).unorderedVerifyAndClearAll(results);
   }
 
   @Test
   public void testSelectWithOrderBy() throws Exception {
     String query = String.format("select id, name from dfs.tmp.`%s` order by id desc", tableRelativePath);
+    RowSet results = queryBuilder().sql(query).rowSet();
+    TupleMetadata actualSchema = results.schema();
+    assertEquals(TypeProtos.MinorType.INT, actualSchema.metadata("id").type());
+    assertEquals(TypeProtos.MinorType.VARCHAR, actualSchema.metadata("name").type());
 
-    testBuilder()
-      .sqlQuery(query)
-      .ordered()
-      .baselineColumns("id", "name")
-      .baselineValues(3, "carol")
-      .baselineValues(2, "bob")
-      .baselineValues(1, "alice")
-      .go();
+    TupleMetadata expectedSchema = new SchemaBuilder()
+      .add("id", TypeProtos.MinorType.INT, actualSchema.metadata("id").mode())
+      .add("name", TypeProtos.MinorType.VARCHAR, actualSchema.metadata("name").mode())
+      .buildSchema();
+    RowSet expected = new RowSetBuilder(client.allocator(), expectedSchema)
+      .addRow(3, "carol")
+      .addRow(2, "bob")
+      .addRow(1, "alice")
+      .build();
+    new RowSetComparison(expected).verifyAndClearAll(results);
   }
 
   @Test
@@ -489,4 +661,5 @@ public class PaimonQueriesTest extends ClusterTest {
       commit.commit(messages);
     }
   }
+
 }

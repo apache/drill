@@ -21,6 +21,7 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonPOJOBuilder;
+import org.apache.drill.common.PlanStringBuilder;
 import org.apache.drill.common.logical.FormatPluginConfig;
 
 import java.util.Map;
@@ -34,8 +35,10 @@ public class PaimonFormatPluginConfig implements FormatPluginConfig {
 
   private final Map<String, String> properties;
 
+  // Time travel: load a specific snapshot id.
   private final Long snapshotId;
 
+  // Time travel: load the latest snapshot at or before the given timestamp (millis).
   private final Long snapshotAsOfTime;
 
   @JsonCreator
@@ -80,6 +83,15 @@ public class PaimonFormatPluginConfig implements FormatPluginConfig {
     return Objects.hash(properties, snapshotId, snapshotAsOfTime);
   }
 
+  @Override
+  public String toString() {
+    return new PlanStringBuilder(this)
+      .field("properties", properties)
+      .field("snapshotId", snapshotId)
+      .field("snapshotAsOfTime", snapshotAsOfTime)
+      .toString();
+  }
+
   @JsonPOJOBuilder(withPrefix = "")
   public static class PaimonFormatPluginConfigBuilder {
     private Map<String, String> properties;
@@ -107,4 +119,5 @@ public class PaimonFormatPluginConfig implements FormatPluginConfig {
       return new PaimonFormatPluginConfig(this);
     }
   }
+
 }

@@ -244,10 +244,6 @@
       <artifactId>calcite-core</artifactId>
     </dependency>
     <dependency>
-      <groupId>org.apiguardian</groupId>
-      <artifactId>apiguardian-api</artifactId>
-    </dependency>
-    <dependency>
       <groupId>org.apache.calcite.avatica</groupId>
       <artifactId>avatica-core</artifactId>
     </dependency>

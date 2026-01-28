@@ -40,6 +40,10 @@ public final class PaimonTableUtils {
   private PaimonTableUtils() {
   }
 
+  /**
+   * Load a Paimon table directly from a filesystem path. If a metadata suffix is present,
+   * returns the corresponding system table; otherwise returns the data table.
+   */
   public static Table loadTable(PaimonFormatPlugin formatPlugin, String path) throws IOException {
     PaimonMetadataType metadataType = extractMetadataType(path);
     String tableLocation = metadataType == null ? path : stripMetadataType(path);
@@ -48,6 +52,7 @@ public final class PaimonTableUtils {
     CatalogContext context = CatalogContext.create(options, formatPlugin.getFsConf());
     FileIO fileIO = FileIO.get(tablePath, context);
     FileStoreTable table = FileStoreTableFactory.create(fileIO, tablePath);
+    // Apply time-travel and custom options at table load time.
     Map<String, String> dynamicOptions = buildDynamicOptions(formatPlugin.getConfig());
     if (!dynamicOptions.isEmpty()) {
       table = table.copy(dynamicOptions);

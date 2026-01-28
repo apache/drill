@@ -19,6 +19,9 @@ package org.apache.drill.exec.store.paimon.format;
 
 import java.util.Locale;
 
+/**
+ * Paimon system tables exposed via table path suffix, e.g. /path/table#snapshots.
+ */
 public enum PaimonMetadataType {
   SNAPSHOTS("snapshots"),
   SCHEMAS("schemas"),
@@ -47,4 +50,5 @@ public enum PaimonMetadataType {
     }
     return null;
   }
+
 }

@@ -247,6 +247,7 @@ public class PaimonGroupScan extends AbstractGroupScan {
   private void init() throws IOException {
     Table table = PaimonTableUtils.loadTable(formatPlugin, path);
     String fileFormat = new CoreOptions(table.options()).fileFormatString();
+    // Paimon supports multiple formats; Drill currently reads Parquet/ORC only.
     if (!"parquet".equalsIgnoreCase(fileFormat) && !"orc".equalsIgnoreCase(fileFormat)) {
       throw UserException.unsupportedError()
         .message("Paimon file format '%s' is not supported. Only parquet and orc are supported.", fileFormat)

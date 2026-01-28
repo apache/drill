@@ -26,18 +26,24 @@ import java.util.function.Function;
 public class PaimonFormatLocationTransformer implements FormatLocationTransformer {
   public static final FormatLocationTransformer INSTANCE = new PaimonFormatLocationTransformer();
 
+  // Paimon metadata tables are addressed via suffix: e.g. /path/to/table#snapshots
   public static final String METADATA_SEPARATOR = "#";
 
   @Override
   public boolean canTransform(String location) {
-    return getMetadataType(location) != null;
+    PaimonMetadataType metadataType = getMetadataType(location);
+    if (metadataType == null) {
+      return false;
+    }
+    return true;
   }
 
   private PaimonMetadataType getMetadataType(String location) {
     String metadataType = StringUtils.substringAfterLast(location, METADATA_SEPARATOR);
-    return StringUtils.isNotEmpty(metadataType)
-      ? PaimonMetadataType.from(metadataType)
-      : null;
+    if (StringUtils.isNotEmpty(metadataType)) {
+      return PaimonMetadataType.from(metadataType);
+    }
+    return null;
   }
 
   @Override
@@ -45,8 +51,11 @@ public class PaimonFormatLocationTransformer implements FormatLocationTransforme
     PaimonMetadataType metadataType = getMetadataType(location);
     location = StringUtils.substringBeforeLast(location, METADATA_SEPARATOR);
     FileSelection fileSelection = selectionFactory.apply(location);
-    return fileSelection != null
-      ? new PaimonMetadataFileSelection(fileSelection, metadataType)
-      : null;
+    if (fileSelection == null) {
+      return null;
+    }
+    // Preserve metadata type while keeping the base path selection.
+    return new PaimonMetadataFileSelection(fileSelection, metadataType);
   }
+
 }

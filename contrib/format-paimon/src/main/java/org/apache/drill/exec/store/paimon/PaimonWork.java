@@ -26,6 +26,7 @@ import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import com.fasterxml.jackson.databind.deser.std.StdDeserializer;
 import com.fasterxml.jackson.databind.ser.std.StdSerializer;
+import org.apache.drill.common.PlanStringBuilder;
 import org.apache.drill.common.exceptions.UserException;
 import org.apache.paimon.table.source.Split;
 import org.slf4j.Logger;
@@ -38,7 +39,6 @@ import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.util.Base64;
 import java.util.Objects;
-import java.util.StringJoiner;
 
 @JsonSerialize(using = PaimonWork.PaimonWorkSerializer.class)
 @JsonDeserialize(using = PaimonWork.PaimonWorkDeserializer.class)
@@ -72,8 +72,8 @@ public class PaimonWork {
 
   @Override
   public String toString() {
-    return new StringJoiner(", ", PaimonWork.class.getSimpleName() + "[", "]")
-      .add("split=" + split)
+    return new PlanStringBuilder(this)
+      .field("split", split)
       .toString();
   }
 
@@ -128,4 +128,5 @@ public class PaimonWork {
       gen.writeEndObject();
     }
   }
+
 }

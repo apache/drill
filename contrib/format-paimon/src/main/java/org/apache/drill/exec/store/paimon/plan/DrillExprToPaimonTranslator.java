@@ -23,6 +23,7 @@ import org.apache.drill.common.expression.LogicalExpression;
 import org.apache.drill.common.expression.NullExpression;
 import org.apache.drill.common.expression.PathSegment;
 import org.apache.drill.common.expression.SchemaPath;
+import org.apache.drill.common.expression.BooleanOperator;
 import org.apache.drill.common.expression.ValueExpressions;
 import org.apache.drill.common.expression.visitors.AbstractExprVisitor;
 import org.apache.drill.common.expression.visitors.ExprVisitor;
@@ -40,6 +41,7 @@ import java.util.Optional;
 public class DrillExprToPaimonTranslator
   extends AbstractExprVisitor<Object, DrillExprToPaimonTranslator.Context, RuntimeException> {
 
+  // Translate Drill logical expressions into Paimon predicates for filter pushdown.
   public static final ExprVisitor<Object, Context, RuntimeException> INSTANCE =
     new DrillExprToPaimonTranslator();
 
@@ -49,6 +51,28 @@ public class DrillExprToPaimonTranslator
     }
     Object value = expression.accept(INSTANCE, new Context(rowType));
     return value instanceof Predicate ? (Predicate) value : null;
+  }
+
+  @Override
+  public Object visitBooleanOperator(BooleanOperator op, Context context) {
+    if (!FunctionNames.AND.equals(op.getName()) && !FunctionNames.OR.equals(op.getName())) {
+      return null;
+    }
+    Predicate result = null;
+    for (LogicalExpression arg : op.args()) {
+      Predicate predicate = asPredicate(arg.accept(this, context));
+      if (predicate == null) {
+        return null;
+      }
+      if (result == null) {
+        result = predicate;
+      } else {
+        result = FunctionNames.AND.equals(op.getName())
+          ? PredicateBuilder.and(result, predicate)
+          : PredicateBuilder.or(result, predicate);
+      }
+    }
+    return result;
   }
 
   @Override

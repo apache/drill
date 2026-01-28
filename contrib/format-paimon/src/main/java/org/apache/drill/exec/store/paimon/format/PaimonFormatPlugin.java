@@ -149,9 +149,10 @@ public class PaimonFormatPlugin implements FormatPlugin {
   public AbstractGroupScan getGroupScan(String userName, FileSelection selection,
     List<SchemaPath> columns, MetadataProviderManager metadataProviderManager) throws IOException {
     SchemaProvider schemaProvider = metadataProviderManager.getSchemaProvider();
-    TupleMetadata schema = schemaProvider != null
-      ? schemaProvider.read().getSchema()
-      : null;
+    TupleMetadata schema = null;
+    if (schemaProvider != null) {
+      schema = schemaProvider.read().getSchema();
+    }
     return PaimonGroupScan.builder()
       .userName(userName)
       .formatPlugin(this)
@@ -207,12 +208,14 @@ public class PaimonFormatPlugin implements FormatPlugin {
   }
 
   private String getPath(FileSelection selection) {
-    String path = selection.selectionRoot.toUri().getPath();
+    String path = selection.getSelectionRoot().toString();
     if (selection instanceof PaimonMetadataFileSelection) {
       PaimonMetadataFileSelection metadataFileSelection = (PaimonMetadataFileSelection) selection;
+      // Map dfs.`/path/table#snapshots` to Paimon system table.
       path = String.format("%s%s%s", path, PaimonFormatLocationTransformer.METADATA_SEPARATOR,
         metadataFileSelection.getMetadataType().getName());
     }
     return path;
   }
+
 }

@@ -55,6 +55,7 @@ public final class PaimonReadUtils {
     if (condition == null) {
       return;
     }
+    // Translate Drill expression into a Paimon predicate (if supported).
     Predicate predicate = DrillExprToPaimonTranslator.translate(condition, rowType);
     if (predicate != null) {
       readBuilder.withFilter(predicate);
