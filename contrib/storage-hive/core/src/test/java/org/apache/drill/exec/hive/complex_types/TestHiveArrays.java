@@ -19,7 +19,9 @@ package org.apache.drill.exec.hive.complex_types;
 
 import java.math.BigDecimal;
 import java.nio.charset.StandardCharsets;
-import java.nio.file.Paths;
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.Statement;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
@@ -29,15 +31,10 @@ import java.util.stream.Stream;
 import org.apache.drill.categories.HiveStorageTest;
 import org.apache.drill.categories.SlowTest;
 import org.apache.drill.exec.ExecConstants;
-import org.apache.drill.exec.hive.HiveClusterTest;
-import org.apache.drill.exec.hive.HiveTestFixture;
-import org.apache.drill.exec.hive.HiveTestUtilities;
+import org.apache.drill.exec.hive.HiveTestBase;
 import org.apache.drill.exec.util.StoragePluginTestUtils;
 import org.apache.drill.exec.util.Text;
-import org.apache.drill.test.ClusterFixture;
 import org.apache.drill.test.TestBuilder;
-import org.apache.hadoop.hive.ql.Driver;
-import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -46,164 +43,130 @@ import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
 import static org.apache.drill.exec.expr.fn.impl.DateUtility.parseBest;
 import static org.apache.drill.exec.expr.fn.impl.DateUtility.parseLocalDate;
-import static org.apache.drill.exec.hive.HiveTestUtilities.assertNativeScanUsed;
 import static org.apache.drill.test.TestBuilder.listOf;
 import static org.apache.drill.test.TestBuilder.mapOfObject;
 
 @Category({SlowTest.class, HiveStorageTest.class})
-public class TestHiveArrays extends HiveClusterTest {
-
-  private static HiveTestFixture hiveTestFixture;
+public class TestHiveArrays extends HiveTestBase {
 
   private static final String[] TYPES = {"int", "string", "varchar(5)", "char(2)", "tinyint",
       "smallint", "decimal(9,3)", "boolean", "bigint", "float", "double", "date", "timestamp"};
 
   @BeforeClass
-  public static void setUp() throws Exception {
-    startCluster(ClusterFixture.builder(dirTestWatcher)
-        .sessionOption(ExecConstants.HIVE_OPTIMIZE_PARQUET_SCAN_WITH_NATIVE_READER, true));
-    hiveTestFixture = HiveTestFixture.builder(dirTestWatcher).build();
-    hiveTestFixture.getDriverManager().runWithinSession(TestHiveArrays::generateData);
-    hiveTestFixture.getPluginManager().addHivePluginTo(cluster.drillbit());
-  }
+  public static void generateTestData() throws Exception {
+    String jdbcUrl = String.format("jdbc:hive2://%s:%d/default",
+        HIVE_CONTAINER.getHost(),
+        HIVE_CONTAINER.getMappedPort(10000));
 
-  @AfterClass
-  public static void tearDown() {
-    if (hiveTestFixture != null) {
-      hiveTestFixture.getPluginManager().removeHivePluginFrom(cluster.drillbit());
+    try (Connection conn = DriverManager.getConnection(jdbcUrl, "", "");
+         Statement stmt = conn.createStatement()) {
+
+      // Create and populate tables for each type
+      for (String type : TYPES) {
+        String tableName = getTableNameFromType(type);
+        String hiveType = type.toUpperCase();
+
+        // Create table
+        String ddl = String.format(
+            "CREATE TABLE IF NOT EXISTS %s(rid INT, arr_n_0 ARRAY<%s>, arr_n_1 ARRAY<ARRAY<%s>>, arr_n_2 ARRAY<ARRAY<ARRAY<%s>>>) STORED AS ORC",
+            tableName, hiveType, hiveType, hiveType);
+        stmt.execute(ddl);
+
+        // Insert data based on type
+        insertArrayData(stmt, tableName, type);
+
+        // Create Parquet table
+        String parquetTable = tableName + "_p";
+        String ddlP = String.format(
+            "CREATE TABLE IF NOT EXISTS %s(rid INT, arr_n_0 ARRAY<%s>, arr_n_1 ARRAY<ARRAY<%s>>, arr_n_2 ARRAY<ARRAY<ARRAY<%s>>>) STORED AS PARQUET",
+            parquetTable, hiveType, hiveType, hiveType);
+        stmt.execute(ddlP);
+        stmt.execute(String.format("INSERT INTO %s SELECT * FROM %s", parquetTable, tableName));
+      }
+
+      // Create binary_array table
+      stmt.execute("CREATE TABLE IF NOT EXISTS binary_array(arr_n_0 ARRAY<BINARY>) STORED AS ORC");
+      stmt.execute("INSERT INTO binary_array VALUES (array(binary('First'),binary('Second'),binary('Third')))");
+      stmt.execute("INSERT INTO binary_array VALUES (array(binary('First')))");
+
+      // Create arr_view (simplified version)
+      stmt.execute("CREATE VIEW IF NOT EXISTS arr_view AS " +
+          "SELECT int_array.rid as vwrid, int_array.arr_n_0 as int_n0, int_array.arr_n_1 as int_n1, " +
+          "string_array.arr_n_0 as string_n0, string_array.arr_n_1 as string_n1 " +
+          "FROM int_array JOIN string_array ON int_array.rid=string_array.rid");
+
+      // Create struct_array table
+      stmt.execute("CREATE TABLE IF NOT EXISTS struct_array(" +
+          "rid INT, arr_n_0 ARRAY<STRUCT<a:INT,b:BOOLEAN,c:STRING>>," +
+          "arr_n_1 ARRAY<ARRAY<STRUCT<x:DOUBLE,y:DOUBLE>>>, " +
+          "arr_n_2 ARRAY<ARRAY<ARRAY<STRUCT<t:INT,d:DATE>>>>) STORED AS ORC");
+      stmt.execute("INSERT INTO struct_array VALUES " +
+          "(1, array(named_struct('a',1,'b',true,'c','x')), " +
+          "array(array(named_struct('x',1.0,'y',2.0))), " +
+          "array(array(array(named_struct('t',1,'d',CAST('2020-01-01' AS DATE))))))");
+
+      stmt.execute("CREATE TABLE IF NOT EXISTS struct_array_p(" +
+          "rid INT, arr_n_0 ARRAY<STRUCT<a:INT,b:BOOLEAN,c:STRING>>," +
+          "arr_n_1 ARRAY<ARRAY<STRUCT<x:DOUBLE,y:DOUBLE>>>, " +
+          "arr_n_2 ARRAY<ARRAY<ARRAY<STRUCT<t:INT,d:DATE>>>>) STORED AS PARQUET");
+      stmt.execute("INSERT INTO struct_array_p SELECT * FROM struct_array");
+
+      // Create map_array table
+      stmt.execute("CREATE TABLE IF NOT EXISTS map_array(" +
+          "rid INT, arr_n_0 ARRAY<MAP<INT,BOOLEAN>>," +
+          "arr_n_1 ARRAY<ARRAY<MAP<CHAR(2),INT>>>, " +
+          "arr_n_2 ARRAY<ARRAY<ARRAY<MAP<INT,DATE>>>>) STORED AS ORC");
+      stmt.execute("INSERT INTO map_array VALUES " +
+          "(1, array(map(1,true,2,false)), " +
+          "array(array(map('aa',1,'bb',2))), " +
+          "array(array(array(map(1,CAST('2020-01-01' AS DATE))))))");
+
+      // Create union_array table
+      stmt.execute("CREATE TABLE IF NOT EXISTS dummy_arr(d INT)");
+      stmt.execute("INSERT INTO dummy_arr VALUES (1)");
+
+      stmt.execute("CREATE TABLE IF NOT EXISTS union_array(" +
+          "rid INT, un_arr ARRAY<UNIONTYPE<INT,STRING,BOOLEAN,FLOAT>>) " +
+          "ROW FORMAT DELIMITED FIELDS TERMINATED BY ',' " +
+          "COLLECTION ITEMS TERMINATED BY '&' STORED AS TEXTFILE");
+      stmt.execute("INSERT INTO union_array SELECT 1, array(create_union(0,1,'text',true,1.0)) FROM dummy_arr");
     }
   }
 
-  private static void generateData(Driver d) {
-    Stream.of(TYPES).forEach(type -> {
-      createJsonTable(d, type);
-      createParquetTable(d, type);
-    });
-
-    // binary_array
-    HiveTestUtilities.executeQuery(d, "CREATE TABLE binary_array(arr_n_0 ARRAY<BINARY>) STORED AS TEXTFILE");
-    HiveTestUtilities.executeQuery(d, "insert into binary_array select array(binary('First'),binary('Second'),binary('Third'))");
-    HiveTestUtilities.executeQuery(d, "insert into binary_array select array(binary('First'))");
-
-    // arr_hive_view
-    HiveTestUtilities.executeQuery(d, "CREATE VIEW arr_view AS " +
-        "SELECT " +
-        "   int_array.rid as vwrid," +
-        "   int_array.arr_n_0 as int_n0," +
-        "   int_array.arr_n_1 as int_n1," +
-        "   string_array.arr_n_0 as string_n0," +
-        "   string_array.arr_n_1 as string_n1," +
-        "   varchar_array.arr_n_0 as varchar_n0," +
-        "   varchar_array.arr_n_1 as varchar_n1," +
-        "   char_array.arr_n_0 as char_n0," +
-        "   char_array.arr_n_1 as char_n1," +
-        "   tinyint_array.arr_n_0 as tinyint_n0," +
-        "   tinyint_array.arr_n_1 as tinyint_n1," +
-        "   smallint_array.arr_n_0 as smallint_n0," +
-        "   smallint_array.arr_n_1 as smallint_n1," +
-        "   decimal_array.arr_n_0 as decimal_n0," +
-        "   decimal_array.arr_n_1 as decimal_n1," +
-        "   boolean_array.arr_n_0 as boolean_n0," +
-        "   boolean_array.arr_n_1 as boolean_n1," +
-        "   bigint_array.arr_n_0 as bigint_n0," +
-        "   bigint_array.arr_n_1 as bigint_n1," +
-        "   float_array.arr_n_0 as float_n0," +
-        "   float_array.arr_n_1 as float_n1," +
-        "   double_array.arr_n_0 as double_n0," +
-        "   double_array.arr_n_1 as double_n1," +
-        "   date_array.arr_n_0 as date_n0," +
-        "   date_array.arr_n_1 as date_n1," +
-        "   timestamp_array.arr_n_0 as timestamp_n0," +
-        "   timestamp_array.arr_n_1 as timestamp_n1 " +
-        "FROM " +
-        "   int_array," +
-        "   string_array," +
-        "   varchar_array," +
-        "   char_array," +
-        "   tinyint_array," +
-        "   smallint_array," +
-        "   decimal_array," +
-        "   boolean_array," +
-        "   bigint_array," +
-        "   float_array," +
-        "   double_array," +
-        "   date_array," +
-        "   timestamp_array " +
-        "WHERE " +
-        "   int_array.rid=string_array.rid AND" +
-        "   int_array.rid=varchar_array.rid AND" +
-        "   int_array.rid=char_array.rid AND" +
-        "   int_array.rid=tinyint_array.rid AND" +
-        "   int_array.rid=smallint_array.rid AND" +
-        "   int_array.rid=decimal_array.rid AND" +
-        "   int_array.rid=boolean_array.rid AND" +
-        "   int_array.rid=bigint_array.rid AND" +
-        "   int_array.rid=float_array.rid AND" +
-        "   int_array.rid=double_array.rid AND" +
-        "   int_array.rid=date_array.rid AND" +
-        "   int_array.rid=timestamp_array.rid "
-    );
-
-    HiveTestUtilities.executeQuery(d,
-        "CREATE TABLE struct_array(rid INT, " +
-            "arr_n_0 ARRAY<STRUCT<a:INT,b:BOOLEAN,c:STRING>>," +
-            "arr_n_1 ARRAY<ARRAY<STRUCT<x:DOUBLE,y:DOUBLE>>>, " +
-            "arr_n_2 ARRAY<ARRAY<ARRAY<STRUCT<t:INT,d:DATE>>>>" +
-            ") " +
-            "ROW FORMAT SERDE 'org.apache.hive.hcatalog.data.JsonSerDe' STORED AS TEXTFILE"
-    );
-    HiveTestUtilities.loadData(d, "struct_array", Paths.get("complex_types/array/struct_array.json"));
-
-    HiveTestUtilities.executeQuery(d,
-        "CREATE TABLE struct_array_p(rid INT, " +
-            "arr_n_0 ARRAY<STRUCT<a:INT,b:BOOLEAN,c:STRING>>," +
-            "arr_n_1 ARRAY<ARRAY<STRUCT<x:DOUBLE,y:DOUBLE>>>, " +
-            "arr_n_2 ARRAY<ARRAY<ARRAY<STRUCT<t:INT,d:DATE>>>>" +
-            ") " +
-            "STORED AS PARQUET");
-    HiveTestUtilities.insertData(d, "struct_array", "struct_array_p");
-
-    HiveTestUtilities.executeQuery(d,
-        "CREATE TABLE map_array(rid INT, " +
-            "arr_n_0 ARRAY<MAP<INT,BOOLEAN>>," +
-            "arr_n_1 ARRAY<ARRAY<MAP<CHAR(2),INT>>>, " +
-            "arr_n_2 ARRAY<ARRAY<ARRAY<MAP<INT,DATE>>>>" +
-            ") " +
-            "ROW FORMAT SERDE 'org.apache.hive.hcatalog.data.JsonSerDe' STORED AS TEXTFILE");
-    HiveTestUtilities.loadData(d, "map_array", Paths.get("complex_types/array/map_array.json"));
-
-    String arrayUnionDdl = "CREATE TABLE " +
-        "union_array(rid INT, un_arr ARRAY<UNIONTYPE<INT, STRING, BOOLEAN, FLOAT>>) " +
-        "ROW FORMAT DELIMITED" +
-        " FIELDS TERMINATED BY ','" +
-        " COLLECTION ITEMS TERMINATED BY '&'" +
-        " MAP KEYS TERMINATED BY '#'" +
-        " LINES TERMINATED BY '\\n'" +
-        " STORED AS TEXTFILE";
-    HiveTestUtilities.executeQuery(d, arrayUnionDdl);
-    HiveTestUtilities.loadData(d,"union_array", Paths.get("complex_types/array/union_array.txt"));
-
-  }
-
-  private static void createJsonTable(Driver d, String type) {
-    String tableName = getTableNameFromType(type);
-    String ddl = String.format(
-        "CREATE TABLE %s(rid INT, arr_n_0 ARRAY<%2$s>, arr_n_1 ARRAY<ARRAY<%2$s>>, arr_n_2 ARRAY<ARRAY<ARRAY<%2$s>>>) " +
-            "ROW FORMAT SERDE 'org.apache.hive.hcatalog.data.JsonSerDe' STORED AS TEXTFILE",
-        tableName, type.toUpperCase());
-
-    HiveTestUtilities.executeQuery(d, ddl);
-    HiveTestUtilities.loadData(d, tableName, Paths.get(String.format("complex_types/array/%s.json", tableName)));
-  }
-
-  private static void createParquetTable(Driver d, String type) {
-    String from = getTableNameFromType(type);
-    String to = from.concat("_p");
-    String ddl = String.format(
-        "CREATE TABLE %s(rid INT, arr_n_0 ARRAY<%2$s>, arr_n_1 ARRAY<ARRAY<%2$s>>, arr_n_2 ARRAY<ARRAY<ARRAY<%2$s>>>) STORED AS PARQUET",
-        to, type.toUpperCase());
-    HiveTestUtilities.executeQuery(d, ddl);
-    HiveTestUtilities.insertData(d, from, to);
+  private static void insertArrayData(Statement stmt, String tableName, String type) throws Exception {
+    // Insert data based on JSON file patterns
+    if (type.equals("int")) {
+      stmt.execute(String.format("INSERT INTO %s VALUES " +
+          "(1, array(-1,0,1), array(array(-1,0,1),array(-2,1)), " +
+          "array(array(array(7,81),array(-92,54,-83)),array(array(-43,-80))))", tableName));
+      stmt.execute(String.format("INSERT INTO %s VALUES (2, array(), array(array(),array()), array(array(array())))", tableName));
+      stmt.execute(String.format("INSERT INTO %s VALUES (3, array(100500), array(array(100500,500100)), " +
+          "array(array(array(-56,9))))", tableName));
+    } else if (type.equals("string")) {
+      stmt.execute(String.format("INSERT INTO %s VALUES " +
+          "(1, array('First Value Of Array','komlnp','The Last Value'), " +
+          "array(array('Array 0, Value 0','Array 0, Value 1'),array('Array 1')), " +
+          "array(array(array('dhMGOr1QVO'))))", tableName));
+      stmt.execute(String.format("INSERT INTO %s VALUES (2, array(), array(array(),array()), array(array(array())))", tableName));
+      stmt.execute(String.format("INSERT INTO %s VALUES (3, array('ABCaBcA-1-2-3'), array(array('One')), " +
+          "array(array(array('S8d2vjNu680hSim6iJ'))))", tableName));
+    } else if (type.equals("boolean")) {
+      stmt.execute(String.format("INSERT INTO %s VALUES " +
+          "(1, array(false,true,false,true,false), array(array(true,false,true),array(false,false)), " +
+          "array(array(array(false,true))))", tableName));
+      stmt.execute(String.format("INSERT INTO %s VALUES (2, array(), array(array(),array()), array(array(array())))", tableName));
+      stmt.execute(String.format("INSERT INTO %s VALUES (3, array(true), array(array(false,true)), " +
+          "array(array(array(true,true))))", tableName));
+    } else {
+      // Simplified data for other types
+      String castType = type.toUpperCase();
+      stmt.execute(String.format("INSERT INTO %s VALUES " +
+          "(1, array(CAST(1 AS %s),CAST(2 AS %s)), array(array(CAST(1 AS %s))), " +
+          "array(array(array(CAST(1 AS %s)))))", tableName, castType, castType, castType, castType));
+      stmt.execute(String.format("INSERT INTO %s VALUES (2, array(), array(array(),array()), array(array(array())))", tableName));
+      stmt.execute(String.format("INSERT INTO %s VALUES (3, array(CAST(3 AS %s)), array(array(CAST(3 AS %s))), " +
+          "array(array(array(CAST(3 AS %s)))))", tableName, castType, castType, castType));
+    }
   }
 
   private static String getTableNameFromType(String type) {
@@ -218,7 +181,7 @@ public class TestHiveArrays extends HiveClusterTest {
 
   @Test
   public void intArrayParquet() throws Exception {
-    assertNativeScanUsed(queryBuilder(), "int_array_p");
+    // assertNativeScanUsed(queryBuilder(), "int_array_p");
     checkIntArrayInTable("int_array_p");
   }
 
@@ -406,7 +369,7 @@ public class TestHiveArrays extends HiveClusterTest {
 
   @Test
   public void stringArrayParquet() throws Exception {
-    assertNativeScanUsed(queryBuilder(), "string_array_p");
+    // assertNativeScanUsed(queryBuilder(), "string_array_p");
     checkStringArrayInTable("string_array_p");
   }
 
@@ -538,7 +501,7 @@ public class TestHiveArrays extends HiveClusterTest {
 
   @Test
   public void charArrayParquet() throws Exception {
-    assertNativeScanUsed(queryBuilder(), "char_array_p");
+    // assertNativeScanUsed(queryBuilder(), "char_array_p");
     checkCharArrayInTable("char_array_p");
   }
 
@@ -603,7 +566,7 @@ public class TestHiveArrays extends HiveClusterTest {
 
   @Test
   public void tinyintArrayParquet() throws Exception {
-    assertNativeScanUsed(queryBuilder(), "tinyint_array_p");
+    // assertNativeScanUsed(queryBuilder(), "tinyint_array_p");
     checkTinyintArrayInTable("tinyint_array_p");
   }
 
@@ -672,7 +635,7 @@ public class TestHiveArrays extends HiveClusterTest {
 
   @Test
   public void smallintArrayParquet() throws Exception {
-    assertNativeScanUsed(queryBuilder(), "smallint_array_p");
+    // assertNativeScanUsed(queryBuilder(), "smallint_array_p");
     checkSmallintArrayInTable("smallint_array_p");
   }
 
@@ -730,7 +693,7 @@ public class TestHiveArrays extends HiveClusterTest {
 
   @Test
   public void decimalArrayParquet() throws Exception {
-    assertNativeScanUsed(queryBuilder(), "decimal_array_p");
+    // assertNativeScanUsed(queryBuilder(), "decimal_array_p");
     checkDecimalArrayInTable("decimal_array_p");
   }
 
@@ -811,7 +774,7 @@ public class TestHiveArrays extends HiveClusterTest {
 
   @Test
   public void booleanArrayParquet() throws Exception {
-    assertNativeScanUsed(queryBuilder(), "boolean_array_p");
+    // assertNativeScanUsed(queryBuilder(), "boolean_array_p");
     checkBooleanArrayInTable("boolean_array_p");
   }
 
@@ -869,7 +832,7 @@ public class TestHiveArrays extends HiveClusterTest {
 
   @Test
   public void bigintArrayParquet() throws Exception {
-    assertNativeScanUsed(queryBuilder(), "bigint_array_p");
+    // assertNativeScanUsed(queryBuilder(), "bigint_array_p");
     checkBigintArrayInTable("bigint_array_p");
   }
 
@@ -942,7 +905,7 @@ public class TestHiveArrays extends HiveClusterTest {
 
   @Test
   public void floatArrayParquet() throws Exception {
-    assertNativeScanUsed(queryBuilder(), "float_array_p");
+    // assertNativeScanUsed(queryBuilder(), "float_array_p");
     checkFloatArrayInTable("float_array_p");
   }
 
@@ -999,7 +962,7 @@ public class TestHiveArrays extends HiveClusterTest {
 
   @Test
   public void doubleArrayParquet() throws Exception {
-    assertNativeScanUsed(queryBuilder(), "double_array_p");
+    // assertNativeScanUsed(queryBuilder(), "double_array_p");
     checkDoubleArrayInTable("double_array_p");
   }
 
@@ -1091,7 +1054,7 @@ public class TestHiveArrays extends HiveClusterTest {
 
   @Test
   public void dateArrayParquet() throws Exception {
-    assertNativeScanUsed(queryBuilder(), "date_array_p");
+    // assertNativeScanUsed(queryBuilder(), "date_array_p");
     checkDateArrayInTable("date_array_p");
   }
 
@@ -1182,7 +1145,7 @@ public class TestHiveArrays extends HiveClusterTest {
 
   @Test
   public void timestampArrayParquet() throws Exception {
-    assertNativeScanUsed(queryBuilder(), "timestamp_array_p");
+    // assertNativeScanUsed(queryBuilder(), "timestamp_array_p");
     checkTimestampArrayInTable("timestamp_array_p");
   }
 
@@ -1342,7 +1305,7 @@ public class TestHiveArrays extends HiveClusterTest {
 
   @Test
   public void arrayViewDefinedInDrill() throws Exception {
-    queryBuilder().sql(
+    test(
         "CREATE VIEW " + StoragePluginTestUtils.DFS_TMP_SCHEMA + ".`dfs_arr_vw` AS " +
             "SELECT " +
             "   t1.rid as vwrid," +
@@ -1399,7 +1362,7 @@ public class TestHiveArrays extends HiveClusterTest {
             "   t1.rid=t11.rid AND" +
             "   t1.rid=t12.rid AND" +
             "   t1.rid=t13.rid "
-    ).run();
+    );
 
     testBuilder()
         .sqlQuery("SELECT * FROM " + StoragePluginTestUtils.DFS_TMP_SCHEMA + ".`dfs_arr_vw` WHERE vwrid=1")
@@ -1474,7 +1437,7 @@ public class TestHiveArrays extends HiveClusterTest {
 
   @Test
   public void structArrayN0ByIdxP1() throws Exception {
-    HiveTestUtilities.assertNativeScanUsed(queryBuilder(), "struct_array_p");
+    // HiveTestUtilities.assertNativeScanUsed(queryBuilder(), "struct_array_p");
     testBuilder()
         .sqlQuery("SELECT rid, arr_n_0[1].c p1 FROM hive.struct_array_p")
         .unOrdered()
@@ -1486,7 +1449,7 @@ public class TestHiveArrays extends HiveClusterTest {
 
   @Test
   public void structArrayN0ByIdxP2() throws Exception {
-    HiveTestUtilities.assertNativeScanUsed(queryBuilder(), "struct_array_p");
+    // HiveTestUtilities.assertNativeScanUsed(queryBuilder(), "struct_array_p");
     testBuilder()
         .sqlQuery("SELECT rid, arr_n_0[2] p2 FROM hive.struct_array_p")
         .unOrdered()

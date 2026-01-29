@@ -18,18 +18,14 @@
 package org.apache.drill.exec.hive.complex_types;
 
 import java.math.BigDecimal;
-import java.util.stream.IntStream;
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.Statement;
 
 import org.apache.drill.categories.HiveStorageTest;
 import org.apache.drill.categories.SlowTest;
-import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.expr.fn.impl.DateUtility;
-import org.apache.drill.exec.hive.HiveClusterTest;
-import org.apache.drill.exec.hive.HiveTestFixture;
-import org.apache.drill.exec.hive.HiveTestUtilities;
-import org.apache.drill.test.ClusterFixture;
-import org.apache.hadoop.hive.ql.Driver;
-import org.junit.AfterClass;
+import org.apache.drill.exec.hive.HiveTestBase;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -39,59 +35,57 @@ import static org.apache.drill.test.TestBuilder.mapOf;
 import static org.apache.drill.test.TestBuilder.mapOfObject;
 
 @Category({SlowTest.class, HiveStorageTest.class})
-public class TestHiveUnions extends HiveClusterTest {
-
-  private static HiveTestFixture hiveTestFixture;
+public class TestHiveUnions extends HiveTestBase {
 
   @BeforeClass
-  public static void setUp() throws Exception {
-    startCluster(ClusterFixture.builder(dirTestWatcher)
-        .sessionOption(ExecConstants.HIVE_OPTIMIZE_PARQUET_SCAN_WITH_NATIVE_READER, true)
-    );
-    hiveTestFixture = HiveTestFixture.builder(dirTestWatcher).build();
-    hiveTestFixture.getDriverManager().runWithinSession(TestHiveUnions::generateData);
-    hiveTestFixture.getPluginManager().addHivePluginTo(cluster.drillbit());
-  }
+  public static void generateTestData() throws Exception {
+    String jdbcUrl = String.format("jdbc:hive2://%s:%d/default",
+        HIVE_CONTAINER.getHost(),
+        HIVE_CONTAINER.getMappedPort(10000));
 
-  @AfterClass
-  public static void tearDown() {
-    if (hiveTestFixture != null) {
-      hiveTestFixture.getPluginManager().removeHivePluginFrom(cluster.drillbit());
+    try (Connection conn = DriverManager.getConnection(jdbcUrl, "", "");
+         Statement stmt = conn.createStatement()) {
+
+      // Create dummy table for data generation
+      stmt.execute("CREATE TABLE IF NOT EXISTS dummy(d INT) STORED AS TEXTFILE");
+      stmt.execute("INSERT INTO TABLE dummy VALUES (1)");
+
+      // Create union table
+      String unionDdl = "CREATE TABLE IF NOT EXISTS union_tbl(" +
+          "tag INT, " +
+          "ut UNIONTYPE<INT, DOUBLE, ARRAY<STRING>, STRUCT<a:INT,b:STRING>, DATE, BOOLEAN," +
+          "DECIMAL(9,3), TIMESTAMP, BIGINT, FLOAT, MAP<INT, BOOLEAN>, ARRAY<INT>>) " +
+          "ROW FORMAT DELIMITED FIELDS TERMINATED BY ',' COLLECTION ITEMS TERMINATED BY '&' " +
+          "MAP KEYS TERMINATED BY '#' LINES TERMINATED BY '\\n' STORED AS TEXTFILE";
+      stmt.execute(unionDdl);
+
+      // Insert test data for each union variant
+      // The create_union function takes: (tag, v0, v1, v2, v3, ...)
+      // and returns the variant at position 'tag'
+
+      String insertTemplate = "INSERT INTO TABLE union_tbl " +
+          "SELECT %1$d, " +
+          "create_union(%1$d, " +
+          "1, " +  // tag 0: INT
+          "CAST(17.55 AS DOUBLE), " +  // tag 1: DOUBLE
+          "array('x','yy','zzz'), " +  // tag 2: ARRAY<STRING>
+          "named_struct('a',1,'b','x'), " +  // tag 3: STRUCT
+          "CAST('2019-09-09' AS DATE), " +  // tag 4: DATE
+          "true, " +  // tag 5: BOOLEAN
+          "CAST(12356.123 AS DECIMAL(9,3)), " +  // tag 6: DECIMAL
+          "CAST('2018-10-21 04:51:36' AS TIMESTAMP), " +  // tag 7: TIMESTAMP
+          "CAST(9223372036854775807 AS BIGINT), " +  // tag 8: BIGINT
+          "CAST(-32.058 AS FLOAT), " +  // tag 9: FLOAT
+          "map(1,true,2,false,3,false,4,true), " +  // tag 10: MAP
+          "array(7,-9,2,-5,22)" +  // tag 11: ARRAY<INT>
+          ") FROM dummy";
+
+      // Insert each union variant
+      int[] tags = {1, 5, 0, 2, 4, 3, 11, 8, 7, 9, 10, 6};
+      for (int tag : tags) {
+        stmt.execute(String.format(insertTemplate, tag));
+      }
     }
-  }
-
-  private static void generateData(Driver d) {
-    HiveTestUtilities.executeQuery(d, "CREATE TABLE dummy(d INT) STORED AS TEXTFILE");
-    HiveTestUtilities.executeQuery(d, "INSERT INTO TABLE dummy VALUES (1)");
-
-    String unionDdl = "CREATE TABLE union_tbl(" +
-        "tag INT, " +
-        "ut UNIONTYPE<INT, DOUBLE, ARRAY<STRING>, STRUCT<a:INT,b:STRING>, DATE, BOOLEAN," +
-        "DECIMAL(9,3), TIMESTAMP, BIGINT, FLOAT, MAP<INT, BOOLEAN>, ARRAY<INT>>) " +
-        "ROW FORMAT DELIMITED FIELDS TERMINATED BY ',' COLLECTION ITEMS TERMINATED BY '&' " +
-        "MAP KEYS TERMINATED BY '#' LINES TERMINATED BY '\\n' STORED AS TEXTFILE";
-    HiveTestUtilities.executeQuery(d, unionDdl);
-
-    String insert = "INSERT INTO TABLE union_tbl " +
-        "SELECT %1$d, " +
-        "create_union(%1$d, " +
-        "1, " +
-        "CAST(17.55 AS DOUBLE), " +
-        "array('x','yy','zzz'), " +
-        "named_struct('a',1,'b','x'), " +
-        "CAST('2019-09-09' AS DATE), " +
-        "true, " +
-        "CAST(12356.123 AS DECIMAL(9,3)), " +
-        "CAST('2018-10-21 04:51:36' AS TIMESTAMP), " +
-        "CAST(9223372036854775807 AS BIGINT), " +
-        "CAST(-32.058 AS FLOAT), " +
-        "map(1,true,2,false,3,false,4,true), " +
-        "array(7,-9,2,-5,22)" +
-        ")" +
-        " FROM dummy";
-
-    IntStream.of(1, 5, 0, 2, 4, 3, 11, 8, 7, 9, 10, 6)
-        .forEach(v -> HiveTestUtilities.executeQuery(d, String.format(insert, v)));
   }
 
   @Test
