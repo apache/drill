@@ -51,6 +51,7 @@
     <!-- Please keep this list sorted. -->
     <aircompressor.version>0.25</aircompressor.version>
     <antlr.version>4.9.3</antlr.version>
+    <apiguardian.version>1.1.2</apiguardian.version>
     <asm.version>9.5</asm.version>
     <avatica.version>1.23.0</avatica.version>
     <avro.version>1.12.0</avro.version>
@@ -93,6 +94,7 @@
     <httpclient.version>4.5.14</httpclient.version>
     <httpdlog-parser.version>5.11.0</httpdlog-parser.version>
     <iceberg.version>0.12.1</iceberg.version>
+    <paimon.version>1.3.1</paimon.version>
     <jackson.version>2.18.3</jackson.version>
     <janino.version>3.1.12</janino.version>
     <javassist.version>3.29.2-GA</javassist.version>
@@ -1012,6 +1014,11 @@
             <artifactId>apiguardian-api</artifactId>
           </exclusion>
         </exclusions>
+      </dependency>
+      <dependency>
+        <groupId>org.apiguardian</groupId>
+        <artifactId>apiguardian-api</artifactId>
+        <version>${apiguardian.version}</version>
       </dependency>
       <dependency>
         <groupId>org.apache.calcite.avatica</groupId>

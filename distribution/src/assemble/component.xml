@@ -48,6 +48,7 @@
         <include>org.apache.drill.contrib:drill-kudu-storage:jar</include>
         <include>org.apache.drill.contrib:drill-mongo-storage:jar</include>
         <include>org.apache.drill.contrib:drill-opentsdb-storage:jar</include>
+        <include>org.apache.drill.contrib:drill-paimon-format:jar</include>
         <include>org.apache.drill.contrib:drill-storage-cassandra:jar</include>
         <include>org.apache.drill.contrib:drill-storage-elasticsearch:jar</include>
         <include>org.apache.drill.contrib:drill-storage-googlesheets:jar</include>

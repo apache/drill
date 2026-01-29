@@ -1,0 +1,20 @@
+{
+  "storage":{
+    "dfs": {
+      "type": "file",
+      "formats": {
+        "paimon": {
+          "type": "paimon"
+        }
+      }
+    },
+    "s3": {
+      "type": "file",
+      "formats": {
+        "paimon": {
+          "type": "paimon"
+        }
+      }
+    }
+  }
+}

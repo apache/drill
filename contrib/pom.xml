@@ -51,6 +51,7 @@
     <module>format-image</module>
     <module>format-log</module>
     <module>format-ltsv</module>
+    <module>format-paimon</module>
     <module>format-pcapng</module>
     <module>format-pdf</module>
     <module>format-sas</module>
