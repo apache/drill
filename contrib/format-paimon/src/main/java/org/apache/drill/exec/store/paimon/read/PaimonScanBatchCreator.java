@@ -23,16 +23,17 @@ import org.apache.drill.common.types.TypeProtos;
 import org.apache.drill.common.types.Types;
 import org.apache.drill.exec.ops.ExecutorFragmentContext;
 import org.apache.drill.exec.physical.impl.BatchCreator;
-import org.apache.drill.exec.physical.impl.scan.framework.BasicScanFactory;
-import org.apache.drill.exec.physical.impl.scan.framework.ManagedReader;
-import org.apache.drill.exec.physical.impl.scan.framework.ManagedScanFramework;
-import org.apache.drill.exec.physical.impl.scan.framework.SchemaNegotiator;
+import org.apache.drill.exec.physical.impl.scan.v3.ManagedReader;
+import org.apache.drill.exec.physical.impl.scan.v3.ReaderFactory;
+import org.apache.drill.exec.physical.impl.scan.v3.ScanLifecycleBuilder;
+import org.apache.drill.exec.physical.impl.scan.v3.SchemaNegotiator;
 import org.apache.drill.exec.record.CloseableRecordBatch;
 import org.apache.drill.exec.record.RecordBatch;
 import org.apache.drill.exec.store.paimon.PaimonSubScan;
 import org.apache.drill.exec.store.paimon.PaimonWork;
 import com.google.common.base.Preconditions;
 
+import java.util.Iterator;
 import java.util.List;
 
 @SuppressWarnings("unused")
@@ -44,7 +45,7 @@ public class PaimonScanBatchCreator implements BatchCreator<PaimonSubScan> {
     Preconditions.checkArgument(children.isEmpty());
 
     try {
-      ManagedScanFramework.ScanFrameworkBuilder builder = createBuilder(subScan);
+      ScanLifecycleBuilder builder = createBuilder(subScan);
       return builder.buildScanOperator(context, subScan);
     } catch (UserException e) {
       throw e;
@@ -53,23 +54,35 @@ public class PaimonScanBatchCreator implements BatchCreator<PaimonSubScan> {
     }
   }
 
-  private ManagedScanFramework.ScanFrameworkBuilder createBuilder(PaimonSubScan subScan) {
-    ManagedScanFramework.ScanFrameworkBuilder builder = new ManagedScanFramework.ScanFrameworkBuilder();
+  private ScanLifecycleBuilder createBuilder(PaimonSubScan subScan) {
+    ScanLifecycleBuilder builder = new ScanLifecycleBuilder();
     builder.projection(subScan.getColumns());
-    builder.setUserName(subScan.getUserName());
+    builder.userName(subScan.getUserName());
     builder.providedSchema(subScan.getSchema());
-
-    ManagedScanFramework.ReaderFactory readerFactory = new BasicScanFactory(
-      subScan.getWorkList().stream()
-        .map(work -> getRecordReader(subScan, work))
-        .iterator());
-    builder.setReaderFactory(readerFactory);
+    builder.readerFactory(new PaimonReaderFactory(subScan));
     builder.nullType(Types.optional(TypeProtos.MinorType.VARCHAR));
     return builder;
   }
 
-  private static ManagedReader<SchemaNegotiator> getRecordReader(PaimonSubScan subScan, PaimonWork work) {
-    return new PaimonRecordReader(subScan.getFormatPlugin(), subScan.getPath(),
-      subScan.getColumns(), subScan.getCondition(), work, subScan.getMaxRecords());
+  private static class PaimonReaderFactory implements ReaderFactory<SchemaNegotiator> {
+    private final PaimonSubScan subScan;
+    private final Iterator<PaimonWork> workIterator;
+
+    private PaimonReaderFactory(PaimonSubScan subScan) {
+      this.subScan = subScan;
+      this.workIterator = subScan.getWorkList().iterator();
+    }
+
+    @Override
+    public boolean hasNext() {
+      return workIterator.hasNext();
+    }
+
+    @Override
+    public ManagedReader next(SchemaNegotiator negotiator) {
+      return new PaimonRecordReader(subScan.getFormatPlugin(), subScan.getPath(),
+        subScan.getColumns(), subScan.getCondition(), workIterator.next(), subScan.getMaxRecords(),
+        negotiator);
+    }
   }
 }

@@ -21,9 +21,9 @@ import org.apache.drill.common.AutoCloseables;
 import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.common.expression.LogicalExpression;
 import org.apache.drill.common.expression.SchemaPath;
-import org.apache.drill.exec.physical.impl.scan.framework.ManagedReader;
-import org.apache.drill.exec.physical.impl.scan.framework.SchemaNegotiator;
 import org.apache.drill.exec.physical.impl.scan.v3.FixedReceiver;
+import org.apache.drill.exec.physical.impl.scan.v3.ManagedReader;
+import org.apache.drill.exec.physical.impl.scan.v3.SchemaNegotiator;
 import org.apache.drill.exec.physical.resultSet.ResultSetLoader;
 import org.apache.drill.exec.physical.resultSet.RowSetLoader;
 import org.apache.drill.exec.ops.OperatorStats;
@@ -48,7 +48,7 @@ import org.slf4j.LoggerFactory;
 import java.io.IOException;
 import java.util.List;
 
-public class PaimonRecordReader implements ManagedReader<SchemaNegotiator> {
+public class PaimonRecordReader implements ManagedReader {
   private static final Logger logger = LoggerFactory.getLogger(PaimonRecordReader.class);
 
   private final PaimonFormatPlugin formatPlugin;
@@ -78,17 +78,14 @@ public class PaimonRecordReader implements ManagedReader<SchemaNegotiator> {
   private int lastSchemaVersion = -1;
 
   public PaimonRecordReader(PaimonFormatPlugin formatPlugin, String path,
-    List<SchemaPath> columns, LogicalExpression condition, PaimonWork work, int maxRecords) {
+    List<SchemaPath> columns, LogicalExpression condition, PaimonWork work, int maxRecords,
+    SchemaNegotiator negotiator) {
     this.formatPlugin = formatPlugin;
     this.path = path;
     this.columns = columns;
     this.condition = condition;
     this.work = work;
     this.maxRecords = maxRecords;
-  }
-
-  @Override
-  public boolean open(SchemaNegotiator negotiator) {
     try {
       Table table = PaimonTableUtils.loadTable(formatPlugin, path);
       RowType rowType = table.rowType();
@@ -109,7 +106,6 @@ public class PaimonRecordReader implements ManagedReader<SchemaNegotiator> {
       recordReader = readBuilder.newRead().executeFilter().createReader(work.getSplit());
       currentBatch = null;
       stats = negotiator.context().getStats();
-      return true;
     } catch (IOException e) {
       throw UserException.dataReadError(e)
         .message("Failed to open Paimon reader for %s", path)

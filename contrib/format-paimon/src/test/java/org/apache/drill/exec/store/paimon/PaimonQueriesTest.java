@@ -499,6 +499,20 @@ public class PaimonQueriesTest extends ClusterTest {
   }
 
   @Test
+  public void testSerDe() throws Exception {
+    String snapshotQuery = String.format(
+      "select snapshot_id from dfs.tmp.`%s#snapshots` order by commit_time limit 1", tableRelativePath);
+
+    long snapshotId = queryBuilder().sql(snapshotQuery).singletonLong();
+    String sql = String.format(
+      "select count(*) as cnt from table(dfs.tmp.`%s`(type => 'paimon', snapshotId => %d))",
+      tableRelativePath, snapshotId);
+    String plan = queryBuilder().sql(sql).explainJson();
+    long count = queryBuilder().physical(plan).singletonLong();
+    assertEquals(2, count);
+  }
+
+  @Test
   public void testInvalidColumnName() throws Exception {
     String query = String.format("select id, invalid_column from dfs.tmp.`%s`", tableRelativePath);
     try {
