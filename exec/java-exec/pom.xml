@@ -697,6 +697,12 @@
       <artifactId>swagger-jaxrs2-servlet-initializer-v2-jakarta</artifactId>
       <version>${swagger.version}</version>
     </dependency>
+    
+    <dependency>
+	    <groupId>com.github.ben-manes.caffeine</groupId>
+	    <artifactId>caffeine</artifactId>
+	    <version>2.9.3</version>
+	</dependency>
   </dependencies>
 
   <profiles>
