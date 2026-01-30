@@ -17,21 +17,10 @@
  */
 package org.apache.drill.test;
 
-import org.apache.drill.exec.alias.AliasRegistryProvider;
-import org.apache.drill.exec.physical.resultSet.ResultSetLoader;
-import org.apache.drill.exec.physical.resultSet.impl.ResultSetLoaderImpl;
-import org.apache.drill.exec.physical.resultSet.impl.ResultSetLoaderImpl.ResultSetOptions;
-import org.apache.drill.exec.server.DrillbitContext;
-import org.apache.drill.metastore.MetastoreRegistry;
 import com.google.common.base.Function;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
 import com.google.common.util.concurrent.ListenableFuture;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.concurrent.Callable;
-import java.util.concurrent.ExecutorService;
 import io.netty.buffer.DrillBuf;
 import org.apache.calcite.schema.SchemaPlus;
 import org.apache.drill.common.config.DrillConfig;
@@ -39,6 +28,7 @@ import org.apache.drill.common.scanner.ClassPathScanner;
 import org.apache.drill.common.scanner.persistence.ScanResult;
 import org.apache.drill.common.types.TypeProtos;
 import org.apache.drill.exec.ExecConstants;
+import org.apache.drill.exec.alias.AliasRegistryProvider;
 import org.apache.drill.exec.compile.ClassBuilder;
 import org.apache.drill.exec.compile.CodeCompiler;
 import org.apache.drill.exec.exception.OutOfMemoryException;
@@ -56,6 +46,15 @@ import org.apache.drill.exec.ops.OpProfileDef;
 import org.apache.drill.exec.ops.OperatorContext;
 import org.apache.drill.exec.ops.OperatorStats;
 import org.apache.drill.exec.physical.base.PhysicalOperator;
+import org.apache.drill.exec.physical.resultSet.ResultSetLoader;
+import org.apache.drill.exec.physical.resultSet.impl.ResultSetLoaderImpl;
+import org.apache.drill.exec.physical.resultSet.impl.ResultSetLoaderImpl.ResultSetOptions;
+import org.apache.drill.exec.physical.rowSet.DirectRowSet;
+import org.apache.drill.exec.physical.rowSet.HyperRowSetImpl;
+import org.apache.drill.exec.physical.rowSet.IndirectRowSet;
+import org.apache.drill.exec.physical.rowSet.RowSet;
+import org.apache.drill.exec.physical.rowSet.RowSet.ExtendableRowSet;
+import org.apache.drill.exec.physical.rowSet.RowSetBuilder;
 import org.apache.drill.exec.planner.PhysicalPlanReaderTestFactory;
 import org.apache.drill.exec.proto.ExecProtos;
 import org.apache.drill.exec.record.BatchSchema;
@@ -65,6 +64,7 @@ import org.apache.drill.exec.record.VectorContainer;
 import org.apache.drill.exec.record.metadata.MetadataUtils;
 import org.apache.drill.exec.record.metadata.TupleMetadata;
 import org.apache.drill.exec.record.selection.SelectionVector2;
+import org.apache.drill.exec.server.DrillbitContext;
 import org.apache.drill.exec.server.options.OptionManager;
 import org.apache.drill.exec.server.options.SystemOptionManager;
 import org.apache.drill.exec.store.PartitionExplorer;
@@ -72,15 +72,16 @@ import org.apache.drill.exec.store.sys.PersistentStoreProvider;
 import org.apache.drill.exec.store.sys.store.provider.LocalPersistentStoreProvider;
 import org.apache.drill.exec.testing.ExecutionControls;
 import org.apache.drill.exec.work.filter.RuntimeFilterWritable;
+import org.apache.drill.metastore.MetastoreRegistry;
 import org.apache.drill.test.ClusterFixtureBuilder.RuntimeOption;
-import org.apache.drill.exec.physical.rowSet.DirectRowSet;
-import org.apache.drill.exec.physical.rowSet.HyperRowSetImpl;
-import org.apache.drill.exec.physical.rowSet.IndirectRowSet;
-import org.apache.drill.exec.physical.rowSet.RowSet;
-import org.apache.drill.exec.physical.rowSet.RowSet.ExtendableRowSet;
-import org.apache.drill.exec.physical.rowSet.RowSetBuilder;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.security.UserGroupInformation;
+
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+import java.util.concurrent.Callable;
+import java.util.concurrent.ExecutorService;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -137,6 +138,8 @@ public class OperatorFixture extends BaseFixture implements AutoCloseable {
         configBuilder.put(ExecConstants.HASHJOIN_SPILL_DIRS, Arrays.asList(dirTestWatcher.getSpillDir().getAbsolutePath()));
         configBuilder.put(ExecConstants.UDF_DIRECTORY_ROOT, dirTestWatcher.getHomeDir().getAbsolutePath());
         configBuilder.put(ExecConstants.UDF_DIRECTORY_FS, FileSystem.DEFAULT_FS);
+        configBuilder.put(ExecConstants.DFDL_DIRECTORY_ROOT, dirTestWatcher.getHomeDir().getAbsolutePath());
+        configBuilder.put(ExecConstants.DFDL_DIRECTORY_FS, FileSystem.DEFAULT_FS);
       }
     }
 

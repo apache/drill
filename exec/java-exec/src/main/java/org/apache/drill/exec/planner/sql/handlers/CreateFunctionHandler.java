@@ -314,7 +314,6 @@ public class CreateFunctionHandler extends DefaultSqlHandler {
       FileUtils.deleteQuietly(new File(localTmpDir.toUri()));
       deleteQuietly(remoteTmpDir, true);
     }
-
     /**
      * Checks if passed path exists on predefined file system.
      *

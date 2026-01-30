@@ -17,10 +17,10 @@
  */
 package org.apache.drill.exec.ops;
 
-import java.util.Collection;
-import java.util.List;
-import java.util.Map;
-
+import com.google.common.base.Function;
+import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
+import io.netty.buffer.DrillBuf;
 import org.apache.calcite.schema.SchemaPlus;
 import org.apache.drill.common.AutoCloseables;
 import org.apache.drill.common.config.DrillConfig;
@@ -35,6 +35,7 @@ import org.apache.drill.exec.memory.BufferAllocator;
 import org.apache.drill.exec.physical.resultSet.ResultSetLoader;
 import org.apache.drill.exec.physical.resultSet.impl.ResultSetLoaderImpl;
 import org.apache.drill.exec.physical.resultSet.impl.ResultSetLoaderImpl.ResultSetOptions;
+import org.apache.drill.exec.schema.daffodil.RemoteDaffodilSchemaRegistry;
 import org.apache.drill.exec.planner.physical.PlannerSettings;
 import org.apache.drill.exec.planner.sql.DrillOperatorTable;
 import org.apache.drill.exec.proto.BitControl.QueryContextInformation;
@@ -56,13 +57,11 @@ import org.apache.drill.exec.store.SchemaTreeProvider;
 import org.apache.drill.exec.store.StoragePluginRegistry;
 import org.apache.drill.exec.testing.ExecutionControls;
 import org.apache.drill.exec.util.Utilities;
-
 import org.apache.drill.metastore.MetastoreRegistry;
-import com.google.common.base.Function;
-import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
 
-import io.netty.buffer.DrillBuf;
+import java.util.Collection;
+import java.util.List;
+import java.util.Map;
 
 // TODO - consider re-name to PlanningContext, as the query execution context actually appears
 // in fragment contexts
@@ -215,8 +214,8 @@ public class QueryContext implements AutoCloseable, OptimizerRulesContext, Schem
   }
 
   /**
-   * Get the user name of the user who issued the query that is managed by this QueryContext.
-   * @return The user name of the user who issued the query that is managed by this QueryContext.
+   * Get the username of the user who issued the query that is managed by this QueryContext.
+   * @return The username of the user who issued the query that is managed by this QueryContext.
    */
   @Override
   public String getQueryUserName() {
@@ -317,6 +316,10 @@ public class QueryContext implements AutoCloseable, OptimizerRulesContext, Schem
 
   public RemoteFunctionRegistry getRemoteFunctionRegistry() {
     return drillbitContext.getRemoteFunctionRegistry();
+  }
+
+  public RemoteDaffodilSchemaRegistry getDaffodilSchemaRegistry() {
+    return drillbitContext.getRemoteDaffodilSchemaRegistry();
   }
 
   @Override
