@@ -28,7 +28,9 @@ import java.io.File;
 import java.io.IOException;
 import java.net.URISyntaxException;
 
-import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 public class DruidStoragePluginConfigTest {
 
@@ -40,11 +42,11 @@ public class DruidStoragePluginConfigTest {
         Resources.getResource("bootstrap-storage-plugins.json").toURI()));
     DruidStoragePluginConfig druidStoragePluginConfig =
         mapper.treeToValue(storagePluginJson.get("storage").get("druid"), DruidStoragePluginConfig.class);
-    assertThat(druidStoragePluginConfig).isNotNull();
-    assertThat(druidStoragePluginConfig.getBrokerAddress()).isEqualTo("http://localhost:8082");
-    assertThat(druidStoragePluginConfig.getCoordinatorAddress()).isEqualTo("http://localhost:8081");
-    assertThat(druidStoragePluginConfig.getAverageRowSizeBytes()).isEqualTo(200);
-    assertThat(druidStoragePluginConfig.isEnabled()).isFalse();
+    assertNotNull(druidStoragePluginConfig);
+    assertEquals("http://localhost:8082", druidStoragePluginConfig.getBrokerAddress());
+    assertEquals("http://localhost:8081", druidStoragePluginConfig.getCoordinatorAddress());
+    assertEquals(200, druidStoragePluginConfig.getAverageRowSizeBytes());
+    assertFalse(druidStoragePluginConfig.isEnabled());
   }
 
   @Test
@@ -59,6 +61,6 @@ public class DruidStoragePluginConfigTest {
     JsonNode storagePluginJson = mapper.readTree(druidConfigStr);
     DruidStoragePluginConfig druidStoragePluginConfig =
         mapper.treeToValue(storagePluginJson.get("storage").get("druid"), DruidStoragePluginConfig.class);
-    assertThat(druidStoragePluginConfig.getAverageRowSizeBytes()).isEqualTo(100);
+    assertEquals(100, druidStoragePluginConfig.getAverageRowSizeBytes());
   }
 }

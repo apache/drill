@@ -15,15 +15,27 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package org.apache.drill.exec.store.druid;
 
-public interface DruidTestConstants {
-  String TEST_DATASOURCE_WIKIPEDIA = "wikipedia";
-  String TEST_STRING_EQUALS_FILTER_QUERY_TEMPLATE1 = "select * from druid.`%s` as ds where ds.user = 'Dansker'";
-  String TEST_STRING_TWO_AND_EQUALS_FILTER_QUERY_TEMPLATE1 = "select * from druid.`%s` as ds where ds.user = 'Dansker' AND ds.comment like 'Bitte'";
-  String TEST_STRING_TWO_OR_EQUALS_FILTER_QUERY_TEMPLATE1 = "select * from druid.`%s` as ds where ds.user = 'Dansker' OR ds.page = '1904'";
-  String TEST_QUERY_PROJECT_PUSH_DOWN_TEMPLATE_1 = "SELECT ds.`comment` FROM druid.`%s` as ds";
-  String TEST_QUERY_COUNT_QUERY_TEMPLATE = "SELECT count(*) as mycount FROM druid.`%s` as ds";
-  String TEST_STAR_QUERY = "SELECT * FROM druid.`%s`";
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import java.math.BigInteger;
+
+public class DruidOffsetTracker {
+  private static final Logger logger = LoggerFactory.getLogger(DruidOffsetTracker.class);
+  private BigInteger nextOffset;
+
+  public DruidOffsetTracker() {
+    this.nextOffset = BigInteger.ZERO;
+  }
+
+  public BigInteger getOffset() {
+    return nextOffset;
+  }
+
+  public void setNextOffset(BigInteger offset) {
+    nextOffset = nextOffset.add(offset);
+    logger.debug("Incrementing offset by {}", offset);
+  }
 }

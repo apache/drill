@@ -29,7 +29,7 @@ volumes:
 services:
   postgres:
     container_name: postgres
-    image: postgres:latest
+    image: postgres:12
     volumes:
       - metadata_data:/var/lib/postgresql/data
     environment:
@@ -63,7 +63,7 @@ services:
       - environment.env
 
   broker:
-    image: apache/druid:0.22.0
+    image: apache/druid:30.0.0
     container_name: broker
     volumes:
       - broker_var:/opt/druid/var
@@ -79,7 +79,7 @@ services:
       - environment.env
 
   historical:
-    image: apache/druid:0.22.0
+    image: apache/druid:30.0.0
     container_name: historical
     volumes:
       - druid_shared:/opt/shared
@@ -96,7 +96,7 @@ services:
       - environment.env
 
   middlemanager:
-    image: apache/druid:0.22.0
+    image: apache/druid:30.0.0
     container_name: middlemanager
     volumes:
       - druid_shared:/opt/shared
@@ -114,7 +114,7 @@ services:
       - environment.env
 
   router:
-    image: apache/druid:0.22.0
+    image: apache/druid:30.0.0
     container_name: router
     volumes:
       - router_var:/opt/druid/var
