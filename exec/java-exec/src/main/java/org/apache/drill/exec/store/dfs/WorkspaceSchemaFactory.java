@@ -51,6 +51,7 @@ import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.dotdrill.DotDrillFile;
 import org.apache.drill.exec.dotdrill.DotDrillType;
 import org.apache.drill.exec.dotdrill.DotDrillUtil;
+import org.apache.drill.exec.dotdrill.MaterializedView;
 import org.apache.drill.exec.dotdrill.View;
 import org.apache.drill.exec.metastore.store.FileSystemMetadataProviderManager;
 import org.apache.drill.exec.metastore.MetadataProviderManager;
@@ -58,6 +59,7 @@ import org.apache.drill.exec.metastore.MetastoreMetadataProviderManager;
 import org.apache.drill.exec.metastore.MetastoreMetadataProviderManager.MetastoreMetadataProviderConfig;
 import org.apache.drill.exec.planner.common.DrillStatsTable;
 import org.apache.drill.exec.planner.logical.CreateTableEntry;
+import org.apache.drill.exec.planner.logical.DrillMaterializedViewTable;
 import org.apache.drill.exec.planner.logical.DrillTable;
 import org.apache.drill.exec.planner.logical.DrillViewTable;
 import org.apache.drill.exec.planner.logical.DynamicDrillTable;
@@ -351,6 +353,148 @@ public class WorkspaceSchemaFactory {
       getFS().delete(getViewPath(viewName), false);
     }
 
+    private Path getMaterializedViewPath(String name) {
+      return DotDrillType.MATERIALIZED_VIEW.getPath(config.getLocation(), name);
+    }
+
+    private Path getMaterializedViewDataPath(String name) {
+      return new Path(config.getLocation(), name);
+    }
+
+    @Override
+    public boolean createMaterializedView(MaterializedView materializedView) throws IOException {
+      String viewName = materializedView.getName();
+      Path viewPath = getMaterializedViewPath(viewName);
+      Path dataPath = getMaterializedViewDataPath(viewName);
+
+      boolean replaced = getFS().exists(viewPath);
+
+      // If replacing, first drop the old data
+      if (replaced) {
+        if (getFS().exists(dataPath)) {
+          getFS().delete(dataPath, true);
+        }
+      }
+
+      // Create the data directory for the materialized view
+      final FsPermission dirPerms = new FsPermission(
+          schemaConfig.getOption(ExecConstants.NEW_VIEW_DEFAULT_PERMS_KEY).string_val);
+      getFS().mkdirs(dataPath, dirPerms);
+
+      // Set the data storage path in the materialized view
+      materializedView.setDataStoragePath(viewName);
+
+      // Write the materialized view definition file
+      final FsPermission viewPerms = new FsPermission(
+          schemaConfig.getOption(ExecConstants.NEW_VIEW_DEFAULT_PERMS_KEY).string_val);
+      try (OutputStream stream = DrillFileSystem.create(getFS(), viewPath, viewPerms)) {
+        mapper.writeValue(stream, materializedView);
+      }
+
+      // Mark as complete (data will be populated by the handler via CTAS-like operation)
+      return replaced;
+    }
+
+    @Override
+    public void dropMaterializedView(String viewName) throws IOException {
+      Path viewPath = getMaterializedViewPath(viewName);
+      Path dataPath = getMaterializedViewDataPath(viewName);
+
+      // Delete the definition file
+      if (getFS().exists(viewPath)) {
+        getFS().delete(viewPath, false);
+      }
+
+      // Delete the data directory
+      if (getFS().exists(dataPath)) {
+        getFS().delete(dataPath, true);
+      }
+    }
+
+    @Override
+    public void refreshMaterializedView(String viewName) throws IOException {
+      // Read the existing materialized view definition
+      MaterializedView mv = getMaterializedView(viewName);
+      if (mv == null) {
+        throw UserException.validationError()
+            .message("Materialized view [%s] not found in schema [%s]", viewName, getFullSchemaName())
+            .build(logger);
+      }
+
+      Path dataPath = getMaterializedViewDataPath(viewName);
+
+      // Delete existing data
+      if (getFS().exists(dataPath)) {
+        getFS().delete(dataPath, true);
+      }
+
+      // Recreate the data directory
+      final FsPermission dirPerms = new FsPermission(
+          schemaConfig.getOption(ExecConstants.NEW_VIEW_DEFAULT_PERMS_KEY).string_val);
+      getFS().mkdirs(dataPath, dirPerms);
+
+      // Update the materialized view with new refresh time
+      MaterializedView updatedMV = mv.withRefreshInfo(
+          System.currentTimeMillis(),
+          MaterializedView.RefreshStatus.COMPLETE);
+
+      // Write the updated definition file
+      Path viewPath = getMaterializedViewPath(viewName);
+      final FsPermission viewPerms = new FsPermission(
+          schemaConfig.getOption(ExecConstants.NEW_VIEW_DEFAULT_PERMS_KEY).string_val);
+      try (OutputStream stream = DrillFileSystem.create(getFS(), viewPath, viewPerms)) {
+        mapper.writeValue(stream, updatedMV);
+      }
+    }
+
+    @Override
+    public MaterializedView getMaterializedView(String viewName) throws IOException {
+      List<DotDrillFile> files = Collections.emptyList();
+      try {
+        files = DotDrillUtil.getDotDrills(getFS(), new Path(config.getLocation()),
+            DrillStringUtils.removeLeadingSlash(viewName), DotDrillType.MATERIALIZED_VIEW);
+      } catch (UnsupportedOperationException e) {
+        logger.debug("The filesystem for this workspace does not support this operation.", e);
+        return null;
+      } catch (IOException e) {
+        logger.warn("Failure while trying to list materialized view in workspace [{}]", getFullSchemaName(), e);
+        return null;
+      }
+
+      for (DotDrillFile f : files) {
+        if (f.getType() == DotDrillType.MATERIALIZED_VIEW) {
+          return f.getMaterializedView(mapper);
+        }
+      }
+      return null;
+    }
+
+    private Set<String> getMaterializedViews() {
+      Set<String> viewSet = Sets.newHashSet();
+      // Look for files with ".materialized_view.drill" extension.
+      List<DotDrillFile> files;
+      try {
+        files = DotDrillUtil.getDotDrills(getFS(), new Path(config.getLocation()), DotDrillType.MATERIALIZED_VIEW);
+        for (DotDrillFile f : files) {
+          viewSet.add(f.getBaseName());
+        }
+      } catch (UnsupportedOperationException e) {
+        logger.debug("The filesystem for this workspace does not support this operation.", e);
+      } catch (AccessControlException e) {
+        if (!schemaConfig.getIgnoreAuthErrors()) {
+          logger.debug(e.getMessage());
+          throw UserException
+              .permissionError(e)
+              .message("Not authorized to list materialized views in schema [%s]", getFullSchemaName())
+              .build(logger);
+        }
+      } catch (Exception e) {
+        logger.warn("Failure while trying to list .materialized_view.drill files in workspace [{}]",
+            getFullSchemaName(), e);
+      }
+      return viewSet;
+    }
+
     private Set<String> getViews() {
       Set<String> viewSet = Sets.newHashSet();
       // Look for files with ".view.drill" extension.
@@ -385,7 +529,7 @@ public class WorkspaceSchemaFactory {
 
     @Override
     public Set<String> getTableNames() {
-      return Sets.union(rawTableNames(), getViews());
+      return Sets.union(Sets.union(rawTableNames(), getViews()), getMaterializedViews());
     }
 
     @Override
@@ -441,7 +585,7 @@ public class WorkspaceSchemaFactory {
       try {
         try {
           files = DotDrillUtil.getDotDrills(getFS(), new Path(config.getLocation()),
-              DrillStringUtils.removeLeadingSlash(tableName), DotDrillType.VIEW);
+              DrillStringUtils.removeLeadingSlash(tableName), DotDrillType.VIEW, DotDrillType.MATERIALIZED_VIEW);
         } catch (AccessControlException e) {
           if (!schemaConfig.getIgnoreAuthErrors()) {
             logger.debug(e.getMessage());
@@ -468,7 +612,26 @@ public class WorkspaceSchemaFactory {
               } catch (IOException e) {
                 logger.warn("Failure while trying to load {}.view.drill file in workspace [{}]", tableName, getFullSchemaName(), e);
               }
+              break;
+            case MATERIALIZED_VIEW:
+              try {
+                MaterializedView mv = f.getMaterializedView(mapper);
+                return new DrillMaterializedViewTable(mv, f.getOwner(), schemaConfig.getViewExpansionContext(),
+                    config.getLocation());
+              } catch (AccessControlException e) {
+                if (!schemaConfig.getIgnoreAuthErrors()) {
+                  logger.debug(e.getMessage());
+                  throw UserException.permissionError(e)
+                    .message("Not authorized to read materialized view [%s] in schema [%s]", tableName, getFullSchemaName())
+                    .build(logger);
+                }
+              } catch (IOException e) {
+                logger.warn("Failure while trying to load {}.materialized_view.drill file in workspace [{}]",
+                    tableName, getFullSchemaName(), e);
+              }
+              break;
             default:
+              break;
           }
         }
       } catch (UnsupportedOperationException e) {

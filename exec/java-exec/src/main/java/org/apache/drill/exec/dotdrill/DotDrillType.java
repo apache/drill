@@ -22,6 +22,7 @@ import org.apache.hadoop.fs.Path;
 
 public enum DotDrillType {
   VIEW,
+  MATERIALIZED_VIEW,
   STATS;
 
   private final String ending;

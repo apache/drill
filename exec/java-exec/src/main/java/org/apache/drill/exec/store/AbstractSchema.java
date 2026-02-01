@@ -49,6 +49,7 @@ import org.apache.calcite.schema.SchemaVersion;
 import org.apache.calcite.schema.Table;
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.drill.common.exceptions.UserException;
+import org.apache.drill.exec.dotdrill.MaterializedView;
 import org.apache.drill.exec.dotdrill.View;
 import org.apache.drill.exec.planner.logical.CreateTableEntry;
 import com.google.common.base.Joiner;
@@ -170,8 +171,58 @@ public abstract class AbstractSchema implements Schema, SchemaPartitionExplorer,
    */
   public void dropView(String viewName) throws IOException {
     throw UserException.unsupportedError()
-        .message("Dropping a view is supported in schema [%s]", getSchemaPath())
+        .message("Dropping a view is not supported in schema [%s]", getSchemaPath())
         .build(logger);
+  }
+
+  /**
+   * Create a new materialized view given definition.
+   *
+   * @param materializedView Materialized view info including name, definition, etc.
+   * @return Returns true if an existing materialized view is replaced with the given view. False otherwise.
+   * @throws IOException in case of error creating a materialized view
+   */
+  public boolean createMaterializedView(MaterializedView materializedView) throws IOException {
+    throw UserException.unsupportedError()
+        .message("Creating materialized views is not supported in schema [%s]", getSchemaPath())
+        .build(logger);
+  }
+
+  /**
+   * Drop the materialized view with given name.
+   * This should remove both the definition file and the data directory.
+   *
+   * @param viewName materialized view name
+   * @throws IOException in case of error dropping the materialized view
+   */
+  public void dropMaterializedView(String viewName) throws IOException {
+    throw UserException.unsupportedError()
+        .message("Dropping materialized views is not supported in schema [%s]", getSchemaPath())
+        .build(logger);
+  }
+
+  /**
+   * Refresh the materialized view with given name by re-executing its query
+   * and replacing the stored data.
+   *
+   * @param viewName materialized view name
+   * @throws IOException in case of error refreshing the materialized view
+   */
+  public void refreshMaterializedView(String viewName) throws IOException {
+    throw UserException.unsupportedError()
+        .message("Refreshing materialized views is not supported in schema [%s]", getSchemaPath())
+        .build(logger);
+  }
+
+  /**
+   * Get the materialized view with the given name.
+   *
+   * @param viewName materialized view name
+   * @return the materialized view or null if not found
+   * @throws IOException in case of error reading the materialized view
+   */
+  public MaterializedView getMaterializedView(String viewName) throws IOException {
+    return null;
   }
 
   /**
