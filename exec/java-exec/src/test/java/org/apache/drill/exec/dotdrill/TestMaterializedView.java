@@ -29,6 +29,7 @@ import java.util.List;
 
 import org.apache.calcite.sql.type.SqlTypeName;
 import org.apache.drill.categories.SqlTest;
+import org.apache.drill.test.BaseTest;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
@@ -38,7 +39,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
  * Tests for MaterializedView data model serialization and deserialization.
  */
 @Category(SqlTest.class)
-public class TestMaterializedView {
+public class TestMaterializedView extends BaseTest {
 
   private static final ObjectMapper mapper = new ObjectMapper();
 

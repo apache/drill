@@ -28,6 +28,7 @@ import org.apache.calcite.sql.parser.SqlParser;
 import org.apache.drill.categories.SqlTest;
 import org.apache.drill.exec.planner.physical.PlannerSettings;
 import org.apache.drill.exec.planner.sql.parser.impl.DrillParserImpl;
+import org.apache.drill.test.BaseTest;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
@@ -35,7 +36,7 @@ import org.junit.experimental.categories.Category;
  * Tests for parsing materialized view SQL statements.
  */
 @Category(SqlTest.class)
-public class TestMaterializedViewSqlParser {
+public class TestMaterializedViewSqlParser extends BaseTest {
 
   private SqlParser.Config parserConfig() {
     return SqlParser.config()
