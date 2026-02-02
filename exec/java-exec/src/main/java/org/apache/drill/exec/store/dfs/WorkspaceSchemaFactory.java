@@ -358,7 +358,8 @@ public class WorkspaceSchemaFactory {
     }
 
     private Path getMaterializedViewDataPath(String name) {
-      return new Path(config.getLocation(), name);
+      // Use _mv_data suffix to distinguish data directory from MV definition lookup
+      return new Path(config.getLocation(), name + "_mv_data");
     }
 
     @Override
@@ -445,6 +446,27 @@ public class WorkspaceSchemaFactory {
       try (OutputStream stream = DrillFileSystem.create(getFS(), viewPath, viewPerms)) {
         mapper.writeValue(stream, updatedMV);
       }
+    }
+
+    @Override
+    public CreateTableEntry createMaterializedViewDataWriter(String viewName) {
+      // Use Parquet format for storing materialized view data
+      FormatPlugin formatPlugin = plugin.getFormatPlugin("parquet");
+      if (formatPlugin == null) {
+        throw UserException.unsupportedError()
+            .message("Parquet format plugin not available for materialized view storage")
+            .build(logger);
+      }
+
+      // Store data in a directory with _mv_data suffix to avoid name collision
+      // with the materialized view lookup (which uses the same base name)
+      String dataLocation = config.getLocation() + Path.SEPARATOR + viewName + "_mv_data";
+      return new FileSystemCreateTableEntry(
+          (FileSystemConfig) plugin.getConfig(),
+          formatPlugin,
+          dataLocation,
+          Collections.emptyList(),  // No partition columns for MVs
+          StorageStrategy.DEFAULT);
     }
 
     @Override
@@ -1021,8 +1043,11 @@ public class WorkspaceSchemaFactory {
     @Override
     public List<Map.Entry<String, TableType>> getTableNamesAndTypes() {
       return Stream.concat(
-          tables.entrySet().stream().map(kv -> Pair.of(kv.getKey().sig.getName(), kv.getValue().getJdbcTableType())),
-          getViews().stream().map(viewName -> Pair.of(viewName, TableType.VIEW))
+          Stream.concat(
+              tables.entrySet().stream().map(kv -> Pair.of(kv.getKey().sig.getName(), kv.getValue().getJdbcTableType())),
+              getViews().stream().map(viewName -> Pair.of(viewName, TableType.VIEW))
+          ),
+          getMaterializedViews().stream().map(mvName -> Pair.of(mvName, TableType.MATERIALIZED_VIEW))
       ).collect(Collectors.toList());
     }
 

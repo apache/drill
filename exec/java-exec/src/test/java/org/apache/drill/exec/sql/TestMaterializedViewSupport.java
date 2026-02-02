@@ -28,7 +28,6 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
-import static org.apache.drill.exec.util.StoragePluginTestUtils.DFS_TMP_SCHEMA;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
@@ -153,14 +152,18 @@ public class TestMaterializedViewSupport extends PlanTestBase {
     String mvName = "test_mv_refresh";
     try {
       // Create materialized view
-      test("CREATE MATERIALIZED VIEW dfs.tmp.%s AS SELECT * FROM cp.`region.json` LIMIT 5", mvName);
+      test("CREATE MATERIALIZED VIEW dfs.tmp.%s AS SELECT region_id, sales_city FROM cp.`region.json` WHERE region_id = 0", mvName);
 
-      // Refresh the materialized view
+      // Refresh the materialized view - this writes data to Parquet
+      // The output is write statistics (Fragment, records, batches)
+      test("REFRESH MATERIALIZED VIEW dfs.tmp.%s", mvName);
+
+      // Verify we can query from the materialized data
       testBuilder()
-          .sqlQuery("REFRESH MATERIALIZED VIEW dfs.tmp.%s", mvName)
+          .sqlQuery("SELECT * FROM dfs.tmp.%s", mvName)
           .unOrdered()
-          .baselineColumns("ok", "summary")
-          .baselineValues(true, String.format("Materialized view [%s] refreshed successfully in schema [dfs.tmp].", mvName))
+          .baselineColumns("region_id", "sales_city")
+          .baselineValues(0L, "None")
           .go();
 
     } finally {
@@ -175,20 +178,41 @@ public class TestMaterializedViewSupport extends PlanTestBase {
   }
 
   @Test
-  public void testQueryMaterializedView() throws Exception {
-    String mvName = "test_mv_query";
+  public void testQueryMaterializedViewBeforeRefresh() throws Exception {
+    String mvName = "test_mv_query_before_refresh";
     try {
-      // Create materialized view
-      test("CREATE MATERIALIZED VIEW dfs.tmp.%s AS SELECT region_id, sales_city FROM cp.`region.json` ORDER BY region_id LIMIT 3", mvName);
+      // Create materialized view (no REFRESH yet)
+      test("CREATE MATERIALIZED VIEW dfs.tmp.%s AS SELECT region_id, sales_city FROM cp.`region.json` WHERE region_id = 0", mvName);
 
-      // Query the materialized view
+      // Query the MV before REFRESH - should expand SQL definition (like a view)
       testBuilder()
           .sqlQuery("SELECT * FROM dfs.tmp.%s", mvName)
           .unOrdered()
           .baselineColumns("region_id", "sales_city")
           .baselineValues(0L, "None")
-          .baselineValues(1L, "San Francisco")
-          .baselineValues(2L, "San Diego")
+          .go();
+
+    } finally {
+      test("DROP MATERIALIZED VIEW IF EXISTS dfs.tmp.%s", mvName);
+    }
+  }
+
+  @Test
+  public void testQueryMaterializedViewAfterRefresh() throws Exception {
+    String mvName = "test_mv_query_after_refresh";
+    try {
+      // Create materialized view
+      test("CREATE MATERIALIZED VIEW dfs.tmp.%s AS SELECT region_id, sales_city FROM cp.`region.json` WHERE region_id = 0", mvName);
+
+      // Refresh to populate data
+      test("REFRESH MATERIALIZED VIEW dfs.tmp.%s", mvName);
+
+      // Query the MV after REFRESH - should read from Parquet data
+      testBuilder()
+          .sqlQuery("SELECT * FROM dfs.tmp.%s", mvName)
+          .unOrdered()
+          .baselineColumns("region_id", "sales_city")
+          .baselineValues(0L, "None")
           .go();
 
     } finally {

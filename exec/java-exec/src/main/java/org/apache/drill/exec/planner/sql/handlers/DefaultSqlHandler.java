@@ -78,6 +78,7 @@ import org.apache.drill.exec.planner.logical.DrillProjectRel;
 import org.apache.drill.exec.planner.logical.DrillRel;
 import org.apache.drill.exec.planner.logical.DrillRelFactories;
 import org.apache.drill.exec.planner.logical.DrillScreenRel;
+import org.apache.drill.exec.planner.logical.MaterializedViewRewriter;
 import org.apache.drill.exec.planner.logical.PreProcessLogicalRel;
 import org.apache.drill.exec.planner.physical.DrillDistributionTrait;
 import org.apache.drill.exec.planner.physical.PhysicalPlanCreator;
@@ -200,6 +201,12 @@ public class DefaultSqlHandler extends AbstractSqlHandler {
 
     RelNode rel = convertToRel(validated);
     rel = preprocessNode(rel);
+
+    // Attempt materialized view rewriting if enabled
+    if (context.getPlannerSettings().isMaterializedViewRewriteEnabled()) {
+      MaterializedViewRewriter mvRewriter = new MaterializedViewRewriter(context, context.getNewDefaultSchema());
+      rel = mvRewriter.rewrite(rel);
+    }
 
     return new ConvertedRelNode(rel, validatedTypedSqlNode.getValue());
   }

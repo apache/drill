@@ -27,7 +27,6 @@ import org.apache.calcite.rel.RelNode;
 import org.apache.calcite.rel.type.RelDataType;
 import org.apache.calcite.rel.type.RelDataTypeFactory;
 import org.apache.calcite.schema.Schema.TableType;
-import org.apache.calcite.schema.SchemaPlus;
 import org.apache.calcite.schema.Statistic;
 import org.apache.calcite.schema.Statistics;
 import org.apache.calcite.schema.TranslatableTable;
@@ -40,14 +39,19 @@ import org.apache.drill.exec.planner.sql.conversion.DrillViewExpander;
 /**
  * Represents a materialized view in the Drill query planning.
  * <p>
- * Unlike regular views which expand to their definition query, materialized views
- * read from pre-computed data stored in the workspace directory.
- * <p>
  * A materialized view stores:
  * <ul>
  *   <li>Definition file (.materialized_view.drill) - JSON with name, SQL, schema info</li>
- *   <li>Data directory - Parquet files with the pre-computed results</li>
+ *   <li>Data directory ({name}_mv_data/) - Parquet files with pre-computed results</li>
  * </ul>
+ * <p>
+ * <b>Behavior:</b>
+ * <ul>
+ *   <li>Before REFRESH: queries expand the SQL definition (like a view)</li>
+ *   <li>After REFRESH: queries scan from pre-computed Parquet data</li>
+ * </ul>
+ *
+ * @see org.apache.drill.exec.dotdrill.MaterializedView
  */
 public class DrillMaterializedViewTable implements TranslatableTable, DrillViewInfoProvider {
 
@@ -77,13 +81,8 @@ public class DrillMaterializedViewTable implements TranslatableTable, DrillViewI
   /**
    * Converts this materialized view to a RelNode for query planning.
    * <p>
-   * Unlike regular views, materialized views expand to their definition SQL
-   * which is then converted to a RelNode. The data is actually read from
-   * the materialized data directory, not computed fresh.
-   * <p>
-   * For now, we expand the view definition since the data is in Parquet format
-   * in a directory with the same name as the view. The storage plugin will
-   * handle reading the actual data.
+   * If the MV has been refreshed (data exists), scans from the pre-computed Parquet data.
+   * Otherwise, expands the SQL definition like a regular view.
    */
   @Override
   public RelNode toRel(ToRelContext context, RelOptTable relOptTable) {
@@ -93,13 +92,30 @@ public class DrillMaterializedViewTable implements TranslatableTable, DrillViewI
       RelDataType rowType = relOptTable.getRowType();
       RelNode rel;
 
+      // Check if materialized data exists (REFRESH has been called)
+      boolean hasData = materializedView.getRefreshStatus() == MaterializedView.RefreshStatus.COMPLETE;
+
+      // Build the SQL to execute - either scan data or expand definition
+      String sqlToExpand;
+      if (hasData) {
+        // Scan from the pre-computed data directory
+        sqlToExpand = buildDataScanSql();
+      } else {
+        // No data yet - expand the SQL definition like a view
+        sqlToExpand = materializedView.getSql();
+      }
+
+      // Always use the workspace schema path for context - needed for table resolution
+      List<String> schemaPath = materializedView.getWorkspaceSchemaPath();
+
       if (viewExpansionContext.isImpersonationEnabled()) {
         token = viewExpansionContext.reserveViewExpansionToken(viewOwner);
-        rel = expandViewForImpersonatedUser(viewExpander, materializedView.getWorkspaceSchemaPath(),
-            token.getSchemaTree());
+        rel = viewExpander.expandView(sqlToExpand, token.getSchemaTree(), schemaPath).rel;
       } else {
-        rel = viewExpander.expandView(rowType, materializedView.getSql(),
-            materializedView.getWorkspaceSchemaPath(), Collections.emptyList()).rel;
+        // When scanning data, pass null for rowType to let Parquet schema be inferred
+        // When expanding SQL definition, use the MV's row type
+        RelDataType typeHint = hasData ? null : rowType;
+        rel = viewExpander.expandView(typeHint, sqlToExpand, schemaPath, Collections.emptyList()).rel;
       }
 
       return rel;
@@ -110,17 +126,38 @@ public class DrillMaterializedViewTable implements TranslatableTable, DrillViewI
     }
   }
 
-  protected RelNode expandViewForImpersonatedUser(DrillViewExpander context,
-                                                  List<String> workspaceSchemaPath,
-                                                  SchemaPlus tokenSchemaTree) {
-    return context.expandView(materializedView.getSql(), tokenSchemaTree, workspaceSchemaPath).rel;
+  /**
+   * Builds SQL to scan the materialized data directory.
+   * The data is stored in {workspace}/{mvName}_mv_data/ directory.
+   * We explicitly select the MV's columns to ensure proper schema matching.
+   */
+  private String buildDataScanSql() {
+    String dataTableName = materializedView.getName() + "_mv_data";
+
+    // Build explicit column list from the MV's field definitions
+    List<String> fieldNames = materializedView.getFields().stream()
+        .map(f -> f.getName())
+        .collect(java.util.stream.Collectors.toList());
+    if (fieldNames.isEmpty()) {
+      // Fallback to SELECT * if no fields defined (shouldn't happen for non-dynamic MVs)
+      return "SELECT * FROM `" + dataTableName + "`";
+    }
+
+    StringBuilder sql = new StringBuilder("SELECT ");
+    for (int i = 0; i < fieldNames.size(); i++) {
+      if (i > 0) {
+        sql.append(", ");
+      }
+      sql.append("`").append(fieldNames.get(i)).append("`");
+    }
+    sql.append(" FROM `").append(dataTableName).append("`");
+    return sql.toString();
   }
 
   @Override
   public TableType getJdbcTableType() {
-    // Report as TABLE since materialized views store actual data
-    // This distinguishes them from regular views (VIEW type)
-    return TableType.TABLE;
+    // Report as MATERIALIZED_VIEW type
+    return TableType.MATERIALIZED_VIEW;
   }
 
   @Override

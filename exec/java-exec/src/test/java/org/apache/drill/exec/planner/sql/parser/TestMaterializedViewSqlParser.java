@@ -57,7 +57,7 @@ public class TestMaterializedViewSqlParser {
     assertNotNull(node);
     assertTrue(node instanceof SqlCreateMaterializedView);
     SqlCreateMaterializedView mv = (SqlCreateMaterializedView) node;
-    assertEquals("mv1", mv.getName());
+    assertEquals("MV1", mv.getName());
     assertEquals(SqlCreateType.SIMPLE, mv.getSqlCreateType());
   }
 
@@ -69,7 +69,7 @@ public class TestMaterializedViewSqlParser {
     assertNotNull(node);
     assertTrue(node instanceof SqlCreateMaterializedView);
     SqlCreateMaterializedView mv = (SqlCreateMaterializedView) node;
-    assertEquals("mv1", mv.getName());
+    assertEquals("MV1", mv.getName());
     assertEquals(SqlCreateType.OR_REPLACE, mv.getSqlCreateType());
   }
 
@@ -81,7 +81,7 @@ public class TestMaterializedViewSqlParser {
     assertNotNull(node);
     assertTrue(node instanceof SqlCreateMaterializedView);
     SqlCreateMaterializedView mv = (SqlCreateMaterializedView) node;
-    assertEquals("mv1", mv.getName());
+    assertEquals("MV1", mv.getName());
     assertEquals(SqlCreateType.IF_NOT_EXISTS, mv.getSqlCreateType());
   }
 
@@ -93,10 +93,10 @@ public class TestMaterializedViewSqlParser {
     assertNotNull(node);
     assertTrue(node instanceof SqlCreateMaterializedView);
     SqlCreateMaterializedView mv = (SqlCreateMaterializedView) node;
-    assertEquals("mv1", mv.getName());
+    assertEquals("MV1", mv.getName());
     assertEquals(2, mv.getSchemaPath().size());
-    assertEquals("dfs", mv.getSchemaPath().get(0));
-    assertEquals("tmp", mv.getSchemaPath().get(1));
+    assertEquals("DFS", mv.getSchemaPath().get(0));
+    assertEquals("TMP", mv.getSchemaPath().get(1));
   }
 
   @Test
@@ -107,10 +107,10 @@ public class TestMaterializedViewSqlParser {
     assertNotNull(node);
     assertTrue(node instanceof SqlCreateMaterializedView);
     SqlCreateMaterializedView mv = (SqlCreateMaterializedView) node;
-    assertEquals("mv1", mv.getName());
+    assertEquals("MV1", mv.getName());
     assertEquals(2, mv.getFieldNames().size());
-    assertEquals("col1", mv.getFieldNames().get(0));
-    assertEquals("col2", mv.getFieldNames().get(1));
+    assertEquals("COL1", mv.getFieldNames().get(0));
+    assertEquals("COL2", mv.getFieldNames().get(1));
   }
 
   @Test
@@ -121,7 +121,7 @@ public class TestMaterializedViewSqlParser {
     assertNotNull(node);
     assertTrue(node instanceof SqlDropMaterializedView);
     SqlDropMaterializedView drop = (SqlDropMaterializedView) node;
-    assertEquals("mv1", drop.getName());
+    assertEquals("MV1", drop.getName());
     assertEquals(false, drop.checkViewExistence());
   }
 
@@ -133,7 +133,7 @@ public class TestMaterializedViewSqlParser {
     assertNotNull(node);
     assertTrue(node instanceof SqlDropMaterializedView);
     SqlDropMaterializedView drop = (SqlDropMaterializedView) node;
-    assertEquals("mv1", drop.getName());
+    assertEquals("MV1", drop.getName());
     assertEquals(true, drop.checkViewExistence());
   }
 
@@ -145,7 +145,7 @@ public class TestMaterializedViewSqlParser {
     assertNotNull(node);
     assertTrue(node instanceof SqlDropMaterializedView);
     SqlDropMaterializedView drop = (SqlDropMaterializedView) node;
-    assertEquals("mv1", drop.getName());
+    assertEquals("MV1", drop.getName());
     assertEquals(2, drop.getSchemaPath().size());
   }
 
@@ -157,7 +157,7 @@ public class TestMaterializedViewSqlParser {
     assertNotNull(node);
     assertTrue(node instanceof SqlRefreshMaterializedView);
     SqlRefreshMaterializedView refresh = (SqlRefreshMaterializedView) node;
-    assertEquals("mv1", refresh.getName());
+    assertEquals("MV1", refresh.getName());
   }
 
   @Test
@@ -168,7 +168,7 @@ public class TestMaterializedViewSqlParser {
     assertNotNull(node);
     assertTrue(node instanceof SqlRefreshMaterializedView);
     SqlRefreshMaterializedView refresh = (SqlRefreshMaterializedView) node;
-    assertEquals("mv1", refresh.getName());
+    assertEquals("MV1", refresh.getName());
     assertEquals(2, refresh.getSchemaPath().size());
   }
 
@@ -190,19 +190,19 @@ public class TestMaterializedViewSqlParser {
   public void testUnparseCreateMaterializedView() throws SqlParseException {
     String sql = "CREATE MATERIALIZED VIEW mv1 AS SELECT * FROM t1";
     SqlNode node = parse(sql);
-    String unparsed = node.toSqlString(null).getSql();
+    String unparsed = node.toSqlString(null, true).getSql();
 
     assertTrue(unparsed.contains("CREATE"));
     assertTrue(unparsed.contains("MATERIALIZED"));
     assertTrue(unparsed.contains("VIEW"));
-    assertTrue(unparsed.contains("mv1"));
+    assertTrue(unparsed.contains("MV1") || unparsed.contains("`MV1`"));
   }
 
   @Test
   public void testUnparseDropMaterializedView() throws SqlParseException {
     String sql = "DROP MATERIALIZED VIEW IF EXISTS mv1";
     SqlNode node = parse(sql);
-    String unparsed = node.toSqlString(null).getSql();
+    String unparsed = node.toSqlString(null, true).getSql();
 
     assertTrue(unparsed.contains("DROP"));
     assertTrue(unparsed.contains("MATERIALIZED"));
@@ -215,7 +215,7 @@ public class TestMaterializedViewSqlParser {
   public void testUnparseRefreshMaterializedView() throws SqlParseException {
     String sql = "REFRESH MATERIALIZED VIEW mv1";
     SqlNode node = parse(sql);
-    String unparsed = node.toSqlString(null).getSql();
+    String unparsed = node.toSqlString(null, true).getSql();
 
     assertTrue(unparsed.contains("REFRESH"));
     assertTrue(unparsed.contains("MATERIALIZED"));
