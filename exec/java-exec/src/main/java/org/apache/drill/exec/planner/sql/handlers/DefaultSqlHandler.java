@@ -204,7 +204,8 @@ public class DefaultSqlHandler extends AbstractSqlHandler {
 
     // Attempt materialized view rewriting if enabled
     if (context.getPlannerSettings().isMaterializedViewRewriteEnabled()) {
-      MaterializedViewRewriter mvRewriter = new MaterializedViewRewriter(context, context.getNewDefaultSchema());
+      MaterializedViewRewriter mvRewriter = new MaterializedViewRewriter(
+          context, context.getNewDefaultSchema(), config.getConverter());
       rel = mvRewriter.rewrite(rel);
     }
 

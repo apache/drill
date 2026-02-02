@@ -27,6 +27,7 @@ import liquibase.database.jvm.JdbcConnection;
 import liquibase.resource.ClassLoaderResourceAccessor;
 import org.apache.drill.common.config.DrillConfig;
 import org.apache.drill.metastore.Metastore;
+import org.apache.drill.metastore.components.materializedviews.MaterializedViews;
 import org.apache.drill.metastore.components.tables.Tables;
 import org.apache.drill.metastore.components.views.Views;
 import org.apache.drill.metastore.rdbms.components.tables.RdbmsTables;
@@ -66,6 +67,11 @@ public class RdbmsMetastore implements Metastore {
   @Override
   public Views views() {
     throw new UnsupportedOperationException("Views metadata support is not implemented");
+  }
+
+  @Override
+  public MaterializedViews materializedViews() {
+    throw new UnsupportedOperationException("Materialized views metadata support is not implemented for RDBMS metastore");
   }
 
   @Override

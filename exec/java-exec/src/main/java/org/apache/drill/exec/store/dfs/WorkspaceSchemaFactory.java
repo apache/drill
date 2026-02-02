@@ -78,6 +78,7 @@ import org.apache.drill.exec.util.DrillFileSystemUtil;
 import org.apache.drill.exec.store.StorageStrategy;
 import org.apache.drill.exec.util.ImpersonationUtil;
 import org.apache.drill.metastore.MetastoreRegistry;
+import org.apache.drill.metastore.components.materializedviews.MaterializedViewMetadataUnit;
 import org.apache.drill.metastore.components.tables.MetastoreTableInfo;
 import org.apache.drill.metastore.exceptions.MetastoreException;
 import org.apache.drill.metastore.metadata.TableInfo;
@@ -392,6 +393,9 @@ public class WorkspaceSchemaFactory {
         mapper.writeValue(stream, materializedView);
       }
 
+      // Sync to metastore if enabled
+      syncMaterializedViewToMetastore(materializedView);
+
       // Mark as complete (data will be populated by the handler via CTAS-like operation)
       return replaced;
     }
@@ -410,6 +414,9 @@ public class WorkspaceSchemaFactory {
       if (getFS().exists(dataPath)) {
         getFS().delete(dataPath, true);
       }
+
+      // Remove from metastore if enabled
+      removeMaterializedViewFromMetastore(viewName);
     }
 
     @Override
@@ -446,6 +453,9 @@ public class WorkspaceSchemaFactory {
       try (OutputStream stream = DrillFileSystem.create(getFS(), viewPath, viewPerms)) {
         mapper.writeValue(stream, updatedMV);
       }
+
+      // Sync updated metadata to metastore if enabled
+      syncMaterializedViewToMetastore(updatedMV);
     }
 
     @Override
@@ -515,6 +525,80 @@ public class WorkspaceSchemaFactory {
             getFullSchemaName(), e);
       }
       return viewSet;
+    }
+
+    /**
+     * Checks if the metastore is enabled for this schema.
+     *
+     * @return true if metastore is enabled, false otherwise
+     */
+    private boolean isMetastoreEnabled() {
+      return schemaConfig.getOption(ExecConstants.METASTORE_ENABLED).bool_val;
+    }
+
+    /**
+     * Syncs materialized view metadata to the metastore if enabled.
+     * This is a best-effort operation that doesn't fail if metastore is unavailable.
+     *
+     * @param materializedView the materialized view to sync
+     */
+    private void syncMaterializedViewToMetastore(MaterializedView materializedView) {
+      if (!isMetastoreEnabled()) {
+        return;
+      }
+
+      try {
+        MetastoreRegistry metastoreRegistry = plugin.getContext().getMetastoreRegistry();
+        MaterializedViewMetadataUnit unit = MaterializedViewMetadataUnit.builder()
+            .storagePlugin(plugin.getName())
+            .workspace(schemaName)
+            .name(materializedView.getName())
+            .owner(schemaConfig.getUserName())
+            .sql(materializedView.getSql())
+            .workspaceSchemaPath(materializedView.getWorkspaceSchemaPath())
+            .dataLocation(materializedView.getDataStoragePath())
+            .refreshStatus(materializedView.getRefreshStatus() != null
+                ? materializedView.getRefreshStatus().name() : null)
+            .lastRefreshTime(materializedView.getLastRefreshTime())
+            .lastModifiedTime(System.currentTimeMillis())
+            .build();
+
+        metastoreRegistry.get()
+            .materializedViews()
+            .modify()
+            .overwrite(Collections.singletonList(unit))
+            .execute();
+
+        logger.debug("Synced materialized view [{}] to metastore", materializedView.getName());
+      } catch (MetastoreException e) {
+        logger.warn("Failed to sync materialized view [{}] to metastore: {}",
+            materializedView.getName(), e.getMessage());
+      }
+    }
+
+    /**
+     * Removes materialized view metadata from the metastore if enabled.
+     * This is a best-effort operation that doesn't fail if metastore is unavailable.
+     *
+     * @param viewName the name of the materialized view to remove
+     */
+    private void removeMaterializedViewFromMetastore(String viewName) {
+      if (!isMetastoreEnabled()) {
+        return;
+      }
+
+      try {
+        MetastoreRegistry metastoreRegistry = plugin.getContext().getMetastoreRegistry();
+        metastoreRegistry.get()
+            .materializedViews()
+            .basicRequests()
+            .delete(plugin.getName(), schemaName, viewName);
+
+        logger.debug("Removed materialized view [{}] from metastore", viewName);
+      } catch (MetastoreException e) {
+        logger.warn("Failed to remove materialized view [{}] from metastore: {}",
+            viewName, e.getMessage());
+      }
     }
 
     private Set<String> getViews() {

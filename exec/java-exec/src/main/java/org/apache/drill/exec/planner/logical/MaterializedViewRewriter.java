@@ -22,10 +22,14 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 
+import org.apache.calcite.plan.RelOptUtil;
+import org.apache.calcite.plan.SubstitutionVisitor;
 import org.apache.calcite.rel.RelNode;
+import org.apache.calcite.rel.RelRoot;
 import org.apache.calcite.schema.SchemaPlus;
 import org.apache.drill.exec.dotdrill.MaterializedView;
 import org.apache.drill.exec.ops.QueryContext;
+import org.apache.drill.exec.planner.sql.conversion.SqlConverter;
 import org.apache.drill.exec.store.AbstractSchema;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -36,58 +40,152 @@ import org.slf4j.LoggerFactory;
  * When enabled via planner.enable_materialized_view_rewrite, this class attempts
  * to rewrite queries to use materialized views when beneficial.
  * <p>
- * Current implementation provides the infrastructure for MV rewriting.
- * Future enhancements can add:
- * <ul>
- *   <li>Structural matching using Calcite's SubstitutionVisitor</li>
- *   <li>Partial query matching (query is subset of MV)</li>
- *   <li>Aggregate rollup rewriting</li>
- *   <li>Cost-based selection among multiple candidate MVs</li>
- * </ul>
+ * The rewriting uses Calcite's SubstitutionVisitor to perform structural matching
+ * between the user's query and available materialized view definitions. If the
+ * query matches (or is a subset of) an MV's definition, the query is rewritten
+ * to scan from the pre-computed MV data instead.
  */
 public class MaterializedViewRewriter {
   private static final Logger logger = LoggerFactory.getLogger(MaterializedViewRewriter.class);
 
   private final QueryContext context;
   private final SchemaPlus defaultSchema;
+  private final SqlConverter sqlConverter;
 
-  public MaterializedViewRewriter(QueryContext context, SchemaPlus defaultSchema) {
+  public MaterializedViewRewriter(QueryContext context, SchemaPlus defaultSchema, SqlConverter sqlConverter) {
     this.context = context;
     this.defaultSchema = defaultSchema;
+    this.sqlConverter = sqlConverter;
   }
 
   /**
    * Attempts to rewrite the given RelNode to use a materialized view.
    *
-   * @param relNode the query plan to potentially rewrite
+   * @param queryRel the query plan to potentially rewrite
    * @return the rewritten plan using an MV, or the original plan if no rewrite is possible
    */
-  public RelNode rewrite(RelNode relNode) {
+  public RelNode rewrite(RelNode queryRel) {
     if (!context.getPlannerSettings().isMaterializedViewRewriteEnabled()) {
-      return relNode;
+      return queryRel;
     }
 
-    // Find all available materialized views
+    // Find all available materialized views that have been refreshed
     List<MaterializedViewCandidate> candidates = findCandidateMaterializedViews();
 
     if (candidates.isEmpty()) {
-      logger.debug("No materialized views available for rewriting");
-      return relNode;
+      logger.debug("No refreshed materialized views available for rewriting");
+      return queryRel;
     }
 
     logger.debug("Found {} materialized view candidates for potential rewriting", candidates.size());
 
-    // Future: Implement structural matching here
-    // For now, log that rewriting is enabled but not yet implemented
+    // Try each candidate MV for structural matching
     for (MaterializedViewCandidate candidate : candidates) {
-      logger.debug("MV candidate: {} in schema {} (refreshed: {})",
-          candidate.getName(),
-          candidate.getSchemaPath(),
-          candidate.isRefreshed());
+      if (!candidate.isRefreshed()) {
+        logger.debug("Skipping MV {} - not refreshed", candidate.getName());
+        continue;
+      }
+
+      try {
+        RelNode rewritten = tryRewriteWithMV(queryRel, candidate);
+        if (rewritten != null) {
+          logger.info("Query rewritten to use materialized view: {}", candidate.getName());
+          return rewritten;
+        }
+      } catch (Exception e) {
+        logger.debug("Failed to rewrite with MV {}: {}", candidate.getName(), e.getMessage());
+      }
     }
 
-    // Return original plan - actual matching not yet implemented
-    return relNode;
+    logger.debug("No materialized view matched the query");
+    return queryRel;
+  }
+
+  /**
+   * Attempts to rewrite the query using a specific materialized view.
+   *
+   * @param queryRel the user's query plan
+   * @param candidate the MV candidate to try
+   * @return the rewritten plan if successful, null otherwise
+   */
+  private RelNode tryRewriteWithMV(RelNode queryRel, MaterializedViewCandidate candidate) {
+    // Parse the MV's SQL definition into a RelNode
+    RelNode mvQueryRel = parseMvSql(candidate);
+    if (mvQueryRel == null) {
+      return null;
+    }
+
+    // Build a RelNode that represents scanning the MV's pre-computed data
+    RelNode mvScanRel = buildMvScanRel(candidate);
+    if (mvScanRel == null) {
+      return null;
+    }
+
+    logger.debug("Attempting structural match for MV: {}", candidate.getName());
+    if (logger.isDebugEnabled()) {
+      logger.debug("Query plan:\n{}", RelOptUtil.toString(queryRel));
+      logger.debug("MV definition plan:\n{}", RelOptUtil.toString(mvQueryRel));
+    }
+
+    // Use Calcite's SubstitutionVisitor to check if the query matches the MV
+    // Constructor takes (target, query) where:
+    //   - target: the MV definition (what we want to match against)
+    //   - query: the replacement (the MV scan)
+    // Then go(queryRel) checks if queryRel can be rewritten using the MV
+    SubstitutionVisitor visitor = new SubstitutionVisitor(mvQueryRel, mvScanRel);
+    List<RelNode> substitutions = visitor.go(queryRel);
+
+    if (substitutions != null && !substitutions.isEmpty()) {
+      RelNode substituted = substitutions.get(0);
+      if (logger.isDebugEnabled()) {
+        logger.debug("Substitution found! Rewritten plan:\n{}", RelOptUtil.toString(substituted));
+      }
+      return substituted;
+    }
+
+    return null;
+  }
+
+  /**
+   * Parses the MV's SQL definition into a RelNode.
+   */
+  private RelNode parseMvSql(MaterializedViewCandidate candidate) {
+    try {
+      String mvSql = candidate.getSql();
+      List<String> schemaPath = candidate.getMaterializedView().getWorkspaceSchemaPath();
+
+      // Parse and convert the MV's SQL to RelNode
+      org.apache.calcite.sql.SqlNode parsedNode = sqlConverter.parse(mvSql);
+      org.apache.calcite.sql.SqlNode validatedNode = sqlConverter.validate(parsedNode);
+      RelRoot relRoot = sqlConverter.toRel(validatedNode);
+
+      return relRoot.rel;
+    } catch (Exception e) {
+      logger.debug("Failed to parse MV SQL for {}: {}", candidate.getName(), e.getMessage());
+      return null;
+    }
+  }
+
+  /**
+   * Builds a RelNode that scans the MV's pre-computed data.
+   * This creates a table scan of the MV's data directory.
+   */
+  private RelNode buildMvScanRel(MaterializedViewCandidate candidate) {
+    try {
+      // Build SQL to scan the MV data table
+      String mvDataTable = candidate.getSchemaPath() + ".`" + candidate.getName() + "_mv_data`";
+      String scanSql = "SELECT * FROM " + mvDataTable;
+
+      // Parse and convert to RelNode
+      org.apache.calcite.sql.SqlNode parsedNode = sqlConverter.parse(scanSql);
+      org.apache.calcite.sql.SqlNode validatedNode = sqlConverter.validate(parsedNode);
+      RelRoot relRoot = sqlConverter.toRel(validatedNode);
+
+      return relRoot.rel;
+    } catch (Exception e) {
+      logger.debug("Failed to build MV scan for {}: {}", candidate.getName(), e.getMessage());
+      return null;
+    }
   }
 
   /**
