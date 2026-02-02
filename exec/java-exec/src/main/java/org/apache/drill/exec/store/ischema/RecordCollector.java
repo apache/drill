@@ -27,6 +27,7 @@ import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.exec.ExecConstants;
+import org.apache.drill.exec.planner.logical.DrillMaterializedViewTable;
 import org.apache.drill.exec.planner.logical.DrillViewInfoProvider;
 import org.apache.drill.exec.record.metadata.TupleMetadata;
 import org.apache.drill.exec.server.options.OptionManager;
@@ -104,6 +105,15 @@ public interface RecordCollector {
   List<Records.View> views(String schemaPath, SchemaPlus schema);
 
   /**
+   * Collects materialized views data for information_schema.
+   *
+   * @param schemaPath schema name
+   * @param schema schema instance
+   * @return list of materialized view records
+   */
+  List<Records.MaterializedView> materializedViews(String schemaPath, SchemaPlus schema);
+
+  /**
    * Collects columns data for information_schema.
    *
    * @param schemaPath schema name
@@ -178,6 +188,33 @@ public interface RecordCollector {
         .map(pair -> new Records.View(IS_CATALOG_NAME, schemaPath, pair.getKey(),
           // View's SQL may not be available for some non-Drill views, for example, JDBC view
           pair.getValue() instanceof DrillViewInfoProvider ? ((DrillViewInfoProvider) pair.getValue()).getViewSql() : ""))
+        .collect(Collectors.toList());
+    }
+
+    @Override
+    public List<Records.MaterializedView> materializedViews(String schemaPath, SchemaPlus schema) {
+      AbstractSchema drillSchema = schema.unwrap(AbstractSchema.class);
+
+      return drillSchema.getTablesByNames(schema.getTableNames()).stream()
+        .filter(pair -> pair.getValue().getJdbcTableType() == Schema.TableType.MATERIALIZED_VIEW)
+        .filter(pair -> filterEvaluator.shouldVisitTable(schemaPath, pair.getKey(), pair.getValue().getJdbcTableType()))
+        .map(pair -> {
+          Table table = pair.getValue();
+          String viewSql = table instanceof DrillViewInfoProvider
+              ? ((DrillViewInfoProvider) table).getViewSql() : "";
+          String refreshStatus = null;
+          Long lastRefreshTime = null;
+          String dataLocation = null;
+          if (table instanceof DrillMaterializedViewTable) {
+            DrillMaterializedViewTable mvTable = (DrillMaterializedViewTable) table;
+            org.apache.drill.exec.dotdrill.MaterializedView mv = mvTable.getMaterializedView();
+            refreshStatus = mv.getRefreshStatus() != null ? mv.getRefreshStatus().name() : null;
+            lastRefreshTime = mv.getLastRefreshTime();
+            dataLocation = mvTable.getDataStoragePath();
+          }
+          return new Records.MaterializedView(IS_CATALOG_NAME, schemaPath, pair.getKey(),
+              viewSql, refreshStatus, lastRefreshTime, dataLocation);
+        })
         .collect(Collectors.toList());
     }
 
@@ -292,6 +329,12 @@ public interface RecordCollector {
 
     @Override
     public List<Records.View> views(String schemaPath, SchemaPlus schema) {
+      return Collections.emptyList();
+    }
+
+    @Override
+    public List<Records.MaterializedView> materializedViews(String schemaPath, SchemaPlus schema) {
+      // TODO: Add metastore-based materialized views retrieval when metastore MV support is complete
       return Collections.emptyList();
     }
 

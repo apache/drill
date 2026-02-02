@@ -260,6 +260,50 @@ The MaterializedViewMetadataUnit stored in the metastore contains:
 2. Delete the data directory and all contents
 3. Remove metadata from metastore (if enabled)
 
+## INFORMATION_SCHEMA Integration
+
+Materialized views are exposed in the `INFORMATION_SCHEMA.MATERIALIZED_VIEWS` table. This allows users to query metadata about all materialized views in the system.
+
+### Querying Materialized Views Metadata
+
+```sql
+-- List all materialized views
+SELECT * FROM INFORMATION_SCHEMA.MATERIALIZED_VIEWS;
+
+-- List materialized views in a specific schema
+SELECT TABLE_NAME, REFRESH_STATUS, LAST_REFRESH_TIME
+FROM INFORMATION_SCHEMA.MATERIALIZED_VIEWS
+WHERE TABLE_SCHEMA = 'dfs.tmp';
+
+-- Find materialized views that need refresh
+SELECT TABLE_SCHEMA, TABLE_NAME
+FROM INFORMATION_SCHEMA.MATERIALIZED_VIEWS
+WHERE REFRESH_STATUS = 'PENDING' OR REFRESH_STATUS IS NULL;
+```
+
+### MATERIALIZED_VIEWS Table Columns
+
+| Column | Type | Description |
+|--------|------|-------------|
+| TABLE_CATALOG | VARCHAR | Catalog name (always "DRILL") |
+| TABLE_SCHEMA | VARCHAR | Schema name (e.g., "dfs.tmp") |
+| TABLE_NAME | VARCHAR | Materialized view name |
+| VIEW_DEFINITION | VARCHAR | SQL statement that defines the materialized view |
+| REFRESH_STATUS | VARCHAR | Current status: "PENDING" or "COMPLETE" |
+| LAST_REFRESH_TIME | TIMESTAMP | When the materialized view was last refreshed |
+| DATA_LOCATION | VARCHAR | File system path to the stored data |
+
+### TABLES Integration
+
+Materialized views also appear in `INFORMATION_SCHEMA.TABLES` with `TABLE_TYPE = 'MATERIALIZED VIEW'`:
+
+```sql
+-- List all materialized views via TABLES
+SELECT TABLE_SCHEMA, TABLE_NAME
+FROM INFORMATION_SCHEMA.TABLES
+WHERE TABLE_TYPE = 'MATERIALIZED VIEW';
+```
+
 ## Limitations
 
 Current limitations of the materialized view implementation:
@@ -342,5 +386,3 @@ Planned improvements for future releases:
 4. **Cost-Based Selection**: When multiple MVs match, select based on estimated query cost.
 
 5. **Staleness Tracking**: Track source table changes to identify stale materialized views.
-
-6. **INFORMATION_SCHEMA Integration**: Expose materialized views in INFORMATION_SCHEMA tables.

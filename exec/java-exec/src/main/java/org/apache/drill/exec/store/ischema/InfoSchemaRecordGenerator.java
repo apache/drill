@@ -176,6 +176,23 @@ public abstract class InfoSchemaRecordGenerator<S> {
     }
   }
 
+  public static class MaterializedViews extends InfoSchemaRecordGenerator<Records.MaterializedView> {
+
+    public MaterializedViews(FilterEvaluator filterEvaluator) {
+      super(filterEvaluator);
+    }
+
+    @Override
+    public PojoRecordReader<Records.MaterializedView> getRecordReader() {
+      return new PojoRecordReader<>(Records.MaterializedView.class, records);
+    }
+
+    @Override
+    protected List<Records.MaterializedView> collect(RecordCollector recordCollector, String schemaPath, SchemaPlus schema) {
+      return recordCollector.materializedViews(schemaPath, schema);
+    }
+  }
+
   public static class Columns extends InfoSchemaRecordGenerator<Records.Column> {
 
     public Columns(FilterEvaluator filterEvaluator) {
