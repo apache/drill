@@ -29,7 +29,6 @@ import org.apache.drill.common.logical.LogicalPlan;
 import org.apache.drill.common.logical.PlanProperties.Generator.ResultMode;
 import org.apache.drill.common.util.JacksonUtils;
 import org.apache.drill.exec.ExecConstants;
-import org.apache.drill.exec.cache.CustomCacheManager;
 import org.apache.drill.exec.exception.OptimizerException;
 import org.apache.drill.exec.exception.OutOfMemoryException;
 import org.apache.drill.exec.ops.QueryContext;
@@ -39,7 +38,6 @@ import org.apache.drill.exec.physical.base.FragmentRoot;
 import org.apache.drill.exec.physical.base.PhysicalOperator;
 import org.apache.drill.exec.planner.fragment.Fragment;
 import org.apache.drill.exec.planner.fragment.MakeFragmentsVisitor;
-import org.apache.drill.exec.planner.physical.PlannerSettings;
 import org.apache.drill.exec.planner.sql.DirectPlan;
 import org.apache.drill.exec.planner.sql.DrillSqlWorker;
 import org.apache.drill.exec.proto.BitControl.PlanFragment;
@@ -57,7 +55,6 @@ import org.apache.drill.exec.rpc.RpcException;
 import org.apache.drill.exec.rpc.UserClientConnection;
 import org.apache.drill.exec.server.DrillbitContext;
 import org.apache.drill.exec.server.FailureUtils;
-import org.apache.drill.exec.server.options.OptionManager;
 import org.apache.drill.exec.server.options.OptionSet;
 import org.apache.drill.exec.testing.ControlsInjector;
 import org.apache.drill.exec.testing.ControlsInjectorFactory;
@@ -597,50 +594,9 @@ public class Foreman implements Runnable {
         queryId, queryWorkUnit.stringifyFragments()));
   }
 
-  private PhysicalPlan getOrBuildPlan(String sql, Pointer<String> textPlan, boolean planCacheEnabled)
-      throws ExecutionSetupException {
-
-    PhysicalPlan plan = null;
-
-    if (planCacheEnabled) {
-      logger.info("Cache enabled, checking entries");
-      plan = CustomCacheManager.getQueryPlan(sql);
-
-      if (plan == null) {
-        logger.info("Cache miss, generating new plan");
-        plan = DrillSqlWorker.getPlan(queryContext, sql, textPlan);
-
-        if (isCacheableQuery(sql)) {
-          CustomCacheManager.putQueryPlan(sql, plan);
-          CustomCacheManager.logCacheStats();
-        }
-      } else {
-        logger.info("Using cached plan");
-      }
-
-    } else {
-      plan = DrillSqlWorker.getPlan(queryContext, sql, textPlan);
-    }
-
-    return plan;
-  }
-
-  private boolean isCacheableQuery(String sql) {
-    return sql.trim().toUpperCase().startsWith("SELECT");
-  }
-
   private void runSQL(final String sql) throws ExecutionSetupException {
     final Pointer<String> textPlan = new Pointer<>();
-    final OptionManager options = queryContext.getOptions();
-    final boolean planCacheEnabled = options.getOption(PlannerSettings.PLAN_CACHE);
-    if (planCacheEnabled) {
-      logger.info("PlanCache is enabled");
-    } else {
-      logger.info("PlanCache is disabled");
-    }
-
-    PhysicalPlan plan = getOrBuildPlan(sql, textPlan, planCacheEnabled);
-
+    final PhysicalPlan plan = DrillSqlWorker.getPlan(queryContext, sql, textPlan);
     runPhysicalPlan(plan, textPlan);
   }
 

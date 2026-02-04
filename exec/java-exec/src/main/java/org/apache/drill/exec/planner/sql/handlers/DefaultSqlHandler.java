@@ -388,11 +388,8 @@ public class DefaultSqlHandler extends AbstractSqlHandler {
             return false;
           }
           CacheKey cacheKey = (CacheKey) o;
-          logger.info("Compare phase {} {}, {} ", phase.equals(cacheKey.phase), phase.name(), cacheKey.phase.name());
-          logger.info("Compare plannerType {} {} {}", plannerType.equals(cacheKey.plannerType), plannerType.name(), cacheKey.plannerType.name());
-          logger.info("Compare input {}", input.deepEquals(cacheKey.input));
-          return  phase.name().equals(cacheKey.phase.name()) &&
-              plannerType.name().equals(cacheKey.plannerType.name()) &&
+          return phase == cacheKey.phase &&
+              plannerType == cacheKey.plannerType &&
               input.deepEquals(cacheKey.input) &&
               targetTraits.equals(cacheKey.targetTraits);
       }
@@ -421,7 +418,7 @@ public class DefaultSqlHandler extends AbstractSqlHandler {
 
       RelNode cachedResult = CustomCacheManager.getTransformedPlan(key);
       if (cachedResult != null) {
-        CustomCacheManager.logCacheStats();
+        logger.debug("Cache hit for transform phase: {}", phase);
         return cachedResult;
       }
     }
@@ -430,7 +427,6 @@ public class DefaultSqlHandler extends AbstractSqlHandler {
     switch (plannerType) {
     case HEP_BOTTOM_UP:
     case HEP: {
-      logger.info("DefaultSqlHandler.transform()");
       final HepProgramBuilder hepPgmBldr = new HepProgramBuilder();
       if (plannerType == PlannerType.HEP_BOTTOM_UP) {
         hepPgmBldr.addMatchOrder(HepMatchOrder.BOTTOM_UP);
@@ -462,22 +458,15 @@ public class DefaultSqlHandler extends AbstractSqlHandler {
       Preconditions.checkArgument(planner instanceof VolcanoPlanner,
           "Cluster is expected to be constructed using VolcanoPlanner. Was actually of type %s.", planner.getClass()
               .getName());
-      logger.info("DefaultSqlHandler.transform() program.run( before");
       output = program.run(planner, input, toTraits,
           ImmutableList.of(), ImmutableList.of());
-      logger.info("DefaultSqlHandler.transform() program.run( after");
-
       break;
     }
     }
 
     if (planCacheEnabled) {
-      logger.info("planCache enabled, storing transformedplan");
-      // Store the result in the cache before returning
       CustomCacheManager.putTransformedPlan(key, output);
-      CustomCacheManager.logCacheStats();
-    } else {
-      logger.info("planCache disabled, not storing transformedplan");
+      logger.debug("Cached transform result for phase: {}", phase);
     }
 
     if (log) {

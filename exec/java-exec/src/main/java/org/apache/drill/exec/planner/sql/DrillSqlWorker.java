@@ -18,9 +18,6 @@
 package org.apache.drill.exec.planner.sql;
 
 import java.io.IOException;
-import java.util.Objects;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ConcurrentMap;
 
 import org.apache.calcite.sql.SqlDescribeSchema;
 import org.apache.calcite.sql.SqlKind;
@@ -32,13 +29,14 @@ import org.apache.calcite.sql.SqlOrderBy;
 import org.apache.calcite.sql.parser.SqlParserPos;
 import org.apache.calcite.tools.RelConversionException;
 import org.apache.calcite.tools.ValidationException;
-import org.apache.calcite.util.Litmus;
 import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.exec.ExecConstants;
+import org.apache.drill.exec.cache.CustomCacheManager;
 import org.apache.drill.exec.exception.MetadataException;
 import org.apache.drill.exec.ops.QueryContext;
 import org.apache.drill.exec.ops.QueryContext.SqlStatementType;
 import org.apache.drill.exec.physical.PhysicalPlan;
+import org.apache.drill.exec.planner.physical.PlannerSettings;
 import org.apache.drill.exec.planner.sql.conversion.SqlConverter;
 import org.apache.drill.exec.planner.sql.handlers.AbstractSqlHandler;
 import org.apache.drill.exec.planner.sql.handlers.AnalyzeTableHandler;
@@ -132,8 +130,6 @@ public class DrillSqlWorker {
     try {
       return getPhysicalPlan(context, sql, textPlan, retryAttempts);
     } catch (Exception e) {
-logger.info("DrillSqlWorker.convertPlan() retrying???: attempt # {}", retryAttempts);
-e.printStackTrace(System.out);
       logger.trace("There was an error during conversion into physical plan.", e);
 
       // It is prohibited to retry query planning for ANALYZE statement since it changes
@@ -182,11 +178,9 @@ e.printStackTrace(System.out);
   private static PhysicalPlan getPhysicalPlan(QueryContext context, String sql, Pointer<String> textPlan,
       long retryAttempts) throws ForemanSetupException, RelConversionException, IOException, ValidationException {
     try {
-      logger.info("DrillSqlWorker.getPhysicalPlan() is called {}", retryAttempts);
       return getQueryPlan(context, sql, textPlan);
     } catch (Exception e) {
       Throwable rootCause = Throwables.getRootCause(e);
-      logger.info("DrillSqlWorker.getPhysicalPlan() is called {}", rootCause.getMessage());
       // Calcite wraps exceptions thrown during planning, so checks whether original exception is OutdatedMetadataException
       if (rootCause instanceof MetadataException) {
         // resets SqlStatementType to avoid errors when it is set during further attempts
@@ -218,27 +212,30 @@ e.printStackTrace(System.out);
 
   /**
    * Converts sql query string into query physical plan.
+   * If plan caching is enabled, attempts to retrieve a cached plan first.
    *
    * @param context query context
    * @param sql sql query
    * @param textPlan text plan
    * @return query physical plan
    */
-
-  private static ConcurrentMap<QueryPlanCacheKey, PhysicalPlan> getQueryPlanCache = new ConcurrentHashMap<>();
-
   private static PhysicalPlan getQueryPlan(QueryContext context, String sql, Pointer<String> textPlan)
       throws ForemanSetupException, RelConversionException, IOException, ValidationException {
+
+    final boolean planCacheEnabled = context.getOptions().getOption(PlannerSettings.PLAN_CACHE);
+
+    // Check cache first if enabled
+    if (planCacheEnabled) {
+      PhysicalPlan cachedPlan = CustomCacheManager.getQueryPlan(sql);
+      if (cachedPlan != null) {
+        logger.debug("Using cached query plan for SQL: {}", sql.substring(0, Math.min(sql.length(), 100)));
+        return cachedPlan;
+      }
+    }
 
     final SqlConverter parser = new SqlConverter(context);
     injector.injectChecked(context.getExecutionControls(), "sql-parsing", ForemanSetupException.class);
     final SqlNode sqlNode = checkAndApplyAutoLimit(parser, context, sql);
-    QueryPlanCacheKey queryPlanCacheKey =  new QueryPlanCacheKey(sqlNode);
-
-    if(getQueryPlanCache.containsKey(queryPlanCacheKey)) {
-      logger.info("Using getQueryPlanCache");
-      return getQueryPlanCache.get(queryPlanCacheKey);
-    }
     final AbstractSqlHandler handler;
     final SqlHandlerConfig config = new SqlHandlerConfig(context, parser);
 
@@ -304,8 +301,6 @@ e.printStackTrace(System.out);
         context.setSQLStatementType(SqlStatementType.OTHER);
     }
 
-
-
     // Determines whether result set should be returned for the query based on return result set option and sql node kind.
     // Overrides the option on a query level if it differs from the current value.
     boolean currentReturnResultValue = context.getOptions().getBoolean(ExecConstants.RETURN_RESULT_SET_FOR_DDL);
@@ -315,33 +310,24 @@ e.printStackTrace(System.out);
     }
 
     PhysicalPlan physicalPlan = handler.getPlan(sqlNode);
-    getQueryPlanCache.put(queryPlanCacheKey, physicalPlan);
+
+    // Cache the plan if caching is enabled and this is a cacheable query type
+    if (planCacheEnabled && isCacheableQuery(sqlNode)) {
+      CustomCacheManager.putQueryPlan(sql, physicalPlan);
+      logger.debug("Cached query plan for SQL: {}", sql.substring(0, Math.min(sql.length(), 100)));
+    }
+
     return physicalPlan;
   }
 
-  private static class QueryPlanCacheKey {
-      private final SqlNode sqlNode;
-
-      public QueryPlanCacheKey(SqlNode sqlNode) {
-          this.sqlNode = sqlNode;
-      }
-
-      @Override
-      public boolean equals(Object o) {
-          if (this == o) {
-            return true;
-          }
-          if (o == null || getClass() != o.getClass()) {
-            return false;
-          }
-          QueryPlanCacheKey cacheKey = (QueryPlanCacheKey) o;
-          return  sqlNode.equalsDeep(cacheKey.sqlNode, Litmus.IGNORE);
-      }
-
-      @Override
-      public int hashCode() {
-        return Objects.hash(sqlNode);
-      }
+  /**
+   * Determines if a query type should be cached.
+   * Only SELECT queries are cached; DDL and other modifying statements should not be cached.
+   */
+  private static boolean isCacheableQuery(SqlNode sqlNode) {
+    SqlKind kind = sqlNode.getKind();
+    // Only cache SELECT queries, not DDL or DML
+    return kind == SqlKind.SELECT || kind == SqlKind.ORDER_BY || kind == SqlKind.UNION;
   }
 
   private static boolean isAutoLimitShouldBeApplied(SqlNode sqlNode, int queryMaxRows) {

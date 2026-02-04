@@ -29,28 +29,46 @@ import org.slf4j.LoggerFactory;
 import com.github.benmanes.caffeine.cache.Cache;
 import com.github.benmanes.caffeine.cache.Caffeine;
 
+/**
+ * Manages caches for query plans and transform results to improve query planning performance.
+ * Uses Caffeine cache with configurable TTL and maximum size.
+ */
 public class CustomCacheManager {
   private static final Logger logger = LoggerFactory.getLogger(CustomCacheManager.class);
 
-  private static Cache<String, PhysicalPlan> queryCache;
-  private static Cache<CacheKey, RelNode> transformCache;
+  private static volatile Cache<String, PhysicalPlan> queryCache;
+  private static volatile Cache<CacheKey, RelNode> transformCache;
+  private static volatile boolean initialized = false;
 
-  private static int queryMaxEntries;
-  private static int queryTtlMinutes;
-  private static int transformMaxEntries;
-  private static int transformTtlMinutes;
+  private static final int DEFAULT_MAX_ENTRIES = 100;
+  private static final int DEFAULT_TTL_MINUTES = 300;
 
-  static {
-    loadConfig();
+  private CustomCacheManager() {
+    // Utility class
   }
 
-  private static void loadConfig() {
+  /**
+   * Lazily initializes the caches if not already initialized.
+   * Uses double-checked locking for thread safety.
+   */
+  private static void ensureInitialized() {
+    if (!initialized) {
+      synchronized (CustomCacheManager.class) {
+        if (!initialized) {
+          initializeCaches();
+          initialized = true;
+        }
+      }
+    }
+  }
+
+  private static void initializeCaches() {
     DrillConfig config = DrillConfig.create();
 
-    queryMaxEntries = getConfigInt(config, "planner.query.cache.max_entries_amount", 100);
-    queryTtlMinutes = getConfigInt(config, "planner.query.cache.plan_cache_ttl_minutes", 300);
-    transformMaxEntries = getConfigInt(config, "planner.transform.cache.max_entries_amount", 100);
-    transformTtlMinutes = getConfigInt(config, "planner.transform.cache.plan_cache_ttl_minutes", 300);
+    int queryMaxEntries = getConfigInt(config, "planner.query.cache.max_entries_amount", DEFAULT_MAX_ENTRIES);
+    int queryTtlMinutes = getConfigInt(config, "planner.query.cache.plan_cache_ttl_minutes", DEFAULT_TTL_MINUTES);
+    int transformMaxEntries = getConfigInt(config, "planner.transform.cache.max_entries_amount", DEFAULT_MAX_ENTRIES);
+    int transformTtlMinutes = getConfigInt(config, "planner.transform.cache.plan_cache_ttl_minutes", DEFAULT_TTL_MINUTES);
 
     queryCache = Caffeine.newBuilder()
         .maximumSize(queryMaxEntries)
@@ -63,41 +81,72 @@ public class CustomCacheManager {
         .expireAfterWrite(transformTtlMinutes, TimeUnit.MINUTES)
         .recordStats()
         .build();
+
+    logger.debug("Query plan cache initialized with maxEntries={}, ttlMinutes={}", queryMaxEntries, queryTtlMinutes);
+    logger.debug("Transform cache initialized with maxEntries={}, ttlMinutes={}", transformMaxEntries, transformTtlMinutes);
   }
 
   private static int getConfigInt(DrillConfig config, String path, int defaultValue) {
-    logger.info("Fetching: " + path);
-    Boolean pathFound = config.hasPath(path);
-    int value = pathFound ? config.getInt(path) : defaultValue;
-    if (!pathFound) {
-      logger.info("Using default value: " + defaultValue);
-    } else {
-      logger.info("Using found value: " + value);
+    if (config.hasPath(path)) {
+      int value = config.getInt(path);
+      logger.debug("Config {}: {}", path, value);
+      return value;
     }
-    return value;
+    logger.debug("Config {} not found, using default: {}", path, defaultValue);
+    return defaultValue;
   }
 
   public static PhysicalPlan getQueryPlan(String sql) {
+    ensureInitialized();
     return queryCache.getIfPresent(sql);
   }
 
   public static void putQueryPlan(String sql, PhysicalPlan plan) {
+    ensureInitialized();
     queryCache.put(sql, plan);
   }
 
   public static RelNode getTransformedPlan(CacheKey key) {
+    ensureInitialized();
     return transformCache.getIfPresent(key);
   }
 
   public static void putTransformedPlan(CacheKey key, RelNode plan) {
+    ensureInitialized();
     transformCache.put(key, plan);
   }
 
   public static void logCacheStats() {
-    logger.info("Query Cache Stats: " + queryCache.stats());
-    logger.info("Query Cache Size: " + queryCache.estimatedSize());
+    ensureInitialized();
+    if (logger.isDebugEnabled()) {
+      logger.debug("Query Cache Stats: {}", queryCache.stats());
+      logger.debug("Query Cache Size: {}", queryCache.estimatedSize());
+      logger.debug("Transform Cache Stats: {}", transformCache.stats());
+      logger.debug("Transform Cache Size: {}", transformCache.estimatedSize());
+    }
+  }
 
-    logger.info("Transform Cache Stats: " + transformCache.stats());
-    logger.info("Transform Cache Size: " + transformCache.estimatedSize());
+  /**
+   * Clears both caches. Useful for testing.
+   */
+  public static void clearCaches() {
+    if (initialized) {
+      queryCache.invalidateAll();
+      transformCache.invalidateAll();
+    }
+  }
+
+  /**
+   * Resets the cache manager, forcing reinitialization on next use.
+   * Useful for testing with different configurations.
+   */
+  public static synchronized void reset() {
+    if (initialized) {
+      queryCache.invalidateAll();
+      transformCache.invalidateAll();
+      queryCache = null;
+      transformCache = null;
+      initialized = false;
+    }
   }
 }
