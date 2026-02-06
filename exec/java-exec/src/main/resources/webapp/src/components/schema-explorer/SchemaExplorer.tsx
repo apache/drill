@@ -175,7 +175,7 @@ export default function SchemaExplorer({ onInsertText, onTableSelect }: SchemaEx
   });
 
   // Helper to build file/folder tree nodes recursively
-  const buildFileNodes = (schema: string, files: FileInfo[], parentPath: string = ''): DataNode[] => {
+  const buildFileNodes = useCallback((schema: string, files: FileInfo[], parentPath: string = ''): DataNode[] => {
     return files.map((file) => {
       const filePath = parentPath ? `${parentPath}/${file.name}` : file.name;
       const fileKey = `file:${schema}:${filePath}`;
@@ -221,7 +221,7 @@ export default function SchemaExplorer({ onInsertText, onTableSelect }: SchemaEx
         };
       }
     });
-  };
+  }, [filesCache, columnsCache]);
 
   // Build tree data from plugins, schemas, tables/files, and columns
   const treeData = useMemo(() => {
@@ -339,7 +339,7 @@ export default function SchemaExplorer({ onInsertText, onTableSelect }: SchemaEx
         isLeaf: false,
       };
     });
-  }, [plugins, schemasCache, tablesCache, columnsCache, filesCache, searchText]);
+  }, [plugins, schemasCache, tablesCache, columnsCache, filesCache, searchText, buildFileNodes]);
 
   // Load schemas, tables/files, or columns on expand
   const loadData = useCallback(
