@@ -329,3 +329,83 @@ body {
   opacity: 0.15;
   border-radius: 8px;
 }
+
+/* ==================== Content Panel Styles ==================== */
+
+/* Markdown panel */
+.markdown-panel {
+  padding: 12px;
+  overflow: auto;
+  height: 100%;
+}
+
+.markdown-panel img {
+  max-width: 100%;
+}
+
+.markdown-panel h1,
+.markdown-panel h2,
+.markdown-panel h3 {
+  margin-top: 0.5em;
+  margin-bottom: 0.3em;
+}
+
+.markdown-panel p {
+  margin-bottom: 0.5em;
+}
+
+/* Image panel */
+.image-panel {
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.image-panel img {
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
+}
+
+/* Title panel */
+.title-panel {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+}
+
+/* ==================== Dashboard Tab Styles ==================== */
+
+.dashboard-tabs {
+  padding: 0 12px;
+  background: #fff;
+  border-bottom: 1px solid #e8e8e8;
+  flex-shrink: 0;
+}
+
+.dashboard-tabs .ant-tabs {
+  margin-bottom: 0;
+}
+
+.dashboard-tabs .ant-tabs-nav {
+  margin-bottom: 0;
+}
+
+/* ==================== PDF Export Overlay ==================== */
+
+.pdf-export-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(255, 255, 255, 0.8);
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
