@@ -47,6 +47,8 @@ import {
   AppstoreOutlined,
   ClockCircleOutlined,
   LinkOutlined,
+  StarOutlined,
+  StarFilled,
 } from '@ant-design/icons';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import {
@@ -54,6 +56,8 @@ import {
   createDashboard,
   deleteDashboard,
   updateDashboard,
+  getFavorites,
+  toggleFavorite,
 } from '../api/dashboards';
 import type { Dashboard } from '../types';
 
@@ -64,6 +68,7 @@ export default function DashboardsPage() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const [searchText, setSearchText] = useState('');
+  const [favoritesOnly, setFavoritesOnly] = useState(false);
   const [createModalOpen, setCreateModalOpen] = useState(false);
   const [editModalOpen, setEditModalOpen] = useState(false);
   const [editingDashboard, setEditingDashboard] = useState<Dashboard | null>(null);
@@ -74,6 +79,20 @@ export default function DashboardsPage() {
   const { data: dashboards, isLoading, error } = useQuery({
     queryKey: ['dashboards'],
     queryFn: getDashboards,
+  });
+
+  // Fetch favorites
+  const { data: favorites } = useQuery({
+    queryKey: ['dashboard-favorites'],
+    queryFn: getFavorites,
+  });
+
+  // Toggle favorite mutation
+  const favoriteMutation = useMutation({
+    mutationFn: toggleFavorite,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['dashboard-favorites'] });
+    },
   });
 
   // Create mutation
@@ -123,16 +142,20 @@ export default function DashboardsPage() {
     if (!dashboards) {
       return [];
     }
-    if (!searchText) {
-      return dashboards;
+    let result = dashboards;
+    if (favoritesOnly && favorites) {
+      result = result.filter((d) => favorites.includes(d.id));
     }
-    const lower = searchText.toLowerCase();
-    return dashboards.filter(
-      (d) =>
-        d.name.toLowerCase().includes(lower) ||
-        (d.description && d.description.toLowerCase().includes(lower))
-    );
-  }, [dashboards, searchText]);
+    if (searchText) {
+      const lower = searchText.toLowerCase();
+      result = result.filter(
+        (d) =>
+          d.name.toLowerCase().includes(lower) ||
+          (d.description && d.description.toLowerCase().includes(lower))
+      );
+    }
+    return result;
+  }, [dashboards, searchText, favoritesOnly, favorites]);
 
   // Handle create
   const handleCreate = async () => {
@@ -223,15 +246,26 @@ export default function DashboardsPage() {
             </Button>
           </div>
 
-          {/* Search */}
-          <Input
-            placeholder="Search dashboards by name or description..."
-            prefix={<SearchOutlined />}
-            value={searchText}
-            onChange={(e) => setSearchText(e.target.value)}
-            allowClear
-            style={{ maxWidth: 400 }}
-          />
+          {/* Search and Favorites Filter */}
+          <Space>
+            <Input
+              placeholder="Search dashboards by name or description..."
+              prefix={<SearchOutlined />}
+              value={searchText}
+              onChange={(e) => setSearchText(e.target.value)}
+              allowClear
+              style={{ width: 400 }}
+            />
+            <Tooltip title="Show favorites only">
+              <Button
+                type={favoritesOnly ? 'primary' : 'default'}
+                icon={favoritesOnly ? <StarFilled /> : <StarOutlined />}
+                onClick={() => setFavoritesOnly(!favoritesOnly)}
+              >
+                Favorites
+              </Button>
+            </Tooltip>
+          </Space>
 
           {/* Dashboard Cards */}
           {isLoading ? (
@@ -273,8 +307,23 @@ export default function DashboardsPage() {
                           alignItems: 'center',
                           justifyContent: 'center',
                           background: 'linear-gradient(135deg, #722ed1 0%, #2f54eb 100%)',
+                          position: 'relative',
                         }}
                       >
+                        {/* Favorite Star */}
+                        <div
+                          style={{ position: 'absolute', top: 8, right: 8, zIndex: 1 }}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            favoriteMutation.mutate(dashboard.id);
+                          }}
+                        >
+                          {(favorites || []).includes(dashboard.id) ? (
+                            <StarFilled style={{ fontSize: 20, color: '#faad14', cursor: 'pointer' }} />
+                          ) : (
+                            <StarOutlined style={{ fontSize: 20, color: 'rgba(255,255,255,0.7)', cursor: 'pointer' }} />
+                          )}
+                        </div>
                         <Space direction="vertical" align="center">
                           <DashboardOutlined style={{ fontSize: 36, color: '#fff' }} />
                           <Text style={{ color: '#fff', fontSize: 12 }}>
