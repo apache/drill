@@ -48,13 +48,16 @@ import {
   PictureOutlined,
   FontSizeOutlined,
   CloseOutlined,
+  SettingOutlined,
+  StarOutlined,
+  StarFilled,
 } from '@ant-design/icons';
 import html2canvas from 'html2canvas';
 import { jsPDF } from 'jspdf';
-import { getDashboard, updateDashboard } from '../api/dashboards';
+import { getDashboard, updateDashboard, getFavorites, toggleFavorite } from '../api/dashboards';
 import { getVisualizations } from '../api/visualizations';
-import { DashboardPanelCard } from '../components/dashboard';
-import type { DashboardPanel, DashboardTab } from '../types';
+import { DashboardPanelCard, DashboardSettingsDrawer, DEFAULT_THEME } from '../components/dashboard';
+import type { DashboardPanel, DashboardTab, DashboardTheme } from '../types';
 
 import 'react-grid-layout/css/styles.css';
 import 'react-resizable/css/styles.css';
@@ -81,6 +84,7 @@ export default function DashboardViewPage() {
   const [editMode, setEditMode] = useState(false);
   const [panels, setPanels] = useState<DashboardPanel[]>([]);
   const [tabs, setTabs] = useState<DashboardTab[]>([]);
+  const [theme, setTheme] = useState<DashboardTheme>(DEFAULT_THEME);
   const [panelsInitialized, setPanelsInitialized] = useState(false);
   const [refreshInterval, setRefreshInterval] = useState(0);
   const [addPanelVisible, setAddPanelVisible] = useState(false);
@@ -89,6 +93,7 @@ export default function DashboardViewPage() {
   const [renamingTabId, setRenamingTabId] = useState<string | null>(null);
   const [renameValue, setRenameValue] = useState('');
   const [exportingPdf, setExportingPdf] = useState(false);
+  const [settingsOpen, setSettingsOpen] = useState(false);
 
   // New panel content inputs
   const [newMarkdownContent, setNewMarkdownContent] = useState('## Heading\n\nYour content here...');
@@ -104,11 +109,30 @@ export default function DashboardViewPage() {
     enabled: !!id,
   });
 
+  // Fetch favorites
+  const { data: favorites } = useQuery({
+    queryKey: ['dashboard-favorites'],
+    queryFn: getFavorites,
+  });
+
+  const isFavorited = useMemo(() => {
+    return id ? (favorites || []).includes(id) : false;
+  }, [favorites, id]);
+
+  // Toggle favorite mutation
+  const favoriteMutation = useMutation({
+    mutationFn: () => toggleFavorite(id!),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['dashboard-favorites'] });
+    },
+  });
+
   // Initialize panels from fetched dashboard data
   useEffect(() => {
     if (dashboard && !panelsInitialized) {
       setPanels(dashboard.panels || []);
       setTabs(dashboard.tabs || []);
+      setTheme(dashboard.theme || DEFAULT_THEME);
       setRefreshInterval(dashboard.refreshInterval || 0);
       setPanelsInitialized(true);
     }
@@ -123,7 +147,7 @@ export default function DashboardViewPage() {
 
   // Save dashboard mutation
   const saveMutation = useMutation({
-    mutationFn: () => updateDashboard(id!, { panels, tabs, refreshInterval }),
+    mutationFn: () => updateDashboard(id!, { panels, tabs, theme, refreshInterval }),
     onSuccess: () => {
       message.success('Dashboard saved');
       queryClient.invalidateQueries({ queryKey: ['dashboard', id] });
@@ -136,7 +160,6 @@ export default function DashboardViewPage() {
   // Filter panels by active tab
   const visiblePanels = useMemo(() => {
     if (!activeTabId) {
-      // Show panels with no tabId (default/all tab)
       if (tabs.length === 0) {
         return panels;
       }
@@ -232,7 +255,6 @@ export default function DashboardViewPage() {
     };
     setPanels((prev) => [...prev, newPanel]);
     setAddPanelVisible(false);
-    // Reset inputs
     setNewMarkdownContent('## Heading\n\nYour content here...');
     setNewImageUrl('');
     setNewImageAlt('');
@@ -254,10 +276,11 @@ export default function DashboardViewPage() {
   // Toggle edit mode
   const handleToggleEdit = useCallback(() => {
     if (editMode) {
-      // Exiting edit mode without saving - reset panels
+      // Exiting edit mode without saving - reset
       if (dashboard) {
         setPanels(dashboard.panels || []);
         setTabs(dashboard.tabs || []);
+        setTheme(dashboard.theme || DEFAULT_THEME);
         setRefreshInterval(dashboard.refreshInterval || 0);
       }
     }
@@ -287,7 +310,6 @@ export default function DashboardViewPage() {
 
   const handleDeleteTab = useCallback((tabId: string) => {
     setTabs((prev) => prev.filter((t) => t.id !== tabId));
-    // Move orphaned panels to default (no tab)
     setPanels((prev) => prev.map((p) => p.tabId === tabId ? { ...p, tabId: undefined } : p));
     if (activeTabId === tabId) {
       setActiveTabId(null);
@@ -317,7 +339,6 @@ export default function DashboardViewPage() {
       const imgWidth = pageWidth - 20;
       const imgHeight = (canvas.height * imgWidth) / canvas.width;
 
-      // Add title
       pdf.setFontSize(16);
       pdf.text(dashboard?.name || 'Dashboard', 10, 12);
       pdf.setFontSize(10);
@@ -330,7 +351,6 @@ export default function DashboardViewPage() {
       if (imgHeight <= availableHeight) {
         pdf.addImage(imgData, 'PNG', 10, startY, imgWidth, imgHeight);
       } else {
-        // Scale to fit
         const scaledHeight = availableHeight;
         const scaledWidth = (canvas.width * scaledHeight) / canvas.height;
         pdf.addImage(imgData, 'PNG', 10, startY, scaledWidth, scaledHeight);
@@ -353,6 +373,20 @@ export default function DashboardViewPage() {
       () => message.error('Failed to copy link')
     );
   }, [id]);
+
+  // Theme CSS custom properties
+  const themeStyle = useMemo((): React.CSSProperties => ({
+    '--db-bg': theme.backgroundColor,
+    '--db-font': theme.fontColor,
+    '--db-panel-bg': theme.panelBackground,
+    '--db-panel-border': theme.panelBorderColor,
+    '--db-panel-radius': theme.panelBorderRadius,
+    '--db-accent': theme.accentColor,
+    '--db-header': theme.headerColor,
+    fontFamily: theme.fontFamily,
+    color: theme.fontColor,
+    backgroundColor: theme.backgroundColor,
+  } as React.CSSProperties), [theme]);
 
   if (isLoading) {
     return (
@@ -440,7 +474,21 @@ export default function DashboardViewPage() {
             Back
           </Button>
           <div>
-            <Title level={4} style={{ margin: 0 }}>{dashboard.name}</Title>
+            <Space align="center">
+              <Title level={4} style={{ margin: 0 }}>{dashboard.name}</Title>
+              <Tooltip title={isFavorited ? 'Remove from favorites' : 'Add to favorites'}>
+                <Button
+                  type="text"
+                  size="small"
+                  icon={isFavorited
+                    ? <StarFilled style={{ color: '#faad14', fontSize: 18 }} />
+                    : <StarOutlined style={{ fontSize: 18 }} />
+                  }
+                  onClick={() => favoriteMutation.mutate()}
+                  loading={favoriteMutation.isPending}
+                />
+              </Tooltip>
+            </Space>
             {dashboard.description && (
               <Text type="secondary">{dashboard.description}</Text>
             )}
@@ -482,6 +530,9 @@ export default function DashboardViewPage() {
 
           {editMode ? (
             <>
+              <Tooltip title="Dashboard settings">
+                <Button icon={<SettingOutlined />} onClick={() => setSettingsOpen(true)} />
+              </Tooltip>
               <Button icon={<PlusOutlined />} onClick={() => setAddPanelVisible(true)}>
                 Add Panel
               </Button>
@@ -547,7 +598,7 @@ export default function DashboardViewPage() {
           </Empty>
         </div>
       ) : (
-        <div className="dashboard-grid-container" ref={gridRef}>
+        <div className="dashboard-grid-container" ref={gridRef} style={themeStyle}>
           <ResponsiveGridLayout
             className={`dashboard-grid ${editMode ? 'edit-mode' : ''}`}
             layouts={{ lg: layout }}
@@ -566,6 +617,7 @@ export default function DashboardViewPage() {
                   panel={panel}
                   editMode={editMode}
                   refreshInterval={editMode ? 0 : refreshInterval}
+                  dashboardUpdatedAt={dashboard.updatedAt}
                   onRemove={handleRemovePanel}
                   onPanelChange={handlePanelChange}
                 />
@@ -574,6 +626,14 @@ export default function DashboardViewPage() {
           </ResponsiveGridLayout>
         </div>
       )}
+
+      {/* Settings Drawer */}
+      <DashboardSettingsDrawer
+        open={settingsOpen}
+        theme={theme}
+        onClose={() => setSettingsOpen(false)}
+        onThemeChange={setTheme}
+      />
 
       {/* Add Panel Modal */}
       <Modal

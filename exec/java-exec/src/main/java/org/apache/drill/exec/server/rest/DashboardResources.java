@@ -61,6 +61,7 @@ import java.util.UUID;
 public class DashboardResources {
   private static final Logger logger = LoggerFactory.getLogger(DashboardResources.class);
   private static final String STORE_NAME = "drill.sqllab.dashboards";
+  private static final String FAVORITES_STORE_NAME = "drill.sqllab.dashboard_favorites";
 
   @Inject
   WorkManager workManager;
@@ -72,8 +73,183 @@ public class DashboardResources {
   PersistentStoreProvider storeProvider;
 
   private static volatile PersistentStore<Dashboard> cachedStore;
+  private static volatile PersistentStore<UserFavorites> cachedFavoritesStore;
 
   // ==================== Model Classes ====================
+
+  /**
+   * Theme configuration for a dashboard's visual appearance.
+   */
+  public static class DashboardTheme {
+    @JsonProperty
+    private String mode;
+    @JsonProperty
+    private String fontFamily;
+    @JsonProperty
+    private String backgroundColor;
+    @JsonProperty
+    private String fontColor;
+    @JsonProperty
+    private String panelBackground;
+    @JsonProperty
+    private String panelBorderColor;
+    @JsonProperty
+    private String panelBorderRadius;
+    @JsonProperty
+    private String accentColor;
+    @JsonProperty
+    private String headerColor;
+
+    public DashboardTheme() {
+    }
+
+    @JsonCreator
+    public DashboardTheme(
+        @JsonProperty("mode") String mode,
+        @JsonProperty("fontFamily") String fontFamily,
+        @JsonProperty("backgroundColor") String backgroundColor,
+        @JsonProperty("fontColor") String fontColor,
+        @JsonProperty("panelBackground") String panelBackground,
+        @JsonProperty("panelBorderColor") String panelBorderColor,
+        @JsonProperty("panelBorderRadius") String panelBorderRadius,
+        @JsonProperty("accentColor") String accentColor,
+        @JsonProperty("headerColor") String headerColor) {
+      this.mode = mode;
+      this.fontFamily = fontFamily;
+      this.backgroundColor = backgroundColor;
+      this.fontColor = fontColor;
+      this.panelBackground = panelBackground;
+      this.panelBorderColor = panelBorderColor;
+      this.panelBorderRadius = panelBorderRadius;
+      this.accentColor = accentColor;
+      this.headerColor = headerColor;
+    }
+
+    public String getMode() {
+      return mode;
+    }
+
+    public String getFontFamily() {
+      return fontFamily;
+    }
+
+    public String getBackgroundColor() {
+      return backgroundColor;
+    }
+
+    public String getFontColor() {
+      return fontColor;
+    }
+
+    public String getPanelBackground() {
+      return panelBackground;
+    }
+
+    public String getPanelBorderColor() {
+      return panelBorderColor;
+    }
+
+    public String getPanelBorderRadius() {
+      return panelBorderRadius;
+    }
+
+    public String getAccentColor() {
+      return accentColor;
+    }
+
+    public String getHeaderColor() {
+      return headerColor;
+    }
+
+    public void setMode(String mode) {
+      this.mode = mode;
+    }
+
+    public void setFontFamily(String fontFamily) {
+      this.fontFamily = fontFamily;
+    }
+
+    public void setBackgroundColor(String backgroundColor) {
+      this.backgroundColor = backgroundColor;
+    }
+
+    public void setFontColor(String fontColor) {
+      this.fontColor = fontColor;
+    }
+
+    public void setPanelBackground(String panelBackground) {
+      this.panelBackground = panelBackground;
+    }
+
+    public void setPanelBorderColor(String panelBorderColor) {
+      this.panelBorderColor = panelBorderColor;
+    }
+
+    public void setPanelBorderRadius(String panelBorderRadius) {
+      this.panelBorderRadius = panelBorderRadius;
+    }
+
+    public void setAccentColor(String accentColor) {
+      this.accentColor = accentColor;
+    }
+
+    public void setHeaderColor(String headerColor) {
+      this.headerColor = headerColor;
+    }
+  }
+
+  /**
+   * Stores a user's list of favorited dashboard IDs.
+   */
+  public static class UserFavorites {
+    @JsonProperty
+    private List<String> dashboardIds;
+
+    public UserFavorites() {
+      this.dashboardIds = new ArrayList<>();
+    }
+
+    @JsonCreator
+    public UserFavorites(
+        @JsonProperty("dashboardIds") List<String> dashboardIds) {
+      this.dashboardIds = dashboardIds != null ? dashboardIds : new ArrayList<>();
+    }
+
+    public List<String> getDashboardIds() {
+      return dashboardIds;
+    }
+
+    public void setDashboardIds(List<String> dashboardIds) {
+      this.dashboardIds = dashboardIds;
+    }
+  }
+
+  /**
+   * Response for favorite toggle operations.
+   */
+  public static class FavoriteResponse {
+    @JsonProperty
+    public boolean favorited;
+    @JsonProperty
+    public String message;
+
+    public FavoriteResponse(boolean favorited, String message) {
+      this.favorited = favorited;
+      this.message = message;
+    }
+  }
+
+  /**
+   * Response containing a list of favorited dashboard IDs.
+   */
+  public static class FavoritesListResponse {
+    @JsonProperty
+    public List<String> dashboardIds;
+
+    public FavoritesListResponse(List<String> dashboardIds) {
+      this.dashboardIds = dashboardIds;
+    }
+  }
 
   /**
    * A panel within a dashboard, referencing a visualization or content and its layout position.
@@ -272,6 +448,8 @@ public class DashboardResources {
     @JsonProperty
     private List<DashboardTab> tabs;
     @JsonProperty
+    private DashboardTheme theme;
+    @JsonProperty
     private String owner;
     @JsonProperty
     private long createdAt;
@@ -292,6 +470,7 @@ public class DashboardResources {
         @JsonProperty("description") String description,
         @JsonProperty("panels") List<DashboardPanel> panels,
         @JsonProperty("tabs") List<DashboardTab> tabs,
+        @JsonProperty("theme") DashboardTheme theme,
         @JsonProperty("owner") String owner,
         @JsonProperty("createdAt") long createdAt,
         @JsonProperty("updatedAt") long updatedAt,
@@ -302,6 +481,7 @@ public class DashboardResources {
       this.description = description;
       this.panels = panels;
       this.tabs = tabs;
+      this.theme = theme;
       this.owner = owner;
       this.createdAt = createdAt;
       this.updatedAt = updatedAt;
@@ -327,6 +507,10 @@ public class DashboardResources {
 
     public List<DashboardTab> getTabs() {
       return tabs;
+    }
+
+    public DashboardTheme getTheme() {
+      return theme;
     }
 
     public String getOwner() {
@@ -365,6 +549,10 @@ public class DashboardResources {
       this.tabs = tabs;
     }
 
+    public void setTheme(DashboardTheme theme) {
+      this.theme = theme;
+    }
+
     public void setUpdatedAt(long updatedAt) {
       this.updatedAt = updatedAt;
     }
@@ -391,6 +579,8 @@ public class DashboardResources {
     @JsonProperty
     public List<DashboardTab> tabs;
     @JsonProperty
+    public DashboardTheme theme;
+    @JsonProperty
     public int refreshInterval;
     @JsonProperty
     public boolean isPublic;
@@ -408,6 +598,8 @@ public class DashboardResources {
     public List<DashboardPanel> panels;
     @JsonProperty
     public List<DashboardTab> tabs;
+    @JsonProperty
+    public DashboardTheme theme;
     @JsonProperty
     public Integer refreshInterval;
     @JsonProperty
@@ -492,6 +684,7 @@ public class DashboardResources {
         request.description,
         request.panels != null ? request.panels : new ArrayList<>(),
         request.tabs,
+        request.theme,
         getCurrentUser(),
         now,
         now,
@@ -582,6 +775,9 @@ public class DashboardResources {
       if (request.tabs != null) {
         dashboard.setTabs(request.tabs);
       }
+      if (request.theme != null) {
+        dashboard.setTheme(request.theme);
+      }
       if (request.refreshInterval != null) {
         dashboard.setRefreshInterval(request.refreshInterval);
       }
@@ -634,6 +830,66 @@ public class DashboardResources {
     }
   }
 
+  // ==================== Favorites Endpoints ====================
+
+  @GET
+  @Path("/favorites")
+  @Produces(MediaType.APPLICATION_JSON)
+  @Operation(summary = "Get favorites", description = "Returns the current user's favorited dashboard IDs")
+  public FavoritesListResponse getFavorites() {
+    logger.debug("Getting favorites for user: {}", getCurrentUser());
+
+    try {
+      PersistentStore<UserFavorites> store = getFavoritesStore();
+      UserFavorites favorites = store.get(getCurrentUser());
+
+      if (favorites == null) {
+        return new FavoritesListResponse(new ArrayList<>());
+      }
+
+      return new FavoritesListResponse(favorites.getDashboardIds());
+    } catch (Exception e) {
+      logger.error("Error getting favorites", e);
+      throw new DrillRuntimeException("Failed to get favorites: " + e.getMessage(), e);
+    }
+  }
+
+  @POST
+  @Path("/{id}/favorite")
+  @Produces(MediaType.APPLICATION_JSON)
+  @Operation(summary = "Toggle favorite", description = "Toggles a dashboard as favorite for the current user")
+  public Response toggleFavorite(
+      @Parameter(description = "Dashboard ID") @PathParam("id") String id) {
+    logger.debug("Toggling favorite for dashboard: {} by user: {}", id, getCurrentUser());
+
+    try {
+      PersistentStore<UserFavorites> store = getFavoritesStore();
+      String user = getCurrentUser();
+      UserFavorites favorites = store.get(user);
+
+      if (favorites == null) {
+        favorites = new UserFavorites();
+      }
+
+      boolean nowFavorited;
+      if (favorites.getDashboardIds().contains(id)) {
+        favorites.getDashboardIds().remove(id);
+        nowFavorited = false;
+      } else {
+        favorites.getDashboardIds().add(id);
+        nowFavorited = true;
+      }
+
+      store.put(user, favorites);
+
+      String msg = nowFavorited ? "Dashboard added to favorites" : "Dashboard removed from favorites";
+      return Response.ok(new FavoriteResponse(nowFavorited, msg)).build();
+    } catch (Exception e) {
+      logger.error("Error toggling favorite", e);
+      throw new DrillRuntimeException("Failed to toggle favorite: " + e.getMessage(), e);
+    }
+  }
+
   // ==================== Helper Methods ====================
 
   private PersistentStore<Dashboard> getStore() {
@@ -656,6 +912,28 @@ public class DashboardResources {
       }
     }
     return cachedStore;
+  }
+
+  private PersistentStore<UserFavorites> getFavoritesStore() {
+    if (cachedFavoritesStore == null) {
+      synchronized (DashboardResources.class) {
+        if (cachedFavoritesStore == null) {
+          try {
+            cachedFavoritesStore = storeProvider.getOrCreateStore(
+                PersistentStoreConfig.newJacksonBuilder(
+                    workManager.getContext().getLpPersistence().getMapper(),
+                    UserFavorites.class
+                )
+                .name(FAVORITES_STORE_NAME)
+                .build()
+            );
+          } catch (StoreException e) {
+            throw new DrillRuntimeException("Failed to access favorites store", e);
+          }
+        }
+      }
+    }
+    return cachedFavoritesStore;
   }
 
   private String getCurrentUser() {

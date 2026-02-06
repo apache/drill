@@ -19,3 +19,4 @@ export { default as DashboardPanelCard } from './DashboardPanelCard';
 export { default as MarkdownPanel } from './MarkdownPanel';
 export { default as ImagePanel } from './ImagePanel';
 export { default as TitlePanel } from './TitlePanel';
+export { default as DashboardSettingsDrawer, DEFAULT_THEME, DARK_THEME } from './DashboardSettingsDrawer';

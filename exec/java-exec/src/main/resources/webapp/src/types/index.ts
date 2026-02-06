@@ -173,12 +173,25 @@ export interface DashboardTab {
   order: number;
 }
 
+export interface DashboardTheme {
+  mode: 'light' | 'dark';
+  fontFamily: string;
+  backgroundColor: string;
+  fontColor: string;
+  panelBackground: string;
+  panelBorderColor: string;
+  panelBorderRadius: string;
+  accentColor: string;
+  headerColor: string;
+}
+
 export interface Dashboard {
   id: string;
   name: string;
   description?: string;
   panels: DashboardPanel[];
   tabs?: DashboardTab[];
+  theme?: DashboardTheme;
   owner: string;
   createdAt: string;
   updatedAt: string;
@@ -191,6 +204,7 @@ export interface DashboardCreate {
   description?: string;
   panels?: DashboardPanel[];
   tabs?: DashboardTab[];
+  theme?: DashboardTheme;
   refreshInterval?: number;
   isPublic?: boolean;
 }
