@@ -152,13 +152,25 @@ export interface VisualizationCreate {
 }
 
 // Dashboard types
+export type DashboardPanelType = 'visualization' | 'markdown' | 'image' | 'title';
+
 export interface DashboardPanel {
   id: string;
-  visualizationId: string;
+  type: DashboardPanelType;
+  visualizationId?: string;
+  content?: string;
+  config?: Record<string, string>;
+  tabId?: string;
   x: number;
   y: number;
   width: number;
   height: number;
+}
+
+export interface DashboardTab {
+  id: string;
+  name: string;
+  order: number;
 }
 
 export interface Dashboard {
@@ -166,6 +178,7 @@ export interface Dashboard {
   name: string;
   description?: string;
   panels: DashboardPanel[];
+  tabs?: DashboardTab[];
   owner: string;
   createdAt: string;
   updatedAt: string;
@@ -177,6 +190,7 @@ export interface DashboardCreate {
   name: string;
   description?: string;
   panels?: DashboardPanel[];
+  tabs?: DashboardTab[];
   refreshInterval?: number;
   isPublic?: boolean;
 }
