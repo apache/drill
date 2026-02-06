@@ -101,6 +101,7 @@ public class WebServer implements AutoCloseable {
   private static final int PORT_HUNT_TRIES = 100;
   private static final String BASE_STATIC_PATH = "/rest/static/";
   private static final String DRILL_ICON_RESOURCE_RELATIVE_PATH = "img/drill.ico";
+  private static final String SQLLAB_WEBAPP_PATH = "/webapp/";
 
   private final DrillConfig config;
   private final MetricRegistry metrics;
@@ -214,6 +215,12 @@ public class WebServer implements AutoCloseable {
     staticHolder.setInitParameter("pathInfoOnly", "true");
     servletContextHandler.addServlet(staticHolder, "/static/*");
 
+    // Add SQL Lab React SPA servlet
+    // Uses custom servlet for SPA client-side routing support
+    final ServletHolder sqlLabHolder = new ServletHolder("sqllab", SqlLabSpaServlet.class);
+    servletContextHandler.addServlet(sqlLabHolder, "/sqllab/*");
+    logger.info("SQL Lab React app configured at /sqllab/*");
+
     // Store the dependencies in the holder BEFORE creating the servlet
     // When Jersey instantiates DrillRestServerApplication (which extends DrillRestServer),
     // it will retrieve these dependencies and pass them to the parent constructor
@@ -260,7 +267,7 @@ public class WebServer implements AutoCloseable {
       holder.setInitParameter(CrossOriginFilter.ALLOW_CREDENTIALS_PARAM,
           String.valueOf(config.getBoolean(ExecConstants.HTTP_CORS_CREDENTIALS)));
 
-      for (String path : new String[]{"*.json", "/storage/*/enable/*", "/status*"}) {
+      for (String path : new String[]{"*.json", "/storage/*/enable/*", "/status*", "/api/*"}) {
         servletContextHandler.addFilter(holder, path, EnumSet.of(DispatcherType.REQUEST));
       }
     }

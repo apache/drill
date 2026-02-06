@@ -1,0 +1,331 @@
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html, body, #root {
+  height: 100%;
+  width: 100%;
+}
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* SQL Lab specific styles */
+.sqllab-container {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  overflow: hidden;
+}
+
+.sqllab-main {
+  display: flex;
+  flex: 1;
+  height: 100%;
+  overflow: hidden;
+}
+
+.sqllab-sidebar {
+  width: 280px;
+  min-width: 200px;
+  max-width: 400px;
+  border-right: 1px solid #e8e8e8;
+  background: #fafafa;
+  overflow: auto;
+  resize: horizontal;
+  transition: width 0.2s ease, min-width 0.2s ease;
+}
+
+.sqllab-sidebar.collapsed {
+  width: 0;
+  min-width: 0;
+  max-width: 0;
+  overflow: hidden;
+  border-right: none;
+  resize: none;
+}
+
+.sidebar-toggle {
+  width: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #fafafa;
+  border-right: 1px solid #e8e8e8;
+  cursor: pointer;
+  flex-shrink: 0;
+  font-size: 14px;
+  color: #666;
+  transition: background 0.2s, color 0.2s;
+}
+
+.sidebar-toggle:hover {
+  background: #e6f4ff;
+  color: #1890ff;
+}
+
+.sqllab-content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.sqllab-editor-panel {
+  min-height: 120px;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.sqllab-resize-handle {
+  height: 5px;
+  background: #e8e8e8;
+  cursor: row-resize;
+  flex-shrink: 0;
+  transition: background 0.2s;
+  position: relative;
+}
+
+.sqllab-resize-handle:hover,
+.sqllab-resize-handle.dragging {
+  background: #1890ff;
+}
+
+.sqllab-resize-handle::after {
+  content: '';
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  width: 30px;
+  height: 3px;
+  border-top: 1px solid #999;
+  border-bottom: 1px solid #999;
+}
+
+.sqllab-resize-handle:hover::after,
+.sqllab-resize-handle.dragging::after {
+  border-top-color: #fff;
+  border-bottom-color: #fff;
+}
+
+.sqllab-results-panel {
+  flex: 1;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  min-height: 100px;
+}
+
+/* Monaco editor container */
+.monaco-container {
+  flex: 1;
+  min-height: 0;
+}
+
+/* AG Grid styles */
+.ag-theme-alpine {
+  --ag-header-background-color: #f5f5f5;
+  --ag-odd-row-background-color: #fafafa;
+}
+
+/* Schema tree styles */
+.schema-tree {
+  padding: 8px;
+}
+
+.schema-tree .ant-tree-node-content-wrapper {
+  display: flex;
+  align-items: center;
+}
+
+/* Query toolbar */
+.query-toolbar {
+  padding: 8px 16px;
+  background: #fff;
+  border-bottom: 1px solid #e8e8e8;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+/* Results toolbar */
+.results-toolbar {
+  padding: 8px 16px;
+  background: #fff;
+  border-bottom: 1px solid #e8e8e8;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+/* Resizable panels */
+.resize-handle {
+  width: 4px;
+  background: transparent;
+  cursor: col-resize;
+  transition: background 0.2s;
+}
+
+.resize-handle:hover {
+  background: #1890ff;
+}
+
+/* Tab rename input */
+.tab-rename-input {
+  border: 1px solid #1890ff;
+  border-radius: 2px;
+  padding: 0 4px;
+  font-size: 14px;
+  line-height: 20px;
+  width: 120px;
+  outline: none;
+  background: #fff;
+}
+
+/* Loading overlay */
+.loading-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(255, 255, 255, 0.8);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 100;
+}
+
+/* ==================== Dashboard Styles ==================== */
+
+/* Dashboard view page */
+.dashboard-view {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+/* Dashboard toolbar */
+.dashboard-toolbar {
+  padding: 12px 24px;
+  background: #fff;
+  border-bottom: 1px solid #e8e8e8;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-shrink: 0;
+}
+
+/* Dashboard grid container */
+.dashboard-grid-container {
+  flex: 1;
+  overflow: auto;
+  padding: 12px;
+  background: #f0f2f5;
+}
+
+/* Dashboard grid layout */
+.dashboard-grid {
+  min-height: 100%;
+}
+
+/* Edit mode styles */
+.dashboard-grid.edit-mode .react-grid-item {
+  border: 2px dashed transparent;
+  transition: border-color 0.2s;
+}
+
+.dashboard-grid.edit-mode .react-grid-item:hover {
+  border-color: #1890ff;
+}
+
+.dashboard-grid.edit-mode .react-grid-item.react-draggable-dragging {
+  border-color: #1890ff;
+  box-shadow: 0 4px 12px rgba(24, 144, 255, 0.3);
+  z-index: 100;
+}
+
+/* Dashboard panel card */
+.dashboard-panel-card {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+.dashboard-panel-card .ant-card-body {
+  flex: 1;
+  padding: 8px;
+  overflow: hidden;
+}
+
+.dashboard-panel-card .ant-card-head {
+  min-height: 36px;
+  padding: 0 8px;
+}
+
+.dashboard-panel-card .ant-card-head-title {
+  padding: 6px 0;
+}
+
+.dashboard-panel-card .ant-card-extra {
+  padding: 6px 0;
+}
+
+/* Dashboard panel header with drag handle */
+.dashboard-panel-header {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+/* Drag handle */
+.drag-handle {
+  cursor: grab;
+  color: #999;
+  font-size: 14px;
+}
+
+.drag-handle:hover {
+  color: #1890ff;
+}
+
+.drag-handle:active {
+  cursor: grabbing;
+}
+
+/* react-grid-layout resize handle */
+.react-resizable-handle {
+  z-index: 10;
+}
+
+/* react-grid-layout placeholder */
+.react-grid-item.react-grid-placeholder {
+  background: #1890ff;
+  opacity: 0.15;
+  border-radius: 8px;
+}
