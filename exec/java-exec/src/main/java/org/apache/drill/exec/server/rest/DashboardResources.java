@@ -29,6 +29,8 @@ import org.apache.drill.exec.store.sys.PersistentStore;
 import org.apache.drill.exec.store.sys.PersistentStoreConfig;
 import org.apache.drill.exec.store.sys.PersistentStoreProvider;
 import org.apache.drill.exec.work.WorkManager;
+import org.glassfish.jersey.media.multipart.FormDataContentDisposition;
+import org.glassfish.jersey.media.multipart.FormDataParam;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -44,11 +46,18 @@ import jakarta.ws.rs.PathParam;
 import jakarta.ws.rs.Produces;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
 import java.time.Instant;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.UUID;
 
 /**
@@ -62,6 +71,10 @@ public class DashboardResources {
   private static final Logger logger = LoggerFactory.getLogger(DashboardResources.class);
   private static final String STORE_NAME = "drill.sqllab.dashboards";
   private static final String FAVORITES_STORE_NAME = "drill.sqllab.dashboard_favorites";
+  private static final String UPLOAD_DIR_NAME = "dashboard-images";
+  private static final long MAX_FILE_SIZE = 5 * 1024 * 1024; // 5 MB
+  private static final Set<String> ALLOWED_EXTENSIONS = new HashSet<>(
+      Arrays.asList("jpg", "jpeg", "png", "gif", "svg", "webp"));
 
   @Inject
   WorkManager workManager;
@@ -74,6 +87,7 @@ public class DashboardResources {
 
   private static volatile PersistentStore<Dashboard> cachedStore;
   private static volatile PersistentStore<UserFavorites> cachedFavoritesStore;
+  private static volatile File cachedUploadDir;
 
   // ==================== Model Classes ====================
 
@@ -630,6 +644,21 @@ public class DashboardResources {
     }
   }
 
+  /**
+   * Response for image upload operations.
+   */
+  public static class ImageUploadResponse {
+    @JsonProperty
+    public String url;
+    @JsonProperty
+    public String filename;
+
+    public ImageUploadResponse(String url, String filename) {
+      this.url = url;
+      this.filename = filename;
+    }
+  }
+
   // ==================== API Endpoints ====================
 
   @GET
@@ -830,6 +859,125 @@ public class DashboardResources {
     }
   }
 
+  // ==================== Image Upload Endpoints ====================
+
+  @POST
+  @Path("/upload-image")
+  @Consumes(MediaType.MULTIPART_FORM_DATA)
+  @Produces(MediaType.APPLICATION_JSON)
+  @Operation(summary = "Upload image", description = "Uploads an image file for use in dashboard panels")
+  public Response uploadImage(
+      @FormDataParam("file") InputStream fileInputStream,
+      @FormDataParam("file") FormDataContentDisposition fileDetail) {
+
+    if (fileInputStream == null || fileDetail == null || fileDetail.getFileName() == null) {
+      return Response.status(Response.Status.BAD_REQUEST)
+          .entity(new MessageResponse("No file provided"))
+          .build();
+    }
+
+    String originalFilename = fileDetail.getFileName();
+    String ext = getFileExtension(originalFilename);
+
+    if (!ALLOWED_EXTENSIONS.contains(ext)) {
+      return Response.status(Response.Status.BAD_REQUEST)
+          .entity(new MessageResponse(
+              "Invalid file type. Allowed: " + String.join(", ", ALLOWED_EXTENSIONS)))
+          .build();
+    }
+
+    String storedFilename = UUID.randomUUID() + "." + ext;
+    File uploadDir = getUploadDir();
+    File targetFile = new File(uploadDir, storedFilename);
+
+    try {
+      long totalBytes = 0;
+      byte[] buffer = new byte[8192];
+      int bytesRead;
+
+      try (FileOutputStream fos = new FileOutputStream(targetFile)) {
+        while ((bytesRead = fileInputStream.read(buffer)) != -1) {
+          totalBytes += bytesRead;
+          if (totalBytes > MAX_FILE_SIZE) {
+            fos.close();
+            if (!targetFile.delete()) {
+              logger.warn("Failed to delete oversized upload: {}", targetFile);
+            }
+            return Response.status(Response.Status.BAD_REQUEST)
+                .entity(new MessageResponse("File exceeds maximum size of 5 MB"))
+                .build();
+          }
+          fos.write(buffer, 0, bytesRead);
+        }
+      }
+    } catch (IOException e) {
+      if (targetFile.exists() && !targetFile.delete()) {
+        logger.warn("Failed to clean up partial upload: {}", targetFile);
+      }
+      logger.error("Error uploading image", e);
+      return Response.status(Response.Status.INTERNAL_SERVER_ERROR)
+          .entity(new MessageResponse("Failed to upload image: " + e.getMessage()))
+          .build();
+    }
+
+    String url = "/api/v1/dashboards/images/" + storedFilename;
+    return Response.status(Response.Status.CREATED)
+        .entity(new ImageUploadResponse(url, originalFilename))
+        .build();
+  }
+
+  @GET
+  @Path("/images/{filename}")
+  @Operation(summary = "Get uploaded image", description = "Serves a previously uploaded dashboard image")
+  public Response getImage(
+      @Parameter(description = "Image filename")
+      @PathParam("filename") String filename) {
+
+    // Strict validation: UUID + allowed extension only
+    if (!filename.matches("[a-f0-9\\-]+\\.(jpg|jpeg|png|gif|svg|webp)")) {
+      return Response.status(Response.Status.BAD_REQUEST)
+          .entity(new MessageResponse("Invalid filename"))
+          .build();
+    }
+
+    File uploadDir = getUploadDir();
+    File imageFile = new File(uploadDir, filename);
+
+    if (!imageFile.exists()) {
+      return Response.status(Response.Status.NOT_FOUND)
+          .entity(new MessageResponse("Image not found"))
+          .build();
+    }
+
+    String ext = getFileExtension(filename);
+    String contentType;
+    switch (ext) {
+      case "jpg":
+      case "jpeg":
+        contentType = "image/jpeg";
+        break;
+      case "png":
+        contentType = "image/png";
+        break;
+      case "gif":
+        contentType = "image/gif";
+        break;
+      case "svg":
+        contentType = "image/svg+xml";
+        break;
+      case "webp":
+        contentType = "image/webp";
+        break;
+      default:
+        contentType = "application/octet-stream";
+        break;
+    }
+
+    return Response.ok(imageFile, contentType)
+        .header("Cache-Control", "public, max-age=86400")
+        .build();
+  }
+
   // ==================== Favorites Endpoints ====================
 
   @GET
@@ -934,6 +1082,33 @@ public class DashboardResources {
       }
     }
     return cachedFavoritesStore;
+  }
+
+  private File getUploadDir() {
+    if (cachedUploadDir == null) {
+      synchronized (DashboardResources.class) {
+        if (cachedUploadDir == null) {
+          String basePath = System.getenv("DRILL_LOG_DIR");
+          if (basePath == null) {
+            basePath = System.getProperty("java.io.tmpdir");
+          }
+          File dir = new File(basePath, UPLOAD_DIR_NAME);
+          if (!dir.exists() && !dir.mkdirs()) {
+            throw new DrillRuntimeException("Failed to create upload directory: " + dir);
+          }
+          cachedUploadDir = dir;
+        }
+      }
+    }
+    return cachedUploadDir;
+  }
+
+  private static String getFileExtension(String filename) {
+    int dotIndex = filename.lastIndexOf('.');
+    if (dotIndex < 0 || dotIndex == filename.length() - 1) {
+      return "";
+    }
+    return filename.substring(dotIndex + 1).toLowerCase();
   }
 
   private String getCurrentUser() {
