@@ -98,8 +98,12 @@ public class DrillRestServer extends ResourceConfig {
     register(MetricsResources.class);
     register(ThreadsResources.class);
     register(LogsResources.class);
+    register(MetadataResources.class);
+    register(SavedQueryResources.class);
+    register(VisualizationResources.class);
+    register(DashboardResources.class);
 
-    logger.info("Registered {} resource classes", 9);
+    logger.info("Registered {} resource classes", 13);
 
     property(FreemarkerMvcFeature.TEMPLATE_OBJECT_FACTORY, getFreemarkerConfiguration(servletContext));
     register(FreemarkerMvcFeature.class);
