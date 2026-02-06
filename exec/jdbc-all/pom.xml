@@ -795,6 +795,7 @@
                 <exclude>**/*.RSA</exclude>
                 <exclude>**/*.SF</exclude>
                 <exclude>*.tokens</exclude>
+                <exclude>webapp/**</exclude>
                 <exclude>webapps/**</exclude>
               </excludes>
             </filter>
