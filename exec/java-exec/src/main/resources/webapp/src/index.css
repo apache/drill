@@ -246,7 +246,8 @@ body {
   flex: 1;
   overflow: auto;
   padding: 12px;
-  background: #f0f2f5;
+  background: var(--db-bg, #f0f2f5);
+  color: var(--db-font, #333333);
 }
 
 /* Dashboard grid layout */
@@ -275,6 +276,15 @@ body {
   height: 100%;
   display: flex;
   flex-direction: column;
+  background: var(--db-panel-bg, #ffffff);
+  border-color: var(--db-panel-border, #e8e8e8);
+  border-radius: var(--db-panel-radius, 8px);
+}
+
+.dashboard-panel-card.ant-card {
+  background: var(--db-panel-bg, #ffffff);
+  border-color: var(--db-panel-border, #e8e8e8);
+  border-radius: var(--db-panel-radius, 8px);
 }
 
 .dashboard-panel-card .ant-card-body {
@@ -286,6 +296,8 @@ body {
 .dashboard-panel-card .ant-card-head {
   min-height: 36px;
   padding: 0 8px;
+  color: var(--db-header, #000000);
+  border-bottom-color: var(--db-panel-border, #f0f0f0);
 }
 
 .dashboard-panel-card .ant-card-head-title {
@@ -301,6 +313,17 @@ body {
   display: flex;
   align-items: center;
   gap: 6px;
+}
+
+/* Dashboard panel footer */
+.dashboard-panel-footer {
+  padding: 4px 0 0;
+  margin-top: 4px;
+  border-top: 1px solid var(--db-panel-border, #f0f0f0);
+  font-size: 11px;
+  color: var(--db-font, #999);
+  opacity: 0.7;
+  text-align: right;
 }
 
 /* Drag handle */
@@ -382,8 +405,8 @@ body {
 
 .dashboard-tabs {
   padding: 0 12px;
-  background: #fff;
-  border-bottom: 1px solid #e8e8e8;
+  background: var(--db-panel-bg, #fff);
+  border-bottom: 1px solid var(--db-panel-border, #e8e8e8);
   flex-shrink: 0;
 }
 
@@ -408,4 +431,18 @@ body {
   display: flex;
   align-items: center;
   justify-content: center;
+}
+
+/* ==================== Settings Drawer Styles ==================== */
+
+.theme-preset-btn {
+  margin-right: 8px;
+  margin-bottom: 8px;
+}
+
+.theme-color-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 12px;
 }
