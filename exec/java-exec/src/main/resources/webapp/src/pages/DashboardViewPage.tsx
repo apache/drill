@@ -33,6 +33,7 @@ import {
   Tooltip,
   Tabs,
   Input,
+  Upload,
 } from 'antd';
 import {
   EditOutlined,
@@ -51,10 +52,11 @@ import {
   SettingOutlined,
   StarOutlined,
   StarFilled,
+  InboxOutlined,
 } from '@ant-design/icons';
 import html2canvas from 'html2canvas';
 import { jsPDF } from 'jspdf';
-import { getDashboard, updateDashboard, getFavorites, toggleFavorite } from '../api/dashboards';
+import { getDashboard, updateDashboard, getFavorites, toggleFavorite, uploadImage } from '../api/dashboards';
 import { getVisualizations } from '../api/visualizations';
 import { DashboardPanelCard, DashboardSettingsDrawer, DEFAULT_THEME } from '../components/dashboard';
 import type { DashboardPanel, DashboardTab, DashboardTheme } from '../types';
@@ -101,6 +103,7 @@ export default function DashboardViewPage() {
   const [newImageAlt, setNewImageAlt] = useState('');
   const [newTitleText, setNewTitleText] = useState('');
   const [newTitleSubtitle, setNewTitleSubtitle] = useState('');
+  const [imageUploading, setImageUploading] = useState(false);
 
   // Fetch dashboard
   const { data: dashboard, isLoading, error } = useQuery({
@@ -718,12 +721,66 @@ export default function DashboardViewPage() {
               label: <span><PictureOutlined /> Image</span>,
               children: (
                 <Space direction="vertical" style={{ width: '100%' }}>
-                  <Text type="secondary">Display an image from a URL.</Text>
-                  <Input
-                    value={newImageUrl}
-                    onChange={(e) => setNewImageUrl(e.target.value)}
-                    placeholder="https://example.com/image.png"
-                    addonBefore="URL"
+                  <Tabs
+                    defaultActiveKey="url"
+                    items={[
+                      {
+                        key: 'url',
+                        label: 'URL',
+                        children: (
+                          <Input
+                            value={newImageUrl}
+                            onChange={(e) => setNewImageUrl(e.target.value)}
+                            placeholder="https://example.com/image.png"
+                            addonBefore="URL"
+                          />
+                        ),
+                      },
+                      {
+                        key: 'upload',
+                        label: 'Upload',
+                        children: (
+                          <Spin spinning={imageUploading} tip="Uploading...">
+                            <Upload.Dragger
+                              accept=".jpg,.jpeg,.png,.gif,.svg,.webp"
+                              showUploadList={false}
+                              beforeUpload={(file) => {
+                                const allowedTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/svg+xml', 'image/webp'];
+                                if (!allowedTypes.includes(file.type)) {
+                                  message.error('Invalid file type. Allowed: JPG, PNG, GIF, SVG, WebP');
+                                  return false;
+                                }
+                                if (file.size > 5 * 1024 * 1024) {
+                                  message.error('File exceeds maximum size of 5 MB');
+                                  return false;
+                                }
+                                setImageUploading(true);
+                                uploadImage(file)
+                                  .then((result) => {
+                                    setNewImageUrl(result.url);
+                                    message.success(`Uploaded ${result.filename}`);
+                                  })
+                                  .catch(() => {
+                                    message.error('Failed to upload image');
+                                  })
+                                  .finally(() => {
+                                    setImageUploading(false);
+                                  });
+                                return false;
+                              }}
+                            >
+                              <p className="ant-upload-drag-icon">
+                                <InboxOutlined />
+                              </p>
+                              <p className="ant-upload-text">Click or drag an image file here</p>
+                              <p className="ant-upload-hint">
+                                JPG, PNG, GIF, SVG, or WebP — max 5 MB
+                              </p>
+                            </Upload.Dragger>
+                          </Spin>
+                        ),
+                      },
+                    ]}
                   />
                   <Input
                     value={newImageAlt}
@@ -731,6 +788,11 @@ export default function DashboardViewPage() {
                     placeholder="Image description (optional)"
                     addonBefore="Alt text"
                   />
+                  {newImageUrl && (
+                    <div style={{ textAlign: 'center', padding: 8, background: '#fafafa', borderRadius: 4 }}>
+                      <img src={newImageUrl} alt={newImageAlt} style={{ maxWidth: '100%', maxHeight: 150 }} />
+                    </div>
+                  )}
                 </Space>
               ),
             },
