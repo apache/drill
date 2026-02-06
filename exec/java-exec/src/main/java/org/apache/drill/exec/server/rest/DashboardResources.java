@@ -76,13 +76,21 @@ public class DashboardResources {
   // ==================== Model Classes ====================
 
   /**
-   * A panel within a dashboard, referencing a visualization and its layout position.
+   * A panel within a dashboard, referencing a visualization or content and its layout position.
    */
   public static class DashboardPanel {
     @JsonProperty
     private String id;
     @JsonProperty
+    private String type;
+    @JsonProperty
     private String visualizationId;
+    @JsonProperty
+    private String content;
+    @JsonProperty
+    private Map<String, String> config;
+    @JsonProperty
+    private String tabId;
     @JsonProperty
     private int x;
     @JsonProperty
@@ -98,13 +106,21 @@ public class DashboardResources {
     @JsonCreator
     public DashboardPanel(
         @JsonProperty("id") String id,
+        @JsonProperty("type") String type,
         @JsonProperty("visualizationId") String visualizationId,
+        @JsonProperty("content") String content,
+        @JsonProperty("config") Map<String, String> config,
+        @JsonProperty("tabId") String tabId,
         @JsonProperty("x") int x,
         @JsonProperty("y") int y,
         @JsonProperty("width") int width,
         @JsonProperty("height") int height) {
       this.id = id;
+      this.type = type != null ? type : "visualization";
       this.visualizationId = visualizationId;
+      this.content = content;
+      this.config = config;
+      this.tabId = tabId;
       this.x = x;
       this.y = y;
       this.width = width;
@@ -115,8 +131,24 @@ public class DashboardResources {
       return id;
     }
 
+    public String getType() {
+      return type;
+    }
+
     public String getVisualizationId() {
       return visualizationId;
+    }
+
+    public String getContent() {
+      return content;
+    }
+
+    public Map<String, String> getConfig() {
+      return config;
+    }
+
+    public String getTabId() {
+      return tabId;
     }
 
     public int getX() {
@@ -139,8 +171,24 @@ public class DashboardResources {
       this.id = id;
     }
 
+    public void setType(String type) {
+      this.type = type;
+    }
+
     public void setVisualizationId(String visualizationId) {
       this.visualizationId = visualizationId;
+    }
+
+    public void setContent(String content) {
+      this.content = content;
+    }
+
+    public void setConfig(Map<String, String> config) {
+      this.config = config;
+    }
+
+    public void setTabId(String tabId) {
+      this.tabId = tabId;
     }
 
     public void setX(int x) {
@@ -161,6 +209,55 @@ public class DashboardResources {
   }
 
   /**
+   * A tab within a dashboard for organizing panels into groups.
+   */
+  public static class DashboardTab {
+    @JsonProperty
+    private String id;
+    @JsonProperty
+    private String name;
+    @JsonProperty
+    private int order;
+
+    public DashboardTab() {
+    }
+
+    @JsonCreator
+    public DashboardTab(
+        @JsonProperty("id") String id,
+        @JsonProperty("name") String name,
+        @JsonProperty("order") int order) {
+      this.id = id;
+      this.name = name;
+      this.order = order;
+    }
+
+    public String getId() {
+      return id;
+    }
+
+    public String getName() {
+      return name;
+    }
+
+    public int getOrder() {
+      return order;
+    }
+
+    public void setId(String id) {
+      this.id = id;
+    }
+
+    public void setName(String name) {
+      this.name = name;
+    }
+
+    public void setOrder(int order) {
+      this.order = order;
+    }
+  }
+
+  /**
    * Dashboard model for persistence.
    */
   public static class Dashboard {
@@ -172,6 +269,8 @@ public class DashboardResources {
     private String description;
     @JsonProperty
     private List<DashboardPanel> panels;
+    @JsonProperty
+    private List<DashboardTab> tabs;
     @JsonProperty
     private String owner;
     @JsonProperty
@@ -192,6 +291,7 @@ public class DashboardResources {
         @JsonProperty("name") String name,
         @JsonProperty("description") String description,
         @JsonProperty("panels") List<DashboardPanel> panels,
+        @JsonProperty("tabs") List<DashboardTab> tabs,
         @JsonProperty("owner") String owner,
         @JsonProperty("createdAt") long createdAt,
         @JsonProperty("updatedAt") long updatedAt,
@@ -201,6 +301,7 @@ public class DashboardResources {
       this.name = name;
       this.description = description;
       this.panels = panels;
+      this.tabs = tabs;
       this.owner = owner;
       this.createdAt = createdAt;
       this.updatedAt = updatedAt;
@@ -222,6 +323,10 @@ public class DashboardResources {
 
     public List<DashboardPanel> getPanels() {
       return panels;
+    }
+
+    public List<DashboardTab> getTabs() {
+      return tabs;
     }
 
     public String getOwner() {
@@ -256,6 +361,10 @@ public class DashboardResources {
       this.panels = panels;
     }
 
+    public void setTabs(List<DashboardTab> tabs) {
+      this.tabs = tabs;
+    }
+
     public void setUpdatedAt(long updatedAt) {
       this.updatedAt = updatedAt;
     }
@@ -280,6 +389,8 @@ public class DashboardResources {
     @JsonProperty
     public List<DashboardPanel> panels;
     @JsonProperty
+    public List<DashboardTab> tabs;
+    @JsonProperty
     public int refreshInterval;
     @JsonProperty
     public boolean isPublic;
@@ -295,6 +406,8 @@ public class DashboardResources {
     public String description;
     @JsonProperty
     public List<DashboardPanel> panels;
+    @JsonProperty
+    public List<DashboardTab> tabs;
     @JsonProperty
     public Integer refreshInterval;
     @JsonProperty
@@ -378,6 +491,7 @@ public class DashboardResources {
         request.name.trim(),
         request.description,
         request.panels != null ? request.panels : new ArrayList<>(),
+        request.tabs,
         getCurrentUser(),
         now,
         now,
@@ -464,6 +578,9 @@ public class DashboardResources {
       }
       if (request.panels != null) {
         dashboard.setPanels(request.panels);
+      }
+      if (request.tabs != null) {
+        dashboard.setTabs(request.tabs);
       }
       if (request.refreshInterval != null) {
         dashboard.setRefreshInterval(request.refreshInterval);
