@@ -15,7 +15,34 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-export { default as DashboardPanelCard } from './DashboardPanelCard';
-export { default as MarkdownPanel } from './MarkdownPanel';
-export { default as ImagePanel } from './ImagePanel';
-export { default as TitlePanel } from './TitlePanel';
+import { Input } from 'antd';
+import Markdown from 'react-markdown';
+
+const { TextArea } = Input;
+
+interface MarkdownPanelProps {
+  content: string;
+  editMode: boolean;
+  onContentChange: (content: string) => void;
+}
+
+export default function MarkdownPanel({ content, editMode, onContentChange }: MarkdownPanelProps) {
+  if (editMode) {
+    return (
+      <div className="markdown-panel">
+        <TextArea
+          value={content}
+          onChange={(e) => onContentChange(e.target.value)}
+          placeholder="Enter markdown content..."
+          style={{ height: '100%', resize: 'none', fontFamily: 'monospace' }}
+        />
+      </div>
+    );
+  }
+
+  return (
+    <div className="markdown-panel">
+      <Markdown>{content || '*No content*'}</Markdown>
+    </div>
+  );
+}

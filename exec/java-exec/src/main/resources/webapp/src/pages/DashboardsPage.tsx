@@ -46,6 +46,7 @@ import {
   PlusOutlined,
   AppstoreOutlined,
   ClockCircleOutlined,
+  LinkOutlined,
 } from '@ant-design/icons';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import {
@@ -422,6 +423,33 @@ export default function DashboardsPage() {
             />
           </Form.Item>
         </Form>
+        {editingDashboard?.isPublic && (
+          <div style={{ padding: '8px 0', borderTop: '1px solid #f0f0f0' }}>
+            <Text type="secondary" style={{ display: 'block', marginBottom: 4 }}>
+              <LinkOutlined /> Shareable Link
+            </Text>
+            <Input.Group compact>
+              <Input
+                value={`${window.location.origin}/sqllab/dashboards/${editingDashboard.id}`}
+                readOnly
+                style={{ width: 'calc(100% - 80px)' }}
+              />
+              <Button
+                icon={<LinkOutlined />}
+                onClick={() => {
+                  navigator.clipboard.writeText(
+                    `${window.location.origin}/sqllab/dashboards/${editingDashboard.id}`
+                  ).then(
+                    () => message.success('Link copied!'),
+                    () => message.error('Failed to copy')
+                  );
+                }}
+              >
+                Copy
+              </Button>
+            </Input.Group>
+          </div>
+        )}
       </Modal>
     </div>
   );
