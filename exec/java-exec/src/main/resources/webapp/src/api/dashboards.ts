@@ -62,3 +62,21 @@ export async function updateDashboard(id: string, dashboard: Partial<DashboardCr
 export async function deleteDashboard(id: string): Promise<void> {
   await apiClient.delete(`${DASHBOARDS_BASE}/${encodeURIComponent(id)}`);
 }
+
+/**
+ * Get the current user's favorited dashboard IDs
+ */
+export async function getFavorites(): Promise<string[]> {
+  const response = await apiClient.get<{ dashboardIds: string[] }>(`${DASHBOARDS_BASE}/favorites`);
+  return response.data.dashboardIds;
+}
+
+/**
+ * Toggle a dashboard as favorite for the current user
+ */
+export async function toggleFavorite(id: string): Promise<{ favorited: boolean }> {
+  const response = await apiClient.post<{ favorited: boolean }>(
+    `${DASHBOARDS_BASE}/${encodeURIComponent(id)}/favorite`
+  );
+  return response.data;
+}
