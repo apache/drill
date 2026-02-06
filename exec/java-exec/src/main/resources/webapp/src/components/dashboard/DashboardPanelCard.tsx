@@ -15,7 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import { useCallback } from 'react';
+import { useCallback, useMemo } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Card, Alert, Spin, Typography, Button, Tooltip } from 'antd';
 import {
@@ -26,6 +26,7 @@ import {
   PictureOutlined,
   FontSizeOutlined,
   BarChartOutlined,
+  ClockCircleOutlined,
 } from '@ant-design/icons';
 import { getVisualization } from '../../api/visualizations';
 import { executeQuery } from '../../api/queries';
@@ -55,6 +56,7 @@ interface DashboardPanelCardProps {
   panel: DashboardPanel;
   editMode: boolean;
   refreshInterval?: number;
+  dashboardUpdatedAt?: number | string;
   onRemove?: (panelId: string) => void;
   onPanelChange?: (panel: DashboardPanel) => void;
 }
@@ -63,6 +65,7 @@ export default function DashboardPanelCard({
   panel,
   editMode,
   refreshInterval,
+  dashboardUpdatedAt,
   onRemove,
   onPanelChange,
 }: DashboardPanelCardProps) {
@@ -205,6 +208,16 @@ export default function DashboardPanelCard({
     }
   };
 
+  const formattedUpdatedAt = useMemo(() => {
+    if (!dashboardUpdatedAt) {
+      return null;
+    }
+    const date = typeof dashboardUpdatedAt === 'number'
+      ? new Date(dashboardUpdatedAt)
+      : new Date(dashboardUpdatedAt);
+    return date.toLocaleString();
+  }, [dashboardUpdatedAt]);
+
   return (
     <Card
       className="dashboard-panel-card"
@@ -238,6 +251,11 @@ export default function DashboardPanelCard({
       }
     >
       {renderContent()}
+      {formattedUpdatedAt && (
+        <div className="dashboard-panel-footer">
+          <ClockCircleOutlined /> Last updated: {formattedUpdatedAt}
+        </div>
+      )}
     </Card>
   );
 }
