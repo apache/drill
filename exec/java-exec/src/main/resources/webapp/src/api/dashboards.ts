@@ -80,3 +80,16 @@ export async function toggleFavorite(id: string): Promise<{ favorited: boolean }
   );
   return response.data;
 }
+
+/**
+ * Upload an image file for use in dashboard image panels
+ */
+export async function uploadImage(file: File): Promise<{ url: string; filename: string }> {
+  const formData = new FormData();
+  formData.append('file', file);
+  const response = await apiClient.post<{ url: string; filename: string }>(
+    `${DASHBOARDS_BASE}/upload-image`, formData,
+    { headers: { 'Content-Type': 'multipart/form-data' } }
+  );
+  return response.data;
+}
