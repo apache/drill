@@ -27,6 +27,7 @@ import org.slf4j.LoggerFactory;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.net.URI;
 import java.net.URL;
 
 /**
@@ -44,6 +45,14 @@ public class SqlLabSpaServlet extends HttpServlet {
     String path = request.getPathInfo();
     if (path == null || path.equals("/")) {
       path = "/" + INDEX_HTML;
+    }
+
+    // Normalize the path to prevent path traversal attacks
+    path = URI.create(path).normalize().toString();
+    if (path.startsWith("/..") || path.contains("/../")) {
+      logger.debug("Blocked path traversal attempt: {}", request.getPathInfo());
+      response.sendError(HttpServletResponse.SC_BAD_REQUEST);
+      return;
     }
 
     // Check if this is a static asset request (has file extension)
