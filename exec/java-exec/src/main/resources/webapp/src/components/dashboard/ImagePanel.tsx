@@ -15,9 +15,15 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import { useState } from 'react';
-import { Input, Space } from 'antd';
-import { PictureOutlined } from '@ant-design/icons';
+import { useState, useCallback } from 'react';
+import { Input, Space, Tabs, Upload, message, Spin } from 'antd';
+import { PictureOutlined, InboxOutlined } from '@ant-design/icons';
+import { uploadImage } from '../../api/dashboards';
+import type { RcFile } from 'antd/es/upload';
+
+const ALLOWED_TYPES = ['image/jpeg', 'image/png', 'image/gif', 'image/svg+xml', 'image/webp'];
+const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5 MB
+const UPLOADED_IMAGE_PREFIX = '/api/v1/dashboards/images/';
 
 interface ImagePanelProps {
   content: string;
@@ -35,20 +41,82 @@ export default function ImagePanel({
   onConfigChange,
 }: ImagePanelProps) {
   const [imgError, setImgError] = useState(false);
+  const [uploading, setUploading] = useState(false);
   const altText = config?.imageAlt || '';
+
+  const defaultTab = content?.startsWith(UPLOADED_IMAGE_PREFIX) ? 'upload' : 'url';
+
+  const handleBeforeUpload = useCallback((file: RcFile) => {
+    if (!ALLOWED_TYPES.includes(file.type)) {
+      message.error('Invalid file type. Allowed: JPG, PNG, GIF, SVG, WebP');
+      return false;
+    }
+    if (file.size > MAX_FILE_SIZE) {
+      message.error('File exceeds maximum size of 5 MB');
+      return false;
+    }
+
+    setUploading(true);
+    uploadImage(file)
+      .then((result) => {
+        onContentChange(result.url);
+        setImgError(false);
+        message.success(`Uploaded ${result.filename}`);
+      })
+      .catch(() => {
+        message.error('Failed to upload image');
+      })
+      .finally(() => {
+        setUploading(false);
+      });
+
+    return false; // Prevent antd default upload behavior
+  }, [onContentChange]);
 
   if (editMode) {
     return (
       <div style={{ padding: 12 }}>
         <Space direction="vertical" style={{ width: '100%' }}>
-          <Input
-            value={content}
-            onChange={(e) => {
-              onContentChange(e.target.value);
-              setImgError(false);
-            }}
-            placeholder="Image URL..."
-            addonBefore="URL"
+          <Tabs
+            defaultActiveKey={defaultTab}
+            items={[
+              {
+                key: 'url',
+                label: 'URL',
+                children: (
+                  <Input
+                    value={content}
+                    onChange={(e) => {
+                      onContentChange(e.target.value);
+                      setImgError(false);
+                    }}
+                    placeholder="Image URL..."
+                    addonBefore="URL"
+                  />
+                ),
+              },
+              {
+                key: 'upload',
+                label: 'Upload',
+                children: (
+                  <Spin spinning={uploading} tip="Uploading...">
+                    <Upload.Dragger
+                      accept=".jpg,.jpeg,.png,.gif,.svg,.webp"
+                      showUploadList={false}
+                      beforeUpload={handleBeforeUpload}
+                    >
+                      <p className="ant-upload-drag-icon">
+                        <InboxOutlined />
+                      </p>
+                      <p className="ant-upload-text">Click or drag an image file here</p>
+                      <p className="ant-upload-hint">
+                        JPG, PNG, GIF, SVG, or WebP — max 5 MB
+                      </p>
+                    </Upload.Dragger>
+                  </Spin>
+                ),
+              },
+            ]}
           />
           <Input
             value={altText}
