@@ -57,7 +57,6 @@ import {
 import html2canvas from 'html2canvas';
 import { jsPDF } from 'jspdf';
 import { getDashboard, updateDashboard, getFavorites, toggleFavorite, uploadImage } from '../api/dashboards';
-import { sanitizeImageUrl } from '../utils/sanitize';
 import { getVisualizations } from '../api/visualizations';
 import { DashboardPanelCard, DashboardSettingsDrawer, DEFAULT_THEME } from '../components/dashboard';
 import type { DashboardPanel, DashboardTab, DashboardTheme } from '../types';
@@ -102,6 +101,28 @@ export default function DashboardViewPage() {
   const [newMarkdownContent, setNewMarkdownContent] = useState('## Heading\n\nYour content here...');
   const [newImageUrl, setNewImageUrl] = useState('');
   const [newImageAlt, setNewImageAlt] = useState('');
+
+  // Parse the image URL through the URL constructor to produce a safe,
+  // untainted value for use in <img src>. This prevents DOM text from
+  // being reinterpreted as HTML (CodeQL: js/xss-through-dom).
+  const safeImagePreviewUrl = useMemo(() => {
+    if (!newImageUrl) {
+      return '';
+    }
+    // Server-uploaded image paths are safe (not user-typed text)
+    if (newImageUrl.startsWith('/api/')) {
+      return newImageUrl;
+    }
+    try {
+      const parsed = new URL(newImageUrl);
+      if (parsed.protocol === 'https:' || parsed.protocol === 'http:') {
+        return parsed.href;
+      }
+      return '';
+    } catch {
+      return '';
+    }
+  }, [newImageUrl]);
   const [newTitleText, setNewTitleText] = useState('');
   const [newTitleSubtitle, setNewTitleSubtitle] = useState('');
   const [imageUploading, setImageUploading] = useState(false);
@@ -789,9 +810,9 @@ export default function DashboardViewPage() {
                     placeholder="Image description (optional)"
                     addonBefore="Alt text"
                   />
-                  {newImageUrl && sanitizeImageUrl(newImageUrl) && (
+                  {safeImagePreviewUrl && (
                     <div style={{ textAlign: 'center', padding: 8, background: '#fafafa', borderRadius: 4 }}>
-                      <img src={sanitizeImageUrl(newImageUrl)} alt={newImageAlt} style={{ maxWidth: '100%', maxHeight: 150 }} />
+                      <img src={safeImagePreviewUrl} alt={newImageAlt} style={{ maxWidth: '100%', maxHeight: 150 }} />
                     </div>
                   )}
                 </Space>
