@@ -975,7 +975,7 @@ public class DashboardResources {
 
     return Response.ok(imageFile, contentType)
         .header("Cache-Control", "public, max-age=86400")
-        .header("Content-Disposition", "inline; filename=\"" + filename + "\"")
+        .header("Content-Disposition", "inline")
         .header("Content-Security-Policy", "default-src 'none'; style-src 'unsafe-inline'")
         .header("X-Content-Type-Options", "nosniff")
         .build();
