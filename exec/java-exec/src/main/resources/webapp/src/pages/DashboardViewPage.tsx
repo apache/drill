@@ -57,6 +57,7 @@ import {
 import html2canvas from 'html2canvas';
 import { jsPDF } from 'jspdf';
 import { getDashboard, updateDashboard, getFavorites, toggleFavorite, uploadImage } from '../api/dashboards';
+import { sanitizeImageUrl } from '../utils/sanitize';
 import { getVisualizations } from '../api/visualizations';
 import { DashboardPanelCard, DashboardSettingsDrawer, DEFAULT_THEME } from '../components/dashboard';
 import type { DashboardPanel, DashboardTab, DashboardTheme } from '../types';
@@ -788,9 +789,9 @@ export default function DashboardViewPage() {
                     placeholder="Image description (optional)"
                     addonBefore="Alt text"
                   />
-                  {newImageUrl && (
+                  {newImageUrl && sanitizeImageUrl(newImageUrl) && (
                     <div style={{ textAlign: 'center', padding: 8, background: '#fafafa', borderRadius: 4 }}>
-                      <img src={newImageUrl} alt={newImageAlt} style={{ maxWidth: '100%', maxHeight: 150 }} />
+                      <img src={sanitizeImageUrl(newImageUrl)} alt={newImageAlt} style={{ maxWidth: '100%', maxHeight: 150 }} />
                     </div>
                   )}
                 </Space>

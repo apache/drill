@@ -19,6 +19,7 @@ import { useState, useCallback } from 'react';
 import { Input, Space, Tabs, Upload, message, Spin } from 'antd';
 import { PictureOutlined, InboxOutlined } from '@ant-design/icons';
 import { uploadImage } from '../../api/dashboards';
+import { sanitizeImageUrl } from '../../utils/sanitize';
 import type { RcFile } from 'antd/es/upload';
 
 const ALLOWED_TYPES = ['image/jpeg', 'image/png', 'image/gif', 'image/svg+xml', 'image/webp'];
@@ -124,10 +125,10 @@ export default function ImagePanel({
             placeholder="Alt text (optional)"
             addonBefore="Alt"
           />
-          {content && !imgError && (
+          {content && !imgError && sanitizeImageUrl(content) && (
             <div className="image-panel">
               <img
-                src={content}
+                src={sanitizeImageUrl(content)}
                 alt={altText}
                 onError={() => setImgError(true)}
               />
@@ -146,10 +147,19 @@ export default function ImagePanel({
     );
   }
 
+  const safeUrl = sanitizeImageUrl(content);
+  if (!safeUrl) {
+    return (
+      <div className="image-panel">
+        <PictureOutlined style={{ fontSize: 48, color: '#d9d9d9' }} />
+      </div>
+    );
+  }
+
   return (
     <div className="image-panel">
       <img
-        src={content}
+        src={safeUrl}
         alt={altText}
         onError={() => setImgError(true)}
       />
