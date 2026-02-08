@@ -50,6 +50,7 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.file.Path;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -940,8 +941,16 @@ public class DashboardResources {
           .build();
     }
 
+    // Use Path normalization to prevent path traversal (CodeQL-recognized sanitizer)
     File uploadDir = getUploadDir();
-    File imageFile = new File(uploadDir, filename);
+    Path basePath = uploadDir.toPath();
+    Path resolvedPath = basePath.resolve(filename).normalize();
+    if (!resolvedPath.startsWith(basePath)) {
+      return Response.status(Response.Status.BAD_REQUEST)
+          .entity(new MessageResponse("Invalid filename"))
+          .build();
+    }
+    File imageFile = resolvedPath.toFile();
 
     if (!imageFile.exists()) {
       return Response.status(Response.Status.NOT_FOUND)
