@@ -27,8 +27,10 @@ import org.slf4j.LoggerFactory;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.net.URI;
 import java.net.URL;
+import java.nio.file.InvalidPathException;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 
 /**
  * Servlet for serving the SQL Lab React SPA.
@@ -36,59 +38,47 @@ import java.net.URL;
  */
 public class SqlLabSpaServlet extends HttpServlet {
   private static final Logger logger = LoggerFactory.getLogger(SqlLabSpaServlet.class);
-  private static final String WEBAPP_PATH = "/webapp/";
   private static final String INDEX_HTML = "index.html";
+  private static final Path WEBAPP_BASE = Paths.get("webapp");
 
   @Override
   protected void doGet(HttpServletRequest request, HttpServletResponse response)
       throws ServletException, IOException {
-    String path = request.getPathInfo();
-    if (path == null || path.equals("/")) {
-      path = "/" + INDEX_HTML;
-    }
-
-    // Normalize the path to prevent path traversal attacks
-    path = URI.create(path).normalize().toString();
-    if (path.startsWith("/..") || path.contains("/../")) {
-      logger.debug("Blocked path traversal attempt: {}", request.getPathInfo());
-      response.sendError(HttpServletResponse.SC_BAD_REQUEST);
-      return;
+    String pathInfo = request.getPathInfo();
+    if (pathInfo == null || pathInfo.equals("/")) {
+      pathInfo = "/" + INDEX_HTML;
     }
 
     // Check if this is a static asset request (has file extension)
-    boolean isStaticAsset = path.lastIndexOf('.') > path.lastIndexOf('/');
-
-    String resourcePath = WEBAPP_PATH + (isStaticAsset ? "dist" + path : "dist/" + INDEX_HTML);
+    boolean isStaticAsset = pathInfo.lastIndexOf('.') > pathInfo.lastIndexOf('/');
 
     // Try to serve from built assets first
-    URL resource = getClass().getResource(resourcePath);
+    String subPath = isStaticAsset ? "dist" + pathInfo : "dist/" + INDEX_HTML;
+    URL resource = resolveResource(subPath);
 
     // Fallback to development mode (source files)
     if (resource == null && isStaticAsset) {
-      resourcePath = WEBAPP_PATH + path.substring(1); // Remove leading slash
-      resource = getClass().getResource(resourcePath);
+      resource = resolveResource(pathInfo.substring(1));
     }
 
     // For SPA routing, always serve index.html for non-static requests
     if (resource == null && !isStaticAsset) {
-      resourcePath = WEBAPP_PATH + "dist/" + INDEX_HTML;
-      resource = getClass().getResource(resourcePath);
+      resource = getClass().getResource("/webapp/dist/" + INDEX_HTML);
 
       // Fallback to source index.html
       if (resource == null) {
-        resourcePath = WEBAPP_PATH + INDEX_HTML;
-        resource = getClass().getResource(resourcePath);
+        resource = getClass().getResource("/webapp/" + INDEX_HTML);
       }
     }
 
     if (resource == null) {
-      logger.debug("Resource not found: {}", path);
+      logger.debug("Resource not found: {}", pathInfo);
       response.sendError(HttpServletResponse.SC_NOT_FOUND);
       return;
     }
 
     // Set content type based on file extension
-    String contentType = getContentType(path);
+    String contentType = getContentType(pathInfo);
     if (contentType != null) {
       response.setContentType(contentType);
     }
@@ -101,6 +91,27 @@ public class SqlLabSpaServlet extends HttpServlet {
       while ((bytesRead = in.read(buffer)) != -1) {
         out.write(buffer, 0, bytesRead);
       }
+    }
+  }
+
+  /**
+   * Resolve a classpath resource within the webapp directory, using
+   * java.nio.file.Path normalization to prevent path traversal.
+   *
+   * @param subPath the relative path within webapp (e.g. "dist/assets/index.js")
+   * @return the resource URL, or null if invalid or not found
+   */
+  private URL resolveResource(String subPath) {
+    try {
+      Path resolved = WEBAPP_BASE.resolve(subPath).normalize();
+      if (!resolved.startsWith(WEBAPP_BASE)) {
+        logger.debug("Blocked path traversal attempt: {}", subPath);
+        return null;
+      }
+      String resourcePath = "/" + resolved.toString().replace('\\', '/');
+      return getClass().getResource(resourcePath);
+    } catch (InvalidPathException e) {
+      return null;
     }
   }
 
