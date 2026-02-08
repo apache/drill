@@ -202,8 +202,9 @@ public abstract class AbstractSchema implements Schema, SchemaPartitionExplorer,
   }
 
   /**
-   * Refresh the materialized view with given name by re-executing its query
-   * and replacing the stored data.
+   * Prepare the materialized view for refresh by clearing existing data
+   * and marking it as INCOMPLETE. After data is written, call
+   * {@link #completeMaterializedViewRefresh(String)} to mark COMPLETE.
    *
    * @param viewName materialized view name
    * @throws IOException in case of error refreshing the materialized view
@@ -211,6 +212,19 @@ public abstract class AbstractSchema implements Schema, SchemaPartitionExplorer,
   public void refreshMaterializedView(String viewName) throws IOException {
     throw UserException.unsupportedError()
         .message("Refreshing materialized views is not supported in schema [%s]", getSchemaPath())
+        .build(logger);
+  }
+
+  /**
+   * Mark the materialized view as COMPLETE after data has been fully written.
+   * This should be called after the refresh data write has finished successfully.
+   *
+   * @param viewName materialized view name
+   * @throws IOException in case of error updating the materialized view
+   */
+  public void completeMaterializedViewRefresh(String viewName) throws IOException {
+    throw UserException.unsupportedError()
+        .message("Completing materialized view refresh is not supported in schema [%s]", getSchemaPath())
         .build(logger);
   }
 

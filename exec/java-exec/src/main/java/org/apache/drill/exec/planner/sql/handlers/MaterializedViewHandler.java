@@ -208,13 +208,22 @@ public abstract class MaterializedViewHandler extends DefaultSqlHandler {
 
       final Table viewToDrop = SqlHandlerUtil.getTableFromSchema(drillSchema, viewName);
 
+      // Check if the table exists and is actually a materialized view
+      final boolean isMaterializedView = viewToDrop != null &&
+          viewToDrop.getJdbcTableType() == Schema.TableType.MATERIALIZED_VIEW;
+
       if (dropMV.checkViewExistence()) {
-        if (viewToDrop == null) {
+        if (viewToDrop == null || !isMaterializedView) {
           return DirectPlan.createDirectPlan(context, false,
               String.format("Materialized view [%s] not found in schema [%s].", viewName, schemaPath));
         }
       } else {
-        if (viewToDrop == null) {
+        if (viewToDrop == null || !isMaterializedView) {
+          if (viewToDrop != null) {
+            throw UserException.validationError()
+                .message("[%s] is not a materialized view in schema [%s].", viewName, schemaPath)
+                .build(logger);
+          }
           throw UserException.validationError()
               .message("Unknown materialized view [%s] in schema [%s].", viewName, schemaPath)
               .build(logger);
@@ -259,7 +268,7 @@ public abstract class MaterializedViewHandler extends DefaultSqlHandler {
             .build(logger);
       }
 
-      // Clear existing data directory
+      // Clear existing data directory and mark INCOMPLETE while refresh is in progress
       drillSchema.refreshMaterializedView(viewName);
 
       // Parse and validate the MV's SQL definition
@@ -281,6 +290,12 @@ public abstract class MaterializedViewHandler extends DefaultSqlHandler {
 
         PhysicalOperator pop = convertToPop(prel);
         PhysicalPlan plan = convertToPlan(pop, queryRelNode);
+
+        // Mark COMPLETE after the plan is successfully created.
+        // TODO: Ideally this should be called after plan execution completes
+        // via a post-execution callback, so that the status is only COMPLETE
+        // once data files are fully written.
+        drillSchema.completeMaterializedViewRefresh(viewName);
 
         logger.info("Refreshing materialized view [{}] in schema [{}]", viewName, schemaPath);
         return plan;

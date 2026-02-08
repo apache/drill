@@ -154,7 +154,7 @@ The definition file contains:
 - Workspace schema path
 - Data storage path
 - Last refresh timestamp
-- Refresh status (PENDING or COMPLETE)
+- Refresh status (INCOMPLETE or COMPLETE)
 
 Example definition file structure:
 
@@ -225,7 +225,7 @@ The MaterializedViewMetadataUnit stored in the metastore contains:
 | sql | String | Defining SQL statement |
 | workspaceSchemaPath | List | Schema path components |
 | dataLocation | String | Path to data directory |
-| refreshStatus | String | PENDING or COMPLETE |
+| refreshStatus | String | INCOMPLETE or COMPLETE |
 | lastRefreshTime | Long | Timestamp of last refresh |
 | lastModifiedTime | Long | Timestamp of last modification |
 
@@ -278,7 +278,7 @@ WHERE TABLE_SCHEMA = 'dfs.tmp';
 -- Find materialized views that need refresh
 SELECT TABLE_SCHEMA, TABLE_NAME
 FROM INFORMATION_SCHEMA.MATERIALIZED_VIEWS
-WHERE REFRESH_STATUS = 'PENDING' OR REFRESH_STATUS IS NULL;
+WHERE REFRESH_STATUS = 'INCOMPLETE' OR REFRESH_STATUS IS NULL;
 ```
 
 ### MATERIALIZED_VIEWS Table Columns
@@ -289,7 +289,7 @@ WHERE REFRESH_STATUS = 'PENDING' OR REFRESH_STATUS IS NULL;
 | TABLE_SCHEMA | VARCHAR | Schema name (e.g., "dfs.tmp") |
 | TABLE_NAME | VARCHAR | Materialized view name |
 | VIEW_DEFINITION | VARCHAR | SQL statement that defines the materialized view |
-| REFRESH_STATUS | VARCHAR | Current status: "PENDING" or "COMPLETE" |
+| REFRESH_STATUS | VARCHAR | Current status: "INCOMPLETE" or "COMPLETE" |
 | LAST_REFRESH_TIME | TIMESTAMP | When the materialized view was last refreshed |
 | DATA_LOCATION | VARCHAR | File system path to the stored data |
 

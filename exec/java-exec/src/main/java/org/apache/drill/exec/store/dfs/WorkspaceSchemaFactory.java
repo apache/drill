@@ -441,10 +441,11 @@ public class WorkspaceSchemaFactory {
           schemaConfig.getOption(ExecConstants.NEW_VIEW_DEFAULT_PERMS_KEY).string_val);
       getFS().mkdirs(dataPath, dirPerms);
 
-      // Update the materialized view with new refresh time
+      // Mark as INCOMPLETE while data is being refreshed.
+      // completeMaterializedViewRefresh() should be called after data is fully written.
       MaterializedView updatedMV = mv.withRefreshInfo(
-          System.currentTimeMillis(),
-          MaterializedView.RefreshStatus.COMPLETE);
+          mv.getLastRefreshTime(),
+          MaterializedView.RefreshStatus.INCOMPLETE);
 
       // Write the updated definition file
       Path viewPath = getMaterializedViewPath(viewName);
@@ -455,6 +456,30 @@ public class WorkspaceSchemaFactory {
       }
 
       // Sync updated metadata to metastore if enabled
+      syncMaterializedViewToMetastore(updatedMV);
+    }
+
+    @Override
+    public void completeMaterializedViewRefresh(String viewName) throws IOException {
+      MaterializedView mv = getMaterializedView(viewName);
+      if (mv == null) {
+        throw UserException.validationError()
+            .message("Materialized view [%s] not found in schema [%s]", viewName, getFullSchemaName())
+            .build(logger);
+      }
+
+      // Mark as COMPLETE with current timestamp now that data is fully written
+      MaterializedView updatedMV = mv.withRefreshInfo(
+          System.currentTimeMillis(),
+          MaterializedView.RefreshStatus.COMPLETE);
+
+      Path viewPath = getMaterializedViewPath(viewName);
+      final FsPermission viewPerms = new FsPermission(
+          schemaConfig.getOption(ExecConstants.NEW_VIEW_DEFAULT_PERMS_KEY).string_val);
+      try (OutputStream stream = DrillFileSystem.create(getFS(), viewPath, viewPerms)) {
+        mapper.writeValue(stream, updatedMV);
+      }
+
       syncMaterializedViewToMetastore(updatedMV);
     }
 
