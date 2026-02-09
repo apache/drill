@@ -19,8 +19,8 @@ import { Tooltip, Typography, Tag } from 'antd';
 import { FolderOutlined, TableOutlined, WarningOutlined } from '@ant-design/icons';
 import { DatabaseOutlined } from '@ant-design/icons';
 import type { DataNode } from 'antd/es/tree';
-import type { PluginInfo, SchemaInfo, TableInfo, ColumnInfo, FileInfo, NestedFieldInfo } from '../../types';
-import { getPluginIcon, getColumnIcon, getFileIcon, isFileBasedPlugin, isComplexColumnType } from './icons';
+import type { PluginInfo, SchemaInfo, TableInfo, ColumnInfo, FileInfo, NestedFieldInfo, SubTableInfo } from '../../types';
+import { getPluginIcon, getColumnIcon, getFileIcon, isFileBasedPlugin, isComplexColumnType, isMultiTableFile, getSubTableIcon } from './icons';
 
 const { Text } = Typography;
 
@@ -31,6 +31,7 @@ const { Text } = Typography;
  *   table:<schema>:<table>                 – table inside a non-file schema
  *   dir:<schema>:<path>                    – directory inside a file-based schema
  *   file:<schema>:<path>                   – file inside a file-based schema
+ *   sheet:<schema>:<filePath>:<subTable>   – sub-table inside a multi-table file (Excel/HDF5/Access)
  *   column:<schema>:<parent>:<col>         – column
  *   nested:<schema>:<parent>:<dotPath>     – nested field inside a MAP/STRUCT column
  */
@@ -99,6 +100,37 @@ export function buildColumnNodes(
   });
 }
 
+/** Build sub-table nodes (sheets/datasets/tables) for a multi-table file. */
+export function buildSubTableNodes(
+  schema: string,
+  filePath: string,
+  subTables: SubTableInfo[],
+  columnsCache: Record<string, ColumnInfo[]>,
+  nestedCache: Record<string, NestedFieldInfo[]>,
+): DataNode[] {
+  return subTables.map((sub) => {
+    const sheetKey = `sheet:${schema}:${filePath}:${sub.name}`;
+    const columns = columnsCache[sheetKey] || [];
+    const columnNodes = columns.length > 0
+      ? buildColumnNodes(columns, schema, `${filePath}/${sub.name}`, nestedCache)
+      : undefined;
+
+    const subtitle = sub.dataType ? ` (${sub.dataType})` : '';
+
+    return {
+      key: sheetKey,
+      title: (
+        <Tooltip title={`Sub-table: ${sub.name}${subtitle}`}>
+          <span>{sub.name}{subtitle && <Text type="secondary" style={{ fontSize: 11 }}>{subtitle}</Text>}</span>
+        </Tooltip>
+      ),
+      icon: getSubTableIcon(),
+      children: columnNodes,
+      isLeaf: false,
+    };
+  });
+}
+
 /** Build file/folder tree nodes recursively. */
 export function buildFileNodes(
   schema: string,
@@ -106,6 +138,7 @@ export function buildFileNodes(
   filesCache: Record<string, FileInfo[]>,
   columnsCache: Record<string, ColumnInfo[]>,
   nestedCache: Record<string, NestedFieldInfo[]>,
+  subTablesCache: Record<string, SubTableInfo[]>,
   parentPath: string = '',
 ): DataNode[] {
   return files.map((file) => {
@@ -116,7 +149,7 @@ export function buildFileNodes(
       const dirKey = `dir:${schema}:${filePath}`;
       const subFiles = filesCache[dirKey] || [];
       const subNodes = subFiles.length > 0
-        ? buildFileNodes(schema, subFiles, filesCache, columnsCache, nestedCache, filePath)
+        ? buildFileNodes(schema, subFiles, filesCache, columnsCache, nestedCache, subTablesCache, filePath)
         : undefined;
 
       return {
@@ -130,6 +163,27 @@ export function buildFileNodes(
 
     // Key prefix is "file:" for files
     const fileKey = `file:${schema}:${filePath}`;
+
+    // Multi-table files with multiple sub-tables show sub-table nodes
+    if (isMultiTableFile(file.name)) {
+      const subTables = subTablesCache[fileKey] || [];
+      if (subTables.length > 0) {
+        const subTableNodes = buildSubTableNodes(schema, filePath, subTables, columnsCache, nestedCache);
+        return {
+          key: fileKey,
+          title: (
+            <Tooltip title={`${file.length} bytes`}>
+              <span>{file.name}</span>
+            </Tooltip>
+          ),
+          icon: getFileIcon(file.name),
+          children: subTableNodes,
+          isLeaf: false,
+        };
+      }
+      // Single sub-table or not yet loaded — fall through to show columns directly
+    }
+
     const columns = columnsCache[fileKey] || [];
     const columnNodes = columns.length > 0
       ? buildColumnNodes(columns, schema, filePath, nestedCache)
@@ -181,6 +235,7 @@ export function buildSchemaNodes(
   columnsCache: Record<string, ColumnInfo[]>,
   filesCache: Record<string, FileInfo[]>,
   nestedCache: Record<string, NestedFieldInfo[]>,
+  subTablesCache: Record<string, SubTableInfo[]>,
 ): DataNode[] {
   const pluginIsFileBased = isFileBasedPlugin(plugin.type, plugin.name);
 
@@ -190,7 +245,7 @@ export function buildSchemaNodes(
     if (pluginIsFileBased) {
       const files = filesCache[schemaKey] || [];
       const fileNodes = files.length > 0
-        ? buildFileNodes(schema.name, files, filesCache, columnsCache, nestedCache)
+        ? buildFileNodes(schema.name, files, filesCache, columnsCache, nestedCache, subTablesCache)
         : undefined;
 
       return {
@@ -237,11 +292,12 @@ export function buildPluginNode(
   columnsCache: Record<string, ColumnInfo[]>,
   filesCache: Record<string, FileInfo[]>,
   nestedCache: Record<string, NestedFieldInfo[]>,
+  subTablesCache: Record<string, SubTableInfo[]>,
 ): DataNode {
   const pluginKey = `plugin:${plugin.name}`;
   const schemas = schemasCache[plugin.name] || [];
   const schemaNodes = schemas.length > 0
-    ? buildSchemaNodes(plugin, schemas, tablesCache, columnsCache, filesCache, nestedCache)
+    ? buildSchemaNodes(plugin, schemas, tablesCache, columnsCache, filesCache, nestedCache, subTablesCache)
     : undefined;
 
   const isHttpPlugin = plugin.type?.toLowerCase().includes('http') || plugin.name.toLowerCase() === 'http';
