@@ -550,8 +550,8 @@ public class MetadataResources {
     int safeLimit = Math.min(Math.max(1, limit), 1000);
 
     String sql = String.format(
-        "SELECT * FROM `%s`.`%s` LIMIT %d",
-        escapeBackticks(schema), escapeBackticks(table), safeLimit);
+        "SELECT * FROM %s.`%s` LIMIT %d",
+        formatSchemaPath(schema), escapeBackticks(table), safeLimit);
 
     try {
       QueryResult result = executeQuery(sql);
@@ -577,9 +577,9 @@ public class MetadataResources {
     }
 
     // Build the fully qualified path
-    // Handle paths that may contain special characters
-    String fullPath = String.format("`%s`.`%s`",
-        escapeBackticks(schema), escapeBackticks(filePath));
+    // Plugin name stays unquoted, workspace parts are individually backtick-quoted,
+    // and the file path is backtick-quoted. e.g. dfs.`test`.`file.xml`
+    String fullPath = formatSchemaPath(schema) + ".`" + escapeBackticks(filePath) + "`";
 
     String sql = String.format("SELECT * FROM %s LIMIT 1", fullPath);
 
@@ -588,11 +588,15 @@ public class MetadataResources {
     try {
       QueryResult result = executeQuery(sql);
 
-      // Get column names and infer types from the first row of results
-      for (String columnName : result.columns) {
-        // Try to infer type from first row value
+      // Use result.metadata for column types when available (preferred),
+      // fall back to value-based inference.
+      List<String> columnNames = new ArrayList<>(result.columns);
+      for (int i = 0; i < columnNames.size(); i++) {
+        String columnName = columnNames.get(i);
         String dataType = "ANY";
-        if (!result.rows.isEmpty()) {
+        if (result.metadata != null && i < result.metadata.size()) {
+          dataType = result.metadata.get(i);
+        } else if (!result.rows.isEmpty()) {
           String value = result.rows.get(0).get(columnName);
           dataType = inferDataType(value);
         }
@@ -716,5 +720,23 @@ public class MetadataResources {
       return "";
     }
     return value.replace("`", "``");
+  }
+
+  /**
+   * Format a compound schema name for SQL queries.
+   * Plugin name stays unquoted; workspace parts are individually backtick-quoted.
+   * e.g. "dfs.test" → "dfs.`test`", "dfs" → "dfs"
+   */
+  private String formatSchemaPath(String schema) {
+    if (schema == null || !schema.contains(".")) {
+      return schema;
+    }
+    String[] parts = schema.split("\\.", 2);
+    String[] workspaceParts = parts[1].split("\\.");
+    StringBuilder sb = new StringBuilder(parts[0]);
+    for (String wp : workspaceParts) {
+      sb.append(".`").append(escapeBackticks(wp)).append("`");
+    }
+    return sb.toString();
   }
 }
