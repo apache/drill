@@ -28,6 +28,7 @@
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "react-grid-layout": "^1.4.4",
+    "react-icons": "^5.5.0",
     "react-markdown": "^10.1.0",
     "react-redux": "^9.0.4",
     "react-router-dom": "^6.21.0",
