@@ -15,14 +15,15 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import { useMemo, useCallback, useRef } from 'react';
+import { useMemo, useCallback, useRef, useState } from 'react';
 import { AgGridReact } from 'ag-grid-react';
-import { Button, Space, Dropdown, Typography, Alert, Empty } from 'antd';
+import { Button, Space, Dropdown, Typography, Alert, Empty, Modal, Select } from 'antd';
 import {
   DownloadOutlined,
   CopyOutlined,
   BarChartOutlined,
   ExpandOutlined,
+  SettingOutlined,
 } from '@ant-design/icons';
 import type { ColDef, GridReadyEvent, GridApi } from 'ag-grid-community';
 import type { MenuProps } from 'antd';
@@ -34,11 +35,21 @@ import 'ag-grid-community/styles/ag-theme-alpine.css';
 
 const { Text } = Typography;
 
+export interface ResultsSettings {
+  timestampDisplayFormat: 'locale' | 'iso' | 'utc' | 'epoch';
+}
+
+export const DEFAULT_RESULTS_SETTINGS: ResultsSettings = {
+  timestampDisplayFormat: 'locale',
+};
+
 interface ResultsGridProps {
   results?: QueryResult;
   error?: QueryError;
   isLoading?: boolean;
   onCreateVisualization?: () => void;
+  resultsSettings?: ResultsSettings;
+  onResultsSettingsChange?: (settings: ResultsSettings) => void;
 }
 
 export default function ResultsGrid({
@@ -46,25 +57,57 @@ export default function ResultsGrid({
   error,
   isLoading,
   onCreateVisualization,
+  resultsSettings,
+  onResultsSettingsChange,
 }: ResultsGridProps) {
   const gridRef = useRef<AgGridReact>(null);
   const gridApiRef = useRef<GridApi | null>(null);
+  const [settingsModalOpen, setSettingsModalOpen] = useState(false);
 
-  // Generate column definitions from results
+  const timestampFormat = resultsSettings?.timestampDisplayFormat ?? DEFAULT_RESULTS_SETTINGS.timestampDisplayFormat;
+
+  // Generate column definitions from results with type-aware filters
   const columnDefs = useMemo<ColDef[]>(() => {
     if (!results?.columns) return [];
 
-    return results.columns.map((col, index) => ({
-      field: col,
-      headerName: col,
-      sortable: true,
-      filter: true,
-      resizable: true,
-      minWidth: 100,
-      // Use metadata for type-specific formatting
-      cellDataType: getColumnType(results.metadata?.[index]),
-    }));
-  }, [results]);
+    return results.columns.map((col, index) => {
+      const metadataType = results.metadata?.[index];
+      const config = getColumnConfig(metadataType);
+      const isDateColumn = metadataType && (metadataType.toUpperCase().includes('DATE') || metadataType.toUpperCase().includes('TIMESTAMP'));
+
+      const colDef: ColDef = {
+        field: col,
+        headerName: col,
+        sortable: true,
+        resizable: true,
+        minWidth: 100,
+        filter: config.filter,
+        filterParams: config.filterParams,
+        ...(config.filterValueGetter ? { filterValueGetter: config.filterValueGetter } : {}),
+      };
+
+      if (isDateColumn) {
+        colDef.valueGetter = (params) => {
+          const raw = params.data?.[col];
+          if (raw == null) {
+            return null;
+          }
+          if (typeof raw === 'number') {
+            return new Date(raw).toISOString();
+          }
+          return raw;
+        };
+        colDef.valueFormatter = (params) => {
+          if (params.value == null) {
+            return '';
+          }
+          return formatTimestamp(params.value, timestampFormat);
+        };
+      }
+
+      return colDef;
+    });
+  }, [results, timestampFormat]);
 
   // Convert row data — stringify nested objects/arrays so AG Grid doesn't show [object Object]
   const rowData = useMemo(() => {
@@ -219,6 +262,13 @@ export default function ResultsGrid({
           >
             Fit Columns
           </Button>
+          <Button
+            icon={<SettingOutlined />}
+            onClick={() => setSettingsModalOpen(true)}
+            size="small"
+          >
+            Settings
+          </Button>
         </Space>
       </div>
 
@@ -231,7 +281,6 @@ export default function ResultsGrid({
           onGridReady={onGridReady}
           defaultColDef={{
             sortable: true,
-            filter: true,
             resizable: true,
             floatingFilter: true,
             cellRenderer: JsonCellRenderer,
@@ -246,8 +295,58 @@ export default function ResultsGrid({
           suppressRowClickSelection={true}
         />
       </div>
+
+      {/* Results Settings Modal */}
+      <Modal
+        title="Results Settings"
+        open={settingsModalOpen}
+        onCancel={() => setSettingsModalOpen(false)}
+        footer={null}
+        width={400}
+      >
+        <div style={{ marginBottom: 16 }}>
+          <Text strong style={{ display: 'block', marginBottom: 8 }}>
+            Timestamp Display Format
+          </Text>
+          <Select
+            value={timestampFormat}
+            onChange={(value) => {
+              onResultsSettingsChange?.({
+                ...resultsSettings,
+                ...DEFAULT_RESULTS_SETTINGS,
+                timestampDisplayFormat: value,
+              });
+            }}
+            style={{ width: '100%' }}
+            options={[
+              { value: 'locale', label: 'Locale (browser default)' },
+              { value: 'iso', label: 'ISO 8601' },
+              { value: 'utc', label: 'UTC' },
+              { value: 'epoch', label: 'Epoch (raw milliseconds)' },
+            ]}
+          />
+        </div>
+      </Modal>
     </div>
   );
+}
+
+// Format a timestamp value based on the user's chosen display format
+function formatTimestamp(value: unknown, format: string): string {
+  if (value == null || value === '') {
+    return '';
+  }
+  const date = new Date(typeof value === 'number' ? value : String(value));
+  if (isNaN(date.getTime())) {
+    return String(value);
+  }
+  switch (format) {
+    case 'iso': return date.toISOString();
+    case 'utc': return date.toUTCString();
+    case 'epoch': return String(date.getTime());
+    case 'locale':
+    default: return date.toLocaleString();
+  }
 }
 
 // Format a cell value for display — JSON-stringify objects/arrays
@@ -261,22 +360,93 @@ function formatCellValue(value: unknown): string {
   return String(value);
 }
 
-// Helper to determine column type from metadata
-function getColumnType(metadataType?: string): string {
-  if (!metadataType) return 'text';
+// Custom comparator for AG Grid date filter — parses Drill date/timestamp strings
+function dateComparator(filterDate: Date, cellValue: string): number {
+  if (!cellValue) {
+    return -1;
+  }
+  const cellDate = new Date(cellValue);
+  if (isNaN(cellDate.getTime())) {
+    return 0;
+  }
+  const filterTime = filterDate.getTime();
+  const cellTime = cellDate.getTime();
+  if (cellTime < filterTime) {
+    return -1;
+  }
+  if (cellTime > filterTime) {
+    return 1;
+  }
+  return 0;
+}
+
+interface ColumnTypeConfig {
+  cellDataType: string;
+  filter: string;
+  filterParams?: Record<string, unknown>;
+  filterValueGetter?: (params: { data: Record<string, unknown>; colDef: { field?: string } }) => unknown;
+}
+
+// Determine column filter configuration from Drill metadata type
+function getColumnConfig(metadataType?: string): ColumnTypeConfig {
+  if (!metadataType) {
+    return { cellDataType: 'text', filter: 'agTextColumnFilter' };
+  }
 
   const type = metadataType.toUpperCase();
-  if (type.includes('INT') || type.includes('FLOAT') || type.includes('DOUBLE') || type.includes('DECIMAL')) {
-    return 'number';
+
+  // Numeric types
+  if (type.includes('INT') || type.includes('FLOAT') || type.includes('DOUBLE') || type.includes('DECIMAL') || type.includes('NUMERIC')) {
+    return {
+      cellDataType: 'text',
+      filter: 'agNumberColumnFilter',
+      filterParams: {
+        buttons: ['reset', 'apply'],
+        filterOptions: [
+          'equals', 'notEqual',
+          'lessThan', 'lessThanOrEqual',
+          'greaterThan', 'greaterThanOrEqual',
+          'inRange', 'blank', 'notBlank',
+        ],
+      },
+      filterValueGetter: (params: { data: Record<string, unknown>; colDef: { field?: string } }) => {
+        const value = params.data?.[params.colDef.field || ''];
+        if (value == null || value === '') {
+          return null;
+        }
+        const num = Number(value);
+        return isNaN(num) ? null : num;
+      },
+    };
   }
-  if (type.includes('DATE')) {
-    return 'date';
+
+  // Date and Timestamp types
+  if (type.includes('DATE') || type.includes('TIMESTAMP')) {
+    return {
+      cellDataType: 'text',
+      filter: 'agDateColumnFilter',
+      filterParams: {
+        buttons: ['reset', 'apply'],
+        filterOptions: [
+          'equals', 'notEqual',
+          'lessThan', 'greaterThan',
+          'inRange', 'blank', 'notBlank',
+        ],
+        comparator: dateComparator,
+      },
+    };
   }
+
+  // Time types — no AG Grid time-specific filter
   if (type.includes('TIME')) {
-    return 'text'; // AG Grid handles timestamps as text
+    return { cellDataType: 'text', filter: 'agTextColumnFilter' };
   }
+
+  // Boolean
   if (type.includes('BOOL')) {
-    return 'boolean';
+    return { cellDataType: 'text', filter: 'agTextColumnFilter' };
   }
-  return 'text';
+
+  // Default: text
+  return { cellDataType: 'text', filter: 'agTextColumnFilter' };
 }

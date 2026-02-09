@@ -268,7 +268,7 @@ export default function VisualizationBuilder({
 
       <Divider />
 
-      {!queryResult || queryResult.rows.length === 0 ? (
+      {!queryResult || !queryResult.rows || queryResult.rows.length === 0 ? (
         <div style={{ padding: 40, textAlign: 'center' }}>
           <Text type="secondary">
             No query results available. Please run a query first to create a visualization.

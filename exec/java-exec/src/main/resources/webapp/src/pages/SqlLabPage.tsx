@@ -34,7 +34,8 @@ import SchemaExplorer from '../components/schema-explorer/SchemaExplorer';
 import SqlEditor, { DEFAULT_EDITOR_SETTINGS } from '../components/query-editor/SqlEditor';
 import type { EditorSettings } from '../components/query-editor/SqlEditor';
 import QueryToolbar from '../components/query-editor/QueryToolbar';
-import ResultsGrid from '../components/results/ResultsGrid';
+import ResultsGrid, { DEFAULT_RESULTS_SETTINGS } from '../components/results/ResultsGrid';
+import type { ResultsSettings } from '../components/results/ResultsGrid';
 import SaveQueryDialog from '../components/query-editor/SaveQueryDialog';
 import { VisualizationBuilder } from '../components/visualization';
 import type { SavedQuery } from '../types';
@@ -71,6 +72,28 @@ export default function SqlLabPage() {
     setEditorSettings(settings);
     try {
       localStorage.setItem('drill-sqllab-editor-settings', JSON.stringify(settings));
+    } catch {
+      // Ignore storage errors
+    }
+  }, []);
+
+  // Results settings with localStorage persistence
+  const [resultsSettings, setResultsSettings] = useState<ResultsSettings>(() => {
+    try {
+      const stored = localStorage.getItem('drill-sqllab-results-settings');
+      if (stored) {
+        return { ...DEFAULT_RESULTS_SETTINGS, ...JSON.parse(stored) };
+      }
+    } catch {
+      // Ignore parse errors
+    }
+    return DEFAULT_RESULTS_SETTINGS;
+  });
+
+  const handleResultsSettingsChange = useCallback((settings: ResultsSettings) => {
+    setResultsSettings(settings);
+    try {
+      localStorage.setItem('drill-sqllab-results-settings', JSON.stringify(settings));
     } catch {
       // Ignore storage errors
     }
@@ -358,6 +381,8 @@ export default function SqlLabPage() {
             error={error}
             isLoading={isExecuting}
             onCreateVisualization={handleCreateVisualization}
+            resultsSettings={resultsSettings}
+            onResultsSettingsChange={handleResultsSettingsChange}
           />
         </div>
       </div>
