@@ -29,6 +29,7 @@ import {
   FieldTimeOutlined,
   FieldBinaryOutlined,
   ApartmentOutlined,
+  TableOutlined,
 } from '@ant-design/icons';
 import {
   SiSplunk,
@@ -44,6 +45,7 @@ import {
   SiJson,
 } from 'react-icons/si';
 import { VscFilePdf, VscFileCode } from 'react-icons/vsc';
+import { FaFileExcel } from 'react-icons/fa';
 
 /** Returns an icon element for a storage plugin based on its type and name. */
 export function getPluginIcon(pluginType: string, pluginName: string): React.ReactNode {
@@ -164,7 +166,7 @@ export function getFileIcon(filename: string): React.ReactNode {
 
     case 'xls':
     case 'xlsx':
-      return <FileOutlined style={{ color: '#217346' }} />;
+      return <FaFileExcel style={{ color: '#217346' }} />;
 
     case 'log':
     case 'txt':
@@ -199,6 +201,38 @@ export function isComplexColumnType(dataType: string): boolean {
   return type === 'MAP' || type === 'STRUCT' || type === 'DICT' ||
          type === 'REPEATED_MAP' ||
          type.startsWith('STRUCT<') || type.startsWith('MAP<');
+}
+
+/** Configuration for file formats that contain multiple internal tables. */
+export interface MultiTableConfig {
+  formatType: string;
+  paramName: string;
+}
+
+const MULTI_TABLE_FORMATS: Record<string, MultiTableConfig> = {
+  xlsx: { formatType: 'excel', paramName: 'sheetName' },
+  xls: { formatType: 'excel', paramName: 'sheetName' },
+  h5: { formatType: 'hdf5', paramName: 'defaultPath' },
+  hdf5: { formatType: 'hdf5', paramName: 'defaultPath' },
+  mdb: { formatType: 'msaccess', paramName: 'tableName' },
+  accdb: { formatType: 'msaccess', paramName: 'tableName' },
+};
+
+/** Check if a file has a multi-table format (Excel, HDF5, MS Access). */
+export function isMultiTableFile(filename: string): boolean {
+  const ext = filename.split('.').pop()?.toLowerCase() || '';
+  return ext in MULTI_TABLE_FORMATS;
+}
+
+/** Get the multi-table config for a file, or undefined if not a multi-table format. */
+export function getMultiTableConfig(filename: string): MultiTableConfig | undefined {
+  const ext = filename.split('.').pop()?.toLowerCase() || '';
+  return MULTI_TABLE_FORMATS[ext];
+}
+
+/** Returns an icon element for a sub-table (sheet, dataset, table within a file). */
+export function getSubTableIcon(): React.ReactNode {
+  return <TableOutlined style={{ color: '#fa8c16' }} />;
 }
 
 /** Check if a plugin is file-based (can browse files/folders). */

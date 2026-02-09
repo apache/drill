@@ -75,8 +75,14 @@ export default function ContextMenu({
           break;
         }
         case 'describe': {
-          const sql = `DESCRIBE ${qualifiedName}`;
-          onInsertText?.(sql);
+          if (qualifiedName.startsWith('table(')) {
+            // Table function syntax — DESCRIBE doesn't support it, use SELECT * LIMIT 0 instead
+            const sql = `SELECT *\nFROM ${qualifiedName}\nLIMIT 0`;
+            onInsertText?.(sql);
+          } else {
+            const sql = `DESCRIBE ${qualifiedName}`;
+            onInsertText?.(sql);
+          }
           break;
         }
         case 'use-schema': {

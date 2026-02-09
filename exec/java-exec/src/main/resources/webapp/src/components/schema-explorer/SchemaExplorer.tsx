@@ -25,9 +25,9 @@ import {
 } from '@ant-design/icons';
 import type { DataNode, EventDataNode } from 'antd/es/tree';
 import { useQueryClient } from '@tanstack/react-query';
-import { getPluginSchemas, getTables, getColumns, getFiles, getFileColumns, getNestedColumns } from '../../api/metadata';
-import type { SchemaInfo, TableInfo, ColumnInfo, FileInfo, NestedFieldInfo } from '../../types';
-import { isFileBasedPlugin } from './icons';
+import { getPluginSchemas, getTables, getColumns, getFiles, getFileColumns, getNestedColumns, getSubTables, getSubTableColumns } from '../../api/metadata';
+import type { SchemaInfo, TableInfo, ColumnInfo, FileInfo, NestedFieldInfo, SubTableInfo } from '../../types';
+import { isFileBasedPlugin, getMultiTableConfig } from './icons';
 import { usePlugins } from './hooks';
 import { buildPluginNode } from './TreeNodeBuilder';
 import ContextMenu from './ContextMenu';
@@ -43,6 +43,18 @@ interface SchemaExplorerProps {
 }
 
 /**
+ * Format a compound schema name for SQL: plugin unquoted, workspace parts backtick-quoted.
+ * e.g. "dfs.test" → "dfs.`test`", "dfs" → "dfs"
+ */
+function formatSchema(schema: string): string {
+  const parts = schema.split('.');
+  if (parts.length <= 1) {
+    return schema;
+  }
+  return parts[0] + '.' + parts.slice(1).map((p) => `\`${p}\``).join('.');
+}
+
+/**
  * Derive a backtick-quoted qualified name from a tree node key.
  * Handles prefixes: plugin, schema, table, dir, file, column.
  */
@@ -55,11 +67,33 @@ function getQualifiedName(key: string): string {
   }
   if (key.startsWith('table:')) {
     const [, schemaName, tableName] = key.split(':');
-    return `\`${schemaName}\`.\`${tableName}\``;
+    return `${formatSchema(schemaName)}.\`${tableName}\``;
   }
   if (key.startsWith('dir:') || key.startsWith('file:')) {
     const parts = key.split(':');
-    return `\`${parts[1]}\`.\`${parts.slice(2).join(':')}\``;
+    return `${formatSchema(parts[1])}.\`${parts.slice(2).join(':')}\``;
+  }
+  if (key.startsWith('sheet:')) {
+    // sheet:<schema>:<filePath>:<subTableName>
+    const parts = key.split(':');
+    const schemaName = parts[1];
+    const filePath = parts[2];
+    const subTableName = parts.slice(3).join(':');
+    const fileName = filePath.split('/').pop() || filePath;
+    const ext = fileName.split('.').pop()?.toLowerCase() || '';
+    const formatConfigs: Record<string, { formatType: string; paramName: string }> = {
+      xlsx: { formatType: 'excel', paramName: 'sheetName' },
+      xls: { formatType: 'excel', paramName: 'sheetName' },
+      h5: { formatType: 'hdf5', paramName: 'defaultPath' },
+      hdf5: { formatType: 'hdf5', paramName: 'defaultPath' },
+      mdb: { formatType: 'msaccess', paramName: 'tableName' },
+      accdb: { formatType: 'msaccess', paramName: 'tableName' },
+    };
+    const cfg = formatConfigs[ext];
+    if (cfg) {
+      return `table( ${formatSchema(schemaName)}.\`${filePath}\` (type => '${cfg.formatType}', ${cfg.paramName} => '${subTableName}'))`;
+    }
+    return `${formatSchema(schemaName)}.\`${filePath}\``;
   }
   if (key.startsWith('column:')) {
     const parts = key.split(':');
@@ -79,6 +113,7 @@ function getNodeType(key: string): NodeType {
   if (key.startsWith('plugin:')) { return 'plugin'; }
   if (key.startsWith('schema:')) { return 'schema'; }
   if (key.startsWith('table:')) { return 'table'; }
+  if (key.startsWith('sheet:')) { return 'table'; }
   if (key.startsWith('dir:') || key.startsWith('file:')) { return 'file'; }
   if (key.startsWith('nested:')) { return 'column'; }
   return 'column';
@@ -95,6 +130,7 @@ export default function SchemaExplorer({ onInsertText, onTableSelect }: SchemaEx
   const [filesCache, setFilesCache] = useState<Record<string, FileInfo[]>>({});
   const [pluginTypesCache, setPluginTypesCache] = useState<Record<string, string>>({});
   const [nestedCache, setNestedCache] = useState<Record<string, NestedFieldInfo[]>>({});
+  const [subTablesCache, setSubTablesCache] = useState<Record<string, SubTableInfo[]>>({});
 
   // Column statistics drawer
   const [statsTarget, setStatsTarget] = useState<{ schema: string; table: string } | null>(null);
@@ -127,6 +163,8 @@ export default function SchemaExplorer({ onInsertText, onTableSelect }: SchemaEx
   pluginTypesCacheRef.current = pluginTypesCache;
   const nestedCacheRef = useRef(nestedCache);
   nestedCacheRef.current = nestedCache;
+  const subTablesCacheRef = useRef(subTablesCache);
+  subTablesCacheRef.current = subTablesCache;
 
   // ---------- Tree data construction ----------
 
@@ -145,9 +183,9 @@ export default function SchemaExplorer({ onInsertText, onTableSelect }: SchemaEx
       : plugins;
 
     return filteredPlugins.map((plugin) =>
-      buildPluginNode(plugin, schemasCache, tablesCache, columnsCache, filesCache, nestedCache)
+      buildPluginNode(plugin, schemasCache, tablesCache, columnsCache, filesCache, nestedCache, subTablesCache)
     );
-  }, [plugins, schemasCache, tablesCache, columnsCache, filesCache, nestedCache, searchText]);
+  }, [plugins, schemasCache, tablesCache, columnsCache, filesCache, nestedCache, subTablesCache, searchText]);
 
   // Favorites section: flat list of pinned nodes at the top
   const favoritesTreeData = useMemo((): DataNode[] => {
@@ -225,13 +263,75 @@ export default function SchemaExplorer({ onInsertText, onTableSelect }: SchemaEx
           loaded = true;
 
         } else if (key.startsWith('file:')) {
-          // ---- File node: load columns ----
+          // ---- File node: load columns or sub-tables ----
           const parts = key.split(':');
           const schemaName = parts[1];
           const filePath = parts.slice(2).join(':');
-          if (!columnsCacheRef.current[key]) {
+          const fileName = filePath.split('/').pop() || filePath;
+          const mtConfig = getMultiTableConfig(fileName);
+
+          if (mtConfig) {
+            // Multi-table file: load sub-tables (sheets/datasets/tables)
+            if (!subTablesCacheRef.current[key] && !columnsCacheRef.current[key]) {
+              try {
+                const subTables = await getSubTables(schemaName, filePath, mtConfig.formatType);
+                if (subTables.length <= 1) {
+                  // Single (or zero) sub-table: load columns directly like a regular file
+                  setSubTablesCache((prev) => ({ ...prev, [key]: [] }));
+                  if (subTables.length === 1) {
+                    try {
+                      const columns = await getSubTableColumns(
+                        schemaName, filePath, mtConfig.formatType, mtConfig.paramName, subTables[0].name
+                      );
+                      setColumnsCache((prev) => ({ ...prev, [key]: columns }));
+                    } catch {
+                      setColumnsCache((prev) => ({ ...prev, [key]: [] }));
+                    }
+                  } else {
+                    setColumnsCache((prev) => ({ ...prev, [key]: [] }));
+                  }
+                } else {
+                  // Multiple sub-tables: show sub-table nodes
+                  setSubTablesCache((prev) => ({ ...prev, [key]: subTables }));
+                }
+                loaded = true;
+              } catch {
+                console.error('Failed to load sub-tables for file:', schemaName, filePath);
+                // Don't cache failure or mark as loaded — allows retry on next expand
+              }
+            } else {
+              loaded = true;
+            }
+          } else {
+            // Regular file: load columns
+            if (!columnsCacheRef.current[key]) {
+              try {
+                const columns = await getFileColumns(schemaName, filePath);
+                setColumnsCache((prev) => ({ ...prev, [key]: columns }));
+                loaded = true;
+              } catch (err) {
+                console.error('Failed to load columns for file:', schemaName, filePath, err);
+                // Don't cache failure or mark as loaded — allows retry on next expand
+              }
+            } else {
+              loaded = true;
+            }
+          }
+
+        } else if (key.startsWith('sheet:')) {
+          // ---- Sub-table node: load columns via table function ----
+          const parts = key.split(':');
+          const schemaName = parts[1];
+          const filePath = parts[2];
+          const subTableName = parts.slice(3).join(':');
+          const fileName = filePath.split('/').pop() || filePath;
+          const mtConfig = getMultiTableConfig(fileName);
+
+          if (mtConfig && !columnsCacheRef.current[key]) {
             try {
-              const columns = await getFileColumns(schemaName, filePath);
+              const columns = await getSubTableColumns(
+                schemaName, filePath, mtConfig.formatType, mtConfig.paramName, subTableName
+              );
               setColumnsCache((prev) => ({ ...prev, [key]: columns }));
             } catch {
               setColumnsCache((prev) => ({ ...prev, [key]: [] }));
@@ -310,6 +410,10 @@ export default function SchemaExplorer({ onInsertText, onTableSelect }: SchemaEx
       if (key.startsWith('table:')) {
         const [, schemaName, tableName] = key.split(':');
         onTableSelect?.(schemaName, tableName);
+      } else if (key.startsWith('sheet:')) {
+        // Pass table function expression so parent generates correct SELECT *
+        const qn = getQualifiedName(key);
+        onTableSelect?.('', qn);
       } else if (key.startsWith('file:') || key.startsWith('dir:')) {
         const parts = key.split(':');
         onTableSelect?.(parts[1], parts.slice(2).join(':'));
@@ -326,7 +430,12 @@ export default function SchemaExplorer({ onInsertText, onTableSelect }: SchemaEx
       }
       const text = getQualifiedName(key);
       if (text && onInsertText) {
-        onInsertText(text);
+        if (key.startsWith('sheet:')) {
+          // Sheet nodes need a complete query since the table function syntax alone isn't usable
+          onInsertText(`SELECT *\nFROM ${text}\nLIMIT 100`);
+        } else {
+          onInsertText(text);
+        }
       }
     },
     [onInsertText],
@@ -338,7 +447,9 @@ export default function SchemaExplorer({ onInsertText, onTableSelect }: SchemaEx
     (info: { event: React.DragEvent; node: EventDataNode<DataNode> }) => {
       const key = info.node.key as string;
       const qn = getQualifiedName(key);
-      info.event.dataTransfer.setData('text/plain', qn);
+      // Sheet nodes drag as a complete query since table function syntax alone isn't usable
+      const text = key.startsWith('sheet:') ? `SELECT *\nFROM ${qn}\nLIMIT 100` : qn;
+      info.event.dataTransfer.setData('text/plain', text);
       info.event.dataTransfer.effectAllowed = 'copy';
     },
     [],
@@ -431,6 +542,19 @@ export default function SchemaExplorer({ onInsertText, onTableSelect }: SchemaEx
         setColumnsCache((prev) => {
           const next = { ...prev };
           delete next[key];
+          // Also clear columns cached under sheet: keys for this file
+          const sheetPrefix = `sheet:${fileSchema}:${filePath}:`;
+          for (const k of Object.keys(next)) {
+            if (k.startsWith(sheetPrefix)) {
+              delete next[k];
+            }
+          }
+          return next;
+        });
+        // Clear sub-tables cache for this file
+        setSubTablesCache((prev) => {
+          const next = { ...prev };
+          delete next[key];
           return next;
         });
         // Clear nested field caches for columns under this file
@@ -445,7 +569,33 @@ export default function SchemaExplorer({ onInsertText, onTableSelect }: SchemaEx
           }
           return next;
         });
-        setLoadedKeys((prev) => prev.filter((k) => k !== key && !k.startsWith(`column:${fileSchema}:${filePath}:`) && !k.startsWith(`nested:${fileSchema}:${filePath}:`)));
+        const sheetKeyPrefix = `sheet:${fileSchema}:${filePath}:`;
+        setLoadedKeys((prev) => prev.filter((k) => k !== key && !k.startsWith(`column:${fileSchema}:${filePath}:`) && !k.startsWith(`nested:${fileSchema}:${filePath}:`) && !k.startsWith(sheetKeyPrefix)));
+      } else if (key.startsWith('sheet:')) {
+        // Clear columns cached for this sub-table
+        const sheetParts = key.split(':');
+        const sheetSchema = sheetParts[1];
+        const sheetFilePath = sheetParts[2];
+        const sheetSubTable = sheetParts.slice(3).join(':');
+        setColumnsCache((prev) => {
+          const next = { ...prev };
+          delete next[key];
+          return next;
+        });
+        // Clear nested caches under this sub-table
+        const parentName = `${sheetFilePath}/${sheetSubTable}`;
+        setNestedCache((prev) => {
+          const next = { ...prev };
+          const colPrefix = `column:${sheetSchema}:${parentName}:`;
+          const nestedPrefix = `nested:${sheetSchema}:${parentName}:`;
+          for (const k of Object.keys(next)) {
+            if (k.startsWith(colPrefix) || k.startsWith(nestedPrefix)) {
+              delete next[k];
+            }
+          }
+          return next;
+        });
+        setLoadedKeys((prev) => prev.filter((k) => k !== key && !k.startsWith(`column:${sheetSchema}:${parentName}:`) && !k.startsWith(`nested:${sheetSchema}:${parentName}:`)));
       }
     },
     [],
@@ -467,6 +617,7 @@ export default function SchemaExplorer({ onInsertText, onTableSelect }: SchemaEx
     setFilesCache({});
     setPluginTypesCache({});
     setNestedCache({});
+    setSubTablesCache({});
     setLoadedKeys([]);
     setExpandedKeys([]);
     queryClient.invalidateQueries({ queryKey: ['plugins'] });
