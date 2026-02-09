@@ -18,6 +18,7 @@
 import { useMemo } from 'react';
 import ReactECharts from 'echarts-for-react';
 import { Empty, Spin, Table } from 'antd';
+import { CaretUpOutlined, CaretDownOutlined, MinusOutlined } from '@ant-design/icons';
 import type { EChartsOption } from 'echarts';
 import type { ChartType, VisualizationConfig, QueryResult } from '../../types';
 
@@ -305,6 +306,118 @@ export default function ChartPreview({
     return (
       <div style={{ height, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
         <Empty description="No data available. Run a query first." />
+      </div>
+    );
+  }
+
+  // For bigNumber type, render custom JSX
+  if (chartType === 'bigNumber') {
+    const metricField = config.metrics?.[0];
+    if (!metricField) {
+      if (mini) {
+        return null;
+      }
+      return (
+        <div style={{ height, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <Empty description="Select a metric to display" />
+        </div>
+      );
+    }
+
+    const rows = data.rows;
+    const lastValue = Number(rows[rows.length - 1]?.[metricField]) || 0;
+    const firstValue = Number(rows[0]?.[metricField]) || 0;
+    const hasMultipleRows = rows.length >= 2;
+
+    const showSparkline = config.chartOptions?.showSparkline !== false;
+    const showTrend = config.chartOptions?.showTrend !== false;
+
+    // Trend calculation
+    let trendPercent = 0;
+    let trendDirection: 'up' | 'down' | 'flat' = 'flat';
+    if (hasMultipleRows && firstValue !== 0) {
+      trendPercent = ((lastValue - firstValue) / Math.abs(firstValue)) * 100;
+      if (trendPercent > 0) {
+        trendDirection = 'up';
+      } else if (trendPercent < 0) {
+        trendDirection = 'down';
+      }
+    }
+
+    // Mini mode: just the big number
+    if (mini) {
+      return (
+        <div style={{
+          height,
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          flexDirection: 'column',
+        }}>
+          <div style={{ fontSize: 28, fontWeight: 700, color: '#262626' }}>
+            {lastValue.toLocaleString()}
+          </div>
+        </div>
+      );
+    }
+
+    // Sparkline data
+    const sparklineValues = rows.map((row) => Number(row[metricField]) || 0);
+
+    const sparklineOption: EChartsOption = {
+      xAxis: { type: 'category', show: false, boundaryGap: false },
+      yAxis: { type: 'value', show: false },
+      grid: { left: 0, right: 0, top: 0, bottom: 0 },
+      series: [{
+        type: 'line',
+        data: sparklineValues,
+        smooth: true,
+        showSymbol: false,
+        lineStyle: { width: 2, color: colors[0] },
+        areaStyle: { color: colors[0], opacity: 0.15 },
+      }],
+      tooltip: undefined,
+      animation: false,
+    };
+
+    return (
+      <div style={{
+        height,
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        flexDirection: 'column',
+        gap: 8,
+      }}>
+        <div style={{ fontSize: 48, fontWeight: 700, color: '#262626', lineHeight: 1.2 }}>
+          {lastValue.toLocaleString()}
+        </div>
+        <div style={{ fontSize: 14, color: '#8c8c8c' }}>
+          {metricField}
+        </div>
+        {showTrend && hasMultipleRows && (
+          <div style={{
+            fontSize: 16,
+            color: trendDirection === 'up' ? '#52c41a' : trendDirection === 'down' ? '#ff4d4f' : '#8c8c8c',
+            display: 'flex',
+            alignItems: 'center',
+            gap: 4,
+          }}>
+            {trendDirection === 'up' && <CaretUpOutlined />}
+            {trendDirection === 'down' && <CaretDownOutlined />}
+            {trendDirection === 'flat' && <MinusOutlined />}
+            {Math.abs(trendPercent).toFixed(1)}%
+          </div>
+        )}
+        {showSparkline && hasMultipleRows && (
+          <div style={{ width: '60%', maxWidth: 300 }}>
+            <ReactECharts
+              option={sparklineOption}
+              style={{ height: 80, width: '100%' }}
+              opts={{ renderer: 'canvas' }}
+            />
+          </div>
+        )}
       </div>
     );
   }
