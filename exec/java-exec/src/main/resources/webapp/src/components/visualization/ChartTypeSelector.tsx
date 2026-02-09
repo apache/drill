@@ -27,6 +27,7 @@ import {
   DashboardOutlined,
   FilterOutlined,
   GlobalOutlined,
+  FieldNumberOutlined,
 } from '@ant-design/icons';
 import type { ChartType } from '../../types';
 
@@ -74,6 +75,13 @@ const chartTypes: ChartTypeOption[] = [
     name: 'Data Table',
     description: 'Display data in tabular format',
     icon: <TableOutlined style={{ fontSize: 24 }} />,
+    category: 'basic',
+  },
+  {
+    type: 'bigNumber',
+    name: 'Big Number',
+    description: 'Display a single key metric with optional trend',
+    icon: <FieldNumberOutlined style={{ fontSize: 24 }} />,
     category: 'basic',
   },
   {

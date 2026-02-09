@@ -90,6 +90,18 @@ export interface QueryError {
   stackTrace?: string;
 }
 
+// Query History types
+export interface QueryHistoryEntry {
+  id: string;
+  sql: string;
+  status: 'success' | 'error';
+  rowCount: number;
+  duration: number;
+  timestamp: number;
+  errorMessage?: string;
+  queryId?: string;
+}
+
 // Saved Query types
 export interface SavedQuery {
   id: string;
@@ -124,7 +136,8 @@ export type ChartType =
   | 'treemap'
   | 'gauge'
   | 'funnel'
-  | 'map';
+  | 'map'
+  | 'bigNumber';
 
 export interface VisualizationConfig {
   xAxis?: string;

@@ -15,7 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import { Form, Select, Typography, Space, Tag } from 'antd';
+import { Form, Select, Switch, Typography, Space, Tag } from 'antd';
 import { FieldNumberOutlined, FieldStringOutlined } from '@ant-design/icons';
 import type { ChartType, VisualizationConfig } from '../../types';
 
@@ -83,6 +83,11 @@ function getRequiredFields(chartType: ChartType): { field: string; label: string
       return [
         { field: 'dimensions', label: 'Location', multi: false, numeric: false },
         { field: 'metrics', label: 'Value', multi: false, numeric: true },
+      ];
+    case 'bigNumber':
+      return [
+        { field: 'metrics', label: 'Metric', multi: false, numeric: true },
+        { field: 'xAxis', label: 'Order By (Optional)', numeric: false },
       ];
     case 'table':
       return [
@@ -189,6 +194,28 @@ export default function ColumnMapper({ columns, chartType, config, onChange }: C
           </Form.Item>
         );
       })}
+      {chartType === 'bigNumber' && (
+        <>
+          <Form.Item label="Show Sparkline">
+            <Switch
+              checked={config.chartOptions?.showSparkline !== false}
+              onChange={(checked) => onChange({
+                ...config,
+                chartOptions: { ...config.chartOptions, showSparkline: checked },
+              })}
+            />
+          </Form.Item>
+          <Form.Item label="Show Trend">
+            <Switch
+              checked={config.chartOptions?.showTrend !== false}
+              onChange={(checked) => onChange({
+                ...config,
+                chartOptions: { ...config.chartOptions, showTrend: checked },
+              })}
+            />
+          </Form.Item>
+        </>
+      )}
     </Form>
   );
 }
