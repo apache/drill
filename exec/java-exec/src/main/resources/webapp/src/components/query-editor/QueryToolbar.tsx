@@ -45,6 +45,7 @@ interface QueryToolbarProps {
   onAutoLimitChange?: (limit: number | null) => void;
   editorSettings?: EditorSettings;
   onEditorSettingsChange?: (settings: EditorSettings) => void;
+  onShowHistory?: () => void;
 }
 
 export default function QueryToolbar({
@@ -61,6 +62,7 @@ export default function QueryToolbar({
   onAutoLimitChange,
   editorSettings,
   onEditorSettingsChange,
+  onShowHistory,
 }: QueryToolbarProps) {
   const [autoLimitEnabled, setAutoLimitEnabled] = useState(true);
   const [settingsModalOpen, setSettingsModalOpen] = useState(false);
@@ -93,6 +95,7 @@ export default function QueryToolbar({
       key: 'history',
       icon: <HistoryOutlined />,
       label: 'Query History',
+      onClick: onShowHistory,
     },
     { type: 'divider' },
     {
