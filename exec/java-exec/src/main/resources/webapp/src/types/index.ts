@@ -61,6 +61,11 @@ export interface NestedFieldInfo {
   type: string;
 }
 
+export interface SubTableInfo {
+  name: string;
+  dataType?: string;
+}
+
 // Query types
 export interface QueryRequest {
   query: string;
