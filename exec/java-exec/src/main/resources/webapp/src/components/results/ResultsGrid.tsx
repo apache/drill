@@ -27,6 +27,7 @@ import {
 import type { ColDef, GridReadyEvent, GridApi } from 'ag-grid-community';
 import type { MenuProps } from 'antd';
 import type { QueryResult, QueryError } from '../../types';
+import JsonCellRenderer from './JsonCellRenderer';
 
 import 'ag-grid-community/styles/ag-grid.css';
 import 'ag-grid-community/styles/ag-theme-alpine.css';
@@ -65,10 +66,21 @@ export default function ResultsGrid({
     }));
   }, [results]);
 
-  // Convert row data
+  // Convert row data — stringify nested objects/arrays so AG Grid doesn't show [object Object]
   const rowData = useMemo(() => {
     if (!results?.rows) return [];
-    return results.rows;
+    return results.rows.map((row) => {
+      const processed: Record<string, unknown> = {};
+      for (const key of Object.keys(row)) {
+        const val = row[key];
+        if (val !== null && typeof val === 'object') {
+          processed[key] = JSON.stringify(val);
+        } else {
+          processed[key] = val;
+        }
+      }
+      return processed;
+    });
   }, [results]);
 
   const onGridReady = useCallback((params: GridReadyEvent) => {
@@ -103,7 +115,7 @@ export default function ResultsGrid({
 
     const header = results.columns.join('\t');
     const rows = results.rows
-      .map((row) => results.columns.map((col) => String(row[col] ?? '')).join('\t'))
+      .map((row) => results.columns.map((col) => formatCellValue(row[col])).join('\t'))
       .join('\n');
     const text = `${header}\n${rows}`;
 
@@ -222,6 +234,7 @@ export default function ResultsGrid({
             filter: true,
             resizable: true,
             floatingFilter: true,
+            cellRenderer: JsonCellRenderer,
           }}
           animateRows={true}
           pagination={true}
@@ -235,6 +248,17 @@ export default function ResultsGrid({
       </div>
     </div>
   );
+}
+
+// Format a cell value for display — JSON-stringify objects/arrays
+function formatCellValue(value: unknown): string {
+  if (value == null) {
+    return '';
+  }
+  if (typeof value === 'object') {
+    return JSON.stringify(value);
+  }
+  return String(value);
 }
 
 // Helper to determine column type from metadata

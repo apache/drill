@@ -134,7 +134,18 @@ export default function SqlLabPage() {
   // Handle table selection from schema explorer
   const handleTableSelect = useCallback(
     (schema: string, table: string) => {
-      const query = `SELECT * FROM \`${schema}\`.\`${table}\` LIMIT 100`;
+      // Table function expressions (e.g. Excel sheets) are passed as the table arg
+      if (table.startsWith('table(')) {
+        const query = `SELECT *\nFROM ${table}\nLIMIT 100`;
+        updateSql(query);
+        return;
+      }
+      // Format schema: plugin unquoted, workspace parts backtick-quoted
+      const schemaParts = schema.split('.');
+      const formattedSchema = schemaParts.length <= 1
+        ? schema
+        : schemaParts[0] + '.' + schemaParts.slice(1).map((p) => `\`${p}\``).join('.');
+      const query = `SELECT *\nFROM ${formattedSchema}.\`${table}\`\nLIMIT 100`;
       updateSql(query);
     },
     [updateSql]
