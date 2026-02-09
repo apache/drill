@@ -446,13 +446,18 @@ public class MetadataResources {
     logger.debug("Fetching files for schema: {}, path: {}", schema, subPath);
 
     List<FileInfo> files = new ArrayList<>();
-    String fullPath = schema;
+
+    // Build a properly-quoted compound schema path:
+    //   dfs.tmp + myFolder → dfs.`tmp`.`myFolder`
+    String formattedPath;
     if (subPath != null && !subPath.isEmpty()) {
-      fullPath = schema + ".`" + subPath + "`";
+      formattedPath = formatSchemaPath(schema) + ".`" + escapeBackticks(subPath) + "`";
+    } else {
+      formattedPath = formatSchemaPath(schema);
     }
 
     // Use SHOW FILES command to list files
-    String sql = String.format("SHOW FILES IN `%s`", escapeBackticks(fullPath));
+    String sql = String.format("SHOW FILES IN %s", formattedPath);
 
     try {
       QueryResult result = executeQuery(sql);
