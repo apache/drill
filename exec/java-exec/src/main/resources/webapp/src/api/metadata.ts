@@ -16,10 +16,23 @@
  * limitations under the License.
  */
 import apiClient from './client';
-import type { SchemaInfo, TableInfo, ColumnInfo, PluginInfo, NestedFieldInfo } from '../types';
+import type { SchemaInfo, TableInfo, ColumnInfo, PluginInfo, NestedFieldInfo, SubTableInfo } from '../types';
 import { executeQuery } from './queries';
 
 const METADATA_BASE = '/api/v1/metadata';
+
+/**
+ * Format a compound schema name for use in SQL queries.
+ * Plugin name stays unquoted; workspace parts are backtick-quoted.
+ * e.g. "dfs.test" → "dfs.`test`", "dfs" → "dfs"
+ */
+function formatSchema(schema: string): string {
+  const parts = schema.split('.');
+  if (parts.length <= 1) {
+    return schema;
+  }
+  return parts[0] + '.' + parts.slice(1).map((p) => `\`${p}\``).join('.');
+}
 
 export interface PluginsResponse {
   plugins: PluginInfo[];
@@ -147,14 +160,24 @@ export async function getFiles(schema: string, subPath?: string): Promise<FileIn
 }
 
 /**
- * Fetch columns from a file by executing SELECT * LIMIT 1
+ * Fetch columns from a file by executing SELECT * LIMIT 1 via the query API.
+ * Uses the same code path as the SQL editor so format plugins work consistently.
  */
 export async function getFileColumns(schema: string, filePath: string): Promise<ColumnInfo[]> {
-  const response = await apiClient.get<ColumnsResponse>(
-    `${METADATA_BASE}/schemas/${encodeURIComponent(schema)}/files/columns`,
-    { params: { path: filePath } }
-  );
-  return response.data.columns;
+  const query = `SELECT * FROM ${formatSchema(schema)}.\`${filePath}\` LIMIT 1`;
+  const result = await executeQuery({ query, queryType: 'SQL', autoLimitRowCount: 1 });
+
+  if (!result.columns || result.columns.length === 0) {
+    return [];
+  }
+
+  return result.columns.map((colName, idx) => ({
+    name: colName,
+    type: result.metadata?.[idx] || 'ANY',
+    nullable: true,
+    schema,
+    table: filePath,
+  }));
 }
 
 /**
@@ -192,7 +215,7 @@ export async function getNestedColumns(
 
   const query =
     `SELECT getMapSchema(${columnExpr}) AS \`schema\`` +
-    ` FROM \`${schema}\`.\`${tableOrFile}\` LIMIT 1`;
+    ` FROM ${formatSchema(schema)}.\`${tableOrFile}\` LIMIT 1`;
 
   const result = await executeQuery({
     query,
@@ -220,4 +243,106 @@ export async function getNestedColumns(
   }
 
   return [];
+}
+
+/**
+ * Fetch sub-tables (sheets, datasets, tables) within a multi-table file.
+ *
+ * @param schema     the schema name (e.g. "dfs.tmp")
+ * @param filePath   the file path (e.g. "data.xlsx")
+ * @param formatType "excel" | "hdf5" | "msaccess"
+ */
+export async function getSubTables(
+  schema: string,
+  filePath: string,
+  formatType: string,
+): Promise<SubTableInfo[]> {
+  let query: string;
+
+  switch (formatType) {
+    case 'excel':
+      query = `SELECT _sheets FROM ${formatSchema(schema)}.\`${filePath}\` LIMIT 1`;
+      break;
+    case 'hdf5':
+      query = `SELECT path, data_type FROM ${formatSchema(schema)}.\`${filePath}\``;
+      break;
+    case 'msaccess':
+      query = `SELECT \`table\` FROM ${formatSchema(schema)}.\`${filePath}\``;
+      break;
+    default:
+      return [];
+  }
+
+  const result = await executeQuery({ query, queryType: 'SQL', autoLimitRowCount: 1000 });
+
+  if (!result.rows || result.rows.length === 0) {
+    return [];
+  }
+
+  if (formatType === 'excel') {
+    const sheetsVal = result.rows[0]['_sheets'];
+    if (Array.isArray(sheetsVal)) {
+      return sheetsVal.map((s) => ({ name: String(s) }));
+    }
+    if (typeof sheetsVal === 'string') {
+      // Could be JSON array string or comma-separated
+      try {
+        const parsed = JSON.parse(sheetsVal);
+        if (Array.isArray(parsed)) {
+          return parsed.map((s: unknown) => ({ name: String(s) }));
+        }
+      } catch {
+        // Treat as comma-separated
+        return sheetsVal.split(',').map((s) => ({ name: s.trim() })).filter((s) => s.name.length > 0);
+      }
+    }
+    return [];
+  }
+
+  if (formatType === 'hdf5') {
+    return result.rows
+      .filter((row) => String(row['data_type']).toUpperCase() === 'DATASET')
+      .map((row) => ({ name: String(row['path']), dataType: String(row['data_type']) }));
+  }
+
+  if (formatType === 'msaccess') {
+    return result.rows.map((row) => ({ name: String(row['table']) }));
+  }
+
+  return [];
+}
+
+/**
+ * Fetch columns for a sub-table within a multi-table file using table function syntax.
+ *
+ * @param schema       the schema name (e.g. "dfs.tmp")
+ * @param filePath     the file path (e.g. "data.xlsx")
+ * @param formatType   "excel" | "hdf5" | "msaccess"
+ * @param paramName    the table-function parameter name (e.g. "sheetName")
+ * @param subTableName the specific sub-table name (e.g. "Sheet1")
+ */
+export async function getSubTableColumns(
+  schema: string,
+  filePath: string,
+  formatType: string,
+  paramName: string,
+  subTableName: string,
+): Promise<ColumnInfo[]> {
+  const query =
+    `SELECT * FROM table( ${formatSchema(schema)}.\`${filePath}\`` +
+    ` (type => '${formatType}', ${paramName} => '${subTableName}')) LIMIT 1`;
+
+  const result = await executeQuery({ query, queryType: 'SQL', autoLimitRowCount: 1 });
+
+  if (!result.columns || result.columns.length === 0) {
+    return [];
+  }
+
+  return result.columns.map((colName, idx) => ({
+    name: colName,
+    type: result.metadata?.[idx] || 'ANY',
+    nullable: true,
+    schema,
+    table: `${filePath}/${subTableName}`,
+  }));
 }
