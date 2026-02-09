@@ -153,7 +153,7 @@ export default function VisualizationBuilder({
         if (chartType === 'table') {
           return true; // Table doesn't require config
         }
-        if (chartType === 'gauge') {
+        if (chartType === 'gauge' || chartType === 'bigNumber') {
           return config.metrics && config.metrics.length > 0;
         }
         if (['pie', 'funnel', 'treemap'].includes(chartType)) {

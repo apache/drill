@@ -29,6 +29,7 @@ import {
   renameTab,
 } from '../store/querySlice';
 import { useQueryExecution } from '../hooks/useQuery';
+import { useQueryHistory } from '../hooks/useQueryHistory';
 import { useSchemas } from '../hooks/useMetadata';
 import SchemaExplorer from '../components/schema-explorer/SchemaExplorer';
 import SqlEditor, { DEFAULT_EDITOR_SETTINGS } from '../components/query-editor/SqlEditor';
@@ -37,6 +38,7 @@ import QueryToolbar from '../components/query-editor/QueryToolbar';
 import ResultsGrid, { DEFAULT_RESULTS_SETTINGS } from '../components/results/ResultsGrid';
 import type { ResultsSettings } from '../components/results/ResultsGrid';
 import SaveQueryDialog from '../components/query-editor/SaveQueryDialog';
+import QueryHistoryModal from '../components/query-editor/QueryHistoryModal';
 import { VisualizationBuilder } from '../components/visualization';
 import type { SavedQuery } from '../types';
 
@@ -53,6 +55,7 @@ export default function SqlLabPage() {
   const [autoLimit, setAutoLimit] = useState<number | null>(1000);
   const [saveDialogOpen, setSaveDialogOpen] = useState(false);
   const [vizBuilderOpen, setVizBuilderOpen] = useState(false);
+  const [historyModalOpen, setHistoryModalOpen] = useState(false);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
 
   // Editor settings with localStorage persistence
@@ -111,6 +114,9 @@ export default function SqlLabPage() {
   // Fetch schemas for the schema selector
   const { data: schemas } = useSchemas();
 
+  // Query history hook
+  const { history, addEntry: addHistory, clearHistory } = useQueryHistory();
+
   // Query execution hook for active tab
   const {
     sql,
@@ -121,7 +127,7 @@ export default function SqlLabPage() {
     execute,
     cancel,
     updateSql,
-  } = useQueryExecution(activeTabId);
+  } = useQueryExecution(activeTabId, addHistory);
 
   // Handle loading query from navigation state (from SavedQueriesPage)
   const locationState = location.state as LocationState | undefined;
@@ -222,6 +228,18 @@ export default function SqlLabPage() {
     }
     setVizBuilderOpen(true);
   }, [results]);
+
+  // Handle query history
+  const handleShowHistory = useCallback(() => {
+    setHistoryModalOpen(true);
+  }, []);
+
+  const handleSelectHistoryQuery = useCallback(
+    (selectedSql: string) => {
+      updateSql(selectedSql);
+    },
+    [updateSql]
+  );
 
   // ---- Resizable editor/results split ----
   const handleDragStart = useCallback((e: React.MouseEvent) => {
@@ -357,6 +375,7 @@ export default function SqlLabPage() {
             onAutoLimitChange={setAutoLimit}
             editorSettings={editorSettings}
             onEditorSettingsChange={handleEditorSettingsChange}
+            onShowHistory={handleShowHistory}
           />
 
           {/* SQL Editor */}
@@ -402,6 +421,15 @@ export default function SqlLabPage() {
         queryResult={results ?? null}
         sql={sql}
         defaultSchema={activeTab?.defaultSchema}
+      />
+
+      {/* Query History Modal */}
+      <QueryHistoryModal
+        open={historyModalOpen}
+        onClose={() => setHistoryModalOpen(false)}
+        history={history}
+        onSelectQuery={handleSelectHistoryQuery}
+        onClearHistory={clearHistory}
       />
     </div>
   );
