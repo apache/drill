@@ -21,8 +21,10 @@ import java.net.URL;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.LinkedHashMap;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 
 import jakarta.annotation.security.PermitAll;
 import jakarta.annotation.security.RolesAllowed;
@@ -58,6 +60,13 @@ import org.apache.drill.exec.work.WorkManager;
 import org.apache.http.client.methods.HttpGet;
 import org.glassfish.jersey.server.mvc.Viewable;
 
+import com.codahale.metrics.Counter;
+import com.codahale.metrics.Gauge;
+import com.codahale.metrics.Histogram;
+import com.codahale.metrics.Meter;
+import com.codahale.metrics.MetricRegistry;
+import com.codahale.metrics.Snapshot;
+import com.codahale.metrics.Timer;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 
@@ -102,6 +111,102 @@ public class StatusResources {
   @Produces(MediaType.TEXT_HTML)
   public Viewable getStatus() {
     return ViewableWithPermissions.create(authEnabled.get(), "/rest/status.ftl", sc, getStatusJSON());
+  }
+
+  /**
+   * Returns the local Drillbit's metrics as JSON.
+   * Replaces the old Codahale MetricsServlet that was removed during
+   * the javax.servlet to jakarta.servlet migration.
+   */
+  @GET
+  @Path(StatusResources.PATH_METRICS)
+  @Produces(MediaType.APPLICATION_JSON)
+  @Operation(externalDocs = @ExternalDocumentation(description = "Apache Drill REST API documentation:", url = "https://drill.apache.org/docs/rest-api-introduction/"))
+  public Map<String, Object> getLocalMetrics() {
+    MetricRegistry metrics = work.getContext().getMetrics();
+    Map<String, Object> result = new LinkedHashMap<>();
+
+    // Gauges
+    Map<String, Object> gauges = new LinkedHashMap<>();
+    for (Map.Entry<String, Gauge> entry : metrics.getGauges().entrySet()) {
+      Map<String, Object> g = new LinkedHashMap<>();
+      g.put("value", entry.getValue().getValue());
+      gauges.put(entry.getKey(), g);
+    }
+    result.put("gauges", gauges);
+
+    // Counters
+    Map<String, Object> counters = new LinkedHashMap<>();
+    for (Map.Entry<String, Counter> entry : metrics.getCounters().entrySet()) {
+      Map<String, Object> c = new LinkedHashMap<>();
+      c.put("count", entry.getValue().getCount());
+      counters.put(entry.getKey(), c);
+    }
+    result.put("counters", counters);
+
+    // Histograms
+    Map<String, Object> histograms = new LinkedHashMap<>();
+    for (Map.Entry<String, Histogram> entry : metrics.getHistograms().entrySet()) {
+      Snapshot snap = entry.getValue().getSnapshot();
+      Map<String, Object> h = new LinkedHashMap<>();
+      h.put("count", entry.getValue().getCount());
+      h.put("max", snap.getMax());
+      h.put("mean", snap.getMean());
+      h.put("min", snap.getMin());
+      h.put("p50", snap.getMedian());
+      h.put("p75", snap.get75thPercentile());
+      h.put("p95", snap.get95thPercentile());
+      h.put("p98", snap.get98thPercentile());
+      h.put("p99", snap.get99thPercentile());
+      h.put("p999", snap.get999thPercentile());
+      h.put("stddev", snap.getStdDev());
+      histograms.put(entry.getKey(), h);
+    }
+    result.put("histograms", histograms);
+
+    // Meters
+    Map<String, Object> meters = new LinkedHashMap<>();
+    for (Map.Entry<String, Meter> entry : metrics.getMeters().entrySet()) {
+      Meter m = entry.getValue();
+      Map<String, Object> mData = new LinkedHashMap<>();
+      mData.put("count", m.getCount());
+      mData.put("m1_rate", m.getOneMinuteRate());
+      mData.put("m5_rate", m.getFiveMinuteRate());
+      mData.put("m15_rate", m.getFifteenMinuteRate());
+      mData.put("mean_rate", m.getMeanRate());
+      mData.put("units", "events/second");
+      meters.put(entry.getKey(), mData);
+    }
+    result.put("meters", meters);
+
+    // Timers
+    Map<String, Object> timers = new LinkedHashMap<>();
+    for (Map.Entry<String, Timer> entry : metrics.getTimers().entrySet()) {
+      Timer t = entry.getValue();
+      Snapshot snap = t.getSnapshot();
+      Map<String, Object> tData = new LinkedHashMap<>();
+      tData.put("count", t.getCount());
+      tData.put("max", snap.getMax());
+      tData.put("mean", snap.getMean());
+      tData.put("min", snap.getMin());
+      tData.put("p50", snap.getMedian());
+      tData.put("p75", snap.get75thPercentile());
+      tData.put("p95", snap.get95thPercentile());
+      tData.put("p98", snap.get98thPercentile());
+      tData.put("p99", snap.get99thPercentile());
+      tData.put("p999", snap.get999thPercentile());
+      tData.put("stddev", snap.getStdDev());
+      tData.put("m1_rate", t.getOneMinuteRate());
+      tData.put("m5_rate", t.getFiveMinuteRate());
+      tData.put("m15_rate", t.getFifteenMinuteRate());
+      tData.put("mean_rate", t.getMeanRate());
+      tData.put("duration_units", "seconds");
+      tData.put("rate_units", "calls/second");
+      timers.put(entry.getKey(), tData);
+    }
+    result.put("timers", timers);
+
+    return result;
   }
 
   @GET
