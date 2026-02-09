@@ -15,141 +15,77 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import { useState, useCallback, useMemo } from 'react';
-import { Tree, Input, Spin, Empty, Tooltip, Typography, Tag } from 'antd';
+import { useState, useCallback, useMemo, useEffect, useRef } from 'react';
+import { Tree, Input, Spin, Empty, Tooltip } from 'antd';
 import {
-  DatabaseOutlined,
-  TableOutlined,
-  FieldStringOutlined,
-  FieldNumberOutlined,
-  FieldTimeOutlined,
-  FieldBinaryOutlined,
   ReloadOutlined,
   SearchOutlined,
-  CloudOutlined,
-  ApiOutlined,
   WarningOutlined,
-  FolderOutlined,
-  ConsoleSqlOutlined,
-  ClusterOutlined,
-  FileOutlined,
-  GoogleOutlined,
-  AmazonOutlined,
+  StarFilled,
 } from '@ant-design/icons';
 import type { DataNode, EventDataNode } from 'antd/es/tree';
-import { useQuery } from '@tanstack/react-query';
-import { getPlugins, getPluginSchemas, getTables, getColumns, getFiles, getFileColumns } from '../../api/metadata';
-import type { SchemaInfo, TableInfo, ColumnInfo, FileInfo } from '../../types';
+import { useQueryClient } from '@tanstack/react-query';
+import { getPluginSchemas, getTables, getColumns, getFiles, getFileColumns, getNestedColumns } from '../../api/metadata';
+import type { SchemaInfo, TableInfo, ColumnInfo, FileInfo, NestedFieldInfo } from '../../types';
+import { isFileBasedPlugin } from './icons';
+import { usePlugins } from './hooks';
+import { buildPluginNode } from './TreeNodeBuilder';
+import ContextMenu from './ContextMenu';
+import type { NodeType } from './ContextMenu';
+import { useFavorites } from './useFavorites';
+import ColumnStats from './ColumnStats';
 
 const { Search } = Input;
-const { Text } = Typography;
 
 interface SchemaExplorerProps {
   onInsertText?: (text: string) => void;
   onTableSelect?: (schema: string, table: string) => void;
 }
 
-// Map data types to icons
-function getColumnIcon(dataType: string) {
-  const type = dataType?.toUpperCase() || '';
-  if (type.includes('INT') || type.includes('FLOAT') || type.includes('DOUBLE') || type.includes('DECIMAL') || type.includes('NUMERIC')) {
-    return <FieldNumberOutlined style={{ color: '#52c41a' }} />;
+/**
+ * Derive a backtick-quoted qualified name from a tree node key.
+ * Handles prefixes: plugin, schema, table, dir, file, column.
+ */
+function getQualifiedName(key: string): string {
+  if (key.startsWith('plugin:')) {
+    return `\`${key.replace('plugin:', '')}\``;
   }
-  if (type.includes('DATE') || type.includes('TIME') || type.includes('TIMESTAMP')) {
-    return <FieldTimeOutlined style={{ color: '#722ed1' }} />;
+  if (key.startsWith('schema:')) {
+    return `\`${key.replace('schema:', '')}\``;
   }
-  if (type.includes('BINARY') || type.includes('BLOB') || type.includes('BYTES')) {
-    return <FieldBinaryOutlined style={{ color: '#eb2f96' }} />;
+  if (key.startsWith('table:')) {
+    const [, schemaName, tableName] = key.split(':');
+    return `\`${schemaName}\`.\`${tableName}\``;
   }
-  return <FieldStringOutlined style={{ color: '#1890ff' }} />;
+  if (key.startsWith('dir:') || key.startsWith('file:')) {
+    const parts = key.split(':');
+    return `\`${parts[1]}\`.\`${parts.slice(2).join(':')}\``;
+  }
+  if (key.startsWith('column:')) {
+    const parts = key.split(':');
+    return `\`${parts[parts.length - 1]}\``;
+  }
+  if (key.startsWith('nested:')) {
+    // nested:schema:parent:record.field1.subfield → `record`.`field1`.`subfield`
+    const parts = key.split(':');
+    const dotPath = parts.slice(3).join(':');
+    return dotPath.split('.').map((p) => `\`${p}\``).join('.');
+  }
+  return key;
 }
 
-// Get icon for plugin type based on plugin type and name
-function getPluginIcon(pluginType: string, pluginName: string) {
-  const type = pluginType?.toLowerCase() || '';
-  const name = pluginName?.toLowerCase() || '';
-
-  // HTTP/REST API plugins
-  if (type.includes('http') || name === 'http' || name.includes('api')) {
-    return <ApiOutlined style={{ color: '#fa8c16' }} />;
-  }
-
-  // File system plugins (dfs, local)
-  if (type.includes('file') || name === 'dfs' || name === 'local' || name.includes('tmp')) {
-    return <FolderOutlined style={{ color: '#1890ff' }} />;
-  }
-
-  // Cloud storage - S3
-  if (type.includes('s3') || name.includes('s3') || name.includes('minio')) {
-    return <AmazonOutlined style={{ color: '#ff9900' }} />;
-  }
-
-  // Cloud storage - GCS (Google Cloud Storage)
-  if (type.includes('gcs') || type.includes('google') || name.includes('gcs') || name.includes('google')) {
-    return <GoogleOutlined style={{ color: '#4285f4' }} />;
-  }
-
-  // Cloud storage - Azure
-  if (type.includes('azure') || name.includes('azure')) {
-    return <CloudOutlined style={{ color: '#0078d4' }} />;
-  }
-
-  // Generic cloud storage
-  if (type.includes('cloud')) {
-    return <CloudOutlined style={{ color: '#13c2c2' }} />;
-  }
-
-  // JDBC/Database plugins
-  if (type.includes('jdbc') || type.includes('rdbms')) {
-    return <ConsoleSqlOutlined style={{ color: '#722ed1' }} />;
-  }
-
-  // Kafka/streaming plugins
-  if (type.includes('kafka') || name.includes('kafka')) {
-    return <ClusterOutlined style={{ color: '#231f20' }} />;
-  }
-
-  // MongoDB
-  if (type.includes('mongo') || name.includes('mongo')) {
-    return <DatabaseOutlined style={{ color: '#47a248' }} />;
-  }
-
-  // Elasticsearch
-  if (type.includes('elastic') || name.includes('elastic')) {
-    return <DatabaseOutlined style={{ color: '#f9b110' }} />;
-  }
-
-  // Hive/HBase
-  if (type.includes('hive') || type.includes('hbase') || name.includes('hive') || name.includes('hbase')) {
-    return <ClusterOutlined style={{ color: '#f09800' }} />;
-  }
-
-  // Parquet/Iceberg/Delta files
-  if (type.includes('parquet') || type.includes('iceberg') || type.includes('delta')) {
-    return <FileOutlined style={{ color: '#1890ff' }} />;
-  }
-
-  // Splunk
-  if (type.includes('splunk') || name.includes('splunk')) {
-    return <DatabaseOutlined style={{ color: '#65a637' }} />;
-  }
-
-  // Default database icon
-  return <DatabaseOutlined style={{ color: '#595959' }} />;
-}
-
-// Check if a plugin is file-based (can browse files/folders)
-function isFileBasedPlugin(pluginType: string, pluginName: string): boolean {
-  const type = pluginType?.toLowerCase() || '';
-  const name = pluginName?.toLowerCase() || '';
-  return type.includes('file') || name === 'dfs' || name === 'local' || name.includes('tmp') ||
-         type.includes('s3') || name.includes('s3') || name.includes('minio') ||
-         type.includes('gcs') || type.includes('google') || name.includes('gcs') ||
-         type.includes('azure') || name.includes('azure') ||
-         type.includes('hdfs') || name.includes('hdfs');
+/** Derive the node type from a tree node key prefix. */
+function getNodeType(key: string): NodeType {
+  if (key.startsWith('plugin:')) { return 'plugin'; }
+  if (key.startsWith('schema:')) { return 'schema'; }
+  if (key.startsWith('table:')) { return 'table'; }
+  if (key.startsWith('dir:') || key.startsWith('file:')) { return 'file'; }
+  if (key.startsWith('nested:')) { return 'column'; }
+  return 'column';
 }
 
 export default function SchemaExplorer({ onInsertText, onTableSelect }: SchemaExplorerProps) {
+  const queryClient = useQueryClient();
   const [searchText, setSearchText] = useState('');
   const [expandedKeys, setExpandedKeys] = useState<string[]>([]);
   const [loadedKeys, setLoadedKeys] = useState<string[]>([]);
@@ -158,72 +94,42 @@ export default function SchemaExplorer({ onInsertText, onTableSelect }: SchemaEx
   const [columnsCache, setColumnsCache] = useState<Record<string, ColumnInfo[]>>({});
   const [filesCache, setFilesCache] = useState<Record<string, FileInfo[]>>({});
   const [pluginTypesCache, setPluginTypesCache] = useState<Record<string, string>>({});
+  const [nestedCache, setNestedCache] = useState<Record<string, NestedFieldInfo[]>>({});
 
-  // Fetch plugins at root level
-  const { data: plugins, isLoading: pluginsLoading, refetch: refetchPlugins } = useQuery({
-    queryKey: ['plugins'],
-    queryFn: async () => {
-      const pluginList = await getPlugins();
-      // Cache plugin types for later use
+  // Column statistics drawer
+  const [statsTarget, setStatsTarget] = useState<{ schema: string; table: string } | null>(null);
+
+  // Favorites
+  const { favorites, toggleFavorite, isFavorite } = useFavorites();
+
+  // React Query: plugins
+  const { data: plugins, isLoading: pluginsLoading } = usePlugins();
+
+  // Keep pluginTypesCache in sync with plugins data (useEffect, not useMemo)
+  useEffect(() => {
+    if (plugins) {
       const types: Record<string, string> = {};
-      pluginList.forEach((p) => {
-        types[p.name] = p.type;
-      });
+      plugins.forEach((p) => { types[p.name] = p.type; });
       setPluginTypesCache(types);
-      return pluginList;
-    },
-  });
+    }
+  }, [plugins]);
 
-  // Helper to build file/folder tree nodes recursively
-  const buildFileNodes = useCallback((schema: string, files: FileInfo[], parentPath: string = ''): DataNode[] => {
-    return files.map((file) => {
-      const filePath = parentPath ? `${parentPath}/${file.name}` : file.name;
-      const fileKey = `file:${schema}:${filePath}`;
+  // ---------- Refs for latest cache values (avoids stale closures in loadData) ----------
+  const schemasCacheRef = useRef(schemasCache);
+  schemasCacheRef.current = schemasCache;
+  const tablesCacheRef = useRef(tablesCache);
+  tablesCacheRef.current = tablesCache;
+  const columnsCacheRef = useRef(columnsCache);
+  columnsCacheRef.current = columnsCache;
+  const filesCacheRef = useRef(filesCache);
+  filesCacheRef.current = filesCache;
+  const pluginTypesCacheRef = useRef(pluginTypesCache);
+  pluginTypesCacheRef.current = pluginTypesCache;
+  const nestedCacheRef = useRef(nestedCache);
+  nestedCacheRef.current = nestedCache;
 
-      if (file.isDirectory) {
-        // It's a folder - can be expanded to show more files
-        const subFiles = filesCache[fileKey] || [];
-        const subNodes = subFiles.length > 0 ? buildFileNodes(schema, subFiles, filePath) : undefined;
+  // ---------- Tree data construction ----------
 
-        return {
-          key: fileKey,
-          title: file.name,
-          icon: <FolderOutlined style={{ color: '#1890ff' }} />,
-          children: subNodes,
-          isLeaf: false,
-        };
-      } else {
-        // It's a file - can be expanded to show columns
-        const columns = columnsCache[fileKey] || [];
-        const columnNodes: DataNode[] = columns.map((col) => ({
-          key: `column:${schema}:${filePath}:${col.name}`,
-          title: (
-            <Tooltip title={`${col.type}${col.nullable ? ' (nullable)' : ''}`}>
-              <span>
-                {col.name} <Text type="secondary" style={{ fontSize: 11 }}>{col.type}</Text>
-              </span>
-            </Tooltip>
-          ),
-          icon: getColumnIcon(col.type),
-          isLeaf: true,
-        }));
-
-        return {
-          key: fileKey,
-          title: (
-            <Tooltip title={`${file.length} bytes`}>
-              <span>{file.name}</span>
-            </Tooltip>
-          ),
-          icon: <FileOutlined style={{ color: '#52c41a' }} />,
-          children: columnNodes.length > 0 ? columnNodes : undefined,
-          isLeaf: false,
-        };
-      }
-    });
-  }, [filesCache, columnsCache]);
-
-  // Build tree data from plugins, schemas, tables/files, and columns
   const treeData = useMemo(() => {
     if (!plugins) {
       return [];
@@ -238,277 +144,321 @@ export default function SchemaExplorer({ onInsertText, onTableSelect }: SchemaEx
         )
       : plugins;
 
-    return filteredPlugins.map((plugin): DataNode => {
-      const pluginKey = `plugin:${plugin.name}`;
-      const schemas = schemasCache[plugin.name] || [];
-      const pluginIsFileBased = isFileBasedPlugin(plugin.type, plugin.name);
+    return filteredPlugins.map((plugin) =>
+      buildPluginNode(plugin, schemasCache, tablesCache, columnsCache, filesCache, nestedCache)
+    );
+  }, [plugins, schemasCache, tablesCache, columnsCache, filesCache, nestedCache, searchText]);
 
-      const schemaNodes: DataNode[] = schemas.map((schema) => {
-        const schemaKey = `schema:${schema.name}`;
+  // Favorites section: flat list of pinned nodes at the top
+  const favoritesTreeData = useMemo((): DataNode[] => {
+    if (favorites.length === 0) {
+      return [];
+    }
+    const nodes: DataNode[] = favorites.map((key) => ({
+      key: `fav:${key}`,
+      title: (
+        <span style={{ fontStyle: 'italic' }}>
+          <StarFilled style={{ color: '#faad14', marginRight: 4, fontSize: 11 }} />
+          {getQualifiedName(key)}
+        </span>
+      ),
+      isLeaf: true,
+    }));
+    return [{
+      key: '__favorites__',
+      title: <span style={{ fontWeight: 600 }}>Favorites</span>,
+      icon: <StarFilled style={{ color: '#faad14' }} />,
+      children: nodes,
+      selectable: false,
+    }];
+  }, [favorites]);
 
-        // For file-based plugins, show files instead of tables
-        if (pluginIsFileBased) {
-          const files = filesCache[schemaKey] || [];
-          const fileNodes = files.length > 0 ? buildFileNodes(schema.name, files) : undefined;
+  const combinedTreeData = useMemo(
+    () => [...favoritesTreeData, ...treeData],
+    [favoritesTreeData, treeData],
+  );
 
-          return {
-            key: schemaKey,
-            title: (
-              <span>
-                {schema.name.replace(`${plugin.name}.`, '')}
-              </span>
-            ),
-            icon: <FolderOutlined style={{ color: '#1890ff' }} />,
-            children: fileNodes,
-            isLeaf: false,
-          };
-        }
+  // ---------- Lazy-load on expand ----------
+  // Uses refs for cache reads so loadData never has stale closure values
+  // and does not need to be recreated when caches change.
 
-        // For non-file plugins, show tables
-        const tables = tablesCache[schema.name] || [];
-
-        const tableNodes: DataNode[] = tables.map((table) => {
-          const tableKey = `table:${schema.name}:${table.name}`;
-          const columns = columnsCache[tableKey] || [];
-
-          const columnNodes: DataNode[] = columns.map((col) => ({
-            key: `column:${schema.name}:${table.name}:${col.name}`,
-            title: (
-              <Tooltip title={`${col.type}${col.nullable ? ' (nullable)' : ''}`}>
-                <span>
-                  {col.name} <Text type="secondary" style={{ fontSize: 11 }}>{col.type}</Text>
-                </span>
-              </Tooltip>
-            ),
-            icon: getColumnIcon(col.type),
-            isLeaf: true,
-          }));
-
-          return {
-            key: tableKey,
-            title: table.name,
-            icon: <TableOutlined style={{ color: '#faad14' }} />,
-            children: columnNodes.length > 0 ? columnNodes : undefined,
-            isLeaf: false,
-          };
-        });
-
-        // For schemas, show warning if not browsable
-        const schemaBrowsable = schema.browsable !== false;
-
-        return {
-          key: schemaKey,
-          title: (
-            <span>
-              {schema.name.replace(`${plugin.name}.`, '')}
-              {!schemaBrowsable && (
-                <Tooltip title="Tables cannot be enumerated for this schema">
-                  <WarningOutlined style={{ marginLeft: 4, color: '#faad14', fontSize: 11 }} />
-                </Tooltip>
-              )}
-            </span>
-          ),
-          icon: <DatabaseOutlined style={{ color: '#52c41a' }} />,
-          children: tableNodes.length > 0 ? tableNodes : undefined,
-          isLeaf: !schemaBrowsable,
-        };
-      });
-
-      // Plugin node with type badge
-      const isHttpPlugin = plugin.type?.toLowerCase().includes('http') || plugin.name.toLowerCase() === 'http';
-
-      return {
-        key: pluginKey,
-        title: (
-          <span>
-            {plugin.name}
-            {!plugin.browsable && (
-              <Tooltip title={isHttpPlugin
-                ? "HTTP plugin - shows endpoints, but table schema cannot be browsed"
-                : "Cannot enumerate tables - query directly"
-              }>
-                <Tag color={isHttpPlugin ? "blue" : "orange"} style={{ marginLeft: 8, fontSize: 10 }}>
-                  {isHttpPlugin ? "API endpoints" : "non-browsable"}
-                </Tag>
-              </Tooltip>
-            )}
-          </span>
-        ),
-        icon: getPluginIcon(plugin.type, plugin.name),
-        children: schemaNodes.length > 0 ? schemaNodes : undefined,
-        isLeaf: false,
-      };
-    });
-  }, [plugins, schemasCache, tablesCache, columnsCache, filesCache, searchText, buildFileNodes]);
-
-  // Load schemas, tables/files, or columns on expand
   const loadData = useCallback(
     async (node: EventDataNode<DataNode>): Promise<void> => {
       const key = node.key as string;
+      let loaded = false;
 
-      if (key.startsWith('plugin:')) {
-        const pluginName = key.replace('plugin:', '');
-        if (!schemasCache[pluginName]) {
-          try {
+      try {
+        if (key.startsWith('plugin:')) {
+          const pluginName = key.replace('plugin:', '');
+          if (!schemasCacheRef.current[pluginName]) {
             const schemas = await getPluginSchemas(pluginName);
             setSchemasCache((prev) => ({ ...prev, [pluginName]: schemas }));
-          } catch (error) {
-            console.error('Failed to load schemas:', error);
           }
-        }
-      } else if (key.startsWith('schema:')) {
-        const schemaName = key.replace('schema:', '');
+          loaded = true;
 
-        // Check if this is a file-based plugin
-        const pluginName = schemaName.split('.')[0];
-        const pluginType = pluginTypesCache[pluginName] || '';
-        const pluginIsFileBased = isFileBasedPlugin(pluginType, pluginName);
+        } else if (key.startsWith('schema:')) {
+          const schemaName = key.replace('schema:', '');
+          const pluginName = schemaName.split('.')[0];
+          const pluginType = pluginTypesCacheRef.current[pluginName] || '';
+          const pluginIsFileBased = isFileBasedPlugin(pluginType, pluginName);
 
-        if (pluginIsFileBased) {
-          // Load files for file-based schemas
-          if (!filesCache[key]) {
-            try {
+          if (pluginIsFileBased) {
+            if (!filesCacheRef.current[key]) {
               const files = await getFiles(schemaName);
               setFilesCache((prev) => ({ ...prev, [key]: files }));
-            } catch (error) {
-              console.error('Failed to load files:', error);
             }
-          }
-        } else {
-          // Load tables for non-file schemas
-          if (!tablesCache[schemaName]) {
-            try {
+          } else {
+            if (!tablesCacheRef.current[schemaName]) {
               const tables = await getTables(schemaName);
               setTablesCache((prev) => ({ ...prev, [schemaName]: tables }));
-            } catch (error) {
-              console.error('Failed to load tables:', error);
-              // For non-browsable schemas, this is expected
             }
           }
-        }
-      } else if (key.startsWith('file:')) {
-        // Handle file or folder expansion
-        const parts = key.split(':');
-        const schemaName = parts[1];
-        const filePath = parts.slice(2).join(':'); // Handle paths with colons
+          loaded = true;
 
-        // Check if there's already data (it's a folder with children loaded)
-        const cachedFiles = filesCache[key];
-        if (cachedFiles !== undefined) {
-          // Already loaded or it's a file, check for columns
-          const cachedColumns = columnsCache[key];
-          if (cachedColumns === undefined) {
-            // Try to load columns for this file
+        } else if (key.startsWith('dir:')) {
+          // ---- Directory node: load child files/folders ----
+          const parts = key.split(':');
+          const schemaName = parts[1];
+          const dirPath = parts.slice(2).join(':');
+          const files = await getFiles(schemaName, dirPath);
+          setFilesCache((prev) => ({ ...prev, [key]: files }));
+          loaded = true;
+
+        } else if (key.startsWith('file:')) {
+          // ---- File node: load columns ----
+          const parts = key.split(':');
+          const schemaName = parts[1];
+          const filePath = parts.slice(2).join(':');
+          if (!columnsCacheRef.current[key]) {
             try {
               const columns = await getFileColumns(schemaName, filePath);
               setColumnsCache((prev) => ({ ...prev, [key]: columns }));
-            } catch (error) {
-              console.error('Failed to load file columns:', error);
-              // Mark as empty to prevent repeated attempts
+            } catch {
               setColumnsCache((prev) => ({ ...prev, [key]: [] }));
             }
           }
-        } else {
-          // Try to load as folder first
-          try {
-            const files = await getFiles(schemaName, filePath);
-            if (files.length > 0) {
-              setFilesCache((prev) => ({ ...prev, [key]: files }));
-            } else {
-              // Empty folder or it's actually a file, try to get columns
-              setFilesCache((prev) => ({ ...prev, [key]: [] }));
-              try {
-                const columns = await getFileColumns(schemaName, filePath);
-                setColumnsCache((prev) => ({ ...prev, [key]: columns }));
-              } catch (colError) {
-                console.error('Failed to load file columns:', colError);
-                setColumnsCache((prev) => ({ ...prev, [key]: [] }));
-              }
-            }
-          } catch (error) {
-            // Folder listing failed, try to get columns (it's a file)
-            console.debug('Not a folder, trying as file:', error);
-            try {
-              const columns = await getFileColumns(schemaName, filePath);
-              setFilesCache((prev) => ({ ...prev, [key]: [] })); // Mark as not a folder
-              setColumnsCache((prev) => ({ ...prev, [key]: columns }));
-            } catch (colError) {
-              console.error('Failed to load file columns:', colError);
-              setFilesCache((prev) => ({ ...prev, [key]: [] }));
-              setColumnsCache((prev) => ({ ...prev, [key]: [] }));
-            }
-          }
-        }
-      } else if (key.startsWith('table:')) {
-        const [, schemaName, tableName] = key.split(':');
-        const cacheKey = `table:${schemaName}:${tableName}`;
-        if (!columnsCache[cacheKey]) {
-          try {
+          loaded = true;
+
+        } else if (key.startsWith('table:')) {
+          const [, schemaName, tableName] = key.split(':');
+          const cacheKey = `table:${schemaName}:${tableName}`;
+          if (!columnsCacheRef.current[cacheKey]) {
             const columns = await getColumns(schemaName, tableName);
             setColumnsCache((prev) => ({ ...prev, [cacheKey]: columns }));
-          } catch (error) {
-            console.error('Failed to load columns:', error);
           }
+          loaded = true;
+
+        } else if (key.startsWith('column:')) {
+          // Complex column (MAP/STRUCT) — load nested sub-fields via getMapSchema()
+          const parts = key.split(':');
+          const schemaName = parts[1];
+          const parentName = parts[2];
+          const colName = parts.slice(3).join(':');
+          if (!nestedCacheRef.current[key]) {
+            try {
+              const nestedFields = await getNestedColumns(schemaName, parentName, colName);
+              setNestedCache((prev) => ({ ...prev, [key]: nestedFields }));
+            } catch {
+              // Column doesn't support getMapSchema — store empty
+              setNestedCache((prev) => ({ ...prev, [key]: [] }));
+            }
+          }
+          loaded = true;
+
+        } else if (key.startsWith('nested:')) {
+          // Deeper nested field (MAP within MAP) — load next level
+          const parts = key.split(':');
+          const schemaName = parts[1];
+          const parentName = parts[2];
+          const dotPath = parts.slice(3).join(':');
+          if (!nestedCacheRef.current[key]) {
+            try {
+              const nestedFields = await getNestedColumns(schemaName, parentName, dotPath);
+              setNestedCache((prev) => ({ ...prev, [key]: nestedFields }));
+            } catch {
+              setNestedCache((prev) => ({ ...prev, [key]: [] }));
+            }
+          }
+          loaded = true;
         }
+      } catch (error) {
+        console.error('Failed to load data for node:', key, error);
       }
 
-      setLoadedKeys((prev) => [...prev, key]);
+      // Only mark as loaded on success so failed nodes can be retried
+      if (loaded) {
+        setLoadedKeys((prev) => [...prev, key]);
+      }
     },
-    [schemasCache, tablesCache, columnsCache, filesCache, pluginTypesCache]
+    [], // No dependencies — uses refs for all cache reads
   );
 
-  // Handle node selection (single-click on table or file)
+  // ---------- Selection / double-click ----------
+
   const handleSelect = useCallback(
     (_selectedKeys: React.Key[], info: { node: DataNode }) => {
       const key = info.node.key as string;
 
+      // Handle favorite clicks – insert the referenced name
+      if (key.startsWith('fav:')) {
+        const realKey = key.replace('fav:', '');
+        const qn = getQualifiedName(realKey);
+        onInsertText?.(qn);
+        return;
+      }
+
       if (key.startsWith('table:')) {
         const [, schemaName, tableName] = key.split(':');
         onTableSelect?.(schemaName, tableName);
-      } else if (key.startsWith('file:')) {
-        // For files: file:schema:path/to/file.parquet
+      } else if (key.startsWith('file:') || key.startsWith('dir:')) {
         const parts = key.split(':');
-        const schemaName = parts[1];
-        const filePath = parts.slice(2).join(':');
-        // Use file path as the "table" name
-        onTableSelect?.(schemaName, filePath);
+        onTableSelect?.(parts[1], parts.slice(2).join(':'));
       }
     },
-    [onTableSelect]
+    [onTableSelect, onInsertText],
   );
 
-  // Handle double-click to insert into editor
   const handleDoubleClick = useCallback(
     (_e: React.MouseEvent, node: DataNode) => {
       const key = node.key as string;
-      let textToInsert = '';
-
-      if (key.startsWith('plugin:')) {
-        textToInsert = `\`${key.replace('plugin:', '')}\``;
-      } else if (key.startsWith('schema:')) {
-        textToInsert = `\`${key.replace('schema:', '')}\``;
-      } else if (key.startsWith('table:')) {
-        const [, schemaName, tableName] = key.split(':');
-        textToInsert = `\`${schemaName}\`.\`${tableName}\``;
-      } else if (key.startsWith('file:')) {
-        // For files: file:schema:path/to/file.parquet
-        const parts = key.split(':');
-        const schemaName = parts[1];
-        const filePath = parts.slice(2).join(':');
-        textToInsert = `\`${schemaName}\`.\`${filePath}\``;
-      } else if (key.startsWith('column:')) {
-        const parts = key.split(':');
-        // Column key format: column:schema:table_or_path:columnName
-        // The column name is the last part
-        textToInsert = `\`${parts[parts.length - 1]}\``;
+      if (key.startsWith('fav:') || key === '__favorites__') {
+        return;
       }
-
-      if (textToInsert && onInsertText) {
-        onInsertText(textToInsert);
+      const text = getQualifiedName(key);
+      if (text && onInsertText) {
+        onInsertText(text);
       }
     },
-    [onInsertText]
+    [onInsertText],
   );
+
+  // ---------- Drag-to-query ----------
+
+  const handleDragStart = useCallback(
+    (info: { event: React.DragEvent; node: EventDataNode<DataNode> }) => {
+      const key = info.node.key as string;
+      const qn = getQualifiedName(key);
+      info.event.dataTransfer.setData('text/plain', qn);
+      info.event.dataTransfer.effectAllowed = 'copy';
+    },
+    [],
+  );
+
+  // ---------- Context menu helpers ----------
+
+  const handleRefreshNode = useCallback(
+    (key: string) => {
+      if (key.startsWith('plugin:')) {
+        const pluginName = key.replace('plugin:', '');
+        setSchemasCache((prev) => {
+          const next = { ...prev };
+          delete next[pluginName];
+          return next;
+        });
+        setLoadedKeys((prev) => prev.filter((k) => k !== key));
+      } else if (key.startsWith('schema:')) {
+        const schemaName = key.replace('schema:', '');
+        setTablesCache((prev) => {
+          const next = { ...prev };
+          delete next[schemaName];
+          return next;
+        });
+        setFilesCache((prev) => {
+          const next = { ...prev };
+          delete next[key];
+          return next;
+        });
+        setLoadedKeys((prev) => prev.filter((k) => k !== key));
+      } else if (key.startsWith('table:')) {
+        setColumnsCache((prev) => {
+          const next = { ...prev };
+          delete next[key];
+          return next;
+        });
+        // Clear any nested field caches for columns under this table
+        setNestedCache((prev) => {
+          const next = { ...prev };
+          const colPrefix = `column:${key.replace('table:', '')}:`;
+          const nestedPrefix = `nested:${key.replace('table:', '')}:`;
+          for (const k of Object.keys(next)) {
+            if (k.startsWith(colPrefix) || k.startsWith(nestedPrefix)) {
+              delete next[k];
+            }
+          }
+          return next;
+        });
+        setLoadedKeys((prev) => prev.filter((k) => k !== key && !k.startsWith(`column:${key.replace('table:', '')}:`) && !k.startsWith(`nested:${key.replace('table:', '')}:`)));
+      } else if (key.startsWith('dir:')) {
+        // Clear directory listing + all nested children
+        const prefix = key + '/';
+        setFilesCache((prev) => {
+          const next = { ...prev };
+          for (const k of Object.keys(next)) {
+            if (k === key || k.startsWith(prefix)) {
+              delete next[k];
+            }
+          }
+          return next;
+        });
+        setColumnsCache((prev) => {
+          const next = { ...prev };
+          for (const k of Object.keys(next)) {
+            // Nested files under this dir use file:<schema>:<dirPath>/...
+            const dirParts = key.split(':');
+            const dirPath = dirParts.slice(2).join(':');
+            const schema = dirParts[1];
+            const filePrefix = `file:${schema}:${dirPath}/`;
+            if (k.startsWith(filePrefix)) {
+              delete next[k];
+            }
+          }
+          return next;
+        });
+        setLoadedKeys((prev) => prev.filter((k) => {
+          if (k === key) { return false; }
+          // Also clear any nested dir: or file: keys
+          const dirParts = key.split(':');
+          const dirPath = dirParts.slice(2).join(':');
+          const schema = dirParts[1];
+          const nestedDirPrefix = `dir:${schema}:${dirPath}/`;
+          const nestedFilePrefix = `file:${schema}:${dirPath}/`;
+          return !k.startsWith(nestedDirPrefix) && !k.startsWith(nestedFilePrefix);
+        }));
+      } else if (key.startsWith('file:')) {
+        const fileParts = key.split(':');
+        const fileSchema = fileParts[1];
+        const filePath = fileParts.slice(2).join(':');
+        setColumnsCache((prev) => {
+          const next = { ...prev };
+          delete next[key];
+          return next;
+        });
+        // Clear nested field caches for columns under this file
+        setNestedCache((prev) => {
+          const next = { ...prev };
+          const colPrefix = `column:${fileSchema}:${filePath}:`;
+          const nestedPrefix = `nested:${fileSchema}:${filePath}:`;
+          for (const k of Object.keys(next)) {
+            if (k.startsWith(colPrefix) || k.startsWith(nestedPrefix)) {
+              delete next[k];
+            }
+          }
+          return next;
+        });
+        setLoadedKeys((prev) => prev.filter((k) => k !== key && !k.startsWith(`column:${fileSchema}:${filePath}:`) && !k.startsWith(`nested:${fileSchema}:${filePath}:`)));
+      }
+    },
+    [],
+  );
+
+  const handleShowStats = useCallback(
+    (schemaName: string, tableName: string) => {
+      setStatsTarget({ schema: schemaName, table: tableName });
+    },
+    [],
+  );
+
+  // ---------- Global refresh ----------
 
   const handleRefresh = useCallback(() => {
     setSchemasCache({});
@@ -516,10 +466,53 @@ export default function SchemaExplorer({ onInsertText, onTableSelect }: SchemaEx
     setColumnsCache({});
     setFilesCache({});
     setPluginTypesCache({});
+    setNestedCache({});
     setLoadedKeys([]);
     setExpandedKeys([]);
-    refetchPlugins();
-  }, [refetchPlugins]);
+    queryClient.invalidateQueries({ queryKey: ['plugins'] });
+  }, [queryClient]);
+
+  // ---------- Right-click handler for tree ----------
+
+  const handleRightClick = useCallback(
+    (info: { event: React.MouseEvent; node: EventDataNode<DataNode> }) => {
+      info.event.preventDefault();
+    },
+    [],
+  );
+
+  // ---------- Title renderer that wraps each node in a ContextMenu ----------
+
+  const titleRender = useCallback(
+    (nodeData: DataNode) => {
+      const key = nodeData.key as string;
+
+      if (key === '__favorites__' || key.startsWith('fav:')) {
+        return nodeData.title as React.ReactNode;
+      }
+
+      const nodeType = getNodeType(key);
+      const qualifiedName = getQualifiedName(key);
+
+      return (
+        <ContextMenu
+          nodeType={nodeType}
+          nodeKey={key}
+          qualifiedName={qualifiedName}
+          onInsertText={onInsertText}
+          onRefreshNode={handleRefreshNode}
+          onShowStats={handleShowStats}
+          isFavorite={isFavorite(key)}
+          onToggleFavorite={toggleFavorite}
+        >
+          <span>{nodeData.title as React.ReactNode}</span>
+        </ContextMenu>
+      );
+    },
+    [onInsertText, handleRefreshNode, handleShowStats, isFavorite, toggleFavorite],
+  );
+
+  // ---------- Render ----------
 
   if (pluginsLoading) {
     return (
@@ -550,30 +543,46 @@ export default function SchemaExplorer({ onInsertText, onTableSelect }: SchemaEx
       </div>
 
       <div style={{ flex: 1, overflow: 'auto', marginTop: 8 }}>
-        {treeData.length === 0 ? (
+        {combinedTreeData.length === 0 ? (
           <Empty description="No plugins found" style={{ marginTop: 40 }} />
         ) : (
           <Tree
             showIcon
             blockNode
-            treeData={treeData}
+            draggable={{ icon: false, nodeDraggable: () => true }}
+            allowDrop={() => false}
+            treeData={combinedTreeData}
             expandedKeys={expandedKeys}
             loadedKeys={loadedKeys}
             loadData={loadData}
             onExpand={(keys) => setExpandedKeys(keys as string[])}
             onSelect={handleSelect}
             onDoubleClick={handleDoubleClick}
+            onDragStart={handleDragStart}
+            onRightClick={handleRightClick}
+            titleRender={titleRender}
             style={{ padding: '0 8px' }}
           />
         )}
       </div>
 
       <div style={{ padding: 8, borderTop: '1px solid #e8e8e8', fontSize: 11, color: '#999' }}>
-        <div>Double-click to insert into query</div>
+        <div>Double-click or drag to insert into query</div>
+        <div style={{ marginTop: 2 }}>Right-click for more options</div>
         <div style={{ marginTop: 2 }}>
           <WarningOutlined style={{ color: '#faad14' }} /> = Cannot browse tables
         </div>
       </div>
+
+      {/* Column Statistics Drawer */}
+      {statsTarget && (
+        <ColumnStats
+          open={!!statsTarget}
+          onClose={() => setStatsTarget(null)}
+          schemaName={statsTarget.schema}
+          tableName={statsTarget.table}
+        />
+      )}
     </div>
   );
 }

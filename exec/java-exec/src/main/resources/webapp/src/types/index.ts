@@ -56,6 +56,11 @@ export interface FileInfo {
   modificationTime?: string;
 }
 
+export interface NestedFieldInfo {
+  name: string;
+  type: string;
+}
+
 // Query types
 export interface QueryRequest {
   query: string;

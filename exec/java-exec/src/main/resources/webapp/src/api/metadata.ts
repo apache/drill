@@ -16,7 +16,8 @@
  * limitations under the License.
  */
 import apiClient from './client';
-import type { SchemaInfo, TableInfo, ColumnInfo, PluginInfo } from '../types';
+import type { SchemaInfo, TableInfo, ColumnInfo, PluginInfo, NestedFieldInfo } from '../types';
+import { executeQuery } from './queries';
 
 const METADATA_BASE = '/api/v1/metadata';
 
@@ -154,4 +155,69 @@ export async function getFileColumns(schema: string, filePath: string): Promise<
     { params: { path: filePath } }
   );
   return response.data.columns;
+}
+
+/**
+ * Parse a string-serialised map schema like "{field1=BIGINT, field2=VARCHAR}".
+ */
+function parseMapSchemaString(str: string): NestedFieldInfo[] {
+  const trimmed = str.replace(/^\{|\}$/g, '').trim();
+  if (!trimmed) {
+    return [];
+  }
+  return trimmed.split(',').map((pair) => {
+    const eqIdx = pair.indexOf('=');
+    if (eqIdx < 0) {
+      return { name: pair.trim(), type: 'ANY' };
+    }
+    return { name: pair.slice(0, eqIdx).trim(), type: pair.slice(eqIdx + 1).trim() || 'ANY' };
+  }).filter((f) => f.name.length > 0);
+}
+
+/**
+ * Fetch nested sub-fields for a MAP/STRUCT column using Drill's getMapSchema() function.
+ *
+ * @param schema      the schema name (e.g. "dfs.tmp")
+ * @param tableOrFile the table or file identifier (e.g. "data.json")
+ * @param columnPath  dot-separated path to the column (e.g. "record" or "record.nested_map")
+ */
+export async function getNestedColumns(
+  schema: string,
+  tableOrFile: string,
+  columnPath: string,
+): Promise<NestedFieldInfo[]> {
+  // Build the column expression with backtick-quoting on each path segment
+  const pathParts = columnPath.split('.');
+  const columnExpr = pathParts.map((p) => `\`${p}\``).join('.');
+
+  const query =
+    `SELECT getMapSchema(${columnExpr}) AS \`schema\`` +
+    ` FROM \`${schema}\`.\`${tableOrFile}\` LIMIT 1`;
+
+  const result = await executeQuery({
+    query,
+    queryType: 'SQL',
+    autoLimitRowCount: 1,
+  });
+
+  if (result.rows.length === 0) {
+    return [];
+  }
+
+  const schemaVal = result.rows[0]['schema'];
+
+  // MAP types are serialised as JSON objects by Drill's /query.json endpoint
+  if (typeof schemaVal === 'object' && schemaVal !== null) {
+    return Object.entries(schemaVal as Record<string, unknown>).map(([name, type]) => ({
+      name,
+      type: String(type),
+    }));
+  }
+
+  // Fallback: string representation like "{field1=BIGINT, field2=VARCHAR}"
+  if (typeof schemaVal === 'string') {
+    return parseMapSchemaString(schemaVal);
+  }
+
+  return [];
 }
