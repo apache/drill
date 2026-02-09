@@ -15,7 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import { useRef, useCallback, useEffect } from 'react';
+import { useState, useRef, useCallback, useEffect } from 'react';
 import Editor, { OnMount, OnChange, Monaco } from '@monaco-editor/react';
 
 // Use Monaco's editor type from the package
@@ -164,8 +164,65 @@ export default function SqlEditor({
     };
   }, [insertText]);
 
+  // ---- Drag-and-drop support (Phase 3) ----
+  const [dragOver, setDragOver] = useState(false);
+
+  const handleDragOver = useCallback((e: React.DragEvent) => {
+    e.preventDefault();
+    e.dataTransfer.dropEffect = 'copy';
+    setDragOver(true);
+  }, []);
+
+  const handleDragLeave = useCallback(() => {
+    setDragOver(false);
+  }, []);
+
+  const handleDrop = useCallback((e: React.DragEvent) => {
+    e.preventDefault();
+    setDragOver(false);
+    const text = e.dataTransfer.getData('text/plain');
+    if (!text) {
+      return;
+    }
+    const editor = editorRef.current;
+    if (editor) {
+      // Try to place the text at the mouse drop position
+      const target = editor.getTargetAtClientPoint(e.clientX, e.clientY);
+      if (target?.position) {
+        const pos = target.position;
+        editor.executeEdits('drop', [
+          {
+            range: {
+              startLineNumber: pos.lineNumber,
+              startColumn: pos.column,
+              endLineNumber: pos.lineNumber,
+              endColumn: pos.column,
+            },
+            text,
+            forceMoveMarkers: true,
+          },
+        ]);
+      } else {
+        // Fallback: insert at current cursor position
+        insertText(text);
+      }
+      editor.focus();
+    }
+  }, [insertText]);
+
   return (
-    <div className="monaco-container" style={{ height }}>
+    <div
+      className="monaco-container"
+      style={{
+        height,
+        border: dragOver ? '2px solid #1890ff' : '2px solid transparent',
+        borderRadius: 4,
+        transition: 'border-color 0.2s',
+      }}
+      onDragOver={handleDragOver}
+      onDragLeave={handleDragLeave}
+      onDrop={handleDrop}
+    >
       <Editor
         height="100%"
         defaultLanguage="sql"

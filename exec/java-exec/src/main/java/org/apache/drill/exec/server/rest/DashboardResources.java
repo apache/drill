@@ -23,6 +23,7 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.apache.drill.common.exceptions.DrillRuntimeException;
+import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.exception.StoreException;
 import org.apache.drill.exec.server.rest.auth.DrillUserPrincipal;
 import org.apache.drill.exec.store.sys.PersistentStore;
@@ -1099,14 +1100,26 @@ public class DashboardResources {
     if (cachedUploadDir == null) {
       synchronized (DashboardResources.class) {
         if (cachedUploadDir == null) {
+          // 1. Prefer DRILL_LOG_DIR (set by Drill startup scripts)
           String basePath = System.getenv("DRILL_LOG_DIR");
+          // 2. Fall back to Drill's persistent store path (same dir as system tables)
           if (basePath == null) {
-            basePath = System.getProperty("java.io.tmpdir");
+            try {
+              basePath = workManager.getContext().getConfig()
+                  .getString(ExecConstants.SYS_STORE_PROVIDER_LOCAL_PATH);
+            } catch (Exception e) {
+              logger.debug("Could not read sys.store.provider.local.path", e);
+            }
+          }
+          // 3. Last resort: user home directory
+          if (basePath == null) {
+            basePath = System.getProperty("user.home");
           }
           File dir = new File(basePath, UPLOAD_DIR_NAME);
           if (!dir.exists() && !dir.mkdirs()) {
             throw new DrillRuntimeException("Failed to create upload directory: " + dir);
           }
+          logger.info("Dashboard image upload directory: {}", dir.getAbsolutePath());
           cachedUploadDir = dir;
         }
       }
