@@ -53,6 +53,7 @@ import {
   DashboardOutlined,
   FilterOutlined,
   GlobalOutlined as MapOutlined,
+  FieldNumberOutlined,
   EyeOutlined,
   PlayCircleOutlined,
   CodeOutlined,
@@ -78,6 +79,7 @@ const chartIcons: Record<ChartType, React.ReactNode> = {
   gauge: <DashboardOutlined />,
   funnel: <FilterOutlined />,
   map: <MapOutlined />,
+  bigNumber: <FieldNumberOutlined />,
 };
 
 // Chart type colors
@@ -92,6 +94,7 @@ const chartColors: Record<ChartType, string> = {
   gauge: '#9a60b4',
   funnel: '#ea7ccc',
   map: '#1890ff',
+  bigNumber: '#ff7a45',
 };
 
 /**
