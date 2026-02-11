@@ -15,11 +15,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import { useCallback, useState, useEffect, useRef } from 'react';
+import { useCallback, useState, useEffect, useRef, useMemo } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import { useLocation } from 'react-router-dom';
 import { Tabs, message, Tooltip } from 'antd';
-import { PlusOutlined, MenuFoldOutlined, MenuUnfoldOutlined } from '@ant-design/icons';
+import { PlusOutlined, MenuFoldOutlined, MenuUnfoldOutlined, RobotOutlined } from '@ant-design/icons';
 import type { RootState, AppDispatch } from '../store';
 import {
   addTab,
@@ -31,7 +31,10 @@ import {
 import { useQueryExecution } from '../hooks/useQuery';
 import { useQueryHistory } from '../hooks/useQueryHistory';
 import { useSchemas } from '../hooks/useMetadata';
+import { useProspector } from '../hooks/useProspector';
+import { getAiStatus } from '../api/ai';
 import SchemaExplorer from '../components/schema-explorer/SchemaExplorer';
+import type { DatasetFilter } from '../components/schema-explorer/SchemaExplorer';
 import SqlEditor, { DEFAULT_EDITOR_SETTINGS } from '../components/query-editor/SqlEditor';
 import type { EditorSettings } from '../components/query-editor/SqlEditor';
 import QueryToolbar from '../components/query-editor/QueryToolbar';
@@ -40,13 +43,20 @@ import type { ResultsSettings } from '../components/results/ResultsGrid';
 import SaveQueryDialog from '../components/query-editor/SaveQueryDialog';
 import QueryHistoryModal from '../components/query-editor/QueryHistoryModal';
 import { VisualizationBuilder } from '../components/visualization';
+import { ProspectorPanel } from '../components/prospector';
 import type { SavedQuery } from '../types';
+import type { ChatContext } from '../types/ai';
+
+interface SqlLabPageProps {
+  datasetFilter?: DatasetFilter;
+  headerContent?: React.ReactNode;
+}
 
 interface LocationState {
   loadQuery?: SavedQuery;
 }
 
-export default function SqlLabPage() {
+export default function SqlLabPage({ datasetFilter, headerContent }: SqlLabPageProps) {
   const dispatch = useDispatch<AppDispatch>();
   const location = useLocation();
   const { tabs, activeTabId } = useSelector((state: RootState) => state.query);
@@ -111,6 +121,16 @@ export default function SqlLabPage() {
   const [editingTabId, setEditingTabId] = useState<string | null>(null);
   const [editingTabName, setEditingTabName] = useState('');
 
+  // Prospector state
+  const [prospectorOpen, setProspectorOpen] = useState(() => {
+    try {
+      return localStorage.getItem('drill-prospector-open') === 'true';
+    } catch {
+      return false;
+    }
+  });
+  const [prospectorAvailable, setProspectorAvailable] = useState(false);
+
   // Fetch schemas for the schema selector
   const { data: schemas } = useSchemas();
 
@@ -128,6 +148,70 @@ export default function SqlLabPage() {
     cancel,
     updateSql,
   } = useQueryExecution(activeTabId, addHistory);
+
+  // Prospector hook
+  const prospector = useProspector(updateSql);
+
+  // Check Prospector status on mount
+  useEffect(() => {
+    getAiStatus()
+      .then((status) => setProspectorAvailable(status.enabled))
+      .catch(() => setProspectorAvailable(false));
+  }, []);
+
+  // Build AI context from current state
+  const aiContext: ChatContext = useMemo(() => ({
+    currentSql: sql || undefined,
+    currentSchema: activeTab?.defaultSchema || undefined,
+    availableSchemas: schemas?.map((s) => s.name),
+    error: error?.message || undefined,
+    resultSummary: results ? {
+      rowCount: results.rows?.length ?? 0,
+      columns: results.columns || [],
+      columnTypes: results.metadata || [],
+    } : undefined,
+  }), [sql, activeTab?.defaultSchema, schemas, error, results]);
+
+  // Prospector sidebar toggle with localStorage persistence
+  const toggleProspector = useCallback(() => {
+    setProspectorOpen((prev) => {
+      const next = !prev;
+      try {
+        localStorage.setItem('drill-prospector-open', String(next));
+      } catch {
+        // Ignore storage errors
+      }
+      return next;
+    });
+  }, []);
+
+  // Handle Prospector actions from toolbar/results (opens sidebar + sends message)
+  const handleProspectorAction = useCallback(
+    (prompt: string) => {
+      if (!prospectorOpen) {
+        setProspectorOpen(true);
+        try {
+          localStorage.setItem('drill-prospector-open', 'true');
+        } catch {
+          // Ignore storage errors
+        }
+      }
+      prospector.sendMessage(prompt, aiContext);
+    },
+    [prospectorOpen, prospector, aiContext],
+  );
+
+  const handleExplainQuery = useCallback(() => {
+    handleProspectorAction('Explain this SQL query. What does it do and how could it be improved?');
+  }, [handleProspectorAction]);
+
+  const handleFixError = useCallback(() => {
+    handleProspectorAction('Fix the error in my SQL query. Explain what went wrong and provide a corrected version.');
+  }, [handleProspectorAction]);
+
+  const handleFixWithProspector = useCallback(() => {
+    handleProspectorAction('Fix the error in my SQL query. Explain what went wrong and provide a corrected version.');
+  }, [handleProspectorAction]);
 
   // Handle loading query from navigation state (from SavedQueriesPage)
   const locationState = location.state as LocationState | undefined;
@@ -314,6 +398,7 @@ export default function SqlLabPage() {
           <SchemaExplorer
             onInsertText={handleInsertText}
             onTableSelect={handleTableSelect}
+            datasetFilter={datasetFilter}
           />
         )}
       </div>
@@ -330,6 +415,9 @@ export default function SqlLabPage() {
 
       {/* Main Content */}
       <div className="sqllab-content" ref={contentRef}>
+        {/* Optional Header (e.g. project bar) */}
+        {headerContent}
+
         {/* Query Tabs */}
         <Tabs
           type="editable-card"
@@ -376,6 +464,13 @@ export default function SqlLabPage() {
             editorSettings={editorSettings}
             onEditorSettingsChange={handleEditorSettingsChange}
             onShowHistory={handleShowHistory}
+            onExplainQuery={handleExplainQuery}
+            onFixError={handleFixError}
+            onToggleProspector={toggleProspector}
+            hasSql={!!sql && sql.trim().length > 0}
+            hasError={!!error}
+            prospectorOpen={prospectorOpen}
+            prospectorAvailable={prospectorAvailable}
           />
 
           {/* SQL Editor */}
@@ -402,6 +497,8 @@ export default function SqlLabPage() {
             onCreateVisualization={handleCreateVisualization}
             resultsSettings={resultsSettings}
             onResultsSettingsChange={handleResultsSettingsChange}
+            onFixWithProspector={handleFixWithProspector}
+            prospectorAvailable={prospectorAvailable}
           />
         </div>
       </div>
@@ -431,6 +528,24 @@ export default function SqlLabPage() {
         onSelectQuery={handleSelectHistoryQuery}
         onClearHistory={clearHistory}
       />
+
+      {/* Prospector Sidebar Toggle */}
+      {prospectorAvailable && (
+        <Tooltip title={prospectorOpen ? 'Hide Prospector' : 'Show Prospector'}>
+          <div className="prospector-sidebar-toggle" onClick={toggleProspector}>
+            <RobotOutlined />
+          </div>
+        </Tooltip>
+      )}
+
+      {/* Prospector Sidebar */}
+      {prospectorAvailable && (
+        <div className={`prospector-sidebar${prospectorOpen ? '' : ' collapsed'}`}>
+          {prospectorOpen && (
+            <ProspectorPanel prospector={prospector} context={aiContext} />
+          )}
+        </div>
+      )}
     </div>
   );
 }
