@@ -251,6 +251,7 @@ export default function FileSystemForm({ config, onChange, onValidationChange, p
   const [workspaces, setWorkspaces] = useState<WorkspaceRow[]>([]);
   const [formatsJson, setFormatsJson] = useState<string>('{}');
   const lastConfigRef = useRef<Record<string, unknown>>(config);
+  const initializedRef = useRef(false);
 
   // Test connection state
   const [testing, setTesting] = useState(false);
@@ -353,12 +354,12 @@ export default function FileSystemForm({ config, onChange, onValidationChange, p
     setBoxClientId(detectedType === 'box' ? (cpCreds?.clientID || '') : '');
     setBoxClientSecret(detectedType === 'box' ? (cpCreds?.clientSecret || '') : '');
 
-    // Update workspaces from config only if the connection or fs type changed
+    // Update workspaces from config on first initialization or when connection changes
     // Don't reinitialize if we're just reflecting our own emitChange back
     const lastConnection = lastConfigRef.current.connection as string;
     const currentConnection = config.connection as string;
 
-    if (lastConnection !== currentConnection) {
+    if (!initializedRef.current || lastConnection !== currentConnection) {
       const ws = (config.workspaces as Record<string, WorkspaceConfig>) || {};
       setWorkspaces(
         Object.entries(ws).map(([name, w]) => ({
@@ -369,6 +370,7 @@ export default function FileSystemForm({ config, onChange, onValidationChange, p
           defaultInputFormat: w.defaultInputFormat,
         }))
       );
+      initializedRef.current = true;
     }
 
     const formats = config.formats || {};
