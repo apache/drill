@@ -24,6 +24,7 @@ import {
   BarChartOutlined,
   ExpandOutlined,
   SettingOutlined,
+  RobotOutlined,
 } from '@ant-design/icons';
 import type { ColDef, GridReadyEvent, GridApi } from 'ag-grid-community';
 import type { MenuProps } from 'antd';
@@ -50,6 +51,8 @@ interface ResultsGridProps {
   onCreateVisualization?: () => void;
   resultsSettings?: ResultsSettings;
   onResultsSettingsChange?: (settings: ResultsSettings) => void;
+  onFixWithProspector?: () => void;
+  prospectorAvailable?: boolean;
 }
 
 export default function ResultsGrid({
@@ -59,6 +62,8 @@ export default function ResultsGrid({
   onCreateVisualization,
   resultsSettings,
   onResultsSettingsChange,
+  onFixWithProspector,
+  prospectorAvailable,
 }: ResultsGridProps) {
   const gridRef = useRef<AgGridReact>(null);
   const gridApiRef = useRef<GridApi | null>(null);
@@ -192,6 +197,17 @@ export default function ResultsGrid({
           type="error"
           showIcon
         />
+        {prospectorAvailable && onFixWithProspector && (
+          <Button
+            icon={<RobotOutlined />}
+            onClick={onFixWithProspector}
+            style={{ marginTop: 12 }}
+            type="primary"
+            ghost
+          >
+            Fix with Prospector
+          </Button>
+        )}
       </div>
     );
   }

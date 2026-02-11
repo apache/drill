@@ -16,7 +16,7 @@
  * limitations under the License.
  */
 import { useState, useCallback } from 'react';
-import { Button, Select, InputNumber, Space, Tooltip, Dropdown, Switch, Typography, Modal, Slider } from 'antd';
+import { Button, Select, InputNumber, Space, Tooltip, Dropdown, Switch, Typography, Modal, Slider, Divider } from 'antd';
 import {
   PlayCircleOutlined,
   StopOutlined,
@@ -25,6 +25,9 @@ import {
   HistoryOutlined,
   DownOutlined,
   SettingOutlined,
+  RobotOutlined,
+  BulbOutlined,
+  BugOutlined,
 } from '@ant-design/icons';
 import type { MenuProps } from 'antd';
 import type { EditorSettings } from './SqlEditor';
@@ -46,6 +49,13 @@ interface QueryToolbarProps {
   editorSettings?: EditorSettings;
   onEditorSettingsChange?: (settings: EditorSettings) => void;
   onShowHistory?: () => void;
+  onExplainQuery?: () => void;
+  onFixError?: () => void;
+  onToggleProspector?: () => void;
+  hasSql?: boolean;
+  hasError?: boolean;
+  prospectorOpen?: boolean;
+  prospectorAvailable?: boolean;
 }
 
 export default function QueryToolbar({
@@ -63,6 +73,13 @@ export default function QueryToolbar({
   editorSettings,
   onEditorSettingsChange,
   onShowHistory,
+  onExplainQuery,
+  onFixError,
+  onToggleProspector,
+  hasSql,
+  hasError,
+  prospectorOpen,
+  prospectorAvailable,
 }: QueryToolbarProps) {
   const [autoLimitEnabled, setAutoLimitEnabled] = useState(true);
   const [settingsModalOpen, setSettingsModalOpen] = useState(false);
@@ -178,10 +195,47 @@ export default function QueryToolbar({
             More <DownOutlined />
           </Button>
         </Dropdown>
+
+        {/* AI Actions */}
+        {prospectorAvailable && (
+          <>
+            <Divider type="vertical" style={{ height: 24 }} />
+            {hasSql && (
+              <Tooltip title="Explain this query with Prospector">
+                <Button
+                  icon={<BulbOutlined />}
+                  onClick={onExplainQuery}
+                >
+                  Explain
+                </Button>
+              </Tooltip>
+            )}
+            {hasError && (
+              <Tooltip title="Fix this error with Prospector">
+                <Button
+                  icon={<BugOutlined />}
+                  onClick={onFixError}
+                  danger
+                >
+                  Fix Error
+                </Button>
+              </Tooltip>
+            )}
+          </>
+        )}
       </Space>
 
-      {/* Execution Time */}
-      <div style={{ marginLeft: 'auto' }}>
+      {/* Right side: Prospector toggle + Execution Time */}
+      <div style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: 12 }}>
+        {prospectorAvailable && (
+          <Tooltip title={prospectorOpen ? 'Hide Prospector' : 'Show Prospector'}>
+            <Button
+              icon={<RobotOutlined />}
+              type={prospectorOpen ? 'primary' : 'default'}
+              onClick={onToggleProspector}
+            />
+          </Tooltip>
+        )}
         {executionTime !== undefined && !isExecuting && (
           <Text type="secondary">
             Executed in {(executionTime / 1000).toFixed(2)}s

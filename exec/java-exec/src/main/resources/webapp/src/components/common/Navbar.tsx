@@ -15,22 +15,29 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+import { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { Layout, Menu, Button, Space, Dropdown } from 'antd';
+import { Layout, Menu, Button, Space, Dropdown, Tooltip } from 'antd';
 import {
+  FolderOutlined,
+  DatabaseOutlined,
   CodeOutlined,
   SaveOutlined,
   BarChartOutlined,
   DashboardOutlined,
   HomeOutlined,
   QuestionCircleOutlined,
+  RobotOutlined,
 } from '@ant-design/icons';
 import type { MenuProps } from 'antd';
+import { ProspectorSettingsModal } from '../prospector/index';
 
 const { Header } = Layout;
 
 const navItems = [
-  { key: '/', icon: <CodeOutlined />, label: 'SQL Lab' },
+  { key: '/projects', icon: <FolderOutlined />, label: 'Projects' },
+  { key: '/datasources', icon: <DatabaseOutlined />, label: 'Data Sources' },
+  { key: '/query', icon: <CodeOutlined />, label: 'SQL Lab' },
   { key: '/saved-queries', icon: <SaveOutlined />, label: 'Saved Queries' },
   { key: '/visualizations', icon: <BarChartOutlined />, label: 'Visualizations' },
   { key: '/dashboards', icon: <DashboardOutlined />, label: 'Dashboards' },
@@ -47,6 +54,15 @@ const legacyMenuItems: MenuProps['items'] = [
 
 export default function Navbar() {
   const location = useLocation();
+  const [prospectorSettingsOpen, setProspectorSettingsOpen] = useState(false);
+
+  // Determine selected nav key, handling sub-routes like /projects/:id, /datasources/:name
+  let selectedKey = location.pathname;
+  if (location.pathname.startsWith('/projects')) {
+    selectedKey = '/projects';
+  } else if (location.pathname.startsWith('/datasources')) {
+    selectedKey = '/datasources';
+  }
 
   return (
     <Header
@@ -60,7 +76,7 @@ export default function Navbar() {
     >
       {/* Logo */}
       <Link
-        to="/"
+        to="/projects"
         style={{
           display: 'flex',
           alignItems: 'center',
@@ -81,7 +97,7 @@ export default function Navbar() {
       <Menu
         theme="dark"
         mode="horizontal"
-        selectedKeys={[location.pathname]}
+        selectedKeys={[selectedKey]}
         items={navItems.map((item) => ({
           key: item.key,
           icon: item.icon,
@@ -92,6 +108,15 @@ export default function Navbar() {
 
       {/* Right side actions */}
       <Space>
+        <Tooltip title="Prospector Settings">
+          <Button
+            type="text"
+            icon={<RobotOutlined />}
+            style={{ color: '#fff' }}
+            onClick={() => setProspectorSettingsOpen(true)}
+          />
+        </Tooltip>
+
         <Dropdown menu={{ items: legacyMenuItems }} placement="bottomRight">
           <Button type="text" icon={<HomeOutlined />} style={{ color: '#fff' }}>
             Drill UI
@@ -106,6 +131,11 @@ export default function Navbar() {
           target="_blank"
         />
       </Space>
+
+      <ProspectorSettingsModal
+        open={prospectorSettingsOpen}
+        onClose={() => setProspectorSettingsOpen(false)}
+      />
     </Header>
   );
 }

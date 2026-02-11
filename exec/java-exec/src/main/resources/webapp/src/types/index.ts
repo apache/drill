@@ -232,6 +232,57 @@ export interface DashboardCreate {
   isPublic?: boolean;
 }
 
+// Project types
+export interface DatasetRef {
+  id: string;
+  type: 'table' | 'saved_query' | 'plugin' | 'schema';
+  schema?: string;
+  table?: string;
+  savedQueryId?: string;
+  label: string;
+}
+
+export interface WikiPage {
+  id: string;
+  title: string;
+  content: string;
+  order: number;
+  createdAt: number;
+  updatedAt: number;
+}
+
+export interface Project {
+  id: string;
+  name: string;
+  description?: string;
+  tags: string[];
+  owner: string;
+  isPublic: boolean;
+  sharedWith: string[];
+  datasets: DatasetRef[];
+  savedQueryIds: string[];
+  visualizationIds: string[];
+  dashboardIds: string[];
+  wikiPages: WikiPage[];
+  createdAt: number;
+  updatedAt: number;
+}
+
+export interface ProjectCreate {
+  name: string;
+  description?: string;
+  tags?: string[];
+  isPublic?: boolean;
+}
+
+export interface ProjectUpdate {
+  name?: string;
+  description?: string;
+  tags?: string[];
+  isPublic?: boolean;
+  sharedWith?: string[];
+}
+
 // Tree node types for schema explorer
 export interface TreeNodeData {
   key: string;
@@ -248,3 +299,17 @@ export interface StoragePlugin {
   config: Record<string, unknown>;
   enabled: boolean;
 }
+
+export interface StoragePluginDetail {
+  name: string;
+  config: Record<string, unknown>;
+}
+
+export interface WorkspaceConfig {
+  location: string;
+  writable: boolean;
+  defaultInputFormat?: string;
+  allowAccessOutsideWorkspace?: boolean;
+}
+
+export type PluginType = 'file' | 'jdbc' | 'http' | 'mongo' | string;
