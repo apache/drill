@@ -52,7 +52,7 @@ export default function ProspectorSettingsModal({ open, onClose }: ProspectorSet
       loadConfig();
       loadProviders();
     }
-  }, [open]);
+  }, [open, loadConfig, loadProviders]);
 
   const loadConfig = useCallback(async () => {
     try {
