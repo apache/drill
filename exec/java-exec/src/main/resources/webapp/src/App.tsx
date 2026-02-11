@@ -18,7 +18,12 @@
 import { Routes, Route, Navigate } from 'react-router-dom';
 import { Layout } from 'antd';
 import Navbar from './components/common/Navbar';
+import ProjectsPage from './pages/ProjectsPage';
+import ProjectDetailPage from './pages/ProjectDetailPage';
+import DataSourcesPage from './pages/DataSourcesPage';
+import DataSourceEditPage from './pages/DataSourceEditPage';
 import SqlLabPage from './pages/SqlLabPage';
+import ProjectQueryPage from './pages/ProjectQueryPage';
 import SavedQueriesPage from './pages/SavedQueriesPage';
 import VisualizationsPage from './pages/VisualizationsPage';
 import DashboardsPage from './pages/DashboardsPage';
@@ -32,12 +37,18 @@ function App() {
       <Navbar />
       <Content style={{ flex: 1, overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
         <Routes>
-          <Route path="/" element={<SqlLabPage />} />
+          <Route path="/" element={<Navigate to="/projects" replace />} />
+          <Route path="/projects" element={<ProjectsPage />} />
+          <Route path="/projects/:id/query" element={<ProjectQueryPage />} />
+          <Route path="/projects/:id" element={<ProjectDetailPage />} />
+          <Route path="/datasources" element={<DataSourcesPage />} />
+          <Route path="/datasources/:name" element={<DataSourceEditPage />} />
+          <Route path="/query" element={<SqlLabPage />} />
           <Route path="/saved-queries" element={<SavedQueriesPage />} />
           <Route path="/visualizations" element={<VisualizationsPage />} />
           <Route path="/dashboards" element={<DashboardsPage />} />
           <Route path="/dashboards/:id" element={<DashboardViewPage />} />
-          <Route path="*" element={<Navigate to="/" replace />} />
+          <Route path="*" element={<Navigate to="/projects" replace />} />
         </Routes>
       </Content>
     </Layout>
