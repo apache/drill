@@ -30,6 +30,7 @@ import {
   Spin,
   Empty,
   Badge,
+  Tooltip,
 } from 'antd';
 import {
   ArrowLeftOutlined,
@@ -72,6 +73,7 @@ export default function DataSourceEditPage() {
   const [jsonText, setJsonText] = useState<string>('{}');
   const [activeTab, setActiveTab] = useState<string>('config');
   const [dirty, setDirty] = useState(isNew);
+  const [isValid, setIsValid] = useState(true);
   const configRef = useRef(config);
   configRef.current = config;
 
@@ -241,7 +243,7 @@ export default function DataSourceEditPage() {
   const renderForm = () => {
     switch (pluginType) {
       case 'file':
-        return <FileSystemForm config={config} onChange={handleFormChange} pluginName={pluginName} />;
+        return <FileSystemForm config={config} onChange={handleFormChange} onValidationChange={setIsValid} pluginName={pluginName} />;
       case 'jdbc':
         return <JdbcForm config={config} onChange={handleFormChange} />;
       case 'http':
@@ -324,15 +326,17 @@ export default function DataSourceEditPage() {
               </div>
             </Space>
             <Space>
-              <Button
-                type="primary"
-                icon={<SaveOutlined />}
-                onClick={handleSave}
-                loading={saveMutation.isPending}
-                disabled={!dirty}
-              >
-                Save
-              </Button>
+              <Tooltip title={!isValid ? 'Cannot save: at least one workspace is required' : !dirty ? 'No changes to save' : ''}>
+                <Button
+                  type="primary"
+                  icon={<SaveOutlined />}
+                  onClick={handleSave}
+                  loading={saveMutation.isPending}
+                  disabled={!dirty || !isValid}
+                >
+                  Save
+                </Button>
+              </Tooltip>
               {!isNew && (
                 <>
                   <Button
