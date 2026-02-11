@@ -1551,8 +1551,6 @@ export default function FileSystemForm({ config, onChange, onValidationChange, p
     </Form>
   );
 
-  const isClasspathPlugin = fsType === 'classpath';
-
   const workspacesTab = (
     <div style={{ padding: '16px 0' }}>
       <Alert
@@ -1561,22 +1559,12 @@ export default function FileSystemForm({ config, onChange, onValidationChange, p
         message="Workspaces define named virtual directories that map to specific paths in your storage. They allow users to query data using schema notation like dfs.workspace_name.table_name instead of full paths."
         style={{ marginBottom: 16, backgroundColor: '#f0f5ff', border: '1px solid #d6e4ff' }}
       />
-      {isClasspathPlugin && (
-        <Alert
-          type="warning"
-          showIcon
-          message="Classpath plugin does not support workspaces"
-          description="The classpath storage plugin cannot be configured with workspaces."
-          style={{ marginBottom: 16 }}
-        />
-      )}
       <Space style={{ marginBottom: 12 }}>
         <Button
           type="primary"
           size="small"
           icon={<PlusOutlined />}
           onClick={addWorkspace}
-          disabled={isClasspathPlugin}
         >
           Add Workspace
         </Button>
@@ -1588,7 +1576,7 @@ export default function FileSystemForm({ config, onChange, onValidationChange, p
         size="small"
         rowKey="key"
       />
-      {!isClasspathPlugin && !hasValidWorkspaces(workspaces) && (
+      {!hasValidWorkspaces(workspaces) && (
         <Alert
           type="warning"
           showIcon
@@ -1627,14 +1615,21 @@ export default function FileSystemForm({ config, onChange, onValidationChange, p
   // Render
   // -----------------------------------------------------------------------
 
+  const tabItems = [
+    { key: 'connection', label: 'Connection', children: connectionTab },
+  ];
+
+  // Only show workspaces tab for non-classpath plugins
+  if (fsType !== 'classpath') {
+    tabItems.push({ key: 'workspaces', label: 'Workspaces', children: workspacesTab });
+  }
+
+  tabItems.push({ key: 'formats', label: 'Formats', children: formatsTab });
+
   return (
     <Tabs
       defaultActiveKey="connection"
-      items={[
-        { key: 'connection', label: 'Connection', children: connectionTab },
-        { key: 'workspaces', label: 'Workspaces', children: workspacesTab },
-        { key: 'formats', label: 'Formats', children: formatsTab },
-      ]}
+      items={tabItems}
     />
   );
 }
