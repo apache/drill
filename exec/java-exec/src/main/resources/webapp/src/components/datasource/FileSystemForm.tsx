@@ -932,15 +932,19 @@ export default function FileSystemForm({ config, onChange, onValidationChange, p
     return ws.filter(w => w.name && w.name.trim()).length > 0;
   }, []);
 
-  const handleWorkspaceChange = useCallback(
-    (newWorkspaces: WorkspaceRow[]) => {
-      setWorkspaces(newWorkspaces);
-      const isValid = hasValidWorkspaces(newWorkspaces);
-      onValidationChange?.(isValid);
-      emitChange(connection, authMode, newWorkspaces, formatsJson);
-    },
-    [connection, authMode, formatsJson, emitChange, onValidationChange, hasValidWorkspaces]
-  );
+  // Update validation when fsType changes (e.g., switching to/from classpath)
+  useEffect(() => {
+    const isValid = fsType === 'classpath' || hasValidWorkspaces(workspaces);
+    onValidationChange?.(isValid);
+  }, [fsType, workspaces, hasValidWorkspaces, onValidationChange]);
+
+  const handleWorkspaceChange = (newWorkspaces: WorkspaceRow[]) => {
+    setWorkspaces(newWorkspaces);
+    // Classpath plugin doesn't support workspaces, so it's always valid
+    const isValid = fsType === 'classpath' || hasValidWorkspaces(newWorkspaces);
+    onValidationChange?.(isValid);
+    emitChange(connection, authMode, newWorkspaces, formatsJson);
+  };
 
   const addWorkspace = () => {
     handleWorkspaceChange([
@@ -1547,6 +1551,8 @@ export default function FileSystemForm({ config, onChange, onValidationChange, p
     </Form>
   );
 
+  const isClasspathPlugin = fsType === 'classpath';
+
   const workspacesTab = (
     <div style={{ padding: '16px 0' }}>
       <Alert
@@ -1555,12 +1561,22 @@ export default function FileSystemForm({ config, onChange, onValidationChange, p
         message="Workspaces define named virtual directories that map to specific paths in your storage. They allow users to query data using schema notation like dfs.workspace_name.table_name instead of full paths."
         style={{ marginBottom: 16, backgroundColor: '#f0f5ff', border: '1px solid #d6e4ff' }}
       />
+      {isClasspathPlugin && (
+        <Alert
+          type="warning"
+          showIcon
+          message="Classpath plugin does not support workspaces"
+          description="The classpath storage plugin cannot be configured with workspaces."
+          style={{ marginBottom: 16 }}
+        />
+      )}
       <Space style={{ marginBottom: 12 }}>
         <Button
           type="primary"
           size="small"
           icon={<PlusOutlined />}
           onClick={addWorkspace}
+          disabled={isClasspathPlugin}
         >
           Add Workspace
         </Button>
@@ -1572,7 +1588,7 @@ export default function FileSystemForm({ config, onChange, onValidationChange, p
         size="small"
         rowKey="key"
       />
-      {!hasValidWorkspaces(workspaces) && (
+      {!isClasspathPlugin && !hasValidWorkspaces(workspaces) && (
         <Alert
           type="warning"
           showIcon
