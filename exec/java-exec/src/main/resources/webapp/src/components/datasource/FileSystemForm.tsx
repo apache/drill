@@ -941,22 +941,40 @@ export default function FileSystemForm({ config, onChange, onValidationChange, p
     return ws.filter(w => w.name && w.name.trim()).length > 0;
   }, []);
 
+  const getDuplicateWorkspaceNames = useCallback((ws: WorkspaceRow[]): string[] => {
+    const names = ws
+      .map(w => w.name.trim())
+      .filter(name => name); // Filter out empty names
+    const seen = new Set<string>();
+    const duplicates = new Set<string>();
+    for (const name of names) {
+      if (seen.has(name)) {
+        duplicates.add(name);
+      }
+      seen.add(name);
+    }
+    return Array.from(duplicates);
+  }, []);
+
   const handleWorkspaceChange = useCallback(
     (newWorkspaces: WorkspaceRow[]) => {
       setWorkspaces(newWorkspaces);
       // Classpath plugin doesn't support workspaces, so it's always valid
-      const isValid = fsType === 'classpath' || hasValidWorkspaces(newWorkspaces);
+      // For other plugins, check that we have valid workspaces and no duplicates
+      const hasDuplicates = getDuplicateWorkspaceNames(newWorkspaces).length > 0;
+      const isValid = fsType === 'classpath' || (hasValidWorkspaces(newWorkspaces) && !hasDuplicates);
       onValidationChange?.(isValid);
       emitChange(connection, authMode, newWorkspaces, formatsJson);
     },
-    [fsType, connection, authMode, formatsJson, emitChange, onValidationChange, hasValidWorkspaces]
+    [fsType, connection, authMode, formatsJson, emitChange, onValidationChange, hasValidWorkspaces, getDuplicateWorkspaceNames]
   );
 
   // Update validation when fsType changes (e.g., switching to/from classpath)
   useEffect(() => {
-    const isValid = fsType === 'classpath' || hasValidWorkspaces(workspaces);
+    const hasDuplicates = getDuplicateWorkspaceNames(workspaces).length > 0;
+    const isValid = fsType === 'classpath' || (hasValidWorkspaces(workspaces) && !hasDuplicates);
     onValidationChange?.(isValid);
-  }, [fsType, workspaces, hasValidWorkspaces, onValidationChange]);
+  }, [fsType, workspaces, hasValidWorkspaces, getDuplicateWorkspaceNames, onValidationChange]);
 
   const addWorkspace = useCallback(() => {
     const newWorkspace = { key: `ws_${Date.now()}`, name: '', location: '/', writable: false };
@@ -1592,7 +1610,16 @@ export default function FileSystemForm({ config, onChange, onValidationChange, p
         size="small"
         rowKey="key"
       />
-      {!hasValidWorkspaces(workspaces) && (
+      {getDuplicateWorkspaceNames(workspaces).length > 0 && (
+        <Alert
+          type="error"
+          showIcon
+          message="Duplicate workspace names"
+          description={`Workspace names must be unique. Duplicates found: ${getDuplicateWorkspaceNames(workspaces).join(', ')}`}
+          style={{ marginTop: 16 }}
+        />
+      )}
+      {!hasValidWorkspaces(workspaces) && getDuplicateWorkspaceNames(workspaces).length === 0 && (
         <Alert
           type="warning"
           showIcon
