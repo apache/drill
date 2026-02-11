@@ -15,7 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import { useState, useEffect, useCallback, useRef } from 'react';
+import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import {
   Form,
   Input,
@@ -949,30 +949,38 @@ export default function FileSystemForm({ config, onChange, onValidationChange, p
     onValidationChange?.(isValid);
   }, [fsType, workspaces, hasValidWorkspaces, onValidationChange]);
 
-  const addWorkspace = () => {
-    handleWorkspaceChange([
-      ...workspaces,
-      { key: `ws_${Date.now()}`, name: '', location: '/', writable: false },
-    ]);
-  };
+  const addWorkspace = useCallback(() => {
+    console.log('addWorkspace clicked, current workspaces:', workspaces);
+    const newWorkspace = { key: `ws_${Date.now()}`, name: '', location: '/', writable: false };
+    console.log('adding new workspace:', newWorkspace);
+    const updated = [...workspaces, newWorkspace];
+    console.log('updated workspaces list:', updated);
+    handleWorkspaceChange(updated);
+  }, [workspaces, handleWorkspaceChange]);
 
-  const removeWorkspace = (key: string) => {
-    handleWorkspaceChange(workspaces.filter((w) => w.key !== key));
-  };
+  const removeWorkspace = useCallback(
+    (key: string) => {
+      handleWorkspaceChange(workspaces.filter((w) => w.key !== key));
+    },
+    [workspaces, handleWorkspaceChange]
+  );
 
-  const updateWorkspace = (key: string, field: keyof WorkspaceRow, value: unknown) => {
-    handleWorkspaceChange(
-      workspaces.map((w) =>
-        w.key === key ? { ...w, [field]: value } : w
-      )
-    );
-  };
+  const updateWorkspace = useCallback(
+    (key: string, field: keyof WorkspaceRow, value: unknown) => {
+      handleWorkspaceChange(
+        workspaces.map((w) =>
+          w.key === key ? { ...w, [field]: value } : w
+        )
+      );
+    },
+    [workspaces, handleWorkspaceChange]
+  );
 
   // -----------------------------------------------------------------------
   // Workspace table columns
   // -----------------------------------------------------------------------
 
-  const wsColumns = [
+  const wsColumns = useMemo(() => [
     {
       title: 'Name',
       dataIndex: 'name',
@@ -1051,7 +1059,7 @@ export default function FileSystemForm({ config, onChange, onValidationChange, p
         />
       ),
     },
-  ];
+  ], [updateWorkspace, removeWorkspace]);
 
   // -----------------------------------------------------------------------
   // Derived flags
