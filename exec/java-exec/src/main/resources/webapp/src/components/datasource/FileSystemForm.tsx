@@ -250,6 +250,7 @@ export default function FileSystemForm({ config, onChange, onValidationChange, p
   const [authMode, setAuthMode] = useState<string>((config.authMode as string) || 'SHARED_USER');
   const [workspaces, setWorkspaces] = useState<WorkspaceRow[]>([]);
   const [formatsJson, setFormatsJson] = useState<string>('{}');
+  const lastConfigRef = useRef<Record<string, unknown>>(config);
 
   // Test connection state
   const [testing, setTesting] = useState(false);
@@ -352,19 +353,27 @@ export default function FileSystemForm({ config, onChange, onValidationChange, p
     setBoxClientId(detectedType === 'box' ? (cpCreds?.clientID || '') : '');
     setBoxClientSecret(detectedType === 'box' ? (cpCreds?.clientSecret || '') : '');
 
-    const ws = (config.workspaces as Record<string, WorkspaceConfig>) || {};
-    setWorkspaces(
-      Object.entries(ws).map(([name, w]) => ({
-        key: name,
-        name,
-        location: w.location || '/',
-        writable: w.writable || false,
-        defaultInputFormat: w.defaultInputFormat,
-      }))
-    );
+    // Update workspaces from config only if the connection or fs type changed
+    // Don't reinitialize if we're just reflecting our own emitChange back
+    const lastConnection = lastConfigRef.current.connection as string;
+    const currentConnection = config.connection as string;
+
+    if (lastConnection !== currentConnection) {
+      const ws = (config.workspaces as Record<string, WorkspaceConfig>) || {};
+      setWorkspaces(
+        Object.entries(ws).map(([name, w]) => ({
+          key: name,
+          name,
+          location: w.location || '/',
+          writable: w.writable || false,
+          defaultInputFormat: w.defaultInputFormat,
+        }))
+      );
+    }
 
     const formats = config.formats || {};
     setFormatsJson(JSON.stringify(formats, null, 2));
+    lastConfigRef.current = config;
   }, [config]);
 
   // -----------------------------------------------------------------------
@@ -950,12 +959,8 @@ export default function FileSystemForm({ config, onChange, onValidationChange, p
   }, [fsType, workspaces, hasValidWorkspaces, onValidationChange]);
 
   const addWorkspace = useCallback(() => {
-    console.log('addWorkspace clicked, current workspaces:', workspaces);
     const newWorkspace = { key: `ws_${Date.now()}`, name: '', location: '/', writable: false };
-    console.log('adding new workspace:', newWorkspace);
-    const updated = [...workspaces, newWorkspace];
-    console.log('updated workspaces list:', updated);
-    handleWorkspaceChange(updated);
+    handleWorkspaceChange([...workspaces, newWorkspace]);
   }, [workspaces, handleWorkspaceChange]);
 
   const removeWorkspace = useCallback(
