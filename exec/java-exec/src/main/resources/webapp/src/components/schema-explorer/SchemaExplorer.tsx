@@ -16,17 +16,19 @@
  * limitations under the License.
  */
 import { useState, useCallback, useMemo, useEffect, useRef } from 'react';
-import { Tree, Input, Spin, Empty, Tooltip } from 'antd';
+import { Tree, Input, Spin, Empty, Tooltip, Button } from 'antd';
 import {
   ReloadOutlined,
   SearchOutlined,
   WarningOutlined,
   StarFilled,
+  SettingOutlined,
 } from '@ant-design/icons';
+import { useNavigate } from 'react-router-dom';
 import type { DataNode, EventDataNode } from 'antd/es/tree';
 import { useQueryClient } from '@tanstack/react-query';
 import { getPluginSchemas, getTables, getColumns, getFiles, getFileColumns, getNestedColumns, getSubTables, getSubTableColumns } from '../../api/metadata';
-import type { SchemaInfo, TableInfo, ColumnInfo, FileInfo, NestedFieldInfo, SubTableInfo } from '../../types';
+import type { SchemaInfo, TableInfo, ColumnInfo, FileInfo, NestedFieldInfo, SubTableInfo, DatasetRef } from '../../types';
 import { isFileBasedPlugin, getMultiTableConfig } from './icons';
 import { usePlugins } from './hooks';
 import { buildPluginNode } from './TreeNodeBuilder';
@@ -37,9 +39,14 @@ import ColumnStats from './ColumnStats';
 
 const { Search } = Input;
 
+export interface DatasetFilter {
+  datasets: DatasetRef[];
+}
+
 interface SchemaExplorerProps {
   onInsertText?: (text: string) => void;
   onTableSelect?: (schema: string, table: string) => void;
+  datasetFilter?: DatasetFilter;
 }
 
 /**
@@ -119,8 +126,176 @@ function getNodeType(key: string): NodeType {
   return 'column';
 }
 
-export default function SchemaExplorer({ onInsertText, onTableSelect }: SchemaExplorerProps) {
+/**
+ * Lookup structure for dataset filtering, supporting plugin, schema, and table-level refs.
+ */
+interface DatasetAllowList {
+  /** Plugins where everything is allowed */
+  plugins: Set<string>;
+  /** Schemas where everything is allowed */
+  schemas: Set<string>;
+  /** Specific table/file allowances: schema → set of table/file names */
+  tables: Map<string, Set<string>>;
+}
+
+/**
+ * Check whether a plugin is allowed at any level.
+ */
+function isPluginAllowed(pluginName: string, allow: DatasetAllowList): boolean {
+  if (allow.plugins.has(pluginName)) {
+    return true;
+  }
+  // Any schema-level ref under this plugin?
+  for (const s of allow.schemas) {
+    if (s === pluginName || s.startsWith(pluginName + '.')) {
+      return true;
+    }
+  }
+  // Any table-level ref under this plugin?
+  for (const s of allow.tables.keys()) {
+    if (s === pluginName || s.startsWith(pluginName + '.')) {
+      return true;
+    }
+  }
+  return false;
+}
+
+/**
+ * Check whether a schema is allowed at any level.
+ */
+function isSchemaAllowed(schemaName: string, allow: DatasetAllowList): boolean {
+  const pluginName = schemaName.split('.')[0];
+  if (allow.plugins.has(pluginName)) {
+    return true;
+  }
+  if (allow.schemas.has(schemaName)) {
+    return true;
+  }
+  return allow.tables.has(schemaName);
+}
+
+/**
+ * Filter tree nodes to only include datasets matching the provided allow list.
+ * Supports plugin-level, schema-level, and table-level filtering.
+ */
+function filterTreeNodes(nodes: DataNode[], allow: DatasetAllowList): DataNode[] {
+  return nodes.reduce<DataNode[]>((acc, node) => {
+    const key = node.key as string;
+
+    // Table leaf
+    if (key.startsWith('table:')) {
+      const [, schema, table] = key.split(':');
+      const pluginName = schema.split('.')[0];
+      // Allowed if plugin or schema is fully included, or specific table matches
+      if (allow.plugins.has(pluginName) || allow.schemas.has(schema)) {
+        acc.push(node);
+      } else {
+        const allowed = allow.tables.get(schema);
+        if (allowed && allowed.has(table)) {
+          acc.push(node);
+        }
+      }
+      return acc;
+    }
+
+    // File leaf
+    if (key.startsWith('file:')) {
+      const parts = key.split(':');
+      const schema = parts[1];
+      const filePath = parts.slice(2).join(':');
+      const pluginName = schema.split('.')[0];
+      if (allow.plugins.has(pluginName) || allow.schemas.has(schema)) {
+        acc.push(node);
+      } else {
+        const allowed = allow.tables.get(schema);
+        if (allowed && allowed.has(filePath)) {
+          acc.push(node);
+        }
+      }
+      return acc;
+    }
+
+    // Column, nested, sheet nodes: always keep (children of approved tables)
+    if (key.startsWith('column:') || key.startsWith('nested:') || key.startsWith('sheet:')) {
+      acc.push(node);
+      return acc;
+    }
+
+    // Directory nodes
+    if (key.startsWith('dir:')) {
+      const parts = key.split(':');
+      const schema = parts[1];
+      const pluginName = schema.split('.')[0];
+      // If plugin or schema fully allowed, keep entire directory
+      if (allow.plugins.has(pluginName) || allow.schemas.has(schema)) {
+        acc.push(node);
+        return acc;
+      }
+      if (node.children) {
+        const filteredChildren = filterTreeNodes(node.children, allow);
+        if (filteredChildren.length > 0) {
+          acc.push({ ...node, children: filteredChildren });
+        }
+      } else {
+        const dirPath = parts.slice(2).join(':');
+        const allowed = allow.tables.get(schema);
+        if (allowed) {
+          const hasMatch = Array.from(allowed).some((t) => t.startsWith(dirPath + '/'));
+          if (hasMatch) {
+            acc.push(node);
+          }
+        }
+      }
+      return acc;
+    }
+
+    // Plugin / schema container nodes
+    if (key.startsWith('plugin:') || key.startsWith('schema:')) {
+      if (key.startsWith('plugin:')) {
+        const pluginName = key.replace('plugin:', '');
+        // Plugin fully allowed — keep everything
+        if (allow.plugins.has(pluginName)) {
+          acc.push(node);
+          return acc;
+        }
+        // Check if any refs exist under this plugin
+        if (!isPluginAllowed(pluginName, allow)) {
+          return acc;
+        }
+      } else {
+        const schemaName = key.replace('schema:', '');
+        const pluginName = schemaName.split('.')[0];
+        // Plugin or schema fully allowed — keep everything
+        if (allow.plugins.has(pluginName) || allow.schemas.has(schemaName)) {
+          acc.push(node);
+          return acc;
+        }
+        if (!isSchemaAllowed(schemaName, allow)) {
+          return acc;
+        }
+      }
+      // Partially allowed — filter children
+      if (node.children) {
+        const filteredChildren = filterTreeNodes(node.children, allow);
+        if (filteredChildren.length > 0) {
+          acc.push({ ...node, children: filteredChildren });
+        }
+      } else {
+        // Children not loaded yet — keep so user can expand
+        acc.push(node);
+      }
+      return acc;
+    }
+
+    // Default: keep
+    acc.push(node);
+    return acc;
+  }, []);
+}
+
+export default function SchemaExplorer({ onInsertText, onTableSelect, datasetFilter }: SchemaExplorerProps) {
   const queryClient = useQueryClient();
+  const navigate = useNavigate();
   const [searchText, setSearchText] = useState('');
   const [expandedKeys, setExpandedKeys] = useState<string[]>([]);
   const [loadedKeys, setLoadedKeys] = useState<string[]>([]);
@@ -168,6 +343,31 @@ export default function SchemaExplorer({ onInsertText, onTableSelect }: SchemaEx
 
   // ---------- Tree data construction ----------
 
+  // Build a hierarchical allow list from datasetFilter
+  const datasetAllowList = useMemo((): DatasetAllowList | null => {
+    if (!datasetFilter || datasetFilter.datasets.length === 0) {
+      return null;
+    }
+    const allow: DatasetAllowList = {
+      plugins: new Set(),
+      schemas: new Set(),
+      tables: new Map(),
+    };
+    for (const ds of datasetFilter.datasets) {
+      if (ds.type === 'plugin' && ds.schema) {
+        allow.plugins.add(ds.schema);
+      } else if (ds.type === 'schema' && ds.schema) {
+        allow.schemas.add(ds.schema);
+      } else if (ds.type === 'table' && ds.schema && ds.table) {
+        if (!allow.tables.has(ds.schema)) {
+          allow.tables.set(ds.schema, new Set());
+        }
+        allow.tables.get(ds.schema)!.add(ds.table);
+      }
+    }
+    return allow;
+  }, [datasetFilter]);
+
   const treeData = useMemo(() => {
     if (!plugins) {
       return [];
@@ -182,10 +382,17 @@ export default function SchemaExplorer({ onInsertText, onTableSelect }: SchemaEx
         )
       : plugins;
 
-    return filteredPlugins.map((plugin) =>
+    let nodes = filteredPlugins.map((plugin) =>
       buildPluginNode(plugin, schemasCache, tablesCache, columnsCache, filesCache, nestedCache, subTablesCache)
     );
-  }, [plugins, schemasCache, tablesCache, columnsCache, filesCache, nestedCache, subTablesCache, searchText]);
+
+    // Apply dataset filter if present
+    if (datasetAllowList) {
+      nodes = filterTreeNodes(nodes, datasetAllowList);
+    }
+
+    return nodes;
+  }, [plugins, schemasCache, tablesCache, columnsCache, filesCache, nestedCache, subTablesCache, searchText, datasetAllowList]);
 
   // Favorites section: flat list of pinned nodes at the top
   const favoritesTreeData = useMemo((): DataNode[] => {
@@ -694,7 +901,26 @@ export default function SchemaExplorer({ onInsertText, onTableSelect }: SchemaEx
       </div>
 
       <div style={{ flex: 1, overflow: 'auto', marginTop: 8 }}>
-        {combinedTreeData.length === 0 ? (
+        {datasetFilter && datasetFilter.datasets.length === 0 ? (
+          <Empty
+            description="No datasets in this project"
+            style={{ marginTop: 40 }}
+          >
+            <Button
+              type="link"
+              icon={<SettingOutlined />}
+              onClick={() => {
+                // Navigate to project settings — extract project ID from URL if available
+                const match = window.location.pathname.match(/\/projects\/([^/]+)/);
+                if (match) {
+                  navigate(`/projects/${match[1]}`);
+                }
+              }}
+            >
+              Add datasets in project settings
+            </Button>
+          </Empty>
+        ) : combinedTreeData.length === 0 ? (
           <Empty description="No plugins found" style={{ marginTop: 40 }} />
         ) : (
           <Tree
