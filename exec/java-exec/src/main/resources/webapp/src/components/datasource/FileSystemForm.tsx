@@ -225,6 +225,7 @@ function buildOciConnection(bucket: string, namespace: string): string {
 interface FileSystemFormProps {
   config: Record<string, unknown>;
   onChange: (config: Record<string, unknown>) => void;
+  onValidationChange?: (isValid: boolean) => void;
   pluginName?: string;
 }
 
@@ -242,7 +243,7 @@ function hGet(cfg: Record<string, unknown>, key: string): string {
   return hadoopCfg?.[key] || '';
 }
 
-export default function FileSystemForm({ config, onChange, pluginName }: FileSystemFormProps) {
+export default function FileSystemForm({ config, onChange, onValidationChange, pluginName }: FileSystemFormProps) {
   const connStr = (config.connection as string) || 'file:///';
   const [connection, setConnection] = useState<string>(connStr);
   const [fsType, setFsType] = useState<string>(() => detectFsType(connStr));
@@ -385,6 +386,7 @@ export default function FileSystemForm({ config, onChange, pluginName }: FileSys
           const entry: WorkspaceConfig = {
             location: row.location,
             writable: row.writable,
+            allowAccessOutsideWorkspace: false,
           };
           if (row.defaultInputFormat) {
             entry.defaultInputFormat = row.defaultInputFormat;
@@ -438,7 +440,7 @@ export default function FileSystemForm({ config, onChange, pluginName }: FileSys
 
       onChange(updated);
     },
-    [config, onChange]
+    [config, onChange, onValidationChange]
   );
 
   // -----------------------------------------------------------------------
@@ -926,10 +928,19 @@ export default function FileSystemForm({ config, onChange, pluginName }: FileSys
   // Workspace handlers
   // -----------------------------------------------------------------------
 
-  const handleWorkspaceChange = (newWorkspaces: WorkspaceRow[]) => {
-    setWorkspaces(newWorkspaces);
-    emitChange(connection, authMode, newWorkspaces, formatsJson);
-  };
+  const hasValidWorkspaces = useCallback((ws: WorkspaceRow[]) => {
+    return ws.filter(w => w.name && w.name.trim()).length > 0;
+  }, []);
+
+  const handleWorkspaceChange = useCallback(
+    (newWorkspaces: WorkspaceRow[]) => {
+      setWorkspaces(newWorkspaces);
+      const isValid = hasValidWorkspaces(newWorkspaces);
+      onValidationChange?.(isValid);
+      emitChange(connection, authMode, newWorkspaces, formatsJson);
+    },
+    [connection, authMode, formatsJson, emitChange, onValidationChange, hasValidWorkspaces]
+  );
 
   const addWorkspace = () => {
     handleWorkspaceChange([
@@ -1538,6 +1549,12 @@ export default function FileSystemForm({ config, onChange, pluginName }: FileSys
 
   const workspacesTab = (
     <div style={{ padding: '16px 0' }}>
+      <Alert
+        type="info"
+        showIcon={false}
+        message="Workspaces define named virtual directories that map to specific paths in your storage. They allow users to query data using schema notation like dfs.workspace_name.table_name instead of full paths."
+        style={{ marginBottom: 16, backgroundColor: '#f0f5ff', border: '1px solid #d6e4ff' }}
+      />
       <Space style={{ marginBottom: 12 }}>
         <Button
           type="primary"
@@ -1555,6 +1572,15 @@ export default function FileSystemForm({ config, onChange, pluginName }: FileSys
         size="small"
         rowKey="key"
       />
+      {!hasValidWorkspaces(workspaces) && (
+        <Alert
+          type="warning"
+          showIcon
+          message="At least one workspace is required"
+          description="The plugin cannot be saved without defining at least one workspace with a valid name."
+          style={{ marginTop: 16 }}
+        />
+      )}
     </div>
   );
 
