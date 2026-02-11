@@ -117,37 +117,40 @@ export default function DatasetPickerModal({
   );
 
   // Build a file/directory tree node
-  function buildFileNode(file: FileInfo, schema: string, parentPath: string): DataNode {
-    const fullPath = parentPath ? `${parentPath}/${file.name}` : file.name;
+  const buildFileNode = useCallback(
+    (file: FileInfo, schema: string, parentPath: string): DataNode => {
+      const fullPath = parentPath ? `${parentPath}/${file.name}` : file.name;
 
-    if (file.isDirectory) {
-      const dirKey = `dir:${schema}:${fullPath}`;
-      const children = filesCache[dirKey];
-      const covered = isExisting(dirKey);
+      if (file.isDirectory) {
+        const dirKey = `dir:${schema}:${fullPath}`;
+        const children = filesCache[dirKey];
+        const covered = isExisting(dirKey);
+        return {
+          key: dirKey,
+          title: covered ? <Text type="secondary">{file.name} (added)</Text> : file.name,
+          icon: <FolderOutlined />,
+          children: children
+            ? children.map((f) => buildFileNode(f, schema, fullPath))
+            : undefined,
+          isLeaf: false,
+          disableCheckbox: covered,
+          disabled: covered,
+        };
+      }
+
+      const key = `file:${schema}:${fullPath}`;
+      const covered = isExisting(key);
       return {
-        key: dirKey,
+        key,
         title: covered ? <Text type="secondary">{file.name} (added)</Text> : file.name,
-        icon: <FolderOutlined />,
-        children: children
-          ? children.map((f) => buildFileNode(f, schema, fullPath))
-          : undefined,
-        isLeaf: false,
+        icon: getFileIcon(file.name) || <FileOutlined />,
+        isLeaf: true,
         disableCheckbox: covered,
         disabled: covered,
       };
-    }
-
-    const key = `file:${schema}:${fullPath}`;
-    const covered = isExisting(key);
-    return {
-      key,
-      title: covered ? <Text type="secondary">{file.name} (added)</Text> : file.name,
-      icon: getFileIcon(file.name) || <FileOutlined />,
-      isLeaf: true,
-      disableCheckbox: covered,
-      disabled: covered,
-    };
-  }
+    },
+    [filesCache, isExisting],
+  );
 
   // Build tree data from caches
   const treeData = useMemo((): DataNode[] => {
@@ -215,7 +218,7 @@ export default function DatasetPickerModal({
         disabled: pluginCovered,
       };
     });
-  }, [plugins, schemasCache, tablesCache, filesCache, isExisting]);
+  }, [plugins, schemasCache, tablesCache, filesCache, isExisting, buildFileNode]);
 
   // Lazy-load on expand
   const loadData = useCallback(
