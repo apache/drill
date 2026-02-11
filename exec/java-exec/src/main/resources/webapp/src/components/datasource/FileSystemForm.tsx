@@ -932,19 +932,22 @@ export default function FileSystemForm({ config, onChange, onValidationChange, p
     return ws.filter(w => w.name && w.name.trim()).length > 0;
   }, []);
 
+  const handleWorkspaceChange = useCallback(
+    (newWorkspaces: WorkspaceRow[]) => {
+      setWorkspaces(newWorkspaces);
+      // Classpath plugin doesn't support workspaces, so it's always valid
+      const isValid = fsType === 'classpath' || hasValidWorkspaces(newWorkspaces);
+      onValidationChange?.(isValid);
+      emitChange(connection, authMode, newWorkspaces, formatsJson);
+    },
+    [fsType, connection, authMode, formatsJson, emitChange, onValidationChange, hasValidWorkspaces]
+  );
+
   // Update validation when fsType changes (e.g., switching to/from classpath)
   useEffect(() => {
     const isValid = fsType === 'classpath' || hasValidWorkspaces(workspaces);
     onValidationChange?.(isValid);
   }, [fsType, workspaces, hasValidWorkspaces, onValidationChange]);
-
-  const handleWorkspaceChange = (newWorkspaces: WorkspaceRow[]) => {
-    setWorkspaces(newWorkspaces);
-    // Classpath plugin doesn't support workspaces, so it's always valid
-    const isValid = fsType === 'classpath' || hasValidWorkspaces(newWorkspaces);
-    onValidationChange?.(isValid);
-    emitChange(connection, authMode, newWorkspaces, formatsJson);
-  };
 
   const addWorkspace = () => {
     handleWorkspaceChange([
