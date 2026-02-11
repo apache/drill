@@ -47,13 +47,6 @@ export default function ProspectorSettingsModal({ open, onClose }: ProspectorSet
   const [config, setConfig] = useState<AiConfig | null>(null);
   const [testResult, setTestResult] = useState<{ success: boolean; message: string } | null>(null);
 
-  useEffect(() => {
-    if (open) {
-      loadConfig();
-      loadProviders();
-    }
-  }, [open, loadConfig, loadProviders]);
-
   const loadConfig = useCallback(async () => {
     try {
       const cfg = await getAiConfig();
@@ -85,6 +78,13 @@ export default function ProspectorSettingsModal({ open, onClose }: ProspectorSet
       ]);
     }
   }, []);
+
+  useEffect(() => {
+    if (open) {
+      loadConfig();
+      loadProviders();
+    }
+  }, [open, loadConfig, loadProviders]);
 
   const handleSave = useCallback(async () => {
     try {
