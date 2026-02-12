@@ -128,6 +128,31 @@ export async function getFunctions(): Promise<string[]> {
   return response.data.functions;
 }
 
+export interface SchemaTreeTable {
+  name: string;
+  columns: string[];
+}
+
+export interface SchemaTreeEntry {
+  name: string;
+  tables: SchemaTreeTable[];
+}
+
+export interface SchemaTreeResponse {
+  schemas: SchemaTreeEntry[];
+}
+
+/**
+ * Fetch the full schema tree (schemas -> tables -> columns) in a single call.
+ */
+export async function getSchemaTree(schemaNames: string[]): Promise<SchemaTreeEntry[]> {
+  const response = await apiClient.post<SchemaTreeResponse>(
+    `${METADATA_BASE}/schema-tree`,
+    { schemas: schemaNames }
+  );
+  return response.data.schemas;
+}
+
 /**
  * File info from SHOW FILES command
  */
