@@ -18,8 +18,9 @@
 import { useCallback, useState, useEffect, useRef, useMemo } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import { useLocation } from 'react-router-dom';
-import { Tabs, message, Tooltip, Modal, Alert } from 'antd';
+import { Tabs, message, Tooltip, Modal, Alert, Button, Space, Spin } from 'antd';
 import { PlusOutlined, MenuFoldOutlined, MenuUnfoldOutlined, RobotOutlined } from '@ant-design/icons';
+import Markdown from 'react-markdown';
 import type { RootState, AppDispatch } from '../store';
 import {
   addTab,
@@ -32,7 +33,8 @@ import { useQueryExecution } from '../hooks/useQuery';
 import { useQueryHistory } from '../hooks/useQueryHistory';
 import { useSchemas } from '../hooks/useMetadata';
 import { useProspector } from '../hooks/useProspector';
-import { getAiStatus } from '../api/ai';
+import { getAiStatus, streamChat, transpileSql } from '../api/ai';
+import { getSchemaTree } from '../api/metadata';
 import SchemaExplorer from '../components/schema-explorer/SchemaExplorer';
 import type { DatasetFilter } from '../components/schema-explorer/SchemaExplorer';
 import SqlEditor, { DEFAULT_EDITOR_SETTINGS } from '../components/query-editor/SqlEditor';
@@ -45,19 +47,30 @@ import QueryHistoryModal from '../components/query-editor/QueryHistoryModal';
 import { VisualizationBuilder } from '../components/visualization';
 import { ProspectorPanel } from '../components/prospector';
 import type { SavedQuery } from '../types';
-import type { ChatContext } from '../types/ai';
+import type { ChatContext, ChatMessage } from '../types/ai';
 import { applySqlTransformation, type ColumnTransformation } from '../utils/sqlTransformations';
+
+function extractSqlFromMarkdown(markdown: string): string | null {
+  const regex = /```sql\s*\n([\s\S]*?)```/g;
+  let lastMatch: string | null = null;
+  let match;
+  while ((match = regex.exec(markdown)) !== null) {
+    lastMatch = match[1].trim();
+  }
+  return lastMatch;
+}
 
 interface SqlLabPageProps {
   datasetFilter?: DatasetFilter;
   headerContent?: React.ReactNode;
+  projectId?: string;
 }
 
 interface LocationState {
   loadQuery?: SavedQuery;
 }
 
-export default function SqlLabPage({ datasetFilter, headerContent }: SqlLabPageProps) {
+export default function SqlLabPage({ datasetFilter, headerContent, projectId }: SqlLabPageProps) {
   const dispatch = useDispatch<AppDispatch>();
   const location = useLocation();
   const { tabs, activeTabId } = useSelector((state: RootState) => state.query);
@@ -68,6 +81,14 @@ export default function SqlLabPage({ datasetFilter, headerContent }: SqlLabPageP
   const [vizBuilderOpen, setVizBuilderOpen] = useState(false);
   const [historyModalOpen, setHistoryModalOpen] = useState(false);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+
+  // Optimize modal state
+  const [optimizeModalOpen, setOptimizeModalOpen] = useState(false);
+  const [optimizeStreaming, setOptimizeStreaming] = useState(false);
+  const [optimizeContent, setOptimizeContent] = useState('');
+  const [optimizeError, setOptimizeError] = useState<string | null>(null);
+  const [optimizeDone, setOptimizeDone] = useState(false);
+  const optimizeAbortRef = useRef<AbortController | null>(null);
 
   // Editor settings with localStorage persistence
   const [editorSettings, setEditorSettings] = useState<EditorSettings>(() => {
@@ -135,8 +156,8 @@ export default function SqlLabPage({ datasetFilter, headerContent }: SqlLabPageP
   // Fetch schemas for the schema selector
   const { data: schemas } = useSchemas();
 
-  // Query history hook
-  const { history, addEntry: addHistory, clearHistory } = useQueryHistory();
+  // Query history hook — scoped to project+tab when inside a project
+  const { history, addEntry: addHistory, clearHistory } = useQueryHistory(projectId, activeTabId);
 
   // Query execution hook for active tab
   const {
@@ -213,6 +234,85 @@ export default function SqlLabPage({ datasetFilter, headerContent }: SqlLabPageP
   const handleFixWithProspector = useCallback(() => {
     handleProspectorAction('Fix the error in my SQL query. Explain what went wrong and provide a corrected version.');
   }, [handleProspectorAction]);
+
+  // Optimize query handler
+  const handleOptimizeQuery = useCallback(() => {
+    if (!sql || sql.trim().length === 0) {
+      return;
+    }
+
+    setOptimizeContent('');
+    setOptimizeError(null);
+    setOptimizeDone(false);
+    setOptimizeStreaming(true);
+    setOptimizeModalOpen(true);
+
+    const messages: ChatMessage[] = [
+      {
+        role: 'system',
+        content: `You are an Apache Drill SQL optimization expert. The user will provide a SQL query. Your job:
+1. Explain what the query does in 1-2 sentences.
+2. List numbered optimization suggestions. For each, explain WHY it improves performance.
+3. Provide the complete optimized SQL in a single \`\`\`sql code block.
+4. Focus on: predicate pushdown, partition pruning, avoiding SELECT *, appropriate use of LIMIT, JOIN ordering, and Drill-specific optimizations.
+5. If the query is already optimal, say so and return the original SQL in a \`\`\`sql code block.`,
+      },
+      {
+        role: 'user',
+        content: `Please optimize this SQL query:\n\n\`\`\`sql\n${sql}\n\`\`\``,
+      },
+    ];
+
+    const controller = streamChat(
+      { messages, tools: [], context: aiContext },
+      (event) => {
+        if (event.type === 'content') {
+          setOptimizeContent((prev) => prev + event.content);
+        }
+      },
+      () => {
+        setOptimizeStreaming(false);
+        setOptimizeDone(true);
+      },
+      (err) => {
+        setOptimizeStreaming(false);
+        setOptimizeError(err.message);
+      },
+    );
+
+    optimizeAbortRef.current = controller;
+  }, [sql, aiContext]);
+
+  const handleOptimizeAccept = useCallback(async () => {
+    const extractedSql = extractSqlFromMarkdown(optimizeContent);
+    if (extractedSql) {
+      const schemaNames = schemas?.map((s) => s.name) || [];
+      let schemaTree: { name: string; tables: { name: string; columns: string[] }[] }[] = [];
+      if (schemaNames.length > 0) {
+        try {
+          schemaTree = await getSchemaTree(schemaNames);
+        } catch {
+          // Fall back to empty schemas if fetch fails
+        }
+      }
+      const transpiledSql = await transpileSql(extractedSql, 'mysql', 'drill', schemaTree);
+      updateSql(transpiledSql);
+    }
+    setOptimizeModalOpen(false);
+    optimizeAbortRef.current?.abort();
+  }, [optimizeContent, updateSql, schemas]);
+
+  const handleOptimizeClose = useCallback(() => {
+    setOptimizeModalOpen(false);
+    optimizeAbortRef.current?.abort();
+  }, []);
+
+  // Cleanup optimize streaming on unmount
+  useEffect(() => {
+    return () => {
+      optimizeAbortRef.current?.abort();
+    };
+  }, []);
 
   // Handle loading query from navigation state (from SavedQueriesPage)
   const locationState = location.state as LocationState | undefined;
@@ -529,8 +629,11 @@ export default function SqlLabPage({ datasetFilter, headerContent }: SqlLabPageP
             onAutoLimitChange={setAutoLimit}
             editorSettings={editorSettings}
             onEditorSettingsChange={handleEditorSettingsChange}
+            resultsSettings={resultsSettings}
+            onResultsSettingsChange={handleResultsSettingsChange}
             onShowHistory={handleShowHistory}
             onExplainQuery={handleExplainQuery}
+            onOptimizeQuery={handleOptimizeQuery}
             onFixError={handleFixError}
             onToggleProspector={toggleProspector}
             hasSql={!!sql && sql.trim().length > 0}
@@ -595,6 +698,50 @@ export default function SqlLabPage({ datasetFilter, headerContent }: SqlLabPageP
         onSelectQuery={handleSelectHistoryQuery}
         onClearHistory={clearHistory}
       />
+
+      {/* Optimize Query Modal */}
+      <Modal
+        title="Optimize Query"
+        open={optimizeModalOpen}
+        onCancel={handleOptimizeClose}
+        width={720}
+        destroyOnClose
+        footer={
+          <Space>
+            <Button onClick={handleOptimizeClose}>Cancel</Button>
+            <Button
+              type="primary"
+              disabled={!optimizeDone || !extractSqlFromMarkdown(optimizeContent)}
+              onClick={handleOptimizeAccept}
+            >
+              Accept
+            </Button>
+          </Space>
+        }
+      >
+        {optimizeError && (
+          <Alert
+            message="Optimization Failed"
+            description={optimizeError}
+            type="error"
+            showIcon
+            style={{ marginBottom: 16 }}
+          />
+        )}
+        {optimizeContent ? (
+          <div className="optimize-modal-content">
+            <div className="optimize-explanation">
+              <Markdown>{optimizeContent}</Markdown>
+              {optimizeStreaming && <span className="prospector-cursor" />}
+            </div>
+          </div>
+        ) : optimizeStreaming ? (
+          <div className="optimize-thinking">
+            <Spin size="small" />
+            <span style={{ marginLeft: 8 }}>Analyzing your query...</span>
+          </div>
+        ) : null}
+      </Modal>
 
       {/* Prospector Sidebar Toggle */}
       {prospectorAvailable && (

@@ -17,13 +17,11 @@
  */
 import { useMemo, useCallback, useRef, useState } from 'react';
 import { AgGridReact } from 'ag-grid-react';
-import { Button, Space, Dropdown, Typography, Alert, Empty, Modal, Select, Checkbox, Divider } from 'antd';
+import { Button, Space, Dropdown, Typography, Alert, Empty, Modal, Checkbox, Divider } from 'antd';
 import {
   DownloadOutlined,
-  CopyOutlined,
   BarChartOutlined,
   ExpandOutlined,
-  SettingOutlined,
   RobotOutlined,
   UnorderedListOutlined,
   SortAscendingOutlined,
@@ -66,16 +64,15 @@ export default function ResultsGrid({
   isLoading,
   onCreateVisualization,
   resultsSettings,
-  onResultsSettingsChange,
   onFixWithProspector,
   prospectorAvailable,
   onTransformColumn,
 }: ResultsGridProps) {
   const gridRef = useRef<AgGridReact>(null);
   const gridApiRef = useRef<GridApi | null>(null);
-  const [settingsModalOpen, setSettingsModalOpen] = useState(false);
   const [columnManagerOpen, setColumnManagerOpen] = useState(false);
   const [sortManagerOpen, setSortManagerOpen] = useState(false);
+  const [columnVisibility, setColumnVisibility] = useState<Record<string, boolean>>({});
 
   const timestampFormat = resultsSettings?.timestampDisplayFormat ?? DEFAULT_RESULTS_SETTINGS.timestampDisplayFormat;
 
@@ -164,7 +161,7 @@ export default function ResultsGrid({
     try {
       const savedState = localStorage.getItem('drill-grid-column-state');
       if (savedState) {
-        params.columnApi.applyColumnState({ state: JSON.parse(savedState), applyOrder: true });
+        params.api.applyColumnState({ state: JSON.parse(savedState), applyOrder: true });
       }
     } catch {
       // Ignore storage errors
@@ -195,30 +192,26 @@ export default function ResultsGrid({
     URL.revokeObjectURL(url);
   }, [results]);
 
-  const copyToClipboard = useCallback(async () => {
-    if (!results) return;
-
-    const header = results.columns.join('\t');
-    const rows = results.rows
-      .map((row) => results.columns.map((col) => formatCellValue(row[col])).join('\t'))
-      .join('\n');
-    const text = `${header}\n${rows}`;
-
-    try {
-      await navigator.clipboard.writeText(text);
-    } catch (err) {
-      console.error('Failed to copy:', err);
+  const syncColumnVisibility = useCallback(() => {
+    if (gridApiRef.current && results?.columns) {
+      const vis: Record<string, boolean> = {};
+      results.columns.forEach((col) => {
+        const column = gridApiRef.current!.getColumn(col);
+        vis[col] = column ? column.isVisible() : true;
+      });
+      setColumnVisibility(vis);
     }
-  }, [results]);
+  }, [results?.columns]);
 
   const handleShowAllColumns = useCallback(() => {
     if (gridApiRef.current && results?.columns) {
       results.columns.forEach((col) => {
-        (gridApiRef.current as any)?.columnApi?.setColumnVisible(col, true);
+        gridApiRef.current!.setColumnsVisible([col], true);
       });
+      syncColumnVisibility();
       saveColumnState();
     }
-  }, [results?.columns, saveColumnState]);
+  }, [results?.columns, saveColumnState, syncColumnVisibility]);
 
   // Sort manager state
   const getSortModel = useCallback(
@@ -311,13 +304,6 @@ export default function ResultsGrid({
         </Space>
 
         <Space>
-          <Button
-            icon={<CopyOutlined />}
-            onClick={copyToClipboard}
-            size="small"
-          >
-            Copy
-          </Button>
           <Dropdown menu={{ items: exportMenuItems }} trigger={['click']}>
             <Button icon={<DownloadOutlined />} size="small">
               Export
@@ -332,7 +318,10 @@ export default function ResultsGrid({
           </Button>
           <Button
             icon={<UnorderedListOutlined />}
-            onClick={() => setColumnManagerOpen(true)}
+            onClick={() => {
+              syncColumnVisibility();
+              setColumnManagerOpen(true);
+            }}
             size="small"
           >
             Columns
@@ -350,13 +339,6 @@ export default function ResultsGrid({
             size="small"
           >
             Fit Columns
-          </Button>
-          <Button
-            icon={<SettingOutlined />}
-            onClick={() => setSettingsModalOpen(true)}
-            size="small"
-          >
-            Settings
           </Button>
         </Space>
       </div>
@@ -388,38 +370,6 @@ export default function ResultsGrid({
         />
       </div>
 
-      {/* Results Settings Modal */}
-      <Modal
-        title="Results Settings"
-        open={settingsModalOpen}
-        onCancel={() => setSettingsModalOpen(false)}
-        footer={null}
-        width={400}
-      >
-        <div style={{ marginBottom: 16 }}>
-          <Text strong style={{ display: 'block', marginBottom: 8 }}>
-            Timestamp Display Format
-          </Text>
-          <Select
-            value={timestampFormat}
-            onChange={(value) => {
-              onResultsSettingsChange?.({
-                ...resultsSettings,
-                ...DEFAULT_RESULTS_SETTINGS,
-                timestampDisplayFormat: value,
-              });
-            }}
-            style={{ width: '100%' }}
-            options={[
-              { value: 'locale', label: 'Locale (browser default)' },
-              { value: 'iso', label: 'ISO 8601' },
-              { value: 'utc', label: 'UTC' },
-              { value: 'epoch', label: 'Epoch (raw milliseconds)' },
-            ]}
-          />
-        </div>
-      </Modal>
-
       {/* Column Manager Modal */}
       <Modal
         title="Manage Columns"
@@ -444,9 +394,10 @@ export default function ResultsGrid({
                   style={{ marginBottom: 8 }}
                 >
                   <Checkbox
-                    checked={(gridApiRef.current as any)?.columnApi?.getColumn(col)?.isVisible?.() !== false}
+                    checked={columnVisibility[col] !== false}
                     onChange={(e) => {
-                      (gridApiRef.current as any)?.columnApi?.setColumnVisible(col, e.target.checked);
+                      gridApiRef.current?.setColumnsVisible([col], e.target.checked);
+                      setColumnVisibility((prev) => ({ ...prev, [col]: e.target.checked }));
                       saveColumnState();
                     }}
                   >
@@ -517,17 +468,6 @@ function formatTimestamp(value: unknown, format: string): string {
     case 'locale':
     default: return date.toLocaleString();
   }
-}
-
-// Format a cell value for display — JSON-stringify objects/arrays
-function formatCellValue(value: unknown): string {
-  if (value == null) {
-    return '';
-  }
-  if (typeof value === 'object') {
-    return JSON.stringify(value);
-  }
-  return String(value);
 }
 
 // Custom comparator for AG Grid date filter — parses Drill date/timestamp strings

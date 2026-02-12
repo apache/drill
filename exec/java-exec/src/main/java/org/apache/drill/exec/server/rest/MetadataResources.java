@@ -33,8 +33,10 @@ import org.slf4j.LoggerFactory;
 
 import jakarta.annotation.security.RolesAllowed;
 import jakarta.inject.Inject;
+import jakarta.ws.rs.Consumes;
 import jakarta.ws.rs.DefaultValue;
 import jakarta.ws.rs.GET;
+import jakarta.ws.rs.POST;
 import jakarta.ws.rs.Path;
 import jakarta.ws.rs.PathParam;
 import jakarta.ws.rs.Produces;
@@ -43,6 +45,7 @@ import jakarta.ws.rs.core.MediaType;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -218,6 +221,47 @@ public class MetadataResources {
 
     public FunctionsResponse(List<String> functions) {
       this.functions = functions;
+    }
+  }
+
+  public static class SchemaTreeRequest {
+    @JsonProperty
+    public List<String> schemas;
+
+    public SchemaTreeRequest() {
+    }
+  }
+
+  public static class SchemaTreeTable {
+    @JsonProperty
+    public String name;
+    @JsonProperty
+    public List<String> columns;
+
+    public SchemaTreeTable(String name, List<String> columns) {
+      this.name = name;
+      this.columns = columns;
+    }
+  }
+
+  public static class SchemaTreeEntry {
+    @JsonProperty
+    public String name;
+    @JsonProperty
+    public List<SchemaTreeTable> tables;
+
+    public SchemaTreeEntry(String name, List<SchemaTreeTable> tables) {
+      this.name = name;
+      this.tables = tables;
+    }
+  }
+
+  public static class SchemaTreeResponse {
+    @JsonProperty
+    public List<SchemaTreeEntry> schemas;
+
+    public SchemaTreeResponse(List<SchemaTreeEntry> schemas) {
+      this.schemas = schemas;
     }
   }
 
@@ -692,12 +736,135 @@ public class MetadataResources {
     return new FunctionsResponse(new ArrayList<>(functionSet));
   }
 
+  @POST
+  @Path("/schema-tree")
+  @Consumes(MediaType.APPLICATION_JSON)
+  @Produces(MediaType.APPLICATION_JSON)
+  @Operation(summary = "Get schema tree",
+      description = "Returns schemas with their tables and columns in a single call")
+  public SchemaTreeResponse getSchemaTree(SchemaTreeRequest request) {
+    logger.debug("Fetching schema tree for {} schemas",
+        request.schemas != null ? request.schemas.size() : 0);
+
+    List<SchemaTreeEntry> entries = new ArrayList<>();
+
+    if (request.schemas == null || request.schemas.isEmpty()) {
+      return new SchemaTreeResponse(entries);
+    }
+
+    // Step 1: Resolve all sub-schemas in one query
+    StringBuilder whereClause = new StringBuilder();
+    for (int i = 0; i < request.schemas.size(); i++) {
+      if (i > 0) {
+        whereClause.append(" OR ");
+      }
+      String name = escapeQuotes(request.schemas.get(i));
+      whereClause.append(String.format(
+          "(SCHEMA_NAME = '%s' OR SCHEMA_NAME LIKE '%s.%%')", name, name));
+    }
+
+    List<String> allSchemas = new ArrayList<>();
+    try {
+      String schemaSql = "SELECT DISTINCT SCHEMA_NAME FROM INFORMATION_SCHEMA.SCHEMATA WHERE "
+          + whereClause + " ORDER BY SCHEMA_NAME";
+      QueryResult result = executeQuery(schemaSql);
+      for (Map<String, String> row : new ArrayList<>(result.rows)) {
+        String name = row.get("SCHEMA_NAME");
+        if (name != null) {
+          allSchemas.add(name);
+        }
+      }
+    } catch (Exception e) {
+      logger.warn("Error resolving sub-schemas", e);
+      allSchemas.addAll(request.schemas);
+    }
+
+    if (allSchemas.isEmpty()) {
+      return new SchemaTreeResponse(entries);
+    }
+
+    // Step 2: Get all tables across all resolved schemas in one query
+    StringBuilder inClause = new StringBuilder();
+    for (int i = 0; i < allSchemas.size(); i++) {
+      if (i > 0) {
+        inClause.append(", ");
+      }
+      inClause.append("'").append(escapeQuotes(allSchemas.get(i))).append("'");
+    }
+
+    // schema -> set of table names (preserving order, deduplicating)
+    Map<String, Set<String>> schemaToTables = new java.util.LinkedHashMap<>();
+    try {
+      String tablesSql = "SELECT DISTINCT TABLE_SCHEMA, TABLE_NAME "
+          + "FROM INFORMATION_SCHEMA.`TABLES` "
+          + "WHERE TABLE_SCHEMA IN (" + inClause + ") "
+          + "ORDER BY TABLE_SCHEMA, TABLE_NAME";
+      QueryResult result = executeQuery(tablesSql);
+      for (Map<String, String> row : new ArrayList<>(result.rows)) {
+        String schema = row.get("TABLE_SCHEMA");
+        String table = row.get("TABLE_NAME");
+        if (schema != null && table != null) {
+          schemaToTables.computeIfAbsent(schema, k -> new LinkedHashSet<>()).add(table);
+        }
+      }
+    } catch (Exception e) {
+      logger.warn("Error fetching tables for schema tree", e);
+    }
+
+    // Step 3: Get all columns across all resolved schemas in one query
+    // Key: "schema|table" -> ordered set of column names
+    Map<String, Set<String>> tableToColumns = new java.util.LinkedHashMap<>();
+    try {
+      String colsSql = "SELECT TABLE_SCHEMA, TABLE_NAME, COLUMN_NAME "
+          + "FROM INFORMATION_SCHEMA.COLUMNS "
+          + "WHERE TABLE_SCHEMA IN (" + inClause + ") "
+          + "ORDER BY TABLE_SCHEMA, TABLE_NAME, ORDINAL_POSITION";
+      QueryResult result = executeQuery(colsSql);
+      for (Map<String, String> row : new ArrayList<>(result.rows)) {
+        String schema = row.get("TABLE_SCHEMA");
+        String table = row.get("TABLE_NAME");
+        String col = row.get("COLUMN_NAME");
+        if (schema != null && table != null && col != null) {
+          String key = schema + "|" + table;
+          tableToColumns.computeIfAbsent(key, k -> new LinkedHashSet<>()).add(col);
+        }
+      }
+    } catch (Exception e) {
+      logger.warn("Error fetching columns for schema tree", e);
+    }
+
+    // Step 4: Assemble the tree
+    for (String schema : allSchemas) {
+      Set<String> tableNames = schemaToTables.get(schema);
+      if (tableNames == null || tableNames.isEmpty()) {
+        continue;
+      }
+
+      List<SchemaTreeTable> tables = new ArrayList<>();
+      for (String tableName : tableNames) {
+        String key = schema + "|" + tableName;
+        Set<String> cols = tableToColumns.get(key);
+        List<String> columns = cols != null ? new ArrayList<>(cols) : new ArrayList<>();
+        tables.add(new SchemaTreeTable(tableName, columns));
+      }
+      entries.add(new SchemaTreeEntry(schema, tables));
+    }
+
+    return new SchemaTreeResponse(entries);
+  }
+
   // ==================== Helper Methods ====================
 
   /**
-   * Execute a SQL query and return the results
+   * Execute a SQL query and return the results.
+   * Clears previous results from the shared WebUserConnection
+   * to prevent accumulation across multiple queries in one request.
    */
   private QueryResult executeQuery(String sql) throws Exception {
+    webUserConnection.results.clear();
+    webUserConnection.columns.clear();
+    webUserConnection.metadata.clear();
+
     QueryWrapper wrapper = new QueryWrapper.RestQueryBuilder()
         .query(sql)
         .queryType("SQL")
