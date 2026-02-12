@@ -473,7 +473,7 @@ export default function DashboardsPage() {
           </Form.Item>
         </Form>
         {editingDashboard?.isPublic && (
-          <div style={{ padding: '8px 0', borderTop: '1px solid #f0f0f0' }}>
+          <div style={{ padding: '8px 0', borderTop: '1px solid var(--color-border-secondary)' }}>
             <Text type="secondary" style={{ display: 'block', marginBottom: 4 }}>
               <LinkOutlined /> Shareable Link
             </Text>

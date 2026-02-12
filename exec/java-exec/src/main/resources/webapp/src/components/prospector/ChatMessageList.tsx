@@ -47,7 +47,7 @@ export default function ChatMessageList({
       {visibleMessages.length === 0 && !isStreaming && (
         <div className="prospector-empty-state">
           <div style={{ fontSize: 32, marginBottom: 12, opacity: 0.3 }}>AI</div>
-          <div style={{ color: '#999', textAlign: 'center' }}>
+          <div style={{ color: 'var(--color-text-tertiary)', textAlign: 'center' }}>
             Ask me about your data, generate SQL queries, or create visualizations.
           </div>
         </div>
