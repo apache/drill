@@ -310,6 +310,14 @@ export interface WorkspaceConfig {
   writable: boolean;
   defaultInputFormat?: string;
   allowAccessOutsideWorkspace?: boolean;
+  description?: string;
 }
 
 export type PluginType = 'file' | 'jdbc' | 'http' | 'mongo' | string;
+
+export interface FormatRow {
+  key: string;                                    // Unique key for React rendering
+  name: string;                                   // Format name (e.g., "csv", "json")
+  type: string;                                   // Format type from config.type
+  config: Record<string, unknown>;               // Full config object
+}
