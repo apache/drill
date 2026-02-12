@@ -93,6 +93,7 @@ export default function ResultsGrid({
         minWidth: 100,
         filter: config.filter,
         filterParams: config.filterParams,
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         headerComponent: CustomHeader as any,
         headerComponentParams: {
           onTransformColumn,
@@ -215,12 +216,14 @@ export default function ResultsGrid({
 
   // Sort manager state
   const getSortModel = useCallback(
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     () => (gridApiRef.current as any)?.getSortModel?.() || [],
     []
   );
 
   const handleClearSort = useCallback(() => {
     if (gridApiRef.current) {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       (gridApiRef.current as any).setSortModel?.([]);
       saveColumnState();
     }

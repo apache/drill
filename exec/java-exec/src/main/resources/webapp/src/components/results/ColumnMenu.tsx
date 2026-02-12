@@ -300,7 +300,7 @@ export default function ColumnMenu({
           label: 'Filters',
           children: (
             <Space direction="vertical" style={{ width: '100%' }}>
-              <div style={{ fontSize: 12, color: '#999' }}>
+              <div style={{ fontSize: 12, color: 'var(--color-text-tertiary)' }}>
                 Use column filters in the grid to filter data
               </div>
               {topValues.length > 0 && (

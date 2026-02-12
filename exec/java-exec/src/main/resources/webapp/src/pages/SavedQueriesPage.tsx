@@ -401,7 +401,7 @@ export default function SavedQueriesPage() {
             )}
             <pre
               style={{
-                background: '#f5f5f5',
+                background: 'var(--color-bg-elevated)',
                 padding: 16,
                 borderRadius: 4,
                 maxHeight: 400,

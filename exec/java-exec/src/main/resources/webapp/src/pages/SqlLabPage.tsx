@@ -361,7 +361,7 @@ export default function SqlLabPage({ datasetFilter, headerContent, projectId }: 
               <strong>Original:</strong>
               <pre
                 style={{
-                  backgroundColor: '#f5f5f5',
+                  backgroundColor: 'var(--color-bg-elevated)',
                   padding: 12,
                   borderRadius: 4,
                   fontSize: 12,
@@ -376,7 +376,7 @@ export default function SqlLabPage({ datasetFilter, headerContent, projectId }: 
               <strong>Transformed:</strong>
               <pre
                 style={{
-                  backgroundColor: '#f5f5f5',
+                  backgroundColor: 'var(--color-bg-elevated)',
                   padding: 12,
                   borderRadius: 4,
                   fontSize: 12,

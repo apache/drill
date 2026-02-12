@@ -59,33 +59,33 @@ function highlightJson(json: string): JSX.Element[] {
       // Key
       elements.push(
         <span key={`k-${match.index}`}>
-          <span style={{ color: '#881391' }}>{match[1]}</span>:
+          <span style={{ color: 'var(--json-key-color, #881391)' }}>{match[1]}</span>:
         </span>
       );
     } else if (match[2]) {
       // String value
       elements.push(
-        <span key={`s-${match.index}`} style={{ color: '#1a1aa6' }}>{match[2]}</span>
+        <span key={`s-${match.index}`} style={{ color: 'var(--json-string-color, #1a1aa6)' }}>{match[2]}</span>
       );
     } else if (match[3]) {
       // Number
       elements.push(
-        <span key={`n-${match.index}`} style={{ color: '#098658' }}>{match[3]}</span>
+        <span key={`n-${match.index}`} style={{ color: 'var(--json-number-color, #098658)' }}>{match[3]}</span>
       );
     } else if (match[4]) {
       // Boolean
       elements.push(
-        <span key={`b-${match.index}`} style={{ color: '#0451a5' }}>{match[4]}</span>
+        <span key={`b-${match.index}`} style={{ color: 'var(--json-bool-color, #0451a5)' }}>{match[4]}</span>
       );
     } else if (match[5]) {
       // Null
       elements.push(
-        <span key={`x-${match.index}`} style={{ color: '#999' }}>{match[5]}</span>
+        <span key={`x-${match.index}`} style={{ color: 'var(--color-text-tertiary, #999)' }}>{match[5]}</span>
       );
     } else if (match[6]) {
       // Structural characters
       elements.push(
-        <span key={`p-${match.index}`} style={{ color: '#333' }}>{match[6]}</span>
+        <span key={`p-${match.index}`} style={{ color: 'var(--color-text, #333)' }}>{match[6]}</span>
       );
     }
 
