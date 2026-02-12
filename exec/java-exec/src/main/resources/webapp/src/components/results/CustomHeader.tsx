@@ -28,7 +28,7 @@ export interface CustomHeaderProps extends IHeaderParams {
 }
 
 export default function CustomHeader(props: CustomHeaderProps) {
-  const { displayName, columnApi, rowData, onTransformColumn } = props;
+  const { displayName, api, rowData, onTransformColumn } = props;
 
   return (
     <div
@@ -46,7 +46,7 @@ export default function CustomHeader(props: CustomHeaderProps) {
           <ColumnMenu
             columnName={displayName || ''}
             rowData={rowData || []}
-            columnApi={columnApi || undefined}
+            gridApi={api}
             onTransformColumn={onTransformColumn}
           />
         }
