@@ -29,8 +29,10 @@ import {
   QuestionCircleOutlined,
   RobotOutlined,
 } from '@ant-design/icons';
+import { SunOutlined, MoonOutlined } from '@ant-design/icons';
 import type { MenuProps } from 'antd';
 import { ProspectorSettingsModal } from '../prospector/index';
+import { useTheme } from '../../hooks/useTheme';
 
 const { Header } = Layout;
 
@@ -54,6 +56,7 @@ const legacyMenuItems: MenuProps['items'] = [
 
 export default function Navbar() {
   const location = useLocation();
+  const { isDark, toggle } = useTheme();
   const [prospectorSettingsOpen, setProspectorSettingsOpen] = useState(false);
 
   // Determine selected nav key, handling sub-routes like /projects/:id, /datasources/:name
@@ -108,6 +111,15 @@ export default function Navbar() {
 
       {/* Right side actions */}
       <Space>
+        <Tooltip title={isDark ? 'Switch to Light Mode' : 'Switch to Dark Mode'}>
+          <Button
+            type="text"
+            icon={isDark ? <SunOutlined /> : <MoonOutlined />}
+            style={{ color: '#fff' }}
+            onClick={toggle}
+          />
+        </Tooltip>
+
         <Tooltip title="Prospector Settings">
           <Button
             type="text"
