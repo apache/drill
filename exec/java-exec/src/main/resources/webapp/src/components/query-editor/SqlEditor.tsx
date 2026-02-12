@@ -15,8 +15,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import { useState, useRef, useCallback, useEffect } from 'react';
+import { useState, useRef, useCallback, useEffect, useMemo } from 'react';
 import Editor, { OnMount, OnChange, Monaco } from '@monaco-editor/react';
+import { useTheme } from '../../hooks/useTheme';
 
 // Use Monaco's editor type from the package
 type IStandaloneCodeEditor = Parameters<OnMount>[0];
@@ -58,6 +59,16 @@ export default function SqlEditor({
 }: SqlEditorProps) {
   const editorRef = useRef<IStandaloneCodeEditor | null>(null);
   const monacoRef = useRef<Monaco | null>(null);
+  const { isDark } = useTheme();
+
+  // Compute effective Monaco theme: respect explicit hc-black choice,
+  // otherwise sync with global dark mode
+  const effectiveTheme = useMemo(() => {
+    if (settings.theme === 'hc-black') {
+      return 'hc-black';
+    }
+    return isDark ? 'vs-dark' : 'vs-light';
+  }, [isDark, settings.theme]);
 
   const handleEditorDidMount: OnMount = useCallback(
     (editor, monaco) => {
@@ -259,7 +270,7 @@ export default function SqlEditor({
             strings: false,
           },
         }}
-        theme={settings.theme}
+        theme={effectiveTheme}
       />
     </div>
   );

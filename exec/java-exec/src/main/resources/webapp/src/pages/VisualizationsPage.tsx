@@ -163,7 +163,7 @@ function MiniVizPreview({ viz }: { viz: Visualization }) {
     <div
       style={{
         height: 140,
-        backgroundColor: '#fff',
+        backgroundColor: 'var(--color-bg-container)',
         overflow: 'hidden',
       }}
     >
@@ -544,7 +544,7 @@ export default function VisualizationsPage() {
             {showSql && viewingViz.sql && (
               <pre
                 style={{
-                  background: '#f5f5f5',
+                  background: 'var(--color-bg-elevated)',
                   padding: 12,
                   borderRadius: 4,
                   marginBottom: 16,
@@ -552,7 +552,7 @@ export default function VisualizationsPage() {
                   overflow: 'auto',
                   fontFamily: 'monospace',
                   fontSize: 12,
-                  border: '1px solid #e8e8e8',
+                  border: '1px solid var(--color-border)',
                 }}
               >
                 {viewingViz.sql}
@@ -570,7 +570,7 @@ export default function VisualizationsPage() {
             )}
 
             {/* Chart rendering */}
-            <div style={{ border: '1px solid #e8e8e8', borderRadius: 8, overflow: 'hidden' }}>
+            <div style={{ border: '1px solid var(--color-border)', borderRadius: 8, overflow: 'hidden' }}>
               <ChartPreview
                 chartType={viewingViz.chartType as ChartType}
                 config={viewingViz.config}

@@ -62,8 +62,8 @@ export default function ProjectQueryPage() {
       alignItems: 'center',
       gap: 8,
       padding: '6px 16px',
-      borderBottom: '1px solid #f0f0f0',
-      background: '#fafafa',
+      borderBottom: '1px solid var(--color-border-secondary)',
+      background: 'var(--color-bg-elevated)',
     }}>
       <Button
         type="text"

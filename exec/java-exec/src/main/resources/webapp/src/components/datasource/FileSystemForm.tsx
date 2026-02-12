@@ -387,7 +387,7 @@ export default function FileSystemForm({ config, onChange, onValidationChange, p
       Object.entries(fmts).map(([name, cfg]) => ({
         key: name,
         name,
-        type: (cfg as any).type || 'text',
+        type: (cfg as Record<string, unknown>).type as string || 'text',
         config: cfg as Record<string, unknown>
       }))
     );
@@ -471,7 +471,7 @@ export default function FileSystemForm({ config, onChange, onValidationChange, p
 
       onChange(updated);
     },
-    [config, onChange, onValidationChange]
+    [config, onChange]
   );
 
   // -----------------------------------------------------------------------
