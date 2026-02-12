@@ -58,7 +58,8 @@ import html2canvas from 'html2canvas';
 import { jsPDF } from 'jspdf';
 import { getDashboard, updateDashboard, getFavorites, toggleFavorite, uploadImage } from '../api/dashboards';
 import { getVisualizations } from '../api/visualizations';
-import { DashboardPanelCard, DashboardSettingsDrawer, DEFAULT_THEME } from '../components/dashboard';
+import { DashboardPanelCard, DashboardSettingsDrawer, DEFAULT_THEME, DARK_THEME } from '../components/dashboard';
+import { useTheme } from '../hooks/useTheme';
 import type { DashboardPanel, DashboardTab, DashboardTheme } from '../types';
 
 import 'react-grid-layout/css/styles.css';
@@ -83,10 +84,14 @@ export default function DashboardViewPage() {
   const queryClient = useQueryClient();
   const gridRef = useRef<HTMLDivElement>(null);
 
+  const { isDark } = useTheme();
+  const globalDefaultTheme = isDark ? DARK_THEME : DEFAULT_THEME;
+
   const [editMode, setEditMode] = useState(false);
   const [panels, setPanels] = useState<DashboardPanel[]>([]);
   const [tabs, setTabs] = useState<DashboardTab[]>([]);
-  const [theme, setTheme] = useState<DashboardTheme>(DEFAULT_THEME);
+  const [theme, setTheme] = useState<DashboardTheme>(globalDefaultTheme);
+  const [hasCustomTheme, setHasCustomTheme] = useState(false);
   const [panelsInitialized, setPanelsInitialized] = useState(false);
   const [refreshInterval, setRefreshInterval] = useState(0);
   const [addPanelVisible, setAddPanelVisible] = useState(false);
@@ -135,11 +140,20 @@ export default function DashboardViewPage() {
     if (dashboard && !panelsInitialized) {
       setPanels(dashboard.panels || []);
       setTabs(dashboard.tabs || []);
-      setTheme(dashboard.theme || DEFAULT_THEME);
+      const savedTheme = dashboard.theme;
+      setHasCustomTheme(!!savedTheme);
+      setTheme(savedTheme || globalDefaultTheme);
       setRefreshInterval(dashboard.refreshInterval || 0);
       setPanelsInitialized(true);
     }
-  }, [dashboard, panelsInitialized]);
+  }, [dashboard, panelsInitialized, globalDefaultTheme]);
+
+  // When global dark mode changes, update dashboards that use the default theme
+  useEffect(() => {
+    if (panelsInitialized && !hasCustomTheme) {
+      setTheme(globalDefaultTheme);
+    }
+  }, [globalDefaultTheme, panelsInitialized, hasCustomTheme]);
 
   // Fetch available visualizations for "Add panel" modal
   const { data: visualizations } = useQuery({
@@ -283,12 +297,13 @@ export default function DashboardViewPage() {
       if (dashboard) {
         setPanels(dashboard.panels || []);
         setTabs(dashboard.tabs || []);
-        setTheme(dashboard.theme || DEFAULT_THEME);
+        setTheme(dashboard.theme || globalDefaultTheme);
+        setHasCustomTheme(!!dashboard.theme);
         setRefreshInterval(dashboard.refreshInterval || 0);
       }
     }
     setEditMode(!editMode);
-  }, [editMode, dashboard]);
+  }, [editMode, dashboard, globalDefaultTheme]);
 
   // Save and exit edit mode
   const handleSave = useCallback(() => {
@@ -449,7 +464,7 @@ export default function DashboardViewPage() {
             {tab.name}
             {editMode && (
               <CloseOutlined
-                style={{ marginLeft: 8, fontSize: 10, color: '#999' }}
+                style={{ marginLeft: 8, fontSize: 10, color: 'var(--color-text-tertiary)' }}
                 onClick={(e) => {
                   e.stopPropagation();
                   handleDeleteTab(tab.id);
@@ -635,7 +650,7 @@ export default function DashboardViewPage() {
         open={settingsOpen}
         theme={theme}
         onClose={() => setSettingsOpen(false)}
-        onThemeChange={setTheme}
+        onThemeChange={(t) => { setTheme(t); setHasCustomTheme(true); }}
       />
 
       {/* Add Panel Modal */}
