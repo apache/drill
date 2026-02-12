@@ -33,4 +33,4 @@ target/
 tools/venv/
 venv/
 .vscode/*
-exec/java-exec/src/main/resources/webapp/
+/exec/java-exec/src/main/resources/python/.venv/
