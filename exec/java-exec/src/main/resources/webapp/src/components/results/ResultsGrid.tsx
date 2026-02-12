@@ -17,7 +17,7 @@
  */
 import { useMemo, useCallback, useRef, useState } from 'react';
 import { AgGridReact } from 'ag-grid-react';
-import { Button, Space, Dropdown, Typography, Alert, Empty, Modal, Select } from 'antd';
+import { Button, Space, Dropdown, Typography, Alert, Empty, Modal, Select, Checkbox, Divider } from 'antd';
 import {
   DownloadOutlined,
   CopyOutlined,
@@ -25,11 +25,15 @@ import {
   ExpandOutlined,
   SettingOutlined,
   RobotOutlined,
+  UnorderedListOutlined,
+  SortAscendingOutlined,
 } from '@ant-design/icons';
-import type { ColDef, GridReadyEvent, GridApi } from 'ag-grid-community';
+import type { ColDef, GridReadyEvent, GridApi, SortModelItem } from 'ag-grid-community';
 import type { MenuProps } from 'antd';
 import type { QueryResult, QueryError } from '../../types';
 import JsonCellRenderer from './JsonCellRenderer';
+import CustomHeader from './CustomHeader';
+import type { ColumnTransformation } from '../../utils/sqlTransformations';
 
 import 'ag-grid-community/styles/ag-grid.css';
 import 'ag-grid-community/styles/ag-theme-alpine.css';
@@ -53,6 +57,7 @@ interface ResultsGridProps {
   onResultsSettingsChange?: (settings: ResultsSettings) => void;
   onFixWithProspector?: () => void;
   prospectorAvailable?: boolean;
+  onTransformColumn?: (columnName: string, transformation: ColumnTransformation) => void;
 }
 
 export default function ResultsGrid({
@@ -64,10 +69,13 @@ export default function ResultsGrid({
   onResultsSettingsChange,
   onFixWithProspector,
   prospectorAvailable,
+  onTransformColumn,
 }: ResultsGridProps) {
   const gridRef = useRef<AgGridReact>(null);
   const gridApiRef = useRef<GridApi | null>(null);
   const [settingsModalOpen, setSettingsModalOpen] = useState(false);
+  const [columnManagerOpen, setColumnManagerOpen] = useState(false);
+  const [sortManagerOpen, setSortManagerOpen] = useState(false);
 
   const timestampFormat = resultsSettings?.timestampDisplayFormat ?? DEFAULT_RESULTS_SETTINGS.timestampDisplayFormat;
 
@@ -88,6 +96,13 @@ export default function ResultsGrid({
         minWidth: 100,
         filter: config.filter,
         filterParams: config.filterParams,
+        headerComponent: CustomHeader as any,
+        headerComponentParams: {
+          onTransformColumn,
+          rowData: results.rows,
+          metadata: metadataType,
+          columnIndex: index,
+        },
         ...(config.filterValueGetter ? { filterValueGetter: config.filterValueGetter } : {}),
       };
 
@@ -112,7 +127,7 @@ export default function ResultsGrid({
 
       return colDef;
     });
-  }, [results, timestampFormat]);
+  }, [results, timestampFormat, onTransformColumn]);
 
   // Convert row data — stringify nested objects/arrays so AG Grid doesn't show [object Object]
   const rowData = useMemo(() => {
@@ -131,8 +146,30 @@ export default function ResultsGrid({
     });
   }, [results]);
 
+  const saveColumnState = useCallback(() => {
+    const state = gridApiRef.current?.getColumnState();
+    if (state) {
+      try {
+        localStorage.setItem('drill-grid-column-state', JSON.stringify(state));
+      } catch {
+        // Ignore storage errors
+      }
+    }
+  }, []);
+
   const onGridReady = useCallback((params: GridReadyEvent) => {
     gridApiRef.current = params.api;
+
+    // Restore saved column state
+    try {
+      const savedState = localStorage.getItem('drill-grid-column-state');
+      if (savedState) {
+        params.columnApi.applyColumnState({ state: JSON.parse(savedState), applyOrder: true });
+      }
+    } catch {
+      // Ignore storage errors
+    }
+
     params.api.sizeColumnsToFit();
   }, []);
 
@@ -173,6 +210,28 @@ export default function ResultsGrid({
       console.error('Failed to copy:', err);
     }
   }, [results]);
+
+  const handleShowAllColumns = useCallback(() => {
+    if (gridApiRef.current && results?.columns) {
+      results.columns.forEach((col) => {
+        (gridApiRef.current as any)?.columnApi?.setColumnVisible(col, true);
+      });
+      saveColumnState();
+    }
+  }, [results?.columns, saveColumnState]);
+
+  // Sort manager state
+  const getSortModel = useCallback(
+    () => (gridApiRef.current as any)?.getSortModel?.() || [],
+    []
+  );
+
+  const handleClearSort = useCallback(() => {
+    if (gridApiRef.current) {
+      (gridApiRef.current as any).setSortModel?.([]);
+      saveColumnState();
+    }
+  }, [saveColumnState]);
 
   const exportMenuItems: MenuProps['items'] = [
     {
@@ -272,6 +331,20 @@ export default function ResultsGrid({
             Create Chart
           </Button>
           <Button
+            icon={<UnorderedListOutlined />}
+            onClick={() => setColumnManagerOpen(true)}
+            size="small"
+          >
+            Columns
+          </Button>
+          <Button
+            icon={<SortAscendingOutlined />}
+            onClick={() => setSortManagerOpen(true)}
+            size="small"
+          >
+            Sort
+          </Button>
+          <Button
             icon={<ExpandOutlined />}
             onClick={() => gridApiRef.current?.sizeColumnsToFit()}
             size="small"
@@ -295,6 +368,9 @@ export default function ResultsGrid({
           columnDefs={columnDefs}
           rowData={rowData}
           onGridReady={onGridReady}
+          onColumnVisible={() => saveColumnState()}
+          onColumnPinned={() => saveColumnState()}
+          onSortChanged={() => saveColumnState()}
           defaultColDef={{
             sortable: true,
             resizable: true,
@@ -342,6 +418,84 @@ export default function ResultsGrid({
             ]}
           />
         </div>
+      </Modal>
+
+      {/* Column Manager Modal */}
+      <Modal
+        title="Manage Columns"
+        open={columnManagerOpen}
+        onCancel={() => setColumnManagerOpen(false)}
+        onOk={() => setColumnManagerOpen(false)}
+        width={400}
+      >
+        <Space direction="vertical" style={{ width: '100%' }}>
+          <Button
+            block
+            onClick={handleShowAllColumns}
+          >
+            Show All Columns
+          </Button>
+          <Divider style={{ margin: '8px 0' }} />
+          {results?.columns && (
+            <div style={{ maxHeight: 400, overflowY: 'auto' }}>
+              {results.columns.map((col) => (
+                <div
+                  key={col}
+                  style={{ marginBottom: 8 }}
+                >
+                  <Checkbox
+                    checked={(gridApiRef.current as any)?.columnApi?.getColumn(col)?.isVisible?.() !== false}
+                    onChange={(e) => {
+                      (gridApiRef.current as any)?.columnApi?.setColumnVisible(col, e.target.checked);
+                      saveColumnState();
+                    }}
+                  >
+                    {col}
+                  </Checkbox>
+                </div>
+              ))}
+            </div>
+          )}
+        </Space>
+      </Modal>
+
+      {/* Sort Manager Modal */}
+      <Modal
+        title="Manage Sorting"
+        open={sortManagerOpen}
+        onCancel={() => setSortManagerOpen(false)}
+        onOk={() => setSortManagerOpen(false)}
+        width={400}
+      >
+        <Space direction="vertical" style={{ width: '100%' }}>
+          <Button
+            block
+            onClick={handleClearSort}
+            danger
+          >
+            Clear All Sorts
+          </Button>
+          <Divider style={{ margin: '8px 0' }} />
+          {getSortModel().length > 0 ? (
+            <div>
+              <Text strong>Current Sort Order:</Text>
+              <div style={{ marginTop: 8 }}>
+                {getSortModel().map((sort: SortModelItem, index: number) => (
+                  <div
+                    key={`${sort.colId}-${index}`}
+                    style={{ marginBottom: 8 }}
+                  >
+                    <Text>
+                      {index + 1}. {sort.colId} ({sort.sort?.toUpperCase()})
+                    </Text>
+                  </div>
+                ))}
+              </div>
+            </div>
+          ) : (
+            <Empty description="No sorts applied" />
+          )}
+        </Space>
       </Modal>
     </div>
   );
