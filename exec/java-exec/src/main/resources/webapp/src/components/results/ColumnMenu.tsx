@@ -33,7 +33,7 @@ import {
   Empty,
 } from 'antd';
 import { DeleteOutlined, PushpinOutlined } from '@ant-design/icons';
-import type { ColumnApi } from 'ag-grid-community';
+import type { GridApi } from 'ag-grid-community';
 import {
   calculateColumnStats,
   type ColumnTransformation,
@@ -42,14 +42,14 @@ import {
 export interface ColumnMenuProps {
   columnName: string;
   rowData: Record<string, unknown>[];
-  columnApi?: ColumnApi;
+  gridApi?: GridApi;
   onTransformColumn?: (columnName: string, transformation: ColumnTransformation) => void;
 }
 
 export default function ColumnMenu({
   columnName,
   rowData,
-  columnApi,
+  gridApi,
   onTransformColumn,
 }: ColumnMenuProps) {
   const [truncateLength, setTruncateLength] = useState(50);
@@ -65,19 +65,19 @@ export default function ColumnMenu({
 
   // Handle column visibility
   const handleHideColumn = useCallback(() => {
-    if (columnApi && columnName) {
-      columnApi.setColumnVisible(columnName, false);
+    if (gridApi && columnName) {
+      gridApi.setColumnsVisible([columnName], false);
     }
-  }, [columnApi, columnName]);
+  }, [gridApi, columnName]);
 
   // Handle column pinning
   const handlePinColumn = useCallback(
     (pinTo: 'left' | 'right' | null) => {
-      if (columnApi && columnName) {
-        columnApi.setColumnPinned(columnName, pinTo);
+      if (gridApi && columnName) {
+        gridApi.setColumnsPinned([columnName], pinTo);
       }
     },
-    [columnApi, columnName]
+    [gridApi, columnName]
   );
 
   // Get top 10 values

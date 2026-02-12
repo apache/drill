@@ -16,7 +16,7 @@
  * limitations under the License.
  */
 import { useState, useCallback } from 'react';
-import { Button, Select, InputNumber, Space, Tooltip, Dropdown, Switch, Typography, Modal, Slider, Divider } from 'antd';
+import { Button, Select, InputNumber, Space, Tooltip, Dropdown, Switch, Typography, Modal, Slider, Divider, Tabs } from 'antd';
 import {
   PlayCircleOutlined,
   StopOutlined,
@@ -28,9 +28,12 @@ import {
   RobotOutlined,
   BulbOutlined,
   BugOutlined,
+  ThunderboltOutlined,
 } from '@ant-design/icons';
 import type { MenuProps } from 'antd';
 import type { EditorSettings } from './SqlEditor';
+import type { ResultsSettings } from '../results/ResultsGrid';
+import { DEFAULT_RESULTS_SETTINGS } from '../results/ResultsGrid';
 
 const { Text } = Typography;
 
@@ -48,8 +51,11 @@ interface QueryToolbarProps {
   onAutoLimitChange?: (limit: number | null) => void;
   editorSettings?: EditorSettings;
   onEditorSettingsChange?: (settings: EditorSettings) => void;
+  resultsSettings?: ResultsSettings;
+  onResultsSettingsChange?: (settings: ResultsSettings) => void;
   onShowHistory?: () => void;
   onExplainQuery?: () => void;
+  onOptimizeQuery?: () => void;
   onFixError?: () => void;
   onToggleProspector?: () => void;
   hasSql?: boolean;
@@ -72,8 +78,11 @@ export default function QueryToolbar({
   onAutoLimitChange,
   editorSettings,
   onEditorSettingsChange,
+  resultsSettings,
+  onResultsSettingsChange,
   onShowHistory,
   onExplainQuery,
+  onOptimizeQuery,
   onFixError,
   onToggleProspector,
   hasSql,
@@ -113,13 +122,6 @@ export default function QueryToolbar({
       icon: <HistoryOutlined />,
       label: 'Query History',
       onClick: onShowHistory,
-    },
-    { type: 'divider' },
-    {
-      key: 'settings',
-      icon: <SettingOutlined />,
-      label: 'Editor Settings',
-      onClick: () => setSettingsModalOpen(true),
     },
   ];
 
@@ -196,6 +198,16 @@ export default function QueryToolbar({
           </Button>
         </Dropdown>
 
+        {/* Settings */}
+        <Tooltip title="Editor & Results Settings">
+          <Button
+            icon={<SettingOutlined />}
+            onClick={() => setSettingsModalOpen(true)}
+          >
+            Settings
+          </Button>
+        </Tooltip>
+
         {/* AI Actions */}
         {prospectorAvailable && (
           <>
@@ -207,6 +219,16 @@ export default function QueryToolbar({
                   onClick={onExplainQuery}
                 >
                   Explain
+                </Button>
+              </Tooltip>
+            )}
+            {hasSql && (
+              <Tooltip title="Optimize this query with Prospector">
+                <Button
+                  icon={<ThunderboltOutlined />}
+                  onClick={onOptimizeQuery}
+                >
+                  Optimize
                 </Button>
               </Tooltip>
             )}
@@ -248,86 +270,124 @@ export default function QueryToolbar({
         )}
       </div>
 
-      {/* Editor Settings Modal */}
-      {editorSettings && (
-        <Modal
-          title="Editor Settings"
-          open={settingsModalOpen}
-          onCancel={() => setSettingsModalOpen(false)}
-          footer={null}
-          width={400}
-        >
-          <Space direction="vertical" style={{ width: '100%' }} size="middle">
-            <div>
-              <Text strong>Theme</Text>
-              <Select
-                style={{ width: '100%', marginTop: 4 }}
-                value={editorSettings.theme}
-                onChange={(value) =>
-                  onEditorSettingsChange?.({ ...editorSettings, theme: value })
-                }
-                options={[
-                  { value: 'vs-light', label: 'Light' },
-                  { value: 'vs-dark', label: 'Dark' },
-                  { value: 'hc-black', label: 'High Contrast' },
-                ]}
-              />
-            </div>
-            <div>
-              <Text strong>Font Size: {editorSettings.fontSize}px</Text>
-              <Slider
-                min={10}
-                max={24}
-                value={editorSettings.fontSize}
-                onChange={(value) =>
-                  onEditorSettingsChange?.({ ...editorSettings, fontSize: value })
-                }
-              />
-            </div>
-            <div>
-              <Text strong>Tab Size</Text>
-              <Select
-                style={{ width: '100%', marginTop: 4 }}
-                value={editorSettings.tabSize}
-                onChange={(value) =>
-                  onEditorSettingsChange?.({ ...editorSettings, tabSize: value })
-                }
-                options={[
-                  { value: 2, label: '2 spaces' },
-                  { value: 4, label: '4 spaces' },
-                ]}
-              />
-            </div>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-              <Text strong>Word Wrap</Text>
-              <Switch
-                checked={editorSettings.wordWrap}
-                onChange={(checked) =>
-                  onEditorSettingsChange?.({ ...editorSettings, wordWrap: checked })
-                }
-              />
-            </div>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-              <Text strong>Minimap</Text>
-              <Switch
-                checked={editorSettings.minimap}
-                onChange={(checked) =>
-                  onEditorSettingsChange?.({ ...editorSettings, minimap: checked })
-                }
-              />
-            </div>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-              <Text strong>Line Numbers</Text>
-              <Switch
-                checked={editorSettings.lineNumbers}
-                onChange={(checked) =>
-                  onEditorSettingsChange?.({ ...editorSettings, lineNumbers: checked })
-                }
-              />
-            </div>
-          </Space>
-        </Modal>
-      )}
+      {/* Unified Settings Modal */}
+      <Modal
+        title="Settings"
+        open={settingsModalOpen}
+        onCancel={() => setSettingsModalOpen(false)}
+        footer={null}
+        width={480}
+      >
+        <Tabs
+          items={[
+            {
+              key: 'editor',
+              label: 'Editor',
+              children: editorSettings ? (
+                <Space direction="vertical" style={{ width: '100%' }} size="middle">
+                  <div>
+                    <Text strong>Theme</Text>
+                    <Select
+                      style={{ width: '100%', marginTop: 4 }}
+                      value={editorSettings.theme}
+                      onChange={(value) =>
+                        onEditorSettingsChange?.({ ...editorSettings, theme: value })
+                      }
+                      options={[
+                        { value: 'vs-light', label: 'Light' },
+                        { value: 'vs-dark', label: 'Dark' },
+                        { value: 'hc-black', label: 'High Contrast' },
+                      ]}
+                    />
+                  </div>
+                  <div>
+                    <Text strong>Font Size: {editorSettings.fontSize}px</Text>
+                    <Slider
+                      min={10}
+                      max={24}
+                      value={editorSettings.fontSize}
+                      onChange={(value) =>
+                        onEditorSettingsChange?.({ ...editorSettings, fontSize: value })
+                      }
+                    />
+                  </div>
+                  <div>
+                    <Text strong>Tab Size</Text>
+                    <Select
+                      style={{ width: '100%', marginTop: 4 }}
+                      value={editorSettings.tabSize}
+                      onChange={(value) =>
+                        onEditorSettingsChange?.({ ...editorSettings, tabSize: value })
+                      }
+                      options={[
+                        { value: 2, label: '2 spaces' },
+                        { value: 4, label: '4 spaces' },
+                      ]}
+                    />
+                  </div>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <Text strong>Word Wrap</Text>
+                    <Switch
+                      checked={editorSettings.wordWrap}
+                      onChange={(checked) =>
+                        onEditorSettingsChange?.({ ...editorSettings, wordWrap: checked })
+                      }
+                    />
+                  </div>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <Text strong>Minimap</Text>
+                    <Switch
+                      checked={editorSettings.minimap}
+                      onChange={(checked) =>
+                        onEditorSettingsChange?.({ ...editorSettings, minimap: checked })
+                      }
+                    />
+                  </div>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <Text strong>Line Numbers</Text>
+                    <Switch
+                      checked={editorSettings.lineNumbers}
+                      onChange={(checked) =>
+                        onEditorSettingsChange?.({ ...editorSettings, lineNumbers: checked })
+                      }
+                    />
+                  </div>
+                </Space>
+              ) : null,
+            },
+            {
+              key: 'results',
+              label: 'Results',
+              children: (
+                <Space direction="vertical" style={{ width: '100%' }} size="middle">
+                  <div>
+                    <Text strong style={{ display: 'block', marginBottom: 8 }}>
+                      Timestamp Display Format
+                    </Text>
+                    <Select
+                      value={resultsSettings?.timestampDisplayFormat ?? DEFAULT_RESULTS_SETTINGS.timestampDisplayFormat}
+                      onChange={(value) => {
+                        onResultsSettingsChange?.({
+                          ...resultsSettings,
+                          ...DEFAULT_RESULTS_SETTINGS,
+                          timestampDisplayFormat: value,
+                        });
+                      }}
+                      style={{ width: '100%' }}
+                      options={[
+                        { value: 'locale', label: 'Locale (browser default)' },
+                        { value: 'iso', label: 'ISO 8601' },
+                        { value: 'utc', label: 'UTC' },
+                        { value: 'epoch', label: 'Epoch (raw milliseconds)' },
+                      ]}
+                    />
+                  </div>
+                </Space>
+              ),
+            },
+          ]}
+        />
+      </Modal>
     </div>
   );
 }
