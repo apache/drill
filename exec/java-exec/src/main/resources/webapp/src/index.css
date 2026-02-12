@@ -15,6 +15,51 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
+/* ==================== CSS Custom Properties (Theme) ==================== */
+
+:root {
+  --color-bg-layout: #f0f2f5;
+  --color-bg-container: #ffffff;
+  --color-bg-elevated: #fafafa;
+  --color-bg-hover: #e6f4ff;
+  --color-border: #e8e8e8;
+  --color-border-secondary: #f0f0f0;
+  --color-text: #333333;
+  --color-text-secondary: #666666;
+  --color-text-tertiary: #999999;
+  --color-bg-overlay: rgba(255, 255, 255, 0.8);
+  --color-bg-assistant: #f5f5f5;
+  --color-bg-code-inline: rgba(0, 0, 0, 0.06);
+  --color-bg-tool-json: #f8f8f8;
+  --json-key-color: #881391;
+  --json-string-color: #1a1aa6;
+  --json-number-color: #098658;
+  --json-bool-color: #0451a5;
+}
+
+html.dark {
+  --color-bg-layout: #141414;
+  --color-bg-container: #1f1f1f;
+  --color-bg-elevated: #262626;
+  --color-bg-hover: #111a2c;
+  --color-border: #424242;
+  --color-border-secondary: #303030;
+  --color-text: #e0e0e0;
+  --color-text-secondary: #999999;
+  --color-text-tertiary: #666666;
+  --color-bg-overlay: rgba(0, 0, 0, 0.6);
+  --color-bg-assistant: #2a2a2a;
+  --color-bg-code-inline: rgba(255, 255, 255, 0.1);
+  --color-bg-tool-json: #1a1a1a;
+  --json-key-color: #c792ea;
+  --json-string-color: #c3e88d;
+  --json-number-color: #f78c6c;
+  --json-bool-color: #82aaff;
+}
+
+/* ==================== Reset & Base ==================== */
+
 * {
   margin: 0;
   padding: 0;
@@ -30,9 +75,13 @@ body {
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  background: var(--color-bg-layout);
+  color: var(--color-text);
+  transition: background-color 0.2s, color 0.2s;
 }
 
-/* SQL Lab specific styles */
+/* ==================== SQL Lab Layout ==================== */
+
 .sqllab-container {
   display: flex;
   flex-direction: column;
@@ -51,8 +100,8 @@ body {
   width: 280px;
   min-width: 200px;
   max-width: 400px;
-  border-right: 1px solid #e8e8e8;
-  background: #fafafa;
+  border-right: 1px solid var(--color-border);
+  background: var(--color-bg-elevated);
   overflow: auto;
   resize: horizontal;
   transition: width 0.2s ease, min-width 0.2s ease;
@@ -72,17 +121,17 @@ body {
   display: flex;
   align-items: center;
   justify-content: center;
-  background: #fafafa;
-  border-right: 1px solid #e8e8e8;
+  background: var(--color-bg-elevated);
+  border-right: 1px solid var(--color-border);
   cursor: pointer;
   flex-shrink: 0;
   font-size: 14px;
-  color: #666;
+  color: var(--color-text-secondary);
   transition: background 0.2s, color 0.2s;
 }
 
 .sidebar-toggle:hover {
-  background: #e6f4ff;
+  background: var(--color-bg-hover);
   color: #1890ff;
 }
 
@@ -102,7 +151,7 @@ body {
 
 .sqllab-resize-handle {
   height: 5px;
-  background: #e8e8e8;
+  background: var(--color-border);
   cursor: row-resize;
   flex-shrink: 0;
   transition: background 0.2s;
@@ -122,8 +171,8 @@ body {
   transform: translate(-50%, -50%);
   width: 30px;
   height: 3px;
-  border-top: 1px solid #999;
-  border-bottom: 1px solid #999;
+  border-top: 1px solid var(--color-text-tertiary);
+  border-bottom: 1px solid var(--color-text-tertiary);
 }
 
 .sqllab-resize-handle:hover::after,
@@ -146,13 +195,30 @@ body {
   min-height: 0;
 }
 
-/* AG Grid styles */
+/* ==================== AG Grid Styles ==================== */
+
 .ag-theme-alpine {
-  --ag-header-background-color: #f5f5f5;
-  --ag-odd-row-background-color: #fafafa;
+  --ag-header-background-color: var(--color-bg-elevated);
+  --ag-odd-row-background-color: var(--color-bg-elevated);
 }
 
-/* Schema tree styles */
+html.dark .ag-theme-alpine {
+  --ag-background-color: #1f1f1f;
+  --ag-header-background-color: #2a2a2a;
+  --ag-odd-row-background-color: #262626;
+  --ag-row-hover-color: #303030;
+  --ag-selected-row-background-color: #111a2c;
+  --ag-range-selection-background-color: rgba(24, 144, 255, 0.2);
+  --ag-border-color: #424242;
+  --ag-header-foreground-color: #e0e0e0;
+  --ag-foreground-color: #e0e0e0;
+  --ag-secondary-foreground-color: #999;
+  --ag-modal-overlay-background-color: rgba(0, 0, 0, 0.5);
+  --ag-input-focus-border-color: #1890ff;
+}
+
+/* ==================== Schema Tree ==================== */
+
 .schema-tree {
   padding: 8px;
 }
@@ -162,27 +228,28 @@ body {
   align-items: center;
 }
 
-/* Query toolbar */
+/* ==================== Toolbars ==================== */
+
 .query-toolbar {
   padding: 8px 16px;
-  background: #fff;
-  border-bottom: 1px solid #e8e8e8;
+  background: var(--color-bg-container);
+  border-bottom: 1px solid var(--color-border);
   display: flex;
   align-items: center;
   gap: 12px;
 }
 
-/* Results toolbar */
 .results-toolbar {
   padding: 8px 16px;
-  background: #fff;
-  border-bottom: 1px solid #e8e8e8;
+  background: var(--color-bg-container);
+  border-bottom: 1px solid var(--color-border);
   display: flex;
   align-items: center;
   justify-content: space-between;
 }
 
-/* JSON cell renderer in results grid */
+/* ==================== JSON Cell Renderer ==================== */
+
 .json-cell {
   display: flex;
   align-items: center;
@@ -196,7 +263,7 @@ body {
   text-overflow: ellipsis;
   white-space: nowrap;
   flex: 1;
-  color: #595959;
+  color: var(--color-text-secondary);
   font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, monospace;
   font-size: 12px;
 }
@@ -215,8 +282,8 @@ body {
 }
 
 .json-viewer {
-  background: #fafafa;
-  border: 1px solid #e8e8e8;
+  background: var(--color-bg-elevated);
+  border: 1px solid var(--color-border);
   border-radius: 4px;
   padding: 12px 16px;
   font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, monospace;
@@ -228,7 +295,8 @@ body {
   margin: 0;
 }
 
-/* Resizable panels */
+/* ==================== Resizable Panels ==================== */
+
 .resize-handle {
   width: 4px;
   background: transparent;
@@ -240,7 +308,8 @@ body {
   background: #1890ff;
 }
 
-/* Tab rename input */
+/* ==================== Tab Rename ==================== */
+
 .tab-rename-input {
   border: 1px solid #1890ff;
   border-radius: 2px;
@@ -249,17 +318,19 @@ body {
   line-height: 20px;
   width: 120px;
   outline: none;
-  background: #fff;
+  background: var(--color-bg-container);
+  color: var(--color-text);
 }
 
-/* Loading overlay */
+/* ==================== Loading Overlay ==================== */
+
 .loading-overlay {
   position: absolute;
   top: 0;
   left: 0;
   right: 0;
   bottom: 0;
-  background: rgba(255, 255, 255, 0.8);
+  background: var(--color-bg-overlay);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -279,21 +350,21 @@ body {
 /* Dashboard toolbar */
 .dashboard-toolbar {
   padding: 12px 24px;
-  background: #fff;
-  border-bottom: 1px solid #e8e8e8;
+  background: var(--color-bg-container);
+  border-bottom: 1px solid var(--color-border);
   display: flex;
   align-items: center;
   justify-content: space-between;
   flex-shrink: 0;
 }
 
-/* Dashboard grid container */
+/* Dashboard grid container — uses dashboard-specific vars with global fallbacks */
 .dashboard-grid-container {
   flex: 1;
   overflow: auto;
   padding: 12px;
-  background: var(--db-bg, #f0f2f5);
-  color: var(--db-font, #333333);
+  background: var(--db-bg, var(--color-bg-layout));
+  color: var(--db-font, var(--color-text));
 }
 
 /* Dashboard grid layout */
@@ -322,14 +393,14 @@ body {
   height: 100%;
   display: flex;
   flex-direction: column;
-  background: var(--db-panel-bg, #ffffff);
-  border-color: var(--db-panel-border, #e8e8e8);
+  background: var(--db-panel-bg, var(--color-bg-container));
+  border-color: var(--db-panel-border, var(--color-border));
   border-radius: var(--db-panel-radius, 8px);
 }
 
 .dashboard-panel-card.ant-card {
-  background: var(--db-panel-bg, #ffffff);
-  border-color: var(--db-panel-border, #e8e8e8);
+  background: var(--db-panel-bg, var(--color-bg-container));
+  border-color: var(--db-panel-border, var(--color-border));
   border-radius: var(--db-panel-radius, 8px);
 }
 
@@ -343,7 +414,7 @@ body {
   min-height: 36px;
   padding: 0 8px;
   color: var(--db-header, #000000);
-  border-bottom-color: var(--db-panel-border, #f0f0f0);
+  border-bottom-color: var(--db-panel-border, var(--color-border-secondary));
 }
 
 .dashboard-panel-card .ant-card-head-title {
@@ -365,9 +436,9 @@ body {
 .dashboard-panel-footer {
   padding: 4px 0 0;
   margin-top: 4px;
-  border-top: 1px solid var(--db-panel-border, #f0f0f0);
+  border-top: 1px solid var(--db-panel-border, var(--color-border-secondary));
   font-size: 11px;
-  color: var(--db-font, #999);
+  color: var(--db-font, var(--color-text-tertiary));
   opacity: 0.7;
   text-align: right;
 }
@@ -375,7 +446,7 @@ body {
 /* Drag handle */
 .drag-handle {
   cursor: grab;
-  color: #999;
+  color: var(--color-text-tertiary);
   font-size: 14px;
 }
 
@@ -451,8 +522,8 @@ body {
 
 .dashboard-tabs {
   padding: 0 12px;
-  background: var(--db-panel-bg, #fff);
-  border-bottom: 1px solid var(--db-panel-border, #e8e8e8);
+  background: var(--db-panel-bg, var(--color-bg-container));
+  border-bottom: 1px solid var(--db-panel-border, var(--color-border));
   flex-shrink: 0;
 }
 
@@ -472,7 +543,7 @@ body {
   left: 0;
   right: 0;
   bottom: 0;
-  background: rgba(255, 255, 255, 0.8);
+  background: var(--color-bg-overlay);
   z-index: 1000;
   display: flex;
   align-items: center;
@@ -500,8 +571,8 @@ body {
   width: 380px;
   min-width: 300px;
   max-width: 500px;
-  border-left: 1px solid #e8e8e8;
-  background: #fafafa;
+  border-left: 1px solid var(--color-border);
+  background: var(--color-bg-elevated);
   overflow: hidden;
   transition: width 0.2s ease, min-width 0.2s ease;
   display: flex;
@@ -520,17 +591,17 @@ body {
   display: flex;
   align-items: center;
   justify-content: center;
-  background: #fafafa;
-  border-left: 1px solid #e8e8e8;
+  background: var(--color-bg-elevated);
+  border-left: 1px solid var(--color-border);
   cursor: pointer;
   flex-shrink: 0;
   font-size: 14px;
-  color: #666;
+  color: var(--color-text-secondary);
   transition: background 0.2s, color 0.2s;
 }
 
 .prospector-sidebar-toggle:hover {
-  background: #e6f4ff;
+  background: var(--color-bg-hover);
   color: #1890ff;
 }
 
@@ -544,12 +615,12 @@ body {
 
 .prospector-panel-header {
   padding: 12px 16px;
-  border-bottom: 1px solid #e8e8e8;
+  border-bottom: 1px solid var(--color-border);
   display: flex;
   align-items: center;
   justify-content: space-between;
   flex-shrink: 0;
-  background: #fff;
+  background: var(--color-bg-container);
 }
 
 .prospector-panel-title {
@@ -558,7 +629,7 @@ body {
 }
 
 .prospector-panel-footer {
-  border-top: 1px solid #f0f0f0;
+  border-top: 1px solid var(--color-border-secondary);
   flex-shrink: 0;
 }
 
@@ -603,8 +674,8 @@ body {
   justify-content: center;
   font-size: 14px;
   flex-shrink: 0;
-  background: #f0f0f0;
-  color: #666;
+  background: var(--color-border-secondary);
+  color: var(--color-text-secondary);
 }
 
 .prospector-message-user .prospector-message-avatar {
@@ -629,8 +700,8 @@ body {
 }
 
 .prospector-bubble-assistant {
-  background: #f5f5f5;
-  color: #333;
+  background: var(--color-bg-assistant);
+  color: var(--color-text);
   border-bottom-left-radius: 4px;
 }
 
@@ -638,6 +709,12 @@ body {
   background: #fff2f0;
   border: 1px solid #ffccc7;
   color: #cf1322;
+}
+
+html.dark .prospector-bubble-error {
+  background: #2a1215;
+  border-color: #58181c;
+  color: #e84749;
 }
 
 /* Markdown in messages */
@@ -660,7 +737,7 @@ body {
 }
 
 .prospector-message-content code {
-  background: rgba(0, 0, 0, 0.06);
+  background: var(--color-bg-code-inline);
   padding: 1px 4px;
   border-radius: 3px;
   font-size: 12px;
@@ -677,8 +754,8 @@ body {
 
 /* Tool call JSON */
 .prospector-tool-json {
-  background: #f8f8f8;
-  border: 1px solid #e8e8e8;
+  background: var(--color-bg-tool-json);
+  border: 1px solid var(--color-border);
   border-radius: 4px;
   padding: 6px 8px;
   font-size: 11px;
@@ -718,7 +795,7 @@ body {
   width: 6px;
   height: 6px;
   border-radius: 50%;
-  background: #999;
+  background: var(--color-text-tertiary);
   animation: prospector-bounce 1.4s ease-in-out infinite;
 }
 
@@ -734,7 +811,7 @@ body {
 /* Quick actions */
 .prospector-quick-actions {
   padding: 8px 12px;
-  border-top: 1px solid #f0f0f0;
+  border-top: 1px solid var(--color-border-secondary);
 }
 
 /* Chat input */
@@ -765,7 +842,7 @@ body {
 }
 
 .optimize-explanation code {
-  background: rgba(0, 0, 0, 0.06);
+  background: var(--color-bg-code-inline);
   padding: 2px 6px;
   border-radius: 3px;
   font-size: 13px;
@@ -781,4 +858,3 @@ body {
   align-items: center;
   padding: 12px 0;
 }
-
