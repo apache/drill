@@ -28,13 +28,19 @@ import {
   Typography,
   Alert,
   Tooltip,
+  Row,
+  Col,
+  Dropdown,
+  Tag,
+  InputNumber,
 } from 'antd';
 import { PlusOutlined, DeleteOutlined, ApiOutlined, RobotOutlined, QuestionCircleOutlined } from '@ant-design/icons';
 import Markdown from 'react-markdown';
-import type { WorkspaceConfig } from '../../types';
+import type { WorkspaceConfig, FormatRow } from '../../types';
 import { testConnection, TestConnectionResult } from '../../api/storage';
 import { getAiStatus, streamChat } from '../../api/ai';
 import Editor from '@monaco-editor/react';
+import { FORMAT_DEFAULTS, FORMAT_METADATA, type FormatConfig } from '../../data/formatDefaults';
 
 const { Text } = Typography;
 
@@ -235,6 +241,7 @@ interface WorkspaceRow {
   location: string;
   writable: boolean;
   defaultInputFormat?: string;
+  description?: string;
 }
 
 /** Read a string from the Hadoop config map inside the plugin config. */
@@ -249,7 +256,7 @@ export default function FileSystemForm({ config, onChange, onValidationChange, p
   const [fsType, setFsType] = useState<string>(() => detectFsType(connStr));
   const [authMode, setAuthMode] = useState<string>((config.authMode as string) || 'SHARED_USER');
   const [workspaces, setWorkspaces] = useState<WorkspaceRow[]>([]);
-  const [formatsJson, setFormatsJson] = useState<string>('{}');
+  const [formats, setFormats] = useState<FormatRow[]>([]);
   const lastConfigRef = useRef<Record<string, unknown>>(config);
   const initializedRef = useRef(false);
 
@@ -368,13 +375,22 @@ export default function FileSystemForm({ config, onChange, onValidationChange, p
           location: w.location || '/',
           writable: w.writable || false,
           defaultInputFormat: w.defaultInputFormat,
+          description: w.description,
         }))
       );
       initializedRef.current = true;
     }
 
-    const formats = config.formats || {};
-    setFormatsJson(JSON.stringify(formats, null, 2));
+    // Convert formats from config to array
+    const fmts = (config.formats as Record<string, FormatConfig>) || {};
+    setFormats(
+      Object.entries(fmts).map(([name, cfg]) => ({
+        key: name,
+        name,
+        type: (cfg as any).type || 'text',
+        config: cfg as Record<string, unknown>
+      }))
+    );
     lastConfigRef.current = config;
   }, [config]);
 
@@ -387,7 +403,7 @@ export default function FileSystemForm({ config, onChange, onValidationChange, p
       conn: string,
       auth: string,
       ws: WorkspaceRow[],
-      fmtJson: string,
+      fmts: FormatRow[],
       hadoopOverrides?: Record<string, string | undefined>,
       topLevelOverrides?: Record<string, unknown>,
     ) => {
@@ -402,16 +418,20 @@ export default function FileSystemForm({ config, onChange, onValidationChange, p
           if (row.defaultInputFormat) {
             entry.defaultInputFormat = row.defaultInputFormat;
           }
+          if (row.description) {
+            entry.description = row.description;
+          }
           wsMap[row.name] = entry;
         }
       });
 
-      let formats: Record<string, unknown> = {};
-      try {
-        formats = JSON.parse(fmtJson);
-      } catch {
-        formats = config.formats as Record<string, unknown> || {};
-      }
+      // Convert formats array to map
+      const formatsMap: Record<string, unknown> = {};
+      fmts.forEach((row) => {
+        if (row.name) {
+          formatsMap[row.name] = row.config;
+        }
+      });
 
       // Merge hadoop config: preserve existing entries, apply overrides
       const hadoopCfg: Record<string, string> = {
@@ -433,7 +453,7 @@ export default function FileSystemForm({ config, onChange, onValidationChange, p
         connection: conn,
         authMode: auth,
         workspaces: wsMap,
-        formats,
+        formats: formatsMap,
         config: hasHadoopCfg ? hadoopCfg : undefined,
       };
 
@@ -472,7 +492,7 @@ export default function FileSystemForm({ config, onChange, onValidationChange, p
       setOciBucket(parsed.bucket);
       setOciNamespace(parsed.namespace);
     }
-    emitChange(val, authMode, workspaces, formatsJson);
+    emitChange(val, authMode, workspaces, formats);
   };
 
   const handleFsTypeChange = (val: string) => {
@@ -521,13 +541,13 @@ export default function FileSystemForm({ config, onChange, onValidationChange, p
       topLevel.credentialsProvider = null;
       topLevel.oAuthConfig = null;
     }
-    emitChange(newConn, authMode, workspaces, formatsJson, undefined,
+    emitChange(newConn, authMode, workspaces, formats, undefined,
       Object.keys(topLevel).length > 0 ? topLevel : undefined);
   };
 
   const handleAuthModeChange = (val: string) => {
     setAuthMode(val);
-    emitChange(connection, val, workspaces, formatsJson);
+    emitChange(connection, val, workspaces, formats);
   };
 
   // -----------------------------------------------------------------------
@@ -536,28 +556,28 @@ export default function FileSystemForm({ config, onChange, onValidationChange, p
 
   const handleS3AccessKeyChange = (val: string) => {
     setS3AccessKey(val);
-    emitChange(connection, authMode, workspaces, formatsJson, {
+    emitChange(connection, authMode, workspaces, formats, {
       'fs.s3a.access.key': val,
     });
   };
 
   const handleS3SecretKeyChange = (val: string) => {
     setS3SecretKey(val);
-    emitChange(connection, authMode, workspaces, formatsJson, {
+    emitChange(connection, authMode, workspaces, formats, {
       'fs.s3a.secret.key': val,
     });
   };
 
   const handleS3EndpointChange = (val: string) => {
     setS3Endpoint(val);
-    emitChange(connection, authMode, workspaces, formatsJson, {
+    emitChange(connection, authMode, workspaces, formats, {
       'fs.s3a.endpoint': val,
     });
   };
 
   const handleS3DisableCacheChange = (checked: boolean) => {
     setS3DisableCache(checked);
-    emitChange(connection, authMode, workspaces, formatsJson, {
+    emitChange(connection, authMode, workspaces, formats, {
       'fs.s3a.impl.disable.cache': checked ? 'true' : undefined,
     });
   };
@@ -579,20 +599,20 @@ export default function FileSystemForm({ config, onChange, onValidationChange, p
     setAzureAccount(val);
     const newConn = buildAzureConnection(val, azureContainer);
     setConnection(newConn);
-    emitChange(newConn, authMode, workspaces, formatsJson, overrides);
+    emitChange(newConn, authMode, workspaces, formats, overrides);
   };
 
   const handleAzureContainerChange = (val: string) => {
     setAzureContainer(val);
     const newConn = buildAzureConnection(azureAccount, val);
     setConnection(newConn);
-    emitChange(newConn, authMode, workspaces, formatsJson);
+    emitChange(newConn, authMode, workspaces, formats);
   };
 
   const handleAzureAccountKeyChange = (val: string) => {
     setAzureAccountKey(val);
     if (azureAccount) {
-      emitChange(connection, authMode, workspaces, formatsJson, {
+      emitChange(connection, authMode, workspaces, formats, {
         [azureAccountKeyProp(azureAccount)]: val,
       });
     }
@@ -606,47 +626,47 @@ export default function FileSystemForm({ config, onChange, onValidationChange, p
     setOciBucket(val);
     const newConn = buildOciConnection(val, ociNamespace);
     setConnection(newConn);
-    emitChange(newConn, authMode, workspaces, formatsJson);
+    emitChange(newConn, authMode, workspaces, formats);
   };
 
   const handleOciNamespaceChange = (val: string) => {
     setOciNamespace(val);
     const newConn = buildOciConnection(ociBucket, val);
     setConnection(newConn);
-    emitChange(newConn, authMode, workspaces, formatsJson);
+    emitChange(newConn, authMode, workspaces, formats);
   };
 
   const handleOciHostnameChange = (val: string) => {
     setOciHostname(val);
-    emitChange(connection, authMode, workspaces, formatsJson, {
+    emitChange(connection, authMode, workspaces, formats, {
       'fs.oci.client.hostname': val,
     });
   };
 
   const handleOciTenantIdChange = (val: string) => {
     setOciTenantId(val);
-    emitChange(connection, authMode, workspaces, formatsJson, {
+    emitChange(connection, authMode, workspaces, formats, {
       'fs.oci.client.auth.tenantId': val,
     });
   };
 
   const handleOciUserIdChange = (val: string) => {
     setOciUserId(val);
-    emitChange(connection, authMode, workspaces, formatsJson, {
+    emitChange(connection, authMode, workspaces, formats, {
       'fs.oci.client.auth.userId': val,
     });
   };
 
   const handleOciFingerprintChange = (val: string) => {
     setOciFingerprint(val);
-    emitChange(connection, authMode, workspaces, formatsJson, {
+    emitChange(connection, authMode, workspaces, formats, {
       'fs.oci.client.auth.fingerprint': val,
     });
   };
 
   const handleOciPemFilePathChange = (val: string) => {
     setOciPemFilePath(val);
-    emitChange(connection, authMode, workspaces, formatsJson, {
+    emitChange(connection, authMode, workspaces, formats, {
       'fs.oci.client.auth.pemfilepath': val,
     });
   };
@@ -657,28 +677,28 @@ export default function FileSystemForm({ config, onChange, onValidationChange, p
 
   const handleGcpProjectIdChange = (val: string) => {
     setGcpProjectId(val);
-    emitChange(connection, authMode, workspaces, formatsJson, {
+    emitChange(connection, authMode, workspaces, formats, {
       'fs.gs.project.id': val,
     });
   };
 
   const handleGcpServiceAccountEmailChange = (val: string) => {
     setGcpServiceAccountEmail(val);
-    emitChange(connection, authMode, workspaces, formatsJson, {
+    emitChange(connection, authMode, workspaces, formats, {
       'fs.gs.auth.service.account.email': val,
     });
   };
 
   const handleGcpPrivateKeyIdChange = (val: string) => {
     setGcpPrivateKeyId(val);
-    emitChange(connection, authMode, workspaces, formatsJson, {
+    emitChange(connection, authMode, workspaces, formats, {
       'fs.gs.auth.service.account.private.key.id': val,
     });
   };
 
   const handleGcpPrivateKeyChange = (val: string) => {
     setGcpPrivateKey(val);
-    emitChange(connection, authMode, workspaces, formatsJson, {
+    emitChange(connection, authMode, workspaces, formats, {
       'fs.gs.auth.service.account.private.key': val,
     });
   };
@@ -700,14 +720,14 @@ export default function FileSystemForm({ config, onChange, onValidationChange, p
 
   const handleSftpUsernameChange = (val: string) => {
     setSftpUsername(val);
-    emitChange(connection, authMode, workspaces, formatsJson, undefined, {
+    emitChange(connection, authMode, workspaces, formats, undefined, {
       credentialsProvider: buildSftpCredentialsProvider(val, sftpPassword),
     });
   };
 
   const handleSftpPasswordChange = (val: string) => {
     setSftpPassword(val);
-    emitChange(connection, authMode, workspaces, formatsJson, undefined, {
+    emitChange(connection, authMode, workspaces, formats, undefined, {
       credentialsProvider: buildSftpCredentialsProvider(sftpUsername, val),
     });
   };
@@ -746,7 +766,7 @@ export default function FileSystemForm({ config, onChange, onValidationChange, p
       // Switch to token: clear OAuth fields, set token in hadoop config
       setDropboxClientId('');
       setDropboxClientSecret('');
-      emitChange(connection, authMode, workspaces, formatsJson, {
+      emitChange(connection, authMode, workspaces, formats, {
         dropboxAccessToken: dropboxAccessToken,
       }, {
         credentialsProvider: null,
@@ -755,7 +775,7 @@ export default function FileSystemForm({ config, onChange, onValidationChange, p
     } else {
       // Switch to OAuth: clear token from hadoop config, set up OAuth
       setDropboxAccessToken('');
-      emitChange(connection, authMode, workspaces, formatsJson, {
+      emitChange(connection, authMode, workspaces, formats, {
         dropboxAccessToken: undefined,
       }, {
         credentialsProvider: buildDropboxOAuthCredentials(dropboxClientId, dropboxClientSecret),
@@ -766,14 +786,14 @@ export default function FileSystemForm({ config, onChange, onValidationChange, p
 
   const handleDropboxAccessTokenChange = (val: string) => {
     setDropboxAccessToken(val);
-    emitChange(connection, authMode, workspaces, formatsJson, {
+    emitChange(connection, authMode, workspaces, formats, {
       dropboxAccessToken: val,
     });
   };
 
   const handleDropboxClientIdChange = (val: string) => {
     setDropboxClientId(val);
-    emitChange(connection, authMode, workspaces, formatsJson, undefined, {
+    emitChange(connection, authMode, workspaces, formats, undefined, {
       credentialsProvider: buildDropboxOAuthCredentials(val, dropboxClientSecret),
       oAuthConfig: pluginName ? buildDropboxOAuthConfig(pluginName) : null,
     });
@@ -781,7 +801,7 @@ export default function FileSystemForm({ config, onChange, onValidationChange, p
 
   const handleDropboxClientSecretChange = (val: string) => {
     setDropboxClientSecret(val);
-    emitChange(connection, authMode, workspaces, formatsJson, undefined, {
+    emitChange(connection, authMode, workspaces, formats, undefined, {
       credentialsProvider: buildDropboxOAuthCredentials(dropboxClientId, val),
       oAuthConfig: pluginName ? buildDropboxOAuthConfig(pluginName) : null,
     });
@@ -837,7 +857,7 @@ export default function FileSystemForm({ config, onChange, onValidationChange, p
 
   const handleBoxClientIdChange = (val: string) => {
     setBoxClientId(val);
-    emitChange(connection, authMode, workspaces, formatsJson, undefined, {
+    emitChange(connection, authMode, workspaces, formats, undefined, {
       credentialsProvider: buildBoxOAuthCredentials(val, boxClientSecret),
       oAuthConfig: pluginName ? buildBoxOAuthConfig(pluginName) : null,
     });
@@ -845,7 +865,7 @@ export default function FileSystemForm({ config, onChange, onValidationChange, p
 
   const handleBoxClientSecretChange = (val: string) => {
     setBoxClientSecret(val);
-    emitChange(connection, authMode, workspaces, formatsJson, undefined, {
+    emitChange(connection, authMode, workspaces, formats, undefined, {
       credentialsProvider: buildBoxOAuthCredentials(boxClientId, val),
       oAuthConfig: pluginName ? buildBoxOAuthConfig(pluginName) : null,
     });
@@ -966,9 +986,9 @@ export default function FileSystemForm({ config, onChange, onValidationChange, p
       const hasDuplicates = getDuplicateWorkspaceNames(newWorkspaces).length > 0;
       const isValid = fsType === 'classpath' || (hasValidWorkspaces(newWorkspaces) && !hasDuplicates);
       onValidationChange?.(isValid);
-      emitChange(connection, authMode, newWorkspaces, formatsJson);
+      emitChange(connection, authMode, newWorkspaces, formats);
     },
-    [fsType, connection, authMode, formatsJson, emitChange, onValidationChange, hasValidWorkspaces, getDuplicateWorkspaceNames]
+    [fsType, connection, authMode, formats, emitChange, onValidationChange, hasValidWorkspaces, getDuplicateWorkspaceNames]
   );
 
   // Update validation when fsType changes (e.g., switching to/from classpath)
@@ -979,7 +999,7 @@ export default function FileSystemForm({ config, onChange, onValidationChange, p
   }, [fsType, workspaces, hasValidWorkspaces, getDuplicateWorkspaceNames, onValidationChange]);
 
   const addWorkspace = useCallback(() => {
-    const newWorkspace = { key: `ws_${Date.now()}`, name: '', location: '/', writable: false };
+    const newWorkspace = { key: `ws_${Date.now()}`, name: '', location: '/', writable: false, description: '' };
     handleWorkspaceChange([...workspaces, newWorkspace]);
   }, [workspaces, handleWorkspaceChange]);
 
@@ -1071,6 +1091,19 @@ export default function FileSystemForm({ config, onChange, onValidationChange, p
       ),
     },
     {
+      title: 'Description',
+      dataIndex: 'description',
+      key: 'description',
+      render: (_: string | undefined, record: WorkspaceRow) => (
+        <Input
+          size="small"
+          value={record.description || ''}
+          onChange={(e) => updateWorkspace(record.key, 'description', e.target.value)}
+          placeholder="optional description"
+        />
+      ),
+    },
+    {
       title: '',
       key: 'actions',
       width: 40,
@@ -1085,6 +1118,350 @@ export default function FileSystemForm({ config, onChange, onValidationChange, p
       ),
     },
   ], [updateWorkspace, removeWorkspace]);
+
+  // -----------------------------------------------------------------------
+  // Format handlers
+  // -----------------------------------------------------------------------
+
+  const handleFormatChange = useCallback(
+    (newFormats: FormatRow[]) => {
+      setFormats(newFormats);
+      emitChange(connection, authMode, workspaces, newFormats);
+    },
+    [connection, authMode, workspaces, emitChange]
+  );
+
+  const addFormat = useCallback(
+    (formatType: string) => {
+      const defaultConfig = FORMAT_DEFAULTS[formatType];
+      if (!defaultConfig) return;
+
+      const newFormat: FormatRow = {
+        key: `fmt_${Date.now()}`,
+        name: formatType,
+        type: defaultConfig.type,
+        config: { ...defaultConfig }
+      };
+      handleFormatChange([...formats, newFormat]);
+    },
+    [formats, handleFormatChange]
+  );
+
+  const removeFormat = useCallback(
+    (key: string) => {
+      handleFormatChange(formats.filter(f => f.key !== key));
+    },
+    [formats, handleFormatChange]
+  );
+
+  const updateFormat = useCallback(
+    (key: string, field: keyof FormatRow, value: unknown) => {
+      handleFormatChange(
+        formats.map(f => f.key === key ? { ...f, [field]: value } : f)
+      );
+    },
+    [formats, handleFormatChange]
+  );
+
+  const updateFormatProperty = useCallback(
+    (key: string, property: string, value: unknown) => {
+      handleFormatChange(
+        formats.map(f => f.key === key ? {
+          ...f,
+          config: { ...f.config, [property]: value }
+        } : f)
+      );
+    },
+    [formats, handleFormatChange]
+  );
+
+  const getDuplicateFormatNames = useCallback((fmts: FormatRow[]): string[] => {
+    const names = fmts
+      .map(f => f.name.trim())
+      .filter(name => name); // Filter out empty names
+    const seen = new Set<string>();
+    const duplicates = new Set<string>();
+    for (const name of names) {
+      if (seen.has(name)) {
+        duplicates.add(name);
+      }
+      seen.add(name);
+    }
+    return Array.from(duplicates);
+  }, []);
+
+  // -----------------------------------------------------------------------
+  // Format table columns
+  // -----------------------------------------------------------------------
+
+  const formatColumns = useMemo(() => [
+    {
+      title: 'Name',
+      dataIndex: 'name',
+      key: 'name',
+      width: 200,
+      render: (_: string, record: FormatRow) => (
+        <Input
+          size="small"
+          value={record.name}
+          onChange={(e) => updateFormat(record.key, 'name', e.target.value)}
+          placeholder="format name"
+          style={{ width: '100%' }}
+        />
+      ),
+    },
+    {
+      title: 'Type',
+      dataIndex: 'type',
+      key: 'type',
+      width: 100,
+      render: (_: string, record: FormatRow) => (
+        <Tag>{record.type}</Tag>
+      ),
+    },
+    {
+      title: 'Extensions',
+      dataIndex: 'config',
+      key: 'extensions',
+      render: (_: unknown, record: FormatRow) => {
+        const exts = (record.config.extensions as string[]) || [];
+        return <Text type="secondary" style={{ fontSize: 12 }}>{exts.join(', ') || 'N/A'}</Text>;
+      },
+    },
+    {
+      title: '',
+      key: 'actions',
+      width: 50,
+      align: 'center' as const,
+      render: (_: unknown, record: FormatRow) => (
+        <Button
+          type="text"
+          size="small"
+          danger
+          icon={<DeleteOutlined />}
+          onClick={() => removeFormat(record.key)}
+        />
+      ),
+    },
+  ], [updateFormat, removeFormat]);
+
+  // -----------------------------------------------------------------------
+  // Format expandable row renderer
+  // -----------------------------------------------------------------------
+
+  const renderFormatEditForm = useCallback((record: FormatRow) => {
+    const { type, config } = record;
+
+    // Text formats (csv, tsv, psv, csvh, text)
+    if (type === 'text') {
+      return (
+        <Form layout="vertical" size="small" style={{ padding: '16px', maxWidth: 800 }}>
+          <Row gutter={16}>
+            <Col span={12}>
+              <Form.Item label="Extensions">
+                <Select
+                  mode="tags"
+                  value={(config.extensions as string[]) || []}
+                  onChange={(val) => updateFormatProperty(record.key, 'extensions', val)}
+                  placeholder="e.g., csv, txt"
+                  style={{ width: '100%' }}
+                />
+              </Form.Item>
+            </Col>
+            <Col span={6}>
+              <Form.Item label="Field Delimiter">
+                <Input
+                  value={(config.fieldDelimiter as string) || ','}
+                  onChange={(e) => updateFormatProperty(record.key, 'fieldDelimiter', e.target.value)}
+                  maxLength={2}
+                />
+              </Form.Item>
+            </Col>
+            <Col span={6}>
+              <Form.Item label="Quote Character">
+                <Input
+                  value={(config.quote as string) || '"'}
+                  onChange={(e) => updateFormatProperty(record.key, 'quote', e.target.value)}
+                  maxLength={1}
+                />
+              </Form.Item>
+            </Col>
+          </Row>
+          <Row gutter={16}>
+            <Col span={6}>
+              <Form.Item label="Extract Header">
+                <Switch
+                  checked={config.extractHeader as boolean}
+                  onChange={(checked) => updateFormatProperty(record.key, 'extractHeader', checked)}
+                />
+              </Form.Item>
+            </Col>
+            <Col span={6}>
+              <Form.Item label="Skip First Line">
+                <Switch
+                  checked={config.skipFirstLine as boolean}
+                  onChange={(checked) => updateFormatProperty(record.key, 'skipFirstLine', checked)}
+                />
+              </Form.Item>
+            </Col>
+          </Row>
+        </Form>
+      );
+    }
+
+    // JSON format
+    if (type === 'json') {
+      return (
+        <Form layout="vertical" size="small" style={{ padding: '16px', maxWidth: 800 }}>
+          <Row gutter={16}>
+            <Col span={12}>
+              <Form.Item label="Extensions">
+                <Select
+                  mode="tags"
+                  value={(config.extensions as string[]) || ['json']}
+                  onChange={(val) => updateFormatProperty(record.key, 'extensions', val)}
+                  style={{ width: '100%' }}
+                />
+              </Form.Item>
+            </Col>
+          </Row>
+          <Row gutter={16}>
+            <Col span={8}>
+              <Form.Item label="All Text Mode">
+                <Switch
+                  checked={config.allTextMode as boolean}
+                  onChange={(checked) => updateFormatProperty(record.key, 'allTextMode', checked)}
+                />
+              </Form.Item>
+            </Col>
+            <Col span={8}>
+              <Form.Item label="Read Numbers as Double">
+                <Switch
+                  checked={config.readNumbersAsDouble as boolean}
+                  onChange={(checked) => updateFormatProperty(record.key, 'readNumbersAsDouble', checked)}
+                />
+              </Form.Item>
+            </Col>
+            <Col span={8}>
+              <Form.Item label="Skip Malformed Records">
+                <Switch
+                  checked={config.skipMalformedJSONRecords as boolean}
+                  onChange={(checked) => updateFormatProperty(record.key, 'skipMalformedJSONRecords', checked)}
+                />
+              </Form.Item>
+            </Col>
+          </Row>
+        </Form>
+      );
+    }
+
+    // Excel format
+    if (type === 'xlsx' || record.name === 'excel') {
+      return (
+        <Form layout="vertical" size="small" style={{ padding: '16px', maxWidth: 800 }}>
+          <Row gutter={16}>
+            <Col span={12}>
+              <Form.Item label="Extensions">
+                <Select
+                  mode="tags"
+                  value={(config.extensions as string[]) || ['xlsx', 'xls']}
+                  onChange={(val) => updateFormatProperty(record.key, 'extensions', val)}
+                  style={{ width: '100%' }}
+                />
+              </Form.Item>
+            </Col>
+            <Col span={6}>
+              <Form.Item label="Header Row">
+                <InputNumber
+                  value={(config.headerRow as number) || 0}
+                  onChange={(val) => updateFormatProperty(record.key, 'headerRow', val)}
+                  min={0}
+                  style={{ width: '100%' }}
+                />
+              </Form.Item>
+            </Col>
+          </Row>
+          <Row gutter={16}>
+            <Col span={8}>
+              <Form.Item label="Sheet Name">
+                <Input
+                  value={(config.sheetName as string) || ''}
+                  onChange={(e) => updateFormatProperty(record.key, 'sheetName', e.target.value)}
+                  placeholder="Leave empty for first sheet"
+                />
+              </Form.Item>
+            </Col>
+            <Col span={8}>
+              <Form.Item label="All Text Mode">
+                <Switch
+                  checked={config.allTextMode as boolean}
+                  onChange={(checked) => updateFormatProperty(record.key, 'allTextMode', checked)}
+                />
+              </Form.Item>
+            </Col>
+          </Row>
+        </Form>
+      );
+    }
+
+    // XML format
+    if (type === 'xml') {
+      return (
+        <Form layout="vertical" size="small" style={{ padding: '16px', maxWidth: 800 }}>
+          <Row gutter={16}>
+            <Col span={12}>
+              <Form.Item label="Extensions">
+                <Select
+                  mode="tags"
+                  value={(config.extensions as string[]) || ['xml']}
+                  onChange={(val) => updateFormatProperty(record.key, 'extensions', val)}
+                  style={{ width: '100%' }}
+                />
+              </Form.Item>
+            </Col>
+            <Col span={6}>
+              <Form.Item label="Data Level">
+                <InputNumber
+                  value={(config.dataLevel as number) || 1}
+                  onChange={(val) => updateFormatProperty(record.key, 'dataLevel', val)}
+                  min={1}
+                  style={{ width: '100%' }}
+                />
+              </Form.Item>
+            </Col>
+          </Row>
+        </Form>
+      );
+    }
+
+    // Fallback: JSON editor for formats without specific UI
+    return (
+      <div style={{ padding: '16px' }}>
+        <Text type="secondary" style={{ marginBottom: 8, display: 'block' }}>
+          Advanced configuration (JSON editing):
+        </Text>
+        <Editor
+          height="200px"
+          language="json"
+          value={JSON.stringify(config, null, 2)}
+          onChange={(val) => {
+            try {
+              const parsed = JSON.parse(val || '{}');
+              updateFormat(record.key, 'config', parsed);
+            } catch {
+              // Invalid JSON, don't update
+            }
+          }}
+          options={{
+            minimap: { enabled: false },
+            lineNumbers: 'on',
+            scrollBeyondLastLine: false,
+            fontSize: 13,
+          }}
+        />
+      </div>
+    );
+  }, [updateFormat, updateFormatProperty]);
 
   // -----------------------------------------------------------------------
   // Derived flags
@@ -1635,24 +2012,64 @@ export default function FileSystemForm({ config, onChange, onValidationChange, p
 
   const formatsTab = (
     <div style={{ padding: '16px 0' }}>
-      <div style={{ border: '1px solid #d9d9d9', borderRadius: 4 }}>
-        <Editor
-          height="400px"
-          language="json"
-          value={formatsJson}
-          onChange={(val) => {
-            const v = val || '{}';
-            setFormatsJson(v);
-            emitChange(connection, authMode, workspaces, v);
+      <Alert
+        type="info"
+        showIcon={false}
+        message="Formats define how Drill reads different file types. Configure extensions and parsing options for each format."
+        style={{ marginBottom: 16, backgroundColor: '#f0f5ff', border: '1px solid #d6e4ff' }}
+      />
+
+      <Space style={{ marginBottom: 12 }}>
+        <Dropdown
+          menu={{
+            items: Object.entries(FORMAT_METADATA)
+              .sort((a, b) => a[1].label.localeCompare(b[1].label))
+              .map(([key, meta]) => ({
+                key,
+                label: `${meta.label} - ${meta.description}`,
+                onClick: () => addFormat(key),
+                disabled: formats.some(f => f.name === key)
+              })),
+            style: { maxHeight: 400, overflowY: 'auto' }
           }}
-          options={{
-            minimap: { enabled: false },
-            lineNumbers: 'on',
-            scrollBeyondLastLine: false,
-            fontSize: 13,
-          }}
+        >
+          <Button type="primary" size="small" icon={<PlusOutlined />}>
+            Add Format
+          </Button>
+        </Dropdown>
+      </Space>
+
+      <Table
+        dataSource={formats}
+        columns={formatColumns}
+        expandable={{
+          expandedRowRender: renderFormatEditForm,
+          expandRowByClick: false,
+        }}
+        pagination={false}
+        size="small"
+        rowKey="key"
+      />
+
+      {getDuplicateFormatNames(formats).length > 0 && (
+        <Alert
+          type="error"
+          showIcon
+          message="Duplicate format names"
+          description={`Format names must be unique. Duplicates found: ${getDuplicateFormatNames(formats).join(', ')}`}
+          style={{ marginTop: 16 }}
         />
-      </div>
+      )}
+
+      {formats.length === 0 && (
+        <Alert
+          type="warning"
+          showIcon
+          message="No formats configured"
+          description="Add at least one format to enable file reading. Common formats include CSV, JSON, and Parquet."
+          style={{ marginTop: 16 }}
+        />
+      )}
     </div>
   );
 
