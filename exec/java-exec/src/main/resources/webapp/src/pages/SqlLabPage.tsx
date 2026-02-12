@@ -18,7 +18,7 @@
 import { useCallback, useState, useEffect, useRef, useMemo } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import { useLocation } from 'react-router-dom';
-import { Tabs, message, Tooltip } from 'antd';
+import { Tabs, message, Tooltip, Modal, Alert } from 'antd';
 import { PlusOutlined, MenuFoldOutlined, MenuUnfoldOutlined, RobotOutlined } from '@ant-design/icons';
 import type { RootState, AppDispatch } from '../store';
 import {
@@ -46,6 +46,7 @@ import { VisualizationBuilder } from '../components/visualization';
 import { ProspectorPanel } from '../components/prospector';
 import type { SavedQuery } from '../types';
 import type { ChatContext } from '../types/ai';
+import { applySqlTransformation, type ColumnTransformation } from '../utils/sqlTransformations';
 
 interface SqlLabPageProps {
   datasetFilter?: DatasetFilter;
@@ -234,6 +235,71 @@ export default function SqlLabPage({ datasetFilter, headerContent }: SqlLabPageP
       defaultSchema: activeTab?.defaultSchema,
     });
   }, [execute, autoLimit, activeTab?.defaultSchema]);
+
+  // Handle column transformation
+  const handleTransformColumn = useCallback(
+    (_columnName: string, transformation: ColumnTransformation) => {
+      const transformedSql = applySqlTransformation(sql || '', transformation);
+
+      if (!transformedSql) {
+        message.error('Could not apply transformation to query');
+        return;
+      }
+
+      // Show preview modal
+      Modal.confirm({
+        title: 'Apply Column Transformation?',
+        width: 600,
+        content: (
+          <div>
+            <Alert
+              message="This will modify your SQL query"
+              type="info"
+              style={{ marginBottom: 16 }}
+            />
+            <div style={{ marginBottom: 8 }}>
+              <strong>Original:</strong>
+              <pre
+                style={{
+                  backgroundColor: '#f5f5f5',
+                  padding: 12,
+                  borderRadius: 4,
+                  fontSize: 12,
+                  maxHeight: 150,
+                  overflowY: 'auto',
+                }}
+              >
+                {sql}
+              </pre>
+            </div>
+            <div>
+              <strong>Transformed:</strong>
+              <pre
+                style={{
+                  backgroundColor: '#f5f5f5',
+                  padding: 12,
+                  borderRadius: 4,
+                  fontSize: 12,
+                  maxHeight: 150,
+                  overflowY: 'auto',
+                }}
+              >
+                {transformedSql}
+              </pre>
+            </div>
+          </div>
+        ),
+        okText: 'Apply & Run',
+        cancelText: 'Cancel',
+        onOk: () => {
+          updateSql(transformedSql);
+          // Execute the query after a short delay to ensure SQL is updated
+          setTimeout(() => handleExecute(), 100);
+        },
+      });
+    },
+    [sql, updateSql, handleExecute]
+  );
 
   // Handle inserting text from schema explorer
   const handleInsertText = useCallback((text: string) => {
@@ -499,6 +565,7 @@ export default function SqlLabPage({ datasetFilter, headerContent }: SqlLabPageP
             onResultsSettingsChange={handleResultsSettingsChange}
             onFixWithProspector={handleFixWithProspector}
             prospectorAvailable={prospectorAvailable}
+            onTransformColumn={handleTransformColumn}
           />
         </div>
       </div>
