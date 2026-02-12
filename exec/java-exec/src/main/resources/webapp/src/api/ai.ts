@@ -90,6 +90,27 @@ function getCsrfToken(): string | null {
 }
 
 /**
+ * Transpile SQL from one dialect to another via the backend sqlglot service.
+ * Falls back to returning the original SQL if transpilation fails.
+ */
+export async function transpileSql(
+  sql: string,
+  sourceDialect: string = 'mysql',
+  targetDialect: string = 'drill',
+  schemas?: { name: string; tables: { name: string; columns: string[] }[] }[]
+): Promise<string> {
+  try {
+    const response = await apiClient.post<{ sql: string; success: boolean }>(
+      '/api/v1/transpile',
+      { sql, sourceDialect, targetDialect, schemas }
+    );
+    return response.data.sql;
+  } catch {
+    return sql;
+  }
+}
+
+/**
  * Stream a chat completion via POST SSE.
  * Uses native fetch + ReadableStream since axios doesn't support streaming.
  * Returns an AbortController for cancellation.

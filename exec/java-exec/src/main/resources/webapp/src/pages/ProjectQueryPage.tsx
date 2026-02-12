@@ -83,5 +83,5 @@ export default function ProjectQueryPage() {
     </div>
   );
 
-  return <SqlLabPage datasetFilter={datasetFilter} headerContent={header} />;
+  return <SqlLabPage datasetFilter={datasetFilter} headerContent={header} projectId={id} />;
 }
