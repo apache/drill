@@ -44,6 +44,7 @@ function getRequiredFields(chartType: ChartType): { field: string; label: string
   switch (chartType) {
     case 'bar':
     case 'line':
+    case 'area':
       return [
         { field: 'xAxis', label: 'X-Axis (Category)', numeric: false },
         { field: 'metrics', label: 'Y-Axis (Values)', multi: true, numeric: true },
