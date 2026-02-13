@@ -100,6 +100,29 @@ export default function ChartPreview({
         };
       }
 
+      case 'area': {
+        if (!xAxis || !metrics || metrics.length === 0) {
+          return null;
+        }
+        const categories = data.rows.map((row) => String(row[xAxis] ?? ''));
+        const series = metrics.map((metric, idx) => ({
+          name: metric,
+          type: 'line' as const,
+          data: data.rows.map((row) => Number(row[metric]) || 0),
+          smooth: true,
+          areaStyle: { opacity: 0.3 },
+          itemStyle: { color: colors[idx % colors.length] },
+        }));
+        return {
+          tooltip: { trigger: 'axis' },
+          legend: { data: metrics, bottom: 0 },
+          xAxis: { type: 'category', data: categories },
+          yAxis: { type: 'value' },
+          series,
+          grid: { left: '3%', right: '4%', bottom: '15%', containLabel: true },
+        };
+      }
+
       case 'pie': {
         if (!dimensions || dimensions.length === 0 || !metrics || metrics.length === 0) {
           return null;
