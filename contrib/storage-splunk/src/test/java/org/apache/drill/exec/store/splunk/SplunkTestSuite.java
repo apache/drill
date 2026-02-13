@@ -28,12 +28,12 @@ import org.apache.drill.test.ClusterFixtureBuilder;
 import org.apache.drill.test.ClusterTest;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
-import org.junit.ClassRule;
 import org.junit.experimental.categories.Category;
 import org.junit.runner.RunWith;
 import org.junit.runners.Suite;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.testcontainers.DockerClientFactory;
 import org.testcontainers.containers.GenericContainer;
 import org.testcontainers.utility.DockerImageName;
 
@@ -42,6 +42,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 import static org.apache.drill.exec.rpc.user.security.testing.UserAuthenticatorTestImpl.TEST_USER_1;
 import static org.apache.drill.exec.rpc.user.security.testing.UserAuthenticatorTestImpl.TEST_USER_2;
+import static org.junit.Assume.assumeTrue;
 
 
 @RunWith(Suite.class)
@@ -107,31 +108,14 @@ public class SplunkTestSuite extends ClusterTest {
     }
   }
 
-  // Pin the patch version. "splunk/splunk:9.3" is a mutable tag; it was
-  // republished on 2026-07-01 and silently broke CI on every branch. Bump this
-  // deliberately so an upstream push can never turn the build red on its own.
-  //
-  // Talk to splunkd over its default HTTPS listener rather than setting
-  // SPLUNKD_SSL_ENABLE=false. Disabling splunkd SSL is a path Splunk has
-  // regressed repeatedly (see splunk/docker-splunk#639, still open), and it
-  // broke again in 9.3.14. The container's cert is self-signed, so the plugin
-  // configs below turn off certificate and hostname validation.
-  @ClassRule
-  public static GenericContainer<?> splunk = new GenericContainer<>(
-    DockerImageName.parse("splunk/splunk:9.3.14")
-  )
-    .withExposedPorts(8089, 8089)
-    .withEnv("SPLUNK_START_ARGS", "--accept-license")
-    .withEnv("SPLUNK_PASSWORD", SPLUNK_PASS)
-    .withCopyFileToContainer(
-      org.testcontainers.utility.MountableFile.forHostPath(
-        createDefaultYmlFile().toPath()
-      ),
-      "/tmp/defaults/default.yml"
-    );
+  private static GenericContainer<?> splunk;
 
   @BeforeClass
   public static void initSplunk() throws Exception {
+    assumeTrue(
+      "Docker is not available, skipping container tests",
+      DockerClientFactory.instance().isDockerAvailable()
+    );
     synchronized (SplunkTestSuite.class) {
       if (initCount.get() == 0) {
         ClusterFixtureBuilder builder = new ClusterFixtureBuilder(dirTestWatcher)
@@ -140,6 +124,28 @@ public class SplunkTestSuite extends ClusterTest {
           .configProperty(ExecConstants.IMPERSONATION_ENABLED, true);
         startCluster(builder);
 
+        // Pin the patch version. "splunk/splunk:9.3" is a mutable tag; it was
+        // republished on 2026-07-01 and silently broke CI on every branch. Bump
+        // this deliberately so an upstream push can never turn the build red on
+        // its own.
+        //
+        // Talk to splunkd over its default HTTPS listener rather than setting
+        // SPLUNKD_SSL_ENABLE=false. Disabling splunkd SSL is a path Splunk has
+        // regressed repeatedly (see splunk/docker-splunk#639, still open), and
+        // it broke again in 9.3.14. The container's cert is self-signed, so the
+        // plugin configs below turn off certificate and hostname validation.
+        splunk = new GenericContainer<>(
+          DockerImageName.parse("splunk/splunk:9.3.14")
+        )
+          .withExposedPorts(8089, 8089)
+          .withEnv("SPLUNK_START_ARGS", "--accept-license")
+          .withEnv("SPLUNK_PASSWORD", SPLUNK_PASS)
+          .withCopyFileToContainer(
+            org.testcontainers.utility.MountableFile.forHostPath(
+              createDefaultYmlFile().toPath()
+            ),
+            "/tmp/defaults/default.yml"
+          );
         splunk.start();
 
         // Wait for Splunk to start and apply configuration from default.yml
@@ -215,6 +221,9 @@ public class SplunkTestSuite extends ClusterTest {
    * This should be called between test classes to prevent disk space exhaustion.
    */
   public static void cleanDispatchDirectory() {
+    if (splunk == null) {
+      return;
+    }
     try {
       logger.info("Cleaning up Splunk dispatch directory...");
       splunk.execInContainer("sh", "-c", "rm -rf /opt/splunk/var/run/splunk/dispatch/*");
@@ -227,7 +236,7 @@ public class SplunkTestSuite extends ClusterTest {
   @AfterClass
   public static void tearDownCluster() {
     synchronized (SplunkTestSuite.class) {
-      if (initCount.decrementAndGet() == 0) {
+      if (initCount.decrementAndGet() == 0 && splunk != null) {
         // Clean up Splunk dispatch files to free disk space before shutdown
         cleanDispatchDirectory();
         splunk.close();

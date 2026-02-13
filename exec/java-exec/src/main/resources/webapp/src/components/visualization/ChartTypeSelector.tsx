@@ -17,6 +17,7 @@
  */
 import { Card, Typography, Row, Col, Tooltip } from 'antd';
 import {
+  AreaChartOutlined,
   BarChartOutlined,
   LineChartOutlined,
   PieChartOutlined,
@@ -54,6 +55,13 @@ const chartTypes: ChartTypeOption[] = [
     name: 'Line Chart',
     description: 'Show trends over time',
     icon: <LineChartOutlined style={{ fontSize: 24 }} />,
+    category: 'basic',
+  },
+  {
+    type: 'area',
+    name: 'Area Chart',
+    description: 'Show trends with filled regions',
+    icon: <AreaChartOutlined style={{ fontSize: 24 }} />,
     category: 'basic',
   },
   {
