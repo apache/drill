@@ -1970,7 +1970,7 @@ export default function FileSystemForm({ config, onChange, onValidationChange, p
         type="info"
         showIcon={false}
         message="Workspaces define named virtual directories that map to specific paths in your storage. They allow users to query data using schema notation like dfs.workspace_name.table_name instead of full paths."
-        style={{ marginBottom: 16, backgroundColor: '#f0f5ff', border: '1px solid #d6e4ff' }}
+        style={{ marginBottom: 16 }}
       />
       <Space style={{ marginBottom: 12 }}>
         <Button
@@ -2016,7 +2016,7 @@ export default function FileSystemForm({ config, onChange, onValidationChange, p
         type="info"
         showIcon={false}
         message="Formats define how Drill reads different file types. Configure extensions and parsing options for each format."
-        style={{ marginBottom: 16, backgroundColor: '#f0f5ff', border: '1px solid #d6e4ff' }}
+        style={{ marginBottom: 16 }}
       />
 
       <Space style={{ marginBottom: 12 }}>

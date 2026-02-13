@@ -274,7 +274,7 @@ export default function DashboardsPage() {
             </div>
           ) : filteredDashboards.length === 0 ? (
             <Empty
-              image={<DashboardOutlined style={{ fontSize: 64, color: '#d9d9d9' }} />}
+              image={<DashboardOutlined style={{ fontSize: 64, color: 'var(--color-text-tertiary)' }} />}
               description={
                 searchText
                   ? 'No dashboards match your search'

@@ -27,6 +27,7 @@ interface QueryTab {
   error?: QueryError;
   isExecuting: boolean;
   executionTime?: number;
+  resultsExpired?: boolean;
 }
 
 interface QueryState {
@@ -83,6 +84,7 @@ const querySlice = createSlice({
         tab.executionTime = action.payload.executionTime;
         tab.isExecuting = false;
         tab.error = undefined;
+        tab.resultsExpired = false;
       }
     },
     setError: (state, action: PayloadAction<{ tabId: string; error: QueryError }>) => {
@@ -149,6 +151,41 @@ const querySlice = createSlice({
         tab.error = undefined;
       }
     },
+    restoreQueryState: (
+      state,
+      action: PayloadAction<{
+        tabs: {
+          id: string;
+          name: string;
+          sql: string;
+          defaultSchema?: string;
+          results?: QueryResult;
+          executionTime?: number;
+          resultsExpired?: boolean;
+        }[];
+        activeTabId: string;
+        tabCounter: number;
+      }>
+    ) => {
+      state.tabs = action.payload.tabs.map((t) => ({
+        id: t.id,
+        name: t.name,
+        sql: t.sql,
+        defaultSchema: t.defaultSchema,
+        results: t.results,
+        executionTime: t.executionTime,
+        isExecuting: false,
+        resultsExpired: t.resultsExpired,
+      }));
+      state.activeTabId = action.payload.activeTabId;
+      tabCounter = action.payload.tabCounter;
+    },
+    clearResultsExpired: (state, action: PayloadAction<string>) => {
+      const tab = state.tabs.find((t) => t.id === action.payload);
+      if (tab) {
+        tab.resultsExpired = false;
+      }
+    },
   },
 });
 
@@ -164,6 +201,8 @@ export const {
   setActiveTab,
   renameTab,
   loadQuery,
+  restoreQueryState,
+  clearResultsExpired,
 } = querySlice.actions;
 
 export default querySlice.reducer;

@@ -139,11 +139,11 @@ export default function ChartTypeSelector({ value, onChange }: ChartTypeSelector
           onClick={() => onChange?.(chart.type)}
           style={{
             textAlign: 'center',
-            border: value === chart.type ? '2px solid #1890ff' : '1px solid #d9d9d9',
-            backgroundColor: value === chart.type ? '#e6f7ff' : undefined,
+            border: value === chart.type ? '2px solid #1890ff' : '1px solid var(--color-border)',
+            backgroundColor: value === chart.type ? 'var(--color-bg-hover)' : undefined,
           }}
         >
-          <div style={{ color: value === chart.type ? '#1890ff' : '#595959' }}>
+          <div style={{ color: value === chart.type ? '#1890ff' : 'var(--color-text-secondary)' }}>
             {chart.icon}
           </div>
           <Text

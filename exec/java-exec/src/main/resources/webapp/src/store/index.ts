@@ -28,7 +28,7 @@ export const store = configureStore({
     getDefaultMiddleware({
       serializableCheck: {
         // Ignore non-serializable values in query results
-        ignoredActions: ['query/setResults'],
+        ignoredActions: ['query/setResults', 'query/restoreQueryState'],
         ignoredPaths: ['query.results'],
       },
     }),
