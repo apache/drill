@@ -288,7 +288,7 @@ export default function ProjectsPage() {
             </div>
           ) : filteredProjects.length === 0 ? (
             <Empty
-              image={<FolderOutlined style={{ fontSize: 64, color: '#d9d9d9' }} />}
+              image={<FolderOutlined style={{ fontSize: 64, color: 'var(--color-text-tertiary)' }} />}
               description={
                 searchText
                   ? 'No projects match your search'

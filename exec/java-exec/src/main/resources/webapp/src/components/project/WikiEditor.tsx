@@ -149,7 +149,7 @@ export default function WikiEditor({ open, projectId, page, onClose, onSuccess }
                 style={{
                   minHeight: 300,
                   padding: 16,
-                  border: '1px solid #d9d9d9',
+                  border: '1px solid var(--color-border)',
                   borderRadius: 6,
                   overflow: 'auto',
                 }}
