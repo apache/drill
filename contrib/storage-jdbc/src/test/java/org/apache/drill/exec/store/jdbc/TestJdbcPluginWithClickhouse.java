@@ -33,6 +33,7 @@ import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
+import org.testcontainers.DockerClientFactory;
 import org.testcontainers.containers.ClickHouseContainer;
 import org.testcontainers.containers.JdbcDatabaseContainer;
 import org.testcontainers.utility.DockerImageName;
@@ -42,6 +43,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assume.assumeTrue;
 
 /**
  * JDBC storage plugin tests against Clickhouse.
@@ -56,6 +58,10 @@ public class TestJdbcPluginWithClickhouse extends ClusterTest {
 
   @BeforeClass
   public static void initClickhouse() throws Exception {
+    assumeTrue(
+      "Docker is not available, skipping container tests",
+      DockerClientFactory.instance().isDockerAvailable()
+    );
     startCluster(ClusterFixture.builder(dirTestWatcher));
     String osName = System.getProperty("os.name").toLowerCase();
     DockerImageName imageName;
