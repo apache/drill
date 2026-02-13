@@ -19,3 +19,4 @@ export { default as ChartTypeSelector } from './ChartTypeSelector';
 export { default as ColumnMapper } from './ColumnMapper';
 export { default as ChartPreview } from './ChartPreview';
 export { default as VisualizationBuilder } from './VisualizationBuilder';
+export { default as VisualizationEditor } from './VisualizationEditor';
