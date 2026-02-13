@@ -28,12 +28,15 @@ import {
   setActiveTab,
   setDefaultSchema,
   renameTab,
+  clearResultsExpired,
 } from '../store/querySlice';
+import { toggleSidebar, setEditorHeight } from '../store/uiSlice';
+import { useWorkspacePersistence } from '../hooks/useWorkspacePersistence';
 import { useQueryExecution } from '../hooks/useQuery';
 import { useQueryHistory } from '../hooks/useQueryHistory';
 import { useSchemas } from '../hooks/useMetadata';
 import { useProspector } from '../hooks/useProspector';
-import { getAiStatus, streamChat, transpileSql } from '../api/ai';
+import { getAiStatus, streamChat, transpileSql, convertDataType } from '../api/ai';
 import { getSchemaTree } from '../api/metadata';
 import SchemaExplorer from '../components/schema-explorer/SchemaExplorer';
 import type { DatasetFilter } from '../components/schema-explorer/SchemaExplorer';
@@ -48,7 +51,7 @@ import { VisualizationBuilder } from '../components/visualization';
 import { ProspectorPanel } from '../components/prospector';
 import type { SavedQuery } from '../types';
 import type { ChatContext, ChatMessage } from '../types/ai';
-import { applySqlTransformation, type ColumnTransformation } from '../utils/sqlTransformations';
+import { applySqlTransformation, prettifySql, type ColumnTransformation } from '../utils/sqlTransformations';
 
 function extractSqlFromMarkdown(markdown: string): string | null {
   const regex = /```sql\s*\n([\s\S]*?)```/g;
@@ -76,11 +79,15 @@ export default function SqlLabPage({ datasetFilter, headerContent, projectId }: 
   const { tabs, activeTabId } = useSelector((state: RootState) => state.query);
   const activeTab = tabs.find((t) => t.id === activeTabId);
 
+  const sidebarCollapsed = useSelector((state: RootState) => state.ui.sidebarCollapsed);
+  const editorHeight = useSelector((state: RootState) => state.ui.editorHeight);
+
+  const { onResultsCached } = useWorkspacePersistence(projectId);
+
   const [autoLimit, setAutoLimit] = useState<number | null>(1000);
   const [saveDialogOpen, setSaveDialogOpen] = useState(false);
   const [vizBuilderOpen, setVizBuilderOpen] = useState(false);
   const [historyModalOpen, setHistoryModalOpen] = useState(false);
-  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
 
   // Optimize modal state
   const [optimizeModalOpen, setOptimizeModalOpen] = useState(false);
@@ -135,7 +142,6 @@ export default function SqlLabPage({ datasetFilter, headerContent, projectId }: 
   }, []);
 
   // Resizable editor panel
-  const [editorHeight, setEditorHeight] = useState(300);
   const [isDragging, setIsDragging] = useState(false);
   const contentRef = useRef<HTMLDivElement>(null);
 
@@ -336,17 +342,24 @@ export default function SqlLabPage({ datasetFilter, headerContent, projectId }: 
     });
   }, [execute, autoLimit, activeTab?.defaultSchema]);
 
-  // Handle column transformation
-  const handleTransformColumn = useCallback(
-    (_columnName: string, transformation: ColumnTransformation) => {
-      const transformedSql = applySqlTransformation(sql || '', transformation);
+  // Show transformation preview modal and apply on confirm.
+  const showTransformPreview = useCallback(
+    (originalSql: string, transformedSql: string, hideLoading: () => void) => {
+      hideLoading();
+      const preStyle = {
+        backgroundColor: 'var(--color-bg-elevated)',
+        color: 'var(--color-text)',
+        padding: 12,
+        borderRadius: 4,
+        fontSize: 12,
+        maxHeight: 150,
+        overflowY: 'auto' as const,
+        whiteSpace: 'pre-wrap' as const,
+      };
 
-      if (!transformedSql) {
-        message.error('Could not apply transformation to query');
-        return;
-      }
+      const formattedOriginal = prettifySql(originalSql);
+      const formattedTransformed = prettifySql(transformedSql);
 
-      // Show preview modal
       Modal.confirm({
         title: 'Apply Column Transformation?',
         width: 600,
@@ -359,46 +372,72 @@ export default function SqlLabPage({ datasetFilter, headerContent, projectId }: 
             />
             <div style={{ marginBottom: 8 }}>
               <strong>Original:</strong>
-              <pre
-                style={{
-                  backgroundColor: 'var(--color-bg-elevated)',
-                  padding: 12,
-                  borderRadius: 4,
-                  fontSize: 12,
-                  maxHeight: 150,
-                  overflowY: 'auto',
-                }}
-              >
-                {sql}
-              </pre>
+              <pre style={preStyle}>{formattedOriginal}</pre>
             </div>
             <div>
               <strong>Transformed:</strong>
-              <pre
-                style={{
-                  backgroundColor: 'var(--color-bg-elevated)',
-                  padding: 12,
-                  borderRadius: 4,
-                  fontSize: 12,
-                  maxHeight: 150,
-                  overflowY: 'auto',
-                }}
-              >
-                {transformedSql}
-              </pre>
+              <pre style={preStyle}>{formattedTransformed}</pre>
             </div>
           </div>
         ),
         okText: 'Apply & Run',
         cancelText: 'Cancel',
         onOk: () => {
-          updateSql(transformedSql);
-          // Execute the query after a short delay to ensure SQL is updated
+          updateSql(formattedTransformed);
           setTimeout(() => handleExecute(), 100);
         },
       });
     },
-    [sql, updateSql, handleExecute]
+    [updateSql, handleExecute]
+  );
+
+  // Handle column transformation
+  const handleTransformColumn = useCallback(
+    (_columnName: string, transformation: ColumnTransformation) => {
+      const currentSql = sql || '';
+      const hideLoading = message.loading('Preparing transformation...', 0);
+
+      // Route CAST transformations through the Python/sqlglot backend
+      if (transformation.type === 'cast' && transformation.targetType) {
+        // Build a columns map from result metadata (needed for star queries)
+        const columnsMap: Record<string, string> | undefined = results?.columns
+          ? Object.fromEntries(results.columns.map((c) => [c, 'VARCHAR']))
+          : undefined;
+
+        const fallbackToTs = () => {
+          const fallback = applySqlTransformation(currentSql, transformation, results?.columns);
+          if (!fallback) {
+            hideLoading();
+            message.error('Could not apply transformation to query');
+            return;
+          }
+          showTransformPreview(currentSql, fallback, hideLoading);
+        };
+
+        convertDataType(currentSql, transformation.columnName, transformation.targetType, columnsMap)
+          .then((response) => {
+            if (!response.success) {
+              fallbackToTs();
+              return;
+            }
+            showTransformPreview(currentSql, response.sql, hideLoading);
+          })
+          .catch(() => {
+            fallbackToTs();
+          });
+        return;
+      }
+
+      // Other transformations use the local TypeScript approach
+      const transformedSql = applySqlTransformation(currentSql, transformation, results?.columns);
+      if (!transformedSql) {
+        hideLoading();
+        message.error('Could not apply transformation to query');
+        return;
+      }
+      showTransformPreview(currentSql, transformedSql, hideLoading);
+    },
+    [sql, results?.columns, showTransformPreview]
   );
 
   // Handle inserting text from schema explorer
@@ -512,7 +551,7 @@ export default function SqlLabPage({ datasetFilter, headerContent, projectId }: 
       const newHeight = e.clientY - contentRect.top - tabsHeight;
       // Clamp between min (120) and max (contentHeight - 100 for results)
       const maxHeight = contentRect.height - tabsHeight - 100;
-      setEditorHeight(Math.max(120, Math.min(newHeight, maxHeight)));
+      dispatch(setEditorHeight(Math.max(120, Math.min(newHeight, maxHeight))));
     };
 
     const handleMouseUp = () => {
@@ -531,7 +570,14 @@ export default function SqlLabPage({ datasetFilter, headerContent, projectId }: 
       document.body.style.userSelect = '';
       document.body.style.cursor = '';
     };
-  }, [isDragging]);
+  }, [isDragging, dispatch]);
+
+  // Cache results when they arrive
+  useEffect(() => {
+    if (results && activeTabId) {
+      onResultsCached(activeTabId, results, executionTime ?? 0);
+    }
+  }, [results, activeTabId, executionTime, onResultsCached]);
 
   // ---- Tab renaming ----
   const handleTabDoubleClick = useCallback((tabId: string, currentName: string) => {
@@ -573,7 +619,7 @@ export default function SqlLabPage({ datasetFilter, headerContent, projectId }: 
       <Tooltip title={sidebarCollapsed ? 'Show Schema Explorer' : 'Hide Schema Explorer'}>
         <div
           className="sidebar-toggle"
-          onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
+          onClick={() => dispatch(toggleSidebar())}
         >
           {sidebarCollapsed ? <MenuUnfoldOutlined /> : <MenuFoldOutlined />}
         </div>
@@ -659,6 +705,22 @@ export default function SqlLabPage({ datasetFilter, headerContent, projectId }: 
 
         {/* Results Panel */}
         <div className="sqllab-results-panel">
+          {activeTab?.resultsExpired && (
+            <Alert
+              message="Cached results have expired"
+              description="Re-run the query to see results."
+              type="info"
+              showIcon
+              closable
+              onClose={() => dispatch(clearResultsExpired(activeTabId))}
+              action={
+                <Button size="small" type="primary" onClick={handleExecute}>
+                  Re-run Query
+                </Button>
+              }
+              style={{ margin: '8px 16px' }}
+            />
+          )}
           <ResultsGrid
             results={results}
             error={error}

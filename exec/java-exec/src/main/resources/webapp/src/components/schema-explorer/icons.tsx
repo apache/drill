@@ -133,7 +133,7 @@ export function getPluginIcon(pluginType: string, pluginName: string): React.Rea
   }
 
   // Default
-  return <DatabaseOutlined style={{ color: '#595959' }} />;
+  return <DatabaseOutlined style={{ color: 'var(--color-text-secondary)' }} />;
 }
 
 /** Returns an icon element for a file based on its filename / extension. */
@@ -149,7 +149,7 @@ export function getFileIcon(filename: string): React.ReactNode {
       return <VscFileCode style={{ color: '#4caf50' }} />;
 
     case 'json':
-      return <SiJson style={{ color: '#000000' }} />;
+      return <SiJson style={{ color: 'var(--color-text)' }} />;
 
     case 'parquet':
       return <FileOutlined style={{ color: '#50b848' }} />;
