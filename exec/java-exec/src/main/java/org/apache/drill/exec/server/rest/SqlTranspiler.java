@@ -17,15 +17,15 @@
  */
 package org.apache.drill.exec.server.rest;
 
-import java.io.IOException;
-import java.io.InputStream;
-import java.nio.charset.StandardCharsets;
-
 import org.graalvm.polyglot.Context;
 import org.graalvm.polyglot.Source;
 import org.graalvm.polyglot.Value;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import java.io.IOException;
+import java.io.InputStream;
+import java.nio.charset.StandardCharsets;
 
 /**
  * Singleton service that wraps a GraalPy context with sqlglot
@@ -49,6 +49,8 @@ public final class SqlTranspiler {
   private Context pythonContext;
   private Value transpileFunc;
   private Value jsonParseFunc;
+  private Value convertDataTypeFunc;
+  private Value formatSqlFunc;
   private boolean available;
 
   /**
@@ -77,6 +79,8 @@ public final class SqlTranspiler {
 
       transpileFunc = pythonContext.getBindings("python").getMember("transpile_sql");
       jsonParseFunc = pythonContext.getBindings("python").getMember("json_parse");
+      convertDataTypeFunc = pythonContext.getBindings("python").getMember("convert_data_type_raw");
+      formatSqlFunc = pythonContext.getBindings("python").getMember("format_sql");
       available = true;
       logger.info("SqlTranspiler initialized successfully with GraalPy + sqlglot");
     } catch (Exception e) {
@@ -104,25 +108,62 @@ public final class SqlTranspiler {
    */
   public synchronized String transpile(String sql, String sourceDialect,
       String targetDialect, String schemasJson) {
-    System.out.println("=== TRANSPILE INPUT ===");
-    System.out.println("Available: " + available);
-    System.out.println("SQL: " + sql);
-    System.out.println("Source dialect: " + sourceDialect);
-    System.out.println("Target dialect: " + targetDialect);
-    System.out.println("Schemas JSON: " + schemasJson);
-    System.out.println("======================");
     if (!available) {
       return sql;
     }
     try {
       Value schemas = jsonParseFunc.execute(schemasJson != null ? schemasJson : "[]");
       String result = transpileFunc.execute(sql, sourceDialect, targetDialect, schemas).asString();
-      System.out.println("=== TRANSPILE OUTPUT ===");
-      System.out.println("Result: " + result);
-      System.out.println("========================");
       return result;
     } catch (Exception e) {
       logger.debug("SQL transpilation failed, returning original SQL: {}", e.getMessage());
+      return sql;
+    }
+  }
+
+  /**
+   * Convert a column's data type in a SQL query using sqlglot AST manipulation.
+   *
+   * @param sql the SQL query
+   * @param columnName the column to convert
+   * @param dataType the target SQL data type (e.g. "INTEGER", "VARCHAR")
+   * @param columnsJson optional JSON object mapping column names to types (for star queries)
+   * @return the transformed SQL, or null if conversion fails
+   */
+  public synchronized String convertDataType(String sql, String columnName,
+      String dataType, String columnsJson) {
+    if (!available) {
+      logger.warn("convertDataType called but transpiler is not available");
+      return null;
+    }
+    try {
+      String result;
+      if (columnsJson != null && !columnsJson.isEmpty()) {
+        result = convertDataTypeFunc.execute(sql, columnName, dataType, columnsJson).asString();
+      } else {
+        result = convertDataTypeFunc.execute(sql, columnName, dataType).asString();
+      }
+      return result;
+    } catch (Exception e) {
+      logger.warn("Data type conversion failed: {}", e.getMessage(), e);
+      return null;
+    }
+  }
+
+  /**
+   * Pretty-print a SQL string using sqlglot.
+   *
+   * @param sql the SQL string to format
+   * @return the formatted SQL, or the original if formatting fails
+   */
+  public synchronized String formatSql(String sql) {
+    if (!available) {
+      return sql;
+    }
+    try {
+      return formatSqlFunc.execute(sql).asString();
+    } catch (Exception e) {
+      logger.debug("SQL formatting failed, returning original: {}", e.getMessage());
       return sql;
     }
   }

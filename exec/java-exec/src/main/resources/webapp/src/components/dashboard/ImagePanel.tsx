@@ -142,7 +142,7 @@ export default function ImagePanel({
   if (!content || imgError) {
     return (
       <div className="image-panel">
-        <PictureOutlined style={{ fontSize: 48, color: '#d9d9d9' }} />
+        <PictureOutlined style={{ fontSize: 48, color: 'var(--color-text-tertiary)' }} />
       </div>
     );
   }
@@ -151,7 +151,7 @@ export default function ImagePanel({
   if (!safeUrl) {
     return (
       <div className="image-panel">
-        <PictureOutlined style={{ fontSize: 48, color: '#d9d9d9' }} />
+        <PictureOutlined style={{ fontSize: 48, color: 'var(--color-text-tertiary)' }} />
       </div>
     );
   }

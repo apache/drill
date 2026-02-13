@@ -22,7 +22,8 @@ and other SQL manipulation tasks.
 
 import json
 import sqlglot
-from sqlglot import exp, parse_one, ErrorLevel
+from sqlglot import exp, parse_one
+
 
 EXTENSIONS = [
   "3g2", "3gp", "accdb", 'mdb', 'mdx', 'ai', 'arw',
@@ -105,13 +106,29 @@ CHAR_MAPPING = {
   "0": "__ZERO__"
 }
 
+
 def json_parse(json_string):
   """Parse a JSON string into a Python object.
   Used by the Java SqlTranspiler to convert JSON strings to Python dicts/lists."""
   return json.loads(json_string)
 
 
-def cleanup_table_names(schemas: dict) -> dict:
+def format_sql(sql):
+  """Pretty-print a SQL string using sqlglot.
+
+  Args:
+      sql: The SQL query string.
+
+  Returns:
+      The formatted SQL string, or the original if parsing fails.
+  """
+  try:
+    return parse_one(sql, read="drill").sql(dialect="drill", pretty=True)
+  except Exception:
+    return sql
+
+
+def cleanup_table_names(schemas):
   """
   Ensures that the table names do not have any illegal characters in them. Additionally,
   views in Drill are treated as files with the extensions .view.drill.  The view extensions are
@@ -138,14 +155,20 @@ def cleanup_table_names(schemas: dict) -> dict:
   return schemas
 
 
-def _replace_illegal_character_with_token(name: str) -> str:
+def _replace_illegal_character_with_token(name):
   for char, token in CHAR_MAPPING.items():
     if char in name:
       name = name.replace(char, token)
   return name
 
 
-def _starts_with_known_extension(name: str) -> bool:
+def _get_column_name(node):
+  if node.table:
+    return f"{node}"
+  return f"{node.alias_or_name}"
+
+
+def _starts_with_known_extension(name):
   for ext in EXTENSIONS:
     if name.startswith(ext):
       return True
@@ -162,6 +185,56 @@ def remove_tokens(sql):
     if token in sql:
       sql = sql.replace(token, char)
 
+  return sql
+
+
+def is_star_query(sql):
+  """
+  Returns true if the query is a star query. Note that SELECT *, foo would be
+  considered a star query.
+  :param sql: A sql query
+  :return: True if the input string is a star query, false if not.
+  """
+  if not isinstance(sql, exp.Select):
+    query = parse_one(sql)
+  else:
+    query = sql
+
+  star_query = query.find_all(exp.Star)
+
+  for column in star_query:
+    if column.parent_select != query:
+      return False
+    return True
+
+  return False
+
+
+def replace_star_with_columns(sql, column_list):
+  """
+  This function will replace a star query with the list of columns.
+  :param sql: The input query which should be a star query.
+  :param column_list:  A dictionary where the keys are field names.
+  :return: An updated query with the star replaced with field names
+  """
+
+  columns = list(column_list.keys())
+
+  # If there are additional columns other than the star, add them to the column list
+  if len(sql.named_selects) > 1:
+    for select in sql.named_selects:
+      if select != '*':
+        columns.append(select)
+
+  first_column = True
+  for column in columns:
+    # Always escape the columns
+    column = f"`{column}`"
+    if first_column:
+      sql.select(column, append=False, copy=False, dialect='drill')
+      first_column = False
+    else:
+      sql = sql.select(column, append=True, copy=False, dialect='drill')
   return sql
 
 
@@ -230,7 +303,7 @@ def ensure_full_table_names(sql, schemas):
     return result.sql(dialect="drill", pretty=True)
 
 
-def fix_aggregate_query_projection(sql: sqlglot.Expression) -> sqlglot.Expression:
+def fix_aggregate_query_projection(sql):
   """
   LLMs seem to generate aggregate queries that project columns which are not in the
   GROUP BY clause.  Drill does not allow this, although some SQL engines do.
@@ -252,7 +325,7 @@ def fix_aggregate_query_projection(sql: sqlglot.Expression) -> sqlglot.Expressio
   return sql
 
 
-def transpile_sql(sql, source_dialect, target_dialect, schemas=None) -> str:
+def transpile_sql(sql, source_dialect, target_dialect, schemas=None):
     """Transpile SQL from one dialect to another.
 
     Args:
@@ -279,3 +352,69 @@ def transpile_sql(sql, source_dialect, target_dialect, schemas=None) -> str:
         return transpiled_sql
     except Exception:
         return sql
+
+
+def convert_data_type(sql, column_name, data_type, column_list=None):
+  """Convert a column's data type by wrapping it in a CAST expression.
+  Uses sqlglot AST manipulation for robust SQL transformation.
+
+  Args:
+      sql: The SQL query string.
+      column_name: The column to convert.
+      data_type: The target SQL data type (e.g. 'INTEGER', 'VARCHAR').
+      column_list: Optional dict mapping column names to types (for star query expansion).
+
+  Returns:
+      The transformed SQL string.
+  """
+  parsed_query = parse_one(sql, read="drill")
+
+  if is_star_query(parsed_query):
+    if not column_list:
+      return sql
+    parsed_query = replace_star_with_columns(parsed_query, column_list)
+
+  column_nodes = parsed_query.find_all(exp.Column)
+  for column in column_nodes:
+    if column.alias_or_name == column_name:
+      if isinstance(column, exp.Column):
+        alias = f"`{column_name}`"
+        if isinstance(column.parent, exp.Alias):
+          # Column already has an alias — preserve it
+          existing_alias = column.parent.alias
+          cast_expr = parse_one(f"CAST({_get_column_name(column)} AS {data_type}) AS `{existing_alias}`")
+          column.parent.replace(cast_expr)
+        elif isinstance(column.parent, exp.Func):
+          # Column is inside a function — wrap the outermost function
+          parent = column.parent
+          while isinstance(parent.parent, exp.Func):
+            parent = parent.parent
+
+          if isinstance(parent.parent, exp.Alias):
+            existing_alias = parent.parent.alias
+            cast_expr = parse_one(f"CAST({parent} AS {data_type}) AS `{existing_alias}`")
+            parent.parent.replace(cast_expr)
+          else:
+            cast_expr = parse_one(f"CAST({parent} AS {data_type}) AS {alias}")
+            parent.replace(cast_expr)
+        else:
+          # Simple column with no alias — add original name as alias
+          cast_expr = parse_one(f"CAST({_get_column_name(column)} AS {data_type}) AS {alias}")
+          column.replace(cast_expr)
+  return parsed_query.sql(dialect="drill", pretty=True)
+
+
+def convert_data_type_raw(sql, column_name, data_type, columns_json=None):
+  """Convert a column's data type. Entry point for Java/GraalPy.
+
+  Args:
+      sql: The SQL query string.
+      column_name: The column to convert.
+      data_type: The target SQL data type (e.g. 'INTEGER', 'VARCHAR').
+      columns_json: Optional JSON string of column name -> type mapping (for star queries).
+
+  Returns:
+      The transformed SQL string.
+  """
+  columns = json.loads(columns_json) if columns_json else None
+  return convert_data_type(sql, column_name, data_type, columns)

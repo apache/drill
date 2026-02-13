@@ -238,7 +238,7 @@ export default function DataSourcesPage() {
             </div>
           ) : filteredPlugins.length === 0 ? (
             <Empty
-              image={<DatabaseOutlined style={{ fontSize: 64, color: '#d9d9d9' }} />}
+              image={<DatabaseOutlined style={{ fontSize: 64, color: 'var(--color-text-tertiary)' }} />}
               description={
                 searchText
                   ? 'No plugins match your search'

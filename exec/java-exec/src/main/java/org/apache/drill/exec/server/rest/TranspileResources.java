@@ -83,9 +83,18 @@ public class TranspileResources {
     @JsonProperty
     public boolean success;
 
+    @JsonProperty
+    public String formattedOriginal;
+
     public TranspileResponse(String sql, boolean success) {
       this.sql = sql;
       this.success = success;
+    }
+
+    public TranspileResponse(String sql, boolean success, String formattedOriginal) {
+      this.sql = sql;
+      this.success = success;
+      this.formattedOriginal = formattedOriginal;
     }
   }
 
@@ -115,6 +124,100 @@ public class TranspileResources {
     }
 
     String result = transpiler.transpile(request.sql, sourceDialect, targetDialect, schemasJson);
+    return Response.ok(new TranspileResponse(result, true)).build();
+  }
+
+  // ==================== Convert Data Type ====================
+
+  public static class ConvertDataTypeRequest {
+    @JsonProperty
+    public String sql;
+
+    @JsonProperty
+    public String columnName;
+
+    @JsonProperty
+    public String dataType;
+
+    @JsonProperty
+    public Map<String, Object> columns;
+
+    public ConvertDataTypeRequest() {
+    }
+
+    @JsonCreator
+    public ConvertDataTypeRequest(
+        @JsonProperty("sql") String sql,
+        @JsonProperty("columnName") String columnName,
+        @JsonProperty("dataType") String dataType,
+        @JsonProperty("columns") Map<String, Object> columns) {
+      this.sql = sql;
+      this.columnName = columnName;
+      this.dataType = dataType;
+      this.columns = columns;
+    }
+  }
+
+  @POST
+  @Path("/convert-type")
+  @Consumes(MediaType.APPLICATION_JSON)
+  @Produces(MediaType.APPLICATION_JSON)
+  @Operation(summary = "Convert column data type",
+      description = "Wraps a column in a CAST expression using sqlglot AST manipulation")
+  public Response convertDataType(ConvertDataTypeRequest request) {
+    if (request.sql == null || request.sql.trim().isEmpty()) {
+      return Response.ok(new TranspileResponse("", true)).build();
+    }
+    if (request.columnName == null || request.dataType == null) {
+      return Response.status(Response.Status.BAD_REQUEST)
+          .entity(new TranspileResponse(request.sql, false)).build();
+    }
+
+    SqlTranspiler transpiler = SqlTranspiler.getInstance();
+    String columnsJson = null;
+    if (request.columns != null && !request.columns.isEmpty()) {
+      try {
+        columnsJson = new ObjectMapper().writeValueAsString(request.columns);
+      } catch (Exception e) {
+        columnsJson = null;
+      }
+    }
+
+    String result = transpiler.convertDataType(
+        request.sql, request.columnName, request.dataType, columnsJson);
+    if (result == null) {
+      return Response.ok(new TranspileResponse(request.sql, false)).build();
+    }
+    String formattedOriginal = transpiler.formatSql(request.sql);
+    return Response.ok(new TranspileResponse(result, true, formattedOriginal)).build();
+  }
+
+  // ==================== Format SQL ====================
+
+  public static class FormatRequest {
+    @JsonProperty
+    public String sql;
+
+    public FormatRequest() {
+    }
+
+    @JsonCreator
+    public FormatRequest(@JsonProperty("sql") String sql) {
+      this.sql = sql;
+    }
+  }
+
+  @POST
+  @Path("/format")
+  @Consumes(MediaType.APPLICATION_JSON)
+  @Produces(MediaType.APPLICATION_JSON)
+  @Operation(summary = "Format SQL",
+      description = "Pretty-prints a SQL string using sqlglot")
+  public Response formatSql(FormatRequest request) {
+    if (request.sql == null || request.sql.trim().isEmpty()) {
+      return Response.ok(new TranspileResponse("", true)).build();
+    }
+    String result = SqlTranspiler.getInstance().formatSql(request.sql);
     return Response.ok(new TranspileResponse(result, true)).build();
   }
 
