@@ -41,6 +41,8 @@ import { executeQuery } from '../../api/queries';
 import ChartTypeSelector from './ChartTypeSelector';
 import ColumnMapper from './ColumnMapper';
 import ChartPreview from './ChartPreview';
+import { buildTimeGrainQuery, hasCompleteTimeGrainConfig } from '../../utils/sqlTransformations';
+import type { TimeGrain, AggregationFunction } from '../../utils/sqlTransformations';
 import type { ChartType, VisualizationConfig, QueryResult, VisualizationCreate, Visualization } from '../../types';
 
 const { Title, Text } = Typography;
@@ -85,7 +87,25 @@ export default function VisualizationBuilder({
   const [dataLoading, setDataLoading] = useState(false);
   const [dataError, setDataError] = useState<string | null>(null);
 
-  const effectiveData = queryResult || fetchedData;
+  // Time grain data for create mode
+  const [timeGrainData, setTimeGrainData] = useState<QueryResult | null>(null);
+  const [timeGrainLoading, setTimeGrainLoading] = useState(false);
+
+  const getEffectiveQuery = useCallback((originalSql: string, cfg: VisualizationConfig): string => {
+    if (!hasCompleteTimeGrainConfig(cfg.chartOptions, cfg.metrics)) {
+      return originalSql;
+    }
+    const grain = cfg.chartOptions!.timeGrain as TimeGrain;
+    const aggregations = cfg.chartOptions!.metricAggregations as Record<string, AggregationFunction>;
+    const wrapped = buildTimeGrainQuery(originalSql, {
+      grain,
+      temporalColumn: cfg.xAxis!,
+      metricAggregations: aggregations,
+    });
+    return wrapped || originalSql;
+  }, []);
+
+  const effectiveData = timeGrainData || queryResult || fetchedData;
 
   // Pre-populate state when opening in edit mode
   useEffect(() => {
@@ -110,8 +130,9 @@ export default function VisualizationBuilder({
     setDataLoading(true);
     setDataError(null);
     try {
+      const query = getEffectiveQuery(visualization.sql, config);
       const result = await executeQuery({
-        query: visualization.sql,
+        query,
         queryType: 'SQL',
         autoLimitRowCount: 10000,
         defaultSchema: visualization.defaultSchema,
@@ -122,7 +143,7 @@ export default function VisualizationBuilder({
     } finally {
       setDataLoading(false);
     }
-  }, [visualization?.sql, visualization?.defaultSchema]);
+  }, [visualization?.sql, visualization?.defaultSchema, config, getEffectiveQuery]);
 
   useEffect(() => {
     if (open && isEditMode && !queryResult) {
@@ -143,6 +164,48 @@ export default function VisualizationBuilder({
       type: effectiveData.metadata[idx] || 'VARCHAR',
     }));
   }, [effectiveData]);
+
+  // In create mode, fetch time grain data when config is complete
+  useEffect(() => {
+    if (!open || isEditMode) {
+      return;
+    }
+    const sourceSql = sql;
+    if (!sourceSql || !hasCompleteTimeGrainConfig(config.chartOptions, config.metrics)) {
+      setTimeGrainData(null);
+      return;
+    }
+    const effectiveQuery = getEffectiveQuery(sourceSql, config);
+    if (effectiveQuery === sourceSql) {
+      setTimeGrainData(null);
+      return;
+    }
+    let cancelled = false;
+    const fetchTimeGrain = async () => {
+      setTimeGrainLoading(true);
+      try {
+        const result = await executeQuery({
+          query: effectiveQuery,
+          queryType: 'SQL',
+          autoLimitRowCount: 10000,
+          defaultSchema,
+        });
+        if (!cancelled) {
+          setTimeGrainData(result);
+        }
+      } catch {
+        if (!cancelled) {
+          setTimeGrainData(null);
+        }
+      } finally {
+        if (!cancelled) {
+          setTimeGrainLoading(false);
+        }
+      }
+    };
+    fetchTimeGrain();
+    return () => { cancelled = true; };
+  }, [open, isEditMode, sql, defaultSchema, config, getEffectiveQuery]);
 
   const createMutation = useMutation({
     mutationFn: createVisualization,
@@ -178,6 +241,8 @@ export default function VisualizationBuilder({
     setFetchedData(null);
     setDataLoading(false);
     setDataError(null);
+    setTimeGrainData(null);
+    setTimeGrainLoading(false);
     form.resetFields();
     onClose();
   };
@@ -279,6 +344,7 @@ export default function VisualizationBuilder({
                 chartType={chartType}
                 config={config}
                 data={effectiveData}
+                loading={timeGrainLoading}
                 height={350}
               />
             </Card>
