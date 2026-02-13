@@ -133,6 +133,7 @@ export interface SavedQueryCreate {
 export type ChartType =
   | 'bar'
   | 'line'
+  | 'area'
   | 'pie'
   | 'scatter'
   | 'table'
