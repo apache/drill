@@ -18,7 +18,7 @@
 import { useMemo } from 'react';
 import ReactECharts from 'echarts-for-react';
 import { Empty, Spin, Table } from 'antd';
-import { CaretUpOutlined, CaretDownOutlined, MinusOutlined } from '@ant-design/icons';
+import { CaretUpOutlined, CaretDownOutlined, MinusOutlined, TableOutlined } from '@ant-design/icons';
 import type { EChartsOption } from 'echarts';
 import type { ChartType, VisualizationConfig, QueryResult } from '../../types';
 
@@ -445,7 +445,64 @@ export default function ChartPreview({
     );
   }
 
-  // For table type, use Ant Design Table (skip in mini mode)
+  // For table type in mini mode, render a stylized placeholder
+  if (chartType === 'table' && mini) {
+    const colCount = Math.min(data.columns.length, 4);
+    const rowCount = Math.min(data.rows.length, 5);
+    return (
+      <div style={{
+        height,
+        display: 'flex',
+        flexDirection: 'column',
+        padding: 8,
+        gap: 2,
+        overflow: 'hidden',
+      }}>
+        {/* Header row */}
+        <div style={{ display: 'flex', gap: 2, flexShrink: 0 }}>
+          {Array.from({ length: colCount }).map((_, i) => (
+            <div key={`h-${i}`} style={{
+              flex: 1,
+              height: 14,
+              borderRadius: 2,
+              backgroundColor: colors[0],
+              opacity: 0.8,
+            }} />
+          ))}
+        </div>
+        {/* Data rows */}
+        {Array.from({ length: rowCount }).map((_, r) => (
+          <div key={`r-${r}`} style={{ display: 'flex', gap: 2, flexShrink: 0 }}>
+            {Array.from({ length: colCount }).map((_, c) => (
+              <div key={`c-${c}`} style={{
+                flex: 1,
+                height: 12,
+                borderRadius: 2,
+                backgroundColor: 'var(--color-text)',
+                opacity: r % 2 === 0 ? 0.08 : 0.04,
+              }} />
+            ))}
+          </div>
+        ))}
+        {/* Table icon label */}
+        <div style={{
+          flex: 1,
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          color: colors[0],
+          fontSize: 11,
+          opacity: 0.6,
+          gap: 4,
+        }}>
+          <TableOutlined />
+          {data.columns.length} cols &middot; {data.rows.length} rows
+        </div>
+      </div>
+    );
+  }
+
+  // For table type, use Ant Design Table
   if (chartType === 'table' && !mini) {
     const columnsToShow = config.dimensions && config.dimensions.length > 0
       ? config.dimensions

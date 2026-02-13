@@ -106,7 +106,7 @@ export function applySqlTransformation(
  * Quotes a column name with backticks if it contains special characters or is a reserved word.
  * Simple identifiers are left unquoted.
  */
-function quoteColumnName(name: string): string {
+export function quoteColumnName(name: string): string {
   if (/^[a-zA-Z_][a-zA-Z0-9_]*$/.test(name)) {
     return name;
   }
@@ -335,6 +335,76 @@ export interface ColumnStats {
   avg?: number;
   nonNullPercentage: number;
   uniquenessPercentage: number;
+}
+
+export type TimeGrain = 'SECOND' | 'MINUTE' | 'HOUR' | 'DAY' | 'WEEK' | 'MONTH' | 'QUARTER' | 'YEAR';
+export type AggregationFunction = 'SUM' | 'AVG' | 'MIN' | 'MAX' | 'COUNT';
+
+export interface TimeGrainConfig {
+  grain: TimeGrain;
+  temporalColumn: string;
+  metricAggregations: Record<string, AggregationFunction>;
+}
+
+/**
+ * Checks whether a column type is a temporal type (DATE, TIMESTAMP, TIME).
+ */
+export function isTemporalType(type: string): boolean {
+  const temporalTypes = ['date', 'timestamp', 'time'];
+  return temporalTypes.some((t) => type.toLowerCase().includes(t));
+}
+
+/**
+ * Wraps the original SQL as a subquery with DATE_TRUNC and GROUP BY for time grain aggregation.
+ * Returns null if config is incomplete.
+ */
+export function buildTimeGrainQuery(
+  originalSql: string,
+  config: TimeGrainConfig
+): string | null {
+  if (!config.grain || !config.temporalColumn) {
+    return null;
+  }
+
+  const metricEntries = Object.entries(config.metricAggregations);
+  if (metricEntries.length === 0) {
+    return null;
+  }
+
+  const quotedTemporal = quoteColumnName(config.temporalColumn);
+  const dateTruncExpr = `DATE_TRUNC('${config.grain}', ${quotedTemporal})`;
+
+  const selectParts = [
+    `${dateTruncExpr} AS ${quotedTemporal}`,
+    ...metricEntries.map(([col, agg]) => {
+      const quotedCol = quoteColumnName(col);
+      return `${agg}(${quotedCol}) AS ${quotedCol}`;
+    }),
+  ];
+
+  return [
+    `SELECT ${selectParts.join(', ')}`,
+    `FROM (${originalSql}) AS _t`,
+    `GROUP BY ${dateTruncExpr}`,
+    `ORDER BY 1`,
+  ].join('\n');
+}
+
+/**
+ * Returns true only when timeGrain is set AND every metric has a corresponding aggregation.
+ */
+export function hasCompleteTimeGrainConfig(
+  chartOptions: Record<string, unknown> | undefined,
+  metrics: string[] | undefined
+): boolean {
+  if (!chartOptions || !chartOptions.timeGrain || !metrics || metrics.length === 0) {
+    return false;
+  }
+  const aggregations = chartOptions.metricAggregations as Record<string, string> | undefined;
+  if (!aggregations) {
+    return false;
+  }
+  return metrics.every((m) => !!aggregations[m]);
 }
 
 export function calculateColumnStats(
