@@ -55,6 +55,14 @@ const uiSlice = createSlice({
     setResultsPanelTab: (state, action: PayloadAction<'results' | 'visualization' | 'history'>) => {
       state.resultsPanelTab = action.payload;
     },
+    restoreUiState: (
+      state,
+      action: PayloadAction<{ sidebarCollapsed: boolean; sidebarWidth: number; editorHeight: number }>
+    ) => {
+      state.sidebarCollapsed = action.payload.sidebarCollapsed;
+      state.sidebarWidth = Math.max(200, Math.min(500, action.payload.sidebarWidth));
+      state.editorHeight = Math.max(150, Math.min(600, action.payload.editorHeight));
+    },
   },
 });
 
@@ -65,6 +73,7 @@ export const {
   setSelectedSchema,
   setSelectedTable,
   setResultsPanelTab,
+  restoreUiState,
 } = uiSlice.actions;
 
 export default uiSlice.reducer;

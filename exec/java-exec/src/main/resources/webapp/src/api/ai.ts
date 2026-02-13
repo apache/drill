@@ -111,6 +111,38 @@ export async function transpileSql(
 }
 
 /**
+ * Format/pretty-print a SQL string via the backend sqlglot service.
+ */
+export async function formatSql(sql: string): Promise<string> {
+  try {
+    const response = await apiClient.post<{ sql: string; success: boolean }>(
+      '/api/v1/transpile/format',
+      { sql }
+    );
+    return response.data.sql;
+  } catch {
+    return sql;
+  }
+}
+
+/**
+ * Convert a column's data type via the backend sqlglot service.
+ * Wraps the column in a CAST() expression using AST manipulation.
+ */
+export async function convertDataType(
+  sql: string,
+  columnName: string,
+  dataType: string,
+  columns?: Record<string, string>
+): Promise<{ sql: string; success: boolean; formattedOriginal?: string }> {
+  const response = await apiClient.post<{ sql: string; success: boolean; formattedOriginal?: string }>(
+    '/api/v1/transpile/convert-type',
+    { sql, columnName, dataType, columns }
+  );
+  return response.data;
+}
+
+/**
  * Stream a chat completion via POST SSE.
  * Uses native fetch + ReadableStream since axios doesn't support streaming.
  * Returns an AbortController for cancellation.

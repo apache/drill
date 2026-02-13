@@ -82,6 +82,10 @@ export interface QueryResult {
   rows: Record<string, unknown>[];
   queryId: string;
   queryState?: string;
+  // Error fields returned by Drill when queryState is "FAILED"
+  errorMessage?: string;
+  exception?: string;
+  stackTrace?: string[];
 }
 
 export interface QueryError {

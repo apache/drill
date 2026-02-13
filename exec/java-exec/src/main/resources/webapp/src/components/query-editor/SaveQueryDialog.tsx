@@ -121,8 +121,8 @@ export default function SaveQueryDialog({
           <Switch />
         </Form.Item>
 
-        <div style={{ marginTop: 16, padding: 12, background: '#f5f5f5', borderRadius: 4 }}>
-          <div style={{ fontSize: 12, color: '#666', marginBottom: 4 }}>SQL Preview:</div>
+        <div style={{ marginTop: 16, padding: 12, background: 'var(--color-bg-elevated)', borderRadius: 4 }}>
+          <div style={{ fontSize: 12, color: 'var(--color-text-secondary)', marginBottom: 4 }}>SQL Preview:</div>
           <pre style={{ margin: 0, fontSize: 12, maxHeight: 100, overflow: 'auto' }}>
             {sql.length > 500 ? sql.substring(0, 500) + '...' : sql}
           </pre>

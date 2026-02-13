@@ -354,7 +354,7 @@ export default function ChartPreview({
           justifyContent: 'center',
           flexDirection: 'column',
         }}>
-          <div style={{ fontSize: 28, fontWeight: 700, color: '#262626' }}>
+          <div style={{ fontSize: 28, fontWeight: 700, color: 'var(--color-text)' }}>
             {lastValue.toLocaleString()}
           </div>
         </div>
@@ -389,16 +389,16 @@ export default function ChartPreview({
         flexDirection: 'column',
         gap: 8,
       }}>
-        <div style={{ fontSize: 48, fontWeight: 700, color: '#262626', lineHeight: 1.2 }}>
+        <div style={{ fontSize: 48, fontWeight: 700, color: 'var(--color-text)', lineHeight: 1.2 }}>
           {lastValue.toLocaleString()}
         </div>
-        <div style={{ fontSize: 14, color: '#8c8c8c' }}>
+        <div style={{ fontSize: 14, color: 'var(--color-text-secondary)' }}>
           {metricField}
         </div>
         {showTrend && hasMultipleRows && (
           <div style={{
             fontSize: 16,
-            color: trendDirection === 'up' ? '#52c41a' : trendDirection === 'down' ? '#ff4d4f' : '#8c8c8c',
+            color: trendDirection === 'up' ? '#52c41a' : trendDirection === 'down' ? '#ff4d4f' : 'var(--color-text-secondary)',
             display: 'flex',
             alignItems: 'center',
             gap: 4,
