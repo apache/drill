@@ -32,9 +32,10 @@ import com.google.common.collect.ImmutableMap;
 import org.apache.drill.test.ClusterFixture;
 import org.apache.drill.test.ClusterTest;
 import org.apache.hadoop.conf.Configuration;
+import org.junit.AfterClass;
 import org.junit.BeforeClass;
-import org.junit.ClassRule;
 import org.junit.Test;
+import org.testcontainers.DockerClientFactory;
 import org.testcontainers.containers.BindMode;
 import org.testcontainers.utility.DockerImageName;
 import org.testcontainers.vault.VaultContainer;
@@ -43,6 +44,7 @@ import java.util.Collections;
 import java.util.Map;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assume.assumeTrue;
 
 public class CredentialsProviderImplementationsTest extends ClusterTest {
 
@@ -52,25 +54,32 @@ public class CredentialsProviderImplementationsTest extends ClusterTest {
   private static final String USER_SECRET_PATH = "secret/testing/$user";
   private static final String CONTAINER_POLICY_PATH = "/tmp/read-vault-secrets.hcl";
 
-  @ClassRule
-  public static final VaultContainer<?> vaultContainer =
-    new VaultContainer<>(DockerImageName.parse("vault").withTag("1.10.3"))
-      .withVaultToken(VAULT_ROOT_TOKEN)
-      .withSecretInVault(SHARED_SECRET_PATH,
-          "top_secret=password1",
-          "db_password=dbpassword1")
-      .withSecretInVault(USER_SECRET_PATH.replace(VaultCredentialsProvider.QUERY_USER_VAR, "alice"),
-          "top_secret=password1",
-          "db_password=dbpassword1")
-      .withClasspathResourceMapping("vault/read-vault-secrets.hcl", CONTAINER_POLICY_PATH, BindMode.READ_ONLY)
-      .withInitCommand(
-        "auth enable approle",
-        String.format("policy write read-secrets %s", CONTAINER_POLICY_PATH),
-        String.format("write %s policies=read-secrets", VAULT_APP_ROLE_PATH)
-      );
+  private static VaultContainer<?> vaultContainer;
 
   @BeforeClass
   public static void init() throws Exception {
+    assumeTrue(
+      "Docker is not available, skipping Vault container tests",
+      DockerClientFactory.instance().isDockerAvailable()
+    );
+
+    vaultContainer =
+      new VaultContainer<>(DockerImageName.parse("vault").withTag("1.10.3"))
+        .withVaultToken(VAULT_ROOT_TOKEN)
+        .withSecretInVault(SHARED_SECRET_PATH,
+            "top_secret=password1",
+            "db_password=dbpassword1")
+        .withSecretInVault(USER_SECRET_PATH.replace(VaultCredentialsProvider.QUERY_USER_VAR, "alice"),
+            "top_secret=password1",
+            "db_password=dbpassword1")
+        .withClasspathResourceMapping("vault/read-vault-secrets.hcl", CONTAINER_POLICY_PATH, BindMode.READ_ONLY)
+        .withInitCommand(
+          "auth enable approle",
+          String.format("policy write read-secrets %s", CONTAINER_POLICY_PATH),
+          String.format("write %s policies=read-secrets", VAULT_APP_ROLE_PATH)
+        );
+    vaultContainer.start();
+
     String vaultAddr = String.format(
       "http://%s:%d",
       vaultContainer.getHost(),
@@ -102,6 +111,13 @@ public class CredentialsProviderImplementationsTest extends ClusterTest {
       .configProperty(VaultCredentialsProvider.VAULT_APP_ROLE_ID, appRoleId)
       .configProperty(VaultCredentialsProvider.VAULT_SECRET_ID, secretId)
     );
+  }
+
+  @AfterClass
+  public static void tearDown() {
+    if (vaultContainer != null) {
+      vaultContainer.stop();
+    }
   }
 
   @Test
