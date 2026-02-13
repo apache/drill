@@ -26,10 +26,11 @@ import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.test.ClientFixture;
 import org.apache.drill.test.ClusterFixture;
 import org.apache.drill.test.ClusterTest;
+import org.junit.AfterClass;
 import org.junit.BeforeClass;
-import org.junit.ClassRule;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
+import org.testcontainers.DockerClientFactory;
 import org.testcontainers.utility.DockerImageName;
 import org.testcontainers.vault.VaultContainer;
 import org.testcontainers.vault.VaultLogLevel;
@@ -38,6 +39,7 @@ import java.util.Arrays;
 import java.util.List;
 
 import static org.junit.Assert.fail;
+import static org.junit.Assume.assumeTrue;
 
 @Category(SecurityTest.class)
 public class TestVaultUserAuthenticator extends ClusterTest {
@@ -46,24 +48,38 @@ public class TestVaultUserAuthenticator extends ClusterTest {
 
   private static String vaultAddr;
 
-  @ClassRule
-  public static final VaultContainer<?> vaultContainer =
-      new VaultContainer<>(DockerImageName.parse("vault").withTag("1.10.3"))
-          .withLogLevel(VaultLogLevel.Debug)
-          .withVaultToken(VAULT_ROOT_TOKEN)
-          .withInitCommand(
-            "auth enable userpass",
-            "write auth/userpass/users/alice password=pass1 policies=admins",
-            "write auth/userpass/users/bob password=buzzkill policies=admins"
-          );
+  private static VaultContainer<?> vaultContainer;
 
   @BeforeClass
   public static void init() throws Exception {
+    assumeTrue(
+      "Docker is not available, skipping Vault container tests",
+      DockerClientFactory.instance().isDockerAvailable()
+    );
+
+    vaultContainer =
+      new VaultContainer<>(DockerImageName.parse("vault").withTag("1.10.3"))
+        .withLogLevel(VaultLogLevel.Debug)
+        .withVaultToken(VAULT_ROOT_TOKEN)
+        .withInitCommand(
+          "auth enable userpass",
+          "write auth/userpass/users/alice password=pass1 policies=admins",
+          "write auth/userpass/users/bob password=buzzkill policies=admins"
+        );
+    vaultContainer.start();
+
     vaultAddr = String.format(
       "http://%s:%d",
       vaultContainer.getHost(),
       vaultContainer.getMappedPort(8200)
     );
+  }
+
+  @AfterClass
+  public static void tearDown() {
+    if (vaultContainer != null) {
+      vaultContainer.stop();
+    }
   }
 
   @Test
