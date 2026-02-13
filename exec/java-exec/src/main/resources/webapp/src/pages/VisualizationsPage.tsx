@@ -60,7 +60,7 @@ import {
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { getVisualizations, deleteVisualization } from '../api/visualizations';
 import { executeQuery } from '../api/queries';
-import { ChartPreview, VisualizationBuilder } from '../components/visualization';
+import { ChartPreview, VisualizationEditor } from '../components/visualization';
 import type { Visualization, ChartType, QueryResult } from '../types';
 
 const { Title, Text, Paragraph } = Typography;
@@ -382,8 +382,8 @@ export default function VisualizationsPage() {
         </Space>
       </Card>
 
-      {/* Edit via VisualizationBuilder */}
-      <VisualizationBuilder
+      {/* Edit via VisualizationEditor */}
+      <VisualizationEditor
         open={!!editBuilderViz}
         visualization={editBuilderViz}
         onClose={() => setEditBuilderViz(null)}
