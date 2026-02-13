@@ -15,6 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+import React from 'react';
 import { Card, Typography, Row, Col, Tooltip } from 'antd';
 import {
   AreaChartOutlined,
@@ -132,14 +133,15 @@ const chartTypes: ChartTypeOption[] = [
 interface ChartTypeSelectorProps {
   value?: ChartType;
   onChange?: (type: ChartType) => void;
+  compact?: boolean;
 }
 
-export default function ChartTypeSelector({ value, onChange }: ChartTypeSelectorProps) {
+export default function ChartTypeSelector({ value, onChange, compact }: ChartTypeSelectorProps) {
   const basicCharts = chartTypes.filter((c) => c.category === 'basic');
   const advancedCharts = chartTypes.filter((c) => c.category === 'advanced');
 
   const renderChartCard = (chart: ChartTypeOption) => (
-    <Col key={chart.type} xs={12} sm={8} md={6} lg={4}>
+    <Col key={chart.type} xs={compact ? 8 : 12} sm={compact ? 8 : 8} md={compact ? 8 : 6} lg={compact ? 8 : 4}>
       <Tooltip title={chart.description}>
         <Card
           hoverable
@@ -149,14 +151,18 @@ export default function ChartTypeSelector({ value, onChange }: ChartTypeSelector
             textAlign: 'center',
             border: value === chart.type ? '2px solid #1890ff' : '1px solid var(--color-border)',
             backgroundColor: value === chart.type ? 'var(--color-bg-hover)' : undefined,
+            padding: compact ? 0 : undefined,
           }}
+          styles={compact ? { body: { padding: '6px 4px' } } : undefined}
         >
-          <div style={{ color: value === chart.type ? '#1890ff' : 'var(--color-text-secondary)' }}>
-            {chart.icon}
+          <div style={{ color: value === chart.type ? '#1890ff' : 'var(--color-text-secondary)', fontSize: compact ? 18 : 24 }}>
+            {compact
+              ? React.cloneElement(chart.icon as React.ReactElement, { style: { fontSize: 18 } })
+              : chart.icon}
           </div>
           <Text
             strong={value === chart.type}
-            style={{ fontSize: 12, display: 'block', marginTop: 4 }}
+            style={{ fontSize: compact ? 10 : 12, display: 'block', marginTop: compact ? 2 : 4 }}
           >
             {chart.name}
           </Text>
@@ -164,6 +170,14 @@ export default function ChartTypeSelector({ value, onChange }: ChartTypeSelector
       </Tooltip>
     </Col>
   );
+
+  if (compact) {
+    return (
+      <Row gutter={[4, 4]}>
+        {[...basicCharts, ...advancedCharts].map(renderChartCard)}
+      </Row>
+    );
+  }
 
   return (
     <div>

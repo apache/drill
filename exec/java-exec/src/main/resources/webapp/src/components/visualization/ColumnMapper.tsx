@@ -15,9 +15,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import { Form, Select, Switch, Typography, Space, Tag } from 'antd';
-import { FieldNumberOutlined, FieldStringOutlined } from '@ant-design/icons';
+import { Form, Select, Switch, Typography, Space, Tag, Divider } from 'antd';
+import { FieldNumberOutlined, FieldStringOutlined, ClockCircleOutlined, FieldTimeOutlined } from '@ant-design/icons';
 import type { ChartType, VisualizationConfig } from '../../types';
+import { isTemporalType } from '../../utils/sqlTransformations';
+import type { TimeGrain, AggregationFunction } from '../../utils/sqlTransformations';
 
 const { Text } = Typography;
 
@@ -38,6 +40,26 @@ function isNumericType(type: string): boolean {
   const numericTypes = ['int', 'bigint', 'float', 'double', 'decimal', 'numeric', 'smallint', 'tinyint'];
   return numericTypes.some((t) => type.toLowerCase().includes(t));
 }
+
+const TIME_GRAIN_OPTIONS: { value: TimeGrain | ''; label: string }[] = [
+  { value: '', label: 'None' },
+  { value: 'SECOND', label: 'Second' },
+  { value: 'MINUTE', label: 'Minute' },
+  { value: 'HOUR', label: 'Hour' },
+  { value: 'DAY', label: 'Day' },
+  { value: 'WEEK', label: 'Week' },
+  { value: 'MONTH', label: 'Month' },
+  { value: 'QUARTER', label: 'Quarter' },
+  { value: 'YEAR', label: 'Year' },
+];
+
+const AGGREGATION_OPTIONS: { value: AggregationFunction; label: string }[] = [
+  { value: 'SUM', label: 'SUM' },
+  { value: 'AVG', label: 'AVG' },
+  { value: 'MIN', label: 'MIN' },
+  { value: 'MAX', label: 'MAX' },
+  { value: 'COUNT', label: 'COUNT' },
+];
 
 // Get required fields for each chart type
 function getRequiredFields(chartType: ChartType): { field: string; label: string; multi?: boolean; numeric?: boolean }[] {
@@ -103,32 +125,58 @@ export default function ColumnMapper({ columns, chartType, config, onChange }: C
   const requiredFields = getRequiredFields(chartType);
 
   const handleFieldChange = (field: string, value: string | string[]) => {
-    const newConfig = { ...config };
+    const newConfig = { ...config, chartOptions: { ...config.chartOptions } };
     if (field === 'xAxis') {
       newConfig.xAxis = value as string;
+      // Clear time grain if x-axis changes to non-temporal column
+      const selectedCol = columns.find((c) => c.name === value);
+      if (!selectedCol || !isTemporalType(selectedCol.type)) {
+        delete newConfig.chartOptions.timeGrain;
+        delete newConfig.chartOptions.metricAggregations;
+      }
     } else if (field === 'yAxis') {
       newConfig.yAxis = value as string;
     } else if (field === 'metrics') {
-      newConfig.metrics = Array.isArray(value) ? value : [value];
+      const newMetrics = Array.isArray(value) ? value : [value];
+      newConfig.metrics = newMetrics;
+      // Remove stale aggregation entries for removed metrics
+      const aggregations = newConfig.chartOptions.metricAggregations as Record<string, string> | undefined;
+      if (aggregations) {
+        const cleaned: Record<string, string> = {};
+        for (const m of newMetrics) {
+          if (aggregations[m]) {
+            cleaned[m] = aggregations[m];
+          }
+        }
+        if (Object.keys(cleaned).length > 0) {
+          newConfig.chartOptions.metricAggregations = cleaned;
+        } else {
+          delete newConfig.chartOptions.metricAggregations;
+        }
+      }
     } else if (field === 'dimensions') {
       newConfig.dimensions = Array.isArray(value) ? value : [value];
     }
     onChange(newConfig);
   };
 
-  const renderColumnOption = (col: ColumnInfo) => (
-    <Select.Option key={col.name} value={col.name}>
-      <Space>
-        {isNumericType(col.type) ? (
-          <FieldNumberOutlined style={{ color: '#52c41a' }} />
-        ) : (
-          <FieldStringOutlined style={{ color: '#1890ff' }} />
-        )}
-        <span>{col.name}</span>
-        <Tag style={{ fontSize: 10 }}>{col.type}</Tag>
-      </Space>
-    </Select.Option>
-  );
+  const renderColumnOption = (col: ColumnInfo) => {
+    let icon = <FieldStringOutlined style={{ color: '#1890ff' }} />;
+    if (isNumericType(col.type)) {
+      icon = <FieldNumberOutlined style={{ color: '#52c41a' }} />;
+    } else if (isTemporalType(col.type)) {
+      icon = <FieldTimeOutlined style={{ color: '#722ed1' }} />;
+    }
+    return (
+      <Select.Option key={col.name} value={col.name}>
+        <Space>
+          {icon}
+          <span>{col.name}</span>
+          <Tag style={{ fontSize: 10 }}>{col.type}</Tag>
+        </Space>
+      </Select.Option>
+    );
+  };
 
   // Filter columns based on type requirements
   const getFilteredColumns = (numericOnly?: boolean) => {
@@ -153,6 +201,40 @@ export default function ColumnMapper({ columns, chartType, config, onChange }: C
       default:
         return undefined;
     }
+  };
+
+  // Time grain computed values
+  const xAxisCol = columns.find((c) => c.name === config.xAxis);
+  const xAxisIsTemporal = !!xAxisCol && isTemporalType(xAxisCol.type);
+  const showTimeGrain = (chartType === 'line' || chartType === 'area') && xAxisIsTemporal;
+  const currentTimeGrain = (config.chartOptions?.timeGrain as TimeGrain | undefined) || undefined;
+  const currentAggregations = (config.chartOptions?.metricAggregations as Record<string, AggregationFunction> | undefined) || {};
+
+  const handleTimeGrainChange = (grain: TimeGrain | '') => {
+    const newOptions = { ...config.chartOptions };
+    if (grain) {
+      newOptions.timeGrain = grain;
+    } else {
+      delete newOptions.timeGrain;
+      delete newOptions.metricAggregations;
+    }
+    onChange({ ...config, chartOptions: newOptions });
+  };
+
+  const handleAggregationChange = (metricName: string, aggregation: AggregationFunction | '') => {
+    const aggregations = { ...(config.chartOptions?.metricAggregations as Record<string, string> || {}) };
+    if (aggregation) {
+      aggregations[metricName] = aggregation;
+    } else {
+      delete aggregations[metricName];
+    }
+    const newOptions = { ...config.chartOptions };
+    if (Object.keys(aggregations).length > 0) {
+      newOptions.metricAggregations = aggregations;
+    } else {
+      delete newOptions.metricAggregations;
+    }
+    onChange({ ...config, chartOptions: newOptions });
   };
 
   if (columns.length === 0) {
@@ -195,6 +277,55 @@ export default function ColumnMapper({ columns, chartType, config, onChange }: C
           </Form.Item>
         );
       })}
+      {showTimeGrain && (
+        <>
+          <Divider style={{ margin: '8px 0' }} />
+          <Form.Item label={<Space><ClockCircleOutlined /> Time Grain</Space>}>
+            <Select
+              placeholder="Select time grain"
+              value={currentTimeGrain || undefined}
+              onChange={(value) => handleTimeGrainChange(value as TimeGrain | '')}
+              allowClear
+              onClear={() => handleTimeGrainChange('')}
+              style={{ width: '100%' }}
+            >
+              {TIME_GRAIN_OPTIONS.filter((o) => o.value !== '').map((o) => (
+                <Select.Option key={o.value} value={o.value}>{o.label}</Select.Option>
+              ))}
+            </Select>
+            <Text type="secondary" style={{ fontSize: 11 }}>
+              Aggregate temporal data by time period
+            </Text>
+          </Form.Item>
+          {currentTimeGrain && config.metrics && config.metrics.length > 0 && (
+            <>
+              <Text strong style={{ fontSize: 12 }}>Metric Aggregations</Text>
+              {config.metrics.map((metric) => (
+                <Form.Item
+                  key={metric}
+                  label={metric}
+                  style={{ marginBottom: 8 }}
+                  validateStatus={currentAggregations[metric] ? undefined : 'warning'}
+                  help={currentAggregations[metric] ? undefined : 'Select an aggregation function'}
+                >
+                  <Select
+                    placeholder="Select aggregation"
+                    value={currentAggregations[metric] || undefined}
+                    onChange={(value) => handleAggregationChange(metric, value as AggregationFunction | '')}
+                    allowClear
+                    onClear={() => handleAggregationChange(metric, '')}
+                    style={{ width: '100%' }}
+                  >
+                    {AGGREGATION_OPTIONS.map((o) => (
+                      <Select.Option key={o.value} value={o.value}>{o.label}</Select.Option>
+                    ))}
+                  </Select>
+                </Form.Item>
+              ))}
+            </>
+          )}
+        </>
+      )}
       {chartType === 'bigNumber' && (
         <>
           <Form.Item label="Show Sparkline">
