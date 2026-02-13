@@ -77,8 +77,11 @@ public class SqlLabSpaServlet extends HttpServlet {
       return;
     }
 
-    // Set content type based on file extension
-    String contentType = getContentType(pathInfo);
+    // Set content type based on file extension.
+    // For SPA fallback routes (non-static assets), we're serving index.html
+    // so use ".html" for content type detection instead of the original path.
+    String contentTypePath = isStaticAsset ? pathInfo : INDEX_HTML;
+    String contentType = getContentType(contentTypePath);
     if (contentType != null) {
       response.setContentType(contentType);
     }
