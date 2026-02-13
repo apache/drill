@@ -41,7 +41,8 @@ export interface ColumnTransformation {
  */
 export function applySqlTransformation(
   sql: string,
-  transformation: ColumnTransformation
+  transformation: ColumnTransformation,
+  resultColumns?: string[]
 ): string | null {
   // Extract SELECT clause
   const selectMatch = sql.match(/SELECT\s+(.*?)\s+FROM/is);
@@ -50,10 +51,24 @@ export function applySqlTransformation(
   }
 
   const selectClause = selectMatch[1];
-  const columns = splitSelectColumns(selectClause);
+  let columns = splitSelectColumns(selectClause);
 
   if (!columns || columns.length === 0) {
     return null;
+  }
+
+  // If the SELECT clause contains a bare *, expand it to explicit column names
+  // so that we can find and transform the target column
+  if (resultColumns && resultColumns.length > 0) {
+    const starIndex = columns.findIndex((c) => c.trim() === '*');
+    if (starIndex !== -1) {
+      const quotedCols = resultColumns.map((c) => quoteColumnName(c));
+      columns = [
+        ...columns.slice(0, starIndex),
+        ...quotedCols,
+        ...columns.slice(starIndex + 1),
+      ];
+    }
   }
 
   // Find and transform the target column
@@ -76,7 +91,7 @@ export function applySqlTransformation(
 
   const newSelectClause = transformedColumns.join(', ');
   const selectIndex = sql.search(/SELECT/i);
-  const fromIndex = selectMatch.index! + selectMatch[0].length - selectMatch[1].length - 5; // 5 = "FROM".length
+  const fromIndex = selectMatch.index! + selectMatch[0].length - 4; // 4 = "FROM".length
 
   return (
     sql.substring(0, selectIndex + 6) + // "SELECT"
@@ -85,6 +100,17 @@ export function applySqlTransformation(
     ' ' +
     sql.substring(fromIndex)
   );
+}
+
+/**
+ * Quotes a column name with backticks if it contains special characters or is a reserved word.
+ * Simple identifiers are left unquoted.
+ */
+function quoteColumnName(name: string): string {
+  if (/^[a-zA-Z_][a-zA-Z0-9_]*$/.test(name)) {
+    return name;
+  }
+  return '`' + name.replace(/`/g, '``') + '`';
 }
 
 /**
@@ -199,11 +225,13 @@ function applyTransformation(colDef: string, transformation: ColumnTransformatio
     case 'trim':
       return `TRIM(${columnName})${alias ? ` AS ${alias}` : ''}`;
 
-    case 'cast':
+    case 'cast': {
       if (!transformation.targetType) {
         return colDef;
       }
-      return `CAST(${columnName} AS ${transformation.targetType})${alias ? ` AS ${alias}` : ''}`;
+      const castAlias = alias || quoteColumnName(transformation.columnName);
+      return `CAST(${columnName} AS ${transformation.targetType}) AS ${castAlias}`;
+    }
 
     case 'truncate':
       if (transformation.length === undefined) {
@@ -220,6 +248,79 @@ function applyTransformation(colDef: string, transformation: ColumnTransformatio
     default:
       return colDef;
   }
+}
+
+/**
+ * Simple SQL pretty-printer. Adds line breaks before major keywords
+ * and indents column lists and conditions.
+ */
+export function prettifySql(sql: string): string {
+  if (!sql || !sql.trim()) {
+    return sql;
+  }
+
+  // Normalize whitespace
+  let formatted = sql.replace(/\s+/g, ' ').trim();
+
+  // Keywords that start a new line (no indent)
+  const majorKeywords = [
+    'SELECT', 'FROM', 'WHERE', 'GROUP BY', 'HAVING',
+    'ORDER BY', 'LIMIT', 'OFFSET', 'UNION', 'UNION ALL',
+    'INTERSECT', 'EXCEPT', 'INSERT INTO', 'UPDATE', 'DELETE FROM',
+    'SET', 'VALUES',
+  ];
+
+  // Keywords that start a new line (with indent)
+  const joinKeywords = [
+    'LEFT OUTER JOIN', 'RIGHT OUTER JOIN', 'FULL OUTER JOIN',
+    'LEFT JOIN', 'RIGHT JOIN', 'FULL JOIN',
+    'INNER JOIN', 'CROSS JOIN', 'JOIN',
+    'ON', 'AND', 'OR',
+  ];
+
+  // Replace major keywords (case-insensitive, whole word)
+  for (const kw of majorKeywords) {
+    const re = new RegExp(`\\b(${kw})\\b`, 'gi');
+    formatted = formatted.replace(re, `\n$1`);
+  }
+
+  // Replace join keywords with indented lines
+  for (const kw of joinKeywords) {
+    const re = new RegExp(`\\b(${kw})\\b`, 'gi');
+    formatted = formatted.replace(re, `\n  $1`);
+  }
+
+  // Indent column list: add newline+indent after SELECT and before FROM
+  formatted = formatted.replace(/\nSELECT\s+/i, '\nSELECT\n  ');
+
+  // Break comma-separated columns onto individual lines (only in SELECT clause)
+  const selectMatch = formatted.match(/\nSELECT\n {2}([\s\S]*?)\nFROM/i);
+  if (selectMatch) {
+    const cols = selectMatch[1];
+    // Split on commas not inside parentheses
+    let depth = 0;
+    let result = '';
+    for (let i = 0; i < cols.length; i++) {
+      const ch = cols[i];
+      if (ch === '(') {
+        depth++;
+      }
+      if (ch === ')') {
+        depth--;
+      }
+      if (ch === ',' && depth === 0) {
+        result += ',\n  ';
+      } else {
+        result += ch;
+      }
+    }
+    formatted = formatted.replace(cols, result);
+  }
+
+  // Clean up: remove leading newline, collapse multiple blank lines
+  formatted = formatted.replace(/^\n+/, '').replace(/\n{3,}/g, '\n\n');
+
+  return formatted;
 }
 
 /**

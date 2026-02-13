@@ -271,7 +271,7 @@ export default function DataSourceEditPage() {
     key: 'json',
     label: 'JSON',
     children: (
-      <div style={{ border: '1px solid #d9d9d9', borderRadius: 4 }}>
+      <div style={{ border: '1px solid var(--color-border)', borderRadius: 4 }}>
         <Editor
           height="500px"
           language="json"

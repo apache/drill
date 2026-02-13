@@ -358,7 +358,7 @@ export default function VisualizationsPage() {
             </div>
           ) : filteredVisualizations.length === 0 ? (
             <Empty
-              image={<BarChartOutlined style={{ fontSize: 64, color: '#d9d9d9' }} />}
+              image={<BarChartOutlined style={{ fontSize: 64, color: 'var(--color-text-tertiary)' }} />}
               description={
                 searchText
                   ? 'No visualizations match your search'

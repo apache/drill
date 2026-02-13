@@ -33,6 +33,14 @@ export async function executeQuery(request: QueryRequest): Promise<QueryResult> 
     defaultSchema: request.defaultSchema,
     options: request.options,
   });
+
+  // Drill returns HTTP 200 even for failed queries — check queryState
+  if (response.data.queryState === 'FAILED') {
+    throw new Error(
+      response.data.errorMessage || 'Query execution failed'
+    );
+  }
+
   return response.data;
 }
 
