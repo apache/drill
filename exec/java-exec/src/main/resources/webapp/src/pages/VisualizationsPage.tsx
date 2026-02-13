@@ -32,8 +32,6 @@ import {
   Empty,
   Spin,
   Modal,
-  Form,
-  Select,
   Alert,
 } from 'antd';
 import {
@@ -43,6 +41,7 @@ import {
   GlobalOutlined,
   LockOutlined,
   UserOutlined,
+  AreaChartOutlined,
   BarChartOutlined,
   LineChartOutlined,
   PieChartOutlined,
@@ -59,16 +58,16 @@ import {
   CodeOutlined,
 } from '@ant-design/icons';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { getVisualizations, deleteVisualization, updateVisualization } from '../api/visualizations';
+import { getVisualizations, deleteVisualization } from '../api/visualizations';
 import { executeQuery } from '../api/queries';
-import { ChartPreview } from '../components/visualization';
+import { ChartPreview, VisualizationBuilder } from '../components/visualization';
 import type { Visualization, ChartType, QueryResult } from '../types';
 
 const { Title, Text, Paragraph } = Typography;
-const { TextArea } = Input;
 
 // Chart type icons mapping
 const chartIcons: Record<ChartType, React.ReactNode> = {
+  area: <AreaChartOutlined />,
   bar: <BarChartOutlined />,
   line: <LineChartOutlined />,
   pie: <PieChartOutlined />,
@@ -84,6 +83,7 @@ const chartIcons: Record<ChartType, React.ReactNode> = {
 
 // Chart type colors
 const chartColors: Record<ChartType, string> = {
+  area: '#73c0de',
   bar: '#5470c6',
   line: '#91cc75',
   pie: '#fac858',
@@ -183,15 +183,13 @@ export default function VisualizationsPage() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const [searchText, setSearchText] = useState('');
-  const [editModalOpen, setEditModalOpen] = useState(false);
-  const [editingViz, setEditingViz] = useState<Visualization | null>(null);
+  const [editBuilderViz, setEditBuilderViz] = useState<Visualization | null>(null);
   const [viewModalOpen, setViewModalOpen] = useState(false);
   const [viewingViz, setViewingViz] = useState<Visualization | null>(null);
   const [viewQueryResult, setViewQueryResult] = useState<QueryResult | null>(null);
   const [viewQueryLoading, setViewQueryLoading] = useState(false);
   const [viewQueryError, setViewQueryError] = useState<string | null>(null);
   const [showSql, setShowSql] = useState(false);
-  const [form] = Form.useForm();
 
   // Fetch visualizations
   const { data: visualizations, isLoading, error } = useQuery({
@@ -211,21 +209,6 @@ export default function VisualizationsPage() {
     },
   });
 
-  // Update mutation
-  const updateMutation = useMutation({
-    mutationFn: ({ id, data }: { id: string; data: Partial<Visualization> }) =>
-      updateVisualization(id, data),
-    onSuccess: () => {
-      message.success('Visualization updated successfully');
-      queryClient.invalidateQueries({ queryKey: ['visualizations'] });
-      setEditModalOpen(false);
-      setEditingViz(null);
-    },
-    onError: (error: Error) => {
-      message.error(`Failed to update visualization: ${error.message}`);
-    },
-  });
-
   // Filter visualizations based on search text
   const filteredVisualizations = useMemo(() => {
     if (!visualizations) {
@@ -242,17 +225,6 @@ export default function VisualizationsPage() {
         (v.description && v.description.toLowerCase().includes(lowerSearch))
     );
   }, [visualizations, searchText]);
-
-  // Handle edit
-  const handleEdit = (viz: Visualization) => {
-    setEditingViz(viz);
-    form.setFieldsValue({
-      name: viz.name,
-      description: viz.description,
-      isPublic: viz.isPublic,
-    });
-    setEditModalOpen(true);
-  };
 
   // Handle view - execute SQL and render chart
   const handleView = useCallback(async (viz: Visualization) => {
@@ -282,26 +254,6 @@ export default function VisualizationsPage() {
       setViewQueryLoading(false);
     }
   }, []);
-
-  // Handle save edit
-  const handleSaveEdit = async () => {
-    if (!editingViz) {
-      return;
-    }
-    try {
-      const values = await form.validateFields();
-      updateMutation.mutate({
-        id: editingViz.id,
-        data: {
-          name: values.name,
-          description: values.description,
-          isPublic: values.isPublic,
-        },
-      });
-    } catch {
-      // Form validation failed
-    }
-  };
 
   // Format timestamp
   const formatDate = (timestamp: number | string) => {
@@ -378,7 +330,7 @@ export default function VisualizationsPage() {
                         <EyeOutlined onClick={() => handleView(viz)} />
                       </Tooltip>,
                       <Tooltip title="Edit" key="edit">
-                        <EditOutlined onClick={() => handleEdit(viz)} />
+                        <EditOutlined onClick={() => setEditBuilderViz(viz)} />
                       </Tooltip>,
                       <Popconfirm
                         key="delete"
@@ -430,38 +382,12 @@ export default function VisualizationsPage() {
         </Space>
       </Card>
 
-      {/* Edit Modal */}
-      <Modal
-        title="Edit Visualization"
-        open={editModalOpen}
-        onOk={handleSaveEdit}
-        onCancel={() => {
-          setEditModalOpen(false);
-          setEditingViz(null);
-        }}
-        confirmLoading={updateMutation.isPending}
-      >
-        <Form form={form} layout="vertical">
-          <Form.Item
-            name="name"
-            label="Name"
-            rules={[{ required: true, message: 'Please enter a name' }]}
-          >
-            <Input />
-          </Form.Item>
-          <Form.Item name="description" label="Description">
-            <TextArea rows={3} />
-          </Form.Item>
-          <Form.Item name="isPublic" label="Visibility">
-            <Select
-              options={[
-                { value: false, label: 'Private' },
-                { value: true, label: 'Public' },
-              ]}
-            />
-          </Form.Item>
-        </Form>
-      </Modal>
+      {/* Edit via VisualizationBuilder */}
+      <VisualizationBuilder
+        open={!!editBuilderViz}
+        visualization={editBuilderViz}
+        onClose={() => setEditBuilderViz(null)}
+      />
 
       {/* View Modal - renders actual chart */}
       <Modal
