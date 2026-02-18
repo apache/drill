@@ -38,8 +38,7 @@ import { executeQuery } from '../../api/queries';
 import ChartTypeSelector from './ChartTypeSelector';
 import ColumnMapper from './ColumnMapper';
 import ChartPreview from './ChartPreview';
-import { buildAggregationQuery, hasCompleteAggregationConfig } from '../../utils/sqlTransformations';
-import type { TimeGrain, AggregationFunction } from '../../utils/sqlTransformations';
+import { getEffectiveQuery } from '../../utils/sqlTransformations';
 import type { ChartType, VisualizationConfig, QueryResult, VisualizationCreate, Visualization } from '../../types';
 
 const { Text } = Typography;
@@ -104,28 +103,6 @@ export default function VisualizationEditor({
     }
   }, [open, visualization, form]);
 
-  // Build effective query with aggregation if applicable
-  const getEffectiveQuery = useCallback((originalSql: string, cfg: VisualizationConfig): string => {
-    if (!hasCompleteAggregationConfig(cfg.chartOptions, cfg.metrics)) {
-      return originalSql;
-    }
-    const aggregations = cfg.chartOptions!.metricAggregations as Record<string, AggregationFunction>;
-    const groupByColumns: string[] = [];
-    if (cfg.xAxis) {
-      groupByColumns.push(cfg.xAxis);
-    }
-    if (cfg.dimensions) {
-      groupByColumns.push(...cfg.dimensions);
-    }
-    const wrapped = buildAggregationQuery(originalSql, {
-      metricAggregations: aggregations,
-      groupByColumns,
-      timeGrain: cfg.chartOptions?.timeGrain as TimeGrain | undefined,
-      temporalColumn: cfg.xAxis,
-    });
-    return wrapped || originalSql;
-  }, []);
-
   // Fetch base data (original SQL, no time grain) — provides columns for ColumnMapper
   const fetchData = useCallback(async () => {
     if (!editedSql.trim()) {
@@ -156,12 +133,12 @@ export default function VisualizationEditor({
     }
   }, [editedSql, visualization?.defaultSchema]);
 
-  // Auto-fetch base data on open
+  // Auto-fetch base data on open (gated on editedSql so it waits for the init effect)
   useEffect(() => {
-    if (open && visualization) {
+    if (open && visualization && editedSql) {
       fetchData();
     }
-  }, [open, visualization, fetchData]);
+  }, [open, visualization, editedSql, fetchData]);
 
   // Extract column info from base data (always the full column set)
   const columns = useMemo(() => {
@@ -198,12 +175,22 @@ export default function VisualizationEditor({
     setStaleMapping(hasStale);
   }, [columns, config.xAxis, config.yAxis, config.metrics, config.dimensions]);
 
-  const effectiveQuery = useMemo(() => {
+  const [effectiveQuery, setEffectiveQuery] = useState<string>('');
+
+  // Compute effective query asynchronously (time grain via backend)
+  useEffect(() => {
     if (!editedSql) {
-      return '';
+      setEffectiveQuery('');
+      return;
     }
-    return getEffectiveQuery(editedSql, config);
-  }, [editedSql, config, getEffectiveQuery]);
+    let cancelled = false;
+    getEffectiveQuery(editedSql, config).then((result) => {
+      if (!cancelled) {
+        setEffectiveQuery(result);
+      }
+    });
+    return () => { cancelled = true; };
+  }, [editedSql, config]);
 
   // Data for chart preview: prefer aggregated data when available
   const previewData = aggregatedData || baseData;

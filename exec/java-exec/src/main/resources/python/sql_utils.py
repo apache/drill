@@ -382,7 +382,7 @@ def convert_data_type(sql, column_name, data_type, column_list=None):
         if isinstance(column.parent, exp.Alias):
           # Column already has an alias — preserve it
           existing_alias = column.parent.alias
-          cast_expr = parse_one(f"CAST({_get_column_name(column)} AS {data_type}) AS `{existing_alias}`")
+          cast_expr = parse_one(f"CAST({_get_column_name(column)} AS {data_type}) AS `{existing_alias}`", read="drill")
           column.parent.replace(cast_expr)
         elif isinstance(column.parent, exp.Func):
           # Column is inside a function — wrap the outermost function
@@ -392,14 +392,14 @@ def convert_data_type(sql, column_name, data_type, column_list=None):
 
           if isinstance(parent.parent, exp.Alias):
             existing_alias = parent.parent.alias
-            cast_expr = parse_one(f"CAST({parent} AS {data_type}) AS `{existing_alias}`")
+            cast_expr = parse_one(f"CAST({parent} AS {data_type}) AS `{existing_alias}`", read="drill")
             parent.parent.replace(cast_expr)
           else:
-            cast_expr = parse_one(f"CAST({parent} AS {data_type}) AS {alias}")
+            cast_expr = parse_one(f"CAST({parent} AS {data_type}) AS {alias}", read="drill")
             parent.replace(cast_expr)
         else:
           # Simple column with no alias — add original name as alias
-          cast_expr = parse_one(f"CAST({_get_column_name(column)} AS {data_type}) AS {alias}")
+          cast_expr = parse_one(f"CAST({_get_column_name(column)} AS {data_type}) AS {alias}", read="drill")
           column.replace(cast_expr)
   return parsed_query.sql(dialect="drill", pretty=True)
 
@@ -418,3 +418,94 @@ def convert_data_type_raw(sql, column_name, data_type, columns_json=None):
   """
   columns = json.loads(columns_json) if columns_json else None
   return convert_data_type(sql, column_name, data_type, columns)
+
+def change_time_grain(sql: str, column_name: str, time_grain: str, column_list: list[str]):
+    """
+    Modifies the SQL query to change the time grain of a specified column by replacing it with a function call.
+    The function handles different cases in the query structure, including simple columns, aliased columns,
+    columns within functions, and subqueries. If the column has no alias, the original column name is used as
+    the alias for the transformed column.
+
+    Parameters:
+        sql (str): The original SQL query string to be modified.
+        column_name (str): The name of the column whose time grain needs to be changed.
+        time_grain (str): The time grain transformation to be applied to the column.
+        column_list (list[str]): A list of all column names in the table, used when the query contains a wildcard (*).
+
+    Returns:
+        dict: A dictionary containing the modified SQL query string. The key is:
+            - "sql": The new SQL query string with the updated time grain transformation.
+
+    Raises:
+        None
+    """
+
+    function_name = "DATE_TRUNC"
+    time_grain = time_grain.upper()
+    parsed_query = parse_one(sql, read="drill")
+
+    # Should never be a star query
+    if is_star_query(parsed_query):
+      # replace_star_with_columns expects a dict; convert list to dict if needed
+      if isinstance(column_list, list):
+        column_list = {col: "VARCHAR" for col in column_list}
+      parsed_query = replace_star_with_columns(parsed_query, column_list)
+
+    column_nodes = parsed_query.find_all(exp.Column)
+    for column in column_nodes:
+      if column.alias_or_name == column_name:
+        # There are several cases
+        # 1.  The column is a simple column with no alias.
+        # 2.  The column is a simple column with an alias.
+        # 3.  The column is a function.
+        # 4.  The column is already a DATE_TRUNC function
+        # 5.  The column is a subquery.
+        if isinstance(column, exp.Column):
+          if isinstance(column.parent, exp.Alias):
+            # Case 2: Column already has an alias.  In this case, we reuse the alias.
+            updated_node = parse_one(function_name + f"({time_grain}, {_get_column_name(column)})")
+            column.replace(updated_node)
+
+          # Case 4:  Existing DATE_TRUNC
+          elif isinstance(column.parent, exp.DateTrunc):
+            parent = column.parent
+            parent.set("unit", exp.Literal.string(time_grain))
+
+          elif isinstance(column.parent, exp.Func):
+            # Case 3: The column is in a function.
+            # Recurse out of the current node to find the outermost parent node that is a function
+            parent = column.parent
+            while isinstance(parent.parent, exp.Func):
+              parent = parent.parent
+
+            if isinstance(parent.parent, exp.Alias):
+              updated_node = parse_one(f"{function_name}({time_grain}, {parent})")
+            else:
+              updated_node = parse_one(f"{function_name}({time_grain}, {parent}) AS {column_name}")
+            parent.replace(updated_node)
+
+          else:
+            # Case 1: Column has no alias.  In this case, we add the original column name as an alias
+            updated_node = parse_one(
+              f"{function_name}({time_grain}, {_get_column_name(column)}) AS {column.alias_or_name}")
+            column.replace(updated_node)
+    return {
+      "sql": parsed_query.sql(dialect="drill", pretty=True, normalize_functions="lower")
+    }
+
+
+def change_time_grain_raw(sql, column_name, time_grain, columns_json=None):
+  """Entry point for Java/GraalPy. Accepts a JSON string for the column list.
+
+  Args:
+      sql: The SQL query string.
+      column_name: The temporal column to transform.
+      time_grain: The time grain (e.g. 'MONTH', 'YEAR').
+      columns_json: Optional JSON array string of column names (for star queries).
+
+  Returns:
+      The transformed SQL string.
+  """
+  columns = json.loads(columns_json) if columns_json else []
+  result = change_time_grain(sql, column_name, time_grain, columns)
+  return result["sql"]

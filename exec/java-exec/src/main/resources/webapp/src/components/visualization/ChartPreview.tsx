@@ -783,6 +783,7 @@ export default function ChartPreview({
   return (
     <ReactECharts
       option={finalOption}
+      notMerge
       style={{ height, width: '100%' }}
       opts={{ renderer: 'canvas' }}
     />
