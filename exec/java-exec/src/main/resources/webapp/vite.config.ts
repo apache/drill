@@ -51,6 +51,10 @@ export default defineConfig({
         target: 'http://localhost:8047',
         changeOrigin: true,
       },
+      '/profiles': {
+        target: 'http://localhost:8047',
+        changeOrigin: true,
+      },
     },
   },
 });
