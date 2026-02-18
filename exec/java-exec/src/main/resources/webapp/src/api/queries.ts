@@ -36,9 +36,29 @@ export async function executeQuery(request: QueryRequest): Promise<QueryResult> 
 
   // Drill returns HTTP 200 even for failed queries — check queryState
   if (response.data.queryState === 'FAILED') {
-    throw new Error(
-      response.data.errorMessage || 'Query execution failed'
-    );
+    const queryId = response.data.queryId;
+    let detail = response.data.errorMessage || response.data.exception || '';
+
+    // If no error detail in the query response, try fetching the profile
+    if (!detail && queryId) {
+      try {
+        const profile = await apiClient.get(`/profiles/${queryId}.json`);
+        const profileData = profile.data;
+        // Prefer verboseError (detailed) over error (concise)
+        if (profileData?.verboseError) {
+          detail = profileData.verboseError;
+        } else if (profileData?.error) {
+          detail = profileData.error;
+        }
+      } catch {
+        // Profile fetch failed — fall through to generic message
+      }
+    }
+
+    if (!detail) {
+      detail = 'Query execution failed — check /profiles/' + (queryId || '') + ' for details';
+    }
+    throw new Error(queryId ? `${detail} [queryId: ${queryId}]` : detail);
   }
 
   return response.data;
