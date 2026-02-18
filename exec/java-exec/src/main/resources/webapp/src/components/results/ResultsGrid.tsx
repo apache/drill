@@ -25,6 +25,7 @@ import {
   RobotOutlined,
   UnorderedListOutlined,
   SortAscendingOutlined,
+  ApiOutlined,
 } from '@ant-design/icons';
 import type { ColDef, GridReadyEvent, GridApi, SortModelItem } from 'ag-grid-community';
 import type { MenuProps } from 'antd';
@@ -56,6 +57,7 @@ interface ResultsGridProps {
   onFixWithProspector?: () => void;
   prospectorAvailable?: boolean;
   onTransformColumn?: (columnName: string, transformation: ColumnTransformation) => void;
+  onShareApi?: () => void;
 }
 
 export default function ResultsGrid({
@@ -67,6 +69,7 @@ export default function ResultsGrid({
   onFixWithProspector,
   prospectorAvailable,
   onTransformColumn,
+  onShareApi,
 }: ResultsGridProps) {
   const gridRef = useRef<AgGridReact>(null);
   const gridApiRef = useRef<GridApi | null>(null);
@@ -318,6 +321,13 @@ export default function ResultsGrid({
             size="small"
           >
             Create Chart
+          </Button>
+          <Button
+            icon={<ApiOutlined />}
+            onClick={onShareApi}
+            size="small"
+          >
+            Share as API
           </Button>
           <Button
             icon={<UnorderedListOutlined />}

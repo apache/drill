@@ -20,6 +20,7 @@ import ReactECharts from 'echarts-for-react';
 import { Empty, Spin, Table } from 'antd';
 import { CaretUpOutlined, CaretDownOutlined, MinusOutlined, TableOutlined } from '@ant-design/icons';
 import type { EChartsOption } from 'echarts';
+import { graphic } from 'echarts';
 import type { ChartType, VisualizationConfig, QueryResult } from '../../types';
 
 interface ChartPreviewProps {
@@ -38,6 +39,87 @@ const colorSchemes: Record<string, string[]> = {
   cool: ['#00bfff', '#1e90ff', '#4169e1', '#0000ff', '#8a2be2', '#9400d3', '#9932cc', '#ba55d3'],
   earth: ['#8b4513', '#a0522d', '#cd853f', '#deb887', '#d2691e', '#bc8f8f', '#f4a460', '#c4a484'],
 };
+
+export type DateFormat = 'auto' | 'YYYY-MM-DD' | 'MM/DD/YYYY' | 'DD/MM/YYYY'
+  | 'YYYY-MM-DD HH:mm' | 'MM/DD/YYYY HH:mm' | 'MMM DD, YYYY' | 'MMMM DD, YYYY';
+
+const MONTH_SHORT = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+const MONTH_LONG = [
+  'January','February','March','April','May','June',
+  'July','August','September','October','November','December',
+];
+
+function pad2(n: number): string {
+  return n < 10 ? `0${n}` : String(n);
+}
+
+/**
+ * Format a raw date value (epoch number, ISO string, or date string)
+ * according to the chosen format. Returns the original string if
+ * the value cannot be parsed as a date.
+ */
+function formatDateValue(raw: unknown, format: DateFormat): string {
+  if (raw == null || raw === '') {
+    return '';
+  }
+  const str = String(raw);
+
+  // Try to parse as a date
+  let date: Date;
+  if (typeof raw === 'number') {
+    date = new Date(raw);
+  } else {
+    date = new Date(str);
+  }
+
+  if (isNaN(date.getTime())) {
+    return str;
+  }
+
+  const y = date.getFullYear();
+  const m = date.getMonth();
+  const d = date.getDate();
+  const hh = pad2(date.getHours());
+  const mm = pad2(date.getMinutes());
+  const md = pad2(m + 1);
+  const dd = pad2(d);
+
+  switch (format) {
+    case 'YYYY-MM-DD':
+      return `${y}-${md}-${dd}`;
+    case 'MM/DD/YYYY':
+      return `${md}/${dd}/${y}`;
+    case 'DD/MM/YYYY':
+      return `${dd}/${md}/${y}`;
+    case 'YYYY-MM-DD HH:mm':
+      return `${y}-${md}-${dd} ${hh}:${mm}`;
+    case 'MM/DD/YYYY HH:mm':
+      return `${md}/${dd}/${y} ${hh}:${mm}`;
+    case 'MMM DD, YYYY':
+      return `${MONTH_SHORT[m]} ${dd}, ${y}`;
+    case 'MMMM DD, YYYY':
+      return `${MONTH_LONG[m]} ${dd}, ${y}`;
+    case 'auto':
+    default:
+      // Auto: if time component is midnight, show date only, otherwise show date+time
+      if (date.getHours() === 0 && date.getMinutes() === 0 && date.getSeconds() === 0) {
+        return `${y}-${md}-${dd}`;
+      }
+      return `${y}-${md}-${dd} ${hh}:${mm}`;
+  }
+}
+
+/**
+ * Check if an xAxis column is temporal based on the query metadata.
+ */
+function isXAxisTemporal(data: QueryResult, xAxis: string): boolean {
+  const colIdx = data.columns.indexOf(xAxis);
+  if (colIdx < 0 || !data.metadata?.[colIdx]) {
+    return false;
+  }
+  const t = data.metadata[colIdx].toUpperCase();
+  return t.includes('DATE') || t.includes('TIMESTAMP') || t.includes('TIME');
+}
 
 export default function ChartPreview({
   chartType,
@@ -61,7 +143,46 @@ export default function ChartPreview({
         if (!xAxis || !metrics || metrics.length === 0) {
           return null;
         }
-        const categories = data.rows.map((row) => String(row[xAxis] ?? ''));
+        const barDateFmt = (config.chartOptions?.dateFormat as DateFormat) || 'auto';
+        const barIsTemporal = isXAxisTemporal(data, xAxis);
+        const barGroupField = dimensions?.[0];
+
+        if (barGroupField) {
+          // Grouped mode: one bar series per unique dimension value
+          const uniqueCategories = [...new Set(data.rows.map((row) =>
+            barIsTemporal ? formatDateValue(row[xAxis], barDateFmt) : String(row[xAxis] ?? '')
+          ))];
+          const groups = [...new Set(data.rows.map((row) => String(row[barGroupField] ?? '')))];
+          const metric = metrics[0];
+          const series = groups.map((group, idx) => {
+            const valueMap: Record<string, number> = {};
+            data.rows.forEach((row) => {
+              if (String(row[barGroupField] ?? '') === group) {
+                const cat = barIsTemporal ? formatDateValue(row[xAxis], barDateFmt) : String(row[xAxis] ?? '');
+                valueMap[cat] = Number(row[metric]) || 0;
+              }
+            });
+            return {
+              name: group,
+              type: 'bar' as const,
+              data: uniqueCategories.map((cat) => valueMap[cat] ?? 0),
+              itemStyle: { color: colors[idx % colors.length] },
+            };
+          });
+          return {
+            tooltip: { trigger: 'axis' },
+            legend: { data: groups, bottom: 0 },
+            xAxis: { type: 'category', data: uniqueCategories },
+            yAxis: { type: 'value' },
+            series,
+            grid: { left: '3%', right: '4%', bottom: '15%', containLabel: true },
+          };
+        }
+
+        // Standard mode: one bar series per metric
+        const categories = data.rows.map((row) =>
+          barIsTemporal ? formatDateValue(row[xAxis], barDateFmt) : String(row[xAxis] ?? '')
+        );
         const series = metrics.map((metric, idx) => ({
           name: metric,
           type: 'bar' as const,
@@ -82,13 +203,68 @@ export default function ChartPreview({
         if (!xAxis || !metrics || metrics.length === 0) {
           return null;
         }
-        const categories = data.rows.map((row) => String(row[xAxis] ?? ''));
+        const smoothLine = config.chartOptions?.smoothLine !== false;
+        const showDataLabels = config.chartOptions?.showDataLabels === true;
+        const lineDateFmt = (config.chartOptions?.dateFormat as DateFormat) || 'auto';
+        const lineIsTemporal = isXAxisTemporal(data, xAxis);
+        const markerShape = (config.chartOptions?.markerShape as string) || 'circle';
+        const markerSize = Number(config.chartOptions?.markerSize) || 4;
+        const hideMarkers = markerShape === 'none';
+        const lineGroupField = dimensions?.[0];
+
+        if (lineGroupField) {
+          // Grouped mode: one line per unique dimension value
+          const uniqueCategories = [...new Set(data.rows.map((row) =>
+            lineIsTemporal ? formatDateValue(row[xAxis], lineDateFmt) : String(row[xAxis] ?? '')
+          ))];
+          const groups = [...new Set(data.rows.map((row) => String(row[lineGroupField] ?? '')))];
+          const metric = metrics[0];
+          const series = groups.map((group, idx) => {
+            // Build a map of category -> value for this group
+            const valueMap: Record<string, number> = {};
+            data.rows.forEach((row) => {
+              if (String(row[lineGroupField] ?? '') === group) {
+                const cat = lineIsTemporal ? formatDateValue(row[xAxis], lineDateFmt) : String(row[xAxis] ?? '');
+                valueMap[cat] = Number(row[metric]) || 0;
+              }
+            });
+            return {
+              name: group,
+              type: 'line' as const,
+              data: uniqueCategories.map((cat) => valueMap[cat] ?? null),
+              smooth: smoothLine,
+              showSymbol: !hideMarkers,
+              symbol: hideMarkers ? 'none' : markerShape,
+              symbolSize: markerSize,
+              itemStyle: { color: colors[idx % colors.length] },
+              label: showDataLabels ? { show: true, position: 'top' as const } : undefined,
+              connectNulls: false,
+            };
+          });
+          return {
+            tooltip: { trigger: 'axis' },
+            legend: { data: groups, bottom: 0 },
+            xAxis: { type: 'category', data: uniqueCategories },
+            yAxis: { type: 'value' },
+            series,
+            grid: { left: '3%', right: '4%', bottom: '15%', containLabel: true },
+          };
+        }
+
+        // Standard mode: one line per metric
+        const categories = data.rows.map((row) =>
+          lineIsTemporal ? formatDateValue(row[xAxis], lineDateFmt) : String(row[xAxis] ?? '')
+        );
         const series = metrics.map((metric, idx) => ({
           name: metric,
           type: 'line' as const,
           data: data.rows.map((row) => Number(row[metric]) || 0),
-          smooth: true,
+          smooth: smoothLine,
+          showSymbol: !hideMarkers,
+          symbol: hideMarkers ? 'none' : markerShape,
+          symbolSize: markerSize,
           itemStyle: { color: colors[idx % colors.length] },
+          label: showDataLabels ? { show: true, position: 'top' as const } : undefined,
         }));
         return {
           tooltip: { trigger: 'axis' },
@@ -104,15 +280,75 @@ export default function ChartPreview({
         if (!xAxis || !metrics || metrics.length === 0) {
           return null;
         }
-        const categories = data.rows.map((row) => String(row[xAxis] ?? ''));
-        const series = metrics.map((metric, idx) => ({
-          name: metric,
-          type: 'line' as const,
-          data: data.rows.map((row) => Number(row[metric]) || 0),
-          smooth: true,
-          areaStyle: { opacity: 0.3 },
-          itemStyle: { color: colors[idx % colors.length] },
-        }));
+        const smoothArea = config.chartOptions?.smoothLine !== false;
+        const showAreaLabels = config.chartOptions?.showDataLabels === true;
+        const useGradient = config.chartOptions?.gradientArea === true;
+        const areaDateFmt = (config.chartOptions?.dateFormat as DateFormat) || 'auto';
+        const areaIsTemporal = isXAxisTemporal(data, xAxis);
+        const areaGroupField = dimensions?.[0];
+
+        const buildAreaStyle = (color: string) => useGradient
+          ? {
+              color: new graphic.LinearGradient(0, 0, 0, 1, [
+                { offset: 0, color },
+                { offset: 1, color: 'rgba(255,255,255,0)' },
+              ]),
+            }
+          : { opacity: 0.3 };
+
+        if (areaGroupField) {
+          // Grouped mode: one area per unique dimension value
+          const uniqueCategories = [...new Set(data.rows.map((row) =>
+            areaIsTemporal ? formatDateValue(row[xAxis], areaDateFmt) : String(row[xAxis] ?? '')
+          ))];
+          const groups = [...new Set(data.rows.map((row) => String(row[areaGroupField] ?? '')))];
+          const metric = metrics[0];
+          const series = groups.map((group, idx) => {
+            const color = colors[idx % colors.length];
+            const valueMap: Record<string, number> = {};
+            data.rows.forEach((row) => {
+              if (String(row[areaGroupField] ?? '') === group) {
+                const cat = areaIsTemporal ? formatDateValue(row[xAxis], areaDateFmt) : String(row[xAxis] ?? '');
+                valueMap[cat] = Number(row[metric]) || 0;
+              }
+            });
+            return {
+              name: group,
+              type: 'line' as const,
+              data: uniqueCategories.map((cat) => valueMap[cat] ?? null),
+              smooth: smoothArea,
+              areaStyle: buildAreaStyle(color),
+              itemStyle: { color },
+              label: showAreaLabels ? { show: true, position: 'top' as const } : undefined,
+              connectNulls: false,
+            };
+          });
+          return {
+            tooltip: { trigger: 'axis' },
+            legend: { data: groups, bottom: 0 },
+            xAxis: { type: 'category', data: uniqueCategories },
+            yAxis: { type: 'value' },
+            series,
+            grid: { left: '3%', right: '4%', bottom: '15%', containLabel: true },
+          };
+        }
+
+        // Standard mode: one area per metric
+        const categories = data.rows.map((row) =>
+          areaIsTemporal ? formatDateValue(row[xAxis], areaDateFmt) : String(row[xAxis] ?? '')
+        );
+        const series = metrics.map((metric, idx) => {
+          const color = colors[idx % colors.length];
+          return {
+            name: metric,
+            type: 'line' as const,
+            data: data.rows.map((row) => Number(row[metric]) || 0),
+            smooth: smoothArea,
+            areaStyle: buildAreaStyle(color),
+            itemStyle: { color },
+            label: showAreaLabels ? { show: true, position: 'top' as const } : undefined,
+          };
+        });
         return {
           tooltip: { trigger: 'axis' },
           legend: { data: metrics, bottom: 0 },
