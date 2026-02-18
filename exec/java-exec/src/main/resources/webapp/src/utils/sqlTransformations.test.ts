@@ -97,7 +97,7 @@ describe('applySqlTransformation', () => {
         'SELECT price FROM products',
         { type: 'cast', columnName: 'price', targetType: 'INTEGER' }
       );
-      expect(result).toBe('SELECT CAST(price AS INTEGER) AS price FROM products');
+      expect(result).toBe('SELECT CAST(price AS INTEGER) AS `price` FROM products');
     });
 
     it('preserves existing alias over column name alias', () => {
@@ -121,7 +121,7 @@ describe('applySqlTransformation', () => {
         'SELECT id FROM products',
         { type: 'cast', columnName: 'id', targetType: 'VARCHAR' }
       );
-      expect(result).toBe('SELECT CAST(id AS VARCHAR) AS id FROM products');
+      expect(result).toBe('SELECT CAST(id AS VARCHAR) AS `id` FROM products');
     });
 
     it('quotes alias for column names with special characters', () => {
@@ -184,7 +184,7 @@ describe('applySqlTransformation', () => {
         { type: 'uppercase', columnName: 'name' },
         ['id', 'name', 'email']
       );
-      expect(result).toBe('SELECT id, UPPER(name), email FROM users');
+      expect(result).toBe('SELECT `id`, UPPER(`name`), `email` FROM users');
     });
 
     it('returns null if target column is not in resultColumns', () => {
@@ -203,7 +203,7 @@ describe('applySqlTransformation', () => {
         ['id', 'first name', 'last name']
       );
       expect(result).toBe(
-        'SELECT id, UPPER(`first name`), `last name` FROM data'
+        'SELECT `id`, UPPER(`first name`), `last name` FROM data'
       );
     });
 
