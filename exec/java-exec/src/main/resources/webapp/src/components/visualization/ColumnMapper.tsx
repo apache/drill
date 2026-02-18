@@ -15,7 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import { Form, Select, Switch, Typography, Space, Tag, Divider } from 'antd';
+import { Form, Select, Switch, Typography, Space, Tag, Divider, Slider } from 'antd';
 import { FieldNumberOutlined, FieldStringOutlined, ClockCircleOutlined, FieldTimeOutlined } from '@ant-design/icons';
 import type { ChartType, VisualizationConfig } from '../../types';
 import { isTemporalType } from '../../utils/sqlTransformations';
@@ -53,6 +53,28 @@ const TIME_GRAIN_OPTIONS: { value: TimeGrain | ''; label: string }[] = [
   { value: 'YEAR', label: 'Year' },
 ];
 
+const MARKER_SHAPE_OPTIONS: { value: string; label: string }[] = [
+  { value: 'circle', label: 'Circle' },
+  { value: 'rect', label: 'Square' },
+  { value: 'roundRect', label: 'Rounded Square' },
+  { value: 'triangle', label: 'Triangle' },
+  { value: 'diamond', label: 'Diamond' },
+  { value: 'pin', label: 'Pin' },
+  { value: 'arrow', label: 'Arrow' },
+  { value: 'none', label: 'None (hidden)' },
+];
+
+const DATE_FORMAT_OPTIONS: { value: string; label: string }[] = [
+  { value: 'auto', label: 'Auto' },
+  { value: 'YYYY-MM-DD', label: 'YYYY-MM-DD' },
+  { value: 'MM/DD/YYYY', label: 'MM/DD/YYYY' },
+  { value: 'DD/MM/YYYY', label: 'DD/MM/YYYY' },
+  { value: 'YYYY-MM-DD HH:mm', label: 'YYYY-MM-DD HH:mm' },
+  { value: 'MM/DD/YYYY HH:mm', label: 'MM/DD/YYYY HH:mm' },
+  { value: 'MMM DD, YYYY', label: 'MMM DD, YYYY' },
+  { value: 'MMMM DD, YYYY', label: 'MMMM DD, YYYY' },
+];
+
 const AGGREGATION_OPTIONS: { value: AggregationFunction; label: string }[] = [
   { value: 'SUM', label: 'SUM' },
   { value: 'AVG', label: 'AVG' },
@@ -70,6 +92,7 @@ function getRequiredFields(chartType: ChartType): { field: string; label: string
       return [
         { field: 'xAxis', label: 'X-Axis (Category)', numeric: false },
         { field: 'metrics', label: 'Y-Axis (Values)', multi: true, numeric: true },
+        { field: 'dimensions', label: 'Group By / Series (Optional)', multi: false, numeric: false },
       ];
     case 'pie':
       return [
@@ -132,7 +155,6 @@ export default function ColumnMapper({ columns, chartType, config, onChange }: C
       const selectedCol = columns.find((c) => c.name === value);
       if (!selectedCol || !isTemporalType(selectedCol.type)) {
         delete newConfig.chartOptions.timeGrain;
-        delete newConfig.chartOptions.metricAggregations;
       }
     } else if (field === 'yAxis') {
       newConfig.yAxis = value as string;
@@ -206,7 +228,9 @@ export default function ColumnMapper({ columns, chartType, config, onChange }: C
   // Time grain computed values
   const xAxisCol = columns.find((c) => c.name === config.xAxis);
   const xAxisIsTemporal = !!xAxisCol && isTemporalType(xAxisCol.type);
-  const showTimeGrain = (chartType === 'line' || chartType === 'area') && xAxisIsTemporal;
+  const showTimeGrain = xAxisIsTemporal;
+  const showDateFormat = (chartType === 'bar' || chartType === 'line' || chartType === 'area') && xAxisIsTemporal;
+  const currentDateFormat = (config.chartOptions?.dateFormat as string) || 'auto';
   const currentTimeGrain = (config.chartOptions?.timeGrain as TimeGrain | undefined) || undefined;
   const currentAggregations = (config.chartOptions?.metricAggregations as Record<string, AggregationFunction> | undefined) || {};
 
@@ -216,7 +240,6 @@ export default function ColumnMapper({ columns, chartType, config, onChange }: C
       newOptions.timeGrain = grain;
     } else {
       delete newOptions.timeGrain;
-      delete newOptions.metricAggregations;
     }
     onChange({ ...config, chartOptions: newOptions });
   };
@@ -274,6 +297,28 @@ export default function ColumnMapper({ columns, chartType, config, onChange }: C
                 {numeric ? 'Numeric columns recommended' : 'Text/category columns recommended'}
               </Text>
             )}
+            {field === 'metrics' && config.metrics && config.metrics.length > 0 && (
+              <div style={{ marginTop: 8 }}>
+                <Text type="secondary" style={{ fontSize: 11, display: 'block', marginBottom: 4 }}>
+                  Aggregation (optional — groups results automatically)
+                </Text>
+                {config.metrics.map((metric) => (
+                  <div key={metric} style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4 }}>
+                    <Text style={{ fontSize: 12, minWidth: 80 }}>{metric}</Text>
+                    <Select
+                      size="small"
+                      placeholder="None"
+                      value={currentAggregations[metric] || undefined}
+                      onChange={(v) => handleAggregationChange(metric, v)}
+                      allowClear
+                      onClear={() => handleAggregationChange(metric, '')}
+                      style={{ flex: 1 }}
+                      options={AGGREGATION_OPTIONS}
+                    />
+                  </div>
+                ))}
+              </div>
+            )}
           </Form.Item>
         );
       })}
@@ -297,32 +342,92 @@ export default function ColumnMapper({ columns, chartType, config, onChange }: C
               Aggregate temporal data by time period
             </Text>
           </Form.Item>
-          {currentTimeGrain && config.metrics && config.metrics.length > 0 && (
-            <>
-              <Text strong style={{ fontSize: 12 }}>Metric Aggregations</Text>
-              {config.metrics.map((metric) => (
-                <Form.Item
-                  key={metric}
-                  label={metric}
-                  style={{ marginBottom: 8 }}
-                  validateStatus={currentAggregations[metric] ? undefined : 'warning'}
-                  help={currentAggregations[metric] ? undefined : 'Select an aggregation function'}
-                >
-                  <Select
-                    placeholder="Select aggregation"
-                    value={currentAggregations[metric] || undefined}
-                    onChange={(value) => handleAggregationChange(metric, value as AggregationFunction | '')}
-                    allowClear
-                    onClear={() => handleAggregationChange(metric, '')}
-                    style={{ width: '100%' }}
-                  >
-                    {AGGREGATION_OPTIONS.map((o) => (
-                      <Select.Option key={o.value} value={o.value}>{o.label}</Select.Option>
-                    ))}
-                  </Select>
-                </Form.Item>
+        </>
+      )}
+      {showDateFormat && (
+        <>
+          <Divider style={{ margin: '8px 0' }} />
+          <Form.Item label={<Space><ClockCircleOutlined /> Date Format</Space>}>
+            <Select
+              value={currentDateFormat}
+              onChange={(value) => onChange({
+                ...config,
+                chartOptions: { ...config.chartOptions, dateFormat: value },
+              })}
+              style={{ width: '100%' }}
+            >
+              {DATE_FORMAT_OPTIONS.map((o) => (
+                <Select.Option key={o.value} value={o.value}>{o.label}</Select.Option>
               ))}
+            </Select>
+            <Text type="secondary" style={{ fontSize: 11 }}>
+              Format for date values on the X-axis
+            </Text>
+          </Form.Item>
+        </>
+      )}
+      {(chartType === 'line' || chartType === 'area') && (
+        <>
+          <Divider style={{ margin: '8px 0' }} />
+          <Form.Item label="Smooth Lines">
+            <Switch
+              checked={config.chartOptions?.smoothLine !== false}
+              onChange={(checked) => onChange({
+                ...config,
+                chartOptions: { ...config.chartOptions, smoothLine: checked },
+              })}
+            />
+          </Form.Item>
+          <Form.Item label="Show Data Point Values">
+            <Switch
+              checked={config.chartOptions?.showDataLabels === true}
+              onChange={(checked) => onChange({
+                ...config,
+                chartOptions: { ...config.chartOptions, showDataLabels: checked },
+              })}
+            />
+          </Form.Item>
+          {chartType === 'line' && (
+            <>
+              <Form.Item label="Marker Shape">
+                <Select
+                  value={(config.chartOptions?.markerShape as string) || 'circle'}
+                  onChange={(value) => onChange({
+                    ...config,
+                    chartOptions: { ...config.chartOptions, markerShape: value },
+                  })}
+                  style={{ width: '100%' }}
+                >
+                  {MARKER_SHAPE_OPTIONS.map((o) => (
+                    <Select.Option key={o.value} value={o.value}>{o.label}</Select.Option>
+                  ))}
+                </Select>
+              </Form.Item>
+              {(config.chartOptions?.markerShape || 'circle') !== 'none' && (
+                <Form.Item label={`Marker Size (${Number(config.chartOptions?.markerSize) || 4}px)`}>
+                  <Slider
+                    min={2}
+                    max={20}
+                    value={Number(config.chartOptions?.markerSize) || 4}
+                    onChange={(value) => onChange({
+                      ...config,
+                      chartOptions: { ...config.chartOptions, markerSize: value },
+                    })}
+                  />
+                </Form.Item>
+              )}
             </>
+          )}
+          {chartType === 'area' && (
+            <Form.Item label="Gradient Fill">
+              <Switch
+                checked={config.chartOptions?.gradientArea === true}
+                onChange={(checked) => onChange({
+                  ...config,
+                  chartOptions: { ...config.chartOptions, gradientArea: checked },
+                })}
+              />
+            </Form.Item>
           )}
         </>
       )}

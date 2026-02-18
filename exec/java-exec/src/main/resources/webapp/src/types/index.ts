@@ -129,6 +129,25 @@ export interface SavedQueryCreate {
   isPublic?: boolean;
 }
 
+// Shared Query API types
+export interface SharedQueryApi {
+  id: string;
+  name: string;
+  sql: string;
+  defaultSchema?: string;
+  owner: string;
+  createdAt: number;
+  updatedAt: number;
+  apiEnabled: boolean;
+}
+
+export interface SharedQueryApiCreate {
+  name: string;
+  sql: string;
+  defaultSchema?: string;
+  apiEnabled?: boolean;
+}
+
 // Visualization types
 export type ChartType =
   | 'bar'

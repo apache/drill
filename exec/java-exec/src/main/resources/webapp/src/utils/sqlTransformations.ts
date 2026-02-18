@@ -103,13 +103,10 @@ export function applySqlTransformation(
 }
 
 /**
- * Quotes a column name with backticks if it contains special characters or is a reserved word.
- * Simple identifiers are left unquoted.
+ * Quotes a column name with backticks. Always quotes to avoid issues with
+ * SQL reserved words (date, time, order, group, etc.).
  */
 export function quoteColumnName(name: string): string {
-  if (/^[a-zA-Z_][a-zA-Z0-9_]*$/.test(name)) {
-    return name;
-  }
   return '`' + name.replace(/`/g, '``') + '`';
 }
 
@@ -344,6 +341,14 @@ export interface TimeGrainConfig {
   grain: TimeGrain;
   temporalColumn: string;
   metricAggregations: Record<string, AggregationFunction>;
+  dimensions?: string[];
+}
+
+export interface AggregationConfig {
+  metricAggregations: Record<string, AggregationFunction>;
+  groupByColumns: string[];
+  timeGrain?: TimeGrain;
+  temporalColumn?: string;
 }
 
 /**
@@ -371,21 +376,34 @@ export function buildTimeGrainQuery(
     return null;
   }
 
+  // Strip trailing semicolons/whitespace — they would be invalid inside the subquery
+  const cleanSql = originalSql.replace(/;\s*$/, '').trim();
+
   const quotedTemporal = quoteColumnName(config.temporalColumn);
-  const dateTruncExpr = `DATE_TRUNC('${config.grain}', ${quotedTemporal})`;
+  // Qualify column references with the subquery alias to avoid ambiguity
+  // (e.g. when the inner query has `to_date(date) AS date`, both the source
+  // column and alias are named "date")
+  const qualifiedTemporal = `_t.${quotedTemporal}`;
+  const dateTruncExpr = `DATE_TRUNC('${config.grain}', ${qualifiedTemporal})`;
+
+  const dimensionParts = (config.dimensions || []).map((d) => quoteColumnName(d));
+  const qualifiedDimensions = dimensionParts.map((d) => `_t.${d}`);
 
   const selectParts = [
     `${dateTruncExpr} AS ${quotedTemporal}`,
+    ...qualifiedDimensions,
     ...metricEntries.map(([col, agg]) => {
       const quotedCol = quoteColumnName(col);
-      return `${agg}(${quotedCol}) AS ${quotedCol}`;
+      return `${agg}(_t.${quotedCol}) AS ${quotedCol}`;
     }),
   ];
 
+  const groupByParts = [dateTruncExpr, ...qualifiedDimensions];
+
   return [
     `SELECT ${selectParts.join(', ')}`,
-    `FROM (${originalSql}) AS _t`,
-    `GROUP BY ${dateTruncExpr}`,
+    `FROM (${cleanSql}) AS _t`,
+    `GROUP BY ${groupByParts.join(', ')}`,
     `ORDER BY 1`,
   ].join('\n');
 }
@@ -405,6 +423,77 @@ export function hasCompleteTimeGrainConfig(
     return false;
   }
   return metrics.every((m) => !!aggregations[m]);
+}
+
+/**
+ * Returns true when at least one metric has an aggregation function set.
+ * Does NOT require timeGrain.
+ */
+export function hasCompleteAggregationConfig(
+  chartOptions: Record<string, unknown> | undefined,
+  metrics: string[] | undefined
+): boolean {
+  if (!chartOptions || !metrics || metrics.length === 0) {
+    return false;
+  }
+  const aggs = chartOptions.metricAggregations as Record<string, string> | undefined;
+  if (!aggs) {
+    return false;
+  }
+  return metrics.some((m) => !!aggs[m]);
+}
+
+/**
+ * Wraps original SQL as a subquery with GROUP BY. Optionally applies DATE_TRUNC
+ * to the temporal column when a time grain is set.
+ */
+export function buildAggregationQuery(
+  originalSql: string,
+  config: AggregationConfig
+): string | null {
+  const metricEntries = Object.entries(config.metricAggregations);
+  if (metricEntries.length === 0) {
+    return null;
+  }
+
+  // Strip trailing semicolons/whitespace — they would be invalid inside the subquery
+  const cleanSql = originalSql.replace(/;\s*$/, '').trim();
+
+  const selectParts: string[] = [];
+  const groupByParts: string[] = [];
+
+  for (const col of config.groupByColumns) {
+    const quoted = quoteColumnName(col);
+    const qualified = `_t.${quoted}`;
+
+    if (config.timeGrain && config.temporalColumn && col === config.temporalColumn) {
+      const truncExpr = `DATE_TRUNC('${config.timeGrain}', ${qualified})`;
+      selectParts.push(`${truncExpr} AS ${quoted}`);
+      groupByParts.push(truncExpr);
+    } else {
+      selectParts.push(qualified);
+      groupByParts.push(qualified);
+    }
+  }
+
+  for (const [col, agg] of metricEntries) {
+    const quoted = quoteColumnName(col);
+    selectParts.push(`${agg}(_t.${quoted}) AS ${quoted}`);
+  }
+
+  if (selectParts.length === 0) {
+    return null;
+  }
+
+  const parts = [
+    `SELECT ${selectParts.join(', ')}`,
+    `FROM (${cleanSql}) AS _t`,
+  ];
+  if (groupByParts.length > 0) {
+    parts.push(`GROUP BY ${groupByParts.join(', ')}`);
+  }
+  parts.push('ORDER BY 1');
+  return parts.join('\n');
 }
 
 export function calculateColumnStats(
