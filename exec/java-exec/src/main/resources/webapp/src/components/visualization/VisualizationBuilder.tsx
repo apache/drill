@@ -41,7 +41,7 @@ import { executeQuery } from '../../api/queries';
 import ChartTypeSelector from './ChartTypeSelector';
 import ColumnMapper from './ColumnMapper';
 import ChartPreview from './ChartPreview';
-import { buildTimeGrainQuery, hasCompleteTimeGrainConfig } from '../../utils/sqlTransformations';
+import { buildAggregationQuery, hasCompleteAggregationConfig } from '../../utils/sqlTransformations';
 import type { TimeGrain, AggregationFunction } from '../../utils/sqlTransformations';
 import type { ChartType, VisualizationConfig, QueryResult, VisualizationCreate, Visualization } from '../../types';
 
@@ -87,25 +87,36 @@ export default function VisualizationBuilder({
   const [dataLoading, setDataLoading] = useState(false);
   const [dataError, setDataError] = useState<string | null>(null);
 
-  // Time grain data for create mode
-  const [timeGrainData, setTimeGrainData] = useState<QueryResult | null>(null);
-  const [timeGrainLoading, setTimeGrainLoading] = useState(false);
+  // Aggregated data for create mode (time grain + metric aggregation)
+  const [aggregatedData, setAggregatedData] = useState<QueryResult | null>(null);
+  const [aggregatedLoading, setAggregatedLoading] = useState(false);
+  const [aggregatedError, setAggregatedError] = useState<string | null>(null);
 
   const getEffectiveQuery = useCallback((originalSql: string, cfg: VisualizationConfig): string => {
-    if (!hasCompleteTimeGrainConfig(cfg.chartOptions, cfg.metrics)) {
+    if (!hasCompleteAggregationConfig(cfg.chartOptions, cfg.metrics)) {
       return originalSql;
     }
-    const grain = cfg.chartOptions!.timeGrain as TimeGrain;
     const aggregations = cfg.chartOptions!.metricAggregations as Record<string, AggregationFunction>;
-    const wrapped = buildTimeGrainQuery(originalSql, {
-      grain,
-      temporalColumn: cfg.xAxis!,
+    const groupByColumns: string[] = [];
+    if (cfg.xAxis) {
+      groupByColumns.push(cfg.xAxis);
+    }
+    if (cfg.dimensions) {
+      groupByColumns.push(...cfg.dimensions);
+    }
+    const wrapped = buildAggregationQuery(originalSql, {
       metricAggregations: aggregations,
+      groupByColumns,
+      timeGrain: cfg.chartOptions?.timeGrain as TimeGrain | undefined,
+      temporalColumn: cfg.xAxis,
     });
     return wrapped || originalSql;
   }, []);
 
-  const effectiveData = timeGrainData || queryResult || fetchedData;
+  // Data for chart preview (prefer aggregated result when available)
+  const effectiveData = aggregatedData || queryResult || fetchedData;
+  // Data for column configuration (always use original query so user sees all columns)
+  const baseData = queryResult || fetchedData;
 
   // Pre-populate state when opening in edit mode
   useEffect(() => {
@@ -154,35 +165,40 @@ export default function VisualizationBuilder({
   // Watch colorScheme from form so preview updates live
   const selectedColorScheme = Form.useWatch('colorScheme', form) || 'default';
 
-  // Extract column info from effective data
+  // Extract column info from base (original) data so the column mapper
+  // always shows the full set of columns, even when a time grain query is active.
   const columns = useMemo(() => {
-    if (!effectiveData || !effectiveData.columns || !effectiveData.metadata) {
+    const source = baseData || effectiveData;
+    if (!source || !source.columns || !source.metadata) {
       return [];
     }
-    return effectiveData.columns.map((name, idx) => ({
+    return source.columns.map((name, idx) => ({
       name,
-      type: effectiveData.metadata[idx] || 'VARCHAR',
+      type: source.metadata[idx] || 'VARCHAR',
     }));
-  }, [effectiveData]);
+  }, [baseData, effectiveData]);
 
-  // In create mode, fetch time grain data when config is complete
+  // In create mode, fetch aggregated data when config is complete
   useEffect(() => {
     if (!open || isEditMode) {
       return;
     }
     const sourceSql = sql;
-    if (!sourceSql || !hasCompleteTimeGrainConfig(config.chartOptions, config.metrics)) {
-      setTimeGrainData(null);
+    if (!sourceSql || !hasCompleteAggregationConfig(config.chartOptions, config.metrics)) {
+      setAggregatedData(null);
+      setAggregatedError(null);
       return;
     }
     const effectiveQuery = getEffectiveQuery(sourceSql, config);
     if (effectiveQuery === sourceSql) {
-      setTimeGrainData(null);
+      setAggregatedData(null);
+      setAggregatedError(null);
       return;
     }
     let cancelled = false;
-    const fetchTimeGrain = async () => {
-      setTimeGrainLoading(true);
+    const fetchAggregated = async () => {
+      setAggregatedLoading(true);
+      setAggregatedError(null);
       try {
         const result = await executeQuery({
           query: effectiveQuery,
@@ -191,19 +207,21 @@ export default function VisualizationBuilder({
           defaultSchema,
         });
         if (!cancelled) {
-          setTimeGrainData(result);
+          setAggregatedData(result);
+          setAggregatedError(null);
         }
-      } catch {
+      } catch (err) {
         if (!cancelled) {
-          setTimeGrainData(null);
+          setAggregatedData(null);
+          setAggregatedError(`Aggregation query failed: ${(err as Error).message}`);
         }
       } finally {
         if (!cancelled) {
-          setTimeGrainLoading(false);
+          setAggregatedLoading(false);
         }
       }
     };
-    fetchTimeGrain();
+    fetchAggregated();
     return () => { cancelled = true; };
   }, [open, isEditMode, sql, defaultSchema, config, getEffectiveQuery]);
 
@@ -241,8 +259,9 @@ export default function VisualizationBuilder({
     setFetchedData(null);
     setDataLoading(false);
     setDataError(null);
-    setTimeGrainData(null);
-    setTimeGrainLoading(false);
+    setAggregatedData(null);
+    setAggregatedLoading(false);
+    setAggregatedError(null);
     form.resetFields();
     onClose();
   };
@@ -340,11 +359,22 @@ export default function VisualizationBuilder({
           </Col>
           <Col span={14}>
             <Card title="Preview" size="small">
+              {aggregatedError && (
+                <Alert
+                  message="Aggregation Error"
+                  description={aggregatedError}
+                  type="error"
+                  showIcon
+                  closable
+                  onClose={() => setAggregatedError(null)}
+                  style={{ marginBottom: 12 }}
+                />
+              )}
               <ChartPreview
                 chartType={chartType}
                 config={config}
                 data={effectiveData}
-                loading={timeGrainLoading}
+                loading={aggregatedLoading}
                 height={350}
               />
             </Card>

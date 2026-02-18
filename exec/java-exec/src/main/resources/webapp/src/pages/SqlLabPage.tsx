@@ -48,6 +48,7 @@ import type { ResultsSettings } from '../components/results/ResultsGrid';
 import SaveQueryDialog from '../components/query-editor/SaveQueryDialog';
 import QueryHistoryModal from '../components/query-editor/QueryHistoryModal';
 import { VisualizationBuilder } from '../components/visualization';
+import ShareApiModal from '../components/results/ShareApiModal';
 import { ProspectorPanel } from '../components/prospector';
 import type { SavedQuery } from '../types';
 import type { ChatContext, ChatMessage } from '../types/ai';
@@ -88,6 +89,8 @@ export default function SqlLabPage({ datasetFilter, headerContent, projectId }: 
   const [saveDialogOpen, setSaveDialogOpen] = useState(false);
   const [vizBuilderOpen, setVizBuilderOpen] = useState(false);
   const [historyModalOpen, setHistoryModalOpen] = useState(false);
+  const [shareApiModalOpen, setShareApiModalOpen] = useState(false);
+  const [sharedQueryApiIds, setSharedQueryApiIds] = useState<Record<string, string | undefined>>({});
 
   // Optimize modal state
   const [optimizeModalOpen, setOptimizeModalOpen] = useState(false);
@@ -518,6 +521,19 @@ export default function SqlLabPage({ datasetFilter, headerContent, projectId }: 
     setVizBuilderOpen(true);
   }, [results]);
 
+  // Handle share as API
+  const handleShareApi = useCallback(() => {
+    if (!results || results.rows.length === 0) {
+      message.warning('Please run a query first to share results as API');
+      return;
+    }
+    setShareApiModalOpen(true);
+  }, [results]);
+
+  const handleSharedQueryApiIdChange = useCallback((id: string | undefined) => {
+    setSharedQueryApiIds(prev => ({ ...prev, [activeTabId]: id }));
+  }, [activeTabId]);
+
   // Handle query history
   const handleShowHistory = useCallback(() => {
     setHistoryModalOpen(true);
@@ -731,6 +747,7 @@ export default function SqlLabPage({ datasetFilter, headerContent, projectId }: 
             onFixWithProspector={handleFixWithProspector}
             prospectorAvailable={prospectorAvailable}
             onTransformColumn={handleTransformColumn}
+            onShareApi={handleShareApi}
           />
         </div>
       </div>
@@ -750,6 +767,16 @@ export default function SqlLabPage({ datasetFilter, headerContent, projectId }: 
         queryResult={results ?? null}
         sql={sql}
         defaultSchema={activeTab?.defaultSchema}
+      />
+
+      {/* Share API Modal */}
+      <ShareApiModal
+        open={shareApiModalOpen}
+        onClose={() => setShareApiModalOpen(false)}
+        sql={sql}
+        defaultSchema={activeTab?.defaultSchema}
+        sharedQueryApiId={sharedQueryApiIds[activeTabId]}
+        onSharedQueryApiIdChange={handleSharedQueryApiIdChange}
       />
 
       {/* Query History Modal */}
