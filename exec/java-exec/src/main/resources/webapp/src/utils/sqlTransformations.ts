@@ -489,9 +489,17 @@ export function buildAggregationQuery(
   return parts.join('\n');
 }
 
+export type EffectiveQueryConfig = {
+  xAxis?: string;
+  metrics?: string[];
+  dimensions?: string[];
+  chartOptions?: Record<string, unknown>;
+};
+
 /**
- * Returns the effective SQL query for a visualization, wrapping the original
- * SQL with aggregation/time grain when the config requires it.
+ * Synchronous version of getEffectiveQuery. Computes the effective SQL query
+ * for a visualization, wrapping the original SQL with aggregation/time grain
+ * when the config requires it.
  *
  * When time grain is set, data is aggregated with DATE_TRUNC + GROUP BY.
  * If the user hasn't set explicit aggregation functions, SUM is used as the
@@ -499,12 +507,13 @@ export function buildAggregationQuery(
  *
  * All transformations are done client-side (no backend API dependency).
  *
- * Shared by VisualizationBuilder, VisualizationEditor, and VisualizationsPage.
+ * Prefer this over getEffectiveQuery in useMemo / render paths to avoid
+ * unnecessary async state transitions.
  */
-export async function getEffectiveQuery(
+export function computeEffectiveQuery(
   originalSql: string,
-  cfg: { xAxis?: string; metrics?: string[]; dimensions?: string[]; chartOptions?: Record<string, unknown> }
-): Promise<string> {
+  cfg: EffectiveQueryConfig
+): string {
   const timeGrain = cfg.chartOptions?.timeGrain as TimeGrain | undefined;
   const hasExplicitAgg = hasCompleteAggregationConfig(cfg.chartOptions, cfg.metrics);
 
@@ -549,6 +558,17 @@ export async function getEffectiveQuery(
     groupByColumns,
   });
   return wrapped || originalSql;
+}
+
+/**
+ * Async wrapper around computeEffectiveQuery for use in async contexts
+ * (useEffect chains, event handlers, etc.).
+ */
+export async function getEffectiveQuery(
+  originalSql: string,
+  cfg: EffectiveQueryConfig
+): Promise<string> {
+  return computeEffectiveQuery(originalSql, cfg);
 }
 
 export function calculateColumnStats(
