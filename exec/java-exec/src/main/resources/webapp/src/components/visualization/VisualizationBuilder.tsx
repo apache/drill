@@ -41,8 +41,7 @@ import { executeQuery } from '../../api/queries';
 import ChartTypeSelector from './ChartTypeSelector';
 import ColumnMapper from './ColumnMapper';
 import ChartPreview from './ChartPreview';
-import { buildAggregationQuery, hasCompleteAggregationConfig } from '../../utils/sqlTransformations';
-import type { TimeGrain, AggregationFunction } from '../../utils/sqlTransformations';
+import { getEffectiveQuery, hasCompleteAggregationConfig } from '../../utils/sqlTransformations';
 import type { ChartType, VisualizationConfig, QueryResult, VisualizationCreate, Visualization } from '../../types';
 
 const { Title, Text } = Typography;
@@ -92,27 +91,6 @@ export default function VisualizationBuilder({
   const [aggregatedLoading, setAggregatedLoading] = useState(false);
   const [aggregatedError, setAggregatedError] = useState<string | null>(null);
 
-  const getEffectiveQuery = useCallback((originalSql: string, cfg: VisualizationConfig): string => {
-    if (!hasCompleteAggregationConfig(cfg.chartOptions, cfg.metrics)) {
-      return originalSql;
-    }
-    const aggregations = cfg.chartOptions!.metricAggregations as Record<string, AggregationFunction>;
-    const groupByColumns: string[] = [];
-    if (cfg.xAxis) {
-      groupByColumns.push(cfg.xAxis);
-    }
-    if (cfg.dimensions) {
-      groupByColumns.push(...cfg.dimensions);
-    }
-    const wrapped = buildAggregationQuery(originalSql, {
-      metricAggregations: aggregations,
-      groupByColumns,
-      timeGrain: cfg.chartOptions?.timeGrain as TimeGrain | undefined,
-      temporalColumn: cfg.xAxis,
-    });
-    return wrapped || originalSql;
-  }, []);
-
   // Data for chart preview (prefer aggregated result when available)
   const effectiveData = aggregatedData || queryResult || fetchedData;
   // Data for column configuration (always use original query so user sees all columns)
@@ -141,7 +119,7 @@ export default function VisualizationBuilder({
     setDataLoading(true);
     setDataError(null);
     try {
-      const query = getEffectiveQuery(visualization.sql, config);
+      const query = await getEffectiveQuery(visualization.sql, config);
       const result = await executeQuery({
         query,
         queryType: 'SQL',
@@ -154,7 +132,7 @@ export default function VisualizationBuilder({
     } finally {
       setDataLoading(false);
     }
-  }, [visualization?.sql, visualization?.defaultSchema, config, getEffectiveQuery]);
+  }, [visualization?.sql, visualization?.defaultSchema, config]);
 
   useEffect(() => {
     if (open && isEditMode && !queryResult) {
@@ -189,17 +167,21 @@ export default function VisualizationBuilder({
       setAggregatedError(null);
       return;
     }
-    const effectiveQuery = getEffectiveQuery(sourceSql, config);
-    if (effectiveQuery === sourceSql) {
-      setAggregatedData(null);
-      setAggregatedError(null);
-      return;
-    }
     let cancelled = false;
     const fetchAggregated = async () => {
       setAggregatedLoading(true);
       setAggregatedError(null);
       try {
+        const effectiveQuery = await getEffectiveQuery(sourceSql, config);
+        if (cancelled) {
+          return;
+        }
+        if (effectiveQuery === sourceSql) {
+          setAggregatedData(null);
+          setAggregatedError(null);
+          setAggregatedLoading(false);
+          return;
+        }
         const result = await executeQuery({
           query: effectiveQuery,
           queryType: 'SQL',
@@ -223,7 +205,7 @@ export default function VisualizationBuilder({
     };
     fetchAggregated();
     return () => { cancelled = true; };
-  }, [open, isEditMode, sql, defaultSchema, config, getEffectiveQuery]);
+  }, [open, isEditMode, sql, defaultSchema, config]);
 
   const createMutation = useMutation({
     mutationFn: createVisualization,

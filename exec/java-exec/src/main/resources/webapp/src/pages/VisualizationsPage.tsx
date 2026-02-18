@@ -60,6 +60,7 @@ import {
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { getVisualizations, deleteVisualization } from '../api/visualizations';
 import { executeQuery } from '../api/queries';
+import { getEffectiveQuery } from '../utils/sqlTransformations';
 import { ChartPreview, VisualizationEditor } from '../components/visualization';
 import type { Visualization, ChartType, QueryResult } from '../types';
 
@@ -116,14 +117,20 @@ function MiniVizPreview({ viz }: { viz: Visualization }) {
     setLoading(true);
     setFailed(false);
 
-    executeQuery({
-      query: viz.sql,
-      queryType: 'SQL',
-      autoLimitRowCount: 100,
-      defaultSchema: viz.defaultSchema,
-    })
+    getEffectiveQuery(viz.sql, viz.config || {})
+      .then((query) => {
+        if (cancelled) {
+          return;
+        }
+        return executeQuery({
+          query,
+          queryType: 'SQL',
+          autoLimitRowCount: 100,
+          defaultSchema: viz.defaultSchema,
+        });
+      })
       .then((result) => {
-        if (!cancelled) {
+        if (!cancelled && result) {
           setQueryResult(result);
           setLoading(false);
         }
@@ -241,8 +248,9 @@ export default function VisualizationsPage() {
 
     setViewQueryLoading(true);
     try {
+      const query = await getEffectiveQuery(viz.sql, viz.config || {});
       const result = await executeQuery({
-        query: viz.sql,
+        query,
         queryType: 'SQL',
         autoLimitRowCount: 10000,
         defaultSchema: viz.defaultSchema,
