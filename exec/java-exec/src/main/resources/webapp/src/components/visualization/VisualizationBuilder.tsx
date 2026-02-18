@@ -162,7 +162,9 @@ export default function VisualizationBuilder({
       return;
     }
     const sourceSql = sql;
-    if (!sourceSql || !hasCompleteAggregationConfig(config.chartOptions, config.metrics)) {
+    const timeGrain = config.chartOptions?.timeGrain;
+    const hasAgg = hasCompleteAggregationConfig(config.chartOptions, config.metrics);
+    if (!sourceSql || (!hasAgg && !(timeGrain && config.xAxis))) {
       setAggregatedData(null);
       setAggregatedError(null);
       return;
