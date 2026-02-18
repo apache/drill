@@ -71,9 +71,6 @@ export default function QueryToolbar({
   onFormat,
   isExecuting,
   executionTime,
-  schemas = [],
-  selectedSchema,
-  onSchemaChange,
   autoLimit = 1000,
   onAutoLimitChange,
   editorSettings,
@@ -156,21 +153,6 @@ export default function QueryToolbar({
             Save
           </Button>
         </Tooltip>
-
-        {/* Schema Selector */}
-        <Space size="small">
-          <Text type="secondary">Schema:</Text>
-          <Select
-            placeholder="Select schema"
-            style={{ width: 200 }}
-            value={selectedSchema}
-            onChange={onSchemaChange}
-            showSearch
-            allowClear
-            optionFilterProp="label"
-            options={schemas.map((s) => ({ value: s.name, label: s.name }))}
-          />
-        </Space>
 
         {/* Auto Limit */}
         <Space size="small">
