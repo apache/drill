@@ -143,6 +143,27 @@ export async function convertDataType(
 }
 
 /**
+ * Change the time grain of a temporal column via the backend sqlglot service.
+ * Wraps the column with DATE_TRUNC using AST manipulation.
+ */
+export async function changeTimeGrain(
+  sql: string,
+  columnName: string,
+  timeGrain: string,
+  columns?: string[]
+): Promise<string> {
+  try {
+    const response = await apiClient.post<{ sql: string; success: boolean }>(
+      '/api/v1/transpile/time-grain',
+      { sql, columnName, timeGrain, columns }
+    );
+    return response.data.sql;
+  } catch {
+    return sql;
+  }
+}
+
+/**
  * Stream a chat completion via POST SSE.
  * Uses native fetch + ReadableStream since axios doesn't support streaming.
  * Returns an AbortController for cancellation.

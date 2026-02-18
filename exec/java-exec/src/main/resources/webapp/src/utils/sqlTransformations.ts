@@ -16,6 +16,8 @@
  * limitations under the License.
  */
 
+import { changeTimeGrain } from '../api/ai';
+
 export type TransformationType =
   | 'uppercase'
   | 'lowercase'
@@ -347,8 +349,6 @@ export interface TimeGrainConfig {
 export interface AggregationConfig {
   metricAggregations: Record<string, AggregationFunction>;
   groupByColumns: string[];
-  timeGrain?: TimeGrain;
-  temporalColumn?: string;
 }
 
 /**
@@ -398,7 +398,9 @@ export function buildTimeGrainQuery(
     }),
   ];
 
-  const groupByParts = [dateTruncExpr, ...qualifiedDimensions];
+  // Drill supports aliases in GROUP BY, so reference the column alias
+  // instead of repeating the DATE_TRUNC expression
+  const groupByParts = [quotedTemporal, ...qualifiedDimensions];
 
   return [
     `SELECT ${selectParts.join(', ')}`,
@@ -444,8 +446,8 @@ export function hasCompleteAggregationConfig(
 }
 
 /**
- * Wraps original SQL as a subquery with GROUP BY. Optionally applies DATE_TRUNC
- * to the temporal column when a time grain is set.
+ * Wraps original SQL as a subquery with GROUP BY and metric aggregations.
+ * Time grain (DATE_TRUNC) is handled separately by the backend Python/sqlglot service.
  */
 export function buildAggregationQuery(
   originalSql: string,
@@ -465,15 +467,8 @@ export function buildAggregationQuery(
   for (const col of config.groupByColumns) {
     const quoted = quoteColumnName(col);
     const qualified = `_t.${quoted}`;
-
-    if (config.timeGrain && config.temporalColumn && col === config.temporalColumn) {
-      const truncExpr = `DATE_TRUNC('${config.timeGrain}', ${qualified})`;
-      selectParts.push(`${truncExpr} AS ${quoted}`);
-      groupByParts.push(truncExpr);
-    } else {
-      selectParts.push(qualified);
-      groupByParts.push(qualified);
-    }
+    selectParts.push(qualified);
+    groupByParts.push(qualified);
   }
 
   for (const [col, agg] of metricEntries) {
@@ -494,6 +489,52 @@ export function buildAggregationQuery(
   }
   parts.push('ORDER BY 1');
   return parts.join('\n');
+}
+
+/**
+ * Returns the effective SQL query for a visualization, wrapping the original
+ * SQL with aggregation/time grain when the config requires it.
+ *
+ * Time grain transformation is delegated to the backend Python/sqlglot service
+ * via the changeTimeGrain API. Metric aggregation wrapping is done client-side.
+ *
+ * Shared by VisualizationBuilder, VisualizationEditor, and VisualizationsPage.
+ */
+export async function getEffectiveQuery(
+  originalSql: string,
+  cfg: { xAxis?: string; metrics?: string[]; dimensions?: string[]; chartOptions?: Record<string, unknown> }
+): Promise<string> {
+  const timeGrain = cfg.chartOptions?.timeGrain as TimeGrain | undefined;
+
+  // If no aggregation config, still apply time grain when set
+  if (!hasCompleteAggregationConfig(cfg.chartOptions, cfg.metrics)) {
+    if (timeGrain && cfg.xAxis) {
+      return changeTimeGrain(originalSql, cfg.xAxis, timeGrain);
+    }
+    return originalSql;
+  }
+
+  const aggregations = cfg.chartOptions!.metricAggregations as Record<string, AggregationFunction>;
+  const groupByColumns: string[] = [];
+  if (cfg.xAxis) {
+    groupByColumns.push(cfg.xAxis);
+  }
+  if (cfg.dimensions) {
+    groupByColumns.push(...cfg.dimensions);
+  }
+
+  // Step 1: Apply time grain via backend sqlglot if configured
+  let sql = originalSql;
+  if (timeGrain && cfg.xAxis) {
+    sql = await changeTimeGrain(sql, cfg.xAxis, timeGrain);
+  }
+
+  // Step 2: Wrap with aggregation (GROUP BY + metric functions)
+  const wrapped = buildAggregationQuery(sql, {
+    metricAggregations: aggregations,
+    groupByColumns,
+  });
+  return wrapped || sql;
 }
 
 export function calculateColumnStats(

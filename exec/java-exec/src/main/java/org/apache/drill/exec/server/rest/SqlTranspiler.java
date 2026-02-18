@@ -51,6 +51,7 @@ public final class SqlTranspiler {
   private Value jsonParseFunc;
   private Value convertDataTypeFunc;
   private Value formatSqlFunc;
+  private Value changeTimeGrainFunc;
   private boolean available;
 
   /**
@@ -81,6 +82,7 @@ public final class SqlTranspiler {
       jsonParseFunc = pythonContext.getBindings("python").getMember("json_parse");
       convertDataTypeFunc = pythonContext.getBindings("python").getMember("convert_data_type_raw");
       formatSqlFunc = pythonContext.getBindings("python").getMember("format_sql");
+      changeTimeGrainFunc = pythonContext.getBindings("python").getMember("change_time_grain_raw");
       available = true;
       logger.info("SqlTranspiler initialized successfully with GraalPy + sqlglot");
     } catch (Exception e) {
@@ -164,6 +166,34 @@ public final class SqlTranspiler {
       return formatSqlFunc.execute(sql).asString();
     } catch (Exception e) {
       logger.debug("SQL formatting failed, returning original: {}", e.getMessage());
+      return sql;
+    }
+  }
+
+  /**
+   * Change the time grain of a temporal column in a SQL query using sqlglot AST manipulation.
+   *
+   * @param sql the SQL query
+   * @param columnName the temporal column to transform
+   * @param timeGrain the time grain (e.g. "MONTH", "YEAR")
+   * @param columnsJson optional JSON array string of column names (for star queries)
+   * @return the transformed SQL, or the original SQL if transformation fails
+   */
+  public synchronized String changeTimeGrain(String sql, String columnName,
+      String timeGrain, String columnsJson) {
+    if (!available) {
+      return sql;
+    }
+    try {
+      String result;
+      if (columnsJson != null && !columnsJson.isEmpty()) {
+        result = changeTimeGrainFunc.execute(sql, columnName, timeGrain, columnsJson).asString();
+      } else {
+        result = changeTimeGrainFunc.execute(sql, columnName, timeGrain).asString();
+      }
+      return result;
+    } catch (Exception e) {
+      logger.warn("Time grain change failed: {}", e.getMessage(), e);
       return sql;
     }
   }

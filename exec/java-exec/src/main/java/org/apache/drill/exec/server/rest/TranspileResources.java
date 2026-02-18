@@ -192,6 +192,67 @@ public class TranspileResources {
     return Response.ok(new TranspileResponse(result, true, formattedOriginal)).build();
   }
 
+  // ==================== Change Time Grain ====================
+
+  public static class TimeGrainRequest {
+    @JsonProperty
+    public String sql;
+
+    @JsonProperty
+    public String columnName;
+
+    @JsonProperty
+    public String timeGrain;
+
+    @JsonProperty
+    public List<String> columns;
+
+    public TimeGrainRequest() {
+    }
+
+    @JsonCreator
+    public TimeGrainRequest(
+        @JsonProperty("sql") String sql,
+        @JsonProperty("columnName") String columnName,
+        @JsonProperty("timeGrain") String timeGrain,
+        @JsonProperty("columns") List<String> columns) {
+      this.sql = sql;
+      this.columnName = columnName;
+      this.timeGrain = timeGrain;
+      this.columns = columns;
+    }
+  }
+
+  @POST
+  @Path("/time-grain")
+  @Consumes(MediaType.APPLICATION_JSON)
+  @Produces(MediaType.APPLICATION_JSON)
+  @Operation(summary = "Change time grain",
+      description = "Wraps a temporal column with DATE_TRUNC using sqlglot AST manipulation")
+  public Response changeTimeGrain(TimeGrainRequest request) {
+    if (request.sql == null || request.sql.trim().isEmpty()) {
+      return Response.ok(new TranspileResponse("", true)).build();
+    }
+    if (request.columnName == null || request.timeGrain == null) {
+      return Response.status(Response.Status.BAD_REQUEST)
+          .entity(new TranspileResponse(request.sql, false)).build();
+    }
+
+    SqlTranspiler transpiler = SqlTranspiler.getInstance();
+    String columnsJson = null;
+    if (request.columns != null && !request.columns.isEmpty()) {
+      try {
+        columnsJson = new ObjectMapper().writeValueAsString(request.columns);
+      } catch (Exception e) {
+        columnsJson = null;
+      }
+    }
+
+    String result = transpiler.changeTimeGrain(
+        request.sql, request.columnName, request.timeGrain, columnsJson);
+    return Response.ok(new TranspileResponse(result, true)).build();
+  }
+
   // ==================== Format SQL ====================
 
   public static class FormatRequest {
