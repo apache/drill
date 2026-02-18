@@ -25,14 +25,21 @@ export async function executeQuery(request: QueryRequest): Promise<QueryResult> 
   // Strip trailing semicolons — Drill's SQL parser doesn't accept them
   // (the CLI strips them automatically, but the REST API passes them through)
   const query = request.query.replace(/;\s*$/, '');
-  const response = await apiClient.post<QueryResult>('/query.json', {
+  const body: Record<string, unknown> = {
     query,
     queryType: request.queryType || 'SQL',
     autoLimit: request.autoLimitRowCount ? String(request.autoLimitRowCount) : '',
-    userName: request.userName,
-    defaultSchema: request.defaultSchema,
-    options: request.options,
-  });
+  };
+  if (request.userName) {
+    body.userName = request.userName;
+  }
+  if (request.defaultSchema) {
+    body.defaultSchema = request.defaultSchema;
+  }
+  if (request.options) {
+    body.options = request.options;
+  }
+  const response = await apiClient.post<QueryResult>('/query.json', body);
 
   // Drill returns HTTP 200 even for failed queries — check queryState
   if (response.data.queryState === 'FAILED') {
