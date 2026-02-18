@@ -38,7 +38,7 @@ import { executeQuery } from '../../api/queries';
 import ChartTypeSelector from './ChartTypeSelector';
 import ColumnMapper from './ColumnMapper';
 import ChartPreview from './ChartPreview';
-import { getEffectiveQuery } from '../../utils/sqlTransformations';
+import { computeEffectiveQuery } from '../../utils/sqlTransformations';
 import type { ChartType, VisualizationConfig, QueryResult, VisualizationCreate, Visualization } from '../../types';
 
 const { Text } = Typography;
@@ -118,6 +118,8 @@ export default function VisualizationEditor({
     }
     setDataLoading(true);
     setDataError(null);
+    console.debug('[VizEditor:fetchData] sending base query, defaultSchema=%s, sql=%s',
+      visualization?.defaultSchema, editedSql.substring(0, 120));
     try {
       const result = await executeQuery({
         query: editedSql,
@@ -125,6 +127,7 @@ export default function VisualizationEditor({
         autoLimitRowCount: 10000,
         defaultSchema: visualization?.defaultSchema,
       });
+      console.debug('[VizEditor:fetchData] SUCCESS rows=%d cols=%s', result.rows?.length, result.columns);
       setBaseData(result);
       setSqlDirty(false);
     } catch (err: unknown) {
@@ -148,7 +151,7 @@ export default function VisualizationEditor({
   }, [open, visualization, editedSql, fetchData]);
 
   // Extract column info from base data (always the full column set)
-  const columns = useMemo(() => {
+  const baseColumns = useMemo(() => {
     if (!baseData || !baseData.columns || !baseData.metadata) {
       return [];
     }
@@ -157,6 +160,45 @@ export default function VisualizationEditor({
       type: baseData.metadata[idx] || 'VARCHAR',
     }));
   }, [baseData]);
+
+  // Fallback columns: when the base query fails, derive columns from
+  // the aggregated query result or the saved config so the ColumnMapper
+  // (and time grain selector) can still render.
+  const columns = useMemo(() => {
+    if (baseColumns.length > 0) {
+      return baseColumns;
+    }
+    // Try aggregated data first — it has real type metadata
+    if (aggregatedData?.columns && aggregatedData?.metadata) {
+      return aggregatedData.columns.map((name, idx) => ({
+        name,
+        type: aggregatedData.metadata[idx] || 'VARCHAR',
+      }));
+    }
+    // Last resort: reconstruct from saved config with assumed types
+    const cols: { name: string; type: string }[] = [];
+    if (config.xAxis) {
+      cols.push({ name: config.xAxis, type: 'DATE' });
+    }
+    if (config.yAxis) {
+      cols.push({ name: config.yAxis, type: 'DOUBLE' });
+    }
+    if (config.metrics) {
+      config.metrics.forEach(m => {
+        if (!cols.some(c => c.name === m)) {
+          cols.push({ name: m, type: 'DOUBLE' });
+        }
+      });
+    }
+    if (config.dimensions) {
+      config.dimensions.forEach(d => {
+        if (!cols.some(c => c.name === d)) {
+          cols.push({ name: d, type: 'VARCHAR' });
+        }
+      });
+    }
+    return cols;
+  }, [baseColumns, aggregatedData, config.xAxis, config.yAxis, config.metrics, config.dimensions]);
 
   // Detect stale column mappings after data changes
   useEffect(() => {
@@ -182,33 +224,32 @@ export default function VisualizationEditor({
     setStaleMapping(hasStale);
   }, [columns, config.xAxis, config.yAxis, config.metrics, config.dimensions]);
 
-  const [effectiveQuery, setEffectiveQuery] = useState<string>('');
-
-  // Compute effective query asynchronously — gated on configReady so we don't
-  // fire with stale/incomplete config before the saved visualization is loaded.
-  useEffect(() => {
+  // Compute effective query synchronously — gated on configReady so we don't
+  // compute with stale/incomplete config before the saved visualization is loaded.
+  const effectiveQuery = useMemo(() => {
     if (!configReady || !editedSql) {
-      setEffectiveQuery('');
-      return;
+      return '';
     }
-    let cancelled = false;
-    getEffectiveQuery(editedSql, config)
-      .then((result) => {
-        if (!cancelled) {
-          setEffectiveQuery(result);
-        }
-      })
-      .catch((err) => {
-        console.error('[VisualizationEditor] getEffectiveQuery failed:', err);
-        if (!cancelled) {
-          setEffectiveQuery(editedSql);
-        }
-      });
-    return () => { cancelled = true; };
+    return computeEffectiveQuery(editedSql, config);
   }, [configReady, editedSql, config]);
 
   // Data for chart preview: prefer aggregated data when available
   const previewData = aggregatedData || baseData;
+
+  // Loading state for chart: when aggregation is active, only wait for the
+  // aggregated query (don't block the chart on the base-data fetch which is
+  // only needed for ColumnMapper's column list).  Matches VisualizationBuilder.
+  const chartLoading = (effectiveQuery && effectiveQuery !== editedSql)
+    ? aggregatedLoading
+    : dataLoading;
+
+  console.debug('[VizEditor] render — chartType=%s, xAxis=%s, metrics=%s, dims=%s, timeGrain=%s, dataLoading=%s, aggLoading=%s, chartLoading=%s, previewData=%s, rows=%d, effectiveQuery=%s',
+    chartType, config.xAxis, JSON.stringify(config.metrics), JSON.stringify(config.dimensions),
+    config.chartOptions?.timeGrain || '(none)',
+    dataLoading, aggregatedLoading, chartLoading,
+    aggregatedData ? 'aggregated' : baseData ? 'base' : 'none',
+    previewData?.rows?.length ?? 0,
+    effectiveQuery ? effectiveQuery.substring(0, 80) : '(empty)');
 
   // Fetch aggregated data when the effective query differs from the base SQL
   useEffect(() => {
@@ -344,28 +385,30 @@ export default function VisualizationEditor({
 
             {/* Data Mapping Section */}
             <Card size="small" title="Data Mapping" style={{ marginBottom: 12 }}>
-              {dataLoading ? (
+              {dataLoading && columns.length === 0 ? (
                 <div style={{ padding: 16, textAlign: 'center' }}>
                   <Spin size="small" />
                   <div style={{ marginTop: 8 }}>
                     <Text type="secondary">Loading columns...</Text>
                   </div>
                 </div>
-              ) : dataError ? (
-                <Alert
-                  type="warning"
-                  message="Could not load data"
-                  description={dataError}
-                  showIcon
-                  style={{ marginBottom: 8 }}
-                  action={
-                    <Button size="small" icon={<ReloadOutlined />} onClick={fetchData}>
-                      Retry
-                    </Button>
-                  }
-                />
               ) : (
                 <>
+                  {dataError && (
+                    <Alert
+                      type="warning"
+                      message="Could not load base data"
+                      description={dataError}
+                      showIcon
+                      closable
+                      style={{ marginBottom: 8 }}
+                      action={
+                        <Button size="small" icon={<ReloadOutlined />} onClick={fetchData}>
+                          Retry
+                        </Button>
+                      }
+                    />
+                  )}
                   {staleMapping && (
                     <Alert
                       type="warning"
@@ -476,7 +519,7 @@ export default function VisualizationEditor({
                   chartType={chartType}
                   config={{ ...config, colorScheme: selectedColorScheme }}
                   data={previewData}
-                  loading={dataLoading || aggregatedLoading}
+                  loading={chartLoading}
                   height="100%"
                 />
               </div>
@@ -505,7 +548,7 @@ export default function VisualizationEditor({
                       <WarningOutlined /> SQL modified but not yet run. Click Run to refresh the preview.
                     </Text>
                   )}
-                  {effectiveQuery !== editedSql && editedSql && (
+                  {effectiveQuery && effectiveQuery !== editedSql && editedSql && (
                     <>
                       <Text type="secondary" style={{ fontSize: 11, display: 'block', marginBottom: 4 }}>
                         Effective Query (with aggregation)

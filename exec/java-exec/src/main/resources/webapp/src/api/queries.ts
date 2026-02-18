@@ -41,9 +41,20 @@ export async function executeQuery(request: QueryRequest): Promise<QueryResult> 
   }
   const response = await apiClient.post<QueryResult>('/query.json', body);
 
-  // Drill returns HTTP 200 even for failed queries — check queryState
-  if (response.data.queryState === 'FAILED') {
+  // Drill returns HTTP 200 even for failed queries — check queryState.
+  // However, when autoLimit is used, Drill may set queryState to FAILED
+  // even though it successfully returned partial results (the auto-limit
+  // interrupted the query).  If we got rows back, treat it as a success.
+  const hasData = response.data.rows && response.data.rows.length > 0;
+  if (response.data.queryState === 'FAILED' && !hasData) {
     const queryId = response.data.queryId;
+    console.error('[executeQuery] FAILED — queryId=%s, queryState=%s, errorMessage=%s, exception=%s, cols=%d, rows=%d, allKeys=%s, query=%s',
+      queryId, response.data.queryState, response.data.errorMessage,
+      response.data.exception,
+      response.data.columns?.length ?? -1,
+      response.data.rows?.length ?? -1,
+      Object.keys(response.data).join(','),
+      query.substring(0, 200));
     let detail = response.data.errorMessage || response.data.exception || '';
 
     // If no error detail in the query response, try fetching the profile
@@ -51,13 +62,19 @@ export async function executeQuery(request: QueryRequest): Promise<QueryResult> 
       try {
         const profile = await apiClient.get(`/profiles/${queryId}.json`);
         const profileData = profile.data;
+        console.error('[executeQuery] profile keys=%s', Object.keys(profileData || {}));
+        console.error('[executeQuery] profile verboseError=%s', profileData?.verboseError);
+        console.error('[executeQuery] profile error=%s', profileData?.error);
+        console.error('[executeQuery] profile errorId=%s planEnd=%s state=%s',
+          profileData?.errorId, profileData?.planEnd, profileData?.state);
         // Prefer verboseError (detailed) over error (concise)
         if (profileData?.verboseError) {
           detail = profileData.verboseError;
         } else if (profileData?.error) {
           detail = profileData.error;
         }
-      } catch {
+      } catch (profileErr) {
+        console.error('[executeQuery] profile fetch failed:', profileErr);
         // Profile fetch failed — fall through to generic message
       }
     }
