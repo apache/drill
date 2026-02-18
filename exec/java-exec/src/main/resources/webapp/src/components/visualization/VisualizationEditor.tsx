@@ -15,7 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import { useState, useMemo, useEffect, useCallback, useRef } from 'react';
+import { useState, useMemo, useEffect, useCallback } from 'react';
 import {
   Modal,
   Button,
@@ -38,7 +38,7 @@ import { executeQuery } from '../../api/queries';
 import ChartTypeSelector from './ChartTypeSelector';
 import ColumnMapper from './ColumnMapper';
 import ChartPreview from './ChartPreview';
-import { buildTimeGrainQuery, hasCompleteTimeGrainConfig } from '../../utils/sqlTransformations';
+import { buildAggregationQuery, hasCompleteAggregationConfig } from '../../utils/sqlTransformations';
 import type { TimeGrain, AggregationFunction } from '../../utils/sqlTransformations';
 import type { ChartType, VisualizationConfig, QueryResult, VisualizationCreate, Visualization } from '../../types';
 
@@ -69,10 +69,15 @@ export default function VisualizationEditor({
   const queryClient = useQueryClient();
   const [showSql, setShowSql] = useState(true);
 
-  // Data fetching state
-  const [fetchedData, setFetchedData] = useState<QueryResult | null>(null);
+  // Base data (original SQL) — used for column list in ColumnMapper
+  const [baseData, setBaseData] = useState<QueryResult | null>(null);
   const [dataLoading, setDataLoading] = useState(false);
   const [dataError, setDataError] = useState<string | null>(null);
+
+  // Aggregated data — used for chart preview when aggregation is active
+  const [aggregatedData, setAggregatedData] = useState<QueryResult | null>(null);
+  const [aggregatedLoading, setAggregatedLoading] = useState(false);
+  const [aggregatedError, setAggregatedError] = useState<string | null>(null);
 
   // Editable SQL state
   const [editedSql, setEditedSql] = useState<string>('');
@@ -99,22 +104,29 @@ export default function VisualizationEditor({
     }
   }, [open, visualization, form]);
 
-  // Build effective query with time grain if applicable
+  // Build effective query with aggregation if applicable
   const getEffectiveQuery = useCallback((originalSql: string, cfg: VisualizationConfig): string => {
-    if (!hasCompleteTimeGrainConfig(cfg.chartOptions, cfg.metrics)) {
+    if (!hasCompleteAggregationConfig(cfg.chartOptions, cfg.metrics)) {
       return originalSql;
     }
-    const grain = cfg.chartOptions!.timeGrain as TimeGrain;
     const aggregations = cfg.chartOptions!.metricAggregations as Record<string, AggregationFunction>;
-    const wrapped = buildTimeGrainQuery(originalSql, {
-      grain,
-      temporalColumn: cfg.xAxis!,
+    const groupByColumns: string[] = [];
+    if (cfg.xAxis) {
+      groupByColumns.push(cfg.xAxis);
+    }
+    if (cfg.dimensions) {
+      groupByColumns.push(...cfg.dimensions);
+    }
+    const wrapped = buildAggregationQuery(originalSql, {
       metricAggregations: aggregations,
+      groupByColumns,
+      timeGrain: cfg.chartOptions?.timeGrain as TimeGrain | undefined,
+      temporalColumn: cfg.xAxis,
     });
     return wrapped || originalSql;
   }, []);
 
-  // Fetch data from edited SQL
+  // Fetch base data (original SQL, no time grain) — provides columns for ColumnMapper
   const fetchData = useCallback(async () => {
     if (!editedSql.trim()) {
       setDataError('SQL query is empty. Please enter a query.');
@@ -123,39 +135,44 @@ export default function VisualizationEditor({
     setDataLoading(true);
     setDataError(null);
     try {
-      const query = getEffectiveQuery(editedSql, config);
       const result = await executeQuery({
-        query,
+        query: editedSql,
         queryType: 'SQL',
         autoLimitRowCount: 10000,
         defaultSchema: visualization?.defaultSchema,
       });
-      setFetchedData(result);
+      setBaseData(result);
       setSqlDirty(false);
-    } catch (err) {
-      setDataError(`Failed to execute query: ${(err as Error).message}`);
+    } catch (err: unknown) {
+      let msg = 'Unknown error';
+      if (err instanceof Error) {
+        msg = err.message;
+      } else if (typeof err === 'object' && err !== null && 'response' in err) {
+        msg = JSON.stringify((err as Record<string, unknown>).response);
+      }
+      setDataError(`Failed to execute query: ${msg}`);
     } finally {
       setDataLoading(false);
     }
-  }, [editedSql, visualization?.defaultSchema, config, getEffectiveQuery]);
+  }, [editedSql, visualization?.defaultSchema]);
 
-  // Auto-fetch on open
+  // Auto-fetch base data on open
   useEffect(() => {
     if (open && visualization) {
       fetchData();
     }
   }, [open, visualization, fetchData]);
 
-  // Extract column info from fetched data
+  // Extract column info from base data (always the full column set)
   const columns = useMemo(() => {
-    if (!fetchedData || !fetchedData.columns || !fetchedData.metadata) {
+    if (!baseData || !baseData.columns || !baseData.metadata) {
       return [];
     }
-    return fetchedData.columns.map((name, idx) => ({
+    return baseData.columns.map((name, idx) => ({
       name,
-      type: fetchedData.metadata[idx] || 'VARCHAR',
+      type: baseData.metadata[idx] || 'VARCHAR',
     }));
-  }, [fetchedData]);
+  }, [baseData]);
 
   // Detect stale column mappings after data changes
   useEffect(() => {
@@ -188,41 +205,49 @@ export default function VisualizationEditor({
     return getEffectiveQuery(editedSql, config);
   }, [editedSql, config, getEffectiveQuery]);
 
-  // Auto-refetch when effective query changes (time grain / aggregation changes)
-  const prevEffectiveQuery = useRef<string>('');
+  // Data for chart preview: prefer aggregated data when available
+  const previewData = aggregatedData || baseData;
+
+  // Fetch aggregated data when the effective query differs from the base SQL
   useEffect(() => {
     if (!open || !editedSql) {
       return;
     }
-    // Skip initial render — fetchData is already called on open
-    if (prevEffectiveQuery.current === '') {
-      prevEffectiveQuery.current = effectiveQuery;
+    if (effectiveQuery === editedSql || !effectiveQuery) {
+      setAggregatedData(null);
+      setAggregatedError(null);
       return;
     }
-    if (effectiveQuery !== prevEffectiveQuery.current) {
-      prevEffectiveQuery.current = effectiveQuery;
-      // Re-fetch with the new effective query
-      const refetch = async () => {
-        setDataLoading(true);
-        setDataError(null);
-        try {
-          const result = await executeQuery({
-            query: effectiveQuery,
-            queryType: 'SQL',
-            autoLimitRowCount: 10000,
-            defaultSchema: visualization?.defaultSchema,
-          });
-          setFetchedData(result);
-          setSqlDirty(false);
-        } catch (err) {
-          setDataError(`Failed to execute query: ${(err as Error).message}`);
-        } finally {
-          setDataLoading(false);
+    let cancelled = false;
+    const fetchAggregated = async () => {
+      setAggregatedLoading(true);
+      setAggregatedError(null);
+      try {
+        const result = await executeQuery({
+          query: effectiveQuery,
+          queryType: 'SQL',
+          autoLimitRowCount: 10000,
+          defaultSchema: visualization?.defaultSchema,
+        });
+        if (!cancelled) {
+          setAggregatedData(result);
+          setAggregatedError(null);
         }
-      };
-      refetch();
-    }
-  }, [effectiveQuery, open, editedSql, visualization?.defaultSchema]);
+      } catch (err) {
+        if (!cancelled) {
+          const errMsg = (err as Error).message;
+          setAggregatedData(null);
+          setAggregatedError(`Aggregation query failed: ${errMsg}\n\nGenerated SQL:\n${effectiveQuery}`);
+        }
+      } finally {
+        if (!cancelled) {
+          setAggregatedLoading(false);
+        }
+      }
+    };
+    fetchAggregated();
+    return () => { cancelled = true; };
+  }, [effectiveQuery, editedSql, open, visualization?.defaultSchema]);
 
   // Update mutation
   const editMutation = useMutation({
@@ -241,9 +266,12 @@ export default function VisualizationEditor({
   const handleClose = () => {
     setChartType('bar');
     setConfig({});
-    setFetchedData(null);
+    setBaseData(null);
     setDataLoading(false);
     setDataError(null);
+    setAggregatedData(null);
+    setAggregatedLoading(false);
+    setAggregatedError(null);
     setShowSql(true);
     setEditedSql('');
     setSqlDirty(false);
@@ -425,11 +453,26 @@ export default function VisualizationEditor({
 
             {/* Chart Preview */}
             <div style={{ flex: 1, padding: 16, overflow: 'hidden' }}>
+              {aggregatedError && (
+                <Alert
+                  message="Aggregation Error"
+                  description={
+                    <pre style={{ whiteSpace: 'pre-wrap', fontSize: 11, margin: 0 }}>
+                      {aggregatedError}
+                    </pre>
+                  }
+                  type="error"
+                  showIcon
+                  closable
+                  onClose={() => setAggregatedError(null)}
+                  style={{ marginBottom: 8 }}
+                />
+              )}
               <ChartPreview
                 chartType={chartType}
                 config={{ ...config, colorScheme: selectedColorScheme }}
-                data={fetchedData}
-                loading={dataLoading}
+                data={previewData}
+                loading={dataLoading || aggregatedLoading}
                 height={showSql ? 250 : 450}
               />
             </div>
@@ -460,7 +503,7 @@ export default function VisualizationEditor({
                   {effectiveQuery !== editedSql && editedSql && (
                     <>
                       <Text type="secondary" style={{ fontSize: 11, display: 'block', marginBottom: 4 }}>
-                        Effective Query (with time grain)
+                        Effective Query (with aggregation)
                       </Text>
                       <pre
                         style={{
