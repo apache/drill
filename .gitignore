@@ -34,3 +34,7 @@ tools/venv/
 venv/
 .vscode/*
 /exec/java-exec/src/main/resources/python/.venv/
+__pycache__/
+*.pyc
+.pytest_cache/
+.coverage
