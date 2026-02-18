@@ -107,6 +107,10 @@ function MiniVizPreview({ viz }: { viz: Visualization }) {
   const [loading, setLoading] = useState(false);
   const [failed, setFailed] = useState(false);
 
+  // Serialize config to a stable string so the effect re-fires when config changes
+  // (e.g. time grain or aggregation settings updated)
+  const configKey = JSON.stringify(viz.config || {});
+
   useEffect(() => {
     if (!viz.sql) {
       setFailed(true);
@@ -145,7 +149,7 @@ function MiniVizPreview({ viz }: { viz: Visualization }) {
     return () => {
       cancelled = true;
     };
-  }, [viz.id, viz.sql, viz.defaultSchema]);
+  }, [viz.id, viz.sql, viz.defaultSchema, configKey]);
 
   // Fall back to icon on failure or no SQL
   if (failed || (!loading && !queryResult)) {
