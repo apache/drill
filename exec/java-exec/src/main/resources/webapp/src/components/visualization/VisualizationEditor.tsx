@@ -83,6 +83,9 @@ export default function VisualizationEditor({
   const [sqlDirty, setSqlDirty] = useState(false);
   const [staleMapping, setStaleMapping] = useState(false);
 
+  // Guard: prevent effective query from firing before the saved config is loaded
+  const [configReady, setConfigReady] = useState(false);
+
   // Watch colorScheme from form so preview updates live
   const selectedColorScheme = Form.useWatch('colorScheme', form) || 'default';
 
@@ -100,6 +103,10 @@ export default function VisualizationEditor({
         colorScheme: visualization.config?.colorScheme || 'default',
         isPublic: visualization.isPublic || false,
       });
+      // Signal that the saved config has been fully loaded — the effective
+      // query effect is gated on this flag to avoid computing queries with
+      // stale/incomplete config (e.g. missing timeGrain).
+      setConfigReady(true);
     }
   }, [open, visualization, form]);
 
@@ -177,20 +184,28 @@ export default function VisualizationEditor({
 
   const [effectiveQuery, setEffectiveQuery] = useState<string>('');
 
-  // Compute effective query asynchronously (time grain via backend)
+  // Compute effective query asynchronously — gated on configReady so we don't
+  // fire with stale/incomplete config before the saved visualization is loaded.
   useEffect(() => {
-    if (!editedSql) {
+    if (!configReady || !editedSql) {
       setEffectiveQuery('');
       return;
     }
     let cancelled = false;
-    getEffectiveQuery(editedSql, config).then((result) => {
-      if (!cancelled) {
-        setEffectiveQuery(result);
-      }
-    });
+    getEffectiveQuery(editedSql, config)
+      .then((result) => {
+        if (!cancelled) {
+          setEffectiveQuery(result);
+        }
+      })
+      .catch((err) => {
+        console.error('[VisualizationEditor] getEffectiveQuery failed:', err);
+        if (!cancelled) {
+          setEffectiveQuery(editedSql);
+        }
+      });
     return () => { cancelled = true; };
-  }, [editedSql, config]);
+  }, [configReady, editedSql, config]);
 
   // Data for chart preview: prefer aggregated data when available
   const previewData = aggregatedData || baseData;
@@ -251,6 +266,7 @@ export default function VisualizationEditor({
   });
 
   const handleClose = () => {
+    setConfigReady(false);
     setChartType('bar');
     setConfig({});
     setBaseData(null);
@@ -439,7 +455,7 @@ export default function VisualizationEditor({
             </div>
 
             {/* Chart Preview */}
-            <div style={{ flex: 1, padding: 16, overflow: 'hidden' }}>
+            <div style={{ flex: 1, padding: 16, overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
               {aggregatedError && (
                 <Alert
                   message="Aggregation Error"
@@ -452,16 +468,18 @@ export default function VisualizationEditor({
                   showIcon
                   closable
                   onClose={() => setAggregatedError(null)}
-                  style={{ marginBottom: 8 }}
+                  style={{ marginBottom: 8, flexShrink: 0 }}
                 />
               )}
-              <ChartPreview
-                chartType={chartType}
-                config={{ ...config, colorScheme: selectedColorScheme }}
-                data={previewData}
-                loading={dataLoading || aggregatedLoading}
-                height={showSql ? 250 : 450}
-              />
+              <div style={{ flex: 1, minHeight: 0 }}>
+                <ChartPreview
+                  chartType={chartType}
+                  config={{ ...config, colorScheme: selectedColorScheme }}
+                  data={previewData}
+                  loading={dataLoading || aggregatedLoading}
+                  height="100%"
+                />
+              </div>
             </div>
 
             {/* SQL Panel (collapsible) */}

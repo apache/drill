@@ -28,7 +28,7 @@ interface ChartPreviewProps {
   config: VisualizationConfig;
   data: QueryResult | null;
   loading?: boolean;
-  height?: number;
+  height?: number | string;
   mini?: boolean;
 }
 
@@ -762,7 +762,7 @@ export default function ChartPreview({
       <Table
         dataSource={data.rows.map((row, idx) => ({ ...row, key: idx }))}
         columns={tableColumns}
-        scroll={{ y: height - 100 }}
+        scroll={{ y: typeof height === 'number' ? height - 100 : 'calc(100% - 100px)' }}
         size="small"
         pagination={{ pageSize: 50, showSizeChanger: true }}
       />

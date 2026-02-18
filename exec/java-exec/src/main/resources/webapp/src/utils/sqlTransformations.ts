@@ -16,8 +16,6 @@
  * limitations under the License.
  */
 
-import { changeTimeGrain } from '../api/ai';
-
 export type TransformationType =
   | 'uppercase'
   | 'lowercase'
@@ -495,8 +493,11 @@ export function buildAggregationQuery(
  * Returns the effective SQL query for a visualization, wrapping the original
  * SQL with aggregation/time grain when the config requires it.
  *
- * Time grain transformation is delegated to the backend Python/sqlglot service
- * via the changeTimeGrain API. Metric aggregation wrapping is done client-side.
+ * When time grain is set, data is aggregated with DATE_TRUNC + GROUP BY.
+ * If the user hasn't set explicit aggregation functions, SUM is used as the
+ * default for each metric so the chart shows meaningful grouped results.
+ *
+ * All transformations are done client-side (no backend API dependency).
  *
  * Shared by VisualizationBuilder, VisualizationEditor, and VisualizationsPage.
  */
@@ -505,16 +506,37 @@ export async function getEffectiveQuery(
   cfg: { xAxis?: string; metrics?: string[]; dimensions?: string[]; chartOptions?: Record<string, unknown> }
 ): Promise<string> {
   const timeGrain = cfg.chartOptions?.timeGrain as TimeGrain | undefined;
+  const hasExplicitAgg = hasCompleteAggregationConfig(cfg.chartOptions, cfg.metrics);
 
-  // If no aggregation config, still apply time grain when set
-  if (!hasCompleteAggregationConfig(cfg.chartOptions, cfg.metrics)) {
-    if (timeGrain && cfg.xAxis) {
-      return changeTimeGrain(originalSql, cfg.xAxis, timeGrain);
+  // Determine effective aggregation functions
+  let aggregations: Record<string, AggregationFunction> | undefined;
+  if (hasExplicitAgg) {
+    aggregations = cfg.chartOptions!.metricAggregations as Record<string, AggregationFunction>;
+  } else if (timeGrain && cfg.xAxis && cfg.metrics && cfg.metrics.length > 0) {
+    // Time grain without explicit aggregation → default to SUM
+    aggregations = {};
+    for (const m of cfg.metrics) {
+      aggregations[m] = 'SUM';
     }
+  }
+
+  // Nothing to transform
+  if (!aggregations) {
     return originalSql;
   }
 
-  const aggregations = cfg.chartOptions!.metricAggregations as Record<string, AggregationFunction>;
+  // Time grain path: DATE_TRUNC + GROUP BY + aggregation
+  if (timeGrain && cfg.xAxis) {
+    const tgQuery = buildTimeGrainQuery(originalSql, {
+      grain: timeGrain,
+      temporalColumn: cfg.xAxis,
+      metricAggregations: aggregations,
+      dimensions: cfg.dimensions,
+    });
+    return tgQuery || originalSql;
+  }
+
+  // Aggregation-only path (no time grain)
   const groupByColumns: string[] = [];
   if (cfg.xAxis) {
     groupByColumns.push(cfg.xAxis);
@@ -522,19 +544,11 @@ export async function getEffectiveQuery(
   if (cfg.dimensions) {
     groupByColumns.push(...cfg.dimensions);
   }
-
-  // Step 1: Apply time grain via backend sqlglot if configured
-  let sql = originalSql;
-  if (timeGrain && cfg.xAxis) {
-    sql = await changeTimeGrain(sql, cfg.xAxis, timeGrain);
-  }
-
-  // Step 2: Wrap with aggregation (GROUP BY + metric functions)
-  const wrapped = buildAggregationQuery(sql, {
+  const wrapped = buildAggregationQuery(originalSql, {
     metricAggregations: aggregations,
     groupByColumns,
   });
-  return wrapped || sql;
+  return wrapped || originalSql;
 }
 
 export function calculateColumnStats(

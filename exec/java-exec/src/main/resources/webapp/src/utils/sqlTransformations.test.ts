@@ -20,7 +20,16 @@ import {
   applySqlTransformation,
   prettifySql,
   calculateColumnStats,
+  buildTimeGrainQuery,
+  buildAggregationQuery,
+  getEffectiveQuery,
+  hasCompleteAggregationConfig,
+  hasCompleteTimeGrainConfig,
+  isTemporalType,
+  quoteColumnName,
   type ColumnTransformation,
+  type TimeGrainConfig,
+  type AggregationConfig,
 } from './sqlTransformations';
 
 // ===========================================================================
@@ -529,5 +538,345 @@ describe('calculateColumnStats', () => {
     expect(stats.min).toBe(5);
     expect(stats.max).toBe(5);
     expect(stats.avg).toBe(5);
+  });
+});
+
+// ===========================================================================
+// quoteColumnName
+// ===========================================================================
+
+describe('quoteColumnName', () => {
+  it('wraps a simple name with backticks', () => {
+    expect(quoteColumnName('date')).toBe('`date`');
+  });
+
+  it('escapes existing backticks', () => {
+    expect(quoteColumnName('col`name')).toBe('`col``name`');
+  });
+});
+
+// ===========================================================================
+// isTemporalType
+// ===========================================================================
+
+describe('isTemporalType', () => {
+  it('returns true for DATE type', () => {
+    expect(isTemporalType('DATE')).toBe(true);
+  });
+
+  it('returns true for TIMESTAMP type', () => {
+    expect(isTemporalType('TIMESTAMP')).toBe(true);
+  });
+
+  it('returns true for TIME type', () => {
+    expect(isTemporalType('TIME')).toBe(true);
+  });
+
+  it('is case-insensitive', () => {
+    expect(isTemporalType('timestamp')).toBe(true);
+    expect(isTemporalType('Date')).toBe(true);
+  });
+
+  it('returns false for non-temporal types', () => {
+    expect(isTemporalType('VARCHAR')).toBe(false);
+    expect(isTemporalType('INTEGER')).toBe(false);
+    expect(isTemporalType('DOUBLE')).toBe(false);
+  });
+});
+
+// ===========================================================================
+// hasCompleteAggregationConfig
+// ===========================================================================
+
+describe('hasCompleteAggregationConfig', () => {
+  it('returns false when chartOptions is undefined', () => {
+    expect(hasCompleteAggregationConfig(undefined, ['hosts'])).toBe(false);
+  });
+
+  it('returns false when metrics is empty', () => {
+    expect(hasCompleteAggregationConfig({ metricAggregations: { hosts: 'SUM' } }, [])).toBe(false);
+  });
+
+  it('returns false when no metricAggregations', () => {
+    expect(hasCompleteAggregationConfig({}, ['hosts'])).toBe(false);
+  });
+
+  it('returns true when at least one metric has an aggregation', () => {
+    expect(hasCompleteAggregationConfig(
+      { metricAggregations: { hosts: 'SUM' } },
+      ['hosts', 'orgs']
+    )).toBe(true);
+  });
+
+  it('returns false when no metric has an aggregation', () => {
+    expect(hasCompleteAggregationConfig(
+      { metricAggregations: { other: 'SUM' } },
+      ['hosts']
+    )).toBe(false);
+  });
+});
+
+// ===========================================================================
+// hasCompleteTimeGrainConfig
+// ===========================================================================
+
+describe('hasCompleteTimeGrainConfig', () => {
+  it('returns false when no timeGrain is set', () => {
+    expect(hasCompleteTimeGrainConfig({}, ['hosts'])).toBe(false);
+  });
+
+  it('returns false when metrics is empty', () => {
+    expect(hasCompleteTimeGrainConfig(
+      { timeGrain: 'MONTH', metricAggregations: { hosts: 'SUM' } },
+      []
+    )).toBe(false);
+  });
+
+  it('returns true when all metrics have aggregations', () => {
+    expect(hasCompleteTimeGrainConfig(
+      { timeGrain: 'MONTH', metricAggregations: { hosts: 'SUM', orgs: 'AVG' } },
+      ['hosts', 'orgs']
+    )).toBe(true);
+  });
+
+  it('returns false when not all metrics have aggregations', () => {
+    expect(hasCompleteTimeGrainConfig(
+      { timeGrain: 'MONTH', metricAggregations: { hosts: 'SUM' } },
+      ['hosts', 'orgs']
+    )).toBe(false);
+  });
+});
+
+// ===========================================================================
+// buildTimeGrainQuery
+// ===========================================================================
+
+describe('buildTimeGrainQuery', () => {
+  const baseSql = 'SELECT date, hosts, orgs FROM metrics';
+
+  it('builds a time grain query with DATE_TRUNC and GROUP BY', () => {
+    const config: TimeGrainConfig = {
+      grain: 'MONTH',
+      temporalColumn: 'date',
+      metricAggregations: { hosts: 'SUM' },
+    };
+    const result = buildTimeGrainQuery(baseSql, config);
+    expect(result).toContain("DATE_TRUNC('MONTH', _t.`date`) AS `date`");
+    expect(result).toContain('SUM(_t.`hosts`) AS `hosts`');
+    expect(result).toContain('GROUP BY `date`');
+    expect(result).toContain('ORDER BY 1');
+    expect(result).toContain(`FROM (${baseSql}) AS _t`);
+  });
+
+  it('includes dimensions in SELECT and GROUP BY', () => {
+    const config: TimeGrainConfig = {
+      grain: 'YEAR',
+      temporalColumn: 'date',
+      metricAggregations: { hosts: 'SUM' },
+      dimensions: ['industry'],
+    };
+    const result = buildTimeGrainQuery(baseSql, config);
+    expect(result).toContain('_t.`industry`');
+    expect(result).toContain('GROUP BY `date`, _t.`industry`');
+  });
+
+  it('handles multiple metrics with different aggregations', () => {
+    const config: TimeGrainConfig = {
+      grain: 'DAY',
+      temporalColumn: 'date',
+      metricAggregations: { hosts: 'SUM', orgs: 'AVG' },
+    };
+    const result = buildTimeGrainQuery(baseSql, config);
+    expect(result).toContain('SUM(_t.`hosts`) AS `hosts`');
+    expect(result).toContain('AVG(_t.`orgs`) AS `orgs`');
+  });
+
+  it('returns null when grain is missing', () => {
+    const config: TimeGrainConfig = {
+      grain: '' as never,
+      temporalColumn: 'date',
+      metricAggregations: { hosts: 'SUM' },
+    };
+    expect(buildTimeGrainQuery(baseSql, config)).toBeNull();
+  });
+
+  it('returns null when no metric aggregations', () => {
+    const config: TimeGrainConfig = {
+      grain: 'MONTH',
+      temporalColumn: 'date',
+      metricAggregations: {},
+    };
+    expect(buildTimeGrainQuery(baseSql, config)).toBeNull();
+  });
+
+  it('strips trailing semicolons from the inner query', () => {
+    const result = buildTimeGrainQuery('SELECT date, hosts FROM t;', {
+      grain: 'MONTH',
+      temporalColumn: 'date',
+      metricAggregations: { hosts: 'SUM' },
+    });
+    expect(result).toContain('FROM (SELECT date, hosts FROM t) AS _t');
+    expect(result).not.toContain(';');
+  });
+});
+
+// ===========================================================================
+// buildAggregationQuery
+// ===========================================================================
+
+describe('buildAggregationQuery', () => {
+  const baseSql = 'SELECT category, amount FROM sales';
+
+  it('builds an aggregation query with GROUP BY', () => {
+    const config: AggregationConfig = {
+      metricAggregations: { amount: 'SUM' },
+      groupByColumns: ['category'],
+    };
+    const result = buildAggregationQuery(baseSql, config);
+    expect(result).toContain('_t.`category`');
+    expect(result).toContain('SUM(_t.`amount`) AS `amount`');
+    expect(result).toContain('GROUP BY _t.`category`');
+    expect(result).toContain('ORDER BY 1');
+  });
+
+  it('returns null when no metric aggregations', () => {
+    const config: AggregationConfig = {
+      metricAggregations: {},
+      groupByColumns: ['category'],
+    };
+    expect(buildAggregationQuery(baseSql, config)).toBeNull();
+  });
+
+  it('handles no GROUP BY columns (total aggregation)', () => {
+    const config: AggregationConfig = {
+      metricAggregations: { amount: 'SUM' },
+      groupByColumns: [],
+    };
+    const result = buildAggregationQuery(baseSql, config);
+    expect(result).toContain('SUM(_t.`amount`) AS `amount`');
+    expect(result).not.toContain('GROUP BY');
+    expect(result).toContain('ORDER BY 1');
+  });
+
+  it('handles multiple group-by columns', () => {
+    const config: AggregationConfig = {
+      metricAggregations: { amount: 'AVG' },
+      groupByColumns: ['category', 'region'],
+    };
+    const result = buildAggregationQuery(baseSql, config);
+    expect(result).toContain('GROUP BY _t.`category`, _t.`region`');
+  });
+});
+
+// ===========================================================================
+// getEffectiveQuery
+// ===========================================================================
+
+describe('getEffectiveQuery', () => {
+  const baseSql = 'SELECT date, industry, hosts, orgs FROM metrics';
+
+  it('returns original SQL when no config is set', async () => {
+    const result = await getEffectiveQuery(baseSql, {});
+    expect(result).toBe(baseSql);
+  });
+
+  it('returns original SQL when only xAxis is set (no metrics)', async () => {
+    const result = await getEffectiveQuery(baseSql, { xAxis: 'date' });
+    expect(result).toBe(baseSql);
+  });
+
+  it('returns original SQL when metrics are set but no aggregation and no time grain', async () => {
+    const result = await getEffectiveQuery(baseSql, {
+      xAxis: 'date',
+      metrics: ['hosts'],
+    });
+    expect(result).toBe(baseSql);
+  });
+
+  it('defaults to SUM when time grain is set without explicit aggregation', async () => {
+    const result = await getEffectiveQuery(baseSql, {
+      xAxis: 'date',
+      metrics: ['hosts'],
+      chartOptions: { timeGrain: 'MONTH' },
+    });
+    expect(result).toContain("DATE_TRUNC('MONTH', _t.`date`)");
+    expect(result).toContain('SUM(_t.`hosts`) AS `hosts`');
+    expect(result).toContain('GROUP BY');
+  });
+
+  it('uses explicit aggregation when provided with time grain', async () => {
+    const result = await getEffectiveQuery(baseSql, {
+      xAxis: 'date',
+      metrics: ['hosts'],
+      chartOptions: {
+        timeGrain: 'YEAR',
+        metricAggregations: { hosts: 'AVG' },
+      },
+    });
+    expect(result).toContain("DATE_TRUNC('YEAR', _t.`date`)");
+    expect(result).toContain('AVG(_t.`hosts`) AS `hosts`');
+  });
+
+  it('applies aggregation-only (no time grain) when aggregation is configured', async () => {
+    const result = await getEffectiveQuery(baseSql, {
+      xAxis: 'date',
+      metrics: ['hosts'],
+      chartOptions: {
+        metricAggregations: { hosts: 'SUM' },
+      },
+    });
+    expect(result).not.toContain('DATE_TRUNC');
+    expect(result).toContain('SUM(_t.`hosts`) AS `hosts`');
+    expect(result).toContain('GROUP BY _t.`date`');
+  });
+
+  it('includes dimensions in GROUP BY', async () => {
+    const result = await getEffectiveQuery(baseSql, {
+      xAxis: 'date',
+      metrics: ['hosts'],
+      dimensions: ['industry'],
+      chartOptions: { timeGrain: 'MONTH' },
+    });
+    expect(result).toContain('_t.`industry`');
+    expect(result).toContain('GROUP BY `date`, _t.`industry`');
+  });
+
+  it('returns original SQL when time grain is set but metrics are empty', async () => {
+    const result = await getEffectiveQuery(baseSql, {
+      xAxis: 'date',
+      metrics: [],
+      chartOptions: { timeGrain: 'MONTH' },
+    });
+    expect(result).toBe(baseSql);
+  });
+
+  it('defaults SUM for multiple metrics when time grain is set', async () => {
+    const result = await getEffectiveQuery(baseSql, {
+      xAxis: 'date',
+      metrics: ['hosts', 'orgs'],
+      chartOptions: { timeGrain: 'QUARTER' },
+    });
+    expect(result).toContain("DATE_TRUNC('QUARTER', _t.`date`)");
+    expect(result).toContain('SUM(_t.`hosts`) AS `hosts`');
+    expect(result).toContain('SUM(_t.`orgs`) AS `orgs`');
+  });
+
+  it('applies DATE_TRUNC when explicit aggregation AND time grain AND dimensions are all set', async () => {
+    // Exact user scenario: explicit SUM + MONTH time grain + industry dimension
+    const userSql = `SELECT to_date(\`date\`) AS \`date\`, \`industry\`, \`botfam\`, CAST(hosts as INTEGER) AS hosts, CAST(orgs as INTEGER) AS orgs FROM dfs.\`demo\`.\`dailybots.csvh\` ORDER BY \`date\` ASC`;
+    const result = await getEffectiveQuery(userSql, {
+      xAxis: 'date',
+      metrics: ['hosts'],
+      dimensions: ['industry'],
+      chartOptions: {
+        timeGrain: 'MONTH',
+        metricAggregations: { hosts: 'SUM' },
+      },
+    });
+    expect(result).toContain("DATE_TRUNC('MONTH', _t.`date`)");
+    expect(result).toContain('SUM(_t.`hosts`) AS `hosts`');
+    expect(result).toContain('_t.`industry`');
+    expect(result).toContain('GROUP BY');
+    expect(result).not.toEqual(userSql);
   });
 });
