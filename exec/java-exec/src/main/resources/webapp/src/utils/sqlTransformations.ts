@@ -16,6 +16,210 @@
  * limitations under the License.
  */
 
+import type { DashboardFilter } from '../types';
+
+/**
+ * Injects WHERE conditions directly into the original SQL for dashboard
+ * cross-filtering.  This approach ensures the filter column is resolved
+ * against the source table, so it works even when the column is not in the
+ * SELECT list.
+ *
+ * - If the query already has a WHERE clause (at the outermost level), the
+ *   conditions are appended with AND.
+ * - Otherwise a new WHERE clause is inserted before GROUP BY / HAVING /
+ *   ORDER BY / LIMIT / UNION (or at the end of the query).
+ *
+ * CAST(col AS VARCHAR) is used so the comparison works regardless of the
+ * column's actual type (INT, DATE, TIMESTAMP, etc.).
+ */
+// Allowlist of valid numeric operators — anything else is rejected.
+const VALID_NUMERIC_OPS = new Set(['=', '!=', '>', '>=', '<', '<=', 'between']);
+
+// ISO date pattern: YYYY-MM-DD (with optional leading zeros)
+const ISO_DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
+
+// Column names may only contain word characters, spaces, dots, and hyphens.
+// This prevents injecting SQL through a crafted column name.
+const SAFE_COLUMN_RE = /^[\w\s.\-]+$/;
+
+/**
+ * Returns true when `val` is a finite number (integer or float, including
+ * negative values and scientific notation like 1e3).
+ */
+function isNumericLiteral(val: string): boolean {
+  return val !== '' && isFinite(Number(val));
+}
+
+export function applyDashboardFilters(
+  sql: string,
+  filters: DashboardFilter[]
+): string {
+  if (!filters || filters.length === 0) {
+    return sql;
+  }
+
+  const cleanSql = sql.replace(/;\s*$/, '').trim();
+
+  const conditions: string[] = [];
+  for (const f of filters) {
+    // -- Validate column name against allowlist pattern --
+    if (!f.column || !SAFE_COLUMN_RE.test(f.column)) {
+      continue; // skip filters with suspicious column names
+    }
+
+    const quotedCol = quoteColumnName(f.column);
+    if (f.value === null || f.value === undefined || f.value === 'null') {
+      conditions.push(`${quotedCol} IS NULL`);
+      continue;
+    }
+
+    // Temporal range filter — values must be valid ISO dates
+    if (f.isTemporal && f.rangeStart && f.rangeEnd) {
+      if (!ISO_DATE_RE.test(f.rangeStart) || !ISO_DATE_RE.test(f.rangeEnd)) {
+        continue; // skip filters with non-date temporal values
+      }
+      const start = f.rangeStart;
+      const end = f.rangeEnd;
+      if (start === end) {
+        conditions.push(`CAST(${quotedCol} AS DATE) = DATE '${start}'`);
+      } else {
+        conditions.push(`CAST(${quotedCol} AS DATE) BETWEEN DATE '${start}' AND DATE '${end}'`);
+      }
+      continue;
+    }
+
+    // Numeric filter with operator — values must be valid numbers, operator must be allowlisted
+    if (f.isNumeric && f.numericOp) {
+      if (!VALID_NUMERIC_OPS.has(f.numericOp)) {
+        continue; // skip filters with unknown operators
+      }
+      if (!isNumericLiteral(String(f.value))) {
+        continue; // skip filters with non-numeric values
+      }
+      const num = Number(f.value);
+      if (f.numericOp === 'between' && f.numericEnd != null) {
+        if (!isNumericLiteral(String(f.numericEnd))) {
+          continue;
+        }
+        const numEnd = Number(f.numericEnd);
+        conditions.push(`${quotedCol} BETWEEN ${num} AND ${numEnd}`);
+      } else {
+        const op = f.numericOp === '!=' ? '<>' : f.numericOp;
+        conditions.push(`${quotedCol} ${op} ${num}`);
+      }
+      continue;
+    }
+
+    const escapedValue = String(f.value).replace(/'/g, "''");
+    conditions.push(`CAST(${quotedCol} AS VARCHAR) = '${escapedValue}'`);
+  }
+
+  // If all filters were invalid / skipped, return the original SQL unchanged.
+  if (conditions.length === 0) {
+    return sql;
+  }
+
+  const filterExpr = conditions.join(' AND ');
+
+  const { whereEnd, insertPos } = findWhereInsertionPoint(cleanSql);
+
+  if (whereEnd !== -1) {
+    // Existing WHERE clause — append AND before the next major keyword
+    const beforeWhere = cleanSql.slice(0, whereEnd).trimEnd();
+    const afterWhere = cleanSql.slice(whereEnd).trimStart();
+    return beforeWhere + ' AND ' + filterExpr + (afterWhere ? ' ' + afterWhere : '');
+  }
+  // No WHERE clause — insert one
+  const before = cleanSql.slice(0, insertPos).trimEnd();
+  const after = cleanSql.slice(insertPos).trimStart();
+  return before + ' WHERE ' + filterExpr + (after ? ' ' + after : '');
+}
+
+/**
+ * Returns true when `keyword` appears at position `pos` in `sql` (case-
+ * insensitive) and is surrounded by word boundaries.
+ */
+function matchKeywordAt(sql: string, pos: number, keyword: string): boolean {
+  if (pos + keyword.length > sql.length) {
+    return false;
+  }
+  if (sql.slice(pos, pos + keyword.length).toUpperCase() !== keyword) {
+    return false;
+  }
+  if (pos > 0 && /\w/.test(sql[pos - 1])) {
+    return false;
+  }
+  const after = pos + keyword.length;
+  if (after < sql.length && /\w/.test(sql[after])) {
+    return false;
+  }
+  return true;
+}
+
+/**
+ * Scans `sql` to locate the outermost WHERE clause (if any) and determine
+ * where to insert/append filter conditions.
+ *
+ * `whereEnd`  – position just before the next major keyword after WHERE
+ *               (-1 when no outermost WHERE exists).
+ * `insertPos` – position where a new WHERE clause should be inserted when
+ *               there is no existing one.
+ */
+function findWhereInsertionPoint(sql: string): { whereEnd: number; insertPos: number } {
+  let depth = 0;
+  let inSingleQuote = false;
+  let inDoubleQuote = false;
+  let inBacktick = false;
+
+  let foundWhere = false;
+  let whereClauseEnd = -1;
+  let insertPos = sql.length;
+  let foundInsert = false;
+
+  const clauseKeywords = ['GROUP BY', 'HAVING', 'ORDER BY', 'LIMIT', 'UNION', 'INTERSECT', 'EXCEPT', 'FETCH'];
+
+  for (let i = 0; i < sql.length; i++) {
+    const ch = sql[i];
+
+    if (ch === "'" && !inDoubleQuote && !inBacktick) { inSingleQuote = !inSingleQuote; continue; }
+    if (ch === '"' && !inSingleQuote && !inBacktick) { inDoubleQuote = !inDoubleQuote; continue; }
+    if (ch === '`' && !inSingleQuote && !inDoubleQuote) { inBacktick = !inBacktick; continue; }
+    if (inSingleQuote || inDoubleQuote || inBacktick) { continue; }
+
+    if (ch === '(') { depth++; continue; }
+    if (ch === ')') { depth--; continue; }
+    if (depth !== 0) { continue; }
+
+    // Outermost level — look for keywords
+    if (!foundWhere && matchKeywordAt(sql, i, 'WHERE')) {
+      foundWhere = true;
+      // Skip past the keyword itself so we don't match it as a clause end
+      i += 4;
+      continue;
+    }
+
+    for (const kw of clauseKeywords) {
+      if (matchKeywordAt(sql, i, kw)) {
+        if (foundWhere && whereClauseEnd === -1) {
+          whereClauseEnd = i;
+        }
+        if (!foundInsert) {
+          insertPos = i;
+          foundInsert = true;
+        }
+        break;
+      }
+    }
+  }
+
+  // If WHERE was found but no subsequent clause keyword, conditions extend to end
+  if (foundWhere && whereClauseEnd === -1) {
+    whereClauseEnd = sql.length;
+  }
+
+  return { whereEnd: foundWhere ? whereClauseEnd : -1, insertPos };
+}
+
 export type TransformationType =
   | 'uppercase'
   | 'lowercase'

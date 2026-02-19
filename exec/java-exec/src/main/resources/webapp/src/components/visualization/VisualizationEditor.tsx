@@ -118,8 +118,6 @@ export default function VisualizationEditor({
     }
     setDataLoading(true);
     setDataError(null);
-    console.debug('[VizEditor:fetchData] sending base query, defaultSchema=%s, sql=%s',
-      visualization?.defaultSchema, editedSql.substring(0, 120));
     try {
       const result = await executeQuery({
         query: editedSql,
@@ -127,7 +125,6 @@ export default function VisualizationEditor({
         autoLimitRowCount: 10000,
         defaultSchema: visualization?.defaultSchema,
       });
-      console.debug('[VizEditor:fetchData] SUCCESS rows=%d cols=%s', result.rows?.length, result.columns);
       setBaseData(result);
       setSqlDirty(false);
     } catch (err: unknown) {
@@ -242,14 +239,6 @@ export default function VisualizationEditor({
   const chartLoading = (effectiveQuery && effectiveQuery !== editedSql)
     ? aggregatedLoading
     : dataLoading;
-
-  console.debug('[VizEditor] render — chartType=%s, xAxis=%s, metrics=%s, dims=%s, timeGrain=%s, dataLoading=%s, aggLoading=%s, chartLoading=%s, previewData=%s, rows=%d, effectiveQuery=%s',
-    chartType, config.xAxis, JSON.stringify(config.metrics), JSON.stringify(config.dimensions),
-    config.chartOptions?.timeGrain || '(none)',
-    dataLoading, aggregatedLoading, chartLoading,
-    aggregatedData ? 'aggregated' : baseData ? 'base' : 'none',
-    previewData?.rows?.length ?? 0,
-    effectiveQuery ? effectiveQuery.substring(0, 80) : '(empty)');
 
   // Fetch aggregated data when the effective query differs from the base SQL
   useEffect(() => {
