@@ -83,11 +83,11 @@ export default function TitlePanel({
       className="title-panel"
       style={{ textAlign, backgroundColor }}
     >
-      <Title level={2} style={{ margin: 0 }}>
+      <Title level={2} style={{ margin: 0, color: 'inherit' }}>
         {content || 'Untitled'}
       </Title>
       {subtitle && (
-        <Text type="secondary" style={{ fontSize: 16, marginTop: 4 }}>
+        <Text style={{ fontSize: 16, marginTop: 4, color: 'inherit', opacity: 0.7 }}>
           {subtitle}
         </Text>
       )}
