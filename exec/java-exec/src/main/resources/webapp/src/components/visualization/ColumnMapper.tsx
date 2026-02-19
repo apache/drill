@@ -15,7 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import { Form, Select, Switch, Typography, Space, Tag, Divider, Slider } from 'antd';
+import { Form, Select, Switch, Radio, Typography, Space, Tag, Divider, Slider } from 'antd';
 import { FieldNumberOutlined, FieldStringOutlined, ClockCircleOutlined, FieldTimeOutlined } from '@ant-design/icons';
 import type { ChartType, VisualizationConfig } from '../../types';
 import { isTemporalType } from '../../utils/sqlTransformations';
@@ -97,7 +97,7 @@ function getRequiredFields(chartType: ChartType): { field: string; label: string
     case 'pie':
       return [
         { field: 'dimensions', label: 'Labels', multi: false, numeric: false },
-        { field: 'metrics', label: 'Values', multi: false, numeric: true },
+        { field: 'metrics', label: 'Values', multi: true, numeric: true },
       ];
     case 'scatter':
       return [
@@ -449,6 +449,61 @@ export default function ColumnMapper({ columns, chartType, config, onChange }: C
                 ...config,
                 chartOptions: { ...config.chartOptions, showTrend: checked },
               })}
+            />
+          </Form.Item>
+        </>
+      )}
+      {chartType === 'pie' && (
+        <>
+          <Divider style={{ margin: '8px 0' }} />
+          <Form.Item label="Pie Style">
+            <Radio.Group
+              value={(config.chartOptions?.pieStyle as string) || 'donut'}
+              onChange={(e) => onChange({
+                ...config,
+                chartOptions: { ...config.chartOptions, pieStyle: e.target.value },
+              })}
+              optionType="button"
+              buttonStyle="solid"
+              size="small"
+            >
+              <Radio.Button value="pie">Pie</Radio.Button>
+              <Radio.Button value="donut">Donut</Radio.Button>
+              <Radio.Button value="nightingale">Nightingale</Radio.Button>
+            </Radio.Group>
+            <Text type="secondary" style={{ fontSize: 11, display: 'block', marginTop: 4 }}>
+              {(config.chartOptions?.pieStyle as string) === 'nightingale'
+                ? 'Nightingale (rose) chart — slice radius encodes value'
+                : (config.chartOptions?.pieStyle as string) === 'pie'
+                  ? 'Standard pie chart — no center hole'
+                  : 'Donut chart — hollow center'
+              }
+            </Text>
+          </Form.Item>
+          <Form.Item label="Show Labels">
+            <Switch
+              checked={config.chartOptions?.showPieLabels !== false}
+              onChange={(checked) => onChange({
+                ...config,
+                chartOptions: { ...config.chartOptions, showPieLabels: checked },
+              })}
+            />
+          </Form.Item>
+          <Form.Item label="Legend Position">
+            <Select
+              value={(config.chartOptions?.legendPosition as string) || 'right'}
+              onChange={(value) => onChange({
+                ...config,
+                chartOptions: { ...config.chartOptions, legendPosition: value },
+              })}
+              style={{ width: '100%' }}
+              options={[
+                { value: 'top', label: 'Top' },
+                { value: 'bottom', label: 'Bottom' },
+                { value: 'left', label: 'Left' },
+                { value: 'right', label: 'Right' },
+                { value: 'hidden', label: 'Hidden' },
+              ]}
             />
           </Form.Item>
         </>

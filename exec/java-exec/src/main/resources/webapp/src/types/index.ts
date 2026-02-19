@@ -337,6 +337,29 @@ export interface WorkspaceConfig {
   description?: string;
 }
 
+export type NumericOperator = '=' | '!=' | '>' | '>=' | '<' | '<=' | 'between';
+
+/** A single active cross-filter applied to the dashboard. */
+export interface DashboardFilter {
+  id: string;
+  column: string;
+  value: string;
+  sourceVizId?: string;
+  label?: string;
+  /** True when the filtered column is a DATE / TIMESTAMP type. */
+  isTemporal?: boolean;
+  /** ISO date (YYYY-MM-DD) for the start of a temporal range. */
+  rangeStart?: string;
+  /** ISO date (YYYY-MM-DD) for the end of a temporal range. */
+  rangeEnd?: string;
+  /** True when the filtered column is numeric. */
+  isNumeric?: boolean;
+  /** Comparison operator for numeric filters (default '='). */
+  numericOp?: NumericOperator;
+  /** Upper bound for numeric 'between' operator. */
+  numericEnd?: string;
+}
+
 export type PluginType = 'file' | 'jdbc' | 'http' | 'mongo' | string;
 
 export interface FormatRow {

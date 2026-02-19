@@ -402,27 +402,31 @@ html.dark .ag-theme-alpine {
   background: var(--db-panel-bg, var(--color-bg-container));
   border-color: var(--db-panel-border, var(--color-border));
   border-radius: var(--db-panel-radius, 8px);
+  color: var(--db-font, var(--color-text));
 }
 
 .dashboard-panel-card .ant-card-body {
   flex: 1;
   padding: 8px;
   overflow: hidden;
+  color: var(--db-font, var(--color-text));
 }
 
 .dashboard-panel-card .ant-card-head {
   min-height: 36px;
   padding: 0 8px;
-  color: var(--db-header, #000000);
+  color: var(--db-header, var(--color-text));
   border-bottom-color: var(--db-panel-border, var(--color-border-secondary));
 }
 
 .dashboard-panel-card .ant-card-head-title {
   padding: 6px 0;
+  color: var(--db-header, var(--color-text));
 }
 
 .dashboard-panel-card .ant-card-extra {
   padding: 6px 0;
+  color: var(--db-font, var(--color-text));
 }
 
 /* Dashboard panel header with drag handle */
@@ -472,11 +476,12 @@ html.dark .ag-theme-alpine {
 
 /* ==================== Content Panel Styles ==================== */
 
-/* Markdown panel */
+/* Markdown panel — inherit dashboard theme color */
 .markdown-panel {
   padding: 12px;
   overflow: auto;
   height: 100%;
+  color: inherit;
 }
 
 .markdown-panel img {
@@ -488,6 +493,7 @@ html.dark .ag-theme-alpine {
 .markdown-panel h3 {
   margin-top: 0.5em;
   margin-bottom: 0.3em;
+  color: inherit;
 }
 
 .markdown-panel p {
@@ -508,7 +514,7 @@ html.dark .ag-theme-alpine {
   object-fit: contain;
 }
 
-/* Title panel */
+/* Title panel — inherit dashboard theme color */
 .title-panel {
   height: 100%;
   display: flex;
@@ -516,6 +522,7 @@ html.dark .ag-theme-alpine {
   align-items: center;
   justify-content: center;
   padding: 16px;
+  color: inherit;
 }
 
 /* ==================== Dashboard Tab Styles ==================== */
@@ -533,6 +540,35 @@ html.dark .ag-theme-alpine {
 
 .dashboard-tabs .ant-tabs-nav {
   margin-bottom: 0;
+}
+
+/* ==================== Dashboard Cross-Filter Bar ==================== */
+
+.dashboard-filter-bar {
+  display: flex;
+  align-items: center;
+  padding: 6px 24px;
+  background: var(--db-panel-bg, var(--color-bg-container));
+  border-bottom: 1px solid var(--db-panel-border, var(--color-border));
+  flex-shrink: 0;
+  min-height: 0;
+  color: var(--db-font, var(--color-text));
+  animation: filter-bar-slide-in 0.15s ease-out;
+}
+
+@keyframes filter-bar-slide-in {
+  from {
+    opacity: 0;
+    max-height: 0;
+    padding-top: 0;
+    padding-bottom: 0;
+  }
+  to {
+    opacity: 1;
+    max-height: 60px;
+    padding-top: 6px;
+    padding-bottom: 6px;
+  }
 }
 
 /* ==================== PDF Export Overlay ==================== */
