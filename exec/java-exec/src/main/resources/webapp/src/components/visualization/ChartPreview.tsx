@@ -15,12 +15,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import { useMemo } from 'react';
+import { useMemo, useCallback } from 'react';
 import ReactECharts from 'echarts-for-react';
-import { Empty, Spin, Table } from 'antd';
-import { CaretUpOutlined, CaretDownOutlined, MinusOutlined, TableOutlined } from '@ant-design/icons';
+import { Empty, Spin, Table, Typography } from 'antd';
+import { CaretUpOutlined, CaretDownOutlined, MinusOutlined, TableOutlined, InfoCircleOutlined } from '@ant-design/icons';
 import type { EChartsOption } from 'echarts';
 import { graphic } from 'echarts';
+import { useTheme } from '../../hooks/useTheme';
 import type { ChartType, VisualizationConfig, QueryResult } from '../../types';
 
 interface ChartPreviewProps {
@@ -30,6 +31,10 @@ interface ChartPreviewProps {
   loading?: boolean;
   height?: number | string;
   mini?: boolean;
+  /** Override dark mode detection (e.g. from dashboard theme). */
+  darkMode?: boolean;
+  /** Called when user clicks a chart element. Receives the column name, value, and type flags. */
+  onChartClick?: (column: string, value: string, isTemporal?: boolean, isNumeric?: boolean) => void;
 }
 
 // Color schemes
@@ -121,6 +126,19 @@ function isXAxisTemporal(data: QueryResult, xAxis: string): boolean {
   return t.includes('DATE') || t.includes('TIMESTAMP') || t.includes('TIME');
 }
 
+/**
+ * Check if a column is numeric based on the query metadata.
+ */
+function isColumnNumeric(data: QueryResult, col: string): boolean {
+  const colIdx = data.columns.indexOf(col);
+  if (colIdx < 0 || !data.metadata?.[colIdx]) {
+    return false;
+  }
+  const t = data.metadata[colIdx].toUpperCase();
+  return t.includes('INT') || t.includes('BIGINT') || t.includes('FLOAT')
+    || t.includes('DOUBLE') || t.includes('DECIMAL') || t.includes('NUMERIC');
+}
+
 export default function ChartPreview({
   chartType,
   config,
@@ -128,8 +146,82 @@ export default function ChartPreview({
   loading = false,
   height = 400,
   mini = false,
+  darkMode,
+  onChartClick,
 }: ChartPreviewProps) {
+  const { isDark: globalDark } = useTheme();
+  const isDark = darkMode ?? globalDark;
   const colors = colorSchemes[config.colorScheme || 'default'] || colorSchemes.default;
+
+  // Map ECharts click event params → (column, value, isTemporal, isNumeric) based on chart type + config
+  const handleChartClick = useCallback((params: Record<string, unknown>) => {
+    if (!onChartClick || !config || !data) {
+      return;
+    }
+
+    const { xAxis: xCol, dimensions } = config;
+    const groupField = dimensions?.[0];
+
+    const emitClick = (col: string, value: string) => {
+      const temporal = isXAxisTemporal(data, col);
+      const numeric = !temporal && isColumnNumeric(data, col);
+      onChartClick(col, value, temporal, numeric);
+    };
+
+    switch (chartType) {
+      case 'bar':
+      case 'line':
+      case 'area': {
+        if (groupField && params.seriesName) {
+          emitClick(groupField, String(params.seriesName));
+        } else if (xCol && params.name != null) {
+          const dataIndex = params.dataIndex as number | undefined;
+          if (dataIndex != null && data.rows[dataIndex]) {
+            const rawValue = data.rows[dataIndex][xCol];
+            emitClick(xCol, rawValue == null ? 'null' : String(rawValue));
+          } else {
+            emitClick(xCol, String(params.name));
+          }
+        }
+        break;
+      }
+      case 'pie':
+      case 'treemap':
+      case 'funnel': {
+        if (groupField || dimensions?.[0]) {
+          const dimCol = groupField || dimensions![0];
+          if (params.name != null) {
+            emitClick(dimCol, String(params.name));
+          }
+        }
+        break;
+      }
+      case 'scatter': {
+        if (xCol) {
+          const val = params.value;
+          if (Array.isArray(val) && val.length > 0) {
+            emitClick(xCol, String(val[0]));
+          }
+        }
+        break;
+      }
+      case 'heatmap': {
+        if (xCol && params.name != null) {
+          emitClick(xCol, String(params.name));
+        }
+        break;
+      }
+      default:
+        break;
+    }
+  }, [onChartClick, chartType, config, data]);
+
+  const onEvents = useMemo(() => {
+    if (!onChartClick) {
+      return undefined;
+    }
+    return { click: handleChartClick };
+  }, [onChartClick, handleChartClick]);
 
   const chartOption: EChartsOption | null = useMemo(() => {
     if (!data || !data.rows || data.rows.length === 0) {
@@ -364,27 +456,103 @@ export default function ChartPreview({
           return null;
         }
         const labelField = dimensions[0];
-        const valueField = metrics[0];
-        const pieData = data.rows.map((row, idx) => ({
-          name: String(row[labelField] ?? ''),
-          value: Number(row[valueField]) || 0,
-          itemStyle: { color: colors[idx % colors.length] },
-        }));
-        return {
-          tooltip: { trigger: 'item', formatter: '{b}: {c} ({d}%)' },
-          legend: { orient: 'vertical', left: 'left' },
-          series: [{
-            type: 'pie',
-            radius: ['40%', '70%'],
+        const pieStyle = (config.chartOptions?.pieStyle as string) || 'donut';
+        const showLabels = config.chartOptions?.showPieLabels !== false;
+        const legendPos = (config.chartOptions?.legendPosition as string) || 'right';
+        const isNested = metrics.length > 1;
+
+        const emphasis = {
+          itemStyle: {
+            shadowBlur: 10,
+            shadowOffsetX: 0,
+            shadowColor: 'rgba(0, 0, 0, 0.5)',
+          },
+        };
+
+        // Compute radius based on style
+        const computeRadius = (ringIndex: number, totalRings: number): [string, string] => {
+          if (totalRings === 1) {
+            if (pieStyle === 'pie' || pieStyle === 'nightingale') {
+              return ['0%', '70%'];
+            }
+            // donut
+            return ['40%', '70%'];
+          }
+          // Nested: divide radial space into concentric rings
+          const gap = 3; // percent gap between rings
+          const maxOuter = 75;
+          const minInner = pieStyle === 'donut' || pieStyle === 'nightingale' ? 15 : 0;
+          const totalSpace = maxOuter - minInner - (totalRings - 1) * gap;
+          const ringWidth = totalSpace / totalRings;
+          const inner = minInner + ringIndex * (ringWidth + gap);
+          const outer = inner + ringWidth;
+          return [`${Math.round(inner)}%`, `${Math.round(outer)}%`];
+        };
+
+        const series = metrics.map((metric, ringIdx) => {
+          const pieData = data.rows.map((row, idx) => ({
+            name: String(row[labelField] ?? ''),
+            value: Number(row[metric]) || 0,
+            itemStyle: { color: colors[idx % colors.length] },
+          }));
+          const radius = computeRadius(ringIdx, metrics.length);
+          return {
+            name: metric,
+            type: 'pie' as const,
+            radius,
+            roseType: pieStyle === 'nightingale' ? ('area' as const) : undefined,
             data: pieData,
-            emphasis: {
-              itemStyle: {
-                shadowBlur: 10,
-                shadowOffsetX: 0,
-                shadowColor: 'rgba(0, 0, 0, 0.5)',
-              },
-            },
-          }],
+            emphasis,
+            label: showLabels
+              ? { formatter: isNested ? '{b}: {d}%' : '{b}: {c} ({d}%)' }
+              : { show: false },
+            labelLine: showLabels ? {} : { show: false },
+          };
+        });
+
+        // Build legend config based on position
+        const legendConfig = (() => {
+          if (legendPos === 'hidden') {
+            return { show: false };
+          }
+          if (legendPos === 'left') {
+            return { orient: 'vertical' as const, left: 'left', top: 'middle' };
+          }
+          if (legendPos === 'right') {
+            return { orient: 'vertical' as const, right: 0, top: 'middle' };
+          }
+          if (legendPos === 'bottom') {
+            return { orient: 'horizontal' as const, bottom: 0, left: 'center' };
+          }
+          // top
+          return { orient: 'horizontal' as const, top: 0, left: 'center' };
+        })();
+
+        // Offset pie center so it doesn't overlap the legend
+        const pieCenter = (() => {
+          if (legendPos === 'hidden') {
+            return ['50%', '50%'];
+          }
+          if (legendPos === 'left') {
+            return ['60%', '50%'];
+          }
+          if (legendPos === 'right') {
+            return ['40%', '50%'];
+          }
+          if (legendPos === 'top') {
+            return ['50%', '55%'];
+          }
+          // bottom
+          return ['50%', '45%'];
+        })();
+
+        // Apply center to each series
+        const centeredSeries = series.map(s => ({ ...s, center: pieCenter }));
+
+        return {
+          tooltip: { trigger: 'item', formatter: '{a}<br/>{b}: {c} ({d}%)' },
+          legend: legendConfig,
+          series: centeredSeries,
         };
       }
 
@@ -534,7 +702,7 @@ export default function ChartPreview({
   }, [chartType, config, data, colors]);
 
   // Strip down chart chrome for mini mode
-  const finalOption = useMemo(() => {
+  const miniOption = useMemo(() => {
     if (!chartOption || !mini) {
       return chartOption;
     }
@@ -549,6 +717,51 @@ export default function ChartPreview({
       animation: false,
     };
   }, [chartOption, mini]);
+
+  // Apply dark mode colors to ECharts (canvas doesn't respond to CSS variables)
+  const finalOption = useMemo(() => {
+    const opt = miniOption;
+    if (!opt || !isDark) {
+      return opt;
+    }
+    const darkText = '#e0e0e0';
+    const darkLine = '#424242';
+    const darkSplit = '#303030';
+    const xAxisRaw = opt.xAxis as Record<string, unknown> | undefined;
+    const yAxisRaw = opt.yAxis as Record<string, unknown> | undefined;
+    return {
+      ...opt,
+      textStyle: { ...(opt.textStyle as Record<string, unknown> || {}), color: darkText },
+      legend: opt.legend ? {
+        ...(opt.legend as Record<string, unknown>),
+        textStyle: { color: darkText },
+      } : undefined,
+      tooltip: opt.tooltip ? {
+        ...(opt.tooltip as Record<string, unknown>),
+        backgroundColor: '#1f1f1f',
+        borderColor: darkLine,
+        textStyle: { color: darkText },
+      } : undefined,
+      xAxis: xAxisRaw ? {
+        ...xAxisRaw,
+        axisLabel: { ...(xAxisRaw.axisLabel as Record<string, unknown> || {}), color: darkText },
+        axisLine: { lineStyle: { color: darkLine } },
+        splitLine: { lineStyle: { color: darkSplit } },
+        splitArea: xAxisRaw.splitArea ? { ...(xAxisRaw.splitArea as Record<string, unknown>), areaStyle: { color: ['transparent', 'rgba(255,255,255,0.02)'] } } : undefined,
+      } : undefined,
+      yAxis: yAxisRaw ? {
+        ...yAxisRaw,
+        axisLabel: { ...(yAxisRaw.axisLabel as Record<string, unknown> || {}), color: darkText },
+        axisLine: { lineStyle: { color: darkLine } },
+        splitLine: { lineStyle: { color: darkSplit } },
+        splitArea: yAxisRaw.splitArea ? { ...(yAxisRaw.splitArea as Record<string, unknown>), areaStyle: { color: ['transparent', 'rgba(255,255,255,0.02)'] } } : undefined,
+      } : undefined,
+      visualMap: opt.visualMap ? {
+        ...(opt.visualMap as Record<string, unknown>),
+        textStyle: { color: darkText },
+      } : undefined,
+    };
+  }, [miniOption, isDark]);
 
   if (loading) {
     return (
@@ -756,6 +969,14 @@ export default function ChartPreview({
         }
         return String(aVal ?? '').localeCompare(String(bVal ?? ''));
       },
+      onCell: (record: Record<string, unknown>) => ({
+        onClick: () => {
+          if (onChartClick && record[col] != null) {
+            onChartClick(col, String(record[col]));
+          }
+        },
+        style: onChartClick ? { cursor: 'pointer' } : undefined,
+      }),
     }));
 
     return (
@@ -780,12 +1001,53 @@ export default function ChartPreview({
     );
   }
 
+  // Pie chart readability warning
+  const PIE_SLICE_WARN = 8;
+  const PIE_SLICE_SEVERE = 15;
+  const pieSliceCount = chartType === 'pie' && data ? data.rows.length : 0;
+  const pieWarning = !mini && chartType === 'pie' && pieSliceCount > PIE_SLICE_WARN;
+
+  if (pieWarning) {
+    const severe = pieSliceCount > PIE_SLICE_SEVERE;
+    return (
+      <div style={{ height, display: 'flex', flexDirection: 'column' }}>
+        <div style={{
+          padding: '4px 12px',
+          fontSize: 12,
+          color: severe ? '#faad14' : 'var(--color-text-tertiary)',
+          display: 'flex',
+          alignItems: 'center',
+          gap: 6,
+          flexShrink: 0,
+        }}>
+          <InfoCircleOutlined />
+          <Typography.Text type={severe ? 'warning' : 'secondary'} style={{ fontSize: 12 }}>
+            {pieSliceCount} slices may be hard to read.
+            {severe
+              ? ' Consider a bar chart, treemap, or filtering to the top values.'
+              : ' A treemap or bar chart may work better for many categories.'}
+          </Typography.Text>
+        </div>
+        <div style={{ flex: 1, minHeight: 0 }}>
+          <ReactECharts
+            option={finalOption}
+            notMerge
+            style={{ height: '100%', width: '100%', cursor: onChartClick ? 'pointer' : undefined }}
+            opts={{ renderer: 'canvas' }}
+            onEvents={onEvents}
+          />
+        </div>
+      </div>
+    );
+  }
+
   return (
     <ReactECharts
       option={finalOption}
       notMerge
-      style={{ height, width: '100%' }}
+      style={{ height, width: '100%', cursor: onChartClick ? 'pointer' : undefined }}
       opts={{ renderer: 'canvas' }}
+      onEvents={onEvents}
     />
   );
 }

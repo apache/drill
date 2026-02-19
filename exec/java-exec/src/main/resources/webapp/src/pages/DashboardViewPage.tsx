@@ -16,7 +16,7 @@
  * limitations under the License.
  */
 import { useState, useCallback, useMemo, useEffect, useRef } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Responsive, WidthProvider } from 'react-grid-layout';
 import {
@@ -58,15 +58,26 @@ import html2canvas from 'html2canvas';
 import { jsPDF } from 'jspdf';
 import { getDashboard, updateDashboard, getFavorites, toggleFavorite, uploadImage } from '../api/dashboards';
 import { getVisualizations } from '../api/visualizations';
-import { DashboardPanelCard, DashboardSettingsDrawer, DEFAULT_THEME, DARK_THEME } from '../components/dashboard';
+import { DashboardPanelCard, DashboardFilterBar, DashboardSettingsDrawer, DEFAULT_THEME, DARK_THEME } from '../components/dashboard';
 import { useTheme } from '../hooks/useTheme';
-import type { DashboardPanel, DashboardTab, DashboardTheme } from '../types';
+import type { DashboardPanel, DashboardTab, DashboardTheme, DashboardFilter } from '../types';
 
 import 'react-grid-layout/css/styles.css';
 import 'react-resizable/css/styles.css';
 
 const ResponsiveGridLayout = WidthProvider(Responsive);
 const { Title, Text } = Typography;
+
+/** Check whether a saved theme matches one of the built-in defaults. */
+function isDefaultTheme(t: DashboardTheme | undefined): boolean {
+  if (!t) {
+    return true;
+  }
+  return (
+    (t.backgroundColor === DEFAULT_THEME.backgroundColor && t.panelBackground === DEFAULT_THEME.panelBackground) ||
+    (t.backgroundColor === DARK_THEME.backgroundColor && t.panelBackground === DARK_THEME.panelBackground)
+  );
+}
 
 const REFRESH_OPTIONS = [
   { label: 'Off', value: 0 },
@@ -101,6 +112,133 @@ export default function DashboardViewPage() {
   const [renameValue, setRenameValue] = useState('');
   const [exportingPdf, setExportingPdf] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
+
+  // Cross-filter helpers
+  const toIsoDate = useCallback((raw: string): string => {
+    const num = Number(raw);
+    if (!isNaN(num) && Math.abs(num) > 1e8) {
+      const ms = Math.abs(num) > 1e12 ? num : num * 1000;
+      return new Date(ms).toISOString().split('T')[0];
+    }
+    const d = new Date(raw);
+    if (!isNaN(d.getTime())) {
+      return d.toISOString().split('T')[0];
+    }
+    return raw;
+  }, []);
+
+  const formatTemporalDisplay = useCallback((raw: string): string => {
+    const num = Number(raw);
+    let d: Date;
+    if (!isNaN(num) && Math.abs(num) > 1e8) {
+      const ms = Math.abs(num) > 1e12 ? num : num * 1000;
+      d = new Date(ms);
+    } else {
+      d = new Date(raw);
+    }
+    if (isNaN(d.getTime())) {
+      return raw;
+    }
+    return d.toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' });
+  }, []);
+
+  // Cross-filter state — persisted in URL search params so filters survive reloads
+  const [searchParams, setSearchParams] = useSearchParams();
+  const [filters, setFiltersRaw] = useState<DashboardFilter[]>(() => {
+    try {
+      const raw = searchParams.get('filters');
+      return raw ? JSON.parse(raw) : [];
+    } catch {
+      return [];
+    }
+  });
+
+  // Wrapper that updates both state and URL
+  const setFilters: typeof setFiltersRaw = useCallback((action) => {
+    setFiltersRaw((prev) => {
+      const next = typeof action === 'function' ? action(prev) : action;
+      // Sync to URL (replace, don't push, to avoid polluting browser history)
+      setSearchParams((sp) => {
+        if (next.length > 0) {
+          sp.set('filters', JSON.stringify(next));
+        } else {
+          sp.delete('filters');
+        }
+        return sp;
+      }, { replace: true });
+      return next;
+    });
+  }, [setSearchParams]);
+
+  const handleChartClick = useCallback((column: string, value: string, vizId: string, isTemporal?: boolean, isNumeric?: boolean) => {
+    setFilters((prev) => {
+      const existing = prev.find((f) => f.column === column && f.value === value);
+      if (existing) {
+        return prev.filter((f) => f.id !== existing.id);
+      }
+
+      let label = `${column} = ${value}`;
+      let rangeStart: string | undefined;
+      let rangeEnd: string | undefined;
+
+      if (isTemporal) {
+        const isoDate = toIsoDate(value);
+        const displayDate = formatTemporalDisplay(value);
+        label = `${column}: ${displayDate}`;
+        rangeStart = isoDate;
+        rangeEnd = isoDate;
+      }
+
+      const newFilter: DashboardFilter = {
+        id: crypto.randomUUID(),
+        column,
+        value,
+        sourceVizId: vizId,
+        label,
+        isTemporal,
+        rangeStart,
+        rangeEnd,
+        isNumeric,
+        numericOp: isNumeric ? '=' : undefined,
+      };
+      return [...prev, newFilter];
+    });
+  }, []);
+
+  const handleRemoveFilter = useCallback((filterId: string) => {
+    setFilters((prev) => prev.filter((f) => f.id !== filterId));
+  }, []);
+
+  const handleUpdateFilter = useCallback((filterId: string, update: Partial<DashboardFilter>) => {
+    setFilters((prev) => prev.map((f) => {
+      if (f.id !== filterId) {
+        return f;
+      }
+      const merged = { ...f, ...update };
+
+      // Recompute label
+      if (merged.isTemporal && merged.rangeStart && merged.rangeEnd) {
+        const fmt = (d: string) => new Date(d).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' });
+        merged.label = merged.rangeStart === merged.rangeEnd
+          ? `${merged.column}: ${fmt(merged.rangeStart)}`
+          : `${merged.column}: ${fmt(merged.rangeStart)} - ${fmt(merged.rangeEnd)}`;
+      } else if (merged.isNumeric) {
+        const op = merged.numericOp || '=';
+        if (op === 'between' && merged.numericEnd != null) {
+          merged.label = `${merged.column}: ${merged.value} - ${merged.numericEnd}`;
+        } else {
+          merged.label = `${merged.column} ${op} ${merged.value}`;
+        }
+      } else {
+        merged.label = `${merged.column} = ${merged.value}`;
+      }
+      return merged;
+    }));
+  }, []);
+
+  const handleClearAllFilters = useCallback(() => {
+    setFilters([]);
+  }, []);
 
   // New panel content inputs
   const [newMarkdownContent, setNewMarkdownContent] = useState('## Heading\n\nYour content here...');
@@ -141,8 +279,12 @@ export default function DashboardViewPage() {
       setPanels(dashboard.panels || []);
       setTabs(dashboard.tabs || []);
       const savedTheme = dashboard.theme;
-      setHasCustomTheme(!!savedTheme);
-      setTheme(savedTheme || globalDefaultTheme);
+      // Treat built-in light/dark themes as non-custom so they sync with
+      // the global dark mode toggle.  Only truly customized themes (Blue,
+      // Warm, or user-adjusted colors) are pinned.
+      const custom = !!savedTheme && !isDefaultTheme(savedTheme);
+      setHasCustomTheme(custom);
+      setTheme(custom ? savedTheme : globalDefaultTheme);
       setRefreshInterval(dashboard.refreshInterval || 0);
       setPanelsInitialized(true);
     }
@@ -162,9 +304,9 @@ export default function DashboardViewPage() {
     enabled: addPanelVisible,
   });
 
-  // Save dashboard mutation
+  // Save dashboard mutation — only persist theme if user explicitly customized it
   const saveMutation = useMutation({
-    mutationFn: () => updateDashboard(id!, { panels, tabs, theme, refreshInterval }),
+    mutationFn: () => updateDashboard(id!, { panels, tabs, theme: hasCustomTheme ? theme : undefined, refreshInterval }),
     onSuccess: () => {
       message.success('Dashboard saved');
       queryClient.invalidateQueries({ queryKey: ['dashboard', id] });
@@ -297,8 +439,9 @@ export default function DashboardViewPage() {
       if (dashboard) {
         setPanels(dashboard.panels || []);
         setTabs(dashboard.tabs || []);
-        setTheme(dashboard.theme || globalDefaultTheme);
-        setHasCustomTheme(!!dashboard.theme);
+        const custom = !!dashboard.theme && !isDefaultTheme(dashboard.theme);
+        setHasCustomTheme(custom);
+        setTheme(custom ? dashboard.theme! : globalDefaultTheme);
         setRefreshInterval(dashboard.refreshInterval || 0);
       }
     }
@@ -334,17 +477,26 @@ export default function DashboardViewPage() {
     }
   }, [activeTabId]);
 
-  // PDF export
+  // PDF export — always renders in light mode for print readability
   const handleExportPdf = useCallback(async () => {
     if (!gridRef.current) {
       return;
     }
     setExportingPdf(true);
+
+    // Temporarily force light theme so the screenshot is always light
+    const prevTheme = theme;
+    setTheme(DEFAULT_THEME);
+
+    // Wait for React re-render + ECharts canvas repaint
+    await new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r)));
+
     try {
       const canvas = await html2canvas(gridRef.current, {
         scale: 2,
         useCORS: true,
         logging: false,
+        backgroundColor: DEFAULT_THEME.backgroundColor,
       });
       const imgData = canvas.toDataURL('image/png');
       const pdf = new jsPDF({
@@ -379,9 +531,11 @@ export default function DashboardViewPage() {
     } catch {
       message.error('Failed to export PDF');
     } finally {
+      // Restore the original theme
+      setTheme(prevTheme);
       setExportingPdf(false);
     }
-  }, [dashboard?.name]);
+  }, [dashboard?.name, theme]);
 
   // Share link
   const handleCopyShareLink = useCallback(() => {
@@ -597,6 +751,14 @@ export default function DashboardViewPage() {
         </div>
       )}
 
+      {/* Cross-Filter Bar */}
+      <DashboardFilterBar
+        filters={filters}
+        onRemoveFilter={handleRemoveFilter}
+        onUpdateFilter={handleUpdateFilter}
+        onClearAll={handleClearAllFilters}
+      />
+
       {/* Dashboard Grid */}
       {visiblePanels.length === 0 ? (
         <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: 'calc(100% - 64px)' }}>
@@ -636,8 +798,11 @@ export default function DashboardViewPage() {
                   editMode={editMode}
                   refreshInterval={editMode ? 0 : refreshInterval}
                   dashboardUpdatedAt={dashboard.updatedAt}
+                  darkMode={theme.mode === 'dark'}
+                  filters={filters}
                   onRemove={handleRemovePanel}
                   onPanelChange={handlePanelChange}
+                  onChartClick={handleChartClick}
                 />
               </div>
             ))}
