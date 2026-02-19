@@ -17,7 +17,7 @@
  */
 import { useCallback, useMemo } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { Card, Alert, Spin, Typography, Button, Tooltip } from 'antd';
+import { Card, Alert, Spin, Typography, Button, Tooltip, Switch } from 'antd';
 import {
   DragOutlined,
   DeleteOutlined,
@@ -27,14 +27,16 @@ import {
   FontSizeOutlined,
   BarChartOutlined,
   ClockCircleOutlined,
+  FilterOutlined,
 } from '@ant-design/icons';
 import { getVisualization } from '../../api/visualizations';
 import { executeQuery } from '../../api/queries';
+import { applyDashboardFilters, computeEffectiveQuery } from '../../utils/sqlTransformations';
 import ChartPreview from '../visualization/ChartPreview';
 import MarkdownPanel from './MarkdownPanel';
 import ImagePanel from './ImagePanel';
 import TitlePanel from './TitlePanel';
-import type { DashboardPanel } from '../../types';
+import type { DashboardPanel, DashboardFilter } from '../../types';
 
 const { Text } = Typography;
 
@@ -57,8 +59,11 @@ interface DashboardPanelCardProps {
   editMode: boolean;
   refreshInterval?: number;
   dashboardUpdatedAt?: number | string;
+  darkMode?: boolean;
+  filters?: DashboardFilter[];
   onRemove?: (panelId: string) => void;
   onPanelChange?: (panel: DashboardPanel) => void;
+  onChartClick?: (column: string, value: string, vizId: string, isTemporal?: boolean, isNumeric?: boolean) => void;
 }
 
 export default function DashboardPanelCard({
@@ -66,8 +71,11 @@ export default function DashboardPanelCard({
   editMode,
   refreshInterval,
   dashboardUpdatedAt,
+  darkMode,
+  filters,
   onRemove,
   onPanelChange,
+  onChartClick,
 }: DashboardPanelCardProps) {
   const panelType = panel.type || 'visualization';
   const isVisualization = panelType === 'visualization';
@@ -84,25 +92,52 @@ export default function DashboardPanelCard({
     enabled: isVisualization && !!panel.visualizationId,
   });
 
-  // Execute the visualization's SQL query (only for visualization panels)
+  // Determine applicable cross-filters for this panel
+  const ignoreCrossFilters = panel.config?.ignoreCrossFilters === 'true';
+  const applicableFilters = useMemo(() => {
+    if (!filters || filters.length === 0 || ignoreCrossFilters) {
+      return [];
+    }
+    return filters.filter((f) => f.sourceVizId !== panel.visualizationId);
+  }, [filters, ignoreCrossFilters, panel.visualizationId]);
+
+  // Build effective SQL: inject cross-filter WHERE conditions into the
+  // original SQL first (so filter columns resolve against the source table),
+  // then apply time grain / aggregation wrapping on top.
+  const effectiveSql = useMemo(() => {
+    if (!visualization?.sql) {
+      return undefined;
+    }
+    const filtered = applicableFilters.length > 0
+      ? applyDashboardFilters(visualization.sql, applicableFilters)
+      : visualization.sql;
+    return computeEffectiveQuery(filtered, {
+      xAxis: visualization.config?.xAxis,
+      metrics: visualization.config?.metrics,
+      dimensions: visualization.config?.dimensions,
+      chartOptions: visualization.config?.chartOptions,
+    });
+  }, [visualization?.sql, visualization?.config, applicableFilters]);
+
+  // Execute the visualization's SQL query
   const {
     data: queryResult,
     isLoading: queryLoading,
     error: queryError,
     refetch,
   } = useQuery({
-    queryKey: ['dashboard-panel-data', panel.visualizationId, visualization?.sql],
+    queryKey: ['dashboard-panel-data', panel.visualizationId, effectiveSql],
     queryFn: () => {
-      if (!visualization?.sql) {
+      if (!effectiveSql) {
         throw new Error('No SQL query configured for this visualization');
       }
       return executeQuery({
-        query: visualization.sql,
+        query: effectiveSql,
         queryType: 'SQL',
-        defaultSchema: visualization.defaultSchema,
+        defaultSchema: visualization?.defaultSchema,
       });
     },
-    enabled: isVisualization && !!visualization?.sql,
+    enabled: isVisualization && !!effectiveSql,
     staleTime: 30000,
     refetchInterval: refreshInterval && refreshInterval > 0 ? refreshInterval * 1000 : false,
   });
@@ -122,6 +157,19 @@ export default function DashboardPanelCard({
   const handleConfigChange = useCallback((config: Record<string, string>) => {
     if (onPanelChange) {
       onPanelChange({ ...panel, config });
+    }
+  }, [onPanelChange, panel]);
+
+  const handleChartClick = useCallback((column: string, value: string, isTemporal?: boolean, isNumeric?: boolean) => {
+    if (onChartClick && panel.visualizationId) {
+      onChartClick(column, value, panel.visualizationId, isTemporal, isNumeric);
+    }
+  }, [onChartClick, panel.visualizationId]);
+
+  const handleToggleIgnoreCrossFilters = useCallback((checked: boolean) => {
+    if (onPanelChange) {
+      const newConfig = { ...(panel.config || {}), ignoreCrossFilters: checked ? 'true' : 'false' };
+      onPanelChange({ ...panel, config: newConfig });
     }
   }, [onPanelChange, panel]);
 
@@ -199,6 +247,8 @@ export default function DashboardPanelCard({
               config={visualization.config}
               data={queryResult || null}
               height={Math.max((panel.height * 120) - 60, 150)}
+              darkMode={darkMode}
+              onChartClick={onChartClick ? handleChartClick : undefined}
             />
           );
         }
@@ -226,13 +276,25 @@ export default function DashboardPanelCard({
         <div className="dashboard-panel-header">
           {editMode && <DragOutlined className="drag-handle" />}
           {!isVisualization && <span style={{ marginRight: 4 }}>{getPanelIcon()}</span>}
-          <Text ellipsis style={{ flex: 1 }}>
+          <Text ellipsis style={{ flex: 1, color: 'inherit' }}>
             {getPanelTitle()}
           </Text>
         </div>
       }
       extra={
-        <div style={{ display: 'flex', gap: 4 }}>
+        <div style={{ display: 'flex', gap: 4, alignItems: 'center' }}>
+          {editMode && isVisualization && (
+            <Tooltip title="Ignore cross-filters">
+              <span style={{ display: 'inline-flex', alignItems: 'center', gap: 2 }}>
+                <FilterOutlined style={{ fontSize: 12, opacity: ignoreCrossFilters ? 0.4 : 1 }} />
+                <Switch
+                  size="small"
+                  checked={ignoreCrossFilters}
+                  onChange={handleToggleIgnoreCrossFilters}
+                />
+              </span>
+            </Tooltip>
+          )}
           {isVisualization && (
             <Tooltip title="Refresh">
               <Button

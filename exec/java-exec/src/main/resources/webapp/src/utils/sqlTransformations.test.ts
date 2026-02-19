@@ -17,6 +17,7 @@
  */
 import { describe, it, expect } from 'vitest';
 import {
+  applyDashboardFilters,
   applySqlTransformation,
   prettifySql,
   calculateColumnStats,
@@ -31,6 +32,7 @@ import {
   type TimeGrainConfig,
   type AggregationConfig,
 } from './sqlTransformations';
+import type { DashboardFilter } from '../types';
 
 // ===========================================================================
 // applySqlTransformation
@@ -878,5 +880,613 @@ describe('getEffectiveQuery', () => {
     expect(result).toContain('_t.`industry`');
     expect(result).toContain('GROUP BY');
     expect(result).not.toEqual(userSql);
+  });
+});
+
+// ===========================================================================
+// applyDashboardFilters — functional tests
+// ===========================================================================
+
+describe('applyDashboardFilters', () => {
+  const baseSql = 'SELECT region, amount FROM sales';
+
+  /** Helper to create a minimal text filter. */
+  function textFilter(column: string, value: string, extra?: Partial<DashboardFilter>): DashboardFilter {
+    return { id: '1', column, value, ...extra };
+  }
+
+  /** Helper to create a temporal filter. */
+  function temporalFilter(
+    column: string,
+    rangeStart: string,
+    rangeEnd: string,
+    extra?: Partial<DashboardFilter>,
+  ): DashboardFilter {
+    return { id: '2', column, value: rangeStart, isTemporal: true, rangeStart, rangeEnd, ...extra };
+  }
+
+  /** Helper to create a numeric filter. */
+  function numericFilter(
+    column: string,
+    value: string,
+    numericOp: DashboardFilter['numericOp'],
+    extra?: Partial<DashboardFilter>,
+  ): DashboardFilter {
+    return { id: '3', column, value, isNumeric: true, numericOp, ...extra };
+  }
+
+  // ---- Basic functional tests ----
+
+  describe('basic functionality', () => {
+    it('returns original SQL for empty filter array', () => {
+      expect(applyDashboardFilters(baseSql, [])).toBe(baseSql);
+    });
+
+    it('returns original SQL for null/undefined filters', () => {
+      expect(applyDashboardFilters(baseSql, null as never)).toBe(baseSql);
+      expect(applyDashboardFilters(baseSql, undefined as never)).toBe(baseSql);
+    });
+
+    it('adds a WHERE clause for a simple text filter', () => {
+      const result = applyDashboardFilters(baseSql, [textFilter('region', 'North America')]);
+      expect(result).toBe(
+        "SELECT region, amount FROM sales WHERE CAST(`region` AS VARCHAR) = 'North America'"
+      );
+    });
+
+    it('appends AND to an existing WHERE clause', () => {
+      const sql = "SELECT region, amount FROM sales WHERE amount > 100";
+      const result = applyDashboardFilters(sql, [textFilter('region', 'Europe')]);
+      expect(result).toContain("AND CAST(`region` AS VARCHAR) = 'Europe'");
+    });
+
+    it('inserts WHERE before GROUP BY', () => {
+      const sql = 'SELECT region, SUM(amount) FROM sales GROUP BY region';
+      const result = applyDashboardFilters(sql, [textFilter('region', 'Asia')]);
+      expect(result).toContain("WHERE CAST(`region` AS VARCHAR) = 'Asia' GROUP BY");
+    });
+
+    it('combines multiple text filters with AND', () => {
+      const result = applyDashboardFilters(baseSql, [
+        textFilter('region', 'US'),
+        { id: '2', column: 'status', value: 'active' },
+      ]);
+      expect(result).toContain("CAST(`region` AS VARCHAR) = 'US'");
+      expect(result).toContain("AND");
+      expect(result).toContain("CAST(`status` AS VARCHAR) = 'active'");
+    });
+
+    it('generates IS NULL for null values', () => {
+      const result = applyDashboardFilters(baseSql, [textFilter('region', 'null')]);
+      expect(result).toContain('`region` IS NULL');
+    });
+
+    it('escapes single quotes in text values', () => {
+      const result = applyDashboardFilters(baseSql, [textFilter('region', "O'Brien")]);
+      expect(result).toContain("'O''Brien'");
+    });
+
+    it('strips trailing semicolons', () => {
+      const result = applyDashboardFilters('SELECT * FROM t;', [textFilter('col', 'val')]);
+      expect(result).not.toContain(';');
+    });
+  });
+
+  // ---- Temporal filter tests ----
+
+  describe('temporal filters', () => {
+    it('generates DATE equality for same start/end', () => {
+      const result = applyDashboardFilters(baseSql, [
+        temporalFilter('date', '2024-01-15', '2024-01-15'),
+      ]);
+      expect(result).toContain("CAST(`date` AS DATE) = DATE '2024-01-15'");
+    });
+
+    it('generates BETWEEN for different start/end', () => {
+      const result = applyDashboardFilters(baseSql, [
+        temporalFilter('date', '2024-01-01', '2024-12-31'),
+      ]);
+      expect(result).toContain("CAST(`date` AS DATE) BETWEEN DATE '2024-01-01' AND DATE '2024-12-31'");
+    });
+  });
+
+  // ---- Numeric filter tests ----
+
+  describe('numeric filters', () => {
+    it('generates equality for = operator', () => {
+      const result = applyDashboardFilters(baseSql, [numericFilter('amount', '100', '=')]);
+      expect(result).toContain('`amount` = 100');
+    });
+
+    it('generates <> for != operator', () => {
+      const result = applyDashboardFilters(baseSql, [numericFilter('amount', '0', '!=')]);
+      expect(result).toContain('`amount` <> 0');
+    });
+
+    it('generates comparison operators correctly', () => {
+      for (const op of ['>', '>=', '<', '<='] as const) {
+        const result = applyDashboardFilters(baseSql, [numericFilter('amount', '50', op)]);
+        expect(result).toContain(`\`amount\` ${op} 50`);
+      }
+    });
+
+    it('generates BETWEEN for between operator', () => {
+      const result = applyDashboardFilters(baseSql, [
+        numericFilter('amount', '10', 'between', { numericEnd: '100' }),
+      ]);
+      expect(result).toContain('`amount` BETWEEN 10 AND 100');
+    });
+
+    it('handles negative numbers', () => {
+      const result = applyDashboardFilters(baseSql, [numericFilter('amount', '-50', '>=')]);
+      expect(result).toContain('`amount` >= -50');
+    });
+
+    it('handles decimal numbers', () => {
+      const result = applyDashboardFilters(baseSql, [numericFilter('amount', '99.99', '=')]);
+      expect(result).toContain('`amount` = 99.99');
+    });
+  });
+});
+
+// ===========================================================================
+// applyDashboardFilters — security / SQL injection tests
+// ===========================================================================
+
+describe('applyDashboardFilters — SQL injection prevention', () => {
+  const baseSql = 'SELECT region, amount FROM sales';
+
+  // ---- Column name injection ----
+
+  describe('column name validation', () => {
+    it('rejects column names containing SQL keywords and semicolons', () => {
+      const malicious: DashboardFilter = {
+        id: '1',
+        column: "region; DROP TABLE sales; --",
+        value: 'x',
+      };
+      const result = applyDashboardFilters(baseSql, [malicious]);
+      expect(result).toBe(baseSql);
+    });
+
+    it('rejects column names containing single quotes', () => {
+      const malicious: DashboardFilter = {
+        id: '1',
+        column: "region' OR '1'='1",
+        value: 'x',
+      };
+      const result = applyDashboardFilters(baseSql, [malicious]);
+      expect(result).toBe(baseSql);
+    });
+
+    it('rejects column names containing parentheses', () => {
+      const malicious: DashboardFilter = {
+        id: '1',
+        column: "region) UNION SELECT * FROM passwords --",
+        value: 'x',
+      };
+      const result = applyDashboardFilters(baseSql, [malicious]);
+      expect(result).toBe(baseSql);
+    });
+
+    it('rejects column names containing backtick escape sequences', () => {
+      const malicious: DashboardFilter = {
+        id: '1',
+        column: "col` = 1 OR `x",
+        value: 'x',
+      };
+      const result = applyDashboardFilters(baseSql, [malicious]);
+      expect(result).toBe(baseSql);
+    });
+
+    it('rejects empty column names', () => {
+      const malicious: DashboardFilter = { id: '1', column: '', value: 'x' };
+      const result = applyDashboardFilters(baseSql, [malicious]);
+      expect(result).toBe(baseSql);
+    });
+
+    it('allows column names with letters, numbers, underscores', () => {
+      const safe: DashboardFilter = { id: '1', column: 'user_name_2', value: 'Alice' };
+      const result = applyDashboardFilters(baseSql, [safe]);
+      expect(result).toContain("`user_name_2`");
+      expect(result).not.toBe(baseSql);
+    });
+
+    it('allows column names with spaces', () => {
+      const safe: DashboardFilter = { id: '1', column: 'first name', value: 'Alice' };
+      const result = applyDashboardFilters(baseSql, [safe]);
+      expect(result).toContain("`first name`");
+      expect(result).not.toBe(baseSql);
+    });
+
+    it('allows column names with dots (table.column)', () => {
+      const safe: DashboardFilter = { id: '1', column: 'users.name', value: 'Alice' };
+      const result = applyDashboardFilters(baseSql, [safe]);
+      expect(result).toContain("`users.name`");
+      expect(result).not.toBe(baseSql);
+    });
+
+    it('allows column names with hyphens', () => {
+      const safe: DashboardFilter = { id: '1', column: 'first-name', value: 'Alice' };
+      const result = applyDashboardFilters(baseSql, [safe]);
+      expect(result).toContain("`first-name`");
+      expect(result).not.toBe(baseSql);
+    });
+  });
+
+  // ---- Numeric value injection ----
+
+  describe('numeric value validation', () => {
+    it('rejects SQL injection via numeric value', () => {
+      const malicious: DashboardFilter = {
+        id: '1',
+        column: 'amount',
+        value: '0; DROP TABLE sales --',
+        isNumeric: true,
+        numericOp: '=',
+      };
+      const result = applyDashboardFilters(baseSql, [malicious]);
+      expect(result).toBe(baseSql);
+      expect(result).not.toContain('DROP');
+    });
+
+    it('rejects SQL injection via numeric value with OR tautology', () => {
+      const malicious: DashboardFilter = {
+        id: '1',
+        column: 'amount',
+        value: '1 OR 1=1',
+        isNumeric: true,
+        numericOp: '=',
+      };
+      const result = applyDashboardFilters(baseSql, [malicious]);
+      expect(result).toBe(baseSql);
+    });
+
+    it('rejects non-numeric strings in numeric filter value', () => {
+      const malicious: DashboardFilter = {
+        id: '1',
+        column: 'amount',
+        value: 'abc',
+        isNumeric: true,
+        numericOp: '>',
+      };
+      const result = applyDashboardFilters(baseSql, [malicious]);
+      expect(result).toBe(baseSql);
+    });
+
+    it('rejects empty string in numeric filter value', () => {
+      const malicious: DashboardFilter = {
+        id: '1',
+        column: 'amount',
+        value: '',
+        isNumeric: true,
+        numericOp: '=',
+      };
+      const result = applyDashboardFilters(baseSql, [malicious]);
+      expect(result).toBe(baseSql);
+    });
+
+    it('rejects Infinity in numeric filter value', () => {
+      const malicious: DashboardFilter = {
+        id: '1',
+        column: 'amount',
+        value: 'Infinity',
+        isNumeric: true,
+        numericOp: '=',
+      };
+      const result = applyDashboardFilters(baseSql, [malicious]);
+      expect(result).toBe(baseSql);
+    });
+
+    it('rejects NaN in numeric filter value', () => {
+      const malicious: DashboardFilter = {
+        id: '1',
+        column: 'amount',
+        value: 'NaN',
+        isNumeric: true,
+        numericOp: '=',
+      };
+      const result = applyDashboardFilters(baseSql, [malicious]);
+      expect(result).toBe(baseSql);
+    });
+
+    it('rejects SQL injection via numericEnd (between upper bound)', () => {
+      const malicious: DashboardFilter = {
+        id: '1',
+        column: 'amount',
+        value: '10',
+        isNumeric: true,
+        numericOp: 'between',
+        numericEnd: '100; DROP TABLE sales',
+      };
+      const result = applyDashboardFilters(baseSql, [malicious]);
+      expect(result).toBe(baseSql);
+      expect(result).not.toContain('DROP');
+    });
+
+    it('accepts valid integers', () => {
+      const safe: DashboardFilter = {
+        id: '1', column: 'amount', value: '42', isNumeric: true, numericOp: '=',
+      };
+      const result = applyDashboardFilters(baseSql, [safe]);
+      expect(result).toContain('`amount` = 42');
+    });
+
+    it('accepts valid negative decimals', () => {
+      const safe: DashboardFilter = {
+        id: '1', column: 'amount', value: '-3.14', isNumeric: true, numericOp: '>=',
+      };
+      const result = applyDashboardFilters(baseSql, [safe]);
+      expect(result).toContain('`amount` >= -3.14');
+    });
+
+    it('accepts scientific notation', () => {
+      const safe: DashboardFilter = {
+        id: '1', column: 'amount', value: '1e3', isNumeric: true, numericOp: '<',
+      };
+      const result = applyDashboardFilters(baseSql, [safe]);
+      expect(result).toContain('`amount` < 1000');
+    });
+  });
+
+  // ---- Numeric operator injection ----
+
+  describe('numeric operator validation', () => {
+    it('rejects arbitrary SQL injected as operator', () => {
+      const malicious: DashboardFilter = {
+        id: '1',
+        column: 'amount',
+        value: '1',
+        isNumeric: true,
+        numericOp: '= 1 OR 1=1 --' as never,
+      };
+      const result = applyDashboardFilters(baseSql, [malicious]);
+      expect(result).toBe(baseSql);
+      expect(result).not.toContain('OR');
+    });
+
+    it('rejects unknown operator strings', () => {
+      const malicious: DashboardFilter = {
+        id: '1',
+        column: 'amount',
+        value: '1',
+        isNumeric: true,
+        numericOp: 'LIKE' as never,
+      };
+      const result = applyDashboardFilters(baseSql, [malicious]);
+      expect(result).toBe(baseSql);
+    });
+
+    it('accepts all valid operators', () => {
+      const ops: Array<DashboardFilter['numericOp']> = ['=', '!=', '>', '>=', '<', '<=', 'between'];
+      for (const op of ops) {
+        const f: DashboardFilter = {
+          id: '1',
+          column: 'amount',
+          value: '50',
+          isNumeric: true,
+          numericOp: op,
+          numericEnd: op === 'between' ? '100' : undefined,
+        };
+        const result = applyDashboardFilters(baseSql, [f]);
+        expect(result).not.toBe(baseSql);
+      }
+    });
+  });
+
+  // ---- Temporal value injection ----
+
+  describe('temporal value validation', () => {
+    it('rejects SQL injection via rangeStart', () => {
+      const malicious: DashboardFilter = {
+        id: '1',
+        column: 'date',
+        value: '2024-01-01',
+        isTemporal: true,
+        rangeStart: "2024-01-01' OR '1'='1",
+        rangeEnd: '2024-12-31',
+      };
+      const result = applyDashboardFilters(baseSql, [malicious]);
+      expect(result).toBe(baseSql);
+      expect(result).not.toContain('OR');
+    });
+
+    it('rejects SQL injection via rangeEnd', () => {
+      const malicious: DashboardFilter = {
+        id: '1',
+        column: 'date',
+        value: '2024-01-01',
+        isTemporal: true,
+        rangeStart: '2024-01-01',
+        rangeEnd: "2024-12-31'; DROP TABLE sales --",
+      };
+      const result = applyDashboardFilters(baseSql, [malicious]);
+      expect(result).toBe(baseSql);
+      expect(result).not.toContain('DROP');
+    });
+
+    it('rejects non-date strings in temporal rangeStart', () => {
+      const malicious: DashboardFilter = {
+        id: '1',
+        column: 'date',
+        value: 'x',
+        isTemporal: true,
+        rangeStart: 'not-a-date',
+        rangeEnd: '2024-12-31',
+      };
+      const result = applyDashboardFilters(baseSql, [malicious]);
+      expect(result).toBe(baseSql);
+    });
+
+    it('rejects dates with extra characters appended', () => {
+      const malicious: DashboardFilter = {
+        id: '1',
+        column: 'date',
+        value: '2024-01-01',
+        isTemporal: true,
+        rangeStart: '2024-01-01 00:00:00',
+        rangeEnd: '2024-12-31',
+      };
+      const result = applyDashboardFilters(baseSql, [malicious]);
+      // The regex requires exactly YYYY-MM-DD, not datetime strings
+      expect(result).toBe(baseSql);
+    });
+
+    it('accepts valid ISO dates', () => {
+      const safe: DashboardFilter = {
+        id: '1',
+        column: 'date',
+        value: '2024-06-15',
+        isTemporal: true,
+        rangeStart: '2024-01-01',
+        rangeEnd: '2024-12-31',
+      };
+      const result = applyDashboardFilters(baseSql, [safe]);
+      expect(result).toContain("DATE '2024-01-01'");
+      expect(result).toContain("DATE '2024-12-31'");
+    });
+  });
+
+  // ---- Text value injection (defense in depth) ----
+
+  describe('text value escaping', () => {
+    it('escapes single quotes to prevent breakout', () => {
+      const malicious: DashboardFilter = {
+        id: '1',
+        column: 'region',
+        value: "'; DROP TABLE sales; --",
+      };
+      const result = applyDashboardFilters(baseSql, [malicious]);
+      // The leading single quote in the value must be doubled so the SQL
+      // string literal is never terminated prematurely.  The "DROP TABLE"
+      // text remains inside the literal — it is data, not a SQL command.
+      expect(result).toBe(
+        "SELECT region, amount FROM sales WHERE CAST(`region` AS VARCHAR) = '''; DROP TABLE sales; --'"
+      );
+      // Crucially, the value opens with a doubled quote ('') keeping the
+      // literal intact.  There is no unquoted semicolon that could start
+      // a second statement.
+    });
+
+    it('escapes UNION-based injection in text value', () => {
+      const malicious: DashboardFilter = {
+        id: '1',
+        column: 'region',
+        value: "x' UNION SELECT password FROM users --",
+      };
+      const result = applyDashboardFilters(baseSql, [malicious]);
+      // Value quotes are doubled — the UNION stays inside the literal
+      expect(result).toContain("x'' UNION SELECT password FROM users --'");
+    });
+
+    it('handles values with multiple single quotes', () => {
+      const filter: DashboardFilter = {
+        id: '1',
+        column: 'name',
+        value: "It's a 'test' value",
+      };
+      const result = applyDashboardFilters(baseSql, [filter]);
+      expect(result).toContain("'It''s a ''test'' value'");
+    });
+  });
+
+  // ---- Mixed valid and malicious filters ----
+
+  describe('mixed valid and malicious filters', () => {
+    it('applies only the valid filters and skips the malicious ones', () => {
+      const filters: DashboardFilter[] = [
+        // Valid text filter
+        { id: '1', column: 'region', value: 'US' },
+        // Malicious column name — should be skipped
+        { id: '2', column: "x'; DROP TABLE t; --", value: 'y' },
+        // Malicious numeric value — should be skipped
+        { id: '3', column: 'amount', value: '0 OR 1=1', isNumeric: true, numericOp: '=' },
+        // Valid numeric filter
+        { id: '4', column: 'amount', value: '100', isNumeric: true, numericOp: '>=' },
+      ];
+      const result = applyDashboardFilters(baseSql, filters);
+      expect(result).toContain("CAST(`region` AS VARCHAR) = 'US'");
+      expect(result).toContain('`amount` >= 100');
+      expect(result).not.toContain('DROP');
+      expect(result).not.toContain('OR 1=1');
+      // Should have exactly 2 conditions joined by AND
+      const andCount = (result.match(/ AND /g) || []).length;
+      expect(andCount).toBe(1);
+    });
+
+    it('returns original SQL when ALL filters are malicious', () => {
+      const filters: DashboardFilter[] = [
+        { id: '1', column: "'; DROP TABLE t; --", value: 'x' },
+        { id: '2', column: 'amount', value: 'not-a-number', isNumeric: true, numericOp: '=' },
+        { id: '3', column: 'date', value: 'd', isTemporal: true, rangeStart: 'bad', rangeEnd: 'bad' },
+      ];
+      const result = applyDashboardFilters(baseSql, filters);
+      expect(result).toBe(baseSql);
+    });
+  });
+
+  // ---- URL-crafted payloads (simulating tampered search params) ----
+
+  describe('URL-crafted attack payloads', () => {
+    it('blocks stacked query injection via numeric value', () => {
+      const payload: DashboardFilter = {
+        id: '1',
+        column: 'id',
+        value: '1; DELETE FROM users',
+        isNumeric: true,
+        numericOp: '=',
+      };
+      const result = applyDashboardFilters(baseSql, [payload]);
+      expect(result).toBe(baseSql);
+    });
+
+    it('blocks UNION SELECT via temporal rangeEnd', () => {
+      const payload: DashboardFilter = {
+        id: '1',
+        column: 'created_at',
+        value: '2024-01-01',
+        isTemporal: true,
+        rangeStart: '2024-01-01',
+        rangeEnd: "2024-12-31' UNION SELECT * FROM secrets --",
+      };
+      const result = applyDashboardFilters(baseSql, [payload]);
+      expect(result).toBe(baseSql);
+    });
+
+    it('blocks operator injection via numericOp field', () => {
+      const payload: DashboardFilter = {
+        id: '1',
+        column: 'amount',
+        value: '1',
+        isNumeric: true,
+        numericOp: "> 0 UNION SELECT * FROM passwords --" as never,
+      };
+      const result = applyDashboardFilters(baseSql, [payload]);
+      expect(result).toBe(baseSql);
+    });
+
+    it('blocks column injection with comment syntax', () => {
+      const payload: DashboardFilter = {
+        id: '1',
+        column: 'col/**/OR/**/1=1--',
+        value: 'x',
+      };
+      const result = applyDashboardFilters(baseSql, [payload]);
+      expect(result).toBe(baseSql);
+    });
+
+    it('blocks column injection with double-dash comment', () => {
+      const payload: DashboardFilter = {
+        id: '1',
+        column: 'col -- ',
+        value: 'x',
+      };
+      const result = applyDashboardFilters(baseSql, [payload]);
+      // The regex allows word chars, spaces, dots, hyphens. '--' has hyphens
+      // followed by space which technically matches [\w\s.\-]+. However the
+      // backtick quoting neutralizes the comment syntax inside a column name.
+      // The important thing is no unquoted SQL can be injected.
+      expect(result).toContain('`col -- `');
+    });
   });
 });
