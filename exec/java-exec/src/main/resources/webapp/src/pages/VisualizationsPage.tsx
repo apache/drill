@@ -121,7 +121,7 @@ function MiniVizPreview({ viz }: { viz: Visualization }) {
     setLoading(true);
     setFailed(false);
 
-    getEffectiveQuery(viz.sql, viz.config || {})
+    getEffectiveQuery(viz.sql, JSON.parse(configKey))
       .then((query) => {
         if (cancelled) {
           return;

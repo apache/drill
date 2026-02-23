@@ -203,11 +203,11 @@ export default function DashboardViewPage() {
       };
       return [...prev, newFilter];
     });
-  }, []);
+  }, [setFilters, toIsoDate, formatTemporalDisplay]);
 
   const handleRemoveFilter = useCallback((filterId: string) => {
     setFilters((prev) => prev.filter((f) => f.id !== filterId));
-  }, []);
+  }, [setFilters]);
 
   const handleUpdateFilter = useCallback((filterId: string, update: Partial<DashboardFilter>) => {
     setFilters((prev) => prev.map((f) => {
@@ -234,11 +234,11 @@ export default function DashboardViewPage() {
       }
       return merged;
     }));
-  }, []);
+  }, [setFilters]);
 
   const handleClearAllFilters = useCallback(() => {
     setFilters([]);
-  }, []);
+  }, [setFilters]);
 
   // New panel content inputs
   const [newMarkdownContent, setNewMarkdownContent] = useState('## Heading\n\nYour content here...');
