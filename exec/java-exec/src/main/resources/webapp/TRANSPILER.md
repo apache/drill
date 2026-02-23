@@ -1,4 +1,4 @@
-# SQL Transpiler (GraalPy + sqlglot)
+# SQL Transpiler (Java sqlglot)
 
 ## Overview
 
@@ -19,15 +19,14 @@ User clicks Optimize
   -> User clicks Accept
   -> Frontend extracts SQL from markdown code block
   -> Frontend calls POST /api/v1/transpile
-  -> Backend transpiles via GraalPy + sqlglot
+  -> Backend transpiles via Java sqlglot
   -> Returns transpiled SQL
   -> Editor receives valid Drill SQL
 ```
 
-The backend embeds a Python runtime (GraalPy) inside the JVM and uses
-[sqlglot](https://github.com/tobymao/sqlglot) for SQL transpilation. The Python
-environment and sqlglot package are embedded at build time via the
-`graalpy-maven-plugin`.
+The backend uses [Java sqlglot](https://github.com/gtkcyber/sqlglot_java), a
+pure Java port of the sqlglot library, for SQL parsing, transpilation, and AST
+manipulation. No external runtime (Python, GraalPy, etc.) is required.
 
 ## REST API
 
@@ -66,12 +65,11 @@ Check whether the transpiler is available.
 }
 ```
 
-Returns `false` if GraalPy or sqlglot could not be initialized. In this case,
-the transpile endpoint will pass SQL through unchanged.
+The transpiler is always available with Java sqlglot.
 
 ## Supported Dialects
 
-sqlglot supports a wide range of SQL dialects including:
+Java sqlglot supports a wide range of SQL dialects including:
 
 - `drill` (Apache Drill)
 - `mysql` (MySQL)
@@ -86,38 +84,20 @@ sqlglot supports a wide range of SQL dialects including:
 - `oracle`
 - `duckdb`
 
-See [sqlglot dialects](https://github.com/tobymao/sqlglot/tree/main/sqlglot/dialects)
-for the full list.
-
-## Graceful Fallback
-
-If GraalPy or sqlglot cannot be initialized (e.g. due to missing native
-libraries or classpath issues), the transpiler falls back gracefully:
-
-- `GET /api/v1/transpile/status` returns `{ "available": false }`
-- `POST /api/v1/transpile` returns the original SQL unchanged
-- The frontend `transpileSql()` function also catches errors and returns the
-  original SQL
-
-This means the Optimize feature continues to work even without transpilation --
-users will just get the AI's raw SQL without dialect conversion.
-
 ## License
 
-The GraalPy artifacts (`org.graalvm.polyglot:polyglot`, `org.graalvm.polyglot:python`)
-are licensed under MIT + UPL (Universal Permissive License) + PSF (Python Software
-Foundation License). All three are ASF Category A compatible licenses.
-
-Apache Hive adopted GraalVM under the same rationale (HIVE-28984).
+The Java sqlglot artifacts (`com.gtkcyber.sqlglot:sqlglot-core`,
+`com.gtkcyber.sqlglot:sqlglot-dialects`) are licensed under the MIT License,
+which is ASF Category A compatible.
 
 ## Key Files
 
 | File | Purpose |
 |------|---------|
-| `SqlTranspiler.java` | Singleton service wrapping GraalPy + sqlglot |
+| `SqlTranspiler.java` | Singleton service using Java sqlglot for transpilation |
 | `TranspileResources.java` | REST endpoint at `/api/v1/transpile` |
 | `DrillRestServer.java` | Registers `TranspileResources` |
 | `api/ai.ts` | Frontend `transpileSql()` function |
 | `pages/SqlLabPage.tsx` | Calls transpile on Optimize accept |
-| `exec/java-exec/pom.xml` | GraalPy Maven dependencies + plugin |
-| `exec/jdbc-all/pom.xml` | GraalPy exclusions from JDBC jar |
+| `exec/java-exec/pom.xml` | Java sqlglot Maven dependencies |
+| `exec/jdbc-all/pom.xml` | Java sqlglot exclusions from JDBC jar |
