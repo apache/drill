@@ -40,7 +40,7 @@ const ISO_DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
 
 // Column names may only contain word characters, spaces, dots, and hyphens.
 // This prevents injecting SQL through a crafted column name.
-const SAFE_COLUMN_RE = /^[\w\s.\-]+$/;
+const SAFE_COLUMN_RE = /^[\w\s.-]+$/;
 
 /**
  * Returns true when `val` is a finite number (integer or float, including
