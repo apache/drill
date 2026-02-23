@@ -37,7 +37,7 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * REST resource for SQL dialect transpilation via GraalPy + sqlglot.
+ * REST resource for SQL dialect transpilation via Java sqlglot.
  * Converts SQL from one dialect (e.g. MySQL) to another (e.g. Apache Drill).
  */
 @Path("/api/v1/transpile")
