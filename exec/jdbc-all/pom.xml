@@ -465,6 +465,7 @@
               <exclude>org.apache.yetus:*</exclude>
               <exclude>org.eclipse.jetty:*</exclude>
               <exclude>org.eclipse.jetty.websocket:*</exclude>
+              <exclude>com.gtkcyber.sqlglot:*</exclude>
               <exclude>org.graalvm.polyglot:*</exclude>
               <exclude>org.graalvm.python:*</exclude>
               <exclude>org.graalvm.sdk:*</exclude>
@@ -802,6 +803,7 @@
                 <exclude>python/**</exclude>
                 <exclude>webapp/**</exclude>
                 <exclude>webapps/**</exclude>
+                <exclude>com/gtkcyber/sqlglot/**</exclude>
                 <exclude>org/graalvm/**</exclude>
                 <exclude>com/oracle/graal/**</exclude>
                 <exclude>com/oracle/truffle/**</exclude>

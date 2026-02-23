@@ -33,7 +33,6 @@
     <aether.version>1.1.0</aether.version>
     <wagon.version>3.3.4</wagon.version>
     <okhttp.version>4.9.3</okhttp.version>
-    <graalpy.version>25.0.2</graalpy.version>
   </properties>
 
   <dependencies>
@@ -682,17 +681,16 @@
       <version>${testcontainers.version}</version>
       <scope>test</scope>
     </dependency>
-    <!-- GraalPy: Embedded Python runtime for SQL transpilation -->
+    <!-- Java sqlglot: SQL parsing, transpilation, and AST manipulation -->
     <dependency>
-      <groupId>org.graalvm.polyglot</groupId>
-      <artifactId>polyglot</artifactId>
-      <version>${graalpy.version}</version>
+      <groupId>com.gtkcyber.sqlglot</groupId>
+      <artifactId>sqlglot-core</artifactId>
+      <version>1.0.1</version>
     </dependency>
     <dependency>
-      <groupId>org.graalvm.polyglot</groupId>
-      <artifactId>python</artifactId>
-      <version>${graalpy.version}</version>
-      <type>pom</type>
+      <groupId>com.gtkcyber.sqlglot</groupId>
+      <artifactId>sqlglot-dialects</artifactId>
+      <version>1.0.1</version>
     </dependency>
 
     <dependency>
@@ -906,25 +904,6 @@
             </goals>
             <configuration>
               <arguments>run build</arguments>
-            </configuration>
-          </execution>
-        </executions>
-      </plugin>
-
-      <!-- GraalPy: Embed sqlglot Python package at build time -->
-      <plugin>
-        <groupId>org.graalvm.python</groupId>
-        <artifactId>graalpy-maven-plugin</artifactId>
-        <version>${graalpy.version}</version>
-        <executions>
-          <execution>
-            <goals>
-              <goal>process-graalpy-resources</goal>
-            </goals>
-            <configuration>
-              <packages>
-                <package>sqlglot==25.33.0</package>
-              </packages>
             </configuration>
           </execution>
         </executions>
