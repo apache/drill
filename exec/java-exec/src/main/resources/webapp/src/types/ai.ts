@@ -70,6 +70,7 @@ export interface AiConfig {
   temperature: number;
   enabled: boolean;
   systemPrompt: string;
+  sendDataToAi: boolean;
 }
 
 export interface AiConfigUpdate {
@@ -81,6 +82,7 @@ export interface AiConfigUpdate {
   temperature?: number;
   enabled?: boolean;
   systemPrompt?: string;
+  sendDataToAi?: boolean;
 }
 
 export interface AiProvider {
