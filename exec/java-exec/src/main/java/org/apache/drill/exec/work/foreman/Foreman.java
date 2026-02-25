@@ -275,7 +275,7 @@ public class Foreman implements Runnable {
         logger.info("Query text for query with id {} issued by {}: {}", queryIdString,
             queryContext.getQueryUserName(), sql);
         runSQL(sql);
-        logger.info("RunSQL is executed within {}", new Date().getTime() - start);
+        logger.debug("RunSQL is executed within {}", new Date().getTime() - start);
         break;
       case EXECUTION:
         runFragment(queryRequest.getFragmentsList());
@@ -485,7 +485,7 @@ public class Foreman implements Runnable {
    * Moves query to RUNNING state.
    */
   private void startQueryProcessing() {
-    logger.info("Starting query processing");
+    logger.debug("Starting query processing");
     enqueue();
     runFragments();
     queryStateProcessor.moveToState(QueryState.RUNNING, null);
@@ -864,7 +864,7 @@ public class Foreman implements Runnable {
   private static class ResponseSendListener extends BaseRpcOutcomeListener<Ack> {
     @Override
     public void failed(final RpcException ex) {
-      logger.info("Failure while trying communicate query result to initiating client. " +
+      logger.debug("Failure while trying communicate query result to initiating client. " +
           "This would happen if a client is disconnected before response notice can be sent.", ex);
     }
 
