@@ -20,9 +20,17 @@ import ReactECharts from 'echarts-for-react';
 import { Empty, Spin, Table, Typography } from 'antd';
 import { CaretUpOutlined, CaretDownOutlined, MinusOutlined, TableOutlined, InfoCircleOutlined } from '@ant-design/icons';
 import type { EChartsOption } from 'echarts';
+import * as echarts from 'echarts/core';
 import { graphic } from 'echarts';
 import { useTheme } from '../../hooks/useTheme';
-import type { ChartType, VisualizationConfig, QueryResult } from '../../types';
+import type { ChartType, VisualizationConfig, QueryResult, PredictiveAnalyticsConfig, PredictionMethod } from '../../types';
+import { generatePredictions, generateFutureLabels, generateTrendLine } from '../../utils/predictions';
+import type { DataPoint } from '../../utils/predictions';
+import worldGeoJson from '../../assets/world.json';
+
+// Register the world map for ECharts geo component
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+echarts.registerMap('world', worldGeoJson as any);
 
 interface ChartPreviewProps {
   chartType: ChartType;
@@ -139,6 +147,163 @@ function isColumnNumeric(data: QueryResult, col: string): boolean {
     || t.includes('DOUBLE') || t.includes('DECIMAL') || t.includes('NUMERIC');
 }
 
+/**
+ * Build ECharts series for forecast data: dashed forecast line + confidence band.
+ * Returns an array of series objects (empty if predictions not enabled / insufficient data).
+ */
+function buildForecastSeries(
+  categories: string[],
+  seriesData: number[],
+  seriesName: string,
+  color: string,
+  paConfig: PredictiveAnalyticsConfig | undefined,
+  isTemporal: boolean,
+  isAreaChart: boolean,
+): { series: Record<string, unknown>[]; futureLabels: string[]; bandNames: string[] } {
+  const empty = { series: [], futureLabels: [], bandNames: [] };
+  if (!paConfig?.enabled || seriesData.length < 2) {
+    return empty;
+  }
+
+  const dataPoints: DataPoint[] = seriesData.map((y, i) => ({
+    x: i,
+    y,
+    xLabel: categories[i] ?? String(i),
+  }));
+
+  const result = generatePredictions(dataPoints, paConfig);
+  if (!result || result.forecastPoints.length === 0) {
+    return empty;
+  }
+
+  const futureLabels = generateFutureLabels(categories, paConfig.periods, isTemporal);
+
+  // Build the forecast data array: nulls for historical points, then forecast values.
+  // The last actual point is included to connect the forecast line seamlessly.
+  const nHistorical = seriesData.length;
+  const forecastLineData: (number | null)[] = new Array(nHistorical).fill(null);
+  // Connect from last actual point
+  forecastLineData[nHistorical - 1] = seriesData[nHistorical - 1];
+  result.forecastPoints.forEach((pt) => forecastLineData.push(pt.y));
+
+  const upperBandData: (number | null)[] = new Array(nHistorical).fill(null);
+  upperBandData[nHistorical - 1] = seriesData[nHistorical - 1];
+  const lowerBandData: (number | null)[] = new Array(nHistorical).fill(null);
+  lowerBandData[nHistorical - 1] = seriesData[nHistorical - 1];
+
+  result.confidenceBands.forEach((band) => {
+    upperBandData.push(band.upper);
+    lowerBandData.push(band.lower);
+  });
+
+  const forecastName = `${seriesName} (Forecast)`;
+  const upperName = `${seriesName} (CI Upper)`;
+  const lowerName = `${seriesName} (CI Lower)`;
+  const stackGroup = `ci-${seriesName}`;
+
+  const series: Record<string, unknown>[] = [
+    // Forecast line — dashed, same color
+    {
+      name: forecastName,
+      type: 'line',
+      data: forecastLineData,
+      smooth: false,
+      showSymbol: false,
+      lineStyle: { type: 'dashed', width: 2, color },
+      itemStyle: { color },
+      areaStyle: isAreaChart ? undefined : undefined,
+      connectNulls: false,
+      z: 5,
+    },
+    // Lower band — invisible base line for the stacked shading
+    {
+      name: lowerName,
+      type: 'line',
+      data: lowerBandData,
+      smooth: false,
+      showSymbol: false,
+      lineStyle: { opacity: 0 },
+      itemStyle: { color },
+      stack: stackGroup,
+      areaStyle: { opacity: 0 },
+      connectNulls: false,
+      z: 3,
+    },
+    // Upper band — shaded area between lower and upper
+    {
+      name: upperName,
+      type: 'line',
+      data: upperBandData.map((val, i) => {
+        if (val == null || lowerBandData[i] == null) {
+          return null;
+        }
+        return val - (lowerBandData[i] as number);
+      }),
+      smooth: false,
+      showSymbol: false,
+      lineStyle: { opacity: 0 },
+      itemStyle: { color },
+      stack: stackGroup,
+      areaStyle: { opacity: 0.15, color },
+      connectNulls: false,
+      z: 3,
+    },
+  ];
+
+  return { series, futureLabels, bandNames: [forecastName, upperName, lowerName] };
+}
+
+/**
+ * Build an ECharts series for a trend line over historical data.
+ * Independent of forecasting — uses generateTrendLine from predictions.ts.
+ */
+function buildTrendLineSeries(
+  categories: string[],
+  seriesData: number[],
+  seriesName: string,
+  color: string,
+  method: PredictionMethod,
+  options?: { polynomialOrder?: number; movingAverageWindow?: number },
+  nFuturePadding?: number,
+): { series: Record<string, unknown>; name: string } | null {
+  if (seriesData.length < 2) {
+    return null;
+  }
+
+  const dataPoints: DataPoint[] = seriesData.map((y, i) => ({
+    x: i,
+    y,
+    xLabel: categories[i] ?? String(i),
+  }));
+
+  const fitted = generateTrendLine(dataPoints, method, options);
+  if (!fitted) {
+    return null;
+  }
+
+  const trendData: (number | null)[] = [...fitted];
+  // Pad with nulls if the x-axis has been extended for forecast labels
+  for (let i = 0; i < (nFuturePadding ?? 0); i++) {
+    trendData.push(null);
+  }
+
+  const name = `${seriesName} (Trend)`;
+  return {
+    series: {
+      name,
+      type: 'line',
+      data: trendData,
+      smooth: false,
+      showSymbol: false,
+      lineStyle: { type: 'dotted', width: 2, color },
+      itemStyle: { color },
+      connectNulls: false,
+      z: 4,
+    },
+    name,
+  };
+}
+
 export default function ChartPreview({
   chartType,
   config,
@@ -208,6 +373,13 @@ export default function ChartPreview({
       case 'heatmap': {
         if (xCol && params.name != null) {
           emitClick(xCol, String(params.name));
+        }
+        break;
+      }
+      case 'map': {
+        const dimCol = dimensions?.[0];
+        if (dimCol && params.name != null) {
+          emitClick(dimCol, String(params.name));
         }
         break;
       }
@@ -333,12 +505,56 @@ export default function ChartPreview({
               connectNulls: false,
             };
           });
+
+          // Forecast series for grouped line chart
+          const allForecastSeries: Record<string, unknown>[] = [];
+          const allBandNames: string[] = [];
+          let lineFutureLabelsGrouped: string[] = [];
+          series.forEach((s, idx) => {
+            const sData = (s.data as (number | null)[]).map((v) => v ?? 0);
+            const fc = buildForecastSeries(
+              uniqueCategories, sData, s.name, colors[idx % colors.length],
+              config.predictiveAnalytics, lineIsTemporal, false,
+            );
+            allForecastSeries.push(...fc.series);
+            allBandNames.push(...fc.bandNames);
+            if (fc.futureLabels.length > lineFutureLabelsGrouped.length) {
+              lineFutureLabelsGrouped = fc.futureLabels;
+            }
+          });
+          const extCatsGrouped = [...uniqueCategories, ...lineFutureLabelsGrouped];
+
+          // Trend line series (independent of forecasting)
+          const showTrend = config.chartOptions?.showTrendLine === true;
+          const trendMethod = (config.chartOptions?.trendLineMethod as PredictionMethod) || 'linear';
+          const trendOpts = {
+            polynomialOrder: Number(config.chartOptions?.trendLinePolynomialOrder) || 2,
+            movingAverageWindow: Number(config.chartOptions?.trendLineWindow) || 3,
+          };
+          const allTrendSeries: Record<string, unknown>[] = [];
+          if (showTrend) {
+            series.forEach((s, idx) => {
+              const sData = (s.data as (number | null)[]).map((v) => v ?? 0);
+              const tl = buildTrendLineSeries(
+                uniqueCategories, sData, s.name, colors[idx % colors.length],
+                trendMethod, trendOpts, lineFutureLabelsGrouped.length,
+              );
+              if (tl) {
+                allTrendSeries.push(tl.series);
+                allBandNames.push(tl.name);
+              }
+            });
+          }
+
           return {
             tooltip: { trigger: 'axis' },
-            legend: { data: groups, bottom: 0 },
-            xAxis: { type: 'category', data: uniqueCategories },
+            legend: {
+              data: groups.filter((g) => !allBandNames.includes(g)),
+              bottom: 0,
+            },
+            xAxis: { type: 'category', data: extCatsGrouped },
             yAxis: { type: 'value' },
-            series,
+            series: [...series, ...allForecastSeries, ...allTrendSeries],
             grid: { left: '3%', right: '4%', bottom: '15%', containLabel: true },
           };
         }
@@ -358,12 +574,55 @@ export default function ChartPreview({
           itemStyle: { color: colors[idx % colors.length] },
           label: showDataLabels ? { show: true, position: 'top' as const } : undefined,
         }));
+
+        // Forecast series for standard line chart
+        const lineForecasts: Record<string, unknown>[] = [];
+        const lineBandNames: string[] = [];
+        let lineFutureLabels: string[] = [];
+        series.forEach((s, idx) => {
+          const sData = s.data as number[];
+          const fc = buildForecastSeries(
+            categories, sData, s.name, colors[idx % colors.length],
+            config.predictiveAnalytics, lineIsTemporal, false,
+          );
+          lineForecasts.push(...fc.series);
+          lineBandNames.push(...fc.bandNames);
+          if (fc.futureLabels.length > lineFutureLabels.length) {
+            lineFutureLabels = fc.futureLabels;
+          }
+        });
+        const extCats = [...categories, ...lineFutureLabels];
+
+        // Trend line series (independent of forecasting)
+        const showLineTrend = config.chartOptions?.showTrendLine === true;
+        const lineTrendMethod = (config.chartOptions?.trendLineMethod as PredictionMethod) || 'linear';
+        const lineTrendOpts = {
+          polynomialOrder: Number(config.chartOptions?.trendLinePolynomialOrder) || 2,
+          movingAverageWindow: Number(config.chartOptions?.trendLineWindow) || 3,
+        };
+        const lineTrendSeries: Record<string, unknown>[] = [];
+        if (showLineTrend) {
+          series.forEach((s, idx) => {
+            const sData = s.data as number[];
+            const tl = buildTrendLineSeries(
+              categories, sData, s.name, colors[idx % colors.length],
+              lineTrendMethod, lineTrendOpts, lineFutureLabels.length,
+            );
+            if (tl) {
+              lineTrendSeries.push(tl.series);
+              lineBandNames.push(tl.name);
+            }
+          });
+        }
+
+        const legendNames = metrics.filter((m) => !lineBandNames.includes(m));
+
         return {
           tooltip: { trigger: 'axis' },
-          legend: { data: metrics, bottom: 0 },
-          xAxis: { type: 'category', data: categories },
+          legend: { data: legendNames, bottom: 0 },
+          xAxis: { type: 'category', data: extCats },
           yAxis: { type: 'value' },
-          series,
+          series: [...series, ...lineForecasts, ...lineTrendSeries],
           grid: { left: '3%', right: '4%', bottom: '15%', containLabel: true },
         };
       }
@@ -415,12 +674,56 @@ export default function ChartPreview({
               connectNulls: false,
             };
           });
+
+          // Forecast series for grouped area chart
+          const areaForecastGrouped: Record<string, unknown>[] = [];
+          const areaBandNamesGrouped: string[] = [];
+          let areaFutureLabelsGrouped: string[] = [];
+          series.forEach((s, idx) => {
+            const sData = (s.data as (number | null)[]).map((v) => v ?? 0);
+            const fc = buildForecastSeries(
+              uniqueCategories, sData, s.name, colors[idx % colors.length],
+              config.predictiveAnalytics, areaIsTemporal, true,
+            );
+            areaForecastGrouped.push(...fc.series);
+            areaBandNamesGrouped.push(...fc.bandNames);
+            if (fc.futureLabels.length > areaFutureLabelsGrouped.length) {
+              areaFutureLabelsGrouped = fc.futureLabels;
+            }
+          });
+          const extAreaCatsGrouped = [...uniqueCategories, ...areaFutureLabelsGrouped];
+
+          // Trend line series (independent of forecasting)
+          const showAreaGroupTrend = config.chartOptions?.showTrendLine === true;
+          const areaGroupTrendMethod = (config.chartOptions?.trendLineMethod as PredictionMethod) || 'linear';
+          const areaGroupTrendOpts = {
+            polynomialOrder: Number(config.chartOptions?.trendLinePolynomialOrder) || 2,
+            movingAverageWindow: Number(config.chartOptions?.trendLineWindow) || 3,
+          };
+          const areaGroupTrendSeries: Record<string, unknown>[] = [];
+          if (showAreaGroupTrend) {
+            series.forEach((s, idx) => {
+              const sData = (s.data as (number | null)[]).map((v) => v ?? 0);
+              const tl = buildTrendLineSeries(
+                uniqueCategories, sData, s.name, colors[idx % colors.length],
+                areaGroupTrendMethod, areaGroupTrendOpts, areaFutureLabelsGrouped.length,
+              );
+              if (tl) {
+                areaGroupTrendSeries.push(tl.series);
+                areaBandNamesGrouped.push(tl.name);
+              }
+            });
+          }
+
           return {
             tooltip: { trigger: 'axis' },
-            legend: { data: groups, bottom: 0 },
-            xAxis: { type: 'category', data: uniqueCategories },
+            legend: {
+              data: groups.filter((g) => !areaBandNamesGrouped.includes(g)),
+              bottom: 0,
+            },
+            xAxis: { type: 'category', data: extAreaCatsGrouped },
             yAxis: { type: 'value' },
-            series,
+            series: [...series, ...areaForecastGrouped, ...areaGroupTrendSeries],
             grid: { left: '3%', right: '4%', bottom: '15%', containLabel: true },
           };
         }
@@ -441,12 +744,55 @@ export default function ChartPreview({
             label: showAreaLabels ? { show: true, position: 'top' as const } : undefined,
           };
         });
+
+        // Forecast series for standard area chart
+        const areaForecasts: Record<string, unknown>[] = [];
+        const areaBandNames: string[] = [];
+        let areaFutureLabels: string[] = [];
+        series.forEach((s, idx) => {
+          const sData = s.data as number[];
+          const fc = buildForecastSeries(
+            categories, sData, s.name, colors[idx % colors.length],
+            config.predictiveAnalytics, areaIsTemporal, true,
+          );
+          areaForecasts.push(...fc.series);
+          areaBandNames.push(...fc.bandNames);
+          if (fc.futureLabels.length > areaFutureLabels.length) {
+            areaFutureLabels = fc.futureLabels;
+          }
+        });
+        const extAreaCats = [...categories, ...areaFutureLabels];
+
+        // Trend line series (independent of forecasting)
+        const showAreaTrend = config.chartOptions?.showTrendLine === true;
+        const areaTrendMethod = (config.chartOptions?.trendLineMethod as PredictionMethod) || 'linear';
+        const areaTrendOpts = {
+          polynomialOrder: Number(config.chartOptions?.trendLinePolynomialOrder) || 2,
+          movingAverageWindow: Number(config.chartOptions?.trendLineWindow) || 3,
+        };
+        const areaTrendSeries: Record<string, unknown>[] = [];
+        if (showAreaTrend) {
+          series.forEach((s, idx) => {
+            const sData = s.data as number[];
+            const tl = buildTrendLineSeries(
+              categories, sData, s.name, colors[idx % colors.length],
+              areaTrendMethod, areaTrendOpts, areaFutureLabels.length,
+            );
+            if (tl) {
+              areaTrendSeries.push(tl.series);
+              areaBandNames.push(tl.name);
+            }
+          });
+        }
+
+        const areaLegendNames = metrics.filter((m) => !areaBandNames.includes(m));
+
         return {
           tooltip: { trigger: 'axis' },
-          legend: { data: metrics, bottom: 0 },
-          xAxis: { type: 'category', data: categories },
+          legend: { data: areaLegendNames, bottom: 0 },
+          xAxis: { type: 'category', data: extAreaCats },
           yAxis: { type: 'value' },
-          series,
+          series: [...series, ...areaForecasts, ...areaTrendSeries],
           grid: { left: '3%', right: '4%', bottom: '15%', containLabel: true },
         };
       }
@@ -696,6 +1042,80 @@ export default function ChartPreview({
         };
       }
 
+      case 'map': {
+        if (!xAxis || !yAxis) {
+          return null;
+        }
+        const pointSize = Number(config.chartOptions?.pointSize) || 8;
+        const scaleByValue = config.chartOptions?.scaleByValue === true;
+        const showBorders = config.chartOptions?.showBorders !== false;
+        const enableRoam = config.chartOptions?.enableRoam !== false;
+        const metricField = metrics?.[0];
+        const labelField = dimensions?.[0];
+
+        // Build scatter data: [lon, lat, value, label]
+        const scatterData = data.rows.map((row) => {
+          const lon = Number(row[xAxis]) || 0;
+          const lat = Number(row[yAxis]) || 0;
+          const val = metricField ? (Number(row[metricField]) || 0) : 0;
+          const label = labelField ? String(row[labelField] ?? '') : '';
+          return { value: [lon, lat, val], name: label };
+        });
+
+        // Compute symbol size function for scaling by value
+        let symbolSizeFn: number | ((val: number[]) => number) = pointSize;
+        if (scaleByValue && metricField) {
+          const values = scatterData.map((d) => d.value[2]);
+          const minVal = Math.min(...values);
+          const maxVal = Math.max(...values);
+          const range = maxVal - minVal || 1;
+          symbolSizeFn = (val: number[]) => {
+            const normalized = (val[2] - minVal) / range;
+            return Math.max(4, pointSize * 0.5 + normalized * pointSize);
+          };
+        }
+
+        return {
+          tooltip: {
+            trigger: 'item',
+            formatter: (params: Record<string, unknown>) => {
+              const val = params.value as number[];
+              const name = params.name as string;
+              const parts: string[] = [];
+              if (name) {
+                parts.push(`<strong>${name}</strong>`);
+              }
+              parts.push(`Lon: ${val[0].toFixed(4)}, Lat: ${val[1].toFixed(4)}`);
+              if (metricField) {
+                parts.push(`${metricField}: ${val[2].toLocaleString()}`);
+              }
+              return parts.join('<br/>');
+            },
+          },
+          geo: {
+            map: 'world',
+            roam: enableRoam,
+            itemStyle: {
+              areaColor: '#e0e0e0',
+              borderColor: showBorders ? '#aaa' : 'transparent',
+              borderWidth: showBorders ? 0.5 : 0,
+            },
+            emphasis: {
+              itemStyle: { areaColor: '#ccc' },
+            },
+            silent: true,
+          },
+          series: [{
+            type: 'scatter',
+            coordinateSystem: 'geo',
+            data: scatterData,
+            symbolSize: symbolSizeFn,
+            itemStyle: { color: colors[0] },
+            emphasis: { scale: true },
+          }],
+        } as unknown as EChartsOption;
+      }
+
       default:
         return null;
     }
@@ -706,6 +1126,26 @@ export default function ChartPreview({
     if (!chartOption || !mini) {
       return chartOption;
     }
+
+    // Map mini mode: simplified geo with smaller points and no roam
+    if (chartType === 'map') {
+      const geoRaw = (chartOption as Record<string, unknown>).geo as Record<string, unknown> | undefined;
+      const seriesRaw = (chartOption as Record<string, unknown>).series as Record<string, unknown>[] | undefined;
+      return {
+        ...chartOption,
+        tooltip: undefined,
+        geo: geoRaw ? {
+          ...geoRaw,
+          roam: false,
+        } : undefined,
+        series: seriesRaw ? seriesRaw.map((s) => ({
+          ...s,
+          symbolSize: 4,
+        })) : undefined,
+        animation: false,
+      };
+    }
+
     return {
       ...chartOption,
       tooltip: undefined,
@@ -716,7 +1156,7 @@ export default function ChartPreview({
       yAxis: chartOption.yAxis ? { ...chartOption.yAxis as Record<string, unknown>, show: false } : undefined,
       animation: false,
     };
-  }, [chartOption, mini]);
+  }, [chartOption, mini, chartType]);
 
   // Apply dark mode colors to ECharts (canvas doesn't respond to CSS variables)
   const finalOption = useMemo(() => {
@@ -759,6 +1199,11 @@ export default function ChartPreview({
       visualMap: opt.visualMap ? {
         ...(opt.visualMap as Record<string, unknown>),
         textStyle: { color: darkText },
+      } : undefined,
+      geo: (opt as Record<string, unknown>).geo ? {
+        ...((opt as Record<string, unknown>).geo as Record<string, unknown>),
+        itemStyle: { areaColor: '#1a1a2e', borderColor: '#333' },
+        emphasis: { itemStyle: { areaColor: '#2a2a3e' } },
       } : undefined,
     };
   }, [miniOption, isDark]);

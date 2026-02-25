@@ -21,14 +21,16 @@ import { MoreOutlined } from '@ant-design/icons';
 import type { IHeaderParams } from 'ag-grid-community';
 import ColumnMenu from './ColumnMenu';
 import type { ColumnTransformation } from '../../utils/sqlTransformations';
+import { getColumnIcon } from '../schema-explorer/icons';
 
 export interface CustomHeaderProps extends IHeaderParams {
   rowData?: Record<string, unknown>[];
+  metadata?: string;
   onTransformColumn?: (columnName: string, transformation: ColumnTransformation) => void;
 }
 
 export default function CustomHeader(props: CustomHeaderProps) {
-  const { displayName, api, rowData, onTransformColumn } = props;
+  const { displayName, api, rowData, metadata, onTransformColumn } = props;
 
   return (
     <div
@@ -40,6 +42,11 @@ export default function CustomHeader(props: CustomHeaderProps) {
         height: '100%',
       }}
     >
+      {metadata && (
+        <span style={{ fontSize: 12, opacity: 0.55, flexShrink: 0, marginRight: 4, display: 'inline-flex', alignItems: 'center' }}>
+          {getColumnIcon(metadata)}
+        </span>
+      )}
       <span style={{ flex: 1 }}>{displayName}</span>
       <Popover
         content={

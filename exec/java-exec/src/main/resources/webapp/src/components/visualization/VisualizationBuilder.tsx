@@ -304,7 +304,7 @@ export default function VisualizationBuilder({
         if (['pie', 'funnel', 'treemap'].includes(chartType)) {
           return config.dimensions && config.dimensions.length > 0 && config.metrics && config.metrics.length > 0;
         }
-        if (chartType === 'scatter') {
+        if (chartType === 'scatter' || chartType === 'map') {
           return !!config.xAxis && !!config.yAxis;
         }
         return !!config.xAxis && config.metrics && config.metrics.length > 0;
