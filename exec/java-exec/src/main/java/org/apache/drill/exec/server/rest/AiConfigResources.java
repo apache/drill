@@ -96,6 +96,9 @@ public class AiConfigResources {
     @JsonProperty
     public String systemPrompt;
 
+    @JsonProperty
+    public boolean sendDataToAi;
+
     public ConfigResponse() {
     }
 
@@ -108,6 +111,7 @@ public class AiConfigResources {
       this.temperature = config.getTemperature();
       this.enabled = config.isEnabled();
       this.systemPrompt = config.getSystemPrompt();
+      this.sendDataToAi = config.isSendDataToAi();
     }
   }
 
@@ -136,6 +140,9 @@ public class AiConfigResources {
     @JsonProperty
     public String systemPrompt;
 
+    @JsonProperty
+    public Boolean sendDataToAi;
+
     public UpdateConfigRequest() {
     }
 
@@ -148,7 +155,8 @@ public class AiConfigResources {
         @JsonProperty("maxTokens") Integer maxTokens,
         @JsonProperty("temperature") Double temperature,
         @JsonProperty("enabled") Boolean enabled,
-        @JsonProperty("systemPrompt") String systemPrompt) {
+        @JsonProperty("systemPrompt") String systemPrompt,
+        @JsonProperty("sendDataToAi") Boolean sendDataToAi) {
       this.provider = provider;
       this.apiEndpoint = apiEndpoint;
       this.apiKey = apiKey;
@@ -157,6 +165,7 @@ public class AiConfigResources {
       this.temperature = temperature;
       this.enabled = enabled;
       this.systemPrompt = systemPrompt;
+      this.sendDataToAi = sendDataToAi;
     }
   }
 
@@ -254,6 +263,9 @@ public class AiConfigResources {
       }
       if (request.systemPrompt != null) {
         existing.setSystemPrompt(request.systemPrompt);
+      }
+      if (request.sendDataToAi != null) {
+        existing.setSendDataToAi(request.sendDataToAi);
       }
 
       store.put(CONFIG_KEY, existing);

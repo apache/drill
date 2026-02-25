@@ -163,6 +163,17 @@ export type ChartType =
   | 'map'
   | 'bigNumber';
 
+export type PredictionMethod = 'linear' | 'polynomial' | 'movingAverage';
+
+export interface PredictiveAnalyticsConfig {
+  enabled: boolean;
+  method: PredictionMethod;
+  periods: number;
+  polynomialOrder?: number;
+  movingAverageWindow?: number;
+  confidenceLevel?: number;
+}
+
 export interface VisualizationConfig {
   xAxis?: string;
   yAxis?: string;
@@ -170,6 +181,7 @@ export interface VisualizationConfig {
   dimensions?: string[];
   chartOptions?: Record<string, unknown>;
   colorScheme?: string;
+  predictiveAnalytics?: PredictiveAnalyticsConfig;
 }
 
 export interface Visualization {

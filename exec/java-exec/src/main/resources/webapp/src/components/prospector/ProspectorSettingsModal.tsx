@@ -59,6 +59,7 @@ export default function ProspectorSettingsModal({ open, onClose }: ProspectorSet
         temperature: cfg.temperature ?? 0.7,
         enabled: cfg.enabled || false,
         systemPrompt: cfg.systemPrompt || '',
+        sendDataToAi: cfg.sendDataToAi ?? true,
       });
     } catch {
       // Config endpoint may 403 if not admin
@@ -99,6 +100,7 @@ export default function ProspectorSettingsModal({ open, onClose }: ProspectorSet
         temperature: values.temperature,
         enabled: values.enabled,
         systemPrompt: values.systemPrompt || undefined,
+        sendDataToAi: values.sendDataToAi,
       });
       message.success('AI configuration saved');
       onClose();
@@ -168,6 +170,7 @@ export default function ProspectorSettingsModal({ open, onClose }: ProspectorSet
           maxTokens: 4096,
           temperature: 0.7,
           enabled: false,
+          sendDataToAi: true,
         }}
       >
         <Form.Item name="enabled" label="Enable Prospector" valuePropName="checked">
@@ -219,6 +222,15 @@ export default function ProspectorSettingsModal({ open, onClose }: ProspectorSet
             rows={3}
             placeholder="Additional instructions for the AI assistant..."
           />
+        </Form.Item>
+
+        <Form.Item
+          name="sendDataToAi"
+          label="Send Data Samples to AI"
+          valuePropName="checked"
+          help="When enabled, a sample of query result rows is included when optimizing queries, helping the AI detect data type mismatches."
+        >
+          <Switch />
         </Form.Item>
       </Form>
     </Modal>
