@@ -17,7 +17,7 @@
  */
 import { Form, Select, Switch, Radio, Typography, Space, Tag, Divider, Slider } from 'antd';
 import { FieldNumberOutlined, FieldStringOutlined, ClockCircleOutlined, FieldTimeOutlined } from '@ant-design/icons';
-import type { ChartType, VisualizationConfig } from '../../types';
+import type { ChartType, VisualizationConfig, PredictionMethod } from '../../types';
 import { isTemporalType } from '../../utils/sqlTransformations';
 import type { TimeGrain, AggregationFunction } from '../../utils/sqlTransformations';
 
@@ -127,8 +127,10 @@ function getRequiredFields(chartType: ChartType): { field: string; label: string
       ];
     case 'map':
       return [
-        { field: 'dimensions', label: 'Location', multi: false, numeric: false },
-        { field: 'metrics', label: 'Value', multi: false, numeric: true },
+        { field: 'xAxis', label: 'Longitude', numeric: true },
+        { field: 'yAxis', label: 'Latitude', numeric: true },
+        { field: 'metrics', label: 'Size Value (Optional)', multi: false, numeric: true },
+        { field: 'dimensions', label: 'Label (Optional)', multi: false, numeric: false },
       ];
     case 'bigNumber':
       return [
@@ -431,6 +433,154 @@ export default function ColumnMapper({ columns, chartType, config, onChange }: C
           )}
         </>
       )}
+      {(chartType === 'line' || chartType === 'area') && (
+        <>
+          <Divider style={{ margin: '8px 0' }}>Trend Line</Divider>
+          <Form.Item label="Show Trend Line">
+            <Switch
+              checked={config.chartOptions?.showTrendLine === true}
+              onChange={(checked) => onChange({
+                ...config,
+                chartOptions: { ...config.chartOptions, showTrendLine: checked },
+              })}
+            />
+            <Text type="secondary" style={{ fontSize: 11, display: 'block', marginTop: 4 }}>
+              Overlay a best-fit line on the historical data
+            </Text>
+          </Form.Item>
+          {config.chartOptions?.showTrendLine === true && (
+            <>
+              <Form.Item label="Trend Line Method">
+                <Select
+                  value={(config.chartOptions?.trendLineMethod as string) || 'linear'}
+                  onChange={(value) => onChange({
+                    ...config,
+                    chartOptions: { ...config.chartOptions, trendLineMethod: value },
+                  })}
+                  style={{ width: '100%' }}
+                >
+                  <Select.Option value="linear">Linear</Select.Option>
+                  <Select.Option value="polynomial">Polynomial</Select.Option>
+                  <Select.Option value="movingAverage">Moving Average</Select.Option>
+                </Select>
+              </Form.Item>
+              {(config.chartOptions?.trendLineMethod as string) === 'polynomial' && (
+                <Form.Item label={`Polynomial Order (${Number(config.chartOptions?.trendLinePolynomialOrder) || 2})`}>
+                  <Slider
+                    min={2}
+                    max={5}
+                    value={Number(config.chartOptions?.trendLinePolynomialOrder) || 2}
+                    onChange={(value) => onChange({
+                      ...config,
+                      chartOptions: { ...config.chartOptions, trendLinePolynomialOrder: value },
+                    })}
+                  />
+                </Form.Item>
+              )}
+              {(config.chartOptions?.trendLineMethod as string) === 'movingAverage' && (
+                <Form.Item label={`Window Size (${Number(config.chartOptions?.trendLineWindow) || 3})`}>
+                  <Slider
+                    min={2}
+                    max={10}
+                    value={Number(config.chartOptions?.trendLineWindow) || 3}
+                    onChange={(value) => onChange({
+                      ...config,
+                      chartOptions: { ...config.chartOptions, trendLineWindow: value },
+                    })}
+                  />
+                </Form.Item>
+              )}
+            </>
+          )}
+          <Divider style={{ margin: '8px 0' }}>Predictive Analytics</Divider>
+          <Form.Item label="Enable Forecasting">
+            <Switch
+              checked={config.predictiveAnalytics?.enabled === true}
+              onChange={(checked) => {
+                const pa = checked
+                  ? { enabled: true, method: 'linear' as PredictionMethod, periods: 5, confidenceLevel: 0.95 }
+                  : { ...config.predictiveAnalytics!, enabled: false };
+                onChange({ ...config, predictiveAnalytics: pa });
+              }}
+            />
+          </Form.Item>
+          {config.predictiveAnalytics?.enabled && (
+            <>
+              <Form.Item label="Prediction Method">
+                <Select
+                  value={config.predictiveAnalytics.method}
+                  onChange={(value: PredictionMethod) => onChange({
+                    ...config,
+                    predictiveAnalytics: { ...config.predictiveAnalytics!, method: value },
+                  })}
+                  style={{ width: '100%' }}
+                >
+                  <Select.Option value="linear">Linear Regression</Select.Option>
+                  <Select.Option value="polynomial">Polynomial Regression</Select.Option>
+                  <Select.Option value="movingAverage">Moving Average</Select.Option>
+                </Select>
+                <Text type="secondary" style={{ fontSize: 11 }}>
+                  {config.predictiveAnalytics.method === 'linear' && 'Best for data with a constant rate of change'}
+                  {config.predictiveAnalytics.method === 'polynomial' && 'Best for data with curves or acceleration'}
+                  {config.predictiveAnalytics.method === 'movingAverage' && 'Best for noisy data; projects the recent average'}
+                </Text>
+              </Form.Item>
+              <Form.Item label={`Forecast Periods (${config.predictiveAnalytics.periods})`}>
+                <Slider
+                  min={1}
+                  max={20}
+                  value={config.predictiveAnalytics.periods}
+                  onChange={(value) => onChange({
+                    ...config,
+                    predictiveAnalytics: { ...config.predictiveAnalytics!, periods: value },
+                  })}
+                />
+              </Form.Item>
+              {config.predictiveAnalytics.method === 'polynomial' && (
+                <Form.Item label={`Polynomial Order (${config.predictiveAnalytics.polynomialOrder ?? 2})`}>
+                  <Slider
+                    min={2}
+                    max={5}
+                    value={config.predictiveAnalytics.polynomialOrder ?? 2}
+                    onChange={(value) => onChange({
+                      ...config,
+                      predictiveAnalytics: { ...config.predictiveAnalytics!, polynomialOrder: value },
+                    })}
+                  />
+                </Form.Item>
+              )}
+              {config.predictiveAnalytics.method === 'movingAverage' && (
+                <Form.Item label={`Window Size (${config.predictiveAnalytics.movingAverageWindow ?? 3})`}>
+                  <Slider
+                    min={2}
+                    max={10}
+                    value={config.predictiveAnalytics.movingAverageWindow ?? 3}
+                    onChange={(value) => onChange({
+                      ...config,
+                      predictiveAnalytics: { ...config.predictiveAnalytics!, movingAverageWindow: value },
+                    })}
+                  />
+                </Form.Item>
+              )}
+              <Form.Item label="Confidence Level">
+                <Select
+                  value={config.predictiveAnalytics.confidenceLevel ?? 0.95}
+                  onChange={(value) => onChange({
+                    ...config,
+                    predictiveAnalytics: { ...config.predictiveAnalytics!, confidenceLevel: value },
+                  })}
+                  style={{ width: '100%' }}
+                  options={[
+                    { value: 0.80, label: '80%' },
+                    { value: 0.90, label: '90%' },
+                    { value: 0.95, label: '95%' },
+                  ]}
+                />
+              </Form.Item>
+            </>
+          )}
+        </>
+      )}
       {chartType === 'bigNumber' && (
         <>
           <Form.Item label="Show Sparkline">
@@ -448,6 +598,51 @@ export default function ColumnMapper({ columns, chartType, config, onChange }: C
               onChange={(checked) => onChange({
                 ...config,
                 chartOptions: { ...config.chartOptions, showTrend: checked },
+              })}
+            />
+          </Form.Item>
+        </>
+      )}
+      {chartType === 'map' && (
+        <>
+          <Divider style={{ margin: '8px 0' }} />
+          <Form.Item label={`Point Size (${Number(config.chartOptions?.pointSize) || 8}px)`}>
+            <Slider
+              min={4}
+              max={30}
+              value={Number(config.chartOptions?.pointSize) || 8}
+              onChange={(value) => onChange({
+                ...config,
+                chartOptions: { ...config.chartOptions, pointSize: value },
+              })}
+            />
+          </Form.Item>
+          {config.metrics && config.metrics.length > 0 && (
+            <Form.Item label="Scale Points by Value">
+              <Switch
+                checked={config.chartOptions?.scaleByValue === true}
+                onChange={(checked) => onChange({
+                  ...config,
+                  chartOptions: { ...config.chartOptions, scaleByValue: checked },
+                })}
+              />
+            </Form.Item>
+          )}
+          <Form.Item label="Show Country Borders">
+            <Switch
+              checked={config.chartOptions?.showBorders !== false}
+              onChange={(checked) => onChange({
+                ...config,
+                chartOptions: { ...config.chartOptions, showBorders: checked },
+              })}
+            />
+          </Form.Item>
+          <Form.Item label="Enable Zoom/Pan">
+            <Switch
+              checked={config.chartOptions?.enableRoam !== false}
+              onChange={(checked) => onChange({
+                ...config,
+                chartOptions: { ...config.chartOptions, enableRoam: checked },
               })}
             />
           </Form.Item>

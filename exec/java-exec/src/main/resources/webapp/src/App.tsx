@@ -35,7 +35,7 @@ function App() {
   return (
     <Layout className="sqllab-container">
       <Navbar />
-      <Content style={{ flex: 1, overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
+      <Content style={{ flex: 1, overflow: 'auto', display: 'flex', flexDirection: 'column' }}>
         <Routes>
           <Route path="/" element={<Navigate to="/projects" replace />} />
           <Route path="/projects" element={<ProjectsPage />} />
