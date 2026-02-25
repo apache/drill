@@ -50,11 +50,15 @@ public class LlmConfig {
   @JsonProperty
   private String systemPrompt;
 
+  @JsonProperty
+  private boolean sendDataToAi;
+
   public LlmConfig() {
     this.provider = "openai";
     this.maxTokens = 4096;
     this.temperature = 0.7;
     this.enabled = false;
+    this.sendDataToAi = true;
   }
 
   @JsonCreator
@@ -66,7 +70,8 @@ public class LlmConfig {
       @JsonProperty("maxTokens") int maxTokens,
       @JsonProperty("temperature") double temperature,
       @JsonProperty("enabled") boolean enabled,
-      @JsonProperty("systemPrompt") String systemPrompt) {
+      @JsonProperty("systemPrompt") String systemPrompt,
+      @JsonProperty("sendDataToAi") Boolean sendDataToAi) {
     this.provider = provider;
     this.apiEndpoint = apiEndpoint;
     this.apiKey = apiKey;
@@ -75,6 +80,7 @@ public class LlmConfig {
     this.temperature = temperature;
     this.enabled = enabled;
     this.systemPrompt = systemPrompt;
+    this.sendDataToAi = sendDataToAi != null ? sendDataToAi : true;
   }
 
   public String getProvider() {
@@ -139,5 +145,13 @@ public class LlmConfig {
 
   public void setSystemPrompt(String systemPrompt) {
     this.systemPrompt = systemPrompt;
+  }
+
+  public boolean isSendDataToAi() {
+    return sendDataToAi;
+  }
+
+  public void setSendDataToAi(boolean sendDataToAi) {
+    this.sendDataToAi = sendDataToAi;
   }
 }

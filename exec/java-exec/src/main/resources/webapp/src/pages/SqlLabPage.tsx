@@ -36,7 +36,7 @@ import { useQueryExecution } from '../hooks/useQuery';
 import { useQueryHistory } from '../hooks/useQueryHistory';
 import { useSchemas } from '../hooks/useMetadata';
 import { useProspector } from '../hooks/useProspector';
-import { getAiStatus, streamChat, transpileSql, convertDataType } from '../api/ai';
+import { getAiStatus, getAiConfig, streamChat, transpileSql, convertDataType } from '../api/ai';
 import { getSchemaTree } from '../api/metadata';
 import SchemaExplorer from '../components/schema-explorer/SchemaExplorer';
 import type { DatasetFilter } from '../components/schema-explorer/SchemaExplorer';
@@ -161,6 +161,7 @@ export default function SqlLabPage({ datasetFilter, headerContent, projectId }: 
     }
   });
   const [prospectorAvailable, setProspectorAvailable] = useState(false);
+  const [sendDataToAi, setSendDataToAi] = useState(true);
 
   // Fetch schemas for the schema selector
   const { data: schemas } = useSchemas();
@@ -183,11 +184,14 @@ export default function SqlLabPage({ datasetFilter, headerContent, projectId }: 
   // Prospector hook
   const prospector = useProspector(updateSql);
 
-  // Check Prospector status on mount
+  // Check Prospector status and config on mount
   useEffect(() => {
     getAiStatus()
       .then((status) => setProspectorAvailable(status.enabled))
       .catch(() => setProspectorAvailable(false));
+    getAiConfig()
+      .then((cfg) => setSendDataToAi(cfg.sendDataToAi ?? true))
+      .catch(() => {});
   }, []);
 
   // Build AI context from current state
@@ -244,6 +248,37 @@ export default function SqlLabPage({ datasetFilter, headerContent, projectId }: 
     handleProspectorAction('Fix the error in my SQL query. Explain what went wrong and provide a corrected version.');
   }, [handleProspectorAction]);
 
+  // Build schema context for the optimize prompt
+  const buildSchemaContext = useCallback(
+    (columns: string[], metadata: string[], rows: Record<string, unknown>[], includeData: boolean): string => {
+      if (!columns || columns.length === 0) {
+        return '';
+      }
+      let ctx = '\n\n## Result Schema\n\n| Column | Drill Type |\n|--------|------------|\n';
+      columns.forEach((col, i) => {
+        ctx += `| ${col} | ${metadata[i] || 'UNKNOWN'} |\n`;
+      });
+
+      if (includeData && rows && rows.length > 0) {
+        const sampleRows = rows.slice(0, 5);
+        ctx += '\n## Sample Data (first ' + sampleRows.length + ' rows)\n\n';
+        ctx += '| ' + columns.join(' | ') + ' |\n';
+        ctx += '| ' + columns.map(() => '---').join(' | ') + ' |\n';
+        for (const row of sampleRows) {
+          const vals = columns.map((col) => {
+            const v = row[col];
+            const s = v == null ? 'NULL' : String(v);
+            return s.length > 40 ? s.substring(0, 37) + '...' : s;
+          });
+          ctx += '| ' + vals.join(' | ') + ' |\n';
+        }
+      }
+
+      return ctx;
+    },
+    [],
+  );
+
   // Optimize query handler
   const handleOptimizeQuery = useCallback(() => {
     if (!sql || sql.trim().length === 0) {
@@ -256,19 +291,24 @@ export default function SqlLabPage({ datasetFilter, headerContent, projectId }: 
     setOptimizeStreaming(true);
     setOptimizeModalOpen(true);
 
+    const schemaContext = results
+      ? buildSchemaContext(results.columns || [], results.metadata || [], results.rows || [], sendDataToAi)
+      : '';
+
     const messages: ChatMessage[] = [
       {
         role: 'system',
         content: `You are an Apache Drill SQL optimization expert. The user will provide a SQL query. Your job:
 1. Explain what the query does in 1-2 sentences.
-2. List numbered optimization suggestions. For each, explain WHY it improves performance.
-3. Provide the complete optimized SQL in a single \`\`\`sql code block.
-4. Focus on: predicate pushdown, partition pruning, avoiding SELECT *, appropriate use of LIMIT, JOIN ordering, and Drill-specific optimizations.
-5. If the query is already optimal, say so and return the original SQL in a \`\`\`sql code block.`,
+2. Analyze the result schema for data type mismatches. If a VARCHAR column contains dates or numbers, suggest CAST expressions.
+3. List numbered optimization suggestions. For each, explain WHY it improves performance.
+4. Provide the complete optimized SQL in a single \`\`\`sql code block.
+5. Focus on: predicate pushdown, partition pruning, avoiding SELECT *, appropriate use of LIMIT, JOIN ordering, Drill-specific optimizations, and data type corrections.
+6. If the query is already optimal, say so and return the original SQL in a \`\`\`sql code block.`,
       },
       {
         role: 'user',
-        content: `Please optimize this SQL query:\n\n\`\`\`sql\n${sql}\n\`\`\``,
+        content: `Please optimize this SQL query:\n\n\`\`\`sql\n${sql}\n\`\`\`` + schemaContext,
       },
     ];
 
@@ -290,7 +330,7 @@ export default function SqlLabPage({ datasetFilter, headerContent, projectId }: 
     );
 
     optimizeAbortRef.current = controller;
-  }, [sql, aiContext]);
+  }, [sql, aiContext, results, sendDataToAi, buildSchemaContext]);
 
   const handleOptimizeAccept = useCallback(async () => {
     const extractedSql = extractSqlFromMarkdown(optimizeContent);
