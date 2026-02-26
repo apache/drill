@@ -16,7 +16,7 @@
  * limitations under the License.
  */
 import { useState, useMemo, useCallback } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import {
   Card,
   Table,
@@ -405,9 +405,9 @@ export default function ProfilesPage() {
       sorter: (a, b) => a.query.localeCompare(b.query),
       render: (query: string, record: QueryProfile) => (
         <Tooltip title={query}>
-          <a href={`/profiles/${record.queryId}`} target="_blank" rel="noreferrer">
+          <Link to={`/profiles/${record.queryId}`}>
             {truncateQuery(query)}
-          </a>
+          </Link>
         </Tooltip>
       ),
     },
@@ -514,9 +514,9 @@ export default function ProfilesPage() {
       sorter: (a, b) => a.query.localeCompare(b.query),
       render: (query: string, record: QueryProfile) => (
         <Tooltip title={query}>
-          <a href={`/profiles/${record.queryId}`} target="_blank" rel="noreferrer">
+          <Link to={`/profiles/${record.queryId}`}>
             {truncateQuery(query)}
-          </a>
+          </Link>
         </Tooltip>
       ),
     },

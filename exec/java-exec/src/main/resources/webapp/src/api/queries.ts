@@ -112,3 +112,80 @@ export async function getRunningQueries(): Promise<QueryProfile[]> {
   const response = await apiClient.get<QueryProfile[]>('/profiles/running.json');
   return response.data;
 }
+
+// Detailed profile interfaces
+export interface DrillbitEndpoint {
+  address: string;
+  userPort?: number;
+  controlPort?: number;
+  dataPort?: number;
+}
+
+export interface MetricValue {
+  metricId: number;
+  longValue?: number;
+  doubleValue?: number;
+}
+
+export interface StreamProfileData {
+  records: number;
+  batches: number;
+  schemas: number;
+}
+
+export interface OperatorProfile {
+  operatorId: number;
+  operatorTypeName: string;
+  setupNanos: number;
+  processNanos: number;
+  waitNanos: number;
+  peakLocalMemoryAllocated: number;
+  inputProfile: StreamProfileData[];
+  metric: MetricValue[];
+}
+
+export interface MinorFragmentProfile {
+  minorFragmentId: number;
+  state: string;
+  startTime: number;
+  endTime: number;
+  memoryUsed: number;
+  maxMemoryUsed: number;
+  endpoint: DrillbitEndpoint;
+  operatorProfile: OperatorProfile[];
+  lastUpdate: number;
+  lastProgress: number;
+}
+
+export interface MajorFragmentProfile {
+  majorFragmentId: number;
+  minorFragmentProfile: MinorFragmentProfile[];
+}
+
+export interface DetailedQueryProfile {
+  queryId: string;
+  query: string;
+  plan: string;
+  state: string;
+  user: string;
+  start: number;
+  end: number;
+  planEnd: number;
+  queueWaitEnd: number;
+  totalCost: number;
+  totalFragments: number;
+  finishedFragments: number;
+  queueName: string;
+  foreman: DrillbitEndpoint;
+  fragmentProfile: MajorFragmentProfile[];
+  optionsJson: string;
+  error?: string;
+  verboseError?: string;
+  scannedPlugins: string[];
+  autoLimit?: number;
+}
+
+export async function getQueryProfileDetail(queryId: string): Promise<DetailedQueryProfile> {
+  const response = await apiClient.get<DetailedQueryProfile>(`/profiles/${encodeURIComponent(queryId)}.json`);
+  return response.data;
+}
