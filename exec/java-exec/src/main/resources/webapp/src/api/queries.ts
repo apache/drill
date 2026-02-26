@@ -93,6 +93,9 @@ export interface QueryProfile {
   state: string;
   query: string;
   foreman: string;
+  duration?: string;
+  totalCost?: number;
+  queueName?: string;
 }
 
 export interface QueryProfilesResponse {
