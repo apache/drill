@@ -28,6 +28,7 @@ import {
   HomeOutlined,
   QuestionCircleOutlined,
   RobotOutlined,
+  SettingOutlined,
 } from '@ant-design/icons';
 import { SunOutlined, MoonOutlined } from '@ant-design/icons';
 import type { MenuProps } from 'antd';
@@ -45,9 +46,12 @@ const navItems = [
   { key: '/dashboards', icon: <DashboardOutlined />, label: 'Dashboards' },
 ];
 
+const adminMenuItems: MenuProps['items'] = [
+  { key: '/profiles', label: <Link to="/profiles">Query History</Link> },
+];
+
 const legacyMenuItems: MenuProps['items'] = [
   { key: 'query', label: <a href="/query">Query (Legacy)</a> },
-  { key: 'profiles', label: <a href="/profiles">Profiles</a> },
   { key: 'storage', label: <a href="/storage">Storage</a> },
   { key: 'options', label: <a href="/options">Options</a> },
   { key: 'metrics', label: <a href="/status/metrics">Metrics</a> },
@@ -65,6 +69,8 @@ export default function Navbar() {
     selectedKey = '/projects';
   } else if (location.pathname.startsWith('/datasources')) {
     selectedKey = '/datasources';
+  } else if (location.pathname.startsWith('/profiles')) {
+    selectedKey = '/profiles';
   }
 
   return (
@@ -119,6 +125,12 @@ export default function Navbar() {
             onClick={toggle}
           />
         </Tooltip>
+
+        <Dropdown menu={{ items: adminMenuItems }} placement="bottomRight">
+          <Button type="text" icon={<SettingOutlined />} style={{ color: '#fff' }}>
+            Admin
+          </Button>
+        </Dropdown>
 
         <Tooltip title="Prospector Settings">
           <Button
