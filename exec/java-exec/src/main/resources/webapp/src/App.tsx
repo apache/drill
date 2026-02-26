@@ -26,6 +26,7 @@ import SqlLabPage from './pages/SqlLabPage';
 import ProjectQueryPage from './pages/ProjectQueryPage';
 import SavedQueriesPage from './pages/SavedQueriesPage';
 import ProfilesPage from './pages/ProfilesPage';
+import ProfileDetailPage from './pages/ProfileDetailPage';
 import VisualizationsPage from './pages/VisualizationsPage';
 import DashboardsPage from './pages/DashboardsPage';
 import DashboardViewPage from './pages/DashboardViewPage';
@@ -47,6 +48,7 @@ function App() {
           <Route path="/query" element={<SqlLabPage />} />
           <Route path="/saved-queries" element={<SavedQueriesPage />} />
           <Route path="/profiles" element={<ProfilesPage />} />
+          <Route path="/profiles/:queryId" element={<ProfileDetailPage />} />
           <Route path="/visualizations" element={<VisualizationsPage />} />
           <Route path="/dashboards" element={<DashboardsPage />} />
           <Route path="/dashboards/:id" element={<DashboardViewPage />} />
