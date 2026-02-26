@@ -199,8 +199,8 @@ function ProfileDetailPage() {
     }
   }, [profile, aiAvailable]);
 
-  const buildAiContext = useCallback((): ChatContext => {
-    if (!profile) return {};
+  const getProfileContext = useCallback((): string => {
+    if (!profile) return '';
 
     const planMs = profile.planEnd - profile.start;
     const queueMs = profile.queueWaitEnd - profile.planEnd;
@@ -210,7 +210,7 @@ function ProfileDetailPage() {
       .sort((a, b) => b.processNanos - a.processNanos)
       .slice(0, 8);
 
-    const contextSummary = `
+    return `
 Query: ${profile.query}
 
 State: ${profile.state} | Duration: ${(profile.end - profile.start) / 1000}ms
@@ -230,11 +230,12 @@ ${topOps
   .join('\n')}
 ${profile.error ? `\nError: ${profile.error}` : ''}
     `.trim();
+  }, [profile]);
 
+  const buildAiContext = useCallback((): ChatContext => {
     return {
-      currentSql: profile.query,
-      error: profile.error,
-      resultSummary: contextSummary as any,
+      currentSql: profile?.query,
+      error: profile?.error,
     };
   }, [profile]);
 
@@ -272,7 +273,9 @@ ${profile.error ? `\nError: ${profile.error}` : ''}
       setAiContent('');
       setAiStreaming(true);
 
-      const userMessage = buildPrompt(promptType);
+      const basePrompt = buildPrompt(promptType);
+      const profileContext = getProfileContext();
+      const userMessage = `${basePrompt}\n\nHere is the query profile information:\n\n${profileContext}`;
       const context = buildAiContext();
 
       abortRef.current = streamChat(
@@ -291,7 +294,7 @@ ${profile.error ? `\nError: ${profile.error}` : ''}
         }
       );
     },
-    [profile, aiAvailable, buildAiContext, buildPrompt, activeTab]
+    [profile, aiAvailable, buildAiContext, getProfileContext, activeTab]
   );
 
   const stopStreaming = useCallback(() => {
