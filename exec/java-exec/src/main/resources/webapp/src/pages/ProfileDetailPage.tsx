@@ -513,8 +513,25 @@ ${profile.error ? `\nError: ${profile.error}` : ''}
         </Space>
       </div>
 
-      {/* Status bar */}
-      <Card style={{ marginBottom: '16px' }}>
+      {/* SQL Query */}
+      <Card style={{ marginBottom: '16px' }} title="Query">
+        <pre
+          style={{
+            backgroundColor: '#f5f5f5',
+            padding: '12px',
+            borderRadius: '4px',
+            overflow: 'auto',
+            fontSize: '12px',
+            maxHeight: '150px',
+            margin: 0,
+          }}
+        >
+          {profile.query}
+        </pre>
+      </Card>
+
+      {/* Status & Actions bar */}
+      <Card style={{ marginBottom: '24px' }}>
         <Space>
           <span
             style={{
@@ -553,22 +570,24 @@ ${profile.error ? `\nError: ${profile.error}` : ''}
         </Space>
       </Card>
 
-      {/* Stat cards */}
-      <Row gutter={16} style={{ marginBottom: '24px' }}>
-        <Col span={6}>
-          <Card>
+      {/* Stat cards - evenly distributed */}
+      <Row gutter={[16, 16]} style={{ marginBottom: '24px' }}>
+        <Col xs={24} sm={12} lg={6}>
+          <Card style={{ height: '100%' }}>
             <div style={{ textAlign: 'center' }}>
-              <div style={{ fontSize: '12px', color: '#666', marginBottom: '8px' }}>Status</div>
+              <div style={{ fontSize: '12px', color: '#666', marginBottom: '12px', fontWeight: 500 }}>Status</div>
               <span
                 style={{
                   display: 'inline-flex',
                   alignItems: 'center',
+                  justifyContent: 'center',
                   gap: '6px',
-                  padding: '4px 12px',
+                  padding: '6px 16px',
                   borderRadius: '4px',
                   backgroundColor: statusConfig.bgColor,
                   color: statusConfig.color,
-                  fontWeight: 500,
+                  fontWeight: 600,
+                  fontSize: '14px',
                 }}
               >
                 {statusConfig.icon}
@@ -577,35 +596,37 @@ ${profile.error ? `\nError: ${profile.error}` : ''}
             </div>
           </Card>
         </Col>
-        <Col span={6}>
-          <Card>
+        <Col xs={24} sm={12} lg={6}>
+          <Card style={{ height: '100%' }}>
             <div style={{ textAlign: 'center' }}>
-              <div style={{ fontSize: '12px', color: '#666', marginBottom: '8px' }}>Total Duration</div>
-              <div style={{ fontSize: '24px', fontWeight: 'bold', color: '#1890ff' }}>{totalMs.toFixed(1)}ms</div>
-              <div style={{ fontSize: '11px', color: '#999', marginTop: '4px' }}>
-                Plan: {planMs.toFixed(1)}ms | Queue: {queueMs.toFixed(1)}ms | Exec: {execMs.toFixed(1)}ms
+              <div style={{ fontSize: '12px', color: '#666', marginBottom: '12px', fontWeight: 500 }}>Total Duration</div>
+              <div style={{ fontSize: '28px', fontWeight: 'bold', color: '#1890ff', marginBottom: '4px' }}>
+                {totalMs.toFixed(1)}ms
+              </div>
+              <div style={{ fontSize: '12px', color: '#999' }}>
+                Plan: {planMs.toFixed(0)}ms | Queue: {queueMs.toFixed(0)}ms | Exec: {execMs.toFixed(0)}ms
               </div>
             </div>
           </Card>
         </Col>
-        <Col span={6}>
-          <Card>
+        <Col xs={24} sm={12} lg={6}>
+          <Card style={{ height: '100%' }}>
             <div style={{ textAlign: 'center' }}>
-              <div style={{ fontSize: '12px', color: '#666', marginBottom: '8px' }}>Total Cost</div>
-              <div style={{ fontSize: '24px', fontWeight: 'bold', color: '#52c41a' }}>
+              <div style={{ fontSize: '12px', color: '#666', marginBottom: '12px', fontWeight: 500 }}>Total Cost</div>
+              <div style={{ fontSize: '28px', fontWeight: 'bold', color: '#52c41a', marginBottom: '4px' }}>
                 {profile.totalCost?.toFixed(2) || 'N/A'}
               </div>
             </div>
           </Card>
         </Col>
-        <Col span={6}>
-          <Card>
+        <Col xs={24} sm={12} lg={6}>
+          <Card style={{ height: '100%' }}>
             <div style={{ textAlign: 'center' }}>
-              <div style={{ fontSize: '12px', color: '#666', marginBottom: '8px' }}>Fragments</div>
-              <div style={{ fontSize: '24px', fontWeight: 'bold', color: '#faad14' }}>
+              <div style={{ fontSize: '12px', color: '#666', marginBottom: '12px', fontWeight: 500 }}>Fragments</div>
+              <div style={{ fontSize: '28px', fontWeight: 'bold', color: '#faad14', marginBottom: '4px' }}>
                 {profile.finishedFragments}/{profile.totalFragments}
               </div>
-              <div style={{ fontSize: '11px', color: '#999', marginTop: '4px' }}>
+              <div style={{ fontSize: '12px', color: '#999' }}>
                 {Math.round((profile.finishedFragments / profile.totalFragments) * 100)}% complete
               </div>
             </div>
