@@ -53,6 +53,31 @@ import type { ChatContext } from '../types/ai';
 const { Title, Text, Paragraph } = Typography;
 
 // Helper functions
+
+/** Redact credentials and sensitive data from SQL/text to prevent exposure to AI */
+const redactCredentials = (text: string): string => {
+  if (!text) return text;
+
+  return text
+    // Redact entire CredentialProvider objects and credentials blocks
+    .replace(/credentialsProvider=[^,\]]*(?:PlainCredentialsProvider[^}]*\{[^}]*credentials[^}]*\}[^,\]]*)*/gi, 'credentialsProvider=[REDACTED]')
+    .replace(/userCredentials[^\}]*/gi, 'userCredentials=[REDACTED]')
+    // Redact API keys, tokens, secrets (common patterns)
+    .replace(/['"]?(?:api[_-]?key|apikey|secret|password|passwd|pwd|token|bearer|authorization|auth)['":\s=]+['"]?[^\s'"}\]]+['"]?/gi, '[REDACTED]')
+    // Redact connection strings
+    .replace(/(?:jdbc:|postgresql:|mysql:|mongodb:)[^\s,}]+/gi, '[REDACTED_CONNECTION_STRING]')
+    // Redact email addresses
+    .replace(/[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}/g, '[REDACTED_EMAIL]')
+    // Redact IP addresses
+    .replace(/\b(?:\d{1,3}\.){3}\d{1,3}\b/g, '[REDACTED_IP]')
+    // Redact common credential values in WHERE clauses
+    .replace(/where\s+\w+\s*=\s*['"][^'"]+['"]/gi, 'where [REDACTED_FILTER]')
+    // Redact base64-encoded strings (potential encoded credentials)
+    .replace(/(?:base64|encoded)[:\s=]+[A-Za-z0-9+/]{20,}/g, '[REDACTED_BASE64]')
+    // Redact OAuth/credential-related URLs
+    .replace(/https?:\/\/[^\s,}\]]*(?:oauth|auth|credential|key)[^\s,}\]]*/gi, '[REDACTED_AUTH_URL]');
+};
+
 const fmtNanos = (ns: number): string => {
   if (ns > 1e9) return `${(ns / 1e9).toFixed(2)}s`;
   return `${(ns / 1e6).toFixed(1)}ms`;
@@ -210,8 +235,13 @@ function ProfileDetailPage() {
       .sort((a, b) => b.processNanos - a.processNanos)
       .slice(0, 8);
 
+    // Redact credentials from query and plan before sending to AI
+    const redactedQuery = redactCredentials(profile.query);
+    const redactedPlan = redactCredentials(profile.plan?.substring(0, 3000) ?? '(unavailable)');
+    const redactedError = profile.error ? redactCredentials(profile.error) : '';
+
     return `
-Query: ${profile.query}
+Query: ${redactedQuery}
 
 State: ${profile.state} | Duration: ${(profile.end - profile.start) / 1000}ms
 (Planning: ${planMs / 1000}ms, Queue Wait: ${queueMs / 1000}ms, Execution: ${execMs / 1000}ms)
@@ -219,7 +249,7 @@ Cost: ${profile.totalCost?.toFixed(0)} | Fragments: ${profile.finishedFragments}
 Scanned: ${profile.scannedPlugins?.join(', ') || 'unknown'}
 
 Physical Plan:
-${profile.plan?.substring(0, 3000) ?? '(unavailable)'}
+${redactedPlan}
 
 Top Operators by Process Time:
 ${topOps
@@ -228,7 +258,7 @@ ${topOps
       `- [${o.majorId}-${o.minorId}] ${o.operatorTypeName}: ${fmtNanos(o.processNanos)} process, ${fmtNanos(o.waitNanos)} wait, ${fmtBytes(o.peakLocalMemoryAllocated)} peak mem, ${o.totalRecords.toLocaleString()} records`
   )
   .join('\n')}
-${profile.error ? `\nError: ${profile.error}` : ''}
+${redactedError ? `\nError: ${redactedError}` : ''}
     `.trim();
   }, [profile]);
 
@@ -832,17 +862,24 @@ ${profile.error ? `\nError: ${profile.error}` : ''}
                   AI Query Advisor requires Prospector to be configured. Visit Admin → Prospector Settings.
                 </Text>
               </div>
-            ) : aiStreaming ? (
-              <div style={{ paddingBottom: '12px' }}>
-                <Markdown>{aiContent}</Markdown>
-                <div style={{ color: '#999', fontSize: '11px', marginTop: '12px', animation: 'pulse 1s infinite' }}>
-                  ▌
-                </div>
-              </div>
-            ) : aiContent ? (
-              <Markdown>{aiContent}</Markdown>
             ) : (
-              <Text type="secondary">Loading analysis...</Text>
+              <>
+                <div style={{ fontSize: '11px', color: '#999', marginBottom: '12px', padding: '8px', backgroundColor: '#f5f5f5', borderRadius: '3px' }}>
+                  🔒 <strong>Privacy:</strong> Credentials and sensitive data are automatically redacted before sending queries to AI.
+                </div>
+                {aiStreaming ? (
+                  <div style={{ paddingBottom: '12px' }}>
+                    <Markdown>{aiContent}</Markdown>
+                    <div style={{ color: '#999', fontSize: '11px', marginTop: '12px', animation: 'pulse 1s infinite' }}>
+                      ▌
+                    </div>
+                  </div>
+                ) : aiContent ? (
+                  <Markdown>{aiContent}</Markdown>
+                ) : (
+                  <Text type="secondary">Loading analysis...</Text>
+                )}
+              </>
             )}
 
             <Divider />
