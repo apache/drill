@@ -73,19 +73,37 @@ export async function getAiProviders(): Promise<AiProvider[]> {
 
 /**
  * Get CSRF token for fetch-based requests
+ * Checks multiple locations since hosted deployments may store tokens differently
  */
 function getCsrfToken(): string | null {
+  // Check meta tags (common location)
   const metaTag = document.querySelector('meta[name="csrf-token"]');
   if (metaTag) {
-    return metaTag.getAttribute('content');
+    const token = metaTag.getAttribute('content');
+    if (token) return token;
   }
+
+  // Check alternative meta tag names
+  const altMetaTags = ['meta[name="_csrf"]', 'meta[name="csrf"]', 'meta[name="X-CSRF-TOKEN"]'];
+  for (const selector of altMetaTags) {
+    const tag = document.querySelector(selector);
+    if (tag) {
+      const token = tag.getAttribute('content');
+      if (token) return token;
+    }
+  }
+
+  // Check cookies (multiple common names)
   const cookies = document.cookie.split(';');
+  const tokenNames = ['drill.csrf.token', '_csrf', 'XSRF-TOKEN', 'X-CSRF-TOKEN'];
+
   for (const cookie of cookies) {
     const [name, value] = cookie.trim().split('=');
-    if (name === 'drill.csrf.token') {
+    if (tokenNames.includes(name) && value) {
       return decodeURIComponent(value);
     }
   }
+
   return null;
 }
 
@@ -182,6 +200,8 @@ export function streamChat(
   const csrfToken = getCsrfToken();
   if (csrfToken) {
     headers['X-CSRF-Token'] = csrfToken;
+  } else {
+    console.warn('CSRF token not found - AI requests may be rejected on hosted deployments');
   }
 
   fetch(`${AI_BASE}/chat`, {
@@ -194,7 +214,19 @@ export function streamChat(
     .then(async (response) => {
       if (!response.ok) {
         const text = await response.text();
-        onError({ message: `HTTP ${response.status}: ${text}` });
+
+        // Handle reCAPTCHA/CSRF errors specifically
+        if (response.status === 403 && text.includes('reCAPTCHA')) {
+          onError({
+            message: 'Security verification required: reCAPTCHA check failed. This may indicate a missing or invalid CSRF token. Please refresh the page and try again.'
+          });
+        } else if (response.status === 403) {
+          onError({
+            message: 'Access denied: Your request was rejected by the security layer. This may be due to missing authentication tokens. Please ensure you are logged in and refresh the page.'
+          });
+        } else {
+          onError({ message: `HTTP ${response.status}: ${text}` });
+        }
         return;
       }
 
