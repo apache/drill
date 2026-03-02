@@ -320,7 +320,7 @@ export default function ProjectsPage() {
                           display: 'flex',
                           alignItems: 'center',
                           justifyContent: 'center',
-                          background: 'linear-gradient(135deg, #1890ff 0%, #096dd9 100%)',
+                          background: 'linear-gradient(135deg, #3b82f6 0%, #2563eb 100%)',
                           position: 'relative',
                         }}
                       >

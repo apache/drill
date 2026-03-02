@@ -40,7 +40,7 @@ export const DEFAULT_THEME: DashboardTheme = {
   panelBackground: '#ffffff',
   panelBorderColor: '#e8e8e8',
   panelBorderRadius: '8px',
-  accentColor: '#1890ff',
+  accentColor: '#3b82f6',
   headerColor: '#000000',
 };
 
@@ -64,7 +64,7 @@ const BLUE_THEME: DashboardTheme = {
   panelBackground: '#ffffff',
   panelBorderColor: '#91d5ff',
   panelBorderRadius: '8px',
-  accentColor: '#1890ff',
+  accentColor: '#3b82f6',
   headerColor: '#003a8c',
 };
 

@@ -56,6 +56,15 @@ import {
   EyeOutlined,
   PlayCircleOutlined,
   CodeOutlined,
+  BranchesOutlined,
+  RadarChartOutlined,
+  ExperimentOutlined,
+  RiseOutlined,
+  SunOutlined,
+  StockOutlined,
+  CalendarOutlined,
+  ClusterOutlined,
+  ApartmentOutlined,
 } from '@ant-design/icons';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { getVisualizations, deleteVisualization } from '../api/visualizations';
@@ -80,6 +89,15 @@ const chartIcons: Record<ChartType, React.ReactNode> = {
   funnel: <FilterOutlined />,
   map: <MapOutlined />,
   bigNumber: <FieldNumberOutlined />,
+  sankey: <BranchesOutlined />,
+  radar: <RadarChartOutlined />,
+  boxplot: <ExperimentOutlined />,
+  waterfall: <RiseOutlined />,
+  sunburst: <SunOutlined />,
+  candlestick: <StockOutlined />,
+  calendar: <CalendarOutlined />,
+  bubble: <ClusterOutlined />,
+  parallel: <ApartmentOutlined />,
 };
 
 // Chart type colors
@@ -94,8 +112,17 @@ const chartColors: Record<ChartType, string> = {
   treemap: '#fc8452',
   gauge: '#9a60b4',
   funnel: '#ea7ccc',
-  map: '#1890ff',
+  map: '#3b82f6',
   bigNumber: '#ff7a45',
+  sankey: '#5470c6',
+  radar: '#91cc75',
+  boxplot: '#3ba272',
+  waterfall: '#52c41a',
+  sunburst: '#fac858',
+  candlestick: '#52c41a',
+  calendar: '#722ed1',
+  bubble: '#73c0de',
+  parallel: '#9a60b4',
 };
 
 /**

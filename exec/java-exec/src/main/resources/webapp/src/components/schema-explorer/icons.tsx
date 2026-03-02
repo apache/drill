@@ -124,7 +124,7 @@ export function getPluginIcon(pluginType: string, pluginName: string): React.Rea
 
   // File system (dfs, local)
   if (type.includes('file') || name === 'dfs' || name === 'local' || name.includes('tmp')) {
-    return <FolderOutlined style={{ color: '#1890ff' }} />;
+    return <FolderOutlined style={{ color: '#3b82f6' }} />;
   }
 
   // JDBC / RDBMS (generic)
@@ -192,7 +192,7 @@ export function getColumnIcon(dataType: string): React.ReactNode {
   if (type.includes('BINARY') || type.includes('BLOB') || type.includes('BYTES')) {
     return <FieldBinaryOutlined style={{ color: '#eb2f96' }} />;
   }
-  return <FieldStringOutlined style={{ color: '#1890ff' }} />;
+  return <FieldStringOutlined style={{ color: '#3b82f6' }} />;
 }
 
 /** Check if a column type represents a complex/nested structure (MAP, STRUCT, DICT). */
