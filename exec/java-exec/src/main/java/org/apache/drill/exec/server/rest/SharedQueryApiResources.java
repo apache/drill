@@ -19,11 +19,19 @@ package org.apache.drill.exec.server.rest;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import io.netty.util.concurrent.DefaultPromise;
+import io.netty.util.concurrent.EventExecutor;
+import io.netty.util.concurrent.Promise;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import org.apache.drill.common.config.DrillConfig;
 import org.apache.drill.common.exceptions.DrillRuntimeException;
+import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.exception.StoreException;
+import org.apache.drill.exec.memory.BufferAllocator;
+import org.apache.drill.exec.proto.UserBitShared;
+import org.apache.drill.exec.rpc.user.UserSession;
 import org.apache.drill.exec.server.rest.QueryWrapper.RestQueryBuilder;
 import org.apache.drill.exec.server.rest.auth.DrillUserPrincipal;
 import org.apache.drill.exec.server.rest.stream.QueryRunner;
@@ -80,6 +88,9 @@ public class SharedQueryApiResources {
 
   @Inject
   WebUserConnection webUserConnection;
+
+  @Inject
+  EventExecutor executor;
 
   private static volatile PersistentStore<SharedQueryApi> cachedStore;
 
@@ -451,7 +462,12 @@ public class SharedQueryApiResources {
         .defaultSchema(query.getDefaultSchema())
         .build();
 
-    QueryRunner runner = new QueryRunner(workManager, webUserConnection);
+    // webUserConnection is null when auth is enabled but the caller is unauthenticated
+    // (the @PermitAll annotation allows the request but the session factory returns null).
+    // Fall back to an anonymous connection so the query can still execute.
+    WebUserConnection conn = webUserConnection != null ? webUserConnection : createAnonWebUserConnection();
+
+    QueryRunner runner = new QueryRunner(workManager, conn);
     try {
       runner.start(queryWrapper);
     } catch (Exception e) {
@@ -478,6 +494,30 @@ public class SharedQueryApiResources {
   }
 
   // ==================== Helper Methods ====================
+
+  /**
+   * Creates an anonymous {@link WebUserConnection} for unauthenticated callers
+   * of the public {@code @PermitAll} data endpoint. Mirrors the logic in
+   * {@code DrillRestServer.AnonWebUserConnectionProvider}.
+   */
+  private WebUserConnection createAnonWebUserConnection() {
+    final DrillConfig config = workManager.getContext().getConfig();
+    final BufferAllocator sessionAllocator = workManager.getContext().getAllocator()
+        .newChildAllocator("WebServer:SharedApiAnonSession",
+            config.getLong(ExecConstants.HTTP_SESSION_MEMORY_RESERVATION),
+            config.getLong(ExecConstants.HTTP_SESSION_MEMORY_MAXIMUM));
+    final UserSession drillUserSession = UserSession.Builder.newBuilder()
+        .withCredentials(UserBitShared.UserCredentials.newBuilder()
+            .setUserName("anonymous")
+            .build())
+        .withOptionManager(workManager.getContext().getOptionManager())
+        .setSupportComplexTypes(config.getBoolean(ExecConstants.CLIENT_SUPPORT_COMPLEX_TYPES))
+        .build();
+    final Promise<Void> closeFuture = new DefaultPromise<>(executor);
+    final WebSessionResources webSessionResources =
+        new WebSessionResources(sessionAllocator, null, drillUserSession, closeFuture);
+    return new WebUserConnection.AnonWebUserConnection(webSessionResources);
+  }
 
   private PersistentStore<SharedQueryApi> getStore() {
     if (cachedStore == null) {

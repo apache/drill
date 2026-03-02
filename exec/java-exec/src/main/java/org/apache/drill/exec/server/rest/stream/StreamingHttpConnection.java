@@ -217,52 +217,66 @@ public class StreamingHttpConnection extends BaseWebUserConnection {
    * }
    * </code></pre>
    * <p>
-   * Admittedly the tail is pretty lame, but we need it to maintain
-   * backward compatibility.
+   * When no data batches were received (query failed before returning rows),
+   * emits an empty result set with consistent {@code columns}, {@code metadata},
+   * and {@code rows} fields so external clients always see a uniform schema.
    * <p>
-   * Note that, under the original design, there is no good way to report
-   * an error that occurs once the query starts running. Here, we report
-   * the query state, which can indicate an error. But, the design of the
-   * API does not currently provide the error message itself.
+   * Always includes {@code errorMessage} when the query failed. Full stack-trace
+   * details are only emitted when {@code ENABLE_REST_VERBOSE_ERRORS_KEY} is set.
    */
   public void finish() throws IOException {
     JsonOutput gen = writer.jsonOutput();
     if (batchCount == 0) {
+      // No data batches received — emit an empty but schema-consistent result set
+      // so external clients (Python, JS, etc.) always find the expected keys.
       startHeader();
-      if (getSession().getOptions().getBoolean(ExecConstants.ENABLE_REST_VERBOSE_ERRORS_KEY)) {
-        emitErrorInfo();
-      }
+      gen.writeFieldName("columns");
+      gen.writeStartArray();
+      gen.writeEndArray();
+      writeNewline(gen);
+      gen.writeFieldName("metadata");
+      gen.writeStartArray();
+      gen.writeEndArray();
+      writeNewline(gen);
+      gen.writeFieldName("attemptedAutoLimit");
+      gen.writeInt(rowLimit);
+      writeNewline(gen);
+      gen.writeFieldName("rows");
+      gen.writeStartArray();
+      gen.writeEndArray();
+      writeNewline(gen);
     } else {
       gen.writeEndArray();
       writeNewline(gen);
+    }
+    if (error != null) {
+      Throwable exception = DrillExceptionUtil.getThrowable(error.getException());
+      if (exception != null) {
+        gen.writeFieldName("errorMessage");
+        gen.writeVarChar(exception.getMessage() != null ? exception.getMessage() : error.getMessage());
+        writeNewline(gen);
+        if (getSession().getOptions().getBoolean(ExecConstants.ENABLE_REST_VERBOSE_ERRORS_KEY)) {
+          gen.writeFieldName("exception");
+          gen.writeVarChar(exception.getClass().getName());
+          writeNewline(gen);
+          gen.writeFieldName("stackTrace");
+          gen.writeStartArray();
+          for (String stackFrame : ExceptionUtils.getStackFrames(exception)) {
+            gen.writeVarChar(stackFrame);
+          }
+          gen.writeEndArray();
+          writeNewline(gen);
+        }
+      } else {
+        gen.writeFieldName("errorMessage");
+        gen.writeVarChar(error.getMessage() != null ? error.getMessage() : "Query execution failed");
+        writeNewline(gen);
+      }
     }
     gen.writeFieldName("queryState");
     gen.writeVarChar(getQueryState());
     writeNewline(gen);
     gen.writeEndObject();
-    writeNewline(gen);
-  }
-
-  private void emitErrorInfo() throws IOException {
-    JsonOutput gen = writer.jsonOutput();
-    Throwable exception = DrillExceptionUtil.getThrowable(error.getException());
-    if (exception != null) {
-      gen.writeFieldName("exception");
-      gen.writeVarChar(exception.getClass().getName());
-      writeNewline(gen);
-      gen.writeFieldName("errorMessage");
-      gen.writeVarChar(exception.getMessage());
-      writeNewline(gen);
-      gen.writeFieldName("stackTrace");
-      gen.writeStartArray();
-      for (String stackFrame : ExceptionUtils.getStackFrames(exception)) {
-        gen.writeVarChar(stackFrame);
-      }
-      gen.writeEndArray();
-    } else {
-      gen.writeFieldName("errorMessage");
-      gen.writeVarChar(error.getMessage());
-    }
     writeNewline(gen);
   }
 }
