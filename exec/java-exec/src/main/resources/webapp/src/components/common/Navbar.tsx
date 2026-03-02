@@ -73,14 +73,22 @@ export default function Navbar() {
     selectedKey = '/profiles';
   }
 
+  const navBg = isDark ? 'rgba(15, 23, 42, 0.8)' : 'rgba(255, 255, 255, 0.8)';
+  const textColor = 'var(--color-text)';
+
   return (
     <Header
       style={{
         display: 'flex',
         alignItems: 'center',
         padding: '0 24px',
-        background: '#001529',
-        height: 48,
+        background: navBg,
+        backdropFilter: 'blur(12px)',
+        WebkitBackdropFilter: 'blur(12px)',
+        borderBottom: '1px solid var(--color-border)',
+        boxShadow: 'var(--shadow-sm)',
+        height: 52,
+        zIndex: 100,
       }}
     >
       {/* Logo */}
@@ -90,7 +98,7 @@ export default function Navbar() {
           display: 'flex',
           alignItems: 'center',
           marginRight: 24,
-          color: '#fff',
+          color: textColor,
           textDecoration: 'none',
         }}
       >
@@ -104,7 +112,7 @@ export default function Navbar() {
 
       {/* Main Navigation */}
       <Menu
-        theme="dark"
+        theme={isDark ? 'dark' : 'light'}
         mode="horizontal"
         selectedKeys={[selectedKey]}
         items={navItems.map((item) => ({
@@ -121,13 +129,13 @@ export default function Navbar() {
           <Button
             type="text"
             icon={isDark ? <SunOutlined /> : <MoonOutlined />}
-            style={{ color: '#fff' }}
+            style={{ color: textColor }}
             onClick={toggle}
           />
         </Tooltip>
 
         <Dropdown menu={{ items: adminMenuItems }} placement="bottomRight">
-          <Button type="text" icon={<SettingOutlined />} style={{ color: '#fff' }}>
+          <Button type="text" icon={<SettingOutlined />} style={{ color: textColor }}>
             Admin
           </Button>
         </Dropdown>
@@ -136,13 +144,13 @@ export default function Navbar() {
           <Button
             type="text"
             icon={<RobotOutlined />}
-            style={{ color: '#fff' }}
+            style={{ color: textColor }}
             onClick={() => setProspectorSettingsOpen(true)}
           />
         </Tooltip>
 
         <Dropdown menu={{ items: legacyMenuItems }} placement="bottomRight">
-          <Button type="text" icon={<HomeOutlined />} style={{ color: '#fff' }}>
+          <Button type="text" icon={<HomeOutlined />} style={{ color: textColor }}>
             Drill UI
           </Button>
         </Dropdown>
@@ -150,7 +158,7 @@ export default function Navbar() {
         <Button
           type="text"
           icon={<QuestionCircleOutlined />}
-          style={{ color: '#fff' }}
+          style={{ color: textColor }}
           href="https://drill.apache.org/docs/"
           target="_blank"
         />

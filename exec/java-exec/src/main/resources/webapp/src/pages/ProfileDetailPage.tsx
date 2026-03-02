@@ -61,7 +61,7 @@ const redactCredentials = (text: string): string => {
   return text
     // Redact entire CredentialProvider objects and credentials blocks
     .replace(/credentialsProvider=[^,\]]*(?:PlainCredentialsProvider[^}]*\{[^}]*credentials[^}]*\}[^,\]]*)*/gi, 'credentialsProvider=[REDACTED]')
-    .replace(/userCredentials[^\}]*/gi, 'userCredentials=[REDACTED]')
+    .replace(/userCredentials[^}]*/gi, 'userCredentials=[REDACTED]')
     // Redact API keys, tokens, secrets (common patterns)
     .replace(/['"]?(?:api[_-]?key|apikey|secret|password|passwd|pwd|token|bearer|authorization|auth)['":\s=]+['"]?[^\s'"}\]]+['"]?/gi, '[REDACTED]')
     // Redact connection strings
@@ -128,7 +128,7 @@ const parsePlanText = (plan: string): TreeNode => {
 
 // Operator type color
 const operatorTypeColor = (type: string): string => {
-  if (type.includes('SCAN')) return '#1890ff';
+  if (type.includes('SCAN')) return '#3b82f6';
   if (type.includes('JOIN')) return '#722ed1';
   if (type.includes('AGG')) return '#fa8c16';
   if (type.includes('SORT')) return '#eb2f96';
@@ -150,13 +150,22 @@ interface FlatOperator {
   totalBatches: number;
 }
 
-const flattenOperators = (fragments: Array<any>): FlatOperator[] => {
+interface InputProfile { records?: number; batches?: number; }
+interface OperatorProfileData {
+  operatorId: number; operatorTypeName: string;
+  setupNanos: number; processNanos: number; waitNanos: number;
+  peakLocalMemoryAllocated: number; inputProfile?: InputProfile[];
+}
+interface MinorFragmentData { minorFragmentId: number; operatorProfile?: OperatorProfileData[]; }
+interface MajorFragmentData { majorFragmentId: number; minorFragmentProfile?: MinorFragmentData[]; }
+
+const flattenOperators = (fragments: MajorFragmentData[]): FlatOperator[] => {
   const operators: FlatOperator[] = [];
   fragments.forEach((major) => {
-    major.minorFragmentProfile?.forEach((minor: any) => {
-      minor.operatorProfile?.forEach((op: any) => {
-        const totalRecords = op.inputProfile?.reduce((sum: number, p: any) => sum + (p.records || 0), 0) || 0;
-        const totalBatches = op.inputProfile?.reduce((sum: number, p: any) => sum + (p.batches || 0), 0) || 0;
+    major.minorFragmentProfile?.forEach((minor) => {
+      minor.operatorProfile?.forEach((op) => {
+        const totalRecords = op.inputProfile?.reduce((sum, p) => sum + (p.records || 0), 0) || 0;
+        const totalBatches = op.inputProfile?.reduce((sum, p) => sum + (p.batches || 0), 0) || 0;
         operators.push({
           majorId: major.majorFragmentId,
           minorId: minor.minorFragmentId,
@@ -183,7 +192,7 @@ const getStatusConfig = (state: string) => {
     case 'Failed':
       return { color: '#ff4d4f', bgColor: '#fff1f0', icon: <CloseCircleOutlined /> };
     case 'Running':
-      return { color: '#1890ff', bgColor: '#e6f7ff', icon: <LoadingOutlined /> };
+      return { color: '#3b82f6', bgColor: '#eff6ff', icon: <LoadingOutlined /> };
     case 'Cancelled':
     case 'Cancellation_Requested':
       return { color: '#faad14', bgColor: '#fffbe6', icon: <StopOutlined /> };
@@ -215,14 +224,6 @@ function ProfileDetailPage() {
   });
 
   const aiAvailable = aiStatus?.configured;
-
-  // Auto-run AI analysis on page load
-  useEffect(() => {
-    if (profile && !hasAutoRun.current && aiAvailable) {
-      hasAutoRun.current = true;
-      runAiAnalysis('summary');
-    }
-  }, [profile, aiAvailable]);
 
   const getProfileContext = useCallback((): string => {
     if (!profile) return '';
@@ -269,7 +270,7 @@ ${redactedError ? `\nError: ${redactedError}` : ''}
     };
   }, [profile]);
 
-  const buildPrompt = (promptType: string): string => {
+  const buildPrompt = useCallback((promptType: string): string => {
     switch (promptType) {
       case 'summary':
         return `In 3-5 bullet points, describe: what this query does, how it performed, and any issues I should know about.`;
@@ -293,7 +294,7 @@ ${redactedError ? `\nError: ${redactedError}` : ''}
       default:
         return '';
     }
-  };
+  }, [activeTab]);
 
   const runAiAnalysis = useCallback(
     (promptType: string) => {
@@ -324,8 +325,16 @@ ${redactedError ? `\nError: ${redactedError}` : ''}
         }
       );
     },
-    [profile, aiAvailable, buildAiContext, getProfileContext, activeTab]
+    [profile, aiAvailable, buildAiContext, getProfileContext, buildPrompt]
   );
+
+  // Auto-run AI analysis on page load (placed after runAiAnalysis to avoid forward reference)
+  useEffect(() => {
+    if (profile && !hasAutoRun.current && aiAvailable) {
+      hasAutoRun.current = true;
+      runAiAnalysis('summary');
+    }
+  }, [profile, aiAvailable, runAiAnalysis]);
 
   const stopStreaming = useCallback(() => {
     abortRef.current?.abort();
@@ -384,7 +393,7 @@ ${redactedError ? `\nError: ${redactedError}` : ''}
     xAxis: { type: 'value', name: 'ms' },
     yAxis: { type: 'category', data: ['Duration'] },
     series: [
-      { name: 'Planning', type: 'bar', stack: 'total', data: [planMs], itemStyle: { color: '#1890ff' } },
+      { name: 'Planning', type: 'bar', stack: 'total', data: [planMs], itemStyle: { color: '#3b82f6' } },
       { name: 'Queue Wait', type: 'bar', stack: 'total', data: [queueMs], itemStyle: { color: '#fa8c16' } },
       { name: 'Execution', type: 'bar', stack: 'total', data: [execMs], itemStyle: { color: '#52c41a' } },
     ],
@@ -426,7 +435,7 @@ ${redactedError ? `\nError: ${redactedError}` : ''}
   });
 
   const majorFragmentColors = [
-    '#1890ff',
+    '#3b82f6',
     '#722ed1',
     '#fa8c16',
     '#52c41a',
@@ -461,7 +470,7 @@ ${redactedError ? `\nError: ${redactedError}` : ''}
       {
         type: 'bar',
         data: operators.slice(0, 10).map((o) => (o.processNanos / 1e6).toFixed(1)),
-        itemStyle: { color: '#1890ff' },
+        itemStyle: { color: '#3b82f6' },
       },
     ],
   };
@@ -550,7 +559,8 @@ ${redactedError ? `\nError: ${redactedError}` : ''}
       <Card style={{ marginBottom: '16px' }} title="Query">
         <pre
           style={{
-            backgroundColor: '#f5f5f5',
+            backgroundColor: 'var(--color-bg-elevated)',
+            color: 'var(--color-text)',
             padding: '12px',
             borderRadius: '4px',
             overflow: 'auto',
@@ -633,7 +643,7 @@ ${redactedError ? `\nError: ${redactedError}` : ''}
           <Card style={{ height: '100%' }}>
             <div style={{ textAlign: 'center' }}>
               <div style={{ fontSize: '12px', color: '#666', marginBottom: '12px', fontWeight: 500 }}>Total Duration</div>
-              <div style={{ fontSize: '28px', fontWeight: 'bold', color: '#1890ff', marginBottom: '4px' }}>
+              <div style={{ fontSize: '28px', fontWeight: 'bold', color: '#3b82f6', marginBottom: '4px' }}>
                 {totalMs.toFixed(1)}ms
               </div>
               <div style={{ fontSize: '12px', color: '#999' }}>
@@ -719,7 +729,8 @@ ${redactedError ? `\nError: ${redactedError}` : ''}
                     <Card title="Plan Text">
                       <pre
                         style={{
-                          backgroundColor: '#f5f5f5',
+                          backgroundColor: 'var(--color-bg-elevated)',
+                          color: 'var(--color-text)',
                           padding: '12px',
                           borderRadius: '4px',
                           overflow: 'auto',
@@ -816,7 +827,8 @@ ${redactedError ? `\nError: ${redactedError}` : ''}
                                 <Text strong>Verbose Error:</Text>
                                 <Paragraph
                                   style={{
-                                    backgroundColor: '#fafafa',
+                                    backgroundColor: 'var(--color-bg-elevated)',
+                                    color: 'var(--color-text)',
                                     padding: '12px',
                                     borderRadius: '4px',
                                     marginTop: '8px',
