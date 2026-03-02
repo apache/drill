@@ -30,6 +30,15 @@ import {
   FilterOutlined,
   GlobalOutlined,
   FieldNumberOutlined,
+  BranchesOutlined,
+  RadarChartOutlined,
+  ExperimentOutlined,
+  RiseOutlined,
+  SunOutlined,
+  StockOutlined,
+  CalendarOutlined,
+  ClusterOutlined,
+  ApartmentOutlined,
 } from '@ant-design/icons';
 import type { ChartType } from '../../types';
 
@@ -128,6 +137,69 @@ const chartTypes: ChartTypeOption[] = [
     icon: <GlobalOutlined style={{ fontSize: 24 }} />,
     category: 'advanced',
   },
+  {
+    type: 'sankey',
+    name: 'Sankey',
+    description: 'Show flow and quantity between nodes',
+    icon: <BranchesOutlined style={{ fontSize: 24 }} />,
+    category: 'advanced',
+  },
+  {
+    type: 'radar',
+    name: 'Radar',
+    description: 'Compare multiple metrics across categories',
+    icon: <RadarChartOutlined style={{ fontSize: 24 }} />,
+    category: 'advanced',
+  },
+  {
+    type: 'boxplot',
+    name: 'Box Plot',
+    description: 'Show distribution, quartiles, and outliers',
+    icon: <ExperimentOutlined style={{ fontSize: 24 }} />,
+    category: 'advanced',
+  },
+  {
+    type: 'waterfall',
+    name: 'Waterfall',
+    description: 'Show incremental changes and running totals',
+    icon: <RiseOutlined style={{ fontSize: 24 }} />,
+    category: 'advanced',
+  },
+  {
+    type: 'sunburst',
+    name: 'Sunburst',
+    description: 'Hierarchical data as concentric rings',
+    icon: <SunOutlined style={{ fontSize: 24 }} />,
+    category: 'advanced',
+  },
+  {
+    type: 'candlestick',
+    name: 'Candlestick',
+    description: 'OHLC chart for financial or time-series data',
+    icon: <StockOutlined style={{ fontSize: 24 }} />,
+    category: 'advanced',
+  },
+  {
+    type: 'calendar',
+    name: 'Calendar',
+    description: 'Daily values on a calendar grid (like GitHub activity)',
+    icon: <CalendarOutlined style={{ fontSize: 24 }} />,
+    category: 'advanced',
+  },
+  {
+    type: 'bubble',
+    name: 'Bubble',
+    description: 'Scatter plot with a third dimension as bubble size',
+    icon: <ClusterOutlined style={{ fontSize: 24 }} />,
+    category: 'advanced',
+  },
+  {
+    type: 'parallel',
+    name: 'Parallel',
+    description: 'Compare rows across many numeric dimensions',
+    icon: <ApartmentOutlined style={{ fontSize: 24 }} />,
+    category: 'advanced',
+  },
 ];
 
 interface ChartTypeSelectorProps {
@@ -149,13 +221,13 @@ export default function ChartTypeSelector({ value, onChange, compact }: ChartTyp
           onClick={() => onChange?.(chart.type)}
           style={{
             textAlign: 'center',
-            border: value === chart.type ? '2px solid #1890ff' : '1px solid var(--color-border)',
+            border: value === chart.type ? '2px solid #3b82f6' : '1px solid var(--color-border)',
             backgroundColor: value === chart.type ? 'var(--color-bg-hover)' : undefined,
             padding: compact ? 0 : undefined,
           }}
           styles={compact ? { body: { padding: '6px 4px' } } : undefined}
         >
-          <div style={{ color: value === chart.type ? '#1890ff' : 'var(--color-text-secondary)', fontSize: compact ? 18 : 24 }}>
+          <div style={{ color: value === chart.type ? '#3b82f6' : 'var(--color-text-secondary)', fontSize: compact ? 18 : 24 }}>
             {compact
               ? React.cloneElement(chart.icon as React.ReactElement, { style: { fontSize: 18 } })
               : chart.icon}

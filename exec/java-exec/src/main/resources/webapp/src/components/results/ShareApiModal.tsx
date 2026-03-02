@@ -261,7 +261,8 @@ export default function ShareApiModal({
                       </Button>
                       <pre
                         style={{
-                          backgroundColor: '#f5f5f5',
+                          backgroundColor: 'var(--color-bg-elevated)',
+                          color: 'var(--color-text)',
                           padding: 16,
                           borderRadius: 6,
                           fontSize: 12,

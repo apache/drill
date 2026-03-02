@@ -44,6 +44,7 @@ interface SqlEditorProps {
   value: string;
   onChange: (value: string) => void;
   onExecute?: () => void;
+  onEditorReady?: (editor: IStandaloneCodeEditor, monaco: Monaco) => void;
   readOnly?: boolean;
   height?: string | number;
   settings?: EditorSettings;
@@ -53,6 +54,7 @@ export default function SqlEditor({
   value,
   onChange,
   onExecute,
+  onEditorReady,
   readOnly = false,
   height = '100%',
   settings = DEFAULT_EDITOR_SETTINGS,
@@ -135,10 +137,13 @@ export default function SqlEditor({
         },
       });
 
+      // Notify parent that the editor is ready
+      onEditorReady?.(editor, monaco);
+
       // Focus the editor
       editor.focus();
     },
-    [onExecute]
+    [onExecute, onEditorReady]
   );
 
   const handleEditorChange: OnChange = useCallback(
@@ -226,8 +231,8 @@ export default function SqlEditor({
       className="monaco-container"
       style={{
         height,
-        border: dragOver ? '2px solid #1890ff' : '2px solid transparent',
-        borderRadius: 4,
+        border: dragOver ? '2px solid #3b82f6' : '2px solid transparent',
+        borderRadius: 8,
         transition: 'border-color 0.2s',
       }}
       onDragOver={handleDragOver}

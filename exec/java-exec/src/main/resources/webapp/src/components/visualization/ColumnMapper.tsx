@@ -15,7 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import { Form, Select, Switch, Radio, Typography, Space, Tag, Divider, Slider } from 'antd';
+import { Form, Select, Switch, Radio, Typography, Space, Tag, Divider, Slider, InputNumber } from 'antd';
 import { FieldNumberOutlined, FieldStringOutlined, ClockCircleOutlined, FieldTimeOutlined } from '@ant-design/icons';
 import type { ChartType, VisualizationConfig, PredictionMethod } from '../../types';
 import { isTemporalType } from '../../utils/sqlTransformations';
@@ -141,6 +141,54 @@ function getRequiredFields(chartType: ChartType): { field: string; label: string
       return [
         { field: 'dimensions', label: 'Columns to Display', multi: true, numeric: false },
       ];
+    case 'sankey':
+      return [
+        { field: 'xAxis', label: 'Source', numeric: false },
+        { field: 'yAxis', label: 'Target', numeric: false },
+        { field: 'metrics', label: 'Flow Value', multi: false, numeric: true },
+      ];
+    case 'radar':
+      return [
+        { field: 'metrics', label: 'Metrics (Axes)', multi: true, numeric: true },
+        { field: 'dimensions', label: 'Series / Group By (Optional)', multi: false, numeric: false },
+      ];
+    case 'boxplot':
+      return [
+        { field: 'xAxis', label: 'Category (Group By)', numeric: false },
+        { field: 'metrics', label: 'Value Column', multi: false, numeric: true },
+      ];
+    case 'waterfall':
+      return [
+        { field: 'xAxis', label: 'Category', numeric: false },
+        { field: 'metrics', label: 'Change Value', multi: false, numeric: true },
+      ];
+    case 'sunburst':
+      return [
+        { field: 'dimensions', label: 'Hierarchy Levels (outermost → innermost)', multi: true, numeric: false },
+        { field: 'metrics', label: 'Size', multi: false, numeric: true },
+      ];
+    case 'candlestick':
+      return [
+        { field: 'xAxis', label: 'Date / Time', numeric: false },
+        { field: 'metrics', label: 'OHLC Columns (select 4: Open, Close, Low, High)', multi: true, numeric: true },
+      ];
+    case 'calendar':
+      return [
+        { field: 'xAxis', label: 'Date Column', numeric: false },
+        { field: 'metrics', label: 'Value', multi: false, numeric: true },
+      ];
+    case 'bubble':
+      return [
+        { field: 'xAxis', label: 'X Axis', numeric: true },
+        { field: 'yAxis', label: 'Y Axis', numeric: true },
+        { field: 'metrics', label: 'Bubble Size (Optional)', multi: false, numeric: true },
+        { field: 'dimensions', label: 'Group By / Label (Optional)', multi: false, numeric: false },
+      ];
+    case 'parallel':
+      return [
+        { field: 'metrics', label: 'Axes (select multiple numeric columns)', multi: true, numeric: true },
+        { field: 'dimensions', label: 'Color By (Optional)', multi: false, numeric: false },
+      ];
     default:
       return [];
   }
@@ -185,7 +233,7 @@ export default function ColumnMapper({ columns, chartType, config, onChange }: C
   };
 
   const renderColumnOption = (col: ColumnInfo) => {
-    let icon = <FieldStringOutlined style={{ color: '#1890ff' }} />;
+    let icon = <FieldStringOutlined style={{ color: '#3b82f6' }} />;
     if (isNumericType(col.type)) {
       icon = <FieldNumberOutlined style={{ color: '#52c41a' }} />;
     } else if (isTemporalType(col.type)) {
@@ -644,6 +692,142 @@ export default function ColumnMapper({ columns, chartType, config, onChange }: C
                 ...config,
                 chartOptions: { ...config.chartOptions, enableRoam: checked },
               })}
+            />
+          </Form.Item>
+        </>
+      )}
+      {chartType === 'radar' && (
+        <>
+          <Divider style={{ margin: '8px 0' }} />
+          <Form.Item label="Fill Areas">
+            <Switch
+              checked={config.chartOptions?.radarFill === true}
+              onChange={(checked) => onChange({
+                ...config,
+                chartOptions: { ...config.chartOptions, radarFill: checked },
+              })}
+            />
+          </Form.Item>
+        </>
+      )}
+      {chartType === 'waterfall' && (
+        <>
+          <Divider style={{ margin: '8px 0' }} />
+          <Form.Item label="Show Connectors">
+            <Switch
+              checked={config.chartOptions?.waterfallConnectors !== false}
+              onChange={(checked) => onChange({
+                ...config,
+                chartOptions: { ...config.chartOptions, waterfallConnectors: checked },
+              })}
+            />
+          </Form.Item>
+        </>
+      )}
+      {chartType === 'sunburst' && (
+        <>
+          <Divider style={{ margin: '8px 0' }} />
+          <Form.Item label="Show Labels">
+            <Switch
+              checked={config.chartOptions?.sunburstLabels !== false}
+              onChange={(checked) => onChange({
+                ...config,
+                chartOptions: { ...config.chartOptions, sunburstLabels: checked },
+              })}
+            />
+          </Form.Item>
+        </>
+      )}
+      {chartType === 'bubble' && (
+        <>
+          <Divider style={{ margin: '8px 0' }} />
+          <Form.Item label={`Max Bubble Size (${Number(config.chartOptions?.maxBubbleSize ?? 60)}px)`}>
+            <Slider
+              min={20}
+              max={120}
+              value={Number(config.chartOptions?.maxBubbleSize ?? 60)}
+              onChange={(value) => onChange({
+                ...config,
+                chartOptions: { ...config.chartOptions, maxBubbleSize: value },
+              })}
+            />
+          </Form.Item>
+        </>
+      )}
+      {chartType === 'parallel' && (
+        <>
+          <Divider style={{ margin: '8px 0' }} />
+          <Form.Item label={`Line Opacity (${Number(config.chartOptions?.parallelOpacity ?? 0.4).toFixed(1)})`}>
+            <Slider
+              min={0.1}
+              max={1}
+              step={0.1}
+              value={Number(config.chartOptions?.parallelOpacity ?? 0.4)}
+              onChange={(value) => onChange({
+                ...config,
+                chartOptions: { ...config.chartOptions, parallelOpacity: value },
+              })}
+            />
+          </Form.Item>
+        </>
+      )}
+      {chartType === 'candlestick' && (
+        <>
+          <Divider style={{ margin: '8px 0' }} />
+          <Text type="secondary" style={{ fontSize: 11, display: 'block', marginBottom: 8 }}>
+            Select exactly 4 OHLC columns in order: Open, Close, Low, High
+          </Text>
+        </>
+      )}
+      {chartType === 'sankey' && (
+        <>
+          <Divider style={{ margin: '8px 0' }} />
+          <Form.Item label="Orientation">
+            <Radio.Group
+              value={(config.chartOptions?.sankeyOrient as string) || 'horizontal'}
+              onChange={(e) => onChange({
+                ...config,
+                chartOptions: { ...config.chartOptions, sankeyOrient: e.target.value },
+              })}
+              optionType="button"
+              buttonStyle="solid"
+              size="small"
+            >
+              <Radio.Button value="horizontal">Horizontal</Radio.Button>
+              <Radio.Button value="vertical">Vertical</Radio.Button>
+            </Radio.Group>
+          </Form.Item>
+          <Form.Item label="Show Node Labels">
+            <Switch
+              checked={config.chartOptions?.sankeyShowLabels !== false}
+              onChange={(checked) => onChange({
+                ...config,
+                chartOptions: { ...config.chartOptions, sankeyShowLabels: checked },
+              })}
+            />
+          </Form.Item>
+          <Form.Item label={`Link Curveness (${Number(config.chartOptions?.sankeyCurveness ?? 0.5).toFixed(1)})`}>
+            <Slider
+              min={0}
+              max={1}
+              step={0.1}
+              value={Number(config.chartOptions?.sankeyCurveness ?? 0.5)}
+              onChange={(value) => onChange({
+                ...config,
+                chartOptions: { ...config.chartOptions, sankeyCurveness: value },
+              })}
+            />
+          </Form.Item>
+          <Form.Item label="Node Width (px)">
+            <InputNumber
+              min={8}
+              max={40}
+              value={Number(config.chartOptions?.sankeyNodeWidth ?? 20)}
+              onChange={(value) => onChange({
+                ...config,
+                chartOptions: { ...config.chartOptions, sankeyNodeWidth: value ?? 20 },
+              })}
+              style={{ width: '100%' }}
             />
           </Form.Item>
         </>
