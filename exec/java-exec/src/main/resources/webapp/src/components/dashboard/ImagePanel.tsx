@@ -92,7 +92,7 @@ export default function ImagePanel({
                       setImgError(false);
                     }}
                     placeholder="Image URL..."
-                    addonBefore="URL"
+                    prefix="URL"
                   />
                 ),
               },
@@ -123,7 +123,7 @@ export default function ImagePanel({
             value={altText}
             onChange={(e) => onConfigChange({ ...config, imageAlt: e.target.value })}
             placeholder="Alt text (optional)"
-            addonBefore="Alt"
+            prefix="Alt"
           />
           {content && !imgError && sanitizeImageUrl(content) && (
             <div className="image-panel">

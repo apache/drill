@@ -148,6 +148,25 @@ function isColumnNumeric(data: QueryResult, col: string): boolean {
 }
 
 /**
+ * Compute [min, Q1, median, Q3, max] for a sorted array of numbers.
+ * Used by the box plot renderer.
+ */
+function computeBoxStats(values: number[]): [number, number, number, number, number] {
+  if (values.length === 0) {
+    return [0, 0, 0, 0, 0];
+  }
+  const sorted = [...values].sort((a, b) => a - b);
+  const n = sorted.length;
+  const q = (p: number) => {
+    const idx = (n - 1) * p;
+    const lo = Math.floor(idx);
+    const hi = Math.ceil(idx);
+    return sorted[lo] + (sorted[hi] - sorted[lo]) * (idx - lo);
+  };
+  return [sorted[0], q(0.25), q(0.5), q(0.75), sorted[n - 1]];
+}
+
+/**
  * Build ECharts series for forecast data: dashed forecast line + confidence band.
  * Returns an array of series objects (empty if predictions not enabled / insufficient data).
  */
@@ -380,6 +399,53 @@ export default function ChartPreview({
         const dimCol = dimensions?.[0];
         if (dimCol && params.name != null) {
           emitClick(dimCol, String(params.name));
+        }
+        break;
+      }
+      case 'sankey': {
+        const { xAxis: srcCol } = config;
+        if (srcCol && params.name != null) {
+          emitClick(srcCol, String(params.name));
+        }
+        break;
+      }
+      case 'radar': {
+        const dimCol = groupField;
+        if (dimCol && params.name != null) {
+          emitClick(dimCol, String(params.name));
+        }
+        break;
+      }
+      case 'boxplot':
+      case 'waterfall':
+      case 'candlestick': {
+        if (xCol && params.name != null) {
+          emitClick(xCol, String(params.name));
+        }
+        break;
+      }
+      case 'sunburst': {
+        const sbDim = config.dimensions?.[0];
+        if (sbDim && params.name != null) {
+          emitClick(sbDim, String(params.name));
+        }
+        break;
+      }
+      case 'calendar': {
+        if (xCol && params.value != null) {
+          const val = params.value as [string, number] | undefined;
+          if (val) {
+            emitClick(xCol, val[0]);
+          }
+        }
+        break;
+      }
+      case 'bubble': {
+        if (xCol) {
+          const val = params.value;
+          if (Array.isArray(val) && val.length > 0) {
+            emitClick(xCol, String(val[0]));
+          }
         }
         break;
       }
@@ -1042,6 +1108,416 @@ export default function ChartPreview({
         };
       }
 
+      case 'radar': {
+        if (!metrics || metrics.length < 2) {
+          return null;
+        }
+        const radarGroupField = dimensions?.[0];
+        const doFill = config.chartOptions?.radarFill === true;
+        const maxValues = metrics.map((m) =>
+          Math.max(...data.rows.map((r) => Number(r[m]) || 0)) * 1.2 || 1
+        );
+        const indicator = metrics.map((m, i) => ({ name: m, max: maxValues[i] }));
+
+        let radarData;
+        if (radarGroupField) {
+          radarData = data.rows.map((row, idx) => ({
+            name: String(row[radarGroupField] ?? `Row ${idx + 1}`),
+            value: metrics.map((m) => Number(row[m]) || 0),
+            itemStyle: { color: colors[idx % colors.length] },
+            lineStyle: { color: colors[idx % colors.length] },
+            areaStyle: doFill ? { opacity: 0.15, color: colors[idx % colors.length] } : undefined,
+          }));
+        } else {
+          const maxRows = Math.min(data.rows.length, 8);
+          radarData = data.rows.slice(0, maxRows).map((row, idx) => ({
+            name: `Row ${idx + 1}`,
+            value: metrics.map((m) => Number(row[m]) || 0),
+            itemStyle: { color: colors[idx % colors.length] },
+            lineStyle: { color: colors[idx % colors.length] },
+            areaStyle: doFill ? { opacity: 0.15, color: colors[idx % colors.length] } : undefined,
+          }));
+        }
+
+        return {
+          tooltip: { trigger: 'item' },
+          legend: { data: radarData.map((d) => d.name), bottom: 0 },
+          radar: { indicator },
+          series: [{ type: 'radar', data: radarData }],
+        };
+      }
+
+      case 'boxplot': {
+        if (!xAxis || !metrics || metrics.length === 0) {
+          return null;
+        }
+        const bpValueField = metrics[0];
+        const bpGroups = new Map<string, number[]>();
+        data.rows.forEach((row) => {
+          const cat = String(row[xAxis] ?? '');
+          const val = Number(row[bpValueField]) || 0;
+          if (!bpGroups.has(cat)) {
+            bpGroups.set(cat, []);
+          }
+          bpGroups.get(cat)!.push(val);
+        });
+        const bpCategories = Array.from(bpGroups.keys());
+        const bpData = bpCategories.map((cat) => computeBoxStats(bpGroups.get(cat)!));
+        return {
+          tooltip: { trigger: 'item' },
+          xAxis: { type: 'category', data: bpCategories },
+          yAxis: { type: 'value', name: bpValueField },
+          series: [{
+            type: 'boxplot',
+            data: bpData,
+            itemStyle: { color: colors[0], borderColor: colors[0] },
+          }],
+          grid: { left: '3%', right: '4%', bottom: '10%', containLabel: true },
+        };
+      }
+
+      case 'waterfall': {
+        if (!xAxis || !metrics || metrics.length === 0) {
+          return null;
+        }
+        const wfValueField = metrics[0];
+        const wfCategories = data.rows.map((r) => String(r[xAxis] ?? ''));
+        const wfValues = data.rows.map((r) => Number(r[wfValueField]) || 0);
+        const showConnectors = config.chartOptions?.waterfallConnectors !== false;
+
+        const wfBases: number[] = [];
+        const wfDeltas: { value: number; itemStyle: { color: string } }[] = [];
+        let wfRunning = 0;
+        wfValues.forEach((v) => {
+          wfBases.push(v >= 0 ? wfRunning : wfRunning + v);
+          wfDeltas.push({ value: Math.abs(v), itemStyle: { color: v >= 0 ? '#52c41a' : '#ff4d4f' } });
+          wfRunning += v;
+        });
+
+        const wfSeries: unknown[] = [
+          {
+            type: 'bar',
+            stack: 'wf',
+            silent: true,
+            itemStyle: { borderColor: 'transparent', color: 'transparent' },
+            emphasis: { itemStyle: { borderColor: 'transparent', color: 'transparent' } },
+            data: wfBases,
+          },
+          {
+            name: wfValueField,
+            type: 'bar',
+            stack: 'wf',
+            data: wfDeltas,
+            label: {
+              show: true,
+              position: 'top',
+              formatter: (p: Record<string, unknown>) => {
+                const i = p.dataIndex as number;
+                return wfValues[i] >= 0 ? `+${wfValues[i]}` : String(wfValues[i]);
+              },
+            },
+          },
+        ];
+
+        if (showConnectors) {
+          const wfTotals: number[] = [];
+          let rt = 0;
+          wfValues.forEach((v) => { rt += v; wfTotals.push(rt); });
+          wfSeries.push({
+            type: 'line',
+            data: wfTotals,
+            symbol: 'circle',
+            symbolSize: 5,
+            lineStyle: { type: 'dashed', color: '#888', width: 1 },
+            itemStyle: { color: '#888' },
+            z: 10,
+          });
+        }
+
+        return {
+          tooltip: { trigger: 'axis' },
+          xAxis: { type: 'category', data: wfCategories },
+          yAxis: { type: 'value' },
+          series: wfSeries,
+          grid: { left: '3%', right: '4%', bottom: '10%', containLabel: true },
+        } as unknown as EChartsOption;
+      }
+
+      case 'sunburst': {
+        if (!dimensions || dimensions.length === 0 || !metrics || metrics.length === 0) {
+          return null;
+        }
+        const sbValueField = metrics[0];
+        const sbLevels = dimensions;
+        const showSbLabels = config.chartOptions?.sunburstLabels !== false;
+
+        const buildSbTree = (
+          rows: typeof data.rows,
+          levelIdx: number
+        ): { name: string; value: number; itemStyle?: { color: string }; children?: unknown[] }[] => {
+          if (levelIdx >= sbLevels.length) {
+            return [];
+          }
+          const level = sbLevels[levelIdx];
+          const groupMap = new Map<string, typeof data.rows>();
+          rows.forEach((row) => {
+            const key = String(row[level] ?? 'Unknown');
+            if (!groupMap.has(key)) {
+              groupMap.set(key, []);
+            }
+            groupMap.get(key)!.push(row);
+          });
+          return Array.from(groupMap.entries()).map(([name, groupRows], idx) => {
+            const value = groupRows.reduce((acc, r) => acc + (Number(r[sbValueField]) || 0), 0);
+            const children = buildSbTree(groupRows, levelIdx + 1);
+            return {
+              name,
+              value,
+              itemStyle: levelIdx === 0 ? { color: colors[idx % colors.length] } : undefined,
+              children: children.length > 0 ? children : undefined,
+            };
+          });
+        };
+
+        return {
+          tooltip: { trigger: 'item', formatter: '{b}: {c}' },
+          series: [{
+            type: 'sunburst',
+            data: buildSbTree(data.rows, 0),
+            radius: ['15%', '90%'],
+            label: { show: showSbLabels, rotate: 'radial' },
+            emphasis: { focus: 'ancestor' },
+          }],
+        } as unknown as EChartsOption;
+      }
+
+      case 'candlestick': {
+        if (!xAxis || !metrics || metrics.length < 4) {
+          return null;
+        }
+        const [csOpen, csClose, csLow, csHigh] = metrics;
+        const csDates = data.rows.map((r) => String(r[xAxis] ?? ''));
+        const csData = data.rows.map((r) => [
+          Number(r[csOpen]) || 0,
+          Number(r[csClose]) || 0,
+          Number(r[csLow]) || 0,
+          Number(r[csHigh]) || 0,
+        ]);
+        return {
+          tooltip: { trigger: 'axis', axisPointer: { type: 'cross' } },
+          xAxis: { type: 'category', data: csDates, boundaryGap: true },
+          yAxis: { type: 'value', scale: true },
+          series: [{
+            type: 'candlestick',
+            data: csData,
+            itemStyle: { color: '#52c41a', color0: '#ff4d4f', borderColor: '#52c41a', borderColor0: '#ff4d4f' },
+          }],
+          grid: { left: '3%', right: '4%', bottom: '10%', containLabel: true },
+        };
+      }
+
+      case 'calendar': {
+        if (!xAxis || !metrics || metrics.length === 0) {
+          return null;
+        }
+        const calValueField = metrics[0];
+        const calData = data.rows
+          .filter((r) => r[xAxis] != null)
+          .map((r) => [String(r[xAxis]), Number(r[calValueField]) || 0] as [string, number]);
+
+        if (calData.length === 0) {
+          return null;
+        }
+
+        const calValues = calData.map((d) => d[1]);
+        const allDates = calData.map((d) => d[0]).sort();
+        const calRange: string | [string, string] = allDates.length > 1
+          ? [allDates[0], allDates[allDates.length - 1]]
+          : allDates[0];
+
+        return {
+          tooltip: {
+            formatter: (params: unknown) => {
+              const p = params as Record<string, unknown>;
+              const val = p.value as [string, number];
+              return `${val[0]}: ${val[1].toLocaleString()}`;
+            },
+          },
+          visualMap: {
+            min: Math.min(...calValues),
+            max: Math.max(...calValues),
+            calculable: true,
+            orient: 'horizontal',
+            left: 'center',
+            bottom: 0,
+          },
+          calendar: {
+            range: calRange,
+            cellSize: ['auto', 13],
+            top: 50,
+            itemStyle: { borderWidth: 0.5 },
+          },
+          series: [{ type: 'heatmap', coordinateSystem: 'calendar', data: calData }],
+        } as unknown as EChartsOption;
+      }
+
+      case 'bubble': {
+        if (!xAxis || !yAxis) {
+          return null;
+        }
+        const bubbleSizeField = metrics?.[0];
+        const bubbleGroupField = dimensions?.[0];
+        const maxBubble = Number(config.chartOptions?.maxBubbleSize ?? 60);
+        const sizeValues = bubbleSizeField ? data.rows.map((r) => Number(r[bubbleSizeField]) || 0) : [];
+        const maxSizeVal = sizeValues.length > 0 ? Math.max(...sizeValues) || 1 : 1;
+
+        const makePoint = (r: Record<string, unknown>) => {
+          const sz = bubbleSizeField ? (Number(r[bubbleSizeField]) || 0) : maxBubble / 2;
+          const normSz = bubbleSizeField ? Math.max(4, (sz / maxSizeVal) * maxBubble) : maxBubble / 2;
+          return { value: [Number(r[xAxis]) || 0, Number(r[yAxis]) || 0, sz], symbolSize: normSz };
+        };
+
+        let bubbleSeries;
+        if (bubbleGroupField) {
+          const groups = [...new Set(data.rows.map((r) => String(r[bubbleGroupField] ?? '')))];
+          bubbleSeries = groups.map((group, idx) => ({
+            name: group,
+            type: 'scatter' as const,
+            data: data.rows.filter((r) => String(r[bubbleGroupField] ?? '') === group).map(makePoint),
+            itemStyle: { color: colors[idx % colors.length], opacity: 0.7 },
+          }));
+        } else {
+          bubbleSeries = [{
+            type: 'scatter' as const,
+            data: data.rows.map(makePoint),
+            itemStyle: { color: colors[0], opacity: 0.7 },
+          }];
+        }
+
+        return {
+          tooltip: {
+            trigger: 'item',
+            formatter: (params: unknown) => {
+              const p = params as Record<string, unknown>;
+              const val = p.value as number[];
+              let text = `${xAxis}: ${val[0]}<br/>${yAxis}: ${val[1]}`;
+              if (bubbleSizeField) {
+                text += `<br/>${bubbleSizeField}: ${val[2].toLocaleString()}`;
+              }
+              return text;
+            },
+          },
+          legend: bubbleGroupField ? { data: bubbleSeries.map((s) => 'name' in s ? String(s.name) : ''), bottom: 0 } : undefined,
+          xAxis: { type: 'value', name: xAxis },
+          yAxis: { type: 'value', name: yAxis },
+          series: bubbleSeries,
+          grid: { left: '3%', right: '4%', bottom: bubbleGroupField ? '15%' : '5%', containLabel: true },
+        };
+      }
+
+      case 'parallel': {
+        if (!metrics || metrics.length < 2) {
+          return null;
+        }
+        const parallelGroupField = dimensions?.[0];
+        const lineOpacity = Number(config.chartOptions?.parallelOpacity ?? 0.4);
+        const parallelAxis = metrics.map((m, i) => ({ dim: i, name: m }));
+
+        let parallelSeries;
+        if (parallelGroupField) {
+          const groups = [...new Set(data.rows.map((r) => String(r[parallelGroupField] ?? '')))];
+          parallelSeries = groups.map((group, idx) => ({
+            type: 'parallel' as const,
+            name: group,
+            data: data.rows
+              .filter((r) => String(r[parallelGroupField] ?? '') === group)
+              .map((r) => metrics.map((m) => Number(r[m]) || 0)),
+            lineStyle: { color: colors[idx % colors.length], opacity: lineOpacity, width: 1 },
+          }));
+        } else {
+          parallelSeries = [{
+            type: 'parallel' as const,
+            data: data.rows.map((r) => metrics.map((m) => Number(r[m]) || 0)),
+            lineStyle: { color: colors[0], opacity: lineOpacity, width: 1 },
+          }];
+        }
+
+        return {
+          tooltip: { trigger: 'item' },
+          legend: parallelGroupField ? { data: parallelSeries.map((s) => 'name' in s ? String(s.name) : ''), bottom: 0 } : undefined,
+          parallelAxis,
+          parallel: { left: '5%', right: '5%', bottom: parallelGroupField ? '15%' : '10%', top: '10%' },
+          series: parallelSeries,
+        } as unknown as EChartsOption;
+      }
+
+      case 'sankey': {
+        if (!xAxis || !yAxis || !metrics || metrics.length === 0) {
+          return null;
+        }
+        const valueField = metrics[0];
+        const orient = (config.chartOptions?.sankeyOrient as string) || 'horizontal';
+        const showLabels = config.chartOptions?.sankeyShowLabels !== false;
+        const curveness = Number(config.chartOptions?.sankeyCurveness ?? 0.5);
+        const nodeWidth = Number(config.chartOptions?.sankeyNodeWidth ?? 20);
+
+        // Collect unique node names from source and target columns
+        const nodeNames = new Set<string>();
+        data.rows.forEach((row) => {
+          const src = String(row[xAxis] ?? '').trim();
+          const tgt = String(row[yAxis] ?? '').trim();
+          if (src) {
+            nodeNames.add(src);
+          }
+          if (tgt) {
+            nodeNames.add(tgt);
+          }
+        });
+
+        const nodes = Array.from(nodeNames).map((name, idx) => ({
+          name,
+          itemStyle: { color: colors[idx % colors.length] },
+        }));
+
+        const links = data.rows
+          .filter((row) => row[xAxis] != null && row[yAxis] != null)
+          .map((row) => ({
+            source: String(row[xAxis]).trim(),
+            target: String(row[yAxis]).trim(),
+            value: Number(row[valueField]) || 0,
+          }));
+
+        return {
+          tooltip: {
+            trigger: 'item',
+            formatter: (params: unknown) => {
+              const p = params as Record<string, unknown>;
+              if (p.dataType === 'node') {
+                return String(p.name);
+              }
+              const d = p.data as Record<string, unknown>;
+              return `${d.source} → ${d.target}: ${(d.value as number).toLocaleString()}`;
+            },
+          },
+          series: [{
+            type: 'sankey',
+            orient,
+            nodeWidth,
+            data: nodes,
+            links,
+            emphasis: { focus: 'adjacency' },
+            label: {
+              show: showLabels,
+              position: orient === 'vertical' ? 'top' : 'right',
+            },
+            lineStyle: {
+              color: 'gradient',
+              curveness,
+            },
+          }],
+        } as unknown as EChartsOption;
+      }
+
       case 'map': {
         if (!xAxis || !yAxis) {
           return null;
@@ -1125,6 +1601,29 @@ export default function ChartPreview({
   const miniOption = useMemo(() => {
     if (!chartOption || !mini) {
       return chartOption;
+    }
+
+    // Calendar mini mode: drop chrome, keep the heatmap series
+    if (chartType === 'calendar') {
+      return {
+        ...chartOption,
+        tooltip: undefined,
+        visualMap: undefined,
+        calendar: {
+          ...(chartOption as Record<string, unknown>).calendar as Record<string, unknown>,
+          cellSize: 4,
+          top: '5%',
+          bottom: '5%',
+          left: '2%',
+          right: '2%',
+        },
+        animation: false,
+      };
+    }
+
+    // Parallel mini mode: strip chrome only (no xAxis/yAxis to handle)
+    if (chartType === 'parallel') {
+      return { ...chartOption, tooltip: undefined, legend: undefined, animation: false };
     }
 
     // Map mini mode: simplified geo with smaller points and no roam
