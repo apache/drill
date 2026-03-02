@@ -155,7 +155,7 @@ export function buildFileNodes(
       return {
         key: dirKey,
         title: file.name,
-        icon: <FolderOutlined style={{ color: '#1890ff' }} />,
+        icon: <FolderOutlined style={{ color: '#3b82f6' }} />,
         children: subNodes,
         isLeaf: false,
       };
@@ -251,7 +251,7 @@ export function buildSchemaNodes(
       return {
         key: schemaKey,
         title: <span>{schema.name.replace(`${plugin.name}.`, '')}</span>,
-        icon: <FolderOutlined style={{ color: '#1890ff' }} />,
+        icon: <FolderOutlined style={{ color: '#3b82f6' }} />,
         children: fileNodes,
         isLeaf: false,
       };

@@ -114,6 +114,23 @@ const querySlice = createSlice({
       state.tabs.push(newTab);
       state.activeTabId = newTab.id;
     },
+    duplicateTab: (state, action: PayloadAction<string>) => {
+      const sourceTab = state.tabs.find((t) => t.id === action.payload);
+      if (!sourceTab) {
+        return;
+      }
+      tabCounter++;
+      const newTab: QueryTab = {
+        id: `tab-${tabCounter}`,
+        name: `${sourceTab.name} (copy)`,
+        sql: sourceTab.sql,
+        defaultSchema: sourceTab.defaultSchema,
+        isExecuting: false,
+      };
+      const sourceIndex = state.tabs.findIndex((t) => t.id === action.payload);
+      state.tabs.splice(sourceIndex + 1, 0, newTab);
+      state.activeTabId = newTab.id;
+    },
     removeTab: (state, action: PayloadAction<string>) => {
       const index = state.tabs.findIndex((t) => t.id === action.payload);
       if (index !== -1 && state.tabs.length > 1) {
@@ -197,6 +214,7 @@ export const {
   setError,
   clearResults,
   addTab,
+  duplicateTab,
   removeTab,
   setActiveTab,
   renameTab,

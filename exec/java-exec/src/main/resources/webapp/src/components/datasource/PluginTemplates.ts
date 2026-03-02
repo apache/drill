@@ -143,7 +143,7 @@ export function getPluginLogoUrl(type: string, connection?: string): string | un
 
 /** Gradient colors per plugin type for card covers */
 export const pluginGradients: Record<string, string> = {
-  file: 'linear-gradient(135deg, #1890ff 0%, #096dd9 100%)',
+  file: 'linear-gradient(135deg, #3b82f6 0%, #2563eb 100%)',
   jdbc: 'linear-gradient(135deg, #13c2c2 0%, #006d75 100%)',
   http: 'linear-gradient(135deg, #52c41a 0%, #237804 100%)',
   mongo: 'linear-gradient(135deg, #389e0d 0%, #135200 100%)',
