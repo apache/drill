@@ -161,7 +161,16 @@ export type ChartType =
   | 'gauge'
   | 'funnel'
   | 'map'
-  | 'bigNumber';
+  | 'bigNumber'
+  | 'sankey'
+  | 'radar'
+  | 'boxplot'
+  | 'waterfall'
+  | 'sunburst'
+  | 'candlestick'
+  | 'calendar'
+  | 'bubble'
+  | 'parallel';
 
 export type PredictionMethod = 'linear' | 'polynomial' | 'movingAverage';
 

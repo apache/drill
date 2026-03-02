@@ -15,15 +15,16 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import { useCallback, useState, useEffect, useRef, useMemo } from 'react';
+import { useCallback, useState, useEffect, useRef, useMemo, type MutableRefObject } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import { useLocation } from 'react-router-dom';
-import { Tabs, message, Tooltip, Modal, Alert, Button, Space, Spin } from 'antd';
-import { PlusOutlined, MenuFoldOutlined, MenuUnfoldOutlined, RobotOutlined } from '@ant-design/icons';
+import { Tabs, message, Tooltip, Modal, Alert, Button, Space, Spin, Dropdown } from 'antd';
+import { PlusOutlined, MenuFoldOutlined, MenuUnfoldOutlined, RobotOutlined, MoreOutlined, EditOutlined, CopyOutlined, CloseOutlined } from '@ant-design/icons';
 import Markdown from 'react-markdown';
 import type { RootState, AppDispatch } from '../store';
 import {
   addTab,
+  duplicateTab,
   removeTab,
   setActiveTab,
   setDefaultSchema,
@@ -53,6 +54,10 @@ import { ProspectorPanel } from '../components/prospector';
 import type { SavedQuery } from '../types';
 import type { ChatContext, ChatMessage } from '../types/ai';
 import { applySqlTransformation, prettifySql, type ColumnTransformation } from '../utils/sqlTransformations';
+import { useSqlValidation } from '../hooks/useSqlValidation';
+import type { Monaco } from '@monaco-editor/react';
+
+type IStandaloneCodeEditor = Parameters<import('@monaco-editor/react').OnMount>[0];
 
 function extractSqlFromMarkdown(markdown: string): string | null {
   const regex = /```sql\s*\n([\s\S]*?)```/g;
@@ -91,6 +96,14 @@ export default function SqlLabPage({ datasetFilter, headerContent, projectId }: 
   const [historyModalOpen, setHistoryModalOpen] = useState(false);
   const [shareApiModalOpen, setShareApiModalOpen] = useState(false);
   const [sharedQueryApiIds, setSharedQueryApiIds] = useState<Record<string, string | undefined>>({});
+
+  // Editor/Monaco refs for SQL validation
+  const editorInstanceRef = useRef<IStandaloneCodeEditor | null>(null) as MutableRefObject<IStandaloneCodeEditor | null>;
+  const monacoInstanceRef = useRef<Monaco | null>(null) as MutableRefObject<Monaco | null>;
+  const handleEditorReady = useCallback((editor: IStandaloneCodeEditor, monaco: Monaco) => {
+    editorInstanceRef.current = editor;
+    monacoInstanceRef.current = monaco;
+  }, []);
 
   // Optimize modal state
   const [optimizeModalOpen, setOptimizeModalOpen] = useState(false);
@@ -183,6 +196,9 @@ export default function SqlLabPage({ datasetFilter, headerContent, projectId }: 
 
   // Prospector hook
   const prospector = useProspector(updateSql);
+
+  // Real-time SQL validation markers in the editor
+  useSqlValidation(sql, editorInstanceRef, monacoInstanceRef);
 
   // Check Prospector status and config on mount
   useEffect(() => {
@@ -650,6 +666,9 @@ export default function SqlLabPage({ datasetFilter, headerContent, projectId }: 
   }, [dispatch, editingTabId, editingTabName]);
 
   const handleTabRenameKeyDown = useCallback((e: React.KeyboardEvent<HTMLInputElement>) => {
+    // Always stop propagation so keystrokes (Delete, Backspace, etc.) don't
+    // bubble up to Ant Design Tabs and accidentally close or switch tabs.
+    e.stopPropagation();
     if (e.key === 'Enter') {
       handleTabRenameSubmit();
     } else if (e.key === 'Escape') {
@@ -657,6 +676,10 @@ export default function SqlLabPage({ datasetFilter, headerContent, projectId }: 
       setEditingTabName('');
     }
   }, [handleTabRenameSubmit]);
+
+  const handleDuplicateTab = useCallback((tabId: string) => {
+    dispatch(duplicateTab(tabId));
+  }, [dispatch]);
 
   return (
     <div className="sqllab-main">
@@ -705,8 +728,58 @@ export default function SqlLabPage({ datasetFilter, headerContent, projectId }: 
                 onClick={(e) => e.stopPropagation()}
               />
             ) : (
-              <span onDoubleClick={() => handleTabDoubleClick(tab.id, tab.name)}>
-                {tab.name}
+              <span className="tab-label-wrapper" onDoubleClick={() => handleTabDoubleClick(tab.id, tab.name)}>
+                <span className="tab-label-text">{tab.name}</span>
+                <Dropdown
+                  trigger={['click']}
+                  menu={{
+                    items: [
+                      {
+                        key: 'rename',
+                        icon: <EditOutlined />,
+                        label: 'Rename',
+                        onClick: ({ domEvent }) => {
+                          domEvent.stopPropagation();
+                          // Defer until after the dropdown fully closes, otherwise
+                          // its cleanup blur fires onBlur and cancels the rename.
+                          setTimeout(() => handleTabDoubleClick(tab.id, tab.name), 0);
+                        },
+                      },
+                      {
+                        key: 'duplicate',
+                        icon: <CopyOutlined />,
+                        label: 'Duplicate',
+                        onClick: ({ domEvent }) => {
+                          domEvent.stopPropagation();
+                          handleDuplicateTab(tab.id);
+                        },
+                      },
+                      { type: 'divider' },
+                      {
+                        key: 'close',
+                        icon: <CloseOutlined />,
+                        label: 'Close',
+                        danger: true,
+                        disabled: tabs.length <= 1,
+                        onClick: ({ domEvent }) => {
+                          domEvent.stopPropagation();
+                          if (tabs.length > 1) {
+                            dispatch(removeTab(tab.id));
+                          } else {
+                            message.warning('Cannot close the last tab');
+                          }
+                        },
+                      },
+                    ],
+                  }}
+                >
+                  <span
+                    className="tab-menu-btn"
+                    onClick={(e) => e.stopPropagation()}
+                  >
+                    <MoreOutlined />
+                  </span>
+                </Dropdown>
               </span>
             ),
             closable: tabs.length > 1,
@@ -749,6 +822,7 @@ export default function SqlLabPage({ datasetFilter, headerContent, projectId }: 
             value={sql}
             onChange={updateSql}
             onExecute={handleExecute}
+            onEditorReady={handleEditorReady}
             settings={editorSettings}
           />
         </div>

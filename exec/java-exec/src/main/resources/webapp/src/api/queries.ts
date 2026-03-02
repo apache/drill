@@ -189,3 +189,31 @@ export async function getQueryProfileDetail(queryId: string): Promise<DetailedQu
   const response = await apiClient.get<DetailedQueryProfile>(`/profiles/${encodeURIComponent(queryId)}.json`);
   return response.data;
 }
+
+// ==================== SQL Validation ====================
+
+export interface SqlValidationError {
+  message: string;
+  line: number;
+  column: number;
+  endLine: number;
+  endColumn: number;
+  severity: 'error' | 'warning';
+}
+
+export interface SqlValidationResult {
+  valid: boolean;
+  errors: SqlValidationError[];
+}
+
+export async function validateSql(
+  sql: string,
+  signal?: AbortSignal,
+): Promise<SqlValidationResult> {
+  const response = await apiClient.post<SqlValidationResult>(
+    '/api/v1/query/validate',
+    { sql },
+    { signal },
+  );
+  return response.data;
+}

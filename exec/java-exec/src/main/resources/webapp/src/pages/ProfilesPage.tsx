@@ -56,13 +56,13 @@ const { Text } = Typography;
 const stateConfig: Record<string, { bgColor: string; textColor: string; icon: JSX.Element | null }> = {
   Succeeded: { bgColor: '#f6ffed', textColor: '#52c41a', icon: <CheckCircleOutlined /> },
   Failed: { bgColor: '#fff1f0', textColor: '#ff4d4f', icon: <CloseCircleOutlined /> },
-  Running: { bgColor: '#e6f7ff', textColor: '#1890ff', icon: <LoadingOutlined /> },
+  Running: { bgColor: '#eff6ff', textColor: '#3b82f6', icon: <LoadingOutlined /> },
   Cancellation_Requested: { bgColor: '#fffbe6', textColor: '#faad14', icon: <StopOutlined /> },
   Cancelled: { bgColor: '#fffbe6', textColor: '#faad14', icon: <StopOutlined /> },
 };
 
 const queryTypeConfig: Record<string, { bgColor: string; textColor: string; icon: JSX.Element | null }> = {
-  SELECT: { bgColor: '#e6f7ff', textColor: '#1890ff', icon: <SelectOutlined /> },
+  SELECT: { bgColor: '#eff6ff', textColor: '#3b82f6', icon: <SelectOutlined /> },
   INSERT: { bgColor: '#f9f0ff', textColor: '#722ed1', icon: <CopyOutlined /> },
   UPDATE: { bgColor: '#fffbe6', textColor: '#faad14', icon: <EditOutlined /> },
   DELETE: { bgColor: '#fff1f0', textColor: '#ff4d4f', icon: <DeleteOutlined /> },
@@ -70,7 +70,7 @@ const queryTypeConfig: Record<string, { bgColor: string; textColor: string; icon
   DROP: { bgColor: '#fff1f0', textColor: '#ff4d4f', icon: <DeleteOutlined /> },
   ALTER: { bgColor: '#fffbe6', textColor: '#faad14', icon: <FormOutlined /> },
   'SHOW/DESC': { bgColor: '#f5f5f5', textColor: '#000000', icon: <UnorderedListOutlined /> },
-  EXPLAIN: { bgColor: '#e6f7ff', textColor: '#1890ff', icon: <UnorderedListOutlined /> },
+  EXPLAIN: { bgColor: '#eff6ff', textColor: '#3b82f6', icon: <UnorderedListOutlined /> },
   USE: { bgColor: '#f5f5f5', textColor: '#000000', icon: <UnorderedListOutlined /> },
   SET: { bgColor: '#f5f5f5', textColor: '#000000', icon: <FormOutlined /> },
   Other: { bgColor: '#f5f5f5', textColor: '#000000', icon: null },
@@ -361,7 +361,7 @@ export default function ProfilesPage() {
             size="small"
             icon={<PlayCircleOutlined />}
             onClick={() => handleRunQuery(record.query)}
-            style={{ color: '#1890ff' }}
+            style={{ color: '#3b82f6' }}
           />
         </Tooltip>
       ),
@@ -468,7 +468,7 @@ export default function ProfilesPage() {
             size="small"
             icon={<PlayCircleOutlined />}
             onClick={() => handleRunQuery(record.query)}
-            style={{ color: '#1890ff' }}
+            style={{ color: '#3b82f6' }}
           />
         </Tooltip>
       ),

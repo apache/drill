@@ -943,7 +943,7 @@ export default function SchemaExplorer({ onInsertText, onTableSelect, datasetFil
         )}
       </div>
 
-      <div style={{ padding: 8, borderTop: '1px solid #e8e8e8', fontSize: 11, color: '#999' }}>
+      <div style={{ padding: 8, borderTop: '1px solid var(--color-border)', fontSize: 11, color: 'var(--color-text-tertiary)' }}>
         <div>Double-click or drag to insert into query</div>
         <div style={{ marginTop: 2 }}>Right-click for more options</div>
         <div style={{ marginTop: 2 }}>
