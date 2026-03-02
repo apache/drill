@@ -16,7 +16,7 @@
  * limitations under the License.
  */
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { render, screen, fireEvent, waitFor } from '@testing-library/react';
+import { render, screen, fireEvent, waitFor, act } from '@testing-library/react';
 import ImagePanel from './ImagePanel';
 
 // Mock the uploadImage API
@@ -171,7 +171,7 @@ describe('ImagePanel', () => {
   describe('upload validation', () => {
     const editProps = { ...defaultProps, editMode: true };
 
-    it('rejects files with invalid type', () => {
+    it('rejects files with invalid type', async () => {
       render(<ImagePanel {...editProps} />);
       fireEvent.click(screen.getByRole('tab', { name: /upload/i }));
 
@@ -179,14 +179,16 @@ describe('ImagePanel', () => {
       const dragger = screen.getByText('Click or drag an image file here').closest('.ant-upload')!;
       const input = dragger.querySelector('input[type="file"]')!;
 
-      fireEvent.change(input, { target: { files: [file] } });
+      await act(async () => {
+        fireEvent.change(input, { target: { files: [file] } });
+      });
       expect(mockMessageError).toHaveBeenCalledWith(
         'Invalid file type. Allowed: JPG, PNG, GIF, SVG, WebP'
       );
       expect(mockUploadImage).not.toHaveBeenCalled();
     });
 
-    it('rejects files exceeding 5 MB', () => {
+    it('rejects files exceeding 5 MB', async () => {
       render(<ImagePanel {...editProps} />);
       fireEvent.click(screen.getByRole('tab', { name: /upload/i }));
 
@@ -197,7 +199,9 @@ describe('ImagePanel', () => {
       const dragger = screen.getByText('Click or drag an image file here').closest('.ant-upload')!;
       const input = dragger.querySelector('input[type="file"]')!;
 
-      fireEvent.change(input, { target: { files: [file] } });
+      await act(async () => {
+        fireEvent.change(input, { target: { files: [file] } });
+      });
       expect(mockMessageError).toHaveBeenCalledWith(
         'File exceeds maximum size of 5 MB'
       );
@@ -226,7 +230,9 @@ describe('ImagePanel', () => {
       const dragger = screen.getByText('Click or drag an image file here').closest('.ant-upload')!;
       const input = dragger.querySelector('input[type="file"]')!;
 
-      fireEvent.change(input, { target: { files: [file] } });
+      await act(async () => {
+        fireEvent.change(input, { target: { files: [file] } });
+      });
 
       await waitFor(() => {
         expect(mockUploadImage).toHaveBeenCalledWith(file);
@@ -251,7 +257,9 @@ describe('ImagePanel', () => {
       const dragger = screen.getByText('Click or drag an image file here').closest('.ant-upload')!;
       const input = dragger.querySelector('input[type="file"]')!;
 
-      fireEvent.change(input, { target: { files: [file] } });
+      await act(async () => {
+        fireEvent.change(input, { target: { files: [file] } });
+      });
 
       await waitFor(() => {
         expect(mockMessageError).toHaveBeenCalledWith('Failed to upload image');

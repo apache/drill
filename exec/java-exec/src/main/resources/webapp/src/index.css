@@ -19,19 +19,25 @@
 /* ==================== CSS Custom Properties (Theme) ==================== */
 
 :root {
-  --color-bg-layout: #f0f2f5;
+  --color-bg-layout: #f8fafc;
   --color-bg-container: #ffffff;
-  --color-bg-elevated: #fafafa;
-  --color-bg-hover: #e6f4ff;
-  --color-border: #e8e8e8;
-  --color-border-secondary: #f0f0f0;
-  --color-text: #333333;
-  --color-text-secondary: #666666;
-  --color-text-tertiary: #999999;
+  --color-bg-elevated: #f1f5f9;
+  --color-bg-hover: #eff6ff;
+  --color-border: #e2e8f0;
+  --color-border-secondary: #f1f5f9;
+  --color-text: #0f172a;
+  --color-text-secondary: #64748b;
+  --color-text-tertiary: #94a3b8;
   --color-bg-overlay: rgba(255, 255, 255, 0.8);
-  --color-bg-assistant: #f5f5f5;
+  --color-bg-assistant: #f1f5f9;
   --color-bg-code-inline: rgba(0, 0, 0, 0.06);
-  --color-bg-tool-json: #f8f8f8;
+  --color-bg-tool-json: #f8fafc;
+  --color-primary: #3b82f6;
+  --color-primary-hover: #2563eb;
+  --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -2px rgba(0, 0, 0, 0.1);
+  --radius: 8px;
+  --radius-lg: 12px;
   --json-key-color: #881391;
   --json-string-color: #1a1aa6;
   --json-number-color: #098658;
@@ -39,19 +45,23 @@
 }
 
 html.dark {
-  --color-bg-layout: #141414;
-  --color-bg-container: #1f1f1f;
-  --color-bg-elevated: #262626;
-  --color-bg-hover: #111a2c;
-  --color-border: #424242;
-  --color-border-secondary: #303030;
-  --color-text: #e0e0e0;
-  --color-text-secondary: #999999;
-  --color-text-tertiary: #666666;
+  --color-bg-layout: #0f172a;
+  --color-bg-container: #1e293b;
+  --color-bg-elevated: #334155;
+  --color-bg-hover: #1e3a5f;
+  --color-border: #334155;
+  --color-border-secondary: #1e293b;
+  --color-text: #f1f5f9;
+  --color-text-secondary: #94a3b8;
+  --color-text-tertiary: #64748b;
   --color-bg-overlay: rgba(0, 0, 0, 0.6);
-  --color-bg-assistant: #2a2a2a;
+  --color-bg-assistant: #1e293b;
   --color-bg-code-inline: rgba(255, 255, 255, 0.1);
-  --color-bg-tool-json: #1a1a1a;
+  --color-bg-tool-json: #0f172a;
+  --color-primary: #60a5fa;
+  --color-primary-hover: #3b82f6;
+  --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.3);
+  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.4), 0 2px 4px -2px rgba(0, 0, 0, 0.3);
   --json-key-color: #c792ea;
   --json-string-color: #c3e88d;
   --json-number-color: #f78c6c;
@@ -72,9 +82,10 @@ html, body, #root {
 }
 
 body {
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  letter-spacing: -0.011em;
   background: var(--color-bg-layout);
   color: var(--color-text);
   transition: background-color 0.2s, color 0.2s;
@@ -101,6 +112,7 @@ body {
   min-width: 200px;
   max-width: 400px;
   border-right: 1px solid var(--color-border);
+  box-shadow: var(--shadow-sm);
   background: var(--color-bg-elevated);
   overflow: auto;
   resize: horizontal;
@@ -132,7 +144,7 @@ body {
 
 .sidebar-toggle:hover {
   background: var(--color-bg-hover);
-  color: #1890ff;
+  color: var(--color-primary);
 }
 
 .sqllab-content {
@@ -160,7 +172,7 @@ body {
 
 .sqllab-resize-handle:hover,
 .sqllab-resize-handle.dragging {
-  background: #1890ff;
+  background: var(--color-primary);
 }
 
 .sqllab-resize-handle::after {
@@ -203,18 +215,18 @@ body {
 }
 
 html.dark .ag-theme-alpine {
-  --ag-background-color: #1f1f1f;
-  --ag-header-background-color: #2a2a2a;
-  --ag-odd-row-background-color: #262626;
-  --ag-row-hover-color: #303030;
-  --ag-selected-row-background-color: #111a2c;
-  --ag-range-selection-background-color: rgba(24, 144, 255, 0.2);
-  --ag-border-color: #424242;
-  --ag-header-foreground-color: #e0e0e0;
-  --ag-foreground-color: #e0e0e0;
-  --ag-secondary-foreground-color: #999;
+  --ag-background-color: #1e293b;
+  --ag-header-background-color: #334155;
+  --ag-odd-row-background-color: #1e293b;
+  --ag-row-hover-color: #334155;
+  --ag-selected-row-background-color: #1e3a5f;
+  --ag-range-selection-background-color: rgba(59, 130, 246, 0.2);
+  --ag-border-color: #334155;
+  --ag-header-foreground-color: #f1f5f9;
+  --ag-foreground-color: #f1f5f9;
+  --ag-secondary-foreground-color: #94a3b8;
   --ag-modal-overlay-background-color: rgba(0, 0, 0, 0.5);
-  --ag-input-focus-border-color: #1890ff;
+  --ag-input-focus-border-color: var(--color-primary);
 }
 
 /* ==================== Schema Tree ==================== */
@@ -231,7 +243,7 @@ html.dark .ag-theme-alpine {
 /* ==================== Toolbars ==================== */
 
 .query-toolbar {
-  padding: 8px 16px;
+  padding: 10px 16px;
   background: var(--color-bg-container);
   border-bottom: 1px solid var(--color-border);
   display: flex;
@@ -240,7 +252,7 @@ html.dark .ag-theme-alpine {
 }
 
 .results-toolbar {
-  padding: 8px 16px;
+  padding: 10px 16px;
   background: var(--color-bg-container);
   border-bottom: 1px solid var(--color-border);
   display: flex;
@@ -270,7 +282,7 @@ html.dark .ag-theme-alpine {
 
 .json-cell-expand {
   cursor: pointer;
-  color: #1890ff;
+  color: var(--color-primary);
   flex-shrink: 0;
   font-size: 12px;
   opacity: 0.6;
@@ -284,7 +296,7 @@ html.dark .ag-theme-alpine {
 .json-viewer {
   background: var(--color-bg-elevated);
   border: 1px solid var(--color-border);
-  border-radius: 4px;
+  border-radius: var(--radius);
   padding: 12px 16px;
   font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, monospace;
   font-size: 13px;
@@ -305,14 +317,57 @@ html.dark .ag-theme-alpine {
 }
 
 .resize-handle:hover {
-  background: #1890ff;
+  background: var(--color-primary);
+}
+
+/* ==================== Tab Labels & Context Menu ==================== */
+
+.tab-label-wrapper {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  user-select: none;
+}
+
+.tab-label-text {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.tab-menu-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 18px;
+  height: 18px;
+  border-radius: 4px;
+  font-size: 12px;
+  color: var(--color-text-secondary);
+  opacity: 0;
+  transition: opacity 0.15s, background 0.15s;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+.tab-menu-btn:hover {
+  background: var(--color-bg-elevated);
+  color: var(--color-text);
+}
+
+/* Show menu button when hovering the tab or when tab is active */
+.ant-tabs-tab:hover .tab-menu-btn,
+.ant-tabs-tab-active .tab-menu-btn {
+  opacity: 1;
 }
 
 /* ==================== Tab Rename ==================== */
 
 .tab-rename-input {
-  border: 1px solid #1890ff;
-  border-radius: 2px;
+  border: 1px solid var(--color-primary);
+  border-radius: 6px;
   padding: 0 4px;
   font-size: 14px;
   line-height: 20px;
@@ -379,12 +434,12 @@ html.dark .ag-theme-alpine {
 }
 
 .dashboard-grid.edit-mode .react-grid-item:hover {
-  border-color: #1890ff;
+  border-color: var(--color-primary);
 }
 
 .dashboard-grid.edit-mode .react-grid-item.react-draggable-dragging {
-  border-color: #1890ff;
-  box-shadow: 0 4px 12px rgba(24, 144, 255, 0.3);
+  border-color: var(--color-primary);
+  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
   z-index: 100;
 }
 
@@ -395,13 +450,13 @@ html.dark .ag-theme-alpine {
   flex-direction: column;
   background: var(--db-panel-bg, var(--color-bg-container));
   border-color: var(--db-panel-border, var(--color-border));
-  border-radius: var(--db-panel-radius, 8px);
+  border-radius: var(--db-panel-radius, var(--radius-lg));
 }
 
 .dashboard-panel-card.ant-card {
   background: var(--db-panel-bg, var(--color-bg-container));
   border-color: var(--db-panel-border, var(--color-border));
-  border-radius: var(--db-panel-radius, 8px);
+  border-radius: var(--db-panel-radius, var(--radius-lg));
   color: var(--db-font, var(--color-text));
 }
 
@@ -455,7 +510,7 @@ html.dark .ag-theme-alpine {
 }
 
 .drag-handle:hover {
-  color: #1890ff;
+  color: var(--color-primary);
 }
 
 .drag-handle:active {
@@ -469,9 +524,9 @@ html.dark .ag-theme-alpine {
 
 /* react-grid-layout placeholder */
 .react-grid-item.react-grid-placeholder {
-  background: #1890ff;
+  background: var(--color-primary);
   opacity: 0.15;
-  border-radius: 8px;
+  border-radius: var(--radius-lg);
 }
 
 /* ==================== Content Panel Styles ==================== */
@@ -638,7 +693,7 @@ html.dark .ag-theme-alpine {
 
 .prospector-sidebar-toggle:hover {
   background: var(--color-bg-hover);
-  color: #1890ff;
+  color: var(--color-primary);
 }
 
 /* Panel layout */
@@ -715,7 +770,7 @@ html.dark .ag-theme-alpine {
 }
 
 .prospector-message-user .prospector-message-avatar {
-  background: #1890ff;
+  background: var(--color-primary);
   color: #fff;
 }
 
@@ -730,7 +785,7 @@ html.dark .ag-theme-alpine {
 }
 
 .prospector-bubble-user {
-  background: #1890ff;
+  background: var(--color-primary);
   color: #fff;
   border-bottom-right-radius: 4px;
 }
@@ -809,7 +864,7 @@ html.dark .prospector-bubble-error {
   display: inline-block;
   width: 6px;
   height: 14px;
-  background: #1890ff;
+  background: var(--color-primary);
   margin-left: 2px;
   animation: prospector-blink 1s infinite;
   vertical-align: text-bottom;

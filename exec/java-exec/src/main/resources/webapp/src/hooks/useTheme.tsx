@@ -106,8 +106,22 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
         theme={{
           algorithm: isDark ? theme.darkAlgorithm : theme.defaultAlgorithm,
           token: {
-            colorPrimary: '#1890ff',
-            borderRadius: 4,
+            colorPrimary: '#3b82f6',
+            borderRadius: 8,
+            fontFamily: "'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif",
+            colorLink: '#3b82f6',
+            controlHeight: 36,
+            ...(isDark
+              ? {
+                  colorBgLayout: '#0f172a',
+                  colorBgContainer: '#1e293b',
+                  colorBorder: '#334155',
+                }
+              : {
+                  colorBgLayout: '#f8fafc',
+                  colorBgContainer: '#ffffff',
+                  colorBorder: '#e2e8f0',
+                }),
           },
         }}
       >
