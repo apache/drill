@@ -156,6 +156,7 @@ export type ChartType =
   | 'pie'
   | 'scatter'
   | 'table'
+  | 'pivot'
   | 'heatmap'
   | 'treemap'
   | 'gauge'
