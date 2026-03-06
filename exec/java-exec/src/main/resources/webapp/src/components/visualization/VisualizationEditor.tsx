@@ -510,6 +510,7 @@ export default function VisualizationEditor({
                   data={previewData}
                   loading={chartLoading}
                   height="100%"
+                  sql={editedSql || undefined}
                 />
               </div>
             </div>

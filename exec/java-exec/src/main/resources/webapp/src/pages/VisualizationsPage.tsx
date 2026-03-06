@@ -65,6 +65,7 @@ import {
   CalendarOutlined,
   ClusterOutlined,
   ApartmentOutlined,
+  AppstoreOutlined,
 } from '@ant-design/icons';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { getVisualizations, deleteVisualization } from '../api/visualizations';
@@ -83,6 +84,7 @@ const chartIcons: Record<ChartType, React.ReactNode> = {
   pie: <PieChartOutlined />,
   scatter: <DotChartOutlined />,
   table: <TableOutlined />,
+  pivot: <AppstoreOutlined />,
   heatmap: <HeatMapOutlined />,
   treemap: <FundOutlined />,
   gauge: <DashboardOutlined />,
@@ -108,6 +110,7 @@ const chartColors: Record<ChartType, string> = {
   pie: '#fac858',
   scatter: '#ee6666',
   table: '#73c0de',
+  pivot: '#5470c6',
   heatmap: '#3ba272',
   treemap: '#fc8452',
   gauge: '#9a60b4',
@@ -542,6 +545,7 @@ export default function VisualizationsPage() {
                 data={viewQueryResult}
                 loading={viewQueryLoading}
                 height={400}
+                sql={viewingViz.sql}
               />
             </div>
           </div>

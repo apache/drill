@@ -149,6 +149,7 @@ export interface UseProspectorReturn {
 
 export function useProspector(
   onSqlGenerated?: (sql: string) => void,
+  onVisualizationCreated?: (id: string, name: string) => void,
 ): UseProspectorReturn {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [isStreaming, setIsStreaming] = useState(false);
@@ -212,7 +213,13 @@ export function useProspector(
             config: args.config as VisualizationConfig,
             sql: args.sql,
           });
-          return JSON.stringify({ id: viz.id, name: viz.name, message: 'Visualization created successfully' });
+          onVisualizationCreated?.(viz.id, viz.name);
+          return JSON.stringify({
+            id: viz.id,
+            name: viz.name,
+            message: `Visualization "${viz.name}" created successfully.`,
+            viewPath: '/visualizations',
+          });
         }
 
         case 'create_dashboard': {
@@ -221,7 +228,12 @@ export function useProspector(
             description: args.description,
             panels: args.panels,
           });
-          return JSON.stringify({ id: dashboard.id, name: dashboard.name, message: 'Dashboard created successfully' });
+          return JSON.stringify({
+            id: dashboard.id,
+            name: dashboard.name,
+            message: `Dashboard "${dashboard.name}" created successfully.`,
+            viewPath: '/dashboards',
+          });
         }
 
         case 'save_query': {
@@ -245,7 +257,7 @@ export function useProspector(
       const msg = err instanceof Error ? err.message : 'Tool execution failed';
       return JSON.stringify({ error: msg });
     }
-  }, [onSqlGenerated]);
+  }, [onSqlGenerated, onVisualizationCreated]);
 
   const doStreamRound = useCallback((
     allMessages: ChatMessage[],
