@@ -17,7 +17,7 @@
  */
 import { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { Layout, Menu, Button, Space, Dropdown, Tooltip } from 'antd';
+import { Layout, Menu, Button, Space, Dropdown, Tooltip, Drawer, Grid } from 'antd';
 import {
   FolderOutlined,
   DatabaseOutlined,
@@ -29,6 +29,7 @@ import {
   QuestionCircleOutlined,
   RobotOutlined,
   SettingOutlined,
+  MenuOutlined,
 } from '@ant-design/icons';
 import { SunOutlined, MoonOutlined } from '@ant-design/icons';
 import type { MenuProps } from 'antd';
@@ -62,6 +63,9 @@ export default function Navbar() {
   const location = useLocation();
   const { isDark, toggle } = useTheme();
   const [prospectorSettingsOpen, setProspectorSettingsOpen] = useState(false);
+  const [drawerOpen, setDrawerOpen] = useState(false);
+  const screens = Grid.useBreakpoint();
+  const isMobile = !screens.md;
 
   // Determine selected nav key, handling sub-routes like /projects/:id, /datasources/:name
   let selectedKey = location.pathname;
@@ -81,7 +85,7 @@ export default function Navbar() {
       style={{
         display: 'flex',
         alignItems: 'center',
-        padding: '0 24px',
+        padding: isMobile ? '0 12px' : '0 24px',
         background: navBg,
         backdropFilter: 'blur(12px)',
         WebkitBackdropFilter: 'blur(12px)',
@@ -110,21 +114,26 @@ export default function Navbar() {
         <span style={{ fontSize: 16, fontWeight: 600 }}>SQL Lab</span>
       </Link>
 
-      {/* Main Navigation */}
-      <Menu
-        theme={isDark ? 'dark' : 'light'}
-        mode="horizontal"
-        selectedKeys={[selectedKey]}
-        items={navItems.map((item) => ({
-          key: item.key,
-          icon: item.icon,
-          label: <Link to={item.key}>{item.label}</Link>,
-        }))}
-        style={{ flex: 1, minWidth: 0, background: 'transparent', borderBottom: 'none' }}
-      />
+      {/* Main Navigation — hidden on mobile */}
+      {!isMobile && (
+        <Menu
+          theme={isDark ? 'dark' : 'light'}
+          mode="horizontal"
+          selectedKeys={[selectedKey]}
+          items={navItems.map((item) => ({
+            key: item.key,
+            icon: item.icon,
+            label: <Link to={item.key}>{item.label}</Link>,
+          }))}
+          style={{ flex: 1, minWidth: 0, background: 'transparent', borderBottom: 'none' }}
+        />
+      )}
+
+      {/* Spacer when nav is hidden */}
+      {isMobile && <div style={{ flex: 1 }} />}
 
       {/* Right side actions */}
-      <Space>
+      <Space size={isMobile ? 4 : 8}>
         <Tooltip title={isDark ? 'Switch to Light Mode' : 'Switch to Dark Mode'}>
           <Button
             type="text"
@@ -134,11 +143,13 @@ export default function Navbar() {
           />
         </Tooltip>
 
-        <Dropdown menu={{ items: adminMenuItems }} placement="bottomRight">
-          <Button type="text" icon={<SettingOutlined />} style={{ color: textColor }}>
-            Admin
-          </Button>
-        </Dropdown>
+        {!isMobile && (
+          <Dropdown menu={{ items: adminMenuItems }} placement="bottomRight">
+            <Button type="text" icon={<SettingOutlined />} style={{ color: textColor }}>
+              Admin
+            </Button>
+          </Dropdown>
+        )}
 
         <Tooltip title="Prospector Settings">
           <Button
@@ -149,11 +160,13 @@ export default function Navbar() {
           />
         </Tooltip>
 
-        <Dropdown menu={{ items: legacyMenuItems }} placement="bottomRight">
-          <Button type="text" icon={<HomeOutlined />} style={{ color: textColor }}>
-            Drill UI
-          </Button>
-        </Dropdown>
+        {!isMobile && (
+          <Dropdown menu={{ items: legacyMenuItems }} placement="bottomRight">
+            <Button type="text" icon={<HomeOutlined />} style={{ color: textColor }}>
+              Drill UI
+            </Button>
+          </Dropdown>
+        )}
 
         <Button
           type="text"
@@ -162,7 +175,50 @@ export default function Navbar() {
           href="https://drill.apache.org/docs/"
           target="_blank"
         />
+
+        {/* Hamburger on mobile */}
+        {isMobile && (
+          <Button
+            type="text"
+            icon={<MenuOutlined />}
+            style={{ color: textColor }}
+            onClick={() => setDrawerOpen(true)}
+          />
+        )}
       </Space>
+
+      {/* Mobile Navigation Drawer */}
+      <Drawer
+        title="Menu"
+        placement="right"
+        open={drawerOpen}
+        onClose={() => setDrawerOpen(false)}
+        width={260}
+      >
+        <Menu
+          theme={isDark ? 'dark' : 'light'}
+          mode="inline"
+          selectedKeys={[selectedKey]}
+          items={navItems.map((item) => ({
+            key: item.key,
+            icon: item.icon,
+            label: <Link to={item.key} onClick={() => setDrawerOpen(false)}>{item.label}</Link>,
+          }))}
+          style={{ background: 'transparent', border: 'none' }}
+        />
+        <div style={{ borderTop: '1px solid var(--color-border)', marginTop: 16, paddingTop: 16 }}>
+          <Dropdown menu={{ items: adminMenuItems }} placement="bottomLeft">
+            <Button type="text" icon={<SettingOutlined />} style={{ color: textColor, width: '100%', textAlign: 'left' }}>
+              Admin
+            </Button>
+          </Dropdown>
+          <Dropdown menu={{ items: legacyMenuItems }} placement="bottomLeft">
+            <Button type="text" icon={<HomeOutlined />} style={{ color: textColor, width: '100%', textAlign: 'left' }}>
+              Drill UI
+            </Button>
+          </Dropdown>
+        </div>
+      </Drawer>
 
       <ProspectorSettingsModal
         open={prospectorSettingsOpen}
