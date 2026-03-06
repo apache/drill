@@ -17,7 +17,7 @@
  */
 import { useMemo, useCallback, useRef, useState } from 'react';
 import { AgGridReact } from 'ag-grid-react';
-import { Button, Space, Dropdown, Typography, Alert, Empty, Modal, Checkbox, Divider } from 'antd';
+import { Button, Space, Dropdown, Typography, Alert, Empty, Modal, Checkbox, Divider, Grid } from 'antd';
 import {
   DownloadOutlined,
   BarChartOutlined,
@@ -26,6 +26,7 @@ import {
   UnorderedListOutlined,
   SortAscendingOutlined,
   ApiOutlined,
+  TableOutlined,
 } from '@ant-design/icons';
 import type { ColDef, GridReadyEvent, GridApi, SortModelItem } from 'ag-grid-community';
 import type { MenuProps } from 'antd';
@@ -76,6 +77,8 @@ export default function ResultsGrid({
   const [columnManagerOpen, setColumnManagerOpen] = useState(false);
   const [sortManagerOpen, setSortManagerOpen] = useState(false);
   const [columnVisibility, setColumnVisibility] = useState<Record<string, boolean>>({});
+  const screens = Grid.useBreakpoint();
+  const isCompact = !screens.lg;
 
   const timestampFormat = resultsSettings?.timestampDisplayFormat ?? DEFAULT_RESULTS_SETTINGS.timestampDisplayFormat;
 
@@ -245,6 +248,33 @@ export default function ResultsGrid({
     },
   ];
 
+  const tableMenuItems: MenuProps['items'] = [
+    {
+      key: 'share',
+      icon: <ApiOutlined />,
+      label: 'Share as API',
+      onClick: onShareApi,
+    },
+    {
+      key: 'columns',
+      icon: <UnorderedListOutlined />,
+      label: 'Manage Columns',
+      onClick: () => { syncColumnVisibility(); setColumnManagerOpen(true); },
+    },
+    {
+      key: 'sort',
+      icon: <SortAscendingOutlined />,
+      label: 'Manage Sort',
+      onClick: () => setSortManagerOpen(true),
+    },
+    {
+      key: 'fit',
+      icon: <ExpandOutlined />,
+      label: 'Fit Columns',
+      onClick: () => gridApiRef.current?.sizeColumnsToFit(),
+    },
+  ];
+
   // Show error state
   if (error) {
     return (
@@ -301,58 +331,49 @@ export default function ResultsGrid({
       {/* Results Toolbar */}
       <div className="results-toolbar">
         <Space>
-          <Text strong>
+          <Text strong style={{ whiteSpace: 'nowrap' }}>
             {rowData.length.toLocaleString()} row{rowData.length !== 1 ? 's' : ''}
           </Text>
-          {results?.queryId && (
-            <Text type="secondary">Query ID: {results.queryId}</Text>
+          {!isCompact && results?.queryId && (
+            <Text type="secondary">ID: {results.queryId}</Text>
           )}
         </Space>
 
         <Space>
           <Dropdown menu={{ items: exportMenuItems }} trigger={['click']}>
             <Button icon={<DownloadOutlined />} size="small">
-              Export
+              {!isCompact && 'Export'}
             </Button>
           </Dropdown>
-          <Button
-            icon={<BarChartOutlined />}
-            onClick={onCreateVisualization}
-            size="small"
-          >
-            Create Chart
+          <Button icon={<BarChartOutlined />} onClick={onCreateVisualization} size="small">
+            {!isCompact && 'Create Chart'}
           </Button>
-          <Button
-            icon={<ApiOutlined />}
-            onClick={onShareApi}
-            size="small"
-          >
-            Share as API
-          </Button>
-          <Button
-            icon={<UnorderedListOutlined />}
-            onClick={() => {
-              syncColumnVisibility();
-              setColumnManagerOpen(true);
-            }}
-            size="small"
-          >
-            Columns
-          </Button>
-          <Button
-            icon={<SortAscendingOutlined />}
-            onClick={() => setSortManagerOpen(true)}
-            size="small"
-          >
-            Sort
-          </Button>
-          <Button
-            icon={<ExpandOutlined />}
-            onClick={() => gridApiRef.current?.sizeColumnsToFit()}
-            size="small"
-          >
-            Fit Columns
-          </Button>
+          {isCompact ? (
+            <Dropdown menu={{ items: tableMenuItems }} trigger={['click']}>
+              <Button icon={<TableOutlined />} size="small">
+                Table
+              </Button>
+            </Dropdown>
+          ) : (
+            <>
+              <Button icon={<ApiOutlined />} onClick={onShareApi} size="small">
+                Share as API
+              </Button>
+              <Button
+                icon={<UnorderedListOutlined />}
+                onClick={() => { syncColumnVisibility(); setColumnManagerOpen(true); }}
+                size="small"
+              >
+                Columns
+              </Button>
+              <Button icon={<SortAscendingOutlined />} onClick={() => setSortManagerOpen(true)} size="small">
+                Sort
+              </Button>
+              <Button icon={<ExpandOutlined />} onClick={() => gridApiRef.current?.sizeColumnsToFit()} size="small">
+                Fit Columns
+              </Button>
+            </>
+          )}
         </Space>
       </div>
 

@@ -18,7 +18,7 @@
 import { useCallback, useState, useEffect, useRef, useMemo, type MutableRefObject } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { Tabs, message, notification, Tooltip, Modal, Alert, Button, Space, Spin, Dropdown } from 'antd';
+import { Tabs, message, notification, Tooltip, Modal, Alert, Button, Space, Spin, Dropdown, Grid } from 'antd';
 import { PlusOutlined, MenuFoldOutlined, MenuUnfoldOutlined, RobotOutlined, MoreOutlined, EditOutlined, CopyOutlined, CloseOutlined } from '@ant-design/icons';
 import Markdown from 'react-markdown';
 import type { RootState, AppDispatch } from '../store';
@@ -88,6 +88,9 @@ export default function SqlLabPage({ datasetFilter, headerContent, projectId }: 
 
   const sidebarCollapsed = useSelector((state: RootState) => state.ui.sidebarCollapsed);
   const editorHeight = useSelector((state: RootState) => state.ui.editorHeight);
+
+  const screens = Grid.useBreakpoint();
+  const isMobile = !screens.md;
 
   const { onResultsCached } = useWorkspacePersistence(projectId);
 
@@ -711,6 +714,21 @@ export default function SqlLabPage({ datasetFilter, headerContent, projectId }: 
 
   return (
     <div className="sqllab-main">
+      {/* Mobile backdrop — closes any open sidebar on tap */}
+      {isMobile && (!sidebarCollapsed || (prospectorOpen && prospectorAvailable)) && (
+        <div
+          className="mobile-sidebar-backdrop"
+          onClick={() => {
+            if (!sidebarCollapsed) {
+              dispatch(toggleSidebar());
+            }
+            if (prospectorOpen) {
+              toggleProspector();
+            }
+          }}
+        />
+      )}
+
       {/* Schema Explorer Sidebar */}
       <div className={`sqllab-sidebar${sidebarCollapsed ? ' collapsed' : ''}`}>
         {!sidebarCollapsed && (
