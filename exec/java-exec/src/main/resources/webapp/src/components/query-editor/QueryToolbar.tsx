@@ -16,7 +16,7 @@
  * limitations under the License.
  */
 import { useState, useCallback } from 'react';
-import { Button, Select, InputNumber, Space, Tooltip, Dropdown, Switch, Typography, Modal, Slider, Divider, Tabs } from 'antd';
+import { Button, Select, InputNumber, Space, Tooltip, Dropdown, Switch, Typography, Modal, Slider, Divider, Tabs, Grid } from 'antd';
 import {
   PlayCircleOutlined,
   StopOutlined,
@@ -89,6 +89,8 @@ export default function QueryToolbar({
 }: QueryToolbarProps) {
   const [autoLimitEnabled, setAutoLimitEnabled] = useState(true);
   const [settingsModalOpen, setSettingsModalOpen] = useState(false);
+  const screens = Grid.useBreakpoint();
+  const isCompact = !screens.lg;
 
   const handleAutoLimitToggle = useCallback(
     (enabled: boolean) => {
@@ -120,29 +122,40 @@ export default function QueryToolbar({
       label: 'Query History',
       onClick: onShowHistory,
     },
+    {
+      key: 'settings',
+      icon: <SettingOutlined />,
+      label: 'Settings',
+      onClick: () => setSettingsModalOpen(true),
+    },
+    ...(isCompact && prospectorAvailable
+      ? [
+          { type: 'divider' as const },
+          ...(hasSql
+            ? [
+                { key: 'explain', icon: <BulbOutlined />, label: 'Explain with Prospector', onClick: onExplainQuery },
+                { key: 'optimize', icon: <ThunderboltOutlined />, label: 'Optimize with Prospector', onClick: onOptimizeQuery },
+              ]
+            : []),
+          ...(hasError
+            ? [{ key: 'fix', icon: <BugOutlined />, label: 'Fix Error with Prospector', onClick: onFixError }]
+            : []),
+        ]
+      : []),
   ];
 
   return (
     <div className="query-toolbar">
-      <Space size="middle">
+      <Space size="small" wrap>
         {/* Execute/Cancel Button */}
         {isExecuting ? (
-          <Button
-            type="primary"
-            danger
-            icon={<StopOutlined />}
-            onClick={onCancel}
-          >
+          <Button type="primary" danger icon={<StopOutlined />} onClick={onCancel}>
             Cancel
           </Button>
         ) : (
           <Tooltip title="Ctrl/Cmd + Enter">
-            <Button
-              type="primary"
-              icon={<PlayCircleOutlined />}
-              onClick={onExecute}
-            >
-              Run Query
+            <Button type="primary" icon={<PlayCircleOutlined />} onClick={onExecute}>
+              Run
             </Button>
           </Tooltip>
         )}
@@ -150,18 +163,14 @@ export default function QueryToolbar({
         {/* Save Query Button */}
         <Tooltip title="Save Query">
           <Button icon={<SaveOutlined />} onClick={onSave}>
-            Save
+            {!isCompact && 'Save'}
           </Button>
         </Tooltip>
 
         {/* Auto Limit */}
-        <Space size="small">
-          <Switch
-            size="small"
-            checked={autoLimitEnabled}
-            onChange={handleAutoLimitToggle}
-          />
-          <Text type="secondary">Limit:</Text>
+        <Space size={4}>
+          <Switch size="small" checked={autoLimitEnabled} onChange={handleAutoLimitToggle} />
+          {!isCompact && <Text type="secondary">Limit:</Text>}
           <InputNumber
             size="small"
             min={1}
@@ -169,58 +178,38 @@ export default function QueryToolbar({
             value={autoLimit}
             onChange={handleAutoLimitChange}
             disabled={!autoLimitEnabled}
-            style={{ width: 80 }}
+            style={{ width: isCompact ? 60 : 80 }}
           />
         </Space>
 
-        {/* More Options */}
+        {/* More / Settings / AI (collapsed on compact) */}
         <Dropdown menu={{ items: moreMenuItems }} trigger={['click']}>
           <Button>
             More <DownOutlined />
           </Button>
         </Dropdown>
 
-        {/* Settings */}
-        <Tooltip title="Editor & Results Settings">
-          <Button
-            icon={<SettingOutlined />}
-            onClick={() => setSettingsModalOpen(true)}
-          >
-            Settings
-          </Button>
-        </Tooltip>
-
-        {/* AI Actions */}
-        {prospectorAvailable && (
+        {/* AI Actions — only shown expanded on large screens */}
+        {!isCompact && prospectorAvailable && (
           <>
             <Divider type="vertical" style={{ height: 24 }} />
             {hasSql && (
               <Tooltip title="Explain this query with Prospector">
-                <Button
-                  icon={<BulbOutlined />}
-                  onClick={onExplainQuery}
-                >
+                <Button icon={<BulbOutlined />} onClick={onExplainQuery}>
                   Explain
                 </Button>
               </Tooltip>
             )}
             {hasSql && (
               <Tooltip title="Optimize this query with Prospector">
-                <Button
-                  icon={<ThunderboltOutlined />}
-                  onClick={onOptimizeQuery}
-                >
+                <Button icon={<ThunderboltOutlined />} onClick={onOptimizeQuery}>
                   Optimize
                 </Button>
               </Tooltip>
             )}
             {hasError && (
               <Tooltip title="Fix this error with Prospector">
-                <Button
-                  icon={<BugOutlined />}
-                  onClick={onFixError}
-                  danger
-                >
+                <Button icon={<BugOutlined />} onClick={onFixError} danger>
                   Fix Error
                 </Button>
               </Tooltip>
@@ -230,7 +219,7 @@ export default function QueryToolbar({
       </Space>
 
       {/* Right side: Prospector toggle + Execution Time */}
-      <div style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: 12 }}>
+      <div style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: 8, flexShrink: 0 }}>
         {prospectorAvailable && (
           <Tooltip title={prospectorOpen ? 'Hide Prospector' : 'Show Prospector'}>
             <Button
@@ -241,13 +230,13 @@ export default function QueryToolbar({
           </Tooltip>
         )}
         {executionTime !== undefined && !isExecuting && (
-          <Text type="secondary">
-            Executed in {(executionTime / 1000).toFixed(2)}s
+          <Text type="secondary" style={{ whiteSpace: 'nowrap' }}>
+            {(executionTime / 1000).toFixed(2)}s
           </Text>
         )}
         {isExecuting && (
-          <Text type="secondary">
-            Executing...
+          <Text type="secondary" style={{ whiteSpace: 'nowrap' }}>
+            Running...
           </Text>
         )}
       </div>
