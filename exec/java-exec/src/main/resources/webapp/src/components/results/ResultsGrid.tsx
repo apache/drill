@@ -93,7 +93,7 @@ export default function ResultsGrid({
         headerName: col,
         sortable: true,
         resizable: true,
-        minWidth: 100,
+        minWidth: Math.max(100, col.length * 9 + 60),
         filter: config.filter,
         filterParams: config.filterParams,
         // eslint-disable-next-line @typescript-eslint/no-explicit-any

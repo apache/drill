@@ -360,6 +360,7 @@ export default function VisualizationBuilder({
                 data={effectiveData}
                 loading={aggregatedLoading}
                 height={350}
+                sql={sql}
               />
             </Card>
           </Col>
@@ -406,6 +407,7 @@ export default function VisualizationBuilder({
                 config={{ ...config, colorScheme: selectedColorScheme }}
                 data={effectiveData}
                 height={300}
+                sql={sql}
               />
             </Card>
           </Col>
