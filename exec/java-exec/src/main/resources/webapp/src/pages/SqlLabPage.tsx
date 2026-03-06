@@ -17,8 +17,8 @@
  */
 import { useCallback, useState, useEffect, useRef, useMemo, type MutableRefObject } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
-import { useLocation } from 'react-router-dom';
-import { Tabs, message, Tooltip, Modal, Alert, Button, Space, Spin, Dropdown } from 'antd';
+import { useLocation, useNavigate } from 'react-router-dom';
+import { Tabs, message, notification, Tooltip, Modal, Alert, Button, Space, Spin, Dropdown } from 'antd';
 import { PlusOutlined, MenuFoldOutlined, MenuUnfoldOutlined, RobotOutlined, MoreOutlined, EditOutlined, CopyOutlined, CloseOutlined } from '@ant-design/icons';
 import Markdown from 'react-markdown';
 import type { RootState, AppDispatch } from '../store';
@@ -82,6 +82,7 @@ interface LocationState {
 export default function SqlLabPage({ datasetFilter, headerContent, projectId }: SqlLabPageProps) {
   const dispatch = useDispatch<AppDispatch>();
   const location = useLocation();
+  const navigate = useNavigate();
   const { tabs, activeTabId } = useSelector((state: RootState) => state.query);
   const activeTab = tabs.find((t) => t.id === activeTabId);
 
@@ -195,7 +196,26 @@ export default function SqlLabPage({ datasetFilter, headerContent, projectId }: 
   } = useQueryExecution(activeTabId, addHistory);
 
   // Prospector hook
-  const prospector = useProspector(updateSql);
+  const prospector = useProspector(updateSql, useCallback((id: string, name: string) => {
+    notification.success({
+      message: 'Visualization Created',
+      description: `"${name}" has been saved.`,
+      btn: (
+        <Button
+          size="small"
+          type="primary"
+          onClick={() => {
+            notification.destroy();
+            navigate('/visualizations');
+          }}
+        >
+          View Visualizations
+        </Button>
+      ),
+      duration: 0,
+      key: `viz-created-${id}`,
+    });
+  }, [navigate]));
 
   // Real-time SQL validation markers in the editor
   useSqlValidation(sql, editorInstanceRef, monacoInstanceRef);
@@ -392,6 +412,14 @@ export default function SqlLabPage({ datasetFilter, headerContent, projectId }: 
       window.history.replaceState({}, document.title);
     }
   }, [locationState, updateSql, dispatch, activeTabId]);
+
+  // Handle format SQL
+  const handleFormat = useCallback(() => {
+    if (!sql || !sql.trim()) {
+      return;
+    }
+    updateSql(prettifySql(sql));
+  }, [sql, updateSql]);
 
   // Handle execute with current settings
   const handleExecute = useCallback(() => {
@@ -795,6 +823,7 @@ export default function SqlLabPage({ datasetFilter, headerContent, projectId }: 
             onExecute={handleExecute}
             onCancel={cancel}
             onSave={handleSave}
+            onFormat={handleFormat}
             isExecuting={isExecuting}
             executionTime={executionTime}
             schemas={schemas}

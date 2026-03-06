@@ -19,6 +19,7 @@ import React from 'react';
 import { Card, Typography, Row, Col, Tooltip } from 'antd';
 import {
   AreaChartOutlined,
+  AppstoreOutlined,
   BarChartOutlined,
   LineChartOutlined,
   PieChartOutlined,
@@ -93,6 +94,13 @@ const chartTypes: ChartTypeOption[] = [
     name: 'Data Table',
     description: 'Display data in tabular format',
     icon: <TableOutlined style={{ fontSize: 24 }} />,
+    category: 'basic',
+  },
+  {
+    type: 'pivot',
+    name: 'Pivot Table',
+    description: 'Cross-tabulate rows by a column dimension with aggregated values',
+    icon: <AppstoreOutlined style={{ fontSize: 24 }} />,
     category: 'basic',
   },
   {
