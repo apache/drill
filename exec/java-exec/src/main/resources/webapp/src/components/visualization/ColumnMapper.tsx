@@ -141,6 +141,12 @@ function getRequiredFields(chartType: ChartType): { field: string; label: string
       return [
         { field: 'dimensions', label: 'Columns to Display', multi: true, numeric: false },
       ];
+    case 'pivot':
+      return [
+        { field: 'xAxis', label: 'Row Dimension', numeric: false },
+        { field: 'yAxis', label: 'Column Pivot (creates headers)', numeric: false },
+        { field: 'metrics', label: 'Value', multi: false, numeric: true },
+      ];
     case 'sankey':
       return [
         { field: 'xAxis', label: 'Source', numeric: false },
@@ -347,7 +353,7 @@ export default function ColumnMapper({ columns, chartType, config, onChange }: C
                 {numeric ? 'Numeric columns recommended' : 'Text/category columns recommended'}
               </Text>
             )}
-            {field === 'metrics' && config.metrics && config.metrics.length > 0 && (
+            {field === 'metrics' && chartType !== 'pivot' && config.metrics && config.metrics.length > 0 && (
               <div style={{ marginTop: 8 }}>
                 <Text type="secondary" style={{ fontSize: 11, display: 'block', marginBottom: 4 }}>
                   Aggregation (optional — groups results automatically)
@@ -828,6 +834,41 @@ export default function ColumnMapper({ columns, chartType, config, onChange }: C
                 chartOptions: { ...config.chartOptions, sankeyNodeWidth: value ?? 20 },
               })}
               style={{ width: '100%' }}
+            />
+          </Form.Item>
+        </>
+      )}
+      {chartType === 'pivot' && (
+        <>
+          <Divider style={{ margin: '8px 0' }} />
+          <Form.Item label="Aggregation">
+            <Select
+              value={(config.chartOptions?.pivotAggregation as string) || 'SUM'}
+              onChange={(v) => onChange({
+                ...config,
+                chartOptions: { ...config.chartOptions, pivotAggregation: v },
+              })}
+              size="small"
+              style={{ width: '100%' }}
+              options={AGGREGATION_OPTIONS}
+            />
+          </Form.Item>
+          <Form.Item label="Row Totals">
+            <Switch
+              checked={config.chartOptions?.showRowTotals !== false}
+              onChange={(checked) => onChange({
+                ...config,
+                chartOptions: { ...config.chartOptions, showRowTotals: checked },
+              })}
+            />
+          </Form.Item>
+          <Form.Item label="Column Totals">
+            <Switch
+              checked={config.chartOptions?.showColumnTotals === true}
+              onChange={(checked) => onChange({
+                ...config,
+                chartOptions: { ...config.chartOptions, showColumnTotals: checked },
+              })}
             />
           </Form.Item>
         </>

@@ -17,8 +17,8 @@
  */
 import { useMemo, useCallback } from 'react';
 import ReactECharts from 'echarts-for-react';
-import { Empty, Spin, Table, Typography } from 'antd';
-import { CaretUpOutlined, CaretDownOutlined, MinusOutlined, TableOutlined, InfoCircleOutlined } from '@ant-design/icons';
+import { Alert, Button, Empty, Spin, Table, Tooltip, Typography, message } from 'antd';
+import { CaretUpOutlined, CaretDownOutlined, CopyOutlined, MinusOutlined, TableOutlined, InfoCircleOutlined } from '@ant-design/icons';
 import type { EChartsOption } from 'echarts';
 import * as echarts from 'echarts/core';
 import { graphic } from 'echarts';
@@ -39,6 +39,8 @@ interface ChartPreviewProps {
   loading?: boolean;
   height?: number | string;
   mini?: boolean;
+  /** The original SQL query — used by pivot table to generate a copyable Drill PIVOT statement. */
+  sql?: string;
   /** Override dark mode detection (e.g. from dashboard theme). */
   darkMode?: boolean;
   /** Called when user clicks a chart element. Receives the column name, value, and type flags. */
@@ -323,6 +325,39 @@ function buildTrendLineSeries(
   };
 }
 
+// Detect cycles in a directed graph using DFS. Returns true if a cycle exists.
+function hasSankeyCycle(links: { source: string; target: string }[]): boolean {
+  const adj = new Map<string, string[]>();
+  for (const link of links) {
+    if (!adj.has(link.source)) {
+      adj.set(link.source, []);
+    }
+    adj.get(link.source)!.push(link.target);
+  }
+  const visited = new Set<string>();
+  const inStack = new Set<string>();
+  function dfs(node: string): boolean {
+    visited.add(node);
+    inStack.add(node);
+    for (const neighbor of adj.get(node) ?? []) {
+      if (inStack.has(neighbor)) {
+        return true;
+      }
+      if (!visited.has(neighbor) && dfs(neighbor)) {
+        return true;
+      }
+    }
+    inStack.delete(node);
+    return false;
+  }
+  for (const node of adj.keys()) {
+    if (!visited.has(node) && dfs(node)) {
+      return true;
+    }
+  }
+  return false;
+}
+
 export default function ChartPreview({
   chartType,
   config,
@@ -330,6 +365,7 @@ export default function ChartPreview({
   loading = false,
   height = 400,
   mini = false,
+  sql,
   darkMode,
   onChartClick,
 }: ChartPreviewProps) {
@@ -460,6 +496,29 @@ export default function ChartPreview({
     }
     return { click: handleChartClick };
   }, [onChartClick, handleChartClick]);
+
+  // Pre-compute cycle detection for Sankey so the render can show a proper React error component
+  const sankeyHasCycle = useMemo(() => {
+    if (chartType !== 'sankey') {
+      return false;
+    }
+    const { xAxis, yAxis, metrics } = config;
+    if (!data?.rows || !xAxis || !yAxis || !metrics?.length) {
+      return false;
+    }
+    const valueField = metrics[0];
+    const links = data.rows
+      .filter((row) => {
+        const src = String(row[xAxis] ?? '').trim();
+        const tgt = String(row[yAxis] ?? '').trim();
+        return src && tgt && src !== tgt && Number(row[valueField]) > 0;
+      })
+      .map((row) => ({
+        source: String(row[xAxis]).trim(),
+        target: String(row[yAxis]).trim(),
+      }));
+    return hasSankeyCycle(links);
+  }, [chartType, config, data]);
 
   const chartOption: EChartsOption | null = useMemo(() => {
     if (!data || !data.rows || data.rows.length === 0) {
@@ -1480,12 +1539,25 @@ export default function ChartPreview({
         }));
 
         const links = data.rows
-          .filter((row) => row[xAxis] != null && row[yAxis] != null)
+          .filter((row) => {
+            const src = String(row[xAxis] ?? '').trim();
+            const tgt = String(row[yAxis] ?? '').trim();
+            // Exclude missing nodes, self-loops, and zero-value flows
+            return src && tgt && src !== tgt && Number(row[valueField]) > 0;
+          })
           .map((row) => ({
             source: String(row[xAxis]).trim(),
             target: String(row[yAxis]).trim(),
-            value: Number(row[valueField]) || 0,
+            value: Number(row[valueField]),
           }));
+
+        if (nodes.length === 0 || links.length === 0) {
+          return null;
+        }
+
+        if (hasSankeyCycle(links)) {
+          return null;
+        }
 
         return {
           tooltip: {
@@ -1931,6 +2003,281 @@ export default function ChartPreview({
         size="small"
         pagination={{ pageSize: 50, showSizeChanger: true }}
       />
+    );
+  }
+
+  // Pivot table mini-mode placeholder
+  if (chartType === 'pivot' && mini) {
+    return (
+      <div style={{
+        height,
+        display: 'flex',
+        flexDirection: 'column',
+        padding: 6,
+        gap: 2,
+        overflow: 'hidden',
+      }}>
+        {[0, 1, 2, 3].map((r) => (
+          <div key={r} style={{ display: 'flex', gap: 2, flex: 1 }}>
+            {[0, 1, 2, 3].map((c) => (
+              <div key={c} style={{
+                flex: c === 0 ? 1.5 : 1,
+                borderRadius: 2,
+                backgroundColor: r === 0 || c === 0 ? colors[0] : 'var(--color-text)',
+                opacity: r === 0 || c === 0 ? 0.4 : r % 2 === 0 ? 0.08 : 0.04,
+              }} />
+            ))}
+          </div>
+        ))}
+      </div>
+    );
+  }
+
+  // Pivot table full render (client-side cross-tabulation)
+  if (chartType === 'pivot' && !mini) {
+    const rowField = config.xAxis;
+    const colField = config.yAxis;
+    const valueField = config.metrics?.[0];
+
+    if (!rowField || !colField || !valueField) {
+      return (
+        <div style={{ height, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <Empty description="Select Row Dimension, Column Pivot, and Value fields" />
+        </div>
+      );
+    }
+
+    const pivotAgg = (config.chartOptions?.pivotAggregation as string) || 'SUM';
+    const showRowTotals = config.chartOptions?.showRowTotals !== false;
+    const showColumnTotals = config.chartOptions?.showColumnTotals === true;
+    const MAX_PIVOT_COLS = 50;
+
+    // Collect unique row and column keys in insertion order
+    const rowKeySet = new Set<string>();
+    const colKeySet = new Set<string>();
+    data.rows.forEach((row) => {
+      rowKeySet.add(String(row[rowField] ?? '(null)'));
+      colKeySet.add(String(row[colField] ?? '(null)'));
+    });
+
+    const rowKeys = Array.from(rowKeySet);
+    const allColKeys = Array.from(colKeySet);
+    const colKeys = allColKeys.slice(0, MAX_PIVOT_COLS);
+    const truncated = allColKeys.length > MAX_PIVOT_COLS;
+
+    // Build cell accumulator: rowKey → colKey → number[]
+    const cellMap = new Map<string, Map<string, number[]>>();
+    for (const rk of rowKeys) {
+      cellMap.set(rk, new Map());
+    }
+    data.rows.forEach((row) => {
+      const rk = String(row[rowField] ?? '(null)');
+      const ck = String(row[colField] ?? '(null)');
+      if (!colKeySet.has(ck) || colKeys.indexOf(ck) < 0) {
+        return;
+      }
+      const val = Number(row[valueField]);
+      if (isNaN(val)) {
+        return;
+      }
+      const colMap = cellMap.get(rk);
+      if (!colMap) {
+        return;
+      }
+      const existing = colMap.get(ck) ?? [];
+      existing.push(val);
+      colMap.set(ck, existing);
+    });
+
+    const aggregate = (values: number[]): number | null => {
+      if (values.length === 0) {
+        return null;
+      }
+      switch (pivotAgg) {
+        case 'AVG': return values.reduce((a, b) => a + b, 0) / values.length;
+        case 'COUNT': return values.length;
+        case 'MIN': return Math.min(...values);
+        case 'MAX': return Math.max(...values);
+        default: return values.reduce((a, b) => a + b, 0); // SUM
+      }
+    };
+
+    const formatVal = (v: number | null): string => {
+      if (v == null) {
+        return '–';
+      }
+      return v.toLocaleString(undefined, { maximumFractionDigits: 2 });
+    };
+
+    // Build table rows
+    const tableRows: Record<string, unknown>[] = rowKeys.map((rk) => {
+      const colMap = cellMap.get(rk)!;
+      const rowData: Record<string, unknown> = { _rowKey: rk };
+      let rowTotal = 0;
+      for (const ck of colKeys) {
+        const agg = aggregate(colMap.get(ck) ?? []);
+        rowData[`__col__${ck}`] = agg;
+        if (agg != null) {
+          rowTotal += agg;
+        }
+      }
+      rowData._rowTotal = rowTotal;
+      return rowData;
+    });
+
+    // Column totals row (appended last if enabled)
+    const colTotals: Record<string, number> = {};
+    let grandTotal = 0;
+    for (const ck of colKeys) {
+      let colTotal = 0;
+      for (const rk of rowKeys) {
+        const agg = aggregate(cellMap.get(rk)?.get(ck) ?? []);
+        if (agg != null) {
+          colTotal += agg;
+        }
+      }
+      colTotals[ck] = colTotal;
+      grandTotal += colTotal;
+    }
+    if (showColumnTotals) {
+      const totalRow: Record<string, unknown> = {
+        _rowKey: 'Total',
+        _rowTotal: grandTotal,
+        _isTotal: true,
+      };
+      for (const ck of colKeys) {
+        totalRow[`__col__${ck}`] = colTotals[ck];
+      }
+      tableRows.push(totalRow);
+    }
+
+    const pivotColumns = [
+      {
+        title: rowField,
+        dataIndex: '_rowKey',
+        key: '_rowKey',
+        fixed: 'left' as const,
+        width: 160,
+        render: (v: unknown, record: Record<string, unknown>) =>
+          record._isTotal
+            ? <strong>{String(v)}</strong>
+            : String(v),
+        sorter: (a: Record<string, unknown>, b: Record<string, unknown>) =>
+          String(a._rowKey ?? '').localeCompare(String(b._rowKey ?? '')),
+      },
+      ...colKeys.map((ck) => ({
+        title: ck,
+        dataIndex: `__col__${ck}`,
+        key: `__col__${ck}`,
+        align: 'right' as const,
+        render: (v: number | null, record: Record<string, unknown>) =>
+          record._isTotal
+            ? <strong>{formatVal(v)}</strong>
+            : formatVal(v),
+        sorter: (a: Record<string, unknown>, b: Record<string, unknown>) => {
+          const av = (a[`__col__${ck}`] as number) ?? -Infinity;
+          const bv = (b[`__col__${ck}`] as number) ?? -Infinity;
+          return av - bv;
+        },
+      })),
+      ...(showRowTotals ? [{
+        title: 'Total',
+        dataIndex: '_rowTotal',
+        key: '_rowTotal',
+        align: 'right' as const,
+        fixed: 'right' as const,
+        width: 100,
+        render: (v: number) => <strong>{formatVal(v)}</strong>,
+        sorter: (a: Record<string, unknown>, b: Record<string, unknown>) =>
+          (a._rowTotal as number ?? 0) - (b._rowTotal as number ?? 0),
+      }] : []),
+    ];
+
+    // Generate equivalent Drill SQL PIVOT query for the "Copy SQL" button
+    const drillPivotSql = (() => {
+      if (!data.rows.length) {
+        return null;
+      }
+      const quotedCol = (c: string) => /[^a-zA-Z0-9_]/.test(c) ? `\`${c}\`` : c;
+      const quotedVal = (v: string) => `'${v.replace(/'/g, "''")}'`;
+      const inList = colKeys.map((ck) => quotedVal(ck)).join(', ');
+      const cleanSql = (sql ?? 'SELECT * FROM your_table').replace(/;\s*$/, '').trim();
+      return `SELECT *\nFROM (\n  ${cleanSql}\n) AS _t\nPIVOT (${pivotAgg}(${quotedCol(valueField)}) FOR ${quotedCol(colField)} IN (${inList}))`;
+    })();
+
+    const handleCopyPivotSql = () => {
+      if (!drillPivotSql) {
+        return;
+      }
+      navigator.clipboard.writeText(drillPivotSql).then(() => {
+        message.success('Drill PIVOT SQL copied to clipboard');
+      });
+    };
+
+    const toolbarHeight = 36;
+    const scrollY = typeof height === 'number'
+      ? height - toolbarHeight - (truncated ? 80 : 40)
+      : 'calc(100% - 76px)';
+
+    return (
+      <div style={{ height, display: 'flex', flexDirection: 'column' }}>
+        <div style={{
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          padding: '4px 8px',
+          flexShrink: 0,
+          borderBottom: '1px solid var(--color-border)',
+          height: toolbarHeight,
+        }}>
+          <Typography.Text type="secondary" style={{ fontSize: 12 }}>
+            {rowKeys.length} rows &times; {colKeys.length} columns
+            {truncated ? ` (truncated from ${allColKeys.length})` : ''}
+          </Typography.Text>
+          {drillPivotSql && (
+            <Tooltip title="Copy the equivalent Drill SQL PIVOT statement">
+              <Button size="small" icon={<CopyOutlined />} onClick={handleCopyPivotSql}>
+                Copy as SQL PIVOT
+              </Button>
+            </Tooltip>
+          )}
+        </div>
+        {truncated && (
+          <Alert
+            type="warning"
+            banner
+            message={`Showing first ${MAX_PIVOT_COLS} of ${allColKeys.length} pivot columns`}
+            style={{ flexShrink: 0 }}
+          />
+        )}
+        <Table
+          dataSource={tableRows.map((row, idx) => ({ ...row, key: idx }))}
+          columns={pivotColumns}
+          scroll={{ x: 'max-content', y: scrollY }}
+          size="small"
+          pagination={false}
+          bordered
+          rowClassName={(record: Record<string, unknown>) =>
+            record._isTotal ? 'pivot-total-row' : ''
+          }
+        />
+      </div>
+    );
+  }
+
+  if (sankeyHasCycle) {
+    if (mini) {
+      return null;
+    }
+    return (
+      <div style={{ height, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24 }}>
+        <Alert
+          type="warning"
+          showIcon
+          message="Sankey cycle detected"
+          description="Sankey diagrams require a directed acyclic graph (DAG). Your data contains bidirectional flows (e.g., A → B and B → A). Check the source and target columns for cycles."
+        />
+      </div>
     );
   }
 
