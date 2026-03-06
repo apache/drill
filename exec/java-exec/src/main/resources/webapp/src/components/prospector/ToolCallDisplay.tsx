@@ -15,7 +15,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import { Collapse, Tag } from 'antd';
+import { Button, Collapse, Space, Tag } from 'antd';
+import { Link } from 'react-router-dom';
 import {
   CodeOutlined,
   DatabaseOutlined,
@@ -23,6 +24,7 @@ import {
   DashboardOutlined,
   SaveOutlined,
   FunctionOutlined,
+  EyeOutlined,
 } from '@ant-design/icons';
 import type { ToolCall } from '../../types/ai';
 import type { ChatMessage } from '../../types/ai';
@@ -86,14 +88,29 @@ export default function ToolCallDisplay({ toolCalls, toolResults }: ToolCallDisp
             <strong>Arguments:</strong>
             <pre className="prospector-tool-json">{formatJson(tc.arguments)}</pre>
           </div>
-          {result && (
-            <div>
-              <strong>Result:</strong>
-              <pre className="prospector-tool-json">
-                {formatJson(result.content || '')}
-              </pre>
-            </div>
-          )}
+          {result && (() => {
+            let parsed: Record<string, unknown> | null = null;
+            try { parsed = JSON.parse(result.content || ''); } catch { /* ignore */ }
+            const viewPath = parsed?.viewPath as string | undefined;
+            const hasError = !!parsed?.error;
+            return (
+              <div>
+                <strong>Result:</strong>
+                <pre className="prospector-tool-json">
+                  {formatJson(result.content || '')}
+                </pre>
+                {viewPath && !hasError && (
+                  <Space style={{ marginTop: 8 }}>
+                    <Link to={viewPath}>
+                      <Button size="small" type="primary" icon={<EyeOutlined />}>
+                        View {tc.name === 'create_dashboard' ? 'Dashboards' : 'Visualizations'}
+                      </Button>
+                    </Link>
+                  </Space>
+                )}
+              </div>
+            );
+          })()}
         </div>
       ),
     };

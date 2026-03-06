@@ -589,11 +589,12 @@ export function buildTimeGrainQuery(
   const dateTruncExpr = `DATE_TRUNC('${config.grain}', ${qualifiedTemporal})`;
 
   const dimensionParts = (config.dimensions || []).map((d) => quoteColumnName(d));
-  const qualifiedDimensions = dimensionParts.map((d) => `_t.${d}`);
+  const qualifiedDimensionSelects = dimensionParts.map((d) => `_t.${d} AS ${d}`);
+  const qualifiedDimensionGroupBy = dimensionParts.map((d) => `_t.${d}`);
 
   const selectParts = [
     `${dateTruncExpr} AS ${quotedTemporal}`,
-    ...qualifiedDimensions,
+    ...qualifiedDimensionSelects,
     ...metricEntries.map(([col, agg]) => {
       const quotedCol = quoteColumnName(col);
       return `${agg}(_t.${quotedCol}) AS ${quotedCol}`;
@@ -602,7 +603,7 @@ export function buildTimeGrainQuery(
 
   // Drill supports aliases in GROUP BY, so reference the column alias
   // instead of repeating the DATE_TRUNC expression
-  const groupByParts = [quotedTemporal, ...qualifiedDimensions];
+  const groupByParts = [quotedTemporal, ...qualifiedDimensionGroupBy];
 
   return [
     `SELECT ${selectParts.join(', ')}`,
@@ -669,7 +670,7 @@ export function buildAggregationQuery(
   for (const col of config.groupByColumns) {
     const quoted = quoteColumnName(col);
     const qualified = `_t.${quoted}`;
-    selectParts.push(qualified);
+    selectParts.push(`${qualified} AS ${quoted}`);
     groupByParts.push(qualified);
   }
 
