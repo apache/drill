@@ -33,3 +33,4 @@ target/
 tools/venv/
 venv/
 .vscode/*
+exec/java-exec/src/main/resources/webapp/
