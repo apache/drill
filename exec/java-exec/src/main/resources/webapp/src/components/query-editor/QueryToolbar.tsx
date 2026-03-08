@@ -29,7 +29,9 @@ import {
   BulbOutlined,
   BugOutlined,
   ThunderboltOutlined,
+  QuestionCircleOutlined,
 } from '@ant-design/icons';
+import KeyboardShortcutsModal from './KeyboardShortcutsModal';
 import type { MenuProps } from 'antd';
 import type { EditorSettings } from './SqlEditor';
 import type { ResultsSettings } from '../results/ResultsGrid';
@@ -59,6 +61,7 @@ interface QueryToolbarProps {
   onFixError?: () => void;
   onToggleProspector?: () => void;
   hasSql?: boolean;
+  hasSelection?: boolean;
   hasError?: boolean;
   prospectorOpen?: boolean;
   prospectorAvailable?: boolean;
@@ -71,6 +74,9 @@ export default function QueryToolbar({
   onFormat,
   isExecuting,
   executionTime,
+  schemas,
+  selectedSchema,
+  onSchemaChange,
   autoLimit = 1000,
   onAutoLimitChange,
   editorSettings,
@@ -83,12 +89,14 @@ export default function QueryToolbar({
   onFixError,
   onToggleProspector,
   hasSql,
+  hasSelection,
   hasError,
   prospectorOpen,
   prospectorAvailable,
 }: QueryToolbarProps) {
   const [autoLimitEnabled, setAutoLimitEnabled] = useState(true);
   const [settingsModalOpen, setSettingsModalOpen] = useState(false);
+  const [shortcutsOpen, setShortcutsOpen] = useState(false);
   const screens = Grid.useBreakpoint();
   const isCompact = !screens.lg;
 
@@ -128,6 +136,12 @@ export default function QueryToolbar({
       label: 'Settings',
       onClick: () => setSettingsModalOpen(true),
     },
+    {
+      key: 'shortcuts',
+      icon: <QuestionCircleOutlined />,
+      label: 'Keyboard Shortcuts',
+      onClick: () => setShortcutsOpen(true),
+    },
     ...(isCompact && prospectorAvailable
       ? [
           { type: 'divider' as const },
@@ -153,11 +167,25 @@ export default function QueryToolbar({
             Cancel
           </Button>
         ) : (
-          <Tooltip title="Ctrl/Cmd + Enter">
+          <Tooltip title={hasSelection ? 'Run selected SQL (Ctrl/Cmd+Enter)' : 'Run query (Ctrl/Cmd+Enter)'}>
             <Button type="primary" icon={<PlayCircleOutlined />} onClick={onExecute}>
-              Run
+              {hasSelection ? 'Run Selection' : 'Run'}
             </Button>
           </Tooltip>
+        )}
+
+        {/* Schema selector */}
+        {schemas && schemas.length > 0 && (
+          <Select
+            size="small"
+            placeholder="Schema"
+            value={selectedSchema || undefined}
+            onChange={onSchemaChange}
+            options={schemas.map((s) => ({ value: s.name, label: s.name }))}
+            style={{ minWidth: isCompact ? 100 : 140 }}
+            allowClear
+            showSearch
+          />
         )}
 
         {/* Save Query Button */}
@@ -359,6 +387,8 @@ export default function QueryToolbar({
           ]}
         />
       </Modal>
+
+      <KeyboardShortcutsModal open={shortcutsOpen} onClose={() => setShortcutsOpen(false)} />
     </div>
   );
 }

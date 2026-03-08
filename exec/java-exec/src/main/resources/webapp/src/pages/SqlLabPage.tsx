@@ -19,7 +19,7 @@ import { useCallback, useState, useEffect, useRef, useMemo, type MutableRefObjec
 import { useSelector, useDispatch } from 'react-redux';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { Tabs, message, notification, Tooltip, Modal, Alert, Button, Space, Spin, Dropdown, Grid } from 'antd';
-import { PlusOutlined, MenuFoldOutlined, MenuUnfoldOutlined, RobotOutlined, MoreOutlined, EditOutlined, CopyOutlined, CloseOutlined } from '@ant-design/icons';
+import { PlusOutlined, MenuFoldOutlined, MenuUnfoldOutlined, RobotOutlined, MoreOutlined, EditOutlined, CopyOutlined, CloseOutlined, PlayCircleOutlined, StopOutlined } from '@ant-design/icons';
 import Markdown from 'react-markdown';
 import type { RootState, AppDispatch } from '../store';
 import {
@@ -37,6 +37,7 @@ import { useQueryExecution } from '../hooks/useQuery';
 import { useQueryHistory } from '../hooks/useQueryHistory';
 import { useSchemas } from '../hooks/useMetadata';
 import { useProspector } from '../hooks/useProspector';
+import { useMonacoCompletion } from '../hooks/useMonacoCompletion';
 import { getAiStatus, getAiConfig, streamChat, transpileSql, convertDataType } from '../api/ai';
 import { getSchemaTree } from '../api/metadata';
 import SchemaExplorer from '../components/schema-explorer/SchemaExplorer';
@@ -47,6 +48,7 @@ import QueryToolbar from '../components/query-editor/QueryToolbar';
 import ResultsGrid, { DEFAULT_RESULTS_SETTINGS } from '../components/results/ResultsGrid';
 import type { ResultsSettings } from '../components/results/ResultsGrid';
 import SaveQueryDialog from '../components/query-editor/SaveQueryDialog';
+import KeyboardShortcutsModal from '../components/query-editor/KeyboardShortcutsModal';
 import QueryHistoryModal from '../components/query-editor/QueryHistoryModal';
 import { VisualizationBuilder } from '../components/visualization';
 import ShareApiModal from '../components/results/ShareApiModal';
@@ -77,6 +79,7 @@ interface SqlLabPageProps {
 
 interface LocationState {
   loadQuery?: SavedQuery;
+  initialSql?: string;
 }
 
 export default function SqlLabPage({ datasetFilter, headerContent, projectId }: SqlLabPageProps) {
@@ -100,13 +103,29 @@ export default function SqlLabPage({ datasetFilter, headerContent, projectId }: 
   const [historyModalOpen, setHistoryModalOpen] = useState(false);
   const [shareApiModalOpen, setShareApiModalOpen] = useState(false);
   const [sharedQueryApiIds, setSharedQueryApiIds] = useState<Record<string, string | undefined>>({});
+  const [shortcutsOpen, setShortcutsOpen] = useState(false);
 
-  // Editor/Monaco refs for SQL validation
+  // Track "unsaved" state per tab: maps tabId -> sql at last explicit save
+  const savedSqlRef = useRef<Record<string, string>>({});
+
+  // Track editor text selection for "Run Selection"
+  const [hasSelection, setHasSelection] = useState(false);
+
+  // Editor/Monaco refs for SQL validation + selection tracking
   const editorInstanceRef = useRef<IStandaloneCodeEditor | null>(null) as MutableRefObject<IStandaloneCodeEditor | null>;
   const monacoInstanceRef = useRef<Monaco | null>(null) as MutableRefObject<Monaco | null>;
+  // State version so hooks can react when the editor mounts
+  const [monacoInstance, setMonacoInstance] = useState<Monaco | null>(null);
+
   const handleEditorReady = useCallback((editor: IStandaloneCodeEditor, monaco: Monaco) => {
     editorInstanceRef.current = editor;
     monacoInstanceRef.current = monaco;
+    setMonacoInstance(monaco);
+    // Track whether the user has a non-empty selection
+    editor.onDidChangeCursorSelection(() => {
+      const sel = editor.getSelection();
+      setHasSelection(!!sel && !sel.isEmpty());
+    });
   }, []);
 
   // Optimize modal state
@@ -183,6 +202,9 @@ export default function SqlLabPage({ datasetFilter, headerContent, projectId }: 
   // Fetch schemas for the schema selector
   const { data: schemas } = useSchemas();
 
+  // Schema-aware SQL autocomplete (must come after schemas is declared)
+  useMonacoCompletion(monacoInstance, schemas);
+
   // Query history hook — scoped to project+tab when inside a project
   const { history, addEntry: addHistory, clearHistory } = useQueryHistory(projectId, activeTabId);
 
@@ -222,6 +244,46 @@ export default function SqlLabPage({ datasetFilter, headerContent, projectId }: 
 
   // Real-time SQL validation markers in the editor
   useSqlValidation(sql, editorInstanceRef, monacoInstanceRef);
+
+  // Global keyboard shortcuts: ?, Ctrl+Shift+F (schema search), Ctrl+S (save)
+  useEffect(() => {
+    const handler = (e: KeyboardEvent) => {
+      const target = e.target as HTMLElement;
+      const inInput = target.tagName === 'INPUT' || target.tagName === 'TEXTAREA' || target.isContentEditable;
+      const mod = e.metaKey || e.ctrlKey;
+
+      // ? — show keyboard shortcuts (not while typing)
+      if (e.key === '?' && !inInput && !mod) {
+        e.preventDefault();
+        setShortcutsOpen(true);
+        return;
+      }
+
+      // Ctrl/Cmd+Shift+F — focus schema search
+      if (mod && e.shiftKey && e.key === 'F') {
+        e.preventDefault();
+        const searchEl = document.getElementById('schema-search-input') as HTMLInputElement | null;
+        if (searchEl) {
+          if (sidebarCollapsed) {
+            dispatch(toggleSidebar());
+          }
+          setTimeout(() => searchEl.focus(), 150);
+        }
+        return;
+      }
+
+      // Ctrl/Cmd+S — save query
+      if (mod && e.key === 's' && !e.shiftKey) {
+        e.preventDefault();
+        if (sql && sql.trim()) {
+          setSaveDialogOpen(true);
+        }
+        return;
+      }
+    };
+    window.addEventListener('keydown', handler);
+    return () => window.removeEventListener('keydown', handler);
+  }, [sql, sidebarCollapsed, dispatch]);
 
   // Check Prospector status and config on mount
   useEffect(() => {
@@ -402,7 +464,7 @@ export default function SqlLabPage({ datasetFilter, headerContent, projectId }: 
     };
   }, []);
 
-  // Handle loading query from navigation state (from SavedQueriesPage)
+  // Handle loading query from navigation state (from SavedQueriesPage or VisualizationsPage)
   const locationState = location.state as LocationState | undefined;
   useEffect(() => {
     if (locationState?.loadQuery) {
@@ -411,7 +473,9 @@ export default function SqlLabPage({ datasetFilter, headerContent, projectId }: 
       if (query.defaultSchema) {
         dispatch(setDefaultSchema({ tabId: activeTabId, schema: query.defaultSchema }));
       }
-      // Clear the location state to prevent reloading on re-render
+      window.history.replaceState({}, document.title);
+    } else if (locationState?.initialSql) {
+      updateSql(locationState.initialSql);
       window.history.replaceState({}, document.title);
     }
   }, [locationState, updateSql, dispatch, activeTabId]);
@@ -424,13 +488,22 @@ export default function SqlLabPage({ datasetFilter, headerContent, projectId }: 
     updateSql(prettifySql(sql));
   }, [sql, updateSql]);
 
-  // Handle execute with current settings
+  // Handle execute — runs selected text if available, otherwise full SQL
   const handleExecute = useCallback(() => {
+    const editor = editorInstanceRef.current;
+    let sqlToRun: string | undefined;
+    if (editor) {
+      const selection = editor.getSelection();
+      if (selection && !selection.isEmpty()) {
+        sqlToRun = editor.getModel()?.getValueInRange(selection) || undefined;
+      }
+    }
     execute({
       autoLimit: autoLimit ?? undefined,
       defaultSchema: activeTab?.defaultSchema,
+      sqlOverride: sqlToRun,
     });
-  }, [execute, autoLimit, activeTab?.defaultSchema]);
+  }, [execute, autoLimit, activeTab?.defaultSchema, editorInstanceRef]);
 
   // Show transformation preview modal and apply on confirm.
   const showTransformPreview = useCallback(
@@ -580,24 +653,39 @@ export default function SqlLabPage({ datasetFilter, headerContent, projectId }: 
       if (action === 'add') {
         dispatch(addTab());
       } else if (action === 'remove' && typeof targetKey === 'string') {
-        if (tabs.length > 1) {
-          dispatch(removeTab(targetKey));
-        } else {
+        if (tabs.length <= 1) {
           message.warning('Cannot close the last tab');
+          return;
+        }
+        const closingTab = tabs.find((t) => t.id === targetKey);
+        const tabSql = closingTab?.sql?.trim() || '';
+        const savedSql = (savedSqlRef.current[targetKey] ?? '').trim();
+        if (tabSql && tabSql !== savedSql) {
+          Modal.confirm({
+            title: 'Close tab with unsaved query?',
+            content: 'This tab has unsaved changes that will be lost.',
+            okText: 'Close anyway',
+            okButtonProps: { danger: true },
+            cancelText: 'Keep open',
+            onOk: () => dispatch(removeTab(targetKey)),
+          });
+        } else {
+          dispatch(removeTab(targetKey));
         }
       }
     },
-    [dispatch, tabs.length]
+    [dispatch, tabs]
   );
 
-  // Handle save query
+  // Handle save query — record saved state
   const handleSave = useCallback(() => {
     if (!sql || sql.trim() === '') {
       message.warning('Please enter a SQL query before saving');
       return;
     }
+    savedSqlRef.current[activeTabId] = sql;
     setSaveDialogOpen(true);
-  }, [sql]);
+  }, [sql, activeTabId]);
 
   // Handle create visualization
   const handleCreateVisualization = useCallback(() => {
@@ -633,9 +721,11 @@ export default function SqlLabPage({ datasetFilter, headerContent, projectId }: 
     [updateSql]
   );
 
-  // ---- Resizable editor/results split ----
-  const handleDragStart = useCallback((e: React.MouseEvent) => {
-    e.preventDefault();
+  // ---- Resizable editor/results split (mouse + touch) ----
+  const handleDragStart = useCallback((e: React.MouseEvent | React.TouchEvent) => {
+    if (!('touches' in e)) {
+      e.preventDefault();
+    }
     setIsDragging(true);
   }, []);
 
@@ -644,32 +734,39 @@ export default function SqlLabPage({ datasetFilter, headerContent, projectId }: 
       return;
     }
 
-    const handleMouseMove = (e: MouseEvent) => {
+    const getClientY = (e: MouseEvent | TouchEvent) =>
+      'touches' in e ? e.touches[0].clientY : e.clientY;
+
+    const handleMove = (e: MouseEvent | TouchEvent) => {
       if (!contentRef.current) {
         return;
       }
+      if (e.cancelable) {
+        e.preventDefault();
+      }
       const contentRect = contentRef.current.getBoundingClientRect();
-      // Subtract the tabs height (~46px) from the top
       const tabsHeight = 46;
-      const newHeight = e.clientY - contentRect.top - tabsHeight;
-      // Clamp between min (120) and max (contentHeight - 100 for results)
+      const newHeight = getClientY(e) - contentRect.top - tabsHeight;
       const maxHeight = contentRect.height - tabsHeight - 100;
       dispatch(setEditorHeight(Math.max(120, Math.min(newHeight, maxHeight))));
     };
 
-    const handleMouseUp = () => {
+    const handleEnd = () => {
       setIsDragging(false);
     };
 
-    document.addEventListener('mousemove', handleMouseMove);
-    document.addEventListener('mouseup', handleMouseUp);
-    // Prevent text selection while dragging
+    document.addEventListener('mousemove', handleMove);
+    document.addEventListener('mouseup', handleEnd);
+    document.addEventListener('touchmove', handleMove, { passive: false });
+    document.addEventListener('touchend', handleEnd);
     document.body.style.userSelect = 'none';
     document.body.style.cursor = 'row-resize';
 
     return () => {
-      document.removeEventListener('mousemove', handleMouseMove);
-      document.removeEventListener('mouseup', handleMouseUp);
+      document.removeEventListener('mousemove', handleMove);
+      document.removeEventListener('mouseup', handleEnd);
+      document.removeEventListener('touchmove', handleMove);
+      document.removeEventListener('touchend', handleEnd);
       document.body.style.userSelect = '';
       document.body.style.cursor = '';
     };
@@ -775,7 +872,15 @@ export default function SqlLabPage({ datasetFilter, headerContent, projectId }: 
               />
             ) : (
               <span className="tab-label-wrapper" onDoubleClick={() => handleTabDoubleClick(tab.id, tab.name)}>
-                <span className="tab-label-text">{tab.name}</span>
+                <span className="tab-label-text">
+                  {tab.name}
+                  {tab.results?.rows && (
+                    <span className="tab-row-count"> ({tab.results.rows.length.toLocaleString()})</span>
+                  )}
+                  {tab.sql?.trim() && tab.sql !== (savedSqlRef.current[tab.id] ?? '') && (
+                    <span className="tab-unsaved-dot" title="Unsaved changes"> •</span>
+                  )}
+                </span>
                 <Dropdown
                   trigger={['click']}
                   menu={{
@@ -859,6 +964,7 @@ export default function SqlLabPage({ datasetFilter, headerContent, projectId }: 
             onFixError={handleFixError}
             onToggleProspector={toggleProspector}
             hasSql={!!sql && sql.trim().length > 0}
+            hasSelection={hasSelection}
             hasError={!!error}
             prospectorOpen={prospectorOpen}
             prospectorAvailable={prospectorAvailable}
@@ -878,6 +984,7 @@ export default function SqlLabPage({ datasetFilter, headerContent, projectId }: 
         <div
           className={`sqllab-resize-handle${isDragging ? ' dragging' : ''}`}
           onMouseDown={handleDragStart}
+          onTouchStart={handleDragStart}
         />
 
         {/* Results Panel */}
@@ -1010,6 +1117,20 @@ export default function SqlLabPage({ datasetFilter, headerContent, projectId }: 
           )}
         </div>
       )}
+
+      {/* Mobile floating Run button */}
+      {isMobile && (
+        <button
+          className={`mobile-run-fab${isExecuting ? ' executing' : ''}`}
+          onClick={handleExecute}
+          aria-label={isExecuting ? 'Cancel query' : (hasSelection ? 'Run selection' : 'Run query')}
+        >
+          {isExecuting ? <StopOutlined /> : <PlayCircleOutlined />}
+        </button>
+      )}
+
+      {/* Keyboard Shortcuts Modal (global) */}
+      <KeyboardShortcutsModal open={shortcutsOpen} onClose={() => setShortcutsOpen(false)} />
     </div>
   );
 }

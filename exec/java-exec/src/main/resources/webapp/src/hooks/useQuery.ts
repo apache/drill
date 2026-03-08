@@ -74,8 +74,9 @@ export function useQueryExecution(
   });
 
   const execute = useCallback(
-    (options?: { autoLimit?: number; defaultSchema?: string }) => {
-      if (!tab?.sql?.trim()) {
+    (options?: { autoLimit?: number; defaultSchema?: string; sqlOverride?: string }) => {
+      const sqlToRun = options?.sqlOverride?.trim() || tab?.sql?.trim();
+      if (!sqlToRun) {
         dispatch(
           setError({
             tabId,
@@ -86,13 +87,13 @@ export function useQueryExecution(
       }
 
       const request: QueryRequest = {
-        query: tab.sql,
+        query: sqlToRun,
         queryType: 'SQL',
         autoLimitRowCount: options?.autoLimit,
-        defaultSchema: options?.defaultSchema || tab.defaultSchema,
+        defaultSchema: options?.defaultSchema || tab?.defaultSchema,
       };
 
-      lastExecutedSql.current = tab.sql;
+      lastExecutedSql.current = sqlToRun;
       mutation.mutate(request);
     },
     [tab, tabId, dispatch, mutation]
