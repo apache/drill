@@ -17,7 +17,7 @@
  */
 import { useMemo, useCallback, useRef, useState } from 'react';
 import { AgGridReact } from 'ag-grid-react';
-import { Button, Space, Dropdown, Typography, Alert, Empty, Modal, Checkbox, Divider, Grid } from 'antd';
+import { Button, Space, Dropdown, Typography, Alert, Empty, Modal, Checkbox, Divider, Grid, message } from 'antd';
 import {
   DownloadOutlined,
   BarChartOutlined,
@@ -34,6 +34,7 @@ import type { QueryResult, QueryError } from '../../types';
 import JsonCellRenderer from './JsonCellRenderer';
 import CustomHeader from './CustomHeader';
 import type { ColumnTransformation } from '../../utils/sqlTransformations';
+import { useTheme } from '../../hooks/useTheme';
 
 import 'ag-grid-community/styles/ag-grid.css';
 import 'ag-grid-community/styles/ag-theme-alpine.css';
@@ -79,6 +80,7 @@ export default function ResultsGrid({
   const [columnVisibility, setColumnVisibility] = useState<Record<string, boolean>>({});
   const screens = Grid.useBreakpoint();
   const isCompact = !screens.lg;
+  const { isDark } = useTheme();
 
   const timestampFormat = resultsSettings?.timestampDisplayFormat ?? DEFAULT_RESULTS_SETTINGS.timestampDisplayFormat;
 
@@ -235,6 +237,32 @@ export default function ResultsGrid({
     }
   }, [saveColumnState]);
 
+  const copyAsTsv = useCallback(() => {
+    if (!results) return;
+    const cols = results.columns;
+    const header = cols.join('\t');
+    const body = results.rows
+      .map((row) => cols.map((c) => String(row[c] ?? '')).join('\t'))
+      .join('\n');
+    navigator.clipboard.writeText(`${header}\n${body}`).then(() => {
+      message.success('Copied as TSV', 1);
+    }).catch(() => {});
+  }, [results]);
+
+  const copyAsMarkdown = useCallback(() => {
+    if (!results) return;
+    const cols = results.columns;
+    const escape = (v: unknown) => String(v ?? '').replace(/\|/g, '\\|');
+    const header = `| ${cols.join(' | ')} |`;
+    const sep = `| ${cols.map(() => '---').join(' | ')} |`;
+    const body = results.rows
+      .map((row) => `| ${cols.map((c) => escape(row[c])).join(' | ')} |`)
+      .join('\n');
+    navigator.clipboard.writeText(`${header}\n${sep}\n${body}`).then(() => {
+      message.success('Copied as Markdown', 1);
+    }).catch(() => {});
+  }, [results]);
+
   const exportMenuItems: MenuProps['items'] = [
     {
       key: 'csv',
@@ -245,6 +273,17 @@ export default function ResultsGrid({
       key: 'json',
       label: 'Export as JSON',
       onClick: exportToJson,
+    },
+    { type: 'divider' },
+    {
+      key: 'tsv',
+      label: 'Copy as TSV',
+      onClick: copyAsTsv,
+    },
+    {
+      key: 'markdown',
+      label: 'Copy as Markdown',
+      onClick: copyAsMarkdown,
     },
   ];
 
@@ -378,7 +417,7 @@ export default function ResultsGrid({
       </div>
 
       {/* AG Grid */}
-      <div className="ag-theme-alpine" style={{ flex: 1, width: '100%' }}>
+      <div className={isDark ? 'ag-theme-alpine-dark' : 'ag-theme-alpine'} style={{ flex: 1, width: '100%' }}>
         <AgGridReact
           ref={gridRef}
           columnDefs={columnDefs}
@@ -387,6 +426,12 @@ export default function ResultsGrid({
           onColumnVisible={() => saveColumnState()}
           onColumnPinned={() => saveColumnState()}
           onSortChanged={() => saveColumnState()}
+          onCellDoubleClicked={(params) => {
+            const val = params.value != null ? String(params.value) : '';
+            navigator.clipboard.writeText(val).then(() => {
+              message.success('Copied to clipboard', 1);
+            }).catch(() => {});
+          }}
           defaultColDef={{
             sortable: true,
             resizable: true,
