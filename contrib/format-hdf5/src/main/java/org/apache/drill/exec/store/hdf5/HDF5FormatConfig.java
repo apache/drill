@@ -20,6 +20,7 @@ package org.apache.drill.exec.store.hdf5;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonInclude.Include;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonTypeName;
 
@@ -32,6 +33,7 @@ import java.util.List;
 import java.util.Objects;
 
 @JsonTypeName(HDF5FormatPlugin.DEFAULT_NAME)
+@JsonInclude(Include.NON_DEFAULT)
 public class HDF5FormatConfig implements FormatPluginConfig {
 
   private final List<String> extensions;
@@ -42,24 +44,28 @@ public class HDF5FormatConfig implements FormatPluginConfig {
   public HDF5FormatConfig(
       @JsonProperty("extensions") List<String> extensions,
       @JsonProperty("defaultPath") String defaultPath,
-      @JsonProperty("showPreview") boolean showPreview) {
+      @JsonProperty("showPreview") Boolean showPreview) {
     this.extensions = extensions == null
         ? Collections.singletonList("h5")
         : ImmutableList.copyOf(extensions);
     this.defaultPath = defaultPath;
-    this.showPreview = showPreview;
+    this.showPreview = showPreview != null && showPreview;
   }
 
-  @JsonInclude(JsonInclude.Include.NON_DEFAULT)
+  @JsonProperty("extensions")
   public List<String> getExtensions() {
     return extensions;
   }
 
+  @JsonProperty("defaultPath")
   public String getDefaultPath() {
     return defaultPath;
   }
 
-  public boolean showPreview() { return showPreview; }
+  @JsonProperty("showPreview")
+  public boolean showPreview() {
+    return showPreview;
+  }
 
   @Override
   public boolean equals(Object obj) {
@@ -71,8 +77,8 @@ public class HDF5FormatConfig implements FormatPluginConfig {
     }
     HDF5FormatConfig other = (HDF5FormatConfig) obj;
     return Objects.equals(extensions, other.getExtensions()) &&
-      Objects.equals(defaultPath, other.defaultPath) &&
-      Objects.equals(showPreview, other.showPreview);
+        Objects.equals(defaultPath, other.defaultPath) &&
+        Objects.equals(showPreview, other.showPreview);
   }
 
   @Override
@@ -83,9 +89,9 @@ public class HDF5FormatConfig implements FormatPluginConfig {
   @Override
   public String toString() {
     return new PlanStringBuilder(this)
-      .field("extensions", extensions)
-      .field("default path", defaultPath)
-      .field("show preview", showPreview)
-      .toString();
+        .field("extensions", extensions)
+        .field("default path", defaultPath)
+        .field("show preview", showPreview)
+        .toString();
   }
 }
