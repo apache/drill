@@ -884,7 +884,8 @@ export default function SchemaExplorer({ onInsertText, onTableSelect, datasetFil
     <div className="schema-tree" style={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
       <div style={{ padding: '8px 8px 0', display: 'flex', gap: 8 }}>
         <Search
-          placeholder="Search plugins & schemas..."
+          id="schema-search-input"
+          placeholder="Search schemas... (Ctrl+Shift+F)"
           allowClear
           size="small"
           prefix={<SearchOutlined />}
