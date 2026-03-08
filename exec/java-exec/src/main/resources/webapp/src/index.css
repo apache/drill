@@ -950,6 +950,57 @@ html.dark .prospector-bubble-error {
   padding: 12px 0;
 }
 
+/* ==================== Tab Label Enhancements ==================== */
+
+.tab-row-count {
+  font-size: 11px;
+  color: var(--color-text-tertiary);
+  margin-left: 2px;
+}
+
+.tab-unsaved-dot {
+  color: var(--color-primary);
+  font-size: 14px;
+  margin-left: 1px;
+  line-height: 1;
+}
+
+/* ==================== Mobile FAB ==================== */
+
+.mobile-run-fab {
+  display: none;
+  position: fixed;
+  bottom: 24px;
+  right: 24px;
+  z-index: 300;
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  background: var(--color-primary);
+  color: #fff;
+  border: none;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.25);
+  cursor: pointer;
+  align-items: center;
+  justify-content: center;
+  font-size: 22px;
+  transition: background 0.2s, transform 0.1s;
+}
+
+.mobile-run-fab:active {
+  transform: scale(0.93);
+}
+
+.mobile-run-fab.executing {
+  background: #ff4d4f;
+}
+
+@media (max-width: 768px) {
+  .mobile-run-fab {
+    display: flex;
+  }
+}
+
 /* ==================== Mobile Backdrop ==================== */
 
 .mobile-sidebar-backdrop {
@@ -1065,5 +1116,10 @@ html.dark .prospector-bubble-error {
   .results-toolbar {
     gap: 4px;
     padding: 6px 8px;
+  }
+
+  /* Larger touch target for resize handle */
+  .sqllab-resize-handle {
+    height: 12px;
   }
 }

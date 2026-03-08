@@ -471,6 +471,18 @@ export default function VisualizationsPage() {
                 Re-run
               </Button>
             )}
+            {viewingViz?.sql && (
+              <Button
+                type="primary"
+                ghost
+                icon={<CodeOutlined />}
+                onClick={() => {
+                  navigate('/query', { state: { initialSql: viewingViz.sql } });
+                }}
+              >
+                Edit in SQL Lab
+              </Button>
+            )}
             <Button onClick={() => {
               setViewModalOpen(false);
               setViewingViz(null);
