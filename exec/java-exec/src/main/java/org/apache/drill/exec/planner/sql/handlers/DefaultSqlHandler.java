@@ -20,15 +20,10 @@ package org.apache.drill.exec.planner.sql.handlers;
 import java.io.IOException;
 import java.util.Collection;
 import java.util.List;
+import java.util.Objects;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
-import com.fasterxml.jackson.databind.ser.PropertyFilter;
-import com.fasterxml.jackson.databind.ser.impl.SimpleBeanPropertyFilter;
-import com.fasterxml.jackson.databind.ser.impl.SimpleFilterProvider;
-import org.apache.drill.exec.util.Utilities;
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.Sets;
 import org.apache.calcite.plan.RelOptCostImpl;
 import org.apache.calcite.plan.RelOptPlanner;
 import org.apache.calcite.plan.RelOptRule;
@@ -66,6 +61,7 @@ import org.apache.drill.common.logical.PlanProperties.Generator.ResultMode;
 import org.apache.drill.common.logical.PlanProperties.PlanPropertiesBuilder;
 import org.apache.drill.common.logical.PlanProperties.PlanType;
 import org.apache.drill.exec.ExecConstants;
+import org.apache.drill.exec.cache.CustomCacheManager;
 import org.apache.drill.exec.ops.QueryContext;
 import org.apache.drill.exec.physical.PhysicalPlan;
 import org.apache.drill.exec.physical.base.AbstractPhysicalVisitor;
@@ -104,13 +100,20 @@ import org.apache.drill.exec.planner.sql.parser.UnsupportedOperatorsVisitor;
 import org.apache.drill.exec.server.options.OptionManager;
 import org.apache.drill.exec.store.StoragePlugin;
 import org.apache.drill.exec.util.Pointer;
+import org.apache.drill.exec.util.Utilities;
 import org.apache.drill.exec.work.foreman.ForemanSetupException;
 import org.apache.drill.exec.work.foreman.SqlUnsupportedException;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Stopwatch;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
+import com.google.common.collect.Sets;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import com.fasterxml.jackson.databind.ser.PropertyFilter;
+import com.fasterxml.jackson.databind.ser.impl.SimpleBeanPropertyFilter;
+import com.fasterxml.jackson.databind.ser.impl.SimpleFilterProvider;
 
 public class DefaultSqlHandler extends AbstractSqlHandler {
   private static final Logger logger = LoggerFactory.getLogger(DefaultSqlHandler.class);
@@ -250,7 +253,6 @@ public class DefaultSqlHandler extends AbstractSqlHandler {
 
           // hep is enabled and hep pruning is enabled.
           intermediateNode2 = transform(PlannerType.HEP_BOTTOM_UP, PlannerPhase.PARTITION_PRUNING, transitiveClosureNode);
-
         } else {
           // Only hep is enabled
           final RelNode intermediateNode =
@@ -361,11 +363,65 @@ public class DefaultSqlHandler extends AbstractSqlHandler {
    * @param log Whether to log the planning phase.
    * @return The transformed relnode.
    */
+
+
+  // A simple cache key class that uses the relevant parameters
+  public static class CacheKey {
+      private final PlannerPhase phase;
+      private PlannerType plannerType;
+      private RelNode input;
+      private RelTraitSet targetTraits;
+
+      public CacheKey(PlannerType plannerType, PlannerPhase phase, RelNode input, RelTraitSet targetTraits) {
+          this.plannerType = plannerType;
+          this.phase = phase;
+          this.input = input;
+          this.targetTraits = targetTraits;
+      }
+
+      @Override
+      public boolean equals(Object o) {
+          if (this == o) {
+            return true;
+          }
+          if (o == null || getClass() != o.getClass()) {
+            return false;
+          }
+          CacheKey cacheKey = (CacheKey) o;
+          return phase == cacheKey.phase &&
+              plannerType == cacheKey.plannerType &&
+              input.deepEquals(cacheKey.input) &&
+              targetTraits.equals(cacheKey.targetTraits);
+      }
+
+      @Override
+      public int hashCode() {
+        return Objects.hash(phase.name(), plannerType.name(), input.deepHashCode(), targetTraits);
+      }
+
+  }
+
+
   protected RelNode transform(PlannerType plannerType, PlannerPhase phase, RelNode input, RelTraitSet targetTraits,
       boolean log) {
     final Stopwatch watch = Stopwatch.createStarted();
     final RuleSet rules = config.getRules(phase, input);
     final RelTraitSet toTraits = targetTraits.simplify();
+    final OptionManager options = context.getOptions();
+    final boolean planCacheEnabled = options.getOption(PlannerSettings.PLAN_CACHE);
+
+    CacheKey key = null;
+
+    if (planCacheEnabled) {
+      // Create a cache key based on the input parameters
+      key = new CacheKey(plannerType, phase, input, targetTraits);
+
+      RelNode cachedResult = CustomCacheManager.getTransformedPlan(key);
+      if (cachedResult != null) {
+        logger.debug("Cache hit for transform phase: {}", phase);
+        return cachedResult;
+      }
+    }
 
     final RelNode output;
     switch (plannerType) {
@@ -404,9 +460,13 @@ public class DefaultSqlHandler extends AbstractSqlHandler {
               .getName());
       output = program.run(planner, input, toTraits,
           ImmutableList.of(), ImmutableList.of());
-
       break;
     }
+    }
+
+    if (planCacheEnabled) {
+      CustomCacheManager.putTransformedPlan(key, output);
+      logger.debug("Cached transform result for phase: {}", phase);
     }
 
     if (log) {
