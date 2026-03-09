@@ -71,6 +71,40 @@ export const pluginTemplates: Record<string, Record<string, unknown>> = {
     batchSize: 100,
     enabled: false,
   },
+  cassandra: {
+    type: 'cassandra',
+    host: 'localhost',
+    port: 9042,
+    username: '',
+    password: '',
+    enabled: false,
+  },
+  druid: {
+    type: 'druid',
+    brokerAddress: 'http://localhost:8082',
+    coordinatorAddress: 'http://localhost:8081',
+    averageRowSizeBytes: 100,
+    enabled: false,
+  },
+  elastic: {
+    type: 'elastic',
+    hosts: ['http://localhost:9200'],
+    username: '',
+    password: '',
+    enabled: false,
+  },
+  splunk: {
+    type: 'splunk',
+    username: 'admin',
+    password: '',
+    scheme: 'https',
+    hostname: 'localhost',
+    port: 8089,
+    earliestTime: '-14d',
+    latestTime: 'now',
+    reconnectRetries: 3,
+    enabled: false,
+  },
 };
 
 export function getTemplate(type: PluginType): Record<string, unknown> {
@@ -161,8 +195,12 @@ export function getPluginGradient(type: string): string {
 
 /** Known plugin types for the create flow */
 export const knownPluginTypes = [
+  { value: 'cassandra', label: 'Cassandra / ScyllaDB' },
+  { value: 'druid', label: 'Druid' },
+  { value: 'elastic', label: 'Elasticsearch' },
   { value: 'file', label: 'File System' },
-  { value: 'jdbc', label: 'JDBC' },
   { value: 'http', label: 'HTTP' },
+  { value: 'jdbc', label: 'JDBC' },
   { value: 'mongo', label: 'MongoDB' },
+  { value: 'splunk', label: 'Splunk' },
 ];
