@@ -86,11 +86,51 @@ export const pluginTemplates: Record<string, Record<string, unknown>> = {
     averageRowSizeBytes: 100,
     enabled: false,
   },
+  hbase: {
+    type: 'hbase',
+    config: {
+      'hbase.zookeeper.quorum': 'localhost',
+      'hbase.zookeeper.property.clientPort': '2181',
+    },
+    'size.calculator.enabled': false,
+    enabled: false,
+  },
+  kafka: {
+    type: 'kafka',
+    kafkaConsumerProps: {
+      'bootstrap.servers': 'localhost:9092',
+    },
+    enabled: false,
+  },
+  hive: {
+    type: 'hive',
+    configProps: {
+      'hive.metastore.uris': '',
+    },
+    enabled: false,
+  },
   elastic: {
     type: 'elastic',
     hosts: ['http://localhost:9200'],
     username: '',
     password: '',
+    enabled: false,
+  },
+  kudu: {
+    type: 'kudu',
+    masterAddresses: 'localhost:7051',
+    enabled: false,
+  },
+  openTSDB: {
+    type: 'openTSDB',
+    connection: 'http://localhost:4242',
+    enabled: false,
+  },
+  phoenix: {
+    type: 'phoenix',
+    zkQuorum: 'localhost',
+    port: 2181,
+    zkPath: '/hbase',
     enabled: false,
   },
   splunk: {
@@ -199,8 +239,14 @@ export const knownPluginTypes = [
   { value: 'druid', label: 'Druid' },
   { value: 'elastic', label: 'Elasticsearch' },
   { value: 'file', label: 'File System' },
+  { value: 'hbase', label: 'HBase' },
+  { value: 'hive', label: 'Hive' },
   { value: 'http', label: 'HTTP' },
   { value: 'jdbc', label: 'JDBC' },
+  { value: 'kafka', label: 'Kafka' },
+  { value: 'kudu', label: 'Kudu' },
   { value: 'mongo', label: 'MongoDB' },
+  { value: 'openTSDB', label: 'OpenTSDB' },
+  { value: 'phoenix', label: 'Phoenix' },
   { value: 'splunk', label: 'Splunk' },
 ];
