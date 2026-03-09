@@ -23,6 +23,12 @@ export { default as SplunkForm } from './SplunkForm';
 export { default as CassandraForm } from './CassandraForm';
 export { default as DruidForm } from './DruidForm';
 export { default as ElasticsearchForm } from './ElasticsearchForm';
+export { default as HBaseForm } from './HBaseForm';
+export { default as HiveForm } from './HiveForm';
+export { default as KafkaForm } from './KafkaForm';
+export { default as KuduForm } from './KuduForm';
+export { default as OpenTSDBForm } from './OpenTSDBForm';
+export { default as PhoenixForm } from './PhoenixForm';
 export {
   pluginTemplates,
   getTemplate,

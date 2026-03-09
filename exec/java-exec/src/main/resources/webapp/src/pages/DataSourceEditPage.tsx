@@ -52,13 +52,19 @@ import {
   CassandraForm,
   DruidForm,
   ElasticsearchForm,
+  HBaseForm,
+  HiveForm,
+  KafkaForm,
+  KuduForm,
+  OpenTSDBForm,
+  PhoenixForm,
   getPluginLogoUrl,
 } from '../components/datasource';
 import type { PluginType } from '../types';
 
 const { Title, Text } = Typography;
 
-const GUIDED_FORM_TYPES: PluginType[] = ['file', 'jdbc', 'http', 'mongo', 'splunk', 'cassandra', 'druid', 'elastic'];
+const GUIDED_FORM_TYPES: PluginType[] = ['file', 'jdbc', 'http', 'mongo', 'splunk', 'cassandra', 'druid', 'elastic', 'hbase', 'hive', 'kafka', 'kudu', 'openTSDB', 'phoenix'];
 
 export default function DataSourceEditPage() {
   const { name } = useParams<{ name: string }>();
@@ -262,6 +268,18 @@ export default function DataSourceEditPage() {
         return <DruidForm config={config} onChange={handleFormChange} />;
       case 'elastic':
         return <ElasticsearchForm config={config} onChange={handleFormChange} />;
+      case 'hbase':
+        return <HBaseForm config={config} onChange={handleFormChange} />;
+      case 'hive':
+        return <HiveForm config={config} onChange={handleFormChange} />;
+      case 'kafka':
+        return <KafkaForm config={config} onChange={handleFormChange} />;
+      case 'kudu':
+        return <KuduForm config={config} onChange={handleFormChange} />;
+      case 'openTSDB':
+        return <OpenTSDBForm config={config} onChange={handleFormChange} />;
+      case 'phoenix':
+        return <PhoenixForm config={config} onChange={handleFormChange} />;
       default:
         return null;
     }
