@@ -18,19 +18,21 @@
 
 package org.apache.drill.exec.store.hdf5;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.drill.categories.RowSetTest;
+import org.apache.drill.common.logical.FormatPluginConfig;
 import org.apache.drill.common.types.TypeProtos;
 import org.apache.drill.common.types.TypeProtos.DataMode;
 import org.apache.drill.common.types.TypeProtos.MinorType;
-import org.apache.drill.exec.record.metadata.TupleMetadata;
-import org.apache.drill.exec.rpc.RpcException;
-import org.apache.drill.test.ClusterFixtureBuilder;
-import org.apache.drill.test.ClusterTest;
 import org.apache.drill.exec.physical.rowSet.RowSet;
 import org.apache.drill.exec.physical.rowSet.RowSetBuilder;
-import org.apache.drill.test.ClusterFixture;
-import org.apache.drill.test.rowSet.RowSetComparison;
 import org.apache.drill.exec.record.metadata.SchemaBuilder;
+import org.apache.drill.exec.record.metadata.TupleMetadata;
+import org.apache.drill.exec.rpc.RpcException;
+import org.apache.drill.test.ClusterFixture;
+import org.apache.drill.test.ClusterFixtureBuilder;
+import org.apache.drill.test.ClusterTest;
+import org.apache.drill.test.rowSet.RowSetComparison;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -40,8 +42,9 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-import static org.junit.Assert.assertEquals;
 import static org.apache.drill.test.QueryTestUtil.generateCompressedFile;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 @Category(RowSetTest.class)
 public class TestHDF5Format extends ClusterTest {
@@ -919,5 +922,66 @@ public class TestHDF5Format extends ClusterTest {
       .build();
 
     new RowSetComparison(expected).unorderedVerifyAndClearAll(results);
+  }
+
+  @Test
+  public void testSerializeAndDeserialize() throws Exception {
+    ObjectMapper mapper = new ObjectMapper();
+    HDF5FormatConfig config = new HDF5FormatConfig(
+        Arrays.asList("h5", "hdf5"),
+        "/data/group1",
+        true
+    );
+
+    String json = mapper.writeValueAsString(config);
+    assertTrue("JSON should contain type field", json.contains("\"type\""));
+    assertTrue("JSON should contain hdf5 type value", json.contains("\"hdf5\""));
+    assertTrue("JSON should contain extensions", json.contains("\"extensions\""));
+    assertTrue("JSON should contain h5 extension", json.contains("\"h5\""));
+    assertTrue("JSON should contain hdf5 extension", json.contains("\"hdf5\""));
+    assertTrue("JSON should contain defaultPath", json.contains("\"defaultPath\""));
+    assertTrue("JSON should contain /data/group1", json.contains("/data/group1"));
+    assertTrue("JSON should contain showPreview", json.contains("\"showPreview\""));
+    assertTrue("JSON should contain true for showPreview", json.contains("true"));
+
+    HDF5FormatConfig deserialized = mapper.readValue(json, HDF5FormatConfig.class);
+
+    assertEquals("Round-tripped config should equal original", config, deserialized);
+    assertEquals("Extensions should match", config.getExtensions(), deserialized.getExtensions());
+    assertEquals("Default path should match", config.getDefaultPath(), deserialized.getDefaultPath());
+    assertEquals("Show preview should match", config.showPreview(), deserialized.showPreview());
+  }
+
+  @Test
+  public void testSerializeDefaults() throws Exception {
+    ObjectMapper mapper = new ObjectMapper();
+
+    HDF5FormatConfig config = new HDF5FormatConfig(null, null, null);
+    String json = mapper.writeValueAsString(config);
+
+    // With @JsonInclude(NON_DEFAULT), default-valued fields may be omitted.
+    // The type field should always be present.
+    assertTrue("JSON should contain type field", json.contains("\"type\""));
+    assertTrue("JSON should contain hdf5 type value", json.contains("\"hdf5\""));
+    HDF5FormatConfig deserialized = mapper.readValue(json, HDF5FormatConfig.class);
+    assertEquals("Round-tripped default config should equal original", config, deserialized);
+  }
+
+  @Test
+  public void testDeserializeViaBaseType() throws Exception {
+    ObjectMapper mapper = new ObjectMapper();
+    mapper.registerSubtypes(HDF5FormatConfig.class);
+
+    HDF5FormatConfig config = new HDF5FormatConfig(Arrays.asList("h5", "hdf5"),
+        "/data/group1",
+        true);
+
+    String json = mapper.writeValueAsString(config);
+    
+    // Deserialize using the base interface to verify type info works
+    FormatPluginConfig deserialized = mapper.readValue(json, FormatPluginConfig.class);
+
+    assertTrue("Deserialized should be HDF5FormatConfig", deserialized instanceof HDF5FormatConfig);
+    assertEquals("Round-tripped config via base type should equal original", config, deserialized);
   }
 }
