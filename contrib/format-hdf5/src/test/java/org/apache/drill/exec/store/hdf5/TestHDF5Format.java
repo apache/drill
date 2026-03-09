@@ -977,7 +977,7 @@ public class TestHDF5Format extends ClusterTest {
         true);
 
     String json = mapper.writeValueAsString(config);
-    
+
     // Deserialize using the base interface to verify type info works
     FormatPluginConfig deserialized = mapper.readValue(json, FormatPluginConfig.class);
 
