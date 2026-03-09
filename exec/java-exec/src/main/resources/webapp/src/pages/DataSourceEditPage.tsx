@@ -48,13 +48,17 @@ import {
   JdbcForm,
   HttpForm,
   MongoForm,
+  SplunkForm,
+  CassandraForm,
+  DruidForm,
+  ElasticsearchForm,
   getPluginLogoUrl,
 } from '../components/datasource';
 import type { PluginType } from '../types';
 
 const { Title, Text } = Typography;
 
-const GUIDED_FORM_TYPES: PluginType[] = ['file', 'jdbc', 'http', 'mongo'];
+const GUIDED_FORM_TYPES: PluginType[] = ['file', 'jdbc', 'http', 'mongo', 'splunk', 'cassandra', 'druid', 'elastic'];
 
 export default function DataSourceEditPage() {
   const { name } = useParams<{ name: string }>();
@@ -250,6 +254,14 @@ export default function DataSourceEditPage() {
         return <HttpForm config={config} onChange={handleFormChange} />;
       case 'mongo':
         return <MongoForm config={config} onChange={handleFormChange} />;
+      case 'splunk':
+        return <SplunkForm config={config} onChange={handleFormChange} />;
+      case 'cassandra':
+        return <CassandraForm config={config} onChange={handleFormChange} />;
+      case 'druid':
+        return <DruidForm config={config} onChange={handleFormChange} />;
+      case 'elastic':
+        return <ElasticsearchForm config={config} onChange={handleFormChange} />;
       default:
         return null;
     }
