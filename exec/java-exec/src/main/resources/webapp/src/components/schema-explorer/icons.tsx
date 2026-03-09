@@ -46,6 +46,7 @@ import {
 } from 'react-icons/si';
 import { VscFilePdf, VscFileCode } from 'react-icons/vsc';
 import { FaFileExcel } from 'react-icons/fa';
+import type { FileInfo } from '../../types';
 
 /** Returns an icon element for a storage plugin based on its type and name. */
 export function getPluginIcon(pluginType: string, pluginName: string): React.ReactNode {
@@ -233,6 +234,35 @@ export function getMultiTableConfig(filename: string): MultiTableConfig | undefi
 /** Returns an icon element for a sub-table (sheet, dataset, table within a file). */
 export function getSubTableIcon(): React.ReactNode {
   return <TableOutlined style={{ color: '#fa8c16' }} />;
+}
+
+/**
+ * File extensions that represent queryable columnar/row data formats.
+ * A directory containing only files of a single such extension
+ * is treated as a single "table" in Drill.
+ */
+const DATA_FILE_EXTENSIONS = new Set([
+  'parquet', 'csv', 'tsv', 'json', 'avro', 'orc', 'csvh', 'psv',
+]);
+
+/**
+ * Check whether a directory's file list represents a homogeneous data set
+ * (i.e. all files share the same queryable data format).  Directories that
+ * contain only sub-directories, or a mix of formats, return undefined.
+ */
+export function getHomogeneousDataFormat(files: FileInfo[]): string | undefined {
+  const dataFiles = files.filter((f) => f.isFile);
+  if (dataFiles.length === 0) {
+    return undefined;
+  }
+  const extensions = new Set(
+    dataFiles.map((f) => (f.name.split('.').pop() || '').toLowerCase())
+  );
+  if (extensions.size !== 1) {
+    return undefined;
+  }
+  const ext = [...extensions][0];
+  return DATA_FILE_EXTENSIONS.has(ext) ? ext : undefined;
 }
 
 /** Check if a plugin is file-based (can browse files/folders). */
