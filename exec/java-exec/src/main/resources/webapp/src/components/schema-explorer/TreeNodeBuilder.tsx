@@ -20,7 +20,7 @@ import { FolderOutlined, TableOutlined, WarningOutlined } from '@ant-design/icon
 import { DatabaseOutlined } from '@ant-design/icons';
 import type { DataNode } from 'antd/es/tree';
 import type { PluginInfo, SchemaInfo, TableInfo, ColumnInfo, FileInfo, NestedFieldInfo, SubTableInfo } from '../../types';
-import { getPluginIcon, getColumnIcon, getFileIcon, isFileBasedPlugin, isComplexColumnType, isMultiTableFile, getSubTableIcon } from './icons';
+import { getPluginIcon, getColumnIcon, getFileIcon, isFileBasedPlugin, isComplexColumnType, isMultiTableFile, getSubTableIcon, getHomogeneousDataFormat } from './icons';
 
 const { Text } = Typography;
 
@@ -148,6 +148,29 @@ export function buildFileNodes(
       // Key prefix is "dir:" for directories
       const dirKey = `dir:${schema}:${filePath}`;
       const subFiles = filesCache[dirKey] || [];
+
+      // If the directory contains only files of a single data format (e.g. all parquet),
+      // treat it as a single table node and show columns instead of individual files.
+      const homoFormat = subFiles.length > 0 ? getHomogeneousDataFormat(subFiles) : undefined;
+      if (homoFormat) {
+        const columns = columnsCache[dirKey] || [];
+        const columnNodes = columns.length > 0
+          ? buildColumnNodes(columns, schema, filePath, nestedCache)
+          : undefined;
+
+        return {
+          key: dirKey,
+          title: (
+            <Tooltip title={`${homoFormat} table (${subFiles.filter((f) => f.isFile).length} files)`}>
+              <span>{file.name}</span>
+            </Tooltip>
+          ),
+          icon: <TableOutlined style={{ color: '#faad14' }} />,
+          children: columnNodes,
+          isLeaf: false,
+        };
+      }
+
       const subNodes = subFiles.length > 0
         ? buildFileNodes(schema, subFiles, filesCache, columnsCache, nestedCache, subTablesCache, filePath)
         : undefined;
