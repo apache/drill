@@ -982,9 +982,13 @@ public class DashboardResources {
         break;
     }
 
+    // SVG files can contain embedded scripts; serve them as attachments
+    // to prevent inline rendering and potential XSS.
+    String disposition = "svg".equals(ext) ? "attachment" : "inline";
+
     return Response.ok(imageFile, contentType)
         .header("Cache-Control", "public, max-age=86400")
-        .header("Content-Disposition", "inline")
+        .header("Content-Disposition", disposition)
         .header("Content-Security-Policy", "default-src 'none'; style-src 'unsafe-inline'")
         .header("X-Content-Type-Options", "nosniff")
         .build();
