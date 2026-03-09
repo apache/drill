@@ -64,7 +64,12 @@ public enum MetadataType {
   /**
    * Metadata type which belongs to views.
    */
-  VIEW(-1);
+  VIEW(-1),
+
+  /**
+   * Metadata type which belongs to materialized views.
+   */
+  MATERIALIZED_VIEW(-2);
 
   /**
    * Level of this metadata type compared to other metadata types.

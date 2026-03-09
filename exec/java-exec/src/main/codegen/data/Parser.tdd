@@ -37,6 +37,7 @@
     "FILES",
     "REFRESH",
     "METADATA",
+    "MATERIALIZED",
     "IF",
     "JAR",
     "PROPERTIES",
@@ -64,6 +65,7 @@
     "SqlDropAllAliases()",
     "SqlDrop()",
     "SqlShowFiles()",
+    "SqlRefreshMaterializedView()",
     "SqlRefreshMetadata()",
     "SqlCreateFunction()",
     "SqlDropFunction()",
@@ -934,6 +936,7 @@
       "COLUMNS"
       "DATETIME"
       "HOURS"
+      "MATERIALIZED"
       "STORAGE"
       "REMOVE"
   ]

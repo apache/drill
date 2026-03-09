@@ -66,6 +66,11 @@ public interface InfoSchemaConstants {
   // Remaining VIEWS column names:
   String VIEWS_COL_VIEW_DEFINITION = "VIEW_DEFINITION";
 
+  // MATERIALIZED_VIEWS column names:
+  String MVIEWS_COL_REFRESH_STATUS = "REFRESH_STATUS";
+  String MVIEWS_COL_LAST_REFRESH_TIME = "LAST_REFRESH_TIME";
+  String MVIEWS_COL_DATA_LOCATION = "DATA_LOCATION";
+
   // Remaining COLUMNS column names:
   String COLS_COL_COLUMN_NAME = "COLUMN_NAME";
   String COLS_COL_ORDINAL_POSITION = "ORDINAL_POSITION";

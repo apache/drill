@@ -416,6 +416,10 @@ public class PlannerSettings implements Context{
     return options.getOption(UNIONALL_DISTRIBUTE);
   }
 
+  public boolean isMaterializedViewRewriteEnabled() {
+    return options.getOption(ExecConstants.ENABLE_MATERIALIZED_VIEW_REWRITE_KEY).bool_val;
+  }
+
   public boolean isParquetRowGroupFilterPushdownPlanningEnabled() {
     return options.getOption(PARQUET_ROWGROUP_FILTER_PUSHDOWN_PLANNING);
   }

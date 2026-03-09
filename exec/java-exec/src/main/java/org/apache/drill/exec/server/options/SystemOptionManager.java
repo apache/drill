@@ -252,6 +252,7 @@ public class SystemOptionManager extends BaseOptionManager implements AutoClosea
       new OptionDefinition(ExecConstants.IMPLICIT_CAST_FOR_JOINS_ENABLED_VALIDATOR),
       new OptionDefinition(ExecConstants.AVERAGE_FIELD_WIDTH),
       new OptionDefinition(ExecConstants.NEW_VIEW_DEFAULT_PERMS_VALIDATOR),
+      new OptionDefinition(ExecConstants.ENABLE_MATERIALIZED_VIEW_REWRITE),
       new OptionDefinition(ExecConstants.CTAS_PARTITIONING_HASH_DISTRIBUTE_VALIDATOR),
       new OptionDefinition(ExecConstants.ADMIN_USERS_VALIDATOR, new OptionMetaData(OptionValue.AccessibleScopes.SYSTEM, true, false)),
       new OptionDefinition(ExecConstants.ADMIN_USER_GROUPS_VALIDATOR, new OptionMetaData(OptionValue.AccessibleScopes.SYSTEM, true, false)),

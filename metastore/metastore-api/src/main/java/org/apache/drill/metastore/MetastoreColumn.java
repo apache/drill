@@ -48,7 +48,16 @@ public enum MetastoreColumn {
   PARTITION_VALUES("partitionValues"),
   PATH("path"),
   ROW_GROUP_INDEX("rowGroupIndex"),
-  HOST_AFFINITY("hostAffinity");
+  HOST_AFFINITY("hostAffinity"),
+
+  // Materialized View specific columns
+  MV_NAME("name"),
+  MV_SQL("sql"),
+  MV_FIELDS("fields"),
+  MV_DATA_LOCATION("dataLocation"),
+  MV_WORKSPACE_SCHEMA_PATH("workspaceSchemaPath"),
+  MV_REFRESH_STATUS("refreshStatus"),
+  MV_LAST_REFRESH_TIME("lastRefreshTime");
 
   private final String columnName;
 

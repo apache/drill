@@ -99,6 +99,7 @@ public class TestInfoSchema extends ClusterTest {
   public void showTablesFromDb() throws Exception {
     List<String[]> expected = Arrays.asList(
         new String[]{"information_schema", "VIEWS"},
+        new String[]{"information_schema", "MATERIALIZED_VIEWS"},
         new String[]{"information_schema", "COLUMNS"},
         new String[]{"information_schema", "TABLES"},
         new String[]{"information_schema", "CATALOGS"},
