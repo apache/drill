@@ -252,8 +252,8 @@ export default function ResultsGrid({
   const copyAsMarkdown = useCallback(() => {
     if (!results) return;
     const cols = results.columns;
-    const escape = (v: unknown) => String(v ?? '').replace(/\|/g, '\\|');
-    const header = `| ${cols.join(' | ')} |`;
+    const escape = (v: unknown) => String(v ?? '').replace(/\\/g, '\\\\').replace(/\|/g, '\\|');
+    const header = `| ${cols.map(escape).join(' | ')} |`;
     const sep = `| ${cols.map(() => '---').join(' | ')} |`;
     const body = results.rows
       .map((row) => `| ${cols.map((c) => escape(row[c])).join(' | ')} |`)

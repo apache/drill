@@ -19,6 +19,10 @@ export { default as FileSystemForm } from './FileSystemForm';
 export { default as JdbcForm } from './JdbcForm';
 export { default as HttpForm } from './HttpForm';
 export { default as MongoForm } from './MongoForm';
+export { default as SplunkForm } from './SplunkForm';
+export { default as CassandraForm } from './CassandraForm';
+export { default as DruidForm } from './DruidForm';
+export { default as ElasticsearchForm } from './ElasticsearchForm';
 export {
   pluginTemplates,
   getTemplate,
