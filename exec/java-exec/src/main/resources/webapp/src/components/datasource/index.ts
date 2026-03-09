@@ -23,6 +23,7 @@ export { default as SplunkForm } from './SplunkForm';
 export { default as CassandraForm } from './CassandraForm';
 export { default as DruidForm } from './DruidForm';
 export { default as ElasticsearchForm } from './ElasticsearchForm';
+export { default as GoogleSheetsForm } from './GoogleSheetsForm';
 export { default as HBaseForm } from './HBaseForm';
 export { default as HiveForm } from './HiveForm';
 export { default as KafkaForm } from './KafkaForm';

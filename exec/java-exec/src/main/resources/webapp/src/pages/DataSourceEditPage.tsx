@@ -52,6 +52,7 @@ import {
   CassandraForm,
   DruidForm,
   ElasticsearchForm,
+  GoogleSheetsForm,
   HBaseForm,
   HiveForm,
   KafkaForm,
@@ -64,7 +65,7 @@ import type { PluginType } from '../types';
 
 const { Title, Text } = Typography;
 
-const GUIDED_FORM_TYPES: PluginType[] = ['file', 'jdbc', 'http', 'mongo', 'splunk', 'cassandra', 'druid', 'elastic', 'hbase', 'hive', 'kafka', 'kudu', 'openTSDB', 'phoenix'];
+const GUIDED_FORM_TYPES: PluginType[] = ['file', 'jdbc', 'http', 'mongo', 'splunk', 'cassandra', 'druid', 'elastic', 'googlesheets', 'hbase', 'hive', 'kafka', 'kudu', 'openTSDB', 'phoenix'];
 
 export default function DataSourceEditPage() {
   const { name } = useParams<{ name: string }>();
@@ -268,6 +269,8 @@ export default function DataSourceEditPage() {
         return <DruidForm config={config} onChange={handleFormChange} />;
       case 'elastic':
         return <ElasticsearchForm config={config} onChange={handleFormChange} />;
+      case 'googlesheets':
+        return <GoogleSheetsForm config={config} onChange={handleFormChange} />;
       case 'hbase':
         return <HBaseForm config={config} onChange={handleFormChange} />;
       case 'hive':

@@ -109,6 +109,29 @@ export const pluginTemplates: Record<string, Record<string, unknown>> = {
     },
     enabled: false,
   },
+  googlesheets: {
+    type: 'googlesheets',
+    allTextMode: true,
+    extractHeaders: true,
+    oAuthConfig: {
+      callbackURL: 'http://localhost:8047/credentials/googlesheets/update_oauth2_authtoken',
+      authorizationURL: 'https://accounts.google.com/o/oauth2/auth',
+      authorizationParams: {
+        response_type: 'code',
+        scope: 'https://www.googleapis.com/auth/spreadsheets https://www.googleapis.com/auth/drive.readonly',
+      },
+    },
+    credentialsProvider: {
+      credentialsProviderType: 'PlainCredentialsProvider',
+      credentials: {
+        clientID: '',
+        clientSecret: '',
+        tokenURI: 'https://oauth2.googleapis.com/token',
+      },
+      userCredentials: {},
+    },
+    enabled: false,
+  },
   elastic: {
     type: 'elastic',
     hosts: ['http://localhost:9200'],
@@ -227,6 +250,7 @@ export const pluginGradients: Record<string, string> = {
   elasticsearch: 'linear-gradient(135deg, #fadb14 0%, #ad8b00 100%)',
   druid: 'linear-gradient(135deg, #722ed1 0%, #391085 100%)',
   splunk: 'linear-gradient(135deg, #f5222d 0%, #a8071a 100%)',
+  googlesheets: 'linear-gradient(135deg, #34a853 0%, #0d652d 100%)',
 };
 
 export function getPluginGradient(type: string): string {
@@ -239,6 +263,7 @@ export const knownPluginTypes = [
   { value: 'druid', label: 'Druid' },
   { value: 'elastic', label: 'Elasticsearch' },
   { value: 'file', label: 'File System' },
+  { value: 'googlesheets', label: 'Google Sheets' },
   { value: 'hbase', label: 'HBase' },
   { value: 'hive', label: 'Hive' },
   { value: 'http', label: 'HTTP' },

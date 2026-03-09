@@ -29,7 +29,7 @@ import type { DataNode, EventDataNode } from 'antd/es/tree';
 import { useQueryClient } from '@tanstack/react-query';
 import { getPluginSchemas, getTables, getColumns, getFiles, getFileColumns, getNestedColumns, getSubTables, getSubTableColumns } from '../../api/metadata';
 import type { SchemaInfo, TableInfo, ColumnInfo, FileInfo, NestedFieldInfo, SubTableInfo, DatasetRef } from '../../types';
-import { isFileBasedPlugin, getMultiTableConfig } from './icons';
+import { isFileBasedPlugin, getMultiTableConfig, getHomogeneousDataFormat } from './icons';
 import { usePlugins } from './hooks';
 import { buildPluginNode } from './TreeNodeBuilder';
 import ContextMenu from './ContextMenu';
@@ -465,8 +465,36 @@ export default function SchemaExplorer({ onInsertText, onTableSelect, datasetFil
           const parts = key.split(':');
           const schemaName = parts[1];
           const dirPath = parts.slice(2).join(':');
-          const files = await getFiles(schemaName, dirPath);
-          setFilesCache((prev) => ({ ...prev, [key]: files }));
+
+          if (!filesCacheRef.current[key]) {
+            const files = await getFiles(schemaName, dirPath);
+            setFilesCache((prev) => ({ ...prev, [key]: files }));
+
+            // If the directory contains only files of a single data format,
+            // treat it as a table and load columns instead of showing individual files.
+            const homoFormat = getHomogeneousDataFormat(files);
+            if (homoFormat && !columnsCacheRef.current[key]) {
+              try {
+                const columns = await getFileColumns(schemaName, dirPath);
+                setColumnsCache((prev) => ({ ...prev, [key]: columns }));
+              } catch {
+                // Fall back to showing individual files
+                setColumnsCache((prev) => ({ ...prev, [key]: [] }));
+              }
+            }
+          } else {
+            // Files already cached — check if we still need to load columns for a homogeneous dir
+            const cachedFiles = filesCacheRef.current[key];
+            const homoFormat = getHomogeneousDataFormat(cachedFiles);
+            if (homoFormat && !columnsCacheRef.current[key]) {
+              try {
+                const columns = await getFileColumns(schemaName, dirPath);
+                setColumnsCache((prev) => ({ ...prev, [key]: columns }));
+              } catch {
+                setColumnsCache((prev) => ({ ...prev, [key]: [] }));
+              }
+            }
+          }
           loaded = true;
 
         } else if (key.startsWith('file:')) {

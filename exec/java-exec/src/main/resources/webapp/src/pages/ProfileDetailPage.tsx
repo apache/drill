@@ -184,17 +184,38 @@ const flattenOperators = (fragments: MajorFragmentData[]): FlatOperator[] => {
   return operators;
 };
 
+/** Normalize Drill profile state strings to a consistent display form. */
+const normalizeState = (state: string): string => {
+  switch (state?.toUpperCase()) {
+    case 'COMPLETED': return 'Succeeded';
+    case 'FAILED': return 'Failed';
+    case 'RUNNING': return 'Running';
+    case 'CANCELED': return 'Cancelled';
+    case 'CANCELLATION_REQUESTED': return 'Cancellation Requested';
+    case 'ENQUEUED': return 'Enqueued';
+    case 'PREPARING': return 'Preparing';
+    case 'PLANNING': return 'Planning';
+    case 'STARTING': return 'Starting';
+    default: return state || 'Unknown';
+  }
+};
+
 // Status badge styling
 const getStatusConfig = (state: string) => {
-  switch (state) {
+  const normalized = normalizeState(state);
+  switch (normalized) {
     case 'Succeeded':
       return { color: '#52c41a', bgColor: '#f6ffed', icon: <CheckCircleOutlined /> };
     case 'Failed':
       return { color: '#ff4d4f', bgColor: '#fff1f0', icon: <CloseCircleOutlined /> };
     case 'Running':
+    case 'Starting':
+    case 'Preparing':
+    case 'Planning':
+    case 'Enqueued':
       return { color: '#3b82f6', bgColor: '#eff6ff', icon: <LoadingOutlined /> };
     case 'Cancelled':
-    case 'Cancellation_Requested':
+    case 'Cancellation Requested':
       return { color: '#faad14', bgColor: '#fffbe6', icon: <StopOutlined /> };
     default:
       return { color: '#000000', bgColor: '#f5f5f5', icon: null };
@@ -207,7 +228,7 @@ function ProfileDetailPage() {
   const navigate = useNavigate();
   const [aiContent, setAiContent] = useState('');
   const [aiStreaming, setAiStreaming] = useState(false);
-  const [activeTab, setActiveTab] = useState('overview');
+  const [activeTab, setActiveTab] = useState<string | null>(null);
   const abortRef = useRef<AbortController | null>(null);
   const hasAutoRun = useRef(false);
 
@@ -216,6 +237,14 @@ function ProfileDetailPage() {
     queryFn: () => (queryId ? getQueryProfileDetail(queryId) : Promise.reject('No query ID')),
     enabled: !!queryId,
   });
+
+  // Auto-select the error tab for failed queries, overview otherwise
+  useEffect(() => {
+    if (profile && activeTab === null) {
+      const failed = normalizeState(profile.state) === 'Failed';
+      setActiveTab(failed ? 'error' : 'overview');
+    }
+  }, [profile, activeTab]);
 
   const { data: aiStatus } = useQuery({
     queryKey: ['aiStatus'],
@@ -232,7 +261,7 @@ function ProfileDetailPage() {
     const queueMs = profile.queueWaitEnd - profile.planEnd;
     const execMs = profile.end - profile.queueWaitEnd;
 
-    const topOps = flattenOperators(profile.fragmentProfile)
+    const topOps = flattenOperators(profile.fragmentProfile || [])
       .sort((a, b) => b.processNanos - a.processNanos)
       .slice(0, 8);
 
@@ -379,13 +408,18 @@ ${redactedError ? `\nError: ${redactedError}` : ''}
     );
   }
 
-  // Calculate timing
-  const planMs = (profile.planEnd - profile.start) / 1000;
-  const queueMs = (profile.queueWaitEnd - profile.planEnd) / 1000;
-  const execMs = (profile.end - profile.queueWaitEnd) / 1000;
-  const totalMs = (profile.end - profile.start) / 1000;
+  // Normalize state for consistent comparisons
+  const displayState = normalizeState(profile.state);
+  const isFailed = displayState === 'Failed';
+
+  // Calculate timing (guard against missing timestamps for failed queries)
+  const planMs = ((profile.planEnd || 0) - (profile.start || 0)) / 1000;
+  const queueMs = ((profile.queueWaitEnd || 0) - (profile.planEnd || 0)) / 1000;
+  const execMs = ((profile.end || 0) - (profile.queueWaitEnd || 0)) / 1000;
+  const totalMs = ((profile.end || 0) - (profile.start || 0)) / 1000;
 
   const statusConfig = getStatusConfig(profile.state);
+  const fragments = profile.fragmentProfile || [];
 
   // Execution waterfall chart
   const waterfallOption: EChartsOption = {
@@ -399,8 +433,8 @@ ${redactedError ? `\nError: ${redactedError}` : ''}
     ],
   };
 
-  // Plan tree
-  const planTree = parsePlanText(profile.plan);
+  // Plan tree (guard against null/undefined plan for failed queries)
+  const planTree = parsePlanText(profile.plan || '');
   const planTreeOption: EChartsOption = {
     tooltip: { trigger: 'item' },
     series: [
@@ -422,8 +456,8 @@ ${redactedError ? `\nError: ${redactedError}` : ''}
   const fragmentData: Array<{ value: [number, number]; name: string; majorId: number }> = [];
   const fragmentLabels: string[] = [];
 
-  profile.fragmentProfile.forEach((major) => {
-    major.minorFragmentProfile.forEach((minor) => {
+  fragments.forEach((major) => {
+    (major.minorFragmentProfile || []).forEach((minor) => {
       const label = `${major.majorFragmentId}-${minor.minorFragmentId}`;
       fragmentLabels.push(label);
       fragmentData.push({
@@ -460,7 +494,7 @@ ${redactedError ? `\nError: ${redactedError}` : ''}
   };
 
   // Operator metrics
-  const operators = flattenOperators(profile.fragmentProfile).sort((a, b) => b.processNanos - a.processNanos);
+  const operators = flattenOperators(fragments).sort((a, b) => b.processNanos - a.processNanos);
 
   const topOperatorsOption: EChartsOption = {
     tooltip: { trigger: 'axis' },
@@ -589,7 +623,7 @@ ${redactedError ? `\nError: ${redactedError}` : ''}
             }}
           >
             {statusConfig.icon}
-            {profile.state}
+            {displayState}
           </span>
           <Divider type="vertical" />
           <Text strong>User:</Text>
@@ -634,7 +668,7 @@ ${redactedError ? `\nError: ${redactedError}` : ''}
                 }}
               >
                 {statusConfig.icon}
-                {profile.state}
+                {displayState}
               </span>
             </div>
           </Card>
@@ -670,7 +704,7 @@ ${redactedError ? `\nError: ${redactedError}` : ''}
                 {profile.finishedFragments}/{profile.totalFragments}
               </div>
               <div style={{ fontSize: '12px', color: '#999' }}>
-                {Math.round((profile.finishedFragments / profile.totalFragments) * 100)}% complete
+                {profile.totalFragments ? Math.round((profile.finishedFragments / profile.totalFragments) * 100) : 0}% complete
               </div>
             </div>
           </Card>
@@ -682,7 +716,7 @@ ${redactedError ? `\nError: ${redactedError}` : ''}
         {/* Left column - Tabs */}
         <Col span={16}>
           <Tabs
-            activeKey={activeTab}
+            activeKey={activeTab || 'overview'}
             onChange={setActiveTab}
             items={[
               {
@@ -699,7 +733,7 @@ ${redactedError ? `\nError: ${redactedError}` : ''}
                           <Text strong>Query ID:</Text> {profile.queryId}
                         </div>
                         <div style={{ marginBottom: '8px' }}>
-                          <Text strong>State:</Text> {profile.state}
+                          <Text strong>State:</Text> {displayState}
                         </div>
                         <div style={{ marginBottom: '8px' }}>
                           <Text strong>User:</Text> {profile.user}
@@ -727,19 +761,23 @@ ${redactedError ? `\nError: ${redactedError}` : ''}
                       <ReactECharts option={planTreeOption} style={{ height: '400px' }} />
                     </Card>
                     <Card title="Plan Text">
-                      <pre
-                        style={{
-                          backgroundColor: 'var(--color-bg-elevated)',
-                          color: 'var(--color-text)',
-                          padding: '12px',
-                          borderRadius: '4px',
-                          overflow: 'auto',
-                          fontSize: '11px',
-                          maxHeight: '300px',
-                        }}
-                      >
-                        {profile.plan}
-                      </pre>
+                      {profile.plan ? (
+                        <pre
+                          style={{
+                            backgroundColor: 'var(--color-bg-elevated)',
+                            color: 'var(--color-text)',
+                            padding: '12px',
+                            borderRadius: '4px',
+                            overflow: 'auto',
+                            fontSize: '11px',
+                            maxHeight: '300px',
+                          }}
+                        >
+                          {profile.plan}
+                        </pre>
+                      ) : (
+                        <Text type="secondary">No plan available (query may have failed before planning completed)</Text>
+                      )}
                     </Card>
                   </div>
                 ),
@@ -799,7 +837,7 @@ ${redactedError ? `\nError: ${redactedError}` : ''}
                   </div>
                 ),
               },
-              ...(profile.state === 'Failed'
+              ...(isFailed
                 ? [
                     {
                       key: 'error',
