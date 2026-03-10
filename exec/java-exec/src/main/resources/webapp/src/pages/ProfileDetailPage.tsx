@@ -184,9 +184,32 @@ const flattenOperators = (fragments: MajorFragmentData[]): FlatOperator[] => {
   return operators;
 };
 
-/** Normalize Drill profile state strings to a consistent display form. */
-const normalizeState = (state: string): string => {
-  switch (state?.toUpperCase()) {
+/**
+ * Normalize Drill profile state to a consistent display form.
+ * The detailed profile API returns protobuf enum integers:
+ *   0=STARTING, 1=RUNNING, 2=COMPLETED, 3=CANCELED,
+ *   4=FAILED, 5=CANCELLATION_REQUESTED, 6=ENQUEUED,
+ *   7=PREPARING, 8=PLANNING
+ * The profile list API returns strings like "COMPLETED", "FAILED", etc.
+ */
+const normalizeState = (state: string | number): string => {
+  // Handle numeric protobuf enum values
+  if (typeof state === 'number') {
+    switch (state) {
+      case 0: return 'Starting';
+      case 1: return 'Running';
+      case 2: return 'Succeeded';
+      case 3: return 'Cancelled';
+      case 4: return 'Failed';
+      case 5: return 'Cancellation Requested';
+      case 6: return 'Enqueued';
+      case 7: return 'Preparing';
+      case 8: return 'Planning';
+      default: return `Unknown (${state})`;
+    }
+  }
+  // Handle string values
+  switch (String(state || '').toUpperCase()) {
     case 'COMPLETED': return 'Succeeded';
     case 'FAILED': return 'Failed';
     case 'RUNNING': return 'Running';
@@ -196,12 +219,12 @@ const normalizeState = (state: string): string => {
     case 'PREPARING': return 'Preparing';
     case 'PLANNING': return 'Planning';
     case 'STARTING': return 'Starting';
-    default: return state || 'Unknown';
+    default: return String(state) || 'Unknown';
   }
 };
 
 // Status badge styling
-const getStatusConfig = (state: string) => {
+const getStatusConfig = (state: string | number) => {
   const normalized = normalizeState(state);
   switch (normalized) {
     case 'Succeeded':
