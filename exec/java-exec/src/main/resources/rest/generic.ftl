@@ -74,7 +74,7 @@
               <#if showStorage == true>
               <li class="nav-item"><a class="nav-link" href="/storage">Storage</a></li>
               </#if>
-              <li class="nav-item"><a class="nav-link" href="/metrics">Metrics</a></li>
+              <li class="nav-item"><a class="nav-link" href="/sqllab#/metrics">Metrics</a></li>
               <#if showThreads == true>
               <li class="nav-item"><a class="nav-link" href="/threads">Threads</a></li>
               </#if>
