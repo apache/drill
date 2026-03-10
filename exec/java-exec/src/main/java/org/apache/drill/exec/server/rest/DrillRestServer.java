@@ -47,6 +47,7 @@ import org.apache.drill.exec.server.rest.auth.AuthDynamicFeature;
 import org.apache.drill.exec.server.rest.auth.DrillUserPrincipal;
 import org.apache.drill.exec.server.rest.auth.DrillUserPrincipal.AnonDrillUserPrincipal;
 import org.apache.drill.exec.server.rest.profile.ProfileResources;
+import org.apache.drill.exec.server.rest.smtp.SmtpConfigResources;
 import org.apache.drill.exec.store.StoragePluginRegistry;
 import org.apache.drill.exec.store.sys.PersistentStoreProvider;
 import org.apache.drill.exec.work.WorkManager;
@@ -95,7 +96,6 @@ public class DrillRestServer extends ResourceConfig {
     register(ProfileResources.class);
     register(CredentialResources.class);
     register(QueryResources.class);
-    register(MetricsResources.class);
     register(ThreadsResources.class);
     register(LogsResources.class);
     register(MetadataResources.class);
@@ -109,8 +109,9 @@ public class DrillRestServer extends ResourceConfig {
     register(TranspileResources.class);
     register(SharedQueryApiResources.class);
     register(SqlValidationResources.class);
+    register(SmtpConfigResources.class);
 
-    logger.info("Registered {} resource classes", 20);
+    logger.info("Registered {} resource classes", 21);
 
     property(FreemarkerMvcFeature.TEMPLATE_OBJECT_FACTORY, getFreemarkerConfiguration(servletContext));
     register(FreemarkerMvcFeature.class);
