@@ -30,10 +30,12 @@ import {
   RobotOutlined,
   SettingOutlined,
   MenuOutlined,
+  MailOutlined,
 } from '@ant-design/icons';
 import { SunOutlined, MoonOutlined } from '@ant-design/icons';
 import type { MenuProps } from 'antd';
 import { ProspectorSettingsModal } from '../prospector/index';
+import SmtpSettingsModal from '../smtp/SmtpSettingsModal';
 import { useTheme } from '../../hooks/useTheme';
 
 const { Header } = Layout;
@@ -47,15 +49,15 @@ const navItems = [
   { key: '/dashboards', icon: <DashboardOutlined />, label: 'Dashboards' },
 ];
 
-const adminMenuItems: MenuProps['items'] = [
+const staticAdminMenuItems: MenuProps['items'] = [
   { key: '/profiles', label: <Link to="/profiles">Query History</Link> },
+  { key: '/metrics', label: <Link to="/metrics">Metrics</Link> },
 ];
 
 const legacyMenuItems: MenuProps['items'] = [
   { key: 'query', label: <a href="/query">Query (Legacy)</a> },
   { key: 'storage', label: <a href="/storage">Storage</a> },
   { key: 'options', label: <a href="/options">Options</a> },
-  { key: 'metrics', label: <a href="/status/metrics">Metrics</a> },
   { key: 'logs', label: <a href="/logs">Logs</a> },
 ];
 
@@ -63,9 +65,16 @@ export default function Navbar() {
   const location = useLocation();
   const { isDark, toggle } = useTheme();
   const [prospectorSettingsOpen, setProspectorSettingsOpen] = useState(false);
+  const [smtpSettingsOpen, setSmtpSettingsOpen] = useState(false);
   const [drawerOpen, setDrawerOpen] = useState(false);
   const screens = Grid.useBreakpoint();
   const isMobile = !screens.md;
+
+  const adminMenuItems: MenuProps['items'] = [
+    ...staticAdminMenuItems!,
+    { type: 'divider' },
+    { key: 'smtp', icon: <MailOutlined />, label: 'Email Settings', onClick: () => setSmtpSettingsOpen(true) },
+  ];
 
   // Determine selected nav key, handling sub-routes like /projects/:id, /datasources/:name
   let selectedKey = location.pathname;
@@ -223,6 +232,11 @@ export default function Navbar() {
       <ProspectorSettingsModal
         open={prospectorSettingsOpen}
         onClose={() => setProspectorSettingsOpen(false)}
+      />
+
+      <SmtpSettingsModal
+        open={smtpSettingsOpen}
+        onClose={() => setSmtpSettingsOpen(false)}
       />
     </Header>
   );
