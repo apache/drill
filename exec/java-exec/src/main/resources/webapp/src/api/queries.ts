@@ -146,7 +146,7 @@ export interface OperatorProfile {
 
 export interface MinorFragmentProfile {
   minorFragmentId: number;
-  state: string;
+  state: string | number;
   startTime: number;
   endTime: number;
   memoryUsed: number;
@@ -166,7 +166,7 @@ export interface DetailedQueryProfile {
   queryId: string;
   query: string;
   plan: string;
-  state: string;
+  state: string | number;
   user: string;
   start: number;
   end: number;
