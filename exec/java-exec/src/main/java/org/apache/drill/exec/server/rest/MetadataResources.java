@@ -25,8 +25,11 @@ import org.apache.drill.exec.expr.fn.registry.FunctionHolder;
 import org.apache.drill.exec.expr.fn.registry.LocalFunctionRegistry;
 import org.apache.drill.exec.server.rest.RestQueryRunner.QueryResult;
 import org.apache.drill.exec.server.rest.auth.DrillUserPrincipal;
+import org.apache.drill.common.logical.FormatPluginConfig;
 import org.apache.drill.common.logical.StoragePluginConfig;
+import org.apache.drill.exec.store.StoragePlugin;
 import org.apache.drill.exec.store.StoragePluginRegistry;
+import org.apache.drill.exec.store.dfs.FileSystemConfig;
 import org.apache.drill.exec.work.WorkManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -42,6 +45,7 @@ import jakarta.ws.rs.PathParam;
 import jakarta.ws.rs.Produces;
 import jakarta.ws.rs.QueryParam;
 import jakarta.ws.rs.core.MediaType;
+import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashSet;
@@ -483,13 +487,17 @@ public class MetadataResources {
   @Path("/schemas/{schema}/files")
   @Produces(MediaType.APPLICATION_JSON)
   @Operation(summary = "List files in schema/workspace",
-      description = "Returns a list of files and folders in the specified schema (for file-based plugins like dfs)")
+      description = "Returns a list of files and folders in the specified schema (for file-based plugins like dfs). "
+          + "Only shows directories and files with extensions recognized by the plugin's format configurations.")
   public FilesResponse getFiles(
       @Parameter(description = "Schema name (e.g., dfs.tmp)") @PathParam("schema") String schema,
       @Parameter(description = "Subdirectory path") @QueryParam("path") @DefaultValue("") String subPath) {
     logger.debug("Fetching files for schema: {}, path: {}", schema, subPath);
 
     List<FileInfo> files = new ArrayList<>();
+
+    // Collect recognized extensions from the plugin's format configs
+    Set<String> recognizedExtensions = getRecognizedExtensions(schema);
 
     // Build a properly-quoted compound schema path:
     //   dfs.tmp + myFolder → dfs.`tmp`.`myFolder`
@@ -513,6 +521,12 @@ public class MetadataResources {
 
         boolean isDirectory = "true".equalsIgnoreCase(row.get("isDirectory"));
         boolean isFile = "true".equalsIgnoreCase(row.get("isFile"));
+
+        // Filter: always show directories, but only show files with recognized extensions
+        if (isFile && !recognizedExtensions.isEmpty() && !hasRecognizedExtension(name, recognizedExtensions)) {
+          continue;
+        }
+
         long length = 0;
         try {
           String lenStr = row.get("length");
@@ -910,5 +924,105 @@ public class MetadataResources {
       sb.append(".`").append(escapeBackticks(wp)).append("`");
     }
     return sb.toString();
+  }
+
+  /**
+   * Common compression extensions that Drill can transparently decompress.
+   * Files like "data.csv.gz" should be recognized if "csv" is a known extension.
+   */
+  private static final Set<String> COMPRESSION_EXTENSIONS = new HashSet<>(Arrays.asList(
+      "gz", "gzip", "bz2", "xz", "snappy", "sz", "lz4", "zst", "zip"
+  ));
+
+  /**
+   * Collect all recognized file extensions from the format configurations
+   * of the storage plugin associated with the given schema.
+   * For example, if the dfs plugin has json, csv, parquet formats configured,
+   * this returns {"json", "csv", "parquet", "csvh", ...} etc.
+   */
+  @SuppressWarnings("unchecked")
+  private Set<String> getRecognizedExtensions(String schema) {
+    Set<String> extensions = new HashSet<>();
+    try {
+      // Extract plugin name from schema (e.g., "dfs.tmp" → "dfs")
+      String pluginName = schema.contains(".") ? schema.split("\\.", 2)[0] : schema;
+      StoragePlugin plugin = storageRegistry.getPlugin(pluginName);
+      if (plugin == null) {
+        return extensions;
+      }
+
+      StoragePluginConfig config = plugin.getConfig();
+      if (!(config instanceof FileSystemConfig)) {
+        return extensions;
+      }
+
+      FileSystemConfig fsConfig = (FileSystemConfig) config;
+      Map<String, FormatPluginConfig> formats = fsConfig.getFormats();
+      if (formats == null) {
+        return extensions;
+      }
+
+      for (FormatPluginConfig formatConfig : formats.values()) {
+        // Use reflection to call getExtensions() since it's not on the interface
+        try {
+          Method getExtensions = formatConfig.getClass().getMethod("getExtensions");
+          List<String> exts = (List<String>) getExtensions.invoke(formatConfig);
+          if (exts != null) {
+            for (String ext : exts) {
+              extensions.add(ext.toLowerCase());
+            }
+          }
+        } catch (NoSuchMethodException e) {
+          // Some format configs (like Parquet) don't have getExtensions()
+          // Add format name as extension fallback
+          // (Parquet files typically have .parquet extension)
+        } catch (Exception e) {
+          logger.debug("Could not get extensions from format config: {}", formatConfig.getClass().getSimpleName(), e);
+        }
+      }
+
+      // Always include parquet since it's handled specially
+      if (formats.containsKey("parquet")) {
+        extensions.add("parquet");
+      }
+    } catch (Exception e) {
+      logger.debug("Could not determine recognized extensions for schema: {}", schema, e);
+    }
+    return extensions;
+  }
+
+  /**
+   * Check if a filename has an extension recognized by the plugin's formats.
+   * Handles compressed files (e.g., data.csv.gz) by stripping compression suffixes.
+   */
+  static boolean hasRecognizedExtension(String fileName, Set<String> recognizedExtensions) {
+    if (fileName == null || recognizedExtensions.isEmpty()) {
+      return true;
+    }
+
+    String lower = fileName.toLowerCase();
+
+    // Check direct extension match
+    int lastDot = lower.lastIndexOf('.');
+    if (lastDot >= 0) {
+      String ext = lower.substring(lastDot + 1);
+      if (recognizedExtensions.contains(ext)) {
+        return true;
+      }
+
+      // If the extension is a compression format, check the underlying extension
+      if (COMPRESSION_EXTENSIONS.contains(ext)) {
+        String stripped = lower.substring(0, lastDot);
+        int prevDot = stripped.lastIndexOf('.');
+        if (prevDot >= 0) {
+          String innerExt = stripped.substring(prevDot + 1);
+          if (recognizedExtensions.contains(innerExt)) {
+            return true;
+          }
+        }
+      }
+    }
+
+    return false;
   }
 }

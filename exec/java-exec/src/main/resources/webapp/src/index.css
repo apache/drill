@@ -201,6 +201,25 @@ body {
   min-height: 100px;
 }
 
+/* Make Ant Design Tabs fill the results panel height */
+.sqllab-results-panel > .ant-tabs {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+.sqllab-results-panel > .ant-tabs > .ant-tabs-content-holder {
+  flex: 1;
+  overflow: hidden;
+}
+.sqllab-results-panel > .ant-tabs > .ant-tabs-content-holder > .ant-tabs-content {
+  height: 100%;
+}
+.sqllab-results-panel > .ant-tabs > .ant-tabs-content-holder > .ant-tabs-content > .ant-tabs-tabpane-active {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
 /* Monaco editor container */
 .monaco-container {
   flex: 1;
@@ -1123,3 +1142,61 @@ html.dark .prospector-bubble-error {
     height: 12px;
   }
 }
+
+/* ─── Notebook Styles ─── */
+
+/* Rich DataFrame tables */
+.notebook-df-output table.drill-df-table {
+  border-collapse: collapse;
+  font-size: 12px;
+  font-family: monospace;
+  width: auto;
+  max-width: 100%;
+}
+
+.notebook-df-output table.drill-df-table th,
+.notebook-df-output table.drill-df-table td {
+  padding: 4px 10px;
+  border: 1px solid var(--color-border);
+  text-align: left;
+  white-space: nowrap;
+  max-width: 300px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.notebook-df-output table.drill-df-table th {
+  background: var(--color-bg-elevated);
+  font-weight: 600;
+  position: sticky;
+  top: 0;
+  z-index: 1;
+}
+
+.notebook-df-output table.drill-df-table tr:nth-child(even) td {
+  background: var(--color-bg-layout);
+}
+
+.notebook-df-output table.drill-df-table tr:hover td {
+  background: var(--color-primary-bg);
+}
+
+/* Markdown cell rendering */
+.notebook-markdown-rendered {
+  font-size: 14px;
+  line-height: 1.6;
+}
+
+.notebook-markdown-rendered h1 { font-size: 1.6em; margin: 0.4em 0; border-bottom: 1px solid var(--color-border); padding-bottom: 0.2em; }
+.notebook-markdown-rendered h2 { font-size: 1.3em; margin: 0.3em 0; border-bottom: 1px solid var(--color-border); padding-bottom: 0.2em; }
+.notebook-markdown-rendered h3 { font-size: 1.1em; margin: 0.3em 0; }
+.notebook-markdown-rendered p { margin: 0.4em 0; }
+.notebook-markdown-rendered ul, .notebook-markdown-rendered ol { margin: 0.3em 0; padding-left: 1.5em; }
+.notebook-markdown-rendered code { background: var(--color-bg-elevated); padding: 1px 4px; border-radius: 3px; font-size: 0.9em; }
+.notebook-markdown-rendered pre { background: var(--color-bg-elevated); padding: 8px 12px; border-radius: 4px; overflow-x: auto; }
+.notebook-markdown-rendered pre code { background: none; padding: 0; }
+.notebook-markdown-rendered blockquote { border-left: 3px solid var(--color-border); margin: 0.4em 0; padding-left: 12px; color: var(--color-text-secondary); }
+.notebook-markdown-rendered table { border-collapse: collapse; margin: 0.5em 0; }
+.notebook-markdown-rendered table th, .notebook-markdown-rendered table td { border: 1px solid var(--color-border); padding: 4px 8px; }
+.notebook-markdown-rendered table th { background: var(--color-bg-elevated); }
+.notebook-markdown-rendered hr { border: none; border-top: 1px solid var(--color-border); margin: 0.6em 0; }
