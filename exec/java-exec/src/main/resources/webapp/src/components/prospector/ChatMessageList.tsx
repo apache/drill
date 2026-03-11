@@ -23,12 +23,14 @@ interface ChatMessageListProps {
   messages: ChatMessage[];
   streamingContent: string;
   isStreaming: boolean;
+  onInsertCell?: (code: string) => void;
 }
 
 export default function ChatMessageList({
   messages,
   streamingContent,
   isStreaming,
+  onInsertCell,
 }: ChatMessageListProps) {
   const bottomRef = useRef<HTMLDivElement>(null);
 
@@ -57,6 +59,7 @@ export default function ChatMessageList({
           key={i}
           message={msg}
           toolResults={toolResults}
+          onInsertCell={onInsertCell}
         />
       ))}
       {isStreaming && streamingContent && (
@@ -64,6 +67,7 @@ export default function ChatMessageList({
           message={{ role: 'assistant', content: streamingContent }}
           toolResults={[]}
           isStreaming
+          onInsertCell={onInsertCell}
         />
       )}
       {isStreaming && !streamingContent && (
