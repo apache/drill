@@ -110,8 +110,9 @@ public class DrillRestServer extends ResourceConfig {
     register(SharedQueryApiResources.class);
     register(SqlValidationResources.class);
     register(SmtpConfigResources.class);
+    register(NotebookResources.class);
 
-    logger.info("Registered {} resource classes", 21);
+    logger.info("Registered {} resource classes", 22);
 
     property(FreemarkerMvcFeature.TEMPLATE_OBJECT_FACTORY, getFreemarkerConfiguration(servletContext));
     register(FreemarkerMvcFeature.class);

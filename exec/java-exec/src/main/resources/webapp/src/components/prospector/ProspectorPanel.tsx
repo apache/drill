@@ -16,8 +16,8 @@
  * limitations under the License.
  */
 import { useCallback } from 'react';
-import { Button, Tooltip } from 'antd';
-import { DeleteOutlined, RobotOutlined } from '@ant-design/icons';
+import { Button, Tooltip, Tag } from 'antd';
+import { DeleteOutlined, RobotOutlined, ExperimentOutlined } from '@ant-design/icons';
 import ChatMessageList from './ChatMessageList';
 import ChatInput from './ChatInput';
 import QuickActionBar from './QuickActionBar';
@@ -27,11 +27,14 @@ import type { ChatContext } from '../../types/ai';
 interface ProspectorPanelProps {
   prospector: UseProspectorReturn;
   context: ChatContext;
+  /** Callback to insert Python code as a new notebook cell */
+  onInsertCell?: (code: string) => void;
 }
 
 export default function ProspectorPanel({
   prospector,
   context,
+  onInsertCell,
 }: ProspectorPanelProps) {
   const { messages, isStreaming, streamingContent, sendMessage, stopStreaming, clearChat } = prospector;
 
@@ -49,12 +52,23 @@ export default function ProspectorPanel({
     [sendMessage, context],
   );
 
+  const isNotebook = !!context.notebookMode;
+
   return (
     <div className="prospector-panel">
       <div className="prospector-panel-header">
         <span className="prospector-panel-title">
           <RobotOutlined style={{ marginRight: 8 }} />
           Prospector
+          {isNotebook && (
+            <Tag
+              color="purple"
+              icon={<ExperimentOutlined />}
+              style={{ marginLeft: 8, fontSize: 10 }}
+            >
+              Notebook
+            </Tag>
+          )}
         </span>
         <Tooltip title="Clear chat">
           <Button
@@ -69,6 +83,7 @@ export default function ProspectorPanel({
         messages={messages}
         streamingContent={streamingContent}
         isStreaming={isStreaming}
+        onInsertCell={isNotebook ? onInsertCell : undefined}
       />
       <div className="prospector-panel-footer">
         <QuickActionBar
@@ -77,11 +92,18 @@ export default function ProspectorPanel({
           hasResults={!!context.resultSummary && context.resultSummary.rowCount > 0}
           hasSql={!!context.currentSql && context.currentSql.trim().length > 0}
           disabled={isStreaming}
+          notebookMode={isNotebook}
+          notebookCellError={!!context.notebookCellError}
+          notebookDfName={context.notebookDfName}
         />
         <ChatInput
           onSend={handleSend}
           onStop={stopStreaming}
           isStreaming={isStreaming}
+          placeholder={isNotebook
+            ? 'Ask about your data, request analysis code, or get help with Python...'
+            : undefined
+          }
         />
       </div>
     </div>

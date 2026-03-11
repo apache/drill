@@ -22,6 +22,9 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import java.util.Arrays;
+import java.util.HashSet;
+import java.util.Set;
 import java.util.concurrent.TimeUnit;
 
 import com.fasterxml.jackson.databind.JsonNode;
@@ -211,6 +214,87 @@ public class TestMetadataResources extends ClusterTest {
       assertTrue(hasCount, "Should include COUNT function");
       assertTrue(hasSum, "Should include SUM function");
     }
+  }
+
+  @Test
+  public void testGetFilesForDfsTmp() throws Exception {
+    String url = String.format(
+        "http://localhost:%d/api/v1/metadata/schemas/dfs.tmp/files",
+        portNumber);
+    Request request = new Request.Builder().url(url).build();
+    try (Response response = httpClient.newCall(request).execute()) {
+      assertEquals(200, response.code());
+      String body = response.body().string();
+      JsonNode json = mapper.readTree(body);
+      assertTrue(json.has("files"));
+      assertTrue(json.get("files").isArray());
+    }
+  }
+
+  @Test
+  public void testGetFilesFiltersUnrecognizedExtensions() throws Exception {
+    // Create test files in the dfs.tmp workspace directory
+    java.io.File tmpDir = dirTestWatcher.getDfsTestTmpDir();
+    java.io.File jsonFile = new java.io.File(tmpDir, "test_recognized.json");
+    java.io.File unrecognized = new java.io.File(tmpDir, "test_unrecognized.xyz");
+    java.nio.file.Files.writeString(jsonFile.toPath(), "[{\"a\":1}]");
+    java.nio.file.Files.writeString(unrecognized.toPath(), "unknown data");
+
+    try {
+      String url = String.format(
+          "http://localhost:%d/api/v1/metadata/schemas/dfs.tmp/files",
+          portNumber);
+      Request request = new Request.Builder().url(url).build();
+      try (Response response = httpClient.newCall(request).execute()) {
+        assertEquals(200, response.code());
+        String body = response.body().string();
+        JsonNode json = mapper.readTree(body);
+        JsonNode files = json.get("files");
+
+        boolean hasJson = false;
+        boolean hasXyz = false;
+        for (JsonNode file : files) {
+          String name = file.get("name").asText();
+          if ("test_recognized.json".equals(name)) {
+            hasJson = true;
+          }
+          if ("test_unrecognized.xyz".equals(name)) {
+            hasXyz = true;
+          }
+        }
+        assertTrue(hasJson, "Should include .json files (recognized extension)");
+        assertFalse(hasXyz, "Should exclude .xyz files (unrecognized extension)");
+      }
+    } finally {
+      jsonFile.delete();
+      unrecognized.delete();
+    }
+  }
+
+  @Test
+  public void testHasRecognizedExtension() {
+    Set<String> extensions = new HashSet<>(Arrays.asList("json", "csv", "parquet"));
+
+    // Direct matches
+    assertTrue(MetadataResources.hasRecognizedExtension("data.json", extensions));
+    assertTrue(MetadataResources.hasRecognizedExtension("data.csv", extensions));
+    assertTrue(MetadataResources.hasRecognizedExtension("data.parquet", extensions));
+    assertTrue(MetadataResources.hasRecognizedExtension("DATA.JSON", extensions));
+
+    // Compressed files
+    assertTrue(MetadataResources.hasRecognizedExtension("data.csv.gz", extensions));
+    assertTrue(MetadataResources.hasRecognizedExtension("data.json.bz2", extensions));
+    assertTrue(MetadataResources.hasRecognizedExtension("data.parquet.snappy", extensions));
+    assertTrue(MetadataResources.hasRecognizedExtension("data.csv.zip", extensions));
+
+    // Unrecognized extensions
+    assertFalse(MetadataResources.hasRecognizedExtension("data.xyz", extensions));
+    assertFalse(MetadataResources.hasRecognizedExtension("readme.txt", extensions));
+    assertFalse(MetadataResources.hasRecognizedExtension("image.png", extensions));
+
+    // Edge cases
+    assertTrue(MetadataResources.hasRecognizedExtension(null, extensions));
+    assertTrue(MetadataResources.hasRecognizedExtension("data.json", new HashSet<>()));
   }
 
   @Test
