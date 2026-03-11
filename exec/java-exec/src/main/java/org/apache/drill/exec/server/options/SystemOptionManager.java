@@ -325,7 +325,8 @@ public class SystemOptionManager extends BaseOptionManager implements AutoClosea
       new OptionDefinition(ExecConstants.STORAGE_PLUGIN_RETRY_ATTEMPTS_VALIDATOR, new OptionMetaData(OptionValue.AccessibleScopes.SYSTEM, true, false)),
       new OptionDefinition(ExecConstants.STORAGE_PLUGIN_RETRY_DELAY_VALIDATOR, new OptionMetaData(OptionValue.AccessibleScopes.SYSTEM, true, false)),
       new OptionDefinition(ExecConstants.STORAGE_PLUGIN_AUTO_DISABLE_VALIDATOR, new OptionMetaData(OptionValue.AccessibleScopes.SYSTEM, true, false)),
-      new OptionDefinition(ExecConstants.DRILLBIT_CONTROLS_VALIDATOR)
+      new OptionDefinition(ExecConstants.DRILLBIT_CONTROLS_VALIDATOR),
+      new OptionDefinition(ExecConstants.NOTEBOOK_WRITE_POLICY_VALIDATOR, new OptionMetaData(OptionValue.AccessibleScopes.SYSTEM, true, false))
     };
 
     CaseInsensitiveMap<OptionDefinition> map = Arrays.stream(definitions)

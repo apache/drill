@@ -42,6 +42,18 @@ export interface ChatContext {
   availableSchemas?: string[];
   error?: string;
   resultSummary?: ResultSummary;
+  /** Whether the user is currently in the notebook tab */
+  notebookMode?: boolean;
+  /** Name of the DataFrame variable available in the notebook */
+  notebookDfName?: string;
+  /** DataFrame shape info (rows x columns) */
+  notebookDfShape?: string;
+  /** Column names and types from the DataFrame */
+  notebookColumns?: string[];
+  /** Current cell code the user is working on */
+  notebookCellCode?: string;
+  /** Error from the last cell execution */
+  notebookCellError?: string;
 }
 
 export interface ResultSummary {
