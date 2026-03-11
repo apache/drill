@@ -520,6 +520,12 @@ export default function NotebookPanel({
     }
   }, [dataInjected, results, pyReady, injectDataFrame, maxNotebookRows, dfName]);
 
+  const refreshVariables = useCallback(async () => {
+    if (!pyReady) { return; }
+    const vars = await listVariables();
+    setVariables(vars);
+  }, [pyReady, listVariables]);
+
   const runCell = useCallback(async (cellId: string) => {
     const cell = cells.find((c) => c.id === cellId);
     if (!cell || !pyReady || cell.type === 'markdown') {
@@ -532,7 +538,7 @@ export default function NotebookPanel({
     updateCell(cellId, { running: false, output, executionCount: count });
     // Refresh variables after each execution
     refreshVariables();
-  }, [cells, pyReady, runPython, updateCell, ensureDataInjected]);
+  }, [cells, pyReady, runPython, updateCell, ensureDataInjected, refreshVariables]);
 
   const runAllCells = useCallback(async () => {
     for (const cell of cells) {
@@ -616,7 +622,7 @@ export default function NotebookPanel({
       setDataInjected(true);
     }
     refreshVariables();
-  }, [resetNamespace, clearOutputs, results, injectDataFrame, maxNotebookRows, dfName]);
+  }, [resetNamespace, clearOutputs, results, injectDataFrame, maxNotebookRows, dfName, refreshVariables]);
 
   const toggleCellType = useCallback((id: string) => {
     setCells((prev) => prev.map((c) => {
@@ -626,13 +632,6 @@ export default function NotebookPanel({
       return { ...c, type: newType, output: null, executionCount: null };
     }));
   }, []);
-
-  // ─── Variables ──────────────────────────────────────────────────
-  const refreshVariables = useCallback(async () => {
-    if (!pyReady) { return; }
-    const vars = await listVariables();
-    setVariables(vars);
-  }, [pyReady, listVariables]);
 
   // ─── Packages ─────────────────────────────────────────────────
   const refreshPackages = useCallback(async () => {
@@ -658,7 +657,8 @@ export default function NotebookPanel({
 
   const handleUpdatePackage = useCallback(async (pkg: string) => {
     setInstallingPackage(true);
-    const output = await runPython(`await micropip.install('${pkg.replace(/'/g, "\\'")}', keep_going=True)\nprint(f"Updated '${pkg.replace(/'/g, "\\'")}' successfully")`);
+    const esc = pkg.replace(/\\/g, '\\\\').replace(/'/g, "\\'");
+    const output = await runPython(`await micropip.install('${esc}', keep_going=True)\nprint(f"Updated '${esc}' successfully")`);
     setInstallingPackage(false);
     if (output.error) { message.error(`Failed to update '${pkg}': ${output.stderr}`); }
     else { message.success(`Updated '${pkg}'`); refreshPackages(); }

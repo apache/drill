@@ -502,7 +502,8 @@ del _drill_raw_data, _drill_raw_cols, _drill_parsed_data, _drill_parsed_cols
     if (!pyodide) {
       return { stdout: '', stderr: 'Python runtime not initialized', result: null, htmlResult: null, imageData: null, error: true };
     }
-    return runPython(`await install('${packageName.replace(/'/g, "\\'")}')`);
+    const esc = packageName.replace(/\\/g, '\\\\').replace(/'/g, "\\'");
+    return runPython(`await install('${esc}')`);
   }, [runPython]);
 
   const uninstallPackage = useCallback(async (packageName: string): Promise<PythonOutput> => {
@@ -510,11 +511,12 @@ del _drill_raw_data, _drill_raw_cols, _drill_parsed_data, _drill_parsed_cols
     if (!pyodide) {
       return { stdout: '', stderr: 'Python runtime not initialized', result: null, htmlResult: null, imageData: null, error: true };
     }
+    const esc = packageName.replace(/\\/g, '\\\\').replace(/'/g, "\\'");
     return runPython(`
-micropip.uninstall('${packageName.replace(/'/g, "\\'")}')
-if '${packageName.replace(/'/g, "\\'")}' in _drill_installed_packages:
-    _drill_installed_packages.remove('${packageName.replace(/'/g, "\\'")}')
-print(f"Uninstalled '${packageName.replace(/'/g, "\\'")}' successfully")
+micropip.uninstall('${esc}')
+if '${esc}' in _drill_installed_packages:
+    _drill_installed_packages.remove('${esc}')
+print(f"Uninstalled '${esc}' successfully")
 `);
   }, [runPython]);
 
@@ -588,8 +590,10 @@ plt.close('all')
     tableName: string,
     format: string,
   ): Promise<PythonOutput> => {
+    // Escape backslashes first, then single quotes for safe Python string interpolation
+    const esc = (s: string) => s.replace(/\\/g, '\\\\').replace(/'/g, "\\'");
     return runPython(
-      `await save_to_drill(${dfName}, plugin='${plugin.replace(/'/g, "\\'")}', workspace='${workspace.replace(/'/g, "\\'")}', table_name='${tableName.replace(/'/g, "\\'")}', format='${format.replace(/'/g, "\\'")}')`
+      `await save_to_drill(${dfName}, plugin='${esc(plugin)}', workspace='${esc(workspace)}', table_name='${esc(tableName)}', format='${esc(format)}')`
     );
   }, [runPython]);
 
