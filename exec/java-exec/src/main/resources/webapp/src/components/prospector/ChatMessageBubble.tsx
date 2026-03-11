@@ -57,7 +57,6 @@ export default function ChatMessageBubble({
             ) : (
               <Markdown
                 components={onInsertCell ? {
-                  // eslint-disable-next-line @typescript-eslint/no-unused-vars
                   code({ className, children, ref: _ref, ...props }) {
                     const match = /language-(\w+)/.exec(className || '');
                     const lang = match?.[1];
