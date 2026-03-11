@@ -19,7 +19,7 @@ import { useCallback, useState, useEffect, useRef, useMemo, type MutableRefObjec
 import { useSelector, useDispatch } from 'react-redux';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { Tabs, message, notification, Tooltip, Modal, Alert, Button, Space, Spin, Dropdown, Grid } from 'antd';
-import { PlusOutlined, MenuFoldOutlined, MenuUnfoldOutlined, RobotOutlined, MoreOutlined, EditOutlined, CopyOutlined, CloseOutlined, PlayCircleOutlined, StopOutlined } from '@ant-design/icons';
+import { PlusOutlined, MenuFoldOutlined, MenuUnfoldOutlined, RobotOutlined, MoreOutlined, EditOutlined, CopyOutlined, CloseOutlined, PlayCircleOutlined, StopOutlined, ExperimentOutlined, TableOutlined } from '@ant-design/icons';
 import Markdown from 'react-markdown';
 import type { RootState, AppDispatch } from '../store';
 import {
@@ -52,6 +52,8 @@ import KeyboardShortcutsModal from '../components/query-editor/KeyboardShortcuts
 import QueryHistoryModal from '../components/query-editor/QueryHistoryModal';
 import { VisualizationBuilder } from '../components/visualization';
 import ShareApiModal from '../components/results/ShareApiModal';
+import NotebookPanel from '../components/notebook/NotebookPanel';
+import type { NotebookPanelHandle } from '../components/notebook/NotebookPanel';
 import { ProspectorPanel } from '../components/prospector';
 import type { SavedQuery } from '../types';
 import type { ChatContext, ChatMessage } from '../types/ai';
@@ -102,6 +104,9 @@ export default function SqlLabPage({ datasetFilter, headerContent, projectId }: 
   const [vizBuilderOpen, setVizBuilderOpen] = useState(false);
   const [historyModalOpen, setHistoryModalOpen] = useState(false);
   const [shareApiModalOpen, setShareApiModalOpen] = useState(false);
+  const [resultsPanelTab, setResultsPanelTab] = useState<string>('results');
+  const [maxNotebookRows, setMaxNotebookRows] = useState(50000);
+  const [notebookHandle, setNotebookHandle] = useState<NotebookPanelHandle | null>(null);
   const [sharedQueryApiIds, setSharedQueryApiIds] = useState<Record<string, string | undefined>>({});
   const [shortcutsOpen, setShortcutsOpen] = useState(false);
 
@@ -295,18 +300,49 @@ export default function SqlLabPage({ datasetFilter, headerContent, projectId }: 
       .catch(() => {});
   }, []);
 
+  // Derive notebook DataFrame name from tab name (same logic as NotebookPanel)
+  const notebookDfName = useMemo(() => {
+    const name = activeTab?.name || 'df';
+    const sanitized = name.replace(/\s+/g, '_').replace(/[^a-zA-Z0-9_]/g, '').replace(/^[0-9]/, '_$&');
+    return sanitized || 'df';
+  }, [activeTab?.name]);
+
   // Build AI context from current state
-  const aiContext: ChatContext = useMemo(() => ({
-    currentSql: sql || undefined,
-    currentSchema: activeTab?.defaultSchema || undefined,
-    availableSchemas: schemas?.map((s) => s.name),
-    error: error?.message || undefined,
-    resultSummary: results ? {
-      rowCount: results.rows?.length ?? 0,
-      columns: results.columns || [],
-      columnTypes: results.metadata || [],
-    } : undefined,
-  }), [sql, activeTab?.defaultSchema, schemas, error, results]);
+  const isNotebookTab = resultsPanelTab === 'notebook';
+  const aiContext: ChatContext = useMemo(() => {
+    const base: ChatContext = {
+      currentSql: sql || undefined,
+      currentSchema: activeTab?.defaultSchema || undefined,
+      availableSchemas: schemas?.map((s) => s.name),
+      error: error?.message || undefined,
+      resultSummary: results ? {
+        rowCount: results.rows?.length ?? 0,
+        columns: results.columns || [],
+        columnTypes: results.metadata || [],
+      } : undefined,
+    };
+
+    if (isNotebookTab) {
+      base.notebookMode = true;
+      base.notebookDfName = notebookDfName;
+      base.notebookColumns = results?.columns;
+      if (results) {
+        base.notebookDfShape = `${results.rows?.length ?? 0} rows x ${results.columns?.length ?? 0} columns`;
+      }
+      if (notebookHandle) {
+        const cellCode = notebookHandle.getLastCellCode();
+        if (cellCode) {
+          base.notebookCellCode = cellCode;
+        }
+        const cellError = notebookHandle.getLastCellError();
+        if (cellError) {
+          base.notebookCellError = cellError;
+        }
+      }
+    }
+
+    return base;
+  }, [sql, activeTab?.defaultSchema, schemas, error, results, isNotebookTab, notebookDfName, notebookHandle]);
 
   // Prospector sidebar toggle with localStorage persistence
   const toggleProspector = useCallback(() => {
@@ -989,33 +1025,67 @@ export default function SqlLabPage({ datasetFilter, headerContent, projectId }: 
 
         {/* Results Panel */}
         <div className="sqllab-results-panel">
-          {activeTab?.resultsExpired && (
-            <Alert
-              message="Cached results have expired"
-              description="Re-run the query to see results."
-              type="info"
-              showIcon
-              closable
-              onClose={() => dispatch(clearResultsExpired(activeTabId))}
-              action={
-                <Button size="small" type="primary" onClick={handleExecute}>
-                  Re-run Query
-                </Button>
-              }
-              style={{ margin: '8px 16px' }}
-            />
-          )}
-          <ResultsGrid
-            results={results}
-            error={error}
-            isLoading={isExecuting}
-            onCreateVisualization={handleCreateVisualization}
-            resultsSettings={resultsSettings}
-            onResultsSettingsChange={handleResultsSettingsChange}
-            onFixWithProspector={handleFixWithProspector}
-            prospectorAvailable={prospectorAvailable}
-            onTransformColumn={handleTransformColumn}
-            onShareApi={handleShareApi}
+          <Tabs
+            activeKey={resultsPanelTab}
+            onChange={setResultsPanelTab}
+            size="small"
+            style={{ height: '100%' }}
+            tabBarStyle={{ margin: '0 12px', marginBottom: 0 }}
+            items={[
+              {
+                key: 'results',
+                label: <span><TableOutlined /> Results</span>,
+                children: (
+                  <div style={{ height: '100%', overflow: 'hidden' }}>
+                    {activeTab?.resultsExpired && (
+                      <Alert
+                        message="Cached results have expired"
+                        description="Re-run the query to see results."
+                        type="info"
+                        showIcon
+                        closable
+                        onClose={() => dispatch(clearResultsExpired(activeTabId))}
+                        action={
+                          <Button size="small" type="primary" onClick={handleExecute}>
+                            Re-run Query
+                          </Button>
+                        }
+                        style={{ margin: '8px 16px' }}
+                      />
+                    )}
+                    <ResultsGrid
+                      results={results}
+                      error={error}
+                      isLoading={isExecuting}
+                      onCreateVisualization={handleCreateVisualization}
+                      resultsSettings={resultsSettings}
+                      onResultsSettingsChange={handleResultsSettingsChange}
+                      onFixWithProspector={handleFixWithProspector}
+                      prospectorAvailable={prospectorAvailable}
+                      onTransformColumn={handleTransformColumn}
+                      onShareApi={handleShareApi}
+                    />
+                  </div>
+                ),
+              },
+              {
+                key: 'notebook',
+                label: <span><ExperimentOutlined /> Notebook</span>,
+                children: (
+                  <div style={{ height: '100%', overflow: 'hidden' }}>
+                    <NotebookPanel
+                      key={activeTabId}
+                      tabId={activeTabId}
+                      results={results}
+                      maxNotebookRows={maxNotebookRows}
+                      onMaxNotebookRowsChange={setMaxNotebookRows}
+                      tabName={activeTab?.name}
+                      onHandle={setNotebookHandle}
+                    />
+                  </div>
+                ),
+              },
+            ]}
           />
         </div>
       </div>
@@ -1113,7 +1183,15 @@ export default function SqlLabPage({ datasetFilter, headerContent, projectId }: 
       {prospectorAvailable && (
         <div className={`prospector-sidebar${prospectorOpen ? '' : ' collapsed'}`}>
           {prospectorOpen && (
-            <ProspectorPanel prospector={prospector} context={aiContext} />
+            <ProspectorPanel
+              prospector={prospector}
+              context={aiContext}
+              onInsertCell={notebookHandle ? (code) => {
+                notebookHandle.addCell(code);
+                // Switch to notebook tab if not already there
+                setResultsPanelTab('notebook');
+              } : undefined}
+            />
           )}
         </div>
       )}

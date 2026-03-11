@@ -26,9 +26,10 @@ interface ChatInputProps {
   onStop: () => void;
   isStreaming: boolean;
   disabled?: boolean;
+  placeholder?: string;
 }
 
-export default function ChatInput({ onSend, onStop, isStreaming, disabled }: ChatInputProps) {
+export default function ChatInput({ onSend, onStop, isStreaming, disabled, placeholder }: ChatInputProps) {
   const [value, setValue] = useState('');
 
   const handleSend = useCallback(() => {
@@ -56,7 +57,7 @@ export default function ChatInput({ onSend, onStop, isStreaming, disabled }: Cha
           value={value}
           onChange={(e) => setValue(e.target.value)}
           onKeyDown={handleKeyDown}
-          placeholder="Ask about your data..."
+          placeholder={placeholder || "Ask about your data..."}
           autoSize={{ minRows: 1, maxRows: 4 }}
           disabled={disabled || isStreaming}
           style={{ resize: 'none' }}
