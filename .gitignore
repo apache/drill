@@ -38,3 +38,15 @@ __pycache__/
 *.pyc
 .pytest_cache/
 .coverage
+
+# Frontend (webapp)
+node_modules/
+.vite/
+.env
+.env.local
+.env.*.local
+*.swo
+Thumbs.db
+coverage/
+/exec/java-exec/src/main/resources/webapp/dist/
+/exec/java-exec/src/main/resources/webapp/node/
