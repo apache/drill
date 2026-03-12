@@ -21,6 +21,7 @@ export interface PersistedTab {
   name: string;
   sql: string;
   defaultSchema?: string;
+  cacheId?: string; // Backend cache ID for result restoration
 }
 
 export interface PersistedTabState {
