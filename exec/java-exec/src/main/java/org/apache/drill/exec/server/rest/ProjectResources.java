@@ -46,6 +46,8 @@ import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
 import java.time.Instant;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -63,6 +65,8 @@ public class ProjectResources {
   private static final Logger logger = LoggerFactory.getLogger(ProjectResources.class);
   private static final String STORE_NAME = "drill.sqllab.projects";
   private static final String FAVORITES_STORE_NAME = "drill.sqllab.project_favorites";
+
+  public static final String SYSTEM_LOGS_PROJECT_ID = "system-drill-logs";
 
   @Inject
   WorkManager workManager;
@@ -209,6 +213,8 @@ public class ProjectResources {
     @JsonProperty
     private List<WikiPage> wikiPages;
     @JsonProperty
+    private boolean isSystem;
+    @JsonProperty
     private long createdAt;
     @JsonProperty
     private long updatedAt;
@@ -230,6 +236,7 @@ public class ProjectResources {
         @JsonProperty("visualizationIds") List<String> visualizationIds,
         @JsonProperty("dashboardIds") List<String> dashboardIds,
         @JsonProperty("wikiPages") List<WikiPage> wikiPages,
+        @JsonProperty("isSystem") boolean isSystem,
         @JsonProperty("createdAt") long createdAt,
         @JsonProperty("updatedAt") long updatedAt) {
       this.id = id;
@@ -244,6 +251,7 @@ public class ProjectResources {
       this.visualizationIds = visualizationIds != null ? visualizationIds : new ArrayList<>();
       this.dashboardIds = dashboardIds != null ? dashboardIds : new ArrayList<>();
       this.wikiPages = wikiPages != null ? wikiPages : new ArrayList<>();
+      this.isSystem = isSystem;
       this.createdAt = createdAt;
       this.updatedAt = updatedAt;
     }
@@ -260,6 +268,7 @@ public class ProjectResources {
     public List<String> getVisualizationIds() { return visualizationIds; }
     public List<String> getDashboardIds() { return dashboardIds; }
     public List<WikiPage> getWikiPages() { return wikiPages; }
+    public boolean isSystem() { return isSystem; }
     public long getCreatedAt() { return createdAt; }
     public long getUpdatedAt() { return updatedAt; }
 
@@ -273,6 +282,7 @@ public class ProjectResources {
     public void setVisualizationIds(List<String> visualizationIds) { this.visualizationIds = visualizationIds; }
     public void setDashboardIds(List<String> dashboardIds) { this.dashboardIds = dashboardIds; }
     public void setWikiPages(List<WikiPage> wikiPages) { this.wikiPages = wikiPages; }
+    public void setSystem(boolean isSystem) { this.isSystem = isSystem; }
     public void setUpdatedAt(long updatedAt) { this.updatedAt = updatedAt; }
   }
 
@@ -400,6 +410,7 @@ public class ProjectResources {
       description = "Returns all projects accessible by the current user")
   public ProjectsResponse listProjects() {
     logger.debug("Listing projects for user: {}", getCurrentUser());
+    ensureSystemProject();
 
     List<Project> projects = new ArrayList<>();
     String currentUser = getCurrentUser();
@@ -453,6 +464,7 @@ public class ProjectResources {
         new ArrayList<>(),
         new ArrayList<>(),
         new ArrayList<>(),
+        false,
         now,
         now
     );
@@ -566,6 +578,12 @@ public class ProjectResources {
       if (project == null) {
         return Response.status(Response.Status.NOT_FOUND)
             .entity(new MessageResponse("Project not found"))
+            .build();
+      }
+
+      if (project.isSystem()) {
+        return Response.status(Response.Status.FORBIDDEN)
+            .entity(new MessageResponse("System projects cannot be deleted"))
             .build();
       }
 
@@ -1216,6 +1234,212 @@ public class ProjectResources {
         p.setUpdatedAt(Instant.now().toEpochMilli());
         store.put(entry.getKey(), p);
       }
+    }
+  }
+
+  /**
+   * Ensures the system "Drill Logs" project exists with pre-built
+   * saved queries, visualizations, and a dashboard for log analysis.
+   */
+  private void ensureSystemProject() {
+    try {
+      PersistentStore<Project> store = getStore();
+      Project existing = store.get(SYSTEM_LOGS_PROJECT_ID);
+      if (existing != null) {
+        return;
+      }
+
+      long now = Instant.now().toEpochMilli();
+      String owner = "system";
+
+      // Create saved queries
+      PersistentStore<SavedQueryResources.SavedQuery> sqStore = storeProvider.getOrCreateStore(
+          PersistentStoreConfig.newJacksonBuilder(
+              workManager.getContext().getLpPersistence().getMapper(),
+              SavedQueryResources.SavedQuery.class
+          ).name("drill.sqllab.saved_queries").build()
+      );
+
+      String sqRecentErrors = "sys-log-recent-errors";
+      String sqErrorFrequency = "sys-log-error-frequency";
+      String sqLevelDist = "sys-log-level-dist";
+      String sqTopLoggers = "sys-log-top-loggers";
+      String sqWarnTrends = "sys-log-warn-trends";
+
+      if (sqStore.get(sqRecentErrors) == null) {
+        sqStore.put(sqRecentErrors, new SavedQueryResources.SavedQuery(
+            sqRecentErrors, "Recent Errors",
+            "Shows the most recent ERROR log entries",
+            "SELECT log_timestamp, logger, message\n"
+                + "FROM dfs.logs.`drillbit.log`\n"
+                + "WHERE level = 'ERROR'\n"
+                + "ORDER BY log_timestamp DESC\nLIMIT 100",
+            "dfs.logs", owner, now, now, new HashMap<>(), true));
+      }
+
+      if (sqStore.get(sqErrorFrequency) == null) {
+        sqStore.put(sqErrorFrequency, new SavedQueryResources.SavedQuery(
+            sqErrorFrequency, "Error Frequency by Hour",
+            "Counts errors per hour for trend analysis",
+            "SELECT SUBSTR(log_timestamp, 1, 13) AS hour,\n"
+                + "       COUNT(*) AS error_count\n"
+                + "FROM dfs.logs.`drillbit.log`\n"
+                + "WHERE level = 'ERROR'\n"
+                + "GROUP BY SUBSTR(log_timestamp, 1, 13)\n"
+                + "ORDER BY hour DESC\nLIMIT 48",
+            "dfs.logs", owner, now, now, new HashMap<>(), true));
+      }
+
+      if (sqStore.get(sqLevelDist) == null) {
+        sqStore.put(sqLevelDist, new SavedQueryResources.SavedQuery(
+            sqLevelDist, "Log Level Distribution",
+            "Distribution of log entries by level",
+            "SELECT level, COUNT(*) AS cnt\n"
+                + "FROM dfs.logs.`drillbit.log`\n"
+                + "GROUP BY level\nORDER BY cnt DESC",
+            "dfs.logs", owner, now, now, new HashMap<>(), true));
+      }
+
+      if (sqStore.get(sqTopLoggers) == null) {
+        sqStore.put(sqTopLoggers, new SavedQueryResources.SavedQuery(
+            sqTopLoggers, "Top Error Sources",
+            "Loggers producing the most errors",
+            "SELECT logger, COUNT(*) AS error_count\n"
+                + "FROM dfs.logs.`drillbit.log`\n"
+                + "WHERE level = 'ERROR'\n"
+                + "GROUP BY logger\n"
+                + "ORDER BY error_count DESC\nLIMIT 20",
+            "dfs.logs", owner, now, now, new HashMap<>(), true));
+      }
+
+      if (sqStore.get(sqWarnTrends) == null) {
+        sqStore.put(sqWarnTrends, new SavedQueryResources.SavedQuery(
+            sqWarnTrends, "Warning Trends",
+            "Daily warning counts for trend analysis",
+            "SELECT SUBSTR(log_timestamp, 1, 10) AS day,\n"
+                + "       COUNT(*) AS warn_count\n"
+                + "FROM dfs.logs.`drillbit.log`\n"
+                + "WHERE level = 'WARN'\n"
+                + "GROUP BY SUBSTR(log_timestamp, 1, 10)\n"
+                + "ORDER BY day DESC\nLIMIT 30",
+            "dfs.logs", owner, now, now, new HashMap<>(), true));
+      }
+
+      // Create visualizations
+      PersistentStore<VisualizationResources.Visualization> vizStore =
+          storeProvider.getOrCreateStore(
+              PersistentStoreConfig.newJacksonBuilder(
+                  workManager.getContext().getLpPersistence().getMapper(),
+                  VisualizationResources.Visualization.class
+              ).name("drill.sqllab.visualizations").build()
+          );
+
+      String vizErrorFreq = "sys-viz-error-frequency";
+      String vizLevelDist = "sys-viz-level-dist";
+      String vizTopLoggers = "sys-viz-top-loggers";
+      String vizWarnTrends = "sys-viz-warn-trends";
+
+      if (vizStore.get(vizErrorFreq) == null) {
+        vizStore.put(vizErrorFreq, new VisualizationResources.Visualization(
+            vizErrorFreq, "Error Frequency Over Time",
+            "Hourly error count trend",
+            sqErrorFrequency, "line",
+            new VisualizationResources.VisualizationConfig(
+                "hour", "error_count", null, null, null, null),
+            owner, now, now, true, null, "dfs.logs"));
+      }
+
+      if (vizStore.get(vizLevelDist) == null) {
+        vizStore.put(vizLevelDist, new VisualizationResources.Visualization(
+            vizLevelDist, "Log Level Distribution",
+            "Pie chart showing log level breakdown",
+            sqLevelDist, "pie",
+            new VisualizationResources.VisualizationConfig(
+                null, null,
+                Arrays.asList("cnt"),
+                Arrays.asList("level"),
+                null, null),
+            owner, now, now, true, null, "dfs.logs"));
+      }
+
+      if (vizStore.get(vizTopLoggers) == null) {
+        vizStore.put(vizTopLoggers, new VisualizationResources.Visualization(
+            vizTopLoggers, "Top Error Sources",
+            "Bar chart of loggers producing the most errors",
+            sqTopLoggers, "bar",
+            new VisualizationResources.VisualizationConfig(
+                "logger", "error_count", null, null, null, null),
+            owner, now, now, true, null, "dfs.logs"));
+      }
+
+      if (vizStore.get(vizWarnTrends) == null) {
+        vizStore.put(vizWarnTrends, new VisualizationResources.Visualization(
+            vizWarnTrends, "Warning Trends",
+            "Daily warning count trend",
+            sqWarnTrends, "line",
+            new VisualizationResources.VisualizationConfig(
+                "day", "warn_count", null, null, null, null),
+            owner, now, now, true, null, "dfs.logs"));
+      }
+
+      // Create dashboard
+      PersistentStore<DashboardResources.Dashboard> dashStore =
+          storeProvider.getOrCreateStore(
+              PersistentStoreConfig.newJacksonBuilder(
+                  workManager.getContext().getLpPersistence().getMapper(),
+                  DashboardResources.Dashboard.class
+              ).name("drill.sqllab.dashboards").build()
+          );
+
+      String dashId = "sys-dash-logs-overview";
+      if (dashStore.get(dashId) == null) {
+        List<DashboardResources.DashboardPanel> panels = new ArrayList<>();
+        panels.add(new DashboardResources.DashboardPanel(
+            "p1", "visualization", vizErrorFreq, null, null, null, 0, 0, 6, 4));
+        panels.add(new DashboardResources.DashboardPanel(
+            "p2", "visualization", vizLevelDist, null, null, null, 6, 0, 6, 4));
+        panels.add(new DashboardResources.DashboardPanel(
+            "p3", "visualization", vizTopLoggers, null, null, null, 0, 4, 6, 4));
+        panels.add(new DashboardResources.DashboardPanel(
+            "p4", "visualization", vizWarnTrends, null, null, null, 6, 4, 6, 4));
+
+        dashStore.put(dashId, new DashboardResources.Dashboard(
+            dashId, "Drill Logs Overview",
+            "Pre-built dashboard for monitoring Drill server logs",
+            panels, null, null, owner, now, now, 0, true));
+      }
+
+      // Create the system project
+      List<DatasetRef> datasets = new ArrayList<>();
+      datasets.add(new DatasetRef(
+          UUID.randomUUID().toString(), "table",
+          "dfs.logs", "drillbit.log", null, "Drillbit Log"));
+
+      Project project = new Project(
+          SYSTEM_LOGS_PROJECT_ID,
+          "Drill Logs",
+          "System project for analyzing Apache Drill server logs. "
+              + "Includes pre-built queries, visualizations, and dashboards.",
+          Arrays.asList("system", "logs", "monitoring"),
+          owner,
+          true,
+          new ArrayList<>(),
+          datasets,
+          Arrays.asList(sqRecentErrors, sqErrorFrequency, sqLevelDist,
+              sqTopLoggers, sqWarnTrends),
+          Arrays.asList(vizErrorFreq, vizLevelDist, vizTopLoggers, vizWarnTrends),
+          Arrays.asList(dashId),
+          new ArrayList<>(),
+          true,
+          now,
+          now
+      );
+
+      store.put(SYSTEM_LOGS_PROJECT_ID, project);
+      logger.info("Created system 'Drill Logs' project with pre-built analytics");
+
+    } catch (Exception e) {
+      logger.warn("Failed to create system Drill Logs project: {}", e.getMessage());
     }
   }
 

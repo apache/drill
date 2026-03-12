@@ -26,7 +26,11 @@ import {
   BarChartOutlined,
   StarOutlined,
   StarFilled,
+  InfoCircleOutlined,
+  SettingOutlined,
+  ProfileOutlined,
 } from '@ant-design/icons';
+import type { FileInfo, ColumnInfo } from '../../types';
 
 export type NodeType = 'plugin' | 'schema' | 'table' | 'file' | 'column';
 
@@ -34,10 +38,16 @@ export interface ContextMenuProps {
   nodeType: NodeType;
   nodeKey: string;
   qualifiedName: string;
+  columnNames?: string[];
+  fileInfo?: FileInfo;
+  columnInfos?: ColumnInfo[];
   children: React.ReactNode;
   onInsertText?: (text: string) => void;
   onRefreshNode?: (key: string) => void;
   onShowStats?: (schemaName: string, tableName: string) => void;
+  onShowFileInfo?: (fileInfo: FileInfo, qualifiedName: string, columns: ColumnInfo[]) => void;
+  onEditPlugin?: (pluginName: string) => void;
+  onProfileData?: (schemaName: string, tableName: string) => void;
   isFavorite?: boolean;
   onToggleFavorite?: (key: string) => void;
 }
@@ -53,10 +63,16 @@ export default function ContextMenu({
   nodeType,
   nodeKey,
   qualifiedName,
+  columnNames,
+  fileInfo,
+  columnInfos,
   children,
   onInsertText,
   onRefreshNode,
   onShowStats,
+  onShowFileInfo,
+  onEditPlugin,
+  onProfileData,
   isFavorite,
   onToggleFavorite,
 }: ContextMenuProps) {
@@ -70,7 +86,10 @@ export default function ContextMenu({
           onRefreshNode?.(nodeKey);
           break;
         case 'select-star': {
-          const sql = `SELECT *\nFROM ${qualifiedName}\nLIMIT 100`;
+          const cols = columnNames && columnNames.length > 0
+            ? columnNames.map((c) => `\`${c}\``).join(',\n       ')
+            : '*';
+          const sql = `SELECT ${cols}\nFROM ${qualifiedName}\nLIMIT 100`;
           onInsertText?.(sql);
           break;
         }
@@ -101,9 +120,28 @@ export default function ContextMenu({
         case 'toggle-favorite':
           onToggleFavorite?.(nodeKey);
           break;
+        case 'file-info':
+          if (fileInfo) {
+            onShowFileInfo?.(fileInfo, qualifiedName, columnInfos || []);
+          }
+          break;
+        case 'edit-plugin': {
+          // Extract plugin name from either "plugin:dfs" or "schema:dfs.tmp"
+          const raw = nodeKey.replace(/^(plugin|schema):/, '');
+          const pluginName = raw.split('.')[0];
+          onEditPlugin?.(pluginName);
+          break;
+        }
+        case 'profile-data': {
+          const parts = nodeKey.split(':');
+          if (parts.length >= 3) {
+            onProfileData?.(parts[1], parts.slice(2).join(':'));
+          }
+          break;
+        }
       }
     },
-    [qualifiedName, nodeKey, onInsertText, onRefreshNode, onShowStats, onToggleFavorite],
+    [qualifiedName, nodeKey, columnNames, fileInfo, columnInfos, onInsertText, onRefreshNode, onShowStats, onShowFileInfo, onEditPlugin, onProfileData, onToggleFavorite],
   );
 
   const items: MenuProps['items'] = [];
@@ -123,11 +161,17 @@ export default function ContextMenu({
   items.push({ type: 'divider' });
 
   if (nodeType === 'plugin') {
+    if (onEditPlugin) {
+      items.push({ key: 'edit-plugin', label: 'Edit Configuration', icon: <SettingOutlined /> });
+    }
     items.push({ key: 'refresh', label: 'Refresh Schemas', icon: <ReloadOutlined /> });
   }
 
   if (nodeType === 'schema') {
     items.push({ key: 'use-schema', label: 'Generate USE', icon: <TableOutlined /> });
+    if (onEditPlugin) {
+      items.push({ key: 'edit-plugin', label: 'Edit Plugin Configuration', icon: <SettingOutlined /> });
+    }
     items.push({ key: 'refresh', label: 'Refresh', icon: <ReloadOutlined /> });
   }
 
@@ -136,6 +180,12 @@ export default function ContextMenu({
     items.push({ key: 'describe', label: 'Generate DESCRIBE', icon: <TableOutlined /> });
     if (nodeType === 'table') {
       items.push({ key: 'show-stats', label: 'Show Statistics', icon: <BarChartOutlined /> });
+    }
+    if (onProfileData) {
+      items.push({ key: 'profile-data', label: 'Profile Data', icon: <ProfileOutlined /> });
+    }
+    if (nodeType === 'file' && fileInfo && onShowFileInfo) {
+      items.push({ key: 'file-info', label: 'Get Info', icon: <InfoCircleOutlined /> });
     }
     items.push({ key: 'refresh', label: 'Refresh Columns', icon: <ReloadOutlined /> });
   }

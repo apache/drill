@@ -29,6 +29,7 @@ import {
   setActiveTab,
   setDefaultSchema,
   renameTab,
+  clearResults,
   clearResultsExpired,
 } from '../store/querySlice';
 import { toggleSidebar, setEditorHeight } from '../store/uiSlice';
@@ -542,6 +543,10 @@ export default function SqlLabPage({ datasetFilter, headerContent, projectId }: 
     });
   }, [execute, autoLimit, activeTab?.defaultSchema, editorInstanceRef]);
 
+  const handleClearResults = useCallback(() => {
+    dispatch(clearResults(activeTabId));
+  }, [dispatch, activeTabId]);
+
   // Show transformation preview modal and apply on confirm.
   const showTransformPreview = useCallback(
     (originalSql: string, transformedSql: string, hideLoading: () => void) => {
@@ -651,10 +656,13 @@ export default function SqlLabPage({ datasetFilter, headerContent, projectId }: 
 
   // Handle table selection from schema explorer
   const handleTableSelect = useCallback(
-    (schema: string, table: string) => {
+    (schema: string, table: string, columnNames?: string[]) => {
+      const cols = columnNames && columnNames.length > 0
+        ? columnNames.map((c) => `\`${c}\``).join(',\n       ')
+        : '*';
       // Table function expressions (e.g. Excel sheets) are passed as the table arg
       if (table.startsWith('table(')) {
-        const query = `SELECT *\nFROM ${table}\nLIMIT 100`;
+        const query = `SELECT ${cols}\nFROM ${table}\nLIMIT 100`;
         updateSql(query);
         return;
       }
@@ -663,7 +671,7 @@ export default function SqlLabPage({ datasetFilter, headerContent, projectId }: 
       const formattedSchema = schemaParts.length <= 1
         ? schema
         : schemaParts[0] + '.' + schemaParts.slice(1).map((p) => `\`${p}\``).join('.');
-      const query = `SELECT *\nFROM ${formattedSchema}.\`${table}\`\nLIMIT 100`;
+      const query = `SELECT ${cols}\nFROM ${formattedSchema}.\`${table}\`\nLIMIT 100`;
       updateSql(query);
     },
     [updateSql]
@@ -1066,6 +1074,9 @@ export default function SqlLabPage({ datasetFilter, headerContent, projectId }: 
                       onTransformColumn={handleTransformColumn}
                       onShareApi={handleShareApi}
                       cacheId={cacheId}
+                      sql={sql}
+                      onClearResults={handleClearResults}
+                      onRerun={handleExecute}
                     />
                   </div>
                 ),

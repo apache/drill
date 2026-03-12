@@ -304,6 +304,7 @@ export interface Project {
   tags: string[];
   owner: string;
   isPublic: boolean;
+  isSystem?: boolean;
   sharedWith: string[];
   datasets: DatasetRef[];
   savedQueryIds: string[];

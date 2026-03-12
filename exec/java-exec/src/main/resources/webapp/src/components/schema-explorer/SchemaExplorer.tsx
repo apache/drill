@@ -36,6 +36,8 @@ import ContextMenu from './ContextMenu';
 import type { NodeType } from './ContextMenu';
 import { useFavorites } from './useFavorites';
 import ColumnStats from './ColumnStats';
+import FileInfoModal from './FileInfoModal';
+import { DataProfiler } from '../data-profiler';
 
 const { Search } = Input;
 
@@ -45,7 +47,7 @@ export interface DatasetFilter {
 
 interface SchemaExplorerProps {
   onInsertText?: (text: string) => void;
-  onTableSelect?: (schema: string, table: string) => void;
+  onTableSelect?: (schema: string, table: string, columnNames?: string[]) => void;
   datasetFilter?: DatasetFilter;
 }
 
@@ -310,6 +312,16 @@ export default function SchemaExplorer({ onInsertText, onTableSelect, datasetFil
   // Column statistics drawer
   const [statsTarget, setStatsTarget] = useState<{ schema: string; table: string } | null>(null);
 
+  // File info modal
+  const [fileInfoState, setFileInfoState] = useState<{
+    fileInfo: FileInfo; qualifiedName: string; columns: ColumnInfo[];
+  } | null>(null);
+
+  // Data profiler target
+  const [profileTarget, setProfileTarget] = useState<{
+    schemaName: string; tableName: string;
+  } | null>(null);
+
   // Favorites
   const { favorites, toggleFavorite, isFavorite } = useFavorites();
 
@@ -532,7 +544,10 @@ export default function SchemaExplorer({ onInsertText, onTableSelect, datasetFil
                 loaded = true;
               } catch {
                 console.error('Failed to load sub-tables for file:', schemaName, filePath);
-                // Don't cache failure or mark as loaded — allows retry on next expand
+                // Cache empty result so the node doesn't spin forever
+                setSubTablesCache((prev) => ({ ...prev, [key]: [] }));
+                setColumnsCache((prev) => ({ ...prev, [key]: [] }));
+                loaded = true;
               }
             } else {
               loaded = true;
@@ -543,11 +558,12 @@ export default function SchemaExplorer({ onInsertText, onTableSelect, datasetFil
               try {
                 const columns = await getFileColumns(schemaName, filePath);
                 setColumnsCache((prev) => ({ ...prev, [key]: columns }));
-                loaded = true;
               } catch (err) {
                 console.error('Failed to load columns for file:', schemaName, filePath, err);
-                // Don't cache failure or mark as loaded — allows retry on next expand
+                // Cache empty result so the node doesn't spin forever
+                setColumnsCache((prev) => ({ ...prev, [key]: [] }));
               }
+              loaded = true;
             } else {
               loaded = true;
             }
@@ -642,16 +658,20 @@ export default function SchemaExplorer({ onInsertText, onTableSelect, datasetFil
         return;
       }
 
+      const cachedCols = columnsCacheRef.current[key];
+      const colNames = cachedCols && cachedCols.length > 0
+        ? cachedCols.map((c) => c.name)
+        : undefined;
+
       if (key.startsWith('table:')) {
         const [, schemaName, tableName] = key.split(':');
-        onTableSelect?.(schemaName, tableName);
+        onTableSelect?.(schemaName, tableName, colNames);
       } else if (key.startsWith('sheet:')) {
-        // Pass table function expression so parent generates correct SELECT *
         const qn = getQualifiedName(key);
-        onTableSelect?.('', qn);
+        onTableSelect?.('', qn, colNames);
       } else if (key.startsWith('file:') || key.startsWith('dir:')) {
         const parts = key.split(':');
-        onTableSelect?.(parts[1], parts.slice(2).join(':'));
+        onTableSelect?.(parts[1], parts.slice(2).join(':'), colNames);
       }
     },
     [onTableSelect, onInsertText],
@@ -665,9 +685,12 @@ export default function SchemaExplorer({ onInsertText, onTableSelect, datasetFil
       }
       const text = getQualifiedName(key);
       if (text && onInsertText) {
-        if (key.startsWith('sheet:')) {
-          // Sheet nodes need a complete query since the table function syntax alone isn't usable
-          onInsertText(`SELECT *\nFROM ${text}\nLIMIT 100`);
+        if (key.startsWith('sheet:') || key.startsWith('table:') || key.startsWith('file:') || key.startsWith('dir:')) {
+          const cachedCols = columnsCacheRef.current[key];
+          const cols = cachedCols && cachedCols.length > 0
+            ? cachedCols.map((c) => `\`${c.name}\``).join(',\n       ')
+            : '*';
+          onInsertText(`SELECT ${cols}\nFROM ${text}\nLIMIT 100`);
         } else {
           onInsertText(text);
         }
@@ -682,8 +705,14 @@ export default function SchemaExplorer({ onInsertText, onTableSelect, datasetFil
     (info: { event: React.DragEvent; node: EventDataNode<DataNode> }) => {
       const key = info.node.key as string;
       const qn = getQualifiedName(key);
-      // Sheet nodes drag as a complete query since table function syntax alone isn't usable
-      const text = key.startsWith('sheet:') ? `SELECT *\nFROM ${qn}\nLIMIT 100` : qn;
+      let text = qn;
+      if (key.startsWith('sheet:') || key.startsWith('table:') || key.startsWith('file:') || key.startsWith('dir:')) {
+        const cachedCols = columnsCacheRef.current[key];
+        const cols = cachedCols && cachedCols.length > 0
+          ? cachedCols.map((c) => `\`${c.name}\``).join(',\n       ')
+          : '*';
+        text = `SELECT ${cols}\nFROM ${qn}\nLIMIT 100`;
+      }
       info.event.dataTransfer.setData('text/plain', text);
       info.event.dataTransfer.effectAllowed = 'copy';
     },
@@ -867,6 +896,53 @@ export default function SchemaExplorer({ onInsertText, onTableSelect, datasetFil
     [],
   );
 
+  // ---------- File info + plugin edit handlers ----------
+
+  const handleShowFileInfo = useCallback(
+    (fi: FileInfo, qn: string, cols: ColumnInfo[]) => {
+      setFileInfoState({ fileInfo: fi, qualifiedName: qn, columns: cols });
+    },
+    [],
+  );
+
+  const handleEditPlugin = useCallback(
+    (pluginName: string) => {
+      navigate(`/datasources/${encodeURIComponent(pluginName)}`);
+    },
+    [navigate],
+  );
+
+  const handleProfileData = useCallback(
+    (schemaName: string, tableName: string) => {
+      setProfileTarget({ schemaName, tableName });
+    },
+    [],
+  );
+
+  /**
+   * Look up a FileInfo from the files cache by a file/dir node key.
+   * Files are stored under their parent directory's cache key.
+   */
+  const lookupFileInfo = useCallback(
+    (key: string): FileInfo | undefined => {
+      if (!key.startsWith('file:') && !key.startsWith('dir:')) {
+        return undefined;
+      }
+      const parts = key.split(':');
+      const schema = parts[1];
+      const filePath = parts.slice(2).join(':');
+      const fileName = filePath.includes('/') ? filePath.split('/').pop()! : filePath;
+
+      // Parent key: either dir:schema:parentPath or schema:schema (for root files)
+      const parentPath = filePath.includes('/') ? filePath.substring(0, filePath.lastIndexOf('/')) : '';
+      const parentKey = parentPath ? `dir:${schema}:${parentPath}` : `schema:${schema}`;
+
+      const siblings = filesCacheRef.current[parentKey];
+      return siblings?.find((f) => f.name === fileName);
+    },
+    [],
+  );
+
   // ---------- Title renderer that wraps each node in a ContextMenu ----------
 
   const titleRender = useCallback(
@@ -880,14 +956,30 @@ export default function SchemaExplorer({ onInsertText, onTableSelect, datasetFil
       const nodeType = getNodeType(key);
       const qualifiedName = getQualifiedName(key);
 
+      // Look up cached column names for tables/files so Generate SELECT *
+      // can enumerate columns instead of using *.
+      const cachedColumns = columnsCacheRef.current[key];
+      const columnNames = cachedColumns && cachedColumns.length > 0
+        ? cachedColumns.map((c) => c.name)
+        : undefined;
+
+      // Look up FileInfo for file nodes (for Get Info)
+      const fi = nodeType === 'file' ? lookupFileInfo(key) : undefined;
+
       return (
         <ContextMenu
           nodeType={nodeType}
           nodeKey={key}
           qualifiedName={qualifiedName}
+          columnNames={columnNames}
+          fileInfo={fi}
+          columnInfos={cachedColumns}
           onInsertText={onInsertText}
           onRefreshNode={handleRefreshNode}
           onShowStats={handleShowStats}
+          onShowFileInfo={handleShowFileInfo}
+          onEditPlugin={handleEditPlugin}
+          onProfileData={handleProfileData}
           isFavorite={isFavorite(key)}
           onToggleFavorite={toggleFavorite}
         >
@@ -895,7 +987,7 @@ export default function SchemaExplorer({ onInsertText, onTableSelect, datasetFil
         </ContextMenu>
       );
     },
-    [onInsertText, handleRefreshNode, handleShowStats, isFavorite, toggleFavorite],
+    [onInsertText, handleRefreshNode, handleShowStats, handleShowFileInfo, handleEditPlugin, handleProfileData, lookupFileInfo, isFavorite, toggleFavorite],
   );
 
   // ---------- Render ----------
@@ -987,6 +1079,26 @@ export default function SchemaExplorer({ onInsertText, onTableSelect, datasetFil
           onClose={() => setStatsTarget(null)}
           schemaName={statsTarget.schema}
           tableName={statsTarget.table}
+        />
+      )}
+
+      {/* File Info Modal */}
+      <FileInfoModal
+        open={!!fileInfoState}
+        onClose={() => setFileInfoState(null)}
+        fileInfo={fileInfoState?.fileInfo ?? null}
+        qualifiedName={fileInfoState?.qualifiedName ?? ''}
+        columns={fileInfoState?.columns ?? []}
+      />
+
+      {/* Data Profiler Modal */}
+      {profileTarget && (
+        <DataProfiler
+          open={!!profileTarget}
+          onClose={() => setProfileTarget(null)}
+          schemaName={profileTarget.schemaName}
+          tableName={profileTarget.tableName}
+          sql={`SELECT * FROM ${formatSchema(profileTarget.schemaName)}.\`${profileTarget.tableName}\``}
         />
       )}
     </div>
