@@ -35,6 +35,9 @@ import JsonCellRenderer from './JsonCellRenderer';
 import CustomHeader from './CustomHeader';
 import type { ColumnTransformation } from '../../utils/sqlTransformations';
 import { useTheme } from '../../hooks/useTheme';
+import { getDownloadUrl } from '../../api/resultCache';
+import { useServerPagination } from '../../hooks/useServerPagination';
+import ServerPaginationBar from './ServerPaginationBar';
 
 import 'ag-grid-community/styles/ag-grid.css';
 import 'ag-grid-community/styles/ag-theme-alpine.css';
@@ -60,6 +63,7 @@ interface ResultsGridProps {
   prospectorAvailable?: boolean;
   onTransformColumn?: (columnName: string, transformation: ColumnTransformation) => void;
   onShareApi?: () => void;
+  cacheId?: string; // Backend cache ID for server-side exports
 }
 
 export default function ResultsGrid({
@@ -72,6 +76,7 @@ export default function ResultsGrid({
   prospectorAvailable,
   onTransformColumn,
   onShareApi,
+  cacheId,
 }: ResultsGridProps) {
   const gridRef = useRef<AgGridReact>(null);
   const gridApiRef = useRef<GridApi | null>(null);
@@ -84,12 +89,16 @@ export default function ResultsGrid({
 
   const timestampFormat = resultsSettings?.timestampDisplayFormat ?? DEFAULT_RESULTS_SETTINGS.timestampDisplayFormat;
 
+  // Server-side pagination: loads pages from backend when results are large
+  const serverPagination = useServerPagination(cacheId, results);
+  const displayResults = serverPagination.effectiveResults || results;
+
   // Generate column definitions from results with type-aware filters
   const columnDefs = useMemo<ColDef[]>(() => {
-    if (!results?.columns) return [];
+    if (!displayResults?.columns) return [];
 
-    return results.columns.map((col, index) => {
-      const metadataType = results.metadata?.[index];
+    return displayResults.columns.map((col, index) => {
+      const metadataType = displayResults.metadata?.[index];
       const config = getColumnConfig(metadataType);
       const isDateColumn = metadataType && (metadataType.toUpperCase().includes('DATE') || metadataType.toUpperCase().includes('TIMESTAMP'));
 
@@ -105,7 +114,7 @@ export default function ResultsGrid({
         headerComponent: CustomHeader as any,
         headerComponentParams: {
           onTransformColumn,
-          rowData: results.rows,
+          rowData: displayResults.rows,
           metadata: metadataType,
           columnIndex: index,
         },
@@ -133,12 +142,12 @@ export default function ResultsGrid({
 
       return colDef;
     });
-  }, [results, timestampFormat, onTransformColumn]);
+  }, [displayResults, timestampFormat, onTransformColumn]);
 
   // Convert row data — stringify nested objects/arrays so AG Grid doesn't show [object Object]
   const rowData = useMemo(() => {
-    if (!results?.rows) return [];
-    return results.rows.map((row) => {
+    if (!displayResults?.rows) return [];
+    return displayResults.rows.map((row) => {
       const processed: Record<string, unknown> = {};
       for (const key of Object.keys(row)) {
         const val = row[key];
@@ -150,7 +159,7 @@ export default function ResultsGrid({
       }
       return processed;
     });
-  }, [results]);
+  }, [displayResults]);
 
   const saveColumnState = useCallback(() => {
     const state = gridApiRef.current?.getColumnState();
@@ -179,48 +188,66 @@ export default function ResultsGrid({
     params.api.sizeColumnsToFit();
   }, []);
 
-  // Export functions
+  // Export functions — prefer backend streaming download when cacheId is available
   const exportToCsv = useCallback(() => {
-    gridApiRef.current?.exportDataAsCsv({
-      fileName: `drill-query-${results?.queryId || 'results'}.csv`,
-    });
-  }, [results?.queryId]);
+    if (cacheId) {
+      // Stream from backend (handles large results without browser memory issues)
+      const link = document.createElement('a');
+      link.href = getDownloadUrl(cacheId, 'csv');
+      link.download = `drill-query-${results?.queryId || 'results'}.csv`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    } else {
+      gridApiRef.current?.exportDataAsCsv({
+        fileName: `drill-query-${results?.queryId || 'results'}.csv`,
+      });
+    }
+  }, [results?.queryId, cacheId]);
 
   const exportToJson = useCallback(() => {
-    if (!results) return;
-
-    const data = JSON.stringify(results.rows, null, 2);
-    const blob = new Blob([data], { type: 'application/json' });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement('a');
-    link.href = url;
-    link.download = `drill-query-${results.queryId || 'results'}.json`;
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-    URL.revokeObjectURL(url);
-  }, [results]);
+    if (cacheId) {
+      // Stream from backend
+      const link = document.createElement('a');
+      link.href = getDownloadUrl(cacheId, 'json');
+      link.download = `drill-query-${results?.queryId || 'results'}.json`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    } else if (results) {
+      const data = JSON.stringify(results.rows, null, 2);
+      const blob = new Blob([data], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `drill-query-${results.queryId || 'results'}.json`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+    }
+  }, [results, cacheId]);
 
   const syncColumnVisibility = useCallback(() => {
-    if (gridApiRef.current && results?.columns) {
+    if (gridApiRef.current && displayResults?.columns) {
       const vis: Record<string, boolean> = {};
-      results.columns.forEach((col) => {
+      displayResults.columns.forEach((col) => {
         const column = gridApiRef.current!.getColumn(col);
         vis[col] = column ? column.isVisible() : true;
       });
       setColumnVisibility(vis);
     }
-  }, [results?.columns]);
+  }, [displayResults?.columns]);
 
   const handleShowAllColumns = useCallback(() => {
-    if (gridApiRef.current && results?.columns) {
-      results.columns.forEach((col) => {
+    if (gridApiRef.current && displayResults?.columns) {
+      displayResults.columns.forEach((col) => {
         gridApiRef.current!.setColumnsVisible([col], true);
       });
       syncColumnVisibility();
       saveColumnState();
     }
-  }, [results?.columns, saveColumnState, syncColumnVisibility]);
+  }, [displayResults?.columns, saveColumnState, syncColumnVisibility]);
 
   // Sort manager state
   const getSortModel = useCallback(
@@ -238,30 +265,30 @@ export default function ResultsGrid({
   }, [saveColumnState]);
 
   const copyAsTsv = useCallback(() => {
-    if (!results) return;
-    const cols = results.columns;
+    if (!displayResults) return;
+    const cols = displayResults.columns;
     const header = cols.join('\t');
-    const body = results.rows
+    const body = displayResults.rows
       .map((row) => cols.map((c) => String(row[c] ?? '')).join('\t'))
       .join('\n');
     navigator.clipboard.writeText(`${header}\n${body}`).then(() => {
       message.success('Copied as TSV', 1);
     }).catch(() => {});
-  }, [results]);
+  }, [displayResults]);
 
   const copyAsMarkdown = useCallback(() => {
-    if (!results) return;
-    const cols = results.columns;
+    if (!displayResults) return;
+    const cols = displayResults.columns;
     const escape = (v: unknown) => String(v ?? '').replace(/\\/g, '\\\\').replace(/\|/g, '\\|');
     const header = `| ${cols.map(escape).join(' | ')} |`;
     const sep = `| ${cols.map(() => '---').join(' | ')} |`;
-    const body = results.rows
+    const body = displayResults.rows
       .map((row) => `| ${cols.map((c) => escape(row[c])).join(' | ')} |`)
       .join('\n');
     navigator.clipboard.writeText(`${header}\n${sep}\n${body}`).then(() => {
       message.success('Copied as Markdown', 1);
     }).catch(() => {});
-  }, [results]);
+  }, [displayResults]);
 
   const exportMenuItems: MenuProps['items'] = [
     {
@@ -340,7 +367,7 @@ export default function ResultsGrid({
   }
 
   // Show empty state
-  if (!results && !isLoading) {
+  if (!displayResults && !isLoading) {
     return (
       <div style={{ padding: 40, textAlign: 'center' }}>
         <Empty
@@ -371,10 +398,10 @@ export default function ResultsGrid({
       <div className="results-toolbar">
         <Space>
           <Text strong style={{ whiteSpace: 'nowrap' }}>
-            {rowData.length.toLocaleString()} row{rowData.length !== 1 ? 's' : ''}
+            {serverPagination.effectiveTotalRows.toLocaleString()} row{serverPagination.effectiveTotalRows !== 1 ? 's' : ''}
           </Text>
-          {!isCompact && results?.queryId && (
-            <Text type="secondary">ID: {results.queryId}</Text>
+          {!isCompact && displayResults?.queryId && (
+            <Text type="secondary">ID: {displayResults.queryId}</Text>
           )}
         </Space>
 
@@ -449,6 +476,15 @@ export default function ResultsGrid({
         />
       </div>
 
+      {/* Server-side pagination bar (shown when result set exceeds threshold) */}
+      <ServerPaginationBar
+        state={serverPagination.state}
+        onGoToPage={serverPagination.goToPage}
+        onNextPage={serverPagination.nextPage}
+        onPrevPage={serverPagination.prevPage}
+        onPageSizeChange={serverPagination.setPageSize}
+      />
+
       {/* Column Manager Modal */}
       <Modal
         title="Manage Columns"
@@ -465,9 +501,9 @@ export default function ResultsGrid({
             Show All Columns
           </Button>
           <Divider style={{ margin: '8px 0' }} />
-          {results?.columns && (
+          {displayResults?.columns && (
             <div style={{ maxHeight: 400, overflowY: 'auto' }}>
-              {results.columns.map((col) => (
+              {displayResults.columns.map((col) => (
                 <div
                   key={col}
                   style={{ marginBottom: 8 }}
