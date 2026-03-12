@@ -51,6 +51,7 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.file.Files;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -982,13 +983,14 @@ public class DashboardResources {
         break;
     }
 
-    // SVG files can contain embedded scripts; serve them as attachments
-    // to prevent inline rendering and potential XSS.
-    String disposition = "svg".equals(ext) ? "attachment" : "inline";
+    // Serve user-uploaded files as attachment to prevent XSS from
+    // malicious content (e.g. SVG with embedded scripts, polyglot files).
+    // Images referenced via <img> tags still render normally with attachment disposition.
+    String sanitizedFilename = filename.replaceAll("[^a-zA-Z0-9._-]", "_");
 
-    return Response.ok(imageFile, contentType)
+    return Response.ok(Files.readAllBytes(imageFile.toPath()), contentType)
         .header("Cache-Control", "public, max-age=86400")
-        .header("Content-Disposition", disposition)
+        .header("Content-Disposition", "attachment; filename=\"" + sanitizedFilename + "\"")
         .header("Content-Security-Policy", "default-src 'none'; style-src 'unsafe-inline'")
         .header("X-Content-Type-Options", "nosniff")
         .build();
