@@ -220,6 +220,7 @@ export default function SqlLabPage({ datasetFilter, headerContent, projectId }: 
     error,
     isExecuting,
     executionTime,
+    cacheId,
     execute,
     cancel,
     updateSql,
@@ -811,9 +812,9 @@ export default function SqlLabPage({ datasetFilter, headerContent, projectId }: 
   // Cache results when they arrive
   useEffect(() => {
     if (results && activeTabId) {
-      onResultsCached(activeTabId, results, executionTime ?? 0);
+      onResultsCached(activeTabId, results, executionTime ?? 0, cacheId);
     }
-  }, [results, activeTabId, executionTime, onResultsCached]);
+  }, [results, activeTabId, executionTime, cacheId, onResultsCached]);
 
   // ---- Tab renaming ----
   const handleTabDoubleClick = useCallback((tabId: string, currentName: string) => {
@@ -1064,6 +1065,7 @@ export default function SqlLabPage({ datasetFilter, headerContent, projectId }: 
                       prospectorAvailable={prospectorAvailable}
                       onTransformColumn={handleTransformColumn}
                       onShareApi={handleShareApi}
+                      cacheId={cacheId}
                     />
                   </div>
                 ),
