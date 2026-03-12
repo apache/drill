@@ -25,7 +25,6 @@ import {
   SaveOutlined,
   BarChartOutlined,
   DashboardOutlined,
-  HomeOutlined,
   QuestionCircleOutlined,
   RobotOutlined,
   SettingOutlined,
@@ -36,6 +35,7 @@ import { SunOutlined, MoonOutlined } from '@ant-design/icons';
 import type { MenuProps } from 'antd';
 import { ProspectorSettingsModal } from '../prospector/index';
 import SmtpSettingsModal from '../smtp/SmtpSettingsModal';
+import ProfileSettingsModal from '../data-profiler/ProfileSettingsModal';
 import { useTheme } from '../../hooks/useTheme';
 
 const { Header } = Layout;
@@ -54,18 +54,13 @@ const staticAdminMenuItems: MenuProps['items'] = [
   { key: '/metrics', label: <Link to="/metrics">Metrics</Link> },
 ];
 
-const legacyMenuItems: MenuProps['items'] = [
-  { key: 'query', label: <a href="/query">Query (Legacy)</a> },
-  { key: 'storage', label: <a href="/storage">Storage</a> },
-  { key: 'options', label: <a href="/options">Options</a> },
-  { key: 'logs', label: <a href="/logs">Logs</a> },
-];
 
 export default function Navbar() {
   const location = useLocation();
   const { isDark, toggle } = useTheme();
   const [prospectorSettingsOpen, setProspectorSettingsOpen] = useState(false);
   const [smtpSettingsOpen, setSmtpSettingsOpen] = useState(false);
+  const [profileSettingsOpen, setProfileSettingsOpen] = useState(false);
   const [drawerOpen, setDrawerOpen] = useState(false);
   const screens = Grid.useBreakpoint();
   const isMobile = !screens.md;
@@ -74,6 +69,11 @@ export default function Navbar() {
     ...staticAdminMenuItems!,
     { type: 'divider' },
     { key: 'smtp', icon: <MailOutlined />, label: 'Email Settings', onClick: () => setSmtpSettingsOpen(true) },
+    { key: 'profiler', icon: <BarChartOutlined />, label: 'Profiler Settings', onClick: () => setProfileSettingsOpen(true) },
+    { key: 'prospector', icon: <RobotOutlined />, label: 'Prospector Settings', onClick: () => setProspectorSettingsOpen(true) },
+    { type: 'divider' },
+    { key: 'options', icon: <SettingOutlined />, label: <Link to="/options">System Options</Link> },
+    { key: 'logs', icon: <CodeOutlined />, label: <Link to="/logs">Server Logs</Link> },
   ];
 
   // Determine selected nav key, handling sub-routes like /projects/:id, /datasources/:name
@@ -160,23 +160,6 @@ export default function Navbar() {
           </Dropdown>
         )}
 
-        <Tooltip title="Prospector Settings">
-          <Button
-            type="text"
-            icon={<RobotOutlined />}
-            style={{ color: textColor }}
-            onClick={() => setProspectorSettingsOpen(true)}
-          />
-        </Tooltip>
-
-        {!isMobile && (
-          <Dropdown menu={{ items: legacyMenuItems }} placement="bottomRight">
-            <Button type="text" icon={<HomeOutlined />} style={{ color: textColor }}>
-              Drill UI
-            </Button>
-          </Dropdown>
-        )}
-
         <Button
           type="text"
           icon={<QuestionCircleOutlined />}
@@ -221,11 +204,6 @@ export default function Navbar() {
               Admin
             </Button>
           </Dropdown>
-          <Dropdown menu={{ items: legacyMenuItems }} placement="bottomLeft">
-            <Button type="text" icon={<HomeOutlined />} style={{ color: textColor, width: '100%', textAlign: 'left' }}>
-              Drill UI
-            </Button>
-          </Dropdown>
         </div>
       </Drawer>
 
@@ -237,6 +215,11 @@ export default function Navbar() {
       <SmtpSettingsModal
         open={smtpSettingsOpen}
         onClose={() => setSmtpSettingsOpen(false)}
+      />
+
+      <ProfileSettingsModal
+        open={profileSettingsOpen}
+        onClose={() => setProfileSettingsOpen(false)}
       />
     </Header>
   );

@@ -112,6 +112,7 @@ public class DrillRestServer extends ResourceConfig {
     register(SmtpConfigResources.class);
     register(NotebookResources.class);
     register(ResultCacheResources.class);
+    register(ProfileConfigResources.class);
 
     logger.info("Registered {} resource classes", 23);
 

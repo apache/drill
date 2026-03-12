@@ -190,7 +190,10 @@ export async function getFiles(schema: string, subPath?: string): Promise<FileIn
  */
 export async function getFileColumns(schema: string, filePath: string): Promise<ColumnInfo[]> {
   const query = `SELECT * FROM ${formatSchema(schema)}.\`${filePath}\` LIMIT 1`;
-  const result = await executeQuery({ query, queryType: 'SQL', autoLimitRowCount: 1 });
+  // Do NOT use autoLimitRowCount here — it causes Drill to auto-cancel the query
+  // after N rows arrive, which can kill format plugins (like PDF/Tabula) that need
+  // to finish reading the source before producing any rows.
+  const result = await executeQuery({ query, queryType: 'SQL' });
 
   if (!result.columns || result.columns.length === 0) {
     return [];

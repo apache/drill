@@ -35,6 +35,7 @@ interface QuickActionBarProps {
   notebookMode?: boolean;
   notebookCellError?: boolean;
   notebookDfName?: string;
+  logAnalysisMode?: boolean;
 }
 
 export default function QuickActionBar({
@@ -46,7 +47,49 @@ export default function QuickActionBar({
   notebookMode,
   notebookCellError,
   notebookDfName = 'df',
+  logAnalysisMode,
 }: QuickActionBarProps) {
+  if (logAnalysisMode) {
+    return (
+      <div className="prospector-quick-actions">
+        <Space size={[4, 4]} wrap>
+          <Button
+            size="small"
+            icon={<BugOutlined />}
+            onClick={() => onAction('Summarize the errors in the log. Identify the most common errors, their frequency, and potential root causes.')}
+            disabled={disabled}
+          >
+            Summarize Errors
+          </Button>
+          <Button
+            size="small"
+            icon={<ExperimentOutlined />}
+            onClick={() => onAction('Analyze the log for performance issues. Look for slow operations, thread contention, timeouts, or memory warnings.')}
+            disabled={disabled}
+          >
+            Find Performance Issues
+          </Button>
+          <Button
+            size="small"
+            icon={<QuestionCircleOutlined />}
+            onClick={() => onAction('Explain the most recent errors in the log. What went wrong and what should I do to fix them?')}
+            disabled={disabled}
+          >
+            Explain Errors
+          </Button>
+          <Button
+            size="small"
+            icon={<CodeOutlined />}
+            onClick={() => onAction('Write a SQL query using the dfs.logs workspace to analyze these log files. Suggest useful analytical queries for monitoring and troubleshooting.')}
+            disabled={disabled}
+          >
+            Suggest SQL
+          </Button>
+        </Space>
+      </div>
+    );
+  }
+
   if (notebookMode) {
     return (
       <div className="prospector-quick-actions">

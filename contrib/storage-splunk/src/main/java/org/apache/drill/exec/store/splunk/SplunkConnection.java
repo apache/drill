@@ -152,11 +152,19 @@ public class SplunkConnection {
       // Fall back to the Splunk SDK default if our value is null by not setting
       loginArgs.setPort(port);
     }
-    loginArgs.setPassword(credentials.map(UsernamePasswordCredentials::getPassword).orElse(null));
-    loginArgs.setUsername(credentials.map(UsernamePasswordCredentials::getUsername).orElse(null));
+
+    // If the user provides a token, do not set the username/password
+    if (token != null && !token.isEmpty()) {
+      loginArgs.setToken("Bearer " + token);
+      loginArgs.setPassword(credentials.map(UsernamePasswordCredentials::getPassword).orElse(null));
+      loginArgs.setUsername(credentials.map(UsernamePasswordCredentials::getUsername).orElse(null));
+    } else {
+      loginArgs.setPassword(credentials.map(UsernamePasswordCredentials::getPassword).orElse(null));
+      loginArgs.setUsername(credentials.map(UsernamePasswordCredentials::getUsername).orElse(null));
+    }
+
     loginArgs.setApp(app);
     loginArgs.setOwner(owner);
-    loginArgs.setToken(token);
     loginArgs.setCookie(cookie);
 
      try {

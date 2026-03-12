@@ -21,12 +21,18 @@ import { Button, Space, Dropdown, Typography, Alert, Empty, Modal, Checkbox, Div
 import {
   DownloadOutlined,
   BarChartOutlined,
-  ExpandOutlined,
+  ColumnWidthOutlined,
+  ColumnHeightOutlined,
   RobotOutlined,
   UnorderedListOutlined,
   SortAscendingOutlined,
   ApiOutlined,
-  TableOutlined,
+  EyeOutlined,
+  ProfileOutlined,
+  UndoOutlined,
+  FundProjectionScreenOutlined,
+  ClearOutlined,
+  ReloadOutlined,
 } from '@ant-design/icons';
 import type { ColDef, GridReadyEvent, GridApi, SortModelItem } from 'ag-grid-community';
 import type { MenuProps } from 'antd';
@@ -38,6 +44,8 @@ import { useTheme } from '../../hooks/useTheme';
 import { getDownloadUrl } from '../../api/resultCache';
 import { useServerPagination } from '../../hooks/useServerPagination';
 import ServerPaginationBar from './ServerPaginationBar';
+
+import { DataProfiler } from '../data-profiler';
 
 import 'ag-grid-community/styles/ag-grid.css';
 import 'ag-grid-community/styles/ag-theme-alpine.css';
@@ -64,6 +72,9 @@ interface ResultsGridProps {
   onTransformColumn?: (columnName: string, transformation: ColumnTransformation) => void;
   onShareApi?: () => void;
   cacheId?: string; // Backend cache ID for server-side exports
+  sql?: string; // Current SQL for data profiling
+  onClearResults?: () => void;
+  onRerun?: () => void;
 }
 
 export default function ResultsGrid({
@@ -77,12 +88,16 @@ export default function ResultsGrid({
   onTransformColumn,
   onShareApi,
   cacheId,
+  sql,
+  onClearResults,
+  onRerun,
 }: ResultsGridProps) {
   const gridRef = useRef<AgGridReact>(null);
   const gridApiRef = useRef<GridApi | null>(null);
   const [columnManagerOpen, setColumnManagerOpen] = useState(false);
   const [sortManagerOpen, setSortManagerOpen] = useState(false);
   const [columnVisibility, setColumnVisibility] = useState<Record<string, boolean>>({});
+  const [profilerOpen, setProfilerOpen] = useState(false);
   const screens = Grid.useBreakpoint();
   const isCompact = !screens.lg;
   const { isDark } = useTheme();
@@ -314,13 +329,29 @@ export default function ResultsGrid({
     },
   ];
 
-  const tableMenuItems: MenuProps['items'] = [
+  const analyzeMenuItems: MenuProps['items'] = [
+    {
+      key: 'chart',
+      icon: <BarChartOutlined />,
+      label: 'Create Chart',
+      onClick: onCreateVisualization,
+    },
+    {
+      key: 'profile',
+      icon: <ProfileOutlined />,
+      label: 'Profile Data',
+      onClick: () => setProfilerOpen(true),
+    },
+    { type: 'divider' },
     {
       key: 'share',
       icon: <ApiOutlined />,
       label: 'Share as API',
       onClick: onShareApi,
     },
+  ];
+
+  const viewMenuItems: MenuProps['items'] = [
     {
       key: 'columns',
       icon: <UnorderedListOutlined />,
@@ -333,11 +364,29 @@ export default function ResultsGrid({
       label: 'Manage Sort',
       onClick: () => setSortManagerOpen(true),
     },
+    { type: 'divider' },
+    {
+      key: 'autosize',
+      icon: <ColumnWidthOutlined />,
+      label: 'Auto-size to Content',
+      onClick: () => gridApiRef.current?.autoSizeAllColumns(),
+    },
     {
       key: 'fit',
-      icon: <ExpandOutlined />,
-      label: 'Fit Columns',
+      icon: <ColumnHeightOutlined />,
+      label: 'Fit to Grid Width',
       onClick: () => gridApiRef.current?.sizeColumnsToFit(),
+    },
+    { type: 'divider' },
+    {
+      key: 'reset',
+      icon: <UndoOutlined />,
+      label: 'Reset Column Layout',
+      onClick: () => {
+        localStorage.removeItem('drill-grid-column-state');
+        gridApiRef.current?.resetColumnState();
+        gridApiRef.current?.sizeColumnsToFit();
+      },
     },
   ];
 
@@ -397,48 +446,40 @@ export default function ResultsGrid({
       {/* Results Toolbar */}
       <div className="results-toolbar">
         <Space>
-          <Text strong style={{ whiteSpace: 'nowrap' }}>
-            {serverPagination.effectiveTotalRows.toLocaleString()} row{serverPagination.effectiveTotalRows !== 1 ? 's' : ''}
-          </Text>
-          {!isCompact && displayResults?.queryId && (
-            <Text type="secondary">ID: {displayResults.queryId}</Text>
-          )}
-        </Space>
-
-        <Space>
           <Dropdown menu={{ items: exportMenuItems }} trigger={['click']}>
             <Button icon={<DownloadOutlined />} size="small">
               {!isCompact && 'Export'}
             </Button>
           </Dropdown>
-          <Button icon={<BarChartOutlined />} onClick={onCreateVisualization} size="small">
-            {!isCompact && 'Create Chart'}
-          </Button>
-          {isCompact ? (
-            <Dropdown menu={{ items: tableMenuItems }} trigger={['click']}>
-              <Button icon={<TableOutlined />} size="small">
-                Table
-              </Button>
-            </Dropdown>
-          ) : (
-            <>
-              <Button icon={<ApiOutlined />} onClick={onShareApi} size="small">
-                Share as API
-              </Button>
-              <Button
-                icon={<UnorderedListOutlined />}
-                onClick={() => { syncColumnVisibility(); setColumnManagerOpen(true); }}
-                size="small"
-              >
-                Columns
-              </Button>
-              <Button icon={<SortAscendingOutlined />} onClick={() => setSortManagerOpen(true)} size="small">
-                Sort
-              </Button>
-              <Button icon={<ExpandOutlined />} onClick={() => gridApiRef.current?.sizeColumnsToFit()} size="small">
-                Fit Columns
-              </Button>
-            </>
+          <Dropdown menu={{ items: analyzeMenuItems }} trigger={['click']}>
+            <Button icon={<FundProjectionScreenOutlined />} size="small">
+              {!isCompact && 'Analyze'}
+            </Button>
+          </Dropdown>
+          <Dropdown menu={{ items: viewMenuItems }} trigger={['click']}>
+            <Button icon={<EyeOutlined />} size="small">
+              {!isCompact && 'View'}
+            </Button>
+          </Dropdown>
+        </Space>
+        <Space>
+          {onRerun && (
+            <Button icon={<ReloadOutlined />} size="small" onClick={onRerun}>
+              {!isCompact && 'Re-run'}
+            </Button>
+          )}
+          {onClearResults && (
+            <Button icon={<ClearOutlined />} size="small" onClick={() => {
+              Modal.confirm({
+                title: 'Clear Results',
+                content: 'Are you sure you want to clear the current results?',
+                okText: 'Clear',
+                okType: 'danger',
+                onOk: onClearResults,
+              });
+            }}>
+              {!isCompact && 'Clear'}
+            </Button>
           )}
         </Space>
       </div>
@@ -474,6 +515,32 @@ export default function ResultsGrid({
           ensureDomOrder={true}
           suppressRowClickSelection={true}
         />
+      </div>
+
+      {/* Results footer: row count + query ID */}
+      <div style={{
+        display: 'flex',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        padding: '4px 12px',
+        borderTop: '1px solid var(--color-border)',
+        fontSize: 12,
+        color: 'var(--color-text-secondary)',
+        flexShrink: 0,
+      }}>
+        <Text type="secondary" style={{ fontSize: 12 }}>
+          {serverPagination.effectiveTotalRows.toLocaleString()} row{serverPagination.effectiveTotalRows !== 1 ? 's' : ''}
+        </Text>
+        {displayResults?.queryId && (
+          <a
+            href={`/sqllab/profiles/${displayResults.queryId}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            style={{ fontSize: 12, color: 'var(--color-text-tertiary)' }}
+          >
+            {displayResults.queryId}
+          </a>
+        )}
       </div>
 
       {/* Server-side pagination bar (shown when result set exceeds threshold) */}
@@ -524,6 +591,17 @@ export default function ResultsGrid({
           )}
         </Space>
       </Modal>
+
+      {/* Data Profiler Modal */}
+      <DataProfiler
+        open={profilerOpen}
+        onClose={() => setProfilerOpen(false)}
+        cacheId={cacheId}
+        columns={displayResults?.columns}
+        metadata={displayResults?.metadata}
+        totalRows={serverPagination.effectiveTotalRows}
+        sql={sql}
+      />
 
       {/* Sort Manager Modal */}
       <Modal
