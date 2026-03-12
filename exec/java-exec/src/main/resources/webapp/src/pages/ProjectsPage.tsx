@@ -365,26 +365,28 @@ export default function ProjectsPage() {
                           navigate(`/projects/${project.id}`);
                         }} />
                       </Tooltip>,
-                      <Popconfirm
-                        key="delete"
-                        title="Delete this project?"
-                        description="This action cannot be undone."
-                        onConfirm={(e) => {
-                          e?.stopPropagation();
-                          deleteMutation.mutate(project.id);
-                        }}
-                        onCancel={(e) => e?.stopPropagation()}
-                        okText="Delete"
-                        cancelText="Cancel"
-                        okButtonProps={{ danger: true }}
-                      >
-                        <Tooltip title="Delete">
-                          <DeleteOutlined
-                            style={{ color: '#ff4d4f' }}
-                            onClick={(e) => e.stopPropagation()}
-                          />
-                        </Tooltip>
-                      </Popconfirm>,
+                      ...(!project.isSystem ? [
+                        <Popconfirm
+                          key="delete"
+                          title="Delete this project?"
+                          description="This action cannot be undone."
+                          onConfirm={(e) => {
+                            e?.stopPropagation();
+                            deleteMutation.mutate(project.id);
+                          }}
+                          onCancel={(e) => e?.stopPropagation()}
+                          okText="Delete"
+                          cancelText="Cancel"
+                          okButtonProps={{ danger: true }}
+                        >
+                          <Tooltip title="Delete">
+                            <DeleteOutlined
+                              style={{ color: '#ff4d4f' }}
+                              onClick={(e) => e.stopPropagation()}
+                            />
+                          </Tooltip>
+                        </Popconfirm>,
+                      ] : []),
                     ]}
                   >
                     <Card.Meta
@@ -393,6 +395,9 @@ export default function ProjectsPage() {
                           <Text strong ellipsis style={{ maxWidth: 150 }}>
                             {project.name}
                           </Text>
+                          {project.isSystem && (
+                            <Tag color="purple" style={{ fontSize: 10, marginRight: 0 }}>SYSTEM</Tag>
+                          )}
                           {project.isPublic ? (
                             <GlobalOutlined style={{ color: '#52c41a', fontSize: 12 }} />
                           ) : (

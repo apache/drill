@@ -18,7 +18,6 @@
 package org.apache.drill.exec.server.rest;
 
 import java.net.URL;
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.LinkedHashMap;
@@ -37,10 +36,9 @@ import jakarta.ws.rs.POST;
 import jakarta.ws.rs.Path;
 import jakarta.ws.rs.PathParam;
 import jakarta.ws.rs.Produces;
-import jakarta.ws.rs.core.Context;
 import jakarta.ws.rs.core.MediaType;
+import jakarta.ws.rs.core.Response;
 import jakarta.ws.rs.core.SecurityContext;
-import jakarta.ws.rs.core.UriInfo;
 import jakarta.xml.bind.annotation.XmlRootElement;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -48,7 +46,6 @@ import io.swagger.v3.oas.annotations.ExternalDocumentation;
 import io.swagger.v3.oas.annotations.Operation;
 import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.apache.commons.lang3.tuple.Pair;
-import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.server.options.OptionList;
 import org.apache.drill.exec.server.options.OptionManager;
 import org.apache.drill.exec.server.options.OptionValue;
@@ -83,9 +80,6 @@ public class StatusResources {
   public static final String PATH_INTERNAL_OPTIONS_JSON = "/internal_options" + REST_API_SUFFIX;
   public static final String PATH_OPTIONS = "/options";
   public static final String PATH_INTERNAL_OPTIONS = "/internal_options";
-  //Used to access current filter state in WebUI
-  private static final String CURRENT_FILTER_PARAM = "filter";
-
   @Inject
   UserAuthEnabled authEnabled;
 
@@ -254,35 +248,20 @@ public class StatusResources {
     return getSystemOptionsJSONHelper(true);
   }
 
-  //Generate model-view for WebUI (PATH_OPTIONS and PATH_INTERNAL_OPTIONS)
-  private Viewable getSystemOptionsHelper(boolean internal, UriInfo uriInfo) {
-    List<OptionWrapper> options = getSystemOptionsJSONHelper(internal);
-    List<String> fltrList = new ArrayList<>(work.getContext().getConfig().getStringList(ExecConstants.HTTP_WEB_OPTIONS_FILTERS));
-    String currFilter = (uriInfo != null) ? uriInfo.getQueryParameters().getFirst(CURRENT_FILTER_PARAM) : null;
-    if (currFilter == null) {
-      currFilter = "";
-    }
-
-    return ViewableWithPermissions.create(authEnabled.get(),
-      "/rest/options.ftl",
-      sc,
-      new OptionsListing(options, fltrList, currFilter, request));
-  }
-
   @GET
   @Path(StatusResources.PATH_OPTIONS)
   @RolesAllowed(DrillUserPrincipal.AUTHENTICATED_ROLE)
   @Produces(MediaType.TEXT_HTML)
-  public Viewable getSystemPublicOptions(@Context UriInfo uriInfo) {
-    return getSystemOptionsHelper(false, uriInfo);
+  public Response getSystemPublicOptions() {
+    return Response.seeOther(java.net.URI.create("/sqllab#/options")).build();
   }
 
   @GET
   @Path(StatusResources.PATH_INTERNAL_OPTIONS)
   @RolesAllowed(DrillUserPrincipal.AUTHENTICATED_ROLE)
   @Produces(MediaType.TEXT_HTML)
-  public Viewable getSystemInternalOptions(@Context UriInfo uriInfo) {
-    return getSystemOptionsHelper(true, uriInfo);
+  public Response getSystemInternalOptions() {
+    return Response.seeOther(java.net.URI.create("/sqllab#/options")).build();
   }
 
   @POST
@@ -290,7 +269,7 @@ public class StatusResources {
   @RolesAllowed(DrillUserPrincipal.ADMIN_ROLE)
   @Consumes("application/x-www-form-urlencoded")
   @Produces(MediaType.TEXT_HTML)
-  public Viewable updateSystemOption(@FormParam("name") String name,
+  public Response updateSystemOption(@FormParam("name") String name,
                                      @FormParam("value") String value,
                                      @FormParam("kind") String kind) {
     SystemOptionManager optionManager = work.getContext()
@@ -302,44 +281,7 @@ public class StatusResources {
       logger.debug("Could not update.", e);
     }
 
-    if (optionManager.getOptionDefinition(name).getMetaData().isInternal()) {
-      return getSystemInternalOptions(null);
-    } else {
-      return getSystemPublicOptions(null);
-    }
-  }
-
-  /**
-   * Data Model for rendering /options on webUI
-   */
-  public static class OptionsListing {
-    private final List<OptionWrapper> options;
-    private final List<String> filters;
-    private final String dynamicFilter;
-    private final String csrfToken;
-
-    public OptionsListing(List<OptionWrapper> optList, List<String> fltrList, String currFilter, HttpServletRequest request) {
-      this.options = optList;
-      this.filters = fltrList;
-      this.dynamicFilter = currFilter;
-      csrfToken = WebUtils.getCsrfTokenFromHttpRequest(request);
-    }
-
-    public List<OptionWrapper> getOptions() {
-      return options;
-    }
-
-    public List<String> getFilters() {
-      return filters;
-    }
-
-    public String getDynamicFilter() {
-      return dynamicFilter;
-    }
-
-    public String getCsrfToken() {
-      return csrfToken;
-    }
+    return Response.seeOther(java.net.URI.create("/sqllab#/options")).build();
   }
 
   @XmlRootElement
