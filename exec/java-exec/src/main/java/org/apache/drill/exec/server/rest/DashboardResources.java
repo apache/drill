@@ -988,7 +988,17 @@ public class DashboardResources {
     // Images referenced via <img> tags still render normally with attachment disposition.
     String sanitizedFilename = filename.replaceAll("[^a-zA-Z0-9._-]", "_");
 
-    return Response.ok(Files.readAllBytes(imageFile.toPath()), contentType)
+    byte[] fileBytes;
+    try {
+      fileBytes = Files.readAllBytes(imageFile.toPath());
+    } catch (IOException e) {
+      logger.error("Failed to read image file: {}", sanitizedFilename, e);
+      return Response.serverError()
+          .entity(new MessageResponse("Failed to read image"))
+          .build();
+    }
+
+    return Response.ok(fileBytes, contentType)
         .header("Cache-Control", "public, max-age=86400")
         .header("Content-Disposition", "attachment; filename=\"" + sanitizedFilename + "\"")
         .header("Content-Security-Policy", "default-src 'none'; style-src 'unsafe-inline'")
