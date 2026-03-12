@@ -358,7 +358,7 @@ export GRACEFUL_SIGFILE=${GRACEFUL_SIGFILE:-"graceful"}
 
 export DRILL_LOG_NAME=${DRILL_LOG_NAME:-"drillbit"}
 export DRILL_LOG_PREFIX="$DRILL_LOG_DIR/$DRILL_LOG_NAME"
-export DRILLBIT_LOG_PATH="${DRILL_LOG_PREFIX}.log"
+export DRILLBIT_LOG_PATH="${DRILL_LOG_PREFIX}.drilllog"
 
 # Class path construction.
 
