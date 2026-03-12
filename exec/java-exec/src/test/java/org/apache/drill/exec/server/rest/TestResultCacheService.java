@@ -204,8 +204,14 @@ public class TestResultCacheService {
 
   @Test
   public void testEvictNonexistent() {
-    boolean evicted = cacheService.evict("nonexistent-id");
+    // Use a valid UUID format that doesn't exist in the cache
+    boolean evicted = cacheService.evict("00000000-0000-0000-0000-000000000000");
     assertFalse(evicted);
+  }
+
+  @Test(expected = IllegalArgumentException.class)
+  public void testEvictInvalidCacheId() {
+    cacheService.evict("not-a-valid-uuid");
   }
 
   @Test
@@ -397,8 +403,19 @@ public class TestResultCacheService {
 
   @Test
   public void testGetRowsNonexistentEntry() throws IOException {
-    PaginatedRows result = cacheService.getRows("nonexistent", 0, 10);
+    // Use a valid UUID format that doesn't exist in the cache
+    PaginatedRows result = cacheService.getRows("00000000-0000-0000-0000-000000000000", 0, 10);
     assertNull(result);
+  }
+
+  @Test(expected = IllegalArgumentException.class)
+  public void testGetRowsInvalidCacheId() throws IOException {
+    cacheService.getRows("../../../etc/passwd", 0, 10);
+  }
+
+  @Test(expected = IllegalArgumentException.class)
+  public void testGetMetadataInvalidCacheId() {
+    cacheService.getMetadata("../../../etc/passwd");
   }
 
   @Test
