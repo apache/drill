@@ -19,8 +19,9 @@ import { useCallback, useRef } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { useMutation } from '@tanstack/react-query';
 import type { RootState, AppDispatch } from '../store';
-import { setExecuting, setResults, setError, setSql } from '../store/querySlice';
+import { setExecuting, setResults, setError, setSql, setCacheId } from '../store/querySlice';
 import { executeQuery as executeQueryApi, cancelQuery as cancelQueryApi } from '../api/queries';
+import { storeResultInCache } from '../api/resultCache';
 import type { QueryRequest, QueryError, QueryHistoryEntry } from '../types';
 
 export function useQueryExecution(
@@ -39,12 +40,12 @@ export function useQueryExecution(
       const startTime = Date.now();
       const result = await executeQueryApi(request);
       const executionTime = Date.now() - startTime;
-      return { result, executionTime, sqlAtExecution };
+      return { result, executionTime, sqlAtExecution, defaultSchema: request.defaultSchema };
     },
     onMutate: () => {
       dispatch(setExecuting({ tabId, isExecuting: true }));
     },
-    onSuccess: ({ result, executionTime, sqlAtExecution }) => {
+    onSuccess: ({ result, executionTime, sqlAtExecution, defaultSchema }) => {
       dispatch(setResults({ tabId, results: result, executionTime }));
       addHistory?.({
         id: crypto.randomUUID?.() || `${Date.now()}-${Math.random().toString(36).slice(2)}`,
@@ -55,6 +56,25 @@ export function useQueryExecution(
         timestamp: Date.now(),
         queryId: result.queryId,
       });
+
+      // Fire-and-forget: cache results to the backend for persistence
+      if (result.rows && result.rows.length > 0) {
+        storeResultInCache(
+          result.queryId,
+          sqlAtExecution,
+          defaultSchema,
+          result.queryState,
+          result.columns || [],
+          result.metadata || [],
+          result.rows,
+        ).then((meta) => {
+          if (meta?.cacheId) {
+            dispatch(setCacheId({ tabId, cacheId: meta.cacheId }));
+          }
+        }).catch(() => {
+          // Backend caching is best-effort
+        });
+      }
     },
     onError: (error: Error) => {
       const queryError: QueryError = {
@@ -122,6 +142,7 @@ export function useQueryExecution(
     error: tab?.error,
     isExecuting: tab?.isExecuting || false,
     executionTime: tab?.executionTime,
+    cacheId: tab?.cacheId,
     execute,
     cancel,
     updateSql,
