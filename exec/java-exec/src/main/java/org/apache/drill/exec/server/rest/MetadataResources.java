@@ -974,9 +974,16 @@ public class MetadataResources {
             }
           }
         } catch (NoSuchMethodException e) {
-          // Some format configs (like Parquet) don't have getExtensions()
-          // Add format name as extension fallback
-          // (Parquet files typically have .parquet extension)
+          // Try singular getExtension() for formats like logRegex
+          try {
+            Method getExtension = formatConfig.getClass().getMethod("getExtension");
+            String ext = (String) getExtension.invoke(formatConfig);
+            if (ext != null && !ext.isEmpty()) {
+              extensions.add(ext.toLowerCase());
+            }
+          } catch (Exception ignored) {
+            // Format doesn't expose extensions at all
+          }
         } catch (Exception e) {
           logger.debug("Could not get extensions from format config: {}", formatConfig.getClass().getSimpleName(), e);
         }

@@ -33,6 +33,7 @@ import {
   Dropdown,
   Tag,
   InputNumber,
+  Popconfirm,
 } from 'antd';
 import { PlusOutlined, DeleteOutlined, ApiOutlined, RobotOutlined, QuestionCircleOutlined } from '@ant-design/icons';
 import Markdown from 'react-markdown';
@@ -1108,13 +1109,21 @@ export default function FileSystemForm({ config, onChange, onValidationChange, p
       key: 'actions',
       width: 40,
       render: (_: unknown, record: WorkspaceRow) => (
-        <Button
-          type="text"
-          size="small"
-          danger
-          icon={<DeleteOutlined />}
-          onClick={() => removeWorkspace(record.key)}
-        />
+        <Popconfirm
+          title={`Delete workspace "${record.name || '(unnamed)'}"?`}
+          description="This workspace will be removed when you save."
+          onConfirm={() => removeWorkspace(record.key)}
+          okText="Delete"
+          cancelText="Cancel"
+          okButtonProps={{ danger: true }}
+        >
+          <Button
+            type="text"
+            size="small"
+            danger
+            icon={<DeleteOutlined />}
+          />
+        </Popconfirm>
       ),
     },
   ], [updateWorkspace, removeWorkspace]);
@@ -1234,13 +1243,21 @@ export default function FileSystemForm({ config, onChange, onValidationChange, p
       width: 50,
       align: 'center' as const,
       render: (_: unknown, record: FormatRow) => (
-        <Button
-          type="text"
-          size="small"
-          danger
-          icon={<DeleteOutlined />}
-          onClick={() => removeFormat(record.key)}
-        />
+        <Popconfirm
+          title={`Delete format "${record.name || '(unnamed)'}"?`}
+          description="This format will be removed when you save."
+          onConfirm={() => removeFormat(record.key)}
+          okText="Delete"
+          cancelText="Cancel"
+          okButtonProps={{ danger: true }}
+        >
+          <Button
+            type="text"
+            size="small"
+            danger
+            icon={<DeleteOutlined />}
+          />
+        </Popconfirm>
       ),
     },
   ], [updateFormat, removeFormat]);

@@ -69,23 +69,23 @@ const { TextArea } = Input;
 const EXAMPLE_QUERIES = [
   {
     label: 'Recent errors',
-    sql: "SELECT log_timestamp, logger, message\nFROM dfs.logs.`drillbit.log`\nWHERE level = 'ERROR'\nORDER BY log_timestamp DESC\nLIMIT 100",
+    sql: "SELECT log_timestamp, logger, message\nFROM dfs.logs.`*.drilllog`\nWHERE level = 'ERROR'\nORDER BY log_timestamp DESC\nLIMIT 100",
   },
   {
     label: 'Error frequency by hour',
-    sql: "SELECT SUBSTR(log_timestamp, 1, 13) AS hour, COUNT(*) AS error_count\nFROM dfs.logs.`drillbit.log`\nWHERE level = 'ERROR'\nGROUP BY SUBSTR(log_timestamp, 1, 13)\nORDER BY hour DESC\nLIMIT 48",
+    sql: "SELECT SUBSTR(log_timestamp, 1, 13) AS hour, COUNT(*) AS error_count\nFROM dfs.logs.`*.drilllog`\nWHERE level = 'ERROR'\nGROUP BY SUBSTR(log_timestamp, 1, 13)\nORDER BY hour DESC\nLIMIT 48",
   },
   {
     label: 'Log level distribution',
-    sql: "SELECT level, COUNT(*) AS cnt\nFROM dfs.logs.`drillbit.log`\nGROUP BY level\nORDER BY cnt DESC",
+    sql: "SELECT level, COUNT(*) AS cnt\nFROM dfs.logs.`*.drilllog`\nGROUP BY level\nORDER BY cnt DESC",
   },
   {
     label: 'Top error loggers',
-    sql: "SELECT logger, COUNT(*) AS error_count\nFROM dfs.logs.`drillbit.log`\nWHERE level = 'ERROR'\nGROUP BY logger\nORDER BY error_count DESC\nLIMIT 20",
+    sql: "SELECT logger, COUNT(*) AS error_count\nFROM dfs.logs.`*.drilllog`\nWHERE level = 'ERROR'\nGROUP BY logger\nORDER BY error_count DESC\nLIMIT 20",
   },
   {
     label: 'Browse logs (sample)',
-    sql: "SELECT *\nFROM dfs.logs.`drillbit.log`\nLIMIT 50",
+    sql: "SELECT *\nFROM dfs.logs.`*.drilllog`\nLIMIT 50",
   },
 ];
 
