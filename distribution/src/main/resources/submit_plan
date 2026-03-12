@@ -22,6 +22,6 @@ bin=`cd -P "$bin">/dev/null; pwd`
 
 . "$bin"/drill-config.sh
 
-DRILL_SHELL_JAVA_OPTS="$DRILL_SHELL_JAVA_OPTS -Dlog.path=$DRILL_LOG_DIR/submitter.log -Dlog.query.path=$DRILL_LOG_DIR/submitter_queries.json"
+DRILL_SHELL_JAVA_OPTS="$DRILL_SHELL_JAVA_OPTS -Dlog.path=$DRILL_LOG_DIR/submitter.drilllog -Dlog.query.path=$DRILL_LOG_DIR/submitter_queries.json"
 
 exec $JAVA $DRILL_SHELL_JAVA_OPTS $DRILL_JAVA_OPTS -cp $CP org.apache.drill.exec.client.QuerySubmitter "${args[@]}"
