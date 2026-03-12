@@ -40,6 +40,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.regex.Pattern;
 
 /**
  * File-based result cache for SQL Lab queries.
@@ -58,6 +59,10 @@ public class ResultCacheService {
   private static final Logger logger = LoggerFactory.getLogger(ResultCacheService.class);
   private static final String META_FILE = "meta.json";
   private static final String DATA_FILE = "data.json";
+
+  /** UUID pattern for validating cacheId to prevent path traversal. */
+  private static final Pattern UUID_PATTERN = Pattern.compile(
+      "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$");
 
   private final File cacheDir;
   private final long ttlMs;
@@ -234,6 +239,7 @@ public class ResultCacheService {
    * Get cache metadata by cacheId.
    */
   public CacheMeta getMetadata(String cacheId) {
+    validateCacheId(cacheId);
     CacheMeta meta = metadataIndex.get(cacheId);
     if (meta != null && isExpired(meta)) {
       evict(cacheId);
@@ -246,6 +252,7 @@ public class ResultCacheService {
    * Fetch paginated rows from a cached result.
    */
   public PaginatedRows getRows(String cacheId, int offset, int limit) throws IOException {
+    validateCacheId(cacheId);
     CacheMeta meta = getMetadata(cacheId);
     if (meta == null) {
       return null;
@@ -296,6 +303,7 @@ public class ResultCacheService {
    * Stream all rows for a cached result to an output stream in the given format.
    */
   public void streamAllRows(String cacheId, String format, OutputStream out) throws IOException {
+    validateCacheId(cacheId);
     CacheMeta meta = getMetadata(cacheId);
     if (meta == null) {
       throw new IOException("Cache entry not found: " + cacheId);
@@ -360,6 +368,7 @@ public class ResultCacheService {
    * Evict a cache entry.
    */
   public boolean evict(String cacheId) {
+    validateCacheId(cacheId);
     CacheMeta meta = metadataIndex.remove(cacheId);
     if (meta != null && meta.sqlHash != null) {
       sqlHashIndex.remove(meta.sqlHash, cacheId);
@@ -389,6 +398,19 @@ public class ResultCacheService {
   }
 
   // ==================== Internal Helpers ====================
+
+  /**
+   * Validate that a cacheId is a well-formed UUID.
+   * This prevents path traversal attacks since the cacheId is used
+   * to construct file paths within the cache directory.
+   *
+   * @throws IllegalArgumentException if the cacheId is not a valid UUID
+   */
+  private static void validateCacheId(String cacheId) {
+    if (cacheId == null || !UUID_PATTERN.matcher(cacheId).matches()) {
+      throw new IllegalArgumentException("Invalid cache ID format: must be a UUID");
+    }
+  }
 
   private boolean isExpired(CacheMeta meta) {
     return System.currentTimeMillis() - meta.cachedAt > ttlMs;
