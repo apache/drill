@@ -28,6 +28,7 @@ interface QueryTab {
   isExecuting: boolean;
   executionTime?: number;
   resultsExpired?: boolean;
+  cacheId?: string; // Backend cache ID for persistent result retrieval
 }
 
 interface QueryState {
@@ -76,7 +77,7 @@ const querySlice = createSlice({
     },
     setResults: (
       state,
-      action: PayloadAction<{ tabId: string; results: QueryResult; executionTime: number }>
+      action: PayloadAction<{ tabId: string; results: QueryResult; executionTime: number; cacheId?: string }>
     ) => {
       const tab = state.tabs.find((t) => t.id === action.payload.tabId);
       if (tab) {
@@ -85,6 +86,15 @@ const querySlice = createSlice({
         tab.isExecuting = false;
         tab.error = undefined;
         tab.resultsExpired = false;
+        if (action.payload.cacheId) {
+          tab.cacheId = action.payload.cacheId;
+        }
+      }
+    },
+    setCacheId: (state, action: PayloadAction<{ tabId: string; cacheId: string }>) => {
+      const tab = state.tabs.find((t) => t.id === action.payload.tabId);
+      if (tab) {
+        tab.cacheId = action.payload.cacheId;
       }
     },
     setError: (state, action: PayloadAction<{ tabId: string; error: QueryError }>) => {
@@ -179,6 +189,7 @@ const querySlice = createSlice({
           results?: QueryResult;
           executionTime?: number;
           resultsExpired?: boolean;
+          cacheId?: string;
         }[];
         activeTabId: string;
         tabCounter: number;
@@ -193,6 +204,7 @@ const querySlice = createSlice({
         executionTime: t.executionTime,
         isExecuting: false,
         resultsExpired: t.resultsExpired,
+        cacheId: t.cacheId,
       }));
       state.activeTabId = action.payload.activeTabId;
       tabCounter = action.payload.tabCounter;
@@ -221,6 +233,7 @@ export const {
   loadQuery,
   restoreQueryState,
   clearResultsExpired,
+  setCacheId,
 } = querySlice.actions;
 
 export default querySlice.reducer;

@@ -28,6 +28,7 @@ import {
   saveUiState,
 } from '../utils/workspacePersistence';
 import { cacheResults, getCachedResults } from '../utils/resultsCache';
+import { getCacheRows, getCacheMetadata } from '../api/resultCache';
 import type { QueryResult } from '../types';
 
 export function useWorkspacePersistence(projectId?: string) {
@@ -45,6 +46,7 @@ export function useWorkspacePersistence(projectId?: string) {
   useEffect(() => {
     const persisted = loadTabState(projectId);
     if (persisted) {
+      // First pass: restore what we can from the in-memory cache
       const restoredTabs = persisted.tabs.map((t) => {
         const cached = getCachedResults(t.id, projectId);
         return {
@@ -55,6 +57,7 @@ export function useWorkspacePersistence(projectId?: string) {
           results: cached?.result,
           executionTime: cached?.executionTime,
           resultsExpired: !cached && t.sql.trim().length > 0,
+          cacheId: cached?.cacheId || t.cacheId,
         };
       });
 
@@ -72,6 +75,14 @@ export function useWorkspacePersistence(projectId?: string) {
         activeTabId: persisted.activeTabId,
         tabCounter: maxCounter,
       }));
+
+      // Second pass: for tabs with cacheId but no in-memory results,
+      // try to restore from the backend cache asynchronously
+      for (const tab of restoredTabs) {
+        if (!tab.results && tab.cacheId) {
+          restoreFromBackendCache(tab.id, tab.cacheId);
+        }
+      }
     }
 
     const persistedUi = loadUiState(projectId);
@@ -89,7 +100,50 @@ export function useWorkspacePersistence(projectId?: string) {
         clearTimeout(saveTimerRef.current);
       }
     };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [dispatch, projectId]);
+
+  // Restore results from backend cache
+  const restoreFromBackendCache = useCallback(async (tabId: string, cacheId: string) => {
+    try {
+      const meta = await getCacheMetadata(cacheId);
+      if (!meta) {
+        return; // Cache entry expired or gone
+      }
+
+      const page = await getCacheRows(cacheId, 0, meta.totalRows);
+      if (!page || !page.rows) {
+        return;
+      }
+
+      const result: QueryResult = {
+        columns: meta.columns,
+        metadata: meta.metadata,
+        rows: page.rows,
+        queryId: meta.queryId,
+        queryState: meta.queryState,
+      };
+
+      // Store in local LRU cache
+      cacheResults(tabId, result, 0, projectId, cacheId);
+
+      // Update Redux
+      dispatch(restoreQueryState({
+        tabs: tabs.map((t) =>
+          t.id === tabId
+            ? { ...t, results: result, executionTime: 0, resultsExpired: false, cacheId }
+            : t
+        ),
+        activeTabId,
+        tabCounter: Math.max(...tabs.map((t) => {
+          const m = t.id.match(/^tab-(\d+)$/);
+          return m ? parseInt(m[1], 10) : 0;
+        })),
+      }));
+    } catch {
+      // Backend cache unavailable — leave as expired
+    }
+  }, [dispatch, tabs, activeTabId, projectId]);
 
   // Save tab state (debounced)
   useEffect(() => {
@@ -118,6 +172,7 @@ export function useWorkspacePersistence(projectId?: string) {
             name: t.name,
             sql: t.sql,
             defaultSchema: t.defaultSchema,
+            cacheId: t.cacheId,
           })),
           activeTabId,
           tabCounter: maxCounter,
@@ -144,8 +199,8 @@ export function useWorkspacePersistence(projectId?: string) {
 
   // Callback for SqlLabPage to cache results when they arrive
   const onResultsCached = useCallback(
-    (tabId: string, result: QueryResult, executionTime: number) => {
-      cacheResults(tabId, result, executionTime, projectId);
+    (tabId: string, result: QueryResult, executionTime: number, cacheId?: string) => {
+      cacheResults(tabId, result, executionTime, projectId, cacheId);
     },
     [projectId],
   );
