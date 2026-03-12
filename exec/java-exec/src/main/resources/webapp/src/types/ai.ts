@@ -54,6 +54,12 @@ export interface ChatContext {
   notebookCellCode?: string;
   /** Error from the last cell execution */
   notebookCellError?: string;
+  /** Whether the user is on the logs page */
+  logAnalysisMode?: boolean;
+  /** Name of the log file being analyzed */
+  logFileName?: string;
+  /** Log lines for AI analysis context */
+  logLines?: string[];
 }
 
 export interface ResultSummary {
