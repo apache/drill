@@ -51,3 +51,4 @@ Thumbs.db
 coverage/
 /exec/java-exec/src/main/resources/webapp/dist/
 /exec/java-exec/src/main/resources/webapp/node/
+result-cache/
