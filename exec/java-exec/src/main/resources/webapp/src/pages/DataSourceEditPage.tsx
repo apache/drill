@@ -372,13 +372,31 @@ export default function DataSourceEditPage() {
               </Tooltip>
               {!isNew && (
                 <>
-                  <Button
-                    icon={<PoweroffOutlined />}
-                    onClick={() => enableMutation.mutate(!enabled)}
-                    loading={enableMutation.isPending}
-                  >
-                    {enabled ? 'Disable' : 'Enable'}
-                  </Button>
+                  {enabled ? (
+                    <Popconfirm
+                      title={`Disable "${pluginName}"?`}
+                      description="Queries using this plugin will fail while it is disabled."
+                      onConfirm={() => enableMutation.mutate(false)}
+                      okText="Disable"
+                      cancelText="Cancel"
+                      okButtonProps={{ danger: true }}
+                    >
+                      <Button
+                        icon={<PoweroffOutlined />}
+                        loading={enableMutation.isPending}
+                      >
+                        Disable
+                      </Button>
+                    </Popconfirm>
+                  ) : (
+                    <Button
+                      icon={<PoweroffOutlined />}
+                      onClick={() => enableMutation.mutate(true)}
+                      loading={enableMutation.isPending}
+                    >
+                      Enable
+                    </Button>
+                  )}
                   <Button
                     icon={<DownloadOutlined />}
                     href={getExportUrl(pluginName)}
