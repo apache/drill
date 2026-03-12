@@ -243,6 +243,8 @@ export function getSubTableIcon(): React.ReactNode {
  */
 const DATA_FILE_EXTENSIONS = new Set([
   'parquet', 'csv', 'tsv', 'json', 'avro', 'orc', 'csvh', 'psv',
+  'pdf', 'xlsx', 'xls', 'pcap', 'pcapng', 'shp', 'hdf5', 'h5',
+  'sas7bdat', 'xpt', 'sav', 'ltsv', 'log',
 ]);
 
 /**

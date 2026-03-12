@@ -966,6 +966,7 @@ public class MetadataResources {
         // Use reflection to call getExtensions() since it's not on the interface
         try {
           Method getExtensions = formatConfig.getClass().getMethod("getExtensions");
+          @SuppressWarnings("unchecked")
           List<String> exts = (List<String>) getExtensions.invoke(formatConfig);
           if (exts != null) {
             for (String ext : exts) {
