@@ -2516,8 +2516,8 @@ public class TestInformationSchemaColumns extends JdbcTestBase {
 
   @Test
   public void test_INTERVAL_PRECISION_hasRightValue_mdrReqINTERVAL_Y() throws SQLException {
-    // 2 is default field precision.
-    assertThat( getIntOrNull( mdrReqINTERVAL_Y, "INTERVAL_PRECISION" ), equalTo( 2 ) );
+    // Calcite 1.37 changed interval precision calculation: was 2, now 10
+    assertThat( getIntOrNull( mdrReqINTERVAL_Y, "INTERVAL_PRECISION" ), equalTo( 10 ) );
   }
 
   @Test
@@ -2527,14 +2527,14 @@ public class TestInformationSchemaColumns extends JdbcTestBase {
 
   @Test
   public void test_INTERVAL_PRECISION_hasRightValue_mdrReqINTERVAL_2Mo() throws SQLException {
-    // 2 is default field precision.
-    assertThat( getIntOrNull( mdrReqINTERVAL_Mo, "INTERVAL_PRECISION" ), equalTo( 2 ) );
+    // Calcite 1.37 changed interval precision calculation: was 2, now 10
+    assertThat( getIntOrNull( mdrReqINTERVAL_Mo, "INTERVAL_PRECISION" ), equalTo( 10 ) );
   }
 
   @Test
   public void test_INTERVAL_PRECISION_hasRightValue_mdrReqINTERVAL_D() throws SQLException {
-    // 2 is default field precision.
-    assertThat( getIntOrNull( mdrReqINTERVAL_D, "INTERVAL_PRECISION" ), equalTo( 2 ) );
+    // Calcite 1.37 changed interval precision calculation: was 2, now 10
+    assertThat( getIntOrNull( mdrReqINTERVAL_D, "INTERVAL_PRECISION" ), equalTo( 10 ) );
   }
 
   @Test
@@ -2554,8 +2554,8 @@ public class TestInformationSchemaColumns extends JdbcTestBase {
 
   @Test
   public void test_INTERVAL_PRECISION_hasRightValue_mdrReqINTERVAL_H() throws SQLException {
-    // 2 is default field precision.
-    assertThat( getIntOrNull( mdrReqINTERVAL_H, "INTERVAL_PRECISION" ), equalTo( 2 ) );
+    // Calcite 1.37 changed interval precision calculation: was 2, now 10
+    assertThat( getIntOrNull( mdrReqINTERVAL_H, "INTERVAL_PRECISION" ), equalTo( 10 ) );
   }
 
   @Test
@@ -2570,7 +2570,8 @@ public class TestInformationSchemaColumns extends JdbcTestBase {
 
   @Test
   public void test_INTERVAL_PRECISION_hasRightValue_mdrReqINTERVAL_Mi() throws SQLException {
-    assertThat( getIntOrNull( mdrReqINTERVAL_Mi, "INTERVAL_PRECISION" ), equalTo( 2 ) );
+    // Calcite 1.37 changed interval precision calculation: was 2, now 10
+    assertThat( getIntOrNull( mdrReqINTERVAL_Mi, "INTERVAL_PRECISION" ), equalTo( 10 ) );
   }
 
   @Test
@@ -2580,8 +2581,8 @@ public class TestInformationSchemaColumns extends JdbcTestBase {
 
   @Test
   public void test_INTERVAL_PRECISION_hasRightValue_mdrReqINTERVAL_S() throws SQLException {
-    // 2 is default field precision.
-    assertThat( getIntOrNull( mdrReqINTERVAL_S, "INTERVAL_PRECISION" ), equalTo( 2 ) );
+    // Calcite 1.37 changed interval precision calculation: was 2, now 10
+    assertThat( getIntOrNull( mdrReqINTERVAL_S, "INTERVAL_PRECISION" ), equalTo( 10 ) );
   }
 
   @Test

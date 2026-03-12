@@ -46,6 +46,13 @@ public class DrillDistinctJoinToSemiJoinRule extends RelOptRule {
     RelMetadataQuery mq = call.getMetadataQuery();
     Project project = call.rel(0);
     Join join = call.rel(1);
+
+    // Reject joins with trivial conditions (ON TRUE or ON FALSE)
+    // These should remain as regular joins, not converted to semi-joins
+    if (join.getCondition().isAlwaysTrue() || join.getCondition().isAlwaysFalse()) {
+      return false;
+    }
+
     ImmutableBitSet bits = RelOptUtil.InputFinder.bits(project.getProjects(), null);
     ImmutableBitSet rightBits = ImmutableBitSet.range(
       join.getLeft().getRowType().getFieldCount(),

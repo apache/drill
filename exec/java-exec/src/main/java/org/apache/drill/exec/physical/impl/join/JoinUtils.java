@@ -121,10 +121,20 @@ public class JoinUtils {
       RexNode remaining = RelOptUtil.splitJoinCondition(left, right, joinRel.getCondition(), leftKeys, rightKeys, filterNulls);
       if (joinRel.getJoinType() == JoinRelType.INNER) {
         if (leftKeys.isEmpty() || rightKeys.isEmpty()) {
+          // Check if this is a join with a scalar subquery - those are allowed as nested loop joins
+          if (hasScalarSubqueryInput(left, right)) {
+            logger.debug("checkCartesianJoin: Found cartesian join with scalar subquery input, allowing it");
+            return false;
+          }
           return true;
         }
       } else {
         if (!remaining.isAlwaysTrue() || leftKeys.isEmpty() || rightKeys.isEmpty()) {
+          // Check if this is a join with a scalar subquery - those are allowed as nested loop joins
+          if (hasScalarSubqueryInput(left, right)) {
+            logger.debug("checkCartesianJoin: Found non-inner cartesian join with scalar subquery input, allowing it");
+            return false;
+          }
           return true;
         }
       }
@@ -255,13 +265,75 @@ public class JoinUtils {
    * @return True if the root rel or its descendant is scalar, False otherwise
    */
   public static boolean isScalarSubquery(RelNode root) {
+    logger.debug("isScalarSubquery called with root: {}", root.getClass().getSimpleName());
     DrillAggregateRel agg = null;
     RelNode currentrel = root;
+    int depth = 0;
     while (agg == null && currentrel != null) {
+      logger.debug("  [depth={}] Checking node: {}", depth++, currentrel.getClass().getName());
       if (currentrel instanceof DrillAggregateRel) {
         agg = (DrillAggregateRel)currentrel;
+        logger.debug("  Found DrillAggregateRel");
+      } else if (currentrel instanceof org.apache.calcite.rel.logical.LogicalAggregate) {
+        // For Calcite 1.37+, handle LogicalAggregate (might appear after decorrelation)
+        org.apache.calcite.rel.logical.LogicalAggregate logicalAgg = (org.apache.calcite.rel.logical.LogicalAggregate) currentrel;
+        // Check if it's scalar (no grouping)
+        logger.debug("  Found LogicalAggregate, groupSet: {}, aggCalls: {}",
+                    logicalAgg.getGroupSet(), logicalAgg.getAggCallList().size());
+        if (logicalAgg.getGroupSet().isEmpty()) {
+          logger.debug("  LogicalAggregate is scalar (empty group set), returning true");
+          return true;
+        }
+        // Check for the EXISTS rewrite pattern (single literal in group set, no agg calls)
+        if (logicalAgg.getAggCallList().isEmpty() && logicalAgg.getGroupSet().cardinality() == 1) {
+          // Look for literal in project below
+          if (currentrel.getInput(0) instanceof org.apache.calcite.rel.core.Project) {
+            org.apache.calcite.rel.core.Project proj = (org.apache.calcite.rel.core.Project) currentrel.getInput(0);
+            if (proj.getProjects().size() > 0 && proj.getProjects().get(0) instanceof org.apache.calcite.rex.RexLiteral) {
+              return true;
+            }
+          }
+        }
+        // Not scalar, but continue traversing down
+        if (logicalAgg.getInputs().size() == 1) {
+          currentrel = logicalAgg.getInput(0);
+        } else {
+          break;
+        }
       } else if (currentrel instanceof RelSubset) {
-        currentrel = ((RelSubset) currentrel).getBest();
+        // For Calcite 1.37+, try getOriginal() if getBest() returns null
+        RelSubset subset = (RelSubset) currentrel;
+        logger.debug("  Found RelSubset");
+        currentrel = subset.getBest();
+        if (currentrel == null) {
+          logger.debug("  RelSubset.getBest() returned null, trying getOriginal()");
+          currentrel = subset.getOriginal();
+        }
+        if (currentrel != null) {
+          logger.debug("  RelSubset resolved to: {}", currentrel.getClass().getName());
+        } else {
+          logger.debug("  RelSubset could not be resolved (both getBest() and getOriginal() returned null)");
+        }
+      } else if (currentrel instanceof org.apache.calcite.rel.logical.LogicalValues) {
+        // For Calcite 1.37+, scalar subqueries like "SELECT 1" may be represented as LogicalValues
+        org.apache.calcite.rel.logical.LogicalValues values = (org.apache.calcite.rel.logical.LogicalValues) currentrel;
+        logger.debug("  Found LogicalValues, tuples: {}", values.getTuples().size());
+        // A scalar subquery returns at most one row
+        if (values.getTuples().size() <= 1) {
+          logger.debug("  LogicalValues is scalar (single tuple), returning true");
+          return true;
+        }
+        return false;
+      } else if (currentrel instanceof org.apache.drill.exec.planner.common.DrillValuesRelBase) {
+        // For Drill's DrillValuesRel (Drill's wrapper around LogicalValues)
+        org.apache.drill.exec.planner.common.DrillValuesRelBase drillValues = (org.apache.drill.exec.planner.common.DrillValuesRelBase) currentrel;
+        logger.debug("  Found DrillValuesRelBase, tuples: {}", drillValues.getTuples().size());
+        // A scalar subquery returns at most one row
+        if (drillValues.getTuples().size() <= 1) {
+          logger.debug("  DrillValuesRelBase is scalar (single tuple), returning true");
+          return true;
+        }
+        return false;
       } else if (currentrel instanceof DrillLimitRel) {
         // TODO: Improve this check when DRILL-5691 is fixed.
         // The problem is that RelMdMaxRowCount currently cannot be used
@@ -278,7 +350,9 @@ public class JoinUtils {
     }
 
     if (agg != null) {
+      logger.debug("Found DrillAggregateRel, groupSet: {}", agg.getGroupSet());
       if (agg.getGroupSet().isEmpty()) {
+        logger.debug("DrillAggregateRel is scalar (empty group set), returning true");
         return true;
       }
       // Checks that expression in group by is a single and it is literal.
@@ -293,6 +367,7 @@ public class JoinUtils {
             && RexUtil.isLiteral(projectedExpressions.get(agg.getGroupSet().nth(0)), true);
       }
     }
+    logger.debug("isScalarSubquery returning false (no scalar aggregate found)");
     return false;
   }
 
