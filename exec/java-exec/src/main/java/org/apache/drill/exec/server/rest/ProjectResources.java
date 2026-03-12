@@ -23,8 +23,13 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.apache.drill.common.exceptions.DrillRuntimeException;
+import org.apache.drill.common.logical.FormatPluginConfig;
+import org.apache.drill.common.logical.StoragePluginConfig;
 import org.apache.drill.exec.exception.StoreException;
 import org.apache.drill.exec.server.rest.auth.DrillUserPrincipal;
+import org.apache.drill.exec.store.StoragePluginRegistry;
+import org.apache.drill.exec.store.dfs.FileSystemConfig;
+import org.apache.drill.exec.store.dfs.WorkspaceConfig;
 import org.apache.drill.exec.store.sys.PersistentStore;
 import org.apache.drill.exec.store.sys.PersistentStoreConfig;
 import org.apache.drill.exec.store.sys.PersistentStoreProvider;
@@ -67,6 +72,15 @@ public class ProjectResources {
   private static final String FAVORITES_STORE_NAME = "drill.sqllab.project_favorites";
 
   public static final String SYSTEM_LOGS_PROJECT_ID = "system-drill-logs";
+
+  private static final String DFS_PLUGIN_NAME = "dfs";
+  private static final String LOGS_WORKSPACE_NAME = "logs";
+  private static final String DRILL_LOG_FORMAT_NAME = "drilllog";
+
+  // Regex to parse Drill's default logback format:
+  // %date{ISO8601} [%thread] %-5level %logger{36} - %msg%n
+  private static final String DRILL_LOG_REGEX =
+      "(\\d{4}-\\d{2}-\\d{2}[T ]\\d{2}:\\d{2}:\\d{2},\\d+)\\s+\\[([^\\]]+)\\]\\s+(\\w+)\\s+([^\\s]+)\\s+-\\s+(.*)";
 
   @Inject
   WorkManager workManager;
@@ -1240,6 +1254,8 @@ public class ProjectResources {
   /**
    * Ensures the system "Drill Logs" project exists with pre-built
    * saved queries, visualizations, and a dashboard for log analysis.
+   * Also auto-configures the dfs.logs workspace and drilllog format
+   * if DRILL_LOG_DIR is set.
    */
   private void ensureSystemProject() {
     try {
@@ -1249,8 +1265,41 @@ public class ProjectResources {
         return;
       }
 
+      // Auto-configure the dfs.logs workspace and format plugin
+      ensureLogWorkspace();
+
       long now = Instant.now().toEpochMilli();
       String owner = "system";
+
+      // Define SQL for saved queries (reused in visualizations)
+      String sqlRecentErrors = "SELECT log_timestamp, logger, message\n"
+          + "FROM dfs.logs.`*.drilllog`\n"
+          + "WHERE level = 'ERROR'\n"
+          + "ORDER BY log_timestamp DESC\nLIMIT 100";
+
+      String sqlErrorFrequency = "SELECT SUBSTR(log_timestamp, 1, 13) AS hour,\n"
+          + "       COUNT(*) AS error_count\n"
+          + "FROM dfs.logs.`*.drilllog`\n"
+          + "WHERE level = 'ERROR'\n"
+          + "GROUP BY SUBSTR(log_timestamp, 1, 13)\n"
+          + "ORDER BY hour DESC\nLIMIT 48";
+
+      String sqlLevelDist = "SELECT level, COUNT(*) AS cnt\n"
+          + "FROM dfs.logs.`*.drilllog`\n"
+          + "GROUP BY level\nORDER BY cnt DESC";
+
+      String sqlTopLoggers = "SELECT logger, COUNT(*) AS error_count\n"
+          + "FROM dfs.logs.`*.drilllog`\n"
+          + "WHERE level = 'ERROR'\n"
+          + "GROUP BY logger\n"
+          + "ORDER BY error_count DESC\nLIMIT 20";
+
+      String sqlWarnTrends = "SELECT SUBSTR(log_timestamp, 1, 10) AS day,\n"
+          + "       COUNT(*) AS warn_count\n"
+          + "FROM dfs.logs.`*.drilllog`\n"
+          + "WHERE level = 'WARN'\n"
+          + "GROUP BY SUBSTR(log_timestamp, 1, 10)\n"
+          + "ORDER BY day DESC\nLIMIT 30";
 
       // Create saved queries
       PersistentStore<SavedQueryResources.SavedQuery> sqStore = storeProvider.getOrCreateStore(
@@ -1270,10 +1319,7 @@ public class ProjectResources {
         sqStore.put(sqRecentErrors, new SavedQueryResources.SavedQuery(
             sqRecentErrors, "Recent Errors",
             "Shows the most recent ERROR log entries",
-            "SELECT log_timestamp, logger, message\n"
-                + "FROM dfs.logs.`drillbit.log`\n"
-                + "WHERE level = 'ERROR'\n"
-                + "ORDER BY log_timestamp DESC\nLIMIT 100",
+            sqlRecentErrors,
             "dfs.logs", owner, now, now, new HashMap<>(), true));
       }
 
@@ -1281,12 +1327,7 @@ public class ProjectResources {
         sqStore.put(sqErrorFrequency, new SavedQueryResources.SavedQuery(
             sqErrorFrequency, "Error Frequency by Hour",
             "Counts errors per hour for trend analysis",
-            "SELECT SUBSTR(log_timestamp, 1, 13) AS hour,\n"
-                + "       COUNT(*) AS error_count\n"
-                + "FROM dfs.logs.`drillbit.log`\n"
-                + "WHERE level = 'ERROR'\n"
-                + "GROUP BY SUBSTR(log_timestamp, 1, 13)\n"
-                + "ORDER BY hour DESC\nLIMIT 48",
+            sqlErrorFrequency,
             "dfs.logs", owner, now, now, new HashMap<>(), true));
       }
 
@@ -1294,9 +1335,7 @@ public class ProjectResources {
         sqStore.put(sqLevelDist, new SavedQueryResources.SavedQuery(
             sqLevelDist, "Log Level Distribution",
             "Distribution of log entries by level",
-            "SELECT level, COUNT(*) AS cnt\n"
-                + "FROM dfs.logs.`drillbit.log`\n"
-                + "GROUP BY level\nORDER BY cnt DESC",
+            sqlLevelDist,
             "dfs.logs", owner, now, now, new HashMap<>(), true));
       }
 
@@ -1304,11 +1343,7 @@ public class ProjectResources {
         sqStore.put(sqTopLoggers, new SavedQueryResources.SavedQuery(
             sqTopLoggers, "Top Error Sources",
             "Loggers producing the most errors",
-            "SELECT logger, COUNT(*) AS error_count\n"
-                + "FROM dfs.logs.`drillbit.log`\n"
-                + "WHERE level = 'ERROR'\n"
-                + "GROUP BY logger\n"
-                + "ORDER BY error_count DESC\nLIMIT 20",
+            sqlTopLoggers,
             "dfs.logs", owner, now, now, new HashMap<>(), true));
       }
 
@@ -1316,16 +1351,11 @@ public class ProjectResources {
         sqStore.put(sqWarnTrends, new SavedQueryResources.SavedQuery(
             sqWarnTrends, "Warning Trends",
             "Daily warning counts for trend analysis",
-            "SELECT SUBSTR(log_timestamp, 1, 10) AS day,\n"
-                + "       COUNT(*) AS warn_count\n"
-                + "FROM dfs.logs.`drillbit.log`\n"
-                + "WHERE level = 'WARN'\n"
-                + "GROUP BY SUBSTR(log_timestamp, 1, 10)\n"
-                + "ORDER BY day DESC\nLIMIT 30",
+            sqlWarnTrends,
             "dfs.logs", owner, now, now, new HashMap<>(), true));
       }
 
-      // Create visualizations
+      // Create visualizations (with SQL populated for dashboard rendering)
       PersistentStore<VisualizationResources.Visualization> vizStore =
           storeProvider.getOrCreateStore(
               PersistentStoreConfig.newJacksonBuilder(
@@ -1346,7 +1376,7 @@ public class ProjectResources {
             sqErrorFrequency, "line",
             new VisualizationResources.VisualizationConfig(
                 "hour", "error_count", null, null, null, null),
-            owner, now, now, true, null, "dfs.logs"));
+            owner, now, now, true, sqlErrorFrequency, "dfs.logs"));
       }
 
       if (vizStore.get(vizLevelDist) == null) {
@@ -1359,7 +1389,7 @@ public class ProjectResources {
                 Arrays.asList("cnt"),
                 Arrays.asList("level"),
                 null, null),
-            owner, now, now, true, null, "dfs.logs"));
+            owner, now, now, true, sqlLevelDist, "dfs.logs"));
       }
 
       if (vizStore.get(vizTopLoggers) == null) {
@@ -1369,7 +1399,7 @@ public class ProjectResources {
             sqTopLoggers, "bar",
             new VisualizationResources.VisualizationConfig(
                 "logger", "error_count", null, null, null, null),
-            owner, now, now, true, null, "dfs.logs"));
+            owner, now, now, true, sqlTopLoggers, "dfs.logs"));
       }
 
       if (vizStore.get(vizWarnTrends) == null) {
@@ -1379,7 +1409,7 @@ public class ProjectResources {
             sqWarnTrends, "line",
             new VisualizationResources.VisualizationConfig(
                 "day", "warn_count", null, null, null, null),
-            owner, now, now, true, null, "dfs.logs"));
+            owner, now, now, true, sqlWarnTrends, "dfs.logs"));
       }
 
       // Create dashboard
@@ -1412,8 +1442,8 @@ public class ProjectResources {
       // Create the system project
       List<DatasetRef> datasets = new ArrayList<>();
       datasets.add(new DatasetRef(
-          UUID.randomUUID().toString(), "table",
-          "dfs.logs", "drillbit.log", null, "Drillbit Log"));
+          "sys-ds-drill-logs", "schema",
+          "dfs.logs", null, null, "Drill Log Files"));
 
       Project project = new Project(
           SYSTEM_LOGS_PROJECT_ID,
@@ -1440,6 +1470,65 @@ public class ProjectResources {
 
     } catch (Exception e) {
       logger.warn("Failed to create system Drill Logs project: {}", e.getMessage());
+    }
+  }
+
+  /**
+   * Configures the dfs.logs workspace and drilllog format plugin
+   * if DRILL_LOG_DIR is set and they don't already exist.
+   */
+  private void ensureLogWorkspace() {
+    String logDir = System.getenv("DRILL_LOG_DIR");
+    if (logDir == null) {
+      logger.debug("DRILL_LOG_DIR not set, skipping log workspace setup");
+      return;
+    }
+
+    try {
+      StoragePluginRegistry storage = workManager.getContext().getStorage();
+      StoragePluginConfig config = storage.getStoredConfig(DFS_PLUGIN_NAME);
+
+      if (!(config instanceof FileSystemConfig)) {
+        return;
+      }
+
+      FileSystemConfig fsConfig = (FileSystemConfig) config;
+
+      // Add workspace if missing
+      if (!fsConfig.getWorkspaces().containsKey(LOGS_WORKSPACE_NAME)) {
+        FileSystemConfig copy = fsConfig.copy();
+        copy.getWorkspaces().put(LOGS_WORKSPACE_NAME,
+            new WorkspaceConfig(logDir, false, DRILL_LOG_FORMAT_NAME, false));
+        storage.put(DFS_PLUGIN_NAME, copy);
+        logger.info("Created dfs.logs workspace pointing to {}", logDir);
+      }
+
+      // Add format plugin if missing
+      StoragePluginConfig updatedConfig = storage.getStoredConfig(DFS_PLUGIN_NAME);
+      if (updatedConfig instanceof FileSystemConfig) {
+        FileSystemConfig updatedFsConfig = (FileSystemConfig) updatedConfig;
+        if (!updatedFsConfig.getFormats().containsKey(DRILL_LOG_FORMAT_NAME)) {
+          String formatJson = "{"
+              + "\"type\": \"logRegex\","
+              + "\"regex\": \"" + DRILL_LOG_REGEX.replace("\\", "\\\\") + "\","
+              + "\"extension\": \"drilllog\","
+              + "\"maxErrors\": 100000,"
+              + "\"schema\": ["
+              + "  {\"fieldName\": \"log_timestamp\", \"fieldType\": \"VARCHAR\"},"
+              + "  {\"fieldName\": \"thread\", \"fieldType\": \"VARCHAR\"},"
+              + "  {\"fieldName\": \"level\", \"fieldType\": \"VARCHAR\"},"
+              + "  {\"fieldName\": \"logger\", \"fieldType\": \"VARCHAR\"},"
+              + "  {\"fieldName\": \"message\", \"fieldType\": \"VARCHAR\"}"
+              + "]}";
+
+          FormatPluginConfig logFormat = storage.mapper()
+              .readValue(formatJson, FormatPluginConfig.class);
+          storage.putFormatPlugin(DFS_PLUGIN_NAME, DRILL_LOG_FORMAT_NAME, logFormat);
+          logger.info("Created drilllog format plugin for parsing Drill logs");
+        }
+      }
+    } catch (Exception e) {
+      logger.warn("Failed to auto-configure log workspace: {}", e.getMessage());
     }
   }
 

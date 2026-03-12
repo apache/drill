@@ -318,18 +318,44 @@ export default function DataSourcesPage() {
                               }}
                             />
                           </Tooltip>,
-                          <Tooltip title={enabled ? 'Disable' : 'Enable'} key="toggle">
-                            <PoweroffOutlined
-                              style={{ color: enabled ? '#52c41a' : '#d9d9d9' }}
-                              onClick={(e) => {
-                                e.stopPropagation();
+                          enabled ? (
+                            <Popconfirm
+                              key="toggle"
+                              title={`Disable "${plugin.name}"?`}
+                              description="Queries using this plugin will fail while it is disabled."
+                              onConfirm={(e) => {
+                                e?.stopPropagation();
                                 enableMutation.mutate({
                                   name: plugin.name,
-                                  enable: !enabled,
+                                  enable: false,
                                 });
                               }}
-                            />
-                          </Tooltip>,
+                              onCancel={(e) => e?.stopPropagation()}
+                              okText="Disable"
+                              cancelText="Cancel"
+                              okButtonProps={{ danger: true }}
+                            >
+                              <Tooltip title="Disable">
+                                <PoweroffOutlined
+                                  style={{ color: '#52c41a' }}
+                                  onClick={(e) => e.stopPropagation()}
+                                />
+                              </Tooltip>
+                            </Popconfirm>
+                          ) : (
+                            <Tooltip title="Enable" key="toggle">
+                              <PoweroffOutlined
+                                style={{ color: '#d9d9d9' }}
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  enableMutation.mutate({
+                                    name: plugin.name,
+                                    enable: true,
+                                  });
+                                }}
+                              />
+                            </Tooltip>
+                          ),
                           <Popconfirm
                             key="delete"
                             title="Delete this plugin?"
