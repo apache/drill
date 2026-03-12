@@ -125,6 +125,15 @@ public class ProspectorResources {
     @JsonProperty
     public ResultSummary resultSummary;
 
+    @JsonProperty
+    public boolean logAnalysisMode;
+
+    @JsonProperty
+    public String logFileName;
+
+    @JsonProperty
+    public List<String> logLines;
+
     public ChatContext() {
     }
 
@@ -134,12 +143,18 @@ public class ProspectorResources {
         @JsonProperty("currentSchema") String currentSchema,
         @JsonProperty("availableSchemas") List<String> availableSchemas,
         @JsonProperty("error") String error,
-        @JsonProperty("resultSummary") ResultSummary resultSummary) {
+        @JsonProperty("resultSummary") ResultSummary resultSummary,
+        @JsonProperty("logAnalysisMode") boolean logAnalysisMode,
+        @JsonProperty("logFileName") String logFileName,
+        @JsonProperty("logLines") List<String> logLines) {
       this.currentSql = currentSql;
       this.currentSchema = currentSchema;
       this.availableSchemas = availableSchemas;
       this.error = error;
       this.resultSummary = resultSummary;
+      this.logAnalysisMode = logAnalysisMode;
+      this.logFileName = logFileName;
+      this.logLines = logLines;
     }
   }
 
@@ -290,6 +305,34 @@ public class ProspectorResources {
 
       if (ctx.error != null && !ctx.error.isEmpty()) {
         systemPrompt.append("\nCurrent error: ").append(ctx.error).append("\n");
+      }
+
+      if (ctx.logAnalysisMode) {
+        systemPrompt.append("\nYou are also a log analysis expert for Apache Drill. ");
+        systemPrompt.append("When analyzing log lines:\n");
+        systemPrompt.append("- Identify error patterns and their root causes\n");
+        systemPrompt.append("- Explain what each log level (ERROR, WARN, INFO, DEBUG) means in context\n");
+        systemPrompt.append("- Suggest configuration changes or actions to resolve issues\n");
+        systemPrompt.append("- Identify performance concerns from thread contention or slow operations\n");
+        systemPrompt.append("- Reference Drill documentation when relevant\n");
+        systemPrompt.append("- Users can query log files via SQL using the dfs.logs workspace\n\n");
+
+        if (ctx.logFileName != null && !ctx.logFileName.isEmpty()) {
+          systemPrompt.append("Log file being analyzed: ").append(ctx.logFileName).append("\n");
+        }
+
+        if (ctx.logLines != null && !ctx.logLines.isEmpty()) {
+          int maxContextLines = Math.min(ctx.logLines.size(), 200);
+          systemPrompt.append("\nLog lines for context:\n```\n");
+          for (int i = 0; i < maxContextLines; i++) {
+            systemPrompt.append(ctx.logLines.get(i)).append("\n");
+          }
+          if (ctx.logLines.size() > maxContextLines) {
+            systemPrompt.append("... (").append(ctx.logLines.size() - maxContextLines)
+                .append(" more lines truncated)\n");
+          }
+          systemPrompt.append("```\n");
+        }
       }
 
       if (ctx.resultSummary != null) {

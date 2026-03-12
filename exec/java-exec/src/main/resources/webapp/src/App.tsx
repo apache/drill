@@ -31,6 +31,8 @@ import VisualizationsPage from './pages/VisualizationsPage';
 import DashboardsPage from './pages/DashboardsPage';
 import DashboardViewPage from './pages/DashboardViewPage';
 import MetricsPage from './pages/MetricsPage';
+import OptionsPage from './pages/OptionsPage';
+import LogsPage from './pages/LogsPage';
 
 const { Content } = Layout;
 
@@ -54,6 +56,8 @@ function App() {
           <Route path="/dashboards" element={<DashboardsPage />} />
           <Route path="/dashboards/:id" element={<DashboardViewPage />} />
           <Route path="/metrics" element={<MetricsPage />} />
+          <Route path="/options" element={<OptionsPage />} />
+          <Route path="/logs" element={<LogsPage />} />
           <Route path="*" element={<Navigate to="/projects" replace />} />
         </Routes>
       </Content>
