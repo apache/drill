@@ -100,6 +100,13 @@ public class PdfFormatConfig implements FormatPluginConfig {
     return this.extensions;
   }
 
+  /**
+   * Standard getter for extensions, consistent with other FormatPluginConfig implementations.
+   */
+  public List<String> getExtensions() {
+    return this.extensions;
+  }
+
   public boolean combinePages() {
     return this.combinePages;
   }
