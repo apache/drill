@@ -23,6 +23,7 @@ import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileWriter;
 import java.lang.management.ManagementFactory;
+import java.util.Arrays;
 
 import org.apache.drill.exec.proto.CoordinationProtos;
 import org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint;
@@ -507,9 +508,16 @@ public class UserException extends DrillRuntimeException {
       // we can't replace the message of a user exception
       if (uex == null && format != null) {
         if (args.length == 0) {
+          // No arguments: treat the provided text as the full message.
           message = format;
         } else {
-          message = String.format(format, args);
+          // Avoid treating user-controlled input as a format string. Instead,
+          // append the argument values in a simple, predictable way.
+          StringBuilder sb = new StringBuilder(format);
+          sb.append(" [");
+          sb.append(Arrays.toString(args));
+          sb.append(']');
+          message = sb.toString();
         }
       }
       return this;
