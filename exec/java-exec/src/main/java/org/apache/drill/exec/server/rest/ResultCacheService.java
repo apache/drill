@@ -261,7 +261,7 @@ public class ResultCacheService {
     // Update last-accessed time
     meta.lastAccessedAt = System.currentTimeMillis();
 
-    File dataFile = new File(new File(cacheDir, cacheId), DATA_FILE);
+    File dataFile = new File(resolveEntryDir(cacheId), DATA_FILE);
     if (!dataFile.exists()) {
       evict(cacheId);
       return null;
@@ -309,7 +309,7 @@ public class ResultCacheService {
       throw new IOException("Cache entry not found: " + cacheId);
     }
 
-    File dataFile = new File(new File(cacheDir, cacheId), DATA_FILE);
+    File dataFile = new File(resolveEntryDir(cacheId), DATA_FILE);
     if (!dataFile.exists()) {
       throw new IOException("Data file not found for cache entry: " + cacheId);
     }
@@ -373,7 +373,13 @@ public class ResultCacheService {
     if (meta != null && meta.sqlHash != null) {
       sqlHashIndex.remove(meta.sqlHash, cacheId);
     }
-    File entryDir = new File(cacheDir, cacheId);
+    File entryDir;
+    try {
+      entryDir = resolveEntryDir(cacheId);
+    } catch (IOException e) {
+      logger.warn("Cannot resolve cache entry directory for eviction: {}", cacheId, e);
+      return false;
+    }
     if (entryDir.exists()) {
       deleteDirectory(entryDir);
       logger.debug("Evicted cache entry: {}", cacheId);
@@ -412,6 +418,19 @@ public class ResultCacheService {
     }
   }
 
+  /**
+   * Resolve cache entry directory with path traversal protection.
+   * Validates that the resolved path is within the cache directory.
+   */
+  private File resolveEntryDir(String cacheId) throws IOException {
+    validateCacheId(cacheId);
+    File entryDir = new File(cacheDir, cacheId).getCanonicalFile();
+    if (!entryDir.toPath().startsWith(cacheDir.getCanonicalFile().toPath())) {
+      throw new IOException("Path traversal detected for cache ID: " + cacheId);
+    }
+    return entryDir;
+  }
+
   private boolean isExpired(CacheMeta meta) {
     return System.currentTimeMillis() - meta.cachedAt > ttlMs;
   }
@@ -440,7 +459,7 @@ public class ResultCacheService {
   }
 
   private void writeMeta(CacheMeta meta) throws IOException {
-    File entryDir = new File(cacheDir, meta.cacheId);
+    File entryDir = resolveEntryDir(meta.cacheId);
     File metaFile = new File(entryDir, META_FILE);
     mapper.writerWithDefaultPrettyPrinter().writeValue(metaFile, meta);
   }
