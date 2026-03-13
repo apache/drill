@@ -29,6 +29,7 @@
         <include>org.apache.drill.contrib.data:tpch-sample-data:jar</include>
         <include>org.apache.drill.contrib:drill-deltalake-format:jar</include>
         <include>org.apache.drill.contrib:drill-druid-storage:jar</include>
+        <include>org.apache.drill.contrib:drill-format-daffodil:jar</include>
         <include>org.apache.drill.contrib:drill-format-esri:jar</include>
         <include>org.apache.drill.contrib:drill-format-excel:jar</include>
         <include>org.apache.drill.contrib:drill-format-hdf5:jar</include>
