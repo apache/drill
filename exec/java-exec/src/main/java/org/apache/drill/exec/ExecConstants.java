@@ -983,6 +983,29 @@ public final class ExecConstants {
           + "See https://docs.oracle.com/javase/8/docs/api/java/time/format/DateTimeFormatter.html for the details about acceptable patterns. "
           + "If empty then the default formatting will be used. (Drill 1.15+)"));
 
+  /**
+   * Notebook write policy. Controls who can export data from notebooks back to Drill workspaces.
+   * Allowed values: "filesystem" (any authenticated user, subject to FS permissions),
+   * "admin_only" (only admin users), "disabled" (no export allowed).
+   */
+  public static final String NOTEBOOK_WRITE_POLICY = "web.notebook.write_policy";
+  public static final OptionValidator NOTEBOOK_WRITE_POLICY_VALIDATOR = new EnumeratedStringValidator(
+      NOTEBOOK_WRITE_POLICY,
+      new OptionDescription("Controls who can export data from SQL Lab notebooks to Drill storage workspaces. "
+          + "Allowed values: 'filesystem' (any authenticated user, subject to file system permissions), "
+          + "'admin_only' (only Drill admin users can export), "
+          + "'disabled' (notebook export is not allowed)."),
+      "filesystem", "admin_only", "disabled");
+
+  /**
+   * Result cache settings for SQL Lab.
+   */
+  public static final String RESULT_CACHE_DIRECTORY = "drill.exec.result_cache.directory";
+  public static final String RESULT_CACHE_TTL_MINUTES = "drill.exec.result_cache.ttl_minutes";
+  public static final String RESULT_CACHE_MAX_TOTAL_MB = "drill.exec.result_cache.max_total_mb";
+  public static final String RESULT_CACHE_MAX_RESULT_MB = "drill.exec.result_cache.max_result_mb";
+  public static final String RESULT_CACHE_MAX_ROWS = "drill.exec.result_cache.max_rows";
+
   public static final String CODE_GEN_EXP_IN_METHOD_SIZE = "exec.java.compiler.exp_in_method_size";
   public static final LongValidator CODE_GEN_EXP_IN_METHOD_SIZE_VALIDATOR = new LongValidator(CODE_GEN_EXP_IN_METHOD_SIZE,
       new OptionDescription("Introduced in Drill 1.8. For queries with complex or multiple expressions in the query logic, this option limits the number of expressions allowed in each method to prevent Drill from generating code that exceeds the Java limit of 64K bytes. If a method approaches the 64K limit, the Java compiler returns a message stating that the code is too large to compile. If queries return such a message, reduce the value of this option at the session level. The default value for this option is 50. The value is the count of expressions allowed in a method. Expressions are added to a method until they hit the Java 64K limit, when a new inner method is created and called from the existing method. Note: This logic has not been implemented for all operators. If a query uses operators for which the logic is not implemented, reducing the setting for this option may not resolve the error. Setting this option at the system level impacts all queries and can degrade query performance."));

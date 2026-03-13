@@ -33,4 +33,21 @@ target/
 tools/venv/
 venv/
 .vscode/*
-exec/java-exec/src/main/resources/webapp/
+/exec/java-exec/src/main/resources/python/.venv/
+__pycache__/
+*.pyc
+.pytest_cache/
+.coverage
+
+# Frontend (webapp)
+node_modules/
+.vite/
+.env
+.env.local
+.env.*.local
+*.swo
+Thumbs.db
+coverage/
+/exec/java-exec/src/main/resources/webapp/dist/
+/exec/java-exec/src/main/resources/webapp/node/
+result-cache/

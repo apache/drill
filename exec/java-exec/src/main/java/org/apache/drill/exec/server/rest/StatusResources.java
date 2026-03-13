@@ -18,11 +18,12 @@
 package org.apache.drill.exec.server.rest;
 
 import java.net.URL;
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.LinkedHashMap;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 
 import jakarta.annotation.security.PermitAll;
 import jakarta.annotation.security.RolesAllowed;
@@ -35,10 +36,9 @@ import jakarta.ws.rs.POST;
 import jakarta.ws.rs.Path;
 import jakarta.ws.rs.PathParam;
 import jakarta.ws.rs.Produces;
-import jakarta.ws.rs.core.Context;
 import jakarta.ws.rs.core.MediaType;
+import jakarta.ws.rs.core.Response;
 import jakarta.ws.rs.core.SecurityContext;
-import jakarta.ws.rs.core.UriInfo;
 import jakarta.xml.bind.annotation.XmlRootElement;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -46,7 +46,6 @@ import io.swagger.v3.oas.annotations.ExternalDocumentation;
 import io.swagger.v3.oas.annotations.Operation;
 import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.apache.commons.lang3.tuple.Pair;
-import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.server.options.OptionList;
 import org.apache.drill.exec.server.options.OptionManager;
 import org.apache.drill.exec.server.options.OptionValue;
@@ -58,6 +57,13 @@ import org.apache.drill.exec.work.WorkManager;
 import org.apache.http.client.methods.HttpGet;
 import org.glassfish.jersey.server.mvc.Viewable;
 
+import com.codahale.metrics.Counter;
+import com.codahale.metrics.Gauge;
+import com.codahale.metrics.Histogram;
+import com.codahale.metrics.Meter;
+import com.codahale.metrics.MetricRegistry;
+import com.codahale.metrics.Snapshot;
+import com.codahale.metrics.Timer;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 
@@ -74,9 +80,6 @@ public class StatusResources {
   public static final String PATH_INTERNAL_OPTIONS_JSON = "/internal_options" + REST_API_SUFFIX;
   public static final String PATH_OPTIONS = "/options";
   public static final String PATH_INTERNAL_OPTIONS = "/internal_options";
-  //Used to access current filter state in WebUI
-  private static final String CURRENT_FILTER_PARAM = "filter";
-
   @Inject
   UserAuthEnabled authEnabled;
 
@@ -102,6 +105,102 @@ public class StatusResources {
   @Produces(MediaType.TEXT_HTML)
   public Viewable getStatus() {
     return ViewableWithPermissions.create(authEnabled.get(), "/rest/status.ftl", sc, getStatusJSON());
+  }
+
+  /**
+   * Returns the local Drillbit's metrics as JSON.
+   * Replaces the old Codahale MetricsServlet that was removed during
+   * the javax.servlet to jakarta.servlet migration.
+   */
+  @GET
+  @Path(StatusResources.PATH_METRICS)
+  @Produces(MediaType.APPLICATION_JSON)
+  @Operation(externalDocs = @ExternalDocumentation(description = "Apache Drill REST API documentation:", url = "https://drill.apache.org/docs/rest-api-introduction/"))
+  public Map<String, Object> getLocalMetrics() {
+    MetricRegistry metrics = work.getContext().getMetrics();
+    Map<String, Object> result = new LinkedHashMap<>();
+
+    // Gauges
+    Map<String, Object> gauges = new LinkedHashMap<>();
+    for (Map.Entry<String, Gauge> entry : metrics.getGauges().entrySet()) {
+      Map<String, Object> g = new LinkedHashMap<>();
+      g.put("value", entry.getValue().getValue());
+      gauges.put(entry.getKey(), g);
+    }
+    result.put("gauges", gauges);
+
+    // Counters
+    Map<String, Object> counters = new LinkedHashMap<>();
+    for (Map.Entry<String, Counter> entry : metrics.getCounters().entrySet()) {
+      Map<String, Object> c = new LinkedHashMap<>();
+      c.put("count", entry.getValue().getCount());
+      counters.put(entry.getKey(), c);
+    }
+    result.put("counters", counters);
+
+    // Histograms
+    Map<String, Object> histograms = new LinkedHashMap<>();
+    for (Map.Entry<String, Histogram> entry : metrics.getHistograms().entrySet()) {
+      Snapshot snap = entry.getValue().getSnapshot();
+      Map<String, Object> h = new LinkedHashMap<>();
+      h.put("count", entry.getValue().getCount());
+      h.put("max", snap.getMax());
+      h.put("mean", snap.getMean());
+      h.put("min", snap.getMin());
+      h.put("p50", snap.getMedian());
+      h.put("p75", snap.get75thPercentile());
+      h.put("p95", snap.get95thPercentile());
+      h.put("p98", snap.get98thPercentile());
+      h.put("p99", snap.get99thPercentile());
+      h.put("p999", snap.get999thPercentile());
+      h.put("stddev", snap.getStdDev());
+      histograms.put(entry.getKey(), h);
+    }
+    result.put("histograms", histograms);
+
+    // Meters
+    Map<String, Object> meters = new LinkedHashMap<>();
+    for (Map.Entry<String, Meter> entry : metrics.getMeters().entrySet()) {
+      Meter m = entry.getValue();
+      Map<String, Object> mData = new LinkedHashMap<>();
+      mData.put("count", m.getCount());
+      mData.put("m1_rate", m.getOneMinuteRate());
+      mData.put("m5_rate", m.getFiveMinuteRate());
+      mData.put("m15_rate", m.getFifteenMinuteRate());
+      mData.put("mean_rate", m.getMeanRate());
+      mData.put("units", "events/second");
+      meters.put(entry.getKey(), mData);
+    }
+    result.put("meters", meters);
+
+    // Timers
+    Map<String, Object> timers = new LinkedHashMap<>();
+    for (Map.Entry<String, Timer> entry : metrics.getTimers().entrySet()) {
+      Timer t = entry.getValue();
+      Snapshot snap = t.getSnapshot();
+      Map<String, Object> tData = new LinkedHashMap<>();
+      tData.put("count", t.getCount());
+      tData.put("max", snap.getMax());
+      tData.put("mean", snap.getMean());
+      tData.put("min", snap.getMin());
+      tData.put("p50", snap.getMedian());
+      tData.put("p75", snap.get75thPercentile());
+      tData.put("p95", snap.get95thPercentile());
+      tData.put("p98", snap.get98thPercentile());
+      tData.put("p99", snap.get99thPercentile());
+      tData.put("p999", snap.get999thPercentile());
+      tData.put("stddev", snap.getStdDev());
+      tData.put("m1_rate", t.getOneMinuteRate());
+      tData.put("m5_rate", t.getFiveMinuteRate());
+      tData.put("m15_rate", t.getFifteenMinuteRate());
+      tData.put("mean_rate", t.getMeanRate());
+      tData.put("duration_units", "seconds");
+      tData.put("rate_units", "calls/second");
+      timers.put(entry.getKey(), tData);
+    }
+    result.put("timers", timers);
+
+    return result;
   }
 
   @GET
@@ -149,35 +248,20 @@ public class StatusResources {
     return getSystemOptionsJSONHelper(true);
   }
 
-  //Generate model-view for WebUI (PATH_OPTIONS and PATH_INTERNAL_OPTIONS)
-  private Viewable getSystemOptionsHelper(boolean internal, UriInfo uriInfo) {
-    List<OptionWrapper> options = getSystemOptionsJSONHelper(internal);
-    List<String> fltrList = new ArrayList<>(work.getContext().getConfig().getStringList(ExecConstants.HTTP_WEB_OPTIONS_FILTERS));
-    String currFilter = (uriInfo != null) ? uriInfo.getQueryParameters().getFirst(CURRENT_FILTER_PARAM) : null;
-    if (currFilter == null) {
-      currFilter = "";
-    }
-
-    return ViewableWithPermissions.create(authEnabled.get(),
-      "/rest/options.ftl",
-      sc,
-      new OptionsListing(options, fltrList, currFilter, request));
-  }
-
   @GET
   @Path(StatusResources.PATH_OPTIONS)
   @RolesAllowed(DrillUserPrincipal.AUTHENTICATED_ROLE)
   @Produces(MediaType.TEXT_HTML)
-  public Viewable getSystemPublicOptions(@Context UriInfo uriInfo) {
-    return getSystemOptionsHelper(false, uriInfo);
+  public Response getSystemPublicOptions() {
+    return Response.seeOther(java.net.URI.create("/sqllab#/options")).build();
   }
 
   @GET
   @Path(StatusResources.PATH_INTERNAL_OPTIONS)
   @RolesAllowed(DrillUserPrincipal.AUTHENTICATED_ROLE)
   @Produces(MediaType.TEXT_HTML)
-  public Viewable getSystemInternalOptions(@Context UriInfo uriInfo) {
-    return getSystemOptionsHelper(true, uriInfo);
+  public Response getSystemInternalOptions() {
+    return Response.seeOther(java.net.URI.create("/sqllab#/options")).build();
   }
 
   @POST
@@ -185,7 +269,7 @@ public class StatusResources {
   @RolesAllowed(DrillUserPrincipal.ADMIN_ROLE)
   @Consumes("application/x-www-form-urlencoded")
   @Produces(MediaType.TEXT_HTML)
-  public Viewable updateSystemOption(@FormParam("name") String name,
+  public Response updateSystemOption(@FormParam("name") String name,
                                      @FormParam("value") String value,
                                      @FormParam("kind") String kind) {
     SystemOptionManager optionManager = work.getContext()
@@ -197,44 +281,7 @@ public class StatusResources {
       logger.debug("Could not update.", e);
     }
 
-    if (optionManager.getOptionDefinition(name).getMetaData().isInternal()) {
-      return getSystemInternalOptions(null);
-    } else {
-      return getSystemPublicOptions(null);
-    }
-  }
-
-  /**
-   * Data Model for rendering /options on webUI
-   */
-  public static class OptionsListing {
-    private final List<OptionWrapper> options;
-    private final List<String> filters;
-    private final String dynamicFilter;
-    private final String csrfToken;
-
-    public OptionsListing(List<OptionWrapper> optList, List<String> fltrList, String currFilter, HttpServletRequest request) {
-      this.options = optList;
-      this.filters = fltrList;
-      this.dynamicFilter = currFilter;
-      csrfToken = WebUtils.getCsrfTokenFromHttpRequest(request);
-    }
-
-    public List<OptionWrapper> getOptions() {
-      return options;
-    }
-
-    public List<String> getFilters() {
-      return filters;
-    }
-
-    public String getDynamicFilter() {
-      return dynamicFilter;
-    }
-
-    public String getCsrfToken() {
-      return csrfToken;
-    }
+    return Response.seeOther(java.net.URI.create("/sqllab#/options")).build();
   }
 
   @XmlRootElement

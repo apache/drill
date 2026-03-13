@@ -1,0 +1,1212 @@
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+/* ==================== CSS Custom Properties (Theme) ==================== */
+
+:root {
+  --color-bg-layout: #f8fafc;
+  --color-bg-container: #ffffff;
+  --color-bg-elevated: #f1f5f9;
+  --color-bg-hover: #eff6ff;
+  --color-border: #e2e8f0;
+  --color-border-secondary: #f1f5f9;
+  --color-text: #0f172a;
+  --color-text-secondary: #64748b;
+  --color-text-tertiary: #94a3b8;
+  --color-bg-overlay: rgba(255, 255, 255, 0.8);
+  --color-bg-assistant: #f1f5f9;
+  --color-bg-code-inline: rgba(0, 0, 0, 0.06);
+  --color-bg-tool-json: #f8fafc;
+  --color-primary: #3b82f6;
+  --color-primary-hover: #2563eb;
+  --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -2px rgba(0, 0, 0, 0.1);
+  --radius: 8px;
+  --radius-lg: 12px;
+  --json-key-color: #881391;
+  --json-string-color: #1a1aa6;
+  --json-number-color: #098658;
+  --json-bool-color: #0451a5;
+}
+
+html.dark {
+  --color-bg-layout: #0f172a;
+  --color-bg-container: #1e293b;
+  --color-bg-elevated: #334155;
+  --color-bg-hover: #1e3a5f;
+  --color-border: #334155;
+  --color-border-secondary: #1e293b;
+  --color-text: #f1f5f9;
+  --color-text-secondary: #94a3b8;
+  --color-text-tertiary: #64748b;
+  --color-bg-overlay: rgba(0, 0, 0, 0.6);
+  --color-bg-assistant: #1e293b;
+  --color-bg-code-inline: rgba(255, 255, 255, 0.1);
+  --color-bg-tool-json: #0f172a;
+  --color-primary: #60a5fa;
+  --color-primary-hover: #3b82f6;
+  --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.3);
+  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.4), 0 2px 4px -2px rgba(0, 0, 0, 0.3);
+  --json-key-color: #c792ea;
+  --json-string-color: #c3e88d;
+  --json-number-color: #f78c6c;
+  --json-bool-color: #82aaff;
+}
+
+/* ==================== Reset & Base ==================== */
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html, body, #root {
+  height: 100%;
+  width: 100%;
+}
+
+body {
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  letter-spacing: -0.011em;
+  background: var(--color-bg-layout);
+  color: var(--color-text);
+  transition: background-color 0.2s, color 0.2s;
+}
+
+/* ==================== SQL Lab Layout ==================== */
+
+.sqllab-container {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  overflow: hidden;
+}
+
+.sqllab-main {
+  display: flex;
+  flex: 1;
+  height: 100%;
+  overflow: hidden;
+}
+
+.sqllab-sidebar {
+  width: 280px;
+  min-width: 200px;
+  max-width: 400px;
+  border-right: 1px solid var(--color-border);
+  box-shadow: var(--shadow-sm);
+  background: var(--color-bg-elevated);
+  overflow: auto;
+  resize: horizontal;
+  transition: width 0.2s ease, min-width 0.2s ease;
+}
+
+.sqllab-sidebar.collapsed {
+  width: 0;
+  min-width: 0;
+  max-width: 0;
+  overflow: hidden;
+  border-right: none;
+  resize: none;
+}
+
+.sidebar-toggle {
+  width: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--color-bg-elevated);
+  border-right: 1px solid var(--color-border);
+  cursor: pointer;
+  flex-shrink: 0;
+  font-size: 14px;
+  color: var(--color-text-secondary);
+  transition: background 0.2s, color 0.2s;
+}
+
+.sidebar-toggle:hover {
+  background: var(--color-bg-hover);
+  color: var(--color-primary);
+}
+
+.sqllab-content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.sqllab-editor-panel {
+  min-height: 120px;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.sqllab-resize-handle {
+  height: 5px;
+  background: var(--color-border);
+  cursor: row-resize;
+  flex-shrink: 0;
+  transition: background 0.2s;
+  position: relative;
+}
+
+.sqllab-resize-handle:hover,
+.sqllab-resize-handle.dragging {
+  background: var(--color-primary);
+}
+
+.sqllab-resize-handle::after {
+  content: '';
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  width: 30px;
+  height: 3px;
+  border-top: 1px solid var(--color-text-tertiary);
+  border-bottom: 1px solid var(--color-text-tertiary);
+}
+
+.sqllab-resize-handle:hover::after,
+.sqllab-resize-handle.dragging::after {
+  border-top-color: #fff;
+  border-bottom-color: #fff;
+}
+
+.sqllab-results-panel {
+  flex: 1;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  min-height: 100px;
+}
+
+/* Make Ant Design Tabs fill the results panel height */
+.sqllab-results-panel > .ant-tabs {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+.sqllab-results-panel > .ant-tabs > .ant-tabs-content-holder {
+  flex: 1;
+  overflow: hidden;
+}
+.sqllab-results-panel > .ant-tabs > .ant-tabs-content-holder > .ant-tabs-content {
+  height: 100%;
+}
+.sqllab-results-panel > .ant-tabs > .ant-tabs-content-holder > .ant-tabs-content > .ant-tabs-tabpane-active {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Monaco editor container */
+.monaco-container {
+  flex: 1;
+  min-height: 0;
+}
+
+/* ==================== AG Grid Styles ==================== */
+
+.ag-theme-alpine {
+  --ag-header-background-color: var(--color-bg-elevated);
+  --ag-odd-row-background-color: var(--color-bg-elevated);
+}
+
+html.dark .ag-theme-alpine {
+  --ag-background-color: #1e293b;
+  --ag-header-background-color: #334155;
+  --ag-odd-row-background-color: #1e293b;
+  --ag-row-hover-color: #334155;
+  --ag-selected-row-background-color: #1e3a5f;
+  --ag-range-selection-background-color: rgba(59, 130, 246, 0.2);
+  --ag-border-color: #334155;
+  --ag-header-foreground-color: #f1f5f9;
+  --ag-foreground-color: #f1f5f9;
+  --ag-secondary-foreground-color: #94a3b8;
+  --ag-modal-overlay-background-color: rgba(0, 0, 0, 0.5);
+  --ag-input-focus-border-color: var(--color-primary);
+}
+
+/* ==================== Schema Tree ==================== */
+
+.schema-tree {
+  padding: 8px;
+}
+
+.schema-tree .ant-tree-node-content-wrapper {
+  display: flex;
+  align-items: center;
+}
+
+/* ==================== Toolbars ==================== */
+
+.query-toolbar {
+  padding: 10px 16px;
+  background: var(--color-bg-container);
+  border-bottom: 1px solid var(--color-border);
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.results-toolbar {
+  padding: 10px 16px;
+  background: var(--color-bg-container);
+  border-bottom: 1px solid var(--color-border);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.server-pagination-bar {
+  padding: 6px 16px;
+  background: var(--color-bg-container);
+  border-top: 1px solid var(--color-border);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-shrink: 0;
+}
+
+/* ==================== JSON Cell Renderer ==================== */
+
+.json-cell {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  width: 100%;
+  overflow: hidden;
+}
+
+.json-cell-preview {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  flex: 1;
+  color: var(--color-text-secondary);
+  font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, monospace;
+  font-size: 12px;
+}
+
+.json-cell-expand {
+  cursor: pointer;
+  color: var(--color-primary);
+  flex-shrink: 0;
+  font-size: 12px;
+  opacity: 0.6;
+  transition: opacity 0.2s;
+}
+
+.json-cell-expand:hover {
+  opacity: 1;
+}
+
+.json-viewer {
+  background: var(--color-bg-elevated);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  padding: 12px 16px;
+  font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, monospace;
+  font-size: 13px;
+  line-height: 1.6;
+  overflow: auto;
+  white-space: pre-wrap;
+  word-break: break-word;
+  margin: 0;
+}
+
+/* ==================== Resizable Panels ==================== */
+
+.resize-handle {
+  width: 4px;
+  background: transparent;
+  cursor: col-resize;
+  transition: background 0.2s;
+}
+
+.resize-handle:hover {
+  background: var(--color-primary);
+}
+
+/* ==================== Tab Labels & Context Menu ==================== */
+
+.tab-label-wrapper {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  user-select: none;
+}
+
+.tab-label-text {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.tab-menu-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 18px;
+  height: 18px;
+  border-radius: 4px;
+  font-size: 12px;
+  color: var(--color-text-secondary);
+  opacity: 0;
+  transition: opacity 0.15s, background 0.15s;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+.tab-menu-btn:hover {
+  background: var(--color-bg-elevated);
+  color: var(--color-text);
+}
+
+/* Show menu button when hovering the tab or when tab is active */
+.ant-tabs-tab:hover .tab-menu-btn,
+.ant-tabs-tab-active .tab-menu-btn {
+  opacity: 1;
+}
+
+/* ==================== Tab Rename ==================== */
+
+.tab-rename-input {
+  border: 1px solid var(--color-primary);
+  border-radius: 6px;
+  padding: 0 4px;
+  font-size: 14px;
+  line-height: 20px;
+  width: 120px;
+  outline: none;
+  background: var(--color-bg-container);
+  color: var(--color-text);
+}
+
+/* ==================== Loading Overlay ==================== */
+
+.loading-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: var(--color-bg-overlay);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 100;
+}
+
+/* ==================== Dashboard Styles ==================== */
+
+/* Dashboard view page */
+.dashboard-view {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+/* Dashboard toolbar */
+.dashboard-toolbar {
+  padding: 12px 24px;
+  background: var(--color-bg-container);
+  border-bottom: 1px solid var(--color-border);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-shrink: 0;
+}
+
+/* Dashboard grid container — uses dashboard-specific vars with global fallbacks */
+.dashboard-grid-container {
+  flex: 1;
+  overflow: auto;
+  padding: 12px;
+  background: var(--db-bg, var(--color-bg-layout));
+  color: var(--db-font, var(--color-text));
+}
+
+/* Dashboard grid layout */
+.dashboard-grid {
+  min-height: 100%;
+}
+
+/* Edit mode styles */
+.dashboard-grid.edit-mode .react-grid-item {
+  border: 2px dashed transparent;
+  transition: border-color 0.2s;
+}
+
+.dashboard-grid.edit-mode .react-grid-item:hover {
+  border-color: var(--color-primary);
+}
+
+.dashboard-grid.edit-mode .react-grid-item.react-draggable-dragging {
+  border-color: var(--color-primary);
+  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+  z-index: 100;
+}
+
+/* Dashboard panel card */
+.dashboard-panel-card {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  background: var(--db-panel-bg, var(--color-bg-container));
+  border-color: var(--db-panel-border, var(--color-border));
+  border-radius: var(--db-panel-radius, var(--radius-lg));
+}
+
+.dashboard-panel-card.ant-card {
+  background: var(--db-panel-bg, var(--color-bg-container));
+  border-color: var(--db-panel-border, var(--color-border));
+  border-radius: var(--db-panel-radius, var(--radius-lg));
+  color: var(--db-font, var(--color-text));
+}
+
+.dashboard-panel-card .ant-card-body {
+  flex: 1;
+  padding: 8px;
+  overflow: hidden;
+  color: var(--db-font, var(--color-text));
+}
+
+.dashboard-panel-card .ant-card-head {
+  min-height: 36px;
+  padding: 0 8px;
+  color: var(--db-header, var(--color-text));
+  border-bottom-color: var(--db-panel-border, var(--color-border-secondary));
+}
+
+.dashboard-panel-card .ant-card-head-title {
+  padding: 6px 0;
+  color: var(--db-header, var(--color-text));
+}
+
+.dashboard-panel-card .ant-card-extra {
+  padding: 6px 0;
+  color: var(--db-font, var(--color-text));
+}
+
+/* Dashboard panel header with drag handle */
+.dashboard-panel-header {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+/* Dashboard panel footer */
+.dashboard-panel-footer {
+  padding: 4px 0 0;
+  margin-top: 4px;
+  border-top: 1px solid var(--db-panel-border, var(--color-border-secondary));
+  font-size: 11px;
+  color: var(--db-font, var(--color-text-tertiary));
+  opacity: 0.7;
+  text-align: right;
+}
+
+/* Drag handle */
+.drag-handle {
+  cursor: grab;
+  color: var(--color-text-tertiary);
+  font-size: 14px;
+}
+
+.drag-handle:hover {
+  color: var(--color-primary);
+}
+
+.drag-handle:active {
+  cursor: grabbing;
+}
+
+/* react-grid-layout resize handle */
+.react-resizable-handle {
+  z-index: 10;
+}
+
+/* react-grid-layout placeholder */
+.react-grid-item.react-grid-placeholder {
+  background: var(--color-primary);
+  opacity: 0.15;
+  border-radius: var(--radius-lg);
+}
+
+/* ==================== Content Panel Styles ==================== */
+
+/* Markdown panel — inherit dashboard theme color */
+.markdown-panel {
+  padding: 12px;
+  overflow: auto;
+  height: 100%;
+  color: inherit;
+}
+
+.markdown-panel img {
+  max-width: 100%;
+}
+
+.markdown-panel h1,
+.markdown-panel h2,
+.markdown-panel h3 {
+  margin-top: 0.5em;
+  margin-bottom: 0.3em;
+  color: inherit;
+}
+
+.markdown-panel p {
+  margin-bottom: 0.5em;
+}
+
+/* Image panel */
+.image-panel {
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.image-panel img {
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
+}
+
+/* Title panel — inherit dashboard theme color */
+.title-panel {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+  color: inherit;
+}
+
+/* ==================== Dashboard Tab Styles ==================== */
+
+.dashboard-tabs {
+  padding: 0 12px;
+  background: var(--db-panel-bg, var(--color-bg-container));
+  border-bottom: 1px solid var(--db-panel-border, var(--color-border));
+  flex-shrink: 0;
+}
+
+.dashboard-tabs .ant-tabs {
+  margin-bottom: 0;
+}
+
+.dashboard-tabs .ant-tabs-nav {
+  margin-bottom: 0;
+}
+
+/* ==================== Dashboard Cross-Filter Bar ==================== */
+
+.dashboard-filter-bar {
+  display: flex;
+  align-items: center;
+  padding: 6px 24px;
+  background: var(--db-panel-bg, var(--color-bg-container));
+  border-bottom: 1px solid var(--db-panel-border, var(--color-border));
+  flex-shrink: 0;
+  min-height: 0;
+  color: var(--db-font, var(--color-text));
+  animation: filter-bar-slide-in 0.15s ease-out;
+}
+
+@keyframes filter-bar-slide-in {
+  from {
+    opacity: 0;
+    max-height: 0;
+    padding-top: 0;
+    padding-bottom: 0;
+  }
+  to {
+    opacity: 1;
+    max-height: 60px;
+    padding-top: 6px;
+    padding-bottom: 6px;
+  }
+}
+
+/* ==================== PDF Export Overlay ==================== */
+
+.pdf-export-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: var(--color-bg-overlay);
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* ==================== Settings Drawer Styles ==================== */
+
+.theme-preset-btn {
+  margin-right: 8px;
+  margin-bottom: 8px;
+}
+
+.theme-color-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 12px;
+}
+
+/* ==================== Prospector Styles ==================== */
+
+/* Right sidebar for Prospector */
+.prospector-sidebar {
+  width: 380px;
+  min-width: 300px;
+  max-width: 500px;
+  border-left: 1px solid var(--color-border);
+  background: var(--color-bg-elevated);
+  overflow: hidden;
+  transition: width 0.2s ease, min-width 0.2s ease;
+  display: flex;
+  flex-direction: column;
+}
+
+.prospector-sidebar.collapsed {
+  width: 0;
+  min-width: 0;
+  max-width: 0;
+  border-left: none;
+}
+
+.prospector-sidebar-toggle {
+  width: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--color-bg-elevated);
+  border-left: 1px solid var(--color-border);
+  cursor: pointer;
+  flex-shrink: 0;
+  font-size: 14px;
+  color: var(--color-text-secondary);
+  transition: background 0.2s, color 0.2s;
+}
+
+.prospector-sidebar-toggle:hover {
+  background: var(--color-bg-hover);
+  color: var(--color-primary);
+}
+
+/* Panel layout */
+.prospector-panel {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  overflow: hidden;
+}
+
+.prospector-panel-header {
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--color-border);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-shrink: 0;
+  background: var(--color-bg-container);
+}
+
+.prospector-panel-title {
+  font-weight: 600;
+  font-size: 14px;
+}
+
+.prospector-panel-footer {
+  border-top: 1px solid var(--color-border-secondary);
+  flex-shrink: 0;
+}
+
+/* Message list */
+.prospector-message-list {
+  flex: 1;
+  overflow-y: auto;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+/* Empty state */
+.prospector-empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  flex: 1;
+  padding: 24px;
+}
+
+/* Single message row */
+.prospector-message {
+  display: flex;
+  gap: 8px;
+  align-items: flex-start;
+}
+
+.prospector-message-user {
+  flex-direction: row-reverse;
+}
+
+/* Avatar */
+.prospector-message-avatar {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+  flex-shrink: 0;
+  background: var(--color-border-secondary);
+  color: var(--color-text-secondary);
+}
+
+.prospector-message-user .prospector-message-avatar {
+  background: var(--color-primary);
+  color: #fff;
+}
+
+/* Bubble */
+.prospector-message-bubble {
+  max-width: 85%;
+  padding: 8px 12px;
+  border-radius: 12px;
+  font-size: 13px;
+  line-height: 1.5;
+  word-break: break-word;
+}
+
+.prospector-bubble-user {
+  background: var(--color-primary);
+  color: #fff;
+  border-bottom-right-radius: 4px;
+}
+
+.prospector-bubble-assistant {
+  background: var(--color-bg-assistant);
+  color: var(--color-text);
+  border-bottom-left-radius: 4px;
+}
+
+.prospector-bubble-error {
+  background: #fff2f0;
+  border: 1px solid #ffccc7;
+  color: #cf1322;
+}
+
+html.dark .prospector-bubble-error {
+  background: #2a1215;
+  border-color: #58181c;
+  color: #e84749;
+}
+
+/* Markdown in messages */
+.prospector-message-content p {
+  margin: 0 0 4px 0;
+}
+
+.prospector-message-content p:last-child {
+  margin-bottom: 0;
+}
+
+.prospector-message-content pre {
+  background: #282c34;
+  color: #abb2bf;
+  padding: 8px 12px;
+  border-radius: 6px;
+  overflow-x: auto;
+  font-size: 12px;
+  margin: 4px 0;
+}
+
+.prospector-message-content code {
+  background: var(--color-bg-code-inline);
+  padding: 1px 4px;
+  border-radius: 3px;
+  font-size: 12px;
+}
+
+.prospector-bubble-user .prospector-message-content code {
+  background: rgba(255, 255, 255, 0.2);
+}
+
+.prospector-bubble-user .prospector-message-content pre {
+  background: rgba(0, 0, 0, 0.3);
+  color: #fff;
+}
+
+/* Tool call JSON */
+.prospector-tool-json {
+  background: var(--color-bg-tool-json);
+  border: 1px solid var(--color-border);
+  border-radius: 4px;
+  padding: 6px 8px;
+  font-size: 11px;
+  line-height: 1.4;
+  overflow-x: auto;
+  max-height: 200px;
+  overflow-y: auto;
+  margin: 4px 0;
+  white-space: pre-wrap;
+  word-break: break-all;
+}
+
+/* Streaming cursor */
+.prospector-cursor {
+  display: inline-block;
+  width: 6px;
+  height: 14px;
+  background: var(--color-primary);
+  margin-left: 2px;
+  animation: prospector-blink 1s infinite;
+  vertical-align: text-bottom;
+}
+
+@keyframes prospector-blink {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0; }
+}
+
+/* Thinking dots */
+.prospector-thinking {
+  display: flex;
+  gap: 4px;
+  padding: 4px 0;
+}
+
+.prospector-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--color-text-tertiary);
+  animation: prospector-bounce 1.4s ease-in-out infinite;
+}
+
+.prospector-dot:nth-child(1) { animation-delay: 0s; }
+.prospector-dot:nth-child(2) { animation-delay: 0.2s; }
+.prospector-dot:nth-child(3) { animation-delay: 0.4s; }
+
+@keyframes prospector-bounce {
+  0%, 80%, 100% { transform: translateY(0); }
+  40% { transform: translateY(-6px); }
+}
+
+/* Quick actions */
+.prospector-quick-actions {
+  padding: 8px 12px;
+  border-top: 1px solid var(--color-border-secondary);
+}
+
+/* Chat input */
+.prospector-chat-input {
+  padding: 8px 12px 12px;
+}
+
+/* ==================== Optimize Modal Styles ==================== */
+
+.optimize-modal-content {
+  max-height: 60vh;
+  overflow-y: auto;
+}
+
+.optimize-explanation {
+  margin-bottom: 16px;
+  line-height: 1.6;
+}
+
+.optimize-explanation pre {
+  background: #282c34;
+  color: #abb2bf;
+  padding: 12px 16px;
+  border-radius: 6px;
+  overflow-x: auto;
+  font-size: 13px;
+  margin: 8px 0;
+}
+
+.optimize-explanation code {
+  background: var(--color-bg-code-inline);
+  padding: 2px 6px;
+  border-radius: 3px;
+  font-size: 13px;
+}
+
+.optimize-explanation pre code {
+  background: none;
+  padding: 0;
+}
+
+.optimize-thinking {
+  display: flex;
+  align-items: center;
+  padding: 12px 0;
+}
+
+/* ==================== Tab Label Enhancements ==================== */
+
+.tab-row-count {
+  font-size: 11px;
+  color: var(--color-text-tertiary);
+  margin-left: 2px;
+}
+
+.tab-unsaved-dot {
+  color: var(--color-primary);
+  font-size: 14px;
+  margin-left: 1px;
+  line-height: 1;
+}
+
+/* ==================== Mobile FAB ==================== */
+
+.mobile-run-fab {
+  display: none;
+  position: fixed;
+  bottom: 24px;
+  right: 24px;
+  z-index: 300;
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  background: var(--color-primary);
+  color: #fff;
+  border: none;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.25);
+  cursor: pointer;
+  align-items: center;
+  justify-content: center;
+  font-size: 22px;
+  transition: background 0.2s, transform 0.1s;
+}
+
+.mobile-run-fab:active {
+  transform: scale(0.93);
+}
+
+.mobile-run-fab.executing {
+  background: #ff4d4f;
+}
+
+@media (max-width: 768px) {
+  .mobile-run-fab {
+    display: flex;
+  }
+}
+
+/* ==================== Mobile Backdrop ==================== */
+
+.mobile-sidebar-backdrop {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.45);
+  z-index: 199;
+  cursor: pointer;
+}
+
+/* ==================== Responsive Breakpoints ==================== */
+
+/* Tablet: narrow sidebars slightly */
+@media (max-width: 1024px) {
+  .sqllab-sidebar {
+    width: 220px;
+    min-width: 180px;
+  }
+
+  .prospector-sidebar {
+    width: 320px;
+    min-width: 260px;
+  }
+}
+
+/* Mobile: sidebars become fixed overlays */
+@media (max-width: 768px) {
+  /* Schema sidebar flies in from left */
+  .sqllab-sidebar {
+    position: fixed;
+    top: 52px;
+    left: 0;
+    bottom: 0;
+    z-index: 200;
+    width: 280px !important;
+    min-width: 280px !important;
+    max-width: 280px !important;
+    resize: none;
+    transform: translateX(-100%);
+    transition: transform 0.25s ease;
+    box-shadow: 4px 0 24px rgba(0, 0, 0, 0.2);
+  }
+
+  .sqllab-sidebar:not(.collapsed) {
+    transform: translateX(0);
+  }
+
+  /* Keep width so transform works; hide via transform */
+  .sqllab-sidebar.collapsed {
+    width: 280px !important;
+    min-width: 280px !important;
+    max-width: 280px !important;
+    transform: translateX(-100%);
+    overflow: auto;
+    border-right: 1px solid var(--color-border);
+  }
+
+  /* Prospector sidebar flies in from right */
+  .prospector-sidebar {
+    position: fixed;
+    top: 52px;
+    right: 0;
+    bottom: 0;
+    z-index: 200;
+    width: 300px !important;
+    min-width: 300px !important;
+    max-width: 300px !important;
+    transform: translateX(100%);
+    transition: transform 0.25s ease;
+    box-shadow: -4px 0 24px rgba(0, 0, 0, 0.2);
+  }
+
+  .prospector-sidebar:not(.collapsed) {
+    transform: translateX(0);
+  }
+
+  .prospector-sidebar.collapsed {
+    width: 300px !important;
+    min-width: 300px !important;
+    max-width: 300px !important;
+    transform: translateX(100%);
+    overflow: auto;
+    border-left: 1px solid var(--color-border);
+  }
+
+  /* Larger touch targets for toggle strips */
+  .sidebar-toggle,
+  .prospector-sidebar-toggle {
+    width: 32px;
+    font-size: 16px;
+  }
+
+  /* Show backdrop when a sidebar overlay is active */
+  .mobile-sidebar-backdrop {
+    display: block;
+  }
+
+  /* Full-width modals on mobile */
+  .ant-modal {
+    max-width: calc(100vw - 16px) !important;
+    margin: 8px auto !important;
+  }
+
+  /* Compact query tabs */
+  .ant-tabs-tab {
+    padding: 6px 8px !important;
+    font-size: 13px;
+  }
+
+  /* Compact toolbars */
+  .query-toolbar,
+  .results-toolbar {
+    gap: 4px;
+    padding: 6px 8px;
+  }
+
+  /* Larger touch target for resize handle */
+  .sqllab-resize-handle {
+    height: 12px;
+  }
+}
+
+/* ─── Notebook Styles ─── */
+
+/* Rich DataFrame tables */
+.notebook-df-output table.drill-df-table {
+  border-collapse: collapse;
+  font-size: 12px;
+  font-family: monospace;
+  width: auto;
+  max-width: 100%;
+}
+
+.notebook-df-output table.drill-df-table th,
+.notebook-df-output table.drill-df-table td {
+  padding: 4px 10px;
+  border: 1px solid var(--color-border);
+  text-align: left;
+  white-space: nowrap;
+  max-width: 300px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.notebook-df-output table.drill-df-table th {
+  background: var(--color-bg-elevated);
+  font-weight: 600;
+  position: sticky;
+  top: 0;
+  z-index: 1;
+}
+
+.notebook-df-output table.drill-df-table tr:nth-child(even) td {
+  background: var(--color-bg-layout);
+}
+
+.notebook-df-output table.drill-df-table tr:hover td {
+  background: var(--color-primary-bg);
+}
+
+/* Markdown cell rendering */
+.notebook-markdown-rendered {
+  font-size: 14px;
+  line-height: 1.6;
+}
+
+.notebook-markdown-rendered h1 { font-size: 1.6em; margin: 0.4em 0; border-bottom: 1px solid var(--color-border); padding-bottom: 0.2em; }
+.notebook-markdown-rendered h2 { font-size: 1.3em; margin: 0.3em 0; border-bottom: 1px solid var(--color-border); padding-bottom: 0.2em; }
+.notebook-markdown-rendered h3 { font-size: 1.1em; margin: 0.3em 0; }
+.notebook-markdown-rendered p { margin: 0.4em 0; }
+.notebook-markdown-rendered ul, .notebook-markdown-rendered ol { margin: 0.3em 0; padding-left: 1.5em; }
+.notebook-markdown-rendered code { background: var(--color-bg-elevated); padding: 1px 4px; border-radius: 3px; font-size: 0.9em; }
+.notebook-markdown-rendered pre { background: var(--color-bg-elevated); padding: 8px 12px; border-radius: 4px; overflow-x: auto; }
+.notebook-markdown-rendered pre code { background: none; padding: 0; }
+.notebook-markdown-rendered blockquote { border-left: 3px solid var(--color-border); margin: 0.4em 0; padding-left: 12px; color: var(--color-text-secondary); }
+.notebook-markdown-rendered table { border-collapse: collapse; margin: 0.5em 0; }
+.notebook-markdown-rendered table th, .notebook-markdown-rendered table td { border: 1px solid var(--color-border); padding: 4px 8px; }
+.notebook-markdown-rendered table th { background: var(--color-bg-elevated); }
+.notebook-markdown-rendered hr { border: none; border-top: 1px solid var(--color-border); margin: 0.6em 0; }

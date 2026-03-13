@@ -303,6 +303,7 @@
             <exclude>**/*.mov</exclude>
             <exclude>**/*.mp4</exclude>
             <exclude>**/NOTICE</exclude>
+            <exclude>**/.npmrc</exclude>
             <exclude>**/*.parquet</exclude>
             <exclude>**/*.patch</exclude>
             <exclude>**/*.pb.cc</exclude>
