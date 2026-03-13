@@ -44,7 +44,7 @@ import java.util.Map;
 /**
  * Unit tests for {@link ResultCacheService}.
  */
-public class TestResultCacheService {
+public class TestResultCacheService extends org.apache.drill.test.BaseTest {
 
   @Rule
   public TemporaryFolder tempFolder = new TemporaryFolder();
@@ -336,7 +336,7 @@ public class TestResultCacheService {
   }
 
   @Test
-  public void testExpiredEntriesEvictedOnRebuild() throws IOException {
+  public void testExpiredEntriesEvictedOnRebuild() throws IOException, InterruptedException {
     File cacheDir = new File(tempFolder.getRoot(), "cache-expire");
     // TTL = 0 means entries expire immediately
     ResultCacheService service1 = new ResultCacheService(cacheDir, 0, 100, 10, 10000, mapper);
@@ -348,7 +348,9 @@ public class TestResultCacheService {
         "q12", "SELECT 1", "dfs", "user1", "COMPLETED",
         columns, null, rows);
 
-    // Entries should expire (TTL=0 means cachedAt + 0 < now)
+    // Wait to ensure at least 1ms passes so TTL=0 check (> 0) triggers
+    Thread.sleep(10);
+
     // The entry might still be in the index of service1, but on a new service it should be evicted
     ResultCacheService service2 = new ResultCacheService(cacheDir, 0, 100, 10, 10000, mapper);
     CacheMeta expired = service2.getMetadata(meta.cacheId);

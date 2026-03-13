@@ -27,7 +27,7 @@ import org.junit.Test;
  * Security tests for the result cache.
  * Validates UUID format enforcement and path traversal prevention.
  */
-public class TestResultCacheSecurity {
+public class TestResultCacheSecurity extends org.apache.drill.test.BaseTest {
 
   // Must match the pattern in ResultCacheResources
   private static final Pattern UUID_PATTERN = Pattern.compile(
