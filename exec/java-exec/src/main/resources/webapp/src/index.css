@@ -670,6 +670,26 @@ html.dark .ag-theme-alpine {
   justify-content: center;
 }
 
+/* ==================== PDF Export Mode ==================== */
+
+.pdf-export-mode .executive-summary-panel button,
+.pdf-export-mode .executive-summary-panel .ant-spin,
+.pdf-export-mode .prospector-chat-input,
+.pdf-export-mode .ant-input-search,
+.pdf-export-mode .ant-btn {
+  display: none !important;
+}
+
+.pdf-export-mode .executive-summary-panel {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  font-size: 13px;
+  line-height: 1.6;
+}
+
+.pdf-export-mode .executive-summary-content {
+  font-size: 13px;
+}
+
 /* ==================== Settings Drawer Styles ==================== */
 
 .theme-preset-btn {

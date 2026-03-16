@@ -31,6 +31,7 @@ import type { ChatMessage } from '../../types/ai';
 
 const TOOL_ICONS: Record<string, React.ReactNode> = {
   execute_sql: <CodeOutlined />,
+  list_schemas: <DatabaseOutlined />,
   get_schema_info: <DatabaseOutlined />,
   create_visualization: <BarChartOutlined />,
   create_dashboard: <DashboardOutlined />,
@@ -40,6 +41,7 @@ const TOOL_ICONS: Record<string, React.ReactNode> = {
 
 const TOOL_LABELS: Record<string, string> = {
   execute_sql: 'Execute SQL',
+  list_schemas: 'List Schemas',
   get_schema_info: 'Schema Info',
   create_visualization: 'Create Chart',
   create_dashboard: 'Create Dashboard',
