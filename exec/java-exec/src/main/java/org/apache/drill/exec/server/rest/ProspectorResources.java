@@ -48,6 +48,7 @@ import jakarta.ws.rs.core.Response;
 import jakarta.ws.rs.core.StreamingOutput;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 /**
  * REST resource for the Prospector chat endpoint.
@@ -134,6 +135,33 @@ public class ProspectorResources {
     @JsonProperty
     public List<String> logLines;
 
+    @JsonProperty
+    public boolean dashboardSummaryMode;
+
+    @JsonProperty
+    public List<DashboardDataContext> dashboardData;
+
+    @JsonProperty
+    public boolean dashboardQnAMode;
+
+    @JsonProperty
+    public boolean dashboardNlFilterMode;
+
+    @JsonProperty
+    public boolean dashboardAlertMode;
+
+    @JsonProperty
+    public String dashboardTone;
+
+    @JsonProperty
+    public boolean dashboardAnomalyFocus;
+
+    @JsonProperty
+    public String previousSummary;
+
+    @JsonProperty
+    public List<ProjectDatasetRef> projectDatasets;
+
     public ChatContext() {
     }
 
@@ -146,7 +174,16 @@ public class ProspectorResources {
         @JsonProperty("resultSummary") ResultSummary resultSummary,
         @JsonProperty("logAnalysisMode") boolean logAnalysisMode,
         @JsonProperty("logFileName") String logFileName,
-        @JsonProperty("logLines") List<String> logLines) {
+        @JsonProperty("logLines") List<String> logLines,
+        @JsonProperty("dashboardSummaryMode") boolean dashboardSummaryMode,
+        @JsonProperty("dashboardData") List<DashboardDataContext> dashboardData,
+        @JsonProperty("dashboardQnAMode") boolean dashboardQnAMode,
+        @JsonProperty("dashboardNlFilterMode") boolean dashboardNlFilterMode,
+        @JsonProperty("dashboardAlertMode") boolean dashboardAlertMode,
+        @JsonProperty("dashboardTone") String dashboardTone,
+        @JsonProperty("dashboardAnomalyFocus") boolean dashboardAnomalyFocus,
+        @JsonProperty("previousSummary") String previousSummary,
+        @JsonProperty("projectDatasets") List<ProjectDatasetRef> projectDatasets) {
       this.currentSql = currentSql;
       this.currentSchema = currentSchema;
       this.availableSchemas = availableSchemas;
@@ -155,6 +192,83 @@ public class ProspectorResources {
       this.logAnalysisMode = logAnalysisMode;
       this.logFileName = logFileName;
       this.logLines = logLines;
+      this.dashboardSummaryMode = dashboardSummaryMode;
+      this.dashboardData = dashboardData;
+      this.dashboardQnAMode = dashboardQnAMode;
+      this.dashboardNlFilterMode = dashboardNlFilterMode;
+      this.dashboardAlertMode = dashboardAlertMode;
+      this.dashboardTone = dashboardTone;
+      this.dashboardAnomalyFocus = dashboardAnomalyFocus;
+      this.previousSummary = previousSummary;
+      this.projectDatasets = projectDatasets;
+    }
+  }
+
+  public static class ProjectDatasetRef {
+    @JsonProperty
+    public String type;
+
+    @JsonProperty
+    public String schema;
+
+    @JsonProperty
+    public String table;
+
+    @JsonProperty
+    public String label;
+
+    public ProjectDatasetRef() {
+    }
+
+    @JsonCreator
+    public ProjectDatasetRef(
+        @JsonProperty("type") String type,
+        @JsonProperty("schema") String schema,
+        @JsonProperty("table") String table,
+        @JsonProperty("label") String label) {
+      this.type = type;
+      this.schema = schema;
+      this.table = table;
+      this.label = label;
+    }
+  }
+
+  public static class DashboardDataContext {
+    @JsonProperty
+    public String panelName;
+
+    @JsonProperty
+    public String sql;
+
+    @JsonProperty
+    public List<String> columns;
+
+    @JsonProperty
+    public List<String> columnTypes;
+
+    @JsonProperty
+    public int rowCount;
+
+    @JsonProperty
+    public List<Map<String, Object>> sampleRows;
+
+    public DashboardDataContext() {
+    }
+
+    @JsonCreator
+    public DashboardDataContext(
+        @JsonProperty("panelName") String panelName,
+        @JsonProperty("sql") String sql,
+        @JsonProperty("columns") List<String> columns,
+        @JsonProperty("columnTypes") List<String> columnTypes,
+        @JsonProperty("rowCount") int rowCount,
+        @JsonProperty("sampleRows") List<Map<String, Object>> sampleRows) {
+      this.panelName = panelName;
+      this.sql = sql;
+      this.columns = columns;
+      this.columnTypes = columnTypes;
+      this.rowCount = rowCount;
+      this.sampleRows = sampleRows;
     }
   }
 
@@ -293,7 +407,22 @@ public class ProspectorResources {
         systemPrompt.append("Current schema: ").append(ctx.currentSchema).append("\n");
       }
 
-      if (ctx.availableSchemas != null && !ctx.availableSchemas.isEmpty()) {
+      if (ctx.projectDatasets != null && !ctx.projectDatasets.isEmpty()) {
+        systemPrompt.append("\nYou are working within a PROJECT scope. ");
+        systemPrompt.append("ONLY use these datasets — do NOT explore outside them:\n");
+        for (ProjectDatasetRef ds : ctx.projectDatasets) {
+          systemPrompt.append("- ").append(ds.label);
+          if (ds.schema != null) {
+            systemPrompt.append(" (schema: ").append(ds.schema);
+            if (ds.table != null) {
+              systemPrompt.append(", table: ").append(ds.table);
+            }
+            systemPrompt.append(")");
+          }
+          systemPrompt.append("\n");
+        }
+        systemPrompt.append("\n");
+      } else if (ctx.availableSchemas != null && !ctx.availableSchemas.isEmpty()) {
         systemPrompt.append("Available schemas: ")
             .append(String.join(", ", ctx.availableSchemas)).append("\n");
       }
@@ -335,6 +464,92 @@ public class ProspectorResources {
         }
       }
 
+      if (ctx.dashboardSummaryMode) {
+        systemPrompt.append("\nYou are generating an executive summary for a dashboard. ");
+        systemPrompt.append("Analyze the data from all dashboard panels and provide:\n");
+        systemPrompt.append("- Key insights and trends\n");
+        systemPrompt.append("- Anomalies or areas needing attention\n");
+        systemPrompt.append("- Status indicators using emoji (✅ good, ⚠️ warning, ❌ critical)\n");
+        systemPrompt.append("- Clear, well-formatted sections using markdown\n");
+        systemPrompt.append("- You may use markdown images ![alt](url) if helpful\n\n");
+
+        appendDashboardData(systemPrompt, ctx);
+      }
+
+      if (ctx.dashboardQnAMode) {
+        systemPrompt.append("\nYou are answering questions about dashboard data. ");
+        systemPrompt.append("Answer questions concisely based on the available data. ");
+        systemPrompt.append("Only use execute_sql and get_schema_info tools if needed.\n\n");
+
+        appendDashboardData(systemPrompt, ctx);
+      }
+
+      if (ctx.dashboardNlFilterMode) {
+        systemPrompt.append("\nReturn ONLY a JSON array of filter objects. ");
+        systemPrompt.append("Each filter object should have these fields: ");
+        systemPrompt.append("column (string), value (string), isTemporal (boolean), ");
+        systemPrompt.append("isNumeric (boolean), numericOp (string: =, !=, >, >=, <, <=, between), ");
+        systemPrompt.append("rangeStart (string, ISO date), rangeEnd (string, ISO date). ");
+        systemPrompt.append("Do not include any explanation, only the JSON array.\n\n");
+
+        if (ctx.dashboardData != null && !ctx.dashboardData.isEmpty()) {
+          systemPrompt.append("Available columns:\n");
+          for (DashboardDataContext ddc : ctx.dashboardData) {
+            if (ddc.columns != null) {
+              for (int j = 0; j < ddc.columns.size(); j++) {
+                systemPrompt.append("- ").append(ddc.columns.get(j));
+                if (ddc.columnTypes != null && j < ddc.columnTypes.size()) {
+                  systemPrompt.append(" (").append(ddc.columnTypes.get(j)).append(")");
+                }
+                systemPrompt.append(" from \"").append(ddc.panelName).append("\"\n");
+              }
+            }
+          }
+        }
+      }
+
+      if (ctx.dashboardAlertMode) {
+        systemPrompt.append("\nYou are analyzing triggered dashboard alert conditions. ");
+        systemPrompt.append("Explain what the alert conditions mean in context, ");
+        systemPrompt.append("why they may have triggered, and suggest actions to address them.\n\n");
+
+        appendDashboardData(systemPrompt, ctx);
+      }
+
+      // Tone instruction
+      if (ctx.dashboardTone != null && !ctx.dashboardTone.isEmpty()) {
+        switch (ctx.dashboardTone) {
+          case "executive":
+            systemPrompt.append("\nWrite in a concise, high-level executive style. ")
+                .append("Focus on business impact and strategic implications.\n");
+            break;
+          case "technical":
+            systemPrompt.append("\nWrite in a detailed technical style. ")
+                .append("Include specific metrics, data points, and technical context.\n");
+            break;
+          case "casual":
+            systemPrompt.append("\nWrite in a friendly, conversational tone. ")
+                .append("Keep it approachable and easy to understand.\n");
+            break;
+          default:
+            break;
+        }
+      }
+
+      // Anomaly focus
+      if (ctx.dashboardAnomalyFocus) {
+        systemPrompt.append("\nPay special attention to anomalies, outliers, and ")
+            .append("unexpected patterns in the data. Highlight any values that deviate ")
+            .append("significantly from expected ranges or historical norms.\n");
+      }
+
+      // Historical comparison
+      if (ctx.previousSummary != null && !ctx.previousSummary.isEmpty()) {
+        systemPrompt.append("\nHere is the previous summary for comparison. ")
+            .append("Note any changes or trends:\n---\nPREVIOUS SUMMARY:\n")
+            .append(ctx.previousSummary).append("\n---\n");
+      }
+
       if (ctx.resultSummary != null) {
         ResultSummary rs = ctx.resultSummary;
         systemPrompt.append("\nQuery results: ").append(rs.rowCount).append(" rows");
@@ -357,8 +572,17 @@ public class ProspectorResources {
     systemPrompt.append("\nWhen generating SQL, use Apache Drill SQL syntax. ");
     systemPrompt.append("Use backtick quoting for identifiers with special characters. ");
     systemPrompt.append("Use `LIMIT` for row limiting.\n\n");
-    systemPrompt.append("You have tools available to execute SQL, explore schemas, ");
-    systemPrompt.append("create visualizations and dashboards. Use them proactively to help the user.");
+
+    systemPrompt.append("IMPORTANT: You have tools available and MUST use them proactively:\n");
+    systemPrompt.append("- When a user asks a data question, ALWAYS use list_schemas and ");
+    systemPrompt.append("get_schema_info to discover available data BEFORE writing SQL.\n");
+    systemPrompt.append("- Use list_schemas to see all available schemas/data sources.\n");
+    systemPrompt.append("- Drill uses hierarchical schemas (e.g., 'mysql' plugin has sub-schemas ");
+    systemPrompt.append("like 'mysql.store'). Use get_schema_info on sub-schemas to find tables.\n");
+    systemPrompt.append("- Use get_schema_info with a table name to discover columns before writing queries.\n");
+    systemPrompt.append("- NEVER ask the user for schema or table names — explore and find them yourself.\n");
+    systemPrompt.append("- After discovering the schema, write and execute the SQL query.\n");
+    systemPrompt.append("- You can also create visualizations, dashboards, and save queries.\n");
 
     // Append custom system prompt if configured
     if (config.getSystemPrompt() != null && !config.getSystemPrompt().isEmpty()) {
@@ -373,6 +597,46 @@ public class ProspectorResources {
     }
 
     return messages;
+  }
+
+  private void appendDashboardData(StringBuilder systemPrompt, ChatContext ctx) {
+    if (ctx.dashboardData != null && !ctx.dashboardData.isEmpty()) {
+      systemPrompt.append("Dashboard panels data:\n\n");
+      for (int i = 0; i < ctx.dashboardData.size(); i++) {
+        DashboardDataContext ddc = ctx.dashboardData.get(i);
+        systemPrompt.append("### Panel ").append(i + 1).append(": ")
+            .append(ddc.panelName).append("\n");
+        if (ddc.sql != null) {
+          systemPrompt.append("SQL: `").append(ddc.sql).append("`\n");
+        }
+        if (ddc.columns != null) {
+          systemPrompt.append("Columns: ");
+          for (int j = 0; j < ddc.columns.size(); j++) {
+            if (j > 0) {
+              systemPrompt.append(", ");
+            }
+            systemPrompt.append(ddc.columns.get(j));
+            if (ddc.columnTypes != null && j < ddc.columnTypes.size()) {
+              systemPrompt.append(" (").append(ddc.columnTypes.get(j)).append(")");
+            }
+          }
+          systemPrompt.append("\n");
+        }
+        systemPrompt.append("Row count: ").append(ddc.rowCount).append("\n");
+        if (ddc.sampleRows != null && !ddc.sampleRows.isEmpty()) {
+          systemPrompt.append("Sample data:\n```json\n");
+          try {
+            ObjectMapper mapper = new ObjectMapper();
+            systemPrompt.append(mapper.writerWithDefaultPrettyPrinter()
+                .writeValueAsString(ddc.sampleRows));
+          } catch (Exception e) {
+            systemPrompt.append("[Error serializing sample data]");
+          }
+          systemPrompt.append("\n```\n");
+        }
+        systemPrompt.append("\n");
+      }
+    }
   }
 
   private LlmConfig getConfig() {

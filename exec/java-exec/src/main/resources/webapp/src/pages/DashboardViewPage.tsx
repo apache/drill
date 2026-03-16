@@ -45,6 +45,7 @@ import {
   FilePdfOutlined,
   ShareAltOutlined,
   BarChartOutlined,
+  BulbOutlined,
   FileMarkdownOutlined,
   PictureOutlined,
   FontSizeOutlined,
@@ -53,6 +54,9 @@ import {
   StarOutlined,
   StarFilled,
   InboxOutlined,
+  CommentOutlined,
+  AlertOutlined,
+  SearchOutlined,
 } from '@ant-design/icons';
 import html2canvas from 'html2canvas';
 import { jsPDF } from 'jspdf';
@@ -87,7 +91,7 @@ const REFRESH_OPTIONS = [
   { label: '5m', value: 300 },
 ];
 
-type AddPanelTab = 'visualization' | 'markdown' | 'image' | 'title';
+type AddPanelTab = 'visualization' | 'markdown' | 'image' | 'title' | 'executiveSummary' | 'aiQnA' | 'aiAlerts' | 'nlFilter';
 
 export default function DashboardViewPage() {
   const { id } = useParams<{ id: string }>();
@@ -246,6 +250,7 @@ export default function DashboardViewPage() {
   const [newImageAlt, setNewImageAlt] = useState('');
   const [newTitleText, setNewTitleText] = useState('');
   const [newTitleSubtitle, setNewTitleSubtitle] = useState('');
+  const [newSummaryPrompt, setNewSummaryPrompt] = useState('');
   const [imageUploading, setImageUploading] = useState(false);
 
   // Fetch dashboard
@@ -380,10 +385,12 @@ export default function DashboardViewPage() {
     message.success('Visualization panel added');
   }, [activeTabId]);
 
-  // Add a content panel (markdown, image, title)
-  const handleAddContentPanel = useCallback((type: 'markdown' | 'image' | 'title') => {
+  // Add a content panel (markdown, image, title, executiveSummary, aiQnA, aiAlerts, nlFilter)
+  const handleAddContentPanel = useCallback((type: 'markdown' | 'image' | 'title' | 'executiveSummary' | 'aiQnA' | 'aiAlerts' | 'nlFilter') => {
     let content = '';
     let config: Record<string, string> | undefined;
+    let width = 6;
+    let height = 3;
 
     if (type === 'markdown') {
       content = newMarkdownContent;
@@ -394,12 +401,37 @@ export default function DashboardViewPage() {
       }
     } else if (type === 'title') {
       content = newTitleText;
+      width = 12;
+      height = 2;
       if (newTitleSubtitle) {
         config = { subtitle: newTitleSubtitle, textAlign: 'center' };
       } else {
         config = { textAlign: 'center' };
       }
+    } else if (type === 'executiveSummary') {
+      content = newSummaryPrompt;
+      config = { includeSampleData: 'true' };
+      width = 12;
+      height = 4;
+    } else if (type === 'aiQnA') {
+      width = 4;
+      height = 4;
+      config = { maxMessages: '20' };
+    } else if (type === 'aiAlerts') {
+      width = 6;
+      height = 3;
+      config = { alertRules: '[]', aiAnalysis: 'false' };
+    } else if (type === 'nlFilter') {
+      width = 6;
+      height = 2;
     }
+
+    const typeLabels: Record<string, string> = {
+      executiveSummary: 'AI Summary',
+      aiQnA: 'AI Q&A',
+      aiAlerts: 'AI Alerts',
+      nlFilter: 'NL Filter',
+    };
 
     const newPanel: DashboardPanel = {
       id: crypto.randomUUID(),
@@ -408,8 +440,8 @@ export default function DashboardViewPage() {
       config,
       x: 0,
       y: Infinity,
-      width: type === 'title' ? 12 : 6,
-      height: type === 'title' ? 2 : 3,
+      width,
+      height,
       tabId: activeTabId || undefined,
     };
     setPanels((prev) => [...prev, newPanel]);
@@ -419,8 +451,9 @@ export default function DashboardViewPage() {
     setNewImageAlt('');
     setNewTitleText('');
     setNewTitleSubtitle('');
-    message.success(`${type.charAt(0).toUpperCase() + type.slice(1)} panel added`);
-  }, [activeTabId, newMarkdownContent, newImageUrl, newImageAlt, newTitleText, newTitleSubtitle]);
+    setNewSummaryPrompt('');
+    message.success(`${typeLabels[type] || type.charAt(0).toUpperCase() + type.slice(1)} panel added`);
+  }, [activeTabId, newMarkdownContent, newImageUrl, newImageAlt, newTitleText, newTitleSubtitle, newSummaryPrompt]);
 
   // Remove a panel
   const handleRemovePanel = useCallback((panelId: string) => {
@@ -477,6 +510,11 @@ export default function DashboardViewPage() {
     }
   }, [activeTabId]);
 
+  // NL Filter: apply AI-generated filters to the dashboard
+  const handleApplyNlFilters = useCallback((newFilters: DashboardFilter[]) => {
+    setFilters((prev) => [...prev, ...newFilters]);
+  }, [setFilters]);
+
   // PDF export — always renders in light mode for print readability
   const handleExportPdf = useCallback(async () => {
     if (!gridRef.current) {
@@ -487,6 +525,9 @@ export default function DashboardViewPage() {
     // Temporarily force light theme so the screenshot is always light
     const prevTheme = theme;
     setTheme(DEFAULT_THEME);
+
+    // Add pdf-export-mode class to hide interactive elements
+    gridRef.current.classList.add('pdf-export-mode');
 
     // Wait for React re-render + ECharts canvas repaint
     await new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r)));
@@ -531,7 +572,10 @@ export default function DashboardViewPage() {
     } catch {
       message.error('Failed to export PDF');
     } finally {
-      // Restore the original theme
+      // Remove pdf-export-mode class and restore the original theme
+      if (gridRef.current) {
+        gridRef.current.classList.remove('pdf-export-mode');
+      }
       setTheme(prevTheme);
       setExportingPdf(false);
     }
@@ -800,9 +844,11 @@ export default function DashboardViewPage() {
                   dashboardUpdatedAt={dashboard.updatedAt}
                   darkMode={theme.mode === 'dark'}
                   filters={filters}
+                  allPanels={visiblePanels}
                   onRemove={handleRemovePanel}
                   onPanelChange={handlePanelChange}
                   onChartClick={handleChartClick}
+                  onApplyFilters={handleApplyNlFilters}
                 />
               </div>
             ))}
@@ -828,7 +874,7 @@ export default function DashboardViewPage() {
             <Button onClick={() => setAddPanelVisible(false)}>Cancel</Button>
             <Button
               type="primary"
-              onClick={() => handleAddContentPanel(addPanelTab)}
+              onClick={() => handleAddContentPanel(addPanelTab as 'markdown' | 'image' | 'title' | 'executiveSummary' | 'aiQnA' | 'aiAlerts' | 'nlFilter')}
               disabled={
                 (addPanelTab === 'image' && !newImageUrl) ||
                 (addPanelTab === 'title' && !newTitleText)
@@ -989,6 +1035,65 @@ export default function DashboardViewPage() {
                     placeholder="Optional subtitle"
                     addonBefore="Subtitle"
                   />
+                </Space>
+              ),
+            },
+            {
+              key: 'executiveSummary',
+              label: <span><BulbOutlined /> AI Summary</span>,
+              children: (
+                <Space direction="vertical" style={{ width: '100%' }}>
+                  <Text type="secondary">
+                    Add an AI-generated executive summary that analyzes data from all visualization panels
+                    on this dashboard. Requires the Prospector AI assistant to be configured.
+                  </Text>
+                  <Text type="secondary" style={{ fontSize: 12 }}>
+                    Customize the prompt below, or leave empty to use the default prompt. The AI will
+                    receive column names, row counts, and sample data from each visualization panel.
+                  </Text>
+                  <Input.TextArea
+                    value={newSummaryPrompt}
+                    onChange={(e) => setNewSummaryPrompt(e.target.value)}
+                    rows={6}
+                    placeholder="You are an executive analyst. Summarize the key insights from this dashboard data. Highlight any anomalies, trends, or areas needing attention. Use status indicators for good/warning/critical and format your response with clear sections."
+                    style={{ fontFamily: 'monospace' }}
+                  />
+                </Space>
+              ),
+            },
+            {
+              key: 'aiQnA',
+              label: <span><CommentOutlined /> AI Q&amp;A</span>,
+              children: (
+                <Space direction="vertical" style={{ width: '100%' }}>
+                  <Text type="secondary">
+                    Add a mini chat widget scoped to this dashboard&apos;s data. Users can ask questions
+                    about the data and get AI-powered answers. Requires the Prospector AI assistant.
+                  </Text>
+                </Space>
+              ),
+            },
+            {
+              key: 'aiAlerts',
+              label: <span><AlertOutlined /> AI Alerts</span>,
+              children: (
+                <Space direction="vertical" style={{ width: '100%' }}>
+                  <Text type="secondary">
+                    Add threshold-based alerts that evaluate against dashboard data. Configure rules in edit
+                    mode to trigger alerts when conditions are met. Optionally enable AI analysis of triggered alerts.
+                  </Text>
+                </Space>
+              ),
+            },
+            {
+              key: 'nlFilter',
+              label: <span><SearchOutlined /> NL Filter</span>,
+              children: (
+                <Space direction="vertical" style={{ width: '100%' }}>
+                  <Text type="secondary">
+                    Add a natural language filter panel. Users can describe filters in plain English and the
+                    AI will convert them into structured dashboard cross-filters. Requires the Prospector AI assistant.
+                  </Text>
                 </Space>
               ),
             },
