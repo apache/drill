@@ -18,7 +18,7 @@
 import { useState, useCallback, useRef } from 'react';
 import { streamChat } from '../api/ai';
 import { executeQuery } from '../api/queries';
-import { getTables, getColumns, getFunctions } from '../api/metadata';
+import { getSchemas, getTables, getColumns, getFunctions } from '../api/metadata';
 import { createVisualization } from '../api/visualizations';
 import { createDashboard } from '../api/dashboards';
 import { createSavedQuery } from '../api/savedQueries';
@@ -32,7 +32,7 @@ import type {
 } from '../types/ai';
 import type { ChartType, VisualizationConfig } from '../types';
 
-const MAX_TOOL_ROUNDS = 5;
+const DEFAULT_MAX_TOOL_ROUNDS = 15;
 
 export const TOOL_DEFINITIONS: ToolDefinition[] = [
   {
@@ -48,13 +48,21 @@ export const TOOL_DEFINITIONS: ToolDefinition[] = [
     },
   },
   {
+    name: 'list_schemas',
+    description: 'List all available schemas/data sources in Apache Drill. Call this first to discover what data is available before writing queries.',
+    parameters: {
+      type: 'object',
+      properties: {},
+    },
+  },
+  {
     name: 'get_schema_info',
-    description: 'Get tables in a schema, or columns in a table',
+    description: 'Get tables in a schema, or columns in a specific table. Drill uses hierarchical schemas (e.g. "mysql" has sub-schemas like "mysql.store"). To get tables, pass the full schema path. To get columns, pass the full schema path and just the table name (not dot-qualified).',
     parameters: {
       type: 'object',
       properties: {
-        schema: { type: 'string', description: 'Schema name' },
-        table: { type: 'string', description: 'Table name (optional)' },
+        schema: { type: 'string', description: 'Full schema path, e.g. "dfs.tmp" or "mysql.store"' },
+        table: { type: 'string', description: 'Table name without schema prefix, e.g. "order_items" (optional — omit to list tables)' },
       },
       required: ['schema'],
     },
@@ -150,7 +158,9 @@ export interface UseProspectorReturn {
 export function useProspector(
   onSqlGenerated?: (sql: string) => void,
   onVisualizationCreated?: (id: string, name: string) => void,
+  maxToolRounds?: number,
 ): UseProspectorReturn {
+  const effectiveMaxToolRounds = maxToolRounds && maxToolRounds > 0 ? maxToolRounds : DEFAULT_MAX_TOOL_ROUNDS;
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [isStreaming, setIsStreaming] = useState(false);
   const [streamingContent, setStreamingContent] = useState('');
@@ -172,7 +182,7 @@ export function useProspector(
     toolRoundsRef.current = 0;
   }, [stopStreaming]);
 
-  const executeToolCall = useCallback(async (toolCall: ToolCall): Promise<string> => {
+  const executeToolCall = useCallback(async (toolCall: ToolCall, context?: ChatContext): Promise<string> => {
     try {
       const args = JSON.parse(toolCall.arguments);
 
@@ -195,6 +205,20 @@ export function useProspector(
             rows: result.rows?.slice(0, 5),
           };
           return JSON.stringify(summary);
+        }
+
+        case 'list_schemas': {
+          // When inside a project, return only project-scoped schemas
+          if (context?.projectDatasets && context.projectDatasets.length > 0) {
+            const projectSchemas = [...new Set(
+              context.projectDatasets
+                .map((d) => d.schema)
+                .filter(Boolean) as string[]
+            )];
+            return JSON.stringify({ schemas: projectSchemas });
+          }
+          const schemas = await getSchemas();
+          return JSON.stringify({ schemas: schemas.map((s) => s.name) });
         }
 
         case 'get_schema_info': {
@@ -322,7 +346,7 @@ export function useProspector(
           // Execute tool calls
           const toolResults: ChatMessage[] = [];
           for (const tc of toolCalls) {
-            const result = await executeToolCall(tc);
+            const result = await executeToolCall(tc, context);
             toolResults.push({
               role: 'tool',
               content: result,
@@ -336,7 +360,7 @@ export function useProspector(
 
           // Check round limit
           toolRoundsRef.current += 1;
-          if (toolRoundsRef.current >= MAX_TOOL_ROUNDS) {
+          if (toolRoundsRef.current >= effectiveMaxToolRounds) {
             // Add a system-level note
             const limitMsg: ChatMessage = {
               role: 'assistant',

@@ -53,12 +53,16 @@ public class LlmConfig {
   @JsonProperty
   private boolean sendDataToAi;
 
+  @JsonProperty
+  private int maxToolRounds;
+
   public LlmConfig() {
     this.provider = "openai";
     this.maxTokens = 4096;
     this.temperature = 0.7;
     this.enabled = false;
     this.sendDataToAi = true;
+    this.maxToolRounds = 15;
   }
 
   @JsonCreator
@@ -71,7 +75,8 @@ public class LlmConfig {
       @JsonProperty("temperature") double temperature,
       @JsonProperty("enabled") boolean enabled,
       @JsonProperty("systemPrompt") String systemPrompt,
-      @JsonProperty("sendDataToAi") Boolean sendDataToAi) {
+      @JsonProperty("sendDataToAi") Boolean sendDataToAi,
+      @JsonProperty("maxToolRounds") Integer maxToolRounds) {
     this.provider = provider;
     this.apiEndpoint = apiEndpoint;
     this.apiKey = apiKey;
@@ -81,6 +86,7 @@ public class LlmConfig {
     this.enabled = enabled;
     this.systemPrompt = systemPrompt;
     this.sendDataToAi = sendDataToAi != null ? sendDataToAi : true;
+    this.maxToolRounds = maxToolRounds != null ? maxToolRounds : 15;
   }
 
   public String getProvider() {
@@ -153,5 +159,13 @@ public class LlmConfig {
 
   public void setSendDataToAi(boolean sendDataToAi) {
     this.sendDataToAi = sendDataToAi;
+  }
+
+  public int getMaxToolRounds() {
+    return maxToolRounds > 0 ? maxToolRounds : 15;
+  }
+
+  public void setMaxToolRounds(int maxToolRounds) {
+    this.maxToolRounds = maxToolRounds;
   }
 }

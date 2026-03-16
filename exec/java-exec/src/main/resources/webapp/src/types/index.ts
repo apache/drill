@@ -221,7 +221,7 @@ export interface VisualizationCreate {
 }
 
 // Dashboard types
-export type DashboardPanelType = 'visualization' | 'markdown' | 'image' | 'title';
+export type DashboardPanelType = 'visualization' | 'markdown' | 'image' | 'title' | 'executiveSummary' | 'aiQnA' | 'aiAlerts' | 'nlFilter';
 
 export interface DashboardPanel {
   id: string;
