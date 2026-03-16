@@ -15,8 +15,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import { useCallback, useMemo } from 'react';
-import { useQuery } from '@tanstack/react-query';
+import { useCallback, useMemo, useState } from 'react';
+import { useQuery, useQueries } from '@tanstack/react-query';
 import { Card, Alert, Spin, Typography, Button, Tooltip, Switch } from 'antd';
 import {
   DragOutlined,
@@ -26,8 +26,12 @@ import {
   PictureOutlined,
   FontSizeOutlined,
   BarChartOutlined,
+  BulbOutlined,
   ClockCircleOutlined,
   FilterOutlined,
+  CommentOutlined,
+  AlertOutlined,
+  SearchOutlined,
 } from '@ant-design/icons';
 import { getVisualization } from '../../api/visualizations';
 import { executeQuery } from '../../api/queries';
@@ -36,7 +40,12 @@ import ChartPreview from '../visualization/ChartPreview';
 import MarkdownPanel from './MarkdownPanel';
 import ImagePanel from './ImagePanel';
 import TitlePanel from './TitlePanel';
+import ExecutiveSummaryPanel from './ExecutiveSummaryPanel';
+import AiQnAPanel from './AiQnAPanel';
+import AiAlertsPanel from './AiAlertsPanel';
+import NlFilterPanel from './NlFilterPanel';
 import type { DashboardPanel, DashboardFilter } from '../../types';
+import type { DashboardDataContext } from '../../types/ai';
 
 const { Text } = Typography;
 
@@ -45,6 +54,10 @@ const PANEL_TYPE_ICONS: Record<string, React.ReactNode> = {
   markdown: <FileMarkdownOutlined />,
   image: <PictureOutlined />,
   title: <FontSizeOutlined />,
+  executiveSummary: <BulbOutlined />,
+  aiQnA: <CommentOutlined />,
+  aiAlerts: <AlertOutlined />,
+  nlFilter: <SearchOutlined />,
 };
 
 const PANEL_TYPE_LABELS: Record<string, string> = {
@@ -52,6 +65,10 @@ const PANEL_TYPE_LABELS: Record<string, string> = {
   markdown: 'Markdown',
   image: 'Image',
   title: 'Title',
+  executiveSummary: 'AI Summary',
+  aiQnA: 'AI Q&A',
+  aiAlerts: 'AI Alerts',
+  nlFilter: 'NL Filter',
 };
 
 interface DashboardPanelCardProps {
@@ -61,9 +78,11 @@ interface DashboardPanelCardProps {
   dashboardUpdatedAt?: number | string;
   darkMode?: boolean;
   filters?: DashboardFilter[];
+  allPanels?: DashboardPanel[];
   onRemove?: (panelId: string) => void;
   onPanelChange?: (panel: DashboardPanel) => void;
   onChartClick?: (column: string, value: string, vizId: string, isTemporal?: boolean, isNumeric?: boolean) => void;
+  onApplyFilters?: (filters: DashboardFilter[]) => void;
 }
 
 export default function DashboardPanelCard({
@@ -73,12 +92,20 @@ export default function DashboardPanelCard({
   dashboardUpdatedAt,
   darkMode,
   filters,
+  allPanels,
   onRemove,
   onPanelChange,
   onChartClick,
+  onApplyFilters,
 }: DashboardPanelCardProps) {
   const panelType = panel.type || 'visualization';
   const isVisualization = panelType === 'visualization';
+  const isExecutiveSummary = panelType === 'executiveSummary';
+  const isAiQnA = panelType === 'aiQnA';
+  const isAiAlerts = panelType === 'aiAlerts';
+  const isNlFilter = panelType === 'nlFilter';
+  const needsDashboardData = isExecutiveSummary || isAiQnA || isAiAlerts || isNlFilter;
+  const [summaryRefreshKey, setSummaryRefreshKey] = useState(0);
 
   // Fetch the visualization metadata (only for visualization panels)
   const {
@@ -141,6 +168,102 @@ export default function DashboardPanelCard({
     staleTime: 30000,
     refetchInterval: refreshInterval && refreshInterval > 0 ? refreshInterval * 1000 : false,
   });
+
+  // For AI panels: collect data from sibling visualization panels
+  const siblingVizPanels = useMemo(() => {
+    if (!needsDashboardData || !allPanels) {
+      return [];
+    }
+    let vizPanels = allPanels.filter(
+      (p) => p.type === 'visualization' && p.visualizationId && p.id !== panel.id,
+    );
+    // A3: Panel scope filtering for executive summary
+    if (isExecutiveSummary && panel.config?.selectedPanelIds) {
+      const selectedIds = panel.config.selectedPanelIds.split(',').filter(Boolean);
+      if (selectedIds.length > 0) {
+        vizPanels = vizPanels.filter((p) => selectedIds.includes(p.visualizationId || ''));
+      }
+    }
+    return vizPanels;
+  }, [needsDashboardData, allPanels, panel.id, panel.config?.selectedPanelIds, isExecutiveSummary]);
+
+  // Fetch all sibling visualization metadata
+  const siblingVizQueries = useQueries({
+    queries: siblingVizPanels.map((p) => ({
+      queryKey: ['visualization', p.visualizationId],
+      queryFn: () => getVisualization(p.visualizationId!),
+      staleTime: 60000,
+      enabled: needsDashboardData,
+    })),
+  });
+
+  // Fetch all sibling visualization data
+  const siblingDataQueries = useQueries({
+    queries: siblingVizPanels.map((p, i) => {
+      const viz = siblingVizQueries[i]?.data;
+      let sql: string | undefined;
+      if (viz?.sql) {
+        const filtered =
+          filters && filters.length > 0
+            ? applyDashboardFilters(viz.sql, filters.filter((f) => f.sourceVizId !== p.visualizationId))
+            : viz.sql;
+        sql = computeEffectiveQuery(filtered, {
+          xAxis: viz.config?.xAxis,
+          metrics: viz.config?.metrics,
+          dimensions: viz.config?.dimensions,
+          chartOptions: viz.config?.chartOptions,
+        });
+      }
+      return {
+        queryKey: ['dashboard-panel-data', p.visualizationId, sql],
+        queryFn: () =>
+          executeQuery({
+            query: sql!,
+            queryType: 'SQL',
+            defaultSchema: viz?.defaultSchema,
+          }),
+        staleTime: 30000,
+        enabled: needsDashboardData && !!sql,
+        refetchInterval: refreshInterval && refreshInterval > 0 ? refreshInterval * 1000 : false,
+      };
+    }),
+  });
+
+  // Build dashboard data context for AI panels
+  const dashboardData: DashboardDataContext[] = useMemo(() => {
+    if (!needsDashboardData) {
+      return [];
+    }
+    const result: DashboardDataContext[] = [];
+    for (let i = 0; i < siblingVizPanels.length; i++) {
+      const viz = siblingVizQueries[i]?.data;
+      const queryData = siblingDataQueries[i]?.data;
+      if (viz && queryData) {
+        const columns = queryData.columns || [];
+        const columnTypes = queryData.metadata || [];
+        const rows = queryData.rows || [];
+        result.push({
+          panelName: viz.name,
+          sql: viz.sql || '',
+          columns,
+          columnTypes,
+          rowCount: rows.length,
+          sampleRows: rows.slice(0, 5),
+        });
+      }
+    }
+    return result;
+  }, [needsDashboardData, siblingVizPanels, siblingVizQueries, siblingDataQueries]);
+
+  // Build allPanelNames for executive summary scope selector (A3)
+  const allPanelNames = useMemo(() => {
+    if (!isExecutiveSummary) {
+      return undefined;
+    }
+    return siblingVizQueries
+      .map((q, i) => q.data ? { id: siblingVizPanels[i]?.visualizationId || '', name: q.data.name } : null)
+      .filter((p): p is { id: string; name: string } => p !== null);
+  }, [isExecutiveSummary, siblingVizQueries, siblingVizPanels]);
 
   const handleRemove = useCallback(() => {
     if (onRemove) {
@@ -214,6 +337,51 @@ export default function DashboardPanelCard({
             editMode={editMode}
             onContentChange={handleContentChange}
             onConfigChange={handleConfigChange}
+          />
+        );
+      case 'executiveSummary':
+        return (
+          <ExecutiveSummaryPanel
+            content={panel.content || ''}
+            config={panel.config}
+            editMode={editMode}
+            darkMode={darkMode}
+            refreshKey={summaryRefreshKey}
+            dashboardData={dashboardData}
+            allPanelNames={allPanelNames}
+            onContentChange={handleContentChange}
+            onConfigChange={handleConfigChange}
+          />
+        );
+      case 'aiQnA':
+        return (
+          <AiQnAPanel
+            config={panel.config}
+            editMode={editMode}
+            darkMode={darkMode}
+            dashboardData={dashboardData}
+            onConfigChange={handleConfigChange}
+          />
+        );
+      case 'aiAlerts':
+        return (
+          <AiAlertsPanel
+            config={panel.config}
+            editMode={editMode}
+            darkMode={darkMode}
+            dashboardData={dashboardData}
+            onConfigChange={handleConfigChange}
+          />
+        );
+      case 'nlFilter':
+        return (
+          <NlFilterPanel
+            config={panel.config}
+            editMode={editMode}
+            darkMode={darkMode}
+            dashboardData={dashboardData}
+            onConfigChange={handleConfigChange}
+            onApplyFilters={onApplyFilters}
           />
         );
       case 'visualization':
@@ -303,6 +471,16 @@ export default function DashboardPanelCard({
                 icon={<ReloadOutlined />}
                 onClick={() => refetch()}
                 disabled={vizLoading || queryLoading}
+              />
+            </Tooltip>
+          )}
+          {isExecutiveSummary && !editMode && (
+            <Tooltip title="Regenerate summary">
+              <Button
+                type="text"
+                size="small"
+                icon={<ReloadOutlined />}
+                onClick={() => setSummaryRefreshKey((k) => k + 1)}
               />
             </Tooltip>
           )}

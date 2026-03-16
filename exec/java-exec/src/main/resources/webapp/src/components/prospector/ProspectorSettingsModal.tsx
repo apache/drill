@@ -60,6 +60,7 @@ export default function ProspectorSettingsModal({ open, onClose }: ProspectorSet
         enabled: cfg.enabled || false,
         systemPrompt: cfg.systemPrompt || '',
         sendDataToAi: cfg.sendDataToAi ?? true,
+        maxToolRounds: cfg.maxToolRounds || 15,
       });
     } catch {
       // Config endpoint may 403 if not admin
@@ -101,6 +102,7 @@ export default function ProspectorSettingsModal({ open, onClose }: ProspectorSet
         enabled: values.enabled,
         systemPrompt: values.systemPrompt || undefined,
         sendDataToAi: values.sendDataToAi,
+        maxToolRounds: values.maxToolRounds,
       });
       message.success('AI configuration saved');
       onClose();
@@ -171,6 +173,7 @@ export default function ProspectorSettingsModal({ open, onClose }: ProspectorSet
           temperature: 0.7,
           enabled: false,
           sendDataToAi: true,
+          maxToolRounds: 15,
         }}
       >
         <Form.Item name="enabled" label="Enable Prospector" valuePropName="checked">
@@ -231,6 +234,14 @@ export default function ProspectorSettingsModal({ open, onClose }: ProspectorSet
           help="When enabled, a sample of query result rows is included when optimizing queries, helping the AI detect data type mismatches."
         >
           <Switch />
+        </Form.Item>
+
+        <Form.Item
+          name="maxToolRounds"
+          label="Max Tool Rounds"
+          help="Maximum number of tool call rounds per message. Higher values let the AI perform more complex multi-step tasks (e.g. exploring schemas then writing queries)."
+        >
+          <InputNumber min={1} max={50} style={{ width: '100%' }} />
         </Form.Item>
       </Form>
     </Modal>
