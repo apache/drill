@@ -60,6 +60,40 @@ export interface ChatContext {
   logFileName?: string;
   /** Log lines for AI analysis context */
   logLines?: string[];
+  /** Whether this is a dashboard executive summary request */
+  dashboardSummaryMode?: boolean;
+  /** Data from dashboard visualization panels for executive summary */
+  dashboardData?: DashboardDataContext[];
+  /** Project datasets — when set, restricts schema exploration to these datasets only */
+  projectDatasets?: ProjectDatasetRef[];
+  /** Whether this is a dashboard Q&A chat mode */
+  dashboardQnAMode?: boolean;
+  /** Whether this is a natural language filter mode */
+  dashboardNlFilterMode?: boolean;
+  /** Whether this is a dashboard alert analysis mode */
+  dashboardAlertMode?: boolean;
+  /** Tone/audience for dashboard summary (Executive, Technical, Casual) */
+  dashboardTone?: string;
+  /** Whether to emphasize anomaly detection in summary */
+  dashboardAnomalyFocus?: boolean;
+  /** Previous summary for historical comparison */
+  previousSummary?: string;
+}
+
+export interface ProjectDatasetRef {
+  type: 'table' | 'saved_query' | 'plugin' | 'schema';
+  schema?: string;
+  table?: string;
+  label: string;
+}
+
+export interface DashboardDataContext {
+  panelName: string;
+  sql: string;
+  columns: string[];
+  columnTypes: string[];
+  rowCount: number;
+  sampleRows: Record<string, unknown>[];
 }
 
 export interface ResultSummary {
@@ -89,6 +123,7 @@ export interface AiConfig {
   enabled: boolean;
   systemPrompt: string;
   sendDataToAi: boolean;
+  maxToolRounds: number;
 }
 
 export interface AiConfigUpdate {
@@ -101,6 +136,7 @@ export interface AiConfigUpdate {
   enabled?: boolean;
   systemPrompt?: string;
   sendDataToAi?: boolean;
+  maxToolRounds?: number;
 }
 
 export interface AiProvider {
