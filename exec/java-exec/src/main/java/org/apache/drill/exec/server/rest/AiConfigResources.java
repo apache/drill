@@ -99,6 +99,9 @@ public class AiConfigResources {
     @JsonProperty
     public boolean sendDataToAi;
 
+    @JsonProperty
+    public int maxToolRounds;
+
     public ConfigResponse() {
     }
 
@@ -112,6 +115,7 @@ public class AiConfigResources {
       this.enabled = config.isEnabled();
       this.systemPrompt = config.getSystemPrompt();
       this.sendDataToAi = config.isSendDataToAi();
+      this.maxToolRounds = config.getMaxToolRounds();
     }
   }
 
@@ -143,6 +147,9 @@ public class AiConfigResources {
     @JsonProperty
     public Boolean sendDataToAi;
 
+    @JsonProperty
+    public Integer maxToolRounds;
+
     public UpdateConfigRequest() {
     }
 
@@ -156,7 +163,8 @@ public class AiConfigResources {
         @JsonProperty("temperature") Double temperature,
         @JsonProperty("enabled") Boolean enabled,
         @JsonProperty("systemPrompt") String systemPrompt,
-        @JsonProperty("sendDataToAi") Boolean sendDataToAi) {
+        @JsonProperty("sendDataToAi") Boolean sendDataToAi,
+        @JsonProperty("maxToolRounds") Integer maxToolRounds) {
       this.provider = provider;
       this.apiEndpoint = apiEndpoint;
       this.apiKey = apiKey;
@@ -166,6 +174,7 @@ public class AiConfigResources {
       this.enabled = enabled;
       this.systemPrompt = systemPrompt;
       this.sendDataToAi = sendDataToAi;
+      this.maxToolRounds = maxToolRounds;
     }
   }
 
@@ -266,6 +275,9 @@ public class AiConfigResources {
       }
       if (request.sendDataToAi != null) {
         existing.setSendDataToAi(request.sendDataToAi);
+      }
+      if (request.maxToolRounds != null) {
+        existing.setMaxToolRounds(request.maxToolRounds);
       }
 
       store.put(CONFIG_KEY, existing);

@@ -566,30 +566,44 @@ public class MetadataResources {
       @Parameter(description = "Table name") @PathParam("table") String table) {
     logger.debug("Fetching columns for table: {}.{}", schema, table);
 
+    // Handle dot-qualified table names like "store.order_items":
+    // split into schema suffix and actual table name so that
+    // TABLE_SCHEMA = 'mysql.store' AND TABLE_NAME = 'order_items'
+    String effectiveSchema = schema;
+    String effectiveTable = table;
+    int lastDot = table.lastIndexOf('.');
+    if (lastDot > 0) {
+      effectiveSchema = schema + "." + table.substring(0, lastDot);
+      effectiveTable = table.substring(lastDot + 1);
+    }
+
+    // Try the resolved schema.table first; if no results, fall back
+    // to the original values in case the dot is part of the table name
+    // (e.g. file-based plugins with filenames containing dots).
     String sql = String.format(
         "SELECT COLUMN_NAME, DATA_TYPE, IS_NULLABLE " +
         "FROM INFORMATION_SCHEMA.COLUMNS " +
         "WHERE TABLE_SCHEMA = '%s' AND TABLE_NAME = '%s' " +
         "ORDER BY ORDINAL_POSITION",
-        escapeQuotes(schema), escapeQuotes(table));
+        escapeQuotes(effectiveSchema), escapeQuotes(effectiveTable));
 
     List<ColumnInfo> columns = new ArrayList<>();
 
     try {
       QueryResult result = executeQuery(sql);
-      for (Map<String, String> row : result.rows) {
-        String columnName = row.get("COLUMN_NAME");
-        String dataType = row.get("DATA_TYPE");
-        String isNullable = row.get("IS_NULLABLE");
-        if (columnName != null) {
-          columns.add(new ColumnInfo(
-              columnName,
-              dataType != null ? dataType : "ANY",
-              "YES".equalsIgnoreCase(isNullable),
-              schema,
-              table
-          ));
-        }
+      populateColumns(result, columns, schema, table);
+
+      // Fallback: if dot-splitting produced no results and we did split,
+      // retry with the original unsplit values
+      if (columns.isEmpty() && lastDot > 0) {
+        String fallbackSql = String.format(
+            "SELECT COLUMN_NAME, DATA_TYPE, IS_NULLABLE " +
+            "FROM INFORMATION_SCHEMA.COLUMNS " +
+            "WHERE TABLE_SCHEMA = '%s' AND TABLE_NAME = '%s' " +
+            "ORDER BY ORDINAL_POSITION",
+            escapeQuotes(schema), escapeQuotes(table));
+        QueryResult fallbackResult = executeQuery(fallbackSql);
+        populateColumns(fallbackResult, columns, schema, table);
       }
     } catch (Exception e) {
       logger.error("Error fetching columns for table: {}.{}", schema, table, e);
@@ -597,6 +611,24 @@ public class MetadataResources {
     }
 
     return new ColumnsResponse(columns);
+  }
+
+  private void populateColumns(QueryResult result, List<ColumnInfo> columns,
+      String schema, String table) {
+    for (Map<String, String> row : result.rows) {
+      String columnName = row.get("COLUMN_NAME");
+      String dataType = row.get("DATA_TYPE");
+      String isNullable = row.get("IS_NULLABLE");
+      if (columnName != null) {
+        columns.add(new ColumnInfo(
+            columnName,
+            dataType != null ? dataType : "ANY",
+            "YES".equalsIgnoreCase(isNullable),
+            schema,
+            table
+        ));
+      }
+    }
   }
 
   @GET

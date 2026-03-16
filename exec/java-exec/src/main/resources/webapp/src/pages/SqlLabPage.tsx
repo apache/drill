@@ -204,6 +204,7 @@ export default function SqlLabPage({ datasetFilter, headerContent, projectId }: 
   });
   const [prospectorAvailable, setProspectorAvailable] = useState(false);
   const [sendDataToAi, setSendDataToAi] = useState(true);
+  const [maxToolRounds, setMaxToolRounds] = useState(15);
 
   // Fetch schemas for the schema selector
   const { data: schemas } = useSchemas();
@@ -247,7 +248,7 @@ export default function SqlLabPage({ datasetFilter, headerContent, projectId }: 
       duration: 0,
       key: `viz-created-${id}`,
     });
-  }, [navigate]));
+  }, [navigate]), maxToolRounds);
 
   // Real-time SQL validation markers in the editor
   useSqlValidation(sql, editorInstanceRef, monacoInstanceRef);
@@ -298,7 +299,10 @@ export default function SqlLabPage({ datasetFilter, headerContent, projectId }: 
       .then((status) => setProspectorAvailable(status.enabled))
       .catch(() => setProspectorAvailable(false));
     getAiConfig()
-      .then((cfg) => setSendDataToAi(cfg.sendDataToAi ?? true))
+      .then((cfg) => {
+        setSendDataToAi(cfg.sendDataToAi ?? true);
+        setMaxToolRounds(cfg.maxToolRounds || 15);
+      })
       .catch(() => {});
   }, []);
 
@@ -312,16 +316,29 @@ export default function SqlLabPage({ datasetFilter, headerContent, projectId }: 
   // Build AI context from current state
   const isNotebookTab = resultsPanelTab === 'notebook';
   const aiContext: ChatContext = useMemo(() => {
+    // When inside a project, scope schemas to project datasets only
+    const projectSchemas = datasetFilter?.datasets?.length
+      ? [...new Set(datasetFilter.datasets.map((d) => d.schema).filter(Boolean) as string[])]
+      : undefined;
+
     const base: ChatContext = {
       currentSql: sql || undefined,
       currentSchema: activeTab?.defaultSchema || undefined,
-      availableSchemas: schemas?.map((s) => s.name),
+      availableSchemas: projectSchemas || schemas?.map((s) => s.name),
       error: error?.message || undefined,
       resultSummary: results ? {
         rowCount: results.rows?.length ?? 0,
         columns: results.columns || [],
         columnTypes: results.metadata || [],
       } : undefined,
+      projectDatasets: datasetFilter?.datasets?.length
+        ? datasetFilter.datasets.map((d) => ({
+            type: d.type,
+            schema: d.schema,
+            table: d.table,
+            label: d.label,
+          }))
+        : undefined,
     };
 
     if (isNotebookTab) {
@@ -344,7 +361,7 @@ export default function SqlLabPage({ datasetFilter, headerContent, projectId }: 
     }
 
     return base;
-  }, [sql, activeTab?.defaultSchema, schemas, error, results, isNotebookTab, notebookDfName, notebookHandle]);
+  }, [sql, activeTab?.defaultSchema, schemas, error, results, isNotebookTab, notebookDfName, notebookHandle, datasetFilter]);
 
   // Prospector sidebar toggle with localStorage persistence
   const toggleProspector = useCallback(() => {
