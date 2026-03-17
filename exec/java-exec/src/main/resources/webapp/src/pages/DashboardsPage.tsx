@@ -64,7 +64,13 @@ import type { Dashboard } from '../types';
 const { Title, Text } = Typography;
 const { TextArea } = Input;
 
-export default function DashboardsPage() {
+interface DashboardsPageProps {
+  filterIds?: string[];
+  projectId?: string;
+  onAdd?: () => void;
+}
+
+export default function DashboardsPage({ filterIds, projectId, onAdd }: DashboardsPageProps = {}) {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const [searchText, setSearchText] = useState('');
@@ -103,7 +109,8 @@ export default function DashboardsPage() {
       queryClient.invalidateQueries({ queryKey: ['dashboards'] });
       setCreateModalOpen(false);
       createForm.resetFields();
-      navigate(`/dashboards/${newDashboard.id}`);
+      const navState = projectId ? { state: { from: `/projects/${projectId}/dashboards` } } : undefined;
+      navigate(`/dashboards/${newDashboard.id}`, navState);
     },
     onError: (err: Error) => {
       message.error(`Failed to create dashboard: ${err.message}`);
@@ -143,6 +150,10 @@ export default function DashboardsPage() {
       return [];
     }
     let result = dashboards;
+    if (filterIds) {
+      const idSet = new Set(filterIds);
+      result = result.filter((d) => idSet.has(d.id));
+    }
     if (favoritesOnly && favorites) {
       result = result.filter((d) => favorites.includes(d.id));
     }
@@ -155,7 +166,7 @@ export default function DashboardsPage() {
       );
     }
     return result;
-  }, [dashboards, searchText, favoritesOnly, favorites]);
+  }, [dashboards, searchText, favoritesOnly, favorites, filterIds]);
 
   // Handle create
   const handleCreate = async () => {
@@ -237,13 +248,20 @@ export default function DashboardsPage() {
             <Title level={3} style={{ margin: 0 }}>
               Dashboards
             </Title>
-            <Button
-              type="primary"
-              icon={<PlusOutlined />}
-              onClick={() => setCreateModalOpen(true)}
-            >
-              New Dashboard
-            </Button>
+            <Space>
+              {onAdd && (
+                <Button onClick={onAdd}>
+                  Add Existing
+                </Button>
+              )}
+              <Button
+                type="primary"
+                icon={<PlusOutlined />}
+                onClick={() => setCreateModalOpen(true)}
+              >
+                New Dashboard
+              </Button>
+            </Space>
           </div>
 
           {/* Search and Favorites Filter */}
@@ -298,7 +316,7 @@ export default function DashboardsPage() {
                   <Card
                     hoverable
                     size="small"
-                    onClick={() => navigate(`/dashboards/${dashboard.id}`)}
+                    onClick={() => navigate(`/dashboards/${dashboard.id}`, projectId ? { state: { from: `/projects/${projectId}/dashboards` } } : undefined)}
                     cover={
                       <div
                         style={{

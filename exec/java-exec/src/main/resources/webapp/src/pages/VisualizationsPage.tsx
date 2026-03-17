@@ -220,7 +220,13 @@ function MiniVizPreview({ viz }: { viz: Visualization }) {
   );
 }
 
-export default function VisualizationsPage() {
+interface VisualizationsPageProps {
+  filterIds?: string[];
+  projectId?: string;
+  onAdd?: () => void;
+}
+
+export default function VisualizationsPage({ filterIds, projectId, onAdd }: VisualizationsPageProps = {}) {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const [searchText, setSearchText] = useState('');
@@ -250,22 +256,27 @@ export default function VisualizationsPage() {
     },
   });
 
-  // Filter visualizations based on search text
+  // Filter visualizations based on filterIds (project scope) and search text
   const filteredVisualizations = useMemo(() => {
     if (!visualizations) {
       return [];
     }
-    if (!searchText) {
-      return visualizations;
+    let result = visualizations;
+    if (filterIds) {
+      const idSet = new Set(filterIds);
+      result = result.filter((v) => idSet.has(v.id));
     }
-    const lowerSearch = searchText.toLowerCase();
-    return visualizations.filter(
-      (v) =>
-        v.name.toLowerCase().includes(lowerSearch) ||
-        v.chartType.toLowerCase().includes(lowerSearch) ||
-        (v.description && v.description.toLowerCase().includes(lowerSearch))
-    );
-  }, [visualizations, searchText]);
+    if (searchText) {
+      const lowerSearch = searchText.toLowerCase();
+      result = result.filter(
+        (v) =>
+          v.name.toLowerCase().includes(lowerSearch) ||
+          v.chartType.toLowerCase().includes(lowerSearch) ||
+          (v.description && v.description.toLowerCase().includes(lowerSearch))
+      );
+    }
+    return result;
+  }, [visualizations, searchText, filterIds]);
 
   // Handle view - execute SQL and render chart
   const handleView = useCallback(async (viz: Visualization) => {
@@ -330,9 +341,16 @@ export default function VisualizationsPage() {
             <Title level={3} style={{ margin: 0 }}>
               Visualizations
             </Title>
-            <Button type="primary" onClick={() => navigate('/sqllab')}>
-              Create from Query
-            </Button>
+            <Space>
+              {onAdd && (
+                <Button onClick={onAdd}>
+                  Add Existing
+                </Button>
+              )}
+              <Button type="primary" onClick={() => navigate(projectId ? `/projects/${projectId}/query` : '/sqllab')}>
+                Create from Query
+              </Button>
+            </Space>
           </div>
 
           {/* Search */}
@@ -477,7 +495,7 @@ export default function VisualizationsPage() {
                 ghost
                 icon={<CodeOutlined />}
                 onClick={() => {
-                  navigate('/query', { state: { initialSql: viewingViz.sql } });
+                  navigate(projectId ? `/projects/${projectId}/query` : '/query', { state: { initialSql: viewingViz.sql } });
                 }}
               >
                 Edit in SQL Lab
