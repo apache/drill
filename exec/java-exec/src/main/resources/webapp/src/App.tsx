@@ -24,6 +24,11 @@ import DataSourcesPage from './pages/DataSourcesPage';
 import DataSourceEditPage from './pages/DataSourceEditPage';
 import SqlLabPage from './pages/SqlLabPage';
 import ProjectQueryPage from './pages/ProjectQueryPage';
+import ProjectSavedQueriesPage from './pages/ProjectSavedQueriesPage';
+import ProjectVisualizationsPage from './pages/ProjectVisualizationsPage';
+import ProjectDashboardsPage from './pages/ProjectDashboardsPage';
+import ProjectDataSourcesPage from './pages/ProjectDataSourcesPage';
+import ProjectWikiPage from './pages/ProjectWikiPage';
 import SavedQueriesPage from './pages/SavedQueriesPage';
 import ProfilesPage from './pages/ProfilesPage';
 import ProfileDetailPage from './pages/ProfileDetailPage';
@@ -33,6 +38,7 @@ import DashboardViewPage from './pages/DashboardViewPage';
 import MetricsPage from './pages/MetricsPage';
 import OptionsPage from './pages/OptionsPage';
 import LogsPage from './pages/LogsPage';
+import { ProjectLayout } from './components/project';
 
 const { Content } = Layout;
 
@@ -44,8 +50,17 @@ function App() {
         <Routes>
           <Route path="/" element={<Navigate to="/projects" replace />} />
           <Route path="/projects" element={<ProjectsPage />} />
-          <Route path="/projects/:id/query" element={<ProjectQueryPage />} />
-          <Route path="/projects/:id" element={<ProjectDetailPage />} />
+          <Route path="/projects/:id" element={<ProjectLayout />}>
+            <Route index element={<Navigate to="query" replace />} />
+            <Route path="query" element={<ProjectQueryPage />} />
+            <Route path="queries" element={<ProjectSavedQueriesPage />} />
+            <Route path="visualizations" element={<ProjectVisualizationsPage />} />
+            <Route path="dashboards" element={<ProjectDashboardsPage />} />
+            <Route path="datasources" element={<ProjectDataSourcesPage />} />
+            <Route path="wiki" element={<ProjectWikiPage />} />
+            <Route path="wiki/:pageId" element={<ProjectWikiPage />} />
+            <Route path="settings" element={<ProjectDetailPage />} />
+          </Route>
           <Route path="/datasources" element={<DataSourcesPage />} />
           <Route path="/datasources/:name" element={<DataSourceEditPage />} />
           <Route path="/query" element={<SqlLabPage />} />

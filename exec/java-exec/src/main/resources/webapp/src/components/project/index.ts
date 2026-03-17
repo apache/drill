@@ -20,3 +20,5 @@ export { default as ShareModal } from './ShareModal';
 export { default as WikiEditor } from './WikiEditor';
 export { default as DatasetRefModal } from './DatasetRefModal';
 export { default as DatasetPickerModal } from './DatasetPickerModal';
+export { default as ProjectLayout } from './ProjectLayout';
+export { default as ProjectNavBar } from './ProjectNavBar';

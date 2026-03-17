@@ -52,7 +52,13 @@ import type { ColumnsType } from 'antd/es/table';
 const { Title, Text, Paragraph } = Typography;
 const { TextArea } = Input;
 
-export default function SavedQueriesPage() {
+interface SavedQueriesPageProps {
+  filterIds?: string[];
+  projectId?: string;
+  onAdd?: () => void;
+}
+
+export default function SavedQueriesPage({ filterIds, projectId, onAdd }: SavedQueriesPageProps = {}) {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const [searchText, setSearchText] = useState('');
@@ -95,27 +101,32 @@ export default function SavedQueriesPage() {
     },
   });
 
-  // Filter queries based on search text
+  // Filter queries based on filterIds (project scope) and search text
   const filteredQueries = useMemo(() => {
     if (!queries) {
       return [];
     }
-    if (!searchText) {
-      return queries;
+    let result = queries;
+    if (filterIds) {
+      const idSet = new Set(filterIds);
+      result = result.filter((q) => idSet.has(q.id));
     }
-    const lowerSearch = searchText.toLowerCase();
-    return queries.filter(
-      (q) =>
-        q.name.toLowerCase().includes(lowerSearch) ||
-        q.sql.toLowerCase().includes(lowerSearch) ||
-        (q.description && q.description.toLowerCase().includes(lowerSearch))
-    );
-  }, [queries, searchText]);
+    if (searchText) {
+      const lowerSearch = searchText.toLowerCase();
+      result = result.filter(
+        (q) =>
+          q.name.toLowerCase().includes(lowerSearch) ||
+          q.sql.toLowerCase().includes(lowerSearch) ||
+          (q.description && q.description.toLowerCase().includes(lowerSearch))
+      );
+    }
+    return result;
+  }, [queries, searchText, filterIds]);
 
   // Handle loading query into SQL Lab
   const handleLoadQuery = (query: SavedQuery) => {
-    // Navigate to SQL Lab - the query will be loaded into the active tab via state
-    navigate('/', { state: { loadQuery: query } });
+    const target = projectId ? `/projects/${projectId}/query` : '/';
+    navigate(target, { state: { loadQuery: query } });
   };
 
   // Handle edit
@@ -296,9 +307,16 @@ export default function SavedQueriesPage() {
             <Title level={3} style={{ margin: 0 }}>
               Saved Queries
             </Title>
-            <Button type="primary" onClick={() => navigate('/sqllab')}>
-              New Query
-            </Button>
+            <Space>
+              {onAdd && (
+                <Button onClick={onAdd}>
+                  Add Existing
+                </Button>
+              )}
+              <Button type="primary" onClick={() => navigate(projectId ? `/projects/${projectId}/query` : '/sqllab')}>
+                New Query
+              </Button>
+            </Space>
           </div>
 
           {/* Search */}
