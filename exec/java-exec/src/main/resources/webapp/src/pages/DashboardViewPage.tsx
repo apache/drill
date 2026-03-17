@@ -16,7 +16,7 @@
  * limitations under the License.
  */
 import { useState, useCallback, useMemo, useEffect, useRef } from 'react';
-import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
+import { useParams, useNavigate, useSearchParams, useLocation } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Responsive, WidthProvider } from 'react-grid-layout';
 import {
@@ -96,8 +96,12 @@ type AddPanelTab = 'visualization' | 'markdown' | 'image' | 'title' | 'executive
 export default function DashboardViewPage() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
+  const location = useLocation();
   const queryClient = useQueryClient();
   const gridRef = useRef<HTMLDivElement>(null);
+
+  // If navigated from a project context, go back there; otherwise /dashboards
+  const backPath = (location.state as { from?: string })?.from || '/dashboards';
 
   const { isDark } = useTheme();
   const globalDefaultTheme = isDark ? DARK_THEME : DEFAULT_THEME;
@@ -621,7 +625,7 @@ export default function DashboardViewPage() {
           type="error"
           showIcon
           action={
-            <Button onClick={() => navigate('/dashboards')}>Back to Dashboards</Button>
+            <Button onClick={() => navigate(backPath)}>Back to Dashboards</Button>
           }
         />
       </div>
@@ -686,7 +690,7 @@ export default function DashboardViewPage() {
       {/* Toolbar */}
       <div className="dashboard-toolbar">
         <Space>
-          <Button icon={<ArrowLeftOutlined />} onClick={() => navigate('/dashboards')}>
+          <Button icon={<ArrowLeftOutlined />} onClick={() => navigate(backPath)}>
             Back
           </Button>
           <div>
