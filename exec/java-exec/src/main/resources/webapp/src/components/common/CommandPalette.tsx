@@ -18,6 +18,7 @@
 import { useState, useEffect, useMemo, useRef } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { Modal, Input, List, Typography, Space } from 'antd';
+import type { InputRef } from 'antd';
 import { SearchOutlined, FolderOutlined, CheckOutlined } from '@ant-design/icons';
 import { useQuery } from '@tanstack/react-query';
 import { getProjects } from '../../api/projects';
@@ -29,7 +30,7 @@ export default function CommandPalette() {
   const [search, setSearch] = useState('');
   const navigate = useNavigate();
   const location = useLocation();
-  const inputRef = useRef<any>(null);
+  const inputRef = useRef<InputRef>(null);
 
   // Extract current project ID from URL
   const currentProjectId = location.pathname.match(/\/projects\/([^/]+)/)?.[1];
