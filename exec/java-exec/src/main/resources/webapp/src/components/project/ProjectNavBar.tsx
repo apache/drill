@@ -30,10 +30,12 @@ import {
   DownOutlined,
   FolderOutlined,
   CheckOutlined,
+  ClockCircleOutlined,
 } from '@ant-design/icons';
 import { useQuery } from '@tanstack/react-query';
 import { getProjects } from '../../api/projects';
 import { useProjectContext } from '../../contexts/ProjectContext';
+import { useRecentItems } from '../../hooks/useRecentItems';
 
 const { Text } = Typography;
 
@@ -50,6 +52,8 @@ export default function ProjectNavBar() {
   const { project, projectId } = useProjectContext();
   const location = useLocation();
   const navigate = useNavigate();
+
+  const { recentItems } = useRecentItems(projectId);
 
   const { data: allProjects } = useQuery({
     queryKey: ['projects'],
@@ -124,8 +128,43 @@ export default function ProjectNavBar() {
         }}
       />
 
-      {/* Right: settings + exit */}
+      {/* Right: recent items + settings + exit */}
       <Space size={4} style={{ flexShrink: 0 }}>
+        {recentItems.length > 0 && (
+          <Dropdown
+            menu={{
+              items: recentItems.map((item) => ({
+                key: `${item.type}:${item.id}`,
+                label: (
+                  <Space>
+                    {item.type === 'query' ? <CodeOutlined /> :
+                     item.type === 'visualization' ? <BarChartOutlined /> :
+                     item.type === 'dashboard' ? <DashboardOutlined /> :
+                     <BookOutlined />}
+                    <span>{item.name}</span>
+                  </Space>
+                ),
+              })),
+              onClick: ({ key }) => {
+                const [type, id] = key.split(':');
+                if (type === 'query') {
+                  navigate(`/projects/${projectId}/query`);
+                } else if (type === 'visualization') {
+                  navigate(`/projects/${projectId}/visualizations`);
+                } else if (type === 'dashboard') {
+                  navigate(`/projects/${projectId}/dashboards`);
+                } else if (type === 'wiki') {
+                  navigate(`/projects/${projectId}/wiki/${id}`);
+                }
+              },
+            }}
+            trigger={['click']}
+          >
+            <Tooltip title="Recent items">
+              <Button type="text" size="small" icon={<ClockCircleOutlined />} />
+            </Tooltip>
+          </Dropdown>
+        )}
         <Tooltip title="Project settings">
           <Button
             type="text"

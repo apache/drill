@@ -22,3 +22,5 @@ export { default as DatasetRefModal } from './DatasetRefModal';
 export { default as DatasetPickerModal } from './DatasetPickerModal';
 export { default as ProjectLayout } from './ProjectLayout';
 export { default as ProjectNavBar } from './ProjectNavBar';
+export { default as ProjectActivityFeed } from './ProjectActivityFeed';
+export { default as ProjectLineage } from './ProjectLineage';

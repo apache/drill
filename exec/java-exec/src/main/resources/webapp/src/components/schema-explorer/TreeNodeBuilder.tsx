@@ -15,8 +15,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import { Tooltip, Typography, Tag } from 'antd';
-import { FolderOutlined, TableOutlined, WarningOutlined } from '@ant-design/icons';
+import { Tooltip, Typography, Tag, Input } from 'antd';
+import { FolderOutlined, TableOutlined, WarningOutlined, InfoCircleOutlined, SearchOutlined } from '@ant-design/icons';
 import { DatabaseOutlined } from '@ant-design/icons';
 import type { DataNode } from 'antd/es/tree';
 import type { PluginInfo, SchemaInfo, TableInfo, ColumnInfo, FileInfo, NestedFieldInfo, SubTableInfo } from '../../types';
@@ -232,19 +232,79 @@ export function buildTableNodes(
   tables: TableInfo[],
   columnsCache: Record<string, ColumnInfo[]>,
   nestedCache: Record<string, NestedFieldInfo[]>,
+  columnFilter?: Record<string, string>,
+  onColumnFilterChange?: (key: string, value: string) => void,
 ): DataNode[] {
   return tables.map((table) => {
     const tableKey = `table:${schemaName}:${table.name}`;
-    const columns = columnsCache[tableKey] || [];
-    const columnNodes = columns.length > 0
-      ? buildColumnNodes(columns, schemaName, table.name, nestedCache)
-      : undefined;
+    const allColumns = columnsCache[tableKey] || [];
+
+    // Dynamic-schema tables (e.g. HTTP endpoints) report "**" to indicate
+    // that the schema is determined at query time.  Show a hint instead of
+    // the raw wildcard.
+    const isDynamic = allColumns.length === 1 && allColumns[0].name === '**';
+    if (isDynamic) {
+      return {
+        key: tableKey,
+        title: table.name,
+        icon: <TableOutlined style={{ color: '#faad14' }} />,
+        children: [{
+          key: `${tableKey}:__dynamic__`,
+          title: (
+            <Text type="secondary" italic style={{ fontSize: 12 }}>
+              Schema determined at query time
+            </Text>
+          ),
+          icon: <InfoCircleOutlined style={{ color: 'var(--color-text-tertiary)' }} />,
+          isLeaf: true,
+          selectable: false,
+        } as DataNode],
+        isLeaf: false,
+      };
+    }
+
+    // Apply column filter if present
+    const filterText = columnFilter?.[tableKey] || '';
+    const filteredColumns = filterText
+      ? allColumns.filter((c) => c.name.toLowerCase().includes(filterText.toLowerCase()))
+      : allColumns;
+
+    const columnNodes = filteredColumns.length > 0
+      ? buildColumnNodes(filteredColumns, schemaName, table.name, nestedCache)
+      : allColumns.length > 0
+        ? [{ key: `${tableKey}:__no_match__`, title: <Text type="secondary" italic>No matching columns</Text>, isLeaf: true, selectable: false } as DataNode]
+        : undefined;
+
+    // Prepend filter input node when there are many columns
+    const children: DataNode[] | undefined = allColumns.length > 15
+      ? [
+          {
+            key: `filter:${tableKey}`,
+            title: (
+              <Input
+                size="small"
+                placeholder="Filter columns..."
+                prefix={<SearchOutlined style={{ fontSize: 11 }} />}
+                value={filterText}
+                onChange={(e) => onColumnFilterChange?.(tableKey, e.target.value)}
+                onClick={(e) => e.stopPropagation()}
+                allowClear
+                style={{ width: 180, fontSize: 12 }}
+              />
+            ),
+            isLeaf: true,
+            selectable: false,
+            checkable: false,
+          } as DataNode,
+          ...(columnNodes || []),
+        ]
+      : columnNodes;
 
     return {
       key: tableKey,
       title: table.name,
       icon: <TableOutlined style={{ color: '#faad14' }} />,
-      children: columnNodes,
+      children,
       isLeaf: false,
     };
   });
@@ -259,6 +319,8 @@ export function buildSchemaNodes(
   filesCache: Record<string, FileInfo[]>,
   nestedCache: Record<string, NestedFieldInfo[]>,
   subTablesCache: Record<string, SubTableInfo[]>,
+  columnFilter?: Record<string, string>,
+  onColumnFilterChange?: (key: string, value: string) => void,
 ): DataNode[] {
   const pluginIsFileBased = isFileBasedPlugin(plugin.type, plugin.name);
 
@@ -283,7 +345,7 @@ export function buildSchemaNodes(
     // Non-file schema
     const tables = tablesCache[schema.name] || [];
     const tableNodes = tables.length > 0
-      ? buildTableNodes(schema.name, tables, columnsCache, nestedCache)
+      ? buildTableNodes(schema.name, tables, columnsCache, nestedCache, columnFilter, onColumnFilterChange)
       : undefined;
 
     const schemaBrowsable = schema.browsable !== false;
@@ -316,11 +378,13 @@ export function buildPluginNode(
   filesCache: Record<string, FileInfo[]>,
   nestedCache: Record<string, NestedFieldInfo[]>,
   subTablesCache: Record<string, SubTableInfo[]>,
+  columnFilter?: Record<string, string>,
+  onColumnFilterChange?: (key: string, value: string) => void,
 ): DataNode {
   const pluginKey = `plugin:${plugin.name}`;
   const schemas = schemasCache[plugin.name] || [];
   const schemaNodes = schemas.length > 0
-    ? buildSchemaNodes(plugin, schemas, tablesCache, columnsCache, filesCache, nestedCache, subTablesCache)
+    ? buildSchemaNodes(plugin, schemas, tablesCache, columnsCache, filesCache, nestedCache, subTablesCache, columnFilter, onColumnFilterChange)
     : undefined;
 
   const isHttpPlugin = plugin.type?.toLowerCase().includes('http') || plugin.name.toLowerCase() === 'http';
