@@ -397,7 +397,7 @@ export function useProspector(
     );
 
     abortRef.current = controller;
-  }, [executeToolCall]);
+  }, [executeToolCall, effectiveMaxToolRounds]);
 
   const sendMessage = useCallback((text: string, context: ChatContext) => {
     if (isStreaming) {
