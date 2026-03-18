@@ -1101,29 +1101,37 @@ public class TestAggregateFunctions extends ClusterTest {
   public void testCollectToListVarcharStreamAgg() throws Exception {
     try {
       client.alterSession(PlannerSettings.HASHAGG.getOptionName(), false);
+      client.alterSession(PlannerSettings.STREAMAGG.getOptionName(), true);
       testBuilder()
-          .sqlQuery("select collect_to_list_varchar(`date`) as l from " +
-              "(select * from cp.`store/json/clicks.json` limit 2)")
+          .sqlQuery("select collect_to_list_varchar(`clicks`.`trans_id`) as ids from " +
+              "cp.`store/json/clicks.json` clicks group by `clicks`.`user_info`.`device`")
           .unOrdered()
-          .baselineColumns("l")
-          .baselineValues(listOf("2014-04-26", "2014-04-20"))
+          .baselineColumns("ids")
+          .baselineValues(listOf("31920", "32383", "32359"))
+          .baselineValues(listOf("31026"))
+          .baselineValues(listOf("33848"))
           .go();
     } finally {
       client.resetSession(PlannerSettings.HASHAGG.getOptionName());
+      client.resetSession(PlannerSettings.STREAMAGG.getOptionName());
     }
   }
 
+  /**
+   * The current implementation of {@link org.apache.drill.exec.expr.fn.impl.CollectToListVarcharFunction}
+   * requires ordered input data. Because the Hash Aggregator does not maintain input order,
+   * it looks like there is no efficient way to process these values correctly within that operator
+   * by the function. {@code SortAggPrule} is intended to handle this to ensure deterministic
+   * results.
+   */
   @Test
   public void testCollectToListVarcharHashAgg() throws Exception {
     try {
+      thrown.expect(UserRemoteException.class);
+      thrown.expectMessage(containsString("SYSTEM ERROR: CannotPlanException"));
       client.alterSession(PlannerSettings.STREAMAGG.getOptionName(), false);
-      testBuilder()
-          .sqlQuery("select collect_to_list_varchar(`date`) as l from " +
-              "(select * from cp.`store/json/clicks.json` limit 2) group by 'a'")
-          .unOrdered()
-          .baselineColumns("l")
-          .baselineValues(listOf("2014-04-26", "2014-04-20"))
-          .go();
+      run("select collect_to_list_varchar(`clicks`.`trans_id`) as ids from" +
+        " cp.`store/json/clicks.json` clicks group by `clicks`.`user_info`.`device`");
     } finally {
       client.resetSession(PlannerSettings.STREAMAGG.getOptionName());
     }
