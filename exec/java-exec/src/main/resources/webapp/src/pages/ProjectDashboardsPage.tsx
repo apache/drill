@@ -37,6 +37,7 @@ export default function ProjectDashboardsPage() {
       <DashboardsPage
         filterIds={project?.dashboardIds}
         projectId={projectId}
+        projectName={project?.name}
         onAdd={() => setAddModalOpen(true)}
       />
       <AddItemModal

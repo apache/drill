@@ -20,6 +20,7 @@ import { useParams, useNavigate, useSearchParams, useLocation } from 'react-rout
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Responsive, WidthProvider } from 'react-grid-layout';
 import {
+  Breadcrumb,
   Button,
   Space,
   Typography,
@@ -101,7 +102,10 @@ export default function DashboardViewPage() {
   const gridRef = useRef<HTMLDivElement>(null);
 
   // If navigated from a project context, go back there; otherwise /dashboards
-  const backPath = (location.state as { from?: string })?.from || '/dashboards';
+  const locationState = (location.state as { from?: string; projectName?: string; projectId?: string }) || {};
+  const backPath = locationState.from || '/dashboards';
+  const projectId = locationState.projectId || (locationState.from?.match(/\/projects\/([^/]+)/)?.[1]);
+  const projectName = locationState.projectName;
 
   const { isDark } = useTheme();
   const globalDefaultTheme = isDark ? DARK_THEME : DEFAULT_THEME;
@@ -690,9 +694,19 @@ export default function DashboardViewPage() {
       {/* Toolbar */}
       <div className="dashboard-toolbar">
         <Space>
-          <Button icon={<ArrowLeftOutlined />} onClick={() => navigate(backPath)}>
-            Back
-          </Button>
+          <Button icon={<ArrowLeftOutlined />} onClick={() => navigate(backPath)} />
+          <Breadcrumb
+            items={[
+              ...(projectId ? [
+                { title: <a onClick={() => navigate('/projects')}>Projects</a> },
+                { title: <a onClick={() => navigate(`/projects/${projectId}/dashboards`)}>{projectName || 'Project'}</a> },
+                { title: <a onClick={() => navigate(`/projects/${projectId}/dashboards`)}>Dashboards</a> },
+              ] : [
+                { title: <a onClick={() => navigate('/dashboards')}>Dashboards</a> },
+              ]),
+              { title: dashboard?.name || 'Dashboard' },
+            ]}
+          />
           <div>
             <Space align="center">
               <Title level={4} style={{ margin: 0 }}>{dashboard.name}</Title>
