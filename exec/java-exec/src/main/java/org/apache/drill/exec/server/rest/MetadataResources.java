@@ -610,6 +610,40 @@ public class MetadataResources {
       throw new RuntimeException("Failed to fetch columns: " + e.getMessage(), e);
     }
 
+    // Dynamic-schema tables (e.g. Splunk, MongoDB, Elasticsearch) report
+    // only "**" in INFORMATION_SCHEMA.  For non-HTTP plugins, fall back to
+    // SELECT * LIMIT 1 to discover the real columns at query time.
+    // HTTP endpoints are skipped because they often require parameters
+    // that a bare LIMIT 1 cannot provide.
+    if (columns.size() == 1 && "**".equals(columns.get(0).name)) {
+      if (isHttpPlugin(schema)) {
+        // Keep the "**" entry so the frontend can show a helpful hint
+        return new ColumnsResponse(columns);
+      }
+      columns.clear();
+      try {
+        String probeSql = String.format("SELECT * FROM %s.`%s` LIMIT 1",
+            formatSchemaPath(schema), escapeBackticks(table));
+        QueryResult probeResult = executeQuery(probeSql);
+        List<String> columnNames = new ArrayList<>(probeResult.columns);
+        for (int i = 0; i < columnNames.size(); i++) {
+          String colName = columnNames.get(i);
+          String dataType = "ANY";
+          if (probeResult.metadata != null && i < probeResult.metadata.size()) {
+            dataType = probeResult.metadata.get(i);
+          } else if (!probeResult.rows.isEmpty()) {
+            dataType = inferDataType(probeResult.rows.get(0).get(colName));
+          }
+          columns.add(new ColumnInfo(colName, dataType, true, schema, table));
+        }
+      } catch (Exception e) {
+        logger.warn("Dynamic column probe failed for {}.{}: {}", schema, table, e.getMessage());
+        // Probe failed — return the "**" marker so the frontend shows
+        // the "schema determined at query time" hint instead of nothing
+        columns.add(new ColumnInfo("**", "ANY", true, schema, table));
+      }
+    }
+
     return new ColumnsResponse(columns);
   }
 
@@ -938,6 +972,25 @@ public class MetadataResources {
       return "";
     }
     return value.replace("`", "``");
+  }
+
+  /**
+   * Check whether a schema belongs to an HTTP storage plugin.
+   * Uses the config class name to avoid a compile-time dependency on the
+   * contrib HTTP module.
+   */
+  private boolean isHttpPlugin(String schema) {
+    try {
+      String pluginName = schema.contains(".") ? schema.split("\\.", 2)[0] : schema;
+      StoragePlugin plugin = storageRegistry.getPlugin(pluginName);
+      if (plugin != null) {
+        String configClass = plugin.getConfig().getClass().getSimpleName();
+        return configClass.contains("HttpStoragePlugin");
+      }
+    } catch (Exception e) {
+      logger.debug("Could not determine plugin type for schema {}: {}", schema, e.getMessage());
+    }
+    return false;
   }
 
   /**

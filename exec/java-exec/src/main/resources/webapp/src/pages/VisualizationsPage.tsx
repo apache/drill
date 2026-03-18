@@ -33,6 +33,7 @@ import {
   Spin,
   Modal,
   Alert,
+  Checkbox,
 } from 'antd';
 import {
   SearchOutlined,
@@ -66,6 +67,7 @@ import {
   ClusterOutlined,
   ApartmentOutlined,
   AppstoreOutlined,
+  FolderOutlined,
 } from '@ant-design/icons';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { getVisualizations, deleteVisualization } from '../api/visualizations';
@@ -73,6 +75,9 @@ import { executeQuery } from '../api/queries';
 import { getEffectiveQuery } from '../utils/sqlTransformations';
 import { ChartPreview, VisualizationEditor } from '../components/visualization';
 import type { Visualization, ChartType, QueryResult } from '../types';
+import AddToProjectModal from '../components/common/AddToProjectModal';
+import BulkActionBar from '../components/common/BulkActionBar';
+import BulkAddToProjectModal from '../components/common/BulkAddToProjectModal';
 
 const { Title, Text, Paragraph } = Typography;
 
@@ -237,6 +242,9 @@ export default function VisualizationsPage({ filterIds, projectId, onAdd }: Visu
   const [viewQueryLoading, setViewQueryLoading] = useState(false);
   const [viewQueryError, setViewQueryError] = useState<string | null>(null);
   const [showSql, setShowSql] = useState(false);
+  const [addToProjectId, setAddToProjectId] = useState<string | null>(null);
+  const [selectedIds, setSelectedIds] = useState<string[]>([]);
+  const [bulkProjectModalOpen, setBulkProjectModalOpen] = useState(false);
 
   // Fetch visualizations
   const { data: visualizations, isLoading, error } = useQuery({
@@ -363,20 +371,46 @@ export default function VisualizationsPage({ filterIds, projectId, onAdd }: Visu
             style={{ maxWidth: 400 }}
           />
 
+          {/* Bulk Action Bar */}
+          <BulkActionBar
+            selectedCount={selectedIds.length}
+            onAddToProject={!projectId ? () => setBulkProjectModalOpen(true) : undefined}
+            onDelete={() => {
+              selectedIds.forEach(id => deleteMutation.mutate(id));
+              setSelectedIds([]);
+            }}
+            onClear={() => setSelectedIds([])}
+          />
+
           {/* Visualization Cards */}
           {isLoading ? (
             <div style={{ textAlign: 'center', padding: 40 }}>
               <Spin size="large" />
             </div>
           ) : filteredVisualizations.length === 0 ? (
-            <Empty
-              image={<BarChartOutlined style={{ fontSize: 64, color: 'var(--color-text-tertiary)' }} />}
-              description={
-                searchText
-                  ? 'No visualizations match your search'
-                  : 'No visualizations yet. Run a query and create one!'
-              }
-            />
+            searchText ? (
+              <Empty
+                image={<BarChartOutlined style={{ fontSize: 64, color: 'var(--color-text-tertiary)' }} />}
+                description="No visualizations match your search"
+              />
+            ) : onAdd ? (
+              <Empty
+                image={<BarChartOutlined style={{ fontSize: 64, color: 'var(--color-text-tertiary)' }} />}
+                description="No visualizations in this project yet"
+              >
+                <Space>
+                  <Button onClick={onAdd}>Add Existing</Button>
+                  <Button type="primary" onClick={() => navigate(`/projects/${projectId}/query`)}>
+                    Create from Query
+                  </Button>
+                </Space>
+              </Empty>
+            ) : (
+              <Empty
+                image={<BarChartOutlined style={{ fontSize: 64, color: 'var(--color-text-tertiary)' }} />}
+                description="No visualizations yet. Run a query and create one!"
+              />
+            )
           ) : (
             <Row gutter={[16, 16]}>
               {filteredVisualizations.map((viz) => (
@@ -384,7 +418,27 @@ export default function VisualizationsPage({ filterIds, projectId, onAdd }: Visu
                   <Card
                     hoverable
                     size="small"
-                    cover={<MiniVizPreview viz={viz} />}
+                    style={selectedIds.includes(viz.id) ? { border: '2px solid var(--color-primary)' } : undefined}
+                    cover={
+                      <div style={{ position: 'relative' }}>
+                        <div
+                          style={{ position: 'absolute', top: 8, left: 8, zIndex: 1 }}
+                          onClick={(e) => e.stopPropagation()}
+                        >
+                          <Checkbox
+                            checked={selectedIds.includes(viz.id)}
+                            onChange={(e) => {
+                              if (e.target.checked) {
+                                setSelectedIds(prev => [...prev, viz.id]);
+                              } else {
+                                setSelectedIds(prev => prev.filter(id => id !== viz.id));
+                              }
+                            }}
+                          />
+                        </div>
+                        <MiniVizPreview viz={viz} />
+                      </div>
+                    }
                     actions={[
                       <Tooltip title="View" key="view">
                         <EyeOutlined onClick={() => handleView(viz)} />
@@ -392,6 +446,11 @@ export default function VisualizationsPage({ filterIds, projectId, onAdd }: Visu
                       <Tooltip title="Edit" key="edit">
                         <EditOutlined onClick={() => setEditBuilderViz(viz)} />
                       </Tooltip>,
+                      ...(!projectId ? [
+                        <Tooltip title="Add to Project" key="addToProject">
+                          <FolderOutlined onClick={() => setAddToProjectId(viz.id)} />
+                        </Tooltip>,
+                      ] : []),
                       <Popconfirm
                         key="delete"
                         title="Delete this visualization?"
@@ -447,6 +506,22 @@ export default function VisualizationsPage({ filterIds, projectId, onAdd }: Visu
         open={!!editBuilderViz}
         visualization={editBuilderViz}
         onClose={() => setEditBuilderViz(null)}
+      />
+
+      {/* Add to Project Modal */}
+      <AddToProjectModal
+        open={!!addToProjectId}
+        onClose={() => setAddToProjectId(null)}
+        itemId={addToProjectId || ''}
+        itemType="visualization"
+      />
+
+      {/* Bulk Add to Project Modal */}
+      <BulkAddToProjectModal
+        open={bulkProjectModalOpen}
+        onClose={() => setBulkProjectModalOpen(false)}
+        itemIds={selectedIds}
+        itemType="visualization"
       />
 
       {/* View Modal - renders actual chart */}

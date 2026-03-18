@@ -50,7 +50,7 @@ import {
   deleteWikiPage,
 } from '../api/projects';
 import { useProjectContext } from '../contexts/ProjectContext';
-import { ShareModal, WikiEditor, DatasetPickerModal } from '../components/project';
+import { ShareModal, WikiEditor, DatasetPickerModal, ProjectActivityFeed, ProjectLineage } from '../components/project';
 
 const { Title, Text, Paragraph } = Typography;
 
@@ -134,6 +134,11 @@ export default function ProjectDetailPage() {
           </Card>
         </Space>
       ),
+    },
+    {
+      key: 'activity',
+      label: 'Activity',
+      children: <ProjectActivityFeed project={project} />,
     },
     {
       key: 'datasets',
@@ -265,6 +270,11 @@ export default function ProjectDetailPage() {
           )}
         </Space>
       ),
+    },
+    {
+      key: 'lineage',
+      label: 'Lineage',
+      children: <ProjectLineage project={project} />,
     },
   ];
 
