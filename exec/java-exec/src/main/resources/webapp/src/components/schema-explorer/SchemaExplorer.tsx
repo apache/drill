@@ -388,16 +388,7 @@ export default function SchemaExplorer({ onInsertText, onTableSelect, datasetFil
       return [];
     }
 
-    const filteredPlugins = searchText
-      ? plugins.filter((p) =>
-          p.name.toLowerCase().includes(searchText.toLowerCase()) ||
-          Object.keys(schemasCache[p.name] || []).some((s) =>
-            s.toLowerCase().includes(searchText.toLowerCase())
-          )
-        )
-      : plugins;
-
-    let nodes = filteredPlugins.map((plugin) =>
+    let nodes = plugins.map((plugin) =>
       buildPluginNode(
         plugin, schemasCache, tablesCache, columnsCache, filesCache, nestedCache, subTablesCache,
         columnFilter,
@@ -408,6 +399,34 @@ export default function SchemaExplorer({ onInsertText, onTableSelect, datasetFil
     // Apply dataset filter if present
     if (datasetAllowList) {
       nodes = filterTreeNodes(nodes, datasetAllowList);
+    }
+
+    // Apply search filter across all levels (plugin, schema, table, column)
+    if (searchText) {
+      const lower = searchText.toLowerCase();
+      const matchesSearch = (node: DataNode): boolean => {
+        const title = typeof node.title === 'string'
+          ? node.title
+          : String(node.key).split(':').pop() || '';
+        if (title.toLowerCase().includes(lower)) {
+          return true;
+        }
+        if (node.children) {
+          return node.children.some(matchesSearch);
+        }
+        return false;
+      };
+      const pruneTree = (nodeList: DataNode[]): DataNode[] => {
+        return nodeList
+          .filter(matchesSearch)
+          .map((node) => {
+            if (!node.children) {
+              return node;
+            }
+            return { ...node, children: pruneTree(node.children) };
+          });
+      };
+      nodes = pruneTree(nodes);
     }
 
     return nodes;
@@ -1012,7 +1031,7 @@ export default function SchemaExplorer({ onInsertText, onTableSelect, datasetFil
       <div style={{ padding: '8px 8px 0', display: 'flex', gap: 8 }}>
         <Search
           id="schema-search-input"
-          placeholder="Search schemas... (Ctrl+Shift+F)"
+          placeholder="Search schemas, tables, columns... (Ctrl+Shift+F)"
           allowClear
           size="small"
           prefix={<SearchOutlined />}
