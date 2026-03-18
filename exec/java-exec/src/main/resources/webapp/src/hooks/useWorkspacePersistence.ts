@@ -44,6 +44,8 @@ export function useWorkspacePersistence(projectId?: string) {
 
   // Restore on mount
   useEffect(() => {
+    hasRestoredRef.current = false;
+
     const persisted = loadTabState(projectId);
     if (persisted) {
       // First pass: restore what we can from the in-memory cache
@@ -90,9 +92,13 @@ export function useWorkspacePersistence(projectId?: string) {
       dispatch(restoreUiState(persistedUi));
     }
 
-    // Mark restore complete after a tick to let effects settle
+    // Mark restore complete after two animation frames to ensure
+    // the Redux state update has propagated and the save effect
+    // has seen the restored state (prevents saving empty default tabs)
     requestAnimationFrame(() => {
-      hasRestoredRef.current = true;
+      requestAnimationFrame(() => {
+        hasRestoredRef.current = true;
+      });
     });
 
     return () => {
@@ -156,6 +162,17 @@ export function useWorkspacePersistence(projectId?: string) {
     }
 
     saveTimerRef.current = setTimeout(() => {
+      // Don't overwrite persisted state with empty default tabs.
+      // This guards against a race where the save fires before
+      // restore has populated Redux.
+      const hasContent = tabs.some((t) => t.sql.trim().length > 0);
+      if (!hasContent && tabs.length <= 1) {
+        const existing = loadTabState(projectId);
+        if (existing && existing.tabs.some((t) => t.sql.trim().length > 0)) {
+          return; // Don't clobber persisted data with empty state
+        }
+      }
+
       // Find max tab counter from current tab IDs
       let maxCounter = 1;
       for (const t of tabs) {
