@@ -34,6 +34,7 @@ import {
   Form,
   Select,
   Switch,
+  Checkbox,
 } from 'antd';
 import {
   SearchOutlined,
@@ -49,6 +50,7 @@ import {
   LinkOutlined,
   StarOutlined,
   StarFilled,
+  FolderOutlined,
 } from '@ant-design/icons';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import {
@@ -60,6 +62,9 @@ import {
   toggleFavorite,
 } from '../api/dashboards';
 import type { Dashboard } from '../types';
+import AddToProjectModal from '../components/common/AddToProjectModal';
+import BulkActionBar from '../components/common/BulkActionBar';
+import BulkAddToProjectModal from '../components/common/BulkAddToProjectModal';
 
 const { Title, Text } = Typography;
 const { TextArea } = Input;
@@ -67,10 +72,11 @@ const { TextArea } = Input;
 interface DashboardsPageProps {
   filterIds?: string[];
   projectId?: string;
+  projectName?: string;
   onAdd?: () => void;
 }
 
-export default function DashboardsPage({ filterIds, projectId, onAdd }: DashboardsPageProps = {}) {
+export default function DashboardsPage({ filterIds, projectId, projectName, onAdd }: DashboardsPageProps = {}) {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const [searchText, setSearchText] = useState('');
@@ -79,6 +85,9 @@ export default function DashboardsPage({ filterIds, projectId, onAdd }: Dashboar
   const [editModalOpen, setEditModalOpen] = useState(false);
   const [editingDashboard, setEditingDashboard] = useState<Dashboard | null>(null);
   const [createForm] = Form.useForm();
+  const [addToProjectId, setAddToProjectId] = useState<string | null>(null);
+  const [selectedIds, setSelectedIds] = useState<string[]>([]);
+  const [bulkProjectModalOpen, setBulkProjectModalOpen] = useState(false);
   const [editForm] = Form.useForm();
 
   // Fetch dashboards
@@ -109,7 +118,7 @@ export default function DashboardsPage({ filterIds, projectId, onAdd }: Dashboar
       queryClient.invalidateQueries({ queryKey: ['dashboards'] });
       setCreateModalOpen(false);
       createForm.resetFields();
-      const navState = projectId ? { state: { from: `/projects/${projectId}/dashboards` } } : undefined;
+      const navState = projectId ? { state: { from: `/projects/${projectId}/dashboards`, projectName, projectId } } : undefined;
       navigate(`/dashboards/${newDashboard.id}`, navState);
     },
     onError: (err: Error) => {
@@ -285,21 +294,45 @@ export default function DashboardsPage({ filterIds, projectId, onAdd }: Dashboar
             </Tooltip>
           </Space>
 
+          {/* Bulk Action Bar */}
+          <BulkActionBar
+            selectedCount={selectedIds.length}
+            onAddToProject={!projectId ? () => setBulkProjectModalOpen(true) : undefined}
+            onDelete={() => {
+              selectedIds.forEach(id => deleteMutation.mutate(id));
+              setSelectedIds([]);
+            }}
+            onClear={() => setSelectedIds([])}
+          />
+
           {/* Dashboard Cards */}
           {isLoading ? (
             <div style={{ textAlign: 'center', padding: 40 }}>
               <Spin size="large" />
             </div>
           ) : filteredDashboards.length === 0 ? (
-            <Empty
-              image={<DashboardOutlined style={{ fontSize: 64, color: 'var(--color-text-tertiary)' }} />}
-              description={
-                searchText
-                  ? 'No dashboards match your search'
-                  : 'No dashboards yet. Create one to get started!'
-              }
-            >
-              {!searchText && (
+            searchText ? (
+              <Empty
+                image={<DashboardOutlined style={{ fontSize: 64, color: 'var(--color-text-tertiary)' }} />}
+                description="No dashboards match your search"
+              />
+            ) : onAdd ? (
+              <Empty
+                image={<DashboardOutlined style={{ fontSize: 64, color: 'var(--color-text-tertiary)' }} />}
+                description="No dashboards in this project yet"
+              >
+                <Space>
+                  <Button onClick={onAdd}>Add Existing</Button>
+                  <Button type="primary" icon={<PlusOutlined />} onClick={() => setCreateModalOpen(true)}>
+                    New Dashboard
+                  </Button>
+                </Space>
+              </Empty>
+            ) : (
+              <Empty
+                image={<DashboardOutlined style={{ fontSize: 64, color: 'var(--color-text-tertiary)' }} />}
+                description="No dashboards yet. Create one to get started!"
+              >
                 <Button
                   type="primary"
                   icon={<PlusOutlined />}
@@ -307,16 +340,27 @@ export default function DashboardsPage({ filterIds, projectId, onAdd }: Dashboar
                 >
                   Create Dashboard
                 </Button>
-              )}
-            </Empty>
+              </Empty>
+            )
           ) : (
+            <>
+            <BulkActionBar
+              selectedCount={selectedIds.length}
+              onAddToProject={!projectId ? () => setBulkProjectModalOpen(true) : undefined}
+              onDelete={() => {
+                selectedIds.forEach(id => deleteMutation.mutate(id));
+                setSelectedIds([]);
+              }}
+              onClear={() => setSelectedIds([])}
+            />
             <Row gutter={[16, 16]}>
               {filteredDashboards.map((dashboard) => (
                 <Col xs={24} sm={12} md={8} lg={6} key={dashboard.id}>
                   <Card
                     hoverable
                     size="small"
-                    onClick={() => navigate(`/dashboards/${dashboard.id}`, projectId ? { state: { from: `/projects/${projectId}/dashboards` } } : undefined)}
+                    style={selectedIds.includes(dashboard.id) ? { border: '2px solid var(--color-primary)' } : undefined}
+                    onClick={() => navigate(`/dashboards/${dashboard.id}`, projectId ? { state: { from: `/projects/${projectId}/dashboards`, projectName, projectId } } : undefined)}
                     cover={
                       <div
                         style={{
@@ -328,6 +372,22 @@ export default function DashboardsPage({ filterIds, projectId, onAdd }: Dashboar
                           position: 'relative',
                         }}
                       >
+                        {/* Selection Checkbox */}
+                        <div
+                          style={{ position: 'absolute', top: 8, left: 8, zIndex: 1 }}
+                          onClick={(e) => e.stopPropagation()}
+                        >
+                          <Checkbox
+                            checked={selectedIds.includes(dashboard.id)}
+                            onChange={(e) => {
+                              if (e.target.checked) {
+                                setSelectedIds(prev => [...prev, dashboard.id]);
+                              } else {
+                                setSelectedIds(prev => prev.filter(id => id !== dashboard.id));
+                              }
+                            }}
+                          />
+                        </div>
                         {/* Favorite Star */}
                         <div
                           style={{ position: 'absolute', top: 8, right: 8, zIndex: 1 }}
@@ -354,6 +414,14 @@ export default function DashboardsPage({ filterIds, projectId, onAdd }: Dashboar
                       <Tooltip title="Edit details" key="edit">
                         <EditOutlined onClick={(e) => handleEdit(dashboard, e)} />
                       </Tooltip>,
+                      ...(!projectId ? [
+                        <Tooltip title="Add to Project" key="addToProject">
+                          <FolderOutlined onClick={(e) => {
+                            e.stopPropagation();
+                            setAddToProjectId(dashboard.id);
+                          }} />
+                        </Tooltip>,
+                      ] : []),
                       <Popconfirm
                         key="delete"
                         title="Delete this dashboard?"
@@ -414,9 +482,26 @@ export default function DashboardsPage({ filterIds, projectId, onAdd }: Dashboar
                 </Col>
               ))}
             </Row>
+            </>
           )}
         </Space>
       </Card>
+
+      {/* Add to Project Modal */}
+      <AddToProjectModal
+        open={!!addToProjectId}
+        onClose={() => setAddToProjectId(null)}
+        itemId={addToProjectId || ''}
+        itemType="dashboard"
+      />
+
+      {/* Bulk Add to Project Modal */}
+      <BulkAddToProjectModal
+        open={bulkProjectModalOpen}
+        onClose={() => setBulkProjectModalOpen(false)}
+        itemIds={selectedIds}
+        itemType="dashboard"
+      />
 
       {/* Create Dashboard Modal */}
       <Modal
@@ -518,6 +603,22 @@ export default function DashboardsPage({ filterIds, projectId, onAdd }: Dashboar
           </div>
         )}
       </Modal>
+
+      {/* Add to Project Modal */}
+      <AddToProjectModal
+        open={!!addToProjectId}
+        onClose={() => setAddToProjectId(null)}
+        itemId={addToProjectId || ''}
+        itemType="dashboard"
+      />
+
+      {/* Bulk Add to Project Modal */}
+      <BulkAddToProjectModal
+        open={bulkProjectModalOpen}
+        onClose={() => setBulkProjectModalOpen(false)}
+        itemIds={selectedIds}
+        itemType="dashboard"
+      />
     </div>
   );
 }

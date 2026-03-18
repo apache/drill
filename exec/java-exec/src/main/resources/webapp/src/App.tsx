@@ -18,6 +18,7 @@
 import { Routes, Route, Navigate } from 'react-router-dom';
 import { Layout } from 'antd';
 import Navbar from './components/common/Navbar';
+import CommandPalette from './components/common/CommandPalette';
 import ProjectsPage from './pages/ProjectsPage';
 import ProjectDetailPage from './pages/ProjectDetailPage';
 import DataSourcesPage from './pages/DataSourcesPage';
@@ -45,6 +46,7 @@ const { Content } = Layout;
 function App() {
   return (
     <Layout className="sqllab-container">
+      <CommandPalette />
       <Navbar />
       <Content style={{ flex: 1, overflow: 'auto', display: 'flex', flexDirection: 'column' }}>
         <Routes>

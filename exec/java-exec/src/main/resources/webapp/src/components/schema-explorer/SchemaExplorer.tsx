@@ -308,6 +308,7 @@ export default function SchemaExplorer({ onInsertText, onTableSelect, datasetFil
   const [pluginTypesCache, setPluginTypesCache] = useState<Record<string, string>>({});
   const [nestedCache, setNestedCache] = useState<Record<string, NestedFieldInfo[]>>({});
   const [subTablesCache, setSubTablesCache] = useState<Record<string, SubTableInfo[]>>({});
+  const [columnFilter, setColumnFilter] = useState<Record<string, string>>({});
 
   // Column statistics drawer
   const [statsTarget, setStatsTarget] = useState<{ schema: string; table: string } | null>(null);
@@ -352,6 +353,8 @@ export default function SchemaExplorer({ onInsertText, onTableSelect, datasetFil
   nestedCacheRef.current = nestedCache;
   const subTablesCacheRef = useRef(subTablesCache);
   subTablesCacheRef.current = subTablesCache;
+  const columnFilterRef = useRef(columnFilter);
+  columnFilterRef.current = columnFilter;
 
   // ---------- Tree data construction ----------
 
@@ -395,7 +398,11 @@ export default function SchemaExplorer({ onInsertText, onTableSelect, datasetFil
       : plugins;
 
     let nodes = filteredPlugins.map((plugin) =>
-      buildPluginNode(plugin, schemasCache, tablesCache, columnsCache, filesCache, nestedCache, subTablesCache)
+      buildPluginNode(
+        plugin, schemasCache, tablesCache, columnsCache, filesCache, nestedCache, subTablesCache,
+        columnFilter,
+        (key, val) => setColumnFilter((prev) => ({ ...prev, [key]: val })),
+      )
     );
 
     // Apply dataset filter if present
@@ -404,7 +411,7 @@ export default function SchemaExplorer({ onInsertText, onTableSelect, datasetFil
     }
 
     return nodes;
-  }, [plugins, schemasCache, tablesCache, columnsCache, filesCache, nestedCache, subTablesCache, searchText, datasetAllowList]);
+  }, [plugins, schemasCache, tablesCache, columnsCache, filesCache, nestedCache, subTablesCache, searchText, datasetAllowList, columnFilter]);
 
   // Favorites section: flat list of pinned nodes at the top
   const favoritesTreeData = useMemo((): DataNode[] => {

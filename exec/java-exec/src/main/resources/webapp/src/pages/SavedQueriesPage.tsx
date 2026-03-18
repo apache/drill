@@ -43,11 +43,15 @@ import {
   LockOutlined,
   UserOutlined,
   CodeOutlined,
+  FolderOutlined,
 } from '@ant-design/icons';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { getSavedQueries, deleteSavedQuery, updateSavedQuery } from '../api/savedQueries';
 import type { SavedQuery } from '../types';
 import type { ColumnsType } from 'antd/es/table';
+import AddToProjectModal from '../components/common/AddToProjectModal';
+import BulkActionBar from '../components/common/BulkActionBar';
+import BulkAddToProjectModal from '../components/common/BulkAddToProjectModal';
 
 const { Title, Text, Paragraph } = Typography;
 const { TextArea } = Input;
@@ -66,6 +70,9 @@ export default function SavedQueriesPage({ filterIds, projectId, onAdd }: SavedQ
   const [editingQuery, setEditingQuery] = useState<SavedQuery | null>(null);
   const [viewModalOpen, setViewModalOpen] = useState(false);
   const [viewingQuery, setViewingQuery] = useState<SavedQuery | null>(null);
+  const [addToProjectId, setAddToProjectId] = useState<string | null>(null);
+  const [selectedRowKeys, setSelectedRowKeys] = useState<string[]>([]);
+  const [bulkProjectModalOpen, setBulkProjectModalOpen] = useState(false);
   const [form] = Form.useForm();
 
   // Fetch saved queries
@@ -265,6 +272,11 @@ export default function SavedQueriesPage({ filterIds, projectId, onAdd }: SavedQ
               onClick={() => handleEdit(record)}
             />
           </Tooltip>
+          {!projectId && (
+            <Tooltip title="Add to Project">
+              <Button size="small" icon={<FolderOutlined />} onClick={() => setAddToProjectId(record.id)} />
+            </Tooltip>
+          )}
           <Popconfirm
             title="Delete this query?"
             description="This action cannot be undone."
@@ -329,24 +341,46 @@ export default function SavedQueriesPage({ filterIds, projectId, onAdd }: SavedQ
             style={{ maxWidth: 400 }}
           />
 
+          {/* Bulk Action Bar */}
+          <BulkActionBar
+            selectedCount={selectedRowKeys.length}
+            onAddToProject={!projectId ? () => setBulkProjectModalOpen(true) : undefined}
+            onDelete={() => {
+              selectedRowKeys.forEach(id => deleteMutation.mutate(id));
+              setSelectedRowKeys([]);
+            }}
+            onClear={() => setSelectedRowKeys([])}
+          />
+
           {/* Table */}
           {isLoading ? (
             <div style={{ textAlign: 'center', padding: 40 }}>
               <Spin size="large" />
             </div>
           ) : filteredQueries.length === 0 ? (
-            <Empty
-              description={
-                searchText
-                  ? 'No queries match your search'
-                  : 'No saved queries yet. Create one in SQL Lab!'
-              }
-            />
+            searchText ? (
+              <Empty description="No queries match your search" />
+            ) : onAdd ? (
+              <Empty description="No saved queries in this project yet">
+                <Space>
+                  <Button onClick={onAdd}>Add Existing</Button>
+                  <Button type="primary" onClick={() => navigate(`/projects/${projectId}/query`)}>
+                    New Query
+                  </Button>
+                </Space>
+              </Empty>
+            ) : (
+              <Empty description="No saved queries yet. Create one in SQL Lab!" />
+            )
           ) : (
             <Table
               dataSource={filteredQueries}
               columns={columns}
               rowKey="id"
+              rowSelection={{
+                selectedRowKeys,
+                onChange: (keys) => setSelectedRowKeys(keys as string[]),
+              }}
               pagination={{
                 pageSize: 10,
                 showSizeChanger: true,
@@ -433,6 +467,22 @@ export default function SavedQueriesPage({ filterIds, projectId, onAdd }: SavedQ
           </div>
         )}
       </Modal>
+
+      {/* Add to Project Modal */}
+      <AddToProjectModal
+        open={!!addToProjectId}
+        onClose={() => setAddToProjectId(null)}
+        itemId={addToProjectId || ''}
+        itemType="savedQuery"
+      />
+
+      {/* Bulk Add to Project Modal */}
+      <BulkAddToProjectModal
+        open={bulkProjectModalOpen}
+        onClose={() => setBulkProjectModalOpen(false)}
+        itemIds={selectedRowKeys}
+        itemType="savedQuery"
+      />
     </div>
   );
 }
