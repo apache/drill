@@ -67,8 +67,8 @@ export default function ProjectLineage({ project }: Props) {
     // Build query -> viz map (via savedQueryId on viz, if available)
     const queryToViz: Record<string, string[]> = {};
     vizs.forEach(v => {
-      if ((v as any).savedQueryId && queryIdSet.has((v as any).savedQueryId)) {
-        const qid = (v as any).savedQueryId;
+      if (v.savedQueryId && queryIdSet.has(v.savedQueryId)) {
+        const qid = v.savedQueryId;
         if (!queryToViz[qid]) {
           queryToViz[qid] = [];
         }
