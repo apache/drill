@@ -15,14 +15,15 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-export { default as AddItemModal } from './AddItemModal';
-export { default as ShareModal } from './ShareModal';
-export { default as WikiEditor } from './WikiEditor';
-export { default as DatasetRefModal } from './DatasetRefModal';
-export { default as DatasetPickerModal } from './DatasetPickerModal';
-export { default as ProjectLayout } from './ProjectLayout';
-export { default as ProjectNavBar } from './ProjectNavBar';
-export { default as ProjectActivityFeed } from './ProjectActivityFeed';
-export { default as ProjectLineage } from './ProjectLineage';
-export { default as QuerySuggestions } from './QuerySuggestions';
-export { default as ExportImportModal } from './ExportImportModal';
+import apiClient from './client';
+
+export interface UserInfo {
+  username: string;
+  isAdmin: boolean;
+  authEnabled: boolean;
+}
+
+export async function getCurrentUser(): Promise<UserInfo> {
+  const response = await apiClient.get<UserInfo>('/api/v1/user/me');
+  return response.data;
+}
