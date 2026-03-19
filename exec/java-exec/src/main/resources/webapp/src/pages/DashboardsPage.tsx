@@ -61,6 +61,7 @@ import {
   getFavorites,
   toggleFavorite,
 } from '../api/dashboards';
+import { useCurrentUser } from '../hooks/useCurrentUser';
 import type { Dashboard } from '../types';
 import AddToProjectModal from '../components/common/AddToProjectModal';
 import BulkActionBar from '../components/common/BulkActionBar';
@@ -73,12 +74,14 @@ interface DashboardsPageProps {
   filterIds?: string[];
   projectId?: string;
   projectName?: string;
+  projectOwner?: string;
   onAdd?: () => void;
 }
 
-export default function DashboardsPage({ filterIds, projectId, projectName, onAdd }: DashboardsPageProps = {}) {
+export default function DashboardsPage({ filterIds, projectId, projectName, projectOwner, onAdd }: DashboardsPageProps = {}) {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
+  const { canEdit, canView, isProjectOwner } = useCurrentUser();
   const [searchText, setSearchText] = useState('');
   const [favoritesOnly, setFavoritesOnly] = useState(false);
   const [createModalOpen, setCreateModalOpen] = useState(false);
@@ -159,6 +162,8 @@ export default function DashboardsPage({ filterIds, projectId, projectName, onAd
       return [];
     }
     let result = dashboards;
+    // Visibility: show own dashboards + public dashboards (admins/anonymous see all)
+    result = result.filter((d) => canView(d.owner, d.isPublic));
     if (filterIds) {
       const idSet = new Set(filterIds);
       result = result.filter((d) => idSet.has(d.id));
@@ -175,7 +180,7 @@ export default function DashboardsPage({ filterIds, projectId, projectName, onAd
       );
     }
     return result;
-  }, [dashboards, searchText, favoritesOnly, favorites, filterIds]);
+  }, [dashboards, searchText, favoritesOnly, favorites, filterIds, canView]);
 
   // Handle create
   const handleCreate = async () => {
@@ -410,39 +415,46 @@ export default function DashboardsPage({ filterIds, projectId, projectName, onAd
                         </Space>
                       </div>
                     }
-                    actions={[
-                      <Tooltip title="Edit details" key="edit">
-                        <EditOutlined onClick={(e) => handleEdit(dashboard, e)} />
-                      </Tooltip>,
-                      ...(!projectId ? [
-                        <Tooltip title="Add to Project" key="addToProject">
-                          <FolderOutlined onClick={(e) => {
-                            e.stopPropagation();
-                            setAddToProjectId(dashboard.id);
-                          }} />
-                        </Tooltip>,
-                      ] : []),
-                      <Popconfirm
-                        key="delete"
-                        title="Delete this dashboard?"
-                        description="This action cannot be undone."
-                        onConfirm={(e) => {
-                          e?.stopPropagation();
-                          deleteMutation.mutate(dashboard.id);
-                        }}
-                        onCancel={(e) => e?.stopPropagation()}
-                        okText="Delete"
-                        cancelText="Cancel"
-                        okButtonProps={{ danger: true }}
-                      >
-                        <Tooltip title="Delete">
-                          <DeleteOutlined
-                            style={{ color: '#ff4d4f' }}
-                            onClick={(e) => e.stopPropagation()}
-                          />
-                        </Tooltip>
-                      </Popconfirm>,
-                    ]}
+                    actions={(() => {
+                      const editable = canEdit(dashboard.owner) || (projectOwner ? isProjectOwner(projectOwner) : false);
+                      return [
+                        ...(editable ? [
+                          <Tooltip title="Edit details" key="edit">
+                            <EditOutlined onClick={(e) => handleEdit(dashboard, e)} />
+                          </Tooltip>,
+                        ] : []),
+                        ...(!projectId ? [
+                          <Tooltip title="Add to Project" key="addToProject">
+                            <FolderOutlined onClick={(e) => {
+                              e.stopPropagation();
+                              setAddToProjectId(dashboard.id);
+                            }} />
+                          </Tooltip>,
+                        ] : []),
+                        ...(editable ? [
+                          <Popconfirm
+                            key="delete"
+                            title="Delete this dashboard?"
+                            description="This action cannot be undone."
+                            onConfirm={(e) => {
+                              e?.stopPropagation();
+                              deleteMutation.mutate(dashboard.id);
+                            }}
+                            onCancel={(e) => e?.stopPropagation()}
+                            okText="Delete"
+                            cancelText="Cancel"
+                            okButtonProps={{ danger: true }}
+                          >
+                            <Tooltip title="Delete">
+                              <DeleteOutlined
+                                style={{ color: '#ff4d4f' }}
+                                onClick={(e) => e.stopPropagation()}
+                              />
+                            </Tooltip>
+                          </Popconfirm>,
+                        ] : []),
+                      ];
+                    })()}
                   >
                     <Card.Meta
                       title={

@@ -19,6 +19,7 @@ import { useState } from 'react';
 import { Modal, Form, Input, Switch, message } from 'antd';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { createSavedQuery } from '../../api/savedQueries';
+import { addSavedQuery } from '../../api/projects';
 import type { SavedQueryCreate } from '../../types';
 
 const { TextArea } = Input;
@@ -28,6 +29,8 @@ interface SaveQueryDialogProps {
   onClose: () => void;
   sql: string;
   defaultSchema?: string;
+  projectId?: string;
+  onSaved?: (name: string) => void;
 }
 
 export default function SaveQueryDialog({
@@ -35,6 +38,8 @@ export default function SaveQueryDialog({
   onClose,
   sql,
   defaultSchema,
+  projectId,
+  onSaved,
 }: SaveQueryDialogProps) {
   const [form] = Form.useForm();
   const queryClient = useQueryClient();
@@ -42,9 +47,19 @@ export default function SaveQueryDialog({
 
   const mutation = useMutation({
     mutationFn: createSavedQuery,
-    onSuccess: () => {
+    onSuccess: async (savedQuery) => {
+      // Auto-add to project if in project context
+      if (projectId && savedQuery?.id) {
+        try {
+          await addSavedQuery(projectId, savedQuery.id);
+          queryClient.invalidateQueries({ queryKey: ['project', projectId] });
+        } catch {
+          // Non-fatal — query was saved, just not linked
+        }
+      }
       message.success('Query saved successfully');
       queryClient.invalidateQueries({ queryKey: ['savedQueries'] });
+      onSaved?.(savedQuery.name);
       form.resetFields();
       onClose();
     },

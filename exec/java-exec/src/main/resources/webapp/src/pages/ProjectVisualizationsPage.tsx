@@ -37,6 +37,7 @@ export default function ProjectVisualizationsPage() {
       <VisualizationsPage
         filterIds={project?.visualizationIds}
         projectId={projectId}
+        projectOwner={project?.owner}
         onAdd={() => setAddModalOpen(true)}
       />
       <AddItemModal

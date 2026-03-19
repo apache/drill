@@ -30,6 +30,7 @@ import {
   SettingOutlined,
   MenuOutlined,
   MailOutlined,
+  ClockCircleOutlined,
 } from '@ant-design/icons';
 import { SunOutlined, MoonOutlined } from '@ant-design/icons';
 import type { MenuProps } from 'antd';
@@ -45,6 +46,7 @@ const navItems = [
   { key: '/datasources', icon: <DatabaseOutlined />, label: 'Data Sources' },
   { key: '/query', icon: <CodeOutlined />, label: 'SQL Lab' },
   { key: '/saved-queries', icon: <SaveOutlined />, label: 'Saved Queries' },
+  { key: '/workflows', icon: <ClockCircleOutlined />, label: 'Workflows' },
   { key: '/visualizations', icon: <BarChartOutlined />, label: 'Visualizations' },
   { key: '/dashboards', icon: <DashboardOutlined />, label: 'Dashboards' },
 ];
