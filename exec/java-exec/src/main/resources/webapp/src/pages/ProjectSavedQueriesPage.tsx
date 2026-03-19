@@ -37,6 +37,7 @@ export default function ProjectSavedQueriesPage() {
       <SavedQueriesPage
         filterIds={project?.savedQueryIds}
         projectId={projectId}
+        projectOwner={project?.owner}
         onAdd={() => setAddModalOpen(true)}
       />
       <AddItemModal

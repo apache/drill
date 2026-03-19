@@ -74,6 +74,7 @@ import { getVisualizations, deleteVisualization } from '../api/visualizations';
 import { executeQuery } from '../api/queries';
 import { getEffectiveQuery } from '../utils/sqlTransformations';
 import { ChartPreview, VisualizationEditor } from '../components/visualization';
+import { useCurrentUser } from '../hooks/useCurrentUser';
 import type { Visualization, ChartType, QueryResult } from '../types';
 import AddToProjectModal from '../components/common/AddToProjectModal';
 import BulkActionBar from '../components/common/BulkActionBar';
@@ -228,12 +229,14 @@ function MiniVizPreview({ viz }: { viz: Visualization }) {
 interface VisualizationsPageProps {
   filterIds?: string[];
   projectId?: string;
+  projectOwner?: string;
   onAdd?: () => void;
 }
 
-export default function VisualizationsPage({ filterIds, projectId, onAdd }: VisualizationsPageProps = {}) {
+export default function VisualizationsPage({ filterIds, projectId, projectOwner, onAdd }: VisualizationsPageProps = {}) {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
+  const { canEdit, canView, isProjectOwner } = useCurrentUser();
   const [searchText, setSearchText] = useState('');
   const [editBuilderViz, setEditBuilderViz] = useState<Visualization | null>(null);
   const [viewModalOpen, setViewModalOpen] = useState(false);
@@ -270,6 +273,8 @@ export default function VisualizationsPage({ filterIds, projectId, onAdd }: Visu
       return [];
     }
     let result = visualizations;
+    // Visibility: show own visualizations + public visualizations (admins/anonymous see all)
+    result = result.filter((v) => canView(v.owner, v.isPublic));
     if (filterIds) {
       const idSet = new Set(filterIds);
       result = result.filter((v) => idSet.has(v.id));
@@ -284,7 +289,7 @@ export default function VisualizationsPage({ filterIds, projectId, onAdd }: Visu
       );
     }
     return result;
-  }, [visualizations, searchText, filterIds]);
+  }, [visualizations, searchText, filterIds, canView]);
 
   // Handle view - execute SQL and render chart
   const handleView = useCallback(async (viz: Visualization) => {
@@ -439,32 +444,39 @@ export default function VisualizationsPage({ filterIds, projectId, onAdd }: Visu
                         <MiniVizPreview viz={viz} />
                       </div>
                     }
-                    actions={[
-                      <Tooltip title="View" key="view">
-                        <EyeOutlined onClick={() => handleView(viz)} />
-                      </Tooltip>,
-                      <Tooltip title="Edit" key="edit">
-                        <EditOutlined onClick={() => setEditBuilderViz(viz)} />
-                      </Tooltip>,
-                      ...(!projectId ? [
-                        <Tooltip title="Add to Project" key="addToProject">
-                          <FolderOutlined onClick={() => setAddToProjectId(viz.id)} />
+                    actions={(() => {
+                      const editable = canEdit(viz.owner) || (projectOwner ? isProjectOwner(projectOwner) : false);
+                      return [
+                        <Tooltip title="View" key="view">
+                          <EyeOutlined onClick={() => handleView(viz)} />
                         </Tooltip>,
-                      ] : []),
-                      <Popconfirm
-                        key="delete"
-                        title="Delete this visualization?"
-                        description="This action cannot be undone."
-                        onConfirm={() => deleteMutation.mutate(viz.id)}
-                        okText="Delete"
-                        cancelText="Cancel"
-                        okButtonProps={{ danger: true }}
-                      >
-                        <Tooltip title="Delete">
-                          <DeleteOutlined style={{ color: '#ff4d4f' }} />
-                        </Tooltip>
-                      </Popconfirm>,
-                    ]}
+                        ...(editable ? [
+                          <Tooltip title="Edit" key="edit">
+                            <EditOutlined onClick={() => setEditBuilderViz(viz)} />
+                          </Tooltip>,
+                        ] : []),
+                        ...(!projectId ? [
+                          <Tooltip title="Add to Project" key="addToProject">
+                            <FolderOutlined onClick={() => setAddToProjectId(viz.id)} />
+                          </Tooltip>,
+                        ] : []),
+                        ...(editable ? [
+                          <Popconfirm
+                            key="delete"
+                            title="Delete this visualization?"
+                            description="This action cannot be undone."
+                            onConfirm={() => deleteMutation.mutate(viz.id)}
+                            okText="Delete"
+                            cancelText="Cancel"
+                            okButtonProps={{ danger: true }}
+                          >
+                            <Tooltip title="Delete">
+                              <DeleteOutlined style={{ color: '#ff4d4f' }} />
+                            </Tooltip>
+                          </Popconfirm>,
+                        ] : []),
+                      ];
+                    })()}
                   >
                     <Card.Meta
                       title={

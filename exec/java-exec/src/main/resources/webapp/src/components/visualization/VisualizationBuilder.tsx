@@ -37,6 +37,7 @@ import {
 import { ReloadOutlined } from '@ant-design/icons';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { createVisualization, updateVisualization } from '../../api/visualizations';
+import { addVisualization } from '../../api/projects';
 import { executeQuery } from '../../api/queries';
 import ChartTypeSelector from './ChartTypeSelector';
 import ColumnMapper from './ColumnMapper';
@@ -55,6 +56,7 @@ interface VisualizationBuilderProps {
   sql?: string;
   defaultSchema?: string;
   visualization?: Visualization | null;
+  projectId?: string;
 }
 
 const colorSchemeOptions = [
@@ -72,6 +74,7 @@ export default function VisualizationBuilder({
   sql,
   defaultSchema,
   visualization,
+  projectId,
 }: VisualizationBuilderProps) {
   const isEditMode = !!visualization;
 
@@ -211,7 +214,15 @@ export default function VisualizationBuilder({
 
   const createMutation = useMutation({
     mutationFn: createVisualization,
-    onSuccess: () => {
+    onSuccess: async (viz) => {
+      if (projectId && viz?.id) {
+        try {
+          await addVisualization(projectId, viz.id);
+          queryClient.invalidateQueries({ queryKey: ['project', projectId] });
+        } catch {
+          // Non-fatal
+        }
+      }
       message.success('Visualization created successfully');
       queryClient.invalidateQueries({ queryKey: ['visualizations'] });
       handleClose();

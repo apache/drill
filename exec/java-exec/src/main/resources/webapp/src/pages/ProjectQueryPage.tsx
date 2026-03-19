@@ -15,14 +15,33 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+import { useSelector, useDispatch } from 'react-redux';
 import { useProjectContext } from '../contexts/ProjectContext';
+import { QuerySuggestions } from '../components/project';
+import type { RootState } from '../store';
+import { setSql } from '../store/querySlice';
 import SqlLabPage from './SqlLabPage';
 
 export default function ProjectQueryPage() {
   const { project, projectId } = useProjectContext();
+  const dispatch = useDispatch();
+  const activeTabId = useSelector((state: RootState) => state.query.activeTabId);
 
   const datasets = project?.datasets || [];
   const datasetFilter = { datasets };
 
-  return <SqlLabPage datasetFilter={datasetFilter} projectId={projectId} />;
+  const handleSelectSql = (sql: string) => {
+    dispatch(setSql({ tabId: activeTabId, sql }));
+  };
+
+  const suggestionPanel = project?.datasets && project.datasets.length > 0 ? (
+    <QuerySuggestions
+      projectId={projectId!}
+      datasets={datasets}
+      savedQueryCount={project?.savedQueryIds?.length || 0}
+      onSelectSql={handleSelectSql}
+    />
+  ) : null;
+
+  return <SqlLabPage datasetFilter={datasetFilter} projectId={projectId} savedQueryIds={project?.savedQueryIds} headerContent={suggestionPanel} />;
 }

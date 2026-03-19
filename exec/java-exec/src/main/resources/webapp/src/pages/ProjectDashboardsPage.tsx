@@ -38,6 +38,7 @@ export default function ProjectDashboardsPage() {
         filterIds={project?.dashboardIds}
         projectId={projectId}
         projectName={project?.name}
+        projectOwner={project?.owner}
         onAdd={() => setAddModalOpen(true)}
       />
       <AddItemModal

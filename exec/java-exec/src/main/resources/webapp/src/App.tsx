@@ -39,6 +39,7 @@ import DashboardViewPage from './pages/DashboardViewPage';
 import MetricsPage from './pages/MetricsPage';
 import OptionsPage from './pages/OptionsPage';
 import LogsPage from './pages/LogsPage';
+import WorkflowsPage from './pages/WorkflowsPage';
 import { ProjectLayout } from './components/project';
 
 const { Content } = Layout;
@@ -67,6 +68,7 @@ function App() {
           <Route path="/datasources/:name" element={<DataSourceEditPage />} />
           <Route path="/query" element={<SqlLabPage />} />
           <Route path="/saved-queries" element={<SavedQueriesPage />} />
+          <Route path="/workflows" element={<WorkflowsPage />} />
           <Route path="/profiles" element={<ProfilesPage />} />
           <Route path="/profiles/:queryId" element={<ProfileDetailPage />} />
           <Route path="/visualizations" element={<VisualizationsPage />} />

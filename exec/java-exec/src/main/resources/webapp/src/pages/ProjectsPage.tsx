@@ -53,6 +53,7 @@ import {
   DashboardOutlined,
   FileTextOutlined,
   SettingOutlined,
+  UploadOutlined,
 } from '@ant-design/icons';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import {
@@ -64,6 +65,7 @@ import {
   toggleFavorite,
 } from '../api/projects';
 import type { Project } from '../types';
+import { ExportImportModal } from '../components/project';
 
 const { Title, Text } = Typography;
 const { TextArea } = Input;
@@ -78,6 +80,7 @@ export default function ProjectsPage() {
   const [editingProject, setEditingProject] = useState<Project | null>(null);
   const [createForm] = Form.useForm();
   const [editForm] = Form.useForm();
+  const [importModalOpen, setImportModalOpen] = useState(false);
 
   const { data: projects, isLoading, error } = useQuery({
     queryKey: ['projects'],
@@ -251,13 +254,21 @@ export default function ProjectsPage() {
             <Title level={3} style={{ margin: 0 }}>
               Projects
             </Title>
-            <Button
-              type="primary"
-              icon={<PlusOutlined />}
-              onClick={() => setCreateModalOpen(true)}
-            >
-              New Project
-            </Button>
+            <Space>
+              <Button
+                icon={<UploadOutlined />}
+                onClick={() => setImportModalOpen(true)}
+              >
+                Import Project
+              </Button>
+              <Button
+                type="primary"
+                icon={<PlusOutlined />}
+                onClick={() => setCreateModalOpen(true)}
+              >
+                New Project
+              </Button>
+            </Space>
           </div>
 
           {/* Search and Favorites Filter */}
@@ -516,6 +527,17 @@ export default function ProjectsPage() {
           </Form.Item>
         </Form>
       </Modal>
+
+      {/* Import Project Modal */}
+      <ExportImportModal
+        open={importModalOpen}
+        mode="import"
+        onClose={() => setImportModalOpen(false)}
+        onSuccess={() => {
+          queryClient.invalidateQueries({ queryKey: ['projects'] });
+          setImportModalOpen(false);
+        }}
+      />
     </div>
   );
 }

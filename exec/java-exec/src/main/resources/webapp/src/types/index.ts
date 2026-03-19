@@ -391,3 +391,55 @@ export interface FormatRow {
   type: string;                                   // Format type from config.type
   config: Record<string, unknown>;               // Full config object
 }
+
+export interface ProjectExportBundle {
+  version: 1;
+  exportedAt: string;
+  project: {
+    name: string;
+    description?: string;
+    tags: string[];
+    isPublic: boolean;
+    datasets: DatasetRef[];
+    wikiPages: Omit<WikiPage, 'id' | 'createdAt' | 'updatedAt'>[];
+  };
+  savedQueries: Omit<SavedQuery, 'id' | 'createdAt' | 'updatedAt' | 'owner'>[];
+  visualizations: Omit<Visualization, 'id' | 'createdAt' | 'updatedAt' | 'owner'>[];
+  dashboards: Omit<Dashboard, 'id' | 'createdAt' | 'updatedAt' | 'owner'>[];
+}
+
+// Query Schedule types
+export type ScheduleFrequency = 'hourly' | 'daily' | 'weekly' | 'monthly';
+export type DayOfWeek = 0 | 1 | 2 | 3 | 4 | 5 | 6;
+
+export interface QuerySchedule {
+  id: string;
+  savedQueryId: string;
+  description?: string;
+  frequency: ScheduleFrequency;
+  enabled: boolean;
+  timeOfDay: string;
+  dayOfWeek?: DayOfWeek;
+  dayOfMonth?: number;
+  notifyOnSuccess: boolean;
+  notifyOnFailure: boolean;
+  notifyEmails: string[];
+  retentionCount: number;
+  nextRunAt?: string;
+  lastRunAt?: string;
+  createdAt: string;
+  expiresAt?: string;
+  renewedAt?: string;
+  snapshots?: QuerySnapshot[];
+}
+
+export interface QuerySnapshot {
+  id: string;
+  scheduleId: string;
+  savedQueryId: string;
+  executedAt: string;
+  status: 'success' | 'error';
+  rowCount?: number;
+  duration?: number;
+  errorMessage?: string;
+}
