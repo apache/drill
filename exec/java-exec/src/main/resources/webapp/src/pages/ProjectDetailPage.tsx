@@ -43,6 +43,7 @@ import {
   ShareAltOutlined,
   EditOutlined,
   SettingOutlined,
+  DownloadOutlined,
 } from '@ant-design/icons';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import {
@@ -50,7 +51,7 @@ import {
   deleteWikiPage,
 } from '../api/projects';
 import { useProjectContext } from '../contexts/ProjectContext';
-import { ShareModal, WikiEditor, DatasetPickerModal, ProjectActivityFeed, ProjectLineage } from '../components/project';
+import { ShareModal, WikiEditor, DatasetPickerModal, ProjectActivityFeed, ProjectLineage, ExportImportModal } from '../components/project';
 
 const { Title, Text, Paragraph } = Typography;
 
@@ -62,6 +63,7 @@ export default function ProjectDetailPage() {
   const [wikiEditorOpen, setWikiEditorOpen] = useState(false);
   const [editingWikiPageId, setEditingWikiPageId] = useState<string | null>(null);
   const [datasetRefModalOpen, setDatasetRefModalOpen] = useState(false);
+  const [exportModalOpen, setExportModalOpen] = useState(false);
 
   const removeDatasetMutation = useMutation({
     mutationFn: (datasetId: string) => removeDataset(projectId!, datasetId),
@@ -305,6 +307,12 @@ export default function ProjectDetailPage() {
             </Space>
             <Space>
               <Button
+                icon={<DownloadOutlined />}
+                onClick={() => setExportModalOpen(true)}
+              >
+                Export
+              </Button>
+              <Button
                 icon={<ShareAltOutlined />}
                 onClick={() => setShareModalOpen(true)}
               >
@@ -361,6 +369,13 @@ export default function ProjectDetailPage() {
           queryClient.invalidateQueries({ queryKey: ['project', projectId] });
           setDatasetRefModalOpen(false);
         }}
+      />
+
+      <ExportImportModal
+        open={exportModalOpen}
+        mode="export"
+        projectId={projectId}
+        onClose={() => setExportModalOpen(false)}
       />
     </div>
   );

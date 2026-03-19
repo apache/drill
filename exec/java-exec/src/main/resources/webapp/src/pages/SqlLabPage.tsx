@@ -78,6 +78,7 @@ interface SqlLabPageProps {
   datasetFilter?: DatasetFilter;
   headerContent?: React.ReactNode;
   projectId?: string;
+  savedQueryIds?: string[];
 }
 
 interface LocationState {
@@ -85,7 +86,7 @@ interface LocationState {
   initialSql?: string;
 }
 
-export default function SqlLabPage({ datasetFilter, headerContent, projectId }: SqlLabPageProps) {
+export default function SqlLabPage({ datasetFilter, headerContent, projectId, savedQueryIds }: SqlLabPageProps) {
   const dispatch = useDispatch<AppDispatch>();
   const location = useLocation();
   const navigate = useNavigate();
@@ -895,6 +896,8 @@ export default function SqlLabPage({ datasetFilter, headerContent, projectId }: 
             onInsertText={handleInsertText}
             onTableSelect={handleTableSelect}
             datasetFilter={datasetFilter}
+            projectId={projectId}
+            savedQueryIds={savedQueryIds}
           />
         )}
       </div>
@@ -1126,6 +1129,8 @@ export default function SqlLabPage({ datasetFilter, headerContent, projectId }: 
         onClose={() => setSaveDialogOpen(false)}
         sql={sql}
         defaultSchema={activeTab?.defaultSchema}
+        projectId={projectId}
+        onSaved={(name) => dispatch(renameTab({ tabId: activeTabId, name }))}
       />
 
       {/* Visualization Builder */}
@@ -1135,6 +1140,7 @@ export default function SqlLabPage({ datasetFilter, headerContent, projectId }: 
         queryResult={results ?? null}
         sql={sql}
         defaultSchema={activeTab?.defaultSchema}
+        projectId={projectId}
       />
 
       {/* Share API Modal */}
