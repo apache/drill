@@ -35,6 +35,7 @@ import { buildPluginNode } from './TreeNodeBuilder';
 import ContextMenu from './ContextMenu';
 import type { NodeType } from './ContextMenu';
 import { useFavorites } from './useFavorites';
+import { useSchemaUsage } from '../../hooks/useSchemaUsage';
 import ColumnStats from './ColumnStats';
 import FileInfoModal from './FileInfoModal';
 import { DataProfiler } from '../data-profiler';
@@ -49,6 +50,8 @@ interface SchemaExplorerProps {
   onInsertText?: (text: string) => void;
   onTableSelect?: (schema: string, table: string, columnNames?: string[]) => void;
   datasetFilter?: DatasetFilter;
+  projectId?: string;
+  savedQueryIds?: string[];
 }
 
 /**
@@ -295,7 +298,7 @@ function filterTreeNodes(nodes: DataNode[], allow: DatasetAllowList): DataNode[]
   }, []);
 }
 
-export default function SchemaExplorer({ onInsertText, onTableSelect, datasetFilter }: SchemaExplorerProps) {
+export default function SchemaExplorer({ onInsertText, onTableSelect, datasetFilter, projectId, savedQueryIds }: SchemaExplorerProps) {
   const queryClient = useQueryClient();
   const navigate = useNavigate();
   const [searchText, setSearchText] = useState('');
@@ -325,6 +328,9 @@ export default function SchemaExplorer({ onInsertText, onTableSelect, datasetFil
 
   // Favorites
   const { favorites, toggleFavorite, isFavorite } = useFavorites();
+
+  // SQL usage counts from project saved queries
+  const usageCounts = useSchemaUsage(projectId, savedQueryIds);
 
   // React Query: plugins
   const { data: plugins, isLoading: pluginsLoading } = usePlugins();
@@ -393,6 +399,7 @@ export default function SchemaExplorer({ onInsertText, onTableSelect, datasetFil
         plugin, schemasCache, tablesCache, columnsCache, filesCache, nestedCache, subTablesCache,
         columnFilter,
         (key, val) => setColumnFilter((prev) => ({ ...prev, [key]: val })),
+        usageCounts,
       )
     );
 
@@ -430,7 +437,7 @@ export default function SchemaExplorer({ onInsertText, onTableSelect, datasetFil
     }
 
     return nodes;
-  }, [plugins, schemasCache, tablesCache, columnsCache, filesCache, nestedCache, subTablesCache, searchText, datasetAllowList, columnFilter]);
+  }, [plugins, schemasCache, tablesCache, columnsCache, filesCache, nestedCache, subTablesCache, searchText, datasetAllowList, columnFilter, usageCounts]);
 
   // Favorites section: flat list of pinned nodes at the top
   const favoritesTreeData = useMemo((): DataNode[] => {

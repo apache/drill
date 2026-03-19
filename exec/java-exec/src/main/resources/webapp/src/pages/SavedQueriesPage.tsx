@@ -33,6 +33,7 @@ import {
   Modal,
   Form,
   Switch,
+  Select,
 } from 'antd';
 import {
   SearchOutlined,
@@ -44,14 +45,19 @@ import {
   UserOutlined,
   CodeOutlined,
   FolderOutlined,
+  ClockCircleOutlined,
 } from '@ant-design/icons';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { getSavedQueries, deleteSavedQuery, updateSavedQuery } from '../api/savedQueries';
+import { getProjects } from '../api/projects';
+import { getSchedules } from '../api/schedules';
+import { useCurrentUser } from '../hooks/useCurrentUser';
 import type { SavedQuery } from '../types';
 import type { ColumnsType } from 'antd/es/table';
 import AddToProjectModal from '../components/common/AddToProjectModal';
 import BulkActionBar from '../components/common/BulkActionBar';
 import BulkAddToProjectModal from '../components/common/BulkAddToProjectModal';
+import ScheduleModal from '../components/query-editor/ScheduleModal';
 
 const { Title, Text, Paragraph } = Typography;
 const { TextArea } = Input;
@@ -59,12 +65,14 @@ const { TextArea } = Input;
 interface SavedQueriesPageProps {
   filterIds?: string[];
   projectId?: string;
+  projectOwner?: string;
   onAdd?: () => void;
 }
 
-export default function SavedQueriesPage({ filterIds, projectId, onAdd }: SavedQueriesPageProps = {}) {
+export default function SavedQueriesPage({ filterIds, projectId, projectOwner, onAdd }: SavedQueriesPageProps = {}) {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
+  const { canEdit, canView, isProjectOwner } = useCurrentUser();
   const [searchText, setSearchText] = useState('');
   const [editModalOpen, setEditModalOpen] = useState(false);
   const [editingQuery, setEditingQuery] = useState<SavedQuery | null>(null);
@@ -73,12 +81,29 @@ export default function SavedQueriesPage({ filterIds, projectId, onAdd }: SavedQ
   const [addToProjectId, setAddToProjectId] = useState<string | null>(null);
   const [selectedRowKeys, setSelectedRowKeys] = useState<string[]>([]);
   const [bulkProjectModalOpen, setBulkProjectModalOpen] = useState(false);
+  const [scheduleQueryId, setScheduleQueryId] = useState<string | null>(null);
+  const [scheduleQueryName, setScheduleQueryName] = useState('');
+  const [scheduleQuerySql, setScheduleQuerySql] = useState<string | undefined>(undefined);
+  const [projectFilter, setProjectFilter] = useState<string | null>(null);
   const [form] = Form.useForm();
 
   // Fetch saved queries
   const { data: queries, isLoading, error } = useQuery({
     queryKey: ['savedQueries'],
     queryFn: getSavedQueries,
+  });
+
+  // Fetch projects for filter dropdown (only on global page)
+  const { data: projects } = useQuery({
+    queryKey: ['projects'],
+    queryFn: getProjects,
+    enabled: !projectId,
+  });
+
+  // Fetch schedules
+  const { data: schedules } = useQuery({
+    queryKey: ['schedules'],
+    queryFn: getSchedules,
   });
 
   // Delete mutation
@@ -108,15 +133,24 @@ export default function SavedQueriesPage({ filterIds, projectId, onAdd }: SavedQ
     },
   });
 
-  // Filter queries based on filterIds (project scope) and search text
+  // Filter queries based on visibility, filterIds (project scope), project filter, and search text
   const filteredQueries = useMemo(() => {
     if (!queries) {
       return [];
     }
     let result = queries;
+    // Visibility: show own queries + public queries (admins/anonymous see all)
+    result = result.filter((q) => canView(q.owner, q.isPublic));
     if (filterIds) {
       const idSet = new Set(filterIds);
       result = result.filter((q) => idSet.has(q.id));
+    }
+    if (projectFilter && projects) {
+      const proj = projects.find((p) => p.id === projectFilter);
+      if (proj) {
+        const idSet = new Set(proj.savedQueryIds || []);
+        result = result.filter((q) => idSet.has(q.id));
+      }
     }
     if (searchText) {
       const lowerSearch = searchText.toLowerCase();
@@ -128,7 +162,7 @@ export default function SavedQueriesPage({ filterIds, projectId, onAdd }: SavedQ
       );
     }
     return result;
-  }, [queries, searchText, filterIds]);
+  }, [queries, searchText, filterIds, projectFilter, projects, canView]);
 
   // Handle loading query into SQL Lab
   const handleLoadQuery = (query: SavedQuery) => {
@@ -188,7 +222,9 @@ export default function SavedQueriesPage({ filterIds, projectId, onAdd }: SavedQ
       dataIndex: 'name',
       key: 'name',
       sorter: (a, b) => a.name.localeCompare(b.name),
-      render: (name: string, record: SavedQuery) => (
+      render: (name: string, record: SavedQuery) => {
+        const hasActiveSchedule = schedules?.some((s) => s.savedQueryId === record.id && s.enabled);
+        return (
         <Space direction="vertical" size={0}>
           <Space>
             <Text strong>{name}</Text>
@@ -201,6 +237,9 @@ export default function SavedQueriesPage({ filterIds, projectId, onAdd }: SavedQ
                 <LockOutlined style={{ color: '#faad14' }} />
               </Tooltip>
             )}
+            {hasActiveSchedule && (
+              <Tag color="green" icon={<ClockCircleOutlined />}>Scheduled</Tag>
+            )}
           </Space>
           {record.description && (
             <Text type="secondary" style={{ fontSize: 12 }}>
@@ -208,7 +247,8 @@ export default function SavedQueriesPage({ filterIds, projectId, onAdd }: SavedQ
             </Text>
           )}
         </Space>
-      ),
+        );
+      },
     },
     {
       title: 'Owner',
@@ -247,8 +287,11 @@ export default function SavedQueriesPage({ filterIds, projectId, onAdd }: SavedQ
     {
       title: 'Actions',
       key: 'actions',
-      width: 200,
-      render: (_: unknown, record: SavedQuery) => (
+      width: 240,
+      render: (_: unknown, record: SavedQuery) => {
+        const hasSchedule = schedules?.some((s) => s.savedQueryId === record.id && s.enabled);
+        const editable = canEdit(record.owner) || (projectOwner ? isProjectOwner(projectOwner) : false);
+        return (
         <Space>
           <Tooltip title="Run in SQL Lab">
             <Button
@@ -265,32 +308,51 @@ export default function SavedQueriesPage({ filterIds, projectId, onAdd }: SavedQ
               onClick={() => handleViewSql(record)}
             />
           </Tooltip>
-          <Tooltip title="Edit">
-            <Button
-              size="small"
-              icon={<EditOutlined />}
-              onClick={() => handleEdit(record)}
-            />
-          </Tooltip>
+          {editable && (
+            <Tooltip title="Edit">
+              <Button
+                size="small"
+                icon={<EditOutlined />}
+                onClick={() => handleEdit(record)}
+              />
+            </Tooltip>
+          )}
+          {editable && (
+            <Tooltip title="Schedule">
+              <Button
+                size="small"
+                icon={<ClockCircleOutlined />}
+                style={hasSchedule ? { color: '#52c41a' } : undefined}
+                onClick={() => {
+                  setScheduleQueryId(record.id);
+                  setScheduleQueryName(record.name);
+                  setScheduleQuerySql(record.sql);
+                }}
+              />
+            </Tooltip>
+          )}
           {!projectId && (
             <Tooltip title="Add to Project">
               <Button size="small" icon={<FolderOutlined />} onClick={() => setAddToProjectId(record.id)} />
             </Tooltip>
           )}
-          <Popconfirm
-            title="Delete this query?"
-            description="This action cannot be undone."
-            onConfirm={() => deleteMutation.mutate(record.id)}
-            okText="Delete"
-            cancelText="Cancel"
-            okButtonProps={{ danger: true }}
-          >
-            <Tooltip title="Delete">
-              <Button size="small" danger icon={<DeleteOutlined />} />
-            </Tooltip>
-          </Popconfirm>
+          {editable && (
+            <Popconfirm
+              title="Delete this query?"
+              description="This action cannot be undone."
+              onConfirm={() => deleteMutation.mutate(record.id)}
+              okText="Delete"
+              cancelText="Cancel"
+              okButtonProps={{ danger: true }}
+            >
+              <Tooltip title="Delete">
+                <Button size="small" danger icon={<DeleteOutlined />} />
+              </Tooltip>
+            </Popconfirm>
+          )}
         </Space>
-      ),
+        );
+      },
     },
   ];
 
@@ -331,15 +393,28 @@ export default function SavedQueriesPage({ filterIds, projectId, onAdd }: SavedQ
             </Space>
           </div>
 
-          {/* Search */}
-          <Input
-            placeholder="Search queries by name, SQL, or description..."
-            prefix={<SearchOutlined />}
-            value={searchText}
-            onChange={(e) => setSearchText(e.target.value)}
-            allowClear
-            style={{ maxWidth: 400 }}
-          />
+          {/* Search and Project Filter */}
+          <Space wrap>
+            <Input
+              placeholder="Search queries by name, SQL, or description..."
+              prefix={<SearchOutlined />}
+              value={searchText}
+              onChange={(e) => setSearchText(e.target.value)}
+              allowClear
+              style={{ width: 400 }}
+            />
+            {!projectId && projects && projects.length > 0 && (
+              <Select
+                placeholder="Filter by project"
+                value={projectFilter}
+                onChange={setProjectFilter}
+                allowClear
+                style={{ width: 200 }}
+                options={projects.map((p) => ({ value: p.id, label: p.name }))}
+                suffixIcon={<FolderOutlined />}
+              />
+            )}
+          </Space>
 
           {/* Bulk Action Bar */}
           <BulkActionBar
@@ -482,6 +557,22 @@ export default function SavedQueriesPage({ filterIds, projectId, onAdd }: SavedQ
         onClose={() => setBulkProjectModalOpen(false)}
         itemIds={selectedRowKeys}
         itemType="savedQuery"
+      />
+
+      {/* Schedule Modal */}
+      <ScheduleModal
+        open={!!scheduleQueryId}
+        onClose={() => {
+          setScheduleQueryId(null);
+          setScheduleQueryName('');
+          setScheduleQuerySql(undefined);
+        }}
+        savedQueryId={scheduleQueryId || ''}
+        savedQueryName={scheduleQueryName}
+        savedQuerySql={scheduleQuerySql}
+        onSuccess={() => {
+          queryClient.invalidateQueries({ queryKey: ['schedules'] });
+        }}
       />
     </div>
   );
