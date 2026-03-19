@@ -24,6 +24,12 @@ import { getPluginIcon, getColumnIcon, getFileIcon, isFileBasedPlugin, isComplex
 
 const { Text } = Typography;
 
+/** Optional usage counts from project saved queries. */
+export interface UsageCounts {
+  tables: Map<string, number>;
+  columns: Map<string, number>;
+}
+
 /**
  * Key-prefix conventions:
  *   plugin:<name>                          – storage plugin
@@ -75,6 +81,7 @@ export function buildColumnNodes(
   parentSchema: string,
   parentName: string,
   nestedCache: Record<string, NestedFieldInfo[]>,
+  usageCounts?: UsageCounts,
 ): DataNode[] {
   return columns.map((col) => {
     const colKey = `column:${parentSchema}:${parentName}:${col.name}`;
@@ -84,12 +91,19 @@ export function buildColumnNodes(
       ? buildNestedFieldNodes(nestedCache[colKey], parentSchema, parentName, col.name, nestedCache)
       : undefined;
 
+    const colCount = usageCounts?.columns.get(col.name.toLowerCase()) || 0;
+
     return {
       key: colKey,
       title: (
-        <Tooltip title={`${col.type}${col.nullable ? ' (nullable)' : ''}`}>
+        <Tooltip title={`${col.type}${col.nullable ? ' (nullable)' : ''}${colCount > 0 ? ` \u2022 Used in ${colCount} queries` : ''}`}>
           <span>
             {col.name} <Text type="secondary" style={{ fontSize: 11 }}>{col.type}</Text>
+            {colCount > 0 && (
+              <Tag color="geekblue" style={{ fontSize: 9, marginLeft: 4, lineHeight: '14px', padding: '0 3px' }}>
+                {colCount}
+              </Tag>
+            )}
           </span>
         </Tooltip>
       ),
@@ -107,12 +121,13 @@ export function buildSubTableNodes(
   subTables: SubTableInfo[],
   columnsCache: Record<string, ColumnInfo[]>,
   nestedCache: Record<string, NestedFieldInfo[]>,
+  usageCounts?: UsageCounts,
 ): DataNode[] {
   return subTables.map((sub) => {
     const sheetKey = `sheet:${schema}:${filePath}:${sub.name}`;
     const columns = columnsCache[sheetKey] || [];
     const columnNodes = columns.length > 0
-      ? buildColumnNodes(columns, schema, `${filePath}/${sub.name}`, nestedCache)
+      ? buildColumnNodes(columns, schema, `${filePath}/${sub.name}`, nestedCache, usageCounts)
       : undefined;
 
     const subtitle = sub.dataType ? ` (${sub.dataType})` : '';
@@ -140,6 +155,7 @@ export function buildFileNodes(
   nestedCache: Record<string, NestedFieldInfo[]>,
   subTablesCache: Record<string, SubTableInfo[]>,
   parentPath: string = '',
+  usageCounts?: UsageCounts,
 ): DataNode[] {
   return files.map((file) => {
     const filePath = parentPath ? `${parentPath}/${file.name}` : file.name;
@@ -155,7 +171,7 @@ export function buildFileNodes(
       if (homoFormat) {
         const columns = columnsCache[dirKey] || [];
         const columnNodes = columns.length > 0
-          ? buildColumnNodes(columns, schema, filePath, nestedCache)
+          ? buildColumnNodes(columns, schema, filePath, nestedCache, usageCounts)
           : undefined;
 
         return {
@@ -172,7 +188,7 @@ export function buildFileNodes(
       }
 
       const subNodes = subFiles.length > 0
-        ? buildFileNodes(schema, subFiles, filesCache, columnsCache, nestedCache, subTablesCache, filePath)
+        ? buildFileNodes(schema, subFiles, filesCache, columnsCache, nestedCache, subTablesCache, filePath, usageCounts)
         : undefined;
 
       return {
@@ -191,7 +207,7 @@ export function buildFileNodes(
     if (isMultiTableFile(file.name)) {
       const subTables = subTablesCache[fileKey] || [];
       if (subTables.length > 0) {
-        const subTableNodes = buildSubTableNodes(schema, filePath, subTables, columnsCache, nestedCache);
+        const subTableNodes = buildSubTableNodes(schema, filePath, subTables, columnsCache, nestedCache, usageCounts);
         return {
           key: fileKey,
           title: (
@@ -209,7 +225,7 @@ export function buildFileNodes(
 
     const columns = columnsCache[fileKey] || [];
     const columnNodes = columns.length > 0
-      ? buildColumnNodes(columns, schema, filePath, nestedCache)
+      ? buildColumnNodes(columns, schema, filePath, nestedCache, usageCounts)
       : undefined;
 
     return {
@@ -234,6 +250,7 @@ export function buildTableNodes(
   nestedCache: Record<string, NestedFieldInfo[]>,
   columnFilter?: Record<string, string>,
   onColumnFilterChange?: (key: string, value: string) => void,
+  usageCounts?: UsageCounts,
 ): DataNode[] {
   return tables.map((table) => {
     const tableKey = `table:${schemaName}:${table.name}`;
@@ -270,7 +287,7 @@ export function buildTableNodes(
       : allColumns;
 
     const columnNodes = filteredColumns.length > 0
-      ? buildColumnNodes(filteredColumns, schemaName, table.name, nestedCache)
+      ? buildColumnNodes(filteredColumns, schemaName, table.name, nestedCache, usageCounts)
       : allColumns.length > 0
         ? [{ key: `${tableKey}:__no_match__`, title: <Text type="secondary" italic>No matching columns</Text>, isLeaf: true, selectable: false } as DataNode]
         : undefined;
@@ -300,9 +317,25 @@ export function buildTableNodes(
         ]
       : columnNodes;
 
+    // Check for usage count
+    const tableFullName = `${schemaName}.${table.name}`.toLowerCase();
+    const tableLower = table.name.toLowerCase();
+    const tableCount = usageCounts?.tables.get(tableFullName) || usageCounts?.tables.get(tableLower) || 0;
+
     return {
       key: tableKey,
-      title: table.name,
+      title: (
+        <span>
+          {table.name}
+          {tableCount > 0 && (
+            <Tooltip title={`Referenced in ${tableCount} saved ${tableCount === 1 ? 'query' : 'queries'}`}>
+              <Tag color="blue" style={{ fontSize: 10, marginLeft: 4, lineHeight: '16px' }}>
+                {tableCount}
+              </Tag>
+            </Tooltip>
+          )}
+        </span>
+      ),
       icon: <TableOutlined style={{ color: '#faad14' }} />,
       children,
       isLeaf: false,
@@ -321,6 +354,7 @@ export function buildSchemaNodes(
   subTablesCache: Record<string, SubTableInfo[]>,
   columnFilter?: Record<string, string>,
   onColumnFilterChange?: (key: string, value: string) => void,
+  usageCounts?: UsageCounts,
 ): DataNode[] {
   const pluginIsFileBased = isFileBasedPlugin(plugin.type, plugin.name);
 
@@ -330,7 +364,7 @@ export function buildSchemaNodes(
     if (pluginIsFileBased) {
       const files = filesCache[schemaKey] || [];
       const fileNodes = files.length > 0
-        ? buildFileNodes(schema.name, files, filesCache, columnsCache, nestedCache, subTablesCache)
+        ? buildFileNodes(schema.name, files, filesCache, columnsCache, nestedCache, subTablesCache, '', usageCounts)
         : undefined;
 
       return {
@@ -345,7 +379,7 @@ export function buildSchemaNodes(
     // Non-file schema
     const tables = tablesCache[schema.name] || [];
     const tableNodes = tables.length > 0
-      ? buildTableNodes(schema.name, tables, columnsCache, nestedCache, columnFilter, onColumnFilterChange)
+      ? buildTableNodes(schema.name, tables, columnsCache, nestedCache, columnFilter, onColumnFilterChange, usageCounts)
       : undefined;
 
     const schemaBrowsable = schema.browsable !== false;
@@ -380,11 +414,12 @@ export function buildPluginNode(
   subTablesCache: Record<string, SubTableInfo[]>,
   columnFilter?: Record<string, string>,
   onColumnFilterChange?: (key: string, value: string) => void,
+  usageCounts?: UsageCounts,
 ): DataNode {
   const pluginKey = `plugin:${plugin.name}`;
   const schemas = schemasCache[plugin.name] || [];
   const schemaNodes = schemas.length > 0
-    ? buildSchemaNodes(plugin, schemas, tablesCache, columnsCache, filesCache, nestedCache, subTablesCache, columnFilter, onColumnFilterChange)
+    ? buildSchemaNodes(plugin, schemas, tablesCache, columnsCache, filesCache, nestedCache, subTablesCache, columnFilter, onColumnFilterChange, usageCounts)
     : undefined;
 
   const isHttpPlugin = plugin.type?.toLowerCase().includes('http') || plugin.name.toLowerCase() === 'http';
