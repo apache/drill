@@ -33,6 +33,7 @@ import {
   message,
   Alert,
   Descriptions,
+  Badge,
 } from 'antd';
 import {
   SearchOutlined,
@@ -45,12 +46,16 @@ import {
   ReloadOutlined,
   SettingOutlined,
   WarningOutlined,
+  PlayCircleOutlined,
+  PauseCircleOutlined,
 } from '@ant-design/icons';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import {
   getSchedules,
   deleteSchedule,
   renewSchedule,
+  runScheduleNow,
+  updateSchedule,
   getSnapshots,
   getScheduleConfig,
   updateScheduleConfig,
@@ -59,6 +64,8 @@ import { getSavedQueries } from '../api/savedQueries';
 import type { QuerySchedule, QuerySnapshot } from '../types';
 import type { ColumnsType } from 'antd/es/table';
 import ScheduleModal from '../components/query-editor/ScheduleModal';
+import Markdown from 'react-markdown';
+import rehypeRaw from 'rehype-raw';
 
 const { Title, Text } = Typography;
 
@@ -134,6 +141,7 @@ export default function WorkflowsPage() {
     name: string;
     sql?: string;
   } | null>(null);
+  const [runningIds, setRunningIds] = useState<Set<string>>(new Set());
   const [showConfig, setShowConfig] = useState(false);
   const [configDraft, setConfigDraft] = useState<{
     expirationEnabled: boolean;
@@ -235,6 +243,34 @@ export default function WorkflowsPage() {
     }
   };
 
+  const handleRunNow = async (id: string) => {
+    try {
+      setRunningIds((prev) => new Set(prev).add(id));
+      await runScheduleNow(id);
+      message.success('Schedule executed successfully');
+      queryClient.invalidateQueries({ queryKey: ['schedules'] });
+      queryClient.invalidateQueries({ queryKey: ['all-snapshots'] });
+    } catch {
+      message.error('Failed to run schedule');
+    } finally {
+      setRunningIds((prev) => {
+        const next = new Set(prev);
+        next.delete(id);
+        return next;
+      });
+    }
+  };
+
+  const handleTogglePause = async (record: QuerySchedule) => {
+    try {
+      await updateSchedule(record.id, { paused: !record.paused });
+      message.success(record.paused ? 'Schedule resumed' : 'Schedule paused');
+      queryClient.invalidateQueries({ queryKey: ['schedules'] });
+    } catch {
+      message.error('Failed to update schedule');
+    }
+  };
+
   const handleSaveConfig = async () => {
     try {
       await updateScheduleConfig(config);
@@ -247,6 +283,18 @@ export default function WorkflowsPage() {
       message.error('Failed to save settings. Admin privileges may be required.');
     }
   };
+
+  // Schedules with triggered alerts in their latest snapshot
+  const schedulesWithAlerts = useMemo(() => {
+    if (!schedules || !allSnapshots) {
+      return [];
+    }
+    return schedules.filter((s) => {
+      const snaps = allSnapshots[s.id] || [];
+      const latest = snaps[0];
+      return latest?.triggeredAlerts && latest.triggeredAlerts.length > 0;
+    });
+  }, [schedules, allSnapshots]);
 
   const columns: ColumnsType<QuerySchedule> = [
     {
@@ -277,13 +325,22 @@ export default function WorkflowsPage() {
         if (!record.enabled) {
           return <Tag icon={<MinusCircleFilled />}>Disabled</Tag>;
         }
+        if (record.status === 'expired') {
+          return <Tag color="error">Expired</Tag>;
+        }
+        if (record.status === 'paused' || record.paused) {
+          return <Tag color="warning" icon={<PauseCircleOutlined />}>Paused</Tag>;
+        }
         const days = daysUntilExpiry(record.expiresAt);
-        if (days !== null && days <= config.warningDaysBeforeExpiry) {
+        if (days !== null && days > 0 && days <= config.warningDaysBeforeExpiry) {
           return (
             <Tooltip title={`Expires in ${days} day${days !== 1 ? 's' : ''}`}>
-              <Tag color="warning" icon={<WarningOutlined />}>Expiring</Tag>
+              <Tag color="orange" icon={<WarningOutlined />}>Expiring</Tag>
             </Tooltip>
           );
+        }
+        if (record.status === 'active') {
+          return <Tag color="success" icon={<CheckCircleFilled />}>Active</Tag>;
         }
         return <Tag color="success" icon={<CheckCircleFilled />}>Active</Tag>;
       },
@@ -295,6 +352,28 @@ export default function WorkflowsPage() {
       render: (_, record) => (
         <RunStatusDots snapshots={allSnapshots?.[record.id] || []} />
       ),
+    },
+    {
+      title: 'Alerts',
+      key: 'alerts',
+      width: 80,
+      render: (_, record) => {
+        const latestSnap = (allSnapshots?.[record.id] || [])[0];
+        const alertCount = latestSnap?.triggeredAlerts?.length || 0;
+        return alertCount > 0
+          ? <Tag color="red">{alertCount} alert{alertCount !== 1 ? 's' : ''}</Tag>
+          : <Text type="secondary">None</Text>;
+      },
+    },
+    {
+      title: 'Results',
+      key: 'results',
+      width: 80,
+      render: (_, record) => {
+        return record.persistResults
+          ? <Tag color="blue">{record.resultFormat || 'parquet'}</Tag>
+          : <Text type="secondary">-</Text>;
+      },
     },
     {
       title: 'Schedule',
@@ -356,13 +435,31 @@ export default function WorkflowsPage() {
     {
       title: 'Actions',
       key: 'actions',
-      width: 160,
+      width: 220,
       render: (_, record) => {
         const q = queryMap[record.savedQueryId];
         const days = daysUntilExpiry(record.expiresAt);
         const needsRenewal = days !== null && days <= config.warningDaysBeforeExpiry;
+        const isRunning = record.isRunning || runningIds.has(record.id);
         return (
           <Space>
+            {!isRunning && (
+              <Tooltip title="Run now">
+                <Button
+                  size="small"
+                  icon={<PlayCircleOutlined />}
+                  loading={runningIds.has(record.id)}
+                  onClick={() => handleRunNow(record.id)}
+                />
+              </Tooltip>
+            )}
+            <Tooltip title={record.paused ? 'Resume' : 'Pause'}>
+              <Button
+                size="small"
+                icon={record.paused ? <PlayCircleOutlined /> : <PauseCircleOutlined />}
+                onClick={() => handleTogglePause(record)}
+              />
+            </Tooltip>
             {needsRenewal && (
               <Tooltip title="Renew schedule">
                 <Button
@@ -425,6 +522,32 @@ export default function WorkflowsPage() {
                     <Button size="small" type="link" onClick={() => handleRenew(s.id)}>
                       Renew now
                     </Button>
+                  </Space>
+                );
+              })}
+            </Space>
+          }
+        />
+      )}
+
+      {/* Alert warnings */}
+      {schedulesWithAlerts.length > 0 && (
+        <Alert
+          type="info"
+          showIcon
+          icon={<WarningOutlined />}
+          style={{ marginBottom: 16 }}
+          message={`${schedulesWithAlerts.length} scheduled ${schedulesWithAlerts.length === 1 ? 'query has' : 'queries have'} triggered alerts`}
+          description={
+            <Space direction="vertical" size={4}>
+              {schedulesWithAlerts.map((s) => {
+                const q = queryMap[s.savedQueryId];
+                const latestSnap = (allSnapshots?.[s.id] || [])[0];
+                const alertCount = latestSnap?.triggeredAlerts?.length || 0;
+                return (
+                  <Space key={s.id}>
+                    <Text>{q?.name || s.savedQueryId}</Text>
+                    <Tag color="red">{alertCount} alert{alertCount !== 1 ? 's' : ''}</Tag>
                   </Space>
                 );
               })}
@@ -526,6 +649,71 @@ export default function WorkflowsPage() {
                 pageSize: 15,
                 showSizeChanger: true,
                 showTotal: (total) => `${total} workflows`,
+              }}
+              expandable={{
+                expandedRowRender: (record) => {
+                  const snaps = allSnapshots?.[record.id] || [];
+                  const latest = snaps[0];
+                  if (!latest) {
+                    return <Empty description="No runs yet" />;
+                  }
+                  return (
+                    <Space direction="vertical" style={{ width: '100%' }} size="small">
+                      {latest.aiSummary && (
+                        <Card size="small" title="AI Summary">
+                          <Markdown rehypePlugins={[rehypeRaw]}>{latest.aiSummary}</Markdown>
+                        </Card>
+                      )}
+                      {latest.triggeredAlerts && latest.triggeredAlerts.length > 0 && (
+                        <div>
+                          <Text strong>Alerts: </Text>
+                          <Space size={4} wrap>
+                            {latest.triggeredAlerts.map((alert, idx) => (
+                              <Tag color="red" key={idx}>{alert.message}</Tag>
+                            ))}
+                          </Space>
+                        </div>
+                      )}
+                      {latest.resultPath && (
+                        <div>
+                          <Text strong>Results: </Text>
+                          <Text copyable code>SELECT * FROM dfs.`{latest.resultPath}`</Text>
+                        </div>
+                      )}
+                      {latest.rowCountDelta != null && (
+                        <div>
+                          <Text strong>Row count change: </Text>
+                          <Badge
+                            count={latest.rowCountDelta > 0 ? `+${latest.rowCountDelta}` : String(latest.rowCountDelta)}
+                            style={{ backgroundColor: latest.rowCountDelta > 0 ? '#52c41a' : latest.rowCountDelta < 0 ? '#ff4d4f' : '#d9d9d9' }}
+                          />
+                          {latest.previousRowCount != null && (
+                            <Text type="secondary" style={{ marginLeft: 8 }}>
+                              (prev: {latest.previousRowCount}, now: {latest.rowCount ?? '?'})
+                            </Text>
+                          )}
+                        </div>
+                      )}
+                      {latest.previewRows && latest.previewColumns && latest.previewRows.length > 0 && (
+                        <Card size="small" title="Preview">
+                          <Table
+                            size="small"
+                            dataSource={latest.previewRows.map((row, idx) => ({ ...row, _key: idx }))}
+                            columns={latest.previewColumns.map((col) => ({
+                              title: col,
+                              dataIndex: col,
+                              key: col,
+                              ellipsis: true,
+                            }))}
+                            rowKey="_key"
+                            pagination={false}
+                            scroll={{ x: true }}
+                          />
+                        </Card>
+                      )}
+                    </Space>
+                  );
+                },
               }}
             />
           )}
