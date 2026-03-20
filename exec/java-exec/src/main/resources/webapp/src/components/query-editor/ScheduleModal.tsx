@@ -34,6 +34,7 @@ import {
   Empty,
   TimePicker,
   Descriptions,
+  Collapse,
 } from 'antd';
 import {
   ClockCircleOutlined,
@@ -42,6 +43,12 @@ import {
   CodeOutlined,
   HistoryOutlined,
   SettingOutlined,
+  PlayCircleOutlined,
+  PlusOutlined,
+  MinusCircleOutlined,
+  DatabaseOutlined,
+  RobotOutlined,
+  AlertOutlined,
 } from '@ant-design/icons';
 import dayjs from 'dayjs';
 import {
@@ -50,8 +57,16 @@ import {
   createSchedule,
   updateSchedule,
   deleteSchedule,
+  runScheduleNow,
 } from '../../api/schedules';
-import type { ScheduleFrequency, DayOfWeek, QuerySchedule, QuerySnapshot } from '../../types';
+import type {
+  ScheduleFrequency,
+  DayOfWeek,
+  QuerySchedule,
+  QuerySnapshot,
+  AlertRule,
+  TriggeredAlert,
+} from '../../types';
 
 const { Text } = Typography;
 
@@ -81,6 +96,17 @@ const DAY_OPTIONS: { value: DayOfWeek; label: string }[] = [
   { value: 6, label: 'Saturday' },
 ];
 
+const ALERT_TYPE_OPTIONS: { value: AlertRule['type']; label: string; needsThreshold: boolean }[] = [
+  { value: 'rowCountAbove', label: 'Row Count Above', needsThreshold: true },
+  { value: 'rowCountBelow', label: 'Row Count Below', needsThreshold: true },
+  { value: 'queryFailed', label: 'Query Failed', needsThreshold: false },
+  { value: 'durationAbove', label: 'Duration Above (seconds)', needsThreshold: true },
+  { value: 'durationExceedsInterval', label: 'Duration Exceeds Interval', needsThreshold: false },
+];
+
+const DEFAULT_AI_PROMPT =
+  'Provide a brief executive summary of these query results. Highlight any anomalies, key metrics, and trends. Keep it concise — no more than 3-5 bullet points.';
+
 function formatNextRun(isoString?: string): string {
   if (!isoString) {
     return 'Not scheduled';
@@ -98,40 +124,9 @@ function formatNextRun(isoString?: string): string {
   return `${d.toLocaleString()} (${relative})`;
 }
 
-const snapshotColumns = [
-  {
-    title: 'Executed',
-    dataIndex: 'executedAt',
-    key: 'executedAt',
-    render: (val: string) => new Date(val).toLocaleString(),
-  },
-  {
-    title: 'Status',
-    dataIndex: 'status',
-    key: 'status',
-    render: (val: string) => (
-      <Tag color={val === 'success' ? 'green' : 'red'}>{val}</Tag>
-    ),
-  },
-  {
-    title: 'Rows',
-    dataIndex: 'rowCount',
-    key: 'rowCount',
-    render: (val?: number) => val !== undefined ? val.toLocaleString() : '-',
-  },
-  {
-    title: 'Duration',
-    dataIndex: 'duration',
-    key: 'duration',
-    render: (val?: number) => val !== undefined ? `${(val / 1000).toFixed(1)}s` : '-',
-  },
-  {
-    title: 'Error',
-    dataIndex: 'errorMessage',
-    key: 'errorMessage',
-    render: (val?: string) => val ? <Text type="danger" ellipsis style={{ maxWidth: 200 }}>{val}</Text> : '-',
-  },
-];
+function alertTypeNeedsThreshold(type: AlertRule['type']): boolean {
+  return type !== 'queryFailed' && type !== 'durationExceedsInterval';
+}
 
 export default function ScheduleModal({
   open,
@@ -147,10 +142,39 @@ export default function ScheduleModal({
   const [loading, setLoading] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const [fetching, setFetching] = useState(false);
+  const [runningNow, setRunningNow] = useState(false);
   const [activeTab, setActiveTab] = useState('schedule');
+  const [alertRules, setAlertRules] = useState<AlertRule[]>([]);
 
   const frequency: ScheduleFrequency = Form.useWatch('frequency', form) || 'daily';
   const enabled: boolean = Form.useWatch('enabled', form) ?? false;
+  const persistResults: boolean = Form.useWatch('persistResults', form) ?? false;
+  const aiSummaryEnabled: boolean = Form.useWatch('aiSummaryEnabled', form) ?? false;
+  const refreshMode: string = Form.useWatch('refreshMode', form) || 'query';
+
+  const defaultFormValues = {
+    description: '',
+    frequency: 'daily' as ScheduleFrequency,
+    enabled: false,
+    paused: false,
+    timeOfDay: dayjs('08:00', 'HH:mm'),
+    dayOfWeek: 1 as DayOfWeek,
+    dayOfMonth: 1,
+    notifyOnSuccess: false,
+    notifyOnFailure: true,
+    notifyEmails: '',
+    retentionCount: 30,
+    persistResults: false,
+    resultLocation: 'dfs.tmp',
+    resultFormat: 'parquet',
+    resultMode: 'overwrite',
+    aiSummaryEnabled: false,
+    aiSummaryPrompt: DEFAULT_AI_PROMPT,
+    aiSummaryMaxRows: 100,
+    refreshMode: 'query',
+    materializedViewName: '',
+    timeoutSeconds: 300,
+  };
 
   // Load existing schedule and snapshots when modal opens
   useEffect(() => {
@@ -167,10 +191,12 @@ export default function ScheduleModal({
           setExisting(schedule);
           setSnapshots(snaps);
           if (schedule) {
+            setAlertRules(schedule.alertRules || []);
             form.setFieldsValue({
               description: schedule.description || '',
               frequency: schedule.frequency,
               enabled: schedule.enabled,
+              paused: schedule.paused ?? false,
               timeOfDay: dayjs(schedule.timeOfDay, 'HH:mm'),
               dayOfWeek: schedule.dayOfWeek,
               dayOfMonth: schedule.dayOfMonth,
@@ -178,20 +204,20 @@ export default function ScheduleModal({
               notifyOnFailure: schedule.notifyOnFailure,
               notifyEmails: schedule.notifyEmails?.join(', ') || '',
               retentionCount: schedule.retentionCount,
+              persistResults: schedule.persistResults ?? false,
+              resultLocation: schedule.resultLocation || 'dfs.tmp',
+              resultFormat: schedule.resultFormat || 'parquet',
+              resultMode: schedule.resultMode || 'overwrite',
+              aiSummaryEnabled: schedule.aiSummaryEnabled ?? false,
+              aiSummaryPrompt: schedule.aiSummaryPrompt || DEFAULT_AI_PROMPT,
+              aiSummaryMaxRows: schedule.aiSummaryMaxRows ?? 100,
+              refreshMode: schedule.refreshMode || 'query',
+              materializedViewName: schedule.materializedViewName || '',
+              timeoutSeconds: schedule.timeoutSeconds ?? 300,
             });
           } else {
-            form.setFieldsValue({
-              description: '',
-              frequency: 'daily',
-              enabled: false,
-              timeOfDay: dayjs('08:00', 'HH:mm'),
-              dayOfWeek: 1,
-              dayOfMonth: 1,
-              notifyOnSuccess: false,
-              notifyOnFailure: true,
-              notifyEmails: '',
-              retentionCount: 30,
-            });
+            setAlertRules([]);
+            form.setFieldsValue(defaultFormValues);
           }
         })
         .catch(() => {
@@ -201,6 +227,7 @@ export default function ScheduleModal({
           setFetching(false);
         });
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open, savedQueryId, form]);
 
   const cronExpression = useMemo(() => {
@@ -238,6 +265,7 @@ export default function ScheduleModal({
         description: values.description || undefined,
         frequency: values.frequency,
         enabled: values.enabled,
+        paused: values.paused,
         timeOfDay,
         dayOfWeek: values.frequency === 'weekly' ? values.dayOfWeek : undefined,
         dayOfMonth: values.frequency === 'monthly' ? values.dayOfMonth : undefined,
@@ -245,6 +273,19 @@ export default function ScheduleModal({
         notifyOnFailure: values.notifyOnFailure,
         notifyEmails: emails,
         retentionCount: values.retentionCount,
+        persistResults: values.persistResults,
+        resultLocation: values.persistResults ? values.resultLocation : undefined,
+        resultFormat: values.persistResults ? values.resultFormat : undefined,
+        resultMode: values.persistResults ? values.resultMode : undefined,
+        aiSummaryEnabled: values.aiSummaryEnabled,
+        aiSummaryPrompt: values.aiSummaryEnabled ? values.aiSummaryPrompt : undefined,
+        aiSummaryMaxRows: values.aiSummaryEnabled ? values.aiSummaryMaxRows : undefined,
+        alertRules,
+        refreshMode: values.refreshMode,
+        materializedViewName: values.refreshMode === 'materializedView'
+          ? values.materializedViewName
+          : undefined,
+        timeoutSeconds: values.timeoutSeconds,
       };
       if (existing) {
         await updateSchedule(existing.id, data);
@@ -278,6 +319,149 @@ export default function ScheduleModal({
     } finally {
       setDeleting(false);
     }
+  };
+
+  const handleRunNow = async () => {
+    if (!existing) {
+      return;
+    }
+    setRunningNow(true);
+    try {
+      await runScheduleNow(existing.id);
+      message.success('Schedule run triggered');
+      // Refresh snapshots
+      const snaps = await getSnapshots(existing.id);
+      setSnapshots(snaps);
+    } catch {
+      message.error('Failed to trigger run');
+    } finally {
+      setRunningNow(false);
+    }
+  };
+
+  // Alert rules management
+  const addAlertRule = () => {
+    const newRule: AlertRule = {
+      id: `rule-${Date.now()}`,
+      type: 'rowCountAbove',
+      threshold: 1000,
+      enabled: true,
+    };
+    setAlertRules([...alertRules, newRule]);
+  };
+
+  const removeAlertRule = (ruleId: string) => {
+    setAlertRules(alertRules.filter((r) => r.id !== ruleId));
+  };
+
+  const updateAlertRule = (ruleId: string, updates: Partial<AlertRule>) => {
+    setAlertRules(
+      alertRules.map((r) => (r.id === ruleId ? { ...r, ...updates } : r))
+    );
+  };
+
+  // Snapshot columns with expanded features
+  const snapshotColumns = [
+    {
+      title: 'Executed',
+      dataIndex: 'executedAt',
+      key: 'executedAt',
+      render: (val: string) => new Date(val).toLocaleString(),
+    },
+    {
+      title: 'Status',
+      dataIndex: 'status',
+      key: 'status',
+      render: (val: string) => (
+        <Tag color={val === 'success' ? 'green' : val === 'skipped' ? 'default' : 'red'}>
+          {val}
+        </Tag>
+      ),
+    },
+    {
+      title: 'Rows',
+      dataIndex: 'rowCount',
+      key: 'rowCount',
+      render: (val?: number) => val !== undefined ? val.toLocaleString() : '-',
+    },
+    {
+      title: 'Duration',
+      dataIndex: 'duration',
+      key: 'duration',
+      render: (val?: number) => val !== undefined ? `${(val / 1000).toFixed(1)}s` : '-',
+    },
+    {
+      title: 'Result Path',
+      dataIndex: 'resultPath',
+      key: 'resultPath',
+      render: (val?: string) => val ? (
+        <a href={`#${val}`} title={val}>
+          <Text ellipsis style={{ maxWidth: 120 }}>{val}</Text>
+        </a>
+      ) : '-',
+    },
+    {
+      title: 'Alerts',
+      dataIndex: 'triggeredAlerts',
+      key: 'triggeredAlerts',
+      render: (alerts?: TriggeredAlert[]) =>
+        alerts && alerts.length > 0
+          ? alerts.map((a, i) => (
+            <Tag color="orange" key={i}>{a.ruleType}</Tag>
+          ))
+          : '-',
+    },
+    {
+      title: 'Error',
+      dataIndex: 'errorMessage',
+      key: 'errorMessage',
+      render: (val?: string) =>
+        val ? <Text type="danger" ellipsis style={{ maxWidth: 150 }}>{val}</Text> : '-',
+    },
+  ];
+
+  const expandedRowRender = (record: QuerySnapshot) => {
+    const items = [];
+
+    if (record.aiSummary) {
+      items.push({
+        key: 'aiSummary',
+        label: 'AI Summary',
+        children: (
+          <div style={{ whiteSpace: 'pre-wrap', fontSize: 13 }}>{record.aiSummary}</div>
+        ),
+      });
+    }
+
+    if (record.previewRows && record.previewRows.length > 0 && record.previewColumns) {
+      const previewCols = record.previewColumns.map((col) => ({
+        title: col,
+        dataIndex: col,
+        key: col,
+        ellipsis: true,
+      }));
+      items.push({
+        key: 'previewRows',
+        label: `Preview (${record.previewRows.length} rows)`,
+        children: (
+          <Table
+            dataSource={record.previewRows.map((row, idx) => ({ ...row, _key: idx }))}
+            columns={previewCols}
+            rowKey="_key"
+            size="small"
+            pagination={false}
+            scroll={{ x: 'max-content' }}
+            style={{ maxHeight: 200, overflow: 'auto' }}
+          />
+        ),
+      });
+    }
+
+    if (items.length === 0) {
+      return <Text type="secondary">No additional details available.</Text>;
+    }
+
+    return <Collapse items={items} size="small" />;
   };
 
   const tabItems = [
@@ -332,8 +516,26 @@ export default function ScheduleModal({
             </Form.Item>
           )}
 
-          <Form.Item name="enabled" label="Enabled" valuePropName="checked">
-            <Switch />
+          <div style={{ display: 'flex', gap: 24 }}>
+            <Form.Item name="enabled" label="Enabled" valuePropName="checked">
+              <Switch />
+            </Form.Item>
+            <Form.Item
+              name="paused"
+              label="Paused"
+              valuePropName="checked"
+              tooltip="Temporarily pause the schedule without disabling it"
+            >
+              <Switch />
+            </Form.Item>
+          </div>
+
+          <Form.Item
+            name="timeoutSeconds"
+            label="Query Timeout (seconds)"
+            extra="Maximum time allowed for the scheduled query to run"
+          >
+            <InputNumber min={10} max={86400} style={{ width: '100%' }} />
           </Form.Item>
 
           {/* Summary */}
@@ -353,6 +555,195 @@ export default function ScheduleModal({
             )}
           </Descriptions>
         </Form>
+      ),
+    },
+    {
+      key: 'results',
+      label: <span><DatabaseOutlined /> Results</span>,
+      children: (
+        <Form form={form} layout="vertical" disabled={fetching}>
+          <Form.Item
+            name="persistResults"
+            label="Persist Results"
+            valuePropName="checked"
+            extra="Save query results to a storage location after each run"
+          >
+            <Switch />
+          </Form.Item>
+
+          {persistResults && (
+            <>
+              <Form.Item
+                name="resultLocation"
+                label="Result Location"
+                rules={[{ required: persistResults, message: 'Please specify a result location' }]}
+              >
+                <Input placeholder="e.g. dfs.tmp, dfs.data" />
+              </Form.Item>
+
+              <Form.Item name="resultFormat" label="Result Format">
+                <Select
+                  options={[
+                    { value: 'parquet', label: 'Parquet' },
+                    { value: 'csv', label: 'CSV' },
+                    { value: 'json', label: 'JSON' },
+                  ]}
+                />
+              </Form.Item>
+
+              <Form.Item name="resultMode" label="Result Mode">
+                <Select
+                  options={[
+                    { value: 'overwrite', label: 'Overwrite' },
+                    { value: 'append', label: 'Append' },
+                    { value: 'newTablePerRun', label: 'New Table Per Run' },
+                  ]}
+                />
+              </Form.Item>
+            </>
+          )}
+
+          <Form.Item
+            name="refreshMode"
+            label="Refresh Mode"
+            extra="Choose how the query executes: normal query or as a materialized view"
+          >
+            <Select
+              options={[
+                { value: 'query', label: 'Normal Query' },
+                { value: 'materializedView', label: 'Materialized View' },
+              ]}
+            />
+          </Form.Item>
+
+          {refreshMode === 'materializedView' && (
+            <Form.Item
+              name="materializedViewName"
+              label="Materialized View Name"
+              rules={[{ required: true, message: 'Please specify a view name' }]}
+            >
+              <Input placeholder="e.g. my_materialized_view" />
+            </Form.Item>
+          )}
+        </Form>
+      ),
+    },
+    {
+      key: 'aiSummary',
+      label: <span><RobotOutlined /> AI Summary</span>,
+      children: (
+        <Form form={form} layout="vertical" disabled={fetching}>
+          <Form.Item
+            name="aiSummaryEnabled"
+            label="Enable AI Summary"
+            valuePropName="checked"
+          >
+            <Switch />
+          </Form.Item>
+
+          <Text type="secondary" style={{ display: 'block', marginBottom: 16 }}>
+            When enabled, results are sent to Prospector AI for summarization after each run.
+            The summary is stored and optionally emailed.
+          </Text>
+
+          {aiSummaryEnabled && (
+            <>
+              <Form.Item
+                name="aiSummaryPrompt"
+                label="Summary Prompt"
+                extra="Customize the prompt sent to the AI for summarization"
+              >
+                <Input.TextArea rows={4} />
+              </Form.Item>
+
+              <Form.Item
+                name="aiSummaryMaxRows"
+                label="Max Rows to Summarize"
+                extra="Limit the number of result rows sent to the AI (1 - 10,000)"
+              >
+                <InputNumber min={1} max={10000} style={{ width: '100%' }} />
+              </Form.Item>
+            </>
+          )}
+        </Form>
+      ),
+    },
+    {
+      key: 'alerts',
+      label: <span><AlertOutlined /> Alerts ({alertRules.length})</span>,
+      children: (
+        <div>
+          <Text type="secondary" style={{ display: 'block', marginBottom: 16 }}>
+            Configure rules that trigger alerts based on query results. Alerts appear in the
+            run history and are included in notification emails.
+          </Text>
+
+          {alertRules.map((rule) => (
+            <div
+              key={rule.id}
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: 8,
+                marginBottom: 12,
+                padding: 12,
+                border: '1px solid var(--color-border)',
+                borderRadius: 6,
+                background: 'var(--color-bg-elevated)',
+              }}
+            >
+              <Select
+                value={rule.type}
+                onChange={(val) => {
+                  const updates: Partial<AlertRule> = { type: val };
+                  if (!alertTypeNeedsThreshold(val)) {
+                    updates.threshold = undefined;
+                  } else if (rule.threshold === undefined) {
+                    updates.threshold = 1000;
+                  }
+                  updateAlertRule(rule.id, updates);
+                }}
+                style={{ width: 220 }}
+                options={ALERT_TYPE_OPTIONS.map((o) => ({
+                  value: o.value,
+                  label: o.label,
+                }))}
+              />
+              {alertTypeNeedsThreshold(rule.type) && (
+                <InputNumber
+                  value={rule.threshold}
+                  onChange={(val) => updateAlertRule(rule.id, { threshold: val ?? undefined })}
+                  placeholder="Threshold"
+                  min={0}
+                  style={{ width: 120 }}
+                />
+              )}
+              <Switch
+                checked={rule.enabled}
+                onChange={(val) => updateAlertRule(rule.id, { enabled: val })}
+                checkedChildren="On"
+                unCheckedChildren="Off"
+                size="small"
+              />
+              <Button
+                type="text"
+                danger
+                icon={<MinusCircleOutlined />}
+                onClick={() => removeAlertRule(rule.id)}
+                size="small"
+              />
+            </div>
+          ))}
+
+          <Button
+            type="dashed"
+            onClick={addAlertRule}
+            icon={<PlusOutlined />}
+            style={{ width: '100%', marginTop: 8 }}
+          >
+            Add Alert Rule
+          </Button>
+        </div>
       ),
     },
     {
@@ -393,6 +784,12 @@ export default function ScheduleModal({
           rowKey="id"
           size="small"
           pagination={{ pageSize: 5 }}
+          expandable={{
+            expandedRowRender,
+            rowExpandable: (record) =>
+              !!(record.aiSummary || (record.previewRows && record.previewRows.length > 0)),
+          }}
+          scroll={{ x: 'max-content' }}
         />
       ) : (
         <Empty description="No run history yet. Scheduled runs will appear here." />
@@ -427,27 +824,37 @@ export default function ScheduleModal({
           <ClockCircleOutlined />
           <span>Schedule: {savedQueryName}</span>
           {existing?.enabled && <Tag color="green">Active</Tag>}
+          {existing?.paused && <Tag color="orange">Paused</Tag>}
         </Space>
       }
       open={open}
       onCancel={onClose}
-      width={640}
+      width={720}
       footer={
         <div style={{ display: 'flex', justifyContent: 'space-between' }}>
           <div>
             {existing && (
-              <Popconfirm
-                title="Delete this schedule?"
-                description="The query will no longer run on a schedule."
-                onConfirm={handleDelete}
-                okText="Delete"
-                cancelText="Cancel"
-                okButtonProps={{ danger: true }}
-              >
-                <Button danger icon={<DeleteOutlined />} loading={deleting}>
-                  Delete
+              <Space>
+                <Popconfirm
+                  title="Delete this schedule?"
+                  description="The query will no longer run on a schedule."
+                  onConfirm={handleDelete}
+                  okText="Delete"
+                  cancelText="Cancel"
+                  okButtonProps={{ danger: true }}
+                >
+                  <Button danger icon={<DeleteOutlined />} loading={deleting}>
+                    Delete
+                  </Button>
+                </Popconfirm>
+                <Button
+                  icon={<PlayCircleOutlined />}
+                  onClick={handleRunNow}
+                  loading={runningNow}
+                >
+                  Run Now
                 </Button>
-              </Popconfirm>
+              </Space>
             )}
           </div>
           <Space>

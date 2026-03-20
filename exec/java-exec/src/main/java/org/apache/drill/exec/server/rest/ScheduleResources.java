@@ -141,6 +141,53 @@ public class ScheduleResources {
     @JsonProperty
     public String renewedAt;
 
+    // ---- Result persistence ----
+    @JsonProperty
+    public boolean persistResults;
+
+    @JsonProperty
+    public String resultLocation = "dfs.tmp";
+
+    @JsonProperty
+    public String resultFormat = "parquet";
+
+    @JsonProperty
+    public String resultMode = "overwrite";
+
+    // ---- AI Summary ----
+    @JsonProperty
+    public boolean aiSummaryEnabled;
+
+    @JsonProperty
+    public String aiSummaryPrompt;
+
+    @JsonProperty
+    public int aiSummaryMaxRows = 100;
+
+    // ---- Alerts ----
+    @JsonProperty
+    public String alertRules;
+
+    // ---- Refresh mode ----
+    @JsonProperty
+    public String refreshMode = "query";
+
+    @JsonProperty
+    public String materializedViewName;
+
+    // ---- Execution control ----
+    @JsonProperty
+    public int timeoutSeconds = 300;
+
+    @JsonProperty
+    public boolean isRunning;
+
+    @JsonProperty
+    public boolean paused;
+
+    @JsonProperty
+    public String status = "active";
+
     public QueryScheduleModel() {
     }
   }
@@ -172,6 +219,32 @@ public class ScheduleResources {
 
     @JsonProperty
     public String errorMessage;
+
+    // ---- Result persistence ----
+    @JsonProperty
+    public String resultPath;
+
+    // ---- AI Summary ----
+    @JsonProperty
+    public String aiSummary;
+
+    // ---- Alerts ----
+    @JsonProperty
+    public String triggeredAlerts;
+
+    // ---- Preview data ----
+    @JsonProperty
+    public String previewRows;
+
+    @JsonProperty
+    public String previewColumns;
+
+    // ---- Diff detection ----
+    @JsonProperty
+    public Integer previousRowCount;
+
+    @JsonProperty
+    public Integer rowCountDelta;
 
     public QuerySnapshotModel() {
     }
@@ -341,6 +414,42 @@ public class ScheduleResources {
     } catch (Exception e) {
       logger.error("Failed to renew schedule: {}", id, e);
       throw new DrillRuntimeException("Failed to renew schedule: " + e.getMessage(), e);
+    }
+  }
+
+  @POST
+  @Path("/{id}/run")
+  @Produces(MediaType.APPLICATION_JSON)
+  @Operation(summary = "Run a schedule immediately",
+      description = "Triggers immediate execution of a schedule, bypassing the timer")
+  public Response runScheduleNow(
+      @Parameter(description = "Schedule ID") @PathParam("id") String id) {
+    try {
+      PersistentStore<QueryScheduleModel> store = getScheduleStore();
+      QueryScheduleModel schedule = store.get(id);
+      if (schedule == null) {
+        return Response.status(Response.Status.NOT_FOUND)
+            .entity(Map.of("error", "Schedule not found: " + id))
+            .build();
+      }
+
+      ScheduleManager mgr = ScheduleManager.getInstance();
+      if (mgr == null) {
+        return Response.status(Response.Status.SERVICE_UNAVAILABLE)
+            .entity(Map.of("error", "ScheduleManager is not running"))
+            .build();
+      }
+
+      QuerySnapshotModel snapshot = mgr.executeNow(id);
+      if (snapshot == null) {
+        return Response.status(Response.Status.INTERNAL_SERVER_ERROR)
+            .entity(Map.of("error", "Execution returned no snapshot"))
+            .build();
+      }
+      return Response.ok(snapshot).build();
+    } catch (Exception e) {
+      logger.error("Failed to run schedule now: {}", id, e);
+      throw new DrillRuntimeException("Failed to run schedule: " + e.getMessage(), e);
     }
   }
 

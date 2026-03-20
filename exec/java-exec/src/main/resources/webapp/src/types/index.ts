@@ -411,6 +411,16 @@ export interface ProjectExportBundle {
 // Query Schedule types
 export type ScheduleFrequency = 'hourly' | 'daily' | 'weekly' | 'monthly';
 export type DayOfWeek = 0 | 1 | 2 | 3 | 4 | 5 | 6;
+export type ResultMode = 'overwrite' | 'append' | 'newTablePerRun';
+export type RefreshMode = 'query' | 'materializedView';
+export type ScheduleStatus = 'active' | 'paused' | 'expired' | 'disabled';
+
+export interface AlertRule {
+  id: string;
+  type: 'rowCountAbove' | 'rowCountBelow' | 'queryFailed' | 'durationAbove' | 'durationExceedsInterval';
+  threshold?: number;
+  enabled: boolean;
+}
 
 export interface QuerySchedule {
   id: string;
@@ -418,19 +428,46 @@ export interface QuerySchedule {
   description?: string;
   frequency: ScheduleFrequency;
   enabled: boolean;
+  paused: boolean;
   timeOfDay: string;
   dayOfWeek?: DayOfWeek;
   dayOfMonth?: number;
+  // Notifications
   notifyOnSuccess: boolean;
   notifyOnFailure: boolean;
   notifyEmails: string[];
+  // Result persistence
+  persistResults: boolean;
+  resultLocation: string;
+  resultFormat: 'parquet' | 'csv' | 'json';
+  resultMode: ResultMode;
+  // AI summary
+  aiSummaryEnabled: boolean;
+  aiSummaryPrompt: string;
+  aiSummaryMaxRows: number;
+  // Alerts
+  alertRules: AlertRule[];
+  // Materialized view
+  refreshMode: RefreshMode;
+  materializedViewName?: string;
+  // Execution control
+  timeoutSeconds: number;
+  isRunning: boolean;
+  // Retention & lifecycle
   retentionCount: number;
   nextRunAt?: string;
   lastRunAt?: string;
   createdAt: string;
   expiresAt?: string;
   renewedAt?: string;
+  status: ScheduleStatus;
   snapshots?: QuerySnapshot[];
+}
+
+export interface TriggeredAlert {
+  ruleId: string;
+  ruleType: string;
+  message: string;
 }
 
 export interface QuerySnapshot {
@@ -438,8 +475,15 @@ export interface QuerySnapshot {
   scheduleId: string;
   savedQueryId: string;
   executedAt: string;
-  status: 'success' | 'error';
+  status: 'success' | 'error' | 'skipped';
   rowCount?: number;
   duration?: number;
   errorMessage?: string;
+  resultPath?: string;
+  aiSummary?: string;
+  triggeredAlerts?: TriggeredAlert[];
+  previewRows?: Record<string, string>[];
+  previewColumns?: string[];
+  previousRowCount?: number;
+  rowCountDelta?: number;
 }
