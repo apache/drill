@@ -16,7 +16,7 @@
  * limitations under the License.
  */
 import apiClient from './client';
-import type { QuerySchedule, QuerySnapshot, ScheduleFrequency, DayOfWeek } from '../types';
+import type { QuerySchedule, QuerySnapshot, ScheduleFrequency, DayOfWeek, ResultMode, RefreshMode, AlertRule } from '../types';
 
 const SCHEDULES_BASE = '/api/v1/schedules';
 
@@ -31,6 +31,7 @@ export interface ScheduleCreateData {
   description?: string;
   frequency: ScheduleFrequency;
   enabled?: boolean;
+  paused?: boolean;
   timeOfDay?: string;
   dayOfWeek?: DayOfWeek;
   dayOfMonth?: number;
@@ -38,6 +39,22 @@ export interface ScheduleCreateData {
   notifyOnFailure?: boolean;
   notifyEmails?: string[];
   retentionCount?: number;
+  // Result persistence
+  persistResults?: boolean;
+  resultLocation?: string;
+  resultFormat?: 'parquet' | 'csv' | 'json';
+  resultMode?: ResultMode;
+  // AI summary
+  aiSummaryEnabled?: boolean;
+  aiSummaryPrompt?: string;
+  aiSummaryMaxRows?: number;
+  // Alerts
+  alertRules?: AlertRule[];
+  // Materialized view
+  refreshMode?: RefreshMode;
+  materializedViewName?: string;
+  // Execution control
+  timeoutSeconds?: number;
 }
 
 // ---- Schedule Config (server-side, admin only to write) ----
@@ -109,6 +126,13 @@ export async function renewSchedule(id: string): Promise<QuerySchedule> {
 
 export async function deleteSchedule(id: string): Promise<void> {
   await apiClient.delete(`${SCHEDULES_BASE}/${id}`);
+}
+
+// ---- Run Now ----
+
+export async function runScheduleNow(id: string): Promise<QuerySnapshot> {
+  const response = await apiClient.post<QuerySnapshot>(`${SCHEDULES_BASE}/${id}/run`);
+  return response.data;
 }
 
 // ---- Snapshots (server-side) ----
