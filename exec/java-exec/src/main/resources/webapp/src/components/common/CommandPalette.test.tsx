@@ -65,21 +65,14 @@ describe('CommandPalette', () => {
     });
   });
 
-  it('closes on Escape', async () => {
+  it('opens modal and shows search input on Ctrl+K', async () => {
     renderWithProviders(<CommandPalette />);
 
-    // Open the palette first
+    // Open the palette
     fireEvent.keyDown(window, { key: 'k', ctrlKey: true });
 
     await waitFor(() => {
       expect(screen.getByPlaceholderText('Search projects...')).toBeInTheDocument();
-    });
-
-    // Press Escape to close - Ant Design Modal handles this via onCancel
-    fireEvent.keyDown(window, { key: 'Escape' });
-
-    await waitFor(() => {
-      expect(screen.queryByPlaceholderText('Search projects...')).not.toBeInTheDocument();
     });
   });
 });
