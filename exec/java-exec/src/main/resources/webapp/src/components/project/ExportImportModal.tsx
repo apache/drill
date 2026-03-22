@@ -90,7 +90,7 @@ export default function ExportImportModal({
     if (mode === 'export' && projectId) {
       loadExportBundle(projectId);
     }
-  }, [open, mode, projectId, resetState]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [open, mode, projectId, resetState]);
 
   const loadExportBundle = async (pid: string) => {
     setLoading(true);
