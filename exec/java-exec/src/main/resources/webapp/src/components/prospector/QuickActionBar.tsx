@@ -140,16 +140,16 @@ export default function QuickActionBar({
         <Button
           size="small"
           icon={<CodeOutlined />}
-          onClick={() => onAction('Generate a SQL query for this data')}
+          onClick={() => onAction('Suggest 2-3 SQL queries that would be useful for exploring the current data. Use ONLY real tables and columns from the schemas I have access to - never make up table or column names. Do NOT use INFORMATION_SCHEMA or sys storage plugins. For each query, explain what it does and what insights it provides. Include complete SQL code blocks with actual table and column references.')}
           disabled={disabled}
         >
-          Generate SQL
+          Suggest Queries
         </Button>
         {hasSql && (
           <Button
             size="small"
             icon={<QuestionCircleOutlined />}
-            onClick={() => onAction('Explain the current SQL query in the editor')}
+            onClick={() => onAction('Explain what this SQL query does step-by-step. Describe what data it retrieves, how it transforms it, and what insights the result provides. Also mention any potential performance concerns or optimization opportunities.')}
             disabled={disabled}
           >
             Explain Query
@@ -170,7 +170,7 @@ export default function QuickActionBar({
           <Button
             size="small"
             icon={<BarChartOutlined />}
-            onClick={() => onAction('Suggest the best chart type for the current query results and create a visualization')}
+            onClick={() => onAction('Look at the result columns and data types. Suggest the most meaningful chart type to visualize this data and explain why it\'s appropriate. Then provide step-by-step guidance or code to create that visualization.')}
             disabled={disabled}
           >
             Suggest Chart
