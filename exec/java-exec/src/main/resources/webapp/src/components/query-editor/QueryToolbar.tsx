@@ -16,7 +16,7 @@
  * limitations under the License.
  */
 import { useState, useCallback } from 'react';
-import { Button, Select, InputNumber, Space, Tooltip, Dropdown, Switch, Typography, Modal, Slider, Divider, Tabs, Grid } from 'antd';
+import { Button, Select, InputNumber, Space, Tooltip, Dropdown, Switch, Typography, Modal, Slider, Tabs, Grid } from 'antd';
 import {
   PlayCircleOutlined,
   StopOutlined,
@@ -142,7 +142,7 @@ export default function QueryToolbar({
       label: 'Keyboard Shortcuts',
       onClick: () => setShortcutsOpen(true),
     },
-    ...(isCompact && prospectorAvailable
+    ...(prospectorAvailable
       ? [
           { type: 'divider' as const },
           ...(hasSql
@@ -160,7 +160,7 @@ export default function QueryToolbar({
 
   return (
     <div className="query-toolbar">
-      <Space size="small" wrap>
+      <Space size="small" wrap={false}>
         {/* Execute/Cancel Button */}
         {isExecuting ? (
           <Button type="primary" danger icon={<StopOutlined />} onClick={onCancel}>
@@ -210,40 +210,12 @@ export default function QueryToolbar({
           />
         </Space>
 
-        {/* More / Settings / AI (collapsed on compact) */}
+        {/* More / Settings / AI */}
         <Dropdown menu={{ items: moreMenuItems }} trigger={['click']}>
           <Button>
             More <DownOutlined />
           </Button>
         </Dropdown>
-
-        {/* AI Actions — only shown expanded on large screens */}
-        {!isCompact && prospectorAvailable && (
-          <>
-            <Divider type="vertical" style={{ height: 24 }} />
-            {hasSql && (
-              <Tooltip title="Explain this query with Prospector">
-                <Button icon={<BulbOutlined />} onClick={onExplainQuery}>
-                  Explain
-                </Button>
-              </Tooltip>
-            )}
-            {hasSql && (
-              <Tooltip title="Optimize this query with Prospector">
-                <Button icon={<ThunderboltOutlined />} onClick={onOptimizeQuery}>
-                  Optimize
-                </Button>
-              </Tooltip>
-            )}
-            {hasError && (
-              <Tooltip title="Fix this error with Prospector">
-                <Button icon={<BugOutlined />} onClick={onFixError} danger>
-                  Fix Error
-                </Button>
-              </Tooltip>
-            )}
-          </>
-        )}
       </Space>
 
       {/* Right side: Prospector toggle + Execution Time */}
