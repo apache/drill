@@ -148,7 +148,7 @@ function buildPrompt(
   const savedQueries = datasets.filter(ds => ds.type === 'saved_query');
 
   // Build list of ALL valid fully-qualified table names
-  let allValidTables: string[] = [];
+  const allValidTables: string[] = [];
   let tableDescriptions = '';
 
   if (schemaInfo && schemaInfo.length > 0) {
