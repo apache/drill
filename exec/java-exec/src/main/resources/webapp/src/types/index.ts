@@ -162,6 +162,7 @@ export type ChartType =
   | 'gauge'
   | 'funnel'
   | 'map'
+  | 'choropleth'
   | 'bigNumber'
   | 'sankey'
   | 'radar'
