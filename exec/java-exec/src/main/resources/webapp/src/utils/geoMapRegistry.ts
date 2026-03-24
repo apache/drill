@@ -155,8 +155,8 @@ export function buildGroupedOptions(
     });
   }
 
-  // Add sub-national groups (in order: NA, SA, Europe, Oceania, Asia)
-  const groups = ['North America', 'South America', 'Europe', 'Oceania', 'Asia'];
+  // Add sub-national groups (in order: NA with ZIP codes, SA, Europe, Oceania, Asia)
+  const groups = ['North America', 'US ZIP Codes (by State)', 'South America', 'Europe', 'Oceania', 'Asia'];
   for (const group of groups) {
     const maps_in_group = grouped.get(group);
     if (maps_in_group && maps_in_group.length > 0) {
