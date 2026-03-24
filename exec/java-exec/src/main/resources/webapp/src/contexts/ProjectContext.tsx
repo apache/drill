@@ -43,6 +43,20 @@ export function ProjectContextProvider({
     queryKey: ['project', projectId],
     queryFn: () => getProject(projectId),
     enabled: !!projectId,
+    retry: (failureCount, error: any) => {
+      // Don't retry 404s (project not found) immediately
+      // Only retry on network errors or server errors (5xx)
+      if (error?.response?.status === 404) {
+        // Don't retry 404 errors
+        return false;
+      }
+      // Retry up to 3 times for other errors
+      return failureCount < 3;
+    },
+    retryDelay: (attemptIndex) => {
+      // Exponential backoff: 100ms, 300ms, 700ms
+      return Math.min(1000 * 2 ** attemptIndex, 30000);
+    },
   });
 
   const savedQueryIdSet = useMemo(
