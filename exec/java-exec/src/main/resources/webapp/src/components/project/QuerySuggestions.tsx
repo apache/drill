@@ -16,7 +16,7 @@
  * limitations under the License.
  */
 import { useState, useEffect, useRef } from 'react';
-import { Card, Row, Col, Button, Space, Typography, Spin, Empty, Tooltip } from 'antd';
+import { Card, Row, Col, Button, Typography, Spin, Empty, Tooltip } from 'antd';
 import { BulbOutlined, ReloadOutlined, PlayCircleOutlined } from '@ant-design/icons';
 import { useQuery } from '@tanstack/react-query';
 import { format } from 'sql-formatter';
