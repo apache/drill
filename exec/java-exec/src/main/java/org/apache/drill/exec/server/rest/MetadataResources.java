@@ -599,6 +599,8 @@ public class MetadataResources {
    * REST endpoints from within Java methods.
    */
   private List<ColumnInfo> fetchColumnsForTable(String schema, String table) throws Exception {
+    logger.info("fetchColumnsForTable: schema={}, table={}", schema, table);
+
     // Handle dot-qualified table names like "store.order_items"
     String effectiveSchema = schema;
     String effectiveTable = table;
@@ -615,9 +617,20 @@ public class MetadataResources {
         "ORDER BY ORDINAL_POSITION",
         escapeQuotes(effectiveSchema), escapeQuotes(effectiveTable));
 
+    logger.info("fetchColumnsForTable: schema={}, table={}, effectiveSchema={}, effectiveTable={}",
+        schema, table, effectiveSchema, effectiveTable);
+    logger.info("fetchColumnsForTable SQL: {}", sql);
+
     List<ColumnInfo> columns = new ArrayList<>();
+    logger.info("Before executeQuery: webUserConnection.results.size() = {}", webUserConnection.results.size());
     QueryResult result = executeQuery(sql);
+    logger.info("After executeQuery: webUserConnection.results.size() = {}", webUserConnection.results.size());
+    logger.info("fetchColumnsForTable: Query returned {} rows", result.rows.size());
+    if (!result.rows.isEmpty()) {
+      logger.info("First row keys: {}", result.rows.get(0).keySet());
+    }
     populateColumns(result, columns, schema, table);
+    logger.info("fetchColumnsForTable: After populateColumns, have {} columns", columns.size());
 
     // Fallback: if dot-splitting produced no results, retry with original values
     if (columns.isEmpty() && lastDot > 0) {
@@ -864,9 +877,10 @@ public class MetadataResources {
    * to prevent accumulation across multiple queries in one request.
    */
   private QueryResult executeQuery(String sql) throws Exception {
-    webUserConnection.results.clear();
-    webUserConnection.columns.clear();
-    webUserConnection.metadata.clear();
+    // Use a fresh WebUserConnection for each query to avoid state contamination
+    // when multiple queries are executed in the same request (like in getSchemaTree)
+    WebUserConnection freshConnection = new WebUserConnection(webUserConnection.getSession(),
+        webUserConnection.isUserAuthenticationEnabled(), webUserConnection.getUsername());
 
     QueryWrapper wrapper = new QueryWrapper.RestQueryBuilder()
         .query(sql)
@@ -874,7 +888,7 @@ public class MetadataResources {
         .rowLimit("10000") // Reasonable limit for metadata queries
         .build();
 
-    return new RestQueryRunner(wrapper, workManager, webUserConnection).run();
+    return new RestQueryRunner(wrapper, workManager, freshConnection).run();
   }
 
   /**
