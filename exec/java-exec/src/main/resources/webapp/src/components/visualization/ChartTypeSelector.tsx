@@ -146,6 +146,13 @@ const chartTypes: ChartTypeOption[] = [
     category: 'advanced',
   },
   {
+    type: 'choropleth',
+    name: 'Choropleth Map',
+    description: 'Fill countries/regions by a numeric value',
+    icon: <GlobalOutlined style={{ fontSize: 24 }} />,
+    category: 'advanced',
+  },
+  {
     type: 'sankey',
     name: 'Sankey',
     description: 'Show flow and quantity between nodes',
