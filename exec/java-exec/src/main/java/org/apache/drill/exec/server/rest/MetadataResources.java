@@ -582,7 +582,7 @@ public class MetadataResources {
     // (e.g. file-based plugins with filenames containing dots).
     String sql = String.format(
         "SELECT COLUMN_NAME, DATA_TYPE, IS_NULLABLE " +
-        "FROM INFORMATION_SCHEMA.COLUMNS " +
+        "FROM INFORMATION_SCHEMA.`COLUMNS` " +
         "WHERE TABLE_SCHEMA = '%s' AND TABLE_NAME = '%s' " +
         "ORDER BY ORDINAL_POSITION",
         escapeQuotes(effectiveSchema), escapeQuotes(effectiveTable));
@@ -598,7 +598,7 @@ public class MetadataResources {
       if (columns.isEmpty() && lastDot > 0) {
         String fallbackSql = String.format(
             "SELECT COLUMN_NAME, DATA_TYPE, IS_NULLABLE " +
-            "FROM INFORMATION_SCHEMA.COLUMNS " +
+            "FROM INFORMATION_SCHEMA.`COLUMNS` " +
             "WHERE TABLE_SCHEMA = '%s' AND TABLE_NAME = '%s' " +
             "ORDER BY ORDINAL_POSITION",
             escapeQuotes(schema), escapeQuotes(table));
@@ -823,120 +823,37 @@ public class MetadataResources {
   @Operation(summary = "Get schema tree",
       description = "Returns schemas with their tables and columns in a single call")
   public SchemaTreeResponse getSchemaTree(SchemaTreeRequest request) {
-    logger.info("=== SCHEMA TREE REQUEST ===");
-    logger.info("Requested schemas: {}", request.schemas);
-
     List<SchemaTreeEntry> entries = new ArrayList<>();
 
     if (request.schemas == null || request.schemas.isEmpty()) {
-      logger.warn("No schemas requested");
       return new SchemaTreeResponse(entries);
     }
 
-    // Use the requested schemas directly - they are assumed to be valid
-    List<String> allSchemas = new ArrayList<>(request.schemas);
-    logger.info("Using requested schemas directly: {}", allSchemas);
+    // For each requested schema, fetch its tables and then columns for each table
+    for (String schema : request.schemas) {
+      try {
+        TablesResponse tablesResp = getTables(schema);
+        List<SchemaTreeTable> schemaTables = new ArrayList<>();
 
-    // Step 2: Get all tables across all resolved schemas in one query
-    StringBuilder inClause = new StringBuilder();
-    for (int i = 0; i < allSchemas.size(); i++) {
-      if (i > 0) {
-        inClause.append(", ");
-      }
-      inClause.append("'").append(escapeQuotes(allSchemas.get(i))).append("'");
-    }
-
-    // schema -> set of table names (preserving order, deduplicating)
-    Map<String, Set<String>> schemaToTables = new java.util.LinkedHashMap<>();
-    try {
-      String tablesSql = "SELECT DISTINCT TABLE_SCHEMA, TABLE_NAME "
-          + "FROM INFORMATION_SCHEMA.`TABLES` "
-          + "WHERE TABLE_SCHEMA IN (" + inClause + ") "
-          + "ORDER BY TABLE_SCHEMA, TABLE_NAME";
-      logger.info("Executing tables SQL: {}", tablesSql);
-      QueryResult result = executeQuery(tablesSql);
-      logger.info("Tables query returned {} rows", result.rows.size());
-      if (!result.rows.isEmpty()) {
-        logger.info("Tables result columns: {}", result.rows.get(0).keySet());
-        logger.info("First table row: {}", result.rows.get(0));
-      }
-
-      if (result.rows.isEmpty()) {
-        logger.warn("Tables query returned no results. Debugging schema names...");
-        // Debug: list all available schemas to understand naming
-        String debugSql = "SELECT DISTINCT TABLE_SCHEMA FROM INFORMATION_SCHEMA.`TABLES` ORDER BY TABLE_SCHEMA";
-        logger.info("Debug: Querying all available schemas: {}", debugSql);
-        try {
-          QueryResult debugResult = executeQuery(debugSql);
-          logger.info("Debug query returned {} rows", debugResult.rows.size());
-          logger.info("Debug query column names: {}", debugResult.rows.isEmpty() ? "N/A" : debugResult.rows.get(0).keySet());
-          logger.info("Available schemas in Drill INFORMATION_SCHEMA:");
-          for (Map<String, String> row : debugResult.rows) {
-            logger.info("  Row data: {}", row);
-            String schema = row.get("TABLE_SCHEMA");
-            if (schema == null) {
-              schema = row.get("table_schema");
+        for (TableInfo tableInfo : tablesResp.tables) {
+          try {
+            ColumnsResponse colsResp = getColumns(schema, tableInfo.name);
+            List<String> columnNames = new ArrayList<>();
+            for (ColumnInfo col : colsResp.columns) {
+              columnNames.add(col.name);
             }
-            logger.info("  - {}", schema);
+            schemaTables.add(new SchemaTreeTable(tableInfo.name, columnNames));
+          } catch (Exception e) {
+            logger.warn("Could not fetch columns for {}.{}: {}", schema, tableInfo.name, e.getMessage());
+            // Add table with empty columns list on error
+            schemaTables.add(new SchemaTreeTable(tableInfo.name, new ArrayList<>()));
           }
-        } catch (Exception debugEx) {
-          logger.warn("Could not query available schemas: {}", debugEx.getMessage());
-          debugEx.printStackTrace();
         }
-      }
 
-      for (Map<String, String> row : new ArrayList<>(result.rows)) {
-        String schema = row.get("TABLE_SCHEMA");
-        String table = row.get("TABLE_NAME");
-        logger.info("  Found table: {}.{}", schema, table);
-        if (schema != null && table != null) {
-          schemaToTables.computeIfAbsent(schema, k -> new LinkedHashSet<>()).add(table);
-        }
+        entries.add(new SchemaTreeEntry(schema, schemaTables));
+      } catch (Exception e) {
+        logger.warn("Could not fetch tables for schema {}: {}", schema, e.getMessage());
       }
-    } catch (Exception e) {
-      logger.error("Error fetching tables for schema tree", e);
-    }
-
-    // Step 3: Get all columns across all resolved schemas in one query
-    // Key: "schema|table" -> ordered set of column names
-    Map<String, Set<String>> tableToColumns = new java.util.LinkedHashMap<>();
-    try {
-      String colsSql = "SELECT TABLE_SCHEMA, TABLE_NAME, COLUMN_NAME "
-          + "FROM INFORMATION_SCHEMA.`COLUMNS` "
-          + "WHERE TABLE_SCHEMA IN (" + inClause + ") "
-          + "ORDER BY TABLE_SCHEMA, TABLE_NAME, ORDINAL_POSITION";
-      logger.info("Executing columns SQL: {}", colsSql);
-      QueryResult result = executeQuery(colsSql);
-      logger.info("Columns query returned {} rows", result.rows.size());
-
-      for (Map<String, String> row : new ArrayList<>(result.rows)) {
-        String schema = row.get("TABLE_SCHEMA");
-        String table = row.get("TABLE_NAME");
-        String col = row.get("COLUMN_NAME");
-        if (schema != null && table != null && col != null) {
-          String key = schema + "|" + table;
-          tableToColumns.computeIfAbsent(key, k -> new LinkedHashSet<>()).add(col);
-        }
-      }
-    } catch (Exception e) {
-      logger.warn("Error fetching columns for schema tree", e);
-    }
-
-    // Step 4: Assemble the tree
-    for (String schema : allSchemas) {
-      Set<String> tableNames = schemaToTables.get(schema);
-      if (tableNames == null || tableNames.isEmpty()) {
-        continue;
-      }
-
-      List<SchemaTreeTable> tables = new ArrayList<>();
-      for (String tableName : tableNames) {
-        String key = schema + "|" + tableName;
-        Set<String> cols = tableToColumns.get(key);
-        List<String> columns = cols != null ? new ArrayList<>(cols) : new ArrayList<>();
-        tables.add(new SchemaTreeTable(tableName, columns));
-      }
-      entries.add(new SchemaTreeEntry(schema, tables));
     }
 
     return new SchemaTreeResponse(entries);
