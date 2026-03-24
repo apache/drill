@@ -113,11 +113,11 @@ const querySlice = createSlice({
         tab.executionTime = undefined;
       }
     },
-    addTab: (state) => {
+    addTab: (state, action: PayloadAction<string | undefined>) => {
       tabCounter++;
       const newTab: QueryTab = {
         id: `tab-${tabCounter}`,
-        name: `Query ${tabCounter}`,
+        name: action.payload || `Query ${tabCounter}`,
         sql: '',
         isExecuting: false,
       };
