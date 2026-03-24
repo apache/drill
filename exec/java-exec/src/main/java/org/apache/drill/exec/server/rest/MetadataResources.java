@@ -876,10 +876,28 @@ public class MetadataResources {
    * Clears previous results from the shared WebUserConnection
    * to prevent accumulation across multiple queries in one request.
    */
-  private QueryResult executeQuery(String sql) throws Exception {
-    // Use a fresh WebUserConnection for each query to avoid state contamination
-    // when multiple queries are executed in the same request (like in getSchemaTree)
-    WebUserConnection freshConnection = new WebUserConnection(webUserConnection.webSessionResources);
+  /**
+   * Execute a SQL query and return the results.
+   *
+   * @param sql The SQL query to execute
+   * @param useFreshConnection If true, uses a new WebUserConnection to avoid state
+   *                           contamination when multiple queries are executed in
+   *                           the same request (e.g., getSchemaTree calling multiple
+   *                           metadata queries). If false, reuses the shared connection.
+   */
+  private QueryResult executeQuery(String sql, boolean useFreshConnection) throws Exception {
+    WebUserConnection connToUse;
+
+    if (useFreshConnection) {
+      // Create a fresh connection to avoid state contamination between sequential queries
+      connToUse = new WebUserConnection(webUserConnection.webSessionResources);
+    } else {
+      // Reuse the shared connection (performance optimization when safe to do so)
+      webUserConnection.results.clear();
+      webUserConnection.columns.clear();
+      webUserConnection.metadata.clear();
+      connToUse = webUserConnection;
+    }
 
     QueryWrapper wrapper = new QueryWrapper.RestQueryBuilder()
         .query(sql)
@@ -887,7 +905,14 @@ public class MetadataResources {
         .rowLimit("10000") // Reasonable limit for metadata queries
         .build();
 
-    return new RestQueryRunner(wrapper, workManager, freshConnection).run();
+    return new RestQueryRunner(wrapper, workManager, connToUse).run();
+  }
+
+  /**
+   * Convenience overload - defaults to using fresh connections for safety.
+   */
+  private QueryResult executeQuery(String sql) throws Exception {
+    return executeQuery(sql, true);
   }
 
   /**
