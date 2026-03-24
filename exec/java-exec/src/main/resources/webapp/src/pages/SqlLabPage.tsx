@@ -537,11 +537,12 @@ export default function SqlLabPage({ datasetFilter, headerContent, projectId, sa
   }, [locationState, updateSql, dispatch, activeTabId]);
 
   // Load saved queries for the project
+  const firstSavedQueryId = savedQueryIds?.[0];
   useEffect(() => {
-    if (projectId && savedQueryIds && savedQueryIds.length > 0) {
+    if (projectId && firstSavedQueryId) {
       // Import here to avoid circular dependency
       import('../api/savedQueries').then(({ getSavedQuery }) => {
-        getSavedQuery(savedQueryIds[0])
+        getSavedQuery(firstSavedQueryId)
           .then((query) => {
             updateSql(query.sql);
             if (query.defaultSchema) {
@@ -557,7 +558,7 @@ export default function SqlLabPage({ datasetFilter, headerContent, projectId, sa
           });
       });
     }
-  }, [projectId, savedQueryIds?.[0], activeTabId, updateSql, dispatch]);
+  }, [projectId, firstSavedQueryId, activeTabId, updateSql, dispatch]);
 
   // Handle format SQL
   const handleFormat = useCallback(() => {
