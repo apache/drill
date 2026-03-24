@@ -44,6 +44,7 @@ export const GEO_MAP_REGISTRY: GeoMapDefinition[] = [
   // Sub-national: North America
   { id: 'us-states',      label: 'US States',                  group: 'North America', center: [-98, 39],  zoom: 3.5, resolve: resolveUsStateName },
   { id: 'us-counties',    label: 'US Counties',                group: 'North America', center: [-98, 39],  zoom: 3.5, resolve: passthrough },
+  { id: 'us-zipcodes',    label: 'US ZIP Codes',               group: 'North America', center: [-98, 39],  zoom: 4.0, resolve: passthrough },
   { id: 'ca-provinces',   label: 'Canadian Provinces',         group: 'North America', center: [-106, 56], zoom: 2.5, resolve: resolveCanadianProvinceName },
   { id: 'mx-states',      label: 'Mexican States',             group: 'North America', center: [-102, 24], zoom: 3.5, resolve: passthrough },
   // Sub-national: South America
