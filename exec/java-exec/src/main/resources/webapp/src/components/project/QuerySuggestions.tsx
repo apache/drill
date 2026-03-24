@@ -16,9 +16,10 @@
  * limitations under the License.
  */
 import { useState, useEffect, useRef } from 'react';
-import { Card, Row, Col, Button, Space, Typography, Collapse, Spin, Empty, Tooltip } from 'antd';
+import { Card, Row, Col, Button, Space, Typography, Spin, Empty, Tooltip } from 'antd';
 import { BulbOutlined, ReloadOutlined, PlayCircleOutlined } from '@ant-design/icons';
 import { useQuery } from '@tanstack/react-query';
+import { format } from 'sql-formatter';
 import { getAiStatus, streamChat } from '../../api/ai';
 import { getSchemaTree } from '../../api/metadata';
 import { aiObservability } from '../../services/aiObservability';
@@ -38,7 +39,7 @@ interface QuerySuggestionsProps {
   datasets: DatasetRef[];
   savedQueryCount: number;
   project?: Project;
-  onSelectSql: (sql: string) => void;
+  onSelectSql: (sql: string, title?: string) => void;
 }
 
 function getCacheKey(projectId: string): string {
@@ -237,7 +238,6 @@ export default function QuerySuggestions({
   const [suggestions, setSuggestions] = useState<QuerySuggestion[] | null>(null);
   const [isGenerating, setIsGenerating] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [activeKey, setActiveKey] = useState<string[]>([]);
   const abortRef = useRef<AbortController | null>(null);
 
   const { data: aiStatus } = useQuery({
@@ -251,7 +251,6 @@ export default function QuerySuggestions({
     const cached = loadCachedSuggestions(projectId);
     if (cached) {
       setSuggestions(cached);
-      setActiveKey(['suggestions']);
     }
   }, [projectId]);
 
@@ -369,7 +368,6 @@ export default function QuerySuggestions({
           try {
             const parsed = parseJsonFromResponse(accumulated);
             setSuggestions(parsed);
-            setActiveKey(['suggestions']);
             saveCachedSuggestions(projectId, parsed);
             setError(null);
 
@@ -472,69 +470,62 @@ export default function QuerySuggestions({
           </Tooltip>
         </div>
         <Row gutter={[12, 12]}>
-          {suggestions.map((suggestion, index) => (
-            <Col key={index} xs={24} sm={12} lg={8}>
-              <Card
-                size="small"
-                title={<Text strong>{suggestion.title}</Text>}
-                actions={[
-                  <Button
-                    key="use"
-                    type="link"
-                    icon={<PlayCircleOutlined />}
-                    onClick={() => onSelectSql(suggestion.sql)}
+          {suggestions.map((suggestion, index) => {
+            const formattedSql = format(suggestion.sql, { language: 'sql' });
+            return (
+              <Col key={index} xs={24} sm={12} lg={8}>
+                <Card
+                  size="small"
+                  title={<Text strong>{suggestion.title}</Text>}
+                  actions={[
+                    <Button
+                      key="use"
+                      type="link"
+                      icon={<PlayCircleOutlined />}
+                      onClick={() => onSelectSql(formattedSql, suggestion.title)}
+                    >
+                      Use This Query
+                    </Button>,
+                  ]}
+                >
+                  <Paragraph
+                    type="secondary"
+                    ellipsis={{ rows: 2 }}
+                    style={{ marginBottom: 8 }}
                   >
-                    Use This Query
-                  </Button>,
-                ]}
-              >
-                <Paragraph
-                  type="secondary"
-                  ellipsis={{ rows: 2 }}
-                  style={{ marginBottom: 8 }}
-                >
-                  {suggestion.description}
-                </Paragraph>
-                <pre
-                  style={{
-                    fontSize: 11,
-                    background: '#f5f5f5',
-                    padding: 8,
-                    borderRadius: 4,
-                    maxHeight: 80,
-                    overflow: 'hidden',
-                    whiteSpace: 'pre-wrap',
-                    wordBreak: 'break-all',
-                    margin: 0,
-                  }}
-                >
-                  {suggestion.sql}
-                </pre>
-              </Card>
-            </Col>
-          ))}
+                    {suggestion.description}
+                  </Paragraph>
+                  <pre
+                    style={{
+                      fontSize: 11,
+                      background: '#f5f5f5',
+                      padding: 8,
+                      borderRadius: 4,
+                      maxHeight: 80,
+                      overflow: 'hidden',
+                      whiteSpace: 'pre-wrap',
+                      wordBreak: 'break-all',
+                      margin: 0,
+                    }}
+                  >
+                    {formattedSql}
+                  </pre>
+                </Card>
+              </Col>
+            );
+          })}
         </Row>
       </div>
     );
   };
 
   return (
-    <Collapse
-      activeKey={activeKey}
-      onChange={setActiveKey}
-      style={{ marginBottom: 12 }}
-      items={[
-        {
-          key: 'suggestions',
-          label: (
-            <Space>
-              <BulbOutlined />
-              <Text strong>AI Query Suggestions</Text>
-            </Space>
-          ),
-          children: renderContent(),
-        },
-      ]}
-    />
+    <div style={{ marginBottom: 12 }}>
+      <div style={{ marginBottom: 12, display: 'flex', alignItems: 'center', gap: 8 }}>
+        <BulbOutlined style={{ fontSize: 16 }} />
+        <Text strong style={{ fontSize: 16 }}>AI Query Suggestions</Text>
+      </div>
+      {renderContent()}
+    </div>
   );
 }
