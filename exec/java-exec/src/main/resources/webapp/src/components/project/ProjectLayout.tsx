@@ -19,7 +19,6 @@ import { useParams, Outlet } from 'react-router-dom';
 import { Spin, Empty, Button } from 'antd';
 import { useNavigate } from 'react-router-dom';
 import { ProjectContextProvider, useProjectContext } from '../../contexts/ProjectContext';
-import ProjectNavBar from './ProjectNavBar';
 
 function ProjectLayoutInner() {
   const { isLoading, error, project } = useProjectContext();
@@ -44,11 +43,8 @@ function ProjectLayoutInner() {
   }
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', flex: 1, overflow: 'hidden' }}>
-      <ProjectNavBar />
-      <div style={{ flex: 1, overflow: 'auto', display: 'flex', flexDirection: 'column' }}>
-        <Outlet />
-      </div>
+    <div style={{ flex: 1, overflow: 'auto', display: 'flex', flexDirection: 'column' }}>
+      <Outlet />
     </div>
   );
 }

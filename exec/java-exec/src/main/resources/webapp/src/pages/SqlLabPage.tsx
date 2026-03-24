@@ -695,14 +695,6 @@ export default function SqlLabPage({ datasetFilter, headerContent, projectId, sa
     [updateSql]
   );
 
-  // Handle schema change
-  const handleSchemaChange = useCallback(
-    (schema: string) => {
-      dispatch(setDefaultSchema({ tabId: activeTabId, schema }));
-    },
-    [dispatch, activeTabId]
-  );
-
   // Handle tab operations
   const handleTabChange = useCallback(
     (key: string) => {
@@ -1014,9 +1006,6 @@ export default function SqlLabPage({ datasetFilter, headerContent, projectId, sa
             onFormat={handleFormat}
             isExecuting={isExecuting}
             executionTime={executionTime}
-            schemas={schemas}
-            selectedSchema={activeTab?.defaultSchema}
-            onSchemaChange={handleSchemaChange}
             autoLimit={autoLimit ?? 1000}
             onAutoLimitChange={setAutoLimit}
             editorSettings={editorSettings}
