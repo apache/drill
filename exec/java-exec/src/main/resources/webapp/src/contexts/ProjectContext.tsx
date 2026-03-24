@@ -43,12 +43,15 @@ export function ProjectContextProvider({
     queryKey: ['project', projectId],
     queryFn: () => getProject(projectId),
     enabled: !!projectId,
-    retry: (failureCount, error: any) => {
+    retry: (failureCount, error: unknown) => {
       // Don't retry 404s (project not found) immediately
       // Only retry on network errors or server errors (5xx)
-      if (error?.response?.status === 404) {
-        // Don't retry 404 errors
-        return false;
+      if (error && typeof error === 'object' && 'response' in error) {
+        const httpError = error as { response?: { status?: number } };
+        if (httpError.response?.status === 404) {
+          // Don't retry 404 errors
+          return false;
+        }
       }
       // Retry up to 3 times for other errors
       return failureCount < 3;
