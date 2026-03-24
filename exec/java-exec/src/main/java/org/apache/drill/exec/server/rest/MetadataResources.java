@@ -823,45 +823,19 @@ public class MetadataResources {
   @Operation(summary = "Get schema tree",
       description = "Returns schemas with their tables and columns in a single call")
   public SchemaTreeResponse getSchemaTree(SchemaTreeRequest request) {
-    logger.debug("Fetching schema tree for {} schemas",
-        request.schemas != null ? request.schemas.size() : 0);
+    logger.info("=== SCHEMA TREE REQUEST ===");
+    logger.info("Requested schemas: {}", request.schemas);
 
     List<SchemaTreeEntry> entries = new ArrayList<>();
 
     if (request.schemas == null || request.schemas.isEmpty()) {
+      logger.warn("No schemas requested");
       return new SchemaTreeResponse(entries);
     }
 
-    // Step 1: Resolve all sub-schemas in one query
-    StringBuilder whereClause = new StringBuilder();
-    for (int i = 0; i < request.schemas.size(); i++) {
-      if (i > 0) {
-        whereClause.append(" OR ");
-      }
-      String name = escapeQuotes(request.schemas.get(i));
-      whereClause.append(String.format(
-          "(SCHEMA_NAME = '%s' OR SCHEMA_NAME LIKE '%s.%%')", name, name));
-    }
-
-    List<String> allSchemas = new ArrayList<>();
-    try {
-      String schemaSql = "SELECT DISTINCT SCHEMA_NAME FROM INFORMATION_SCHEMA.SCHEMATA WHERE "
-          + whereClause + " ORDER BY SCHEMA_NAME";
-      QueryResult result = executeQuery(schemaSql);
-      for (Map<String, String> row : new ArrayList<>(result.rows)) {
-        String name = row.get("SCHEMA_NAME");
-        if (name != null) {
-          allSchemas.add(name);
-        }
-      }
-    } catch (Exception e) {
-      logger.warn("Error resolving sub-schemas", e);
-      allSchemas.addAll(request.schemas);
-    }
-
-    if (allSchemas.isEmpty()) {
-      return new SchemaTreeResponse(entries);
-    }
+    // Use the requested schemas directly - they are assumed to be valid
+    List<String> allSchemas = new ArrayList<>(request.schemas);
+    logger.info("Using requested schemas directly: {}", allSchemas);
 
     // Step 2: Get all tables across all resolved schemas in one query
     StringBuilder inClause = new StringBuilder();
@@ -879,16 +853,48 @@ public class MetadataResources {
           + "FROM INFORMATION_SCHEMA.`TABLES` "
           + "WHERE TABLE_SCHEMA IN (" + inClause + ") "
           + "ORDER BY TABLE_SCHEMA, TABLE_NAME";
+      logger.info("Executing tables SQL: {}", tablesSql);
       QueryResult result = executeQuery(tablesSql);
+      logger.info("Tables query returned {} rows", result.rows.size());
+      if (!result.rows.isEmpty()) {
+        logger.info("Tables result columns: {}", result.rows.get(0).keySet());
+        logger.info("First table row: {}", result.rows.get(0));
+      }
+
+      if (result.rows.isEmpty()) {
+        logger.warn("Tables query returned no results. Debugging schema names...");
+        // Debug: list all available schemas to understand naming
+        String debugSql = "SELECT DISTINCT TABLE_SCHEMA FROM INFORMATION_SCHEMA.`TABLES` ORDER BY TABLE_SCHEMA";
+        logger.info("Debug: Querying all available schemas: {}", debugSql);
+        try {
+          QueryResult debugResult = executeQuery(debugSql);
+          logger.info("Debug query returned {} rows", debugResult.rows.size());
+          logger.info("Debug query column names: {}", debugResult.rows.isEmpty() ? "N/A" : debugResult.rows.get(0).keySet());
+          logger.info("Available schemas in Drill INFORMATION_SCHEMA:");
+          for (Map<String, String> row : debugResult.rows) {
+            logger.info("  Row data: {}", row);
+            String schema = row.get("TABLE_SCHEMA");
+            if (schema == null) {
+              schema = row.get("table_schema");
+            }
+            logger.info("  - {}", schema);
+          }
+        } catch (Exception debugEx) {
+          logger.warn("Could not query available schemas: {}", debugEx.getMessage());
+          debugEx.printStackTrace();
+        }
+      }
+
       for (Map<String, String> row : new ArrayList<>(result.rows)) {
         String schema = row.get("TABLE_SCHEMA");
         String table = row.get("TABLE_NAME");
+        logger.info("  Found table: {}.{}", schema, table);
         if (schema != null && table != null) {
           schemaToTables.computeIfAbsent(schema, k -> new LinkedHashSet<>()).add(table);
         }
       }
     } catch (Exception e) {
-      logger.warn("Error fetching tables for schema tree", e);
+      logger.error("Error fetching tables for schema tree", e);
     }
 
     // Step 3: Get all columns across all resolved schemas in one query
@@ -896,10 +902,13 @@ public class MetadataResources {
     Map<String, Set<String>> tableToColumns = new java.util.LinkedHashMap<>();
     try {
       String colsSql = "SELECT TABLE_SCHEMA, TABLE_NAME, COLUMN_NAME "
-          + "FROM INFORMATION_SCHEMA.COLUMNS "
+          + "FROM INFORMATION_SCHEMA.`COLUMNS` "
           + "WHERE TABLE_SCHEMA IN (" + inClause + ") "
           + "ORDER BY TABLE_SCHEMA, TABLE_NAME, ORDINAL_POSITION";
+      logger.info("Executing columns SQL: {}", colsSql);
       QueryResult result = executeQuery(colsSql);
+      logger.info("Columns query returned {} rows", result.rows.size());
+
       for (Map<String, String> row : new ArrayList<>(result.rows)) {
         String schema = row.get("TABLE_SCHEMA");
         String table = row.get("TABLE_NAME");
