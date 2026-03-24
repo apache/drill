@@ -46,9 +46,6 @@ interface QueryToolbarProps {
   onFormat?: () => void;
   isExecuting: boolean;
   executionTime?: number;
-  schemas?: Array<{ name: string }>;
-  selectedSchema?: string;
-  onSchemaChange?: (schema: string) => void;
   autoLimit?: number;
   onAutoLimitChange?: (limit: number | null) => void;
   editorSettings?: EditorSettings;
@@ -74,9 +71,6 @@ export default function QueryToolbar({
   onFormat,
   isExecuting,
   executionTime,
-  schemas,
-  selectedSchema,
-  onSchemaChange,
   autoLimit = 1000,
   onAutoLimitChange,
   editorSettings,
@@ -172,20 +166,6 @@ export default function QueryToolbar({
               {hasSelection ? 'Run Selection' : 'Run'}
             </Button>
           </Tooltip>
-        )}
-
-        {/* Schema selector */}
-        {schemas && schemas.length > 0 && (
-          <Select
-            size="small"
-            placeholder="Schema"
-            value={selectedSchema || undefined}
-            onChange={onSchemaChange}
-            options={schemas.map((s) => ({ value: s.name, label: s.name }))}
-            style={{ minWidth: isCompact ? 100 : 140 }}
-            allowClear
-            showSearch
-          />
         )}
 
         {/* Save Query Button */}
