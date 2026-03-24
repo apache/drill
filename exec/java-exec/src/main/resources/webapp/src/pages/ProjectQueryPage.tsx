@@ -15,33 +15,56 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+import { useRef, useEffect } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import { useProjectContext } from '../contexts/ProjectContext';
-import { QuerySuggestions } from '../components/project';
+import AiAssistantModal from '../components/ai/AiAssistantModal';
 import type { RootState } from '../store';
-import { setSql } from '../store/querySlice';
+import { setSql, addTab } from '../store/querySlice';
 import SqlLabPage from './SqlLabPage';
 
 export default function ProjectQueryPage() {
   const { project, projectId } = useProjectContext();
   const dispatch = useDispatch();
   const activeTabId = useSelector((state: RootState) => state.query.activeTabId);
+  const currentTab = useSelector((state: RootState) =>
+    state.query.tabs.find(tab => tab.id === activeTabId)
+  );
+  const currentSql = currentTab?.sql || '';
+  const pendingSqlRef = useRef<string | null>(null);
+  const lastActiveTabRef = useRef<string>(activeTabId);
 
   const datasets = project?.datasets || [];
   const datasetFilter = { datasets };
 
+  // When a new tab is created and becomes active, set the pending SQL
+  useEffect(() => {
+    if (pendingSqlRef.current && activeTabId !== lastActiveTabRef.current) {
+      dispatch(setSql({ tabId: activeTabId, sql: pendingSqlRef.current }));
+      pendingSqlRef.current = null;
+    }
+    lastActiveTabRef.current = activeTabId;
+  }, [activeTabId, dispatch]);
+
   const handleSelectSql = (sql: string) => {
-    dispatch(setSql({ tabId: activeTabId, sql }));
+    // Store the SQL and create a new tab
+    pendingSqlRef.current = sql;
+    dispatch(addTab());
   };
 
-  const suggestionPanel = project?.datasets && project.datasets.length > 0 ? (
-    <QuerySuggestions
-      projectId={projectId!}
-      datasets={datasets}
-      savedQueryCount={project?.savedQueryIds?.length || 0}
-      onSelectSql={handleSelectSql}
-    />
-  ) : null;
-
-  return <SqlLabPage datasetFilter={datasetFilter} projectId={projectId} savedQueryIds={project?.savedQueryIds} headerContent={suggestionPanel} />;
+  return (
+    <>
+      <SqlLabPage datasetFilter={datasetFilter} projectId={projectId} savedQueryIds={project?.savedQueryIds} />
+      {project?.datasets && project.datasets.length > 0 && (
+        <AiAssistantModal
+          projectId={projectId!}
+          datasets={datasets}
+          savedQueryCount={project?.savedQueryIds?.length || 0}
+          project={project}
+          currentSql={currentSql}
+          onSelectSql={handleSelectSql}
+        />
+      )}
+    </>
+  );
 }

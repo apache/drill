@@ -33,6 +33,7 @@ import {
   FundProjectionScreenOutlined,
   ClearOutlined,
   ReloadOutlined,
+  FilterOutlined,
 } from '@ant-design/icons';
 import type { ColDef, GridReadyEvent, GridApi, SortModelItem } from 'ag-grid-community';
 import type { MenuProps } from 'antd';
@@ -98,6 +99,7 @@ export default function ResultsGrid({
   const [sortManagerOpen, setSortManagerOpen] = useState(false);
   const [columnVisibility, setColumnVisibility] = useState<Record<string, boolean>>({});
   const [profilerOpen, setProfilerOpen] = useState(false);
+  const [showFilters, setShowFilters] = useState(false);
   const screens = Grid.useBreakpoint();
   const isCompact = !screens.lg;
   const { isDark } = useTheme();
@@ -461,6 +463,14 @@ export default function ResultsGrid({
               {!isCompact && 'View'}
             </Button>
           </Dropdown>
+          <Button
+            icon={<FilterOutlined />}
+            size="small"
+            type={showFilters ? 'primary' : 'text'}
+            onClick={() => setShowFilters(!showFilters)}
+          >
+            {!isCompact && (showFilters ? 'Hide Filters' : 'Show Filters')}
+          </Button>
         </Space>
         <Space>
           {onRerun && (
@@ -503,7 +513,7 @@ export default function ResultsGrid({
           defaultColDef={{
             sortable: true,
             resizable: true,
-            floatingFilter: true,
+            floatingFilter: showFilters,
             cellRenderer: JsonCellRenderer,
           }}
           animateRows={true}
