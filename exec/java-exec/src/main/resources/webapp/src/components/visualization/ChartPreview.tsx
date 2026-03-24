@@ -62,17 +62,22 @@ const _mapPromiseCache = new Map<string, Promise<void>>();
 function ensureMapRegistered(mapId: string): Promise<void> {
   // Check if already registered
   if (echarts.getMap(mapId)) {
+    console.debug(`[ECharts] Map ${mapId} already registered`);
     return Promise.resolve();
   }
 
   // Check if fetch is already in progress
   if (_mapPromiseCache.has(mapId)) {
+    console.debug(`[ECharts] Map ${mapId} fetch in progress, waiting...`);
     return _mapPromiseCache.get(mapId)!;
   }
 
   // Fetch and register the map
+  console.debug(`[ECharts] Fetching map ${mapId}...`);
   const promise = fetchGeoJson(mapId)
     .then((geoJson) => {
+      const features = (geoJson as Record<string, unknown>).features as unknown[];
+      console.debug(`[ECharts] Registering map ${mapId} with ${features?.length ?? 0} features`);
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       echarts.registerMap(mapId, geoJson as any);
     })
@@ -1773,6 +1778,12 @@ export default function ChartPreview({
           name: resolverFn(String(row[dimCol] ?? '')),
           value: Number(row[valueCol]) || 0,
         }));
+
+        // Debug logging for choropleth rendering
+        if (choroData.length > 0) {
+          console.debug(`[Choropleth] scope=${scopeKey}, mapId=${getActualMapId(scopeKey)}, dataRows=${choroData.length}`);
+          console.debug(`[Choropleth] First 5 data points:`, choroData.slice(0, 5));
+        }
 
         // Compute min/max for visualMap
         const values = choroData.map((d) => d.value).filter((v) => isFinite(v));
