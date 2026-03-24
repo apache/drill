@@ -566,9 +566,40 @@ public class MetadataResources {
       @Parameter(description = "Table name") @PathParam("table") String table) {
     logger.debug("Fetching columns for table: {}.{}", schema, table);
 
-    // Handle dot-qualified table names like "store.order_items":
-    // split into schema suffix and actual table name so that
-    // TABLE_SCHEMA = 'mysql.store' AND TABLE_NAME = 'order_items'
+    try {
+      List<ColumnInfo> columns = fetchColumnsForTable(schema, table);
+      return new ColumnsResponse(columns);
+    } catch (Exception e) {
+      logger.error("Error fetching columns for table: {}.{}", schema, table, e);
+      throw new RuntimeException("Failed to fetch columns: " + e.getMessage(), e);
+    }
+  }
+
+  private void populateColumns(QueryResult result, List<ColumnInfo> columns,
+      String schema, String table) {
+    for (Map<String, String> row : result.rows) {
+      String columnName = row.get("COLUMN_NAME");
+      String dataType = row.get("DATA_TYPE");
+      String isNullable = row.get("IS_NULLABLE");
+      if (columnName != null) {
+        columns.add(new ColumnInfo(
+            columnName,
+            dataType != null ? dataType : "ANY",
+            "YES".equalsIgnoreCase(isNullable),
+            schema,
+            table
+        ));
+      }
+    }
+  }
+
+  /**
+   * Private helper to fetch columns for a specific table.
+   * Used by both the REST endpoint and getSchemaTree() to avoid calling
+   * REST endpoints from within Java methods.
+   */
+  private List<ColumnInfo> fetchColumnsForTable(String schema, String table) throws Exception {
+    // Handle dot-qualified table names like "store.order_items"
     String effectiveSchema = schema;
     String effectiveTable = table;
     int lastDot = table.lastIndexOf('.');
@@ -577,9 +608,6 @@ public class MetadataResources {
       effectiveTable = table.substring(lastDot + 1);
     }
 
-    // Try the resolved schema.table first; if no results, fall back
-    // to the original values in case the dot is part of the table name
-    // (e.g. file-based plugins with filenames containing dots).
     String sql = String.format(
         "SELECT COLUMN_NAME, DATA_TYPE, IS_NULLABLE " +
         "FROM INFORMATION_SCHEMA.`COLUMNS` " +
@@ -588,37 +616,25 @@ public class MetadataResources {
         escapeQuotes(effectiveSchema), escapeQuotes(effectiveTable));
 
     List<ColumnInfo> columns = new ArrayList<>();
+    QueryResult result = executeQuery(sql);
+    populateColumns(result, columns, schema, table);
 
-    try {
-      QueryResult result = executeQuery(sql);
-      populateColumns(result, columns, schema, table);
-
-      // Fallback: if dot-splitting produced no results and we did split,
-      // retry with the original unsplit values
-      if (columns.isEmpty() && lastDot > 0) {
-        String fallbackSql = String.format(
-            "SELECT COLUMN_NAME, DATA_TYPE, IS_NULLABLE " +
-            "FROM INFORMATION_SCHEMA.`COLUMNS` " +
-            "WHERE TABLE_SCHEMA = '%s' AND TABLE_NAME = '%s' " +
-            "ORDER BY ORDINAL_POSITION",
-            escapeQuotes(schema), escapeQuotes(table));
-        QueryResult fallbackResult = executeQuery(fallbackSql);
-        populateColumns(fallbackResult, columns, schema, table);
-      }
-    } catch (Exception e) {
-      logger.error("Error fetching columns for table: {}.{}", schema, table, e);
-      throw new RuntimeException("Failed to fetch columns: " + e.getMessage(), e);
+    // Fallback: if dot-splitting produced no results, retry with original values
+    if (columns.isEmpty() && lastDot > 0) {
+      String fallbackSql = String.format(
+          "SELECT COLUMN_NAME, DATA_TYPE, IS_NULLABLE " +
+          "FROM INFORMATION_SCHEMA.`COLUMNS` " +
+          "WHERE TABLE_SCHEMA = '%s' AND TABLE_NAME = '%s' " +
+          "ORDER BY ORDINAL_POSITION",
+          escapeQuotes(schema), escapeQuotes(table));
+      QueryResult fallbackResult = executeQuery(fallbackSql);
+      populateColumns(fallbackResult, columns, schema, table);
     }
 
-    // Dynamic-schema tables (e.g. Splunk, MongoDB, Elasticsearch) report
-    // only "**" in INFORMATION_SCHEMA.  For non-HTTP plugins, fall back to
-    // SELECT * LIMIT 1 to discover the real columns at query time.
-    // HTTP endpoints are skipped because they often require parameters
-    // that a bare LIMIT 1 cannot provide.
+    // Handle dynamic-schema tables (e.g. Splunk, MongoDB)
     if (columns.size() == 1 && "**".equals(columns.get(0).name)) {
       if (isHttpPlugin(schema)) {
-        // Keep the "**" entry so the frontend can show a helpful hint
-        return new ColumnsResponse(columns);
+        return columns; // Keep the "**" marker for HTTP endpoints
       }
       columns.clear();
       try {
@@ -638,31 +654,11 @@ public class MetadataResources {
         }
       } catch (Exception e) {
         logger.warn("Dynamic column probe failed for {}.{}: {}", schema, table, e.getMessage());
-        // Probe failed — return the "**" marker so the frontend shows
-        // the "schema determined at query time" hint instead of nothing
         columns.add(new ColumnInfo("**", "ANY", true, schema, table));
       }
     }
 
-    return new ColumnsResponse(columns);
-  }
-
-  private void populateColumns(QueryResult result, List<ColumnInfo> columns,
-      String schema, String table) {
-    for (Map<String, String> row : result.rows) {
-      String columnName = row.get("COLUMN_NAME");
-      String dataType = row.get("DATA_TYPE");
-      String isNullable = row.get("IS_NULLABLE");
-      if (columnName != null) {
-        columns.add(new ColumnInfo(
-            columnName,
-            dataType != null ? dataType : "ANY",
-            "YES".equalsIgnoreCase(isNullable),
-            schema,
-            table
-        ));
-      }
-    }
+    return columns;
   }
 
   @GET
@@ -837,9 +833,10 @@ public class MetadataResources {
 
         for (TableInfo tableInfo : tablesResp.tables) {
           try {
-            ColumnsResponse colsResp = getColumns(schema, tableInfo.name);
+            // Use private helper instead of REST endpoint to fetch columns
+            List<ColumnInfo> columns = fetchColumnsForTable(schema, tableInfo.name);
             List<String> columnNames = new ArrayList<>();
-            for (ColumnInfo col : colsResp.columns) {
+            for (ColumnInfo col : columns) {
               columnNames.add(col.name);
             }
             schemaTables.add(new SchemaTreeTable(tableInfo.name, columnNames));
