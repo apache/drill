@@ -41,6 +41,7 @@ import { useProspector } from '../hooks/useProspector';
 import { useMonacoCompletion } from '../hooks/useMonacoCompletion';
 import { getAiStatus, getAiConfig, streamChat, transpileSql, convertDataType } from '../api/ai';
 import { getSchemaTree } from '../api/metadata';
+import { getSavedQuery } from '../api/savedQueries';
 import SchemaExplorer from '../components/schema-explorer/SchemaExplorer';
 import type { DatasetFilter } from '../components/schema-explorer/SchemaExplorer';
 import SqlEditor, { DEFAULT_EDITOR_SETTINGS } from '../components/query-editor/SqlEditor';
@@ -540,23 +541,20 @@ export default function SqlLabPage({ datasetFilter, headerContent, projectId, sa
   const firstSavedQueryId = savedQueryIds?.[0];
   useEffect(() => {
     if (projectId && firstSavedQueryId) {
-      // Import here to avoid circular dependency
-      import('../api/savedQueries').then(({ getSavedQuery }) => {
-        getSavedQuery(firstSavedQueryId)
-          .then((query) => {
-            updateSql(query.sql);
-            if (query.defaultSchema) {
-              dispatch(setDefaultSchema({ tabId: activeTabId, schema: query.defaultSchema }));
-            }
-            // Rename tab to match the saved query name
-            if (query.name) {
-              dispatch(renameTab({ tabId: activeTabId, name: query.name }));
-            }
-          })
-          .catch((error) => {
-            console.warn('Failed to load project saved query:', error);
-          });
-      });
+      getSavedQuery(firstSavedQueryId)
+        .then((query) => {
+          updateSql(query.sql);
+          if (query.defaultSchema) {
+            dispatch(setDefaultSchema({ tabId: activeTabId, schema: query.defaultSchema }));
+          }
+          // Rename tab to match the saved query name
+          if (query.name) {
+            dispatch(renameTab({ tabId: activeTabId, name: query.name }));
+          }
+        })
+        .catch((error) => {
+          console.warn('Failed to load project saved query:', error);
+        });
     }
   }, [projectId, firstSavedQueryId, activeTabId, updateSql, dispatch]);
 
