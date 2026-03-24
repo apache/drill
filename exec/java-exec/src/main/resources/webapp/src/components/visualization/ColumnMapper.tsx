@@ -20,6 +20,7 @@ import { FieldNumberOutlined, FieldStringOutlined, ClockCircleOutlined, FieldTim
 import type { ChartType, VisualizationConfig, PredictionMethod } from '../../types';
 import { isTemporalType } from '../../utils/sqlTransformations';
 import type { TimeGrain, AggregationFunction } from '../../utils/sqlTransformations';
+import { GEO_SCOPE_OPTIONS } from '../../utils/geoMapRegistry';
 
 const { Text } = Typography;
 
@@ -131,6 +132,11 @@ function getRequiredFields(chartType: ChartType): { field: string; label: string
         { field: 'yAxis', label: 'Latitude', numeric: true },
         { field: 'metrics', label: 'Size Value (Optional)', multi: false, numeric: true },
         { field: 'dimensions', label: 'Label (Optional)', multi: false, numeric: false },
+      ];
+    case 'choropleth':
+      return [
+        { field: 'dimensions', label: 'Location Code (ISO-2, ISO-3, or country name)', multi: false, numeric: false },
+        { field: 'metrics', label: 'Value', multi: false, numeric: true },
       ];
     case 'bigNumber':
       return [
@@ -692,6 +698,46 @@ export default function ColumnMapper({ columns, chartType, config, onChange }: C
             />
           </Form.Item>
           <Form.Item label="Enable Zoom/Pan">
+            <Switch
+              checked={config.chartOptions?.enableRoam !== false}
+              onChange={(checked) => onChange({
+                ...config,
+                chartOptions: { ...config.chartOptions, enableRoam: checked },
+              })}
+            />
+          </Form.Item>
+        </>
+      )}
+      {chartType === 'choropleth' && (
+        <>
+          <Divider style={{ margin: '8px 0' }} />
+          <Form.Item label="Geographic Scope">
+            <Select
+              value={(config.chartOptions?.mapScope as string) || 'world'}
+              onChange={(value) => onChange({
+                ...config,
+                chartOptions: { ...config.chartOptions, mapScope: value },
+              })}
+              options={GEO_SCOPE_OPTIONS}
+            />
+          </Form.Item>
+          <Form.Item label="Color Scale">
+            <Select
+              value={(config.chartOptions?.choroplethColorScale as string) || 'blue'}
+              onChange={(value) => onChange({
+                ...config,
+                chartOptions: { ...config.chartOptions, choroplethColorScale: value },
+              })}
+              options={[
+                { value: 'blue', label: 'Blue (light → dark)' },
+                { value: 'green', label: 'Green' },
+                { value: 'red', label: 'Red' },
+                { value: 'heat', label: 'Heat (yellow → red)' },
+                { value: 'diverging', label: 'Diverging (blue → red)' },
+              ]}
+            />
+          </Form.Item>
+          <Form.Item label="Enable Pan/Zoom">
             <Switch
               checked={config.chartOptions?.enableRoam !== false}
               onChange={(checked) => onChange({

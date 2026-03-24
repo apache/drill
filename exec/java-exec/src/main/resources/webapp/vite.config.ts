@@ -17,9 +17,32 @@
  */
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
+import { createReadStream } from 'fs';
+import { resolve } from 'path';
 
 export default defineConfig({
-  plugins: [react()],
+  plugins: [
+    react(),
+    {
+      name: 'serve-geojson',
+      configureServer(server) {
+        return () => {
+          server.middlewares.use('/sqllab/geojson', (req, res, next) => {
+            // Serve GeoJSON files from public/geojson/
+            const filePath = resolve(__dirname, `public${req.url}`);
+            try {
+              const stream = createReadStream(filePath);
+              res.setHeader('Content-Type', 'application/json');
+              stream.pipe(res);
+              stream.on('error', () => next());
+            } catch {
+              next();
+            }
+          });
+        };
+      },
+    },
+  ],
   base: '/sqllab/',
   build: {
     outDir: 'dist',
@@ -52,6 +75,10 @@ export default defineConfig({
         changeOrigin: true,
       },
       '/profiles': {
+        target: 'http://localhost:8047',
+        changeOrigin: true,
+      },
+      '/sqllab/geojson': {
         target: 'http://localhost:8047',
         changeOrigin: true,
       },
