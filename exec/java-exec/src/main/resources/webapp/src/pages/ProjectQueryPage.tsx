@@ -46,10 +46,10 @@ export default function ProjectQueryPage() {
     lastActiveTabRef.current = activeTabId;
   }, [activeTabId, dispatch]);
 
-  const handleSelectSql = (sql: string) => {
-    // Store the SQL and create a new tab
+  const handleSelectSql = (sql: string, title?: string) => {
+    // Store the SQL and create a new tab with optional title
     pendingSqlRef.current = sql;
-    dispatch(addTab());
+    dispatch(addTab(title));
   };
 
   return (
