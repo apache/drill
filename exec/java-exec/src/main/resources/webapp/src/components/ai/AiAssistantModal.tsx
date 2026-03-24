@@ -32,7 +32,7 @@ interface AiAssistantModalProps {
   savedQueryCount: number;
   project?: Project;
   currentSql?: string;
-  onSelectSql: (sql: string) => void;
+  onSelectSql: (sql: string, title?: string) => void;
 }
 
 function ExplainQueryPanel({ sql, onApplySql }: { sql: string; onApplySql?: (sql: string) => void }) {
@@ -300,8 +300,8 @@ export default function AiAssistantModal({
           datasets={datasets}
           savedQueryCount={savedQueryCount}
           project={project}
-          onSelectSql={(sql) => {
-            onSelectSql(sql);
+          onSelectSql={(sql, title) => {
+            onSelectSql(sql, title);
             closeModal();
           }}
         />
