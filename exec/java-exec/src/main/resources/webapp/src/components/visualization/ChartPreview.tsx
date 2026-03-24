@@ -427,7 +427,15 @@ export default function ChartPreview({
       return;
     }
 
-    const scopeKey = (config.chartOptions?.mapScope as string) || 'world';
+    // Check if multi-select scopes are used
+    const mapScopes = (config.chartOptions?.mapScopes as string[]) || [];
+    let scopeKey = (config.chartOptions?.mapScope as string) || 'world';
+
+    // If multiple state ZIP codes are selected, use the all-states map
+    if (mapScopes.length > 1 || (mapScopes.length === 1 && mapScopes[0]?.includes('-zipcodes'))) {
+      scopeKey = 'us-zipcodes';  // All-states merged map
+    }
+
     const mapDef = getMapDef(scopeKey);
     if (!mapDef) {
       setMapReady(false);
@@ -456,7 +464,7 @@ export default function ChartPreview({
         setMapReady(false);
         mapReadyRef.current = null;
       });
-  }, [chartType, config.chartOptions?.mapScope]);
+  }, [chartType, config.chartOptions?.mapScope, config.chartOptions?.mapScopes]);
 
   // Map ECharts click event params → (column, value, isTemporal, isNumeric) based on chart type + config
   const handleChartClick = useCallback((params: Record<string, unknown>) => {
@@ -1763,8 +1771,15 @@ export default function ChartPreview({
           return null;
         }
 
-        // Get map scope from config and resolve to map definition
-        const scopeKey = (config.chartOptions?.mapScope as string) || 'world';
+        // Handle both single and multi-select scopes
+        const mapScopes = (config.chartOptions?.mapScopes as string[]) || [];
+        let scopeKey = (config.chartOptions?.mapScope as string) || 'world';
+
+        // If multiple state ZIP codes are selected, use the all-states map
+        if (mapScopes.length > 1 || (mapScopes.length === 1 && mapScopes[0]?.includes('-zipcodes'))) {
+          scopeKey = 'us-zipcodes';  // All-states merged map
+        }
+
         const mapDef = getMapDef(scopeKey);
         if (!mapDef) {
           return null;
@@ -1781,7 +1796,8 @@ export default function ChartPreview({
 
         // Debug logging for choropleth rendering
         if (choroData.length > 0) {
-          console.debug(`[Choropleth] scope=${scopeKey}, mapId=${getActualMapId(scopeKey)}, dataRows=${choroData.length}`);
+          const displayScope = mapScopes.length > 0 ? `${mapScopes.length} states` : scopeKey;
+          console.debug(`[Choropleth] scope=${displayScope}, mapId=${getActualMapId(scopeKey)}, dataRows=${choroData.length}`);
           console.debug(`[Choropleth] First 5 data points:`, choroData.slice(0, 5));
         }
 
