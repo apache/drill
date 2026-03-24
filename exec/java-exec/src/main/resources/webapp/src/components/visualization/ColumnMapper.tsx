@@ -20,7 +20,7 @@ import { FieldNumberOutlined, FieldStringOutlined, ClockCircleOutlined, FieldTim
 import type { ChartType, VisualizationConfig, PredictionMethod } from '../../types';
 import { isTemporalType } from '../../utils/sqlTransformations';
 import type { TimeGrain, AggregationFunction } from '../../utils/sqlTransformations';
-import { GEO_SCOPE_OPTIONS } from '../../utils/geoMapRegistry';
+import { GEO_SCOPE_OPTIONS, getMapDef } from '../../utils/geoMapRegistry';
 
 const { Text } = Typography;
 
@@ -712,14 +712,49 @@ export default function ColumnMapper({ columns, chartType, config, onChange }: C
         <>
           <Divider style={{ margin: '8px 0' }} />
           <Form.Item label="Geographic Scope">
-            <Select
-              value={(config.chartOptions?.mapScope as string) || 'world'}
-              onChange={(value) => onChange({
-                ...config,
-                chartOptions: { ...config.chartOptions, mapScope: value },
-              })}
-              options={GEO_SCOPE_OPTIONS}
-            />
+            {(() => {
+              // Determine if multi-select is enabled for current scope
+              const currentScope = (config.chartOptions?.mapScope as string) || 'world';
+              const currentScopes = (config.chartOptions?.mapScopes as string[]) || [];
+              const mapDef = getMapDef(currentScope);
+              const isMultiSelectScope = mapDef?.multiSelectAllowed || false;
+
+              // Get state ZIP code options for multi-select
+              const stateZipOptions = GEO_SCOPE_OPTIONS
+                .find((opt: any) => opt.label === 'US ZIP Codes (by State)')
+                ?.options || [];
+
+              if (isMultiSelectScope && stateZipOptions.length > 0) {
+                return (
+                  <Select
+                    mode="multiple"
+                    placeholder="Select one or more states"
+                    value={currentScopes.length > 0 ? currentScopes : [currentScope]}
+                    onChange={(values) => onChange({
+                      ...config,
+                      chartOptions: {
+                        ...config.chartOptions,
+                        mapScopes: values,
+                        mapScope: values[0] || 'world', // Keep single mapScope for fallback
+                      },
+                    })}
+                    options={stateZipOptions}
+                  />
+                );
+              }
+
+              // Single-select for all other scopes
+              return (
+                <Select
+                  value={currentScope}
+                  onChange={(value) => onChange({
+                    ...config,
+                    chartOptions: { ...config.chartOptions, mapScope: value, mapScopes: [] },
+                  })}
+                  options={GEO_SCOPE_OPTIONS}
+                />
+              );
+            })()}
           </Form.Item>
           <Form.Item label="Color Scale">
             <Select
