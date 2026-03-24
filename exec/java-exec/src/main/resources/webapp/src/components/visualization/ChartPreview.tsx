@@ -15,7 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import { useMemo, useCallback } from 'react';
+import { useMemo, useCallback, useState, useEffect, useRef } from 'react';
 import ReactECharts from 'echarts-for-react';
 import { Alert, Button, Empty, Spin, Table, Tooltip, Typography, message } from 'antd';
 import { CaretUpOutlined, CaretDownOutlined, CopyOutlined, MinusOutlined, TableOutlined, InfoCircleOutlined } from '@ant-design/icons';
@@ -26,11 +26,8 @@ import { useTheme } from '../../hooks/useTheme';
 import type { ChartType, VisualizationConfig, QueryResult, PredictiveAnalyticsConfig, PredictionMethod } from '../../types';
 import { generatePredictions, generateFutureLabels, generateTrendLine } from '../../utils/predictions';
 import type { DataPoint } from '../../utils/predictions';
-import worldGeoJson from '../../assets/world.json';
-
-// Register the world map for ECharts geo component
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-echarts.registerMap('world', worldGeoJson as any);
+import { fetchGeoJson } from '../../api/geojson';
+import { getMapDef, getActualMapId } from '../../utils/geoMapRegistry';
 
 interface ChartPreviewProps {
   chartType: ChartType;
@@ -53,6 +50,48 @@ const colorSchemes: Record<string, string[]> = {
   warm: ['#ff7f50', '#ff6347', '#ff4500', '#ffa500', '#ffd700', '#ffb6c1', '#ff69b4', '#ff1493'],
   cool: ['#00bfff', '#1e90ff', '#4169e1', '#0000ff', '#8a2be2', '#9400d3', '#9932cc', '#ba55d3'],
   earth: ['#8b4513', '#a0522d', '#cd853f', '#deb887', '#d2691e', '#bc8f8f', '#f4a460', '#c4a484'],
+};
+
+// Module-level promise cache for lazy-loading maps
+const _mapPromiseCache = new Map<string, Promise<void>>();
+
+/**
+ * Ensure a GeoJSON map is registered with ECharts.
+ * Uses module-level cache to avoid refetching the same map.
+ */
+function ensureMapRegistered(mapId: string): Promise<void> {
+  // Check if already registered
+  if (echarts.getMap(mapId)) {
+    return Promise.resolve();
+  }
+
+  // Check if fetch is already in progress
+  if (_mapPromiseCache.has(mapId)) {
+    return _mapPromiseCache.get(mapId)!;
+  }
+
+  // Fetch and register the map
+  const promise = fetchGeoJson(mapId)
+    .then((geoJson) => {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      echarts.registerMap(mapId, geoJson as any);
+    })
+    .catch((error) => {
+      console.error(`Failed to load map ${mapId}:`, error);
+      throw error;
+    });
+
+  _mapPromiseCache.set(mapId, promise);
+  return promise;
+}
+
+// Choropleth color palettes for different scales
+const CHOROPLETH_PALETTES: Record<string, string[]> = {
+  blue: ['#e0f3f8', '#abd9e9', '#74add1', '#4575b4', '#313695'],
+  green: ['#edf8e9', '#bae4b3', '#74c476', '#31a354', '#006d2c'],
+  red: ['#fff5eb', '#fdd0a2', '#fdae6b', '#e6550d', '#a63603'],
+  heat: ['#ffffcc', '#fed976', '#fd8d3c', '#e31a1c', '#800026'],
+  diverging: ['#313695', '#abd9e9', '#ffffbf', '#fdae61', '#a50026'],
 };
 
 export type DateFormat = 'auto' | 'YYYY-MM-DD' | 'MM/DD/YYYY' | 'DD/MM/YYYY'
@@ -372,6 +411,47 @@ export default function ChartPreview({
   const { isDark: globalDark } = useTheme();
   const isDark = darkMode ?? globalDark;
   const colors = colorSchemes[config.colorScheme || 'default'] || colorSchemes.default;
+  const [mapReady, setMapReady] = useState(chartType !== 'choropleth');
+  const mapReadyRef = useRef<string | null>(null);
+
+  // Trigger async map loading when chart type or mapScope changes
+  useEffect(() => {
+    if (chartType !== 'choropleth') {
+      setMapReady(true);
+      mapReadyRef.current = null;
+      return;
+    }
+
+    const scopeKey = (config.chartOptions?.mapScope as string) || 'world';
+    const mapDef = getMapDef(scopeKey);
+    if (!mapDef) {
+      setMapReady(false);
+      return;
+    }
+
+    // For world regions, we use the 'world' map
+    const mapId = getActualMapId(scopeKey);
+
+    // Avoid re-fetching if this exact map is already loaded
+    if (mapReadyRef.current === mapId) {
+      setMapReady(true);
+      return;
+    }
+
+    setMapReady(false);
+    mapReadyRef.current = null;
+
+    ensureMapRegistered(mapId)
+      .then(() => {
+        setMapReady(true);
+        mapReadyRef.current = mapId;
+      })
+      .catch((error) => {
+        console.error(`Failed to load map ${mapId}:`, error);
+        setMapReady(false);
+        mapReadyRef.current = null;
+      });
+  }, [chartType, config.chartOptions?.mapScope]);
 
   // Map ECharts click event params → (column, value, isTemporal, isNumeric) based on chart type + config
   const handleChartClick = useCallback((params: Record<string, unknown>) => {
@@ -432,6 +512,13 @@ export default function ChartPreview({
         break;
       }
       case 'map': {
+        const dimCol = dimensions?.[0];
+        if (dimCol && params.name != null) {
+          emitClick(dimCol, String(params.name));
+        }
+        break;
+      }
+      case 'choropleth': {
         const dimCol = dimensions?.[0];
         if (dimCol && params.name != null) {
           emitClick(dimCol, String(params.name));
@@ -1664,10 +1751,84 @@ export default function ChartPreview({
         } as unknown as EChartsOption;
       }
 
+      case 'choropleth': {
+        const dimCol = dimensions?.[0];
+        const valueCol = metrics?.[0];
+        if (!dimCol || !valueCol) {
+          return null;
+        }
+
+        // Get map scope from config and resolve to map definition
+        const scopeKey = (config.chartOptions?.mapScope as string) || 'world';
+        const mapDef = getMapDef(scopeKey);
+        if (!mapDef) {
+          return null;
+        }
+
+        // Get resolver function from map definition
+        const resolverFn = mapDef.resolve;
+
+        // Build choropleth data: array of { name: resolvedName, value: numericValue }
+        const choroData = data.rows.map((row) => ({
+          name: resolverFn(String(row[dimCol] ?? '')),
+          value: Number(row[valueCol]) || 0,
+        }));
+
+        // Compute min/max for visualMap
+        const values = choroData.map((d) => d.value).filter((v) => isFinite(v));
+        const minVal = values.length ? Math.min(...values) : 0;
+        const maxVal = values.length ? Math.max(...values) : 1;
+
+        // Get color palette from config
+        const paletteKey = (config.chartOptions?.choroplethColorScale as string) || 'blue';
+        const palette = CHOROPLETH_PALETTES[paletteKey] ?? CHOROPLETH_PALETTES.blue;
+        const enableRoam = config.chartOptions?.enableRoam !== false;
+
+        return {
+          tooltip: {
+            trigger: 'item',
+            formatter: (params: Record<string, unknown>) =>
+              `${params.name}: ${params.value != null ? Number(params.value).toLocaleString() : 'N/A'}`,
+          },
+          visualMap: {
+            min: minVal,
+            max: maxVal,
+            left: 'right',
+            orient: 'vertical',
+            calculable: true,
+            inRange: { color: palette },
+            text: [maxVal.toLocaleString(), minVal.toLocaleString()],
+            textStyle: { color: isDark ? '#ccc' : '#333' },
+          },
+          series: [{
+            type: 'map',
+            map: getActualMapId(scopeKey),
+            roam: enableRoam,
+            center: mapDef.center,
+            zoom: mapDef.zoom,
+            data: choroData,
+            nameProperty: 'name',
+            itemStyle: {
+              borderColor: isDark ? '#555' : '#ccc',
+              borderWidth: 0.5,
+              areaColor: isDark ? '#444' : '#f0f0f0',
+            },
+            emphasis: {
+              label: { show: true, color: isDark ? '#fff' : '#333' },
+              itemStyle: { areaColor: '#fac858' },
+            },
+            select: {
+              label: { show: true },
+              itemStyle: { areaColor: '#f4a732' },
+            },
+          }],
+        } as unknown as EChartsOption;
+      }
+
       default:
         return null;
     }
-  }, [chartType, config, data, colors]);
+  }, [chartType, config, data, colors, isDark]);
 
   // Strip down chart chrome for mini mode
   const miniOption = useMemo(() => {
@@ -1712,6 +1873,21 @@ export default function ChartPreview({
         series: seriesRaw ? seriesRaw.map((s) => ({
           ...s,
           symbolSize: 4,
+        })) : undefined,
+        animation: false,
+      };
+    }
+
+    // Choropleth mini mode: no roam, no tooltip
+    if (chartType === 'choropleth') {
+      const seriesRaw = (chartOption as Record<string, unknown>).series as Record<string, unknown>[] | undefined;
+      return {
+        ...chartOption,
+        tooltip: undefined,
+        visualMap: undefined,
+        series: seriesRaw ? seriesRaw.map((s) => ({
+          ...s,
+          roam: false,
         })) : undefined,
         animation: false,
       };
@@ -2328,6 +2504,15 @@ export default function ChartPreview({
             onEvents={onEvents}
           />
         </div>
+      </div>
+    );
+  }
+
+  // Gate choropleth rendering on map being ready
+  if (!mapReady && chartType === 'choropleth') {
+    return (
+      <div style={{ height, width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+        <Spin tip="Loading map..." />
       </div>
     );
   }
