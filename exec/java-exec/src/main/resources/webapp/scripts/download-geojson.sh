@@ -55,6 +55,16 @@ unzip -q "$TEMP_DIR/us_counties.zip" -d "$TEMP_DIR/"
 ogr2ogr -f GeoJSON -t_srs EPSG:4326 "$GEOJSON_DIR/us-counties.json" \
   "$TEMP_DIR/cb_2021_us_county_20m.shp"
 
+# US ZIP Codes (US Census Bureau ZCTA - 20m simplified)
+# Note: ZCTA (ZIP Code Tabulation Areas) are approximations based on census blocks
+# For production use, consider downloading the 500k resolution for better accuracy
+echo "→ Downloading us-zipcodes.json..."
+curl -sL "https://www2.census.gov/geo/tiger/GENZ2021/shp/cb_2021_us_zcta520_20m.zip" \
+  -o "$TEMP_DIR/us_zipcodes.zip"
+unzip -q "$TEMP_DIR/us_zipcodes.zip" -d "$TEMP_DIR/"
+ogr2ogr -f GeoJSON -t_srs EPSG:4326 "$GEOJSON_DIR/us-zipcodes.json" \
+  "$TEMP_DIR/cb_2021_us_zcta520_20m.shp"
+
 # Canadian Provinces (Statistics Canada)
 echo "→ Downloading ca-provinces.json..."
 curl -sL "https://www12.statcan.gc.ca/cartography/shared/files/lcpr000b21a_e.zip" \
