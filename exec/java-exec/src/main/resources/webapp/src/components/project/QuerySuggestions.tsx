@@ -20,7 +20,9 @@ import { Card, Row, Col, Button, Space, Typography, Collapse, Spin, Empty, Toolt
 import { BulbOutlined, ReloadOutlined, PlayCircleOutlined } from '@ant-design/icons';
 import { useQuery } from '@tanstack/react-query';
 import { getAiStatus, streamChat } from '../../api/ai';
-import type { DatasetRef } from '../../types';
+import { getSchemaTree } from '../../api/metadata';
+import { aiObservability } from '../../services/aiObservability';
+import type { DatasetRef, Project } from '../../types';
 import type { ChatMessage, DeltaEvent } from '../../types/ai';
 
 const { Text, Paragraph } = Typography;
@@ -35,6 +37,7 @@ interface QuerySuggestionsProps {
   projectId: string;
   datasets: DatasetRef[];
   savedQueryCount: number;
+  project?: Project;
   onSelectSql: (sql: string) => void;
 }
 
@@ -66,62 +69,175 @@ function saveCachedSuggestions(projectId: string, suggestions: QuerySuggestion[]
  * Parse JSON from an AI response that may be wrapped in markdown code blocks.
  */
 function parseJsonFromResponse(text: string): QuerySuggestion[] {
+  if (!text || text.trim().length === 0) {
+    throw new Error('Empty response from AI');
+  }
+
   // Try to extract JSON from markdown code blocks first
   const codeBlockMatch = text.match(/```(?:json)?\s*\n?([\s\S]*?)\n?\s*```/);
-  const jsonStr = codeBlockMatch ? codeBlockMatch[1].trim() : text.trim();
+  let jsonStr = codeBlockMatch ? codeBlockMatch[1].trim() : text.trim();
 
-  const parsed = JSON.parse(jsonStr);
+  // If no valid JSON array found in code block, try to find it in the text
+  if (!jsonStr.startsWith('[')) {
+    const arrayMatch = jsonStr.match(/\[\s*\{[\s\S]*?\}\s*\]/);
+    if (arrayMatch) {
+      jsonStr = arrayMatch[0];
+    } else {
+      throw new Error('No JSON array found in response');
+    }
+  }
+
+  let parsed;
+  try {
+    parsed = JSON.parse(jsonStr);
+  } catch (err) {
+    // Try to fix common issues with incomplete JSON
+    if (jsonStr.endsWith(',')) {
+      jsonStr = jsonStr.slice(0, -1) + ']';
+      parsed = JSON.parse(jsonStr);
+    } else {
+      throw new Error(`Invalid JSON: ${err instanceof Error ? err.message : String(err)}`);
+    }
+  }
+
   if (!Array.isArray(parsed)) {
     throw new Error('Expected a JSON array');
   }
-  return parsed.map((item: Record<string, unknown>) => ({
-    title: String(item.title || ''),
-    description: String(item.description || ''),
-    sql: String(item.sql || ''),
-  }));
+
+  // Validate and clean up the parsed data
+  const suggestions = parsed
+    .map((item: Record<string, unknown>) => {
+      const title = String(item.title || '').trim();
+      const description = String(item.description || '').trim();
+      const sql = String(item.sql || '').trim();
+
+      // Skip invalid suggestions but don't fail
+      if (!title || !description || !sql) {
+        return null;
+      }
+
+      return { title, description, sql };
+    })
+    .filter((s) => s !== null);
+
+  if (suggestions.length === 0) {
+    throw new Error('AI could not generate valid suggestions. Try a different query or check your available tables.');
+  }
+
+  return suggestions;
 }
 
-function buildPrompt(datasets: DatasetRef[], savedQueryCount: number): string {
-  const datasetDescriptions = datasets.map((ds) => {
-    if (ds.type === 'table') {
-      return `- Table: ${ds.schema ? ds.schema + '.' : ''}${ds.table || ds.label} (type: ${ds.type})`;
-    }
-    if (ds.type === 'schema') {
-      return `- Schema: ${ds.schema || ds.label}`;
-    }
-    if (ds.type === 'saved_query') {
-      return `- Saved Query: ${ds.label}`;
-    }
-    return `- ${ds.type}: ${ds.label}`;
+interface SchemaTreeEntry {
+  name: string;
+  tables: Array<{
+    name: string;
+    columns: string[];
+  }>;
+}
+
+function buildPrompt(
+  datasets: DatasetRef[],
+  savedQueryCount: number,
+  schemaInfo?: SchemaTreeEntry[],
+  project?: Project
+): string {
+  // Separate datasets by type
+  const tables = datasets.filter(ds => ds.type === 'table');
+  const schemas = datasets.filter(ds => ds.type === 'schema');
+  const savedQueries = datasets.filter(ds => ds.type === 'saved_query');
+
+  // Build list of ALL valid fully-qualified table names
+  let allValidTables: string[] = [];
+  let tableDescriptions = '';
+
+  if (schemaInfo && schemaInfo.length > 0) {
+    tableDescriptions = schemaInfo.map(schema => {
+      const schemaTables = schema.tables.map(table => {
+        const fullTableName = `${schema.name}.${table.name}`;
+        allValidTables.push(fullTableName);
+        const columnList = table.columns.slice(0, 15).join(', '); // Show first 15 columns
+        const moreColsText = table.columns.length > 15 ? `, ... (${table.columns.length - 15} more)` : '';
+        return `  - ${fullTableName} (columns: ${columnList}${moreColsText})`;
+      }).join('\n');
+      return schemaTables;
+    }).join('\n');
+  } else {
+    tableDescriptions = tables.map((ds) => {
+      const fullName = ds.schema ? `${ds.schema}.${ds.table || ds.label}` : (ds.table || ds.label);
+      allValidTables.push(fullName);
+      return `  - ${fullName}`;
+    }).join('\n');
+  }
+
+  const schemaDescriptions = schemas.map((ds) => {
+    return `  - ${ds.schema || ds.label}`;
   }).join('\n');
 
-  return `You are an Apache Drill SQL expert. A project has the following datasets:
+  const savedQueryDescriptions = savedQueries.map((ds) => {
+    return `  - ${ds.label}`;
+  }).join('\n');
 
-${datasetDescriptions}
+  // Create a strict list of valid table references
+  const validTablesSection = allValidTables.length > 0
+    ? `\n\nVALID TABLE REFERENCES (COPY EXACTLY):\n${allValidTables.map(t => `  ${t}`).join('\n')}\n`
+    : '';
 
-The project has ${savedQueryCount} saved queries.
+  // Build project context section
+  const projectContext = project
+    ? `PROJECT CONTEXT:
+Project Name: ${project.name}
+${project.description ? `Project Description: ${project.description}\n` : ''}`
+    : '';
 
-Generate 3-5 useful SQL queries that would help explore and analyze this data.
-For each query, provide a title, brief description, and the SQL.
+  return `You are an Apache Drill SQL expert. Generate ONLY practical SQL queries using EXACTLY these available data sources.
 
-Return ONLY a JSON array with objects having these fields: "title", "description", "sql".
-Do not include any other text outside the JSON array. Example format:
-[
-  {"title": "...", "description": "...", "sql": "..."}
-]
+${projectContext}
 
-Make the queries practical and varied - include aggregations, joins (if multiple tables), filtering, and exploration queries. Use Apache Drill SQL syntax.`;
+AVAILABLE TABLES AND COLUMNS:
+${tableDescriptions}
+${validTablesSection}
+${schemas.length > 0 ? `AVAILABLE SCHEMAS:\n${schemaDescriptions}\n` : ''}${savedQueries.length > 0 ? `AVAILABLE SAVED QUERIES:\n${savedQueryDescriptions}\n` : ''}${savedQueryCount > 0 ? `Note: The project also has ${savedQueryCount} other saved queries available.\n\n` : ''}
+========== ABSOLUTE REQUIREMENTS ==========
+1. EVERY table name in your queries MUST be copied from the "VALID TABLE REFERENCES" section above
+2. NEVER invent or guess table names
+3. NEVER reference ANY tables not listed in "VALID TABLE REFERENCES"
+4. NEVER reference tables, columns, or schemas not listed above
+5. NEVER suggest "List All Tables", "Show Schemas", or metadata queries
+6. Use the EXACT fully qualified table names: schema.table format
+7. If a column has spaces or special characters, wrap it in backticks: \`column name\`
+8. Each query must be valid Apache Drill SQL and executable
+9. Generate queries that provide real business insights
+10. INVALID: Making up table names like "sales", "customers", "products" - ONLY use tables from the list
+
+TASK: Generate 3-5 diverse SQL queries analyzing the available data.
+
+For each query provide:
+- title: A clear, specific title (max 50 chars)
+- description: What insight it provides (1-2 sentences)
+- sql: Valid Apache Drill SQL using ONLY tables from "VALID TABLE REFERENCES"
+
+OUTPUT REQUIREMENTS:
+- Return ONLY a JSON array
+- NO markdown code blocks
+- NO explanations before or after the JSON
+- NO line breaks in the JSON - all on one line
+- Every table must be from the valid list
+
+Example JSON (ONE LINE):
+[{"title": "Revenue by Product", "description": "Shows total revenue by product.", "sql": "SELECT product_id, SUM(amount) as total_revenue FROM ${allValidTables.length > 0 ? allValidTables[0] : 'schema.table'} GROUP BY product_id"}]`;
 }
 
 export default function QuerySuggestions({
   projectId,
   datasets,
   savedQueryCount,
+  project,
   onSelectSql,
 }: QuerySuggestionsProps) {
   const [suggestions, setSuggestions] = useState<QuerySuggestion[] | null>(null);
   const [isGenerating, setIsGenerating] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [activeKey, setActiveKey] = useState<string[]>([]);
   const abortRef = useRef<AbortController | null>(null);
 
   const { data: aiStatus } = useQuery({
@@ -135,6 +251,7 @@ export default function QuerySuggestions({
     const cached = loadCachedSuggestions(projectId);
     if (cached) {
       setSuggestions(cached);
+      setActiveKey(['suggestions']);
     }
   }, [projectId]);
 
@@ -147,7 +264,7 @@ export default function QuerySuggestions({
     };
   }, []);
 
-  const handleGenerate = () => {
+  const handleGenerate = async () => {
     if (abortRef.current) {
       abortRef.current.abort();
     }
@@ -156,37 +273,132 @@ export default function QuerySuggestions({
     setError(null);
     setSuggestions(null);
 
-    const prompt = buildPrompt(datasets, savedQueryCount);
-    const messages: ChatMessage[] = [
-      { role: 'user', content: prompt },
-    ];
+    try {
+      // Fetch schema tree to include actual table structures
+      // Extract schema names from both 'schema' type datasets and 'table' type datasets
+      const schemaNames = Array.from(new Set(
+        datasets
+          .filter(ds => (ds.type === 'schema') || (ds.type === 'table' && ds.schema))
+          .map(ds => ds.type === 'schema' ? (ds.schema || ds.label) : ds.schema!)
+          .filter(name => name && name.length > 0)
+      ));
 
-    let accumulated = '';
+      console.log('Available schemas:', schemaNames);
+      console.log('Total datasets:', datasets.length);
+      console.log('Dataset types:', datasets.map(ds => `${ds.label} (${ds.type})`));
 
-    abortRef.current = streamChat(
-      { messages, tools: [], context: {} },
-      (event: DeltaEvent) => {
-        if (event.type === 'content') {
-          accumulated += event.content;
-        }
-      },
-      () => {
-        // Done
+      let schemaInfo: SchemaTreeEntry[] | undefined;
+      if (schemaNames.length > 0) {
         try {
-          const parsed = parseJsonFromResponse(accumulated);
-          setSuggestions(parsed);
-          saveCachedSuggestions(projectId, parsed);
-          setError(null);
-        } catch {
-          setError('Failed to parse AI response. Please try again.');
+          console.log('🔍 Calling getSchemaTree with schemas:', schemaNames);
+          schemaInfo = await getSchemaTree(schemaNames);
+          console.log('📊 Fetched schema tree:', schemaInfo);
+
+          if (!schemaInfo || schemaInfo.length === 0) {
+            console.warn('⚠️ Schema tree API returned empty! Endpoint may not be implemented.');
+            console.warn('   Request: POST /api/v1/metadata/schema-tree with', { schemas: schemaNames });
+            console.log('   ℹ️  To fix this, ensure the backend has the schema-tree endpoint implemented.');
+            console.log('   ℹ️  Or add explicit table configurations to your project.');
+          } else {
+            console.log(`✅ Found ${schemaInfo.length} schemas with tables`);
+            schemaInfo.forEach(s => {
+              console.log(`   └─ ${s.name}: ${s.tables.length} tables`);
+              s.tables.forEach(t => {
+                console.log(`      • ${s.name}.${t.name} (${t.columns.length} columns)`);
+              });
+            });
+          }
+        } catch (err) {
+          console.error('❌ Failed to fetch schema tree:', err);
+          console.log('Tip: The /api/v1/metadata/schema-tree endpoint may not be implemented.');
         }
-        setIsGenerating(false);
-      },
-      (err) => {
-        setError(err.message || 'Failed to generate suggestions.');
-        setIsGenerating(false);
-      },
-    );
+      } else {
+        console.warn('⚠️ No schemas found in datasets');
+      }
+
+      // If schema tree is empty, add a warning to the prompt
+      if (!schemaInfo || schemaInfo.length === 0) {
+        console.error('');
+        console.error('❌ CRITICAL ISSUE: Cannot generate valid query suggestions without table information!');
+        console.error('');
+        console.error('The schema tree API is not returning table data. This causes the AI to hallucinate columns.');
+        console.error('');
+        console.error('TO FIX THIS:');
+        console.error('1. Check that your backend has the /api/v1/metadata/schema-tree endpoint');
+        console.error('2. Verify it returns tables for the "mysql.store" schema');
+        console.error('3. Or: Add explicit table definitions to your project configuration');
+        console.error('');
+      }
+
+      const prompt = buildPrompt(datasets, savedQueryCount, schemaInfo, project);
+
+      // Debug logging
+      console.group('🔍 Query Suggestions - Prompt Details');
+      console.log('Schema Info Available:', schemaInfo ? 'YES' : 'NO');
+      if (schemaInfo) {
+        console.log('Schema Count:', schemaInfo.length);
+        schemaInfo.forEach((schema, idx) => {
+          console.log(`  [${idx}] ${schema.name}: ${schema.tables.length} tables`);
+          schema.tables.forEach(table => {
+            console.log(`    - ${schema.name}.${table.name} (${table.columns.length} columns)`);
+          });
+        });
+      }
+      console.log('Project Context:', project ? `${project.name}` : 'NONE');
+      console.log('Datasets Count:', datasets.length);
+      console.log('Full Prompt (first 1000 chars):', prompt.substring(0, 1000));
+      console.groupEnd();
+
+      const messages: ChatMessage[] = [
+        { role: 'user', content: prompt },
+      ];
+
+      let accumulated = '';
+      const startTime = Date.now();
+
+      abortRef.current = streamChat(
+        { messages, tools: [], context: {} },
+        (event: DeltaEvent) => {
+          if (event.type === 'content') {
+            accumulated += event.content;
+          }
+        },
+        () => {
+          // Done
+          const duration = Date.now() - startTime;
+          try {
+            const parsed = parseJsonFromResponse(accumulated);
+            setSuggestions(parsed);
+            setActiveKey(['suggestions']);
+            saveCachedSuggestions(projectId, parsed);
+            setError(null);
+
+            // Log successful AI call
+            aiObservability.logAICall('query_suggestions', prompt, accumulated, duration);
+          } catch (err) {
+            const errorMsg = err instanceof Error ? err.message : 'Unknown error';
+            console.error('Failed to parse AI response:', errorMsg);
+            console.log('AI response was:', accumulated);
+            setError(`Failed to parse suggestions: ${errorMsg}`);
+
+            // Log failed AI call
+            aiObservability.logAICall('query_suggestions', prompt, accumulated, duration, errorMsg);
+          }
+          setIsGenerating(false);
+        },
+        (err) => {
+          const duration = Date.now() - startTime;
+          setError(err.message || 'Failed to generate suggestions.');
+
+          // Log error
+          aiObservability.logAICall('query_suggestions', prompt, '', duration, err.message);
+          setIsGenerating(false);
+        },
+      );
+    } catch (err) {
+      setError('Failed to generate suggestions.');
+      setIsGenerating(false);
+    }
   };
 
   // Don't render if AI is not enabled/configured
@@ -308,7 +520,8 @@ export default function QuerySuggestions({
 
   return (
     <Collapse
-      defaultActiveKey={suggestions ? ['suggestions'] : []}
+      activeKey={activeKey}
+      onChange={setActiveKey}
       style={{ marginBottom: 12 }}
       items={[
         {

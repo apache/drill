@@ -18,6 +18,7 @@
 import { Routes, Route, Navigate } from 'react-router-dom';
 import { Layout } from 'antd';
 import Navbar from './components/common/Navbar';
+import { AiModalProvider } from './contexts/AiModalContext';
 import CommandPalette from './components/common/CommandPalette';
 import ProjectsPage from './pages/ProjectsPage';
 import ProjectDetailPage from './pages/ProjectDetailPage';
@@ -46,11 +47,12 @@ const { Content } = Layout;
 
 function App() {
   return (
-    <Layout className="sqllab-container">
-      <CommandPalette />
-      <Navbar />
-      <Content style={{ flex: 1, overflow: 'auto', display: 'flex', flexDirection: 'column' }}>
-        <Routes>
+    <AiModalProvider>
+      <Layout className="sqllab-container">
+        <CommandPalette />
+        <Navbar />
+        <Content style={{ flex: 1, overflow: 'auto', display: 'flex', flexDirection: 'column' }}>
+          <Routes>
           <Route path="/" element={<Navigate to="/projects" replace />} />
           <Route path="/projects" element={<ProjectsPage />} />
           <Route path="/projects/:id" element={<ProjectLayout />}>
@@ -81,6 +83,7 @@ function App() {
         </Routes>
       </Content>
     </Layout>
+    </AiModalProvider>
   );
 }
 
