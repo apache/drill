@@ -55,6 +55,23 @@ unzip -q "$TEMP_DIR/us_counties.zip" -d "$TEMP_DIR/"
 ogr2ogr -f GeoJSON -t_srs EPSG:4326 "$GEOJSON_DIR/us-counties.json" \
   "$TEMP_DIR/cb_2021_us_county_20m.shp"
 
+# US ZIP Codes (US Census Bureau ZCTA - 5-digit, 20m simplified)
+# NOTE: The current us-zipcodes.json is DC-only (~1.2 MB, 172 features).
+# For complete US (all 50 states), see instructions below:
+#
+# To download the full US ZCTA (Census Bureau 5-digit ZIP Code Tabulation Areas):
+# 1. Install GDAL tools: brew install gdal
+# 2. Run these commands:
+#    curl -sL "https://www2.census.gov/geo/tiger/GENZ2021/shp/cb_2021_us_zcta520_20m.zip" \
+#      -o us_zipcodes_temp.zip
+#    unzip -q us_zipcodes_temp.zip
+#    ogr2ogr -f GeoJSON us-zipcodes.json cb_2021_us_zcta520_20m.shp
+#    rm us_zipcodes_temp.zip cb_2021_us_zcta520_20m.*
+#
+# The full US ZCTA GeoJSON is ~100 MB (uncompressed), so it's delivered
+# as a lazy-loaded map file rather than bundled in the JavaScript.
+echo "→ US ZIP Codes (use instructions above for full US data)"
+
 # Canadian Provinces (Statistics Canada)
 echo "→ Downloading ca-provinces.json..."
 curl -sL "https://www12.statcan.gc.ca/cartography/shared/files/lcpr000b21a_e.zip" \
