@@ -879,8 +879,7 @@ public class MetadataResources {
   private QueryResult executeQuery(String sql) throws Exception {
     // Use a fresh WebUserConnection for each query to avoid state contamination
     // when multiple queries are executed in the same request (like in getSchemaTree)
-    WebUserConnection freshConnection = new WebUserConnection(webUserConnection.getSession(),
-        webUserConnection.isUserAuthenticationEnabled(), webUserConnection.getUsername());
+    WebUserConnection freshConnection = new WebUserConnection(webUserConnection.webSessionResources);
 
     QueryWrapper wrapper = new QueryWrapper.RestQueryBuilder()
         .query(sql)
