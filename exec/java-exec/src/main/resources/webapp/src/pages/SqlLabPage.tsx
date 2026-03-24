@@ -536,6 +536,29 @@ export default function SqlLabPage({ datasetFilter, headerContent, projectId, sa
     }
   }, [locationState, updateSql, dispatch, activeTabId]);
 
+  // Load saved queries for the project
+  useEffect(() => {
+    if (projectId && savedQueryIds && savedQueryIds.length > 0) {
+      // Import here to avoid circular dependency
+      import('../api/savedQueries').then(({ getSavedQuery }) => {
+        getSavedQuery(savedQueryIds[0])
+          .then((query) => {
+            updateSql(query.sql);
+            if (query.defaultSchema) {
+              dispatch(setDefaultSchema({ tabId: activeTabId, schema: query.defaultSchema }));
+            }
+            // Rename tab to match the saved query name
+            if (query.name) {
+              dispatch(renameTab({ tabId: activeTabId, name: query.name }));
+            }
+          })
+          .catch((error) => {
+            console.warn('Failed to load project saved query:', error);
+          });
+      });
+    }
+  }, [projectId, savedQueryIds?.[0], activeTabId, updateSql, dispatch]);
+
   // Handle format SQL
   const handleFormat = useCallback(() => {
     if (!sql || !sql.trim()) {
