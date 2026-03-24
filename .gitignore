@@ -51,3 +51,11 @@ coverage/
 /exec/java-exec/src/main/resources/webapp/dist/
 /exec/java-exec/src/main/resources/webapp/node/
 result-cache/
+
+# Large GeoJSON files (for local development only, not committed to git)
+# Users can download full US ZIP codes locally using instructions in download-geojson.sh
+# Current us-zipcodes.json is DC only (~1.2 MB), safe to commit
+# Full US ZCTA would be ~100 MB - keep locally only
+/exec/java-exec/src/main/resources/webapp/public/geojson/*.zip
+/exec/java-exec/src/main/resources/webapp/public/geojson/cb_*
+/exec/java-exec/src/main/resources/webapp/public/geojson/*-topo.json
