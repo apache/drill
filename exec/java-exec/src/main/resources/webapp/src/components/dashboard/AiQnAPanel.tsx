@@ -16,7 +16,7 @@
  * limitations under the License.
  */
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { Alert, InputNumber, Spin, Typography } from 'antd';
+import { Alert, Button, InputNumber, Spin, Typography } from 'antd';
 import Markdown from 'react-markdown';
 import rehypeRaw from 'rehype-raw';
 import { getAiStatus, streamChat } from '../../api/ai';
@@ -86,7 +86,7 @@ export default function AiQnAPanel({
     }).join('\n');
 
     const briefingInstruction = dashboardData.length > 0
-      ? 'Analyze ONLY the dashboard data provided above. Do NOT suggest writing queries or exploring the database. Keep responses concise (1-2 sentences) with direct answers.'
+      ? 'You MUST answer using ONLY the dashboard data above. Do not mention retrieving, querying, or exploring data. You have all information needed. Answer directly in 1-2 sentences.'
       : 'Keep responses concise (1-2 sentences). Focus on direct answers.';
     const chatMessages: ChatMessage[] = [
       ...messages,
@@ -184,6 +184,18 @@ export default function AiQnAPanel({
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', height: '100%', overflow: 'hidden' }}>
+      {messages.length > 0 && (
+        <div style={{ padding: '4px 8px', borderBottom: '1px solid var(--color-border, #f0f0f0)', textAlign: 'right' }}>
+          <Button
+            size="small"
+            type="text"
+            onClick={() => setMessages([])}
+            style={{ fontSize: 12 }}
+          >
+            Clear
+          </Button>
+        </div>
+      )}
       <div
         ref={scrollRef}
         style={{
