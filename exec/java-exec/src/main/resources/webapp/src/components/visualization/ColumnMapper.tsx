@@ -385,6 +385,42 @@ export default function ColumnMapper({ columns, chartType, config, onChange, onC
           </Form.Item>
         );
       })}
+      {(chartType === 'bar' || chartType === 'heatmap' || chartType === 'boxplot' || chartType === 'waterfall') && config.xAxis && (
+        <>
+          <Divider style={{ margin: '8px 0' }} />
+          <Form.Item label="Sort Direction">
+            <Select
+              value={(config.chartOptions?.sortDirection as string) || 'asc'}
+              onChange={(value) => onChange({
+                ...config,
+                chartOptions: { ...config.chartOptions, sortDirection: value },
+              })}
+              style={{ width: '100%' }}
+            >
+              <Select.Option value="asc">Ascending (A → Z, 0 → 9)</Select.Option>
+              <Select.Option value="desc">Descending (Z → A, 9 → 0)</Select.Option>
+            </Select>
+          </Form.Item>
+        </>
+      )}
+      {(chartType === 'pie' || chartType === 'funnel' || chartType === 'treemap') && config.dimensions && config.dimensions.length > 0 && (
+        <>
+          <Divider style={{ margin: '8px 0' }} />
+          <Form.Item label="Sort Direction">
+            <Select
+              value={(config.chartOptions?.sortDirection as string) || 'asc'}
+              onChange={(value) => onChange({
+                ...config,
+                chartOptions: { ...config.chartOptions, sortDirection: value },
+              })}
+              style={{ width: '100%' }}
+            >
+              <Select.Option value="asc">Ascending (A → Z, 0 → 9)</Select.Option>
+              <Select.Option value="desc">Descending (Z → A, 9 → 0)</Select.Option>
+            </Select>
+          </Form.Item>
+        </>
+      )}
       {showTimeGrain && (
         <>
           <Divider style={{ margin: '8px 0' }} />
@@ -662,6 +698,21 @@ export default function ColumnMapper({ columns, chartType, config, onChange, onC
               })}
             />
           </Form.Item>
+          {config.xAxis && (
+            <Form.Item label="Sort Direction">
+              <Select
+                value={(config.chartOptions?.sortDirection as string) || 'desc'}
+                onChange={(value) => onChange({
+                  ...config,
+                  chartOptions: { ...config.chartOptions, sortDirection: value },
+                })}
+                style={{ width: '100%' }}
+              >
+                <Select.Option value="asc">Ascending (A → Z, 0 → 9)</Select.Option>
+                <Select.Option value="desc">Descending (Z → A, 9 → 0)</Select.Option>
+              </Select>
+            </Form.Item>
+          )}
         </>
       )}
       {chartType === 'map' && (
