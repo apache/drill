@@ -44,9 +44,6 @@ interface ChartPreviewProps {
   onChartClick?: (column: string, value: string, isTemporal?: boolean, isNumeric?: boolean) => void;
 }
 
-interface EChartsRef {
-  getEchartsInstance: () => echarts.ECharts | null;
-}
 
 // Color schemes
 const colorSchemes: Record<string, string[]> = {
@@ -406,7 +403,8 @@ function hasSankeyCycle(links: { source: string; target: string }[]): boolean {
   return false;
 }
 
-const ChartPreviewComponent = forwardRef<EChartsRef, ChartPreviewProps>(({
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const ChartPreviewComponent = forwardRef<any, ChartPreviewProps>(({
   chartType,
   config,
   data,
