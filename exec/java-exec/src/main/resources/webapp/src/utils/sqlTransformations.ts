@@ -567,7 +567,8 @@ export function isTemporalType(type: string): boolean {
  */
 export function buildTimeGrainQuery(
   originalSql: string,
-  config: TimeGrainConfig
+  config: TimeGrainConfig,
+  sortDirection?: 'asc' | 'desc'
 ): string | null {
   if (!config.grain || !config.temporalColumn) {
     return null;
@@ -605,11 +606,12 @@ export function buildTimeGrainQuery(
   // instead of repeating the DATE_TRUNC expression
   const groupByParts = [quotedTemporal, ...qualifiedDimensionGroupBy];
 
+  const orderDirection = sortDirection === 'desc' ? 'DESC' : 'ASC';
   return [
     `SELECT ${selectParts.join(', ')}`,
     `FROM (${cleanSql}) AS _t`,
     `GROUP BY ${groupByParts.join(', ')}`,
-    `ORDER BY 1`,
+    `ORDER BY 1 ${orderDirection}`,
   ].join('\n');
 }
 
@@ -654,7 +656,8 @@ export function hasCompleteAggregationConfig(
  */
 export function buildAggregationQuery(
   originalSql: string,
-  config: AggregationConfig
+  config: AggregationConfig,
+  sortDirection?: 'asc' | 'desc'
 ): string | null {
   const metricEntries = Object.entries(config.metricAggregations);
   if (metricEntries.length === 0) {
@@ -683,6 +686,7 @@ export function buildAggregationQuery(
     return null;
   }
 
+  const orderDirection = sortDirection === 'desc' ? 'DESC' : 'ASC';
   const parts = [
     `SELECT ${selectParts.join(', ')}`,
     `FROM (${cleanSql}) AS _t`,
@@ -690,7 +694,7 @@ export function buildAggregationQuery(
   if (groupByParts.length > 0) {
     parts.push(`GROUP BY ${groupByParts.join(', ')}`);
   }
-  parts.push('ORDER BY 1');
+  parts.push(`ORDER BY 1 ${orderDirection}`);
   return parts.join('\n');
 }
 
@@ -739,6 +743,9 @@ export function computeEffectiveQuery(
     return originalSql;
   }
 
+  // Extract sort direction from chartOptions
+  const sortDirection = cfg.chartOptions?.sortDirection as 'asc' | 'desc' | undefined;
+
   // Time grain path: DATE_TRUNC + GROUP BY + aggregation
   if (timeGrain && cfg.xAxis) {
     const tgQuery = buildTimeGrainQuery(originalSql, {
@@ -746,7 +753,7 @@ export function computeEffectiveQuery(
       temporalColumn: cfg.xAxis,
       metricAggregations: aggregations,
       dimensions: cfg.dimensions,
-    });
+    }, sortDirection);
     return tgQuery || originalSql;
   }
 
@@ -761,7 +768,7 @@ export function computeEffectiveQuery(
   const wrapped = buildAggregationQuery(originalSql, {
     metricAggregations: aggregations,
     groupByColumns,
-  });
+  }, sortDirection);
   return wrapped || originalSql;
 }
 
