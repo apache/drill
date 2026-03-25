@@ -85,7 +85,9 @@ export default function AiQnAPanel({
       return section;
     }).join('\n');
 
-    const briefingInstruction = 'Keep responses concise (1-2 sentences). Focus on direct answers to the question.';
+    const briefingInstruction = dashboardData.length > 0
+      ? 'Analyze ONLY the dashboard data provided above. Do NOT suggest writing queries or exploring the database. Keep responses concise (1-2 sentences) with direct answers.'
+      : 'Keep responses concise (1-2 sentences). Focus on direct answers.';
     const chatMessages: ChatMessage[] = [
       ...messages,
       userMsg,
