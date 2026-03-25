@@ -15,7 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import { Form, Select, Switch, Radio, Typography, Space, Tag, Divider, Slider, InputNumber, Button } from 'antd';
+import { Form, Select, Switch, Radio, Typography, Space, Tag, Divider, Slider, InputNumber, Button, Input } from 'antd';
 import { FieldNumberOutlined, FieldStringOutlined, ClockCircleOutlined, FieldTimeOutlined } from '@ant-design/icons';
 import type { ChartType, VisualizationConfig, PredictionMethod } from '../../types';
 import { isTemporalType } from '../../utils/sqlTransformations';
@@ -713,6 +713,48 @@ export default function ColumnMapper({ columns, chartType, config, onChange, onC
               </Select>
             </Form.Item>
           )}
+          <Divider style={{ margin: '8px 0' }} />
+          <Form.Item label="Number Format">
+            <Select
+              value={(config.chartOptions?.numberFormat as string) || 'default'}
+              onChange={(value) => onChange({
+                ...config,
+                chartOptions: { ...config.chartOptions, numberFormat: value },
+              })}
+              style={{ width: '100%' }}
+            >
+              <Select.Option value="default">Default (1234567)</Select.Option>
+              <Select.Option value="comma">Comma (1,234,567)</Select.Option>
+              <Select.Option value="compact">Compact (1.2M, 3.4K)</Select.Option>
+              <Select.Option value="percentage">Percentage (45.3%)</Select.Option>
+            </Select>
+          </Form.Item>
+          <Form.Item label="Label (e.g. 'Users', 'Revenue')">
+            <Input
+              placeholder="Leave blank for no label"
+              value={(config.chartOptions?.metricLabel as string) || ''}
+              onChange={(e) => onChange({
+                ...config,
+                chartOptions: { ...config.chartOptions, metricLabel: e.target.value || undefined },
+              })}
+              maxLength={50}
+            />
+          </Form.Item>
+          <Form.Item label={`Sparkline Data Points (${Math.min(Number(config.chartOptions?.sparklineMaxPoints) || 100, 1000)})`}>
+            <Slider
+              min={10}
+              max={1000}
+              step={10}
+              value={Math.min(Number(config.chartOptions?.sparklineMaxPoints) || 100, 1000)}
+              onChange={(value) => onChange({
+                ...config,
+                chartOptions: { ...config.chartOptions, sparklineMaxPoints: value },
+              })}
+            />
+            <Text type="secondary" style={{ fontSize: 11 }}>
+              Limit the number of data points shown in sparkline (for performance with large datasets)
+            </Text>
+          </Form.Item>
         </>
       )}
       {chartType === 'map' && (
