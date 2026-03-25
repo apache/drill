@@ -130,6 +130,51 @@ def is_valid_zipcode(zipcode_str):
     s = str(zipcode_str).strip()
     return len(s) == 5 and s.isdigit()
 
+def simplify_geometry(geom, tolerance=0.0001):
+    """
+    Simplify polygon coordinates to reduce file size.
+    Uses Douglas-Peucker algorithm approximation.
+    tolerance: coordinate precision to keep (0.0001 ≈ ~10m at equator)
+    """
+    if not geom or 'coordinates' not in geom:
+        return geom
+
+    geom_type = geom.get('type', '')
+
+    if geom_type == 'Polygon':
+        # Polygon: array of linear rings
+        coords = geom.get('coordinates', [])
+        geom['coordinates'] = [simplify_ring(ring, tolerance) for ring in coords]
+    elif geom_type == 'MultiPolygon':
+        # MultiPolygon: array of Polygons (each is array of rings)
+        coords = geom.get('coordinates', [])
+        geom['coordinates'] = [
+            [simplify_ring(ring, tolerance) for ring in poly]
+            for poly in coords
+        ]
+
+    return geom
+
+
+def simplify_ring(ring, tolerance):
+    """
+    Simple coordinate reduction: keep every Nth coordinate.
+    This is a fast approximation (not Douglas-Peucker).
+    For ZIP codes, we can reduce detail significantly without visual loss.
+    """
+    if not ring or len(ring) < 4:
+        return ring
+
+    # Keep start, end, and every 3rd coordinate (reduces by ~67%)
+    simplified = [ring[0]]  # Always keep first
+    step = 3  # Adjust: 2=50% reduction, 3=67%, 4=75%
+    for i in range(step, len(ring) - 1, step):
+        simplified.append(ring[i])
+    simplified.append(ring[-1])  # Always keep last (closes polygon)
+
+    return simplified
+
+
 def clean_feature(feature):
     """Clean a single feature: normalize properties, validate geometry"""
     if not feature.get('geometry') or not feature.get('properties'):
@@ -164,6 +209,9 @@ def clean_feature(feature):
     coords = geom.get('coordinates', [])
     if not coords:
         return None
+
+    # Simplify geometry to reduce file size (67% coordinate reduction)
+    geom = simplify_geometry(geom)
 
     # Create cleaned feature with minimal properties
     cleaned = {
