@@ -107,6 +107,7 @@ const projectNavItems = [
 const staticAdminMenuItems: MenuProps['items'] = [
   { key: '/profiles', label: <Link to="/profiles">Query History</Link> },
   { key: '/metrics', label: <Link to="/metrics">Metrics</Link> },
+  { key: '/datasources', icon: <DatabaseOutlined />, label: <Link to="/datasources">Manage Data Sources</Link> },
 ];
 
 
