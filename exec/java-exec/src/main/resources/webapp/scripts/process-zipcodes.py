@@ -92,17 +92,18 @@ def cleanup():
 def download_state_files():
     """Download individual state ZIP code GeoJSON files from OpenDataDE"""
     print("Downloading state ZIP code files from OpenDataDE...")
+    print("(This may take several minutes - large files are being downloaded)")
 
     state_data = {}
     failed_states = []
 
     for state, url in sorted(STATE_ZIP_URLs.items()):
         try:
-            print(f"  Downloading {state}...", end=' ')
+            print(f"  Downloading {state}...", end=' ', flush=True)
             result = subprocess.run(
                 ['curl', '-fL', url],
                 capture_output=True,
-                timeout=30
+                timeout=300  # 5 minutes per file (was 30 seconds)
             )
             if result.returncode == 0:
                 data = json.loads(result.stdout)
@@ -216,14 +217,19 @@ def process_state_data(state_data):
     print(f"  Processed: {total_after}/{total_before} features ({len(state_groups)} states with ZIP codes)")
     return all_features, state_groups
 
-def write_geojson_file(path, features):
-    """Write GeoJSON FeatureCollection to file"""
+def write_geojson_file(path, features, minify=True):
+    """Write GeoJSON FeatureCollection to file (minified by default)"""
     geojson = {
         'type': 'FeatureCollection',
         'features': features,
     }
     with open(path, 'w') as f:
-        json.dump(geojson, f, separators=(',', ':'))
+        if minify:
+            # Minified: no whitespace, compact separators
+            json.dump(geojson, f, separators=(',', ':'))
+        else:
+            # Pretty-printed for debugging
+            json.dump(geojson, f, indent=2)
 
 def create_state_files(state_groups):
     """Create individual state ZIP code files"""
