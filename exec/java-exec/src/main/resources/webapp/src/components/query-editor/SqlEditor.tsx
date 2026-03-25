@@ -45,6 +45,7 @@ interface SqlEditorProps {
   onChange: (value: string) => void;
   onExecute?: () => void;
   onEditorReady?: (editor: IStandaloneCodeEditor, monaco: Monaco) => void;
+  onAttemptEdit?: () => void;
   readOnly?: boolean;
   height?: string | number;
   settings?: EditorSettings;
@@ -55,6 +56,7 @@ export default function SqlEditor({
   onChange,
   onExecute,
   onEditorReady,
+  onAttemptEdit,
   readOnly = false,
   height = '100%',
   settings = DEFAULT_EDITOR_SETTINGS,
@@ -101,6 +103,11 @@ export default function SqlEditor({
         },
       });
 
+      // Register handler for attempts to edit read-only editor
+      editor.onDidAttemptReadOnlyEdit(() => {
+        onAttemptEdit?.();
+      });
+
       // Configure SQL language settings
       monaco.languages.registerCompletionItemProvider('sql', {
         provideCompletionItems: (model: unknown, position: { lineNumber: number; column: number }) => {
@@ -143,7 +150,7 @@ export default function SqlEditor({
       // Focus the editor
       editor.focus();
     },
-    [onExecute, onEditorReady]
+    [onExecute, onEditorReady, onAttemptEdit]
   );
 
   const handleEditorChange: OnChange = useCallback(

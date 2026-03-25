@@ -15,7 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import { Form, Select, Switch, Radio, Typography, Space, Tag, Divider, Slider, InputNumber } from 'antd';
+import { Form, Select, Switch, Radio, Typography, Space, Tag, Divider, Slider, InputNumber, Button } from 'antd';
 import { FieldNumberOutlined, FieldStringOutlined, ClockCircleOutlined, FieldTimeOutlined } from '@ant-design/icons';
 import type { ChartType, VisualizationConfig, PredictionMethod } from '../../types';
 import { isTemporalType } from '../../utils/sqlTransformations';
@@ -786,6 +786,54 @@ export default function ColumnMapper({ columns, chartType, config, onChange }: C
               })}
             />
           </Form.Item>
+          <Divider style={{ margin: '8px 0' }} />
+          <Form.Item label="Starting Zoom" style={{ marginBottom: 8 }}>
+            <InputNumber
+              min={1} max={20} step={0.5}
+              placeholder="Map default"
+              value={(config.chartOptions?.choroplethZoom as number) ?? undefined}
+              onChange={(val) => onChange({
+                ...config,
+                chartOptions: { ...config.chartOptions, choroplethZoom: val ?? undefined },
+              })}
+              style={{ width: '100%' }}
+            />
+          </Form.Item>
+          <Form.Item label="Starting Center" style={{ marginBottom: 4 }}>
+            <Space.Compact style={{ width: '100%' }}>
+              <InputNumber
+                placeholder="Longitude" min={-180} max={180} step={0.1}
+                value={(config.chartOptions?.choroplethCenter as [number,number])?.[0] ?? undefined}
+                onChange={(lon) => {
+                  const prev = (config.chartOptions?.choroplethCenter as [number, number]) ?? [0, 0];
+                  const next: [number, number] = [...prev];
+                  next[0] = lon ?? 0;
+                  onChange({ ...config, chartOptions: { ...config.chartOptions, choroplethCenter: next } });
+                }}
+                style={{ width: '50%' }}
+              />
+              <InputNumber
+                placeholder="Latitude" min={-90} max={90} step={0.1}
+                value={(config.chartOptions?.choroplethCenter as [number,number])?.[1] ?? undefined}
+                onChange={(lat) => {
+                  const prev = (config.chartOptions?.choroplethCenter as [number, number]) ?? [0, 0];
+                  const next: [number, number] = [...prev];
+                  next[1] = lat ?? 0;
+                  onChange({ ...config, chartOptions: { ...config.chartOptions, choroplethCenter: next } });
+                }}
+                style={{ width: '50%' }}
+              />
+            </Space.Compact>
+          </Form.Item>
+          <Button
+            size="small" type="link"
+            onClick={() => onChange({
+              ...config,
+              chartOptions: { ...config.chartOptions, choroplethZoom: undefined, choroplethCenter: undefined },
+            })}
+          >
+            Reset to map defaults
+          </Button>
         </>
       )}
       {chartType === 'radar' && (

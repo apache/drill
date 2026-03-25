@@ -22,6 +22,10 @@ export interface PersistedTab {
   sql: string;
   defaultSchema?: string;
   cacheId?: string; // Backend cache ID for result restoration
+  vizIds?: string[]; // IDs of visualizations created from this tab
+  isLocked?: boolean; // Prevents edits, renames, deletion
+  lockReason?: string; // Optional note explaining why it's locked
+  lockType?: 'manual' | 'api'; // Drives which icon is shown
 }
 
 export interface PersistedTabState {
