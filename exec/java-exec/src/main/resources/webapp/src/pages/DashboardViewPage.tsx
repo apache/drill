@@ -95,7 +95,8 @@ const REFRESH_OPTIONS = [
 type AddPanelTab = 'visualization' | 'markdown' | 'image' | 'title' | 'executiveSummary' | 'aiQnA' | 'aiAlerts' | 'nlFilter';
 
 export default function DashboardViewPage() {
-  const { id, projectId: urlProjectId } = useParams<{ id: string; projectId?: string }>();
+  const { dashboardId, projectId: urlProjectId } = useParams<{ dashboardId?: string; projectId?: string }>();
+  const id = dashboardId; // Keep using 'id' internally for compatibility
   const navigate = useNavigate();
   const location = useLocation();
   const queryClient = useQueryClient();
