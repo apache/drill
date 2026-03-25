@@ -53,9 +53,11 @@ coverage/
 result-cache/
 
 # Large GeoJSON files (for local development only, not committed to git)
-# Users can download full US ZIP codes locally using instructions in download-geojson.sh
-# Current us-zipcodes.json is DC only (~1.2 MB), safe to commit
-# Full US ZCTA would be ~100 MB - keep locally only
+# Exception: us-zipcodes.json (merged all-states) is committed to git (~105 MB)
+# Individual state files (us-al-zipcodes.json, us-ca-zipcodes.json, etc.) are git-ignored
+# These can be regenerated locally using scripts/process-zipcodes.py
+/exec/java-exec/src/main/resources/webapp/public/geojson/us-*-zipcodes.json
+!/exec/java-exec/src/main/resources/webapp/public/geojson/us-zipcodes.json
 /exec/java-exec/src/main/resources/webapp/public/geojson/*.zip
 /exec/java-exec/src/main/resources/webapp/public/geojson/cb_*
 /exec/java-exec/src/main/resources/webapp/public/geojson/*-topo.json
