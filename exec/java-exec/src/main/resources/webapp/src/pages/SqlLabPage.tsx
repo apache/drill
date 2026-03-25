@@ -125,6 +125,9 @@ export default function SqlLabPage({ datasetFilter, headerContent, projectId, sa
   // Track "unsaved" state per tab: maps tabId -> sql at last explicit save
   const savedSqlRef = useRef<Record<string, string>>({});
 
+  // Track which projects we've loaded initial saved queries for
+  const loadedProjectsRef = useRef(new Set<string>());
+
   // Track editor text selection for "Run Selection"
   const [hasSelection, setHasSelection] = useState(false);
 
@@ -562,25 +565,33 @@ export default function SqlLabPage({ datasetFilter, headerContent, projectId, sa
     }
   }, [locationState, updateSql, dispatch, activeTabId]);
 
-  // Load saved queries for the project
+  // Load saved queries for the project (only once per project)
   const firstSavedQueryId = savedQueryIds?.[0];
   useEffect(() => {
-    if (projectId && firstSavedQueryId) {
-      getSavedQuery(firstSavedQueryId)
-        .then((query) => {
-          updateSql(query.sql);
-          if (query.defaultSchema) {
-            dispatch(setDefaultSchema({ tabId: activeTabId, schema: query.defaultSchema }));
-          }
-          // Rename tab to match the saved query name
-          if (query.name) {
-            dispatch(renameTab({ tabId: activeTabId, name: query.name }));
-          }
-        })
-        .catch((error) => {
-          console.warn('Failed to load project saved query:', error);
-        });
+    if (!projectId || !firstSavedQueryId) {
+      return;
     }
+    // Only load the initial saved query once per project
+    if (loadedProjectsRef.current.has(projectId)) {
+      return;
+    }
+    loadedProjectsRef.current.add(projectId);
+
+    const currentActiveTabId = activeTabId; // Capture activeTabId at the time the effect runs
+    getSavedQuery(firstSavedQueryId)
+      .then((query) => {
+        updateSql(query.sql);
+        if (query.defaultSchema) {
+          dispatch(setDefaultSchema({ tabId: currentActiveTabId, schema: query.defaultSchema }));
+        }
+        // Rename tab to match the saved query name
+        if (query.name) {
+          dispatch(renameTab({ tabId: currentActiveTabId, name: query.name }));
+        }
+      })
+      .catch((error) => {
+        console.warn('Failed to load project saved query:', error);
+      });
   }, [projectId, firstSavedQueryId, activeTabId, updateSql, dispatch]);
 
   // Handle format SQL
