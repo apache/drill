@@ -45,6 +45,8 @@ const initialTab: QueryTab = {
   name: 'Query 1',
   sql: '',
   isExecuting: false,
+  vizIds: undefined,
+  isLocked: false,
 };
 
 const initialState: QueryState = {
