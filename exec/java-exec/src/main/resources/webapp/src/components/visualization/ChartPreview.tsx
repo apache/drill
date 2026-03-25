@@ -2029,6 +2029,24 @@ const ChartPreviewComponent = forwardRef<any, ChartPreviewProps>(({
       );
     }
 
+    // Helper function to format numbers
+    const formatNumber = (value: number, format?: string): string => {
+      if (format === 'comma') {
+        return value.toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 2 });
+      } else if (format === 'compact') {
+        if (Math.abs(value) >= 1e9) {
+          return (value / 1e9).toFixed(1) + 'B';
+        } else if (Math.abs(value) >= 1e6) {
+          return (value / 1e6).toFixed(1) + 'M';
+        } else if (Math.abs(value) >= 1e3) {
+          return (value / 1e3).toFixed(1) + 'K';
+        }
+      } else if (format === 'percentage') {
+        return (value * 100).toFixed(1) + '%';
+      }
+      return String(value);
+    };
+
     const rows = data.rows;
     const lastValue = Number(rows[rows.length - 1]?.[metricField]) || 0;
     const firstValue = Number(rows[0]?.[metricField]) || 0;
@@ -2036,6 +2054,9 @@ const ChartPreviewComponent = forwardRef<any, ChartPreviewProps>(({
 
     const showSparkline = config.chartOptions?.showSparkline !== false;
     const showTrend = config.chartOptions?.showTrend !== false;
+    const numberFormat = config.chartOptions?.numberFormat as string | undefined;
+    const metricLabel = config.chartOptions?.metricLabel as string | undefined;
+    const sparklineMaxPoints = Math.min(Number(config.chartOptions?.sparklineMaxPoints) || 100, 1000);
 
     // Trend calculation
     let trendPercent = 0;
@@ -2051,6 +2072,7 @@ const ChartPreviewComponent = forwardRef<any, ChartPreviewProps>(({
 
     // Mini mode: just the big number
     if (mini) {
+      const formattedValue = formatNumber(lastValue, numberFormat);
       return (
         <div style={{
           height,
@@ -2060,14 +2082,20 @@ const ChartPreviewComponent = forwardRef<any, ChartPreviewProps>(({
           flexDirection: 'column',
         }}>
           <div style={{ fontSize: 28, fontWeight: 700, color: 'var(--color-text)' }}>
-            {lastValue.toLocaleString()}
+            {formattedValue}
+            {metricLabel && <span style={{ fontSize: '0.6em', marginLeft: 4 }}>{metricLabel}</span>}
           </div>
         </div>
       );
     }
 
-    // Sparkline data
-    const sparklineValues = rows.map((row) => Number(row[metricField]) || 0);
+    // Sparkline data - limit to sparklineMaxPoints
+    let sparklineValues = rows.map((row) => Number(row[metricField]) || 0);
+    if (sparklineValues.length > sparklineMaxPoints) {
+      // Sample evenly across the data
+      const step = Math.ceil(sparklineValues.length / sparklineMaxPoints);
+      sparklineValues = sparklineValues.filter((_, i) => i % step === 0);
+    }
 
     const sparklineOption: EChartsOption = {
       xAxis: { type: 'category', show: false, boundaryGap: false },
@@ -2095,10 +2123,11 @@ const ChartPreviewComponent = forwardRef<any, ChartPreviewProps>(({
         gap: 8,
       }}>
         <div style={{ fontSize: 48, fontWeight: 700, color: 'var(--color-text)', lineHeight: 1.2 }}>
-          {lastValue.toLocaleString()}
+          {formatNumber(lastValue, numberFormat)}
+          {metricLabel && <span style={{ fontSize: '0.5em', marginLeft: 8, whiteSpace: 'nowrap' }}>{metricLabel}</span>}
         </div>
         <div style={{ fontSize: 14, color: 'var(--color-text-secondary)' }}>
-          {metricField}
+          {metricLabel || metricField}
         </div>
         {showTrend && hasMultipleRows && (
           <div style={{
