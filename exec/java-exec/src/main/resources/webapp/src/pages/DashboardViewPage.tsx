@@ -863,7 +863,7 @@ export default function DashboardViewPage() {
                   dashboardUpdatedAt={dashboard.updatedAt}
                   darkMode={theme.mode === 'dark'}
                   filters={filters}
-                  allPanels={visiblePanels}
+                  allPanels={panels}
                   onRemove={handleRemovePanel}
                   onPanelChange={handlePanelChange}
                   onChartClick={handleChartClick}
