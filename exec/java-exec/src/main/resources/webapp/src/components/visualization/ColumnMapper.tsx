@@ -15,7 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import { Form, Select, Switch, Radio, Typography, Space, Tag, Divider, Slider, InputNumber, Button, Input } from 'antd';
+import { Form, Select, Switch, Radio, Typography, Space, Tag, Divider, Slider, InputNumber, Button, Input, Collapse } from 'antd';
 import { FieldNumberOutlined, FieldStringOutlined, ClockCircleOutlined, FieldTimeOutlined } from '@ant-design/icons';
 import type { ChartType, VisualizationConfig, PredictionMethod } from '../../types';
 import { isTemporalType } from '../../utils/sqlTransformations';
@@ -680,81 +680,144 @@ export default function ColumnMapper({ columns, chartType, config, onChange, onC
       )}
       {chartType === 'bigNumber' && (
         <>
-          <Form.Item label="Show Sparkline">
-            <Switch
-              checked={config.chartOptions?.showSparkline !== false}
-              onChange={(checked) => onChange({
-                ...config,
-                chartOptions: { ...config.chartOptions, showSparkline: checked },
-              })}
-            />
-          </Form.Item>
-          <Form.Item label="Show Trend">
-            <Switch
-              checked={config.chartOptions?.showTrend !== false}
-              onChange={(checked) => onChange({
-                ...config,
-                chartOptions: { ...config.chartOptions, showTrend: checked },
-              })}
-            />
-          </Form.Item>
-          {config.xAxis && (
-            <Form.Item label="Sort Direction">
-              <Select
-                value={(config.chartOptions?.sortDirection as string) || 'desc'}
-                onChange={(value) => onChange({
-                  ...config,
-                  chartOptions: { ...config.chartOptions, sortDirection: value },
-                })}
-                style={{ width: '100%' }}
-              >
-                <Select.Option value="asc">Ascending (A → Z, 0 → 9)</Select.Option>
-                <Select.Option value="desc">Descending (Z → A, 9 → 0)</Select.Option>
-              </Select>
-            </Form.Item>
-          )}
-          <Divider style={{ margin: '8px 0' }} />
-          <Form.Item label="Number Format">
-            <Select
-              value={(config.chartOptions?.numberFormat as string) || 'default'}
-              onChange={(value) => onChange({
-                ...config,
-                chartOptions: { ...config.chartOptions, numberFormat: value },
-              })}
-              style={{ width: '100%' }}
-            >
-              <Select.Option value="default">Default (1234567)</Select.Option>
-              <Select.Option value="comma">Comma (1,234,567)</Select.Option>
-              <Select.Option value="compact">Compact (1.2M, 3.4K)</Select.Option>
-              <Select.Option value="percentage">Percentage (45.3%)</Select.Option>
-            </Select>
-          </Form.Item>
-          <Form.Item label="Label (e.g. 'Users', 'Revenue')">
-            <Input
-              placeholder="Leave blank for no label"
-              value={(config.chartOptions?.metricLabel as string) || ''}
-              onChange={(e) => onChange({
-                ...config,
-                chartOptions: { ...config.chartOptions, metricLabel: e.target.value || undefined },
-              })}
-              maxLength={50}
-            />
-          </Form.Item>
-          <Form.Item label={`Sparkline Data Points (${Math.min(Number(config.chartOptions?.sparklineMaxPoints) || 100, 1000)})`}>
-            <Slider
-              min={10}
-              max={1000}
-              step={10}
-              value={Math.min(Number(config.chartOptions?.sparklineMaxPoints) || 100, 1000)}
-              onChange={(value) => onChange({
-                ...config,
-                chartOptions: { ...config.chartOptions, sparklineMaxPoints: value },
-              })}
-            />
-            <Text type="secondary" style={{ fontSize: 11 }}>
-              Limit the number of data points shown in sparkline (for performance with large datasets)
-            </Text>
-          </Form.Item>
+          <Collapse
+            items={[
+              {
+                key: 'number-display',
+                label: '📊 Number Display',
+                children: (
+                  <Form layout="vertical" size="small" style={{ marginTop: 0 }}>
+                    <Form.Item label="Number Format" style={{ marginBottom: 12 }}>
+                      <Select
+                        value={(config.chartOptions?.numberFormat as string) || 'default'}
+                        onChange={(value) => onChange({
+                          ...config,
+                          chartOptions: { ...config.chartOptions, numberFormat: value },
+                        })}
+                        style={{ width: '100%' }}
+                      >
+                        <Select.Option value="default">Default (1234567)</Select.Option>
+                        <Select.Option value="comma">Comma (1,234,567)</Select.Option>
+                        <Select.Option value="compact">Compact (1.2M, 3.4K)</Select.Option>
+                        <Select.Option value="percentage">Percentage (45.3%)</Select.Option>
+                        <Select.Option value="currency">Currency</Select.Option>
+                      </Select>
+                    </Form.Item>
+                    {(config.chartOptions?.numberFormat as string) === 'currency' && (
+                      <Form.Item label="Currency Symbol" style={{ marginBottom: 12 }}>
+                        <Select
+                          value={(config.chartOptions?.currencySymbol as string) || '$'}
+                          onChange={(value) => onChange({
+                            ...config,
+                            chartOptions: { ...config.chartOptions, currencySymbol: value },
+                          })}
+                          style={{ width: '100%' }}
+                        >
+                          <Select.Option value="$">USD ($)</Select.Option>
+                          <Select.Option value="€">Euro (€)</Select.Option>
+                          <Select.Option value="£">British Pound (£)</Select.Option>
+                          <Select.Option value="¥">Japanese Yen (¥)</Select.Option>
+                          <Select.Option value="₹">Indian Rupee (₹)</Select.Option>
+                          <Select.Option value="₽">Russian Ruble (₽)</Select.Option>
+                          <Select.Option value="CHF">Swiss Franc (CHF)</Select.Option>
+                          <Select.Option value="₩">South Korean Won (₩)</Select.Option>
+                          <Select.Option value="₦">Nigerian Naira (₦)</Select.Option>
+                          <Select.Option value="₪">Israeli Shekel (₪)</Select.Option>
+                        </Select>
+                      </Form.Item>
+                    )}
+                    <Form.Item label="Custom Label" style={{ marginBottom: 0 }}>
+                      <Input
+                        placeholder="e.g., 'Users', 'Revenue' (optional)"
+                        value={(config.chartOptions?.metricLabel as string) || ''}
+                        onChange={(e) => onChange({
+                          ...config,
+                          chartOptions: { ...config.chartOptions, metricLabel: e.target.value || undefined },
+                        })}
+                        maxLength={50}
+                      />
+                      <Text type="secondary" style={{ fontSize: 11, display: 'block', marginTop: 4 }}>
+                        Leave blank to use the column name
+                      </Text>
+                    </Form.Item>
+                  </Form>
+                ),
+              },
+              {
+                key: 'sparkline-trend',
+                label: '📈 Sparkline & Trend',
+                children: (
+                  <Form layout="vertical" size="small" style={{ marginTop: 0 }}>
+                    <Form.Item label="Show Sparkline" style={{ marginBottom: 12 }}>
+                      <Switch
+                        checked={config.chartOptions?.showSparkline !== false}
+                        onChange={(checked) => onChange({
+                          ...config,
+                          chartOptions: { ...config.chartOptions, showSparkline: checked },
+                        })}
+                      />
+                      <Text type="secondary" style={{ fontSize: 11, display: 'block', marginTop: 4 }}>
+                        Display mini line chart showing trend over time
+                      </Text>
+                    </Form.Item>
+                    <Form.Item label="Show Trend Indicator" style={{ marginBottom: 12 }}>
+                      <Switch
+                        checked={config.chartOptions?.showTrend !== false}
+                        onChange={(checked) => onChange({
+                          ...config,
+                          chartOptions: { ...config.chartOptions, showTrend: checked },
+                        })}
+                      />
+                      <Text type="secondary" style={{ fontSize: 11, display: 'block', marginTop: 4 }}>
+                        Show percentage change and direction (up/down/flat)
+                      </Text>
+                    </Form.Item>
+                    {config.chartOptions?.showSparkline !== false && (
+                      <Form.Item label={`Sparkline Data Points (${Math.min(Number(config.chartOptions?.sparklineMaxPoints) || 100, 1000)})`} style={{ marginBottom: 0 }}>
+                        <Slider
+                          min={10}
+                          max={1000}
+                          step={10}
+                          value={Math.min(Number(config.chartOptions?.sparklineMaxPoints) || 100, 1000)}
+                          onChange={(value) => onChange({
+                            ...config,
+                            chartOptions: { ...config.chartOptions, sparklineMaxPoints: value },
+                          })}
+                        />
+                        <Text type="secondary" style={{ fontSize: 11, display: 'block', marginTop: 4 }}>
+                          Limit data points for performance with large datasets
+                        </Text>
+                      </Form.Item>
+                    )}
+                  </Form>
+                ),
+              },
+              ...(config.xAxis ? [
+                {
+                  key: 'sorting',
+                  label: '🔤 Sorting',
+                  children: (
+                    <Form layout="vertical" size="small" style={{ marginTop: 0 }}>
+                      <Form.Item label="Sort Direction" style={{ marginBottom: 0 }}>
+                        <Select
+                          value={(config.chartOptions?.sortDirection as string) || 'desc'}
+                          onChange={(value) => onChange({
+                            ...config,
+                            chartOptions: { ...config.chartOptions, sortDirection: value },
+                          })}
+                          style={{ width: '100%' }}
+                        >
+                          <Select.Option value="asc">Ascending (A → Z, 0 → 9)</Select.Option>
+                          <Select.Option value="desc">Descending (Z → A, 9 → 0)</Select.Option>
+                        </Select>
+                      </Form.Item>
+                    </Form>
+                  ),
+                },
+              ] : []),
+            ]}
+            style={{ marginBottom: 16 }}
+          />
         </>
       )}
       {chartType === 'map' && (

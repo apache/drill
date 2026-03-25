@@ -2030,9 +2030,14 @@ const ChartPreviewComponent = forwardRef<any, ChartPreviewProps>(({
     }
 
     // Helper function to format numbers
+    const currencySymbol = config.chartOptions?.currencySymbol as string | undefined;
     const formatNumber = (value: number, format?: string): string => {
       if (format === 'comma') {
         return value.toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 2 });
+      } else if (format === 'currency') {
+        const symbol = currencySymbol || '$';
+        const formatted = value.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+        return symbol + formatted;
       } else if (format === 'compact') {
         if (Math.abs(value) >= 1e9) {
           return (value / 1e9).toFixed(1) + 'B';
