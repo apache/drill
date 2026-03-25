@@ -87,7 +87,8 @@ export default function VisualizationBuilder({
   const [config, setConfig] = useState<VisualizationConfig>({});
   const [form] = Form.useForm();
   const queryClient = useQueryClient();
-  const echartsRef = useRef<{ getEchartsInstance: () => unknown } | null>(null);
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const echartsRef = useRef<any>(null);
 
   // Internal data fetching for edit mode
   const [fetchedData, setFetchedData] = useState<QueryResult | null>(null);
