@@ -18,8 +18,8 @@
 import { useCallback, useState, useEffect, useRef, useMemo, type MutableRefObject } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { Tabs, message, notification, Tooltip, Modal, Alert, Button, Space, Spin, Dropdown, Grid } from 'antd';
-import { PlusOutlined, MenuFoldOutlined, MenuUnfoldOutlined, RobotOutlined, MoreOutlined, EditOutlined, CopyOutlined, CloseOutlined, PlayCircleOutlined, StopOutlined, ExperimentOutlined, TableOutlined } from '@ant-design/icons';
+import { Tabs, message, notification, Tooltip, Modal, Alert, Button, Space, Spin, Dropdown, Grid, Input } from 'antd';
+import { PlusOutlined, MenuFoldOutlined, MenuUnfoldOutlined, RobotOutlined, MoreOutlined, EditOutlined, CopyOutlined, CloseOutlined, PlayCircleOutlined, StopOutlined, ExperimentOutlined, TableOutlined, LockOutlined, UnlockOutlined, ApiOutlined } from '@ant-design/icons';
 import Markdown from 'react-markdown';
 import type { RootState, AppDispatch } from '../store';
 import {
@@ -31,6 +31,11 @@ import {
   renameTab,
   clearResults,
   clearResultsExpired,
+  addVizToTab,
+  removeVizFromTab,
+  lockTab,
+  unlockTab,
+  type QueryTab,
 } from '../store/querySlice';
 import { toggleSidebar, setEditorHeight } from '../store/uiSlice';
 import { useWorkspacePersistence } from '../hooks/useWorkspacePersistence';
@@ -42,6 +47,8 @@ import { useMonacoCompletion } from '../hooks/useMonacoCompletion';
 import { getAiStatus, getAiConfig, streamChat, transpileSql, convertDataType } from '../api/ai';
 import { getSchemaTree } from '../api/metadata';
 import { getSavedQuery } from '../api/savedQueries';
+import { getVisualizations } from '../api/visualizations';
+import { useQuery } from '@tanstack/react-query';
 import SchemaExplorer from '../components/schema-explorer/SchemaExplorer';
 import type { DatasetFilter } from '../components/schema-explorer/SchemaExplorer';
 import SqlEditor, { DEFAULT_EDITOR_SETTINGS } from '../components/query-editor/SqlEditor';
@@ -53,11 +60,13 @@ import SaveQueryDialog from '../components/query-editor/SaveQueryDialog';
 import KeyboardShortcutsModal from '../components/query-editor/KeyboardShortcutsModal';
 import QueryHistoryModal from '../components/query-editor/QueryHistoryModal';
 import { VisualizationBuilder } from '../components/visualization';
+import { VizTabIcon } from '../components/sqllab/VizTabIcon';
 import ShareApiModal from '../components/results/ShareApiModal';
 import NotebookPanel from '../components/notebook/NotebookPanel';
 import type { NotebookPanelHandle } from '../components/notebook/NotebookPanel';
 import { ProspectorPanel } from '../components/prospector';
-import type { SavedQuery } from '../types';
+import type { SavedQuery, Visualization } from '../types';
+import { normalizeSql } from '../utils/sqlTransformations';
 import type { ChatContext, ChatMessage } from '../types/ai';
 import { applySqlTransformation, prettifySql, type ColumnTransformation } from '../utils/sqlTransformations';
 import { useSqlValidation } from '../hooks/useSqlValidation';
@@ -213,6 +222,22 @@ export default function SqlLabPage({ datasetFilter, headerContent, projectId, sa
 
   // Schema-aware SQL autocomplete (must come after schemas is declared)
   useMonacoCompletion(monacoInstance, schemas);
+
+  // Fetch all visualizations for linking to tabs
+  const { data: allVisualizations } = useQuery({
+    queryKey: ['visualizations'],
+    queryFn: getVisualizations,
+    staleTime: 2 * 60 * 1000, // 2 minutes
+  });
+
+  // Build visualization lookup by ID and by normalized SQL
+  const vizById = useMemo(() => {
+    const map = new Map<string, Visualization>();
+    for (const v of allVisualizations ?? []) {
+      map.set(v.id, v);
+    }
+    return map;
+  }, [allVisualizations]);
 
   // Query history hook — scoped to project+tab when inside a project
   const { history, addEntry: addHistory, clearHistory } = useQueryHistory(projectId, activeTabId);
@@ -735,6 +760,10 @@ export default function SqlLabPage({ datasetFilter, headerContent, projectId, sa
           return;
         }
         const closingTab = tabs.find((t) => t.id === targetKey);
+        if (closingTab?.isLocked) {
+          message.warning('Unlock the tab before closing');
+          return;
+        }
         const tabSql = closingTab?.sql?.trim() || '';
         const savedSql = (savedSqlRef.current[targetKey] ?? '').trim();
         if (tabSql && tabSql !== savedSql) {
@@ -784,7 +813,42 @@ export default function SqlLabPage({ datasetFilter, headerContent, projectId, sa
 
   const handleSharedQueryApiIdChange = useCallback((id: string | undefined) => {
     setSharedQueryApiIds(prev => ({ ...prev, [activeTabId]: id }));
-  }, [activeTabId]);
+    // Auto-lock tab when API is created
+    if (id) {
+      dispatch(lockTab({ tabId: activeTabId, reason: 'API endpoint active', lockType: 'api' }));
+    }
+  }, [activeTabId, dispatch]);
+
+  // Handle locking a tab
+  const handleLockTab = useCallback((tabId: string) => {
+    let reason = '';
+    Modal.confirm({
+      title: 'Lock tab',
+      content: (
+        <div>
+          <p>Locking prevents edits, renames, and deletion. You can still run the query.</p>
+          <Input
+            placeholder="Optional: reason for locking (e.g. 'used in production')"
+            onChange={(e) => { reason = e.target.value; }}
+          />
+        </div>
+      ),
+      onOk: () => dispatch(lockTab({ tabId, reason: reason || undefined, lockType: 'manual' })),
+    });
+  }, [dispatch]);
+
+  // Handle unlocking a tab
+  const handleUnlockTab = useCallback((tab: QueryTab) => {
+    if (tab.lockType === 'api') {
+      Modal.confirm({
+        title: 'Unlock API-locked tab',
+        content: 'This tab has an active API endpoint. Unlocking will not revoke the API — it will remain live. Continue?',
+        onOk: () => dispatch(unlockTab(tab.id)),
+      });
+    } else {
+      dispatch(unlockTab(tab.id));
+    }
+  }, [dispatch]);
 
   // Handle query history
   const handleShowHistory = useCallback(() => {
@@ -950,7 +1014,13 @@ export default function SqlLabPage({ datasetFilter, headerContent, projectId, sa
                 onClick={(e) => e.stopPropagation()}
               />
             ) : (
-              <span className="tab-label-wrapper" onDoubleClick={() => handleTabDoubleClick(tab.id, tab.name)}>
+              <span className="tab-label-wrapper" onDoubleClick={() => {
+                if (tab.isLocked) {
+                  message.warning('Unlock the tab before renaming');
+                  return;
+                }
+                handleTabDoubleClick(tab.id, tab.name);
+              }}>
                 <span className="tab-label-text">
                   {tab.name}
                   {tab.results?.rows && (
@@ -960,6 +1030,37 @@ export default function SqlLabPage({ datasetFilter, headerContent, projectId, sa
                     <span className="tab-unsaved-dot" title="Unsaved changes"> •</span>
                   )}
                 </span>
+                {(() => {
+                  const linkedVizs = (tab.vizIds ?? [])
+                    .map((id) => vizById.get(id))
+                    .filter((v): v is Visualization => v !== undefined);
+                  const hasStale = linkedVizs.some(
+                    (v) => v.sql && normalizeSql(v.sql) !== normalizeSql(tab.sql ?? '')
+                  );
+                  return linkedVizs.length > 0 ? (
+                    <VizTabIcon
+                      vizs={linkedVizs}
+                      isStale={hasStale}
+                      projectId={projectId}
+                      currentSql={tab.sql}
+                      onRemoveLink={(vizId) => dispatch(removeVizFromTab({ tabId: tab.id, vizId }))}
+                    />
+                  ) : null;
+                })()}
+                {tab.isLocked && (
+                  <Tooltip title={tab.lockReason ?? (tab.lockType === 'api' ? 'API endpoint active' : 'Locked')}>
+                    <span
+                      onClick={(e) => { e.stopPropagation(); handleUnlockTab(tab); }}
+                      style={{ cursor: 'pointer', marginLeft: 4, display: 'inline-flex' }}
+                    >
+                      {tab.lockType === 'api' ? (
+                        <ApiOutlined style={{ color: '#fa8c16', fontSize: 12 }} />
+                      ) : (
+                        <LockOutlined style={{ color: '#8c8c8c', fontSize: 12 }} />
+                      )}
+                    </span>
+                  </Tooltip>
+                )}
                 <Dropdown
                   trigger={['click']}
                   menu={{
@@ -968,8 +1069,13 @@ export default function SqlLabPage({ datasetFilter, headerContent, projectId, sa
                         key: 'rename',
                         icon: <EditOutlined />,
                         label: 'Rename',
+                        disabled: tab.isLocked,
                         onClick: ({ domEvent }) => {
                           domEvent.stopPropagation();
+                          if (tab.isLocked) {
+                            message.warning('Unlock the tab before renaming');
+                            return;
+                          }
                           // Defer until after the dropdown fully closes, otherwise
                           // its cleanup blur fires onBlur and cancels the rename.
                           setTimeout(() => handleTabDoubleClick(tab.id, tab.name), 0);
@@ -986,13 +1092,30 @@ export default function SqlLabPage({ datasetFilter, headerContent, projectId, sa
                       },
                       { type: 'divider' },
                       {
+                        key: 'lock',
+                        icon: tab.isLocked ? <UnlockOutlined /> : <LockOutlined />,
+                        label: tab.isLocked ? 'Unlock tab' : 'Lock tab',
+                        onClick: ({ domEvent }) => {
+                          domEvent.stopPropagation();
+                          if (tab.isLocked) {
+                            handleUnlockTab(tab);
+                          } else {
+                            handleLockTab(tab.id);
+                          }
+                        },
+                      },
+                      {
                         key: 'close',
                         icon: <CloseOutlined />,
                         label: 'Close',
                         danger: true,
-                        disabled: tabs.length <= 1,
+                        disabled: tabs.length <= 1 || tab.isLocked,
                         onClick: ({ domEvent }) => {
                           domEvent.stopPropagation();
+                          if (tab.isLocked) {
+                            message.warning('Unlock the tab before closing');
+                            return;
+                          }
                           if (tabs.length > 1) {
                             dispatch(removeTab(tab.id));
                           } else {
@@ -1053,6 +1176,8 @@ export default function SqlLabPage({ datasetFilter, headerContent, projectId, sa
             onExecute={handleExecute}
             onEditorReady={handleEditorReady}
             settings={editorSettings}
+            readOnly={activeTab?.isLocked ?? false}
+            onAttemptEdit={() => message.warning('Tab is locked — click the lock icon in the tab to unlock')}
           />
         </div>
 
@@ -1152,6 +1277,10 @@ export default function SqlLabPage({ datasetFilter, headerContent, projectId, sa
         sql={sql}
         defaultSchema={activeTab?.defaultSchema}
         projectId={projectId}
+        tabId={activeTabId}
+        onVisualizationSaved={(vizId) => {
+          dispatch(addVizToTab({ tabId: activeTabId, vizId }));
+        }}
       />
 
       {/* Share API Modal */}

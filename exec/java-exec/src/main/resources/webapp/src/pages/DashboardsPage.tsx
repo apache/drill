@@ -121,8 +121,9 @@ export default function DashboardsPage({ filterIds, projectId, projectName, proj
       queryClient.invalidateQueries({ queryKey: ['dashboards'] });
       setCreateModalOpen(false);
       createForm.resetFields();
+      const dashboardPath = projectId ? `/projects/${projectId}/dashboards/${newDashboard.id}` : `/dashboards/${newDashboard.id}`;
       const navState = projectId ? { state: { from: `/projects/${projectId}/dashboards`, projectName, projectId } } : undefined;
-      navigate(`/dashboards/${newDashboard.id}`, navState);
+      navigate(dashboardPath, navState);
     },
     onError: (err: Error) => {
       message.error(`Failed to create dashboard: ${err.message}`);
@@ -365,7 +366,11 @@ export default function DashboardsPage({ filterIds, projectId, projectName, proj
                     hoverable
                     size="small"
                     style={selectedIds.includes(dashboard.id) ? { border: '2px solid var(--color-primary)' } : undefined}
-                    onClick={() => navigate(`/dashboards/${dashboard.id}`, projectId ? { state: { from: `/projects/${projectId}/dashboards`, projectName, projectId } } : undefined)}
+                    onClick={() => {
+                      const dashboardPath = projectId ? `/projects/${projectId}/dashboards/${dashboard.id}` : `/dashboards/${dashboard.id}`;
+                      const navState = projectId ? { state: { from: `/projects/${projectId}/dashboards`, projectName, projectId } } : undefined;
+                      navigate(dashboardPath, navState);
+                    }}
                     cover={
                       <div
                         style={{

@@ -17,7 +17,7 @@
  */
 import { useCallback, useMemo, useState } from 'react';
 import { useQuery, useQueries } from '@tanstack/react-query';
-import { Card, Alert, Spin, Typography, Button, Tooltip, Switch } from 'antd';
+import { Card, Alert, Spin, Typography, Button, Tooltip, Switch, Form, InputNumber, Popover } from 'antd';
 import {
   DragOutlined,
   DeleteOutlined,
@@ -32,6 +32,7 @@ import {
   CommentOutlined,
   AlertOutlined,
   SearchOutlined,
+  GlobalOutlined,
 } from '@ant-design/icons';
 import { getVisualization } from '../../api/visualizations';
 import { executeQuery } from '../../api/queries';
@@ -296,6 +297,24 @@ export default function DashboardPanelCard({
     }
   }, [onPanelChange, panel]);
 
+  // Merge panel-level choropleth overrides into visualization config
+  const mergedConfig = useMemo(() => {
+    if (!visualization?.config) return visualization?.config;
+    const base = { ...visualization.config };
+    const panelZoom = panel.config?.choroplethZoom;
+    const panelCenter = panel.config?.choroplethCenter;
+    if (panelZoom || panelCenter) {
+      const overrides: Record<string, unknown> = {};
+      if (panelZoom) overrides.choroplethZoom = parseFloat(panelZoom);
+      if (panelCenter) {
+        const [lon, lat] = panelCenter.split(',').map(Number);
+        overrides.choroplethCenter = [lon, lat] as [number, number];
+      }
+      base.chartOptions = { ...(base.chartOptions || {}), ...overrides };
+    }
+    return base;
+  }, [visualization, panel.config?.choroplethZoom, panel.config?.choroplethCenter]);
+
   // Determine title based on panel type
   const getPanelTitle = () => {
     if (isVisualization) {
@@ -307,6 +326,36 @@ export default function DashboardPanelCard({
   const getPanelIcon = () => {
     return PANEL_TYPE_ICONS[panelType] || <BarChartOutlined />;
   };
+
+  // Choropleth map settings
+  const isChoropleth = visualization?.chartType === 'choropleth';
+  const panelZoomValue = panel.config?.choroplethZoom
+    ? parseFloat(panel.config.choroplethZoom) : undefined;
+  const panelCenterLon = panel.config?.choroplethCenter
+    ? parseFloat(panel.config.choroplethCenter.split(',')[0]) : undefined;
+  const panelCenterLat = panel.config?.choroplethCenter
+    ? parseFloat(panel.config.choroplethCenter.split(',')[1]) : undefined;
+  const vizDefaultZoom = visualization?.config?.chartOptions?.choroplethZoom as number | undefined;
+
+  const handleMapViewChange = useCallback((field: 'zoom' | 'lon' | 'lat', val: number | null) => {
+    const newConfig = { ...(panel.config || {}) };
+    if (field === 'zoom') {
+      if (val != null) newConfig.choroplethZoom = String(val);
+      else delete newConfig.choroplethZoom;
+    } else {
+      const lon = field === 'lon' ? (val ?? 0) : (panelCenterLon ?? 0);
+      const lat = field === 'lat' ? (val ?? 0) : (panelCenterLat ?? 0);
+      newConfig.choroplethCenter = `${lon},${lat}`;
+    }
+    onPanelChange?.({ ...panel, config: newConfig });
+  }, [panel, panelCenterLon, panelCenterLat, onPanelChange]);
+
+  const handleResetMapView = useCallback(() => {
+    const newConfig = { ...(panel.config || {}) };
+    delete newConfig.choroplethZoom;
+    delete newConfig.choroplethCenter;
+    onPanelChange?.({ ...panel, config: newConfig });
+  }, [panel, onPanelChange]);
 
   // Render content based on panel type
   const renderContent = () => {
@@ -412,7 +461,7 @@ export default function DashboardPanelCard({
           return (
             <ChartPreview
               chartType={visualization.chartType}
-              config={visualization.config}
+              config={mergedConfig!}
               data={queryResult || null}
               height={Math.max((panel.height * 120) - 60, 150)}
               darkMode={darkMode}
@@ -462,6 +511,52 @@ export default function DashboardPanelCard({
                 />
               </span>
             </Tooltip>
+          )}
+          {editMode && isChoropleth && (
+            <Popover
+              trigger="click"
+              title="Map Starting View"
+              content={
+                <div style={{ width: 220 }}>
+                  <Form layout="vertical" size="small">
+                    <Form.Item label="Starting Zoom" style={{ marginBottom: 8 }}>
+                      <InputNumber
+                        min={1} max={20} step={0.5} style={{ width: '100%' }}
+                        placeholder={`Default (${vizDefaultZoom ?? 'auto'})`}
+                        value={panelZoomValue}
+                        onChange={(val) => handleMapViewChange('zoom', val)}
+                      />
+                    </Form.Item>
+                    <Form.Item label="Center Longitude" style={{ marginBottom: 8 }}>
+                      <InputNumber
+                        min={-180} max={180} step={0.1} style={{ width: '100%' }}
+                        placeholder="Longitude"
+                        value={panelCenterLon}
+                        onChange={(val) => handleMapViewChange('lon', val)}
+                      />
+                    </Form.Item>
+                    <Form.Item label="Center Latitude" style={{ marginBottom: 4 }}>
+                      <InputNumber
+                        min={-90} max={90} step={0.1} style={{ width: '100%' }}
+                        placeholder="Latitude"
+                        value={panelCenterLat}
+                        onChange={(val) => handleMapViewChange('lat', val)}
+                      />
+                    </Form.Item>
+                    <Button
+                      size="small" type="link" style={{ padding: 0 }}
+                      onClick={handleResetMapView}
+                    >
+                      Reset to visualization defaults
+                    </Button>
+                  </Form>
+                </div>
+              }
+            >
+              <Tooltip title="Map starting view">
+                <GlobalOutlined style={{ cursor: 'pointer' }} />
+              </Tooltip>
+            </Popover>
           )}
           {isVisualization && (
             <Tooltip title="Refresh">

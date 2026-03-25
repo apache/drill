@@ -188,6 +188,8 @@ public class VisualizationResources {
     private String sql;
     @JsonProperty
     private String defaultSchema;
+    @JsonProperty
+    private String tabId;
 
     public Visualization() {
     }
@@ -205,7 +207,8 @@ public class VisualizationResources {
         @JsonProperty("updatedAt") long updatedAt,
         @JsonProperty("isPublic") boolean isPublic,
         @JsonProperty("sql") String sql,
-        @JsonProperty("defaultSchema") String defaultSchema) {
+        @JsonProperty("defaultSchema") String defaultSchema,
+        @JsonProperty("tabId") String tabId) {
       this.id = id;
       this.name = name;
       this.description = description;
@@ -218,6 +221,7 @@ public class VisualizationResources {
       this.isPublic = isPublic;
       this.sql = sql;
       this.defaultSchema = defaultSchema;
+      this.tabId = tabId;
     }
 
     // Getters
@@ -269,6 +273,10 @@ public class VisualizationResources {
       return defaultSchema;
     }
 
+    public String getTabId() {
+      return tabId;
+    }
+
     // Setters for updates
     public void setName(String name) {
       this.name = name;
@@ -305,6 +313,10 @@ public class VisualizationResources {
     public void setDefaultSchema(String defaultSchema) {
       this.defaultSchema = defaultSchema;
     }
+
+    public void setTabId(String tabId) {
+      this.tabId = tabId;
+    }
   }
 
   /**
@@ -327,6 +339,8 @@ public class VisualizationResources {
     public String sql;
     @JsonProperty
     public String defaultSchema;
+    @JsonProperty
+    public String tabId;
   }
 
   /**
@@ -349,6 +363,8 @@ public class VisualizationResources {
     public String sql;
     @JsonProperty
     public String defaultSchema;
+    @JsonProperty
+    public String tabId;
   }
 
   /**
@@ -441,7 +457,8 @@ public class VisualizationResources {
         now,
         request.isPublic,
         request.sql,
-        request.defaultSchema
+        request.defaultSchema,
+        request.tabId
     );
 
     try {
@@ -538,6 +555,9 @@ public class VisualizationResources {
       }
       if (request.defaultSchema != null) {
         viz.setDefaultSchema(request.defaultSchema);
+      }
+      if (request.tabId != null) {
+        viz.setTabId(request.tabId);
       }
 
       viz.setUpdatedAt(Instant.now().toEpochMilli());

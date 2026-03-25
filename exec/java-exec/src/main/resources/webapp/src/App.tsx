@@ -61,6 +61,7 @@ function App() {
             <Route path="queries" element={<ProjectSavedQueriesPage />} />
             <Route path="visualizations" element={<ProjectVisualizationsPage />} />
             <Route path="dashboards" element={<ProjectDashboardsPage />} />
+            <Route path="dashboards/:id" element={<DashboardViewPage />} />
             <Route path="datasources" element={<ProjectDataSourcesPage />} />
             <Route path="wiki" element={<ProjectWikiPage />} />
             <Route path="wiki/:pageId" element={<ProjectWikiPage />} />
