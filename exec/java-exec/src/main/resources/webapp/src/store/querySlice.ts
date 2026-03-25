@@ -18,7 +18,7 @@
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
 import type { QueryResult, QueryError } from '../types';
 
-interface QueryTab {
+export interface QueryTab {
   id: string;
   name: string;
   sql: string;
@@ -29,6 +29,10 @@ interface QueryTab {
   executionTime?: number;
   resultsExpired?: boolean;
   cacheId?: string; // Backend cache ID for persistent result retrieval
+  vizIds?: string[]; // IDs of visualizations created from this tab
+  isLocked?: boolean; // Prevents edits, renames, deletion
+  lockReason?: string; // Optional note explaining why it's locked
+  lockType?: 'manual' | 'api'; // Drives which icon is shown
 }
 
 interface QueryState {
@@ -56,7 +60,7 @@ const querySlice = createSlice({
   reducers: {
     setSql: (state, action: PayloadAction<{ tabId: string; sql: string }>) => {
       const tab = state.tabs.find((t) => t.id === action.payload.tabId);
-      if (tab) {
+      if (tab && !tab.isLocked) {
         tab.sql = action.payload.sql;
       }
     },
@@ -166,7 +170,7 @@ const querySlice = createSlice({
       action: PayloadAction<{ tabId: string; sql: string; name?: string; defaultSchema?: string }>
     ) => {
       const tab = state.tabs.find((t) => t.id === action.payload.tabId);
-      if (tab) {
+      if (tab && !tab.isLocked) {
         tab.sql = action.payload.sql;
         if (action.payload.name) {
           tab.name = action.payload.name;
@@ -190,6 +194,10 @@ const querySlice = createSlice({
           executionTime?: number;
           resultsExpired?: boolean;
           cacheId?: string;
+          vizIds?: string[];
+          isLocked?: boolean;
+          lockReason?: string;
+          lockType?: 'manual' | 'api';
         }[];
         activeTabId: string;
         tabCounter: number;
@@ -205,6 +213,10 @@ const querySlice = createSlice({
         isExecuting: false,
         resultsExpired: t.resultsExpired,
         cacheId: t.cacheId,
+        vizIds: t.vizIds,
+        isLocked: t.isLocked,
+        lockReason: t.lockReason,
+        lockType: t.lockType,
       }));
       state.activeTabId = action.payload.activeTabId;
       tabCounter = action.payload.tabCounter;
@@ -213,6 +225,39 @@ const querySlice = createSlice({
       const tab = state.tabs.find((t) => t.id === action.payload);
       if (tab) {
         tab.resultsExpired = false;
+      }
+    },
+    addVizToTab: (state, action: PayloadAction<{ tabId: string; vizId: string }>) => {
+      const tab = state.tabs.find((t) => t.id === action.payload.tabId);
+      if (tab) {
+        if (!tab.vizIds) {
+          tab.vizIds = [];
+        }
+        if (!tab.vizIds.includes(action.payload.vizId)) {
+          tab.vizIds.push(action.payload.vizId);
+        }
+      }
+    },
+    removeVizFromTab: (state, action: PayloadAction<{ tabId: string; vizId: string }>) => {
+      const tab = state.tabs.find((t) => t.id === action.payload.tabId);
+      if (tab && tab.vizIds) {
+        tab.vizIds = tab.vizIds.filter((id) => id !== action.payload.vizId);
+      }
+    },
+    lockTab: (state, action: PayloadAction<{ tabId: string; reason?: string; lockType?: 'manual' | 'api' }>) => {
+      const tab = state.tabs.find((t) => t.id === action.payload.tabId);
+      if (tab) {
+        tab.isLocked = true;
+        tab.lockReason = action.payload.reason;
+        tab.lockType = action.payload.lockType ?? 'manual';
+      }
+    },
+    unlockTab: (state, action: PayloadAction<string>) => {
+      const tab = state.tabs.find((t) => t.id === action.payload);
+      if (tab) {
+        tab.isLocked = false;
+        tab.lockReason = undefined;
+        tab.lockType = undefined;
       }
     },
   },
@@ -234,6 +279,10 @@ export const {
   restoreQueryState,
   clearResultsExpired,
   setCacheId,
+  addVizToTab,
+  removeVizFromTab,
+  lockTab,
+  unlockTab,
 } = querySlice.actions;
 
 export default querySlice.reducer;
