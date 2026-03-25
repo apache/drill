@@ -279,6 +279,27 @@ def write_geojson_file(path, features, minify=True):
             # Pretty-printed for debugging
             json.dump(geojson, f, indent=2)
 
+
+def convert_geojson_to_topojson(geojson_path, topojson_path):
+    """
+    Convert GeoJSON to TopoJSON using mapshaper (5-10x compression).
+    TopoJSON uses delta encoding and shared arcs.
+    """
+    try:
+        # Use mapshaper command-line tool
+        # -o format=topojson specifies output format
+        # -o quantization=1e4 sets coordinate precision
+        subprocess.run([
+            'mapshaper', geojson_path,
+            '-o', 'format=topojson',
+            '-o', 'quantization=1e4',
+            topojson_path
+        ], check=True, capture_output=True, text=True)
+        return True
+    except (FileNotFoundError, subprocess.CalledProcessError) as e:
+        # mapshaper not installed, skip TopoJSON conversion
+        return False
+
 def create_state_files(state_groups):
     """Create individual state ZIP code files"""
     print("Creating state-level ZIP code files...")
@@ -322,6 +343,18 @@ def main():
 
         # Create merged all-states file (committed to git)
         create_merged_file(all_features)
+
+        # Convert to TopoJSON for better compression
+        print("Converting to TopoJSON format...")
+        merged_geojson = GEOJSON_DIR / 'us-zipcodes.json'
+        merged_topojson = GEOJSON_DIR / 'us-zipcodes.topojson'
+        if convert_geojson_to_topojson(str(merged_geojson), str(merged_topojson)):
+            geojson_size = os.path.getsize(merged_geojson) / 1024 / 1024
+            topojson_size = os.path.getsize(merged_topojson) / 1024 / 1024
+            compression = (1 - topojson_size / geojson_size) * 100
+            print(f"  ✓ {merged_topojson.name}: {topojson_size:.1f} MB ({compression:.1f}% smaller)")
+        else:
+            print("  ⚠ mapshaper not found, skipping TopoJSON conversion")
 
         print("\n✓ Processing complete!\n")
         print(f"Summary:")

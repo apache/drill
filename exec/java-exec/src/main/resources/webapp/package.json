@@ -37,7 +37,8 @@
     "react-router-dom": "^6.21.0",
     "regression": "^2.0.1",
     "rehype-raw": "^7.0.0",
-    "sql-formatter": "^15.0.2"
+    "sql-formatter": "^15.0.2",
+    "topojson-client": "^3.1.0"
   },
   "devDependencies": {
     "@testing-library/jest-dom": "^6.9.1",
