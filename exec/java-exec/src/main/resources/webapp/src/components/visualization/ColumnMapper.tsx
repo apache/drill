@@ -421,6 +421,24 @@ export default function ColumnMapper({ columns, chartType, config, onChange, onC
           </Form.Item>
         </>
       )}
+      {chartType === 'bigNumber' && config.xAxis && (
+        <>
+          <Divider style={{ margin: '8px 0' }} />
+          <Form.Item label="Sort Direction">
+            <Select
+              value={(config.chartOptions?.sortDirection as string) || 'desc'}
+              onChange={(value) => onChange({
+                ...config,
+                chartOptions: { ...config.chartOptions, sortDirection: value },
+              })}
+              style={{ width: '100%' }}
+            >
+              <Select.Option value="asc">Ascending (A → Z, 0 → 9)</Select.Option>
+              <Select.Option value="desc">Descending (Z → A, 9 → 0)</Select.Option>
+            </Select>
+          </Form.Item>
+        </>
+      )}
       {showTimeGrain && (
         <>
           <Divider style={{ margin: '8px 0' }} />
@@ -792,29 +810,6 @@ export default function ColumnMapper({ columns, chartType, config, onChange, onC
                   </Form>
                 ),
               },
-              ...(config.xAxis ? [
-                {
-                  key: 'sorting',
-                  label: '🔤 Sorting',
-                  children: (
-                    <Form layout="vertical" size="small" style={{ marginTop: 0 }}>
-                      <Form.Item label="Sort Direction" style={{ marginBottom: 0 }}>
-                        <Select
-                          value={(config.chartOptions?.sortDirection as string) || 'desc'}
-                          onChange={(value) => onChange({
-                            ...config,
-                            chartOptions: { ...config.chartOptions, sortDirection: value },
-                          })}
-                          style={{ width: '100%' }}
-                        >
-                          <Select.Option value="asc">Ascending (A → Z, 0 → 9)</Select.Option>
-                          <Select.Option value="desc">Descending (Z → A, 9 → 0)</Select.Option>
-                        </Select>
-                      </Form.Item>
-                    </Form>
-                  ),
-                },
-              ] : []),
             ]}
             style={{ marginBottom: 16 }}
           />
