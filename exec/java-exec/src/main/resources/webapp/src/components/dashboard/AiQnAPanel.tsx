@@ -76,8 +76,11 @@ export default function AiQnAPanel({
       let section = `### Panel ${i + 1}: ${d.panelName}\n`;
       section += `- Columns: ${d.columns.join(', ')}\n`;
       section += `- Row count: ${d.rowCount}\n`;
+      if (d.sql) {
+        section += `**Query:**\n\`\`\`sql\n${d.sql}\n\`\`\`\n`;
+      }
       if (d.sampleRows.length > 0) {
-        section += '```json\n' + JSON.stringify(d.sampleRows.slice(0, 3), null, 2) + '\n```\n';
+        section += '**Sample Data:**\n```json\n' + JSON.stringify(d.sampleRows.slice(0, 5), null, 2) + '\n```\n';
       }
       return section;
     }).join('\n');
