@@ -139,6 +139,11 @@ const querySlice = createSlice({
         name: `${sourceTab.name} (copy)`,
         sql: sourceTab.sql,
         defaultSchema: sourceTab.defaultSchema,
+        cacheId: sourceTab.cacheId,
+        vizIds: sourceTab.vizIds ? [...sourceTab.vizIds] : undefined,
+        isLocked: sourceTab.isLocked,
+        lockReason: sourceTab.lockReason,
+        lockType: sourceTab.lockType,
         isExecuting: false,
       };
       const sourceIndex = state.tabs.findIndex((t) => t.id === action.payload);
