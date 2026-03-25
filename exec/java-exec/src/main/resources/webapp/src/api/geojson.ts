@@ -39,7 +39,7 @@ export async function fetchGeoJson(mapId: string): Promise<object> {
     // If it's TopoJSON, convert to GeoJSON
     if ('objects' in data) {
       console.debug(`[GeoJSON] Converting TopoJSON to GeoJSON for ${mapId}`);
-      return convertTopoJsonToGeoJson(data as topojson.Topology);
+      return convertTopoJsonToGeoJson(data as unknown);
     }
 
     return data;
@@ -83,20 +83,25 @@ async function tryFetchMap(mapId: string, ext: string): Promise<unknown> {
   }
 }
 
-function convertTopoJsonToGeoJson(
-  topoData: topojson.Topology
-): Record<string, unknown> {
+function convertTopoJsonToGeoJson(topoData: unknown): object {
   try {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const topo = topoData as any;
+    if (!topo.objects) {
+      throw new Error('Invalid TopoJSON: missing objects property');
+    }
+
     // Get the first object from the topology (usually 'features' or a similar key)
-    const objectKey = Object.keys(topoData.objects)[0];
+    const objectKey = Object.keys(topo.objects)[0];
     if (!objectKey) {
       throw new Error('TopoJSON has no objects');
     }
 
     // Convert the topology object to GeoJSON FeatureCollection
-    const geoJson = topojson.feature(topoData, topoData.objects[objectKey]);
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const geoJson = topojson.feature(topo, topo.objects[objectKey]) as any;
     console.debug(`[GeoJSON] Converted TopoJSON with key "${objectKey}"`);
-    return geoJson;
+    return geoJson as object;
   } catch (error) {
     console.error(`[GeoJSON] TopoJSON conversion failed:`, error);
     throw new Error(`Failed to convert TopoJSON: ${error}`);
