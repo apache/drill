@@ -53,11 +53,11 @@ coverage/
 result-cache/
 
 # Large GeoJSON files (for local development only, not committed to git)
-# Exception: us-zipcodes.json (merged all-states) is committed to git (~105 MB)
+# Exception: us-zipcodes.topojson (merged all-states, 91 MB) is committed to git
 # Individual state files (us-al-zipcodes.json, us-ca-zipcodes.json, etc.) are git-ignored
 # These can be regenerated locally using scripts/process-zipcodes.py
 /exec/java-exec/src/main/resources/webapp/public/geojson/us-*-zipcodes.json
-!/exec/java-exec/src/main/resources/webapp/public/geojson/us-zipcodes.json
+/exec/java-exec/src/main/resources/webapp/public/geojson/us-zipcodes.json
+!/exec/java-exec/src/main/resources/webapp/public/geojson/us-zipcodes.topojson
 /exec/java-exec/src/main/resources/webapp/public/geojson/*.zip
 /exec/java-exec/src/main/resources/webapp/public/geojson/cb_*
-/exec/java-exec/src/main/resources/webapp/public/geojson/*-topo.json
