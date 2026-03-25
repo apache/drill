@@ -208,6 +208,7 @@ export interface Visualization {
   isPublic: boolean;
   sql?: string;
   defaultSchema?: string;
+  tabId?: string;
 }
 
 export interface VisualizationCreate {
@@ -219,6 +220,7 @@ export interface VisualizationCreate {
   isPublic?: boolean;
   sql?: string;
   defaultSchema?: string;
+  tabId?: string;
 }
 
 // Dashboard types

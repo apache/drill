@@ -1376,7 +1376,7 @@ public class ProjectResources {
             sqErrorFrequency, "line",
             new VisualizationResources.VisualizationConfig(
                 "hour", "error_count", null, null, null, null),
-            owner, now, now, true, sqlErrorFrequency, "dfs.logs"));
+            owner, now, now, true, sqlErrorFrequency, "dfs.logs", null));
       }
 
       if (vizStore.get(vizLevelDist) == null) {
@@ -1389,7 +1389,7 @@ public class ProjectResources {
                 Arrays.asList("cnt"),
                 Arrays.asList("level"),
                 null, null),
-            owner, now, now, true, sqlLevelDist, "dfs.logs"));
+            owner, now, now, true, sqlLevelDist, "dfs.logs", null));
       }
 
       if (vizStore.get(vizTopLoggers) == null) {
@@ -1399,7 +1399,7 @@ public class ProjectResources {
             sqTopLoggers, "bar",
             new VisualizationResources.VisualizationConfig(
                 "logger", "error_count", null, null, null, null),
-            owner, now, now, true, sqlTopLoggers, "dfs.logs"));
+            owner, now, now, true, sqlTopLoggers, "dfs.logs", null));
       }
 
       if (vizStore.get(vizWarnTrends) == null) {
@@ -1409,7 +1409,7 @@ public class ProjectResources {
             sqWarnTrends, "line",
             new VisualizationResources.VisualizationConfig(
                 "day", "warn_count", null, null, null, null),
-            owner, now, now, true, sqlWarnTrends, "dfs.logs"));
+            owner, now, now, true, sqlWarnTrends, "dfs.logs", null));
       }
 
       // Create dashboard

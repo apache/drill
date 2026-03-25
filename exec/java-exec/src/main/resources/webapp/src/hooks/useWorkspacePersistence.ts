@@ -60,6 +60,10 @@ export function useWorkspacePersistence(projectId?: string) {
           executionTime: cached?.executionTime,
           resultsExpired: !cached && t.sql.trim().length > 0,
           cacheId: cached?.cacheId || t.cacheId,
+          vizIds: t.vizIds,
+          isLocked: t.isLocked,
+          lockReason: t.lockReason,
+          lockType: t.lockType,
         };
       });
 
@@ -190,6 +194,10 @@ export function useWorkspacePersistence(projectId?: string) {
             sql: t.sql,
             defaultSchema: t.defaultSchema,
             cacheId: t.cacheId,
+            vizIds: t.vizIds,
+            isLocked: t.isLocked,
+            lockReason: t.lockReason,
+            lockType: t.lockType,
           })),
           activeTabId,
           tabCounter: maxCounter,

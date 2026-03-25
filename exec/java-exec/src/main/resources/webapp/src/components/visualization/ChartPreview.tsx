@@ -1843,8 +1843,8 @@ export default function ChartPreview({
             type: 'map',
             map: getActualMapId(scopeKey),
             roam: enableRoam,
-            center: mapDef.center,
-            zoom: mapDef.zoom,
+            center: (config.chartOptions?.choroplethCenter as [number, number] | undefined) ?? mapDef.center,
+            zoom: (config.chartOptions?.choroplethZoom as number | undefined) ?? mapDef.zoom,
             data: choroData,
             nameProperty: 'name',
             itemStyle: {

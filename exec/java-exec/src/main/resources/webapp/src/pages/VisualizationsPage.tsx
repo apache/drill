@@ -15,8 +15,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import { useState, useMemo, useCallback, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useState, useMemo, useCallback, useEffect, useRef } from 'react';
+import { useNavigate, useLocation } from 'react-router-dom';
 import {
   Card,
   Row,
@@ -237,7 +237,10 @@ interface VisualizationsPageProps {
 
 export default function VisualizationsPage({ filterIds, projectId, projectOwner, onAdd }: VisualizationsPageProps = {}) {
   const navigate = useNavigate();
+  const location = useLocation();
   const queryClient = useQueryClient();
+  const navState = location.state as { viewVizId?: string } | null;
+  const autoOpenDoneRef = useRef(false);
   const { canEdit, canView, isProjectOwner } = useCurrentUser();
   const [searchText, setSearchText] = useState('');
   const [editBuilderViz, setEditBuilderViz] = useState<Visualization | null>(null);
@@ -322,6 +325,17 @@ export default function VisualizationsPage({ filterIds, projectId, projectOwner,
       setViewQueryLoading(false);
     }
   }, []);
+
+  // Auto-open visualization when navigated with viewVizId state
+  useEffect(() => {
+    if (autoOpenDoneRef.current || !navState?.viewVizId || !visualizations) return;
+    const target = visualizations.find((v) => v.id === navState.viewVizId);
+    if (target) {
+      autoOpenDoneRef.current = true;
+      handleView(target);
+      window.history.replaceState({}, '', location.pathname + location.search);
+    }
+  }, [visualizations, navState?.viewVizId, handleView, location.pathname, location.search]);
 
   // Format timestamp
   const formatDate = (timestamp: number | string) => {
