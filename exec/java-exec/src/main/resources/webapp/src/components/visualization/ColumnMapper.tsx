@@ -34,6 +34,7 @@ interface ColumnMapperProps {
   chartType: ChartType;
   config: VisualizationConfig;
   onChange: (config: VisualizationConfig) => void;
+  onCaptureMapView?: () => { zoom?: number; center?: [number, number] } | null;
 }
 
 // Determine if a column type is numeric
@@ -206,7 +207,7 @@ function getRequiredFields(chartType: ChartType): { field: string; label: string
   }
 }
 
-export default function ColumnMapper({ columns, chartType, config, onChange }: ColumnMapperProps) {
+export default function ColumnMapper({ columns, chartType, config, onChange, onCaptureMapView }: ColumnMapperProps) {
   const requiredFields = getRequiredFields(chartType);
 
   const handleFieldChange = (field: string, value: string | string[]) => {
@@ -833,6 +834,25 @@ export default function ColumnMapper({ columns, chartType, config, onChange }: C
             })}
           >
             Reset to map defaults
+          </Button>
+          <br />
+          <Button
+            size="small"
+            onClick={() => {
+              const view = onCaptureMapView?.();
+              if (view && (view.zoom !== undefined || view.center !== undefined)) {
+                onChange({
+                  ...config,
+                  chartOptions: {
+                    ...config.chartOptions,
+                    ...(view.zoom !== undefined && { choroplethZoom: view.zoom }),
+                    ...(view.center !== undefined && { choroplethCenter: view.center }),
+                  },
+                });
+              }
+            }}
+          >
+            Capture current map view
           </Button>
         </>
       )}
