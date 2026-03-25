@@ -16,28 +16,50 @@
  * limitations under the License.
  */
 
+import * as topojson from 'topojson-client';
+
 /**
  * Fetch GeoJSON for a map by ID from the public/geojson/ directory.
+ * Supports both .geojson and .topojson formats.
+ * TopoJSON is automatically converted to GeoJSON for ECharts compatibility.
  * The base URL is relative to the page location to work in both dev and prod.
  */
 export async function fetchGeoJson(mapId: string): Promise<object> {
   try {
-    // Use relative path that works regardless of deployment location
-    // In dev: served by Vite from public/
-    // In prod: served from webapp resources
-    const url = `/sqllab/geojson/${mapId}.json`;
+    // Try TopoJSON first (more compact), fall back to GeoJSON
+    let data = await tryFetchMap(mapId, '.topojson');
+    if (!data) {
+      data = await tryFetchMap(mapId, '.json');
+    }
 
+    if (!data || typeof data !== 'object') {
+      throw new Error(`Invalid GeoJSON for map ${mapId}`);
+    }
+
+    // If it's TopoJSON, convert to GeoJSON
+    if ('objects' in data) {
+      console.debug(`[GeoJSON] Converting TopoJSON to GeoJSON for ${mapId}`);
+      return convertTopoJsonToGeoJson(data as topojson.Topology);
+    }
+
+    return data;
+  } catch (error) {
+    console.error(`[GeoJSON] Error loading ${mapId}:`, error);
+    throw error;
+  }
+}
+
+async function tryFetchMap(mapId: string, ext: string): Promise<unknown> {
+  try {
+    const url = `/sqllab/geojson/${mapId}${ext}`;
     console.debug(`[GeoJSON] Fetching from: ${url}`);
 
     const response = await fetch(url);
-
     if (!response.ok) {
-      console.error(`[GeoJSON] 404 for ${url} - trying fallback paths`);
-
       // Try alternative paths
       const altPaths = [
-        `/geojson/${mapId}.json`,
-        `./geojson/${mapId}.json`,
+        `/geojson/${mapId}${ext}`,
+        `./geojson/${mapId}${ext}`,
       ];
 
       for (const altPath of altPaths) {
@@ -45,26 +67,38 @@ export async function fetchGeoJson(mapId: string): Promise<object> {
           const altResponse = await fetch(altPath);
           if (altResponse.ok) {
             console.log(`[GeoJSON] Found at fallback path: ${altPath}`);
-            const data = await altResponse.json();
-            return data;
+            return altResponse.json();
           }
         } catch {
           // Continue to next fallback
         }
       }
-
-      throw new Error(`HTTP ${response.status} - map file not found at ${url}`);
+      return null;
     }
 
-    const data = await response.json();
-
-    if (!data || typeof data !== 'object') {
-      throw new Error(`Invalid GeoJSON for map ${mapId}`);
-    }
-
-    return data;
+    return response.json();
   } catch (error) {
-    console.error(`[GeoJSON] Error loading ${mapId}:`, error);
-    throw error;
+    console.debug(`[GeoJSON] Error trying ${ext}:`, error);
+    return null;
+  }
+}
+
+function convertTopoJsonToGeoJson(
+  topoData: topojson.Topology
+): Record<string, unknown> {
+  try {
+    // Get the first object from the topology (usually 'features' or a similar key)
+    const objectKey = Object.keys(topoData.objects)[0];
+    if (!objectKey) {
+      throw new Error('TopoJSON has no objects');
+    }
+
+    // Convert the topology object to GeoJSON FeatureCollection
+    const geoJson = topojson.feature(topoData, topoData.objects[objectKey]);
+    console.debug(`[GeoJSON] Converted TopoJSON with key "${objectKey}"`);
+    return geoJson;
+  } catch (error) {
+    console.error(`[GeoJSON] TopoJSON conversion failed:`, error);
+    throw new Error(`Failed to convert TopoJSON: ${error}`);
   }
 }
