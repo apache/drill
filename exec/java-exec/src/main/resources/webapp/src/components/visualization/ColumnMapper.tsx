@@ -721,7 +721,7 @@ export default function ColumnMapper({ columns, chartType, config, onChange }: C
 
               // Get state ZIP code options for multi-select
               const stateZipOptions = GEO_SCOPE_OPTIONS
-                .find((opt: any) => opt.label === 'US ZIP Codes (by State)')
+                .find((opt) => opt.label === 'US ZIP Codes (by State)')
                 ?.options || [];
 
               if (isMultiSelectScope && stateZipOptions.length > 0) {
