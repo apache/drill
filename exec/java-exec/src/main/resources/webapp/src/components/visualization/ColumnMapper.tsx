@@ -726,20 +726,25 @@ export default function ColumnMapper({ columns, chartType, config, onChange }: C
 
               if (isMultiSelectScope && stateZipOptions.length > 0) {
                 return (
-                  <Select
-                    mode="multiple"
-                    placeholder="Select one or more states"
-                    value={currentScopes.length > 0 ? currentScopes : [currentScope]}
-                    onChange={(values) => onChange({
-                      ...config,
-                      chartOptions: {
-                        ...config.chartOptions,
-                        mapScopes: values,
-                        mapScope: values[0] || 'world', // Keep single mapScope for fallback
-                      },
-                    })}
-                    options={stateZipOptions}
-                  />
+                  <div>
+                    <Select
+                      mode="multiple"
+                      placeholder="Select one or more states (recommended for performance)"
+                      value={currentScopes.length > 0 ? currentScopes : [currentScope]}
+                      onChange={(values) => onChange({
+                        ...config,
+                        chartOptions: {
+                          ...config.chartOptions,
+                          mapScopes: values,
+                          mapScope: values[0] || 'world', // Keep single mapScope for fallback
+                        },
+                      })}
+                      options={stateZipOptions}
+                    />
+                    <div style={{ fontSize: '12px', color: '#999', marginTop: '8px' }}>
+                      💡 Tip: Select specific states for best performance. Each state file is ~1-3 MB.
+                    </div>
+                  </div>
                 );
               }
 
