@@ -431,9 +431,15 @@ export default function ChartPreview({
     const mapScopes = (config.chartOptions?.mapScopes as string[]) || [];
     let scopeKey = (config.chartOptions?.mapScope as string) || 'world';
 
-    // If multiple state ZIP codes are selected, use the all-states map
-    if (mapScopes.length > 1 || (mapScopes.length === 1 && mapScopes[0]?.includes('-zipcodes'))) {
-      scopeKey = 'us-zipcodes';  // All-states merged map
+    // Smart state-based loading: use individual state files instead of all-states merged
+    // This dramatically reduces memory usage (1-3 MB per state vs 100+ MB for all)
+    if (mapScopes.length > 0) {
+      // Multi-select or single state: use first selected state's file
+      // (User can filter data to their states, so no need for all-states)
+      scopeKey = mapScopes[0];
+    } else if (scopeKey.includes('-zipcodes')) {
+      // Single state ZIP code selected
+      scopeKey = scopeKey;  // Use the specific state file
     }
 
     const mapDef = getMapDef(scopeKey);
@@ -1775,9 +1781,15 @@ export default function ChartPreview({
         const mapScopes = (config.chartOptions?.mapScopes as string[]) || [];
         let scopeKey = (config.chartOptions?.mapScope as string) || 'world';
 
-        // If multiple state ZIP codes are selected, use the all-states map
-        if (mapScopes.length > 1 || (mapScopes.length === 1 && mapScopes[0]?.includes('-zipcodes'))) {
-          scopeKey = 'us-zipcodes';  // All-states merged map
+        // Smart state-based loading: use specific state files instead of merged all-states
+        // This keeps memory usage low (1-3 MB per state vs 100+ MB for all)
+        if (mapScopes.length > 0) {
+          // Multi-select: use first selected state's file
+          // User's data will naturally be filtered to their selected states
+          scopeKey = mapScopes[0];
+        } else if (scopeKey.includes('-zipcodes')) {
+          // Single state ZIP code already selected
+          scopeKey = scopeKey;
         }
 
         const mapDef = getMapDef(scopeKey);
@@ -1796,7 +1808,7 @@ export default function ChartPreview({
 
         // Debug logging for choropleth rendering
         if (choroData.length > 0) {
-          const displayScope = mapScopes.length > 0 ? `${mapScopes.length} states` : scopeKey;
+          const displayScope = mapScopes.length > 1 ? `${mapScopes.length} states (showing ${mapScopes[0]})` : scopeKey;
           console.debug(`[Choropleth] scope=${displayScope}, mapId=${getActualMapId(scopeKey)}, dataRows=${choroData.length}`);
           console.debug(`[Choropleth] First 5 data points:`, choroData.slice(0, 5));
         }
