@@ -478,8 +478,9 @@ public class ProspectorResources {
 
       if (ctx.dashboardQnAMode) {
         systemPrompt.append("\nYou are answering questions about dashboard data. ");
-        systemPrompt.append("Answer questions concisely based on the available data. ");
-        systemPrompt.append("Only use execute_sql and get_schema_info tools if needed.\n\n");
+        systemPrompt.append("IMPORTANT: Do NOT suggest running queries, retrieving data, or using tools. ");
+        systemPrompt.append("You have all the information needed in the dashboard data below. ");
+        systemPrompt.append("Answer questions directly and concisely (1-2 sentences) using ONLY the data provided.\n\n");
 
         appendDashboardData(systemPrompt, ctx);
       }
