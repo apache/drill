@@ -15,7 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import { useMemo, useCallback, useState, useEffect, useRef } from 'react';
+import { useMemo, useCallback, useState, useEffect, useRef, forwardRef } from 'react';
 import ReactECharts from 'echarts-for-react';
 import { Alert, Button, Empty, Spin, Table, Tooltip, Typography, message } from 'antd';
 import { CaretUpOutlined, CaretDownOutlined, CopyOutlined, MinusOutlined, TableOutlined, InfoCircleOutlined } from '@ant-design/icons';
@@ -42,6 +42,10 @@ interface ChartPreviewProps {
   darkMode?: boolean;
   /** Called when user clicks a chart element. Receives the column name, value, and type flags. */
   onChartClick?: (column: string, value: string, isTemporal?: boolean, isNumeric?: boolean) => void;
+}
+
+interface EChartsRef {
+  getEchartsInstance: () => echarts.ECharts | null;
 }
 
 // Color schemes
@@ -402,7 +406,7 @@ function hasSankeyCycle(links: { source: string; target: string }[]): boolean {
   return false;
 }
 
-export default function ChartPreview({
+const ChartPreviewComponent = forwardRef<EChartsRef, ChartPreviewProps>(({
   chartType,
   config,
   data,
@@ -412,7 +416,7 @@ export default function ChartPreview({
   sql,
   darkMode,
   onChartClick,
-}: ChartPreviewProps) {
+}: ChartPreviewProps, ref) => {
   const { isDark: globalDark } = useTheme();
   const isDark = darkMode ?? globalDark;
   const colors = colorSchemes[config.colorScheme || 'default'] || colorSchemes.default;
@@ -2558,6 +2562,7 @@ export default function ChartPreview({
 
   return (
     <ReactECharts
+      ref={ref}
       option={finalOption}
       notMerge
       style={{ height, width: '100%', cursor: onChartClick ? 'pointer' : undefined }}
@@ -2565,4 +2570,7 @@ export default function ChartPreview({
       onEvents={onEvents}
     />
   );
-}
+});
+
+ChartPreviewComponent.displayName = 'ChartPreview';
+export default ChartPreviewComponent;

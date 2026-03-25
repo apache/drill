@@ -15,7 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import { useState, useMemo, useEffect, useCallback } from 'react';
+import { useState, useMemo, useEffect, useCallback, useRef } from 'react';
 import {
   Modal,
   Steps,
@@ -87,6 +87,7 @@ export default function VisualizationBuilder({
   const [config, setConfig] = useState<VisualizationConfig>({});
   const [form] = Form.useForm();
   const queryClient = useQueryClient();
+  const echartsRef = useRef<{ getEchartsInstance: () => unknown } | null>(null);
 
   // Internal data fetching for edit mode
   const [fetchedData, setFetchedData] = useState<QueryResult | null>(null);
@@ -309,6 +310,24 @@ export default function VisualizationBuilder({
     }
   };
 
+  // Capture current map view for choropleth
+  const captureMapView = useCallback(() => {
+    if (!echartsRef.current) return null;
+    try {
+      const instance = echartsRef.current.getEchartsInstance?.();
+      if (!instance) return null;
+      const option = instance.getOption?.();
+      if (!option || !option.series || !option.series[0]) return null;
+      const series = option.series[0];
+      return {
+        zoom: series.zoom,
+        center: series.center,
+      };
+    } catch {
+      return null;
+    }
+  }, []);
+
   const canProceed = () => {
     switch (currentStep) {
       case 0:
@@ -357,6 +376,7 @@ export default function VisualizationBuilder({
                 chartType={chartType}
                 config={config}
                 onChange={setConfig}
+                onCaptureMapView={captureMapView}
               />
             </Card>
           </Col>
@@ -374,6 +394,7 @@ export default function VisualizationBuilder({
                 />
               )}
               <ChartPreview
+                ref={echartsRef}
                 chartType={chartType}
                 config={config}
                 data={effectiveData}
