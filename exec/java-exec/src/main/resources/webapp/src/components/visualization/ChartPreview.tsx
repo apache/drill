@@ -1801,10 +1801,14 @@ export default function ChartPreview({
         const resolverFn = mapDef.resolve;
 
         // Build choropleth data: array of { name: resolvedName, value: numericValue }
-        const choroData = data.rows.map((row) => ({
-          name: resolverFn(String(row[dimCol] ?? '')),
-          value: Number(row[valueCol]) || 0,
-        }));
+        // Replace NaN with 0
+        const choroData = data.rows.map((row) => {
+          const value = Number(row[valueCol]);
+          return {
+            name: resolverFn(String(row[dimCol] ?? '')),
+            value: isNaN(value) ? 0 : value,
+          };
+        });
 
         // Debug logging for choropleth rendering
         if (choroData.length > 0) {
