@@ -85,10 +85,11 @@ export default function AiQnAPanel({
       return section;
     }).join('\n');
 
+    const briefingInstruction = 'Keep responses concise (1-2 sentences). Focus on direct answers to the question.';
     const chatMessages: ChatMessage[] = [
       ...messages,
       userMsg,
-      ...(dataContext ? [{ role: 'user' as const, content: `[Dashboard Data Context]\n${dataContext}` }] : []),
+      ...(dataContext ? [{ role: 'user' as const, content: `[Dashboard Data Context]\n${dataContext}\n\n${briefingInstruction}` }] : [{ role: 'user' as const, content: briefingInstruction }]),
     ];
 
     const controller = streamChat(
