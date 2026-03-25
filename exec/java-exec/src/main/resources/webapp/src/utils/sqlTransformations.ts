@@ -805,3 +805,16 @@ export function calculateColumnStats(
     uniquenessPercentage: (distinctSet.size / values.length) * 100,
   };
 }
+
+/**
+ * Normalize SQL for comparison — handles whitespace, case, and comments.
+ * Useful for matching visualizations to tabs by SQL equality.
+ */
+export function normalizeSql(sql: string): string {
+  return sql
+    .toLowerCase()
+    .replace(/--[^\n]*/g, '') // Remove single-line comments
+    .replace(/\/\*[\s\S]*?\*\//g, '') // Remove block comments
+    .replace(/\s+/g, ' ') // Collapse whitespace
+    .trim();
+}
