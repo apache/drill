@@ -437,10 +437,8 @@ export default function ChartPreview({
       // Multi-select or single state: use first selected state's file
       // (User can filter data to their states, so no need for all-states)
       scopeKey = mapScopes[0];
-    } else if (scopeKey.includes('-zipcodes')) {
-      // Single state ZIP code selected
-      scopeKey = scopeKey;  // Use the specific state file
     }
+    // else: single state ZIP code already in scopeKey (no need to reassign)
 
     const mapDef = getMapDef(scopeKey);
     if (!mapDef) {
@@ -1787,10 +1785,8 @@ export default function ChartPreview({
           // Multi-select: use first selected state's file
           // User's data will naturally be filtered to their selected states
           scopeKey = mapScopes[0];
-        } else if (scopeKey.includes('-zipcodes')) {
-          // Single state ZIP code already selected
-          scopeKey = scopeKey;
         }
+        // else: single state ZIP code already in scopeKey (no need to reassign)
 
         const mapDef = getMapDef(scopeKey);
         if (!mapDef) {
