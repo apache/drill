@@ -57,6 +57,8 @@ interface VisualizationBuilderProps {
   defaultSchema?: string;
   visualization?: Visualization | null;
   projectId?: string;
+  tabId?: string;
+  onVisualizationSaved?: (vizId: string) => void;
 }
 
 const colorSchemeOptions = [
@@ -75,6 +77,8 @@ export default function VisualizationBuilder({
   defaultSchema,
   visualization,
   projectId,
+  tabId,
+  onVisualizationSaved,
 }: VisualizationBuilderProps) {
   const isEditMode = !!visualization;
 
@@ -225,6 +229,9 @@ export default function VisualizationBuilder({
       }
       message.success('Visualization created successfully');
       queryClient.invalidateQueries({ queryKey: ['visualizations'] });
+      if (onVisualizationSaved && viz?.id) {
+        onVisualizationSaved(viz.id);
+      }
       handleClose();
     },
     onError: (error: Error) => {
@@ -289,6 +296,7 @@ export default function VisualizationBuilder({
         isPublic: values.isPublic || false,
         sql: sql || visualization?.sql,
         defaultSchema: defaultSchema || visualization?.defaultSchema,
+        tabId,
       };
 
       if (isEditMode) {

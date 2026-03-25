@@ -95,7 +95,7 @@ const REFRESH_OPTIONS = [
 type AddPanelTab = 'visualization' | 'markdown' | 'image' | 'title' | 'executiveSummary' | 'aiQnA' | 'aiAlerts' | 'nlFilter';
 
 export default function DashboardViewPage() {
-  const { id } = useParams<{ id: string }>();
+  const { id, projectId: urlProjectId } = useParams<{ id: string; projectId?: string }>();
   const navigate = useNavigate();
   const location = useLocation();
   const queryClient = useQueryClient();
@@ -104,7 +104,7 @@ export default function DashboardViewPage() {
   // If navigated from a project context, go back there; otherwise /dashboards
   const locationState = (location.state as { from?: string; projectName?: string; projectId?: string }) || {};
   const backPath = locationState.from || '/dashboards';
-  const projectId = locationState.projectId || (locationState.from?.match(/\/projects\/([^/]+)/)?.[1]);
+  const projectId = urlProjectId || locationState.projectId || (locationState.from?.match(/\/projects\/([^/]+)/)?.[1]);
   const projectName = locationState.projectName;
 
   const { isDark } = useTheme();
