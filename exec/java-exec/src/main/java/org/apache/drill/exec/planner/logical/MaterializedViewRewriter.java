@@ -20,17 +20,23 @@ package org.apache.drill.exec.planner.logical;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
-import org.apache.calcite.plan.RelOptUtil;
-import org.apache.calcite.plan.SubstitutionVisitor;
+import org.apache.calcite.plan.RelOptMaterialization;
+import org.apache.calcite.plan.RelOptMaterializations;
 import org.apache.calcite.rel.RelNode;
 import org.apache.calcite.rel.RelRoot;
 import org.apache.calcite.schema.SchemaPlus;
+import org.apache.calcite.util.Pair;
 import org.apache.drill.exec.dotdrill.MaterializedView;
 import org.apache.drill.exec.ops.QueryContext;
 import org.apache.drill.exec.planner.sql.conversion.SqlConverter;
 import org.apache.drill.exec.store.AbstractSchema;
+import org.apache.drill.exec.store.StoragePlugin;
+import org.apache.drill.exec.store.StoragePluginRegistry;
+import org.apache.drill.exec.store.StoragePluginRegistry.PluginException;
+import org.apache.drill.exec.store.dfs.FileSystemPlugin;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -40,21 +46,24 @@ import org.slf4j.LoggerFactory;
  * When enabled via planner.enable_materialized_view_rewrite, this class attempts
  * to rewrite queries to use materialized views when beneficial.
  * <p>
- * The rewriting uses Calcite's SubstitutionVisitor to perform structural matching
- * between the user's query and available materialized view definitions. If the
- * query matches (or is a subset of) an MV's definition, the query is rewritten
- * to scan from the pre-computed MV data instead.
+ * Uses Calcite's {@link RelOptMaterializations#useMaterializedViews} API which
+ * normalizes both the query and MV definitions before performing structural
+ * matching via {@link org.apache.calcite.plan.SubstitutionVisitor}.
+ * <p>
+ * Materialized views are discovered by iterating over enabled file-based
+ * storage plugins (the only plugin type that supports MVs) and force-loading
+ * their schemas to find .materialized_view.drill files.
  */
 public class MaterializedViewRewriter {
   private static final Logger logger = LoggerFactory.getLogger(MaterializedViewRewriter.class);
 
   private final QueryContext context;
-  private final SchemaPlus defaultSchema;
+  private final SchemaPlus rootSchema;
   private final SqlConverter sqlConverter;
 
-  public MaterializedViewRewriter(QueryContext context, SchemaPlus defaultSchema, SqlConverter sqlConverter) {
+  public MaterializedViewRewriter(QueryContext context, SchemaPlus rootSchema, SqlConverter sqlConverter) {
     this.context = context;
-    this.defaultSchema = defaultSchema;
+    this.rootSchema = rootSchema;
     this.sqlConverter = sqlConverter;
   }
 
@@ -79,7 +88,8 @@ public class MaterializedViewRewriter {
 
     logger.debug("Found {} materialized view candidates for potential rewriting", candidates.size());
 
-    // Try each candidate MV for structural matching
+    // Build Calcite RelOptMaterialization objects for each refreshed candidate
+    List<RelOptMaterialization> materializations = new ArrayList<>();
     for (MaterializedViewCandidate candidate : candidates) {
       if (!candidate.isRefreshed()) {
         logger.debug("Skipping MV {} - not refreshed", candidate.getName());
@@ -87,14 +97,38 @@ public class MaterializedViewRewriter {
       }
 
       try {
-        RelNode rewritten = tryRewriteWithMV(queryRel, candidate);
-        if (rewritten != null) {
-          logger.info("Query rewritten to use materialized view: {}", candidate.getName());
-          return rewritten;
+        RelOptMaterialization mat = buildMaterialization(candidate);
+        if (mat != null) {
+          materializations.add(mat);
         }
       } catch (Exception e) {
-        logger.debug("Failed to rewrite with MV {}: {}", candidate.getName(), e.getMessage());
+        logger.debug("Failed to build materialization for MV {}: {}", candidate.getName(), e.getMessage());
       }
+    }
+
+    if (materializations.isEmpty()) {
+      logger.debug("No valid materializations could be built");
+      return queryRel;
+    }
+
+    // Use Calcite's materialized view matching API which normalizes both the
+    // query and MV definitions (trimming unused fields, converting Filter/Project
+    // to Calc, merging, etc.) before performing structural matching.
+    try {
+      List<Pair<RelNode, List<RelOptMaterialization>>> results =
+          RelOptMaterializations.useMaterializedViews(queryRel, materializations);
+
+      if (!results.isEmpty()) {
+        RelNode rewritten = results.get(0).left;
+        if (logger.isInfoEnabled()) {
+          List<RelOptMaterialization> usedMVs = results.get(0).right;
+          logger.info("Query rewritten to use materialized view(s): {}",
+              !usedMVs.isEmpty() ? usedMVs.get(0).qualifiedTableName : "unknown");
+        }
+        return rewritten;
+      }
+    } catch (Exception e) {
+      logger.debug("Materialized view rewriting failed: {}", e.getMessage());
     }
 
     logger.debug("No materialized view matched the query");
@@ -102,48 +136,28 @@ public class MaterializedViewRewriter {
   }
 
   /**
-   * Attempts to rewrite the query using a specific materialized view.
-   *
-   * @param queryRel the user's query plan
-   * @param candidate the MV candidate to try
-   * @return the rewritten plan if successful, null otherwise
+   * Builds a Calcite {@link RelOptMaterialization} for a candidate MV.
    */
-  private RelNode tryRewriteWithMV(RelNode queryRel, MaterializedViewCandidate candidate) {
-    // Parse the MV's SQL definition into a RelNode
+  private RelOptMaterialization buildMaterialization(MaterializedViewCandidate candidate) {
     RelNode mvQueryRel = parseMvSql(candidate);
     if (mvQueryRel == null) {
       return null;
     }
 
-    // Build a RelNode that represents scanning the MV's pre-computed data
-    RelNode mvScanRel = buildMvScanRel(candidate);
-    if (mvScanRel == null) {
+    RelNode mvTableRel = buildMvScanRel(candidate);
+    if (mvTableRel == null) {
       return null;
     }
 
-    logger.debug("Attempting structural match for MV: {}", candidate.getName());
-    if (logger.isDebugEnabled()) {
-      logger.debug("Query plan:\n{}", RelOptUtil.toString(queryRel));
-      logger.debug("MV definition plan:\n{}", RelOptUtil.toString(mvQueryRel));
-    }
+    List<String> qualifiedTableName = java.util.Arrays.asList(
+        candidate.getSchemaPath().split("\\."));
 
-    // Use Calcite's SubstitutionVisitor to check if the query matches the MV
-    // Constructor takes (target, query) where:
-    //   - target: the MV definition (what we want to match against)
-    //   - query: the replacement (the MV scan)
-    // Then go(queryRel) checks if queryRel can be rewritten using the MV
-    SubstitutionVisitor visitor = new SubstitutionVisitor(mvQueryRel, mvScanRel);
-    List<RelNode> substitutions = visitor.go(queryRel);
-
-    if (substitutions != null && !substitutions.isEmpty()) {
-      RelNode substituted = substitutions.get(0);
-      if (logger.isDebugEnabled()) {
-        logger.debug("Substitution found! Rewritten plan:\n{}", RelOptUtil.toString(substituted));
-      }
-      return substituted;
-    }
-
-    return null;
+    return new RelOptMaterialization(
+        mvTableRel,
+        mvQueryRel,
+        null,
+        qualifiedTableName
+    );
   }
 
   /**
@@ -152,13 +166,9 @@ public class MaterializedViewRewriter {
   private RelNode parseMvSql(MaterializedViewCandidate candidate) {
     try {
       String mvSql = candidate.getSql();
-      List<String> schemaPath = candidate.getMaterializedView().getWorkspaceSchemaPath();
-
-      // Parse and convert the MV's SQL to RelNode
       org.apache.calcite.sql.SqlNode parsedNode = sqlConverter.parse(mvSql);
       org.apache.calcite.sql.SqlNode validatedNode = sqlConverter.validate(parsedNode);
       RelRoot relRoot = sqlConverter.toRel(validatedNode);
-
       return relRoot.rel;
     } catch (Exception e) {
       logger.debug("Failed to parse MV SQL for {}: {}", candidate.getName(), e.getMessage());
@@ -168,19 +178,30 @@ public class MaterializedViewRewriter {
 
   /**
    * Builds a RelNode that scans the MV's pre-computed data.
-   * This creates a table scan of the MV's data directory.
    */
   private RelNode buildMvScanRel(MaterializedViewCandidate candidate) {
     try {
-      // Build SQL to scan the MV data table
       String mvDataTable = candidate.getSchemaPath() + ".`" + candidate.getName() + "_mv_data`";
-      String scanSql = "SELECT * FROM " + mvDataTable;
 
-      // Parse and convert to RelNode
-      org.apache.calcite.sql.SqlNode parsedNode = sqlConverter.parse(scanSql);
+      // Build explicit column list from the MV's field definitions to avoid
+      // DYNAMIC_STAR type issues with SELECT *
+      List<org.apache.drill.exec.dotdrill.View.Field> fields = candidate.getMaterializedView().getFields();
+      StringBuilder scanSql = new StringBuilder("SELECT ");
+      if (fields != null && !fields.isEmpty()) {
+        for (int i = 0; i < fields.size(); i++) {
+          if (i > 0) {
+            scanSql.append(", ");
+          }
+          scanSql.append("`").append(fields.get(i).getName()).append("`");
+        }
+      } else {
+        scanSql.append("*");
+      }
+      scanSql.append(" FROM ").append(mvDataTable);
+
+      org.apache.calcite.sql.SqlNode parsedNode = sqlConverter.parse(scanSql.toString());
       org.apache.calcite.sql.SqlNode validatedNode = sqlConverter.validate(parsedNode);
       RelRoot relRoot = sqlConverter.toRel(validatedNode);
-
       return relRoot.rel;
     } catch (Exception e) {
       logger.debug("Failed to build MV scan for {}: {}", candidate.getName(), e.getMessage());
@@ -189,50 +210,62 @@ public class MaterializedViewRewriter {
   }
 
   /**
-   * Finds all materialized views in accessible schemas that could potentially
-   * be used for query rewriting.
+   * Finds all materialized views by iterating over enabled file-based storage
+   * plugins. Only file-based plugins (FileSystemPlugin) support materialized views.
+   * <p>
+   * Because Drill's schema tree is lazily loaded, we cannot simply traverse
+   * already-loaded schemas. Instead, we use the StoragePluginRegistry to
+   * discover file-based plugins and force-load their workspace schemas.
    */
   private List<MaterializedViewCandidate> findCandidateMaterializedViews() {
     List<MaterializedViewCandidate> candidates = new ArrayList<>();
+    StoragePluginRegistry pluginRegistry = context.getStorage();
 
-    // Traverse accessible schemas to find MVs
-    collectMaterializedViews(defaultSchema, candidates);
+    // Get all enabled storage plugin names
+    Map<String, org.apache.drill.common.logical.StoragePluginConfig> enabledPlugins =
+        pluginRegistry.storedConfigs(StoragePluginRegistry.PluginFilter.ENABLED);
+
+    for (String pluginName : enabledPlugins.keySet()) {
+      try {
+        StoragePlugin plugin = pluginRegistry.getPlugin(pluginName);
+        if (!(plugin instanceof FileSystemPlugin)) {
+          continue;
+        }
+
+        // Force-load this plugin's schema into the root schema tree.
+        // DynamicRootSchema lazily loads schemas only on getSubSchema() calls.
+        SchemaPlus pluginSchema = rootSchema.getSubSchema(pluginName);
+        if (pluginSchema == null) {
+          continue;
+        }
+
+        // Iterate over workspaces (sub-schemas of the plugin)
+        for (String workspaceName : pluginSchema.getSubSchemaNames()) {
+          SchemaPlus workspaceSchema = pluginSchema.getSubSchema(workspaceName);
+          if (workspaceSchema == null) {
+            continue;
+          }
+
+          AbstractSchema abstractSchema = workspaceSchema.unwrap(AbstractSchema.class);
+          if (abstractSchema == null) {
+            continue;
+          }
+
+          collectMaterializedViewsFromSchema(abstractSchema, candidates);
+        }
+      } catch (PluginException e) {
+        logger.debug("Error accessing plugin {}: {}", pluginName, e.getMessage());
+      }
+    }
 
     return candidates;
   }
 
   /**
-   * Recursively collects materialized views from a schema and its subschemas.
-   */
-  private void collectMaterializedViews(SchemaPlus schema, List<MaterializedViewCandidate> candidates) {
-    if (schema == null) {
-      return;
-    }
-
-    // Check if this schema supports MVs (is an AbstractSchema)
-    if (schema.unwrap(AbstractSchema.class) != null) {
-      AbstractSchema abstractSchema = schema.unwrap(AbstractSchema.class);
-      try {
-        collectMaterializedViewsFromSchema(abstractSchema, candidates);
-      } catch (Exception e) {
-        logger.debug("Error collecting MVs from schema {}: {}", schema.getName(), e.getMessage());
-      }
-    }
-
-    // Recurse into subschemas
-    Set<String> subSchemaNames = schema.getSubSchemaNames();
-    for (String subSchemaName : subSchemaNames) {
-      SchemaPlus subSchema = schema.getSubSchema(subSchemaName);
-      collectMaterializedViews(subSchema, candidates);
-    }
-  }
-
-  /**
-   * Collects MVs from a specific schema.
+   * Collects MVs from a specific workspace schema.
    */
   private void collectMaterializedViewsFromSchema(AbstractSchema schema,
                                                    List<MaterializedViewCandidate> candidates) {
-    // Get table names and check for MVs
     Set<String> tableNames = schema.getTableNames();
     for (String tableName : tableNames) {
       try {

@@ -48,8 +48,9 @@ public class TestMaterializedViewRewriting extends PlanTestBase {
   public void testRewritingEnabledByDefault() throws Exception {
     String mvName = "test_mv_rewrite_enabled_default";
     try {
-      // Create materialized view
+      // Create and refresh materialized view
       test("CREATE MATERIALIZED VIEW dfs.tmp.%s AS SELECT region_id, sales_city FROM cp.`region.json` WHERE region_id = 0", mvName);
+      test("REFRESH MATERIALIZED VIEW dfs.tmp.%s", mvName);
 
       // Verify rewriting is enabled by default and queries work correctly
       testBuilder()
@@ -58,6 +59,13 @@ public class TestMaterializedViewRewriting extends PlanTestBase {
           .baselineColumns("region_id", "sales_city")
           .baselineValues(0L, "None")
           .go();
+
+      // Verify the plan is rewritten to use MV data, not the original source
+      testPlanSubstrPatterns(
+          "SELECT region_id, sales_city FROM cp.`region.json` WHERE region_id = 0",
+          new String[]{"_mv_data"},
+          new String[]{"region.json"}
+      );
     } finally {
       test("DROP MATERIALIZED VIEW IF EXISTS dfs.tmp.%s", mvName);
     }
@@ -92,6 +100,13 @@ public class TestMaterializedViewRewriting extends PlanTestBase {
           .baselineColumns("region_id", "sales_city")
           .baselineValues(0L, "None")
           .go();
+
+      // Verify the plan does NOT use MV data when rewriting is disabled
+      testPlanSubstrPatterns(
+          "SELECT region_id, sales_city FROM cp.`region.json` WHERE region_id = 0",
+          new String[]{"region.json"},
+          new String[]{"_mv_data"}
+      );
     } finally {
       test("ALTER SESSION SET `%s` = true", ExecConstants.ENABLE_MATERIALIZED_VIEW_REWRITE_KEY);
       test("DROP MATERIALIZED VIEW IF EXISTS dfs.tmp.%s", mvName);
@@ -115,6 +130,13 @@ public class TestMaterializedViewRewriting extends PlanTestBase {
           .baselineColumns("region_id", "sales_city")
           .baselineValues(0L, "None")
           .go();
+
+      // Verify direct MV query scans from pre-computed data
+      testPlanSubstrPatterns(
+          String.format("SELECT * FROM dfs.tmp.%s", mvName),
+          new String[]{"_mv_data"},
+          new String[]{"region.json"}
+      );
     } finally {
       test("DROP MATERIALIZED VIEW IF EXISTS dfs.tmp.%s", mvName);
     }
@@ -177,6 +199,13 @@ public class TestMaterializedViewRewriting extends PlanTestBase {
           .baselineColumns("region_id", "sales_city")
           .baselineValues(0L, "None")
           .go();
+
+      // Verify the plan was rewritten to use MV data
+      testPlanSubstrPatterns(
+          "SELECT region_id, sales_city FROM cp.`region.json` WHERE region_id = 0",
+          new String[]{"_mv_data"},
+          new String[]{"region.json"}
+      );
     } finally {
       test("DROP MATERIALIZED VIEW IF EXISTS dfs.tmp.%s", mvName);
     }
@@ -194,6 +223,13 @@ public class TestMaterializedViewRewriting extends PlanTestBase {
 
       // Run aggregate query
       test("SELECT sales_country, COUNT(*) AS cnt FROM cp.`region.json` WHERE region_id < 5 GROUP BY sales_country");
+
+      // Verify the plan was rewritten to use MV data
+      testPlanSubstrPatterns(
+          "SELECT sales_country, COUNT(*) AS cnt FROM cp.`region.json` WHERE region_id < 5 GROUP BY sales_country",
+          new String[]{"_mv_data"},
+          new String[]{"region.json"}
+      );
     } finally {
       test("DROP MATERIALIZED VIEW IF EXISTS dfs.tmp.%s", mvName);
     }
@@ -250,6 +286,13 @@ public class TestMaterializedViewRewriting extends PlanTestBase {
           .baselineColumns("region_id", "sales_city")
           .baselineValues(0L, "None")
           .go();
+
+      // Verify un-refreshed MV is NOT used for rewriting - plan should scan original source
+      testPlanSubstrPatterns(
+          "SELECT region_id, sales_city FROM cp.`region.json` WHERE region_id = 0",
+          new String[]{"region.json"},
+          new String[]{"_mv_data"}
+      );
     } finally {
       test("DROP MATERIALIZED VIEW IF EXISTS dfs.tmp.%s", mvName);
     }
@@ -269,6 +312,13 @@ public class TestMaterializedViewRewriting extends PlanTestBase {
           .baselineColumns("region_id", "sales_city")
           .baselineValues(0L, "None")
           .go();
+
+      // Verify the plan expands SQL and scans original source, not _mv_data
+      testPlanSubstrPatterns(
+          String.format("SELECT * FROM dfs.tmp.%s", mvName),
+          new String[]{"region.json"},
+          new String[]{"_mv_data"}
+      );
     } finally {
       test("DROP MATERIALIZED VIEW IF EXISTS dfs.tmp.%s", mvName);
     }
