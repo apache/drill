@@ -23,6 +23,7 @@ import java.nio.file.Paths;
 import org.apache.drill.PlanTestBase;
 import org.apache.drill.categories.SqlTest;
 import org.apache.drill.common.exceptions.UserRemoteException;
+import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.dotdrill.DotDrillType;
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -279,6 +280,125 @@ public class TestMaterializedViewSupport extends PlanTestBase {
       test("CREATE OR REPLACE MATERIALIZED VIEW dfs.tmp.%s AS SELECT * FROM cp.`region.json`", mvName);
     } finally {
       test("DROP VIEW IF EXISTS dfs.tmp.%s", viewName);
+    }
+  }
+
+  // ==================== Query Plan Verification Tests ====================
+
+  @Test
+  public void testPlanUsesParquetAfterRefresh() throws Exception {
+    String mvName = "test_mv_plan_parquet";
+    try {
+      // Create and refresh materialized view
+      test("CREATE MATERIALIZED VIEW dfs.tmp.%s AS SELECT region_id, sales_city FROM cp.`region.json` WHERE region_id = 0", mvName);
+      test("REFRESH MATERIALIZED VIEW dfs.tmp.%s", mvName);
+
+      // After REFRESH, querying the MV directly should scan from _mv_data (Parquet), not region.json
+      testPlanSubstrPatterns(
+          String.format("SELECT * FROM dfs.tmp.%s", mvName),
+          new String[]{"_mv_data"},
+          new String[]{"region.json"}
+      );
+    } finally {
+      test("DROP MATERIALIZED VIEW IF EXISTS dfs.tmp.%s", mvName);
+    }
+  }
+
+  @Test
+  public void testPlanExpandsSqlBeforeRefresh() throws Exception {
+    String mvName = "test_mv_plan_expand";
+    try {
+      // Create MV but do NOT refresh
+      test("CREATE MATERIALIZED VIEW dfs.tmp.%s AS SELECT region_id, sales_city FROM cp.`region.json` WHERE region_id = 0", mvName);
+
+      // Before REFRESH, querying the MV should expand the SQL definition and scan the original source
+      testPlanSubstrPatterns(
+          String.format("SELECT * FROM dfs.tmp.%s", mvName),
+          new String[]{"region.json"},
+          new String[]{"_mv_data"}
+      );
+    } finally {
+      test("DROP MATERIALIZED VIEW IF EXISTS dfs.tmp.%s", mvName);
+    }
+  }
+
+  @Test
+  public void testPlanRewritesQueryToUseMV() throws Exception {
+    String mvName = "test_mv_plan_rewrite";
+    try {
+      // Create and refresh MV
+      test("CREATE MATERIALIZED VIEW dfs.tmp.%s AS SELECT region_id, sales_city FROM cp.`region.json` WHERE region_id = 0", mvName);
+      test("REFRESH MATERIALIZED VIEW dfs.tmp.%s", mvName);
+
+      // Query against the base table that matches the MV definition should be rewritten
+      // to scan from the MV's pre-computed data instead of region.json
+      testPlanSubstrPatterns(
+          "SELECT region_id, sales_city FROM cp.`region.json` WHERE region_id = 0",
+          new String[]{"_mv_data"},
+          new String[]{"region.json"}
+      );
+    } finally {
+      test("DROP MATERIALIZED VIEW IF EXISTS dfs.tmp.%s", mvName);
+    }
+  }
+
+  @Test
+  public void testPlanDoesNotRewriteWhenDisabled() throws Exception {
+    String mvName = "test_mv_plan_no_rewrite";
+    try {
+      // Create and refresh MV
+      test("CREATE MATERIALIZED VIEW dfs.tmp.%s AS SELECT region_id, sales_city FROM cp.`region.json` WHERE region_id = 0", mvName);
+      test("REFRESH MATERIALIZED VIEW dfs.tmp.%s", mvName);
+
+      // Disable MV rewriting
+      test("ALTER SESSION SET `%s` = false", ExecConstants.ENABLE_MATERIALIZED_VIEW_REWRITE_KEY);
+
+      // With rewriting disabled, the query should scan region.json, not the MV data
+      testPlanSubstrPatterns(
+          "SELECT region_id, sales_city FROM cp.`region.json` WHERE region_id = 0",
+          new String[]{"region.json"},
+          new String[]{"_mv_data"}
+      );
+    } finally {
+      test("ALTER SESSION SET `%s` = true", ExecConstants.ENABLE_MATERIALIZED_VIEW_REWRITE_KEY);
+      test("DROP MATERIALIZED VIEW IF EXISTS dfs.tmp.%s", mvName);
+    }
+  }
+
+  @Test
+  public void testPlanDoesNotRewriteUnrefreshedMV() throws Exception {
+    String mvName = "test_mv_plan_unrefreshed";
+    try {
+      // Create MV but do NOT refresh
+      test("CREATE MATERIALIZED VIEW dfs.tmp.%s AS SELECT region_id, sales_city FROM cp.`region.json` WHERE region_id = 0", mvName);
+
+      // Query against the base table - un-refreshed MV should NOT be used for rewriting
+      testPlanSubstrPatterns(
+          "SELECT region_id, sales_city FROM cp.`region.json` WHERE region_id = 0",
+          new String[]{"region.json"},
+          new String[]{"_mv_data"}
+      );
+    } finally {
+      test("DROP MATERIALIZED VIEW IF EXISTS dfs.tmp.%s", mvName);
+    }
+  }
+
+  @Test
+  public void testPlanRewritesAggregateQuery() throws Exception {
+    String mvName = "test_mv_plan_agg";
+    try {
+      // Create and refresh MV with aggregation
+      test("CREATE MATERIALIZED VIEW dfs.tmp.%s AS SELECT sales_country, COUNT(*) AS cnt FROM cp.`region.json` GROUP BY sales_country", mvName);
+      test("REFRESH MATERIALIZED VIEW dfs.tmp.%s", mvName);
+
+      // The same aggregate query against the base table should be rewritten to use the MV
+      testPlanSubstrPatterns(
+          "SELECT sales_country, COUNT(*) AS cnt FROM cp.`region.json` GROUP BY sales_country",
+          new String[]{"_mv_data"},
+          new String[]{"region.json"}
+      );
+    } finally {
+      test("DROP MATERIALIZED VIEW IF EXISTS dfs.tmp.%s", mvName);
     }
   }
 

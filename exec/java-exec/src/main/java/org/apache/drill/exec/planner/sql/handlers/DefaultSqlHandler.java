@@ -202,11 +202,18 @@ public class DefaultSqlHandler extends AbstractSqlHandler {
     RelNode rel = convertToRel(validated);
     rel = preprocessNode(rel);
 
-    // Attempt materialized view rewriting if enabled
+    // Attempt materialized view rewriting if enabled.
+    // The rewriting uses Calcite's SubstitutionVisitor which may produce invalid
+    // plans for partial-match cases (e.g., MV covers a column subset). We guard
+    // against this by catching any errors and falling back to the original plan.
     if (context.getPlannerSettings().isMaterializedViewRewriteEnabled()) {
-      MaterializedViewRewriter mvRewriter = new MaterializedViewRewriter(
-          context, context.getNewDefaultSchema(), config.getConverter());
-      rel = mvRewriter.rewrite(rel);
+      try {
+        MaterializedViewRewriter mvRewriter = new MaterializedViewRewriter(
+            context, config.getConverter().getRootSchema(), config.getConverter());
+        rel = mvRewriter.rewrite(rel);
+      } catch (Exception | AssertionError e) {
+        logger.debug("Materialized view rewriting failed, using original plan: {}", e.getMessage());
+      }
     }
 
     return new ConvertedRelNode(rel, validatedTypedSqlNode.getValue());
