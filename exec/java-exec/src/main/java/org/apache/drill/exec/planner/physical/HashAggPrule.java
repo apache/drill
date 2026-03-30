@@ -19,11 +19,13 @@ package org.apache.drill.exec.planner.physical;
 
 import com.google.common.collect.Lists;
 import org.apache.calcite.util.ImmutableBitSet;
+import org.apache.drill.exec.expr.fn.impl.CollectToListVarcharFunction;
 import org.apache.drill.exec.planner.logical.DrillAggregateRel;
 import org.apache.drill.exec.planner.logical.RelOptHelper;
 import org.apache.drill.exec.planner.physical.AggPrelBase.OperatorPhase;
 import org.apache.calcite.rel.InvalidRelException;
 import org.apache.calcite.rel.RelNode;
+import org.apache.calcite.rel.core.AggregateCall;
 import org.apache.calcite.plan.RelOptRule;
 import org.apache.calcite.plan.RelOptRuleCall;
 import org.apache.calcite.plan.RelTrait;
@@ -57,6 +59,10 @@ public class HashAggPrule extends AggPruleBase {
 
     final DrillAggregateRel aggregate = call.rel(0);
     final RelNode input = call.rel(1);
+
+    if (hasIncompatibleAggCalls(aggregate)) {
+      return;
+    }
 
     if (aggregate.containsDistinctCall() || aggregate.getGroupCount() == 0) {
       // currently, don't use HashAggregate if any of the logical aggrs contains DISTINCT or
@@ -168,4 +174,35 @@ public class HashAggPrule extends AggPruleBase {
     call.transformTo(newAgg);
   }
 
+  /**
+   * Evaluates the logical aggregate expressions to determine if any are
+   * incompatible with the Hash Aggregate physical operator.
+   * <p>
+   * While Hash Aggregate is generally performant for many aggregation types,
+   * certain functions (such as {@code collect_to_list_varchar}) may require specific
+   * data ordering or memory management patterns that the Hash Aggregate
+   * implementation does not provide.
+   * </p>
+   * <p>
+   * <b>Current Incompatibilities:</b>
+   * <ul>
+   * <li>{@link org.apache.drill.exec.expr.fn.impl.CollectToListVarcharFunction}: Excluded from
+   * HashAgg because it requires data ordering and cannot be processed efficiently in an unordered
+   * fashion. {@code SortAggPrule} is intended to handle this, ensuring deterministic results.
+   * </li>
+   * </ul>
+   * </p>
+   * @param aggregate The logical aggregate relational nodes containing the
+   * list of {@link AggregateCall}s to inspect.
+   * @return {@code true} if at least one aggregation call is incompatible
+   * with HashAgg; {@code false} otherwise.
+   */
+  private boolean hasIncompatibleAggCalls(DrillAggregateRel aggregate) {
+    for (AggregateCall aggCall : aggregate.getAggCallList()) {
+      if (CollectToListVarcharFunction.NAME.equalsIgnoreCase(aggCall.getAggregation().getName())) {
+        return true;
+      }
+    }
+    return false;
+  }
 }
