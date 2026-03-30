@@ -29,40 +29,47 @@ import org.apache.drill.exec.vector.complex.writer.BaseWriter;
 /**
  * Aggregate function which collects incoming VarChar column values into the list.
  */
-@FunctionTemplate(name = "collect_to_list_varchar",
-                  scope = FunctionTemplate.FunctionScope.POINT_AGGREGATE,
-                  isInternal = true)
-public class CollectToListVarcharAggFunction implements DrillAggFunc {
+public class CollectToListVarcharFunction {
+  public static final String NAME = "collect_to_list_varchar";
 
-  @Param NullableVarCharHolder input;
-  @Output BaseWriter.ComplexWriter writer;
-  @Workspace ObjectHolder writerHolder;
+  @FunctionTemplate(name = NAME,
+      scope = FunctionTemplate.FunctionScope.POINT_AGGREGATE,
+      isInternal = true)
+  public static class CollectToListVarcharAggFunction implements DrillAggFunc {
 
-  @Override
-  public void setup() {
-    writerHolder = new ObjectHolder();
-  }
+    @Param NullableVarCharHolder input;
+    @Output BaseWriter.ComplexWriter writer;
+    @Workspace ObjectHolder writerHolder;
 
-  @Override
-  public void add() {
-    org.apache.drill.exec.vector.complex.writer.BaseWriter.ListWriter listWriter;
-    if (writerHolder.obj == null) {
-      writerHolder.obj = writer.rootAsList();
+    private CollectToListVarcharAggFunction() {
     }
 
-    listWriter = (org.apache.drill.exec.vector.complex.writer.BaseWriter.ListWriter) writerHolder.obj;
-
-    if (input.isSet > 0) {
-      listWriter.varChar().writeVarChar(input.start, input.end, input.buffer);
+    @Override
+    public void setup() {
+      writerHolder = new ObjectHolder();
     }
-  }
 
-  @Override
-  public void output() {
-  }
+    @Override
+    public void add() {
+      org.apache.drill.exec.vector.complex.writer.BaseWriter.ListWriter listWriter;
+      if (writerHolder.obj == null) {
+        writerHolder.obj = writer.rootAsList();
+      }
 
-  @Override
-  public void reset() {
-    writerHolder.obj = null;
+      listWriter = (org.apache.drill.exec.vector.complex.writer.BaseWriter.ListWriter) writerHolder.obj;
+
+      if (input.isSet > 0) {
+        listWriter.varChar().writeVarChar(input.start, input.end, input.buffer);
+      }
+    }
+
+    @Override
+    public void output() {
+    }
+
+    @Override
+    public void reset() {
+      writerHolder.obj = null;
+    }
   }
 }
