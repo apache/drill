@@ -46,6 +46,7 @@ import {
   DatabaseOutlined,
   PoweroffOutlined,
   SettingOutlined,
+  KeyOutlined,
 } from '@ant-design/icons';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { getPlugins, deletePlugin, enablePlugin } from '../api/storage';
@@ -56,6 +57,47 @@ import type { StoragePluginDetail } from '../types';
 const { Title, Text } = Typography;
 
 type FilterMode = 'all' | 'enabled' | 'disabled';
+
+/**
+ * Build the OAuth authorization URL from the plugin configuration.
+ * Mirrors the Java PluginConfigWrapper.getAuthorizationURIWithParams() logic.
+ */
+function buildAuthorizationUrl(config: Record<string, unknown>): string {
+  const oAuth = config.oAuthConfig as Record<string, unknown>;
+  const credProvider = config.credentialsProvider as Record<string, unknown> | undefined;
+  const creds = credProvider?.credentials as Record<string, unknown> | undefined;
+
+  if (!oAuth?.authorizationURL || !creds?.clientID) {
+    return '';
+  }
+
+  let url = `${oAuth.authorizationURL}?client_id=${encodeURIComponent(creds.clientID as string)}`
+          + `&redirect_uri=${encodeURIComponent(oAuth.callbackURL as string)}`;
+
+  const scope = oAuth.scope as string | undefined;
+  if (scope) {
+    url += `&scope=${encodeURIComponent(scope)}`;
+  }
+
+  const params = oAuth.authorizationParams as Record<string, string> | undefined;
+  if (params) {
+    for (const [k, v] of Object.entries(params)) {
+      url += `&${encodeURIComponent(k)}=${encodeURIComponent(v)}`;
+    }
+  }
+
+  return url;
+}
+
+/**
+ * Check if a plugin uses OAuth.
+ */
+function isOAuthPlugin(config: Record<string, unknown>): boolean {
+  const oAuth = config.oAuthConfig as Record<string, unknown> | undefined;
+  const credProvider = config.credentialsProvider as Record<string, unknown> | undefined;
+  const credentials = credProvider?.credentials as Record<string, unknown> | undefined;
+  return !!(oAuth?.authorizationURL && credentials?.clientID);
+}
 
 function getPluginType(plugin: StoragePluginDetail): string {
   return (plugin.config?.type as string) || 'unknown';
@@ -117,6 +159,26 @@ export default function DataSourcesPage() {
       message.error(`Failed to toggle plugin: ${err.message}`);
     },
   });
+
+  const handleAuthorize = (_pluginName: string, config: Record<string, unknown>) => {
+    const url = buildAuthorizationUrl(config);
+    if (!url) {
+      message.error('Cannot authorize: OAuth configuration is incomplete');
+      return;
+    }
+    const popup = window.open(
+      url,
+      'Authorize Drill',
+      'toolbar=no,menubar=no,scrollbars=yes,resizable=yes,top=500,left=500,width=450,height=600'
+    );
+    const timer = setInterval(() => {
+      if (popup?.closed) {
+        clearInterval(timer);
+        // Refresh plugins data to pick up stored tokens
+        queryClient.invalidateQueries({ queryKey: ['storage-plugins'] });
+      }
+    }, 1000);
+  };
 
   const filteredPlugins = useMemo(() => {
     if (!plugins) {
@@ -262,6 +324,92 @@ export default function DataSourcesPage() {
                 const enabled = isEnabled(plugin);
                 const logoUrl = getPluginLogoUrl(type, plugin.config?.connection as string);
 
+                const cardActions = [
+                  <Tooltip title="Edit" key="edit">
+                    <EditOutlined
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        navigate(
+                          `/datasources/${encodeURIComponent(plugin.name)}`
+                        );
+                      }}
+                    />
+                  </Tooltip>,
+                  enabled ? (
+                    <Popconfirm
+                      key="toggle"
+                      title={`Disable "${plugin.name}"?`}
+                      description="Queries using this plugin will fail while it is disabled."
+                      onConfirm={(e) => {
+                        e?.stopPropagation();
+                        enableMutation.mutate({
+                          name: plugin.name,
+                          enable: false,
+                        });
+                      }}
+                      onCancel={(e) => e?.stopPropagation()}
+                      okText="Disable"
+                      cancelText="Cancel"
+                      okButtonProps={{ danger: true }}
+                    >
+                      <Tooltip title="Disable">
+                        <PoweroffOutlined
+                          style={{ color: '#52c41a' }}
+                          onClick={(e) => e.stopPropagation()}
+                        />
+                      </Tooltip>
+                    </Popconfirm>
+                  ) : (
+                    <Tooltip title="Enable" key="toggle">
+                      <PoweroffOutlined
+                        style={{ color: '#d9d9d9' }}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          enableMutation.mutate({
+                            name: plugin.name,
+                            enable: true,
+                          });
+                        }}
+                      />
+                    </Tooltip>
+                  ),
+                  <Popconfirm
+                    key="delete"
+                    title="Delete this plugin?"
+                    description="This action cannot be undone."
+                    onConfirm={(e) => {
+                      e?.stopPropagation();
+                      deleteMutation.mutate(plugin.name);
+                    }}
+                    onCancel={(e) => e?.stopPropagation()}
+                    okText="Delete"
+                    cancelText="Cancel"
+                    okButtonProps={{ danger: true }}
+                  >
+                    <Tooltip title="Delete">
+                      <DeleteOutlined
+                        style={{ color: '#ff4d4f' }}
+                        onClick={(e) => e.stopPropagation()}
+                      />
+                    </Tooltip>
+                  </Popconfirm>,
+                ];
+
+                // Add authorize button if OAuth is configured
+                if (isOAuthPlugin(plugin.config)) {
+                  cardActions.splice(1, 0, (
+                    <Tooltip title="Authorize" key="authorize">
+                      <KeyOutlined
+                        style={{ color: '#faad14' }}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleAuthorize(plugin.name, plugin.config);
+                        }}
+                      />
+                    </Tooltip>
+                  ));
+                }
+
                 return (
                   <Col xs={24} sm={12} md={8} lg={6} key={plugin.name}>
                     <Badge.Ribbon
@@ -307,76 +455,7 @@ export default function DataSourcesPage() {
                             )}
                           </div>
                         }
-                        actions={[
-                          <Tooltip title="Edit" key="edit">
-                            <EditOutlined
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                navigate(
-                                  `/datasources/${encodeURIComponent(plugin.name)}`
-                                );
-                              }}
-                            />
-                          </Tooltip>,
-                          enabled ? (
-                            <Popconfirm
-                              key="toggle"
-                              title={`Disable "${plugin.name}"?`}
-                              description="Queries using this plugin will fail while it is disabled."
-                              onConfirm={(e) => {
-                                e?.stopPropagation();
-                                enableMutation.mutate({
-                                  name: plugin.name,
-                                  enable: false,
-                                });
-                              }}
-                              onCancel={(e) => e?.stopPropagation()}
-                              okText="Disable"
-                              cancelText="Cancel"
-                              okButtonProps={{ danger: true }}
-                            >
-                              <Tooltip title="Disable">
-                                <PoweroffOutlined
-                                  style={{ color: '#52c41a' }}
-                                  onClick={(e) => e.stopPropagation()}
-                                />
-                              </Tooltip>
-                            </Popconfirm>
-                          ) : (
-                            <Tooltip title="Enable" key="toggle">
-                              <PoweroffOutlined
-                                style={{ color: '#d9d9d9' }}
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  enableMutation.mutate({
-                                    name: plugin.name,
-                                    enable: true,
-                                  });
-                                }}
-                              />
-                            </Tooltip>
-                          ),
-                          <Popconfirm
-                            key="delete"
-                            title="Delete this plugin?"
-                            description="This action cannot be undone."
-                            onConfirm={(e) => {
-                              e?.stopPropagation();
-                              deleteMutation.mutate(plugin.name);
-                            }}
-                            onCancel={(e) => e?.stopPropagation()}
-                            okText="Delete"
-                            cancelText="Cancel"
-                            okButtonProps={{ danger: true }}
-                          >
-                            <Tooltip title="Delete">
-                              <DeleteOutlined
-                                style={{ color: '#ff4d4f' }}
-                                onClick={(e) => e.stopPropagation()}
-                              />
-                            </Tooltip>
-                          </Popconfirm>,
-                        ]}
+                        actions={cardActions}
                       >
                         <Card.Meta
                           title={
