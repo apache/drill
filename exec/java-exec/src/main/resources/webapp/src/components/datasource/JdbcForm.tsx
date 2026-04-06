@@ -25,8 +25,9 @@ import {
   Button,
   Space,
   Table,
+  Alert,
 } from 'antd';
-import { PlusOutlined, DeleteOutlined } from '@ant-design/icons';
+import { PlusOutlined, DeleteOutlined, LinkOutlined } from '@ant-design/icons';
 
 interface JdbcFormProps {
   config: Record<string, unknown>;
@@ -61,6 +62,8 @@ export default function JdbcForm({ config, onChange }: JdbcFormProps) {
   );
   const [batchSize, setBatchSize] = useState<number>((config.writerBatchSize as number) || 10000);
   const [params, setParams] = useState<ParamRow[]>([]);
+  const [testLoading, setTestLoading] = useState<boolean>(false);
+  const [testResult, setTestResult] = useState<{ success: boolean; message: string } | null>(null);
 
   useEffect(() => {
     setDriver((config.driver as string) || '');
@@ -87,6 +90,53 @@ export default function JdbcForm({ config, onChange }: JdbcFormProps) {
     },
     [config, onChange]
   );
+
+  const handleTestConnection = useCallback(async () => {
+    if (!driver || !url) {
+      setTestResult({ success: false, message: 'Please enter a Driver Class and JDBC URL' });
+      return;
+    }
+
+    setTestLoading(true);
+    setTestResult(null);
+
+    try {
+      const testConfig = {
+        type: 'jdbc',
+        driver,
+        url,
+        username,
+        password,
+        writable,
+        caseInsensitiveTableNames: caseInsensitive,
+        writerBatchSize: batchSize,
+      };
+
+      const response = await fetch('/storage/test-connection', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          name: 'test-connection',
+          config: testConfig,
+        }),
+      });
+
+      const result = await response.json();
+      setTestResult({
+        success: result.success || false,
+        message: result.message || 'Unknown error',
+      });
+    } catch (error) {
+      setTestResult({
+        success: false,
+        message: `Error testing connection: ${error instanceof Error ? error.message : 'Unknown error'}`,
+      });
+    } finally {
+      setTestLoading(false);
+    }
+  }, [driver, url, username, password, writable, caseInsensitive, batchSize]);
 
   const handleParamsChange = (newParams: ParamRow[]) => {
     setParams(newParams);
@@ -265,6 +315,33 @@ export default function JdbcForm({ config, onChange }: JdbcFormProps) {
           />
         )}
       </Form.Item>
+
+      <Form.Item>
+        <Space>
+          <Button
+            type="primary"
+            icon={<LinkOutlined />}
+            loading={testLoading}
+            onClick={handleTestConnection}
+            disabled={!driver || !url}
+          >
+            Test Connection
+          </Button>
+        </Space>
+      </Form.Item>
+
+      {testResult && (
+        <Form.Item>
+          <Alert
+            message={testResult.success ? 'Connection Successful' : 'Connection Failed'}
+            description={testResult.message}
+            type={testResult.success ? 'success' : 'error'}
+            showIcon
+            closable
+            onClose={() => setTestResult(null)}
+          />
+        </Form.Item>
+      )}
     </Form>
   );
 }

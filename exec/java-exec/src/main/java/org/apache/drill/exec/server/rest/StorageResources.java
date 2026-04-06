@@ -168,8 +168,10 @@ public class StorageResources {
       (PluginConfigWrapper) getPluginConfig(name).getEntity(),
       request, sc
     );
-    return ViewableWithPermissions.create(authEnabled.get(), "/rest/storage/update.ftl", sc,
-      model);
+    String template = "JdbcStorageConfig".equals(model.getType())
+        ? "/rest/storage/update_jdbc.ftl"
+        : "/rest/storage/update.ftl";
+    return ViewableWithPermissions.create(authEnabled.get(), template, sc, model);
   }
 
   @POST

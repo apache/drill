@@ -38,6 +38,7 @@ import {
   DeleteOutlined,
   PoweroffOutlined,
   DownloadOutlined,
+  KeyOutlined,
 } from '@ant-design/icons';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import Editor from '@monaco-editor/react';
@@ -66,6 +67,37 @@ import type { PluginType } from '../types';
 const { Title, Text } = Typography;
 
 const GUIDED_FORM_TYPES: PluginType[] = ['file', 'jdbc', 'http', 'mongo', 'splunk', 'cassandra', 'druid', 'elastic', 'googlesheets', 'hbase', 'hive', 'kafka', 'kudu', 'openTSDB', 'phoenix'];
+
+/**
+ * Build the OAuth authorization URL from the plugin configuration.
+ * Mirrors the Java PluginConfigWrapper.getAuthorizationURIWithParams() logic.
+ */
+function buildAuthorizationUrl(config: Record<string, unknown>): string {
+  const oAuth = config.oAuthConfig as Record<string, unknown>;
+  const credProvider = config.credentialsProvider as Record<string, unknown> | undefined;
+  const creds = credProvider?.credentials as Record<string, unknown> | undefined;
+
+  if (!oAuth?.authorizationURL || !creds?.clientID) {
+    return '';
+  }
+
+  let url = `${oAuth.authorizationURL}?client_id=${encodeURIComponent(creds.clientID as string)}`
+          + `&redirect_uri=${encodeURIComponent(oAuth.callbackURL as string)}`;
+
+  const scope = oAuth.scope as string | undefined;
+  if (scope) {
+    url += `&scope=${encodeURIComponent(scope)}`;
+  }
+
+  const params = oAuth.authorizationParams as Record<string, string> | undefined;
+  if (params) {
+    for (const [k, v] of Object.entries(params)) {
+      url += `&${encodeURIComponent(k)}=${encodeURIComponent(v)}`;
+    }
+  }
+
+  return url;
+}
 
 export default function DataSourceEditPage() {
   const { name } = useParams<{ name: string }>();
@@ -174,6 +206,35 @@ export default function DataSourceEditPage() {
       message.error(`Failed to toggle plugin: ${err.message}`);
     },
   });
+
+  // OAuth detection
+  const oAuthConfig = config.oAuthConfig as Record<string, unknown> | undefined;
+  const credProvider = config.credentialsProvider as Record<string, unknown> | undefined;
+  const credentials = credProvider?.credentials as Record<string, unknown> | undefined;
+  const isOAuth = !isNew &&
+    !!oAuthConfig?.authorizationURL &&
+    !!credentials?.clientID;
+
+  // Handle OAuth authorization
+  const handleAuthorize = useCallback(() => {
+    const url = buildAuthorizationUrl(config);
+    if (!url) {
+      message.error('Cannot authorize: OAuth configuration is incomplete');
+      return;
+    }
+    const popup = window.open(
+      url,
+      'Authorize Drill',
+      'toolbar=no,menubar=no,scrollbars=yes,resizable=yes,top=500,left=500,width=450,height=600'
+    );
+    const timer = setInterval(() => {
+      if (popup?.closed) {
+        clearInterval(timer);
+        // Refresh plugin data to pick up stored tokens
+        queryClient.invalidateQueries({ queryKey: ['storage-plugin', pluginName] });
+      }
+    }, 1000);
+  }, [config, pluginName, queryClient]);
 
   const handleFormChange = useCallback(
     (newConfig: Record<string, unknown>) => {
@@ -396,6 +457,16 @@ export default function DataSourceEditPage() {
                     >
                       Enable
                     </Button>
+                  )}
+                  {isOAuth && (
+                    <Tooltip title="Authenticate with the OAuth provider to authorize Drill to access your data">
+                      <Button
+                        icon={<KeyOutlined />}
+                        onClick={handleAuthorize}
+                      >
+                        Authorize
+                      </Button>
+                    </Tooltip>
                   )}
                   <Button
                     icon={<DownloadOutlined />}
