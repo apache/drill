@@ -335,6 +335,7 @@
             <exclude>**/TAGS</exclude>
             <exclude>**/target/**</exclude>
             <exclude>**/*.tbl</exclude>
+            <exclude>**/*.topojson</exclude>
             <exclude>**/*.tsv</exclude>
             <exclude>**/*.txt</exclude>
             <exclude>**/*.wav</exclude>
