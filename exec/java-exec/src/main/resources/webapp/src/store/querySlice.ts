@@ -33,6 +33,7 @@ export interface QueryTab {
   isLocked?: boolean; // Prevents edits, renames, deletion
   lockReason?: string; // Optional note explaining why it's locked
   lockType?: 'manual' | 'api'; // Drives which icon is shown
+  isPinned?: boolean; // Pinned tabs get longer cache TTL (2 hours vs 30 min default)
 }
 
 interface QueryState {
@@ -267,6 +268,18 @@ const querySlice = createSlice({
         tab.lockType = undefined;
       }
     },
+    pinTab: (state, action: PayloadAction<string>) => {
+      const tab = state.tabs.find((t) => t.id === action.payload);
+      if (tab) {
+        tab.isPinned = true;
+      }
+    },
+    unpinTab: (state, action: PayloadAction<string>) => {
+      const tab = state.tabs.find((t) => t.id === action.payload);
+      if (tab) {
+        tab.isPinned = false;
+      }
+    },
   },
 });
 
@@ -290,6 +303,8 @@ export const {
   removeVizFromTab,
   lockTab,
   unlockTab,
+  pinTab,
+  unpinTab,
 } = querySlice.actions;
 
 export default querySlice.reducer;

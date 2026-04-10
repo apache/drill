@@ -35,6 +35,8 @@ import SavedQueriesPage from './pages/SavedQueriesPage';
 import ProfilesPage from './pages/ProfilesPage';
 import ProfileDetailPage from './pages/ProfileDetailPage';
 import VisualizationsPage from './pages/VisualizationsPage';
+import VisualizationDetailPage from './pages/VisualizationDetailPage';
+import ProjectVisualizationDetailPage from './pages/ProjectVisualizationDetailPage';
 import DashboardsPage from './pages/DashboardsPage';
 import DashboardViewPage from './pages/DashboardViewPage';
 import MetricsPage from './pages/MetricsPage';
@@ -60,6 +62,7 @@ function App() {
             <Route path="query" element={<ProjectQueryPage />} />
             <Route path="queries" element={<ProjectSavedQueriesPage />} />
             <Route path="visualizations" element={<ProjectVisualizationsPage />} />
+            <Route path="visualizations/:vizId" element={<ProjectVisualizationDetailPage />} />
             <Route path="dashboards" element={<ProjectDashboardsPage />} />
             <Route path="dashboards/:dashboardId" element={<DashboardViewPage />} />
             <Route path="datasources" element={<ProjectDataSourcesPage />} />
@@ -75,6 +78,7 @@ function App() {
           <Route path="/profiles" element={<ProfilesPage />} />
           <Route path="/profiles/:queryId" element={<ProfileDetailPage />} />
           <Route path="/visualizations" element={<VisualizationsPage />} />
+          <Route path="/visualizations/:vizId" element={<VisualizationDetailPage />} />
           <Route path="/dashboards" element={<DashboardsPage />} />
           <Route path="/dashboards/:id" element={<DashboardViewPage />} />
           <Route path="/metrics" element={<MetricsPage />} />
