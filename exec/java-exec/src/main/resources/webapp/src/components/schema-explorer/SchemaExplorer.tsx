@@ -26,7 +26,7 @@ import {
 } from '@ant-design/icons';
 import { useNavigate } from 'react-router-dom';
 import type { DataNode, EventDataNode } from 'antd/es/tree';
-import { useQueryClient } from '@tanstack/react-query';
+import { useQueryClient, useQuery as useReactQuery } from '@tanstack/react-query';
 import { getPluginSchemas, getTables, getColumns, getFiles, getFileColumns, getNestedColumns, getSubTables, getSubTableColumns } from '../../api/metadata';
 import type { SchemaInfo, TableInfo, ColumnInfo, FileInfo, NestedFieldInfo, SubTableInfo, DatasetRef } from '../../types';
 import { isFileBasedPlugin, getMultiTableConfig, getHomogeneousDataFormat } from './icons';
@@ -39,6 +39,11 @@ import { useSchemaUsage } from '../../hooks/useSchemaUsage';
 import ColumnStats from './ColumnStats';
 import FileInfoModal from './FileInfoModal';
 import { DataProfiler } from '../data-profiler';
+import QueryNavigator, { type QueryItem } from './QueryNavigator';
+import { getSchedules } from '../../api/schedules';
+import { getVisualizations } from '../../api/visualizations';
+import { getProject } from '../../api/projects';
+import { getExecutionHistory } from '../../utils/queryExecutionHistory';
 
 const { Search } = Input;
 
@@ -49,6 +54,7 @@ export interface DatasetFilter {
 interface SchemaExplorerProps {
   onInsertText?: (text: string) => void;
   onTableSelect?: (schema: string, table: string, columnNames?: string[]) => void;
+  onSelectQuery?: (query: { id: string; name: string; sql?: string; description?: string }) => void;
   datasetFilter?: DatasetFilter;
   projectId?: string;
   savedQueryIds?: string[];
@@ -298,7 +304,7 @@ function filterTreeNodes(nodes: DataNode[], allow: DatasetAllowList): DataNode[]
   }, []);
 }
 
-export default function SchemaExplorer({ onInsertText, onTableSelect, datasetFilter, projectId, savedQueryIds }: SchemaExplorerProps) {
+export default function SchemaExplorer({ onInsertText, onTableSelect, onSelectQuery, datasetFilter, projectId, savedQueryIds }: SchemaExplorerProps) {
   const queryClient = useQueryClient();
   const navigate = useNavigate();
   const [searchText, setSearchText] = useState('');
@@ -343,6 +349,73 @@ export default function SchemaExplorer({ onInsertText, onTableSelect, datasetFil
       setPluginTypesCache(types);
     }
   }, [plugins]);
+
+  // Fetch scheduled queries (workflows)
+  const { data: schedules = [] } = useReactQuery({
+    queryKey: ['schedules'],
+    queryFn: getSchedules,
+  });
+
+  // Fetch visualizations
+  const { data: visualizations = [] } = useReactQuery({
+    queryKey: ['visualizations'],
+    queryFn: getVisualizations,
+  });
+
+  // Fetch project if projectId is provided
+  const { data: project } = useReactQuery({
+    queryKey: ['project', projectId],
+    queryFn: () => (projectId ? getProject(projectId) : Promise.resolve(null)),
+    enabled: !!projectId,
+  });
+
+  // Build query navigator data from local state and API data
+  // Note: getExecutionHistory is called directly (not memoized) so data updates in real-time
+  const getRecentQueries = useCallback(() => {
+    const execution = getExecutionHistory();
+    return execution.slice(0, 10).map((e) => ({
+      id: `recent-${e.cacheId}`,
+      name: e.sql.substring(0, 50) + (e.sql.length > 50 ? '...' : ''),
+      description: e.rowCount ? `${e.rowCount.toLocaleString()} rows` : '',
+      sql: e.sql,
+    }));
+  }, []);
+
+  const queryNavigatorData = useMemo(() => {
+    // Filter visualizations to project scope if projectId is provided
+    const filteredVisualizations = projectId && project?.visualizationIds
+      ? visualizations.filter((v) => project.visualizationIds.includes(v.id))
+      : visualizations;
+
+    // Get workflow queries from schedules
+    // Note: Only show if no project context, or filter by project if available
+    const workflowQueries = (projectId ? [] : schedules)
+      .filter((s) => s.enabled)
+      .slice(0, 10)
+      .map((s) => ({
+        id: `workflow-${s.id}`,
+        name: s.description || `Schedule ${s.id}`,
+        description: `Every ${s.frequency}`,
+      }));
+
+    // Get visualization queries from visualizations
+    const vizQueries = filteredVisualizations
+      .filter((v) => v.sql)
+      .slice(0, 10)
+      .map((v) => ({
+        id: `viz-${v.id}`,
+        name: v.name,
+        description: v.description,
+        sql: v.sql,
+      }));
+
+    return {
+      pinnedQueries: [] as QueryItem[], // Will be populated from Redux
+      recentQueries: projectId ? [] : getRecentQueries(), // Only show recent queries if not in project context
+      workflowQueries,
+      visualizationQueries: vizQueries,
+    };
+  }, [schedules, visualizations, getRecentQueries, projectId, project]);
 
   // ---------- Refs for latest cache values (avoids stale closures in loadData) ----------
   const schemasCacheRef = useRef(schemasCache);
@@ -1053,6 +1126,29 @@ export default function SchemaExplorer({ onInsertText, onTableSelect, datasetFil
           />
         </Tooltip>
       </div>
+
+      <QueryNavigator
+        pinnedQueries={queryNavigatorData.pinnedQueries}
+        recentQueries={queryNavigatorData.recentQueries}
+        workflowQueries={queryNavigatorData.workflowQueries}
+        visualizationQueries={queryNavigatorData.visualizationQueries}
+        visualizations={visualizations}
+        onSelectQuery={(query) => {
+          if (onSelectQuery) {
+            onSelectQuery(query);
+          } else if (query.sql) {
+            // Fallback: just insert text if no query handler
+            onInsertText?.(query.sql);
+          }
+        }}
+        onOpenVisualization={(vizId) => {
+          if (projectId) {
+            navigate(`/projects/${projectId}/visualizations/${encodeURIComponent(vizId)}`);
+          } else {
+            navigate(`/visualizations/${encodeURIComponent(vizId)}`);
+          }
+        }}
+      />
 
       <div style={{ flex: 1, overflow: 'auto', marginTop: 8 }}>
         {datasetFilter && datasetFilter.datasets.length === 0 ? (
