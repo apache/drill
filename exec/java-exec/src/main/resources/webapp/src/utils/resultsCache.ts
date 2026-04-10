@@ -38,6 +38,7 @@ export interface CachedResult {
   lastAccessedAt: number;
   estimatedBytes: number;
   cacheId?: string; // Backend cache ID for persistent retrieval
+  ttlOverride?: number; // Per-tab TTL override (in ms), for pinned tabs
 }
 
 export interface CacheConfig {
@@ -101,6 +102,7 @@ export function estimateResultSize(result: QueryResult): number {
 
 /**
  * Cache a query result in the browser's LRU memory cache.
+ * @param ttlOverride - Optional TTL override in ms (e.g., for pinned tabs with longer retention)
  */
 export function cacheResults(
   tabId: string,
@@ -108,6 +110,7 @@ export function cacheResults(
   executionTime: number,
   projectId?: string,
   cacheId?: string,
+  ttlOverride?: number,
 ): void {
   const key = cacheKey(tabId, projectId);
   const estimatedBytes = estimateResultSize(result);
@@ -122,6 +125,7 @@ export function cacheResults(
     lastAccessedAt: Date.now(),
     estimatedBytes,
     cacheId,
+    ttlOverride,
   });
 
   evictIfOverBudget();
@@ -142,7 +146,8 @@ export function getCachedResults(
     return null;
   }
 
-  const effectiveTtl = ttlMs ?? config.ttlMs;
+  // Use ttlOverride if set (for pinned tabs), otherwise use provided ttl or config default
+  const effectiveTtl = entry.ttlOverride ?? ttlMs ?? config.ttlMs;
   if (Date.now() - entry.cachedAt > effectiveTtl) {
     cache.delete(key);
     return null;

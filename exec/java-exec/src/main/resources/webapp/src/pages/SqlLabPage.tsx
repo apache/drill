@@ -19,7 +19,7 @@ import { useCallback, useState, useEffect, useRef, useMemo, type MutableRefObjec
 import { useSelector, useDispatch } from 'react-redux';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { Tabs, message, notification, Tooltip, Modal, Alert, Button, Space, Spin, Dropdown, Grid, Input } from 'antd';
-import { PlusOutlined, MenuFoldOutlined, MenuUnfoldOutlined, RobotOutlined, MoreOutlined, EditOutlined, CopyOutlined, CloseOutlined, PlayCircleOutlined, StopOutlined, ExperimentOutlined, TableOutlined, LockOutlined, UnlockOutlined, ApiOutlined } from '@ant-design/icons';
+import { PlusOutlined, MenuFoldOutlined, MenuUnfoldOutlined, RobotOutlined, MoreOutlined, EditOutlined, CopyOutlined, CloseOutlined, PlayCircleOutlined, StopOutlined, ExperimentOutlined, TableOutlined, LockOutlined, UnlockOutlined, ApiOutlined, StarOutlined, StarFilled } from '@ant-design/icons';
 import Markdown from 'react-markdown';
 import type { RootState, AppDispatch } from '../store';
 import {
@@ -35,6 +35,9 @@ import {
   removeVizFromTab,
   lockTab,
   unlockTab,
+  pinTab,
+  unpinTab,
+  setSql,
   type QueryTab,
 } from '../store/querySlice';
 import { toggleSidebar, setEditorHeight } from '../store/uiSlice';
@@ -42,6 +45,7 @@ import { useWorkspacePersistence } from '../hooks/useWorkspacePersistence';
 import { useQueryExecution } from '../hooks/useQuery';
 import { useQueryHistory } from '../hooks/useQueryHistory';
 import { useSchemas } from '../hooks/useMetadata';
+import { useTabPersistence, useRestoreTabs } from '../hooks/useTabPersistence';
 import { useProspector } from '../hooks/useProspector';
 import { useMonacoCompletion } from '../hooks/useMonacoCompletion';
 import { getAiStatus, getAiConfig, streamChat, transpileSql, convertDataType } from '../api/ai';
@@ -111,6 +115,10 @@ export default function SqlLabPage({ datasetFilter, headerContent, projectId, sa
 
   const { onResultsCached } = useWorkspacePersistence(projectId);
 
+  // Tab persistence: save tabs to localStorage on changes, restore on mount
+  useTabPersistence();
+  useRestoreTabs();
+
   const [autoLimit, setAutoLimit] = useState<number | null>(1000);
   const [saveDialogOpen, setSaveDialogOpen] = useState(false);
   const [vizBuilderOpen, setVizBuilderOpen] = useState(false);
@@ -127,6 +135,9 @@ export default function SqlLabPage({ datasetFilter, headerContent, projectId, sa
 
   // Track which projects we've loaded initial saved queries for
   const loadedProjectsRef = useRef(new Set<string>());
+
+  // Track query pending load when a new tab is created from sidebar click
+  const pendingQueryRef = useRef<{ sql: string; name: string } | null>(null);
 
   // Track editor text selection for "Run Selection"
   const [hasSelection, setHasSelection] = useState(false);
@@ -753,6 +764,50 @@ export default function SqlLabPage({ datasetFilter, headerContent, projectId, sa
     [updateSql]
   );
 
+  // Handle query selection from sidebar navigator
+  const handleSelectQuery = useCallback(
+    (query: { id: string; name: string; sql?: string; description?: string }) => {
+      const querySQL = query.sql?.trim();
+      if (!querySQL) {
+        return;
+      }
+
+      // Check if a tab with the same SQL already exists
+      const existingTab = tabs.find((t) => {
+        const normalizeSQL = (sql: string) => sql.trim().toLowerCase().replace(/\s+/g, ' ');
+        return normalizeSQL(t.sql || '') === normalizeSQL(querySQL);
+      });
+
+      if (existingTab) {
+        // Switch to the existing tab
+        dispatch(setActiveTab(existingTab.id));
+      } else {
+        // Load into the current active tab if it's empty, otherwise create a new tab
+        const currentTab = activeTab;
+        if (currentTab && !currentTab.sql?.trim()) {
+          // Current tab is empty, load the query here
+          dispatch(setSql({ tabId: currentTab.id, sql: querySQL }));
+          dispatch(renameTab({ tabId: currentTab.id, name: query.name || 'Query' }));
+        } else {
+          // Create a new tab for this query and mark it for loading
+          pendingQueryRef.current = { sql: querySQL, name: query.name || 'Query' };
+          dispatch(addTab(query.name || 'Query'));
+        }
+      }
+    },
+    [tabs, activeTab, dispatch]
+  );
+
+  // When a new empty tab is created after clicking a sidebar query, load the pending query
+  useEffect(() => {
+    if (pendingQueryRef.current && activeTab && !activeTab.sql?.trim()) {
+      const { sql, name } = pendingQueryRef.current;
+      dispatch(setSql({ tabId: activeTab.id, sql }));
+      dispatch(renameTab({ tabId: activeTab.id, name }));
+      pendingQueryRef.current = null;
+    }
+  }, [activeTab, dispatch]);
+
   // Handle tab operations
   const handleTabChange = useCallback(
     (key: string) => {
@@ -775,20 +830,7 @@ export default function SqlLabPage({ datasetFilter, headerContent, projectId, sa
           message.warning('Unlock the tab before closing');
           return;
         }
-        const tabSql = closingTab?.sql?.trim() || '';
-        const savedSql = (savedSqlRef.current[targetKey] ?? '').trim();
-        if (tabSql && tabSql !== savedSql) {
-          Modal.confirm({
-            title: 'Close tab with unsaved query?',
-            content: 'This tab has unsaved changes that will be lost.',
-            okText: 'Close anyway',
-            okButtonProps: { danger: true },
-            cancelText: 'Keep open',
-            onOk: () => dispatch(removeTab(targetKey)),
-          });
-        } else {
-          dispatch(removeTab(targetKey));
-        }
+        dispatch(removeTab(targetKey));
       }
     },
     [dispatch, tabs]
@@ -984,6 +1026,7 @@ export default function SqlLabPage({ datasetFilter, headerContent, projectId, sa
           <SchemaExplorer
             onInsertText={handleInsertText}
             onTableSelect={handleTableSelect}
+            onSelectQuery={handleSelectQuery}
             datasetFilter={datasetFilter}
             projectId={projectId}
             savedQueryIds={savedQueryIds}
@@ -1099,6 +1142,19 @@ export default function SqlLabPage({ datasetFilter, headerContent, projectId, sa
                         onClick: ({ domEvent }) => {
                           domEvent.stopPropagation();
                           handleDuplicateTab(tab.id);
+                        },
+                      },
+                      {
+                        key: 'pin',
+                        icon: tab.isPinned ? <StarFilled /> : <StarOutlined />,
+                        label: tab.isPinned ? 'Unpin tab' : 'Pin tab',
+                        onClick: ({ domEvent }) => {
+                          domEvent.stopPropagation();
+                          if (tab.isPinned) {
+                            dispatch(unpinTab(tab.id));
+                          } else {
+                            dispatch(pinTab(tab.id));
+                          }
                         },
                       },
                       { type: 'divider' },
