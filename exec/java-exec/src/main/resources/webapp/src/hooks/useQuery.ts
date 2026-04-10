@@ -22,6 +22,8 @@ import type { RootState, AppDispatch } from '../store';
 import { setExecuting, setResults, setError, setSql, setCacheId } from '../store/querySlice';
 import { executeQuery as executeQueryApi, cancelQuery as cancelQueryApi } from '../api/queries';
 import { storeResultInCache } from '../api/resultCache';
+import { recordQueryExecution, lookupCacheForQuery } from '../utils/queryExecutionHistory';
+import { cacheResults } from '../utils/resultsCache';
 import type { QueryRequest, QueryError, QueryHistoryEntry } from '../types';
 
 export function useQueryExecution(
@@ -57,8 +59,15 @@ export function useQueryExecution(
         queryId: result.queryId,
       });
 
-      // Fire-and-forget: cache results to the backend for persistence
+      // Cache results in browser with extended TTL for pinned tabs (2 hours vs 30 min default)
+      const isPinned = tab?.isPinned || false;
+      const ttlOverride = isPinned ? 2 * 60 * 60 * 1000 : undefined; // 2 hours for pinned
+
       if (result.rows && result.rows.length > 0) {
+        // Cache locally with extended TTL if pinned
+        cacheResults(tabId, result, executionTime, undefined, undefined, ttlOverride);
+
+        // Fire-and-forget: cache results to the backend for persistence
         storeResultInCache(
           result.queryId,
           sqlAtExecution,
@@ -70,6 +79,14 @@ export function useQueryExecution(
         ).then((meta) => {
           if (meta?.cacheId) {
             dispatch(setCacheId({ tabId, cacheId: meta.cacheId }));
+            // Record in execution history for smart cache lookup
+            recordQueryExecution(
+              sqlAtExecution,
+              meta.cacheId,
+              result.rows?.length || 0,
+              executionTime,
+              defaultSchema,
+            );
           }
         }).catch(() => {
           // Backend caching is best-effort
@@ -94,7 +111,7 @@ export function useQueryExecution(
   });
 
   const execute = useCallback(
-    (options?: { autoLimit?: number; defaultSchema?: string; sqlOverride?: string }) => {
+    (options?: { autoLimit?: number; defaultSchema?: string; sqlOverride?: string; skipCache?: boolean }) => {
       const sqlToRun = options?.sqlOverride?.trim() || tab?.sql?.trim();
       if (!sqlToRun) {
         dispatch(
@@ -104,6 +121,17 @@ export function useQueryExecution(
           })
         );
         return;
+      }
+
+      // Smart cache lookup: check if we have a cached result for this query
+      if (!options?.skipCache) {
+        const cached = lookupCacheForQuery(sqlToRun);
+        if (cached) {
+          // Try to retrieve from backend cache using the cacheId
+          // For now, we'll just note that a cache is available
+          // A full implementation would fetch from backend here
+          dispatch(setCacheId({ tabId, cacheId: cached.cacheId }));
+        }
       }
 
       const request: QueryRequest = {
