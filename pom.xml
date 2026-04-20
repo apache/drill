@@ -112,7 +112,7 @@
     <kerby.version>2.0.3</kerby.version>
     <libthrift.version>0.18.1</libthrift.version>
     <license.skip>true</license.skip>
-    <log4j.version>2.23.1</log4j.version>
+    <log4j.version>2.25.4</log4j.version>
     <!-- Upgrading logback further breaks JDK 8 build compatibility -->
     <logback.version>1.3.16</logback.version>
     <maven.compiler.release>11</maven.compiler.release>
