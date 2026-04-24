@@ -26,6 +26,7 @@ import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.memory.BufferAllocator;
 import org.apache.drill.exec.proto.UserBitShared;
 import org.apache.drill.exec.rpc.user.UserSession;
+import org.apache.drill.exec.server.rest.auth.DrillUserPrincipal;
 import org.apache.drill.exec.server.rest.ScheduleResources.QueryScheduleModel;
 import org.apache.drill.exec.server.rest.ScheduleResources.QuerySnapshotModel;
 import org.apache.drill.exec.server.rest.SavedQueryResources.SavedQuery;
@@ -302,12 +303,13 @@ public class ScheduleManager implements AutoCloseable {
     try {
       String sql = savedQuery.getSql();
       int timeout = schedule.timeoutSeconds > 0 ? schedule.timeoutSeconds : DEFAULT_TIMEOUT_SECONDS;
+      String userName = effectiveUserName(schedule);
 
       // --- Result persistence: build CTAS/INSERT SQL ---
       if (schedule.persistResults) {
-        resultPath = executePersistentQuery(schedule, sql, timeout);
+        resultPath = executePersistentQuery(schedule, sql, timeout, userName);
         // After persistence, run original query with limited rows for preview
-        RestQueryRunner.QueryResult previewResult = executeQueryWithTimeout(sql, PREVIEW_ROW_LIMIT, timeout);
+        RestQueryRunner.QueryResult previewResult = executeQueryWithTimeout(sql, PREVIEW_ROW_LIMIT, timeout, userName);
         if (previewResult != null && previewResult.rows != null) {
           resultRows = previewResult.rows;
           resultColumns = previewResult.columns;
@@ -316,7 +318,7 @@ public class ScheduleManager implements AutoCloseable {
         success = true;
       } else {
         // --- Standard execution with timeout ---
-        RestQueryRunner.QueryResult result = executeQueryWithTimeout(sql, 100, timeout);
+        RestQueryRunner.QueryResult result = executeQueryWithTimeout(sql, 100, timeout, userName);
         success = true;
         if (result != null) {
           if (result.rows != null) {
@@ -411,12 +413,12 @@ public class ScheduleManager implements AutoCloseable {
   /**
    * Executes a query with a timeout using a separate thread.
    */
-  private RestQueryRunner.QueryResult executeQueryWithTimeout(String sql, int rowLimit, int timeoutSeconds)
-      throws Exception {
+  private RestQueryRunner.QueryResult executeQueryWithTimeout(String sql, int rowLimit, int timeoutSeconds,
+      String userName) throws Exception {
     Callable<RestQueryRunner.QueryResult> task = () -> {
       WebUserConnection conn = null;
       try {
-        conn = createSchedulerConnection();
+        conn = createSchedulerConnection(userName);
         QueryWrapper wrapper = new QueryWrapper.RestQueryBuilder()
             .query(sql)
             .queryType("SQL")
@@ -450,8 +452,8 @@ public class ScheduleManager implements AutoCloseable {
    * Executes the query with result persistence (CTAS or INSERT INTO).
    * Returns the result path where data was stored.
    */
-  private String executePersistentQuery(QueryScheduleModel schedule, String originalSql, int timeout)
-      throws Exception {
+  private String executePersistentQuery(QueryScheduleModel schedule, String originalSql, int timeout,
+      String userName) throws Exception {
     String mode = schedule.resultMode != null ? schedule.resultMode : "overwrite";
     String location = schedule.resultLocation != null ? schedule.resultLocation : "dfs.tmp";
     String format = schedule.resultFormat != null ? schedule.resultFormat : "parquet";
@@ -476,7 +478,7 @@ public class ScheduleManager implements AutoCloseable {
         tablePath = buildTablePath(location, schedule.id, null);
         // Drop existing table first
         try {
-          executeQueryWithTimeout("DROP TABLE IF EXISTS " + tablePath, 0, timeout);
+          executeQueryWithTimeout("DROP TABLE IF EXISTS " + tablePath, 0, timeout, userName);
         } catch (Exception e) {
           logger.debug("Drop table before overwrite failed (may not exist): {}", e.getMessage());
         }
@@ -486,13 +488,13 @@ public class ScheduleManager implements AutoCloseable {
 
     // Set output format
     try {
-      executeQueryWithTimeout("ALTER SESSION SET `store.format` = '" + format + "'", 0, timeout);
+      executeQueryWithTimeout("ALTER SESSION SET `store.format` = '" + format + "'", 0, timeout, userName);
     } catch (Exception e) {
       logger.warn("Failed to set store format to '{}': {}", format, e.getMessage());
     }
 
     // Execute the CTAS/INSERT
-    executeQueryWithTimeout(persistSql, 0, timeout);
+    executeQueryWithTimeout(persistSql, 0, timeout, userName);
     logger.info("Persisted results for schedule {} to {}", schedule.id, tablePath);
     return tablePath;
   }
@@ -829,22 +831,38 @@ public class ScheduleManager implements AutoCloseable {
 
   // ==================== Connection ====================
 
-  private WebUserConnection createSchedulerConnection() {
+  /**
+   * Builds a WebUserConnection for scheduled query execution.
+   * Runs under the schedule owner's identity so storage plugins and impersonation
+   * enforce the owner's ACLs. Falls back to anonymous only for legacy schedules
+   * with no recorded owner.
+   */
+  private WebUserConnection createSchedulerConnection(String userName) {
     DrillConfig config = workManager.getContext().getConfig();
     BufferAllocator allocator = workManager.getContext().getAllocator()
         .newChildAllocator("ScheduleManager:session",
             config.getLong(ExecConstants.HTTP_SESSION_MEMORY_RESERVATION),
             config.getLong(ExecConstants.HTTP_SESSION_MEMORY_MAXIMUM));
+    String effectiveUser = (userName == null || userName.isEmpty())
+        ? DrillUserPrincipal.ANONYMOUS_USER : userName;
     UserSession session = UserSession.Builder.newBuilder()
         .withCredentials(UserBitShared.UserCredentials.newBuilder()
-            .setUserName("anonymous")
+            .setUserName(effectiveUser)
             .build())
         .withOptionManager(workManager.getContext().getOptionManager())
         .setSupportComplexTypes(config.getBoolean(ExecConstants.CLIENT_SUPPORT_COMPLEX_TYPES))
         .build();
     Promise<Void> closeFuture = new DefaultPromise<>(GlobalEventExecutor.INSTANCE);
     WebSessionResources wsr = new WebSessionResources(allocator, null, session, closeFuture);
-    return new WebUserConnection.AnonWebUserConnection(wsr);
+    if (DrillUserPrincipal.ANONYMOUS_USER.equals(effectiveUser)) {
+      return new WebUserConnection.AnonWebUserConnection(wsr);
+    }
+    return new WebUserConnection(wsr);
+  }
+
+  private String effectiveUserName(QueryScheduleModel schedule) {
+    return (schedule.owner == null || schedule.owner.isEmpty())
+        ? DrillUserPrincipal.ANONYMOUS_USER : schedule.owner;
   }
 
   // ==================== Helpers ====================
