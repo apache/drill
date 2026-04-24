@@ -97,6 +97,9 @@ public class ScheduleResources {
     public String savedQueryId;
 
     @JsonProperty
+    public String owner;
+
+    @JsonProperty
     public String description;
 
     @JsonProperty
@@ -262,8 +265,13 @@ public class ScheduleResources {
       Iterator<Map.Entry<String, QueryScheduleModel>> iter = store.getAll();
       List<QueryScheduleModel> list = new ArrayList<>();
       String now = Instant.now().toString();
+      boolean isAdmin = principal.isAdminUser();
+      String currentUser = getCurrentUser();
       while (iter.hasNext()) {
         QueryScheduleModel schedule = iter.next().getValue();
+        if (!isAdmin && !currentUser.equals(schedule.owner)) {
+          continue;
+        }
         if (schedule.enabled && schedule.expiresAt != null && schedule.expiresAt.compareTo(now) < 0) {
           schedule.enabled = false;
           store.put(schedule.id, schedule);
@@ -293,6 +301,9 @@ public class ScheduleResources {
             .entity(Map.of("error", "Schedule not found: " + id))
             .build();
       }
+      if (!canAccess(schedule)) {
+        return forbidden();
+      }
       return Response.ok(schedule).build();
     } catch (Exception e) {
       logger.error("Failed to get schedule: {}", id, e);
@@ -313,6 +324,9 @@ public class ScheduleResources {
       while (iter.hasNext()) {
         QueryScheduleModel schedule = iter.next().getValue();
         if (savedQueryId.equals(schedule.savedQueryId)) {
+          if (!canAccess(schedule)) {
+            return forbidden();
+          }
           return Response.ok(schedule).build();
         }
       }
@@ -333,13 +347,15 @@ public class ScheduleResources {
   public Response createSchedule(QueryScheduleModel schedule) {
     try {
       schedule.id = UUID.randomUUID().toString();
+      schedule.owner = getCurrentUser();
       schedule.createdAt = Instant.now().toString();
       schedule.nextRunAt = computeNextRun(schedule);
       schedule.expiresAt = computeExpiresAt();
 
       PersistentStore<QueryScheduleModel> store = getScheduleStore();
       store.put(schedule.id, schedule);
-      logger.info("Created schedule: {} for query: {}", schedule.id, schedule.savedQueryId);
+      logger.info("Created schedule: {} for query: {} (owner: {})",
+          schedule.id, schedule.savedQueryId, schedule.owner);
 
       return Response.status(Response.Status.CREATED).entity(schedule).build();
     } catch (Exception e) {
@@ -365,8 +381,12 @@ public class ScheduleResources {
             .entity(Map.of("error", "Schedule not found: " + id))
             .build();
       }
+      if (!canAccess(existing)) {
+        return forbidden();
+      }
 
       schedule.id = id;
+      schedule.owner = existing.owner;
       schedule.createdAt = existing.createdAt;
       if (schedule.expiresAt == null) {
         schedule.expiresAt = existing.expiresAt;
@@ -401,6 +421,9 @@ public class ScheduleResources {
             .entity(Map.of("error", "Schedule not found: " + id))
             .build();
       }
+      if (!canAccess(schedule)) {
+        return forbidden();
+      }
 
       schedule.renewedAt = Instant.now().toString();
       schedule.expiresAt = computeExpiresAt();
@@ -431,6 +454,9 @@ public class ScheduleResources {
         return Response.status(Response.Status.NOT_FOUND)
             .entity(Map.of("error", "Schedule not found: " + id))
             .build();
+      }
+      if (!canAccess(schedule)) {
+        return forbidden();
       }
 
       ScheduleManager mgr = ScheduleManager.getInstance();
@@ -468,6 +494,9 @@ public class ScheduleResources {
             .entity(Map.of("error", "Schedule not found: " + id))
             .build();
       }
+      if (!canAccess(existing)) {
+        return forbidden();
+      }
 
       // Delete all snapshots for this schedule
       PersistentStore<QuerySnapshotModel> snapStore = getSnapshotStore();
@@ -504,6 +533,15 @@ public class ScheduleResources {
   public Response listSnapshots(
       @Parameter(description = "Schedule ID") @PathParam("id") String id) {
     try {
+      QueryScheduleModel schedule = getScheduleStore().get(id);
+      if (schedule == null) {
+        return Response.status(Response.Status.NOT_FOUND)
+            .entity(Map.of("error", "Schedule not found: " + id))
+            .build();
+      }
+      if (!canAccess(schedule)) {
+        return forbidden();
+      }
       PersistentStore<QuerySnapshotModel> store = getSnapshotStore();
       Iterator<Map.Entry<String, QuerySnapshotModel>> iter = store.getAll();
       List<QuerySnapshotModel> snapshots = new ArrayList<>();
@@ -521,6 +559,28 @@ public class ScheduleResources {
   }
 
   // ==================== Helper Methods ====================
+
+  private String getCurrentUser() {
+    return principal.getName();
+  }
+
+  /**
+   * Returns true if the current user is an admin or the owner of the schedule.
+   * Schedules persisted before the owner field existed have a null owner;
+   * those are only accessible to admins.
+   */
+  private boolean canAccess(QueryScheduleModel schedule) {
+    if (principal.isAdminUser()) {
+      return true;
+    }
+    return schedule.owner != null && schedule.owner.equals(getCurrentUser());
+  }
+
+  private Response forbidden() {
+    return Response.status(Response.Status.FORBIDDEN)
+        .entity(Map.of("error", "Access denied"))
+        .build();
+  }
 
   /**
    * Computes the next run time based on the schedule's frequency, timeOfDay,
