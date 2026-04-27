@@ -1,0 +1,15 @@
+{
+  "cacheId" : "8b3ecf2e-1b79-48ae-835b-f4377381176b",
+  "queryId" : "16117989-065b-d712-3b8e-5144c38c2eba",
+  "sqlHash" : "99293c9d49201908832223c6f305f9dbb742c2f6d6dea30317254277369b1352",
+  "sql" : "SELECT \n    CAST(`o`.`ordered` AS DATE) AS `order_date`, \n    SUM(`o`.`total`) AS `revenue`,\n    SUM(`o`.`total` - (`oi`.`qty` * `oi`.`unit_price`)) AS `profit`\nFROM \n    `mysql.store`.`orders` AS `o`\nJOIN \n    `mysql.store`.`order_items` AS `oi` ON `o`.`orderid` = `oi`.`orderid`\nGROUP BY \n    CAST(`o`.`ordered` AS DATE)\nORDER BY \n    `order_date` ASC",
+  "defaultSchema" : "",
+  "userName" : "anonymous",
+  "queryState" : "COMPLETED",
+  "columns" : [ "order_date", "revenue", "profit" ],
+  "metadata" : [ "DATE(10, 0)", "VARDECIMAL(29, 2)", "VARDECIMAL(38, 2)" ],
+  "totalRows" : 1000,
+  "sizeBytes" : 71530,
+  "cachedAt" : 1777239674493,
+  "lastAccessedAt" : 1777239674493
+}

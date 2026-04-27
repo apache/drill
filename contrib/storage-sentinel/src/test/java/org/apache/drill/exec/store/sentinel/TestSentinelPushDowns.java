@@ -49,6 +49,7 @@ public class TestSentinelPushDowns extends SentinelTestBase {
         AuthMode.SHARED_USER,
         null,
         mockServerUrl,
+        null,
         false
     );
     config.setEnabled(true);
