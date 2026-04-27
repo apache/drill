@@ -19,8 +19,8 @@
 package org.apache.drill.exec.store.sentinel;
 
 import org.apache.calcite.schema.Table;
-import org.apache.drill.exec.planner.logical.DynamicDrillTable;
 import org.apache.drill.exec.store.AbstractSchema;
+import org.apache.drill.exec.store.plan.rel.PluginDrillTable;
 
 import java.util.Collections;
 import java.util.HashMap;
@@ -56,12 +56,12 @@ public class SentinelSchema extends AbstractSchema {
         name,
         name);
 
-    SentinelGroupScan groupScan = new SentinelGroupScan(scanSpec, null);
-
-    DynamicDrillTable table = new DynamicDrillTable(
+    PluginDrillTable table = new PluginDrillTable(
         plugin,
         plugin.getName(),
-        scanSpec);
+        null,
+        scanSpec,
+        plugin.getConvention());
 
     tableCache.put(name, table);
     return table;
