@@ -111,12 +111,6 @@ public class SentinelPluginImplementor extends AbstractPluginImplementor {
     kqlQuery.append("\n| where ").append(kqlCondition);
   }
 
-  public void implement(Filter filter) throws IOException {
-    visitChild(filter.getInput());
-    String kqlCondition = RexToKqlConverter.convert(filter.getCondition(), filter.getInput().getRowType());
-    kqlQuery.append("\n| where ").append(kqlCondition);
-  }
-
   @Override
   public void implement(PluginProjectRel project) throws IOException {
     visitChild(project.getInput());
@@ -205,6 +199,21 @@ public class SentinelPluginImplementor extends AbstractPluginImplementor {
   @Override
   public Class<? extends StoragePlugin> supportedPlugin() {
     return SentinelStoragePlugin.class;
+  }
+
+  @Override
+  public boolean splitProject(Project project) {
+    return false;
+  }
+
+  @Override
+  public boolean artificialLimit() {
+    return false;
+  }
+
+  @Override
+  public boolean artificialFilter() {
+    return false;
   }
 
   @Override

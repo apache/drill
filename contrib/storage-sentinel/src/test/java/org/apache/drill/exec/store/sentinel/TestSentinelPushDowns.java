@@ -195,6 +195,25 @@ public class TestSentinelPushDowns extends SentinelTestBase {
 
   private static boolean containsKqlOperation(String plan, String operation) throws Exception {
     JsonNode root = mapper.readTree(plan);
+    // Check if the KQL query in the SentinelGroupScan contains the operation
+    if (root.has("graph")) {
+      JsonNode graph = root.get("graph");
+      if (graph.isArray()) {
+        for (JsonNode node : graph) {
+          if (node.has("pop") && "SentinelGroupScan".equals(node.get("pop").asText())) {
+            if (node.has("scanSpec")) {
+              JsonNode scanSpec = node.get("scanSpec");
+              if (scanSpec.has("kqlQuery")) {
+                String kqlQuery = scanSpec.get("kqlQuery").asText();
+                if (kqlQuery.contains(operation)) {
+                  return true;
+                }
+              }
+            }
+          }
+        }
+      }
+    }
     return plan.contains(operation) || findInPlan(root, operation);
   }
 

@@ -48,25 +48,6 @@ A read-only Apache Drill storage plugin that enables native querying of Microsof
   - Client Secret
   - API permission: `https://api.loganalytics.io/user_impersonation` (or use default scope `https://api.loganalytics.io/.default`)
 
-### Installation
-
-1. **Build the Plugin**
-   ```bash
-   mvn clean package -pl contrib/storage-sentinel -DskipTests
-   ```
-
-2. **Deploy to Drill**
-   Copy the JAR to your Drill installation:
-   ```bash
-   cp contrib/storage-sentinel/target/drill-storage-sentinel-1.23.0-SNAPSHOT.jar \
-      $DRILL_HOME/jars/3rdparty/
-   ```
-
-3. **Restart Drill**
-   ```bash
-   $DRILL_HOME/bin/drillbit.sh restart
-   ```
-
 ## Configuration
 
 The plugin is configured through Drill's storage plugin interface. Use the Drill Web UI or REST API to create a new storage plugin with type `sentinel`.
@@ -152,7 +133,7 @@ SELECT * FROM sentinel.SecurityAlert LIMIT 100;
 
 **Column projection:**
 ```sql
-SELECT AlertName, Severity, TimeGenerated 
+SELECT AlertName, Severity, TimeGenerated
 FROM sentinel.SecurityAlert;
 ```
 
@@ -220,7 +201,7 @@ FROM sentinel.SecurityAlert;
 
 **GROUP BY with aggregates:**
 ```sql
-SELECT AlertName, COUNT(*) as AlertCount, 
+SELECT AlertName, COUNT(*) as AlertCount,
        SUM(ConfidenceLevel) as TotalConfidence,
        MIN(ConfidenceLevel) as MinConfidence,
        MAX(ConfidenceLevel) as MaxConfidence,
@@ -411,7 +392,7 @@ All 48 tests pass with no external dependencies (uses MockWebServer for HTTP moc
    ```sql
    -- Good: filters early
    WHERE Severity = 'High' AND SourceIP = '1.2.3.4'
-   
+
    -- Less efficient: joins filter only after aggregation
    SELECT SourceIP, COUNT(*) FROM SecurityAlert GROUP BY SourceIP
    HAVING SourceIP = '1.2.3.4'
@@ -439,28 +420,28 @@ All 48 tests pass with no external dependencies (uses MockWebServer for HTTP moc
 ### Common Issues
 
 #### "Failed to obtain Azure AD token: HTTP 401"
-**Cause**: Invalid client credentials  
+**Cause**: Invalid client credentials
 **Solution**:
 1. Verify `clientId` and `clientSecret` in Azure AD app registration
 2. Confirm the service principal hasn't expired or been deleted
 3. Check tenant ID is correct
 
 #### "Failed to obtain Azure AD token: HTTP 403"
-**Cause**: Service principal lacks Log Analytics permissions  
+**Cause**: Service principal lacks Log Analytics permissions
 **Solution**:
 1. Verify service principal has "Log Analytics Reader" or higher role on the workspace
 2. Go to Workspace → Access Control (IAM) in Azure portal
 3. Add service principal with appropriate role assignment
 
 #### "Query failed: HTTP 400"
-**Cause**: Invalid KQL syntax generated from SQL query  
+**Cause**: Invalid KQL syntax generated from SQL query
 **Solution**:
 1. Check EXPLAIN PLAN output for generated KQL
 2. Verify all column names are valid in the target table
 3. Check for unsupported operations (e.g., LIKE without %, unsupported functions)
 
 #### "Timeout waiting for query results"
-**Cause**: Query executing too long in Log Analytics  
+**Cause**: Query executing too long in Log Analytics
 **Solution**:
 1. Add more restrictive WHERE clauses (especially time filters)
 2. Narrow `defaultTimespan` to shorter duration
@@ -468,21 +449,21 @@ All 48 tests pass with no external dependencies (uses MockWebServer for HTTP moc
 4. Review Log Analytics query performance: Log Analytics → Logs → Performance
 
 #### "Table not found: SecurityAlert"
-**Cause**: Table name is case-sensitive; workspace doesn't have the table  
+**Cause**: Table name is case-sensitive; workspace doesn't have the table
 **Solution**:
 1. Run `SHOW TABLES IN sentinel;` to see available tables
 2. Verify table exists in Sentinel workspace
 3. Check table name capitalization exactly
 
 #### "Column not found: AlertName"
-**Cause**: Column doesn't exist in the table or has different name  
+**Cause**: Column doesn't exist in the table or has different name
 **Solution**:
 1. Query the table with `SELECT * LIMIT 1` to inspect columns
 2. Use exact case-sensitive column names
 3. Reference Sentinel table schema documentation
 
 #### "HTTP 429 - Too Many Requests"
-**Cause**: Rate limiting from Log Analytics API  
+**Cause**: Rate limiting from Log Analytics API
 **Solution**:
 1. Add delays between queries
 2. Batch multiple operations into single query where possible
@@ -552,23 +533,23 @@ Apache License 2.0 (same as Apache Drill)
 
 ## FAQ
 
-**Q: Can I query multiple Sentinel workspaces?**  
+**Q: Can I query multiple Sentinel workspaces?**
 A: No, each plugin instance connects to one workspace. Create multiple plugin instances for multiple workspaces.
 
-**Q: Does the plugin support real-time queries?**  
+**Q: Does the plugin support real-time queries?**
 A: Queries execute against the latest data in Log Analytics, but are not continuous streaming. For real-time monitoring, use Sentinel's built-in rules and automation.
 
-**Q: How much data can I query at once?**  
+**Q: How much data can I query at once?**
 A: Limited by Log Analytics quotas and your `maxRows` configuration. Typical queries return 10K-100K rows; larger queries may timeout.
 
-**Q: Can I modify Sentinel data through Drill?**  
+**Q: Can I modify Sentinel data through Drill?**
 A: No, this is a read-only plugin. Use Log Analytics API or Azure portal for data modifications.
 
-**Q: How do I optimize queries for performance?**  
+**Q: How do I optimize queries for performance?**
 A: See "Performance Tuning" section. Key: filter by TimeGenerated, project needed columns, push aggregates to Log Analytics.
 
-**Q: What happens if the Log Analytics API is unavailable?**  
+**Q: What happens if the Log Analytics API is unavailable?**
 A: Queries fail with HTTP error. Drill will not retry automatically; use your orchestration layer to retry.
 
-**Q: How are large result sets handled?**  
+**Q: How are large result sets handled?**
 A: The plugin uses pagination through @odata.nextLink and streams results through Drill batches. Memory usage should be reasonable even for million-row results.
