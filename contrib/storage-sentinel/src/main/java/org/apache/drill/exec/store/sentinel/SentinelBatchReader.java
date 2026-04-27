@@ -61,6 +61,7 @@ public class SentinelBatchReader implements ManagedReader<SchemaNegotiator> {
   private List<ColumnMetadata> columnMetadata;
   private List<List<Object>> rows;
   private int currentRowIndex;
+  private ResultSetLoader resultSetLoader;
   private RowSetLoader rowWriter;
   private List<ScalarWriter> columnWriters;
 
@@ -113,8 +114,8 @@ public class SentinelBatchReader implements ManagedReader<SchemaNegotiator> {
       }
       TupleMetadata schema = schemaBuilder.build();
 
-      negotiator.tableSchema(schema, false);
-      ResultSetLoader resultSetLoader = negotiator.build();
+      negotiator.tableSchema(schema, true);
+      this.resultSetLoader = negotiator.build();
       this.rowWriter = resultSetLoader.writer();
       buildColumnWriters();
 
@@ -128,6 +129,15 @@ public class SentinelBatchReader implements ManagedReader<SchemaNegotiator> {
 
   @Override
   public boolean next() {
+    while (!rowWriter.isFull()) {
+      if (!processRow()) {
+        return false;
+      }
+    }
+    return true;
+  }
+
+  private boolean processRow() {
     if (currentRowIndex >= rows.size()) {
       return false;
     }
@@ -152,6 +162,13 @@ public class SentinelBatchReader implements ManagedReader<SchemaNegotiator> {
 
   @Override
   public void close() {
+    try {
+      if (resultSetLoader != null) {
+        resultSetLoader.close();
+      }
+    } catch (Exception e) {
+      logger.debug("Error closing result set loader", e);
+    }
     try {
       httpClient.dispatcher().executorService().shutdown();
       httpClient.connectionPool().evictAll();
