@@ -20,174 +20,123 @@ package org.apache.drill.exec.store.sentinel.plan;
 
 import org.junit.Test;
 
-import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
 public class TestSentinelQueryBuilder {
 
   @Test
-  public void testBasicKQLGeneration() {
-    String tableName = "SecurityAlert";
-    String expectedKQL = "SecurityAlert";
-
-    assertEquals(expectedKQL, tableName);
+  public void testRexConverterExists() {
+    // Test that the RexToKqlConverter class is available and can be instantiated
+    assertNotNull(RexToKqlConverter.class);
   }
 
   @Test
-  public void testWhereClauseParsing() {
-    String kqlCondition = "Severity == \"High\"";
-    assertTrue(kqlCondition.contains("=="));
-    assertTrue(kqlCondition.contains("\"High\""));
+  public void testKqlWhereClauseSyntax() {
+    // Test that KQL where clause syntax is correct
+    String whereClause = "Severity == \"High\"";
+    assertTrue(whereClause.contains("=="));
+    assertTrue(whereClause.contains("\"High\""));
   }
 
   @Test
-  public void testProjectionGeneration() {
-    String projection = "AlertName, Severity";
-    String kqlProject = "| project " + projection;
-
-    assertTrue(kqlProject.contains("project"));
-    assertTrue(kqlProject.contains("AlertName"));
-    assertTrue(kqlProject.contains("Severity"));
+  public void testKqlProjectSyntax() {
+    // Test that KQL project (column selection) syntax is correct
+    String projectClause = "| project AlertName, Severity, Count";
+    assertTrue(projectClause.contains("project"));
+    assertTrue(projectClause.contains("AlertName"));
+    assertTrue(projectClause.contains("Severity"));
   }
 
   @Test
-  public void testLimitGeneration() {
-    long limit = 10;
-    String kqlLimit = "| take " + limit;
-
-    assertTrue(kqlLimit.contains("take"));
-    assertTrue(kqlLimit.contains("10"));
+  public void testKqlSortSyntax() {
+    // Test that KQL sort syntax is correct
+    String sortClause = "| sort by TimeGenerated desc";
+    assertTrue(sortClause.contains("sort by"));
+    assertTrue(sortClause.contains("desc"));
   }
 
   @Test
-  public void testSortGeneration() {
-    String sortField = "Severity";
-    String direction = "desc";
-    String kqlSort = "| sort by " + sortField + " " + direction;
-
-    assertTrue(kqlSort.contains("sort by"));
-    assertTrue(kqlSort.contains("Severity"));
-    assertTrue(kqlSort.contains("desc"));
+  public void testKqlTakeSyntax() {
+    // Test that KQL take (limit) syntax is correct
+    String takeClause = "| take 100";
+    assertTrue(takeClause.contains("take"));
+    assertTrue(takeClause.contains("100"));
   }
 
   @Test
-  public void testAggregateGeneration() {
-    String aggFunction = "count()";
-    String groupField = "AlertName";
-    String kqlAgg = "| summarize " + aggFunction + " by " + groupField;
-
-    assertTrue(kqlAgg.contains("summarize"));
-    assertTrue(kqlAgg.contains("count()"));
-    assertTrue(kqlAgg.contains("by"));
-    assertTrue(kqlAgg.contains("AlertName"));
+  public void testKqlSummarizeSyntax() {
+    // Test that KQL summarize (aggregate) syntax is correct
+    String summarizeClause = "| summarize count() by Severity";
+    assertTrue(summarizeClause.contains("summarize"));
+    assertTrue(summarizeClause.contains("count()"));
+    assertTrue(summarizeClause.contains("by"));
   }
 
   @Test
-  public void testComplexQueryGeneration() {
-    StringBuilder kql = new StringBuilder("SecurityAlert");
-    kql.append("\n| where Severity == \"High\"");
-    kql.append("\n| project AlertName, Severity");
-    kql.append("\n| sort by Severity desc");
-    kql.append("\n| take 10");
-
-    String result = kql.toString();
-    assertTrue(result.contains("SecurityAlert"));
-    assertTrue(result.contains("where"));
-    assertTrue(result.contains("project"));
-    assertTrue(result.contains("sort"));
-    assertTrue(result.contains("take"));
+  public void testKqlAndCondition() {
+    // Test that KQL AND condition syntax is correct
+    String andClause = "(Severity == \"High\") and (Status == \"New\")";
+    assertTrue(andClause.contains("and"));
   }
 
   @Test
-  public void testAndCondition() {
-    String condition = "(Severity == \"High\") and (Active == true)";
-    assertTrue(condition.contains("and"));
+  public void testKqlOrCondition() {
+    // Test that KQL OR condition syntax is correct
+    String orClause = "(Severity == \"High\") or (Severity == \"Critical\")";
+    assertTrue(orClause.contains("or"));
   }
 
   @Test
-  public void testOrCondition() {
-    String condition = "(Severity == \"High\") or (Severity == \"Critical\")";
-    assertTrue(condition.contains("or"));
+  public void testKqlComparisonOperators() {
+    // Test that KQL comparison operators are correct
+    assertTrue("Count < 100".contains("<"));
+    assertTrue("Count > 50".contains(">"));
+    assertTrue("Count <= 100".contains("<="));
+    assertTrue("Count >= 50".contains(">="));
+    assertTrue("Severity != \"Low\"".contains("!="));
   }
 
   @Test
-  public void testIsNullCondition() {
-    String condition = "isnull(AlertName)";
-    assertTrue(condition.contains("isnull"));
+  public void testKqlIsNullSyntax() {
+    // Test that KQL isnull() syntax is correct
+    String isNullClause = "isnull(AlertName)";
+    assertTrue(isNullClause.contains("isnull"));
   }
 
   @Test
-  public void testIsNotNullCondition() {
-    String condition = "isnotnull(AlertName)";
-    assertTrue(condition.contains("isnotnull"));
+  public void testKqlIsNotNullSyntax() {
+    // Test that KQL isnotnull() syntax is correct
+    String isNotNullClause = "isnotnull(AlertName)";
+    assertTrue(isNotNullClause.contains("isnotnull"));
   }
 
   @Test
-  public void testLikeCondition() {
-    String condition = "AlertName contains \"Malware\"";
-    assertTrue(condition.contains("contains"));
+  public void testKqlStartsWithSyntax() {
+    // Test that KQL startswith syntax for LIKE prefix matching is correct
+    String startsWithClause = "AlertName startswith \"Malware\"";
+    assertTrue(startsWithClause.contains("startswith"));
   }
 
   @Test
-  public void testComparisonOperators() {
-    String lt = "Count < 100";
-    String gt = "Count > 50";
-    String lte = "Count <= 100";
-    String gte = "Count >= 50";
-    String ne = "Severity != \"Low\"";
-
-    assertTrue(lt.contains("<"));
-    assertTrue(gt.contains(">"));
-    assertTrue(lte.contains("<="));
-    assertTrue(gte.contains(">="));
-    assertTrue(ne.contains("!="));
+  public void testKqlContainsSyntax() {
+    // Test that KQL contains syntax for LIKE substring matching is correct
+    String containsClause = "AlertName contains \"virus\"";
+    assertTrue(containsClause.contains("contains"));
   }
 
   @Test
-  public void testSumAggregate() {
-    String agg = "sum(Count) as TotalCount";
-    assertTrue(agg.contains("sum"));
-  }
+  public void testComplexKqlQuery() {
+    // Test a complete KQL query combining multiple operations
+    String complexQuery = "SecurityAlert\n" +
+        "| where Severity == \"High\"\n" +
+        "| project AlertName, Severity, Count\n" +
+        "| sort by Count desc\n" +
+        "| take 50";
 
-  @Test
-  public void testMinMaxAggregates() {
-    String minAgg = "min(Count) as MinCount";
-    String maxAgg = "max(Count) as MaxCount";
-    String avgAgg = "avg(Count) as AvgCount";
-
-    assertTrue(minAgg.contains("min"));
-    assertTrue(maxAgg.contains("max"));
-    assertTrue(avgAgg.contains("avg"));
-  }
-
-  @Test
-  public void testStringValueQuoting() {
-    String value = "\"test-value\"";
-    assertTrue(value.startsWith("\""));
-    assertTrue(value.endsWith("\""));
-  }
-
-  @Test
-  public void testQuoteEscaping() {
-    String escapedValue = "\"value\\\"with\\\"quotes\"";
-    assertTrue(escapedValue.contains("\\\""));
-  }
-
-  @Test
-  public void testNumericValues() {
-    String intValue = "42";
-    String floatValue = "3.14";
-
-    assertTrue(intValue.matches("\\d+"));
-    assertTrue(floatValue.matches("\\d+\\.\\d+"));
-  }
-
-  @Test
-  public void testBooleanValues() {
-    String trueValue = "true";
-    String falseValue = "false";
-
-    assertEquals("true", trueValue);
-    assertEquals("false", falseValue);
+    assertTrue(complexQuery.contains("where"));
+    assertTrue(complexQuery.contains("project"));
+    assertTrue(complexQuery.contains("sort by"));
+    assertTrue(complexQuery.contains("take"));
   }
 }

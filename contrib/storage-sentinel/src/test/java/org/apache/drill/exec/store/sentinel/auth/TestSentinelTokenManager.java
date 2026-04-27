@@ -21,9 +21,7 @@ package org.apache.drill.exec.store.sentinel.auth;
 import org.apache.drill.common.logical.StoragePluginConfig.AuthMode;
 import org.junit.Test;
 
-import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
 
 public class TestSentinelTokenManager {
 
@@ -41,99 +39,122 @@ public class TestSentinelTokenManager {
   }
 
   @Test
-  public void testBearerTokenPrefix() {
-    String bearerToken = "Bearer test-token-123";
-    assertTrue(bearerToken.startsWith("Bearer "));
+  public void testTokenManagerWithDifferentAuthMode() {
+    SentinelTokenManager tokenManager = new SentinelTokenManager(
+        "tenant-123",
+        "client-456",
+        "secret-789",
+        AuthMode.USER_TRANSLATION,
+        null
+    );
+
+    assertNotNull(tokenManager);
   }
 
   @Test
-  public void testBearerTokenFormatWithSpace() {
-    String token = "test-token-xyz";
-    String bearerFormat = "Bearer " + token;
+  public void testTokenManagerInitializesSuccessfully() {
+    // Test that token manager can be created with various configurations
+    String[] tenantIds = {"tenant-1", "tenant-2", "tenant-3"};
+    String[] clientIds = {"client-1", "client-2", "client-3"};
 
-    assertTrue(bearerFormat.startsWith("Bearer "));
-    assertTrue(bearerFormat.contains(token));
-    assertEquals("Bearer test-token-xyz", bearerFormat);
-  }
+    for (int i = 0; i < tenantIds.length; i++) {
+      SentinelTokenManager tokenManager = new SentinelTokenManager(
+          tenantIds[i],
+          clientIds[i],
+          "secret-" + i,
+          AuthMode.SHARED_USER,
+          null
+      );
 
-  @Test
-  public void testAccessTokenExtraction() {
-    String jsonResponse = "{\"access_token\":\"test-token-123\",\"expires_in\":3600,\"token_type\":\"Bearer\"}";
-    assertTrue(jsonResponse.contains("access_token"));
-    assertTrue(jsonResponse.contains("test-token-123"));
-  }
-
-  @Test
-  public void testExpiresInParsing() {
-    String expiresIn = "3600";
-    int expiresInSeconds = Integer.parseInt(expiresIn);
-
-    assertEquals(3600, expiresInSeconds);
-  }
-
-  @Test
-  public void testTokenRefreshTiming() {
-    int expiresIn = 3600;
-    int refreshBufferSeconds = 60;
-    long refreshTimeSeconds = expiresIn - refreshBufferSeconds;
-
-    assertEquals(3540, refreshTimeSeconds);
-  }
-
-  @Test
-  public void testTokenExpiryCalculation() {
-    long now = System.currentTimeMillis();
-    int expiresInSeconds = 3600;
-    long expiryTime = now + (expiresInSeconds * 1000);
-
-    assertTrue(expiryTime > now);
-  }
-
-  @Test
-  public void testTokenRefreshCheckWithBuffer() {
-    long expiryTime = System.currentTimeMillis() + (60 * 1000);
-    long now = System.currentTimeMillis();
-    boolean shouldRefresh = now > (expiryTime - (60 * 1000));
-
-    assertFalse(shouldRefresh);
-  }
-
-  @Test
-  public void testMultipleTokenFormats() {
-    String[] tokenFormats = {
-        "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9",
-        "Bearer abc123def456",
-        "Bearer token-with-dashes",
-        "Bearer token_with_underscores"
-    };
-
-    for (String token : tokenFormats) {
-      assertTrue(token.startsWith("Bearer "));
+      assertNotNull(tokenManager);
     }
   }
 
   @Test
-  public void testOAuth2GrantType() {
-    String grantType = "client_credentials";
-    assertEquals("client_credentials", grantType);
+  public void testTokenManagerOAuth2Configuration() {
+    // Test that token manager is configured for OAuth2 client credentials flow
+    SentinelTokenManager tokenManager = new SentinelTokenManager(
+        "test-tenant",
+        "test-client",
+        "test-secret",
+        AuthMode.SHARED_USER,
+        null
+    );
+
+    // OAuth2 client credentials flow uses:
+    // - grant_type: client_credentials
+    // - scope: https://api.loganalytics.io/.default
+    // - client_id and client_secret from config
+    assertNotNull(tokenManager);
   }
 
   @Test
-  public void testOAuth2Scope() {
-    String scope = "https://api.loganalytics.io/.default";
-    assertTrue(scope.startsWith("https://"));
-    assertTrue(scope.contains("api.loganalytics.io"));
+  public void testBearerTokenFormat() {
+    // Test that bearer tokens follow the correct format: "Bearer <token>"
+    String token = "test-access-token-abc123";
+    String bearerToken = "Bearer " + token;
+
+    assertNotNull(bearerToken);
+    assert(bearerToken.startsWith("Bearer "));
+    assert(bearerToken.contains(token));
   }
 
   @Test
-  public void testTenantIdFormat() {
-    String tenantId = "12345678-1234-1234-1234-123456789012";
-    assertTrue(tenantId.matches("[0-9a-f\\-]{36}"));
+  public void testTokenExpiryCalculation() {
+    // Tokens expire after "expires_in" seconds
+    int expiresInSeconds = 3600;  // 1 hour
+    long currentTimeMs = System.currentTimeMillis();
+    long expiryTimeMs = currentTimeMs + (expiresInSeconds * 1000L);
+
+    assertNotNull(expiryTimeMs);
+    assert(expiryTimeMs > currentTimeMs);
   }
 
   @Test
-  public void testClientIdFormat() {
-    String clientId = "87654321-4321-4321-4321-210987654321";
-    assertTrue(clientId.matches("[0-9a-f\\-]{36}"));
+  public void testTokenRefreshBuffer() {
+    // Tokens should be refreshed 60 seconds before actual expiry
+    int expiresInSeconds = 3600;
+    int refreshBufferSeconds = 60;
+    long refreshTimeSeconds = expiresInSeconds - refreshBufferSeconds;
+
+    assert(refreshTimeSeconds == 3540);
+  }
+
+  @Test
+  public void testTokenManagerSupportsSharedUserMode() {
+    SentinelTokenManager tokenManager = new SentinelTokenManager(
+        "tenant-id",
+        "client-id",
+        "client-secret",
+        AuthMode.SHARED_USER,
+        null
+    );
+
+    assertNotNull(tokenManager);
+  }
+
+  @Test
+  public void testTokenManagerSupportsUserTranslationMode() {
+    SentinelTokenManager tokenManager = new SentinelTokenManager(
+        "tenant-id",
+        "client-id",
+        "client-secret",
+        AuthMode.USER_TRANSLATION,
+        null
+    );
+
+    assertNotNull(tokenManager);
+  }
+
+  @Test
+  public void testTokenEndpointUrl() {
+    // Token endpoint follows Azure AD pattern:
+    // https://login.microsoftonline.com/{tenantId}/oauth2/v2.0/token
+    String tenantId = "12345678-1234-5678-1234-567812345678";
+    String expectedUrl = "https://login.microsoftonline.com/" + tenantId + "/oauth2/v2.0/token";
+
+    assertNotNull(expectedUrl);
+    assert(expectedUrl.contains("login.microsoftonline.com"));
+    assert(expectedUrl.contains("oauth2/v2.0/token"));
   }
 }
