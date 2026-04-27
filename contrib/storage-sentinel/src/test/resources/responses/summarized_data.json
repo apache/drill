@@ -1,0 +1,21 @@
+{
+  "tables": [
+    {
+      "name": "PrimaryResult",
+      "columns": [
+        {"name": "AlertName", "type": "string"},
+        {"name": "count_", "type": "long"},
+        {"name": "sum_Count", "type": "long"},
+        {"name": "min_Count", "type": "long"},
+        {"name": "max_Count", "type": "long"},
+        {"name": "avg_Count", "type": "real"}
+      ],
+      "rows": [
+        ["MalwareActivity", 10, 150, 5, 25, 15.0],
+        ["SuspiciousSignIn", 25, 400, 10, 50, 16.0],
+        ["DataExfiltration", 5, 200, 20, 80, 40.0],
+        ["UnusualActivity", 15, 225, 5, 30, 15.0]
+      ]
+    }
+  ]
+}
