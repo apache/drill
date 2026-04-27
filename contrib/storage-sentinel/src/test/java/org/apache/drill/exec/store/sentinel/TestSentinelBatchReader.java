@@ -32,8 +32,6 @@ import org.junit.Test;
 
 import java.util.ArrayList;
 
-import static org.junit.Assert.assertEquals;
-
 public class TestSentinelBatchReader extends SentinelTestBase {
   private static final int MOCK_SERVER_PORT = 18888;
 
@@ -42,6 +40,7 @@ public class TestSentinelBatchReader extends SentinelTestBase {
     String mockServerUrl = "http://localhost:" + MOCK_SERVER_PORT;
     SentinelStoragePluginConfig config = new SentinelStoragePluginConfig(
         "workspace-id",
+        null,
         "tenant-id",
         "client-id",
         "client-secret",
@@ -50,7 +49,8 @@ public class TestSentinelBatchReader extends SentinelTestBase {
         new ArrayList<>(),
         AuthMode.SHARED_USER,
         null,
-        mockServerUrl
+        mockServerUrl,
+        false
     );
     config.setEnabled(true);
     cluster.defineStoragePlugin("sentinel", config);

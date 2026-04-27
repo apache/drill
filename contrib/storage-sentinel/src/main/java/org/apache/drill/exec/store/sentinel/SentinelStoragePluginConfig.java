@@ -31,6 +31,7 @@ import java.util.Objects;
 @JsonTypeName("sentinel")
 public class SentinelStoragePluginConfig extends StoragePluginConfig {
   private final String workspaceId;
+  private final List<String> workspaceIds;
   private final String tenantId;
   private final String clientId;
   private final String clientSecret;
@@ -38,10 +39,12 @@ public class SentinelStoragePluginConfig extends StoragePluginConfig {
   private final int maxRows;
   private final List<String> tables;
   private final String apiEndpoint;
+  private final boolean cacheResults;
 
   @JsonCreator
   public SentinelStoragePluginConfig(
       @JsonProperty("workspaceId") String workspaceId,
+      @JsonProperty("workspaceIds") List<String> workspaceIds,
       @JsonProperty("tenantId") String tenantId,
       @JsonProperty("clientId") String clientId,
       @JsonProperty("clientSecret") String clientSecret,
@@ -50,10 +53,13 @@ public class SentinelStoragePluginConfig extends StoragePluginConfig {
       @JsonProperty("tables") List<String> tables,
       @JsonProperty("authMode") AuthMode authMode,
       @JsonProperty("credentialsProvider") CredentialsProvider credentialsProvider,
-      @JsonProperty("apiEndpoint") String apiEndpoint) {
+      @JsonProperty("apiEndpoint") String apiEndpoint,
+      @JsonProperty("cacheResults") Boolean cacheResults) {
     super(CredentialProviderUtils.getCredentialsProvider(clientId, clientSecret, null, null,
         null, null, null, credentialsProvider), false, authMode);
     this.workspaceId = workspaceId;
+    this.workspaceIds = (workspaceIds != null && !workspaceIds.isEmpty()) ? workspaceIds :
+        (workspaceId != null ? List.of(workspaceId) : List.of());
     this.tenantId = tenantId;
     this.clientId = clientId;
     this.clientSecret = clientSecret;
@@ -61,11 +67,13 @@ public class SentinelStoragePluginConfig extends StoragePluginConfig {
     this.maxRows = maxRows > 0 ? maxRows : 10000;
     this.tables = tables != null ? tables : List.of();
     this.apiEndpoint = apiEndpoint != null ? apiEndpoint : "https://api.loganalytics.io/v1";
+    this.cacheResults = cacheResults != null && cacheResults;
   }
 
   public SentinelStoragePluginConfig(SentinelStoragePluginConfig that, CredentialsProvider credentialsProvider) {
     super(credentialsProvider, false, that.authMode);
     this.workspaceId = that.workspaceId;
+    this.workspaceIds = that.workspaceIds;
     this.tenantId = that.tenantId;
     this.clientId = that.clientId;
     this.clientSecret = that.clientSecret;
@@ -73,10 +81,15 @@ public class SentinelStoragePluginConfig extends StoragePluginConfig {
     this.maxRows = that.maxRows;
     this.tables = that.tables;
     this.apiEndpoint = that.apiEndpoint;
+    this.cacheResults = that.cacheResults;
   }
 
   public String getWorkspaceId() {
     return workspaceId;
+  }
+
+  public List<String> getWorkspaceIds() {
+    return workspaceIds;
   }
 
   public String getTenantId() {
@@ -107,6 +120,10 @@ public class SentinelStoragePluginConfig extends StoragePluginConfig {
     return apiEndpoint;
   }
 
+  public boolean cacheResults() {
+    return cacheResults;
+  }
+
   public AuthMode getAuthMode() {
     return authMode;
   }
@@ -125,7 +142,9 @@ public class SentinelStoragePluginConfig extends StoragePluginConfig {
     }
     SentinelStoragePluginConfig that = (SentinelStoragePluginConfig) o;
     return maxRows == that.maxRows
+        && cacheResults == that.cacheResults
         && Objects.equals(workspaceId, that.workspaceId)
+        && Objects.equals(workspaceIds, that.workspaceIds)
         && Objects.equals(tenantId, that.tenantId)
         && Objects.equals(clientId, that.clientId)
         && Objects.equals(clientSecret, that.clientSecret)
@@ -138,19 +157,21 @@ public class SentinelStoragePluginConfig extends StoragePluginConfig {
 
   @Override
   public int hashCode() {
-    return Objects.hash(workspaceId, tenantId, clientId, clientSecret, defaultTimespan, maxRows, tables, apiEndpoint, credentialsProvider, authMode);
+    return Objects.hash(workspaceId, workspaceIds, tenantId, clientId, clientSecret, defaultTimespan, maxRows, tables, apiEndpoint, cacheResults, credentialsProvider, authMode);
   }
 
   @Override
   public String toString() {
     return "SentinelStoragePluginConfig{" +
         "workspaceId='" + workspaceId + '\'' +
+        ", workspaceIds=" + workspaceIds +
         ", tenantId='" + tenantId + '\'' +
         ", clientId='" + clientId + '\'' +
         ", defaultTimespan='" + defaultTimespan + '\'' +
         ", maxRows=" + maxRows +
         ", tables=" + tables +
         ", apiEndpoint='" + apiEndpoint + '\'' +
+        ", cacheResults=" + cacheResults +
         ", authMode=" + authMode +
         '}';
   }

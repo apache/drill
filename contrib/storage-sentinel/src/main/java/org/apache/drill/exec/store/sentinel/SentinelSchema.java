@@ -30,12 +30,18 @@ import java.util.Set;
 public class SentinelSchema extends AbstractSchema {
   private final SentinelStoragePlugin plugin;
   private final String schemaName;
+  private final String workspaceId;
   private final Map<String, Table> tableCache;
 
   public SentinelSchema(SentinelStoragePlugin plugin, String schemaName) {
+    this(plugin, schemaName, null);
+  }
+
+  public SentinelSchema(SentinelStoragePlugin plugin, String schemaName, String workspaceId) {
     super(Collections.emptyList(), schemaName);
     this.plugin = plugin;
     this.schemaName = schemaName;
+    this.workspaceId = workspaceId;
     this.tableCache = new HashMap<>();
   }
 

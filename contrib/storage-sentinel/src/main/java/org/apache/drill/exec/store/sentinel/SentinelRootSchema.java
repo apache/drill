@@ -19,25 +19,39 @@
 package org.apache.drill.exec.store.sentinel;
 
 import org.apache.calcite.schema.SchemaPlus;
-import org.apache.drill.exec.store.AbstractSchemaFactory;
-import org.apache.drill.exec.store.SchemaConfig;
+import org.apache.drill.common.map.CaseInsensitiveMap;
+import org.apache.drill.exec.store.AbstractSchema;
 
-public class SentinelSchemaFactory extends AbstractSchemaFactory {
+import java.util.Collections;
+import java.util.Map;
+import java.util.Set;
+
+public class SentinelRootSchema extends AbstractSchema {
   private final SentinelStoragePlugin plugin;
+  private final Map<String, SentinelSchema> workspaceSchemas;
 
-  public SentinelSchemaFactory(SentinelStoragePlugin plugin) {
-    super(plugin.getName());
+  public SentinelRootSchema(SentinelStoragePlugin plugin) {
+    super(Collections.emptyList(), plugin.getName());
     this.plugin = plugin;
+    this.workspaceSchemas = CaseInsensitiveMap.newHashMap();
   }
 
   @Override
-  public void registerSchemas(SchemaConfig schemaConfig, SchemaPlus parent) {
-    if (plugin.getConfig().getWorkspaceIds().size() > 1) {
-      SentinelRootSchema rootSchema = new SentinelRootSchema(plugin);
-      parent.add(getName(), rootSchema);
-    } else {
-      SentinelSchema schema = new SentinelSchema(plugin, getName());
-      parent.add(getName(), schema);
+  public SchemaPlus getSubSchema(String name) {
+    if (!workspaceSchemas.containsKey(name)) {
+      SentinelSchema schema = new SentinelSchema(plugin, name, name);
+      workspaceSchemas.put(name, schema);
     }
+    return null;
+  }
+
+  @Override
+  public Set<String> getSubSchemaNames() {
+    return Set.copyOf(plugin.getConfig().getWorkspaceIds());
+  }
+
+  @Override
+  public String getTypeName() {
+    return "sentinel";
   }
 }

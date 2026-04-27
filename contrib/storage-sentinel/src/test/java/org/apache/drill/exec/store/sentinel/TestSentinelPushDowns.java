@@ -39,6 +39,7 @@ public class TestSentinelPushDowns extends SentinelTestBase {
     String mockServerUrl = "http://localhost:" + MOCK_SERVER_PORT;
     SentinelStoragePluginConfig config = new SentinelStoragePluginConfig(
         "workspace-id",
+        null,
         "tenant-id",
         "client-id",
         "client-secret",
@@ -47,7 +48,8 @@ public class TestSentinelPushDowns extends SentinelTestBase {
         new ArrayList<>(),
         AuthMode.SHARED_USER,
         null,
-        mockServerUrl
+        mockServerUrl,
+        false
     );
     config.setEnabled(true);
     cluster.defineStoragePlugin("sentinel", config);
@@ -165,7 +167,9 @@ public class TestSentinelPushDowns extends SentinelTestBase {
     for (int i = 0; i < columnNames.length; i++) {
       json.append("        {\"name\": \"").append(columnNames[i]).append("\", \"type\": \"")
           .append(columnTypes[i]).append("\"}");
-      if (i < columnNames.length - 1) json.append(",");
+      if (i < columnNames.length - 1) {
+        json.append(",");
+      }
       json.append("\n");
     }
 
@@ -180,10 +184,14 @@ public class TestSentinelPushDowns extends SentinelTestBase {
         } else {
           json.append(val);
         }
-        if (j < rows[i].length - 1) json.append(", ");
+        if (j < rows[i].length - 1) {
+          json.append(", ");
+        }
       }
       json.append("]");
-      if (i < rows.length - 1) json.append(",");
+      if (i < rows.length - 1) {
+        json.append(",");
+      }
       json.append("\n");
     }
 

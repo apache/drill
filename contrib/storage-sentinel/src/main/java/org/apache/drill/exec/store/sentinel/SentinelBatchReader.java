@@ -20,6 +20,7 @@ package org.apache.drill.exec.store.sentinel;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import okhttp3.Cache;
 import okhttp3.MediaType;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
@@ -38,6 +39,7 @@ import org.apache.drill.exec.vector.accessor.ScalarWriter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.File;
 import java.io.IOException;
 import java.time.Instant;
 import java.util.ArrayList;
@@ -80,10 +82,16 @@ public class SentinelBatchReader implements ManagedReader<SchemaNegotiator> {
     this.scanSpec = scanSpec;
     this.tokenManager = tokenManager;
     this.username = username;
-    this.httpClient = new OkHttpClient.Builder()
+
+    OkHttpClient.Builder builder = new OkHttpClient.Builder()
         .connectTimeout(10, TimeUnit.SECONDS)
-        .readTimeout(60, TimeUnit.SECONDS)
-        .build();
+        .readTimeout(60, TimeUnit.SECONDS);
+
+    if (config.cacheResults()) {
+      setupCache(builder);
+    }
+
+    this.httpClient = builder.build();
     this.rows = new ArrayList<>();
     this.currentRowIndex = 0;
   }
@@ -288,5 +296,29 @@ public class SentinelBatchReader implements ManagedReader<SchemaNegotiator> {
         .replace("\n", "\\n")
         .replace("\r", "\\r")
         .replace("\t", "\\t");
+  }
+
+  private void setupCache(OkHttpClient.Builder builder) {
+    int cacheSize = 10 * 1024 * 1024;
+    String tempDir = System.getProperty("java.io.tmpdir");
+    File cacheDirectory = new File(tempDir, "sentinel-cache");
+    if (!cacheDirectory.exists()) {
+      if (!cacheDirectory.mkdirs()) {
+        throw UserException.dataWriteError()
+            .message("Could not create the Sentinel query cache directory")
+            .addContext("Path", cacheDirectory.getAbsolutePath())
+            .build(logger);
+      }
+    }
+
+    try {
+      Cache cache = new Cache(cacheDirectory, cacheSize);
+      logger.debug("Caching Sentinel query results at: {}", cacheDirectory);
+      builder.cache(cache);
+    } catch (Exception e) {
+      throw UserException.dataWriteError(e)
+          .message("Error setting up Sentinel query cache")
+          .build(logger);
+    }
   }
 }

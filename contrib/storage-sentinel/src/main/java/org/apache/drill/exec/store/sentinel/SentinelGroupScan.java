@@ -210,6 +210,7 @@ public class SentinelGroupScan extends AbstractGroupScan {
     return new PlanStringBuilder(this)
         .field("config", config)
         .field("scanSpec", scanSpec)
+        .field("kql", scanSpec != null ? scanSpec.getKqlQuery() : null)
         .field("columns", columns)
         .toString();
   }
