@@ -106,7 +106,8 @@ public class SentinelScanBatchCreator implements BatchCreator<SentinelSubScan> {
           config.getClientId(),
           config.getClientSecret(),
           config.getAuthMode(),
-          config.getCredentialsProvider());
+          config.getCredentialsProvider(),
+          config.getTokenEndpoint());
 
       return new SentinelBatchReader(config, scanSpec, tokenManager, username);
     }

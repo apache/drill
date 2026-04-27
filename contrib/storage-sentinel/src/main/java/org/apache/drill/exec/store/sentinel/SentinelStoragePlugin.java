@@ -31,9 +31,14 @@ import org.apache.drill.exec.store.sentinel.plan.SentinelPluginImplementor;
 import org.apache.drill.exec.store.sentinel.auth.SentinelTokenManager;
 import org.apache.calcite.schema.SchemaPlus;
 import org.apache.drill.exec.ops.OptimizerRulesContext;
+import org.apache.drill.common.JSONOptions;
+import org.apache.drill.exec.physical.base.AbstractGroupScan;
+import org.apache.drill.exec.metastore.MetadataProviderManager;
+import com.fasterxml.jackson.core.type.TypeReference;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.IOException;
 import java.util.Set;
 import java.util.Collections;
 
@@ -56,7 +61,8 @@ public class SentinelStoragePlugin extends AbstractStoragePlugin {
         config.getClientId(),
         config.getClientSecret(),
         config.getAuthMode(),
-        config.getCredentialsProvider());
+        config.getCredentialsProvider(),
+        config.getTokenEndpoint());
     this.schemaFactory = new SentinelSchemaFactory(this);
 
     this.convention = new Convention.Impl("SENTINEL." + name, PluginRel.class);
@@ -89,6 +95,12 @@ public class SentinelStoragePlugin extends AbstractStoragePlugin {
       return rulesSupplier.getOptimizerRules();
     }
     return Collections.emptySet();
+  }
+
+  @Override
+  public AbstractGroupScan getPhysicalScan(String userName, JSONOptions selection) throws IOException {
+    SentinelScanSpec scanSpec = selection.getListWith(new TypeReference<SentinelScanSpec>() {});
+    return new SentinelGroupScan(config, scanSpec, (MetadataProviderManager) null);
   }
 
   @Override

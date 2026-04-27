@@ -39,6 +39,7 @@ public class SentinelStoragePluginConfig extends StoragePluginConfig {
   private final int maxRows;
   private final List<String> tables;
   private final String apiEndpoint;
+  private final String tokenEndpoint;
   private final boolean cacheResults;
 
   @JsonCreator
@@ -54,6 +55,7 @@ public class SentinelStoragePluginConfig extends StoragePluginConfig {
       @JsonProperty("authMode") AuthMode authMode,
       @JsonProperty("credentialsProvider") CredentialsProvider credentialsProvider,
       @JsonProperty("apiEndpoint") String apiEndpoint,
+      @JsonProperty("tokenEndpoint") String tokenEndpoint,
       @JsonProperty("cacheResults") Boolean cacheResults) {
     super(CredentialProviderUtils.getCredentialsProvider(clientId, clientSecret, null, null,
         null, null, null, credentialsProvider), false, authMode);
@@ -67,6 +69,7 @@ public class SentinelStoragePluginConfig extends StoragePluginConfig {
     this.maxRows = maxRows > 0 ? maxRows : 10000;
     this.tables = tables != null ? tables : List.of();
     this.apiEndpoint = apiEndpoint != null ? apiEndpoint : "https://api.loganalytics.io/v1";
+    this.tokenEndpoint = tokenEndpoint;
     this.cacheResults = cacheResults != null && cacheResults;
   }
 
@@ -81,6 +84,7 @@ public class SentinelStoragePluginConfig extends StoragePluginConfig {
     this.maxRows = that.maxRows;
     this.tables = that.tables;
     this.apiEndpoint = that.apiEndpoint;
+    this.tokenEndpoint = that.tokenEndpoint;
     this.cacheResults = that.cacheResults;
   }
 
@@ -120,6 +124,10 @@ public class SentinelStoragePluginConfig extends StoragePluginConfig {
     return apiEndpoint;
   }
 
+  public String getTokenEndpoint() {
+    return tokenEndpoint;
+  }
+
   public boolean cacheResults() {
     return cacheResults;
   }
@@ -151,13 +159,14 @@ public class SentinelStoragePluginConfig extends StoragePluginConfig {
         && Objects.equals(defaultTimespan, that.defaultTimespan)
         && Objects.equals(tables, that.tables)
         && Objects.equals(apiEndpoint, that.apiEndpoint)
+        && Objects.equals(tokenEndpoint, that.tokenEndpoint)
         && Objects.equals(credentialsProvider, that.credentialsProvider)
         && authMode == that.authMode;
   }
 
   @Override
   public int hashCode() {
-    return Objects.hash(workspaceId, workspaceIds, tenantId, clientId, clientSecret, defaultTimespan, maxRows, tables, apiEndpoint, cacheResults, credentialsProvider, authMode);
+    return Objects.hash(workspaceId, workspaceIds, tenantId, clientId, clientSecret, defaultTimespan, maxRows, tables, apiEndpoint, tokenEndpoint, cacheResults, credentialsProvider, authMode);
   }
 
   @Override

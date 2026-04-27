@@ -109,7 +109,7 @@ public class SentinelBatchReader implements ManagedReader<SchemaNegotiator> {
 
       SchemaBuilder schemaBuilder = new SchemaBuilder();
       for (ColumnMetadata col : columnMetadata) {
-        schemaBuilder.add(col.name, col.drillType);
+        schemaBuilder.addNullable(col.name, col.drillType);
       }
       TupleMetadata schema = schemaBuilder.build();
 
@@ -244,6 +244,9 @@ public class SentinelBatchReader implements ManagedReader<SchemaNegotiator> {
         case VARCHAR:
           writer.setString(strValue);
           break;
+        case INT:
+          writer.setInt(Integer.parseInt(strValue.trim()));
+          break;
         case BIGINT:
           writer.setLong(Long.parseLong(strValue.trim()));
           break;
@@ -269,6 +272,7 @@ public class SentinelBatchReader implements ManagedReader<SchemaNegotiator> {
   private static MinorType mapKqlTypeToDrill(String kqlType) {
     switch (kqlType.toLowerCase()) {
       case "int":
+        return MinorType.INT;
       case "long":
         return MinorType.BIGINT;
       case "real":

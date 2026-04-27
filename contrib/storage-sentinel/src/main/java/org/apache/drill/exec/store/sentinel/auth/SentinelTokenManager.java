@@ -48,6 +48,7 @@ public class SentinelTokenManager {
   private final String clientSecret;
   private final AuthMode authMode;
   private final CredentialsProvider credentialsProvider;
+  private final String tokenEndpoint;
   private final OkHttpClient httpClient;
 
   private volatile String accessToken;
@@ -57,11 +58,18 @@ public class SentinelTokenManager {
 
   public SentinelTokenManager(String tenantId, String clientId, String clientSecret,
                             AuthMode authMode, CredentialsProvider credentialsProvider) {
+    this(tenantId, clientId, clientSecret, authMode, credentialsProvider, null);
+  }
+
+  public SentinelTokenManager(String tenantId, String clientId, String clientSecret,
+                            AuthMode authMode, CredentialsProvider credentialsProvider,
+                            String tokenEndpoint) {
     this.tenantId = tenantId;
     this.clientId = clientId;
     this.clientSecret = clientSecret;
     this.authMode = authMode;
     this.credentialsProvider = credentialsProvider;
+    this.tokenEndpoint = tokenEndpoint;
     this.httpClient = new OkHttpClient.Builder()
         .connectTimeout(10, TimeUnit.SECONDS)
         .readTimeout(30, TimeUnit.SECONDS)
@@ -91,7 +99,9 @@ public class SentinelTokenManager {
 
   private void refreshToken(String username) {
     try {
-      String tokenUrl = String.format("https://login.microsoftonline.com/%s/oauth2/v2.0/token", tenantId);
+      String tokenUrl = tokenEndpoint != null
+          ? tokenEndpoint
+          : String.format("https://login.microsoftonline.com/%s/oauth2/v2.0/token", tenantId);
 
       FormBody.Builder bodyBuilder = new FormBody.Builder()
           .add("client_id", clientId)

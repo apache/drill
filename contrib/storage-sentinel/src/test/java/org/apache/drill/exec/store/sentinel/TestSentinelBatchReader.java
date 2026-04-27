@@ -19,7 +19,6 @@
 package org.apache.drill.exec.store.sentinel;
 
 import okhttp3.mockwebserver.MockResponse;
-import okhttp3.mockwebserver.MockWebServer;
 import org.apache.drill.common.logical.StoragePluginConfig.AuthMode;
 import org.apache.drill.common.types.TypeProtos;
 import org.apache.drill.exec.physical.rowSet.RowSet;
@@ -33,11 +32,11 @@ import org.junit.Test;
 import java.util.ArrayList;
 
 public class TestSentinelBatchReader extends SentinelTestBase {
-  private static final int MOCK_SERVER_PORT = 18888;
 
   @BeforeClass
   public static void setupPlugin() throws Exception {
-    String mockServerUrl = "http://localhost:" + MOCK_SERVER_PORT;
+    String mockServerUrl = getMockServerUrl();
+    String tokenEndpoint = mockServerUrl + "token";
     SentinelStoragePluginConfig config = new SentinelStoragePluginConfig(
         "workspace-id",
         null,
@@ -50,6 +49,7 @@ public class TestSentinelBatchReader extends SentinelTestBase {
         AuthMode.SHARED_USER,
         null,
         mockServerUrl,
+        tokenEndpoint,
         false
     );
     config.setEnabled(true);
@@ -75,25 +75,25 @@ public class TestSentinelBatchReader extends SentinelTestBase {
         "  ]\n" +
         "}";
 
-    try (MockWebServer server = startMockServer()) {
-      server.enqueue(new MockResponse().setResponseCode(200).setBody(responseJson));
+    String tokenResponse = "{\"access_token\": \"test-token\", \"expires_in\": 3600}";
+    mockWebServer.enqueue(new MockResponse().setResponseCode(200).setBody(tokenResponse));
+    mockWebServer.enqueue(new MockResponse().setResponseCode(200).setBody(responseJson));
 
-      String sql = "SELECT AlertName, Severity, Count FROM sentinel.SecurityAlert";
-      RowSet results = client.queryBuilder().sql(sql).rowSet();
+    String sql = "SELECT AlertName, Severity, Count FROM sentinel.SecurityAlert";
+    RowSet results = client.queryBuilder().sql(sql).rowSet();
 
-      TupleMetadata expectedSchema = new SchemaBuilder()
-          .add("AlertName", TypeProtos.MinorType.VARCHAR, TypeProtos.DataMode.OPTIONAL)
-          .add("Severity", TypeProtos.MinorType.VARCHAR, TypeProtos.DataMode.OPTIONAL)
-          .add("Count", TypeProtos.MinorType.BIGINT, TypeProtos.DataMode.OPTIONAL)
-          .buildSchema();
+    TupleMetadata expectedSchema = new SchemaBuilder()
+        .add("AlertName", TypeProtos.MinorType.VARCHAR, TypeProtos.DataMode.OPTIONAL)
+        .add("Severity", TypeProtos.MinorType.VARCHAR, TypeProtos.DataMode.OPTIONAL)
+        .add("Count", TypeProtos.MinorType.BIGINT, TypeProtos.DataMode.OPTIONAL)
+        .buildSchema();
 
-      RowSet expected = new RowSetBuilder(client.allocator(), expectedSchema)
-          .addRow("Alert1", "High", 5L)
-          .addRow("Alert2", "Medium", 3L)
-          .build();
+    RowSet expected = new RowSetBuilder(client.allocator(), expectedSchema)
+        .addRow("Alert1", "High", 5L)
+        .addRow("Alert2", "Medium", 3L)
+        .build();
 
-      RowSetUtilities.verify(expected, results);
-    }
+    RowSetUtilities.verify(expected, results);
   }
 
   @Test
@@ -113,24 +113,24 @@ public class TestSentinelBatchReader extends SentinelTestBase {
         "  ]\n" +
         "}";
 
-    try (MockWebServer server = startMockServer()) {
-      server.enqueue(new MockResponse().setResponseCode(200).setBody(responseJson));
+    String tokenResponse = "{\"access_token\": \"test-token\", \"expires_in\": 3600}";
+    mockWebServer.enqueue(new MockResponse().setResponseCode(200).setBody(tokenResponse));
+    mockWebServer.enqueue(new MockResponse().setResponseCode(200).setBody(responseJson));
 
-      String sql = "SELECT AlertName, Severity FROM sentinel.SecurityAlert";
-      RowSet results = client.queryBuilder().sql(sql).rowSet();
+    String sql = "SELECT AlertName, Severity FROM sentinel.SecurityAlert";
+    RowSet results = client.queryBuilder().sql(sql).rowSet();
 
-      TupleMetadata expectedSchema = new SchemaBuilder()
-          .add("AlertName", TypeProtos.MinorType.VARCHAR, TypeProtos.DataMode.OPTIONAL)
-          .add("Severity", TypeProtos.MinorType.VARCHAR, TypeProtos.DataMode.OPTIONAL)
-          .buildSchema();
+    TupleMetadata expectedSchema = new SchemaBuilder()
+        .add("AlertName", TypeProtos.MinorType.VARCHAR, TypeProtos.DataMode.OPTIONAL)
+        .add("Severity", TypeProtos.MinorType.VARCHAR, TypeProtos.DataMode.OPTIONAL)
+        .buildSchema();
 
-      RowSet expected = new RowSetBuilder(client.allocator(), expectedSchema)
-          .addRow("Malware", "Critical")
-          .addRow("Phishing", "High")
-          .build();
+    RowSet expected = new RowSetBuilder(client.allocator(), expectedSchema)
+        .addRow("Malware", "Critical")
+        .addRow("Phishing", "High")
+        .build();
 
-      RowSetUtilities.verify(expected, results);
-    }
+    RowSetUtilities.verify(expected, results);
   }
 
   @Test
@@ -152,26 +152,26 @@ public class TestSentinelBatchReader extends SentinelTestBase {
         "  ]\n" +
         "}";
 
-    try (MockWebServer server = startMockServer()) {
-      server.enqueue(new MockResponse().setResponseCode(200).setBody(responseJson));
+    String tokenResponse = "{\"access_token\": \"test-token\", \"expires_in\": 3600}";
+    mockWebServer.enqueue(new MockResponse().setResponseCode(200).setBody(tokenResponse));
+    mockWebServer.enqueue(new MockResponse().setResponseCode(200).setBody(responseJson));
 
-      String sql = "SELECT StringCol, IntCol, LongCol, RealCol, BoolCol FROM sentinel.AllTypes";
-      RowSet results = client.queryBuilder().sql(sql).rowSet();
+    String sql = "SELECT StringCol, IntCol, LongCol, RealCol, BoolCol FROM sentinel.AllTypes";
+    RowSet results = client.queryBuilder().sql(sql).rowSet();
 
-      TupleMetadata expectedSchema = new SchemaBuilder()
-          .add("StringCol", TypeProtos.MinorType.VARCHAR, TypeProtos.DataMode.OPTIONAL)
-          .add("IntCol", TypeProtos.MinorType.INT, TypeProtos.DataMode.OPTIONAL)
-          .add("LongCol", TypeProtos.MinorType.BIGINT, TypeProtos.DataMode.OPTIONAL)
-          .add("RealCol", TypeProtos.MinorType.FLOAT8, TypeProtos.DataMode.OPTIONAL)
-          .add("BoolCol", TypeProtos.MinorType.BIT, TypeProtos.DataMode.OPTIONAL)
-          .buildSchema();
+    TupleMetadata expectedSchema = new SchemaBuilder()
+        .add("StringCol", TypeProtos.MinorType.VARCHAR, TypeProtos.DataMode.OPTIONAL)
+        .add("IntCol", TypeProtos.MinorType.INT, TypeProtos.DataMode.OPTIONAL)
+        .add("LongCol", TypeProtos.MinorType.BIGINT, TypeProtos.DataMode.OPTIONAL)
+        .add("RealCol", TypeProtos.MinorType.FLOAT8, TypeProtos.DataMode.OPTIONAL)
+        .add("BoolCol", TypeProtos.MinorType.BIT, TypeProtos.DataMode.OPTIONAL)
+        .buildSchema();
 
-      RowSet expected = new RowSetBuilder(client.allocator(), expectedSchema)
-          .addRow("test", 42, 1000L, 3.14, true)
-          .build();
+    RowSet expected = new RowSetBuilder(client.allocator(), expectedSchema)
+        .addRow("test", 42, 1000L, 3.14, true)
+        .build();
 
-      RowSetUtilities.verify(expected, results);
-    }
+    RowSetUtilities.verify(expected, results);
   }
 
   @Test
@@ -191,24 +191,24 @@ public class TestSentinelBatchReader extends SentinelTestBase {
         "  ]\n" +
         "}";
 
-    try (MockWebServer server = startMockServer()) {
-      server.enqueue(new MockResponse().setResponseCode(200).setBody(responseJson));
+    String tokenResponse = "{\"access_token\": \"test-token\", \"expires_in\": 3600}";
+    mockWebServer.enqueue(new MockResponse().setResponseCode(200).setBody(tokenResponse));
+    mockWebServer.enqueue(new MockResponse().setResponseCode(200).setBody(responseJson));
 
-      String sql = "SELECT Col1, Col2 FROM sentinel.NullTest";
-      RowSet results = client.queryBuilder().sql(sql).rowSet();
+    String sql = "SELECT Col1, Col2 FROM sentinel.NullTest";
+    RowSet results = client.queryBuilder().sql(sql).rowSet();
 
-      TupleMetadata expectedSchema = new SchemaBuilder()
-          .add("Col1", TypeProtos.MinorType.VARCHAR, TypeProtos.DataMode.OPTIONAL)
-          .add("Col2", TypeProtos.MinorType.INT, TypeProtos.DataMode.OPTIONAL)
-          .buildSchema();
+    TupleMetadata expectedSchema = new SchemaBuilder()
+        .add("Col1", TypeProtos.MinorType.VARCHAR, TypeProtos.DataMode.OPTIONAL)
+        .add("Col2", TypeProtos.MinorType.INT, TypeProtos.DataMode.OPTIONAL)
+        .buildSchema();
 
-      RowSet expected = new RowSetBuilder(client.allocator(), expectedSchema)
-          .addRow(null, 123)
-          .addRow("value", null)
-          .build();
+    RowSet expected = new RowSetBuilder(client.allocator(), expectedSchema)
+        .addRow(null, 123)
+        .addRow("value", null)
+        .build();
 
-      RowSetUtilities.verify(expected, results);
-    }
+    RowSetUtilities.verify(expected, results);
   }
 
   @Test
@@ -225,22 +225,22 @@ public class TestSentinelBatchReader extends SentinelTestBase {
         "  ]\n" +
         "}";
 
-    try (MockWebServer server = startMockServer()) {
-      server.enqueue(new MockResponse().setResponseCode(200).setBody(responseJson));
+    String tokenResponse = "{\"access_token\": \"test-token\", \"expires_in\": 3600}";
+    mockWebServer.enqueue(new MockResponse().setResponseCode(200).setBody(tokenResponse));
+    mockWebServer.enqueue(new MockResponse().setResponseCode(200).setBody(responseJson));
 
-      String sql = "SELECT AlertName, Severity FROM sentinel.EmptyTable";
-      RowSet results = client.queryBuilder().sql(sql).rowSet();
+    String sql = "SELECT AlertName, Severity FROM sentinel.EmptyTable";
+    RowSet results = client.queryBuilder().sql(sql).rowSet();
 
-      TupleMetadata expectedSchema = new SchemaBuilder()
-          .add("AlertName", TypeProtos.MinorType.VARCHAR, TypeProtos.DataMode.OPTIONAL)
-          .add("Severity", TypeProtos.MinorType.VARCHAR, TypeProtos.DataMode.OPTIONAL)
-          .buildSchema();
+    TupleMetadata expectedSchema = new SchemaBuilder()
+        .add("AlertName", TypeProtos.MinorType.VARCHAR, TypeProtos.DataMode.OPTIONAL)
+        .add("Severity", TypeProtos.MinorType.VARCHAR, TypeProtos.DataMode.OPTIONAL)
+        .buildSchema();
 
-      RowSet expected = new RowSetBuilder(client.allocator(), expectedSchema)
-          .build();
+    RowSet expected = new RowSetBuilder(client.allocator(), expectedSchema)
+        .build();
 
-      RowSetUtilities.verify(expected, results);
-    }
+    RowSetUtilities.verify(expected, results);
   }
 
   @Test
@@ -261,25 +261,25 @@ public class TestSentinelBatchReader extends SentinelTestBase {
         "  ]\n" +
         "}";
 
-    try (MockWebServer server = startMockServer()) {
-      server.enqueue(new MockResponse().setResponseCode(200).setBody(responseJson));
+    String tokenResponse = "{\"access_token\": \"test-token\", \"expires_in\": 3600}";
+    mockWebServer.enqueue(new MockResponse().setResponseCode(200).setBody(tokenResponse));
+    mockWebServer.enqueue(new MockResponse().setResponseCode(200).setBody(responseJson));
 
-      String sql = "SELECT Name, Value FROM sentinel.MultiRow";
-      RowSet results = client.queryBuilder().sql(sql).rowSet();
+    String sql = "SELECT Name, Value FROM sentinel.MultiRow";
+    RowSet results = client.queryBuilder().sql(sql).rowSet();
 
-      TupleMetadata expectedSchema = new SchemaBuilder()
-          .add("Name", TypeProtos.MinorType.VARCHAR, TypeProtos.DataMode.OPTIONAL)
-          .add("Value", TypeProtos.MinorType.INT, TypeProtos.DataMode.OPTIONAL)
-          .buildSchema();
+    TupleMetadata expectedSchema = new SchemaBuilder()
+        .add("Name", TypeProtos.MinorType.VARCHAR, TypeProtos.DataMode.OPTIONAL)
+        .add("Value", TypeProtos.MinorType.INT, TypeProtos.DataMode.OPTIONAL)
+        .buildSchema();
 
-      RowSet expected = new RowSetBuilder(client.allocator(), expectedSchema)
-          .addRow("Alert1", 10)
-          .addRow("Alert2", 20)
-          .addRow("Alert3", 30)
-          .build();
+    RowSet expected = new RowSetBuilder(client.allocator(), expectedSchema)
+        .addRow("Alert1", 10)
+        .addRow("Alert2", 20)
+        .addRow("Alert3", 30)
+        .build();
 
-      RowSetUtilities.verify(expected, results);
-    }
+    RowSetUtilities.verify(expected, results);
   }
 
   @Test
@@ -293,22 +293,22 @@ public class TestSentinelBatchReader extends SentinelTestBase {
         "  ]\n" +
         "}";
 
-    try (MockWebServer server = startMockServer()) {
-      server.enqueue(new MockResponse().setResponseCode(200).setBody(responseJson));
+    String tokenResponse = "{\"access_token\": \"test-token\", \"expires_in\": 3600}";
+    mockWebServer.enqueue(new MockResponse().setResponseCode(200).setBody(tokenResponse));
+    mockWebServer.enqueue(new MockResponse().setResponseCode(200).setBody(responseJson));
 
-      String sql = "SELECT BigNumber FROM sentinel.LargeNumbers";
-      RowSet results = client.queryBuilder().sql(sql).rowSet();
+    String sql = "SELECT BigNumber FROM sentinel.LargeNumbers";
+    RowSet results = client.queryBuilder().sql(sql).rowSet();
 
-      TupleMetadata expectedSchema = new SchemaBuilder()
-          .add("BigNumber", TypeProtos.MinorType.BIGINT, TypeProtos.DataMode.OPTIONAL)
-          .buildSchema();
+    TupleMetadata expectedSchema = new SchemaBuilder()
+        .add("BigNumber", TypeProtos.MinorType.BIGINT, TypeProtos.DataMode.OPTIONAL)
+        .buildSchema();
 
-      RowSet expected = new RowSetBuilder(client.allocator(), expectedSchema)
-          .addRow(9223372036854775807L)
-          .build();
+    RowSet expected = new RowSetBuilder(client.allocator(), expectedSchema)
+        .addRow(9223372036854775807L)
+        .build();
 
-      RowSetUtilities.verify(expected, results);
-    }
+    RowSetUtilities.verify(expected, results);
   }
 
   @Test
@@ -325,28 +325,22 @@ public class TestSentinelBatchReader extends SentinelTestBase {
         "  ]\n" +
         "}";
 
-    try (MockWebServer server = startMockServer()) {
-      server.enqueue(new MockResponse().setResponseCode(200).setBody(responseJson));
+    String tokenResponse = "{\"access_token\": \"test-token\", \"expires_in\": 3600}";
+    mockWebServer.enqueue(new MockResponse().setResponseCode(200).setBody(tokenResponse));
+    mockWebServer.enqueue(new MockResponse().setResponseCode(200).setBody(responseJson));
 
-      String sql = "SELECT IntVal, RealVal FROM sentinel.NegativeNumbers";
-      RowSet results = client.queryBuilder().sql(sql).rowSet();
+    String sql = "SELECT IntVal, RealVal FROM sentinel.NegativeNumbers";
+    RowSet results = client.queryBuilder().sql(sql).rowSet();
 
-      TupleMetadata expectedSchema = new SchemaBuilder()
-          .add("IntVal", TypeProtos.MinorType.INT, TypeProtos.DataMode.OPTIONAL)
-          .add("RealVal", TypeProtos.MinorType.FLOAT8, TypeProtos.DataMode.OPTIONAL)
-          .buildSchema();
+    TupleMetadata expectedSchema = new SchemaBuilder()
+        .add("IntVal", TypeProtos.MinorType.INT, TypeProtos.DataMode.OPTIONAL)
+        .add("RealVal", TypeProtos.MinorType.FLOAT8, TypeProtos.DataMode.OPTIONAL)
+        .buildSchema();
 
-      RowSet expected = new RowSetBuilder(client.allocator(), expectedSchema)
-          .addRow(-42, -3.14)
-          .build();
+    RowSet expected = new RowSetBuilder(client.allocator(), expectedSchema)
+        .addRow(-42, -3.14)
+        .build();
 
-      RowSetUtilities.verify(expected, results);
-    }
-  }
-
-  private static MockWebServer startMockServer() throws Exception {
-    MockWebServer server = new MockWebServer();
-    server.start(MOCK_SERVER_PORT);
-    return server;
+    RowSetUtilities.verify(expected, results);
   }
 }
