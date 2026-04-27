@@ -149,7 +149,8 @@ public class SentinelBatchReader implements ManagedReader<SchemaNegotiator> {
 
   private void queryLogAnalytics() throws IOException {
     String queryUrl = String.format(
-        "https://api.loganalytics.io/v1/workspaces/%s/query",
+        "%s/workspaces/%s/query",
+        config.getApiEndpoint(),
         config.getWorkspaceId());
 
     String token = tokenManager.getBearerToken(username);

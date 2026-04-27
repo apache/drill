@@ -37,6 +37,7 @@ public class SentinelStoragePluginConfig extends StoragePluginConfig {
   private final String defaultTimespan;
   private final int maxRows;
   private final List<String> tables;
+  private final String apiEndpoint;
 
   @JsonCreator
   public SentinelStoragePluginConfig(
@@ -48,7 +49,8 @@ public class SentinelStoragePluginConfig extends StoragePluginConfig {
       @JsonProperty("maxRows") int maxRows,
       @JsonProperty("tables") List<String> tables,
       @JsonProperty("authMode") AuthMode authMode,
-      @JsonProperty("credentialsProvider") CredentialsProvider credentialsProvider) {
+      @JsonProperty("credentialsProvider") CredentialsProvider credentialsProvider,
+      @JsonProperty("apiEndpoint") String apiEndpoint) {
     super(CredentialProviderUtils.getCredentialsProvider(clientId, clientSecret, null, null,
         null, null, null, credentialsProvider), false, authMode);
     this.workspaceId = workspaceId;
@@ -58,6 +60,7 @@ public class SentinelStoragePluginConfig extends StoragePluginConfig {
     this.defaultTimespan = defaultTimespan != null ? defaultTimespan : "P1D";
     this.maxRows = maxRows > 0 ? maxRows : 10000;
     this.tables = tables != null ? tables : List.of();
+    this.apiEndpoint = apiEndpoint != null ? apiEndpoint : "https://api.loganalytics.io/v1";
   }
 
   public SentinelStoragePluginConfig(SentinelStoragePluginConfig that, CredentialsProvider credentialsProvider) {
@@ -69,6 +72,7 @@ public class SentinelStoragePluginConfig extends StoragePluginConfig {
     this.defaultTimespan = that.defaultTimespan;
     this.maxRows = that.maxRows;
     this.tables = that.tables;
+    this.apiEndpoint = that.apiEndpoint;
   }
 
   public String getWorkspaceId() {
@@ -99,6 +103,10 @@ public class SentinelStoragePluginConfig extends StoragePluginConfig {
     return tables;
   }
 
+  public String getApiEndpoint() {
+    return apiEndpoint;
+  }
+
   public AuthMode getAuthMode() {
     return authMode;
   }
@@ -123,13 +131,14 @@ public class SentinelStoragePluginConfig extends StoragePluginConfig {
         && Objects.equals(clientSecret, that.clientSecret)
         && Objects.equals(defaultTimespan, that.defaultTimespan)
         && Objects.equals(tables, that.tables)
+        && Objects.equals(apiEndpoint, that.apiEndpoint)
         && Objects.equals(credentialsProvider, that.credentialsProvider)
         && authMode == that.authMode;
   }
 
   @Override
   public int hashCode() {
-    return Objects.hash(workspaceId, tenantId, clientId, clientSecret, defaultTimespan, maxRows, tables, credentialsProvider, authMode);
+    return Objects.hash(workspaceId, tenantId, clientId, clientSecret, defaultTimespan, maxRows, tables, apiEndpoint, credentialsProvider, authMode);
   }
 
   @Override
@@ -141,6 +150,7 @@ public class SentinelStoragePluginConfig extends StoragePluginConfig {
         ", defaultTimespan='" + defaultTimespan + '\'' +
         ", maxRows=" + maxRows +
         ", tables=" + tables +
+        ", apiEndpoint='" + apiEndpoint + '\'' +
         ", authMode=" + authMode +
         '}';
   }

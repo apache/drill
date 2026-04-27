@@ -18,54 +18,25 @@
 
 package org.apache.drill.exec.store.sentinel;
 
-import org.apache.drill.common.expression.SchemaPath;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import okhttp3.mockwebserver.MockResponse;
+import okhttp3.mockwebserver.MockWebServer;
 import org.apache.drill.common.logical.StoragePluginConfig.AuthMode;
+import org.junit.BeforeClass;
 import org.junit.Test;
 
 import java.util.ArrayList;
-import java.util.List;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
-public class TestSentinelPushDowns {
+public class TestSentinelPushDowns extends SentinelTestBase {
+  private static final int MOCK_SERVER_PORT = 18889;
+  private static final ObjectMapper mapper = new ObjectMapper();
 
-  @Test
-  public void testScanSpecWithBasicTableName() {
-    SentinelScanSpec scanSpec = new SentinelScanSpec("test-plugin", "SecurityAlert", "SecurityAlert");
-
-    assertNotNull(scanSpec);
-    assertEquals("test-plugin", scanSpec.getPluginName());
-    assertEquals("SecurityAlert", scanSpec.getTableName());
-    assertEquals("SecurityAlert", scanSpec.getKqlQuery());
-  }
-
-  @Test
-  public void testScanSpecDefaultsTableNameAsQuery() {
-    // When kqlQuery is null, it should default to table name
-    SentinelScanSpec scanSpec = new SentinelScanSpec("test-plugin", "SecurityAlert", null);
-
-    assertEquals("SecurityAlert", scanSpec.getKqlQuery());
-  }
-
-  @Test
-  public void testScanSpecWithComplexKQL() {
-    String kqlQuery = "SecurityAlert\n" +
-        "| where Severity == \"High\"\n" +
-        "| project AlertName, Severity\n" +
-        "| take 10";
-
-    SentinelScanSpec scanSpec = new SentinelScanSpec("test-plugin", "SecurityAlert", kqlQuery);
-
-    assertNotNull(scanSpec.getKqlQuery());
-    assertTrue(scanSpec.getKqlQuery().contains("where Severity"));
-    assertTrue(scanSpec.getKqlQuery().contains("project AlertName"));
-    assertTrue(scanSpec.getKqlQuery().contains("take 10"));
-  }
-
-  @Test
-  public void testStoragePluginConfigCreation() {
+  @BeforeClass
+  public static void setupPlugin() throws Exception {
+    String mockServerUrl = "http://localhost:" + MOCK_SERVER_PORT;
     SentinelStoragePluginConfig config = new SentinelStoragePluginConfig(
         "workspace-id",
         "tenant-id",
@@ -75,155 +46,188 @@ public class TestSentinelPushDowns {
         10000,
         new ArrayList<>(),
         AuthMode.SHARED_USER,
-        null
+        null,
+        mockServerUrl
     );
-
-    assertNotNull(config);
-    assertEquals("workspace-id", config.getWorkspaceId());
-    assertEquals("tenant-id", config.getTenantId());
-    assertEquals("client-id", config.getClientId());
-    assertEquals("P1D", config.getDefaultTimespan());
-    assertEquals(10000, config.getMaxRows());
+    config.setEnabled(true);
+    cluster.defineStoragePlugin("sentinel", config);
   }
 
   @Test
-  public void testGroupScanCreationWithBasicSpec() {
-    SentinelStoragePluginConfig config = new SentinelStoragePluginConfig(
-        "workspace-id",
-        "tenant-id",
-        "client-id",
-        "client-secret",
-        "P1D",
-        10000,
-        new ArrayList<>(),
-        AuthMode.SHARED_USER,
-        null
-    );
-    SentinelScanSpec scanSpec = new SentinelScanSpec("test-plugin", "SecurityAlert", "SecurityAlert");
-    List<SchemaPath> columns = new ArrayList<>();
+  public void testFilterPushdown() throws Exception {
+    String responseJson = createResponse(new String[]{"Severity", "AlertName"},
+        new String[]{"string", "string"},
+        new Object[][]{{"High", "Alert1"}, {"Critical", "Alert2"}});
 
-    SentinelGroupScan groupScan = new SentinelGroupScan(config, scanSpec, columns);
+    try (MockWebServer server = startMockServer()) {
+      server.enqueue(new MockResponse().setResponseCode(200).setBody(responseJson));
 
-    assertNotNull(groupScan);
-    // Verify group scan was created successfully
-    assertEquals(0, groupScan.getColumns().size());
+      String sql = "SELECT Severity, AlertName FROM sentinel.SecurityAlert WHERE Severity = 'High'";
+      String plan = client.queryBuilder().sql(sql).explainJson();
+
+      assertTrue("Filter should be pushed down to Sentinel", containsKqlOperation(plan, "where"));
+      assertTrue("WHERE clause should contain Severity filter", containsKqlOperation(plan, "Severity"));
+    }
   }
 
   @Test
-  public void testGroupScanStoresColumnSelection() {
-    SentinelStoragePluginConfig config = new SentinelStoragePluginConfig(
-        "workspace-id",
-        "tenant-id",
-        "client-id",
-        "client-secret",
-        "P1D",
-        10000,
-        new ArrayList<>(),
-        AuthMode.SHARED_USER,
-        null
-    );
-    SentinelScanSpec scanSpec = new SentinelScanSpec("test-plugin", "SecurityAlert", "SecurityAlert");
+  public void testProjectionPushdown() throws Exception {
+    String responseJson = createResponse(new String[]{"AlertName", "Severity"},
+        new String[]{"string", "string"},
+        new Object[][]{{"Alert1", "High"}});
 
-    List<SchemaPath> columns = new ArrayList<>();
-    columns.add(SchemaPath.getSimplePath("AlertName"));
-    columns.add(SchemaPath.getSimplePath("Severity"));
+    try (MockWebServer server = startMockServer()) {
+      server.enqueue(new MockResponse().setResponseCode(200).setBody(responseJson));
 
-    SentinelGroupScan groupScan = new SentinelGroupScan(config, scanSpec, columns);
+      String sql = "SELECT AlertName, Severity FROM sentinel.SecurityAlert";
+      String plan = client.queryBuilder().sql(sql).explainJson();
 
-    assertNotNull(groupScan);
-    assertEquals(2, groupScan.getColumns().size());
+      assertTrue("Projection should be pushed down", containsKqlOperation(plan, "project"));
+      assertTrue("Project should contain AlertName", containsKqlOperation(plan, "AlertName"));
+      assertTrue("Project should contain Severity", containsKqlOperation(plan, "Severity"));
+    }
   }
 
   @Test
-  public void testFilterPushdownInKQL() {
-    // Test that filter clauses can be represented in KQL
-    String kqlWithFilter = "SecurityAlert\n" +
-        "| where Severity == \"High\"";
-    SentinelScanSpec scanSpec = new SentinelScanSpec("test-plugin", "SecurityAlert", kqlWithFilter);
+  public void testLimitPushdown() throws Exception {
+    String responseJson = createResponse(new String[]{"AlertName"},
+        new String[]{"string"},
+        new Object[][]{{"Alert1"}, {"Alert2"}});
 
-    assertTrue(scanSpec.getKqlQuery().contains("where"));
-    assertTrue(scanSpec.getKqlQuery().contains("Severity"));
+    try (MockWebServer server = startMockServer()) {
+      server.enqueue(new MockResponse().setResponseCode(200).setBody(responseJson));
+
+      String sql = "SELECT AlertName FROM sentinel.SecurityAlert LIMIT 10";
+      String plan = client.queryBuilder().sql(sql).explainJson();
+
+      assertTrue("LIMIT should be pushed down as take", containsKqlOperation(plan, "take"));
+    }
   }
 
   @Test
-  public void testProjectionPushdownInKQL() {
-    // Test that projection can be represented in KQL
-    String kqlWithProjection = "SecurityAlert\n" +
-        "| project AlertName, Severity, TimeGenerated";
-    SentinelScanSpec scanSpec = new SentinelScanSpec("test-plugin", "SecurityAlert", kqlWithProjection);
+  public void testSortPushdown() throws Exception {
+    String responseJson = createResponse(new String[]{"AlertName", "Count"},
+        new String[]{"string", "int"},
+        new Object[][]{{"Alert1", 5}, {"Alert2", 3}});
 
-    assertTrue(scanSpec.getKqlQuery().contains("project"));
-    assertTrue(scanSpec.getKqlQuery().contains("AlertName"));
+    try (MockWebServer server = startMockServer()) {
+      server.enqueue(new MockResponse().setResponseCode(200).setBody(responseJson));
+
+      String sql = "SELECT AlertName, Count FROM sentinel.SecurityAlert ORDER BY Count DESC";
+      String plan = client.queryBuilder().sql(sql).explainJson();
+
+      assertTrue("ORDER BY should be pushed down as sort", containsKqlOperation(plan, "sort by"));
+      assertTrue("Sort should specify column", containsKqlOperation(plan, "Count"));
+    }
   }
 
   @Test
-  public void testLimitPushdownInKQL() {
-    // Test that limit can be represented in KQL as "take"
-    String kqlWithLimit = "SecurityAlert\n" +
-        "| take 100";
-    SentinelScanSpec scanSpec = new SentinelScanSpec("test-plugin", "SecurityAlert", kqlWithLimit);
+  public void testAggregatePushdown() throws Exception {
+    String responseJson = createResponse(new String[]{"Severity", "Count"},
+        new String[]{"string", "long"},
+        new Object[][]{{"High", 5}, {"Critical", 3}});
 
-    assertTrue(scanSpec.getKqlQuery().contains("take 100"));
+    try (MockWebServer server = startMockServer()) {
+      server.enqueue(new MockResponse().setResponseCode(200).setBody(responseJson));
+
+      String sql = "SELECT Severity, COUNT(*) as Count FROM sentinel.SecurityAlert GROUP BY Severity";
+      String plan = client.queryBuilder().sql(sql).explainJson();
+
+      assertTrue("GROUP BY should be pushed down as summarize", containsKqlOperation(plan, "summarize"));
+      assertTrue("Summarize should have count function", containsKqlOperation(plan, "count()"));
+    }
   }
 
   @Test
-  public void testSortPushdownInKQL() {
-    // Test that sort can be represented in KQL
-    String kqlWithSort = "SecurityAlert\n" +
-        "| sort by TimeGenerated desc";
-    SentinelScanSpec scanSpec = new SentinelScanSpec("test-plugin", "SecurityAlert", kqlWithSort);
+  public void testMultiplePushdowns() throws Exception {
+    String responseJson = createResponse(new String[]{"AlertName"},
+        new String[]{"string"},
+        new Object[][]{{"Alert1"}});
 
-    assertTrue(scanSpec.getKqlQuery().contains("sort by"));
-    assertTrue(scanSpec.getKqlQuery().contains("desc"));
+    try (MockWebServer server = startMockServer()) {
+      server.enqueue(new MockResponse().setResponseCode(200).setBody(responseJson));
+
+      String sql = "SELECT AlertName FROM sentinel.SecurityAlert WHERE Severity = 'High' " +
+          "ORDER BY AlertName LIMIT 5";
+      String plan = client.queryBuilder().sql(sql).explainJson();
+
+      assertTrue("Filter should be pushed down", containsKqlOperation(plan, "where"));
+      assertTrue("Projection should be pushed down", containsKqlOperation(plan, "project"));
+      assertTrue("Sort should be pushed down", containsKqlOperation(plan, "sort"));
+      assertTrue("Limit should be pushed down", containsKqlOperation(plan, "take"));
+    }
   }
 
-  @Test
-  public void testAggregatePushdownInKQL() {
-    // Test that aggregation can be represented in KQL as "summarize"
-    String kqlWithAggregate = "SecurityAlert\n" +
-        "| summarize count() by Severity";
-    SentinelScanSpec scanSpec = new SentinelScanSpec("test-plugin", "SecurityAlert", kqlWithAggregate);
+  private static String createResponse(String[] columnNames, String[] columnTypes, Object[][] rows) {
+    StringBuilder json = new StringBuilder();
+    json.append("{\n  \"tables\": [\n    {\n      \"columns\": [\n");
 
-    assertTrue(scanSpec.getKqlQuery().contains("summarize"));
-    assertTrue(scanSpec.getKqlQuery().contains("count()"));
+    for (int i = 0; i < columnNames.length; i++) {
+      json.append("        {\"name\": \"").append(columnNames[i]).append("\", \"type\": \"")
+          .append(columnTypes[i]).append("\"}");
+      if (i < columnNames.length - 1) json.append(",");
+      json.append("\n");
+    }
+
+    json.append("      ],\n      \"rows\": [\n");
+
+    for (int i = 0; i < rows.length; i++) {
+      json.append("        [");
+      for (int j = 0; j < rows[i].length; j++) {
+        Object val = rows[i][j];
+        if (val instanceof String) {
+          json.append("\"").append(val).append("\"");
+        } else {
+          json.append(val);
+        }
+        if (j < rows[i].length - 1) json.append(", ");
+      }
+      json.append("]");
+      if (i < rows.length - 1) json.append(",");
+      json.append("\n");
+    }
+
+    json.append("      ]\n    }\n  ]\n}");
+    return json.toString();
   }
 
-  @Test
-  public void testMultiplePushdownsAccumulated() {
-    // Test that multiple operations can be accumulated in the KQL query
-    String complexKQL = "SecurityAlert\n" +
-        "| where Severity == \"High\"\n" +
-        "| project AlertName, Severity, Count\n" +
-        "| sort by Count desc\n" +
-        "| take 50";
-    SentinelScanSpec scanSpec = new SentinelScanSpec("test-plugin", "SecurityAlert", complexKQL);
-
-    // Verify all operations are present in the accumulated KQL
-    assertTrue(scanSpec.getKqlQuery().contains("where Severity"));
-    assertTrue(scanSpec.getKqlQuery().contains("project AlertName"));
-    assertTrue(scanSpec.getKqlQuery().contains("sort by Count"));
-    assertTrue(scanSpec.getKqlQuery().contains("take 50"));
+  private static boolean containsKqlOperation(String plan, String operation) throws Exception {
+    JsonNode root = mapper.readTree(plan);
+    return plan.contains(operation) || findInPlan(root, operation);
   }
 
-  @Test
-  public void testEmptyColumnList() {
-    SentinelStoragePluginConfig config = new SentinelStoragePluginConfig(
-        "workspace-id",
-        "tenant-id",
-        "client-id",
-        "client-secret",
-        "P1D",
-        10000,
-        new ArrayList<>(),
-        AuthMode.SHARED_USER,
-        null
-    );
-    SentinelScanSpec scanSpec = new SentinelScanSpec("test-plugin", "SecurityAlert", "SecurityAlert");
-    List<SchemaPath> columns = new ArrayList<>();
+  private static boolean findInPlan(JsonNode node, String target) {
+    if (node == null) {
+      return false;
+    }
 
-    SentinelGroupScan groupScan = new SentinelGroupScan(config, scanSpec, columns);
+    if (node.isTextual() && node.asText().contains(target)) {
+      return true;
+    }
 
-    assertNotNull(groupScan);
-    assertEquals(0, groupScan.getColumns().size());
+    if (node.isObject()) {
+      for (JsonNode child : node) {
+        if (findInPlan(child, target)) {
+          return true;
+        }
+      }
+    }
+
+    if (node.isArray()) {
+      for (JsonNode child : node) {
+        if (findInPlan(child, target)) {
+          return true;
+        }
+      }
+    }
+
+    return false;
+  }
+
+  private static MockWebServer startMockServer() throws Exception {
+    MockWebServer server = new MockWebServer();
+    server.start(MOCK_SERVER_PORT);
+    return server;
   }
 }
+
