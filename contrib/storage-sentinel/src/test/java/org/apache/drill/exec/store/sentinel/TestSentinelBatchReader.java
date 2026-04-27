@@ -75,8 +75,7 @@ public class TestSentinelBatchReader extends SentinelTestBase {
         "  ]\n" +
         "}";
 
-    String tokenResponse = "{\"access_token\": \"test-token\", \"expires_in\": 3600}";
-    mockWebServer.enqueue(new MockResponse().setResponseCode(200).setBody(tokenResponse));
+    mockWebServer.enqueue(new MockResponse().setResponseCode(200).setBody("{\"access_token\": \"test-token\", \"expires_in\": 3600}"));
     mockWebServer.enqueue(new MockResponse().setResponseCode(200).setBody(responseJson));
 
     String sql = "SELECT AlertName, Severity, Count FROM sentinel.SecurityAlert";
@@ -113,8 +112,7 @@ public class TestSentinelBatchReader extends SentinelTestBase {
         "  ]\n" +
         "}";
 
-    String tokenResponse = "{\"access_token\": \"test-token\", \"expires_in\": 3600}";
-    mockWebServer.enqueue(new MockResponse().setResponseCode(200).setBody(tokenResponse));
+    mockWebServer.enqueue(new MockResponse().setResponseCode(200).setBody("{\"access_token\": \"test-token\", \"expires_in\": 3600}"));
     mockWebServer.enqueue(new MockResponse().setResponseCode(200).setBody(responseJson));
 
     String sql = "SELECT AlertName, Severity FROM sentinel.SecurityAlert";
@@ -152,8 +150,7 @@ public class TestSentinelBatchReader extends SentinelTestBase {
         "  ]\n" +
         "}";
 
-    String tokenResponse = "{\"access_token\": \"test-token\", \"expires_in\": 3600}";
-    mockWebServer.enqueue(new MockResponse().setResponseCode(200).setBody(tokenResponse));
+    mockWebServer.enqueue(new MockResponse().setResponseCode(200).setBody("{\"access_token\": \"test-token\", \"expires_in\": 3600}"));
     mockWebServer.enqueue(new MockResponse().setResponseCode(200).setBody(responseJson));
 
     String sql = "SELECT StringCol, IntCol, LongCol, RealCol, BoolCol FROM sentinel.AllTypes";
@@ -191,8 +188,7 @@ public class TestSentinelBatchReader extends SentinelTestBase {
         "  ]\n" +
         "}";
 
-    String tokenResponse = "{\"access_token\": \"test-token\", \"expires_in\": 3600}";
-    mockWebServer.enqueue(new MockResponse().setResponseCode(200).setBody(tokenResponse));
+    mockWebServer.enqueue(new MockResponse().setResponseCode(200).setBody("{\"access_token\": \"test-token\", \"expires_in\": 3600}"));
     mockWebServer.enqueue(new MockResponse().setResponseCode(200).setBody(responseJson));
 
     String sql = "SELECT Col1, Col2 FROM sentinel.NullTest";
@@ -225,8 +221,7 @@ public class TestSentinelBatchReader extends SentinelTestBase {
         "  ]\n" +
         "}";
 
-    String tokenResponse = "{\"access_token\": \"test-token\", \"expires_in\": 3600}";
-    mockWebServer.enqueue(new MockResponse().setResponseCode(200).setBody(tokenResponse));
+    mockWebServer.enqueue(new MockResponse().setResponseCode(200).setBody("{\"access_token\": \"test-token\", \"expires_in\": 3600}"));
     mockWebServer.enqueue(new MockResponse().setResponseCode(200).setBody(responseJson));
 
     String sql = "SELECT AlertName, Severity FROM sentinel.EmptyTable";
@@ -261,8 +256,7 @@ public class TestSentinelBatchReader extends SentinelTestBase {
         "  ]\n" +
         "}";
 
-    String tokenResponse = "{\"access_token\": \"test-token\", \"expires_in\": 3600}";
-    mockWebServer.enqueue(new MockResponse().setResponseCode(200).setBody(tokenResponse));
+    mockWebServer.enqueue(new MockResponse().setResponseCode(200).setBody("{\"access_token\": \"test-token\", \"expires_in\": 3600}"));
     mockWebServer.enqueue(new MockResponse().setResponseCode(200).setBody(responseJson));
 
     String sql = "SELECT Name, Value FROM sentinel.MultiRow";
@@ -293,8 +287,7 @@ public class TestSentinelBatchReader extends SentinelTestBase {
         "  ]\n" +
         "}";
 
-    String tokenResponse = "{\"access_token\": \"test-token\", \"expires_in\": 3600}";
-    mockWebServer.enqueue(new MockResponse().setResponseCode(200).setBody(tokenResponse));
+    mockWebServer.enqueue(new MockResponse().setResponseCode(200).setBody("{\"access_token\": \"test-token\", \"expires_in\": 3600}"));
     mockWebServer.enqueue(new MockResponse().setResponseCode(200).setBody(responseJson));
 
     String sql = "SELECT BigNumber FROM sentinel.LargeNumbers";
@@ -325,8 +318,7 @@ public class TestSentinelBatchReader extends SentinelTestBase {
         "  ]\n" +
         "}";
 
-    String tokenResponse = "{\"access_token\": \"test-token\", \"expires_in\": 3600}";
-    mockWebServer.enqueue(new MockResponse().setResponseCode(200).setBody(tokenResponse));
+    mockWebServer.enqueue(new MockResponse().setResponseCode(200).setBody("{\"access_token\": \"test-token\", \"expires_in\": 3600}"));
     mockWebServer.enqueue(new MockResponse().setResponseCode(200).setBody(responseJson));
 
     String sql = "SELECT IntVal, RealVal FROM sentinel.NegativeNumbers";

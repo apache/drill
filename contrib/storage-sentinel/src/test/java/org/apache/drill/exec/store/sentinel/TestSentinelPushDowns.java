@@ -21,7 +21,6 @@ package org.apache.drill.exec.store.sentinel;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import okhttp3.mockwebserver.MockResponse;
-import okhttp3.mockwebserver.MockWebServer;
 import org.apache.drill.common.logical.StoragePluginConfig.AuthMode;
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -31,12 +30,12 @@ import java.util.ArrayList;
 import static org.junit.Assert.assertTrue;
 
 public class TestSentinelPushDowns extends SentinelTestBase {
-  private static final int MOCK_SERVER_PORT = 18889;
   private static final ObjectMapper mapper = new ObjectMapper();
 
   @BeforeClass
   public static void setupPlugin() throws Exception {
-    String mockServerUrl = "http://localhost:" + MOCK_SERVER_PORT;
+    String mockServerUrl = getMockServerUrl();
+    String tokenEndpoint = mockServerUrl + "token";
     SentinelStoragePluginConfig config = new SentinelStoragePluginConfig(
         "workspace-id",
         null,
@@ -49,7 +48,7 @@ public class TestSentinelPushDowns extends SentinelTestBase {
         AuthMode.SHARED_USER,
         null,
         mockServerUrl,
-        null,
+        tokenEndpoint,
         false
     );
     config.setEnabled(true);
@@ -62,15 +61,14 @@ public class TestSentinelPushDowns extends SentinelTestBase {
         new String[]{"string", "string"},
         new Object[][]{{"High", "Alert1"}, {"Critical", "Alert2"}});
 
-    try (MockWebServer server = startMockServer()) {
-      server.enqueue(new MockResponse().setResponseCode(200).setBody(responseJson));
+    mockWebServer.enqueue(new MockResponse().setResponseCode(200).setBody("{\"access_token\": \"test-token\", \"expires_in\": 3600}"));
+    mockWebServer.enqueue(new MockResponse().setResponseCode(200).setBody(responseJson));
 
-      String sql = "SELECT Severity, AlertName FROM sentinel.SecurityAlert WHERE Severity = 'High'";
-      String plan = client.queryBuilder().sql(sql).explainJson();
+    String sql = "SELECT Severity, AlertName FROM sentinel.SecurityAlert WHERE Severity = 'High'";
+    String plan = client.queryBuilder().sql(sql).explainJson();
 
-      assertTrue("Filter should be pushed down to Sentinel", containsKqlOperation(plan, "where"));
-      assertTrue("WHERE clause should contain Severity filter", containsKqlOperation(plan, "Severity"));
-    }
+    assertTrue("Filter should be pushed down to Sentinel", containsKqlOperation(plan, "where"));
+    assertTrue("WHERE clause should contain Severity filter", containsKqlOperation(plan, "Severity"));
   }
 
   @Test
@@ -79,16 +77,15 @@ public class TestSentinelPushDowns extends SentinelTestBase {
         new String[]{"string", "string"},
         new Object[][]{{"Alert1", "High"}});
 
-    try (MockWebServer server = startMockServer()) {
-      server.enqueue(new MockResponse().setResponseCode(200).setBody(responseJson));
+    mockWebServer.enqueue(new MockResponse().setResponseCode(200).setBody("{\"access_token\": \"test-token\", \"expires_in\": 3600}"));
+    mockWebServer.enqueue(new MockResponse().setResponseCode(200).setBody(responseJson));
 
-      String sql = "SELECT AlertName, Severity FROM sentinel.SecurityAlert";
-      String plan = client.queryBuilder().sql(sql).explainJson();
+    String sql = "SELECT AlertName, Severity FROM sentinel.SecurityAlert";
+    String plan = client.queryBuilder().sql(sql).explainJson();
 
-      assertTrue("Projection should be pushed down", containsKqlOperation(plan, "project"));
-      assertTrue("Project should contain AlertName", containsKqlOperation(plan, "AlertName"));
-      assertTrue("Project should contain Severity", containsKqlOperation(plan, "Severity"));
-    }
+    assertTrue("Projection should be pushed down", containsKqlOperation(plan, "project"));
+    assertTrue("Project should contain AlertName", containsKqlOperation(plan, "AlertName"));
+    assertTrue("Project should contain Severity", containsKqlOperation(plan, "Severity"));
   }
 
   @Test
@@ -97,14 +94,13 @@ public class TestSentinelPushDowns extends SentinelTestBase {
         new String[]{"string"},
         new Object[][]{{"Alert1"}, {"Alert2"}});
 
-    try (MockWebServer server = startMockServer()) {
-      server.enqueue(new MockResponse().setResponseCode(200).setBody(responseJson));
+    mockWebServer.enqueue(new MockResponse().setResponseCode(200).setBody("{\"access_token\": \"test-token\", \"expires_in\": 3600}"));
+    mockWebServer.enqueue(new MockResponse().setResponseCode(200).setBody(responseJson));
 
-      String sql = "SELECT AlertName FROM sentinel.SecurityAlert LIMIT 10";
-      String plan = client.queryBuilder().sql(sql).explainJson();
+    String sql = "SELECT AlertName FROM sentinel.SecurityAlert LIMIT 10";
+    String plan = client.queryBuilder().sql(sql).explainJson();
 
-      assertTrue("LIMIT should be pushed down as take", containsKqlOperation(plan, "take"));
-    }
+    assertTrue("LIMIT should be pushed down as take", containsKqlOperation(plan, "take"));
   }
 
   @Test
@@ -113,15 +109,14 @@ public class TestSentinelPushDowns extends SentinelTestBase {
         new String[]{"string", "int"},
         new Object[][]{{"Alert1", 5}, {"Alert2", 3}});
 
-    try (MockWebServer server = startMockServer()) {
-      server.enqueue(new MockResponse().setResponseCode(200).setBody(responseJson));
+    mockWebServer.enqueue(new MockResponse().setResponseCode(200).setBody("{\"access_token\": \"test-token\", \"expires_in\": 3600}"));
+    mockWebServer.enqueue(new MockResponse().setResponseCode(200).setBody(responseJson));
 
-      String sql = "SELECT AlertName, Count FROM sentinel.SecurityAlert ORDER BY Count DESC";
-      String plan = client.queryBuilder().sql(sql).explainJson();
+    String sql = "SELECT AlertName, Count FROM sentinel.SecurityAlert ORDER BY Count DESC";
+    String plan = client.queryBuilder().sql(sql).explainJson();
 
-      assertTrue("ORDER BY should be pushed down as sort", containsKqlOperation(plan, "sort by"));
-      assertTrue("Sort should specify column", containsKqlOperation(plan, "Count"));
-    }
+    assertTrue("ORDER BY should be pushed down as sort", containsKqlOperation(plan, "sort by"));
+    assertTrue("Sort should specify column", containsKqlOperation(plan, "Count"));
   }
 
   @Test
@@ -130,15 +125,14 @@ public class TestSentinelPushDowns extends SentinelTestBase {
         new String[]{"string", "long"},
         new Object[][]{{"High", 5}, {"Critical", 3}});
 
-    try (MockWebServer server = startMockServer()) {
-      server.enqueue(new MockResponse().setResponseCode(200).setBody(responseJson));
+    mockWebServer.enqueue(new MockResponse().setResponseCode(200).setBody("{\"access_token\": \"test-token\", \"expires_in\": 3600}"));
+    mockWebServer.enqueue(new MockResponse().setResponseCode(200).setBody(responseJson));
 
-      String sql = "SELECT Severity, COUNT(*) as Count FROM sentinel.SecurityAlert GROUP BY Severity";
-      String plan = client.queryBuilder().sql(sql).explainJson();
+    String sql = "SELECT Severity, COUNT(*) as Count FROM sentinel.SecurityAlert GROUP BY Severity";
+    String plan = client.queryBuilder().sql(sql).explainJson();
 
-      assertTrue("GROUP BY should be pushed down as summarize", containsKqlOperation(plan, "summarize"));
-      assertTrue("Summarize should have count function", containsKqlOperation(plan, "count()"));
-    }
+    assertTrue("GROUP BY should be pushed down as summarize", containsKqlOperation(plan, "summarize"));
+    assertTrue("Summarize should have count function", containsKqlOperation(plan, "count()"));
   }
 
   @Test
@@ -147,18 +141,17 @@ public class TestSentinelPushDowns extends SentinelTestBase {
         new String[]{"string"},
         new Object[][]{{"Alert1"}});
 
-    try (MockWebServer server = startMockServer()) {
-      server.enqueue(new MockResponse().setResponseCode(200).setBody(responseJson));
+    mockWebServer.enqueue(new MockResponse().setResponseCode(200).setBody("{\"access_token\": \"test-token\", \"expires_in\": 3600}"));
+    mockWebServer.enqueue(new MockResponse().setResponseCode(200).setBody(responseJson));
 
-      String sql = "SELECT AlertName FROM sentinel.SecurityAlert WHERE Severity = 'High' " +
-          "ORDER BY AlertName LIMIT 5";
-      String plan = client.queryBuilder().sql(sql).explainJson();
+    String sql = "SELECT AlertName FROM sentinel.SecurityAlert WHERE Severity = 'High' " +
+        "ORDER BY AlertName LIMIT 5";
+    String plan = client.queryBuilder().sql(sql).explainJson();
 
-      assertTrue("Filter should be pushed down", containsKqlOperation(plan, "where"));
-      assertTrue("Projection should be pushed down", containsKqlOperation(plan, "project"));
-      assertTrue("Sort should be pushed down", containsKqlOperation(plan, "sort"));
-      assertTrue("Limit should be pushed down", containsKqlOperation(plan, "take"));
-    }
+    assertTrue("Filter should be pushed down", containsKqlOperation(plan, "where"));
+    assertTrue("Projection should be pushed down", containsKqlOperation(plan, "project"));
+    assertTrue("Sort should be pushed down", containsKqlOperation(plan, "sort"));
+    assertTrue("Limit should be pushed down", containsKqlOperation(plan, "take"));
   }
 
   private static String createResponse(String[] columnNames, String[] columnTypes, Object[][] rows) {
@@ -232,11 +225,4 @@ public class TestSentinelPushDowns extends SentinelTestBase {
 
     return false;
   }
-
-  private static MockWebServer startMockServer() throws Exception {
-    MockWebServer server = new MockWebServer();
-    server.start(MOCK_SERVER_PORT);
-    return server;
-  }
 }
-

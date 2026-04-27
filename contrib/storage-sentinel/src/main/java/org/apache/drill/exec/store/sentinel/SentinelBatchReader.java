@@ -152,7 +152,12 @@ public class SentinelBatchReader implements ManagedReader<SchemaNegotiator> {
 
   @Override
   public void close() {
-    httpClient.dispatcher().executorService().shutdown();
+    try {
+      httpClient.dispatcher().executorService().shutdown();
+      httpClient.connectionPool().evictAll();
+    } catch (Exception e) {
+      logger.debug("Error closing HTTP client", e);
+    }
   }
 
   private void queryLogAnalytics() throws IOException {
