@@ -31,12 +31,9 @@ import org.apache.hadoop.hive.ql.Driver;
 import org.apache.hadoop.hive.ql.processors.CommandProcessorResponse;
 import org.apache.hadoop.util.ComparableVersion;
 import org.apache.hive.common.util.HiveVersionInfo;
-import org.junit.AssumptionViolatedException;
 
 import static org.hamcrest.CoreMatchers.containsString;
-import static org.hamcrest.CoreMatchers.startsWith;
 import static org.hamcrest.MatcherAssert.assertThat;
-import static org.junit.Assume.assumeThat;
 
 public class HiveTestUtilities {
 
@@ -125,30 +122,10 @@ public class HiveTestUtilities {
   }
 
   /**
-   * Current Hive version doesn't support JDK 9+.
-   * Checks if current version is supported by Hive.
-   *
-   * @return {@code true} if current version is supported by Hive, {@code false} otherwise
-   */
-  public static boolean supportedJavaVersion() {
-    return System.getProperty("java.version").startsWith("1.8");
-  }
-
-  /**
    * Checks whether current version is not less than hive 3.0
    */
   public static boolean isHive3() {
     return new ComparableVersion(HiveVersionInfo.getVersion())
         .compareTo(new ComparableVersion("3.0")) >= 0;
-  }
-
-  /**
-   * Checks if current version is supported by Hive.
-   *
-   * @throws AssumptionViolatedException if current version is not supported by Hive,
-   * so unit tests may be skipped.
-   */
-  public static void assumeJavaVersion() throws AssumptionViolatedException {
-    assumeThat("Skipping tests since Hive supports only JDK 8.", System.getProperty("java.version"), startsWith("1.8"));
   }
 }
