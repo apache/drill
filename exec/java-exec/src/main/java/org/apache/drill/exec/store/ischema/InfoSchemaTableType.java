@@ -26,6 +26,7 @@ import org.apache.drill.exec.server.options.OptionManager;
 import org.apache.drill.exec.store.ischema.InfoSchemaTable.Catalogs;
 import org.apache.drill.exec.store.ischema.InfoSchemaTable.Columns;
 import org.apache.drill.exec.store.ischema.InfoSchemaTable.Files;
+import org.apache.drill.exec.store.ischema.InfoSchemaTable.MaterializedViews;
 import org.apache.drill.exec.store.ischema.InfoSchemaTable.Partitions;
 import org.apache.drill.exec.store.ischema.InfoSchemaTable.Schemata;
 import org.apache.drill.exec.store.ischema.InfoSchemaTable.Tables;
@@ -46,6 +47,7 @@ public enum InfoSchemaTableType implements DrillTableSelection {
   CATALOGS(new Catalogs()),
   SCHEMATA(new Schemata()),
   VIEWS(new Views()),
+  MATERIALIZED_VIEWS(new MaterializedViews()),
   COLUMNS(new Columns()),
   TABLES(new Tables()),
   PARTITIONS(new Partitions()),

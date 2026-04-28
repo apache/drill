@@ -887,6 +887,13 @@ public final class ExecConstants {
   public static final OptionValidator NEW_VIEW_DEFAULT_PERMS_VALIDATOR = new StringValidator(NEW_VIEW_DEFAULT_PERMS_KEY,
       new OptionDescription("Sets view permissions using an octal code in the Unix tradition."));
 
+  public static final String ENABLE_MATERIALIZED_VIEW_REWRITE_KEY = "planner.enable_materialized_view_rewrite";
+  public static final BooleanValidator ENABLE_MATERIALIZED_VIEW_REWRITE = new BooleanValidator(
+      ENABLE_MATERIALIZED_VIEW_REWRITE_KEY,
+      new OptionDescription("Enables automatic query rewriting to use materialized views when available. " +
+          "When enabled, the query planner will attempt to match queries against materialized views " +
+          "and use the pre-computed results instead of executing the original query."));
+
   public static final String CTAS_PARTITIONING_HASH_DISTRIBUTE = "store.partition.hash_distribute";
   public static final BooleanValidator CTAS_PARTITIONING_HASH_DISTRIBUTE_VALIDATOR = new BooleanValidator(CTAS_PARTITIONING_HASH_DISTRIBUTE,
       new OptionDescription("Uses a hash algorithm to distribute data on partition keys in a CTAS partitioning operation. An alpha option--for experimental use at this stage. Do not use in production systems."));

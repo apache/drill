@@ -86,6 +86,9 @@ import static org.apache.drill.exec.store.ischema.InfoSchemaConstants.TBLS_COL_N
 import static org.apache.drill.exec.store.ischema.InfoSchemaConstants.TBLS_COL_TABLE_SOURCE;
 import static org.apache.drill.exec.store.ischema.InfoSchemaConstants.TBLS_COL_TABLE_TYPE;
 import static org.apache.drill.exec.store.ischema.InfoSchemaConstants.VIEWS_COL_VIEW_DEFINITION;
+import static org.apache.drill.exec.store.ischema.InfoSchemaConstants.MVIEWS_COL_REFRESH_STATUS;
+import static org.apache.drill.exec.store.ischema.InfoSchemaConstants.MVIEWS_COL_LAST_REFRESH_TIME;
+import static org.apache.drill.exec.store.ischema.InfoSchemaConstants.MVIEWS_COL_DATA_LOCATION;
 
 /**
  * Base class for tables in INFORMATION_SCHEMA. Defines the table (fields and types).
@@ -225,6 +228,30 @@ public abstract class InfoSchemaTable<S> {
     @Override
     public InfoSchemaRecordGenerator<Records.View> getRecordGenerator(FilterEvaluator filterEvaluator) {
       return new InfoSchemaRecordGenerator.Views(filterEvaluator);
+    }
+  }
+
+  /**
+   * Layout for the MATERIALIZED_VIEWS table.
+   */
+  public static class MaterializedViews extends InfoSchemaTable<Records.MaterializedView> {
+
+    private static final List<Field> fields = Arrays.asList(
+      Field.create(SHRD_COL_TABLE_CATALOG, VARCHAR),
+      Field.create(SHRD_COL_TABLE_SCHEMA, VARCHAR),
+      Field.create(SHRD_COL_TABLE_NAME, VARCHAR),
+      Field.create(VIEWS_COL_VIEW_DEFINITION, VARCHAR),
+      Field.create(MVIEWS_COL_REFRESH_STATUS, VARCHAR),
+      Field.create(MVIEWS_COL_LAST_REFRESH_TIME, TIMESTAMP),
+      Field.create(MVIEWS_COL_DATA_LOCATION, VARCHAR));
+
+    public MaterializedViews() {
+      super(fields);
+    }
+
+    @Override
+    public InfoSchemaRecordGenerator<Records.MaterializedView> getRecordGenerator(FilterEvaluator filterEvaluator) {
+      return new InfoSchemaRecordGenerator.MaterializedViews(filterEvaluator);
     }
   }
 

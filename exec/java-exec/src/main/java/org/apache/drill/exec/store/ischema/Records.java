@@ -673,6 +673,31 @@ public class Records {
   }
 
   /**
+   * Pojo object for a record in INFORMATION_SCHEMA.MATERIALIZED_VIEWS
+   */
+  public static class MaterializedView {
+
+    public final String TABLE_CATALOG;
+    public final String TABLE_SCHEMA;
+    public final String TABLE_NAME;
+    public final String VIEW_DEFINITION;
+    public final String REFRESH_STATUS;
+    public final Timestamp LAST_REFRESH_TIME;
+    public final String DATA_LOCATION;
+
+    public MaterializedView(String catalog, String schema, String name, String definition,
+                            String refreshStatus, Long lastRefreshTime, String dataLocation) {
+      this.TABLE_CATALOG = catalog;
+      this.TABLE_SCHEMA = schema;
+      this.TABLE_NAME = name;
+      this.VIEW_DEFINITION = definition;
+      this.REFRESH_STATUS = refreshStatus;
+      this.LAST_REFRESH_TIME = lastRefreshTime != null ? convertToTimestamp(lastRefreshTime) : null;
+      this.DATA_LOCATION = dataLocation;
+    }
+  }
+
+  /**
    * Pojo object for a record in INFORMATION_SCHEMA.CATALOGS
    */
   public static class Catalog {

@@ -20,8 +20,10 @@ package org.apache.drill.metastore.iceberg;
 import com.typesafe.config.Config;
 import org.apache.drill.common.config.DrillConfig;
 import org.apache.drill.metastore.Metastore;
+import org.apache.drill.metastore.components.materializedviews.MaterializedViews;
 import org.apache.drill.metastore.components.tables.Tables;
 import org.apache.drill.metastore.components.views.Views;
+import org.apache.drill.metastore.iceberg.components.materializedviews.IcebergMaterializedViews;
 import org.apache.drill.metastore.iceberg.components.tables.IcebergTables;
 import org.apache.drill.metastore.iceberg.config.IcebergConfigConstants;
 import org.apache.drill.metastore.iceberg.exceptions.IcebergMetastoreException;
@@ -88,6 +90,14 @@ public class IcebergMetastore implements Metastore {
   @Override
   public Views views() {
     throw new UnsupportedOperationException("Views metadata support is not implemented");
+  }
+
+  @Override
+  public MaterializedViews materializedViews() {
+    Table table = loadTable(IcebergConfigConstants.COMPONENTS_MATERIALIZED_VIEWS_LOCATION,
+        IcebergConfigConstants.COMPONENTS_MATERIALIZED_VIEWS_PROPERTIES,
+        IcebergMaterializedViews.SCHEMA, MaterializedViews.class);
+    return new IcebergMaterializedViews(table);
   }
 
   /**

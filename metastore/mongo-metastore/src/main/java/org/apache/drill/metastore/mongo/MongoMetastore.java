@@ -22,6 +22,7 @@ import com.mongodb.client.MongoClient;
 import com.mongodb.client.MongoClients;
 import org.apache.drill.common.config.DrillConfig;
 import org.apache.drill.metastore.Metastore;
+import org.apache.drill.metastore.components.materializedviews.MaterializedViews;
 import org.apache.drill.metastore.components.tables.Tables;
 import org.apache.drill.metastore.components.views.Views;
 import org.apache.drill.metastore.mongo.components.tables.MongoTables;
@@ -60,6 +61,11 @@ public class MongoMetastore implements Metastore {
   @Override
   public Views views() {
     throw new UnsupportedOperationException("Views metadata support is not implemented");
+  }
+
+  @Override
+  public MaterializedViews materializedViews() {
+    throw new UnsupportedOperationException("Materialized views metadata support is not implemented for Mongo metastore");
   }
 
   @Override

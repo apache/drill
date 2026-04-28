@@ -193,6 +193,14 @@ SqlNode SqlCreateOrReplace() :
     [ <OR> <REPLACE> { createType = "OR_REPLACE"; } ]
     [ <TEMPORARY> { isTemporary = true; } ]
     (
+        <MATERIALIZED> <VIEW>
+            {
+                if (isTemporary) {
+                    throw new ParseException("Create materialized view statement does not allow <TEMPORARY> keyword.");
+                }
+                return SqlCreateMaterializedView(pos, createType);
+            }
+    |
         <VIEW>
             {
                 if (isTemporary) {
@@ -256,6 +264,36 @@ SqlNode SqlCreateView(SqlParserPos pos, String createType) :
     query = OrderedQueryOrExpr(ExprContext.ACCEPT_QUERY)
     {
         return new SqlCreateView(pos, viewName, fieldList, query, SqlLiteral.createCharString(createType, getPos()));
+    }
+}
+
+/**
+ * Parses a create materialized view or replace existing materialized view statement.
+ * after CREATE OR REPLACE MATERIALIZED VIEW statement which is handled in the SqlCreateOrReplace method.
+ *
+ * CREATE { [OR REPLACE] MATERIALIZED VIEW | MATERIALIZED VIEW [IF NOT EXISTS] | MATERIALIZED VIEW } view_name [ (field1, field2 ...) ] AS select_statement
+ */
+SqlNode SqlCreateMaterializedView(SqlParserPos pos, String createType) :
+{
+    SqlIdentifier viewName;
+    SqlNode query;
+    SqlNodeList fieldList;
+}
+{
+    [
+        <IF> <NOT> <EXISTS> {
+            if (createType == "OR_REPLACE") {
+                throw new ParseException("Create materialized view statement cannot have both <OR REPLACE> and <IF NOT EXISTS> clause");
+            }
+            createType = "IF_NOT_EXISTS";
+        }
+    ]
+    viewName = CompoundIdentifier()
+    fieldList = ParseOptionalFieldList("Materialized View")
+    <AS>
+    query = OrderedQueryOrExpr(ExprContext.ACCEPT_QUERY)
+    {
+        return new SqlCreateMaterializedView(pos, viewName, fieldList, query, SqlLiteral.createCharString(createType, getPos()));
     }
 }
 
@@ -392,7 +430,7 @@ void addProperty(SqlNodeList properties) :
 }
 
 /**
- * Parses DROP command for VIEW, TABLE and SCHEMA.
+ * Parses DROP command for VIEW, TABLE, MATERIALIZED VIEW and SCHEMA.
  */
 SqlNode SqlDrop() :
 {
@@ -401,6 +439,11 @@ SqlNode SqlDrop() :
 {
     <DROP> { pos = getPos(); }
     (
+        <MATERIALIZED> <VIEW>
+        {
+            return SqlDropMaterializedView(pos);
+        }
+    |
         <VIEW>
         {
             return SqlDropView(pos);
@@ -432,6 +475,23 @@ SqlNode SqlDropView(SqlParserPos pos) :
     [ <IF> <EXISTS> { viewExistenceCheck = true; } ]
     {
         return new SqlDropView(pos, CompoundIdentifier(), viewExistenceCheck);
+    }
+}
+
+/**
+ * Parses a drop materialized view or drop materialized view if exists statement
+ * after DROP MATERIALIZED VIEW statement which is handled in SqlDrop method.
+ *
+ * DROP MATERIALIZED VIEW [IF EXISTS] view_name;
+ */
+SqlNode SqlDropMaterializedView(SqlParserPos pos) :
+{
+    boolean viewExistenceCheck = false;
+}
+{
+    [ <IF> <EXISTS> { viewExistenceCheck = true; } ]
+    {
+        return new SqlDropMaterializedView(pos, CompoundIdentifier(), viewExistenceCheck);
     }
 }
 
@@ -469,6 +529,25 @@ SqlNode SqlDropSchema(SqlParserPos pos) :
     <FOR> <TABLE> { table = CompoundIdentifier(); }
     {
         return new SqlSchema.Drop(pos, table, SqlLiteral.createBoolean(existenceCheck, getPos()));
+    }
+}
+
+/**
+ * Parse refresh materialized view statement.
+ * REFRESH MATERIALIZED VIEW view_name
+ */
+SqlNode SqlRefreshMaterializedView() :
+{
+    SqlParserPos pos;
+    SqlIdentifier viewName;
+}
+{
+    <REFRESH> { pos = getPos(); }
+    <MATERIALIZED>
+    <VIEW>
+    viewName = CompoundIdentifier()
+    {
+        return new SqlRefreshMaterializedView(pos, viewName);
     }
 }
 

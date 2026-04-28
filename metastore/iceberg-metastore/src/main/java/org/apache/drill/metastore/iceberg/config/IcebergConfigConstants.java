@@ -90,4 +90,19 @@ public interface IcebergConfigConstants {
    * Metastore Views Iceberg table properties.
    */
   String COMPONENTS_VIEWS_PROPERTIES = COMPONENTS_VIEWS + "properties";
+
+  /**
+   * Drill Iceberg Metastore MaterializedViews components configuration properties namespace.
+   */
+  String COMPONENTS_MATERIALIZED_VIEWS = COMPONENTS + "materialized_views.";
+
+  /**
+   * Metastore MaterializedViews Iceberg table location inside Iceberg Metastore.
+   */
+  String COMPONENTS_MATERIALIZED_VIEWS_LOCATION = COMPONENTS_MATERIALIZED_VIEWS + "location";
+
+  /**
+   * Metastore MaterializedViews Iceberg table properties.
+   */
+  String COMPONENTS_MATERIALIZED_VIEWS_PROPERTIES = COMPONENTS_MATERIALIZED_VIEWS + "properties";
 }
