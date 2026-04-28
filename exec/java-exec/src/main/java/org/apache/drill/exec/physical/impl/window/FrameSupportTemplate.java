@@ -163,6 +163,16 @@ public abstract class FrameSupportTemplate implements WindowFramer {
     setupEvaluatePeer(current, container);
     setupReadLastValue(current, container);
 
+    // Check if we need to handle EXCLUDE modes that require special processing
+    final boolean hasExclude = popConfig.getExclude() != null &&
+                                popConfig.getExclude() != WindowPOP.Exclusion.EXCLUDE_NO_OTHER;
+
+    // For EXCLUDE modes, we need to aggregate the entire frame before outputting each row
+    if (hasExclude) {
+      return processROWSWithFrame(row);
+    }
+
+    // Standard streaming processing for simple frames
     while (row < outputCount && !isPartitionDone()) {
       logger.trace("aggregating row {}", row);
       evaluatePeer(row);
@@ -175,6 +185,64 @@ public abstract class FrameSupportTemplate implements WindowFramer {
     }
 
     return row;
+  }
+
+  /**
+   * Process ROWS frames that require seeing the entire frame (EXCLUDE or UNBOUNDED FOLLOWING)
+   */
+  private int processROWSWithFrame(int row) throws SchemaChangeException {
+    while (row < outputCount && !isPartitionDone()) {
+      // Reset aggregation values for this row (but don't clear internal vectors)
+      resetValues();
+
+      // Aggregate all rows in the frame, applying EXCLUDE logic
+      aggregateFrameForRow(row);
+
+      // Reset all context back to current batch after iterating through all batches
+      setupPartition(current, container);
+      setupEvaluatePeer(current, container);
+      setupReadLastValue(current, container);
+
+      outputRow(row);
+      writeLastValue(row, row);
+
+      remainingRows--;
+      row++;
+    }
+
+    return row;
+  }
+
+  /**
+   * Aggregate all rows in the frame for the current row, applying EXCLUDE logic
+   */
+  private void aggregateFrameForRow(final int currentRow) throws SchemaChangeException {
+    final WindowPOP.Exclusion exclude = popConfig.getExclude();
+
+    // If no exclusion, aggregate all rows in all batches
+    if (exclude == null || exclude == WindowPOP.Exclusion.EXCLUDE_NO_OTHER) {
+      for (WindowDataBatch batch : batches) {
+        setupEvaluatePeer(batch, container);
+        final int recordCount = batch.getRecordCount();
+        for (int frameRow = 0; frameRow < recordCount; frameRow++) {
+          evaluatePeer(frameRow);
+        }
+      }
+      return;
+    }
+
+    // For EXCLUDE modes, we need to check each row
+    for (WindowDataBatch batch : batches) {
+      setupEvaluatePeer(batch, container);
+      final int recordCount = batch.getRecordCount();
+
+      for (int frameRow = 0; frameRow < recordCount; frameRow++) {
+        // Check if this row should be excluded based on EXCLUDE clause
+        if (!shouldExcludeRow(currentRow, frameRow, current, batch)) {
+          evaluatePeer(frameRow);
+        }
+      }
+    }
   }
 
   private int processRANGE(int row) throws SchemaChangeException {
@@ -249,6 +317,45 @@ public abstract class FrameSupportTemplate implements WindowFramer {
   }
 
   /**
+   * Determines if a row should be excluded from the window frame based on the EXCLUDE clause.
+   * @param currentRow the row being processed (for which window function is being computed)
+   * @param frameRow the row in the frame being considered for aggregation
+   * @param currentBatch the batch containing currentRow
+   * @param frameBatch the batch containing frameRow
+   * @return true if the row should be excluded from aggregation
+   */
+  private boolean shouldExcludeRow(final int currentRow, final int frameRow,
+                                    final VectorAccessible currentBatch, final VectorAccessible frameBatch) {
+    final WindowPOP.Exclusion exclude = popConfig.getExclude();
+
+    // Null or EXCLUDE_NO_OTHER means don't exclude anything
+    if (exclude == null || exclude == WindowPOP.Exclusion.EXCLUDE_NO_OTHER) {
+      return false; // Default: don't exclude anything
+    }
+
+    final boolean isCurrentRow = (currentRow == frameRow) && (currentBatch == frameBatch);
+
+    if (exclude == WindowPOP.Exclusion.EXCLUDE_CURRENT_ROW) {
+      return isCurrentRow;
+    }
+
+    // For EXCLUDE_GROUP and EXCLUDE_TIES, we need to check if frameRow is a peer of currentRow
+    final boolean isPeerRow = isPeer(currentRow, currentBatch, frameRow, frameBatch);
+
+    if (exclude == WindowPOP.Exclusion.EXCLUDE_GROUP) {
+      // Exclude current row and all its peers
+      return isPeerRow;
+    }
+
+    if (exclude == WindowPOP.Exclusion.EXCLUDE_TIES) {
+      // Exclude peers but NOT the current row itself
+      return isPeerRow && !isCurrentRow;
+    }
+
+    return false;
+  }
+
+  /**
    * Aggregates all peer rows of current row
    * @param start starting row of the current frame
    * @return num peer rows for current row
@@ -282,7 +389,11 @@ public abstract class FrameSupportTemplate implements WindowFramer {
           }
         }
 
-        evaluatePeer(row);
+        // Check if this row should be excluded based on EXCLUDE clause
+        if (!shouldExcludeRow(start, row, current, batch)) {
+          evaluatePeer(row);
+        }
+
         last = batch;
         frameLastRow = row;
       }

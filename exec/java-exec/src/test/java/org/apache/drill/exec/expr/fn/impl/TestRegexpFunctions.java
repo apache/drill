@@ -62,9 +62,10 @@ public class TestRegexpFunctions extends ClusterTest {
         "regexp_extract('123-456-789', '([0-9]{3})-([0-9]{3})-([0-9]{3})', 0) AS allText";
     RowSet results = client.queryBuilder().sql(sql).rowSet();
 
+    // Calcite 1.35+: VARCHAR now includes explicit precision (65535)
     TupleMetadata expectedSchema = new SchemaBuilder()
-        .add("extractedText", MinorType.VARCHAR)
-        .add("allText", MinorType.VARCHAR)
+        .add("extractedText", MinorType.VARCHAR, 65535)
+        .add("allText", MinorType.VARCHAR, 65535)
         .buildSchema();
 
     RowSet expected = client.rowSetBuilder(expectedSchema)

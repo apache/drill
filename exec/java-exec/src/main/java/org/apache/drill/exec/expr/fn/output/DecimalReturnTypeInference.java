@@ -17,6 +17,7 @@
  */
 package org.apache.drill.exec.expr.fn.output;
 
+import org.apache.calcite.sql.type.SqlTypeName;
 import org.apache.drill.common.exceptions.DrillRuntimeException;
 import org.apache.drill.common.expression.LogicalExpression;
 import org.apache.drill.common.expression.ValueExpressions;
@@ -306,7 +307,7 @@ public class DecimalReturnTypeInference {
       return TypeProtos.MajorType.newBuilder()
           .setMinorType(TypeProtos.MinorType.VARDECIMAL)
           .setScale(scale)
-          .setPrecision(DRILL_REL_DATATYPE_SYSTEM.getMaxNumericPrecision())
+          .setPrecision(DRILL_REL_DATATYPE_SYSTEM.getMaxPrecision(SqlTypeName.DECIMAL))
           .setMode(mode)
           .build();
     }
@@ -335,8 +336,9 @@ public class DecimalReturnTypeInference {
       return TypeProtos.MajorType.newBuilder()
           .setMinorType(TypeProtos.MinorType.VARDECIMAL)
           .setScale(Math.min(Math.max(6, scale),
-              DRILL_REL_DATATYPE_SYSTEM.getMaxNumericScale()))
-          .setPrecision(DRILL_REL_DATATYPE_SYSTEM.getMaxNumericPrecision())
+              // Use getMaxScale(DECIMAL) instead of deprecated getMaxNumericScale()
+              DRILL_REL_DATATYPE_SYSTEM.getMaxScale(SqlTypeName.DECIMAL)))
+          .setPrecision(DRILL_REL_DATATYPE_SYSTEM.getMaxPrecision(SqlTypeName.DECIMAL))
           .setMode(mode)
           .build();
     }

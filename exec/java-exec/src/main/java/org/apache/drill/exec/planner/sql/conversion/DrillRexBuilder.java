@@ -17,18 +17,20 @@
  */
 package org.apache.drill.exec.planner.sql.conversion;
 
-import java.math.BigDecimal;
-
 import org.apache.calcite.rel.type.RelDataType;
 import org.apache.calcite.rel.type.RelDataTypeFactory;
 import org.apache.calcite.rex.RexBuilder;
 import org.apache.calcite.rex.RexLiteral;
 import org.apache.calcite.rex.RexNode;
+import org.apache.calcite.sql.SqlOperator;
 import org.apache.calcite.sql.type.SqlTypeName;
 import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.exec.util.DecimalUtility;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import java.math.BigDecimal;
+import java.util.List;
 
 class DrillRexBuilder extends RexBuilder {
 
@@ -36,6 +38,83 @@ class DrillRexBuilder extends RexBuilder {
 
   DrillRexBuilder(RelDataTypeFactory typeFactory) {
     super(typeFactory);
+  }
+
+  /**
+   * Override makeCall to fix DECIMAL precision/scale issues in Calcite 1.38.
+   * CALCITE-6427 can create invalid DECIMAL types where scale > precision.
+   * This version intercepts calls WITH explicit return type.
+   */
+  @Override
+  public RexNode makeCall(RelDataType returnType, SqlOperator op, List<RexNode> exprs) {
+    // Fix DECIMAL return types for arithmetic operations
+    if (returnType.getSqlTypeName() == SqlTypeName.DECIMAL) {
+      int precision = returnType.getPrecision();
+      int scale = returnType.getScale();
+
+      // If scale exceeds precision, fix it
+      if (scale > precision) {
+        // Cap precision at Drill's max (38)
+        int maxPrecision = 38;
+        if (precision > maxPrecision) {
+          precision = maxPrecision;
+        }
+
+        // Ensure scale doesn't exceed precision
+        if (scale > precision) {
+          scale = precision;
+        }
+
+        // Create corrected type
+        returnType = typeFactory.createSqlType(SqlTypeName.DECIMAL, precision, scale);
+      }
+    }
+
+    return super.makeCall(returnType, op, exprs);
+  }
+
+  /**
+   * Override makeCall to fix DECIMAL precision/scale issues in Calcite 1.38.
+   * CALCITE-6427 can create invalid DECIMAL types where scale > precision.
+   * This version intercepts calls WITHOUT explicit return type (type is inferred).
+   * NOTE: Cannot override makeCall(SqlOperator, RexNode...) because it's final in RexBuilder.
+   * Instead, override the List version which the varargs version calls internally.
+   */
+  @Override
+  public RexNode makeCall(SqlOperator op, List<? extends RexNode> exprs) {
+    // Call super to get the result with inferred type
+    RexNode result = super.makeCall(op, exprs);
+
+    // Check if the inferred type has invalid DECIMAL precision/scale
+    if (result.getType().getSqlTypeName() == SqlTypeName.DECIMAL) {
+      int precision = result.getType().getPrecision();
+      int scale = result.getType().getScale();
+
+      // If scale exceeds precision, recreate the call with fixed type
+      if (scale > precision) {
+        // Cap precision at Drill's max (38)
+        int maxPrecision = 38;
+        if (precision > maxPrecision) {
+          precision = maxPrecision;
+        }
+
+        // Ensure scale doesn't exceed precision
+        if (scale > precision) {
+          scale = precision;
+        }
+
+        // Create corrected type and recreate the call with fixed type
+        RelDataType fixedType = typeFactory.createSqlType(SqlTypeName.DECIMAL, precision, scale);
+        // Convert to List<RexNode> to call the 3-arg version with explicit type
+        List<RexNode> exprList = new java.util.ArrayList<>();
+        for (RexNode expr : exprs) {
+          exprList.add(expr);
+        }
+        result = super.makeCall(fixedType, op, exprList);
+      }
+    }
+
+    return result;
   }
 
   /**
@@ -51,12 +130,7 @@ class DrillRexBuilder extends RexBuilder {
   }
 
   /**
-   * Creates a call to the CAST operator, expanding if possible, and optionally
-   * also preserving nullability.
-   *
-   * <p>Tries to expand the cast, and therefore the result may be something
-   * other than a {@link org.apache.calcite.rex.RexCall} to the CAST operator, such as a
-   * {@link RexLiteral} if {@code matchNullability} is false.
+   * Override makeCast to handle DECIMAL literal precision/scale validation.
    *
    * @param type             Type to cast to
    * @param exp              Expression being cast
@@ -69,19 +143,25 @@ class DrillRexBuilder extends RexBuilder {
     if (matchNullability) {
       return makeAbstractCast(type, exp);
     }
-    // for the case when BigDecimal literal has a scale or precision
-    // that differs from the value from specified RelDataType, cast cannot be removed
-    // TODO: remove this code when CALCITE-1468 is fixed
-    if (type.getSqlTypeName() == SqlTypeName.DECIMAL && exp instanceof RexLiteral) {
+
+    // Validate DECIMAL precision and scale for all DECIMAL casts
+    // This catches user-specified invalid types before DrillTypeFactory auto-fixes them
+    if (type.getSqlTypeName() == SqlTypeName.DECIMAL) {
       int precision = type.getPrecision();
       int scale = type.getScale();
       validatePrecisionAndScale(precision, scale);
-      Comparable<?> value = ((RexLiteral) exp).getValueAs(Comparable.class);
-      if (value instanceof BigDecimal) {
-        BigDecimal bigDecimal = (BigDecimal) value;
-        DecimalUtility.checkValueOverflow(bigDecimal, precision, scale);
-        if (bigDecimal.precision() != precision || bigDecimal.scale() != scale) {
-          return makeAbstractCast(type, exp);
+
+      // for the case when BigDecimal literal has a scale or precision
+      // that differs from the value from specified RelDataType, cast cannot be removed
+      // TODO: remove this code when CALCITE-1468 is fixed
+      if (exp instanceof RexLiteral) {
+        Comparable<?> value = ((RexLiteral) exp).getValueAs(Comparable.class);
+        if (value instanceof BigDecimal) {
+          BigDecimal bigDecimal = (BigDecimal) value;
+          DecimalUtility.checkValueOverflow(bigDecimal, precision, scale);
+          if (bigDecimal.precision() != precision || bigDecimal.scale() != scale) {
+            return makeAbstractCast(type, exp);
+          }
         }
       }
     }
