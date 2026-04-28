@@ -17,7 +17,6 @@
  */
 package org.apache.drill.exec;
 
-import java.util.Arrays;
 import org.apache.drill.common.config.DrillConfig;
 import org.apache.drill.exec.physical.impl.common.HashTable;
 import org.apache.drill.exec.rpc.user.InboundImpersonationManager;
@@ -41,6 +40,8 @@ import org.apache.drill.exec.server.options.TypeValidators.StringValidator;
 import org.apache.drill.exec.store.parquet.ParquetFormatPlugin;
 import org.apache.drill.exec.testing.ExecutionControls;
 import org.apache.drill.exec.vector.ValueVector;
+
+import java.util.Arrays;
 
 public final class ExecConstants {
   private ExecConstants() {
@@ -342,6 +343,17 @@ public final class ExecConstants {
   public static final String UDF_DIRECTORY_REGISTRY = "drill.exec.udf.directory.registry";
   public static final String UDF_DIRECTORY_TMP = "drill.exec.udf.directory.tmp";
   public static final String UDF_DISABLE_DYNAMIC = "drill.exec.udf.disable_dynamic";
+
+  /**
+   * Configuration properties for Apache Daffodil
+   */
+  public static final String DFDL_RETRY_ATTEMPTS = "drill.exec.daffodil.retry-attempts";
+  public static final String DFDL_DIRECTORY_LOCAL = "drill.exec.daffodil.directory.local";
+  public static final String DFDL_DIRECTORY_FS = "drill.exec.daffodil.directory.fs";
+  public static final String DFDL_DIRECTORY_ROOT = "drill.exec.daffodil.directory.root";
+  public static final String DFDL_DIRECTORY_STAGING = "drill.exec.daffodil.directory.staging";
+  public static final String DFDL_DIRECTORY_REGISTRY = "drill.exec.daffodil.directory.registry";
+  public static final String DFDL_DIRECTORY_TMP = "drill.exec.daffodil.directory.tmp";
 
   /**
    * Local temporary directory is used as base for temporary storage of Dynamic UDF jars.
