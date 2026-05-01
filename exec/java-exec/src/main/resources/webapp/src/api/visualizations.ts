@@ -57,8 +57,33 @@ export async function updateVisualization(id: string, viz: Partial<Visualization
 }
 
 /**
- * Delete a visualization
+ * Delete a visualization (soft-delete; recoverable from Trash)
  */
 export async function deleteVisualization(id: string): Promise<void> {
   await apiClient.delete(`${VISUALIZATIONS_BASE}/${encodeURIComponent(id)}`);
+}
+
+/**
+ * List soft-deleted visualizations owned by the current user
+ */
+export async function getTrashedVisualizations(): Promise<Visualization[]> {
+  const response = await apiClient.get<VisualizationsResponse>(`${VISUALIZATIONS_BASE}/trash`);
+  return response.data.visualizations;
+}
+
+/**
+ * Restore a soft-deleted visualization
+ */
+export async function restoreVisualization(id: string): Promise<Visualization> {
+  const response = await apiClient.post<Visualization>(
+    `${VISUALIZATIONS_BASE}/${encodeURIComponent(id)}/restore`
+  );
+  return response.data;
+}
+
+/**
+ * Permanently delete a visualization from trash
+ */
+export async function purgeVisualization(id: string): Promise<void> {
+  await apiClient.delete(`${VISUALIZATIONS_BASE}/${encodeURIComponent(id)}/purge`);
 }

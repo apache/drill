@@ -57,8 +57,33 @@ export async function updateSavedQuery(id: string, query: Partial<SavedQueryCrea
 }
 
 /**
- * Delete a saved query
+ * Delete a saved query (soft-delete; recoverable from Trash)
  */
 export async function deleteSavedQuery(id: string): Promise<void> {
   await apiClient.delete(`${SAVED_QUERIES_BASE}/${encodeURIComponent(id)}`);
+}
+
+/**
+ * List soft-deleted saved queries owned by the current user
+ */
+export async function getTrashedSavedQueries(): Promise<SavedQuery[]> {
+  const response = await apiClient.get<SavedQueriesResponse>(`${SAVED_QUERIES_BASE}/trash`);
+  return response.data.queries;
+}
+
+/**
+ * Restore a soft-deleted saved query
+ */
+export async function restoreSavedQuery(id: string): Promise<SavedQuery> {
+  const response = await apiClient.post<SavedQuery>(
+    `${SAVED_QUERIES_BASE}/${encodeURIComponent(id)}/restore`
+  );
+  return response.data;
+}
+
+/**
+ * Permanently delete a saved query from trash
+ */
+export async function purgeSavedQuery(id: string): Promise<void> {
+  await apiClient.delete(`${SAVED_QUERIES_BASE}/${encodeURIComponent(id)}/purge`);
 }

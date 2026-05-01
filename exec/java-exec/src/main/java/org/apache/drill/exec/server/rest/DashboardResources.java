@@ -72,6 +72,7 @@ import java.util.UUID;
 public class DashboardResources {
   private static final Logger logger = LoggerFactory.getLogger(DashboardResources.class);
   private static final String STORE_NAME = "drill.sqllab.dashboards";
+  private static final long TRASH_TTL_MS = 30L * 24 * 60 * 60 * 1000;
   private static final String FAVORITES_STORE_NAME = "drill.sqllab.dashboard_favorites";
   private static final String UPLOAD_DIR_NAME = "dashboard-images";
   private static final long MAX_FILE_SIZE = 5 * 1024 * 1024; // 5 MB
@@ -475,6 +476,8 @@ public class DashboardResources {
     private int refreshInterval;
     @JsonProperty
     private boolean isPublic;
+    @JsonProperty
+    private long deletedAt;
 
     public Dashboard() {
     }
@@ -491,7 +494,8 @@ public class DashboardResources {
         @JsonProperty("createdAt") long createdAt,
         @JsonProperty("updatedAt") long updatedAt,
         @JsonProperty("refreshInterval") int refreshInterval,
-        @JsonProperty("isPublic") boolean isPublic) {
+        @JsonProperty("isPublic") boolean isPublic,
+        @JsonProperty("deletedAt") long deletedAt) {
       this.id = id;
       this.name = name;
       this.description = description;
@@ -503,6 +507,7 @@ public class DashboardResources {
       this.updatedAt = updatedAt;
       this.refreshInterval = refreshInterval;
       this.isPublic = isPublic;
+      this.deletedAt = deletedAt;
     }
 
     public String getId() {
@@ -549,6 +554,10 @@ public class DashboardResources {
       return isPublic;
     }
 
+    public long getDeletedAt() {
+      return deletedAt;
+    }
+
     public void setName(String name) {
       this.name = name;
     }
@@ -579,6 +588,10 @@ public class DashboardResources {
 
     public void setPublic(boolean isPublic) {
       this.isPublic = isPublic;
+    }
+
+    public void setDeletedAt(long deletedAt) {
+      this.deletedAt = deletedAt;
     }
   }
 
@@ -680,6 +693,10 @@ public class DashboardResources {
         Map.Entry<String, Dashboard> entry = iterator.next();
         Dashboard dashboard = entry.getValue();
 
+        if (dashboard.getDeletedAt() > 0) {
+          continue;
+        }
+
         // Return dashboards owned by user or public dashboards
         if (dashboard.getOwner().equals(currentUser) || dashboard.isPublic()) {
           dashboards.add(dashboard);
@@ -720,7 +737,8 @@ public class DashboardResources {
         now,
         now,
         request.refreshInterval,
-        request.isPublic
+        request.isPublic,
+        0L
     );
 
     try {
@@ -746,7 +764,7 @@ public class DashboardResources {
       PersistentStore<Dashboard> store = getStore();
       Dashboard dashboard = store.get(id);
 
-      if (dashboard == null) {
+      if (dashboard == null || dashboard.getDeletedAt() > 0) {
         return Response.status(Response.Status.NOT_FOUND)
             .entity(new MessageResponse("Dashboard not found"))
             .build();
@@ -830,7 +848,7 @@ public class DashboardResources {
   @DELETE
   @Path("/{id}")
   @Produces(MediaType.APPLICATION_JSON)
-  @Operation(summary = "Delete dashboard", description = "Deletes a dashboard")
+  @Operation(summary = "Delete dashboard", description = "Soft-deletes a dashboard (recoverable from Trash)")
   public Response deleteDashboard(
       @Parameter(description = "Dashboard ID") @PathParam("id") String id) {
     logger.debug("Deleting dashboard: {}", id);
@@ -852,12 +870,114 @@ public class DashboardResources {
             .build();
       }
 
-      store.delete(id);
+      dashboard.setDeletedAt(Instant.now().toEpochMilli());
+      store.put(id, dashboard);
 
-      return Response.ok(new MessageResponse("Dashboard deleted successfully")).build();
+      return Response.ok(new MessageResponse("Dashboard moved to trash")).build();
     } catch (Exception e) {
       logger.error("Error deleting dashboard", e);
       throw new DrillRuntimeException("Failed to delete dashboard: " + e.getMessage(), e);
+    }
+  }
+
+  @GET
+  @Path("/trash")
+  @Produces(MediaType.APPLICATION_JSON)
+  @Operation(summary = "List trashed dashboards", description = "Returns soft-deleted dashboards owned by the current user")
+  public DashboardsResponse listTrash() {
+    List<Dashboard> dashboards = new ArrayList<>();
+    String currentUser = getCurrentUser();
+    long expiryCutoff = Instant.now().toEpochMilli() - TRASH_TTL_MS;
+
+    try {
+      PersistentStore<Dashboard> store = getStore();
+      Iterator<Map.Entry<String, Dashboard>> iterator = store.getAll();
+
+      while (iterator.hasNext()) {
+        Map.Entry<String, Dashboard> entry = iterator.next();
+        Dashboard dashboard = entry.getValue();
+        if (dashboard.getDeletedAt() <= 0) {
+          continue;
+        }
+        if (dashboard.getDeletedAt() < expiryCutoff) {
+          try {
+            store.delete(entry.getKey());
+          } catch (Exception e) {
+            logger.warn("Failed to auto-purge expired dashboard {}: {}",
+                entry.getKey(), e.getMessage());
+          }
+          continue;
+        }
+        if (dashboard.getOwner().equals(currentUser)) {
+          dashboards.add(dashboard);
+        }
+      }
+    } catch (Exception e) {
+      logger.error("Error listing trashed dashboards", e);
+      throw new DrillRuntimeException("Failed to list trashed dashboards: " + e.getMessage(), e);
+    }
+
+    return new DashboardsResponse(dashboards);
+  }
+
+  @POST
+  @Path("/{id}/restore")
+  @Produces(MediaType.APPLICATION_JSON)
+  @Operation(summary = "Restore dashboard", description = "Restores a soft-deleted dashboard from trash")
+  public Response restoreDashboard(
+      @Parameter(description = "Dashboard ID") @PathParam("id") String id) {
+    try {
+      PersistentStore<Dashboard> store = getStore();
+      Dashboard dashboard = store.get(id);
+
+      if (dashboard == null) {
+        return Response.status(Response.Status.NOT_FOUND)
+            .entity(new MessageResponse("Dashboard not found"))
+            .build();
+      }
+
+      if (!dashboard.getOwner().equals(getCurrentUser())) {
+        return Response.status(Response.Status.FORBIDDEN)
+            .entity(new MessageResponse("Only the owner can restore this dashboard"))
+            .build();
+      }
+
+      dashboard.setDeletedAt(0L);
+      store.put(id, dashboard);
+      return Response.ok(dashboard).build();
+    } catch (Exception e) {
+      logger.error("Error restoring dashboard", e);
+      throw new DrillRuntimeException("Failed to restore dashboard: " + e.getMessage(), e);
+    }
+  }
+
+  @DELETE
+  @Path("/{id}/purge")
+  @Produces(MediaType.APPLICATION_JSON)
+  @Operation(summary = "Permanently delete dashboard", description = "Hard-deletes a dashboard from trash")
+  public Response purgeDashboard(
+      @Parameter(description = "Dashboard ID") @PathParam("id") String id) {
+    try {
+      PersistentStore<Dashboard> store = getStore();
+      Dashboard dashboard = store.get(id);
+
+      if (dashboard == null) {
+        return Response.status(Response.Status.NOT_FOUND)
+            .entity(new MessageResponse("Dashboard not found"))
+            .build();
+      }
+
+      if (!dashboard.getOwner().equals(getCurrentUser())) {
+        return Response.status(Response.Status.FORBIDDEN)
+            .entity(new MessageResponse("Only the owner can purge this dashboard"))
+            .build();
+      }
+
+      store.delete(id);
+      return Response.ok(new MessageResponse("Dashboard permanently deleted")).build();
+    } catch (Exception e) {
+      logger.error("Error purging dashboard", e);
+      throw new DrillRuntimeException("Failed to purge dashboard: " + e.getMessage(), e);
     }
   }
 

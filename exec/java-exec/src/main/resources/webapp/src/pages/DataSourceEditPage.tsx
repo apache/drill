@@ -15,30 +15,29 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import { useState, useEffect, useCallback, useRef } from 'react';
+import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import {
-  Card,
   Button,
   Input,
   Space,
   Tabs,
   Tag,
-  Popconfirm,
+  Modal,
   message,
-  Typography,
   Spin,
-  Empty,
-  Badge,
   Tooltip,
+  Dropdown,
 } from 'antd';
+import type { MenuProps } from 'antd';
 import {
-  ArrowLeftOutlined,
   SaveOutlined,
   DeleteOutlined,
   PoweroffOutlined,
   DownloadOutlined,
   KeyOutlined,
+  MoreOutlined,
+  SettingOutlined,
 } from '@ant-design/icons';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import Editor from '@monaco-editor/react';
@@ -62,16 +61,15 @@ import {
   PhoenixForm,
   getPluginLogoUrl,
 } from '../components/datasource';
+import { usePageChrome, type BreadcrumbSegment } from '../contexts/AppChromeContext';
+import { useTheme } from '../hooks/useTheme';
 import type { PluginType } from '../types';
 
-const { Title, Text } = Typography;
+const GUIDED_FORM_TYPES: PluginType[] = [
+  'file', 'jdbc', 'http', 'mongo', 'splunk', 'cassandra', 'druid', 'elastic',
+  'googlesheets', 'hbase', 'hive', 'kafka', 'kudu', 'openTSDB', 'phoenix',
+];
 
-const GUIDED_FORM_TYPES: PluginType[] = ['file', 'jdbc', 'http', 'mongo', 'splunk', 'cassandra', 'druid', 'elastic', 'googlesheets', 'hbase', 'hive', 'kafka', 'kudu', 'openTSDB', 'phoenix'];
-
-/**
- * Build the OAuth authorization URL from the plugin configuration.
- * Mirrors the Java PluginConfigWrapper.getAuthorizationURIWithParams() logic.
- */
 function buildAuthorizationUrl(config: Record<string, unknown>): string {
   const oAuth = config.oAuthConfig as Record<string, unknown>;
   const credProvider = config.credentialsProvider as Record<string, unknown> | undefined;
@@ -104,8 +102,8 @@ export default function DataSourceEditPage() {
   const navigate = useNavigate();
   const location = useLocation();
   const queryClient = useQueryClient();
+  const { isDark } = useTheme();
 
-  // State from navigation (for new plugin creation)
   const navState = location.state as {
     config?: Record<string, unknown>;
     isNew?: boolean;
@@ -122,14 +120,12 @@ export default function DataSourceEditPage() {
 
   const pluginName = name ? decodeURIComponent(name) : '';
 
-  // Fetch existing plugin config (skip for new plugins)
   const { data: pluginData, isLoading, error } = useQuery({
     queryKey: ['storage-plugin', pluginName],
     queryFn: () => getPlugin(pluginName),
     enabled: !!pluginName && !isNew,
   });
 
-  // Initialize config from fetched data
   useEffect(() => {
     if (pluginData && !isNew) {
       setConfig(pluginData.config);
@@ -137,7 +133,6 @@ export default function DataSourceEditPage() {
     }
   }, [pluginData, isNew]);
 
-  // Initialize JSON text from nav state config
   useEffect(() => {
     if (isNew && navState?.config) {
       setJsonText(JSON.stringify(navState.config, null, 2));
@@ -156,14 +151,11 @@ export default function DataSourceEditPage() {
       setDirty(false);
       queryClient.invalidateQueries({ queryKey: ['storage-plugins'] });
       queryClient.invalidateQueries({ queryKey: ['storage-plugin', pluginName] });
-      // Clear the nav state so refresh fetches from server
       if (isNew) {
         window.history.replaceState({}, '');
       }
     },
-    onError: (err: Error) => {
-      message.error(`Failed to save plugin: ${err.message}`);
-    },
+    onError: (err: Error) => message.error(`Failed to save plugin: ${err.message}`),
   });
 
   const deleteMutation = useMutation({
@@ -171,24 +163,20 @@ export default function DataSourceEditPage() {
     onSuccess: () => {
       message.success('Plugin deleted');
       queryClient.invalidateQueries({ queryKey: ['storage-plugins'] });
-      // Remove dataset references for this plugin from all projects
       cleanupPluginDatasets(pluginName).then(() => {
         queryClient.invalidateQueries({ queryKey: ['projects'] });
       }).catch(() => {
-        // Best-effort cleanup — ignore failures
+        // Best-effort cleanup
       });
       navigate('/datasources');
     },
-    onError: (err: Error) => {
-      message.error(`Failed to delete plugin: ${err.message}`);
-    },
+    onError: (err: Error) => message.error(`Failed to delete plugin: ${err.message}`),
   });
 
   const enableMutation = useMutation({
     mutationFn: (enable: boolean) => enablePlugin(pluginName, enable),
     onSuccess: (_, enable) => {
       message.success(enable ? 'Plugin enabled' : 'Plugin disabled');
-      // Update local config state
       setConfig((prev) => ({ ...prev, enabled: enable }));
       setJsonText((prev) => {
         try {
@@ -202,20 +190,14 @@ export default function DataSourceEditPage() {
       queryClient.invalidateQueries({ queryKey: ['storage-plugins'] });
       queryClient.invalidateQueries({ queryKey: ['storage-plugin', pluginName] });
     },
-    onError: (err: Error) => {
-      message.error(`Failed to toggle plugin: ${err.message}`);
-    },
+    onError: (err: Error) => message.error(`Failed to toggle plugin: ${err.message}`),
   });
 
-  // OAuth detection
   const oAuthConfig = config.oAuthConfig as Record<string, unknown> | undefined;
   const credProvider = config.credentialsProvider as Record<string, unknown> | undefined;
   const credentials = credProvider?.credentials as Record<string, unknown> | undefined;
-  const isOAuth = !isNew &&
-    !!oAuthConfig?.authorizationURL &&
-    !!credentials?.clientID;
+  const isOAuth = !isNew && !!oAuthConfig?.authorizationURL && !!credentials?.clientID;
 
-  // Handle OAuth authorization
   const handleAuthorize = useCallback(() => {
     const url = buildAuthorizationUrl(config);
     if (!url) {
@@ -225,52 +207,42 @@ export default function DataSourceEditPage() {
     const popup = window.open(
       url,
       'Authorize Drill',
-      'toolbar=no,menubar=no,scrollbars=yes,resizable=yes,top=500,left=500,width=450,height=600'
+      'toolbar=no,menubar=no,scrollbars=yes,resizable=yes,top=500,left=500,width=450,height=600',
     );
     const timer = setInterval(() => {
       if (popup?.closed) {
         clearInterval(timer);
-        // Refresh plugin data to pick up stored tokens
         queryClient.invalidateQueries({ queryKey: ['storage-plugin', pluginName] });
       }
     }, 1000);
   }, [config, pluginName, queryClient]);
 
-  const handleFormChange = useCallback(
-    (newConfig: Record<string, unknown>) => {
-      setConfig(newConfig);
-      setJsonText(JSON.stringify(newConfig, null, 2));
-      setDirty(true);
-    },
-    []
-  );
+  const handleFormChange = useCallback((newConfig: Record<string, unknown>) => {
+    setConfig(newConfig);
+    setJsonText(JSON.stringify(newConfig, null, 2));
+    setDirty(true);
+  }, []);
 
-  const handleJsonChange = useCallback(
-    (value: string | undefined) => {
-      const val = value || '{}';
-      setJsonText(val);
-      try {
-        const parsed = JSON.parse(val);
-        setConfig(parsed);
-        setDirty(true);
-      } catch {
-        // Don't update config on invalid JSON — user is still typing
-        setDirty(true);
-      }
-    },
-    []
-  );
+  const handleJsonChange = useCallback((value: string | undefined) => {
+    const val = value || '{}';
+    setJsonText(val);
+    try {
+      const parsed = JSON.parse(val);
+      setConfig(parsed);
+      setDirty(true);
+    } catch {
+      setDirty(true);
+    }
+  }, []);
 
   const handleTabChange = (key: string) => {
     if (key === 'json') {
-      // Sync JSON from current config
       setJsonText(JSON.stringify(config, null, 2));
     }
     setActiveTab(key);
   };
 
   const handleSave = () => {
-    // If we're on JSON tab, parse the JSON first
     if (activeTab === 'json') {
       try {
         const parsed = JSON.parse(jsonText);
@@ -284,11 +256,121 @@ export default function DataSourceEditPage() {
     saveMutation.mutate();
   };
 
+  const handleToggleEnable = () => {
+    if (enabled) {
+      Modal.confirm({
+        title: `Disable "${pluginName}"?`,
+        content: 'Queries using this plugin will fail while it is disabled.',
+        okText: 'Disable',
+        okButtonProps: { danger: true },
+        onOk: () => enableMutation.mutate(false),
+      });
+    } else {
+      enableMutation.mutate(true);
+    }
+  };
+
+  const handleDelete = () => {
+    Modal.confirm({
+      title: 'Delete this plugin?',
+      content: 'This action cannot be undone.',
+      okText: 'Delete',
+      okButtonProps: { danger: true },
+      onOk: () => deleteMutation.mutate(),
+    });
+  };
+
   const logoUrl = getPluginLogoUrl(pluginType, config.connection as string);
+
+  // Breadcrumb in unified shell
+  const breadcrumb = useMemo<BreadcrumbSegment[]>(
+    () => [
+      { key: 'datasources', label: 'Data Sources', to: '/datasources' },
+      { key: 'plugin', label: pluginName || 'Plugin' },
+    ],
+    [pluginName],
+  );
+
+  // Toolbar actions
+  const toolbarActions = useMemo(() => {
+    const moreItems: MenuProps['items'] = !isNew ? [
+      ...(isOAuth ? [{
+        key: 'authorize',
+        icon: <KeyOutlined />,
+        label: 'Authorize…',
+        onClick: handleAuthorize,
+      }] : []),
+      {
+        key: 'export',
+        icon: <DownloadOutlined />,
+        label: 'Export config',
+        onClick: () => {
+          window.open(getExportUrl(pluginName), '_blank');
+        },
+      },
+      { type: 'divider' as const },
+      {
+        key: 'delete',
+        icon: <DeleteOutlined />,
+        label: 'Delete plugin',
+        danger: true,
+        onClick: handleDelete,
+      },
+    ] : [];
+
+    return (
+      <Space size={4}>
+        {!isNew && (
+          <Tooltip title={enabled ? 'Disable plugin' : 'Enable plugin'}>
+            <Button
+              type="text"
+              size="small"
+              icon={<PoweroffOutlined style={{ color: enabled ? 'var(--color-success)' : undefined }} />}
+              onClick={handleToggleEnable}
+              loading={enableMutation.isPending}
+            />
+          </Tooltip>
+        )}
+        {isOAuth && (
+          <Tooltip title="Authorize OAuth">
+            <Button
+              type="text"
+              size="small"
+              icon={<KeyOutlined />}
+              onClick={handleAuthorize}
+            />
+          </Tooltip>
+        )}
+        <Tooltip title={!isValid ? 'Cannot save: at least one workspace is required' : !dirty ? 'No changes to save' : ''}>
+          <Button
+            type="primary"
+            size="small"
+            icon={<SaveOutlined />}
+            onClick={handleSave}
+            loading={saveMutation.isPending}
+            disabled={!dirty || !isValid}
+          >
+            Save
+          </Button>
+        </Tooltip>
+        {moreItems.length > 0 && (
+          <Dropdown menu={{ items: moreItems }} placement="bottomRight" trigger={['click']}>
+            <Button type="text" size="small" icon={<MoreOutlined />} />
+          </Dropdown>
+        )}
+      </Space>
+    );
+  }, [
+    isNew, isOAuth, enabled, isValid, dirty,
+    pluginName, handleAuthorize, handleToggleEnable, handleSave, handleDelete,
+    enableMutation.isPending, saveMutation.isPending,
+  ]);
+
+  usePageChrome({ breadcrumb, toolbarActions });
 
   if (isLoading) {
     return (
-      <div style={{ padding: 24, textAlign: 'center' }}>
+      <div className="page-datasource-edit-loading">
         <Spin size="large" />
       </div>
     );
@@ -296,18 +378,10 @@ export default function DataSourceEditPage() {
 
   if (error && !isNew) {
     return (
-      <div style={{ padding: 24 }}>
-        <Card>
-          <Empty
-            description={
-              <Text type="danger">
-                Failed to load plugin: {(error as Error).message}
-              </Text>
-            }
-          >
-            <Button onClick={() => navigate('/datasources')}>Back to Data Sources</Button>
-          </Empty>
-        </Card>
+      <div className="page-datasource-edit-error">
+        <h2>Couldn't load plugin</h2>
+        <p>{(error as Error).message}</p>
+        <Button onClick={() => navigate('/datasources')}>Back to Data Sources</Button>
       </div>
     );
   }
@@ -355,7 +429,7 @@ export default function DataSourceEditPage() {
       key: 'config',
       label: 'Configuration',
       children: (
-        <div style={{ padding: '16px 0' }}>
+        <div className="datasource-edit-form">
           {renderForm()}
         </div>
       ),
@@ -365,10 +439,11 @@ export default function DataSourceEditPage() {
     key: 'json',
     label: 'JSON',
     children: (
-      <div style={{ border: '1px solid var(--color-border)', borderRadius: 4 }}>
+      <div className="datasource-edit-json">
         <Editor
           height="500px"
           language="json"
+          theme={isDark ? 'vs-dark' : 'light'}
           value={jsonText}
           onChange={handleJsonChange}
           options={{
@@ -376,7 +451,10 @@ export default function DataSourceEditPage() {
             lineNumbers: 'on',
             scrollBeyondLastLine: false,
             fontSize: 13,
+            fontFamily: "'SF Mono', SFMono-Regular, Consolas, monospace",
             formatOnPaste: true,
+            renderLineHighlight: 'line',
+            padding: { top: 12, bottom: 12 },
           }}
         />
       </div>
@@ -384,144 +462,62 @@ export default function DataSourceEditPage() {
   });
 
   return (
-    <div style={{ padding: 24, overflow: 'auto', flex: 1 }}>
-      <Card>
-        <Space direction="vertical" style={{ width: '100%' }} size="large">
-          {/* Header */}
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-            <Space align="center" size="middle">
-              <Button
-                icon={<ArrowLeftOutlined />}
-                onClick={() => navigate('/datasources')}
-              />
-              {logoUrl && (
-                <img
-                  src={logoUrl}
-                  alt={pluginType}
-                  style={{ height: 32, objectFit: 'contain' }}
-                />
-              )}
-              <div>
-                <Title level={3} style={{ margin: 0 }}>
-                  {pluginName}
-                  {isNew && (
-                    <Tag color="blue" style={{ marginLeft: 8, verticalAlign: 'middle' }}>
-                      New
-                    </Tag>
-                  )}
-                </Title>
-                <Space size={4} style={{ marginTop: 4 }}>
-                  <Tag>{pluginType || 'unknown'}</Tag>
-                  <Badge
-                    status={enabled ? 'success' : 'default'}
-                    text={enabled ? 'Enabled' : 'Disabled'}
-                  />
-                </Space>
-              </div>
-            </Space>
-            <Space>
-              <Tooltip title={!isValid ? 'Cannot save: at least one workspace is required' : !dirty ? 'No changes to save' : ''}>
-                <Button
-                  type="primary"
-                  icon={<SaveOutlined />}
-                  onClick={handleSave}
-                  loading={saveMutation.isPending}
-                  disabled={!dirty || !isValid}
-                >
-                  Save
-                </Button>
-              </Tooltip>
-              {!isNew && (
-                <>
-                  {enabled ? (
-                    <Popconfirm
-                      title={`Disable "${pluginName}"?`}
-                      description="Queries using this plugin will fail while it is disabled."
-                      onConfirm={() => enableMutation.mutate(false)}
-                      okText="Disable"
-                      cancelText="Cancel"
-                      okButtonProps={{ danger: true }}
-                    >
-                      <Button
-                        icon={<PoweroffOutlined />}
-                        loading={enableMutation.isPending}
-                      >
-                        Disable
-                      </Button>
-                    </Popconfirm>
-                  ) : (
-                    <Button
-                      icon={<PoweroffOutlined />}
-                      onClick={() => enableMutation.mutate(true)}
-                      loading={enableMutation.isPending}
-                    >
-                      Enable
-                    </Button>
-                  )}
-                  {isOAuth && (
-                    <Tooltip title="Authenticate with the OAuth provider to authorize Drill to access your data">
-                      <Button
-                        icon={<KeyOutlined />}
-                        onClick={handleAuthorize}
-                      >
-                        Authorize
-                      </Button>
-                    </Tooltip>
-                  )}
-                  <Button
-                    icon={<DownloadOutlined />}
-                    href={getExportUrl(pluginName)}
-                    target="_blank"
-                  >
-                    Export
-                  </Button>
-                  <Popconfirm
-                    title="Delete this plugin?"
-                    description="This action cannot be undone."
-                    onConfirm={() => deleteMutation.mutate()}
-                    okText="Delete"
-                    cancelText="Cancel"
-                    okButtonProps={{ danger: true }}
-                  >
-                    <Button
-                      danger
-                      icon={<DeleteOutlined />}
-                      loading={deleteMutation.isPending}
-                    >
-                      Delete
-                    </Button>
-                  </Popconfirm>
-                </>
-              )}
-            </Space>
+    <div className="page-datasource-edit">
+      <header className="datasource-edit-header">
+        {logoUrl ? (
+          <div className="datasource-edit-logo">
+            <img src={logoUrl} alt={pluginType} onError={(e) => {
+              (e.target as HTMLImageElement).style.display = 'none';
+            }} />
           </div>
+        ) : (
+          <div className="datasource-edit-logo datasource-edit-logo-fallback">
+            <SettingOutlined />
+          </div>
+        )}
+        <div className="datasource-edit-title-block">
+          <div className="datasource-edit-title-row">
+            <h1 className="datasource-edit-title">{pluginName}</h1>
+            {isNew && <Tag bordered={false} color="processing">New</Tag>}
+            {!isNew && (
+              <span className={`datasource-edit-status${enabled ? ' is-on' : ''}`}>
+                <span className="datasource-edit-status-dot" />
+                {enabled ? 'Enabled' : 'Disabled'}
+              </span>
+            )}
+          </div>
+          <div className="datasource-edit-subtitle">
+            <span className="datasource-edit-type">{pluginType || 'unknown'}</span>
+            {dirty && <span className="datasource-edit-dirty">· Unsaved changes</span>}
+          </div>
+        </div>
+      </header>
 
-          {/* Description */}
-          <Input.TextArea
-            placeholder="Add a description for this data source (optional)"
-            value={description}
-            onChange={(e) => {
-              const val = e.target.value;
-              const newConfig = { ...config, description: val || undefined };
-              if (!val) {
-                delete newConfig.description;
-              }
-              setConfig(newConfig);
-              setJsonText(JSON.stringify(newConfig, null, 2));
-              setDirty(true);
-            }}
-            autoSize={{ minRows: 1, maxRows: 3 }}
-            style={{ maxWidth: 600 }}
-          />
+      <div className="datasource-edit-description">
+        <Input.TextArea
+          placeholder="Describe what this data source connects to (optional)"
+          value={description}
+          onChange={(e) => {
+            const val = e.target.value;
+            const newConfig = { ...config, description: val || undefined };
+            if (!val) {
+              delete newConfig.description;
+            }
+            setConfig(newConfig);
+            setJsonText(JSON.stringify(newConfig, null, 2));
+            setDirty(true);
+          }}
+          autoSize={{ minRows: 1, maxRows: 3 }}
+        />
+      </div>
 
-          {/* Tabs */}
-          <Tabs
-            activeKey={hasGuidedForm ? activeTab : 'json'}
-            onChange={handleTabChange}
-            items={tabItems}
-          />
-        </Space>
-      </Card>
+      <div className="datasource-edit-tabs">
+        <Tabs
+          activeKey={hasGuidedForm ? activeTab : 'json'}
+          onChange={handleTabChange}
+          items={tabItems}
+        />
+      </div>
     </div>
   );
 }

@@ -15,80 +15,94 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+import { lazy, Suspense } from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
-import { Layout } from 'antd';
-import Navbar from './components/common/Navbar';
+import { Spin } from 'antd';
 import { AiModalProvider } from './contexts/AiModalContext';
-import CommandPalette from './components/common/CommandPalette';
-import ProjectsPage from './pages/ProjectsPage';
-import ProjectDetailPage from './pages/ProjectDetailPage';
-import DataSourcesPage from './pages/DataSourcesPage';
-import DataSourceEditPage from './pages/DataSourceEditPage';
-import SqlLabPage from './pages/SqlLabPage';
-import ProjectQueryPage from './pages/ProjectQueryPage';
-import ProjectSavedQueriesPage from './pages/ProjectSavedQueriesPage';
-import ProjectVisualizationsPage from './pages/ProjectVisualizationsPage';
-import ProjectDashboardsPage from './pages/ProjectDashboardsPage';
-import ProjectDataSourcesPage from './pages/ProjectDataSourcesPage';
-import ProjectWikiPage from './pages/ProjectWikiPage';
-import SavedQueriesPage from './pages/SavedQueriesPage';
-import ProfilesPage from './pages/ProfilesPage';
-import ProfileDetailPage from './pages/ProfileDetailPage';
-import VisualizationsPage from './pages/VisualizationsPage';
-import VisualizationDetailPage from './pages/VisualizationDetailPage';
-import ProjectVisualizationDetailPage from './pages/ProjectVisualizationDetailPage';
-import DashboardsPage from './pages/DashboardsPage';
-import DashboardViewPage from './pages/DashboardViewPage';
-import MetricsPage from './pages/MetricsPage';
-import OptionsPage from './pages/OptionsPage';
-import LogsPage from './pages/LogsPage';
-import WorkflowsPage from './pages/WorkflowsPage';
-import { ProjectLayout } from './components/project';
+import { AppChromeProvider } from './contexts/AppChromeContext';
+import AppShell from './components/shell/AppShell';
 
-const { Content } = Layout;
+// Lazy-loaded routes — each page becomes its own chunk so the initial
+// bundle drops well below the 500kB warning. Only the AppShell + sidebar
+// + toolbar load up front; pages download on first navigation.
+const ProjectsPage = lazy(() => import('./pages/ProjectsPage'));
+const ProjectDetailPage = lazy(() => import('./pages/ProjectDetailPage'));
+const DataSourcesPage = lazy(() => import('./pages/DataSourcesPage'));
+const DataSourceEditPage = lazy(() => import('./pages/DataSourceEditPage'));
+const SqlLabPage = lazy(() => import('./pages/SqlLabPage'));
+const ProjectQueryPage = lazy(() => import('./pages/ProjectQueryPage'));
+const ProjectSavedQueriesPage = lazy(() => import('./pages/ProjectSavedQueriesPage'));
+const ProjectVisualizationsPage = lazy(() => import('./pages/ProjectVisualizationsPage'));
+const ProjectDashboardsPage = lazy(() => import('./pages/ProjectDashboardsPage'));
+const ProjectDataSourcesPage = lazy(() => import('./pages/ProjectDataSourcesPage'));
+const ProjectWikiPage = lazy(() => import('./pages/ProjectWikiPage'));
+const ProjectWorkflowsPage = lazy(() => import('./pages/ProjectWorkflowsPage'));
+const SavedQueriesPage = lazy(() => import('./pages/SavedQueriesPage'));
+const ProfilesPage = lazy(() => import('./pages/ProfilesPage'));
+const ProfileDetailPage = lazy(() => import('./pages/ProfileDetailPage'));
+const VisualizationsPage = lazy(() => import('./pages/VisualizationsPage'));
+const VisualizationDetailPage = lazy(() => import('./pages/VisualizationDetailPage'));
+const ProjectVisualizationDetailPage = lazy(() => import('./pages/ProjectVisualizationDetailPage'));
+const DashboardsPage = lazy(() => import('./pages/DashboardsPage'));
+const DashboardViewPage = lazy(() => import('./pages/DashboardViewPage'));
+const MetricsPage = lazy(() => import('./pages/MetricsPage'));
+const OptionsPage = lazy(() => import('./pages/OptionsPage'));
+const LogsPage = lazy(() => import('./pages/LogsPage'));
+const WorkflowsPage = lazy(() => import('./pages/WorkflowsPage'));
+const ProjectLayout = lazy(() => import('./components/project').then((m) => ({ default: m.ProjectLayout })));
+
+/** Subtle fallback used while a route chunk is loading. */
+function RouteFallback() {
+  return (
+    <div className="route-fallback">
+      <Spin size="large" />
+    </div>
+  );
+}
 
 function App() {
   return (
-    <AiModalProvider>
-      <Layout className="sqllab-container">
-        <CommandPalette />
-        <Navbar />
-        <Content style={{ flex: 1, overflow: 'auto', display: 'flex', flexDirection: 'column' }}>
-          <Routes>
-          <Route path="/" element={<Navigate to="/projects" replace />} />
-          <Route path="/projects" element={<ProjectsPage />} />
-          <Route path="/projects/:id" element={<ProjectLayout />}>
-            <Route index element={<Navigate to="query" replace />} />
-            <Route path="query" element={<ProjectQueryPage />} />
-            <Route path="queries" element={<ProjectSavedQueriesPage />} />
-            <Route path="visualizations" element={<ProjectVisualizationsPage />} />
-            <Route path="visualizations/:vizId" element={<ProjectVisualizationDetailPage />} />
-            <Route path="dashboards" element={<ProjectDashboardsPage />} />
-            <Route path="dashboards/:dashboardId" element={<DashboardViewPage />} />
-            <Route path="datasources" element={<ProjectDataSourcesPage />} />
-            <Route path="wiki" element={<ProjectWikiPage />} />
-            <Route path="wiki/:pageId" element={<ProjectWikiPage />} />
-            <Route path="settings" element={<ProjectDetailPage />} />
-          </Route>
-          <Route path="/datasources" element={<DataSourcesPage />} />
-          <Route path="/datasources/:name" element={<DataSourceEditPage />} />
-          <Route path="/query" element={<SqlLabPage />} />
-          <Route path="/saved-queries" element={<SavedQueriesPage />} />
-          <Route path="/workflows" element={<WorkflowsPage />} />
-          <Route path="/profiles" element={<ProfilesPage />} />
-          <Route path="/profiles/:queryId" element={<ProfileDetailPage />} />
-          <Route path="/visualizations" element={<VisualizationsPage />} />
-          <Route path="/visualizations/:vizId" element={<VisualizationDetailPage />} />
-          <Route path="/dashboards" element={<DashboardsPage />} />
-          <Route path="/dashboards/:id" element={<DashboardViewPage />} />
-          <Route path="/metrics" element={<MetricsPage />} />
-          <Route path="/options" element={<OptionsPage />} />
-          <Route path="/logs" element={<LogsPage />} />
-          <Route path="*" element={<Navigate to="/projects" replace />} />
-        </Routes>
-      </Content>
-    </Layout>
-    </AiModalProvider>
+    <AppChromeProvider>
+      <AiModalProvider>
+        <AppShell>
+          <Suspense fallback={<RouteFallback />}>
+            <Routes>
+              <Route path="/" element={<Navigate to="/projects" replace />} />
+              <Route path="/projects" element={<ProjectsPage />} />
+              <Route path="/projects/:id" element={<ProjectLayout />}>
+                <Route index element={<Navigate to="query" replace />} />
+                <Route path="query" element={<ProjectQueryPage />} />
+                <Route path="queries" element={<ProjectSavedQueriesPage />} />
+                <Route path="visualizations" element={<ProjectVisualizationsPage />} />
+                <Route path="visualizations/:vizId" element={<ProjectVisualizationDetailPage />} />
+                <Route path="dashboards" element={<ProjectDashboardsPage />} />
+                <Route path="dashboards/:dashboardId" element={<DashboardViewPage />} />
+                <Route path="datasources" element={<ProjectDataSourcesPage />} />
+                <Route path="workflows" element={<ProjectWorkflowsPage />} />
+                <Route path="wiki" element={<ProjectWikiPage />} />
+                <Route path="wiki/:pageId" element={<ProjectWikiPage />} />
+                <Route path="settings" element={<ProjectDetailPage />} />
+              </Route>
+              <Route path="/datasources" element={<DataSourcesPage />} />
+              <Route path="/datasources/:name" element={<DataSourceEditPage />} />
+              <Route path="/query" element={<SqlLabPage />} />
+              <Route path="/saved-queries" element={<SavedQueriesPage />} />
+              <Route path="/workflows" element={<WorkflowsPage />} />
+              <Route path="/profiles" element={<ProfilesPage />} />
+              <Route path="/profiles/:queryId" element={<ProfileDetailPage />} />
+              <Route path="/visualizations" element={<VisualizationsPage />} />
+              <Route path="/visualizations/:vizId" element={<VisualizationDetailPage />} />
+              <Route path="/dashboards" element={<DashboardsPage />} />
+              <Route path="/dashboards/:id" element={<DashboardViewPage />} />
+              <Route path="/metrics" element={<MetricsPage />} />
+              <Route path="/options" element={<OptionsPage />} />
+              <Route path="/logs" element={<LogsPage />} />
+              <Route path="*" element={<Navigate to="/projects" replace />} />
+            </Routes>
+          </Suspense>
+        </AppShell>
+      </AiModalProvider>
+    </AppChromeProvider>
   );
 }
 
