@@ -26,7 +26,6 @@ import {
   InputNumber,
   Button,
   message,
-  Space,
   Alert,
 } from 'antd';
 import { getAiConfig, updateAiConfig, testAiConfig, getAiProviders } from '../../api/ai';
@@ -34,12 +33,18 @@ import type { AiConfig, AiProvider } from '../../types/ai';
 
 const { TextArea } = Input;
 
-interface ProspectorSettingsModalProps {
-  open: boolean;
-  onClose: () => void;
+interface BodyProps {
+  /** Called after a successful save. May close the host modal/sheet. */
+  onSaved?: () => void;
+  /** Show a "Cancel" button alongside Save/Test. */
+  showCancel?: boolean;
+  onCancel?: () => void;
 }
 
-export default function ProspectorSettingsModal({ open, onClose }: ProspectorSettingsModalProps) {
+/**
+ * The form body — usable inside the standalone modal or the consolidated Preferences sheet.
+ */
+export function ProspectorSettingsBody({ onSaved, showCancel, onCancel }: BodyProps) {
   const [form] = Form.useForm();
   const [loading, setLoading] = useState(false);
   const [testing, setTesting] = useState(false);
@@ -63,7 +68,6 @@ export default function ProspectorSettingsModal({ open, onClose }: ProspectorSet
         maxToolRounds: cfg.maxToolRounds || 15,
       });
     } catch {
-      // Config endpoint may 403 if not admin
       message.error('Failed to load AI configuration. Admin access required.');
     }
   }, [form]);
@@ -73,7 +77,6 @@ export default function ProspectorSettingsModal({ open, onClose }: ProspectorSet
       const provs = await getAiProviders();
       setProviders(provs);
     } catch {
-      // Use defaults
       setProviders([
         { id: 'openai', displayName: 'OpenAI Compatible' },
         { id: 'anthropic', displayName: 'Anthropic Claude' },
@@ -82,11 +85,9 @@ export default function ProspectorSettingsModal({ open, onClose }: ProspectorSet
   }, []);
 
   useEffect(() => {
-    if (open) {
-      loadConfig();
-      loadProviders();
-    }
-  }, [open, loadConfig, loadProviders]);
+    loadConfig();
+    loadProviders();
+  }, [loadConfig, loadProviders]);
 
   const handleSave = useCallback(async () => {
     try {
@@ -105,16 +106,16 @@ export default function ProspectorSettingsModal({ open, onClose }: ProspectorSet
         maxToolRounds: values.maxToolRounds,
       });
       message.success('AI configuration saved');
-      onClose();
+      onSaved?.();
     } catch (err) {
       if (err && typeof err === 'object' && 'errorFields' in err) {
-        return; // Form validation error
+        return;
       }
       message.error('Failed to save AI configuration');
     } finally {
       setLoading(false);
     }
-  }, [form, onClose]);
+  }, [form, onSaved]);
 
   const handleTest = useCallback(async () => {
     try {
@@ -136,23 +137,7 @@ export default function ProspectorSettingsModal({ open, onClose }: ProspectorSet
   }, [form]);
 
   return (
-    <Modal
-      title="Prospector Settings"
-      open={open}
-      onCancel={onClose}
-      width={560}
-      footer={
-        <Space>
-          <Button onClick={onClose}>Cancel</Button>
-          <Button onClick={handleTest} loading={testing}>
-            Test Connection
-          </Button>
-          <Button type="primary" onClick={handleSave} loading={loading}>
-            Save
-          </Button>
-        </Space>
-      }
-    >
+    <div className="settings-body">
       {testResult && (
         <Alert
           type={testResult.success ? 'success' : 'error'}
@@ -190,11 +175,7 @@ export default function ProspectorSettingsModal({ open, onClose }: ProspectorSet
           </Select>
         </Form.Item>
 
-        <Form.Item
-          name="apiEndpoint"
-          label="API Endpoint"
-          help="Leave empty for default endpoint"
-        >
+        <Form.Item name="apiEndpoint" label="API Endpoint" help="Leave empty for default endpoint">
           <Input placeholder="https://api.openai.com/v1" />
         </Form.Item>
 
@@ -203,9 +184,7 @@ export default function ProspectorSettingsModal({ open, onClose }: ProspectorSet
           label="API Key"
           help={config?.apiKeySet ? 'API key is set. Enter a new value to change it.' : undefined}
         >
-          <Input.Password
-            placeholder={config?.apiKeySet ? '(unchanged)' : 'Enter API key'}
-          />
+          <Input.Password placeholder={config?.apiKeySet ? '(unchanged)' : 'Enter API key'} />
         </Form.Item>
 
         <Form.Item name="model" label="Model" rules={[{ required: true }]}>
@@ -221,17 +200,14 @@ export default function ProspectorSettingsModal({ open, onClose }: ProspectorSet
         </Form.Item>
 
         <Form.Item name="systemPrompt" label="Custom System Prompt">
-          <TextArea
-            rows={3}
-            placeholder="Additional instructions for the AI assistant..."
-          />
+          <TextArea rows={3} placeholder="Additional instructions for the AI assistant..." />
         </Form.Item>
 
         <Form.Item
           name="sendDataToAi"
           label="Send Data Samples to AI"
           valuePropName="checked"
-          help="When enabled, a sample of query result rows is included when optimizing queries, helping the AI detect data type mismatches."
+          help="When enabled, a sample of query result rows is included when optimizing queries."
         >
           <Switch />
         </Form.Item>
@@ -239,11 +215,30 @@ export default function ProspectorSettingsModal({ open, onClose }: ProspectorSet
         <Form.Item
           name="maxToolRounds"
           label="Max Tool Rounds"
-          help="Maximum number of tool call rounds per message. Higher values let the AI perform more complex multi-step tasks (e.g. exploring schemas then writing queries)."
+          help="Maximum number of tool call rounds per message."
         >
           <InputNumber min={1} max={50} style={{ width: '100%' }} />
         </Form.Item>
       </Form>
+
+      <div className="settings-body-actions">
+        {showCancel && <Button onClick={onCancel}>Cancel</Button>}
+        <Button onClick={handleTest} loading={testing}>Test Connection</Button>
+        <Button type="primary" onClick={handleSave} loading={loading}>Save</Button>
+      </div>
+    </div>
+  );
+}
+
+interface ProspectorSettingsModalProps {
+  open: boolean;
+  onClose: () => void;
+}
+
+export default function ProspectorSettingsModal({ open, onClose }: ProspectorSettingsModalProps) {
+  return (
+    <Modal title="Prospector Settings" open={open} onCancel={onClose} width={560} footer={null} destroyOnClose>
+      <ProspectorSettingsBody onSaved={onClose} showCancel onCancel={onClose} />
     </Modal>
   );
 }

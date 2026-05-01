@@ -38,13 +38,26 @@ export function useWorkspacePersistence(projectId?: string) {
 
   const tabs = useSelector((state: RootState) => state.query.tabs);
   const activeTabId = useSelector((state: RootState) => state.query.activeTabId);
-  const sidebarCollapsed = useSelector((state: RootState) => state.ui.sidebarCollapsed);
-  const sidebarWidth = useSelector((state: RootState) => state.ui.sidebarWidth);
   const editorHeight = useSelector((state: RootState) => state.ui.editorHeight);
 
-  // Restore on mount
+  // Refs that mirror current state — used by the cleanup function to
+  // synchronously flush the previous project's tabs before switching.
+  const tabsRef = useRef(tabs);
+  tabsRef.current = tabs;
+  const activeTabIdRef = useRef(activeTabId);
+  activeTabIdRef.current = activeTabId;
+  // Track previous projectId so we know whether this effect is a true switch
+  // vs a re-mount of the same project (StrictMode, route remount, etc.).
+  // `false` sentinel = "never set" — distinct from a real `undefined` (global).
+  const previousProjectIdRef = useRef<string | undefined | false>(false);
+
+  // Restore on mount and on projectId change
   useEffect(() => {
     hasRestoredRef.current = false;
+
+    const isProjectSwitch =
+      previousProjectIdRef.current !== false &&
+      previousProjectIdRef.current !== projectId;
 
     const persisted = loadTabState(projectId);
     if (persisted) {
@@ -89,7 +102,18 @@ export function useWorkspacePersistence(projectId?: string) {
           restoreFromBackendCache(tab.id, tab.cacheId);
         }
       }
+    } else if (isProjectSwitch) {
+      // No persisted state AND this is a switch from a different project —
+      // reset to a fresh empty tab so the previous project's tabs don't leak
+      // into this one. On first mount or re-mount of the SAME project, leave
+      // Redux alone (its current state is trustworthy or already-default).
+      dispatch(restoreQueryState({
+        tabs: [{ id: 'tab-1', name: 'Query 1', sql: '' }],
+        activeTabId: 'tab-1',
+        tabCounter: 1,
+      }));
     }
+    previousProjectIdRef.current = projectId;
 
     const persistedUi = loadUiState(projectId);
     if (persistedUi) {
@@ -105,9 +129,46 @@ export function useWorkspacePersistence(projectId?: string) {
       });
     });
 
+    // Cleanup: when projectId changes (or on unmount), flush the current
+    // tabs synchronously to the OLD projectId. This prevents losing edits
+    // that hadn't yet been persisted by the debounced save.
+    const flushProjectId = projectId;
     return () => {
       if (saveTimerRef.current) {
         clearTimeout(saveTimerRef.current);
+        saveTimerRef.current = null;
+      }
+      const currentTabs = tabsRef.current;
+      const currentActiveTabId = activeTabIdRef.current;
+      // Only persist if there is something worth saving (some tab has SQL).
+      const hasContent = currentTabs.some((t) => t.sql.trim().length > 0);
+      if (hasContent) {
+        let maxCounter = 1;
+        for (const t of currentTabs) {
+          const match = t.id.match(/^tab-(\d+)$/);
+          if (match) {
+            maxCounter = Math.max(maxCounter, parseInt(match[1], 10));
+          }
+        }
+        saveTabState(
+          {
+            tabs: currentTabs.map((t) => ({
+              id: t.id,
+              name: t.name,
+              sql: t.sql,
+              defaultSchema: t.defaultSchema,
+              cacheId: t.cacheId,
+              vizIds: t.vizIds,
+              isLocked: t.isLocked,
+              lockReason: t.lockReason,
+              lockType: t.lockType,
+            })),
+            activeTabId: currentActiveTabId,
+            tabCounter: maxCounter,
+            savedAt: Date.now(),
+          },
+          flushProjectId,
+        );
       }
     };
   // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -219,8 +280,8 @@ export function useWorkspacePersistence(projectId?: string) {
     if (!hasRestoredRef.current) {
       return;
     }
-    saveUiState({ sidebarCollapsed, sidebarWidth, editorHeight }, projectId);
-  }, [sidebarCollapsed, sidebarWidth, editorHeight, projectId]);
+    saveUiState({ editorHeight }, projectId);
+  }, [editorHeight, projectId]);
 
   // Callback for SqlLabPage to cache results when they arrive
   const onResultsCached = useCallback(

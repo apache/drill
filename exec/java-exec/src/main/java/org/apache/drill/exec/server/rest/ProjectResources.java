@@ -70,6 +70,7 @@ public class ProjectResources {
   private static final Logger logger = LoggerFactory.getLogger(ProjectResources.class);
   private static final String STORE_NAME = "drill.sqllab.projects";
   private static final String FAVORITES_STORE_NAME = "drill.sqllab.project_favorites";
+  private static final long TRASH_TTL_MS = 30L * 24 * 60 * 60 * 1000;
 
   public static final String SYSTEM_LOGS_PROJECT_ID = "system-drill-logs";
 
@@ -232,6 +233,15 @@ public class ProjectResources {
     private long createdAt;
     @JsonProperty
     private long updatedAt;
+    /** Hex color (e.g. "#0A84FF") for the project tile gradient. Null = use auto-hash color. */
+    @JsonProperty
+    private String tileColor;
+    /** Data URI ("data:image/jpeg;base64,...") for the project tile cover image. Null = no image. */
+    @JsonProperty
+    private String tileImage;
+    /** Epoch millis when the project was soft-deleted. 0 = active. */
+    @JsonProperty
+    private long deletedAt;
 
     public Project() {
     }
@@ -252,7 +262,10 @@ public class ProjectResources {
         @JsonProperty("wikiPages") List<WikiPage> wikiPages,
         @JsonProperty("isSystem") boolean isSystem,
         @JsonProperty("createdAt") long createdAt,
-        @JsonProperty("updatedAt") long updatedAt) {
+        @JsonProperty("updatedAt") long updatedAt,
+        @JsonProperty("tileColor") String tileColor,
+        @JsonProperty("tileImage") String tileImage,
+        @JsonProperty("deletedAt") long deletedAt) {
       this.id = id;
       this.name = name;
       this.description = description;
@@ -268,6 +281,9 @@ public class ProjectResources {
       this.isSystem = isSystem;
       this.createdAt = createdAt;
       this.updatedAt = updatedAt;
+      this.tileColor = tileColor;
+      this.tileImage = tileImage;
+      this.deletedAt = deletedAt;
     }
 
     public String getId() { return id; }
@@ -285,6 +301,9 @@ public class ProjectResources {
     public boolean isSystem() { return isSystem; }
     public long getCreatedAt() { return createdAt; }
     public long getUpdatedAt() { return updatedAt; }
+    public String getTileColor() { return tileColor; }
+    public String getTileImage() { return tileImage; }
+    public long getDeletedAt() { return deletedAt; }
 
     public void setName(String name) { this.name = name; }
     public void setDescription(String description) { this.description = description; }
@@ -298,6 +317,9 @@ public class ProjectResources {
     public void setWikiPages(List<WikiPage> wikiPages) { this.wikiPages = wikiPages; }
     public void setSystem(boolean isSystem) { this.isSystem = isSystem; }
     public void setUpdatedAt(long updatedAt) { this.updatedAt = updatedAt; }
+    public void setTileColor(String tileColor) { this.tileColor = tileColor; }
+    public void setTileImage(String tileImage) { this.tileImage = tileImage; }
+    public void setDeletedAt(long deletedAt) { this.deletedAt = deletedAt; }
   }
 
   /**
@@ -335,10 +357,18 @@ public class ProjectResources {
     public List<String> tags;
     @JsonProperty
     public boolean isPublic;
+    @JsonProperty
+    public String tileColor;
+    @JsonProperty
+    public String tileImage;
   }
 
   /**
    * Request body for updating a project.
+   *
+   * NOTE: tileColor and tileImage are written unconditionally (null clears the value).
+   * The web client always sends current state when saving, so the partial-update
+   * pattern used by the other fields would prevent users from removing covers.
    */
   public static class UpdateProjectRequest {
     @JsonProperty
@@ -351,6 +381,10 @@ public class ProjectResources {
     public Boolean isPublic;
     @JsonProperty
     public List<String> sharedWith;
+    @JsonProperty
+    public String tileColor;
+    @JsonProperty
+    public String tileImage;
   }
 
   /**
@@ -437,6 +471,10 @@ public class ProjectResources {
         Map.Entry<String, Project> entry = iterator.next();
         Project project = entry.getValue();
 
+        if (project.getDeletedAt() > 0) {
+          continue;
+        }
+
         if (canRead(project, currentUser)) {
           projects.add(project);
         }
@@ -480,7 +518,10 @@ public class ProjectResources {
         new ArrayList<>(),
         false,
         now,
-        now
+        now,
+        request.tileColor,
+        request.tileImage,
+        0L
     );
 
     try {
@@ -506,7 +547,7 @@ public class ProjectResources {
       PersistentStore<Project> store = getStore();
       Project project = store.get(id);
 
-      if (project == null) {
+      if (project == null || project.getDeletedAt() > 0) {
         return Response.status(Response.Status.NOT_FOUND)
             .entity(new MessageResponse("Project not found"))
             .build();
@@ -566,6 +607,9 @@ public class ProjectResources {
       if (request.sharedWith != null) {
         project.setSharedWith(request.sharedWith);
       }
+      // Cover fields are set unconditionally; null clears the value.
+      project.setTileColor(request.tileColor);
+      project.setTileImage(request.tileImage);
 
       project.setUpdatedAt(Instant.now().toEpochMilli());
       store.put(id, project);
@@ -607,12 +651,120 @@ public class ProjectResources {
             .build();
       }
 
-      store.delete(id);
+      project.setDeletedAt(Instant.now().toEpochMilli());
+      store.put(id, project);
 
-      return Response.ok(new MessageResponse("Project deleted successfully")).build();
+      return Response.ok(new MessageResponse("Project moved to trash")).build();
     } catch (Exception e) {
       logger.error("Error deleting project", e);
       throw new DrillRuntimeException("Failed to delete project: " + e.getMessage(), e);
+    }
+  }
+
+  @GET
+  @Path("/trash")
+  @Produces(MediaType.APPLICATION_JSON)
+  @Operation(summary = "List trashed projects", description = "Returns soft-deleted projects owned by the current user")
+  public ProjectsResponse listTrash() {
+    List<Project> projects = new ArrayList<>();
+    String currentUser = getCurrentUser();
+    long expiryCutoff = Instant.now().toEpochMilli() - TRASH_TTL_MS;
+
+    try {
+      PersistentStore<Project> store = getStore();
+      Iterator<Map.Entry<String, Project>> iterator = store.getAll();
+
+      while (iterator.hasNext()) {
+        Map.Entry<String, Project> entry = iterator.next();
+        Project project = entry.getValue();
+        if (project.getDeletedAt() <= 0) {
+          continue;
+        }
+        if (project.getDeletedAt() < expiryCutoff && !project.isSystem()) {
+          try {
+            store.delete(entry.getKey());
+          } catch (Exception e) {
+            logger.warn("Failed to auto-purge expired project {}: {}",
+                entry.getKey(), e.getMessage());
+          }
+          continue;
+        }
+        if (project.getOwner().equals(currentUser)) {
+          projects.add(project);
+        }
+      }
+    } catch (Exception e) {
+      logger.error("Error listing trashed projects", e);
+      throw new DrillRuntimeException("Failed to list trashed projects: " + e.getMessage(), e);
+    }
+
+    return new ProjectsResponse(projects);
+  }
+
+  @POST
+  @Path("/{id}/restore")
+  @Produces(MediaType.APPLICATION_JSON)
+  @Operation(summary = "Restore project", description = "Restores a soft-deleted project from trash")
+  public Response restoreProject(
+      @Parameter(description = "Project ID") @PathParam("id") String id) {
+    try {
+      PersistentStore<Project> store = getStore();
+      Project project = store.get(id);
+
+      if (project == null) {
+        return Response.status(Response.Status.NOT_FOUND)
+            .entity(new MessageResponse("Project not found"))
+            .build();
+      }
+
+      if (!project.getOwner().equals(getCurrentUser())) {
+        return Response.status(Response.Status.FORBIDDEN)
+            .entity(new MessageResponse("Only the owner can restore this project"))
+            .build();
+      }
+
+      project.setDeletedAt(0L);
+      store.put(id, project);
+      return Response.ok(project).build();
+    } catch (Exception e) {
+      logger.error("Error restoring project", e);
+      throw new DrillRuntimeException("Failed to restore project: " + e.getMessage(), e);
+    }
+  }
+
+  @DELETE
+  @Path("/{id}/purge")
+  @Produces(MediaType.APPLICATION_JSON)
+  @Operation(summary = "Permanently delete project", description = "Hard-deletes a project from trash")
+  public Response purgeProject(
+      @Parameter(description = "Project ID") @PathParam("id") String id) {
+    try {
+      PersistentStore<Project> store = getStore();
+      Project project = store.get(id);
+
+      if (project == null) {
+        return Response.status(Response.Status.NOT_FOUND)
+            .entity(new MessageResponse("Project not found"))
+            .build();
+      }
+
+      if (project.isSystem()) {
+        return Response.status(Response.Status.FORBIDDEN)
+            .entity(new MessageResponse("System projects cannot be deleted"))
+            .build();
+      }
+
+      if (!project.getOwner().equals(getCurrentUser())) {
+        return Response.status(Response.Status.FORBIDDEN)
+            .entity(new MessageResponse("Only the owner can purge this project"))
+            .build();
+      }
+
+      store.delete(id);
+      return Response.ok(new MessageResponse("Project permanently deleted")).build();
+    } catch (Exception e) {
+      logger.error("Error purging project", e);
+      throw new DrillRuntimeException("Failed to purge project: " + e.getMessage(), e);
     }
   }
 
@@ -1320,7 +1472,7 @@ public class ProjectResources {
             sqRecentErrors, "Recent Errors",
             "Shows the most recent ERROR log entries",
             sqlRecentErrors,
-            "dfs.logs", owner, now, now, new HashMap<>(), true));
+            "dfs.logs", owner, now, now, new HashMap<>(), true, 0L));
       }
 
       if (sqStore.get(sqErrorFrequency) == null) {
@@ -1328,7 +1480,7 @@ public class ProjectResources {
             sqErrorFrequency, "Error Frequency by Hour",
             "Counts errors per hour for trend analysis",
             sqlErrorFrequency,
-            "dfs.logs", owner, now, now, new HashMap<>(), true));
+            "dfs.logs", owner, now, now, new HashMap<>(), true, 0L));
       }
 
       if (sqStore.get(sqLevelDist) == null) {
@@ -1336,7 +1488,7 @@ public class ProjectResources {
             sqLevelDist, "Log Level Distribution",
             "Distribution of log entries by level",
             sqlLevelDist,
-            "dfs.logs", owner, now, now, new HashMap<>(), true));
+            "dfs.logs", owner, now, now, new HashMap<>(), true, 0L));
       }
 
       if (sqStore.get(sqTopLoggers) == null) {
@@ -1344,7 +1496,7 @@ public class ProjectResources {
             sqTopLoggers, "Top Error Sources",
             "Loggers producing the most errors",
             sqlTopLoggers,
-            "dfs.logs", owner, now, now, new HashMap<>(), true));
+            "dfs.logs", owner, now, now, new HashMap<>(), true, 0L));
       }
 
       if (sqStore.get(sqWarnTrends) == null) {
@@ -1352,7 +1504,7 @@ public class ProjectResources {
             sqWarnTrends, "Warning Trends",
             "Daily warning counts for trend analysis",
             sqlWarnTrends,
-            "dfs.logs", owner, now, now, new HashMap<>(), true));
+            "dfs.logs", owner, now, now, new HashMap<>(), true, 0L));
       }
 
       // Create visualizations (with SQL populated for dashboard rendering)
@@ -1376,7 +1528,7 @@ public class ProjectResources {
             sqErrorFrequency, "line",
             new VisualizationResources.VisualizationConfig(
                 "hour", "error_count", null, null, null, null),
-            owner, now, now, true, sqlErrorFrequency, "dfs.logs", null));
+            owner, now, now, true, sqlErrorFrequency, "dfs.logs", null, 0L));
       }
 
       if (vizStore.get(vizLevelDist) == null) {
@@ -1389,7 +1541,7 @@ public class ProjectResources {
                 Arrays.asList("cnt"),
                 Arrays.asList("level"),
                 null, null),
-            owner, now, now, true, sqlLevelDist, "dfs.logs", null));
+            owner, now, now, true, sqlLevelDist, "dfs.logs", null, 0L));
       }
 
       if (vizStore.get(vizTopLoggers) == null) {
@@ -1399,7 +1551,7 @@ public class ProjectResources {
             sqTopLoggers, "bar",
             new VisualizationResources.VisualizationConfig(
                 "logger", "error_count", null, null, null, null),
-            owner, now, now, true, sqlTopLoggers, "dfs.logs", null));
+            owner, now, now, true, sqlTopLoggers, "dfs.logs", null, 0L));
       }
 
       if (vizStore.get(vizWarnTrends) == null) {
@@ -1409,7 +1561,7 @@ public class ProjectResources {
             sqWarnTrends, "line",
             new VisualizationResources.VisualizationConfig(
                 "day", "warn_count", null, null, null, null),
-            owner, now, now, true, sqlWarnTrends, "dfs.logs", null));
+            owner, now, now, true, sqlWarnTrends, "dfs.logs", null, 0L));
       }
 
       // Create dashboard
@@ -1436,7 +1588,7 @@ public class ProjectResources {
         dashStore.put(dashId, new DashboardResources.Dashboard(
             dashId, "Drill Logs Overview",
             "Pre-built dashboard for monitoring Drill server logs",
-            panels, null, null, owner, now, now, 0, true));
+            panels, null, null, owner, now, now, 0, true, 0L));
       }
 
       // Create the system project
@@ -1462,7 +1614,10 @@ public class ProjectResources {
           new ArrayList<>(),
           true,
           now,
-          now
+          now,
+          null,
+          null,
+          0L
       );
 
       store.put(SYSTEM_LOGS_PROJECT_ID, project);

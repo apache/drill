@@ -393,4 +393,81 @@ public class TestDashboardResources extends ClusterTest {
       assertEquals(404, response.code());
     }
   }
+
+  @Test
+  public void testA_TrashContainsSoftDeletedDashboard() throws Exception {
+    assertNotNull(createdDashboardId, "Dashboard should have been soft-deleted in test11");
+
+    String url = String.format("http://localhost:%d/api/v1/dashboards/trash", portNumber);
+    Request request = new Request.Builder().url(url).build();
+    try (Response response = httpClient.newCall(request).execute()) {
+      assertEquals(200, response.code());
+      JsonNode json = mapper.readTree(response.body().string());
+      assertTrue(json.has("dashboards"));
+      JsonNode items = json.get("dashboards");
+      assertTrue(items.isArray());
+
+      boolean found = false;
+      for (JsonNode d : items) {
+        if (createdDashboardId.equals(d.get("id").asText())) {
+          found = true;
+          assertTrue(d.get("deletedAt").asLong() > 0);
+        }
+      }
+      assertTrue(found, "Trash should contain the soft-deleted dashboard");
+    }
+  }
+
+  @Test
+  public void testB_RestoreDashboard() throws Exception {
+    assertNotNull(createdDashboardId);
+
+    String restoreUrl = String.format(
+        "http://localhost:%d/api/v1/dashboards/%s/restore",
+        portNumber, createdDashboardId);
+    try (Response response = httpClient.newCall(new Request.Builder()
+        .url(restoreUrl)
+        .post(RequestBody.create("", JSON_MEDIA_TYPE))
+        .build()).execute()) {
+      assertEquals(200, response.code());
+      JsonNode json = mapper.readTree(response.body().string());
+      assertEquals(createdDashboardId, json.get("id").asText());
+      assertEquals(0L, json.get("deletedAt").asLong());
+    }
+
+    String getUrl = String.format("http://localhost:%d/api/v1/dashboards/%s",
+        portNumber, createdDashboardId);
+    try (Response response = httpClient.newCall(new Request.Builder().url(getUrl).build()).execute()) {
+      assertEquals(200, response.code());
+    }
+  }
+
+  @Test
+  public void testC_PurgeFromTrash() throws Exception {
+    assertNotNull(createdDashboardId);
+
+    String deleteUrl = String.format("http://localhost:%d/api/v1/dashboards/%s",
+        portNumber, createdDashboardId);
+    try (Response response = httpClient.newCall(
+        new Request.Builder().url(deleteUrl).delete().build()).execute()) {
+      assertEquals(200, response.code());
+    }
+
+    String purgeUrl = String.format("http://localhost:%d/api/v1/dashboards/%s/purge",
+        portNumber, createdDashboardId);
+    try (Response response = httpClient.newCall(
+        new Request.Builder().url(purgeUrl).delete().build()).execute()) {
+      assertEquals(200, response.code());
+    }
+
+    String restoreUrl = String.format(
+        "http://localhost:%d/api/v1/dashboards/%s/restore",
+        portNumber, createdDashboardId);
+    try (Response response = httpClient.newCall(new Request.Builder()
+        .url(restoreUrl)
+        .post(RequestBody.create("", JSON_MEDIA_TYPE))
+        .build()).execute()) {
+      assertEquals(404, response.code());
+    }
+  }
 }

@@ -61,6 +61,7 @@ import java.util.UUID;
 public class VisualizationResources {
   private static final Logger logger = LoggerFactory.getLogger(VisualizationResources.class);
   private static final String STORE_NAME = "drill.sqllab.visualizations";
+  private static final long TRASH_TTL_MS = 30L * 24 * 60 * 60 * 1000;
 
   @Inject
   WorkManager workManager;
@@ -190,6 +191,8 @@ public class VisualizationResources {
     private String defaultSchema;
     @JsonProperty
     private String tabId;
+    @JsonProperty
+    private long deletedAt;
 
     public Visualization() {
     }
@@ -208,7 +211,8 @@ public class VisualizationResources {
         @JsonProperty("isPublic") boolean isPublic,
         @JsonProperty("sql") String sql,
         @JsonProperty("defaultSchema") String defaultSchema,
-        @JsonProperty("tabId") String tabId) {
+        @JsonProperty("tabId") String tabId,
+        @JsonProperty("deletedAt") long deletedAt) {
       this.id = id;
       this.name = name;
       this.description = description;
@@ -222,6 +226,7 @@ public class VisualizationResources {
       this.sql = sql;
       this.defaultSchema = defaultSchema;
       this.tabId = tabId;
+      this.deletedAt = deletedAt;
     }
 
     // Getters
@@ -277,6 +282,10 @@ public class VisualizationResources {
       return tabId;
     }
 
+    public long getDeletedAt() {
+      return deletedAt;
+    }
+
     // Setters for updates
     public void setName(String name) {
       this.name = name;
@@ -316,6 +325,10 @@ public class VisualizationResources {
 
     public void setTabId(String tabId) {
       this.tabId = tabId;
+    }
+
+    public void setDeletedAt(long deletedAt) {
+      this.deletedAt = deletedAt;
     }
   }
 
@@ -410,6 +423,10 @@ public class VisualizationResources {
         Map.Entry<String, Visualization> entry = iterator.next();
         Visualization viz = entry.getValue();
 
+        if (viz.getDeletedAt() > 0) {
+          continue;
+        }
+
         // Return visualizations owned by user or public visualizations
         if (viz.getOwner().equals(currentUser) || viz.isPublic()) {
           visualizations.add(viz);
@@ -458,7 +475,8 @@ public class VisualizationResources {
         request.isPublic,
         request.sql,
         request.defaultSchema,
-        request.tabId
+        request.tabId,
+        0L
     );
 
     try {
@@ -484,7 +502,7 @@ public class VisualizationResources {
       PersistentStore<Visualization> store = getStore();
       Visualization viz = store.get(id);
 
-      if (viz == null) {
+      if (viz == null || viz.getDeletedAt() > 0) {
         return Response.status(Response.Status.NOT_FOUND)
             .entity(new MessageResponse("Visualization not found"))
             .build();
@@ -574,7 +592,7 @@ public class VisualizationResources {
   @DELETE
   @Path("/{id}")
   @Produces(MediaType.APPLICATION_JSON)
-  @Operation(summary = "Delete visualization", description = "Deletes a visualization")
+  @Operation(summary = "Delete visualization", description = "Soft-deletes a visualization (recoverable from Trash)")
   public Response deleteVisualization(
       @Parameter(description = "Visualization ID") @PathParam("id") String id) {
     logger.debug("Deleting visualization: {}", id);
@@ -596,12 +614,114 @@ public class VisualizationResources {
             .build();
       }
 
-      store.delete(id);
+      viz.setDeletedAt(Instant.now().toEpochMilli());
+      store.put(id, viz);
 
-      return Response.ok(new MessageResponse("Visualization deleted successfully")).build();
+      return Response.ok(new MessageResponse("Visualization moved to trash")).build();
     } catch (Exception e) {
       logger.error("Error deleting visualization", e);
       throw new DrillRuntimeException("Failed to delete visualization: " + e.getMessage(), e);
+    }
+  }
+
+  @GET
+  @Path("/trash")
+  @Produces(MediaType.APPLICATION_JSON)
+  @Operation(summary = "List trashed visualizations", description = "Returns soft-deleted visualizations owned by the current user")
+  public VisualizationsResponse listTrash() {
+    List<Visualization> visualizations = new ArrayList<>();
+    String currentUser = getCurrentUser();
+    long expiryCutoff = Instant.now().toEpochMilli() - TRASH_TTL_MS;
+
+    try {
+      PersistentStore<Visualization> store = getStore();
+      Iterator<Map.Entry<String, Visualization>> iterator = store.getAll();
+
+      while (iterator.hasNext()) {
+        Map.Entry<String, Visualization> entry = iterator.next();
+        Visualization viz = entry.getValue();
+        if (viz.getDeletedAt() <= 0) {
+          continue;
+        }
+        if (viz.getDeletedAt() < expiryCutoff) {
+          try {
+            store.delete(entry.getKey());
+          } catch (Exception e) {
+            logger.warn("Failed to auto-purge expired visualization {}: {}",
+                entry.getKey(), e.getMessage());
+          }
+          continue;
+        }
+        if (viz.getOwner().equals(currentUser)) {
+          visualizations.add(viz);
+        }
+      }
+    } catch (Exception e) {
+      logger.error("Error listing trashed visualizations", e);
+      throw new DrillRuntimeException("Failed to list trashed visualizations: " + e.getMessage(), e);
+    }
+
+    return new VisualizationsResponse(visualizations);
+  }
+
+  @POST
+  @Path("/{id}/restore")
+  @Produces(MediaType.APPLICATION_JSON)
+  @Operation(summary = "Restore visualization", description = "Restores a soft-deleted visualization from trash")
+  public Response restoreVisualization(
+      @Parameter(description = "Visualization ID") @PathParam("id") String id) {
+    try {
+      PersistentStore<Visualization> store = getStore();
+      Visualization viz = store.get(id);
+
+      if (viz == null) {
+        return Response.status(Response.Status.NOT_FOUND)
+            .entity(new MessageResponse("Visualization not found"))
+            .build();
+      }
+
+      if (!viz.getOwner().equals(getCurrentUser())) {
+        return Response.status(Response.Status.FORBIDDEN)
+            .entity(new MessageResponse("Only the owner can restore this visualization"))
+            .build();
+      }
+
+      viz.setDeletedAt(0L);
+      store.put(id, viz);
+      return Response.ok(viz).build();
+    } catch (Exception e) {
+      logger.error("Error restoring visualization", e);
+      throw new DrillRuntimeException("Failed to restore visualization: " + e.getMessage(), e);
+    }
+  }
+
+  @DELETE
+  @Path("/{id}/purge")
+  @Produces(MediaType.APPLICATION_JSON)
+  @Operation(summary = "Permanently delete visualization", description = "Hard-deletes a visualization from trash")
+  public Response purgeVisualization(
+      @Parameter(description = "Visualization ID") @PathParam("id") String id) {
+    try {
+      PersistentStore<Visualization> store = getStore();
+      Visualization viz = store.get(id);
+
+      if (viz == null) {
+        return Response.status(Response.Status.NOT_FOUND)
+            .entity(new MessageResponse("Visualization not found"))
+            .build();
+      }
+
+      if (!viz.getOwner().equals(getCurrentUser())) {
+        return Response.status(Response.Status.FORBIDDEN)
+            .entity(new MessageResponse("Only the owner can purge this visualization"))
+            .build();
+      }
+
+      store.delete(id);
+      return Response.ok(new MessageResponse("Visualization permanently deleted")).build();
+    } catch (Exception e) {
+      logger.error("Error purging visualization", e);
+      throw new DrillRuntimeException("Failed to purge visualization: " + e.getMessage(), e);
     }
   }
 

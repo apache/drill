@@ -16,28 +16,27 @@
  * limitations under the License.
  */
 import { useEffect, useState } from 'react';
-import { Modal, Form, InputNumber, Spin, message } from 'antd';
+import { Modal, Form, InputNumber, Spin, message, Button } from 'antd';
 import { getProfileConfig, updateProfileConfig } from '../../api/profile';
 import type { ProfileConfig } from '../../types/profile';
 
-interface Props {
-  open: boolean;
-  onClose: () => void;
+interface BodyProps {
+  onSaved?: () => void;
+  showCancel?: boolean;
+  onCancel?: () => void;
 }
 
-export default function ProfileSettingsModal({ open, onClose }: Props) {
+export function ProfileSettingsBody({ onSaved, showCancel, onCancel }: BodyProps) {
   const [form] = Form.useForm<ProfileConfig>();
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
-    if (open) {
-      setLoading(true);
-      getProfileConfig()
-        .then((config) => form.setFieldsValue(config))
-        .finally(() => setLoading(false));
-    }
-  }, [open, form]);
+    setLoading(true);
+    getProfileConfig()
+      .then((config) => form.setFieldsValue(config))
+      .finally(() => setLoading(false));
+  }, [form]);
 
   const handleSave = async () => {
     try {
@@ -45,7 +44,7 @@ export default function ProfileSettingsModal({ open, onClose }: Props) {
       setSaving(true);
       await updateProfileConfig(values);
       message.success('Profile settings saved');
-      onClose();
+      onSaved?.();
     } catch (err) {
       if (err instanceof Error) {
         message.error(`Failed to save: ${err.message}`);
@@ -56,14 +55,7 @@ export default function ProfileSettingsModal({ open, onClose }: Props) {
   };
 
   return (
-    <Modal
-      title="Data Profiler Settings"
-      open={open}
-      onOk={handleSave}
-      onCancel={onClose}
-      confirmLoading={saving}
-      okText="Save"
-    >
+    <div className="settings-body">
       <Spin spinning={loading}>
         <Form form={form} layout="vertical">
           <Form.Item
@@ -108,6 +100,23 @@ export default function ProfileSettingsModal({ open, onClose }: Props) {
           </Form.Item>
         </Form>
       </Spin>
+      <div className="settings-body-actions">
+        {showCancel && <Button onClick={onCancel}>Cancel</Button>}
+        <Button type="primary" onClick={handleSave} loading={saving}>Save</Button>
+      </div>
+    </div>
+  );
+}
+
+interface Props {
+  open: boolean;
+  onClose: () => void;
+}
+
+export default function ProfileSettingsModal({ open, onClose }: Props) {
+  return (
+    <Modal title="Data Profiler Settings" open={open} onCancel={onClose} footer={null} destroyOnClose>
+      <ProfileSettingsBody onSaved={onClose} showCancel onCancel={onClose} />
     </Modal>
   );
 }
