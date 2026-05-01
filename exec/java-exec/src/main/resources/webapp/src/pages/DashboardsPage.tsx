@@ -103,7 +103,7 @@ function formatRelative(ts: number | string | undefined): string {
  * position it occupies in the dashboard grid.
  */
 function DashboardThumb({ dashboard, height = 180 }: { dashboard: Dashboard; height?: number }) {
-  const panels = dashboard.panels ?? [];
+  const panels = useMemo(() => dashboard.panels ?? [], [dashboard.panels]);
 
   const { maxX, maxY } = useMemo(() => {
     let x = 0;

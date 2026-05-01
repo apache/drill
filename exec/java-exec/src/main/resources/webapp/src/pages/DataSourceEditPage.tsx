@@ -242,7 +242,7 @@ export default function DataSourceEditPage() {
     setActiveTab(key);
   };
 
-  const handleSave = () => {
+  const handleSave = useCallback(() => {
     if (activeTab === 'json') {
       try {
         const parsed = JSON.parse(jsonText);
@@ -254,9 +254,9 @@ export default function DataSourceEditPage() {
       }
     }
     saveMutation.mutate();
-  };
+  }, [activeTab, jsonText, saveMutation]);
 
-  const handleToggleEnable = () => {
+  const handleToggleEnable = useCallback(() => {
     if (enabled) {
       Modal.confirm({
         title: `Disable "${pluginName}"?`,
@@ -268,9 +268,9 @@ export default function DataSourceEditPage() {
     } else {
       enableMutation.mutate(true);
     }
-  };
+  }, [enabled, pluginName, enableMutation]);
 
-  const handleDelete = () => {
+  const handleDelete = useCallback(() => {
     Modal.confirm({
       title: 'Delete this plugin?',
       content: 'This action cannot be undone.',
@@ -278,7 +278,7 @@ export default function DataSourceEditPage() {
       okButtonProps: { danger: true },
       onOk: () => deleteMutation.mutate(),
     });
-  };
+  }, [deleteMutation]);
 
   const logoUrl = getPluginLogoUrl(pluginType, config.connection as string);
 
