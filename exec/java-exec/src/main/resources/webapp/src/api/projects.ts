@@ -60,10 +60,35 @@ export async function updateProject(id: string, project: ProjectUpdate): Promise
 }
 
 /**
- * Delete a project
+ * Delete a project (soft-delete; recoverable from Trash)
  */
 export async function deleteProject(id: string): Promise<void> {
   await apiClient.delete(`${PROJECTS_BASE}/${encodeURIComponent(id)}`);
+}
+
+/**
+ * List soft-deleted projects owned by the current user
+ */
+export async function getTrashedProjects(): Promise<Project[]> {
+  const response = await apiClient.get<ProjectsResponse>(`${PROJECTS_BASE}/trash`);
+  return response.data.projects;
+}
+
+/**
+ * Restore a soft-deleted project
+ */
+export async function restoreProject(id: string): Promise<Project> {
+  const response = await apiClient.post<Project>(
+    `${PROJECTS_BASE}/${encodeURIComponent(id)}/restore`
+  );
+  return response.data;
+}
+
+/**
+ * Permanently delete a project from trash
+ */
+export async function purgeProject(id: string): Promise<void> {
+  await apiClient.delete(`${PROJECTS_BASE}/${encodeURIComponent(id)}/purge`);
 }
 
 /**

@@ -36,8 +36,6 @@ export interface PersistedTabState {
 }
 
 export interface PersistedUiState {
-  sidebarCollapsed: boolean;
-  sidebarWidth: number;
   editorHeight: number;
 }
 
@@ -97,6 +95,84 @@ export function clearPersistedState(projectId?: string): void {
   try {
     localStorage.removeItem(tabsKey(projectId));
     localStorage.removeItem(uiKey(projectId));
+  } catch {
+    // Ignore storage errors
+  }
+}
+
+const TABS_KEY_PREFIX = 'drill-sqllab-tabs-';
+
+export interface TabStateEntry {
+  /** null when this is the global (`/query`) bucket */
+  projectId: string | null;
+  state: PersistedTabState;
+}
+
+/**
+ * Enumerate every persisted tab state in localStorage. Used by the Workspace
+ * Recovery UI to surface stranded tabs from project-id mix-ups.
+ */
+export function listAllTabStates(): TabStateEntry[] {
+  const out: TabStateEntry[] = [];
+  try {
+    for (let i = 0; i < localStorage.length; i++) {
+      const k = localStorage.key(i);
+      if (!k || !k.startsWith(TABS_KEY_PREFIX)) {
+        continue;
+      }
+      const id = k.slice(TABS_KEY_PREFIX.length);
+      const projectId = id === 'global' ? null : id;
+      const raw = localStorage.getItem(k);
+      if (!raw) {
+        continue;
+      }
+      try {
+        const parsed = JSON.parse(raw) as PersistedTabState;
+        if (!parsed.tabs || !Array.isArray(parsed.tabs) || parsed.tabs.length === 0) {
+          continue;
+        }
+        out.push({ projectId, state: parsed });
+      } catch {
+        // Skip malformed entries
+      }
+    }
+  } catch {
+    // localStorage may be unavailable
+  }
+  return out;
+}
+
+/**
+ * Move a persisted tab state from one project bucket to another.
+ * If `from` and `to` are the same, this is a no-op. Replaces destination.
+ * Returns true on success.
+ */
+export function moveTabState(
+  from: { projectId: string | null },
+  to: { projectId: string | null },
+): boolean {
+  try {
+    const fromKey = tabsKey(from.projectId ?? undefined);
+    const toKey = tabsKey(to.projectId ?? undefined);
+    if (fromKey === toKey) {
+      return false;
+    }
+    const raw = localStorage.getItem(fromKey);
+    if (!raw) {
+      return false;
+    }
+    localStorage.setItem(toKey, raw);
+    localStorage.removeItem(fromKey);
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+/** Remove a single persisted tab state. */
+export function deleteTabState(projectId: string | null): void {
+  try {
+    localStorage.removeItem(tabsKey(projectId ?? undefined));
   } catch {
     // Ignore storage errors
   }

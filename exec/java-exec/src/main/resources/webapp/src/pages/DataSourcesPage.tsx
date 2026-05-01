@@ -18,50 +18,37 @@
 import { useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
-  Card,
-  Row,
-  Col,
   Input,
   Button,
-  Space,
-  Popconfirm,
-  message,
-  Typography,
-  Tooltip,
-  Empty,
   Spin,
   Modal,
   Form,
   Select,
-  Tag,
-  Badge,
+  Tooltip,
+  Dropdown,
+  message,
 } from 'antd';
+import type { MenuProps } from 'antd';
 import {
   SearchOutlined,
   EditOutlined,
   DeleteOutlined,
   PlusOutlined,
-  CheckCircleOutlined,
-  StopOutlined,
   DatabaseOutlined,
-  PoweroffOutlined,
-  SettingOutlined,
   KeyOutlined,
+  PoweroffOutlined,
+  MoreOutlined,
+  SettingOutlined,
 } from '@ant-design/icons';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { getPlugins, deletePlugin, enablePlugin } from '../api/storage';
 import { cleanupPluginDatasets } from '../api/projects';
 import { getPluginLogoUrl, getPluginGradient, knownPluginTypes, getTemplate } from '../components/datasource';
+import { usePageChrome } from '../contexts/AppChromeContext';
 import type { StoragePluginDetail } from '../types';
-
-const { Title, Text } = Typography;
 
 type FilterMode = 'all' | 'enabled' | 'disabled';
 
-/**
- * Build the OAuth authorization URL from the plugin configuration.
- * Mirrors the Java PluginConfigWrapper.getAuthorizationURIWithParams() logic.
- */
 function buildAuthorizationUrl(config: Record<string, unknown>): string {
   const oAuth = config.oAuthConfig as Record<string, unknown>;
   const credProvider = config.credentialsProvider as Record<string, unknown> | undefined;
@@ -89,9 +76,6 @@ function buildAuthorizationUrl(config: Record<string, unknown>): string {
   return url;
 }
 
-/**
- * Check if a plugin uses OAuth.
- */
 function isOAuthPlugin(config: Record<string, unknown>): boolean {
   const oAuth = config.oAuthConfig as Record<string, unknown> | undefined;
   const credProvider = config.credentialsProvider as Record<string, unknown> | undefined;
@@ -108,12 +92,9 @@ function isEnabled(plugin: StoragePluginDetail): boolean {
 }
 
 function getConnectionSnippet(config: Record<string, unknown>): string {
-  const conn =
-    (config.connection as string) ||
-    (config.url as string) ||
-    '';
-  if (conn.length > 60) {
-    return conn.substring(0, 57) + '...';
+  const conn = (config.connection as string) || (config.url as string) || '';
+  if (conn.length > 64) {
+    return conn.substring(0, 61) + '…';
   }
   return conn;
 }
@@ -136,16 +117,13 @@ export default function DataSourcesPage() {
     onSuccess: (_data, pluginName) => {
       message.success('Plugin deleted');
       queryClient.invalidateQueries({ queryKey: ['storage-plugins'] });
-      // Remove dataset references for this plugin from all projects
       cleanupPluginDatasets(pluginName).then(() => {
         queryClient.invalidateQueries({ queryKey: ['projects'] });
       }).catch(() => {
-        // Best-effort cleanup — ignore failures
+        // Best-effort cleanup
       });
     },
-    onError: (err: Error) => {
-      message.error(`Failed to delete plugin: ${err.message}`);
-    },
+    onError: (err: Error) => message.error(`Failed to delete plugin: ${err.message}`),
   });
 
   const enableMutation = useMutation({
@@ -155,12 +133,10 @@ export default function DataSourcesPage() {
       message.success(enable ? 'Plugin enabled' : 'Plugin disabled');
       queryClient.invalidateQueries({ queryKey: ['storage-plugins'] });
     },
-    onError: (err: Error) => {
-      message.error(`Failed to toggle plugin: ${err.message}`);
-    },
+    onError: (err: Error) => message.error(`Failed to toggle plugin: ${err.message}`),
   });
 
-  const handleAuthorize = (_pluginName: string, config: Record<string, unknown>) => {
+  const handleAuthorize = (config: Record<string, unknown>) => {
     const url = buildAuthorizationUrl(config);
     if (!url) {
       message.error('Cannot authorize: OAuth configuration is incomplete');
@@ -169,12 +145,11 @@ export default function DataSourcesPage() {
     const popup = window.open(
       url,
       'Authorize Drill',
-      'toolbar=no,menubar=no,scrollbars=yes,resizable=yes,top=500,left=500,width=450,height=600'
+      'toolbar=no,menubar=no,scrollbars=yes,resizable=yes,top=500,left=500,width=450,height=600',
     );
     const timer = setInterval(() => {
       if (popup?.closed) {
         clearInterval(timer);
-        // Refresh plugins data to pick up stored tokens
         queryClient.invalidateQueries({ queryKey: ['storage-plugins'] });
       }
     }, 1000);
@@ -196,7 +171,7 @@ export default function DataSourcesPage() {
         (p) =>
           p.name.toLowerCase().includes(lower) ||
           getPluginType(p).toLowerCase().includes(lower) ||
-          ((p.config?.description as string) || '').toLowerCase().includes(lower)
+          ((p.config?.description as string) || '').toLowerCase().includes(lower),
       );
     }
     return result.sort((a, b) => {
@@ -216,7 +191,6 @@ export default function DataSourcesPage() {
       if (values.description) {
         template.description = values.description;
       }
-      // Navigate to edit page with the template config as URL state
       navigate(`/datasources/${encodeURIComponent(values.name)}`, {
         state: { config: template, isNew: true },
       });
@@ -227,277 +201,240 @@ export default function DataSourcesPage() {
     }
   };
 
+  // Toolbar action registered in unified shell
+  const toolbarActions = useMemo(
+    () => (
+      <Button type="primary" size="small" icon={<PlusOutlined />} onClick={() => setCreateModalOpen(true)}>
+        New Data Source
+      </Button>
+    ),
+    [],
+  );
+  usePageChrome({ toolbarActions });
+
+  const total = plugins?.length ?? 0;
+  const enabledCount = (plugins ?? []).filter(isEnabled).length;
+
   if (error) {
     return (
-      <div style={{ padding: 24 }}>
-        <Card>
-          <Empty
-            description={
-              <Text type="danger">
-                Failed to load storage plugins: {(error as Error).message}
-              </Text>
-            }
-          />
-        </Card>
+      <div className="page-datasources-error">
+        <h2>Couldn't load data sources</h2>
+        <p>{(error as Error).message}</p>
       </div>
     );
   }
 
   return (
-    <div style={{ padding: 24, overflow: 'auto', flex: 1 }}>
-      <Card>
-        <Space direction="vertical" style={{ width: '100%' }} size="large">
-          {/* Header */}
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <Title level={3} style={{ margin: 0 }}>
-              Data Sources
-            </Title>
-            <Button
-              type="primary"
-              icon={<PlusOutlined />}
-              onClick={() => setCreateModalOpen(true)}
-            >
-              New Data Source
-            </Button>
-          </div>
+    <div className="page-datasources">
+      <header className="page-datasources-header">
+        <div>
+          <h1 className="page-datasources-title">Data Sources</h1>
+          <p className="page-datasources-subtitle">
+            {plugins === undefined
+              ? 'Loading…'
+              : total === 0
+                ? 'No plugins configured'
+                : `${enabledCount} enabled · ${total - enabledCount} disabled · ${total} total`}
+          </p>
+        </div>
+      </header>
 
-          {/* Search and Filter */}
-          <Space>
-            <Input
-              placeholder="Search plugins by name or type..."
-              prefix={<SearchOutlined />}
-              value={searchText}
-              onChange={(e) => setSearchText(e.target.value)}
-              allowClear
-              style={{ width: 400 }}
-            />
-            <Button
-              type={filterMode === 'all' ? 'primary' : 'default'}
-              onClick={() => setFilterMode('all')}
-            >
-              All
-            </Button>
-            <Button
-              type={filterMode === 'enabled' ? 'primary' : 'default'}
-              icon={<CheckCircleOutlined />}
-              onClick={() => setFilterMode('enabled')}
-            >
-              Enabled
-            </Button>
-            <Button
-              type={filterMode === 'disabled' ? 'primary' : 'default'}
-              icon={<StopOutlined />}
-              onClick={() => setFilterMode('disabled')}
-            >
-              Disabled
-            </Button>
-          </Space>
+      <div className="page-datasources-toolbar">
+        <Input
+          placeholder="Search by name, type, or description…"
+          prefix={<SearchOutlined style={{ color: 'var(--color-text-tertiary)' }} />}
+          value={searchText}
+          onChange={(e) => setSearchText(e.target.value)}
+          allowClear
+          className="page-datasources-search"
+        />
 
-          {/* Plugin Cards */}
-          {isLoading ? (
-            <div style={{ textAlign: 'center', padding: 40 }}>
-              <Spin size="large" />
-            </div>
-          ) : filteredPlugins.length === 0 ? (
-            <Empty
-              image={<DatabaseOutlined style={{ fontSize: 64, color: 'var(--color-text-tertiary)' }} />}
-              description={
-                searchText
-                  ? 'No plugins match your search'
-                  : 'No storage plugins found.'
-              }
+        <div className="page-datasources-chips">
+          {(['all', 'enabled', 'disabled'] as FilterMode[]).map((f) => (
+            <button
+              key={f}
+              type="button"
+              className={`page-datasources-chip${filterMode === f ? ' is-active' : ''}`}
+              onClick={() => setFilterMode(f)}
             >
-              {!searchText && (
-                <Button
-                  type="primary"
-                  icon={<PlusOutlined />}
-                  onClick={() => setCreateModalOpen(true)}
-                >
-                  Create Data Source
-                </Button>
+              {f === 'all' && 'All'}
+              {f === 'enabled' && (
+                <>
+                  <span className="page-datasources-chip-dot" style={{ background: 'var(--color-success)' }} />
+                  Enabled
+                </>
               )}
-            </Empty>
-          ) : (
-            <Row gutter={[16, 16]}>
-              {filteredPlugins.map((plugin) => {
-                const type = getPluginType(plugin);
-                const enabled = isEnabled(plugin);
-                const logoUrl = getPluginLogoUrl(type, plugin.config?.connection as string);
+              {f === 'disabled' && (
+                <>
+                  <span className="page-datasources-chip-dot" style={{ background: 'var(--color-text-quaternary)' }} />
+                  Disabled
+                </>
+              )}
+            </button>
+          ))}
+        </div>
+      </div>
 
-                const cardActions = [
-                  <Tooltip title="Edit" key="edit">
-                    <EditOutlined
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        navigate(
-                          `/datasources/${encodeURIComponent(plugin.name)}`
-                        );
+      {isLoading ? (
+        <div className="page-datasources-loading">
+          <Spin size="large" />
+        </div>
+      ) : (
+        <div className="page-datasources-grid">
+          <NewDataSourceTile onClick={() => setCreateModalOpen(true)} />
+
+          {filteredPlugins.map((plugin) => {
+            const type = getPluginType(plugin);
+            const enabled = isEnabled(plugin);
+            const logoUrl = getPluginLogoUrl(type, plugin.config?.connection as string);
+            const oauth = isOAuthPlugin(plugin.config);
+            const description = plugin.config?.description as string | undefined;
+            const connSnippet = getConnectionSnippet(plugin.config);
+
+            const moreItems: MenuProps['items'] = [
+              {
+                key: 'edit',
+                icon: <EditOutlined />,
+                label: 'Edit configuration',
+                onClick: () => navigate(`/datasources/${encodeURIComponent(plugin.name)}`),
+              },
+              ...(oauth ? [{
+                key: 'authorize',
+                icon: <KeyOutlined />,
+                label: 'Authorize…',
+                onClick: () => handleAuthorize(plugin.config),
+              }] : []),
+              {
+                key: 'toggle',
+                icon: <PoweroffOutlined />,
+                label: enabled ? 'Disable' : 'Enable',
+                onClick: () => {
+                  if (enabled) {
+                    Modal.confirm({
+                      title: `Disable "${plugin.name}"?`,
+                      content: 'Queries using this plugin will fail while it is disabled.',
+                      okText: 'Disable',
+                      okButtonProps: { danger: true },
+                      onOk: () => enableMutation.mutate({ name: plugin.name, enable: false }),
+                    });
+                  } else {
+                    enableMutation.mutate({ name: plugin.name, enable: true });
+                  }
+                },
+              },
+              { type: 'divider' as const },
+              {
+                key: 'delete',
+                icon: <DeleteOutlined />,
+                label: 'Delete',
+                danger: true,
+                onClick: () => {
+                  Modal.confirm({
+                    title: 'Delete this plugin?',
+                    content: 'This action cannot be undone.',
+                    okText: 'Delete',
+                    okButtonProps: { danger: true },
+                    onOk: () => deleteMutation.mutate(plugin.name),
+                  });
+                },
+              },
+            ];
+
+            return (
+              <div
+                key={plugin.name}
+                className={`datasource-tile${enabled ? '' : ' is-disabled'}`}
+                onClick={() => navigate(`/datasources/${encodeURIComponent(plugin.name)}`)}
+                role="button"
+                tabIndex={0}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' || e.key === ' ') {
+                    e.preventDefault();
+                    navigate(`/datasources/${encodeURIComponent(plugin.name)}`);
+                  }
+                }}
+              >
+                <div
+                  className="datasource-tile-banner"
+                  style={{ background: getPluginGradient(type) }}
+                >
+                  {logoUrl ? (
+                    <img
+                      src={logoUrl}
+                      alt={type}
+                      className="datasource-tile-logo"
+                      onError={(e) => {
+                        (e.target as HTMLImageElement).style.display = 'none';
                       }}
                     />
-                  </Tooltip>,
-                  enabled ? (
-                    <Popconfirm
-                      key="toggle"
-                      title={`Disable "${plugin.name}"?`}
-                      description="Queries using this plugin will fail while it is disabled."
-                      onConfirm={(e) => {
-                        e?.stopPropagation();
-                        enableMutation.mutate({
-                          name: plugin.name,
-                          enable: false,
-                        });
-                      }}
-                      onCancel={(e) => e?.stopPropagation()}
-                      okText="Disable"
-                      cancelText="Cancel"
-                      okButtonProps={{ danger: true }}
-                    >
-                      <Tooltip title="Disable">
-                        <PoweroffOutlined
-                          style={{ color: '#52c41a' }}
-                          onClick={(e) => e.stopPropagation()}
-                        />
-                      </Tooltip>
-                    </Popconfirm>
                   ) : (
-                    <Tooltip title="Enable" key="toggle">
-                      <PoweroffOutlined
-                        style={{ color: '#d9d9d9' }}
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          enableMutation.mutate({
-                            name: plugin.name,
-                            enable: true,
-                          });
-                        }}
-                      />
-                    </Tooltip>
-                  ),
-                  <Popconfirm
-                    key="delete"
-                    title="Delete this plugin?"
-                    description="This action cannot be undone."
-                    onConfirm={(e) => {
-                      e?.stopPropagation();
-                      deleteMutation.mutate(plugin.name);
-                    }}
-                    onCancel={(e) => e?.stopPropagation()}
-                    okText="Delete"
-                    cancelText="Cancel"
-                    okButtonProps={{ danger: true }}
-                  >
-                    <Tooltip title="Delete">
-                      <DeleteOutlined
-                        style={{ color: '#ff4d4f' }}
-                        onClick={(e) => e.stopPropagation()}
-                      />
-                    </Tooltip>
-                  </Popconfirm>,
-                ];
+                    <SettingOutlined className="datasource-tile-fallback-icon" />
+                  )}
 
-                // Add authorize button if OAuth is configured
-                if (isOAuthPlugin(plugin.config)) {
-                  cardActions.splice(1, 0, (
-                    <Tooltip title="Authorize" key="authorize">
-                      <KeyOutlined
-                        style={{ color: '#faad14' }}
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handleAuthorize(plugin.name, plugin.config);
-                        }}
-                      />
-                    </Tooltip>
-                  ));
-                }
+                  <Tooltip title={enabled ? 'Enabled' : 'Disabled'}>
+                    <span className={`datasource-tile-status-dot${enabled ? ' is-on' : ''}`} aria-label={enabled ? 'Enabled' : 'Disabled'} />
+                  </Tooltip>
 
-                return (
-                  <Col xs={24} sm={12} md={8} lg={6} key={plugin.name}>
-                    <Badge.Ribbon
-                      text={enabled ? 'Enabled' : 'Disabled'}
-                      color={enabled ? 'green' : 'default'}
-                    >
-                      <Card
-                        hoverable
-                        size="small"
-                        style={enabled ? undefined : { opacity: 0.55 }}
-                        onClick={() =>
-                          navigate(`/datasources/${encodeURIComponent(plugin.name)}`)
-                        }
-                        cover={
-                          <div
-                            style={{
-                              height: 120,
-                              display: 'flex',
-                              alignItems: 'center',
-                              justifyContent: 'center',
-                              background: getPluginGradient(type),
-                              filter: enabled ? undefined : 'grayscale(80%)',
-                              position: 'relative',
-                            }}
-                          >
-                            {logoUrl ? (
-                              <img
-                                src={logoUrl}
-                                alt={type}
-                                style={{
-                                  maxHeight: 56,
-                                  maxWidth: 120,
-                                  objectFit: 'contain',
-                                  mixBlendMode: 'multiply',
-                                }}
-                                onError={(e) => {
-                                  // Fallback to icon if image fails to load
-                                  (e.target as HTMLImageElement).style.display = 'none';
-                                }}
-                              />
-                            ) : (
-                              <SettingOutlined style={{ fontSize: 40, color: '#fff' }} />
-                            )}
-                          </div>
-                        }
-                        actions={cardActions}
-                      >
-                        <Card.Meta
-                          title={
-                            <Space>
-                              <Text strong ellipsis style={{ maxWidth: 150 }}>
-                                {plugin.name}
-                              </Text>
-                            </Space>
-                          }
-                          description={
-                            <Space direction="vertical" size={0}>
-                              <Tag color="blue">{type}</Tag>
-                              {(plugin.config?.description as string) && (
-                                <Text
-                                  type="secondary"
-                                  ellipsis
-                                  style={{ fontSize: 12, marginTop: 4 }}
-                                >
-                                  {plugin.config.description as string}
-                                </Text>
-                              )}
-                              {getConnectionSnippet(plugin.config) && (
-                                <Text
-                                  type="secondary"
-                                  ellipsis
-                                  style={{ fontSize: 11, marginTop: 4 }}
-                                >
-                                  {getConnectionSnippet(plugin.config)}
-                                </Text>
-                              )}
-                            </Space>
-                          }
-                        />
-                      </Card>
-                    </Badge.Ribbon>
-                  </Col>
-                );
-              })}
-            </Row>
+                  <div className="datasource-tile-actions" onClick={(e) => e.stopPropagation()}>
+                    {oauth && (
+                      <Tooltip title="Authorize OAuth">
+                        <button
+                          type="button"
+                          className="datasource-tile-action-btn"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleAuthorize(plugin.config);
+                          }}
+                          aria-label="Authorize"
+                        >
+                          <KeyOutlined />
+                        </button>
+                      </Tooltip>
+                    )}
+                    <Dropdown menu={{ items: moreItems }} placement="bottomRight" trigger={['click']}>
+                      <button type="button" className="datasource-tile-action-btn" aria-label="More">
+                        <MoreOutlined />
+                      </button>
+                    </Dropdown>
+                  </div>
+                </div>
+
+                <div className="datasource-tile-meta">
+                  <div className="datasource-tile-name-row">
+                    <h3 className="datasource-tile-name" title={plugin.name}>{plugin.name}</h3>
+                    <span className="datasource-tile-type">{type}</span>
+                  </div>
+                  {description && (
+                    <p className="datasource-tile-description">{description}</p>
+                  )}
+                  {connSnippet && (
+                    <p className="datasource-tile-connection">
+                      <code>{connSnippet}</code>
+                    </p>
+                  )}
+                </div>
+              </div>
+            );
+          })}
+
+          {filteredPlugins.length === 0 && total > 0 && (
+            <div className="page-datasources-empty page-datasources-empty-inline">
+              <SearchOutlined className="page-datasources-empty-glyph" />
+              <h2>No matches</h2>
+              <p>Try a different search term or filter.</p>
+              <Button onClick={() => { setSearchText(''); setFilterMode('all'); }}>Clear filters</Button>
+            </div>
           )}
-        </Space>
-      </Card>
+
+          {total === 0 && !isLoading && (
+            <div className="page-datasources-empty">
+              <DatabaseOutlined className="page-datasources-empty-glyph" />
+              <h2>No data sources yet</h2>
+              <p>Connect Drill to a file system, JDBC database, REST API, or any other data source.</p>
+            </div>
+          )}
+        </div>
+      )}
 
       {/* Create Plugin Modal */}
       <Modal
@@ -516,18 +453,12 @@ export default function DataSourcesPage() {
             label="Plugin Name"
             rules={[
               { required: true, message: 'Please enter a plugin name' },
-              {
-                pattern: /^[a-zA-Z0-9_-]+$/,
-                message: 'Only letters, numbers, hyphens, and underscores',
-              },
+              { pattern: /^[a-zA-Z0-9_-]+$/, message: 'Only letters, numbers, hyphens, and underscores' },
             ]}
           >
             <Input placeholder="my_plugin" />
           </Form.Item>
-          <Form.Item
-            name="description"
-            label="Description (optional)"
-          >
+          <Form.Item name="description" label="Description (optional)">
             <Input.TextArea
               placeholder="Brief description of this data source"
               autoSize={{ minRows: 1, maxRows: 3 }}
@@ -549,5 +480,21 @@ export default function DataSourcesPage() {
         </Form>
       </Modal>
     </div>
+  );
+}
+
+interface NewTileProps {
+  onClick: () => void;
+}
+
+function NewDataSourceTile({ onClick }: NewTileProps) {
+  return (
+    <button type="button" className="datasource-tile datasource-tile-new" onClick={onClick}>
+      <div className="datasource-tile-new-glyph">
+        <PlusOutlined />
+      </div>
+      <div className="datasource-tile-new-label">New Data Source</div>
+      <div className="datasource-tile-new-sublabel">Connect a database, file system, or API</div>
+    </button>
   );
 }

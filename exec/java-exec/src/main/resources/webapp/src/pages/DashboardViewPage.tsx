@@ -20,7 +20,6 @@ import { useParams, useNavigate, useSearchParams, useLocation } from 'react-rout
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Responsive, WidthProvider } from 'react-grid-layout';
 import {
-  Breadcrumb,
   Button,
   Space,
   Typography,
@@ -38,10 +37,8 @@ import {
 } from 'antd';
 import {
   EditOutlined,
-  EyeOutlined,
   SaveOutlined,
   PlusOutlined,
-  ArrowLeftOutlined,
   ReloadOutlined,
   FilePdfOutlined,
   ShareAltOutlined,
@@ -65,13 +62,14 @@ import { getDashboard, updateDashboard, getFavorites, toggleFavorite, uploadImag
 import { getVisualizations } from '../api/visualizations';
 import { DashboardPanelCard, DashboardFilterBar, DashboardSettingsDrawer, DEFAULT_THEME, DARK_THEME } from '../components/dashboard';
 import { useTheme } from '../hooks/useTheme';
+import { usePageChrome, type BreadcrumbSegment } from '../contexts/AppChromeContext';
 import type { DashboardPanel, DashboardTab, DashboardTheme, DashboardFilter } from '../types';
 
 import 'react-grid-layout/css/styles.css';
 import 'react-resizable/css/styles.css';
 
 const ResponsiveGridLayout = WidthProvider(Responsive);
-const { Title, Text } = Typography;
+const { Text } = Typography;
 
 /** Check whether a saved theme matches one of the built-in defaults. */
 function isDefaultTheme(t: DashboardTheme | undefined): boolean {
@@ -121,6 +119,7 @@ export default function DashboardViewPage() {
   const [addPanelVisible, setAddPanelVisible] = useState(false);
   const [addPanelTab, setAddPanelTab] = useState<AddPanelTab>('visualization');
   const [activeTabId, setActiveTabId] = useState<string | null>(null);
+  // Tab renaming — Modal-based to sidestep AntD Tabs' internal focus management.
   const [renamingTabId, setRenamingTabId] = useState<string | null>(null);
   const [renameValue, setRenameValue] = useState('');
   const [exportingPdf, setExportingPdf] = useState(false);
@@ -506,10 +505,26 @@ export default function DashboardViewPage() {
     setTabs((prev) => [...prev, newTab]);
   }, [tabs.length]);
 
-  const handleRenameTab = useCallback((tabId: string, newName: string) => {
-    setTabs((prev) => prev.map((t) => t.id === tabId ? { ...t, name: newName } : t));
-    setRenamingTabId(null);
+  const openRenameTab = useCallback((tabId: string, currentName: string) => {
+    setRenameValue(currentName);
+    setRenamingTabId(tabId);
   }, []);
+
+  const closeRenameTab = useCallback(() => {
+    setRenamingTabId(null);
+    setRenameValue('');
+  }, []);
+
+  const submitRenameTab = useCallback(() => {
+    if (!renamingTabId) {
+      return;
+    }
+    const trimmed = renameValue.trim();
+    if (trimmed) {
+      setTabs((prev) => prev.map((t) => t.id === renamingTabId ? { ...t, name: trimmed } : t));
+    }
+    closeRenameTab();
+  }, [renamingTabId, renameValue, closeRenameTab]);
 
   const handleDeleteTab = useCallback((tabId: string) => {
     setTabs((prev) => prev.filter((t) => t.id !== tabId));
@@ -613,6 +628,113 @@ export default function DashboardViewPage() {
     backgroundColor: theme.backgroundColor,
   } as React.CSSProperties), [theme]);
 
+  // Register chrome on the unified shell toolbar — breadcrumb + actions
+  const breadcrumb = useMemo<BreadcrumbSegment[]>(() => {
+    if (!dashboard) {
+      return [];
+    }
+    if (projectId) {
+      return [
+        { key: 'projects', label: 'Projects', to: '/projects' },
+        { key: 'project', label: projectName ?? 'Project', to: `/projects/${projectId}/dashboards` },
+        { key: 'dashboards', label: 'Dashboards', to: `/projects/${projectId}/dashboards` },
+        { key: 'dashboard', label: dashboard.name },
+      ];
+    }
+    return [
+      { key: 'dashboards', label: 'Dashboards', to: '/dashboards' },
+      { key: 'dashboard', label: dashboard.name },
+    ];
+  }, [dashboard, projectId, projectName]);
+
+  const toolbarActions = useMemo(() => {
+    if (!dashboard) {
+      return null;
+    }
+    return (
+      <Space size={2}>
+        <Tooltip title={isFavorited ? 'Remove from favorites' : 'Add to favorites'}>
+          <Button
+            type="text"
+            size="small"
+            icon={isFavorited
+              ? <StarFilled style={{ color: '#FFD60A' }} />
+              : <StarOutlined />
+            }
+            onClick={() => favoriteMutation.mutate()}
+            loading={favoriteMutation.isPending}
+          />
+        </Tooltip>
+
+        <Select
+          size="small"
+          value={refreshInterval}
+          onChange={setRefreshInterval}
+          options={REFRESH_OPTIONS}
+          style={{ width: 84 }}
+          suffixIcon={<ReloadOutlined style={{ fontSize: 11 }} />}
+          variant="borderless"
+        />
+
+        <Tooltip title="Export as PDF">
+          <Button
+            type="text"
+            size="small"
+            icon={<FilePdfOutlined />}
+            onClick={handleExportPdf}
+            disabled={exportingPdf || panels.length === 0}
+          />
+        </Tooltip>
+
+        {dashboard.isPublic && (
+          <Tooltip title="Copy shareable link">
+            <Button type="text" size="small" icon={<ShareAltOutlined />} onClick={handleCopyShareLink} />
+          </Tooltip>
+        )}
+
+        {editMode ? (
+          <>
+            <Tooltip title="Dashboard settings">
+              <Button type="text" size="small" icon={<SettingOutlined />} onClick={() => setSettingsOpen(true)} />
+            </Tooltip>
+            <Button size="small" icon={<PlusOutlined />} onClick={() => setAddPanelVisible(true)}>
+              Add Panel
+            </Button>
+            <Button size="small" onClick={handleToggleEdit}>Cancel</Button>
+            <Button
+              size="small"
+              type="primary"
+              icon={<SaveOutlined />}
+              onClick={handleSave}
+              loading={saveMutation.isPending}
+            >
+              Save
+            </Button>
+          </>
+        ) : (
+          <Button size="small" type="primary" icon={<EditOutlined />} onClick={handleToggleEdit}>
+            Edit
+          </Button>
+        )}
+      </Space>
+    );
+  }, [
+    dashboard,
+    isFavorited,
+    favoriteMutation,
+    refreshInterval,
+    handleExportPdf,
+    exportingPdf,
+    panels.length,
+    handleCopyShareLink,
+    editMode,
+    handleToggleEdit,
+    handleSave,
+    saveMutation.isPending,
+  ]);
+
+  usePageChrome({ breadcrumb, toolbarActions });
+
   if (isLoading) {
     return (
       <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100%' }}>
@@ -647,24 +769,12 @@ export default function DashboardViewPage() {
       .sort((a, b) => a.order - b.order)
       .map((tab) => ({
         key: tab.id,
-        label: editMode && renamingTabId === tab.id ? (
-          <Input
-            className="tab-rename-input"
-            value={renameValue}
-            onChange={(e) => setRenameValue(e.target.value)}
-            onBlur={() => handleRenameTab(tab.id, renameValue)}
-            onPressEnter={() => handleRenameTab(tab.id, renameValue)}
-            autoFocus
-            size="small"
-            onClick={(e) => e.stopPropagation()}
-          />
-        ) : (
+        label: (
           <span
             onDoubleClick={(e) => {
               if (editMode) {
                 e.stopPropagation();
-                setRenamingTabId(tab.id);
-                setRenameValue(tab.name);
+                openRenameTab(tab.id, tab.name);
               }
             }}
           >
@@ -692,105 +802,12 @@ export default function DashboardViewPage() {
         </div>
       )}
 
-      {/* Toolbar */}
-      <div className="dashboard-toolbar">
-        <Space>
-          <Button icon={<ArrowLeftOutlined />} onClick={() => navigate(backPath)} />
-          <Breadcrumb
-            items={[
-              ...(projectId ? [
-                { title: <a onClick={() => navigate('/projects')}>Projects</a> },
-                { title: <a onClick={() => navigate(`/projects/${projectId}/dashboards`)}>{projectName || 'Project'}</a> },
-                { title: <a onClick={() => navigate(`/projects/${projectId}/dashboards`)}>Dashboards</a> },
-              ] : [
-                { title: <a onClick={() => navigate('/dashboards')}>Dashboards</a> },
-              ]),
-              { title: dashboard?.name || 'Dashboard' },
-            ]}
-          />
-          <div>
-            <Space align="center">
-              <Title level={4} style={{ margin: 0 }}>{dashboard.name}</Title>
-              <Tooltip title={isFavorited ? 'Remove from favorites' : 'Add to favorites'}>
-                <Button
-                  type="text"
-                  size="small"
-                  icon={isFavorited
-                    ? <StarFilled style={{ color: '#faad14', fontSize: 18 }} />
-                    : <StarOutlined style={{ fontSize: 18 }} />
-                  }
-                  onClick={() => favoriteMutation.mutate()}
-                  loading={favoriteMutation.isPending}
-                />
-              </Tooltip>
-            </Space>
-            {dashboard.description && (
-              <Text type="secondary">{dashboard.description}</Text>
-            )}
-          </div>
-        </Space>
-
-        <Space>
-          {/* PDF Export */}
-          <Tooltip title="Export as PDF">
-            <Button
-              icon={<FilePdfOutlined />}
-              onClick={handleExportPdf}
-              disabled={exportingPdf || panels.length === 0}
-            >
-              PDF
-            </Button>
-          </Tooltip>
-
-          {/* Share Link */}
-          {dashboard.isPublic && (
-            <Tooltip title="Copy shareable link">
-              <Button
-                icon={<ShareAltOutlined />}
-                onClick={handleCopyShareLink}
-              >
-                Share
-              </Button>
-            </Tooltip>
-          )}
-
-          <Select
-            value={refreshInterval}
-            onChange={setRefreshInterval}
-            options={REFRESH_OPTIONS}
-            style={{ width: 100 }}
-            prefix={<ReloadOutlined />}
-            disabled={!editMode}
-          />
-
-          {editMode ? (
-            <>
-              <Tooltip title="Dashboard settings">
-                <Button icon={<SettingOutlined />} onClick={() => setSettingsOpen(true)} />
-              </Tooltip>
-              <Button icon={<PlusOutlined />} onClick={() => setAddPanelVisible(true)}>
-                Add Panel
-              </Button>
-              <Button
-                icon={<SaveOutlined />}
-                type="primary"
-                onClick={handleSave}
-                loading={saveMutation.isPending}
-              >
-                Save
-              </Button>
-              <Tooltip title="Cancel editing">
-                <Button icon={<EyeOutlined />} onClick={handleToggleEdit}>
-                  Cancel
-                </Button>
-              </Tooltip>
-            </>
-          ) : (
-            <Button icon={<EditOutlined />} onClick={handleToggleEdit}>
-              Edit
-            </Button>
-          )}
-        </Space>
+      {/* Title strip — dashboard name + description as a doc-style header */}
+      <div className="dashboard-title-strip">
+        <h1 className="dashboard-title">{dashboard.name}</h1>
+        {dashboard.description && (
+          <p className="dashboard-title-description">{dashboard.description}</p>
+        )}
       </div>
 
       {/* Dashboard Tabs */}
@@ -1117,6 +1134,27 @@ export default function DashboardViewPage() {
               ),
             },
           ]}
+        />
+      </Modal>
+
+      {/* Rename Tab Modal */}
+      <Modal
+        title="Rename tab"
+        open={renamingTabId !== null}
+        onCancel={closeRenameTab}
+        onOk={submitRenameTab}
+        okText="Rename"
+        okButtonProps={{ disabled: !renameValue.trim() }}
+        destroyOnClose
+        width={420}
+      >
+        <Input
+          autoFocus
+          value={renameValue}
+          onChange={(e) => setRenameValue(e.target.value)}
+          onPressEnter={submitRenameTab}
+          placeholder="Tab name"
+          maxLength={100}
         />
       </Modal>
     </div>

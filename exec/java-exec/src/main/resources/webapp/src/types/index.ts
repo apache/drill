@@ -118,6 +118,7 @@ export interface SavedQuery {
   updatedAt: string;
   tags?: Record<string, string>;
   isPublic: boolean;
+  deletedAt?: number;
 }
 
 export interface SavedQueryCreate {
@@ -209,6 +210,7 @@ export interface Visualization {
   sql?: string;
   defaultSchema?: string;
   tabId?: string;
+  deletedAt?: number;
 }
 
 export interface VisualizationCreate {
@@ -269,6 +271,7 @@ export interface Dashboard {
   updatedAt: string;
   refreshInterval: number;
   isPublic: boolean;
+  deletedAt?: number;
 }
 
 export interface DashboardCreate {
@@ -316,6 +319,11 @@ export interface Project {
   wikiPages: WikiPage[];
   createdAt: number;
   updatedAt: number;
+  /** Hex color (e.g. "#0A84FF") for the tile gradient. Null/undefined = auto-hash. */
+  tileColor?: string | null;
+  /** Data URI ("data:image/jpeg;base64,...") for the tile cover. Null/undefined = no image. */
+  tileImage?: string | null;
+  deletedAt?: number;
 }
 
 export interface ProjectCreate {
@@ -323,6 +331,8 @@ export interface ProjectCreate {
   description?: string;
   tags?: string[];
   isPublic?: boolean;
+  tileColor?: string | null;
+  tileImage?: string | null;
 }
 
 export interface ProjectUpdate {
@@ -331,6 +341,9 @@ export interface ProjectUpdate {
   tags?: string[];
   isPublic?: boolean;
   sharedWith?: string[];
+  /** Sent unconditionally on appearance saves; null clears the value. */
+  tileColor?: string | null;
+  tileImage?: string | null;
 }
 
 // Tree node types for schema explorer

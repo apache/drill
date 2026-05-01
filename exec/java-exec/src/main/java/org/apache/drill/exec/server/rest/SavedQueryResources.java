@@ -62,6 +62,7 @@ import java.util.UUID;
 public class SavedQueryResources {
   private static final Logger logger = LoggerFactory.getLogger(SavedQueryResources.class);
   private static final String STORE_NAME = "drill.sqllab.saved_queries";
+  private static final long TRASH_TTL_MS = 30L * 24 * 60 * 60 * 1000;
 
   @Inject
   WorkManager workManager;
@@ -100,6 +101,8 @@ public class SavedQueryResources {
     private Map<String, String> tags;
     @JsonProperty
     private boolean isPublic;
+    @JsonProperty
+    private long deletedAt;
 
     // Default constructor for Jackson
     public SavedQuery() {
@@ -116,7 +119,8 @@ public class SavedQueryResources {
         @JsonProperty("createdAt") long createdAt,
         @JsonProperty("updatedAt") long updatedAt,
         @JsonProperty("tags") Map<String, String> tags,
-        @JsonProperty("isPublic") boolean isPublic) {
+        @JsonProperty("isPublic") boolean isPublic,
+        @JsonProperty("deletedAt") long deletedAt) {
       this.id = id;
       this.name = name;
       this.description = description;
@@ -127,6 +131,7 @@ public class SavedQueryResources {
       this.updatedAt = updatedAt;
       this.tags = tags;
       this.isPublic = isPublic;
+      this.deletedAt = deletedAt;
     }
 
     // Getters
@@ -170,6 +175,10 @@ public class SavedQueryResources {
       return isPublic;
     }
 
+    public long getDeletedAt() {
+      return deletedAt;
+    }
+
     // Setters for updates
     public void setName(String name) {
       this.name = name;
@@ -197,6 +206,10 @@ public class SavedQueryResources {
 
     public void setPublic(boolean isPublic) {
       this.isPublic = isPublic;
+    }
+
+    public void setDeletedAt(long deletedAt) {
+      this.deletedAt = deletedAt;
     }
   }
 
@@ -279,6 +292,10 @@ public class SavedQueryResources {
         Map.Entry<String, SavedQuery> entry = iterator.next();
         SavedQuery query = entry.getValue();
 
+        if (query.getDeletedAt() > 0) {
+          continue;
+        }
+
         // Return queries owned by user or public queries
         if (query.getOwner().equals(currentUser) || query.isPublic()) {
           queries.add(query);
@@ -324,7 +341,8 @@ public class SavedQueryResources {
         now,
         now,
         request.tags != null ? request.tags : new HashMap<>(),
-        request.isPublic
+        request.isPublic,
+        0L
     );
 
     try {
@@ -350,7 +368,7 @@ public class SavedQueryResources {
       PersistentStore<SavedQuery> store = getStore();
       SavedQuery query = store.get(id);
 
-      if (query == null) {
+      if (query == null || query.getDeletedAt() > 0) {
         return Response.status(Response.Status.NOT_FOUND)
             .entity(new MessageResponse("Query not found"))
             .build();
@@ -431,7 +449,7 @@ public class SavedQueryResources {
   @DELETE
   @Path("/{id}")
   @Produces(MediaType.APPLICATION_JSON)
-  @Operation(summary = "Delete saved query", description = "Deletes a saved query")
+  @Operation(summary = "Delete saved query", description = "Soft-deletes a saved query (recoverable from Trash)")
   public Response deleteSavedQuery(
       @Parameter(description = "Query ID") @PathParam("id") String id) {
     logger.debug("Deleting saved query: {}", id);
@@ -453,12 +471,114 @@ public class SavedQueryResources {
             .build();
       }
 
-      store.delete(id);
+      query.setDeletedAt(Instant.now().toEpochMilli());
+      store.put(id, query);
 
-      return Response.ok(new MessageResponse("Query deleted successfully")).build();
+      return Response.ok(new MessageResponse("Query moved to trash")).build();
     } catch (Exception e) {
       logger.error("Error deleting saved query", e);
       throw new DrillRuntimeException("Failed to delete saved query: " + e.getMessage(), e);
+    }
+  }
+
+  @GET
+  @Path("/trash")
+  @Produces(MediaType.APPLICATION_JSON)
+  @Operation(summary = "List trashed queries", description = "Returns soft-deleted queries owned by the current user")
+  public SavedQueriesResponse listTrash() {
+    List<SavedQuery> queries = new ArrayList<>();
+    String currentUser = getCurrentUser();
+    long expiryCutoff = Instant.now().toEpochMilli() - TRASH_TTL_MS;
+
+    try {
+      PersistentStore<SavedQuery> store = getStore();
+      Iterator<Map.Entry<String, SavedQuery>> iterator = store.getAll();
+
+      while (iterator.hasNext()) {
+        Map.Entry<String, SavedQuery> entry = iterator.next();
+        SavedQuery query = entry.getValue();
+        if (query.getDeletedAt() <= 0) {
+          continue;
+        }
+        // Auto-purge items past the 30-day retention window
+        if (query.getDeletedAt() < expiryCutoff) {
+          try {
+            store.delete(entry.getKey());
+          } catch (Exception e) {
+            logger.warn("Failed to auto-purge expired query {}: {}", entry.getKey(), e.getMessage());
+          }
+          continue;
+        }
+        if (query.getOwner().equals(currentUser)) {
+          queries.add(query);
+        }
+      }
+    } catch (Exception e) {
+      logger.error("Error listing trashed queries", e);
+      throw new DrillRuntimeException("Failed to list trashed queries: " + e.getMessage(), e);
+    }
+
+    return new SavedQueriesResponse(queries);
+  }
+
+  @POST
+  @Path("/{id}/restore")
+  @Produces(MediaType.APPLICATION_JSON)
+  @Operation(summary = "Restore saved query", description = "Restores a soft-deleted query from trash")
+  public Response restoreSavedQuery(
+      @Parameter(description = "Query ID") @PathParam("id") String id) {
+    try {
+      PersistentStore<SavedQuery> store = getStore();
+      SavedQuery query = store.get(id);
+
+      if (query == null) {
+        return Response.status(Response.Status.NOT_FOUND)
+            .entity(new MessageResponse("Query not found"))
+            .build();
+      }
+
+      if (!query.getOwner().equals(getCurrentUser())) {
+        return Response.status(Response.Status.FORBIDDEN)
+            .entity(new MessageResponse("Only the owner can restore this query"))
+            .build();
+      }
+
+      query.setDeletedAt(0L);
+      store.put(id, query);
+      return Response.ok(query).build();
+    } catch (Exception e) {
+      logger.error("Error restoring saved query", e);
+      throw new DrillRuntimeException("Failed to restore saved query: " + e.getMessage(), e);
+    }
+  }
+
+  @DELETE
+  @Path("/{id}/purge")
+  @Produces(MediaType.APPLICATION_JSON)
+  @Operation(summary = "Permanently delete saved query", description = "Hard-deletes a query from trash")
+  public Response purgeSavedQuery(
+      @Parameter(description = "Query ID") @PathParam("id") String id) {
+    try {
+      PersistentStore<SavedQuery> store = getStore();
+      SavedQuery query = store.get(id);
+
+      if (query == null) {
+        return Response.status(Response.Status.NOT_FOUND)
+            .entity(new MessageResponse("Query not found"))
+            .build();
+      }
+
+      if (!query.getOwner().equals(getCurrentUser())) {
+        return Response.status(Response.Status.FORBIDDEN)
+            .entity(new MessageResponse("Only the owner can purge this query"))
+            .build();
+      }
+
+      store.delete(id);
+      return Response.ok(new MessageResponse("Query permanently deleted")).build();
+    } catch (Exception e) {
+      logger.error("Error purging saved query", e);
+      throw new DrillRuntimeException("Failed to purge saved query: " + e.getMessage(), e);
     }
   }
 
