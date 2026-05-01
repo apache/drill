@@ -25,18 +25,18 @@ import {
   InputNumber,
   Button,
   message,
-  Space,
   Alert,
 } from 'antd';
 import { getSmtpConfig, updateSmtpConfig, testSmtpConfig } from '../../api/smtp';
 import type { SmtpConfig } from '../../api/smtp';
 
-interface SmtpSettingsModalProps {
-  open: boolean;
-  onClose: () => void;
+interface BodyProps {
+  onSaved?: () => void;
+  showCancel?: boolean;
+  onCancel?: () => void;
 }
 
-export default function SmtpSettingsModal({ open, onClose }: SmtpSettingsModalProps) {
+export function SmtpSettingsBody({ onSaved, showCancel, onCancel }: BodyProps) {
   const [form] = Form.useForm();
   const [loading, setLoading] = useState(false);
   const [testing, setTesting] = useState(false);
@@ -62,11 +62,9 @@ export default function SmtpSettingsModal({ open, onClose }: SmtpSettingsModalPr
   }, [form]);
 
   useEffect(() => {
-    if (open) {
-      setTestResult(null);
-      loadConfig();
-    }
-  }, [open, loadConfig]);
+    setTestResult(null);
+    loadConfig();
+  }, [loadConfig]);
 
   const handleSave = useCallback(async () => {
     try {
@@ -83,7 +81,7 @@ export default function SmtpSettingsModal({ open, onClose }: SmtpSettingsModalPr
         enabled: values.enabled,
       });
       message.success('SMTP configuration saved');
-      onClose();
+      onSaved?.();
     } catch (err) {
       if (err && typeof err === 'object' && 'errorFields' in err) {
         return;
@@ -92,7 +90,7 @@ export default function SmtpSettingsModal({ open, onClose }: SmtpSettingsModalPr
     } finally {
       setLoading(false);
     }
-  }, [form, onClose]);
+  }, [form, onSaved]);
 
   const handleTest = useCallback(async () => {
     try {
@@ -112,23 +110,7 @@ export default function SmtpSettingsModal({ open, onClose }: SmtpSettingsModalPr
   }, [form]);
 
   return (
-    <Modal
-      title="Email (SMTP) Settings"
-      open={open}
-      onCancel={onClose}
-      width={560}
-      footer={
-        <Space>
-          <Button onClick={onClose}>Cancel</Button>
-          <Button onClick={handleTest} loading={testing}>
-            Test Connection
-          </Button>
-          <Button type="primary" onClick={handleSave} loading={loading}>
-            Save
-          </Button>
-        </Space>
-      }
-    >
+    <div className="settings-body">
       {testResult && (
         <Alert
           type={testResult.success ? 'success' : 'error'}
@@ -154,19 +136,11 @@ export default function SmtpSettingsModal({ open, onClose }: SmtpSettingsModalPr
           <Switch />
         </Form.Item>
 
-        <Form.Item
-          name="host"
-          label="SMTP Host"
-          rules={[{ required: true, message: 'SMTP host is required' }]}
-        >
+        <Form.Item name="host" label="SMTP Host" rules={[{ required: true, message: 'SMTP host is required' }]}>
           <Input placeholder="smtp.gmail.com" />
         </Form.Item>
 
-        <Form.Item
-          name="port"
-          label="SMTP Port"
-          rules={[{ required: true, message: 'Port is required' }]}
-        >
+        <Form.Item name="port" label="SMTP Port" rules={[{ required: true, message: 'Port is required' }]}>
           <InputNumber min={1} max={65535} style={{ width: '100%' }} />
         </Form.Item>
 
@@ -187,9 +161,7 @@ export default function SmtpSettingsModal({ open, onClose }: SmtpSettingsModalPr
           label="Password"
           help={config?.passwordSet ? 'Password is set. Enter a new value to change it.' : undefined}
         >
-          <Input.Password
-            placeholder={config?.passwordSet ? '(unchanged)' : 'Enter password'}
-          />
+          <Input.Password placeholder={config?.passwordSet ? '(unchanged)' : 'Enter password'} />
         </Form.Item>
 
         <Form.Item
@@ -207,6 +179,25 @@ export default function SmtpSettingsModal({ open, onClose }: SmtpSettingsModalPr
           <Input placeholder="Apache Drill" />
         </Form.Item>
       </Form>
+
+      <div className="settings-body-actions">
+        {showCancel && <Button onClick={onCancel}>Cancel</Button>}
+        <Button onClick={handleTest} loading={testing}>Test Connection</Button>
+        <Button type="primary" onClick={handleSave} loading={loading}>Save</Button>
+      </div>
+    </div>
+  );
+}
+
+interface SmtpSettingsModalProps {
+  open: boolean;
+  onClose: () => void;
+}
+
+export default function SmtpSettingsModal({ open, onClose }: SmtpSettingsModalProps) {
+  return (
+    <Modal title="Email (SMTP) Settings" open={open} onCancel={onClose} width={560} footer={null} destroyOnClose>
+      <SmtpSettingsBody onSaved={onClose} showCancel onCancel={onClose} />
     </Modal>
   );
 }

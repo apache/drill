@@ -18,30 +18,24 @@
 import { useState, useMemo, useCallback, useEffect, useRef } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import {
-  Card,
-  Row,
-  Col,
   Input,
   Button,
   Space,
   Tag,
   Popconfirm,
-  message,
-  Typography,
   Tooltip,
-  Empty,
   Spin,
   Modal,
   Alert,
-  Checkbox,
+  Dropdown,
 } from 'antd';
+import type { MenuProps } from 'antd';
 import {
   SearchOutlined,
   EditOutlined,
   DeleteOutlined,
   GlobalOutlined,
   LockOutlined,
-  UserOutlined,
   AreaChartOutlined,
   BarChartOutlined,
   LineChartOutlined,
@@ -54,7 +48,6 @@ import {
   FilterOutlined,
   GlobalOutlined as MapOutlined,
   FieldNumberOutlined,
-  EyeOutlined,
   PlayCircleOutlined,
   CodeOutlined,
   BranchesOutlined,
@@ -68,21 +61,22 @@ import {
   ApartmentOutlined,
   AppstoreOutlined,
   FolderOutlined,
+  CheckOutlined,
+  MoreOutlined,
+  PlusOutlined,
 } from '@ant-design/icons';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { getVisualizations, deleteVisualization } from '../api/visualizations';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { getVisualizations, deleteVisualization, restoreVisualization } from '../api/visualizations';
+import { useUndoableDelete } from '../hooks/useUndoableDelete';
 import { executeQuery } from '../api/queries';
 import { getEffectiveQuery } from '../utils/sqlTransformations';
 import { ChartPreview, VisualizationEditor } from '../components/visualization';
 import { useCurrentUser } from '../hooks/useCurrentUser';
+import { usePageChrome } from '../contexts/AppChromeContext';
 import type { Visualization, ChartType, QueryResult } from '../types';
 import AddToProjectModal from '../components/common/AddToProjectModal';
-import BulkActionBar from '../components/common/BulkActionBar';
 import BulkAddToProjectModal from '../components/common/BulkAddToProjectModal';
 
-const { Title, Text, Paragraph } = Typography;
-
-// Chart type icons mapping
 const chartIcons: Record<ChartType, React.ReactNode> = {
   area: <AreaChartOutlined />,
   bar: <BarChartOutlined />,
@@ -109,7 +103,6 @@ const chartIcons: Record<ChartType, React.ReactNode> = {
   parallel: <ApartmentOutlined />,
 };
 
-// Chart type colors
 const chartColors: Record<ChartType, string> = {
   area: '#73c0de',
   bar: '#5470c6',
@@ -136,17 +129,36 @@ const chartColors: Record<ChartType, string> = {
   parallel: '#9a60b4',
 };
 
+function formatRelative(ts: number | string): string {
+  const date = typeof ts === 'number' ? new Date(ts) : new Date(ts);
+  const diff = Date.now() - date.getTime();
+  const min = Math.floor(diff / 60000);
+  if (min < 60) {
+    return min < 1 ? 'just now' : `${min}m ago`;
+  }
+  const hr = Math.floor(min / 60);
+  if (hr < 24) {
+    return `${hr}h ago`;
+  }
+  const days = Math.floor(hr / 24);
+  if (days < 7) {
+    return `${days}d ago`;
+  }
+  if (days < 30) {
+    return `${Math.floor(days / 7)}w ago`;
+  }
+  return date.toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
+}
+
 /**
- * Mini chart preview for visualization cards.
- * Fetches the viz SQL and renders a small chart thumbnail.
+ * Mini chart preview that runs the viz SQL and renders a thumbnail.
+ * Falls back to a tinted icon glyph when no SQL or on error.
  */
-function MiniVizPreview({ viz }: { viz: Visualization }) {
+function MiniVizPreview({ viz, height = 180 }: { viz: Visualization; height?: number }) {
   const [queryResult, setQueryResult] = useState<QueryResult | null>(null);
   const [loading, setLoading] = useState(false);
   const [failed, setFailed] = useState(false);
 
-  // Serialize config to a stable string so the effect re-fires when config changes
-  // (e.g. time grain or aggregation settings updated)
   const configKey = JSON.stringify(viz.config || {});
 
   useEffect(() => {
@@ -160,17 +172,14 @@ function MiniVizPreview({ viz }: { viz: Visualization }) {
     setFailed(false);
 
     getEffectiveQuery(viz.sql, JSON.parse(configKey))
-      .then((query) => {
-        if (cancelled) {
-          return;
-        }
-        return executeQuery({
+      .then((query) =>
+        executeQuery({
           query,
           queryType: 'SQL',
           autoLimitRowCount: 100,
           defaultSchema: viz.defaultSchema,
-        });
-      })
+        }),
+      )
       .then((result) => {
         if (!cancelled && result) {
           setQueryResult(result);
@@ -189,19 +198,17 @@ function MiniVizPreview({ viz }: { viz: Visualization }) {
     };
   }, [viz.id, viz.sql, viz.defaultSchema, configKey]);
 
-  // Fall back to icon on failure or no SQL
   if (failed || (!loading && !queryResult)) {
+    const tint = chartColors[viz.chartType] || '#5470c6';
     return (
       <div
+        className="viz-tile-fallback"
         style={{
-          height: 140,
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          backgroundColor: (chartColors[viz.chartType] || '#5470c6') + '20',
+          height,
+          background: `linear-gradient(135deg, ${tint}30 0%, ${tint}18 100%)`,
         }}
       >
-        <span style={{ fontSize: 48, color: chartColors[viz.chartType] || '#5470c6' }}>
+        <span className="viz-tile-fallback-icon" style={{ color: tint }}>
           {chartIcons[viz.chartType] || <BarChartOutlined />}
         </span>
       </div>
@@ -209,19 +216,13 @@ function MiniVizPreview({ viz }: { viz: Visualization }) {
   }
 
   return (
-    <div
-      style={{
-        height: 140,
-        backgroundColor: 'var(--color-bg-container)',
-        overflow: 'hidden',
-      }}
-    >
+    <div className="viz-tile-chart" style={{ height }}>
       <ChartPreview
         chartType={viz.chartType as ChartType}
         config={viz.config}
         data={queryResult}
         loading={loading}
-        height={140}
+        height={height}
         mini
       />
     </div>
@@ -243,6 +244,7 @@ export default function VisualizationsPage({ filterIds, projectId, projectOwner,
   const autoOpenDoneRef = useRef(false);
   const { canEdit, canView, isProjectOwner } = useCurrentUser();
   const [searchText, setSearchText] = useState('');
+  const [chartTypeFilter, setChartTypeFilter] = useState<ChartType | 'all'>('all');
   const [editBuilderViz, setEditBuilderViz] = useState<Visualization | null>(null);
   const [viewModalOpen, setViewModalOpen] = useState(false);
   const [viewingViz, setViewingViz] = useState<Visualization | null>(null);
@@ -251,52 +253,80 @@ export default function VisualizationsPage({ filterIds, projectId, projectOwner,
   const [viewQueryError, setViewQueryError] = useState<string | null>(null);
   const [showSql, setShowSql] = useState(false);
   const [addToProjectId, setAddToProjectId] = useState<string | null>(null);
-  const [selectedIds, setSelectedIds] = useState<string[]>([]);
+  const [bulkSelected, setBulkSelected] = useState<Set<string>>(new Set());
   const [bulkProjectModalOpen, setBulkProjectModalOpen] = useState(false);
 
-  // Fetch visualizations
   const { data: visualizations, isLoading, error } = useQuery({
     queryKey: ['visualizations'],
     queryFn: getVisualizations,
   });
 
-  // Delete mutation
-  const deleteMutation = useMutation({
-    mutationFn: deleteVisualization,
-    onSuccess: () => {
-      message.success('Visualization deleted successfully');
-      queryClient.invalidateQueries({ queryKey: ['visualizations'] });
-    },
-    onError: (error: Error) => {
-      message.error(`Failed to delete visualization: ${error.message}`);
-    },
+  const undoable = useUndoableDelete();
+
+  const deleteVizWithUndo = (viz: Visualization) => undoable.run({
+    label: `Deleted "${viz.name}"`,
+    capture: () => viz,
+    remove: () => deleteVisualization(viz.id),
+    restore: (snap) => restoreVisualization(snap.id),
+    onDeleted: () => queryClient.invalidateQueries({ queryKey: ['visualizations'] }),
+    onRestored: () => queryClient.invalidateQueries({ queryKey: ['visualizations'] }),
   });
 
-  // Filter visualizations based on filterIds (project scope) and search text
-  const filteredVisualizations = useMemo(() => {
+  const bulkDeleteVizWithUndo = (ids: string[]) => {
+    if (ids.length === 0) {
+      return;
+    }
+    undoable.run<string[]>({
+      label: `Deleted ${ids.length} ${ids.length === 1 ? 'visualization' : 'visualizations'}`,
+      capture: () => [...ids],
+      remove: async () => { await Promise.all(ids.map((id) => deleteVisualization(id))); },
+      restore: async (snap) => { await Promise.all(snap.map((id) => restoreVisualization(id))); },
+      onDeleted: () => queryClient.invalidateQueries({ queryKey: ['visualizations'] }),
+      onRestored: () => queryClient.invalidateQueries({ queryKey: ['visualizations'] }),
+    });
+  };
+
+  // Visible after permission + project filter (before chart-type/search filtering — used for chip computation)
+  const visibleVisualizations = useMemo(() => {
     if (!visualizations) {
       return [];
     }
-    let result = visualizations;
-    // Visibility: show own visualizations + public visualizations (admins/anonymous see all)
-    result = result.filter((v) => canView(v.owner, v.isPublic));
+    let result = visualizations.filter((v) => canView(v.owner, v.isPublic));
     if (filterIds) {
       const idSet = new Set(filterIds);
       result = result.filter((v) => idSet.has(v.id));
     }
+    return result;
+  }, [visualizations, filterIds, canView]);
+
+  // Chart type chips (only for types actually present in this view)
+  const presentChartTypes = useMemo(() => {
+    const types = new Set<ChartType>();
+    visibleVisualizations.forEach((v) => types.add(v.chartType as ChartType));
+    return Array.from(types).sort();
+  }, [visibleVisualizations]);
+
+  const filteredVisualizations = useMemo(() => {
+    let result = visibleVisualizations;
+    if (chartTypeFilter !== 'all') {
+      result = result.filter((v) => v.chartType === chartTypeFilter);
+    }
     if (searchText) {
-      const lowerSearch = searchText.toLowerCase();
+      const lower = searchText.toLowerCase();
       result = result.filter(
         (v) =>
-          v.name.toLowerCase().includes(lowerSearch) ||
-          v.chartType.toLowerCase().includes(lowerSearch) ||
-          (v.description && v.description.toLowerCase().includes(lowerSearch))
+          v.name.toLowerCase().includes(lower) ||
+          v.chartType.toLowerCase().includes(lower) ||
+          (v.description && v.description.toLowerCase().includes(lower)),
       );
     }
-    return result;
-  }, [visualizations, searchText, filterIds, canView]);
+    return [...result].sort((a, b) => {
+      const at = typeof a.updatedAt === 'number' ? a.updatedAt : new Date(a.updatedAt).getTime();
+      const bt = typeof b.updatedAt === 'number' ? b.updatedAt : new Date(b.updatedAt).getTime();
+      return bt - at;
+    });
+  }, [visibleVisualizations, chartTypeFilter, searchText]);
 
-  // Handle view - execute SQL and render chart
   const handleView = useCallback(async (viz: Visualization) => {
     setViewingViz(viz);
     setViewModalOpen(true);
@@ -328,7 +358,9 @@ export default function VisualizationsPage({ filterIds, projectId, projectOwner,
 
   // Auto-open visualization when navigated with viewVizId state
   useEffect(() => {
-    if (autoOpenDoneRef.current || !navState?.viewVizId || !visualizations) return;
+    if (autoOpenDoneRef.current || !navState?.viewVizId || !visualizations) {
+      return;
+    }
     const target = visualizations.find((v) => v.id === navState.viewVizId);
     if (target) {
       autoOpenDoneRef.current = true;
@@ -337,197 +369,268 @@ export default function VisualizationsPage({ filterIds, projectId, projectOwner,
     }
   }, [visualizations, navState?.viewVizId, handleView, location.pathname, location.search]);
 
-  // Format timestamp
-  const formatDate = (timestamp: number | string) => {
-    const date = typeof timestamp === 'number'
-      ? new Date(timestamp)
-      : new Date(timestamp);
-    return date.toLocaleDateString();
+  const closeView = () => {
+    setViewModalOpen(false);
+    setViewingViz(null);
+    setViewQueryResult(null);
+    setViewQueryError(null);
+    setShowSql(false);
   };
+
+  const toggleBulk = (id: string) => {
+    setBulkSelected((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) {
+        next.delete(id);
+      } else {
+        next.add(id);
+      }
+      return next;
+    });
+  };
+
+  // Toolbar actions registered in the unified shell toolbar
+  const toolbarActions = useMemo(
+    () => (
+      <Space size={4}>
+        {onAdd && (
+          <Tooltip title="Add existing">
+            <Button type="text" size="small" icon={<PlusOutlined />} onClick={onAdd} />
+          </Tooltip>
+        )}
+        <Button
+          type="primary"
+          size="small"
+          icon={<PlusOutlined />}
+          onClick={() => navigate(projectId ? `/projects/${projectId}/query` : '/query')}
+        >
+          New Visualization
+        </Button>
+      </Space>
+    ),
+    [navigate, onAdd, projectId],
+  );
+  usePageChrome({ toolbarActions });
 
   if (error) {
     return (
-      <div style={{ padding: 24 }}>
-        <Card>
-          <Empty
-            description={
-              <Text type="danger">
-                Failed to load visualizations: {(error as Error).message}
-              </Text>
-            }
-          />
-        </Card>
+      <div className="page-visualizations-error">
+        <h2>Couldn't load visualizations</h2>
+        <p>{(error as Error).message}</p>
       </div>
     );
   }
 
   return (
-    <div style={{ padding: 24 }}>
-      <Card>
-        <Space direction="vertical" style={{ width: '100%' }} size="large">
-          {/* Header */}
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <Title level={3} style={{ margin: 0 }}>
-              Visualizations
-            </Title>
-            <Space>
-              {onAdd && (
-                <Button onClick={onAdd}>
-                  Add Existing
-                </Button>
-              )}
-              <Button type="primary" onClick={() => navigate(projectId ? `/projects/${projectId}/query` : '/sqllab')}>
-                Create from Query
-              </Button>
-            </Space>
-          </div>
+    <div className="page-visualizations">
+      {undoable.contextHolder}
+      <header className="page-visualizations-header">
+        <div>
+          <h1 className="page-visualizations-title">Visualizations</h1>
+          <p className="page-visualizations-subtitle">
+            {visualizations === undefined
+              ? 'Loading…'
+              : visibleVisualizations.length === 0
+                ? 'No visualizations yet'
+                : filteredVisualizations.length === visibleVisualizations.length
+                  ? `${visibleVisualizations.length} ${visibleVisualizations.length === 1 ? 'item' : 'items'}`
+                  : `Showing ${filteredVisualizations.length} of ${visibleVisualizations.length}`}
+          </p>
+        </div>
+      </header>
 
-          {/* Search */}
-          <Input
-            placeholder="Search visualizations by name, type, or description..."
-            prefix={<SearchOutlined />}
-            value={searchText}
-            onChange={(e) => setSearchText(e.target.value)}
-            allowClear
-            style={{ maxWidth: 400 }}
-          />
+      <div className="page-visualizations-toolbar">
+        <Input
+          placeholder="Search visualizations…"
+          prefix={<SearchOutlined style={{ color: 'var(--color-text-tertiary)' }} />}
+          value={searchText}
+          onChange={(e) => setSearchText(e.target.value)}
+          allowClear
+          className="page-visualizations-search"
+        />
 
-          {/* Bulk Action Bar */}
-          <BulkActionBar
-            selectedCount={selectedIds.length}
-            onAddToProject={!projectId ? () => setBulkProjectModalOpen(true) : undefined}
-            onDelete={() => {
-              selectedIds.forEach(id => deleteMutation.mutate(id));
-              setSelectedIds([]);
-            }}
-            onClear={() => setSelectedIds([])}
-          />
-
-          {/* Visualization Cards */}
-          {isLoading ? (
-            <div style={{ textAlign: 'center', padding: 40 }}>
-              <Spin size="large" />
-            </div>
-          ) : filteredVisualizations.length === 0 ? (
-            searchText ? (
-              <Empty
-                image={<BarChartOutlined style={{ fontSize: 64, color: 'var(--color-text-tertiary)' }} />}
-                description="No visualizations match your search"
-              />
-            ) : onAdd ? (
-              <Empty
-                image={<BarChartOutlined style={{ fontSize: 64, color: 'var(--color-text-tertiary)' }} />}
-                description="No visualizations in this project yet"
+        {presentChartTypes.length > 1 && (
+          <div className="page-visualizations-chips">
+            <button
+              type="button"
+              className={`page-visualizations-chip${chartTypeFilter === 'all' ? ' is-active' : ''}`}
+              onClick={() => setChartTypeFilter('all')}
+            >
+              All
+            </button>
+            {presentChartTypes.map((t) => (
+              <button
+                key={t}
+                type="button"
+                className={`page-visualizations-chip${chartTypeFilter === t ? ' is-active' : ''}`}
+                onClick={() => setChartTypeFilter(t)}
+                style={chartTypeFilter === t ? undefined : undefined}
               >
-                <Space>
-                  <Button onClick={onAdd}>Add Existing</Button>
-                  <Button type="primary" onClick={() => navigate(`/projects/${projectId}/query`)}>
-                    Create from Query
-                  </Button>
-                </Space>
-              </Empty>
-            ) : (
-              <Empty
-                image={<BarChartOutlined style={{ fontSize: 64, color: 'var(--color-text-tertiary)' }} />}
-                description="No visualizations yet. Run a query and create one!"
-              />
-            )
-          ) : (
-            <Row gutter={[16, 16]}>
-              {filteredVisualizations.map((viz) => (
-                <Col xs={24} sm={12} md={8} lg={6} key={viz.id}>
-                  <Card
-                    hoverable
-                    size="small"
-                    style={selectedIds.includes(viz.id) ? { border: '2px solid var(--color-primary)' } : undefined}
-                    cover={
-                      <div style={{ position: 'relative' }}>
-                        <div
-                          style={{ position: 'absolute', top: 8, left: 8, zIndex: 1 }}
-                          onClick={(e) => e.stopPropagation()}
-                        >
-                          <Checkbox
-                            checked={selectedIds.includes(viz.id)}
-                            onChange={(e) => {
-                              if (e.target.checked) {
-                                setSelectedIds(prev => [...prev, viz.id]);
-                              } else {
-                                setSelectedIds(prev => prev.filter(id => id !== viz.id));
-                              }
-                            }}
-                          />
-                        </div>
-                        <MiniVizPreview viz={viz} />
-                      </div>
-                    }
-                    actions={(() => {
-                      const editable = canEdit(viz.owner) || (projectOwner ? isProjectOwner(projectOwner) : false);
-                      return [
-                        <Tooltip title="View" key="view">
-                          <EyeOutlined onClick={() => handleView(viz)} />
-                        </Tooltip>,
-                        ...(editable ? [
-                          <Tooltip title="Edit" key="edit">
-                            <EditOutlined onClick={() => setEditBuilderViz(viz)} />
-                          </Tooltip>,
-                        ] : []),
-                        ...(!projectId ? [
-                          <Tooltip title="Add to Project" key="addToProject">
-                            <FolderOutlined onClick={() => setAddToProjectId(viz.id)} />
-                          </Tooltip>,
-                        ] : []),
-                        ...(editable ? [
-                          <Popconfirm
-                            key="delete"
-                            title="Delete this visualization?"
-                            description="This action cannot be undone."
-                            onConfirm={() => deleteMutation.mutate(viz.id)}
-                            okText="Delete"
-                            cancelText="Cancel"
-                            okButtonProps={{ danger: true }}
-                          >
-                            <Tooltip title="Delete">
-                              <DeleteOutlined style={{ color: '#ff4d4f' }} />
-                            </Tooltip>
-                          </Popconfirm>,
-                        ] : []),
-                      ];
-                    })()}
-                  >
-                    <Card.Meta
-                      title={
-                        <Space>
-                          <Text strong ellipsis style={{ maxWidth: 150 }}>
-                            {viz.name}
-                          </Text>
-                          {viz.isPublic ? (
-                            <GlobalOutlined style={{ color: '#52c41a', fontSize: 12 }} />
-                          ) : (
-                            <LockOutlined style={{ color: '#faad14', fontSize: 12 }} />
-                          )}
-                        </Space>
-                      }
-                      description={
-                        <Space direction="vertical" size={0}>
-                          <Tag color={chartColors[viz.chartType]} style={{ marginBottom: 4 }}>
-                            {viz.chartType}
-                          </Tag>
-                          <Text type="secondary" style={{ fontSize: 11 }}>
-                            <UserOutlined /> {viz.owner}
-                          </Text>
-                          <Text type="secondary" style={{ fontSize: 11 }}>
-                            {formatDate(viz.updatedAt)}
-                          </Text>
-                        </Space>
-                      }
-                    />
-                  </Card>
-                </Col>
-              ))}
-            </Row>
+                <span className="page-visualizations-chip-icon" style={{ color: chartColors[t] }}>
+                  {chartIcons[t]}
+                </span>
+                <span style={{ textTransform: 'capitalize' }}>{t}</span>
+              </button>
+            ))}
+          </div>
+        )}
+
+        {bulkSelected.size > 0 && (
+          <div className="page-visualizations-bulkbar">
+            <span>{bulkSelected.size} selected</span>
+            {!projectId && (
+              <Button size="small" onClick={() => setBulkProjectModalOpen(true)}>Add to project</Button>
+            )}
+            <Popconfirm
+              title={`Delete ${bulkSelected.size} ${bulkSelected.size === 1 ? 'visualization' : 'visualizations'}?`}
+              onConfirm={() => {
+                bulkDeleteVizWithUndo(Array.from(bulkSelected));
+                setBulkSelected(new Set());
+              }}
+              okText="Delete"
+              cancelText="Cancel"
+              okButtonProps={{ danger: true }}
+            >
+              <Button size="small" danger>Delete</Button>
+            </Popconfirm>
+            <Button size="small" type="text" onClick={() => setBulkSelected(new Set())}>Clear</Button>
+          </div>
+        )}
+      </div>
+
+      {isLoading ? (
+        <div className="page-visualizations-loading">
+          <Spin size="large" />
+        </div>
+      ) : filteredVisualizations.length === 0 ? (
+        <div className="page-visualizations-empty">
+          <BarChartOutlined className="page-visualizations-empty-glyph" />
+          <h2>
+            {searchText || chartTypeFilter !== 'all'
+              ? 'No matches'
+              : visibleVisualizations.length === 0
+                ? 'No visualizations yet'
+                : 'No visualizations'}
+          </h2>
+          <p>
+            {searchText || chartTypeFilter !== 'all'
+              ? 'Try a different search or chart type.'
+              : 'Run a query in SQL Lab and turn the results into a chart.'}
+          </p>
+          {!searchText && chartTypeFilter === 'all' && (
+            <Button
+              type="primary"
+              icon={<PlusOutlined />}
+              onClick={() => navigate(projectId ? `/projects/${projectId}/query` : '/query')}
+            >
+              Create from a query
+            </Button>
           )}
-        </Space>
-      </Card>
+          {(searchText || chartTypeFilter !== 'all') && (
+            <Button
+              onClick={() => {
+                setSearchText('');
+                setChartTypeFilter('all');
+              }}
+            >
+              Clear filters
+            </Button>
+          )}
+        </div>
+      ) : (
+        <div className="page-visualizations-grid">
+          {filteredVisualizations.map((viz) => {
+            const isBulk = bulkSelected.has(viz.id);
+            const editable = canEdit(viz.owner) || (projectOwner ? isProjectOwner(projectOwner) : false);
+            const tint = chartColors[viz.chartType] || '#5470c6';
+
+            const moreItems: MenuProps['items'] = [
+              editable
+                ? { key: 'edit', icon: <EditOutlined />, label: 'Edit', onClick: () => setEditBuilderViz(viz) }
+                : null,
+              !projectId
+                ? { key: 'addto', icon: <FolderOutlined />, label: 'Add to project…', onClick: () => setAddToProjectId(viz.id) }
+                : null,
+              editable ? { type: 'divider' as const } : null,
+              editable
+                ? {
+                    key: 'delete',
+                    icon: <DeleteOutlined />,
+                    label: 'Delete',
+                    danger: true,
+                    onClick: () => {
+                      Modal.confirm({
+                        title: 'Delete this visualization?',
+                        content: 'This action cannot be undone.',
+                        okText: 'Delete',
+                        okButtonProps: { danger: true },
+                        onOk: () => deleteVizWithUndo(viz),
+                      });
+                    },
+                  }
+                : null,
+            ].filter(Boolean) as MenuProps['items'];
+
+            return (
+              <div
+                key={viz.id}
+                className={`viz-tile${isBulk ? ' is-bulk-selected' : ''}`}
+                onClick={() => handleView(viz)}
+                role="button"
+                tabIndex={0}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' || e.key === ' ') {
+                    e.preventDefault();
+                    handleView(viz);
+                  }
+                }}
+              >
+                <div className="viz-tile-thumb-wrap">
+                  <MiniVizPreview viz={viz} />
+
+                  <button
+                    type="button"
+                    className={`viz-tile-check${isBulk ? ' is-on' : ''}`}
+                    aria-label={isBulk ? 'Deselect' : 'Select'}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      toggleBulk(viz.id);
+                    }}
+                  >
+                    {isBulk && <CheckOutlined />}
+                  </button>
+
+                  <div className="viz-tile-actions" onClick={(e) => e.stopPropagation()}>
+                    <Dropdown menu={{ items: moreItems }} placement="bottomRight" trigger={['click']}>
+                      <button type="button" className="viz-tile-action-btn" aria-label="More">
+                        <MoreOutlined />
+                      </button>
+                    </Dropdown>
+                  </div>
+                </div>
+
+                <div className="viz-tile-meta">
+                  <div className="viz-tile-name-row">
+                    <h3 className="viz-tile-name" title={viz.name}>{viz.name}</h3>
+                    {viz.isPublic ? (
+                      <GlobalOutlined className="viz-tile-vis-icon" title="Public" />
+                    ) : (
+                      <LockOutlined className="viz-tile-vis-icon" title="Private" />
+                    )}
+                  </div>
+                  <div className="viz-tile-sub">
+                    <span className="viz-tile-type" style={{ color: tint }}>
+                      <span className="viz-tile-type-icon">{chartIcons[viz.chartType]}</span>
+                      <span style={{ textTransform: 'capitalize' }}>{viz.chartType}</span>
+                    </span>
+                    <span className="viz-tile-time">{formatRelative(viz.updatedAt)}</span>
+                  </div>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      )}
 
       {/* Edit via VisualizationEditor */}
       <VisualizationEditor
@@ -544,51 +647,36 @@ export default function VisualizationsPage({ filterIds, projectId, projectOwner,
         itemType="visualization"
       />
 
-      {/* Bulk Add to Project Modal */}
       <BulkAddToProjectModal
         open={bulkProjectModalOpen}
         onClose={() => setBulkProjectModalOpen(false)}
-        itemIds={selectedIds}
+        itemIds={Array.from(bulkSelected)}
         itemType="visualization"
       />
 
-      {/* View Modal - renders actual chart */}
+      {/* Quick Look-style View Modal */}
       <Modal
-        title={
-          <Space>
-            <span style={{ color: chartColors[viewingViz?.chartType || 'bar'] }}>
-              {chartIcons[viewingViz?.chartType || 'bar']}
-            </span>
-            {viewingViz?.name || 'Visualization'}
-          </Space>
-        }
         open={viewModalOpen}
-        onCancel={() => {
-          setViewModalOpen(false);
-          setViewingViz(null);
-          setViewQueryResult(null);
-          setViewQueryError(null);
-          setShowSql(false);
-        }}
+        onCancel={closeView}
+        title={
+          viewingViz ? (
+            <Space>
+              <span style={{ color: chartColors[viewingViz.chartType] }}>
+                {chartIcons[viewingViz.chartType]}
+              </span>
+              {viewingViz.name}
+            </Space>
+          ) : 'Visualization'
+        }
         footer={
           <Space>
             {viewingViz?.sql && (
-              <Button
-                icon={<CodeOutlined />}
-                onClick={() => setShowSql(!showSql)}
-              >
+              <Button icon={<CodeOutlined />} onClick={() => setShowSql(!showSql)}>
                 {showSql ? 'Hide SQL' : 'Show SQL'}
               </Button>
             )}
             {viewingViz?.sql && (
-              <Button
-                icon={<PlayCircleOutlined />}
-                onClick={() => {
-                  if (viewingViz) {
-                    handleView(viewingViz);
-                  }
-                }}
-              >
+              <Button icon={<PlayCircleOutlined />} onClick={() => viewingViz && handleView(viewingViz)}>
                 Re-run
               </Button>
             )}
@@ -604,80 +692,47 @@ export default function VisualizationsPage({ filterIds, projectId, projectOwner,
                 Edit in SQL Lab
               </Button>
             )}
-            <Button onClick={() => {
-              setViewModalOpen(false);
-              setViewingViz(null);
-              setViewQueryResult(null);
-              setViewQueryError(null);
-              setShowSql(false);
-            }}>
-              Close
-            </Button>
+            <Button onClick={closeView}>Close</Button>
           </Space>
         }
-        width={800}
+        width={860}
         destroyOnClose
       >
         {viewingViz && (
           <div>
-            {/* Description */}
             {viewingViz.description && (
-              <Paragraph type="secondary" style={{ marginBottom: 12 }}>
-                {viewingViz.description}
-              </Paragraph>
+              <p className="viz-view-desc">{viewingViz.description}</p>
             )}
-
-            {/* Metadata row */}
-            <Space style={{ marginBottom: 16 }} wrap>
-              <Tag color={chartColors[viewingViz.chartType]}>{viewingViz.chartType}</Tag>
-              <Text type="secondary">
-                <UserOutlined /> {viewingViz.owner}
-              </Text>
+            <Space wrap style={{ marginBottom: 14 }}>
+              <Tag bordered={false} style={{ background: `${chartColors[viewingViz.chartType]}20`, color: chartColors[viewingViz.chartType] }}>
+                <span style={{ marginRight: 4 }}>{chartIcons[viewingViz.chartType]}</span>
+                <span style={{ textTransform: 'capitalize' }}>{viewingViz.chartType}</span>
+              </Tag>
               {viewingViz.isPublic ? (
-                <Tag color="green" icon={<GlobalOutlined />}>Public</Tag>
+                <Tag bordered={false} icon={<GlobalOutlined />} color="success">Public</Tag>
               ) : (
-                <Tag color="orange" icon={<LockOutlined />}>Private</Tag>
+                <Tag bordered={false} icon={<LockOutlined />}>Private</Tag>
               )}
-              <Text type="secondary">Updated: {formatDate(viewingViz.updatedAt)}</Text>
+              <span style={{ color: 'var(--color-text-tertiary)', fontSize: 12 }}>
+                {viewingViz.owner} · Updated {formatRelative(viewingViz.updatedAt)}
+              </span>
             </Space>
 
-            {/* SQL display (toggle) */}
             {showSql && viewingViz.sql && (
-              <pre
-                style={{
-                  background: 'var(--color-bg-elevated)',
-                  padding: 12,
-                  borderRadius: 4,
-                  marginBottom: 16,
-                  maxHeight: 150,
-                  overflow: 'auto',
-                  fontFamily: 'monospace',
-                  fontSize: 12,
-                  border: '1px solid var(--color-border)',
-                }}
-              >
-                {viewingViz.sql}
-              </pre>
+              <pre className="viz-view-sql">{viewingViz.sql}</pre>
             )}
 
-            {/* Error display */}
             {viewQueryError && (
-              <Alert
-                type="warning"
-                message={viewQueryError}
-                style={{ marginBottom: 16 }}
-                showIcon
-              />
+              <Alert type="warning" message={viewQueryError} style={{ marginBottom: 16 }} showIcon />
             )}
 
-            {/* Chart rendering */}
-            <div style={{ border: '1px solid var(--color-border)', borderRadius: 8, overflow: 'hidden' }}>
+            <div className="viz-view-chart">
               <ChartPreview
                 chartType={viewingViz.chartType as ChartType}
                 config={viewingViz.config}
                 data={viewQueryResult}
                 loading={viewQueryLoading}
-                height={400}
+                height={420}
                 sql={viewingViz.sql}
               />
             </div>

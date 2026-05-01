@@ -15,26 +15,24 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
-  Card,
-  Table,
   Input,
   Button,
   Space,
   Tag,
   Popconfirm,
   message,
-  Typography,
   Tooltip,
-  Empty,
   Spin,
   Modal,
   Form,
   Switch,
   Select,
+  Dropdown,
 } from 'antd';
+import type { MenuProps } from 'antd';
 import {
   SearchOutlined,
   PlayCircleOutlined,
@@ -46,20 +44,26 @@ import {
   CodeOutlined,
   FolderOutlined,
   ClockCircleOutlined,
+  CopyOutlined,
+  CalendarOutlined,
+  PlusOutlined,
+  MoreOutlined,
+  CheckOutlined,
 } from '@ant-design/icons';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { getSavedQueries, deleteSavedQuery, updateSavedQuery } from '../api/savedQueries';
+import Editor from '@monaco-editor/react';
+import { getSavedQueries, deleteSavedQuery, updateSavedQuery, restoreSavedQuery } from '../api/savedQueries';
+import { useUndoableDelete } from '../hooks/useUndoableDelete';
 import { getProjects } from '../api/projects';
 import { getSchedules } from '../api/schedules';
 import { useCurrentUser } from '../hooks/useCurrentUser';
+import { useTheme } from '../hooks/useTheme';
+import { usePageChrome } from '../contexts/AppChromeContext';
 import type { SavedQuery } from '../types';
-import type { ColumnsType } from 'antd/es/table';
 import AddToProjectModal from '../components/common/AddToProjectModal';
-import BulkActionBar from '../components/common/BulkActionBar';
 import BulkAddToProjectModal from '../components/common/BulkAddToProjectModal';
 import ScheduleModal from '../components/query-editor/ScheduleModal';
 
-const { Title, Text, Paragraph } = Typography;
 const { TextArea } = Input;
 
 interface SavedQueriesPageProps {
@@ -69,78 +73,120 @@ interface SavedQueriesPageProps {
   onAdd?: () => void;
 }
 
+type Filter = 'all' | 'mine' | 'public' | 'scheduled';
+
+function formatRelative(ts: number | string): string {
+  const date = typeof ts === 'number' ? new Date(ts) : new Date(ts);
+  const diff = Date.now() - date.getTime();
+  const min = Math.floor(diff / 60000);
+  if (min < 1) {
+    return 'just now';
+  }
+  if (min < 60) {
+    return `${min}m ago`;
+  }
+  const hr = Math.floor(min / 60);
+  if (hr < 24) {
+    return `${hr}h ago`;
+  }
+  const days = Math.floor(hr / 24);
+  if (days < 7) {
+    return `${days}d ago`;
+  }
+  if (days < 30) {
+    return `${Math.floor(days / 7)}w ago`;
+  }
+  return date.toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
+}
+
+function firstLine(s: string, max = 80): string {
+  const trimmed = s.replace(/\s+/g, ' ').trim();
+  return trimmed.length > max ? trimmed.slice(0, max) + '…' : trimmed;
+}
+
 export default function SavedQueriesPage({ filterIds, projectId, projectOwner, onAdd }: SavedQueriesPageProps = {}) {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const { canEdit, canView, isProjectOwner } = useCurrentUser();
+  const { isDark } = useTheme();
   const [searchText, setSearchText] = useState('');
+  const [filter, setFilter] = useState<Filter>('all');
+  const [selectedId, setSelectedId] = useState<string | null>(null);
   const [editModalOpen, setEditModalOpen] = useState(false);
   const [editingQuery, setEditingQuery] = useState<SavedQuery | null>(null);
-  const [viewModalOpen, setViewModalOpen] = useState(false);
-  const [viewingQuery, setViewingQuery] = useState<SavedQuery | null>(null);
   const [addToProjectId, setAddToProjectId] = useState<string | null>(null);
-  const [selectedRowKeys, setSelectedRowKeys] = useState<string[]>([]);
   const [bulkProjectModalOpen, setBulkProjectModalOpen] = useState(false);
+  const [bulkSelected, setBulkSelected] = useState<Set<string>>(new Set());
   const [scheduleQueryId, setScheduleQueryId] = useState<string | null>(null);
   const [scheduleQueryName, setScheduleQueryName] = useState('');
   const [scheduleQuerySql, setScheduleQuerySql] = useState<string | undefined>(undefined);
   const [projectFilter, setProjectFilter] = useState<string | null>(null);
   const [form] = Form.useForm();
 
-  // Fetch saved queries
   const { data: queries, isLoading, error } = useQuery({
     queryKey: ['savedQueries'],
     queryFn: getSavedQueries,
   });
 
-  // Fetch projects for filter dropdown (only on global page)
   const { data: projects } = useQuery({
     queryKey: ['projects'],
     queryFn: getProjects,
     enabled: !projectId,
   });
 
-  // Fetch schedules
   const { data: schedules } = useQuery({
     queryKey: ['schedules'],
     queryFn: getSchedules,
   });
 
-  // Delete mutation
-  const deleteMutation = useMutation({
-    mutationFn: deleteSavedQuery,
-    onSuccess: () => {
-      message.success('Query deleted successfully');
-      queryClient.invalidateQueries({ queryKey: ['savedQueries'] });
-    },
-    onError: (error: Error) => {
-      message.error(`Failed to delete query: ${error.message}`);
-    },
+  const scheduledIds = useMemo(
+    () => new Set((schedules ?? []).filter((s) => s.enabled).map((s) => s.savedQueryId)),
+    [schedules],
+  );
+
+  const undoable = useUndoableDelete();
+
+  const deleteSavedQueryWithUndo = (q: SavedQuery) => undoable.run({
+    label: `Deleted "${q.name}"`,
+    capture: () => q,
+    remove: () => deleteSavedQuery(q.id),
+    restore: (snap) => restoreSavedQuery(snap.id),
+    onDeleted: () => queryClient.invalidateQueries({ queryKey: ['savedQueries'] }),
+    onRestored: () => queryClient.invalidateQueries({ queryKey: ['savedQueries'] }),
   });
 
-  // Update mutation
+  const bulkDeleteWithUndo = (ids: string[]) => {
+    if (ids.length === 0) {
+      return;
+    }
+    undoable.run<string[]>({
+      label: `Deleted ${ids.length} ${ids.length === 1 ? 'query' : 'queries'}`,
+      capture: () => [...ids],
+      remove: async () => { await Promise.all(ids.map((id) => deleteSavedQuery(id))); },
+      restore: async (snap) => { await Promise.all(snap.map((id) => restoreSavedQuery(id))); },
+      onDeleted: () => queryClient.invalidateQueries({ queryKey: ['savedQueries'] }),
+      onRestored: () => queryClient.invalidateQueries({ queryKey: ['savedQueries'] }),
+    });
+  };
+
   const updateMutation = useMutation({
     mutationFn: ({ id, data }: { id: string; data: Partial<SavedQuery> }) =>
       updateSavedQuery(id, data),
     onSuccess: () => {
-      message.success('Query updated successfully');
+      message.success('Query updated');
       queryClient.invalidateQueries({ queryKey: ['savedQueries'] });
       setEditModalOpen(false);
       setEditingQuery(null);
     },
-    onError: (error: Error) => {
-      message.error(`Failed to update query: ${error.message}`);
-    },
+    onError: (err: Error) => message.error(`Failed to update: ${err.message}`),
   });
 
-  // Filter queries based on visibility, filterIds (project scope), project filter, and search text
   const filteredQueries = useMemo(() => {
     if (!queries) {
       return [];
     }
-    let result = queries;
-    // Visibility: show own queries + public queries (admins/anonymous see all)
-    result = result.filter((q) => canView(q.owner, q.isPublic));
+    let result = queries.filter((q) => canView(q.owner, q.isPublic));
+
     if (filterIds) {
       const idSet = new Set(filterIds);
       result = result.filter((q) => idSet.has(q.id));
@@ -152,25 +198,51 @@ export default function SavedQueriesPage({ filterIds, projectId, projectOwner, o
         result = result.filter((q) => idSet.has(q.id));
       }
     }
+    if (filter === 'mine') {
+      result = result.filter((q) => canEdit(q.owner));
+    } else if (filter === 'public') {
+      result = result.filter((q) => q.isPublic);
+    } else if (filter === 'scheduled') {
+      result = result.filter((q) => scheduledIds.has(q.id));
+    }
     if (searchText) {
-      const lowerSearch = searchText.toLowerCase();
+      const lower = searchText.toLowerCase();
       result = result.filter(
         (q) =>
-          q.name.toLowerCase().includes(lowerSearch) ||
-          q.sql.toLowerCase().includes(lowerSearch) ||
-          (q.description && q.description.toLowerCase().includes(lowerSearch))
+          q.name.toLowerCase().includes(lower) ||
+          q.sql.toLowerCase().includes(lower) ||
+          (q.description && q.description.toLowerCase().includes(lower)),
       );
     }
-    return result;
-  }, [queries, searchText, filterIds, projectFilter, projects, canView]);
+    // Most-recent first
+    return [...result].sort((a, b) => {
+      const at = typeof a.updatedAt === 'number' ? a.updatedAt : new Date(a.updatedAt).getTime();
+      const bt = typeof b.updatedAt === 'number' ? b.updatedAt : new Date(b.updatedAt).getTime();
+      return bt - at;
+    });
+  }, [queries, searchText, filter, filterIds, projectFilter, projects, scheduledIds, canView, canEdit]);
 
-  // Handle loading query into SQL Lab
+  // Auto-select first query when list changes (or current selection drops out of list)
+  useEffect(() => {
+    if (filteredQueries.length === 0) {
+      setSelectedId(null);
+      return;
+    }
+    if (!selectedId || !filteredQueries.some((q) => q.id === selectedId)) {
+      setSelectedId(filteredQueries[0].id);
+    }
+  }, [filteredQueries, selectedId]);
+
+  const selected = useMemo(
+    () => filteredQueries.find((q) => q.id === selectedId) ?? null,
+    [filteredQueries, selectedId],
+  );
+
   const handleLoadQuery = (query: SavedQuery) => {
-    const target = projectId ? `/projects/${projectId}/query` : '/';
+    const target = projectId ? `/projects/${projectId}/query` : '/query';
     navigate(target, { state: { loadQuery: query } });
   };
 
-  // Handle edit
   const handleEdit = (query: SavedQuery) => {
     setEditingQuery(query);
     form.setFieldsValue({
@@ -181,13 +253,6 @@ export default function SavedQueriesPage({ filterIds, projectId, projectOwner, o
     setEditModalOpen(true);
   };
 
-  // Handle view SQL
-  const handleViewSql = (query: SavedQuery) => {
-    setViewingQuery(query);
-    setViewModalOpen(true);
-  };
-
-  // Handle save edit
   const handleSaveEdit = async () => {
     if (!editingQuery) {
       return;
@@ -207,266 +272,230 @@ export default function SavedQueriesPage({ filterIds, projectId, projectOwner, o
     }
   };
 
-  // Format timestamp
-  const formatDate = (timestamp: number | string) => {
-    const date = typeof timestamp === 'number'
-      ? new Date(timestamp)
-      : new Date(timestamp);
-    return date.toLocaleDateString() + ' ' + date.toLocaleTimeString();
+  const copyToClipboard = (text: string) => {
+    navigator.clipboard
+      .writeText(text)
+      .then(() => message.success('Copied to clipboard'))
+      .catch(() => message.error('Could not copy'));
   };
 
-  // Table columns
-  const columns: ColumnsType<SavedQuery> = [
-    {
-      title: 'Name',
-      dataIndex: 'name',
-      key: 'name',
-      sorter: (a, b) => a.name.localeCompare(b.name),
-      render: (name: string, record: SavedQuery) => {
-        const hasActiveSchedule = schedules?.some((s) => s.savedQueryId === record.id && s.enabled);
-        return (
-        <Space direction="vertical" size={0}>
-          <Space>
-            <Text strong>{name}</Text>
-            {record.isPublic ? (
-              <Tooltip title="Public - visible to all users">
-                <GlobalOutlined style={{ color: '#52c41a' }} />
-              </Tooltip>
-            ) : (
-              <Tooltip title="Private - only visible to you">
-                <LockOutlined style={{ color: '#faad14' }} />
-              </Tooltip>
-            )}
-            {hasActiveSchedule && (
-              <Tag color="green" icon={<ClockCircleOutlined />}>Scheduled</Tag>
-            )}
-          </Space>
-          {record.description && (
-            <Text type="secondary" style={{ fontSize: 12 }}>
-              {record.description}
-            </Text>
-          )}
-        </Space>
-        );
-      },
-    },
-    {
-      title: 'Owner',
-      dataIndex: 'owner',
-      key: 'owner',
-      width: 150,
-      render: (owner: string) => (
-        <Space>
-          <UserOutlined />
-          <Text>{owner}</Text>
-        </Space>
-      ),
-    },
-    {
-      title: 'Schema',
-      dataIndex: 'defaultSchema',
-      key: 'defaultSchema',
-      width: 150,
-      render: (schema: string | undefined) =>
-        schema ? <Tag>{schema}</Tag> : <Text type="secondary">None</Text>,
-    },
-    {
-      title: 'Updated',
-      dataIndex: 'updatedAt',
-      key: 'updatedAt',
-      width: 180,
-      sorter: (a, b) => {
-        const aTime = typeof a.updatedAt === 'number' ? a.updatedAt : new Date(a.updatedAt).getTime();
-        const bTime = typeof b.updatedAt === 'number' ? b.updatedAt : new Date(b.updatedAt).getTime();
-        return aTime - bTime;
-      },
-      render: (timestamp: number | string) => (
-        <Text type="secondary">{formatDate(timestamp)}</Text>
-      ),
-    },
-    {
-      title: 'Actions',
-      key: 'actions',
-      width: 240,
-      render: (_: unknown, record: SavedQuery) => {
-        const hasSchedule = schedules?.some((s) => s.savedQueryId === record.id && s.enabled);
-        const editable = canEdit(record.owner) || (projectOwner ? isProjectOwner(projectOwner) : false);
-        return (
-        <Space>
-          <Tooltip title="Run in SQL Lab">
-            <Button
-              type="primary"
-              size="small"
-              icon={<PlayCircleOutlined />}
-              onClick={() => handleLoadQuery(record)}
-            />
+  const toggleBulk = (id: string) => {
+    setBulkSelected((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) {
+        next.delete(id);
+      } else {
+        next.add(id);
+      }
+      return next;
+    });
+  };
+
+  // Toolbar action: New Query (registers in unified shell toolbar)
+  const toolbarActions = useMemo(
+    () => (
+      <Space size={4}>
+        {onAdd && (
+          <Tooltip title="Add existing">
+            <Button type="text" size="small" icon={<PlusOutlined />} onClick={onAdd} />
           </Tooltip>
-          <Tooltip title="View SQL">
-            <Button
-              size="small"
-              icon={<CodeOutlined />}
-              onClick={() => handleViewSql(record)}
-            />
-          </Tooltip>
-          {editable && (
-            <Tooltip title="Edit">
-              <Button
-                size="small"
-                icon={<EditOutlined />}
-                onClick={() => handleEdit(record)}
-              />
-            </Tooltip>
-          )}
-          {editable && (
-            <Tooltip title="Schedule">
-              <Button
-                size="small"
-                icon={<ClockCircleOutlined />}
-                style={hasSchedule ? { color: '#52c41a' } : undefined}
-                onClick={() => {
-                  setScheduleQueryId(record.id);
-                  setScheduleQueryName(record.name);
-                  setScheduleQuerySql(record.sql);
-                }}
-              />
-            </Tooltip>
-          )}
-          {!projectId && (
-            <Tooltip title="Add to Project">
-              <Button size="small" icon={<FolderOutlined />} onClick={() => setAddToProjectId(record.id)} />
-            </Tooltip>
-          )}
-          {editable && (
-            <Popconfirm
-              title="Delete this query?"
-              description="This action cannot be undone."
-              onConfirm={() => deleteMutation.mutate(record.id)}
-              okText="Delete"
-              cancelText="Cancel"
-              okButtonProps={{ danger: true }}
-            >
-              <Tooltip title="Delete">
-                <Button size="small" danger icon={<DeleteOutlined />} />
-              </Tooltip>
-            </Popconfirm>
-          )}
-        </Space>
-        );
-      },
-    },
-  ];
+        )}
+        <Button
+          type="primary"
+          size="small"
+          icon={<PlusOutlined />}
+          onClick={() => navigate(projectId ? `/projects/${projectId}/query` : '/query')}
+        >
+          New Query
+        </Button>
+      </Space>
+    ),
+    [navigate, onAdd, projectId],
+  );
+  usePageChrome({ toolbarActions });
 
   if (error) {
     return (
-      <div style={{ padding: 24 }}>
-        <Card>
-          <Empty
-            description={
-              <Text type="danger">
-                Failed to load saved queries: {(error as Error).message}
-              </Text>
-            }
-          />
-        </Card>
+      <div className="page-savedqueries-error">
+        <h2>Couldn't load queries</h2>
+        <p>{(error as Error).message}</p>
       </div>
     );
   }
 
   return (
-    <div style={{ padding: 24 }}>
-      <Card>
-        <Space direction="vertical" style={{ width: '100%' }} size="large">
-          {/* Header */}
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <Title level={3} style={{ margin: 0 }}>
-              Saved Queries
-            </Title>
-            <Space>
-              {onAdd && (
-                <Button onClick={onAdd}>
-                  Add Existing
-                </Button>
-              )}
-              <Button type="primary" onClick={() => navigate(projectId ? `/projects/${projectId}/query` : '/sqllab')}>
-                New Query
-              </Button>
-            </Space>
-          </div>
+    <div className="page-savedqueries">
+      {undoable.contextHolder}
+      {/* Filter strip */}
+      <div className="page-savedqueries-filterbar">
+        <Input
+          placeholder="Search by name, SQL, or description…"
+          prefix={<SearchOutlined style={{ color: 'var(--color-text-tertiary)' }} />}
+          value={searchText}
+          onChange={(e) => setSearchText(e.target.value)}
+          allowClear
+          className="page-savedqueries-search"
+        />
 
-          {/* Search and Project Filter */}
-          <Space wrap>
-            <Input
-              placeholder="Search queries by name, SQL, or description..."
-              prefix={<SearchOutlined />}
-              value={searchText}
-              onChange={(e) => setSearchText(e.target.value)}
-              allowClear
-              style={{ width: 400 }}
-            />
-            {!projectId && projects && projects.length > 0 && (
-              <Select
-                placeholder="Filter by project"
-                value={projectFilter}
-                onChange={setProjectFilter}
-                allowClear
-                style={{ width: 200 }}
-                options={projects.map((p) => ({ value: p.id, label: p.name }))}
-                suffixIcon={<FolderOutlined />}
-              />
-            )}
-          </Space>
+        <div className="page-savedqueries-chips">
+          {(['all', 'mine', 'public', 'scheduled'] as Filter[]).map((f) => (
+            <button
+              key={f}
+              type="button"
+              className={`page-savedqueries-chip${filter === f ? ' is-active' : ''}`}
+              onClick={() => setFilter(f)}
+            >
+              {f === 'all' && 'All'}
+              {f === 'mine' && 'Mine'}
+              {f === 'public' && 'Public'}
+              {f === 'scheduled' && 'Scheduled'}
+            </button>
+          ))}
+        </div>
 
-          {/* Bulk Action Bar */}
-          <BulkActionBar
-            selectedCount={selectedRowKeys.length}
-            onAddToProject={!projectId ? () => setBulkProjectModalOpen(true) : undefined}
-            onDelete={() => {
-              selectedRowKeys.forEach(id => deleteMutation.mutate(id));
-              setSelectedRowKeys([]);
-            }}
-            onClear={() => setSelectedRowKeys([])}
+        {!projectId && projects && projects.length > 0 && (
+          <Select
+            placeholder="Any project"
+            value={projectFilter}
+            onChange={setProjectFilter}
+            allowClear
+            size="small"
+            style={{ width: 180 }}
+            options={projects.map((p) => ({ value: p.id, label: p.name }))}
+            suffixIcon={<FolderOutlined />}
           />
+        )}
 
-          {/* Table */}
+        {bulkSelected.size > 0 && (
+          <div className="page-savedqueries-bulkbar">
+            <span>{bulkSelected.size} selected</span>
+            {!projectId && (
+              <Button size="small" onClick={() => setBulkProjectModalOpen(true)}>Add to project</Button>
+            )}
+            <Popconfirm
+              title={`Delete ${bulkSelected.size} ${bulkSelected.size === 1 ? 'query' : 'queries'}?`}
+              onConfirm={() => {
+                bulkDeleteWithUndo(Array.from(bulkSelected));
+                setBulkSelected(new Set());
+              }}
+              okText="Delete"
+              cancelText="Cancel"
+              okButtonProps={{ danger: true }}
+            >
+              <Button size="small" danger>Delete</Button>
+            </Popconfirm>
+            <Button size="small" type="text" onClick={() => setBulkSelected(new Set())}>
+              Clear
+            </Button>
+          </div>
+        )}
+      </div>
+
+      {/* Two-column body */}
+      <div className="page-savedqueries-body">
+        {/* List column */}
+        <ul className="savedquery-list" role="list">
           {isLoading ? (
-            <div style={{ textAlign: 'center', padding: 40 }}>
-              <Spin size="large" />
-            </div>
+            <li className="savedquery-list-loading"><Spin /></li>
           ) : filteredQueries.length === 0 ? (
-            searchText ? (
-              <Empty description="No queries match your search" />
-            ) : onAdd ? (
-              <Empty description="No saved queries in this project yet">
-                <Space>
-                  <Button onClick={onAdd}>Add Existing</Button>
-                  <Button type="primary" onClick={() => navigate(`/projects/${projectId}/query`)}>
-                    New Query
-                  </Button>
-                </Space>
-              </Empty>
-            ) : (
-              <Empty description="No saved queries yet. Create one in SQL Lab!" />
-            )
+            <li className="savedquery-list-empty">
+              {searchText
+                ? 'No queries match your search.'
+                : onAdd
+                  ? 'No saved queries in this project yet.'
+                  : 'No saved queries yet — save one from SQL Lab.'}
+            </li>
           ) : (
-            <Table
-              dataSource={filteredQueries}
-              columns={columns}
-              rowKey="id"
-              rowSelection={{
-                selectedRowKeys,
-                onChange: (keys) => setSelectedRowKeys(keys as string[]),
-              }}
-              pagination={{
-                pageSize: 10,
-                showSizeChanger: true,
-                showTotal: (total) => `${total} queries`,
-              }}
-            />
-          )}
-        </Space>
-      </Card>
+            filteredQueries.map((q) => {
+              const isSelected = q.id === selectedId;
+              const isBulk = bulkSelected.has(q.id);
+              const subtitle = q.description?.trim()
+                ? firstLine(q.description, 90)
+                : firstLine(q.sql, 90);
+              return (
+                <li
+                  key={q.id}
+                  className={`savedquery-row${isSelected ? ' is-selected' : ''}${isBulk ? ' is-bulk-selected' : ''}`}
+                  onClick={() => setSelectedId(q.id)}
+                >
+                  <button
+                    type="button"
+                    className={`savedquery-row-check${isBulk ? ' is-on' : ''}`}
+                    aria-label={isBulk ? 'Deselect' : 'Select for bulk action'}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      toggleBulk(q.id);
+                    }}
+                  >
+                    {isBulk && <CheckOutlined />}
+                  </button>
 
-      {/* Edit Modal */}
+                  <div className="savedquery-row-body">
+                    <div className="savedquery-row-title-line">
+                      <span className="savedquery-row-name" title={q.name}>{q.name}</span>
+                      {q.isPublic ? (
+                        <GlobalOutlined className="savedquery-row-icon" title="Public" />
+                      ) : (
+                        <LockOutlined className="savedquery-row-icon" title="Private" />
+                      )}
+                      {scheduledIds.has(q.id) && (
+                        <CalendarOutlined className="savedquery-row-icon savedquery-row-icon-scheduled" title="Scheduled" />
+                      )}
+                    </div>
+                    <div className="savedquery-row-sub">{subtitle}</div>
+                    <div className="savedquery-row-meta">
+                      <span>{formatRelative(q.updatedAt)}</span>
+                      <span aria-hidden="true">·</span>
+                      <span>{q.owner}</span>
+                      {q.defaultSchema && (
+                        <>
+                          <span aria-hidden="true">·</span>
+                          <span className="savedquery-row-schema">{q.defaultSchema}</span>
+                        </>
+                      )}
+                    </div>
+                  </div>
+                </li>
+              );
+            })
+          )}
+        </ul>
+
+        {/* Preview column */}
+        <section className="savedquery-preview">
+          {selected ? (
+            <SelectedQueryPreview
+              query={selected}
+              isDark={isDark}
+              isScheduled={scheduledIds.has(selected.id)}
+              canEditQuery={canEdit(selected.owner) || (projectOwner ? isProjectOwner(projectOwner) : false)}
+              showAddToProject={!projectId}
+              onRun={() => handleLoadQuery(selected)}
+              onEdit={() => handleEdit(selected)}
+              onCopy={() => copyToClipboard(selected.sql)}
+              onSchedule={() => {
+                setScheduleQueryId(selected.id);
+                setScheduleQueryName(selected.name);
+                setScheduleQuerySql(selected.sql);
+              }}
+              onAddToProject={() => setAddToProjectId(selected.id)}
+              onDelete={() => deleteSavedQueryWithUndo(selected)}
+            />
+          ) : (
+            <div className="savedquery-preview-empty">
+              <CodeOutlined className="savedquery-preview-empty-glyph" />
+              <h2>{filteredQueries.length === 0 ? 'No queries' : 'Select a query'}</h2>
+              <p>
+                {filteredQueries.length === 0
+                  ? 'Save one from SQL Lab to see it here.'
+                  : 'Choose a query from the list to preview its SQL.'}
+              </p>
+            </div>
+          )}
+        </section>
+      </div>
+
+      {/* Modals */}
       <Modal
         title="Edit Query"
         open={editModalOpen}
@@ -494,56 +523,6 @@ export default function SavedQueriesPage({ filterIds, projectId, projectOwner, o
         </Form>
       </Modal>
 
-      {/* View SQL Modal */}
-      <Modal
-        title={viewingQuery?.name || 'SQL'}
-        open={viewModalOpen}
-        onCancel={() => {
-          setViewModalOpen(false);
-          setViewingQuery(null);
-        }}
-        footer={[
-          <Button key="close" onClick={() => setViewModalOpen(false)}>
-            Close
-          </Button>,
-          <Button
-            key="run"
-            type="primary"
-            icon={<PlayCircleOutlined />}
-            onClick={() => {
-              if (viewingQuery) {
-                handleLoadQuery(viewingQuery);
-              }
-            }}
-          >
-            Run in SQL Lab
-          </Button>,
-        ]}
-        width={700}
-      >
-        {viewingQuery && (
-          <div>
-            {viewingQuery.description && (
-              <Paragraph type="secondary">{viewingQuery.description}</Paragraph>
-            )}
-            <pre
-              style={{
-                background: 'var(--color-bg-elevated)',
-                padding: 16,
-                borderRadius: 4,
-                maxHeight: 400,
-                overflow: 'auto',
-                fontFamily: 'monospace',
-                fontSize: 13,
-              }}
-            >
-              {viewingQuery.sql}
-            </pre>
-          </div>
-        )}
-      </Modal>
-
-      {/* Add to Project Modal */}
       <AddToProjectModal
         open={!!addToProjectId}
         onClose={() => setAddToProjectId(null)}
@@ -551,15 +530,13 @@ export default function SavedQueriesPage({ filterIds, projectId, projectOwner, o
         itemType="savedQuery"
       />
 
-      {/* Bulk Add to Project Modal */}
       <BulkAddToProjectModal
         open={bulkProjectModalOpen}
         onClose={() => setBulkProjectModalOpen(false)}
-        itemIds={selectedRowKeys}
+        itemIds={Array.from(bulkSelected)}
         itemType="savedQuery"
       />
 
-      {/* Schedule Modal */}
       <ScheduleModal
         open={!!scheduleQueryId}
         onClose={() => {
@@ -575,5 +552,112 @@ export default function SavedQueriesPage({ filterIds, projectId, projectOwner, o
         }}
       />
     </div>
+  );
+}
+
+interface SelectedQueryPreviewProps {
+  query: SavedQuery;
+  isDark: boolean;
+  isScheduled: boolean;
+  canEditQuery: boolean;
+  showAddToProject: boolean;
+  onRun: () => void;
+  onEdit: () => void;
+  onCopy: () => void;
+  onSchedule: () => void;
+  onAddToProject: () => void;
+  onDelete: () => void;
+}
+
+function SelectedQueryPreview({
+  query,
+  isDark,
+  isScheduled,
+  canEditQuery,
+  showAddToProject,
+  onRun,
+  onEdit,
+  onCopy,
+  onSchedule,
+  onAddToProject,
+  onDelete,
+}: SelectedQueryPreviewProps) {
+  const moreItems: MenuProps['items'] = [
+    canEditQuery
+      ? { key: 'edit', icon: <EditOutlined />, label: 'Edit details', onClick: onEdit }
+      : null,
+    canEditQuery
+      ? { key: 'schedule', icon: <CalendarOutlined />, label: isScheduled ? 'Manage schedule' : 'Schedule…', onClick: onSchedule }
+      : null,
+    showAddToProject
+      ? { key: 'addto', icon: <FolderOutlined />, label: 'Add to project…', onClick: onAddToProject }
+      : null,
+    { key: 'copy', icon: <CopyOutlined />, label: 'Copy SQL', onClick: onCopy },
+    canEditQuery ? { type: 'divider' as const } : null,
+    canEditQuery
+      ? { key: 'delete', icon: <DeleteOutlined />, label: 'Delete', danger: true, onClick: onDelete }
+      : null,
+  ].filter(Boolean) as MenuProps['items'];
+
+  return (
+    <>
+      <header className="savedquery-preview-header">
+        <div className="savedquery-preview-titles">
+          <h1 className="savedquery-preview-name">{query.name}</h1>
+          <div className="savedquery-preview-badges">
+            {query.isPublic ? (
+              <Tag bordered={false} icon={<GlobalOutlined />} color="success">Public</Tag>
+            ) : (
+              <Tag bordered={false} icon={<LockOutlined />}>Private</Tag>
+            )}
+            {isScheduled && (
+              <Tag bordered={false} icon={<CalendarOutlined />} color="processing">Scheduled</Tag>
+            )}
+            {query.defaultSchema && <Tag bordered={false}>{query.defaultSchema}</Tag>}
+          </div>
+        </div>
+        <div className="savedquery-preview-actions">
+          <Button type="primary" icon={<PlayCircleOutlined />} onClick={onRun}>
+            Run in SQL Lab
+          </Button>
+          <Tooltip title="Copy SQL">
+            <Button icon={<CopyOutlined />} onClick={onCopy} />
+          </Tooltip>
+          <Dropdown menu={{ items: moreItems }} placement="bottomRight" trigger={['click']}>
+            <Button icon={<MoreOutlined />} />
+          </Dropdown>
+        </div>
+      </header>
+
+      {query.description && (
+        <p className="savedquery-preview-desc">{query.description}</p>
+      )}
+
+      <div className="savedquery-preview-meta">
+        <span><UserOutlined /> {query.owner}</span>
+        <span><ClockCircleOutlined /> Updated {formatRelative(query.updatedAt)}</span>
+      </div>
+
+      <div className="savedquery-preview-sql">
+        <Editor
+          value={query.sql}
+          language="sql"
+          theme={isDark ? 'vs-dark' : 'light'}
+          height="100%"
+          options={{
+            readOnly: true,
+            minimap: { enabled: false },
+            scrollBeyondLastLine: false,
+            fontSize: 13,
+            fontFamily: "'SF Mono', SFMono-Regular, Consolas, 'Liberation Mono', Menlo, monospace",
+            renderLineHighlight: 'none',
+            lineNumbers: 'on',
+            folding: false,
+            scrollbar: { useShadows: false, verticalScrollbarSize: 10 },
+            padding: { top: 10, bottom: 10 },
+          }}
+        />
+      </div>
+    </>
   );
 }

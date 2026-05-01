@@ -15,677 +15,482 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import { useState, useMemo, useCallback } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
-import {
-  Card,
-  Table,
-  Input,
-  Button,
-  Space,
-  message,
-  Typography,
-  Tooltip,
-  Empty,
-  Spin,
-  Modal,
-  Select,
-} from 'antd';
+import { useState, useMemo, useCallback, type ReactNode } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { Input, Button, Spin, message, Tooltip, Select, Popconfirm } from 'antd';
 import {
   SearchOutlined,
-  ExclamationCircleOutlined,
-  CheckCircleOutlined,
-  CloseCircleOutlined,
-  LoadingOutlined,
+  CheckOutlined,
+  ReloadOutlined,
   StopOutlined,
-  SelectOutlined,
-  EditOutlined,
-  DeleteOutlined,
-  CopyOutlined,
-  FormOutlined,
-  UnorderedListOutlined,
-  PlayCircleOutlined,
 } from '@ant-design/icons';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { getQueryProfiles, cancelQuery } from '../api/queries';
 import type { QueryProfile } from '../api/queries';
-import type { ColumnsType } from 'antd/es/table';
+import { usePageChrome } from '../contexts/AppChromeContext';
 
-const { Text } = Typography;
+type StatusFilter = 'all' | 'running' | 'succeeded' | 'failed' | 'cancelled';
 
-const stateConfig: Record<string, { bgColor: string; textColor: string; icon: JSX.Element | null }> = {
-  Succeeded: { bgColor: '#f6ffed', textColor: '#52c41a', icon: <CheckCircleOutlined /> },
-  Failed: { bgColor: '#fff1f0', textColor: '#ff4d4f', icon: <CloseCircleOutlined /> },
-  Running: { bgColor: '#eff6ff', textColor: '#3b82f6', icon: <LoadingOutlined /> },
-  Cancellation_Requested: { bgColor: '#fffbe6', textColor: '#faad14', icon: <StopOutlined /> },
-  Cancelled: { bgColor: '#fffbe6', textColor: '#faad14', icon: <StopOutlined /> },
+const STATUS_DOT_COLORS: Record<string, string> = {
+  Succeeded: 'var(--color-success)',
+  Failed: 'var(--color-error)',
+  Running: 'var(--color-primary)',
+  Cancelled: 'var(--color-warning)',
+  Cancellation_Requested: 'var(--color-warning)',
 };
 
-const queryTypeConfig: Record<string, { bgColor: string; textColor: string; icon: JSX.Element | null }> = {
-  SELECT: { bgColor: '#eff6ff', textColor: '#3b82f6', icon: <SelectOutlined /> },
-  INSERT: { bgColor: '#f9f0ff', textColor: '#722ed1', icon: <CopyOutlined /> },
-  UPDATE: { bgColor: '#fffbe6', textColor: '#faad14', icon: <EditOutlined /> },
-  DELETE: { bgColor: '#fff1f0', textColor: '#ff4d4f', icon: <DeleteOutlined /> },
-  CREATE: { bgColor: '#f6ffed', textColor: '#52c41a', icon: <CopyOutlined /> },
-  DROP: { bgColor: '#fff1f0', textColor: '#ff4d4f', icon: <DeleteOutlined /> },
-  ALTER: { bgColor: '#fffbe6', textColor: '#faad14', icon: <FormOutlined /> },
-  'SHOW/DESC': { bgColor: '#f5f5f5', textColor: '#000000', icon: <UnorderedListOutlined /> },
-  EXPLAIN: { bgColor: '#eff6ff', textColor: '#3b82f6', icon: <UnorderedListOutlined /> },
-  USE: { bgColor: '#f5f5f5', textColor: '#000000', icon: <UnorderedListOutlined /> },
-  SET: { bgColor: '#f5f5f5', textColor: '#000000', icon: <FormOutlined /> },
-  Other: { bgColor: '#f5f5f5', textColor: '#000000', icon: null },
-};
-
-const renderQueryType = (queryType: string) => {
-  const config = queryTypeConfig[queryType] || queryTypeConfig['Other'];
-  return (
-    <span
-      style={{
-        display: 'inline-flex',
-        alignItems: 'center',
-        gap: '6px',
-        padding: '4px 12px',
-        borderRadius: '4px',
-        backgroundColor: config.bgColor,
-        color: config.textColor,
-        fontWeight: 500,
-        fontSize: '12px',
-      }}
-    >
-      {config.icon}
-      {queryType}
-    </span>
-  );
-};
-
-const renderStatusBadge = (state: string) => {
-  const config = stateConfig[state] || { bgColor: '#f5f5f5', textColor: '#000000', icon: null };
-  return (
-    <span
-      style={{
-        display: 'inline-flex',
-        alignItems: 'center',
-        gap: '6px',
-        padding: '4px 12px',
-        borderRadius: '4px',
-        backgroundColor: config.bgColor,
-        color: config.textColor,
-        fontWeight: 500,
-        fontSize: '12px',
-      }}
-    >
-      {config.icon}
-      {state}
-    </span>
-  );
-};
-
-// Helper to get unique values for filters
-const getUniqueValues = (data: QueryProfile[], key: keyof QueryProfile): string[] => {
-  const values = new Set<string>();
-  data.forEach((item) => {
-    const value = item[key];
-    if (value && typeof value === 'string') {
-      values.add(value);
-    }
-  });
-  return Array.from(values).sort();
-};
-
-// Detect query type from SQL text
-const detectQueryType = (sql: string): string => {
-  if (!sql) return 'Unknown';
-
-  // Normalize: trim whitespace and convert to uppercase
+function detectQueryType(sql: string): string {
+  if (!sql) {
+    return 'Unknown';
+  }
   const normalized = sql.trim().toUpperCase();
-
-  // Skip comments and get first meaningful word
-  const lines = normalized.split('\n');
   let firstWord = '';
-
-  for (const line of lines) {
+  for (const line of normalized.split('\n')) {
     const trimmed = line.trim();
-    // Skip comment lines
     if (trimmed.startsWith('--') || trimmed.startsWith('/*')) {
       continue;
     }
-    // Get first word from non-comment line
-    const match = trimmed.match(/^([A-Z]+)/);
-    if (match) {
-      firstWord = match[1];
+    const m = trimmed.match(/^([A-Z]+)/);
+    if (m) {
+      firstWord = m[1];
       break;
     }
   }
-
-  // Categorize by SQL command
-  if (firstWord.startsWith('SELECT') || firstWord.startsWith('WITH')) {
-    return 'SELECT';
-  }
-  if (firstWord.startsWith('INSERT')) {
-    return 'INSERT';
-  }
-  if (firstWord.startsWith('UPDATE')) {
-    return 'UPDATE';
-  }
-  if (firstWord.startsWith('DELETE')) {
-    return 'DELETE';
-  }
-  if (firstWord.startsWith('CREATE') || firstWord.startsWith('CTAS')) {
-    return 'CREATE';
-  }
-  if (firstWord.startsWith('DROP') || firstWord.startsWith('TRUNCATE')) {
-    return 'DROP';
-  }
-  if (firstWord.startsWith('ALTER')) {
-    return 'ALTER';
-  }
-  if (firstWord.startsWith('SHOW') || firstWord.startsWith('DESCRIBE') || firstWord.startsWith('DESC')) {
-    return 'SHOW/DESC';
-  }
-  if (firstWord.startsWith('EXPLAIN')) {
-    return 'EXPLAIN';
-  }
-  if (firstWord.startsWith('USE')) {
-    return 'USE';
-  }
-  if (firstWord.startsWith('SET')) {
-    return 'SET';
-  }
-
+  if (firstWord.startsWith('SELECT') || firstWord.startsWith('WITH')) return 'SELECT';
+  if (firstWord.startsWith('INSERT')) return 'INSERT';
+  if (firstWord.startsWith('UPDATE')) return 'UPDATE';
+  if (firstWord.startsWith('DELETE')) return 'DELETE';
+  if (firstWord.startsWith('CREATE') || firstWord.startsWith('CTAS')) return 'CREATE';
+  if (firstWord.startsWith('DROP') || firstWord.startsWith('TRUNCATE')) return 'DROP';
+  if (firstWord.startsWith('ALTER')) return 'ALTER';
+  if (firstWord.startsWith('SHOW') || firstWord.startsWith('DESCRIBE') || firstWord.startsWith('DESC')) return 'SHOW';
+  if (firstWord.startsWith('EXPLAIN')) return 'EXPLAIN';
+  if (firstWord.startsWith('USE')) return 'USE';
+  if (firstWord.startsWith('SET')) return 'SET';
   return 'Other';
-};
+}
+
+function formatTime(ts: number): string {
+  return new Date(ts).toLocaleTimeString(undefined, {
+    hour: '2-digit',
+    minute: '2-digit',
+    second: '2-digit',
+    hour12: false,
+  });
+}
+
+function dayLabel(ts: number): string {
+  const d = new Date(ts);
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  const tomorrow = new Date(today);
+  tomorrow.setDate(today.getDate() + 1);
+  const yesterday = new Date(today);
+  yesterday.setDate(today.getDate() - 1);
+  const weekAgo = new Date(today);
+  weekAgo.setDate(today.getDate() - 6);
+
+  if (d >= today && d < tomorrow) {
+    return 'Today';
+  }
+  if (d >= yesterday && d < today) {
+    return 'Yesterday';
+  }
+  if (d >= weekAgo && d < yesterday) {
+    return d.toLocaleDateString(undefined, { weekday: 'long' });
+  }
+  return d.toLocaleDateString(undefined, { month: 'long', day: 'numeric', year: 'numeric' });
+}
+
+function dayKey(ts: number): string {
+  const d = new Date(ts);
+  return `${d.getFullYear()}-${d.getMonth()}-${d.getDate()}`;
+}
+
+function singleLine(s: string, max = 200): string {
+  const trimmed = s.replace(/\s+/g, ' ').trim();
+  return trimmed.length > max ? trimmed.slice(0, max) + '…' : trimmed;
+}
+
+function isRunningState(state: string): boolean {
+  return state === 'Running' || state === 'Cancellation_Requested';
+}
+
+interface DayGroup {
+  key: string;
+  label: string;
+  entries: QueryProfile[];
+}
 
 export default function ProfilesPage() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const [searchText, setSearchText] = useState('');
-  const [selectedRunningIds, setSelectedRunningIds] = useState<React.Key[]>([]);
+  const [statusFilter, setStatusFilter] = useState<StatusFilter>('all');
+  const [userFilter, setUserFilter] = useState<string | null>(null);
+  const [typeFilter, setTypeFilter] = useState<string | null>(null);
+  const [selectedRunningIds, setSelectedRunningIds] = useState<Set<string>>(new Set());
   const [isCancelling, setIsCancelling] = useState(false);
-  const [profilesLimit, setProfilesLimit] = useState(100);
 
-  // Fetch profiles (running + completed)
-  const { data: profilesData, isLoading, error } = useQuery({
+  const { data: profilesData, isLoading, error, refetch, isFetching } = useQuery({
     queryKey: ['profiles'],
     queryFn: getQueryProfiles,
-    refetchInterval: 5000, // Auto-refresh every 5 seconds
+    refetchInterval: 5000,
   });
 
-  // Cancel mutation
-  const cancelMutation = useMutation({
-    mutationFn: cancelQuery,
-  });
+  const cancelMutation = useMutation({ mutationFn: cancelQuery });
 
-  const runningQueries = profilesData?.runningQueries || [];
+  // All entries combined, sorted newest first
+  const allEntries = useMemo(() => {
+    const running = profilesData?.runningQueries ?? [];
+    const finished = profilesData?.finishedQueries ?? [];
+    return [...running, ...finished].sort((a, b) => b.startTime - a.startTime);
+  }, [profilesData]);
 
-  // Filter completed queries based on search text
-  const filteredFinished = useMemo(() => {
-    const queries = profilesData?.finishedQueries || [];
-    if (!searchText) {
-      return queries;
-    }
-    const lowerSearch = searchText.toLowerCase();
-    return queries.filter(
-      (q) =>
-        q.user.toLowerCase().includes(lowerSearch) ||
-        q.query.toLowerCase().includes(lowerSearch)
-    );
-  }, [profilesData?.finishedQueries, searchText]);
+  const allUsers = useMemo(() => {
+    const set = new Set<string>();
+    allEntries.forEach((q) => q.user && set.add(q.user));
+    return Array.from(set).sort();
+  }, [allEntries]);
 
-  // Format timestamp
-  const formatDate = (timestamp: number) => {
-    const date = new Date(timestamp);
-    return date.toLocaleDateString() + ' ' + date.toLocaleTimeString();
-  };
+  const allTypes = useMemo(() => {
+    const set = new Set<string>();
+    allEntries.forEach((q) => set.add(detectQueryType(q.query)));
+    return Array.from(set).sort();
+  }, [allEntries]);
 
-  // Truncate query text for display
-  const truncateQuery = (query: string, maxLength: number = 100) => {
-    return query.length > maxLength ? query.substring(0, maxLength) + '...' : query;
-  };
-
-  // Handle running a query in SQL Lab
-  const handleRunQuery = useCallback(
-    (query: string) => {
-      navigate('/query', {
-        state: {
-          loadQuery: {
-            sql: query,
-          },
-        },
+  const filteredEntries = useMemo(() => {
+    let result = allEntries;
+    if (statusFilter !== 'all') {
+      result = result.filter((q) => {
+        if (statusFilter === 'running') {
+          return isRunningState(q.state);
+        }
+        if (statusFilter === 'succeeded') {
+          return q.state === 'Succeeded';
+        }
+        if (statusFilter === 'failed') {
+          return q.state === 'Failed';
+        }
+        if (statusFilter === 'cancelled') {
+          return q.state === 'Cancelled' || q.state === 'Cancellation_Requested';
+        }
+        return true;
       });
-    },
-    [navigate]
+    }
+    if (userFilter) {
+      result = result.filter((q) => q.user === userFilter);
+    }
+    if (typeFilter) {
+      result = result.filter((q) => detectQueryType(q.query) === typeFilter);
+    }
+    if (searchText) {
+      const lower = searchText.toLowerCase();
+      result = result.filter(
+        (q) =>
+          q.user.toLowerCase().includes(lower) ||
+          q.query.toLowerCase().includes(lower) ||
+          q.queryId.toLowerCase().includes(lower),
+      );
+    }
+    return result;
+  }, [allEntries, statusFilter, userFilter, typeFilter, searchText]);
+
+  // Group by day
+  const grouped = useMemo<DayGroup[]>(() => {
+    const groups = new Map<string, DayGroup>();
+    for (const e of filteredEntries) {
+      const k = dayKey(e.startTime);
+      if (!groups.has(k)) {
+        groups.set(k, { key: k, label: dayLabel(e.startTime), entries: [] });
+      }
+      groups.get(k)!.entries.push(e);
+    }
+    return Array.from(groups.values());
+  }, [filteredEntries]);
+
+  const runningCount = useMemo(
+    () => allEntries.filter((q) => isRunningState(q.state)).length,
+    [allEntries],
   );
 
-  // Handle cancel selected queries with sequential cancellation and error tracking
+  const toggleRunningSelection = (id: string) => {
+    setSelectedRunningIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) {
+        next.delete(id);
+      } else {
+        next.add(id);
+      }
+      return next;
+    });
+  };
+
   const handleCancelSelected = useCallback(async () => {
-    if (selectedRunningIds.length === 0) {
-      message.warning('No queries selected');
+    if (selectedRunningIds.size === 0) {
       return;
     }
-
-    const queryCount = selectedRunningIds.length;
-    const showConfirm = queryCount > 1;
-
-    const performCancel = async () => {
-      setIsCancelling(true);
-      const failures: Array<{ id: string; error: string }> = [];
-      let successCount = 0;
-
-      // Cancel queries sequentially to avoid race conditions
-      for (const id of selectedRunningIds) {
-        try {
-          await cancelMutation.mutateAsync(id as string);
-          successCount++;
-        } catch (err) {
-          const errorMsg = err instanceof Error ? err.message : 'Unknown error';
-          failures.push({ id: id as string, error: errorMsg });
-        }
+    setIsCancelling(true);
+    const failures: string[] = [];
+    let successes = 0;
+    for (const id of selectedRunningIds) {
+      try {
+        await cancelMutation.mutateAsync(id);
+        successes++;
+      } catch (e) {
+        failures.push(`${id}: ${(e as Error).message}`);
       }
-
-      setIsCancelling(false);
-
-      // Show comprehensive feedback
-      if (failures.length === 0) {
-        message.success(`Successfully cancelled ${successCount} ${successCount === 1 ? 'query' : 'queries'}`);
-        setSelectedRunningIds([]);
-        queryClient.invalidateQueries({ queryKey: ['profiles'] });
-      } else if (successCount === 0) {
-        // All failed
-        const errorDetails = failures.map((f) => `${f.id}: ${f.error}`).join('\n');
-        message.error({
-          content: (
-            <div>
-              <div>Failed to cancel all {queryCount} queries:</div>
-              <div style={{ marginTop: 8, maxHeight: 200, overflow: 'auto', fontSize: 12, whiteSpace: 'pre-wrap' }}>
-                {errorDetails}
-              </div>
-            </div>
-          ),
-          duration: 5,
-        });
-      } else {
-        // Partial success
-        const errorDetails = failures.map((f) => `${f.id}: ${f.error}`).join('\n');
-        message.warning({
-          content: (
-            <div>
-              <div>Cancelled {successCount}/{queryCount} queries</div>
-              <div style={{ marginTop: 8, maxHeight: 200, overflow: 'auto', fontSize: 12, whiteSpace: 'pre-wrap' }}>
-                Failed:\n{errorDetails}
-              </div>
-            </div>
-          ),
-          duration: 5,
-        });
-        setSelectedRunningIds([]);
-        queryClient.invalidateQueries({ queryKey: ['profiles'] });
-      }
-    };
-
-    if (showConfirm) {
-      Modal.confirm({
-        title: 'Cancel Multiple Queries',
-        icon: <ExclamationCircleOutlined />,
-        content: `Are you sure you want to cancel ${queryCount} selected ${queryCount === 1 ? 'query' : 'queries'}?`,
-        okText: 'Cancel Queries',
-        okType: 'danger',
-        cancelText: 'Keep Queries',
-        onOk() {
-          performCancel();
-        },
-      });
+    }
+    setIsCancelling(false);
+    if (failures.length === 0) {
+      message.success(`Cancelled ${successes} ${successes === 1 ? 'query' : 'queries'}`);
+      setSelectedRunningIds(new Set());
+      queryClient.invalidateQueries({ queryKey: ['profiles'] });
+    } else if (successes === 0) {
+      message.error(`Failed to cancel: ${failures.join('; ')}`);
     } else {
-      performCancel();
+      message.warning(`Cancelled ${successes}, ${failures.length} failed`);
     }
   }, [selectedRunningIds, cancelMutation, queryClient]);
 
-  // Get unique query types for running queries
-  const runningQueryTypes = Array.from(new Set(runningQueries.map((q) => detectQueryType(q.query)))).sort();
-  const runningQueryTypeOptions = runningQueryTypes.map((t) => ({ text: t, value: t }));
-
-  // Get unique values for running queries filters
-  const runningUserOptions = getUniqueValues(runningQueries, 'user').map((u) => ({ text: u, value: u }));
-  const runningForemanOptions = getUniqueValues(runningQueries, 'foreman').map((f) => ({ text: f, value: f }));
-
-  // Table columns for running queries
-  const runningColumns: ColumnsType<QueryProfile> = [
-    {
-      title: 'Actions',
-      key: 'actions',
-      width: 80,
-      fixed: 'left',
-      render: (_: unknown, record: QueryProfile) => (
-        <Tooltip title="Run in SQL Lab">
-          <Button
-            type="text"
-            size="small"
-            icon={<PlayCircleOutlined />}
-            onClick={() => handleRunQuery(record.query)}
-            style={{ color: '#3b82f6' }}
-          />
-        </Tooltip>
-      ),
-    },
-    {
-      title: 'Status',
-      dataIndex: 'state',
-      key: 'state',
-      width: 130,
-      sorter: (a, b) => a.state.localeCompare(b.state),
-      filters: [
-        { text: 'Running', value: 'Running' },
-        { text: 'Cancellation Requested', value: 'Cancellation_Requested' },
-      ],
-      onFilter: (value, record) => record.state === value,
-      render: (state: string) => renderStatusBadge(state),
-    },
-    {
-      title: 'Start Time',
-      dataIndex: 'startTime',
-      key: 'startTime',
-      width: 180,
-      sorter: (a, b) => a.startTime - b.startTime,
-      render: (timestamp: number) => (
-        <Text type="secondary">{formatDate(timestamp)}</Text>
-      ),
-    },
-    {
-      title: 'User',
-      dataIndex: 'user',
-      key: 'user',
-      width: 120,
-      sorter: (a, b) => a.user.localeCompare(b.user),
-      filters: runningUserOptions,
-      onFilter: (value, record) => record.user === value,
-    },
-    {
-      title: 'Query',
-      dataIndex: 'query',
-      key: 'query',
-      sorter: (a, b) => a.query.localeCompare(b.query),
-      render: (query: string, record: QueryProfile) => (
-        <Tooltip title={query}>
-          <Link to={`/profiles/${record.queryId}`}>
-            {truncateQuery(query)}
-          </Link>
-        </Tooltip>
-      ),
-    },
-    {
-      title: 'Query Type',
-      key: 'queryType',
-      width: 120,
-      sorter: (a, b) => detectQueryType(a.query).localeCompare(detectQueryType(b.query)),
-      filters: runningQueryTypeOptions,
-      onFilter: (value, record) => detectQueryType(record.query) === value,
-      render: (_: unknown, record: QueryProfile) => renderQueryType(detectQueryType(record.query)),
-    },
-    {
-      title: 'Duration',
-      dataIndex: 'duration',
-      key: 'duration',
-      width: 100,
-      sorter: (a, b) => {
-        const aDur = a.duration ? parseFloat(a.duration) : 0;
-        const bDur = b.duration ? parseFloat(b.duration) : 0;
-        return aDur - bDur;
-      },
-      render: (duration: string | undefined) => (
-        <Text type="secondary">{duration || '-'}</Text>
-      ),
-    },
-    {
-      title: 'Foreman',
-      dataIndex: 'foreman',
-      key: 'foreman',
-      width: 150,
-      sorter: (a, b) => a.foreman.localeCompare(b.foreman),
-      filters: runningForemanOptions,
-      onFilter: (value, record) => record.foreman === value,
-    },
-  ];
-
-  // Get unique query types for finished queries
-  const finishedQueryTypes = Array.from(new Set(filteredFinished.map((q) => detectQueryType(q.query)))).sort();
-  const finishedQueryTypeOptions = finishedQueryTypes.map((t) => ({ text: t, value: t }));
-
-  // Get unique values for finished queries filters
-  const finishedUserOptions = getUniqueValues(filteredFinished, 'user').map((u) => ({ text: u, value: u }));
-  const finishedForemanOptions = getUniqueValues(filteredFinished, 'foreman').map((f) => ({ text: f, value: f }));
-  const queueOptions = getUniqueValues(filteredFinished, 'queueName').map((q) => ({ text: q, value: q }));
-
-  // Table columns for finished queries
-  const finishedColumns: ColumnsType<QueryProfile> = [
-    {
-      title: 'Actions',
-      key: 'actions',
-      width: 80,
-      fixed: 'left',
-      render: (_: unknown, record: QueryProfile) => (
-        <Tooltip title="Run in SQL Lab">
-          <Button
-            type="text"
-            size="small"
-            icon={<PlayCircleOutlined />}
-            onClick={() => handleRunQuery(record.query)}
-            style={{ color: '#3b82f6' }}
-          />
-        </Tooltip>
-      ),
-    },
-    {
-      title: 'Status',
-      dataIndex: 'state',
-      key: 'state',
-      width: 130,
-      sorter: (a, b) => a.state.localeCompare(b.state),
-      filters: [
-        { text: 'Succeeded', value: 'Succeeded' },
-        { text: 'Failed', value: 'Failed' },
-        { text: 'Cancelled', value: 'Cancelled' },
-        { text: 'Cancellation Requested', value: 'Cancellation_Requested' },
-      ],
-      onFilter: (value, record) => record.state === value,
-      render: (state: string) => renderStatusBadge(state),
-    },
-    {
-      title: 'Start Time',
-      dataIndex: 'startTime',
-      key: 'startTime',
-      width: 180,
-      sorter: (a, b) => a.startTime - b.startTime,
-      render: (timestamp: number) => (
-        <Text type="secondary">{formatDate(timestamp)}</Text>
-      ),
-    },
-    {
-      title: 'User',
-      dataIndex: 'user',
-      key: 'user',
-      width: 120,
-      sorter: (a, b) => a.user.localeCompare(b.user),
-      filters: finishedUserOptions,
-      onFilter: (value, record) => record.user === value,
-    },
-    {
-      title: 'Query',
-      dataIndex: 'query',
-      key: 'query',
-      sorter: (a, b) => a.query.localeCompare(b.query),
-      render: (query: string, record: QueryProfile) => (
-        <Tooltip title={query}>
-          <Link to={`/profiles/${record.queryId}`}>
-            {truncateQuery(query)}
-          </Link>
-        </Tooltip>
-      ),
-    },
-    {
-      title: 'Query Type',
-      key: 'queryType',
-      width: 120,
-      sorter: (a, b) => detectQueryType(a.query).localeCompare(detectQueryType(b.query)),
-      filters: finishedQueryTypeOptions,
-      onFilter: (value, record) => detectQueryType(record.query) === value,
-      render: (_: unknown, record: QueryProfile) => renderQueryType(detectQueryType(record.query)),
-    },
-    {
-      title: 'Duration',
-      dataIndex: 'duration',
-      key: 'duration',
-      width: 100,
-      sorter: (a, b) => {
-        const aDur = a.duration ? parseFloat(a.duration) : 0;
-        const bDur = b.duration ? parseFloat(b.duration) : 0;
-        return aDur - bDur;
-      },
-      render: (duration: string | undefined) => (
-        <Text type="secondary">{duration || '-'}</Text>
-      ),
-    },
-    {
-      title: 'Foreman',
-      dataIndex: 'foreman',
-      key: 'foreman',
-      width: 150,
-      sorter: (a, b) => a.foreman.localeCompare(b.foreman),
-      filters: finishedForemanOptions,
-      onFilter: (value, record) => record.foreman === value,
-    },
-    {
-      title: 'Queue',
-      dataIndex: 'queueName',
-      key: 'queueName',
-      width: 120,
-      sorter: (a, b) => {
-        const aQueue = a.queueName || '';
-        const bQueue = b.queueName || '';
-        return aQueue.localeCompare(bQueue);
-      },
-      filters: queueOptions,
-      onFilter: (value, record) => record.queueName === value,
-      render: (queueName: string | undefined) => {
-        if (!queueName || queueName === '-') {
-          return <Text type="secondary">-</Text>;
-        }
-        return <Text>{queueName}</Text>;
-      },
-    },
-  ];
+  // Toolbar action: refresh
+  const toolbarActions = useMemo(
+    () => (
+      <Tooltip title="Refresh">
+        <Button
+          type="text"
+          size="small"
+          icon={<ReloadOutlined spin={isFetching} />}
+          onClick={() => refetch()}
+        />
+      </Tooltip>
+    ),
+    [refetch, isFetching],
+  );
+  usePageChrome({ toolbarActions });
 
   if (error) {
     return (
-      <div style={{ padding: 24 }}>
-        <Card>
-          <Empty
-            description={
-              <Text type="danger">
-                Failed to load profiles: {(error as Error).message}
-              </Text>
-            }
-          />
-        </Card>
+      <div className="page-profiles-error">
+        <h2>Couldn't load query history</h2>
+        <p>{(error as Error).message}</p>
       </div>
     );
   }
 
   return (
-    <div style={{ padding: 24 }}>
-      <Space direction="vertical" style={{ width: '100%' }} size="large">
-        {/* Controls */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
-          <span>Load profiles limit:</span>
-          <Select
-            style={{ width: 150 }}
-            value={profilesLimit}
-            onChange={setProfilesLimit}
-            options={[
-              { label: '50', value: 50 },
-              { label: '100', value: 100 },
-              { label: '250', value: 250 },
-              { label: '500', value: 500 },
-              { label: '1000', value: 1000 },
-            ]}
-          />
+    <div className="page-profiles">
+      <header className="page-profiles-header">
+        <div>
+          <h1 className="page-profiles-title">Query History</h1>
+          <p className="page-profiles-subtitle">
+            {isLoading
+              ? 'Loading…'
+              : (
+                <>
+                  {runningCount > 0 && (
+                    <span className="page-profiles-running-pill">
+                      <span className="page-profiles-running-dot" />
+                      {runningCount} running
+                    </span>
+                  )}
+                  {' '}
+                  {allEntries.length === 0
+                    ? 'No queries yet'
+                    : `${allEntries.length} total · auto-refreshing`}
+                </>
+              )}
+          </p>
+        </div>
+      </header>
+
+      <div className="page-profiles-toolbar">
+        <Input
+          placeholder="Search SQL, user, or query ID…"
+          prefix={<SearchOutlined style={{ color: 'var(--color-text-tertiary)' }} />}
+          value={searchText}
+          onChange={(e) => setSearchText(e.target.value)}
+          allowClear
+          className="page-profiles-search"
+        />
+
+        <div className="page-profiles-chips">
+          {(['all', 'running', 'succeeded', 'failed', 'cancelled'] as StatusFilter[]).map((s) => (
+            <button
+              key={s}
+              type="button"
+              className={`page-profiles-chip${statusFilter === s ? ' is-active' : ''}`}
+              onClick={() => setStatusFilter(s)}
+            >
+              {s === 'all' && 'All'}
+              {s === 'running' && (
+                <>
+                  <span className="page-profiles-chip-dot" style={{ background: STATUS_DOT_COLORS.Running }} />
+                  Running
+                </>
+              )}
+              {s === 'succeeded' && (
+                <>
+                  <span className="page-profiles-chip-dot" style={{ background: STATUS_DOT_COLORS.Succeeded }} />
+                  Succeeded
+                </>
+              )}
+              {s === 'failed' && (
+                <>
+                  <span className="page-profiles-chip-dot" style={{ background: STATUS_DOT_COLORS.Failed }} />
+                  Failed
+                </>
+              )}
+              {s === 'cancelled' && (
+                <>
+                  <span className="page-profiles-chip-dot" style={{ background: STATUS_DOT_COLORS.Cancelled }} />
+                  Cancelled
+                </>
+              )}
+            </button>
+          ))}
         </div>
 
-        {/* Running Queries Section */}
-        {runningQueries.length > 0 && (
-          <Card
-            title="Running Queries"
-            extra={
-              <Button
-                danger
-                onClick={handleCancelSelected}
-                disabled={selectedRunningIds.length === 0 || isCancelling}
-                loading={isCancelling}
-              >
-                Cancel Selected
-              </Button>
-            }
-          >
-            {isLoading ? (
-              <div style={{ textAlign: 'center', padding: 40 }}>
-                <Spin size="large" />
-              </div>
-            ) : (
-              <Table
-                dataSource={runningQueries}
-                columns={runningColumns}
-                rowKey="queryId"
-                rowSelection={{
-                  selectedRowKeys: selectedRunningIds,
-                  onChange: (selectedKeys) => setSelectedRunningIds(selectedKeys),
-                }}
-                pagination={{
-                  pageSize: 10,
-                  showSizeChanger: true,
-                  showTotal: (total) => `${total} queries`,
-                }}
-              />
-            )}
-          </Card>
+        {allUsers.length > 1 && (
+          <Select
+            size="small"
+            placeholder="Any user"
+            value={userFilter}
+            onChange={setUserFilter}
+            allowClear
+            style={{ width: 140 }}
+            options={allUsers.map((u) => ({ value: u, label: u }))}
+          />
         )}
 
-        {/* Completed Queries Section */}
-        <Card title="Completed Queries">
-          <Space direction="vertical" style={{ width: '100%' }} size="middle">
-            {/* Search */}
-            <Input
-              placeholder="Search queries by user or SQL text..."
-              prefix={<SearchOutlined />}
-              value={searchText}
-              onChange={(e) => setSearchText(e.target.value)}
-              allowClear
-              style={{ maxWidth: 400 }}
-            />
+        {allTypes.length > 1 && (
+          <Select
+            size="small"
+            placeholder="Any type"
+            value={typeFilter}
+            onChange={setTypeFilter}
+            allowClear
+            style={{ width: 130 }}
+            options={allTypes.map((t) => ({ value: t, label: t }))}
+          />
+        )}
 
-            {/* Table */}
-            {isLoading ? (
-              <div style={{ textAlign: 'center', padding: 40 }}>
-                <Spin size="large" />
-              </div>
-            ) : filteredFinished.length === 0 ? (
-              <Empty
-                description={
-                  searchText ? 'No queries match your search' : 'No completed queries'
-                }
-              />
-            ) : (
-              <Table
-                dataSource={filteredFinished}
-                columns={finishedColumns}
-                rowKey="queryId"
-                pagination={{
-                  pageSize: 20,
-                  showSizeChanger: true,
-                  showTotal: (total) => `${total} queries`,
-                }}
-              />
-            )}
-          </Space>
-        </Card>
-      </Space>
+        {selectedRunningIds.size > 0 && (
+          <div className="page-profiles-bulkbar">
+            <span>{selectedRunningIds.size} selected</span>
+            <Popconfirm
+              title={`Cancel ${selectedRunningIds.size} ${selectedRunningIds.size === 1 ? 'query' : 'queries'}?`}
+              onConfirm={handleCancelSelected}
+              okText="Cancel them"
+              cancelText="Keep"
+              okButtonProps={{ danger: true, loading: isCancelling }}
+            >
+              <Button size="small" danger icon={<StopOutlined />} loading={isCancelling}>
+                Cancel
+              </Button>
+            </Popconfirm>
+            <Button size="small" type="text" onClick={() => setSelectedRunningIds(new Set())}>
+              Clear
+            </Button>
+          </div>
+        )}
+      </div>
+
+      {isLoading ? (
+        <div className="page-profiles-loading"><Spin size="large" /></div>
+      ) : grouped.length === 0 ? (
+        <EmptyState
+          searching={!!searchText || statusFilter !== 'all' || !!userFilter || !!typeFilter}
+          onClear={() => {
+            setSearchText('');
+            setStatusFilter('all');
+            setUserFilter(null);
+            setTypeFilter(null);
+          }}
+        />
+      ) : (
+        <div className="page-profiles-timeline">
+          {grouped.map((group) => (
+            <section key={group.key} className="profiles-day-group">
+              <h2 className="profiles-day-header">{group.label}</h2>
+              <ul className="profiles-day-list">
+                {group.entries.map((q) => {
+                  const running = isRunningState(q.state);
+                  const selected = selectedRunningIds.has(q.queryId);
+                  const dotColor = STATUS_DOT_COLORS[q.state] || 'var(--color-text-tertiary)';
+                  return (
+                    <li
+                      key={q.queryId}
+                      className={`profiles-row${running ? ' is-running' : ''}${selected ? ' is-selected' : ''}`}
+                      onClick={() => navigate(`/profiles/${q.queryId}`)}
+                      role="button"
+                      tabIndex={0}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter' || e.key === ' ') {
+                          e.preventDefault();
+                          navigate(`/profiles/${q.queryId}`);
+                        }
+                      }}
+                    >
+                      {running && (
+                        <button
+                          type="button"
+                          className={`profiles-row-check${selected ? ' is-on' : ''}`}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            toggleRunningSelection(q.queryId);
+                          }}
+                          aria-label={selected ? 'Deselect' : 'Select for cancellation'}
+                        >
+                          {selected && <CheckOutlined />}
+                        </button>
+                      )}
+
+                      <span className={`profiles-row-dot${running ? ' is-pulsing' : ''}`} style={{ background: dotColor }} />
+
+                      <span className="profiles-row-time">{formatTime(q.startTime)}</span>
+
+                      <span className={`profiles-row-type type-${detectQueryType(q.query).toLowerCase()}`}>
+                        {detectQueryType(q.query)}
+                      </span>
+
+                      <span className="profiles-row-user">{q.user}</span>
+
+                      <span className="profiles-row-sql" title={q.query}>
+                        {singleLine(q.query, 240)}
+                      </span>
+
+                      <span className="profiles-row-duration">
+                        {q.duration ?? (running ? 'running…' : '—')}
+                      </span>
+                    </li>
+                  );
+                })}
+              </ul>
+            </section>
+          ))}
+        </div>
+      )}
     </div>
   );
 }
+
+function EmptyState({ searching, onClear }: { searching: boolean; onClear: () => void }): ReactNode {
+  return (
+    <div className="page-profiles-empty">
+      <span className="page-profiles-empty-glyph" aria-hidden="true">
+        <span className="page-profiles-empty-stack">
+          <span /><span /><span />
+        </span>
+      </span>
+      <h2>{searching ? 'No matches' : 'No query activity'}</h2>
+      <p>
+        {searching
+          ? 'Try a different search or clear the filters.'
+          : 'Run a query in SQL Lab and it will show up here.'}
+      </p>
+      {searching && <Button onClick={onClear}>Clear filters</Button>}
+    </div>
+  );
+}
+

@@ -273,4 +273,81 @@ public class TestVisualizationResources extends ClusterTest {
       assertEquals(404, response.code());
     }
   }
+
+  @Test
+  public void testA_TrashContainsSoftDeletedVisualization() throws Exception {
+    assertNotNull(createdVizId, "Visualization should have been soft-deleted in test8");
+
+    String url = String.format("http://localhost:%d/api/v1/visualizations/trash", portNumber);
+    Request request = new Request.Builder().url(url).build();
+    try (Response response = httpClient.newCall(request).execute()) {
+      assertEquals(200, response.code());
+      JsonNode json = mapper.readTree(response.body().string());
+      assertTrue(json.has("visualizations"));
+      JsonNode items = json.get("visualizations");
+      assertTrue(items.isArray());
+
+      boolean found = false;
+      for (JsonNode v : items) {
+        if (createdVizId.equals(v.get("id").asText())) {
+          found = true;
+          assertTrue(v.get("deletedAt").asLong() > 0);
+        }
+      }
+      assertTrue(found, "Trash should contain the soft-deleted visualization");
+    }
+  }
+
+  @Test
+  public void testB_RestoreVisualization() throws Exception {
+    assertNotNull(createdVizId);
+
+    String restoreUrl = String.format(
+        "http://localhost:%d/api/v1/visualizations/%s/restore",
+        portNumber, createdVizId);
+    try (Response response = httpClient.newCall(new Request.Builder()
+        .url(restoreUrl)
+        .post(RequestBody.create("", JSON_MEDIA_TYPE))
+        .build()).execute()) {
+      assertEquals(200, response.code());
+      JsonNode json = mapper.readTree(response.body().string());
+      assertEquals(createdVizId, json.get("id").asText());
+      assertEquals(0L, json.get("deletedAt").asLong());
+    }
+
+    String getUrl = String.format("http://localhost:%d/api/v1/visualizations/%s",
+        portNumber, createdVizId);
+    try (Response response = httpClient.newCall(new Request.Builder().url(getUrl).build()).execute()) {
+      assertEquals(200, response.code());
+    }
+  }
+
+  @Test
+  public void testC_PurgeFromTrash() throws Exception {
+    assertNotNull(createdVizId);
+
+    String deleteUrl = String.format("http://localhost:%d/api/v1/visualizations/%s",
+        portNumber, createdVizId);
+    try (Response response = httpClient.newCall(
+        new Request.Builder().url(deleteUrl).delete().build()).execute()) {
+      assertEquals(200, response.code());
+    }
+
+    String purgeUrl = String.format("http://localhost:%d/api/v1/visualizations/%s/purge",
+        portNumber, createdVizId);
+    try (Response response = httpClient.newCall(
+        new Request.Builder().url(purgeUrl).delete().build()).execute()) {
+      assertEquals(200, response.code());
+    }
+
+    String restoreUrl = String.format(
+        "http://localhost:%d/api/v1/visualizations/%s/restore",
+        portNumber, createdVizId);
+    try (Response response = httpClient.newCall(new Request.Builder()
+        .url(restoreUrl)
+        .post(RequestBody.create("", JSON_MEDIA_TYPE))
+        .build()).execute()) {
+      assertEquals(404, response.code());
+    }
+  }
 }

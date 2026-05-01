@@ -15,20 +15,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import { useMemo, useRef } from 'react';
+import { useMemo, useRef, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import {
-  Card,
-  Button,
-  List,
-  Empty,
-  Typography,
-  Space,
-  Popconfirm,
-  Tooltip,
-  message,
-  Spin,
-} from 'antd';
+import { Button, Tooltip, message, Spin, Modal, Space } from 'antd';
 import {
   PlusOutlined,
   EditOutlined,
@@ -46,10 +35,43 @@ import { getVisualizations } from '../api/visualizations';
 import { getDashboards } from '../api/dashboards';
 import { useProjectContext } from '../contexts/ProjectContext';
 import { WikiEditor } from '../components/project';
-import { useState } from 'react';
+import { usePageChrome } from '../contexts/AppChromeContext';
 import type { ChatMessage, DeltaEvent } from '../types/ai';
+import type { WikiPage } from '../types';
 
-const { Title, Text } = Typography;
+function formatRelative(ts: number): string {
+  const date = new Date(ts);
+  const diff = Date.now() - date.getTime();
+  const min = Math.floor(diff / 60000);
+  if (min < 1) {
+    return 'just now';
+  }
+  if (min < 60) {
+    return `${min}m ago`;
+  }
+  const hr = Math.floor(min / 60);
+  if (hr < 24) {
+    return `${hr}h ago`;
+  }
+  const days = Math.floor(hr / 24);
+  if (days < 7) {
+    return `${days}d ago`;
+  }
+  return date.toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
+}
+
+/** Strip basic markdown for the page-list preview line. */
+function previewFromMarkdown(md: string, max = 100): string {
+  const stripped = md
+    .replace(/^---[\s\S]*?---\n/, '')           // frontmatter
+    .replace(/```[\s\S]*?```/g, '')             // code blocks
+    .replace(/!\[[^\]]*\]\([^)]+\)/g, '')       // images
+    .replace(/\[([^\]]+)\]\([^)]+\)/g, '$1')    // links → text
+    .replace(/[#>*_`~-]/g, '')                  // markdown markers
+    .replace(/\s+/g, ' ')
+    .trim();
+  return stripped.length > max ? stripped.slice(0, max) + '…' : stripped;
+}
 
 export default function ProjectWikiPage() {
   const { pageId } = useParams<{ pageId: string }>();
@@ -62,17 +84,38 @@ export default function ProjectWikiPage() {
   const [aiContent, setAiContent] = useState('');
   const abortRef = useRef<AbortController | null>(null);
 
-  // AI status check
   const { data: aiStatus } = useQuery({
     queryKey: ['ai-status'],
     queryFn: getAiStatus,
   });
   const aiEnabled = aiStatus?.enabled && aiStatus?.configured;
 
-  // Fetch items for AI context
   const { data: allQueries } = useQuery({ queryKey: ['savedQueries'], queryFn: getSavedQueries });
   const { data: allVizs } = useQuery({ queryKey: ['visualizations'], queryFn: getVisualizations });
   const { data: allDashboards } = useQuery({ queryKey: ['dashboards'], queryFn: getDashboards });
+
+  const sortedPages = useMemo<WikiPage[]>(
+    () => [...(project?.wikiPages || [])].sort((a, b) => a.order - b.order),
+    [project?.wikiPages],
+  );
+
+  const selectedPage = useMemo<WikiPage | null>(() => {
+    if (pageId) {
+      return sortedPages.find((p) => p.id === pageId) || null;
+    }
+    return sortedPages.length > 0 ? sortedPages[0] : null;
+  }, [pageId, sortedPages]);
+
+  const deleteWikiMutation = useMutation({
+    mutationFn: (pid: string) => deleteWikiPage(projectId!, pid),
+    onSuccess: () => {
+      message.success('Wiki page deleted');
+      queryClient.invalidateQueries({ queryKey: ['project', projectId] });
+      if (pageId) {
+        navigate(`/projects/${projectId}/wiki`);
+      }
+    },
+  });
 
   const handleAiGenerate = async () => {
     if (!project) {
@@ -82,39 +125,50 @@ export default function ProjectWikiPage() {
     setAiGenerating(true);
     setAiContent('');
 
-    // Gather project data
     const queryIdSet = new Set(project.savedQueryIds || []);
     const vizIdSet = new Set(project.visualizationIds || []);
     const dashIdSet = new Set(project.dashboardIds || []);
 
-    const projQueries = (allQueries || []).filter(q => queryIdSet.has(q.id));
-    const projVizs = (allVizs || []).filter(v => vizIdSet.has(v.id));
-    const projDashboards = (allDashboards || []).filter(d => dashIdSet.has(d.id));
+    const projQueries = (allQueries || []).filter((q) => queryIdSet.has(q.id));
+    const projVizs = (allVizs || []).filter((v) => vizIdSet.has(v.id));
+    const projDashboards = (allDashboards || []).filter((d) => dashIdSet.has(d.id));
 
-    const datasetsDesc = (project.datasets || []).map(d => {
-      if (d.type === 'plugin') {
-        return `- **${d.label}** — Plugin: all schemas in \`${d.schema}\``;
-      }
-      if (d.type === 'schema') {
-        return `- **${d.label}** — Schema: all tables in \`${d.schema}\``;
-      }
-      if (d.type === 'saved_query') {
-        return `- **${d.label}** — Saved Query: \`${d.savedQueryId}\``;
-      }
-      return `- **${d.label}** — Table: \`${d.schema}.${d.table}\``;
-    }).join('\n') || '- No datasets configured';
+    const datasetsDesc =
+      (project.datasets || [])
+        .map((d) => {
+          if (d.type === 'plugin') {
+            return `- **${d.label}** — Plugin: all schemas in \`${d.schema}\``;
+          }
+          if (d.type === 'schema') {
+            return `- **${d.label}** — Schema: all tables in \`${d.schema}\``;
+          }
+          if (d.type === 'saved_query') {
+            return `- **${d.label}** — Saved Query: \`${d.savedQueryId}\``;
+          }
+          return `- **${d.label}** — Table: \`${d.schema}.${d.table}\``;
+        })
+        .join('\n') || '- No datasets configured';
 
-    const queriesDesc = projQueries.map(q =>
-      `- **${q.name}**${q.description ? `: ${q.description}` : ''} — SQL: \`${q.sql.substring(0, 120)}${q.sql.length > 120 ? '...' : ''}\``
-    ).join('\n') || '- No saved queries';
+    const queriesDesc =
+      projQueries
+        .map((q) =>
+          `- **${q.name}**${q.description ? `: ${q.description}` : ''} — SQL: \`${q.sql.substring(0, 120)}${q.sql.length > 120 ? '...' : ''}\``,
+        )
+        .join('\n') || '- No saved queries';
 
-    const vizsDesc = projVizs.map(v =>
-      `- **${v.name}** (${v.chartType} chart)${v.description ? `: ${v.description}` : ''} — [View](/sqllab/projects/${projectId}/visualizations)`
-    ).join('\n') || '- No visualizations';
+    const vizsDesc =
+      projVizs
+        .map((v) =>
+          `- **${v.name}** (${v.chartType} chart)${v.description ? `: ${v.description}` : ''} — [View](/sqllab/projects/${projectId}/visualizations)`,
+        )
+        .join('\n') || '- No visualizations';
 
-    const dashDesc = projDashboards.map(d =>
-      `- **${d.name}**${d.description ? `: ${d.description}` : ''} — ${d.panels?.length || 0} panels — [View](/sqllab/dashboards/${d.id})`
-    ).join('\n') || '- No dashboards';
+    const dashDesc =
+      projDashboards
+        .map((d) =>
+          `- **${d.name}**${d.description ? `: ${d.description}` : ''} — ${d.panels?.length || 0} panels — [View](/sqllab/dashboards/${d.id})`,
+        )
+        .join('\n') || '- No dashboards';
 
     const prompt = `You are a technical writer for a data analytics project. Generate a comprehensive project wiki page in Markdown for the project described below. The page should include:
 
@@ -159,7 +213,6 @@ ${dashDesc}`;
         }
       },
       async () => {
-        // Done streaming — save as a wiki page
         try {
           await createWikiPage(projectId!, {
             title: 'Project Overview',
@@ -186,61 +239,59 @@ ${dashDesc}`;
     setAiContent('');
   };
 
-  const sortedPages = useMemo(
-    () => [...(project?.wikiPages || [])].sort((a, b) => a.order - b.order),
-    [project?.wikiPages]
-  );
-
-  const selectedPage = useMemo(() => {
-    if (pageId) {
-      return sortedPages.find((p) => p.id === pageId) || null;
+  const handleEditSelected = () => {
+    if (!selectedPage) {
+      return;
     }
-    return sortedPages.length > 0 ? sortedPages[0] : null;
-  }, [pageId, sortedPages]);
-
-  const deleteWikiMutation = useMutation({
-    mutationFn: (pid: string) => deleteWikiPage(projectId!, pid),
-    onSuccess: () => {
-      message.success('Wiki page deleted');
-      queryClient.invalidateQueries({ queryKey: ['project', projectId] });
-      // If we deleted the selected page, navigate to wiki root
-      if (pageId) {
-        navigate(`/projects/${projectId}/wiki`);
-      }
-    },
-  });
-
-  const formatDate = (timestamp: number) => {
-    return new Date(timestamp).toLocaleString();
+    setEditingPageId(selectedPage.id);
+    setWikiEditorOpen(true);
   };
 
+  const handleDeleteSelected = () => {
+    if (!selectedPage) {
+      return;
+    }
+    Modal.confirm({
+      title: 'Delete this wiki page?',
+      content: 'This action cannot be undone.',
+      okText: 'Delete',
+      okButtonProps: { danger: true },
+      onOk: () => deleteWikiMutation.mutate(selectedPage.id),
+    });
+  };
+
+  // Page-level actions live in the unified shell toolbar
+  const toolbarActions = useMemo(
+    () => (
+      <Space size={4}>
+        {selectedPage && (
+          <>
+            <Tooltip title="Edit page">
+              <Button type="text" size="small" icon={<EditOutlined />} onClick={handleEditSelected} />
+            </Tooltip>
+            <Tooltip title="Delete page">
+              <Button type="text" size="small" icon={<DeleteOutlined />} danger onClick={handleDeleteSelected} />
+            </Tooltip>
+          </>
+        )}
+      </Space>
+    ),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [selectedPage?.id],
+  );
+  usePageChrome({ toolbarActions });
+
   return (
-    <div style={{ display: 'flex', flex: 1, overflow: 'hidden' }}>
-      {/* Left sidebar: page list */}
-      <div
-        style={{
-          width: 260,
-          borderRight: '1px solid var(--color-border-secondary)',
-          display: 'flex',
-          flexDirection: 'column',
-          background: 'var(--color-bg-elevated)',
-          flexShrink: 0,
-        }}
-      >
-        <div
-          style={{
-            padding: '12px 16px',
-            borderBottom: '1px solid var(--color-border-secondary)',
-            display: 'flex',
-            justifyContent: 'space-between',
-            alignItems: 'center',
-          }}
-        >
-          <Title level={5} style={{ margin: 0 }}>Wiki Pages</Title>
-          <Space size={4}>
+    <div className="page-wiki">
+      {/* Pages list — Notes-style middle column */}
+      <aside className="wiki-pagelist">
+        <header className="wiki-pagelist-header">
+          <span className="wiki-pagelist-title">Wiki Pages</span>
+          <Space size={2}>
             {aiEnabled && (
-              <Tooltip title="Generate wiki page with AI">
+              <Tooltip title="Generate page with AI">
                 <Button
+                  type="text"
                   size="small"
                   icon={<RobotOutlined />}
                   loading={aiGenerating}
@@ -260,125 +311,81 @@ ${dashDesc}`;
               />
             </Tooltip>
           </Space>
-        </div>
-        <div style={{ flex: 1, overflow: 'auto' }}>
+        </header>
+
+        <div className="wiki-pagelist-scroll">
           {sortedPages.length === 0 ? (
-            <div style={{ padding: 16, textAlign: 'center' }}>
-              <Text type="secondary">No wiki pages yet</Text>
+            <div className="wiki-pagelist-empty">
+              <FileTextOutlined className="wiki-pagelist-empty-glyph" />
+              <p>No wiki pages yet.</p>
+              <p className="wiki-pagelist-empty-hint">
+                Create a page or generate one from project context using AI.
+              </p>
             </div>
           ) : (
-            <List
-              size="small"
-              dataSource={sortedPages}
-              renderItem={(page) => (
-                <List.Item
-                  style={{
-                    cursor: 'pointer',
-                    padding: '8px 16px',
-                    background: selectedPage?.id === page.id
-                      ? 'var(--color-bg-container)'
-                      : 'transparent',
-                    borderLeft: selectedPage?.id === page.id
-                      ? '3px solid var(--color-primary)'
-                      : '3px solid transparent',
-                  }}
-                  onClick={() => navigate(`/projects/${projectId}/wiki/${page.id}`)}
-                >
-                  <Space>
-                    <FileTextOutlined />
-                    <Text
-                      strong={selectedPage?.id === page.id}
-                      ellipsis
-                      style={{ maxWidth: 180 }}
-                    >
-                      {page.title}
-                    </Text>
-                  </Space>
-                </List.Item>
-              )}
-            />
+            <ul className="wiki-pagelist-items" role="list">
+              {sortedPages.map((page) => {
+                const selected = selectedPage?.id === page.id;
+                return (
+                  <li
+                    key={page.id}
+                    className={`wiki-pagelist-item${selected ? ' is-selected' : ''}`}
+                    onClick={() => navigate(`/projects/${projectId}/wiki/${page.id}`)}
+                  >
+                    <div className="wiki-pagelist-item-title">{page.title}</div>
+                    <div className="wiki-pagelist-item-preview">
+                      {previewFromMarkdown(page.content) || <em>No content</em>}
+                    </div>
+                    <div className="wiki-pagelist-item-meta">{formatRelative(page.updatedAt)}</div>
+                  </li>
+                );
+              })}
+            </ul>
           )}
         </div>
-      </div>
+      </aside>
 
-      {/* Main area: selected page content */}
-      <div style={{ flex: 1, overflow: 'auto', padding: 24 }}>
+      {/* Document content */}
+      <section className="wiki-content">
         {aiGenerating ? (
-          <Card>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
-              <Space>
-                <Spin size="small" />
-                <Text strong>Generating Project Overview...</Text>
-              </Space>
-              <Button size="small" onClick={handleCancelAi}>Cancel</Button>
-            </div>
-            <div
-              style={{
-                padding: '16px 0',
-                borderTop: '1px solid var(--color-border-secondary)',
-              }}
-            >
-              <div className="wiki-markdown-content">
-                <Markdown rehypePlugins={[rehypeRaw]}>
-                  {aiContent || '*Waiting for AI response...*'}
-                </Markdown>
+          <article className="wiki-document">
+            <header className="wiki-document-header">
+              <div className="wiki-document-title-row">
+                <h1 className="wiki-document-title">Generating Project Overview…</h1>
+                <Space>
+                  <Spin size="small" />
+                  <Button size="small" onClick={handleCancelAi}>Cancel</Button>
+                </Space>
               </div>
+              <p className="wiki-document-meta">AI is drafting based on the project's datasets, queries, vizzes, and dashboards.</p>
+            </header>
+            <div className="wiki-document-body">
+              <Markdown rehypePlugins={[rehypeRaw]}>
+                {aiContent || '*Waiting for AI response…*'}
+              </Markdown>
             </div>
-          </Card>
+          </article>
         ) : selectedPage ? (
-          <Card>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 16 }}>
-              <div>
-                <Title level={3} style={{ margin: 0 }}>{selectedPage.title}</Title>
-                <Text type="secondary" style={{ fontSize: 12 }}>
-                  Last updated: {formatDate(selectedPage.updatedAt)}
-                </Text>
-              </div>
-              <Space>
-                <Tooltip title="Edit">
-                  <Button
-                    icon={<EditOutlined />}
-                    onClick={() => {
-                      setEditingPageId(selectedPage.id);
-                      setWikiEditorOpen(true);
-                    }}
-                  >
-                    Edit
-                  </Button>
-                </Tooltip>
-                <Popconfirm
-                  title="Delete this wiki page?"
-                  onConfirm={() => deleteWikiMutation.mutate(selectedPage.id)}
-                  okText="Delete"
-                  cancelText="Cancel"
-                  okButtonProps={{ danger: true }}
-                >
-                  <Button danger icon={<DeleteOutlined />}>Delete</Button>
-                </Popconfirm>
-              </Space>
+          <article className="wiki-document">
+            <header className="wiki-document-header">
+              <h1 className="wiki-document-title">{selectedPage.title}</h1>
+              <p className="wiki-document-meta">Last updated {formatRelative(selectedPage.updatedAt)}</p>
+            </header>
+            <div className="wiki-document-body">
+              <Markdown rehypePlugins={[rehypeRaw]}>{selectedPage.content}</Markdown>
             </div>
-            <div
-              style={{
-                padding: '16px 0',
-                borderTop: '1px solid var(--color-border-secondary)',
-              }}
-            >
-              <div className="wiki-markdown-content">
-                <Markdown rehypePlugins={[rehypeRaw]}>
-                  {selectedPage.content}
-                </Markdown>
-              </div>
-            </div>
-          </Card>
+          </article>
         ) : (
-          <Empty description="No wiki pages yet. Create one to get started!">
+          <div className="wiki-document-empty">
+            <FileTextOutlined className="wiki-document-empty-glyph" />
+            <h2>Start the project wiki</h2>
+            <p>
+              Document the project's purpose, datasets, and findings in Markdown.
+              Pick a page from the list, or create a new one.
+            </p>
             <Space>
               {aiEnabled && (
-                <Button
-                  icon={<RobotOutlined />}
-                  onClick={handleAiGenerate}
-                  loading={aiGenerating}
-                >
+                <Button icon={<RobotOutlined />} onClick={handleAiGenerate} loading={aiGenerating}>
                   Generate with AI
                 </Button>
               )}
@@ -390,12 +397,12 @@ ${dashDesc}`;
                   setWikiEditorOpen(true);
                 }}
               >
-                Create Page
+                Create page
               </Button>
             </Space>
-          </Empty>
+          </div>
         )}
-      </div>
+      </section>
 
       <WikiEditor
         open={wikiEditorOpen}

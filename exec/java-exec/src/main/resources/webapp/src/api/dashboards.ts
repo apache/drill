@@ -57,10 +57,35 @@ export async function updateDashboard(id: string, dashboard: Partial<DashboardCr
 }
 
 /**
- * Delete a dashboard
+ * Delete a dashboard (soft-delete; recoverable from Trash)
  */
 export async function deleteDashboard(id: string): Promise<void> {
   await apiClient.delete(`${DASHBOARDS_BASE}/${encodeURIComponent(id)}`);
+}
+
+/**
+ * List soft-deleted dashboards owned by the current user
+ */
+export async function getTrashedDashboards(): Promise<Dashboard[]> {
+  const response = await apiClient.get<DashboardsResponse>(`${DASHBOARDS_BASE}/trash`);
+  return response.data.dashboards;
+}
+
+/**
+ * Restore a soft-deleted dashboard
+ */
+export async function restoreDashboard(id: string): Promise<Dashboard> {
+  const response = await apiClient.post<Dashboard>(
+    `${DASHBOARDS_BASE}/${encodeURIComponent(id)}/restore`
+  );
+  return response.data;
+}
+
+/**
+ * Permanently delete a dashboard from trash
+ */
+export async function purgeDashboard(id: string): Promise<void> {
+  await apiClient.delete(`${DASHBOARDS_BASE}/${encodeURIComponent(id)}/purge`);
 }
 
 /**

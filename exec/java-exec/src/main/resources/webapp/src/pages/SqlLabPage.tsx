@@ -19,7 +19,7 @@ import { useCallback, useState, useEffect, useRef, useMemo, type MutableRefObjec
 import { useSelector, useDispatch } from 'react-redux';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { Tabs, message, notification, Tooltip, Modal, Alert, Button, Space, Spin, Dropdown, Grid, Input } from 'antd';
-import { PlusOutlined, MenuFoldOutlined, MenuUnfoldOutlined, RobotOutlined, MoreOutlined, EditOutlined, CopyOutlined, CloseOutlined, PlayCircleOutlined, StopOutlined, ExperimentOutlined, TableOutlined, LockOutlined, UnlockOutlined, ApiOutlined, StarOutlined, StarFilled } from '@ant-design/icons';
+import { PlusOutlined, RobotOutlined, MoreOutlined, EditOutlined, CopyOutlined, CloseOutlined, PlayCircleOutlined, StopOutlined, ExperimentOutlined, TableOutlined, LockOutlined, UnlockOutlined, ApiOutlined, StarOutlined, StarFilled, DatabaseOutlined } from '@ant-design/icons';
 import Markdown from 'react-markdown';
 import type { RootState, AppDispatch } from '../store';
 import {
@@ -40,7 +40,7 @@ import {
   setSql,
   type QueryTab,
 } from '../store/querySlice';
-import { toggleSidebar, setEditorHeight } from '../store/uiSlice';
+import { setEditorHeight } from '../store/uiSlice';
 import { useWorkspacePersistence } from '../hooks/useWorkspacePersistence';
 import { useQueryExecution } from '../hooks/useQuery';
 import { useQueryHistory } from '../hooks/useQueryHistory';
@@ -69,6 +69,7 @@ import ShareApiModal from '../components/results/ShareApiModal';
 import NotebookPanel from '../components/notebook/NotebookPanel';
 import type { NotebookPanelHandle } from '../components/notebook/NotebookPanel';
 import { ProspectorPanel } from '../components/prospector';
+import { useAppChrome, usePageChrome, type InspectorTab } from '../contexts/AppChromeContext';
 import type { SavedQuery, Visualization } from '../types';
 import { normalizeSql } from '../utils/sqlTransformations';
 import type { ChatContext, ChatMessage } from '../types/ai';
@@ -77,6 +78,29 @@ import { useSqlValidation } from '../hooks/useSqlValidation';
 import type { Monaco } from '@monaco-editor/react';
 
 type IStandaloneCodeEditor = Parameters<import('@monaco-editor/react').OnMount>[0];
+
+/**
+ * Extract the LIMIT N clause from a SQL string, if any. Naive: strips line +
+ * block comments, then matches the last `LIMIT <number>` (case-insensitive)
+ * not followed by a paren (which would indicate a subquery's limit, not the
+ * outermost). Returns null when no limit is found.
+ */
+function extractSqlLimit(sql: string): number | null {
+  if (!sql) {
+    return null;
+  }
+  const stripped = sql
+    .replace(/--[^\n]*/g, ' ')
+    .replace(/\/\*[\s\S]*?\*\//g, ' ');
+  // Walk all matches; keep the last one (closest to the outermost SELECT).
+  const re = /\bLIMIT\s+(\d+)\b/gi;
+  let last: RegExpExecArray | null = null;
+  let m: RegExpExecArray | null;
+  while ((m = re.exec(stripped)) !== null) {
+    last = m;
+  }
+  return last ? parseInt(last[1], 10) : null;
+}
 
 function extractSqlFromMarkdown(markdown: string): string | null {
   const regex = /```sql\s*\n([\s\S]*?)```/g;
@@ -107,7 +131,6 @@ export default function SqlLabPage({ datasetFilter, headerContent, projectId, sa
   const { tabs, activeTabId } = useSelector((state: RootState) => state.query);
   const activeTab = tabs.find((t) => t.id === activeTabId);
 
-  const sidebarCollapsed = useSelector((state: RootState) => state.ui.sidebarCollapsed);
   const editorHeight = useSelector((state: RootState) => state.ui.editorHeight);
 
   const screens = Grid.useBreakpoint();
@@ -215,18 +238,19 @@ export default function SqlLabPage({ datasetFilter, headerContent, projectId, sa
   const [isDragging, setIsDragging] = useState(false);
   const contentRef = useRef<HTMLDivElement>(null);
 
-  // Tab renaming
-  const [editingTabId, setEditingTabId] = useState<string | null>(null);
-  const [editingTabName, setEditingTabName] = useState('');
+  // Tab renaming — Modal-based to sidestep AntD Tabs' internal focus management
+  // (inline-input inside an AntD Tab label kept losing focus mid-keystroke).
+  const [renamingTabId, setRenamingTabId] = useState<string | null>(null);
+  const [renameDraft, setRenameDraft] = useState('');
 
-  // Prospector state
-  const [prospectorOpen, setProspectorOpen] = useState(() => {
-    try {
-      return localStorage.getItem('drill-prospector-open') === 'true';
-    } catch {
-      return false;
-    }
-  });
+  // Prospector visibility comes from the global inspector chrome — no local state.
+  const {
+    inspectorOpen,
+    setInspectorOpen,
+    inspectorActiveTab,
+    setInspectorActiveTab,
+  } = useAppChrome();
+  const prospectorOpen = inspectorOpen && inspectorActiveTab === 'prospector';
   const [prospectorAvailable, setProspectorAvailable] = useState(false);
   const [sendDataToAi, setSendDataToAi] = useState(true);
   const [maxToolRounds, setMaxToolRounds] = useState(15);
@@ -308,16 +332,15 @@ export default function SqlLabPage({ datasetFilter, headerContent, projectId, sa
         return;
       }
 
-      // Ctrl/Cmd+Shift+F — focus schema search
+      // Ctrl/Cmd+Shift+F — open inspector to Schema tab and focus search
       if (mod && e.shiftKey && e.key === 'F') {
         e.preventDefault();
-        const searchEl = document.getElementById('schema-search-input') as HTMLInputElement | null;
-        if (searchEl) {
-          if (sidebarCollapsed) {
-            dispatch(toggleSidebar());
-          }
-          setTimeout(() => searchEl.focus(), 150);
-        }
+        setInspectorOpen(true);
+        setInspectorActiveTab('schema');
+        setTimeout(() => {
+          const searchEl = document.getElementById('schema-search-input') as HTMLInputElement | null;
+          searchEl?.focus();
+        }, 150);
         return;
       }
 
@@ -332,7 +355,7 @@ export default function SqlLabPage({ datasetFilter, headerContent, projectId, sa
     };
     window.addEventListener('keydown', handler);
     return () => window.removeEventListener('keydown', handler);
-  }, [sql, sidebarCollapsed, dispatch]);
+  }, [sql, dispatch, setInspectorOpen, setInspectorActiveTab]);
 
   // Check Prospector status and config on mount
   useEffect(() => {
@@ -404,33 +427,26 @@ export default function SqlLabPage({ datasetFilter, headerContent, projectId, sa
     return base;
   }, [sql, activeTab?.defaultSchema, schemas, error, results, isNotebookTab, notebookDfName, notebookHandle, datasetFilter]);
 
-  // Prospector sidebar toggle with localStorage persistence
+  // Toggle the inspector to show the Prospector tab.
   const toggleProspector = useCallback(() => {
-    setProspectorOpen((prev) => {
-      const next = !prev;
-      try {
-        localStorage.setItem('drill-prospector-open', String(next));
-      } catch {
-        // Ignore storage errors
-      }
-      return next;
-    });
-  }, []);
+    if (prospectorOpen) {
+      setInspectorOpen(false);
+    } else {
+      setInspectorOpen(true);
+      setInspectorActiveTab('prospector');
+    }
+  }, [prospectorOpen, setInspectorOpen, setInspectorActiveTab]);
 
-  // Handle Prospector actions from toolbar/results (opens sidebar + sends message)
+  // Handle Prospector actions from toolbar/results (opens inspector + sends message)
   const handleProspectorAction = useCallback(
     (prompt: string) => {
       if (!prospectorOpen) {
-        setProspectorOpen(true);
-        try {
-          localStorage.setItem('drill-prospector-open', 'true');
-        } catch {
-          // Ignore storage errors
-        }
+        setInspectorOpen(true);
+        setInspectorActiveTab('prospector');
       }
       prospector.sendMessage(prompt, aiContext);
     },
-    [prospectorOpen, prospector, aiContext],
+    [prospectorOpen, prospector, aiContext, setInspectorOpen, setInspectorActiveTab],
   );
 
   const handleExplainQuery = useCallback(() => {
@@ -808,6 +824,57 @@ export default function SqlLabPage({ datasetFilter, headerContent, projectId, sa
     }
   }, [activeTab, dispatch]);
 
+  // Register Schema + Prospector as inspector tabs (overrides global Prospector)
+  const inspectorTabs = useMemo<InspectorTab[]>(() => {
+    const tabs: InspectorTab[] = [
+      {
+        key: 'schema',
+        title: 'Schema',
+        icon: <DatabaseOutlined />,
+        content: (
+          <SchemaExplorer
+            onInsertText={handleInsertText}
+            onTableSelect={handleTableSelect}
+            onSelectQuery={handleSelectQuery}
+            datasetFilter={datasetFilter}
+            projectId={projectId}
+            savedQueryIds={savedQueryIds}
+          />
+        ),
+      },
+    ];
+    if (prospectorAvailable) {
+      tabs.push({
+        key: 'prospector',
+        title: 'Prospector',
+        icon: <RobotOutlined />,
+        content: (
+          <ProspectorPanel
+            prospector={prospector}
+            context={aiContext}
+            onInsertCell={notebookHandle ? (code) => {
+              notebookHandle.addCell(code);
+              setResultsPanelTab('notebook');
+            } : undefined}
+          />
+        ),
+      });
+    }
+    return tabs;
+  }, [
+    handleInsertText,
+    handleTableSelect,
+    handleSelectQuery,
+    datasetFilter,
+    projectId,
+    savedQueryIds,
+    prospectorAvailable,
+    prospector,
+    aiContext,
+    notebookHandle,
+  ]);
+  usePageChrome({ inspectorTabs });
+
   // Handle tab operations
   const handleTabChange = useCallback(
     (key: string) => {
@@ -973,31 +1040,27 @@ export default function SqlLabPage({ datasetFilter, headerContent, projectId, sa
     }
   }, [results, activeTabId, executionTime, cacheId, onResultsCached]);
 
-  // ---- Tab renaming ----
-  const handleTabDoubleClick = useCallback((tabId: string, currentName: string) => {
-    setEditingTabId(tabId);
-    setEditingTabName(currentName);
+  // ---- Tab renaming (Modal-based) ----
+  const openRename = useCallback((tabId: string, currentName: string) => {
+    setRenameDraft(currentName);
+    setRenamingTabId(tabId);
   }, []);
 
-  const handleTabRenameSubmit = useCallback(() => {
-    if (editingTabId && editingTabName.trim()) {
-      dispatch(renameTab({ tabId: editingTabId, name: editingTabName.trim() }));
-    }
-    setEditingTabId(null);
-    setEditingTabName('');
-  }, [dispatch, editingTabId, editingTabName]);
+  const closeRename = useCallback(() => {
+    setRenamingTabId(null);
+    setRenameDraft('');
+  }, []);
 
-  const handleTabRenameKeyDown = useCallback((e: React.KeyboardEvent<HTMLInputElement>) => {
-    // Always stop propagation so keystrokes (Delete, Backspace, etc.) don't
-    // bubble up to Ant Design Tabs and accidentally close or switch tabs.
-    e.stopPropagation();
-    if (e.key === 'Enter') {
-      handleTabRenameSubmit();
-    } else if (e.key === 'Escape') {
-      setEditingTabId(null);
-      setEditingTabName('');
+  const submitRename = useCallback(() => {
+    if (!renamingTabId) {
+      return;
     }
-  }, [handleTabRenameSubmit]);
+    const trimmed = renameDraft.trim();
+    if (trimmed) {
+      dispatch(renameTab({ tabId: renamingTabId, name: trimmed }));
+    }
+    closeRename();
+  }, [dispatch, renamingTabId, renameDraft, closeRename]);
 
   const handleDuplicateTab = useCallback((tabId: string) => {
     dispatch(duplicateTab(tabId));
@@ -1005,46 +1068,7 @@ export default function SqlLabPage({ datasetFilter, headerContent, projectId, sa
 
   return (
     <div className="sqllab-main">
-      {/* Mobile backdrop — closes any open sidebar on tap */}
-      {isMobile && (!sidebarCollapsed || (prospectorOpen && prospectorAvailable)) && (
-        <div
-          className="mobile-sidebar-backdrop"
-          onClick={() => {
-            if (!sidebarCollapsed) {
-              dispatch(toggleSidebar());
-            }
-            if (prospectorOpen) {
-              toggleProspector();
-            }
-          }}
-        />
-      )}
-
-      {/* Schema Explorer Sidebar */}
-      <div className={`sqllab-sidebar${sidebarCollapsed ? ' collapsed' : ''}`}>
-        {!sidebarCollapsed && (
-          <SchemaExplorer
-            onInsertText={handleInsertText}
-            onTableSelect={handleTableSelect}
-            onSelectQuery={handleSelectQuery}
-            datasetFilter={datasetFilter}
-            projectId={projectId}
-            savedQueryIds={savedQueryIds}
-          />
-        )}
-      </div>
-
-      {/* Sidebar Toggle */}
-      <Tooltip title={sidebarCollapsed ? 'Show Schema Explorer' : 'Hide Schema Explorer'}>
-        <div
-          className="sidebar-toggle"
-          onClick={() => dispatch(toggleSidebar())}
-        >
-          {sidebarCollapsed ? <MenuUnfoldOutlined /> : <MenuFoldOutlined />}
-        </div>
-      </Tooltip>
-
-      {/* Main Content */}
+      {/* Main Content — Schema and Prospector live in the global right inspector */}
       <div className="sqllab-content" ref={contentRef}>
         {/* Optional Header (e.g. project bar) */}
         {headerContent}
@@ -1057,23 +1081,13 @@ export default function SqlLabPage({ datasetFilter, headerContent, projectId, sa
           onEdit={handleTabEdit}
           items={tabs.map((tab) => ({
             key: tab.id,
-            label: editingTabId === tab.id ? (
-              <input
-                className="tab-rename-input"
-                value={editingTabName}
-                onChange={(e) => setEditingTabName(e.target.value)}
-                onBlur={handleTabRenameSubmit}
-                onKeyDown={handleTabRenameKeyDown}
-                autoFocus
-                onClick={(e) => e.stopPropagation()}
-              />
-            ) : (
+            label: (
               <span className="tab-label-wrapper" onDoubleClick={() => {
                 if (tab.isLocked) {
                   message.warning('Unlock the tab before renaming');
                   return;
                 }
-                handleTabDoubleClick(tab.id, tab.name);
+                openRename(tab.id, tab.name);
               }}>
                 <span className="tab-label-text">
                   {tab.name}
@@ -1130,9 +1144,7 @@ export default function SqlLabPage({ datasetFilter, headerContent, projectId, sa
                             message.warning('Unlock the tab before renaming');
                             return;
                           }
-                          // Defer until after the dropdown fully closes, otherwise
-                          // its cleanup blur fires onBlur and cancels the rename.
-                          setTimeout(() => handleTabDoubleClick(tab.id, tab.name), 0);
+                          openRename(tab.id, tab.name);
                         },
                       },
                       {
@@ -1220,6 +1232,7 @@ export default function SqlLabPage({ datasetFilter, headerContent, projectId, sa
             executionTime={executionTime}
             autoLimit={autoLimit ?? 1000}
             onAutoLimitChange={setAutoLimit}
+            sqlLimit={extractSqlLimit(sql)}
             editorSettings={editorSettings}
             onEditorSettingsChange={handleEditorSettingsChange}
             resultsSettings={resultsSettings}
@@ -1413,31 +1426,26 @@ export default function SqlLabPage({ datasetFilter, headerContent, projectId, sa
         ) : null}
       </Modal>
 
-      {/* Prospector Sidebar Toggle */}
-      {prospectorAvailable && (
-        <Tooltip title={prospectorOpen ? 'Hide Prospector' : 'Show Prospector'}>
-          <div className="prospector-sidebar-toggle" onClick={toggleProspector}>
-            <RobotOutlined />
-          </div>
-        </Tooltip>
-      )}
-
-      {/* Prospector Sidebar */}
-      {prospectorAvailable && (
-        <div className={`prospector-sidebar${prospectorOpen ? '' : ' collapsed'}`}>
-          {prospectorOpen && (
-            <ProspectorPanel
-              prospector={prospector}
-              context={aiContext}
-              onInsertCell={notebookHandle ? (code) => {
-                notebookHandle.addCell(code);
-                // Switch to notebook tab if not already there
-                setResultsPanelTab('notebook');
-              } : undefined}
-            />
-          )}
-        </div>
-      )}
+      {/* Rename Tab Modal */}
+      <Modal
+        title="Rename tab"
+        open={renamingTabId !== null}
+        onCancel={closeRename}
+        onOk={submitRename}
+        okText="Rename"
+        okButtonProps={{ disabled: !renameDraft.trim() }}
+        destroyOnClose
+        width={420}
+      >
+        <Input
+          autoFocus
+          value={renameDraft}
+          onChange={(e) => setRenameDraft(e.target.value)}
+          onPressEnter={submitRename}
+          placeholder="Tab name"
+          maxLength={100}
+        />
+      </Modal>
 
       {/* Mobile floating Run button */}
       {isMobile && (

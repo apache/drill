@@ -30,6 +30,7 @@ import {
   BugOutlined,
   ThunderboltOutlined,
   QuestionCircleOutlined,
+  WarningOutlined,
 } from '@ant-design/icons';
 import KeyboardShortcutsModal from './KeyboardShortcutsModal';
 import type { MenuProps } from 'antd';
@@ -48,6 +49,8 @@ interface QueryToolbarProps {
   executionTime?: number;
   autoLimit?: number;
   onAutoLimitChange?: (limit: number | null) => void;
+  /** When the active SQL has its own LIMIT clause (parsed in SqlLabPage). */
+  sqlLimit?: number | null;
   editorSettings?: EditorSettings;
   onEditorSettingsChange?: (settings: EditorSettings) => void;
   resultsSettings?: ResultsSettings;
@@ -73,6 +76,7 @@ export default function QueryToolbar({
   executionTime,
   autoLimit = 1000,
   onAutoLimitChange,
+  sqlLimit,
   editorSettings,
   onEditorSettingsChange,
   resultsSettings,
@@ -188,6 +192,27 @@ export default function QueryToolbar({
             disabled={!autoLimitEnabled}
             style={{ width: isCompact ? 60 : 80 }}
           />
+          {/* Mismatch warnings — surface when the SQL's own LIMIT is being
+              clipped by the auto-limit, OR when auto-limit is off and the
+              query has no LIMIT (unbounded result risk). */}
+          {autoLimitEnabled && sqlLimit != null && sqlLimit > autoLimit && (
+            <Tooltip
+              title={`Your query has LIMIT ${sqlLimit.toLocaleString()}, but the auto-limit caps the result at ${autoLimit.toLocaleString()} rows. Raise the auto-limit (or turn it off) to see all ${sqlLimit.toLocaleString()} rows.`}
+            >
+              <span className="autolimit-warning">
+                <WarningOutlined />
+                <span className="autolimit-warning-label">capped</span>
+              </span>
+            </Tooltip>
+          )}
+          {!autoLimitEnabled && sqlLimit == null && hasSql && (
+            <Tooltip title="Auto-limit is off and this query has no LIMIT clause — it will return every row.">
+              <span className="autolimit-warning is-info">
+                <WarningOutlined />
+                <span className="autolimit-warning-label">unbounded</span>
+              </span>
+            </Tooltip>
+          )}
         </Space>
 
         {/* More / Settings / AI */}
