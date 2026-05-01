@@ -26,6 +26,18 @@ vi.mock('../../api/projects', () => ({
   getProjects: vi.fn(() => Promise.resolve([])),
 }));
 
+vi.mock('../../api/savedQueries', () => ({
+  getSavedQueries: vi.fn(() => Promise.resolve([])),
+}));
+
+vi.mock('../../api/visualizations', () => ({
+  getVisualizations: vi.fn(() => Promise.resolve([])),
+}));
+
+vi.mock('../../api/dashboards', () => ({
+  getDashboards: vi.fn(() => Promise.resolve([])),
+}));
+
 function createQueryClient() {
   return new QueryClient({
     defaultOptions: {
@@ -61,7 +73,9 @@ describe('CommandPalette', () => {
     fireEvent.keyDown(window, { key: 'k', ctrlKey: true });
 
     await waitFor(() => {
-      expect(screen.getByPlaceholderText('Search projects...')).toBeInTheDocument();
+      expect(
+        screen.getByPlaceholderText(/Search projects, queries, visualizations, dashboards/i)
+      ).toBeInTheDocument();
     });
   });
 
@@ -72,7 +86,9 @@ describe('CommandPalette', () => {
     fireEvent.keyDown(window, { key: 'k', ctrlKey: true });
 
     await waitFor(() => {
-      expect(screen.getByPlaceholderText('Search projects...')).toBeInTheDocument();
+      expect(
+        screen.getByPlaceholderText(/Search projects, queries, visualizations, dashboards/i)
+      ).toBeInTheDocument();
     });
   });
 });
