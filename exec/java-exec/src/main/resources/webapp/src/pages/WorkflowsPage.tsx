@@ -15,39 +15,33 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import { useState, useMemo } from 'react';
+import { useState, useMemo, type ReactNode } from 'react';
 import {
-  Card,
-  Table,
-  Typography,
-  Space,
   Tag,
   Button,
   Tooltip,
-  Empty,
   Spin,
   Input,
   InputNumber,
   Switch,
-  Popconfirm,
   message,
-  Alert,
-  Descriptions,
-  Badge,
+  Dropdown,
+  Modal,
 } from 'antd';
+import type { MenuProps } from 'antd';
 import {
   SearchOutlined,
-  CheckCircleFilled,
-  CloseCircleFilled,
-  MinusCircleFilled,
-  ClockCircleOutlined,
   DeleteOutlined,
   EditOutlined,
   ReloadOutlined,
   SettingOutlined,
-  WarningOutlined,
   PlayCircleOutlined,
   PauseCircleOutlined,
+  ClockCircleOutlined,
+  WarningOutlined,
+  MoreOutlined,
+  CaretRightOutlined,
+  DatabaseOutlined,
 } from '@ant-design/icons';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import {
@@ -61,19 +55,25 @@ import {
   updateScheduleConfig,
 } from '../api/schedules';
 import { getSavedQueries } from '../api/savedQueries';
+import { usePageChrome } from '../contexts/AppChromeContext';
 import type { QuerySchedule, QuerySnapshot } from '../types';
-import type { ColumnsType } from 'antd/es/table';
 import ScheduleModal from '../components/query-editor/ScheduleModal';
 import Markdown from 'react-markdown';
 import rehypeRaw from 'rehype-raw';
 
-const { Title, Text } = Typography;
+type Bucket = 'now' | 'today' | 'tomorrow' | 'week' | 'later' | 'inactive' | 'expired';
+type Filter = 'all' | 'active' | 'paused' | 'expiring' | 'alerts' | 'data';
 
-const FREQUENCY_LABELS: Record<string, string> = {
-  hourly: 'Hourly',
-  daily: 'Daily',
-  weekly: 'Weekly',
-  monthly: 'Monthly',
+const BUCKET_ORDER: Bucket[] = ['now', 'today', 'tomorrow', 'week', 'later', 'inactive', 'expired'];
+
+const BUCKET_LABELS: Record<Bucket, string> = {
+  now: 'Now',
+  today: 'Today',
+  tomorrow: 'Tomorrow',
+  week: 'This Week',
+  later: 'Later',
+  inactive: 'Inactive',
+  expired: 'Expired',
 };
 
 const DAY_LABELS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
@@ -90,7 +90,7 @@ function formatSchedule(s: QuerySchedule): string {
     case 'monthly':
       return `${s.dayOfMonth ?? 1}${ordinalSuffix(s.dayOfMonth ?? 1)} of month at ${time}`;
     default:
-      return FREQUENCY_LABELS[s.frequency] || s.frequency;
+      return s.frequency;
   }
 }
 
@@ -110,38 +110,127 @@ function daysUntilExpiry(expiresAt?: string): number | null {
   if (!expiresAt) {
     return null;
   }
-  const diff = new Date(expiresAt).getTime() - Date.now();
-  return Math.ceil(diff / 86400000);
+  return Math.ceil((new Date(expiresAt).getTime() - Date.now()) / 86400000);
 }
 
-function RunStatusDots({ snapshots }: { snapshots: QuerySnapshot[] }) {
-  const recent = snapshots.slice(0, 5);
+function timeUntil(iso: string | undefined): string {
+  if (!iso) {
+    return '—';
+  }
+  const ms = new Date(iso).getTime() - Date.now();
+  if (ms < 0) {
+    return 'overdue';
+  }
+  if (ms < 60_000) {
+    return 'in <1m';
+  }
+  const min = Math.floor(ms / 60_000);
+  if (min < 60) {
+    return `in ${min}m`;
+  }
+  const hr = Math.floor(min / 60);
+  if (hr < 24) {
+    return `in ${hr}h`;
+  }
+  const days = Math.floor(hr / 24);
+  if (days < 7) {
+    return `in ${days}d`;
+  }
+  if (days < 30) {
+    return `in ${Math.floor(days / 7)}w`;
+  }
+  return new Date(iso).toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
+}
+
+function bucketFor(s: QuerySchedule): Bucket {
+  if (s.status === 'expired') {
+    return 'expired';
+  }
+  if (!s.enabled || s.paused) {
+    return 'inactive';
+  }
+  if (s.isRunning) {
+    return 'now';
+  }
+  if (!s.nextRunAt) {
+    return 'later';
+  }
+  const next = new Date(s.nextRunAt).getTime();
+  const now = Date.now();
+  if (next < now) {
+    return 'now';
+  }
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  const tomorrow = new Date(today);
+  tomorrow.setDate(today.getDate() + 1);
+  const dayAfter = new Date(tomorrow);
+  dayAfter.setDate(tomorrow.getDate() + 1);
+  const weekFromNow = new Date(today);
+  weekFromNow.setDate(today.getDate() + 7);
+
+  if (next < tomorrow.getTime()) {
+    return 'today';
+  }
+  if (next < dayAfter.getTime()) {
+    return 'tomorrow';
+  }
+  if (next < weekFromNow.getTime()) {
+    return 'week';
+  }
+  return 'later';
+}
+
+function statusColor(s: QuerySchedule, expiringSoon: boolean): string {
+  if (s.status === 'expired') {
+    return 'var(--color-error)';
+  }
+  if (!s.enabled || s.paused) {
+    return 'var(--color-warning)';
+  }
+  if (s.isRunning) {
+    return 'var(--color-primary)';
+  }
+  if (expiringSoon) {
+    return 'var(--color-warning)';
+  }
+  return 'var(--color-success)';
+}
+
+function RunDots({ snapshots }: { snapshots: QuerySnapshot[] }) {
+  const recent = snapshots.slice(0, 5).reverse();
   if (recent.length === 0) {
-    return <Text type="secondary">No runs</Text>;
+    return <span className="workflow-row-runs is-empty">No runs</span>;
   }
   return (
-    <Space size={2}>
+    <span className="workflow-row-runs">
       {recent.map((snap) => (
-        <Tooltip key={snap.id} title={`${new Date(snap.executedAt).toLocaleString()} - ${snap.status}`}>
-          {snap.status === 'success'
-            ? <CheckCircleFilled style={{ color: '#52c41a', fontSize: 14 }} />
-            : <CloseCircleFilled style={{ color: '#ff4d4f', fontSize: 14 }} />
-          }
+        <Tooltip key={snap.id} title={`${new Date(snap.executedAt).toLocaleString()} — ${snap.status}`}>
+          <span
+            className={`workflow-run-dot is-${snap.status}`}
+            aria-label={snap.status}
+          />
         </Tooltip>
       ))}
-    </Space>
+    </span>
   );
 }
 
-export default function WorkflowsPage() {
+interface WorkflowsPageProps {
+  /** When set, only schedules whose savedQueryId is in this list are shown. */
+  filterSavedQueryIds?: string[];
+  /** Set to disable workflow-config editing on project-scoped views. */
+  hideSettings?: boolean;
+}
+
+export default function WorkflowsPage({ filterSavedQueryIds, hideSettings }: WorkflowsPageProps = {}) {
   const queryClient = useQueryClient();
   const [searchText, setSearchText] = useState('');
-  const [editingSchedule, setEditingSchedule] = useState<{
-    id: string;
-    name: string;
-    sql?: string;
-  } | null>(null);
+  const [filter, setFilter] = useState<Filter>('all');
+  const [editingSchedule, setEditingSchedule] = useState<{ id: string; name: string; sql?: string } | null>(null);
   const [runningIds, setRunningIds] = useState<Set<string>>(new Set());
+  const [expandedIds, setExpandedIds] = useState<Set<string>>(new Set());
+  const [expandedSnapshots, setExpandedSnapshots] = useState<Set<string>>(new Set());
   const [showConfig, setShowConfig] = useState(false);
   const [configDraft, setConfigDraft] = useState<{
     expirationEnabled: boolean;
@@ -154,13 +243,16 @@ export default function WorkflowsPage() {
     queryFn: getScheduleConfig,
   });
 
-  const config = useMemo(() => configDraft || serverConfig || {
-    expirationEnabled: true,
-    expirationDays: 90,
-    warningDaysBeforeExpiry: 14,
-  }, [configDraft, serverConfig]);
+  const config = useMemo(
+    () => configDraft || serverConfig || {
+      expirationEnabled: true,
+      expirationDays: 90,
+      warningDaysBeforeExpiry: 14,
+    },
+    [configDraft, serverConfig],
+  );
 
-  const { data: schedules, isLoading } = useQuery({
+  const { data: schedules, isLoading, refetch, isFetching } = useQuery({
     queryKey: ['schedules'],
     queryFn: getSchedules,
   });
@@ -170,7 +262,6 @@ export default function WorkflowsPage() {
     queryFn: getSavedQueries,
   });
 
-  // Build a map of schedule ID -> snapshots
   const { data: allSnapshots } = useQuery({
     queryKey: ['all-snapshots', schedules?.map((s) => s.id).join(',')],
     queryFn: async () => {
@@ -194,52 +285,123 @@ export default function WorkflowsPage() {
     return m;
   }, [savedQueries]);
 
+  const isExpiring = (s: QuerySchedule): boolean => {
+    if (!config.expirationEnabled) {
+      return false;
+    }
+    const days = daysUntilExpiry(s.expiresAt);
+    return days !== null && days > 0 && days <= config.warningDaysBeforeExpiry && s.enabled;
+  };
+
+  const hasAlerts = (s: QuerySchedule): boolean => {
+    const latest = (allSnapshots?.[s.id] || [])[0];
+    return !!(latest?.triggeredAlerts && latest.triggeredAlerts.length > 0);
+  };
+
+  /**
+   * "Visible data" means a snapshot can be inspected for content beyond bare
+   * status: an AI summary, a persisted result path, or in-page preview rows.
+   */
+  const hasViewableData = (s: QuerySchedule): boolean => {
+    const snaps = allSnapshots?.[s.id] || [];
+    return snaps.some(
+      (sn) =>
+        !!sn.aiSummary ||
+        !!sn.resultPath ||
+        (Array.isArray(sn.previewRows) && sn.previewRows.length > 0),
+    );
+  };
+
   const filteredSchedules = useMemo(() => {
     if (!schedules) {
       return [];
     }
-    if (!searchText) {
-      return schedules;
+    let result = schedules;
+    if (filterSavedQueryIds) {
+      const allowed = new Set(filterSavedQueryIds);
+      result = result.filter((s) => allowed.has(s.savedQueryId));
     }
-    const lower = searchText.toLowerCase();
-    return schedules.filter((s) => {
-      const qName = queryMap[s.savedQueryId]?.name || '';
-      return (
-        qName.toLowerCase().includes(lower) ||
-        (s.description && s.description.toLowerCase().includes(lower)) ||
-        s.frequency.toLowerCase().includes(lower)
-      );
-    });
-  }, [schedules, searchText, queryMap]);
+    if (filter === 'active') {
+      result = result.filter((s) => s.enabled && !s.paused && s.status !== 'expired');
+    } else if (filter === 'paused') {
+      result = result.filter((s) => !s.enabled || s.paused);
+    } else if (filter === 'expiring') {
+      result = result.filter(isExpiring);
+    } else if (filter === 'alerts') {
+      result = result.filter(hasAlerts);
+    } else if (filter === 'data') {
+      result = result.filter(hasViewableData);
+    }
+    if (searchText) {
+      const lower = searchText.toLowerCase();
+      result = result.filter((s) => {
+        const qName = queryMap[s.savedQueryId]?.name || '';
+        return (
+          qName.toLowerCase().includes(lower) ||
+          (s.description && s.description.toLowerCase().includes(lower)) ||
+          s.frequency.toLowerCase().includes(lower)
+        );
+      });
+    }
+    return result;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [schedules, searchText, filter, filterSavedQueryIds, queryMap, allSnapshots, config.expirationEnabled, config.warningDaysBeforeExpiry]);
 
-  // Schedules expiring soon
-  const expiringSchedules = useMemo(() => {
-    if (!config.expirationEnabled || !schedules) {
-      return [];
+  const grouped = useMemo(() => {
+    const groups = new Map<Bucket, QuerySchedule[]>();
+    BUCKET_ORDER.forEach((b) => groups.set(b, []));
+    for (const s of filteredSchedules) {
+      const b = bucketFor(s);
+      groups.get(b)!.push(s);
     }
-    return schedules.filter((s) => {
-      const days = daysUntilExpiry(s.expiresAt);
-      return days !== null && days > 0 && days <= config.warningDaysBeforeExpiry && s.enabled;
-    });
-  }, [schedules, config]);
+    // Sort each bucket by the most-relevant date for that bucket's intent:
+    //  - Now/Today/Tomorrow/Week/Later: by nextRunAt ascending (soonest first)
+    //  - Inactive/Expired: by lastRunAt descending (most recently run first)
+    const bucketKey = (s: QuerySchedule, b: Bucket): number => {
+      if (b === 'inactive' || b === 'expired') {
+        if (s.lastRunAt) {
+          return -new Date(s.lastRunAt).getTime(); // negative for desc
+        }
+        return -new Date(s.createdAt).getTime();
+      }
+      if (s.nextRunAt) {
+        return new Date(s.nextRunAt).getTime();
+      }
+      return Number.MAX_SAFE_INTEGER;
+    };
+    for (const b of BUCKET_ORDER) {
+      const arr = groups.get(b)!;
+      arr.sort((a, c) => bucketKey(a, b) - bucketKey(c, b));
+    }
+    return groups;
+  }, [filteredSchedules]);
+
+  const stats = useMemo(() => {
+    const total = schedules?.length ?? 0;
+    const expiring = (schedules || []).filter(isExpiring).length;
+    const alertCount = (schedules || []).filter(hasAlerts).length;
+    const running = (schedules || []).filter((s) => s.isRunning).length;
+    return { total, expiring, alertCount, running };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [schedules, allSnapshots, config.expirationEnabled, config.warningDaysBeforeExpiry]);
 
   const handleDelete = async (id: string) => {
     try {
       await deleteSchedule(id);
-      message.success('Schedule deleted');
+      message.success('Workflow deleted');
       queryClient.invalidateQueries({ queryKey: ['schedules'] });
     } catch {
-      message.error('Failed to delete schedule');
+      message.error('Failed to delete');
     }
   };
 
   const handleRenew = async (id: string) => {
     try {
       await renewSchedule(id);
-      message.success(`Schedule renewed for ${config.expirationDays} days`);
+      message.success(`Renewed for ${config.expirationDays} days`);
       queryClient.invalidateQueries({ queryKey: ['schedules'] });
     } catch {
-      message.error('Failed to renew schedule');
+      message.error('Failed to renew');
     }
   };
 
@@ -247,11 +409,11 @@ export default function WorkflowsPage() {
     try {
       setRunningIds((prev) => new Set(prev).add(id));
       await runScheduleNow(id);
-      message.success('Schedule executed successfully');
+      message.success('Workflow executed');
       queryClient.invalidateQueries({ queryKey: ['schedules'] });
       queryClient.invalidateQueries({ queryKey: ['all-snapshots'] });
     } catch {
-      message.error('Failed to run schedule');
+      message.error('Failed to run');
     } finally {
       setRunningIds((prev) => {
         const next = new Set(prev);
@@ -264,463 +426,382 @@ export default function WorkflowsPage() {
   const handleTogglePause = async (record: QuerySchedule) => {
     try {
       await updateSchedule(record.id, { paused: !record.paused });
-      message.success(record.paused ? 'Schedule resumed' : 'Schedule paused');
+      message.success(record.paused ? 'Resumed' : 'Paused');
       queryClient.invalidateQueries({ queryKey: ['schedules'] });
     } catch {
-      message.error('Failed to update schedule');
+      message.error('Failed to update');
     }
   };
 
   const handleSaveConfig = async () => {
     try {
       await updateScheduleConfig(config);
-      message.success('Workflow settings saved');
+      message.success('Settings saved');
       setConfigDraft(null);
       setShowConfig(false);
       queryClient.invalidateQueries({ queryKey: ['workflow-config'] });
       queryClient.invalidateQueries({ queryKey: ['schedules'] });
     } catch {
-      message.error('Failed to save settings. Admin privileges may be required.');
+      message.error('Failed to save settings (admin required)');
     }
   };
 
-  // Schedules with triggered alerts in their latest snapshot
-  const schedulesWithAlerts = useMemo(() => {
-    if (!schedules || !allSnapshots) {
-      return [];
-    }
-    return schedules.filter((s) => {
-      const snaps = allSnapshots[s.id] || [];
-      const latest = snaps[0];
-      return latest?.triggeredAlerts && latest.triggeredAlerts.length > 0;
+  const toggleExpand = (id: string) => {
+    setExpandedIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) {
+        next.delete(id);
+      } else {
+        next.add(id);
+      }
+      return next;
     });
-  }, [schedules, allSnapshots]);
+  };
 
-  const columns: ColumnsType<QuerySchedule> = [
-    {
-      title: 'Query Name',
-      key: 'name',
-      sorter: (a, b) => {
-        const aName = queryMap[a.savedQueryId]?.name || '';
-        const bName = queryMap[b.savedQueryId]?.name || '';
-        return aName.localeCompare(bName);
-      },
-      render: (_, record) => {
-        const q = queryMap[record.savedQueryId];
-        return (
-          <Space direction="vertical" size={0}>
-            <Text strong>{q?.name || record.savedQueryId}</Text>
-            {record.description && (
-              <Text type="secondary" style={{ fontSize: 12 }}>{record.description}</Text>
-            )}
-          </Space>
-        );
-      },
-    },
-    {
-      title: 'Status',
-      key: 'status',
-      width: 100,
-      render: (_, record) => {
-        if (!record.enabled) {
-          return <Tag icon={<MinusCircleFilled />}>Disabled</Tag>;
-        }
-        if (record.status === 'expired') {
-          return <Tag color="error">Expired</Tag>;
-        }
-        if (record.status === 'paused' || record.paused) {
-          return <Tag color="warning" icon={<PauseCircleOutlined />}>Paused</Tag>;
-        }
-        const days = daysUntilExpiry(record.expiresAt);
-        if (days !== null && days > 0 && days <= config.warningDaysBeforeExpiry) {
-          return (
-            <Tooltip title={`Expires in ${days} day${days !== 1 ? 's' : ''}`}>
-              <Tag color="orange" icon={<WarningOutlined />}>Expiring</Tag>
-            </Tooltip>
-          );
-        }
-        if (record.status === 'active') {
-          return <Tag color="success" icon={<CheckCircleFilled />}>Active</Tag>;
-        }
-        return <Tag color="success" icon={<CheckCircleFilled />}>Active</Tag>;
-      },
-    },
-    {
-      title: 'Recent Runs',
-      key: 'runs',
-      width: 120,
-      render: (_, record) => (
-        <RunStatusDots snapshots={allSnapshots?.[record.id] || []} />
-      ),
-    },
-    {
-      title: 'Alerts',
-      key: 'alerts',
-      width: 80,
-      render: (_, record) => {
-        const latestSnap = (allSnapshots?.[record.id] || [])[0];
-        const alertCount = latestSnap?.triggeredAlerts?.length || 0;
-        return alertCount > 0
-          ? <Tag color="red">{alertCount} alert{alertCount !== 1 ? 's' : ''}</Tag>
-          : <Text type="secondary">None</Text>;
-      },
-    },
-    {
-      title: 'Results',
-      key: 'results',
-      width: 80,
-      render: (_, record) => {
-        return record.persistResults
-          ? <Tag color="blue">{record.resultFormat || 'parquet'}</Tag>
-          : <Text type="secondary">-</Text>;
-      },
-    },
-    {
-      title: 'Schedule',
-      key: 'schedule',
-      width: 200,
-      render: (_, record) => (
-        <Space direction="vertical" size={0}>
-          <Text>{formatSchedule(record)}</Text>
-          <Text type="secondary" style={{ fontSize: 11 }}>{FREQUENCY_LABELS[record.frequency]}</Text>
-        </Space>
-      ),
-    },
-    {
-      title: 'Created',
-      dataIndex: 'createdAt',
-      key: 'createdAt',
-      width: 140,
-      sorter: (a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime(),
-      render: (val: string) => (
-        <Text type="secondary">{new Date(val).toLocaleDateString()}</Text>
-      ),
-    },
-    {
-      title: 'Last Run',
-      dataIndex: 'lastRunAt',
-      key: 'lastRunAt',
-      width: 160,
-      sorter: (a, b) => {
-        const aTime = a.lastRunAt ? new Date(a.lastRunAt).getTime() : 0;
-        const bTime = b.lastRunAt ? new Date(b.lastRunAt).getTime() : 0;
-        return aTime - bTime;
-      },
-      render: (val?: string) => val
-        ? <Text type="secondary">{new Date(val).toLocaleString()}</Text>
-        : <Text type="secondary">Never</Text>,
-    },
-    {
-      title: 'Expires',
-      key: 'expires',
-      width: 120,
-      render: (_, record) => {
-        if (!record.expiresAt) {
-          return <Text type="secondary">Never</Text>;
-        }
-        const days = daysUntilExpiry(record.expiresAt);
-        if (days !== null && days <= 0) {
-          return <Tag color="error">Expired</Tag>;
-        }
-        if (days !== null && days <= config.warningDaysBeforeExpiry) {
-          return (
-            <Tooltip title={`Renew to extend ${config.expirationDays} more days`}>
-              <Tag color="warning">{days}d left</Tag>
-            </Tooltip>
-          );
-        }
-        return <Text type="secondary">{days}d left</Text>;
-      },
-    },
-    {
-      title: 'Actions',
-      key: 'actions',
-      width: 220,
-      render: (_, record) => {
-        const q = queryMap[record.savedQueryId];
-        const days = daysUntilExpiry(record.expiresAt);
-        const needsRenewal = days !== null && days <= config.warningDaysBeforeExpiry;
-        const isRunning = record.isRunning || runningIds.has(record.id);
-        return (
-          <Space>
-            {!isRunning && (
-              <Tooltip title="Run now">
-                <Button
-                  size="small"
-                  icon={<PlayCircleOutlined />}
-                  loading={runningIds.has(record.id)}
-                  onClick={() => handleRunNow(record.id)}
-                />
-              </Tooltip>
-            )}
-            <Tooltip title={record.paused ? 'Resume' : 'Pause'}>
-              <Button
-                size="small"
-                icon={record.paused ? <PlayCircleOutlined /> : <PauseCircleOutlined />}
-                onClick={() => handleTogglePause(record)}
-              />
-            </Tooltip>
-            {needsRenewal && (
-              <Tooltip title="Renew schedule">
-                <Button
-                  size="small"
-                  type="primary"
-                  icon={<ReloadOutlined />}
-                  onClick={() => handleRenew(record.id)}
-                >
-                  Renew
-                </Button>
-              </Tooltip>
-            )}
-            <Tooltip title="Edit">
-              <Button
-                size="small"
-                icon={<EditOutlined />}
-                onClick={() => setEditingSchedule({
-                  id: record.savedQueryId,
-                  name: q?.name || 'Query',
-                  sql: q?.sql,
-                })}
-              />
-            </Tooltip>
-            <Popconfirm
-              title="Delete this schedule?"
-              onConfirm={() => handleDelete(record.id)}
-              okText="Delete"
-              cancelText="Cancel"
-              okButtonProps={{ danger: true }}
-            >
-              <Tooltip title="Delete">
-                <Button size="small" danger icon={<DeleteOutlined />} />
-              </Tooltip>
-            </Popconfirm>
-          </Space>
-        );
-      },
-    },
-  ];
+  const toolbarActions = useMemo(
+    () => (
+      <span style={{ display: 'inline-flex', gap: 4 }}>
+        <Tooltip title="Refresh">
+          <Button type="text" size="small" icon={<ReloadOutlined spin={isFetching} />} onClick={() => refetch()} />
+        </Tooltip>
+        {!hideSettings && (
+          <Tooltip title="Workflow settings">
+            <Button type="text" size="small" icon={<SettingOutlined />} onClick={() => setShowConfig((v) => !v)} />
+          </Tooltip>
+        )}
+      </span>
+    ),
+    [refetch, isFetching, hideSettings],
+  );
+  usePageChrome({ toolbarActions });
 
   return (
-    <div style={{ padding: 24 }}>
-      {/* Expiration warnings */}
-      {expiringSchedules.length > 0 && (
-        <Alert
-          type="warning"
-          showIcon
-          icon={<WarningOutlined />}
-          style={{ marginBottom: 16 }}
-          message={`${expiringSchedules.length} scheduled ${expiringSchedules.length === 1 ? 'query is' : 'queries are'} expiring soon`}
-          description={
-            <Space direction="vertical" size={4}>
-              {expiringSchedules.map((s) => {
-                const q = queryMap[s.savedQueryId];
-                const days = daysUntilExpiry(s.expiresAt);
-                return (
-                  <Space key={s.id}>
-                    <Text>{q?.name || s.savedQueryId}</Text>
-                    <Tag color="warning">{days}d left</Tag>
-                    <Button size="small" type="link" onClick={() => handleRenew(s.id)}>
-                      Renew now
-                    </Button>
-                  </Space>
-                );
-              })}
-            </Space>
-          }
-        />
-      )}
-
-      {/* Alert warnings */}
-      {schedulesWithAlerts.length > 0 && (
-        <Alert
-          type="info"
-          showIcon
-          icon={<WarningOutlined />}
-          style={{ marginBottom: 16 }}
-          message={`${schedulesWithAlerts.length} scheduled ${schedulesWithAlerts.length === 1 ? 'query has' : 'queries have'} triggered alerts`}
-          description={
-            <Space direction="vertical" size={4}>
-              {schedulesWithAlerts.map((s) => {
-                const q = queryMap[s.savedQueryId];
-                const latestSnap = (allSnapshots?.[s.id] || [])[0];
-                const alertCount = latestSnap?.triggeredAlerts?.length || 0;
-                return (
-                  <Space key={s.id}>
-                    <Text>{q?.name || s.savedQueryId}</Text>
-                    <Tag color="red">{alertCount} alert{alertCount !== 1 ? 's' : ''}</Tag>
-                  </Space>
-                );
-              })}
-            </Space>
-          }
-        />
-      )}
-
-      <Card>
-        <Space direction="vertical" style={{ width: '100%' }} size="large">
-          {/* Header */}
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <Title level={3} style={{ margin: 0 }}>
-              <ClockCircleOutlined style={{ marginRight: 8 }} />
-              Workflows
-            </Title>
-            <Space>
-              <Tooltip title="Workflow settings">
-                <Button
-                  icon={<SettingOutlined />}
-                  onClick={() => setShowConfig(!showConfig)}
-                >
-                  Settings
-                </Button>
-              </Tooltip>
-            </Space>
-          </div>
-
-          {/* Settings panel */}
-          {showConfig && (
-            <Card size="small" title="Workflow Expiration Settings" extra={<Tag>Admin</Tag>}>
-              <Space direction="vertical" style={{ width: '100%' }}>
-                <Descriptions column={1} size="small">
-                  <Descriptions.Item label="Auto-expire scheduled queries">
-                    <Switch
-                      checked={config.expirationEnabled}
-                      onChange={(checked) => setConfigDraft({ ...config, expirationEnabled: checked })}
-                    />
-                  </Descriptions.Item>
-                  {config.expirationEnabled && (
-                    <>
-                      <Descriptions.Item label="Expiration period (days)">
-                        <InputNumber
-                          min={7}
-                          max={365}
-                          value={config.expirationDays}
-                          onChange={(val) => setConfigDraft({ ...config, expirationDays: val || 90 })}
-                          style={{ width: 100 }}
-                        />
-                      </Descriptions.Item>
-                      <Descriptions.Item label="Warning before expiry (days)">
-                        <InputNumber
-                          min={1}
-                          max={30}
-                          value={config.warningDaysBeforeExpiry}
-                          onChange={(val) => setConfigDraft({ ...config, warningDaysBeforeExpiry: val || 14 })}
-                          style={{ width: 100 }}
-                        />
-                      </Descriptions.Item>
-                    </>
+    <div className="page-workflows">
+      <header className="page-workflows-header">
+        <div>
+          <h1 className="page-workflows-title">Workflows</h1>
+          <p className="page-workflows-subtitle">
+            {schedules === undefined
+              ? 'Loading…'
+              : (
+                <>
+                  {stats.running > 0 && (
+                    <span className="page-workflows-stat-pill page-workflows-stat-running">
+                      <span className="page-workflows-running-dot" />
+                      {stats.running} running
+                    </span>
                   )}
-                </Descriptions>
-                <Button type="primary" size="small" onClick={handleSaveConfig}>
-                  Save Settings
-                </Button>
-              </Space>
-            </Card>
+                  {stats.alertCount > 0 && (
+                    <span
+                      className="page-workflows-stat-pill page-workflows-stat-alert"
+                      onClick={() => setFilter('alerts')}
+                      role="button"
+                      tabIndex={0}
+                    >
+                      <WarningOutlined />
+                      {stats.alertCount} with alerts
+                    </span>
+                  )}
+                  {stats.expiring > 0 && (
+                    <span
+                      className="page-workflows-stat-pill page-workflows-stat-expiring"
+                      onClick={() => setFilter('expiring')}
+                      role="button"
+                      tabIndex={0}
+                    >
+                      <ClockCircleOutlined />
+                      {stats.expiring} expiring
+                    </span>
+                  )}{' '}
+                  {stats.total === 0
+                    ? 'No scheduled queries yet'
+                    : `${stats.total} total`}
+                </>
+              )}
+          </p>
+        </div>
+      </header>
+
+      {/* Settings panel — slides down when toggled */}
+      {showConfig && (
+        <div className="page-workflows-settings">
+          <div className="page-workflows-settings-header">
+            <span>Workflow Expiration</span>
+            <Tag>Admin</Tag>
+          </div>
+          <div className="page-workflows-settings-grid">
+            <label className="page-workflows-settings-row">
+              <span>Auto-expire scheduled queries</span>
+              <Switch
+                checked={config.expirationEnabled}
+                onChange={(v) => setConfigDraft({ ...config, expirationEnabled: v })}
+              />
+            </label>
+            {config.expirationEnabled && (
+              <>
+                <label className="page-workflows-settings-row">
+                  <span>Expiration period (days)</span>
+                  <InputNumber
+                    min={7}
+                    max={365}
+                    value={config.expirationDays}
+                    onChange={(v) => setConfigDraft({ ...config, expirationDays: v || 90 })}
+                    style={{ width: 100 }}
+                  />
+                </label>
+                <label className="page-workflows-settings-row">
+                  <span>Warning before expiry (days)</span>
+                  <InputNumber
+                    min={1}
+                    max={30}
+                    value={config.warningDaysBeforeExpiry}
+                    onChange={(v) => setConfigDraft({ ...config, warningDaysBeforeExpiry: v || 14 })}
+                    style={{ width: 100 }}
+                  />
+                </label>
+              </>
+            )}
+          </div>
+          <div className="page-workflows-settings-actions">
+            <Button size="small" onClick={() => { setShowConfig(false); setConfigDraft(null); }}>
+              Cancel
+            </Button>
+            <Button type="primary" size="small" onClick={handleSaveConfig}>
+              Save
+            </Button>
+          </div>
+        </div>
+      )}
+
+      <div className="page-workflows-toolbar">
+        <Input
+          placeholder="Search workflows…"
+          prefix={<SearchOutlined style={{ color: 'var(--color-text-tertiary)' }} />}
+          value={searchText}
+          onChange={(e) => setSearchText(e.target.value)}
+          allowClear
+          className="page-workflows-search"
+        />
+
+        <div className="page-workflows-chips">
+          {(['all', 'active', 'paused', 'data', 'expiring', 'alerts'] as Filter[]).map((f) => (
+            <button
+              key={f}
+              type="button"
+              className={`page-workflows-chip${filter === f ? ' is-active' : ''}`}
+              onClick={() => setFilter(f)}
+            >
+              {f === 'all' && 'All'}
+              {f === 'active' && (
+                <>
+                  <span className="page-workflows-chip-dot" style={{ background: 'var(--color-success)' }} />
+                  Active
+                </>
+              )}
+              {f === 'paused' && (
+                <>
+                  <span className="page-workflows-chip-dot" style={{ background: 'var(--color-warning)' }} />
+                  Paused
+                </>
+              )}
+              {f === 'data' && (
+                <>
+                  <DatabaseOutlined style={{ fontSize: 11, marginRight: 4 }} />
+                  Data
+                </>
+              )}
+              {f === 'expiring' && 'Expiring'}
+              {f === 'alerts' && 'Alerts'}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {isLoading ? (
+        <div className="page-workflows-loading"><Spin size="large" /></div>
+      ) : filteredSchedules.length === 0 ? (
+        <div className="page-workflows-empty">
+          <ClockCircleOutlined className="page-workflows-empty-glyph" />
+          <h2>{searchText || filter !== 'all' ? 'No matches' : 'No workflows yet'}</h2>
+          <p>
+            {searchText || filter !== 'all'
+              ? 'Try a different search or filter.'
+              : 'Schedule a saved query to create a workflow that runs automatically.'}
+          </p>
+          {(searchText || filter !== 'all') && (
+            <Button onClick={() => { setSearchText(''); setFilter('all'); }}>Clear filters</Button>
           )}
+        </div>
+      ) : (
+        <div className="page-workflows-list">
+          {BUCKET_ORDER.map((bucket) => {
+            const items = grouped.get(bucket) ?? [];
+            if (items.length === 0) {
+              return null;
+            }
+            return (
+              <section key={bucket} className={`workflow-bucket workflow-bucket-${bucket}`}>
+                <h2 className="workflow-bucket-header">
+                  {BUCKET_LABELS[bucket]}
+                  <span className="workflow-bucket-count">{items.length}</span>
+                </h2>
+                <ul className="workflow-bucket-list">
+                  {items.map((s) => {
+                    const q = queryMap[s.savedQueryId];
+                    const expanded = expandedIds.has(s.id);
+                    const expiringSoon = isExpiring(s);
+                    const dotColor = statusColor(s, expiringSoon);
+                    const isRunning = s.isRunning || runningIds.has(s.id);
+                    const days = daysUntilExpiry(s.expiresAt);
+                    const needsRenewal = days !== null && days > 0 && days <= config.warningDaysBeforeExpiry;
+                    const snapshots = allSnapshots?.[s.id] || [];
+                    const latestSnap = snapshots[0];
+                    const alertCount = latestSnap?.triggeredAlerts?.length ?? 0;
 
-          {/* Search */}
-          <Input
-            placeholder="Search workflows by query name, description, or frequency..."
-            prefix={<SearchOutlined />}
-            value={searchText}
-            onChange={(e) => setSearchText(e.target.value)}
-            allowClear
-            style={{ maxWidth: 400 }}
-          />
+                    const moreItems: MenuProps['items'] = [
+                      {
+                        key: 'edit',
+                        icon: <EditOutlined />,
+                        label: 'Edit schedule…',
+                        onClick: () => setEditingSchedule({ id: s.savedQueryId, name: q?.name ?? 'Query', sql: q?.sql }),
+                      },
+                      {
+                        key: 'pause',
+                        icon: s.paused ? <PlayCircleOutlined /> : <PauseCircleOutlined />,
+                        label: s.paused ? 'Resume' : 'Pause',
+                        onClick: () => handleTogglePause(s),
+                      },
+                      ...(needsRenewal
+                        ? [{ key: 'renew', icon: <ReloadOutlined />, label: 'Renew', onClick: () => handleRenew(s.id) }]
+                        : []),
+                      { type: 'divider' as const },
+                      {
+                        key: 'delete',
+                        icon: <DeleteOutlined />,
+                        label: 'Delete',
+                        danger: true,
+                        onClick: () => {
+                          Modal.confirm({
+                            title: 'Delete this workflow?',
+                            content: 'This action cannot be undone.',
+                            okText: 'Delete',
+                            okButtonProps: { danger: true },
+                            onOk: () => handleDelete(s.id),
+                          });
+                        },
+                      },
+                    ];
 
-          {/* Table */}
-          {isLoading ? (
-            <div style={{ textAlign: 'center', padding: 40 }}>
-              <Spin size="large" />
-            </div>
-          ) : filteredSchedules.length === 0 ? (
-            <Empty
-              description={
-                searchText
-                  ? 'No workflows match your search'
-                  : 'No scheduled queries yet. Schedule a saved query to create a workflow.'
-              }
-            />
-          ) : (
-            <Table
-              dataSource={filteredSchedules}
-              columns={columns}
-              rowKey="id"
-              pagination={{
-                pageSize: 15,
-                showSizeChanger: true,
-                showTotal: (total) => `${total} workflows`,
-              }}
-              expandable={{
-                expandedRowRender: (record) => {
-                  const snaps = allSnapshots?.[record.id] || [];
-                  const latest = snaps[0];
-                  if (!latest) {
-                    return <Empty description="No runs yet" />;
-                  }
-                  return (
-                    <Space direction="vertical" style={{ width: '100%' }} size="small">
-                      {latest.aiSummary && (
-                        <Card size="small" title="AI Summary">
-                          <Markdown rehypePlugins={[rehypeRaw]}>{latest.aiSummary}</Markdown>
-                        </Card>
-                      )}
-                      {latest.triggeredAlerts && latest.triggeredAlerts.length > 0 && (
-                        <div>
-                          <Text strong>Alerts: </Text>
-                          <Space size={4} wrap>
-                            {latest.triggeredAlerts.map((alert, idx) => (
-                              <Tag color="red" key={idx}>{alert.message}</Tag>
-                            ))}
-                          </Space>
-                        </div>
-                      )}
-                      {latest.resultPath && (
-                        <div>
-                          <Text strong>Results: </Text>
-                          <Text copyable code>SELECT * FROM dfs.`{latest.resultPath}`</Text>
-                        </div>
-                      )}
-                      {latest.rowCountDelta != null && (
-                        <div>
-                          <Text strong>Row count change: </Text>
-                          <Badge
-                            count={latest.rowCountDelta > 0 ? `+${latest.rowCountDelta}` : String(latest.rowCountDelta)}
-                            style={{ backgroundColor: latest.rowCountDelta > 0 ? '#52c41a' : latest.rowCountDelta < 0 ? '#ff4d4f' : '#d9d9d9' }}
-                          />
-                          {latest.previousRowCount != null && (
-                            <Text type="secondary" style={{ marginLeft: 8 }}>
-                              (prev: {latest.previousRowCount}, now: {latest.rowCount ?? '?'})
-                            </Text>
+                    return (
+                      <li
+                        key={s.id}
+                        className={`workflow-row${expanded ? ' is-expanded' : ''}${isRunning ? ' is-running' : ''}`}
+                      >
+                        <button
+                          type="button"
+                          className="workflow-row-summary"
+                          onClick={() => toggleExpand(s.id)}
+                        >
+                          <span className="workflow-row-disclosure" aria-hidden="true">
+                            <CaretRightOutlined />
+                          </span>
+                          <span className={`workflow-row-dot${isRunning ? ' is-pulsing' : ''}`} style={{ background: dotColor }} />
+
+                          <span className="workflow-row-time">{timeUntil(s.nextRunAt)}</span>
+
+                          <span className="workflow-row-info">
+                            <span className="workflow-row-name">{q?.name ?? s.savedQueryId}</span>
+                            {s.description && <span className="workflow-row-desc">{s.description}</span>}
+                          </span>
+
+                          <span className="workflow-row-frequency">{formatSchedule(s)}</span>
+
+                          <RunDots snapshots={snapshots} />
+
+                          {hasViewableData(s) && (
+                            <Tooltip title="Has viewable run data — preview rows, AI summary, or persisted results">
+                              <span className="workflow-row-data">
+                                <DatabaseOutlined />
+                              </span>
+                            </Tooltip>
                           )}
-                        </div>
-                      )}
-                      {latest.previewRows && latest.previewColumns && latest.previewRows.length > 0 && (
-                        <Card size="small" title="Preview">
-                          <Table
-                            size="small"
-                            dataSource={latest.previewRows.map((row, idx) => ({ ...row, _key: idx }))}
-                            columns={latest.previewColumns.map((col) => ({
-                              title: col,
-                              dataIndex: col,
-                              key: col,
-                              ellipsis: true,
-                            }))}
-                            rowKey="_key"
-                            pagination={false}
-                            scroll={{ x: true }}
-                          />
-                        </Card>
-                      )}
-                    </Space>
-                  );
-                },
-              }}
-            />
-          )}
-        </Space>
-      </Card>
 
-      {/* Schedule Edit Modal */}
+                          {alertCount > 0 && (
+                            <span className="workflow-row-alerts">
+                              <WarningOutlined /> {alertCount}
+                            </span>
+                          )}
+
+                          {expiringSoon && (
+                            <Tooltip title={`Expires in ${days} day${days !== 1 ? 's' : ''}`}>
+                              <span className="workflow-row-expiry">{days}d</span>
+                            </Tooltip>
+                          )}
+                        </button>
+
+                        <span className="workflow-row-actions" onClick={(e) => e.stopPropagation()}>
+                          {!isRunning && (
+                            <Tooltip title="Run now">
+                              <Button
+                                size="small"
+                                type="text"
+                                icon={<PlayCircleOutlined />}
+                                loading={runningIds.has(s.id)}
+                                onClick={() => handleRunNow(s.id)}
+                              />
+                            </Tooltip>
+                          )}
+                          {needsRenewal && (
+                            <Tooltip title={`Renew schedule for ${config.expirationDays} days`}>
+                              <Button
+                                size="small"
+                                type="primary"
+                                ghost
+                                icon={<ReloadOutlined />}
+                                onClick={() => handleRenew(s.id)}
+                              >
+                                Renew
+                              </Button>
+                            </Tooltip>
+                          )}
+                          <Dropdown menu={{ items: moreItems }} placement="bottomRight" trigger={['click']}>
+                            <Button size="small" type="text" icon={<MoreOutlined />} />
+                          </Dropdown>
+                        </span>
+
+                        {expanded && (
+                          <div className="workflow-row-detail">
+                            {snapshots.length === 0 ? (
+                              <p className="workflow-detail-empty">No runs yet.</p>
+                            ) : (
+                              <RunHistory
+                                snapshots={snapshots}
+                                expandedSnapshots={expandedSnapshots}
+                                onToggleSnapshot={(snapshotId) => {
+                                  setExpandedSnapshots((prev) => {
+                                    const next = new Set(prev);
+                                    if (next.has(snapshotId)) {
+                                      next.delete(snapshotId);
+                                    } else {
+                                      next.add(snapshotId);
+                                    }
+                                    return next;
+                                  });
+                                }}
+                              />
+                            )}
+                          </div>
+                        )}
+                      </li>
+                    );
+                  })}
+                </ul>
+              </section>
+            );
+          })}
+        </div>
+      )}
+
       {editingSchedule && (
         <ScheduleModal
           open={!!editingSchedule}
@@ -737,3 +818,200 @@ export default function WorkflowsPage() {
     </div>
   );
 }
+
+interface RunHistoryProps {
+  snapshots: QuerySnapshot[];
+  expandedSnapshots: Set<string>;
+  onToggleSnapshot: (id: string) => void;
+}
+
+function RunHistory({ snapshots, expandedSnapshots, onToggleSnapshot }: RunHistoryProps): ReactNode {
+  // Sort snapshots most-recent first defensively (the API ordering isn't
+  // guaranteed) so the user always sees the latest run at the top.
+  const sortedSnapshots = useMemo(
+    () =>
+      [...snapshots].sort(
+        (a, b) => new Date(b.executedAt).getTime() - new Date(a.executedAt).getTime(),
+      ),
+    [snapshots],
+  );
+  const latest = sortedSnapshots[0];
+  const isLatestExpanded = latest ? expandedSnapshots.has(latest.id) : false;
+  const hasAnyExpanded = sortedSnapshots.some((s) => expandedSnapshots.has(s.id));
+  const showLatest = isLatestExpanded || !hasAnyExpanded;
+
+  return (
+    <div className="workflow-history">
+      <div className="workflow-history-header">
+        <span className="workflow-history-title">Run history</span>
+        <span className="workflow-history-count">
+          {sortedSnapshots.length} {sortedSnapshots.length === 1 ? 'run' : 'runs'}
+        </span>
+      </div>
+      <ul className="workflow-history-list">
+        {sortedSnapshots.map((snap, idx) => {
+          const isExpanded =
+            expandedSnapshots.has(snap.id) || (idx === 0 && showLatest);
+          return (
+            <li key={snap.id} className={`workflow-history-snapshot${isExpanded ? ' is-expanded' : ''}`}>
+              <button
+                type="button"
+                className="workflow-history-snapshot-summary"
+                onClick={() => onToggleSnapshot(snap.id)}
+              >
+                <span className="workflow-history-disclosure" aria-hidden="true">
+                  <CaretRightOutlined />
+                </span>
+                <span className={`workflow-run-dot is-${snap.status}`} aria-label={snap.status} />
+                <span className="workflow-history-time">
+                  {new Date(snap.executedAt).toLocaleString(undefined, {
+                    month: 'short',
+                    day: 'numeric',
+                    hour: '2-digit',
+                    minute: '2-digit',
+                  })}
+                </span>
+                <span className={`workflow-history-status is-${snap.status}`}>{snap.status}</span>
+                {snap.rowCount != null && (
+                  <span className="workflow-history-rows">
+                    {snap.rowCount.toLocaleString()} {snap.rowCount === 1 ? 'row' : 'rows'}
+                  </span>
+                )}
+                {snap.rowCountDelta != null && snap.rowCountDelta !== 0 && (
+                  <span
+                    className={`workflow-history-delta${snap.rowCountDelta > 0 ? ' is-up' : ' is-down'}`}
+                  >
+                    {snap.rowCountDelta > 0 ? `+${snap.rowCountDelta}` : snap.rowCountDelta}
+                  </span>
+                )}
+                {snap.triggeredAlerts && snap.triggeredAlerts.length > 0 && (
+                  <span className="workflow-history-alert-pill">
+                    <WarningOutlined /> {snap.triggeredAlerts.length}
+                  </span>
+                )}
+              </button>
+              {isExpanded && (
+                <div className="workflow-history-snapshot-detail">
+                  <RunDetail snapshot={snap} />
+                </div>
+              )}
+            </li>
+          );
+        })}
+      </ul>
+    </div>
+  );
+}
+
+function RunDetail({ snapshot }: { snapshot: QuerySnapshot }): ReactNode {
+  const hasAdditionalContent =
+    !!snapshot.errorMessage ||
+    !!snapshot.aiSummary ||
+    !!snapshot.resultPath ||
+    (snapshot.previewRows != null && snapshot.previewRows.length > 0) ||
+    (snapshot.triggeredAlerts != null && snapshot.triggeredAlerts.length > 0) ||
+    (snapshot.rowCountDelta != null && snapshot.previousRowCount != null);
+
+  return (
+    <div className="workflow-detail-grid">
+      {/* Always show the run timestamp + status + row count as a baseline.
+          Without this, runs whose snapshot has no preview/AI/results render
+          as a visually-empty block. */}
+      <div className="workflow-detail-row">
+        <span className="workflow-detail-label">Run</span>
+        <span>
+          {new Date(snapshot.executedAt).toLocaleString()}
+          {' · '}
+          <span className={`workflow-detail-status is-${snapshot.status}`}>{snapshot.status}</span>
+          {snapshot.rowCount != null && <> · {snapshot.rowCount.toLocaleString()} rows</>}
+          {snapshot.duration != null && <> · {Math.round(snapshot.duration)} ms</>}
+        </span>
+      </div>
+
+      {snapshot.errorMessage && (
+        <div className="workflow-detail-row">
+          <span className="workflow-detail-label">Error</span>
+          <span className="workflow-detail-alert">{snapshot.errorMessage}</span>
+        </div>
+      )}
+
+      {!hasAdditionalContent && (
+        <div className="workflow-detail-row">
+          <span className="workflow-detail-label">Output</span>
+          <span className="workflow-detail-empty-hint">
+            No previewed data, AI summary, or persisted results for this run.
+            {snapshot.status === 'success' && ' Enable result persistence or AI summary on the schedule to see content here.'}
+          </span>
+        </div>
+      )}
+
+      {snapshot.rowCountDelta != null && snapshot.previousRowCount != null && (
+        <div className="workflow-detail-row">
+          <span className="workflow-detail-label">Compared to previous</span>
+          <span>
+            <span
+              className={`workflow-detail-delta${
+                snapshot.rowCountDelta > 0 ? ' is-up' : snapshot.rowCountDelta < 0 ? ' is-down' : ''
+              }`}
+            >
+              {snapshot.rowCountDelta > 0 ? `+${snapshot.rowCountDelta}` : snapshot.rowCountDelta}
+            </span>
+            {snapshot.previousRowCount != null && (
+              <span className="workflow-detail-prev"> (prev {snapshot.previousRowCount.toLocaleString()})</span>
+            )}
+          </span>
+        </div>
+      )}
+
+      {snapshot.triggeredAlerts && snapshot.triggeredAlerts.length > 0 && (
+        <div className="workflow-detail-row">
+          <span className="workflow-detail-label">Alerts</span>
+          <span className="workflow-detail-alerts">
+            {snapshot.triggeredAlerts.map((a, i) => (
+              <span key={i} className="workflow-detail-alert">{a.message}</span>
+            ))}
+          </span>
+        </div>
+      )}
+
+      {snapshot.resultPath && (
+        <div className="workflow-detail-row">
+          <span className="workflow-detail-label">Results</span>
+          <code className="workflow-detail-path">{`SELECT * FROM dfs.\`${snapshot.resultPath}\``}</code>
+        </div>
+      )}
+
+      {snapshot.aiSummary && (
+        <div className="workflow-detail-row">
+          <span className="workflow-detail-label">AI Summary</span>
+          <div className="workflow-detail-ai">
+            <Markdown rehypePlugins={[rehypeRaw]}>{snapshot.aiSummary}</Markdown>
+          </div>
+        </div>
+      )}
+
+      {snapshot.previewRows && snapshot.previewColumns && snapshot.previewRows.length > 0 && (
+        <div className="workflow-detail-row">
+          <span className="workflow-detail-label">Preview</span>
+          <div className="workflow-detail-preview">
+            <table>
+              <thead>
+                <tr>
+                  {snapshot.previewColumns.map((c) => <th key={c}>{c}</th>)}
+                </tr>
+              </thead>
+              <tbody>
+                {snapshot.previewRows.slice(0, 5).map((row, idx) => (
+                  <tr key={idx}>
+                    {snapshot.previewColumns!.map((c) => <td key={c}>{String(row[c] ?? '')}</td>)}
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+

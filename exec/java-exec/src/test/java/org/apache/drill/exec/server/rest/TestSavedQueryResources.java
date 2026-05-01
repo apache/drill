@@ -264,4 +264,100 @@ public class TestSavedQueryResources extends ClusterTest {
       assertEquals(404, response.code());
     }
   }
+
+  @Test
+  public void testA_TrashContainsSoftDeletedQuery() throws Exception {
+    assertNotNull(createdQueryId, "Query should have been soft-deleted in test8");
+
+    String url = String.format("http://localhost:%d/api/v1/saved-queries/trash", portNumber);
+    Request request = new Request.Builder().url(url).build();
+    try (Response response = httpClient.newCall(request).execute()) {
+      assertEquals(200, response.code());
+      JsonNode json = mapper.readTree(response.body().string());
+      assertTrue(json.has("queries"));
+      JsonNode queries = json.get("queries");
+      assertTrue(queries.isArray());
+
+      boolean found = false;
+      for (JsonNode q : queries) {
+        if (createdQueryId.equals(q.get("id").asText())) {
+          found = true;
+          assertTrue(q.get("deletedAt").asLong() > 0,
+              "Trashed item should have deletedAt set");
+        }
+      }
+      assertTrue(found, "Trash should contain the soft-deleted query");
+    }
+  }
+
+  @Test
+  public void testB_RestoreSavedQuery() throws Exception {
+    assertNotNull(createdQueryId);
+
+    String restoreUrl = String.format(
+        "http://localhost:%d/api/v1/saved-queries/%s/restore",
+        portNumber, createdQueryId);
+    Request restoreRequest = new Request.Builder()
+        .url(restoreUrl)
+        .post(RequestBody.create("", JSON_MEDIA_TYPE))
+        .build();
+    try (Response response = httpClient.newCall(restoreRequest).execute()) {
+      assertEquals(200, response.code());
+      JsonNode json = mapper.readTree(response.body().string());
+      assertEquals(createdQueryId, json.get("id").asText(),
+          "Restore should return the original ID");
+      assertEquals(0L, json.get("deletedAt").asLong(),
+          "deletedAt should be cleared after restore");
+    }
+
+    // After restore, GET the item works again
+    String getUrl = String.format("http://localhost:%d/api/v1/saved-queries/%s",
+        portNumber, createdQueryId);
+    try (Response response = httpClient.newCall(new Request.Builder().url(getUrl).build()).execute()) {
+      assertEquals(200, response.code());
+    }
+
+    // And it disappears from trash
+    String trashUrl = String.format("http://localhost:%d/api/v1/saved-queries/trash", portNumber);
+    try (Response response = httpClient.newCall(new Request.Builder().url(trashUrl).build()).execute()) {
+      assertEquals(200, response.code());
+      JsonNode json = mapper.readTree(response.body().string());
+      for (JsonNode q : json.get("queries")) {
+        assertFalse(createdQueryId.equals(q.get("id").asText()),
+            "Restored query should no longer be in trash");
+      }
+    }
+  }
+
+  @Test
+  public void testC_PurgeFromTrash() throws Exception {
+    assertNotNull(createdQueryId);
+
+    // Soft-delete again to put it back in trash
+    String deleteUrl = String.format("http://localhost:%d/api/v1/saved-queries/%s",
+        portNumber, createdQueryId);
+    try (Response response = httpClient.newCall(
+        new Request.Builder().url(deleteUrl).delete().build()).execute()) {
+      assertEquals(200, response.code());
+    }
+
+    // Hard-purge from trash
+    String purgeUrl = String.format("http://localhost:%d/api/v1/saved-queries/%s/purge",
+        portNumber, createdQueryId);
+    try (Response response = httpClient.newCall(
+        new Request.Builder().url(purgeUrl).delete().build()).execute()) {
+      assertEquals(200, response.code());
+    }
+
+    // After purge, item is truly gone — restore should 404
+    String restoreUrl = String.format(
+        "http://localhost:%d/api/v1/saved-queries/%s/restore",
+        portNumber, createdQueryId);
+    try (Response response = httpClient.newCall(
+        new Request.Builder().url(restoreUrl)
+            .post(RequestBody.create("", JSON_MEDIA_TYPE))
+            .build()).execute()) {
+      assertEquals(404, response.code());
+    }
+  }
 }
