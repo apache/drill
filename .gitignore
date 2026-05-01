@@ -33,4 +33,31 @@ target/
 tools/venv/
 venv/
 .vscode/*
-exec/java-exec/src/main/resources/webapp/
+/exec/java-exec/src/main/resources/python/.venv/
+__pycache__/
+*.pyc
+.pytest_cache/
+.coverage
+
+# Frontend (webapp)
+node_modules/
+.vite/
+.env
+.env.local
+.env.*.local
+*.swo
+Thumbs.db
+coverage/
+/exec/java-exec/src/main/resources/webapp/dist/
+/exec/java-exec/src/main/resources/webapp/node/
+result-cache/
+
+# Large GeoJSON files (for local development only, not committed to git)
+# Exception: us-zipcodes.topojson (merged all-states, 91 MB) is committed to git
+# Individual state files (us-al-zipcodes.json, us-ca-zipcodes.json, etc.) are git-ignored
+# These can be regenerated locally using scripts/process-zipcodes.py
+/exec/java-exec/src/main/resources/webapp/public/geojson/us-*-zipcodes.json
+/exec/java-exec/src/main/resources/webapp/public/geojson/us-zipcodes.json
+!/exec/java-exec/src/main/resources/webapp/public/geojson/us-zipcodes.topojson
+/exec/java-exec/src/main/resources/webapp/public/geojson/*.zip
+/exec/java-exec/src/main/resources/webapp/public/geojson/cb_*

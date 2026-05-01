@@ -20,6 +20,7 @@ package org.apache.drill.exec.server;
 import org.apache.curator.framework.api.ACLProvider;
 import org.apache.curator.utils.ZKPaths;
 import org.apache.drill.common.AutoCloseables;
+import org.apache.drill.exec.server.rest.ScheduleManager;
 import org.apache.drill.common.StackTrace;
 import org.apache.drill.common.concurrent.ExtendedLatch;
 import org.apache.drill.common.config.DrillConfig;
@@ -233,6 +234,16 @@ public class Drillbit implements AutoCloseable {
     javaPropertiesToSystemOptions();
     manager.getContext().getRemoteFunctionRegistry().init(context.getConfig(), storeProvider, coord);
     webServer.start();
+
+    // Start the SQL Lab scheduled query manager.
+    // Runs on a background daemon thread, checking every 60 seconds for due queries.
+    try {
+      ScheduleManager.getOrCreate(manager, storeProvider).start();
+      logger.info("ScheduleManager started for SQL Lab scheduled queries");
+    } catch (Exception e) {
+      logger.warn("Failed to start ScheduleManager (scheduled queries will not run): {}", e.getMessage());
+    }
+
     //Discovering HTTP port (in case of port hunting)
     int httpPort = -1;
     if (webServer.isRunning()) {
@@ -317,6 +328,7 @@ public class Drillbit implements AutoCloseable {
 
     try {
       AutoCloseables.close(
+          ScheduleManager.getInstance(),
           webServer,
           engine,
           storeProvider,

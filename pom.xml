@@ -303,6 +303,7 @@
             <exclude>**/*.mov</exclude>
             <exclude>**/*.mp4</exclude>
             <exclude>**/NOTICE</exclude>
+            <exclude>**/.npmrc</exclude>
             <exclude>**/*.parquet</exclude>
             <exclude>**/*.patch</exclude>
             <exclude>**/*.pb.cc</exclude>
@@ -334,6 +335,7 @@
             <exclude>**/TAGS</exclude>
             <exclude>**/target/**</exclude>
             <exclude>**/*.tbl</exclude>
+            <exclude>**/*.topojson</exclude>
             <exclude>**/*.tsv</exclude>
             <exclude>**/*.txt</exclude>
             <exclude>**/*.wav</exclude>

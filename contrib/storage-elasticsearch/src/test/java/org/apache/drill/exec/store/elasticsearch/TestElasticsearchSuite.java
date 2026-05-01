@@ -39,6 +39,7 @@ import org.junit.BeforeClass;
 import org.junit.experimental.categories.Category;
 import org.junit.runner.RunWith;
 import org.junit.runners.Suite;
+import org.testcontainers.DockerClientFactory;
 import org.testcontainers.elasticsearch.ElasticsearchContainer;
 
 import com.google.api.client.util.SslUtils;
@@ -53,6 +54,8 @@ import java.security.cert.Certificate;
 import java.security.cert.CertificateFactory;
 import java.time.Duration;
 import java.util.concurrent.atomic.AtomicInteger;
+
+import static org.junit.Assume.assumeTrue;
 
 
 @Category(SlowTest.class)
@@ -76,6 +79,10 @@ public class TestElasticsearchSuite extends BaseTest {
 
   @BeforeClass
   public static void initElasticsearch() throws IOException, GeneralSecurityException {
+    assumeTrue(
+      "Docker is not available, skipping container tests",
+      DockerClientFactory.instance().isDockerAvailable()
+    );
     synchronized (TestElasticsearchSuite.class) {
       if (initCount.get() == 0) {
         startElasticsearch();

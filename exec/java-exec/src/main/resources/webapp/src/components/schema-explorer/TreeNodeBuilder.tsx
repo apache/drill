@@ -1,0 +1,448 @@
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+import { Tooltip, Typography, Tag, Input } from 'antd';
+import { FolderOutlined, TableOutlined, WarningOutlined, InfoCircleOutlined, SearchOutlined } from '@ant-design/icons';
+import { DatabaseOutlined } from '@ant-design/icons';
+import type { DataNode } from 'antd/es/tree';
+import type { PluginInfo, SchemaInfo, TableInfo, ColumnInfo, FileInfo, NestedFieldInfo, SubTableInfo } from '../../types';
+import { getPluginIcon, getColumnIcon, getFileIcon, isFileBasedPlugin, isComplexColumnType, isMultiTableFile, getSubTableIcon, getHomogeneousDataFormat } from './icons';
+
+const { Text } = Typography;
+
+/** Optional usage counts from project saved queries. */
+export interface UsageCounts {
+  tables: Map<string, number>;
+  columns: Map<string, number>;
+}
+
+/**
+ * Key-prefix conventions:
+ *   plugin:<name>                          – storage plugin
+ *   schema:<schemaName>                    – schema / workspace
+ *   table:<schema>:<table>                 – table inside a non-file schema
+ *   dir:<schema>:<path>                    – directory inside a file-based schema
+ *   file:<schema>:<path>                   – file inside a file-based schema
+ *   sheet:<schema>:<filePath>:<subTable>   – sub-table inside a multi-table file (Excel/HDF5/Access)
+ *   column:<schema>:<parent>:<col>         – column
+ *   nested:<schema>:<parent>:<dotPath>     – nested field inside a MAP/STRUCT column
+ */
+
+/** Build nested field nodes for a MAP/STRUCT column (recursive). */
+export function buildNestedFieldNodes(
+  fields: NestedFieldInfo[],
+  parentSchema: string,
+  parentName: string,
+  parentPath: string,
+  nestedCache: Record<string, NestedFieldInfo[]>,
+): DataNode[] {
+  return fields.map((field) => {
+    const fieldPath = `${parentPath}.${field.name}`;
+    const nodeKey = `nested:${parentSchema}:${parentName}:${fieldPath}`;
+    const complex = isComplexColumnType(field.type);
+
+    const children = complex && nestedCache[nodeKey]
+      ? buildNestedFieldNodes(nestedCache[nodeKey], parentSchema, parentName, fieldPath, nestedCache)
+      : undefined;
+
+    return {
+      key: nodeKey,
+      title: (
+        <Tooltip title={field.type}>
+          <span>
+            {field.name} <Text type="secondary" style={{ fontSize: 11 }}>{field.type}</Text>
+          </span>
+        </Tooltip>
+      ),
+      icon: getColumnIcon(field.type),
+      isLeaf: !complex,
+      children,
+    };
+  });
+}
+
+/** Build column tree nodes from a list of ColumnInfo. */
+export function buildColumnNodes(
+  columns: ColumnInfo[],
+  parentSchema: string,
+  parentName: string,
+  nestedCache: Record<string, NestedFieldInfo[]>,
+  usageCounts?: UsageCounts,
+): DataNode[] {
+  return columns.map((col) => {
+    const colKey = `column:${parentSchema}:${parentName}:${col.name}`;
+    const complex = isComplexColumnType(col.type);
+
+    const children = complex && nestedCache[colKey]
+      ? buildNestedFieldNodes(nestedCache[colKey], parentSchema, parentName, col.name, nestedCache)
+      : undefined;
+
+    const colCount = usageCounts?.columns.get(col.name.toLowerCase()) || 0;
+
+    return {
+      key: colKey,
+      title: (
+        <Tooltip title={`${col.type}${col.nullable ? ' (nullable)' : ''}${colCount > 0 ? ` \u2022 Used in ${colCount} queries` : ''}`}>
+          <span>
+            {col.name} <Text type="secondary" style={{ fontSize: 11 }}>{col.type}</Text>
+            {colCount > 0 && (
+              <Tag color="geekblue" style={{ fontSize: 9, marginLeft: 4, lineHeight: '14px', padding: '0 3px' }}>
+                {colCount}
+              </Tag>
+            )}
+          </span>
+        </Tooltip>
+      ),
+      icon: getColumnIcon(col.type),
+      isLeaf: !complex,
+      children,
+    };
+  });
+}
+
+/** Build sub-table nodes (sheets/datasets/tables) for a multi-table file. */
+export function buildSubTableNodes(
+  schema: string,
+  filePath: string,
+  subTables: SubTableInfo[],
+  columnsCache: Record<string, ColumnInfo[]>,
+  nestedCache: Record<string, NestedFieldInfo[]>,
+  usageCounts?: UsageCounts,
+): DataNode[] {
+  return subTables.map((sub) => {
+    const sheetKey = `sheet:${schema}:${filePath}:${sub.name}`;
+    const columns = columnsCache[sheetKey] || [];
+    const columnNodes = columns.length > 0
+      ? buildColumnNodes(columns, schema, `${filePath}/${sub.name}`, nestedCache, usageCounts)
+      : undefined;
+
+    const subtitle = sub.dataType ? ` (${sub.dataType})` : '';
+
+    return {
+      key: sheetKey,
+      title: (
+        <Tooltip title={`Sub-table: ${sub.name}${subtitle}`}>
+          <span>{sub.name}{subtitle && <Text type="secondary" style={{ fontSize: 11 }}>{subtitle}</Text>}</span>
+        </Tooltip>
+      ),
+      icon: getSubTableIcon(),
+      children: columnNodes,
+      isLeaf: false,
+    };
+  });
+}
+
+/** Build file/folder tree nodes recursively. */
+export function buildFileNodes(
+  schema: string,
+  files: FileInfo[],
+  filesCache: Record<string, FileInfo[]>,
+  columnsCache: Record<string, ColumnInfo[]>,
+  nestedCache: Record<string, NestedFieldInfo[]>,
+  subTablesCache: Record<string, SubTableInfo[]>,
+  parentPath: string = '',
+  usageCounts?: UsageCounts,
+): DataNode[] {
+  return files.map((file) => {
+    const filePath = parentPath ? `${parentPath}/${file.name}` : file.name;
+
+    if (file.isDirectory) {
+      // Key prefix is "dir:" for directories
+      const dirKey = `dir:${schema}:${filePath}`;
+      const subFiles = filesCache[dirKey] || [];
+
+      // If the directory contains only files of a single data format (e.g. all parquet),
+      // treat it as a single table node and show columns instead of individual files.
+      const homoFormat = subFiles.length > 0 ? getHomogeneousDataFormat(subFiles) : undefined;
+      if (homoFormat) {
+        const columns = columnsCache[dirKey] || [];
+        const columnNodes = columns.length > 0
+          ? buildColumnNodes(columns, schema, filePath, nestedCache, usageCounts)
+          : undefined;
+
+        return {
+          key: dirKey,
+          title: (
+            <Tooltip title={`${homoFormat} table (${subFiles.filter((f) => f.isFile).length} files)`}>
+              <span>{file.name}</span>
+            </Tooltip>
+          ),
+          icon: <TableOutlined style={{ color: '#faad14' }} />,
+          children: columnNodes,
+          isLeaf: false,
+        };
+      }
+
+      const subNodes = subFiles.length > 0
+        ? buildFileNodes(schema, subFiles, filesCache, columnsCache, nestedCache, subTablesCache, filePath, usageCounts)
+        : undefined;
+
+      return {
+        key: dirKey,
+        title: file.name,
+        icon: <FolderOutlined style={{ color: '#3b82f6' }} />,
+        children: subNodes,
+        isLeaf: false,
+      };
+    }
+
+    // Key prefix is "file:" for files
+    const fileKey = `file:${schema}:${filePath}`;
+
+    // Multi-table files with multiple sub-tables show sub-table nodes
+    if (isMultiTableFile(file.name)) {
+      const subTables = subTablesCache[fileKey] || [];
+      if (subTables.length > 0) {
+        const subTableNodes = buildSubTableNodes(schema, filePath, subTables, columnsCache, nestedCache, usageCounts);
+        return {
+          key: fileKey,
+          title: (
+            <Tooltip title={`${file.length} bytes`}>
+              <span>{file.name}</span>
+            </Tooltip>
+          ),
+          icon: getFileIcon(file.name),
+          children: subTableNodes,
+          isLeaf: false,
+        };
+      }
+      // Single sub-table or not yet loaded — fall through to show columns directly
+    }
+
+    const columns = columnsCache[fileKey] || [];
+    const columnNodes = columns.length > 0
+      ? buildColumnNodes(columns, schema, filePath, nestedCache, usageCounts)
+      : undefined;
+
+    return {
+      key: fileKey,
+      title: (
+        <Tooltip title={`${file.length} bytes`}>
+          <span>{file.name}</span>
+        </Tooltip>
+      ),
+      icon: getFileIcon(file.name),
+      children: columnNodes,
+      isLeaf: false,
+    };
+  });
+}
+
+/** Build table tree nodes for a non-file schema. */
+export function buildTableNodes(
+  schemaName: string,
+  tables: TableInfo[],
+  columnsCache: Record<string, ColumnInfo[]>,
+  nestedCache: Record<string, NestedFieldInfo[]>,
+  columnFilter?: Record<string, string>,
+  onColumnFilterChange?: (key: string, value: string) => void,
+  usageCounts?: UsageCounts,
+): DataNode[] {
+  return tables.map((table) => {
+    const tableKey = `table:${schemaName}:${table.name}`;
+    const allColumns = columnsCache[tableKey] || [];
+
+    // Dynamic-schema tables (e.g. HTTP endpoints) report "**" to indicate
+    // that the schema is determined at query time.  Show a hint instead of
+    // the raw wildcard.
+    const isDynamic = allColumns.length === 1 && allColumns[0].name === '**';
+    if (isDynamic) {
+      return {
+        key: tableKey,
+        title: table.name,
+        icon: <TableOutlined style={{ color: '#faad14' }} />,
+        children: [{
+          key: `${tableKey}:__dynamic__`,
+          title: (
+            <Text type="secondary" italic style={{ fontSize: 12 }}>
+              Schema determined at query time
+            </Text>
+          ),
+          icon: <InfoCircleOutlined style={{ color: 'var(--color-text-tertiary)' }} />,
+          isLeaf: true,
+          selectable: false,
+        } as DataNode],
+        isLeaf: false,
+      };
+    }
+
+    // Apply column filter if present
+    const filterText = columnFilter?.[tableKey] || '';
+    const filteredColumns = filterText
+      ? allColumns.filter((c) => c.name.toLowerCase().includes(filterText.toLowerCase()))
+      : allColumns;
+
+    const columnNodes = filteredColumns.length > 0
+      ? buildColumnNodes(filteredColumns, schemaName, table.name, nestedCache, usageCounts)
+      : allColumns.length > 0
+        ? [{ key: `${tableKey}:__no_match__`, title: <Text type="secondary" italic>No matching columns</Text>, isLeaf: true, selectable: false } as DataNode]
+        : undefined;
+
+    // Prepend filter input node when there are many columns
+    const children: DataNode[] | undefined = allColumns.length > 15
+      ? [
+          {
+            key: `filter:${tableKey}`,
+            title: (
+              <Input
+                size="small"
+                placeholder="Filter columns..."
+                prefix={<SearchOutlined style={{ fontSize: 11 }} />}
+                value={filterText}
+                onChange={(e) => onColumnFilterChange?.(tableKey, e.target.value)}
+                onClick={(e) => e.stopPropagation()}
+                allowClear
+                style={{ width: 180, fontSize: 12 }}
+              />
+            ),
+            isLeaf: true,
+            selectable: false,
+            checkable: false,
+          } as DataNode,
+          ...(columnNodes || []),
+        ]
+      : columnNodes;
+
+    // Check for usage count
+    const tableFullName = `${schemaName}.${table.name}`.toLowerCase();
+    const tableLower = table.name.toLowerCase();
+    const tableCount = usageCounts?.tables.get(tableFullName) || usageCounts?.tables.get(tableLower) || 0;
+
+    return {
+      key: tableKey,
+      title: (
+        <span>
+          {table.name}
+          {tableCount > 0 && (
+            <Tooltip title={`Referenced in ${tableCount} saved ${tableCount === 1 ? 'query' : 'queries'}`}>
+              <Tag color="blue" style={{ fontSize: 10, marginLeft: 4, lineHeight: '16px' }}>
+                {tableCount}
+              </Tag>
+            </Tooltip>
+          )}
+        </span>
+      ),
+      icon: <TableOutlined style={{ color: '#faad14' }} />,
+      children,
+      isLeaf: false,
+    };
+  });
+}
+
+/** Build schema tree nodes for a plugin. */
+export function buildSchemaNodes(
+  plugin: PluginInfo,
+  schemas: SchemaInfo[],
+  tablesCache: Record<string, TableInfo[]>,
+  columnsCache: Record<string, ColumnInfo[]>,
+  filesCache: Record<string, FileInfo[]>,
+  nestedCache: Record<string, NestedFieldInfo[]>,
+  subTablesCache: Record<string, SubTableInfo[]>,
+  columnFilter?: Record<string, string>,
+  onColumnFilterChange?: (key: string, value: string) => void,
+  usageCounts?: UsageCounts,
+): DataNode[] {
+  const pluginIsFileBased = isFileBasedPlugin(plugin.type, plugin.name);
+
+  return schemas.map((schema) => {
+    const schemaKey = `schema:${schema.name}`;
+
+    if (pluginIsFileBased) {
+      const files = filesCache[schemaKey] || [];
+      const fileNodes = files.length > 0
+        ? buildFileNodes(schema.name, files, filesCache, columnsCache, nestedCache, subTablesCache, '', usageCounts)
+        : undefined;
+
+      return {
+        key: schemaKey,
+        title: <span>{schema.name.replace(`${plugin.name}.`, '')}</span>,
+        icon: <FolderOutlined style={{ color: '#3b82f6' }} />,
+        children: fileNodes,
+        isLeaf: false,
+      };
+    }
+
+    // Non-file schema
+    const tables = tablesCache[schema.name] || [];
+    const tableNodes = tables.length > 0
+      ? buildTableNodes(schema.name, tables, columnsCache, nestedCache, columnFilter, onColumnFilterChange, usageCounts)
+      : undefined;
+
+    const schemaBrowsable = schema.browsable !== false;
+
+    return {
+      key: schemaKey,
+      title: (
+        <span>
+          {schema.name.replace(`${plugin.name}.`, '')}
+          {!schemaBrowsable && (
+            <Tooltip title="Tables cannot be enumerated for this schema">
+              <WarningOutlined style={{ marginLeft: 4, color: '#faad14', fontSize: 11 }} />
+            </Tooltip>
+          )}
+        </span>
+      ),
+      icon: <DatabaseOutlined style={{ color: '#52c41a' }} />,
+      children: tableNodes,
+      isLeaf: !schemaBrowsable,
+    };
+  });
+}
+
+/** Build a full plugin tree node. */
+export function buildPluginNode(
+  plugin: PluginInfo,
+  schemasCache: Record<string, SchemaInfo[]>,
+  tablesCache: Record<string, TableInfo[]>,
+  columnsCache: Record<string, ColumnInfo[]>,
+  filesCache: Record<string, FileInfo[]>,
+  nestedCache: Record<string, NestedFieldInfo[]>,
+  subTablesCache: Record<string, SubTableInfo[]>,
+  columnFilter?: Record<string, string>,
+  onColumnFilterChange?: (key: string, value: string) => void,
+  usageCounts?: UsageCounts,
+): DataNode {
+  const pluginKey = `plugin:${plugin.name}`;
+  const schemas = schemasCache[plugin.name] || [];
+  const schemaNodes = schemas.length > 0
+    ? buildSchemaNodes(plugin, schemas, tablesCache, columnsCache, filesCache, nestedCache, subTablesCache, columnFilter, onColumnFilterChange, usageCounts)
+    : undefined;
+
+  const isHttpPlugin = plugin.type?.toLowerCase().includes('http') || plugin.name.toLowerCase() === 'http';
+
+  return {
+    key: pluginKey,
+    title: (
+      <span>
+        {plugin.name}
+        {!plugin.browsable && (
+          <Tooltip title={isHttpPlugin
+            ? 'HTTP plugin - shows endpoints, but table schema cannot be browsed'
+            : 'Cannot enumerate tables - query directly'
+          }>
+            <Tag color={isHttpPlugin ? 'blue' : 'orange'} style={{ marginLeft: 8, fontSize: 10 }}>
+              {isHttpPlugin ? 'API endpoints' : 'non-browsable'}
+            </Tag>
+          </Tooltip>
+        )}
+      </span>
+    ),
+    icon: getPluginIcon(plugin.type, plugin.name),
+    children: schemaNodes,
+    isLeaf: false,
+  };
+}

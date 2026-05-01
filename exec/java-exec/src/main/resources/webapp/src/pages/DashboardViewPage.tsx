@@ -1,0 +1,1162 @@
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+import { useState, useCallback, useMemo, useEffect, useRef } from 'react';
+import { useParams, useNavigate, useSearchParams, useLocation } from 'react-router-dom';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { Responsive, WidthProvider } from 'react-grid-layout';
+import {
+  Button,
+  Space,
+  Typography,
+  Spin,
+  Alert,
+  Select,
+  Modal,
+  List,
+  Empty,
+  message,
+  Tooltip,
+  Tabs,
+  Input,
+  Upload,
+} from 'antd';
+import {
+  EditOutlined,
+  SaveOutlined,
+  PlusOutlined,
+  ReloadOutlined,
+  FilePdfOutlined,
+  ShareAltOutlined,
+  BarChartOutlined,
+  BulbOutlined,
+  FileMarkdownOutlined,
+  PictureOutlined,
+  FontSizeOutlined,
+  CloseOutlined,
+  SettingOutlined,
+  StarOutlined,
+  StarFilled,
+  InboxOutlined,
+  CommentOutlined,
+  AlertOutlined,
+  SearchOutlined,
+} from '@ant-design/icons';
+import html2canvas from 'html2canvas';
+import { jsPDF } from 'jspdf';
+import { getDashboard, updateDashboard, getFavorites, toggleFavorite, uploadImage } from '../api/dashboards';
+import { getVisualizations } from '../api/visualizations';
+import { DashboardPanelCard, DashboardFilterBar, DashboardSettingsDrawer, DEFAULT_THEME, DARK_THEME } from '../components/dashboard';
+import { useTheme } from '../hooks/useTheme';
+import { usePageChrome, type BreadcrumbSegment } from '../contexts/AppChromeContext';
+import type { DashboardPanel, DashboardTab, DashboardTheme, DashboardFilter } from '../types';
+
+import 'react-grid-layout/css/styles.css';
+import 'react-resizable/css/styles.css';
+
+const ResponsiveGridLayout = WidthProvider(Responsive);
+const { Text } = Typography;
+
+/** Check whether a saved theme matches one of the built-in defaults. */
+function isDefaultTheme(t: DashboardTheme | undefined): boolean {
+  if (!t) {
+    return true;
+  }
+  return (
+    (t.backgroundColor === DEFAULT_THEME.backgroundColor && t.panelBackground === DEFAULT_THEME.panelBackground) ||
+    (t.backgroundColor === DARK_THEME.backgroundColor && t.panelBackground === DARK_THEME.panelBackground)
+  );
+}
+
+const REFRESH_OPTIONS = [
+  { label: 'Off', value: 0 },
+  { label: '10s', value: 10 },
+  { label: '30s', value: 30 },
+  { label: '1m', value: 60 },
+  { label: '5m', value: 300 },
+];
+
+type AddPanelTab = 'visualization' | 'markdown' | 'image' | 'title' | 'executiveSummary' | 'aiQnA' | 'aiAlerts' | 'nlFilter';
+
+export default function DashboardViewPage() {
+  const { dashboardId, projectId: urlProjectId } = useParams<{ dashboardId?: string; projectId?: string }>();
+  const id = dashboardId; // Keep using 'id' internally for compatibility
+  const navigate = useNavigate();
+  const location = useLocation();
+  const queryClient = useQueryClient();
+  const gridRef = useRef<HTMLDivElement>(null);
+
+  // If navigated from a project context, go back there; otherwise /dashboards
+  const locationState = (location.state as { from?: string; projectName?: string; projectId?: string }) || {};
+  const backPath = locationState.from || '/dashboards';
+  const projectId = urlProjectId || locationState.projectId || (locationState.from?.match(/\/projects\/([^/]+)/)?.[1]);
+  const projectName = locationState.projectName;
+
+  const { isDark } = useTheme();
+  const globalDefaultTheme = isDark ? DARK_THEME : DEFAULT_THEME;
+
+  const [editMode, setEditMode] = useState(false);
+  const [panels, setPanels] = useState<DashboardPanel[]>([]);
+  const [tabs, setTabs] = useState<DashboardTab[]>([]);
+  const [theme, setTheme] = useState<DashboardTheme>(globalDefaultTheme);
+  const [hasCustomTheme, setHasCustomTheme] = useState(false);
+  const [panelsInitialized, setPanelsInitialized] = useState(false);
+  const [refreshInterval, setRefreshInterval] = useState(0);
+  const [addPanelVisible, setAddPanelVisible] = useState(false);
+  const [addPanelTab, setAddPanelTab] = useState<AddPanelTab>('visualization');
+  const [activeTabId, setActiveTabId] = useState<string | null>(null);
+  // Tab renaming — Modal-based to sidestep AntD Tabs' internal focus management.
+  const [renamingTabId, setRenamingTabId] = useState<string | null>(null);
+  const [renameValue, setRenameValue] = useState('');
+  const [exportingPdf, setExportingPdf] = useState(false);
+  const [settingsOpen, setSettingsOpen] = useState(false);
+
+  // Cross-filter helpers
+  const toIsoDate = useCallback((raw: string): string => {
+    const num = Number(raw);
+    if (!isNaN(num) && Math.abs(num) > 1e8) {
+      const ms = Math.abs(num) > 1e12 ? num : num * 1000;
+      return new Date(ms).toISOString().split('T')[0];
+    }
+    const d = new Date(raw);
+    if (!isNaN(d.getTime())) {
+      return d.toISOString().split('T')[0];
+    }
+    return raw;
+  }, []);
+
+  const formatTemporalDisplay = useCallback((raw: string): string => {
+    const num = Number(raw);
+    let d: Date;
+    if (!isNaN(num) && Math.abs(num) > 1e8) {
+      const ms = Math.abs(num) > 1e12 ? num : num * 1000;
+      d = new Date(ms);
+    } else {
+      d = new Date(raw);
+    }
+    if (isNaN(d.getTime())) {
+      return raw;
+    }
+    return d.toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' });
+  }, []);
+
+  // Cross-filter state — persisted in URL search params so filters survive reloads
+  const [searchParams, setSearchParams] = useSearchParams();
+  const [filters, setFiltersRaw] = useState<DashboardFilter[]>(() => {
+    try {
+      const raw = searchParams.get('filters');
+      return raw ? JSON.parse(raw) : [];
+    } catch {
+      return [];
+    }
+  });
+
+  // Wrapper that updates both state and URL
+  const setFilters: typeof setFiltersRaw = useCallback((action) => {
+    setFiltersRaw((prev) => {
+      const next = typeof action === 'function' ? action(prev) : action;
+      // Sync to URL (replace, don't push, to avoid polluting browser history)
+      setSearchParams((sp) => {
+        if (next.length > 0) {
+          sp.set('filters', JSON.stringify(next));
+        } else {
+          sp.delete('filters');
+        }
+        return sp;
+      }, { replace: true });
+      return next;
+    });
+  }, [setSearchParams]);
+
+  const handleChartClick = useCallback((column: string, value: string, vizId: string, isTemporal?: boolean, isNumeric?: boolean) => {
+    setFilters((prev) => {
+      const existing = prev.find((f) => f.column === column && f.value === value);
+      if (existing) {
+        return prev.filter((f) => f.id !== existing.id);
+      }
+
+      let label = `${column} = ${value}`;
+      let rangeStart: string | undefined;
+      let rangeEnd: string | undefined;
+
+      if (isTemporal) {
+        const isoDate = toIsoDate(value);
+        const displayDate = formatTemporalDisplay(value);
+        label = `${column}: ${displayDate}`;
+        rangeStart = isoDate;
+        rangeEnd = isoDate;
+      }
+
+      const newFilter: DashboardFilter = {
+        id: crypto.randomUUID(),
+        column,
+        value,
+        sourceVizId: vizId,
+        label,
+        isTemporal,
+        rangeStart,
+        rangeEnd,
+        isNumeric,
+        numericOp: isNumeric ? '=' : undefined,
+      };
+      return [...prev, newFilter];
+    });
+  }, [setFilters, toIsoDate, formatTemporalDisplay]);
+
+  const handleRemoveFilter = useCallback((filterId: string) => {
+    setFilters((prev) => prev.filter((f) => f.id !== filterId));
+  }, [setFilters]);
+
+  const handleUpdateFilter = useCallback((filterId: string, update: Partial<DashboardFilter>) => {
+    setFilters((prev) => prev.map((f) => {
+      if (f.id !== filterId) {
+        return f;
+      }
+      const merged = { ...f, ...update };
+
+      // Recompute label
+      if (merged.isTemporal && merged.rangeStart && merged.rangeEnd) {
+        const fmt = (d: string) => new Date(d).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' });
+        merged.label = merged.rangeStart === merged.rangeEnd
+          ? `${merged.column}: ${fmt(merged.rangeStart)}`
+          : `${merged.column}: ${fmt(merged.rangeStart)} - ${fmt(merged.rangeEnd)}`;
+      } else if (merged.isNumeric) {
+        const op = merged.numericOp || '=';
+        if (op === 'between' && merged.numericEnd != null) {
+          merged.label = `${merged.column}: ${merged.value} - ${merged.numericEnd}`;
+        } else {
+          merged.label = `${merged.column} ${op} ${merged.value}`;
+        }
+      } else {
+        merged.label = `${merged.column} = ${merged.value}`;
+      }
+      return merged;
+    }));
+  }, [setFilters]);
+
+  const handleClearAllFilters = useCallback(() => {
+    setFilters([]);
+  }, [setFilters]);
+
+  // New panel content inputs
+  const [newMarkdownContent, setNewMarkdownContent] = useState('## Heading\n\nYour content here...');
+  const [newImageUrl, setNewImageUrl] = useState('');
+  const [newImageAlt, setNewImageAlt] = useState('');
+  const [newTitleText, setNewTitleText] = useState('');
+  const [newTitleSubtitle, setNewTitleSubtitle] = useState('');
+  const [newSummaryPrompt, setNewSummaryPrompt] = useState('');
+  const [imageUploading, setImageUploading] = useState(false);
+
+  // Fetch dashboard
+  const { data: dashboard, isLoading, error } = useQuery({
+    queryKey: ['dashboard', id],
+    queryFn: () => getDashboard(id!),
+    enabled: !!id,
+  });
+
+  // Fetch favorites
+  const { data: favorites } = useQuery({
+    queryKey: ['dashboard-favorites'],
+    queryFn: getFavorites,
+  });
+
+  const isFavorited = useMemo(() => {
+    return id ? (favorites || []).includes(id) : false;
+  }, [favorites, id]);
+
+  // Toggle favorite mutation
+  const favoriteMutation = useMutation({
+    mutationFn: () => toggleFavorite(id!),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['dashboard-favorites'] });
+    },
+  });
+
+  // Initialize panels from fetched dashboard data
+  useEffect(() => {
+    if (dashboard && !panelsInitialized) {
+      setPanels(dashboard.panels || []);
+      setTabs(dashboard.tabs || []);
+      const savedTheme = dashboard.theme;
+      // Treat built-in light/dark themes as non-custom so they sync with
+      // the global dark mode toggle.  Only truly customized themes (Blue,
+      // Warm, or user-adjusted colors) are pinned.
+      const custom = !!savedTheme && !isDefaultTheme(savedTheme);
+      setHasCustomTheme(custom);
+      setTheme(custom ? savedTheme : globalDefaultTheme);
+      setRefreshInterval(dashboard.refreshInterval || 0);
+      setPanelsInitialized(true);
+    }
+  }, [dashboard, panelsInitialized, globalDefaultTheme]);
+
+  // When global dark mode changes, update dashboards that use the default theme
+  useEffect(() => {
+    if (panelsInitialized && !hasCustomTheme) {
+      setTheme(globalDefaultTheme);
+    }
+  }, [globalDefaultTheme, panelsInitialized, hasCustomTheme]);
+
+  // Fetch available visualizations for "Add panel" modal
+  const { data: visualizations } = useQuery({
+    queryKey: ['visualizations'],
+    queryFn: getVisualizations,
+    enabled: addPanelVisible,
+  });
+
+  // Save dashboard mutation — only persist theme if user explicitly customized it
+  const saveMutation = useMutation({
+    mutationFn: () => updateDashboard(id!, { panels, tabs, theme: hasCustomTheme ? theme : undefined, refreshInterval }),
+    onSuccess: () => {
+      message.success('Dashboard saved');
+      queryClient.invalidateQueries({ queryKey: ['dashboard', id] });
+    },
+    onError: () => {
+      message.error('Failed to save dashboard');
+    },
+  });
+
+  // Filter panels by active tab
+  const visiblePanels = useMemo(() => {
+    if (!activeTabId) {
+      if (tabs.length === 0) {
+        return panels;
+      }
+      return panels.filter((p) => !p.tabId);
+    }
+    return panels.filter((p) => p.tabId === activeTabId);
+  }, [panels, activeTabId, tabs]);
+
+  // Convert panels to react-grid-layout format
+  const layout = useMemo(() => {
+    return visiblePanels.map((panel) => ({
+      i: panel.id,
+      x: panel.x,
+      y: panel.y,
+      w: panel.width,
+      h: panel.height,
+      minW: 2,
+      minH: 2,
+      static: !editMode,
+    }));
+  }, [visiblePanels, editMode]);
+
+  // Handle layout change from drag/resize
+  const handleLayoutChange = useCallback((newLayout: Array<{ i: string; x: number; y: number; w: number; h: number }>) => {
+    if (!editMode) {
+      return;
+    }
+    setPanels((prev) =>
+      prev.map((panel) => {
+        const layoutItem = newLayout.find((l) => l.i === panel.id);
+        if (layoutItem) {
+          return {
+            ...panel,
+            x: layoutItem.x,
+            y: layoutItem.y,
+            width: layoutItem.w,
+            height: layoutItem.h,
+          };
+        }
+        return panel;
+      })
+    );
+  }, [editMode]);
+
+  // Add a visualization panel
+  const handleAddVizPanel = useCallback((visualizationId: string) => {
+    const newPanel: DashboardPanel = {
+      id: crypto.randomUUID(),
+      type: 'visualization',
+      visualizationId,
+      x: 0,
+      y: Infinity,
+      width: 6,
+      height: 3,
+      tabId: activeTabId || undefined,
+    };
+    setPanels((prev) => [...prev, newPanel]);
+    setAddPanelVisible(false);
+    message.success('Visualization panel added');
+  }, [activeTabId]);
+
+  // Add a content panel (markdown, image, title, executiveSummary, aiQnA, aiAlerts, nlFilter)
+  const handleAddContentPanel = useCallback((type: 'markdown' | 'image' | 'title' | 'executiveSummary' | 'aiQnA' | 'aiAlerts' | 'nlFilter') => {
+    let content = '';
+    let config: Record<string, string> | undefined;
+    let width = 6;
+    let height = 3;
+
+    if (type === 'markdown') {
+      content = newMarkdownContent;
+    } else if (type === 'image') {
+      content = newImageUrl;
+      if (newImageAlt) {
+        config = { imageAlt: newImageAlt };
+      }
+    } else if (type === 'title') {
+      content = newTitleText;
+      width = 12;
+      height = 2;
+      if (newTitleSubtitle) {
+        config = { subtitle: newTitleSubtitle, textAlign: 'center' };
+      } else {
+        config = { textAlign: 'center' };
+      }
+    } else if (type === 'executiveSummary') {
+      content = newSummaryPrompt;
+      config = { includeSampleData: 'true' };
+      width = 12;
+      height = 4;
+    } else if (type === 'aiQnA') {
+      width = 4;
+      height = 4;
+      config = { maxMessages: '20' };
+    } else if (type === 'aiAlerts') {
+      width = 6;
+      height = 3;
+      config = { alertRules: '[]', aiAnalysis: 'false' };
+    } else if (type === 'nlFilter') {
+      width = 6;
+      height = 2;
+    }
+
+    const typeLabels: Record<string, string> = {
+      executiveSummary: 'AI Summary',
+      aiQnA: 'AI Q&A',
+      aiAlerts: 'AI Alerts',
+      nlFilter: 'NL Filter',
+    };
+
+    const newPanel: DashboardPanel = {
+      id: crypto.randomUUID(),
+      type,
+      content,
+      config,
+      x: 0,
+      y: Infinity,
+      width,
+      height,
+      tabId: activeTabId || undefined,
+    };
+    setPanels((prev) => [...prev, newPanel]);
+    setAddPanelVisible(false);
+    setNewMarkdownContent('## Heading\n\nYour content here...');
+    setNewImageUrl('');
+    setNewImageAlt('');
+    setNewTitleText('');
+    setNewTitleSubtitle('');
+    setNewSummaryPrompt('');
+    message.success(`${typeLabels[type] || type.charAt(0).toUpperCase() + type.slice(1)} panel added`);
+  }, [activeTabId, newMarkdownContent, newImageUrl, newImageAlt, newTitleText, newTitleSubtitle, newSummaryPrompt]);
+
+  // Remove a panel
+  const handleRemovePanel = useCallback((panelId: string) => {
+    setPanels((prev) => prev.filter((p) => p.id !== panelId));
+  }, []);
+
+  // Update a panel's content/config inline
+  const handlePanelChange = useCallback((updatedPanel: DashboardPanel) => {
+    setPanels((prev) => prev.map((p) => p.id === updatedPanel.id ? updatedPanel : p));
+  }, []);
+
+  // Toggle edit mode
+  const handleToggleEdit = useCallback(() => {
+    if (editMode) {
+      // Exiting edit mode without saving - reset
+      if (dashboard) {
+        setPanels(dashboard.panels || []);
+        setTabs(dashboard.tabs || []);
+        const custom = !!dashboard.theme && !isDefaultTheme(dashboard.theme);
+        setHasCustomTheme(custom);
+        setTheme(custom ? dashboard.theme! : globalDefaultTheme);
+        setRefreshInterval(dashboard.refreshInterval || 0);
+      }
+    }
+    setEditMode(!editMode);
+  }, [editMode, dashboard, globalDefaultTheme]);
+
+  // Save and exit edit mode
+  const handleSave = useCallback(() => {
+    saveMutation.mutate();
+    setEditMode(false);
+  }, [saveMutation]);
+
+  // Tab management
+  const handleAddTab = useCallback(() => {
+    const newTab: DashboardTab = {
+      id: crypto.randomUUID(),
+      name: `Tab ${tabs.length + 1}`,
+      order: tabs.length,
+    };
+    setTabs((prev) => [...prev, newTab]);
+  }, [tabs.length]);
+
+  const openRenameTab = useCallback((tabId: string, currentName: string) => {
+    setRenameValue(currentName);
+    setRenamingTabId(tabId);
+  }, []);
+
+  const closeRenameTab = useCallback(() => {
+    setRenamingTabId(null);
+    setRenameValue('');
+  }, []);
+
+  const submitRenameTab = useCallback(() => {
+    if (!renamingTabId) {
+      return;
+    }
+    const trimmed = renameValue.trim();
+    if (trimmed) {
+      setTabs((prev) => prev.map((t) => t.id === renamingTabId ? { ...t, name: trimmed } : t));
+    }
+    closeRenameTab();
+  }, [renamingTabId, renameValue, closeRenameTab]);
+
+  const handleDeleteTab = useCallback((tabId: string) => {
+    setTabs((prev) => prev.filter((t) => t.id !== tabId));
+    setPanels((prev) => prev.map((p) => p.tabId === tabId ? { ...p, tabId: undefined } : p));
+    if (activeTabId === tabId) {
+      setActiveTabId(null);
+    }
+  }, [activeTabId]);
+
+  // NL Filter: apply AI-generated filters to the dashboard
+  const handleApplyNlFilters = useCallback((newFilters: DashboardFilter[]) => {
+    setFilters((prev) => [...prev, ...newFilters]);
+  }, [setFilters]);
+
+  // PDF export — always renders in light mode for print readability
+  const handleExportPdf = useCallback(async () => {
+    if (!gridRef.current) {
+      return;
+    }
+    setExportingPdf(true);
+
+    // Temporarily force light theme so the screenshot is always light
+    const prevTheme = theme;
+    setTheme(DEFAULT_THEME);
+
+    // Add pdf-export-mode class to hide interactive elements
+    gridRef.current.classList.add('pdf-export-mode');
+
+    // Wait for React re-render + ECharts canvas repaint
+    await new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r)));
+
+    try {
+      const canvas = await html2canvas(gridRef.current, {
+        scale: 2,
+        useCORS: true,
+        logging: false,
+        backgroundColor: DEFAULT_THEME.backgroundColor,
+      });
+      const imgData = canvas.toDataURL('image/png');
+      const pdf = new jsPDF({
+        orientation: 'landscape',
+        unit: 'mm',
+        format: 'a4',
+      });
+      const pageWidth = pdf.internal.pageSize.getWidth();
+      const pageHeight = pdf.internal.pageSize.getHeight();
+      const imgWidth = pageWidth - 20;
+      const imgHeight = (canvas.height * imgWidth) / canvas.width;
+
+      pdf.setFontSize(16);
+      pdf.text(dashboard?.name || 'Dashboard', 10, 12);
+      pdf.setFontSize(10);
+      pdf.setTextColor(128);
+      pdf.text(`Exported ${new Date().toLocaleString()}`, 10, 18);
+
+      const startY = 22;
+      const availableHeight = pageHeight - startY - 5;
+
+      if (imgHeight <= availableHeight) {
+        pdf.addImage(imgData, 'PNG', 10, startY, imgWidth, imgHeight);
+      } else {
+        const scaledHeight = availableHeight;
+        const scaledWidth = (canvas.width * scaledHeight) / canvas.height;
+        pdf.addImage(imgData, 'PNG', 10, startY, scaledWidth, scaledHeight);
+      }
+
+      pdf.save(`${dashboard?.name || 'dashboard'}.pdf`);
+      message.success('PDF exported');
+    } catch {
+      message.error('Failed to export PDF');
+    } finally {
+      // Remove pdf-export-mode class and restore the original theme
+      if (gridRef.current) {
+        gridRef.current.classList.remove('pdf-export-mode');
+      }
+      setTheme(prevTheme);
+      setExportingPdf(false);
+    }
+  }, [dashboard?.name, theme]);
+
+  // Share link
+  const handleCopyShareLink = useCallback(() => {
+    const url = `${window.location.origin}/sqllab/dashboards/${id}`;
+    navigator.clipboard.writeText(url).then(
+      () => message.success('Link copied to clipboard!'),
+      () => message.error('Failed to copy link')
+    );
+  }, [id]);
+
+  // Theme CSS custom properties
+  const themeStyle = useMemo((): React.CSSProperties => ({
+    '--db-bg': theme.backgroundColor,
+    '--db-font': theme.fontColor,
+    '--db-panel-bg': theme.panelBackground,
+    '--db-panel-border': theme.panelBorderColor,
+    '--db-panel-radius': theme.panelBorderRadius,
+    '--db-accent': theme.accentColor,
+    '--db-header': theme.headerColor,
+    fontFamily: theme.fontFamily,
+    color: theme.fontColor,
+    backgroundColor: theme.backgroundColor,
+  } as React.CSSProperties), [theme]);
+
+  // Register chrome on the unified shell toolbar — breadcrumb + actions
+  const breadcrumb = useMemo<BreadcrumbSegment[]>(() => {
+    if (!dashboard) {
+      return [];
+    }
+    if (projectId) {
+      return [
+        { key: 'projects', label: 'Projects', to: '/projects' },
+        { key: 'project', label: projectName ?? 'Project', to: `/projects/${projectId}/dashboards` },
+        { key: 'dashboards', label: 'Dashboards', to: `/projects/${projectId}/dashboards` },
+        { key: 'dashboard', label: dashboard.name },
+      ];
+    }
+    return [
+      { key: 'dashboards', label: 'Dashboards', to: '/dashboards' },
+      { key: 'dashboard', label: dashboard.name },
+    ];
+  }, [dashboard, projectId, projectName]);
+
+  const toolbarActions = useMemo(() => {
+    if (!dashboard) {
+      return null;
+    }
+    return (
+      <Space size={2}>
+        <Tooltip title={isFavorited ? 'Remove from favorites' : 'Add to favorites'}>
+          <Button
+            type="text"
+            size="small"
+            icon={isFavorited
+              ? <StarFilled style={{ color: '#FFD60A' }} />
+              : <StarOutlined />
+            }
+            onClick={() => favoriteMutation.mutate()}
+            loading={favoriteMutation.isPending}
+          />
+        </Tooltip>
+
+        <Select
+          size="small"
+          value={refreshInterval}
+          onChange={setRefreshInterval}
+          options={REFRESH_OPTIONS}
+          style={{ width: 84 }}
+          suffixIcon={<ReloadOutlined style={{ fontSize: 11 }} />}
+          variant="borderless"
+        />
+
+        <Tooltip title="Export as PDF">
+          <Button
+            type="text"
+            size="small"
+            icon={<FilePdfOutlined />}
+            onClick={handleExportPdf}
+            disabled={exportingPdf || panels.length === 0}
+          />
+        </Tooltip>
+
+        {dashboard.isPublic && (
+          <Tooltip title="Copy shareable link">
+            <Button type="text" size="small" icon={<ShareAltOutlined />} onClick={handleCopyShareLink} />
+          </Tooltip>
+        )}
+
+        {editMode ? (
+          <>
+            <Tooltip title="Dashboard settings">
+              <Button type="text" size="small" icon={<SettingOutlined />} onClick={() => setSettingsOpen(true)} />
+            </Tooltip>
+            <Button size="small" icon={<PlusOutlined />} onClick={() => setAddPanelVisible(true)}>
+              Add Panel
+            </Button>
+            <Button size="small" onClick={handleToggleEdit}>Cancel</Button>
+            <Button
+              size="small"
+              type="primary"
+              icon={<SaveOutlined />}
+              onClick={handleSave}
+              loading={saveMutation.isPending}
+            >
+              Save
+            </Button>
+          </>
+        ) : (
+          <Button size="small" type="primary" icon={<EditOutlined />} onClick={handleToggleEdit}>
+            Edit
+          </Button>
+        )}
+      </Space>
+    );
+  }, [
+    dashboard,
+    isFavorited,
+    favoriteMutation,
+    refreshInterval,
+    handleExportPdf,
+    exportingPdf,
+    panels.length,
+    handleCopyShareLink,
+    editMode,
+    handleToggleEdit,
+    handleSave,
+    saveMutation.isPending,
+  ]);
+
+  usePageChrome({ breadcrumb, toolbarActions });
+
+  if (isLoading) {
+    return (
+      <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100%' }}>
+        <Spin size="large" tip="Loading dashboard..." />
+      </div>
+    );
+  }
+
+  if (error || !dashboard) {
+    return (
+      <div style={{ padding: 24 }}>
+        <Alert
+          message="Error"
+          description={error instanceof Error ? error.message : 'Dashboard not found'}
+          type="error"
+          showIcon
+          action={
+            <Button onClick={() => navigate(backPath)}>Back to Dashboards</Button>
+          }
+        />
+      </div>
+    );
+  }
+
+  // Build tab items for Ant Tabs
+  const tabItems = tabs.length > 0 ? [
+    {
+      key: '__default__',
+      label: 'All',
+    },
+    ...tabs
+      .sort((a, b) => a.order - b.order)
+      .map((tab) => ({
+        key: tab.id,
+        label: (
+          <span
+            onDoubleClick={(e) => {
+              if (editMode) {
+                e.stopPropagation();
+                openRenameTab(tab.id, tab.name);
+              }
+            }}
+          >
+            {tab.name}
+            {editMode && (
+              <CloseOutlined
+                style={{ marginLeft: 8, fontSize: 10, color: 'var(--color-text-tertiary)' }}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handleDeleteTab(tab.id);
+                }}
+              />
+            )}
+          </span>
+        ),
+      })),
+  ] : [];
+
+  return (
+    <div className="dashboard-view">
+      {/* PDF Export Overlay */}
+      {exportingPdf && (
+        <div className="pdf-export-overlay">
+          <Spin size="large" tip="Generating PDF..." />
+        </div>
+      )}
+
+      {/* Title strip — dashboard name + description as a doc-style header */}
+      <div className="dashboard-title-strip">
+        <h1 className="dashboard-title">{dashboard.name}</h1>
+        {dashboard.description && (
+          <p className="dashboard-title-description">{dashboard.description}</p>
+        )}
+      </div>
+
+      {/* Dashboard Tabs */}
+      {(tabs.length > 0 || editMode) && (
+        <div className="dashboard-tabs">
+          <Tabs
+            activeKey={activeTabId || '__default__'}
+            onChange={(key) => setActiveTabId(key === '__default__' ? null : key)}
+            items={tabItems}
+            tabBarExtraContent={editMode ? (
+              <Button
+                type="text"
+                size="small"
+                icon={<PlusOutlined />}
+                onClick={handleAddTab}
+              >
+                Add Tab
+              </Button>
+            ) : undefined}
+          />
+        </div>
+      )}
+
+      {/* Cross-Filter Bar */}
+      <DashboardFilterBar
+        filters={filters}
+        onRemoveFilter={handleRemoveFilter}
+        onUpdateFilter={handleUpdateFilter}
+        onClearAll={handleClearAllFilters}
+      />
+
+      {/* Dashboard Grid */}
+      {visiblePanels.length === 0 ? (
+        <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: 'calc(100% - 64px)' }}>
+          <Empty
+            description={
+              <span>
+                No panels{activeTabId ? ' in this tab' : ''}.
+                {editMode ? ' Click "Add Panel" to get started.' : ' Click "Edit" to add panels.'}
+              </span>
+            }
+          >
+            {!editMode && (
+              <Button type="primary" icon={<EditOutlined />} onClick={() => setEditMode(true)}>
+                Start Editing
+              </Button>
+            )}
+          </Empty>
+        </div>
+      ) : (
+        <div className="dashboard-grid-container" ref={gridRef} style={themeStyle}>
+          <ResponsiveGridLayout
+            className={`dashboard-grid ${editMode ? 'edit-mode' : ''}`}
+            layouts={{ lg: layout }}
+            breakpoints={{ lg: 1200, md: 996, sm: 768, xs: 480 }}
+            cols={{ lg: 12, md: 10, sm: 6, xs: 4 }}
+            rowHeight={120}
+            isDraggable={editMode}
+            isResizable={editMode}
+            onLayoutChange={handleLayoutChange}
+            draggableHandle=".drag-handle"
+            margin={[12, 12]}
+          >
+            {visiblePanels.map((panel) => (
+              <div key={panel.id}>
+                <DashboardPanelCard
+                  panel={panel}
+                  editMode={editMode}
+                  refreshInterval={editMode ? 0 : refreshInterval}
+                  dashboardUpdatedAt={dashboard.updatedAt}
+                  darkMode={theme.mode === 'dark'}
+                  filters={filters}
+                  allPanels={panels}
+                  onRemove={handleRemovePanel}
+                  onPanelChange={handlePanelChange}
+                  onChartClick={handleChartClick}
+                  onApplyFilters={handleApplyNlFilters}
+                />
+              </div>
+            ))}
+          </ResponsiveGridLayout>
+        </div>
+      )}
+
+      {/* Settings Drawer */}
+      <DashboardSettingsDrawer
+        open={settingsOpen}
+        theme={theme}
+        onClose={() => setSettingsOpen(false)}
+        onThemeChange={(t) => { setTheme(t); setHasCustomTheme(true); }}
+      />
+
+      {/* Add Panel Modal */}
+      <Modal
+        title="Add Panel"
+        open={addPanelVisible}
+        onCancel={() => setAddPanelVisible(false)}
+        footer={addPanelTab !== 'visualization' ? (
+          <Space>
+            <Button onClick={() => setAddPanelVisible(false)}>Cancel</Button>
+            <Button
+              type="primary"
+              onClick={() => handleAddContentPanel(addPanelTab as 'markdown' | 'image' | 'title' | 'executiveSummary' | 'aiQnA' | 'aiAlerts' | 'nlFilter')}
+              disabled={
+                (addPanelTab === 'image' && !newImageUrl) ||
+                (addPanelTab === 'title' && !newTitleText)
+              }
+            >
+              Add Panel
+            </Button>
+          </Space>
+        ) : null}
+        width={600}
+      >
+        <Tabs
+          activeKey={addPanelTab}
+          onChange={(key) => setAddPanelTab(key as AddPanelTab)}
+          items={[
+            {
+              key: 'visualization',
+              label: <span><BarChartOutlined /> Visualization</span>,
+              children: visualizations && visualizations.length > 0 ? (
+                <List
+                  dataSource={visualizations}
+                  renderItem={(viz) => {
+                    const alreadyAdded = panels.some((p) => p.visualizationId === viz.id);
+                    return (
+                      <List.Item
+                        actions={[
+                          <Button
+                            key="add"
+                            type="primary"
+                            size="small"
+                            disabled={alreadyAdded}
+                            onClick={() => handleAddVizPanel(viz.id)}
+                          >
+                            {alreadyAdded ? 'Added' : 'Add'}
+                          </Button>,
+                        ]}
+                      >
+                        <List.Item.Meta
+                          title={viz.name}
+                          description={`${viz.chartType} chart${viz.description ? ` - ${viz.description}` : ''}`}
+                        />
+                      </List.Item>
+                    );
+                  }}
+                />
+              ) : (
+                <Empty description="No visualizations available. Create one first from the Visualizations page." />
+              ),
+            },
+            {
+              key: 'markdown',
+              label: <span><FileMarkdownOutlined /> Markdown</span>,
+              children: (
+                <div>
+                  <Text type="secondary" style={{ display: 'block', marginBottom: 8 }}>
+                    Add formatted text using Markdown syntax. Supports headers, bold, italic, links, lists, and more.
+                  </Text>
+                  <Input.TextArea
+                    value={newMarkdownContent}
+                    onChange={(e) => setNewMarkdownContent(e.target.value)}
+                    rows={6}
+                    placeholder="Enter markdown content..."
+                    style={{ fontFamily: 'monospace' }}
+                  />
+                </div>
+              ),
+            },
+            {
+              key: 'image',
+              label: <span><PictureOutlined /> Image</span>,
+              children: (
+                <Space direction="vertical" style={{ width: '100%' }}>
+                  <Tabs
+                    defaultActiveKey="url"
+                    items={[
+                      {
+                        key: 'url',
+                        label: 'URL',
+                        children: (
+                          <Input
+                            value={newImageUrl}
+                            onChange={(e) => setNewImageUrl(e.target.value)}
+                            placeholder="https://example.com/image.png"
+                            addonBefore="URL"
+                          />
+                        ),
+                      },
+                      {
+                        key: 'upload',
+                        label: 'Upload',
+                        children: (
+                          <Spin spinning={imageUploading} tip="Uploading...">
+                            <Upload.Dragger
+                              accept=".jpg,.jpeg,.png,.gif,.svg,.webp"
+                              showUploadList={false}
+                              beforeUpload={(file) => {
+                                const allowedTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/svg+xml', 'image/webp'];
+                                if (!allowedTypes.includes(file.type)) {
+                                  message.error('Invalid file type. Allowed: JPG, PNG, GIF, SVG, WebP');
+                                  return false;
+                                }
+                                if (file.size > 5 * 1024 * 1024) {
+                                  message.error('File exceeds maximum size of 5 MB');
+                                  return false;
+                                }
+                                setImageUploading(true);
+                                uploadImage(file)
+                                  .then((result) => {
+                                    setNewImageUrl(result.url);
+                                    message.success(`Uploaded ${result.filename}`);
+                                  })
+                                  .catch(() => {
+                                    message.error('Failed to upload image');
+                                  })
+                                  .finally(() => {
+                                    setImageUploading(false);
+                                  });
+                                return false;
+                              }}
+                            >
+                              <p className="ant-upload-drag-icon">
+                                <InboxOutlined />
+                              </p>
+                              <p className="ant-upload-text">Click or drag an image file here</p>
+                              <p className="ant-upload-hint">
+                                JPG, PNG, GIF, SVG, or WebP — max 5 MB
+                              </p>
+                            </Upload.Dragger>
+                          </Spin>
+                        ),
+                      },
+                    ]}
+                  />
+                  <Input
+                    value={newImageAlt}
+                    onChange={(e) => setNewImageAlt(e.target.value)}
+                    placeholder="Image description (optional)"
+                    addonBefore="Alt text"
+                  />
+                </Space>
+              ),
+            },
+            {
+              key: 'title',
+              label: <span><FontSizeOutlined /> Title</span>,
+              children: (
+                <Space direction="vertical" style={{ width: '100%' }}>
+                  <Text type="secondary">Add a large heading with an optional subtitle.</Text>
+                  <Input
+                    value={newTitleText}
+                    onChange={(e) => setNewTitleText(e.target.value)}
+                    placeholder="Dashboard Section Title"
+                    addonBefore="Title"
+                  />
+                  <Input
+                    value={newTitleSubtitle}
+                    onChange={(e) => setNewTitleSubtitle(e.target.value)}
+                    placeholder="Optional subtitle"
+                    addonBefore="Subtitle"
+                  />
+                </Space>
+              ),
+            },
+            {
+              key: 'executiveSummary',
+              label: <span><BulbOutlined /> AI Summary</span>,
+              children: (
+                <Space direction="vertical" style={{ width: '100%' }}>
+                  <Text type="secondary">
+                    Add an AI-generated executive summary that analyzes data from all visualization panels
+                    on this dashboard. Requires the Prospector AI assistant to be configured.
+                  </Text>
+                  <Text type="secondary" style={{ fontSize: 12 }}>
+                    Customize the prompt below, or leave empty to use the default prompt. The AI will
+                    receive column names, row counts, and sample data from each visualization panel.
+                  </Text>
+                  <Input.TextArea
+                    value={newSummaryPrompt}
+                    onChange={(e) => setNewSummaryPrompt(e.target.value)}
+                    rows={6}
+                    placeholder="You are an executive analyst. Summarize the key insights from this dashboard data. Highlight any anomalies, trends, or areas needing attention. Use status indicators for good/warning/critical and format your response with clear sections."
+                    style={{ fontFamily: 'monospace' }}
+                  />
+                </Space>
+              ),
+            },
+            {
+              key: 'aiQnA',
+              label: <span><CommentOutlined /> AI Q&amp;A</span>,
+              children: (
+                <Space direction="vertical" style={{ width: '100%' }}>
+                  <Text type="secondary">
+                    Add a mini chat widget scoped to this dashboard&apos;s data. Users can ask questions
+                    about the data and get AI-powered answers. Requires the Prospector AI assistant.
+                  </Text>
+                </Space>
+              ),
+            },
+            {
+              key: 'aiAlerts',
+              label: <span><AlertOutlined /> AI Alerts</span>,
+              children: (
+                <Space direction="vertical" style={{ width: '100%' }}>
+                  <Text type="secondary">
+                    Add threshold-based alerts that evaluate against dashboard data. Configure rules in edit
+                    mode to trigger alerts when conditions are met. Optionally enable AI analysis of triggered alerts.
+                  </Text>
+                </Space>
+              ),
+            },
+            {
+              key: 'nlFilter',
+              label: <span><SearchOutlined /> NL Filter</span>,
+              children: (
+                <Space direction="vertical" style={{ width: '100%' }}>
+                  <Text type="secondary">
+                    Add a natural language filter panel. Users can describe filters in plain English and the
+                    AI will convert them into structured dashboard cross-filters. Requires the Prospector AI assistant.
+                  </Text>
+                </Space>
+              ),
+            },
+          ]}
+        />
+      </Modal>
+
+      {/* Rename Tab Modal */}
+      <Modal
+        title="Rename tab"
+        open={renamingTabId !== null}
+        onCancel={closeRenameTab}
+        onOk={submitRenameTab}
+        okText="Rename"
+        okButtonProps={{ disabled: !renameValue.trim() }}
+        destroyOnClose
+        width={420}
+      >
+        <Input
+          autoFocus
+          value={renameValue}
+          onChange={(e) => setRenameValue(e.target.value)}
+          onPressEnter={submitRenameTab}
+          placeholder="Tab name"
+          maxLength={100}
+        />
+      </Modal>
+    </div>
+  );
+}
