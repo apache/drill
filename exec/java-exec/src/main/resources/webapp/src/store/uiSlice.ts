@@ -18,8 +18,6 @@
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
 
 interface UiState {
-  sidebarCollapsed: boolean;
-  sidebarWidth: number;
   editorHeight: number;
   selectedSchema?: string;
   selectedTable?: string;
@@ -27,8 +25,6 @@ interface UiState {
 }
 
 const initialState: UiState = {
-  sidebarCollapsed: false,
-  sidebarWidth: 280,
   editorHeight: 300,
   resultsPanelTab: 'results',
 };
@@ -37,12 +33,6 @@ const uiSlice = createSlice({
   name: 'ui',
   initialState,
   reducers: {
-    toggleSidebar: (state) => {
-      state.sidebarCollapsed = !state.sidebarCollapsed;
-    },
-    setSidebarWidth: (state, action: PayloadAction<number>) => {
-      state.sidebarWidth = Math.max(200, Math.min(500, action.payload));
-    },
     setEditorHeight: (state, action: PayloadAction<number>) => {
       state.editorHeight = Math.max(150, Math.min(600, action.payload));
     },
@@ -57,18 +47,14 @@ const uiSlice = createSlice({
     },
     restoreUiState: (
       state,
-      action: PayloadAction<{ sidebarCollapsed: boolean; sidebarWidth: number; editorHeight: number }>
+      action: PayloadAction<{ editorHeight: number }>,
     ) => {
-      state.sidebarCollapsed = action.payload.sidebarCollapsed;
-      state.sidebarWidth = Math.max(200, Math.min(500, action.payload.sidebarWidth));
       state.editorHeight = Math.max(150, Math.min(600, action.payload.editorHeight));
     },
   },
 });
 
 export const {
-  toggleSidebar,
-  setSidebarWidth,
   setEditorHeight,
   setSelectedSchema,
   setSelectedTable,
