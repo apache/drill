@@ -97,9 +97,22 @@ function buildAuthorizationUrl(config: Record<string, unknown>): string {
   return url;
 }
 
-export default function DataSourceEditPage() {
+interface DataSourceEditPageProps {
+  /**
+   * Optional project context. When set, the page treats the project's
+   * Data Sources tab as the parent in breadcrumbs and back navigation,
+   * keeping the user inside the project workspace.
+   */
+  projectId?: string;
+}
+
+export default function DataSourceEditPage({ projectId }: DataSourceEditPageProps = {}) {
   const { name } = useParams<{ name: string }>();
   const navigate = useNavigate();
+  // Where the page returns to after delete / cancel. Project-scoped when
+  // we're inside a project, global otherwise.
+  const parentPath = projectId ? `/projects/${projectId}/datasources` : '/datasources';
+  const parentLabel = projectId ? 'Project Data Sources' : 'Data Sources';
   const location = useLocation();
   const queryClient = useQueryClient();
   const { isDark } = useTheme();
@@ -168,7 +181,7 @@ export default function DataSourceEditPage() {
       }).catch(() => {
         // Best-effort cleanup
       });
-      navigate('/datasources');
+      navigate(parentPath);
     },
     onError: (err: Error) => message.error(`Failed to delete plugin: ${err.message}`),
   });
@@ -282,13 +295,14 @@ export default function DataSourceEditPage() {
 
   const logoUrl = getPluginLogoUrl(pluginType, config.connection as string);
 
-  // Breadcrumb in unified shell
+  // Breadcrumb in unified shell — points back to the parent list (project
+  // tab when project-scoped, global page otherwise).
   const breadcrumb = useMemo<BreadcrumbSegment[]>(
     () => [
-      { key: 'datasources', label: 'Data Sources', to: '/datasources' },
+      { key: 'datasources', label: parentLabel, to: parentPath },
       { key: 'plugin', label: pluginName || 'Plugin' },
     ],
-    [pluginName],
+    [pluginName, parentLabel, parentPath],
   );
 
   // Toolbar actions
@@ -381,7 +395,7 @@ export default function DataSourceEditPage() {
       <div className="page-datasource-edit-error">
         <h2>Couldn't load plugin</h2>
         <p>{(error as Error).message}</p>
-        <Button onClick={() => navigate('/datasources')}>Back to Data Sources</Button>
+        <Button onClick={() => navigate(parentPath)}>Back to {parentLabel}</Button>
       </div>
     );
   }
