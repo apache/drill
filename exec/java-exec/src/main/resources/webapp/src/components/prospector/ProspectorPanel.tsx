@@ -36,7 +36,15 @@ export default function ProspectorPanel({
   context,
   onInsertCell,
 }: ProspectorPanelProps) {
-  const { messages, isStreaming, streamingContent, sendMessage, stopStreaming, clearChat } = prospector;
+  const {
+    messages,
+    isStreaming,
+    streamingContent,
+    usage,
+    sendMessage,
+    stopStreaming,
+    clearChat,
+  } = prospector;
 
   const handleSend = useCallback(
     (text: string) => {
@@ -86,6 +94,27 @@ export default function ProspectorPanel({
         onInsertCell={isNotebook ? onInsertCell : undefined}
       />
       <div className="prospector-panel-footer">
+        {usage && (usage.totalTokens || usage.costUsd !== undefined) && (
+          <div className="prospector-usage-pill" aria-live="polite">
+            {usage.totalTokens !== undefined && (
+              <span className="prospector-usage-tokens">
+                {usage.totalTokens.toLocaleString()} tok
+              </span>
+            )}
+            {usage.promptTokens !== undefined && usage.responseTokens !== undefined && (
+              <span className="prospector-usage-breakdown">
+                {usage.promptTokens.toLocaleString()} in · {usage.responseTokens.toLocaleString()} out
+              </span>
+            )}
+            {usage.costUsd !== undefined && (
+              <span className="prospector-usage-cost">
+                {(usage.currency === 'USD' || !usage.currency) ? '$' : ''}
+                {usage.costUsd.toFixed(usage.costUsd < 0.01 ? 4 : 3)}
+                {usage.currency && usage.currency !== 'USD' ? ` ${usage.currency}` : ''}
+              </span>
+            )}
+          </div>
+        )}
         <QuickActionBar
           onAction={handleQuickAction}
           hasError={!!context.error}

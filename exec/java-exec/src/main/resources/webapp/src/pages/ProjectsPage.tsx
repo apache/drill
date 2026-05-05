@@ -29,8 +29,8 @@ import {
   Select,
   Tooltip,
   Tag,
-  Spin,
 } from 'antd';
+import { CardGridSkeleton } from '../components/common/Skeletons';
 import {
   SearchOutlined,
   EditOutlined,
@@ -566,8 +566,8 @@ export default function ProjectsPage() {
           </Button>
         </div>
       ) : isLoading ? (
-        <div className="page-projects-loading">
-          <Spin size="large" />
+        <div className="page-projects-grid">
+          <CardGridSkeleton count={8} />
         </div>
       ) : totalCount === 0 ? (
         <ProjectsWelcome
