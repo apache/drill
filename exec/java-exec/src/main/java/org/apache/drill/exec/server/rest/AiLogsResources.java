@@ -18,127 +18,102 @@
 package org.apache.drill.exec.server.rest;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
+import org.apache.drill.exec.server.rest.ai.AiEvent;
+import org.apache.drill.exec.server.rest.ai.AiEventLogger;
+import org.apache.drill.exec.server.rest.auth.DrillUserPrincipal;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import jakarta.annotation.security.RolesAllowed;
 import jakarta.ws.rs.Consumes;
 import jakarta.ws.rs.POST;
 import jakarta.ws.rs.Path;
 import jakarta.ws.rs.Produces;
+import jakarta.ws.rs.core.Context;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
+import jakarta.ws.rs.core.SecurityContext;
 
-import java.io.BufferedWriter;
-import java.io.File;
-import java.io.FileWriter;
-import java.io.IOException;
-import java.text.SimpleDateFormat;
-import java.util.Date;
+import java.security.Principal;
+import java.time.Instant;
+import java.time.format.DateTimeFormatter;
 import java.util.List;
 
 /**
- * REST endpoint for logging AI interactions.
- * Writes logs to ai-interactions.log in the DRILL_LOG_DIR.
- * No authentication required - all users can log their AI interactions.
+ * REST endpoint that accepts client-side AI observability events and appends
+ * them to the JSONL ai-events.log used by the AI analytics dashboard.
+ * The user identity is taken from the SecurityContext on the server, not the request body.
  */
 @Path("/api/v1/ai/logs")
+@RolesAllowed(DrillUserPrincipal.AUTHENTICATED_ROLE)
 public class AiLogsResources {
   private static final Logger logger = LoggerFactory.getLogger(AiLogsResources.class);
-  private static final String AI_LOG_FILE = "ai-interactions.log";
-  private static final SimpleDateFormat ISO8601_FORMAT = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss,SSS");
 
-  /**
-   * Log a batch of AI interactions.
-   * Each log entry is written in Drill's standard log format:
-   * %date{ISO8601} [thread] %-5level logger - message
-   */
   @POST
   @Consumes(MediaType.APPLICATION_JSON)
   @Produces(MediaType.APPLICATION_JSON)
-  public Response logAiInteractions(List<AiLogEntry> entries) {
-    String logDir = System.getenv("DRILL_LOG_DIR");
-    if (logDir == null) {
-      logger.warn("DRILL_LOG_DIR is not set, cannot log AI interactions");
-      return Response.ok(new AiLogResponse(false, "DRILL_LOG_DIR not configured")).build();
+  public Response logAiInteractions(List<AiLogEntry> entries, @Context SecurityContext sc) {
+    if (entries == null || entries.isEmpty()) {
+      return Response.ok(new AiLogResponse(true, "No entries to log")).build();
     }
 
-    File file = new File(logDir, AI_LOG_FILE);
-    try (BufferedWriter writer = new BufferedWriter(new FileWriter(file, true))) {
-      for (AiLogEntry entry : entries) {
-        String logLine = formatLogLine(entry);
-        writer.write(logLine);
-        writer.newLine();
+    String username = resolveUser(sc);
+    int written = 0;
+    for (AiLogEntry entry : entries) {
+      try {
+        AiEventLogger.log(toEvent(entry, username));
+        written++;
+      } catch (Exception e) {
+        logger.warn("Failed to log AI event entry", e);
       }
-      writer.flush();
-      return Response.ok(new AiLogResponse(true, "Logged " + entries.size() + " AI interactions")).build();
-    } catch (IOException e) {
-      logger.error("Failed to write AI logs", e);
-      return Response.status(Response.Status.INTERNAL_SERVER_ERROR)
-          .entity(new AiLogResponse(false, "Failed to write logs: " + e.getMessage()))
-          .build();
     }
+    return Response.ok(new AiLogResponse(true, "Logged " + written + " AI interactions")).build();
   }
 
-  /**
-   * Format a log entry in Drill's standard log format with full details.
-   * Format: YYYY-MM-DDTHH:MM:SS,mmm [thread] LEVEL org.apache.drill.exec.server.rest.AiLogsResources - message
-   */
-  private String formatLogLine(AiLogEntry entry) {
-    Date timestamp = new Date(entry.timestamp);
-    String dateStr = ISO8601_FORMAT.format(timestamp);
-    String threadName = Thread.currentThread().getName();
-    String level = "INFO";
-    String loggerName = "org.apache.drill.exec.server.rest.AiLogsResources";
-
-    // Build message with all relevant details
-    StringBuilder message = new StringBuilder();
-    message.append("type=").append(entry.type);
-    message.append(" duration=").append(entry.duration).append("ms");
-    message.append(" tokens=").append(entry.totalTokens);
-    message.append(" (input=").append(entry.promptTokens);
-    message.append(" output=").append(entry.responseTokens).append(")");
-    message.append(" success=").append(entry.success);
-    if (entry.error != null) {
-      message.append(" error=").append(entry.error);
+  private static String resolveUser(SecurityContext sc) {
+    if (sc == null) {
+      return "anonymous";
     }
-
-    // Include prompt and response if available
-    if (entry.prompt != null && !entry.prompt.isEmpty()) {
-      // Truncate very long prompts to keep logs readable
-      String promptStr = entry.prompt.length() > 500
-          ? entry.prompt.substring(0, 500) + "..."
-          : entry.prompt;
-      message.append(" prompt=\"").append(escapeLogValue(promptStr)).append("\"");
+    Principal p = sc.getUserPrincipal();
+    if (p == null || p.getName() == null || p.getName().isEmpty()) {
+      return "anonymous";
     }
-    if (entry.response != null && !entry.response.isEmpty()) {
-      // Truncate very long responses
-      String responseStr = entry.response.length() > 500
-          ? entry.response.substring(0, 500) + "..."
-          : entry.response;
-      message.append(" response=\"").append(escapeLogValue(responseStr)).append("\"");
-    }
-
-    return String.format("%s [%s] %-5s %s - %s",
-        dateStr, threadName, level, loggerName, message.toString());
+    return p.getName();
   }
 
-  /**
-   * Escape special characters in log values to prevent log injection
-   */
-  private String escapeLogValue(String value) {
-    if (value == null) {
-      return "";
+  private static AiEvent toEvent(AiLogEntry entry, String username) {
+    AiEvent event = new AiEvent();
+    if (entry.timestamp > 0) {
+      event.ts = DateTimeFormatter.ISO_INSTANT.format(Instant.ofEpochMilli(entry.timestamp));
+    } else {
+      event.ts = AiEventLogger.nowIso();
     }
-    // Replace newlines with spaces, escape quotes
-    return value.replace("\n", " ").replace("\r", " ").replace("\"", "\\\"");
+    event.user = username;
+    event.feature = entry.type;
+    event.source = "client";
+    event.provider = entry.provider;
+    event.model = entry.model;
+    event.promptTokens = entry.promptTokens > 0 ? entry.promptTokens : null;
+    event.responseTokens = entry.responseTokens > 0 ? entry.responseTokens : null;
+    event.totalTokens = entry.totalTokens > 0 ? entry.totalTokens : null;
+    event.durationMs = entry.duration > 0 ? entry.duration : null;
+    event.success = entry.success;
+    event.error = entry.error;
+    if (entry.error != null && !entry.error.isEmpty()) {
+      event.errorClass = "ClientReported";
+    }
+    event.userMessage = AiEventLogger.truncate(entry.prompt);
+    event.prompt = AiEventLogger.truncate(entry.prompt);
+    event.response = AiEventLogger.truncate(entry.response);
+    return event;
   }
 
-  /**
-   * Request body for logging AI interactions.
-   */
+  /** Request body for logging AI interactions from the browser. */
   public static class AiLogEntry {
     @JsonProperty public long timestamp;
     @JsonProperty public String type;
+    @JsonProperty public String provider;
+    @JsonProperty public String model;
     @JsonProperty public int promptTokens;
     @JsonProperty public int responseTokens;
     @JsonProperty public int totalTokens;
@@ -147,23 +122,8 @@ public class AiLogsResources {
     @JsonProperty public String error;
     @JsonProperty public String prompt;
     @JsonProperty public String response;
-
-    // Getters for Jackson
-    public long getTimestamp() { return timestamp; }
-    public String getType() { return type; }
-    public int getPromptTokens() { return promptTokens; }
-    public int getResponseTokens() { return responseTokens; }
-    public int getTotalTokens() { return totalTokens; }
-    public long getDuration() { return duration; }
-    public boolean isSuccess() { return success; }
-    public String getError() { return error; }
-    public String getPrompt() { return prompt; }
-    public String getResponse() { return response; }
   }
 
-  /**
-   * Response object for log write operations.
-   */
   public static class AiLogResponse {
     @JsonProperty public final boolean success;
     @JsonProperty public final String message;
@@ -172,8 +132,5 @@ public class AiLogsResources {
       this.success = success;
       this.message = message;
     }
-
-    public boolean isSuccess() { return success; }
-    public String getMessage() { return message; }
   }
 }

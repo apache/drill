@@ -29,6 +29,7 @@ import type {
   ChatContext,
   DeltaEvent,
   DoneEvent,
+  UsageEvent,
 } from '../types/ai';
 import type { ChartType, VisualizationConfig } from '../types';
 
@@ -150,6 +151,8 @@ export interface UseProspectorReturn {
   messages: ChatMessage[];
   isStreaming: boolean;
   streamingContent: string;
+  /** Most recent usage event from the active or just-completed chat call. */
+  usage: UsageEvent | null;
   sendMessage: (text: string, context: ChatContext) => void;
   stopStreaming: () => void;
   clearChat: () => void;
@@ -164,6 +167,7 @@ export function useProspector(
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [isStreaming, setIsStreaming] = useState(false);
   const [streamingContent, setStreamingContent] = useState('');
+  const [usage, setUsage] = useState<UsageEvent | null>(null);
   const abortRef = useRef<AbortController | null>(null);
   const toolRoundsRef = useRef(0);
 
@@ -179,6 +183,7 @@ export function useProspector(
   const clearChat = useCallback(() => {
     stopStreaming();
     setMessages([]);
+    setUsage(null);
     toolRoundsRef.current = 0;
   }, [stopStreaming]);
 
@@ -394,6 +399,12 @@ export function useProspector(
         };
         setMessages((prev) => [...prev, errorMsg]);
       },
+      // onUsage — keep the most recent counts. During tool-call rounds the
+      // server emits multiple usage events; we accumulate by always replacing
+      // with the latest cumulative snapshot so the pill reflects "this turn so far".
+      (event: UsageEvent) => {
+        setUsage(event);
+      },
     );
 
     abortRef.current = controller;
@@ -411,6 +422,7 @@ export function useProspector(
 
     const updatedMessages = [...messages, userMsg];
     setMessages(updatedMessages);
+    setUsage(null);
     toolRoundsRef.current = 0;
 
     doStreamRound(updatedMessages, context);
@@ -420,6 +432,7 @@ export function useProspector(
     messages,
     isStreaming,
     streamingContent,
+    usage,
     sendMessage,
     stopStreaming,
     clearChat,

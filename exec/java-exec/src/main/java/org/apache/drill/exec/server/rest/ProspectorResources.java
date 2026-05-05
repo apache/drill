@@ -23,11 +23,16 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.apache.drill.exec.exception.StoreException;
+import org.apache.drill.exec.server.rest.ai.AiEvent;
+import org.apache.drill.exec.server.rest.ai.AiEventLogger;
+import org.apache.drill.exec.server.rest.ai.AiPricing;
 import org.apache.drill.exec.server.rest.ai.ChatMessage;
+import org.apache.drill.exec.server.rest.ai.LlmCallResult;
 import org.apache.drill.exec.server.rest.ai.LlmConfig;
 import org.apache.drill.exec.server.rest.ai.LlmProvider;
 import org.apache.drill.exec.server.rest.ai.LlmProviderRegistry;
 import org.apache.drill.exec.server.rest.ai.ToolDefinition;
+import org.apache.drill.exec.server.rest.ai.UsageObserver;
 import org.apache.drill.exec.server.rest.auth.DrillUserPrincipal;
 import org.apache.drill.exec.store.sys.PersistentStore;
 import org.apache.drill.exec.store.sys.PersistentStoreConfig;
@@ -43,9 +48,12 @@ import jakarta.ws.rs.GET;
 import jakarta.ws.rs.POST;
 import jakarta.ws.rs.Path;
 import jakarta.ws.rs.Produces;
+import jakarta.ws.rs.core.Context;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
+import jakarta.ws.rs.core.SecurityContext;
 import jakarta.ws.rs.core.StreamingOutput;
+import java.security.Principal;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -333,7 +341,7 @@ public class ProspectorResources {
   @Produces("text/event-stream")
   @Operation(summary = "Stream AI chat completion",
       description = "Sends messages to the LLM and streams back SSE events")
-  public Response chat(ChatRequest request) {
+  public Response chat(ChatRequest request, @Context SecurityContext sc) {
     try {
       LlmConfig config = getConfig();
       if (config == null || !config.isEnabled()) {
@@ -355,10 +363,27 @@ public class ProspectorResources {
       List<ChatMessage> fullMessages = buildMessages(config, request);
       List<ToolDefinition> tools = request.tools != null ? request.tools : new ArrayList<>();
 
+      String username = resolveUser(sc);
+      String userMessage = lastUserMessage(request);
+      String fullPrompt = renderFullPrompt(fullMessages);
+      LlmConfig snapshot = config;
+
+      // Pricing for the configured model — looked up once per call. Used to
+      // enrich usage SSE events with a server-computed cost so the client can
+      // render a live "tokens · $cost" pill without exposing pricing config.
+      AiPricing pricing = AiPricingResources
+          .snapshot(workManager, storeProvider)
+          .get(AiPricing.key(snapshot.getProvider(), snapshot.getModel()));
+
       StreamingOutput stream = out -> {
+        long start = System.currentTimeMillis();
+        LlmCallResult callResult = null;
+        Exception failure = null;
+        UsageObserver observer = (in, outTokens) -> emitUsageEvent(out, pricing, in, outTokens);
         try {
-          provider.streamChatCompletion(config, fullMessages, tools, out);
+          callResult = provider.streamChatCompletion(snapshot, fullMessages, tools, out, observer);
         } catch (Exception e) {
+          failure = e;
           logger.error("Error during AI chat streaming", e);
           try {
             ObjectMapper mapper = new ObjectMapper();
@@ -369,6 +394,9 @@ public class ProspectorResources {
           } catch (Exception writeErr) {
             logger.error("Error writing error event", writeErr);
           }
+        } finally {
+          recordEvent(snapshot, username, userMessage, fullPrompt,
+              callResult, failure, System.currentTimeMillis() - start);
         }
       };
 
@@ -384,6 +412,118 @@ public class ProspectorResources {
           .entity(new ErrorResponse("Failed to initiate chat: " + e.getMessage()))
           .type(MediaType.APPLICATION_JSON)
           .build();
+    }
+  }
+
+  /**
+   * Writes a normalized "usage" SSE event with cumulative token counts and a
+   * server-computed cost (when pricing is configured for the active model).
+   * Best-effort — IO errors during emission are swallowed since the client may
+   * have already disconnected, which is not a chat failure.
+   */
+  private static void emitUsageEvent(java.io.OutputStream out, AiPricing pricing,
+      Integer promptTokens, Integer responseTokens) {
+    try {
+      ObjectMapper mapper = new ObjectMapper();
+      java.util.Map<String, Object> payload = new java.util.LinkedHashMap<>();
+      if (promptTokens != null) {
+        payload.put("promptTokens", promptTokens);
+      }
+      if (responseTokens != null) {
+        payload.put("responseTokens", responseTokens);
+      }
+      int total = (promptTokens != null ? promptTokens : 0)
+          + (responseTokens != null ? responseTokens : 0);
+      payload.put("totalTokens", total);
+      if (pricing != null) {
+        double inputCost = ((promptTokens != null ? promptTokens : 0) / 1_000_000.0)
+            * pricing.getInputPricePerMTokens();
+        double outputCost = ((responseTokens != null ? responseTokens : 0) / 1_000_000.0)
+            * pricing.getOutputPricePerMTokens();
+        payload.put("costUsd", round4(inputCost + outputCost));
+        payload.put("currency", pricing.getCurrency());
+      }
+      String sse = "event: usage\ndata: " + mapper.writeValueAsString(payload) + "\n\n";
+      out.write(sse.getBytes("UTF-8"));
+      out.flush();
+    } catch (Exception ignored) {
+      // Stream may already be closed by the client — non-fatal.
+    }
+  }
+
+  private static double round4(double v) {
+    return Math.round(v * 10000.0) / 10000.0;
+  }
+
+  private static String resolveUser(SecurityContext sc) {
+    if (sc == null) {
+      return "anonymous";
+    }
+    Principal p = sc.getUserPrincipal();
+    if (p == null || p.getName() == null || p.getName().isEmpty()) {
+      return "anonymous";
+    }
+    return p.getName();
+  }
+
+  private static String lastUserMessage(ChatRequest request) {
+    if (request == null || request.messages == null) {
+      return null;
+    }
+    for (int i = request.messages.size() - 1; i >= 0; i--) {
+      ChatMessage m = request.messages.get(i);
+      if ("user".equals(m.getRole()) && m.getContent() != null) {
+        return m.getContent();
+      }
+    }
+    return null;
+  }
+
+  private static String renderFullPrompt(List<ChatMessage> messages) {
+    if (messages == null) {
+      return null;
+    }
+    StringBuilder sb = new StringBuilder();
+    for (ChatMessage m : messages) {
+      sb.append("[").append(m.getRole()).append("]\n");
+      if (m.getContent() != null) {
+        sb.append(m.getContent());
+      }
+      sb.append("\n\n");
+    }
+    return sb.toString();
+  }
+
+  private static void recordEvent(LlmConfig config, String username, String userMessage,
+      String fullPrompt, LlmCallResult callResult, Exception failure, long durationMs) {
+    try {
+      AiEvent event = new AiEvent();
+      event.ts = AiEventLogger.nowIso();
+      event.user = username;
+      event.feature = "prospector_chat";
+      event.source = "server";
+      event.provider = config != null ? config.getProvider() : null;
+      event.model = config != null ? config.getModel() : null;
+      event.durationMs = durationMs;
+      event.success = failure == null;
+      event.cancelled = AiEventLogger.isClientCancellation(failure);
+      if (failure != null) {
+        event.errorClass = event.cancelled
+            ? "ClientCancelled"
+            : failure.getClass().getSimpleName();
+        event.error = failure.getMessage();
+      }
+      if (callResult != null) {
+        event.promptTokens = callResult.getPromptTokens();
+        event.responseTokens = callResult.getResponseTokens();
+        event.totalTokens = callResult.getTotalTokens();
+        event.response = AiEventLogger.truncate(callResult.getResponseText());
+      }
+      event.userMessage = AiEventLogger.truncate(userMessage);
+      event.prompt = AiEventLogger.truncate(fullPrompt);
+      AiEventLogger.log(event);
+    } catch (Exception logErr) {
+      logger.warn("Failed to record AI usage event", logErr);
     }
   }
 

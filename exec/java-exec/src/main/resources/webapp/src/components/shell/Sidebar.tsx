@@ -34,6 +34,7 @@ import {
   CaretRightOutlined,
   SearchOutlined,
   HolderOutlined,
+  RobotOutlined,
   FieldTimeOutlined as WorkflowIcon,
 } from '@ant-design/icons';
 import { useQuery } from '@tanstack/react-query';
@@ -125,6 +126,7 @@ const ADMIN: NavItem[] = [
   { to: '/metrics', label: 'Metrics', icon: <LineChartOutlined /> },
   { to: '/options', label: 'System Options', icon: <SettingOutlined /> },
   { to: '/logs', label: 'Server Logs', icon: <FileTextOutlined /> },
+  { to: '/ai-analytics', label: 'AI Analytics', icon: <RobotOutlined /> },
 ];
 
 interface ProjectSection {

@@ -24,12 +24,12 @@ import {
   Tag,
   Popconfirm,
   Tooltip,
-  Spin,
   Modal,
   Alert,
   Dropdown,
 } from 'antd';
 import type { MenuProps } from 'antd';
+import { CardGridSkeleton } from '../components/common/Skeletons';
 import {
   SearchOutlined,
   EditOutlined,
@@ -499,9 +499,7 @@ export default function VisualizationsPage({ filterIds, projectId, projectOwner,
       </div>
 
       {isLoading ? (
-        <div className="page-visualizations-loading">
-          <Spin size="large" />
-        </div>
+        <CardGridSkeleton count={6} />
       ) : filteredVisualizations.length === 0 ? (
         <div className="page-visualizations-empty">
           <BarChartOutlined className="page-visualizations-empty-glyph" />

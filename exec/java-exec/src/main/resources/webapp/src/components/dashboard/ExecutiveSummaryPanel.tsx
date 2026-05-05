@@ -76,6 +76,51 @@ const STATUS_ICON_SETS: { key: string; label: string; good: string; warning: str
   { key: 'weather', label: 'Weather', good: '☀️', warning: '⛅', critical: '🌧️' },
 ];
 
+/**
+ * Short stable hash (djb2 xor) — used as a cache key so we can tell when the
+ * combined inputs to a summary have actually changed. Cheap, no crypto needed.
+ */
+function hashString(s: string): string {
+  let h = 5381;
+  for (let i = 0; i < s.length; i++) {
+    h = ((h << 5) + h) ^ s.charCodeAt(i);
+  }
+  return (h >>> 0).toString(36);
+}
+
+/**
+ * Build a cache key from every input that affects the generated summary.
+ * If two calls would produce the same answer, they get the same key.
+ */
+function computeInputsHash(
+  dashboardData: DashboardDataContext[],
+  prompt: string,
+  tone: string,
+  anomalyFocus: boolean,
+  iconSet: string,
+  template: string,
+  includeSampleData: boolean,
+): string {
+  const dataPart = dashboardData.map((d) => ({
+    name: d.panelName,
+    rows: d.rowCount,
+    cols: d.columns,
+    types: d.columnTypes,
+    // Hash sample rows so two refreshes with same shape but different values
+    // are treated as a true data change. Skip when sample data is excluded.
+    sample: includeSampleData ? hashString(JSON.stringify(d.sampleRows)) : null,
+  }));
+  return hashString(JSON.stringify({
+    data: dataPart,
+    prompt,
+    tone,
+    anomalyFocus,
+    iconSet,
+    template,
+    includeSampleData,
+  }));
+}
+
 interface ExecutiveSummaryPanelProps {
   content: string;
   config?: Record<string, string>;
@@ -104,7 +149,8 @@ export default function ExecutiveSummaryPanel({
   const [error, setError] = useState<string | null>(null);
   const [aiAvailable, setAiAvailable] = useState<boolean | null>(null);
   const abortRef = useRef<AbortController | null>(null);
-  const lastDataHashRef = useRef<string>('');
+  // Seeded from persisted config so a reload with unchanged inputs is a cache hit.
+  const lastInputsHashRef = useRef<string>(config?.cachedInputsHash || '');
   const prompt = content || DEFAULT_PROMPT;
   const includeSampleData = config?.includeSampleData !== 'false';
   const pinned = config?.pinned === 'true';
@@ -220,11 +266,24 @@ export default function ExecutiveSummaryPanel({
       },
       () => {
         setIsGenerating(false);
-        // Cache the result and push to history (A7)
+        // Cache the result and push to history (A7). The inputs hash lets the
+        // data-change effect skip the LLM round-trip on reloads when nothing
+        // affecting the summary has changed.
+        const inputsHash = computeInputsHash(
+          dashboardData,
+          prompt,
+          selectedTone,
+          anomalyFocus,
+          selectedIconSet,
+          selectedTemplate,
+          includeSampleData,
+        );
+        lastInputsHashRef.current = inputsHash;
         const newHistory = [...summaryHistory, { timestamp: Date.now(), summary: accumulated }].slice(-5);
         onConfigChange({
           ...(config || {}),
           cachedSummary: accumulated,
+          cachedInputsHash: inputsHash,
           summaryHistory: JSON.stringify(newHistory),
         });
       },
@@ -235,24 +294,68 @@ export default function ExecutiveSummaryPanel({
     );
 
     abortRef.current = controller;
-  }, [aiAvailable, prompt, dashboardData, buildDataContext, config, onConfigChange, selectedTone, anomalyFocus, selectedIconSet, summaryHistory]);
+  }, [aiAvailable, prompt, dashboardData, buildDataContext, config, onConfigChange, selectedTone, anomalyFocus, selectedIconSet, selectedTemplate, includeSampleData, summaryHistory]);
 
-  // Generate summary when data changes or on refresh (respecting pin - A2)
+  // Generate summary when inputs change (respecting pin - A2).
+  // Two layers of waste-reduction:
+  //   1. Cache hit short-circuit — same inputs as persisted summary, no LLM call.
+  //   2. Debounce — staggered panel arrivals during one dashboard load collapse
+  //      into a single call after data settles, instead of firing once per panel
+  //      and aborting all but the last.
   useEffect(() => {
     if (editMode || !aiAvailable || pinned) {
       return;
     }
+    if (dashboardData.length === 0) {
+      return;
+    }
 
-    // Create a hash of the data to detect changes
-    const dataHash = JSON.stringify(
-      dashboardData.map((d) => ({ name: d.panelName, rows: d.rowCount, cols: d.columns })),
+    const inputsHash = computeInputsHash(
+      dashboardData,
+      prompt,
+      selectedTone,
+      anomalyFocus,
+      selectedIconSet,
+      selectedTemplate,
+      includeSampleData,
     );
 
-    if (dataHash !== lastDataHashRef.current && dashboardData.length > 0) {
-      lastDataHashRef.current = dataHash;
-      generateSummary();
+    // Cache hit: persisted summary is still valid for these inputs.
+    if (config?.cachedInputsHash === inputsHash && config?.cachedSummary) {
+      lastInputsHashRef.current = inputsHash;
+      if (!summary) {
+        setSummary(config.cachedSummary);
+      }
+      return;
     }
-  }, [editMode, aiAvailable, dashboardData, generateSummary, pinned]);
+
+    // Within-session dedupe: don't re-fire if we just generated for these inputs.
+    if (lastInputsHashRef.current === inputsHash) {
+      return;
+    }
+
+    // Debounce so sequential panel arrivals collapse into one call. Effect cleanup
+    // cancels the timer when inputs change again before it fires.
+    const timer = setTimeout(() => {
+      lastInputsHashRef.current = inputsHash;
+      generateSummary();
+    }, 600);
+    return () => clearTimeout(timer);
+  }, [
+    editMode,
+    aiAvailable,
+    dashboardData,
+    generateSummary,
+    pinned,
+    prompt,
+    selectedTone,
+    anomalyFocus,
+    selectedIconSet,
+    selectedTemplate,
+    includeSampleData,
+    config,
+    summary,
+  ]);
 
   // Respond to external refresh (refresh interval or manual)
   useEffect(() => {

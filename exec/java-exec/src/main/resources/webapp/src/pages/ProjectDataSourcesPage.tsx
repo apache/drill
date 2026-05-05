@@ -89,7 +89,7 @@ export default function ProjectDataSourcesPage() {
                           type="text"
                           icon={<SettingOutlined />}
                           size="small"
-                          onClick={() => navigate(`/datasources/${encodeURIComponent(dataset.schema!.split('.')[0])}`)}
+                          onClick={() => navigate(`/projects/${projectId}/datasources/${encodeURIComponent(dataset.schema!.split('.')[0])}`)}
                         />
                       </Tooltip>
                     ) : null,

@@ -23,7 +23,6 @@ import {
   Space,
   Popconfirm,
   message,
-  Spin,
   Modal,
   Form,
   Select,
@@ -32,6 +31,7 @@ import {
   Dropdown,
 } from 'antd';
 import type { MenuProps } from 'antd';
+import { CardGridSkeleton } from '../components/common/Skeletons';
 import {
   SearchOutlined,
   EditOutlined,
@@ -455,9 +455,7 @@ export default function DashboardsPage({ filterIds, projectId, projectName, proj
       </div>
 
       {isLoading ? (
-        <div className="page-dashboards-loading">
-          <Spin size="large" />
-        </div>
+        <CardGridSkeleton count={6} />
       ) : filteredDashboards.length === 0 ? (
         <div className="page-dashboards-empty">
           <DashboardOutlined className="page-dashboards-empty-glyph" />

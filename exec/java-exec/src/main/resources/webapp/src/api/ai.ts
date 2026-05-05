@@ -25,6 +25,7 @@ import type {
   ChatRequest,
   DeltaEvent,
   DoneEvent,
+  UsageEvent,
   ErrorEvent,
 } from '../types/ai';
 
@@ -173,6 +174,7 @@ export function streamChat(
   onDelta: (event: DeltaEvent) => void,
   onDone: (event: DoneEvent) => void,
   onError: (error: ErrorEvent) => void,
+  onUsage?: (event: UsageEvent) => void,
 ): AbortController {
   const controller = new AbortController();
 
@@ -234,6 +236,8 @@ export function streamChat(
                 onDelta(parsed as DeltaEvent);
               } else if (currentEvent === 'done') {
                 onDone(parsed as DoneEvent);
+              } else if (currentEvent === 'usage' && onUsage) {
+                onUsage(parsed as UsageEvent);
               } else if (currentEvent === 'error') {
                 onError(parsed as ErrorEvent);
               }

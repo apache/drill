@@ -182,6 +182,20 @@ export interface DoneEvent {
   finish_reason: 'stop' | 'tool_calls';
 }
 
+/**
+ * Cumulative token usage emitted by the server during a chat stream.
+ * Anthropic emits incrementally (input on message_start, running output on each
+ * message_delta); OpenAI emits once at the end. costUsd / currency are present
+ * only when the server has pricing configured for the active model.
+ */
+export interface UsageEvent {
+  promptTokens?: number;
+  responseTokens?: number;
+  totalTokens?: number;
+  costUsd?: number;
+  currency?: string;
+}
+
 export interface ErrorEvent {
   message: string;
 }
