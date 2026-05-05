@@ -33,10 +33,15 @@ import {
   AlertOutlined,
   SearchOutlined,
   GlobalOutlined,
+  WarningOutlined,
 } from '@ant-design/icons';
 import { getVisualization } from '../../api/visualizations';
 import { executeQuery } from '../../api/queries';
 import { applyDashboardFilters, computeEffectiveQuery } from '../../utils/sqlTransformations';
+import {
+  findMissingColumnRefs,
+  groupMissingByColumn,
+} from '../../utils/vizColumnDeps';
 import ChartPreview from '../visualization/ChartPreview';
 import MarkdownPanel from './MarkdownPanel';
 import ImagePanel from './ImagePanel';
@@ -315,6 +320,18 @@ export default function DashboardPanelCard({
     return base;
   }, [visualization, panel.config?.choroplethZoom, panel.config?.choroplethCenter]);
 
+  // When the panel's underlying query no longer returns the columns the chart
+  // config relies on, surface a warning glyph in the title so the user knows
+  // the chart will render with empty values until they fix the mapping.
+  // Only applies to visualization panels with a successful query result.
+  const missingColumnGroups = useMemo(() => {
+    if (!isVisualization || !queryResult || !visualization?.config) {
+      return [];
+    }
+    const missing = findMissingColumnRefs(visualization.config, queryResult.columns);
+    return groupMissingByColumn(missing);
+  }, [isVisualization, queryResult, visualization?.config]);
+
   // Determine title based on panel type
   const getPanelTitle = () => {
     if (isVisualization) {
@@ -496,6 +513,30 @@ export default function DashboardPanelCard({
           <Text ellipsis style={{ flex: 1, color: 'inherit' }}>
             {getPanelTitle()}
           </Text>
+          {missingColumnGroups.length > 0 && (
+            <Tooltip
+              title={
+                <div>
+                  <div style={{ fontWeight: 600, marginBottom: 4 }}>
+                    Chart mappings out of sync
+                  </div>
+                  <div>This panel's query no longer returns:</div>
+                  <ul style={{ margin: '4px 0 0', paddingLeft: 18 }}>
+                    {missingColumnGroups.map((g) => (
+                      <li key={g.column}>
+                        <code>{g.column}</code> ({g.slots.join(', ')})
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              }
+            >
+              <WarningOutlined
+                aria-label="Some chart mappings are missing from the query result"
+                style={{ color: 'var(--color-warning, #faad14)', marginLeft: 6, fontSize: 13 }}
+              />
+            </Tooltip>
+          )}
         </div>
       }
       extra={
