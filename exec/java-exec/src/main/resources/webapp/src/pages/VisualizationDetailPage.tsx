@@ -22,6 +22,9 @@ import {
   Button,
   Card,
   Checkbox,
+  Form,
+  Radio,
+  Select,
   Space,
   Spin,
   Alert,
@@ -43,6 +46,9 @@ import {
   SaveOutlined,
   CloseOutlined,
   WarningOutlined,
+  FormatPainterOutlined,
+  DashboardOutlined,
+  PlusOutlined,
 } from '@ant-design/icons';
 import {
   getVisualization,
@@ -50,6 +56,13 @@ import {
   deleteVisualization,
 } from '../api/visualizations';
 import { executeQuery } from '../api/queries';
+import { formatSql } from '../api/ai';
+import {
+  getDashboards,
+  getDashboard,
+  createDashboard,
+  updateDashboard,
+} from '../api/dashboards';
 import { createSavedQuery, updateSavedQuery } from '../api/savedQueries';
 import { addSavedQuery } from '../api/projects';
 import { getEffectiveQuery } from '../utils/sqlTransformations';
@@ -90,6 +103,9 @@ export default function VisualizationDetailPage({ projectId: propProjectId }: Vi
   const [editedSql, setEditedSql] = useState('');
   const [hasRunSinceEdit, setHasRunSinceEdit] = useState(false);
   const [saving, setSaving] = useState(false);
+
+  // ── Add-to-dashboard state ──────────────────────────────────────────
+  const [addToDashOpen, setAddToDashOpen] = useState(false);
 
   const { data: viz, isLoading, error } = useQuery({
     queryKey: ['visualization', vizId],
@@ -139,6 +155,24 @@ export default function VisualizationDetailPage({ projectId: propProjectId }: Vi
       setHasRunSinceEdit(true);
     }
   }, [runSql, editedSql]);
+
+  // Pretty-print the current draft via the backend sqlglot service. Failures
+  // fall back silently to the unchanged buffer (formatSql already handles this).
+  const [formatting, setFormatting] = useState(false);
+  const handleFormatEditedSql = useCallback(async () => {
+    if (!editedSql.trim()) {
+      return;
+    }
+    setFormatting(true);
+    try {
+      const formatted = await formatSql(editedSql);
+      if (formatted && formatted !== editedSql) {
+        setEditedSql(formatted);
+      }
+    } finally {
+      setFormatting(false);
+    }
+  }, [editedSql]);
 
   // Auto-run query when visualization loads
   useEffect(() => {
@@ -220,6 +254,62 @@ export default function VisualizationDetailPage({ projectId: propProjectId }: Vi
     setSaving(true);
     saveMutation.mutate({ alsoUpdateSavedQuery });
   }, [saveMutation]);
+
+  /**
+   * Append this visualization to a dashboard as a new visualization panel.
+   * Either picks an existing dashboard or creates a new one. Default placement
+   * is full-width below any existing panels (12-col grid, height 4).
+   */
+  const addToDashboardMutation = useMutation({
+    mutationFn: async (target: { dashboardId?: string; newDashboardName?: string }) => {
+      if (!viz?.id) {
+        throw new Error('Missing visualization id');
+      }
+      let dashboardId = target.dashboardId;
+
+      if (!dashboardId) {
+        if (!target.newDashboardName?.trim()) {
+          throw new Error('Provide a dashboard name');
+        }
+        const created = await createDashboard({
+          name: target.newDashboardName.trim(),
+          panels: [],
+          refreshInterval: 0,
+        });
+        dashboardId = created.id;
+      }
+
+      const dash = await getDashboard(dashboardId);
+      const existing = dash.panels ?? [];
+      // Place the new panel below the lowest-current panel, full row width.
+      const lowestY = existing.reduce(
+        (max, p) => Math.max(max, (p.y ?? 0) + (p.height ?? 0)),
+        0,
+      );
+      const newPanel = {
+        id: `panel-${Date.now()}`,
+        type: 'visualization' as const,
+        visualizationId: viz.id,
+        x: 0,
+        y: lowestY,
+        width: 12,
+        height: 4,
+      };
+      await updateDashboard(dashboardId, {
+        panels: [...existing, newPanel],
+      });
+      return { dashboardId, dashboardName: target.newDashboardName ?? dash.name };
+    },
+    onSuccess: (r) => {
+      message.success(`Added to "${r.dashboardName}"`);
+      queryClient.invalidateQueries({ queryKey: ['dashboards'] });
+      queryClient.invalidateQueries({ queryKey: ['dashboard', r.dashboardId] });
+      setAddToDashOpen(false);
+    },
+    onError: (e: Error) => {
+      message.error(`Couldn't add to dashboard: ${e.message}`);
+    },
+  });
 
   /**
    * Manually save the visualization's SQL as a saved query and link the viz
@@ -432,6 +522,13 @@ export default function VisualizationDetailPage({ projectId: propProjectId }: Vi
                 </Button>
               </Tooltip>
             )}
+            <Button
+              icon={<DashboardOutlined />}
+              onClick={() => setAddToDashOpen(true)}
+              disabled={isEditing}
+            >
+              Add to dashboard
+            </Button>
             <Button danger icon={<DeleteOutlined />} onClick={handleDelete} disabled={isEditing}>
               Delete
             </Button>
@@ -519,6 +616,16 @@ export default function VisualizationDetailPage({ projectId: propProjectId }: Vi
           style={{ marginTop: '24px' }}
           extra={
             <Space>
+              <Tooltip title="Pretty-print SQL">
+                <Button
+                  icon={<FormatPainterOutlined />}
+                  onClick={handleFormatEditedSql}
+                  loading={formatting}
+                  disabled={!editedSql.trim()}
+                >
+                  Format
+                </Button>
+              </Tooltip>
               <Button
                 icon={<PlayCircleOutlined />}
                 onClick={handleRunEditedSql}
@@ -600,6 +707,144 @@ export default function VisualizationDetailPage({ projectId: propProjectId }: Vi
           />
         </Card>
       )}
+
+      <AddToDashboardModal
+        open={addToDashOpen}
+        onCancel={() => setAddToDashOpen(false)}
+        onConfirm={(target) => addToDashboardMutation.mutate(target)}
+        saving={addToDashboardMutation.isPending}
+      />
     </div>
+  );
+}
+
+interface AddToDashboardTarget {
+  dashboardId?: string;
+  newDashboardName?: string;
+}
+
+interface AddToDashboardModalProps {
+  open: boolean;
+  onCancel: () => void;
+  onConfirm: (target: AddToDashboardTarget) => void;
+  saving: boolean;
+}
+
+/**
+ * Modal that asks the user which dashboard to add the visualization to —
+ * either an existing dashboard from the dropdown, or a brand-new one.
+ */
+function AddToDashboardModal({ open, onCancel, onConfirm, saving }: AddToDashboardModalProps) {
+  const [mode, setMode] = useState<'existing' | 'new'>('existing');
+  const [selectedId, setSelectedId] = useState<string | undefined>(undefined);
+  const [newName, setNewName] = useState('');
+
+  // Only fetch the dashboard list while the modal is open. Otherwise this is
+  // a wasted query for any user who never clicks "Add to dashboard".
+  const dashboards = useQuery({
+    queryKey: ['dashboards'],
+    queryFn: getDashboards,
+    enabled: open,
+  });
+
+  // When the list arrives, default to the first dashboard so the user doesn't
+  // have to also pick from a single-item dropdown. If the list is empty,
+  // bias toward the "new" mode automatically.
+  useEffect(() => {
+    if (!open) {
+      return;
+    }
+    const list = dashboards.data ?? [];
+    if (list.length === 0) {
+      setMode('new');
+      setSelectedId(undefined);
+    } else if (!selectedId) {
+      setSelectedId(list[0].id);
+    }
+  }, [open, dashboards.data, selectedId]);
+
+  const reset = () => {
+    setMode('existing');
+    setSelectedId(undefined);
+    setNewName('');
+  };
+
+  const handleOk = () => {
+    if (mode === 'existing') {
+      if (!selectedId) {
+        message.warning('Pick a dashboard');
+        return;
+      }
+      onConfirm({ dashboardId: selectedId });
+    } else {
+      if (!newName.trim()) {
+        message.warning('Name the new dashboard');
+        return;
+      }
+      onConfirm({ newDashboardName: newName });
+    }
+  };
+
+  const handleCancel = () => {
+    reset();
+    onCancel();
+  };
+
+  const list = dashboards.data ?? [];
+
+  return (
+    <Modal
+      title="Add to dashboard"
+      open={open}
+      onCancel={handleCancel}
+      onOk={handleOk}
+      confirmLoading={saving}
+      okText="Add"
+      afterClose={reset}
+    >
+      <Form layout="vertical">
+        <Form.Item>
+          <Radio.Group
+            value={mode}
+            onChange={(e) => setMode(e.target.value)}
+            optionType="button"
+            buttonStyle="solid"
+            options={[
+              { label: 'Existing', value: 'existing', disabled: list.length === 0 },
+              { label: 'New', value: 'new' },
+            ]}
+          />
+        </Form.Item>
+
+        {mode === 'existing' && (
+          <Form.Item label="Dashboard">
+            <Select
+              loading={dashboards.isLoading}
+              placeholder={list.length === 0 ? 'No dashboards yet' : 'Pick one'}
+              value={selectedId}
+              onChange={setSelectedId}
+              showSearch
+              optionFilterProp="label"
+              options={list.map((d) => ({ value: d.id, label: d.name }))}
+              style={{ width: '100%' }}
+            />
+          </Form.Item>
+        )}
+
+        {mode === 'new' && (
+          <Form.Item label="Dashboard name" required>
+            <Input
+              placeholder="e.g. Weekly metrics"
+              value={newName}
+              onChange={(e) => setNewName(e.target.value)}
+              autoFocus
+            />
+          </Form.Item>
+        )}
+      </Form>
+      <Tag icon={<PlusOutlined />} color="blue">
+        Adds the chart as a full-width panel below any existing panels
+      </Tag>
+    </Modal>
   );
 }
