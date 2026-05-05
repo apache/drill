@@ -49,6 +49,7 @@ import {
 import { Link } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import type { ColumnsType } from 'antd/es/table';
+import { ListSkeleton, EmptyState } from '../components/common/Skeletons';
 import {
   getLogFiles,
   getLogContent,
@@ -292,9 +293,7 @@ function LogFilesTab({ onAnalyzeWithAi, aiAvailable }: LogFilesTabProps) {
           style={{ marginBottom: 16 }}
         />
       ) : isLoading ? (
-        <div style={{ textAlign: 'center', padding: 60 }}>
-          <Spin tip="Loading log files..." />
-        </div>
+        <ListSkeleton rows={6} />
       ) : (
         <Table
           dataSource={filtered}
@@ -302,7 +301,15 @@ function LogFilesTab({ onAnalyzeWithAi, aiAvailable }: LogFilesTabProps) {
           rowKey="name"
           size="small"
           pagination={false}
-          locale={{ emptyText: <Empty description="No log files found" /> }}
+          locale={{
+            emptyText: (
+              <EmptyState
+                icon={<FileTextOutlined />}
+                title="No log files yet"
+                description="Drill will create log files in DRILL_LOG_DIR as it runs. Check back after the server has handled some queries."
+              />
+            ),
+          }}
         />
       )}
 

@@ -17,7 +17,6 @@
  */
 import { useMemo, useState, useRef } from 'react';
 import {
-  Card,
   Row,
   Col,
   Table,
@@ -54,7 +53,7 @@ import { getMetrics } from '../api/metrics';
 import type { MetricsResponse } from '../api/metrics';
 import type { ColumnsType } from 'antd/es/table';
 
-const { Text, Title } = Typography;
+const { Text } = Typography;
 
 // ── Helpers ──
 
@@ -190,10 +189,10 @@ function MemorySection({ gauges, prevGauges }: {
   const directCount = g('jvm.direct.count');
 
   return (
-    <Card
-      title={<span><HddOutlined style={{ marginRight: 8 }} />Memory</span>}
-      size="small"
-    >
+    <section className="metrics-section">
+      <h3 className="metrics-section-title">
+        <HddOutlined className="metrics-section-title-icon" />Memory
+      </h3>
       <Row gutter={[16, 16]}>
         {bars.map((bar) => (
           <Col xs={24} sm={12} lg={6} key={bar.label}>
@@ -254,7 +253,7 @@ function MemorySection({ gauges, prevGauges }: {
         <span>Direct Buffers: <Text strong>{directCount}</Text></span>
         <span>Direct Capacity: <Text strong>{fmtBytes(directCapacity)}</Text></span>
       </div>
-    </Card>
+    </section>
   );
 }
 
@@ -302,10 +301,10 @@ function QueriesSection({ counters, prevCounters }: {
     + (counters['drill.connections.rpc.data.unencrypted']?.count || 0);
 
   return (
-    <Card
-      title={<span><DashboardOutlined style={{ marginRight: 8 }} />Queries & Connections</span>}
-      size="small"
-    >
+    <section className="metrics-section">
+      <h3 className="metrics-section-title">
+        <DashboardOutlined className="metrics-section-title-icon" />Queries & Connections
+      </h3>
       <Row gutter={[16, 16]}>
         <Col xs={24} lg={14}>
           <Row gutter={[12, 12]}>
@@ -338,7 +337,7 @@ function QueriesSection({ counters, prevCounters }: {
           )}
         </Col>
       </Row>
-    </Card>
+    </section>
   );
 }
 
@@ -384,10 +383,10 @@ function ThreadsSection({ gauges, prevGauges }: {
   };
 
   return (
-    <Card
-      title={<span><ThunderboltOutlined style={{ marginRight: 8 }} />Threads</span>}
-      size="small"
-    >
+    <section className="metrics-section">
+      <h3 className="metrics-section-title">
+        <ThunderboltOutlined className="metrics-section-title-icon" />Threads
+      </h3>
       <Row gutter={[16, 16]}>
         <Col xs={24} lg={14}>
           <Row gutter={[12, 12]}>
@@ -430,7 +429,7 @@ function ThreadsSection({ gauges, prevGauges }: {
           <ReactECharts option={chartOption} style={{ height: 200 }} />
         </Col>
       </Row>
-    </Card>
+    </section>
   );
 }
 
@@ -451,10 +450,10 @@ function GCSection({ gauges, prevGauges }: {
   const avgOld = oldCount > 0 ? round(oldTime / oldCount, 1) : 0;
 
   return (
-    <Card
-      title={<span><ClockCircleOutlined style={{ marginRight: 8 }} />Garbage Collection</span>}
-      size="small"
-    >
+    <section className="metrics-section">
+      <h3 className="metrics-section-title">
+        <ClockCircleOutlined className="metrics-section-title-icon" />Garbage Collection
+      </h3>
       <Row gutter={[24, 16]}>
         <Col xs={24} sm={12}>
           <Text strong style={{ display: 'block', marginBottom: 8 }}>Young Generation (G1)</Text>
@@ -495,7 +494,7 @@ function GCSection({ gauges, prevGauges }: {
           </Row>
         </Col>
       </Row>
-    </Card>
+    </section>
   );
 }
 
@@ -526,10 +525,8 @@ function AllocationsSection({ histograms }: {
   };
 
   return (
-    <Card
-      title="Allocations"
-      size="small"
-    >
+    <section className="metrics-section">
+      <h3 className="metrics-section-title">Allocations</h3>
       <Row gutter={[16, 16]}>
         <Col xs={24} lg={12}>
           {entries.map(([name, h]) => (
@@ -550,7 +547,7 @@ function AllocationsSection({ histograms }: {
           <ReactECharts option={chartOption} style={{ height: 220 }} />
         </Col>
       </Row>
-    </Card>
+    </section>
   );
 }
 
@@ -563,7 +560,10 @@ function PerformanceSection({ timers }: {
   if (entries.length === 0) return null;
 
   return (
-    <Card title={<span><ClockCircleOutlined style={{ marginRight: 8 }} />Performance Timers</span>} size="small">
+    <section className="metrics-section">
+      <h3 className="metrics-section-title">
+        <ClockCircleOutlined className="metrics-section-title-icon" />Performance Timers
+      </h3>
       {entries.map(([name, t]) => {
         const shortName = name.split('.').pop() || name;
         return (
@@ -589,7 +589,7 @@ function PerformanceSection({ timers }: {
           </div>
         );
       })}
-    </Card>
+    </section>
   );
 }
 
@@ -624,7 +624,10 @@ function MetersSection({ meters }: {
   };
 
   return (
-    <Card title={<span><DashboardOutlined style={{ marginRight: 8 }} />Meters</span>} size="small">
+    <section className="metrics-section">
+      <h3 className="metrics-section-title">
+        <DashboardOutlined className="metrics-section-title-icon" />Meters
+      </h3>
       <Row gutter={[16, 16]}>
         <Col xs={24} lg={12}>
           {entries.map(([name, m]) => {
@@ -653,7 +656,7 @@ function MetersSection({ meters }: {
           <ReactECharts option={chartOption} style={{ height: Math.max(200, entries.length * 40) }} />
         </Col>
       </Row>
-    </Card>
+    </section>
   );
 }
 
@@ -851,10 +854,10 @@ export default function MetricsPage() {
 
   if (error || !metrics) {
     return (
-      <div style={{ padding: 24 }}>
-        <Card>
+      <div className="metrics-page">
+        <section className="metrics-section">
           <Empty description={<Text type="danger">Failed to load metrics: {(error as Error)?.message || 'Unknown error'}</Text>} />
-        </Card>
+        </section>
       </div>
     );
   }
@@ -878,66 +881,53 @@ export default function MetricsPage() {
   const processLoadAvg = g('drillbit.load.avg');
 
   return (
-    <div style={{ padding: 24, overflow: 'auto', flex: 1 }}>
-      <Space direction="vertical" style={{ width: '100%' }} size="large">
-        {/* Header */}
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          <Title level={3} style={{ margin: 0 }}>
-            <DashboardOutlined style={{ marginRight: 8 }} />
-            System Metrics
-          </Title>
-          <Space size="middle">
-            <Tag>{totalMetrics} metrics</Tag>
-            <Text type="secondary" style={{ fontSize: 12 }}>Auto-refreshing every 3s</Text>
-          </Space>
+    <div className="metrics-page">
+      <header className="metrics-header">
+        <div>
+          <h2 className="metrics-header-title">System Metrics</h2>
+          <p className="metrics-header-subtitle">{totalMetrics} metrics tracked</p>
         </div>
+        <span className="metrics-status-pill" title="Auto-refreshing every 3 seconds">
+          Live · 3s
+        </span>
+      </header>
 
-        {/* Top-level stats */}
-        <Row gutter={[16, 16]}>
-          <Col xs={12} sm={6} lg={4}>
-            <Card size="small">
-              <Statistic title="Uptime" value={uptimeStr} prefix={<ClockCircleOutlined />} valueStyle={{ fontSize: 20 }} />
-            </Card>
-          </Col>
-          <Col xs={12} sm={6} lg={4}>
-            <Card size="small">
-              <Statistic title="Running Fragments" value={g('drill.fragments.running')} prefix={<ThunderboltOutlined />} valueStyle={{ fontSize: 20 }} />
-            </Card>
-          </Col>
-          <Col xs={12} sm={6} lg={4}>
-            <Card size="small">
-              <Statistic title="System Load" value={round(osLoadAvg, 2)} prefix={<HddOutlined />} valueStyle={{ fontSize: 20 }} />
-            </Card>
-          </Col>
-          <Col xs={12} sm={6} lg={4}>
-            <Card size="small">
-              <Statistic title="Process CPU" value={round(processLoadAvg, 4)} prefix={<ThunderboltOutlined />} valueStyle={{ fontSize: 20 }} />
-            </Card>
-          </Col>
-          <Col xs={12} sm={6} lg={4}>
-            <Card size="small">
-              <Tooltip title={`${fdPercent}% of file descriptors in use`}>
-                <div>
-                  <div style={{ fontSize: 12, color: 'var(--color-text-secondary)', marginBottom: 4 }}>
-                    <FileOutlined style={{ marginRight: 4 }} />File Descriptors
-                  </div>
-                  <Progress
-                    percent={fdPercent}
-                    strokeColor={thresholdColor(fdPercent)}
-                    status={thresholdStatus(fdPercent)}
-                    format={() => `${fdPercent}%`}
-                    size="small"
-                  />
-                </div>
-              </Tooltip>
-            </Card>
-          </Col>
-          <Col xs={12} sm={6} lg={4}>
-            <Card size="small">
-              <Statistic title="Classes Loaded" value={g('class.loaded')} valueStyle={{ fontSize: 20 }} />
-            </Card>
-          </Col>
-        </Row>
+      <div className="metrics-stat-grid">
+        <div className="metrics-stat-tile">
+          <span className="metrics-stat-label"><ClockCircleOutlined />Uptime</span>
+          <span className="metrics-stat-value">{uptimeStr}</span>
+        </div>
+        <div className="metrics-stat-tile">
+          <span className="metrics-stat-label"><ThunderboltOutlined />Running fragments</span>
+          <span className="metrics-stat-value">{g('drill.fragments.running')}</span>
+        </div>
+        <div className="metrics-stat-tile">
+          <span className="metrics-stat-label"><HddOutlined />System load</span>
+          <span className="metrics-stat-value">{round(osLoadAvg, 2)}</span>
+        </div>
+        <div className="metrics-stat-tile">
+          <span className="metrics-stat-label"><ThunderboltOutlined />Process CPU</span>
+          <span className="metrics-stat-value">{round(processLoadAvg, 4)}</span>
+        </div>
+        <div className="metrics-stat-tile">
+          <span className="metrics-stat-label"><FileOutlined />File descriptors</span>
+          <Tooltip title={`${fdPercent}% of file descriptors in use`}>
+            <Progress
+              percent={fdPercent}
+              strokeColor={thresholdColor(fdPercent)}
+              status={thresholdStatus(fdPercent)}
+              format={() => `${fdPercent}%`}
+              size="small"
+            />
+          </Tooltip>
+        </div>
+        <div className="metrics-stat-tile">
+          <span className="metrics-stat-label">Classes loaded</span>
+          <span className="metrics-stat-value">{g('class.loaded')}</span>
+        </div>
+      </div>
+
+      <Space direction="vertical" style={{ width: '100%' }} size={0}>
 
         {/* Domain sections */}
         <MemorySection gauges={metrics.gauges} prevGauges={prevMetrics?.gauges} />
@@ -967,9 +957,10 @@ export default function MetricsPage() {
 
         {/* Unified raw metrics table */}
         <Collapse
+          className="metrics-collapse"
           items={[{
             key: 'all-metrics',
-            label: <span>All Metrics ({totalMetrics})</span>,
+            label: <span>All metrics ({totalMetrics})</span>,
             children: (
               <>
                 <div style={{ marginBottom: 16 }}>

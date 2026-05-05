@@ -72,8 +72,10 @@ public class OpenAiCompatibleProvider implements LlmProvider {
   }
 
   @Override
-  public void streamChatCompletion(LlmConfig config, List<ChatMessage> messages,
-      List<ToolDefinition> tools, OutputStream out) throws Exception {
+  public LlmCallResult streamChatCompletion(LlmConfig config, List<ChatMessage> messages,
+      List<ToolDefinition> tools, OutputStream out, UsageObserver usageObserver)
+      throws Exception {
+    UsageObserver observer = usageObserver != null ? usageObserver : UsageObserver.NOOP;
 
     String endpoint = config.getApiEndpoint();
     if (endpoint == null || endpoint.isEmpty()) {
@@ -98,6 +100,7 @@ public class OpenAiCompatibleProvider implements LlmProvider {
 
     Request request = reqBuilder.build();
 
+    LlmCallResult result = new LlmCallResult();
     try (Response response = httpClient.newCall(request).execute()) {
       if (!response.isSuccessful()) {
         String errorBody = "";
@@ -108,20 +111,21 @@ public class OpenAiCompatibleProvider implements LlmProvider {
         String errorMsg = "LLM API error " + response.code() + ": " + errorBody;
         logger.error(errorMsg);
         writeSseEvent(out, "error", "{\"message\":" + MAPPER.writeValueAsString(errorMsg) + "}");
-        return;
+        return result;
       }
 
       ResponseBody body = response.body();
       if (body == null) {
         writeSseEvent(out, "error", "{\"message\":\"Empty response from LLM API\"}");
-        return;
+        return result;
       }
 
       try (BufferedReader reader = new BufferedReader(
           new InputStreamReader(body.byteStream(), StandardCharsets.UTF_8))) {
-        processOpenAiStream(reader, out);
+        processOpenAiStream(reader, out, result, observer);
       }
     }
+    return result;
   }
 
   @Override
@@ -146,6 +150,12 @@ public class OpenAiCompatibleProvider implements LlmProvider {
     body.put("stream", true);
     body.put("max_tokens", config.getMaxTokens());
     body.put("temperature", config.getTemperature());
+
+    // Ask the upstream API to include token usage in the final stream chunk so we can
+    // record it for analytics. OpenAI honours stream_options.include_usage; providers
+    // that do not (e.g. Ollama) ignore the field harmlessly.
+    ObjectNode streamOptions = body.putObject("stream_options");
+    streamOptions.put("include_usage", true);
 
     // Messages
     ArrayNode messagesArray = body.putArray("messages");
@@ -194,11 +204,13 @@ public class OpenAiCompatibleProvider implements LlmProvider {
     return body;
   }
 
-  private void processOpenAiStream(BufferedReader reader, OutputStream out) throws Exception {
+  private void processOpenAiStream(BufferedReader reader, OutputStream out, LlmCallResult result,
+      UsageObserver observer) throws Exception {
     // Track tool calls being assembled
     Map<Integer, String> toolCallIds = new HashMap<>();
     Map<Integer, String> toolCallNames = new HashMap<>();
     Map<Integer, StringBuilder> toolCallArgs = new HashMap<>();
+    boolean doneEmitted = false;
 
     String line;
     while ((line = reader.readLine()) != null) {
@@ -215,23 +227,36 @@ public class OpenAiCompatibleProvider implements LlmProvider {
       String data = line.substring(6).trim();
 
       if ("[DONE]".equals(data)) {
-        // Check if we have pending tool calls
-        if (!toolCallIds.isEmpty()) {
-          // Emit tool_call_end events
-          for (Map.Entry<Integer, String> entry : toolCallIds.entrySet()) {
-            int idx = entry.getKey();
-            writeSseEvent(out, "delta",
-                "{\"type\":\"tool_call_end\",\"id\":" + MAPPER.writeValueAsString(entry.getValue()) + "}");
+        if (!doneEmitted) {
+          if (!toolCallIds.isEmpty()) {
+            for (Map.Entry<Integer, String> entry : toolCallIds.entrySet()) {
+              writeSseEvent(out, "delta",
+                  "{\"type\":\"tool_call_end\",\"id\":" + MAPPER.writeValueAsString(entry.getValue()) + "}");
+            }
+            writeSseEvent(out, "done", "{\"finish_reason\":\"tool_calls\"}");
+          } else {
+            writeSseEvent(out, "done", "{\"finish_reason\":\"stop\"}");
           }
-          writeSseEvent(out, "done", "{\"finish_reason\":\"tool_calls\"}");
-        } else {
-          writeSseEvent(out, "done", "{\"finish_reason\":\"stop\"}");
         }
         return;
       }
 
       try {
         JsonNode chunk = MAPPER.readTree(data);
+
+        // OpenAI sends a final chunk with empty choices and a "usage" field when
+        // stream_options.include_usage is true. Capture it before skipping.
+        JsonNode usage = chunk.get("usage");
+        if (usage != null && !usage.isNull()) {
+          if (usage.has("prompt_tokens")) {
+            result.setPromptTokens(usage.get("prompt_tokens").asInt());
+          }
+          if (usage.has("completion_tokens")) {
+            result.setResponseTokens(usage.get("completion_tokens").asInt());
+          }
+          observer.onUsage(result.getPromptTokens(), result.getResponseTokens());
+        }
+
         JsonNode choices = chunk.get("choices");
         if (choices == null || !choices.isArray() || choices.isEmpty()) {
           continue;
@@ -243,22 +268,20 @@ public class OpenAiCompatibleProvider implements LlmProvider {
           continue;
         }
 
-        // Check finish_reason
+        // Check finish_reason — emit done but keep reading for trailing usage chunk.
         JsonNode finishReason = choice.get("finish_reason");
-        if (finishReason != null && !finishReason.isNull()) {
+        if (finishReason != null && !finishReason.isNull() && !doneEmitted) {
           String reason = finishReason.asText();
           if ("tool_calls".equals(reason)) {
-            // Emit end events for all tracked tool calls
             for (Map.Entry<Integer, String> entry : toolCallIds.entrySet()) {
               writeSseEvent(out, "delta",
                   "{\"type\":\"tool_call_end\",\"id\":" + MAPPER.writeValueAsString(entry.getValue()) + "}");
             }
             writeSseEvent(out, "done", "{\"finish_reason\":\"tool_calls\"}");
-            return;
-          }
-          if ("stop".equals(reason)) {
+            doneEmitted = true;
+          } else if ("stop".equals(reason)) {
             writeSseEvent(out, "done", "{\"finish_reason\":\"stop\"}");
-            return;
+            doneEmitted = true;
           }
         }
 
@@ -267,6 +290,7 @@ public class OpenAiCompatibleProvider implements LlmProvider {
         if (content != null && !content.isNull()) {
           String text = content.asText();
           if (!text.isEmpty()) {
+            result.appendResponseText(text);
             writeSseEvent(out, "delta",
                 "{\"type\":\"content\",\"content\":" + MAPPER.writeValueAsString(text) + "}");
           }
