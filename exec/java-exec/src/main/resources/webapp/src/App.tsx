@@ -35,6 +35,7 @@ const ProjectSavedQueriesPage = lazy(() => import('./pages/ProjectSavedQueriesPa
 const ProjectVisualizationsPage = lazy(() => import('./pages/ProjectVisualizationsPage'));
 const ProjectDashboardsPage = lazy(() => import('./pages/ProjectDashboardsPage'));
 const ProjectDataSourcesPage = lazy(() => import('./pages/ProjectDataSourcesPage'));
+const ProjectDataSourceEditPage = lazy(() => import('./pages/ProjectDataSourceEditPage'));
 const ProjectWikiPage = lazy(() => import('./pages/ProjectWikiPage'));
 const ProjectWorkflowsPage = lazy(() => import('./pages/ProjectWorkflowsPage'));
 const SavedQueriesPage = lazy(() => import('./pages/SavedQueriesPage'));
@@ -48,6 +49,7 @@ const DashboardViewPage = lazy(() => import('./pages/DashboardViewPage'));
 const MetricsPage = lazy(() => import('./pages/MetricsPage'));
 const OptionsPage = lazy(() => import('./pages/OptionsPage'));
 const LogsPage = lazy(() => import('./pages/LogsPage'));
+const AiAnalyticsPage = lazy(() => import('./pages/AiAnalyticsPage'));
 const WorkflowsPage = lazy(() => import('./pages/WorkflowsPage'));
 const ProjectLayout = lazy(() => import('./components/project').then((m) => ({ default: m.ProjectLayout })));
 
@@ -78,6 +80,7 @@ function App() {
                 <Route path="dashboards" element={<ProjectDashboardsPage />} />
                 <Route path="dashboards/:dashboardId" element={<DashboardViewPage />} />
                 <Route path="datasources" element={<ProjectDataSourcesPage />} />
+                <Route path="datasources/:name" element={<ProjectDataSourceEditPage />} />
                 <Route path="workflows" element={<ProjectWorkflowsPage />} />
                 <Route path="wiki" element={<ProjectWikiPage />} />
                 <Route path="wiki/:pageId" element={<ProjectWikiPage />} />
@@ -97,6 +100,7 @@ function App() {
               <Route path="/metrics" element={<MetricsPage />} />
               <Route path="/options" element={<OptionsPage />} />
               <Route path="/logs" element={<LogsPage />} />
+              <Route path="/ai-analytics" element={<AiAnalyticsPage />} />
               <Route path="*" element={<Navigate to="/projects" replace />} />
             </Routes>
           </Suspense>

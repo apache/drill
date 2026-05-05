@@ -73,8 +73,10 @@ public class AnthropicProvider implements LlmProvider {
   }
 
   @Override
-  public void streamChatCompletion(LlmConfig config, List<ChatMessage> messages,
-      List<ToolDefinition> tools, OutputStream out) throws Exception {
+  public LlmCallResult streamChatCompletion(LlmConfig config, List<ChatMessage> messages,
+      List<ToolDefinition> tools, OutputStream out, UsageObserver usageObserver)
+      throws Exception {
+    UsageObserver observer = usageObserver != null ? usageObserver : UsageObserver.NOOP;
 
     String endpoint = config.getApiEndpoint();
     if (endpoint == null || endpoint.isEmpty()) {
@@ -95,6 +97,7 @@ public class AnthropicProvider implements LlmProvider {
         .addHeader("anthropic-version", ANTHROPIC_VERSION)
         .build();
 
+    LlmCallResult result = new LlmCallResult();
     try (Response response = httpClient.newCall(request).execute()) {
       if (!response.isSuccessful()) {
         String errorBody = "";
@@ -105,20 +108,21 @@ public class AnthropicProvider implements LlmProvider {
         String errorMsg = "Anthropic API error " + response.code() + ": " + errorBody;
         logger.error(errorMsg);
         writeSseEvent(out, "error", "{\"message\":" + MAPPER.writeValueAsString(errorMsg) + "}");
-        return;
+        return result;
       }
 
       ResponseBody body = response.body();
       if (body == null) {
         writeSseEvent(out, "error", "{\"message\":\"Empty response from Anthropic API\"}");
-        return;
+        return result;
       }
 
       try (BufferedReader reader = new BufferedReader(
           new InputStreamReader(body.byteStream(), StandardCharsets.UTF_8))) {
-        processAnthropicStream(reader, out);
+        processAnthropicStream(reader, out, result, observer);
       }
     }
+    return result;
   }
 
   @Override
@@ -205,7 +209,8 @@ public class AnthropicProvider implements LlmProvider {
     return body;
   }
 
-  private void processAnthropicStream(BufferedReader reader, OutputStream out) throws Exception {
+  private void processAnthropicStream(BufferedReader reader, OutputStream out, LlmCallResult result,
+      UsageObserver observer) throws Exception {
     // Track content blocks by index
     Map<Integer, String> blockTypes = new HashMap<>();
     Map<Integer, String> toolUseIds = new HashMap<>();
@@ -231,6 +236,18 @@ public class AnthropicProvider implements LlmProvider {
         String type = event.has("type") ? event.get("type").asText() : "";
 
         switch (type) {
+          case "message_start":
+            // Anthropic emits input token count in message_start.usage.input_tokens
+            JsonNode startMessage = event.get("message");
+            if (startMessage != null) {
+              JsonNode startUsage = startMessage.get("usage");
+              if (startUsage != null && startUsage.has("input_tokens")) {
+                result.setPromptTokens(startUsage.get("input_tokens").asInt());
+                observer.onUsage(result.getPromptTokens(), result.getResponseTokens());
+              }
+            }
+            break;
+
           case "content_block_start":
             handleContentBlockStart(event, blockTypes, toolUseIds, toolUseNames, out);
             if (event.has("content_block")) {
@@ -242,7 +259,7 @@ public class AnthropicProvider implements LlmProvider {
             break;
 
           case "content_block_delta":
-            handleContentBlockDelta(event, blockTypes, toolUseIds, out);
+            handleContentBlockDelta(event, blockTypes, toolUseIds, out, result);
             break;
 
           case "content_block_stop":
@@ -250,7 +267,12 @@ public class AnthropicProvider implements LlmProvider {
             break;
 
           case "message_delta":
-            // Check for stop_reason
+            // Anthropic emits the running output_tokens in message_delta.usage.output_tokens.
+            JsonNode deltaUsage = event.get("usage");
+            if (deltaUsage != null && deltaUsage.has("output_tokens")) {
+              result.setResponseTokens(deltaUsage.get("output_tokens").asInt());
+              observer.onUsage(result.getPromptTokens(), result.getResponseTokens());
+            }
             JsonNode messageDelta = event.get("delta");
             if (messageDelta != null && messageDelta.has("stop_reason")) {
               String stopReason = messageDelta.get("stop_reason").asText();
@@ -278,7 +300,6 @@ public class AnthropicProvider implements LlmProvider {
             return;
 
           default:
-            // ping, message_start, etc. — skip
             break;
         }
       } catch (Exception e) {
@@ -317,7 +338,8 @@ public class AnthropicProvider implements LlmProvider {
   private void handleContentBlockDelta(JsonNode event,
       Map<Integer, String> blockTypes,
       Map<Integer, String> toolUseIds,
-      OutputStream out) throws Exception {
+      OutputStream out,
+      LlmCallResult result) throws Exception {
 
     int index = event.path("index").asInt(0);
     JsonNode delta = event.get("delta");
@@ -331,6 +353,7 @@ public class AnthropicProvider implements LlmProvider {
     if ("text_delta".equals(deltaType)) {
       String text = delta.path("text").asText();
       if (!text.isEmpty()) {
+        result.appendResponseText(text);
         writeSseEvent(out, "delta",
             "{\"type\":\"content\",\"content\":" + MAPPER.writeValueAsString(text) + "}");
       }

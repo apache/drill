@@ -105,6 +105,8 @@ public class DrillRestServer extends ResourceConfig {
     register(ProspectorResources.class);
     register(AiConfigResources.class);
     register(AiLogsResources.class);
+    register(AiPricingResources.class);
+    register(AiAnalyticsResources.class);
     register(ProjectResources.class);
     register(TestConnectionResources.class);
     register(TranspileResources.class);
@@ -118,7 +120,7 @@ public class DrillRestServer extends ResourceConfig {
     register(WorkflowConfigResources.class);
     register(ScheduleResources.class);
 
-    logger.info("Registered {} resource classes", 27);
+    logger.info("Registered {} resource classes", 29);
 
     property(FreemarkerMvcFeature.TEMPLATE_OBJECT_FACTORY, getFreemarkerConfiguration(servletContext));
     register(FreemarkerMvcFeature.class);

@@ -37,7 +37,8 @@ import {
 import { ReloadOutlined } from '@ant-design/icons';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { createVisualization, updateVisualization } from '../../api/visualizations';
-import { addVisualization } from '../../api/projects';
+import { addVisualization, addSavedQuery } from '../../api/projects';
+import { createSavedQuery } from '../../api/savedQueries';
 import { executeQuery } from '../../api/queries';
 import ChartTypeSelector from './ChartTypeSelector';
 import ColumnMapper from './ColumnMapper';
@@ -286,10 +287,47 @@ export default function VisualizationBuilder({
     try {
       const values = await form.validateFields();
 
+      // Smart-link to a saved query: if the user is creating a viz from raw SQL
+      // (no existing savedQueryId) and there's an active project to put it in,
+      // persist the SQL as a saved query first and link the viz to it. This
+      // gives us a single source of truth for the SQL without forcing the user
+      // to manually save the query before building a chart. Failure here is
+      // non-fatal — we fall back to the inline-sql path used today.
+      let effectiveSavedQueryId: string | undefined =
+        savedQueryId || visualization?.savedQueryId;
+      const shouldAutoSaveQuery = !isEditMode && !effectiveSavedQueryId
+        && !!sql && !!projectId;
+      if (shouldAutoSaveQuery && sql) {
+        try {
+          const created = await createSavedQuery({
+            name: values.name,
+            description: values.description
+              ? `Query backing visualization: ${values.description}`
+              : `Query backing visualization "${values.name}"`,
+            sql,
+            defaultSchema,
+            isPublic: values.isPublic || false,
+          });
+          effectiveSavedQueryId = created.id;
+          if (projectId && created.id) {
+            try {
+              await addSavedQuery(projectId, created.id);
+            } catch {
+              // Project linkage is best-effort; the saved query still exists.
+            }
+          }
+        } catch (err) {
+          // Surface but don't block — the viz can still be created with inline sql.
+          message.warning(
+            `Couldn't save query alongside visualization: ${err instanceof Error ? err.message : 'unknown error'}`,
+          );
+        }
+      }
+
       const payload: VisualizationCreate = {
         name: values.name,
         description: values.description,
-        savedQueryId: savedQueryId || visualization?.savedQueryId,
+        savedQueryId: effectiveSavedQueryId,
         chartType,
         config: {
           ...config,

@@ -40,14 +40,17 @@ public interface LlmProvider {
   /**
    * Stream a chat completion to the given output stream using normalized SSE events.
    *
-   * @param config   the LLM configuration (endpoint, key, model, etc.)
-   * @param messages the conversation messages
-   * @param tools    tool definitions (may be empty)
-   * @param out      the output stream to write SSE events to
+   * @param config         the LLM configuration (endpoint, key, model, etc.)
+   * @param messages       the conversation messages
+   * @param tools          tool definitions (may be empty)
+   * @param out            the output stream to write SSE events to
+   * @param usageObserver  receives token-usage updates as they arrive from upstream;
+   *                       use UsageObserver.NOOP if you don't need them
+   * @return summary of the call (token usage, response text) for analytics
    * @throws Exception if streaming fails
    */
-  void streamChatCompletion(LlmConfig config, List<ChatMessage> messages,
-      List<ToolDefinition> tools, OutputStream out) throws Exception;
+  LlmCallResult streamChatCompletion(LlmConfig config, List<ChatMessage> messages,
+      List<ToolDefinition> tools, OutputStream out, UsageObserver usageObserver) throws Exception;
 
   /**
    * Validate the given configuration for this provider.

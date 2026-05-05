@@ -25,7 +25,6 @@ import {
   Popconfirm,
   message,
   Tooltip,
-  Spin,
   Modal,
   Form,
   Switch,
@@ -33,6 +32,7 @@ import {
   Dropdown,
 } from 'antd';
 import type { MenuProps } from 'antd';
+import { ListSkeleton } from '../components/common/Skeletons';
 import {
   SearchOutlined,
   PlayCircleOutlined,
@@ -396,7 +396,9 @@ export default function SavedQueriesPage({ filterIds, projectId, projectOwner, o
         {/* List column */}
         <ul className="savedquery-list" role="list">
           {isLoading ? (
-            <li className="savedquery-list-loading"><Spin /></li>
+            <li className="savedquery-list-loading">
+              <ListSkeleton rows={6} />
+            </li>
           ) : filteredQueries.length === 0 ? (
             <li className="savedquery-list-empty">
               {searchText

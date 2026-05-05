@@ -1414,6 +1414,13 @@ public class ProjectResources {
       PersistentStore<Project> store = getStore();
       Project existing = store.get(SYSTEM_LOGS_PROJECT_ID);
       if (existing != null) {
+        // Backfill the bundled wiki documentation on installs that pre-date it.
+        // We only add the wiki when the project has none — never overwrite user edits.
+        if (existing.getWikiPages() == null || existing.getWikiPages().isEmpty()) {
+          existing.setWikiPages(buildSystemLogsWiki(Instant.now().toEpochMilli()));
+          store.put(SYSTEM_LOGS_PROJECT_ID, existing);
+          logger.info("Backfilled bundled wiki pages on existing 'Drill Logs' project");
+        }
         return;
       }
 
@@ -1597,6 +1604,8 @@ public class ProjectResources {
           "sys-ds-drill-logs", "schema",
           "dfs.logs", null, null, "Drill Log Files"));
 
+      List<WikiPage> wikiPages = buildSystemLogsWiki(now);
+
       Project project = new Project(
           SYSTEM_LOGS_PROJECT_ID,
           "Drill Logs",
@@ -1611,7 +1620,7 @@ public class ProjectResources {
               sqTopLoggers, sqWarnTrends),
           Arrays.asList(vizErrorFreq, vizLevelDist, vizTopLoggers, vizWarnTrends),
           Arrays.asList(dashId),
-          new ArrayList<>(),
+          wikiPages,
           true,
           now,
           now,
@@ -1626,6 +1635,106 @@ public class ProjectResources {
     } catch (Exception e) {
       logger.warn("Failed to create system Drill Logs project: {}", e.getMessage());
     }
+  }
+
+  /**
+   * Pre-generated wiki content shipped with the system Drill Logs project.
+   * Explains what the project is, what it ships with, and how to use it.
+   */
+  private List<WikiPage> buildSystemLogsWiki(long now) {
+    List<WikiPage> pages = new ArrayList<>();
+
+    String overview =
+        "# Drill Logs\n\n"
+        + "This is a **system project** that ships with Apache Drill. It gives operators "
+        + "and analysts a one-click view of what is happening inside the Drillbit by "
+        + "turning the server's own log files into queryable tables, ready-made "
+        + "visualizations, and a pre-built dashboard.\n\n"
+        + "> ⚠️ **This project cannot be deleted.** It is created automatically the first "
+        + "time the SQL Lab loads, restored on every Drillbit start if missing, and the "
+        + "delete endpoint refuses to remove it. If you do not want it visible, you can "
+        + "hide it from the sidebar but the project itself will remain in the system store.\n\n"
+        + "## What is included\n\n"
+        + "When you open this project you will find:\n\n"
+        + "- **A `dfs.logs` workspace** registered automatically when `DRILL_LOG_DIR` is set. "
+        + "It points the workspace at the log directory and adds a custom `drilllog` "
+        + "format plugin that parses each line into typed columns (`log_timestamp`, "
+        + "`thread`, `level`, `logger`, `message`).\n"
+        + "- **Five saved queries** that cover the common log questions:\n"
+        + "  - *Recent Errors* — last 100 ERROR lines.\n"
+        + "  - *Error Frequency by Hour* — error rate over the last 48 hours.\n"
+        + "  - *Log Level Distribution* — counts by level across the whole log.\n"
+        + "  - *Top Error Sources* — which loggers are noisiest.\n"
+        + "  - *Warning Trends* — daily WARN counts for the last 30 days.\n"
+        + "- **Four visualizations** that wrap those queries as line, pie, and bar charts.\n"
+        + "- **A dashboard** (\"Drill Logs Overview\") that lays the four visualizations out "
+        + "in a 2×2 grid for at-a-glance monitoring.\n\n"
+        + "## How to use it\n\n"
+        + "1. Set the `DRILL_LOG_DIR` environment variable before starting the Drillbit "
+        + "if you have not already. Without it the workspace cannot find log files.\n"
+        + "2. Open the dashboard from the project's **Dashboards** tab to see the "
+        + "current state of the cluster.\n"
+        + "3. Open the **Saved Queries** tab to run any of the bundled queries directly, "
+        + "or use them as a starting point for your own.\n"
+        + "4. Use **SQL Lab** with `FROM dfs.logs.\\`*.drilllog\\`` to write ad-hoc "
+        + "queries against the logs in the same workspace.\n\n"
+        + "## Querying log files with SQL\n\n"
+        + "Each log line is parsed by the `drilllog` format plugin. Treat a log directory "
+        + "like a table — for example:\n\n"
+        + "```sql\n"
+        + "SELECT log_timestamp, level, logger, message\n"
+        + "FROM dfs.logs.`*.drilllog`\n"
+        + "WHERE level IN ('ERROR', 'WARN')\n"
+        + "  AND log_timestamp > '2024-01-01T00:00:00,000'\n"
+        + "ORDER BY log_timestamp DESC\n"
+        + "LIMIT 200;\n"
+        + "```\n\n"
+        + "Glob patterns work too — `dfs.logs.\\`drillbit*.log\\`` reads the active log "
+        + "and any rolled archives in one scan.\n\n"
+        + "## Where the data lives\n\n"
+        + "Nothing is copied. Queries read directly from the files in `DRILL_LOG_DIR` "
+        + "every time, so what you see is always current. Logs that have been rotated "
+        + "out of the directory are no longer queryable from this workspace.\n";
+
+    pages.add(new WikiPage(
+        "sys-wiki-overview", "About this project", overview, 0, now, now));
+
+    String maintenance =
+        "# Maintenance and FAQ\n\n"
+        + "## Why can't I delete this project?\n\n"
+        + "The Drill Logs project is part of the SQL Lab's built-in tooling. Deleting it "
+        + "would only remove the curated views — Drill itself would re-create it on the "
+        + "next restart — and would leave dashboards, alerts, and shared links that "
+        + "reference its saved queries broken in the meantime. Because of that, the "
+        + "project's `isSystem` flag is set to `true` and the delete endpoint returns "
+        + "`400 System projects cannot be deleted`.\n\n"
+        + "If a project is cluttering your sidebar, hide it from the **Pin / Recent "
+        + "Projects** menu instead — the project stays in place but does not take up "
+        + "screen real estate.\n\n"
+        + "## Can I edit the bundled queries and visualizations?\n\n"
+        + "Yes. The bundled saved queries and visualizations are regular records in "
+        + "the persistent store; you can rename them, change their SQL, or build new "
+        + "visualizations on top of them. They are tagged as system items but they are "
+        + "not write-protected.\n\n"
+        + "If you want to **reset** them back to the originals, delete the items by id "
+        + "(prefix `sys-log-`, `sys-viz-`, `sys-dash-`) and restart the Drillbit. The "
+        + "bootstrap will re-create any item that no longer exists.\n\n"
+        + "## What if `DRILL_LOG_DIR` is not set?\n\n"
+        + "The project is still created, but the `dfs.logs` workspace cannot be "
+        + "registered until the environment variable is set. The bundled dashboards "
+        + "will return *Not Found* errors for the `dfs.logs` schema until then. Setting "
+        + "`DRILL_LOG_DIR` and restarting the Drillbit is enough — the workspace setup "
+        + "runs idempotently on every start.\n\n"
+        + "## Where do the logs come from?\n\n"
+        + "From the same Drillbit that is hosting this UI. Every Drillbit writes its "
+        + "own logs into its own `DRILL_LOG_DIR`, so the queries here cover this node, "
+        + "not the cluster. For multi-node visibility, point a separate Drill cluster at "
+        + "a shared log volume or use a log shipper.\n";
+
+    pages.add(new WikiPage(
+        "sys-wiki-faq", "Maintenance & FAQ", maintenance, 1, now, now));
+
+    return pages;
   }
 
   /**

@@ -22,6 +22,8 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import org.apache.drill.exec.server.rest.ai.AiEvent;
+import org.apache.drill.exec.server.rest.ai.AiEventLogger;
 import org.apache.drill.exec.server.rest.auth.DrillUserPrincipal;
 
 import jakarta.annotation.security.RolesAllowed;
@@ -30,8 +32,11 @@ import jakarta.ws.rs.GET;
 import jakarta.ws.rs.POST;
 import jakarta.ws.rs.Path;
 import jakarta.ws.rs.Produces;
+import jakarta.ws.rs.core.Context;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
+import jakarta.ws.rs.core.SecurityContext;
+import java.security.Principal;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -105,7 +110,7 @@ public class TranspileResources {
   @Produces(MediaType.APPLICATION_JSON)
   @Operation(summary = "Transpile SQL",
       description = "Transpiles SQL from one dialect to another using sqlglot")
-  public Response transpile(TranspileRequest request) {
+  public Response transpile(TranspileRequest request, @Context SecurityContext sc) {
     if (request.sql == null || request.sql.trim().isEmpty()) {
       return Response.ok(new TranspileResponse("", true)).build();
     }
@@ -123,8 +128,58 @@ public class TranspileResources {
       }
     }
 
-    String result = transpiler.transpile(request.sql, sourceDialect, targetDialect, schemasJson);
-    return Response.ok(new TranspileResponse(result, true)).build();
+    long start = System.currentTimeMillis();
+    String result = null;
+    Exception failure = null;
+    try {
+      result = transpiler.transpile(request.sql, sourceDialect, targetDialect, schemasJson);
+      return Response.ok(new TranspileResponse(result, true)).build();
+    } catch (RuntimeException e) {
+      failure = e;
+      throw e;
+    } finally {
+      logTranspile(sc, sourceDialect, targetDialect, request.sql, result,
+          failure, System.currentTimeMillis() - start);
+    }
+  }
+
+  private static void logTranspile(SecurityContext sc, String sourceDialect, String targetDialect,
+      String sql, String result, Exception failure, long durationMs) {
+    try {
+      AiEvent event = new AiEvent();
+      event.ts = AiEventLogger.nowIso();
+      event.user = resolveUser(sc);
+      event.feature = "transpile";
+      event.source = "server";
+      event.provider = "sqlglot";
+      event.model = sourceDialect + "->" + targetDialect;
+      event.durationMs = durationMs;
+      event.success = failure == null;
+      event.cancelled = AiEventLogger.isClientCancellation(failure);
+      if (failure != null) {
+        event.errorClass = event.cancelled
+            ? "ClientCancelled"
+            : failure.getClass().getSimpleName();
+        event.error = failure.getMessage();
+      }
+      event.userMessage = AiEventLogger.truncate(sql);
+      event.prompt = AiEventLogger.truncate(sql);
+      event.response = AiEventLogger.truncate(result);
+      AiEventLogger.log(event);
+    } catch (Exception ignored) {
+      // analytics must not break the transpile call
+    }
+  }
+
+  private static String resolveUser(SecurityContext sc) {
+    if (sc == null) {
+      return "anonymous";
+    }
+    Principal p = sc.getUserPrincipal();
+    if (p == null || p.getName() == null || p.getName().isEmpty()) {
+      return "anonymous";
+    }
+    return p.getName();
   }
 
   // ==================== Convert Data Type ====================
