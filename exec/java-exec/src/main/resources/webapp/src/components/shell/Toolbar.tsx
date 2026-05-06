@@ -31,6 +31,7 @@ import {
   QuestionCircleOutlined,
   MenuFoldOutlined,
   MenuUnfoldOutlined,
+  DatabaseOutlined,
 } from '@ant-design/icons';
 import { useQuery } from '@tanstack/react-query';
 import { useTheme } from '../../hooks/useTheme';
@@ -65,9 +66,15 @@ const TOP_LEVEL_LABELS: Record<string, string> = {
 interface ToolbarProps {
   /** Open the command palette (Spotlight) */
   onOpenCommand: () => void;
+  /**
+   * Trigger the contextual "Browse data" surface. The shell decides whether
+   * this toggles the page-registered left rail (e.g. SQL Lab schema browser)
+   * or opens the global drawer; the toolbar just reports the click.
+   */
+  onBrowseData?: () => void;
 }
 
-export default function Toolbar({ onOpenCommand }: ToolbarProps) {
+export default function Toolbar({ onOpenCommand, onBrowseData }: ToolbarProps) {
   const location = useLocation();
   const { isDark, toggle } = useTheme();
   const { chrome, toggleSidebar, toggleInspector, inspectorOpen, sidebarCollapsed } = useAppChrome();
@@ -188,6 +195,18 @@ export default function Toolbar({ onOpenCommand }: ToolbarProps) {
               className="shell-toolbar-icon-btn"
             />
           </Tooltip>
+
+          {onBrowseData && (
+            <Tooltip title="Browse data (⌘B)">
+              <Button
+                type="text"
+                size="small"
+                icon={<DatabaseOutlined />}
+                onClick={onBrowseData}
+                className="shell-toolbar-icon-btn"
+              />
+            </Tooltip>
+          )}
 
           <Tooltip title={inspectorOpen ? 'Hide Inspector (⌘⌥0)' : 'Show Inspector (⌘⌥0)'}>
             <Button

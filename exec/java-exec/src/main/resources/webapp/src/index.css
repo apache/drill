@@ -1875,6 +1875,113 @@ a.shell-breadcrumb-segment:hover,
   background: var(--color-bg-layout);
 }
 
+/* ----- Left Rail (e.g. SQL Lab schema browser) ----- */
+
+.shell-left-rail {
+  /* Width set inline; bounds guarded in JS. */
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  background: var(--color-bg-sidebar);
+  -webkit-backdrop-filter: saturate(180%) blur(28px);
+  backdrop-filter: saturate(180%) blur(28px);
+  border-right: 1px solid var(--color-border);
+  overflow: hidden;
+  position: relative;
+}
+
+.shell-left-rail.is-dragging {
+  user-select: none;
+}
+
+.shell-left-rail-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 10px 12px 8px;
+  border-bottom: 1px solid var(--color-border-secondary);
+  flex-shrink: 0;
+}
+
+.shell-left-rail-title {
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--color-text-secondary);
+}
+
+.shell-left-rail-collapse-btn,
+.shell-left-rail-collapsed {
+  appearance: none;
+  border: none;
+  background: transparent;
+  color: var(--color-text-secondary);
+  cursor: pointer;
+  padding: 4px 6px;
+  border-radius: var(--radius-sm);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: background var(--duration-fast) var(--ease-standard);
+}
+
+.shell-left-rail-collapse-btn:hover,
+.shell-left-rail-collapsed:hover {
+  background: var(--color-bg-hover);
+  color: var(--color-text);
+}
+
+.shell-left-rail-body {
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
+}
+
+.shell-left-rail-resize-handle {
+  position: absolute;
+  top: 0;
+  right: -3px;
+  width: 6px;
+  height: 100%;
+  cursor: col-resize;
+  z-index: 5;
+}
+
+.shell-left-rail-resize-handle:hover,
+.shell-left-rail-resize-handle.is-dragging {
+  background: var(--color-primary-soft);
+}
+
+/* Collapsed strip — narrow chevron-only column the user can click to reopen
+   the rail. Sits in the same flex slot as the full rail so layout doesn't
+   reflow when toggled. */
+.shell-left-rail-collapsed {
+  flex-shrink: 0;
+  width: 24px;
+  background: var(--color-bg-sidebar);
+  border-right: 1px solid var(--color-border);
+  border-radius: 0;
+  align-items: flex-start;
+  padding: 12px 0 0;
+}
+
+@media (max-width: 768px) {
+  /* On phones the left rail floats above content rather than competing
+     for horizontal space. The mobile backdrop already handles dismissal. */
+  .shell-left-rail {
+    position: absolute;
+    inset: 0 auto 0 0;
+    z-index: 60;
+    box-shadow: var(--shadow-lg, 0 12px 36px rgba(0, 0, 0, 0.18));
+  }
+
+  .shell-root.is-left-rail-collapsed .shell-left-rail {
+    display: none;
+  }
+}
+
 /* ----- Right Inspector ----- */
 
 .shell-inspector {
