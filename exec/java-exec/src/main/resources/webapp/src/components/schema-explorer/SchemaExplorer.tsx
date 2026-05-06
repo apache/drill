@@ -55,6 +55,15 @@ interface SchemaExplorerProps {
   onInsertText?: (text: string) => void;
   onTableSelect?: (schema: string, table: string, columnNames?: string[]) => void;
   onSelectQuery?: (query: { id: string; name: string; sql?: string; description?: string }) => void;
+  /**
+   * Optional handler invoked when the user double-clicks a table-like node.
+   * Receives a ready-to-run SELECT statement and a short tab name. When set
+   * it takes precedence over onInsertText for table double-clicks — the
+   * canonical action is "open a fresh editor tab with this query loaded"
+   * rather than "splice into the current cursor". Non-table nodes still go
+   * through onInsertText (or do nothing if onInsertText isn't provided).
+   */
+  onOpenInNewTab?: (sql: string, tabName?: string) => void;
   datasetFilter?: DatasetFilter;
   projectId?: string;
   savedQueryIds?: string[];
@@ -304,7 +313,7 @@ function filterTreeNodes(nodes: DataNode[], allow: DatasetAllowList): DataNode[]
   }, []);
 }
 
-export default function SchemaExplorer({ onInsertText, onTableSelect, onSelectQuery, datasetFilter, projectId, savedQueryIds }: SchemaExplorerProps) {
+export default function SchemaExplorer({ onInsertText, onTableSelect, onSelectQuery, onOpenInNewTab, datasetFilter, projectId, savedQueryIds }: SchemaExplorerProps) {
   const queryClient = useQueryClient();
   const navigate = useNavigate();
   const [searchText, setSearchText] = useState('');
@@ -790,19 +799,37 @@ export default function SchemaExplorer({ onInsertText, onTableSelect, onSelectQu
         return;
       }
       const text = getQualifiedName(key);
-      if (text && onInsertText) {
-        if (key.startsWith('sheet:') || key.startsWith('table:') || key.startsWith('file:') || key.startsWith('dir:')) {
-          const cachedCols = columnsCacheRef.current[key];
-          const cols = cachedCols && cachedCols.length > 0
-            ? cachedCols.map((c) => `\`${c.name}\``).join(',\n       ')
-            : '*';
-          onInsertText(`SELECT ${cols}\nFROM ${text}\nLIMIT 100`);
-        } else {
-          onInsertText(text);
+      if (!text) {
+        return;
+      }
+      const isTableLike = key.startsWith('sheet:') || key.startsWith('table:')
+        || key.startsWith('file:') || key.startsWith('dir:');
+      if (isTableLike) {
+        const cachedCols = columnsCacheRef.current[key];
+        const cols = cachedCols && cachedCols.length > 0
+          ? cachedCols.map((c) => `\`${c.name}\``).join(',\n       ')
+          : '*';
+        const sql = `SELECT ${cols}\nFROM ${text}\nLIMIT 100`;
+        // Tab name: last path segment, stripped of backticks. Falls back to
+        // a generic "Query" if we can't derive anything readable.
+        const lastSegment = text.split('.').pop() ?? '';
+        const tabName = lastSegment.replace(/`/g, '').trim() || 'Query';
+        if (onOpenInNewTab) {
+          onOpenInNewTab(sql, tabName);
+          return;
         }
+        if (onInsertText) {
+          onInsertText(sql);
+        }
+        return;
+      }
+      // Non-table nodes (column, schema, plugin) keep the simple insert
+      // behavior — there's no useful "open in new tab" semantic for those.
+      if (onInsertText) {
+        onInsertText(text);
       }
     },
-    [onInsertText],
+    [onInsertText, onOpenInNewTab],
   );
 
   // ---------- Drag-to-query ----------
