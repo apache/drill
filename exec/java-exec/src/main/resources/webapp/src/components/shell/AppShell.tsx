@@ -15,12 +15,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import { useEffect, useRef, useState, type ReactNode } from 'react';
+import { useCallback, useEffect, useRef, useState, type ReactNode } from 'react';
 import { useLocation } from 'react-router-dom';
 import { useAppChrome } from '../../contexts/AppChromeContext';
 import Sidebar from './Sidebar';
 import Toolbar from './Toolbar';
 import RightInspector from './RightInspector';
+import LeftRail, { useAutoCollapseLeftRail } from './LeftRail';
+import BrowseDataDrawer from './BrowseDataDrawer';
 import CommandPalette from '../common/CommandPalette';
 import KeyboardShortcutsModal from '../query-editor/KeyboardShortcutsModal';
 
@@ -37,17 +39,39 @@ function isMobileViewport(): boolean {
 
 export default function AppShell({ children }: AppShellProps) {
   const {
+    chrome,
     sidebarCollapsed,
     setSidebarCollapsed,
     toggleSidebar,
     inspectorOpen,
     setInspectorOpen,
     toggleInspector,
+    leftRailCollapsed,
+    toggleLeftRail,
   } = useAppChrome();
   const location = useLocation();
   const [paletteOpen, setPaletteOpen] = useState(false);
   const [shortcutsOpen, setShortcutsOpen] = useState(false);
+  const [browseOpen, setBrowseOpen] = useState(false);
   const isFirstLocation = useRef(true);
+
+  // Auto-collapse the left rail on narrow viewports so it doesn't crowd the
+  // editor. The hook stays a no-op on wide screens.
+  useAutoCollapseLeftRail();
+
+  const hasLeftRail = !!chrome.leftRail;
+
+  // ⌘B routes to whichever surface fits context: a page that registered a
+  // left rail (e.g. SQL Lab schema browser) gets toggled directly; everywhere
+  // else opens the global Browse Data drawer so the user can still reach
+  // schemas without leaving the page.
+  const handleBrowseShortcut = useCallback(() => {
+    if (hasLeftRail) {
+      toggleLeftRail();
+    } else {
+      setBrowseOpen((v) => !v);
+    }
+  }, [hasLeftRail, toggleLeftRail]);
 
   // Global keyboard shortcuts
   useEffect(() => {
@@ -81,10 +105,15 @@ export default function AppShell({ children }: AppShellProps) {
         e.preventDefault();
         toggleInspector();
       }
+      // ⌘B toggles the contextual "Browse data" surface.
+      if ((e.key === 'b' || e.key === 'B') && !e.altKey && !e.shiftKey) {
+        e.preventDefault();
+        handleBrowseShortcut();
+      }
     };
     window.addEventListener('keydown', onKeyDown);
     return () => window.removeEventListener('keydown', onKeyDown);
-  }, [toggleSidebar, toggleInspector]);
+  }, [toggleSidebar, toggleInspector, handleBrowseShortcut]);
 
   // On mobile, auto-close the sidebar/inspector overlays on navigation so
   // the user can see the page content. Skip the very first render.
@@ -108,15 +137,28 @@ export default function AppShell({ children }: AppShellProps) {
   };
 
   return (
-    <div className={`shell-root${sidebarCollapsed ? ' is-sidebar-collapsed' : ''}${inspectorOpen ? ' is-inspector-open' : ''}`}>
+    <div
+      className={[
+        'shell-root',
+        sidebarCollapsed ? 'is-sidebar-collapsed' : '',
+        inspectorOpen ? 'is-inspector-open' : '',
+        hasLeftRail ? 'has-left-rail' : '',
+        hasLeftRail && leftRailCollapsed ? 'is-left-rail-collapsed' : '',
+      ].filter(Boolean).join(' ')}
+    >
       <Sidebar />
       <div className="shell-main">
-        <Toolbar onOpenCommand={() => setPaletteOpen(true)} />
+        <Toolbar
+          onOpenCommand={() => setPaletteOpen(true)}
+          onBrowseData={handleBrowseShortcut}
+        />
         <div className="shell-content-wrap">
+          <LeftRail />
           <main className="shell-content">{children}</main>
           <RightInspector />
         </div>
       </div>
+      <BrowseDataDrawer open={browseOpen} onClose={() => setBrowseOpen(false)} />
       {showBackdrop && (
         <div
           className="shell-mobile-backdrop"

@@ -41,10 +41,26 @@ export interface InspectorTab {
   content: ReactNode;
 }
 
+/**
+ * Single-slot rail anchored to the left of the main content area, between the
+ * sidebar and the editor. Pages opt in by registering one. Used today for the
+ * SQL Lab schema browser; the rail itself is generic so other editor-style
+ * pages can claim it too.
+ */
+export interface LeftRail {
+  /** Stable key — used for localStorage namespacing of width/collapsed state. */
+  key: string;
+  /** Optional header title shown above the rail body. */
+  title?: ReactNode;
+  /** Body content. */
+  content: ReactNode;
+}
+
 export interface PageChrome {
   breadcrumb?: BreadcrumbSegment[];
   toolbarActions?: ReactNode;
   inspectorTabs?: InspectorTab[];
+  leftRail?: LeftRail;
 }
 
 interface AppChromeValue {
@@ -58,10 +74,17 @@ interface AppChromeValue {
   setInspectorOpen: (v: boolean) => void;
   inspectorActiveTab: string | null;
   setInspectorActiveTab: (key: string | null) => void;
+  /** Whether the left rail (when a page registered one) is collapsed. */
+  leftRailCollapsed: boolean;
+  toggleLeftRail: () => void;
+  setLeftRailCollapsed: (v: boolean) => void;
 }
 
 const SIDEBAR_KEY = 'drill-shell-sidebar-collapsed';
 const INSPECTOR_KEY = 'drill-shell-inspector-open';
+const LEFT_RAIL_KEY = 'drill-shell-left-rail-collapsed';
+/** Below this viewport width, the left rail is auto-collapsed on first load. */
+const LEFT_RAIL_AUTO_COLLAPSE_PX = 1100;
 
 function readBool(key: string, fallback: boolean): boolean {
   try {
@@ -85,6 +108,13 @@ function isMobileViewport(): boolean {
   return window.matchMedia('(max-width: 768px)').matches;
 }
 
+function isNarrowViewport(): boolean {
+  if (typeof window === 'undefined' || !window.matchMedia) {
+    return false;
+  }
+  return window.matchMedia(`(max-width: ${LEFT_RAIL_AUTO_COLLAPSE_PX - 1}px)`).matches;
+}
+
 function writeBool(key: string, value: boolean): void {
   try {
     localStorage.setItem(key, String(value));
@@ -104,6 +134,9 @@ const AppChromeContext = createContext<AppChromeValue>({
   setInspectorOpen: () => {},
   inspectorActiveTab: null,
   setInspectorActiveTab: () => {},
+  leftRailCollapsed: false,
+  toggleLeftRail: () => {},
+  setLeftRailCollapsed: () => {},
 });
 
 export function AppChromeProvider({ children }: { children: ReactNode }) {
@@ -123,6 +156,15 @@ export function AppChromeProvider({ children }: { children: ReactNode }) {
     return readBool(INSPECTOR_KEY, false);
   });
   const [inspectorActiveTab, setInspectorActiveTab] = useState<string | null>(null);
+  // Left rail defaults to open on roomy desktop viewports (the user wants
+  // schema visible) but auto-collapses on narrow screens. The user's explicit
+  // collapse state overrides the default once they've touched it.
+  const [leftRailCollapsed, setLeftRailState] = useState<boolean>(() => {
+    if (isMobileViewport() || isNarrowViewport()) {
+      return true;
+    }
+    return readBool(LEFT_RAIL_KEY, false);
+  });
 
   const setChrome = useCallback((next: PageChrome) => {
     setChromeState(next);
@@ -154,6 +196,19 @@ export function AppChromeProvider({ children }: { children: ReactNode }) {
     });
   }, []);
 
+  const setLeftRailCollapsed = useCallback((v: boolean) => {
+    setLeftRailState(v);
+    writeBool(LEFT_RAIL_KEY, v);
+  }, []);
+
+  const toggleLeftRail = useCallback(() => {
+    setLeftRailState((prev) => {
+      const next = !prev;
+      writeBool(LEFT_RAIL_KEY, next);
+      return next;
+    });
+  }, []);
+
   const value = useMemo<AppChromeValue>(
     () => ({
       chrome,
@@ -166,6 +221,9 @@ export function AppChromeProvider({ children }: { children: ReactNode }) {
       setInspectorOpen,
       inspectorActiveTab,
       setInspectorActiveTab,
+      leftRailCollapsed,
+      toggleLeftRail,
+      setLeftRailCollapsed,
     }),
     [
       chrome,
@@ -177,6 +235,9 @@ export function AppChromeProvider({ children }: { children: ReactNode }) {
       toggleInspector,
       setInspectorOpen,
       inspectorActiveTab,
+      leftRailCollapsed,
+      toggleLeftRail,
+      setLeftRailCollapsed,
     ],
   );
 
@@ -209,5 +270,5 @@ export function usePageChrome(chrome: PageChrome): void {
   useEffect(() => {
     ctx.setChrome(chrome);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [chrome.breadcrumb, chrome.toolbarActions, chrome.inspectorTabs]);
+  }, [chrome.breadcrumb, chrome.toolbarActions, chrome.inspectorTabs, chrome.leftRail]);
 }
