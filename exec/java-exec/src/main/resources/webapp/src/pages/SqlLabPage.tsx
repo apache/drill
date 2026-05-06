@@ -19,7 +19,7 @@ import { useCallback, useState, useEffect, useRef, useMemo, type MutableRefObjec
 import { useSelector, useDispatch } from 'react-redux';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { Tabs, message, notification, Tooltip, Modal, Alert, Button, Space, Spin, Dropdown, Grid, Input } from 'antd';
-import { PlusOutlined, RobotOutlined, MoreOutlined, EditOutlined, CopyOutlined, CloseOutlined, PlayCircleOutlined, StopOutlined, ExperimentOutlined, TableOutlined, LockOutlined, UnlockOutlined, ApiOutlined, StarOutlined, StarFilled, DatabaseOutlined } from '@ant-design/icons';
+import { PlusOutlined, RobotOutlined, MoreOutlined, EditOutlined, CopyOutlined, CloseOutlined, PlayCircleOutlined, StopOutlined, ExperimentOutlined, TableOutlined, LockOutlined, UnlockOutlined, ApiOutlined, StarOutlined, StarFilled } from '@ant-design/icons';
 import Markdown from 'react-markdown';
 import type { RootState, AppDispatch } from '../store';
 import {
@@ -757,6 +757,31 @@ export default function SqlLabPage({ datasetFilter, headerContent, projectId, sa
     }
   }, []);
 
+  /**
+   * Open a fresh SQL tab pre-loaded with the supplied query. Reuses the
+   * existing pendingQueryRef pattern: addTab() spawns a new tab, the
+   * post-add useEffect (already in this file) notices the pendingQueryRef
+   * and applies SQL + name to the now-active new tab.
+   */
+  const handleOpenQueryInNewTab = useCallback((querySql: string, name?: string) => {
+    pendingQueryRef.current = { sql: querySql, name: name || 'Query' };
+    dispatch(addTab(name || 'Query'));
+  }, [dispatch]);
+
+  // When we're navigated here from the global Browse Data drawer, the
+  // pending query is parked on the router state. Pick it up once and clear
+  // the state so refresh/back doesn't replay it.
+  useEffect(() => {
+    const state = location.state as { pendingQuery?: { sql: string; name?: string } } | null;
+    const pending = state?.pendingQuery;
+    if (!pending) {
+      return;
+    }
+    handleOpenQueryInNewTab(pending.sql, pending.name);
+    navigate(location.pathname, { replace: true, state: null });
+    // We only want to react once per navigation event; deps tied to location.
+  }, [location, navigate, handleOpenQueryInNewTab]);
+
   // Handle table selection from schema explorer
   const handleTableSelect = useCallback(
     (schema: string, table: string, columnNames?: string[]) => {
@@ -824,27 +849,15 @@ export default function SqlLabPage({ datasetFilter, headerContent, projectId, sa
     }
   }, [activeTab, dispatch]);
 
-  // Register Schema + Prospector as inspector tabs (overrides global Prospector)
+  // Register Prospector as the right-rail inspector tab. The schema browser
+  // moved out of the inspector to a dedicated left rail; the right rail is
+  // now AI-only on this page.
   const inspectorTabs = useMemo<InspectorTab[]>(() => {
-    const tabs: InspectorTab[] = [
+    if (!prospectorAvailable) {
+      return [];
+    }
+    return [
       {
-        key: 'schema',
-        title: 'Schema',
-        icon: <DatabaseOutlined />,
-        content: (
-          <SchemaExplorer
-            onInsertText={handleInsertText}
-            onTableSelect={handleTableSelect}
-            onSelectQuery={handleSelectQuery}
-            datasetFilter={datasetFilter}
-            projectId={projectId}
-            savedQueryIds={savedQueryIds}
-          />
-        ),
-      },
-    ];
-    if (prospectorAvailable) {
-      tabs.push({
         key: 'prospector',
         title: 'Prospector',
         icon: <RobotOutlined />,
@@ -858,22 +871,37 @@ export default function SqlLabPage({ datasetFilter, headerContent, projectId, sa
             } : undefined}
           />
         ),
-      });
-    }
-    return tabs;
-  }, [
+      },
+    ];
+  }, [prospectorAvailable, prospector, aiContext, notebookHandle]);
+
+  // Schema browser owns the left rail. Keeps clicks/inserts wired through to
+  // the editor exactly as before — the data didn't change, only the address.
+  const leftRail = useMemo(() => ({
+    key: 'sqllab-schema',
+    title: 'Schema',
+    content: (
+      <SchemaExplorer
+        onInsertText={handleInsertText}
+        onTableSelect={handleTableSelect}
+        onSelectQuery={handleSelectQuery}
+        onOpenInNewTab={handleOpenQueryInNewTab}
+        datasetFilter={datasetFilter}
+        projectId={projectId}
+        savedQueryIds={savedQueryIds}
+      />
+    ),
+  }), [
     handleInsertText,
     handleTableSelect,
     handleSelectQuery,
+    handleOpenQueryInNewTab,
     datasetFilter,
     projectId,
     savedQueryIds,
-    prospectorAvailable,
-    prospector,
-    aiContext,
-    notebookHandle,
   ]);
-  usePageChrome({ inspectorTabs });
+
+  usePageChrome({ inspectorTabs, leftRail });
 
   // Handle tab operations
   const handleTabChange = useCallback(
