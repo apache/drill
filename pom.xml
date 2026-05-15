@@ -110,7 +110,7 @@
     <junit.platform.version>1.8.2</junit.platform.version>
     <junit.version>5.7.2</junit.version>
     <kerby.version>2.0.3</kerby.version>
-    <libthrift.version>0.18.1</libthrift.version>
+    <libthrift.version>0.23.0</libthrift.version>
     <license.skip>true</license.skip>
     <log4j.version>2.25.4</log4j.version>
     <!-- Upgrading logback further breaks JDK 8 build compatibility -->
