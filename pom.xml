@@ -778,6 +778,11 @@
               <artifactId>asm-commons</artifactId>
               <version>${asm.version}</version>
             </dependency>
+            <dependency>
+              <groupId>org.vafer</groupId>
+              <artifactId>jdependency</artifactId>
+              <version>2.15</version>
+            </dependency>
           </dependencies>
         </plugin>
         <plugin>
