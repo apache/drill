@@ -764,16 +764,6 @@
               <goals>
                 <goal>shade</goal>
               </goals>
-              <configuration>
-                <filters>
-                  <filter>
-                    <artifact>org.bouncycastle:bcprov-jdk18on</artifact>
-                    <excludes>
-                      <exclude>META-INF/versions/25/**/*.*</exclude>
-                    </excludes>
-                  </filter>
-                </filters>
-              </configuration>
             </execution>
           </executions>
           <dependencies>
