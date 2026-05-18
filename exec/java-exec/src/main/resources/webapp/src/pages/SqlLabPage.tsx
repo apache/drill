@@ -782,29 +782,6 @@ export default function SqlLabPage({ datasetFilter, headerContent, projectId, sa
     // We only want to react once per navigation event; deps tied to location.
   }, [location, navigate, handleOpenQueryInNewTab]);
 
-  // Handle table selection from schema explorer
-  const handleTableSelect = useCallback(
-    (schema: string, table: string, columnNames?: string[]) => {
-      const cols = columnNames && columnNames.length > 0
-        ? columnNames.map((c) => `\`${c}\``).join(',\n       ')
-        : '*';
-      // Table function expressions (e.g. Excel sheets) are passed as the table arg
-      if (table.startsWith('table(')) {
-        const query = `SELECT ${cols}\nFROM ${table}\nLIMIT 100`;
-        updateSql(query);
-        return;
-      }
-      // Format schema: plugin unquoted, workspace parts backtick-quoted
-      const schemaParts = schema.split('.');
-      const formattedSchema = schemaParts.length <= 1
-        ? schema
-        : schemaParts[0] + '.' + schemaParts.slice(1).map((p) => `\`${p}\``).join('.');
-      const query = `SELECT ${cols}\nFROM ${formattedSchema}.\`${table}\`\nLIMIT 100`;
-      updateSql(query);
-    },
-    [updateSql]
-  );
-
   // Handle query selection from sidebar navigator
   const handleSelectQuery = useCallback(
     (query: { id: string; name: string; sql?: string; description?: string }) => {
@@ -883,7 +860,6 @@ export default function SqlLabPage({ datasetFilter, headerContent, projectId, sa
     content: (
       <SchemaExplorer
         onInsertText={handleInsertText}
-        onTableSelect={handleTableSelect}
         onSelectQuery={handleSelectQuery}
         onOpenInNewTab={handleOpenQueryInNewTab}
         datasetFilter={datasetFilter}
@@ -893,7 +869,6 @@ export default function SqlLabPage({ datasetFilter, headerContent, projectId, sa
     ),
   }), [
     handleInsertText,
-    handleTableSelect,
     handleSelectQuery,
     handleOpenQueryInNewTab,
     datasetFilter,
