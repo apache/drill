@@ -923,7 +923,7 @@ ${redactedError ? `\nError: ${redactedError}` : ''}
               </Space>
             }
             style={{
-              backgroundColor: '#fafafa',
+              backgroundColor: 'var(--color-bg-elevated)',
               height: 'fit-content',
               maxHeight: 'calc(100vh - 200px)',
               overflow: 'auto',
@@ -937,13 +937,20 @@ ${redactedError ? `\nError: ${redactedError}` : ''}
               </div>
             ) : (
               <>
-                <div style={{ fontSize: '11px', color: '#999', marginBottom: '12px', padding: '8px', backgroundColor: '#f5f5f5', borderRadius: '3px' }}>
+                <div style={{
+                  fontSize: '11px',
+                  color: 'var(--color-text-tertiary)',
+                  marginBottom: '12px',
+                  padding: '8px',
+                  backgroundColor: 'var(--color-bg-hover)',
+                  borderRadius: '3px',
+                }}>
                   🔒 <strong>Privacy:</strong> Credentials and sensitive data are automatically redacted before sending queries to AI.
                 </div>
                 {aiStreaming ? (
                   <div style={{ paddingBottom: '12px' }}>
                     <Markdown>{aiContent}</Markdown>
-                    <div style={{ color: '#999', fontSize: '11px', marginTop: '12px', animation: 'pulse 1s infinite' }}>
+                    <div style={{ color: 'var(--color-text-tertiary)', fontSize: '11px', marginTop: '12px', animation: 'pulse 1s infinite' }}>
                       ▌
                     </div>
                   </div>
