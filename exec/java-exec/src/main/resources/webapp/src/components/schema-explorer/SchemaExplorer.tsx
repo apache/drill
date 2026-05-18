@@ -53,7 +53,6 @@ export interface DatasetFilter {
 
 interface SchemaExplorerProps {
   onInsertText?: (text: string) => void;
-  onTableSelect?: (schema: string, table: string, columnNames?: string[]) => void;
   onSelectQuery?: (query: { id: string; name: string; sql?: string; description?: string }) => void;
   /**
    * Optional handler invoked when the user double-clicks a table-like node.
@@ -313,7 +312,7 @@ function filterTreeNodes(nodes: DataNode[], allow: DatasetAllowList): DataNode[]
   }, []);
 }
 
-export default function SchemaExplorer({ onInsertText, onTableSelect, onSelectQuery, onOpenInNewTab, datasetFilter, projectId, savedQueryIds }: SchemaExplorerProps) {
+export default function SchemaExplorer({ onInsertText, onSelectQuery, onOpenInNewTab, datasetFilter, projectId, savedQueryIds }: SchemaExplorerProps) {
   const queryClient = useQueryClient();
   const navigate = useNavigate();
   const [searchText, setSearchText] = useState('');
@@ -765,7 +764,9 @@ export default function SchemaExplorer({ onInsertText, onTableSelect, onSelectQu
     (_selectedKeys: React.Key[], info: { node: DataNode }) => {
       const key = info.node.key as string;
 
-      // Handle favorite clicks – insert the referenced name
+      // Favorites are an explicit shortcut — single-click inserts the name
+      // into the editor (these rows exist precisely so users can paste
+      // common references quickly).
       if (key.startsWith('fav:')) {
         const realKey = key.replace('fav:', '');
         const qn = getQualifiedName(realKey);
@@ -773,23 +774,12 @@ export default function SchemaExplorer({ onInsertText, onTableSelect, onSelectQu
         return;
       }
 
-      const cachedCols = columnsCacheRef.current[key];
-      const colNames = cachedCols && cachedCols.length > 0
-        ? cachedCols.map((c) => c.name)
-        : undefined;
-
-      if (key.startsWith('table:')) {
-        const [, schemaName, tableName] = key.split(':');
-        onTableSelect?.(schemaName, tableName, colNames);
-      } else if (key.startsWith('sheet:')) {
-        const qn = getQualifiedName(key);
-        onTableSelect?.('', qn, colNames);
-      } else if (key.startsWith('file:') || key.startsWith('dir:')) {
-        const parts = key.split(':');
-        onTableSelect?.(parts[1], parts.slice(2).join(':'), colNames);
-      }
+      // For every other node type single-click only selects/expands the row.
+      // Editor-modifying actions are reserved for drag (insert at cursor) and
+      // double-click (open in a new tab) so users can browse without
+      // accidentally clobbering their current query.
     },
-    [onTableSelect, onInsertText],
+    [onInsertText],
   );
 
   const handleDoubleClick = useCallback(
@@ -1221,7 +1211,7 @@ export default function SchemaExplorer({ onInsertText, onTableSelect, onSelectQu
       </div>
 
       <div style={{ padding: 8, borderTop: '1px solid var(--color-border)', fontSize: 11, color: 'var(--color-text-tertiary)' }}>
-        <div>Double-click or drag to insert into query</div>
+        <div>Double-click to open in a new tab · Drag to insert into the editor</div>
         <div style={{ marginTop: 2 }}>Right-click for more options</div>
         <div style={{ marginTop: 2 }}>
           <WarningOutlined style={{ color: '#faad14' }} /> = Cannot browse tables
