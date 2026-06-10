@@ -19,11 +19,16 @@ package org.apache.calcite.jdbc;
 
 import org.apache.calcite.schema.Schema;
 import org.apache.calcite.schema.SchemaPlus;
+import org.apache.calcite.schema.lookup.LikePattern;
+import org.apache.calcite.schema.lookup.Lookup;
+import org.apache.calcite.schema.lookup.Named;
 import org.apache.drill.common.AutoCloseables;
 import org.apache.drill.exec.alias.AliasRegistryProvider;
 import org.apache.drill.exec.store.AbstractSchema;
 import org.apache.drill.exec.store.SchemaConfig;
 import org.apache.drill.exec.store.StoragePluginRegistry;
+
+import java.util.Set;
 
 
 /**
@@ -36,14 +41,56 @@ public class DynamicSchema extends SimpleCalciteSchema implements AutoCloseable 
     super(parent, schema, name);
   }
 
+  /**
+   * Ensures sub-schemas materialised from the underlying {@link Schema} remain
+   * {@link DynamicSchema} instances so that lazy loading keeps working at every
+   * level of the schema tree. Prior to Calcite 1.39 (CALCITE-6029) this was done
+   * by overriding the now-removed {@code getImplicitSubSchema(String, boolean)};
+   * the new {@code subSchemas()} lookup uses {@code createSubSchema} to wrap
+   * schemas resolved from the underlying {@link Schema}.
+   */
   @Override
-  protected CalciteSchema getImplicitSubSchema(String schemaName,
-                                               boolean caseSensitive) {
-    Schema s = schema.getSubSchema(schemaName);
-    if (s != null) {
-      return new DynamicSchema(this, s, schemaName);
-    }
-    return getSubSchemaMap().get(schemaName);
+  protected CalciteSchema createSubSchema(Schema schema, String name) {
+    return new DynamicSchema(this, schema, name);
+  }
+
+  /**
+   * Forces case-sensitive (exact) table lookups. Drill's storage schemas resolve
+   * table names themselves (for example file names within a workspace); allowing
+   * Calcite to perform a case-insensitive match would force it to enumerate every
+   * table in the schema (a potentially expensive directory listing). This used to
+   * be expressed as {@code getImplicitTable(tableName, true)} before that method
+   * was removed in Calcite 1.39.
+   */
+  @Override
+  public Lookup<TableEntry> tables() {
+    return exactLookup(super.tables());
+  }
+
+  /**
+   * Wraps a {@link Lookup} so that case-insensitive lookups behave like exact,
+   * case-sensitive ones: {@code getIgnoreCase} only returns a match when an
+   * entry with exactly the requested name exists, avoiding any enumeration of
+   * the underlying entries.
+   */
+  static <T> Lookup<T> exactLookup(Lookup<T> delegate) {
+    return new Lookup<T>() {
+      @Override
+      public T get(String name) {
+        return delegate.get(name);
+      }
+
+      @Override
+      public Named<T> getIgnoreCase(String name) {
+        T entity = delegate.get(name);
+        return entity == null ? null : new Named<>(name, entity);
+      }
+
+      @Override
+      public Set<String> getNames(LikePattern pattern) {
+        return delegate.getNames(pattern);
+      }
+    };
   }
 
   public static SchemaPlus createRootSchema(StoragePluginRegistry storages,
@@ -58,11 +105,6 @@ public class DynamicSchema extends SimpleCalciteSchema implements AutoCloseable 
       new DynamicSchema(this, schema, name);
     subSchemaMap.put(name, calciteSchema);
     return calciteSchema;
-  }
-
-  @Override
-  protected TableEntry getImplicitTable(String tableName, boolean caseSensitive) {
-    return super.getImplicitTable(tableName, true);
   }
 
   @Override

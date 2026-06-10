@@ -6149,8 +6149,12 @@ SqlNode BuiltinFunctionCall() :
             (
                 <FROM> {
                     if (null == flag && null == trimChars) {
-                        throw SqlUtil.newContextException(getPos(),
-                            RESOURCE.illegalFromEmpty());
+                        // TRIM(FROM x) is not allowed: a flag and/or trim
+                        // characters must precede FROM. (Calcite removed the
+                        // RESOURCE.illegalFromEmpty() message in 1.42, so raise
+                        // a parse error directly instead.)
+                        throw new ParseException(
+                            "Encountered \"FROM\" without a leading flag or trim characters in TRIM");
                     }
                 }
             |

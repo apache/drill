@@ -28,6 +28,7 @@ import org.apache.calcite.rex.RexLambdaRef;
 import org.apache.calcite.rex.RexLiteral;
 import org.apache.calcite.rex.RexLocalRef;
 import org.apache.calcite.rex.RexNode;
+import org.apache.calcite.rex.RexNodeAndFieldIndex;
 import org.apache.calcite.rex.RexOver;
 import org.apache.calcite.rex.RexPatternFieldRef;
 import org.apache.calcite.rex.RexRangeRef;
@@ -144,6 +145,12 @@ class JdbcExpressionCheck implements RexVisitor<Boolean> {
   @Override
   public Boolean visitLambda(RexLambda lambda) {
     // Lambda expressions are not supported for JDBC pushdown
+    return false;
+  }
+
+  @Override
+  public Boolean visitNodeAndFieldIndex(RexNodeAndFieldIndex nodeAndFieldIndex) {
+    // RexNodeAndFieldIndex (added in Calcite 1.41) is not supported for JDBC pushdown
     return false;
   }
 }

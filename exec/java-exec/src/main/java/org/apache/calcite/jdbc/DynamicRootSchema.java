@@ -21,6 +21,9 @@ import org.apache.calcite.DataContext;
 import org.apache.calcite.linq4j.tree.Expression;
 import org.apache.calcite.linq4j.tree.Expressions;
 import org.apache.calcite.schema.SchemaPlus;
+import org.apache.calcite.schema.lookup.LikePattern;
+import org.apache.calcite.schema.lookup.Lookup;
+import org.apache.calcite.schema.lookup.Named;
 import org.apache.calcite.util.BuiltInMethod;
 import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.common.exceptions.UserExceptionUtils;
@@ -41,13 +44,16 @@ import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 /**
- * Loads schemas from storage plugins later when {@link #getSubSchema(String, boolean)}
- * is called.
+ * Loads schemas from storage plugins lazily: a storage plugin's schemas are only
+ * registered the first time the corresponding name is requested through the
+ * {@link #subSchemas()} lookup.
  */
 public class DynamicRootSchema extends DynamicSchema {
   private static final Logger logger = LoggerFactory.getLogger(DynamicRootSchema.class);
@@ -66,18 +72,55 @@ public class DynamicRootSchema extends DynamicSchema {
     this.aliasRegistryProvider = aliasRegistryProvider;
   }
 
+  /**
+   * Resolves storage-plugin sub-schemas lazily. Replaces the pre-Calcite-1.39
+   * {@code getImplicitSubSchema} override (removed by CALCITE-6029): the public,
+   * final {@link #getSubSchema(String, boolean)} now delegates here.
+   *
+   * <p>Both {@code get} and {@code getIgnoreCase} attempt the lazy resolution,
+   * because a name may need to be registered on demand (this includes
+   * single-identifier, multi-level names such as {@code `cp.default`} that are
+   * not present in {@link #getNames}). Case-insensitivity is handled inside
+   * {@link #getSchema(String)}, which lower-cases the name before lookup
+   * (Drill registers schemas in lower case), mirroring Drill's case-insensitive
+   * schema policy.
+   */
   @Override
-  protected CalciteSchema getImplicitSubSchema(String schemaName,
-                                               boolean caseSensitive) {
-    String actualSchemaName = aliasRegistryProvider.getStorageAliasesRegistry()
-      .getUserAliases(schemaConfig.getUserName()).get(SchemaPath.getSimplePath(schemaName).toExpr());
-    return getSchema(actualSchemaName != null
-        ? SchemaPath.parseFromString(actualSchemaName).getRootSegmentPath()
-        : schemaName,
-      caseSensitive);
+  public Lookup<CalciteSchema> subSchemas() {
+    return new Lookup<CalciteSchema>() {
+      @Override
+      public CalciteSchema get(String name) {
+        return resolveSubSchema(name);
+      }
+
+      @Override
+      public Named<CalciteSchema> getIgnoreCase(String name) {
+        CalciteSchema schema = resolveSubSchema(name);
+        return schema == null ? null : new Named<>(schema.name, schema);
+      }
+
+      @Override
+      public Set<String> getNames(LikePattern pattern) {
+        // Already-registered sub-schemas plus every plugin that could still be
+        // registered lazily.
+        Set<String> names = new LinkedHashSet<>(subSchemaMap.map().keySet());
+        names.addAll(storages.availablePlugins());
+        return names.stream()
+          .filter(pattern.matcher()::apply)
+          .collect(Collectors.toCollection(LinkedHashSet::new));
+      }
+    };
   }
 
-  private CalciteSchema getSchema(String schemaName, boolean caseSensitive) {
+  private CalciteSchema resolveSubSchema(String name) {
+    String actualSchemaName = aliasRegistryProvider.getStorageAliasesRegistry()
+      .getUserAliases(schemaConfig.getUserName()).get(SchemaPath.getSimplePath(name).toExpr());
+    return getSchema(actualSchemaName != null
+        ? SchemaPath.parseFromString(actualSchemaName).getRootSegmentPath()
+        : name);
+  }
+
+  private CalciteSchema getSchema(String schemaName) {
     // Drill registers schemas in lower case, see AbstractSchema constructor
     schemaName = schemaName == null ? null : schemaName.toLowerCase();
     CalciteSchema retSchema = subSchemaMap.map().get(schemaName);
@@ -85,9 +128,39 @@ public class DynamicRootSchema extends DynamicSchema {
       return retSchema;
     }
 
-    loadSchemaFactory(schemaName, caseSensitive);
+    loadSchemaFactory(schemaName);
     retSchema = subSchemaMap.map().get(schemaName);
     return retSchema;
+  }
+
+  /**
+   * Resolves temporary tables (those registered through a table alias) before
+   * falling back to the regular, case-sensitive table lookup. Replaces the
+   * pre-Calcite-1.39 {@code getImplicitTable} override.
+   */
+  @Override
+  public Lookup<TableEntry> tables() {
+    Lookup<TableEntry> base = super.tables();
+    return new Lookup<TableEntry>() {
+      @Override
+      public TableEntry get(String name) {
+        TableEntry temporaryTable = getTemporaryTable(name);
+        return temporaryTable != null ? temporaryTable : base.get(name);
+      }
+
+      @Override
+      public Named<TableEntry> getIgnoreCase(String name) {
+        TableEntry temporaryTable = getTemporaryTable(name);
+        return temporaryTable != null
+          ? new Named<>(name, temporaryTable)
+          : base.getIgnoreCase(name);
+      }
+
+      @Override
+      public Set<String> getNames(LikePattern pattern) {
+        return base.getNames(pattern);
+      }
+    };
   }
 
   private SchemaPath resolveTableAlias(String alias) {
@@ -145,9 +218,8 @@ public class DynamicRootSchema extends DynamicSchema {
   /**
    * Loads schema factory(storage plugin) for specified {@code schemaName}
    * @param schemaName the name of the schema
-   * @param caseSensitive whether matching for the schema name is case sensitive
    */
-  private void loadSchemaFactory(String schemaName, boolean caseSensitive) {
+  private void loadSchemaFactory(String schemaName) {
     StoragePlugin plugin = null;
     try {
       SchemaPlus schemaPlus = this.plus();
@@ -229,16 +301,7 @@ public class DynamicRootSchema extends DynamicSchema {
     }
   }
 
-  @Override
-  protected TableEntry getImplicitTable(String tableName, boolean caseSensitive) {
-    return Optional.ofNullable(getTemporaryTable(tableName, caseSensitive))
-      .<TableEntry>map(table -> new TableEntryImpl(this, tableName, table.getTable(), table.sqls))
-      .orElse(super.getImplicitTable(tableName, true));
-  }
-
-  private TableEntry getTemporaryTable(String tableName, boolean caseSensitive) {
-    CalciteSchema currentSchema = this;
-
+  private TableEntry getTemporaryTable(String tableName) {
     PathSegment.NameSegment pathSegment =
       Optional.ofNullable(resolveTableAlias(SchemaPath.getCompoundPath(tableName).toExpr()))
         .map(SchemaPath::getRootSegment)
@@ -248,15 +311,21 @@ public class DynamicRootSchema extends DynamicSchema {
       return null;
     }
 
+    CalciteSchema currentSchema = this;
     while (!pathSegment.isLastPath()) {
-      currentSchema = currentSchema.getImplicitSubSchema(pathSegment.getPath(), caseSensitive);
+      currentSchema = currentSchema.getSubSchema(pathSegment.getPath(), false);
+      if (currentSchema == null) {
+        return null;
+      }
       pathSegment = pathSegment.getChild().getNameSegment();
     }
 
-    if (currentSchema != null) {
-      return currentSchema.getTable(pathSegment.getNameSegment().getPath(), caseSensitive);
+    TableEntry table = currentSchema.getTable(pathSegment.getNameSegment().getPath(), false);
+    if (table == null) {
+      return null;
     }
-    return null;
+    // Re-label the resolved entry with the alias name the query referred to.
+    return new TableEntryImpl(this, tableName, table.getTable(), table.sqls);
   }
 
   public static class RootSchema extends AbstractSchema {

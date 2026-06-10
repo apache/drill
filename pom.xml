@@ -53,12 +53,12 @@
     <antlr.version>4.9.3</antlr.version>
     <apiguardian.version>1.1.2</apiguardian.version>
     <asm.version>9.9.1</asm.version>
-    <avatica.version>1.23.0</avatica.version>
+    <avatica.version>1.28.0</avatica.version>
     <avro.version>1.12.0</avro.version>
     <bouncycastle.version>1.84</bouncycastle.version>
     <caffeine.version>2.9.3</caffeine.version>
     <calcite.groupId>org.apache.calcite</calcite.groupId>
-    <calcite.version>1.38.0</calcite.version>
+    <calcite.version>1.42.0</calcite.version>
     <codemodel.version>2.6</codemodel.version>
     <commons.beanutils.version>1.11.0</commons.beanutils.version>
     <commons.cli.version>1.4</commons.cli.version>

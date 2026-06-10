@@ -83,21 +83,10 @@ public class DrillRelDataTypeSystem extends RelDataTypeSystemImpl {
     return super.getMaxPrecision(typeName);
   }
 
-  @Override
-  @Deprecated
-  public int getMaxNumericPrecision() {
-    // Override deprecated method for compatibility with Calcite internals that still call it
-    // Calcite 1.38 changed this from 38 to 19, but Drill needs 38
-    return 38;
-  }
-
-  @Override
-  @Deprecated
-  public int getMaxNumericScale() {
-    // Override deprecated method for compatibility with Calcite internals that still call it
-    // Drill needs max scale of 38 for DECIMAL
-    return 38;
-  }
+  // Note: getMaxNumericPrecision() and getMaxNumericScale() became final in Calcite 1.42
+  // (CALCITE-6789). They now delegate to getMaxPrecision(DECIMAL) / getMaxScale(DECIMAL),
+  // which Drill overrides above to return 38. So overriding them directly is no longer
+  // possible nor necessary.
 
   @Override
   public boolean isSchemaCaseSensitive() {

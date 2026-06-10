@@ -61,7 +61,9 @@ public class TestLiteralAggFunction extends ClusterTest {
         .sqlQuery(query)
         .unOrdered()
         .baselineColumns("department_id", "const_val", "cnt")
-        .baselineValues(1L, 42, 7L)
+        // department_id is constant-folded to the INT literal 1 by Calcite
+        // (it is constrained to 1 by the WHERE clause), so it is INT, not BIGINT.
+        .baselineValues(1, 42, 7L)
         .go();
 
     // Verify the plan contains expected operations
@@ -87,7 +89,8 @@ public class TestLiteralAggFunction extends ClusterTest {
         .sqlQuery(query)
         .unOrdered()
         .baselineColumns("department_id", "int_const", "str_const", "cnt")
-        .baselineValues(1L, 100, "test", 7L)
+        // department_id constant-folds to the INT literal 1 (see above).
+        .baselineValues(1, 100, "test", 7L)
         .go();
 
     // Verify the plan is valid
@@ -150,7 +153,8 @@ public class TestLiteralAggFunction extends ClusterTest {
         .sqlQuery(query)
         .unOrdered()
         .baselineColumns("department_id", "null_val", "cnt")
-        .baselineValues(1L, null, 7L)
+        // department_id constant-folds to the INT literal 1 (see above).
+        .baselineValues(1, null, 7L)
         .go();
 
     // Verify the plan is valid
@@ -173,6 +177,8 @@ public class TestLiteralAggFunction extends ClusterTest {
         .sqlQuery(query)
         .ordered()
         .baselineColumns("department_id", "expr_val", "cnt")
+        // department_id stays BIGINT here: the IN (1, 2) predicate does not
+        // constrain it to a single constant, so no constant-folding occurs.
         .baselineValues(1L, 42, 7L)
         .baselineValues(2L, 42, 5L)
         .go();
@@ -201,7 +207,8 @@ public class TestLiteralAggFunction extends ClusterTest {
         .sqlQuery(query)
         .unOrdered()
         .baselineColumns("department_id", "cnt", "label", "sum_id", "version")
-        .baselineValues(1L, 7L, "dept", 75L, 100)
+        // department_id constant-folds to the INT literal 1 (see above).
+        .baselineValues(1, 7L, "dept", 75L, 100)
         .go();
 
     // Verify the plan contains aggregate operations
@@ -235,7 +242,9 @@ public class TestLiteralAggFunction extends ClusterTest {
         .sqlQuery(query)
         .unOrdered()
         .baselineColumns("department_id", "const_val", "cnt")
-        .baselineValues(1L, 42, 7L)
+        // department_id is constant-folded to the INT literal 1 by Calcite
+        // (it is constrained to 1 by the WHERE clause), so it is INT, not BIGINT.
+        .baselineValues(1, 42, 7L)
         .go();
   }
 }
