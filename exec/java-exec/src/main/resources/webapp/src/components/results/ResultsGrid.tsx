@@ -543,7 +543,7 @@ export default function ResultsGrid({
         </Text>
         {displayResults?.queryId && (
           <a
-            href={`/sqllab/profiles/${displayResults.queryId}`}
+            href={`/profiles/${displayResults.queryId}`}
             target="_blank"
             rel="noopener noreferrer"
             style={{ fontSize: 12, color: 'var(--color-text-tertiary)' }}

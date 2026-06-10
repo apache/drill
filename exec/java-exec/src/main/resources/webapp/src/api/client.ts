@@ -17,63 +17,115 @@
  */
 import axios, { AxiosError, AxiosInstance } from 'axios';
 
-// Create axios instance with default config
+const CSRF_TOKEN_ENDPOINT = '/api/v1/csrf-token';
+const CSRF_HEADER = 'X-CSRF-Token';
+const MUTATING_METHODS = new Set(['post', 'put', 'delete', 'patch']);
+
 const apiClient: AxiosInstance = axios.create({
   baseURL: '',
-  withCredentials: true, // Include cookies for session auth
+  withCredentials: true,
   headers: {
     'Content-Type': 'application/json',
   },
 });
 
-// Get CSRF token from meta tag or cookie
-function getCsrfToken(): string | null {
-  // Try meta tag first
-  const metaTag = document.querySelector('meta[name="csrf-token"]');
-  if (metaTag) {
-    return metaTag.getAttribute('content');
-  }
+// Cached promise so concurrent boot-time requests share a single fetch.
+let csrfTokenPromise: Promise<string | null> | null = null;
 
-  // Try cookie
-  const cookies = document.cookie.split(';');
-  for (const cookie of cookies) {
+async function fetchCsrfToken(): Promise<string | null> {
+  try {
+    const response = await axios.get<{ token?: string }>(CSRF_TOKEN_ENDPOINT, {
+      withCredentials: true,
+    });
+    const token = response.data?.token ?? null;
+    if (token) {
+      // Mirror into the meta tag so non-axios readers (Pyodide, observability,
+      // anything else doing manual fetch) can pull from a sync DOM source.
+      const meta = document.querySelector('meta[name="csrf-token"]');
+      if (meta) {
+        meta.setAttribute('content', token);
+      }
+    }
+    return token;
+  } catch {
+    // Fallback to meta tag / cookie below; do not break the request flow.
+    return null;
+  }
+}
+
+function readCsrfFromDom(): string | null {
+  const meta = document.querySelector('meta[name="csrf-token"]');
+  if (meta) {
+    return meta.getAttribute('content');
+  }
+  for (const cookie of document.cookie.split(';')) {
     const [name, value] = cookie.trim().split('=');
     if (name === 'drill.csrf.token') {
       return decodeURIComponent(value);
     }
   }
-
   return null;
 }
 
-// Request interceptor to add CSRF token
-apiClient.interceptors.request.use(
-  (config) => {
-    const csrfToken = getCsrfToken();
-    if (csrfToken && ['post', 'put', 'delete', 'patch'].includes(config.method?.toLowerCase() ?? '')) {
-      config.headers['X-CSRF-Token'] = csrfToken;
-    }
-    return config;
-  },
-  (error) => Promise.reject(error)
-);
+async function getCsrfToken(): Promise<string | null> {
+  if (csrfTokenPromise === null) {
+    csrfTokenPromise = fetchCsrfToken();
+  }
+  const fetched = await csrfTokenPromise;
+  return fetched ?? readCsrfFromDom();
+}
 
-// Response interceptor to handle auth errors
+/**
+ * Force-refresh the cached CSRF token. Call after login or session changes.
+ */
+export function invalidateCsrfToken(): void {
+  csrfTokenPromise = null;
+}
+
+/**
+ * Resolve the current CSRF token. Used by non-axios callers (SSE streams,
+ * direct fetch calls) that need to attach the header themselves.
+ */
+export async function resolveCsrfToken(): Promise<string | null> {
+  return getCsrfToken();
+}
+
+/**
+ * Warm the CSRF token cache at app boot so the first mutating request doesn't
+ * pay the round-trip. Safe to call multiple times — subsequent calls reuse the
+ * cached promise.
+ */
+export function prefetchCsrfToken(): Promise<string | null> {
+  if (csrfTokenPromise === null) {
+    csrfTokenPromise = fetchCsrfToken();
+  }
+  return csrfTokenPromise;
+}
+
+apiClient.interceptors.request.use(async (config) => {
+  const method = config.method?.toLowerCase() ?? '';
+  if (MUTATING_METHODS.has(method)) {
+    const token = await getCsrfToken();
+    if (token) {
+      config.headers[CSRF_HEADER] = token;
+    }
+  }
+  return config;
+});
+
 apiClient.interceptors.response.use(
   (response) => response,
   (error: AxiosError) => {
     if (error.response?.status === 401) {
-      // Redirect to login page
-      const currentPath = window.location.pathname;
-      window.location.href = `/mainLogin?redirect=${encodeURIComponent(currentPath)}`;
+      const redirect = encodeURIComponent(window.location.pathname + window.location.search);
+      window.location.href = `/mainLogin?redirect=${redirect}`;
     }
     return Promise.reject(error);
-  }
+  },
 );
 
 export default apiClient;
 
-// Helper to handle API errors
 export function getErrorMessage(error: unknown): string {
   if (axios.isAxiosError(error)) {
     const axiosError = error as AxiosError<{ message?: string; error?: string }>;

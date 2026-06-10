@@ -15,7 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import apiClient from './client';
+import apiClient, { resolveCsrfToken } from './client';
 import type {
   AiStatus,
   AiConfig,
@@ -70,24 +70,6 @@ export async function testAiConfig(config: AiConfigUpdate): Promise<ValidationRe
 export async function getAiProviders(): Promise<AiProvider[]> {
   const response = await apiClient.get<{ providers: AiProvider[] }>(`${AI_CONFIG_BASE}/providers`);
   return response.data.providers;
-}
-
-/**
- * Get CSRF token for fetch-based requests
- */
-function getCsrfToken(): string | null {
-  const metaTag = document.querySelector('meta[name="csrf-token"]');
-  if (metaTag) {
-    return metaTag.getAttribute('content');
-  }
-  const cookies = document.cookie.split(';');
-  for (const cookie of cookies) {
-    const [name, value] = cookie.trim().split('=');
-    if (name === 'drill.csrf.token') {
-      return decodeURIComponent(value);
-    }
-  }
-  return null;
 }
 
 /**
@@ -178,21 +160,25 @@ export function streamChat(
 ): AbortController {
   const controller = new AbortController();
 
-  const headers: Record<string, string> = {
-    'Content-Type': 'application/json',
-  };
-  const csrfToken = getCsrfToken();
-  if (csrfToken) {
-    headers['X-CSRF-Token'] = csrfToken;
-  }
+  const startFetch = async () => {
+    const headers: Record<string, string> = {
+      'Content-Type': 'application/json',
+    };
+    const csrfToken = await resolveCsrfToken();
+    if (csrfToken) {
+      headers['X-CSRF-Token'] = csrfToken;
+    }
 
-  fetch(`${AI_BASE}/chat`, {
-    method: 'POST',
-    headers,
-    body: JSON.stringify(request),
-    signal: controller.signal,
-    credentials: 'include',
-  })
+    return fetch(`${AI_BASE}/chat`, {
+      method: 'POST',
+      headers,
+      body: JSON.stringify(request),
+      signal: controller.signal,
+      credentials: 'include',
+    });
+  };
+
+  startFetch()
     .then(async (response) => {
       if (!response.ok) {
         const text = await response.text();
