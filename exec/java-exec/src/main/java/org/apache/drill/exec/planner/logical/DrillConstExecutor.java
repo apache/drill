@@ -169,6 +169,15 @@ public class DrillConstExecutor implements RexExecutor {
       ValueHolder output = InterpreterEvaluator.evaluateConstantExpr(udfUtilities, materializedExpr);
       RelDataTypeFactory typeFactory = rexBuilder.getTypeFactory();
 
+      if (output == null) {
+        // Drill's interpreter produced no value for this constant (observed for
+        // some CHAR constants under Calcite 1.42). Leave the expression unfolded
+        // rather than failing; it will simply be evaluated at execution time.
+        logger.debug("Constant expression not folded (interpreter returned no value): {}", newCall);
+        reducedValues.add(newCall);
+        continue;
+      }
+
       if (materializedExpr.getMajorType().getMode() == TypeProtos.DataMode.OPTIONAL && TypeHelper.isNull(output)) {
         SqlTypeName sqlTypeName = TypeInferenceUtils.getCalciteTypeFromDrillType(materializedExpr.getMajorType().getMinorType());
         if (sqlTypeName == null) {
@@ -359,6 +368,18 @@ public class DrillConstExecutor implements RexExecutor {
             long value = (materializedExpr.getMajorType().getMode() == TypeProtos.DataMode.OPTIONAL) ?
                 ((NullableTimeStampHolder) valueHolder).value :
                 ((TimeStampHolder) valueHolder).value;
+            // Some operations that SQL types as DATE are computed by Drill as a
+            // TIMESTAMP (e.g. DATE + INTERVAL YEAR). Emit a DATE literal in that
+            // case so the literal's value (a DateString) matches its SQL type;
+            // otherwise a DATE-typed Sarg would receive a TimestampString bound
+            // and fail with a ClassCastException in Calcite's RexSimplify.
+            if (newCall.getType().getSqlTypeName() == SqlTypeName.DATE) {
+              long days = value / TimeUnit.DAYS.toMillis(1);
+              LocalDate localDate = LocalDate.ofEpochDay(days);
+              return rexBuilder.makeLiteral(
+                  new DateString(localDate.getYear(), localDate.getMonthValue(), localDate.getDayOfMonth()),
+                  TypeInferenceUtils.createCalciteTypeWithNullability(typeFactory, SqlTypeName.DATE, newCall.getType().isNullable()), false);
+            }
             RelDataType type = typeFactory.createSqlType(SqlTypeName.TIMESTAMP, newCall.getType().getPrecision());
             RelDataType typeWithNullability = typeFactory.createTypeWithNullability(type, newCall.getType().isNullable());
             return rexBuilder.makeLiteral(TimestampString.fromMillisSinceEpoch(value), typeWithNullability, false);
