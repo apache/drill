@@ -607,7 +607,7 @@ export default function DashboardViewPage() {
 
   // Share link
   const handleCopyShareLink = useCallback(() => {
-    const url = `${window.location.origin}/sqllab/dashboards/${id}`;
+    const url = `${window.location.origin}/dashboards/${id}`;
     navigator.clipboard.writeText(url).then(
       () => message.success('Link copied to clipboard!'),
       () => message.error('Failed to copy link')

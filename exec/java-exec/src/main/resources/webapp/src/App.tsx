@@ -15,8 +15,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import { lazy, Suspense } from 'react';
-import { Routes, Route, Navigate } from 'react-router-dom';
+import { lazy, ReactNode, Suspense } from 'react';
+import { Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { Spin } from 'antd';
 import { AiModalProvider } from './contexts/AiModalContext';
 import { AppChromeProvider } from './contexts/AppChromeContext';
@@ -50,6 +50,11 @@ const MetricsPage = lazy(() => import('./pages/MetricsPage'));
 const OptionsPage = lazy(() => import('./pages/OptionsPage'));
 const LogsPage = lazy(() => import('./pages/LogsPage'));
 const AiAnalyticsPage = lazy(() => import('./pages/AiAnalyticsPage'));
+const ClusterPage = lazy(() => import('./pages/ClusterPage'));
+const CredentialsPage = lazy(() => import('./pages/CredentialsPage'));
+const ThreadsPage = lazy(() => import('./pages/ThreadsPage'));
+const LoginPage = lazy(() => import('./pages/LoginPage'));
+const MainLoginPage = lazy(() => import('./pages/MainLoginPage'));
 const WorkflowsPage = lazy(() => import('./pages/WorkflowsPage'));
 const ProjectLayout = lazy(() => import('./components/project').then((m) => ({ default: m.ProjectLayout })));
 
@@ -62,13 +67,26 @@ function RouteFallback() {
   );
 }
 
+/** Routes that render outside the AppShell — login flow has its own chrome. */
+const SHELL_FREE_ROUTES = new Set(['/login', '/mainLogin']);
+
+function ShellSwitch({ children }: { children: ReactNode }) {
+  const location = useLocation();
+  if (SHELL_FREE_ROUTES.has(location.pathname)) {
+    return <>{children}</>;
+  }
+  return <AppShell>{children}</AppShell>;
+}
+
 function App() {
   return (
     <AppChromeProvider>
       <AiModalProvider>
-        <AppShell>
+        <ShellSwitch>
           <Suspense fallback={<RouteFallback />}>
             <Routes>
+              <Route path="/login" element={<LoginPage />} />
+              <Route path="/mainLogin" element={<MainLoginPage />} />
               <Route path="/" element={<Navigate to="/projects" replace />} />
               <Route path="/projects" element={<ProjectsPage />} />
               <Route path="/projects/:id" element={<ProjectLayout />}>
@@ -101,10 +119,13 @@ function App() {
               <Route path="/options" element={<OptionsPage />} />
               <Route path="/logs" element={<LogsPage />} />
               <Route path="/ai-analytics" element={<AiAnalyticsPage />} />
+              <Route path="/cluster" element={<ClusterPage />} />
+              <Route path="/credentials" element={<CredentialsPage />} />
+              <Route path="/threads" element={<ThreadsPage />} />
               <Route path="*" element={<Navigate to="/projects" replace />} />
             </Routes>
           </Suspense>
-        </AppShell>
+        </ShellSwitch>
       </AiModalProvider>
     </AppChromeProvider>
   );

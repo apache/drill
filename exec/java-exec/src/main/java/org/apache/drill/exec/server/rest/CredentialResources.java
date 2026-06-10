@@ -24,11 +24,9 @@ import org.apache.drill.common.logical.StoragePluginConfig.AuthMode;
 import org.apache.drill.common.logical.StoragePluginConfig;
 import org.apache.drill.common.logical.security.CredentialsProvider;
 import org.apache.drill.exec.server.rest.DrillRestServer.UserAuthEnabled;
-import org.apache.drill.exec.server.rest.StorageResources.StoragePluginModel;
 import org.apache.drill.exec.store.StoragePluginRegistry;
 import org.apache.drill.exec.store.StoragePluginRegistry.PluginException;
 import org.apache.drill.exec.store.StoragePluginRegistry.PluginFilter;
-import org.glassfish.jersey.server.mvc.Viewable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -80,21 +78,6 @@ public class CredentialResources {
 
   @Inject
   HttpServletRequest request;
-
-  @GET
-  @Path("/credentials")
-  @Produces(MediaType.TEXT_HTML)
-  @Operation(externalDocs = @ExternalDocumentation(description = "Apache Drill REST API documentation:", url = "https://drill.apache.org/docs/rest-api-introduction/"))
-  public Viewable getPlugins() {
-    List<StoragePluginModel> model = getPluginsJSON().stream()
-      .map(plugin -> new StoragePluginModel(plugin, request, sc))
-      .collect(Collectors.toList());
-    // Creating an empty model with CSRF token, if there are no storage plugins
-    if (model.isEmpty()) {
-      model.add(new StoragePluginModel(null, request, sc));
-    }
-    return ViewableWithPermissions.create(authEnabled.get(), "/rest/credentials/list.ftl", sc, model);
-  }
 
   @GET
   @Path("/credentials.json")
