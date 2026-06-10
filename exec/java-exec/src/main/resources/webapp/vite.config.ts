@@ -27,9 +27,9 @@ export default defineConfig({
       name: 'serve-geojson',
       configureServer(server) {
         return () => {
-          server.middlewares.use('/sqllab/geojson', (req, res, next) => {
+          server.middlewares.use('/geojson', (req, res, next) => {
             // Serve GeoJSON files from public/geojson/
-            const filePath = resolve(__dirname, `public${req.url}`);
+            const filePath = resolve(__dirname, `public/geojson${req.url}`);
             try {
               const stream = createReadStream(filePath);
               res.setHeader('Content-Type', 'application/json');
@@ -43,7 +43,7 @@ export default defineConfig({
       },
     },
   ],
-  base: '/sqllab/',
+  base: '/',
   build: {
     outDir: 'dist',
     sourcemap: true,
@@ -74,11 +74,70 @@ export default defineConfig({
         target: 'http://localhost:8047',
         changeOrigin: true,
       },
+      // /storage/{name}.json, /storage/{name}/enable/...
+      '/storage': {
+        target: 'http://localhost:8047',
+        changeOrigin: true,
+      },
       '/profiles': {
         target: 'http://localhost:8047',
         changeOrigin: true,
       },
-      '/sqllab/geojson': {
+      // Cluster page endpoints (DrillRoot)
+      '/cluster.json': {
+        target: 'http://localhost:8047',
+        changeOrigin: true,
+      },
+      '/state': {
+        target: 'http://localhost:8047',
+        changeOrigin: true,
+      },
+      '/queriesCount': {
+        target: 'http://localhost:8047',
+        changeOrigin: true,
+      },
+      '/gracePeriod': {
+        target: 'http://localhost:8047',
+        changeOrigin: true,
+      },
+      '/portNum': {
+        target: 'http://localhost:8047',
+        changeOrigin: true,
+      },
+      '/gracefulShutdown': {
+        target: 'http://localhost:8047',
+        changeOrigin: true,
+      },
+      '/quiescent': {
+        target: 'http://localhost:8047',
+        changeOrigin: true,
+      },
+      '/shutdown': {
+        target: 'http://localhost:8047',
+        changeOrigin: true,
+      },
+      // Status / Options / Credentials JSON
+      '/status.json': {
+        target: 'http://localhost:8047',
+        changeOrigin: true,
+      },
+      '/options.json': {
+        target: 'http://localhost:8047',
+        changeOrigin: true,
+      },
+      '/internal_options.json': {
+        target: 'http://localhost:8047',
+        changeOrigin: true,
+      },
+      '/credentials.json': {
+        target: 'http://localhost:8047',
+        changeOrigin: true,
+      },
+      '/credentials': {
+        target: 'http://localhost:8047',
+        changeOrigin: true,
+      },
+      '/geojson': {
         target: 'http://localhost:8047',
         changeOrigin: true,
       },

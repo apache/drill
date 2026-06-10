@@ -17,7 +17,6 @@
  */
 package org.apache.drill.exec.server.rest.profile;
 
-import java.nio.charset.StandardCharsets;
 import java.text.SimpleDateFormat;
 import java.util.Collections;
 import java.util.Date;
@@ -28,10 +27,7 @@ import java.util.concurrent.TimeUnit;
 
 import jakarta.annotation.security.RolesAllowed;
 import jakarta.inject.Inject;
-import jakarta.servlet.http.HttpServletRequest;
-import jakarta.ws.rs.Consumes;
 import jakarta.ws.rs.GET;
-import jakarta.ws.rs.POST;
 import jakarta.ws.rs.Path;
 import jakarta.ws.rs.PathParam;
 import jakarta.ws.rs.Produces;
@@ -39,7 +35,6 @@ import jakarta.ws.rs.core.Context;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.QueryParam;
 import jakarta.ws.rs.core.Response;
-import jakarta.ws.rs.core.SecurityContext;
 import jakarta.ws.rs.core.UriInfo;
 import jakarta.xml.bind.annotation.XmlRootElement;
 
@@ -54,16 +49,12 @@ import org.apache.drill.exec.proto.UserBitShared.QueryId;
 import org.apache.drill.exec.proto.UserBitShared.QueryInfo;
 import org.apache.drill.exec.proto.UserBitShared.QueryProfile;
 import org.apache.drill.exec.proto.helper.QueryIdHelper;
-import org.apache.drill.exec.server.rest.DrillRestServer.UserAuthEnabled;
 import org.apache.drill.exec.server.QueryProfileStoreContext;
-import org.apache.drill.exec.server.rest.ViewableWithPermissions;
 import org.apache.drill.exec.server.rest.auth.DrillUserPrincipal;
 import org.apache.drill.exec.store.sys.PersistentStore;
 import org.apache.drill.exec.store.sys.PersistentStoreProvider;
 import org.apache.drill.exec.work.WorkManager;
 import org.apache.drill.exec.work.foreman.Foreman;
-import org.glassfish.jersey.media.multipart.FormDataParam;
-import org.glassfish.jersey.server.mvc.Viewable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import com.google.common.base.Joiner;
@@ -79,19 +70,10 @@ public class ProfileResources {
   private static final Logger logger = LoggerFactory.getLogger(ProfileResources.class);
 
   @Inject
-  UserAuthEnabled authEnabled;
-
-  @Inject
   WorkManager work;
 
   @Inject
   DrillUserPrincipal principal;
-
-  @Inject
-  SecurityContext sc;
-
-  @Inject
-  HttpServletRequest request;
 
   public static class ProfileInfo implements Comparable<ProfileInfo> {
     private static final int QUERY_SNIPPET_MAX_CHAR = 150;
@@ -417,14 +399,6 @@ public class ProfileResources {
     }
   }
 
-  @GET
-  @Path("/profiles")
-  @Produces(MediaType.TEXT_HTML)
-  public Viewable getProfiles(@Context UriInfo uriInfo) {
-    QProfiles profiles = (QProfiles) getProfilesJSON(uriInfo).getEntity();
-    return ViewableWithPermissions.create(authEnabled.get(), "/rest/profile/list.ftl", sc, profiles);
-  }
-
   private QueryProfile getQueryProfile(String queryId) {
     QueryId id = QueryIdHelper.getQueryIdFromString(queryId);
 
@@ -490,40 +464,6 @@ public class ProfileResources {
       return Response.status(Response.Status.INTERNAL_SERVER_ERROR)
         .entity("{ 'message' : 'error (unable to serialize profile)' }")
         .build();
-    }
-  }
-
-  @GET
-  @Path("/profiles/{queryid}")
-  @Produces(MediaType.TEXT_HTML)
-  public Viewable getProfile(@PathParam("queryid") String queryId){
-    try {
-      ProfileWrapper wrapper = new ProfileWrapper(getQueryProfile(queryId), work.getContext().getConfig(), request);
-      return ViewableWithPermissions.create(authEnabled.get(), "/rest/profile/profile.ftl", sc, wrapper);
-    } catch (Exception | Error e) {
-      logger.error("Exception was thrown when fetching profile {} :\n{}", queryId, e);
-      return ViewableWithPermissions.create(authEnabled.get(), "/rest/errorMessage.ftl", sc, e);
-    }
-  }
-
-  @POST
-  @Path("/profiles/view")
-  @Consumes(MediaType.MULTIPART_FORM_DATA)
-  @Produces(MediaType.TEXT_HTML)
-  public Viewable viewProfile(@FormDataParam("profileData") String content) {
-    try {
-      QueryProfile profile = work.getContext().getProfileStoreContext()
-        .getProfileStoreConfig().getSerializer().deserialize(content.getBytes(StandardCharsets.UTF_8));
-      PROFILE_CACHE.put(profile.getQueryId(), content);
-      ProfileWrapper wrapper = new ProfileWrapper(profile,
-        work.getContext().getConfig(), request);
-      return ViewableWithPermissions.create(authEnabled.get(),
-        "/rest/profile/profile.ftl", sc, wrapper);
-    } catch (Exception | Error e) {
-      logger.error("Exception was thrown when parsing profile {} :\n{}",
-        content, e);
-      return ViewableWithPermissions.create(authEnabled.get(),
-        "/rest/errorMessage.ftl", sc, e);
     }
   }
 

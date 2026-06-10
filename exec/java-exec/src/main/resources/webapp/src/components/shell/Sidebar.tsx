@@ -35,6 +35,9 @@ import {
   SearchOutlined,
   HolderOutlined,
   RobotOutlined,
+  ClusterOutlined,
+  KeyOutlined,
+  PartitionOutlined,
   FieldTimeOutlined as WorkflowIcon,
 } from '@ant-design/icons';
 import { useQuery } from '@tanstack/react-query';
@@ -122,10 +125,13 @@ const LIBRARY: NavItem[] = [
 ];
 
 const ADMIN: NavItem[] = [
+  { to: '/cluster', label: 'Cluster', icon: <ClusterOutlined /> },
   { to: '/datasources', label: 'Data Sources', icon: <DatabaseOutlined />, matchPrefix: '/datasources' },
+  { to: '/credentials', label: 'Credentials', icon: <KeyOutlined /> },
   { to: '/metrics', label: 'Metrics', icon: <LineChartOutlined /> },
   { to: '/options', label: 'System Options', icon: <SettingOutlined /> },
   { to: '/logs', label: 'Server Logs', icon: <FileTextOutlined /> },
+  { to: '/threads', label: 'Threads', icon: <PartitionOutlined /> },
   { to: '/ai-analytics', label: 'AI Analytics', icon: <RobotOutlined /> },
 ];
 

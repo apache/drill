@@ -51,14 +51,13 @@ export async function fetchGeoJson(mapId: string): Promise<object> {
 
 async function tryFetchMap(mapId: string, ext: string): Promise<unknown> {
   try {
-    const url = `/sqllab/geojson/${mapId}${ext}`;
+    const url = `/geojson/${mapId}${ext}`;
     console.debug(`[GeoJSON] Fetching from: ${url}`);
 
     const response = await fetch(url);
     if (!response.ok) {
       // Try alternative paths
       const altPaths = [
-        `/geojson/${mapId}${ext}`,
         `./geojson/${mapId}${ext}`,
       ];
 
