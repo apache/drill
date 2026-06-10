@@ -677,7 +677,7 @@ export default function DashboardsPage({ filterIds, projectId, projectName, proj
             <span className="dashboard-share-link-label"><LinkOutlined /> Shareable link</span>
             <Input.Group compact>
               <Input
-                value={`${window.location.origin}/sqllab/dashboards/${editingDashboard.id}`}
+                value={`${window.location.origin}/dashboards/${editingDashboard.id}`}
                 readOnly
                 style={{ width: 'calc(100% - 80px)' }}
               />
@@ -685,7 +685,7 @@ export default function DashboardsPage({ filterIds, projectId, projectName, proj
                 icon={<LinkOutlined />}
                 onClick={() => {
                   navigator.clipboard.writeText(
-                    `${window.location.origin}/sqllab/dashboards/${editingDashboard.id}`,
+                    `${window.location.origin}/dashboards/${editingDashboard.id}`,
                   ).then(
                     () => message.success('Link copied'),
                     () => message.error('Failed to copy'),

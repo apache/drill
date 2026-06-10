@@ -159,14 +159,14 @@ export default function ProjectWikiPage() {
     const vizsDesc =
       projVizs
         .map((v) =>
-          `- **${v.name}** (${v.chartType} chart)${v.description ? `: ${v.description}` : ''} — [View](/sqllab/projects/${projectId}/visualizations)`,
+          `- **${v.name}** (${v.chartType} chart)${v.description ? `: ${v.description}` : ''} — [View](/projects/${projectId}/visualizations)`,
         )
         .join('\n') || '- No visualizations';
 
     const dashDesc =
       projDashboards
         .map((d) =>
-          `- **${d.name}**${d.description ? `: ${d.description}` : ''} — ${d.panels?.length || 0} panels — [View](/sqllab/dashboards/${d.id})`,
+          `- **${d.name}**${d.description ? `: ${d.description}` : ''} — ${d.panels?.length || 0} panels — [View](/dashboards/${d.id})`,
         )
         .join('\n') || '- No dashboards';
 

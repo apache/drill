@@ -215,12 +215,6 @@ public class WebServer implements AutoCloseable {
     staticHolder.setInitParameter("pathInfoOnly", "true");
     servletContextHandler.addServlet(staticHolder, "/static/*");
 
-    // Add SQL Lab React SPA servlet
-    // Uses custom servlet for SPA client-side routing support
-    final ServletHolder sqlLabHolder = new ServletHolder("sqllab", SqlLabSpaServlet.class);
-    servletContextHandler.addServlet(sqlLabHolder, "/sqllab/*");
-    logger.info("SQL Lab React app configured at /sqllab/*");
-
     // Store the dependencies in the holder BEFORE creating the servlet
     // When Jersey instantiates DrillRestServerApplication (which extends DrillRestServer),
     // it will retrieve these dependencies and pass them to the parent constructor
@@ -249,6 +243,11 @@ public class WebServer implements AutoCloseable {
       servletContextHandler.setSessionHandler(createSessionHandler(drillSecurityHandler));
       servletContextHandler.setSecurityHandler(drillSecurityHandler);
     }
+
+    // Serve the React SPA for paths that aren't claimed by a JAX-RS resource.
+    // Registered FIRST so it runs before any other filter (and before Jersey)
+    // and can short-circuit SPA paths without invoking the rest of the chain.
+    servletContextHandler.addFilter(SpaServletFilter.class, "/*", EnumSet.of(DispatcherType.REQUEST));
 
     // Applying filters for CSRF protection.
     servletContextHandler.addFilter(CsrfTokenInjectFilter.class, "/*", EnumSet.of(DispatcherType.REQUEST));

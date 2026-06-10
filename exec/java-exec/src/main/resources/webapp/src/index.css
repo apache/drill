@@ -8293,3 +8293,38 @@ html.dark .ant-btn:not(.ant-btn-primary):not(.ant-btn-text):not(.ant-btn-link):n
 .ant-modal-confirm .ant-modal-confirm-btns {
   margin-top: 16px !important;
 }
+
+/* ──────────────────────────────────────────────
+   Login pages — rendered outside the AppShell.
+   ────────────────────────────────────────────── */
+
+.login-shell {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  background: var(--color-bg-window);
+}
+
+.login-card {
+  width: 100%;
+  max-width: 380px;
+  background: var(--color-bg-surface);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-2);
+}
+
+.login-brand {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 0 20px;
+}
+
+.login-logo {
+  height: 48px;
+  width: auto;
+  margin-bottom: 8px;
+}

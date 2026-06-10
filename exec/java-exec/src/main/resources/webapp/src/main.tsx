@@ -23,7 +23,11 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import App from './App';
 import { store } from './store';
 import { ThemeProvider } from './hooks/useTheme';
+import { prefetchCsrfToken } from './api/client';
 import './index.css';
+
+// Warm the CSRF token cache so the first mutating request doesn't pay the round-trip.
+prefetchCsrfToken();
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -39,7 +43,7 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>
     <Provider store={store}>
       <QueryClientProvider client={queryClient}>
-        <BrowserRouter basename="/sqllab">
+        <BrowserRouter basename="/">
           <ThemeProvider>
             <App />
           </ThemeProvider>
