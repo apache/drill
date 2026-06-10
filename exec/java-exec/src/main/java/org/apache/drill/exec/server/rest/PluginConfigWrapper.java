@@ -97,7 +97,7 @@ public class PluginConfigWrapper {
    * 3. The credentialsProvider must contain a client_id and client_secret
    * @return true if the plugin uses OAuth, false if not.
    */
-  @JsonIgnore
+  @JsonProperty("isOauth")
   public boolean isOauth() {
     CredentialsProvider credentialsProvider = config.getCredentialsProvider();
     if (credentialsProvider == null) {
@@ -126,7 +126,7 @@ public class PluginConfigWrapper {
    * If the plugin is not OAuth, or is missing components, the function will return an empty string.
    * @return The authorization URI for an OAuth enabled plugin.
    */
-  @JsonIgnore
+  @JsonProperty("authorizationUrl")
   public String getAuthorizationURIWithParams() {
     if (!isOauth()) {
       logger.warn("{} is not an OAuth enabled storage plugin", name);

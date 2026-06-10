@@ -78,8 +78,6 @@ public class StatusResources {
   public static final String PATH_METRICS = PATH_STATUS + "/metrics";
   public static final String PATH_OPTIONS_JSON = "/options" + REST_API_SUFFIX;
   public static final String PATH_INTERNAL_OPTIONS_JSON = "/internal_options" + REST_API_SUFFIX;
-  public static final String PATH_OPTIONS = "/options";
-  public static final String PATH_INTERNAL_OPTIONS = "/internal_options";
   @Inject
   UserAuthEnabled authEnabled;
 
@@ -100,6 +98,11 @@ public class StatusResources {
     return new ImmutablePair<>("status", "Running!");
   }
 
+  /**
+   * Health-check endpoint kept for external monitors / load balancers that
+   * poll {@code /status} for a 200 + simple HTML body. The page renders
+   * "Running!" via Freemarker.
+   */
   @GET
   @Path(StatusResources.PATH_STATUS)
   @Produces(MediaType.TEXT_HTML)
@@ -248,27 +251,11 @@ public class StatusResources {
     return getSystemOptionsJSONHelper(true);
   }
 
-  @GET
-  @Path(StatusResources.PATH_OPTIONS)
-  @RolesAllowed(DrillUserPrincipal.AUTHENTICATED_ROLE)
-  @Produces(MediaType.TEXT_HTML)
-  public Response getSystemPublicOptions() {
-    return Response.seeOther(java.net.URI.create("/sqllab#/options")).build();
-  }
-
-  @GET
-  @Path(StatusResources.PATH_INTERNAL_OPTIONS)
-  @RolesAllowed(DrillUserPrincipal.AUTHENTICATED_ROLE)
-  @Produces(MediaType.TEXT_HTML)
-  public Response getSystemInternalOptions() {
-    return Response.seeOther(java.net.URI.create("/sqllab#/options")).build();
-  }
-
   @POST
   @Path("option/{optionName}")
   @RolesAllowed(DrillUserPrincipal.ADMIN_ROLE)
   @Consumes("application/x-www-form-urlencoded")
-  @Produces(MediaType.TEXT_HTML)
+  @Produces(MediaType.APPLICATION_JSON)
   public Response updateSystemOption(@FormParam("name") String name,
                                      @FormParam("value") String value,
                                      @FormParam("kind") String kind) {
@@ -279,9 +266,12 @@ public class StatusResources {
       optionManager.setLocalOption(OptionValue.Kind.valueOf(kind), name, value);
     } catch (Exception e) {
       logger.debug("Could not update.", e);
+      return Response.status(Response.Status.BAD_REQUEST)
+        .entity(Collections.singletonMap("error", e.getMessage()))
+        .build();
     }
 
-    return Response.seeOther(java.net.URI.create("/sqllab#/options")).build();
+    return Response.ok(Collections.singletonMap("success", true)).build();
   }
 
   @XmlRootElement
