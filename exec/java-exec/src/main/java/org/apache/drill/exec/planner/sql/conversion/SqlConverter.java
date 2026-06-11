@@ -238,6 +238,10 @@ public class SqlConverter {
       // for Calcite 1.35+ compatibility
       rewritten = rewritten.accept(new org.apache.drill.exec.planner.sql.parser.SpecialFunctionRewriter());
 
+      // Expand GROUP BY items that reference a SELECT alias (Drill's
+      // isGroupByAlias behavior). Calcite 1.42 stopped doing this for GROUP BY.
+      rewritten = rewritten.accept(new org.apache.drill.exec.planner.sql.parser.GroupByAliasRewriter());
+
       final SqlNode finalRewritten = rewritten;
       if (isImpersonationEnabled) {
         return ImpersonationUtil.getProcessUserUGI().doAs(
