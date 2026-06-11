@@ -231,10 +231,13 @@ public class DrillOptiq {
           List<RexNode> oldOperands = call.getOperands();
           List<LogicalExpression> newOperands = new ArrayList<>();
           for (int i = 0; i < oldOperands.size(); i++) {
-            RexLiteral nameOperand = getRexBuilder().makeLiteral(fieldList.get(i).getName());
-            RexNode valueOperand = call.operands.get(i);
-            newOperands.add(nameOperand.accept(this));
-            newOperands.add(valueOperand.accept(this));
+            // Build the field-name string literal directly rather than going
+            // through getRexBuilder().makeLiteral(...).accept(this): the RexBuilder
+            // is null when converting a standalone (e.g. constant) expression with
+            // no input rel, which would NPE here.
+            String fieldName = fieldList.get(i).getName();
+            newOperands.add(ValueExpressions.getChar(fieldName, fieldName.length()));
+            newOperands.add(call.operands.get(i).accept(this));
           }
           return FunctionCallFactory.createExpression(call.op.getName().toLowerCase(), newOperands);
         case LIKE:
