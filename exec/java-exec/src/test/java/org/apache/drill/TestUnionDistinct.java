@@ -399,10 +399,20 @@ public class TestUnionDistinct extends ClusterTest {
         .run();
   }
 
-  @Test(expected = UserException.class)
-  public void testUnionDistinctImplicitCastingFailure() throws Exception {
-    run("(select key from cp.`store/json/intData.json` " +
-      "union select key from cp.`store/json/booleanData.json` )");
+  @Test // formerly testUnionDistinctImplicitCastingFailure (DRILL-2590)
+  public void testUnionDistinctImplicitCastingBooleanToNumeric() throws Exception {
+    // Calcite 1.42 coerces BOOLEAN to the numeric column type in set operations
+    // (true -> 1, false -> 0), so this union now succeeds instead of failing.
+    testBuilder()
+      .sqlQuery("(select key from cp.`store/json/intData.json` " +
+        "union select key from cp.`store/json/booleanData.json`)")
+      .unOrdered()
+      .baselineColumns("key")
+      .baselineValues(52459253098448904L)
+      .baselineValues(1116675951L)
+      .baselineValues(1L)
+      .baselineValues(0L)
+      .go();
   }
 
   @Test

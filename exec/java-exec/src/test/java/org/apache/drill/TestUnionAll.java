@@ -394,14 +394,22 @@ public class TestUnionAll extends ClusterTest {
         .build().run();
   }
 
-  @Test(expected = UserException.class) // see DRILL-2590
-  public void testUnionAllImplicitCastingFailure() throws Exception {
+  @Test // formerly testUnionAllImplicitCastingFailure (DRILL-2590)
+  public void testUnionAllImplicitCastingBooleanToNumeric() throws Exception {
+    // Calcite 1.42 coerces BOOLEAN to the numeric column type in set operations
+    // (true -> 1, false -> 0), so this union now succeeds instead of failing.
     String rootInt = "/store/json/intData.json";
     String rootBoolean = "/store/json/booleanData.json";
 
-    run("(select key from cp.`%s` " +
-        "union all " +
-        "select key from cp.`%s` )", rootInt, rootBoolean);
+    testBuilder()
+        .sqlQuery("(select key from cp.`%s` union all select key from cp.`%s`)", rootInt, rootBoolean)
+        .unOrdered()
+        .baselineColumns("key")
+        .baselineValues(52459253098448904L)
+        .baselineValues(1116675951L)
+        .baselineValues(1L)
+        .baselineValues(0L)
+        .go();
   }
 
   @Test // see DRILL-2591
