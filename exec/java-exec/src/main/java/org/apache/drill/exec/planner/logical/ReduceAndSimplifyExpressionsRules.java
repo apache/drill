@@ -27,6 +27,7 @@ import org.apache.calcite.rel.core.Project;
 import org.apache.calcite.rel.logical.LogicalSort;
 import org.apache.calcite.rel.rules.ReduceExpressionsRule;
 import org.apache.calcite.rex.RexCall;
+import org.apache.calcite.rex.RexLiteral;
 import org.apache.calcite.rex.RexNode;
 import org.apache.calcite.sql.SqlKind;
 
@@ -75,6 +76,14 @@ public class ReduceAndSimplifyExpressionsRules {
       int orCount = countOrNodes(filter.getCondition());
       if (orCount > 10) {
         return; // Skip this rule for complex OR expressions
+      }
+
+      // DRILL-8537: Calcite 1.42's RexSimplify.simplifyLike mangles LIKE
+      // patterns whose escape character is also a wildcard ('%' or '_') -- it
+      // collapses escaped wildcards and produces an invalid pattern. Skip
+      // reduction so the original (correct) LIKE pattern is preserved.
+      if (containsLikeWithWildcardEscape(filter.getCondition())) {
+        return;
       }
 
       try {
@@ -179,5 +188,30 @@ public class ReduceAndSimplifyExpressionsRules {
       return count;
     }
     return 0;
+  }
+
+  /**
+   * Returns true if the RexNode tree contains a LIKE call with an explicit
+   * ESCAPE clause whose escape character is also a wildcard ('%' or '_').
+   * Calcite 1.42's RexSimplify.simplifyLike mishandles that degenerate case.
+   */
+  private static boolean containsLikeWithWildcardEscape(RexNode node) {
+    if (node instanceof RexCall) {
+      RexCall call = (RexCall) node;
+      if (call.getKind() == SqlKind.LIKE
+          && call.getOperands().size() == 3
+          && call.getOperands().get(2) instanceof RexLiteral) {
+        Character escape = ((RexLiteral) call.getOperands().get(2)).getValueAs(Character.class);
+        if (escape != null && (escape == '%' || escape == '_')) {
+          return true;
+        }
+      }
+      for (RexNode operand : call.getOperands()) {
+        if (containsLikeWithWildcardEscape(operand)) {
+          return true;
+        }
+      }
+    }
+    return false;
   }
 }
