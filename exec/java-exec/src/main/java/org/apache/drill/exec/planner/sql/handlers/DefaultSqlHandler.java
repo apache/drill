@@ -39,6 +39,11 @@ import org.apache.calcite.plan.hep.HepPlanner;
 import org.apache.calcite.plan.hep.HepProgramBuilder;
 import org.apache.calcite.plan.volcano.VolcanoPlanner;
 import org.apache.calcite.rel.RelNode;
+import org.apache.calcite.rel.RelCollation;
+import org.apache.calcite.rel.RelCollationTraitDef;
+import org.apache.calcite.rel.core.Sort;
+import org.apache.calcite.rel.RelCollations;
+import org.apache.calcite.rel.RelHomogeneousShuttle;
 import org.apache.calcite.rel.RelShuttleImpl;
 import org.apache.calcite.rel.core.Project;
 import org.apache.calcite.rel.core.TableFunctionScan;
@@ -229,7 +234,14 @@ public class DefaultSqlHandler extends AbstractSqlHandler {
 
     try {
       // HEP Directory pruning.
-      final RelNode pruned = transform(PlannerType.HEP_BOTTOM_UP, PlannerPhase.DIRECTORY_PRUNING, relNode);
+      final RelNode prunedRaw = transform(PlannerType.HEP_BOTTOM_UP, PlannerPhase.DIRECTORY_PRUNING, relNode);
+      // Calcite 1.42 derives collations for constant/single-row VALUES (and
+      // propagates them up the tree). Drill applies ordering in a later physical
+      // phase and has no logical collation-conversion rules, so a logical
+      // collation requirement is unsatisfiable (CannotPlanException, "sort=[...]").
+      // Strip collations from the tree before logical Volcano planning so both
+      // the input and the derived target traits are collation-free.
+      final RelNode pruned = removeCollations(prunedRaw);
       final RelTraitSet logicalTraits = pruned.getTraitSet().plus(DrillRel.DRILL_LOGICAL);
 
       final RelNode convertedRelNode;
@@ -294,6 +306,40 @@ public class DefaultSqlHandler extends AbstractSqlHandler {
         throw ex;
       }
     }
+  }
+
+  /**
+   * Returns a copy of the tree with every node's collation trait removed.
+   * Calcite 1.42 derives collations for constant/single-row VALUES and
+   * propagates them; Drill does not honor logical collation (it orders rows in
+   * a later physical phase) and has no logical collation-conversion rules, so a
+   * lingering collation requirement causes a CannotPlanException. Stripping it
+   * before logical Volcano planning keeps the input and derived target traits
+   * collation-free.
+   */
+  private static RelNode removeCollations(RelNode rel) {
+    return rel.accept(new RelHomogeneousShuttle() {
+      @Override
+      public RelNode visit(RelNode other) {
+        RelNode visited = super.visit(other);
+        // Preserve a Sort's own collation -- those are the requested sort keys
+        // (ORDER BY). Only strip *derived* collations (e.g. the spurious ones
+        // Calcite 1.42 attaches to constant VALUES and propagates through
+        // Project/Filter), which Drill cannot satisfy at the logical phase.
+        if (visited instanceof Sort) {
+          return visited;
+        }
+        // Use getTraits (not getCollation/getTrait) since a node may carry a
+        // composite collation trait with multiple values.
+        List<RelCollation> collations = visited.getTraitSet().getTraits(RelCollationTraitDef.INSTANCE);
+        boolean hasCollation = collations != null
+            && collations.stream().anyMatch(c -> !c.getFieldCollations().isEmpty());
+        if (hasCollation) {
+          return visited.copy(visited.getTraitSet().replace(RelCollations.EMPTY), visited.getInputs());
+        }
+        return visited;
+      }
+    });
   }
 
   /**
