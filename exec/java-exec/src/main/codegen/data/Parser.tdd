@@ -30,6 +30,7 @@
 
   # List of keywords.
   keywords: [
+    "DAFFODIL",
     "DATABASES",
     "SCHEMAS",
     "TABLES",
@@ -67,6 +68,8 @@
     "SqlRefreshMetadata()",
     "SqlCreateFunction()",
     "SqlDropFunction()",
+    "SqlCreateDaffodilSchema()",
+    "SqlDropDaffodilSchema()",
     "SqlAnalyzeTable()",
     "DrillSqlSetOption(Span.of(), null)",
     "DrillSqlResetOption(Span.of(), null)",

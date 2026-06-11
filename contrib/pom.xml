@@ -42,6 +42,7 @@
     <!-- Please keep this list sorted. -->
     <module>data</module>
     <module>format-access</module>
+    <module>format-daffodil</module>
     <module>format-deltalake</module>
     <module>format-esri</module>
     <module>format-excel</module>

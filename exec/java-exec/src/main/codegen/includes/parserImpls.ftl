@@ -688,6 +688,48 @@ SqlNode SqlDropFunction() :
 }
 
 /**
+* Parse create Daffodil Schema statement
+* CREATE DAFFODIL SCHEMA USING JAR 'jar_name'
+*/
+SqlNode SqlCreateDaffodilSchema() :
+{
+  SqlParserPos pos;
+  SqlNode jar;
+}
+{
+  <CREATE> { pos = getPos(); }
+  <DAFFODIL>
+  <SCHEMA>
+  <USING>
+  <JAR>
+  jar = StringLiteral()
+  {
+     return new SqlCreateDaffodilSchema(pos, jar);
+   }
+ }
+
+/**
+* Parse drop UDF statement
+* DROP DAFFODIL SCHEMA USING JAR 'jar_name'
+*/
+SqlNode SqlDropDaffodilSchema() :
+{
+SqlParserPos pos;
+SqlNode jar;
+}
+{
+<DROP> { pos = getPos(); }
+<DAFFODIL>
+<SCHEMA>
+<USING>
+  <JAR>
+  jar = StringLiteral()
+  {
+    return new SqlDropDaffodilSchema(pos, jar);
+  }
+}
+
+/**
  * Parses a analyze statements:
  * <ul>
  * <li>ANALYZE TABLE [table_name | table({table function name}(parameters))] [COLUMNS {(col1, col2, ...) | NONE}] REFRESH METADATA ['level' LEVEL] [{COMPUTE | ESTIMATE} | STATISTICS [ SAMPLE number PERCENT ]]
