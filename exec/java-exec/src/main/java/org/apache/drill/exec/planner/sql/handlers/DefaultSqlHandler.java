@@ -18,6 +18,7 @@
 package org.apache.drill.exec.planner.sql.handlers;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
@@ -43,7 +44,6 @@ import org.apache.calcite.rel.RelCollation;
 import org.apache.calcite.rel.RelCollationTraitDef;
 import org.apache.calcite.rel.core.Sort;
 import org.apache.calcite.rel.RelCollations;
-import org.apache.calcite.rel.RelHomogeneousShuttle;
 import org.apache.calcite.rel.RelShuttleImpl;
 import org.apache.calcite.rel.core.Project;
 import org.apache.calcite.rel.core.TableFunctionScan;
@@ -318,28 +318,50 @@ public class DefaultSqlHandler extends AbstractSqlHandler {
    * collation-free.
    */
   private static RelNode removeCollations(RelNode rel) {
-    return rel.accept(new RelHomogeneousShuttle() {
-      @Override
-      public RelNode visit(RelNode other) {
-        RelNode visited = super.visit(other);
-        // Preserve a Sort's own collation -- those are the requested sort keys
-        // (ORDER BY). Only strip *derived* collations (e.g. the spurious ones
-        // Calcite 1.42 attaches to constant VALUES and propagates through
-        // Project/Filter), which Drill cannot satisfy at the logical phase.
-        if (visited instanceof Sort) {
-          return visited;
-        }
-        // Use getTraits (not getCollation/getTrait) since a node may carry a
-        // composite collation trait with multiple values.
-        List<RelCollation> collations = visited.getTraitSet().getTraits(RelCollationTraitDef.INSTANCE);
-        boolean hasCollation = collations != null
-            && collations.stream().anyMatch(c -> !c.getFieldCollations().isEmpty());
-        if (hasCollation) {
-          return visited.copy(visited.getTraitSet().replace(RelCollations.EMPTY), visited.getInputs());
-        }
-        return visited;
+    return stripSpuriousCollations(rel, new boolean[1]);
+  }
+
+  /**
+   * Rewrites the tree, removing collation traits that are <em>not</em> produced
+   * by a {@link Sort}. Calcite 1.42 attaches collations to constant/single-row
+   * {@code VALUES} and propagates them up through Project/Filter; Drill has no
+   * logical collation-conversion rules, so such a requirement is unsatisfiable
+   * and planning fails with {@code CannotPlanException: ... sort=[...]}.
+   * Collations that originate from a Sort (an explicit {@code ORDER BY}) are
+   * preserved -- including on the Project/Limit/etc. above the Sort -- so the
+   * ordering still drives {@code LIMIT} and is not silently dropped.
+   *
+   * @param sortBelowOut single-element array, set to {@code true} when the
+   *                     subtree rooted at {@code rel} contains a Sort.
+   */
+  private static RelNode stripSpuriousCollations(RelNode rel, boolean[] sortBelowOut) {
+    boolean sortBelow = rel instanceof Sort;
+    boolean inputsChanged = false;
+    final List<RelNode> newInputs = new ArrayList<>();
+    for (RelNode input : rel.getInputs()) {
+      boolean[] childSort = new boolean[1];
+      RelNode newInput = stripSpuriousCollations(input, childSort);
+      sortBelow |= childSort[0];
+      inputsChanged |= newInput != input;
+      newInputs.add(newInput);
+    }
+
+    RelNode result = inputsChanged ? rel.copy(rel.getTraitSet(), newInputs) : rel;
+
+    // Only strip collations that are not anchored by a Sort in this subtree.
+    // Use getTraits (not getCollation) since a node may carry a composite
+    // collation trait with multiple values.
+    if (!sortBelow) {
+      List<RelCollation> collations = result.getTraitSet().getTraits(RelCollationTraitDef.INSTANCE);
+      boolean hasCollation = collations != null
+          && collations.stream().anyMatch(c -> !c.getFieldCollations().isEmpty());
+      if (hasCollation) {
+        result = result.copy(result.getTraitSet().replace(RelCollations.EMPTY), result.getInputs());
       }
-    });
+    }
+
+    sortBelowOut[0] = sortBelow;
+    return result;
   }
 
   /**
