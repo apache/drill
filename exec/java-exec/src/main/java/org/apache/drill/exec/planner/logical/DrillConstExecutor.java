@@ -150,6 +150,18 @@ public class DrillConstExecutor implements RexExecutor {
           reducedValues.add(newCall);
           continue;
         }
+        // If folding fails because no function implementation matches the
+        // argument types, the call simply cannot be evaluated as a constant
+        // (for example FLATTEN over a scalar that Calcite 1.42 constant-
+        // propagated, which has no flatten(<scalar>) implementation). Leave it
+        // unfolded so execution surfaces the proper runtime error (e.g.
+        // "Flatten does not support inputs of non-list values") instead of a
+        // generic constant-folding plan error.
+        if (errorMsg.contains("Missing function implementation")) {
+          logger.debug("Constant expression not folded (no matching function implementation): {}", newCall.toString());
+          reducedValues.add(newCall);
+          continue;
+        }
         String message = String.format(
             "Failure while materializing expression in constant expression evaluator [%s].  Errors: %s",
             newCall.toString(), errors.toString());
