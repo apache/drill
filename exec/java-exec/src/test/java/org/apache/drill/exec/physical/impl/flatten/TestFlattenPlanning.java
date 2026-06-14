@@ -41,20 +41,11 @@ public class TestFlattenPlanning extends PlanTestBase {
         " select comp, rownum " +
         " from (select flatten(complex) comp, rownum " +
         "      from cp.`store/json/test_flatten_mappify2.json`) " +
-        " where comp > 1 " +
-        "   and rownum = 100";
+        " where comp > 1 " +   // should not be pushed down
+        "   and rownum = 100"; // should be pushed down.
 
-    // DrillPushFilterPastProjectRule still fires and correctly classifies
-    // "rownum = 100" as pushable (it does not reference the flattened column)
-    // and "comp > 1" as not pushable. However, the rule runs only in the
-    // cost-based (Volcano) logical phase, and under Calcite 1.42 the planner
-    // keeps the conjunctive filter combined above the flatten for this input
-    // rather than splitting it -- the split plan's extra Filter operator is not
-    // cheaper on this dataset. The query result is unchanged; only the plan
-    // shape differs, so assert the combined filter sits above the flatten and
-    // no separate filter was pushed below it.
-    final String[] expectedPlans = {"(?s)Filter.*AND.*Flatten"};
-    final String[] excludedPlans = {"(?s)Flatten.*Filter"};
+    final String[] expectedPlans = {"(?s)Filter.*>.*Flatten.*Filter.*=.*"};
+    final String[] excludedPlans = {"Filter.*AND.*"};
     PlanTestBase.testPlanMatchingPatterns(query, expectedPlans, excludedPlans);
   }
 

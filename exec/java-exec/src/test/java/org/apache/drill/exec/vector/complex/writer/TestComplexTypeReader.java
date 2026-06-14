@@ -330,9 +330,7 @@ public class TestComplexTypeReader extends BaseTestQuery {
           "where employee_id = 1")
         .unOrdered()
         .baselineColumns("employee_id", "complex_field")
-        // employee_id is constant-folded to the INT literal 1 by Calcite (it is
-        // constrained to 1 by the WHERE clause), so it is INT, not BIGINT.
-        .baselineValues(1, null)
+        .baselineValues(1L, null)
         .build()
         .run();
   }
