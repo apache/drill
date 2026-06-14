@@ -17,6 +17,7 @@
  */
 package org.apache.drill.exec.planner.logical;
 
+import org.apache.calcite.plan.RelOptPredicateList;
 import org.apache.calcite.plan.RelOptRuleCall;
 import org.apache.calcite.rel.RelCollations;
 import org.apache.calcite.rel.core.Calc;
@@ -25,6 +26,7 @@ import org.apache.calcite.rel.RelNode;
 import org.apache.calcite.rel.SingleRel;
 import org.apache.calcite.rel.core.Project;
 import org.apache.calcite.rel.logical.LogicalSort;
+import org.apache.calcite.rel.metadata.RelMetadataQuery;
 import org.apache.calcite.rel.rules.ReduceExpressionsRule;
 import org.apache.calcite.rex.RexCall;
 import org.apache.calcite.rex.RexLiteral;
@@ -32,6 +34,8 @@ import org.apache.calcite.rex.RexNode;
 import org.apache.calcite.sql.SqlKind;
 
 import java.math.BigDecimal;
+import java.util.ArrayList;
+import java.util.List;
 
 public class ReduceAndSimplifyExpressionsRules {
 
@@ -153,8 +157,30 @@ public class ReduceAndSimplifyExpressionsRules {
 
     @Override
     public void onMatch(RelOptRuleCall call) {
+      final Project project = call.rel(0);
+      final RelMetadataQuery mq = call.getMetadataQuery();
+      // DRILL: Under schema-on-read a scan column is typed ANY and "=" performs
+      // an implicit-cast comparison, not a type-strict equality. A pulled-up
+      // predicate like `$0 = '1.2'` (where $0 is the ANY-typed float column)
+      // must not substitute $0 with the VARCHAR literal in the parent project,
+      // which would change the projected column's type. Calcite 1.42 propagates
+      // such constants aggressively, so strip these ANY-column equalities first.
+      // (See DrillReduceExpressionsRule.stripAnyTypedConstantEqualities.)
+      final RelOptPredicateList predicates =
+        DrillReduceExpressionsRule.stripAnyTypedConstantEqualities(
+          project.getCluster().getRexBuilder(),
+          mq.getPulledUpPredicates(project.getInput()));
+      final List<RexNode> expList = new ArrayList<>(project.getProjects());
       try {
-        super.onMatch(call);
+        if (reduceExpressions(project, expList, predicates, false, true,
+            config.treatDynamicCallsAsConstant())) {
+          call.transformTo(
+            call.builder()
+              .push(project.getInput())
+              .project(expList, project.getRowType().getFieldNames())
+              .build());
+          call.getPlanner().prune(project);
+        }
       } catch (ClassCastException | IllegalArgumentException e) {
         // noop - Calcite 1.35+ may throw IllegalArgumentException for type mismatches
       } catch (RuntimeException e) {
