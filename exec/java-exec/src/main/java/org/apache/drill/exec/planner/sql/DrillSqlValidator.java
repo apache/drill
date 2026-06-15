@@ -22,9 +22,13 @@ import org.apache.calcite.rel.type.RelDataTypeFactory;
 import org.apache.calcite.sql.SqlIdentifier;
 import org.apache.calcite.sql.SqlNode;
 import org.apache.calcite.sql.SqlOperatorTable;
+import org.apache.calcite.sql.SqlSelect;
 import org.apache.calcite.sql.validate.SqlValidatorCatalogReader;
 import org.apache.calcite.sql.validate.SqlValidatorImpl;
 import org.apache.calcite.sql.validate.SqlValidatorScope;
+
+import java.util.IdentityHashMap;
+import java.util.Map;
 
 /**
  * Custom SqlValidator for Drill that extends Calcite's SqlValidatorImpl.
@@ -37,12 +41,35 @@ import org.apache.calcite.sql.validate.SqlValidatorScope;
  */
 public class DrillSqlValidator extends SqlValidatorImpl {
 
+  /**
+   * Memoizes {@link #isAggregate(SqlSelect)} per SELECT node. Calcite 1.42's
+   * {@code validateOrderList} calls {@code isAggregate} once for every ORDER BY
+   * item (via {@code OrderExpressionExpander -> expandSelectItem}), and each
+   * call rescans the entire SELECT list with {@code AggFinder}. For wide queries
+   * (e.g. thousands of projected columns ordered by hundreds of columns) this is
+   * O(orderByItems x selectListSize) and dominates validation time. The result
+   * depends only on GROUP BY / HAVING / the SELECT list -- none of which change
+   * during ORDER BY expansion -- so it is safe to cache by node identity.
+   */
+  private final Map<SqlSelect, Boolean> isAggregateCache = new IdentityHashMap<>();
+
   public DrillSqlValidator(
       SqlOperatorTable opTab,
       SqlValidatorCatalogReader catalogReader,
       RelDataTypeFactory typeFactory,
       Config config) {
     super(opTab, catalogReader, typeFactory, config);
+  }
+
+  @Override
+  public boolean isAggregate(SqlSelect select) {
+    Boolean cached = isAggregateCache.get(select);
+    if (cached != null) {
+      return cached;
+    }
+    boolean result = super.isAggregate(select);
+    isAggregateCache.put(select, result);
+    return result;
   }
 
   @Override
