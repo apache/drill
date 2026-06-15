@@ -55,7 +55,10 @@ public class SplunkPluginTest extends SplunkBaseTest {
 
     TupleMetadata expectedSchema = new SchemaBuilder()
       .add("SCHEMA_NAME", TypeProtos.MinorType.VARCHAR, TypeProtos.DataMode.OPTIONAL)
-      .add("TYPE", TypeProtos.MinorType.VARCHAR, TypeProtos.DataMode.OPTIONAL)
+      // Calcite 1.42 constant-folds the TYPE column (constrained to 'splunk' by the
+      // WHERE clause) into the string literal, so TYPE is reported as a REQUIRED
+      // VARCHAR with the literal's max precision rather than OPTIONAL.
+      .add("TYPE", TypeProtos.MinorType.VARCHAR, 65536)
       .buildSchema();
 
     RowSet expected = new RowSetBuilder(client.allocator(), expectedSchema)
