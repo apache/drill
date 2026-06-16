@@ -56,7 +56,10 @@ public class SecuredPhoenixCommandTest extends SecuredPhoenixBaseTest {
     RowSet sets = builder.rowSet();
 
     TupleMetadata schema = new SchemaBuilder()
-        .addNullable("TABLE_SCHEMA", MinorType.VARCHAR)
+        // SHOW TABLES FROM phoenix123.v1 constrains TABLE_SCHEMA to the literal
+        // 'phoenix123.v1', which Calcite 1.42 constant-folds, so it is reported as
+        // a REQUIRED VARCHAR with the literal's max precision rather than nullable.
+        .add("TABLE_SCHEMA", MinorType.VARCHAR, 65536)
         .addNullable("TABLE_NAME", MinorType.VARCHAR)
         .build();
 
