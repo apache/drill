@@ -25,6 +25,9 @@ import org.apache.calcite.plan.RelTraitSet;
 import org.apache.calcite.rel.RelNode;
 import org.apache.calcite.rel.convert.ConverterRule;
 import org.apache.calcite.rel.core.Filter;
+import org.apache.calcite.rex.RexCall;
+import org.apache.calcite.rex.RexNode;
+import org.apache.calcite.sql.SqlKind;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -50,6 +53,16 @@ public class ElasticsearchFilterRule extends ConverterRule {
     if (filterFinder.containsNode) {
       return null;
     }
+
+    // Calcite 1.42's Elasticsearch PredicateAnalyzer accepts LIKE predicates and
+    // pushes them down, but the generated ES query does not match Drill's LIKE
+    // semantics (it returns no rows for patterns such as 'Sh%'). Earlier Calcite
+    // versions rejected LIKE, leaving it for Drill to evaluate. Preserve that
+    // behaviour by keeping any LIKE predicate on the Drill side.
+    if (containsLike(filter.getCondition())) {
+      return null;
+    }
+
     RelTraitSet traitSet = filter.getTraitSet().replace(out);
 
     try {
@@ -61,6 +74,21 @@ public class ElasticsearchFilterRule extends ConverterRule {
 
     return CalciteUtils.createFilter(traitSet,
         convert(filter.getInput(), out), filter.getCondition());
+  }
+
+  private static boolean containsLike(RexNode node) {
+    if (node instanceof RexCall) {
+      RexCall call = (RexCall) node;
+      if (call.getKind() == SqlKind.LIKE) {
+        return true;
+      }
+      for (RexNode operand : call.getOperands()) {
+        if (containsLike(operand)) {
+          return true;
+        }
+      }
+    }
+    return false;
   }
 
 }
