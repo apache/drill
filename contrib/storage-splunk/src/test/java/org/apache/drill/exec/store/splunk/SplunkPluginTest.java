@@ -73,7 +73,10 @@ public class SplunkPluginTest extends SplunkBaseTest {
     String sql = "SHOW TABLES IN `splunk`";
     RowSet results = client.queryBuilder().sql(sql).rowSet();
     TupleMetadata expectedSchema = new SchemaBuilder()
-      .add("TABLE_SCHEMA", TypeProtos.MinorType.VARCHAR, TypeProtos.DataMode.OPTIONAL)
+      // SHOW TABLES IN `splunk` constrains TABLE_SCHEMA to the literal 'splunk',
+      // which Calcite 1.42 constant-folds, so it is reported as a REQUIRED VARCHAR
+      // with the literal's max precision rather than OPTIONAL.
+      .add("TABLE_SCHEMA", TypeProtos.MinorType.VARCHAR, 65536)
       .add("TABLE_NAME", TypeProtos.MinorType.VARCHAR, TypeProtos.DataMode.OPTIONAL)
       .buildSchema();
 
