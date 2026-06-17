@@ -135,6 +135,14 @@ public class PluginConfigWrapper {
 
     String clientID = getClientID();
     OAuthConfig oAuthConfig = config.oAuthConfig();
+    if (oAuthConfig == null) {
+      // The plugin advertises OAuth credentials (a clientID) but has no OAuth
+      // config, so we cannot build an authorization URL. Returning an empty
+      // string here avoids an NPE during JSON serialization which would
+      // otherwise abort the whole storage plugin list response.
+      logger.warn("{} has OAuth credentials but no oAuthConfig; cannot build authorization URL", name);
+      return "";
+    }
     String authorizationURI = oAuthConfig.getAuthorizationURL();
 
     StringBuilder finalUrlBuilder = new StringBuilder();
