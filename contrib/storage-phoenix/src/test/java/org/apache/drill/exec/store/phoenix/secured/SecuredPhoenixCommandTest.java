@@ -70,7 +70,9 @@ public class SecuredPhoenixCommandTest extends SecuredPhoenixBaseTest {
         .addRow("phoenix123.v1", "REGION")
         .build();
 
-    new RowSetComparison(expected).verifyAndClearAll(sets);
+    // SHOW TABLES has no ORDER BY, so the row order is not guaranteed
+    // (Calcite 1.42 returns them in a different order); compare unordered.
+    new RowSetComparison(expected).unorderedVerifyAndClearAll(sets);
   }
 
   @Test
