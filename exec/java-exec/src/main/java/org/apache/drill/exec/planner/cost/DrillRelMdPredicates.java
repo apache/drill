@@ -29,11 +29,25 @@ import org.apache.calcite.rel.metadata.RelMetadataQuery;
 import org.apache.calcite.rex.RexBuilder;
 import org.apache.calcite.rex.RexUtil;
 import org.apache.calcite.util.Util;
+import org.apache.drill.exec.store.plan.rel.PluginFilterRel;
 
 public class DrillRelMdPredicates extends RelMdPredicates {
 
   public static final RelMetadataProvider SOURCE = ReflectiveRelMetadataProvider
     .reflectiveSource(new DrillRelMdPredicates(), BuiltInMetadata.Predicates.Handler.class);
+
+  /**
+   * A plugin filter is pushed down to the storage/format plugin, but for some
+   * plugins (e.g. Delta Lake) it is only used to prune files conservatively and
+   * does not guarantee that the rows it returns satisfy the filter condition --
+   * a residual Drill filter is kept to remove non-matching rows. If we advertise
+   * the condition as a pulled-up predicate, Calcite 1.42 treats that residual
+   * filter as redundant and removes it, returning rows that should have been
+   * filtered out. Only propagate the input's predicates for plugin filters.
+   */
+  public RelOptPredicateList getPredicates(PluginFilterRel filter, RelMetadataQuery mq) {
+    return mq.getPulledUpPredicates(filter.getInput());
+  }
 
   /**
    * Add the Filter condition to the pulledPredicates list from the input.
