@@ -57,6 +57,32 @@ const colorSchemes: Record<string, string[]> = {
 const _mapPromiseCache = new Map<string, Promise<void>>();
 
 /**
+ * The ECharts map id a chart needs registered before it can render, or null if
+ * the chart type uses no basemap. Keep this the single source of truth for both
+ * the lazy-load effect and the render gate so they can never disagree.
+ */
+function getChartMapId(
+  chartType: string,
+  chartOptions: Record<string, unknown> | undefined,
+): string | null {
+  if (chartType === 'map') {
+    // Geo scatter/bubble always renders on the 'world' basemap.
+    return 'world';
+  }
+  if (chartType === 'choropleth') {
+    const mapScopes = (chartOptions?.mapScopes as string[]) || [];
+    const scopeKey = mapScopes.length > 0
+      ? mapScopes[0]
+      : ((chartOptions?.mapScope as string) || 'world');
+    if (!getMapDef(scopeKey)) {
+      return null;
+    }
+    return getActualMapId(scopeKey);
+  }
+  return null;
+}
+
+/**
  * Ensure a GeoJSON map is registered with ECharts.
  * Uses module-level cache to avoid refetching the same map.
  */
@@ -418,42 +444,36 @@ const ChartPreviewComponent = forwardRef<any, ChartPreviewProps>(({
   const { isDark: globalDark } = useTheme();
   const isDark = darkMode ?? globalDark;
   const colors = colorSchemes[config.colorScheme || 'default'] || colorSchemes.default;
-  const [mapReady, setMapReady] = useState(chartType !== 'choropleth');
+  // 'map' (geo scatter/bubble) and 'choropleth' both render on an ECharts
+  // basemap that must be registered first. Start ready only if no basemap is
+  // needed or the required map is already registered (avoids a spinner flash).
+  const [mapReady, setMapReady] = useState(() => {
+    if (chartType !== 'choropleth' && chartType !== 'map') {
+      return true;
+    }
+    const id = getChartMapId(chartType, config.chartOptions);
+    return !!id && !!echarts.getMap(id);
+  });
   const mapReadyRef = useRef<string | null>(null);
 
   // Trigger async map loading when chart type or mapScope changes
   useEffect(() => {
-    if (chartType !== 'choropleth') {
-      setMapReady(true);
+    const mapId = getChartMapId(chartType, config.chartOptions);
+
+    // No basemap needed (line/bar/etc.), or a choropleth whose scope can't be
+    // resolved — nothing to register.
+    if (!mapId) {
+      // Ready only when the chart genuinely needs no map; an unresolvable
+      // choropleth scope stays gated (the render gate shows a spinner).
+      setMapReady(chartType !== 'choropleth' && chartType !== 'map');
       mapReadyRef.current = null;
       return;
     }
 
-    // Check if multi-select scopes are used
-    const mapScopes = (config.chartOptions?.mapScopes as string[]) || [];
-    let scopeKey = (config.chartOptions?.mapScope as string) || 'world';
-
-    // Smart state-based loading: use individual state files instead of all-states merged
-    // This dramatically reduces memory usage (1-3 MB per state vs 100+ MB for all)
-    if (mapScopes.length > 0) {
-      // Multi-select or single state: use first selected state's file
-      // (User can filter data to their states, so no need for all-states)
-      scopeKey = mapScopes[0];
-    }
-    // else: single state ZIP code already in scopeKey (no need to reassign)
-
-    const mapDef = getMapDef(scopeKey);
-    if (!mapDef) {
-      setMapReady(false);
-      return;
-    }
-
-    // For world regions, we use the 'world' map
-    const mapId = getActualMapId(scopeKey);
-
-    // Avoid re-fetching if this exact map is already loaded
-    if (mapReadyRef.current === mapId) {
+    // Avoid re-fetching if this exact map is already registered.
+    if (mapReadyRef.current === mapId || echarts.getMap(mapId)) {
       setMapReady(true);
+      mapReadyRef.current = mapId;
       return;
     }
 
@@ -470,6 +490,9 @@ const ChartPreviewComponent = forwardRef<any, ChartPreviewProps>(({
         setMapReady(false);
         mapReadyRef.current = null;
       });
+    // getChartMapId only reads mapScope/mapScopes from chartOptions, so depending
+    // on the whole object would re-run on unrelated option changes.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [chartType, config.chartOptions?.mapScope, config.chartOptions?.mapScopes]);
 
   // Map ECharts click event params → (column, value, isTemporal, isNumeric) based on chart type + config
@@ -2583,8 +2606,16 @@ const ChartPreviewComponent = forwardRef<any, ChartPreviewProps>(({
     );
   }
 
-  // Gate choropleth rendering on map being ready
-  if (!mapReady && chartType === 'choropleth') {
+  // Gate geo-basemap chart rendering on the map being registered. Both
+  // 'choropleth' and 'map' (geo scatter/bubble) reference an ECharts map by
+  // name; rendering before it is registered makes ECharts throw on `.regions`.
+  // Check the ECharts registry directly (not just the async `mapReady` state)
+  // so a chart that has just switched into a geo type can't slip through with a
+  // stale-ready flag before the load effect runs. `mapReady` is referenced so
+  // the gate re-evaluates once async registration completes.
+  const requiredMapId = getChartMapId(chartType, config.chartOptions);
+  if ((chartType === 'choropleth' || chartType === 'map')
+      && (!requiredMapId || !echarts.getMap(requiredMapId) || !mapReady)) {
     return (
       <div style={{ height, width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
         <Spin tip="Loading map..." />

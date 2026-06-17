@@ -309,9 +309,18 @@ export function applySqlTransformation(
 /**
  * Quotes a column name with backticks. Always quotes to avoid issues with
  * SQL reserved words (date, time, order, group, etc.).
+ *
+ * Tolerates null/undefined defensively: although the type is `string`, column
+ * lists are built from stored config / UI state that TypeScript can't enforce
+ * at runtime, and a stray null here would otherwise throw inside React render
+ * (`null is not an object` on `.replace`) and blank the page. Callers should
+ * still filter empty columns; this is a last-resort guard.
  */
-export function quoteColumnName(name: string): string {
-  return '`' + name.replace(/`/g, '``') + '`';
+export function quoteColumnName(name: string | null | undefined): string {
+  if (name == null) {
+    return '``';
+  }
+  return '`' + String(name).replace(/`/g, '``') + '`';
 }
 
 /**
@@ -589,7 +598,11 @@ export function buildTimeGrainQuery(
   const qualifiedTemporal = `_t.${quotedTemporal}`;
   const dateTruncExpr = `DATE_TRUNC('${config.grain}', ${qualifiedTemporal})`;
 
-  const dimensionParts = (config.dimensions || []).map((d) => quoteColumnName(d));
+  // Drop empty/null dimensions — they're meaningless in GROUP BY and would
+  // otherwise produce invalid SQL (or crash quoting).
+  const dimensionParts = (config.dimensions || [])
+    .filter((d): d is string => typeof d === 'string' && d.length > 0)
+    .map((d) => quoteColumnName(d));
   const qualifiedDimensionSelects = dimensionParts.map((d) => `_t.${d} AS ${d}`);
   const qualifiedDimensionGroupBy = dimensionParts.map((d) => `_t.${d}`);
 
@@ -670,7 +683,7 @@ export function buildAggregationQuery(
   const selectParts: string[] = [];
   const groupByParts: string[] = [];
 
-  for (const col of config.groupByColumns) {
+  for (const col of config.groupByColumns.filter((c): c is string => typeof c === 'string' && c.length > 0)) {
     const quoted = quoteColumnName(col);
     const qualified = `_t.${quoted}`;
     selectParts.push(`${qualified} AS ${quoted}`);
