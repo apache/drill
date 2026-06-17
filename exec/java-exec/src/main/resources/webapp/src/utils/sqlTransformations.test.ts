@@ -693,6 +693,21 @@ describe('buildTimeGrainQuery', () => {
     expect(result).toContain('AVG(_t.`orgs`) AS `orgs`');
   });
 
+  it('drops null/empty dimensions instead of crashing', () => {
+    const config: TimeGrainConfig = {
+      grain: 'MONTH',
+      temporalColumn: 'date',
+      metricAggregations: { hosts: 'SUM' },
+      // Stored config / UI state can contain stray null/empty entries despite
+      // the string[] type; these must not throw inside quoteColumnName.
+      dimensions: ['industry', null, '', undefined] as unknown as string[],
+    };
+    const result = buildTimeGrainQuery(baseSql, config);
+    expect(result).toContain('_t.`industry`');
+    expect(result).toContain('GROUP BY `date`, _t.`industry`');
+    expect(result).not.toContain('``');
+  });
+
   it('returns null when grain is missing', () => {
     const config: TimeGrainConfig = {
       grain: '' as never,

@@ -31,6 +31,16 @@ import { cacheResults, getCachedResults } from '../utils/resultsCache';
 import { getCacheRows, getCacheMetadata } from '../api/resultCache';
 import type { QueryResult } from '../types';
 
+// Which project the (singleton) Redux tab state currently belongs to.
+// This is module-level on purpose: the query editor lives in different route
+// subtrees for global (`/query`) vs project (`/projects/:id/query`), so
+// navigating between them REMOUNTS this hook. A per-instance ref would reset
+// to its "never set" sentinel on that remount, making a real project switch
+// look like a first mount — which let the previous project's tabs leak into
+// the new one. Module-level state survives the remount, mirroring the
+// singleton Redux store it describes. `false` = not yet loaded by any instance.
+let loadedProjectId: string | undefined | false = false;
+
 export function useWorkspacePersistence(projectId?: string) {
   const dispatch = useDispatch<AppDispatch>();
   const hasRestoredRef = useRef(false);
@@ -46,18 +56,18 @@ export function useWorkspacePersistence(projectId?: string) {
   tabsRef.current = tabs;
   const activeTabIdRef = useRef(activeTabId);
   activeTabIdRef.current = activeTabId;
-  // Track previous projectId so we know whether this effect is a true switch
-  // vs a re-mount of the same project (StrictMode, route remount, etc.).
-  // `false` sentinel = "never set" — distinct from a real `undefined` (global).
-  const previousProjectIdRef = useRef<string | undefined | false>(false);
 
   // Restore on mount and on projectId change
   useEffect(() => {
     hasRestoredRef.current = false;
 
+    // A true switch is when the currently-loaded project differs from this
+    // one. Tracked at module scope (see `loadedProjectId`) so it survives the
+    // remount that happens when navigating between the global and project
+    // editors — a per-instance ref would miss those switches and leak tabs.
     const isProjectSwitch =
-      previousProjectIdRef.current !== false &&
-      previousProjectIdRef.current !== projectId;
+      loadedProjectId !== false &&
+      loadedProjectId !== projectId;
 
     const persisted = loadTabState(projectId);
     if (persisted) {
@@ -113,7 +123,7 @@ export function useWorkspacePersistence(projectId?: string) {
         tabCounter: 1,
       }));
     }
-    previousProjectIdRef.current = projectId;
+    loadedProjectId = projectId;
 
     const persistedUi = loadUiState(projectId);
     if (persistedUi) {
