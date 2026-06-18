@@ -488,6 +488,11 @@ class PageReader {
           ValuesReader dlReader = dlEncoding.getValuesReader(columnDescriptor, ValuesType.DEFINITION_LEVEL);
           dlReader.initFromPage(pageValueCount, dataStream);
           this.definitionLevels = new ValuesReaderIntIterator(dlReader);
+        } else {
+          // Even if all values in a page are REQUIRED, still initialize definitionLevels this way
+          // to be able to read such a column with NullableColumnReader and treat each value
+          // definition as 1
+          this.definitionLevels = () -> 1;
         }
 
         dataOffset = (int) dataStream.position();
@@ -511,6 +516,11 @@ class PageReader {
             maxDefLevel,
             BytesInput.from(pageData.nioBuffer(repLevelLen, defLevelLen))
           );
+        } else {
+          // Even if all values in a page are REQUIRED, still initialize definitionLevels this way
+          // to be able to read such a column with NullableColumnReader and treat each value
+          // definition as 1
+          this.definitionLevels = () -> 1;
         }
 
         dataOffset = repLevelLen + defLevelLen;
