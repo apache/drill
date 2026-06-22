@@ -200,16 +200,16 @@ public interface RecordCollector {
         .filter(pair -> filterEvaluator.shouldVisitTable(schemaPath, pair.getKey(), pair.getValue().getJdbcTableType()))
         .map(pair -> {
           Table table = pair.getValue();
-          String viewSql = table instanceof DrillViewInfoProvider
-              ? ((DrillViewInfoProvider) table).getViewSql() : "";
+          String viewSql = table instanceof DrillViewInfoProvider provider
+              ? provider.getViewSql() : "";
           String refreshStatus = null;
           Long lastRefreshTime = null;
           String dataLocation = null;
-          if (table instanceof DrillMaterializedViewTable) {
-            DrillMaterializedViewTable mvTable = (DrillMaterializedViewTable) table;
-            org.apache.drill.exec.dotdrill.MaterializedView mv = mvTable.getMaterializedView();
-            refreshStatus = mv.getRefreshStatus() != null ? mv.getRefreshStatus().name() : null;
-            lastRefreshTime = mv.getLastRefreshTime();
+          if (table instanceof DrillMaterializedViewTable mvTable) {
+            org.apache.drill.exec.dotdrill.MaterializedView materializedView = mvTable.getMaterializedView();
+            refreshStatus = materializedView.getRefreshStatus() != null
+                ? materializedView.getRefreshStatus().name() : null;
+            lastRefreshTime = materializedView.getLastRefreshTime();
             dataLocation = mvTable.getDataStoragePath();
           }
           return new Records.MaterializedView(IS_CATALOG_NAME, schemaPath, pair.getKey(),

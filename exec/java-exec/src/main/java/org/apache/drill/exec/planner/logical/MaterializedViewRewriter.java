@@ -23,6 +23,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import org.apache.calcite.avatica.util.Quoting;
 import org.apache.calcite.plan.RelOptMaterialization;
 import org.apache.calcite.plan.RelOptMaterializations;
 import org.apache.calcite.rel.RelNode;
@@ -78,11 +79,12 @@ public class MaterializedViewRewriter {
       return queryRel;
     }
 
-    // Find all available materialized views that have been refreshed
+    // Find all available materialized views (both refreshed and not; the
+    // unrefreshed ones are filtered out below before building materializations)
     List<MaterializedViewCandidate> candidates = findCandidateMaterializedViews();
 
     if (candidates.isEmpty()) {
-      logger.debug("No refreshed materialized views available for rewriting");
+      logger.debug("No materialized views available for rewriting");
       return queryRel;
     }
 
@@ -181,18 +183,21 @@ public class MaterializedViewRewriter {
    */
   private RelNode buildMvScanRel(MaterializedViewCandidate candidate) {
     try {
-      String mvDataTable = candidate.getSchemaPath() + ".`" + candidate.getName() + "_mv_data`";
+      Quoting quoting = context.getPlannerSettings().getQuotingIdentifiers();
+      MaterializedView materializedView = candidate.getMaterializedView();
+      String mvDataTable = candidate.getSchemaPath() + "."
+          + DrillMaterializedViewTable.quoteIdentifier(quoting, materializedView.getDataStoragePath());
 
       // Build explicit column list from the MV's field definitions to avoid
       // DYNAMIC_STAR type issues with SELECT *
-      List<org.apache.drill.exec.dotdrill.View.Field> fields = candidate.getMaterializedView().getFields();
+      List<org.apache.drill.exec.dotdrill.View.Field> fields = materializedView.getFields();
       StringBuilder scanSql = new StringBuilder("SELECT ");
       if (fields != null && !fields.isEmpty()) {
         for (int i = 0; i < fields.size(); i++) {
           if (i > 0) {
             scanSql.append(", ");
           }
-          scanSql.append("`").append(fields.get(i).getName()).append("`");
+          scanSql.append(DrillMaterializedViewTable.quoteIdentifier(quoting, fields.get(i).getName()));
         }
       } else {
         scanSql.append("*");
@@ -269,13 +274,13 @@ public class MaterializedViewRewriter {
     Set<String> tableNames = schema.getTableNames();
     for (String tableName : tableNames) {
       try {
-        MaterializedView mv = schema.getMaterializedView(tableName);
-        if (mv != null) {
-          boolean isRefreshed = mv.getRefreshStatus() == MaterializedView.RefreshStatus.COMPLETE;
+        MaterializedView materializedView = schema.getMaterializedView(tableName);
+        if (materializedView != null) {
+          boolean isRefreshed = materializedView.getRefreshStatus() == MaterializedView.RefreshStatus.COMPLETE;
           candidates.add(new MaterializedViewCandidate(
-              mv.getName(),
+              materializedView.getName(),
               schema.getFullSchemaName(),
-              mv,
+              materializedView,
               isRefreshed));
         }
       } catch (IOException e) {

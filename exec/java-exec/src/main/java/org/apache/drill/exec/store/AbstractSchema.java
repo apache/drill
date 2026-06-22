@@ -243,10 +243,10 @@ public abstract class AbstractSchema implements Schema, SchemaPartitionExplorer,
    * Creates a table entry for writing data to a materialized view's data directory.
    * The data will be stored in Parquet format.
    *
-   * @param viewName materialized view name
-   * @return create table entry for writing MV data
+   * @param materializedView the materialized view whose data directory will be written
+   * @return create table entry for writing materialized view data
    */
-  public CreateTableEntry createMaterializedViewDataWriter(String viewName) {
+  public CreateTableEntry createMaterializedViewDataWriter(MaterializedView materializedView) {
     throw UserException.unsupportedError()
         .message("Creating materialized view data is not supported in schema [%s]", getSchemaPath())
         .build(logger);

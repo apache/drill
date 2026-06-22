@@ -40,6 +40,13 @@ import com.fasterxml.jackson.annotation.JsonTypeName;
 public class MaterializedView {
 
   /**
+   * Suffix appended to the view name to form the relative directory that holds
+   * the pre-computed data. Kept distinct from the definition file so the data
+   * directory never collides with the materialized view lookup name.
+   */
+  public static final String DATA_DIR_SUFFIX = "_mv_data";
+
+  /**
    * Represents the refresh status of the materialized view.
    */
   public enum RefreshStatus {
@@ -56,7 +63,7 @@ public class MaterializedView {
   /** Current schema when materialized view is created (not the schema to which view belongs to) */
   private List<String> workspaceSchemaPath;
 
-  /** The relative path where the materialized data is stored (typically the view name) */
+  /** The relative directory where the materialized data is stored (defaults to {@code name + DATA_DIR_SUFFIX}) */
   @JsonInclude(Include.NON_NULL)
   private String dataStoragePath;
 
@@ -75,7 +82,7 @@ public class MaterializedView {
             .map(f -> new View.Field(f.getName(), f.getType()))
             .collect(Collectors.toList()),
         workspaceSchemaPath,
-        name,  // data storage path defaults to view name
+        name + DATA_DIR_SUFFIX,  // data storage directory defaults to {name}_mv_data
         System.currentTimeMillis(),
         RefreshStatus.INCOMPLETE);
   }
@@ -98,7 +105,7 @@ public class MaterializedView {
         workspaceSchemaPath.stream()
             .map(String::toLowerCase)
             .collect(Collectors.toList());
-    this.dataStoragePath = dataStoragePath != null ? dataStoragePath : name;
+    this.dataStoragePath = dataStoragePath != null ? dataStoragePath : name + DATA_DIR_SUFFIX;
     this.lastRefreshTime = lastRefreshTime;
     this.refreshStatus = refreshStatus != null ? refreshStatus : RefreshStatus.INCOMPLETE;
   }

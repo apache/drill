@@ -140,9 +140,7 @@ public abstract class MaterializedViewHandler extends DefaultSqlHandler {
           table.getJdbcTableType() == Schema.TableType.MATERIALIZED_VIEW;
       final boolean isView = (table != null && table.getJdbcTableType() == Schema.TableType.VIEW);
       // Regular table check excludes views and materialized views
-      final boolean isTable = (table != null
-          && table.getJdbcTableType() != Schema.TableType.VIEW
-          && table.getJdbcTableType() != Schema.TableType.MATERIALIZED_VIEW)
+      final boolean isTable = (table != null && !isView && !isMaterializedView)
           || context.getSession().isTemporaryTable(drillSchema, context.getConfig(), viewName);
 
       SqlCreateType createType = createMV.getSqlCreateType();
@@ -261,8 +259,8 @@ public abstract class MaterializedViewHandler extends DefaultSqlHandler {
       final String schemaPath = drillSchema.getFullSchemaName();
 
       // Get the existing materialized view definition
-      final MaterializedView mv = drillSchema.getMaterializedView(viewName);
-      if (mv == null) {
+      final MaterializedView materializedView = drillSchema.getMaterializedView(viewName);
+      if (materializedView == null) {
         throw UserException.validationError()
             .message("Materialized view [%s] not found in schema [%s].", viewName, schemaPath)
             .build(logger);
@@ -272,14 +270,14 @@ public abstract class MaterializedViewHandler extends DefaultSqlHandler {
       drillSchema.refreshMaterializedView(viewName);
 
       // Parse and validate the MV's SQL definition
-      SqlNode mvQuery = config.getConverter().parse(mv.getSql());
+      SqlNode mvQuery = config.getConverter().parse(materializedView.getSql());
       final ConvertedRelNode convertedRelNode = validateAndConvert(mvQuery);
       final RelDataType validatedRowType = convertedRelNode.getValidatedRowType();
       final RelNode queryRelNode = convertedRelNode.getConvertedNode();
 
       try {
         // Get the writer entry for the MV data directory
-        CreateTableEntry createTableEntry = drillSchema.createMaterializedViewDataWriter(viewName);
+        CreateTableEntry createTableEntry = drillSchema.createMaterializedViewDataWriter(materializedView);
 
         // Convert to Drill logical plan with writer
         DrillRel drel = convertToDrel(queryRelNode, createTableEntry, validatedRowType);

@@ -94,7 +94,7 @@ public class TestMaterializedView extends BaseTest {
     assertEquals("SELECT * FROM t", mv.getSql());
     assertEquals("dfs", mv.getWorkspaceSchemaPath().get(0));
     // Default values
-    assertEquals("mv1", mv.getDataStoragePath()); // Defaults to name
+    assertEquals("mv1" + MaterializedView.DATA_DIR_SUFFIX, mv.getDataStoragePath()); // Defaults to {name}_mv_data
     assertEquals(MaterializedView.RefreshStatus.INCOMPLETE, mv.getRefreshStatus());
   }
 

@@ -29,6 +29,7 @@ import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Queue;
 import java.util.Set;
 import java.util.concurrent.ThreadLocalRandom;
@@ -36,6 +37,7 @@ import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import org.apache.calcite.avatica.util.Quoting;
 import org.apache.calcite.schema.Function;
 import org.apache.calcite.schema.Table;
 import org.apache.commons.lang3.SystemUtils;
@@ -64,6 +66,7 @@ import org.apache.drill.exec.planner.logical.DrillTable;
 import org.apache.drill.exec.planner.logical.DrillViewTable;
 import org.apache.drill.exec.planner.logical.DynamicDrillTable;
 import org.apache.drill.exec.planner.logical.FileSystemCreateTableEntry;
+import org.apache.drill.exec.planner.physical.PlannerSettings;
 import org.apache.drill.exec.planner.sql.ExpandingConcurrentMap;
 import org.apache.drill.exec.planner.sql.SchemaUtilities;
 import org.apache.drill.exec.record.metadata.schema.FsMetastoreSchemaProvider;
@@ -358,16 +361,30 @@ public class WorkspaceSchemaFactory {
       return DotDrillType.MATERIALIZED_VIEW.getPath(config.getLocation(), name);
     }
 
-    private Path getMaterializedViewDataPath(String name) {
-      // Use _mv_data suffix to distinguish data directory from MV definition lookup
-      return new Path(config.getLocation(), name + "_mv_data");
+    private Path getMaterializedViewDataPath(MaterializedView materializedView) {
+      return new Path(config.getLocation(), materializedView.getDataStoragePath());
+    }
+
+    /**
+     * Resolves the session's configured identifier quoting character so that
+     * SQL generated against materialized view data parses regardless of the
+     * {@code planner.parser.quoting_identifiers} setting.
+     */
+    private Quoting getSessionQuoting() {
+      String quotingChar = schemaConfig.getOption(PlannerSettings.QUOTING_IDENTIFIERS_KEY).string_val;
+      for (Quoting value : Quoting.values()) {
+        if (value.string.equals(quotingChar)) {
+          return value;
+        }
+      }
+      return Quoting.BACK_TICK;
     }
 
     @Override
     public boolean createMaterializedView(MaterializedView materializedView) throws IOException {
       String viewName = materializedView.getName();
       Path viewPath = getMaterializedViewPath(viewName);
-      Path dataPath = getMaterializedViewDataPath(viewName);
+      Path dataPath = getMaterializedViewDataPath(materializedView);
 
       boolean replaced = getFS().exists(viewPath);
 
@@ -382,9 +399,6 @@ public class WorkspaceSchemaFactory {
       final FsPermission dirPerms = new FsPermission(
           schemaConfig.getOption(ExecConstants.NEW_VIEW_DEFAULT_PERMS_KEY).string_val);
       getFS().mkdirs(dataPath, dirPerms);
-
-      // Set the data storage path in the materialized view
-      materializedView.setDataStoragePath(viewName);
 
       // Write the materialized view definition file
       final FsPermission viewPerms = new FsPermission(
@@ -403,7 +417,11 @@ public class WorkspaceSchemaFactory {
     @Override
     public void dropMaterializedView(String viewName) throws IOException {
       Path viewPath = getMaterializedViewPath(viewName);
-      Path dataPath = getMaterializedViewDataPath(viewName);
+      // Resolve the data directory from the definition before deleting it.
+      MaterializedView materializedView = getMaterializedView(viewName);
+      Path dataPath = materializedView != null
+          ? getMaterializedViewDataPath(materializedView)
+          : new Path(config.getLocation(), viewName + MaterializedView.DATA_DIR_SUFFIX);
 
       // Delete the definition file
       if (getFS().exists(viewPath)) {
@@ -422,14 +440,14 @@ public class WorkspaceSchemaFactory {
     @Override
     public void refreshMaterializedView(String viewName) throws IOException {
       // Read the existing materialized view definition
-      MaterializedView mv = getMaterializedView(viewName);
-      if (mv == null) {
+      MaterializedView materializedView = getMaterializedView(viewName);
+      if (materializedView == null) {
         throw UserException.validationError()
             .message("Materialized view [%s] not found in schema [%s]", viewName, getFullSchemaName())
             .build(logger);
       }
 
-      Path dataPath = getMaterializedViewDataPath(viewName);
+      Path dataPath = getMaterializedViewDataPath(materializedView);
 
       // Delete existing data
       if (getFS().exists(dataPath)) {
@@ -443,8 +461,8 @@ public class WorkspaceSchemaFactory {
 
       // Mark as INCOMPLETE while data is being refreshed.
       // completeMaterializedViewRefresh() should be called after data is fully written.
-      MaterializedView updatedMV = mv.withRefreshInfo(
-          mv.getLastRefreshTime(),
+      MaterializedView updatedMaterializedView = materializedView.withRefreshInfo(
+          materializedView.getLastRefreshTime(),
           MaterializedView.RefreshStatus.INCOMPLETE);
 
       // Write the updated definition file
@@ -452,24 +470,24 @@ public class WorkspaceSchemaFactory {
       final FsPermission viewPerms = new FsPermission(
           schemaConfig.getOption(ExecConstants.NEW_VIEW_DEFAULT_PERMS_KEY).string_val);
       try (OutputStream stream = DrillFileSystem.create(getFS(), viewPath, viewPerms)) {
-        mapper.writeValue(stream, updatedMV);
+        mapper.writeValue(stream, updatedMaterializedView);
       }
 
       // Sync updated metadata to metastore if enabled
-      syncMaterializedViewToMetastore(updatedMV);
+      syncMaterializedViewToMetastore(updatedMaterializedView);
     }
 
     @Override
     public void completeMaterializedViewRefresh(String viewName) throws IOException {
-      MaterializedView mv = getMaterializedView(viewName);
-      if (mv == null) {
+      MaterializedView materializedView = getMaterializedView(viewName);
+      if (materializedView == null) {
         throw UserException.validationError()
             .message("Materialized view [%s] not found in schema [%s]", viewName, getFullSchemaName())
             .build(logger);
       }
 
       // Mark as COMPLETE with current timestamp now that data is fully written
-      MaterializedView updatedMV = mv.withRefreshInfo(
+      MaterializedView updatedMaterializedView = materializedView.withRefreshInfo(
           System.currentTimeMillis(),
           MaterializedView.RefreshStatus.COMPLETE);
 
@@ -477,14 +495,14 @@ public class WorkspaceSchemaFactory {
       final FsPermission viewPerms = new FsPermission(
           schemaConfig.getOption(ExecConstants.NEW_VIEW_DEFAULT_PERMS_KEY).string_val);
       try (OutputStream stream = DrillFileSystem.create(getFS(), viewPath, viewPerms)) {
-        mapper.writeValue(stream, updatedMV);
+        mapper.writeValue(stream, updatedMaterializedView);
       }
 
-      syncMaterializedViewToMetastore(updatedMV);
+      syncMaterializedViewToMetastore(updatedMaterializedView);
     }
 
     @Override
-    public CreateTableEntry createMaterializedViewDataWriter(String viewName) {
+    public CreateTableEntry createMaterializedViewDataWriter(MaterializedView materializedView) {
       // Use Parquet format for storing materialized view data
       FormatPlugin formatPlugin = plugin.getFormatPlugin("parquet");
       if (formatPlugin == null) {
@@ -493,9 +511,7 @@ public class WorkspaceSchemaFactory {
             .build(logger);
       }
 
-      // Store data in a directory with _mv_data suffix to avoid name collision
-      // with the materialized view lookup (which uses the same base name)
-      String dataLocation = config.getLocation() + Path.SEPARATOR + viewName + "_mv_data";
+      String dataLocation = config.getLocation() + Path.SEPARATOR + materializedView.getDataStoragePath();
       return new FileSystemCreateTableEntry(
           (FileSystemConfig) plugin.getConfig(),
           formatPlugin,
@@ -518,12 +534,11 @@ public class WorkspaceSchemaFactory {
         return null;
       }
 
-      for (DotDrillFile f : files) {
-        if (f.getType() == DotDrillType.MATERIALIZED_VIEW) {
-          return f.getMaterializedView(mapper);
-        }
-      }
-      return null;
+      Optional<DotDrillFile> mvFile = files.stream()
+          .filter(f -> f.getType() == DotDrillType.MATERIALIZED_VIEW)
+          .findFirst();
+      // getMaterializedView throws IOException, so read outside the stream
+      return mvFile.isPresent() ? mvFile.get().getMaterializedView(mapper) : null;
     }
 
     private Set<String> getMaterializedViews() {
@@ -746,9 +761,9 @@ public class WorkspaceSchemaFactory {
               break;
             case MATERIALIZED_VIEW:
               try {
-                MaterializedView mv = f.getMaterializedView(mapper);
-                return new DrillMaterializedViewTable(mv, f.getOwner(), schemaConfig.getViewExpansionContext(),
-                    config.getLocation());
+                MaterializedView materializedView = f.getMaterializedView(mapper);
+                return new DrillMaterializedViewTable(materializedView, f.getOwner(), schemaConfig.getViewExpansionContext(),
+                    config.getLocation(), getSessionQuoting());
               } catch (AccessControlException e) {
                 if (!schemaConfig.getIgnoreAuthErrors()) {
                   logger.debug(e.getMessage());

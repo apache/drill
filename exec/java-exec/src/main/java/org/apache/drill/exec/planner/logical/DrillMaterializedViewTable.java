@@ -20,6 +20,7 @@ package org.apache.drill.exec.planner.logical;
 import java.util.Collections;
 import java.util.List;
 
+import org.apache.calcite.avatica.util.Quoting;
 import org.apache.calcite.config.CalciteConnectionConfig;
 import org.apache.calcite.plan.RelOptTable;
 import org.apache.calcite.plan.RelOptTable.ToRelContext;
@@ -59,13 +60,16 @@ public class DrillMaterializedViewTable implements TranslatableTable, DrillViewI
   private final String viewOwner;
   private final ViewExpansionContext viewExpansionContext;
   private final String workspaceLocation;
+  private final Quoting quoting;
 
   public DrillMaterializedViewTable(MaterializedView materializedView, String viewOwner,
-                                    ViewExpansionContext viewExpansionContext, String workspaceLocation) {
+                                    ViewExpansionContext viewExpansionContext, String workspaceLocation,
+                                    Quoting quoting) {
     this.materializedView = materializedView;
     this.viewOwner = viewOwner;
     this.viewExpansionContext = viewExpansionContext;
     this.workspaceLocation = workspaceLocation;
+    this.quoting = quoting;
   }
 
   @Override
@@ -128,11 +132,14 @@ public class DrillMaterializedViewTable implements TranslatableTable, DrillViewI
 
   /**
    * Builds SQL to scan the materialized data directory.
-   * The data is stored in {workspace}/{mvName}_mv_data/ directory.
+   * The data is stored in the {@code materializedView.getDataStoragePath()}
+   * directory relative to the workspace. Identifiers are quoted using the
+   * session's configured quoting character so the generated SQL parses
+   * regardless of the {@code planner.parser.quoting_identifiers} setting.
    * We explicitly select the MV's columns to ensure proper schema matching.
    */
   private String buildDataScanSql() {
-    String dataTableName = materializedView.getName() + "_mv_data";
+    String dataTableName = quote(materializedView.getDataStoragePath());
 
     // Build explicit column list from the MV's field definitions
     List<String> fieldNames = materializedView.getFields().stream()
@@ -140,7 +147,7 @@ public class DrillMaterializedViewTable implements TranslatableTable, DrillViewI
         .collect(java.util.stream.Collectors.toList());
     if (fieldNames.isEmpty()) {
       // Fallback to SELECT * if no fields defined (shouldn't happen for non-dynamic MVs)
-      return "SELECT * FROM `" + dataTableName + "`";
+      return "SELECT * FROM " + dataTableName;
     }
 
     StringBuilder sql = new StringBuilder("SELECT ");
@@ -148,10 +155,30 @@ public class DrillMaterializedViewTable implements TranslatableTable, DrillViewI
       if (i > 0) {
         sql.append(", ");
       }
-      sql.append("`").append(fieldNames.get(i)).append("`");
+      sql.append(quote(fieldNames.get(i)));
     }
-    sql.append(" FROM `").append(dataTableName).append("`");
+    sql.append(" FROM ").append(dataTableName);
     return sql.toString();
+  }
+
+  private String quote(String identifier) {
+    return quoteIdentifier(quoting, identifier);
+  }
+
+  /**
+   * Wraps an identifier in the quote characters matching the session's
+   * configured {@link Quoting}, escaping any embedded quote characters.
+   */
+  public static String quoteIdentifier(Quoting quoting, String identifier) {
+    switch (quoting) {
+      case DOUBLE_QUOTE:
+        return "\"" + identifier.replace("\"", "\"\"") + "\"";
+      case BRACKET:
+        return "[" + identifier.replace("]", "]]") + "]";
+      case BACK_TICK:
+      default:
+        return "`" + identifier.replace("`", "``") + "`";
+    }
   }
 
   @Override
