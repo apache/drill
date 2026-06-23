@@ -50,11 +50,14 @@ class JdbcCatalogSchema extends AbstractSchema {
     super(Collections.emptyList(), name);
     this.schemaMap = new HashMap<>();
     String connectionSchemaName = null;
+    String connectionCatalogName = null;
+    boolean hasForeignCatalog = false;
     try (Connection con = source.getConnection();
          ResultSet set = con.getMetaData().getCatalogs()) {
 
       try {
         connectionSchemaName = con.getSchema();
+        connectionCatalogName = con.getCatalog();
       } catch (AbstractMethodError ex) {
         // DRILL-8227. Some Sybase JDBC drivers still don't implement this method, e.g. JConnect, jTDS.
         logger.warn(
@@ -70,6 +73,10 @@ class JdbcCatalogSchema extends AbstractSchema {
           continue;
         }
 
+        if (connectionCatalogName == null || !catalogName.equalsIgnoreCase(connectionCatalogName)) {
+          hasForeignCatalog = true;
+        }
+
         CapitalizingJdbcSchema schema = new CapitalizingJdbcSchema(
             getSchemaPath(), catalogName, source, dialect, convention, catalogName, null, caseSensitive);
         schemaMap.put(schema.getName(), schema);
@@ -78,11 +85,20 @@ class JdbcCatalogSchema extends AbstractSchema {
       logger.warn("Failure while attempting to load JDBC schema.", e);
     }
 
+    // When the driver reports catalogs other than the connection's own, the catalog (database)
+    // level is not navigable within a single connection (e.g. PostgreSQL, where each connection is
+    // bound to one database). In that case register the connection's own catalog's schemas at the
+    // plugin top level (e.g. "pg.public") instead of nested under the catalog ("pg.<database>.public").
+    // Older drivers achieved this by reporting a null catalog from getSchemas(); some newer ones
+    // (e.g. PostgreSQL JDBC 42.7+) report the database instead, which would otherwise change the
+    // schema path. Single-catalog sources such as H2 keep the existing catalog nesting.
+    String catalogToFlatten = hasForeignCatalog ? connectionCatalogName : null;
+
     // unable to read catalog list.
     if (schemaMap.isEmpty()) {
 
       // try to add a list of schemas to the schema map.
-      boolean schemasAdded = addSchemas(source, dialect, convention, caseSensitive);
+      boolean schemasAdded = addSchemas(source, dialect, convention, caseSensitive, catalogToFlatten);
 
       if (!schemasAdded) {
         // there were no schemas, just create a default one (the jdbc system doesn't support catalogs/schemas).
@@ -91,7 +107,7 @@ class JdbcCatalogSchema extends AbstractSchema {
       }
     } else {
       // We already have catalogs. Add schemas in this context of their catalogs.
-      addSchemas(source, dialect, convention, caseSensitive);
+      addSchemas(source, dialect, convention, caseSensitive, catalogToFlatten);
     }
 
     defaultSchema = determineDefaultSchema(connectionSchemaName);
@@ -114,13 +130,20 @@ class JdbcCatalogSchema extends AbstractSchema {
     }
   }
 
-  private boolean addSchemas(DataSource source, SqlDialect dialect, DrillJdbcConvention convention, boolean caseSensitive) {
+  private boolean addSchemas(DataSource source, SqlDialect dialect, DrillJdbcConvention convention,
+      boolean caseSensitive, String catalogToFlatten) {
     boolean added = false;
     try (Connection con = source.getConnection();
          ResultSet set = con.getMetaData().getSchemas()) {
       while (set.next()) {
         final String schemaName = set.getString(1);
-        final String catalogName = set.getString(2);
+        String catalogName = set.getString(2);
+
+        // Hoist the connection's own catalog's schemas to the plugin top level (see the catalog
+        // loop above) by dropping the catalog so they are not nested under it.
+        if (catalogToFlatten != null && catalogToFlatten.equalsIgnoreCase(catalogName)) {
+          catalogName = null;
+        }
 
         String parentKey = StringUtils.lowerCase(catalogName);
         CapitalizingJdbcSchema parentSchema = schemaMap.get(parentKey);
