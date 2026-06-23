@@ -130,7 +130,7 @@
     <nashorn.version>15.4</nashorn.version>
     <netty.tcnative.classifier />
     <netty.tcnative.version>2.0.65.Final</netty.tcnative.version>
-    <netty.version>4.1.118.Final</netty.version>
+    <netty.version>4.1.135.Final</netty.version>
     <parquet.format.version>2.11.0</parquet.format.version>
     <parquet.version>1.15.2</parquet.version>
     <project.build.outputTimestamp>1750144553</project.build.outputTimestamp>
