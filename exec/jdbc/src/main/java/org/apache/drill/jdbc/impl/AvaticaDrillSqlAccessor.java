@@ -37,6 +37,10 @@ import java.util.Calendar;
 import java.util.Map;
 
 import org.apache.calcite.avatica.util.Cursor.Accessor;
+import org.joou.UByte;
+import org.joou.UInteger;
+import org.joou.ULong;
+import org.joou.UShort;
 import org.apache.drill.exec.vector.accessor.SqlAccessor;
 import org.apache.drill.jdbc.InvalidCursorStateSqlException;
 
@@ -127,6 +131,40 @@ public class AvaticaDrillSqlAccessor implements Accessor {
     return underlyingAccessor.isNull(getCurrentRecordNumber())
         ? PRIMITIVE_NUM_NULL_VALUE
         : underlyingAccessor.getLong(getCurrentRecordNumber());
+  }
+
+  // Avatica 1.28 added unsigned accessors (getUByte/getUShort/getUInt/getULong)
+  // to Cursor.Accessor for unsigned integer support. Drill has no unsigned
+  // integer types (AvaticaSite.get is always called with signed=true), so these
+  // mirror the signed getters; the jOOU valueOf(<primitive>) overloads
+  // reinterpret the bits and never throw.
+
+  @Override
+  public UByte getUByte() throws SQLException {
+    return underlyingAccessor.isNull(getCurrentRecordNumber())
+        ? UByte.valueOf(PRIMITIVE_NUM_NULL_VALUE)
+        : UByte.valueOf(underlyingAccessor.getByte(getCurrentRecordNumber()));
+  }
+
+  @Override
+  public UShort getUShort() throws SQLException {
+    return underlyingAccessor.isNull(getCurrentRecordNumber())
+        ? UShort.valueOf((short) PRIMITIVE_NUM_NULL_VALUE)
+        : UShort.valueOf(underlyingAccessor.getShort(getCurrentRecordNumber()));
+  }
+
+  @Override
+  public UInteger getUInt() throws SQLException {
+    return underlyingAccessor.isNull(getCurrentRecordNumber())
+        ? UInteger.valueOf((int) PRIMITIVE_NUM_NULL_VALUE)
+        : UInteger.valueOf(underlyingAccessor.getInt(getCurrentRecordNumber()));
+  }
+
+  @Override
+  public ULong getULong() throws SQLException {
+    return underlyingAccessor.isNull(getCurrentRecordNumber())
+        ? ULong.valueOf((long) PRIMITIVE_NUM_NULL_VALUE)
+        : ULong.valueOf(underlyingAccessor.getLong(getCurrentRecordNumber()));
   }
 
   @Override

@@ -18,6 +18,7 @@
 package org.apache.drill.exec.planner.sql.handlers;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
@@ -39,6 +40,10 @@ import org.apache.calcite.plan.hep.HepPlanner;
 import org.apache.calcite.plan.hep.HepProgramBuilder;
 import org.apache.calcite.plan.volcano.VolcanoPlanner;
 import org.apache.calcite.rel.RelNode;
+import org.apache.calcite.rel.RelCollation;
+import org.apache.calcite.rel.RelCollationTraitDef;
+import org.apache.calcite.rel.core.Sort;
+import org.apache.calcite.rel.RelCollations;
 import org.apache.calcite.rel.RelShuttleImpl;
 import org.apache.calcite.rel.core.Project;
 import org.apache.calcite.rel.core.TableFunctionScan;
@@ -229,7 +234,14 @@ public class DefaultSqlHandler extends AbstractSqlHandler {
 
     try {
       // HEP Directory pruning.
-      final RelNode pruned = transform(PlannerType.HEP_BOTTOM_UP, PlannerPhase.DIRECTORY_PRUNING, relNode);
+      final RelNode prunedRaw = transform(PlannerType.HEP_BOTTOM_UP, PlannerPhase.DIRECTORY_PRUNING, relNode);
+      // Calcite 1.42 derives collations for constant/single-row VALUES (and
+      // propagates them up the tree). Drill applies ordering in a later physical
+      // phase and has no logical collation-conversion rules, so a logical
+      // collation requirement is unsatisfiable (CannotPlanException, "sort=[...]").
+      // Strip collations from the tree before logical Volcano planning so both
+      // the input and the derived target traits are collation-free.
+      final RelNode pruned = removeCollations(prunedRaw);
       final RelTraitSet logicalTraits = pruned.getTraitSet().plus(DrillRel.DRILL_LOGICAL);
 
       final RelNode convertedRelNode;
@@ -294,6 +306,62 @@ public class DefaultSqlHandler extends AbstractSqlHandler {
         throw ex;
       }
     }
+  }
+
+  /**
+   * Returns a copy of the tree with every node's collation trait removed.
+   * Calcite 1.42 derives collations for constant/single-row VALUES and
+   * propagates them; Drill does not honor logical collation (it orders rows in
+   * a later physical phase) and has no logical collation-conversion rules, so a
+   * lingering collation requirement causes a CannotPlanException. Stripping it
+   * before logical Volcano planning keeps the input and derived target traits
+   * collation-free.
+   */
+  private static RelNode removeCollations(RelNode rel) {
+    return stripSpuriousCollations(rel, new boolean[1]);
+  }
+
+  /**
+   * Rewrites the tree, removing collation traits that are <em>not</em> produced
+   * by a {@link Sort}. Calcite 1.42 attaches collations to constant/single-row
+   * {@code VALUES} and propagates them up through Project/Filter; Drill has no
+   * logical collation-conversion rules, so such a requirement is unsatisfiable
+   * and planning fails with {@code CannotPlanException: ... sort=[...]}.
+   * Collations that originate from a Sort (an explicit {@code ORDER BY}) are
+   * preserved -- including on the Project/Limit/etc. above the Sort -- so the
+   * ordering still drives {@code LIMIT} and is not silently dropped.
+   *
+   * @param sortBelowOut single-element array, set to {@code true} when the
+   *                     subtree rooted at {@code rel} contains a Sort.
+   */
+  private static RelNode stripSpuriousCollations(RelNode rel, boolean[] sortBelowOut) {
+    boolean sortBelow = rel instanceof Sort;
+    boolean inputsChanged = false;
+    final List<RelNode> newInputs = new ArrayList<>();
+    for (RelNode input : rel.getInputs()) {
+      boolean[] childSort = new boolean[1];
+      RelNode newInput = stripSpuriousCollations(input, childSort);
+      sortBelow |= childSort[0];
+      inputsChanged |= newInput != input;
+      newInputs.add(newInput);
+    }
+
+    RelNode result = inputsChanged ? rel.copy(rel.getTraitSet(), newInputs) : rel;
+
+    // Only strip collations that are not anchored by a Sort in this subtree.
+    // Use getTraits (not getCollation) since a node may carry a composite
+    // collation trait with multiple values.
+    if (!sortBelow) {
+      List<RelCollation> collations = result.getTraitSet().getTraits(RelCollationTraitDef.INSTANCE);
+      boolean hasCollation = collations != null
+          && collations.stream().anyMatch(c -> !c.getFieldCollations().isEmpty());
+      if (hasCollation) {
+        result = result.copy(result.getTraitSet().replace(RelCollations.EMPTY), result.getInputs());
+      }
+    }
+
+    sortBelowOut[0] = sortBelow;
+    return result;
   }
 
   /**

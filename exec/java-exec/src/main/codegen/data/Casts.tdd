@@ -32,7 +32,11 @@
     {to: "BigInt", from: "Float8" , explicit: "long", native: "double", major: "Fixed"},
     {from: "TinyInt", to: "Bit", major: "Fixed"},
     {from: "Bit", to: "TinyInt", explicit: "byte", major: "Fixed"},
-    
+    {from: "Bit", to: "Int", explicit: "int", major: "Fixed"},
+    {from: "Bit", to: "BigInt", explicit: "long", major: "Fixed"},
+    {from: "Bit", to: "Float4", explicit: "float", major: "Fixed"},
+    {from: "Bit", to: "Float8", explicit: "double", major: "Fixed"},
+
     {from: "VarChar", to: "BigInt", major: "SrcVarlen", javaType: "Long", primeType: "long"},
     {from: "VarChar", to: "Int", major: "SrcVarlen", javaType:"Integer", primeType:"int"},
     {from: "VarBinary", to: "BigInt", major: "SrcVarlen", javaType: "Long", primeType : "long"},

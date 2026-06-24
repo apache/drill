@@ -51,7 +51,10 @@ public class PhoenixCommandTest extends PhoenixBaseTest {
     RowSet sets = builder.rowSet();
 
     TupleMetadata schema = new SchemaBuilder()
-        .addNullable("TABLE_SCHEMA", MinorType.VARCHAR)
+        // SHOW TABLES FROM phoenix123.v1 constrains TABLE_SCHEMA to the literal
+        // 'phoenix123.v1', which Calcite 1.42 constant-folds, so it is reported as
+        // a REQUIRED VARCHAR with the literal's max precision rather than nullable.
+        .add("TABLE_SCHEMA", MinorType.VARCHAR, 65536)
         .addNullable("TABLE_NAME", MinorType.VARCHAR)
         .build();
 
@@ -62,7 +65,9 @@ public class PhoenixCommandTest extends PhoenixBaseTest {
         .addRow("phoenix123.v1", "REGION")
         .build();
 
-    new RowSetComparison(expected).verifyAndClearAll(sets);
+    // SHOW TABLES has no ORDER BY, so the row order is not guaranteed
+    // (Calcite 1.42 returns them in a different order); compare unordered.
+    new RowSetComparison(expected).unorderedVerifyAndClearAll(sets);
   }
 
   @Test

@@ -394,14 +394,22 @@ public class TestUnionAll extends ClusterTest {
         .build().run();
   }
 
-  @Test(expected = UserException.class) // see DRILL-2590
-  public void testUnionAllImplicitCastingFailure() throws Exception {
+  @Test // formerly testUnionAllImplicitCastingFailure (DRILL-2590)
+  public void testUnionAllImplicitCastingBooleanToNumeric() throws Exception {
+    // Calcite 1.42 coerces BOOLEAN to the numeric column type in set operations
+    // (true -> 1, false -> 0), so this union now succeeds instead of failing.
     String rootInt = "/store/json/intData.json";
     String rootBoolean = "/store/json/booleanData.json";
 
-    run("(select key from cp.`%s` " +
-        "union all " +
-        "select key from cp.`%s` )", rootInt, rootBoolean);
+    testBuilder()
+        .sqlQuery("(select key from cp.`%s` union all select key from cp.`%s`)", rootInt, rootBoolean)
+        .unOrdered()
+        .baselineColumns("key")
+        .baselineValues(52459253098448904L)
+        .baselineValues(1116675951L)
+        .baselineValues(1L)
+        .baselineValues(0L)
+        .go();
   }
 
   @Test // see DRILL-2591
@@ -1026,37 +1034,46 @@ public class TestUnionAll extends ClusterTest {
         "        WHERE  t_w_firstyear.year_total = t_w_secyear.year_total\n" +
         "         AND t_w_firstyear.year_total > 0 and t_w_secyear.year_total > 0";
 
-    testBuilder()
-        .sqlQuery(query1)
-        .ordered()
-        .baselineColumns("ct")
-        .baselineValues((long) 80)
-        .build()
-        .run();
+    // year_total is the constant literal 1, so "year_total = year_total" is
+    // always true: query2/3/4 are genuine cartesian joins (Calcite 1.42 folds
+    // the constant join key, whereas earlier versions kept a redundant equi-
+    // join). Running a cartesian join requires enabling non-scalar NLJ.
+    client.alterSession(PlannerSettings.NLJOIN_FOR_SCALAR.getOptionName(), false);
+    try {
+      testBuilder()
+          .sqlQuery(query1)
+          .ordered()
+          .baselineColumns("ct")
+          .baselineValues((long) 80)
+          .build()
+          .run();
 
-    testBuilder()
-        .sqlQuery(query2)
-        .ordered()
-        .baselineColumns("ct")
-        .baselineValues((long) 100)
-        .build()
-        .run();
+      testBuilder()
+          .sqlQuery(query2)
+          .ordered()
+          .baselineColumns("ct")
+          .baselineValues((long) 100)
+          .build()
+          .run();
 
-    testBuilder()
-        .sqlQuery(query3)
-        .ordered()
-        .baselineColumns("ct")
-        .baselineValues((long) 500)
-        .build()
-        .run();
+      testBuilder()
+          .sqlQuery(query3)
+          .ordered()
+          .baselineColumns("ct")
+          .baselineValues((long) 500)
+          .build()
+          .run();
 
-    testBuilder()
-        .sqlQuery(query4)
-        .ordered()
-        .baselineColumns("ct")
-        .baselineValues((long) 900)
-        .build()
-        .run();
+      testBuilder()
+          .sqlQuery(query4)
+          .ordered()
+          .baselineColumns("ct")
+          .baselineValues((long) 900)
+          .build()
+          .run();
+    } finally {
+      client.resetSession(PlannerSettings.NLJOIN_FOR_SCALAR.getOptionName());
+    }
   }
 
   @Test // DRILL-4147 // base case

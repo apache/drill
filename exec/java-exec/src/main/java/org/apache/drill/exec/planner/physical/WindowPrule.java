@@ -17,9 +17,7 @@
  */
 package org.apache.drill.exec.planner.physical;
 
-import com.google.common.base.Predicate;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 
 import org.apache.calcite.linq4j.Ord;
@@ -116,15 +114,19 @@ public class WindowPrule extends Prule {
       List<RelDataTypeField> newRowFields = Lists.newArrayList();
       newRowFields.addAll(convertedInput.getRowType().getFieldList());
 
-      Iterable<RelDataTypeField> newWindowFields = Iterables.filter(window.getRowType().getFieldList(), new Predicate<RelDataTypeField>() {
-            @Override
-            public boolean apply(RelDataTypeField relDataTypeField) {
-              return relDataTypeField.getName().startsWith("w" + w.i + "$");
-            }
-      });
-
-      for(RelDataTypeField newField : newWindowFields) {
-        newRowFields.add(newField);
+      // The window output fields follow the input fields in window.getRowType(),
+      // ordered by window group and then by aggregate call within the group.
+      // This group's outputs are the slice that comes after the input fields and
+      // any window outputs produced by groups processed before it
+      // (constantShiftIndex tracks the number of such preceding outputs).
+      // Earlier Drill releases identified these fields by their "w<group>$..."
+      // names, but Calcite no longer uses that naming convention for window
+      // output columns, so we select them positionally instead.
+      List<RelDataTypeField> windowRowFields = window.getRowType().getFieldList();
+      int windowFieldStart = startConstantsIndex + constantShiftIndex;
+      int windowFieldEnd = windowFieldStart + windowBase.aggCalls.size();
+      for (int fieldIndex = windowFieldStart; fieldIndex < windowFieldEnd; fieldIndex++) {
+        newRowFields.add(windowRowFields.get(fieldIndex));
       }
 
       RelDataType rowType = new RelRecordType(newRowFields);
@@ -168,6 +170,7 @@ public class WindowPrule extends Prule {
           windowBase.isRows,
           windowBase.lowerBound,
           windowBase.upperBound,
+          windowBase.exclude,  // Preserve exclude clause from Calcite (CALCITE-5855)
           windowBase.orderKeys,
           newWinAggCalls
       );

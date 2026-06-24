@@ -140,6 +140,28 @@ public class DrillConstExecutor implements RexExecutor {
       ErrorCollectorImpl errors = new ErrorCollectorImpl();
       LogicalExpression materializedExpr = ExpressionTreeMaterializer.materialize(logEx, null, errors, funcImplReg);
       if (errors.getErrorCount() != 0) {
+        // For Calcite 1.35+ compatibility: Check if error is due to complex writer functions
+        // Complex writer functions (like regexp_extract with ComplexWriter output) cannot be
+        // constant-folded because they require a ProjectRecordBatch context. Skip folding them.
+        // However, we must still enforce that FLATTEN cannot be used in aggregates (DRILL-2181).
+        String errorMsg = errors.toString();
+        if (errorMsg.contains("complex writer function") && !errorMsg.toLowerCase().contains("flatten")) {
+          logger.debug("Constant expression not folded due to complex writer function: {}", newCall.toString());
+          reducedValues.add(newCall);
+          continue;
+        }
+        // If folding fails because no function implementation matches the
+        // argument types, the call simply cannot be evaluated as a constant
+        // (for example FLATTEN over a scalar that Calcite 1.42 constant-
+        // propagated, which has no flatten(<scalar>) implementation). Leave it
+        // unfolded so execution surfaces the proper runtime error (e.g.
+        // "Flatten does not support inputs of non-list values") instead of a
+        // generic constant-folding plan error.
+        if (errorMsg.contains("Missing function implementation")) {
+          logger.debug("Constant expression not folded (no matching function implementation): {}", newCall.toString());
+          reducedValues.add(newCall);
+          continue;
+        }
         String message = String.format(
             "Failure while materializing expression in constant expression evaluator [%s].  Errors: %s",
             newCall.toString(), errors.toString());
@@ -158,6 +180,15 @@ public class DrillConstExecutor implements RexExecutor {
 
       ValueHolder output = InterpreterEvaluator.evaluateConstantExpr(udfUtilities, materializedExpr);
       RelDataTypeFactory typeFactory = rexBuilder.getTypeFactory();
+
+      if (output == null) {
+        // Drill's interpreter produced no value for this constant (observed for
+        // some CHAR constants under Calcite 1.42). Leave the expression unfolded
+        // rather than failing; it will simply be evaluated at execution time.
+        logger.debug("Constant expression not folded (interpreter returned no value): {}", newCall);
+        reducedValues.add(newCall);
+        continue;
+      }
 
       if (materializedExpr.getMajorType().getMode() == TypeProtos.DataMode.OPTIONAL && TypeHelper.isNull(output)) {
         SqlTypeName sqlTypeName = TypeInferenceUtils.getCalciteTypeFromDrillType(materializedExpr.getMajorType().getMinorType());
@@ -349,6 +380,18 @@ public class DrillConstExecutor implements RexExecutor {
             long value = (materializedExpr.getMajorType().getMode() == TypeProtos.DataMode.OPTIONAL) ?
                 ((NullableTimeStampHolder) valueHolder).value :
                 ((TimeStampHolder) valueHolder).value;
+            // Some operations that SQL types as DATE are computed by Drill as a
+            // TIMESTAMP (e.g. DATE + INTERVAL YEAR). Emit a DATE literal in that
+            // case so the literal's value (a DateString) matches its SQL type;
+            // otherwise a DATE-typed Sarg would receive a TimestampString bound
+            // and fail with a ClassCastException in Calcite's RexSimplify.
+            if (newCall.getType().getSqlTypeName() == SqlTypeName.DATE) {
+              long days = value / TimeUnit.DAYS.toMillis(1);
+              LocalDate localDate = LocalDate.ofEpochDay(days);
+              return rexBuilder.makeLiteral(
+                  new DateString(localDate.getYear(), localDate.getMonthValue(), localDate.getDayOfMonth()),
+                  TypeInferenceUtils.createCalciteTypeWithNullability(typeFactory, SqlTypeName.DATE, newCall.getType().isNullable()), false);
+            }
             RelDataType type = typeFactory.createSqlType(SqlTypeName.TIMESTAMP, newCall.getType().getPrecision());
             RelDataType typeWithNullability = typeFactory.createTypeWithNullability(type, newCall.getType().isNullable());
             return rexBuilder.makeLiteral(TimestampString.fromMillisSinceEpoch(value), typeWithNullability, false);

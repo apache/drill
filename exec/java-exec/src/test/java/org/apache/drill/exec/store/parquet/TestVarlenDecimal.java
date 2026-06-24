@@ -195,8 +195,9 @@ public class TestVarlenDecimal extends ClusterTest {
   @Test // DRILL-7960
   public void testWideningLimit() throws Exception {
     // A union of VARDECIMALs that requires a widening to an unsupported
-    // DECIMAL(40, 6). The resulting column should be limited DECIMAL(38, 6)
-    // and a precision loss warning logged.
+    // DECIMAL(40, 6). The result is limited to the maximum precision of 38.
+    // When the computed precision overflows, Calcite 1.42 reduces the scale to
+    // fit (preserving integer digits), yielding DECIMAL(38, 4).
     String query = "SELECT CAST(10 AS DECIMAL(38, 4)) AS `Col1` " +
       "UNION ALL " +
       "SELECT CAST(22 AS DECIMAL(29, 6)) AS `Col1`";
@@ -204,13 +205,13 @@ public class TestVarlenDecimal extends ClusterTest {
     testBuilder().sqlQuery(query)
       .unOrdered()
       .baselineColumns("Col1")
-      .baselineValues(new BigDecimal("10.000000"))
-      .baselineValues(new BigDecimal("22.000000"))
+      .baselineValues(new BigDecimal("10.0000"))
+      .baselineValues(new BigDecimal("22.0000"))
       .go();
 
     List<Pair<SchemaPath, TypeProtos.MajorType>> expectedSchema = Collections.singletonList(Pair.of(
         SchemaPath.getSimplePath("Col1"),
-        Types.withPrecisionAndScale(MinorType.VARDECIMAL, DataMode.REQUIRED, 38, 6)
+        Types.withPrecisionAndScale(MinorType.VARDECIMAL, DataMode.REQUIRED, 38, 4)
     ));
 
     testBuilder()

@@ -180,7 +180,9 @@ public class DrillResultSetImpl extends AvaticaResultSet implements DrillResultS
     ColumnMetaData metaData = columnMetaDataList.get(columnIndex - 1);
     // Drill returns a float (4bytes) for a SQL Float whereas Calcite would return a double (8bytes)
     int typeId = (metaData.type.id != Types.FLOAT) ? metaData.type.id : Types.REAL;
-    return typeId != Types.NULL ? AvaticaSite.get(accessor, typeId, localCalendar) : null;
+    // Avatica 1.28 added a 'signed' parameter to AvaticaSite.get(); Drill's
+    // numeric types are all signed, so pass true (the pre-1.28 behaviour).
+    return typeId != Types.NULL ? AvaticaSite.get(accessor, typeId, true, localCalendar) : null;
   }
 
   //--------------------------JDBC 2.0-----------------------------------

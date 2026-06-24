@@ -43,6 +43,7 @@ import org.apache.calcite.rex.RexSimplify;
 import org.apache.calcite.rex.RexUnknownAs;
 import org.apache.calcite.rex.RexUtil;
 import org.apache.calcite.sql.SqlKind;
+import org.apache.calcite.sql.type.SqlTypeName;
 import org.apache.calcite.util.Util;
 import com.google.common.collect.Lists;
 
@@ -92,6 +93,15 @@ public abstract class DrillReduceExpressionsRule
       final Filter filter = call.rel(0);
       final List<RexNode> expList =
         Lists.newArrayList(filter.getCondition());
+
+      // DRILL: Skip simplification for expressions with large OR chains
+      // Calcite 1.37's RexSimplify has exponential complexity with large OR expressions
+      // (created from IN clauses with expressions like: WHERE x IN (1, 1+1, 1, ...))
+      int orCount = countOrNodes(filter.getCondition());
+      if (orCount > 10) {
+        return; // Skip this rule for complex OR expressions
+      }
+
       RexNode newConditionExp;
       boolean reduced;
       final RelMetadataQuery mq = call.getMetadataQuery();
@@ -276,8 +286,16 @@ public abstract class DrillReduceExpressionsRule
     public void onMatch(RelOptRuleCall call) {
       final Project project = call.rel(0);
       final RelMetadataQuery mq = call.getMetadataQuery();
+      // DRILL: Under schema-on-read a scan column is typed ANY, and "=" performs
+      // an implicit-cast comparison rather than a type-strict equality. A pulled-up
+      // predicate such as `$0 = '1.2'` (where $0 is the ANY-typed `float` column)
+      // therefore does NOT license substituting $0 with the VARCHAR literal '1.2'
+      // in the parent projection -- doing so would change the projected column's
+      // type from FLOAT8 to VARCHAR. Calcite 1.42 propagates such constants more
+      // aggressively, so strip these ANY-column equalities before simplifying.
       final RelOptPredicateList predicates =
-        mq.getPulledUpPredicates(project.getInput());
+        stripAnyTypedConstantEqualities(project.getCluster().getRexBuilder(),
+          mq.getPulledUpPredicates(project.getInput()));
       final List<RexNode> expList =
         Lists.newArrayList(project.getProjects());
       if (reduceExpressionsNoSimplify(project, expList, predicates, false,
@@ -298,6 +316,22 @@ public abstract class DrillReduceExpressionsRule
 
   protected static boolean reduceExpressionsNoSimplify(RelNode rel, List<RexNode> expList,
     RelOptPredicateList predicates, boolean unknownAsFalse, boolean treatDynamicCallsAsConstant) {
+
+    // Check complexity of expressions to avoid exponential planning time
+    // Calcite 1.37's RexSimplify has performance issues with large OR expressions
+    // created from IN clauses with many expressions
+    int totalComplexity = 0;
+    for (RexNode exp : expList) {
+      totalComplexity += countNodes(exp);
+    }
+
+    // Skip simplification for overly complex expressions (>50 nodes)
+    // This prevents timeout with expressions like: WHERE x IN (1, 1+1, 1, ..., [20 items])
+    // Calcite 1.37's RexSimplify becomes exponentially slow with OR expressions
+    if (totalComplexity > 50) {
+      return false;
+    }
+
     RelOptCluster cluster = rel.getCluster();
     RexBuilder rexBuilder = cluster.getRexBuilder();
     RexExecutor executor =
@@ -310,6 +344,83 @@ public abstract class DrillReduceExpressionsRule
 
     return ReduceExpressionsRule.reduceExpressionsInternal(rel, simplify, unknownAs,
       expList, predicates, treatDynamicCallsAsConstant);
+  }
+
+  /**
+   * Removes pulled-up equality predicates of the form {@code $ref = <constant>}
+   * (or {@code <constant> = $ref}) where {@code $ref} is an ANY-typed input
+   * reference. Such predicates arise from Drill's schema-on-read columns, where
+   * equality is an implicit-cast comparison rather than a type-strict equality;
+   * letting them drive constant substitution would rewrite an ANY column into a
+   * differently-typed literal (e.g. projecting VARCHAR '1.2' instead of the
+   * FLOAT8 value 1.2). All other predicates are preserved so legitimate constant
+   * folding still occurs.
+   */
+  static RelOptPredicateList stripAnyTypedConstantEqualities(
+    RexBuilder rexBuilder, RelOptPredicateList predicates) {
+    if (predicates.pulledUpPredicates.isEmpty()) {
+      return predicates;
+    }
+    List<RexNode> kept = new ArrayList<>();
+    boolean changed = false;
+    for (RexNode pred : predicates.pulledUpPredicates) {
+      if (isAnyRefEqualsConstant(pred)) {
+        changed = true;
+      } else {
+        kept.add(pred);
+      }
+    }
+    return changed ? RelOptPredicateList.of(rexBuilder, kept) : predicates;
+  }
+
+  private static boolean isAnyRefEqualsConstant(RexNode node) {
+    if (!(node instanceof RexCall)) {
+      return false;
+    }
+    RexCall call = (RexCall) node;
+    if (call.getKind() != SqlKind.EQUALS || call.getOperands().size() != 2) {
+      return false;
+    }
+    RexNode left = call.getOperands().get(0);
+    RexNode right = call.getOperands().get(1);
+    return (isAnyTypedRef(left) && RexUtil.isConstant(right))
+        || (isAnyTypedRef(right) && RexUtil.isConstant(left));
+  }
+
+  private static boolean isAnyTypedRef(RexNode node) {
+    return node instanceof RexInputRef
+        && node.getType().getSqlTypeName() == SqlTypeName.ANY;
+  }
+
+  /**
+   * Count the number of OR nodes in a RexNode tree
+   * Large OR chains (from IN clauses) cause exponential planning time in Calcite 1.37
+   */
+  private static int countOrNodes(RexNode node) {
+    if (node instanceof RexCall) {
+      RexCall call = (RexCall) node;
+      int count = call.getKind() == SqlKind.OR ? 1 : 0;
+      for (RexNode operand : call.getOperands()) {
+        count += countOrNodes(operand);
+      }
+      return count;
+    }
+    return 0;
+  }
+
+  /**
+   * Count the number of nodes in a RexNode tree to estimate complexity
+   */
+  private static int countNodes(RexNode node) {
+    if (node instanceof RexCall) {
+      RexCall call = (RexCall) node;
+      int count = 1;
+      for (RexNode operand : call.getOperands()) {
+        count += countNodes(operand);
+      }
+      return count;
+    }
+    return 1;
   }
 
   private static RelNode createEmptyEmptyRelHelper(SingleRel input) {

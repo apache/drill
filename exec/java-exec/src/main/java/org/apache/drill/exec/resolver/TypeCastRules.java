@@ -808,7 +808,7 @@ public class TypeCastRules {
             new MajorTypeInLogicalExpression(majorType));
       }
 
-      if (DRILL_REL_DATATYPE_SYSTEM.getMaxNumericPrecision() <
+      if (DRILL_REL_DATATYPE_SYSTEM.getMaxPrecision(org.apache.calcite.sql.type.SqlTypeName.DECIMAL) <
           holder.getReturnType(logicalExpressions).getPrecision()) {
         return Float.POSITIVE_INFINITY;
       }

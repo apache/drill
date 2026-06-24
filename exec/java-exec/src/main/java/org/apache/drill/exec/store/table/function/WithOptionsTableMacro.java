@@ -22,6 +22,7 @@ import org.apache.calcite.rel.type.RelDataTypeFactory;
 import org.apache.calcite.schema.FunctionParameter;
 import org.apache.calcite.schema.TableMacro;
 import org.apache.calcite.schema.TranslatableTable;
+import org.apache.calcite.sql.type.SqlTypeName;
 import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.exec.planner.logical.DrillTable;
 
@@ -75,7 +76,30 @@ public class WithOptionsTableMacro implements TableMacro {
 
         @Override
         public RelDataType getType(RelDataTypeFactory typeFactory) {
-          return typeFactory.createJavaType(p.getType());
+          RelDataType type = typeFactory.createJavaType(p.getType());
+          // Calcite 1.42 routine resolution (SqlUtil.filterRoutinesByTypePrecedence)
+          // asserts that every candidate parameter type appears in the argument's
+          // type-precedence list. Parameters whose Java type maps to a non-scalar
+          // Calcite type (e.g. a List config field becomes an ARRAY) are absent from
+          // the scalar precedence lists of the string literals these table-function
+          // parameters are supplied as, which raises an AssertionError. Such
+          // parameters can only ever be provided as string literals (e.g. an inline
+          // schema), so expose them to the planner as VARCHAR; Drill converts the
+          // literal to the real field type when the table is built.
+          switch (type.getSqlTypeName()) {
+            case ARRAY:
+            case MAP:
+            case MULTISET:
+            case ROW:
+            case STRUCTURED:
+            case DISTINCT:
+            case OTHER:
+            case ANY:
+              return typeFactory.createTypeWithNullability(
+                  typeFactory.createSqlType(SqlTypeName.VARCHAR), true);
+            default:
+              return type;
+          }
         }
 
         @Override

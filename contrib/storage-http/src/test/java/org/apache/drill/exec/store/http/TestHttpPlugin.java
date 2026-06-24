@@ -762,7 +762,10 @@ public class TestHttpPlugin extends ClusterTest {
 
     TupleMetadata expectedSchema = new SchemaBuilder()
       .add("SCHEMA_NAME", TypeProtos.MinorType.VARCHAR, TypeProtos.DataMode.OPTIONAL)
-      .add("TYPE", TypeProtos.MinorType.VARCHAR, TypeProtos.DataMode.OPTIONAL)
+      // Calcite 1.42 constant-folds the TYPE column (constrained to 'http' by the
+      // WHERE clause) into the string literal, so TYPE is reported as a REQUIRED
+      // VARCHAR with the literal's max precision rather than OPTIONAL.
+      .add("TYPE", TypeProtos.MinorType.VARCHAR, 65536)
       .buildSchema();
 
     // Expect table-like connections to NOT appear here.

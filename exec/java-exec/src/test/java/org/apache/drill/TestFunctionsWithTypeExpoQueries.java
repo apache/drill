@@ -140,7 +140,8 @@ public class TestFunctionsWithTypeExpoQueries extends BaseTestQuery {
     TypeProtos.MajorType majorType = TypeProtos.MajorType.newBuilder()
         .setMinorType(TypeProtos.MinorType.VARCHAR)
         .setMode(TypeProtos.DataMode.REQUIRED)
-        .setPrecision(Types.MAX_VARCHAR_LENGTH)
+        // Calcite 1.35+: Improved type inference - TRIM('drill') returns VARCHAR(5), not VARCHAR(65535)
+        .setPrecision(5)
         .build();
     expectedSchema.add(Pair.of(SchemaPath.getSimplePath("col"), majorType));
 
@@ -173,7 +174,8 @@ public class TestFunctionsWithTypeExpoQueries extends BaseTestQuery {
     TypeProtos.MajorType majorType = TypeProtos.MajorType.newBuilder()
         .setMinorType(TypeProtos.MinorType.VARCHAR)
         .setMode(TypeProtos.DataMode.REQUIRED)
-        .setPrecision(Types.MAX_VARCHAR_LENGTH)
+        // Calcite 1.35+: Improved type inference - TRIM(... 'drill') returns VARCHAR(5), not VARCHAR(65535)
+        .setPrecision(5)
         .build();
     expectedSchema.add(Pair.of(SchemaPath.getSimplePath("col"), majorType));
 
@@ -206,7 +208,8 @@ public class TestFunctionsWithTypeExpoQueries extends BaseTestQuery {
     TypeProtos.MajorType majorType = TypeProtos.MajorType.newBuilder()
         .setMinorType(TypeProtos.MinorType.VARCHAR)
         .setMode(TypeProtos.DataMode.REQUIRED)
-        .setPrecision(Types.MAX_VARCHAR_LENGTH)
+        // Calcite 1.35+: Improved type inference - TRIM(... from 'drill') returns VARCHAR(5), not VARCHAR(65535)
+        .setPrecision(5)
         .build();
     expectedSchema.add(Pair.of(SchemaPath.getSimplePath("col"), majorType));
 
@@ -258,6 +261,7 @@ public class TestFunctionsWithTypeExpoQueries extends BaseTestQuery {
 
     List<Pair<SchemaPath, TypeProtos.MajorType>> expectedSchema = Lists.newArrayList();
     TypeProtos.MajorType majorType = TypeProtos.MajorType.newBuilder()
+        // EXTRACT(SECOND ...) returns FLOAT8 (DOUBLE) to support fractional seconds
         .setMinorType(TypeProtos.MinorType.FLOAT8)
         .setMode(TypeProtos.DataMode.REQUIRED)
         .build();
@@ -737,7 +741,8 @@ public class TestFunctionsWithTypeExpoQueries extends BaseTestQuery {
         "from cp.`tpch/region.parquet` " +
         "window w as (partition by r_regionkey)";
 
-    final String[] expectedPlan = {"\\$SUM0"};
+    // Calcite 1.35+ changed the plan format - SUM is shown instead of $SUM0
+    final String[] expectedPlan = {"SUM\\("};
     final String[] excludedPlan = {};
     PlanTestBase.testPlanMatchingPatterns(query, expectedPlan, excludedPlan);
   }

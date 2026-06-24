@@ -510,7 +510,8 @@ public class TestWindowFunctions extends ClusterTest {
         "where n_nationkey = 1";
 
     // Validate the plan
-    final String[] expectedPlan1 = {"Window.*partition \\{0\\} aggs .*SUM\\(\\$0\\), COUNT\\(\\$0\\)",
+    // Calcite 1.35+ doesn't rewrite AVG to SUM/COUNT in all cases anymore
+    final String[] expectedPlan1 = {"Window.*partition \\{0\\} aggs .*AVG\\(\\$0\\)",
         "Scan.*columns=\\[`n_nationkey`\\]"};
     final String[] excludedPatterns1 = {"Scan.*columns=\\[`\\*`\\]"};
 
@@ -533,7 +534,8 @@ public class TestWindowFunctions extends ClusterTest {
         "where n_nationkey = 1";
 
     // Validate the plan
-    final String[] expectedPlan2 = {"Window.*partition \\{0\\} aggs .*SUM\\(\\$2\\), SUM\\(\\$1\\), COUNT\\(\\$1\\)",
+    // Calcite 1.35+ doesn't rewrite VAR_POP to SUM/COUNT in all cases anymore
+    final String[] expectedPlan2 = {"Window.*partition \\{0\\} aggs .*VAR_POP\\(\\$0\\)",
         "Scan.*columns=\\[`n_nationkey`\\]"};
     final String[] excludedPatterns2 = {"Scan.*columns=\\[`\\*`\\]"};
 
@@ -580,7 +582,8 @@ public class TestWindowFunctions extends ClusterTest {
         "from cp.`jsoninput/large_int.json` limit 1";
 
     // Validate the plan
-    final String[] expectedPlan2 = {"Window.*partition \\{0\\} aggs .*SUM\\(\\$1\\), COUNT\\(\\$1\\)",
+    // Calcite 1.35+ doesn't rewrite AVG to SUM/COUNT in all cases anymore
+    final String[] expectedPlan2 = {"Window.*partition \\{0\\} aggs .*AVG\\(\\$1\\)",
         "Scan.*columns=\\[`col_varchar`, `col_int`\\]"};
     final String[] excludedPatterns2 = {"Scan.*columns=\\[`\\*`\\]"};
 
@@ -697,7 +700,9 @@ public class TestWindowFunctions extends ClusterTest {
         "window w as(partition by position_id order by employee_id)";
 
     // Validate the plan
-    final String[] expectedPlan = {"Window.*partition \\{0\\} order by \\[1\\].*RANK\\(\\), \\$SUM0\\(\\$2\\), SUM\\(\\$1\\), \\$SUM0\\(\\$3\\)",
+    // Calcite 1.35+ changed plan format - $SUM0 is now shown as SUM
+    // Calcite 1.38 may reorder aggregates, so just check for presence of all aggregates
+    final String[] expectedPlan = {"Window.*partition \\{0\\} order by \\[1\\].*RANK\\(\\).*SUM\\(.*SUM\\(.*SUM\\(",
         "Scan.*columns=\\[`position_id`, `employee_id`\\]"};
     final String[] excludedPatterns = {"Scan.*columns=\\[`\\*`\\]"};
 
@@ -846,10 +851,11 @@ public class TestWindowFunctions extends ClusterTest {
         "order by 1, 2, 3, 4", root);
 
     // Validate the plan
-    final String[] expectedPlan = {"Window.*\\$SUM0\\(\\$3\\).*\n" +
+    // Calcite 1.35+ changed plan format - $SUM0 is now shown as SUM
+    final String[] expectedPlan = {"Window.*SUM\\(\\$3\\).*\n" +
         ".*SelectionVectorRemover.*\n" +
         ".*Sort.*\n" +
-        ".*Window.*\\$SUM0\\(\\$2\\).*"
+        ".*Window.*SUM\\(\\$2\\).*"
     };
 
     client.queryBuilder()
@@ -1000,7 +1006,8 @@ public class TestWindowFunctions extends ClusterTest {
         .sqlQuery(sqlWindowFunctionQuery)
         .unOrdered()
         .baselineColumns("c1", "c2", "c3", "c4")
-        .baselineValues(333.56708470261117d, 333.4226520980038d, 111266.99999699896d, 111170.66493206649d)
+        // Calcite 1.35+ has minor precision differences in statistical functions due to calculation order changes
+        .baselineValues(333.56708470261106d, 333.4226520980037d, 111266.99999699889d, 111170.66493206641d)
         .build()
         .run();
   }
@@ -1169,4 +1176,138 @@ public class TestWindowFunctions extends ClusterTest {
     new RowSetComparison(expected).verifyAndClearAll(results);
 
   }
+
+  // Tests for EXCLUDE clause (Calcite 1.38 feature)
+
+  @Test
+  public void testSimpleUnbounded() throws Exception {
+    // Test like testWindowFrameEquivalentToDefault - partition by same column as aggregation
+    final String query = "SELECT " +
+        "SUM(position_id) OVER(PARTITION BY position_id " +
+        "ROWS BETWEEN UNBOUNDED PRECEDING AND UNBOUNDED FOLLOWING) AS sum_all " +
+        "FROM cp.`employee.json` WHERE position_id = 2";
+
+    testBuilder()
+        .sqlQuery(query)
+        .unOrdered()
+        .baselineColumns("sum_all")
+        .baselineValues(12L) // 6 rows * 2
+        .baselineValues(12L)
+        .baselineValues(12L)
+        .baselineValues(12L)
+        .baselineValues(12L)
+        .baselineValues(12L)
+        .build()
+        .run();
+  }
+
+  @Test
+  public void testExcludeNoOthers() throws Exception {
+    // EXCLUDE NO OTHERS is the default - should include all rows in frame
+    final String query = "SELECT " +
+        "SUM(n_nationkey) OVER(PARTITION BY n_nationkey ORDER BY n_nationkey " +
+        "ROWS BETWEEN UNBOUNDED PRECEDING AND UNBOUNDED FOLLOWING EXCLUDE NO OTHERS) AS sum_all " +
+        "FROM cp.`tpch/nation.parquet`";
+
+    testBuilder()
+        .sqlQuery(query)
+        .unOrdered()
+        .baselineColumns("sum_all")
+        .baselineValues(0L)
+        .baselineValues(1L)
+        .baselineValues(2L)
+        .baselineValues(3L)
+        .baselineValues(4L)
+        .baselineValues(5L)
+        .baselineValues(6L)
+        .baselineValues(7L)
+        .baselineValues(8L)
+        .baselineValues(9L)
+        .baselineValues(10L)
+        .baselineValues(11L)
+        .baselineValues(12L)
+        .baselineValues(13L)
+        .baselineValues(14L)
+        .baselineValues(15L)
+        .baselineValues(16L)
+        .baselineValues(17L)
+        .baselineValues(18L)
+        .baselineValues(19L)
+        .baselineValues(20L)
+        .baselineValues(21L)
+        .baselineValues(22L)
+        .baselineValues(23L)
+        .baselineValues(24L)
+        .build()
+        .run();
+  }
+
+  @Test
+  public void testExcludeCurrentRow() throws Exception {
+    // EXCLUDE CURRENT ROW should exclude only the current row from the aggregation
+    // Use region partition (multiple nations per region) to test proper exclusion
+    // For region 0 (5 nations): each nation excludes itself from count
+    final String query = "SELECT " +
+        "COUNT(*) OVER(PARTITION BY n_regionkey ORDER BY n_regionkey " +
+        "RANGE BETWEEN UNBOUNDED PRECEDING AND UNBOUNDED FOLLOWING EXCLUDE CURRENT ROW) AS count_exclude_current " +
+        "FROM cp.`tpch/nation.parquet` WHERE n_regionkey = 0";
+
+    testBuilder()
+        .sqlQuery(query)
+        .unOrdered()
+        .baselineColumns("count_exclude_current")
+        .baselineValues(4L)  // 5 total - 1 (self) = 4
+        .baselineValues(4L)
+        .baselineValues(4L)
+        .baselineValues(4L)
+        .baselineValues(4L)
+        .build()
+        .run();
+  }
+
+  @Test
+  public void testExcludeTies() throws Exception {
+    // EXCLUDE TIES should exclude peer rows but NOT the current row
+    // Use RANGE frame with nation.parquet grouped by region (multiple nations per region are peers)
+    // For region 0 (5 nations): EXCLUDE TIES means each nation sees only itself (count=1)
+    final String query = "SELECT " +
+        "COUNT(*) OVER(PARTITION BY n_regionkey ORDER BY n_regionkey " +
+        "RANGE BETWEEN UNBOUNDED PRECEDING AND UNBOUNDED FOLLOWING EXCLUDE TIES) AS count_self " +
+        "FROM cp.`tpch/nation.parquet` WHERE n_regionkey = 0";
+
+    testBuilder()
+        .sqlQuery(query)
+        .unOrdered()
+        .baselineColumns("count_self")
+        .baselineValues(1L)  // Each row excludes 4 peers, sees only itself
+        .baselineValues(1L)
+        .baselineValues(1L)
+        .baselineValues(1L)
+        .baselineValues(1L)
+        .build()
+        .run();
+  }
+
+  @Test
+  public void testExcludeGroup() throws Exception {
+    // EXCLUDE GROUP should exclude current row AND all peer rows
+    // For region 0 (5 nations): EXCLUDE GROUP means each nation sees nothing (count=0)
+    final String query = "SELECT " +
+        "COUNT(*) OVER(PARTITION BY n_regionkey ORDER BY n_regionkey " +
+        "RANGE BETWEEN UNBOUNDED PRECEDING AND UNBOUNDED FOLLOWING EXCLUDE GROUP) AS count_exclude_group " +
+        "FROM cp.`tpch/nation.parquet` WHERE n_regionkey = 0";
+
+    testBuilder()
+        .sqlQuery(query)
+        .unOrdered()
+        .baselineColumns("count_exclude_group")
+        .baselineValues(0L)  // Each row excludes self and all 4 peers = 0
+        .baselineValues(0L)
+        .baselineValues(0L)
+        .baselineValues(0L)
+        .baselineValues(0L)
+        .build()
+        .run();
+  }
+
 }

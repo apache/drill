@@ -845,37 +845,46 @@ public class TestSetOp extends ClusterTest {
       "        WHERE  t_w_firstyear.year_total = t_w_secyear.year_total\n" +
       "         AND t_w_firstyear.year_total > 0 and t_w_secyear.year_total > 0";
 
-    testBuilder()
-      .sqlQuery(query1)
-      .ordered()
-      .baselineColumns("ct")
-      .baselineValues((long) 5)
-      .build()
-      .run();
+    // year_total is the constant literal 1, so "year_total = year_total" is
+    // always true: query2/3/4 are genuine cartesian joins (Calcite 1.42 folds
+    // the constant join key, whereas earlier versions kept a redundant equi-
+    // join). Running a cartesian join requires enabling non-scalar NLJ.
+    client.alterSession(PlannerSettings.NLJOIN_FOR_SCALAR.getOptionName(), false);
+    try {
+      testBuilder()
+        .sqlQuery(query1)
+        .ordered()
+        .baselineColumns("ct")
+        .baselineValues((long) 5)
+        .build()
+        .run();
 
-    testBuilder()
-      .sqlQuery(query2)
-      .ordered()
-      .baselineColumns("ct")
-      .baselineValues((long) 25)
-      .build()
-      .run();
+      testBuilder()
+        .sqlQuery(query2)
+        .ordered()
+        .baselineColumns("ct")
+        .baselineValues((long) 25)
+        .build()
+        .run();
 
-    testBuilder()
-      .sqlQuery(query3)
-      .ordered()
-      .baselineColumns("ct")
-      .baselineValues((long) 125)
-      .build()
-      .run();
+      testBuilder()
+        .sqlQuery(query3)
+        .ordered()
+        .baselineColumns("ct")
+        .baselineValues((long) 125)
+        .build()
+        .run();
 
-    testBuilder()
-      .sqlQuery(query4)
-      .ordered()
-      .baselineColumns("ct")
-      .baselineValues((long) 25)
-      .build()
-      .run();
+      testBuilder()
+        .sqlQuery(query4)
+        .ordered()
+        .baselineColumns("ct")
+        .baselineValues((long) 25)
+        .build()
+        .run();
+    } finally {
+      client.resetSession(PlannerSettings.NLJOIN_FOR_SCALAR.getOptionName());
+    }
   }
 
   @Test

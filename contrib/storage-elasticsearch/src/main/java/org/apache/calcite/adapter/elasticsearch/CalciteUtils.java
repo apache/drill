@@ -39,7 +39,7 @@ import java.util.stream.Collectors;
 public class CalciteUtils {
 
   private static final List<String> BANNED_RULES =
-      Arrays.asList("ElasticsearchProjectRule", "ElasticsearchFilterRule");
+      Arrays.asList("ElasticsearchProjectRule", "ElasticsearchFilterRule", "ElasticsearchAggregateRule");
 
   public static final Predicate<RelOptRule> RULE_PREDICATE =
       relOptRule -> BANNED_RULES.stream()
@@ -61,6 +61,8 @@ public class CalciteUtils {
     rules.add(ELASTIC_DREL_CONVERTER_RULE);
     rules.add(ElasticsearchProjectRule.INSTANCE);
     rules.add(ElasticsearchFilterRule.INSTANCE);
+    rules.add(ElasticsearchAggregateRule.INSTANCE);
+    rules.add(ElasticsearchAggregateRule.DRILL_LOGICAL_INSTANCE);
     return rules;
   }
 

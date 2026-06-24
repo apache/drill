@@ -777,7 +777,7 @@ void LimitClause(Span s, SqlNode[] offsetFetch) :
         <COMMA> offsetFetch[1] = UnsignedNumericLiteralOrParam() {
             if (!this.conformance.isLimitStartCountAllowed()) {
                 throw SqlUtil.newContextException(s.end(this),
-                    RESOURCE.limitStartCountNotAllowed());
+                    RESOURCE.limitStartCountOrAllNotAllowed("count"));
             }
         }
     |
@@ -2699,6 +2699,7 @@ SqlWindow WindowSpecification() :
     final SqlNode lowerBound, upperBound;
     final Span s, s1, s2;
     final SqlLiteral allowPartial;
+    final SqlLiteral exclude;
 }
 {
     <LPAREN> { s = span(); }
@@ -2736,6 +2737,27 @@ SqlWindow WindowSpecification() :
         }
     )
     (
+        <EXCLUDE> { final Span s3 = span(); }
+        (
+            <CURRENT> <ROW> {
+                exclude = SqlWindow.createExcludeCurrentRow(s3.end(this));
+            }
+        |
+            <GROUP> {
+                exclude = SqlWindow.createExcludeGroup(s3.end(this));
+            }
+        |
+            <TIES> {
+                exclude = SqlWindow.createExcludeTies(s3.end(this));
+            }
+        |
+            <NO> <OTHERS> {
+                exclude = SqlWindow.createExcludeNoOthers(s3.end(this));
+            }
+        )
+    |   { exclude = SqlWindow.createExcludeNoOthers(s.pos()); }
+    )
+    (
         <ALLOW> { s2 = span(); } <PARTIAL> {
             allowPartial = SqlLiteral.createBoolean(true, s2.end(this));
         }
@@ -2748,7 +2770,7 @@ SqlWindow WindowSpecification() :
     <RPAREN>
     {
         return SqlWindow.create(null, id, partitionList, orderList,
-            isRows, lowerBound, upperBound, allowPartial, s.end(this));
+            isRows, lowerBound, upperBound, allowPartial, exclude, s.end(this));
     }
 }
 
@@ -6127,8 +6149,12 @@ SqlNode BuiltinFunctionCall() :
             (
                 <FROM> {
                     if (null == flag && null == trimChars) {
-                        throw SqlUtil.newContextException(getPos(),
-                            RESOURCE.illegalFromEmpty());
+                        // TRIM(FROM x) is not allowed: a flag and/or trim
+                        // characters must precede FROM. (Calcite removed the
+                        // RESOURCE.illegalFromEmpty() message in 1.42, so raise
+                        // a parse error directly instead.)
+                        throw new ParseException(
+                            "Encountered \"FROM\" without a leading flag or trim characters in TRIM");
                     }
                 }
             |

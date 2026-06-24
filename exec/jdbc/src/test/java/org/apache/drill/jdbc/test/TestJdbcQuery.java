@@ -125,15 +125,18 @@ public class TestJdbcQuery extends JdbcTestQueryBase {
 
   @Test
   public void testLikeNotLike() throws Exception{
+    // The query has no ORDER BY, so row order is implementation-dependent
+    // (Calcite 1.42 enumerates the INFORMATION_SCHEMA rows in a different order).
+    // Compare the result set order-independently.
     withNoDefaultSchema()
       .sql("SELECT TABLE_NAME, COLUMN_NAME FROM INFORMATION_SCHEMA.COLUMNS " +
         "WHERE TABLE_NAME NOT LIKE 'C%' AND COLUMN_NAME LIKE 'TABLE_%E'")
-      .returns(
-        "TABLE_NAME=PARTITIONS; COLUMN_NAME=TABLE_NAME\n" +
-        "TABLE_NAME=TABLES; COLUMN_NAME=TABLE_NAME\n" +
-        "TABLE_NAME=TABLES; COLUMN_NAME=TABLE_TYPE\n" +
-        "TABLE_NAME=TABLES; COLUMN_NAME=TABLE_SOURCE\n" +
-        "TABLE_NAME=VIEWS; COLUMN_NAME=TABLE_NAME\n"
+      .returnsUnordered(
+        "TABLE_NAME=PARTITIONS; COLUMN_NAME=TABLE_NAME",
+        "TABLE_NAME=TABLES; COLUMN_NAME=TABLE_NAME",
+        "TABLE_NAME=TABLES; COLUMN_NAME=TABLE_TYPE",
+        "TABLE_NAME=TABLES; COLUMN_NAME=TABLE_SOURCE",
+        "TABLE_NAME=VIEWS; COLUMN_NAME=TABLE_NAME"
       );
   }
 

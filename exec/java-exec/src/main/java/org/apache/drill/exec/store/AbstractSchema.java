@@ -47,6 +47,9 @@ import org.apache.calcite.schema.Schema;
 import org.apache.calcite.schema.SchemaPlus;
 import org.apache.calcite.schema.SchemaVersion;
 import org.apache.calcite.schema.Table;
+import org.apache.calcite.schema.lookup.LikePattern;
+import org.apache.calcite.schema.lookup.Lookup;
+import org.apache.calcite.schema.lookup.Named;
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.exec.dotdrill.View;
@@ -346,6 +349,43 @@ public abstract class AbstractSchema implements Schema, SchemaPartitionExplorer,
   @Override
   public Set<String> getSubSchemaNames() {
     return Collections.emptySet();
+  }
+
+  /**
+   * Overrides Calcite 1.42's default sub-schema {@link Lookup}, whose
+   * case-insensitive {@code getIgnoreCase} matches only against the names
+   * returned by {@link #getSubSchemaNames()}. Several Drill schemas expose their
+   * sub-schemas lazily through {@link #getSubSchema(String)} and do not
+   * enumerate them (for example Cassandra keyspaces and Mongo databases), so a
+   * name-based match finds nothing and multi-level references such as
+   * {@code cassandra.test_keyspace.employee} fail to resolve. This wrapper keeps
+   * the default name-based behaviour but falls back to a direct, lazy
+   * {@code getSubSchema(name)} resolution when no enumerated name matches.
+   */
+  @Override
+  public Lookup<? extends Schema> subSchemas() {
+    final Lookup<? extends Schema> base = Schema.super.subSchemas();
+    return new Lookup<Schema>() {
+      @Override
+      public Schema get(String name) {
+        return getSubSchema(name);
+      }
+
+      @Override
+      public Named<Schema> getIgnoreCase(String name) {
+        Named<? extends Schema> named = base.getIgnoreCase(name);
+        if (named != null) {
+          return new Named<>(named.name(), named.entity());
+        }
+        Schema schema = getSubSchema(name);
+        return schema == null ? null : new Named<>(name, schema);
+      }
+
+      @Override
+      public Set<String> getNames(LikePattern pattern) {
+        return base.getNames(pattern);
+      }
+    };
   }
 
   @Override
