@@ -20,11 +20,11 @@
 
 - **Project:** Apache Drill (`apache/drill`), `master` @ HEAD (2026-06). Scope: `apache/drill` only.
 - **Date:** 2026-06-18. **Author:** ASF Security team, drafted via the threat-model-producer (Scovetta) rubric at the Drill PMC's request (path 3 — chosen by Charles Givre, 2026-06-17).
-- **Status:** DRAFT — not yet reviewed by the Drill PMC. Every load-bearing claim is *(inferred)* pending PMC confirmation (see §14).
+- **Status:** DRAFT — under Drill PMC review (Charles Givre, 2026-06). Most load-bearing claims remain *(inferred)* pending further PMC confirmation (see §14).
 - **Version binding:** versioned with the project; a report against version *N* is triaged against the model as it stood at *N*.
 - **Reporting cross-reference:** §8-property violations → report privately per the ASF process (`security@apache.org` → `private@drill.apache.org`); §3/§9 findings are closed citing this document.
 - **Provenance legend:** *(documented)* = Drill's own docs/repo; *(maintainer)* = confirmed by a Drill PMC member through this process; *(inferred)* = reasoned from architecture/docs, not yet PMC-ratified — each has a matching §14 open question.
-- **Draft confidence:** ~10 documented / 0 maintainer / ~28 inferred — a first draft to react to, not a ratified model.
+- **Draft confidence:** ~10 documented / 2 maintainer / ~26 inferred (cgivre's PR #3052 review folded: `contrib/` plugins in scope + the storage-enumeration non-finding).
 
 **What Drill is.** Apache Drill is a **schema-free, distributed SQL query engine** for large-scale datasets. A cluster of **Drillbit** daemons (coordinated via Apache ZooKeeper) accepts ANSI-SQL queries over JDBC, ODBC, a REST API, and a Web UI (default port **8047**), and executes them directly against data in configurable **storage plugins** (local/HDFS/S3 files, Hive, HBase, Kafka, MongoDB, RDBMS via JDBC, HTTP, …) — discovering schema at query time rather than requiring a pre-defined schema. *(documented — drill.apache.org)*
 
@@ -50,7 +50,8 @@ Intended deployment: a **clustered set of Drillbits** inside an operator-control
 | UDF layer | built-in functions + **dynamic UDFs** (runtime jar upload) | in-JVM code execution | **In as code-execution-by-design** *(documented — dynamic UDFs)* |
 | Inter-Drillbit RPC | control + data RPC between Drillbits, SASL | network (intra-cluster) | **In (boundary is authenticated)** *(inferred — §14 Q3)* |
 | Client connectors | JDBC driver, ODBC driver, C++ client | client trust domain | client-side — out (§3) |
-| Examples / tests / contrib | `contrib/`-bundled formats, `exec/.../test`, samples | n/a | **Out** *(see §3)* |
+| **`contrib/` storage + format plugins** | connectors/formats bundled + maintained with Drill (`contrib/storage-*`, `contrib/format-*`) | filesystem + network out | **In — same connector surface as the storage-plugin row** *(maintainer — cgivre)* |
+| Tests / examples / sample data | `exec/.../test`, demo code, sample datasets | n/a | **Out** *(see §3)* |
 
 ## §3 Out of scope (explicit non-goals)
 
@@ -59,7 +60,7 @@ Intended deployment: a **clustered set of Drillbits** inside an operator-control
 - **An operator with cluster/root access, the Drillbit service account, or direct ZooKeeper write access.** Anyone who controls the cluster processes or the coordination store has already won. `OUT-OF-MODEL: adversary-not-in-scope`. *(inferred — §14 Q5)*
 - **Embedded / single-user mode**, where the caller owns the JVM, the filesystem, and all input — equivalent to an in-process library call. *(inferred — §14 Q1)*
 - **SQL injection in an embedding application** that string-concatenates untrusted input into Drill SQL — that is the embedding app's bug, not Drill's. *(inferred — §11)*
-- **Bundled connectors / formats under `contrib/`, tests, and examples** — separately authored; threat-model per connector if promoted. *(inferred)*
+- **Tests, examples, and sample data** (`exec/.../test`, demo code, sample datasets) — not a shipped runtime surface. *(inferred)* **NB:** the `contrib/` storage/format **plugins are in scope** — they ship with Drill and are PMC-maintained, carrying the same connector trust surface as the core storage plugins (§2); only tests/examples/samples are out. *(maintainer — cgivre, PR #3052)*
 
 ## §4 Trust boundaries and data flow
 
@@ -150,6 +151,7 @@ The security envelope is set primarily by runtime configuration, not compile fla
 - **"A dynamic UDF / storage plugin can run arbitrary code or reach any URL/file."** By design — both are admin-authorized operations. `BY-DESIGN` unless a non-admin can reach them. *(inferred)*
 - **"The REST API / Web UI accepts requests without authentication."** Only when auth is disabled — a non-default/operator-chosen posture (pending §14 Q9), not a Drill defect. `OUT-OF-MODEL: non-default-build`.
 - **"A query can read an arbitrary local file via the `dfs` plugin."** In-model only if it crosses the impersonated identity's authorization or the configured workspace; otherwise it is the operator's plugin-scope choice. *(inferred — §14 Q2/Q7)*
+- **"Drill can enumerate / read the files, schemas, or storage systems it is pointed at."** That is the **function** of a federated query engine — exposing configured storage to SQL is the point of Drill, not a vulnerability. `KNOWN-NON-FINDING` / `BY-DESIGN`. In-model **only** if the access crosses the authenticated identity's authorization (reading data an impersonated user shouldn't, or bypassing a Drill view — §8.2). *(maintainer — cgivre, PR #3052: "yes… that's the point of Drill".)*
 - **"SQL injection in Drill"** where the untrusted string was concatenated by an *embedding app* — that app's bug (§11), not Drill's.
 - **Dependency-tail CVEs** (Calcite, Hadoop, Jackson, Netty, a transitive jar) from an SCA scan — triage upstream unless Drill's own code reaches the vulnerable path with untrusted input.
 
@@ -168,7 +170,7 @@ The security envelope is set primarily by runtime configuration, not compile fla
 | `VALID-HARDENING` | A §11 misuse is too easy (e.g. an over-broad default plugin scope). | §11 |
 | `OUT-OF-MODEL: trusted-input` | Requires admin-tier input (plugin config / UDF jar) or data the operator already trusts. | §6 |
 | `OUT-OF-MODEL: adversary-not-in-scope` | Requires operator / cluster-host / ZooKeeper / data-source control. | §7 |
-| `OUT-OF-MODEL: unsupported-component` | Lands in `contrib/`, tests, examples, or embedded single-user mode. | §3 |
+| `OUT-OF-MODEL: unsupported-component` | Lands in tests, examples/sample data, or embedded single-user mode. (NB: `contrib/` storage/format plugins are **in** scope — §2.) | §3 |
 | `OUT-OF-MODEL: non-default-build` | Only manifests with auth/impersonation/encryption left at a discouraged setting. | §5a |
 | `BY-DESIGN: property-disclaimed` | Concerns a property §9 disclaims (UDF/plugin code exec, SSRF-by-config, data-source security). | §9 |
 | `KNOWN-NON-FINDING` | Matches §11a. | §11a |
@@ -195,4 +197,4 @@ The security envelope is set primarily by runtime configuration, not compile fla
 - **Q3.** Inter-Drillbit + ZooKeeper trust: confirm these are assumed network-isolated, the RPC is authenticated (SASL), and Drill makes no integrity claim against a Byzantine authenticated peer.
 - **Q8.** Confirm the §5 "no ambient side effects" inventory — beyond its ports, configured plugins, profile/spill writes, and ZooKeeper, a Drillbit makes no other outbound connection except those a query drives.
 - **Q11.** Is super-linear CPU/memory in query/data size a bug, or is bounding it the operator's job (per-query memory limits, queues)? Is a hang on a pathological query a security issue? Or is no resource guarantee made?
-- **Q12.** What do scanners/researchers most often report against Drill that you consider a non-finding? (Feeds §11a.)
+- **Q12.** *(Partially answered — cgivre, PR #3052: storage/filesystem enumeration via Drill is by-design, not a finding — folded into §11a. More welcome.)* What do scanners/researchers most often report against Drill that you consider a non-finding? (Feeds §11a.)
