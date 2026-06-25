@@ -17,18 +17,13 @@
  */
 package org.apache.drill.exec.planner.logical;
 
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-
 import org.apache.calcite.avatica.util.Quoting;
 import org.apache.calcite.plan.RelOptMaterialization;
 import org.apache.calcite.plan.RelOptMaterializations;
 import org.apache.calcite.rel.RelNode;
 import org.apache.calcite.rel.RelRoot;
 import org.apache.calcite.schema.SchemaPlus;
+import org.apache.calcite.sql.SqlNode;
 import org.apache.calcite.util.Pair;
 import org.apache.drill.exec.dotdrill.MaterializedView;
 import org.apache.drill.exec.ops.QueryContext;
@@ -40,6 +35,12 @@ import org.apache.drill.exec.store.StoragePluginRegistry.PluginException;
 import org.apache.drill.exec.store.dfs.FileSystemPlugin;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 /**
  * Utility class for materialized view query rewriting.
@@ -168,8 +169,8 @@ public class MaterializedViewRewriter {
   private RelNode parseMvSql(MaterializedViewCandidate candidate) {
     try {
       String mvSql = candidate.getSql();
-      org.apache.calcite.sql.SqlNode parsedNode = sqlConverter.parse(mvSql);
-      org.apache.calcite.sql.SqlNode validatedNode = sqlConverter.validate(parsedNode);
+      SqlNode parsedNode = sqlConverter.parse(mvSql);
+      SqlNode validatedNode = sqlConverter.validate(parsedNode);
       RelRoot relRoot = sqlConverter.toRel(validatedNode);
       return relRoot.rel;
     } catch (Exception e) {
@@ -204,8 +205,8 @@ public class MaterializedViewRewriter {
       }
       scanSql.append(" FROM ").append(mvDataTable);
 
-      org.apache.calcite.sql.SqlNode parsedNode = sqlConverter.parse(scanSql.toString());
-      org.apache.calcite.sql.SqlNode validatedNode = sqlConverter.validate(parsedNode);
+      SqlNode parsedNode = sqlConverter.parse(scanSql.toString());
+      SqlNode validatedNode = sqlConverter.validate(parsedNode);
       RelRoot relRoot = sqlConverter.toRel(validatedNode);
       return relRoot.rel;
     } catch (Exception e) {
