@@ -31,10 +31,13 @@ import org.apache.calcite.tools.RelConversionException;
 import org.apache.calcite.tools.ValidationException;
 import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.exec.ExecConstants;
+import org.apache.drill.exec.cache.CustomCacheManager;
 import org.apache.drill.exec.exception.MetadataException;
 import org.apache.drill.exec.ops.QueryContext;
 import org.apache.drill.exec.ops.QueryContext.SqlStatementType;
 import org.apache.drill.exec.physical.PhysicalPlan;
+import org.apache.drill.exec.planner.physical.PlannerSettings;
+import org.apache.drill.exec.planner.sql.conversion.SqlConverter;
 import org.apache.drill.exec.planner.sql.handlers.AbstractSqlHandler;
 import org.apache.drill.exec.planner.sql.handlers.AnalyzeTableHandler;
 import org.apache.drill.exec.planner.sql.handlers.DefaultSqlHandler;
@@ -52,7 +55,6 @@ import org.apache.drill.exec.planner.sql.parser.DrillSqlCall;
 import org.apache.drill.exec.planner.sql.parser.DrillSqlDescribeTable;
 import org.apache.drill.exec.planner.sql.parser.DrillSqlResetOption;
 import org.apache.drill.exec.planner.sql.parser.SqlSchema;
-import org.apache.drill.exec.planner.sql.conversion.SqlConverter;
 import org.apache.drill.exec.proto.UserBitShared.DrillPBError;
 import org.apache.drill.exec.testing.ControlsInjector;
 import org.apache.drill.exec.testing.ControlsInjectorFactory;
@@ -210,6 +212,7 @@ public class DrillSqlWorker {
 
   /**
    * Converts sql query string into query physical plan.
+   * If plan caching is enabled, attempts to retrieve a cached plan first.
    *
    * @param context query context
    * @param sql sql query
@@ -218,6 +221,17 @@ public class DrillSqlWorker {
    */
   private static PhysicalPlan getQueryPlan(QueryContext context, String sql, Pointer<String> textPlan)
       throws ForemanSetupException, RelConversionException, IOException, ValidationException {
+
+    final boolean planCacheEnabled = context.getOptions().getOption(PlannerSettings.PLAN_CACHE);
+
+    // Check cache first if enabled
+    if (planCacheEnabled) {
+      PhysicalPlan cachedPlan = CustomCacheManager.getQueryPlan(sql);
+      if (cachedPlan != null) {
+        logger.debug("Using cached query plan for SQL: {}", sql.substring(0, Math.min(sql.length(), 100)));
+        return cachedPlan;
+      }
+    }
 
     final SqlConverter parser = new SqlConverter(context);
     injector.injectChecked(context.getExecutionControls(), "sql-parsing", ForemanSetupException.class);
@@ -295,7 +309,25 @@ public class DrillSqlWorker {
       context.getOptions().setLocalOption(ExecConstants.RETURN_RESULT_SET_FOR_DDL, true);
     }
 
-    return handler.getPlan(sqlNode);
+    PhysicalPlan physicalPlan = handler.getPlan(sqlNode);
+
+    // Cache the plan if caching is enabled and this is a cacheable query type
+    if (planCacheEnabled && isCacheableQuery(sqlNode)) {
+      CustomCacheManager.putQueryPlan(sql, physicalPlan);
+      logger.debug("Cached query plan for SQL: {}", sql.substring(0, Math.min(sql.length(), 100)));
+    }
+
+    return physicalPlan;
+  }
+
+  /**
+   * Determines if a query type should be cached.
+   * Only SELECT queries are cached; DDL and other modifying statements should not be cached.
+   */
+  private static boolean isCacheableQuery(SqlNode sqlNode) {
+    SqlKind kind = sqlNode.getKind();
+    // Only cache SELECT queries, not DDL or DML
+    return kind == SqlKind.SELECT || kind == SqlKind.ORDER_BY || kind == SqlKind.UNION;
   }
 
   private static boolean isAutoLimitShouldBeApplied(SqlNode sqlNode, int queryMaxRows) {
