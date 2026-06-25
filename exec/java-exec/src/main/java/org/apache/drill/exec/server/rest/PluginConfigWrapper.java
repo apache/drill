@@ -36,6 +36,7 @@ import org.apache.drill.exec.store.StoragePluginRegistry;
 import org.apache.drill.exec.store.StoragePluginRegistry.PluginException;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import org.apache.drill.exec.store.security.UsernamePasswordCredentials;
 import org.apache.drill.exec.store.security.oauth.OAuthTokenCredentials;
@@ -43,6 +44,10 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 @XmlRootElement
+// isOauth/authorizationUrl are serialized out for the UI but are derived,
+// read-only fields. Ignore them (and any other extras) on input so a config
+// round-tripped through a POST body deserializes cleanly.
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class PluginConfigWrapper {
   private static final Logger logger = LoggerFactory.getLogger(PluginConfigWrapper.class);
   private final String name;

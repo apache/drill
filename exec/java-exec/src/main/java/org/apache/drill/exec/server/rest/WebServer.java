@@ -244,9 +244,17 @@ public class WebServer implements AutoCloseable {
       servletContextHandler.setSecurityHandler(drillSecurityHandler);
     }
 
+    // Configured response headers must apply to every response, including the
+    // SPA pages served by SpaServletFilter (which short-circuits the chain).
+    // Register it first so it sets the headers before any downstream filter
+    // or servlet commits the response.
+    FilterHolder responseHeadersSettingFilter = new FilterHolder(ResponseHeadersSettingFilter.class);
+    responseHeadersSettingFilter.setInitParameters(ResponseHeadersSettingFilter.retrieveResponseHeaders(config));
+    servletContextHandler.addFilter(responseHeadersSettingFilter, "/*", EnumSet.of(DispatcherType.REQUEST));
+
     // Serve the React SPA for paths that aren't claimed by a JAX-RS resource.
-    // Registered FIRST so it runs before any other filter (and before Jersey)
-    // and can short-circuit SPA paths without invoking the rest of the chain.
+    // Registered before the CSRF/CORS filters and Jersey so it can short-circuit
+    // SPA paths without invoking the rest of the chain.
     servletContextHandler.addFilter(SpaServletFilter.class, "/*", EnumSet.of(DispatcherType.REQUEST));
 
     // Applying filters for CSRF protection.
@@ -277,10 +285,6 @@ public class WebServer implements AutoCloseable {
 
     // Allowing CORS for metrics only
     servletContextHandler.addFilter(filterHolder, STATUS_METRICS_PATH, null);
-
-    FilterHolder responseHeadersSettingFilter = new FilterHolder(ResponseHeadersSettingFilter.class);
-    responseHeadersSettingFilter.setInitParameters(ResponseHeadersSettingFilter.retrieveResponseHeaders(config));
-    servletContextHandler.addFilter(responseHeadersSettingFilter, "/*", EnumSet.of(DispatcherType.REQUEST));
 
     return servletContextHandler;
   }
