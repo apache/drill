@@ -17,6 +17,7 @@
  */
 package org.apache.drill.metastore;
 
+import org.apache.drill.metastore.components.materializedviews.MaterializedViews;
 import org.apache.drill.metastore.components.tables.Tables;
 import org.apache.drill.metastore.components.views.Views;
 
@@ -40,4 +41,9 @@ public interface Metastore extends AutoCloseable {
    * @return Metastore Views component implementation
    */
   Views views();
+
+  /**
+   * @return Metastore MaterializedViews component implementation
+   */
+  MaterializedViews materializedViews();
 }

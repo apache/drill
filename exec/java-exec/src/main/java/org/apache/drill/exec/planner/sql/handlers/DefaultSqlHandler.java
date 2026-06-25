@@ -78,6 +78,7 @@ import org.apache.drill.exec.planner.logical.DrillProjectRel;
 import org.apache.drill.exec.planner.logical.DrillRel;
 import org.apache.drill.exec.planner.logical.DrillRelFactories;
 import org.apache.drill.exec.planner.logical.DrillScreenRel;
+import org.apache.drill.exec.planner.logical.MaterializedViewRewriter;
 import org.apache.drill.exec.planner.logical.PreProcessLogicalRel;
 import org.apache.drill.exec.planner.physical.DrillDistributionTrait;
 import org.apache.drill.exec.planner.physical.PhysicalPlanCreator;
@@ -200,6 +201,20 @@ public class DefaultSqlHandler extends AbstractSqlHandler {
 
     RelNode rel = convertToRel(validated);
     rel = preprocessNode(rel);
+
+    // Attempt materialized view rewriting if enabled.
+    // The rewriting uses Calcite's SubstitutionVisitor which may produce invalid
+    // plans for partial-match cases (e.g., MV covers a column subset). We guard
+    // against this by catching any errors and falling back to the original plan.
+    if (context.getPlannerSettings().isMaterializedViewRewriteEnabled()) {
+      try {
+        MaterializedViewRewriter mvRewriter = new MaterializedViewRewriter(
+            context, config.getConverter().getRootSchema(), config.getConverter());
+        rel = mvRewriter.rewrite(rel);
+      } catch (Exception | AssertionError e) {
+        logger.debug("Materialized view rewriting failed, using original plan: {}", e.getMessage());
+      }
+    }
 
     return new ConvertedRelNode(rel, validatedTypedSqlNode.getValue());
   }

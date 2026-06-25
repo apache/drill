@@ -116,9 +116,9 @@
     <log4j.version>2.25.4</log4j.version>
     <!-- Upgrading logback further breaks JDK 8 build compatibility -->
     <logback.version>1.5.25</logback.version>
-    <maven.compiler.release>11</maven.compiler.release>
-    <maven.compiler.source>11</maven.compiler.source>
-    <maven.compiler.target>11</maven.compiler.target>
+    <maven.compiler.release>17</maven.compiler.release>
+    <maven.compiler.source>17</maven.compiler.source>
+    <maven.compiler.target>17</maven.compiler.target>
     <maven.min.version>3.6.3</maven.min.version>
     <maven.version>3.8.4</maven.version>
     <memoryMb>4096</memoryMb>
@@ -3016,9 +3016,9 @@
         <jdk>[9,)</jdk>
       </activation>
       <properties>
-        <maven.compiler.source>11</maven.compiler.source>
-        <maven.compiler.target>11</maven.compiler.target>
-        <maven.compiler.release>11</maven.compiler.release>
+        <maven.compiler.source>17</maven.compiler.source>
+        <maven.compiler.target>17</maven.compiler.target>
+        <maven.compiler.release>17</maven.compiler.release>
         <junit.args>
           --add-opens java.base/java.lang=ALL-UNNAMED
           --add-opens java.base/java.net=ALL-UNNAMED

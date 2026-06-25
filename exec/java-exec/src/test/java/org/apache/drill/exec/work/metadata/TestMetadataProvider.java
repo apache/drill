@@ -149,13 +149,14 @@ public class TestMetadataProvider extends BaseTestQuery {
 
     assertEquals(RequestStatus.OK, resp.getStatus());
     List<TableMetadata> tables = resp.getTablesList();
-    assertEquals(22, tables.size());
+    assertEquals(23, tables.size());
 
     verifyTable("information_schema", "CATALOGS", tables);
     verifyTable("information_schema", "COLUMNS", tables);
     verifyTable("information_schema", "SCHEMATA", tables);
     verifyTable("information_schema", "TABLES", tables);
     verifyTable("information_schema", "VIEWS", tables);
+    verifyTable("information_schema", "MATERIALIZED_VIEWS", tables);
     verifyTable("information_schema", "PARTITIONS", tables);
     verifyTable("information_schema", "FILES", tables);
     //Verify System Tables
@@ -183,13 +184,14 @@ public class TestMetadataProvider extends BaseTestQuery {
 
     assertEquals(RequestStatus.OK, resp.getStatus());
     List<TableMetadata> tables = resp.getTablesList();
-    assertEquals(22, tables.size());
+    assertEquals(23, tables.size());
 
     verifyTable("information_schema", "CATALOGS", tables);
     verifyTable("information_schema", "COLUMNS", tables);
     verifyTable("information_schema", "SCHEMATA", tables);
     verifyTable("information_schema", "TABLES", tables);
     verifyTable("information_schema", "VIEWS", tables);
+    verifyTable("information_schema", "MATERIALIZED_VIEWS", tables);
     verifyTable("information_schema", "PARTITIONS", tables);
     verifyTable("information_schema", "FILES", tables);
     //Verify System Tables
@@ -242,7 +244,7 @@ public class TestMetadataProvider extends BaseTestQuery {
 
     assertEquals(RequestStatus.OK, resp.getStatus());
     List<ColumnMetadata> columns = resp.getColumnsList();
-    assertEquals(172, columns.size());
+    assertEquals(179, columns.size());
     // too many records to verify the output.
   }
 

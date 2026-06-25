@@ -57,7 +57,7 @@ public class DotDrillFile {
    * @return Return owner of the file in underlying file system.
    */
   public String getOwner() {
-    if (type == DotDrillType.VIEW && status.getOwner().isEmpty()) {
+    if ((type == DotDrillType.VIEW || type == DotDrillType.MATERIALIZED_VIEW) && status.getOwner().isEmpty()) {
       // Drill view S3AFileStatus is not populated with owner (it has default value of "").
       // This empty String causes IllegalArgumentException to be thrown (if impersonation is enabled) in
       // SchemaTreeProvider#createRootSchema(String, SchemaConfigInfoProvider). To work-around the issue
@@ -80,6 +80,13 @@ public class DotDrillFile {
     Preconditions.checkArgument(type == DotDrillType.VIEW);
     try(InputStream is = fs.open(status.getPath())){
       return mapper.readValue(is, View.class);
+    }
+  }
+
+  public MaterializedView getMaterializedView(ObjectMapper mapper) throws IOException {
+    Preconditions.checkArgument(type == DotDrillType.MATERIALIZED_VIEW);
+    try(InputStream is = fs.open(status.getPath())){
+      return mapper.readValue(is, MaterializedView.class);
     }
   }
 }

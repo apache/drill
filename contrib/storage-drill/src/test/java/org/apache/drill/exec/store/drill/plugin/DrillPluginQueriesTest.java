@@ -99,6 +99,7 @@ public class DrillPluginQueriesTest extends ClusterTest {
       .baselineValues("drill.information_schema", "FILES")
       .baselineValues("drill.information_schema", "SCHEMATA")
       .baselineValues("drill.information_schema", "TABLES")
+      .baselineValues("drill.information_schema", "MATERIALIZED_VIEWS")
       .go();
   }
 
