@@ -28,12 +28,14 @@ import org.apache.drill.exec.ops.FragmentContext;
 import org.apache.drill.exec.physical.config.Project;
 import org.apache.drill.exec.physical.resultSet.ResultSetLoader;
 import org.apache.drill.exec.record.AbstractSingleRecordBatch;
+import org.apache.drill.exec.record.MaterializedField;
 import org.apache.drill.exec.record.BatchSchema;
 import org.apache.drill.exec.record.BatchSchema.SelectionVectorMode;
 import org.apache.drill.exec.record.RecordBatch;
 import org.apache.drill.exec.record.SimpleRecordBatch;
 import org.apache.drill.exec.record.VectorContainer;
 import org.apache.drill.exec.record.VectorWrapper;
+import org.apache.drill.exec.expr.fn.impl.conv.JsonConverterUtils;
 import org.apache.drill.exec.util.record.RecordBatchStats;
 import org.apache.drill.exec.util.record.RecordBatchStats.RecordBatchIOType;
 import org.apache.drill.exec.vector.AllocationHelper;
@@ -54,7 +56,14 @@ public class ProjectRecordBatch extends AbstractSingleRecordBatch<Project> {
   protected List<ValueVector> allocationVectors;
   @Deprecated // use new writer rsLoader
   protected List<ComplexWriter> complexWriters;
-  protected ResultSetLoader rsLoader;
+  // One result set loader per complex-writer (EVF) function in the project list.
+  // rsLoaderRefs holds each loader's output column name, captured at codegen, so
+  // the harvested column lands in the slot reserved for that function.
+  protected List<ResultSetLoader> rsLoaders;
+  private List<String> rsLoaderRefs;
+  // True once the loaders have been harvested and must be re-started before the
+  // next output batch is written.
+  private boolean loadersNeedStart;
   protected List<FieldReference> complexFieldReferencesList;
   protected ProjectMemoryManager memoryManager;
   private Projector projector;
@@ -111,7 +120,7 @@ public class ProjectRecordBatch extends AbstractSingleRecordBatch<Project> {
     memoryManager.update();
 
     if (first && incomingRecordCount == 0) {
-      if (!CollectionUtils.isEmpty(complexWriters) || rsLoader != null ) {
+      if (!CollectionUtils.isEmpty(complexWriters) || !CollectionUtils.isEmpty(rsLoaders)) {
         IterOutcome next = null;
         while (incomingRecordCount == 0) {
           if (getLastKnownOutcome() == EMIT) {
@@ -146,7 +155,7 @@ public class ProjectRecordBatch extends AbstractSingleRecordBatch<Project> {
       }
     }
 
-    if ((!CollectionUtils.isEmpty(complexWriters) || rsLoader != null) && getLastKnownOutcome() == EMIT) {
+    if ((!CollectionUtils.isEmpty(complexWriters) || !CollectionUtils.isEmpty(rsLoaders)) && getLastKnownOutcome() == EMIT) {
       throw UserException.unsupportedError()
           .message("Currently functions producing complex types as output are not " +
             "supported in project list for subquery between LATERAL and UNNEST. Please re-write the query using this " +
@@ -162,6 +171,7 @@ public class ProjectRecordBatch extends AbstractSingleRecordBatch<Project> {
                  memoryManager.getOutputRowCount(), incomingRecordCount, incoming, this);
 
     doAlloc(maxOuputRecordCount);
+    startLoaderBatchIfNeeded();
     long projectStartTime = System.currentTimeMillis();
     int outputRecords = projector.projectRecords(incoming, 0, maxOuputRecordCount, 0);
     long projectEndTime = System.currentTimeMillis();
@@ -178,14 +188,8 @@ public class ProjectRecordBatch extends AbstractSingleRecordBatch<Project> {
     }
     // In case of complex writer expression, vectors would be added to batch run-time.
     // We have to re-build the schema.
-    if (rsLoader != null) {
-      MapVector map = container.addOrGet(container.getLast().getField().getName(), Types.required(TypeProtos.MinorType.MAP), MapVector.class);
-      map.setMapValueCount(recordCount);
-      for (VectorWrapper<?> vectorWrapper : rsLoader.harvest()) {
-        ValueVector valueVector = vectorWrapper.getValueVector();
-        map.putChild(valueVector.getField().getName(), valueVector);
-      }
-      container.buildSchema(SelectionVectorMode.NONE);
+    if (!CollectionUtils.isEmpty(rsLoaders)) {
+      harvestLoaders();
     } else if (!CollectionUtils.isEmpty(complexWriters)) {
       container.buildSchema(SelectionVectorMode.NONE);
     }
@@ -202,6 +206,7 @@ public class ProjectRecordBatch extends AbstractSingleRecordBatch<Project> {
     assert memoryManager.incomingBatch() == incoming;
     int recordsToProcess = Math.min(remainingRecordCount, memoryManager.getOutputRowCount());
     doAlloc(recordsToProcess);
+    startLoaderBatchIfNeeded();
 
     logger.trace("handleRemainder: remaining RC {}, toProcess {}, remainder index {}, incoming {}, Project {}",
                  remainingRecordCount, recordsToProcess, remainderIndex, incoming, this);
@@ -225,7 +230,9 @@ public class ProjectRecordBatch extends AbstractSingleRecordBatch<Project> {
     }
     // In case of complex writer expression, vectors would be added to batch run-time.
     // We have to re-build the schema.
-    if (!CollectionUtils.isEmpty(complexWriters) || rsLoader != null) {
+    if (!CollectionUtils.isEmpty(rsLoaders)) {
+      harvestLoaders();
+    } else if (!CollectionUtils.isEmpty(complexWriters)) {
       container.buildSchema(SelectionVectorMode.NONE);
     }
 
@@ -239,8 +246,65 @@ public class ProjectRecordBatch extends AbstractSingleRecordBatch<Project> {
     complexWriters.add(writer);
   }
 
-  public void addLoader(ResultSetLoader loader) {
-    rsLoader = loader;
+  public void addLoader(ResultSetLoader loader, String refName) {
+    if (rsLoaders == null) {
+      rsLoaders = new ArrayList<>();
+      rsLoaderRefs = new ArrayList<>();
+    }
+    rsLoaders.add(loader);
+    rsLoaderRefs.add(refName);
+  }
+
+  /**
+   * Re-starts each result set loader batch when the previous batch has already
+   * been harvested. The loaders start their first batch from the generated UDF
+   * setup; this drives every subsequent output batch.
+   */
+  private void startLoaderBatchIfNeeded() {
+    if (loadersNeedStart && !CollectionUtils.isEmpty(rsLoaders)) {
+      for (ResultSetLoader loader : rsLoaders) {
+        loader.startBatch();
+      }
+      loadersNeedStart = false;
+    }
+  }
+
+  /**
+   * Harvests each complex-writer function's result set loader and moves its
+   * single (wrapped) output column into the container slot reserved for that
+   * function (see {@link ProjectBatchBuilder#addComplexField}).
+   */
+  private void harvestLoaders() {
+    for (int i = 0; i < rsLoaders.size(); i++) {
+      String refName = rsLoaderRefs.get(i);
+      VectorContainer harvested = rsLoaders.get(i).harvest();
+      List<ValueVector> columns = new ArrayList<>();
+      for (VectorWrapper<?> w : harvested) {
+        columns.add(w.getValueVector());
+      }
+
+      if (columns.size() == 1
+          && JsonConverterUtils.WRAP_FIELD.equals(columns.get(0).getField().getName())) {
+        // convert_fromJSON wraps its value in a single marker column. Unwrap it
+        // so the output preserves the value's own type (scalar, array or map).
+        ValueVector src = columns.get(0);
+        ValueVector dst = container.addOrGet(
+            MaterializedField.create(refName, src.getField().getType()), callBack);
+        src.makeTransferPair(dst).transfer();
+      } else {
+        // The loader produced the JSON object's fields directly (e.g. the HTTP
+        // UDFs, or an empty/all-null document). Wrap them in a map named for the
+        // output column.
+        MapVector map = container.addOrGet(refName,
+            Types.required(TypeProtos.MinorType.MAP), MapVector.class);
+        map.setMapValueCount(recordCount);
+        for (ValueVector src : columns) {
+          map.putChild(src.getField().getName(), src);
+        }
+      }
+    }
+    loadersNeedStart = true;
+    container.buildSchema(SelectionVectorMode.NONE);
   }
 
   private void doAlloc(int recordCount) {
@@ -274,8 +338,10 @@ public class ProjectRecordBatch extends AbstractSingleRecordBatch<Project> {
       for (ComplexWriter writer : complexWriters) {
         writer.setValueCount(count);
       }
-    } else if (rsLoader != null) {
-      rsLoader.setTargetRowCount(count);
+    } else if (!CollectionUtils.isEmpty(rsLoaders)) {
+      for (ResultSetLoader loader : rsLoaders) {
+        loader.setTargetRowCount(count);
+      }
     }
   }
 
@@ -359,7 +425,7 @@ public class ProjectRecordBatch extends AbstractSingleRecordBatch<Project> {
   protected IterOutcome getFinalOutcome(boolean hasMoreRecordInBoundary) {
     // In a case of complex writers vectors are added at runtime, so the schema
     // may change (e.g. when a batch contains new column(s) not present in previous batches)
-    if (!CollectionUtils.isEmpty(complexWriters) || rsLoader != null) {
+    if (!CollectionUtils.isEmpty(complexWriters) || !CollectionUtils.isEmpty(rsLoaders)) {
       return IterOutcome.OK_NEW_SCHEMA;
     }
     return super.getFinalOutcome(hasMoreRecordInBoundary);
@@ -375,9 +441,16 @@ public class ProjectRecordBatch extends AbstractSingleRecordBatch<Project> {
     }
     allocationVectors = new ArrayList<>();
 
-    if (rsLoader != null) {
+    if (!CollectionUtils.isEmpty(rsLoaders)) {
       container.clear();
-      rsLoader.close();
+      for (ResultSetLoader loader : rsLoaders) {
+        loader.close();
+      }
+      // The generated projector setup repopulates these (one loader per
+      // complex-writer function) on the rebuild that follows.
+      rsLoaders = null;
+      rsLoaderRefs = null;
+      loadersNeedStart = false;
     } else if (!CollectionUtils.isEmpty(complexWriters)) {
       container.clear();
     } else {

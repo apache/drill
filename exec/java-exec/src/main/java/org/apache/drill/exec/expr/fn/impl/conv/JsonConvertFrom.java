@@ -18,7 +18,6 @@
 package org.apache.drill.exec.expr.fn.impl.conv;
 
 
-import io.netty.buffer.DrillBuf;
 import org.apache.drill.exec.expr.DrillSimpleFunc;
 import org.apache.drill.exec.expr.annotations.FunctionTemplate;
 import org.apache.drill.exec.expr.annotations.FunctionTemplate.FunctionScope;
@@ -30,11 +29,13 @@ import org.apache.drill.exec.expr.holders.NullableVarBinaryHolder;
 import org.apache.drill.exec.expr.holders.NullableVarCharHolder;
 import org.apache.drill.exec.expr.holders.VarBinaryHolder;
 import org.apache.drill.exec.expr.holders.VarCharHolder;
+import org.apache.drill.exec.physical.resultSet.ResultSetLoader;
 import org.apache.drill.exec.server.options.OptionManager;
 import org.apache.drill.exec.vector.complex.writer.BaseWriter.ComplexWriter;
 
 import javax.inject.Inject;
 
+@SuppressWarnings("unused")
 public class JsonConvertFrom {
 
   private JsonConvertFrom() {
@@ -46,39 +47,31 @@ public class JsonConvertFrom {
     @Param
     VarBinaryHolder in;
 
-    @Inject
-    DrillBuf buffer;
+    @Output
+    ComplexWriter writer;
 
     @Inject
     OptionManager options;
 
-    @Workspace
-    org.apache.drill.exec.vector.complex.fn.JsonReader jsonReader;
+    @Inject
+    ResultSetLoader rsLoader;
 
-    @Output
-    ComplexWriter writer;
+    @Workspace
+    org.apache.drill.exec.store.easy.json.loader.ClosingStreamIterator streamIter;
+
+    @Workspace
+    org.apache.drill.exec.store.easy.json.loader.JsonLoaderImpl jsonLoader;
 
     @Override
     public void setup() {
-      boolean allTextMode = options.getBoolean(org.apache.drill.exec.ExecConstants.JSON_ALL_TEXT_MODE);
-      boolean readNumbersAsDouble = options.getBoolean(org.apache.drill.exec.ExecConstants.JSON_READ_NUMBERS_AS_DOUBLE);
-
-      jsonReader = new org.apache.drill.exec.vector.complex.fn.JsonReader.Builder(buffer)
-          .defaultSchemaPathColumns()
-          .allTextMode(allTextMode)
-          .readNumbersAsDouble(readNumbersAsDouble)
-          .build();
+      streamIter = new org.apache.drill.exec.store.easy.json.loader.ClosingStreamIterator();
+      rsLoader.startBatch();
     }
 
     @Override
     public void eval() {
-      try {
-        jsonReader.setSource(in.start, in.end, in.buffer);
-        jsonReader.write(writer);
-        buffer = jsonReader.getWorkBuf();
-      } catch (Exception e) {
-        throw new org.apache.drill.common.exceptions.DrillRuntimeException("Error while converting from JSON. ", e);
-      }
+      jsonLoader = org.apache.drill.exec.expr.fn.impl.conv.JsonConverterUtils.convertJson(
+        rsLoader, jsonLoader, options, streamIter, 1, in.start, in.end, in.buffer, false, false, false);
     }
   }
 
@@ -94,39 +87,34 @@ public class JsonConvertFrom {
     @Param
     BitHolder readNumbersAsDoubleHolder;
 
-    @Inject
-    DrillBuf buffer;
-
-    @Workspace
-    org.apache.drill.exec.vector.complex.fn.JsonReader jsonReader;
-
     @Output
     ComplexWriter writer;
 
+    @Inject
+    OptionManager options;
+
+    @Inject
+    ResultSetLoader rsLoader;
+
+    @Workspace
+    org.apache.drill.exec.store.easy.json.loader.ClosingStreamIterator streamIter;
+
+    @Workspace
+    org.apache.drill.exec.store.easy.json.loader.JsonLoaderImpl jsonLoader;
+
     @Override
     public void setup() {
-      boolean allTextMode = allTextModeHolder.value == 1;
-      boolean readNumbersAsDouble = readNumbersAsDoubleHolder.value == 1;
-
-      jsonReader = new org.apache.drill.exec.vector.complex.fn.JsonReader.Builder(buffer)
-          .defaultSchemaPathColumns()
-          .allTextMode(allTextMode)
-          .readNumbersAsDouble(readNumbersAsDouble)
-          .build();
+      streamIter = new org.apache.drill.exec.store.easy.json.loader.ClosingStreamIterator();
+      rsLoader.startBatch();
     }
 
     @Override
     public void eval() {
-      try {
-        jsonReader.setSource(in.start, in.end, in.buffer);
-        jsonReader.write(writer);
-        buffer = jsonReader.getWorkBuf();
-      } catch (Exception e) {
-        throw new org.apache.drill.common.exceptions.DrillRuntimeException("Error while converting from JSON. ", e);
-      }
+      jsonLoader = org.apache.drill.exec.expr.fn.impl.conv.JsonConverterUtils.convertJson(
+        rsLoader, jsonLoader, options, streamIter, 1, in.start, in.end, in.buffer, true,
+        allTextModeHolder.value == 1, readNumbersAsDoubleHolder.value == 1);
     }
   }
-
 
   @FunctionTemplate(name = "convert_fromJSON", scope = FunctionScope.SIMPLE, isRandom = true)
   public static class ConvertFromJsonVarchar implements DrillSimpleFunc {
@@ -134,39 +122,31 @@ public class JsonConvertFrom {
     @Param
     VarCharHolder in;
 
-    @Inject
-    DrillBuf buffer;
+    @Output
+    ComplexWriter writer;
 
     @Inject
     OptionManager options;
 
-    @Workspace
-    org.apache.drill.exec.vector.complex.fn.JsonReader jsonReader;
+    @Inject
+    ResultSetLoader rsLoader;
 
-    @Output
-    ComplexWriter writer;
+    @Workspace
+    org.apache.drill.exec.store.easy.json.loader.ClosingStreamIterator streamIter;
+
+    @Workspace
+    org.apache.drill.exec.store.easy.json.loader.JsonLoaderImpl jsonLoader;
 
     @Override
     public void setup() {
-      boolean allTextMode = options.getBoolean(org.apache.drill.exec.ExecConstants.JSON_ALL_TEXT_MODE);
-      boolean readNumbersAsDouble = options.getBoolean(org.apache.drill.exec.ExecConstants.JSON_READ_NUMBERS_AS_DOUBLE);
-
-      jsonReader = new org.apache.drill.exec.vector.complex.fn.JsonReader.Builder(buffer)
-          .defaultSchemaPathColumns()
-          .allTextMode(allTextMode)
-          .readNumbersAsDouble(readNumbersAsDouble)
-          .build();
+      streamIter = new org.apache.drill.exec.store.easy.json.loader.ClosingStreamIterator();
+      rsLoader.startBatch();
     }
 
     @Override
     public void eval() {
-      try {
-        jsonReader.setSource(in.start, in.end, in.buffer);
-        jsonReader.write(writer);
-        buffer = jsonReader.getWorkBuf();
-      } catch (Exception e) {
-        throw new org.apache.drill.common.exceptions.DrillRuntimeException("Error while converting from JSON. ", e);
-      }
+      jsonLoader = org.apache.drill.exec.expr.fn.impl.conv.JsonConverterUtils.convertJson(
+        rsLoader, jsonLoader, options, streamIter, 1, in.start, in.end, in.buffer, false, false, false);
     }
   }
 
@@ -182,36 +162,32 @@ public class JsonConvertFrom {
     @Param
     BitHolder readNumbersAsDoubleHolder;
 
-    @Inject
-    DrillBuf buffer;
-
-    @Workspace
-    org.apache.drill.exec.vector.complex.fn.JsonReader jsonReader;
-
     @Output
     ComplexWriter writer;
 
+    @Inject
+    OptionManager options;
+
+    @Inject
+    ResultSetLoader rsLoader;
+
+    @Workspace
+    org.apache.drill.exec.store.easy.json.loader.ClosingStreamIterator streamIter;
+
+    @Workspace
+    org.apache.drill.exec.store.easy.json.loader.JsonLoaderImpl jsonLoader;
+
     @Override
     public void setup() {
-      boolean allTextMode = allTextModeHolder.value == 1;
-      boolean readNumbersAsDouble = readNumbersAsDoubleHolder.value == 1;
-
-      jsonReader = new org.apache.drill.exec.vector.complex.fn.JsonReader.Builder(buffer)
-          .defaultSchemaPathColumns()
-          .allTextMode(allTextMode)
-          .readNumbersAsDouble(readNumbersAsDouble)
-          .build();
+      streamIter = new org.apache.drill.exec.store.easy.json.loader.ClosingStreamIterator();
+      rsLoader.startBatch();
     }
 
     @Override
     public void eval() {
-      try {
-        jsonReader.setSource(in.start, in.end, in.buffer);
-        jsonReader.write(writer);
-        buffer = jsonReader.getWorkBuf();
-      } catch (Exception e) {
-        throw new org.apache.drill.common.exceptions.DrillRuntimeException("Error while converting from JSON. ", e);
-      }
+      jsonLoader = org.apache.drill.exec.expr.fn.impl.conv.JsonConverterUtils.convertJson(
+        rsLoader, jsonLoader, options, streamIter, 1, in.start, in.end, in.buffer, true,
+        allTextModeHolder.value == 1, readNumbersAsDoubleHolder.value == 1);
     }
   }
 
@@ -221,47 +197,31 @@ public class JsonConvertFrom {
     @Param
     NullableVarBinaryHolder in;
 
-    @Inject
-    DrillBuf buffer;
+    @Output
+    ComplexWriter writer;
 
     @Inject
     OptionManager options;
 
-    @Workspace
-    org.apache.drill.exec.vector.complex.fn.JsonReader jsonReader;
+    @Inject
+    ResultSetLoader rsLoader;
 
-    @Output
-    ComplexWriter writer;
+    @Workspace
+    org.apache.drill.exec.store.easy.json.loader.ClosingStreamIterator streamIter;
+
+    @Workspace
+    org.apache.drill.exec.store.easy.json.loader.JsonLoaderImpl jsonLoader;
 
     @Override
     public void setup() {
-      boolean allTextMode = options.getBoolean(org.apache.drill.exec.ExecConstants.JSON_ALL_TEXT_MODE);
-      boolean readNumbersAsDouble = options.getBoolean(org.apache.drill.exec.ExecConstants.JSON_READ_NUMBERS_AS_DOUBLE);
-
-      jsonReader = new org.apache.drill.exec.vector.complex.fn.JsonReader.Builder(buffer)
-          .defaultSchemaPathColumns()
-          .allTextMode(allTextMode)
-          .readNumbersAsDouble(readNumbersAsDouble)
-          .build();
+      streamIter = new org.apache.drill.exec.store.easy.json.loader.ClosingStreamIterator();
+      rsLoader.startBatch();
     }
 
     @Override
     public void eval() {
-      if (in.isSet == 0) {
-        // Return empty map
-        org.apache.drill.exec.vector.complex.writer.BaseWriter.MapWriter mapWriter = writer.rootAsMap();
-        mapWriter.start();
-        mapWriter.end();
-        return;
-      }
-
-      try {
-        jsonReader.setSource(in.start, in.end, in.buffer);
-        jsonReader.write(writer);
-        buffer = jsonReader.getWorkBuf();
-      } catch (Exception e) {
-        throw new org.apache.drill.common.exceptions.DrillRuntimeException("Error while converting from JSON. ", e);
-      }
+      jsonLoader = org.apache.drill.exec.expr.fn.impl.conv.JsonConverterUtils.convertJson(
+        rsLoader, jsonLoader, options, streamIter, in.isSet, in.start, in.end, in.buffer, false, false, false);
     }
   }
 
@@ -277,44 +237,32 @@ public class JsonConvertFrom {
     @Param
     BitHolder readNumbersAsDoubleHolder;
 
-    @Inject
-    DrillBuf buffer;
-
-    @Workspace
-    org.apache.drill.exec.vector.complex.fn.JsonReader jsonReader;
-
     @Output
     ComplexWriter writer;
 
+    @Inject
+    OptionManager options;
+
+    @Inject
+    ResultSetLoader rsLoader;
+
+    @Workspace
+    org.apache.drill.exec.store.easy.json.loader.ClosingStreamIterator streamIter;
+
+    @Workspace
+    org.apache.drill.exec.store.easy.json.loader.JsonLoaderImpl jsonLoader;
+
     @Override
     public void setup() {
-      boolean allTextMode = allTextModeHolder.value == 1;
-      boolean readNumbersAsDouble = readNumbersAsDoubleHolder.value == 1;
-
-      jsonReader = new org.apache.drill.exec.vector.complex.fn.JsonReader.Builder(buffer)
-          .defaultSchemaPathColumns()
-          .allTextMode(allTextMode)
-          .readNumbersAsDouble(readNumbersAsDouble)
-          .build();
+      streamIter = new org.apache.drill.exec.store.easy.json.loader.ClosingStreamIterator();
+      rsLoader.startBatch();
     }
 
     @Override
     public void eval() {
-      if (in.isSet == 0) {
-        // Return empty map
-        org.apache.drill.exec.vector.complex.writer.BaseWriter.MapWriter mapWriter = writer.rootAsMap();
-        mapWriter.start();
-        mapWriter.end();
-        return;
-      }
-
-      try {
-        jsonReader.setSource(in.start, in.end, in.buffer);
-        jsonReader.write(writer);
-        buffer = jsonReader.getWorkBuf();
-      } catch (Exception e) {
-        throw new org.apache.drill.common.exceptions.DrillRuntimeException("Error while converting from JSON. ", e);
-      }
+      jsonLoader = org.apache.drill.exec.expr.fn.impl.conv.JsonConverterUtils.convertJson(
+        rsLoader, jsonLoader, options, streamIter, in.isSet, in.start, in.end, in.buffer, true,
+        allTextModeHolder.value == 1, readNumbersAsDoubleHolder.value == 1);
     }
   }
 
@@ -324,46 +272,31 @@ public class JsonConvertFrom {
     @Param
     NullableVarCharHolder in;
 
-    @Inject
-    DrillBuf buffer;
+    @Output
+    ComplexWriter writer;
 
     @Inject
     OptionManager options;
 
-    @Workspace
-    org.apache.drill.exec.vector.complex.fn.JsonReader jsonReader;
+    @Inject
+    ResultSetLoader rsLoader;
 
-    @Output ComplexWriter writer;
+    @Workspace
+    org.apache.drill.exec.store.easy.json.loader.ClosingStreamIterator streamIter;
+
+    @Workspace
+    org.apache.drill.exec.store.easy.json.loader.JsonLoaderImpl jsonLoader;
 
     @Override
     public void setup() {
-      boolean allTextMode = options.getBoolean(org.apache.drill.exec.ExecConstants.JSON_ALL_TEXT_MODE);
-      boolean readNumbersAsDouble = options.getBoolean(org.apache.drill.exec.ExecConstants.JSON_READ_NUMBERS_AS_DOUBLE);
-
-      jsonReader = new org.apache.drill.exec.vector.complex.fn.JsonReader.Builder(buffer)
-          .defaultSchemaPathColumns()
-          .allTextMode(allTextMode)
-          .readNumbersAsDouble(readNumbersAsDouble)
-          .build();
+      streamIter = new org.apache.drill.exec.store.easy.json.loader.ClosingStreamIterator();
+      rsLoader.startBatch();
     }
 
     @Override
     public void eval() {
-      if (in.isSet == 0) {
-        // Return empty map
-        org.apache.drill.exec.vector.complex.writer.BaseWriter.MapWriter mapWriter = writer.rootAsMap();
-        mapWriter.start();
-        mapWriter.end();
-        return;
-      }
-
-      try {
-        jsonReader.setSource(in.start, in.end, in.buffer);
-        jsonReader.write(writer);
-        buffer = jsonReader.getWorkBuf();
-      } catch (Exception e) {
-        throw new org.apache.drill.common.exceptions.DrillRuntimeException("Error while converting from JSON. ", e);
-      }
+      jsonLoader = org.apache.drill.exec.expr.fn.impl.conv.JsonConverterUtils.convertJson(
+        rsLoader, jsonLoader, options, streamIter, in.isSet, in.start, in.end, in.buffer, false, false, false);
     }
   }
 
@@ -379,43 +312,32 @@ public class JsonConvertFrom {
     @Param
     BitHolder readNumbersAsDoubleHolder;
 
+    @Output
+    ComplexWriter writer;
+
     @Inject
-    DrillBuf buffer;
+    OptionManager options;
+
+    @Inject
+    ResultSetLoader rsLoader;
 
     @Workspace
-    org.apache.drill.exec.vector.complex.fn.JsonReader jsonReader;
+    org.apache.drill.exec.store.easy.json.loader.ClosingStreamIterator streamIter;
 
-    @Output ComplexWriter writer;
+    @Workspace
+    org.apache.drill.exec.store.easy.json.loader.JsonLoaderImpl jsonLoader;
 
     @Override
     public void setup() {
-      boolean allTextMode = allTextModeHolder.value == 1;
-      boolean readNumbersAsDouble = readNumbersAsDoubleHolder.value == 1;
-
-      jsonReader = new org.apache.drill.exec.vector.complex.fn.JsonReader.Builder(buffer)
-          .defaultSchemaPathColumns()
-          .allTextMode(allTextMode)
-          .readNumbersAsDouble(readNumbersAsDouble)
-          .build();
+      streamIter = new org.apache.drill.exec.store.easy.json.loader.ClosingStreamIterator();
+      rsLoader.startBatch();
     }
 
     @Override
     public void eval() {
-      if (in.isSet == 0) {
-        // Return empty map
-        org.apache.drill.exec.vector.complex.writer.BaseWriter.MapWriter mapWriter = writer.rootAsMap();
-        mapWriter.start();
-        mapWriter.end();
-        return;
-      }
-
-      try {
-        jsonReader.setSource(in.start, in.end, in.buffer);
-        jsonReader.write(writer);
-        buffer = jsonReader.getWorkBuf();
-      } catch (Exception e) {
-        throw new org.apache.drill.common.exceptions.DrillRuntimeException("Error while converting from JSON. ", e);
-      }
+      jsonLoader = org.apache.drill.exec.expr.fn.impl.conv.JsonConverterUtils.convertJson(
+        rsLoader, jsonLoader, options, streamIter, in.isSet, in.start, in.end, in.buffer, true,
+        allTextModeHolder.value == 1, readNumbersAsDoubleHolder.value == 1);
     }
   }
 
