@@ -18,15 +18,11 @@
 package org.apache.drill.exec.hive;
 
 import org.apache.drill.test.ClusterTest;
-import org.junit.BeforeClass;
 
 /**
  * Base class for Hive cluster tests.
+ * Now uses Docker-based Hive for compatibility with Java 11+.
  */
 public class HiveClusterTest extends ClusterTest {
-
-  @BeforeClass
-  public static void checkJavaVersion() {
-    HiveTestUtilities.assumeJavaVersion();
-  }
+  // Java version check removed - Docker-based Hive supports Java 11+
 }
