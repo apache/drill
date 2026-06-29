@@ -87,7 +87,7 @@ public class DrillComplexWriterFuncHolder extends DrillSimpleFuncHolder {
       classGenerator.getEvalBlock().add(complexWriter.invoke("setPosition").arg(classGenerator.getMappingSet().getValueWriteIndex()));
       sub.decl(classGenerator.getModel()._ref(ComplexWriter.class), getReturnValue().getName(), complexWriter);
     } else {
-      classGenerator.getSetupBlock().add(projBatch.invoke("addLoader").arg(rsLoader));
+      classGenerator.getSetupBlock().add(projBatch.invoke("addLoader").arg(rsLoader).arg(JExpr.lit(refName)));
       sub.decl(classGenerator.getModel()._ref(ResultSetLoader.class), getReturnValue().getName(), rsLoader);
     }
 
