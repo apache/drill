@@ -33,7 +33,7 @@
        "package.namespace.prefix" equals to "oadd.". It can be overridden if necessary within any profile -->
   <properties>
     <package.namespace.prefix>oadd.</package.namespace.prefix>
-    <jdbc-all-jar.maxsize>62000000</jdbc-all-jar.maxsize>
+    <jdbc-all-jar.maxsize>64000000</jdbc-all-jar.maxsize>
   </properties>
 
   <dependencies>
@@ -465,6 +465,11 @@
               <exclude>org.apache.yetus:*</exclude>
               <exclude>org.eclipse.jetty:*</exclude>
               <exclude>org.eclipse.jetty.websocket:*</exclude>
+              <exclude>com.gtkcyber.sqlglot:*</exclude>
+              <exclude>org.graalvm.polyglot:*</exclude>
+              <exclude>org.graalvm.python:*</exclude>
+              <exclude>org.graalvm.sdk:*</exclude>
+              <exclude>org.graalvm.truffle:*</exclude>
               <exclude>org.hamcrest:hamcrest-core</exclude>
               <exclude>org.hibernate:*</exclude>
               <exclude>org.mockito:mockito-core</exclude>
@@ -795,7 +800,16 @@
                 <exclude>**/*.RSA</exclude>
                 <exclude>**/*.SF</exclude>
                 <exclude>*.tokens</exclude>
+                <exclude>python/**</exclude>
+                <exclude>webapp/**</exclude>
                 <exclude>webapps/**</exclude>
+                <exclude>com/gtkcyber/sqlglot/**</exclude>
+                <exclude>org/graalvm/**</exclude>
+                <exclude>com/oracle/graal/**</exclude>
+                <exclude>com/oracle/truffle/**</exclude>
+                <exclude>GRAALPY-VFS/**</exclude>
+                <exclude>org.graalvm.python.vfs/**</exclude>
+                <exclude>META-INF/native-image/org.graalvm.python/**</exclude>
               </excludes>
             </filter>
             <!-- This file is used to automatically load given jdbc driver without calling Class.forName().

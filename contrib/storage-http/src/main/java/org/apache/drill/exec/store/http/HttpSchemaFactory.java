@@ -20,6 +20,7 @@ package org.apache.drill.exec.store.http;
 import java.util.Collections;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Set;
 
 import org.apache.calcite.schema.SchemaPlus;
 import org.apache.calcite.schema.Table;
@@ -110,6 +111,16 @@ public class HttpSchemaFactory extends AbstractSchemaFactory {
       } else {
         return null; // Unknown table
       }
+    }
+
+    @Override
+    public Set<String> getTableNames() {
+      return tables.keySet();
+    }
+
+    @Override
+    public Set<String> getSubSchemaNames() {
+      return subSchemas.keySet();
     }
 
     @Override

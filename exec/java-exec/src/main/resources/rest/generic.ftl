@@ -65,7 +65,7 @@
           <div class="navbar-collapse collapse">
             <#if showControls == true>
             <ul class="nav navbar-nav mr-auto">
-              <li class="nav-item"><a class="nav-link" href="/query">Query</a></li>
+              <li class="nav-item"><a class="nav-link" href="/sqllab" style="color: #17a2b8; font-weight: 500;">SQL Lab</a></li>
               <li class="nav-item"><a class="nav-link" href="/profiles">Profiles</a></li>
               <#if showCredentials == true>
               <li class="nav-item"><a class="nav-link" href="/credentials">Credentials</a></li>
@@ -73,18 +73,18 @@
               <#if showStorage == true>
               <li class="nav-item"><a class="nav-link" href="/storage">Storage</a></li>
               </#if>
-              <li class="nav-item"><a class="nav-link" href="/metrics">Metrics</a></li>
+              <li class="nav-item"><a class="nav-link" href="/sqllab#/metrics">Metrics</a></li>
               <#if showThreads == true>
               <li class="nav-item"><a class="nav-link" href="/threads">Threads</a></li>
               </#if>
               <#if showLogs == true>
-                  <li class="nav-item"><a class="nav-link" href="/logs">Logs</a></li>
+                  <li class="nav-item"><a class="nav-link" href="/sqllab#/logs">Logs</a></li>
               </#if>
             </ul>
             </#if>
             <ul class="nav navbar-nav navbar-right">
               <#if showOptions == true>
-              <li class="nav-item"><a class="nav-link" href="/options">Options</a></li>
+              <li class="nav-item"><a class="nav-link" href="/sqllab#/options">Options</a></li>
               </#if>
               <li class="nav-item"><a class="nav-link" href="http://drill.apache.org/docs/">Documentation</a>
               <#if showLogin == true >
