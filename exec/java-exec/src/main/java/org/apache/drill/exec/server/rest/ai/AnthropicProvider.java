@@ -37,7 +37,6 @@ import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.TimeUnit;
 
 /**
  * LLM provider for the Anthropic Claude API.
@@ -51,16 +50,6 @@ public class AnthropicProvider implements LlmProvider {
   private static final MediaType JSON_TYPE = MediaType.parse("application/json");
   private static final String DEFAULT_ENDPOINT = "https://api.anthropic.com";
   private static final String ANTHROPIC_VERSION = "2023-06-01";
-
-  private final OkHttpClient httpClient;
-
-  public AnthropicProvider() {
-    this.httpClient = new OkHttpClient.Builder()
-        .connectTimeout(30, TimeUnit.SECONDS)
-        .readTimeout(120, TimeUnit.SECONDS)
-        .writeTimeout(30, TimeUnit.SECONDS)
-        .build();
-  }
 
   @Override
   public String getId() {
@@ -77,6 +66,9 @@ public class AnthropicProvider implements LlmProvider {
       List<ToolDefinition> tools, OutputStream out, UsageObserver usageObserver)
       throws Exception {
     UsageObserver observer = usageObserver != null ? usageObserver : UsageObserver.NOOP;
+
+    // Create HTTP client with enterprise configuration
+    OkHttpClient httpClient = HttpClientFactory.createClient(config);
 
     String endpoint = config.getApiEndpoint();
     if (endpoint == null || endpoint.isEmpty()) {
@@ -203,6 +195,13 @@ public class AnthropicProvider implements LlmProvider {
         toolNode.put("name", tool.getName());
         toolNode.put("description", tool.getDescription());
         toolNode.set("input_schema", MAPPER.valueToTree(tool.getParameters()));
+      }
+    }
+
+    // Additional request parameters (for enterprise APIs)
+    if (config.getAdditionalParameters() != null) {
+      for (Map.Entry<String, Object> entry : config.getAdditionalParameters().entrySet()) {
+        body.set(entry.getKey(), MAPPER.valueToTree(entry.getValue()));
       }
     }
 

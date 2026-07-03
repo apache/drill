@@ -19,6 +19,7 @@ package org.apache.drill.exec.server.rest.ai;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import java.util.Map;
 
 /**
  * Configuration POJO for the AI copilot LLM connection.
@@ -56,6 +57,61 @@ public class LlmConfig {
   @JsonProperty
   private int maxToolRounds;
 
+  // Network Configuration
+  @JsonProperty
+  private Map<String, String> customHeaders;
+
+  @JsonProperty
+  private String proxyUrl;
+
+  @JsonProperty
+  private String proxyUsername;
+
+  @JsonProperty
+  private String proxyPassword;
+
+  @JsonProperty
+  private Integer connectTimeoutSeconds;
+
+  @JsonProperty
+  private Integer readTimeoutSeconds;
+
+  @JsonProperty
+  private Integer writeTimeoutSeconds;
+
+  // SSL/TLS Configuration
+  @JsonProperty
+  private String keystorePath;
+
+  @JsonProperty
+  private String keystorePassword;
+
+  @JsonProperty
+  private String keystoreType;
+
+  @JsonProperty
+  private String truststorePath;
+
+  @JsonProperty
+  private String truststorePassword;
+
+  @JsonProperty
+  private String truststoreType;
+
+  @JsonProperty
+  private Boolean verifySSL;
+
+  // Additional Request Parameters
+  @JsonProperty
+  private Map<String, Object> additionalParameters;
+
+  // Custom API Format
+  @JsonProperty
+  private String requestTemplate;
+
+  @JsonProperty
+  private String responseMapping;
+
   public LlmConfig() {
     this.provider = "openai";
     this.maxTokens = 4096;
@@ -63,6 +119,9 @@ public class LlmConfig {
     this.enabled = false;
     this.sendDataToAi = true;
     this.maxToolRounds = 15;
+    // Network configuration defaults to null (will use system defaults)
+    this.verifySSL = true;
+    // Custom headers and additional parameters default to null
   }
 
   @JsonCreator
@@ -76,7 +135,24 @@ public class LlmConfig {
       @JsonProperty("enabled") boolean enabled,
       @JsonProperty("systemPrompt") String systemPrompt,
       @JsonProperty("sendDataToAi") Boolean sendDataToAi,
-      @JsonProperty("maxToolRounds") Integer maxToolRounds) {
+      @JsonProperty("maxToolRounds") Integer maxToolRounds,
+      @JsonProperty("customHeaders") Map<String, String> customHeaders,
+      @JsonProperty("proxyUrl") String proxyUrl,
+      @JsonProperty("proxyUsername") String proxyUsername,
+      @JsonProperty("proxyPassword") String proxyPassword,
+      @JsonProperty("connectTimeoutSeconds") Integer connectTimeoutSeconds,
+      @JsonProperty("readTimeoutSeconds") Integer readTimeoutSeconds,
+      @JsonProperty("writeTimeoutSeconds") Integer writeTimeoutSeconds,
+      @JsonProperty("keystorePath") String keystorePath,
+      @JsonProperty("keystorePassword") String keystorePassword,
+      @JsonProperty("keystoreType") String keystoreType,
+      @JsonProperty("truststorePath") String truststorePath,
+      @JsonProperty("truststorePassword") String truststorePassword,
+      @JsonProperty("truststoreType") String truststoreType,
+      @JsonProperty("verifySSL") Boolean verifySSL,
+      @JsonProperty("additionalParameters") Map<String, Object> additionalParameters,
+      @JsonProperty("requestTemplate") String requestTemplate,
+      @JsonProperty("responseMapping") String responseMapping) {
     this.provider = provider;
     this.apiEndpoint = apiEndpoint;
     this.apiKey = apiKey;
@@ -87,6 +163,23 @@ public class LlmConfig {
     this.systemPrompt = systemPrompt;
     this.sendDataToAi = sendDataToAi != null ? sendDataToAi : true;
     this.maxToolRounds = maxToolRounds != null ? maxToolRounds : 15;
+    this.customHeaders = customHeaders;
+    this.proxyUrl = proxyUrl;
+    this.proxyUsername = proxyUsername;
+    this.proxyPassword = proxyPassword;
+    this.connectTimeoutSeconds = connectTimeoutSeconds;
+    this.readTimeoutSeconds = readTimeoutSeconds;
+    this.writeTimeoutSeconds = writeTimeoutSeconds;
+    this.keystorePath = keystorePath;
+    this.keystorePassword = keystorePassword;
+    this.keystoreType = keystoreType;
+    this.truststorePath = truststorePath;
+    this.truststorePassword = truststorePassword;
+    this.truststoreType = truststoreType;
+    this.verifySSL = verifySSL != null ? verifySSL : true;
+    this.additionalParameters = additionalParameters;
+    this.requestTemplate = requestTemplate;
+    this.responseMapping = responseMapping;
   }
 
   public String getProvider() {
@@ -167,5 +260,145 @@ public class LlmConfig {
 
   public void setMaxToolRounds(int maxToolRounds) {
     this.maxToolRounds = maxToolRounds;
+  }
+
+  // Network Configuration Getters/Setters
+  public Map<String, String> getCustomHeaders() {
+    return customHeaders;
+  }
+
+  public void setCustomHeaders(Map<String, String> customHeaders) {
+    this.customHeaders = customHeaders;
+  }
+
+  public String getProxyUrl() {
+    return proxyUrl;
+  }
+
+  public void setProxyUrl(String proxyUrl) {
+    this.proxyUrl = proxyUrl;
+  }
+
+  public String getProxyUsername() {
+    return proxyUsername;
+  }
+
+  public void setProxyUsername(String proxyUsername) {
+    this.proxyUsername = proxyUsername;
+  }
+
+  public String getProxyPassword() {
+    return proxyPassword;
+  }
+
+  public void setProxyPassword(String proxyPassword) {
+    this.proxyPassword = proxyPassword;
+  }
+
+  public Integer getConnectTimeoutSeconds() {
+    return connectTimeoutSeconds;
+  }
+
+  public void setConnectTimeoutSeconds(Integer connectTimeoutSeconds) {
+    this.connectTimeoutSeconds = connectTimeoutSeconds;
+  }
+
+  public Integer getReadTimeoutSeconds() {
+    return readTimeoutSeconds;
+  }
+
+  public void setReadTimeoutSeconds(Integer readTimeoutSeconds) {
+    this.readTimeoutSeconds = readTimeoutSeconds;
+  }
+
+  public Integer getWriteTimeoutSeconds() {
+    return writeTimeoutSeconds;
+  }
+
+  public void setWriteTimeoutSeconds(Integer writeTimeoutSeconds) {
+    this.writeTimeoutSeconds = writeTimeoutSeconds;
+  }
+
+  // SSL/TLS Configuration Getters/Setters
+  public String getKeystorePath() {
+    return keystorePath;
+  }
+
+  public void setKeystorePath(String keystorePath) {
+    this.keystorePath = keystorePath;
+  }
+
+  public String getKeystorePassword() {
+    return keystorePassword;
+  }
+
+  public void setKeystorePassword(String keystorePassword) {
+    this.keystorePassword = keystorePassword;
+  }
+
+  public String getKeystoreType() {
+    return keystoreType;
+  }
+
+  public void setKeystoreType(String keystoreType) {
+    this.keystoreType = keystoreType;
+  }
+
+  public String getTruststorePath() {
+    return truststorePath;
+  }
+
+  public void setTruststorePath(String truststorePath) {
+    this.truststorePath = truststorePath;
+  }
+
+  public String getTruststorePassword() {
+    return truststorePassword;
+  }
+
+  public void setTruststorePassword(String truststorePassword) {
+    this.truststorePassword = truststorePassword;
+  }
+
+  public String getTruststoreType() {
+    return truststoreType;
+  }
+
+  public void setTruststoreType(String truststoreType) {
+    this.truststoreType = truststoreType;
+  }
+
+  public Boolean getVerifySSL() {
+    return verifySSL;
+  }
+
+  public void setVerifySSL(Boolean verifySSL) {
+    this.verifySSL = verifySSL;
+  }
+
+  // Additional Request Parameters Getters/Setters
+  public Map<String, Object> getAdditionalParameters() {
+    return additionalParameters;
+  }
+
+  public void setAdditionalParameters(Map<String, Object> additionalParameters) {
+    this.additionalParameters = additionalParameters;
+  }
+
+  // Custom API Format Getters/Setters
+  public String getRequestTemplate() {
+    return requestTemplate;
+  }
+
+  public void setRequestTemplate(String requestTemplate) {
+    this.requestTemplate = requestTemplate;
+  }
+
+  public String getResponseMapping() {
+    return responseMapping;
+  }
+
+  public void setResponseMapping(String responseMapping) {
+    this.responseMapping = responseMapping;
   }
 }

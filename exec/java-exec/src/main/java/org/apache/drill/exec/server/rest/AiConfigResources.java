@@ -47,6 +47,7 @@ import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 /**
  * REST resource for managing Prospector AI configuration.
@@ -102,6 +103,61 @@ public class AiConfigResources {
     @JsonProperty
     public int maxToolRounds;
 
+    // Network Configuration
+    @JsonProperty
+    public Map<String, String> customHeaders;
+
+    @JsonProperty
+    public String proxyUrl;
+
+    @JsonProperty
+    public String proxyUsername;
+
+    @JsonProperty
+    public boolean proxyPasswordSet;
+
+    @JsonProperty
+    public Integer connectTimeoutSeconds;
+
+    @JsonProperty
+    public Integer readTimeoutSeconds;
+
+    @JsonProperty
+    public Integer writeTimeoutSeconds;
+
+    // SSL/TLS Configuration
+    @JsonProperty
+    public String keystorePath;
+
+    @JsonProperty
+    public boolean keystorePasswordSet;
+
+    @JsonProperty
+    public String keystoreType;
+
+    @JsonProperty
+    public String truststorePath;
+
+    @JsonProperty
+    public boolean truststorePasswordSet;
+
+    @JsonProperty
+    public String truststoreType;
+
+    @JsonProperty
+    public Boolean verifySSL;
+
+    // Additional Request Parameters
+    @JsonProperty
+    public Map<String, Object> additionalParameters;
+
+    // Custom API Format
+    @JsonProperty
+    public String requestTemplate;
+
+    @JsonProperty
+    public String responseMapping;
+
     public ConfigResponse() {
     }
 
@@ -116,6 +172,31 @@ public class AiConfigResources {
       this.systemPrompt = config.getSystemPrompt();
       this.sendDataToAi = config.isSendDataToAi();
       this.maxToolRounds = config.getMaxToolRounds();
+
+      // Network Configuration
+      this.customHeaders = config.getCustomHeaders();
+      this.proxyUrl = config.getProxyUrl();
+      this.proxyUsername = config.getProxyUsername();
+      this.proxyPasswordSet = config.getProxyPassword() != null && !config.getProxyPassword().isEmpty();
+      this.connectTimeoutSeconds = config.getConnectTimeoutSeconds();
+      this.readTimeoutSeconds = config.getReadTimeoutSeconds();
+      this.writeTimeoutSeconds = config.getWriteTimeoutSeconds();
+
+      // SSL/TLS Configuration
+      this.keystorePath = config.getKeystorePath();
+      this.keystorePasswordSet = config.getKeystorePassword() != null && !config.getKeystorePassword().isEmpty();
+      this.keystoreType = config.getKeystoreType();
+      this.truststorePath = config.getTruststorePath();
+      this.truststorePasswordSet = config.getTruststorePassword() != null && !config.getTruststorePassword().isEmpty();
+      this.truststoreType = config.getTruststoreType();
+      this.verifySSL = config.getVerifySSL();
+
+      // Additional Request Parameters
+      this.additionalParameters = config.getAdditionalParameters();
+
+      // Custom API Format
+      this.requestTemplate = config.getRequestTemplate();
+      this.responseMapping = config.getResponseMapping();
     }
   }
 
@@ -150,6 +231,61 @@ public class AiConfigResources {
     @JsonProperty
     public Integer maxToolRounds;
 
+    // Network Configuration
+    @JsonProperty
+    public Map<String, String> customHeaders;
+
+    @JsonProperty
+    public String proxyUrl;
+
+    @JsonProperty
+    public String proxyUsername;
+
+    @JsonProperty
+    public String proxyPassword;
+
+    @JsonProperty
+    public Integer connectTimeoutSeconds;
+
+    @JsonProperty
+    public Integer readTimeoutSeconds;
+
+    @JsonProperty
+    public Integer writeTimeoutSeconds;
+
+    // SSL/TLS Configuration
+    @JsonProperty
+    public String keystorePath;
+
+    @JsonProperty
+    public String keystorePassword;
+
+    @JsonProperty
+    public String keystoreType;
+
+    @JsonProperty
+    public String truststorePath;
+
+    @JsonProperty
+    public String truststorePassword;
+
+    @JsonProperty
+    public String truststoreType;
+
+    @JsonProperty
+    public Boolean verifySSL;
+
+    // Additional Request Parameters
+    @JsonProperty
+    public Map<String, Object> additionalParameters;
+
+    // Custom API Format
+    @JsonProperty
+    public String requestTemplate;
+
+    @JsonProperty
+    public String responseMapping;
+
     public UpdateConfigRequest() {
     }
 
@@ -164,7 +300,24 @@ public class AiConfigResources {
         @JsonProperty("enabled") Boolean enabled,
         @JsonProperty("systemPrompt") String systemPrompt,
         @JsonProperty("sendDataToAi") Boolean sendDataToAi,
-        @JsonProperty("maxToolRounds") Integer maxToolRounds) {
+        @JsonProperty("maxToolRounds") Integer maxToolRounds,
+        @JsonProperty("customHeaders") Map<String, String> customHeaders,
+        @JsonProperty("proxyUrl") String proxyUrl,
+        @JsonProperty("proxyUsername") String proxyUsername,
+        @JsonProperty("proxyPassword") String proxyPassword,
+        @JsonProperty("connectTimeoutSeconds") Integer connectTimeoutSeconds,
+        @JsonProperty("readTimeoutSeconds") Integer readTimeoutSeconds,
+        @JsonProperty("writeTimeoutSeconds") Integer writeTimeoutSeconds,
+        @JsonProperty("keystorePath") String keystorePath,
+        @JsonProperty("keystorePassword") String keystorePassword,
+        @JsonProperty("keystoreType") String keystoreType,
+        @JsonProperty("truststorePath") String truststorePath,
+        @JsonProperty("truststorePassword") String truststorePassword,
+        @JsonProperty("truststoreType") String truststoreType,
+        @JsonProperty("verifySSL") Boolean verifySSL,
+        @JsonProperty("additionalParameters") Map<String, Object> additionalParameters,
+        @JsonProperty("requestTemplate") String requestTemplate,
+        @JsonProperty("responseMapping") String responseMapping) {
       this.provider = provider;
       this.apiEndpoint = apiEndpoint;
       this.apiKey = apiKey;
@@ -175,6 +328,23 @@ public class AiConfigResources {
       this.systemPrompt = systemPrompt;
       this.sendDataToAi = sendDataToAi;
       this.maxToolRounds = maxToolRounds;
+      this.customHeaders = customHeaders;
+      this.proxyUrl = proxyUrl;
+      this.proxyUsername = proxyUsername;
+      this.proxyPassword = proxyPassword;
+      this.connectTimeoutSeconds = connectTimeoutSeconds;
+      this.readTimeoutSeconds = readTimeoutSeconds;
+      this.writeTimeoutSeconds = writeTimeoutSeconds;
+      this.keystorePath = keystorePath;
+      this.keystorePassword = keystorePassword;
+      this.keystoreType = keystoreType;
+      this.truststorePath = truststorePath;
+      this.truststorePassword = truststorePassword;
+      this.truststoreType = truststoreType;
+      this.verifySSL = verifySSL;
+      this.additionalParameters = additionalParameters;
+      this.requestTemplate = requestTemplate;
+      this.responseMapping = responseMapping;
     }
   }
 
@@ -280,6 +450,65 @@ public class AiConfigResources {
         existing.setMaxToolRounds(request.maxToolRounds);
       }
 
+      // Network Configuration
+      if (request.customHeaders != null) {
+        existing.setCustomHeaders(request.customHeaders);
+      }
+      if (request.proxyUrl != null) {
+        existing.setProxyUrl(request.proxyUrl);
+      }
+      if (request.proxyUsername != null) {
+        existing.setProxyUsername(request.proxyUsername);
+      }
+      if (request.proxyPassword != null && !request.proxyPassword.isEmpty()) {
+        existing.setProxyPassword(request.proxyPassword);
+      }
+      if (request.connectTimeoutSeconds != null) {
+        existing.setConnectTimeoutSeconds(request.connectTimeoutSeconds);
+      }
+      if (request.readTimeoutSeconds != null) {
+        existing.setReadTimeoutSeconds(request.readTimeoutSeconds);
+      }
+      if (request.writeTimeoutSeconds != null) {
+        existing.setWriteTimeoutSeconds(request.writeTimeoutSeconds);
+      }
+
+      // SSL/TLS Configuration
+      if (request.keystorePath != null) {
+        existing.setKeystorePath(request.keystorePath);
+      }
+      if (request.keystorePassword != null && !request.keystorePassword.isEmpty()) {
+        existing.setKeystorePassword(request.keystorePassword);
+      }
+      if (request.keystoreType != null) {
+        existing.setKeystoreType(request.keystoreType);
+      }
+      if (request.truststorePath != null) {
+        existing.setTruststorePath(request.truststorePath);
+      }
+      if (request.truststorePassword != null && !request.truststorePassword.isEmpty()) {
+        existing.setTruststorePassword(request.truststorePassword);
+      }
+      if (request.truststoreType != null) {
+        existing.setTruststoreType(request.truststoreType);
+      }
+      if (request.verifySSL != null) {
+        existing.setVerifySSL(request.verifySSL);
+      }
+
+      // Additional Request Parameters
+      if (request.additionalParameters != null) {
+        existing.setAdditionalParameters(request.additionalParameters);
+      }
+
+      // Custom API Format
+      if (request.requestTemplate != null) {
+        existing.setRequestTemplate(request.requestTemplate);
+      }
+      if (request.responseMapping != null) {
+        existing.setResponseMapping(request.responseMapping);
+      }
+
       store.put(CONFIG_KEY, existing);
 
       return Response.ok(new ConfigResponse(existing)).build();
@@ -318,6 +547,99 @@ public class AiConfigResources {
         testConfig.setApiKey(request.apiKey);
       } else if (existing != null) {
         testConfig.setApiKey(existing.getApiKey());
+      }
+
+      // Network Configuration
+      if (request.customHeaders != null) {
+        testConfig.setCustomHeaders(request.customHeaders);
+      } else if (existing != null) {
+        testConfig.setCustomHeaders(existing.getCustomHeaders());
+      }
+      if (request.proxyUrl != null) {
+        testConfig.setProxyUrl(request.proxyUrl);
+      } else if (existing != null) {
+        testConfig.setProxyUrl(existing.getProxyUrl());
+      }
+      if (request.proxyUsername != null) {
+        testConfig.setProxyUsername(request.proxyUsername);
+      } else if (existing != null) {
+        testConfig.setProxyUsername(existing.getProxyUsername());
+      }
+      if (request.proxyPassword != null && !request.proxyPassword.isEmpty()) {
+        testConfig.setProxyPassword(request.proxyPassword);
+      } else if (existing != null) {
+        testConfig.setProxyPassword(existing.getProxyPassword());
+      }
+      if (request.connectTimeoutSeconds != null) {
+        testConfig.setConnectTimeoutSeconds(request.connectTimeoutSeconds);
+      } else if (existing != null) {
+        testConfig.setConnectTimeoutSeconds(existing.getConnectTimeoutSeconds());
+      }
+      if (request.readTimeoutSeconds != null) {
+        testConfig.setReadTimeoutSeconds(request.readTimeoutSeconds);
+      } else if (existing != null) {
+        testConfig.setReadTimeoutSeconds(existing.getReadTimeoutSeconds());
+      }
+      if (request.writeTimeoutSeconds != null) {
+        testConfig.setWriteTimeoutSeconds(request.writeTimeoutSeconds);
+      } else if (existing != null) {
+        testConfig.setWriteTimeoutSeconds(existing.getWriteTimeoutSeconds());
+      }
+
+      // SSL/TLS Configuration
+      if (request.keystorePath != null) {
+        testConfig.setKeystorePath(request.keystorePath);
+      } else if (existing != null) {
+        testConfig.setKeystorePath(existing.getKeystorePath());
+      }
+      if (request.keystorePassword != null && !request.keystorePassword.isEmpty()) {
+        testConfig.setKeystorePassword(request.keystorePassword);
+      } else if (existing != null) {
+        testConfig.setKeystorePassword(existing.getKeystorePassword());
+      }
+      if (request.keystoreType != null) {
+        testConfig.setKeystoreType(request.keystoreType);
+      } else if (existing != null) {
+        testConfig.setKeystoreType(existing.getKeystoreType());
+      }
+      if (request.truststorePath != null) {
+        testConfig.setTruststorePath(request.truststorePath);
+      } else if (existing != null) {
+        testConfig.setTruststorePath(existing.getTruststorePath());
+      }
+      if (request.truststorePassword != null && !request.truststorePassword.isEmpty()) {
+        testConfig.setTruststorePassword(request.truststorePassword);
+      } else if (existing != null) {
+        testConfig.setTruststorePassword(existing.getTruststorePassword());
+      }
+      if (request.truststoreType != null) {
+        testConfig.setTruststoreType(request.truststoreType);
+      } else if (existing != null) {
+        testConfig.setTruststoreType(existing.getTruststoreType());
+      }
+      if (request.verifySSL != null) {
+        testConfig.setVerifySSL(request.verifySSL);
+      } else if (existing != null) {
+        testConfig.setVerifySSL(existing.getVerifySSL());
+      }
+
+      // Additional Request Parameters
+      if (request.additionalParameters != null) {
+        testConfig.setAdditionalParameters(request.additionalParameters);
+      } else if (existing != null) {
+        testConfig.setAdditionalParameters(existing.getAdditionalParameters());
+      }
+
+      // Custom API Format
+      if (request.requestTemplate != null) {
+        testConfig.setRequestTemplate(request.requestTemplate);
+      } else if (existing != null) {
+        testConfig.setRequestTemplate(existing.getRequestTemplate());
+      }
+      if (request.responseMapping != null) {
+        testConfig.setResponseMapping(request.responseMapping);
+      } else if (existing != null) {
+        testConfig.setResponseMapping(existing.getResponseMapping());
       }
 
       LlmProvider provider = LlmProviderRegistry.get(testConfig.getProvider());

@@ -124,6 +124,31 @@ export interface AiConfig {
   systemPrompt: string;
   sendDataToAi: boolean;
   maxToolRounds: number;
+
+  // Network Configuration
+  customHeaders?: Record<string, string>;
+  proxyUrl?: string;
+  proxyUsername?: string;
+  proxyPasswordSet?: boolean;
+  connectTimeoutSeconds?: number;
+  readTimeoutSeconds?: number;
+  writeTimeoutSeconds?: number;
+
+  // SSL/TLS Configuration
+  keystorePath?: string;
+  keystorePasswordSet?: boolean;
+  keystoreType?: string;
+  truststorePath?: string;
+  truststorePasswordSet?: boolean;
+  truststoreType?: string;
+  verifySSL?: boolean;
+
+  // Additional Request Parameters
+  additionalParameters?: Record<string, unknown>;
+
+  // Custom API Format
+  requestTemplate?: string;
+  responseMapping?: string;
 }
 
 export interface AiConfigUpdate {
@@ -137,6 +162,31 @@ export interface AiConfigUpdate {
   systemPrompt?: string;
   sendDataToAi?: boolean;
   maxToolRounds?: number;
+
+  // Network Configuration
+  customHeaders?: Record<string, string>;
+  proxyUrl?: string;
+  proxyUsername?: string;
+  proxyPassword?: string;
+  connectTimeoutSeconds?: number;
+  readTimeoutSeconds?: number;
+  writeTimeoutSeconds?: number;
+
+  // SSL/TLS Configuration
+  keystorePath?: string;
+  keystorePassword?: string;
+  keystoreType?: string;
+  truststorePath?: string;
+  truststorePassword?: string;
+  truststoreType?: string;
+  verifySSL?: boolean;
+
+  // Additional Request Parameters
+  additionalParameters?: Record<string, unknown>;
+
+  // Custom API Format
+  requestTemplate?: string;
+  responseMapping?: string;
 }
 
 export interface AiProvider {
