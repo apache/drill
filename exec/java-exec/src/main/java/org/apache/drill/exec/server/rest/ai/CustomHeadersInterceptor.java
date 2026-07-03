@@ -17,35 +17,30 @@
  */
 package org.apache.drill.exec.server.rest.ai;
 
-import java.util.Collection;
-import java.util.LinkedHashMap;
+import okhttp3.Interceptor;
+import okhttp3.Request;
+import okhttp3.Response;
+
+import java.io.IOException;
 import java.util.Map;
 
 /**
- * Static registry of available LLM providers.
+ * OkHttp interceptor that adds custom headers to all requests.
+ * Used for enterprise authentication headers, tenant IDs, etc.
  */
-public final class LlmProviderRegistry {
+public class CustomHeadersInterceptor implements Interceptor {
+  private final Map<String, String> headers;
 
-  private static final Map<String, LlmProvider> PROVIDERS = new LinkedHashMap<>();
-
-  static {
-    register(new OpenAiCompatibleProvider());
-    register(new AnthropicProvider());
-    register(new EnterpriseProvider());
+  public CustomHeadersInterceptor(Map<String, String> headers) {
+    this.headers = headers;
   }
 
-  private LlmProviderRegistry() {
-  }
-
-  public static void register(LlmProvider provider) {
-    PROVIDERS.put(provider.getId(), provider);
-  }
-
-  public static LlmProvider get(String id) {
-    return PROVIDERS.get(id);
-  }
-
-  public static Collection<LlmProvider> getAll() {
-    return PROVIDERS.values();
+  @Override
+  public Response intercept(Chain chain) throws IOException {
+    Request.Builder builder = chain.request().newBuilder();
+    for (Map.Entry<String, String> entry : headers.entrySet()) {
+      builder.addHeader(entry.getKey(), entry.getValue());
+    }
+    return chain.proceed(builder.build());
   }
 }

@@ -37,7 +37,6 @@ import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.TimeUnit;
 
 /**
  * LLM provider for OpenAI-compatible APIs (OpenAI, Azure OpenAI, Ollama, etc.).
@@ -50,16 +49,6 @@ public class OpenAiCompatibleProvider implements LlmProvider {
   private static final ObjectMapper MAPPER = new ObjectMapper();
   private static final MediaType JSON_TYPE = MediaType.parse("application/json");
   private static final String DEFAULT_ENDPOINT = "https://api.openai.com/v1";
-
-  private final OkHttpClient httpClient;
-
-  public OpenAiCompatibleProvider() {
-    this.httpClient = new OkHttpClient.Builder()
-        .connectTimeout(30, TimeUnit.SECONDS)
-        .readTimeout(120, TimeUnit.SECONDS)
-        .writeTimeout(30, TimeUnit.SECONDS)
-        .build();
-  }
 
   @Override
   public String getId() {
@@ -76,6 +65,9 @@ public class OpenAiCompatibleProvider implements LlmProvider {
       List<ToolDefinition> tools, OutputStream out, UsageObserver usageObserver)
       throws Exception {
     UsageObserver observer = usageObserver != null ? usageObserver : UsageObserver.NOOP;
+
+    // Create HTTP client with enterprise configuration
+    OkHttpClient httpClient = HttpClientFactory.createClient(config);
 
     String endpoint = config.getApiEndpoint();
     if (endpoint == null || endpoint.isEmpty()) {
@@ -198,6 +190,13 @@ public class OpenAiCompatibleProvider implements LlmProvider {
         fnNode.put("name", tool.getName());
         fnNode.put("description", tool.getDescription());
         fnNode.set("parameters", MAPPER.valueToTree(tool.getParameters()));
+      }
+    }
+
+    // Additional request parameters (for enterprise APIs)
+    if (config.getAdditionalParameters() != null) {
+      for (Map.Entry<String, Object> entry : config.getAdditionalParameters().entrySet()) {
+        body.set(entry.getKey(), MAPPER.valueToTree(entry.getValue()));
       }
     }
 
