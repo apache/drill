@@ -59,7 +59,7 @@ export const VizTabIcon = ({
       queryClient.invalidateQueries({ queryKey: ['visualizations'] });
       message.success('Visualization SQL updated');
       onUpdateSql?.(vizId, currentSql);
-    } catch (error) {
+    } catch {
       message.error('Failed to update visualization SQL');
     }
   };
