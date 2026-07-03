@@ -169,7 +169,7 @@ export default function ColumnMenu({
     try {
       await navigator.clipboard.writeText(values);
       message.success('Column values copied to clipboard');
-    } catch (err) {
+    } catch {
       message.error('Failed to copy to clipboard');
     }
   }, [rowData, columnName]);

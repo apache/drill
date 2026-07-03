@@ -36,12 +36,10 @@ import {
   SiMongodb,
   SiElasticsearch,
   SiApachekafka,
-  SiAmazons3,
   SiGooglecloud,
   SiApachehive,
   SiMysql,
   SiPostgresql,
-  SiOracle,
   SiJson,
 } from 'react-icons/si';
 import { VscFilePdf, VscFileCode } from 'react-icons/vsc';
@@ -75,7 +73,7 @@ export function getPluginIcon(pluginType: string, pluginName: string): React.Rea
 
   // S3 / MinIO
   if (type.includes('s3') || name.includes('s3') || name.includes('minio')) {
-    return <SiAmazons3 style={{ color: '#569a31' }} />;
+    return <CloudOutlined style={{ color: '#569a31' }} />;
   }
 
   // Google Cloud Storage
@@ -115,7 +113,7 @@ export function getPluginIcon(pluginType: string, pluginName: string): React.Rea
 
   // Oracle
   if (name.includes('oracle')) {
-    return <SiOracle style={{ color: '#f80000' }} />;
+    return <DatabaseOutlined style={{ color: '#f80000' }} />;
   }
 
   // HTTP / REST API

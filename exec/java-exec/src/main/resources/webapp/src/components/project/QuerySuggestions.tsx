@@ -393,7 +393,7 @@ export default function QuerySuggestions({
           setIsGenerating(false);
         },
       );
-    } catch (err) {
+    } catch {
       setError('Failed to generate suggestions.');
       setIsGenerating(false);
     }
