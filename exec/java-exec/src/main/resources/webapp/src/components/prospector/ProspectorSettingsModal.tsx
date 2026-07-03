@@ -31,7 +31,6 @@ import {
   Space,
   Divider,
 } from 'antd';
-import { MinusCircleOutlined, PlusOutlined } from '@ant-design/icons';
 import { getAiConfig, updateAiConfig, testAiConfig, getAiProviders } from '../../api/ai';
 import type { AiConfig, AiProvider } from '../../types/ai';
 
@@ -354,7 +353,7 @@ export function ProspectorSettingsBody({ onSaved, showCancel, onCancel }: BodyPr
                   <Form.Item
                     name="additionalParameters"
                     label="Parameters (JSON)"
-                    help='Enter as JSON object, e.g., {"tenant_id": "abc123", "environment": "production"}'
+                    help="Enter as JSON object, e.g., {tenant_id: abc123, environment: production}"
                   >
                     <TextArea rows={4} placeholder='{"tenant_id": "abc123"}' />
                   </Form.Item>
@@ -493,7 +492,7 @@ export function ProspectorSettingsBody({ onSaved, showCancel, onCancel }: BodyPr
                   <Form.Item
                     name="customHeaders"
                     label="Headers (JSON)"
-                    help='Enter as JSON object, e.g., {"X-Tenant-ID": "tenant123"}'
+                    help="Enter as JSON object, e.g., {X-Tenant-ID: tenant123}"
                   >
                     <TextArea rows={4} placeholder='{"X-Tenant-ID": "tenant123"}' />
                   </Form.Item>
@@ -516,7 +515,7 @@ export function ProspectorSettingsBody({ onSaved, showCancel, onCancel }: BodyPr
                     <Form.Item
                       name="requestTemplate"
                       label="Request Template (JSON)"
-                      help="Template for custom API request format. Supports variable substitution: {model}, {temperature}, {maxTokens}, {messages}, {tools}"
+                      help="Template for custom API request format. Supports: {model}, {temperature}, {maxTokens}, {messages}, {tools}"
                       rules={[
                         { required: true, message: 'Request template is required for enterprise provider' },
                       ]}
@@ -527,7 +526,7 @@ export function ProspectorSettingsBody({ onSaved, showCancel, onCancel }: BodyPr
                     <Form.Item
                       name="responseMapping"
                       label="Response Mapping (JSONPath)"
-                      help="Map custom API response to standard format. Optional. Example: {\"contentPath\": \"$.data.text\", \"donePath\": \"$.data.finish_reason\"}"
+                      help="Map custom API response to standard format (optional). Example: contentPath: $.data.text, donePath: $.data.finish_reason"
                     >
                       <TextArea
                         rows={4}
