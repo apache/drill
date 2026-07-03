@@ -129,7 +129,7 @@ export function ProspectorSettingsBody({ onSaved, showCancel, onCancel }: BodyPr
       if (values.customHeaders && typeof values.customHeaders === 'string') {
         try {
           customHeaders = values.customHeaders ? JSON.parse(values.customHeaders) : undefined;
-        } catch (e) {
+        } catch {
           message.error('Invalid JSON in Custom Headers');
           return;
         }
@@ -139,7 +139,7 @@ export function ProspectorSettingsBody({ onSaved, showCancel, onCancel }: BodyPr
       if (values.additionalParameters && typeof values.additionalParameters === 'string') {
         try {
           additionalParameters = values.additionalParameters ? JSON.parse(values.additionalParameters) : undefined;
-        } catch (e) {
+        } catch {
           message.error('Invalid JSON in Additional Parameters');
           return;
         }
@@ -205,7 +205,7 @@ export function ProspectorSettingsBody({ onSaved, showCancel, onCancel }: BodyPr
       if (values.customHeaders) {
         try {
           customHeaders = JSON.parse(values.customHeaders);
-        } catch (e) {
+        } catch {
           setTestResult({ success: false, message: 'Invalid JSON in Custom Headers' });
           return;
         }
@@ -215,7 +215,7 @@ export function ProspectorSettingsBody({ onSaved, showCancel, onCancel }: BodyPr
       if (values.additionalParameters) {
         try {
           additionalParameters = JSON.parse(values.additionalParameters);
-        } catch (e) {
+        } catch {
           setTestResult({ success: false, message: 'Invalid JSON in Additional Parameters' });
           return;
         }
