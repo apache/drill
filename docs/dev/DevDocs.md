@@ -11,8 +11,9 @@ For documentation of the React single-page app served by the Drillbit — archit
 ## AI features
 
 - [PROSPECTOR.md](PROSPECTOR.md) — Prospector AI assistant (backend, REST endpoints, providers)
-- [TRANSPILER.md](TRANSPILER.md) — GraalPy + sqlglot SQL transpiler
 - [AI_FEATURES.md](AI_FEATURES.md) — overview of all AI features
+- [ai/ENTERPRISE_PROVIDERS.md](ai/ENTERPRISE_PROVIDERS.md) — enterprise AI provider configuration (proxy, SSL/TLS, custom headers, static parameters)
+- [TRANSPILER.md](TRANSPILER.md) — GraalPy + sqlglot SQL transpiler
 
 ## Environment
 

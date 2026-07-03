@@ -265,9 +265,22 @@ Open the Prospector sidebar and click the gear icon to open the settings modal. 
 
 Click "Test Connection" to validate the provider, endpoint, API key, and model before saving.
 
+### Enterprise Configuration
+
+For internal/corporate AI deployments, Drill supports advanced configuration:
+
+- **Custom HTTP Headers** -- Authentication headers (e.g., `X-Tenant-ID`, `X-API-Key`)
+- **HTTP Proxy** -- Corporate proxy with optional authentication
+- **SSL/TLS** -- Custom CA certificates (truststore) and client certificates (mTLS)
+- **Configurable Timeouts** -- Connection, read, and write timeouts
+- **Static Request Parameters** -- Additional key-value pairs sent with every API request
+- **Custom API Formats** -- Support for proprietary/non-OpenAI-compatible APIs with request templates and response mapping
+
+See [ENTERPRISE_PROVIDERS.md](ENTERPRISE_PROVIDERS.md) for detailed configuration guide.
+
 ### Storage
 
-Configuration is stored in Drill's `PersistentStore` under the key `drill.sqllab.ai_config`. This persists across restarts and uses the same storage backend as other Drill system tables.
+Configuration is stored in Drill's `PersistentStore` under the key `drill.sqllab.ai_config`. This persists across restarts and uses the same storage backend as other Drill system tables. Sensitive fields (API keys, passwords) are encrypted at rest and redacted from API responses.
 
 ---
 
@@ -419,3 +432,13 @@ POST   /api/v1/transpile/time-grain   -- Add DATE_TRUNC
 | `components/dashboard/AiQnAPanel.tsx` | Dashboard Q&A chat |
 | `components/dashboard/AiAlertsPanel.tsx` | Threshold alerts + AI analysis |
 | `components/dashboard/NlFilterPanel.tsx` | Natural language filters |
+
+---
+
+## See Also
+
+- [ENTERPRISE_PROVIDERS.md](ENTERPRISE_PROVIDERS.md) - Detailed guide for configuring internal/corporate AI models with proxy, SSL/TLS, custom headers, and static request parameters
+- [PROSPECTOR.md](PROSPECTOR.md) - Prospector AI assistant architecture and tool definitions
+- [TRANSPILER.md](TRANSPILER.md) - SQL transpiler implementation details
+- [Environment.md](Environment.md) - Development environment setup
+- [Testing.md](Testing.md) - Testing guidelines
