@@ -125,7 +125,59 @@ public class AnthropicProvider implements LlmProvider {
     if (config.getModel() == null || config.getModel().isEmpty()) {
       return ValidationResult.error("Model name is required");
     }
-    return ValidationResult.ok("Configuration is valid");
+
+    // Send a minimal, non-streaming request so we surface real failures (bad key,
+    // unknown model, unreachable endpoint) instead of reporting success blindly.
+    String endpoint = config.getApiEndpoint();
+    if (endpoint == null || endpoint.isEmpty()) {
+      endpoint = DEFAULT_ENDPOINT;
+    }
+    if (endpoint.endsWith("/")) {
+      endpoint = endpoint.substring(0, endpoint.length() - 1);
+    }
+
+    ObjectNode probeBody = MAPPER.createObjectNode();
+    probeBody.put("model", config.getModel());
+    probeBody.put("max_tokens", 1);
+    ArrayNode probeMessages = probeBody.putArray("messages");
+    ObjectNode probeMsg = probeMessages.addObject();
+    probeMsg.put("role", "user");
+    probeMsg.put("content", "ping");
+
+    Request request = new Request.Builder()
+        .url(endpoint + "/v1/messages")
+        .post(RequestBody.create(probeBody.toString(), JSON_TYPE))
+        .addHeader("Content-Type", "application/json")
+        .addHeader("x-api-key", config.getApiKey())
+        .addHeader("anthropic-version", ANTHROPIC_VERSION)
+        .build();
+
+    try (Response response = HttpClientFactory.createClient(config).newCall(request).execute()) {
+      if (response.isSuccessful()) {
+        return ValidationResult.ok("Connection successful");
+      }
+      String body = response.body() != null ? response.body().string() : "";
+      return ValidationResult.error("Anthropic API error " + response.code() + ": "
+          + extractErrorMessage(body));
+    } catch (Exception e) {
+      return ValidationResult.error("Could not reach Anthropic endpoint: " + e.getMessage());
+    }
+  }
+
+  /** Pulls a human-readable message out of an Anthropic error body, falling back to the raw text. */
+  private String extractErrorMessage(String body) {
+    if (body == null || body.isEmpty()) {
+      return "(empty response)";
+    }
+    try {
+      JsonNode error = MAPPER.readTree(body).get("error");
+      if (error != null && error.hasNonNull("message")) {
+        return error.get("message").asText();
+      }
+    } catch (Exception e) {
+      // Not JSON — return the raw body below.
+    }
+    return body;
   }
 
   private ObjectNode buildRequestBody(LlmConfig config, List<ChatMessage> messages,
@@ -147,10 +199,11 @@ public class AnthropicProvider implements LlmProvider {
       }
 
       ObjectNode msgNode = messagesArray.addObject();
-      msgNode.put("role", msg.getRole());
 
       if ("tool".equals(msg.getRole())) {
-        // Anthropic uses tool_result content blocks
+        // Anthropic has no "tool" role: a tool result is a user message
+        // carrying a tool_result content block.
+        msgNode.put("role", "user");
         ArrayNode contentArray = msgNode.putArray("content");
         ObjectNode block = contentArray.addObject();
         block.put("type", "tool_result");
@@ -159,6 +212,7 @@ public class AnthropicProvider implements LlmProvider {
       } else if ("assistant".equals(msg.getRole()) && msg.getToolCalls() != null
           && !msg.getToolCalls().isEmpty()) {
         // Assistant message with tool calls
+        msgNode.put("role", "assistant");
         ArrayNode contentArray = msgNode.putArray("content");
 
         if (msg.getContent() != null && !msg.getContent().isEmpty()) {
@@ -179,6 +233,7 @@ public class AnthropicProvider implements LlmProvider {
           }
         }
       } else {
+        msgNode.put("role", msg.getRole());
         msgNode.put("content", msg.getContent() != null ? msg.getContent() : "");
       }
     }

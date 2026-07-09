@@ -20,6 +20,7 @@ import {
   Modal,
   Form,
   Input,
+  AutoComplete,
   Select,
   Switch,
   Slider,
@@ -36,6 +37,24 @@ import type { AiConfig, AiProvider } from '../../types/ai';
 
 const { TextArea } = Input;
 
+// ponytail: static per-provider model lists. Upgrade path = backend /models fetch
+// (needs the API key), if/when keeping these current by hand gets annoying.
+// The model field stays an AutoComplete, so custom/self-hosted names still work.
+const MODEL_OPTIONS: Record<string, string[]> = {
+  openai: ['gpt-4o', 'gpt-4o-mini', 'gpt-4-turbo', 'o1', 'o1-mini'],
+  anthropic: [
+    'claude-opus-4-8',
+    'claude-sonnet-5',
+    'claude-sonnet-4-6',
+    'claude-haiku-4-5',
+  ],
+};
+
+const DEFAULT_MODELS: Record<string, string> = {
+  openai: 'gpt-4o',
+  anthropic: 'claude-sonnet-5',
+};
+
 interface BodyProps {
   /** Called after a successful save. May close the host modal/sheet. */
   onSaved?: () => void;
@@ -49,6 +68,7 @@ interface BodyProps {
  */
 export function ProspectorSettingsBody({ onSaved, showCancel, onCancel }: BodyProps) {
   const [form] = Form.useForm();
+  const selectedProvider = Form.useWatch('provider', form);
   const [loading, setLoading] = useState(false);
   const [testing, setTesting] = useState(false);
   const [providers, setProviders] = useState<AiProvider[]>([]);
@@ -268,6 +288,17 @@ export function ProspectorSettingsBody({ onSaved, showCancel, onCancel }: BodyPr
       <Form
         form={form}
         layout="vertical"
+        onValuesChange={(changed) => {
+          // When the provider changes, swap in that provider's default model — but only
+          // if the current model is empty or is another provider's default, so we never
+          // clobber a model the user typed by hand.
+          if (changed.provider) {
+            const current = form.getFieldValue('model');
+            if (!current || Object.values(DEFAULT_MODELS).includes(current)) {
+              form.setFieldsValue({ model: DEFAULT_MODELS[changed.provider] ?? '' });
+            }
+          }
+        }}
         initialValues={{
           provider: 'openai',
           maxTokens: 4096,
@@ -304,7 +335,13 @@ export function ProspectorSettingsBody({ onSaved, showCancel, onCancel }: BodyPr
         </Form.Item>
 
         <Form.Item name="model" label="Model" rules={[{ required: true }]}>
-          <Input placeholder="gpt-4o, claude-sonnet-4-20250514, llama3, etc." />
+          <AutoComplete
+            options={(MODEL_OPTIONS[selectedProvider] ?? []).map((m) => ({ value: m }))}
+            filterOption={(input, option) =>
+              (option?.value ?? '').toLowerCase().includes(input.toLowerCase())
+            }
+            placeholder="Select a model or type a custom name (e.g. gpt-4o, claude-sonnet-5, llama3)"
+          />
         </Form.Item>
 
         <Form.Item name="maxTokens" label="Max Tokens">
