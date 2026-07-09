@@ -132,7 +132,60 @@ public class OpenAiCompatibleProvider implements LlmProvider {
     if (config.getModel() == null || config.getModel().isEmpty()) {
       return ValidationResult.error("Model name is required");
     }
-    return ValidationResult.ok("Configuration is valid");
+
+    // Send a minimal, non-streaming request so we surface real failures (bad key,
+    // unknown model, unreachable endpoint) instead of reporting success blindly.
+    String endpoint = config.getApiEndpoint();
+    if (endpoint == null || endpoint.isEmpty()) {
+      endpoint = DEFAULT_ENDPOINT;
+    }
+    if (endpoint.endsWith("/")) {
+      endpoint = endpoint.substring(0, endpoint.length() - 1);
+    }
+
+    ObjectNode probeBody = MAPPER.createObjectNode();
+    probeBody.put("model", config.getModel());
+    probeBody.put("max_tokens", 1);
+    ArrayNode probeMessages = probeBody.putArray("messages");
+    ObjectNode probeMsg = probeMessages.addObject();
+    probeMsg.put("role", "user");
+    probeMsg.put("content", "ping");
+
+    Request.Builder reqBuilder = new Request.Builder()
+        .url(endpoint + "/chat/completions")
+        .post(RequestBody.create(probeBody.toString(), JSON_TYPE))
+        .addHeader("Content-Type", "application/json");
+    if (config.getApiKey() != null && !config.getApiKey().isEmpty()) {
+      reqBuilder.addHeader("Authorization", "Bearer " + config.getApiKey());
+    }
+
+    try (Response response = HttpClientFactory.createClient(config)
+        .newCall(reqBuilder.build()).execute()) {
+      if (response.isSuccessful()) {
+        return ValidationResult.ok("Connection successful");
+      }
+      String body = response.body() != null ? response.body().string() : "";
+      return ValidationResult.error("LLM API error " + response.code() + ": "
+          + extractErrorMessage(body));
+    } catch (Exception e) {
+      return ValidationResult.error("Could not reach endpoint: " + e.getMessage());
+    }
+  }
+
+  /** Pulls a human-readable message out of an OpenAI-style error body, else returns the raw text. */
+  private String extractErrorMessage(String body) {
+    if (body == null || body.isEmpty()) {
+      return "(empty response)";
+    }
+    try {
+      JsonNode error = MAPPER.readTree(body).get("error");
+      if (error != null && error.hasNonNull("message")) {
+        return error.get("message").asText();
+      }
+    } catch (Exception e) {
+      // Not JSON — return the raw body below.
+    }
+    return body;
   }
 
   private ObjectNode buildRequestBody(LlmConfig config, List<ChatMessage> messages,
