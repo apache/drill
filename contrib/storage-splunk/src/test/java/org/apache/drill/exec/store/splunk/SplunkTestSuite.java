@@ -35,8 +35,10 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testcontainers.DockerClientFactory;
 import org.testcontainers.containers.GenericContainer;
+import org.testcontainers.containers.wait.strategy.Wait;
 import org.testcontainers.utility.DockerImageName;
 
+import java.time.Duration;
 import java.util.HashMap;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -136,12 +138,19 @@ public class SplunkTestSuite extends ClusterTest {
               createDefaultYmlFile().toPath()
             ),
             "/tmp/defaults/default.yml"
+          )
+          // Block start() until splunkd actually answers on the management port,
+          // instead of guessing with a fixed sleep. /services/server/info returns
+          // 401 (unauthorized) once splunkd is live, which is enough to proceed.
+          .waitingFor(
+            Wait.forHttp("/services/server/info")
+              .forPort(8089)
+              .forStatusCodeMatching(code -> code == 200 || code == 401)
+              .withStartupTimeout(Duration.ofMinutes(3))
           );
         splunk.start();
 
-        // Wait for Splunk to start and apply configuration from default.yml
-        logger.info("Waiting for Splunk to start with custom configuration...");
-        Thread.sleep(60000);
+        logger.info("Splunk management port is up.");
 
         // Clean up any existing dispatch files
         logger.info("Cleaning up existing dispatch directory...");
