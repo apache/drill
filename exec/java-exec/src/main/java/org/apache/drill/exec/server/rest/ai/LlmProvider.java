@@ -19,6 +19,7 @@ package org.apache.drill.exec.server.rest.ai;
 
 import java.io.OutputStream;
 import java.util.List;
+import java.util.Locale;
 
 /**
  * Interface for LLM providers that can stream chat completions.
@@ -59,4 +60,29 @@ public interface LlmProvider {
    * @return validation result
    */
   ValidationResult validateConfig(LlmConfig config);
+
+  /**
+   * Normalize an admin-configured endpoint: fall back to {@code defaultEndpoint} when
+   * blank, strip a trailing slash, and reject non-http(s) schemes. The scheme guard is
+   * defense-in-depth against a mistyped or hostile value (e.g. {@code file://}) being
+   * used to build the outbound request URL.
+   *
+   * @param endpoint        the configured endpoint (may be null/empty)
+   * @param defaultEndpoint the provider default to use when blank
+   * @return the normalized endpoint, without a trailing slash
+   * @throws IllegalArgumentException if the endpoint is not an http(s) URL
+   */
+  static String normalizeEndpoint(String endpoint, String defaultEndpoint) {
+    if (endpoint == null || endpoint.isEmpty()) {
+      endpoint = defaultEndpoint;
+    }
+    if (endpoint.endsWith("/")) {
+      endpoint = endpoint.substring(0, endpoint.length() - 1);
+    }
+    String lower = endpoint.toLowerCase(Locale.ROOT);
+    if (!lower.startsWith("http://") && !lower.startsWith("https://")) {
+      throw new IllegalArgumentException("AI endpoint must be an http(s) URL: " + endpoint);
+    }
+    return endpoint;
+  }
 }
