@@ -70,13 +70,7 @@ public class AnthropicProvider implements LlmProvider {
     // Create HTTP client with enterprise configuration
     OkHttpClient httpClient = HttpClientFactory.createClient(config);
 
-    String endpoint = config.getApiEndpoint();
-    if (endpoint == null || endpoint.isEmpty()) {
-      endpoint = DEFAULT_ENDPOINT;
-    }
-    if (endpoint.endsWith("/")) {
-      endpoint = endpoint.substring(0, endpoint.length() - 1);
-    }
+    String endpoint = LlmProvider.normalizeEndpoint(config.getApiEndpoint(), DEFAULT_ENDPOINT);
     String url = endpoint + "/v1/messages";
 
     ObjectNode requestBody = buildRequestBody(config, messages, tools);
@@ -128,13 +122,7 @@ public class AnthropicProvider implements LlmProvider {
 
     // Send a minimal, non-streaming request so we surface real failures (bad key,
     // unknown model, unreachable endpoint) instead of reporting success blindly.
-    String endpoint = config.getApiEndpoint();
-    if (endpoint == null || endpoint.isEmpty()) {
-      endpoint = DEFAULT_ENDPOINT;
-    }
-    if (endpoint.endsWith("/")) {
-      endpoint = endpoint.substring(0, endpoint.length() - 1);
-    }
+    String endpoint = LlmProvider.normalizeEndpoint(config.getApiEndpoint(), DEFAULT_ENDPOINT);
 
     ObjectNode probeBody = MAPPER.createObjectNode();
     probeBody.put("model", config.getModel());
