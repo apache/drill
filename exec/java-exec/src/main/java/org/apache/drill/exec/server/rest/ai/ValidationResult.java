@@ -17,6 +17,7 @@
  */
 package org.apache.drill.exec.server.rest.ai;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 /**
@@ -30,12 +31,23 @@ public class ValidationResult {
   @JsonProperty
   private String message;
 
+  // Diagnostic detail for failures (URL hit, HTTP status, response body, exception
+  // cause chain). Omitted from JSON when null so successful results stay lean.
+  @JsonInclude(JsonInclude.Include.NON_NULL)
+  @JsonProperty
+  private String details;
+
   public ValidationResult() {
   }
 
   public ValidationResult(boolean success, String message) {
+    this(success, message, null);
+  }
+
+  public ValidationResult(boolean success, String message, String details) {
     this.success = success;
     this.message = message;
+    this.details = details;
   }
 
   public static ValidationResult ok(String message) {
@@ -46,11 +58,19 @@ public class ValidationResult {
     return new ValidationResult(false, message);
   }
 
+  public static ValidationResult error(String message, String details) {
+    return new ValidationResult(false, message, details);
+  }
+
   public boolean isSuccess() {
     return success;
   }
 
   public String getMessage() {
     return message;
+  }
+
+  public String getDetails() {
+    return details;
   }
 }

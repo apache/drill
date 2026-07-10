@@ -123,6 +123,7 @@ public class AnthropicProvider implements LlmProvider {
     // Send a minimal, non-streaming request so we surface real failures (bad key,
     // unknown model, unreachable endpoint) instead of reporting success blindly.
     String endpoint = LlmProvider.normalizeEndpoint(config.getApiEndpoint(), DEFAULT_ENDPOINT);
+    String url = endpoint + "/v1/messages";
 
     ObjectNode probeBody = MAPPER.createObjectNode();
     probeBody.put("model", config.getModel());
@@ -133,7 +134,7 @@ public class AnthropicProvider implements LlmProvider {
     probeMsg.put("content", "ping");
 
     Request request = new Request.Builder()
-        .url(endpoint + "/v1/messages")
+        .url(url)
         .post(RequestBody.create(probeBody.toString(), JSON_TYPE))
         .addHeader("Content-Type", "application/json")
         .addHeader("x-api-key", config.getApiKey())
@@ -145,10 +146,14 @@ public class AnthropicProvider implements LlmProvider {
         return ValidationResult.ok("Connection successful");
       }
       String body = response.body() != null ? response.body().string() : "";
+      String details = LlmProvider.describeHttpError(url, response.code(), body);
+      logger.warn("Anthropic config test failed:\n{}", details);
       return ValidationResult.error("Anthropic API error " + response.code() + ": "
-          + extractErrorMessage(body));
+          + extractErrorMessage(body), details);
     } catch (Exception e) {
-      return ValidationResult.error("Could not reach Anthropic endpoint: " + e.getMessage());
+      logger.warn("Anthropic config test could not reach {}", url, e);
+      return ValidationResult.error("Could not reach Anthropic endpoint: " + e.getMessage(),
+          LlmProvider.describeException(url, e));
     }
   }
 

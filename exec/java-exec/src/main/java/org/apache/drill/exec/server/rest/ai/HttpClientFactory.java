@@ -31,10 +31,24 @@ import javax.net.ssl.SSLContext;
 import javax.net.ssl.TrustManager;
 import javax.net.ssl.TrustManagerFactory;
 import javax.net.ssl.X509TrustManager;
+import java.io.ByteArrayInputStream;
 import java.io.FileInputStream;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Paths;
+import java.security.KeyFactory;
 import java.security.KeyStore;
+import java.security.PrivateKey;
 import java.security.SecureRandom;
+import java.security.cert.Certificate;
+import java.security.cert.CertificateFactory;
+import java.security.spec.PKCS8EncodedKeySpec;
+import java.util.ArrayList;
+import java.util.Base64;
+import java.util.List;
 import java.util.concurrent.TimeUnit;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 /**
  * Factory for creating OkHttpClient instances with enterprise configuration.
@@ -42,6 +56,11 @@ import java.util.concurrent.TimeUnit;
  */
 public class HttpClientFactory {
   private static final Logger logger = LoggerFactory.getLogger(HttpClientFactory.class);
+
+  private static final Pattern CERT_PATTERN = Pattern.compile(
+      "-----BEGIN CERTIFICATE-----(.+?)-----END CERTIFICATE-----", Pattern.DOTALL);
+  private static final Pattern KEY_PATTERN = Pattern.compile(
+      "-----BEGIN PRIVATE KEY-----(.+?)-----END PRIVATE KEY-----", Pattern.DOTALL);
 
   // Default timeouts (in seconds) - matching existing hardcoded values
   private static final int DEFAULT_CONNECT_TIMEOUT = 30;
@@ -126,13 +145,16 @@ public class HttpClientFactory {
     // Check if custom SSL configuration is needed
     boolean hasKeystore = config.getKeystorePath() != null && !config.getKeystorePath().isEmpty();
     boolean hasTruststore = config.getTruststorePath() != null && !config.getTruststorePath().isEmpty();
+    boolean hasPemCert = config.getClientCertPath() != null && !config.getClientCertPath().isEmpty();
 
-    if (hasKeystore || hasTruststore) {
+    if (hasKeystore || hasTruststore || hasPemCert) {
       SSLContext sslContext = SSLContext.getInstance("TLS");
 
       KeyManager[] keyManagers = null;
       if (hasKeystore) {
         keyManagers = loadKeyManagers(config);
+      } else if (hasPemCert) {
+        keyManagers = loadKeyManagersFromPem(config);
       }
 
       TrustManager[] trustManagers = null;
@@ -192,6 +214,65 @@ public class HttpClientFactory {
     tmf.init(trustStore);
 
     return tmf.getTrustManagers();
+  }
+
+  /**
+   * Load key managers from a PEM file holding the client certificate chain plus an
+   * unencrypted PKCS#8 private key (the single-file form that Python httpx/requests
+   * accepts as {@code cert=}). Used for mTLS against enterprise gateways.
+   *
+   * <p>PKCS#1 ({@code BEGIN RSA PRIVATE KEY}) and SEC1 ({@code BEGIN EC PRIVATE KEY}) keys
+   * are not supported by the JDK directly; the error message tells the user how to convert.
+   */
+  private static KeyManager[] loadKeyManagersFromPem(LlmConfig config) throws Exception {
+    String pemPath = config.getClientCertPath();
+    String pem = new String(Files.readAllBytes(Paths.get(pemPath)), StandardCharsets.UTF_8);
+
+    CertificateFactory cf = CertificateFactory.getInstance("X.509");
+    List<Certificate> chain = new ArrayList<>();
+    Matcher certMatcher = CERT_PATTERN.matcher(pem);
+    while (certMatcher.find()) {
+      byte[] der = Base64.getMimeDecoder().decode(certMatcher.group(1).trim());
+      chain.add(cf.generateCertificate(new ByteArrayInputStream(der)));
+    }
+    if (chain.isEmpty()) {
+      throw new IllegalArgumentException("No CERTIFICATE block found in PEM: " + pemPath);
+    }
+
+    Matcher keyMatcher = KEY_PATTERN.matcher(pem);
+    if (!keyMatcher.find()) {
+      if (pem.contains("BEGIN RSA PRIVATE KEY") || pem.contains("BEGIN EC PRIVATE KEY")) {
+        throw new IllegalArgumentException("PEM private key is PKCS#1/SEC1, which the JDK "
+            + "cannot read. Convert to PKCS#8 with: openssl pkcs8 -topk8 -nocrypt -in "
+            + pemPath + " -out client-pkcs8.pem");
+      }
+      throw new IllegalArgumentException("No unencrypted PRIVATE KEY (PKCS#8) block found in PEM: "
+          + pemPath);
+    }
+    byte[] keyDer = Base64.getMimeDecoder().decode(keyMatcher.group(1).trim());
+    PrivateKey privateKey = parsePkcs8PrivateKey(keyDer);
+
+    KeyStore keyStore = KeyStore.getInstance("PKCS12");
+    keyStore.load(null, null);
+    keyStore.setKeyEntry("client", privateKey, new char[0], chain.toArray(new Certificate[0]));
+
+    KeyManagerFactory kmf = KeyManagerFactory.getInstance(KeyManagerFactory.getDefaultAlgorithm());
+    kmf.init(keyStore, new char[0]);
+    return kmf.getKeyManagers();
+  }
+
+  /** The PKCS#8 blob carries its own algorithm OID, so try the common ones until one parses. */
+  private static PrivateKey parsePkcs8PrivateKey(byte[] der) throws Exception {
+    PKCS8EncodedKeySpec spec = new PKCS8EncodedKeySpec(der);
+    for (String algorithm : new String[] {"RSA", "EC"}) {
+      try {
+        return KeyFactory.getInstance(algorithm).generatePrivate(spec);
+      } catch (Exception ignored) {
+        // Wrong algorithm for this key — try the next.
+      }
+    }
+    throw new IllegalArgumentException("Unsupported client-cert private key algorithm "
+        + "(expected RSA or EC PKCS#8)");
   }
 
   /**

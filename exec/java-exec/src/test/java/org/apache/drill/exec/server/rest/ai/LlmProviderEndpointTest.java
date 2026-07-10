@@ -21,6 +21,7 @@ import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
  * Unit tests for {@link LlmProvider#normalizeEndpoint}.
@@ -52,5 +53,26 @@ public class LlmProviderEndpointTest {
         () -> LlmProvider.normalizeEndpoint("file:///etc/passwd", DEFAULT));
     assertThrows(IllegalArgumentException.class,
         () -> LlmProvider.normalizeEndpoint("gopher://internal", DEFAULT));
+  }
+
+  @Test
+  public void describeHttpErrorIncludesUrlStatusBody() {
+    String d = LlmProvider.describeHttpError("https://host/v1", 401, "{\"error\":\"nope\"}");
+    assertTrue(d.contains("https://host/v1"));
+    assertTrue(d.contains("401"));
+    assertTrue(d.contains("nope"));
+  }
+
+  @Test
+  public void describeExceptionWalksCauseChain() {
+    Throwable root = new java.security.cert.CertPathBuilderException("unable to find valid certification path");
+    Throwable mid = new javax.net.ssl.SSLHandshakeException("PKIX path building failed");
+    mid.initCause(root);
+    String d = LlmProvider.describeException("https://llm.corp", mid);
+    // The top message alone is useless; the root cause is the real reason.
+    assertTrue(d.contains("https://llm.corp"));
+    assertTrue(d.contains("PKIX path building failed"));
+    assertTrue(d.contains("Caused by"));
+    assertTrue(d.contains("unable to find valid certification path"));
   }
 }
