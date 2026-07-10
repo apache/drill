@@ -198,16 +198,39 @@ public class HttpClientFactory {
   }
 
   /**
-   * Load trust managers from truststore for custom CA certificate support.
+   * Load trust managers for custom CA verification. Accepts either a keystore
+   * (JKS/PKCS12) or a PEM CA bundle (the {@code verify=} form that Python
+   * requests/httpx use — one or more {@code BEGIN CERTIFICATE} blocks, no key).
+   * The format is auto-detected from the file contents, so the truststore type
+   * does not have to be set for PEM.
    */
   private static TrustManager[] loadTrustManagers(LlmConfig config) throws Exception {
-    String truststorePath = config.getTruststorePath();
-    String truststorePassword = config.getTruststorePassword();
-    String truststoreType = config.getTruststoreType() != null ? config.getTruststoreType() : "JKS";
+    String truststorePath = config.getTruststorePath().trim();
+    byte[] bytes = Files.readAllBytes(Paths.get(truststorePath));
 
-    KeyStore trustStore = KeyStore.getInstance(truststoreType);
-    try (FileInputStream fis = new FileInputStream(truststorePath)) {
-      trustStore.load(fis, truststorePassword != null ? truststorePassword.toCharArray() : null);
+    KeyStore trustStore;
+    if (new String(bytes, StandardCharsets.UTF_8).contains("-----BEGIN CERTIFICATE-----")) {
+      trustStore = KeyStore.getInstance(KeyStore.getDefaultType());
+      trustStore.load(null, null);
+      CertificateFactory cf = CertificateFactory.getInstance("X.509");
+      Matcher matcher = CERT_PATTERN.matcher(new String(bytes, StandardCharsets.UTF_8));
+      int count = 0;
+      while (matcher.find()) {
+        byte[] der = Base64.getMimeDecoder().decode(matcher.group(1).trim());
+        Certificate cert = cf.generateCertificate(new ByteArrayInputStream(der));
+        trustStore.setCertificateEntry("ca-" + count++, cert);
+      }
+      if (count == 0) {
+        throw new IllegalArgumentException("No CERTIFICATE block found in truststore PEM: "
+            + truststorePath);
+      }
+    } else {
+      String truststorePassword = config.getTruststorePassword();
+      String truststoreType = config.getTruststoreType() != null ? config.getTruststoreType() : "JKS";
+      trustStore = KeyStore.getInstance(truststoreType);
+      try (ByteArrayInputStream in = new ByteArrayInputStream(bytes)) {
+        trustStore.load(in, truststorePassword != null ? truststorePassword.toCharArray() : null);
+      }
     }
 
     TrustManagerFactory tmf = TrustManagerFactory.getInstance(TrustManagerFactory.getDefaultAlgorithm());
@@ -225,7 +248,9 @@ public class HttpClientFactory {
    * are not supported by the JDK directly; the error message tells the user how to convert.
    */
   private static KeyManager[] loadKeyManagersFromPem(LlmConfig config) throws Exception {
-    String pemPath = config.getClientCertPath();
+    // Trim so a stray leading/trailing space in the configured path doesn't cause a
+    // spurious NoSuchFileException.
+    String pemPath = config.getClientCertPath().trim();
     String pem = new String(Files.readAllBytes(Paths.get(pemPath)), StandardCharsets.UTF_8);
 
     CertificateFactory cf = CertificateFactory.getInstance("X.509");
