@@ -139,18 +139,18 @@ public class SplunkTestSuite extends ClusterTest {
             ),
             "/tmp/defaults/default.yml"
           )
-          // Block start() until splunkd actually answers on the management port,
-          // instead of guessing with a fixed sleep. /services/server/info returns
-          // 401 (unauthorized) once splunkd is live, which is enough to proceed.
+          // The splunk/splunk image provisions via Ansible on first boot and logs
+          // "Ansible playbook complete" once splunkd is fully up with our config
+          // applied. Waiting on that marker is scheme-agnostic (unlike an HTTP probe
+          // against the management port, which may still be HTTPS mid-provisioning)
+          // and robust on slow CI runners where first boot can take several minutes.
           .waitingFor(
-            Wait.forHttp("/services/server/info")
-              .forPort(8089)
-              .forStatusCodeMatching(code -> code == 200 || code == 401)
-              .withStartupTimeout(Duration.ofMinutes(3))
+            Wait.forLogMessage(".*Ansible playbook complete.*", 1)
+              .withStartupTimeout(Duration.ofMinutes(5))
           );
         splunk.start();
 
-        logger.info("Splunk management port is up.");
+        logger.info("Splunk provisioning complete.");
 
         // Clean up any existing dispatch files
         logger.info("Cleaning up existing dispatch directory...");
