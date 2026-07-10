@@ -2,7 +2,7 @@
 
 ## Overview
 
-Prospector is an integrated chat-based AI assistant for SQL Lab that helps users explore data, generate SQL queries, create visualizations, and build dashboards using natural language. It connects to LLM providers (OpenAI, Anthropic Claude, Ollama, etc.) through a backend proxy that keeps API keys secure.
+Prospector is an integrated chat-based AI assistant for SQL Lab that helps users explore data, generate SQL queries, create visualizations, and build dashboards using natural language. It connects to LLM providers (OpenAI, Anthropic Claude, Ollama, OAuth2-gateway-fronted models, and custom enterprise APIs) through a backend proxy that keeps API keys secure.
 
 ## Architecture
 
@@ -39,6 +39,11 @@ Click the robot icon in the top navigation bar to open the Prospector Settings m
 | **Anthropic Claude** | `https://api.anthropic.com` (default) | Yes | `claude-sonnet-4-20250514`, `claude-haiku-4-5-20251001` |
 | **Ollama (local)** | `http://localhost:11434/v1` | No | `llama3`, `mistral`, `codellama` |
 | **Azure OpenAI** | Your Azure endpoint | Yes | Your deployed model name |
+| **OAuth2 Gateway** | Your gateway chat endpoint | OAuth2 client-credentials + optional mTLS | OpenAI-compatible model behind an enterprise gateway |
+| **Enterprise (Custom API)** | Your API URL | Custom | Proprietary request/response format via templates |
+
+For OAuth2 Gateway and Enterprise setup (proxy, mTLS/PEM, custom headers, token fetch), see
+[Enterprise AI Provider Configuration](ai/ENTERPRISE_PROVIDERS.md).
 
 ### 3. Required Settings
 
@@ -194,8 +199,11 @@ exec/java-exec/src/main/java/org/apache/drill/exec/server/rest/
     ToolDefinition.java         - Tool schema definition
     ToolCall.java               - Tool call from LLM
     ValidationResult.java       - Config validation result
-    OpenAiCompatibleProvider.java - OpenAI/Ollama provider
+    OpenAiCompatibleProvider.java - OpenAI/Ollama provider (base for OAuth2 gateway)
     AnthropicProvider.java       - Anthropic Claude provider
+    EnterpriseProvider.java      - Custom request/response templates
+    OAuth2GatewayProvider.java   - OAuth2 client-credentials + mTLS gateway
+    HttpClientFactory.java       - Proxy, SSL/TLS, PEM mTLS, custom headers
     LlmProviderRegistry.java    - Provider registry
   ProspectorResources.java      - Chat SSE endpoint
   AiConfigResources.java        - Admin config endpoint
