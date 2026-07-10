@@ -73,7 +73,7 @@ export function ProspectorSettingsBody({ onSaved, showCancel, onCancel }: BodyPr
   const [testing, setTesting] = useState(false);
   const [providers, setProviders] = useState<AiProvider[]>([]);
   const [config, setConfig] = useState<AiConfig | null>(null);
-  const [testResult, setTestResult] = useState<{ success: boolean; message: string } | null>(null);
+  const [testResult, setTestResult] = useState<{ success: boolean; message: string; details?: string } | null>(null);
 
   const loadConfig = useCallback(async () => {
     try {
@@ -116,6 +116,14 @@ export function ProspectorSettingsBody({ onSaved, showCancel, onCancel }: BodyPr
         // Custom API Format
         requestTemplate: cfg.requestTemplate || '',
         responseMapping: cfg.responseMapping || '',
+
+        // OAuth2 gateway. consumerSecret is write-only, so it loads blank.
+        authUrl: cfg.authUrl || '',
+        consumerKey: cfg.consumerKey || '',
+        clientId: cfg.clientId || '',
+        usecaseId: cfg.usecaseId || '',
+        clientCertPath: cfg.clientCertPath || '',
+        gatewayHeaders: cfg.gatewayHeaders ? JSON.stringify(cfg.gatewayHeaders, null, 2) : '',
       });
     } catch {
       message.error('Failed to load AI configuration. Admin access required.');
@@ -130,6 +138,7 @@ export function ProspectorSettingsBody({ onSaved, showCancel, onCancel }: BodyPr
       setProviders([
         { id: 'openai', displayName: 'OpenAI Compatible' },
         { id: 'anthropic', displayName: 'Anthropic Claude' },
+        { id: 'oauth2', displayName: 'OAuth2 Gateway' },
       ]);
     }
   }, []);
@@ -161,6 +170,16 @@ export function ProspectorSettingsBody({ onSaved, showCancel, onCancel }: BodyPr
           additionalParameters = values.additionalParameters ? JSON.parse(values.additionalParameters) : undefined;
         } catch {
           message.error('Invalid JSON in Additional Parameters');
+          return;
+        }
+      }
+
+      let gatewayHeaders = undefined;
+      if (values.gatewayHeaders && typeof values.gatewayHeaders === 'string') {
+        try {
+          gatewayHeaders = JSON.parse(values.gatewayHeaders);
+        } catch {
+          message.error('Invalid JSON in Gateway Headers');
           return;
         }
       }
@@ -201,6 +220,15 @@ export function ProspectorSettingsBody({ onSaved, showCancel, onCancel }: BodyPr
         // Custom API Format
         requestTemplate: values.requestTemplate || undefined,
         responseMapping: values.responseMapping || undefined,
+
+        // OAuth2 gateway
+        authUrl: values.authUrl || undefined,
+        consumerKey: values.consumerKey || undefined,
+        consumerSecret: values.consumerSecret || undefined,
+        clientId: values.clientId || undefined,
+        usecaseId: values.usecaseId || undefined,
+        clientCertPath: values.clientCertPath || undefined,
+        gatewayHeaders,
       });
       message.success('AI configuration saved');
       onSaved?.();
@@ -241,6 +269,16 @@ export function ProspectorSettingsBody({ onSaved, showCancel, onCancel }: BodyPr
         }
       }
 
+      let gatewayHeaders = undefined;
+      if (values.gatewayHeaders) {
+        try {
+          gatewayHeaders = JSON.parse(values.gatewayHeaders);
+        } catch {
+          setTestResult({ success: false, message: 'Invalid JSON in Gateway Headers' });
+          return;
+        }
+      }
+
       const result = await testAiConfig({
         provider: values.provider,
         apiEndpoint: values.apiEndpoint || undefined,
@@ -263,10 +301,21 @@ export function ProspectorSettingsBody({ onSaved, showCancel, onCancel }: BodyPr
         additionalParameters,
         requestTemplate: values.requestTemplate || undefined,
         responseMapping: values.responseMapping || undefined,
+        authUrl: values.authUrl || undefined,
+        consumerKey: values.consumerKey || undefined,
+        consumerSecret: values.consumerSecret || undefined,
+        clientId: values.clientId || undefined,
+        usecaseId: values.usecaseId || undefined,
+        clientCertPath: values.clientCertPath || undefined,
+        gatewayHeaders,
       });
       setTestResult(result);
-    } catch {
-      setTestResult({ success: false, message: 'Test failed' });
+    } catch (err) {
+      setTestResult({
+        success: false,
+        message: 'Test failed',
+        details: err instanceof Error ? err.message : String(err),
+      });
     } finally {
       setTesting(false);
     }
@@ -278,6 +327,33 @@ export function ProspectorSettingsBody({ onSaved, showCancel, onCancel }: BodyPr
         <Alert
           type={testResult.success ? 'success' : 'error'}
           message={testResult.message}
+          description={
+            !testResult.success && testResult.details ? (
+              <Collapse
+                ghost
+                size="small"
+                items={[
+                  {
+                    key: 'details',
+                    label: 'Details',
+                    children: (
+                      <pre
+                        style={{
+                          whiteSpace: 'pre-wrap',
+                          wordBreak: 'break-word',
+                          margin: 0,
+                          fontSize: 12,
+                          fontFamily: 'monospace',
+                        }}
+                      >
+                        {testResult.details}
+                      </pre>
+                    ),
+                  },
+                ]}
+              />
+            ) : undefined
+          }
           showIcon
           closable
           onClose={() => setTestResult(null)}
@@ -333,6 +409,55 @@ export function ProspectorSettingsBody({ onSaved, showCancel, onCancel }: BodyPr
         >
           <Input.Password placeholder={config?.apiKeySet ? '(unchanged)' : 'Enter API key'} />
         </Form.Item>
+
+        {selectedProvider === 'oauth2' && (
+          <>
+            <Divider orientation="left">OAuth2 Gateway (client-credentials + mTLS)</Divider>
+            <Form.Item
+              name="authUrl"
+              label="Auth URL"
+              help="OAuth2 client-credentials token endpoint (called with Basic auth)"
+            >
+              <Input placeholder="https://.../oauth2/v1/token" />
+            </Form.Item>
+            <Form.Item name="consumerKey" label="Consumer Key">
+              <Input placeholder="Consumer Key (used with the secret for Basic auth)" />
+            </Form.Item>
+            <Form.Item
+              name="consumerSecret"
+              label="Consumer Secret"
+              help={config?.consumerSecretSet ? 'Secret is set. Enter a new value to change it.' : undefined}
+            >
+              <Input.Password
+                autoComplete="new-password"
+                placeholder={config?.consumerSecretSet ? '(unchanged)' : 'Enter consumer secret'}
+              />
+            </Form.Item>
+            <Form.Item name="clientId" label="Client ID" help="Available to gateway headers as {clientId}">
+              <Input />
+            </Form.Item>
+            <Form.Item name="usecaseId" label="Usecase ID" help="Available to gateway headers as {usecaseId}">
+              <Input />
+            </Form.Item>
+            <Form.Item
+              name="clientCertPath"
+              label="Client Certificate (PEM)"
+              help="Path on the Drillbit host to the client cert + PKCS#8 key for mTLS"
+            >
+              <Input placeholder="/etc/drill/gateway-client.pem" />
+            </Form.Item>
+            <Form.Item
+              name="gatewayHeaders"
+              label="Gateway Headers (JSON)"
+              help="Header name → value template. Placeholders: {token}, {uuid}, {timestamp}, {apiKey}, {clientId}, {usecaseId}, {model}. Leave blank for the default mapping."
+            >
+              <TextArea
+                rows={7}
+                placeholder={'{\n  "Authorization": "Bearer {token}",\n  "x-wf-api-key": "{apiKey}",\n  "x-request-id": "{uuid}"\n}'}
+              />
+            </Form.Item>
+          </>
+        )}
 
         <Form.Item name="model" label="Model" rules={[{ required: true }]}>
           <AutoComplete

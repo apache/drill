@@ -69,8 +69,7 @@ public class OpenAiCompatibleProvider implements LlmProvider {
     // Create HTTP client with enterprise configuration
     OkHttpClient httpClient = HttpClientFactory.createClient(config);
 
-    String endpoint = LlmProvider.normalizeEndpoint(config.getApiEndpoint(), DEFAULT_ENDPOINT);
-    String url = endpoint + "/chat/completions";
+    String url = chatUrl(config);
 
     ObjectNode requestBody = buildRequestBody(config, messages, tools);
 
@@ -78,10 +77,7 @@ public class OpenAiCompatibleProvider implements LlmProvider {
         .url(url)
         .post(RequestBody.create(requestBody.toString(), JSON_TYPE))
         .addHeader("Content-Type", "application/json");
-
-    if (config.getApiKey() != null && !config.getApiKey().isEmpty()) {
-      reqBuilder.addHeader("Authorization", "Bearer " + config.getApiKey());
-    }
+    decorateRequest(reqBuilder, config);
 
     Request request = reqBuilder.build();
 
@@ -125,10 +121,17 @@ public class OpenAiCompatibleProvider implements LlmProvider {
     if (config.getModel() == null || config.getModel().isEmpty()) {
       return ValidationResult.error("Model name is required");
     }
+    return probe(config);
+  }
 
-    // Send a minimal, non-streaming request so we surface real failures (bad key,
-    // unknown model, unreachable endpoint) instead of reporting success blindly.
-    String endpoint = LlmProvider.normalizeEndpoint(config.getApiEndpoint(), DEFAULT_ENDPOINT);
+  /**
+   * Send a minimal, non-streaming request so we surface real failures (bad key/token,
+   * unknown model, unreachable endpoint, TLS) instead of reporting success blindly.
+   * Uses {@link #chatUrl} and {@link #decorateRequest}, so subclasses that override auth
+   * (e.g. an OAuth gateway) exercise their real auth path here too.
+   */
+  protected ValidationResult probe(LlmConfig config) {
+    String url = chatUrl(config);
 
     ObjectNode probeBody = MAPPER.createObjectNode();
     probeBody.put("model", config.getModel());
@@ -138,24 +141,47 @@ public class OpenAiCompatibleProvider implements LlmProvider {
     probeMsg.put("role", "user");
     probeMsg.put("content", "ping");
 
-    Request.Builder reqBuilder = new Request.Builder()
-        .url(endpoint + "/chat/completions")
-        .post(RequestBody.create(probeBody.toString(), JSON_TYPE))
-        .addHeader("Content-Type", "application/json");
-    if (config.getApiKey() != null && !config.getApiKey().isEmpty()) {
-      reqBuilder.addHeader("Authorization", "Bearer " + config.getApiKey());
-    }
+    try {
+      Request.Builder reqBuilder = new Request.Builder()
+          .url(url)
+          .post(RequestBody.create(probeBody.toString(), JSON_TYPE))
+          .addHeader("Content-Type", "application/json");
+      decorateRequest(reqBuilder, config);
 
-    try (Response response = HttpClientFactory.createClient(config)
-        .newCall(reqBuilder.build()).execute()) {
-      if (response.isSuccessful()) {
-        return ValidationResult.ok("Connection successful");
+      try (Response response = HttpClientFactory.createClient(config)
+          .newCall(reqBuilder.build()).execute()) {
+        if (response.isSuccessful()) {
+          return ValidationResult.ok("Connection successful");
+        }
+        String body = response.body() != null ? response.body().string() : "";
+        String details = LlmProvider.describeHttpError(url, response.code(), body);
+        logger.warn("{} config test failed:\n{}", getId(), details);
+        return ValidationResult.error("LLM API error " + response.code() + ": "
+            + extractErrorMessage(body), details);
       }
-      String body = response.body() != null ? response.body().string() : "";
-      return ValidationResult.error("LLM API error " + response.code() + ": "
-          + extractErrorMessage(body));
     } catch (Exception e) {
-      return ValidationResult.error("Could not reach endpoint: " + e.getMessage());
+      logger.warn("{} config test could not reach {}", getId(), url, e);
+      return ValidationResult.error("Could not reach endpoint: " + e.getMessage(),
+          LlmProvider.describeException(url, e));
+    }
+  }
+
+  /**
+   * Resolve the chat-completions URL from the configured endpoint. If the endpoint
+   * already targets {@code /chat/completions}, use it as-is; otherwise append the path.
+   */
+  protected String chatUrl(LlmConfig config) {
+    String endpoint = LlmProvider.normalizeEndpoint(config.getApiEndpoint(), DEFAULT_ENDPOINT);
+    return endpoint.endsWith("/chat/completions") ? endpoint : endpoint + "/chat/completions";
+  }
+
+  /**
+   * Attach auth to the outbound request. The default is a static bearer from the API key;
+   * subclasses override this to fetch a token, add gateway headers, etc.
+   */
+  protected void decorateRequest(Request.Builder builder, LlmConfig config) throws Exception {
+    if (config.getApiKey() != null && !config.getApiKey().isEmpty()) {
+      builder.addHeader("Authorization", "Bearer " + config.getApiKey());
     }
   }
 

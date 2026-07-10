@@ -149,6 +149,15 @@ export interface AiConfig {
   // Custom API Format
   requestTemplate?: string;
   responseMapping?: string;
+
+  // OAuth2 gateway. consumerSecret is write-only; only its presence is returned.
+  authUrl?: string;
+  consumerKey?: string;
+  consumerSecretSet?: boolean;
+  clientId?: string;
+  usecaseId?: string;
+  clientCertPath?: string;
+  gatewayHeaders?: Record<string, string>;
 }
 
 export interface AiConfigUpdate {
@@ -187,6 +196,15 @@ export interface AiConfigUpdate {
   // Custom API Format
   requestTemplate?: string;
   responseMapping?: string;
+
+  // OAuth2 gateway
+  authUrl?: string;
+  consumerKey?: string;
+  consumerSecret?: string;
+  clientId?: string;
+  usecaseId?: string;
+  clientCertPath?: string;
+  gatewayHeaders?: Record<string, string>;
 }
 
 export interface AiProvider {
@@ -197,6 +215,8 @@ export interface AiProvider {
 export interface ValidationResult {
   success: boolean;
   message: string;
+  /** Diagnostic detail for failures (URL, HTTP status, response body, exception chain). */
+  details?: string;
 }
 
 // SSE event types
