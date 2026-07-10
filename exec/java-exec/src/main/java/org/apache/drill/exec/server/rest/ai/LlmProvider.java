@@ -18,6 +18,8 @@
 package org.apache.drill.exec.server.rest.ai;
 
 import java.io.OutputStream;
+import java.io.PrintWriter;
+import java.io.StringWriter;
 import java.util.List;
 import java.util.Locale;
 
@@ -115,6 +117,11 @@ public interface LlmProvider {
       sb.append('\n');
       prefix = "Caused by: ";
     }
+    // The concise chain above is the TL;DR; the full stack trace (with frames) follows for
+    // deeper debugging. Safe to include here: this endpoint is admin-only.
+    StringWriter trace = new StringWriter();
+    t.printStackTrace(new PrintWriter(trace));
+    sb.append('\n').append("Stack trace:\n").append(trace.toString().trim());
     return sb.toString().trim();
   }
 }

@@ -453,7 +453,7 @@ export function ProspectorSettingsBody({ onSaved, showCancel, onCancel }: BodyPr
             >
               <TextArea
                 rows={7}
-                placeholder={'{\n  "Authorization": "Bearer {token}",\n  "x-wf-api-key": "{apiKey}",\n  "x-request-id": "{uuid}"\n}'}
+                placeholder={'{\n  "Authorization": "Bearer {token}",\n  "api-key": "{apiKey}",\n  "x-request-id": "{uuid}"\n}'}
               />
             </Form.Item>
           </>
