@@ -94,7 +94,7 @@ public class OAuth2GatewayProviderTest {
         + Base64.getEncoder().encodeToString("ck:cs".getBytes(StandardCharsets.UTF_8));
     assertEquals(expectedBasic, tokenReq.getHeader("Authorization"));
 
-    // Chat call: fetched bearer token + the x-wf-* gateway headers.
+    // Chat call: fetched bearer token + the gateway headers.
     RecordedRequest chatReq = server.takeRequest();
     assertTrue(chatReq.getPath().endsWith("/chat/completions"), chatReq.getPath());
     assertEquals("Bearer tok123", chatReq.getHeader("Authorization"));
@@ -103,10 +103,10 @@ public class OAuth2GatewayProviderTest {
     assertEquals("apikey", chatReq.getHeader("api-key"));
     assertNotNull(chatReq.getHeader("x-request-id"));
     assertNotNull(chatReq.getHeader("x-correlation-id"));
-    // x-wf-request-date must match Python's datetime.now().isoformat(): microsecond, no zone.
-    assertTrue(chatReq.getHeader("x-wf-request-date")
+    // request-date must match Python's datetime.now().isoformat(): microsecond, no zone.
+    assertTrue(chatReq.getHeader("request-date")
         .matches("\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}\\.\\d{6}"),
-        chatReq.getHeader("x-wf-request-date"));
+        chatReq.getHeader("request-date"));
 
     assertTrue(out.toString(StandardCharsets.UTF_8).contains("hi"));
   }

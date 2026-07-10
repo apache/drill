@@ -99,23 +99,32 @@ Connect Timeout: 45 seconds
 
 If your internal API uses HTTPS with a self-signed certificate or internal CA:
 
-1. Export your internal CA certificate (usually `.pem` or `.cer` format)
-2. Convert to PKCS12 format if needed:
-   ```bash
-   keytool -import -alias company-ca \
-     -file ca-certificate.pem \
-     -keystore truststore.jks \
-     -storepass changeit
-   ```
-3. In Prospector Settings:
-   - Set **Truststore Path**: `/opt/drill/certs/truststore.jks`
-   - Set **Truststore Password**: `changeit`
-   - Set **Truststore Type**: `JKS`
-   - Keep **Verify SSL Certificates** enabled
+**Option A — PEM CA bundle (simplest).** Point **Truststore Path** directly at a PEM file
+containing one or more `-----BEGIN CERTIFICATE-----` blocks (the same CA-bundle file a Python
+`requests`/`httpx` client passes as `verify=`). The PEM format is auto-detected; no keystore
+conversion or password is needed. This is the right place for a **certificates-only** file (no
+private key) — that is a CA bundle for verifying the *server*, not a client certificate.
+
+```
+Truststore Path: /opt/drill/certs/ca-bundle.pem
+Verify SSL Certificates: (keep enabled)
+```
+
+**Option B — JKS/PKCS12 truststore.** Convert the CA to a keystore if you prefer:
+```bash
+keytool -import -alias company-ca \
+  -file ca-certificate.pem \
+  -keystore truststore.jks \
+  -storepass changeit
+```
+Then set **Truststore Path** / **Truststore Password** / **Truststore Type: JKS**, and keep
+**Verify SSL Certificates** enabled.
 
 #### Client Certificate (mTLS)
 
-If the AI API requires mutual TLS (client certificate authentication):
+If the AI API requires mutual TLS (client certificate authentication). Note this is **not** the
+same as the CA bundle above — a client certificate file must contain a **private key** as well as
+the certificate. A certificates-only PEM belongs in the truststore, not here.
 
 1. Obtain your client certificate and private key
 2. Convert to PKCS12 format if needed:
@@ -408,21 +417,13 @@ Client ID: drill-prod
 Usecase ID: analytics-001
 API Key: (enter in password field)
 Client Certificate (PEM): /opt/drill/certs/gateway-client.pem
-Gateway Headers:
-{
-  "Authorization": "Bearer {token}",
-  "x-wf-client-id": "{clientId}",
-  "x-wf-usecase-id": "{usecaseId}",
-  "x-wf-api-key": "{apiKey}",
-  "x-request-id": "{uuid}",
-  "x-correlation-id": "{uuid}",
-  "x-wf-request-date": "{timestamp}"
-}
+Gateway Headers: (blank — uses the default mapping)
 ```
 
 Leaving **Gateway Headers** blank uses the default mapping (`client-id`, `usecase-id`,
-`api-key`, …). Set it explicitly, as above, whenever your gateway needs specific
-header names such as the `x-wf-*` family.
+`api-key`, `x-request-id`, `x-correlation-id`, `request-date`). Set it explicitly whenever
+your gateway needs different header names or a non-Bearer scheme — see
+[Configurable gateway headers](#configurable-gateway-headers).
 
 ## Troubleshooting
 
