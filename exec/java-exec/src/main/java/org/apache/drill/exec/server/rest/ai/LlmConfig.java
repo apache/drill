@@ -112,6 +112,34 @@ public class LlmConfig {
   @JsonProperty
   private String responseMapping;
 
+  // OAuth2 gateway: client-credentials token fetch + mTLS. The token endpoint is called
+  // with Basic auth (consumerKey:consumerSecret); the fetched bearer token, plus the
+  // clientId/usecaseId/apiKey gateway headers, authorize the API call.
+  @JsonProperty
+  private String authUrl;
+
+  @JsonProperty
+  private String consumerKey;
+
+  @JsonProperty
+  private String consumerSecret;
+
+  @JsonProperty
+  private String clientId;
+
+  @JsonProperty
+  private String usecaseId;
+
+  // Path to a PEM file holding the client cert + PKCS#8 private key for mTLS.
+  @JsonProperty
+  private String clientCertPath;
+
+  // Gateway request headers: header name -> value template. Templates support the
+  // placeholders {token}, {uuid}, {timestamp}, {apiKey}, {clientId}, {usecaseId}, {model}.
+  // Null/empty falls back to OAuth2GatewayProvider.DEFAULT_GATEWAY_HEADERS.
+  @JsonProperty
+  private Map<String, String> gatewayHeaders;
+
   public LlmConfig() {
     this.provider = "openai";
     this.maxTokens = 4096;
@@ -400,5 +428,62 @@ public class LlmConfig {
 
   public void setResponseMapping(String responseMapping) {
     this.responseMapping = responseMapping;
+  }
+
+  // OAuth2 gateway Getters/Setters
+  public String getAuthUrl() {
+    return authUrl;
+  }
+
+  public void setAuthUrl(String authUrl) {
+    this.authUrl = authUrl;
+  }
+
+  public String getConsumerKey() {
+    return consumerKey;
+  }
+
+  public void setConsumerKey(String consumerKey) {
+    this.consumerKey = consumerKey;
+  }
+
+  public String getConsumerSecret() {
+    return consumerSecret;
+  }
+
+  public void setConsumerSecret(String consumerSecret) {
+    this.consumerSecret = consumerSecret;
+  }
+
+  public String getClientId() {
+    return clientId;
+  }
+
+  public void setClientId(String clientId) {
+    this.clientId = clientId;
+  }
+
+  public String getUsecaseId() {
+    return usecaseId;
+  }
+
+  public void setUsecaseId(String usecaseId) {
+    this.usecaseId = usecaseId;
+  }
+
+  public String getClientCertPath() {
+    return clientCertPath;
+  }
+
+  public void setClientCertPath(String clientCertPath) {
+    this.clientCertPath = clientCertPath;
+  }
+
+  public Map<String, String> getGatewayHeaders() {
+    return gatewayHeaders;
+  }
+
+  public void setGatewayHeaders(Map<String, String> gatewayHeaders) {
+    this.gatewayHeaders = gatewayHeaders;
   }
 }

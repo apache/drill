@@ -90,7 +90,41 @@ public class EnterpriseProvider implements LlmProvider {
       }
     }
 
-    return ValidationResult.ok("Configuration is valid");
+    // Send a real probe to the endpoint (using the configured template) so "Test
+    // Connection" actually exercises DNS, TLS, proxy, and auth instead of only
+    // checking that the templates parse. This is the same request path the live
+    // chat uses, so a failure here surfaces the real enterprise-gateway error.
+    String url = config.getApiEndpoint();
+    String requestBody;
+    try {
+      requestBody = buildCustomRequest(config, List.of(ChatMessage.user("ping")), null);
+    } catch (Exception e) {
+      logger.warn("Enterprise config test could not build request from template", e);
+      return ValidationResult.error("Failed to build request from template: " + e.getMessage(),
+          LlmProvider.describeException(url, e));
+    }
+
+    Request.Builder reqBuilder = new Request.Builder()
+        .url(url)
+        .post(RequestBody.create(requestBody, JSON_TYPE))
+        .addHeader("Content-Type", "application/json");
+    addBearerToken(reqBuilder, config);
+
+    try (Response response = HttpClientFactory.createClient(config)
+        .newCall(reqBuilder.build()).execute()) {
+      if (response.isSuccessful()) {
+        return ValidationResult.ok("Connection successful");
+      }
+      String body = response.body() != null ? response.body().string() : "";
+      String details = LlmProvider.describeHttpError(url, response.code(), body);
+      logger.warn("Enterprise config test failed:\n{}", details);
+      return ValidationResult.error("Enterprise API error " + response.code() + ": "
+          + (body.isEmpty() ? "(empty response)" : body), details);
+    } catch (Exception e) {
+      logger.warn("Enterprise config test could not reach {}", url, e);
+      return ValidationResult.error("Could not reach endpoint: " + e.getMessage(),
+          LlmProvider.describeException(url, e));
+    }
   }
 
   @Override
@@ -111,11 +145,12 @@ public class EnterpriseProvider implements LlmProvider {
     // Build custom request using template and variable substitution
     String requestBody = buildCustomRequest(config, messages, tools);
 
-    Request request = new Request.Builder()
+    Request.Builder reqBuilder = new Request.Builder()
         .url(url)
         .post(RequestBody.create(requestBody, JSON_TYPE))
-        .addHeader("Content-Type", "application/json")
-        .build();
+        .addHeader("Content-Type", "application/json");
+    addBearerToken(reqBuilder, config);
+    Request request = reqBuilder.build();
 
     LlmCallResult result = new LlmCallResult();
     try (Response response = httpClient.newCall(request).execute()) {
@@ -143,6 +178,28 @@ public class EnterpriseProvider implements LlmProvider {
       }
     }
     return result;
+  }
+
+  /**
+   * Add {@code Authorization: Bearer <apiKey>} from the configured API key, unless the
+   * user already supplied an Authorization header via custom headers (that wins, so
+   * non-Bearer schemes still work). Enterprise gateways commonly expect a bearer
+   * token; without this the API Key field would be silently ignored for this provider.
+   */
+  private void addBearerToken(Request.Builder builder, LlmConfig config) {
+    String apiKey = config.getApiKey();
+    if (apiKey == null || apiKey.isEmpty()) {
+      return;
+    }
+    Map<String, String> custom = config.getCustomHeaders();
+    if (custom != null) {
+      for (String key : custom.keySet()) {
+        if ("authorization".equalsIgnoreCase(key)) {
+          return;
+        }
+      }
+    }
+    builder.addHeader("Authorization", "Bearer " + apiKey);
   }
 
   /**

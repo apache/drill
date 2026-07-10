@@ -85,4 +85,36 @@ public interface LlmProvider {
     }
     return endpoint;
   }
+
+  /**
+   * Build a diagnostic string for a non-2xx HTTP response from a provider probe:
+   * the URL hit, the status code, and the full response body. Intended for the
+   * {@code details} field of a failed {@link ValidationResult} and for server logs.
+   */
+  static String describeHttpError(String url, int statusCode, String body) {
+    return "URL: " + url + "\nHTTP status: " + statusCode + "\nResponse body:\n"
+        + (body == null || body.isEmpty() ? "(empty)" : body);
+  }
+
+  /**
+   * Build a diagnostic string for an exception thrown while reaching a provider,
+   * walking the full cause chain. For enterprise failures the real reason (SSL PKIX
+   * path, connection refused, unknown host) is usually a nested cause, not the
+   * top-level message, so the whole chain is included.
+   */
+  static String describeException(String url, Throwable t) {
+    StringBuilder sb = new StringBuilder("URL: ").append(url).append('\n');
+    String prefix = "";
+    // ponytail: cap at 10 to avoid a pathological self-referential cause cycle
+    Throwable cur = t;
+    for (int i = 0; cur != null && i < 10; i++, cur = cur.getCause()) {
+      sb.append(prefix).append(cur.getClass().getName());
+      if (cur.getMessage() != null) {
+        sb.append(": ").append(cur.getMessage());
+      }
+      sb.append('\n');
+      prefix = "Caused by: ";
+    }
+    return sb.toString().trim();
+  }
 }
