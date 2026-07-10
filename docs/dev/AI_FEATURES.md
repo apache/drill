@@ -251,7 +251,7 @@ Open the Prospector sidebar and click the gear icon to open the settings modal. 
 | Setting | Default | Description |
 |---------|---------|-------------|
 | Enable Prospector | Off | Master toggle for all AI features |
-| LLM Provider | OpenAI | `openai` (OpenAI-compatible), `anthropic` (Anthropic Claude) |
+| LLM Provider | OpenAI | `openai` (OpenAI-compatible), `anthropic` (Anthropic Claude), `oauth2` (OAuth2 gateway + mTLS), `enterprise` (custom API templates) |
 | API Endpoint | (auto) | Override the default endpoint URL. Leave empty for the provider's default. Useful for Azure OpenAI, local Ollama, or proxy setups. |
 | API Key | -- | Provider API key. Stored securely on the server; never sent to the browser. |
 | Model | -- | Model identifier (e.g., `gpt-4o`, `claude-sonnet-4-20250514`, `llama3`) |

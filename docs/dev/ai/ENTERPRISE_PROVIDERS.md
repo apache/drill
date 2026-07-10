@@ -34,6 +34,21 @@ If you're running an internal instance of an OpenAI-compatible API (vLLM, TGI, O
 6. Click **Test Connection** to verify
 7. Click **Save**
 
+### For OpenAI-Compatible Models Behind an OAuth2 Gateway
+
+If your model is OpenAI-compatible but fronted by an enterprise API gateway that requires
+an OAuth2 client-credentials token (and often mTLS):
+
+1. Set **LLM Provider** to "OAuth2 Gateway"
+2. Set **API Endpoint** to the chat endpoint and **Model** to your model name
+3. Fill in **Auth URL**, **Consumer Key**, **Consumer Secret** (the token is fetched automatically)
+4. Fill in **Client ID**, **Usecase ID**, and **API Key** if your gateway's headers use them
+5. Set **Client Certificate (PEM)** if the gateway requires mTLS
+6. Click **Test Connection** — this performs the real token fetch *and* endpoint call
+7. Click **Save**
+
+See [OAuth2 Gateway Provider](#oauth2-gateway-provider) for the full flow and configurable headers.
+
 ### For Custom Enterprise APIs
 
 If you have a proprietary API format:
@@ -49,7 +64,7 @@ If you have a proprietary API format:
 
 ### Basic Configuration
 
-- **Provider**: Choose from OpenAI Compatible, Anthropic Claude, or Enterprise (Custom API)
+- **Provider**: Choose from OpenAI Compatible, Anthropic Claude, OAuth2 Gateway, or Enterprise (Custom API)
 - **API Endpoint**: Full URL to your API server
 - **API Key**: Authentication token (optional for local endpoints)
 - **Model**: Model name or ID
@@ -115,6 +130,19 @@ If the AI API requires mutual TLS (client certificate authentication):
    - Set **Keystore Path**: `/opt/drill/certs/client-keystore.p12`
    - Set **Keystore Password**: (your keystore password)
    - Set **Keystore Type**: `PKCS12`
+
+##### PEM client certificate (OAuth2 Gateway provider)
+
+The **OAuth2 Gateway** provider also accepts a single PEM file directly (the same
+`cert=` form used by Python `requests`/`httpx`) via its **Client Certificate (PEM)** field —
+no keystore conversion needed. The file must contain the client certificate chain plus an
+**unencrypted PKCS#8** private key (`-----BEGIN PRIVATE KEY-----`).
+
+If your key is PKCS#1 (`BEGIN RSA PRIVATE KEY`) or SEC1 (`BEGIN EC PRIVATE KEY`), convert it:
+```bash
+openssl pkcs8 -topk8 -nocrypt -in client.pem -out client-pkcs8.pem
+```
+The certificate is presented on **both** the token call and the endpoint call.
 
 #### Self-Signed Certificates (Development Only)
 
@@ -224,6 +252,93 @@ If no mapping is provided, the response is assumed to be in normalized format (w
 }
 ```
 
+## OAuth2 Gateway Provider
+
+The **OAuth2 Gateway** provider targets an OpenAI-compatible chat API that sits behind an
+enterprise API gateway (Apigee and similar) using **OAuth2 client-credentials** authentication
+and, usually, **mTLS**. Because the chat API itself is OpenAI-compatible, this provider reuses
+the OpenAI request/response handling and only adds the gateway authentication.
+
+### How it works
+
+On every chat request (and on **Test Connection**), the provider:
+
+1. **Fetches a bearer token** from the **Auth URL** using OAuth2 client-credentials:
+   ```
+   POST {authUrl}
+   Authorization: Basic base64(consumerKey:consumerSecret)
+   Content-Type: application/x-www-form-urlencoded
+
+   grant_type=client_credentials
+   ```
+   It reads `access_token` from the JSON response and caches it until ~60s before `expires_in`
+   (numeric or numeric-string). The token is re-fetched automatically when it expires.
+2. **Calls the endpoint** with the OpenAI-compatible body plus the configured gateway headers
+   (see below), including the fetched token.
+
+mTLS (see [PEM client certificate](#pem-client-certificate-oauth2-gateway-provider)) is
+presented on both calls.
+
+### Configuration fields
+
+| Field | Purpose |
+|---|---|
+| **API Endpoint** | Chat endpoint (OpenAI-compatible). `/chat/completions` is appended if absent. |
+| **Model** | Model name. |
+| **Auth URL** | OAuth2 token endpoint. |
+| **Consumer Key** / **Consumer Secret** | Basic-auth credentials for the token call. |
+| **Client ID** / **Usecase ID** | Referenced by the default gateway headers; optional otherwise. |
+| **API Key** | Referenced by the default gateway headers; optional otherwise. |
+| **Client Certificate (PEM)** | Path to the mTLS client cert + PKCS#8 key. |
+| **Gateway Headers (JSON)** | Header name → value template (see below). Blank = default mapping. |
+
+Only **API Endpoint**, **Model**, **Auth URL**, **Consumer Key**, and **Consumer Secret** are
+required; the rest depend on what your gateway headers reference.
+
+### Configurable gateway headers
+
+Header **names are fully configurable** so the provider works with any gateway. The **Gateway
+Headers (JSON)** field maps a header name to a value template. Templates may contain these
+placeholders (anything else is sent literally):
+
+| Placeholder | Resolves to |
+|---|---|
+| `{token}` | the fetched OAuth2 bearer token |
+| `{uuid}` | a fresh UUID, generated per request |
+| `{timestamp}` | local ISO-8601 timestamp with microseconds, e.g. `2026-07-10T09:25:58.123456` |
+| `{apiKey}` | the **API Key** field |
+| `{clientId}` | the **Client ID** field |
+| `{usecaseId}` | the **Usecase ID** field |
+| `{model}` | the **Model** field |
+
+Leaving the field blank applies the default mapping:
+
+```json
+{
+  "Authorization": "Bearer {token}",
+  "client-id": "{clientId}",
+  "usecase-id": "{usecaseId}",
+  "api-key": "{apiKey}",
+  "x-request-id": "{uuid}",
+  "x-correlation-id": "{uuid}",
+  "request-date": "{timestamp}"
+}
+```
+
+For a gateway with different header names or a non-Bearer scheme, override it, e.g.:
+
+```json
+{
+  "X-Api-Token": "{token}",
+  "X-Request-Trace": "{uuid}",
+  "X-Model": "{model}"
+}
+```
+
+> **Timestamp note:** `{timestamp}` uses **local** time (matching a Python `datetime.now().isoformat()`
+> reference client). If your gateway validates the date as UTC and rejects requests as stale, that is
+> the first thing to adjust.
+
 ## Configuration Examples
 
 ### Example 1: Local Ollama (No Auth)
@@ -280,11 +395,47 @@ Response Mapping:
 }
 ```
 
+### Example 5: OpenAI-Compatible Model Behind an OAuth2 Gateway (mTLS)
+
+```
+Provider: OAuth2 Gateway
+API Endpoint: https://gateway.company.com/ai/v1
+Model: gpt-4o
+Auth URL: https://gateway.company.com/oauth2/v1/token
+Consumer Key: (enter in field)
+Consumer Secret: (enter in password field)
+Client ID: drill-prod
+Usecase ID: analytics-001
+API Key: (enter in password field)
+Client Certificate (PEM): /opt/drill/certs/gateway-client.pem
+Gateway Headers:
+{
+  "Authorization": "Bearer {token}",
+  "x-wf-client-id": "{clientId}",
+  "x-wf-usecase-id": "{usecaseId}",
+  "x-wf-api-key": "{apiKey}",
+  "x-request-id": "{uuid}",
+  "x-correlation-id": "{uuid}",
+  "x-wf-request-date": "{timestamp}"
+}
+```
+
+Leaving **Gateway Headers** blank uses the default mapping (`client-id`, `usecase-id`,
+`api-key`, …). Set it explicitly, as above, whenever your gateway needs specific
+header names such as the `x-wf-*` family.
+
 ## Troubleshooting
 
 ### Connection Test Fails
 
 **Problem**: "Connection test failed"
+
+**Read the details first.** When a test fails, the result banner has an expandable **Details**
+panel with the exact URL called, the HTTP status and full response body, or — for connection
+failures — the **full exception cause chain** (e.g. an `SSLHandshakeException` caused by
+`PKIX path building failed`, the real signal for a missing CA). The same detail is written to the
+Drillbit log. `Test Connection` exercises the real request path, so for the OAuth2 Gateway
+provider it tells you which leg broke — token fetch vs. mTLS vs. the endpoint call.
 
 **Solutions:**
 1. Verify API endpoint URL is correct and accessible
@@ -292,6 +443,10 @@ Response Mapping:
 3. If proxy is configured, verify proxy URL and credentials
 4. Check API key is valid (if required)
 5. Check certificate configuration (truststore exists and password is correct)
+6. For the OAuth2 Gateway provider: if the Details show a non-2xx from the **Auth URL**, the
+   Consumer Key/Secret or Auth URL is wrong; if the token succeeds but the endpoint returns 401,
+   check the gateway headers; a `PKIX`/`unable to find valid certification path` error means the
+   gateway's CA is missing from your truststore, or the client PEM is wrong for mTLS.
 
 ### SSL Certificate Errors
 

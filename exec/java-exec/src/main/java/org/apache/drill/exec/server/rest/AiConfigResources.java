@@ -158,6 +158,28 @@ public class AiConfigResources {
     @JsonProperty
     public String responseMapping;
 
+    // OAuth2 gateway. consumerSecret is a secret, so only its presence is returned.
+    @JsonProperty
+    public String authUrl;
+
+    @JsonProperty
+    public String consumerKey;
+
+    @JsonProperty
+    public boolean consumerSecretSet;
+
+    @JsonProperty
+    public String clientId;
+
+    @JsonProperty
+    public String usecaseId;
+
+    @JsonProperty
+    public String clientCertPath;
+
+    @JsonProperty
+    public Map<String, String> gatewayHeaders;
+
     public ConfigResponse() {
     }
 
@@ -197,6 +219,15 @@ public class AiConfigResources {
       // Custom API Format
       this.requestTemplate = config.getRequestTemplate();
       this.responseMapping = config.getResponseMapping();
+
+      // OAuth2 gateway
+      this.authUrl = config.getAuthUrl();
+      this.consumerKey = config.getConsumerKey();
+      this.consumerSecretSet = config.getConsumerSecret() != null && !config.getConsumerSecret().isEmpty();
+      this.clientId = config.getClientId();
+      this.usecaseId = config.getUsecaseId();
+      this.clientCertPath = config.getClientCertPath();
+      this.gatewayHeaders = config.getGatewayHeaders();
     }
   }
 
@@ -285,6 +316,28 @@ public class AiConfigResources {
 
     @JsonProperty
     public String responseMapping;
+
+    // OAuth2 gateway
+    @JsonProperty
+    public String authUrl;
+
+    @JsonProperty
+    public String consumerKey;
+
+    @JsonProperty
+    public String consumerSecret;
+
+    @JsonProperty
+    public String clientId;
+
+    @JsonProperty
+    public String usecaseId;
+
+    @JsonProperty
+    public String clientCertPath;
+
+    @JsonProperty
+    public Map<String, String> gatewayHeaders;
 
     public UpdateConfigRequest() {
     }
@@ -509,6 +562,30 @@ public class AiConfigResources {
         existing.setResponseMapping(request.responseMapping);
       }
 
+      // OAuth2 gateway. consumerSecret only updates on a non-empty value so a
+      // save from the UI (which sends it blank when unchanged) doesn't wipe the stored secret.
+      if (request.authUrl != null) {
+        existing.setAuthUrl(request.authUrl);
+      }
+      if (request.consumerKey != null) {
+        existing.setConsumerKey(request.consumerKey);
+      }
+      if (request.consumerSecret != null && !request.consumerSecret.isEmpty()) {
+        existing.setConsumerSecret(request.consumerSecret);
+      }
+      if (request.clientId != null) {
+        existing.setClientId(request.clientId);
+      }
+      if (request.usecaseId != null) {
+        existing.setUsecaseId(request.usecaseId);
+      }
+      if (request.clientCertPath != null) {
+        existing.setClientCertPath(request.clientCertPath);
+      }
+      if (request.gatewayHeaders != null) {
+        existing.setGatewayHeaders(request.gatewayHeaders);
+      }
+
       store.put(CONFIG_KEY, existing);
 
       return Response.ok(new ConfigResponse(existing)).build();
@@ -640,6 +717,43 @@ public class AiConfigResources {
         testConfig.setResponseMapping(request.responseMapping);
       } else if (existing != null) {
         testConfig.setResponseMapping(existing.getResponseMapping());
+      }
+
+      // OAuth2 gateway
+      if (request.authUrl != null) {
+        testConfig.setAuthUrl(request.authUrl);
+      } else if (existing != null) {
+        testConfig.setAuthUrl(existing.getAuthUrl());
+      }
+      if (request.consumerKey != null) {
+        testConfig.setConsumerKey(request.consumerKey);
+      } else if (existing != null) {
+        testConfig.setConsumerKey(existing.getConsumerKey());
+      }
+      if (request.consumerSecret != null && !request.consumerSecret.isEmpty()) {
+        testConfig.setConsumerSecret(request.consumerSecret);
+      } else if (existing != null) {
+        testConfig.setConsumerSecret(existing.getConsumerSecret());
+      }
+      if (request.clientId != null) {
+        testConfig.setClientId(request.clientId);
+      } else if (existing != null) {
+        testConfig.setClientId(existing.getClientId());
+      }
+      if (request.usecaseId != null) {
+        testConfig.setUsecaseId(request.usecaseId);
+      } else if (existing != null) {
+        testConfig.setUsecaseId(existing.getUsecaseId());
+      }
+      if (request.clientCertPath != null) {
+        testConfig.setClientCertPath(request.clientCertPath);
+      } else if (existing != null) {
+        testConfig.setClientCertPath(existing.getClientCertPath());
+      }
+      if (request.gatewayHeaders != null) {
+        testConfig.setGatewayHeaders(request.gatewayHeaders);
+      } else if (existing != null) {
+        testConfig.setGatewayHeaders(existing.getGatewayHeaders());
       }
 
       LlmProvider provider = LlmProviderRegistry.get(testConfig.getProvider());

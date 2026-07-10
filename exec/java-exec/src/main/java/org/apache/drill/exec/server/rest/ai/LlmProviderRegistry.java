@@ -32,6 +32,7 @@ public final class LlmProviderRegistry {
     register(new OpenAiCompatibleProvider());
     register(new AnthropicProvider());
     register(new EnterpriseProvider());
+    register(new OAuth2GatewayProvider());
   }
 
   private LlmProviderRegistry() {
