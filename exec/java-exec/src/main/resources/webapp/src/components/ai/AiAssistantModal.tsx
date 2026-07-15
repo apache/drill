@@ -20,7 +20,6 @@ import { BulbOutlined, FileTextOutlined, RocketOutlined } from '@ant-design/icon
 import { useState, useRef } from 'react';
 import ReactMarkdown from 'react-markdown';
 import { streamChat } from '../../api/ai';
-import { aiObservability } from '../../services/aiObservability';
 import QuerySuggestions from '../project/QuerySuggestions';
 import type { DatasetRef, Project } from '../../types';
 import type { ChatMessage, DeltaEvent } from '../../types/ai';
@@ -92,7 +91,6 @@ Provide:
 
     const messages: ChatMessage[] = [{ role: 'user', content: prompt }];
     let accumulated = '';
-    const startTime = Date.now();
 
     abortRef.current = streamChat(
       { messages, tools: [], context: { feature: 'explain_query' } },
@@ -103,13 +101,9 @@ Provide:
         }
       },
       () => {
-        const duration = Date.now() - startTime;
-        aiObservability.logAICall('explain_query', prompt, accumulated, duration);
         setIsLoading(false);
       },
-      (err) => {
-        const duration = Date.now() - startTime;
-        aiObservability.logAICall('explain_query', prompt, accumulated, duration, err.message);
+      () => {
         setIsLoading(false);
       }
     );
@@ -213,7 +207,6 @@ Be practical and focus on changes that can actually improve performance in Apach
 
     const messages: ChatMessage[] = [{ role: 'user', content: prompt }];
     let accumulated = '';
-    const startTime = Date.now();
 
     abortRef.current = streamChat(
       { messages, tools: [], context: { feature: 'optimize_query' } },
@@ -224,13 +217,9 @@ Be practical and focus on changes that can actually improve performance in Apach
         }
       },
       () => {
-        const duration = Date.now() - startTime;
-        aiObservability.logAICall('optimize_query', prompt, accumulated, duration);
         setIsLoading(false);
       },
-      (err) => {
-        const duration = Date.now() - startTime;
-        aiObservability.logAICall('optimize_query', prompt, accumulated, duration, err.message);
+      () => {
         setIsLoading(false);
       }
     );
