@@ -414,10 +414,15 @@ export function useProspector(
 
         if (doneEvent.finish_reason === 'tool_calls' && pendingToolCalls.size > 0) {
           // Build assistant message with tool calls
+          // A tool invoked with no arguments (get_available_functions, or
+          // get_project_docs listing page titles) streams no argument deltas, leaving
+          // this blank. Blank is not valid JSON: it breaks JSON.parse in
+          // executeToolCall and serializes to a null tool_use.input, which the
+          // Anthropic API rejects.
           const toolCalls: ToolCall[] = Array.from(pendingToolCalls.values()).map((tc) => ({
             id: tc.id,
             name: tc.name,
-            arguments: tc.arguments,
+            arguments: tc.arguments || '{}',
           }));
 
           const assistantMsg: ChatMessage = {

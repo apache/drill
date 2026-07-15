@@ -219,9 +219,20 @@ public class AnthropicProvider implements LlmProvider {
           toolUseBlock.put("type", "tool_use");
           toolUseBlock.put("id", tc.getId());
           toolUseBlock.put("name", tc.getName());
+          // A tool called with no arguments streams no input_json_delta, so arguments
+          // arrives blank; readTree("") returns a non-object node rather than throwing,
+          // and it serializes to null, which the API rejects. Anything that is not a
+          // JSON object becomes {} — the API accepts no other shape for input.
+          JsonNode input = null;
           try {
-            toolUseBlock.set("input", MAPPER.readTree(tc.getArguments()));
+            input = MAPPER.readTree(tc.getArguments());
           } catch (Exception e) {
+            logger.debug("Unparseable arguments for tool call {}; sending empty input",
+                tc.getId(), e);
+          }
+          if (input != null && input.isObject()) {
+            toolUseBlock.set("input", input);
+          } else {
             toolUseBlock.putObject("input");
           }
         }
