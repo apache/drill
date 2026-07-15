@@ -15,8 +15,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import { useState, useCallback, useRef } from 'react';
-import { streamChat } from '../api/ai';
+import { useState, useCallback, useRef, useEffect } from 'react';
+import { streamChat, getAiStatus } from '../api/ai';
 import { executeQuery } from '../api/queries';
 import { getSchemas, getTables, getColumns, getFunctions } from '../api/metadata';
 import { createVisualization } from '../api/visualizations';
@@ -191,6 +191,33 @@ export function useProspector(
   const abortRef = useRef<AbortController | null>(null);
   const toolRoundsRef = useRef(0);
 
+  // The sendDataToAi privacy setting, read here rather than accepted as a parameter so
+  // that every caller of this hook is gated by construction — the previous design had
+  // each caller thread it through ChatContext, and the two that forgot (the global
+  // Prospector tab, the dashboard panels) silently sent rows with the setting off.
+  // Read from /status, not /config: config is admin-only, so a non-admin's browser
+  // would fail the fetch and fall back to permissive, which is the same bug again.
+  // Unknown (still loading, or the fetch failed) withholds rows: a privacy setting has
+  // to fail closed, and the panel is unusable anyway if status cannot be read.
+  const sendDataToAiRef = useRef(false);
+  useEffect(() => {
+    let cancelled = false;
+    getAiStatus()
+      .then((status) => {
+        if (!cancelled) {
+          sendDataToAiRef.current = status.sendDataToAi;
+        }
+      })
+      .catch(() => {
+        if (!cancelled) {
+          sendDataToAiRef.current = false;
+        }
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
   const stopStreaming = useCallback(() => {
     if (abortRef.current) {
       abortRef.current.abort();
@@ -227,7 +254,9 @@ export function useProspector(
           const summary = {
             columns: result.columns,
             rowCount,
-            rows: context?.sendDataToAi === false ? undefined : result.rows?.slice(0, 5),
+            // Shape (columns, count) is metadata and always safe; the rows themselves
+            // are user data and go only when the deployment permits it.
+            rows: sendDataToAiRef.current ? result.rows?.slice(0, 5) : undefined,
           };
           return JSON.stringify(summary);
         }
