@@ -530,9 +530,11 @@ public class ProspectorResources {
    * the admin config test that reports its own success. Package-private and side-effect
    * free so the recorded fields can be asserted directly.
    *
-   * <p>Success semantics for every recorded event live here and in
-   * {@link #buildEvent}; callers must not hand-roll AiEvent construction, since
-   * "no exception thrown" is not the same as "the call succeeded".
+   * <p>Success semantics for most recorded events live here and in {@link #buildEvent};
+   * callers should prefer these builders over hand-rolling AiEvent construction, since
+   * "no exception thrown" is not generally the same as "the call succeeded". A caller
+   * may still hand-roll construction when its own success signal is a thrown exception
+   * rather than an error-carrying result — see TranspileResources.logTranspile.
    */
   static AiEvent buildOutcomeEvent(LlmConfig config, String username, String feature,
       boolean success, String errorClass, String message, long durationMs) {
