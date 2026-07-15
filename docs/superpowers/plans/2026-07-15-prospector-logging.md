@@ -256,12 +256,11 @@ recorded fields can be asserted without capturing log output."
 
 **Files:**
 - Modify: `exec/java-exec/src/main/java/org/apache/drill/exec/server/rest/ProspectorResources.java` (`ChatContext`, ~line 121; `chat`, ~line 398)
-- Modify: `exec/java-exec/src/main/resources/webapp/src/types/ai.ts:39`
 - Test: `exec/java-exec/src/test/java/org/apache/drill/exec/server/rest/ProspectorEventTest.java` (extend)
 
 **Interfaces:**
 - Consumes: `ProspectorResources.buildEvent(...)` from Task 1.
-- Produces: `ChatContext.feature` (`String`, Java; `feature?: string`, TS). `chat()` reads `request.context.feature` and passes it to `recordEvent`.
+- Produces: Java `ChatContext.feature` (`String`). `chat()` reads `request.context.feature` and passes it to `recordEvent`. The TypeScript counterpart is Task 3's.
 
 - [ ] **Step 1: Write the failing test**
 
@@ -308,20 +307,14 @@ and in the `finally`:
         }
 ```
 
-In `webapp/src/types/ai.ts`, add to `ChatContext` (after `currentSchema`):
-
-```ts
-  /** Which UI feature originated this call; used for analytics attribution. */
-  feature?: string;
-```
+This task is **server-side only**. The TypeScript type change lands in Task 3
+together with the call sites it forces, because making the field required breaks
+every existing `ChatContext` literal at once — the two cannot compile apart.
 
 - [ ] **Step 4: Run test to verify it passes**
 
 Run: `mvn -o test -pl exec/java-exec -Dtest=ProspectorEventTest -DfailIfNoTests=false`
 Expected: PASS — 7 tests.
-
-Run: `cd exec/java-exec/src/main/resources/webapp && npx tsc --noEmit`
-Expected: exit 0, no output.
 
 Run: `mvn -o checkstyle:check -pl exec/java-exec`
 Expected: BUILD SUCCESS.
@@ -330,120 +323,98 @@ Expected: BUILD SUCCESS.
 
 ```bash
 git add exec/java-exec/src/main/java/org/apache/drill/exec/server/rest/ProspectorResources.java \
-        exec/java-exec/src/main/resources/webapp/src/types/ai.ts \
         exec/java-exec/src/test/java/org/apache/drill/exec/server/rest/ProspectorEventTest.java
-git commit -m "Carry originating feature on ChatContext for AI analytics"
+git commit -m "Read the originating feature from ChatContext for AI analytics"
 ```
 
 ---
 
-### Task 3: Tag every call site
+### Task 3: Require `feature` and tag every call site
 
-Thirteen call sites currently send no feature, so the dashboard cannot distinguish them. Set `feature` on each `ChatContext`.
+Every `streamChat` caller currently sends no feature, so the dashboard cannot
+distinguish them. Rather than tag a hand-written list of call sites, make
+`feature` **required** on the TypeScript `ChatContext` and let the compiler
+enumerate the callers exhaustively.
+
+This matters: the first draft of this plan listed the call sites by hand and the
+list was wrong — it missed `pages/LogsPage.tsx` and had the wrong directory for
+`FileSystemForm.tsx`. A hand-maintained list (or a test asserting one) certifies
+the author's blind spots. `tsc` cannot miss a caller.
 
 **Files:**
-- Modify: `exec/java-exec/src/main/resources/webapp/src/hooks/useProspector.ts` (~line 301)
-- Modify: `exec/java-exec/src/main/resources/webapp/src/pages/SqlLabPage.tsx` (`aiContext` memo ~line 381; optimize call ~line 528)
-- Modify: `exec/java-exec/src/main/resources/webapp/src/components/shell/GlobalProspectorTab.tsx:30`
-- Modify: `exec/java-exec/src/main/resources/webapp/src/components/project/QuerySuggestions.tsx` (~line 358)
-- Modify: `exec/java-exec/src/main/resources/webapp/src/components/ai/AiAssistantModal.tsx` (explain ~line 90; optimize ~line 210)
-- Modify: `exec/java-exec/src/main/resources/webapp/src/components/dashboard/AiQnAPanel.tsx` (~line 97)
-- Modify: `exec/java-exec/src/main/resources/webapp/src/components/dashboard/NlFilterPanel.tsx` (~line 85)
-- Modify: `exec/java-exec/src/main/resources/webapp/src/components/dashboard/AiAlertsPanel.tsx` (~line 180)
-- Modify: `exec/java-exec/src/main/resources/webapp/src/components/dashboard/ExecutiveSummaryPanel.tsx` (~line 249)
-- Modify: `exec/java-exec/src/main/resources/webapp/src/pages/ProjectWikiPage.tsx` (~line 207)
-- Modify: `exec/java-exec/src/main/resources/webapp/src/pages/ProfileDetailPage.tsx` (~line 364)
-- Modify: `exec/java-exec/src/main/resources/webapp/src/components/storage/FileSystemForm.tsx` (~line 937)
+- Modify: `exec/java-exec/src/main/resources/webapp/src/types/ai.ts:39` (make `feature` required)
+- Modify: every file `tsc` reports as failing. At the time of writing that set is:
+  - `pages/SqlLabPage.tsx` (`aiContext` memo ~line 382; `base` ~line 388; optimize call ~line 528)
+  - `pages/ProjectWikiPage.tsx:208`
+  - `pages/ProfileDetailPage.tsx` (`buildAiContext` ~line 318)
+  - `pages/LogsPage.tsx:626`
+  - `components/shell/GlobalProspectorTab.tsx:30`
+  - `components/project/QuerySuggestions.tsx:359`
+  - `components/ai/AiAssistantModal.tsx:98` and `:219`
+  - `components/dashboard/AiQnAPanel.tsx:101`
+  - `components/dashboard/ExecutiveSummaryPanel.tsx:253`
+  - `components/dashboard/NlFilterPanel.tsx:89`
+  - `components/dashboard/AiAlertsPanel.tsx:184`
+  - `components/datasource/FileSystemForm.tsx:941`
+
+  **Trust `tsc`, not this list.** If the compiler reports a file not named here,
+  tag it too and note it in your report. If it does not report one named here,
+  do not invent a call for it.
 
 **Interfaces:**
-- Consumes: `ChatContext.feature` from Task 2.
-- Produces: the exact feature vocabulary below. Task 6 documents it; the dashboard groups by it.
+- Consumes: Java `ChatContext.feature` from Task 2 (the server already reads and defaults it).
+- Produces: `ChatContext.feature: string` (required). The feature vocabulary below is the contract Task 7 documents and the dashboard groups by.
 
-Feature vocabulary (use verbatim):
+Feature vocabulary — use these exact strings:
 
 | File | `feature` |
 |---|---|
-| `useProspector.ts` | `sql_lab_chat` |
-| `GlobalProspectorTab.tsx` | `global_chat` |
-| `QuerySuggestions.tsx` | `query_suggestions` |
-| `AiAssistantModal.tsx` (explain) | `explain_query` |
-| `AiAssistantModal.tsx` (optimize) | `optimize_query` |
-| `SqlLabPage.tsx:528` | `sql_lab_optimize` |
-| `AiQnAPanel.tsx` | `dashboard_qna` |
-| `ExecutiveSummaryPanel.tsx` | `executive_summary` |
-| `NlFilterPanel.tsx` | `nl_filter` |
-| `AiAlertsPanel.tsx` | `ai_alerts` |
-| `ProjectWikiPage.tsx` | `wiki_generation` |
-| `ProfileDetailPage.tsx` | `profile_analysis` |
-| `FileSystemForm.tsx` | `filesystem_form` |
+| `pages/SqlLabPage.tsx` (`aiContext` memo) | `sql_lab_chat` |
+| `pages/SqlLabPage.tsx` (optimize call ~528) | `sql_lab_optimize` |
+| `pages/LogsPage.tsx` | `log_analysis` |
+| `pages/ProjectWikiPage.tsx` | `wiki_generation` |
+| `pages/ProfileDetailPage.tsx` | `profile_analysis` |
+| `components/shell/GlobalProspectorTab.tsx` | `global_chat` |
+| `components/project/QuerySuggestions.tsx` | `query_suggestions` |
+| `components/ai/AiAssistantModal.tsx` (explain, ~98) | `explain_query` |
+| `components/ai/AiAssistantModal.tsx` (optimize, ~219) | `optimize_query` |
+| `components/dashboard/AiQnAPanel.tsx` | `dashboard_qna` |
+| `components/dashboard/ExecutiveSummaryPanel.tsx` | `executive_summary` |
+| `components/dashboard/NlFilterPanel.tsx` | `nl_filter` |
+| `components/dashboard/AiAlertsPanel.tsx` | `ai_alerts` |
+| `components/datasource/FileSystemForm.tsx` | `filesystem_form` |
 
-**Note on `useProspector.ts`:** it does not build the context itself — it receives it from the caller and forwards it at line 301-302. `SqlLabPage`'s `aiContext` memo is the SQL Lab source, so set `feature: 'sql_lab_chat'` there. `GlobalProspectorTab.tsx:30` currently sends `{}`; make it `{ feature: 'global_chat' }`. Do not set a default inside `useProspector` — the server already defaults, and a hook-level default would mask an untagged caller.
+**Do not** add a default inside `useProspector` or `api/ai.ts`. `useProspector`
+receives the context from its caller and forwards it (~line 301); a hook-level
+default would mask an untagged caller and defeat the compiler check. The server's
+`prospector_chat` default exists only for wire compatibility with older clients.
 
-- [ ] **Step 1: Write the failing test**
+**Note on `SqlLabPage.tsx`:** it builds `base: ChatContext` (~line 388) and
+spreads it. Tag `base` once — the spread carries `feature` to the derived
+contexts. Verify no derived context overwrites it.
 
-Create `exec/java-exec/src/main/resources/webapp/src/components/shell/__tests__/GlobalProspectorTab.context.test.ts`:
+- [ ] **Step 1: Make the field required — this is the failing check**
+
+In `webapp/src/types/ai.ts`, add to `ChatContext` (after `currentSchema`). It is
+required on purpose; every other field on this interface is optional:
 
 ```ts
-/*
- * Licensed to the Apache Software Foundation (ASF) under one
- * or more contributor license agreements.  See the NOTICE file
- * distributed with this work for additional information
- * regarding copyright ownership.  The ASF licenses this file
- * to you under the Apache License, Version 2.0 (the
- * "License"); you may not use this file except in compliance
- * with the License.  You may obtain a copy of the License at
- *
- * http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-import { describe, expect, it } from 'vitest';
-import { readFileSync } from 'fs';
-import { join } from 'path';
-
-/**
- * Every streamChat caller must tag its ChatContext with a feature, otherwise the
- * call is attributed to the prospector_chat default and the analytics dashboard
- * cannot tell the features apart. This guards the vocabulary as a whole.
- */
-const SRC = join(__dirname, '..', '..', '..');
-
-const EXPECTED: Array<[string, string]> = [
-  ['pages/SqlLabPage.tsx', 'sql_lab_chat'],
-  ['pages/SqlLabPage.tsx', 'sql_lab_optimize'],
-  ['components/shell/GlobalProspectorTab.tsx', 'global_chat'],
-  ['components/project/QuerySuggestions.tsx', 'query_suggestions'],
-  ['components/ai/AiAssistantModal.tsx', 'explain_query'],
-  ['components/ai/AiAssistantModal.tsx', 'optimize_query'],
-  ['components/dashboard/AiQnAPanel.tsx', 'dashboard_qna'],
-  ['components/dashboard/ExecutiveSummaryPanel.tsx', 'executive_summary'],
-  ['components/dashboard/NlFilterPanel.tsx', 'nl_filter'],
-  ['components/dashboard/AiAlertsPanel.tsx', 'ai_alerts'],
-  ['pages/ProjectWikiPage.tsx', 'wiki_generation'],
-  ['pages/ProfileDetailPage.tsx', 'profile_analysis'],
-  ['components/storage/FileSystemForm.tsx', 'filesystem_form'],
-];
-
-describe('AI feature tagging', () => {
-  it.each(EXPECTED)('%s tags feature %s', (file, feature) => {
-    const source = readFileSync(join(SRC, file), 'utf8');
-    expect(source).toContain(`feature: '${feature}'`);
-  });
-});
+  /** Which UI feature originated this call; used for analytics attribution. */
+  feature: string;
 ```
 
-- [ ] **Step 2: Run test to verify it fails**
+- [ ] **Step 2: Run the check to verify it fails**
 
-Run: `cd exec/java-exec/src/main/resources/webapp && npx vitest run src/components/shell/__tests__/GlobalProspectorTab.context.test.ts`
-Expected: FAIL — 13 assertions fail, no file contains a `feature:` tag.
+Run: `cd exec/java-exec/src/main/resources/webapp && npx tsc --noEmit`
+Expected: FAIL — one `TS2739`/`TS2741` error per untagged `ChatContext` literal
+("Property 'feature' is missing in type '{}' but required in type 'ChatContext'"),
+naming each file and line. **Save this output** — it is the authoritative
+worklist for Step 3, and your report must state how many files it named.
 
-- [ ] **Step 3: Write minimal implementation**
+- [ ] **Step 3: Tag each call site the compiler named**
 
-Add the tag to each context object literal per the table. Examples:
+Work the `tsc` list, assigning each file the string from the vocabulary table.
+Examples:
 
 `GlobalProspectorTab.tsx:30`:
 
@@ -451,52 +422,54 @@ Add the tag to each context object literal per the table. Examples:
   const context: ChatContext = useMemo(() => ({ feature: 'global_chat' }), []);
 ```
 
-`SqlLabPage.tsx` `aiContext` memo — add as the first property:
+`QuerySuggestions.tsx:359`:
 
 ```ts
+        { messages, tools: [], context: { feature: 'query_suggestions' } },
+```
+
+`SqlLabPage.tsx` — add to the `base` literal as its first property:
+
+```ts
+    const base: ChatContext = {
       feature: 'sql_lab_chat',
 ```
 
-`SqlLabPage.tsx:528` (optimize call) — its inline context becomes:
+`AiAlertsPanel.tsx:184` — the context is already populated; add the tag beside
+the existing fields rather than replacing them:
 
 ```ts
-        context: { feature: 'sql_lab_optimize' },
+        context: { feature: 'ai_alerts', dashboardAlertMode: true, dashboardData },
 ```
 
-`QuerySuggestions.tsx:358` — replace `context: {}`:
+For the multi-line dashboard contexts (`AiQnAPanel.tsx:101`,
+`ExecutiveSummaryPanel.tsx:253`, `NlFilterPanel.tsx:89`) and
+`LogsPage.tsx:626`, add `feature: '<value>',` as the first property of the
+existing object literal, preserving every field already there.
 
-```ts
-        context: { feature: 'query_suggestions' },
-```
+- [ ] **Step 4: Run the check to verify it passes**
 
-`ProjectWikiPage.tsx:207` — replace `context: {}`:
+Run: `cd exec/java-exec/src/main/resources/webapp && npx tsc --noEmit`
+Expected: exit 0, no output. A green `tsc` now proves every caller is tagged —
+that is the guarantee this task exists to create.
 
-```ts
-        context: { feature: 'wiki_generation' },
-```
-
-Apply the same shape to `AiAssistantModal.tsx` (explain → `explain_query`, optimize → `optimize_query`), `AiQnAPanel.tsx` (`dashboard_qna`), `ExecutiveSummaryPanel.tsx` (`executive_summary`), `NlFilterPanel.tsx` (`nl_filter`), `AiAlertsPanel.tsx` (`ai_alerts`), `ProfileDetailPage.tsx` (`profile_analysis`), `FileSystemForm.tsx` (`filesystem_form`). Where the component already builds a populated `ChatContext` (the dashboard panels set `dashboardQnAMode` etc.), add `feature` alongside the existing fields rather than replacing them.
-
-- [ ] **Step 4: Run test to verify it passes**
-
-Run: `cd exec/java-exec/src/main/resources/webapp && npx vitest run src/components/shell/__tests__/GlobalProspectorTab.context.test.ts`
-Expected: PASS — 13 assertions.
-
-Run: `npx tsc --noEmit`
-Expected: exit 0.
+Run: `npx vitest run`
+Expected: PASS, no regressions.
 
 - [ ] **Step 5: Commit**
 
 ```bash
 git add exec/java-exec/src/main/resources/webapp/src
-git commit -m "Tag every AI call site with its originating feature
+git commit -m "Require an originating feature on every AI call
 
-All thirteen streamChat callers previously landed in the analytics dashboard
-as prospector_chat, so dashboard Q&A, wiki generation and SQL Lab chat could
-not be told apart."
+All streamChat callers previously landed in the analytics dashboard as
+prospector_chat, so dashboard Q&A, wiki generation and SQL Lab chat could not
+be told apart. Making the field required lets the compiler enumerate the call
+sites exhaustively rather than relying on a hand-maintained list."
 ```
 
 ---
+
 
 ### Task 4: Delete client-side logging
 
@@ -504,61 +477,50 @@ not be told apart."
 
 Verified before writing this plan: those two components are the only importers of `aiObservability`, the service is the only caller of `POST /api/v1/ai/logs`, and its `getLogs()` localStorage accessor has no consumers. The deletion is clean.
 
+This task is a pure deletion, so it has no unit test of its own: there is no
+behaviour left to assert. Its verification is that nothing references the deleted
+code and everything still compiles. Do not add a test that asserts a file is
+absent — that tests the filesystem, not the product.
+
 **Files:**
 - Modify: `exec/java-exec/src/main/resources/webapp/src/components/project/QuerySuggestions.tsx` (remove import line 25; remove calls at 375, 383, 392)
 - Modify: `exec/java-exec/src/main/resources/webapp/src/components/ai/AiAssistantModal.tsx` (remove import line 23; remove calls at 107, 112, 228, 233)
 - Delete: `exec/java-exec/src/main/resources/webapp/src/services/aiObservability.ts` (354 lines)
 - Delete: `exec/java-exec/src/main/java/org/apache/drill/exec/server/rest/ai/AiLogsResources.java`
-- Test: `exec/java-exec/src/main/resources/webapp/src/components/shell/__tests__/GlobalProspectorTab.context.test.ts` (extend)
 
 **Interfaces:**
 - Consumes: feature tagging from Task 3 (this deletion is only safe once the server records attribution).
 - Produces: no client-side AI logging. `source` on every event is now always `server`.
 
-- [ ] **Step 1: Write the failing test**
+- [ ] **Step 1: Confirm the current references exist**
 
-Append to `GlobalProspectorTab.context.test.ts`:
+Run:
 
-```ts
-describe('client-side AI logging is removed', () => {
-  it.each([
-    'components/project/QuerySuggestions.tsx',
-    'components/ai/AiAssistantModal.tsx',
-  ])('%s does not log AI calls from the browser', (file) => {
-    const source = readFileSync(join(SRC, file), 'utf8');
-    expect(source).not.toContain('aiObservability');
-    expect(source).not.toContain('logAICall');
-  });
-
-  it('the aiObservability service no longer exists', () => {
-    expect(existsSync(join(SRC, 'services/aiObservability.ts'))).toBe(false);
-  });
-});
+```bash
+grep -rn --include='*.java' --include='*.ts' --include='*.tsx' -E "AiLogsResources|ai/logs|aiObservability" exec/java-exec/src
 ```
 
-Add `existsSync` to the fs import at the top of the file:
+Expected: matches in exactly four files — `QuerySuggestions.tsx`,
+`AiAssistantModal.tsx`, `services/aiObservability.ts`, and `AiLogsResources.java`.
+If any **other** file appears, stop and report it: the deletion is not clean and
+this plan's premise is wrong.
 
-```ts
-import { existsSync, readFileSync } from 'fs';
-```
-
-- [ ] **Step 2: Run test to verify it fails**
-
-Run: `cd exec/java-exec/src/main/resources/webapp && npx vitest run src/components/shell/__tests__/GlobalProspectorTab.context.test.ts`
-Expected: FAIL — 3 assertions fail; the service exists and both components reference it.
-
-- [ ] **Step 3: Write minimal implementation**
+- [ ] **Step 2: Remove the call sites**
 
 Remove the import and every `aiObservability.logAICall(...)` call from both components. In `QuerySuggestions.tsx` the calls sit inside the `onDone`/`onError` callbacks alongside `duration` bookkeeping — delete only the logging call; if a `duration`/`startTime` local becomes unused afterwards, delete it too (`tsc` will flag it).
 
-Then delete both files:
+- [ ] **Step 3: Delete the service and the endpoint**
 
 ```bash
 git rm exec/java-exec/src/main/resources/webapp/src/services/aiObservability.ts
 git rm exec/java-exec/src/main/java/org/apache/drill/exec/server/rest/ai/AiLogsResources.java
 ```
 
-`AiLogsResources` is a JAX-RS resource discovered by package scanning, so no registration list needs editing. Confirm nothing else references it:
+`AiLogsResources` is a JAX-RS resource discovered by package scanning, so no registration list needs editing.
+
+- [ ] **Step 4: Verify nothing references the deleted code and it all still builds**
+
+Run:
 
 ```bash
 grep -rn --include='*.java' --include='*.ts' --include='*.tsx' -E "AiLogsResources|ai/logs|aiObservability" exec/java-exec/src
@@ -566,13 +528,11 @@ grep -rn --include='*.java' --include='*.ts' --include='*.tsx' -E "AiLogsResourc
 
 Expected: no matches.
 
-- [ ] **Step 4: Run test to verify it passes**
+Run: `cd exec/java-exec/src/main/resources/webapp && npx tsc --noEmit`
+Expected: exit 0. This is the real check — a dangling import would fail here.
 
-Run: `cd exec/java-exec/src/main/resources/webapp && npx vitest run src/components/shell/__tests__/GlobalProspectorTab.context.test.ts`
-Expected: PASS.
-
-Run: `npx tsc --noEmit`
-Expected: exit 0.
+Run: `npx vitest run`
+Expected: PASS, no regressions.
 
 Run: `mvn -o test-compile -pl exec/java-exec -DskipTests` then `mvn -o checkstyle:check -pl exec/java-exec`
 Expected: BUILD SUCCESS for both.
@@ -590,6 +550,7 @@ these events existed to supply, leaving them pure duplicates."
 ```
 
 ---
+
 
 ### Task 5: Log the blind spots
 
