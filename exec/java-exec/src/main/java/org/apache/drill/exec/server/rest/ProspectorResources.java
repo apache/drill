@@ -655,7 +655,7 @@ public class ProspectorResources {
 
   // ==================== Helper Methods ====================
 
-  private List<ChatMessage> buildMessages(LlmConfig config, ChatRequest request) {
+  List<ChatMessage> buildMessages(LlmConfig config, ChatRequest request) {
     List<ChatMessage> messages = new ArrayList<>();
 
     // Build system prompt
@@ -691,6 +691,14 @@ public class ProspectorResources {
       } else if (ctx.availableSchemas != null && !ctx.availableSchemas.isEmpty()) {
         systemPrompt.append("Available schemas: ")
             .append(String.join(", ", ctx.availableSchemas)).append("\n");
+      }
+
+      if (ctx.projectId != null && !ctx.projectId.trim().isEmpty()) {
+        ProjectResources.Project project = loadProject(ctx.projectId);
+        if (project != null) {
+          systemPrompt.append(buildProjectBlock(project,
+              loadSavedQueries(project.getSavedQueryIds())));
+        }
       }
 
       if (ctx.currentSql != null && !ctx.currentSql.isEmpty()) {
