@@ -17,12 +17,14 @@
  */
 package org.apache.drill.exec.server.rest;
 
+import jakarta.ws.rs.core.SecurityContext;
 import org.apache.drill.exec.server.rest.ai.AiEvent;
 import org.apache.drill.exec.server.rest.ai.LlmCallResult;
 import org.apache.drill.exec.server.rest.ai.LlmConfig;
 import org.junit.jupiter.api.Test;
 
 import java.io.IOException;
+import java.security.Principal;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
@@ -145,5 +147,38 @@ public class ProspectorEventTest {
     AiEvent event = ProspectorResources.buildSetupFailureEvent(
         null, "alice", null, "UnknownProvider", "Unknown LLM provider: bogus");
     assertEquals("prospector_chat", event.feature);
+  }
+
+  /**
+   * When auth is disabled there is no SecurityContext (or no principal on it).
+   * AiEvent's contract is "anonymous" in that case, never null — a null user
+   * breaks the analytics dashboard's byUser grouping.
+   */
+  @Test
+  public void testResolveUserFallsBackToAnonymousWhenNoPrincipal() {
+    assertEquals("anonymous", ProspectorResources.resolveUser(null));
+
+    SecurityContext noPrincipal = new SecurityContext() {
+      @Override
+      public Principal getUserPrincipal() {
+        return null;
+      }
+
+      @Override
+      public boolean isUserInRole(String role) {
+        return false;
+      }
+
+      @Override
+      public boolean isSecure() {
+        return false;
+      }
+
+      @Override
+      public String getAuthenticationScheme() {
+        return null;
+      }
+    };
+    assertEquals("anonymous", ProspectorResources.resolveUser(noPrincipal));
   }
 }
