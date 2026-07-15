@@ -89,9 +89,15 @@ public class HttpClientFactory {
         .readTimeout(readTimeout, TimeUnit.SECONDS)
         .writeTimeout(writeTimeout, TimeUnit.SECONDS);
 
-    // 2. Configure proxy
-    if (config.getProxyUrl() != null && !config.getProxyUrl().isEmpty()) {
+    // 2. Configure proxy. When none is configured, connect directly rather than letting
+    // OkHttp inherit the JVM's global -Dhttps.proxyHost: the AI endpoint is often reachable
+    // directly (as from a Python client that ignores Java system properties) while a global
+    // proxy would silently route — and sometimes reset — the connection. Set the Proxy URL in
+    // the Prospector network config if the AI endpoint must go through a proxy.
+    if (isSet(config.getProxyUrl())) {
       configureProxy(builder, config);
+    } else {
+      builder.proxy(Proxy.NO_PROXY);
     }
 
     // 3. Configure SSL/TLS
@@ -108,6 +114,11 @@ public class HttpClientFactory {
     }
 
     return builder.build();
+  }
+
+  /** A config path is "set" only if non-null and not blank once trimmed. */
+  private static boolean isSet(String value) {
+    return value != null && !value.trim().isEmpty();
   }
 
   /**
@@ -143,9 +154,9 @@ public class HttpClientFactory {
   private static void configureSSL(OkHttpClient.Builder builder, LlmConfig config)
       throws Exception {
     // Check if custom SSL configuration is needed
-    boolean hasKeystore = config.getKeystorePath() != null && !config.getKeystorePath().isEmpty();
-    boolean hasTruststore = config.getTruststorePath() != null && !config.getTruststorePath().isEmpty();
-    boolean hasPemCert = config.getClientCertPath() != null && !config.getClientCertPath().isEmpty();
+    boolean hasKeystore = isSet(config.getKeystorePath());
+    boolean hasTruststore = isSet(config.getTruststorePath());
+    boolean hasPemCert = isSet(config.getClientCertPath());
 
     if (hasKeystore || hasTruststore || hasPemCert) {
       SSLContext sslContext = SSLContext.getInstance("TLS");
