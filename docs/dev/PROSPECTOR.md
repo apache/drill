@@ -129,9 +129,21 @@ guessing.
   whole system prompt is re-sent on every tool round (up to `maxToolRounds`).
   Instead, the model calls the `get_project_docs` tool to read one page in full
   when it needs to (see [`ui/components/prospector.md`](ui/components/prospector.md)).
-- Loading is best-effort: an unreachable project store, a missing project, or
-  any other lookup failure simply means no project block is injected — the
-  chat still proceeds normally rather than failing.
+- **`projectId` is client-supplied, so the load path authorizes it.** `loadProject`
+  enforces exactly what `GET /api/v1/projects/{id}` enforces — soft-deleted projects
+  (`deletedAt > 0`) are invisible, and the requester must satisfy
+  `ProjectResources.canRead` (owner, or public, or in `sharedWith`). Saved queries are
+  authorized individually via `SavedQueryResources.canRead` (owner or public), because a
+  readable project can reference another user's private query. Both predicates are reused
+  from the resource that owns them rather than copied: a divergent second copy is how
+  this class of bug comes back. Without these checks, any user could name another user's
+  private project id and have its description, wiki titles, and saved-query SQL read back
+  out of the system prompt.
+- Loading is best-effort: an unreachable project store, a missing project, an
+  unauthorized or deleted project, or any other lookup failure all simply mean no project
+  block is injected — the chat still proceeds normally rather than failing. Unauthorized
+  is deliberately indistinguishable from missing, so a chat cannot be used to probe which
+  project ids exist.
 
 ## REST API Reference
 

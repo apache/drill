@@ -1360,7 +1360,16 @@ public class ProjectResources {
 
   // ==================== Helper Methods ====================
 
-  private boolean canRead(Project project, String user) {
+  /**
+   * The single definition of "may this user read this project". Package-private and
+   * static so other resources that surface project content — notably
+   * {@link ProspectorResources}, which injects project metadata into the AI system
+   * prompt — enforce exactly this rule rather than a divergent copy of it.
+   *
+   * <p>Callers must separately reject soft-deleted projects ({@code getDeletedAt() > 0}):
+   * being in the trash is orthogonal to readability.
+   */
+  static boolean canRead(Project project, String user) {
     return project.getOwner().equals(user)
         || project.isPublic()
         || project.getSharedWith().contains(user);
