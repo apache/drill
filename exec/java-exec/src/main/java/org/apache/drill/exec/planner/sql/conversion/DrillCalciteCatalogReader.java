@@ -35,6 +35,9 @@ import org.apache.drill.exec.metastore.MetadataProviderManager;
 import org.apache.drill.exec.planner.logical.DrillTable;
 import org.apache.drill.exec.planner.sql.SchemaUtilities;
 import org.apache.drill.exec.rpc.user.UserSession;
+import org.apache.drill.exec.security.ranger.AccessAuthorizer;
+import org.apache.drill.exec.security.ranger.AccessAuthorizerFactory;
+import org.apache.ranger.authorization.drill.resource.DrillAccessType;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
@@ -103,12 +106,97 @@ class DrillCalciteCatalogReader extends CalciteCatalogReader {
   public Prepare.PreparingTable getTable(List<String> names) {
     checkTemporaryTable(names);
     Prepare.PreparingTable table = super.getTable(names);
-    DrillTable drillTable;
-    if (table != null && (drillTable = table.unwrap(DrillTable.class)) != null) {
-      drillTable.setOptions(session.getOptions());
-      drillTable.setTableMetadataProviderManager(tableCache.getUnchecked(DrillTableKey.of(names, drillTable)));
+    if (table != null) {
+      // Ranger SELECT authorization check for ALL table types, including
+      // JDBC storage plugin tables (JdbcTable) that are not DrillTable.
+      checkTableAccess(table, names);
+
+      DrillTable drillTable = table.unwrap(DrillTable.class);
+      if (drillTable != null) {
+        drillTable.setOptions(session.getOptions());
+        drillTable.setTableMetadataProviderManager(tableCache.getUnchecked(DrillTableKey.of(names, drillTable)));
+      }
     }
     return table;
+  }
+
+  /**
+   * Checks SELECT permission on the resolved table via the configured {@link AccessAuthorizer}
+   * (Ranger by default). No-op when authorization is disabled (fail-open). System schemas
+   * (INFORMATION_SCHEMA, sys) are bypassed inside the authorizer implementation.
+   *
+   * <p>Extracts datasource/schema/table from the resolved qualified name so it works
+   * for both DrillTable (native storage plugins) and non-DrillTable (JDBC storage plugin).
+   * The {@code names} argument is used as a fallback to determine the datasource when
+   * the qualified name does not expose it.
+   */
+  private void checkTableAccess(Prepare.PreparingTable table, List<String> names) {
+    AccessAuthorizer authorizer = AccessAuthorizerFactory.getAuthorizer(drillConfig);
+    if (!authorizer.isEnabled()) {
+      return; // fail-open when disabled
+    }
+    // Use the resolved qualified name (includes default schema resolution) rather than
+    // the raw input names, which may be incomplete when the user omits the schema.
+    //
+    // Ranger four-level resource model: datasource / schema / table / column.
+    // The first segment of qualifiedName is the datasource (storage plugin name);
+    // the LAST segment is the table; any segments in between form the schema path.
+    // For example "mysql.shf.users" -> datasource=mysql, schema=shf, table=users.
+    // The schema MUST NOT include the datasource prefix, otherwise Ranger policy
+    // matching fails (policy has schema=shf but request sends schema=mysql.shf).
+    //
+    // Some backends have no schema concept (e.g. a flat file store). To keep the
+    // four-level model uniform, we synthesize a default schema per datasource via
+    // getDefaultSchemaByDataSource(). The default branch returns the datasource
+    // name itself so each storage plugin gets its own default schema namespace
+    // until an explicit mapping is added.
+    List<String> qualifiedName = table.getQualifiedName();
+    String tableName = qualifiedName.get(qualifiedName.size() - 1);
+    String dataSource;
+    String schemaPath;
+    if (qualifiedName.size() > 2) {
+      // datasource.schema.table  OR  datasource.subschema.table
+      dataSource = qualifiedName.get(0);
+      schemaPath = SchemaUtilities.getSchemaPath(qualifiedName.subList(1, qualifiedName.size() - 1));
+    } else if (qualifiedName.size() == 2) {
+      // datasource.table — backend has no schema; synthesize a default so the
+      // four-level resource stays complete (Ranger policy matching requires a
+      // non-null schema key when schema is a mandatory resource).
+      dataSource = qualifiedName.get(0);
+      schemaPath = getDefaultSchemaByDataSource(dataSource);
+    } else {
+      // Single-element qualified name: fall back to the input names list to find the datasource.
+      dataSource = !names.isEmpty() ? names.get(0) : tableName;
+      schemaPath = getDefaultSchemaByDataSource(dataSource);
+    }
+    String userName = session.getCredentials().getUserName();
+
+    if (!authorizer.checkTableAccess(userName, dataSource, schemaPath, tableName, DrillAccessType.SELECT.name())) {
+      throw UserException.permissionError()
+          .message("Access denied: user '%s' lacks SELECT privilege on %s.%s.%s",
+              userName, dataSource, schemaPath, tableName)
+          .build(logger);
+    }
+  }
+
+  /**
+   * Returns the default schema name to use when a table's qualified name does not
+   * contain an explicit schema segment (i.e. two-segment {@code datasource.table}
+   * or a single-segment fallback). This keeps the Ranger four-level resource
+   * model complete even for backends that have no native schema concept.
+   *
+   * <p>Add explicit cases below as new storage plugins are integrated. The
+   * {@code default} branch returns the datasource name itself so each plugin
+   * gets a distinct default schema namespace without further configuration.</p>
+   *
+   * @param dataSource the storage plugin / datasource name
+   * @return a non-null default schema name
+   */
+  static String getDefaultSchemaByDataSource(String dataSource) {
+    return switch (dataSource.toLowerCase()) {
+      case "dfs", "cp" -> "default";
+      default -> dataSource;
+    };
   }
 
   private void checkTemporaryTable(List<String> names) {

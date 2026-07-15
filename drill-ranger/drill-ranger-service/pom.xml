@@ -1,0 +1,139 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  Licensed to the Apache Software Foundation (ASF) under one
+  or more contributor license agreements.  See the NOTICE file
+  distributed with this work for additional information
+  regarding copyright ownership.  The ASF licenses this file
+  to you under the Apache License, Version 2.0 (the
+  "License"); you may not use this file except in compliance
+  with the License.  You may obtain a copy of the License at
+
+  http://www.apache.org/licenses/LICENSE-2.0
+
+  Unless required by applicable law or agreed to in writing, software
+  distributed under the License is distributed on an "AS IS" BASIS,
+  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  See the License for the specific language governing permissions and
+  limitations under the License.
+-->
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+
+  <parent>
+    <groupId>org.apache.drill</groupId>
+    <artifactId>drill-ranger-parent</artifactId>
+    <version>1.23.0-SNAPSHOT</version>
+  </parent>
+
+  <artifactId>ranger-drill-service</artifactId>
+  <name>Drill : Ranger Drill Service Plugin</name>
+  <description>
+    Apache Ranger service plugin for Apache Drill.
+    Deployed to Ranger Admin (NOT to the Drillbit). Provides validateConfig
+    (connection test) and lookupResource (schema/table/column autocomplete in
+    the Ranger policy editor) by connecting to Drill via REST API.
+    Compiled with JDK 8 bytecode for compatibility with Ranger Admin running
+    on JDK 8. Uses only JDK-standard HTTP (HttpURLConnection) and Jackson
+    (provided by Ranger Admin) with no Drill dependencies.
+  </description>
+
+  <properties>
+    <!--
+      ranger.version comes from drill-ranger-parent.
+      jackson.version, slf4j.version and mockito.version come from
+      drill-root's <properties> / <dependencyManagement> (jackson via
+      jackson-bom import, slf4j-api via explicit dependencyManagement,
+      mockito-core via inherited <dependencies>).
+    -->
+  </properties>
+
+  <dependencies>
+    <!-- Ranger plugin base classes (RangerBaseService, ResourceLookupContext, etc.).
+         Scope=provided: Ranger Admin already ships these; we only compile against them.
+         Exclusions are transitive: declaring them here removes the banned artifacts
+         from the entire subtree (hadoop-common, commons-configuration2,
+         ranger-plugins-cred, ranger-plugins-audit, elasticsearch, aws-sdk, etc.). -->
+    <dependency>
+      <groupId>org.apache.ranger</groupId>
+      <artifactId>ranger-plugins-common</artifactId>
+      <version>${ranger.version}</version>
+      <scope>provided</scope>
+      <exclusions>
+        <!-- Banned by Drill parent enforcer; Ranger Admin provides its own. -->
+        <exclusion>
+          <groupId>commons-logging</groupId>
+          <artifactId>commons-logging</artifactId>
+        </exclusion>
+        <exclusion>
+          <groupId>javax.servlet</groupId>
+          <artifactId>javax.servlet-api</artifactId>
+        </exclusion>
+        <exclusion>
+          <groupId>javax.servlet.jsp</groupId>
+          <artifactId>jsp-api</artifactId>
+        </exclusion>
+      </exclusions>
+    </dependency>
+
+    <!-- Jackson for JSON parsing of Drill REST API responses.
+         Scope=provided: Ranger Admin already ships Jackson.
+         Version managed by drill-root's jackson-bom import. -->
+    <dependency>
+      <groupId>com.fasterxml.jackson.core</groupId>
+      <artifactId>jackson-databind</artifactId>
+      <scope>provided</scope>
+    </dependency>
+
+    <!-- Logging - provided by Ranger Admin runtime.
+         Version managed by drill-root's <dependencyManagement>. -->
+    <dependency>
+      <groupId>org.slf4j</groupId>
+      <artifactId>slf4j-api</artifactId>
+      <scope>provided</scope>
+    </dependency>
+
+    <!-- Test dependencies (versions inherited from drill-root).
+         Note: mockito-core is NOT declared here — RangerServiceDrillTest
+         uses only JUnit reflection, no mocking. It remains on the test
+         classpath via inheritance from drill-root, but is not needed. -->
+    <dependency>
+      <groupId>org.junit.jupiter</groupId>
+      <artifactId>junit-jupiter</artifactId>
+      <scope>test</scope>
+    </dependency>
+  </dependencies>
+
+  <build>
+    <plugins>
+      <!--
+        Explicitly override maven-compiler-plugin to compile this module
+        to JDK 8 bytecode (class major version 52) for deployment into
+        Ranger Admin running on JDK 8.
+
+        Why explicit configuration instead of just setting the
+        maven.compiler.release property? The root Drill POM defines an
+        active jdk9+ profile that sets maven.compiler.release=11, and
+        profile properties take precedence over child POM properties.
+        An explicit release element in the plugin configuration is the
+        only reliable way to override the profile-driven property value.
+
+        Building with JDK 17 (Drill default): release 8 cross-compiles
+        and validates against the JDK 8 API symbol table.
+
+        Building with JDK 8 (optional): JDK 8 javac does not support
+        the release flag. Pass -Dmaven.compiler.release= on the command
+        line to blank it out and fall back to source/target=1.8:
+          mvn -Dmaven.compiler.release= -Dmaven.compiler.source=1.8 -Dmaven.compiler.target=1.8 clean install
+      -->
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-compiler-plugin</artifactId>
+        <configuration>
+          <release>8</release>
+        </configuration>
+      </plugin>
+    </plugins>
+  </build>
+</project>

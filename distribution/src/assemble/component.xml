@@ -65,6 +65,7 @@
         <include>org.apache.drill:drill-common:jar</include>
         <include>org.apache.drill:drill-logical:jar</include>
         <include>org.apache.drill:drill-protocol:jar</include>
+        <include>org.apache.drill:drill-ranger-plugin:jar</include>
         <include>org.apache.drill.exec:drill-java-exec:jar</include>
         <include>org.apache.drill.exec:drill-jdbc:jar</include>
         <include>org.apache.drill.exec:drill-rpc:jar</include>
@@ -95,6 +96,21 @@
         <include>org.apache.drill.exec:drill-jdbc-all:jar</include>
       </includes>
       <outputDirectory>jars/jdbc-driver</outputDirectory>
+      <useProjectArtifact>false</useProjectArtifact>
+    </dependencySet>
+
+    <!--
+      Ranger Admin service plugin (self-contained fat jar with drill-jdbc
+      shaded + relocated). Kept in its own directory so it never lands on the
+      Drillbit classpath. Users copy this jar into Ranger Admin's
+      WEB-INF/classes/lib to enable Test Connection and resource autocomplete
+      in the Ranger policy editor.
+    -->
+    <dependencySet>
+      <includes>
+        <include>org.apache.drill:ranger-drill-service:jar</include>
+      </includes>
+      <outputDirectory>jars/ranger-service</outputDirectory>
       <useProjectArtifact>false</useProjectArtifact>
     </dependencySet>
 
@@ -219,6 +235,11 @@
     <fileSet>
       <directory>${project.build.directory}/winutils</directory>
       <outputDirectory>winutils/bin</outputDirectory>
+    </fileSet>
+    <fileSet>
+      <directory>src/main/resources/ranger</directory>
+      <outputDirectory>conf/ranger</outputDirectory>
+      <fileMode>0640</fileMode>
     </fileSet>
   </fileSets>
 

@@ -3039,5 +3039,6 @@
     <module>drill-yarn</module>
     <module>distribution</module>
     <module>metastore</module>
+    <module>drill-ranger</module>
   </modules>
 </project>

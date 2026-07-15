@@ -697,6 +697,12 @@
       <artifactId>swagger-jaxrs2-servlet-initializer-v2-jakarta</artifactId>
       <version>${swagger.version}</version>
     </dependency>
+      <dependency>
+          <groupId>org.apache.drill</groupId>
+          <artifactId>drill-ranger-plugin</artifactId>
+          <version>1.23.0-SNAPSHOT</version>
+          <scope>provided</scope>
+      </dependency>
   </dependencies>
 
   <profiles>

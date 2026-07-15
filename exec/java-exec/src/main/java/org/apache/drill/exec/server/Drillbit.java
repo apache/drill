@@ -34,6 +34,7 @@ import org.apache.drill.exec.coord.zk.ZKClusterCoordinator;
 import org.apache.drill.exec.exception.DrillbitStartupException;
 import org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint;
 import org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint.State;
+import org.apache.drill.exec.security.ranger.AccessAuthorizerFactory;
 import org.apache.drill.exec.server.DrillbitStateManager.DrillbitState;
 import org.apache.drill.exec.server.options.OptionDefinition;
 import org.apache.drill.exec.server.options.OptionValue;
@@ -229,6 +230,8 @@ public class Drillbit implements AutoCloseable {
     final DrillbitContext drillbitContext = manager.getContext();
     storageRegistry = drillbitContext.getStorage();
     storageRegistry.init();
+    // Initialize Ranger access authorizer if enabled
+    AccessAuthorizerFactory.getAuthorizer(context.getConfig());
     drillbitContext.getOptionManager().init();
     javaPropertiesToSystemOptions();
     manager.getContext().getRemoteFunctionRegistry().init(context.getConfig(), storeProvider, coord);
