@@ -53,6 +53,7 @@ import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
 import jakarta.ws.rs.core.SecurityContext;
 import jakarta.ws.rs.core.StreamingOutput;
+import java.security.Principal;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -346,8 +347,7 @@ public class ProspectorResources {
   @Operation(summary = "Stream AI chat completion",
       description = "Sends messages to the LLM and streams back SSE events")
   public Response chat(ChatRequest request, @Context SecurityContext sc) {
-    String username = sc != null && sc.getUserPrincipal() != null
-        ? sc.getUserPrincipal().getName() : null;
+    String username = resolveUser(sc);
     String feature = request != null && request.context != null ? request.context.feature : null;
     try {
       LlmConfig config = getConfig();
@@ -464,6 +464,22 @@ public class ProspectorResources {
 
   private static double round4(double v) {
     return Math.round(v * 10000.0) / 10000.0;
+  }
+
+  /**
+   * Resolves the authenticated username for AI analytics events, falling back to
+   * "anonymous" when there is no principal (e.g. auth disabled) so that dashboard
+   * grouping by user is never broken by a null value.
+   */
+  static String resolveUser(SecurityContext sc) {
+    if (sc == null) {
+      return "anonymous";
+    }
+    Principal p = sc.getUserPrincipal();
+    if (p == null || p.getName() == null || p.getName().isEmpty()) {
+      return "anonymous";
+    }
+    return p.getName();
   }
 
   private static String lastUserMessage(ChatRequest request) {
