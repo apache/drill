@@ -227,7 +227,7 @@ export function useProspector(
           const summary = {
             columns: result.columns,
             rowCount,
-            rows: result.rows?.slice(0, 5),
+            rows: context?.sendDataToAi === false ? undefined : result.rows?.slice(0, 5),
           };
           return JSON.stringify(summary);
         }

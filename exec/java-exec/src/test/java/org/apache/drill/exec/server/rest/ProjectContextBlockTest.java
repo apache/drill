@@ -23,6 +23,7 @@ import org.junit.jupiter.api.Test;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
@@ -197,5 +198,129 @@ public class ProjectContextBlockTest {
 
     assertEquals(1, capturedSavedQueryIds.size());
     assertEquals(fixtureProject.getSavedQueryIds(), capturedSavedQueryIds.get(0));
+  }
+
+  @Test
+  public void testSendDataToAiDefaultsToTrueWhenAbsent() throws Exception {
+    com.fasterxml.jackson.databind.ObjectMapper mapper =
+        new com.fasterxml.jackson.databind.ObjectMapper();
+    ProspectorResources.ChatContext ctx = mapper.readValue(
+        "{\"feature\":\"sql_lab_chat\"}", ProspectorResources.ChatContext.class);
+    assertTrue(ProspectorResources.isSendDataToAi(ctx));
+  }
+
+  @Test
+  public void testSendDataToAiRespectsExplicitFalse() throws Exception {
+    com.fasterxml.jackson.databind.ObjectMapper mapper =
+        new com.fasterxml.jackson.databind.ObjectMapper();
+    ProspectorResources.ChatContext ctx = mapper.readValue(
+        "{\"feature\":\"sql_lab_chat\",\"sendDataToAi\":false}",
+        ProspectorResources.ChatContext.class);
+    assertFalse(ProspectorResources.isSendDataToAi(ctx));
+  }
+
+  /**
+   * The notebook tab populates six notebook* context fields, which deserialize fine
+   * (covered by ProspectorEventTest.testChatContextCarriesNotebookFields) but were
+   * silently dropped by buildMessages. This proves they actually reach the prompt
+   * the model sees, not just the deserialized ChatContext.
+   */
+  @Test
+  public void testNotebookContextReachesSystemPrompt() {
+    ProspectorResources.ChatRequest req = new ProspectorResources.ChatRequest();
+    ProspectorResources.ChatContext ctx = new ProspectorResources.ChatContext();
+    ctx.feature = "sql_lab_chat";
+    ctx.notebookMode = true;
+    ctx.notebookDfName = "sales_df";
+    ctx.notebookDfShape = "10 rows x 3 cols";
+    ctx.notebookColumns = List.of("region", "amount");
+    ctx.notebookCellCode = "sales_df.groupby('region').sum()";
+    ctx.notebookCellError = "KeyError: 'region'";
+    req.context = ctx;
+    req.messages = new ArrayList<>();
+
+    List<ChatMessage> messages = new ProspectorResources().buildMessages(new LlmConfig(), req);
+    String systemPrompt = systemPromptOf(messages);
+
+    assertTrue(systemPrompt.contains("sales_df"));
+    assertTrue(systemPrompt.contains("10 rows x 3 cols"));
+    assertTrue(systemPrompt.contains("region"));
+    assertTrue(systemPrompt.contains("amount"));
+    assertTrue(systemPrompt.contains("sales_df.groupby('region').sum()"));
+    assertTrue(systemPrompt.contains("KeyError: 'region'"));
+  }
+
+  /**
+   * notebookDfName etc. are populated even though notebookMode is off — this can't
+   * happen from the real UI, but it isolates the notebookMode guard itself: without
+   * it, a stale notebook value would leak into a non-notebook chat's prompt.
+   */
+  @Test
+  public void testNoNotebookSectionWhenNotebookModeFalse() {
+    ProspectorResources.ChatRequest req = new ProspectorResources.ChatRequest();
+    ProspectorResources.ChatContext ctx = new ProspectorResources.ChatContext();
+    ctx.feature = "sql_lab_chat";
+    ctx.notebookMode = false;
+    ctx.notebookDfName = "ghost_df";
+    ctx.notebookCellCode = "ghost_df.head()";
+    req.context = ctx;
+    req.messages = new ArrayList<>();
+
+    List<ChatMessage> messages = new ProspectorResources().buildMessages(new LlmConfig(), req);
+    String systemPrompt = systemPromptOf(messages);
+    assertFalse(systemPrompt.contains("ghost_df"));
+    assertFalse(systemPrompt.contains("DataFrame variable:"));
+  }
+
+  private static ProspectorResources.DashboardDataContext dashboardPanel(String panelName,
+      List<String> columns, List<Map<String, Object>> sampleRows) {
+    ProspectorResources.DashboardDataContext ddc = new ProspectorResources.DashboardDataContext();
+    ddc.panelName = panelName;
+    ddc.columns = columns;
+    ddc.rowCount = sampleRows.size();
+    ddc.sampleRows = sampleRows;
+    return ddc;
+  }
+
+  /**
+   * appendDashboardData used to serialize sample rows unconditionally, ignoring the
+   * user's sendDataToAi privacy flag. Columns and row count are metadata, not user
+   * data, so they must survive even when sample rows are withheld.
+   */
+  @Test
+  public void testDashboardSampleRowsOmittedWhenSendDataToAiFalse() {
+    ProspectorResources.ChatRequest req = new ProspectorResources.ChatRequest();
+    ProspectorResources.ChatContext ctx = new ProspectorResources.ChatContext();
+    ctx.feature = "sql_lab_chat";
+    ctx.dashboardSummaryMode = true;
+    ctx.sendDataToAi = false;
+    ctx.dashboardData = List.of(dashboardPanel("Sales", List.of("region", "amount"),
+        List.of(Map.of("region", "West", "amount", "SECRET_VALUE_42"))));
+    req.context = ctx;
+    req.messages = new ArrayList<>();
+
+    String systemPrompt =
+        systemPromptOf(new ProspectorResources().buildMessages(new LlmConfig(), req));
+
+    assertTrue(systemPrompt.contains("region"));
+    assertTrue(systemPrompt.contains("Row count: 1"));
+    assertFalse(systemPrompt.contains("SECRET_VALUE_42"));
+  }
+
+  @Test
+  public void testDashboardSampleRowsIncludedWhenSendDataToAiAbsent() {
+    ProspectorResources.ChatRequest req = new ProspectorResources.ChatRequest();
+    ProspectorResources.ChatContext ctx = new ProspectorResources.ChatContext();
+    ctx.feature = "sql_lab_chat";
+    ctx.dashboardSummaryMode = true;
+    ctx.dashboardData = List.of(dashboardPanel("Sales", List.of("region", "amount"),
+        List.of(Map.of("region", "West", "amount", "SECRET_VALUE_42"))));
+    req.context = ctx;
+    req.messages = new ArrayList<>();
+
+    String systemPrompt =
+        systemPromptOf(new ProspectorResources().buildMessages(new LlmConfig(), req));
+
+    assertTrue(systemPrompt.contains("SECRET_VALUE_42"));
   }
 }

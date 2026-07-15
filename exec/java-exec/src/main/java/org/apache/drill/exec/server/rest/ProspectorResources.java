@@ -218,6 +218,14 @@ public class ProspectorResources {
     @JsonProperty
     public List<ProjectDatasetRef> projectDatasets;
 
+    /**
+     * Sample data may be sent to the model unless the user explicitly opted out.
+     * A {@link Boolean} (not {@code boolean}) so "absent" is distinguishable from
+     * "explicitly false" — see {@link #isSendDataToAi(ChatContext)}.
+     */
+    @JsonProperty
+    public Boolean sendDataToAi;
+
     public ChatContext() {
     }
 
@@ -655,6 +663,11 @@ public class ProspectorResources {
 
   // ==================== Helper Methods ====================
 
+  /** Sample data may be sent unless the user explicitly opted out. */
+  static boolean isSendDataToAi(ChatContext ctx) {
+    return ctx == null || ctx.sendDataToAi == null || ctx.sendDataToAi;
+  }
+
   List<ChatMessage> buildMessages(LlmConfig config, ChatRequest request) {
     List<ChatMessage> messages = new ArrayList<>();
 
@@ -698,6 +711,28 @@ public class ProspectorResources {
         if (project != null) {
           systemPrompt.append(buildProjectBlock(project,
               loadSavedQueries(project.getSavedQueryIds())));
+        }
+      }
+
+      if (ctx.notebookMode) {
+        systemPrompt.append("\nYou are also assisting inside the notebook tab, where the user ");
+        systemPrompt.append("works with a pandas-like DataFrame.\n");
+        if (ctx.notebookDfName != null && !ctx.notebookDfName.isEmpty()) {
+          systemPrompt.append("DataFrame variable: ").append(ctx.notebookDfName).append("\n");
+        }
+        if (ctx.notebookDfShape != null && !ctx.notebookDfShape.isEmpty()) {
+          systemPrompt.append("Shape: ").append(ctx.notebookDfShape).append("\n");
+        }
+        if (ctx.notebookColumns != null && !ctx.notebookColumns.isEmpty()) {
+          systemPrompt.append("Columns: ")
+              .append(String.join(", ", ctx.notebookColumns)).append("\n");
+        }
+        if (ctx.notebookCellCode != null && !ctx.notebookCellCode.isEmpty()) {
+          systemPrompt.append("Current cell code:\n```python\n")
+              .append(ctx.notebookCellCode).append("\n```\n");
+        }
+        if (ctx.notebookCellError != null && !ctx.notebookCellError.isEmpty()) {
+          systemPrompt.append("Last cell error: ").append(ctx.notebookCellError).append("\n");
         }
       }
 
@@ -898,7 +933,7 @@ public class ProspectorResources {
           systemPrompt.append("\n");
         }
         systemPrompt.append("Row count: ").append(ddc.rowCount).append("\n");
-        if (ddc.sampleRows != null && !ddc.sampleRows.isEmpty()) {
+        if (isSendDataToAi(ctx) && ddc.sampleRows != null && !ddc.sampleRows.isEmpty()) {
           systemPrompt.append("Sample data:\n```json\n");
           try {
             ObjectMapper mapper = new ObjectMapper();

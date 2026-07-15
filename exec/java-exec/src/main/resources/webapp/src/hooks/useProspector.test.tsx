@@ -21,6 +21,7 @@ import { renderHook } from '@testing-library/react';
 import { useProspector } from './useProspector';
 import { createVisualization } from '../api/visualizations';
 import { addVisualization, getProject } from '../api/projects';
+import { executeQuery } from '../api/queries';
 import type { ChatContext, ToolCall } from '../types/ai';
 
 vi.mock('../api/visualizations', () => ({ createVisualization: vi.fn() }));
@@ -151,5 +152,38 @@ describe('get_project_docs tool', () => {
     const out = JSON.parse(await result.current.executeToolCall(docsCall(), ctx()));
     expect(out.error).toBe('No active project — get_project_docs is only available inside a project.');
     expect(out.error).not.toContain('Unknown tool');
+  });
+});
+
+describe('execute_sql honours sendDataToAi', () => {
+  const sqlCall = (): ToolCall => ({
+    id: 'call-3',
+    name: 'execute_sql',
+    arguments: JSON.stringify({ sql: 'SELECT * FROM sales' }),
+  });
+
+  beforeEach(() => {
+    vi.clearAllMocks();
+    vi.mocked(executeQuery).mockResolvedValue({
+      columns: ['region', 'amount'],
+      metadata: ['VARCHAR', 'INTEGER'],
+      rows: [{ region: 'West', amount: 42 }],
+    } as never);
+  });
+
+  it('omits sample rows when sendDataToAi is false, keeping columns and count', async () => {
+    const { result } = renderHook(() => useProspector());
+    const out = JSON.parse(await result.current.executeToolCall(
+      sqlCall(), { feature: 'sql_lab_chat', sendDataToAi: false } as ChatContext));
+    expect(out.rows).toBeUndefined();
+    expect(out.columns).toBeDefined();
+    expect(out.rowCount).toBeDefined();
+  });
+
+  it('includes sample rows when sendDataToAi is true', async () => {
+    const { result } = renderHook(() => useProspector());
+    const out = JSON.parse(await result.current.executeToolCall(
+      sqlCall(), { feature: 'sql_lab_chat', sendDataToAi: true } as ChatContext));
+    expect(out.rows).toBeDefined();
   });
 });
