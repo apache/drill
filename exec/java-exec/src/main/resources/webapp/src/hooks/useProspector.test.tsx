@@ -20,11 +20,11 @@ import { renderHook } from '@testing-library/react';
 
 import { useProspector } from './useProspector';
 import { createVisualization } from '../api/visualizations';
-import { addVisualization } from '../api/projects';
+import { addVisualization, getProject } from '../api/projects';
 import type { ChatContext, ToolCall } from '../types/ai';
 
 vi.mock('../api/visualizations', () => ({ createVisualization: vi.fn() }));
-vi.mock('../api/projects', () => ({ addVisualization: vi.fn() }));
+vi.mock('../api/projects', () => ({ addVisualization: vi.fn(), getProject: vi.fn() }));
 vi.mock('../api/ai', () => ({ streamChat: vi.fn() }));
 vi.mock('../api/queries', () => ({ executeQuery: vi.fn() }));
 vi.mock('../api/metadata', () => ({
@@ -105,5 +105,50 @@ describe('create_visualization tool', () => {
     expect(out.error).toContain('boom');
     expect(consoleError).toHaveBeenCalled();
     consoleError.mockRestore();
+  });
+});
+
+describe('get_project_docs tool', () => {
+  const docsCall = (pageTitle?: string): ToolCall => ({
+    id: 'call-2',
+    name: 'get_project_docs',
+    arguments: JSON.stringify(pageTitle ? { pageTitle } : {}),
+  });
+
+  beforeEach(() => {
+    vi.clearAllMocks();
+    vi.mocked(getProject).mockResolvedValue({
+      wikiPages: [
+        { title: 'Runbook', content: 'step one ...' },
+        { title: 'Glossary', content: '...' },
+      ],
+    } as never);
+  });
+
+  it('lists page titles when given no title', async () => {
+    const { result } = renderHook(() => useProspector());
+    const out = JSON.parse(await result.current.executeToolCall(docsCall(), ctx('proj-42')));
+    expect(out.pages.map((p: { title: string }) => p.title)).toEqual(['Runbook', 'Glossary']);
+  });
+
+  it('returns the full content of a named page', async () => {
+    const { result } = renderHook(() => useProspector());
+    const out = JSON.parse(
+      await result.current.executeToolCall(docsCall('Runbook'), ctx('proj-42')));
+    expect(out.title).toBe('Runbook');
+    expect(out.content).toContain('step one');
+  });
+
+  it('reports a missing page rather than failing silently', async () => {
+    const { result } = renderHook(() => useProspector());
+    const out = JSON.parse(
+      await result.current.executeToolCall(docsCall('Nope'), ctx('proj-42')));
+    expect(out.error).toContain('Nope');
+  });
+
+  it('requires an active project', async () => {
+    const { result } = renderHook(() => useProspector());
+    const out = JSON.parse(await result.current.executeToolCall(docsCall(), ctx()));
+    expect(out.error).toMatch(/project/i);
   });
 });
