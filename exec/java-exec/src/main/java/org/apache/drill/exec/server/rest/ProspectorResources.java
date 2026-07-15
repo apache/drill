@@ -97,9 +97,20 @@ public class ProspectorResources {
     @JsonProperty
     public boolean configured;
 
-    public AiStatusResponse(boolean enabled, boolean configured) {
+    /**
+     * Whether the deployment permits sample data to be sent to the model. Mirrored
+     * here from {@link LlmConfig} because this status endpoint is readable by every
+     * authenticated user, whereas /api/v1/ai/config is admin-only — a non-admin's
+     * browser has no other way to learn the setting, and a client that cannot read it
+     * cannot honour it. It is a privacy policy flag, not a secret.
+     */
+    @JsonProperty
+    public boolean sendDataToAi;
+
+    public AiStatusResponse(boolean enabled, boolean configured, boolean sendDataToAi) {
       this.enabled = enabled;
       this.configured = configured;
+      this.sendDataToAi = sendDataToAi;
     }
   }
 
@@ -217,14 +228,6 @@ public class ProspectorResources {
 
     @JsonProperty
     public List<ProjectDatasetRef> projectDatasets;
-
-    /**
-     * Sample data may be sent to the model unless the user explicitly opted out.
-     * A {@link Boolean} (not {@code boolean}) so "absent" is distinguishable from
-     * "explicitly false" — see {@link #isSendDataToAi(ChatContext)}.
-     */
-    @JsonProperty
-    public Boolean sendDataToAi;
 
     public ChatContext() {
     }
@@ -380,14 +383,16 @@ public class ProspectorResources {
     try {
       LlmConfig config = getConfig();
       if (config == null) {
-        return new AiStatusResponse(false, false);
+        return new AiStatusResponse(false, false, false);
       }
       boolean configured = config.getApiKey() != null && !config.getApiKey().isEmpty()
           && config.getModel() != null && !config.getModel().isEmpty();
-      return new AiStatusResponse(config.isEnabled() && configured, configured);
+      return new AiStatusResponse(config.isEnabled() && configured, configured,
+          config.isSendDataToAi());
     } catch (Exception e) {
       logger.error("Error checking AI status", e);
-      return new AiStatusResponse(false, false);
+      // Unknown status reports the privacy-preserving value, not the permissive one.
+      return new AiStatusResponse(false, false, false);
     }
   }
 
@@ -425,7 +430,7 @@ public class ProspectorResources {
       }
 
       // Build the full message list with system prompt
-      List<ChatMessage> fullMessages = buildMessages(config, request);
+      List<ChatMessage> fullMessages = buildMessages(config, request, username);
       List<ToolDefinition> tools = request.tools != null ? request.tools : new ArrayList<>();
 
       String userMessage = lastUserMessage(request);
@@ -663,12 +668,11 @@ public class ProspectorResources {
 
   // ==================== Helper Methods ====================
 
-  /** Sample data may be sent unless the user explicitly opted out. */
-  static boolean isSendDataToAi(ChatContext ctx) {
-    return ctx == null || ctx.sendDataToAi == null || ctx.sendDataToAi;
-  }
-
-  List<ChatMessage> buildMessages(LlmConfig config, ChatRequest request) {
+  /**
+   * @param username the authenticated requester, used to authorize the client-supplied
+   *     projectId before any project metadata reaches the prompt
+   */
+  List<ChatMessage> buildMessages(LlmConfig config, ChatRequest request, String username) {
     List<ChatMessage> messages = new ArrayList<>();
 
     // Build system prompt
@@ -707,10 +711,10 @@ public class ProspectorResources {
       }
 
       if (ctx.projectId != null && !ctx.projectId.trim().isEmpty()) {
-        ProjectResources.Project project = loadProject(ctx.projectId);
+        ProjectResources.Project project = loadProject(ctx.projectId, username);
         if (project != null) {
           systemPrompt.append(buildProjectBlock(project,
-              loadSavedQueries(project.getSavedQueryIds())));
+              loadSavedQueries(project.getSavedQueryIds(), username)));
         }
       }
 
@@ -782,7 +786,7 @@ public class ProspectorResources {
         systemPrompt.append("- Clear, well-formatted sections using markdown\n");
         systemPrompt.append("- You may use markdown images ![alt](url) if helpful\n\n");
 
-        appendDashboardData(systemPrompt, ctx);
+        appendDashboardData(systemPrompt, ctx, config.isSendDataToAi());
       }
 
       if (ctx.dashboardQnAMode) {
@@ -791,7 +795,7 @@ public class ProspectorResources {
         systemPrompt.append("You have all the information needed in the dashboard data below. ");
         systemPrompt.append("Answer questions directly and concisely (1-2 sentences) using ONLY the data provided.\n\n");
 
-        appendDashboardData(systemPrompt, ctx);
+        appendDashboardData(systemPrompt, ctx, config.isSendDataToAi());
       }
 
       if (ctx.dashboardNlFilterMode) {
@@ -823,7 +827,7 @@ public class ProspectorResources {
         systemPrompt.append("Explain what the alert conditions mean in context, ");
         systemPrompt.append("why they may have triggered, and suggest actions to address them.\n\n");
 
-        appendDashboardData(systemPrompt, ctx);
+        appendDashboardData(systemPrompt, ctx, config.isSendDataToAi());
       }
 
       // Tone instruction
@@ -909,7 +913,14 @@ public class ProspectorResources {
     return messages;
   }
 
-  private void appendDashboardData(StringBuilder systemPrompt, ChatContext ctx) {
+  /**
+   * Renders dashboard panels into the system prompt. Sample rows are withheld unless
+   * {@code sendDataToAi} is on — that value comes from the server-side {@link LlmConfig},
+   * not from the request, so every dashboard-mode caller is gated by construction and no
+   * client can opt itself back in.
+   */
+  private void appendDashboardData(StringBuilder systemPrompt, ChatContext ctx,
+      boolean sendDataToAi) {
     if (ctx.dashboardData != null && !ctx.dashboardData.isEmpty()) {
       systemPrompt.append("Dashboard panels data:\n\n");
       for (int i = 0; i < ctx.dashboardData.size(); i++) {
@@ -933,7 +944,7 @@ public class ProspectorResources {
           systemPrompt.append("\n");
         }
         systemPrompt.append("Row count: ").append(ddc.rowCount).append("\n");
-        if (isSendDataToAi(ctx) && ddc.sampleRows != null && !ddc.sampleRows.isEmpty()) {
+        if (sendDataToAi && ddc.sampleRows != null && !ddc.sampleRows.isEmpty()) {
           systemPrompt.append("Sample data:\n```json\n");
           try {
             ObjectMapper mapper = new ObjectMapper();
@@ -981,7 +992,8 @@ public class ProspectorResources {
     return cachedStore;
   }
 
-  private PersistentStore<ProjectResources.Project> getProjectStore() {
+  /** Package-private as a test seam: the authorization in loadProject needs a store. */
+  PersistentStore<ProjectResources.Project> getProjectStore() {
     if (cachedProjectStore == null) {
       synchronized (ProspectorResources.class) {
         if (cachedProjectStore == null) {
@@ -1003,7 +1015,8 @@ public class ProspectorResources {
     return cachedProjectStore;
   }
 
-  private PersistentStore<SavedQueryResources.SavedQuery> getSavedQueryStore() {
+  /** Package-private as a test seam: the filtering in loadSavedQueries needs a store. */
+  PersistentStore<SavedQueryResources.SavedQuery> getSavedQueryStore() {
     if (cachedSavedQueryStore == null) {
       synchronized (ProspectorResources.class) {
         if (cachedSavedQueryStore == null) {
@@ -1025,12 +1038,30 @@ public class ProspectorResources {
     return cachedSavedQueryStore;
   }
 
-  ProjectResources.Project loadProject(String projectId) {
-    if (projectId == null || projectId.trim().isEmpty()) {
-      return null;
-    }
+  /**
+   * Loads a project for AI context, enforcing the same read authorization as the REST
+   * read path ({@code GET /api/v1/projects/{id}}): soft-deleted projects are invisible,
+   * and the requester must be able to read the project per
+   * {@link ProjectResources#canRead}. The projectId is client-supplied, so without this
+   * any user could name another user's private project id and have its description,
+   * tags, wiki titles and saved-query SQL read back out of the system prompt.
+   *
+   * <p>Unauthorized and deleted projects are indistinguishable from missing ones by
+   * design: the chat proceeds with no project block rather than erroring, which both
+   * keeps context an enhancement and avoids confirming that an id exists.
+   */
+  ProjectResources.Project loadProject(String projectId, String username) {
     try {
-      return getProjectStore().get(projectId);
+      ProjectResources.Project project = getProjectStore().get(projectId);
+      if (project == null || project.getDeletedAt() > 0) {
+        return null;
+      }
+      if (!ProjectResources.canRead(project, username)) {
+        logger.debug("User {} may not read project {}; omitting AI project context",
+            username, projectId);
+        return null;
+      }
+      return project;
     } catch (Exception e) {
       // Context is an enhancement; never fail the chat because it is unavailable.
       logger.debug("Could not load project {} for AI context", projectId, e);
@@ -1038,7 +1069,13 @@ public class ProspectorResources {
     }
   }
 
-  List<SavedQueryResources.SavedQuery> loadSavedQueries(List<String> ids) {
+  /**
+   * Loads the given saved queries for AI context, keeping only those the requester may
+   * read per {@link SavedQueryResources#canRead} and skipping soft-deleted ones. A
+   * readable project can hold another user's private saved query, so project
+   * readability alone is not sufficient — each query is checked on its own.
+   */
+  List<SavedQueryResources.SavedQuery> loadSavedQueries(List<String> ids, String username) {
     List<SavedQueryResources.SavedQuery> out = new ArrayList<>();
     if (ids == null || ids.isEmpty()) {
       return out;
@@ -1047,7 +1084,7 @@ public class ProspectorResources {
       PersistentStore<SavedQueryResources.SavedQuery> store = getSavedQueryStore();
       for (String id : ids) {
         SavedQueryResources.SavedQuery q = store.get(id);
-        if (q != null) {
+        if (q != null && q.getDeletedAt() <= 0 && SavedQueryResources.canRead(q, username)) {
           out.add(q);
         }
       }
@@ -1072,7 +1109,9 @@ public class ProspectorResources {
     }
     StringBuilder sb = new StringBuilder();
     sb.append("\nPROJECT CONTEXT — the user's own description of this work:\n");
-    sb.append("Project: ").append(project.getName()).append("\n");
+    if (project.getName() != null && !project.getName().trim().isEmpty()) {
+      sb.append("Project: ").append(project.getName()).append("\n");
+    }
     if (project.getDescription() != null && !project.getDescription().trim().isEmpty()) {
       sb.append("Description: ").append(project.getDescription()).append("\n");
     }
@@ -1082,7 +1121,7 @@ public class ProspectorResources {
     if (savedQueries != null && !savedQueries.isEmpty()) {
       sb.append("\nSaved queries in this project:\n");
       for (SavedQueryResources.SavedQuery q : savedQueries) {
-        sb.append("- ").append(q.getName());
+        sb.append("- ").append(q.getName() == null ? "(untitled)" : q.getName());
         if (q.getDescription() != null && !q.getDescription().trim().isEmpty()) {
           sb.append(": ").append(q.getDescription());
         }
@@ -1096,7 +1135,11 @@ public class ProspectorResources {
       sb.append("\nProject documentation pages (call get_project_docs with a title to "
           + "read one in full):\n");
       for (ProjectResources.WikiPage page : project.getWikiPages()) {
-        sb.append("- ").append(page.getTitle()).append("\n");
+        // The title is the key the model passes back to get_project_docs, so a
+        // titleless page is not addressable and listing it only invites a failed call.
+        if (page.getTitle() != null && !page.getTitle().trim().isEmpty()) {
+          sb.append("- ").append(page.getTitle()).append("\n");
+        }
       }
     }
     return truncate(sb.toString(), PROJECT_BLOCK_MAX_CHARS);

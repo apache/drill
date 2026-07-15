@@ -297,7 +297,7 @@ public class SavedQueryResources {
         }
 
         // Return queries owned by user or public queries
-        if (query.getOwner().equals(currentUser) || query.isPublic()) {
+        if (canRead(query, currentUser)) {
           queries.add(query);
         }
       }
@@ -375,7 +375,7 @@ public class SavedQueryResources {
       }
 
       // Check access permissions
-      if (!query.getOwner().equals(getCurrentUser()) && !query.isPublic()) {
+      if (!canRead(query, getCurrentUser())) {
         return Response.status(Response.Status.FORBIDDEN)
             .entity(new MessageResponse("Access denied"))
             .build();
@@ -608,5 +608,19 @@ public class SavedQueryResources {
 
   private String getCurrentUser() {
     return principal.getName();
+  }
+
+  /**
+   * The single definition of "may this user read this saved query" — a saved query is
+   * readable by its owner or when it is public. Package-private and static so other
+   * resources that surface saved-query content — notably {@link ProspectorResources},
+   * which injects saved-query SQL and descriptions into the AI system prompt — enforce
+   * exactly this rule rather than a divergent copy of it.
+   *
+   * <p>Callers must separately reject soft-deleted queries ({@code getDeletedAt() > 0}):
+   * being in the trash is orthogonal to readability.
+   */
+  static boolean canRead(SavedQuery query, String user) {
+    return query.getOwner().equals(user) || query.isPublic();
   }
 }

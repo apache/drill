@@ -19,6 +19,8 @@ package org.apache.drill.exec.server.rest;
 
 import org.apache.drill.exec.server.rest.ai.ChatMessage;
 import org.apache.drill.exec.server.rest.ai.LlmConfig;
+import org.apache.drill.exec.store.sys.PersistentStore;
+import org.apache.drill.exec.store.sys.store.InMemoryStore;
 import org.junit.jupiter.api.Test;
 
 import java.util.ArrayList;
@@ -35,6 +37,8 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
  * must stay small enough to survive being re-sent on every tool round.
  */
 public class ProjectContextBlockTest {
+
+  private static final String USER = "alice";
 
   private static ProjectResources.Project project(String name, String description,
       List<String> tags, List<ProjectResources.WikiPage> wikiPages) {
@@ -110,6 +114,23 @@ public class ProjectContextBlockTest {
     assertEquals("", ProspectorResources.buildProjectBlock(null, List.of()));
   }
 
+  /**
+   * Names are optional on the wire, and an unguarded append renders the four-character
+   * string "null" into the prompt as if it were the user's own word for their work.
+   */
+  @Test
+  public void testNullNamesNeverRenderAsTheLiteralNull() {
+    ProjectResources.WikiPage untitledPage =
+        new ProjectResources.WikiPage("w1", null, "body", 0, 0L, 0L);
+    String block = ProspectorResources.buildProjectBlock(
+        project(null, "Store sales analytics", null, List.of(untitledPage)),
+        List.of(savedQuery(null, null, "SELECT 1")));
+    assertFalse(block.contains("null"));
+    // The guards must drop only the missing values, not the block around them.
+    assertTrue(block.contains("Store sales analytics"));
+    assertTrue(block.contains("SELECT 1"));
+  }
+
   @Test
   public void testTruncatesLongSavedQuerySql() {
     String longSql = "SELECT " + "x, ".repeat(400) + "1";
@@ -136,7 +157,7 @@ public class ProjectContextBlockTest {
   @Test
   public void testNoProjectBlockWhenNoProjectId() {
     List<ChatMessage> messages =
-        new ProspectorResources().buildMessages(new LlmConfig(), request(null));
+        new ProspectorResources().buildMessages(new LlmConfig(), request(null), USER);
     assertFalse(systemPromptOf(messages).contains("PROJECT CONTEXT"));
   }
 
@@ -147,7 +168,7 @@ public class ProjectContextBlockTest {
   @Test
   public void testUnreachableStoreDoesNotFailTheChat() {
     List<ChatMessage> messages =
-        new ProspectorResources().buildMessages(new LlmConfig(), request("proj-42"));
+        new ProspectorResources().buildMessages(new LlmConfig(), request("proj-42"), USER);
     assertFalse(systemPromptOf(messages).contains("PROJECT CONTEXT"));
     assertTrue(systemPromptOf(messages).contains("Apache Drill"));
   }
@@ -175,19 +196,22 @@ public class ProjectContextBlockTest {
 
     ProspectorResources resources = new ProspectorResources() {
       @Override
-      ProjectResources.Project loadProject(String projectId) {
+      ProjectResources.Project loadProject(String projectId, String username) {
         assertEquals("proj-42", projectId);
+        assertEquals(USER, username);
         return fixtureProject;
       }
 
       @Override
-      List<SavedQueryResources.SavedQuery> loadSavedQueries(List<String> ids) {
+      List<SavedQueryResources.SavedQuery> loadSavedQueries(List<String> ids, String username) {
         capturedSavedQueryIds.add(ids);
+        assertEquals(USER, username);
         return List.of(fixtureQuery);
       }
     };
 
-    List<ChatMessage> messages = resources.buildMessages(new LlmConfig(), request("proj-42"));
+    List<ChatMessage> messages =
+        resources.buildMessages(new LlmConfig(), request("proj-42"), USER);
     String systemPrompt = systemPromptOf(messages);
 
     assertTrue(systemPrompt.contains("PROJECT CONTEXT"));
@@ -200,23 +224,129 @@ public class ProjectContextBlockTest {
     assertEquals(fixtureProject.getSavedQueryIds(), capturedSavedQueryIds.get(0));
   }
 
+  // ==================== Authorization ====================
+  //
+  // projectId is client-supplied, so the load path must enforce the same rules as
+  // GET /api/v1/projects/{id}: soft-deleted projects are invisible, and the requester
+  // must own the project, or it must be public, or it must be shared with them.
+  // Anything else must look exactly like a missing project — no block, chat proceeds.
+
+  private static ProjectResources.Project storedProject(String owner, boolean isPublic,
+      List<String> sharedWith, long deletedAt, List<String> savedQueryIds) {
+    return new ProjectResources.Project("proj-42", "Retail", "PROJECT_SECRET_DESC",
+        List.of("sales"), owner, isPublic, sharedWith, null, savedQueryIds, null, null,
+        List.of(new ProjectResources.WikiPage("w1", "Runbook", "body", 0, 0L, 0L)),
+        false, 0L, 0L, null, null, deletedAt);
+  }
+
+  private static SavedQueryResources.SavedQuery storedQuery(String id, String name,
+      String owner, boolean isPublic, long deletedAt) {
+    return new SavedQueryResources.SavedQuery(id, name, "desc for " + name,
+        "SELECT * FROM " + name, null, owner, 0L, 0L, null, isPublic, deletedAt);
+  }
+
+  /** A ProspectorResources backed by real in-memory stores rather than a Drillbit. */
+  private static ProspectorResources withStores(ProjectResources.Project project,
+      List<SavedQueryResources.SavedQuery> queries) {
+    PersistentStore<ProjectResources.Project> projectStore = new InMemoryStore<>(10);
+    if (project != null) {
+      projectStore.put(project.getId(), project);
+    }
+    PersistentStore<SavedQueryResources.SavedQuery> queryStore = new InMemoryStore<>(10);
+    for (SavedQueryResources.SavedQuery q : queries) {
+      queryStore.put(q.getId(), q);
+    }
+    return new ProspectorResources() {
+      @Override
+      PersistentStore<ProjectResources.Project> getProjectStore() {
+        return projectStore;
+      }
+
+      @Override
+      PersistentStore<SavedQueryResources.SavedQuery> getSavedQueryStore() {
+        return queryStore;
+      }
+    };
+  }
+
+  private static String promptFor(ProjectResources.Project project,
+      List<SavedQueryResources.SavedQuery> queries, String requester) {
+    return systemPromptOf(withStores(project, queries)
+        .buildMessages(new LlmConfig(), request("proj-42"), requester));
+  }
+
+  /**
+   * The IDOR itself: naming another user's private project id must not read its
+   * contents back out of the system prompt.
+   */
   @Test
-  public void testSendDataToAiDefaultsToTrueWhenAbsent() throws Exception {
-    com.fasterxml.jackson.databind.ObjectMapper mapper =
-        new com.fasterxml.jackson.databind.ObjectMapper();
-    ProspectorResources.ChatContext ctx = mapper.readValue(
-        "{\"feature\":\"sql_lab_chat\"}", ProspectorResources.ChatContext.class);
-    assertTrue(ProspectorResources.isSendDataToAi(ctx));
+  public void testNoProjectBlockForOtherUsersPrivateProject() {
+    String prompt = promptFor(
+        storedProject("alice", false, List.of("bob"), 0L, List.of()), List.of(), "mallory");
+    assertFalse(prompt.contains("PROJECT CONTEXT"));
+    assertFalse(prompt.contains("PROJECT_SECRET_DESC"));
+    // Unauthorized must be indistinguishable from missing: the chat still happens.
+    assertTrue(prompt.contains("Apache Drill"));
   }
 
   @Test
-  public void testSendDataToAiRespectsExplicitFalse() throws Exception {
-    com.fasterxml.jackson.databind.ObjectMapper mapper =
-        new com.fasterxml.jackson.databind.ObjectMapper();
-    ProspectorResources.ChatContext ctx = mapper.readValue(
-        "{\"feature\":\"sql_lab_chat\",\"sendDataToAi\":false}",
-        ProspectorResources.ChatContext.class);
-    assertFalse(ProspectorResources.isSendDataToAi(ctx));
+  public void testProjectBlockForOwner() {
+    assertTrue(promptFor(storedProject("alice", false, List.of(), 0L, List.of()),
+        List.of(), "alice").contains("PROJECT_SECRET_DESC"));
+  }
+
+  @Test
+  public void testProjectBlockForPublicProject() {
+    assertTrue(promptFor(storedProject("alice", true, List.of(), 0L, List.of()),
+        List.of(), "mallory").contains("PROJECT_SECRET_DESC"));
+  }
+
+  @Test
+  public void testProjectBlockWhenSharedWithRequester() {
+    assertTrue(promptFor(storedProject("alice", false, List.of("bob"), 0L, List.of()),
+        List.of(), "bob").contains("PROJECT_SECRET_DESC"));
+  }
+
+  /** Trashed projects are 404 on the REST path; they must be invisible here too. */
+  @Test
+  public void testNoProjectBlockForSoftDeletedProjectEvenForOwner() {
+    String prompt = promptFor(storedProject("alice", false, List.of(), 999L, List.of()),
+        List.of(), "alice");
+    assertFalse(prompt.contains("PROJECT CONTEXT"));
+    assertFalse(prompt.contains("PROJECT_SECRET_DESC"));
+  }
+
+  @Test
+  public void testNoProjectBlockForMissingProject() {
+    assertFalse(promptFor(null, List.of(), "alice").contains("PROJECT CONTEXT"));
+  }
+
+  /**
+   * A readable project can reference a saved query owned by someone else — sharing a
+   * project does not share every query it lists. Each query is authorized on its own.
+   */
+  @Test
+  public void testOtherUsersPrivateSavedQueryExcludedFromReadableProject() {
+    String prompt = promptFor(
+        storedProject("alice", true, List.of(), 0L, List.of("q-mine", "q-private", "q-public")),
+        List.of(storedQuery("q-mine", "my_query", "bob", false, 0L),
+            storedQuery("q-private", "alices_secret", "alice", false, 0L),
+            storedQuery("q-public", "shared_query", "alice", true, 0L)),
+        "bob");
+
+    assertTrue(prompt.contains("my_query"));
+    assertTrue(prompt.contains("shared_query"));
+    assertFalse(prompt.contains("alices_secret"));
+  }
+
+  @Test
+  public void testSoftDeletedSavedQueryExcluded() {
+    String prompt = promptFor(
+        storedProject("bob", false, List.of(), 0L, List.of("q-gone")),
+        List.of(storedQuery("q-gone", "trashed_query", "bob", false, 999L)),
+        "bob");
+    assertTrue(prompt.contains("PROJECT CONTEXT"));
+    assertFalse(prompt.contains("trashed_query"));
   }
 
   /**
@@ -239,7 +369,7 @@ public class ProjectContextBlockTest {
     req.context = ctx;
     req.messages = new ArrayList<>();
 
-    List<ChatMessage> messages = new ProspectorResources().buildMessages(new LlmConfig(), req);
+    List<ChatMessage> messages = new ProspectorResources().buildMessages(new LlmConfig(), req, USER);
     String systemPrompt = systemPromptOf(messages);
 
     assertTrue(systemPrompt.contains("sales_df"));
@@ -266,7 +396,7 @@ public class ProjectContextBlockTest {
     req.context = ctx;
     req.messages = new ArrayList<>();
 
-    List<ChatMessage> messages = new ProspectorResources().buildMessages(new LlmConfig(), req);
+    List<ChatMessage> messages = new ProspectorResources().buildMessages(new LlmConfig(), req, USER);
     String systemPrompt = systemPromptOf(messages);
     assertFalse(systemPrompt.contains("ghost_df"));
     assertFalse(systemPrompt.contains("DataFrame variable:"));
@@ -282,25 +412,34 @@ public class ProjectContextBlockTest {
     return ddc;
   }
 
-  /**
-   * appendDashboardData used to serialize sample rows unconditionally, ignoring the
-   * user's sendDataToAi privacy flag. Columns and row count are metadata, not user
-   * data, so they must survive even when sample rows are withheld.
-   */
-  @Test
-  public void testDashboardSampleRowsOmittedWhenSendDataToAiFalse() {
+  private static ProspectorResources.ChatRequest dashboardRequest() {
     ProspectorResources.ChatRequest req = new ProspectorResources.ChatRequest();
     ProspectorResources.ChatContext ctx = new ProspectorResources.ChatContext();
     ctx.feature = "sql_lab_chat";
     ctx.dashboardSummaryMode = true;
-    ctx.sendDataToAi = false;
     ctx.dashboardData = List.of(dashboardPanel("Sales", List.of("region", "amount"),
         List.of(Map.of("region", "West", "amount", "SECRET_VALUE_42"))));
     req.context = ctx;
     req.messages = new ArrayList<>();
+    return req;
+  }
 
-    String systemPrompt =
-        systemPromptOf(new ProspectorResources().buildMessages(new LlmConfig(), req));
+  private static LlmConfig configWithSendDataToAi(boolean sendDataToAi) {
+    LlmConfig config = new LlmConfig();
+    config.setSendDataToAi(sendDataToAi);
+    return config;
+  }
+
+  /**
+   * appendDashboardData used to serialize sample rows unconditionally. The gate is the
+   * server-side LlmConfig setting rather than anything the request carries, so a client
+   * cannot opt itself back in. Columns and row count are metadata, not user data, so
+   * they must survive even when sample rows are withheld.
+   */
+  @Test
+  public void testDashboardSampleRowsOmittedWhenConfigForbidsSendingData() {
+    String systemPrompt = systemPromptOf(new ProspectorResources()
+        .buildMessages(configWithSendDataToAi(false), dashboardRequest(), USER));
 
     assertTrue(systemPrompt.contains("region"));
     assertTrue(systemPrompt.contains("Row count: 1"));
@@ -308,19 +447,45 @@ public class ProjectContextBlockTest {
   }
 
   @Test
-  public void testDashboardSampleRowsIncludedWhenSendDataToAiAbsent() {
-    ProspectorResources.ChatRequest req = new ProspectorResources.ChatRequest();
-    ProspectorResources.ChatContext ctx = new ProspectorResources.ChatContext();
-    ctx.feature = "sql_lab_chat";
-    ctx.dashboardSummaryMode = true;
+  public void testDashboardSampleRowsIncludedWhenConfigPermitsSendingData() {
+    String systemPrompt = systemPromptOf(new ProspectorResources()
+        .buildMessages(configWithSendDataToAi(true), dashboardRequest(), USER));
+
+    assertTrue(systemPrompt.contains("SECRET_VALUE_42"));
+  }
+
+  /**
+   * The gate must not be re-openable from the request. This is the whole point of
+   * moving it off ChatContext: a stray client field must be inert, so an unknown
+   * "sendDataToAi":true in the JSON cannot restore rows that the config withholds.
+   */
+  @Test
+  public void testClientCannotReEnableSampleRowsViaRequestJson() throws Exception {
+    com.fasterxml.jackson.databind.ObjectMapper mapper =
+        new com.fasterxml.jackson.databind.ObjectMapper();
+    ProspectorResources.ChatContext ctx = mapper.readValue(
+        "{\"feature\":\"sql_lab_chat\",\"dashboardSummaryMode\":true,\"sendDataToAi\":true}",
+        ProspectorResources.ChatContext.class);
     ctx.dashboardData = List.of(dashboardPanel("Sales", List.of("region", "amount"),
         List.of(Map.of("region", "West", "amount", "SECRET_VALUE_42"))));
+    ProspectorResources.ChatRequest req = new ProspectorResources.ChatRequest();
     req.context = ctx;
     req.messages = new ArrayList<>();
 
-    String systemPrompt =
-        systemPromptOf(new ProspectorResources().buildMessages(new LlmConfig(), req));
+    String systemPrompt = systemPromptOf(new ProspectorResources()
+        .buildMessages(configWithSendDataToAi(false), req, USER));
 
-    assertTrue(systemPrompt.contains("SECRET_VALUE_42"));
+    assertFalse(systemPrompt.contains("SECRET_VALUE_42"));
+  }
+
+  /**
+   * The status endpoint is the only source of this flag a non-admin browser can read
+   * (/api/v1/ai/config is admin-only), so the client-side execute_sql row gate depends
+   * on it being mirrored here.
+   */
+  @Test
+  public void testStatusResponseCarriesSendDataToAi() {
+    assertFalse(new ProspectorResources.AiStatusResponse(true, true, false).sendDataToAi);
+    assertTrue(new ProspectorResources.AiStatusResponse(true, true, true).sendDataToAi);
   }
 }
