@@ -16,6 +16,7 @@
  * limitations under the License.
  */
 import { useMemo } from 'react';
+import { useMatch } from 'react-router-dom';
 import { useProspector } from '../../hooks/useProspector';
 import { ProspectorPanel } from '../prospector';
 import type { ChatContext } from '../../types/ai';
@@ -27,6 +28,17 @@ import type { ChatContext } from '../../types/ai';
  */
 export default function GlobalProspectorTab() {
   const prospector = useProspector();
-  const context: ChatContext = useMemo(() => ({ feature: 'global_chat' }), []);
+  // RightInspector (which hosts this tab) renders above the router outlet in
+  // AppShell, so ProjectContextProvider (mounted only inside the /projects/:id
+  // route element) is not an ancestor here and useProjectContext() would throw.
+  // Read the active project from the route instead. The trailing "/*" matches
+  // both the bare project route ("/projects/:id") and nested ones
+  // ("/projects/:id/sql", etc).
+  const match = useMatch('/projects/:id/*');
+  const projectId = match?.params.id;
+  const context: ChatContext = useMemo(
+    () => ({ feature: 'global_chat', projectId }),
+    [projectId]
+  );
   return <ProspectorPanel prospector={prospector} context={context} />;
 }
