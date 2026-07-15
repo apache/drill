@@ -90,7 +90,13 @@ Inside, it manages:
 - An accumulating `contentBuffer` and a `tool calls Map`.
 - A `doStreamRound()` function that calls `streamChat`, accumulates deltas, executes any tool calls when `finish_reason === 'tool_calls'`, and recurses up to `maxToolRounds`.
 
-Tool definitions are hardcoded in `TOOL_DEFINITIONS` at the top of the file: `execute_sql`, `list_schemas`, `get_schema_info`, `create_visualization`, `create_dashboard`, `save_query`, `get_available_functions`. Each maps to a backend or local API call invoked by `executeToolCall()`.
+Tool definitions are hardcoded in `TOOL_DEFINITIONS` at the top of the file: `execute_sql`, `list_schemas`, `get_schema_info`, `create_visualization`, `create_dashboard`, `save_query`, `get_available_functions`, `get_project_docs`. Each maps to a backend or local API call invoked by `executeToolCall()`.
+
+### get_project_docs
+
+Client-executed, project-scoped: it errors out immediately if `context.projectId` is unset. Called with no arguments it lists the current project's wiki page titles; called with a `pageTitle` it fetches that page (via `getProject`) and returns its body, truncated to `PROJECT_DOC_MAX_CHARS` (8000 characters, suffixed `...[truncated]`) if longer.
+
+This exists because the server-injected project context block (see [`../../PROSPECTOR.md`](../../PROSPECTOR.md#project-context)) lists wiki page **titles only** — bodies are fetched on demand through this tool instead of being inlined into the system prompt, since that prompt is re-sent on every tool round.
 
 ## API client
 
@@ -152,6 +158,7 @@ ChatContext (the per-message payload) lives in `types/ai.ts` and is constructed 
 - **Usage events are cumulative per conversation.** Multi-round tool execution emits a usage event per roundtrip; the hook overwrites with the latest snapshot, so the usage pill shows the running total for the conversation, not just the last message.
 - **Quick action prompts** include explicit anti-hallucination instructions ("never make up table or column names — use ONLY real tables and columns from the schemas I have access to"). When adding new quick actions, follow the same pattern.
 - **Context scoping is partial.** `projectDatasets` in `ChatContext` lets the backend restrict schema listings, but enforcement is server-side — the frontend does not filter tools by mode.
+- **`sendDataToAi: false` suppresses sample rows, not metadata.** When the user turns this off in Prospector Settings, `execute_sql`'s tool result (built here in `executeToolCall`) omits `rows` while still returning `columns` and `rowCount`. The same flag also suppresses `sampleRows` in dashboard-mode chats (executive summary, Q&A, alerts) — but that check (`isSendDataToAi`) is server-side, in `appendDashboardData` in `ProspectorResources.java`, not in this hook. Absent (`undefined`) is treated as opted-in, same as explicit `true`.
 - **No state in Redux.** Prospector is entirely component-local (hook + props). It does not write to Redux, react-query cache, or shared contexts other than reading config from `AiModalContext`.
 
 ## Related docs

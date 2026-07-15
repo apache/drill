@@ -112,6 +112,27 @@ Prospector automatically receives context about your current state:
 - Current query error (if any)
 - Query result summary (row count, column names and types)
 
+### Project Context
+
+When a chat originates inside a project, the browser sets `context.projectId` and
+the server loads that project (and the saved queries it references) and injects a
+capped summary into the system prompt: project name, description, tags,
+saved-query names/descriptions/SQL, and wiki page **titles only**. This lets
+Prospector answer from the user's own description of the work instead of
+guessing.
+
+- The whole block is capped at 2000 characters (`PROJECT_BLOCK_MAX_CHARS` in
+  `ProspectorResources`); each saved query's SQL is separately capped at 500
+  characters first (`SAVED_QUERY_SQL_MAX_CHARS`). Content cut by either cap is
+  suffixed with `...[truncated]`.
+- Wiki page **bodies** are never inlined — a page can be tens of KB, and the
+  whole system prompt is re-sent on every tool round (up to `maxToolRounds`).
+  Instead, the model calls the `get_project_docs` tool to read one page in full
+  when it needs to (see [`ui/components/prospector.md`](ui/components/prospector.md)).
+- Loading is best-effort: an unreachable project store, a missing project, or
+  any other lookup failure simply means no project block is injected — the
+  chat still proceeds normally rather than failing.
+
 ## REST API Reference
 
 ### Status Endpoint
