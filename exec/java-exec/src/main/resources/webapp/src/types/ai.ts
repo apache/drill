@@ -47,6 +47,12 @@ export interface ChatContext {
    * `tsc` at the call site instead of silently reaching the server unlabelled.
    */
   feature: AiFeature;
+  /**
+   * Active project, when the call originates inside one. Tools that create
+   * artefacts attach them to this project, matching what the equivalent
+   * hand-driven UI does.
+   */
+  projectId?: string;
   availableSchemas?: string[];
   error?: string;
   resultSummary?: ResultSummary;
