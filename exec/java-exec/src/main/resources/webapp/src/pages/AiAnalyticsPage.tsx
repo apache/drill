@@ -251,19 +251,20 @@ export default function AiAnalyticsPage() {
           />
         )}
 
-        {ready && status.data?.logFileExists === false && (
+        {ready && summary.data?.notConfigured && (
           <Alert
             type="info"
-            message="No AI events captured yet"
-            description="Once Prospector or the SQL transpiler is used, events will appear here."
+            showIcon
+            message="AI analytics is not configured"
+            description="No AI event log has been written yet, so there is nothing to report — this is not the same as zero usage. Once Prospector or the SQL transpiler is used, events will appear here."
           />
         )}
 
-        {ready && summary.data && (
+        {ready && summary.data && !summary.data.notConfigured && (
           <SummarySection summary={summary.data} loading={summary.isFetching} />
         )}
 
-        {ready && (
+        {ready && summary.data && !summary.data.notConfigured && (
           <EventsSection from={fromIso} to={toIso} pricing={summary.data?.pricing ?? {}} />
         )}
 
