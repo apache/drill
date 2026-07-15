@@ -123,6 +123,10 @@ public class ProspectorResources {
     @JsonProperty
     public String currentSql;
 
+    /** Which UI feature originated this call; used for analytics attribution. */
+    @JsonProperty
+    public String feature;
+
     @JsonProperty
     public String currentSchema;
 
@@ -368,6 +372,7 @@ public class ProspectorResources {
       String userMessage = lastUserMessage(request);
       String fullPrompt = renderFullPrompt(fullMessages);
       LlmConfig snapshot = config;
+      String feature = request.context != null ? request.context.feature : null;
 
       // Pricing for the configured model — looked up once per call. Used to
       // enrich usage SSE events with a server-computed cost so the client can
@@ -396,7 +401,7 @@ public class ProspectorResources {
             logger.error("Error writing error event", writeErr);
           }
         } finally {
-          recordEvent(snapshot, username, null, userMessage, fullPrompt,
+          recordEvent(snapshot, username, feature, userMessage, fullPrompt,
               callResult, failure, System.currentTimeMillis() - start);
         }
       };
