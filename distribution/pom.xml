@@ -138,6 +138,15 @@
           <groupId>com.amazonaws</groupId>
           <artifactId>aws-java-sdk-bundle</artifactId>
         </exclusion>
+        <!--
+         Drill already pulls in the fine-grained AWS SDK v2 modules
+         (s3, dynamodb, sts, aws-core) at ${aws.java.sdk.version}, so the
+         bundle is redundant as well as harmful.
+       -->
+        <exclusion>
+          <groupId>software.amazon.awssdk</groupId>
+          <artifactId>bundle</artifactId>
+        </exclusion>
       </exclusions>
     </dependency>
     <dependency>
