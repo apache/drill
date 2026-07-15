@@ -92,12 +92,6 @@ export interface ChatContext {
   dashboardAnomalyFocus?: boolean;
   /** Previous summary for historical comparison */
   previousSummary?: string;
-  /**
-   * User privacy flag: when explicitly false, tool results and prompt sections must
-   * omit sample data (rows) while still describing shape (columns, row counts).
-   * Absent/undefined means "allowed", matching the server default.
-   */
-  sendDataToAi?: boolean;
 }
 
 export interface ProjectDatasetRef {
@@ -131,6 +125,12 @@ export interface ChatRequest {
 export interface AiStatus {
   enabled: boolean;
   configured: boolean;
+  /**
+   * Whether the deployment permits sample data to reach the model. Mirrored from the
+   * admin-only AiConfig onto this endpoint because every authenticated user can read
+   * /api/v1/ai/status, and a client that cannot read the setting cannot honour it.
+   */
+  sendDataToAi: boolean;
 }
 
 export interface AiConfig {
