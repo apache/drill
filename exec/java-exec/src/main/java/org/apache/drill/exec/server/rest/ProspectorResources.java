@@ -73,6 +73,10 @@ public class ProspectorResources {
   private static final String CONFIG_STORE_NAME = "drill.sqllab.ai_config";
   private static final String CONFIG_KEY = "default";
   private static final String DEFAULT_FEATURE = "prospector_chat";
+  private static final String PROJECTS_STORE_NAME = "drill.sqllab.projects";
+  private static final String SAVED_QUERIES_STORE_NAME = "drill.sqllab.saved_queries";
+  private static final int PROJECT_BLOCK_MAX_CHARS = 2000;
+  private static final int SAVED_QUERY_SQL_MAX_CHARS = 500;
 
   @Inject
   WorkManager workManager;
@@ -81,6 +85,8 @@ public class ProspectorResources {
   PersistentStoreProvider storeProvider;
 
   private static volatile PersistentStore<LlmConfig> cachedStore;
+  private static volatile PersistentStore<ProjectResources.Project> cachedProjectStore;
+  private static volatile PersistentStore<SavedQueryResources.SavedQuery> cachedSavedQueryStore;
 
   // ==================== Request/Response Models ====================
 
@@ -930,5 +936,133 @@ public class ProspectorResources {
       }
     }
     return cachedStore;
+  }
+
+  private PersistentStore<ProjectResources.Project> getProjectStore() {
+    if (cachedProjectStore == null) {
+      synchronized (ProspectorResources.class) {
+        if (cachedProjectStore == null) {
+          try {
+            cachedProjectStore = storeProvider.getOrCreateStore(
+                PersistentStoreConfig.newJacksonBuilder(
+                    workManager.getContext().getLpPersistence().getMapper(),
+                    ProjectResources.Project.class
+                )
+                .name(PROJECTS_STORE_NAME)
+                .build()
+            );
+          } catch (StoreException e) {
+            throw new RuntimeException("Failed to access projects store", e);
+          }
+        }
+      }
+    }
+    return cachedProjectStore;
+  }
+
+  private PersistentStore<SavedQueryResources.SavedQuery> getSavedQueryStore() {
+    if (cachedSavedQueryStore == null) {
+      synchronized (ProspectorResources.class) {
+        if (cachedSavedQueryStore == null) {
+          try {
+            cachedSavedQueryStore = storeProvider.getOrCreateStore(
+                PersistentStoreConfig.newJacksonBuilder(
+                    workManager.getContext().getLpPersistence().getMapper(),
+                    SavedQueryResources.SavedQuery.class
+                )
+                .name(SAVED_QUERIES_STORE_NAME)
+                .build()
+            );
+          } catch (StoreException e) {
+            throw new RuntimeException("Failed to access saved queries store", e);
+          }
+        }
+      }
+    }
+    return cachedSavedQueryStore;
+  }
+
+  private ProjectResources.Project loadProject(String projectId) {
+    if (projectId == null || projectId.trim().isEmpty()) {
+      return null;
+    }
+    try {
+      return getProjectStore().get(projectId);
+    } catch (Exception e) {
+      // Context is an enhancement; never fail the chat because it is unavailable.
+      logger.debug("Could not load project {} for AI context", projectId, e);
+      return null;
+    }
+  }
+
+  private List<SavedQueryResources.SavedQuery> loadSavedQueries(List<String> ids) {
+    List<SavedQueryResources.SavedQuery> out = new ArrayList<>();
+    if (ids == null || ids.isEmpty()) {
+      return out;
+    }
+    try {
+      PersistentStore<SavedQueryResources.SavedQuery> store = getSavedQueryStore();
+      for (String id : ids) {
+        SavedQueryResources.SavedQuery q = store.get(id);
+        if (q != null) {
+          out.add(q);
+        }
+      }
+    } catch (Exception e) {
+      logger.debug("Could not load saved queries for AI context", e);
+    }
+    return out;
+  }
+
+  /**
+   * Renders the project's own descriptive metadata for the system prompt. Pure and
+   * package-private so its output can be asserted without a store.
+   *
+   * <p>Wiki bodies are deliberately excluded — a page can be tens of KB and the whole
+   * system prompt is re-sent on every tool round, so bodies are fetched on demand by
+   * the get_project_docs tool instead.
+   */
+  static String buildProjectBlock(ProjectResources.Project project,
+      List<SavedQueryResources.SavedQuery> savedQueries) {
+    if (project == null) {
+      return "";
+    }
+    StringBuilder sb = new StringBuilder();
+    sb.append("\nPROJECT CONTEXT — the user's own description of this work:\n");
+    sb.append("Project: ").append(project.getName()).append("\n");
+    if (project.getDescription() != null && !project.getDescription().trim().isEmpty()) {
+      sb.append("Description: ").append(project.getDescription()).append("\n");
+    }
+    if (project.getTags() != null && !project.getTags().isEmpty()) {
+      sb.append("Tags: ").append(String.join(", ", project.getTags())).append("\n");
+    }
+    if (savedQueries != null && !savedQueries.isEmpty()) {
+      sb.append("\nSaved queries in this project:\n");
+      for (SavedQueryResources.SavedQuery q : savedQueries) {
+        sb.append("- ").append(q.getName());
+        if (q.getDescription() != null && !q.getDescription().trim().isEmpty()) {
+          sb.append(": ").append(q.getDescription());
+        }
+        if (q.getSql() != null) {
+          sb.append("\n  SQL: ").append(truncate(q.getSql(), SAVED_QUERY_SQL_MAX_CHARS));
+        }
+        sb.append("\n");
+      }
+    }
+    if (project.getWikiPages() != null && !project.getWikiPages().isEmpty()) {
+      sb.append("\nProject documentation pages (call get_project_docs with a title to "
+          + "read one in full):\n");
+      for (ProjectResources.WikiPage page : project.getWikiPages()) {
+        sb.append("- ").append(page.getTitle()).append("\n");
+      }
+    }
+    return truncate(sb.toString(), PROJECT_BLOCK_MAX_CHARS);
+  }
+
+  private static String truncate(String text, int maxChars) {
+    if (text == null || text.length() <= maxChars) {
+      return text;
+    }
+    return text.substring(0, maxChars) + "...[truncated]";
   }
 }
