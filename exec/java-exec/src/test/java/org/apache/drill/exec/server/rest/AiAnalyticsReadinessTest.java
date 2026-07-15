@@ -54,4 +54,15 @@ public class AiAnalyticsReadinessTest {
   public void testNoEventLogWhenDirectoryMissing() {
     assertFalse(AiAnalyticsResources.hasEventLog(null));
   }
+
+  /**
+   * A directory whose name matches the glob is not an event log. Counting it would
+   * make isReady() true, so /summary would skip the not-configured path and run a
+   * Drill query that fails with HTTP 500 instead.
+   */
+  @Test
+  public void testNoEventLogWhenMatchIsADirectory(@TempDir Path dir) {
+    assertTrue(new File(dir.toFile(), "ai-events.log").mkdir());
+    assertFalse(AiAnalyticsResources.hasEventLog(dir.toString()));
+  }
 }

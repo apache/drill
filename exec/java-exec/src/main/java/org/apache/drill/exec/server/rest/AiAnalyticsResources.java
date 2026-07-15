@@ -64,8 +64,6 @@ public class AiAnalyticsResources {
   private static final String DFS_PLUGIN_NAME = "dfs";
   private static final String AI_LOGS_WORKSPACE = "ai_logs";
   private static final String AI_LOG_FORMAT = "ai_log";
-  /** Active log file written by the AI_EVENTS logback appender. */
-  private static final String EVENT_LOG_FILE = "ai-events.log";
 
   /**
    * Glob that matches the active file plus rolled archives produced by the
@@ -90,6 +88,7 @@ public class AiAnalyticsResources {
   public static class StatusResponse {
     @JsonProperty public boolean logDirConfigured;
     @JsonProperty public String logDir;
+    /** True when any ai-events*.log exists, including rolled archives. */
     @JsonProperty public boolean logFileExists;
     @JsonProperty public boolean workspaceExists;
     @JsonProperty public boolean formatExists;
@@ -157,9 +156,9 @@ public class AiAnalyticsResources {
     String logDir = System.getenv("DRILL_LOG_DIR");
     status.logDirConfigured = logDir != null;
     status.logDir = logDir;
-    if (logDir != null) {
-      status.logFileExists = new File(logDir, EVENT_LOG_FILE).isFile();
-    }
+    // Glob-aware, matching the read path: an event log that has rolled into an
+    // archive still counts as present.
+    status.logFileExists = hasEventLog(logDir);
     try {
       StoragePluginConfig cfg = storageRegistry.getStoredConfig(DFS_PLUGIN_NAME);
       if (cfg instanceof FileSystemConfig) {
@@ -458,7 +457,7 @@ public class AiAnalyticsResources {
       return false;
     }
     File[] matches = dir.listFiles((d, name) ->
-        name.startsWith("ai-events") && name.endsWith(".log"));
+        name.startsWith("ai-events") && name.endsWith(".log") && new File(d, name).isFile());
     return matches != null && matches.length > 0;
   }
 
