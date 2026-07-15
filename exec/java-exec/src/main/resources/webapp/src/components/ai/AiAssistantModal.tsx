@@ -95,7 +95,7 @@ Provide:
     const startTime = Date.now();
 
     abortRef.current = streamChat(
-      { messages, tools: [], context: {} },
+      { messages, tools: [], context: { feature: 'explain_query' } },
       (event: DeltaEvent) => {
         if (event.type === 'content') {
           accumulated += event.content;
@@ -216,7 +216,7 @@ Be practical and focus on changes that can actually improve performance in Apach
     const startTime = Date.now();
 
     abortRef.current = streamChat(
-      { messages, tools: [], context: {} },
+      { messages, tools: [], context: { feature: 'optimize_query' } },
       (event: DeltaEvent) => {
         if (event.type === 'content') {
           accumulated += event.content;

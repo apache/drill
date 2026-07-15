@@ -205,7 +205,7 @@ ${dashDesc}`;
     const messages: ChatMessage[] = [{ role: 'user', content: prompt }];
 
     abortRef.current = streamChat(
-      { messages, tools: [], context: {} },
+      { messages, tools: [], context: { feature: 'wiki_generation' } },
       (event: DeltaEvent) => {
         if (event.type === 'content') {
           accumulated += event.content;
