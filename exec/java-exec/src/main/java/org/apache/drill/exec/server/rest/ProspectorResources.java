@@ -18,6 +18,7 @@
 package org.apache.drill.exec.server.rest;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.swagger.v3.oas.annotations.Operation;
@@ -120,7 +121,42 @@ public class ProspectorResources {
     }
   }
 
+  /**
+   * Context the browser attaches to a chat call. Every field is an optional
+   * enhancement, so an unknown one is ignored rather than rejected: the browser may
+   * be running newer assets than the Drillbit (or a cached older build), and losing
+   * one hint is survivable where failing the whole chat is not.
+   */
+  @JsonIgnoreProperties(ignoreUnknown = true)
   public static class ChatContext {
+    /** Active project, when the call originates inside one. */
+    @JsonProperty
+    public String projectId;
+
+    /** True when the user is working in the notebook tab. */
+    @JsonProperty
+    public boolean notebookMode;
+
+    /** Name of the DataFrame variable available in the notebook. */
+    @JsonProperty
+    public String notebookDfName;
+
+    /** DataFrame shape, e.g. "10 rows x 3 cols". */
+    @JsonProperty
+    public String notebookDfShape;
+
+    /** Column names available on the notebook DataFrame. */
+    @JsonProperty
+    public List<String> notebookColumns;
+
+    /** Code in the cell the user is currently working on. */
+    @JsonProperty
+    public String notebookCellCode;
+
+    /** Error from the last cell execution, if any. */
+    @JsonProperty
+    public String notebookCellError;
+
     @JsonProperty
     public String currentSql;
 
