@@ -39,9 +39,33 @@ Admin-only dashboard for AI / LLM feature usage and cost. Per-feature event log,
 ## Behavior
 
 - **Setup.** If analytics isn't initialized (`getAnalyticsStatus` returns disabled), the page shows a one-click setup. Once set up, events are written to a JSONL log and queryable via Drill itself — backend details in [`../AI_FEATURES.md`](../AI_FEATURES.md) and the project memory notes.
+- **Server-side only.** Every event is recorded by the server, one per LLM call, with `source` always `"server"`. There is no client-side event log or endpoint for the browser to report its own AI usage — the server is the sole source of truth.
+- **Not configured vs. no usage.** If `DRILL_LOG_DIR` isn't set (analytics can't be initialized), `/summary` and `/events` return `notConfigured: true` rather than empty arrays, so the page can distinguish "not set up" from "set up but idle."
 - **Pricing rows** are editable inline. Each save triggers `upsertPricing` and an invalidate.
-- **Feature labels** are mapped via a constant: `prospector_chat`, `transpile`, `query_suggestions`, `explain_query`, `optimize_query`, `format_sql`, etc.
+- **Feature labels** identify which UI surface originated the call — see [`PROSPECTOR.md`](../../PROSPECTOR.md#chat-endpoint) for the `context.feature` contract. As implemented, the values are:
+
+  | Feature | Origin |
+  |---|---|
+  | `sql_lab_chat` | SQL Lab chat panel |
+  | `sql_lab_optimize` | SQL Lab "Optimize query" |
+  | `log_analysis` | Logs page chat |
+  | `wiki_generation` | Project wiki generation |
+  | `profile_analysis` | Query profile detail page |
+  | `global_chat` | Global Prospector tab (shell) |
+  | `query_suggestions` | Query suggestions panel |
+  | `explain_query` | Explain Query action |
+  | `optimize_query` | Optimize Query action |
+  | `dashboard_qna` | Dashboard Q&A panel |
+  | `executive_summary` | Dashboard executive summary panel |
+  | `nl_filter` | Dashboard natural-language filter panel |
+  | `ai_alerts` | Dashboard AI alerts panel |
+  | `filesystem_form` | Filesystem storage-plugin form assistant |
+  | `config_test` | Server-side: "Test Connection" in AI config |
+  | `transpile` | Server-side: SQL dialect transpiler |
+  | `prospector_chat` | Default when a caller sends no `feature` (wire compatibility with older clients) |
+
 - **Cost formatting.** `fmtMoney` (USD by default), `fmtNum` for counts.
+- **Call outcomes.** Each event is exactly one of success, failure, or cancelled; `successCount + failureCount + cancelledCount == totalCalls` for any summary window.
 - **Empty state.** Non-admins see an empty state explaining they need admin/owner privileges.
 
 ## Chrome
