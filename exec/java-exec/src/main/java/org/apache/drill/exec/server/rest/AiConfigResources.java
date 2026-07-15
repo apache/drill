@@ -23,6 +23,8 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.apache.drill.common.exceptions.DrillRuntimeException;
 import org.apache.drill.exec.exception.StoreException;
+import org.apache.drill.exec.server.rest.ai.AiEvent;
+import org.apache.drill.exec.server.rest.ai.AiEventLogger;
 import org.apache.drill.exec.server.rest.ai.LlmConfig;
 import org.apache.drill.exec.server.rest.ai.LlmProvider;
 import org.apache.drill.exec.server.rest.ai.LlmProviderRegistry;
@@ -761,8 +763,34 @@ public class AiConfigResources {
         return Response.ok(ValidationResult.error("Unknown provider: " + testConfig.getProvider())).build();
       }
 
-      ValidationResult result = provider.validateConfig(testConfig);
-      return Response.ok(result).build();
+      long start = System.currentTimeMillis();
+      Exception failure = null;
+      try {
+        ValidationResult result = provider.validateConfig(testConfig);
+        return Response.ok(result).build();
+      } catch (Exception e) {
+        failure = e;
+        throw e;
+      } finally {
+        try {
+          AiEvent event = new AiEvent();
+          event.ts = AiEventLogger.nowIso();
+          event.user = null;
+          event.feature = "config_test";
+          event.source = "server";
+          event.provider = testConfig.getProvider();
+          event.model = testConfig.getModel();
+          event.durationMs = System.currentTimeMillis() - start;
+          event.success = failure == null;
+          if (failure != null) {
+            event.errorClass = failure.getClass().getSimpleName();
+            event.error = failure.getMessage();
+          }
+          AiEventLogger.log(event);
+        } catch (Exception logErr) {
+          logger.warn("Failed to record AI config test event", logErr);
+        }
+      }
     } catch (Exception e) {
       logger.error("Error testing AI config", e);
       return Response.ok(ValidationResult.error("Test failed: " + e.getMessage())).build();
