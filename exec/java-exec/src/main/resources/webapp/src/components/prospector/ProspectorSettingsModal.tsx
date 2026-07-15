@@ -206,10 +206,10 @@ export function ProspectorSettingsBody({ onSaved, showCancel, onCancel }: BodyPr
         writeTimeoutSeconds: values.writeTimeoutSeconds || undefined,
 
         // SSL/TLS Configuration
-        keystorePath: values.keystorePath || undefined,
+        keystorePath: values.keystorePath ?? '',
         keystorePassword: values.keystorePassword || undefined,
         keystoreType: values.keystoreType || undefined,
-        truststorePath: values.truststorePath || undefined,
+        truststorePath: values.truststorePath ?? '',
         truststorePassword: values.truststorePassword || undefined,
         truststoreType: values.truststoreType || undefined,
         verifySSL: values.verifySSL,
@@ -227,7 +227,7 @@ export function ProspectorSettingsBody({ onSaved, showCancel, onCancel }: BodyPr
         consumerSecret: values.consumerSecret || undefined,
         clientId: values.clientId || undefined,
         usecaseId: values.usecaseId || undefined,
-        clientCertPath: values.clientCertPath || undefined,
+        clientCertPath: values.clientCertPath ?? '',
         gatewayHeaders,
       });
       message.success('AI configuration saved');
@@ -291,10 +291,10 @@ export function ProspectorSettingsBody({ onSaved, showCancel, onCancel }: BodyPr
         connectTimeoutSeconds: values.connectTimeoutSeconds || undefined,
         readTimeoutSeconds: values.readTimeoutSeconds || undefined,
         writeTimeoutSeconds: values.writeTimeoutSeconds || undefined,
-        keystorePath: values.keystorePath || undefined,
+        keystorePath: values.keystorePath ?? '',
         keystorePassword: values.keystorePassword || undefined,
         keystoreType: values.keystoreType || undefined,
-        truststorePath: values.truststorePath || undefined,
+        truststorePath: values.truststorePath ?? '',
         truststorePassword: values.truststorePassword || undefined,
         truststoreType: values.truststoreType || undefined,
         verifySSL: values.verifySSL,
@@ -306,7 +306,7 @@ export function ProspectorSettingsBody({ onSaved, showCancel, onCancel }: BodyPr
         consumerSecret: values.consumerSecret || undefined,
         clientId: values.clientId || undefined,
         usecaseId: values.usecaseId || undefined,
-        clientCertPath: values.clientCertPath || undefined,
+        clientCertPath: values.clientCertPath ?? '',
         gatewayHeaders,
       });
       setTestResult(result);
@@ -593,9 +593,9 @@ export function ProspectorSettingsBody({ onSaved, showCancel, onCancel }: BodyPr
                   <Form.Item
                     name="truststorePath"
                     label="Truststore Path"
-                    help="Absolute path to truststore file (JKS or PKCS12)"
+                    help="Absolute path on the Drillbit host to a truststore (JKS/PKCS12) or a PEM CA bundle (BEGIN CERTIFICATE blocks, like Python's verify=). PEM is auto-detected; no password/type needed."
                   >
-                    <Input placeholder="/opt/drill/certs/truststore.jks" />
+                    <Input placeholder="/opt/drill/certs/ca-bundle.pem" />
                   </Form.Item>
 
                   <Form.Item name="truststorePassword" label="Truststore Password">
