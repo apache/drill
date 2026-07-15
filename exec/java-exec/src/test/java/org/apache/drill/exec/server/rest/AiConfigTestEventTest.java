@@ -71,9 +71,21 @@ public class AiConfigTestEventTest {
     AiEvent event = AiConfigResources.buildConfigTestEvent(config(), "alice", failed, null, 90L);
     assertFalse(event.success);
     assertEquals("ValidationFailed", event.errorClass);
-    assertEquals("API returned HTTP 401", event.error);
+    assertEquals("API returned HTTP 401 (Incorrect API key provided)", event.error);
     assertEquals("config_test", event.feature);
     assertEquals(90L, event.durationMs);
+  }
+
+  /**
+   * When a failed result carries no {@code details} (the common case — most providers
+   * report only a message), the event's error text is just the message, unchanged.
+   */
+  @Test
+  public void testFailedValidationWithoutDetailsRecordsMessageOnly() {
+    ValidationResult failed = ValidationResult.error("Model name is required");
+    AiEvent event = AiConfigResources.buildConfigTestEvent(config(), "alice", failed, null, 5L);
+    assertFalse(event.success);
+    assertEquals("Model name is required", event.error);
   }
 
   @Test

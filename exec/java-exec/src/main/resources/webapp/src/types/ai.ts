@@ -16,6 +16,8 @@
  * limitations under the License.
  */
 
+import type { AiFeature } from '../constants/aiFeatures';
+
 export interface ChatMessage {
   role: 'system' | 'user' | 'assistant' | 'tool';
   content: string | null;
@@ -39,8 +41,12 @@ export interface ToolDefinition {
 export interface ChatContext {
   currentSql?: string;
   currentSchema?: string;
-  /** Which UI feature originated this call; used for analytics attribution. */
-  feature: string;
+  /**
+   * Which UI feature originated this call; used for analytics attribution. Typed as
+   * the labelled-slug union (not `string`) so an unlabelled or misspelled slug fails
+   * `tsc` at the call site instead of silently reaching the server unlabelled.
+   */
+  feature: AiFeature;
   availableSchemas?: string[];
   error?: string;
   resultSummary?: ResultSummary;

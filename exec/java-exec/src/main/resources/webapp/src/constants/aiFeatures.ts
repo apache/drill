@@ -25,10 +25,14 @@
  * server-side slugs come from AiConfigResources (config_test), TranspileResources
  * (transpile), and ProspectorResources' default (prospector_chat).
  *
- * Keep this in sync with the table in docs/dev/ui/pages/ai-analytics.md. The companion
- * test scans the source tree for emitted slugs and fails when one has no label here.
+ * Keep this in sync with the table in docs/dev/ui/pages/ai-analytics.md. `AiFeature`
+ * (below) is derived from this map's keys, so `ChatContext.feature` — a required field
+ * — can only ever hold a slug already labelled here: `tsc` rejects an unlabelled or
+ * misspelled slug at the call site that emits it. Server-emitted slugs (config_test,
+ * transpile, prospector_chat) have no TypeScript literal to check against and stay
+ * manually maintained.
  */
-export const FEATURE_LABEL: Record<string, string> = {
+export const FEATURE_LABEL = {
   // SQL Lab
   sql_lab_chat: 'SQL Lab chat',
   sql_lab_optimize: 'SQL Lab optimize',
@@ -51,9 +55,16 @@ export const FEATURE_LABEL: Record<string, string> = {
   config_test: 'AI config test',
   transpile: 'SQL transpile',
   prospector_chat: 'Prospector chat',
-};
+} as const;
+
+/**
+ * Every client-emitted `feature` slug. `ChatContext.feature` is typed as this union
+ * (not `string`), so passing an unlabelled slug is a compile error rather than a
+ * silently-dropped analytics tag.
+ */
+export type AiFeature = keyof typeof FEATURE_LABEL;
 
 /** Label for a feature slug, falling back to the raw slug for unknown values. */
 export function featureLabel(feature: string): string {
-  return FEATURE_LABEL[feature] ?? feature;
+  return FEATURE_LABEL[feature as AiFeature] ?? feature;
 }
