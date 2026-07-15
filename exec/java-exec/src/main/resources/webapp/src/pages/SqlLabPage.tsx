@@ -253,7 +253,8 @@ export default function SqlLabPage({ datasetFilter, headerContent, projectId, sa
   } = useAppChrome();
   const prospectorOpen = inspectorOpen && inspectorActiveTab === 'prospector';
   const [prospectorAvailable, setProspectorAvailable] = useState(false);
-  const [sendDataToAi, setSendDataToAi] = useState(true);
+  // Starts closed and opens only once /status says the deployment permits sample data.
+  const [sendDataToAi, setSendDataToAi] = useState(false);
   const [maxToolRounds, setMaxToolRounds] = useState(15);
 
   // Fetch schemas for the schema selector
@@ -366,14 +367,21 @@ export default function SqlLabPage({ datasetFilter, headerContent, projectId, sa
 
   // Check Prospector status and config on mount
   useEffect(() => {
+    // sendDataToAi comes from /status, not /config: /config is admin-only, so for a
+    // non-admin the fetch 403s and the old code kept the permissive default, sending
+    // sample data the deployment had turned off. /status is readable by every
+    // authenticated user. An unreadable status withholds data rather than sending it.
     getAiStatus()
-      .then((status) => setProspectorAvailable(status.enabled))
-      .catch(() => setProspectorAvailable(false));
-    getAiConfig()
-      .then((cfg) => {
-        setSendDataToAi(cfg.sendDataToAi ?? true);
-        setMaxToolRounds(cfg.maxToolRounds || 15);
+      .then((status) => {
+        setProspectorAvailable(status.enabled);
+        setSendDataToAi(status.sendDataToAi);
       })
+      .catch(() => {
+        setProspectorAvailable(false);
+        setSendDataToAi(false);
+      });
+    getAiConfig()
+      .then((cfg) => setMaxToolRounds(cfg.maxToolRounds || 15))
       .catch(() => {});
   }, []);
 
@@ -412,7 +420,6 @@ export default function SqlLabPage({ datasetFilter, headerContent, projectId, sa
             label: d.label,
           }))
         : undefined,
-      sendDataToAi,
     };
 
     if (isNotebookTab) {
@@ -435,7 +442,7 @@ export default function SqlLabPage({ datasetFilter, headerContent, projectId, sa
     }
 
     return base;
-  }, [sql, projectId, activeTab?.defaultSchema, schemas, error, results, isNotebookTab, notebookDfName, notebookHandle, datasetFilter, sendDataToAi]);
+  }, [sql, projectId, activeTab?.defaultSchema, schemas, error, results, isNotebookTab, notebookDfName, notebookHandle, datasetFilter]);
 
   // Toggle the inspector to show the Prospector tab.
   const toggleProspector = useCallback(() => {

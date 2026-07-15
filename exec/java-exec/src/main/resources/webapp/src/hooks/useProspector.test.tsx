@@ -16,23 +16,33 @@
  * limitations under the License.
  */
 import { describe, expect, it, vi, beforeEach } from 'vitest';
-import { renderHook } from '@testing-library/react';
+import { renderHook, waitFor } from '@testing-library/react';
 
 import { useProspector } from './useProspector';
 import { createVisualization } from '../api/visualizations';
 import { addVisualization, getProject } from '../api/projects';
 import { executeQuery } from '../api/queries';
+import { getAiStatus } from '../api/ai';
 import type { ChatContext, ToolCall } from '../types/ai';
 
 vi.mock('../api/visualizations', () => ({ createVisualization: vi.fn() }));
 vi.mock('../api/projects', () => ({ addVisualization: vi.fn(), getProject: vi.fn() }));
-vi.mock('../api/ai', () => ({ streamChat: vi.fn() }));
+vi.mock('../api/ai', () => ({ streamChat: vi.fn(), getAiStatus: vi.fn() }));
 vi.mock('../api/queries', () => ({ executeQuery: vi.fn() }));
 vi.mock('../api/metadata', () => ({
   getSchemas: vi.fn(), getTables: vi.fn(), getColumns: vi.fn(), getFunctions: vi.fn(),
 }));
 vi.mock('../api/dashboards', () => ({ createDashboard: vi.fn() }));
 vi.mock('../api/savedQueries', () => ({ createSavedQuery: vi.fn() }));
+
+// Every useProspector mount reads the sendDataToAi setting from /status. Tests that
+// are not about that gate still need the fetch to resolve; those that are override it.
+// vi.clearAllMocks() clears calls but keeps implementations, so this survives the
+// per-describe beforeEach hooks.
+beforeEach(() => {
+  vi.mocked(getAiStatus).mockResolvedValue(
+    { enabled: true, configured: true, sendDataToAi: true } as never);
+});
 
 const VIZ = { id: 'viz-1', name: 'Sales by Region' };
 
@@ -155,12 +165,21 @@ describe('get_project_docs tool', () => {
   });
 });
 
-describe('execute_sql honours sendDataToAi', () => {
+/**
+ * The gate is the server's sendDataToAi setting, read from /status by the hook itself.
+ * It used to be a ChatContext field each caller had to remember to set, and the callers
+ * that forgot (the global Prospector tab, the dashboard panels) sent rows regardless of
+ * the setting. Reading it here means no caller can forget.
+ */
+describe('execute_sql honours the server sendDataToAi setting', () => {
   const sqlCall = (): ToolCall => ({
     id: 'call-3',
     name: 'execute_sql',
     arguments: JSON.stringify({ sql: 'SELECT * FROM sales' }),
   });
+
+  const status = (sendDataToAi: boolean) =>
+    ({ enabled: true, configured: true, sendDataToAi });
 
   beforeEach(() => {
     vi.clearAllMocks();
@@ -171,19 +190,45 @@ describe('execute_sql honours sendDataToAi', () => {
     } as never);
   });
 
-  it('omits sample rows when sendDataToAi is false, keeping columns and count', async () => {
-    const { result } = renderHook(() => useProspector());
-    const out = JSON.parse(await result.current.executeToolCall(
-      sqlCall(), { feature: 'sql_lab_chat', sendDataToAi: false } as ChatContext));
+  /** Waits for the hook's on-mount status fetch to land in its ref. */
+  const renderWithStatus = async (sendDataToAi: boolean) => {
+    vi.mocked(getAiStatus).mockResolvedValue(status(sendDataToAi) as never);
+    const rendered = renderHook(() => useProspector());
+    await waitFor(() => expect(getAiStatus).toHaveBeenCalled());
+    return rendered;
+  };
+
+  it('omits sample rows when the setting is off, keeping columns and count', async () => {
+    const { result } = await renderWithStatus(false);
+    const out = JSON.parse(await result.current.executeToolCall(sqlCall(), ctx()));
     expect(out.rows).toBeUndefined();
     expect(out.columns).toBeDefined();
-    expect(out.rowCount).toBeDefined();
+    expect(out.rowCount).toBe(1);
   });
 
-  it('includes sample rows when sendDataToAi is true', async () => {
-    const { result } = renderHook(() => useProspector());
-    const out = JSON.parse(await result.current.executeToolCall(
-      sqlCall(), { feature: 'sql_lab_chat', sendDataToAi: true } as ChatContext));
+  it('includes sample rows when the setting is on', async () => {
+    const { result } = await renderWithStatus(true);
+    const out = JSON.parse(await result.current.executeToolCall(sqlCall(), ctx()));
     expect(out.rows).toBeDefined();
+  });
+
+  /**
+   * The global Prospector tab passes no privacy hint at all — under the old design that
+   * was exactly the path that leaked. Its context must not be able to re-open the gate.
+   */
+  it('ignores a sendDataToAi hint on the context when the setting is off', async () => {
+    const { result } = await renderWithStatus(false);
+    const out = JSON.parse(await result.current.executeToolCall(
+      sqlCall(), { feature: 'global_chat', sendDataToAi: true } as unknown as ChatContext));
+    expect(out.rows).toBeUndefined();
+  });
+
+  /** A privacy setting that cannot be read must fail closed, not open. */
+  it('withholds sample rows when the status fetch fails', async () => {
+    vi.mocked(getAiStatus).mockRejectedValue(new Error('403'));
+    const { result } = renderHook(() => useProspector());
+    await waitFor(() => expect(getAiStatus).toHaveBeenCalled());
+    const out = JSON.parse(await result.current.executeToolCall(sqlCall(), ctx()));
+    expect(out.rows).toBeUndefined();
   });
 });
