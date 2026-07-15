@@ -87,6 +87,7 @@ export default function NlFilterPanel({
         messages,
         tools: [],
         context: {
+          feature: 'nl_filter',
           dashboardNlFilterMode: true,
           dashboardData,
         },

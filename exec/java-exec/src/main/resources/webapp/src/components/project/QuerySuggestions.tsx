@@ -356,7 +356,7 @@ export default function QuerySuggestions({
       const startTime = Date.now();
 
       abortRef.current = streamChat(
-        { messages, tools: [], context: {} },
+        { messages, tools: [], context: { feature: 'query_suggestions' } },
         (event: DeltaEvent) => {
           if (event.type === 'content') {
             accumulated += event.content;

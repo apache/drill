@@ -39,6 +39,8 @@ export interface ToolDefinition {
 export interface ChatContext {
   currentSql?: string;
   currentSchema?: string;
+  /** Which UI feature originated this call; used for analytics attribution. */
+  feature: string;
   availableSchemas?: string[];
   error?: string;
   resultSummary?: ResultSummary;

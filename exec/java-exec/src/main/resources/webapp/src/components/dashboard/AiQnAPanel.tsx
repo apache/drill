@@ -99,6 +99,7 @@ export default function AiQnAPanel({
         messages: chatMessages,
         tools: [],
         context: {
+          feature: 'dashboard_qna',
           dashboardQnAMode: true,
           dashboardData,
         },

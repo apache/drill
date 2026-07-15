@@ -27,6 +27,6 @@ import type { ChatContext } from '../../types/ai';
  */
 export default function GlobalProspectorTab() {
   const prospector = useProspector();
-  const context: ChatContext = useMemo(() => ({}), []);
+  const context: ChatContext = useMemo(() => ({ feature: 'global_chat' }), []);
   return <ProspectorPanel prospector={prospector} context={context} />;
 }

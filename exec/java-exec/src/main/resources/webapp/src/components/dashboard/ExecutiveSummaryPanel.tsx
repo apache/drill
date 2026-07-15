@@ -251,6 +251,7 @@ export default function ExecutiveSummaryPanel({
         messages,
         tools: [],
         context: {
+          feature: 'executive_summary',
           dashboardSummaryMode: true,
           dashboardData,
           dashboardTone: selectedTone,

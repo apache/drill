@@ -938,7 +938,7 @@ export default function FileSystemForm({ config, onChange, onValidationChange, p
       {
         messages: [{ role: 'user', content: prompt }],
         tools: [],
-        context: {},
+        context: { feature: 'filesystem_form' },
       },
       (event) => {
         if (event.type === 'content') {
