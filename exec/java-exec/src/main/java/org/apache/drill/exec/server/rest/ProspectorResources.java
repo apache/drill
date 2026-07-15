@@ -990,7 +990,7 @@ public class ProspectorResources {
     return cachedSavedQueryStore;
   }
 
-  private ProjectResources.Project loadProject(String projectId) {
+  ProjectResources.Project loadProject(String projectId) {
     if (projectId == null || projectId.trim().isEmpty()) {
       return null;
     }
@@ -1003,7 +1003,7 @@ public class ProspectorResources {
     }
   }
 
-  private List<SavedQueryResources.SavedQuery> loadSavedQueries(List<String> ids) {
+  List<SavedQueryResources.SavedQuery> loadSavedQueries(List<String> ids) {
     List<SavedQueryResources.SavedQuery> out = new ArrayList<>();
     if (ids == null || ids.isEmpty()) {
       return out;

@@ -150,4 +150,52 @@ public class ProjectContextBlockTest {
     assertFalse(systemPromptOf(messages).contains("PROJECT CONTEXT"));
     assertTrue(systemPromptOf(messages).contains("Apache Drill"));
   }
+
+  /**
+   * Proves the positive path end to end: a loaded project actually reaches the
+   * system prompt via buildMessages, and the project's own savedQueryIds are what
+   * get passed to loadSavedQueries — not some other field. Without this, a test
+   * suite that only exercises buildProjectBlock directly (as the six tests above
+   * do) can't tell the injection wiring in buildMessages apart from wiring that was
+   * deleted or subtly broken.
+   */
+  @Test
+  public void testLoadedProjectReachesSystemPrompt() {
+    ProjectResources.WikiPage wikiPage = new ProjectResources.WikiPage(
+        "w1", "Runbook", "SECRET_BODY_TEXT", 0, 0L, 0L);
+    ProjectResources.Project fixtureProject = project("Retail", "Store sales analytics",
+        List.of("sales", "retail"), List.of(wikiPage));
+    fixtureProject.setSavedQueryIds(List.of("q1"));
+
+    SavedQueryResources.SavedQuery fixtureQuery = savedQuery("Top regions",
+        "Revenue by region, last 30d", "SELECT region, SUM(amount) FROM sales GROUP BY region");
+
+    List<List<String>> capturedSavedQueryIds = new ArrayList<>();
+
+    ProspectorResources resources = new ProspectorResources() {
+      @Override
+      ProjectResources.Project loadProject(String projectId) {
+        assertEquals("proj-42", projectId);
+        return fixtureProject;
+      }
+
+      @Override
+      List<SavedQueryResources.SavedQuery> loadSavedQueries(List<String> ids) {
+        capturedSavedQueryIds.add(ids);
+        return List.of(fixtureQuery);
+      }
+    };
+
+    List<ChatMessage> messages = resources.buildMessages(new LlmConfig(), request("proj-42"));
+    String systemPrompt = systemPromptOf(messages);
+
+    assertTrue(systemPrompt.contains("PROJECT CONTEXT"));
+    assertTrue(systemPrompt.contains("Store sales analytics"));
+    assertTrue(systemPrompt.contains("Revenue by region, last 30d"));
+    assertTrue(systemPrompt.contains("Runbook"));
+    assertFalse(systemPrompt.contains("SECRET_BODY_TEXT"));
+
+    assertEquals(1, capturedSavedQueryIds.size());
+    assertEquals(fixtureProject.getSavedQueryIds(), capturedSavedQueryIds.get(0));
+  }
 }
