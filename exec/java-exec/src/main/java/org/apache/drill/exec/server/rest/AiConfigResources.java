@@ -65,6 +65,8 @@ public class AiConfigResources {
   private static final Logger logger = LoggerFactory.getLogger(AiConfigResources.class);
   private static final String CONFIG_STORE_NAME = "drill.sqllab.ai_config";
   private static final String CONFIG_KEY = "default";
+  /** Analytics feature slug for admin "Test Connection" calls. */
+  private static final String CONFIG_TEST_FEATURE = "config_test";
 
   @Inject
   WorkManager workManager;
@@ -760,38 +762,30 @@ public class AiConfigResources {
         testConfig.setGatewayHeaders(existing.getGatewayHeaders());
       }
 
+      String username = ProspectorResources.resolveUser(sc);
+
       LlmProvider provider = LlmProviderRegistry.get(testConfig.getProvider());
       if (provider == null) {
-        return Response.ok(ValidationResult.error("Unknown provider: " + testConfig.getProvider())).build();
+        // No billable call is made, but the attempt is still a failed config test:
+        // record it as a zero-token event rather than dropping it on the floor.
+        ValidationResult unknown =
+            ValidationResult.error("Unknown provider: " + testConfig.getProvider());
+        recordConfigTest(testConfig, username, unknown, null, 0L);
+        return Response.ok(unknown).build();
       }
 
       long start = System.currentTimeMillis();
+      ValidationResult result = null;
       Exception failure = null;
       try {
-        ValidationResult result = provider.validateConfig(testConfig);
+        result = provider.validateConfig(testConfig);
         return Response.ok(result).build();
       } catch (Exception e) {
         failure = e;
         throw e;
       } finally {
-        try {
-          AiEvent event = new AiEvent();
-          event.ts = AiEventLogger.nowIso();
-          event.user = ProspectorResources.resolveUser(sc);
-          event.feature = "config_test";
-          event.source = "server";
-          event.provider = testConfig.getProvider();
-          event.model = testConfig.getModel();
-          event.durationMs = System.currentTimeMillis() - start;
-          event.success = failure == null;
-          if (failure != null) {
-            event.errorClass = failure.getClass().getSimpleName();
-            event.error = failure.getMessage();
-          }
-          AiEventLogger.log(event);
-        } catch (Exception logErr) {
-          logger.warn("Failed to record AI config test event", logErr);
-        }
+        recordConfigTest(testConfig, username, result, failure,
+            System.currentTimeMillis() - start);
       }
     } catch (Exception e) {
       logger.error("Error testing AI config", e);
@@ -813,6 +807,40 @@ public class AiConfigResources {
   }
 
   // ==================== Helper Methods ====================
+
+  /**
+   * Builds the analytics event for a "Test Connection" attempt. Package-private and
+   * side-effect free so the recorded fields can be asserted directly.
+   *
+   * <p>A provider reports a failed test by returning an error {@link ValidationResult},
+   * not by throwing — {@code validateConfig} catches transport errors (HTTP 401, refused
+   * connections) and turns them into results. So "nothing was thrown" says nothing about
+   * whether the test passed; only the result does.
+   */
+  static AiEvent buildConfigTestEvent(LlmConfig testConfig, String username,
+      ValidationResult result, Exception failure, long durationMs) {
+    boolean success = failure == null && result != null && result.isSuccess();
+    String errorClass = null;
+    String error = null;
+    if (failure != null) {
+      errorClass = failure.getClass().getSimpleName();
+      error = failure.getMessage();
+    } else if (!success && result != null) {
+      errorClass = "ValidationFailed";
+      error = result.getMessage();
+    }
+    return ProspectorResources.buildOutcomeEvent(testConfig, username, CONFIG_TEST_FEATURE,
+        success, errorClass, error, durationMs);
+  }
+
+  private static void recordConfigTest(LlmConfig testConfig, String username,
+      ValidationResult result, Exception failure, long durationMs) {
+    try {
+      AiEventLogger.log(buildConfigTestEvent(testConfig, username, result, failure, durationMs));
+    } catch (Exception logErr) {
+      logger.warn("Failed to record AI config test event", logErr);
+    }
+  }
 
   private PersistentStore<LlmConfig> getStore() {
     if (cachedStore == null) {

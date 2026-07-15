@@ -349,8 +349,11 @@ public class ProspectorResources {
   public Response chat(ChatRequest request, @Context SecurityContext sc) {
     String username = resolveUser(sc);
     String feature = request != null && request.context != null ? request.context.feature : null;
+    // Declared outside the try so the outer catch can still attribute provider/model
+    // when the config loaded fine and a later step (buildMessages, pricing) threw.
+    LlmConfig config = null;
     try {
-      LlmConfig config = getConfig();
+      config = getConfig();
       if (config == null || !config.isEnabled()) {
         recordSetupFailure(config, username, feature,
             "ProspectorDisabled", "Prospector is not enabled");
@@ -418,7 +421,7 @@ public class ProspectorResources {
           .build();
     } catch (Exception e) {
       logger.error("Error initiating AI chat", e);
-      recordSetupFailure(null, username, feature, e.getClass().getSimpleName(), e.getMessage());
+      recordSetupFailure(config, username, feature, e.getClass().getSimpleName(), e.getMessage());
       return Response.serverError()
           .entity(new ErrorResponse("Failed to initiate chat: " + e.getMessage()))
           .type(MediaType.APPLICATION_JSON)
@@ -522,17 +525,32 @@ public class ProspectorResources {
   }
 
   /**
+   * Builds a token-free event for an AI interaction whose outcome is already decided —
+   * a setup failure that never reached the provider, or a non-streaming call such as
+   * the admin config test that reports its own success. Package-private and side-effect
+   * free so the recorded fields can be asserted directly.
+   *
+   * <p>Success semantics for every recorded event live here and in
+   * {@link #buildEvent}; callers must not hand-roll AiEvent construction, since
+   * "no exception thrown" is not the same as "the call succeeded".
+   */
+  static AiEvent buildOutcomeEvent(LlmConfig config, String username, String feature,
+      boolean success, String errorClass, String message, long durationMs) {
+    AiEvent event = buildEvent(config, username, feature, null, null, null, null, durationMs);
+    event.success = success;
+    event.cancelled = false;
+    event.errorClass = success ? null : errorClass;
+    event.error = success ? null : message;
+    return event;
+  }
+
+  /**
    * Builds the event for a failure that never reached the provider. Package-private
    * and side-effect free so the recorded fields can be asserted directly.
    */
   static AiEvent buildSetupFailureEvent(LlmConfig config, String username, String feature,
       String errorClass, String message) {
-    AiEvent event = buildEvent(config, username, feature, null, null, null, null, 0L);
-    event.success = false;
-    event.cancelled = false;
-    event.errorClass = errorClass;
-    event.error = message;
-    return event;
+    return buildOutcomeEvent(config, username, feature, false, errorClass, message, 0L);
   }
 
   /** Records a setup failure that never reached the provider. */
