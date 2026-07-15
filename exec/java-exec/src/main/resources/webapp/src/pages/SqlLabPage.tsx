@@ -52,7 +52,7 @@ import { getAiStatus, getAiConfig, streamChat, transpileSql, convertDataType } f
 import { getSchemaTree } from '../api/metadata';
 import { getSavedQuery } from '../api/savedQueries';
 import { getVisualizations } from '../api/visualizations';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import SchemaExplorer from '../components/schema-explorer/SchemaExplorer';
 import type { DatasetFilter } from '../components/schema-explorer/SchemaExplorer';
 import SqlEditor, { DEFAULT_EDITOR_SETTINGS } from '../components/query-editor/SqlEditor';
@@ -128,6 +128,7 @@ export default function SqlLabPage({ datasetFilter, headerContent, projectId, sa
   const dispatch = useDispatch<AppDispatch>();
   const location = useLocation();
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
   const { tabs, activeTabId } = useSelector((state: RootState) => state.query);
   const activeTab = tabs.find((t) => t.id === activeTabId);
 
@@ -295,6 +296,12 @@ export default function SqlLabPage({ datasetFilter, headerContent, projectId, sa
 
   // Prospector hook
   const prospector = useProspector(updateSql, useCallback((id: string, name: string) => {
+    // The tool has already attached it to the project; refresh the cached views
+    // so it shows up without a reload.
+    queryClient.invalidateQueries({ queryKey: ['visualizations'] });
+    if (projectId) {
+      queryClient.invalidateQueries({ queryKey: ['project', projectId] });
+    }
     notification.success({
       message: 'Visualization Created',
       description: `"${name}" has been saved.`,
@@ -313,7 +320,7 @@ export default function SqlLabPage({ datasetFilter, headerContent, projectId, sa
       duration: 0,
       key: `viz-created-${id}`,
     });
-  }, [navigate]), maxToolRounds);
+  }, [navigate, queryClient, projectId]), maxToolRounds);
 
   // Real-time SQL validation markers in the editor
   useSqlValidation(sql, editorInstanceRef, monacoInstanceRef);
@@ -387,6 +394,7 @@ export default function SqlLabPage({ datasetFilter, headerContent, projectId, sa
 
     const base: ChatContext = {
       feature: 'sql_lab_chat',
+      projectId,
       currentSql: sql || undefined,
       currentSchema: activeTab?.defaultSchema || undefined,
       availableSchemas: projectSchemas || schemas?.map((s) => s.name),
@@ -426,7 +434,7 @@ export default function SqlLabPage({ datasetFilter, headerContent, projectId, sa
     }
 
     return base;
-  }, [sql, activeTab?.defaultSchema, schemas, error, results, isNotebookTab, notebookDfName, notebookHandle, datasetFilter]);
+  }, [sql, projectId, activeTab?.defaultSchema, schemas, error, results, isNotebookTab, notebookDfName, notebookHandle, datasetFilter]);
 
   // Toggle the inspector to show the Prospector tab.
   const toggleProspector = useCallback(() => {
