@@ -56,17 +56,10 @@ import {
   type AiPricingEntry,
 } from '../api/aiAnalytics';
 import { useCurrentUser } from '../hooks/useCurrentUser';
+import { FEATURE_LABEL, featureLabel } from '../constants/aiFeatures';
 
 const { Title, Text } = Typography;
 const { RangePicker } = DatePicker;
-
-const FEATURE_LABEL: Record<string, string> = {
-  prospector_chat: 'Prospector chat',
-  transpile: 'SQL transpile',
-  query_suggestions: 'Query suggestions',
-  explain_query: 'Explain query',
-  optimize_query: 'Optimize query',
-};
 
 function fmtNum(v: unknown): string {
   if (v === null || v === undefined || v === '') {
@@ -251,20 +244,26 @@ export default function AiAnalyticsPage() {
           />
         )}
 
+        {/*
+          Genuine misconfiguration is already reported by the two alerts above
+          (DRILL_LOG_DIR unset, workspace/format not registered). Once `ready` is true,
+          the only thing left that can set notConfigured is a missing ai-events*.log —
+          i.e. the deployment is set up correctly and simply hasn't made an AI call yet.
+        */}
         {ready && summary.data?.notConfigured && (
           <Alert
             type="info"
             showIcon
-            message="AI analytics is not configured"
-            description="No AI event log has been written yet, so there is nothing to report — this is not the same as zero usage. Once Prospector or the SQL transpiler is used, events will appear here."
+            message="No AI events captured yet"
+            description="AI analytics is set up, but no event log has been written. Once Prospector or the SQL transpiler is used, events will appear here."
           />
         )}
 
-        {ready && summary.data && !summary.data.notConfigured && (
+        {ready && summary.data && (
           <SummarySection summary={summary.data} loading={summary.isFetching} />
         )}
 
-        {ready && summary.data && !summary.data.notConfigured && (
+        {ready && (
           <EventsSection from={fromIso} to={toIso} pricing={summary.data?.pricing ?? {}} />
         )}
 
@@ -438,7 +437,7 @@ function SummarySection({ summary, loading }: SummarySectionProps) {
               dataSource={summary.byFeature}
               pagination={false}
               columns={[
-                { title: 'Feature', dataIndex: 'feature', render: (v: string) => FEATURE_LABEL[v] ?? v },
+                { title: 'Feature', dataIndex: 'feature', render: (v: string) => featureLabel(v) },
                 { title: 'Calls', dataIndex: 'calls', align: 'right', render: fmtNum },
                 { title: 'Tokens', dataIndex: 'tokens', align: 'right', render: fmtNum },
                 { title: 'Avg ms', dataIndex: 'avgDurationMs', align: 'right',
@@ -585,6 +584,13 @@ function EventsSection({ from, to, pricing }: EventsSectionProps) {
         loading={events.isFetching}
         rowKey={(r, i) => `${r.ts}-${i}`}
         dataSource={events.data?.rows ?? []}
+        locale={{
+          // notConfigured means the event log doesn't exist yet, which is a different
+          // empty than "the log exists but nothing matched these filters".
+          emptyText: events.data?.notConfigured
+            ? 'No AI event log yet — events appear here once an AI feature is used.'
+            : 'No events match the selected range and filters.',
+        }}
         onRow={(record) => ({
           onClick: () => setSelected(record),
           style: { cursor: 'pointer' },
@@ -607,7 +613,7 @@ function EventsSection({ from, to, pricing }: EventsSectionProps) {
             render: (v: string) => v ? new Date(v).toLocaleString() : '—' },
           { title: 'User', dataIndex: 'user', width: 140 },
           { title: 'Feature', dataIndex: 'feature', width: 160,
-            render: (v: string) => FEATURE_LABEL[v] ?? v },
+            render: (v: string) => featureLabel(v) },
           { title: 'Provider', dataIndex: 'provider', width: 110 },
           { title: 'Model', dataIndex: 'model', width: 200, ellipsis: true },
           { title: 'In', dataIndex: 'promptTokens', align: 'right', width: 70, render: fmtNum },
@@ -646,7 +652,7 @@ function EventsSection({ from, to, pricing }: EventsSectionProps) {
             <Row gutter={[12, 12]}>
               <Col span={12}><Text type="secondary">Time</Text><div>{selected.ts}</div></Col>
               <Col span={12}><Text type="secondary">User</Text><div>{selected.user}</div></Col>
-              <Col span={12}><Text type="secondary">Feature</Text><div>{FEATURE_LABEL[selected.feature] ?? selected.feature}</div></Col>
+              <Col span={12}><Text type="secondary">Feature</Text><div>{featureLabel(selected.feature)}</div></Col>
               <Col span={12}><Text type="secondary">Provider / model</Text><div>{selected.provider} / {selected.model}</div></Col>
               <Col span={6}><Text type="secondary">In tokens</Text><div>{fmtNum(selected.promptTokens)}</div></Col>
               <Col span={6}><Text type="secondary">Out tokens</Text><div>{fmtNum(selected.responseTokens)}</div></Col>
