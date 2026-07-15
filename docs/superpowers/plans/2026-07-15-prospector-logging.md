@@ -486,7 +486,8 @@ absent — that tests the filesystem, not the product.
 - Modify: `exec/java-exec/src/main/resources/webapp/src/components/project/QuerySuggestions.tsx` (remove import line 25; remove calls at 375, 383, 392)
 - Modify: `exec/java-exec/src/main/resources/webapp/src/components/ai/AiAssistantModal.tsx` (remove import line 23; remove calls at 107, 112, 228, 233)
 - Delete: `exec/java-exec/src/main/resources/webapp/src/services/aiObservability.ts` (354 lines)
-- Delete: `exec/java-exec/src/main/java/org/apache/drill/exec/server/rest/ai/AiLogsResources.java`
+- Delete: `exec/java-exec/src/main/java/org/apache/drill/exec/server/rest/AiLogsResources.java`
+- Modify: `exec/java-exec/src/main/java/org/apache/drill/exec/server/rest/DrillRestServer.java:107` (remove `register(AiLogsResources.class);`)
 
 **Interfaces:**
 - Consumes: feature tagging from Task 3 (this deletion is only safe once the server records attribution).
@@ -500,8 +501,11 @@ Run:
 grep -rn --include='*.java' --include='*.ts' --include='*.tsx' -E "AiLogsResources|ai/logs|aiObservability" exec/java-exec/src
 ```
 
-Expected: matches in exactly four files — `QuerySuggestions.tsx`,
-`AiAssistantModal.tsx`, `services/aiObservability.ts`, and `AiLogsResources.java`.
+Expected: matches in exactly five files — `QuerySuggestions.tsx`,
+`AiAssistantModal.tsx`, `services/aiObservability.ts`, `AiLogsResources.java`,
+and `DrillRestServer.java` (which registers the resource). Ignore anything under
+a `target/` directory — those are build artifacts, not source.
+
 If any **other** file appears, stop and report it: the deletion is not clean and
 this plan's premise is wrong.
 
@@ -513,10 +517,20 @@ Remove the import and every `aiObservability.logAICall(...)` call from both comp
 
 ```bash
 git rm exec/java-exec/src/main/resources/webapp/src/services/aiObservability.ts
-git rm exec/java-exec/src/main/java/org/apache/drill/exec/server/rest/ai/AiLogsResources.java
+git rm exec/java-exec/src/main/java/org/apache/drill/exec/server/rest/AiLogsResources.java
 ```
 
-`AiLogsResources` is a JAX-RS resource discovered by package scanning, so no registration list needs editing.
+`AiLogsResources` is **explicitly registered**, not package-scanned. Remove its
+registration from `DrillRestServer.java:107`, alongside the other AI resources:
+
+```java
+    register(AiConfigResources.class);
+    register(AiPricingResources.class);
+```
+
+(i.e. delete the `register(AiLogsResources.class);` line between them). It is in
+the same package, so there is no import to remove. Leaving the registration would
+fail `test-compile`.
 
 - [ ] **Step 4: Verify nothing references the deleted code and it all still builds**
 
