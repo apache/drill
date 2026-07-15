@@ -1,0 +1,163 @@
+{
+  "name": "drill",
+  "label": "Apache Drill",
+  "description": "Apache Drill distributed SQL query engine",
+  "guid": "d8b1c0a2-7e3f-4b2a-9c1d-0a1b2c3d4e5f",
+  "implClass": "org.apache.ranger.services.drill.RangerServiceDrill",
+  "version": 1,
+  "resources": [
+    {
+      "itemId": 1,
+      "name": "datasource",
+      "label": "Data Source",
+      "description": "Drill storage plugin name (e.g. dfs, hive, mongo)",
+      "level": 10,
+      "parent": "",
+      "mandatory": true,
+      "lookupSupported": true,
+      "recursiveSupported": false,
+      "excludesSupported": false,
+      "matcher": "org.apache.ranger.plugin.resourcematcher.RangerDefaultResourceMatcher",
+      "matcherOptions": {
+        "wildCard": "false",
+        "ignoreCase": "false"
+      },
+      "validationRegEx": "",
+      "uiPageSize": "",
+      "accessTypeRestrictions": []
+    },
+    {
+      "itemId": 2,
+      "name": "schema",
+      "label": "Schema",
+      "description": "Schema path within the data source (e.g. tmp, default)",
+      "level": 20,
+      "parent": "datasource",
+      "mandatory": true,
+      "lookupSupported": true,
+      "recursiveSupported": true,
+      "excludesSupported": true,
+      "matcher": "org.apache.ranger.plugin.resourcematcher.RangerDefaultResourceMatcher",
+      "matcherOptions": {
+        "wildCard": "true",
+        "ignoreCase": "false"
+      },
+      "validationRegEx": "",
+      "uiPageSize": "",
+      "accessTypeRestrictions": []
+    },
+    {
+      "itemId": 3,
+      "name": "table",
+      "label": "Table",
+      "description": "Table name within the schema",
+      "level": 30,
+      "parent": "schema",
+      "mandatory": true,
+      "lookupSupported": true,
+      "recursiveSupported": true,
+      "excludesSupported": true,
+      "matcher": "org.apache.ranger.plugin.resourcematcher.RangerDefaultResourceMatcher",
+      "matcherOptions": {
+        "wildCard": "true",
+        "ignoreCase": "false"
+      },
+      "validationRegEx": "",
+      "uiPageSize": "",
+      "accessTypeRestrictions": []
+    },
+    {
+      "itemId": 4,
+      "name": "column",
+      "label": "Column",
+      "description": "Column name within the table",
+      "level": 40,
+      "parent": "table",
+      "mandatory": false,
+      "lookupSupported": true,
+      "recursiveSupported": true,
+      "excludesSupported": true,
+      "matcher": "org.apache.ranger.plugin.resourcematcher.RangerDefaultResourceMatcher",
+      "matcherOptions": {
+        "wildCard": "true",
+        "ignoreCase": "false"
+      },
+      "validationRegEx": "",
+      "uiPageSize": "",
+      "accessTypeRestrictions": []
+    }
+  ],
+  "accessTypes": [
+    {
+      "itemId": 1,
+      "name": "SELECT",
+      "label": "Select",
+      "impliedGrants": ["SHOW", "USE"]
+    },
+    {
+      "itemId": 2,
+      "name": "CREATE",
+      "label": "Create"
+    },
+    {
+      "itemId": 3,
+      "name": "INSERT",
+      "label": "Insert"
+    },
+    {
+      "itemId": 4,
+      "name": "DROP",
+      "label": "Drop"
+    },
+    {
+      "itemId": 5,
+      "name": "SHOW",
+      "label": "Show",
+      "impliedGrants": []
+    },
+    {
+      "itemId": 6,
+      "name": "USE",
+      "label": "Use",
+      "impliedGrants": []
+    },
+    {
+      "itemId": 7,
+      "name": "DELETE",
+      "label": "Delete"
+    }
+  ],
+  "serviceConfigOptions": [
+    {
+      "itemId": 1,
+      "name": "username",
+      "label": "Username",
+      "description": "Drill user name for policy lookup connection",
+      "type": "string",
+      "mandatory": true,
+      "defaultValue": "",
+      "validationRegEx": ""
+    },
+    {
+      "itemId": 2,
+      "name": "password",
+      "label": "Password",
+      "description": "Drill user password",
+      "type": "password",
+      "mandatory": false,
+      "defaultValue": ""
+    },
+    {
+      "itemId": 3,
+      "name": "drill.connection.url",
+      "label": "Drill REST URL",
+      "description": "Drill REST API endpoint for resource lookup (e.g. http://drillbit-host:8047)",
+      "type": "string",
+      "mandatory": true,
+      "defaultValue": "http://localhost:8047"
+    }
+  ],
+  "policyConditions": [],
+  "contextEnrichers": [],
+  "enums": []
+}

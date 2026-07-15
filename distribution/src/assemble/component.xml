@@ -98,6 +98,68 @@
       <useProjectArtifact>false</useProjectArtifact>
     </dependencySet>
 
+    <!--
+      Ranger Admin service plugin. Kept in its own directory so it never lands on the
+      Drillbit classpath. Users copy this jar into Ranger Admin's
+      WEB-INF/classes/lib to enable Test Connection and resource autocomplete
+      in the Ranger policy editor.
+    -->
+    <dependencySet>
+      <includes>
+        <include>org.apache.drill:ranger-drill-service:jar</include>
+      </includes>
+      <outputDirectory>jars/ranger-service</outputDirectory>
+      <useProjectArtifact>false</useProjectArtifact>
+    </dependencySet>
+
+    <!--
+      Ranger framework jars (NOT Jersey/HK2 — those are force-copied by
+      maven-dependency-plugin:copy in distribution/pom.xml to ensure
+      correct 2.x versions are used).
+
+      These jars are NOT on the Drillbit's main classpath; they are loaded
+      by RangerPluginClassLoader from this directory. This isolation is
+      required because the plugin ships Jersey 2.35 (org.glassfish.jersey.*
+      + javax.ws.rs.*) which conflicts with Drill's own Jersey 3.1.9
+      (org.glassfish.jersey.* + jakarta.ws.rs.*) on the main classpath.
+
+      Shared deps (SLF4J, Netty, Hadoop, Jackson) are 'provided' scope in
+      drill-ranger-plugin/pom.xml and intentionally NOT listed here — the
+      plugin classloader falls back to the Drillbit classloader for those.
+    -->
+    <dependencySet>
+      <includes>
+        <!-- Plugin itself -->
+        <include>org.apache.drill:drill-ranger-plugin:jar</include>
+        <!-- Ranger plugin framework -->
+        <include>org.apache.ranger:ranger-plugins-common:jar</include>
+        <include>org.apache.ranger:ranger-knox-plugin:jar</include>
+        <include>org.apache.ranger:ranger-audit-core:jar</include>
+        <include>org.apache.ranger:ranger-audit-dest-log4j:jar</include>
+        <include>org.apache.ranger:ranger-authz-api:jar</include>
+        <include>org.apache.ranger:ugsync-util:jar</include>
+      </includes>
+      <outputDirectory>jars/ranger-drill-plugin-impl</outputDirectory>
+      <unpack>false</unpack>
+      <useProjectArtifact>false</useProjectArtifact>
+    </dependencySet>
+
+    <!--
+      RangerPluginClassLoader must be on the Drillbit's main classpath because
+      RangerAccessAuthorizer (in drill-java-exec.jar) directly references it to
+      create the isolated classloader for the Ranger plugin. It cannot itself
+      be loaded by the isolated classloader.
+    -->
+    <dependencySet>
+      <includes>
+        <include>org.apache.ranger:ranger-plugin-classloader:jar</include>
+      </includes>
+      <outputDirectory>jars/3rdparty</outputDirectory>
+      <unpack>false</unpack>
+      <useProjectArtifact>false</useProjectArtifact>
+      <scope>compile</scope>
+    </dependencySet>
+
     <dependencySet>
       <outputDirectory>jars/classb</outputDirectory>
       <unpack>false</unpack>
@@ -125,6 +187,22 @@
         <include>org.jvnet.mimepull</include>
         <include>org.reflections</include>
       </includes>
+      <!--
+        Exclude Jersey 2.x jars (used by drill-ranger-plugin via
+        RangerPluginClassLoader). These go to jars/ranger-drill-plugin-impl/
+        instead, to avoid org.glassfish.jersey.* package conflicts with
+        Drill's own Jersey 3.1.9 on the main classpath.
+      -->
+      <excludes>
+        <exclude>org.glassfish.jersey.core:jersey-client:jar:${jersey.ranger.version}</exclude>
+        <exclude>org.glassfish.jersey.core:jersey-common:jar:${jersey.ranger.version}</exclude>
+        <exclude>org.glassfish.jersey.core:jersey-server:jar:${jersey.ranger.version}</exclude>
+        <exclude>org.glassfish.jersey.inject:jersey-hk2:jar:${jersey.ranger.version}</exclude>
+        <exclude>org.glassfish.jersey.media:jersey-media-json-jackson:jar:${jersey.ranger.version}</exclude>
+        <exclude>org.glassfish.jersey.media:jersey-media-multipart:jar:${jersey.ranger.version}</exclude>
+        <exclude>org.glassfish.jersey.ext:jersey-entity-filtering:jar:${jersey.ranger.version}</exclude>
+        <exclude>jakarta.ws.rs:jakarta.ws.rs-api:jar:${jaxrs.api.version}</exclude>
+      </excludes>
     </dependencySet>
     <dependencySet>
       <outputDirectory>jars/3rdparty/</outputDirectory>
@@ -152,10 +230,16 @@
         <exclude>org.apache.drill.exec</exclude>
         <exclude>org.apache.drill.memory</exclude>
         <exclude>org.apache.drill.metastore</exclude>
+        <!--
+          Ranger plugin jars and their transitive deps go to
+          jars/ranger-drill-plugin-impl/ (loaded by RangerPluginClassLoader),
+          NOT jars/3rdparty/ (main classpath).
+        -->
+        <exclude>org.apache.ranger</exclude>
+        <exclude>org.glassfish.hk2.external</exclude>
+        <exclude>org.glassfish.hk2</exclude>
         <exclude>org.apache.zookeeper</exclude>
         <exclude>org.eclipse.jetty</exclude>
-        <exclude>org.glassfish.hk2</exclude>
-        <exclude>org.glassfish.hk2.external</exclude>
         <exclude>org.glassfish.jersey.containers</exclude>
         <exclude>org.glassfish.jersey.core</exclude>
         <exclude>org.glassfish.jersey.ext</exclude>
@@ -216,9 +300,25 @@
       <directory>../sample-data</directory>
       <outputDirectory>sample-data</outputDirectory>
     </fileSet>
+    <!--
+      JAX-RS 2.x API (jakarta.ws.rs-api:2.1.6) and Jersey HK2 2.35 that were
+      force-copied by maven-dependency-plugin:copy in distribution/pom.xml.
+      These must use the 2.x versions, not the 3.x versions that Maven
+      dependency mediation would otherwise pick (because Drill's own REST
+      server depends on the 3.x versions at a shallower depth).
+    -->
+    <fileSet>
+      <directory>${project.build.directory}/ranger-drill-plugin-impl</directory>
+      <outputDirectory>jars/ranger-drill-plugin-impl</outputDirectory>
+    </fileSet>
     <fileSet>
       <directory>${project.build.directory}/winutils</directory>
       <outputDirectory>winutils/bin</outputDirectory>
+    </fileSet>
+    <fileSet>
+      <directory>src/main/resources/ranger</directory>
+      <outputDirectory>conf/ranger</outputDirectory>
+      <fileMode>0640</fileMode>
     </fileSet>
   </fileSets>
 
