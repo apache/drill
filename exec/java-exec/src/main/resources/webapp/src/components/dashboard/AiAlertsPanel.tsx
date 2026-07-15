@@ -181,7 +181,7 @@ export default function AiAlertsPanel({
       {
         messages,
         tools: [],
-        context: { dashboardAlertMode: true, dashboardData },
+        context: { feature: 'ai_alerts', dashboardAlertMode: true, dashboardData },
       },
       (event: DeltaEvent) => {
         if (event.type === 'content') {

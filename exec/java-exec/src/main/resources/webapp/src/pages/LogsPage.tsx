@@ -611,7 +611,7 @@ function SqlQueryTab() {
 export default function LogsPage() {
   const [prospectorOpen, setProspectorOpen] = useState(false);
   const [aiAvailable, setAiAvailable] = useState(false);
-  const [logContext, setLogContext] = useState<ChatContext>({ logAnalysisMode: true });
+  const [logContext, setLogContext] = useState<ChatContext>({ feature: 'log_analysis', logAnalysisMode: true });
 
   const prospector = useProspector();
 
@@ -624,6 +624,7 @@ export default function LogsPage() {
   const handleAnalyzeWithAi = useCallback(
     (prompt: string, lines: string[], fileName: string) => {
       const ctx: ChatContext = {
+        feature: 'log_analysis',
         logAnalysisMode: true,
         logFileName: fileName,
         logLines: lines,

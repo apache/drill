@@ -386,6 +386,7 @@ export default function SqlLabPage({ datasetFilter, headerContent, projectId, sa
       : undefined;
 
     const base: ChatContext = {
+      feature: 'sql_lab_chat',
       currentSql: sql || undefined,
       currentSchema: activeTab?.defaultSchema || undefined,
       availableSchemas: projectSchemas || schemas?.map((s) => s.name),
@@ -526,7 +527,7 @@ export default function SqlLabPage({ datasetFilter, headerContent, projectId, sa
     ];
 
     const controller = streamChat(
-      { messages, tools: [], context: aiContext },
+      { messages, tools: [], context: { ...aiContext, feature: 'sql_lab_optimize' } },
       (event) => {
         if (event.type === 'content') {
           setOptimizeContent((prev) => prev + event.content);
