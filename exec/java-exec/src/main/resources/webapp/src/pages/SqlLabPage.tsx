@@ -47,6 +47,7 @@ import { useQueryHistory } from '../hooks/useQueryHistory';
 import { useSchemas } from '../hooks/useMetadata';
 import { useTabPersistence, useRestoreTabs } from '../hooks/useTabPersistence';
 import { useProspector } from '../hooks/useProspector';
+import { useSendDataToAi } from '../hooks/useSendDataToAi';
 import { useMonacoCompletion } from '../hooks/useMonacoCompletion';
 import { getAiStatus, getAiConfig, streamChat, transpileSql, convertDataType } from '../api/ai';
 import { getSchemaTree } from '../api/metadata';
@@ -254,7 +255,8 @@ export default function SqlLabPage({ datasetFilter, headerContent, projectId, sa
   const prospectorOpen = inspectorOpen && inspectorActiveTab === 'prospector';
   const [prospectorAvailable, setProspectorAvailable] = useState(false);
   // Starts closed and opens only once /status says the deployment permits sample data.
-  const [sendDataToAi, setSendDataToAi] = useState(false);
+  // Shared with useProspector via useSendDataToAi — see that hook's doc comment.
+  const { sendDataToAi } = useSendDataToAi();
   const [maxToolRounds, setMaxToolRounds] = useState(15);
 
   // Fetch schemas for the schema selector
@@ -365,21 +367,12 @@ export default function SqlLabPage({ datasetFilter, headerContent, projectId, sa
     return () => window.removeEventListener('keydown', handler);
   }, [sql, dispatch, setInspectorOpen, setInspectorActiveTab]);
 
-  // Check Prospector status and config on mount
+  // Check Prospector status and config on mount. sendDataToAi itself comes from
+  // useSendDataToAi (shared with useProspector), not from this fetch.
   useEffect(() => {
-    // sendDataToAi comes from /status, not /config: /config is admin-only, so for a
-    // non-admin the fetch 403s and the old code kept the permissive default, sending
-    // sample data the deployment had turned off. /status is readable by every
-    // authenticated user. An unreadable status withholds data rather than sending it.
     getAiStatus()
-      .then((status) => {
-        setProspectorAvailable(status.enabled);
-        setSendDataToAi(status.sendDataToAi);
-      })
-      .catch(() => {
-        setProspectorAvailable(false);
-        setSendDataToAi(false);
-      });
+      .then((status) => setProspectorAvailable(status.enabled))
+      .catch(() => setProspectorAvailable(false));
     getAiConfig()
       .then((cfg) => setMaxToolRounds(cfg.maxToolRounds || 15))
       .catch(() => {});
