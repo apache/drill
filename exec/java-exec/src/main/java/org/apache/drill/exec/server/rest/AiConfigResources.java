@@ -827,7 +827,9 @@ public class AiConfigResources {
       error = failure.getMessage();
     } else if (!success && result != null) {
       errorClass = "ValidationFailed";
-      error = result.getMessage();
+      error = result.getDetails() != null
+          ? result.getMessage() + " (" + result.getDetails() + ")"
+          : result.getMessage();
     }
     return ProspectorResources.buildOutcomeEvent(testConfig, username, CONFIG_TEST_FEATURE,
         success, errorClass, error, durationMs);

@@ -39,7 +39,7 @@ public class AiEvent {
    * The UI feature that originated the call, e.g. sql_lab_chat, dashboard_qna,
    * or config_test. Client callers pass it in the chat request's context; server-side
    * callers set it directly. Defaults to prospector_chat when a caller sends none.
-   * The dashboard's label map (AiAnalyticsPage FEATURE_LABEL) enumerates the values.
+   * The dashboard's label map (constants/aiFeatures.ts FEATURE_LABEL) enumerates the values.
    */
   @JsonProperty("feature")
   public String feature;
