@@ -107,14 +107,22 @@ public class SplunkTestSuite extends ClusterTest {
     }
   }
 
+  // Pin the patch version. "splunk/splunk:9.3" is a mutable tag; it was
+  // republished on 2026-07-01 and silently broke CI on every branch. Bump this
+  // deliberately so an upstream push can never turn the build red on its own.
+  //
+  // Talk to splunkd over its default HTTPS listener rather than setting
+  // SPLUNKD_SSL_ENABLE=false. Disabling splunkd SSL is a path Splunk has
+  // regressed repeatedly (see splunk/docker-splunk#639, still open), and it
+  // broke again in 9.3.14. The container's cert is self-signed, so the plugin
+  // configs below turn off certificate and hostname validation.
   @ClassRule
   public static GenericContainer<?> splunk = new GenericContainer<>(
-    DockerImageName.parse("splunk/splunk:9.3")
+    DockerImageName.parse("splunk/splunk:9.3.14")
   )
     .withExposedPorts(8089, 8089)
     .withEnv("SPLUNK_START_ARGS", "--accept-license")
     .withEnv("SPLUNK_PASSWORD", SPLUNK_PASS)
-    .withEnv("SPLUNKD_SSL_ENABLE", "false")
     .withCopyFileToContainer(
       org.testcontainers.utility.MountableFile.forHostPath(
         createDefaultYmlFile().toPath()
@@ -159,8 +167,11 @@ public class SplunkTestSuite extends ClusterTest {
         StoragePluginRegistry pluginRegistry = cluster.drillbit().getContext().getStorage();
         SPLUNK_STORAGE_PLUGIN_CONFIG = new SplunkPluginConfig(
           SPLUNK_LOGIN, SPLUNK_PASS,
-          "http", hostname, port,
-          null, null, null, null, false, true, // app, owner, token, cookie, validateCertificates
+          "https", hostname, port,
+          // app, owner, token, cookie, validateCertificates, validateHostname.
+          // The container serves a self-signed cert for a hostname that never matches
+          // the mapped localhost port, so both checks must be off.
+          null, null, null, null, false, false,
           "1", "now",
           null,
           4,
@@ -181,8 +192,9 @@ public class SplunkTestSuite extends ClusterTest {
 
         SPLUNK_STORAGE_PLUGIN_CONFIG_WITH_USER_TRANSLATION = new SplunkPluginConfig(
           null, null, // username, password
-          "http", hostname, port,
-          null, null, null, null, false, false, // app, owner, token, cookie, validateCertificates
+          "https", hostname, port,
+          // app, owner, token, cookie, validateCertificates, validateHostname
+          null, null, null, null, false, false,
           "1", "now",
           credentialsProvider,
           4,
