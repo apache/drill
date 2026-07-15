@@ -180,5 +180,33 @@ public class ProspectorEventTest {
       }
     };
     assertEquals("anonymous", ProspectorResources.resolveUser(noPrincipal));
+    assertEquals("anonymous", ProspectorResources.resolveUser(principalNamed(null)));
+    assertEquals("anonymous", ProspectorResources.resolveUser(principalNamed("")));
+    assertEquals("alice", ProspectorResources.resolveUser(principalNamed("alice")));
+  }
+
+  /** A SecurityContext whose principal reports the given name. */
+  private static SecurityContext principalNamed(String name) {
+    return new SecurityContext() {
+      @Override
+      public Principal getUserPrincipal() {
+        return () -> name;
+      }
+
+      @Override
+      public boolean isUserInRole(String role) {
+        return false;
+      }
+
+      @Override
+      public boolean isSecure() {
+        return false;
+      }
+
+      @Override
+      public String getAuthenticationScheme() {
+        return null;
+      }
+    };
   }
 }
