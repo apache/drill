@@ -127,15 +127,14 @@ public class SplunkTestSuite extends ClusterTest {
         startCluster(builder);
 
         // Pin the patch version. "splunk/splunk:9.3" is a mutable tag; it was
-        // republished on 2026-07-01 and silently broke CI on every branch. Bump
-        // this deliberately so an upstream push can never turn the build red on
-        // its own.
+        // republished on 2026-07-01 and silently broke CI on every branch. Bump this
+        // deliberately so an upstream push can never turn the build red on its own.
         //
         // Talk to splunkd over its default HTTPS listener rather than setting
         // SPLUNKD_SSL_ENABLE=false. Disabling splunkd SSL is a path Splunk has
-        // regressed repeatedly (see splunk/docker-splunk#639, still open), and
-        // it broke again in 9.3.14. The container's cert is self-signed, so the
-        // plugin configs below turn off certificate and hostname validation.
+        // regressed repeatedly (see splunk/docker-splunk#639, still open), and it
+        // broke again in 9.3.14. The container's cert is self-signed, so the plugin
+        // configs below turn off certificate and hostname validation.
         splunk = new GenericContainer<>(
           DockerImageName.parse("splunk/splunk:9.3.14")
         )
