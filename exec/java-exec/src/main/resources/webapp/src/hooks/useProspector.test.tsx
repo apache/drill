@@ -22,7 +22,7 @@ import { useProspector } from './useProspector';
 import { createVisualization } from '../api/visualizations';
 import { addVisualization, getProject } from '../api/projects';
 import { executeQuery } from '../api/queries';
-import { getAiStatus } from '../api/ai';
+import { getAiStatus, streamChat } from '../api/ai';
 import type { ChatContext, ToolCall } from '../types/ai';
 
 vi.mock('../api/visualizations', () => ({ createVisualization: vi.fn() }));
@@ -162,6 +162,61 @@ describe('get_project_docs tool', () => {
     const out = JSON.parse(await result.current.executeToolCall(docsCall(), ctx()));
     expect(out.error).toBe('No active project — get_project_docs is only available inside a project.');
     expect(out.error).not.toContain('Unknown tool');
+  });
+});
+
+/**
+ * A tool invoked with no arguments (get_available_functions, or get_project_docs
+ * listing page titles) streams no argument deltas at all, so the assembled argument
+ * string stays blank. Blank is not valid JSON: it throws in executeToolCall, and the
+ * backend serializes it to a null tool_use.input, which the Anthropic API rejects
+ * with "messages.N.content.N.tool_use.input: Input should be an object". The other
+ * tests here hand executeToolCall a ready-made '{}', so only a test that drives the
+ * stream the way the server does catches this.
+ */
+describe('tool calls that take no arguments', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    vi.mocked(getProject).mockResolvedValue({
+      wikiPages: [{ title: 'Runbook', content: 'step one ...' }],
+    } as never);
+    // Round 1 announces a no-argument tool call and sends no deltas; round 2 is the
+    // model's reply to the tool result, which must not loop back into another call.
+    let round = 0;
+    vi.mocked(streamChat).mockImplementation(((_req, onDelta, onDone) => {
+      if (round++ === 0) {
+        onDelta({ type: 'tool_call_start', id: 'call-9', name: 'get_project_docs' } as never);
+        onDelta({ type: 'tool_call_end', id: 'call-9' } as never);
+        onDone({ finish_reason: 'tool_calls' } as never);
+      } else {
+        onDelta({ type: 'content', content: 'There is one page: Runbook.' } as never);
+        onDone({ finish_reason: 'stop' } as never);
+      }
+      return new AbortController();
+    }) as never);
+  });
+
+  it('assembles {} rather than a blank string when no argument deltas arrive', async () => {
+    const { result } = renderHook(() => useProspector());
+    result.current.sendMessage('what docs exist?', ctx('proj-42'));
+
+    await waitFor(() => expect(streamChat).toHaveBeenCalledTimes(2));
+
+    const followUp = vi.mocked(streamChat).mock.calls[1][0];
+    const assistant = followUp.messages.find((m) => m.role === 'assistant');
+    expect(assistant?.toolCalls?.[0].arguments).toBe('{}');
+  });
+
+  it('runs the tool instead of failing to parse blank arguments', async () => {
+    const { result } = renderHook(() => useProspector());
+    result.current.sendMessage('what docs exist?', ctx('proj-42'));
+
+    await waitFor(() => expect(streamChat).toHaveBeenCalledTimes(2));
+
+    const followUp = vi.mocked(streamChat).mock.calls[1][0];
+    const toolResult = followUp.messages.find((m) => m.role === 'tool');
+    expect(toolResult?.content).toContain('Runbook');
+    expect(toolResult?.content).not.toContain('JSON');
   });
 });
 

@@ -896,7 +896,13 @@ public class ProspectorResources {
     systemPrompt.append("- Use get_schema_info with a table name to discover columns before writing queries.\n");
     systemPrompt.append("- NEVER ask the user for schema or table names — explore and find them yourself.\n");
     systemPrompt.append("- After discovering the schema, write and execute the SQL query.\n");
-    systemPrompt.append("- You can also create visualizations, dashboards, and save queries.\n");
+    // Scoped out of the "MUST use proactively" list above: that instruction is for the
+    // read-only discovery tools. Listing the authoring tools under it read as standing
+    // permission, and the model charted every result unasked.
+    systemPrompt.append("\nYou can also create visualizations, dashboards, and save queries, ");
+    systemPrompt.append("but ONLY when the user explicitly asks. Answering a data question ");
+    systemPrompt.append("means reporting the result — do not create a chart, dashboard, or ");
+    systemPrompt.append("saved query unless it was requested.\n");
 
     // Append custom system prompt if configured
     if (config.getSystemPrompt() != null && !config.getSystemPrompt().isEmpty()) {
