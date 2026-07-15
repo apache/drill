@@ -149,6 +149,53 @@ public class ProspectorEventTest {
     assertFalse(event.success);
   }
 
+  /**
+   * A field the client sends but the server does not know must never fail the request.
+   * The browser may be running newer assets than the Drillbit (or a cached older
+   * build), and every ChatContext field is an optional enhancement — dropping one is
+   * survivable, rejecting the whole chat with HTTP 500 is not.
+   */
+  @Test
+  public void testUnknownContextFieldIsIgnoredRatherThanRejected() throws Exception {
+    com.fasterxml.jackson.databind.ObjectMapper mapper =
+        new com.fasterxml.jackson.databind.ObjectMapper();
+    ProspectorResources.ChatContext ctx = mapper.readValue(
+        "{\"feature\":\"sql_lab_chat\",\"somethingFromANewerClient\":\"x\"}",
+        ProspectorResources.ChatContext.class);
+    assertEquals("sql_lab_chat", ctx.feature);
+  }
+
+  @Test
+  public void testChatContextCarriesProjectId() throws Exception {
+    com.fasterxml.jackson.databind.ObjectMapper mapper =
+        new com.fasterxml.jackson.databind.ObjectMapper();
+    ProspectorResources.ChatContext ctx = mapper.readValue(
+        "{\"feature\":\"sql_lab_chat\",\"projectId\":\"proj-42\"}",
+        ProspectorResources.ChatContext.class);
+    assertEquals("proj-42", ctx.projectId);
+  }
+
+  /**
+   * The notebook tab sends these six fields. The server had no matching fields, so a
+   * chat from the notebook tab failed outright.
+   */
+  @Test
+  public void testChatContextCarriesNotebookFields() throws Exception {
+    com.fasterxml.jackson.databind.ObjectMapper mapper =
+        new com.fasterxml.jackson.databind.ObjectMapper();
+    ProspectorResources.ChatContext ctx = mapper.readValue(
+        "{\"feature\":\"sql_lab_chat\",\"notebookMode\":true,\"notebookDfName\":\"df\","
+        + "\"notebookDfShape\":\"10 rows x 3 cols\",\"notebookColumns\":[\"a\",\"b\"],"
+        + "\"notebookCellCode\":\"df.head()\",\"notebookCellError\":\"KeyError: 'z'\"}",
+        ProspectorResources.ChatContext.class);
+    assertTrue(ctx.notebookMode);
+    assertEquals("df", ctx.notebookDfName);
+    assertEquals("10 rows x 3 cols", ctx.notebookDfShape);
+    assertEquals(java.util.List.of("a", "b"), ctx.notebookColumns);
+    assertEquals("df.head()", ctx.notebookCellCode);
+    assertEquals("KeyError: 'z'", ctx.notebookCellError);
+  }
+
   @Test
   public void testChatContextCarriesFeature() throws Exception {
     com.fasterxml.jackson.databind.ObjectMapper mapper =
