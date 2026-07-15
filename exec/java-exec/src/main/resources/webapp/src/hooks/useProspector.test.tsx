@@ -149,6 +149,7 @@ describe('get_project_docs tool', () => {
   it('requires an active project', async () => {
     const { result } = renderHook(() => useProspector());
     const out = JSON.parse(await result.current.executeToolCall(docsCall(), ctx()));
-    expect(out.error).toMatch(/project/i);
+    expect(out.error).toBe('No active project — get_project_docs is only available inside a project.');
+    expect(out.error).not.toContain('Unknown tool');
   });
 });
