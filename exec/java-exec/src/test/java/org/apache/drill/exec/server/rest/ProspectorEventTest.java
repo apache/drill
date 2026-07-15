@@ -115,4 +115,13 @@ public class ProspectorEventTest {
     assertEquals("ClientCancelled", event.errorClass);
     assertFalse(event.success);
   }
+
+  @Test
+  public void testChatContextCarriesFeature() throws Exception {
+    com.fasterxml.jackson.databind.ObjectMapper mapper =
+        new com.fasterxml.jackson.databind.ObjectMapper();
+    ProspectorResources.ChatContext ctx = mapper.readValue(
+        "{\"feature\":\"executive_summary\"}", ProspectorResources.ChatContext.class);
+    assertEquals("executive_summary", ctx.feature);
+  }
 }
