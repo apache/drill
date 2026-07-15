@@ -17,6 +17,8 @@
  */
 package org.apache.drill.exec.server.rest;
 
+import org.apache.drill.exec.server.rest.ai.ChatMessage;
+import org.apache.drill.exec.server.rest.ai.LlmConfig;
 import org.junit.jupiter.api.Test;
 
 import java.util.ArrayList;
@@ -114,5 +116,38 @@ public class ProjectContextBlockTest {
         project("Retail", null, null, null),
         List.of(savedQuery("Wide", null, longSql)));
     assertFalse(block.contains(longSql));
+  }
+
+  private static ProspectorResources.ChatRequest request(String projectId) {
+    ProspectorResources.ChatRequest req = new ProspectorResources.ChatRequest();
+    ProspectorResources.ChatContext ctx = new ProspectorResources.ChatContext();
+    ctx.feature = "sql_lab_chat";
+    ctx.projectId = projectId;
+    req.context = ctx;
+    req.messages = new ArrayList<>();
+    return req;
+  }
+
+  private static String systemPromptOf(List<ChatMessage> messages) {
+    return messages.get(0).getContent();
+  }
+
+  @Test
+  public void testNoProjectBlockWhenNoProjectId() {
+    List<ChatMessage> messages =
+        new ProspectorResources().buildMessages(new LlmConfig(), request(null));
+    assertFalse(systemPromptOf(messages).contains("PROJECT CONTEXT"));
+  }
+
+  /**
+   * Context is an enhancement. An unreachable store (here: no injected provider at
+   * all) must degrade to no project block, never to a failed chat.
+   */
+  @Test
+  public void testUnreachableStoreDoesNotFailTheChat() {
+    List<ChatMessage> messages =
+        new ProspectorResources().buildMessages(new LlmConfig(), request("proj-42"));
+    assertFalse(systemPromptOf(messages).contains("PROJECT CONTEXT"));
+    assertTrue(systemPromptOf(messages).contains("Apache Drill"));
   }
 }
