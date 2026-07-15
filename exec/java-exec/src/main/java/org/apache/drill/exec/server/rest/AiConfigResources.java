@@ -45,8 +45,10 @@ import jakarta.ws.rs.POST;
 import jakarta.ws.rs.PUT;
 import jakarta.ws.rs.Path;
 import jakarta.ws.rs.Produces;
+import jakarta.ws.rs.core.Context;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
+import jakarta.ws.rs.core.SecurityContext;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -603,7 +605,7 @@ public class AiConfigResources {
   @Produces(MediaType.APPLICATION_JSON)
   @Operation(summary = "Test AI configuration",
       description = "Validates the configuration and tests connectivity to the LLM provider")
-  public Response testConfig(UpdateConfigRequest request) {
+  public Response testConfig(UpdateConfigRequest request, @Context SecurityContext sc) {
     logger.debug("Testing AI configuration");
 
     try {
@@ -775,7 +777,7 @@ public class AiConfigResources {
         try {
           AiEvent event = new AiEvent();
           event.ts = AiEventLogger.nowIso();
-          event.user = null;
+          event.user = ProspectorResources.resolveUser(sc);
           event.feature = "config_test";
           event.source = "server";
           event.provider = testConfig.getProvider();
