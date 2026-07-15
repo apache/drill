@@ -92,6 +92,12 @@ export interface ChatContext {
   dashboardAnomalyFocus?: boolean;
   /** Previous summary for historical comparison */
   previousSummary?: string;
+  /**
+   * User privacy flag: when explicitly false, tool results and prompt sections must
+   * omit sample data (rows) while still describing shape (columns, row counts).
+   * Absent/undefined means "allowed", matching the server default.
+   */
+  sendDataToAi?: boolean;
 }
 
 export interface ProjectDatasetRef {

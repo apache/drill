@@ -412,6 +412,7 @@ export default function SqlLabPage({ datasetFilter, headerContent, projectId, sa
             label: d.label,
           }))
         : undefined,
+      sendDataToAi,
     };
 
     if (isNotebookTab) {
@@ -434,7 +435,7 @@ export default function SqlLabPage({ datasetFilter, headerContent, projectId, sa
     }
 
     return base;
-  }, [sql, projectId, activeTab?.defaultSchema, schemas, error, results, isNotebookTab, notebookDfName, notebookHandle, datasetFilter]);
+  }, [sql, projectId, activeTab?.defaultSchema, schemas, error, results, isNotebookTab, notebookDfName, notebookHandle, datasetFilter, sendDataToAi]);
 
   // Toggle the inspector to show the Prospector tab.
   const toggleProspector = useCallback(() => {
