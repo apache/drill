@@ -317,6 +317,7 @@ ${redactedError ? `\nError: ${redactedError}` : ''}
 
   const buildAiContext = useCallback((): ChatContext => {
     return {
+      feature: 'profile_analysis',
       currentSql: profile?.query,
       error: profile?.error,
     };
