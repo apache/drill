@@ -115,7 +115,7 @@ Other AI endpoints in this module:
 
 | Function | Endpoint | Purpose |
 |---|---|---|
-| `getAiStatus` | `GET /api/v1/ai/status` | Is Prospector configured? (gates UI affordances) |
+| `getAiStatus` | `GET /api/v1/ai/status` | Is Prospector configured? (gates UI affordances). Also carries `sendDataToAi`, mirrored from the admin-only config because every authenticated user can read this endpoint. |
 | `transpileSql` | `POST /api/v1/ai/transpile` | sqlglot transpile (see [`../../TRANSPILER.md`](../../TRANSPILER.md)) |
 | `formatSql` | `POST /api/v1/ai/formatSql` | LLM-formatted SQL |
 | `getAiConfig` / `updateAiConfig` | `GET/PUT /api/v1/ai/config` | Provider config |
@@ -158,7 +158,11 @@ ChatContext (the per-message payload) lives in `types/ai.ts` and is constructed 
 - **Usage events are cumulative per conversation.** Multi-round tool execution emits a usage event per roundtrip; the hook overwrites with the latest snapshot, so the usage pill shows the running total for the conversation, not just the last message.
 - **Quick action prompts** include explicit anti-hallucination instructions ("never make up table or column names — use ONLY real tables and columns from the schemas I have access to"). When adding new quick actions, follow the same pattern.
 - **Context scoping is partial.** `projectDatasets` in `ChatContext` lets the backend restrict schema listings, but enforcement is server-side — the frontend does not filter tools by mode.
-- **`sendDataToAi: false` suppresses sample rows, not metadata.** When the user turns this off in Prospector Settings, `execute_sql`'s tool result (built here in `executeToolCall`) omits `rows` while still returning `columns` and `rowCount`. The same flag also suppresses `sampleRows` in dashboard-mode chats (executive summary, Q&A, alerts) — but that check (`isSendDataToAi`) is server-side, in `appendDashboardData` in `ProspectorResources.java`, not in this hook. Absent (`undefined`) is treated as opted-in, same as explicit `true`.
+- **`sendDataToAi` is server config, never a request field.** It lives on `LlmConfig` (set by an admin in Prospector Settings) and gates sample *rows* only — `columns` and `rowCount` are metadata and always sent.
+  - Server-side: `appendDashboardData` in `ProspectorResources.java` reads `config.isSendDataToAi()`, so every dashboard-mode chat (executive summary, Q&A, alerts) is gated by construction.
+  - Client-side: `useProspector` reads the flag once on mount via `getAiStatus()` and omits `rows` from the `execute_sql` tool result when it is off. It is deliberately *not* a hook parameter or a `ChatContext` field: it used to be one, and the callers that forgot to pass it (the global Prospector tab, the dashboard panels) sent rows regardless of the setting. Reading it inside the hook means no caller can forget.
+  - It is read from `/api/v1/ai/status`, not `/api/v1/ai/config`, because config is admin-only — a non-admin's fetch would 403 and fall back to permissive. Unknown (still loading, or the fetch failed) withholds rows: a privacy flag fails closed.
+  - **Known gap:** `AiQnAPanel` and `ExecutiveSummaryPanel` inline sample rows into the *user message*, which no server-side gate can suppress. `ExecutiveSummaryPanel`'s own `includeSampleData` toggle is likewise undermined by its context passing raw `dashboardData`. Pre-existing and not yet fixed.
 - **No state in Redux.** Prospector is entirely component-local (hook + props). It does not write to Redux, react-query cache, or shared contexts other than reading config from `AiModalContext`.
 
 ## Related docs
