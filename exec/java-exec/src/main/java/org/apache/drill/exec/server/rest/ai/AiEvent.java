@@ -35,11 +35,19 @@ public class AiEvent {
   @JsonProperty("user")
   public String user;
 
-  /** Feature that issued the call: prospector_chat, transpile, query_suggestions, explain_query, optimize_query. */
+  /**
+   * The UI feature that originated the call, e.g. sql_lab_chat, dashboard_qna,
+   * or config_test. Client callers pass it in the chat request's context; server-side
+   * callers set it directly. Defaults to prospector_chat when a caller sends none.
+   * The dashboard's label map (AiAnalyticsPage FEATURE_LABEL) enumerates the values.
+   */
   @JsonProperty("feature")
   public String feature;
 
-  /** Where the event was captured: server (instrumentation) or client (browser observability). */
+  /**
+   * Where the event was captured. Always "server" — the Drillbit is the sole recorder
+   * of AI events; the browser never reports its own usage.
+   */
   @JsonProperty("source")
   public String source;
 
