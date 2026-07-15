@@ -147,6 +147,7 @@ Streams AI responses via Server-Sent Events (SSE).
   ],
   "tools": [...],
   "context": {
+    "feature": "sql_lab_chat",
     "currentSql": "SELECT * FROM ...",
     "currentSchema": "dfs.tmp",
     "availableSchemas": ["dfs", "dfs.tmp", "sys"],
@@ -155,6 +156,13 @@ Streams AI responses via Server-Sent Events (SSE).
   }
 }
 ```
+
+`context.feature` tags which UI feature originated the call and drives the
+analytics dashboard's per-feature breakdown (see
+[`ui/pages/ai-analytics.md`](ui/pages/ai-analytics.md)). Every caller must set
+it; calls without one are recorded as `prospector_chat`. Do not log AI calls
+from the browser — the server records every call to `/api/v1/ai/chat` with
+real token counts, so there is no client-side event log to keep in sync.
 
 **SSE Events:**
 ```
