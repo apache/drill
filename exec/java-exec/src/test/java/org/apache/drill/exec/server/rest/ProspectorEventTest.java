@@ -19,8 +19,10 @@ package org.apache.drill.exec.server.rest;
 
 import jakarta.ws.rs.core.SecurityContext;
 import org.apache.drill.exec.server.rest.ai.AiEvent;
+import org.apache.drill.exec.server.rest.ai.ChatMessage;
 import org.apache.drill.exec.server.rest.ai.LlmCallResult;
 import org.apache.drill.exec.server.rest.ai.LlmConfig;
+import org.apache.drill.exec.server.rest.ai.ToolCall;
 import org.junit.jupiter.api.Test;
 
 import java.io.IOException;
@@ -49,6 +51,35 @@ public class ProspectorEventTest {
     result.setResponseTokens(5);
     result.appendResponseText("hello");
     return result;
+  }
+
+  /**
+   * An assistant's tool calls live in ChatMessage.toolCalls, not content. Rendering
+   * only content silently drops every tool invocation from the recorded prompt,
+   * leaving the analytics log unable to explain what the model actually did.
+   */
+  @Test
+  public void testRenderFullPromptIncludesToolCalls() {
+    ChatMessage assistant = new ChatMessage(
+        "assistant",
+        null,
+        java.util.List.of(new ToolCall("call-1", "create_visualization", "{\"name\":\"Sales\"}")),
+        null,
+        null);
+    String rendered = ProspectorResources.renderFullPrompt(
+        java.util.List.of(ChatMessage.user("chart my sales"), assistant));
+
+    assertTrue(rendered.contains("chart my sales"));
+    assertTrue(rendered.contains("create_visualization"));
+    assertTrue(rendered.contains("{\"name\":\"Sales\"}"));
+  }
+
+  @Test
+  public void testRenderFullPromptKeepsToolResults() {
+    String rendered = ProspectorResources.renderFullPrompt(
+        java.util.List.of(ChatMessage.tool("call-1", "create_visualization",
+            "{\"error\":\"project not found\"}")));
+    assertTrue(rendered.contains("project not found"));
   }
 
   @Test
