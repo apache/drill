@@ -20,6 +20,7 @@ import { streamChat } from '../api/ai';
 import { executeQuery } from '../api/queries';
 import { getSchemas, getTables, getColumns, getFunctions } from '../api/metadata';
 import { createVisualization } from '../api/visualizations';
+import { addVisualization } from '../api/projects';
 import { createDashboard } from '../api/dashboards';
 import { createSavedQuery } from '../api/savedQueries';
 import type {
@@ -156,6 +157,8 @@ export interface UseProspectorReturn {
   sendMessage: (text: string, context: ChatContext) => void;
   stopStreaming: () => void;
   clearChat: () => void;
+  /** Runs a single tool call. Exposed so its behaviour can be asserted directly. */
+  executeToolCall: (toolCall: ToolCall, context?: ChatContext) => Promise<string>;
 }
 
 export function useProspector(
@@ -242,10 +245,30 @@ export function useProspector(
             config: args.config as VisualizationConfig,
             sql: args.sql,
           });
+
+          // Attach it to the active project, as VisualizationBuilder does on its
+          // own save path. Without this the visualization is created but orphaned,
+          // so it never appears in the project the user is working in.
+          let addedToProject = false;
+          let projectError: string | undefined;
+          if (context?.projectId) {
+            try {
+              await addVisualization(context.projectId, viz.id);
+              addedToProject = true;
+            } catch (err) {
+              // The visualization itself exists, so don't fail the whole call and
+              // report it as never created. Tell the model what actually happened.
+              projectError = err instanceof Error ? err.message : 'unknown error';
+              console.error('Failed to add visualization to project', err);
+            }
+          }
+
           onVisualizationCreated?.(viz.id, viz.name);
           return JSON.stringify({
             id: viz.id,
             name: viz.name,
+            addedToProject,
+            ...(projectError ? { projectError } : {}),
             message: `Visualization "${viz.name}" created successfully.`,
             viewPath: '/visualizations',
           });
@@ -284,6 +307,9 @@ export function useProspector(
       }
     } catch (err) {
       const msg = err instanceof Error ? err.message : 'Tool execution failed';
+      // The result goes to the model, which may narrate success regardless, so
+      // without this the failure is invisible to both the user and the console.
+      console.error(`Tool "${toolCall.name}" failed`, err);
       return JSON.stringify({ error: msg });
     }
   }, [onSqlGenerated, onVisualizationCreated]);
@@ -436,5 +462,6 @@ export function useProspector(
     sendMessage,
     stopStreaming,
     clearChat,
+    executeToolCall,
   };
 }

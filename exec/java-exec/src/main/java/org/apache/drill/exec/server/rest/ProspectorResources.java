@@ -29,6 +29,7 @@ import org.apache.drill.exec.server.rest.ai.AiPricing;
 import org.apache.drill.exec.server.rest.ai.ChatMessage;
 import org.apache.drill.exec.server.rest.ai.LlmCallResult;
 import org.apache.drill.exec.server.rest.ai.LlmConfig;
+import org.apache.drill.exec.server.rest.ai.ToolCall;
 import org.apache.drill.exec.server.rest.ai.LlmProvider;
 import org.apache.drill.exec.server.rest.ai.LlmProviderRegistry;
 import org.apache.drill.exec.server.rest.ai.ToolDefinition;
@@ -498,7 +499,7 @@ public class ProspectorResources {
     return null;
   }
 
-  private static String renderFullPrompt(List<ChatMessage> messages) {
+  static String renderFullPrompt(List<ChatMessage> messages) {
     if (messages == null) {
       return null;
     }
@@ -507,6 +508,15 @@ public class ProspectorResources {
       sb.append("[").append(m.getRole()).append("]\n");
       if (m.getContent() != null) {
         sb.append(m.getContent());
+      }
+      // An assistant's tool calls live in toolCalls, not content. Rendering only
+      // content drops every tool invocation from the recorded prompt, which hides
+      // exactly the behaviour the analytics log is consulted to explain.
+      if (m.getToolCalls() != null) {
+        for (ToolCall tc : m.getToolCalls()) {
+          sb.append("[tool_call] ").append(tc.getName())
+              .append("(").append(tc.getArguments()).append(")\n");
+        }
       }
       sb.append("\n\n");
     }
