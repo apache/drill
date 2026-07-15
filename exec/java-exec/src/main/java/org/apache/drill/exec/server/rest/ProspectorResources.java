@@ -70,6 +70,7 @@ public class ProspectorResources {
   private static final Logger logger = LoggerFactory.getLogger(ProspectorResources.class);
   private static final String CONFIG_STORE_NAME = "drill.sqllab.ai_config";
   private static final String CONFIG_KEY = "default";
+  private static final String DEFAULT_FEATURE = "prospector_chat";
 
   @Inject
   WorkManager workManager;
@@ -395,7 +396,7 @@ public class ProspectorResources {
             logger.error("Error writing error event", writeErr);
           }
         } finally {
-          recordEvent(snapshot, username, userMessage, fullPrompt,
+          recordEvent(snapshot, username, null, userMessage, fullPrompt,
               callResult, failure, System.currentTimeMillis() - start);
         }
       };
@@ -494,37 +495,51 @@ public class ProspectorResources {
     return sb.toString();
   }
 
-  private static void recordEvent(LlmConfig config, String username, String userMessage,
-      String fullPrompt, LlmCallResult callResult, Exception failure, long durationMs) {
+  private static void recordEvent(LlmConfig config, String username, String feature,
+      String userMessage, String fullPrompt, LlmCallResult callResult, Exception failure,
+      long durationMs) {
     try {
-      AiEvent event = new AiEvent();
-      event.ts = AiEventLogger.nowIso();
-      event.user = username;
-      event.feature = "prospector_chat";
-      event.source = "server";
-      event.provider = config != null ? config.getProvider() : null;
-      event.model = config != null ? config.getModel() : null;
-      event.durationMs = durationMs;
-      event.success = failure == null;
-      event.cancelled = AiEventLogger.isClientCancellation(failure);
-      if (failure != null) {
-        event.errorClass = event.cancelled
-            ? "ClientCancelled"
-            : failure.getClass().getSimpleName();
-        event.error = failure.getMessage();
-      }
-      if (callResult != null) {
-        event.promptTokens = callResult.getPromptTokens();
-        event.responseTokens = callResult.getResponseTokens();
-        event.totalTokens = callResult.getTotalTokens();
-        event.response = AiEventLogger.truncate(callResult.getResponseText());
-      }
-      event.userMessage = AiEventLogger.truncate(userMessage);
-      event.prompt = AiEventLogger.truncate(fullPrompt);
-      AiEventLogger.log(event);
+      AiEventLogger.log(buildEvent(config, username, feature, userMessage, fullPrompt,
+          callResult, failure, durationMs));
     } catch (Exception logErr) {
       logger.warn("Failed to record AI usage event", logErr);
     }
+  }
+
+  /**
+   * Builds the event for a single LLM call. Package-private and side-effect free
+   * so the recorded fields can be asserted directly.
+   */
+  static AiEvent buildEvent(LlmConfig config, String username, String feature,
+      String userMessage, String fullPrompt, LlmCallResult callResult, Exception failure,
+      long durationMs) {
+    AiEvent event = new AiEvent();
+    event.ts = AiEventLogger.nowIso();
+    event.user = username;
+    event.feature = (feature == null || feature.trim().isEmpty()) ? DEFAULT_FEATURE : feature;
+    event.source = "server";
+    event.provider = config != null ? config.getProvider() : null;
+    event.model = config != null ? config.getModel() : null;
+    event.durationMs = durationMs;
+    // A missing callResult means no completed call, even when nothing was thrown:
+    // an Error escapes the streaming catch(Exception) but still runs its finally.
+    event.success = failure == null && callResult != null;
+    event.cancelled = AiEventLogger.isClientCancellation(failure);
+    if (failure != null) {
+      event.errorClass = event.cancelled
+          ? "ClientCancelled"
+          : failure.getClass().getSimpleName();
+      event.error = failure.getMessage();
+    }
+    if (callResult != null) {
+      event.promptTokens = callResult.getPromptTokens();
+      event.responseTokens = callResult.getResponseTokens();
+      event.totalTokens = callResult.getTotalTokens();
+      event.response = AiEventLogger.truncate(callResult.getResponseText());
+    }
+    event.userMessage = AiEventLogger.truncate(userMessage);
+    event.prompt = AiEventLogger.truncate(fullPrompt);
+    return event;
   }
 
   // ==================== Helper Methods ====================
