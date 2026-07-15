@@ -70,6 +70,12 @@ export interface AiAnalyticsSummary {
   latencyByModel: Array<Record<string, unknown>>;
   pricing: Record<string, AiPricingEntry>;
   projection?: AiCostProjection;
+  /**
+   * True when the data source isn't ready (no event log yet, or the
+   * dfs.ai_logs workspace/format isn't set up). Distinguishes "not
+   * configured" from "configured but genuinely zero usage".
+   */
+  notConfigured: boolean;
 }
 
 export interface AiAnalyticsEventsResponse {
@@ -77,6 +83,8 @@ export interface AiAnalyticsEventsResponse {
   columns: string[];
   limit: number;
   offset: number;
+  /** See {@link AiAnalyticsSummary.notConfigured}. */
+  notConfigured: boolean;
 }
 
 export interface AiEventsFilters {

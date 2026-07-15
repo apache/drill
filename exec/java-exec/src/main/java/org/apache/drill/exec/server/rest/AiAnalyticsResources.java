@@ -116,6 +116,12 @@ public class AiAnalyticsResources {
     @JsonProperty public Map<String, AiPricing> pricing;
     /** Current-calendar-month cost forecast — independent of the selected date range. */
     @JsonProperty public ProjectionResponse projection;
+    /**
+     * True when the data source isn't ready (no event log yet, or the
+     * dfs.ai_logs workspace/format isn't set up). Lets the dashboard tell
+     * "not configured" apart from "configured but genuinely zero usage".
+     */
+    @JsonProperty public boolean notConfigured;
   }
 
   /**
@@ -136,6 +142,8 @@ public class AiAnalyticsResources {
     @JsonProperty public List<String> columns;
     @JsonProperty public int limit;
     @JsonProperty public int offset;
+    /** See {@link SummaryResponse#notConfigured}. */
+    @JsonProperty public boolean notConfigured;
   }
 
   // ==================== Endpoints ====================
@@ -233,8 +241,10 @@ public class AiAnalyticsResources {
       resp.byModel = new ArrayList<>();
       resp.byUser = new ArrayList<>();
       resp.latencyByModel = new ArrayList<>();
+      resp.notConfigured = true;
       return Response.ok(resp).build();
     }
+    resp.notConfigured = false;
 
     String where = buildWhereClause(from, to);
     // Glob picks up the active file plus rolled archives in one scan.
@@ -328,8 +338,10 @@ public class AiAnalyticsResources {
     resp.columns = new ArrayList<>();
 
     if (!isReady()) {
+      resp.notConfigured = true;
       return Response.ok(resp).build();
     }
+    resp.notConfigured = false;
 
     StringBuilder where = new StringBuilder(buildWhereClause(from, to));
     appendEqClause(where, "`user`", user);
@@ -433,9 +445,26 @@ public class AiAnalyticsResources {
     return Math.round(v * 10000.0) / 10000.0;
   }
 
+  /**
+   * True when the log directory holds any AI event log, including rolled
+   * archives. Mirrors the ai-events*.log glob used when querying.
+   */
+  static boolean hasEventLog(String logDir) {
+    if (logDir == null) {
+      return false;
+    }
+    File dir = new File(logDir);
+    if (!dir.isDirectory()) {
+      return false;
+    }
+    File[] matches = dir.listFiles((d, name) ->
+        name.startsWith("ai-events") && name.endsWith(".log"));
+    return matches != null && matches.length > 0;
+  }
+
   private boolean isReady() {
     String logDir = System.getenv("DRILL_LOG_DIR");
-    if (logDir == null || !new File(logDir, EVENT_LOG_FILE).isFile()) {
+    if (!hasEventLog(logDir)) {
       return false;
     }
     try {
