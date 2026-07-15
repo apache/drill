@@ -124,4 +124,26 @@ public class ProspectorEventTest {
         "{\"feature\":\"executive_summary\"}", ProspectorResources.ChatContext.class);
     assertEquals("executive_summary", ctx.feature);
   }
+
+  @Test
+  public void testSetupFailureEvent() {
+    AiEvent event = ProspectorResources.buildSetupFailureEvent(
+        null, "alice", "sql_lab_chat", "ProspectorDisabled", "Prospector is not enabled");
+    assertFalse(event.success);
+    assertFalse(event.cancelled);
+    assertEquals("sql_lab_chat", event.feature);
+    assertEquals("ProspectorDisabled", event.errorClass);
+    assertEquals("Prospector is not enabled", event.error);
+    assertEquals("server", event.source);
+    // A setup failure never reached the provider, so it burned no tokens.
+    assertNull(event.totalTokens);
+    assertEquals(0L, event.durationMs);
+  }
+
+  @Test
+  public void testSetupFailureEventDefaultsFeature() {
+    AiEvent event = ProspectorResources.buildSetupFailureEvent(
+        null, "alice", null, "UnknownProvider", "Unknown LLM provider: bogus");
+    assertEquals("prospector_chat", event.feature);
+  }
 }
