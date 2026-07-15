@@ -22,7 +22,6 @@ import { useQuery } from '@tanstack/react-query';
 import { format } from 'sql-formatter';
 import { getAiStatus, streamChat } from '../../api/ai';
 import { getSchemaTree } from '../../api/metadata';
-import { aiObservability } from '../../services/aiObservability';
 import type { DatasetRef, Project } from '../../types';
 import type { ChatMessage, DeltaEvent } from '../../types/ai';
 
@@ -353,7 +352,6 @@ export default function QuerySuggestions({
       ];
 
       let accumulated = '';
-      const startTime = Date.now();
 
       abortRef.current = streamChat(
         { messages, tools: [], context: { feature: 'query_suggestions' } },
@@ -364,32 +362,21 @@ export default function QuerySuggestions({
         },
         () => {
           // Done
-          const duration = Date.now() - startTime;
           try {
             const parsed = parseJsonFromResponse(accumulated);
             setSuggestions(parsed);
             saveCachedSuggestions(projectId, parsed);
             setError(null);
-
-            // Log successful AI call
-            aiObservability.logAICall('query_suggestions', prompt, accumulated, duration);
           } catch (err) {
             const errorMsg = err instanceof Error ? err.message : 'Unknown error';
             console.error('Failed to parse AI response:', errorMsg);
             console.log('AI response was:', accumulated);
             setError(`Failed to parse suggestions: ${errorMsg}`);
-
-            // Log failed AI call
-            aiObservability.logAICall('query_suggestions', prompt, accumulated, duration, errorMsg);
           }
           setIsGenerating(false);
         },
         (err) => {
-          const duration = Date.now() - startTime;
           setError(err.message || 'Failed to generate suggestions.');
-
-          // Log error
-          aiObservability.logAICall('query_suggestions', prompt, '', duration, err.message);
           setIsGenerating(false);
         },
       );
