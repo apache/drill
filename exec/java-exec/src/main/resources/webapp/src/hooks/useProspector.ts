@@ -20,7 +20,7 @@ import { streamChat } from '../api/ai';
 import { executeQuery } from '../api/queries';
 import { getSchemas, getTables, getColumns, getFunctions } from '../api/metadata';
 import { createVisualization } from '../api/visualizations';
-import { addVisualization } from '../api/projects';
+import { addVisualization, getProject } from '../api/projects';
 import { createDashboard } from '../api/dashboards';
 import { createSavedQuery } from '../api/savedQueries';
 import type {
@@ -35,6 +35,7 @@ import type {
 import type { ChartType, VisualizationConfig } from '../types';
 
 const DEFAULT_MAX_TOOL_ROUNDS = 15;
+const PROJECT_DOC_MAX_CHARS = 8000;
 
 export const TOOL_DEFINITIONS: ToolDefinition[] = [
   {
@@ -139,6 +140,22 @@ export const TOOL_DEFINITIONS: ToolDefinition[] = [
     name: 'get_available_functions',
     description: 'List available SQL functions in Apache Drill',
     parameters: { type: 'object', properties: {} },
+  },
+  {
+    name: 'get_project_docs',
+    description: 'Read the current project\'s documentation (wiki) pages. Call with no '
+      + 'arguments to list page titles, or with pageTitle to read one page in full. '
+      + 'Use this when the project has documentation that may explain the data, its '
+      + 'conventions, or the business meaning of a table or column.',
+    parameters: {
+      type: 'object',
+      properties: {
+        pageTitle: {
+          type: 'string',
+          description: 'Title of the page to read. Omit to list available pages.',
+        },
+      },
+    },
   },
 ];
 
@@ -300,6 +317,32 @@ export function useProspector(
         case 'get_available_functions': {
           const functions = await getFunctions();
           return JSON.stringify({ functions: functions.slice(0, 100), totalCount: functions.length });
+        }
+
+        case 'get_project_docs': {
+          if (!context?.projectId) {
+            return JSON.stringify({ error: 'No active project — get_project_docs is '
+              + 'only available inside a project.' });
+          }
+          const project = await getProject(context.projectId);
+          const pages = project.wikiPages || [];
+          if (!args.pageTitle) {
+            return JSON.stringify({ pages: pages.map((p) => ({ title: p.title })) });
+          }
+          const page = pages.find((p) => p.title === args.pageTitle);
+          if (!page) {
+            return JSON.stringify({
+              error: `No documentation page titled "${args.pageTitle}". Available: `
+                + `${pages.map((p) => p.title).join(', ') || 'none'}`,
+            });
+          }
+          const content = page.content || '';
+          return JSON.stringify({
+            title: page.title,
+            content: content.length > PROJECT_DOC_MAX_CHARS
+              ? `${content.slice(0, PROJECT_DOC_MAX_CHARS)}...[truncated]`
+              : content,
+          });
         }
 
         default:
