@@ -15,8 +15,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import { useState, useCallback, useRef, useEffect } from 'react';
-import { streamChat, getAiStatus } from '../api/ai';
+import { useState, useCallback, useRef } from 'react';
+import { streamChat } from '../api/ai';
+import { useSendDataToAi } from './useSendDataToAi';
 import { executeQuery } from '../api/queries';
 import { getSchemas, getTables, getColumns, getFunctions } from '../api/metadata';
 import { createVisualization } from '../api/visualizations';
@@ -195,28 +196,10 @@ export function useProspector(
   // that every caller of this hook is gated by construction — the previous design had
   // each caller thread it through ChatContext, and the two that forgot (the global
   // Prospector tab, the dashboard panels) silently sent rows with the setting off.
-  // Read from /status, not /config: config is admin-only, so a non-admin's browser
-  // would fail the fetch and fall back to permissive, which is the same bug again.
-  // Unknown (still loading, or the fetch failed) withholds rows: a privacy setting has
-  // to fail closed, and the panel is unusable anyway if status cannot be read.
-  const sendDataToAiRef = useRef(false);
-  useEffect(() => {
-    let cancelled = false;
-    getAiStatus()
-      .then((status) => {
-        if (!cancelled) {
-          sendDataToAiRef.current = status.sendDataToAi;
-        }
-      })
-      .catch(() => {
-        if (!cancelled) {
-          sendDataToAiRef.current = false;
-        }
-      });
-    return () => {
-      cancelled = true;
-    };
-  }, []);
+  // useSendDataToAi reads it from /status (not the admin-only /config) and fails closed
+  // while loading or on error; see its doc comment for the full rationale. The ref form
+  // is used below so executeToolCall's dependency array doesn't churn on every fetch.
+  const { sendDataToAiRef } = useSendDataToAi();
 
   const stopStreaming = useCallback(() => {
     if (abortRef.current) {
