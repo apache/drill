@@ -53,7 +53,6 @@ import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
 import jakarta.ws.rs.core.SecurityContext;
 import jakarta.ws.rs.core.StreamingOutput;
-import java.security.Principal;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -347,9 +346,14 @@ public class ProspectorResources {
   @Operation(summary = "Stream AI chat completion",
       description = "Sends messages to the LLM and streams back SSE events")
   public Response chat(ChatRequest request, @Context SecurityContext sc) {
+    String username = sc != null && sc.getUserPrincipal() != null
+        ? sc.getUserPrincipal().getName() : null;
+    String feature = request != null && request.context != null ? request.context.feature : null;
     try {
       LlmConfig config = getConfig();
       if (config == null || !config.isEnabled()) {
+        recordSetupFailure(config, username, feature,
+            "ProspectorDisabled", "Prospector is not enabled");
         return Response.status(Response.Status.SERVICE_UNAVAILABLE)
             .entity(new ErrorResponse("Prospector is not enabled"))
             .type(MediaType.APPLICATION_JSON)
@@ -358,6 +362,8 @@ public class ProspectorResources {
 
       LlmProvider provider = LlmProviderRegistry.get(config.getProvider());
       if (provider == null) {
+        recordSetupFailure(config, username, feature,
+            "UnknownProvider", "Unknown LLM provider: " + config.getProvider());
         return Response.status(Response.Status.BAD_REQUEST)
             .entity(new ErrorResponse("Unknown LLM provider: " + config.getProvider()))
             .type(MediaType.APPLICATION_JSON)
@@ -368,11 +374,9 @@ public class ProspectorResources {
       List<ChatMessage> fullMessages = buildMessages(config, request);
       List<ToolDefinition> tools = request.tools != null ? request.tools : new ArrayList<>();
 
-      String username = resolveUser(sc);
       String userMessage = lastUserMessage(request);
       String fullPrompt = renderFullPrompt(fullMessages);
       LlmConfig snapshot = config;
-      String feature = request.context != null ? request.context.feature : null;
 
       // Pricing for the configured model — looked up once per call. Used to
       // enrich usage SSE events with a server-computed cost so the client can
@@ -414,6 +418,7 @@ public class ProspectorResources {
           .build();
     } catch (Exception e) {
       logger.error("Error initiating AI chat", e);
+      recordSetupFailure(null, username, feature, e.getClass().getSimpleName(), e.getMessage());
       return Response.serverError()
           .entity(new ErrorResponse("Failed to initiate chat: " + e.getMessage()))
           .type(MediaType.APPLICATION_JSON)
@@ -461,17 +466,6 @@ public class ProspectorResources {
     return Math.round(v * 10000.0) / 10000.0;
   }
 
-  private static String resolveUser(SecurityContext sc) {
-    if (sc == null) {
-      return "anonymous";
-    }
-    Principal p = sc.getUserPrincipal();
-    if (p == null || p.getName() == null || p.getName().isEmpty()) {
-      return "anonymous";
-    }
-    return p.getName();
-  }
-
   private static String lastUserMessage(ChatRequest request) {
     if (request == null || request.messages == null) {
       return null;
@@ -508,6 +502,30 @@ public class ProspectorResources {
           callResult, failure, durationMs));
     } catch (Exception logErr) {
       logger.warn("Failed to record AI usage event", logErr);
+    }
+  }
+
+  /**
+   * Builds the event for a failure that never reached the provider. Package-private
+   * and side-effect free so the recorded fields can be asserted directly.
+   */
+  static AiEvent buildSetupFailureEvent(LlmConfig config, String username, String feature,
+      String errorClass, String message) {
+    AiEvent event = buildEvent(config, username, feature, null, null, null, null, 0L);
+    event.success = false;
+    event.cancelled = false;
+    event.errorClass = errorClass;
+    event.error = message;
+    return event;
+  }
+
+  /** Records a setup failure that never reached the provider. */
+  private static void recordSetupFailure(LlmConfig config, String username, String feature,
+      String errorClass, String message) {
+    try {
+      AiEventLogger.log(buildSetupFailureEvent(config, username, feature, errorClass, message));
+    } catch (Exception logErr) {
+      logger.warn("Failed to record AI setup failure", logErr);
     }
   }
 
