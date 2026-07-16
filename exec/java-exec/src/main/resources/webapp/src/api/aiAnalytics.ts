@@ -19,6 +19,7 @@ import apiClient from './client';
 
 const ANALYTICS_BASE = '/api/v1/ai/analytics';
 const PRICING_BASE = '/api/v1/ai/pricing';
+const CONFIG_BASE = '/api/v1/ai/config';
 
 export interface AiAnalyticsStatus {
   logDirConfigured: boolean;
@@ -144,4 +145,19 @@ export async function upsertPricing(entry: AiPricingEntry): Promise<AiPricingEnt
 
 export async function deletePricing(provider: string, model: string): Promise<void> {
   await apiClient.delete(`${PRICING_BASE}/${encodeURIComponent(provider)}/${encodeURIComponent(model)}`);
+}
+
+export interface ProviderInfo {
+  id: string;
+  displayName: string;
+}
+
+export async function getProviders(): Promise<ProviderInfo[]> {
+  const r = await apiClient.get<{ providers: ProviderInfo[] }>(`${CONFIG_BASE}/providers`);
+  return r.data.providers ?? [];
+}
+
+export async function getModelsForProvider(providerId: string): Promise<string[]> {
+  const r = await apiClient.get<{ models: string[] }>(`${CONFIG_BASE}/providers/${encodeURIComponent(providerId)}/models`);
+  return r.data.models ?? [];
 }
