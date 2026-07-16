@@ -30,7 +30,9 @@ vi.mock('../../api/savedQueries', () => ({
 }));
 
 vi.mock('../../api/metadata', () => ({
-  getViewTargets: vi.fn(() => Promise.resolve([{ name: 'dfs.tmp', type: 'schema' }])),
+  getViewTargets: vi.fn(() =>
+    Promise.resolve([{ name: 'dfs.tmp', type: 'schema', plugin: 'dfs', browsable: true }])
+  ),
 }));
 
 vi.mock('../../api/projects', () => ({
@@ -60,7 +62,9 @@ function renderWithProviders(ui: ReactNode) {
 describe('SaveQueryDialog', () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    mockGetViewTargets.mockResolvedValue([{ name: 'dfs.tmp', type: 'schema' }]);
+    mockGetViewTargets.mockResolvedValue([
+      { name: 'dfs.tmp', type: 'schema', plugin: 'dfs', browsable: true },
+    ]);
   });
 
   it('does not call createSavedQuery when Save is clicked in View mode (Bug 1)', async () => {
@@ -74,7 +78,27 @@ describe('SaveQueryDialog', () => {
       expect(screen.getByText('Save as View')).toBeInTheDocument();
     });
 
+    // Fill BOTH required view-mode fields so form.validateFields() actually
+    // succeeds and handleSave reaches the isViewMode guard, rather than
+    // bailing out earlier in the catch block for unrelated reasons.
+    await user.type(screen.getByPlaceholderText('e.g. sales_summary'), 'my_view');
+
+    const schemaSelect = screen.getByRole('combobox');
+    await user.click(schemaSelect);
+    const option = await screen.findByTitle('dfs.tmp');
+    await user.click(option);
+
+    await waitFor(() => {
+      expect(screen.getByText('dfs.tmp', { selector: '.ant-select-selection-item' }))
+        .toBeInTheDocument();
+    });
+
     await user.click(screen.getByRole('button', { name: 'Save' }));
+
+    // Let any pending validation/microtasks resolve before asserting, so a
+    // guard removal that lets execution fall through to the (async)
+    // mutation actually has a chance to register the call.
+    await new Promise((resolve) => setTimeout(resolve, 0));
 
     expect(mockCreateSavedQuery).not.toHaveBeenCalled();
   });
