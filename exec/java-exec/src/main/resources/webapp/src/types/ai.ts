@@ -95,7 +95,7 @@ export interface ChatContext {
 }
 
 export interface ProjectDatasetRef {
-  type: 'table' | 'saved_query' | 'plugin' | 'schema';
+  type: 'table' | 'saved_query' | 'plugin' | 'schema' | 'view' | 'materialized_view';
   schema?: string;
   table?: string;
   label: string;
