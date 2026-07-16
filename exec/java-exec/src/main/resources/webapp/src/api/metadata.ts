@@ -18,21 +18,9 @@
 import apiClient from './client';
 import type { SchemaInfo, TableInfo, ColumnInfo, PluginInfo, NestedFieldInfo, SubTableInfo } from '../types';
 import { executeQuery } from './queries';
+import { formatSchema } from '../utils/sql';
 
 const METADATA_BASE = '/api/v1/metadata';
-
-/**
- * Format a compound schema name for use in SQL queries.
- * Plugin name stays unquoted; workspace parts are backtick-quoted.
- * e.g. "dfs.test" → "dfs.`test`", "dfs" → "dfs"
- */
-function formatSchema(schema: string): string {
-  const parts = schema.split('.');
-  if (parts.length <= 1) {
-    return schema;
-  }
-  return parts[0] + '.' + parts.slice(1).map((p) => `\`${p}\``).join('.');
-}
 
 export interface PluginsResponse {
   plugins: PluginInfo[];
