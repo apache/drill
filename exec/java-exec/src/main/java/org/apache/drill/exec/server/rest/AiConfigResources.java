@@ -806,6 +806,52 @@ public class AiConfigResources {
     return new ProvidersResponse(providers);
   }
 
+  public static class ModelsResponse {
+    @JsonProperty
+    public List<String> models;
+
+    public ModelsResponse(List<String> models) {
+      this.models = models;
+    }
+  }
+
+  @GET
+  @Path("/providers/{provider}/models")
+  @Produces(MediaType.APPLICATION_JSON)
+  @Operation(summary = "List available models for a provider",
+      description = "Returns the list of available models for the specified LLM provider")
+  public ModelsResponse getModels(@jakarta.ws.rs.PathParam("provider") String providerId) {
+    List<String> models = getModelsForProvider(providerId);
+    return new ModelsResponse(models);
+  }
+
+  private static List<String> getModelsForProvider(String providerId) {
+    List<String> models = new ArrayList<>();
+    if ("openai".equalsIgnoreCase(providerId)) {
+      models.add("gpt-4o");
+      models.add("gpt-4-turbo");
+      models.add("gpt-4");
+      models.add("gpt-3.5-turbo");
+    } else if ("anthropic".equalsIgnoreCase(providerId)) {
+      models.add("claude-opus-4-1");
+      models.add("claude-opus-4");
+      models.add("claude-sonnet-4");
+      models.add("claude-haiku-4");
+      models.add("claude-3-5-sonnet");
+      models.add("claude-3-sonnet");
+      models.add("claude-3-opus");
+      models.add("claude-3-haiku");
+    } else if ("ollama".equalsIgnoreCase(providerId)) {
+      models.add("mistral");
+      models.add("llama2");
+      models.add("llama3");
+      models.add("neural-chat");
+    } else if ("sqlglot".equalsIgnoreCase(providerId)) {
+      models.add("sqlglot");
+    }
+    return models;
+  }
+
   // ==================== Helper Methods ====================
 
   /**

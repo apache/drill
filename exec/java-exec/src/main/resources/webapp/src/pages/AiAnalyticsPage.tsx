@@ -15,9 +15,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import {
   Alert,
+  AutoComplete,
   Button,
   Card,
   Col,
@@ -52,8 +53,11 @@ import {
   listPricing,
   upsertPricing,
   deletePricing,
+  getProviders,
+  getModelsForProvider,
   type AiAnalyticsSummary,
   type AiPricingEntry,
+  type ProviderInfo,
 } from '../api/aiAnalytics';
 import { useCurrentUser } from '../hooks/useCurrentUser';
 import { FEATURE_LABEL, featureLabel } from '../constants/aiFeatures';
@@ -800,6 +804,33 @@ interface PricingEditorProps {
 
 function PricingEditor({ entry, onCancel, onSave, saving }: PricingEditorProps) {
   const [form] = Form.useForm<AiPricingEntry>();
+  const [providers, setProviders] = useState<ProviderInfo[]>([]);
+  const [models, setModels] = useState<string[]>([]);
+
+  useEffect(() => {
+    getProviders().then(setProviders).catch(() => setProviders([]));
+  }, []);
+
+  const handleProviderChange = (value: string) => {
+    form.setFieldValue('provider', value);
+    setModels([]);
+    if (value) {
+      getModelsForProvider(value)
+        .then(setModels)
+        .catch(() => setModels([]));
+    }
+  };
+
+  const providerOptions = providers.map((p) => ({
+    label: p.displayName,
+    value: p.id,
+  }));
+
+  const modelOptions = models.map((m) => ({
+    label: m,
+    value: m,
+  }));
+
   return (
     <Modal
       title={entry.provider && entry.model ? `Edit ${entry.provider}/${entry.model}` : 'Add model pricing'}
@@ -812,10 +843,24 @@ function PricingEditor({ entry, onCancel, onSave, saving }: PricingEditorProps) 
     >
       <Form layout="vertical" form={form} initialValues={entry}>
         <Form.Item label="Provider" name="provider" rules={[{ required: true }]}>
-          <Input placeholder="openai, anthropic, ollama, sqlglot, …" />
+          <AutoComplete
+            options={providerOptions}
+            placeholder="Select or enter provider (openai, anthropic, ollama, sqlglot, …)"
+            onChange={handleProviderChange}
+            filterOption={(inputValue, option) =>
+              (option?.label ?? '').toLowerCase().includes(inputValue.toLowerCase()) ||
+              (option?.value ?? '').toLowerCase().includes(inputValue.toLowerCase())
+            }
+          />
         </Form.Item>
         <Form.Item label="Model" name="model" rules={[{ required: true }]}>
-          <Input placeholder="gpt-4o, claude-sonnet-4, …" />
+          <AutoComplete
+            options={modelOptions}
+            placeholder="Select or enter model (gpt-4o, claude-sonnet-4, …)"
+            filterOption={(inputValue, option) =>
+              (option?.label ?? '').toLowerCase().includes(inputValue.toLowerCase())
+            }
+          />
         </Form.Item>
         <Form.Item label="Input price per 1M tokens" name="inputPricePerMTokens" rules={[{ required: true }]}>
           <InputNumber min={0} step={0.01} style={{ width: '100%' }} />
