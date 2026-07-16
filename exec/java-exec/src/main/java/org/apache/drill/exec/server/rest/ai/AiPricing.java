@@ -96,6 +96,6 @@ public class AiPricing {
 
   /** Build the storage key for a given provider+model pair. */
   public static String key(String provider, String model) {
-    return (provider == null ? "" : provider) + ":" + (model == null ? "" : model);
+    return (provider == null ? "" : provider) + "|" + (model == null ? "" : model);
   }
 }
