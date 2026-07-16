@@ -23,6 +23,7 @@ import type { ReactNode } from 'react';
 import SaveQueryDialog from './SaveQueryDialog';
 import { createSavedQuery } from '../../api/savedQueries';
 import { getViewTargets } from '../../api/metadata';
+import { executeQuery } from '../../api/queries';
 import type { SavedQuery } from '../../types';
 
 vi.mock('../../api/savedQueries', () => ({
@@ -37,10 +38,19 @@ vi.mock('../../api/metadata', () => ({
 
 vi.mock('../../api/projects', () => ({
   addSavedQuery: vi.fn(),
+  addDataset: vi.fn(),
+}));
+
+// View mode now runs createViewFromQuery, which calls executeQuery. Left unmocked, this
+// test would fall through to a real axios call from jsdom instead of exercising the
+// guard under test, and would drag in several seconds of network-timeout latency.
+vi.mock('../../api/queries', () => ({
+  executeQuery: vi.fn(),
 }));
 
 const mockCreateSavedQuery = vi.mocked(createSavedQuery);
 const mockGetViewTargets = vi.mocked(getViewTargets);
+const mockExecuteQuery = vi.mocked(executeQuery);
 
 function createQueryClient() {
   return new QueryClient({
@@ -65,6 +75,7 @@ describe('SaveQueryDialog', () => {
     mockGetViewTargets.mockResolvedValue([
       { name: 'dfs.tmp', type: 'schema', plugin: 'dfs', browsable: true },
     ]);
+    mockExecuteQuery.mockResolvedValue({} as never);
   });
 
   it('does not call createSavedQuery when Save is clicked in View mode (Bug 1)', async () => {
@@ -95,10 +106,11 @@ describe('SaveQueryDialog', () => {
 
     await user.click(screen.getByRole('button', { name: 'Save' }));
 
-    // Let any pending validation/microtasks resolve before asserting, so a
-    // guard removal that lets execution fall through to the (async)
-    // mutation actually has a chance to register the call.
-    await new Promise((resolve) => setTimeout(resolve, 0));
+    // Confirms the view-creation path actually ran (not just that some early guard
+    // returned before reaching createSavedQuery), so this assertion isn't vacuous.
+    await waitFor(() => {
+      expect(mockExecuteQuery).toHaveBeenCalledTimes(1);
+    });
 
     expect(mockCreateSavedQuery).not.toHaveBeenCalled();
   });
