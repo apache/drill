@@ -34,7 +34,9 @@ export interface SchemaInfo {
 export interface TableInfo {
   name: string;
   schema: string;
-  type: 'TABLE' | 'VIEW' | 'SYSTEM TABLE';
+  // Values come straight from INFORMATION_SCHEMA.TABLES.TABLE_TYPE, which the backend
+  // passes through untouched. Materialized views report 'MATERIALIZED VIEW'.
+  type: 'TABLE' | 'VIEW' | 'MATERIALIZED VIEW' | 'SYSTEM TABLE';
 }
 
 export interface ColumnInfo {
@@ -287,7 +289,7 @@ export interface DashboardCreate {
 // Project types
 export interface DatasetRef {
   id: string;
-  type: 'table' | 'saved_query' | 'plugin' | 'schema';
+  type: 'table' | 'saved_query' | 'plugin' | 'schema' | 'view' | 'materialized_view';
   schema?: string;
   table?: string;
   savedQueryId?: string;
