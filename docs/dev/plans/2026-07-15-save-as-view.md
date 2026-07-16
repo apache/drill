@@ -33,6 +33,8 @@ Phases 1-2 of the spec's five. Ships a working feature: save as view/MV, correct
 | `TestMetadataResources.java` (modify) | Cluster test hitting the live endpoint |
 | `src/utils/sql.ts` (create) | Pure SQL helpers: `formatSchema`, `isCreatableAsView`, `isValidViewName`, `buildViewDdl` |
 | `src/utils/sql.test.ts` (create) | Tests for the above |
+| `src/utils/createView.ts` (create) | Orchestration: run the DDL, then link the project; returns the partial outcome |
+| `src/utils/createView.test.ts` (create) | Tests for the above |
 | `src/api/metadata.ts` (modify) | `getViewTargets()`; import `formatSchema` from `utils/sql` instead of its private copy |
 | `src/types/index.ts` (modify) | `TableInfo.type` gains `'MATERIALIZED VIEW'`; `DatasetRef.type` gains `'view'`/`'materialized_view'` |
 | `SaveQueryDialog.tsx` (modify) | Mode radio, view fields, DDL execution, project linking |
@@ -41,7 +43,11 @@ Phases 1-2 of the spec's five. Ships a working feature: save as view/MV, correct
 | `SchemaExplorer.tsx` (modify) | `refreshSchema` prop so a create can invalidate one schema |
 | `SqlLabPage.tsx` (modify) | Wire dialog → explorer refresh |
 
-`utils/sql.ts` holds the only real logic (quoting, guard, DDL shape) and has **no imports from `api/`**, so its tests need no mocking.
+The logic lives outside the components, so it can be tested without rendering anything:
+`utils/sql.ts` is pure (quoting, guard, DDL shape) and has **no imports from `api/`**, so
+its tests need no mocking at all; `utils/createView.ts` holds the orchestration and
+partial-failure rule, and mocks only `api/queries` and `api/projects`. The dialog is left
+with form state and messages.
 
 ---
 
@@ -791,79 +797,225 @@ git commit -m "Add view and materialized view modes to the save dialog"
 ### Task 5: Execute the DDL and link the project
 
 **Files:**
+- Create: `exec/java-exec/src/main/resources/webapp/src/utils/createView.ts`
+- Create: `exec/java-exec/src/main/resources/webapp/src/utils/createView.test.ts`
 - Modify: `exec/java-exec/src/main/resources/webapp/src/components/query-editor/SaveQueryDialog.tsx`
 - Modify: `exec/java-exec/src/main/resources/webapp/src/pages/ProjectDetailPage.tsx:203-213`
 
 **Interfaces:**
-- Consumes: `buildViewDdl` (Task 2); `mode` state (Task 4); `DatasetRef` types (Task 3).
+- Consumes: `buildViewDdl`, `ViewMode` (Task 2); `mode` state (Task 4); `DatasetRef` types (Task 3).
+- Produces: `createViewFromQuery(opts: CreateViewOptions): Promise<CreateViewResult>` where
+  `CreateViewOptions = { mode: ViewMode; schema: string; name: string; sql: string; replace: boolean; projectId?: string }`
+  and `CreateViewResult = { ddl: string; projectError?: string }`.
 - Produces: new optional prop `onViewCreated?: (schema: string) => void` on `SaveQueryDialogProps`, consumed by Task 7.
 
-- [ ] **Step 1: Add imports and the prop**
+**Why the orchestration is its own module:** the partial-failure rule is real logic and needs a real test — the view exists the moment `executeQuery` resolves, so a later project-link failure must not be reported as total failure. Reaching that path through the rendered dialog would mean driving antd's `Select` and `Form` from RTL, which is brittle. A plain async function is not. Unlike `utils/sql.ts`, this module *may* import from `api/`.
+
+- [ ] **Step 1: Write the failing tests**
+
+Create `src/utils/createView.test.ts` (Apache header first):
 
 ```ts
-import { executeQuery } from '../../api/queries';
-import { addDataset } from '../../api/projects';
-import { buildViewDdl } from '../../utils/sql';
+import { describe, expect, it, vi, beforeEach } from 'vitest';
+import { createViewFromQuery } from './createView';
+import { executeQuery } from '../api/queries';
+import { addDataset } from '../api/projects';
+
+vi.mock('../api/queries', () => ({ executeQuery: vi.fn() }));
+vi.mock('../api/projects', () => ({ addDataset: vi.fn() }));
+
+const base = {
+  mode: 'view' as const,
+  schema: 'dfs.tmp',
+  name: 'sales',
+  sql: 'SELECT 1 FROM t',
+  replace: false,
+};
+
+describe('createViewFromQuery', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    vi.mocked(executeQuery).mockResolvedValue({} as never);
+    vi.mocked(addDataset).mockResolvedValue({} as never);
+  });
+
+  it('sends the CREATE VIEW statement to Drill', async () => {
+    await createViewFromQuery(base);
+    expect(vi.mocked(executeQuery).mock.calls[0][0].query)
+      .toBe('CREATE VIEW dfs.`tmp`.`sales` AS SELECT 1 FROM t');
+  });
+
+  /** Auto-limit makes Drill cancel once N rows arrive, truncating an MV's data. */
+  it('never sets an auto limit, which would truncate a materialized view', async () => {
+    await createViewFromQuery({ ...base, mode: 'materialized_view' });
+    expect(vi.mocked(executeQuery).mock.calls[0][0].autoLimitRowCount).toBeUndefined();
+  });
+
+  it('does not touch the project when there is no active project', async () => {
+    await createViewFromQuery(base);
+    expect(addDataset).not.toHaveBeenCalled();
+  });
+
+  it('links a view to the active project as a view dataset', async () => {
+    await createViewFromQuery({ ...base, projectId: 'p1' });
+    expect(addDataset).toHaveBeenCalledWith('p1', expect.objectContaining({
+      type: 'view', schema: 'dfs.tmp', table: 'sales', label: 'sales',
+    }));
+  });
+
+  it('links a materialized view as a materialized_view dataset', async () => {
+    await createViewFromQuery({ ...base, mode: 'materialized_view', projectId: 'p1' });
+    expect(addDataset).toHaveBeenCalledWith('p1', expect.objectContaining({
+      type: 'materialized_view',
+    }));
+  });
+
+  /**
+   * The view already exists at this point. Failing the whole call would tell the user
+   * nothing was created and invite a retry, which would then fail on the name conflict.
+   */
+  it('reports a project-linking failure without losing the created view', async () => {
+    const consoleError = vi.spyOn(console, 'error').mockImplementation(() => {});
+    vi.mocked(addDataset).mockRejectedValue(new Error('project not found'));
+
+    const result = await createViewFromQuery({ ...base, projectId: 'p1' });
+
+    expect(result.ddl).toContain('CREATE VIEW');
+    expect(result.projectError).toContain('project not found');
+    expect(consoleError).toHaveBeenCalled();
+    consoleError.mockRestore();
+  });
+
+  it('throws when the DDL itself fails, because nothing was created', async () => {
+    vi.mocked(executeQuery).mockRejectedValue(new Error('already exists'));
+    await expect(createViewFromQuery(base)).rejects.toThrow('already exists');
+    expect(addDataset).not.toHaveBeenCalled();
+  });
+});
 ```
 
-Add to `SaveQueryDialogProps` (line 27-34):
+- [ ] **Step 2: Run to verify it fails**
+
+```bash
+npx vitest run src/utils/createView.test.ts
+```
+
+Expected: FAIL — `Failed to resolve import "./createView"`.
+
+- [ ] **Step 3: Write the orchestration**
+
+Create `src/utils/createView.ts` (Apache header first):
+
+```ts
+import { executeQuery } from '../api/queries';
+import { addDataset } from '../api/projects';
+import { buildViewDdl, type ViewMode } from './sql';
+
+export interface CreateViewOptions {
+  mode: ViewMode;
+  schema: string;
+  name: string;
+  sql: string;
+  replace: boolean;
+  projectId?: string;
+}
+
+export interface CreateViewResult {
+  /** The statement sent to Drill. */
+  ddl: string;
+  /** Set when the view was created but could not be linked to the project. */
+  projectError?: string;
+}
+
+/**
+ * Create a view or materialized view, then link it to the active project.
+ *
+ * Creating a view is DDL, not metadata: it executes immediately and is visible to
+ * anyone who can read the schema. The view exists the moment executeQuery resolves, so
+ * a later failure to link it to a project is reported as a partial outcome rather than
+ * thrown — the same rule the visualization tool follows when addVisualization fails.
+ *
+ * Throws only if the DDL itself fails, in which case nothing was created.
+ */
+export async function createViewFromQuery(opts: CreateViewOptions): Promise<CreateViewResult> {
+  const { mode, schema, name, sql, replace, projectId } = opts;
+  const ddl = buildViewDdl({ mode, schema, name, sql, replace });
+
+  // No autoLimitRowCount: it makes Drill cancel the query once N rows arrive, which
+  // would truncate a materialized view's data.
+  await executeQuery({ query: ddl, queryType: 'SQL' });
+
+  if (!projectId) {
+    return { ddl };
+  }
+
+  try {
+    await addDataset(projectId, {
+      id: '',
+      type: mode === 'materialized_view' ? 'materialized_view' : 'view',
+      schema,
+      table: name,
+      label: name,
+    });
+    return { ddl };
+  } catch (err) {
+    // The result goes back to a user who was told the view was created, so this must
+    // not be silent.
+    console.error('View created but could not be added to the project', err);
+    return { ddl, projectError: err instanceof Error ? err.message : String(err) };
+  }
+}
+```
+
+- [ ] **Step 4: Run to verify it passes**
+
+```bash
+npx vitest run src/utils/createView.test.ts
+```
+
+Expected: 7 passing.
+
+- [ ] **Step 5: Wire it into the dialog**
+
+Add the imports to `SaveQueryDialog.tsx`:
+
+```ts
+import { createViewFromQuery } from '../../utils/createView';
+import type { ViewMode } from '../../utils/sql';
+```
+
+Add to `SaveQueryDialogProps` (lines 27-34):
 
 ```ts
   /** Called after a view or materialized view is created, with its schema. */
   onViewCreated?: (schema: string) => void;
 ```
 
-and to the destructured props (line 36-43): `onViewCreated,`.
+and add `onViewCreated,` to the destructured props (lines 36-43).
 
-- [ ] **Step 2: Add the view-creation handler**
-
-Insert before `handleSave` (line 74):
+Insert this handler before `handleSave` (line 74):
 
 ```ts
-  /**
-   * Creating a view is DDL, not metadata: it executes immediately and is visible to
-   * anyone who can read the schema. The view exists the moment executeQuery resolves,
-   * so a later failure (project linking) must never be reported as a total failure —
-   * same rule the visualization tool follows when addVisualization fails.
-   */
   const createView = async (values: { schema: string; name: string; replace?: boolean }) => {
-    const ddl = buildViewDdl({
-      mode: mode as 'view' | 'materialized_view',
+    const { projectError } = await createViewFromQuery({
+      mode: mode as ViewMode,
       schema: values.schema,
       name: values.name,
       sql,
       replace: values.replace ?? false,
+      projectId,
     });
 
-    // No autoLimitRowCount: it makes Drill cancel the query once N rows arrive, which
-    // would truncate a materialized view's data.
-    await executeQuery({ query: ddl, queryType: 'SQL' });
-
     const label = mode === 'materialized_view' ? 'Materialized view' : 'View';
-
-    if (projectId) {
-      try {
-        await addDataset(projectId, {
-          id: '',
-          type: mode === 'materialized_view' ? 'materialized_view' : 'view',
-          schema: values.schema,
-          table: values.name,
-          label: values.name,
-        });
+    if (projectError) {
+      message.warning(`${label} created, but not added to the project: ${projectError}`);
+    } else {
+      message.success(`${label} ${values.schema}.${values.name} created`);
+      if (projectId) {
         queryClient.invalidateQueries({ queryKey: ['project', projectId] });
-      } catch (err) {
-        const detail = err instanceof Error ? err.message : String(err);
-        console.error('Failed to add view to project', err);
-        message.warning(`${label} created, but not added to the project: ${detail}`);
-        onViewCreated?.(values.schema);
-        form.resetFields();
-        setMode('query');
-        onClose();
-        return;
       }
     }
 
-    message.success(`${label} ${values.schema}.${values.name} created`);
     onViewCreated?.(values.schema);
     form.resetFields();
     setMode('query');
@@ -871,7 +1023,7 @@ Insert before `handleSave` (line 74):
   };
 ```
 
-- [ ] **Step 3: Branch `handleSave` on the mode**
+- [ ] **Step 6: Branch `handleSave` on the mode**
 
 Replace the body of `handleSave` (lines 74-91):
 
@@ -910,7 +1062,7 @@ Replace the body of `handleSave` (lines 74-91):
   };
 ```
 
-- [ ] **Step 4: Give the project page real labels**
+- [ ] **Step 7: Give the project page real labels**
 
 `ProjectDetailPage.tsx:203-213` is a fallthrough chain ending in `'Table'`, so an unhandled `'view'` renders as "Table" silently. Replace:
 
@@ -925,7 +1077,7 @@ Replace the body of `handleSave` (lines 74-91):
 
 Read the surrounding lines first — the existing chain's exact formatting and variable name must be preserved.
 
-- [ ] **Step 5: Verify**
+- [ ] **Step 8: Verify**
 
 ```bash
 npx tsc --noEmit && npm run lint && npx vitest run
@@ -933,7 +1085,7 @@ npx tsc --noEmit && npm run lint && npx vitest run
 
 Expected: no errors, no warnings, all tests pass.
 
-- [ ] **Step 6: Manual check — the real gate**
+- [ ] **Step 9: Manual check — the real gate**
 
 With `npm run dev` against a running Drillbit:
 
@@ -947,10 +1099,10 @@ With `npm run dev` against a running Drillbit:
 
 Clean up: ``DROP VIEW dfs.`tmp`.`plan_test_view` `` and ``DROP MATERIALIZED VIEW dfs.`tmp`.`plan_test_mv` ``.
 
-- [ ] **Step 7: Commit**
+- [ ] **Step 10: Commit**
 
 ```bash
-git add src/components/query-editor/SaveQueryDialog.tsx src/pages/ProjectDetailPage.tsx
+git add src/utils/createView.ts src/utils/createView.test.ts src/components/query-editor/SaveQueryDialog.tsx src/pages/ProjectDetailPage.tsx
 git commit -m "Create views and materialized views from the save dialog"
 ```
 
@@ -1050,6 +1202,46 @@ npx tsc --noEmit && npm run lint && npx vitest run
 ```
 
 Expected: no errors, no warnings, all tests pass.
+
+- [ ] **Step 3a: Write the failing icon tests FIRST**
+
+Do this before Steps 1-3. `buildTableNodes` is a pure function returning `DataNode[]`, and `src/components/schema-explorer/TreeNodeBuilder.test.tsx` already asserts directly on `result[0].key` / `.children`. Append to that file:
+
+```tsx
+/**
+ * TableInfo.type was dead data: tables, views and materialized views all rendered the
+ * same amber TableOutlined. Asserting the exact component per type means these fail if
+ * the branch is deleted, rather than passing on a shared default.
+ */
+describe('buildTableNodes icons', () => {
+  const emptyNestedCache: Record<string, never[]> = {};
+
+  const iconOf = (type: TableInfo['type']) =>
+    (buildTableNodes('s', [{ name: 'x', schema: 's', type }], {}, emptyNestedCache)[0]
+      .icon as ReactElement).type;
+
+  it('gives a plain table the table icon', () => {
+    expect(iconOf('TABLE')).toBe(TableOutlined);
+  });
+
+  it('gives a view its own icon, not the table icon', () => {
+    expect(iconOf('VIEW')).toBe(EyeOutlined);
+  });
+
+  it('gives a materialized view its own icon, distinct from a plain view', () => {
+    expect(iconOf('MATERIALIZED VIEW')).toBe(ThunderboltOutlined);
+  });
+});
+```
+
+Extend that file's existing imports — do not duplicate them:
+
+```tsx
+import type { ReactElement } from 'react';
+import { EyeOutlined, TableOutlined, ThunderboltOutlined } from '@ant-design/icons';
+```
+
+Run `npx vitest run src/components/schema-explorer/TreeNodeBuilder.test.tsx`. Expected: the TABLE case passes; the VIEW and MATERIALIZED VIEW cases FAIL, each reporting it received `TableOutlined`. That failure is the proof the test is wired to the behaviour. Then do Steps 1-3 and re-run — all three pass.
 
 - [ ] **Step 5: Manual check**
 
