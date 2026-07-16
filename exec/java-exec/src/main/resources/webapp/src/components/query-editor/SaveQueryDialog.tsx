@@ -75,6 +75,7 @@ export default function SaveQueryDialog({
       queryClient.invalidateQueries({ queryKey: ['savedQueries'] });
       onSaved?.(savedQuery.name);
       form.resetFields();
+      setMode('query');
       onClose();
     },
     onError: (error: Error) => {
@@ -86,6 +87,12 @@ export default function SaveQueryDialog({
   });
 
   const handleSave = async () => {
+    // View modes are wired to execute their DDL in a later task. Until then, the Save
+    // button must not fall through to createSavedQuery, which would save a mislabeled
+    // plain query. Task 5 replaces this guard with the real view-creation branch.
+    if (isViewMode) {
+      return;
+    }
     try {
       const values = await form.validateFields();
       setSaving(true);
