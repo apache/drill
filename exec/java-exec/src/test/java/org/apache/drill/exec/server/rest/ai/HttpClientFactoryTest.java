@@ -18,17 +18,16 @@
 package org.apache.drill.exec.server.rest.ai;
 
 import okhttp3.OkHttpClient;
-import okhttp3.Proxy;
 import org.junit.jupiter.api.Test;
 
 import java.net.InetSocketAddress;
+import java.net.Proxy;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
