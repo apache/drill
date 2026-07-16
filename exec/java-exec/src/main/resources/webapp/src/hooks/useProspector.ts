@@ -367,7 +367,7 @@ export function useProspector(
       console.error(`Tool "${toolCall.name}" failed`, err);
       return JSON.stringify({ error: msg });
     }
-  }, [onSqlGenerated, onVisualizationCreated]);
+  }, [onSqlGenerated, onVisualizationCreated, sendDataToAiRef]);
 
   const doStreamRound = useCallback((
     allMessages: ChatMessage[],
