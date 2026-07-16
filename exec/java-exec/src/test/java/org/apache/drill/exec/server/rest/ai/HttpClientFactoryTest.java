@@ -18,6 +18,7 @@
 package org.apache.drill.exec.server.rest.ai;
 
 import okhttp3.OkHttpClient;
+import okhttp3.Proxy;
 import org.junit.jupiter.api.Test;
 
 import java.net.InetSocketAddress;
@@ -133,7 +134,7 @@ public class HttpClientFactoryTest {
     config.setProxyUrl(null);
 
     OkHttpClient client = HttpClientFactory.createClient(config);
-    assertNull(client.proxy());
+    assertEquals(Proxy.Type.DIRECT, client.proxy().type());
   }
 
   @Test
@@ -142,7 +143,7 @@ public class HttpClientFactoryTest {
     config.setProxyUrl("");
 
     OkHttpClient client = HttpClientFactory.createClient(config);
-    assertNull(client.proxy());
+    assertEquals(Proxy.Type.DIRECT, client.proxy().type());
   }
 
   @Test
