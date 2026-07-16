@@ -450,6 +450,60 @@ public class MetadataResources {
     return new SchemasResponse(schemas);
   }
 
+  /**
+   * Whether a schema can hold a view or materialized view.
+   *
+   * <p>Both halves are required. IS_MUTABLE is exactly WorkspaceConfig.isWritable(), so
+   * it is the right writability source, but plugins such as Splunk, Kudu, JDBC and
+   * GoogleSheets report mutable while rejecting views: only WorkspaceSchema overrides
+   * createView/createMaterializedView, and AbstractSchema throws for everything else.
+   *
+   * @param config the schema's plugin config, or null if the plugin is not registered
+   * @param isMutable the IS_MUTABLE column from INFORMATION_SCHEMA.SCHEMATA
+   */
+  static boolean isViewTarget(StoragePluginConfig config, String isMutable) {
+    return config instanceof FileSystemConfig && "YES".equalsIgnoreCase(isMutable);
+  }
+
+  @GET
+  @Path("/view-targets")
+  @Produces(MediaType.APPLICATION_JSON)
+  @Operation(summary = "List schemas that can hold a view",
+      description = "Returns writable file-based schemas — the only ones where CREATE VIEW succeeds")
+  public SchemasResponse getViewTargets() {
+    logger.debug("Fetching view target schemas");
+
+    List<SchemaInfo> schemas = new ArrayList<>();
+
+    Map<String, StoragePluginConfig> enabledPlugins;
+    try {
+      enabledPlugins = storageRegistry.enabledConfigs();
+    } catch (Exception e) {
+      logger.error("Error fetching plugins for view targets", e);
+      return new SchemasResponse(schemas);
+    }
+
+    String sql = "SELECT SCHEMA_NAME, IS_MUTABLE FROM INFORMATION_SCHEMA.SCHEMATA "
+        + "ORDER BY SCHEMA_NAME";
+    try {
+      QueryResult result = executeQuery(sql);
+      for (Map<String, String> row : result.rows) {
+        String schemaName = row.get("SCHEMA_NAME");
+        if (schemaName == null) {
+          continue;
+        }
+        String pluginName = schemaName.split("\\.")[0];
+        if (isViewTarget(enabledPlugins.get(pluginName), row.get("IS_MUTABLE"))) {
+          schemas.add(new SchemaInfo(schemaName, pluginName, true));
+        }
+      }
+    } catch (Exception e) {
+      logger.error("Error fetching view targets from INFORMATION_SCHEMA", e);
+    }
+
+    return new SchemasResponse(schemas);
+  }
+
   @GET
   @Path("/schemas/{schema}/tables")
   @Produces(MediaType.APPLICATION_JSON)
