@@ -203,6 +203,8 @@ export default function ProjectDetailPage() {
                   const typeLabel = dataset.type === 'plugin' ? 'Plugin'
                     : dataset.type === 'schema' ? 'Schema'
                     : dataset.type === 'saved_query' ? 'Saved Query'
+                    : dataset.type === 'view' ? 'View'
+                    : dataset.type === 'materialized_view' ? 'Materialized View'
                     : 'Table';
                   const typeDesc = dataset.type === 'plugin'
                     ? `All schemas in ${dataset.schema}`

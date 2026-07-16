@@ -22,6 +22,8 @@ import { createSavedQuery } from '../../api/savedQueries';
 import { addSavedQuery } from '../../api/projects';
 import { getViewTargets } from '../../api/metadata';
 import { isCreatableAsView, isValidViewName } from '../../utils/sql';
+import type { ViewMode } from '../../utils/sql';
+import { createViewFromQuery } from '../../utils/createView';
 import type { SavedQueryCreate } from '../../types';
 
 const { TextArea } = Input;
@@ -33,6 +35,8 @@ interface SaveQueryDialogProps {
   defaultSchema?: string;
   projectId?: string;
   onSaved?: (name: string) => void;
+  /** Called after a view or materialized view is created, with its schema. */
+  onViewCreated?: (schema: string) => void;
 }
 
 export default function SaveQueryDialog({
@@ -42,6 +46,7 @@ export default function SaveQueryDialog({
   defaultSchema,
   projectId,
   onSaved,
+  onViewCreated,
 }: SaveQueryDialogProps) {
   const [form] = Form.useForm();
   const queryClient = useQueryClient();
@@ -86,29 +91,63 @@ export default function SaveQueryDialog({
     },
   });
 
+  const createView = async (values: { schema: string; name: string; replace?: boolean }) => {
+    const { projectError } = await createViewFromQuery({
+      mode: mode as ViewMode,
+      schema: values.schema,
+      name: values.name,
+      sql,
+      replace: values.replace ?? false,
+      projectId,
+    });
+
+    const label = mode === 'materialized_view' ? 'Materialized view' : 'View';
+    if (projectError) {
+      message.warning(`${label} created, but not added to the project: ${projectError}`);
+    } else {
+      message.success(`${label} ${values.schema}.${values.name} created`);
+      if (projectId) {
+        queryClient.invalidateQueries({ queryKey: ['project', projectId] });
+      }
+    }
+
+    onViewCreated?.(values.schema);
+    form.resetFields();
+    setMode('query');
+    onClose();
+  };
+
   const handleSave = async () => {
-    // View modes are wired to execute their DDL in a later task. Until then, the Save
-    // button must not fall through to createSavedQuery, which would save a mislabeled
-    // plain query. Task 5 replaces this guard with the real view-creation branch.
+    let values;
+    try {
+      values = await form.validateFields();
+    } catch {
+      return; // Form validation failed; antd has already shown the messages.
+    }
+
+    setSaving(true);
+
     if (isViewMode) {
+      try {
+        await createView(values);
+      } catch (err) {
+        const detail = err instanceof Error ? err.message : String(err);
+        message.error(`Failed to create ${mode === 'view' ? 'view' : 'materialized view'}: ${detail}`);
+      } finally {
+        setSaving(false);
+      }
       return;
     }
-    try {
-      const values = await form.validateFields();
-      setSaving(true);
 
-      const query: SavedQueryCreate = {
-        name: values.name,
-        description: values.description,
-        sql: sql,
-        defaultSchema: defaultSchema,
-        isPublic: values.isPublic || false,
-      };
+    const query: SavedQueryCreate = {
+      name: values.name,
+      description: values.description,
+      sql: sql,
+      defaultSchema: defaultSchema,
+      isPublic: values.isPublic || false,
+    };
 
-      mutation.mutate(query);
-    } catch {
-      // Form validation failed
-    }
+    mutation.mutate(query);
   };
 
   const handleCancel = () => {
