@@ -314,4 +314,27 @@ public class TestMetadataResources extends ClusterTest {
       assertTrue(json.get("rows").size() > 0, "Preview should return rows");
     }
   }
+
+  /**
+   * dfs.tmp is writable and file-based, so it must be offered. cp is file-based but not
+   * writable, and sys is neither — both must be absent.
+   */
+  @Test
+  public void testGetViewTargets() throws Exception {
+    String url = String.format("http://localhost:%d/api/v1/metadata/view-targets", portNumber);
+    Request request = new Request.Builder().url(url).build();
+    try (Response response = httpClient.newCall(request).execute()) {
+      assertEquals(200, response.code());
+      JsonNode json = mapper.readTree(response.body().string());
+      assertTrue(json.has("schemas"));
+
+      Set<String> names = new HashSet<>();
+      for (JsonNode schema : json.get("schemas")) {
+        names.add(schema.get("name").asText());
+      }
+      assertTrue(names.contains("dfs.tmp"), "dfs.tmp is writable and must be a view target");
+      assertFalse(names.contains("sys"), "sys is not file-based and must not be a view target");
+      assertFalse(names.contains("cp"), "cp is not writable and must not be a view target");
+    }
+  }
 }
