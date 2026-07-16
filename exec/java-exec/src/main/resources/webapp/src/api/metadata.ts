@@ -74,6 +74,18 @@ export async function getSchemas(): Promise<SchemaInfo[]> {
 }
 
 /**
+ * Fetch the schemas a view or materialized view can be created in.
+ *
+ * Deliberately a dedicated endpoint rather than a flag on getSchemas: getSchemas returns
+ * root plugin names only, and workspaces such as dfs.tmp come from getPluginSchemas one
+ * plugin at a time, so filtering client-side would take N+1 requests.
+ */
+export async function getViewTargets(): Promise<SchemaInfo[]> {
+  const response = await apiClient.get<SchemasResponse>(`${METADATA_BASE}/view-targets`);
+  return response.data.schemas;
+}
+
+/**
  * Fetch tables in a specific schema
  */
 export async function getTables(schema: string): Promise<TableInfo[]> {
