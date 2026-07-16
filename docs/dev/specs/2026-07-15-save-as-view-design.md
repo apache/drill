@@ -29,7 +29,7 @@ store, and UI.
 | Decision | Choice | Rationale |
 |---|---|---|
 | UI shape | A `Save as` radio in the existing `SaveQueryDialog` | Save button unchanged; reuses the modal and form |
-| Schema eligibility | New backend `supportsViews` flag on `SchemaInfo` | Authoritative; see below |
+| Schema eligibility | New backend `GET /api/v1/metadata/view-targets` endpoint | Authoritative; see below |
 | Saved-query record for views | None — the `.view.drill` file is the artifact | One radio, one destination; avoids drift |
 | Project linking | Auto-add to the active project when one is active | Matches the existing `addSavedQuery` behaviour |
 | `DatasetRef.type` | Add `'view'` and `'materialized_view'` | Backend field is a free `String`; no Java change |
@@ -41,11 +41,28 @@ store, and UI.
 
 ## Backend
 
-### 1. `MetadataResources.java` — `supportsViews` on `SchemaInfo`
+### 1. `MetadataResources.java` — new `GET /api/v1/metadata/view-targets`
+
+Returns the flat list of schemas that can hold a view — exactly what the dialog's
+dropdown needs, in one round trip.
 
 ```
-supportsViews = (pluginConfig instanceof FileSystemConfig) && IS_MUTABLE = 'YES'
+eligible = (pluginConfig instanceof FileSystemConfig) && IS_MUTABLE = 'YES'
 ```
+
+**Why a dedicated endpoint rather than a `supportsViews` flag on `SchemaInfo`.**
+`getSchemas()` (`:408`) does not return workspaces at all — it lists root plugin names
+(`dfs`, `cp`, `s3`) from the plugin registry and returns early; its `INFORMATION_SCHEMA`
+query is only a fallback for when the registry fails. Workspaces come from
+`getPluginSchemas(plugin)` (`:359`), one plugin per call. So a flag on `SchemaInfo` would
+force the dialog to fetch plugins, then fetch workspaces per plugin, then filter — N+1
+requests to fill a dropdown. One endpoint running one `SCHEMATA` query replaces all of
+it, and no consumer other than the dialog needs the flag.
+
+Implementation: query
+`SELECT SCHEMA_NAME FROM INFORMATION_SCHEMA.SCHEMATA WHERE IS_MUTABLE = 'YES'`, then keep
+rows whose plugin — `schemaName.split("\\.")[0]` — maps to a `FileSystemConfig` in
+`storageRegistry.enabledConfigs()`. That is a map lookup; no plugin instantiation.
 
 **Both halves are required.** Neither is sufficient:
 
@@ -95,7 +112,8 @@ view recreated under the same name almost certainly wants its description back.
 
 | File | Change |
 |---|---|
-| `types/index.ts` | `SchemaInfo.supportsViews`; add `'MATERIALIZED VIEW'` to `TableInfo.type`; add `'view' \| 'materialized_view'` to `DatasetRef.type` |
+| `types/index.ts` | Add `'MATERIALIZED VIEW'` to `TableInfo.type`; add `'view' \| 'materialized_view'` to `DatasetRef.type` |
+| `api/metadata.ts` | Add `getViewTargets()` calling the new endpoint |
 | `api/viewDescriptions.ts` | New — get (batch per schema) / put / delete |
 | `buildViewDdl.ts` | New — pure DDL builder + `isCreatableAsView` guard |
 | `SaveQueryDialog.tsx` | Mode radio; schema/name/replace fields for the view modes |
@@ -238,9 +256,9 @@ natural source for showing a view's SQL in a tooltip or a future edit flow.
 
 **Java**
 
-- `supportsViews` is true for a writable file workspace; false for a non-writable one
-  (`dfs.root`); **false for a mutable non-file plugin**. The third case is the entire
-  point of the flag.
+- `/view-targets` includes a writable file workspace; excludes a non-writable one
+  (`dfs.root`); **excludes a mutable non-file plugin**. The third case is the entire
+  point of the endpoint.
 - `ViewDescriptionResources` CRUD, including key encoding for a schema containing dots
   and a view name containing slashes.
 
@@ -257,7 +275,7 @@ natural source for showing a view's SQL in a tooltip or a future edit flow.
 
 Each step is independently shippable:
 
-1. `supportsViews` + dialog mode radio + `buildViewDdl` + SELECT guard.
+1. `/view-targets` endpoint + dialog mode radio + `buildViewDdl` + SELECT guard.
 2. Tree icons + refresh-after-create.
 3. Descriptions store + REST + edit UI.
 4. MV refresh action + staleness display.
