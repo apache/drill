@@ -16,7 +16,7 @@
  * limitations under the License.
  */
 import { Tooltip, Typography, Tag, Input } from 'antd';
-import { FolderOutlined, TableOutlined, WarningOutlined, InfoCircleOutlined, SearchOutlined } from '@ant-design/icons';
+import { FolderOutlined, TableOutlined, WarningOutlined, InfoCircleOutlined, SearchOutlined, EyeOutlined, ThunderboltOutlined } from '@ant-design/icons';
 import { DatabaseOutlined } from '@ant-design/icons';
 import type { DataNode } from 'antd/es/tree';
 import type { PluginInfo, SchemaInfo, TableInfo, ColumnInfo, FileInfo, NestedFieldInfo, SubTableInfo } from '../../types';
@@ -242,6 +242,31 @@ export function buildFileNodes(
   });
 }
 
+/**
+ * Tables, views and materialized views are all rows in INFORMATION_SCHEMA.TABLES and
+ * were previously rendered identically. The distinction matters: a view is always live,
+ * whereas a materialized view serves stored data that can be stale until refreshed.
+ */
+function tableIcon(type: TableInfo['type']) {
+  if (type === 'VIEW') {
+    return <EyeOutlined style={{ color: '#722ed1' }} />;
+  }
+  if (type === 'MATERIALIZED VIEW') {
+    return <ThunderboltOutlined style={{ color: '#13c2c2' }} />;
+  }
+  return <TableOutlined style={{ color: '#faad14' }} />;
+}
+
+function tableTooltip(type: TableInfo['type']): string | undefined {
+  if (type === 'VIEW') {
+    return 'View — runs its query each time it is read';
+  }
+  if (type === 'MATERIALIZED VIEW') {
+    return 'Materialized view — serves stored data; may be stale until refreshed';
+  }
+  return undefined;
+}
+
 /** Build table tree nodes for a non-file schema. */
 export function buildTableNodes(
   schemaName: string,
@@ -264,7 +289,7 @@ export function buildTableNodes(
       return {
         key: tableKey,
         title: table.name,
-        icon: <TableOutlined style={{ color: '#faad14' }} />,
+        icon: tableIcon(table.type),
         children: [{
           key: `${tableKey}:__dynamic__`,
           title: (
@@ -326,7 +351,9 @@ export function buildTableNodes(
       key: tableKey,
       title: (
         <span>
-          {table.name}
+          <Tooltip title={tableTooltip(table.type)}>
+            <span>{table.name}</span>
+          </Tooltip>
           {tableCount > 0 && (
             <Tooltip title={`Referenced in ${tableCount} saved ${tableCount === 1 ? 'query' : 'queries'}`}>
               <Tag color="blue" style={{ fontSize: 10, marginLeft: 4, lineHeight: '16px' }}>
@@ -336,7 +363,7 @@ export function buildTableNodes(
           )}
         </span>
       ),
-      icon: <TableOutlined style={{ color: '#faad14' }} />,
+      icon: tableIcon(table.type),
       children,
       isLeaf: false,
     };
