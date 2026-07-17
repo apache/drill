@@ -44,6 +44,7 @@ import { getSchedules } from '../../api/schedules';
 import { getVisualizations } from '../../api/visualizations';
 import { getProject } from '../../api/projects';
 import { getExecutionHistory } from '../../utils/queryExecutionHistory';
+import { buildDatasetAllowList, type DatasetAllowList } from './datasetAllowList';
 
 const { Search } = Input;
 
@@ -149,18 +150,6 @@ function getNodeType(key: string): NodeType {
   if (key.startsWith('dir:') || key.startsWith('file:')) { return 'file'; }
   if (key.startsWith('nested:')) { return 'column'; }
   return 'column';
-}
-
-/**
- * Lookup structure for dataset filtering, supporting plugin, schema, and table-level refs.
- */
-interface DatasetAllowList {
-  /** Plugins where everything is allowed */
-  plugins: Set<string>;
-  /** Schemas where everything is allowed */
-  schemas: Set<string>;
-  /** Specific table/file allowances: schema → set of table/file names */
-  tables: Map<string, Set<string>>;
 }
 
 /**
@@ -456,27 +445,7 @@ export default function SchemaExplorer({ onInsertText, onSelectQuery, onOpenInNe
     if (!datasetFilter || datasetFilter.datasets.length === 0) {
       return null;
     }
-    const allow: DatasetAllowList = {
-      plugins: new Set(),
-      schemas: new Set(),
-      tables: new Map(),
-    };
-    for (const ds of datasetFilter.datasets) {
-      if (ds.type === 'plugin' && ds.schema) {
-        allow.plugins.add(ds.schema);
-      } else if (ds.type === 'schema' && ds.schema) {
-        allow.schemas.add(ds.schema);
-      } else if (
-        (ds.type === 'table' || ds.type === 'view' || ds.type === 'materialized_view')
-        && ds.schema && ds.table
-      ) {
-        if (!allow.tables.has(ds.schema)) {
-          allow.tables.set(ds.schema, new Set());
-        }
-        allow.tables.get(ds.schema)!.add(ds.table);
-      }
-    }
-    return allow;
+    return buildDatasetAllowList(datasetFilter.datasets);
   }, [datasetFilter]);
 
   const treeData = useMemo(() => {
