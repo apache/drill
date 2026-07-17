@@ -146,6 +146,7 @@ export default function SqlLabPage({ datasetFilter, headerContent, projectId, sa
 
   const [autoLimit, setAutoLimit] = useState<number | null>(1000);
   const [saveDialogOpen, setSaveDialogOpen] = useState(false);
+  const [refreshSchema, setRefreshSchema] = useState<{ schema: string; nonce: number }>();
   const [vizBuilderOpen, setVizBuilderOpen] = useState(false);
   const [historyModalOpen, setHistoryModalOpen] = useState(false);
   const [shareApiModalOpen, setShareApiModalOpen] = useState(false);
@@ -875,6 +876,7 @@ export default function SqlLabPage({ datasetFilter, headerContent, projectId, sa
         datasetFilter={datasetFilter}
         projectId={projectId}
         savedQueryIds={savedQueryIds}
+        refreshSchema={refreshSchema}
       />
     ),
   }), [
@@ -884,6 +886,7 @@ export default function SqlLabPage({ datasetFilter, headerContent, projectId, sa
     datasetFilter,
     projectId,
     savedQueryIds,
+    refreshSchema,
   ]);
 
   usePageChrome({ inspectorTabs, leftRail });
@@ -1360,6 +1363,8 @@ export default function SqlLabPage({ datasetFilter, headerContent, projectId, sa
         defaultSchema={activeTab?.defaultSchema}
         projectId={projectId}
         onSaved={(name) => dispatch(renameTab({ tabId: activeTabId, name }))}
+        onViewCreated={(schema) =>
+          setRefreshSchema((prev) => ({ schema, nonce: (prev?.nonce ?? 0) + 1 }))}
       />
 
       {/* Visualization Builder */}

@@ -66,6 +66,12 @@ interface SchemaExplorerProps {
   datasetFilter?: DatasetFilter;
   projectId?: string;
   savedQueryIds?: string[];
+  /**
+   * Ask the explorer to reload one schema — used after a view is created, since the
+   * tables cache is local state rather than react-query and cannot be invalidated from
+   * outside. The nonce makes repeat saves to the same schema distinct.
+   */
+  refreshSchema?: { schema: string; nonce: number };
 }
 
 /**
@@ -312,7 +318,7 @@ function filterTreeNodes(nodes: DataNode[], allow: DatasetAllowList): DataNode[]
   }, []);
 }
 
-export default function SchemaExplorer({ onInsertText, onSelectQuery, onOpenInNewTab, datasetFilter, projectId, savedQueryIds }: SchemaExplorerProps) {
+export default function SchemaExplorer({ onInsertText, onSelectQuery, onOpenInNewTab, datasetFilter, projectId, savedQueryIds, refreshSchema }: SchemaExplorerProps) {
   const queryClient = useQueryClient();
   const navigate = useNavigate();
   const [searchText, setSearchText] = useState('');
@@ -987,6 +993,14 @@ export default function SchemaExplorer({ onInsertText, onSelectQuery, onOpenInNe
     },
     [],
   );
+
+  // Reload one schema when asked from outside (e.g. after a view is created via
+  // SaveQueryDialog). The nonce guarantees repeat saves to the same schema re-fire.
+  useEffect(() => {
+    if (refreshSchema) {
+      handleRefreshNode(`schema:${refreshSchema.schema}`);
+    }
+  }, [refreshSchema, handleRefreshNode]);
 
   const handleShowStats = useCallback(
     (schemaName: string, tableName: string) => {
