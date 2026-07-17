@@ -19,6 +19,8 @@ import { describe, it, expect, vi } from 'vitest';
 import { buildColumnNodes, buildTableNodes } from './TreeNodeBuilder';
 import type { UsageCounts } from './TreeNodeBuilder';
 import type { ColumnInfo, TableInfo } from '../../types';
+import type { ReactElement } from 'react';
+import { EyeOutlined, TableOutlined, ThunderboltOutlined } from '@ant-design/icons';
 
 describe('buildTableNodes', () => {
   const emptyNestedCache: Record<string, never[]> = {};
@@ -205,5 +207,30 @@ describe('buildColumnNodes', () => {
     // Both nodes should be created successfully
     expect(result[0].key).toBe('column:myschema:mytable:user_id');
     expect(result[1].key).toBe('column:myschema:mytable:email');
+  });
+});
+
+/**
+ * TableInfo.type was dead data: tables, views and materialized views all rendered the
+ * same amber TableOutlined. Asserting the exact component per type means these fail if
+ * the branch is deleted, rather than passing on a shared default.
+ */
+describe('buildTableNodes icons', () => {
+  const emptyNestedCache: Record<string, never[]> = {};
+
+  const iconOf = (type: TableInfo['type']) =>
+    (buildTableNodes('s', [{ name: 'x', schema: 's', type }], {}, emptyNestedCache)[0]
+      .icon as ReactElement).type;
+
+  it('gives a plain table the table icon', () => {
+    expect(iconOf('TABLE')).toBe(TableOutlined);
+  });
+
+  it('gives a view its own icon, not the table icon', () => {
+    expect(iconOf('VIEW')).toBe(EyeOutlined);
+  });
+
+  it('gives a materialized view its own icon, distinct from a plain view', () => {
+    expect(iconOf('MATERIALIZED VIEW')).toBe(ThunderboltOutlined);
   });
 });
