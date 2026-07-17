@@ -32,9 +32,10 @@ Object.defineProperty(window, 'matchMedia', {
   })),
 });
 
-// Mock getComputedStyle for antd
+// antd's popup alignment (rc-trigger/rc-align) calls getComputedStyle(el, pseudoElt) while
+// positioning dropdowns. jsdom does not implement the pseudo-element form and logs a
+// "Not implemented" virtual-console error on every call, flooding CI output. The previous
+// shim passed pseudoElt straight through, so it suppressed nothing. Dropping the argument
+// returns the element's own computed style — all antd needs — and silences the noise.
 const originalGetComputedStyle = window.getComputedStyle;
-window.getComputedStyle = (elt: Element, pseudoElt?: string | null) => {
-  const style = originalGetComputedStyle(elt, pseudoElt);
-  return style;
-};
+window.getComputedStyle = (elt: Element) => originalGetComputedStyle(elt);

@@ -16,8 +16,7 @@
  * limitations under the License.
  */
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { render, screen, waitFor } from '@testing-library/react';
-import userEvent from '@testing-library/user-event';
+import { render, screen, waitFor, fireEvent } from '@testing-library/react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import type { ReactNode } from 'react';
 import SaveQueryDialog from './SaveQueryDialog';
@@ -79,45 +78,44 @@ describe('SaveQueryDialog', () => {
   });
 
   it('does not call createSavedQuery when Save is clicked in View mode (Bug 1)', async () => {
-    const user = userEvent.setup();
+    // Uses fireEvent, not userEvent. userEvent.click fires a full pointer sequence
+    // (pointerover/down/focus/up/click), each wrapped in act() with microtask flushes;
+    // on a Modal + Select that re-renders on every event, that compounded into ~4s and
+    // tipped this test past the 5s timeout under the full suite's parallel CPU load.
+    // Synchronous fireEvent exercises the same code paths without that overhead.
     renderWithProviders(
       <SaveQueryDialog open={true} onClose={vi.fn()} sql="SELECT * FROM foo" />
     );
 
-    await user.click(screen.getByRole('radio', { name: 'View' }));
-    await waitFor(() => {
-      expect(screen.getByText('Save as View')).toBeInTheDocument();
-    });
+    fireEvent.click(screen.getByRole('radio', { name: 'View' }));
 
-    // Fill BOTH required view-mode fields so form.validateFields() actually
-    // succeeds and handleSave reaches the isViewMode guard, rather than
-    // bailing out earlier in the catch block for unrelated reasons.
-    await user.type(screen.getByPlaceholderText('e.g. sales_summary'), 'my_view');
+    // Fill BOTH required view-mode fields so form.validateFields() actually succeeds and
+    // handleSave reaches the isViewMode branch. If the schema were left empty, validation
+    // would reject and createSavedQuery would be skipped regardless of the branch, making
+    // the assertion below vacuous. findByTitle waits for the option to render, and the
+    // final waitFor fails loudly if the selection did not take — so this is self-checking.
+    fireEvent.change(await screen.findByPlaceholderText('e.g. sales_summary'),
+      { target: { value: 'my_view' } });
+    fireEvent.mouseDown(screen.getByRole('combobox'));
+    fireEvent.click(await screen.findByTitle('dfs.tmp'));
 
-    const schemaSelect = screen.getByRole('combobox');
-    await user.click(schemaSelect);
-    const option = await screen.findByTitle('dfs.tmp');
-    await user.click(option);
+    fireEvent.click(screen.getByRole('button', { name: 'Save' }));
 
-    await waitFor(() => {
-      expect(screen.getByText('dfs.tmp', { selector: '.ant-select-selection-item' }))
-        .toBeInTheDocument();
-    });
-
-    await user.click(screen.getByRole('button', { name: 'Save' }));
-
-    // Confirms the view-creation path actually ran (not just that some early guard
-    // returned before reaching createSavedQuery), so this assertion isn't vacuous.
+    // executeQuery firing proves the view-creation path ran (query mode would call the
+    // saved-query mutation instead), so this assertion is a real branch check.
     await waitFor(() => {
       expect(mockExecuteQuery).toHaveBeenCalledTimes(1);
     });
 
     expect(mockCreateSavedQuery).not.toHaveBeenCalled();
-  });
+    // Rendering a full antd Modal + Select and driving it takes ~2.5-3.5s here; on slower
+    // shared CI runners that can approach the 5s default. This headroom is for that, not
+    // for a hang — the test is deterministic and mutation-verified (breaking the
+    // isViewMode branch fails it).
+  }, 10000);
 
   it('resets to Save Query on reopen after a successful save, even if the mode was ' +
     'changed to View while the save was in flight (Bug 2)', async () => {
-    const user = userEvent.setup();
     const onClose = vi.fn();
 
     // Resolve createSavedQuery only when we choose to — this lets us flip the mode
@@ -140,18 +138,18 @@ describe('SaveQueryDialog', () => {
 
     expect(screen.getByText('Save Query')).toBeInTheDocument();
 
-    await user.type(
+    fireEvent.change(
       screen.getByPlaceholderText('Enter a name for this query'),
-      'my_query'
+      { target: { value: 'my_query' } }
     );
-    await user.click(screen.getByRole('button', { name: 'Save' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Save' }));
 
     await waitFor(() => {
       expect(mockCreateSavedQuery).toHaveBeenCalledTimes(1);
     });
 
     // The save is still pending. Flip to View mode before it resolves.
-    await user.click(screen.getByRole('radio', { name: 'View' }));
+    fireEvent.click(screen.getByRole('radio', { name: 'View' }));
     await waitFor(() => {
       expect(screen.getByText('Save as View')).toBeInTheDocument();
     });
@@ -186,5 +184,5 @@ describe('SaveQueryDialog', () => {
       expect(screen.getByText('Save Query')).toBeInTheDocument();
     });
     expect(screen.queryByText('Save as View')).not.toBeInTheDocument();
-  });
+  }, 10000);
 });
