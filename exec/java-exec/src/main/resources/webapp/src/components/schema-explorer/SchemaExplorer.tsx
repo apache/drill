@@ -466,7 +466,10 @@ export default function SchemaExplorer({ onInsertText, onSelectQuery, onOpenInNe
         allow.plugins.add(ds.schema);
       } else if (ds.type === 'schema' && ds.schema) {
         allow.schemas.add(ds.schema);
-      } else if (ds.type === 'table' && ds.schema && ds.table) {
+      } else if (
+        (ds.type === 'table' || ds.type === 'view' || ds.type === 'materialized_view')
+        && ds.schema && ds.table
+      ) {
         if (!allow.tables.has(ds.schema)) {
           allow.tables.set(ds.schema, new Set());
         }
