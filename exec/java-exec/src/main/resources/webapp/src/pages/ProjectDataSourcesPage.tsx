@@ -120,7 +120,9 @@ export default function ProjectDataSourcesPage() {
                   <Tag>
                     {dataset.type === 'plugin' ? 'Plugin' :
                      dataset.type === 'schema' ? 'Schema' :
-                     dataset.type === 'saved_query' ? 'Saved Query' : 'Table'}
+                     dataset.type === 'saved_query' ? 'Saved Query' :
+                     dataset.type === 'view' ? 'View' :
+                     dataset.type === 'materialized_view' ? 'Materialized View' : 'Table'}
                   </Tag>
                 </List.Item>
               )}
