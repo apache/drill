@@ -22,6 +22,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import org.apache.drill.exec.store.dfs.FileSystemConfig;
 import org.apache.drill.exec.store.mock.MockStorageEngineConfig;
+import org.apache.drill.test.BaseTest;
 import org.junit.Test;
 
 /**
@@ -29,7 +30,7 @@ import org.junit.Test;
  * rule matter: plugins such as Splunk, Kudu and JDBC report IS_MUTABLE = YES yet reject
  * CREATE VIEW, because only WorkspaceSchema overrides createView.
  */
-public class TestViewTargets {
+public class TestViewTargets extends BaseTest {
 
   private static FileSystemConfig fileConfig() {
     return new FileSystemConfig("file:///", null, null, null, null);
