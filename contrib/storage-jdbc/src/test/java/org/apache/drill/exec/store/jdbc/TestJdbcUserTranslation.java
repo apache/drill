@@ -37,6 +37,7 @@ import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
+import org.testcontainers.DockerClientFactory;
 import org.testcontainers.containers.JdbcDatabaseContainer;
 import org.testcontainers.containers.MySQLContainer;
 import org.testcontainers.ext.ScriptUtils;
@@ -54,6 +55,7 @@ import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
+import static org.junit.Assume.assumeTrue;
 
 @Category(JdbcStorageTest.class)
 public class TestJdbcUserTranslation extends ClusterTest {
@@ -65,6 +67,10 @@ public class TestJdbcUserTranslation extends ClusterTest {
 
   @BeforeClass
   public static void initMysql() throws Exception {
+    assumeTrue(
+      "Docker is not available, skipping container tests",
+      DockerClientFactory.instance().isDockerAvailable()
+    );
     ClusterFixtureBuilder builder = new ClusterFixtureBuilder(dirTestWatcher)
       .configProperty(ExecConstants.HTTP_ENABLE, true)
       .configProperty(ExecConstants.HTTP_PORT_HUNT, true)

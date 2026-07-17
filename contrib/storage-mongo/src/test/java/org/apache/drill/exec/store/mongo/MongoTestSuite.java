@@ -39,6 +39,7 @@ import org.junit.runner.RunWith;
 import org.junit.runners.Suite;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.testcontainers.DockerClientFactory;
 import org.testcontainers.containers.Container;
 import org.testcontainers.containers.GenericContainer;
 import org.testcontainers.containers.Network;
@@ -54,6 +55,7 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import static java.nio.charset.StandardCharsets.UTF_8;
+import static org.junit.Assume.assumeTrue;
 
 @RunWith(Suite.class)
 @Suite.SuiteClasses({
@@ -229,6 +231,10 @@ public class MongoTestSuite extends BaseTest implements MongoTestConstants {
 
   @BeforeClass
   public static void initMongo() throws Exception {
+    assumeTrue(
+      "Docker is not available, skipping container tests",
+      DockerClientFactory.instance().isDockerAvailable()
+    );
     synchronized (MongoTestSuite.class) {
       if (initCount.get() == 0) {
         if (distMode) {
