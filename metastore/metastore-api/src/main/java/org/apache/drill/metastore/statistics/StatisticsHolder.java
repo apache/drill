@@ -134,6 +134,7 @@ public class StatisticsHolder<T> {
         .allowIfSubType(byte[].class)
         .allowIfSubType("java.time.")
         .allowIfSubType("org.joda.time.") // Joda used by ColumnStatistics
+        .allowIfSubType("org.apache.drill.metastore.")
         .build();
   }
 }
