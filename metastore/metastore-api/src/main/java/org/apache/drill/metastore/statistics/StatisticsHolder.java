@@ -115,7 +115,8 @@ public class StatisticsHolder<T> {
   }
 
   static JsonMapper.Builder  createJsonMapperBuilder() {
-    JacksonUtils.createJsonMapperBuilder()
+    return JacksonUtils
+        .createJsonMapperBuilder()
         .polymorphicTypeValidator(createPolymorphicTypeValidator());
   }
 
