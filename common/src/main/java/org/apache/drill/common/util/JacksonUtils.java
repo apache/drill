@@ -21,7 +21,6 @@ import com.fasterxml.jackson.core.JsonFactory;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.json.JsonMapper;
 import com.fasterxml.jackson.databind.jsontype.BasicPolymorphicTypeValidator;
-import com.fasterxml.jackson.databind.jsontype.PolymorphicTypeValidator;
 
 /**
  * Utility class which contain methods for interacting with Jackson.
@@ -52,8 +51,12 @@ public final class JacksonUtils {
    * @return an {@link JsonMapper.Builder} instance
    */
   public static JsonMapper.Builder createJsonMapperBuilder() {
+    // it is deliberate to have polymorphicTypeValidator that allows nothing
+    // for security reasons
+    // org.apache.drill.metastore.statistics.StatisticsHolder replaces this with
+    // a polymorphicTypeValidator that allows only the types it needs
     return JsonMapper.builder()
-        .polymorphicTypeValidator(createPolymorphicTypeValidator());
+        .polymorphicTypeValidator(BasicPolymorphicTypeValidator.builder().build());
   }
 
   /**
@@ -62,23 +65,11 @@ public final class JacksonUtils {
    * @return an {@link JsonMapper.Builder} instance
    */
   public static JsonMapper.Builder createJsonMapperBuilder(final JsonFactory factory) {
+    // it is deliberate to have polymorphicTypeValidator that allows nothing
+    // for security reasons
+    // org.apache.drill.metastore.statistics.StatisticsHolder replaces this with
+    // a polymorphicTypeValidator that allows only the types it needs
     return JsonMapper.builder(factory)
-        .polymorphicTypeValidator(createPolymorphicTypeValidator());
-  }
-
-  private static PolymorphicTypeValidator createPolymorphicTypeValidator() {
-    // Only use case appears to be org.apache.drill.metastore.statistics.StatisticsHolder
-    // which can hold a number or in theory, any type. The problem is that it is a security hole
-    // to accept any type because a hacker could use it to load a gadget.
-    // The main use case appears to be for Parquet and I've made a best guess as to what types to
-    // restrict to.
-    // The more restrictive this validator is, the better for security.
-    return BasicPolymorphicTypeValidator.builder()
-        .allowIfSubType(Number.class)
-        .allowIfSubType(Boolean.class)
-        .allowIfSubType(String.class)
-        .allowIfSubType(byte[].class)
-        .allowIfSubType("java.time.")
-        .build();
+        .polymorphicTypeValidator(BasicPolymorphicTypeValidator.builder().build());
   }
 }
