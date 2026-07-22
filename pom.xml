@@ -96,7 +96,7 @@
     <httpdlog-parser.version>5.11.0</httpdlog-parser.version>
     <iceberg.version>0.12.1</iceberg.version>
     <paimon.version>1.3.1</paimon.version>
-    <jackson.version>2.18.3</jackson.version>
+    <jackson.version>2.18.9</jackson.version>
     <janino.version>3.1.12</janino.version>
     <javassist.version>3.29.2-GA</javassist.version>
     <javax.el.version>3.0.0</javax.el.version>
