@@ -46,7 +46,7 @@ public class LogicalPlanPersistence {
   private final ObjectMapper mapper;
 
   public LogicalPlanPersistence(DrillConfig conf, ScanResult scanResult) {
-    this(conf, scanResult, JacksonUtils.createObjectMapper());
+    this(conf, scanResult, JacksonUtils.createJsonMapperBuilderWithPolymorphicTypeValidator().build());
   }
 
   public LogicalPlanPersistence(DrillConfig conf, ScanResult scanResult, ObjectMapper mapper) {
@@ -65,9 +65,9 @@ public class LogicalPlanPersistence {
     mapper.setInjectableValues(injectables);
     mapper.registerModule(deserModule);
     mapper.enable(SerializationFeature.INDENT_OUTPUT);
-    mapper.configure(Feature.ALLOW_UNQUOTED_FIELD_NAMES, true);
-    mapper.configure(JsonGenerator.Feature.QUOTE_FIELD_NAMES, true);
-    mapper.configure(Feature.ALLOW_COMMENTS, true);
+    mapper.enable(Feature.ALLOW_UNQUOTED_FIELD_NAMES);
+    mapper.enable(JsonGenerator.Feature.QUOTE_FIELD_NAMES);
+    mapper.enable(Feature.ALLOW_COMMENTS);
     mapper.setFilterProvider(new SimpleFilterProvider().setFailOnUnknownId(false));
     // For LogicalOperatorBase
     registerSubtypes(getSubTypes(scanResult, LogicalOperator.class));
@@ -92,7 +92,7 @@ public class LogicalPlanPersistence {
    * Scan for implementations of the given interface.
    *
    * @param classpathScan Drill configuration object used to find the packages to scan
-   * @return list of classes that implement the interface.
+   * @return set of classes that implement the interface.
    */
   public static <T> Set<Class<? extends T>> getSubTypes(final ScanResult classpathScan, Class<T> parent) {
     Set<Class<? extends T>> subclasses = classpathScan.getImplementations(parent);

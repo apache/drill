@@ -74,8 +74,26 @@ public final class JacksonUtils {
         .polymorphicTypeValidator(BasicPolymorphicTypeValidator.builder().build());
   }
 
+  /**
+   * Creates a new instance of the Jackson {@link JsonMapper.Builder} that has a
+   * <code>PolymorphicTypeValidator</code> applied that allows a curated set of classes
+   * that can be loaded.
+   * @return an {@link JsonMapper.Builder} instance
+   */
   public static JsonMapper.Builder createJsonMapperBuilderWithPolymorphicTypeValidator() {
     return createJsonMapperBuilder()
+        .polymorphicTypeValidator(createPolymorphicTypeValidator());
+  }
+
+  /**
+   * Creates a new instance of the Jackson {@link JsonMapper.Builder} that has a
+   * <code>PolymorphicTypeValidator</code> applied that allows a curated set of classes
+   * that can be loaded.
+   * @param factory a {@link JsonFactory} instance
+   * @return an {@link JsonMapper.Builder} instance
+   */
+  public static JsonMapper.Builder createJsonMapperBuilderWithPolymorphicTypeValidator(JsonFactory factory) {
+    return createJsonMapperBuilder(factory)
         .polymorphicTypeValidator(createPolymorphicTypeValidator());
   }
 

@@ -45,7 +45,7 @@ public class DrillbitPluginRegistryContext implements PluginRegistryContext {
     // to handle HOCON format in the override file
     LogicalPlanPersistence persistence = new LogicalPlanPersistence(drillbitContext.getConfig(),
         drillbitContext.getClasspathScan(),
-        JacksonUtils.createObjectMapper(new HoconFactory()));
+        JacksonUtils.createJsonMapperBuilderWithPolymorphicTypeValidator(new HoconFactory()).build());
     hoconMapper = persistence.getMapper();
   }
 
