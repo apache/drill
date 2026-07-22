@@ -67,11 +67,18 @@ public final class JacksonUtils {
   }
 
   private static PolymorphicTypeValidator createPolymorphicTypeValidator() {
-    // only use case appears to be org.apache.drill.metastore.statistics.StatisticsHolder
-    // which holds a number, so allow only subtypes of Number
-    // the more restrictive this validator is, the better for security
+    // Only use case appears to be org.apache.drill.metastore.statistics.StatisticsHolder
+    // which can hold a number or in theory, any type. The problem is that it is a security hole
+    // to accept any type because a hacker could use it to load a gadget.
+    // The main use case appears to be for Parquet and I've made a best guess as to what types to
+    // restrict to.
+    // The more restrictive this validator is, the better for security.
     return BasicPolymorphicTypeValidator.builder()
         .allowIfSubType(Number.class)
+        .allowIfSubType(Boolean.class)
+        .allowIfSubType(String.class)
+        .allowIfSubType(byte[].class)
+        .allowIfSubType("java.time.")
         .build();
   }
 }
