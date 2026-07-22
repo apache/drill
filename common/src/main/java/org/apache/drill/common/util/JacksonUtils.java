@@ -20,6 +20,8 @@ package org.apache.drill.common.util;
 import com.fasterxml.jackson.core.JsonFactory;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.json.JsonMapper;
+import com.fasterxml.jackson.databind.jsontype.BasicPolymorphicTypeValidator;
+import com.fasterxml.jackson.databind.jsontype.PolymorphicTypeValidator;
 
 /**
  * Utility class which contain methods for interacting with Jackson.
@@ -50,7 +52,8 @@ public final class JacksonUtils {
    * @return an {@link JsonMapper.Builder} instance
    */
   public static JsonMapper.Builder createJsonMapperBuilder() {
-    return JsonMapper.builder();
+    return JsonMapper.builder()
+        .polymorphicTypeValidator(createPolymorphicTypeValidator());
   }
 
   /**
@@ -59,6 +62,13 @@ public final class JacksonUtils {
    * @return an {@link JsonMapper.Builder} instance
    */
   public static JsonMapper.Builder createJsonMapperBuilder(final JsonFactory factory) {
-    return JsonMapper.builder(factory);
+    return JsonMapper.builder(factory)
+        .polymorphicTypeValidator(createPolymorphicTypeValidator());
+  }
+
+  private static final PolymorphicTypeValidator createPolymorphicTypeValidator() {
+    return BasicPolymorphicTypeValidator.builder()
+        .allowIfSubType("org.apache.drill.")
+        .build();
   }
 }
