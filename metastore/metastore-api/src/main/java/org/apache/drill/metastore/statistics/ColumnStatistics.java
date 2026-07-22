@@ -28,6 +28,7 @@ import com.fasterxml.jackson.databind.ObjectReader;
 import com.fasterxml.jackson.databind.ObjectWriter;
 import com.fasterxml.jackson.datatype.joda.JodaModule;
 import org.apache.drill.common.types.TypeProtos;
+import org.apache.drill.common.util.JacksonUtils;
 import org.apache.drill.metastore.util.TableMetadataUtils;
 
 import java.io.IOException;
@@ -67,7 +68,7 @@ import java.util.stream.Collectors;
 public class ColumnStatistics<T> {
 
   private static final ObjectMapper MAPPER =
-      StatisticsHolder.createJsonMapperBuilder()
+      JacksonUtils.createJsonMapperBuilderWithPolymorphicTypeValidator()
         .addModule(new JodaModule())
         .build();
 

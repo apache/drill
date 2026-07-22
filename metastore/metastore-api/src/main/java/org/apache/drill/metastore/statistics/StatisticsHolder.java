@@ -25,9 +25,6 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.ObjectReader;
 import com.fasterxml.jackson.databind.ObjectWriter;
-import com.fasterxml.jackson.databind.json.JsonMapper;
-import com.fasterxml.jackson.databind.jsontype.BasicPolymorphicTypeValidator;
-import com.fasterxml.jackson.databind.jsontype.PolymorphicTypeValidator;
 import org.apache.drill.common.util.JacksonUtils;
 
 import java.io.IOException;
@@ -42,7 +39,8 @@ import java.util.StringJoiner;
 @JsonInclude(JsonInclude.Include.NON_DEFAULT)
 public class StatisticsHolder<T> {
 
-  private static final ObjectMapper OBJECT_MAPPER = createJsonMapperBuilder().build();
+  private static final ObjectMapper OBJECT_MAPPER =
+      JacksonUtils.createJsonMapperBuilderWithPolymorphicTypeValidator().build();
   private static final ObjectWriter OBJECT_WRITER = OBJECT_MAPPER.writerFor(StatisticsHolder.class);
   private static final ObjectReader OBJECT_READER = OBJECT_MAPPER.readerFor(StatisticsHolder.class);
 
@@ -112,30 +110,5 @@ public class StatisticsHolder<T> {
     } catch (IOException e) {
       throw new IllegalArgumentException("Unable to convert statistics holder from json string: " + serialized, e);
     }
-  }
-
-  static JsonMapper.Builder  createJsonMapperBuilder() {
-    return JacksonUtils
-        .createJsonMapperBuilder()
-        .polymorphicTypeValidator(createPolymorphicTypeValidator());
-  }
-
-  // Only use case appears to be org.apache.drill.metastore.statistics.StatisticsHolder
-  // which can hold a number or in theory, any type. The problem is that it is a security hole
-  // to accept any type because a hacker could use it to load a gadget.
-  // The main use case appears to be for Parquet and I've made a best guess as to what types to
-  // restrict to.
-  // The more restrictive this validator is, the better for security.
-  private static PolymorphicTypeValidator createPolymorphicTypeValidator() {
-    return BasicPolymorphicTypeValidator.builder()
-        .allowIfSubType(Number.class)
-        .allowIfSubType(Boolean.class)
-        .allowIfSubType(String.class)
-        .allowIfSubType(byte[].class)
-        .allowIfSubType("java.time.")
-        .allowIfSubType("org.joda.time.") // Joda used by ColumnStatistics
-        .allowIfSubType("org.apache.drill.exec.")
-        .allowIfSubType("org.apache.drill.metastore.")
-        .build();
   }
 }

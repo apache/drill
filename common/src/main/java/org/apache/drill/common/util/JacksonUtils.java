@@ -21,6 +21,7 @@ import com.fasterxml.jackson.core.JsonFactory;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.json.JsonMapper;
 import com.fasterxml.jackson.databind.jsontype.BasicPolymorphicTypeValidator;
+import com.fasterxml.jackson.databind.jsontype.PolymorphicTypeValidator;
 
 /**
  * Utility class which contain methods for interacting with Jackson.
@@ -72,4 +73,24 @@ public final class JacksonUtils {
     return JsonMapper.builder(factory)
         .polymorphicTypeValidator(BasicPolymorphicTypeValidator.builder().build());
   }
+
+  public static JsonMapper.Builder createJsonMapperBuilderWithPolymorphicTypeValidator() {
+    return createJsonMapperBuilder()
+        .polymorphicTypeValidator(createPolymorphicTypeValidator());
+  }
+
+  // The more restrictive this validator is, the better for security.
+  private static PolymorphicTypeValidator createPolymorphicTypeValidator() {
+    return BasicPolymorphicTypeValidator.builder()
+        .allowIfSubType(Number.class)
+        .allowIfSubType(Boolean.class)
+        .allowIfSubType(String.class)
+        .allowIfSubType(byte[].class)
+        .allowIfSubType("java.time.")
+        .allowIfSubType("org.joda.time.") // Joda used by ColumnStatistics
+        .allowIfSubType("org.apache.drill.exec.")
+        .allowIfSubType("org.apache.drill.metastore.")
+        .build();
+  }
+
 }
