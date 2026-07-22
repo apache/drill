@@ -83,7 +83,7 @@ jobs:
           cache: 'maven'
       # Caches built protobuf library
       - name: Cache protobufs
-        uses: actions/cache@v4
+        uses: actions/cache@v6
         with:
           path: ~/protobuf
           key: ${{ runner.os }}-protobuf
