@@ -66,9 +66,12 @@ public final class JacksonUtils {
         .polymorphicTypeValidator(createPolymorphicTypeValidator());
   }
 
-  private static final PolymorphicTypeValidator createPolymorphicTypeValidator() {
+  private static PolymorphicTypeValidator createPolymorphicTypeValidator() {
+    // only use case appears to be org.apache.drill.metastore.statistics.StatisticsHolder
+    // which holds a number, so allow only subtypes of Number
+    // the more restrictive this validator is, the better for security
     return BasicPolymorphicTypeValidator.builder()
-        .allowIfSubType("org.apache.drill.")
+        .allowIfSubType(Number.class)
         .build();
   }
 }
