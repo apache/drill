@@ -1,0 +1,74 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  Licensed to the Apache Software Foundation (ASF) under one
+  or more contributor license agreements.  See the NOTICE file
+  distributed with this work for additional information
+  regarding copyright ownership.  The ASF licenses this file
+  to you under the Apache License, Version 2.0 (the
+  "License"); you may not use this file except in compliance
+  with the License.  You may obtain a copy of the License at
+
+  http://www.apache.org/licenses/LICENSE-2.0
+
+  Unless required by applicable law or agreed to in writing, software
+  distributed under the License is distributed on an "AS IS" BASIS,
+  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  See the License for the specific language governing permissions and
+  limitations under the License.
+-->
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+
+  <parent>
+    <groupId>org.apache.drill</groupId>
+    <artifactId>drill-root</artifactId>
+    <version>1.23.0-SNAPSHOT</version>
+  </parent>
+
+  <!--
+    Parent pom for the two Ranger / Drill integration modules.
+
+    Split rationale (see project_memory.md):
+      - drill-ranger-plugin  : authorization side, loaded by the Drillbit JVM.
+        Produces drill-ranger-plugin-x.x.x.jar, shipped in Drill's jars/ dir.
+        Depends only on ranger-plugins-common + hadoop-common(provided).
+        Does NOT depend on drill-jdbc.
+
+      - drill-ranger-service : service side, loaded by the Ranger Admin JVM.
+        Produces ranger-drill-service-x.x.x.jar, deployed into Ranger Admin's
+        WEB-INF/classes/lib/.
+        Connects to Drill via REST API (HttpURLConnection) for validateConfig
+        / lookupResource; does NOT depend on drill-jdbc (avoids JDK 11 bytecode
+        conflict on Ranger Admin's JDK 8 runtime).
+
+    The two sides have non-overlapping dependencies and run in different JVMs,
+    so they must NOT be packaged together.
+  -->
+  <artifactId>drill-ranger-parent</artifactId>
+  <packaging>pom</packaging>
+  <name>Drill : Ranger Integration Parent</name>
+  <description>
+    Parent module aggregating the Drill Ranger authorization plugin
+    (drill-ranger-plugin) and the Drill Ranger service plugin
+    (drill-ranger-service).
+  </description>
+
+  <properties>
+    <ranger.version>2.8.0</ranger.version>
+    <!--
+      Jersey 1.x version for drill-ranger-plugin. Ranger 2.8.0's
+      RangerAdminRESTClient hard-codes the com.sun.jersey.* API, so the
+      plugin must ship Jersey 1.x client/core. This is distinct from
+      drill-root's <jersey.version> (3.1.9, Jersey 3.x for Drill's own
+      REST server) and must NOT be merged with it.
+    -->
+    <jersey.ranger.version>1.19.4</jersey.ranger.version>
+  </properties>
+
+  <modules>
+    <module>drill-ranger-plugin</module>
+    <module>drill-ranger-service</module>
+  </modules>
+</project>

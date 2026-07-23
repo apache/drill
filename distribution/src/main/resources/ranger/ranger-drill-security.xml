@@ -1,0 +1,51 @@
+<?xml version="1.0"?>
+<?xml-stylesheet type="text/xsl" href="configuration.xsl"?>
+<!--
+  Licensed to the Apache Software Foundation (ASF) under one or more
+  contributor license agreements.  See the NOTICE file distributed with
+  this work for additional information regarding copyright ownership.
+  The ASF licenses this file to You under the Apache License, Version 2.0
+  (the "License"); you may not use this file except in compliance with
+  the License.  You may obtain a copy of the License at
+
+  http://www.apache.org/licenses/LICENSE-2.0
+
+  Unless required by applicable law or agreed to in writing, software
+  distributed under the License is distributed on an "AS IS" BASIS,
+  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  See the License for the specific language governing permissions and
+  limitations under the License.
+-->
+<configuration>
+  <!-- Ranger Admin REST URL. Update to point to your Ranger Admin instance. -->
+  <property>
+    <name>ranger.plugin.drill.policy.rest.url</name>
+    <value>http://ranger-admin-host:6080</value>
+  </property>
+
+  <!-- Ranger service instance name. Must match a service created in Ranger Admin
+       with service type "drill". Should match drill.exec.security.ranger.service.name
+       in drill-override.conf. -->
+  <property>
+    <name>ranger.plugin.drill.service.name</name>
+    <value>drill</value>
+  </property>
+
+  <!-- Policy source implementation -->
+  <property>
+    <name>ranger.plugin.drill.policy.source.impl</name>
+    <value>org.apache.ranger.admin.client.RangerAdminRESTClient</value>
+  </property>
+
+  <!-- Policy polling interval in milliseconds -->
+  <property>
+    <name>ranger.plugin.drill.policy.pollIntervalMs</name>
+    <value>30000</value>
+  </property>
+
+  <!-- Local policy cache directory -->
+  <property>
+    <name>ranger.plugin.drill.policy.cache.dir</name>
+    <value>/tmp/ranger/drill/policy</value>
+  </property>
+</configuration>

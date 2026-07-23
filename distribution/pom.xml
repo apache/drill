@@ -75,6 +75,23 @@
     </dependency>
     <dependency>
       <groupId>org.apache.drill</groupId>
+      <artifactId>drill-ranger-plugin</artifactId>
+      <version>${project.version}</version>
+    </dependency>
+    <!--
+      Ranger Admin service plugin (REST-based, JDK 8 bytecode, no Drill deps).
+      Deployed into Ranger Admin's WEB-INF/lib. No shade/fat jar needed:
+      the plugin uses only HttpURLConnection (JDK-standard) and Jackson
+      (provided by Ranger Admin).
+    -->
+    <dependency>
+      <groupId>org.apache.drill</groupId>
+      <artifactId>ranger-drill-service</artifactId>
+      <version>${project.version}</version>
+      <type>jar</type>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.drill</groupId>
       <artifactId>drill-yarn</artifactId>
       <version>${project.version}</version>
     </dependency>
