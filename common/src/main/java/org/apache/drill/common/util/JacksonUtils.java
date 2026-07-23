@@ -52,10 +52,6 @@ public final class JacksonUtils {
    * @return an {@link JsonMapper.Builder} instance
    */
   public static JsonMapper.Builder createJsonMapperBuilder() {
-    // it is deliberate to have polymorphicTypeValidator that allows nothing
-    // for security reasons
-    // org.apache.drill.metastore.statistics.StatisticsHolder replaces this with
-    // a polymorphicTypeValidator that allows only the types it needs
     return JsonMapper.builder()
         .polymorphicTypeValidator(createPolymorphicTypeValidator());
   }
