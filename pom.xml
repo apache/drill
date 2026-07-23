@@ -115,7 +115,7 @@
     <license.skip>true</license.skip>
     <log4j.version>2.25.4</log4j.version>
     <!-- Upgrading logback further breaks JDK 8 build compatibility -->
-    <logback.version>1.5.25</logback.version>
+    <logback.version>1.5.34</logback.version>
     <maven.compiler.release>17</maven.compiler.release>
     <maven.compiler.source>17</maven.compiler.source>
     <maven.compiler.target>17</maven.compiler.target>
