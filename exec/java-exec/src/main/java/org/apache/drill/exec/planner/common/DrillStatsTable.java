@@ -470,7 +470,7 @@ public class DrillStatsTable {
         .addSerializer(TypeProtos.MajorType.class, new MajorTypeSerDe.Se())
         .addDeserializer(TypeProtos.MajorType.class, new MajorTypeSerDe.De())
         .addDeserializer(SchemaPath.class, new SchemaPath.De());
-    ObjectMapper mapper = JacksonUtils.createJsonMapperBuilderWithPolymorphicTypeValidator()
+    ObjectMapper mapper = JacksonUtils.createJsonMapperBuilder()
         .addModule(deModule)
         .build();
     mapper.registerSubtypes(new NamedType(NumericEquiDepthHistogram.class, "numeric-equi-depth"));

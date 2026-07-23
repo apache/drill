@@ -51,8 +51,7 @@ import com.fasterxml.jackson.databind.util.TokenBuffer;
  */
 public abstract class DrillValuesRelBase extends Values implements DrillRelNode {
 
-  private static final ObjectMapper MAPPER =
-      JacksonUtils.createJsonMapperBuilderWithPolymorphicTypeValidator().build();
+  private static final ObjectMapper MAPPER = JacksonUtils.createObjectMapper();
 
   protected final String content;
 

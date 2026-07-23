@@ -39,8 +39,7 @@ import java.util.StringJoiner;
 @JsonInclude(JsonInclude.Include.NON_DEFAULT)
 public class StatisticsHolder<T> {
 
-  private static final ObjectMapper OBJECT_MAPPER =
-      JacksonUtils.createJsonMapperBuilderWithPolymorphicTypeValidator().build();
+  private static final ObjectMapper OBJECT_MAPPER = JacksonUtils.createObjectMapper();
   private static final ObjectWriter OBJECT_WRITER = OBJECT_MAPPER.writerFor(StatisticsHolder.class);
   private static final ObjectReader OBJECT_READER = OBJECT_MAPPER.readerFor(StatisticsHolder.class);
 

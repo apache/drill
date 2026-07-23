@@ -57,7 +57,7 @@ public final class JacksonUtils {
     // org.apache.drill.metastore.statistics.StatisticsHolder replaces this with
     // a polymorphicTypeValidator that allows only the types it needs
     return JsonMapper.builder()
-        .polymorphicTypeValidator(BasicPolymorphicTypeValidator.builder().build());
+        .polymorphicTypeValidator(createPolymorphicTypeValidator());
   }
 
   /**
@@ -66,34 +66,7 @@ public final class JacksonUtils {
    * @return an {@link JsonMapper.Builder} instance
    */
   public static JsonMapper.Builder createJsonMapperBuilder(final JsonFactory factory) {
-    // it is deliberate to have polymorphicTypeValidator that allows nothing
-    // for security reasons
-    // org.apache.drill.metastore.statistics.StatisticsHolder replaces this with
-    // a polymorphicTypeValidator that allows only the types it needs
     return JsonMapper.builder(factory)
-        .polymorphicTypeValidator(BasicPolymorphicTypeValidator.builder().build());
-  }
-
-  /**
-   * Creates a new instance of the Jackson {@link JsonMapper.Builder} that has a
-   * <code>PolymorphicTypeValidator</code> applied that allows a curated set of classes
-   * that can be loaded.
-   * @return an {@link JsonMapper.Builder} instance
-   */
-  public static JsonMapper.Builder createJsonMapperBuilderWithPolymorphicTypeValidator() {
-    return createJsonMapperBuilder()
-        .polymorphicTypeValidator(createPolymorphicTypeValidator());
-  }
-
-  /**
-   * Creates a new instance of the Jackson {@link JsonMapper.Builder} that has a
-   * <code>PolymorphicTypeValidator</code> applied that allows a curated set of classes
-   * that can be loaded.
-   * @param factory a {@link JsonFactory} instance
-   * @return an {@link JsonMapper.Builder} instance
-   */
-  public static JsonMapper.Builder createJsonMapperBuilderWithPolymorphicTypeValidator(JsonFactory factory) {
-    return createJsonMapperBuilder(factory)
         .polymorphicTypeValidator(createPolymorphicTypeValidator());
   }
 

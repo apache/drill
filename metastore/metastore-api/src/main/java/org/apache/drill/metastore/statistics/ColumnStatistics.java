@@ -68,7 +68,7 @@ import java.util.stream.Collectors;
 public class ColumnStatistics<T> {
 
   private static final ObjectMapper MAPPER =
-      JacksonUtils.createJsonMapperBuilderWithPolymorphicTypeValidator()
+      JacksonUtils.createJsonMapperBuilder()
         .addModule(new JodaModule())
         .build();
 

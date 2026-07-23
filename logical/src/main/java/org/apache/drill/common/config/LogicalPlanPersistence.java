@@ -46,7 +46,7 @@ public class LogicalPlanPersistence {
   private final ObjectMapper mapper;
 
   public LogicalPlanPersistence(DrillConfig conf, ScanResult scanResult) {
-    this(conf, scanResult, JacksonUtils.createJsonMapperBuilderWithPolymorphicTypeValidator().build());
+    this(conf, scanResult, JacksonUtils.createObjectMapper());
   }
 
   public LogicalPlanPersistence(DrillConfig conf, ScanResult scanResult, ObjectMapper mapper) {
