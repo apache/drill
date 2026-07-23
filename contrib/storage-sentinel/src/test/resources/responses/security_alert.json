@@ -1,0 +1,24 @@
+{
+  "tables": [
+    {
+      "name": "PrimaryResult",
+      "columns": [
+        {"name": "TimeGenerated", "type": "datetime"},
+        {"name": "AlertName", "type": "string"},
+        {"name": "Severity", "type": "string"},
+        {"name": "Status", "type": "string"},
+        {"name": "CompromisedEntity", "type": "string"},
+        {"name": "SourceIPAddress", "type": "string"},
+        {"name": "AttackVector", "type": "string"},
+        {"name": "ConfidenceLevel", "type": "int"}
+      ],
+      "rows": [
+        ["2026-04-26T10:30:00Z", "MalwareActivity", "High", "New", "computer123", "192.168.1.100", "Network", 95],
+        ["2026-04-26T10:25:00Z", "SuspiciousSignIn", "Medium", "New", "user456", "203.0.113.45", "SignIn", 75],
+        ["2026-04-26T10:20:00Z", "DataExfiltration", "Critical", "InProgress", "database001", "198.51.100.22", "Data", 100],
+        ["2026-04-26T10:15:00Z", "BruteForceAttempt", "Medium", "Dismissed", "server789", "192.0.2.10", "BruteForce", 65],
+        ["2026-04-26T10:10:00Z", "UnusualActivity", "Low", "New", "client456", "198.51.100.89", "Behavioral", 40]
+      ]
+    }
+  ]
+}

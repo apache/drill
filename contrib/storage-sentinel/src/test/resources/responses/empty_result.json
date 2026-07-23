@@ -1,0 +1,14 @@
+{
+  "tables": [
+    {
+      "name": "PrimaryResult",
+      "columns": [
+        {"name": "AlertName", "type": "string"},
+        {"name": "Severity", "type": "string"},
+        {"name": "Count", "type": "long"},
+        {"name": "Active", "type": "bool"}
+      ],
+      "rows": []
+    }
+  ]
+}
