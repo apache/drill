@@ -57,6 +57,10 @@ jobs:
             mkswap /tmp/swapfile
             swapon /tmp/swapfile
           "
+      - name: Build Hive Docker image for tests
+        run: |
+          cd contrib/storage-hive/core/src/test/resources/docker
+          docker build -f Dockerfile.fast -t drill-hive-test:fast .
       - name: Build and test
         run: |
           mvn -P${{ matrix.profile }} install --batch-mode --no-transfer-progress \
