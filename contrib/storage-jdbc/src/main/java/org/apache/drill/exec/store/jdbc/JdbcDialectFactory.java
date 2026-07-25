@@ -18,12 +18,16 @@
 package org.apache.drill.exec.store.jdbc;
 
 import org.apache.calcite.sql.SqlDialect;
+import org.apache.calcite.sql.dialect.InformixSqlDialect;
 import org.apache.drill.exec.store.jdbc.clickhouse.ClickhouseJdbcDialect;
+import org.apache.drill.exec.store.jdbc.informix.InformixJdbcDialect;
 
 import java.time.Duration;
+import java.util.Locale;
 
 public class JdbcDialectFactory {
   public static final String JDBC_CLICKHOUSE_PREFIX = "jdbc:clickhouse";
+  public static final String JDBC_INFORMIX_PREFIX = "jdbc:informix";
   public static final int CACHE_SIZE = 100;
   public static final Duration CACHE_TTL = Duration.ofHours(1);
   private volatile JdbcDialect jdbcDialect;
@@ -38,9 +42,16 @@ public class JdbcDialectFactory {
       synchronized (this) {
         jd = jdbcDialect;
         if (jd == null) {
-          jd = plugin.getConfig().getUrl().startsWith(JDBC_CLICKHOUSE_PREFIX)
-                ? new ClickhouseJdbcDialect(plugin, dialect)
-                : new DefaultJdbcDialect(plugin, dialect);
+          String url = plugin.getConfig().getUrl();
+          String normalizedUrl = url == null ? null : url.toLowerCase(Locale.ROOT);
+          if (normalizedUrl != null && normalizedUrl.startsWith(JDBC_CLICKHOUSE_PREFIX)) {
+            jd = new ClickhouseJdbcDialect(plugin, dialect);
+          } else if (dialect instanceof InformixSqlDialect
+              || normalizedUrl != null && normalizedUrl.startsWith(JDBC_INFORMIX_PREFIX)) {
+            jd = new InformixJdbcDialect(plugin, dialect);
+          } else {
+            jd = new DefaultJdbcDialect(plugin, dialect);
+          }
           jdbcDialect = jd;
         }
       }
