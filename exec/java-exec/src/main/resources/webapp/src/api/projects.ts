@@ -16,7 +16,7 @@
  * limitations under the License.
  */
 import apiClient from './client';
-import type { Project, ProjectCreate, ProjectUpdate, DatasetRef, WikiPage } from '../types';
+import type { Project, ProjectCreate, ProjectUpdate, DatasetRef, WikiPage, SchemaCacheResponse } from '../types';
 
 const PROJECTS_BASE = '/api/v1/projects';
 
@@ -233,6 +233,26 @@ export async function getFavorites(): Promise<string[]> {
 export async function toggleFavorite(id: string): Promise<{ favorited: boolean }> {
   const response = await apiClient.post<{ favorited: boolean }>(
     `${PROJECTS_BASE}/${encodeURIComponent(id)}/favorite`
+  );
+  return response.data;
+}
+
+/**
+ * Get the project's cached schema metadata (schemas -> tables -> columns)
+ */
+export async function getSchemaCache(projectId: string): Promise<SchemaCacheResponse> {
+  const response = await apiClient.get<SchemaCacheResponse>(
+    `${PROJECTS_BASE}/${encodeURIComponent(projectId)}/schema-cache`
+  );
+  return response.data;
+}
+
+/**
+ * Re-scan every scannable schema referenced by the project's datasets
+ */
+export async function refreshSchemaCache(projectId: string): Promise<SchemaCacheResponse> {
+  const response = await apiClient.post<SchemaCacheResponse>(
+    `${PROJECTS_BASE}/${encodeURIComponent(projectId)}/schema-cache/refresh`
   );
   return response.data;
 }
