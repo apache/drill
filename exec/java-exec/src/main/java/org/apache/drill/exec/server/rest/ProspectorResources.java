@@ -715,6 +715,7 @@ public class ProspectorResources {
         if (project != null) {
           systemPrompt.append(buildProjectBlock(project,
               loadSavedQueries(project.getSavedQueryIds(), username)));
+          systemPrompt.append(buildSchemaCacheBlock(project, loadSchemaCache()));
         }
       }
 
@@ -887,15 +888,15 @@ public class ProspectorResources {
     systemPrompt.append("Use backtick quoting for identifiers with special characters. ");
     systemPrompt.append("Use `LIMIT` for row limiting.\n\n");
 
-    systemPrompt.append("IMPORTANT: You have tools available and MUST use them proactively:\n");
-    systemPrompt.append("- When a user asks a data question, ALWAYS use list_schemas and ");
-    systemPrompt.append("get_schema_info to discover available data BEFORE writing SQL.\n");
-    systemPrompt.append("- Use list_schemas to see all available schemas/data sources.\n");
+    systemPrompt.append("IMPORTANT: Prefer the cached schema listed above when present:\n");
+    systemPrompt.append("- If the tables/columns you need are listed above, use them directly and ");
+    systemPrompt.append("do NOT call get_schema_info for them.\n");
+    systemPrompt.append("- Only call list_schemas / get_schema_info when a needed table or column is ");
+    systemPrompt.append("NOT listed above (e.g. the cache is truncated or a source could not be scanned).\n");
     systemPrompt.append("- Drill uses hierarchical schemas (e.g., 'mysql' plugin has sub-schemas ");
-    systemPrompt.append("like 'mysql.store'). Use get_schema_info on sub-schemas to find tables.\n");
-    systemPrompt.append("- Use get_schema_info with a table name to discover columns before writing queries.\n");
-    systemPrompt.append("- NEVER ask the user for schema or table names — explore and find them yourself.\n");
-    systemPrompt.append("- After discovering the schema, write and execute the SQL query.\n");
+    systemPrompt.append("like 'mysql.store').\n");
+    systemPrompt.append("- NEVER ask the user for schema or table names — use the list above or explore.\n");
+    systemPrompt.append("- After identifying the schema, write and execute the SQL query.\n");
     // Scoped out of the "MUST use proactively" list above: that instruction is for the
     // read-only discovery tools. Listing the authoring tools under it read as standing
     // permission, and the model charted every result unasked.
@@ -1156,5 +1157,64 @@ public class ProspectorResources {
       return text;
     }
     return text.substring(0, maxChars) + "...[truncated]";
+  }
+
+  /**
+   * Package-private test seam: wraps {@link ProjectSchemaCache#get} so an unavailable
+   * store (e.g. no injected provider) degrades to no schema-cache block rather than
+   * failing the chat, matching {@link #loadProject} and {@link #loadSavedQueries}.
+   */
+  ProjectSchemaCache loadSchemaCache() {
+    try {
+      return ProjectSchemaCache.get(storeProvider, workManager);
+    } catch (Exception e) {
+      logger.debug("Could not load project schema cache for AI context", e);
+      return null;
+    }
+  }
+
+  /**
+   * Renders cached tables + columns for the project's dataset schemas into the
+   * system prompt, so the model does not need get_schema_info round-trips. Reads
+   * are cache-only (peek) — a chat must never run scanning queries.
+   */
+  static String buildSchemaCacheBlock(ProjectResources.Project project, ProjectSchemaCache cache) {
+    if (project == null || cache == null || project.getDatasets() == null) {
+      return "";
+    }
+    StringBuilder sb = new StringBuilder();
+    java.util.Set<String> seen = new java.util.HashSet<>();
+    for (ProjectResources.DatasetRef d : project.getDatasets()) {
+      String schema = d.getSchema();
+      if (schema == null || !seen.add(schema)) {
+        continue;
+      }
+      ProjectSchemaCache.CachedSchema cs = cache.peek(project.getId(), schema);
+      if (cs == null || cs.getTables().isEmpty()) {
+        continue;
+      }
+      for (ProjectSchemaCache.CachedTable t : cs.getTables()) {
+        sb.append("- ").append(t.getSchema()).append(".").append(t.getName());
+        if (!t.getColumns().isEmpty()) {
+          sb.append(" (");
+          for (int i = 0; i < t.getColumns().size(); i++) {
+            if (i > 0) {
+              sb.append(", ");
+            }
+            ProjectSchemaCache.CachedColumn c = t.getColumns().get(i);
+            sb.append(c.getName()).append(" ").append(c.getType());
+          }
+          sb.append(")");
+        }
+        sb.append("\n");
+      }
+      if (cs.isTruncated()) {
+        sb.append("  ...(schema ").append(schema).append(" truncated; use get_schema_info for the rest)\n");
+      }
+    }
+    if (sb.length() == 0) {
+      return "";
+    }
+    return "\nKnown tables and columns in this project (from cache):\n" + sb + "\n";
   }
 }
