@@ -29,8 +29,10 @@ import java.util.concurrent.TimeUnit;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import okhttp3.MediaType;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
+import okhttp3.RequestBody;
 import okhttp3.Response;
 import org.apache.drill.common.util.JacksonUtils;
 import org.apache.drill.exec.ExecConstants;
@@ -48,6 +50,8 @@ public class TestMetadataResources extends ClusterTest {
   private static final int TIMEOUT = 30;
   private static int portNumber;
 
+  private static final MediaType JSON = MediaType.parse("application/json");
+
   private static final OkHttpClient httpClient = new OkHttpClient.Builder()
       .connectTimeout(TIMEOUT, TimeUnit.SECONDS)
       .writeTimeout(TIMEOUT, TimeUnit.SECONDS)
@@ -55,6 +59,28 @@ public class TestMetadataResources extends ClusterTest {
       .build();
 
   private static final ObjectMapper mapper = JacksonUtils.createObjectMapper();
+
+  private static String url(String path) {
+    return String.format("http://localhost:%d%s", portNumber, path);
+  }
+
+  private static JsonNode post(String path, String jsonBody) throws Exception {
+    RequestBody body = RequestBody.create(jsonBody == null ? "" : jsonBody, JSON);
+    Request request = new Request.Builder().url(url(path)).post(body).build();
+    try (Response response = httpClient.newCall(request).execute()) {
+      assertTrue(response.code() >= 200 && response.code() < 300,
+          "Expected 2xx from POST " + path + " but got " + response.code());
+      return mapper.readTree(response.body().string());
+    }
+  }
+
+  private static String get(String path) throws Exception {
+    Request request = new Request.Builder().url(url(path)).build();
+    try (Response response = httpClient.newCall(request).execute()) {
+      assertEquals(200, response.code());
+      return response.body().string();
+    }
+  }
 
   @BeforeClass
   public static void setup() throws Exception {
@@ -336,5 +362,79 @@ public class TestMetadataResources extends ClusterTest {
       assertFalse(names.contains("sys"), "sys is not file-based and must not be a view target");
       assertFalse(names.contains("cp"), "cp is not writable and must not be a view target");
     }
+  }
+
+  /**
+   * Read-through: with a projectId that references dfs.tmp and a refreshed cache, the
+   * tables endpoint is served from the cache. Proven by dropping the underlying view
+   * after the scan: the live (no-projectId) call no longer sees it, but the cached
+   * (projectId) call still returns it — which can only happen if the read-through fires.
+   */
+  @Test
+  public void testTablesServedFromProjectCache() throws Exception {
+    String viewName = "metadata_cache_view";
+    client.runSqlSilently("CREATE OR REPLACE VIEW dfs.tmp." + viewName + " AS SELECT 1 AS n");
+    try {
+      // Create a project referencing dfs.tmp and populate its schema cache.
+      JsonNode project = post("/api/v1/projects", "{\"name\":\"Metadata Cache Test\"}");
+      String id = project.get("id").asText();
+      post("/api/v1/projects/" + id + "/datasets",
+          "{\"type\":\"schema\",\"schema\":\"dfs.tmp\",\"label\":\"tmp\"}");
+      JsonNode refreshed = post("/api/v1/projects/" + id + "/schema-cache/refresh", null);
+      assertTrue(refreshed.get("schemas").has("dfs.tmp"),
+          "Refresh should have scanned dfs.tmp");
+
+      // Cached read returns 200 with a tables array that includes the view.
+      JsonNode cachedBefore = mapper.readTree(
+          get("/api/v1/metadata/schemas/dfs.tmp/tables?projectId=" + id));
+      assertTrue(cachedBefore.has("tables"), "Response should contain a tables array");
+      assertTrue(cachedBefore.get("tables").isArray());
+      assertTrue(containsTable(cachedBefore, viewName),
+          "Cached tables should include the freshly scanned view");
+
+      // Drop the view: the live path must stop reporting it.
+      client.runSqlSilently("DROP VIEW dfs.tmp." + viewName);
+
+      JsonNode liveAfter = mapper.readTree(
+          get("/api/v1/metadata/schemas/dfs.tmp/tables"));
+      assertFalse(containsTable(liveAfter, viewName),
+          "Live query must not list the dropped view");
+
+      // The cached (projectId) call still returns it — read-through, not a live query.
+      JsonNode cachedAfter = mapper.readTree(
+          get("/api/v1/metadata/schemas/dfs.tmp/tables?projectId=" + id));
+      assertTrue(containsTable(cachedAfter, viewName),
+          "Cached read-through should still return the view after it was dropped");
+    } finally {
+      client.runSqlSilently("DROP VIEW IF EXISTS dfs.tmp." + viewName);
+    }
+  }
+
+  /**
+   * A schema that is not referenced by the project must not be served from the cache:
+   * the projectId call must be byte-identical to the plain live call (fall-through).
+   */
+  @Test
+  public void testUnreferencedSchemaFallsThroughToLive() throws Exception {
+    JsonNode project = post("/api/v1/projects", "{\"name\":\"Fallthrough Test\"}");
+    String id = project.get("id").asText();
+    post("/api/v1/projects/" + id + "/datasets",
+        "{\"type\":\"schema\",\"schema\":\"dfs.tmp\",\"label\":\"tmp\"}");
+    post("/api/v1/projects/" + id + "/schema-cache/refresh", null);
+
+    // cp is not referenced by the project, so the projectId call must equal the live call.
+    String withProject = get("/api/v1/metadata/schemas/cp/tables?projectId=" + id);
+    String live = get("/api/v1/metadata/schemas/cp/tables");
+    assertEquals(live, withProject,
+        "Unreferenced schema must fall through to the identical live result");
+  }
+
+  private static boolean containsTable(JsonNode tablesResponse, String name) {
+    for (JsonNode t : tablesResponse.get("tables")) {
+      if (name.equals(t.get("name").asText())) {
+        return true;
+      }
+    }
+    return false;
   }
 }
