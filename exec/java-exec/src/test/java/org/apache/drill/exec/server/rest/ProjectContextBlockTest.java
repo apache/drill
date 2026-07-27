@@ -488,4 +488,49 @@ public class ProjectContextBlockTest {
     assertFalse(new ProspectorResources.AiStatusResponse(true, true, false).sendDataToAi);
     assertTrue(new ProspectorResources.AiStatusResponse(true, true, true).sendDataToAi);
   }
+
+  // ==================== Schema cache block ====================
+  //
+  // buildSchemaCacheBlock lets the model use cached tables/columns instead of a live
+  // get_schema_info round-trip. It must only ever peek the cache — never scan — since
+  // a chat request must not trigger scanning queries against the project's sources.
+
+  @Test
+  public void testSchemaCacheBlockListsTablesAndColumns() {
+    PersistentStore<ProjectSchemaCache.ProjectSchemaCacheEntry> store = new InMemoryStore<>(100);
+    ProjectSchemaCache cache = new ProjectSchemaCache(store);
+
+    ProjectResources.DatasetRef ds = new ProjectResources.DatasetRef();
+    ds.setSchema("dfs.logs");
+    // Project has no setId(); id is only assignable via the full constructor.
+    ProjectResources.Project p = new ProjectResources.Project("p1", "Retail", null, null,
+        null, false, null, new ArrayList<>(List.of(ds)), null, null, null, null,
+        false, 0L, 0L, null, null, 0L);
+
+    cache.scan("p1", "dfs.logs", schemaPath -> {
+      ProjectSchemaCache.CachedTable t = new ProjectSchemaCache.CachedTable();
+      t.setSchema("dfs.logs");
+      t.setName("events");
+      t.setType("TABLE");
+      ProjectSchemaCache.CachedColumn c = new ProjectSchemaCache.CachedColumn();
+      c.setName("id");
+      c.setType("INT");
+      t.setColumns(new ArrayList<>(List.of(c)));
+      return new ArrayList<>(List.of(t));
+    });
+
+    String block = ProspectorResources.buildSchemaCacheBlock(p, cache);
+    assertTrue(block.contains("dfs.logs.events"));
+    assertTrue(block.contains("id INT"));
+  }
+
+  @Test
+  public void testSchemaCacheBlockEmptyWhenNoCache() {
+    PersistentStore<ProjectSchemaCache.ProjectSchemaCacheEntry> store = new InMemoryStore<>(100);
+    ProjectSchemaCache cache = new ProjectSchemaCache(store);
+    ProjectResources.Project p = new ProjectResources.Project("p1", "Retail", null, null,
+        null, false, null, new ArrayList<>(), null, null, null, null,
+        false, 0L, 0L, null, null, 0L);
+    assertEquals("", ProspectorResources.buildSchemaCacheBlock(p, cache));
+  }
 }
