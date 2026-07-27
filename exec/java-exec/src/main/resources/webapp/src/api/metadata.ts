@@ -88,9 +88,10 @@ export async function getViewTargets(): Promise<SchemaInfo[]> {
 /**
  * Fetch tables in a specific schema
  */
-export async function getTables(schema: string): Promise<TableInfo[]> {
+export async function getTables(schema: string, projectId?: string): Promise<TableInfo[]> {
   const response = await apiClient.get<TablesResponse>(
-    `${METADATA_BASE}/schemas/${encodeURIComponent(schema)}/tables`
+    `${METADATA_BASE}/schemas/${encodeURIComponent(schema)}/tables`,
+    { params: projectId ? { projectId } : undefined }
   );
   return response.data.tables;
 }
@@ -98,9 +99,10 @@ export async function getTables(schema: string): Promise<TableInfo[]> {
 /**
  * Fetch columns for a specific table
  */
-export async function getColumns(schema: string, table: string): Promise<ColumnInfo[]> {
+export async function getColumns(schema: string, table: string, projectId?: string): Promise<ColumnInfo[]> {
   const response = await apiClient.get<ColumnsResponse>(
-    `${METADATA_BASE}/schemas/${encodeURIComponent(schema)}/tables/${encodeURIComponent(table)}/columns`
+    `${METADATA_BASE}/schemas/${encodeURIComponent(schema)}/tables/${encodeURIComponent(table)}/columns`,
+    { params: projectId ? { projectId } : undefined }
   );
   return response.data.columns;
 }

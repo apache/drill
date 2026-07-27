@@ -348,6 +348,31 @@ export interface ProjectUpdate {
   tileImage?: string | null;
 }
 
+// Server-side project schema cache (see ProjectSchemaCache.java on the backend)
+export interface CachedColumnInfo {
+  name: string;
+  type: string;
+}
+
+export interface CachedTableInfo {
+  schema: string;
+  name: string;
+  type: string;
+  columns: CachedColumnInfo[];
+}
+
+export interface CachedSchemaInfo {
+  schemaPath: string;
+  scannedAt: number;
+  truncated: boolean;
+  tables: CachedTableInfo[];
+}
+
+export interface SchemaCacheResponse {
+  projectId: string;
+  schemas: Record<string, CachedSchemaInfo>;
+}
+
 // Tree node types for schema explorer
 export interface TreeNodeData {
   key: string;
