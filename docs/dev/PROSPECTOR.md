@@ -145,6 +145,52 @@ guessing.
   is deliberately indistinguishable from missing, so a chat cannot be used to probe which
   project ids exist.
 
+### Project Schema Cache
+
+Each project keeps a server-side cache of the tables and columns exposed by the
+data sources (datasets) it has added, in a `PersistentStore` named
+`drill.sqllab.schema_cache` keyed by project id (`ProjectSchemaCache`). It backs
+three consumers: Prospector's system prompt, the schema tree, and SQL
+autocomplete, so all three read pre-scanned metadata instead of issuing live
+`INFORMATION_SCHEMA` queries.
+
+- **Populated on add.** When a dataset is added to a project (`POST
+  /api/v1/projects/{id}/datasets`), its schema is scanned inline (two
+  `INFORMATION_SCHEMA` queries — `TABLES` and `COLUMNS`) and the result is
+  cached. The scan is best-effort: a failure is logged and does not fail the
+  add.
+- **Refreshed on access when stale.** The schema tree and autocomplete
+  (`MetadataResources` `getTables`/`getColumns`, when called with a
+  `projectId`) serve a cached entry as-is while it is fresh, and transparently
+  rescan it inline once it is older than the staleness interval (~5 minutes).
+  There is no background poller — a stale entry is only rescanned the next
+  time it's read.
+- **Refreshed manually.** A "Refresh schema cache" button on the Project Data
+  Sources page calls `POST /api/v1/projects/{id}/schema-cache/refresh` to
+  rescan every scannable schema in the project; `GET
+  /api/v1/projects/{id}/schema-cache` returns the cached entries (with
+  `scannedAt` / `truncated` per schema) and drives the page's "last scanned"
+  indicator.
+- **HTTP and GoogleSheets plugins are never scanned.** Their schemas cannot be
+  enumerated cheaply (HTTP "tables" are just URL-tail arguments; GoogleSheets
+  enumeration requires a Google Drive API round-trip), so they always fall
+  through to today's live `INFORMATION_SCHEMA` discovery instead of being
+  cached.
+- **How Prospector uses it.** For each dataset schema of the (already
+  authorized) project, `ProspectorResources` peeks the cache — a read-only
+  lookup that never triggers a scan, since a chat request must not run
+  queries — and injects the known tables/columns into the system prompt
+  (capped, same budget discipline as the rest of the project block). The
+  instruction that used to tell the model to *always* call `get_schema_info`
+  before writing SQL is softened to a fallback: use the schema already listed,
+  and only call `get_schema_info` for anything not listed (e.g. a truncated
+  schema, or a source that could not be cached).
+- **Access control.** The cache is per-project — the same schema added to two
+  projects is scanned and stored twice, so a cached entry never crosses a
+  project boundary. It is served only to a requester who passes the same
+  `canRead(project)` check (owner, public, or `sharedWith`) enforced by the
+  project's own endpoints.
+
 ## REST API Reference
 
 ### Status Endpoint
