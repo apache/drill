@@ -30,6 +30,7 @@ import org.apache.drill.common.logical.StoragePluginConfig;
 import org.apache.drill.exec.store.StoragePlugin;
 import org.apache.drill.exec.store.StoragePluginRegistry;
 import org.apache.drill.exec.store.dfs.FileSystemConfig;
+import org.apache.drill.exec.store.sys.PersistentStoreProvider;
 import org.apache.drill.exec.work.WorkManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -44,8 +45,11 @@ import jakarta.ws.rs.Path;
 import jakarta.ws.rs.PathParam;
 import jakarta.ws.rs.Produces;
 import jakarta.ws.rs.QueryParam;
+import jakarta.ws.rs.core.Context;
 import jakarta.ws.rs.core.MediaType;
+import jakarta.ws.rs.core.SecurityContext;
 import java.lang.reflect.Method;
+import java.security.Principal;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashSet;
@@ -72,6 +76,9 @@ public class MetadataResources {
 
   @Inject
   StoragePluginRegistry storageRegistry;
+
+  @Inject
+  PersistentStoreProvider storeProvider;
 
   // Plugins to completely exclude from the UI
   private static final Set<String> EXCLUDED_PLUGINS = new HashSet<>(Arrays.asList(
@@ -509,8 +516,21 @@ public class MetadataResources {
   @Produces(MediaType.APPLICATION_JSON)
   @Operation(summary = "List tables in schema", description = "Returns a list of tables in the specified schema")
   public TablesResponse getTables(
-      @Parameter(description = "Schema name") @PathParam("schema") String schema) {
-    logger.debug("Fetching tables for schema: {}", schema);
+      @Parameter(description = "Schema name") @PathParam("schema") String schema,
+      @Parameter(description = "Project id for cache scoping") @QueryParam("projectId") String projectId,
+      @Context SecurityContext sc) {
+    logger.debug("Fetching tables for schema: {} (projectId={})", schema, projectId);
+
+    ProjectSchemaCache.CachedSchema cached = cachedSchemaFor(projectId, schema, sc);
+    if (cached != null) {
+      List<TableInfo> cachedTables = new ArrayList<>();
+      for (ProjectSchemaCache.CachedTable t : cached.getTables()) {
+        if (schema.equals(t.getSchema())) {
+          cachedTables.add(new TableInfo(t.getName(), schema, t.getType() != null ? t.getType() : "TABLE"));
+        }
+      }
+      return new TablesResponse(cachedTables);
+    }
 
     String sql = String.format(
         "SELECT TABLE_NAME, TABLE_TYPE FROM INFORMATION_SCHEMA.`TABLES` " +
@@ -616,8 +636,26 @@ public class MetadataResources {
   @Operation(summary = "List columns in table", description = "Returns a list of columns in the specified table")
   public ColumnsResponse getColumns(
       @Parameter(description = "Schema name") @PathParam("schema") String schema,
-      @Parameter(description = "Table name") @PathParam("table") String table) {
-    logger.debug("Fetching columns for table: {}.{}", schema, table);
+      @Parameter(description = "Table name") @PathParam("table") String table,
+      @Parameter(description = "Project id for cache scoping") @QueryParam("projectId") String projectId,
+      @Context SecurityContext sc) {
+    logger.debug("Fetching columns for table: {}.{} (projectId={})", schema, table, projectId);
+
+    ProjectSchemaCache.CachedSchema cached = cachedSchemaFor(projectId, schema, sc);
+    if (cached != null) {
+      for (ProjectSchemaCache.CachedTable t : cached.getTables()) {
+        if (schema.equals(t.getSchema()) && table.equals(t.getName())) {
+          List<ColumnInfo> cachedColumns = new ArrayList<>();
+          for (ProjectSchemaCache.CachedColumn c : t.getColumns()) {
+            cachedColumns.add(new ColumnInfo(c.getName(), c.getType(), true, schema, table));
+          }
+          // Empty column list (e.g. dynamic-schema "**" source) -> fall through to live probe.
+          if (!cachedColumns.isEmpty()) {
+            return new ColumnsResponse(cachedColumns);
+          }
+        }
+      }
+    }
 
     try {
       List<ColumnInfo> columns = fetchColumnsForTable(schema, table);
@@ -725,6 +763,58 @@ public class MetadataResources {
     }
 
     return columns;
+  }
+
+  /**
+   * Returns the authorized cache entry for {@code schema} when {@code projectId} is
+   * supplied, the caller can read that project, the schema is scannable, and the schema
+   * is referenced by the project's datasets; otherwise null (the caller then runs the
+   * live query). Rescans inline when the entry is stale/missing. Never throws — any
+   * failure degrades to a null (live-query) result so the endpoint keeps working.
+   */
+  private ProjectSchemaCache.CachedSchema cachedSchemaFor(String projectId, String schema,
+      SecurityContext sc) {
+    if (projectId == null || projectId.isEmpty()) {
+      return null;
+    }
+    if (!ProjectSchemaCache.isScannable(storageRegistry, schema)) {
+      return null;
+    }
+    try {
+      ProjectResources.Project project =
+          ProjectResources.openStore(storeProvider, workManager).get(projectId);
+      if (project == null || project.getDeletedAt() > 0
+          || !ProjectResources.canRead(project, resolveUser(sc))) {
+        return null;
+      }
+      // schema must actually belong to the project
+      String trackedSchema = null;
+      for (ProjectResources.DatasetRef d : project.getDatasets()) {
+        String sp = d.getSchema();
+        if (sp != null && (schema.equals(sp) || schema.startsWith(sp + "."))) {
+          trackedSchema = sp;
+          break;
+        }
+      }
+      if (trackedSchema == null) {
+        return null;
+      }
+      final String scanSchema = trackedSchema;
+      return ProjectSchemaCache.get(storeProvider, workManager)
+          .read(projectId, scanSchema,
+              s -> ProjectSchemaCache.infoSchemaScan(s, workManager, webUserConnection));
+    } catch (Exception e) {
+      logger.debug("Cache lookup failed for project {} schema {}: {}", projectId, schema, e.getMessage());
+      return null;
+    }
+  }
+
+  private static String resolveUser(SecurityContext sc) {
+    if (sc == null) {
+      return "anonymous";
+    }
+    Principal p = sc.getUserPrincipal();
+    return p != null ? p.getName() : "anonymous";
   }
 
   @GET
@@ -894,7 +984,7 @@ public class MetadataResources {
     // For each requested schema, fetch its tables and then columns for each table
     for (String schema : request.schemas) {
       try {
-        TablesResponse tablesResp = getTables(schema);
+        TablesResponse tablesResp = getTables(schema, null, null);
         List<SchemaTreeTable> schemaTables = new ArrayList<>();
 
         for (TableInfo tableInfo : tablesResp.tables) {
