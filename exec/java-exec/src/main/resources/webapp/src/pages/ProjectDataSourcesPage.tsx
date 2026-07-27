@@ -35,8 +35,8 @@ import {
   DeleteOutlined,
   SettingOutlined,
 } from '@ant-design/icons';
-import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { removeDataset } from '../api/projects';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { removeDataset, getSchemaCache, refreshSchemaCache } from '../api/projects';
 import { useProjectContext } from '../contexts/ProjectContext';
 import { DatasetPickerModal } from '../components/project';
 
@@ -56,6 +56,28 @@ export default function ProjectDataSourcesPage() {
     },
   });
 
+  const { data: schemaCache } = useQuery({
+    queryKey: ['schemaCache', projectId],
+    queryFn: () => getSchemaCache(projectId!),
+    enabled: !!projectId,
+  });
+
+  const refreshMutation = useMutation({
+    mutationFn: () => refreshSchemaCache(projectId!),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['schemaCache', projectId] });
+      message.success('Schema cache refreshed');
+    },
+    onError: () => message.error('Failed to refresh schema cache'),
+  });
+
+  const lastScanned = schemaCache
+    ? Object.values(schemaCache.schemas)
+        .map((s) => s.scannedAt)
+        .filter((t) => t > 0)
+        .sort((a, b) => b - a)[0]
+    : undefined;
+
   const datasets = project?.datasets || [];
 
   return (
@@ -66,13 +88,26 @@ export default function ProjectDataSourcesPage() {
             <Title level={3} style={{ margin: 0 }}>
               Data Sources
             </Title>
-            <Button
-              type="primary"
-              icon={<PlusOutlined />}
-              onClick={() => setPickerOpen(true)}
-            >
-              Add Dataset
-            </Button>
+            <Space>
+              {lastScanned ? (
+                <Typography.Text type="secondary">
+                  Last scanned {new Date(lastScanned).toLocaleString()}
+                </Typography.Text>
+              ) : null}
+              <Button
+                onClick={() => refreshMutation.mutate()}
+                loading={refreshMutation.isPending}
+              >
+                Refresh schema cache
+              </Button>
+              <Button
+                type="primary"
+                icon={<PlusOutlined />}
+                onClick={() => setPickerOpen(true)}
+              >
+                Add Dataset
+              </Button>
+            </Space>
           </div>
 
           {datasets.length === 0 ? (
