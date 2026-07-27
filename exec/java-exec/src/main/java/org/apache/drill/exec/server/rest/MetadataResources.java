@@ -49,7 +49,6 @@ import jakarta.ws.rs.core.Context;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.SecurityContext;
 import java.lang.reflect.Method;
-import java.security.Principal;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashSet;
@@ -784,7 +783,7 @@ public class MetadataResources {
       ProjectResources.Project project =
           ProjectResources.openStore(storeProvider, workManager).get(projectId);
       if (project == null || project.getDeletedAt() > 0
-          || !ProjectResources.canRead(project, resolveUser(sc))) {
+          || !ProjectResources.canRead(project, ProspectorResources.resolveUser(sc))) {
         return null;
       }
       // schema must actually belong to the project
@@ -807,14 +806,6 @@ public class MetadataResources {
       logger.debug("Cache lookup failed for project {} schema {}: {}", projectId, schema, e.getMessage());
       return null;
     }
-  }
-
-  private static String resolveUser(SecurityContext sc) {
-    if (sc == null) {
-      return "anonymous";
-    }
-    Principal p = sc.getUserPrincipal();
-    return p != null ? p.getName() : "anonymous";
   }
 
   @GET
