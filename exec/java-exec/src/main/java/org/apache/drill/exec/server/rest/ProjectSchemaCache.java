@@ -202,7 +202,9 @@ public class ProjectSchemaCache {
   }
 
   public synchronized void removeProject(String projectId) {
-    store.delete(projectId);
+    if (store.get(projectId) != null) {
+      store.delete(projectId);
+    }
   }
 
   public ProjectSchemaCacheEntry getEntry(String projectId) {
