@@ -57,8 +57,10 @@ import jakarta.ws.rs.core.SecurityContext;
 import jakarta.ws.rs.core.StreamingOutput;
 import java.security.Principal;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 /**
  * REST resource for the Prospector chat endpoint.
@@ -76,6 +78,10 @@ public class ProspectorResources {
   private static final String PROJECTS_STORE_NAME = "drill.sqllab.projects";
   private static final String SAVED_QUERIES_STORE_NAME = "drill.sqllab.saved_queries";
   private static final int PROJECT_BLOCK_MAX_CHARS = 2000;
+  // The schema listing is the high-value payload for tool-free SQL help, so it gets a
+  // somewhat larger budget than the project block, but the whole system prompt is
+  // re-sent on every tool round, so this still bounds it rather than leaving it uncapped.
+  static final int SCHEMA_CACHE_BLOCK_MAX_CHARS = 4000;
   private static final int SAVED_QUERY_SQL_MAX_CHARS = 500;
 
   @Inject
@@ -1183,7 +1189,7 @@ public class ProspectorResources {
       return "";
     }
     StringBuilder sb = new StringBuilder();
-    java.util.Set<String> seen = new java.util.HashSet<>();
+    Set<String> seen = new HashSet<>();
     for (ProjectResources.DatasetRef d : project.getDatasets()) {
       String schema = d.getSchema();
       if (schema == null || !seen.add(schema)) {
@@ -1215,6 +1221,7 @@ public class ProspectorResources {
     if (sb.length() == 0) {
       return "";
     }
-    return "\nKnown tables and columns in this project (from cache):\n" + sb + "\n";
+    return truncate("\nKnown tables and columns in this project (from cache):\n" + sb + "\n",
+        SCHEMA_CACHE_BLOCK_MAX_CHARS);
   }
 }
