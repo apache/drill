@@ -59,8 +59,7 @@ ProjectSchemaCache {
 }
 CachedSchema {
   String  schemaPath;
-  long    scannedAt;      // 0 = placeholder, not yet scanned
-  boolean scanning;       // an async scan is in flight
+  long    scannedAt;      // epoch millis of the last successful scan
   boolean truncated;      // size cap hit (see below)
   List<CachedTable> tables;
 }
@@ -83,33 +82,45 @@ the same entry; each `CachedTable` keeps its own fully-qualified `schema`.
 
 ### The `SchemaCache` helper
 
-One new class owns the store and all logic. It is injected into both
-`MetadataResources` and `ProjectResources`. All read/mutate operations are scoped
-to a `projectId`.
+One new class (`ProjectSchemaCache`) owns the store and all logic — a plain class
+with a static cached `PersistentStore` (mirroring `ProjectResources.getStore()`),
+used by both `MetadataResources` and `ProjectResources`. All read/mutate operations
+are scoped to a `projectId`.
+
+**Everything runs synchronously on the calling request thread.** Drill's query
+machinery (`WebUserConnection` + `RestQueryRunner`) is request-scoped, so there is
+**no background executor** — scanning on a non-request thread would mean executing
+queries with no request context. Each of the three scan trigger points (add,
+refresh, and a stale read) is already on a request thread that has an injected
+`WebUserConnection`, which is passed into `scan`.
 
 ```
-read(projectId, schemaPath) -> CachedSchema | null
-    // Returns the project's cached entry if present and scanned. If the entry is
-    // older than STALE_INTERVAL_MS, fires a background refresh
-    // (serve-stale-then-refresh) and still returns the current copy. Returns null
-    // if the schema is not tracked in that project. Callers gate on canRead first.
+read(projectId, schemaPath, conn) -> CachedSchema | null
+    // Returns the project's cached entry if present and fresh (age < STALE_INTERVAL_MS).
+    // If the entry is missing or stale, runs scan() inline (conn is on this request
+    // thread) to (re)populate it, then returns the fresh copy. Returns null only if
+    // the schema is not scannable. Callers gate on canRead first.
 
-scan(projectId, schemaPath)         // synchronous scan -> writes the entry (async worker + refresh)
-refreshAsync(projectId, schemaPath) // fire-and-forget scan on a background thread
-track(projectId, schemaPath)        // write a placeholder entry (scannedAt=0) if absent, then refreshAsync
-untrack(projectId, schemaPath)      // remove the schema from that project's cache map
+scan(projectId, schemaPath, conn) -> CachedSchema   // synchronous scan -> writes + returns the entry
+peek(projectId, schemaPath) -> CachedSchema | null  // cache-only lookup, NEVER scans (for Prospector)
+remove(projectId, schemaPath)   // remove one schema from the project's cache map
+removeProject(projectId)        // drop the project's whole cache entry
 isScannable(schemaPath) -> boolean  // false for http / googlesheets / EXCLUDED_PLUGINS
 ```
 
-`scan` runs two cheap `INFORMATION_SCHEMA` queries via the same `RestQueryRunner`
-machinery `MetadataResources` already uses, both filtered by
+`peek` exists because `ProspectorResources` must **never run queries mid-chat** — it
+reads whatever is cached (even if stale) and, on a miss, simply omits the schema and
+lets the live-discovery instruction handle it.
+
+`scan` runs two cheap `INFORMATION_SCHEMA` queries via a `RestQueryRunner` (built
+exactly as `MetadataResources.executeQuery` does), both filtered by
 `TABLE_SCHEMA = ? OR TABLE_SCHEMA LIKE ?` (the schema path and its `.%` prefix):
 - `INFORMATION_SCHEMA.\`TABLES\`` → `TABLE_SCHEMA, TABLE_NAME, TABLE_TYPE` (the type,
   so cached VIEW / MATERIALIZED VIEW / TABLE render with the same icons as today).
 - `INFORMATION_SCHEMA.\`COLUMNS\`` → `TABLE_SCHEMA, TABLE_NAME, COLUMN_NAME, DATA_TYPE`.
 
-It joins the two by (schema, table), groups into `CachedTable`s, and writes the
-entry. Two small queries per schema, run only on scan/refresh (not per read).
+It joins the two by (schema, table), groups into `CachedTable`s, stamps `scannedAt`,
+and writes the entry. Two small queries per scan; a fresh read runs zero queries.
 
 `isScannable` reuses the plugin-config-class-name check that
 `MetadataResources.isHttpPlugin` already does, extended to also reject
@@ -121,8 +132,9 @@ sets `truncated = true`. Keeps the cache and the Prospector prompt bounded for
 large JDBC/Hive sources.
 
 **Staleness:** `STALE_INTERVAL_MS` default 5 minutes. Access-triggered, not a
-poller — a read only schedules a refresh if the entry is already older than this,
-so typing/expanding does not rescan on every keystroke.
+poller — a read only rescans if the entry is already older than this, so
+typing/expanding does not rescan on every keystroke; within the interval, reads are
+served from cache with zero queries.
 
 **Configurability.** Both are compile-time constants, not runtime config — the
 lazy default. They can be promoted to Drill boot-config options
@@ -138,11 +150,14 @@ bumps).
 ### Read-through for tree + autocomplete
 
 `MetadataResources.getTables(schema)` and `getColumns(schema, table)` gain an
-optional `?projectId=` query param and a cache fast path:
+optional `?projectId=` query param (and inject `@Context SecurityContext` to get the
+caller, as `ProspectorResources.chat` does) and a cache fast path:
 
 1. If `projectId` is present **and** the requester passes `canRead(project)` **and**
-   `schemaCache.read(projectId, schema)` returns a scanned entry → serve
-   tables/columns from it (a background refresh is scheduled if the entry is stale).
+   the schema is scannable → call `schemaCache.read(projectId, schema, conn)` and
+   serve tables/columns from the returned entry. A fresh entry is served with no
+   query; a missing/stale entry is scanned inline first (same cost as today's live
+   query, since it runs one anyway) and then cached.
 2. Otherwise fall through to today's live `INFORMATION_SCHEMA` query, unchanged.
 
 The cache is only consulted inside an authorized project context; without a
@@ -162,21 +177,23 @@ sent and nothing is cached or served — unchanged behavior.
 
 | Event | Where | Action |
 |---|---|---|
-| Add dataset | `ProjectResources.addDataset` (`POST /{id}/datasets`) | if `isScannable(schema)`, `schemaCache.track(projectId, schema)` (placeholder + async scan). Non-blocking; the add response returns immediately. |
-| Remove dataset | `ProjectResources.removeDataset` (`DELETE /{id}/datasets/{dsId}`) | `schemaCache.untrack(projectId, schema)` — remove the schema from this project's cache map (no cross-project lookup, since the cache is per-project). |
-| Delete project | `ProjectResources.deleteProject` / `purge` | drop the project's whole cache entry. |
-| Read (tree / autocomplete, in project context) | `MetadataResources` | if `canRead(project)` and schema tracked, serve from cache; background refresh if stale. |
+| Add dataset | `ProjectResources.addDataset` (`POST /{id}/datasets`) | if `isScannable(schema)`, `schemaCache.scan(projectId, schema, conn)` synchronously (ProjectResources injects `WebUserConnection`). Best-effort: a scan failure is logged and does not fail the add. |
+| Remove dataset | `ProjectResources.removeDataset` (`DELETE /{id}/datasets/{dsId}`) | `schemaCache.remove(projectId, schema)` — remove the schema from this project's cache map (no cross-project lookup, since the cache is per-project). |
+| Delete project | `ProjectResources.deleteProject` / `purge` | `schemaCache.removeProject(projectId)`. |
+| Read (tree / autocomplete, in project context) | `MetadataResources` | if `canRead(project)` and schema scannable, serve from cache (scan inline if missing/stale). |
 | Refresh | `POST /{id}/schema-cache/refresh` | re-scan every scannable schema referenced by the project's datasets. Owner-only, mirrors existing dataset-endpoint auth. |
-| Inspect | `GET /{id}/schema-cache` | return the project's cached entries + `scannedAt` / `scanning` / `truncated` per schema, for the UI. `canRead`-gated. |
+| Inspect | `GET /{id}/schema-cache` | return the project's cached entries + `scannedAt` / `truncated` per schema, for the UI. `canRead`-gated. |
 
 ### Prospector integration
 
 `ProspectorResources` already loads and **authorizes** the project via `loadProject`
 (which enforces `canRead`). For each dataset schema of that authorized project it
-calls `schemaCache.read(projectId, schema)` and injects the cached tables + columns
-(capped, same pattern and budget discipline as the existing project block at
-`ProspectorResources` ~L693–711). Because the read is scoped to a project the caller
-already passed `canRead` on, no additional auth check is needed here.
+calls `schemaCache.peek(projectId, schema)` (cache-only, never scans — a chat must
+not run queries) and injects the cached tables + columns (capped, same pattern and
+budget discipline as the existing project block at `ProspectorResources` ~L693–711).
+Because the read is scoped to a project the caller already passed `canRead` on, no
+additional auth check is needed here. A cache miss simply omits that schema's tables,
+and the (softened) live-discovery instruction still lets the model fetch them.
 
 The current instruction (~L890–898) that says *"ALWAYS use `list_schemas` /
 `get_schema_info` to discover data BEFORE writing SQL"* softens to: *"Use the
@@ -198,19 +215,19 @@ miss / empty → the old live-discovery instruction still applies, so nothing br
 
 ```
 User adds "mysql" to project
-  -> POST /{id}/datasets
-  -> track("mysql"): placeholder entry written, async scan queued -> returns 200 immediately
-  -> background: scan runs INFORMATION_SCHEMA.COLUMNS WHERE TABLE_SCHEMA='mysql' OR LIKE 'mysql.%'
-                 (mysql is scannable; not http/googlesheets) -> entry filled, scannedAt stamped
+  -> POST /{id}/datasets  (mysql is scannable; not http/googlesheets)
+  -> scan("mysql") runs inline: INFORMATION_SCHEMA.TABLES + COLUMNS
+                                WHERE TABLE_SCHEMA='mysql' OR LIKE 'mysql.%'
+  -> entry filled, scannedAt stamped -> add returns 200 with the cache already populated
 
 User opens SQL Lab in the project, types "SELECT * FROM mysql.store."
   -> autocomplete calls getColumns("mysql.store", ..., projectId=P)
   -> canRead(P) ok, read(P, "mysql.store") hits the "mysql" entry -> served from cache (instant)
-  -> entry age < 5min -> no refresh
+  -> entry age < 5min -> no rescan
 
 Later, user expands mysql in the tree (entry now stale)
-  -> getTables("mysql", projectId=P) serves cached tables instantly
-  -> read() sees age > 5min -> schedules background refresh -> entry updated if changed
+  -> getTables("mysql", projectId=P): read() sees age > 5min -> rescans inline (same cost
+     as a normal live query) -> entry updated if changed -> serves fresh tables
 
 User asks Prospector "top 10 customers by revenue"
   -> system prompt already contains mysql.store's tables+columns from cache
@@ -226,19 +243,22 @@ User asks Prospector "top 10 customers by revenue"
 - **Per-project cache, not shared** — accepts scanning the same schema once per
   project so the cache never crosses an authorization boundary and removal needs no
   cross-project lookup. Chosen over a global cache specifically for access control.
-- **Serve-stale-then-refresh** rather than blocking reads on freshness. Access
-  keeps the cache current asynchronously; the user never waits.
+- **No background executor — everything runs synchronously on the request thread.**
+  Drill's query connection is request-scoped, so off-thread scanning is a hazard we
+  avoid entirely. A fresh read costs zero queries; a stale/missing read costs the
+  same one scan a live query would have cost anyway.
 - **Snapshot equality** for change detection, not hashing.
-- **Async scan on add is best-effort** (like `loadProject`): if it fails, the next
-  read or the refresh button fills it in.
+- **Scan on add is best-effort** (like `loadProject`): if it throws, it is logged
+  and the add still succeeds; the next read or the refresh button fills the cache in.
 - Single size cap and single staleness interval, both compile-time constants — no
   per-plugin policy, no config surface (promotable to boot config later).
 
 ## Testing
 
-- `SchemaCache` unit tests: `isScannable` rejects http/googlesheets/excluded and
-  accepts a normal schema; size cap sets `truncated`; snapshot equality suppresses
-  a no-op re-`put`; stale read schedules a refresh, fresh read does not.
+- `ProjectSchemaCache` unit tests: `isScannable` rejects http/googlesheets/excluded
+  and accepts a normal schema; size cap sets `truncated`; snapshot equality suppresses
+  a no-op re-`put`; a stale read rescans, a fresh read serves without scanning; `peek`
+  never scans (returns cached-or-null).
 - `MetadataResources`: with `projectId` + `canRead`, a tracked schema is served from
   cache; without `projectId`, or a schema not tracked in that project, falls through
   to the live query; http/googlesheets never served from cache.
@@ -250,8 +270,9 @@ User asks Prospector "top 10 customers by revenue"
 
 ## Open items for the plan
 
-- Background-thread mechanism for `refreshAsync` (reuse an existing executor on
-  the Drillbit context vs. a small dedicated single-thread pool).
-- Confirm the `INFORMATION_SCHEMA.\`TABLES\`` + `COLUMNS` join handles dynamic-schema
-  sources (Splunk/Mongo `**` marker) the way `MetadataResources.fetchColumnsForTable`
-  does today, or that such schemas simply cache what INFORMATION_SCHEMA returns.
+- Dynamic-schema sources (Splunk/Mongo) return a single `**` column from
+  `INFORMATION_SCHEMA.COLUMNS`; `MetadataResources.fetchColumnsForTable` probes them
+  with `SELECT * ... LIMIT 1`. The bulk scan will simply cache whatever
+  INFORMATION_SCHEMA returns (including a `**` marker) rather than probing every
+  table — acceptable, since the read-through still falls back to the live per-table
+  path for a specific `getColumns` call when needed. Confirm this is fine in the plan.
