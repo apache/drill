@@ -26,6 +26,7 @@ import org.apache.drill.common.exceptions.DrillRuntimeException;
 import org.apache.drill.common.logical.FormatPluginConfig;
 import org.apache.drill.common.logical.StoragePluginConfig;
 import org.apache.drill.exec.exception.StoreException;
+import org.apache.drill.exec.server.rest.ProjectSchemaCache.ProjectSchemaCacheEntry;
 import org.apache.drill.exec.server.rest.auth.DrillUserPrincipal;
 import org.apache.drill.exec.store.StoragePluginRegistry;
 import org.apache.drill.exec.store.dfs.FileSystemConfig;
@@ -53,9 +54,11 @@ import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.UUID;
 
 /**
@@ -91,6 +94,12 @@ public class ProjectResources {
 
   @Inject
   PersistentStoreProvider storeProvider;
+
+  @Inject
+  WebUserConnection webUserConnection;
+
+  @Inject
+  StoragePluginRegistry storageRegistry;
 
   private static volatile PersistentStore<Project> cachedStore;
   private static volatile PersistentStore<UserFavorites> cachedFavoritesStore;
@@ -653,6 +662,7 @@ public class ProjectResources {
 
       project.setDeletedAt(Instant.now().toEpochMilli());
       store.put(id, project);
+      schemaCache().removeProject(id);
 
       return Response.ok(new MessageResponse("Project moved to trash")).build();
     } catch (Exception e) {
@@ -761,6 +771,7 @@ public class ProjectResources {
       }
 
       store.delete(id);
+      schemaCache().removeProject(id);
       return Response.ok(new MessageResponse("Project permanently deleted")).build();
     } catch (Exception e) {
       logger.error("Error purging project", e);
@@ -808,6 +819,8 @@ public class ProjectResources {
         project.setUpdatedAt(Instant.now().toEpochMilli());
         store.put(id, project);
 
+        scanDatasetSchema(id, datasetRef.getSchema());
+
         return Response.ok(project).build();
       }
     } catch (Exception e) {
@@ -841,14 +854,87 @@ public class ProjectResources {
             .build();
       }
 
+      DatasetRef removed = project.getDatasets().stream()
+          .filter(d -> d.getId().equals(datasetId))
+          .findFirst().orElse(null);
       project.getDatasets().removeIf(d -> d.getId().equals(datasetId));
       project.setUpdatedAt(Instant.now().toEpochMilli());
       store.put(id, project);
+
+      if (removed != null && removed.getSchema() != null) {
+        schemaCache().remove(id, removed.getSchema());
+      }
 
       return Response.ok(project).build();
     } catch (Exception e) {
       logger.error("Error removing dataset from project", e);
       throw new DrillRuntimeException("Failed to remove dataset: " + e.getMessage(), e);
+    }
+  }
+
+  @POST
+  @Path("/{id}/schema-cache/refresh")
+  @Produces(MediaType.APPLICATION_JSON)
+  @Operation(summary = "Refresh schema cache",
+      description = "Re-scans every scannable schema referenced by the project's datasets")
+  public Response refreshSchemaCache(
+      @Parameter(description = "Project ID") @PathParam("id") String id) {
+    try {
+      PersistentStore<Project> store = getStore();
+      Project project = store.get(id);
+      if (project == null) {
+        return Response.status(Response.Status.NOT_FOUND)
+            .entity(new MessageResponse("Project not found")).build();
+      }
+      if (!project.getOwner().equals(getCurrentUser())) {
+        return Response.status(Response.Status.FORBIDDEN)
+            .entity(new MessageResponse("Only the owner can modify this project")).build();
+      }
+      Set<String> scanned = new HashSet<>();
+      for (DatasetRef d : project.getDatasets()) {
+        String schema = d.getSchema();
+        if (schema != null && scanned.add(schema)) {
+          scanDatasetSchema(id, schema);
+        }
+      }
+      ProjectSchemaCacheEntry entry = schemaCache().getEntry(id);
+      if (entry == null) {
+        entry = new ProjectSchemaCacheEntry();
+        entry.setProjectId(id);
+      }
+      return Response.ok(entry).build();
+    } catch (Exception e) {
+      logger.error("Error refreshing schema cache", e);
+      throw new DrillRuntimeException("Failed to refresh schema cache: " + e.getMessage(), e);
+    }
+  }
+
+  @GET
+  @Path("/{id}/schema-cache")
+  @Produces(MediaType.APPLICATION_JSON)
+  @Operation(summary = "Get schema cache", description = "Returns the project's cached schema metadata")
+  public Response getSchemaCache(
+      @Parameter(description = "Project ID") @PathParam("id") String id) {
+    try {
+      PersistentStore<Project> store = getStore();
+      Project project = store.get(id);
+      if (project == null || project.getDeletedAt() > 0) {
+        return Response.status(Response.Status.NOT_FOUND)
+            .entity(new MessageResponse("Project not found")).build();
+      }
+      if (!canRead(project, getCurrentUser())) {
+        return Response.status(Response.Status.FORBIDDEN)
+            .entity(new MessageResponse("Not authorized to read this project")).build();
+      }
+      ProjectSchemaCacheEntry entry = schemaCache().getEntry(id);
+      if (entry == null) {
+        entry = new ProjectSchemaCacheEntry();
+        entry.setProjectId(id);
+      }
+      return Response.ok(entry).build();
+    } catch (Exception e) {
+      logger.error("Error reading schema cache", e);
+      throw new DrillRuntimeException("Failed to read schema cache: " + e.getMessage(), e);
     }
   }
 
@@ -884,6 +970,16 @@ public class ProjectResources {
           removedCount += before - datasets.size();
           project.setUpdatedAt(Instant.now().toEpochMilli());
           store.put(entry.getKey(), project);
+
+          // Also purge cached schemas for the deleted plugin.
+          ProjectSchemaCacheEntry cacheEntry = schemaCache().getEntry(entry.getKey());
+          if (cacheEntry != null) {
+            boolean pruned = cacheEntry.getSchemas().keySet().removeIf(sp ->
+                sp.equals(pluginName) || sp.startsWith(pluginName + "."));
+            if (pruned) {
+              schemaCache().putEntry(entry.getKey(), cacheEntry);
+            }
+          }
         }
       }
 
@@ -1805,12 +1901,12 @@ public class ProjectResources {
     }
   }
 
-  private PersistentStore<Project> getStore() {
+  static PersistentStore<Project> openStore(PersistentStoreProvider provider, WorkManager workManager) {
     if (cachedStore == null) {
       synchronized (ProjectResources.class) {
         if (cachedStore == null) {
           try {
-            cachedStore = storeProvider.getOrCreateStore(
+            cachedStore = provider.getOrCreateStore(
                 PersistentStoreConfig.newJacksonBuilder(
                     workManager.getContext().getLpPersistence().getMapper(),
                     Project.class
@@ -1825,6 +1921,27 @@ public class ProjectResources {
       }
     }
     return cachedStore;
+  }
+
+  private PersistentStore<Project> getStore() {
+    return openStore(storeProvider, workManager);
+  }
+
+  private ProjectSchemaCache schemaCache() {
+    return ProjectSchemaCache.get(storeProvider, workManager);
+  }
+
+  private void scanDatasetSchema(String projectId, String schema) {
+    if (schema == null || !ProjectSchemaCache.isScannable(storageRegistry, schema)) {
+      return;
+    }
+    try {
+      schemaCache().scan(projectId, schema,
+          s -> ProjectSchemaCache.infoSchemaScan(s, workManager, webUserConnection));
+    } catch (Exception e) {
+      // Best-effort: a scan failure must never fail the triggering request.
+      logger.warn("Schema scan failed for project {} schema {}: {}", projectId, schema, e.getMessage());
+    }
   }
 
   private PersistentStore<UserFavorites> getFavoritesStore() {
