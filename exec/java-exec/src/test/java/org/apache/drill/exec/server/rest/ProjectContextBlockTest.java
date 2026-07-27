@@ -524,6 +524,49 @@ public class ProjectContextBlockTest {
     assertTrue(block.contains("id INT"));
   }
 
+  /**
+   * A project can reference schemas with up to MAX_TABLES_PER_SCHEMA (500) tables
+   * each, and the block is rebuilt into the system prompt on every tool round, so it
+   * must be capped the same way buildProjectBlock is capped — otherwise a handful of
+   * large schemas would bloat every round trip to the model.
+   */
+  @Test
+  public void testSchemaCacheBlockIsCapped() {
+    PersistentStore<ProjectSchemaCache.ProjectSchemaCacheEntry> store = new InMemoryStore<>(100);
+    ProjectSchemaCache cache = new ProjectSchemaCache(store);
+
+    ProjectResources.DatasetRef ds = new ProjectResources.DatasetRef();
+    ds.setSchema("dfs.logs");
+    ProjectResources.Project p = new ProjectResources.Project("p1", "Retail", null, null,
+        null, false, null, new ArrayList<>(List.of(ds)), null, null, null, null,
+        false, 0L, 0L, null, null, 0L);
+
+    cache.scan("p1", "dfs.logs", schemaPath -> {
+      List<ProjectSchemaCache.CachedTable> tables = new ArrayList<>();
+      for (int i = 0; i < 500; i++) {
+        ProjectSchemaCache.CachedTable t = new ProjectSchemaCache.CachedTable();
+        t.setSchema("dfs.logs");
+        t.setName("some_fairly_long_table_name_" + i);
+        t.setType("TABLE");
+        List<ProjectSchemaCache.CachedColumn> columns = new ArrayList<>();
+        for (int j = 0; j < 5; j++) {
+          ProjectSchemaCache.CachedColumn c = new ProjectSchemaCache.CachedColumn();
+          c.setName("column_" + j);
+          c.setType("VARCHAR");
+          columns.add(c);
+        }
+        t.setColumns(columns);
+        tables.add(t);
+      }
+      return tables;
+    });
+
+    String block = ProspectorResources.buildSchemaCacheBlock(p, cache);
+    assertTrue(block.length()
+        <= ProspectorResources.SCHEMA_CACHE_BLOCK_MAX_CHARS + "...[truncated]".length());
+    assertTrue(block.contains("...[truncated]"));
+  }
+
   @Test
   public void testSchemaCacheBlockEmptyWhenNoCache() {
     PersistentStore<ProjectSchemaCache.ProjectSchemaCacheEntry> store = new InMemoryStore<>(100);
