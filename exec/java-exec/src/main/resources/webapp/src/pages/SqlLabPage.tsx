@@ -264,7 +264,7 @@ export default function SqlLabPage({ datasetFilter, headerContent, projectId, sa
   const { data: schemas } = useSchemas();
 
   // Schema-aware SQL autocomplete (must come after schemas is declared)
-  useMonacoCompletion(monacoInstance, schemas);
+  useMonacoCompletion(monacoInstance, schemas, projectId);
 
   // Fetch all visualizations for linking to tabs
   const { data: allVisualizations } = useQuery({
