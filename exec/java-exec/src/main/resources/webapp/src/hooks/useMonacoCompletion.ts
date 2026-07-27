@@ -43,6 +43,7 @@ const DRILL_KEYWORDS = [
 export function useMonacoCompletion(
   monaco: Monaco | null,
   schemas: SchemaInfo[] | undefined,
+  projectId?: string,
 ) {
   // Caches survive provider re-registrations (schemas list reload)
   const tableCache = useRef<Map<string, string[]>>(new Map());
@@ -101,7 +102,7 @@ export function useMonacoCompletion(
             let tables = tableCache.current.get(qualifier);
             if (!tables) {
               try {
-                const result = await getTables(qualifier);
+                const result = await getTables(qualifier, projectId);
                 tables = result.map((t) => t.name);
                 tableCache.current.set(qualifier, tables);
               } catch {
@@ -131,7 +132,7 @@ export function useMonacoCompletion(
               let cols = columnCache.current.get(cacheKey);
               if (!cols) {
                 try {
-                  const result = await getColumns(parentSchema, tableName);
+                  const result = await getColumns(parentSchema, tableName, projectId);
                   cols = result.map((c) => c.name);
                   columnCache.current.set(cacheKey, cols);
                 } catch {
@@ -181,5 +182,5 @@ export function useMonacoCompletion(
       disposableRef.current?.dispose();
       disposableRef.current = null;
     };
-  }, [monaco, schemas]);
+  }, [monaco, schemas, projectId]);
 }

@@ -558,7 +558,7 @@ export default function SchemaExplorer({ onInsertText, onSelectQuery, onOpenInNe
             }
           } else {
             if (!tablesCacheRef.current[schemaName]) {
-              const tables = await getTables(schemaName);
+              const tables = await getTables(schemaName, projectId);
               setTablesCache((prev) => ({ ...prev, [schemaName]: tables }));
             }
           }
@@ -686,7 +686,7 @@ export default function SchemaExplorer({ onInsertText, onSelectQuery, onOpenInNe
           const [, schemaName, tableName] = key.split(':');
           const cacheKey = `table:${schemaName}:${tableName}`;
           if (!columnsCacheRef.current[cacheKey]) {
-            const columns = await getColumns(schemaName, tableName);
+            const columns = await getColumns(schemaName, tableName, projectId);
             setColumnsCache((prev) => ({ ...prev, [cacheKey]: columns }));
           }
           loaded = true;
@@ -733,7 +733,7 @@ export default function SchemaExplorer({ onInsertText, onSelectQuery, onOpenInNe
         setLoadedKeys((prev) => [...prev, key]);
       }
     },
-    [], // No dependencies — uses refs for all cache reads
+    [projectId], // Uses refs for all cache reads; projectId is a real dependency for cache scoping
   );
 
   // ---------- Selection / double-click ----------
