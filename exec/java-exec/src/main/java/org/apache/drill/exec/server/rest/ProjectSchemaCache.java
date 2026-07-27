@@ -63,6 +63,11 @@ public class ProjectSchemaCache {
 
   private static volatile PersistentStore<ProjectSchemaCacheEntry> cachedStore;
 
+  // Memoized so all production callers of get(...) share one instance (and thus one
+  // monitor for the synchronized methods below). Constructing a fresh instance per
+  // call would give each request its own lock, defeating the synchronization.
+  private static volatile ProjectSchemaCache instance;
+
   private final PersistentStore<ProjectSchemaCacheEntry> store;
 
   public ProjectSchemaCache(PersistentStore<ProjectSchemaCacheEntry> store) {
@@ -70,9 +75,9 @@ public class ProjectSchemaCache {
   }
 
   public static ProjectSchemaCache get(PersistentStoreProvider provider, WorkManager workManager) {
-    if (cachedStore == null) {
+    if (instance == null) {
       synchronized (ProjectSchemaCache.class) {
-        if (cachedStore == null) {
+        if (instance == null) {
           try {
             cachedStore = provider.getOrCreateStore(
                 PersistentStoreConfig.newJacksonBuilder(
@@ -83,16 +88,17 @@ public class ProjectSchemaCache {
           } catch (StoreException e) {
             throw new DrillRuntimeException("Failed to access schema cache store", e);
           }
+          instance = new ProjectSchemaCache(cachedStore);
         }
       }
     }
-    return new ProjectSchemaCache(cachedStore);
+    return instance;
   }
 
   // ---- scannability ----
 
   public static boolean isExcludedPlugin(String pluginName) {
-    return EXCLUDED_PLUGINS.contains(pluginName);
+    return pluginName != null && EXCLUDED_PLUGINS.contains(pluginName.toLowerCase());
   }
 
   public static boolean isNonScannableConfigClass(String configClassSimpleName) {
@@ -171,8 +177,13 @@ public class ProjectSchemaCache {
       entry.setProjectId(projectId);
     }
     CachedSchema prev = entry.getSchemas().get(schemaPath);
-    // Snapshot equality: skip the put when only the timestamp would change.
+    // Snapshot equality: avoid replacing the tables list (and any downstream identity
+    // churn) when the scan came back the same, but still bump scannedAt and persist it
+    // so the staleness clock resets. Otherwise a stable schema would get rescanned on
+    // every read past STALE_INTERVAL_MS forever.
     if (prev != null && prev.isTruncated() == truncated && prev.getTables().equals(tables)) {
+      prev.setScannedAt(fresh.getScannedAt());
+      store.put(projectId, entry);
       return prev;
     }
     entry.getSchemas().put(schemaPath, fresh);
@@ -191,9 +202,7 @@ public class ProjectSchemaCache {
   }
 
   public synchronized void removeProject(String projectId) {
-    if (store.get(projectId) != null) {
-      store.delete(projectId);
-    }
+    store.delete(projectId);
   }
 
   public ProjectSchemaCacheEntry getEntry(String projectId) {

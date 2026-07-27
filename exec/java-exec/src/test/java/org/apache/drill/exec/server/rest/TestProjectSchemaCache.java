@@ -121,6 +121,30 @@ public class TestProjectSchemaCache {
   }
 
   @Test
+  public void testScanOnUnchangedSnapshotResetsStalenessClock() {
+    AtomicInteger calls = new AtomicInteger();
+    TableScanner scanner = scannerReturning(
+        List.of(table("dfs.logs", "events", "TABLE", "id", "INT")), calls);
+    cache.scan("p1", "dfs.logs", scanner);            // 1 call
+
+    // force staleness by rewriting scannedAt to the epoch
+    CachedSchema s = cache.getEntry("p1").getSchemas().get("dfs.logs");
+    s.setScannedAt(1L);
+    ProjectSchemaCacheEntry e = cache.getEntry("p1");
+    e.getSchemas().put("dfs.logs", s);
+    store.put("p1", e);
+
+    cache.read("p1", "dfs.logs", scanner);            // stale -> rescan
+    assertEquals(2, calls.get());
+
+    // The rescan returned the same tables snapshot, so the entry's scannedAt must
+    // have been bumped to "now". A second read right away should therefore be
+    // served fresh, without a third scan.
+    cache.read("p1", "dfs.logs", scanner);
+    assertEquals(2, calls.get());
+  }
+
+  @Test
   public void testPeekNeverScans() {
     AtomicInteger calls = new AtomicInteger();
     assertNull(cache.peek("p1", "dfs.logs"));       // miss, no scan
