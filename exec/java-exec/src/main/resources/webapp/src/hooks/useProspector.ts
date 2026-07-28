@@ -21,7 +21,7 @@ import { useSendDataToAi } from './useSendDataToAi';
 import { executeQuery } from '../api/queries';
 import { getSchemas, getTables, getColumns, getFunctions } from '../api/metadata';
 import { createVisualization } from '../api/visualizations';
-import { addVisualization, getProject } from '../api/projects';
+import { addVisualization, addDashboard, getProject } from '../api/projects';
 import { createDashboard } from '../api/dashboards';
 import { createSavedQuery } from '../api/savedQueries';
 import type {
@@ -353,9 +353,25 @@ export function useProspector(
             description: args.description,
             panels: args.panels,
           });
+
+          // Same orphaning problem as create_visualization above.
+          let addedToProject = false;
+          let projectError: string | undefined;
+          if (context?.projectId) {
+            try {
+              await addDashboard(context.projectId, dashboard.id);
+              addedToProject = true;
+            } catch (err) {
+              projectError = err instanceof Error ? err.message : 'unknown error';
+              console.error('Failed to add dashboard to project', err);
+            }
+          }
+
           return JSON.stringify({
             id: dashboard.id,
             name: dashboard.name,
+            addedToProject,
+            ...(projectError ? { projectError } : {}),
             message: `Dashboard "${dashboard.name}" created successfully.`,
             viewPath: '/dashboards',
           });

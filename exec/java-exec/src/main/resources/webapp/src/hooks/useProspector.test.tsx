@@ -20,13 +20,16 @@ import { renderHook, waitFor } from '@testing-library/react';
 
 import { useProspector } from './useProspector';
 import { createVisualization } from '../api/visualizations';
-import { addVisualization, getProject } from '../api/projects';
+import { createDashboard } from '../api/dashboards';
+import { addVisualization, addDashboard, getProject } from '../api/projects';
 import { executeQuery } from '../api/queries';
 import { getAiStatus, streamChat } from '../api/ai';
 import type { ChatContext, ToolCall } from '../types/ai';
 
 vi.mock('../api/visualizations', () => ({ createVisualization: vi.fn() }));
-vi.mock('../api/projects', () => ({ addVisualization: vi.fn(), getProject: vi.fn() }));
+vi.mock('../api/projects', () => ({
+  addVisualization: vi.fn(), addDashboard: vi.fn(), getProject: vi.fn(),
+}));
 vi.mock('../api/ai', () => ({ streamChat: vi.fn(), getAiStatus: vi.fn() }));
 vi.mock('../api/queries', () => ({ executeQuery: vi.fn() }));
 vi.mock('../api/metadata', () => ({
@@ -116,6 +119,37 @@ describe('create_visualization tool', () => {
     expect(out.error).toContain('boom');
     expect(consoleError).toHaveBeenCalled();
     consoleError.mockRestore();
+  });
+});
+
+describe('create_dashboard tool', () => {
+  const dashCall = (): ToolCall => ({
+    id: 'call-3',
+    name: 'create_dashboard',
+    arguments: JSON.stringify({ name: 'Sales Overview', panels: [] }),
+  });
+
+  beforeEach(() => {
+    vi.clearAllMocks();
+    vi.mocked(createDashboard).mockResolvedValue({ id: 'dash-1', name: 'Sales Overview' } as never);
+    vi.mocked(addDashboard).mockResolvedValue({} as never);
+  });
+
+  it('adds the dashboard to the active project', async () => {
+    const { result } = renderHook(() => useProspector());
+    const out = JSON.parse(await result.current.executeToolCall(dashCall(), ctx('proj-42')));
+
+    expect(addDashboard).toHaveBeenCalledWith('proj-42', 'dash-1');
+    expect(out.addedToProject).toBe(true);
+  });
+
+  it('creates the dashboard without a project when there is no active project', async () => {
+    const { result } = renderHook(() => useProspector());
+    const out = JSON.parse(await result.current.executeToolCall(dashCall(), ctx()));
+
+    expect(createDashboard).toHaveBeenCalledOnce();
+    expect(addDashboard).not.toHaveBeenCalled();
+    expect(out.addedToProject).toBe(false);
   });
 });
 

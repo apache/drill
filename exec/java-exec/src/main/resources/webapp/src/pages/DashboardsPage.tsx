@@ -62,7 +62,8 @@ import {
 import { useCurrentUser } from '../hooks/useCurrentUser';
 import { useUndoableDelete } from '../hooks/useUndoableDelete';
 import { usePageChrome } from '../contexts/AppChromeContext';
-import type { Dashboard, DashboardPanel, DashboardPanelType } from '../types';
+import { addDashboard } from '../api/projects';
+import type { Dashboard, DashboardCreate, DashboardPanel, DashboardPanelType } from '../types';
 import AddToProjectModal from '../components/common/AddToProjectModal';
 import BulkAddToProjectModal from '../components/common/BulkAddToProjectModal';
 
@@ -193,10 +194,19 @@ export default function DashboardsPage({ filterIds, projectId, projectName, proj
   });
 
   const createMutation = useMutation({
-    mutationFn: createDashboard,
+    // Created inside a project? Link it, or the dashboard is orphaned and never
+    // shows up on the project's dashboards page (which filters on dashboardIds).
+    mutationFn: async (data: DashboardCreate) => {
+      const created = await createDashboard(data);
+      if (projectId) {
+        await addDashboard(projectId, created.id);
+      }
+      return created;
+    },
     onSuccess: (newDashboard) => {
       message.success('Dashboard created');
       queryClient.invalidateQueries({ queryKey: ['dashboards'] });
+      queryClient.invalidateQueries({ queryKey: ['project', projectId] });
       setCreateModalOpen(false);
       createForm.resetFields();
       const dashboardPath = projectId
