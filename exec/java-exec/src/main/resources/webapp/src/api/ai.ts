@@ -194,6 +194,12 @@ export function streamChat(
 
       const decoder = new TextDecoder();
       let buffer = '';
+      // An SSE event is two lines ("event: X" then "data: Y"). A network read can
+      // end between them, so currentEvent must persist across reads — resetting it
+      // per chunk drops any event whose two lines land in different reads (which
+      // silently loses content deltas and, worse, the terminal "done" event, so
+      // the caller's stream never ends).
+      let currentEvent = '';
 
       while (true) {
         const { done, value } = await reader.read();
@@ -206,7 +212,6 @@ export function streamChat(
         // Keep the last incomplete line in buffer
         buffer = lines.pop() || '';
 
-        let currentEvent = '';
         for (const line of lines) {
           const trimmed = line.trim();
 
