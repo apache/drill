@@ -298,8 +298,25 @@ export default function SqlLabPage({ datasetFilter, headerContent, projectId, sa
     updateSql,
   } = useQueryExecution(activeTabId, addHistory);
 
+  // Suggested queries from Prospector open in a new tab, unless the current tab
+  // is empty (then reuse it). Reads the active tab through a ref so repeated
+  // suggestions within one AI turn each see the latest tab state.
+  // ponytail: relies on the existing pendingQueryRef effect to fill the new tab;
+  // two suggestions fired faster than a render could both target the same new
+  // tab — acceptable, the model streams these one at a time in practice.
+  const activeTabRef = useRef(activeTab);
+  activeTabRef.current = activeTab;
+  const handleProspectorSql = useCallback((newSql: string) => {
+    if (activeTabRef.current?.sql?.trim()) {
+      pendingQueryRef.current = { sql: newSql, name: 'Query' };
+      dispatch(addTab('Query'));
+    } else {
+      updateSql(newSql);
+    }
+  }, [updateSql, dispatch]);
+
   // Prospector hook
-  const prospector = useProspector(updateSql, useCallback((id: string, name: string) => {
+  const prospector = useProspector(handleProspectorSql, useCallback((id: string, name: string) => {
     // The tool has already attached it to the project; refresh the cached views
     // so it shows up without a reload.
     queryClient.invalidateQueries({ queryKey: ['visualizations'] });
@@ -324,7 +341,8 @@ export default function SqlLabPage({ datasetFilter, headerContent, projectId, sa
       duration: 0,
       key: `viz-created-${id}`,
     });
-  }, [navigate, queryClient, projectId]), maxToolRounds);
+  }, [navigate, queryClient, projectId]), maxToolRounds,
+  projectId ? `prospector_chat_${projectId}` : null);
 
   // Real-time SQL validation markers in the editor
   useSqlValidation(sql, editorInstanceRef, monacoInstanceRef);

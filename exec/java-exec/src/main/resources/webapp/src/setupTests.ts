@@ -39,3 +39,7 @@ Object.defineProperty(window, 'matchMedia', {
 // returns the element's own computed style — all antd needs — and silences the noise.
 const originalGetComputedStyle = window.getComputedStyle;
 window.getComputedStyle = (elt: Element) => originalGetComputedStyle(elt);
+
+// Real Monaco cannot boot in jsdom (it probes document.queryCommandSupported and friends).
+// Components import ./monaco for its loader side effect only; tests mock @monaco-editor/react.
+vi.mock('./monaco', () => ({}));

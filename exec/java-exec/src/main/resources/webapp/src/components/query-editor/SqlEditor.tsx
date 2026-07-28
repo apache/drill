@@ -17,6 +17,8 @@
  */
 import { useState, useRef, useCallback, useEffect, useMemo } from 'react';
 import Editor, { OnMount, OnChange, Monaco } from '@monaco-editor/react';
+// Serve Monaco from the bundle, not a CDN. Must load before any <Editor> mounts.
+import '../../monaco';
 import { useTheme } from '../../hooks/useTheme';
 
 // Use Monaco's editor type from the package

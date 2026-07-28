@@ -27,7 +27,6 @@ import type { ChatContext } from '../../types/ai';
  * their own inspector tabs via usePageChrome.
  */
 export default function GlobalProspectorTab() {
-  const prospector = useProspector();
   // RightInspector (which hosts this tab) renders above the router outlet in
   // AppShell, so ProjectContextProvider (mounted only inside the /projects/:id
   // route element) is not an ancestor here and useProjectContext() would throw.
@@ -36,6 +35,12 @@ export default function GlobalProspectorTab() {
   // ("/projects/:id/sql", etc).
   const match = useMatch('/projects/:id/*');
   const projectId = match?.params.id;
+  const prospector = useProspector(
+    undefined,
+    undefined,
+    undefined,
+    projectId ? `prospector_chat_${projectId}` : null,
+  );
   const context: ChatContext = useMemo(
     () => ({ feature: 'global_chat', projectId }),
     [projectId]
