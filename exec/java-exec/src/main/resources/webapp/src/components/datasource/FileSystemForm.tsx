@@ -41,6 +41,8 @@ import type { WorkspaceConfig, FormatRow } from '../../types';
 import { testConnection, TestConnectionResult } from '../../api/storage';
 import { getAiStatus, streamChat } from '../../api/ai';
 import Editor from '@monaco-editor/react';
+// Serve Monaco from the bundle, not a CDN. Must load before any <Editor> mounts.
+import '../../monaco';
 import { FORMAT_DEFAULTS, FORMAT_METADATA, type FormatConfig } from '../../data/formatDefaults';
 
 const { Text } = Typography;

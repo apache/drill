@@ -15,7 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import { useState, useCallback, useRef } from 'react';
+import { useState, useCallback, useRef, useEffect } from 'react';
 import { streamChat } from '../api/ai';
 import { useSendDataToAi } from './useSendDataToAi';
 import { executeQuery } from '../api/queries';
@@ -166,6 +166,29 @@ interface ToolCallInProgress {
   arguments: string;
 }
 
+// ponytail: chat history persisted to localStorage keyed by project. Fine for the
+// current single-user-per-browser model; move to a backend store if chats need to
+// follow the user across devices.
+function loadChat(key: string | null | undefined): ChatMessage[] {
+  if (!key) {
+    return [];
+  }
+  try {
+    const raw = localStorage.getItem(key);
+    return raw ? JSON.parse(raw) : [];
+  } catch {
+    return [];
+  }
+}
+
+function saveChat(key: string, messages: ChatMessage[]): void {
+  try {
+    localStorage.setItem(key, JSON.stringify(messages));
+  } catch {
+    // Ignore storage errors (quota, private mode)
+  }
+}
+
 export interface UseProspectorReturn {
   messages: ChatMessage[];
   isStreaming: boolean;
@@ -183,9 +206,12 @@ export function useProspector(
   onSqlGenerated?: (sql: string) => void,
   onVisualizationCreated?: (id: string, name: string) => void,
   maxToolRounds?: number,
+  // When set (e.g. per project), chat history is loaded from and saved to
+  // localStorage under this key, so it survives navigation and unmounts.
+  storageKey?: string | null,
 ): UseProspectorReturn {
   const effectiveMaxToolRounds = maxToolRounds && maxToolRounds > 0 ? maxToolRounds : DEFAULT_MAX_TOOL_ROUNDS;
-  const [messages, setMessages] = useState<ChatMessage[]>([]);
+  const [messages, setMessages] = useState<ChatMessage[]>(() => loadChat(storageKey));
   const [isStreaming, setIsStreaming] = useState(false);
   const [streamingContent, setStreamingContent] = useState('');
   const [usage, setUsage] = useState<UsageEvent | null>(null);
@@ -216,6 +242,24 @@ export function useProspector(
     setUsage(null);
     toolRoundsRef.current = 0;
   }, [stopStreaming]);
+
+  // Swap in the stored history when the project (storageKey) changes.
+  const prevKeyRef = useRef(storageKey);
+  useEffect(() => {
+    if (prevKeyRef.current !== storageKey) {
+      prevKeyRef.current = storageKey;
+      setMessages(loadChat(storageKey));
+      setUsage(null);
+      toolRoundsRef.current = 0;
+    }
+  }, [storageKey]);
+
+  // Persist history for the active project (including clears, which write []).
+  useEffect(() => {
+    if (storageKey) {
+      saveChat(storageKey, messages);
+    }
+  }, [messages, storageKey]);
 
   const executeToolCall = useCallback(async (toolCall: ToolCall, context?: ChatContext): Promise<string> => {
     try {

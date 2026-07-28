@@ -61,6 +61,8 @@ import {
   CloudUploadOutlined,
 } from '@ant-design/icons';
 import Editor from '@monaco-editor/react';
+// Serve Monaco from the bundle, not a CDN. Must load before any <Editor> mounts.
+import '../../monaco';
 import Markdown from 'react-markdown';
 import DOMPurify from 'dompurify';
 import { usePyodide } from '../../hooks/usePyodide';
