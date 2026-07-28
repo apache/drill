@@ -114,7 +114,7 @@ function App() {
               <Route path="/visualizations" element={<VisualizationsPage />} />
               <Route path="/visualizations/:vizId" element={<VisualizationDetailPage />} />
               <Route path="/dashboards" element={<DashboardsPage />} />
-              <Route path="/dashboards/:id" element={<DashboardViewPage />} />
+              <Route path="/dashboards/:dashboardId" element={<DashboardViewPage />} />
               <Route path="/metrics" element={<MetricsPage />} />
               <Route path="/options" element={<OptionsPage />} />
               <Route path="/logs" element={<LogsPage />} />
