@@ -28,6 +28,7 @@ vi.mock('./client', () => ({
     put: mockPut,
     delete: vi.fn(),
   },
+  resolveCsrfToken: vi.fn().mockResolvedValue(null),
 }));
 
 import {
@@ -39,6 +40,7 @@ import {
   updateAiConfig,
   testAiConfig,
   getAiProviders,
+  streamChat,
 } from './ai';
 
 // ===========================================================================
@@ -309,5 +311,66 @@ describe('getAiProviders', () => {
     const result = await getAiProviders();
     expect(mockGet).toHaveBeenCalledWith('/api/v1/ai/config/providers');
     expect(result).toEqual(providers);
+  });
+});
+
+// ===========================================================================
+// streamChat SSE parsing
+// ===========================================================================
+
+describe('streamChat SSE parsing', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  // Turns an array of string chunks into a Response whose body streams them
+  // one reader.read() at a time — modelling how the network fragments the SSE.
+  function responseFromChunks(chunks: string[]): Response {
+    const enc = new TextEncoder();
+    let i = 0;
+    return {
+      ok: true,
+      body: {
+        getReader() {
+          return {
+            read() {
+              if (i < chunks.length) {
+                return Promise.resolve({ done: false, value: enc.encode(chunks[i++]) });
+              }
+              return Promise.resolve({ done: true, value: undefined });
+            },
+          };
+        },
+      },
+    } as unknown as Response;
+  }
+
+  // Regression: an SSE event split across reads between its "event:" and "data:"
+  // lines must still be parsed. The old parser reset currentEvent per read, so
+  // every delta AND the terminal "done" were dropped — content never rendered
+  // and the stream never ended (the profile page's AI panel "hung").
+  it('parses events whose event: and data: lines land in separate reads', async () => {
+    const chunks = [
+      'event: delta\n',
+      'data: {"type":"content","content":"Hello "}\n\n',
+      'event: delta\n',
+      'data: {"type":"content","content":"world"}\n\n',
+      'event: done\n',
+      'data: {"finish_reason":"stop"}\n\n',
+    ];
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValue(responseFromChunks(chunks)));
+
+    const deltas: string[] = [];
+    const done = await new Promise<boolean>((resolve, reject) => {
+      streamChat(
+        { messages: [{ role: 'user', content: 'hi' }], tools: [], context: { feature: 'profile_analysis' } },
+        (event) => { if (event.type === 'content') { deltas.push(event.content); } },
+        () => resolve(true),
+        (err) => reject(new Error(err.message)),
+      );
+    });
+
+    expect(done).toBe(true);
+    expect(deltas.join('')).toBe('Hello world');
   });
 });
