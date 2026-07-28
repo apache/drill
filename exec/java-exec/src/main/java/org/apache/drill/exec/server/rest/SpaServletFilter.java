@@ -79,7 +79,11 @@ public class SpaServletFilter implements Filter {
       // /spnegoLogin and /logout return server-side redirects.
       "/login", "/spnegoLogin", "/mainLogin", "/logout",
       // Health-check HTML page consumed by external monitors / load balancers.
-      "/status"
+      "/status",
+      // Profile listing JSON that doesn't end in ".json" (so the endsWith check
+      // below misses it). The bare "/profiles/{queryid}" page is intentionally
+      // NOT here — it's a SPA route (ProfileDetailPage), served index.html.
+      "/profiles/json"
   );
 
   /**
@@ -89,7 +93,11 @@ public class SpaServletFilter implements Filter {
   private static final String[] JERSEY_PREFIXES = {
       "/api/",
       "/storage/",
-      "/profiles/",
+      // Only the cancel action stays server-side. The "/profiles/" prefix used to
+      // be here, but that shadowed the SPA's "/profiles/{queryid}" profile page
+      // (the HTML page no longer exists on the backend — only ".json" endpoints do,
+      // and those are caught by the endsWith check), which 404'd. See getProfileJSON.
+      "/profiles/cancel/",
       "/credentials/",
       "/option/",
       "/logs/",
@@ -143,7 +151,8 @@ public class SpaServletFilter implements Filter {
   public void destroy() {
   }
 
-  private static boolean isJerseyPath(String path) {
+  // Package-private for unit testing of the routing allow-list.
+  static boolean isJerseyPath(String path) {
     if (path.endsWith(".json")) {
       return true;
     }
