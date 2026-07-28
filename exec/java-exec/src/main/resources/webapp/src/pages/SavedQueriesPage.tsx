@@ -52,6 +52,8 @@ import {
 } from '@ant-design/icons';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import Editor from '@monaco-editor/react';
+// Serve Monaco from the bundle, not a CDN. Must load before any <Editor> mounts.
+import '../monaco';
 import { getSavedQueries, deleteSavedQuery, updateSavedQuery, restoreSavedQuery } from '../api/savedQueries';
 import { useUndoableDelete } from '../hooks/useUndoableDelete';
 import { getProjects } from '../api/projects';

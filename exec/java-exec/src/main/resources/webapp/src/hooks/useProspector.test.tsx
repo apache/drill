@@ -287,3 +287,42 @@ describe('execute_sql honours the server sendDataToAi setting', () => {
     expect(out.rows).toBeUndefined();
   });
 });
+
+describe('per-project chat persistence', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    const store: Record<string, string> = {};
+    vi.stubGlobal('localStorage', {
+      getItem: (k: string) => store[k] ?? null,
+      setItem: (k: string, v: string) => { store[k] = v; },
+      removeItem: (k: string) => { delete store[k]; },
+      clear: () => { for (const k of Object.keys(store)) { delete store[k]; } },
+      get length() { return Object.keys(store).length; },
+    });
+  });
+
+  it('loads existing history for the project on mount', () => {
+    localStorage.setItem('prospector_chat_p1',
+      JSON.stringify([{ role: 'user', content: 'hi' }]));
+    const { result } = renderHook(() => useProspector(undefined, undefined, undefined, 'prospector_chat_p1'));
+    expect(result.current.messages).toEqual([{ role: 'user', content: 'hi' }]);
+  });
+
+  it('swaps history when the project (storageKey) changes', () => {
+    localStorage.setItem('prospector_chat_p1', JSON.stringify([{ role: 'user', content: 'in p1' }]));
+    localStorage.setItem('prospector_chat_p2', JSON.stringify([{ role: 'user', content: 'in p2' }]));
+    const { result, rerender } = renderHook(
+      ({ key }) => useProspector(undefined, undefined, undefined, key),
+      { initialProps: { key: 'prospector_chat_p1' } },
+    );
+    expect(result.current.messages[0].content).toBe('in p1');
+    rerender({ key: 'prospector_chat_p2' });
+    expect(result.current.messages[0].content).toBe('in p2');
+  });
+
+  it('does not touch storage when no storageKey is given', () => {
+    const { result } = renderHook(() => useProspector());
+    expect(result.current.messages).toEqual([]);
+    expect(localStorage.length).toBe(0);
+  });
+});
