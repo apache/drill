@@ -51,7 +51,7 @@ export default defineConfig({
     rollupOptions: {
       output: {
         manualChunks: {
-          monaco: ['@monaco-editor/react'],
+          monaco: ['@monaco-editor/react', './src/monaco.ts'],
           charts: ['echarts', 'echarts-for-react'],
           grid: ['ag-grid-react', 'ag-grid-community'],
           antd: ['antd', '@ant-design/icons'],

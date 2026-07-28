@@ -67,7 +67,11 @@ Admin configuration: provider (OpenAI, Anthropic, Ollama, ...), endpoint, model,
 
 **File:** `src/hooks/useProspector.ts`
 
-The orchestrator. Accepts optional `onSqlGenerated`, `onVisualizationCreated`, `maxToolRounds` (default `DEFAULT_MAX_TOOL_ROUNDS = 15`).
+The orchestrator. Accepts optional `onSqlGenerated`, `onVisualizationCreated`, `maxToolRounds` (default `DEFAULT_MAX_TOOL_ROUNDS = 15`), and `storageKey`.
+
+When `storageKey` is set, the chat history is loaded from and saved to `localStorage` under that key, so it survives navigation and component unmounts. Inside a project both the SQL Lab page instance and the global inspector instance pass `prospector_chat_${projectId}`, so the conversation is per-project and continuous as the user moves between project pages (only one instance is live at a time). Changing the key (switching projects) swaps in that project's stored history; `clearChat` writes an empty history back. Outside a project the key is `null` and nothing is persisted.
+
+`onSqlGenerated` (SQL Lab) routes a suggested query to a new tab unless the active tab is empty, in which case it reuses that tab — see `handleProspectorSql` in `SqlLabPage.tsx`.
 
 Returns:
 
