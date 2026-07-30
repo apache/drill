@@ -20,9 +20,10 @@ package org.apache.drill.exec.server.rest;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
+import org.apache.drill.test.BaseTest;
 import org.junit.Test;
 
-public class TestSpaServletFilter {
+public class TestSpaServletFilter extends BaseTest {
 
   /** The bug this guards: a bare "/profiles/{queryid}" must reach the SPA, not Jersey. */
   @Test
