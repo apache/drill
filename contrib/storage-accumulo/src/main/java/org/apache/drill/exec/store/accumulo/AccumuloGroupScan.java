@@ -172,7 +172,7 @@ public class AccumuloGroupScan extends AbstractGroupScan {
     // Adjust cost for pushdowns
     if (filterPushedDown) {
       cpuCost *= 0.5;
-      rowCount *= 0.5;
+      rowCount /= 2;
     }
     if (projectionPushedDown) {
       // Projection reduces network I/O significantly
