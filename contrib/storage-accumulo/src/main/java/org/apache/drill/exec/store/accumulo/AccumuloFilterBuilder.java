@@ -211,7 +211,8 @@ public class AccumuloFilterBuilder
         groupScan.getScanSpec().getColumns(),
         null, // No filter expression needed when using row ranges
         groupScan.getScanSpec().getLimit(),
-        groupScan.getScanSpec().isUseSortedScanner());
+        groupScan.getScanSpec().isUseSortedScanner(),
+        groupScan.getScanSpec().isSortDescending());
   }
 
   /**
@@ -253,7 +254,8 @@ public class AccumuloFilterBuilder
         leftSpec.getColumns(),
         leftSpec.getFilterExpression(),
         leftSpec.getLimit(),
-        leftSpec.isUseSortedScanner());
+        leftSpec.isUseSortedScanner(),
+        leftSpec.isSortDescending());
   }
 
   /**
