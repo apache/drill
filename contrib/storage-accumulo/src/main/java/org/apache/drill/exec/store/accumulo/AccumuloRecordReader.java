@@ -17,7 +17,6 @@
  */
 package org.apache.drill.exec.store.accumulo;
 
-import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.util.Collection;
 import java.util.HashMap;
