@@ -59,6 +59,7 @@
     <module>format-spss</module>
     <module>format-syslog</module>
     <module>format-xml</module>
+    <module>storage-accumulo</module>
     <module>storage-cassandra</module>
     <module>storage-drill</module>
     <module>storage-druid</module>
