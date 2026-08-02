@@ -56,10 +56,7 @@ public class BaseAccumuloTest extends BaseTestQuery {
         AccumuloIntegrationTestsSuite.getZooKeepers(),
         AccumuloIntegrationTestsSuite.getInstanceName(),
         AccumuloIntegrationTestsSuite.getRootUser(),
-        AccumuloIntegrationTestsSuite.getRootPassword(),
-        null,  // schemaMetadataTable
-        null,  // clientTimeout
-        null   // batchScannerThreads
+        AccumuloIntegrationTestsSuite.getRootPassword()
     );
     storagePluginConfig.setEnabled(true);
 

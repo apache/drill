@@ -24,7 +24,6 @@ import org.apache.accumulo.core.client.AccumuloClient;
 import org.apache.calcite.schema.SchemaPlus;
 import org.apache.drill.common.JSONOptions;
 import org.apache.drill.common.exceptions.UserException;
-import org.apache.drill.common.logical.StoragePluginConfig.AuthMode;
 import org.apache.drill.exec.ops.OptimizerRulesContext;
 import org.apache.drill.exec.store.accumulo.schema.AccumuloSchemaProvider;
 import org.apache.drill.exec.store.accumulo.schema.MetadataTableSchemaProvider;
