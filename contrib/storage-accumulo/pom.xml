@@ -32,7 +32,11 @@
 
   <properties>
     <accumulo.version>2.1.4</accumulo.version>
-    <accumulo.TestSuite>**/AccumuloTestsSuite.class</accumulo.TestSuite>
+    <!--
+      Matches both AccumuloTestsSuite (unit tests) and AccumuloIntegrationTestsSuite
+      (queries against a MiniAccumuloCluster), so a plain `mvn test` runs both.
+    -->
+    <accumulo.TestSuite>**/Accumulo*TestsSuite.class</accumulo.TestSuite>
   </properties>
 
   <dependencies>
@@ -62,6 +66,19 @@
           <artifactId>commons-logging</artifactId>
         </exclusion>
       </exclusions>
+    </dependency>
+
+    <!--
+      Accumulo pulls in ZooKeeper 3.9.3, whose zookeeper-jute wins Maven's
+      nearest-definition rule while the zookeeper artifact itself is managed to
+      ${zookeeper.version} by the root POM. The resulting jute/server mismatch makes
+      MiniAccumuloCluster's ZooKeeper process die with NoSuchMethodError on startup,
+      so pin jute to the same version as the server.
+    -->
+    <dependency>
+      <groupId>org.apache.zookeeper</groupId>
+      <artifactId>zookeeper-jute</artifactId>
+      <version>${zookeeper.version}</version>
     </dependency>
 
     <!-- Test dependencies -->

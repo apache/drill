@@ -198,8 +198,10 @@ public class AccumuloGroupScan extends AbstractGroupScan {
 
   @Override
   public GroupScan applyLimit(int maxRecords) {
-    // If limit is already set and is more restrictive, keep the current one
-    if (this.maxRecords > 0 && this.maxRecords <= maxRecords) {
+    // If a limit is already set and is at least as restrictive, keep the current one.
+    // The bound must include zero: returning a new scan for an unchanged limit makes
+    // the planner rule fire on its own output forever (e.g. for LIMIT 0).
+    if (this.maxRecords >= 0 && this.maxRecords <= maxRecords) {
       return null;
     }
 

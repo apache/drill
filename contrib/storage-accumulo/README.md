@@ -165,11 +165,21 @@ For production environments, `auth-conf` is recommended for full encryption of d
 -- Select all columns from a table
 SELECT * FROM accumulo.`my_table`;
 
--- Select specific columns
-SELECT row_key, cf.column1, cf.column2 FROM accumulo.`my_table`;
+-- Select specific columns. Reaching into a column family requires a table alias
+-- (`t` below), the same as for the HBase plugin.
+SELECT row_key, t.cf.column1, t.cf.column2 FROM accumulo.`my_table` t;
 
 -- Select entire column family
 SELECT personal FROM accumulo.`users`;
+```
+
+Values, including the row key, come back as `VARBINARY`. Decode them with
+`CONVERT_FROM` to compare or display them as text:
+
+```sql
+SELECT CONVERT_FROM(row_key, 'UTF8') AS row_key,
+       CONVERT_FROM(t.cf.name, 'UTF8') AS name
+FROM accumulo.`my_table` t;
 ```
 
 ### Filter Queries
@@ -201,8 +211,8 @@ SELECT * FROM accumulo.`my_table` ORDER BY row_key ASC;
 
 ```sql
 -- Filter, project, sort, and limit
-SELECT row_key, cf.name, cf.value
-FROM accumulo.`my_table`
+SELECT row_key, t.cf.name, t.cf.value
+FROM accumulo.`my_table` t
 WHERE row_key >= 'row_100'
 ORDER BY row_key ASC
 LIMIT 50;
@@ -223,6 +233,12 @@ Accumulo: row_001 -> personal:first_name = "John", personal:last_name = "Doe"
 Drill:    row_key = 'row_001', personal = {first_name: "John", last_name: "Doe"}
 ```
 
+Accumulo, unlike HBase, keeps no catalog of its column families, so when a table has
+no entry in the schema metadata table the plugin infers them by reading the first
+1000 entries of the table at plan time. A family that appears only later in the table
+will not be visible to the planner; define an explicit schema for tables where that
+matters.
+
 ### Data Types
 
 All values are stored as `VARBINARY` by default. Use Drill's CAST functions for type conversion:
@@ -230,9 +246,9 @@ All values are stored as `VARBINARY` by default. Use Drill's CAST functions for 
 ```sql
 SELECT
   row_key,
-  CAST(cf.age AS INT) as age,
-  CAST(cf.salary AS DOUBLE) as salary
-FROM accumulo.`employees`;
+  CAST(CONVERT_FROM(t.cf.age, 'UTF8') AS INT) as age,
+  CAST(CONVERT_FROM(t.cf.salary, 'UTF8') AS DOUBLE) as salary
+FROM accumulo.`employees` t;
 ```
 
 ## Schema Metadata (Optional)

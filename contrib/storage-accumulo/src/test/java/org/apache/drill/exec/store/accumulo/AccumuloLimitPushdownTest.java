@@ -125,6 +125,30 @@ public class AccumuloLimitPushdownTest extends BaseTest {
   }
 
   @Test
+  public void testApplyLimitIsNotReappliedToItsOwnResult() {
+    // The planner rule keeps firing as long as applyLimit hands back a new scan, so
+    // re-applying the same limit must return null or planning never terminates.
+    AccumuloGroupScan original = createTestGroupScan();
+
+    AccumuloGroupScan limited = (AccumuloGroupScan) original.applyLimit(100);
+
+    assertNull("Re-applying the same limit should return null", limited.applyLimit(100));
+  }
+
+  @Test
+  public void testApplyLimitZeroIsNotReapplied() {
+    // LIMIT 0 is the case that regressed: a zero limit must still be recognised as
+    // already pushed down.
+    AccumuloGroupScan original = createTestGroupScan();
+
+    AccumuloGroupScan limited = (AccumuloGroupScan) original.applyLimit(0);
+
+    assertNotNull("A zero limit should still be pushed down", limited);
+    assertEquals(0, limited.getMaxRecords());
+    assertNull("Re-applying a zero limit should return null", limited.applyLimit(0));
+  }
+
+  @Test
   public void testApplyLimitPreservesOtherPushdowns() {
     AccumuloGroupScan original = createTestGroupScan();
     original.setFilterPushedDown(true);

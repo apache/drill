@@ -41,6 +41,7 @@ public class AccumuloTestUtils {
   public static final String TEST_TABLE_1 = "drill_test_table_1";
   public static final String TEST_TABLE_USERS = "drill_test_users";
   public static final String TEST_TABLE_LARGE = "drill_test_large";
+  public static final String TEST_TABLE_SPARSE = "drill_test_sparse";
 
   /**
    * Creates a simple test table with basic key-value data.
@@ -169,12 +170,60 @@ public class AccumuloTestUtils {
   }
 
   /**
+   * Creates a test table where rows have different sets of column qualifiers.
+   *
+   * <p>This exercises the record reader's handling of columns that are absent from
+   * some rows: every missing qualifier must come back as NULL rather than shifting
+   * values between rows.</p>
+   *
+   * <p>Table structure:</p>
+   * <ul>
+   *   <li>sparse_001: cf:a, cf:b, cf:c</li>
+   *   <li>sparse_002: cf:a only</li>
+   *   <li>sparse_003: cf:b only</li>
+   *   <li>sparse_004: cf:c only</li>
+   *   <li>sparse_005: cf:a, cf:c</li>
+   * </ul>
+   */
+  public static void createTestTableSparse(AccumuloClient client) throws Exception {
+    String tableName = TEST_TABLE_SPARSE;
+    createTableIfNotExists(client, tableName);
+
+    try (BatchWriter writer = client.createBatchWriter(tableName, new BatchWriterConfig())) {
+      // null means the qualifier is absent for that row
+      String[][] data = {
+          {"sparse_001", "a1", "b1", "c1"},
+          {"sparse_002", "a2", null, null},
+          {"sparse_003", null, "b3", null},
+          {"sparse_004", null, null, "c4"},
+          {"sparse_005", "a5", null, "c5"}
+      };
+
+      String[] qualifiers = {"a", "b", "c"};
+      for (String[] row : data) {
+        Mutation m = new Mutation(new Text(row[0]));
+        for (int i = 0; i < qualifiers.length; i++) {
+          String value = row[i + 1];
+          if (value != null) {
+            m.put(new Text("cf"), new Text(qualifiers[i]),
+                new Value(value.getBytes(StandardCharsets.UTF_8)));
+          }
+        }
+        writer.addMutation(m);
+      }
+    }
+
+    logger.info("Created test table: {} with 5 sparse rows", tableName);
+  }
+
+  /**
    * Creates all test tables.
    */
   public static void createAllTestTables(AccumuloClient client) throws Exception {
     createTestTable1(client);
     createTestTableUsers(client);
     createTestTableLarge(client);
+    createTestTableSparse(client);
   }
 
   /**
@@ -184,6 +233,7 @@ public class AccumuloTestUtils {
     deleteTableIfExists(client, TEST_TABLE_1);
     deleteTableIfExists(client, TEST_TABLE_USERS);
     deleteTableIfExists(client, TEST_TABLE_LARGE);
+    deleteTableIfExists(client, TEST_TABLE_SPARSE);
   }
 
   /**

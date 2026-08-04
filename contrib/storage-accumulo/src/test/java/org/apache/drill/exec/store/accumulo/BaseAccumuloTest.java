@@ -17,14 +17,19 @@
  */
 package org.apache.drill.exec.store.accumulo;
 
+import static org.junit.Assert.assertEquals;
+
+import java.util.ArrayList;
 import java.util.List;
 
-import org.apache.drill.exec.exception.SchemaChangeException;
-import org.apache.drill.exec.rpc.user.QueryDataBatch;
+import org.apache.drill.exec.physical.rowSet.DirectRowSet;
+import org.apache.drill.exec.physical.rowSet.RowSetReader;
 import org.apache.drill.exec.store.StoragePluginRegistry;
-import org.apache.drill.test.BaseTestQuery;
+import org.apache.drill.exec.vector.accessor.ScalarReader;
+import org.apache.drill.test.ClusterFixture;
+import org.apache.drill.test.ClusterTest;
+import org.apache.drill.test.QueryRowSetIterator;
 import org.junit.AfterClass;
-import org.junit.Assert;
 import org.junit.BeforeClass;
 
 /**
@@ -33,7 +38,7 @@ import org.junit.BeforeClass;
  * <p>This class sets up the Drill test cluster and registers the Accumulo storage plugin
  * configured to connect to the MiniAccumuloCluster.</p>
  */
-public class BaseAccumuloTest extends BaseTestQuery {
+public class BaseAccumuloTest extends ClusterTest {
 
   public static final String ACCUMULO_STORAGE_PLUGIN_NAME = "accumulo";
 
@@ -41,17 +46,17 @@ public class BaseAccumuloTest extends BaseTestQuery {
   protected static AccumuloStoragePluginConfig storagePluginConfig;
 
   @BeforeClass
-  public static void setupDefaultTestCluster() throws Exception {
+  public static void setupAccumuloTestCluster() throws Exception {
     // Initialize the MiniAccumuloCluster
     boolean isManaged = Boolean.parseBoolean(System.getProperty("drill.accumulo.tests.managed", "true"));
     AccumuloIntegrationTestsSuite.configure(isManaged, true);
     AccumuloIntegrationTestsSuite.initCluster();
 
     // Start the Drill test cluster
-    BaseTestQuery.setupDefaultTestCluster();
+    startCluster(ClusterFixture.builder(dirTestWatcher));
 
     // Register Accumulo storage plugin
-    StoragePluginRegistry pluginRegistry = getDrillbitContext().getStorage();
+    StoragePluginRegistry pluginRegistry = cluster.drillbit().getContext().getStorage();
     storagePluginConfig = new AccumuloStoragePluginConfig(
         AccumuloIntegrationTestsSuite.getZooKeepers(),
         AccumuloIntegrationTestsSuite.getInstanceName(),
@@ -65,33 +70,17 @@ public class BaseAccumuloTest extends BaseTestQuery {
   }
 
   @AfterClass
-  public static void tearDownAfterClass() throws Exception {
+  public static void tearDownAccumuloTestCluster() throws Exception {
     AccumuloIntegrationTestsSuite.tearDownCluster();
   }
 
   /**
-   * Runs a SQL query and verifies the row count.
+   * Runs a SQL query and verifies the row count. Pass {@code -1} to skip the check.
    */
   protected void runAccumuloSQLVerifyCount(String sql, int expectedRowCount) throws Exception {
-    List<QueryDataBatch> results = testSqlWithResults(sql);
-    logResultAndVerifyRowCount(results, expectedRowCount);
-  }
-
-  /**
-   * Runs a SQL query and returns the results for inspection.
-   */
-  protected List<QueryDataBatch> runAccumuloSQLWithResults(String sql) throws Exception {
-    return testSqlWithResults(sql);
-  }
-
-  /**
-   * Logs the results and verifies the row count.
-   */
-  private void logResultAndVerifyRowCount(List<QueryDataBatch> results, int expectedRowCount)
-      throws SchemaChangeException {
-    int rowCount = logResult(results);
+    long rowCount = queryBuilder().sql(sql).run().recordCount();
     if (expectedRowCount != -1) {
-      Assert.assertEquals(expectedRowCount, rowCount);
+      assertEquals(expectedRowCount, rowCount);
     }
   }
 
@@ -103,5 +92,62 @@ public class BaseAccumuloTest extends BaseTestQuery {
    */
   protected String fullTableName(String tableName) {
     return ACCUMULO_STORAGE_PLUGIN_NAME + ".`" + tableName + "`";
+  }
+
+  /**
+   * Returns a {@code FROM} clause that aliases the table as {@code t}. Referring to a
+   * qualifier inside a column family requires the table alias ({@code t.cf.name}),
+   * the same as for the HBase plugin.
+   */
+  protected String fromTable(String tableName) {
+    return " FROM " + fullTableName(tableName) + " t";
+  }
+
+  /**
+   * Wraps a column reference in a {@code CONVERT_FROM(..., 'UTF8')} call. Accumulo row
+   * keys and values are surfaced to Drill as VARBINARY, so they must be decoded before
+   * they can be compared against string baselines.
+   *
+   * @param column the column reference, e.g. {@code row_key} or {@code cf.name}
+   * @param alias the alias to give the decoded column
+   */
+  protected static String utf8(String column, String alias) {
+    return "CONVERT_FROM(" + column + ", 'UTF8') AS " + alias;
+  }
+
+  /**
+   * Runs a query and returns its results as rows of strings, with {@code null} for
+   * NULL values. Reading the values back as strings keeps the assertions independent
+   * of whether a column comes back as required or nullable.
+   */
+  protected List<List<String>> runAndReadStrings(String sql) throws Exception {
+    return readStrings(queryBuilder().sql(sql).rowSetIterator());
+  }
+
+  /**
+   * Drains a query's row sets into rows of strings, with {@code null} for NULL values.
+   *
+   * <p>Every batch is read, so this stays correct for queries that return their results
+   * across several batches, and each row set is released as it is consumed.</p>
+   */
+  protected static List<List<String>> readStrings(QueryRowSetIterator batches) {
+    List<List<String>> rows = new ArrayList<>();
+    for (DirectRowSet rowSet : batches) {
+      try {
+        int columnCount = rowSet.schema().size();
+        RowSetReader reader = rowSet.reader();
+        while (reader.next()) {
+          List<String> row = new ArrayList<>(columnCount);
+          for (int i = 0; i < columnCount; i++) {
+            ScalarReader scalar = reader.scalar(i);
+            row.add(scalar.isNull() ? null : String.valueOf(scalar.getObject()));
+          }
+          rows.add(row);
+        }
+      } finally {
+        rowSet.clear();
+      }
+    }
+    return rows;
   }
 }
