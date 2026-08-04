@@ -29,65 +29,65 @@ public class AccumuloBasicQueryTest extends BaseAccumuloTest {
 
   @Test
   public void testSelectStarFromTable1() throws Exception {
-    String sql = "SELECT * FROM " + fullTableName(AccumuloTestUtils.TEST_TABLE_1);
+    String sql = "SELECT * FROM " + fullTableName(AccumuloTestUtils.TEST_TABLE_1) + " t";
     runAccumuloSQLVerifyCount(sql, 10);
   }
 
   @Test
   public void testSelectSpecificColumnsFromTable1() throws Exception {
-    String sql = "SELECT row_key, cf.name, cf.age FROM " + fullTableName(AccumuloTestUtils.TEST_TABLE_1);
+    String sql = "SELECT row_key, t.cf.name, t.cf.age FROM " + fullTableName(AccumuloTestUtils.TEST_TABLE_1) + " t";
     runAccumuloSQLVerifyCount(sql, 10);
   }
 
   @Test
   public void testSelectRowKeyOnly() throws Exception {
-    String sql = "SELECT row_key FROM " + fullTableName(AccumuloTestUtils.TEST_TABLE_1);
+    String sql = "SELECT row_key FROM " + fullTableName(AccumuloTestUtils.TEST_TABLE_1) + " t";
     runAccumuloSQLVerifyCount(sql, 10);
   }
 
   @Test
   public void testSelectFromUsersTable() throws Exception {
-    String sql = "SELECT * FROM " + fullTableName(AccumuloTestUtils.TEST_TABLE_USERS);
+    String sql = "SELECT * FROM " + fullTableName(AccumuloTestUtils.TEST_TABLE_USERS) + " t";
     runAccumuloSQLVerifyCount(sql, 20);
   }
 
   @Test
   public void testSelectMultipleColumnFamilies() throws Exception {
-    String sql = "SELECT row_key, personal.first_name, personal.last_name, employment.company " +
-        "FROM " + fullTableName(AccumuloTestUtils.TEST_TABLE_USERS);
+    String sql = "SELECT row_key, t.personal.first_name, t.personal.last_name, t.employment.company " +
+        "FROM " + fullTableName(AccumuloTestUtils.TEST_TABLE_USERS) + " t";
     runAccumuloSQLVerifyCount(sql, 20);
   }
 
   @Test
   public void testSelectFromLargeTable() throws Exception {
-    String sql = "SELECT * FROM " + fullTableName(AccumuloTestUtils.TEST_TABLE_LARGE);
+    String sql = "SELECT * FROM " + fullTableName(AccumuloTestUtils.TEST_TABLE_LARGE) + " t";
     runAccumuloSQLVerifyCount(sql, 1000);
   }
 
   @Test
   public void testCountStar() throws Exception {
-    String sql = "SELECT COUNT(*) FROM " + fullTableName(AccumuloTestUtils.TEST_TABLE_1);
+    String sql = "SELECT COUNT(*) FROM " + fullTableName(AccumuloTestUtils.TEST_TABLE_1) + " t";
     runAccumuloSQLVerifyCount(sql, 1);
   }
 
   @Test
   public void testCountStarUsersTable() throws Exception {
-    String sql = "SELECT COUNT(*) FROM " + fullTableName(AccumuloTestUtils.TEST_TABLE_USERS);
+    String sql = "SELECT COUNT(*) FROM " + fullTableName(AccumuloTestUtils.TEST_TABLE_USERS) + " t";
     runAccumuloSQLVerifyCount(sql, 1);
   }
 
   @Test
   public void testDistinctCompany() throws Exception {
-    String sql = "SELECT DISTINCT employment.company FROM " + fullTableName(AccumuloTestUtils.TEST_TABLE_USERS);
+    String sql = "SELECT DISTINCT t.employment.company FROM " + fullTableName(AccumuloTestUtils.TEST_TABLE_USERS) + " t";
     // Should have 3 distinct companies: Acme Corp, TechCo, DataInc
     runAccumuloSQLVerifyCount(sql, 3);
   }
 
   @Test
   public void testGroupByCompany() throws Exception {
-    String sql = "SELECT employment.company, COUNT(*) as cnt " +
-        "FROM " + fullTableName(AccumuloTestUtils.TEST_TABLE_USERS) +
-        " GROUP BY employment.company";
+    String sql = "SELECT t.employment.company, COUNT(*) as cnt " +
+        "FROM " + fullTableName(AccumuloTestUtils.TEST_TABLE_USERS) + " t" +
+        " GROUP BY t.employment.company";
     runAccumuloSQLVerifyCount(sql, 3);
   }
 }

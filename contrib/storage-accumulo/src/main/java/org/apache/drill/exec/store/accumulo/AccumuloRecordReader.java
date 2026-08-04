@@ -224,16 +224,17 @@ public class AccumuloRecordReader extends AbstractRecordReader implements DrillA
     byte[] startRow = scanSpec.getStartRow();
     byte[] stopRow = scanSpec.getStopRow();
 
-    if (startRow != null && stopRow != null) {
-      scanner.setRange(new Range(
-          new Text(startRow), true,
-          new Text(stopRow), false));
-    } else if (startRow != null) {
-      scanner.setRange(new Range(new Text(startRow), null));
-    } else if (stopRow != null) {
-      scanner.setRange(new Range(null, new Text(stopRow)));
+    if (startRow == null && stopRow == null) {
+      // Full table scan (default)
+      return;
     }
-    // else: full table scan (default)
+
+    // The inclusive flags carry the difference between, say, `row_key < 'x'` and
+    // `row_key <= 'x'`, so they have to be passed through rather than assumed. A null
+    // bound means unbounded on that side.
+    scanner.setRange(new Range(
+        startRow == null ? null : new Text(startRow), scanSpec.isStartRowInclusive(),
+        stopRow == null ? null : new Text(stopRow), scanSpec.isStopRowInclusive()));
   }
 
   /**

@@ -18,7 +18,14 @@
 package org.apache.drill.exec.store.accumulo;
 
 import java.util.ArrayList;
+import java.util.LinkedHashSet;
+import java.util.Map;
+import java.util.Set;
 
+import org.apache.accumulo.core.client.Scanner;
+import org.apache.accumulo.core.data.Key;
+import org.apache.accumulo.core.data.Value;
+import org.apache.accumulo.core.security.Authorizations;
 import org.apache.calcite.rel.type.RelDataType;
 import org.apache.calcite.rel.type.RelDataTypeFactory;
 import org.apache.calcite.sql.type.SqlTypeName;
@@ -38,18 +45,27 @@ import org.slf4j.LoggerFactory;
  * <p>Schema resolution follows this order:</p>
  * <ol>
  *   <li>If explicit schema is defined in the metadata table, use that</li>
- *   <li>Otherwise, use a dynamic schema with row_key and a columns map</li>
+ *   <li>Otherwise, expose row_key plus one map column per Accumulo column family,
+ *       with the families inferred from a bounded sample of the table's data</li>
  * </ol>
  */
 public class DrillAccumuloTable extends DrillTable {
   private static final Logger logger = LoggerFactory.getLogger(DrillAccumuloTable.class);
 
   public static final String ROW_KEY_COLUMN = "row_key";
-  public static final String COLUMNS_MAP_COLUMN = "columns";
 
   private final AccumuloStoragePlugin plugin;
   private final AccumuloScanSpec scanSpec;
+
+  /**
+   * Maximum number of Accumulo entries examined when inferring which column families
+   * a table contains. Accumulo has no catalog of column families, so they have to be
+   * read off the data itself; the cap keeps planning cheap on large tables.
+   */
+  private static final int COLUMN_FAMILY_SAMPLE_SIZE = 1000;
+
   private TableSchema tableSchema;
+  private Set<String> columnFamilies;
 
   public DrillAccumuloTable(
       AccumuloStoragePlugin plugin,
@@ -83,12 +99,16 @@ public class DrillAccumuloTable extends DrillTable {
       logger.debug("Using explicit schema for table '{}' with {} columns",
           scanSpec.getTableName(), schema.getColumnCount());
     } else {
-      // Use dynamic schema with columns map
-      fieldNameList.add(COLUMNS_MAP_COLUMN);
-      typeList.add(typeFactory.createMapType(
-          typeFactory.createSqlType(SqlTypeName.VARCHAR),
-          typeFactory.createSqlType(SqlTypeName.ANY)));
-      logger.debug("Using dynamic schema for table '{}'", scanSpec.getTableName());
+      // No explicit schema: expose one map column per Accumulo column family, which
+      // is the shape the record reader produces (row_key plus a MapVector per family).
+      for (String family : getColumnFamilies()) {
+        fieldNameList.add(family);
+        typeList.add(typeFactory.createMapType(
+            typeFactory.createSqlType(SqlTypeName.VARCHAR),
+            typeFactory.createSqlType(SqlTypeName.ANY)));
+      }
+      logger.debug("Using inferred schema for table '{}' with column families {}",
+          scanSpec.getTableName(), fieldNameList);
     }
 
     return typeFactory.createStructType(typeList, fieldNameList);
@@ -111,6 +131,36 @@ public class DrillAccumuloTable extends DrillTable {
       default:
         return typeFactory.createSqlType(sqlType);
     }
+  }
+
+  /**
+   * Returns the column families present in the table, inferring them from a bounded
+   * sample of the table's data.
+   *
+   * <p>Unlike HBase, Accumulo does not declare its column families up front, so they
+   * are read from the first {@value #COLUMN_FAMILY_SAMPLE_SIZE} entries. A family that
+   * appears only beyond that point will not be visible to the planner; define an
+   * explicit schema in the metadata table for tables where that matters.</p>
+   */
+  private Set<String> getColumnFamilies() {
+    if (columnFamilies == null) {
+      Set<String> families = new LinkedHashSet<>();
+      try (Scanner scanner = plugin.getClient()
+          .createScanner(scanSpec.getTableName(), Authorizations.EMPTY)) {
+        int examined = 0;
+        for (Map.Entry<Key, Value> entry : scanner) {
+          families.add(entry.getKey().getColumnFamily().toString());
+          if (++examined >= COLUMN_FAMILY_SAMPLE_SIZE) {
+            break;
+          }
+        }
+      } catch (Exception e) {
+        logger.warn("Failed to infer column families for table '{}'",
+            scanSpec.getTableName(), e);
+      }
+      columnFamilies = families;
+    }
+    return columnFamilies;
   }
 
   /**

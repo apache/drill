@@ -44,7 +44,9 @@ import org.slf4j.LoggerFactory;
 @RunWith(Suite.class)
 @Suite.SuiteClasses({
     AccumuloBasicQueryTest.class,
-    AccumuloPushdownIntegrationTest.class
+    AccumuloPushdownIntegrationTest.class,
+    AccumuloResultVerificationTest.class,
+    AccumuloSerDeTest.class
 })
 public class AccumuloIntegrationTestsSuite extends BaseTest {
   private static final Logger logger = LoggerFactory.getLogger(AccumuloIntegrationTestsSuite.class);
