@@ -53,6 +53,7 @@ import org.junit.experimental.categories.Category;
 import org.mockito.Mockito;
 
 import javax.security.auth.Subject;
+import org.apache.hadoop.security.authentication.util.SubjectUtil;
 import java.lang.reflect.Field;
 import java.security.PrivilegedExceptionAction;
 
@@ -255,7 +256,7 @@ public class TestSpnegoAuthentication extends BaseTest {
       spnegoHelper.clientKeytab.getAbsoluteFile());
 
     // Generate a SPNEGO token for the peer SERVER_PRINCIPAL from this CLIENT_PRINCIPAL
-    final String token = Subject.doAs(clientSubject, new PrivilegedExceptionAction<String>() {
+    final String token = SubjectUtil.doAs(clientSubject, new PrivilegedExceptionAction<String>() {
       @Override
       public String run() throws Exception {
 

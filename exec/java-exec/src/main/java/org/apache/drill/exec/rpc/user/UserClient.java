@@ -79,10 +79,14 @@ import org.apache.drill.exec.rpc.security.plain.PlainFactory;
 import org.apache.drill.exec.ssl.SSLConfig;
 import org.apache.drill.exec.ssl.SSLConfigBuilder;
 import org.apache.hadoop.security.UserGroupInformation;
+import org.apache.hadoop.security.authentication.util.SubjectUtil;
 import org.slf4j.Logger;
 
 import javax.net.ssl.SSLEngine;
+import javax.security.auth.Subject;
 import javax.security.sasl.SaslException;
+import java.security.PrivilegedActionException;
+import java.security.PrivilegedExceptionAction;
 import java.io.IOException;
 import java.util.List;
 import java.util.Map;
@@ -109,6 +113,11 @@ public class UserClient
   private DrillbitEndpoint endpoint;
 
   private DrillProperties properties;
+
+  // ponytail: the SASL handshake completes on a Netty thread, which no longer inherits the caller's
+  // Subject (JEP 486 replaced the inheritable AccessControlContext with a scoped value). Capture the
+  // Subject on the connecting thread and rebind it around the login below.
+  private Subject subject;
 
   public UserClient(String clientName, DrillConfig config, Properties properties, boolean supportComplexTypes,
       BufferAllocator allocator, EventLoopGroup eventLoopGroup, Executor eventExecutor,
@@ -174,6 +183,7 @@ public class UserClient
    */
   public void connect(final DrillbitEndpoint endpoint, final DrillProperties properties,
       final UserCredentials credentials) throws RpcException {
+    subject = SubjectUtil.current();
     final UserToBitHandshake.Builder hsBuilder =
         UserToBitHandshake.newBuilder()
             .setRpcVersion(UserRpcConfig.RPC_VERSION)
@@ -449,7 +459,15 @@ public class UserClient
       final ClassLoader oldThreadCtxtCL = Thread.currentThread().getContextClassLoader();
       final ClassLoader newThreadCtxtCL = this.getClass().getClassLoader();
       Thread.currentThread().setContextClassLoader(newThreadCtxtCL);
-      final UserGroupInformation ugi = factory.createAndLoginUser(saslProperties);
+      final UserGroupInformation ugi;
+      try {
+        ugi = SubjectUtil.doAs(subject,
+          (PrivilegedExceptionAction<UserGroupInformation>) () -> factory.createAndLoginUser(saslProperties));
+      } catch (PrivilegedActionException e) {
+        Thread.currentThread().setContextClassLoader(oldThreadCtxtCL);
+        throw e.getCause() instanceof IOException
+          ? (IOException) e.getCause() : new IOException(e.getCause());
+      }
       // Reset the thread context class loader to original one
       Thread.currentThread().setContextClassLoader(oldThreadCtxtCL);
 

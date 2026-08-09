@@ -42,6 +42,7 @@ import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
 import javax.security.auth.Subject;
+import org.apache.hadoop.security.authentication.util.SubjectUtil;
 import java.security.PrivilegedExceptionAction;
 
 import static junit.framework.TestCase.assertEquals;
@@ -157,7 +158,7 @@ public class TestUserBitKerberosEncryption extends ClusterTest {
     );
 
     try (
-      ClientFixture client = Subject.doAs(
+      ClientFixture client = SubjectUtil.doAs(
         clientSubject,
         (PrivilegedExceptionAction<ClientFixture>) () -> cluster.clientBuilder()
           .property(DrillProperties.SERVICE_PRINCIPAL, krbHelper.SERVER_PRINCIPAL)
