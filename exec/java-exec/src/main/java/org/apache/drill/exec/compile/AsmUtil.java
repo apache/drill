@@ -53,7 +53,7 @@ public class AsmUtil {
     classNode.accept(verifyWriter);
     final ClassReader ver = new ClassReader(verifyWriter.toByteArray());
     try {
-      DrillCheckClassAdapter.verify(ver, false, new PrintWriter(sw));
+      DrillCheckClassAdapter.verify(ver, new PrintWriter(sw));
     } catch(final Exception e) {
       logger.info("Caught exception verifying class:");
       logClass(logger, logTag, classNode);

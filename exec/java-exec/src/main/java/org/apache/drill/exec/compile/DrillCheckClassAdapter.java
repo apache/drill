@@ -18,10 +18,20 @@
 package org.apache.drill.exec.compile;
 
 import java.io.PrintWriter;
+import java.util.ArrayList;
+import java.util.List;
 
 import org.objectweb.asm.ClassReader;
 import org.objectweb.asm.ClassVisitor;
 import org.objectweb.asm.ClassWriter;
+import org.objectweb.asm.Opcodes;
+import org.objectweb.asm.Type;
+import org.objectweb.asm.tree.ClassNode;
+import org.objectweb.asm.tree.MethodNode;
+import org.objectweb.asm.tree.analysis.Analyzer;
+import org.objectweb.asm.tree.analysis.AnalyzerException;
+import org.objectweb.asm.tree.analysis.BasicValue;
+import org.objectweb.asm.tree.analysis.SimpleVerifier;
 import org.objectweb.asm.util.CheckClassAdapter;
 
 /**
@@ -100,19 +110,79 @@ public class DrillCheckClassAdapter extends RetargetableClassVisitor {
   }
 
   /**
-   * See {@link org.objectweb.asm.util.CheckClassAdapter#verify(ClassReader, boolean, PrintWriter)}.
+   * Data flow verification, equivalent to
+   * {@link org.objectweb.asm.util.CheckClassAdapter#verify(ClassReader, boolean, PrintWriter)}
+   * but tolerant of types that cannot be loaded (see {@link LenientVerifier}).
+   * Any problem found is written to <code>pw</code>; nothing is written if the
+   * class is well formed.
    */
-  public static void verify(final ClassReader cr, final boolean dump,
-      final PrintWriter pw) {
+  public static void verify(final ClassReader cr, final PrintWriter pw) {
     /*
      * For plain verification, we don't need to restore the original access
      * bytes the way we do when the check adapter is used as part of a chain, so
-     * we can just strip it and use the ASM version directly.
+     * we can just strip it and verify directly.
      */
     final ClassWriter classWriter = new ClassWriter(0);
     cr.accept(new InnerClassAccessStripper(CompilationConfig.ASM_API_VERSION,
         classWriter), ClassReader.SKIP_DEBUG);
-    final ClassReader strippedCr = new ClassReader(classWriter.toByteArray());
-    CheckClassAdapter.verify(strippedCr, dump, pw);
+
+    final ClassNode classNode = new ClassNode();
+    new ClassReader(classWriter.toByteArray()).accept(classNode, ClassReader.SKIP_DEBUG);
+
+    final Type currentClass = Type.getObjectType(classNode.name);
+    final Type currentSuperClass =
+        classNode.superName == null ? null : Type.getObjectType(classNode.superName);
+    final List<Type> currentClassInterfaces = new ArrayList<>();
+    for (String interfaceName : classNode.interfaces) {
+      currentClassInterfaces.add(Type.getObjectType(interfaceName));
+    }
+    final boolean isInterface = (classNode.access & Opcodes.ACC_INTERFACE) != 0;
+
+    for (MethodNode method : classNode.methods) {
+      final SimpleVerifier verifier = new LenientVerifier(
+          currentClass, currentSuperClass, currentClassInterfaces, isInterface);
+      try {
+        new Analyzer<>(verifier).analyze(classNode.name, method);
+      } catch (AnalyzerException e) {
+        e.printStackTrace(pw);
+      }
+    }
+  }
+
+  /**
+   * ASM's {@link SimpleVerifier} resolves types with {@link Class#forName}, which
+   * cannot work for the classes Drill is in the middle of generating: a generated
+   * nested class refers to its enclosing generated class, and neither has been
+   * defined in any class loader yet. Since JDK 22 javac emits an
+   * <code>Objects.requireNonNull(outer)</code> prologue in nested class
+   * constructors, which makes the verifier resolve the enclosing class and fail.
+   *
+   * <p>Types that cannot be loaded are treated as assignable, so verification
+   * still covers everything that is resolvable.
+   */
+  private static class LenientVerifier extends SimpleVerifier {
+    LenientVerifier(final Type currentClass, final Type currentSuperClass,
+        final List<Type> currentClassInterfaces, final boolean isInterface) {
+      super(CompilationConfig.ASM_API_VERSION, currentClass, currentSuperClass,
+          currentClassInterfaces, isInterface);
+    }
+
+    @Override
+    protected boolean isAssignableFrom(final Type type1, final Type type2) {
+      try {
+        return super.isAssignableFrom(type1, type2);
+      } catch (TypeNotPresentException e) {
+        return true;
+      }
+    }
+
+    @Override
+    public BasicValue merge(final BasicValue value1, final BasicValue value2) {
+      try {
+        return super.merge(value1, value2);
+      } catch (TypeNotPresentException e) {
+        return BasicValue.REFERENCE_VALUE;
+      }
+    }
   }
 }
