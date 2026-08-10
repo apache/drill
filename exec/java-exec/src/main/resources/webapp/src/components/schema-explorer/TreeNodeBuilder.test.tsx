@@ -16,9 +16,9 @@
  * limitations under the License.
  */
 import { describe, it, expect, vi } from 'vitest';
-import { buildColumnNodes, buildTableNodes } from './TreeNodeBuilder';
+import { buildColumnNodes, buildPluginNode, buildTableNodes } from './TreeNodeBuilder';
 import type { UsageCounts } from './TreeNodeBuilder';
-import type { ColumnInfo, TableInfo } from '../../types';
+import type { ColumnInfo, PluginInfo, TableInfo } from '../../types';
 import type { ReactElement } from 'react';
 import { EyeOutlined, TableOutlined, ThunderboltOutlined } from '@ant-design/icons';
 
@@ -232,5 +232,30 @@ describe('buildTableNodes icons', () => {
 
   it('gives a materialized view its own icon, distinct from a plain view', () => {
     expect(iconOf('MATERIALIZED VIEW')).toBe(ThunderboltOutlined);
+  });
+});
+
+describe('buildPluginNode', () => {
+  const plugin: PluginInfo = { name: 'splunk', type: 'splunk', enabled: true, browsable: true };
+
+  it('collapses a lone schema named after the plugin', () => {
+    const node = buildPluginNode(
+      plugin,
+      { splunk: [{ name: 'splunk', plugin: 'splunk', type: 'schema', browsable: true }] },
+      { splunk: [{ name: 'main', schema: 'splunk', type: 'TABLE' }] },
+      {}, {}, {}, {},
+    );
+
+    expect(node.children?.map((c) => c.key)).toEqual(['table:splunk:main']);
+  });
+
+  it('keeps the schema level when schemas differ from the plugin name', () => {
+    const node = buildPluginNode(
+      plugin,
+      { splunk: [{ name: 'splunk.audit', plugin: 'splunk', type: 'schema', browsable: true }] },
+      {}, {}, {}, {}, {},
+    );
+
+    expect(node.children?.map((c) => c.key)).toEqual(['schema:splunk.audit']);
   });
 });
