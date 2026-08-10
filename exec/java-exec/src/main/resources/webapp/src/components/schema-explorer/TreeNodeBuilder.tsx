@@ -449,6 +449,12 @@ export function buildPluginNode(
     ? buildSchemaNodes(plugin, schemas, tablesCache, columnsCache, filesCache, nestedCache, subTablesCache, columnFilter, onColumnFilterChange, usageCounts)
     : undefined;
 
+  // Plugins whose only schema repeats the plugin name (Splunk, Mongo, …) would otherwise
+  // render "splunk > splunk > tables".  Hoist that schema's children onto the plugin node.
+  const children = schemaNodes && schemas.length === 1 && schemas[0].name === plugin.name
+    ? schemaNodes[0].children
+    : schemaNodes;
+
   const isHttpPlugin = plugin.type?.toLowerCase().includes('http') || plugin.name.toLowerCase() === 'http';
 
   return {
@@ -469,7 +475,7 @@ export function buildPluginNode(
       </span>
     ),
     icon: getPluginIcon(plugin.type, plugin.name),
-    children: schemaNodes,
+    children,
     isLeaf: false,
   };
 }
