@@ -539,9 +539,24 @@ export default function SchemaExplorer({ onInsertText, onSelectQuery, onOpenInNe
       try {
         if (key.startsWith('plugin:')) {
           const pluginName = key.replace('plugin:', '');
-          if (!schemasCacheRef.current[pluginName]) {
-            const schemas = await getPluginSchemas(pluginName);
-            setSchemasCache((prev) => ({ ...prev, [pluginName]: schemas }));
+          let schemas = schemasCacheRef.current[pluginName];
+          if (!schemas) {
+            schemas = await getPluginSchemas(pluginName);
+            setSchemasCache((prev) => ({ ...prev, [pluginName]: schemas! }));
+          }
+          // When the plugin's only schema repeats the plugin name the tree collapses the
+          // two into one node, so its contents must be loaded here.
+          if (schemas.length === 1 && schemas[0].name === pluginName) {
+            const pluginType = pluginTypesCacheRef.current[pluginName] || '';
+            if (isFileBasedPlugin(pluginType, pluginName)) {
+              if (!filesCacheRef.current[`schema:${pluginName}`]) {
+                const files = await getFiles(pluginName);
+                setFilesCache((prev) => ({ ...prev, [`schema:${pluginName}`]: files }));
+              }
+            } else if (!tablesCacheRef.current[pluginName]) {
+              const tables = await getTables(pluginName, projectId);
+              setTablesCache((prev) => ({ ...prev, [pluginName]: tables }));
+            }
           }
           loaded = true;
 
