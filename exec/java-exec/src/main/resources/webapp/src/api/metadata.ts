@@ -211,6 +211,32 @@ export async function getFileColumns(schema: string, filePath: string): Promise<
 }
 
 /**
+ * Sample the schema of a dynamic table by running SELECT * ... LIMIT 1.
+ *
+ * Plugins backed by DynamicDrillTable (Splunk, HTTP, Mongo, ...) report a single
+ * "**" column in INFORMATION_SCHEMA because their real schema only exists once a
+ * query runs. Executing a one-row query is the only way to learn the columns, so
+ * this is always user-initiated — for a large Splunk index it is not cheap.
+ */
+export async function probeTableColumns(schema: string, table: string): Promise<ColumnInfo[]> {
+  const query = `SELECT * FROM ${formatSchema(schema)}.\`${table}\` LIMIT 1`;
+  const result = await executeQuery({ query, queryType: 'SQL' });
+
+  if (!result.columns || result.columns.length === 0) {
+    return [];
+  }
+
+  return result.columns.map((colName, idx) => ({
+    name: colName,
+    type: result.metadata?.[idx] || 'ANY',
+    nullable: true,
+    schema,
+    table,
+    sampled: true,
+  }));
+}
+
+/**
  * Parse a string-serialised map schema like "{field1=BIGINT, field2=VARCHAR}".
  */
 function parseMapSchemaString(str: string): NestedFieldInfo[] {

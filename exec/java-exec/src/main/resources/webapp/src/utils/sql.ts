@@ -85,3 +85,48 @@ export function buildViewDdl({ mode, schema, name, sql, replace }: ViewDdlOption
   const target = `${formatSchema(schema)}.\`${name}\``;
   return `CREATE ${orReplace}${keyword} ${target} AS ${sql.replace(/;\s*$/, '')}`;
 }
+
+/**
+ * If a query is an unambiguous whole-table read, return the table it reads.
+ *
+ * Used to harvest a dynamic table's schema from a query the user already ran, so
+ * they don't pay for a second probe query. Correctness matters more than reach
+ * here: the result columns of `SELECT a, b FROM t` are NOT t's schema, so anything
+ * other than a bare `SELECT *` against a single schema-qualified table returns
+ * null. Filters and ordering are fine — they don't change the row type.
+ */
+export function dynamicTableFromSql(sql: string): { schema: string; table: string } | null {
+  const stripped = sql
+    .replace(/\/\*[\s\S]*?\*\//g, ' ')
+    .replace(/--[^\n]*/g, ' ')
+    .replace(/\s+/g, ' ')
+    .replace(/;\s*$/, '')
+    .trim();
+
+  // A table reference part: `quoted` or a bare identifier.
+  const part = '(?:`[^`]+`|[A-Za-z_][A-Za-z0-9_$]*)';
+  // Require at least one dot — an unqualified name depends on the session's USE
+  // schema, which we can't see from here.
+  const head = new RegExp(`^select \\* from ((?:${part})(?:\\.(?:${part}))+)( .*)?$`, 'i');
+  const match = head.exec(stripped);
+  if (!match) {
+    return null;
+  }
+
+  const tail = (match[2] || '').trim();
+  // A comma or open paren immediately after the table means a multi-table FROM
+  // list or a table function, neither of which we can attribute columns to.
+  if (/^[,(]/.test(tail) || /\b(join|union|intersect|except)\b/i.test(tail)) {
+    return null;
+  }
+
+  const parts = match[1].match(new RegExp(part, 'g')) || [];
+  if (parts.length < 2) {
+    return null;
+  }
+  const unquote = (p: string) => p.replace(/^`|`$/g, '');
+  return {
+    schema: parts.slice(0, -1).map(unquote).join('.'),
+    table: unquote(parts[parts.length - 1]),
+  };
+}

@@ -16,7 +16,7 @@
  * limitations under the License.
  */
 import { describe, expect, it } from 'vitest';
-import { buildViewDdl, isCreatableAsView, isValidViewName, formatSchema } from './sql';
+import { buildViewDdl, isCreatableAsView, isValidViewName, formatSchema, dynamicTableFromSql } from './sql';
 
 describe('formatSchema', () => {
   it('leaves a bare plugin unquoted', () => {
@@ -129,5 +129,49 @@ describe('buildViewDdl', () => {
   it('strips a trailing semicolon from the query', () => {
     expect(buildViewDdl({ ...base, mode: 'view', sql: 'SELECT 1 FROM t;' }))
       .toBe('CREATE VIEW dfs.`tmp`.`sales` AS SELECT 1 FROM t');
+  });
+});
+
+describe('dynamicTableFromSql', () => {
+  it('matches a bare SELECT * against a qualified table', () => {
+    expect(dynamicTableFromSql('SELECT * FROM splunk.main')).toEqual({ schema: 'splunk', table: 'main' });
+  });
+
+  it('tolerates filters, ordering, limits, aliases and semicolons', () => {
+    expect(dynamicTableFromSql('select * from splunk.main m where m.host = \'a\' order by _time limit 10;'))
+      .toEqual({ schema: 'splunk', table: 'main' });
+  });
+
+  it('unquotes backticked parts and keeps multi-part schemas', () => {
+    expect(dynamicTableFromSql('SELECT * FROM dfs.`tmp`.`my table`'))
+      .toEqual({ schema: 'dfs.tmp', table: 'my table' });
+  });
+
+  it('ignores comments', () => {
+    expect(dynamicTableFromSql('-- probe\nSELECT * /* all */ FROM splunk.main'))
+      .toEqual({ schema: 'splunk', table: 'main' });
+  });
+
+  // The rejections are the point: anything below would attribute the wrong
+  // columns to the table.
+  it('rejects a projection, since those columns are not the table schema', () => {
+    expect(dynamicTableFromSql('SELECT a, b FROM splunk.main')).toBeNull();
+    expect(dynamicTableFromSql('SELECT m.* FROM splunk.main m')).toBeNull();
+  });
+
+  it('rejects joins, comma joins and set operations', () => {
+    expect(dynamicTableFromSql('SELECT * FROM splunk.main JOIN splunk.other ON a = b')).toBeNull();
+    expect(dynamicTableFromSql('SELECT * FROM splunk.main, splunk.other')).toBeNull();
+    expect(dynamicTableFromSql('SELECT * FROM splunk.main UNION SELECT * FROM splunk.other')).toBeNull();
+  });
+
+  it('rejects CTEs, table functions and unqualified names', () => {
+    expect(dynamicTableFromSql('WITH x AS (SELECT * FROM splunk.main) SELECT * FROM x')).toBeNull();
+    expect(dynamicTableFromSql('SELECT * FROM table(dfs.`f.csv`(type => \'text\'))')).toBeNull();
+    expect(dynamicTableFromSql('SELECT * FROM main')).toBeNull();
+  });
+
+  it('rejects non-SELECT statements', () => {
+    expect(dynamicTableFromSql('DESCRIBE splunk.main')).toBeNull();
   });
 });

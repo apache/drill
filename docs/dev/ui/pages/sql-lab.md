@@ -29,7 +29,7 @@ In `src/components/sqllab/`:
 
 - `SqlEditor` — Monaco wrapper. Selection tracking, completion provider, validation, SQL-aware command palette.
 - `ResultsGrid` — AG Grid table for results. Pagination, sort, column visibility, JSON-cell expander, CSV/clipboard export.
-- `SchemaExplorer` — nested schema/table tree. Filter, drag-to-insert, peek-rows preview. Renders into the Left Rail.
+- `SchemaExplorer` — nested schema/table tree. Filter, drag-to-insert, peek-rows preview. Renders into the Left Rail. See [Sampling dynamic schemas](#sampling-dynamic-schemas).
 - `QueryToolbar` — Run / Run Selection / Cancel buttons, schema/auto-limit dropdowns, format SQL.
 - `VisualizationBuilder` — chart-config panel that drives ChartPreview. Lives next to ResultsGrid as the "Visualization" sub-tab.
 - `NotebookPanel` — collapsible right-side markdown notebook for query narratives. Insertable Python code blocks from Prospector.
@@ -98,6 +98,31 @@ The tabs themselves live in Redux because they must survive route changes:
 - **AI Optimize.** Selecting "Optimize" in the AI menu sends the current SQL through Prospector with the optimize prompt. The response streams into a modal; "Accept" runs the result through `transpileSql` and replaces the editor contents.
 - **Notebook panel.** Collapsible markdown surface to the right of the editor. Renders saved markdown plus runnable Python cells.
 - **Mobile / tablet.** Below the mobile breakpoint (`Grid.useBreakpoint()`), the schema explorer collapses and the layout switches to single-pane.
+
+## Sampling dynamic schemas
+
+Storage plugins backed by `DynamicDrillTable` (Splunk, HTTP, Mongo, …) have no schema until a
+query runs, so `INFORMATION_SCHEMA.COLUMNS` reports a single column named `**`. The explorer
+detects that placeholder (`TreeNodeBuilder.tsx`, `isDynamic`) and renders a hint node instead of
+the raw wildcard. Two paths replace it with real columns; both write to the same
+`columnsCache['table:<schema>:<table>']` entry, so the rest of the tree is unaware of the
+difference.
+
+1. **Click to sample.** The hint node is selectable. Clicking it calls `probeTableColumns()`
+   (`api/metadata.ts`), which runs `SELECT * FROM <schema>.<table> LIMIT 1` and maps the result
+   columns. This is never automatic — against a large Splunk index it is a real query with real
+   cost. No time bounds are injected; the plugin's configured `earliestTime`/`latestTime` apply.
+2. **Harvest from the editor.** `SqlLabPage` forwards the last execution to the explorer as
+   `lastQueryResult` (SQL plus result columns, paired by tab id so a mid-flight tab switch can't
+   mismatch them). `dynamicTableFromSql()` (`utils/sql.ts`) accepts only a bare `SELECT *` against
+   one schema-qualified table — projections, joins, comma-joins, set operations, CTEs, table
+   functions and unqualified names all return `null`, because their result columns are not the
+   table's schema. The harvest applies only when the cache still holds the `**` placeholder, so a
+   real schema is never overwritten.
+
+Columns obtained either way carry `ColumnInfo.sampled`, surfaced as a tooltip: they are a lower
+bound, since fields absent from the sampled rows don't appear. Context-menu **Refresh Columns**
+clears the cache back to the placeholder, ready to be sampled again.
 
 ## Quirks
 
