@@ -96,7 +96,7 @@ export function buildColumnNodes(
     return {
       key: colKey,
       title: (
-        <Tooltip title={`${col.type}${col.nullable ? ' (nullable)' : ''}${colCount > 0 ? ` \u2022 Used in ${colCount} queries` : ''}`}>
+        <Tooltip title={`${col.type}${col.nullable ? ' (nullable)' : ''}${col.sampled ? ' \u2022 Sampled from query results \u2014 fields absent from the sampled rows are not listed' : ''}${colCount > 0 ? ` \u2022 Used in ${colCount} queries` : ''}`}>
           <span>
             {col.name} <Text type="secondary" style={{ fontSize: 11 }}>{col.type}</Text>
             {colCount > 0 && (
@@ -293,13 +293,14 @@ export function buildTableNodes(
         children: [{
           key: `${tableKey}:__dynamic__`,
           title: (
-            <Text type="secondary" italic style={{ fontSize: 12 }}>
-              Schema determined at query time
-            </Text>
+            <Tooltip title="Runs SELECT * ... LIMIT 1 against this table to sample its columns">
+              <Text italic style={{ fontSize: 12, color: 'var(--color-primary)' }}>
+                Schema determined at query time — click to sample
+              </Text>
+            </Tooltip>
           ),
           icon: <InfoCircleOutlined style={{ color: 'var(--color-text-tertiary)' }} />,
           isLeaf: true,
-          selectable: false,
         } as DataNode],
         isLeaf: false,
       };
