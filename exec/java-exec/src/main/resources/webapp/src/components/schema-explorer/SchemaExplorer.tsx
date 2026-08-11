@@ -16,7 +16,7 @@
  * limitations under the License.
  */
 import { useState, useCallback, useMemo, useEffect, useRef } from 'react';
-import { Tree, Input, Spin, Empty, Tooltip, Button } from 'antd';
+import { Tree, Input, Spin, Empty, Tooltip, Button, message } from 'antd';
 import {
   ReloadOutlined,
   SearchOutlined,
@@ -27,7 +27,7 @@ import {
 import { useNavigate } from 'react-router-dom';
 import type { DataNode, EventDataNode } from 'antd/es/tree';
 import { useQueryClient, useQuery as useReactQuery } from '@tanstack/react-query';
-import { getPluginSchemas, getTables, getColumns, getFiles, getFileColumns, getNestedColumns, getSubTables, getSubTableColumns } from '../../api/metadata';
+import { getPluginSchemas, getTables, getColumns, getFiles, getFileColumns, getNestedColumns, getSubTables, getSubTableColumns, probeTableColumns } from '../../api/metadata';
 import type { SchemaInfo, TableInfo, ColumnInfo, FileInfo, NestedFieldInfo, SubTableInfo, DatasetRef } from '../../types';
 import { isFileBasedPlugin, getMultiTableConfig, getHomogeneousDataFormat } from './icons';
 import { usePlugins } from './hooks';
@@ -45,6 +45,7 @@ import { getVisualizations } from '../../api/visualizations';
 import { getProject } from '../../api/projects';
 import { getExecutionHistory } from '../../utils/queryExecutionHistory';
 import { buildDatasetAllowList, type DatasetAllowList } from './datasetAllowList';
+import { dynamicTableFromSql } from '../../utils/sql';
 
 const { Search } = Input;
 
@@ -73,6 +74,13 @@ interface SchemaExplorerProps {
    * outside. The nonce makes repeat saves to the same schema distinct.
    */
   refreshSchema?: { schema: string; nonce: number };
+  /**
+   * The most recent query the user ran, forwarded from the editor. When the query
+   * is a plain whole-table read of a dynamic table, its result columns are that
+   * table's sampled schema — so we can fill the tree without running a second
+   * query. A fresh object per execution is what triggers the harvest.
+   */
+  lastQueryResult?: { sql: string; columns: string[]; metadata?: string[] };
 }
 
 /**
@@ -307,7 +315,7 @@ function filterTreeNodes(nodes: DataNode[], allow: DatasetAllowList): DataNode[]
   }, []);
 }
 
-export default function SchemaExplorer({ onInsertText, onSelectQuery, onOpenInNewTab, datasetFilter, projectId, savedQueryIds, refreshSchema }: SchemaExplorerProps) {
+export default function SchemaExplorer({ onInsertText, onSelectQuery, onOpenInNewTab, datasetFilter, projectId, savedQueryIds, refreshSchema, lastQueryResult }: SchemaExplorerProps) {
   const queryClient = useQueryClient();
   const navigate = useNavigate();
   const [searchText, setSearchText] = useState('');
@@ -753,9 +761,80 @@ export default function SchemaExplorer({ onInsertText, onSelectQuery, onOpenInNe
 
   // ---------- Selection / double-click ----------
 
+  /**
+   * Replace a dynamic table's "**" placeholder with columns sampled from a query.
+   * Shared by the click-to-sample node and by harvesting from the editor, so both
+   * paths land in the same cache entry the tree already renders from.
+   */
+  const applySampledColumns = useCallback(
+    (schemaName: string, tableName: string, columns: ColumnInfo[]) => {
+      setColumnsCache((prev) => ({
+        ...prev,
+        [`table:${schemaName}:${tableName}`]: columns,
+      }));
+    },
+    [],
+  );
+
+  const handleProbeSchema = useCallback(
+    async (schemaName: string, tableName: string) => {
+      const toastKey = `probe:${schemaName}:${tableName}`;
+      message.loading({ key: toastKey, content: `Sampling schema of ${tableName}...`, duration: 0 });
+      try {
+        const columns = await probeTableColumns(schemaName, tableName);
+        if (columns.length === 0) {
+          message.warning({ key: toastKey, content: `${tableName} returned no rows — schema unavailable` });
+          return;
+        }
+        applySampledColumns(schemaName, tableName, columns);
+        message.success({ key: toastKey, content: `Sampled ${columns.length} columns from ${tableName}` });
+      } catch (err) {
+        message.error({
+          key: toastKey,
+          content: `Could not sample ${tableName}: ${err instanceof Error ? err.message : 'query failed'}`,
+        });
+      }
+    },
+    [applySampledColumns],
+  );
+
+  // Harvest a dynamic table's schema from a query the user already ran, rather
+  // than making them pay for a probe query. Only fires when the table is still
+  // showing the "**" placeholder, so a real schema is never overwritten.
+  useEffect(() => {
+    if (!lastQueryResult || lastQueryResult.columns.length === 0) {
+      return;
+    }
+    const target = dynamicTableFromSql(lastQueryResult.sql);
+    if (!target) {
+      return;
+    }
+    const cached = columnsCacheRef.current[`table:${target.schema}:${target.table}`];
+    const isPlaceholder = cached?.length === 1 && cached[0].name === '**';
+    if (!isPlaceholder) {
+      return;
+    }
+    applySampledColumns(target.schema, target.table, lastQueryResult.columns.map((name, idx) => ({
+      name,
+      type: lastQueryResult.metadata?.[idx] || 'ANY',
+      nullable: true,
+      schema: target.schema,
+      table: target.table,
+      sampled: true,
+    })));
+  }, [lastQueryResult, applySampledColumns]);
+
   const handleSelect = useCallback(
     (_selectedKeys: React.Key[], info: { node: DataNode }) => {
       const key = info.node.key as string;
+
+      // The "schema determined at query time" hint doubles as the sample button —
+      // clicking it is the only way to learn a dynamic table's columns.
+      if (key.endsWith(':__dynamic__')) {
+        const [, schemaName, tableName] = key.slice(0, -':__dynamic__'.length).split(':');
+        handleProbeSchema(schemaName, tableName);
+        return;
+      }
 
       // Favorites are an explicit shortcut — single-click inserts the name
       // into the editor (these rows exist precisely so users can paste
@@ -772,7 +851,7 @@ export default function SchemaExplorer({ onInsertText, onSelectQuery, onOpenInNe
       // double-click (open in a new tab) so users can browse without
       // accidentally clobbering their current query.
     },
-    [onInsertText],
+    [onInsertText, handleProbeSchema],
   );
 
   const handleDoubleClick = useCallback(

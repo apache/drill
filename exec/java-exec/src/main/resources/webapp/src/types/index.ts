@@ -45,6 +45,12 @@ export interface ColumnInfo {
   nullable: boolean;
   schema: string;
   table: string;
+  /**
+   * True when the column was inferred by sampling rows (dynamic-schema sources)
+   * rather than read from INFORMATION_SCHEMA. Fields missing from the sampled
+   * rows will be absent, so the list is a lower bound, not the whole schema.
+   */
+  sampled?: boolean;
 }
 
 export interface FileInfo {

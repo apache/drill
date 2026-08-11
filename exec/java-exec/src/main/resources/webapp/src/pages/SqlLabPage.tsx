@@ -658,6 +658,13 @@ export default function SqlLabPage({ datasetFilter, headerContent, projectId, sa
     updateSql(prettifySql(sql));
   }, [sql, updateSql]);
 
+  // The SQL of the execution we're still waiting on, tagged with its tab so a
+  // tab switch mid-flight can't pair this SQL with another tab's cached results.
+  const pendingSqlRef = useRef<{ tabId: string; sql: string } | null>(null);
+  const [lastQueryResult, setLastQueryResult] = useState<{
+    sql: string; columns: string[]; metadata?: string[];
+  }>();
+
   // Handle execute — runs selected text if available, otherwise full SQL
   const handleExecute = useCallback(() => {
     const editor = editorInstanceRef.current;
@@ -668,12 +675,13 @@ export default function SqlLabPage({ datasetFilter, headerContent, projectId, sa
         sqlToRun = editor.getModel()?.getValueInRange(selection) || undefined;
       }
     }
+    pendingSqlRef.current = { tabId: activeTabId, sql: sqlToRun ?? sql ?? '' };
     execute({
       autoLimit: autoLimit ?? undefined,
       defaultSchema: activeTab?.defaultSchema,
       sqlOverride: sqlToRun,
     });
-  }, [execute, autoLimit, activeTab?.defaultSchema, editorInstanceRef]);
+  }, [execute, autoLimit, activeTab?.defaultSchema, editorInstanceRef, activeTabId, sql]);
 
   const handleClearResults = useCallback(() => {
     dispatch(clearResults(activeTabId));
@@ -895,6 +903,7 @@ export default function SqlLabPage({ datasetFilter, headerContent, projectId, sa
         projectId={projectId}
         savedQueryIds={savedQueryIds}
         refreshSchema={refreshSchema}
+        lastQueryResult={lastQueryResult}
       />
     ),
   }), [
@@ -905,6 +914,7 @@ export default function SqlLabPage({ datasetFilter, headerContent, projectId, sa
     projectId,
     savedQueryIds,
     refreshSchema,
+    lastQueryResult,
   ]);
 
   usePageChrome({ inspectorTabs, leftRail });
@@ -1066,6 +1076,16 @@ export default function SqlLabPage({ datasetFilter, headerContent, projectId, sa
       document.body.style.cursor = '';
     };
   }, [isDragging, dispatch]);
+
+  // Pair arriving results with the SQL that asked for them, so the schema
+  // explorer can learn a dynamic table's columns from a query already run.
+  useEffect(() => {
+    const pending = pendingSqlRef.current;
+    if (results && pending && pending.tabId === activeTabId) {
+      pendingSqlRef.current = null;
+      setLastQueryResult({ sql: pending.sql, columns: results.columns || [], metadata: results.metadata });
+    }
+  }, [results, activeTabId]);
 
   // Cache results when they arrive
   useEffect(() => {
