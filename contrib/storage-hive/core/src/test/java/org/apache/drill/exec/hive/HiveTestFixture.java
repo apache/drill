@@ -114,6 +114,33 @@ public class HiveTestFixture {
     return new Builder(requireNonNull(baseDir, "Parameter 'baseDir' can't be null!"));
   }
 
+  /**
+   * Creates a builder configured for Docker-based Hive testing.
+   *
+   * @param baseDir Base directory for test files
+   * @param hiveContainer Hive container instance
+   * @return Builder configured for Docker
+   */
+  public static Builder builderForDocker(File baseDir, HiveContainer hiveContainer) {
+    requireNonNull(baseDir, "Parameter 'baseDir' can't be null!");
+    requireNonNull(hiveContainer, "Parameter 'hiveContainer' can't be null!");
+
+    Builder builder = new Builder(baseDir);
+    String metastoreUri = hiveContainer.getMetastoreUri();
+    String warehouseDir = "/opt/hive/data/warehouse"; // Container's warehouse directory
+
+    // Configure for Docker-based metastore
+    builder.pluginOption(ConfVars.METASTOREURIS, metastoreUri);
+    builder.pluginOption(ConfVars.METASTOREWAREHOUSE, warehouseDir);
+
+    // Configure driver for Docker-based HiveServer2
+    // Driver uses the containerized metastore via thrift
+    builder.driverOption(ConfVars.METASTOREURIS, metastoreUri);
+    builder.driverOption(ConfVars.METASTOREWAREHOUSE, warehouseDir);
+
+    return builder;
+  }
+
   public HivePluginManager getPluginManager() {
     return pluginManager;
   }

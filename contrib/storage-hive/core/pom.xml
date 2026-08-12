@@ -32,6 +32,8 @@
   <name>Drill : Contrib : Storage : Hive : Core</name>
   <properties>
     <freemarker.conf.file>src/main/codegen/configHive3.fmpp</freemarker.conf.file>
+    <!-- Default: don't exclude any tests. ARM64 profiles override this to skip slow Docker tests -->
+    <hive.test.excludedGroups></hive.test.excludedGroups>
   </properties>
 
   <dependencies>
@@ -335,6 +337,46 @@
         </exclusion>
       </exclusions>
     </dependency>
+    <!-- Testcontainers for Docker-based Hive testing -->
+    <dependency>
+      <groupId>org.testcontainers</groupId>
+      <artifactId>testcontainers</artifactId>
+      <version>${testcontainers.version}</version>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.hive</groupId>
+      <artifactId>hive-jdbc</artifactId>
+      <version>${hive.version}</version>
+      <scope>test</scope>
+      <exclusions>
+        <exclusion>
+          <groupId>org.apache.logging.log4j</groupId>
+          <artifactId>log4j-slf4j-impl</artifactId>
+        </exclusion>
+        <exclusion>
+          <groupId>org.apache.logging.log4j</groupId>
+          <artifactId>log4j-1.2-api</artifactId>
+        </exclusion>
+        <!-- Exclude banned servlet dependencies -->
+        <exclusion>
+          <groupId>javax.servlet</groupId>
+          <artifactId>javax.servlet-api</artifactId>
+        </exclusion>
+        <exclusion>
+          <groupId>javax.servlet.jsp</groupId>
+          <artifactId>javax.servlet.jsp-api</artifactId>
+        </exclusion>
+        <exclusion>
+          <groupId>org.eclipse.jetty</groupId>
+          <artifactId>jetty-runner</artifactId>
+        </exclusion>
+        <exclusion>
+          <groupId>org.apache.hive</groupId>
+          <artifactId>hive-service</artifactId>
+        </exclusion>
+      </exclusions>
+    </dependency>
 
   </dependencies>
 
@@ -359,6 +401,51 @@
           </execution>
         </executions>
       </plugin>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-surefire-plugin</artifactId>
+        <configuration>
+          <!-- Skip Hive Docker tests on ARM64 due to slow emulation (20-30 min startup) -->
+          <!-- Tests run normally on AMD64 architecture and in CI/CD -->
+          <excludedGroups>${hive.test.excludedGroups}</excludedGroups>
+        </configuration>
+      </plugin>
     </plugins>
   </build>
+
+  <profiles>
+    <!-- Skip Hive Docker tests on ARM64/aarch64 by default (slow emulation) -->
+    <!-- Linux reports as 'aarch64', macOS reports as 'arm64' -->
+    <profile>
+      <id>skip-hive-tests-on-arm-linux</id>
+      <activation>
+        <os>
+          <arch>aarch64</arch>
+        </os>
+      </activation>
+      <properties>
+        <hive.test.excludedGroups>org.apache.drill.categories.HiveStorageTest</hive.test.excludedGroups>
+      </properties>
+    </profile>
+
+    <profile>
+      <id>skip-hive-tests-on-arm-macos</id>
+      <activation>
+        <os>
+          <arch>arm64</arch>
+        </os>
+      </activation>
+      <properties>
+        <hive.test.excludedGroups>org.apache.drill.categories.HiveStorageTest</hive.test.excludedGroups>
+      </properties>
+    </profile>
+
+    <!-- Force run Hive tests even on ARM64 with: mvn test -Pforce-hive-tests -->
+    <profile>
+      <id>force-hive-tests</id>
+      <properties>
+        <hive.test.excludedGroups></hive.test.excludedGroups>
+      </properties>
+    </profile>
+  </profiles>
 </project>

@@ -17,13 +17,12 @@
  */
 package org.apache.drill.exec.sql.hive;
 
-import java.util.Objects;
-
 import org.apache.drill.categories.HiveStorageTest;
 import org.apache.drill.categories.SlowTest;
-import org.apache.drill.exec.hive.HiveTestUtilities;
+import org.apache.drill.exec.hive.HiveTestBase;
 import org.apache.drill.exec.sql.TestBaseViewSupport;
 import org.junit.AfterClass;
+import org.junit.Assume;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -36,10 +35,11 @@ public class TestViewSupportOnHiveTables extends TestBaseViewSupport {
 
   @BeforeClass
   public static void setUp() {
-    HiveTestUtilities.assumeJavaVersion();
-    Objects.requireNonNull(HIVE_TEST_FIXTURE, "Failed to configure Hive storage plugin, " +
-        "because HiveTestBase.HIVE_TEST_FIXTURE isn't initialized!")
-        .getPluginManager().addHivePluginTo(bits);
+    // Trigger lazy initialization of Hive infrastructure
+    HiveTestBase.setUp();
+
+    // Skip if Hive infrastructure is not available
+    Assume.assumeNotNull("Hive infrastructure not available", HIVE_TEST_FIXTURE);
   }
 
   @AfterClass
