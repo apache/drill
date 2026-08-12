@@ -17,7 +17,6 @@
  */
 package org.apache.drill.test;
 
-import org.apache.drill.common.util.GuavaPatcher;
 import org.apache.drill.common.util.ProtobufPatcher;
 
 /**
@@ -33,10 +32,5 @@ public class BaseTest {
      * This code removes these final modifiers.
      */
     ProtobufPatcher.patch();
-    /*
-     * Some libraries, such as Hadoop, HBase, Iceberg depend on incompatible versions of Guava.
-     * This code adds back some methods to so that the libraries can work with single Guava version.
-     */
-    GuavaPatcher.patch();
   }
 }
