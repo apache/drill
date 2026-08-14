@@ -61,6 +61,18 @@ if(MSVC)
     add_library(drillClient SHARED ${CLIENTLIB_SRC_FILES} ${CMAKE_CURRENT_BINARY_DIR}/version.rc)
 else()
     add_library(drillClient SHARED ${CLIENTLIB_SRC_FILES})
+    # Build static archives of Drill Client.
+    set(REL_OBJECT_FILES ${CMAKE_CURRENT_BINARY_DIR}/rel_objs)
+    add_custom_command(TARGET drillClient PRE_LINK COMMAND mkdir -p ${REL_OBJECT_FILES})
+    foreach(ARCHIVE IN LISTS Boost_LIBRARIES  PROTOBUF_LIBRARY Zookeeper_LIBRARIES SASL_LIBRARIES OPENSSL_LIBRARIES)
+        add_custom_command(TARGET drillClient PRE_LINK COMMAND ar -x ${ARCHIVE} WORKING_DIRECTORY ${REL_OBJECT_FILES})
+    endforeach()
+    get_target_property(PROTOMSGS_LIBRARY_DIR protomsgs BINARY_DIR)
+    get_target_property(Y2038_LIBRARY_DIR y2038 BINARY_DIR)
+    add_custom_command(TARGET drillClient PRE_LINK COMMAND ar -x ${PROTOMSGS_LIBRARY_DIR}/libprotomsgs.a WORKING_DIRECTORY ${REL_OBJECT_FILES})
+    add_custom_command(TARGET drillClient PRE_LINK COMMAND ar -x ${Y2038_LIBRARY_DIR}/liby2038.a WORKING_DIRECTORY ${REL_OBJECT_FILES})
+    add_custom_command(TARGET drillClient PRE_LINK
+    COMMAND ar -qcs libdrillClient.a ${CMAKE_CURRENT_BINARY_DIR}/CMakeFiles/drillClient.dir/*.cpp.o ${REL_OBJECT_FILES}/*.o)
 endif()
 
 target_link_libraries(drillClient ${Boost_LIBRARIES} ${PROTOBUF_LIBRARY} ${Zookeeper_LIBRARIES} ${SASL_LIBRARIES} ${OPENSSL_LIBRARIES} protomsgs y2038)
