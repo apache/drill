@@ -73,6 +73,7 @@
     <module>storage-mongo</module>
     <module>storage-opentsdb</module>
     <module>storage-phoenix</module>
+    <module>storage-sentinel</module>
     <module>storage-splunk</module>
     <module>udfs</module>
   </modules>
