@@ -24,18 +24,18 @@ import org.apache.drill.common.types.TypeProtos;
 import org.apache.drill.common.types.Types;
 import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.exception.SchemaChangeException;
+import org.apache.drill.exec.expr.fn.impl.conv.JsonConverterUtils;
 import org.apache.drill.exec.ops.FragmentContext;
 import org.apache.drill.exec.physical.config.Project;
 import org.apache.drill.exec.physical.resultSet.ResultSetLoader;
 import org.apache.drill.exec.record.AbstractSingleRecordBatch;
-import org.apache.drill.exec.record.MaterializedField;
 import org.apache.drill.exec.record.BatchSchema;
 import org.apache.drill.exec.record.BatchSchema.SelectionVectorMode;
+import org.apache.drill.exec.record.MaterializedField;
 import org.apache.drill.exec.record.RecordBatch;
 import org.apache.drill.exec.record.SimpleRecordBatch;
 import org.apache.drill.exec.record.VectorContainer;
 import org.apache.drill.exec.record.VectorWrapper;
-import org.apache.drill.exec.expr.fn.impl.conv.JsonConverterUtils;
 import org.apache.drill.exec.util.record.RecordBatchStats;
 import org.apache.drill.exec.util.record.RecordBatchStats.RecordBatchIOType;
 import org.apache.drill.exec.vector.AllocationHelper;
@@ -314,7 +314,7 @@ public class ProjectRecordBatch extends AbstractSingleRecordBatch<Project> {
     }
 
     // Allocate vv for complexWriters.
-    if (complexWriters != null) {
+    if (!CollectionUtils.isEmpty(complexWriters)) {
       for (ComplexWriter writer : complexWriters) {
         writer.allocate();
       }
@@ -334,13 +334,11 @@ public class ProjectRecordBatch extends AbstractSingleRecordBatch<Project> {
     // the transfer pairs or vector copies.
     container.setRecordCount(count);
 
-    if (complexWriters != null) {
+    // Result set loaders need nothing here: their row count follows the rows the
+    // generated function wrote, and the batch is harvested right after this call.
+    if (!CollectionUtils.isEmpty(complexWriters)) {
       for (ComplexWriter writer : complexWriters) {
         writer.setValueCount(count);
-      }
-    } else if (!CollectionUtils.isEmpty(rsLoaders)) {
-      for (ResultSetLoader loader : rsLoaders) {
-        loader.setTargetRowCount(count);
       }
     }
   }

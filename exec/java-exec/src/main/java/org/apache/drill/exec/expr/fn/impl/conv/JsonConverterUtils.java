@@ -167,8 +167,9 @@ public class JsonConverterUtils {
   }
 
   /**
-   * Wraps the raw input value in a single-field JSON object ({@code {"json": <value>}})
-   * so that the record-oriented JSON loader accepts top-level scalars and arrays.
+   * Wraps the raw input value in a single-field JSON object
+   * ({@code {"drill_json_value_wrapper": <value>}}, see {@link #WRAP_FIELD}) so that
+   * the record-oriented JSON loader accepts top-level scalars and arrays.
    */
   private static InputStream getWrappedJsonStream(int start, int end, DrillBuf buffer) {
     InputStream value = DrillBufInputStream.getStream(start, end, buffer);
