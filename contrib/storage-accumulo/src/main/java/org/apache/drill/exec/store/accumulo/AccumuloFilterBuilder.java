@@ -42,8 +42,13 @@ import org.apache.drill.common.expression.visitors.AbstractExprVisitor;
  *   <li>row_key < 'value' → stop row (exclusive)</li>
  *   <li>row_key <= 'value' → stop row (inclusive)</li>
  *   <li>AND combinations → intersect ranges</li>
- *   <li>OR combinations → union ranges (if contiguous)</li>
+ *   <li>OR combinations → the range spanning both operands</li>
  * </ul>
+ *
+ * <p>An AND of row key predicates is an exact translation, so the Drill filter can be
+ * removed once it is pushed down. An OR is not: the spanning range also covers the rows
+ * between the operands, so the range is treated as a partial pushdown and the filter is
+ * left in the plan to remove the extra rows.</p>
  */
 public class AccumuloFilterBuilder
     extends AbstractExprVisitor<AccumuloScanSpec, Void, RuntimeException>
@@ -114,6 +119,14 @@ public class AccumuloFilterBuilder
             AccumuloScanSpec nextScanSpec = args.get(i).accept(this, null);
             if (firstScanSpec != null && nextScanSpec != null) {
               nodeScanSpec = mergeScanSpecs(functionName, firstScanSpec, nextScanSpec);
+              if (FunctionNames.OR.equals(functionName)) {
+                // The union of two ranges is only an approximation of the OR: the
+                // resulting range also covers rows that fall between the operands
+                // (for example row_key = 'a' OR row_key = 'z' becomes ['a', 'z\0')).
+                // The range still narrows the scan, but the filter must be retained
+                // so that the extra rows are discarded.
+                allExpressionsConverted = false;
+              }
             } else {
               allExpressionsConverted = false;
               if (FunctionNames.AND.equals(functionName)) {
@@ -236,9 +249,10 @@ public class AccumuloFilterBuilder
         break;
 
       case FunctionNames.OR:
-        // OR: Take the union (min of starts, max of stops)
-        startRow = minOfStartRows(leftSpec.getStartRow(), rightSpec.getStartRow());
-        stopRow = maxOfStopRows(leftSpec.getStopRow(), rightSpec.getStopRow());
+        // OR: Take the union (min of starts, max of stops). A null bound means
+        // unbounded, so a null on either side makes the union unbounded too.
+        startRow = unionStartRows(leftSpec.getStartRow(), rightSpec.getStartRow());
+        stopRow = unionStopRows(leftSpec.getStopRow(), rightSpec.getStopRow());
         break;
 
       default:
@@ -272,14 +286,13 @@ public class AccumuloFilterBuilder
   }
 
   /**
-   * Returns the minimum of two start rows (earlier in sort order).
+   * Returns the start row covering the union of two ranges, that is the earlier
+   * of the two in sort order. A null start row means "unbounded below", so a null
+   * on either side yields a null (unbounded) union.
    */
-  private byte[] minOfStartRows(byte[] left, byte[] right) {
-    if (left == null) {
-      return right;
-    }
-    if (right == null) {
-      return left;
+  private byte[] unionStartRows(byte[] left, byte[] right) {
+    if (left == null || right == null) {
+      return null;
     }
     return compareBytes(left, right) <= 0 ? left : right;
   }
@@ -298,14 +311,13 @@ public class AccumuloFilterBuilder
   }
 
   /**
-   * Returns the maximum of two stop rows (later in sort order).
+   * Returns the stop row covering the union of two ranges, that is the later of
+   * the two in sort order. A null stop row means "unbounded above", so a null on
+   * either side yields a null (unbounded) union.
    */
-  private byte[] maxOfStopRows(byte[] left, byte[] right) {
-    if (left == null) {
-      return right;
-    }
-    if (right == null) {
-      return left;
+  private byte[] unionStopRows(byte[] left, byte[] right) {
+    if (left == null || right == null) {
+      return null;
     }
     return compareBytes(left, right) >= 0 ? left : right;
   }

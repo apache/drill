@@ -78,7 +78,7 @@ public class AccumuloRecordReader extends AbstractRecordReader implements DrillA
 
   // Batch constraints to avoid OOM
   private static final int MAX_ALLOCATED_MEMORY_PER_BATCH = 64 * 1024 * 1024; // 64 MB
-  private static final int TARGET_RECORD_COUNT = 4000;
+  private static final int TARGET_RECORD_COUNT = DEFAULT_BATCH_SIZE;
 
   private final AccumuloClient client;
   private final AccumuloScanSpec scanSpec;
