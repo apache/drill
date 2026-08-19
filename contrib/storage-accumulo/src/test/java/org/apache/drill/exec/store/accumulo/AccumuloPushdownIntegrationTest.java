@@ -67,6 +67,22 @@ public class AccumuloPushdownIntegrationTest extends BaseAccumuloTest {
   }
 
   @Test
+  public void testFilterOnRowKeyDisjunction() throws Exception {
+    // The pushed range spans both operands, so the filter must be kept in the plan
+    // to discard the rows in between.
+    String sql = "SELECT * FROM " + fullTableName(AccumuloTestUtils.TEST_TABLE_1) + " t" +
+        " WHERE row_key = 'row_001' OR row_key = 'row_009'";
+    runAccumuloSQLVerifyCount(sql, 2);
+  }
+
+  @Test
+  public void testFilterOnRowKeyDisjunctionOfRanges() throws Exception {
+    String sql = "SELECT * FROM " + fullTableName(AccumuloTestUtils.TEST_TABLE_1) + " t" +
+        " WHERE row_key < 'row_003' OR row_key > 'row_008'";
+    runAccumuloSQLVerifyCount(sql, 4);  // row_001, row_002, row_009, row_010
+  }
+
+  @Test
   public void testFilterOnColumnValue() throws Exception {
     // Note: column value filters may not be pushed down, but should still work
     String sql = "SELECT * FROM " + fullTableName(AccumuloTestUtils.TEST_TABLE_USERS) + " t" +
