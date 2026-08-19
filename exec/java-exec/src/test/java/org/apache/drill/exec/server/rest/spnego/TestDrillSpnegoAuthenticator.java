@@ -45,6 +45,7 @@ import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
 import javax.security.auth.Subject;
+import org.apache.hadoop.security.authentication.util.SubjectUtil;
 import java.lang.reflect.Field;
 import java.security.PrivilegedExceptionAction;
 import java.util.concurrent.TimeUnit;
@@ -118,7 +119,7 @@ public class TestDrillSpnegoAuthenticator extends ClusterTest {
     final Subject clientSubject = JaasKrbUtil.loginUsingKeytab(spnegoHelper.CLIENT_PRINCIPAL,
         spnegoHelper.clientKeytab.getAbsoluteFile());
 
-    return Subject.doAs(clientSubject, (PrivilegedExceptionAction<String>) () -> {
+    return SubjectUtil.doAs(clientSubject, (PrivilegedExceptionAction<String>) () -> {
       final GSSManager gssManager = GSSManager.getInstance();
       GSSContext gssContext = null;
       try {

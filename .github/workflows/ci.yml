@@ -34,7 +34,7 @@ jobs:
     strategy:
       matrix:
         # Java versions to run unit tests (Jetty 12 requires Java 17+)
-        java: [ '17', '21' ]
+        java: [ '17', '21', '25' ]
         profile: ['default-hadoop']
       fail-fast: false
     steps:

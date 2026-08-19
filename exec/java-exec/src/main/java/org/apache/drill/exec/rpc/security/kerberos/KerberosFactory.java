@@ -26,9 +26,9 @@ import org.apache.drill.exec.rpc.security.SecurityConfiguration;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.CommonConfigurationKeys;
 import org.apache.hadoop.security.HadoopKerberosName;
+import org.apache.hadoop.security.authentication.util.SubjectUtil;
 import org.apache.hadoop.security.UserGroupInformation;
 
-import javax.security.auth.Subject;
 import javax.security.auth.callback.Callback;
 import javax.security.auth.callback.CallbackHandler;
 import javax.security.auth.callback.UnsupportedCallbackException;
@@ -41,7 +41,6 @@ import javax.security.sasl.SaslServer;
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.UndeclaredThrowableException;
-import java.security.AccessController;
 import java.security.PrivilegedExceptionAction;
 import java.util.Map;
 
@@ -68,7 +67,7 @@ public class KerberosFactory implements AuthenticatorFactory {
     try {
       final UserGroupInformation ugi;
       if (assumeSubject) {
-        ugi = UserGroupInformation.getUGIFromSubject(Subject.getSubject(AccessController.getContext()));
+        ugi = UserGroupInformation.getUGIFromSubject(SubjectUtil.current());
         logger.debug("Assuming subject for {}.", ugi.getShortUserName());
       } else {
         if (keytab != null) {

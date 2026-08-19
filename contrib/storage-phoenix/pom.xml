@@ -335,6 +335,9 @@
             -Djava.net.preferIPv4Stack=true
             -Dsun.security.krb5.debug=true
             -Dsun.security.krb5.allowUdp=false
+            <!-- HBase's shaded Netty disables sun.misc.Unsafe by default on Java 24+, but HBase's own
+                 ByteBuff/UnsafeAccess still calls into it, so the mini cluster NPEs on every RPC. -->
+            -Dorg.apache.hbase.thirdparty.io.netty.noUnsafe=false
           </argLine>
         </configuration>
       </plugin>

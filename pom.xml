@@ -82,7 +82,9 @@
     <forkCount>1</forkCount>
     <freemarker.version>2.3.30</freemarker.version>
     <guava.version>32.1.2-jre</guava.version>
-    <hadoop.version>3.4.1</hadoop.version>
+    <!-- 3.4.3+ required on JDK 24+: earlier versions call Subject.getSubject(AccessControlContext),
+         which JEP 486 made throw UnsupportedOperationException unconditionally. -->
+    <hadoop.version>3.4.3</hadoop.version>
     <hamcrest.version>2.2</hamcrest.version>
     <hbase.version>2.6.1-hadoop3</hbase.version>
     <hikari.version>4.0.3</hikari.version>
@@ -123,8 +125,7 @@
     <maven.version>3.8.4</maven.version>
     <memoryMb>4096</memoryMb>
     <metrics.version>4.2.19</metrics.version>
-    <mockito.version>5.17.0</mockito.version>
-    <mockito_inline.version>5.2.0</mockito_inline.version>
+    <mockito.version>5.23.0</mockito.version>
     <mongo.version>5.5.1</mongo.version>
     <msgpack.version>0.6.6</msgpack.version>
     <nashorn.version>15.4</nashorn.version>
@@ -510,7 +511,7 @@
                   <version>[${maven.version.min},4)</version>
                 </requireMavenVersion>
                 <requireJavaVersion>
-                  <version>[17,24)</version>
+                  <version>[17,26)</version>
                 </requireJavaVersion>
               </rules>
             </configuration>
@@ -931,18 +932,6 @@
         </exclusion>
       </exclusions>
       <scope>test</scope>
-    </dependency>
-    <dependency>
-      <groupId>org.mockito</groupId>
-      <artifactId>mockito-inline</artifactId>
-      <version>${mockito_inline.version}</version>
-      <scope>test</scope>
-      <exclusions>
-        <exclusion>
-          <artifactId>mockito-core</artifactId>
-          <groupId>org.mockito</groupId>
-        </exclusion>
-      </exclusions>
     </dependency>
     <dependency>
       <groupId>de.huxhorn.lilith</groupId>
