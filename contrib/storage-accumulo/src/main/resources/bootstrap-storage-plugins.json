@@ -1,0 +1,12 @@
+{
+  "storage":{
+    "accumulo" : {
+      "type": "accumulo",
+      "zookeeperQuorum": "localhost:2181",
+      "instanceName": "accumulo",
+      "username": "root",
+      "password": "secret",
+      "enabled": false
+    }
+  }
+}
