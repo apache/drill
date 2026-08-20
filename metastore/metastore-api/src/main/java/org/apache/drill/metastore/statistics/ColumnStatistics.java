@@ -67,9 +67,10 @@ import java.util.stream.Collectors;
 @JsonPropertyOrder({"statistics", "comparator"})
 public class ColumnStatistics<T> {
 
-  private static final ObjectMapper MAPPER = JacksonUtils.createJsonMapperBuilder()
-      .addModule(new JodaModule())
-      .build();
+  private static final ObjectMapper MAPPER =
+      JacksonUtils.createJsonMapperBuilder()
+        .addModule(new JodaModule())
+        .build();
 
   private static final ObjectWriter OBJECT_WRITER = MAPPER.writerFor(ColumnStatistics.class);
 
