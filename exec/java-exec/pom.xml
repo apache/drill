@@ -697,6 +697,12 @@
       <artifactId>swagger-jaxrs2-servlet-initializer-v2-jakarta</artifactId>
       <version>${swagger.version}</version>
     </dependency>
+      <dependency>
+          <groupId>org.apache.ranger</groupId>
+          <artifactId>ranger-plugin-classloader</artifactId>
+          <version>${ranger.version}</version>
+          <scope>provided</scope>
+      </dependency>
   </dependencies>
 
   <profiles>
