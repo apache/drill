@@ -95,9 +95,10 @@ public class ProjectBatchBuilder implements ProjectionMaterializer.BatchBuilder 
 
   @Override
   public void addComplexField(FieldReference ref) {
-    if (projectBatch.rsLoader == null) {
-      initComplexWriters();
-    }
+    // The result set loaders are not registered until the generated projector
+    // setup runs (after this point), so the complex-writer list is always
+    // (re)initialised here; it is simply left unused when loaders are present.
+    initComplexWriters();
     if (projectBatch.complexFieldReferencesList == null) {
       projectBatch.complexFieldReferencesList = Lists.newArrayList();
     } else {

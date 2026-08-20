@@ -21,6 +21,7 @@ package org.apache.drill.exec.store.json;
 import org.apache.commons.io.FileUtils;
 import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.exec.ExecConstants;
+import org.apache.drill.exec.physical.resultSet.ResultSetLoader;
 import org.apache.drill.exec.record.RecordBatchLoader;
 import org.apache.drill.exec.record.VectorWrapper;
 import org.apache.drill.exec.rpc.user.QueryDataBatch;
@@ -219,5 +220,31 @@ public class TestJsonConversionUDF extends BaseTestQuery {
 
     resetSessionOption(ExecConstants.JSON_ALL_TEXT_MODE);
     resetSessionOption(ExecConstants.JSON_READ_NUMBERS_AS_DOUBLE);
+  }
+
+  @Test
+  public void testConvertFromJsonBatchLargerThanLoaderRowLimit() throws Exception {
+    // More rows than the result set loader's default row count limit, so that a
+    // single project batch outgrows the loader's initial target row count.
+    int rowCount = ResultSetLoader.DEFAULT_ROW_COUNT * 2 + 17;
+    String table = "large_json_input.csv";
+    File file = new File(dirTestWatcher.getRootDir(), table);
+    StringBuilder csv = new StringBuilder();
+    for (int i = 0; i < rowCount; i++) {
+      csv.append("col_").append(i).append(", {\"id\":").append(i).append("}\n");
+    }
+    try {
+      FileUtils.writeStringToFile(file, csv.toString(), Charset.defaultCharset());
+      String sql = String.format(
+          "SELECT COUNT(*) AS cnt FROM (SELECT convert_fromJSON(columns[1]) AS col FROM dfs.`%s`)", table);
+      testBuilder()
+          .sqlQuery(sql)
+          .unOrdered()
+          .baselineColumns("cnt")
+          .baselineValues((long) rowCount)
+          .go();
+    } finally {
+      FileUtils.deleteQuietly(file);
+    }
   }
 }
