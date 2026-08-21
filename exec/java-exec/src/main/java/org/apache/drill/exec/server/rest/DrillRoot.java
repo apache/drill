@@ -59,7 +59,6 @@ import org.apache.drill.exec.work.foreman.rm.QueryQueue;
 import org.apache.drill.exec.work.foreman.rm.ResourceManager;
 import org.apache.drill.exec.work.foreman.rm.ThrottledResourceManager;
 import org.apache.http.client.methods.HttpPost;
-import org.glassfish.jersey.server.mvc.Viewable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -82,13 +81,6 @@ public class DrillRoot {
   Drillbit drillbit;
   @Inject
   HttpServletRequest request;
-
-  @GET
-  @Produces(MediaType.TEXT_HTML)
-  public Viewable getClusterInfo() {
-    return ViewableWithPermissions.create(authEnabled.get(), "/rest/index.ftl", sc, getClusterInfoJSON());
-  }
-
 
   @GET
   @Path("/state")

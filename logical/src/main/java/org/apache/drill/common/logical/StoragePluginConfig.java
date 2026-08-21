@@ -46,6 +46,7 @@ public abstract class StoragePluginConfig {
   protected final CredentialsProvider credentialsProvider;
   protected final AuthMode authMode;
   protected OAuthConfig oAuthConfig;
+  protected String description;
 
   public StoragePluginConfig() {
     this(PlainCredentialsProvider.EMPTY_CREDENTIALS_PROVIDER,  true);
@@ -73,10 +74,21 @@ public abstract class StoragePluginConfig {
     AuthMode authMode,
     OAuthConfig oAuthConfig
   ) {
+   this(credentialsProvider, directCredentials, authMode, oAuthConfig, null);
+  }
+
+  public StoragePluginConfig(
+      CredentialsProvider credentialsProvider,
+      boolean directCredentials,
+      AuthMode authMode,
+      OAuthConfig oAuthConfig,
+      String description
+  ) {
     this.credentialsProvider = credentialsProvider;
     this.directCredentials = directCredentials;
     this.authMode = authMode;
     this.oAuthConfig = oAuthConfig;
+    this.description = description;
   }
 
   /**
@@ -127,6 +139,16 @@ public abstract class StoragePluginConfig {
   @JsonInclude(Include.NON_NULL)
   public OAuthConfig oAuthConfig() {
     return oAuthConfig;
+  }
+
+  @JsonProperty("description")
+  @JsonInclude(Include.NON_NULL)
+  public String getDescription() {
+    return description;
+  }
+
+  public void setDescription(String description) {
+    this.description = description;
   }
 
   @Override
