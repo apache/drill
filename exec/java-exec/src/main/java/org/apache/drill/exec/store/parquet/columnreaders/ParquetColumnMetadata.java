@@ -56,10 +56,10 @@ public class ParquetColumnMetadata {
     this.column = column;
   }
 
-  public void resolveDrillType(Map<String, SchemaElement> schemaElements, OptionManager options) {
+  public void resolveDrillType(Map<String, SchemaElement> schemaElements, OptionManager options, boolean isEnforcedOptional) {
     se = schemaElements.get(ParquetReaderUtility.getFullColumnPath(column));
     type = ParquetToDrillTypeConverter.toMajorType(column.getType(), column.getTypeLength(),
-        getDataMode(column), se, options);
+        isEnforcedOptional ? DataMode.OPTIONAL : getDataMode(column), se, options);
     field = MaterializedField.create(toFieldName(column.getPath()).getLastSegment().getNameSegment().getPath(), type);
     length = getDataTypeLength();
   }

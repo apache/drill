@@ -144,7 +144,7 @@ public class UnionAllRecordBatch extends AbstractBinaryRecordBatch<UnionAll> {
 
   private IterOutcome doWork(BatchStatusWrappper batchStatus, boolean newSchema) {
     Preconditions.checkArgument(batchStatus.batch.getSchema().getFieldCount() == container.getSchema().getFieldCount(),
-        "Input batch and output batch have different field counthas!");
+        "Input batch and output batch have different field counts!");
 
     if (newSchema) {
       createUnionAller(batchStatus.batch);
