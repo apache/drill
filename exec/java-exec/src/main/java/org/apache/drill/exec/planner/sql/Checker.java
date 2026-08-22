@@ -79,7 +79,9 @@ class Checker implements SqlOperandTypeChecker {
 
   @Override
   public Consistency getConsistency() {
-    return Consistency.NONE;
+    // Allow implicit type coercion for Calcite 1.35+ compatibility
+    // This enables Calcite to coerce types (e.g., VARCHAR to VARBINARY) during validation
+    return Consistency.LEAST_RESTRICTIVE;
   }
 
   @Override

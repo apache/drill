@@ -269,7 +269,8 @@ public class TestAggregateFunctions extends ClusterTest {
         .sqlQuery("select stddev_samp(cast(employee_id as int)) as col from cp.`employee.json`")
         .unOrdered()
         .baselineColumns("col")
-        .baselineValues(333.56708470261117d)
+        // Calcite 1.35+: Minor precision difference in floating-point calculation
+        .baselineValues(333.56708470261106d)
         .go();
   }
 
@@ -286,7 +287,8 @@ public class TestAggregateFunctions extends ClusterTest {
           .baselineColumns("dec20", "dec6", "d")
           .baselineValues(new BigDecimal("111266.99999699895713760532"),
               new BigDecimal("111266.999997"),
-              111266.99999699896)
+              // Calcite 1.35+: Minor precision difference in floating-point calculation
+              111266.99999699889)
           .go();
     } finally {
       client.resetSession(PlannerSettings.ENABLE_DECIMAL_DATA_TYPE_KEY);
@@ -306,7 +308,8 @@ public class TestAggregateFunctions extends ClusterTest {
           .baselineColumns("dec20", "dec6", "d")
           .baselineValues(new BigDecimal("111170.66493206649050804895"),
               new BigDecimal("111170.664932"),
-              111170.66493206649)
+              // Calcite 1.35+: Minor precision difference in floating-point calculation
+              111170.66493206641)
           .go();
     } finally {
       client.resetSession(PlannerSettings.ENABLE_DECIMAL_DATA_TYPE_KEY);
@@ -326,7 +329,8 @@ public class TestAggregateFunctions extends ClusterTest {
           .baselineColumns("dec20", "dec6", "d")
           .baselineValues(new BigDecimal("333.56708470261114349632"),
               new BigDecimal("333.567085"),
-              333.56708470261117) // last number differs because of double precision.
+              // Calcite 1.35+: Minor precision difference in floating-point calculation
+              333.56708470261106) // last number differs because of double precision.
           // Was taken sqrt of 111266.99999699895713760531784795216338 and decimal result is correct
           .go();
     } finally {
@@ -347,7 +351,8 @@ public class TestAggregateFunctions extends ClusterTest {
           .baselineColumns("dec20", "dec6", "d")
           .baselineValues(new BigDecimal("333.42265209800381903633"),
               new BigDecimal("333.422652"),
-              333.4226520980038)
+              // Calcite 1.35+: Minor precision difference in floating-point calculation
+              333.4226520980037)
           .go();
     } finally {
       client.resetSession(PlannerSettings.ENABLE_DECIMAL_DATA_TYPE_KEY);

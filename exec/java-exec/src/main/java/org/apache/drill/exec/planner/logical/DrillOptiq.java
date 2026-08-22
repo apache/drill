@@ -484,6 +484,24 @@ public class DrillOptiq {
     }
 
     private LogicalExpression getDrillCastFunctionFromOptiq(RexCall call){
+      // Validate DATE literals before casting - check year range for SQL standard compliance
+      if (call.getType().getSqlTypeName() == SqlTypeName.DATE &&
+          call.getOperands().get(0) instanceof RexLiteral) {
+        RexLiteral literal = (RexLiteral) call.getOperands().get(0);
+        if (literal.getTypeName() == SqlTypeName.CHAR || literal.getTypeName() == SqlTypeName.VARCHAR) {
+          // For string literals being cast to DATE, Calcite 1.35+ validates the format
+          // but may accept years outside SQL standard range (1-9999).
+          // We need to validate before the CAST is applied.
+          String dateStr = literal.getValueAs(String.class);
+          if (dateStr != null && dateStr.matches("\\d{5,}-.*")) {
+            // Date string has 5+ digit year, likely out of range
+            throw UserException.validationError()
+                .message("Year out of range for DATE literal '%s'. Year must be between 1 and 9999.", dateStr)
+                .build(logger);
+          }
+        }
+      }
+
       LogicalExpression arg = call.getOperands().get(0).accept(this);
       MajorType castType;
 
@@ -510,6 +528,19 @@ public class DrillOptiq {
 
           int precision = call.getType().getPrecision();
           int scale = call.getType().getScale();
+
+          // Validate precision and scale
+          if (precision < 1) {
+            throw UserException.validationError()
+                .message("Expected precision greater than 0, but was %s.", precision)
+                .build(logger);
+          }
+          if (scale > precision) {
+            throw UserException.validationError()
+                .message("Expected scale less than or equal to precision, " +
+                    "but was precision %s and scale %s.", precision, scale)
+                .build(logger);
+          }
 
           castType = TypeProtos.MajorType.newBuilder()
                 .setMinorType(MinorType.VARDECIMAL)
@@ -599,6 +630,36 @@ public class DrillOptiq {
               throw new UnsupportedOperationException("extract function supports the following " +
                 "time units: YEAR, QUARTER, MONTH, WEEK, DAY, DAYOFWEEK, DAYOFYEAR, EPOCH, HOUR, " +
                 "MINUTE, SECOND");
+          }
+        }
+        case "timestampadd": {
+
+          // Assert that the first argument is a QuotedString
+          Preconditions.checkArgument(args.get(0) instanceof ValueExpressions.QuotedString,
+            "The first argument of TIMESTAMPADD function should be QuotedString");
+
+          String timeUnitStr = ((ValueExpressions.QuotedString) args.get(0)).value;
+
+          TimeUnit timeUnit = TimeUnit.valueOf(timeUnitStr);
+
+          switch (timeUnit) {
+            case YEAR:
+            case MONTH:
+            case DAY:
+            case HOUR:
+            case MINUTE:
+            case SECOND:
+            case MILLISECOND:
+            case QUARTER:
+            case WEEK:
+            case MICROSECOND:
+            case NANOSECOND:
+              String functionPostfix = StringUtils.capitalize(timeUnitStr.toLowerCase());
+              functionName += functionPostfix;
+              return FunctionCallFactory.createExpression(functionName, args.subList(1, 3));
+            default:
+              throw new UnsupportedOperationException("TIMESTAMPADD function supports the following time units: " +
+                  "YEAR, MONTH, DAY, HOUR, MINUTE, SECOND, QUARTER, WEEK, MICROSECOND, NANOSECOND");
           }
         }
         case "timestampdiff": {
@@ -834,13 +895,19 @@ public class DrillOptiq {
         if (isLiteralNull(literal)){
           return createNullExpr(MinorType.FLOAT8);
         }
-        double d = ((BigDecimal) literal.getValue()).doubleValue();
+        // Calcite 1.38+ stores DOUBLE as java.lang.Double instead of BigDecimal
+        double d = literal.getValue() instanceof Double ?
+            (Double) literal.getValue() :
+            ((BigDecimal) literal.getValue()).doubleValue();
         return ValueExpressions.getFloat8(d);
       case FLOAT:
         if (isLiteralNull(literal)) {
           return createNullExpr(MinorType.FLOAT4);
         }
-        float f = ((BigDecimal) literal.getValue()).floatValue();
+        // Calcite 1.38+ stores FLOAT as java.lang.Double instead of BigDecimal
+        float f = literal.getValue() instanceof Double ?
+            ((Double) literal.getValue()).floatValue() :
+            ((BigDecimal) literal.getValue()).floatValue();
         return ValueExpressions.getFloat4(f);
       case INTEGER:
         if (isLiteralNull(literal)) {
@@ -861,9 +928,29 @@ public class DrillOptiq {
                     literal.getType().getScale()
                 ));
           }
-          return ValueExpressions.getVarDecimal((BigDecimal) literal.getValue(),
-              literal.getType().getPrecision(),
-              literal.getType().getScale());
+          // Calcite 1.35+ may return BigDecimal with scale=0 even for typed decimals.
+          // We need to ensure the BigDecimal has the correct scale from the type.
+          int precision = literal.getType().getPrecision();
+          int targetScale = literal.getType().getScale();
+
+          // Validate precision and scale before processing
+          if (precision < 1) {
+            throw UserException.validationError()
+                .message("Expected precision greater than 0, but was %s.", precision)
+                .build(logger);
+          }
+          if (targetScale > precision) {
+            throw UserException.validationError()
+                .message("Expected scale less than or equal to precision, " +
+                    "but was precision %s and scale %s.", precision, targetScale)
+                .build(logger);
+          }
+
+          BigDecimal value = (BigDecimal) literal.getValue();
+          if (value.scale() != targetScale) {
+            value = value.setScale(targetScale, java.math.RoundingMode.HALF_UP);
+          }
+          return ValueExpressions.getVarDecimal(value, precision, targetScale);
         }
         double dbl = ((BigDecimal) literal.getValue()).doubleValue();
         logger.warn("Converting exact decimal into approximate decimal.\n" +
@@ -883,7 +970,17 @@ public class DrillOptiq {
         if (isLiteralNull(literal)) {
           return createNullExpr(MinorType.DATE);
         }
-        return (ValueExpressions.getDate((GregorianCalendar)literal.getValue()));
+        // Validate date year is within SQL standard range (0001 to 9999)
+        // Calcite 1.35+ may accept dates outside this range, but SQL:2011 spec
+        // requires year to be between 0001 and 9999
+        GregorianCalendar dateValue = (GregorianCalendar) literal.getValue();
+        int year = dateValue.get(java.util.Calendar.YEAR);
+        if (year < 1 || year > 9999) {
+          throw UserException.validationError()
+              .message("Year out of range for DATE literal. Year must be between 1 and 9999, but was %d.", year)
+              .build(logger);
+        }
+        return (ValueExpressions.getDate(dateValue));
       case TIME:
         if (isLiteralNull(literal)) {
           return createNullExpr(MinorType.TIME);
