@@ -23,7 +23,7 @@ const SYNC_WAIT = { timeout: 4000 };
 import { Provider } from 'react-redux';
 import { configureStore } from '@reduxjs/toolkit';
 import type { ReactNode } from 'react';
-import queryReducer, { setSql, setResults, setError } from '../store/querySlice';
+import queryReducer, { setSql, setResults, setError, hideTab } from '../store/querySlice';
 import uiReducer from '../store/uiSlice';
 import { useWorkspacePersistence } from './useWorkspacePersistence';
 import { listTabs, createTab, updateTab } from '../api/tabs';
@@ -136,6 +136,36 @@ describe('useWorkspacePersistence server tier', () => {
       expect(raw).toBeTruthy();
       expect(raw).toContain('SELECT 1');
     }, SYNC_WAIT);
+  });
+
+  /**
+   * The second promotion trigger. Without it, typing SQL and closing without running
+   * leaves content in localStorage that the project tree does not list and the user
+   * cannot get back to.
+   */
+  it('promotes an unexecuted tab when it is closed holding SQL', async () => {
+    renderHook(() => useWorkspacePersistence('p1'), { wrapper });
+    const id = activeTab().id;
+
+    act(() => {
+      store.dispatch(setSql({ tabId: id, sql: 'SELECT 1' }));
+      store.dispatch(hideTab(id));
+    });
+
+    await waitFor(() =>
+      expect(createTab).toHaveBeenCalledWith(expect.objectContaining({ id })), SYNC_WAIT);
+  });
+
+  it('promotes nothing when an empty tab is closed', async () => {
+    renderHook(() => useWorkspacePersistence('p1'), { wrapper });
+    const id = activeTab().id;
+
+    act(() => {
+      store.dispatch(hideTab(id));
+    });
+
+    await new Promise((resolve) => setTimeout(resolve, 2000));
+    expect(createTab).not.toHaveBeenCalledWith(expect.objectContaining({ id }));
   });
 
   it('reconciles server tabs into the restored state on mount', async () => {
