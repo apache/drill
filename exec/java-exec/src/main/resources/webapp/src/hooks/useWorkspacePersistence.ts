@@ -356,7 +356,9 @@ export function useWorkspacePersistence(projectId?: string) {
         const alreadyPromoted = promotedIdsRef.current.has(tab.id);
         const promote = shouldPromote({
           hasExecuted: !!tab.hasExecuted,
-          isClosing: false,
+          // A hidden tab is a closed tab, which is the second promotion trigger: it
+          // has left the tab strip, so the project tree is the only way back to it.
+          isClosing: !!tab.hidden,
           sql: tab.sql,
           conversationLength: 0,
           alreadyPromoted,

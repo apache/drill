@@ -16,7 +16,7 @@
  * limitations under the License.
  */
 import { describe, it, expect } from 'vitest';
-import reducer, { addTab, duplicateTab } from './querySlice';
+import reducer, { addTab, duplicateTab, hideTab, deleteTab, lockTab, setSql } from './querySlice';
 import { migrateTabIds } from '../utils/workspacePersistence';
 import type { PersistedTabState } from '../utils/workspacePersistence';
 
@@ -137,5 +137,104 @@ describe('migrateTabIds', () => {
     } as PersistedTabState);
 
     expect(migrated.activeTabId).toBe(migrated.tabs[0].id);
+  });
+});
+
+describe('hiding versus deleting', () => {
+  it('hides a tab instead of removing it', () => {
+    let state = reducer(undefined, addTab(undefined));
+    const id = state.tabs[0].id;
+    state = reducer(state, hideTab(id));
+
+    expect(state.tabs.find((t) => t.id === id)).toBeDefined();
+    expect(state.tabs.find((t) => t.id === id)?.hidden).toBe(true);
+  });
+
+  it('moves activeTabId off a tab that is being hidden', () => {
+    let state = reducer(undefined, addTab(undefined));
+    const active = state.activeTabId;
+    state = reducer(state, hideTab(active));
+
+    expect(state.activeTabId).not.toBe(active);
+    expect(state.tabs.find((t) => t.id === state.activeTabId)?.hidden).toBeFalsy();
+  });
+
+  /** The editor must never be left with nothing selected. */
+  it('opens a fresh tab when the last visible one is hidden', () => {
+    let state = reducer(undefined, addTab(undefined));
+    for (const t of [...state.tabs]) {
+      state = reducer(state, hideTab(t.id));
+    }
+
+    const visible = state.tabs.filter((t) => !t.hidden);
+    expect(visible).toHaveLength(1);
+    expect(state.activeTabId).toBe(visible[0].id);
+  });
+
+  /** Hiding is harmless, so a lock does not block it. Deleting is another matter. */
+  it('allows a locked tab to be hidden', () => {
+    let state = reducer(undefined, addTab(undefined));
+    const id = state.tabs[state.tabs.length - 1].id;
+    state = reducer(state, lockTab({ tabId: id, reason: 'test', lockType: 'manual' }));
+    state = reducer(state, hideTab(id));
+
+    expect(state.tabs.find((t) => t.id === id)?.hidden).toBe(true);
+  });
+
+  it('deleteTab removes the record outright', () => {
+    let state = reducer(undefined, addTab(undefined));
+    const id = state.tabs[state.tabs.length - 1].id;
+    state = reducer(state, deleteTab(id));
+
+    expect(state.tabs.find((t) => t.id === id)).toBeUndefined();
+  });
+
+  it('refuses to delete a locked tab', () => {
+    let state = reducer(undefined, addTab(undefined));
+    const id = state.tabs[state.tabs.length - 1].id;
+    state = reducer(state, lockTab({ tabId: id, reason: 'test', lockType: 'manual' }));
+    state = reducer(state, deleteTab(id));
+
+    expect(state.tabs.find((t) => t.id === id)).toBeDefined();
+  });
+
+  it('deletes a hidden tab without disturbing the visible ones', () => {
+    let state = reducer(undefined, addTab(undefined));
+    state = reducer(state, addTab(undefined));
+    const [first, second] = state.tabs.map((t) => t.id);
+    state = reducer(state, hideTab(first));
+    state = reducer(state, deleteTab(first));
+
+    expect(state.tabs.find((t) => t.id === first)).toBeUndefined();
+    expect(state.tabs.find((t) => t.id === second)).toBeDefined();
+  });
+
+  it('opens a fresh tab when the last tab is deleted', () => {
+    let state = reducer(undefined, addTab(undefined));
+    for (const t of [...state.tabs]) {
+      state = reducer(state, deleteTab(t.id));
+    }
+
+    expect(state.tabs.filter((t) => !t.hidden)).toHaveLength(1);
+  });
+
+  /** Unhiding is how the project tree reopens a closed tab. */
+  it('reopens a hidden tab by hiding it false', () => {
+    let state = reducer(undefined, addTab(undefined));
+    const id = state.tabs[0].id;
+    state = reducer(state, hideTab(id));
+    state = reducer(state, { type: 'query/showTab', payload: id });
+
+    expect(state.tabs.find((t) => t.id === id)?.hidden).toBe(false);
+    expect(state.activeTabId).toBe(id);
+  });
+
+  it('keeps a hidden tab\'s SQL intact', () => {
+    let state = reducer(undefined, addTab(undefined));
+    const id = state.tabs[0].id;
+    state = reducer(state, setSql({ tabId: id, sql: 'SELECT 42' }));
+    state = reducer(state, hideTab(id));
+
+    expect(state.tabs.find((t) => t.id === id)?.sql).toBe('SELECT 42');
   });
 });

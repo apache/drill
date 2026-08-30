@@ -25,7 +25,7 @@ import type { RootState, AppDispatch } from '../store';
 import {
   addTab,
   duplicateTab,
-  removeTab,
+  hideTab,
   setActiveTab,
   setDefaultSchema,
   renameTab,
@@ -297,6 +297,10 @@ export default function SqlLabPage({ datasetFilter, headerContent, projectId, sa
     cancel,
     updateSql,
   } = useQueryExecution(activeTabId, addHistory);
+
+  // The tab strip shows only open tabs. Hidden ones still exist and stay reachable
+  // from the project tree; see docs/dev/TabPersistence.md.
+  const visibleTabs = useMemo(() => tabs.filter((t) => !t.hidden), [tabs]);
 
   // Nothing to run until the editor holds more than whitespace. Gates both Run buttons and
   // handleExecute itself, so the keyboard shortcut cannot fire a query the button refuses.
@@ -943,12 +947,9 @@ export default function SqlLabPage({ datasetFilter, headerContent, projectId, sa
           message.warning('Cannot close the last tab');
           return;
         }
-        const closingTab = tabs.find((t) => t.id === targetKey);
-        if (closingTab?.isLocked) {
-          message.warning('Unlock the tab before closing');
-          return;
-        }
-        dispatch(removeTab(targetKey));
+        // A locked tab may be closed: closing only hides it, and the tab stays
+        // recoverable from the project tree. Deletion is what a lock prevents.
+        dispatch(hideTab(targetKey));
       }
     },
     [dispatch, tabs]
@@ -1140,7 +1141,7 @@ export default function SqlLabPage({ datasetFilter, headerContent, projectId, sa
           activeKey={activeTabId}
           onChange={handleTabChange}
           onEdit={handleTabEdit}
-          items={tabs.map((tab) => ({
+          items={visibleTabs.map((tab) => ({
             key: tab.id,
             label: (
               <span className="tab-label-wrapper" onDoubleClick={() => {
@@ -1252,15 +1253,7 @@ export default function SqlLabPage({ datasetFilter, headerContent, projectId, sa
                         disabled: tabs.length <= 1 || tab.isLocked,
                         onClick: ({ domEvent }) => {
                           domEvent.stopPropagation();
-                          if (tab.isLocked) {
-                            message.warning('Unlock the tab before closing');
-                            return;
-                          }
-                          if (tabs.length > 1) {
-                            dispatch(removeTab(tab.id));
-                          } else {
-                            message.warning('Cannot close the last tab');
-                          }
+                          dispatch(hideTab(tab.id));
                         },
                       },
                     ],

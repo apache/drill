@@ -76,6 +76,30 @@ function newTabId(): string {
   return crypto.randomUUID();
 }
 
+/**
+ * Keeps a visible tab selected after one is hidden or deleted, opening a fresh tab if
+ * that was the last visible one. The editor must never be left with nothing selected.
+ */
+function ensureVisibleActiveTab(state: QueryState, removedId: string) {
+  if (state.activeTabId !== removedId) {
+    return;
+  }
+  const visible = state.tabs.filter((t) => !t.hidden);
+  if (visible.length > 0) {
+    state.activeTabId = visible[visible.length - 1].id;
+    return;
+  }
+  tabCounter++;
+  const fresh: QueryTab = {
+    id: newTabId(),
+    name: `Query ${tabCounter}`,
+    sql: '',
+    isExecuting: false,
+  };
+  state.tabs.push(fresh);
+  state.activeTabId = fresh.id;
+}
+
 const querySlice = createSlice({
   name: 'query',
   initialState,
@@ -177,14 +201,39 @@ const querySlice = createSlice({
       state.tabs.splice(sourceIndex + 1, 0, newTab);
       state.activeTabId = newTab.id;
     },
-    removeTab: (state, action: PayloadAction<string>) => {
-      const index = state.tabs.findIndex((t) => t.id === action.payload);
-      if (index !== -1 && state.tabs.length > 1) {
-        state.tabs.splice(index, 1);
-        if (state.activeTabId === action.payload) {
-          state.activeTabId = state.tabs[Math.max(0, index - 1)].id;
-        }
+    /**
+     * Closing a tab hides it. The record survives and stays listed in the project
+     * tree, so a close is recoverable rather than destructive. Locked tabs may be
+     * hidden — only deletion is blocked.
+     */
+    hideTab: (state, action: PayloadAction<string>) => {
+      const tab = state.tabs.find((t) => t.id === action.payload);
+      if (!tab || tab.hidden) {
+        return;
       }
+      tab.hidden = true;
+      ensureVisibleActiveTab(state, action.payload);
+    },
+    /** Reopens a hidden tab, which is how the project tree brings one back. */
+    showTab: (state, action: PayloadAction<string>) => {
+      const tab = state.tabs.find((t) => t.id === action.payload);
+      if (!tab) {
+        return;
+      }
+      tab.hidden = false;
+      state.activeTabId = tab.id;
+    },
+    /**
+     * Permanently removes a tab. Locked tabs are refused here as well as server-side,
+     * so the two agree; the server is the one that actually enforces it.
+     */
+    deleteTab: (state, action: PayloadAction<string>) => {
+      const index = state.tabs.findIndex((t) => t.id === action.payload);
+      if (index === -1 || state.tabs[index].isLocked) {
+        return;
+      }
+      state.tabs.splice(index, 1);
+      ensureVisibleActiveTab(state, action.payload);
     },
     setActiveTab: (state, action: PayloadAction<string>) => {
       if (state.tabs.some((t) => t.id === action.payload)) {
@@ -316,7 +365,9 @@ export const {
   clearResults,
   addTab,
   duplicateTab,
-  removeTab,
+  hideTab,
+  showTab,
+  deleteTab,
   setActiveTab,
   renameTab,
   loadQuery,
@@ -330,5 +381,13 @@ export const {
   pinTab,
   unpinTab,
 } = querySlice.actions;
+
+/**
+ * Closing a tab now hides it rather than destroying it. Kept as an alias for one
+ * release so no caller breaks silently on the rename.
+ *
+ * @deprecated use {@link hideTab}
+ */
+export const removeTab = hideTab;
 
 export default querySlice.reducer;
