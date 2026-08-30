@@ -99,7 +99,35 @@ Prospector has access to the following tools:
 | `create_visualization` | Create chart visualizations |
 | `create_dashboard` | Create dashboards |
 | `save_query` | Save SQL queries |
-| `get_available_functions` | List Drill SQL functions |
+| `get_available_functions` | Look up Drill SQL functions by name or description, with signatures |
+
+#### Function lookup and descriptions
+
+`get_available_functions` is backed by `GET /api/v1/metadata/functions`:
+
+| Query param | Effect |
+|---|---|
+| *(none)* | Bare name array, used by SQL Lab autocomplete. Shape is load-bearing — do not change it. |
+| `detail=true` | Adds `details[]` with `signatures`, `description` and `source` per function |
+| `search=<term>` | Case-insensitive substring match on name **and** description |
+
+Overloads are grouped under one name. Results are capped (`MAX_FUNCTION_DETAILS`, `MAX_SIGNATURES_PER_FUNCTION` in `MetadataResources.java`) and the response sets `truncated` when the cap was hit. All registry jars are scanned, so dynamically loaded UDFs appear alongside built-ins.
+
+Descriptions come from the optional `desc` attribute on `@FunctionTemplate`:
+
+```java
+@FunctionTemplate(name = "split_part", scope = FunctionScope.SIMPLE,
+    desc = "Splits a string on a delimiter and returns the part at the given 1-based index.")
+```
+
+The attribute already existed on the annotation but was never read; it now flows through `FunctionAttributes.getDesc()` → `DrillFuncHolder.getDesc()` → the REST API. When a name has several overloads, the first non-empty description wins, so only one overload needs to declare it. Every UDF in `contrib/udfs` carries one; most built-ins do not yet, and a function without a description still reports its signatures.
+
+> **A `desc` must not contain parentheses or apostrophes.**
+> `FunctionInitializer.convertToCompilationUnit` strips annotations with the regex `@\w+(?:\([^\\]*?\))?` before handing the source to Janino for runtime code generation. The match is non-greedy and ends at the **first** close paren, so a parenthesis inside a `desc` truncates the strip and leaves stray tokens behind. Janino then fails the entire compilation unit with `FUNCTION ERROR: Failure reading Function class` — at query time, not build time, and for *every* function declared in that file, not just the annotated one. An apostrophe trips Janino's scanner separately as a character literal.
+>
+> Nothing in the normal build catches this: the Java is valid and compiles fine. `TestUdfDescriptions.testDescriptionsAvoidCharactersThatBreakJanino` enforces it.
+
+The system prompt also carries a hand-written Drill dialect section (`DRILL_SQL_DIALECT_NOTES` in `ProspectorResources.java`) covering the places Drill diverges from MySQL/Postgres, which signatures alone cannot express.
 
 When Prospector uses a tool, you'll see a collapsible panel showing the tool name, arguments, and results. Tool calls are executed automatically and Prospector uses the results to continue the conversation.
 

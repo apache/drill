@@ -37,7 +37,8 @@ public class TypeFunctions {
 
   @FunctionTemplate(name = "sqlTypeOf",
           scope = FunctionTemplate.FunctionScope.SIMPLE,
-          nulls = NullHandling.INTERNAL)
+          nulls = NullHandling.INTERNAL,
+          desc = "Returns the SQL type name of a column as a string. Use it to diagnose unexpected types in schema-free data before casting.")
   public static class GetSqlType implements DrillSimpleFunc {
 
     @Param
@@ -65,7 +66,8 @@ public class TypeFunctions {
 
   @FunctionTemplate(name = "drillTypeOf",
           scope = FunctionTemplate.FunctionScope.SIMPLE,
-          nulls = NullHandling.INTERNAL)
+          nulls = NullHandling.INTERNAL,
+          desc = "Returns the internal Drill minor type name for a column, which is more specific than sqlTypeOf.")
   public static class GetDrillType implements DrillSimpleFunc {
 
     @Param
@@ -92,7 +94,8 @@ public class TypeFunctions {
 
   @FunctionTemplate(name = "modeOf",
           scope = FunctionTemplate.FunctionScope.SIMPLE,
-          nulls = NullHandling.INTERNAL)
+          nulls = NullHandling.INTERNAL,
+          desc = "Returns the cardinality mode of a column: NULLABLE, NOT NULL or ARRAY.")
   public static class GetMode implements DrillSimpleFunc {
 
     @Param

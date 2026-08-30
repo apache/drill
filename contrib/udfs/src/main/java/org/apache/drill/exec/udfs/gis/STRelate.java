@@ -34,7 +34,9 @@ import javax.inject.Inject;
  *  If no intersectionMatrixPattern is passed in, then returns the maximum intersectionMatrixPattern that relates the 2 geometries
  */
 @FunctionTemplate(name = "st_relate", scope = FunctionTemplate.FunctionScope.SIMPLE,
-  nulls = FunctionTemplate.NullHandling.NULL_IF_NULL)
+  nulls = FunctionTemplate.NullHandling.NULL_IF_NULL,
+  desc = "Returns true when two geometries are spatially related according to the given DE-9IM "
+    + "intersection matrix pattern.")
 public class STRelate implements DrillSimpleFunc {
   @Param
   VarBinaryHolder geom1Param;
