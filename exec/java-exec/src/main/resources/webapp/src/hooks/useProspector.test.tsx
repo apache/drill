@@ -18,7 +18,7 @@
 import { describe, expect, it, vi, beforeEach } from 'vitest';
 import { renderHook, waitFor } from '@testing-library/react';
 
-import { useProspector } from './useProspector';
+import { useProspector, prospectorChatKey } from './useProspector';
 import { createVisualization } from '../api/visualizations';
 import { createDashboard } from '../api/dashboards';
 import { addVisualization, addDashboard, getProject } from '../api/projects';
@@ -322,6 +322,30 @@ describe('execute_sql honours the server sendDataToAi setting', () => {
   });
 });
 
+describe('prospectorChatKey', () => {
+  it('scopes a conversation to one tab within a project', () => {
+    expect(prospectorChatKey('p1', 'tab-a')).not.toBe(prospectorChatKey('p1', 'tab-b'));
+  });
+
+  it('scopes a conversation to one project for the same tab id', () => {
+    expect(prospectorChatKey('p1', 'tab-a')).not.toBe(prospectorChatKey('p2', 'tab-a'));
+  });
+
+  /** Tabs exist outside a project too, and their conversations should persist. */
+  it('still produces a key when there is no project', () => {
+    expect(prospectorChatKey(undefined, 'tab-a')).toBeTruthy();
+    expect(prospectorChatKey(undefined, 'tab-a')).not.toBe(prospectorChatKey('p1', 'tab-a'));
+  });
+
+  it('returns null without a tab, so nothing is stored under a shared key', () => {
+    expect(prospectorChatKey('p1', undefined)).toBeNull();
+  });
+
+  it('is stable for the same inputs', () => {
+    expect(prospectorChatKey('p1', 'tab-a')).toBe(prospectorChatKey('p1', 'tab-a'));
+  });
+});
+
 describe('per-project chat persistence', () => {
   beforeEach(() => {
     vi.clearAllMocks();
@@ -358,5 +382,31 @@ describe('per-project chat persistence', () => {
     const { result } = renderHook(() => useProspector());
     expect(result.current.messages).toEqual([]);
     expect(localStorage.length).toBe(0);
+  });
+
+  /** Switching tabs must show that tab's conversation, not the previous one's. */
+  it('keeps a separate conversation per tab', () => {
+    localStorage.setItem(prospectorChatKey('p1', 'tab-a')!,
+      JSON.stringify([{ role: 'user', content: 'about tab a' }]));
+    const { result, rerender } = renderHook(
+      ({ key }) => useProspector(undefined, undefined, undefined, key),
+      { initialProps: { key: prospectorChatKey('p1', 'tab-a')! } },
+    );
+    expect(result.current.messages[0].content).toBe('about tab a');
+
+    rerender({ key: prospectorChatKey('p1', 'tab-b')! });
+    expect(result.current.messages).toEqual([]);
+  });
+
+  it('restores a tab conversation when returning to it', () => {
+    localStorage.setItem(prospectorChatKey('p1', 'tab-a')!,
+      JSON.stringify([{ role: 'user', content: 'about tab a' }]));
+    const { result, rerender } = renderHook(
+      ({ key }) => useProspector(undefined, undefined, undefined, key),
+      { initialProps: { key: prospectorChatKey('p1', 'tab-a')! } },
+    );
+    rerender({ key: prospectorChatKey('p1', 'tab-b')! });
+    rerender({ key: prospectorChatKey('p1', 'tab-a')! });
+    expect(result.current.messages[0].content).toBe('about tab a');
   });
 });
