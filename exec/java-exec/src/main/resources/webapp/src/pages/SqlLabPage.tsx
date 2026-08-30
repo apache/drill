@@ -48,7 +48,7 @@ import { useQueryExecution } from '../hooks/useQuery';
 import { useQueryHistory } from '../hooks/useQueryHistory';
 import { useSchemas } from '../hooks/useMetadata';
 import { useTabPersistence, useRestoreTabs } from '../hooks/useTabPersistence';
-import { useProspector, prospectorChatKey } from '../hooks/useProspector';
+import { useProspector, prospectorChatKey, conversationLengthFor } from '../hooks/useProspector';
 import { useSendDataToAi } from '../hooks/useSendDataToAi';
 import { useMonacoCompletion } from '../hooks/useMonacoCompletion';
 import { getAiStatus, getAiConfig, streamChat, transpileSql, convertDataType } from '../api/ai';
@@ -411,7 +411,7 @@ export default function SqlLabPage({ datasetFilter, headerContent, projectId, sa
       key: `viz-created-${id}`,
     });
   }, [navigate, queryClient, projectId]), maxToolRounds,
-  prospectorChatKey(projectId, activeTabId));
+  prospectorChatKey(projectId, activeTabId), activeTabId);
 
   // Real-time SQL validation markers in the editor
   useSqlValidation(sql, editorInstanceRef, monacoInstanceRef);
@@ -1583,7 +1583,7 @@ export default function SqlLabPage({ datasetFilter, headerContent, projectId, sa
             id: deleteTarget,
             name: tabs.find((t) => t.id === deleteTarget)?.name ?? 'this tab',
             vizIds: tabs.find((t) => t.id === deleteTarget)?.vizIds,
-            conversationLength: 0,
+            conversationLength: conversationLengthFor(projectId, deleteTarget),
           }}
           vizNames={Object.fromEntries(
             (allVisualizations ?? []).map((v) => [v.id, v.name])

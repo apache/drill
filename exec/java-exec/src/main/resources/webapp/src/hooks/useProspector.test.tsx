@@ -18,7 +18,7 @@
 import { describe, expect, it, vi, beforeEach } from 'vitest';
 import { renderHook, waitFor } from '@testing-library/react';
 
-import { useProspector, prospectorChatKey } from './useProspector';
+import { useProspector, prospectorChatKey, conversationLengthFor } from './useProspector';
 import { createVisualization } from '../api/visualizations';
 import { createDashboard } from '../api/dashboards';
 import { addVisualization, addDashboard, getProject } from '../api/projects';
@@ -343,6 +343,43 @@ describe('prospectorChatKey', () => {
 
   it('is stable for the same inputs', () => {
     expect(prospectorChatKey('p1', 'tab-a')).toBe(prospectorChatKey('p1', 'tab-a'));
+  });
+});
+
+describe('conversationLengthFor', () => {
+  beforeEach(() => {
+    const store: Record<string, string> = {};
+    vi.stubGlobal('localStorage', {
+      getItem: (k: string) => store[k] ?? null,
+      setItem: (k: string, v: string) => { store[k] = v; },
+      removeItem: (k: string) => { delete store[k]; },
+      clear: () => { for (const k of Object.keys(store)) { delete store[k]; } },
+      get length() { return Object.keys(store).length; },
+    });
+  });
+
+  /**
+   * Readable for any tab, not just the open one: the promotion rule has to know
+   * whether a tab being closed has a conversation, and that tab is not the one whose
+   * conversation is currently loaded in the panel.
+   */
+  it('counts the messages stored for a tab', () => {
+    localStorage.setItem(prospectorChatKey('p1', 'tab-a')!,
+      JSON.stringify([{ role: 'user' }, { role: 'assistant' }]));
+    expect(conversationLengthFor('p1', 'tab-a')).toBe(2);
+  });
+
+  it('returns 0 for a tab that has never been talked to', () => {
+    expect(conversationLengthFor('p1', 'tab-none')).toBe(0);
+  });
+
+  it('returns 0 rather than throwing on unreadable storage', () => {
+    localStorage.setItem(prospectorChatKey('p1', 'tab-bad')!, 'not json');
+    expect(conversationLengthFor('p1', 'tab-bad')).toBe(0);
+  });
+
+  it('returns 0 without a tab id', () => {
+    expect(conversationLengthFor('p1', undefined)).toBe(0);
   });
 });
 
