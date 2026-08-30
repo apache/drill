@@ -34,6 +34,14 @@ export interface QueryTab {
   lockReason?: string; // Optional note explaining why it's locked
   lockType?: 'manual' | 'api'; // Drives which icon is shown
   isPinned?: boolean; // Pinned tabs get longer cache TTL (2 hours vs 30 min default)
+  /**
+   * A query has been run from this tab at some point, successfully or not. This is one
+   * of the two triggers that promote a tab to server-side storage, so it has to survive
+   * a reload — deriving it from `results` would lose it as soon as they expire.
+   */
+  hasExecuted?: boolean;
+  /** Closed but not deleted: out of the tab strip, still in the project tree. */
+  hidden?: boolean;
 }
 
 interface QueryState {
@@ -89,6 +97,9 @@ const querySlice = createSlice({
       if (tab) {
         tab.isExecuting = action.payload.isExecuting;
         if (action.payload.isExecuting) {
+          // Set when the run starts, not when it succeeds: a cancelled or failed
+          // query is still work the user will want back.
+          tab.hasExecuted = true;
           tab.error = undefined;
         }
       }
@@ -104,6 +115,7 @@ const querySlice = createSlice({
         tab.isExecuting = false;
         tab.error = undefined;
         tab.resultsExpired = false;
+        tab.hasExecuted = true;
         if (action.payload.cacheId) {
           tab.cacheId = action.payload.cacheId;
         }
@@ -121,6 +133,7 @@ const querySlice = createSlice({
         tab.error = action.payload.error;
         tab.isExecuting = false;
         tab.results = undefined;
+        tab.hasExecuted = true;
       }
     },
     clearResults: (state, action: PayloadAction<string>) => {

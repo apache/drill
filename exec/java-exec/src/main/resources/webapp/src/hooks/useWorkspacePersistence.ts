@@ -26,8 +26,12 @@ import {
   saveTabState,
   loadUiState,
   saveUiState,
+  nextTabCounter,
 } from '../utils/workspacePersistence';
 import { cacheResults, getCachedResults } from '../utils/resultsCache';
+import { listTabs, createTab, updateTab } from '../api/tabs';
+import { reconcileTabs } from '../utils/tabReconcile';
+import { shouldPromote } from '../utils/tabPromotion';
 import { getCacheRows, getCacheMetadata } from '../api/resultCache';
 import type { QueryResult } from '../types';
 
@@ -87,17 +91,13 @@ export function useWorkspacePersistence(projectId?: string) {
           isLocked: t.isLocked,
           lockReason: t.lockReason,
           lockType: t.lockType,
+          hidden: t.hidden,
+          hasExecuted: t.hasExecuted,
         };
       });
 
-      // Find max tab counter from restored tab IDs
-      let maxCounter = persisted.tabCounter;
-      for (const t of persisted.tabs) {
-        const match = t.id.match(/^tab-(\d+)$/);
-        if (match) {
-          maxCounter = Math.max(maxCounter, parseInt(match[1], 10));
-        }
-      }
+      // Ids are UUIDs now, so the counter comes from the default tab names.
+      const maxCounter = Math.max(persisted.tabCounter, nextTabCounter(persisted.tabs));
 
       dispatch(restoreQueryState({
         tabs: restoredTabs,
@@ -117,9 +117,10 @@ export function useWorkspacePersistence(projectId?: string) {
       // reset to a fresh empty tab so the previous project's tabs don't leak
       // into this one. On first mount or re-mount of the SAME project, leave
       // Redux alone (its current state is trustworthy or already-default).
+      const freshId = crypto.randomUUID();
       dispatch(restoreQueryState({
-        tabs: [{ id: 'tab-1', name: 'Query 1', sql: '' }],
-        activeTabId: 'tab-1',
+        tabs: [{ id: freshId, name: 'Query 1', sql: '' }],
+        activeTabId: freshId,
         tabCounter: 1,
       }));
     }
@@ -153,13 +154,7 @@ export function useWorkspacePersistence(projectId?: string) {
       // Only persist if there is something worth saving (some tab has SQL).
       const hasContent = currentTabs.some((t) => t.sql.trim().length > 0);
       if (hasContent) {
-        let maxCounter = 1;
-        for (const t of currentTabs) {
-          const match = t.id.match(/^tab-(\d+)$/);
-          if (match) {
-            maxCounter = Math.max(maxCounter, parseInt(match[1], 10));
-          }
-        }
+        const maxCounter = nextTabCounter(currentTabs);
         saveTabState(
           {
             tabs: currentTabs.map((t) => ({
@@ -172,6 +167,9 @@ export function useWorkspacePersistence(projectId?: string) {
               isLocked: t.isLocked,
               lockReason: t.lockReason,
               lockType: t.lockType,
+              hidden: t.hidden,
+              hasExecuted: t.hasExecuted,
+              updatedAt: Date.now(),
             })),
             activeTabId: currentActiveTabId,
             tabCounter: maxCounter,
@@ -216,10 +214,7 @@ export function useWorkspacePersistence(projectId?: string) {
             : t
         ),
         activeTabId,
-        tabCounter: Math.max(...tabs.map((t) => {
-          const m = t.id.match(/^tab-(\d+)$/);
-          return m ? parseInt(m[1], 10) : 0;
-        })),
+        tabCounter: nextTabCounter(tabs),
       }));
     } catch {
       // Backend cache unavailable — leave as expired
@@ -228,15 +223,17 @@ export function useWorkspacePersistence(projectId?: string) {
 
   // Save tab state (debounced)
   useEffect(() => {
-    if (!hasRestoredRef.current) {
-      return;
-    }
-
     if (saveTimerRef.current) {
       clearTimeout(saveTimerRef.current);
     }
 
     saveTimerRef.current = setTimeout(() => {
+      // Checked inside the timer, not at effect entry: restore finishes a couple of
+      // frames after mount, and returning early would leave nothing to retrigger the
+      // save if the user's first edit lands before then.
+      if (!hasRestoredRef.current) {
+        return;
+      }
       // Don't overwrite persisted state with empty default tabs.
       // This guards against a race where the save fires before
       // restore has populated Redux.
@@ -248,14 +245,7 @@ export function useWorkspacePersistence(projectId?: string) {
         }
       }
 
-      // Find max tab counter from current tab IDs
-      let maxCounter = 1;
-      for (const t of tabs) {
-        const match = t.id.match(/^tab-(\d+)$/);
-        if (match) {
-          maxCounter = Math.max(maxCounter, parseInt(match[1], 10));
-        }
-      }
+      const maxCounter = nextTabCounter(tabs);
 
       saveTabState(
         {
@@ -269,6 +259,9 @@ export function useWorkspacePersistence(projectId?: string) {
             isLocked: t.isLocked,
             lockReason: t.lockReason,
             lockType: t.lockType,
+            hidden: t.hidden,
+            hasExecuted: t.hasExecuted,
+            updatedAt: Date.now(),
           })),
           activeTabId,
           tabCounter: maxCounter,
@@ -281,6 +274,132 @@ export function useWorkspacePersistence(projectId?: string) {
     return () => {
       if (saveTimerRef.current) {
         clearTimeout(saveTimerRef.current);
+      }
+    };
+  }, [tabs, activeTabId, projectId]);
+
+  // Ids known to have a server-side record, so promotion does not re-create them.
+  // A ref rather than state: it must not retrigger the sync effect that writes it.
+  const promotedIdsRef = useRef<Set<string>>(new Set());
+  const serverSyncTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  // Pull the server's tabs once per project and merge them into what is already here.
+  useEffect(() => {
+    let cancelled = false;
+    promotedIdsRef.current = new Set();
+
+    listTabs(projectId).then((serverTabs) => {
+      if (cancelled || serverTabs.length === 0) {
+        return;
+      }
+      for (const tab of serverTabs) {
+        promotedIdsRef.current.add(tab.id);
+      }
+
+      const merged = reconcileTabs(
+        tabsRef.current.map((t) => ({
+          id: t.id,
+          name: t.name,
+          sql: t.sql,
+          defaultSchema: t.defaultSchema,
+          cacheId: t.cacheId,
+          vizIds: t.vizIds,
+          isLocked: t.isLocked,
+          lockReason: t.lockReason,
+          lockType: t.lockType,
+          hidden: t.hidden,
+          updatedAt: Date.now(),
+        })),
+        serverTabs,
+      );
+
+      dispatch(restoreQueryState({
+        tabs: merged.map((t) => ({
+          id: t.id,
+          name: t.name,
+          sql: t.sql,
+          defaultSchema: t.defaultSchema,
+          cacheId: t.cacheId,
+          vizIds: t.vizIds,
+          isLocked: t.isLocked,
+          lockReason: t.lockReason,
+          lockType: t.lockType,
+          hidden: t.hidden,
+          // Anything the server holds was promoted, which means it was executed.
+          hasExecuted: true,
+          resultsExpired: t.sql.trim().length > 0,
+        })),
+        activeTabId: activeTabIdRef.current,
+        tabCounter: nextTabCounter(merged),
+      }));
+    });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [dispatch, projectId]);
+
+  // Push promoted tabs to the server, on a slower beat than the local save: SQL
+  // changes on every keystroke and each change is now a potential network write.
+  useEffect(() => {
+    if (serverSyncTimerRef.current) {
+      clearTimeout(serverSyncTimerRef.current);
+    }
+
+    serverSyncTimerRef.current = setTimeout(() => {
+      // Checked here rather than at effect entry: restore completes a couple of frames
+      // after mount, and an early return would leave nothing to retrigger the sync.
+      if (!hasRestoredRef.current) {
+        return;
+      }
+      for (const tab of tabsRef.current) {
+        const alreadyPromoted = promotedIdsRef.current.has(tab.id);
+        const promote = shouldPromote({
+          hasExecuted: !!tab.hasExecuted,
+          isClosing: false,
+          sql: tab.sql,
+          conversationLength: 0,
+          alreadyPromoted,
+        });
+
+        if (!promote && !alreadyPromoted) {
+          continue;
+        }
+
+        const payload = {
+          id: tab.id,
+          projectId,
+          name: tab.name,
+          sql: tab.sql,
+          defaultSchema: tab.defaultSchema,
+          hidden: !!tab.hidden,
+          vizIds: tab.vizIds,
+          locked: tab.isLocked,
+          lockReason: tab.lockReason,
+          lockType: tab.lockType,
+          pinned: tab.isPinned,
+          cacheId: tab.cacheId,
+        };
+
+        // Every server call is best-effort. localStorage has already been written, so
+        // a failure here costs sync, never the user's SQL.
+        if (alreadyPromoted) {
+          updateTab(tab.id, payload).catch(() => {
+            // Retried on the next sync tick.
+          });
+        } else {
+          promotedIdsRef.current.add(tab.id);
+          createTab(payload).catch(() => {
+            // Allow a later tick to try again.
+            promotedIdsRef.current.delete(tab.id);
+          });
+        }
+      }
+    }, 1500);
+
+    return () => {
+      if (serverSyncTimerRef.current) {
+        clearTimeout(serverSyncTimerRef.current);
       }
     };
   }, [tabs, activeTabId, projectId]);
