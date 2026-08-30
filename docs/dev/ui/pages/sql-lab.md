@@ -49,11 +49,34 @@ The tabs themselves live in Redux because they must survive route changes:
 ```ts
 {
   tabs: Array<{
-    id, name, sql, results, cacheId, isRunning, vizIds, isLocked
+    id, name, sql, results, cacheId, isRunning, vizIds, isLocked,
+    hidden,       // closed but not deleted; still listed in the project tree
+    hasExecuted,  // a query has been run from this tab, successfully or not
   }>,
   activeTabId: string,
 }
 ```
+
+Tab ids are UUIDs. They used to come from a counter that reset per project and per
+reload, which cannot identify a durable server-side record; legacy `tab-N` ids are
+rewritten once on load by `migrateTabIds`. The counter still numbers tab *names* and is
+recovered from them by `nextTabCounter`.
+
+#### Tabs are persisted in two tiers
+
+Every tab is written to `localStorage` from the first keystroke. A tab is **promoted**
+to server-side storage when a query has been run from it, or when it is closed holding
+content — SQL or a Prospector conversation. Only promoted tabs appear in the project
+tree.
+
+- **Closing hides** (`hideTab`); the record survives and the sidebar lists it.
+  Locked tabs may be hidden.
+- **Deleting** (`deleteTab`) is explicit, warns about dependants via `DeleteTabModal`,
+  and is refused for locked tabs — server-side with a 409, not only in the UI.
+- `removeTab` is a deprecated alias for `hideTab`.
+
+The local write is unconditional, so a failed server write costs sync rather than the
+user's SQL. Full design in [`../../TabPersistence.md`](../../TabPersistence.md).
 
 ### Redux (`uiSlice`)
 

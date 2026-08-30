@@ -101,6 +101,31 @@ Prospector has access to the following tools:
 | `save_query` | Save SQL queries |
 | `get_available_functions` | Look up Drill SQL functions by name or description, with signatures |
 
+#### Conversations are per tab
+
+Each query tab has its own Prospector conversation. The `localStorage` key comes from
+`prospectorChatKey(projectId, tabId)` in `useProspector.ts`; switching tabs swaps the
+history, and a duplicated tab starts empty because it gets a new UUID.
+
+Server-side storage exists but the client does not use it yet:
+
+| Endpoint | Purpose |
+|---|---|
+| `GET /api/v1/tabs/{id}/conversation` | Chat history for one tab; empty list, not 404, for a tab never talked to |
+| `PUT /api/v1/tabs/{id}/conversation` | Replaces it; **413 over 512 KB** |
+
+Deleting a tab deletes its conversation, both server-side (cascade in
+`QueryTabResources.deleteTab`) and locally.
+
+> The 512 KB cap is not arbitrary. `PersistentStore` defaults to
+> `ZookeeperPersistentStoreProvider` (`drill-module.conf:241`), whose write path is
+> `client.put(key, bytes)` into a znode, and ZooKeeper's default `jute.maxbuffer` is
+> 1 MB. Conversations live in their own store (`drill.sqllab.tab_conversations`) rather
+> than on the tab record, because the project tree reads the tab listing on every
+> expand.
+
+See [`TabPersistence.md`](TabPersistence.md).
+
 #### Function lookup and descriptions
 
 `get_available_functions` is backed by `GET /api/v1/metadata/functions`:
