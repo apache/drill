@@ -22,7 +22,6 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.apache.drill.exec.expr.fn.registry.FunctionHolder;
-import org.apache.drill.exec.expr.fn.registry.LocalFunctionRegistry;
 import org.apache.drill.exec.server.rest.RestQueryRunner.QueryResult;
 import org.apache.drill.exec.server.rest.auth.DrillUserPrincipal;
 import org.apache.drill.common.logical.FormatPluginConfig;
@@ -51,11 +50,14 @@ import jakarta.ws.rs.core.SecurityContext;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
-import java.util.TreeSet;
+import java.util.TreeMap;
+import java.util.regex.Pattern;
 
 /**
  * REST API for browsing database metadata (schemas, tables, columns).
@@ -228,8 +230,50 @@ public class MetadataResources {
     @JsonProperty
     public List<String> functions;
 
+    /**
+     * Signature/description detail, populated only when the caller asks for it. Left null
+     * for the plain autocomplete call so that response keeps its original shape and size.
+     */
+    @JsonProperty
+    public List<FunctionDetail> details;
+
+    /** Number of functions matching the search before {@code details} was capped. */
+    @JsonProperty
+    public Integer matchCount;
+
+    /** True when {@code details} was truncated by the result cap. */
+    @JsonProperty
+    public Boolean truncated;
+
     public FunctionsResponse(List<String> functions) {
       this.functions = functions;
+    }
+  }
+
+  /**
+   * One SQL function, with its overload signatures collapsed under a single name.
+   */
+  public static class FunctionDetail {
+    @JsonProperty
+    public String name;
+
+    /** Overload signatures, e.g. {@code "(VARCHAR-REQUIRED,INT-REQUIRED) -> VARCHAR"}. */
+    @JsonProperty
+    public List<String> signatures;
+
+    /** Empty unless the function declares desc() on its @FunctionTemplate. */
+    @JsonProperty
+    public String description;
+
+    /** Jar the function came from; "built-in" for Drill's own functions. */
+    @JsonProperty
+    public String source;
+
+    public FunctionDetail(String name, List<String> signatures, String description, String source) {
+      this.name = name;
+      this.signatures = signatures;
+      this.description = description;
+      this.source = source;
     }
   }
 
@@ -924,39 +968,119 @@ public class MetadataResources {
     return "VARCHAR";
   }
 
+  /**
+   * Functions whose names survive into the public list: must start with a letter and
+   * contain only word characters, which filters out operators ("+", "==") and the
+   * internal cast helpers.
+   */
+  private static final Pattern PUBLIC_FUNCTION_NAME = Pattern.compile("([a-z]|[A-Z])\\w+");
+
+  /**
+   * Cap on how many functions get full detail in one response. A bare search for a common
+   * substring can match hundreds of names; the AI assistant is the main consumer here and
+   * a thousand signatures is neither useful to it nor cheap to send.
+   */
+  private static final int MAX_FUNCTION_DETAILS = 60;
+
+  /** Cap on overload signatures reported per function. Some names carry 40+ overloads. */
+  private static final int MAX_SIGNATURES_PER_FUNCTION = 8;
+
   @GET
   @Path("/functions")
   @Produces(MediaType.APPLICATION_JSON)
-  @Operation(summary = "List SQL functions", description = "Returns a list of available SQL functions for autocomplete")
-  public FunctionsResponse getFunctions() {
-    logger.debug("Fetching SQL functions");
+  @Operation(summary = "List SQL functions",
+      description = "Returns available SQL function names for autocomplete. Pass detail=true "
+          + "for signatures, descriptions and source jars, and search to filter by name or "
+          + "description.")
+  public FunctionsResponse getFunctions(
+      @QueryParam("search") String search,
+      @QueryParam("detail") boolean detail) {
+    logger.debug("Fetching SQL functions (search={}, detail={})", search, detail);
 
-    TreeSet<String> functionSet = new TreeSet<>();
+    // Overloads of one name collapse into a single entry, so the caller sees "date_add" once
+    // with its signatures rather than eleven near-identical rows.
+    Map<String, FunctionDetail> byName = new TreeMap<>();
 
     try {
-      // Get built-in functions from the function registry
-      List<FunctionHolder> builtInFunctions = workManager.getContext()
+      // Every jar, not just BUILT_IN: dynamically loaded UDFs are exactly the functions a
+      // caller is least likely to already know about.
+      Map<String, List<FunctionHolder>> jars = workManager.getContext()
           .getFunctionImplementationRegistry()
           .getLocalFunctionRegistry()
-          .getAllJarsWithFunctionsHolders()
-          .get(LocalFunctionRegistry.BUILT_IN);
+          .getAllJarsWithFunctionsHolders();
 
-      if (builtInFunctions != null) {
-        for (FunctionHolder holder : builtInFunctions) {
+      for (Map.Entry<String, List<FunctionHolder>> jar : jars.entrySet()) {
+        String source = jar.getKey();
+        if (jar.getValue() == null) {
+          continue;
+        }
+        for (FunctionHolder holder : jar.getValue()) {
           String name = holder.getName();
-          // Only include functions that start with a letter and don't contain spaces
-          if (name != null && !name.contains(" ") && name.matches("([a-z]|[A-Z])\\w+")
-              && !holder.getHolder().isInternal()) {
-            functionSet.add(name);
+          if (name == null || name.contains(" ")
+              || !PUBLIC_FUNCTION_NAME.matcher(name).matches()
+              || holder.getHolder().isInternal()) {
+            continue;
+          }
+
+          FunctionDetail entry = byName.computeIfAbsent(name,
+              n -> new FunctionDetail(n, new ArrayList<>(), "", source));
+
+          // First non-empty description wins; overloads of one name share a meaning.
+          if (entry.description.isEmpty()) {
+            entry.description = holder.getHolder().getDesc();
+          }
+
+          String signature = "(" + holder.getHolder().getInputParameters() + ") -> "
+              + holder.getHolder().getReturnType().getMinorType();
+          if (!entry.signatures.contains(signature)) {
+            entry.signatures.add(signature);
           }
         }
       }
     } catch (Exception e) {
       logger.error("Error fetching functions", e);
-      // Return empty list on error rather than failing
+      // Return an empty list rather than failing: autocomplete degrades, it does not break.
     }
 
-    return new FunctionsResponse(new ArrayList<>(functionSet));
+    List<FunctionDetail> matches = filterFunctions(byName.values(), search);
+
+    List<String> names = new ArrayList<>(matches.size());
+    for (FunctionDetail fd : matches) {
+      names.add(fd.name);
+    }
+
+    FunctionsResponse response = new FunctionsResponse(names);
+    if (detail) {
+      response.matchCount = matches.size();
+      response.truncated = matches.size() > MAX_FUNCTION_DETAILS;
+      List<FunctionDetail> capped = matches.subList(0, Math.min(matches.size(), MAX_FUNCTION_DETAILS));
+      for (FunctionDetail fd : capped) {
+        if (fd.signatures.size() > MAX_SIGNATURES_PER_FUNCTION) {
+          fd.signatures = new ArrayList<>(fd.signatures.subList(0, MAX_SIGNATURES_PER_FUNCTION));
+        }
+      }
+      response.details = new ArrayList<>(capped);
+    }
+    return response;
+  }
+
+  /**
+   * Filters functions by a case-insensitive substring of the name or description. A blank
+   * search returns everything, which is what the autocomplete call relies on.
+   */
+  private static List<FunctionDetail> filterFunctions(Collection<FunctionDetail> all, String search) {
+    if (search == null || search.trim().isEmpty()) {
+      return new ArrayList<>(all);
+    }
+    String needle = search.trim().toLowerCase(Locale.ROOT);
+    List<FunctionDetail> matches = new ArrayList<>();
+    for (FunctionDetail fd : all) {
+      if (fd.name.toLowerCase(Locale.ROOT).contains(needle)
+          || fd.description.toLowerCase(Locale.ROOT).contains(needle)) {
+        matches.add(fd);
+      }
+    }
+    return matches;
   }
 
   @POST
