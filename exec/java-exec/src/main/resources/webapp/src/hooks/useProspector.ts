@@ -19,7 +19,7 @@ import { useState, useCallback, useRef, useEffect } from 'react';
 import { streamChat } from '../api/ai';
 import { useSendDataToAi } from './useSendDataToAi';
 import { executeQuery } from '../api/queries';
-import { getSchemas, getTables, getColumns, getFunctions } from '../api/metadata';
+import { getSchemas, getTables, getColumns, searchFunctions } from '../api/metadata';
 import { createVisualization } from '../api/visualizations';
 import { addVisualization, addDashboard, getProject } from '../api/projects';
 import { createDashboard } from '../api/dashboards';
@@ -139,8 +139,21 @@ export const TOOL_DEFINITIONS: ToolDefinition[] = [
   },
   {
     name: 'get_available_functions',
-    description: 'List available SQL functions in Apache Drill',
-    parameters: { type: 'object', properties: {} },
+    description: 'Look up Apache Drill SQL functions with their signatures and descriptions. '
+      + 'Pass a search term to filter by function name or description (e.g. "date", "json", '
+      + '"regexp"); omit it only to browse, since the full catalog is large and the result is '
+      + 'capped. Use this before assuming a MySQL or Postgres function exists in Drill, and to '
+      + 'discover user-defined functions loaded on this cluster.',
+    parameters: {
+      type: 'object',
+      properties: {
+        search: {
+          type: 'string',
+          description: 'Case-insensitive substring matched against function names and '
+            + 'descriptions. Prefer a short term over a long phrase.',
+        },
+      },
+    },
   },
   {
     name: 'get_project_docs',
@@ -387,8 +400,27 @@ export function useProspector(
         }
 
         case 'get_available_functions': {
-          const functions = await getFunctions();
-          return JSON.stringify({ functions: functions.slice(0, 100), totalCount: functions.length });
+          const search = args.search as string | undefined;
+          const result = await searchFunctions(search);
+          // Details carry the signatures; the bare name list adds nothing on top of them and
+          // would double the payload, so it is only used when detail came back empty.
+          if (result.details && result.details.length > 0) {
+            return JSON.stringify({
+              functions: result.details,
+              matchCount: result.matchCount,
+              truncated: result.truncated,
+              ...(result.truncated
+                ? { note: 'Results were capped. Narrow the search term to see more.' }
+                : {}),
+            });
+          }
+          return JSON.stringify({
+            functions: [],
+            matchCount: 0,
+            note: search
+              ? `No Drill function matches "${search}". It may not exist — do not invent one.`
+              : 'No functions returned.',
+          });
         }
 
         case 'get_project_docs': {

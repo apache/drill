@@ -32,7 +32,9 @@ import javax.inject.Inject;
  * For geography type defaults to return minimum geodesic distance between two geographies in meters
  */
 @FunctionTemplate(name = "st_distance", scope = FunctionTemplate.FunctionScope.SIMPLE,
-  nulls = FunctionTemplate.NullHandling.NULL_IF_NULL)
+  nulls = FunctionTemplate.NullHandling.NULL_IF_NULL,
+  desc = "Returns the 2D Cartesian distance between two geometries, in the units of their spatial "
+    + "reference.")
 public class STDistance implements DrillSimpleFunc {
   @Param
   VarBinaryHolder geom1Param;

@@ -32,7 +32,8 @@ public class StringDistanceFunctions {
    * This function calculates the cosine distance between two strings.
    * Usage:  SELECT cosine_distance( string1, string2 ) AS cosine_distance FROM...
    */
-  @FunctionTemplate(name = "cosine_distance", scope = FunctionTemplate.FunctionScope.SIMPLE, nulls = FunctionTemplate.NullHandling.NULL_IF_NULL)
+  @FunctionTemplate(name = "cosine_distance", scope = FunctionTemplate.FunctionScope.SIMPLE, nulls = FunctionTemplate.NullHandling.NULL_IF_NULL,
+    desc = "Returns the cosine distance between two strings. Lower values mean more similar.")
   public static class CosineDistanceFunction implements DrillSimpleFunc {
 
     @Param
@@ -74,7 +75,9 @@ public class StringDistanceFunctions {
    * <p>
    * Usage:  SELECT fuzzy_score( string1, string2 ) AS fuzzy_score FROM...
    */
-  @FunctionTemplate(name = "fuzzy_score", scope = FunctionTemplate.FunctionScope.SIMPLE, nulls = FunctionTemplate.NullHandling.NULL_IF_NULL)
+  @FunctionTemplate(name = "fuzzy_score", scope = FunctionTemplate.FunctionScope.SIMPLE, nulls = FunctionTemplate.NullHandling.NULL_IF_NULL,
+    desc = "Returns a fuzzy match score between two strings, in the style of an editor fuzzy find. "
+      + "Higher values mean a better match.")
   public static class FuzzyScoreFunction implements DrillSimpleFunc {
 
     @Param
@@ -113,7 +116,8 @@ public class StringDistanceFunctions {
    * <p>
    * Usage:  SELECT hamming_distance( string1, string2 ) FROM...
    */
-  @FunctionTemplate(name = "hamming_distance", scope = FunctionTemplate.FunctionScope.SIMPLE, nulls = FunctionTemplate.NullHandling.NULL_IF_NULL)
+  @FunctionTemplate(name = "hamming_distance", scope = FunctionTemplate.FunctionScope.SIMPLE, nulls = FunctionTemplate.NullHandling.NULL_IF_NULL,
+    desc = "Returns the number of positions at which two equal-length strings differ.")
   public static class HammingDistanceFunction implements DrillSimpleFunc {
 
     @Param
@@ -154,7 +158,9 @@ public class StringDistanceFunctions {
    * <p>
    * Usage:  SELECT jaccard_distance( string1, string2 ) FROM ...
    */
-  @FunctionTemplate(name = "jaccard_distance", scope = FunctionTemplate.FunctionScope.SIMPLE, nulls = FunctionTemplate.NullHandling.NULL_IF_NULL)
+  @FunctionTemplate(name = "jaccard_distance", scope = FunctionTemplate.FunctionScope.SIMPLE, nulls = FunctionTemplate.NullHandling.NULL_IF_NULL,
+    desc = "Returns the Jaccard distance between two strings: the complement of Jaccard similarity, so 0 "
+      + "means identical sets.")
   public static class JaccardDistanceFunction implements DrillSimpleFunc {
 
     @Param
@@ -196,7 +202,9 @@ public class StringDistanceFunctions {
    * <p>
    * Usage: SELECT jaro_distance( string1, string2 ) FROM...
    */
-  @FunctionTemplate(name = "jaro_distance", scope = FunctionTemplate.FunctionScope.SIMPLE, nulls = FunctionTemplate.NullHandling.NULL_IF_NULL)
+  @FunctionTemplate(name = "jaro_distance", scope = FunctionTemplate.FunctionScope.SIMPLE, nulls = FunctionTemplate.NullHandling.NULL_IF_NULL,
+    desc = "Returns the Jaro-Winkler similarity of two strings as the share of matched characters, "
+      + "adjusted for transpositions.")
   public static class JaroDistanceFunction implements DrillSimpleFunc {
 
     @Param
@@ -235,7 +243,9 @@ public class StringDistanceFunctions {
    * <p>
    * Usage: SELECT levenshtein_distance( string1, string2 ) FROM...
    */
-  @FunctionTemplate(name = "levenshtein_distance", scope = FunctionTemplate.FunctionScope.SIMPLE, nulls = FunctionTemplate.NullHandling.NULL_IF_NULL)
+  @FunctionTemplate(name = "levenshtein_distance", scope = FunctionTemplate.FunctionScope.SIMPLE, nulls = FunctionTemplate.NullHandling.NULL_IF_NULL,
+    desc = "Returns the Levenshtein edit distance between two strings: how many single-character "
+      + "inserts, deletes or substitutions turn one into the other.")
   public static class LevenstheinDistanceFunction implements DrillSimpleFunc {
 
     @Param
@@ -276,7 +286,9 @@ public class StringDistanceFunctions {
    * <p>
    * Usage:  SELECT longest_common_substring_distance( string1, string2 ) FROM...
    */
-  @FunctionTemplate(name = "longest_common_substring_distance", scope = FunctionTemplate.FunctionScope.SIMPLE, nulls = FunctionTemplate.NullHandling.NULL_IF_NULL)
+  @FunctionTemplate(name = "longest_common_substring_distance", scope = FunctionTemplate.FunctionScope.SIMPLE, nulls = FunctionTemplate.NullHandling.NULL_IF_NULL,
+    desc = "Returns the length of the longest subsequence two strings share. 0 means they have nothing "
+      + "in common.")
   public static class LongestCommonSubstringDistanceFunction implements DrillSimpleFunc {
 
     @Param

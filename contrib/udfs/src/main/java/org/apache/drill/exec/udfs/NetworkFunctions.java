@@ -35,7 +35,8 @@ public class NetworkFunctions {
   /**
    * This function takes two arguments, an input IPv4 and a CIDR, and returns true if the IP is in the given CIDR block
    */
-  @FunctionTemplate(name = "in_network", scope = FunctionTemplate.FunctionScope.SIMPLE, nulls = FunctionTemplate.NullHandling.NULL_IF_NULL)
+  @FunctionTemplate(name = "in_network", scope = FunctionTemplate.FunctionScope.SIMPLE, nulls = FunctionTemplate.NullHandling.NULL_IF_NULL,
+    desc = "Returns true when an IPv4 address falls inside the given CIDR block.")
   public static class InNetworkFunction implements DrillSimpleFunc {
 
     @Param
@@ -68,7 +69,8 @@ public class NetworkFunctions {
   /**
    * This function retunrs the number of IP addresses in the input CIDR block.
    */
-  @FunctionTemplate(name = "address_count", scope = FunctionTemplate.FunctionScope.SIMPLE, nulls = FunctionTemplate.NullHandling.NULL_IF_NULL)
+  @FunctionTemplate(name = "address_count", scope = FunctionTemplate.FunctionScope.SIMPLE, nulls = FunctionTemplate.NullHandling.NULL_IF_NULL,
+    desc = "Returns the number of IP addresses contained in a CIDR block.")
   public static class AddressCountFunction implements DrillSimpleFunc {
 
     @Param
@@ -96,7 +98,8 @@ public class NetworkFunctions {
   /**
    * This function returns the broadcast address of a given CIDR block.
    */
-  @FunctionTemplate(name = "broadcast_address", scope = FunctionTemplate.FunctionScope.SIMPLE, nulls = FunctionTemplate.NullHandling.NULL_IF_NULL)
+  @FunctionTemplate(name = "broadcast_address", scope = FunctionTemplate.FunctionScope.SIMPLE, nulls = FunctionTemplate.NullHandling.NULL_IF_NULL,
+    desc = "Returns the broadcast address of a CIDR block.")
   public static class BroadcastAddressFunction implements DrillSimpleFunc {
 
     @Param
@@ -133,7 +136,8 @@ public class NetworkFunctions {
   /**
    * This function gets the netmask of the input CIDR block.
    */
-  @FunctionTemplate(name = "netmask", scope = FunctionTemplate.FunctionScope.SIMPLE, nulls = FunctionTemplate.NullHandling.NULL_IF_NULL)
+  @FunctionTemplate(name = "netmask", scope = FunctionTemplate.FunctionScope.SIMPLE, nulls = FunctionTemplate.NullHandling.NULL_IF_NULL,
+    desc = "Returns the netmask of a CIDR block.")
   public static class NetmaskFunction implements DrillSimpleFunc {
 
     @Param
@@ -170,7 +174,8 @@ public class NetworkFunctions {
   /**
    * This function gets the numerically lowest IP address in an input CIDR block.
    */
-  @FunctionTemplate(name = "low_address", scope = FunctionTemplate.FunctionScope.SIMPLE, nulls = FunctionTemplate.NullHandling.NULL_IF_NULL)
+  @FunctionTemplate(name = "low_address", scope = FunctionTemplate.FunctionScope.SIMPLE, nulls = FunctionTemplate.NullHandling.NULL_IF_NULL,
+    desc = "Returns the numerically lowest IP address in a CIDR block.")
   public static class LowAddressFunction implements DrillSimpleFunc {
 
     @Param
@@ -207,7 +212,8 @@ public class NetworkFunctions {
   /**
    * This function gets the numerically highest IP address in an input CIDR block.
    */
-  @FunctionTemplate(name = "high_address", scope = FunctionTemplate.FunctionScope.SIMPLE, nulls = FunctionTemplate.NullHandling.NULL_IF_NULL)
+  @FunctionTemplate(name = "high_address", scope = FunctionTemplate.FunctionScope.SIMPLE, nulls = FunctionTemplate.NullHandling.NULL_IF_NULL,
+    desc = "Returns the numerically highest IP address in a CIDR block.")
   public static class HighAddressFunction implements DrillSimpleFunc {
 
     @Param
@@ -243,7 +249,8 @@ public class NetworkFunctions {
   /**
    * This function encodes URL strings.
    */
-  @FunctionTemplate(name = "url_encode", scope = FunctionTemplate.FunctionScope.SIMPLE, nulls = FunctionTemplate.NullHandling.NULL_IF_NULL)
+  @FunctionTemplate(name = "url_encode", scope = FunctionTemplate.FunctionScope.SIMPLE, nulls = FunctionTemplate.NullHandling.NULL_IF_NULL,
+    desc = "URL-encodes a string.")
   public static class UrlEncodeFunction implements DrillSimpleFunc {
 
     @Param
@@ -279,7 +286,8 @@ public class NetworkFunctions {
   /**
    * This function decodes URL strings.
    */
-  @FunctionTemplate(name = "url_decode", scope = FunctionTemplate.FunctionScope.SIMPLE, nulls = FunctionTemplate.NullHandling.NULL_IF_NULL)
+  @FunctionTemplate(name = "url_decode", scope = FunctionTemplate.FunctionScope.SIMPLE, nulls = FunctionTemplate.NullHandling.NULL_IF_NULL,
+    desc = "Decodes a URL-encoded string.")
   public static class UrlDecodeFunction implements DrillSimpleFunc {
 
     @Param
@@ -316,7 +324,8 @@ public class NetworkFunctions {
   /**
    * This function converts a BigInt IPv4 into dotted decimal notation.  The opposite of inet_aton.
    */
-  @FunctionTemplate(name = "inet_ntoa", scope = FunctionTemplate.FunctionScope.SIMPLE, nulls = FunctionTemplate.NullHandling.NULL_IF_NULL)
+  @FunctionTemplate(name = "inet_ntoa", scope = FunctionTemplate.FunctionScope.SIMPLE, nulls = FunctionTemplate.NullHandling.NULL_IF_NULL,
+    desc = "Converts a BigInt to dotted-decimal IPv4 notation. The inverse of INET_ATON.")
   public static class InetNtoaFunction implements DrillSimpleFunc {
 
     @Param
@@ -354,7 +363,8 @@ public class NetworkFunctions {
   /**
    * This function returns true if a given IPv4 address is private, false if not.
    */
-  @FunctionTemplate(name = "is_private_ip", scope = FunctionTemplate.FunctionScope.SIMPLE, nulls = FunctionTemplate.NullHandling.NULL_IF_NULL)
+  @FunctionTemplate(name = "is_private_ip", scope = FunctionTemplate.FunctionScope.SIMPLE, nulls = FunctionTemplate.NullHandling.NULL_IF_NULL,
+    desc = "Returns true when an IPv4 address is in a private RFC 1918 range.")
   public static class IsPrivateIP implements DrillSimpleFunc {
 
     @Param
@@ -411,7 +421,9 @@ public class NetworkFunctions {
    * FROM <data>
    * ORDER BY inet_aton( ip ) ASC
    */
-  @FunctionTemplate(name = "inet_aton", scope = FunctionTemplate.FunctionScope.SIMPLE, nulls = FunctionTemplate.NullHandling.NULL_IF_NULL)
+  @FunctionTemplate(name = "inet_aton", scope = FunctionTemplate.FunctionScope.SIMPLE, nulls = FunctionTemplate.NullHandling.NULL_IF_NULL,
+    desc = "Converts a dotted-decimal IPv4 address to a BigInt, which sorts and range-compares "
+      + "correctly. The inverse of INET_NTOA.")
   public static class InetAtonFunction implements DrillSimpleFunc {
 
     @Param
@@ -452,7 +464,8 @@ public class NetworkFunctions {
   /**
    * Returns true if the input string is a valid IP address
    */
-  @FunctionTemplate(name = "is_valid_IP", scope = FunctionTemplate.FunctionScope.SIMPLE, nulls = FunctionTemplate.NullHandling.NULL_IF_NULL)
+  @FunctionTemplate(name = "is_valid_IP", scope = FunctionTemplate.FunctionScope.SIMPLE, nulls = FunctionTemplate.NullHandling.NULL_IF_NULL,
+    desc = "Returns true when the string is a valid IPv4 or IPv6 address.")
   public static class IsValidIPFunction implements DrillSimpleFunc {
 
     @Param
@@ -475,7 +488,8 @@ public class NetworkFunctions {
   /**
    * Returns true if the input string is a valid IPv4 address
    */
-  @FunctionTemplate(name = "is_valid_IPv4", scope = FunctionTemplate.FunctionScope.SIMPLE, nulls = FunctionTemplate.NullHandling.NULL_IF_NULL)
+  @FunctionTemplate(name = "is_valid_IPv4", scope = FunctionTemplate.FunctionScope.SIMPLE, nulls = FunctionTemplate.NullHandling.NULL_IF_NULL,
+    desc = "Returns true when the string is a valid IPv4 address.")
   public static class IsValidIPV4Function implements DrillSimpleFunc {
 
     @Param
@@ -497,7 +511,8 @@ public class NetworkFunctions {
   /**
    * Returns true if the input string is a valid IP address
    */
-  @FunctionTemplate(name = "is_valid_IPv6", scope = FunctionTemplate.FunctionScope.SIMPLE, nulls = FunctionTemplate.NullHandling.NULL_IF_NULL)
+  @FunctionTemplate(name = "is_valid_IPv6", scope = FunctionTemplate.FunctionScope.SIMPLE, nulls = FunctionTemplate.NullHandling.NULL_IF_NULL,
+    desc = "Returns true when the string is a valid IPv6 address.")
   public static class IsValidIPv6Function implements DrillSimpleFunc {
 
     @Param

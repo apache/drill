@@ -31,7 +31,8 @@ import javax.inject.Inject;
  * Returns X maxima of a bounding box 2d or 3d or a geometry
  */
 @FunctionTemplate(name = "st_xmax", scope = FunctionTemplate.FunctionScope.SIMPLE,
-  nulls = FunctionTemplate.NullHandling.NULL_IF_NULL)
+  nulls = FunctionTemplate.NullHandling.NULL_IF_NULL,
+  desc = "Returns the maximum X coordinate of the bounding box of a geometry.")
 public class STXMax implements DrillSimpleFunc {
   @Param
   VarBinaryHolder geom1Param;

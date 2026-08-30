@@ -678,6 +678,73 @@ public class ProspectorResources {
    * @param username the authenticated requester, used to authorize the client-supplied
    *     projectId before any project metadata reaches the prompt
    */
+  /**
+   * Drill dialect guidance for the system prompt.
+   *
+   * <p>Models default to MySQL/Postgres habits when writing Drill SQL, and the resulting
+   * queries fail in ways the model cannot diagnose from the error text. This block covers
+   * only the places where Drill actually differs from that default — listing functions Drill
+   * shares with every other engine would burn tokens teaching the model what it knows.
+   *
+   * <p>The full function catalog is reachable through the get_available_functions tool; this
+   * is the subset the model gets wrong when it does not think to look.
+   */
+  private static final String DRILL_SQL_DIALECT_NOTES =
+      "\nDRILL SQL DIALECT — this is NOT MySQL or Postgres. Differences that matter:\n\n"
+
+      + "Identifiers and sources:\n"
+      + "- Quote identifiers with backticks, not double quotes: `my column`.\n"
+      + "- Files and directories are queried directly as tables:\n"
+      + "  SELECT * FROM dfs.`/data/sales.parquet`\n"
+      + "  A directory reads every file under it: FROM dfs.`/logs/2024` scans the whole tree.\n"
+      + "- Schemas are hierarchical: plugin.workspace.table (e.g. dfs.tmp.`x`, mysql.store.orders).\n"
+      + "- Implicit file columns exist but are only returned when named explicitly:\n"
+      + "  filename, filepath, suffix, fqn. They never appear in SELECT *.\n\n"
+
+      + "Dates and times:\n"
+      + "- Format patterns are JODA, not strftime. Use TO_DATE(s, 'yyyy-MM-dd'),\n"
+      + "  NOT TO_DATE(s, '%Y-%m-%d'). Common: yyyy MM dd HH mm ss (HH is 24-hour).\n"
+      + "- TO_DATE, TO_TIMESTAMP, TO_CHAR all take Joda patterns.\n"
+      + "- Date math uses INTERVAL or DATE_ADD/DATE_SUB with an interval:\n"
+      + "  ts + INTERVAL '1' DAY, DATE_ADD(d, 7), DATE_SUB(d, INTERVAL '2' MONTH)\n"
+      + "- DATE_TRUNC('month', ts) works; EXTRACT(YEAR FROM ts) works.\n"
+      + "- There is no NOW(); use CURRENT_TIMESTAMP, CURRENT_DATE, LOCALTIMESTAMP.\n\n"
+
+      + "Nested and schema-free data (Drill's real specialty):\n"
+      + "- Access nested fields with dots and array subscripts: t.address.city, t.items[0].sku\n"
+      + "  Always alias the table when reaching into nested fields — Drill needs the prefix.\n"
+      + "- FLATTEN(arrayCol) turns one row with an N-element array into N rows. This is how\n"
+      + "  you unnest; there is no LATERAL/UNNEST-style join for it.\n"
+      + "- KVGEN(mapCol) converts a map into repeated key/value pairs, for when field names\n"
+      + "  are data. Usually combined: SELECT f.`key`, f.`value` FROM (SELECT FLATTEN(KVGEN(m)) f FROM ...)\n"
+      + "- REPEATED_COUNT(arrayCol) gives array length.\n"
+      + "- CONVERT_FROM(col, 'JSON') parses a JSON string column into real nested structure.\n"
+      + "  CONVERT_TO(col, 'JSON') goes the other way. Also used for binary encodings\n"
+      + "  (UTF8, INT_BE, ...) when reading HBase/Kafka-style byte columns.\n"
+      + "- CSV without headers arrives as a single array column named columns:\n"
+      + "  SELECT columns[0] AS id, columns[1] AS name FROM dfs.`/data/f.csv`\n\n"
+
+      + "Types:\n"
+      + "- Drill infers types per file and per row; a column can arrive as VARCHAR when you\n"
+      + "  expect a number. CAST explicitly before arithmetic or comparison on file data.\n"
+      + "- sqlTypeOf(col), drillTypeOf(col), modeOf(col) report what a column actually is.\n"
+      + "  Use them to diagnose a schema-change or type error rather than guessing.\n\n"
+
+      + "Strings:\n"
+      + "- SPLIT(s, delim) returns an array; SPLIT_PART(s, delim, n) returns one piece (1-based).\n"
+      + "- ILIKE(s, pattern) is case-insensitive LIKE. REGEXP_REPLACE and REGEXP_MATCHES exist.\n"
+      + "- SUBSTR/SUBSTRING are 1-based. || concatenates, and so does CONCAT.\n\n"
+
+      + "Not supported — do not generate these:\n"
+      + "- UPDATE, DELETE, MERGE, or INSERT on file data. Drill reads; it does not edit rows.\n"
+      + "  Writes happen through CREATE TABLE AS SELECT (CTAS) into a writable workspace.\n"
+      + "- Stored procedures, triggers, user variables, or MySQL backtick-quoted string\n"
+      + "  literals (backticks are identifiers only; string literals use single quotes).\n"
+      + "- LIMIT with MySQL's two-argument form. Use LIMIT n OFFSET m.\n\n"
+
+      + "If you need a function you are unsure about, call get_available_functions rather than\n"
+      + "assuming a MySQL or Postgres equivalent exists.\n\n";
+
   List<ChatMessage> buildMessages(LlmConfig config, ChatRequest request, String username) {
     List<ChatMessage> messages = new ArrayList<>();
 
@@ -686,7 +753,7 @@ public class ProspectorResources {
     systemPrompt.append("You are an AI assistant for Apache Drill SQL Lab. ");
     systemPrompt.append("Apache Drill is a schema-free SQL query engine that supports ");
     systemPrompt.append("querying various data sources (JSON, CSV, Parquet, databases, APIs) ");
-    systemPrompt.append("using ANSI SQL.\n\n");
+    systemPrompt.append("using its own SQL dialect.\n\n");
 
     // Add context
     if (request.context != null) {
@@ -890,9 +957,7 @@ public class ProspectorResources {
       }
     }
 
-    systemPrompt.append("\nWhen generating SQL, use Apache Drill SQL syntax. ");
-    systemPrompt.append("Use backtick quoting for identifiers with special characters. ");
-    systemPrompt.append("Use `LIMIT` for row limiting.\n\n");
+    systemPrompt.append(DRILL_SQL_DIALECT_NOTES);
 
     systemPrompt.append("IMPORTANT: Prefer the cached schema listed above when present:\n");
     systemPrompt.append("- If the tables/columns you need are listed above, use them directly and ");

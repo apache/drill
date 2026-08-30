@@ -43,8 +43,18 @@ export interface TablePreviewResponse {
   rows: Record<string, unknown>[];
 }
 
+export interface FunctionDetail {
+  name: string;
+  signatures: string[];
+  description: string;
+  source: string;
+}
+
 export interface FunctionsResponse {
   functions: string[];
+  details?: FunctionDetail[];
+  matchCount?: number;
+  truncated?: boolean;
 }
 
 /**
@@ -123,11 +133,22 @@ export async function previewTable(
 }
 
 /**
- * Fetch available SQL functions for autocomplete
+ * Fetch available SQL function names for autocomplete.
  */
 export async function getFunctions(): Promise<string[]> {
   const response = await apiClient.get<FunctionsResponse>(`${METADATA_BASE}/functions`);
   return response.data.functions;
+}
+
+/**
+ * Fetch SQL functions with signatures and descriptions, optionally filtered by a
+ * case-insensitive substring of the name or description.
+ */
+export async function searchFunctions(search?: string): Promise<FunctionsResponse> {
+  const response = await apiClient.get<FunctionsResponse>(`${METADATA_BASE}/functions`, {
+    params: { detail: true, ...(search ? { search } : {}) },
+  });
+  return response.data;
 }
 
 export interface SchemaTreeTable {

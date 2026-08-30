@@ -31,7 +31,9 @@ import javax.inject.Inject;
  * Returns TRUE if the geometries have at least one point in common, but their interiors do not intersect
  */
 @FunctionTemplate(name = "st_touches", scope = FunctionTemplate.FunctionScope.SIMPLE,
-  nulls = FunctionTemplate.NullHandling.NULL_IF_NULL)
+  nulls = FunctionTemplate.NullHandling.NULL_IF_NULL,
+  desc = "Returns true when two geometries share at least one boundary point but their interiors do "
+    + "not intersect.")
 public class STTouches implements DrillSimpleFunc {
   @Param
   VarBinaryHolder geom1Param;

@@ -242,6 +242,69 @@ public class TestMetadataResources extends ClusterTest {
     }
   }
 
+  /**
+   * The plain call must keep returning a bare name array: SQL Lab's autocomplete reads
+   * response.functions directly and would break on a shape change.
+   */
+  @Test
+  public void testGetFunctionsOmitsDetailByDefault() throws Exception {
+    String url = String.format("http://localhost:%d/api/v1/metadata/functions", portNumber);
+    Request request = new Request.Builder().url(url).build();
+    try (Response response = httpClient.newCall(request).execute()) {
+      assertEquals(200, response.code());
+      JsonNode json = mapper.readTree(response.body().string());
+      assertTrue(json.get("functions").get(0).isTextual(), "Names should stay plain strings");
+      assertTrue(json.get("details").isNull() || !json.has("details"),
+          "Detail should not be sent unless requested");
+    }
+  }
+
+  @Test
+  public void testSearchFunctionsReturnsSignatures() throws Exception {
+    String url = String.format(
+        "http://localhost:%d/api/v1/metadata/functions?detail=true&search=split_part", portNumber);
+    Request request = new Request.Builder().url(url).build();
+    try (Response response = httpClient.newCall(request).execute()) {
+      assertEquals(200, response.code());
+      JsonNode json = mapper.readTree(response.body().string());
+      JsonNode details = json.get("details");
+      assertTrue(details != null && details.isArray() && details.size() > 0,
+          "Search for split_part should match at least one function");
+
+      JsonNode splitPart = null;
+      for (JsonNode fd : details) {
+        if ("split_part".equals(fd.get("name").asText())) {
+          splitPart = fd;
+        }
+      }
+      assertTrue(splitPart != null, "split_part should be among the matches");
+      assertTrue(splitPart.get("signatures").size() > 0, "Should report at least one signature");
+      // desc() on the @FunctionTemplate must survive the trip through
+      // FunctionAttributes -> DrillFuncHolder -> REST.
+      assertTrue(splitPart.get("description").asText().contains("1-based"),
+          "Description from the annotation should reach the API");
+    }
+  }
+
+  /**
+   * The old implementation read only the BUILT_IN jar and truncated to 100 names, so a
+   * search that matches nothing must come back empty rather than silently returning a
+   * prefix of the catalog.
+   */
+  @Test
+  public void testSearchFunctionsWithNoMatches() throws Exception {
+    String url = String.format(
+        "http://localhost:%d/api/v1/metadata/functions?detail=true&search=nosuchfunctionxyz",
+        portNumber);
+    Request request = new Request.Builder().url(url).build();
+    try (Response response = httpClient.newCall(request).execute()) {
+      assertEquals(200, response.code());
+      JsonNode json = mapper.readTree(response.body().string());
+      assertEquals(0, json.get("details").size());
+      assertEquals(0, json.get("matchCount").asInt());
+    }
+  }
+
   @Test
   public void testGetFilesForDfsTmp() throws Exception {
     String url = String.format(
