@@ -58,8 +58,7 @@ import { getSavedQueries } from '../api/savedQueries';
 import { usePageChrome } from '../contexts/AppChromeContext';
 import type { QuerySchedule, QuerySnapshot } from '../types';
 import ScheduleModal from '../components/query-editor/ScheduleModal';
-import Markdown from 'react-markdown';
-import rehypeRaw from 'rehype-raw';
+import MarkdownView from '../components/MarkdownView';
 
 type Bucket = 'now' | 'today' | 'tomorrow' | 'week' | 'later' | 'inactive' | 'expired';
 type Filter = 'all' | 'active' | 'paused' | 'expiring' | 'alerts' | 'data';
@@ -985,7 +984,7 @@ function RunDetail({ snapshot }: { snapshot: QuerySnapshot }): ReactNode {
         <div className="workflow-detail-row">
           <span className="workflow-detail-label">AI Summary</span>
           <div className="workflow-detail-ai">
-            <Markdown rehypePlugins={[rehypeRaw]}>{snapshot.aiSummary}</Markdown>
+            <MarkdownView allowHtml>{snapshot.aiSummary}</MarkdownView>
           </div>
         </div>
       )}

@@ -17,8 +17,7 @@
  */
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { Alert, Button, InputNumber, Spin, Typography } from 'antd';
-import Markdown from 'react-markdown';
-import rehypeRaw from 'rehype-raw';
+import MarkdownView from '../MarkdownView';
 import { getAiStatus, streamChat } from '../../api/ai';
 import ChatInput from '../prospector/ChatInput';
 import type { ChatMessage, DashboardDataContext, DeltaEvent } from '../../types/ai';
@@ -228,7 +227,7 @@ export default function AiQnAPanel({
             </Text>
             <div style={{ fontSize: 13, lineHeight: 1.5 }}>
               {msg.role === 'assistant' ? (
-                <Markdown rehypePlugins={[rehypeRaw]}>{msg.content || ''}</Markdown>
+                <MarkdownView allowHtml>{msg.content || ''}</MarkdownView>
               ) : (
                 <span>{msg.content}</span>
               )}

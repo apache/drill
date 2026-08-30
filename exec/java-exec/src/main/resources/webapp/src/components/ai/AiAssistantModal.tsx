@@ -18,7 +18,7 @@
 import { Modal, Tabs, Empty, Button } from 'antd';
 import { BulbOutlined, FileTextOutlined, RocketOutlined } from '@ant-design/icons';
 import { useState, useRef } from 'react';
-import ReactMarkdown from 'react-markdown';
+import MarkdownView from '../MarkdownView';
 import { streamChat } from '../../api/ai';
 import QuerySuggestions from '../project/QuerySuggestions';
 import type { DatasetRef, Project } from '../../types';
@@ -124,7 +124,7 @@ Provide:
             maxHeight: 400,
             overflow: 'auto',
           }}>
-            <ReactMarkdown>{response}</ReactMarkdown>
+            <MarkdownView>{response}</MarkdownView>
           </div>
           {onApplySql && (
             <Button
@@ -240,7 +240,7 @@ Be practical and focus on changes that can actually improve performance in Apach
             maxHeight: 400,
             overflow: 'auto',
           }}>
-            <ReactMarkdown>{response}</ReactMarkdown>
+            <MarkdownView>{response}</MarkdownView>
           </div>
           {onApplySql && (
             <Button

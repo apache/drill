@@ -16,7 +16,7 @@
  * limitations under the License.
  */
 import { Input } from 'antd';
-import Markdown from 'react-markdown';
+import MarkdownView from '../MarkdownView';
 
 const { TextArea } = Input;
 
@@ -42,7 +42,7 @@ export default function MarkdownPanel({ content, editMode, onContentChange }: Ma
 
   return (
     <div className="markdown-panel">
-      <Markdown>{content || '*No content*'}</Markdown>
+      <MarkdownView>{content || '*No content*'}</MarkdownView>
     </div>
   );
 }
