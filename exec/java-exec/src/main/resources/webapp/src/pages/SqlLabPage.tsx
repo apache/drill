@@ -48,7 +48,7 @@ import { useQueryExecution } from '../hooks/useQuery';
 import { useQueryHistory } from '../hooks/useQueryHistory';
 import { useSchemas } from '../hooks/useMetadata';
 import { useTabPersistence, useRestoreTabs } from '../hooks/useTabPersistence';
-import { useProspector } from '../hooks/useProspector';
+import { useProspector, prospectorChatKey } from '../hooks/useProspector';
 import { useSendDataToAi } from '../hooks/useSendDataToAi';
 import { useMonacoCompletion } from '../hooks/useMonacoCompletion';
 import { getAiStatus, getAiConfig, streamChat, transpileSql, convertDataType } from '../api/ai';
@@ -336,6 +336,17 @@ export default function SqlLabPage({ datasetFilter, headerContent, projectId, sa
     const id = deleteTarget;
     setDeleteTarget(null);
     dispatch(deleteTab(id));
+
+    // The tab's conversation goes with it, or it lingers in localStorage under a key
+    // nothing will ever look up again.
+    const chatKey = prospectorChatKey(projectId, id);
+    if (chatKey) {
+      try {
+        localStorage.removeItem(chatKey);
+      } catch {
+        // Storage unavailable; the orphaned entry is harmless.
+      }
+    }
     try {
       await deleteServerTab(id);
     } catch {
@@ -400,7 +411,7 @@ export default function SqlLabPage({ datasetFilter, headerContent, projectId, sa
       key: `viz-created-${id}`,
     });
   }, [navigate, queryClient, projectId]), maxToolRounds,
-  projectId ? `prospector_chat_${projectId}` : null);
+  prospectorChatKey(projectId, activeTabId));
 
   // Real-time SQL validation markers in the editor
   useSqlValidation(sql, editorInstanceRef, monacoInstanceRef);

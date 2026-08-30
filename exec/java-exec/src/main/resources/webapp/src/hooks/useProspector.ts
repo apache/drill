@@ -215,6 +215,29 @@ export interface UseProspectorReturn {
   executeToolCall: (toolCall: ToolCall, context?: ChatContext) => Promise<string>;
 }
 
+/**
+ * localStorage key for one tab's Prospector conversation.
+ *
+ * Conversations are per tab, not per project: a thread is about the query in front of
+ * you, and carrying one across tabs made the assistant answer about the wrong SQL.
+ * The schema cache already puts the project's tables in the system prompt
+ * (ProspectorResources.buildSchemaCacheBlock), so a fresh conversation per tab does
+ * not pay to rediscover the schema.
+ *
+ * Returns null without a tab id, so nothing is ever written under a shared key.
+ *
+ * See docs/dev/TabPersistence.md.
+ */
+export function prospectorChatKey(
+  projectId: string | undefined,
+  tabId: string | undefined,
+): string | null {
+  if (!tabId) {
+    return null;
+  }
+  return `prospector_chat_${projectId ?? 'global'}_${tabId}`;
+}
+
 export function useProspector(
   onSqlGenerated?: (sql: string) => void,
   onVisualizationCreated?: (id: string, name: string) => void,
