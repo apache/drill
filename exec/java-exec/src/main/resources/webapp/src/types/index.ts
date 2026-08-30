@@ -148,6 +148,11 @@ export interface SharedQueryApi {
   createdAt: number;
   updatedAt: number;
   apiEnabled: boolean;
+  /**
+   * Tab this was published from, when known. Provenance only: the API keeps its own
+   * SQL and keeps serving after the tab is deleted.
+   */
+  tabId?: string;
 }
 
 export interface SharedQueryApiCreate {
@@ -155,6 +160,7 @@ export interface SharedQueryApiCreate {
   sql: string;
   defaultSchema?: string;
   apiEnabled?: boolean;
+  tabId?: string;
 }
 
 // Visualization types
