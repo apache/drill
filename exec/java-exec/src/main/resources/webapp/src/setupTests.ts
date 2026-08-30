@@ -17,6 +17,39 @@
  */
 import '@testing-library/jest-dom';
 
+// Node 26 exposes a global `localStorage` accessor that returns undefined unless the
+// process was started with --localstorage-file. Vitest's jsdom environment only copies a
+// jsdom window property onto globalThis when the key is absent from the Node global (or is
+// on its small hardcoded allowlist, which predates Node having Web Storage), so jsdom's
+// working localStorage is skipped and Node's dead stub shadows it. sessionStorage is
+// skipped the same way but survives because Node's own implementation works in memory.
+// ponytail: in-memory shim rather than a vitest upgrade; delete once vitest's jsdom
+// environment copies localStorage through (or once Node's global one works unflagged).
+if (typeof globalThis.localStorage === 'undefined') {
+  const store = new Map<string, string>();
+  const storage: Storage = {
+    get length() {
+      return store.size;
+    },
+    key: (i: number) => Array.from(store.keys())[i] ?? null,
+    getItem: (k: string) => (store.has(k) ? store.get(k)! : null),
+    setItem: (k: string, v: string) => {
+      store.set(String(k), String(v));
+    },
+    removeItem: (k: string) => {
+      store.delete(k);
+    },
+    clear: () => {
+      store.clear();
+    },
+  };
+  Object.defineProperty(globalThis, 'localStorage', {
+    value: storage,
+    writable: true,
+    configurable: true,
+  });
+}
+
 // Mock matchMedia for antd components
 Object.defineProperty(window, 'matchMedia', {
   writable: true,
