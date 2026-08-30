@@ -1541,6 +1541,65 @@ html.dark .shell-sidebar-brand img {
   gap: 1px;
 }
 
+/* Query tabs listed under a project. Hidden (closed) tabs appear here too — this
+   list is the only route back to them. */
+.shell-sidebar-tab-list {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  margin-top: 2px;
+}
+
+.shell-sidebar-tab-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  width: 100%;
+  padding: 4px 8px 4px 30px;
+  border: none;
+  background: none;
+  color: var(--color-text);
+  font-size: 12px;
+  text-align: left;
+  cursor: pointer;
+  border-radius: 5px;
+}
+
+.shell-sidebar-tab-row:hover {
+  background: var(--color-bg-hover);
+}
+
+/* Closed tabs read as present but inactive, rather than as a second kind of thing. */
+.shell-sidebar-tab-row.is-hidden-tab {
+  opacity: 0.55;
+}
+
+.shell-sidebar-tab-row.is-hidden-tab .shell-sidebar-tab-label {
+  font-style: italic;
+}
+
+.shell-sidebar-tab-label {
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.shell-sidebar-tab-icon,
+.shell-sidebar-tab-lock {
+  display: inline-flex;
+  align-items: center;
+  font-size: 11px;
+  opacity: 0.7;
+}
+
+.shell-sidebar-tab-empty {
+  padding: 4px 8px 4px 30px;
+  font-size: 11px;
+  color: var(--color-text-secondary);
+  font-style: italic;
+}
+
 .shell-sidebar-empty {
   padding: 6px 8px;
   font-size: 12px;

@@ -40,7 +40,9 @@ import {
   PartitionOutlined,
   FieldTimeOutlined as WorkflowIcon,
 } from '@ant-design/icons';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { listTabs, deleteTab as deleteServerTab } from '../../api/tabs';
+import ProjectTabsSection from './ProjectTabsSection';
 import { getProjects } from '../../api/projects';
 import { getSchedules } from '../../api/schedules';
 import { useAppChrome } from '../../contexts/AppChromeContext';
@@ -261,6 +263,8 @@ interface ProjectRowProps {
   onDrop: (id: string) => void;
   onDragEnd: () => void;
   activeProjectSubPath: string | null;
+  onOpenTab: (projectId: string, tabId: string) => void;
+  onDeleteTab: (projectId: string, tabId: string) => void;
 }
 
 function ProjectRow({
@@ -278,7 +282,18 @@ function ProjectRow({
   onDrop,
   onDragEnd,
   activeProjectSubPath,
+  onOpenTab,
+  onDeleteTab,
 }: ProjectRowProps) {
+  // Only fetched once a project is expanded, so collapsed projects cost nothing.
+  // The tree lists the server's tabs by definition: an unpromoted tab has no server
+  // record and is still open in the tab strip anyway.
+  const { data: projectTabs } = useQuery({
+    queryKey: ['project-tabs', project.id],
+    queryFn: () => listTabs(project.id),
+    enabled: expanded,
+    staleTime: 15_000,
+  });
   const handleChevron = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
@@ -382,6 +397,21 @@ function ProjectRow({
               indent={1}
             />
           ))}
+          {projectTabs && projectTabs.length > 0 && (
+            <div className="shell-sidebar-tab-list">
+              <ProjectTabsSection
+                tabs={projectTabs.map((t) => ({
+                  id: t.id,
+                  name: t.name,
+                  hidden: t.hidden,
+                  locked: t.locked,
+                  lockType: t.lockType,
+                }))}
+                onOpen={(tabId) => onOpenTab(project.id, tabId)}
+                onDelete={(tabId) => onDeleteTab(project.id, tabId)}
+              />
+            </div>
+          )}
         </div>
       )}
     </div>
@@ -487,6 +517,30 @@ export default function Sidebar() {
     enabled: !!activeProjectId,
     staleTime: 30_000,
   });
+
+  const queryClient = useQueryClient();
+
+  /**
+   * Opening a tab from the tree navigates to that project's editor with the tab id in
+   * the URL. SqlLabPage unhides and activates it on arrival, which works the same way
+   * whether or not the tab belongs to the project currently loaded — Redux only ever
+   * holds one project's tabs.
+   */
+  const handleOpenTab = useCallback((projectId: string, tabId: string) => {
+    navigate(`/projects/${projectId}/query?tab=${encodeURIComponent(tabId)}`);
+  }, [navigate]);
+
+  const handleDeleteTab = useCallback(async (projectId: string, tabId: string) => {
+    try {
+      await deleteServerTab(tabId);
+      queryClient.invalidateQueries({ queryKey: ['project-tabs', projectId] });
+    } catch {
+      // A 409 means the tab is locked. The menu does not offer Delete for locked
+      // tabs, so this is only reachable if the lock was added since the tree loaded;
+      // refreshing the list shows the current state.
+      queryClient.invalidateQueries({ queryKey: ['project-tabs', projectId] });
+    }
+  }, [queryClient]);
 
   // Set of saved-query IDs that have a schedule attached
   const scheduledQueryIds = useMemo(() => {
@@ -676,6 +730,8 @@ export default function Sidebar() {
               onDrop={handleDropProject}
               onDragEnd={handleDragEnd}
               activeProjectSubPath={activeProjectSubPath}
+              onOpenTab={handleOpenTab}
+              onDeleteTab={handleDeleteTab}
             />
           ))}
 
