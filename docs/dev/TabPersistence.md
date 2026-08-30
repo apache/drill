@@ -161,8 +161,10 @@ decision. When picked up, note that:
   belong to once conversations go per-tab. They are stranded under the old
   `prospector_chat_<projectId>` key: a visible one-time loss for anyone
   mid-conversation, and not migrated.
-- **The client does not yet use the server-side conversation store.** Conversations
-  are per-tab in `localStorage` (`prospectorChatKey`), and the REST endpoints exist and
-  are tested, but `useProspector` has not been switched over to them. Until it is,
-  conversations remain per-device and the `conversationLength` shown in the delete
-  warning is hardcoded to 0.
+- **Conversations sync on the same two tiers as tabs.** `useProspector` writes
+  `localStorage` immediately and mirrors to the server on a 2s debounce, never mid-
+  stream. On load the server copy replaces the local one only when it holds *more*
+  messages, so a conversation continued on another device appears without discarding
+  anything this device has that the server has not seen. A 413 (over the 512 KB cap)
+  tells the user once that this thread has stopped syncing; the local copy is
+  unaffected.

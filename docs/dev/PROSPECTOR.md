@@ -107,7 +107,7 @@ Each query tab has its own Prospector conversation. The `localStorage` key comes
 `prospectorChatKey(projectId, tabId)` in `useProspector.ts`; switching tabs swaps the
 history, and a duplicated tab starts empty because it gets a new UUID.
 
-Server-side storage exists but the client does not use it yet:
+Conversations follow their tab to the server on the same two tiers as tabs:
 
 | Endpoint | Purpose |
 |---|---|

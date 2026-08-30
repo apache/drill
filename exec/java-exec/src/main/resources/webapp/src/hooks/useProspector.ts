@@ -16,11 +16,14 @@
  * limitations under the License.
  */
 import { useState, useCallback, useRef, useEffect } from 'react';
+import { message } from 'antd';
 import { streamChat } from '../api/ai';
 import { useSendDataToAi } from './useSendDataToAi';
 import { executeQuery } from '../api/queries';
 import { getSchemas, getTables, getColumns, searchFunctions } from '../api/metadata';
 import { createVisualization } from '../api/visualizations';
+import { getConversation, putConversation } from '../api/tabs';
+import type { StoredChatMessage } from '../api/tabs';
 import { addVisualization, addDashboard, getProject } from '../api/projects';
 import { createDashboard } from '../api/dashboards';
 import { createSavedQuery } from '../api/savedQueries';
@@ -238,6 +241,35 @@ export function prospectorChatKey(
   return `prospector_chat_${projectId ?? 'global'}_${tabId}`;
 }
 
+/**
+ * How many Prospector messages a tab holds, read straight from storage.
+ *
+ * Deliberately not tied to the hook: the promotion rule has to know whether a tab
+ * *being closed* has a conversation, and that is rarely the tab whose conversation is
+ * loaded in the panel. Returns 0 for anything unreadable — an undercount only means a
+ * tab is not promoted, which is recoverable, whereas throwing here would break the
+ * save path.
+ */
+export function conversationLengthFor(
+  projectId: string | undefined,
+  tabId: string | undefined,
+): number {
+  const key = prospectorChatKey(projectId, tabId);
+  if (!key) {
+    return 0;
+  }
+  try {
+    const raw = localStorage.getItem(key);
+    if (!raw) {
+      return 0;
+    }
+    const parsed = JSON.parse(raw);
+    return Array.isArray(parsed) ? parsed.length : 0;
+  } catch {
+    return 0;
+  }
+}
+
 export function useProspector(
   onSqlGenerated?: (sql: string) => void,
   onVisualizationCreated?: (id: string, name: string) => void,
@@ -245,6 +277,10 @@ export function useProspector(
   // When set (e.g. per project), chat history is loaded from and saved to
   // localStorage under this key, so it survives navigation and unmounts.
   storageKey?: string | null,
+  // When set, the conversation is also mirrored to the server so it follows the tab
+  // across devices and can be recovered from the project tree. localStorage stays the
+  // write-through buffer: a failed server write costs sync, never the conversation.
+  tabId?: string | null,
 ): UseProspectorReturn {
   const effectiveMaxToolRounds = maxToolRounds && maxToolRounds > 0 ? maxToolRounds : DEFAULT_MAX_TOOL_ROUNDS;
   const [messages, setMessages] = useState<ChatMessage[]>(() => loadChat(storageKey));
@@ -290,12 +326,78 @@ export function useProspector(
     }
   }, [storageKey]);
 
-  // Persist history for the active project (including clears, which write []).
+  // Pull the server's copy for this tab. The local copy renders immediately; the
+  // server copy replaces it only when it holds more history, which is what makes a
+  // conversation started on another device show up here without ever discarding
+  // messages this device has that the server has not seen yet.
+  useEffect(() => {
+    if (!tabId || !storageKey) {
+      return;
+    }
+    let cancelled = false;
+    getConversation(tabId).then((serverMessages: StoredChatMessage[]) => {
+      if (cancelled || serverMessages.length === 0) {
+        return;
+      }
+      setMessages((current) => {
+        if (serverMessages.length <= current.length) {
+          return current;
+        }
+        const merged = serverMessages as unknown as ChatMessage[];
+        saveChat(storageKey, merged);
+        return merged;
+      });
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [tabId, storageKey]);
+
+  // Persist history for the active tab (including clears, which write []).
+  // Unconditional and immediate: this is the copy that must never be lost.
   useEffect(() => {
     if (storageKey) {
       saveChat(storageKey, messages);
     }
   }, [messages, storageKey]);
+
+  // Mirror to the server on a slower beat than the local write, and never while a
+  // response is still streaming — a half-written assistant turn is not worth storing,
+  // and messages changes on every token.
+  const serverSaveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const oversizeReportedRef = useRef(false);
+  useEffect(() => {
+    if (!tabId || isStreaming) {
+      return;
+    }
+    if (serverSaveTimerRef.current) {
+      clearTimeout(serverSaveTimerRef.current);
+    }
+    serverSaveTimerRef.current = setTimeout(() => {
+      putConversation(tabId, messages as unknown as StoredChatMessage[]).then((result) => {
+        // Past the server's size cap this thread has quietly stopped syncing, which
+        // the user should hear about once — not on every subsequent keystroke.
+        if (result === 'too-large' && !oversizeReportedRef.current) {
+          oversizeReportedRef.current = true;
+          message.warning(
+            'This conversation is too long to save on the server. It stays on this '
+            + 'device, but will not follow you to another one. Start a new tab to '
+            + 'keep syncing.',
+            8,
+          );
+        }
+        if (result === 'ok') {
+          oversizeReportedRef.current = false;
+        }
+      });
+    }, 2000);
+
+    return () => {
+      if (serverSaveTimerRef.current) {
+        clearTimeout(serverSaveTimerRef.current);
+      }
+    };
+  }, [messages, tabId, isStreaming]);
 
   const executeToolCall = useCallback(async (toolCall: ToolCall, context?: ChatContext): Promise<string> => {
     try {

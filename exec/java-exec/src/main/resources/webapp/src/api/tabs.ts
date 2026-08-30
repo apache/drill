@@ -83,3 +83,50 @@ export async function updateTab(id: string, tab: Partial<ServerTab>): Promise<Se
 export async function deleteTab(id: string): Promise<void> {
   await apiClient.delete(`${TABS_BASE}/${id}`);
 }
+
+/** One message in a tab's Prospector conversation, as stored server-side. */
+export interface StoredChatMessage {
+  role: string;
+  content?: string;
+  [key: string]: unknown;
+}
+
+/**
+ * A tab's Prospector conversation. Degrades to an empty list on failure: a tab that
+ * has never been talked to and an unreachable drillbit look the same to the caller,
+ * and in both cases the local copy is what the panel shows.
+ */
+export async function getConversation(tabId: string): Promise<StoredChatMessage[]> {
+  try {
+    const response = await apiClient.get<{ messages: StoredChatMessage[] }>(
+      `${TABS_BASE}/${tabId}/conversation`,
+    );
+    return response.data.messages ?? [];
+  } catch {
+    return [];
+  }
+}
+
+/** Outcome of a conversation write. */
+export type ConversationWriteResult = 'ok' | 'too-large' | 'failed';
+
+/**
+ * Replaces a tab's conversation server-side.
+ *
+ * Reports rather than throws, because the local copy has already been written and the
+ * conversation is not at risk — but 'too-large' is worth telling the user about: the
+ * server caps conversations at 512 KB (ZooKeeper's znode limit), and past that point
+ * this thread has silently stopped syncing to other devices.
+ */
+export async function putConversation(
+  tabId: string,
+  messages: StoredChatMessage[],
+): Promise<ConversationWriteResult> {
+  try {
+    await apiClient.put(`${TABS_BASE}/${tabId}/conversation`, { messages });
+    return 'ok';
+  } catch (err) {
+    const status = (err as { response?: { status?: number } })?.response?.status;
+    return status === 413 ? 'too-large' : 'failed';
+  }
+}
