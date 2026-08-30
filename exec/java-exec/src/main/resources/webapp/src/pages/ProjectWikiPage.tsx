@@ -25,8 +25,7 @@ import {
   FileTextOutlined,
   RobotOutlined,
 } from '@ant-design/icons';
-import Markdown from 'react-markdown';
-import rehypeRaw from 'rehype-raw';
+import MarkdownView from '../components/MarkdownView';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { deleteWikiPage, createWikiPage } from '../api/projects';
 import { streamChat, getAiStatus } from '../api/ai';
@@ -360,9 +359,9 @@ ${dashDesc}`;
               <p className="wiki-document-meta">AI is drafting based on the project's datasets, queries, vizzes, and dashboards.</p>
             </header>
             <div className="wiki-document-body">
-              <Markdown rehypePlugins={[rehypeRaw]}>
+              <MarkdownView allowHtml>
                 {aiContent || '*Waiting for AI response…*'}
-              </Markdown>
+              </MarkdownView>
             </div>
           </article>
         ) : selectedPage ? (
@@ -372,7 +371,7 @@ ${dashDesc}`;
               <p className="wiki-document-meta">Last updated {formatRelative(selectedPage.updatedAt)}</p>
             </header>
             <div className="wiki-document-body">
-              <Markdown rehypePlugins={[rehypeRaw]}>{selectedPage.content}</Markdown>
+              <MarkdownView allowHtml>{selectedPage.content}</MarkdownView>
             </div>
           </article>
         ) : (

@@ -20,7 +20,7 @@ import { useSelector, useDispatch } from 'react-redux';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { Tabs, message, notification, Tooltip, Modal, Alert, Button, Space, Spin, Dropdown, Grid, Input } from 'antd';
 import { PlusOutlined, RobotOutlined, MoreOutlined, EditOutlined, CopyOutlined, CloseOutlined, PlayCircleOutlined, StopOutlined, ExperimentOutlined, TableOutlined, LockOutlined, UnlockOutlined, ApiOutlined, StarOutlined, StarFilled } from '@ant-design/icons';
-import Markdown from 'react-markdown';
+import MarkdownView from '../components/MarkdownView';
 import type { RootState, AppDispatch } from '../store';
 import {
   addTab,
@@ -297,6 +297,10 @@ export default function SqlLabPage({ datasetFilter, headerContent, projectId, sa
     cancel,
     updateSql,
   } = useQueryExecution(activeTabId, addHistory);
+
+  // Nothing to run until the editor holds more than whitespace. Gates both Run buttons and
+  // handleExecute itself, so the keyboard shortcut cannot fire a query the button refuses.
+  const hasSql = !!sql && sql.trim().length > 0;
 
   // Suggested queries from Prospector open in a new tab, unless the current tab
   // is empty (then reuse it). Reads the active tab through a ref so repeated
@@ -667,6 +671,9 @@ export default function SqlLabPage({ datasetFilter, headerContent, projectId, sa
 
   // Handle execute — runs selected text if available, otherwise full SQL
   const handleExecute = useCallback(() => {
+    if (!hasSql) {
+      return;
+    }
     const editor = editorInstanceRef.current;
     let sqlToRun: string | undefined;
     if (editor) {
@@ -681,7 +688,7 @@ export default function SqlLabPage({ datasetFilter, headerContent, projectId, sa
       defaultSchema: activeTab?.defaultSchema,
       sqlOverride: sqlToRun,
     });
-  }, [execute, autoLimit, activeTab?.defaultSchema, editorInstanceRef, activeTabId, sql]);
+  }, [execute, autoLimit, activeTab?.defaultSchema, editorInstanceRef, activeTabId, sql, hasSql]);
 
   const handleClearResults = useCallback(() => {
     dispatch(clearResults(activeTabId));
@@ -1296,7 +1303,7 @@ export default function SqlLabPage({ datasetFilter, headerContent, projectId, sa
             onOptimizeQuery={handleOptimizeQuery}
             onFixError={handleFixError}
             onToggleProspector={toggleProspector}
-            hasSql={!!sql && sql.trim().length > 0}
+            hasSql={hasSql}
             hasSelection={hasSelection}
             hasError={!!error}
             prospectorOpen={prospectorOpen}
@@ -1470,7 +1477,7 @@ export default function SqlLabPage({ datasetFilter, headerContent, projectId, sa
         {optimizeContent ? (
           <div className="optimize-modal-content">
             <div className="optimize-explanation">
-              <Markdown>{optimizeContent}</Markdown>
+              <MarkdownView>{optimizeContent}</MarkdownView>
               {optimizeStreaming && <span className="prospector-cursor" />}
             </div>
           </div>
@@ -1508,6 +1515,7 @@ export default function SqlLabPage({ datasetFilter, headerContent, projectId, sa
         <button
           className={`mobile-run-fab${isExecuting ? ' executing' : ''}`}
           onClick={handleExecute}
+          disabled={!isExecuting && !hasSql}
           aria-label={isExecuting ? 'Cancel query' : (hasSelection ? 'Run selection' : 'Run query')}
         >
           {isExecuting ? <StopOutlined /> : <PlayCircleOutlined />}

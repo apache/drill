@@ -949,6 +949,7 @@ html.dark .ag-theme-alpine {
 /* Bubble — Apple Messages-style with continuous corners and tail tuck */
 .prospector-message-bubble {
   max-width: 85%;
+  min-width: 0; /* ponytail: without this a nowrap table's min-content width beats max-width and blows out the bubble */
   padding: 7px 12px;
   border-radius: 18px;
   font-size: 13px;
@@ -1016,6 +1017,30 @@ html.dark .prospector-bubble-error {
 .prospector-bubble-user .prospector-message-content pre {
   background: rgba(0, 0, 0, 0.3);
   color: #fff;
+}
+
+/* Tables (GFM). ponytail: scroll horizontally rather than wrap -- the panel is
+   narrow and a wide table crushed to fit is unreadable. */
+.prospector-message-content table {
+  display: block;
+  max-width: 100%;
+  overflow-x: auto;
+  border-collapse: collapse;
+  font-size: 12px;
+  margin: 6px 0;
+}
+
+.prospector-message-content th,
+.prospector-message-content td {
+  border: 1px solid var(--color-border);
+  padding: 3px 8px;
+  text-align: left;
+  white-space: nowrap;
+}
+
+.prospector-message-content th {
+  background: var(--color-bg-code-inline);
+  font-weight: 600;
 }
 
 /* Tool call JSON */
@@ -1164,6 +1189,17 @@ html.dark .prospector-bubble-error {
   font-size: 22px;
   transition: transform var(--duration-fast) var(--ease-standard),
               box-shadow var(--duration-fast) var(--ease-standard);
+}
+
+.mobile-run-fab:disabled {
+  background: var(--color-bg-disabled, #c7c7cc);
+  box-shadow: 0 0 0 0.5px rgba(0, 0, 0, 0.12);
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+.mobile-run-fab:disabled:active {
+  transform: none;
 }
 
 .mobile-run-fab:active {

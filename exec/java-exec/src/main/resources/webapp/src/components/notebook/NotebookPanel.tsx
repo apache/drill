@@ -63,7 +63,7 @@ import {
 import Editor from '@monaco-editor/react';
 // Serve Monaco from the bundle, not a CDN. Must load before any <Editor> mounts.
 import '../../monaco';
-import Markdown from 'react-markdown';
+import MarkdownView from '../MarkdownView';
 import DOMPurify from 'dompurify';
 import { usePyodide } from '../../hooks/usePyodide';
 import type { PythonOutput, PackageInfo, VariableInfo, WorkspaceInfo } from '../../hooks/usePyodide';
@@ -957,7 +957,7 @@ export default function NotebookPanel({
                     onDoubleClick={() => setEditingMarkdownId(cell.id)}
                   >
                     <div className="notebook-markdown-rendered">
-                      <Markdown>{cell.code || '*Double-click to edit*'}</Markdown>
+                      <MarkdownView>{cell.code || '*Double-click to edit*'}</MarkdownView>
                     </div>
                   </div>
                 )

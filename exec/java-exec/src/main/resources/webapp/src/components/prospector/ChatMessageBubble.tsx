@@ -16,7 +16,7 @@
  * limitations under the License.
  */
 import { useCallback } from 'react';
-import Markdown from 'react-markdown';
+import MarkdownView from '../MarkdownView';
 import { Button, Tooltip } from 'antd';
 import { UserOutlined, RobotOutlined, PlusSquareOutlined } from '@ant-design/icons';
 import type { ChatMessage } from '../../types/ai';
@@ -55,7 +55,7 @@ export default function ChatMessageBubble({
             {isUser ? (
               <span>{message.content}</span>
             ) : (
-              <Markdown
+              <MarkdownView
                 components={onInsertCell ? {
                   code({ className, children, ref: _ref, ...props }) {
                     const match = /language-(\w+)/.exec(className || '');
@@ -95,7 +95,7 @@ export default function ChatMessageBubble({
                 } : undefined}
               >
                 {message.content}
-              </Markdown>
+              </MarkdownView>
             )}
           </div>
         )}

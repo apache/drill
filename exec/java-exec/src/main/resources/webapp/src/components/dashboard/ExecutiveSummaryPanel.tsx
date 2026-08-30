@@ -18,8 +18,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { Alert, Button, Input, Select, Space, Spin, Switch, Typography } from 'antd';
 import { PushpinFilled, PushpinOutlined, ReloadOutlined, HistoryOutlined } from '@ant-design/icons';
-import Markdown from 'react-markdown';
-import rehypeRaw from 'rehype-raw';
+import MarkdownView from '../MarkdownView';
 import { getAiStatus } from '../../api/ai';
 import { streamChat } from '../../api/ai';
 import type { ChatMessage, DashboardDataContext } from '../../types/ai';
@@ -558,7 +557,7 @@ export default function ExecutiveSummaryPanel({
       {summary && (
         <>
           <div className="executive-summary-content" style={{ fontSize: 14, lineHeight: 1.6 }}>
-            <Markdown rehypePlugins={[rehypeRaw]}>{summary}</Markdown>
+            <MarkdownView allowHtml>{summary}</MarkdownView>
           </div>
           <div style={{ marginTop: 8, display: 'flex', justifyContent: 'flex-end', gap: 8, alignItems: 'center' }}>
             {isGenerating && <Spin size="small" />}
