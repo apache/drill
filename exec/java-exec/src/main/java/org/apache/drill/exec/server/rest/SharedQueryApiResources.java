@@ -53,6 +53,7 @@ import jakarta.ws.rs.PUT;
 import jakarta.ws.rs.Path;
 import jakarta.ws.rs.PathParam;
 import jakarta.ws.rs.Produces;
+import jakarta.ws.rs.QueryParam;
 import jakarta.ws.rs.WebApplicationException;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
@@ -116,6 +117,14 @@ public class SharedQueryApiResources {
     private long updatedAt;
     @JsonProperty
     private boolean apiEnabled;
+    /**
+     * The query tab this API was published from, when it is known. Provenance only:
+     * this record carries its own SQL and keeps serving after the tab is deleted. Used
+     * to warn the user what a tab was published as before they remove it. Null for
+     * APIs created before the field existed.
+     */
+    @JsonProperty
+    private String tabId;
 
     // Default constructor for Jackson
     public SharedQueryApi() {
@@ -130,7 +139,8 @@ public class SharedQueryApiResources {
         @JsonProperty("owner") String owner,
         @JsonProperty("createdAt") long createdAt,
         @JsonProperty("updatedAt") long updatedAt,
-        @JsonProperty("apiEnabled") boolean apiEnabled) {
+        @JsonProperty("apiEnabled") boolean apiEnabled,
+        @JsonProperty("tabId") String tabId) {
       this.id = id;
       this.name = name;
       this.sql = sql;
@@ -139,6 +149,7 @@ public class SharedQueryApiResources {
       this.createdAt = createdAt;
       this.updatedAt = updatedAt;
       this.apiEnabled = apiEnabled;
+      this.tabId = tabId;
     }
 
     public String getId() {
@@ -171,6 +182,10 @@ public class SharedQueryApiResources {
 
     public boolean isApiEnabled() {
       return apiEnabled;
+    }
+
+    public String getTabId() {
+      return tabId;
     }
 
     public void setName(String name) {
@@ -206,6 +221,9 @@ public class SharedQueryApiResources {
     public String defaultSchema;
     @JsonProperty
     public boolean apiEnabled;
+    /** Tab this was published from, so the tab can warn about it before deletion. */
+    @JsonProperty
+    public String tabId;
   }
 
   /**
@@ -251,7 +269,9 @@ public class SharedQueryApiResources {
   @GET
   @Produces(MediaType.APPLICATION_JSON)
   @Operation(summary = "List shared query APIs", description = "Returns all shared query APIs owned by the current user")
-  public SharedQueryApisResponse listSharedQueryApis() {
+  public SharedQueryApisResponse listSharedQueryApis(
+      @Parameter(description = "Only APIs published from this tab")
+      @QueryParam("tabId") String tabId) {
     logger.debug("Listing shared query APIs for user: {}", getCurrentUser());
 
     List<SharedQueryApi> queries = new ArrayList<>();
@@ -265,7 +285,8 @@ public class SharedQueryApiResources {
         Map.Entry<String, SharedQueryApi> entry = iterator.next();
         SharedQueryApi query = entry.getValue();
 
-        if (query.getOwner().equals(currentUser)) {
+        if (query.getOwner().equals(currentUser)
+            && (tabId == null || tabId.isEmpty() || tabId.equals(query.getTabId()))) {
           queries.add(query);
         }
       }
@@ -301,7 +322,8 @@ public class SharedQueryApiResources {
         getCurrentUser(),
         now,
         now,
-        request.apiEnabled
+        request.apiEnabled,
+        request.tabId
     );
 
     try {
