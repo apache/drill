@@ -4,7 +4,9 @@ Design notes for moving SQL Lab query tabs from browser-local scratch state to
 per-user project content. This document is the spec; the implementation plan is
 [`plans/2026-08-30-server-side-tabs.md`](plans/2026-08-30-server-side-tabs.md).
 
-Status: **design agreed, not yet implemented**.
+Status: **implemented** (13 tasks, see
+[`plans/2026-08-30-server-side-tabs.md`](plans/2026-08-30-server-side-tabs.md)).
+Not yet exercised against a running drillbit outside the test suite.
 
 ## Why
 
@@ -117,11 +119,13 @@ unconditional removes it.
 - **`PersistentStore` has no prefix scan** — `get`, `put`, `delete`, `putIfAbsent`,
   `getAll()`, `getRange(skip, take)`. Listing a user's tabs means `getAll()` plus a
   filter, which is the pattern `ProjectResources` already uses for projects.
-- **Prospector conversations are large.** In a distributed deployment `PersistentStore`
-  is ZooKeeper-backed, and ZooKeeper's default per-znode limit is 1 MB. There is no
-  size handling in the store code. Conversation storage needs a size cap or a
-  different store than tabs use; this must be confirmed against a real deployment
-  before Phase 4.
+- **Prospector conversations are large.** Confirmed: `drill-module.conf:241` makes
+  `ZookeeperPersistentStoreProvider` the default, and its write path is
+  `client.put(key, bytes)` straight into a znode. ZooKeeper's default
+  `jute.maxbuffer` is 1 MB. Conversations therefore live in their own store,
+  `drill.sqllab.tab_conversations`, capped at 512 KB with a 413 — rejected rather
+  than truncated, since a conversation silently losing its earliest messages is worse
+  than a refused write the caller can report.
 - **Global (non-project) tabs exist** at `/query`, persisted under
   `tabsKey(undefined)`. They need a server-side home too: same store, null
   `projectId`, keyed by user.
@@ -154,5 +158,11 @@ decision. When picked up, note that:
 ## Open questions
 
 - **Existing project-level Prospector histories** in `localStorage` have no tab to
-  belong to once conversations go per-tab. Stranding them is a visible one-time loss
-  for anyone mid-conversation.
+  belong to once conversations go per-tab. They are stranded under the old
+  `prospector_chat_<projectId>` key: a visible one-time loss for anyone
+  mid-conversation, and not migrated.
+- **The client does not yet use the server-side conversation store.** Conversations
+  are per-tab in `localStorage` (`prospectorChatKey`), and the REST endpoints exist and
+  are tested, but `useProspector` has not been switched over to them. Until it is,
+  conversations remain per-device and the `conversationLength` shown in the delete
+  warning is hardcoded to 0.
