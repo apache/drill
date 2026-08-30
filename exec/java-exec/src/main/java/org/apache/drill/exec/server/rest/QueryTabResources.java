@@ -178,6 +178,76 @@ public class QueryTabResources {
     }
   }
 
+  @GET
+  @Path("/{id}/conversation")
+  @Produces(MediaType.APPLICATION_JSON)
+  @Operation(summary = "Get a tab's Prospector conversation",
+      description = "Returns the chat history for one tab. A tab that has not been "
+          + "talked to returns an empty message list rather than a 404.")
+  public Response getConversation(
+      @Parameter(description = "Tab ID") @PathParam("id") String id) {
+    QueryTabStore.TabRecord tab = getStore().find(id);
+    if (tab == null) {
+      return Response.status(Response.Status.NOT_FOUND)
+          .entity(new MessageResponse("Tab not found"))
+          .build();
+    }
+    if (!getCurrentUser().equals(tab.getOwner())) {
+      return Response.status(Response.Status.FORBIDDEN)
+          .entity(new MessageResponse("Only the owner can read this conversation"))
+          .build();
+    }
+    return Response.ok(TabConversationStore.get(storeProvider, workManager).find(id)).build();
+  }
+
+  @PUT
+  @Path("/{id}/conversation")
+  @Consumes(MediaType.APPLICATION_JSON)
+  @Produces(MediaType.APPLICATION_JSON)
+  @Operation(summary = "Replace a tab's Prospector conversation",
+      description = "Stores the chat history for one tab. Rejects payloads over 512 KB "
+          + "with 413: the default store writes into a ZooKeeper znode, whose 1 MB "
+          + "limit would otherwise fail the write far from where it can be reported.")
+  public Response putConversation(
+      @Parameter(description = "Tab ID") @PathParam("id") String id,
+      TabConversationStore.Conversation conversation) {
+    try {
+      QueryTabStore.TabRecord tab = getStore().find(id);
+      if (tab == null) {
+        return Response.status(Response.Status.NOT_FOUND)
+            .entity(new MessageResponse("Tab not found"))
+            .build();
+      }
+      if (!getCurrentUser().equals(tab.getOwner())) {
+        return Response.status(Response.Status.FORBIDDEN)
+            .entity(new MessageResponse("Only the owner can write this conversation"))
+            .build();
+      }
+
+      // Measured on the serialized form, which is what actually reaches the store.
+      // Rejected rather than truncated: a conversation silently losing its earliest
+      // messages is worse than a refused write the caller can surface.
+      byte[] serialized = workManager.getContext().getLpPersistence().getMapper()
+          .writeValueAsBytes(conversation);
+      if (serialized.length > TabConversationStore.MAX_CONVERSATION_BYTES) {
+        return Response.status(413)
+            .entity(new MessageResponse(String.format(
+                "Conversation is %d bytes, over the %d byte limit. Start a new tab to "
+                    + "continue.", serialized.length,
+                TabConversationStore.MAX_CONVERSATION_BYTES)))
+            .build();
+      }
+
+      synchronized (id.intern()) {
+        TabConversationStore.get(storeProvider, workManager).save(id, conversation);
+      }
+      return Response.ok(conversation).build();
+    } catch (Exception e) {
+      logger.error("Error saving tab conversation", e);
+      throw new DrillRuntimeException("Failed to save conversation: " + e.getMessage(), e);
+    }
+  }
+
   @DELETE
   @Path("/{id}")
   @Produces(MediaType.APPLICATION_JSON)
@@ -208,6 +278,9 @@ public class QueryTabResources {
         }
 
         store.delete(id);
+        // The conversation belongs to the tab; leaving it would orphan a record
+        // nothing can reach.
+        TabConversationStore.get(storeProvider, workManager).delete(id);
         return Response.ok(new MessageResponse("Tab deleted")).build();
       }
     } catch (Exception e) {
