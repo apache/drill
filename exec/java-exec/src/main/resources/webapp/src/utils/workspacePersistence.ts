@@ -36,6 +36,11 @@ export interface PersistedTab {
    * project tree, which is what makes closing non-destructive.
    */
   hidden?: boolean;
+  /**
+   * A query has been run from this tab. Persisted because it is a promotion trigger
+   * and must survive a reload, where results have usually expired.
+   */
+  hasExecuted?: boolean;
 }
 
 export interface PersistedTabState {
@@ -47,6 +52,27 @@ export interface PersistedTabState {
 
 /** Ids written before tabs became durable records. */
 const LEGACY_TAB_ID = /^tab-\d+$/;
+
+/** Default tab names, the only place the tab counter is still recoverable from. */
+const DEFAULT_TAB_NAME = /^Query (\d+)$/;
+
+/**
+ * Highest number in use among default-named tabs, so a new tab continues the sequence.
+ *
+ * The counter used to be read back out of `tab-N` ids. Ids are UUIDs now, so without
+ * this the counter would reset to 1 on every reload and new tabs would collide with
+ * the names of existing ones.
+ */
+export function nextTabCounter(tabs: Pick<PersistedTab, 'name'>[]): number {
+  let highest = 1;
+  for (const tab of tabs) {
+    const match = DEFAULT_TAB_NAME.exec(tab.name);
+    if (match) {
+      highest = Math.max(highest, parseInt(match[1], 10));
+    }
+  }
+  return highest;
+}
 
 /**
  * Rewrites pre-UUID `tab-N` ids, once, before anything else reads the restored state.
