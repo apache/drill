@@ -41,8 +41,12 @@ interface QueryState {
   activeTabId: string;
 }
 
+// The seed tab gets a UUID like any other, so a "tab-1" can never reach the server.
+// Restoring persisted state replaces it before the user sees anything.
+const initialTabId = crypto.randomUUID();
+
 const initialTab: QueryTab = {
-  id: 'tab-1',
+  id: initialTabId,
   name: 'Query 1',
   sql: '',
   isExecuting: false,
@@ -52,10 +56,17 @@ const initialTab: QueryTab = {
 
 const initialState: QueryState = {
   tabs: [initialTab],
-  activeTabId: 'tab-1',
+  activeTabId: initialTabId,
 };
 
+// Drives tab NAMES only ("Query 3"). Ids are UUIDs: tabs are durable server-side
+// records now, and a per-project counter that resets on reload cannot produce a
+// stable identity. See docs/dev/TabPersistence.md.
 let tabCounter = 1;
+
+function newTabId(): string {
+  return crypto.randomUUID();
+}
 
 const querySlice = createSlice({
   name: 'query',
@@ -123,7 +134,7 @@ const querySlice = createSlice({
     addTab: (state, action: PayloadAction<string | undefined>) => {
       tabCounter++;
       const newTab: QueryTab = {
-        id: `tab-${tabCounter}`,
+        id: newTabId(),
         name: action.payload || `Query ${tabCounter}`,
         sql: '',
         isExecuting: false,
@@ -138,7 +149,7 @@ const querySlice = createSlice({
       }
       tabCounter++;
       const newTab: QueryTab = {
-        id: `tab-${tabCounter}`,
+        id: newTabId(),
         name: `${sourceTab.name} (copy)`,
         sql: sourceTab.sql,
         defaultSchema: sourceTab.defaultSchema,
