@@ -31,6 +31,11 @@ export interface PersistedTab {
   isLocked?: boolean; // Prevents edits, renames, deletion
   lockReason?: string; // Optional note explaining why it's locked
   lockType?: 'manual' | 'api'; // Drives which icon is shown
+  /**
+   * Closed but not deleted. A hidden tab leaves the tab strip and stays listed in the
+   * project tree, which is what makes closing non-destructive.
+   */
+  hidden?: boolean;
 }
 
 export interface PersistedTabState {
