@@ -18,6 +18,11 @@
 
 export interface PersistedTab {
   id: string;
+  /**
+   * Last local edit, epoch millis. Reconciliation compares this against the server
+   * copy's updatedAt to decide which side wins, so it must be set on every write.
+   */
+  updatedAt?: number;
   name: string;
   sql: string;
   defaultSchema?: string;
@@ -33,6 +38,38 @@ export interface PersistedTabState {
   activeTabId: string;
   tabCounter: number;
   savedAt: number;
+}
+
+/** Ids written before tabs became durable records. */
+const LEGACY_TAB_ID = /^tab-\d+$/;
+
+/**
+ * Rewrites pre-UUID `tab-N` ids, once, before anything else reads the restored state.
+ *
+ * A tab id used to come from a counter that reset per project and per reload, which is
+ * fine for a key into localStorage and useless as the identity of a server-side record.
+ * Idempotent: ids that already look like UUIDs are left exactly as they are, so a tab
+ * already promoted under its id keeps matching its server copy.
+ */
+export function migrateTabIds(state: PersistedTabState): PersistedTabState {
+  const remapped = new Map<string, string>();
+  const tabs = state.tabs.map((tab) => {
+    if (!LEGACY_TAB_ID.test(tab.id)) {
+      return tab;
+    }
+    const id = crypto.randomUUID();
+    remapped.set(tab.id, id);
+    return { ...tab, id };
+  });
+
+  let activeTabId = remapped.get(state.activeTabId) ?? state.activeTabId;
+  // A saved activeTabId pointing at no tab would leave the editor with nothing
+  // selected; fall back to the first tab rather than propagating the dangling id.
+  if (!tabs.some((t) => t.id === activeTabId)) {
+    activeTabId = tabs.length > 0 ? tabs[0].id : activeTabId;
+  }
+
+  return { ...state, tabs, activeTabId };
 }
 
 export interface PersistedUiState {
@@ -57,7 +94,13 @@ export function loadTabState(projectId?: string): PersistedTabState | null {
     if (!parsed.tabs || !Array.isArray(parsed.tabs) || parsed.tabs.length === 0) {
       return null;
     }
-    return parsed;
+    // Migrate here rather than at the call sites: this is the only way persisted tab
+    // state enters the app, so nothing downstream ever sees a legacy id.
+    const migrated = migrateTabIds(parsed);
+    if (migrated.tabs.some((t, i) => t.id !== parsed.tabs[i].id)) {
+      saveTabState(migrated, projectId);
+    }
+    return migrated;
   } catch {
     return null;
   }
