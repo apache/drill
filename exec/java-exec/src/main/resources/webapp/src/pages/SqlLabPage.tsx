@@ -26,6 +26,7 @@ import {
   addTab,
   duplicateTab,
   hideTab,
+  showTab,
   setActiveTab,
   setDefaultSchema,
   renameTab,
@@ -297,6 +298,20 @@ export default function SqlLabPage({ datasetFilter, headerContent, projectId, sa
     cancel,
     updateSql,
   } = useQueryExecution(activeTabId, addHistory);
+
+  // A ?tab= param means the user picked a tab from the project tree. Unhide and
+  // activate it, then strip the param so a later refresh does not reopen a tab the
+  // user has since closed again.
+  useEffect(() => {
+    const requested = new URLSearchParams(location.search).get('tab');
+    if (!requested) {
+      return;
+    }
+    if (tabs.some((t) => t.id === requested)) {
+      dispatch(showTab(requested));
+      navigate({ pathname: location.pathname }, { replace: true });
+    }
+  }, [location.search, location.pathname, tabs, dispatch, navigate]);
 
   // The tab strip shows only open tabs. Hidden ones still exist and stay reachable
   // from the project tree; see docs/dev/TabPersistence.md.
