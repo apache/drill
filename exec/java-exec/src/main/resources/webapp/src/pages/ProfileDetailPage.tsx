@@ -43,7 +43,7 @@ import {
 } from '@ant-design/icons';
 import { useQuery } from '@tanstack/react-query';
 import ReactECharts from 'echarts-for-react';
-import Markdown from 'react-markdown';
+import MarkdownView from '../components/MarkdownView';
 import { getQueryProfileDetail } from '../api/queries';
 import { getAiStatus, streamChat } from '../api/ai';
 import type { ColumnsType } from 'antd/es/table';
@@ -950,13 +950,13 @@ ${redactedError ? `\nError: ${redactedError}` : ''}
                 </div>
                 {aiStreaming ? (
                   <div style={{ paddingBottom: '12px' }}>
-                    <Markdown>{aiContent}</Markdown>
+                    <MarkdownView>{aiContent}</MarkdownView>
                     <div style={{ color: 'var(--color-text-tertiary)', fontSize: '11px', marginTop: '12px', animation: 'pulse 1s infinite' }}>
                       ▌
                     </div>
                   </div>
                 ) : aiContent ? (
-                  <Markdown>{aiContent}</Markdown>
+                  <MarkdownView>{aiContent}</MarkdownView>
                 ) : (
                   <Text type="secondary">Loading analysis...</Text>
                 )}

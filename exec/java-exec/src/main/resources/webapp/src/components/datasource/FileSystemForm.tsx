@@ -36,7 +36,7 @@ import {
   Popconfirm,
 } from 'antd';
 import { PlusOutlined, DeleteOutlined, ApiOutlined, RobotOutlined, QuestionCircleOutlined } from '@ant-design/icons';
-import Markdown from 'react-markdown';
+import MarkdownView from '../MarkdownView';
 import type { WorkspaceConfig, FormatRow } from '../../types';
 import { testConnection, TestConnectionResult } from '../../api/storage';
 import { getAiStatus, streamChat } from '../../api/ai';
@@ -1973,7 +1973,7 @@ export default function FileSystemForm({ config, onChange, onValidationChange, p
           message="Prospector Analysis"
           description={
             <div>
-              <Markdown>{aiExplanation || 'Analyzing...'}</Markdown>
+              <MarkdownView>{aiExplanation || 'Analyzing...'}</MarkdownView>
               {aiExplaining && <span style={{ color: '#999' }}>Thinking...</span>}
             </div>
           }

@@ -18,8 +18,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Alert, Button, Card, Input, InputNumber, Select, Space, Switch, Typography } from 'antd';
 import { DeleteOutlined, PlusOutlined } from '@ant-design/icons';
-import Markdown from 'react-markdown';
-import rehypeRaw from 'rehype-raw';
+import MarkdownView from '../MarkdownView';
 import { getAiStatus, streamChat } from '../../api/ai';
 import type { ChatMessage, DashboardDataContext, DeltaEvent } from '../../types/ai';
 
@@ -345,7 +344,7 @@ export default function AiAlertsPanel({
         <div style={{ marginTop: 8, padding: 8, borderTop: '1px solid var(--color-border, #f0f0f0)' }}>
           <Text strong style={{ fontSize: 12 }}>AI Analysis</Text>
           <div style={{ fontSize: 13, lineHeight: 1.5 }}>
-            <Markdown rehypePlugins={[rehypeRaw]}>{aiAnalysis}</Markdown>
+            <MarkdownView allowHtml>{aiAnalysis}</MarkdownView>
           </div>
         </div>
       )}

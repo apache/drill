@@ -38,6 +38,8 @@
     "react-router-dom": "^6.21.0",
     "regression": "^2.0.1",
     "rehype-raw": "^7.0.0",
+    "rehype-sanitize": "^6.0.0",
+    "remark-gfm": "^4.0.1",
     "sql-formatter": "^15.0.2",
     "topojson-client": "^3.1.0"
   },
