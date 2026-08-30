@@ -7,6 +7,7 @@ For documentation of the React single-page app served by the Drillbit — archit
 ## Authentication / Login
 
 - [LoginRefactor.md](LoginRefactor.md) — design notes for the login/auth refactor: current auth model, the three separable layers (authentication / execution identity / authorization), and a layered direction. Exploration stage.
+- [TabPersistence.md](TabPersistence.md) — design for moving SQL Lab tabs server-side: two-tier persistence, promotion rules, hide vs delete, the project tree listing, and per-tab Prospector conversations. Design agreed, not yet implemented; the plan is [plans/2026-08-30-server-side-tabs.md](plans/2026-08-30-server-side-tabs.md).
 
 ## AI features
 
