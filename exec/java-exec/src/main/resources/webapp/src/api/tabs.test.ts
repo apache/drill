@@ -32,7 +32,7 @@ vi.mock('./client', () => ({
   },
 }));
 
-import { listTabs, createTab, updateTab, deleteTab } from './tabs';
+import { listTabs, createTab, updateTab, deleteTab, getConversation, putConversation } from './tabs';
 
 describe('tabs api', () => {
   beforeEach(() => {
@@ -74,6 +74,46 @@ describe('tabs api', () => {
     mockPut.mockResolvedValue({ data: { id: 'x', name: 'Renamed' } });
     await updateTab('x', { name: 'Renamed' });
     expect(mockPut).toHaveBeenCalledWith('/api/v1/tabs/x', { name: 'Renamed' });
+  });
+
+  it('reads a tab conversation', async () => {
+    mockGet.mockResolvedValue({ data: { messages: [{ role: 'user', content: 'hi' }] } });
+    await expect(getConversation('t1')).resolves.toHaveLength(1);
+    expect(mockGet).toHaveBeenCalledWith('/api/v1/tabs/t1/conversation');
+  });
+
+  /** A tab with no server-side conversation yet must not look like an error. */
+  it('returns an empty conversation when the request fails', async () => {
+    mockGet.mockRejectedValue(new Error('network'));
+    await expect(getConversation('t1')).resolves.toEqual([]);
+  });
+
+  it('writes a tab conversation', async () => {
+    mockPut.mockResolvedValue({ data: {} });
+    await putConversation('t1', [{ role: 'user', content: 'hi' }]);
+    expect(mockPut).toHaveBeenCalledWith('/api/v1/tabs/t1/conversation', {
+      messages: [{ role: 'user', content: 'hi' }],
+    });
+  });
+
+  /**
+   * 413 means the conversation exceeded the server cap. It is reported rather than
+   * swallowed: the local copy is still intact, and the user needs to know this thread
+   * has stopped syncing.
+   */
+  it('reports an oversized conversation rather than swallowing it', async () => {
+    mockPut.mockRejectedValue({ response: { status: 413 } });
+    await expect(putConversation('t1', [])).resolves.toBe('too-large');
+  });
+
+  it('reports other write failures as a plain failure', async () => {
+    mockPut.mockRejectedValue(new Error('network'));
+    await expect(putConversation('t1', [])).resolves.toBe('failed');
+  });
+
+  it('reports a successful write', async () => {
+    mockPut.mockResolvedValue({ data: {} });
+    await expect(putConversation('t1', [])).resolves.toBe('ok');
   });
 
   /** A 409 means the tab is locked; callers surface that rather than swallowing it. */
