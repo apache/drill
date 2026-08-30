@@ -165,10 +165,25 @@ export default function QueryToolbar({
             Cancel
           </Button>
         ) : (
-          <Tooltip title={hasSelection ? 'Run selected SQL (Ctrl/Cmd+Enter)' : 'Run query (Ctrl/Cmd+Enter)'}>
-            <Button type="primary" icon={<PlayCircleOutlined />} onClick={onExecute}>
-              {hasSelection ? 'Run Selection' : 'Run'}
-            </Button>
+          <Tooltip
+            title={
+              hasSql
+                ? (hasSelection ? 'Run selected SQL (Ctrl/Cmd+Enter)' : 'Run query (Ctrl/Cmd+Enter)')
+                : 'Enter a query to run'
+            }
+          >
+            {/* antd disables pointer events on a disabled Button, so the Tooltip needs a
+                wrapper element to hang the hover on. */}
+            <span>
+              <Button
+                type="primary"
+                icon={<PlayCircleOutlined />}
+                onClick={onExecute}
+                disabled={!hasSql}
+              >
+                {hasSelection ? 'Run Selection' : 'Run'}
+              </Button>
+            </span>
           </Tooltip>
         )}
 
