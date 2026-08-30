@@ -24,8 +24,14 @@ export interface SharedQueryApisResponse {
   queries: SharedQueryApi[];
 }
 
-export async function getSharedQueryApis(): Promise<SharedQueryApi[]> {
-  const response = await apiClient.get<SharedQueryApisResponse>(BASE);
+/**
+ * Shared query APIs owned by the current user. Pass a tabId to get only those
+ * published from that tab, which is how the delete-tab warning names them.
+ */
+export async function getSharedQueryApis(tabId?: string): Promise<SharedQueryApi[]> {
+  const response = await apiClient.get<SharedQueryApisResponse>(BASE, {
+    params: tabId ? { tabId } : {},
+  });
   return response.data.queries;
 }
 
