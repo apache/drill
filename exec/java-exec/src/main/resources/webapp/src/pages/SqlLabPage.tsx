@@ -19,7 +19,7 @@ import { useCallback, useState, useEffect, useRef, useMemo, type MutableRefObjec
 import { useSelector, useDispatch } from 'react-redux';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { Tabs, message, notification, Tooltip, Modal, Alert, Button, Space, Spin, Dropdown, Grid, Input } from 'antd';
-import { PlusOutlined, RobotOutlined, MoreOutlined, EditOutlined, CopyOutlined, CloseOutlined, PlayCircleOutlined, StopOutlined, ExperimentOutlined, TableOutlined, LockOutlined, UnlockOutlined, ApiOutlined, StarOutlined, StarFilled } from '@ant-design/icons';
+import { PlusOutlined, RobotOutlined, MoreOutlined, EditOutlined, CopyOutlined, CloseOutlined, DeleteOutlined, PlayCircleOutlined, StopOutlined, ExperimentOutlined, TableOutlined, LockOutlined, UnlockOutlined, ApiOutlined, StarOutlined, StarFilled } from '@ant-design/icons';
 import MarkdownView from '../components/MarkdownView';
 import type { RootState, AppDispatch } from '../store';
 import {
@@ -27,6 +27,7 @@ import {
   duplicateTab,
   hideTab,
   showTab,
+  deleteTab,
   setActiveTab,
   setDefaultSchema,
   renameTab,
@@ -68,6 +69,9 @@ import QueryHistoryModal from '../components/query-editor/QueryHistoryModal';
 import { VisualizationBuilder } from '../components/visualization';
 import { VizTabIcon } from '../components/sqllab/VizTabIcon';
 import ShareApiModal from '../components/results/ShareApiModal';
+import DeleteTabModal from '../components/query-editor/DeleteTabModal';
+import { getSharedQueryApis } from '../api/sharedQueries';
+import { deleteTab as deleteServerTab } from '../api/tabs';
 import NotebookPanel from '../components/notebook/NotebookPanel';
 import type { NotebookPanelHandle } from '../components/notebook/NotebookPanel';
 import { ProspectorPanel } from '../components/prospector';
@@ -312,6 +316,37 @@ export default function SqlLabPage({ datasetFilter, headerContent, projectId, sa
       navigate({ pathname: location.pathname }, { replace: true });
     }
   }, [location.search, location.pathname, tabs, dispatch, navigate]);
+
+  // Which tab the delete confirmation is open for, if any.
+  const [deleteTarget, setDeleteTarget] = useState<string | null>(null);
+
+  // Endpoints published from the tab being deleted. Fetched on demand so the warning
+  // can name them; they survive the deletion, so this is provenance, not a dependency.
+  const { data: publishedApis } = useQuery({
+    queryKey: ['tab-published-apis', deleteTarget],
+    queryFn: () => getSharedQueryApis(deleteTarget ?? undefined),
+    enabled: !!deleteTarget,
+    staleTime: 10_000,
+  });
+
+  const handleConfirmDelete = useCallback(async () => {
+    if (!deleteTarget) {
+      return;
+    }
+    const id = deleteTarget;
+    setDeleteTarget(null);
+    dispatch(deleteTab(id));
+    try {
+      await deleteServerTab(id);
+    } catch {
+      // The tab is gone locally either way. A 409 means it was locked server-side,
+      // which the menu already prevents; anything else is a transient failure and the
+      // record is cleaned up on the next delete attempt.
+    }
+    if (projectId) {
+      queryClient.invalidateQueries({ queryKey: ['project-tabs', projectId] });
+    }
+  }, [deleteTarget, dispatch, projectId, queryClient]);
 
   // The tab strip shows only open tabs. Hidden ones still exist and stay reachable
   // from the project tree; see docs/dev/TabPersistence.md.
@@ -1264,11 +1299,22 @@ export default function SqlLabPage({ datasetFilter, headerContent, projectId, sa
                         key: 'close',
                         icon: <CloseOutlined />,
                         label: 'Close',
-                        danger: true,
-                        disabled: tabs.length <= 1 || tab.isLocked,
+                        // Closing only hides, so it is available even for a locked
+                        // tab and even when it is the last one open.
                         onClick: ({ domEvent }) => {
                           domEvent.stopPropagation();
                           dispatch(hideTab(tab.id));
+                        },
+                      },
+                      {
+                        key: 'delete',
+                        icon: <DeleteOutlined />,
+                        label: 'Delete permanently',
+                        danger: true,
+                        disabled: tab.isLocked,
+                        onClick: ({ domEvent }) => {
+                          domEvent.stopPropagation();
+                          setDeleteTarget(tab.id);
                         },
                       },
                     ],
@@ -1518,6 +1564,24 @@ export default function SqlLabPage({ datasetFilter, headerContent, projectId, sa
           maxLength={100}
         />
       </Modal>
+
+      {deleteTarget && (
+        <DeleteTabModal
+          open
+          tab={{
+            id: deleteTarget,
+            name: tabs.find((t) => t.id === deleteTarget)?.name ?? 'this tab',
+            vizIds: tabs.find((t) => t.id === deleteTarget)?.vizIds,
+            conversationLength: 0,
+          }}
+          vizNames={Object.fromEntries(
+            (allVisualizations ?? []).map((v) => [v.id, v.name])
+          )}
+          publishedApis={(publishedApis ?? []).map((a) => ({ id: a.id, name: a.name }))}
+          onConfirm={handleConfirmDelete}
+          onCancel={() => setDeleteTarget(null)}
+        />
+      )}
 
       {/* Mobile floating Run button */}
       {isMobile && (
