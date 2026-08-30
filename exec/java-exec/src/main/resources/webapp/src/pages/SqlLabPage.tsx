@@ -1442,6 +1442,7 @@ export default function SqlLabPage({ datasetFilter, headerContent, projectId, sa
         defaultSchema={activeTab?.defaultSchema}
         sharedQueryApiId={sharedQueryApiIds[activeTabId]}
         onSharedQueryApiIdChange={handleSharedQueryApiIdChange}
+        tabId={activeTabId}
       />
 
       {/* Query History Modal */}

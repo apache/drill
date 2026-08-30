@@ -30,6 +30,8 @@ interface ShareApiModalProps {
   defaultSchema?: string;
   sharedQueryApiId?: string;
   onSharedQueryApiIdChange: (id: string | undefined) => void;
+  /** Tab being published, recorded so its delete warning can name this endpoint. */
+  tabId?: string;
 }
 
 function generatePythonSnippet(apiUrl: string): string {
@@ -106,6 +108,7 @@ export default function ShareApiModal({
   defaultSchema,
   sharedQueryApiId,
   onSharedQueryApiIdChange,
+  tabId,
 }: ShareApiModalProps) {
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -148,6 +151,7 @@ export default function ShareApiModal({
           sql,
           defaultSchema,
           apiEnabled: true,
+          tabId,
         });
         setSharedQuery(created);
         setApiEnabled(true);
@@ -170,7 +174,7 @@ export default function ShareApiModal({
     } finally {
       setSaving(false);
     }
-  }, [sharedQuery, sql, defaultSchema, onSharedQueryApiIdChange]);
+  }, [sharedQuery, sql, defaultSchema, onSharedQueryApiIdChange, tabId]);
 
   const apiUrl = sharedQuery
     ? `${window.location.origin}/api/v1/shared-queries/${sharedQuery.id}/data`
