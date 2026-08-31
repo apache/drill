@@ -21,6 +21,7 @@ import { renderHook, act, waitFor } from '@testing-library/react';
 // The server sync debounce is 1500ms, longer than waitFor's 1000ms default.
 const SYNC_WAIT = { timeout: 4000 };
 import { Provider } from 'react-redux';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { configureStore } from '@reduxjs/toolkit';
 import type { ReactNode } from 'react';
 import queryReducer, { setSql, setResults, setError, hideTab } from '../store/querySlice';
@@ -50,16 +51,31 @@ function makeStore() {
 }
 
 let store: ReturnType<typeof makeStore>;
+let queryClient: QueryClient;
 
 function wrapper({ children }: { children: ReactNode }) {
-  return <Provider store={store}>{children}</Provider>;
+  return (
+    <QueryClientProvider client={queryClient}>
+      <Provider store={store}>{children}</Provider>
+    </QueryClientProvider>
+  );
 }
 
 describe('useWorkspacePersistence server tier', () => {
   beforeEach(() => {
+    // clearAllMocks resets calls but not implementations, so a mockRejectedValue set
+    // by one test would leak into the next. Re-establish the defaults explicitly.
     vi.clearAllMocks();
+    vi.mocked(listTabs).mockResolvedValue([]);
+    vi.mocked(createTab).mockImplementation((t) =>
+      Promise.resolve({ ...t, updatedAt: Date.now() } as never));
+    vi.mocked(updateTab).mockImplementation((id, t) =>
+      Promise.resolve({ ...t, id, updatedAt: Date.now() } as never));
     localStorage.clear();
     store = makeStore();
+    queryClient = new QueryClient({
+      defaultOptions: { queries: { retry: false } },
+    });
   });
 
   afterEach(() => {
@@ -186,6 +202,29 @@ describe('useWorkspacePersistence server tier', () => {
 
     await waitFor(() =>
       expect(createTab).toHaveBeenCalledWith(expect.objectContaining({ id })), SYNC_WAIT);
+  });
+
+  /**
+   * The sidebar caches its tab list. Without an invalidation on promotion, a project
+   * expanded before the first query caches an empty list and the tab never appears.
+   */
+  it('invalidates the sidebar tab list after promoting a tab', async () => {
+    const invalidate = vi.spyOn(queryClient, 'invalidateQueries');
+    renderHook(() => useWorkspacePersistence('p1'), { wrapper });
+    const id = activeTab().id;
+
+    act(() => {
+      store.dispatch(setSql({ tabId: id, sql: 'SELECT 1' }));
+      store.dispatch(setResults({
+        tabId: id,
+        results: { columns: ['a'], rows: [{ a: 1 }] },
+        executionTime: 5,
+      }));
+    });
+
+    await waitFor(() =>
+      expect(invalidate).toHaveBeenCalledWith({ queryKey: ['project-tabs', 'p1'] }),
+      SYNC_WAIT);
   });
 
   it('reconciles server tabs into the restored state on mount', async () => {
