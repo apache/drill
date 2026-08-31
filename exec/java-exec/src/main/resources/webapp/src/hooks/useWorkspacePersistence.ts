@@ -285,11 +285,15 @@ export function useWorkspacePersistence(projectId?: string) {
   // A ref rather than state: it must not retrigger the sync effect that writes it.
   const promotedIdsRef = useRef<Set<string>>(new Set());
   const serverSyncTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  // Last-synced value of the fields the sidebar renders, per tab, so a rename can be
+  // told apart from an ordinary no-op update.
+  const treeSignaturesRef = useRef<Map<string, string>>(new Map());
 
   // Pull the server's tabs once per project and merge them into what is already here.
   useEffect(() => {
     let cancelled = false;
     promotedIdsRef.current = new Set();
+    treeSignaturesRef.current = new Map();
 
     listTabs(projectId).then((serverTabs) => {
       if (cancelled || serverTabs.length === 0) {
@@ -389,9 +393,24 @@ export function useWorkspacePersistence(projectId?: string) {
         // Every server call is best-effort. localStorage has already been written, so
         // a failure here costs sync, never the user's SQL.
         if (alreadyPromoted) {
-          updateTab(tab.id, payload).catch(() => {
-            // Retried on the next sync tick.
-          });
+          // The sidebar shows a tab's name, hidden state and lock. When one of those
+          // changes the cached list is stale, so refresh it — but only then. This runs
+          // on every sync tick, and invalidating on each one would refetch the tree
+          // every 1.5 seconds for no reason.
+          const signature = `${tab.name}|${!!tab.hidden}|${!!tab.isLocked}|${tab.lockType ?? ''}`;
+          const changed = treeSignaturesRef.current.get(tab.id) !== signature;
+          treeSignaturesRef.current.set(tab.id, signature);
+
+          updateTab(tab.id, payload)
+            .then(() => {
+              if (changed) {
+                queryClient.invalidateQueries({ queryKey: ['project-tabs', projectId] });
+              }
+            })
+            .catch(() => {
+              // Retried on the next sync tick.
+              treeSignaturesRef.current.delete(tab.id);
+            });
         } else {
           promotedIdsRef.current.add(tab.id);
           createTab(payload)
