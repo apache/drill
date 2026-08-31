@@ -250,6 +250,34 @@ describe('useWorkspacePersistence server tier', () => {
       SYNC_WAIT);
   });
 
+  /**
+   * A drillbit restart leaves the browser holding tabs the server has forgotten.
+   * Updating them 404s forever unless the promotion is forgotten so they are recreated.
+   */
+  it('re-creates a promoted tab the server has forgotten', async () => {
+    vi.mocked(listTabs).mockResolvedValue([{
+      id: 'known', name: 'Known', sql: 'SELECT 1',
+      hidden: false, createdAt: 1, updatedAt: 1,
+    }]);
+    vi.mocked(updateTab).mockRejectedValue({ response: { status: 404 } });
+
+    renderHook(() => useWorkspacePersistence('p1'), { wrapper });
+    await waitFor(() =>
+      expect(store.getState().query.tabs.some((t) => t.id === 'known')).toBe(true), SYNC_WAIT);
+
+    act(() => {
+      store.dispatch(setSql({ tabId: 'known', sql: 'SELECT 2' }));
+    });
+    await waitFor(() => expect(updateTab).toHaveBeenCalled(), SYNC_WAIT);
+
+    act(() => {
+      store.dispatch(setSql({ tabId: 'known', sql: 'SELECT 3' }));
+    });
+    await waitFor(() =>
+      expect(createTab).toHaveBeenCalledWith(expect.objectContaining({ id: 'known' })),
+      SYNC_WAIT);
+  });
+
   it('reconciles server tabs into the restored state on mount', async () => {
     vi.mocked(listTabs).mockResolvedValue([{
       id: 'server-only',

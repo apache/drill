@@ -407,9 +407,16 @@ export function useWorkspacePersistence(projectId?: string) {
                 queryClient.invalidateQueries({ queryKey: ['project-tabs', projectId] });
               }
             })
-            .catch(() => {
-              // Retried on the next sync tick.
+            .catch((err) => {
               treeSignaturesRef.current.delete(tab.id);
+              // A 404 means the server no longer has this tab — the drillbit was
+              // restarted, or its store was cleared, while the browser kept the tab.
+              // Forgetting the promotion makes the next tick re-create it instead of
+              // updating a record that will never exist again.
+              const status = (err as { response?: { status?: number } })?.response?.status;
+              if (status === 404) {
+                promotedIdsRef.current.delete(tab.id);
+              }
             });
         } else {
           promotedIdsRef.current.add(tab.id);
