@@ -1553,16 +1553,17 @@ html.dark .shell-sidebar-brand img {
 .shell-sidebar-tab-row {
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: 9px;
   width: 100%;
-  padding: 4px 8px 4px 30px;
+  padding: 5px 8px 5px 34px;
   border: none;
   background: none;
   color: var(--color-text);
-  font-size: 12px;
+  font-size: 13px;
+  font-weight: 500;
   text-align: left;
   cursor: pointer;
-  border-radius: 5px;
+  border-radius: var(--radius-sm);
 }
 
 .shell-sidebar-tab-row:hover {
@@ -1589,7 +1590,7 @@ html.dark .shell-sidebar-brand img {
 .shell-sidebar-tab-lock {
   display: inline-flex;
   align-items: center;
-  font-size: 11px;
+  font-size: 12px;
   opacity: 0.7;
 }
 
@@ -1598,16 +1599,19 @@ html.dark .shell-sidebar-brand img {
 .shell-sidebar-tab-group {
   display: flex;
   align-items: center;
-  gap: 6px;
+  /* Matches .shell-sidebar-item: same size, weight and gap, so the group reads as a
+     peer of the other sidebar entries rather than as secondary chrome. */
+  gap: 9px;
   width: 100%;
-  padding: 4px 8px 4px 18px;
+  padding: 5px 8px 5px 18px;
   border: none;
   background: none;
-  color: var(--color-text-secondary);
-  font-size: 12px;
+  color: var(--color-text);
+  font-size: 13px;
+  font-weight: 500;
   text-align: left;
   cursor: pointer;
-  border-radius: 5px;
+  border-radius: var(--radius-sm);
 }
 
 .shell-sidebar-tab-group:hover {
@@ -1625,7 +1629,7 @@ html.dark .shell-sidebar-brand img {
 }
 
 .shell-sidebar-tab-count {
-  font-size: 10px;
+  font-size: 11px;
   padding: 0 5px;
   border-radius: 8px;
   background: var(--color-bg-hover);

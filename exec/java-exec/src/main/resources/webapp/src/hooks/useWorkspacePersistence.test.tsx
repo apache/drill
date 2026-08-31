@@ -24,7 +24,7 @@ import { Provider } from 'react-redux';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { configureStore } from '@reduxjs/toolkit';
 import type { ReactNode } from 'react';
-import queryReducer, { setSql, setResults, setError, hideTab } from '../store/querySlice';
+import queryReducer, { setSql, setResults, setError, hideTab, renameTab } from '../store/querySlice';
 import uiReducer from '../store/uiSlice';
 import { useWorkspacePersistence } from './useWorkspacePersistence';
 import { listTabs, createTab, updateTab } from '../api/tabs';
@@ -220,6 +220,29 @@ describe('useWorkspacePersistence server tier', () => {
         results: { columns: ['a'], rows: [{ a: 1 }] },
         executionTime: 5,
       }));
+    });
+
+    await waitFor(() =>
+      expect(invalidate).toHaveBeenCalledWith({ queryKey: ['project-tabs', 'p1'] }),
+      SYNC_WAIT);
+  });
+
+  /**
+   * The sidebar caches tab names, so a rename that does not invalidate leaves the tree
+   * showing the old one until the cache happens to expire.
+   */
+  it('refreshes the sidebar when a promoted tab is renamed', async () => {
+    vi.mocked(listTabs).mockResolvedValue([{
+      id: 'known', name: 'Old name', sql: 'SELECT 1',
+      hidden: false, createdAt: 1, updatedAt: 1,
+    }]);
+    renderHook(() => useWorkspacePersistence('p1'), { wrapper });
+    await waitFor(() =>
+      expect(store.getState().query.tabs.some((t) => t.id === 'known')).toBe(true), SYNC_WAIT);
+
+    const invalidate = vi.spyOn(queryClient, 'invalidateQueries');
+    act(() => {
+      store.dispatch(renameTab({ tabId: 'known', name: 'New name' }));
     });
 
     await waitFor(() =>

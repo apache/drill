@@ -40,8 +40,9 @@ import {
   PartitionOutlined,
   FieldTimeOutlined as WorkflowIcon,
 } from '@ant-design/icons';
-import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { listTabs, deleteTab as deleteServerTab } from '../../api/tabs';
+import { useQuery } from '@tanstack/react-query';
+import { listTabs } from '../../api/tabs';
+import { useDeleteTab } from '../../hooks/useDeleteTab';
 import ProjectTabsSection from './ProjectTabsSection';
 import { getProjects } from '../../api/projects';
 import { getSchedules } from '../../api/schedules';
@@ -518,8 +519,6 @@ export default function Sidebar() {
     staleTime: 30_000,
   });
 
-  const queryClient = useQueryClient();
-
   /**
    * Opening a tab from the tree navigates to that project's editor with the tab id in
    * the URL. SqlLabPage unhides and activates it on arrival, which works the same way
@@ -530,17 +529,14 @@ export default function Sidebar() {
     navigate(`/projects/${projectId}/query?tab=${encodeURIComponent(tabId)}`);
   }, [navigate]);
 
-  const handleDeleteTab = useCallback(async (projectId: string, tabId: string) => {
-    try {
-      await deleteServerTab(tabId);
-      queryClient.invalidateQueries({ queryKey: ['project-tabs', projectId] });
-    } catch {
-      // A 409 means the tab is locked. The menu does not offer Delete for locked
-      // tabs, so this is only reachable if the lock was added since the tree loaded;
-      // refreshing the list shows the current state.
-      queryClient.invalidateQueries({ queryKey: ['project-tabs', projectId] });
-    }
-  }, [queryClient]);
+  // Shared with the editor's delete so the two cannot drift again: an earlier version
+  // here removed only the server record, leaving the tab open in the strip to be
+  // re-promoted moments later.
+  const deleteTabEverywhere = useDeleteTab(activeProjectId ?? undefined);
+  const handleDeleteTab = useCallback(
+    (_projectId: string, tabId: string) => deleteTabEverywhere(tabId),
+    [deleteTabEverywhere],
+  );
 
   // Set of saved-query IDs that have a schedule attached
   const scheduledQueryIds = useMemo(() => {

@@ -27,7 +27,6 @@ import {
   duplicateTab,
   hideTab,
   showTab,
-  deleteTab,
   setActiveTab,
   setDefaultSchema,
   renameTab,
@@ -71,7 +70,7 @@ import { VizTabIcon } from '../components/sqllab/VizTabIcon';
 import ShareApiModal from '../components/results/ShareApiModal';
 import DeleteTabModal from '../components/query-editor/DeleteTabModal';
 import { getSharedQueryApis } from '../api/sharedQueries';
-import { deleteTab as deleteServerTab } from '../api/tabs';
+import { useDeleteTab } from '../hooks/useDeleteTab';
 import NotebookPanel from '../components/notebook/NotebookPanel';
 import type { NotebookPanelHandle } from '../components/notebook/NotebookPanel';
 import { ProspectorPanel } from '../components/prospector';
@@ -329,35 +328,15 @@ export default function SqlLabPage({ datasetFilter, headerContent, projectId, sa
     staleTime: 10_000,
   });
 
+  const deleteTabEverywhere = useDeleteTab(projectId);
   const handleConfirmDelete = useCallback(async () => {
     if (!deleteTarget) {
       return;
     }
     const id = deleteTarget;
     setDeleteTarget(null);
-    dispatch(deleteTab(id));
-
-    // The tab's conversation goes with it, or it lingers in localStorage under a key
-    // nothing will ever look up again.
-    const chatKey = prospectorChatKey(projectId, id);
-    if (chatKey) {
-      try {
-        localStorage.removeItem(chatKey);
-      } catch {
-        // Storage unavailable; the orphaned entry is harmless.
-      }
-    }
-    try {
-      await deleteServerTab(id);
-    } catch {
-      // The tab is gone locally either way. A 409 means it was locked server-side,
-      // which the menu already prevents; anything else is a transient failure and the
-      // record is cleaned up on the next delete attempt.
-    }
-    if (projectId) {
-      queryClient.invalidateQueries({ queryKey: ['project-tabs', projectId] });
-    }
-  }, [deleteTarget, dispatch, projectId, queryClient]);
+    await deleteTabEverywhere(id);
+  }, [deleteTarget, deleteTabEverywhere]);
 
   // The tab strip shows only open tabs. Hidden ones still exist and stay reachable
   // from the project tree; see docs/dev/TabPersistence.md.
