@@ -959,15 +959,25 @@ public class ProspectorResources {
 
     systemPrompt.append(DRILL_SQL_DIALECT_NOTES);
 
-    systemPrompt.append("IMPORTANT: Prefer the cached schema listed above when present:\n");
-    systemPrompt.append("- If the tables/columns you need are listed above, use them directly and ");
-    systemPrompt.append("do NOT call get_schema_info for them.\n");
-    systemPrompt.append("- Only call list_schemas / get_schema_info when a needed table or column is ");
-    systemPrompt.append("NOT listed above (e.g. the cache is truncated or a source could not be scanned).\n");
+    systemPrompt.append("IMPORTANT — the schema listed above is already complete for those ");
+    systemPrompt.append("schemas. It was scanned from the live database. Treat it as fact:\n");
+    systemPrompt.append("- Every table and column shown above is real, current, and named exactly ");
+    systemPrompt.append("as written. You do NOT need to verify it.\n");
+    systemPrompt.append("- Do NOT run discovery work for anything listed above. That means no ");
+    systemPrompt.append("get_schema_info, no list_schemas, AND no exploratory execute_sql such as ");
+    systemPrompt.append("SHOW TABLES, SHOW DATABASES, DESCRIBE, INFORMATION_SCHEMA queries, or ");
+    systemPrompt.append("SELECT * ... LIMIT n run purely to see what the columns are. The answer ");
+    systemPrompt.append("to all of those is already above.\n");
+    systemPrompt.append("- Go straight to the query that answers the question. A request you can ");
+    systemPrompt.append("satisfy from the listed schema should produce exactly one query.\n");
+    systemPrompt.append("- Discovery IS warranted when a needed table or column is not listed above ");
+    systemPrompt.append("(the cache is truncated, or a source could not be scanned), or when the ");
+    systemPrompt.append("request genuinely depends on the data VALUES rather than the structure — ");
+    systemPrompt.append("for example checking which categories exist before filtering on one. Say ");
+    systemPrompt.append("which of these applies when you do it.\n");
     systemPrompt.append("- Drill uses hierarchical schemas (e.g., 'mysql' plugin has sub-schemas ");
     systemPrompt.append("like 'mysql.store').\n");
-    systemPrompt.append("- NEVER ask the user for schema or table names — use the list above or explore.\n");
-    systemPrompt.append("- After identifying the schema, write and execute the SQL query.\n");
+    systemPrompt.append("- NEVER ask the user for schema or table names.\n");
     // Scoped out of the "MUST use proactively" list above: that instruction is for the
     // read-only discovery tools. Listing the authoring tools under it read as standing
     // permission, and the model charted every result unasked.
