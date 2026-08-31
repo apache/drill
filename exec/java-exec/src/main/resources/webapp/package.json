@@ -29,6 +29,7 @@
     "html2canvas": "^1.4.1",
     "jspdf": "^4.1.0",
     "monaco-editor": "^0.55.1",
+    "ol": "^10.10.0",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "react-grid-layout": "^1.4.4",
