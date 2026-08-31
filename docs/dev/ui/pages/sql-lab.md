@@ -104,6 +104,23 @@ user's SQL. Full design in [`../../TabPersistence.md`](../../TabPersistence.md).
 - `useMonacoCompletion` — completion provider feeding off schema tree.
 - `useSqlValidation` — inline error markers.
 
+## Map tab (geospatial filter builder)
+
+A drawing surface for authoring spatial filters, enabled once a query has returned.
+Draw a rectangle, polygon, path or point; the geometry becomes a Drill `ST_` predicate
+wrapped around the current query, which then re-runs.
+
+- `components/geo/GeoFilterPanel.tsx` — gating, column resolution, SQL preview. Lazy
+  loaded, so OpenLayers stays out of the initial bundle.
+- `components/geo/GeoMapCanvas.tsx` — the OpenLayers map and draw interactions.
+- `utils/geoColumns.ts`, `utils/geoProjection.ts`, `utils/geoFilterSql.ts` — pure
+  functions for detection, UTM zone selection and SQL generation.
+
+Results are **not** plotted: this authors geometry, it does not visualise data.
+
+Design and the reasoning behind the projection handling are in
+[`../../GeoFilterBuilder.md`](../../GeoFilterBuilder.md).
+
 ## Chrome
 
 - Breadcrumb: `SQL Lab` (or project breadcrumb when wrapped by `ProjectQueryPage`).

@@ -4,7 +4,9 @@ Design notes for drawing geographic filters on a map and pushing them into the q
 SQL. The implementation plan is
 [`plans/2026-08-31-geo-filter-builder.md`](plans/2026-08-31-geo-filter-builder.md).
 
-Status: **design agreed, not yet implemented**.
+Status: **implemented** (7 tasks, see
+[`plans/2026-08-31-geo-filter-builder.md`](plans/2026-08-31-geo-filter-builder.md)).
+Not yet exercised against a running drillbit: no drawn shape has produced a real query.
 
 ## What it is
 

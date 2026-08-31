@@ -15,11 +15,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import { useCallback, useState, useEffect, useRef, useMemo, type MutableRefObject } from 'react';
+import { useCallback, useState, useEffect, useRef, useMemo, lazy, Suspense, type MutableRefObject } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { Tabs, message, notification, Tooltip, Modal, Alert, Button, Space, Spin, Dropdown, Grid, Input } from 'antd';
-import { PlusOutlined, RobotOutlined, MoreOutlined, EditOutlined, CopyOutlined, CloseOutlined, DeleteOutlined, PlayCircleOutlined, StopOutlined, ExperimentOutlined, TableOutlined, LockOutlined, UnlockOutlined, ApiOutlined, StarOutlined, StarFilled } from '@ant-design/icons';
+import { PlusOutlined, RobotOutlined, MoreOutlined, EditOutlined, CopyOutlined, CloseOutlined, DeleteOutlined, GlobalOutlined, PlayCircleOutlined, StopOutlined, ExperimentOutlined, TableOutlined, LockOutlined, UnlockOutlined, ApiOutlined, StarOutlined, StarFilled } from '@ant-design/icons';
 import MarkdownView from '../components/MarkdownView';
 import type { RootState, AppDispatch } from '../store';
 import {
@@ -68,6 +68,9 @@ import QueryHistoryModal from '../components/query-editor/QueryHistoryModal';
 import { VisualizationBuilder } from '../components/visualization';
 import { VizTabIcon } from '../components/sqllab/VizTabIcon';
 import ShareApiModal from '../components/results/ShareApiModal';
+// Lazy: OpenLayers is only needed once someone opens the Map tab, and it should not
+// weigh down the initial load for everyone who never does.
+const GeoFilterPanel = lazy(() => import('../components/geo/GeoFilterPanel'));
 import DeleteTabModal from '../components/query-editor/DeleteTabModal';
 import { getSharedQueryApis } from '../api/sharedQueries';
 import { useDeleteTab } from '../hooks/useDeleteTab';
@@ -1441,6 +1444,27 @@ export default function SqlLabPage({ datasetFilter, headerContent, projectId, sa
                       tabName={activeTab?.name}
                       onHandle={setNotebookHandle}
                     />
+                  </div>
+                ),
+              },
+              {
+                key: 'geo',
+                label: <span><GlobalOutlined /> Map</span>,
+                children: (
+                  <div style={{ height: '100%', overflow: 'auto' }}>
+                    <Suspense fallback={<div style={{ padding: 16 }}>Loading map…</div>}>
+                      <GeoFilterPanel
+                        results={results
+                          ? { columns: results.columns, metadata: results.metadata }
+                          : null}
+                        sql={sql}
+                        onApplyFilter={(filtered: string) => {
+                          updateSql(filtered);
+                          setResultsPanelTab('results');
+                          handleExecute();
+                        }}
+                      />
+                    </Suspense>
                   </div>
                 ),
               },
