@@ -51,13 +51,6 @@ public class QueryTabStore {
 
   private static final String STORE_NAME = "drill.sqllab.tabs";
 
-  /**
-   * Separator for the composite store key. NUL cannot appear in a username, so no
-   * caller can craft an owner that resolves into another user's namespace — which a
-   * printable separator such as ':' would allow.
-   */
-  private static final char KEY_SEPARATOR = '\0';
-
   /** Stands in for a null project id, for tabs opened outside a project at /query. */
   private static final String GLOBAL_PROJECT = "_global";
 
@@ -93,9 +86,24 @@ public class QueryTabStore {
     return instance;
   }
 
+  /**
+   * The store key is the tab id alone.
+   *
+   * <p>Under {@code LocalPersistentStoreProvider} this key becomes a filename, so it
+   * cannot carry arbitrary user-supplied text. A previous version joined owner, project
+   * and tab id with a NUL separator to isolate namespaces; NUL cannot appear in a path
+   * and every write failed with "Invalid file path" outside ZooKeeper deployments.
+   *
+   * <p>Nothing is lost. Tab ids are UUIDs, so keys do not collide across users or
+   * projects, and isolation comes from the owner and project fields on the record that
+   * {@link #list} filters on — plus the ownership checks in {@code QueryTabResources},
+   * which is where it belongs.
+   *
+   * <p>The owner and projectId parameters are kept so callers read naturally and so a
+   * future key scheme has them available.
+   */
   static String storeKey(String owner, String projectId, String tabId) {
-    String project = projectId == null || projectId.isEmpty() ? GLOBAL_PROJECT : projectId;
-    return owner + KEY_SEPARATOR + project + KEY_SEPARATOR + tabId;
+    return tabId;
   }
 
   /**
@@ -125,9 +133,8 @@ public class QueryTabStore {
   }
 
   /**
-   * Looks a tab up by id alone. The store key includes owner and project, which a
-   * caller holding only an id does not know, so this scans. Callers must still check
-   * ownership before acting on the result.
+   * Looks a tab up by id. Callers must still check ownership before acting on the
+   * result — this returns any user's tab.
    */
   public TabRecord find(String id) {
     Iterator<Map.Entry<String, TabRecord>> entries = store.getAll();

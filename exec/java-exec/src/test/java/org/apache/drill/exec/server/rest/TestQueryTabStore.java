@@ -126,16 +126,33 @@ public class TestQueryTabStore extends ClusterTest {
   }
 
   /**
-   * The key joins owner, project and tab id with a NUL separator. NUL cannot appear
-   * in a username, so no caller can craft an owner string that resolves into another
-   * user's namespace the way a printable separator such as ':' would allow.
+   * The store key becomes a FILENAME under LocalPersistentStoreProvider, so it must
+   * contain nothing a filesystem rejects. An earlier version joined owner, project and
+   * tab id with a NUL separator for isolation; that is unrepresentable in a path and
+   * every write failed with "Invalid file path" on any non-ZooKeeper deployment. The
+   * in-memory store used by ClusterTest accepted it, so only a real drillbit caught it.
+   *
+   * <p>Isolation does not need the key: tab ids are UUIDs, and ownership is enforced by
+   * the record fields that {@link QueryTabStore#list} filters on.
    */
   @Test
-  public void testOwnerCannotForgeAKeyIntoAnotherNamespace() {
+  public void testStoreKeyIsSafeAsAFilename() {
+    String key = QueryTabStore.storeKey("alice", "proj1", "dae5800c-2f50-4ddb-b80f-0c756a435852");
+    for (char c : key.toCharArray()) {
+      assertTrue("Key contains a character invalid in a file path: " + (int) c,
+          c >= 0x20 && c != '/' && c != '\\' && c != ':' && c != 0x7f);
+    }
+    assertEquals("dae5800c-2f50-4ddb-b80f-0c756a435852", key);
+  }
+
+  /** One user must never see another's tabs, however the key is built. */
+  @Test
+  public void testOneUserCannotSeeAnothersTabs() {
     QueryTabStore store = QueryTabStore.get(provider, workManager);
     store.save(newRecord("k1", "frank", "proj1", "SELECT 1"));
 
-    assertTrue(store.list("frank" + '\0' + "proj1", "").isEmpty());
+    assertTrue(store.list("mallory", "proj1").isEmpty());
+    assertEquals(1, store.list("frank", "proj1").size());
   }
 
   @Test
