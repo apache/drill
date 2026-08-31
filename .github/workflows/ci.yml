@@ -27,7 +27,7 @@ on: [push, pull_request]
 
 jobs:
   build:
-    name: Main Build
+    name: Main Build (java ${{ matrix.java }}, shard ${{ matrix.shard }})
     runs-on: ubuntu-latest
     if: github.repository == 'apache/drill'
     timeout-minutes: 150
@@ -36,6 +36,12 @@ jobs:
         # Java versions to run unit tests (Jetty 12 requires Java 17+)
         java: [ '17', '21', '25' ]
         profile: ['default-hadoop']
+        # exec/java-exec holds ~31 minutes of the suite in 577 classes, which dominates
+        # the build. Splitting it three ways by class name brings the longest shard to
+        # about 11 minutes. Boundaries were chosen from measured per-class times; the
+        # patterns are exhaustive, so a newly added test always lands in exactly one
+        # shard rather than being silently skipped.
+        shard: [ '1', '2', '3' ]
       fail-fast: false
     steps:
       - name: Checkout
@@ -57,13 +63,41 @@ jobs:
             mkswap /tmp/swapfile
             swapon /tmp/swapfile
           "
+      # Which slice of the suite this job runs. The patterns are exhaustive: every
+      # The patterns are spelled out one prefix at a time because surefire does NOT
+      # support character-class globs: -Dtest='Test[A-F]*' silently matches nothing and
+      # the build passes green having run no tests. Only '*' wildcards and comma
+      # separated lists work, so each letter gets its own entry, in both cases
+      # (TestforBaseTestInheritance has a lowercase f).
+      #
+      # Shard 3 repeats surefire's other default includes (*Test, *Tests, *TestCase) to
+      # pick up classes not named Test*. Verified exhaustive against all 894 test
+      # classes in the repo. TestFrameworkTest matches shards 1 and 3 and runs twice —
+      # harmless, and far safer than a gap that skips tests without saying so.
+      - name: Select test shard
+        id: shard
+        run: |
+          case "${{ matrix.shard }}" in
+            1) echo 'pattern=TestA*,Testa*,TestB*,Testb*,TestC*,Testc*,TestD*,Testd*,TestE*,Teste*,TestF*,Testf*' >> "$GITHUB_OUTPUT" ;;
+            2) echo 'pattern=TestG*,Testg*,TestH*,Testh*,TestI*,Testi*,TestJ*,Testj*,TestK*,Testk*,TestL*,Testl*,TestM*,Testm*,TestN*,Testn*,TestO*,Testo*,TestP*,Testp*' >> "$GITHUB_OUTPUT" ;;
+            3) echo 'pattern=TestQ*,Testq*,TestR*,Testr*,TestS*,Tests*,TestT*,Testt*,TestU*,Testu*,TestV*,Testv*,TestW*,Testw*,TestX*,Testx*,TestY*,Testy*,TestZ*,Testz*,*Test,*Tests,*TestCase,Test0*,Test1*,Test2*,Test3*,Test4*,Test5*,Test6*,Test7*,Test8*,Test9*,Test_*' >> "$GITHUB_OUTPUT" ;;
+          esac
+
       # -DskipFrontend: no Java test uses webapp/dist, and building it here would
       # download Node and run npm ci once per matrix entry. The SQL Lab frontend is
       # built, type-checked, linted and tested by the sqllab-frontend workflow.
+      #
+      # -DforkCount=2: several of the slowest classes are wall-clock bound rather than
+      # CPU bound — TestTimedCallable spends 105 seconds asleep, and the RPC, SSL and
+      # graceful-shutdown tests wait on timeouts — so a second fork overlaps that idle
+      # time at little extra cost. Raise further only with memory headroom: the vector
+      # tests fail with OutOfMemoryException under pressure.
       - name: Build and test
         run: |
           mvn -P${{ matrix.profile }} install --batch-mode --no-transfer-progress \
-          -DskipFrontend=true \
+          -DskipFrontend=true -DforkCount=2 \
+          -Dsurefire.failIfNoSpecifiedTests=false \
+          -Dtest='${{ steps.shard.outputs.pattern }}' \
           -Dhttp.keepAlive=false -Dmaven.wagon.http.pool=false -Dmaven.wagon.httpconnectionManager.ttlSeconds=120
       - name: Remove swap space
         run : |
