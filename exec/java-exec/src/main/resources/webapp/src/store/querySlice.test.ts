@@ -16,7 +16,7 @@
  * limitations under the License.
  */
 import { describe, it, expect } from 'vitest';
-import reducer, { addTab, duplicateTab, hideTab, deleteTab, lockTab, setSql } from './querySlice';
+import reducer, { addTab, duplicateTab, hideTab, deleteTab, lockTab, setSql, restoreQueryState } from './querySlice';
 import { migrateTabIds } from '../utils/workspacePersistence';
 import type { PersistedTabState } from '../utils/workspacePersistence';
 
@@ -236,5 +236,50 @@ describe('hiding versus deleting', () => {
     state = reducer(state, hideTab(id));
 
     expect(state.tabs.find((t) => t.id === id)?.sql).toBe('SELECT 42');
+  });
+});
+
+/**
+ * restoreQueryState rebuilds each tab from an explicit field list, so any field it
+ * forgets is silently dropped — TypeScript does not flag excess properties coming out
+ * of a .map(). Both of these are load-bearing: losing `hidden` makes closed tabs
+ * reappear after a reload, and losing `hasExecuted` stops a tab ever being promoted.
+ */
+describe('restoreQueryState field preservation', () => {
+  it('keeps the hidden flag', () => {
+    const state = reducer(undefined, restoreQueryState({
+      tabs: [{ id: 'a', name: 'A', sql: 'SELECT 1', hidden: true }],
+      activeTabId: 'a',
+      tabCounter: 1,
+    }));
+    expect(state.tabs[0].hidden).toBe(true);
+  });
+
+  it('keeps hasExecuted', () => {
+    const state = reducer(undefined, restoreQueryState({
+      tabs: [{ id: 'a', name: 'A', sql: 'SELECT 1', hasExecuted: true }],
+      activeTabId: 'a',
+      tabCounter: 1,
+    }));
+    expect(state.tabs[0].hasExecuted).toBe(true);
+  });
+
+  it('keeps isPinned', () => {
+    const state = reducer(undefined, restoreQueryState({
+      tabs: [{ id: 'a', name: 'A', sql: 'SELECT 1', isPinned: true }],
+      activeTabId: 'a',
+      tabCounter: 1,
+    }));
+    expect(state.tabs[0].isPinned).toBe(true);
+  });
+
+  it('leaves the flags unset when they were absent', () => {
+    const state = reducer(undefined, restoreQueryState({
+      tabs: [{ id: 'a', name: 'A', sql: 'SELECT 1' }],
+      activeTabId: 'a',
+      tabCounter: 1,
+    }));
+    expect(state.tabs[0].hidden).toBeFalsy();
+    expect(state.tabs[0].hasExecuted).toBeFalsy();
   });
 });

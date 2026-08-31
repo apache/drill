@@ -60,7 +60,14 @@ export async function listTabs(projectId?: string): Promise<ServerTab[]> {
       params: projectId ? { projectId } : {},
     });
     return response.data.tabs ?? [];
-  } catch {
+  } catch (err) {
+    // Degrading to empty is right for a transient failure, but it also makes a real
+    // server error look exactly like "this project has no tabs" — which is a very
+    // confusing way to lose a feature. Say something for an actual HTTP response.
+    const status = (err as { response?: { status?: number } })?.response?.status;
+    if (status) {
+      console.error(`Failed to list tabs (HTTP ${status}); showing none.`, err);
+    }
     return [];
   }
 }

@@ -17,6 +17,7 @@
  */
 
 import { useEffect, useRef, useCallback } from 'react';
+import { useQueryClient } from '@tanstack/react-query';
 import { useSelector, useDispatch } from 'react-redux';
 import type { RootState, AppDispatch } from '../store';
 import { restoreQueryState } from '../store/querySlice';
@@ -48,6 +49,7 @@ let loadedProjectId: string | undefined | false = false;
 
 export function useWorkspacePersistence(projectId?: string) {
   const dispatch = useDispatch<AppDispatch>();
+  const queryClient = useQueryClient();
   const hasRestoredRef = useRef(false);
   const saveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -392,10 +394,17 @@ export function useWorkspacePersistence(projectId?: string) {
           });
         } else {
           promotedIdsRef.current.add(tab.id);
-          createTab(payload).catch(() => {
-            // Allow a later tick to try again.
-            promotedIdsRef.current.delete(tab.id);
-          });
+          createTab(payload)
+            .then(() => {
+              // The sidebar caches its tab list, so a newly promoted tab is invisible
+              // until the list is refetched. Without this, a project expanded before
+              // the first query keeps showing an empty tree.
+              queryClient.invalidateQueries({ queryKey: ['project-tabs', projectId] });
+            })
+            .catch(() => {
+              // Allow a later tick to try again.
+              promotedIdsRef.current.delete(tab.id);
+            });
         }
       }
     }, 1500);
@@ -405,7 +414,7 @@ export function useWorkspacePersistence(projectId?: string) {
         clearTimeout(serverSyncTimerRef.current);
       }
     };
-  }, [tabs, activeTabId, projectId]);
+  }, [tabs, activeTabId, projectId, queryClient]);
 
   // Save UI state (immediate — changes are infrequent)
   useEffect(() => {
