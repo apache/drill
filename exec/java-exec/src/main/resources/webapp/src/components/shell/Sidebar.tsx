@@ -397,7 +397,7 @@ function ProjectRow({
               indent={1}
             />
           ))}
-          {projectTabs && (
+          {projectTabs !== undefined && (
             <div className="shell-sidebar-tab-list">
               <ProjectTabsSection
                 tabs={projectTabs.map((t) => ({

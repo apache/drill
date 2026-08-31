@@ -15,8 +15,15 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+import { useState } from 'react';
 import { Dropdown, Tooltip } from 'antd';
-import { CodeOutlined, LockOutlined, ApiOutlined } from '@ant-design/icons';
+import {
+  CodeOutlined,
+  LockOutlined,
+  ApiOutlined,
+  RightOutlined,
+  FolderOpenOutlined,
+} from '@ant-design/icons';
 import type { MenuProps } from 'antd';
 
 /** The subset of a tab the tree needs. */
@@ -37,25 +44,40 @@ interface ProjectTabsSectionProps {
 }
 
 /**
- * Lists a project's query tabs in the sidebar.
+ * A project's query tabs, as a collapsible group in the sidebar.
  *
- * Tabs are the first item-level content in a sidebar that otherwise lists sections,
- * which is why this is its own component rather than another `ProjectSection`.
+ * Tabs are the first item-level content in a sidebar that otherwise lists sections, so
+ * they get their own group with a count rather than sitting loose among the section
+ * links. The group is always present, showing 0 when the project has none — a section
+ * that vanishes reads as a bug, and the count is how you tell "no tabs" from "not
+ * loaded".
  *
  * Both open and hidden tabs appear. A hidden tab has left the tab strip, so this list
  * is the only route back to it; leaving them out would make closing a tab feel like
  * losing it. See docs/dev/TabPersistence.md.
  */
 export default function ProjectTabsSection({ tabs, onOpen, onDelete }: ProjectTabsSectionProps) {
-  if (tabs.length === 0) {
-    return (
-      <div className="shell-sidebar-tab-empty">No tabs yet</div>
-    );
-  }
+  const [expanded, setExpanded] = useState(true);
 
   return (
     <>
-      {tabs.map((tab) => {
+      <button
+        type="button"
+        className="shell-sidebar-tab-group"
+        onClick={() => setExpanded((open) => !open)}
+        aria-expanded={expanded}
+      >
+        <span className={`shell-sidebar-tab-caret${expanded ? ' is-open' : ''}`}>
+          <RightOutlined />
+        </span>
+        <span className="shell-sidebar-tab-icon">
+          <FolderOpenOutlined />
+        </span>
+        <span className="shell-sidebar-tab-label">Tabs</span>
+        <span className="shell-sidebar-tab-count">{tabs.length}</span>
+      </button>
+
+      {expanded && tabs.map((tab) => {
         // A locked tab cannot be deleted, so the menu says why instead of offering an
         // action that the server would refuse with a 409.
         const menuItems: MenuProps['items'] = tab.locked

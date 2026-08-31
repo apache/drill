@@ -87,8 +87,35 @@ describe('ProjectTabsSection', () => {
     expect(screen.getByText(/unlock to delete/i)).toBeInTheDocument();
   });
 
-  it('renders an empty state when the project has no tabs', () => {
+  it('shows how many tabs the project has', () => {
+    render(<ProjectTabsSection tabs={tabs} onOpen={vi.fn()} onDelete={vi.fn()} />);
+    expect(screen.getByText('2')).toBeInTheDocument();
+  });
+
+  /** The group stays visible at zero, so the tree does not appear to lose a section. */
+  it('renders the group with a zero count when there are no tabs', () => {
     render(<ProjectTabsSection tabs={[]} onOpen={vi.fn()} onDelete={vi.fn()} />);
-    expect(screen.getByText(/no tabs/i)).toBeInTheDocument();
+    expect(screen.getByText('Tabs')).toBeInTheDocument();
+    expect(screen.getByText('0')).toBeInTheDocument();
+    expect(screen.queryByText(/no tabs/i)).not.toBeInTheDocument();
+  });
+
+  it('collapses and expands the list', () => {
+    render(<ProjectTabsSection tabs={tabs} onOpen={vi.fn()} onDelete={vi.fn()} />);
+    expect(screen.getByText('Open one')).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole('button', { name: /tabs/i }));
+    expect(screen.queryByText('Open one')).not.toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole('button', { name: /tabs/i }));
+    expect(screen.getByText('Open one')).toBeInTheDocument();
+  });
+
+  it('marks the group expanded state for assistive tech', () => {
+    render(<ProjectTabsSection tabs={tabs} onOpen={vi.fn()} onDelete={vi.fn()} />);
+    const header = screen.getByRole('button', { name: /tabs/i });
+    expect(header).toHaveAttribute('aria-expanded', 'true');
+    fireEvent.click(header);
+    expect(header).toHaveAttribute('aria-expanded', 'false');
   });
 });

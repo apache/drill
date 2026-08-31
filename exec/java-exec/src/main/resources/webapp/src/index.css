@@ -1593,11 +1593,43 @@ html.dark .shell-sidebar-brand img {
   opacity: 0.7;
 }
 
-.shell-sidebar-tab-empty {
-  padding: 4px 8px 4px 30px;
-  font-size: 11px;
+/* The "Tabs" group header: always present, so a project with none still shows the
+   section with a count of 0 rather than appearing to lose it. */
+.shell-sidebar-tab-group {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  width: 100%;
+  padding: 4px 8px 4px 18px;
+  border: none;
+  background: none;
   color: var(--color-text-secondary);
-  font-style: italic;
+  font-size: 12px;
+  text-align: left;
+  cursor: pointer;
+  border-radius: 5px;
+}
+
+.shell-sidebar-tab-group:hover {
+  background: var(--color-bg-hover);
+}
+
+.shell-sidebar-tab-caret {
+  display: inline-flex;
+  font-size: 9px;
+  transition: transform 0.15s ease;
+}
+
+.shell-sidebar-tab-caret.is-open {
+  transform: rotate(90deg);
+}
+
+.shell-sidebar-tab-count {
+  font-size: 10px;
+  padding: 0 5px;
+  border-radius: 8px;
+  background: var(--color-bg-hover);
+  color: var(--color-text-secondary);
 }
 
 .shell-sidebar-empty {
