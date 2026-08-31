@@ -109,6 +109,7 @@ public class DrillRestServer extends ResourceConfig {
     register(ProjectResources.class);
     register(TestConnectionResources.class);
     register(TranspileResources.class);
+    register(MapConfigResources.class);
     register(QueryTabResources.class);
     register(SharedQueryApiResources.class);
     register(SqlValidationResources.class);
