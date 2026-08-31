@@ -283,3 +283,73 @@ describe('restoreQueryState field preservation', () => {
     expect(state.tabs[0].hasExecuted).toBeFalsy();
   });
 });
+
+/**
+ * Restoring a set of tabs that are all hidden used to leave the editor with nothing
+ * to render — the blank screen you get after closing your tabs, leaving, and coming
+ * back. ensureVisibleActiveTab only ran on hide/delete, never on restore.
+ */
+describe('restoreQueryState always leaves something usable', () => {
+  it('opens a fresh tab when every restored tab is hidden', () => {
+    const state = reducer(undefined, restoreQueryState({
+      tabs: [
+        { id: 'a', name: 'A', sql: 'SELECT 1', hidden: true },
+        { id: 'b', name: 'B', sql: 'SELECT 2', hidden: true },
+      ],
+      activeTabId: 'a',
+      tabCounter: 2,
+    }));
+
+    const visible = state.tabs.filter((t) => !t.hidden);
+    expect(visible).toHaveLength(1);
+    expect(state.activeTabId).toBe(visible[0].id);
+  });
+
+  it('keeps the hidden tabs when it opens a fresh one', () => {
+    const state = reducer(undefined, restoreQueryState({
+      tabs: [{ id: 'a', name: 'A', sql: 'SELECT 1', hidden: true }],
+      activeTabId: 'a',
+      tabCounter: 1,
+    }));
+
+    expect(state.tabs.find((t) => t.id === 'a')).toBeDefined();
+    expect(state.tabs).toHaveLength(2);
+  });
+
+  it('activates a visible tab when activeTabId points at a hidden one', () => {
+    const state = reducer(undefined, restoreQueryState({
+      tabs: [
+        { id: 'a', name: 'A', sql: 'SELECT 1', hidden: true },
+        { id: 'b', name: 'B', sql: 'SELECT 2', hidden: false },
+      ],
+      activeTabId: 'a',
+      tabCounter: 2,
+    }));
+
+    expect(state.activeTabId).toBe('b');
+  });
+
+  it('activates a real tab when activeTabId matches nothing', () => {
+    const state = reducer(undefined, restoreQueryState({
+      tabs: [{ id: 'a', name: 'A', sql: 'SELECT 1' }],
+      activeTabId: 'gone',
+      tabCounter: 1,
+    }));
+
+    expect(state.activeTabId).toBe('a');
+  });
+
+  it('leaves a normal restore untouched', () => {
+    const state = reducer(undefined, restoreQueryState({
+      tabs: [
+        { id: 'a', name: 'A', sql: 'SELECT 1' },
+        { id: 'b', name: 'B', sql: 'SELECT 2' },
+      ],
+      activeTabId: 'b',
+      tabCounter: 2,
+    }));
+
+    expect(state.tabs).toHaveLength(2);
+    expect(state.activeTabId).toBe('b');
+  });
+});

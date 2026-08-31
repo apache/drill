@@ -311,6 +311,25 @@ const querySlice = createSlice({
       }));
       state.activeTabId = action.payload.activeTabId;
       tabCounter = action.payload.tabCounter;
+
+      // A restored set can legitimately be all-hidden — close your tabs, leave, come
+      // back — and an activeTabId can point at a tab that is hidden or no longer
+      // present. Either way the editor would have nothing to render, which reads as a
+      // blank screen rather than as an empty workspace. Guarantee one visible tab.
+      const visible = state.tabs.filter((t) => !t.hidden);
+      if (visible.length === 0) {
+        tabCounter++;
+        const fresh: QueryTab = {
+          id: newTabId(),
+          name: `Query ${tabCounter}`,
+          sql: '',
+          isExecuting: false,
+        };
+        state.tabs.push(fresh);
+        state.activeTabId = fresh.id;
+      } else if (!visible.some((t) => t.id === state.activeTabId)) {
+        state.activeTabId = visible[0].id;
+      }
     },
     clearResultsExpired: (state, action: PayloadAction<string>) => {
       const tab = state.tabs.find((t) => t.id === action.payload);
