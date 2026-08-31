@@ -279,11 +279,18 @@ const querySlice = createSlice({
           isLocked?: boolean;
           lockReason?: string;
           lockType?: 'manual' | 'api';
+          isPinned?: boolean;
+          hidden?: boolean;
+          hasExecuted?: boolean;
         }[];
         activeTabId: string;
         tabCounter: number;
       }>
     ) => {
+      // Every field a tab carries has to be listed here. TypeScript does not flag a
+      // property that this map forgets, so an omission is silent: `hidden` going
+      // missing makes closed tabs reappear on reload, and `hasExecuted` going missing
+      // stops a tab ever being promoted to the server.
       state.tabs = action.payload.tabs.map((t) => ({
         id: t.id,
         name: t.name,
@@ -298,6 +305,9 @@ const querySlice = createSlice({
         isLocked: t.isLocked,
         lockReason: t.lockReason,
         lockType: t.lockType,
+        isPinned: t.isPinned,
+        hidden: t.hidden,
+        hasExecuted: t.hasExecuted,
       }));
       state.activeTabId = action.payload.activeTabId;
       tabCounter = action.payload.tabCounter;
