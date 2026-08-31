@@ -70,6 +70,22 @@ describe('ProjectTabsSection', () => {
     expect(onDelete).toHaveBeenCalledWith('a');
   });
 
+  /** The last remaining tab cannot be deleted, so the menu says so instead. */
+  it('does not offer Delete when only one tab remains', () => {
+    render(<ProjectTabsSection
+      tabs={[{ id: 'a', name: 'Only one', hidden: false }]}
+      onOpen={vi.fn()} onDelete={vi.fn()} />);
+    fireEvent.contextMenu(screen.getByText('Only one'));
+    expect(screen.queryByText(/^delete$/i)).not.toBeInTheDocument();
+    expect(screen.getByText(/only tab/i)).toBeInTheDocument();
+  });
+
+  it('offers Delete again once a second tab exists', () => {
+    render(<ProjectTabsSection tabs={tabs} onOpen={vi.fn()} onDelete={vi.fn()} />);
+    fireEvent.contextMenu(screen.getByText('Open one'));
+    expect(screen.getByText(/^delete$/i)).toBeInTheDocument();
+  });
+
   /** Locked tabs cannot be deleted, so the menu must not offer it. */
   it('does not offer Delete for a locked tab', () => {
     render(<ProjectTabsSection

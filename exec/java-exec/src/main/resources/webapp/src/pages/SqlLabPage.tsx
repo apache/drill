@@ -1299,9 +1299,14 @@ export default function SqlLabPage({ datasetFilter, headerContent, projectId, sa
                       {
                         key: 'delete',
                         icon: <DeleteOutlined />,
-                        label: 'Delete permanently',
+                        label: tabs.length <= 1
+                          ? 'Cannot delete the only tab'
+                          : 'Delete permanently',
                         danger: true,
-                        disabled: tab.isLocked,
+                        // A project always keeps at least one tab, and a locked tab is
+                        // refused server-side anyway. Counts every tab, hidden ones
+                        // included, so hiding the rest does not block deleting this one.
+                        disabled: tab.isLocked || tabs.length <= 1,
                         onClick: ({ domEvent }) => {
                           domEvent.stopPropagation();
                           setDeleteTarget(tab.id);

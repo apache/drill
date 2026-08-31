@@ -78,17 +78,27 @@ export default function ProjectTabsSection({ tabs, onOpen, onDelete }: ProjectTa
       </button>
 
       {expanded && tabs.map((tab) => {
-        // A locked tab cannot be deleted, so the menu says why instead of offering an
-        // action that the server would refuse with a 409.
-        const menuItems: MenuProps['items'] = tab.locked
-          ? [{
+        // Both cases show a disabled item explaining itself rather than a Delete that
+        // would be refused: a locked tab is refused by the server with a 409, and the
+        // last remaining tab is withheld so a project always keeps one.
+        let menuItems: MenuProps['items'];
+        if (tab.locked) {
+          menuItems = [{
             key: 'locked',
             disabled: true,
             label: tab.lockType === 'api'
               ? 'Locked: API endpoint active'
               : 'Locked — unlock to delete',
-          }]
-          : [{ key: 'delete', danger: true, label: 'Delete' }];
+          }];
+        } else if (tabs.length <= 1) {
+          menuItems = [{
+            key: 'last',
+            disabled: true,
+            label: 'Cannot delete the only tab',
+          }];
+        } else {
+          menuItems = [{ key: 'delete', danger: true, label: 'Delete' }];
+        }
 
         const onMenuClick: MenuProps['onClick'] = ({ key, domEvent }) => {
           domEvent.stopPropagation();
