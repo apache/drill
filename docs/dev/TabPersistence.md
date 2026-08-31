@@ -64,6 +64,8 @@ Nothing is promoted for a tab closed with no content at all. That keeps a stray
 - **Closing a tab hides it.** The tab keeps existing and stays listed in the project
   tree. This replaces today's destructive close.
 - **Deleting is explicit**, from a right-click in the tree or the tab's three-dot menu.
+  Withheld for the last remaining tab, so a project always keeps one; both menus show a
+  disabled item saying why rather than an action that would be refused.
 
 Rules:
 
