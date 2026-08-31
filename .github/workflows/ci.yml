@@ -57,9 +57,13 @@ jobs:
             mkswap /tmp/swapfile
             swapon /tmp/swapfile
           "
+      # -DskipFrontend: no Java test uses webapp/dist, and building it here would
+      # download Node and run npm ci once per matrix entry. The SQL Lab frontend is
+      # built, type-checked, linted and tested by the sqllab-frontend workflow.
       - name: Build and test
         run: |
           mvn -P${{ matrix.profile }} install --batch-mode --no-transfer-progress \
+          -DskipFrontend=true \
           -Dhttp.keepAlive=false -Dmaven.wagon.http.pool=false -Dmaven.wagon.httpconnectionManager.ttlSeconds=120
       - name: Remove swap space
         run : |
@@ -107,7 +111,7 @@ jobs:
       # Builds Drill project, performs license checkstyle goal and regenerates java and C++ protobuf files
       - name: Build
         run: |
-          MAVEN_OPTS="-Xms1G -Xmx1G" mvn install -Drat.skip=false -Dlicense.skip=false --batch-mode --no-transfer-progress -Dhttp.keepAlive=false -Dmaven.wagon.http.pool=false -Dmaven.wagon.httpconnectionManager.ttlSeconds=120 -Dorg.slf4j.simpleLogger.log.org.apache.maven.cli.transfer.Slf4jMavenTransferListener=warn -DskipTests=true -Dmaven.javadoc.skip=true -Dmaven.source.skip=true && \
+          MAVEN_OPTS="-Xms1G -Xmx1G" mvn install -Drat.skip=false -Dlicense.skip=false --batch-mode --no-transfer-progress -DskipFrontend=true -Dhttp.keepAlive=false -Dmaven.wagon.http.pool=false -Dmaven.wagon.httpconnectionManager.ttlSeconds=120 -Dorg.slf4j.simpleLogger.log.org.apache.maven.cli.transfer.Slf4jMavenTransferListener=warn -DskipTests=true -Dmaven.javadoc.skip=true -Dmaven.source.skip=true && \
           pushd protocol && mvn process-sources -P proto-compile && popd && \
           mkdir contrib/native/client/build && pushd contrib/native/client/build && cmake -G "Unix Makefiles" .. && make cpProtobufs && popd; \
       # Checks whether project files weren't changed after regenerating protobufs

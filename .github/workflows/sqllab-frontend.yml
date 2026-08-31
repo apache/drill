@@ -51,9 +51,8 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: TypeScript type check
-        run: npx tsc --noEmit
-
+      # No separate type-check step: "npm run build" is "tsc && vite build", so the
+      # build below already fails on a type error.
       - name: Lint
         run: npm run lint
 

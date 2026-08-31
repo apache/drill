@@ -29,6 +29,22 @@
   <name>Drill : Exec : Java Execution Engine</name>
 
   <properties>
+    <!--
+      Skips the SQL Lab frontend build (node install, npm ci, vite build).
+
+      No Java test uses webapp/dist, so CI test jobs set this to avoid downloading Node
+      and rebuilding the SPA once per matrix entry. The frontend is built and tested by
+      the sqllab-frontend workflow instead.
+
+      Leave false everywhere a real artifact is produced: a jar built with this on has
+      no web UI in it.
+    -->
+    <skipFrontend>false</skipFrontend>
+    <!--
+      Node lives outside target/ so "mvn clean" does not force a re-download, and so CI
+      can cache it. frontend-maven-plugin puts a "node" directory inside this path.
+    -->
+    <frontendInstallDirectory>${user.home}/.drill-frontend</frontendInstallDirectory>
     <libpam4j.version>1.11</libpam4j.version>
     <aether.version>1.1.0</aether.version>
     <wagon.version>3.3.4</wagon.version>
@@ -875,7 +891,8 @@
         <version>1.15.0</version>
         <configuration>
           <workingDirectory>${project.basedir}/src/main/resources/webapp</workingDirectory>
-          <installDirectory>${project.build.directory}</installDirectory>
+          <installDirectory>${frontendInstallDirectory}</installDirectory>
+          <skip>${skipFrontend}</skip>
         </configuration>
         <executions>
           <!-- Install Node.js and npm -->
