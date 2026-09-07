@@ -127,7 +127,7 @@
     <metrics.version>4.2.19</metrics.version>
     <mockito.version>5.23.0</mockito.version>
     <mongo.version>5.5.1</mongo.version>
-    <msgpack.version>0.6.6</msgpack.version>
+    <msgpack.version>0.9.12</msgpack.version>
     <nashorn.version>15.4</nashorn.version>
     <netty.tcnative.classifier />
     <netty.tcnative.version>2.0.65.Final</netty.tcnative.version>
@@ -1032,7 +1032,7 @@
       </dependency>
       <dependency>
         <groupId>org.msgpack</groupId>
-        <artifactId>msgpack</artifactId>
+        <artifactId>msgpack-core</artifactId>
         <version>${msgpack.version}</version>
       </dependency>
       <dependency>

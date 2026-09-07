@@ -54,7 +54,7 @@
 
     <dependency>
       <groupId>org.msgpack</groupId>
-      <artifactId>msgpack</artifactId>
+      <artifactId>msgpack-core</artifactId>
     </dependency>
 
     <dependency>
