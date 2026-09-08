@@ -152,12 +152,25 @@ public class SplunkConnection {
       // Fall back to the Splunk SDK default if our value is null by not setting
       loginArgs.setPort(port);
     }
-    loginArgs.setPassword(credentials.map(UsernamePasswordCredentials::getPassword).orElse(null));
-    loginArgs.setUsername(credentials.map(UsernamePasswordCredentials::getUsername).orElse(null));
+
     loginArgs.setApp(app);
     loginArgs.setOwner(owner);
-    loginArgs.setToken(token);
     loginArgs.setCookie(cookie);
+
+    // If the user provides a token, use token-based auth and skip username/password.
+    // Setting username/password alongside a token causes the Splunk SDK to attempt
+    // a login flow which fails with "Missing username or password" when those are empty.
+    if (token != null && !token.isEmpty()) {
+      // The SDK expects the full "Bearer <token>" value. Guard against users
+      // who already include the prefix in their config.
+      String tokenValue = token.regionMatches(true, 0, "Bearer ", 0, 7)
+        ? token
+        : "Bearer " + token;
+      loginArgs.setToken(tokenValue);
+    } else {
+      loginArgs.setPassword(credentials.map(UsernamePasswordCredentials::getPassword).orElse(null));
+      loginArgs.setUsername(credentials.map(UsernamePasswordCredentials::getUsername).orElse(null));
+    }
 
      try {
       connectionAttempts--;

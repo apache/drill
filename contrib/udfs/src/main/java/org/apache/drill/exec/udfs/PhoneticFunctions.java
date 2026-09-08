@@ -34,7 +34,9 @@ public class PhoneticFunctions {
    * <p>
    * Usage:  SELECT caverphone1( string ) FROM...
    */
-  @FunctionTemplate(name = "caverphone1", scope = FunctionTemplate.FunctionScope.SIMPLE, nulls = FunctionTemplate.NullHandling.NULL_IF_NULL)
+  @FunctionTemplate(name = "caverphone1", scope = FunctionTemplate.FunctionScope.SIMPLE, nulls = FunctionTemplate.NullHandling.NULL_IF_NULL,
+    desc = "Encodes a string with the Caverphone 1.0 phonetic algorithm, so names that sound alike "
+      + "compare equal.")
   public static class Caverphone1Function implements DrillSimpleFunc {
 
     @Param
@@ -70,7 +72,9 @@ public class PhoneticFunctions {
    * <p>
    * Usage: SELECT caverphone2( string ) FROM...
    */
-  @FunctionTemplate(name = "caverphone2", scope = FunctionTemplate.FunctionScope.SIMPLE, nulls = FunctionTemplate.NullHandling.NULL_IF_NULL)
+  @FunctionTemplate(name = "caverphone2", scope = FunctionTemplate.FunctionScope.SIMPLE, nulls = FunctionTemplate.NullHandling.NULL_IF_NULL,
+    desc = "Encodes a string with the Caverphone 2.0 phonetic algorithm, so names that sound alike "
+      + "compare equal.")
   public static class Caverphone2Function implements DrillSimpleFunc {
 
     @Param
@@ -110,7 +114,9 @@ public class PhoneticFunctions {
    * <p>
    * Usage:  SELECT cologne_phonetic( string ) FROM...
    */
-  @FunctionTemplate(name = "cologne_phonetic", scope = FunctionTemplate.FunctionScope.SIMPLE, nulls = FunctionTemplate.NullHandling.NULL_IF_NULL)
+  @FunctionTemplate(name = "cologne_phonetic", scope = FunctionTemplate.FunctionScope.SIMPLE, nulls = FunctionTemplate.NullHandling.NULL_IF_NULL,
+    desc = "Encodes a string with the Koelner Phonetik, or Cologne Phonetic, algorithm, a phonetic "
+      + "matcher tuned for German.")
   public static class ColognePhoneticFunction implements DrillSimpleFunc {
 
     @Param
@@ -155,7 +161,9 @@ public class PhoneticFunctions {
    * <p>
    * Usage:  SELECT dm_soundex( string ) FROM...
    */
-  @FunctionTemplate(name = "dm_soundex", scope = FunctionTemplate.FunctionScope.SIMPLE, nulls = FunctionTemplate.NullHandling.NULL_IF_NULL)
+  @FunctionTemplate(name = "dm_soundex", scope = FunctionTemplate.FunctionScope.SIMPLE, nulls = FunctionTemplate.NullHandling.NULL_IF_NULL,
+    desc = "Encodes a string with the Daitch-Mokotoff Soundex algorithm, a Soundex refinement tuned for "
+      + "Slavic and Yiddish surnames.")
   public static class DaitchMokotoffFunction implements DrillSimpleFunc {
 
     @Param
@@ -190,7 +198,8 @@ public class PhoneticFunctions {
    * Match Rating Approach Phonetic Algorithm Developed by Western Airlines in 1977.
    * Usage:  SELECT match_rating_encoder( string ) FROM...
    */
-  @FunctionTemplate(name = "match_rating_encoder", scope = FunctionTemplate.FunctionScope.SIMPLE, nulls = FunctionTemplate.NullHandling.NULL_IF_NULL)
+  @FunctionTemplate(name = "match_rating_encoder", scope = FunctionTemplate.FunctionScope.SIMPLE, nulls = FunctionTemplate.NullHandling.NULL_IF_NULL,
+    desc = "Encodes a string with the Match Rating Approach phonetic algorithm.")
   public static class MatchRatingFunction implements DrillSimpleFunc {
 
     @Param
@@ -227,7 +236,8 @@ public class PhoneticFunctions {
    * <p>
    * Usage: SELECT nysiis(string) FROM...
    */
-  @FunctionTemplate(name = "nysiis", scope = FunctionTemplate.FunctionScope.SIMPLE, nulls = FunctionTemplate.NullHandling.NULL_IF_NULL)
+  @FunctionTemplate(name = "nysiis", scope = FunctionTemplate.FunctionScope.SIMPLE, nulls = FunctionTemplate.NullHandling.NULL_IF_NULL,
+    desc = "Encodes a string with the NYSIIS phonetic algorithm.")
   public static class NYSIISFunction implements DrillSimpleFunc {
 
     @Param
@@ -262,7 +272,9 @@ public class PhoneticFunctions {
    * <p>
    * Usage:  SELECT refined_soundex( string ) FROM...
    */
-  @FunctionTemplate(name = "refined_soundex", scope = FunctionTemplate.FunctionScope.SIMPLE, nulls = FunctionTemplate.NullHandling.NULL_IF_NULL)
+  @FunctionTemplate(name = "refined_soundex", scope = FunctionTemplate.FunctionScope.SIMPLE, nulls = FunctionTemplate.NullHandling.NULL_IF_NULL,
+    desc = "Encodes a string with the Refined Soundex algorithm, for matching words with similar "
+      + "phonemes.")
   public static class RefinedSoundexFunction implements DrillSimpleFunc {
 
     @Param
@@ -298,7 +310,8 @@ public class PhoneticFunctions {
    * <p>
    * Usage:  SELECT soundex( string ) FROM...
    */
-  @FunctionTemplate(name = "soundex", scope = FunctionTemplate.FunctionScope.SIMPLE, nulls = FunctionTemplate.NullHandling.NULL_IF_NULL)
+  @FunctionTemplate(name = "soundex", scope = FunctionTemplate.FunctionScope.SIMPLE, nulls = FunctionTemplate.NullHandling.NULL_IF_NULL,
+    desc = "Encodes a string with the Soundex algorithm, so names that sound alike compare equal.")
   public static class SoundexFunction implements DrillSimpleFunc {
 
     @Param
@@ -334,7 +347,8 @@ public class PhoneticFunctions {
    * <p>
    * Usage: SELECT metaphone( string ) FROM...
    */
-  @FunctionTemplate(name = "metaphone", scope = FunctionTemplate.FunctionScope.SIMPLE, nulls = FunctionTemplate.NullHandling.NULL_IF_NULL)
+  @FunctionTemplate(name = "metaphone", scope = FunctionTemplate.FunctionScope.SIMPLE, nulls = FunctionTemplate.NullHandling.NULL_IF_NULL,
+    desc = "Encodes a string with the Metaphone phonetic algorithm.")
   public static class MetaphoneFunction implements DrillSimpleFunc {
 
     @Param
@@ -371,7 +385,8 @@ public class PhoneticFunctions {
    * <p>
    * Usage: SELECT double_metaphone( string ) FROM...
    */
-  @FunctionTemplate(name = "double_metaphone", scope = FunctionTemplate.FunctionScope.SIMPLE, nulls = FunctionTemplate.NullHandling.NULL_IF_NULL)
+  @FunctionTemplate(name = "double_metaphone", scope = FunctionTemplate.FunctionScope.SIMPLE, nulls = FunctionTemplate.NullHandling.NULL_IF_NULL,
+    desc = "Encodes a string with the Double Metaphone phonetic algorithm.")
   public static class DoubleMetaphoneFunction implements DrillSimpleFunc {
 
     @Param

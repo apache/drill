@@ -31,7 +31,9 @@ import javax.inject.Inject;
  * Returns TRUE if the Geometries share space, are of the same dimension, but are not completely contained by each other
  */
 @FunctionTemplate(name = "st_overlaps", scope = FunctionTemplate.FunctionScope.SIMPLE,
-  nulls = FunctionTemplate.NullHandling.NULL_IF_NULL)
+  nulls = FunctionTemplate.NullHandling.NULL_IF_NULL,
+  desc = "Returns true when two geometries of the same dimension share space without either containing "
+    + "the other.")
 public class STOverlaps implements DrillSimpleFunc {
   @Param
   VarBinaryHolder geom1Param;

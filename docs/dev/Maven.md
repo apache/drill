@@ -49,3 +49,24 @@ To check the list of active Maven profiles:<br>
 ```
 mvn help:active-profiles
 ```
+
+## Skipping the SQL Lab frontend build
+
+`exec/java-exec` builds the React SPA during `generate-resources` via
+`frontend-maven-plugin`: it installs Node, runs `npm ci`, then `tsc && vite build`.
+
+No Java test reads `webapp/dist`, so a test-only build can skip all of that:
+
+```bash
+mvn install -DskipFrontend=true
+```
+
+CI does this in both `ci.yml` jobs, which otherwise repeated the whole frontend build
+once per Java matrix entry. The frontend is built, type-checked, linted and tested by
+the separate `sqllab-frontend` workflow.
+
+**A jar built with `-DskipFrontend=true` has no web UI in it.** Leave the flag off for
+anything you intend to run or ship.
+
+Node is installed to `~/.drill-frontend` rather than `target/`, so `mvn clean` no longer
+forces a re-download and CI can cache it. Override with `-DfrontendInstallDirectory=...`.

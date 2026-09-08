@@ -161,8 +161,8 @@ public class XMLReader implements Closeable {
 
   /**
    * This function processes the XML elements.  This function stops reading when the
-   * limit (if any) which came from the query has been reached or the Iterator runs out of
-   * elements.
+   * limit (if any) which came from the query has been reached, a complete row has been
+   * read, or the Iterator runs out of elements.
    * @return True if there are more elements to parse, false if not
    */
   private boolean processElements() {
@@ -197,6 +197,13 @@ public class XMLReader implements Closeable {
 
         // Process the event
         processEvent(currentEvent, lastEvent, reader.peek());
+
+        // After completing a row, return to let next() check batch capacity.
+        // This prevents batch overflow errors that occur when rows accumulate
+        // beyond what the batch can hold without the isFull() check running.
+        if (currentState == xmlState.ROW_ENDED) {
+          return true;
+        }
       } catch (XMLStreamException e) {
         throw UserException
           .dataReadError(e)

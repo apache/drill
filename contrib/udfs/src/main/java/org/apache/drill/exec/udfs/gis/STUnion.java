@@ -30,7 +30,8 @@ import javax.inject.Inject;
  * Returns a geometry that represents the point set union of the Geometries
  */
 @FunctionTemplate(name = "st_union", scope = FunctionTemplate.FunctionScope.SIMPLE,
-  nulls = FunctionTemplate.NullHandling.NULL_IF_NULL)
+  nulls = FunctionTemplate.NullHandling.NULL_IF_NULL,
+  desc = "Returns the point-set union of two geometries.")
 public class STUnion implements DrillSimpleFunc {
   @Param
   VarBinaryHolder geom1Param;

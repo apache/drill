@@ -68,6 +68,24 @@
     </encoder>
   </appender>
 
+  <!-- Structured per-call AI usage events. One JSON object per line.
+       Drill queries this file via the dfs.ai_logs workspace for analytics.
+       Pattern intentionally has no decoration: the message *is* the JSON record. -->
+  <appender name="AI_EVENTS" class="ch.qos.logback.core.rolling.RollingFileAppender">
+    <file>${DRILL_LOG_DIR:-./log}/ai-events.log</file>
+    <rollingPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedRollingPolicy">
+      <!-- Rolled files keep the .log extension so the dfs.ai_logs JSON format
+           plugin matches them on extension. -->
+      <fileNamePattern>${DRILL_LOG_DIR:-./log}/ai-events-%d{yyyy-MM-dd}.%i.log</fileNamePattern>
+      <maxFileSize>100MB</maxFileSize>
+      <maxHistory>30</maxHistory>
+      <totalSizeCap>5GB</totalSizeCap>
+    </rollingPolicy>
+    <encoder>
+      <pattern>%msg%n</pattern>
+    </encoder>
+  </appender>
+
 
   <logger name="org.apache.drill" additivity="false" level="info">
     <appender-ref ref="FILE" />
@@ -76,6 +94,10 @@
   <logger name="query.logger" additivity="false" level="info">
     <appender-ref ref="QUERY" />
     <!--     <appender-ref ref="SOCKET" /> -->
+  </logger>
+
+  <logger name="ai.events" additivity="false" level="info">
+    <appender-ref ref="AI_EVENTS" />
   </logger>
 
   <!--

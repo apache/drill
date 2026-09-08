@@ -36,6 +36,7 @@ import org.apache.drill.exec.store.StoragePluginRegistry;
 import org.apache.drill.exec.store.StoragePluginRegistry.PluginException;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import org.apache.drill.exec.store.security.UsernamePasswordCredentials;
 import org.apache.drill.exec.store.security.oauth.OAuthTokenCredentials;
@@ -43,6 +44,10 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 @XmlRootElement
+// isOauth/authorizationUrl are serialized out for the UI but are derived,
+// read-only fields. Ignore them (and any other extras) on input so a config
+// round-tripped through a POST body deserializes cleanly.
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class PluginConfigWrapper {
   private static final Logger logger = LoggerFactory.getLogger(PluginConfigWrapper.class);
   private final String name;
@@ -97,7 +102,7 @@ public class PluginConfigWrapper {
    * 3. The credentialsProvider must contain a client_id and client_secret
    * @return true if the plugin uses OAuth, false if not.
    */
-  @JsonIgnore
+  @JsonProperty("isOauth")
   public boolean isOauth() {
     CredentialsProvider credentialsProvider = config.getCredentialsProvider();
     if (credentialsProvider == null) {
@@ -126,7 +131,7 @@ public class PluginConfigWrapper {
    * If the plugin is not OAuth, or is missing components, the function will return an empty string.
    * @return The authorization URI for an OAuth enabled plugin.
    */
-  @JsonIgnore
+  @JsonProperty("authorizationUrl")
   public String getAuthorizationURIWithParams() {
     if (!isOauth()) {
       logger.warn("{} is not an OAuth enabled storage plugin", name);
@@ -135,6 +140,14 @@ public class PluginConfigWrapper {
 
     String clientID = getClientID();
     OAuthConfig oAuthConfig = config.oAuthConfig();
+    if (oAuthConfig == null) {
+      // The plugin advertises OAuth credentials (a clientID) but has no OAuth
+      // config, so we cannot build an authorization URL. Returning an empty
+      // string here avoids an NPE during JSON serialization which would
+      // otherwise abort the whole storage plugin list response.
+      logger.warn("{} has OAuth credentials but no oAuthConfig; cannot build authorization URL", name);
+      return "";
+    }
     String authorizationURI = oAuthConfig.getAuthorizationURL();
 
     StringBuilder finalUrlBuilder = new StringBuilder();

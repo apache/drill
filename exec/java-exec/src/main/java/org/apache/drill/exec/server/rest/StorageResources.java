@@ -56,7 +56,6 @@ import org.apache.drill.exec.store.StoragePluginRegistry.PluginException;
 import org.apache.drill.exec.store.StoragePluginRegistry.PluginFilter;
 import org.apache.drill.exec.store.StoragePluginRegistry.PluginNotFoundException;
 import org.apache.drill.exec.work.WorkManager;
-import org.glassfish.jersey.server.mvc.Viewable;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -130,20 +129,6 @@ public class StorageResources {
   }
 
   @GET
-  @Path("/storage")
-  @Produces(MediaType.TEXT_HTML)
-  public Viewable getPlugins() {
-    List<StoragePluginModel> model = getPluginsJSON().stream()
-      .map(plugin -> new StoragePluginModel(plugin, request, sc))
-      .collect(Collectors.toList());
-    // Creating an empty model with CSRF token, if there are no storage plugins
-    if (model.isEmpty()) {
-      model.add(new StoragePluginModel(null, request, sc));
-    }
-    return ViewableWithPermissions.create(authEnabled.get(), "/rest/storage/list.ftl", sc, model);
-  }
-
-  @GET
   @Path("/storage/{name}.json")
   @Produces(MediaType.APPLICATION_JSON)
   @Operation(externalDocs = @ExternalDocumentation(description = "Apache Drill REST API documentation:", url = "https://drill.apache.org/docs/rest-api-introduction/"))
@@ -158,18 +143,6 @@ public class StorageResources {
         .entity(message("Failure while trying to access storage config: %s", e.getMessage()))
         .build();
     }
-  }
-
-  @GET
-  @Path("/storage/{name}")
-  @Produces(MediaType.TEXT_HTML)
-  public Viewable getPlugin(@PathParam("name") String name) {
-    StoragePluginModel model = new StoragePluginModel(
-      (PluginConfigWrapper) getPluginConfig(name).getEntity(),
-      request, sc
-    );
-    return ViewableWithPermissions.create(authEnabled.get(), "/rest/storage/update.ftl", sc,
-      model);
   }
 
   @POST
@@ -444,62 +417,4 @@ public class StorageResources {
     }
   }
 
-  /**
-   * Model class for Storage Plugin and Credentials page.
-   * It contains a storage plugin as well as the CSRF token for the page.
-   */
-  public static class StoragePluginModel {
-    private final PluginConfigWrapper plugin;
-    private final String type;
-    private final String csrfToken;
-    private final SecurityContext securityContext;
-
-    public StoragePluginModel(PluginConfigWrapper plugin, HttpServletRequest request, SecurityContext sc) {
-      this.plugin = plugin;
-
-      if (plugin != null) {
-        this.type = plugin.getConfig().getClass().getSimpleName();
-      } else {
-        this.type = "Unknown";
-      }
-      csrfToken = WebUtils.getCsrfTokenFromHttpRequest(request);
-      this.securityContext = sc;
-    }
-
-    public String getActiveUser() {
-      return securityContext.getUserPrincipal().getName();
-    }
-
-    public String getUserName() {
-      String username = plugin.getUserName(getActiveUser());
-      if (StringUtils.isEmpty(username)) {
-        return "";
-      }
-      else {
-        return username;
-      }
-    }
-
-    public String getPassword() {
-      String password = plugin.getPassword(getActiveUser());
-      if (StringUtils.isEmpty(password)) {
-        return "";
-      }
-      else {
-        return password;
-      }
-    }
-
-    public String getType() {
-      return type;
-    }
-
-    public PluginConfigWrapper getPlugin() {
-      return plugin;
-    }
-
-    public String getCsrfToken() {
-      return csrfToken;
-    }
-  }
 }

@@ -38,7 +38,8 @@ public class DNSFunctions {
   /* This function gets the host name associated with an IP address */
   @FunctionTemplate(names = {"get_host_name", "getHostName", "reverse_ip_lookup"},
       scope = FunctionTemplate.FunctionScope.SIMPLE,
-      nulls = FunctionTemplate.NullHandling.NULL_IF_NULL)
+      nulls = FunctionTemplate.NullHandling.NULL_IF_NULL,
+    desc = "Reverse DNS lookup: returns the host name registered for an IP address.")
   public static class ReverseIPLookup implements DrillSimpleFunc {
 
     @Param
@@ -77,7 +78,9 @@ public class DNSFunctions {
   /* This function takes a host name and returns the IP address associated with that host, and "Unknown if there is an error */
   @FunctionTemplate(names = {"get_host_address", "getHostAddress", "host_lookup", "hostLookup"},
       scope = FunctionTemplate.FunctionScope.SIMPLE,
-      nulls = FunctionTemplate.NullHandling.NULL_IF_NULL)
+      nulls = FunctionTemplate.NullHandling.NULL_IF_NULL,
+    desc = "Forward DNS lookup: returns the IP address for a host name, or the literal Unknown when the "
+      + "lookup fails.")
   public static class HostLookup implements DrillSimpleFunc {
 
     @Param
@@ -113,7 +116,9 @@ public class DNSFunctions {
   }
 
   /* This function performs a complete DNS lookup */
-  @FunctionTemplate(names = {"dns_lookup", "dnsLookup", "dns"}, scope = FunctionTemplate.FunctionScope.SIMPLE)
+  @FunctionTemplate(names = {"dns_lookup", "dnsLookup", "dns"}, scope = FunctionTemplate.FunctionScope.SIMPLE,
+    desc = "Performs a full DNS lookup for a domain and returns the records found. An optional second "
+      + "argument names the resolver to use.")
   public static class DNSLookupFunctionWithNull implements DrillSimpleFunc {
 
     @Param
@@ -156,7 +161,9 @@ public class DNSFunctions {
     }
   }
 
-  @FunctionTemplate(names = {"dns_lookup", "dnsLookup", "dns"}, scope = FunctionTemplate.FunctionScope.SIMPLE)
+  @FunctionTemplate(names = {"dns_lookup", "dnsLookup", "dns"}, scope = FunctionTemplate.FunctionScope.SIMPLE,
+    desc = "Performs a full DNS lookup for a domain and returns the records found. An optional second "
+      + "argument names the resolver to use.")
   public static class DNSLookupFunctionWithResolver implements DrillSimpleFunc {
 
     @Param
@@ -206,7 +213,9 @@ public class DNSFunctions {
   }
 
   @FunctionTemplate(names = {"whois"},
-      scope = FunctionTemplate.FunctionScope.SIMPLE)
+      scope = FunctionTemplate.FunctionScope.SIMPLE,
+    desc = "Performs a WHOIS lookup for a domain and returns the registry response. An optional second "
+      + "argument names a non-default WHOIS server.")
   public static class WhoIsFunction implements DrillSimpleFunc {
 
     @Param
@@ -229,7 +238,9 @@ public class DNSFunctions {
     }
   }
 
-  @FunctionTemplate(names = {"whois"}, scope = FunctionTemplate.FunctionScope.SIMPLE)
+  @FunctionTemplate(names = {"whois"}, scope = FunctionTemplate.FunctionScope.SIMPLE,
+    desc = "Performs a WHOIS lookup for a domain and returns the registry response. An optional second "
+      + "argument names a non-default WHOIS server.")
   public static class WhoIsFunctionWithNonDefaultServer implements DrillSimpleFunc {
 
     @Param

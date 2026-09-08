@@ -1,0 +1,290 @@
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+package org.apache.drill.exec.server.rest;
+
+import jakarta.ws.rs.core.SecurityContext;
+import org.apache.drill.exec.server.rest.ai.AiEvent;
+import org.apache.drill.exec.server.rest.ai.ChatMessage;
+import org.apache.drill.exec.server.rest.ai.LlmCallResult;
+import org.apache.drill.exec.server.rest.ai.LlmConfig;
+import org.apache.drill.exec.server.rest.ai.ToolCall;
+import org.junit.jupiter.api.Test;
+
+import java.io.IOException;
+import java.security.Principal;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+
+/**
+ * Unit tests for the AI event built for each Prospector chat call.
+ */
+public class ProspectorEventTest {
+
+  private static LlmConfig config() {
+    LlmConfig config = new LlmConfig();
+    config.setProvider("openai");
+    config.setModel("gpt-4o");
+    return config;
+  }
+
+  private static LlmCallResult result() {
+    LlmCallResult result = new LlmCallResult();
+    result.setPromptTokens(10);
+    result.setResponseTokens(5);
+    result.appendResponseText("hello");
+    return result;
+  }
+
+  /**
+   * An assistant's tool calls live in ChatMessage.toolCalls, not content. Rendering
+   * only content silently drops every tool invocation from the recorded prompt,
+   * leaving the analytics log unable to explain what the model actually did.
+   */
+  @Test
+  public void testRenderFullPromptIncludesToolCalls() {
+    ChatMessage assistant = new ChatMessage(
+        "assistant",
+        null,
+        java.util.List.of(new ToolCall("call-1", "create_visualization", "{\"name\":\"Sales\"}")),
+        null,
+        null);
+    String rendered = ProspectorResources.renderFullPrompt(
+        java.util.List.of(ChatMessage.user("chart my sales"), assistant));
+
+    assertTrue(rendered.contains("chart my sales"));
+    assertTrue(rendered.contains("create_visualization"));
+    assertTrue(rendered.contains("{\"name\":\"Sales\"}"));
+  }
+
+  @Test
+  public void testRenderFullPromptKeepsToolResults() {
+    String rendered = ProspectorResources.renderFullPrompt(
+        java.util.List.of(ChatMessage.tool("call-1", "create_visualization",
+            "{\"error\":\"project not found\"}")));
+    assertTrue(rendered.contains("project not found"));
+  }
+
+  @Test
+  public void testFeatureIsRecorded() {
+    AiEvent event = ProspectorResources.buildEvent(
+        config(), "alice", "dashboard_qna", "hi", "prompt", result(), null, 42L);
+    assertEquals("dashboard_qna", event.feature);
+    assertEquals("server", event.source);
+    assertEquals("alice", event.user);
+    assertEquals("openai", event.provider);
+    assertEquals("gpt-4o", event.model);
+    assertEquals(42L, event.durationMs);
+  }
+
+  @Test
+  public void testFeatureDefaultsWhenAbsent() {
+    AiEvent nullFeature = ProspectorResources.buildEvent(
+        config(), "alice", null, "hi", "prompt", result(), null, 1L);
+    assertEquals("prospector_chat", nullFeature.feature);
+
+    AiEvent blankFeature = ProspectorResources.buildEvent(
+        config(), "alice", "   ", "hi", "prompt", result(), null, 1L);
+    assertEquals("prospector_chat", blankFeature.feature);
+  }
+
+  @Test
+  public void testSuccessWhenResultPresent() {
+    AiEvent event = ProspectorResources.buildEvent(
+        config(), "alice", "sql_lab_chat", "hi", "prompt", result(), null, 1L);
+    assertTrue(event.success);
+    assertEquals(10, event.promptTokens);
+    assertEquals(5, event.responseTokens);
+    assertEquals("hello", event.response);
+    assertNull(event.errorClass);
+  }
+
+  /**
+   * An Error (not Exception) escapes the streaming catch block, leaving failure
+   * null while finally still runs. Without a callResult this is not a success.
+   */
+  @Test
+  public void testNotSuccessfulWhenResultMissingAndNoFailure() {
+    AiEvent event = ProspectorResources.buildEvent(
+        config(), "alice", "sql_lab_chat", "hi", "prompt", null, null, 1L);
+    assertFalse(event.success);
+    assertNull(event.totalTokens);
+  }
+
+  @Test
+  public void testFailureIsRecorded() {
+    AiEvent event = ProspectorResources.buildEvent(
+        config(), "alice", "sql_lab_chat", "hi", "prompt", null,
+        new IllegalStateException("boom"), 1L);
+    assertFalse(event.success);
+    assertEquals("IllegalStateException", event.errorClass);
+    assertEquals("boom", event.error);
+    assertFalse(event.cancelled);
+  }
+
+  @Test
+  public void testClientCancellationIsFlagged() {
+    AiEvent event = ProspectorResources.buildEvent(
+        config(), "alice", "sql_lab_chat", "hi", "prompt", null,
+        new IOException("Broken pipe"), 1L);
+    assertTrue(event.cancelled);
+    assertEquals("ClientCancelled", event.errorClass);
+    assertFalse(event.success);
+  }
+
+  /**
+   * A field the client sends but the server does not know must never fail the request.
+   * The browser may be running newer assets than the Drillbit (or a cached older
+   * build), and every ChatContext field is an optional enhancement — dropping one is
+   * survivable, rejecting the whole chat with HTTP 500 is not.
+   */
+  @Test
+  public void testUnknownContextFieldIsIgnoredRatherThanRejected() throws Exception {
+    com.fasterxml.jackson.databind.ObjectMapper mapper =
+        new com.fasterxml.jackson.databind.ObjectMapper();
+    ProspectorResources.ChatContext ctx = mapper.readValue(
+        "{\"feature\":\"sql_lab_chat\",\"somethingFromANewerClient\":\"x\"}",
+        ProspectorResources.ChatContext.class);
+    assertEquals("sql_lab_chat", ctx.feature);
+  }
+
+  @Test
+  public void testChatContextCarriesProjectId() throws Exception {
+    com.fasterxml.jackson.databind.ObjectMapper mapper =
+        new com.fasterxml.jackson.databind.ObjectMapper();
+    ProspectorResources.ChatContext ctx = mapper.readValue(
+        "{\"feature\":\"sql_lab_chat\",\"projectId\":\"proj-42\"}",
+        ProspectorResources.ChatContext.class);
+    assertEquals("proj-42", ctx.projectId);
+  }
+
+  /**
+   * The notebook tab sends these six fields. The server had no matching fields, so a
+   * chat from the notebook tab failed outright.
+   */
+  @Test
+  public void testChatContextCarriesNotebookFields() throws Exception {
+    com.fasterxml.jackson.databind.ObjectMapper mapper =
+        new com.fasterxml.jackson.databind.ObjectMapper();
+    ProspectorResources.ChatContext ctx = mapper.readValue(
+        "{\"feature\":\"sql_lab_chat\",\"notebookMode\":true,\"notebookDfName\":\"df\","
+        + "\"notebookDfShape\":\"10 rows x 3 cols\",\"notebookColumns\":[\"a\",\"b\"],"
+        + "\"notebookCellCode\":\"df.head()\",\"notebookCellError\":\"KeyError: 'z'\"}",
+        ProspectorResources.ChatContext.class);
+    assertTrue(ctx.notebookMode);
+    assertEquals("df", ctx.notebookDfName);
+    assertEquals("10 rows x 3 cols", ctx.notebookDfShape);
+    assertEquals(java.util.List.of("a", "b"), ctx.notebookColumns);
+    assertEquals("df.head()", ctx.notebookCellCode);
+    assertEquals("KeyError: 'z'", ctx.notebookCellError);
+  }
+
+  @Test
+  public void testChatContextCarriesFeature() throws Exception {
+    com.fasterxml.jackson.databind.ObjectMapper mapper =
+        new com.fasterxml.jackson.databind.ObjectMapper();
+    ProspectorResources.ChatContext ctx = mapper.readValue(
+        "{\"feature\":\"executive_summary\"}", ProspectorResources.ChatContext.class);
+    assertEquals("executive_summary", ctx.feature);
+  }
+
+  @Test
+  public void testSetupFailureEvent() {
+    AiEvent event = ProspectorResources.buildSetupFailureEvent(
+        null, "alice", "sql_lab_chat", "ProspectorDisabled", "Prospector is not enabled");
+    assertFalse(event.success);
+    assertFalse(event.cancelled);
+    assertEquals("sql_lab_chat", event.feature);
+    assertEquals("ProspectorDisabled", event.errorClass);
+    assertEquals("Prospector is not enabled", event.error);
+    assertEquals("server", event.source);
+    // A setup failure never reached the provider, so it burned no tokens.
+    assertNull(event.totalTokens);
+    assertEquals(0L, event.durationMs);
+  }
+
+  @Test
+  public void testSetupFailureEventDefaultsFeature() {
+    AiEvent event = ProspectorResources.buildSetupFailureEvent(
+        null, "alice", null, "UnknownProvider", "Unknown LLM provider: bogus");
+    assertEquals("prospector_chat", event.feature);
+  }
+
+  /**
+   * When auth is disabled there is no SecurityContext (or no principal on it).
+   * AiEvent's contract is "anonymous" in that case, never null — a null user
+   * breaks the analytics dashboard's byUser grouping.
+   */
+  @Test
+  public void testResolveUserFallsBackToAnonymousWhenNoPrincipal() {
+    assertEquals("anonymous", ProspectorResources.resolveUser(null));
+
+    SecurityContext noPrincipal = new SecurityContext() {
+      @Override
+      public Principal getUserPrincipal() {
+        return null;
+      }
+
+      @Override
+      public boolean isUserInRole(String role) {
+        return false;
+      }
+
+      @Override
+      public boolean isSecure() {
+        return false;
+      }
+
+      @Override
+      public String getAuthenticationScheme() {
+        return null;
+      }
+    };
+    assertEquals("anonymous", ProspectorResources.resolveUser(noPrincipal));
+    assertEquals("anonymous", ProspectorResources.resolveUser(principalNamed(null)));
+    assertEquals("anonymous", ProspectorResources.resolveUser(principalNamed("")));
+    assertEquals("alice", ProspectorResources.resolveUser(principalNamed("alice")));
+  }
+
+  /** A SecurityContext whose principal reports the given name. */
+  private static SecurityContext principalNamed(String name) {
+    return new SecurityContext() {
+      @Override
+      public Principal getUserPrincipal() {
+        return () -> name;
+      }
+
+      @Override
+      public boolean isUserInRole(String role) {
+        return false;
+      }
+
+      @Override
+      public boolean isSecure() {
+        return false;
+      }
+
+      @Override
+      public String getAuthenticationScheme() {
+        return null;
+      }
+    };
+  }
+}

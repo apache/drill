@@ -182,9 +182,10 @@ public class TestDrillSpnegoAuthenticator extends ClusterTest {
         .build();
 
     try (Response response = httpClient.newCall(request).execute()) {
-      // Verify successful authentication
-      assertEquals("Expected 200 OK for valid SPNEGO authentication",
-          200, response.code());
+      // On success the endpoint establishes the session and redirects (303) to
+      // the SPA home page; the React app renders the actual landing page.
+      assertEquals("Expected 303 redirect after valid SPNEGO authentication",
+          303, response.code());
 
       // Verify we received a Set-Cookie header to establish a session
       String setCookie = response.header("Set-Cookie");
@@ -209,7 +210,7 @@ public class TestDrillSpnegoAuthenticator extends ClusterTest {
 
     String sessionCookie;
     try (Response loginResponse = httpClient.newCall(loginRequest).execute()) {
-      assertEquals("Expected successful authentication", 200, loginResponse.code());
+      assertEquals("Expected 303 redirect after SPNEGO authentication", 303, loginResponse.code());
 
       // Extract the session cookie
       sessionCookie = loginResponse.header("Set-Cookie");
@@ -250,7 +251,7 @@ public class TestDrillSpnegoAuthenticator extends ClusterTest {
 
     String sessionCookie;
     try (Response loginResponse = httpClient.newCall(loginRequest).execute()) {
-      assertEquals("Expected successful authentication", 200, loginResponse.code());
+      assertEquals("Expected 303 redirect after SPNEGO authentication", 303, loginResponse.code());
       sessionCookie = loginResponse.header("Set-Cookie");
       assertTrue("Expected session cookie, but got: " + sessionCookie,
           sessionCookie != null && (sessionCookie.contains("JSESSIONID") || sessionCookie.contains("Drill-Session-Id")));

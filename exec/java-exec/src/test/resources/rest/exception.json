@@ -1,3 +1,8 @@
 !\{"queryId":"[^"]+"
+,"columns":[]
+,"metadata":[]
+,"attemptedAutoLimit":0
+,"rows":[]
+!,"errorMessage":"[^"]+"
 ,"queryState":"FAILED"
 }
