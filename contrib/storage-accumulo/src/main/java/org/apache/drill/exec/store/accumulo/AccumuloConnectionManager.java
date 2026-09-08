@@ -35,6 +35,7 @@ import org.apache.accumulo.core.client.security.tokens.AuthenticationToken;
 import org.apache.accumulo.core.client.security.tokens.DelegationToken;
 import org.apache.accumulo.core.client.security.tokens.KerberosToken;
 import org.apache.accumulo.core.client.security.tokens.PasswordToken;
+import org.apache.accumulo.core.security.Authorizations;
 import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.common.logical.StoragePluginConfig.AuthMode;
 import org.apache.drill.exec.proto.UserBitShared.UserCredentials;
@@ -102,6 +103,30 @@ public class AccumuloConnectionManager implements Closeable {
 
   public AccumuloConnectionManager(AccumuloStoragePluginConfig config) {
     this.config = config;
+  }
+
+  /**
+   * Returns the authorizations granted to the user the client is connected as.
+   *
+   * <p>Scanners must be created with the caller's authorizations, otherwise
+   * Accumulo hides every entry that carries a column visibility label and the
+   * query silently returns a subset of the table. Falls back to
+   * {@link Authorizations#EMPTY} if the authorizations cannot be read, which
+   * preserves the previous behaviour of only returning unlabeled data rather
+   * than failing the query.</p>
+   *
+   * @param client the client the scanner will be created from
+   * @return the connected user's authorizations
+   */
+  public static Authorizations getUserAuthorizations(AccumuloClient client) {
+    try {
+      return client.securityOperations().getUserAuthorizations(client.whoami());
+    } catch (AccumuloException | AccumuloSecurityException e) {
+      logger.warn("Could not read authorizations for Accumulo user '{}'; "
+          + "falling back to empty authorizations. Rows with column visibility "
+          + "labels will not be returned.", client.whoami(), e);
+      return Authorizations.EMPTY;
+    }
   }
 
   /**

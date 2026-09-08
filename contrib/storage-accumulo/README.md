@@ -376,11 +376,26 @@ mvn test -pl contrib/storage-accumulo \
 | KERBEROS + SHARED_USER | Kerberos | Service principal for all queries | Enterprise, single service account |
 | KERBEROS + USER_IMPERSONATION | Kerberos + Delegation Tokens | Service authenticates, then impersonates Drill user | Enterprise, per-user audit/authorization |
 
+## Column Visibility
+
+Scans are created with the authorizations of the Accumulo user the connection is
+made as, which depends on the authentication mode:
+
+- **SHARED_USER**: the service user's authorizations, so every Drill user sees
+  the same set of entries.
+- **USER_TRANSLATION** / **USER_IMPERSONATION**: the mapped or impersonated
+  Accumulo user's own authorizations, so column visibility is enforced per Drill
+  user.
+
+Entries whose column visibility the connecting user does not satisfy are not
+returned, and unlabeled entries are always returned. If the authorizations
+cannot be read, the plugin logs a warning and falls back to empty
+authorizations, which returns only unlabeled entries.
+
 ## Future Enhancements
 
 Planned features for future releases:
 - Custom Accumulo iterators for server-side processing
-- Visibility/Authorization support
 - Write support (INSERT/UPDATE/DELETE)
 - Statistics-based cost estimation
 

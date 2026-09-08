@@ -27,6 +27,8 @@ import org.apache.accumulo.core.client.BatchWriterConfig;
 import org.apache.accumulo.core.client.TableExistsException;
 import org.apache.accumulo.core.client.TableNotFoundException;
 import org.apache.accumulo.core.data.Mutation;
+import org.apache.accumulo.core.security.Authorizations;
+import org.apache.accumulo.core.security.ColumnVisibility;
 import org.apache.accumulo.core.data.Value;
 import org.apache.hadoop.io.Text;
 import org.slf4j.Logger;
@@ -42,6 +44,17 @@ public class AccumuloTestUtils {
   public static final String TEST_TABLE_USERS = "drill_test_users";
   public static final String TEST_TABLE_LARGE = "drill_test_large";
   public static final String TEST_TABLE_SPARSE = "drill_test_sparse";
+  public static final String TEST_TABLE_VISIBILITY = "drill_test_visibility";
+
+  /**
+   * The column visibility the test user is granted for {@link #TEST_TABLE_VISIBILITY}.
+   */
+  public static final String VISIBILITY_GRANTED = "public";
+
+  /**
+   * A column visibility the test user is deliberately <em>not</em> granted.
+   */
+  public static final String VISIBILITY_WITHHELD = "secret";
 
   /**
    * Creates a simple test table with basic key-value data.
@@ -217,6 +230,44 @@ public class AccumuloTestUtils {
   }
 
   /**
+   * Creates a table whose rows carry column visibility labels.
+   *
+   * <p>One row is unlabeled, one is labeled {@value #VISIBILITY_GRANTED} and one
+   * {@value #VISIBILITY_WITHHELD}. The connecting user is granted only
+   * {@value #VISIBILITY_GRANTED}, so a scan created with that user's authorizations
+   * sees two of the three rows, while a scan created with
+   * {@code Authorizations.EMPTY} would see only the unlabeled one.</p>
+   */
+  public static void createTestTableVisibility(AccumuloClient client) throws Exception {
+    String tableName = TEST_TABLE_VISIBILITY;
+    createTableIfNotExists(client, tableName);
+
+    client.securityOperations().changeUserAuthorizations(client.whoami(),
+        new Authorizations(VISIBILITY_GRANTED));
+
+    try (BatchWriter writer = client.createBatchWriter(tableName, new BatchWriterConfig())) {
+      String[][] data = {
+          {"vis_001", "unlabeled", ""},
+          {"vis_002", "readable", VISIBILITY_GRANTED},
+          {"vis_003", "hidden", VISIBILITY_WITHHELD}
+      };
+
+      for (String[] row : data) {
+        Mutation m = new Mutation(new Text(row[0]));
+        Value value = new Value(row[1].getBytes(StandardCharsets.UTF_8));
+        if (row[2].isEmpty()) {
+          m.put(new Text("cf"), new Text("name"), value);
+        } else {
+          m.put(new Text("cf"), new Text("name"), new ColumnVisibility(row[2]), value);
+        }
+        writer.addMutation(m);
+      }
+    }
+
+    logger.info("Created test table: {} with 3 rows", tableName);
+  }
+
+  /**
    * Creates all test tables.
    */
   public static void createAllTestTables(AccumuloClient client) throws Exception {
@@ -224,6 +275,7 @@ public class AccumuloTestUtils {
     createTestTableUsers(client);
     createTestTableLarge(client);
     createTestTableSparse(client);
+    createTestTableVisibility(client);
   }
 
   /**
@@ -234,6 +286,7 @@ public class AccumuloTestUtils {
     deleteTableIfExists(client, TEST_TABLE_USERS);
     deleteTableIfExists(client, TEST_TABLE_LARGE);
     deleteTableIfExists(client, TEST_TABLE_SPARSE);
+    deleteTableIfExists(client, TEST_TABLE_VISIBILITY);
   }
 
   /**

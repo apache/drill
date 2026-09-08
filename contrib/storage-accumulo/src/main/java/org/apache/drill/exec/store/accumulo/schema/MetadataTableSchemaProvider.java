@@ -31,7 +31,7 @@ import org.apache.accumulo.core.client.TableNotFoundException;
 import org.apache.accumulo.core.data.Key;
 import org.apache.accumulo.core.data.Range;
 import org.apache.accumulo.core.data.Value;
-import org.apache.accumulo.core.security.Authorizations;
+import org.apache.drill.exec.store.accumulo.AccumuloConnectionManager;
 import org.apache.hadoop.io.Text;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -144,7 +144,7 @@ public class MetadataTableSchemaProvider implements AccumuloSchemaProvider {
       return false;
     }
 
-    try (Scanner scanner = client.createScanner(metadataTableName, Authorizations.EMPTY)) {
+    try (Scanner scanner = client.createScanner(metadataTableName, AccumuloConnectionManager.getUserAuthorizations(client))) {
       scanner.setRange(Range.exact(tableName));
       scanner.fetchColumn(new Text(SCHEMA_COLUMN_FAMILY), new Text(COLUMNS_QUALIFIER));
       return scanner.iterator().hasNext();
@@ -175,7 +175,7 @@ public class MetadataTableSchemaProvider implements AccumuloSchemaProvider {
       return TableSchema.dynamic(tableName);
     }
 
-    try (Scanner scanner = client.createScanner(metadataTableName, Authorizations.EMPTY)) {
+    try (Scanner scanner = client.createScanner(metadataTableName, AccumuloConnectionManager.getUserAuthorizations(client))) {
       scanner.setRange(Range.exact(tableName));
       scanner.fetchColumnFamily(new Text(SCHEMA_COLUMN_FAMILY));
 

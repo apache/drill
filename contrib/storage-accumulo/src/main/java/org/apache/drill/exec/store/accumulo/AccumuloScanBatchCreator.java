@@ -62,12 +62,12 @@ public class AccumuloScanBatchCreator implements BatchCreator<AccumuloSubScan> {
       columns = GroupScan.ALL_COLUMNS;
     }
 
-    try {
-      // Determine if we need to create a new client from delegation token
-      // or use the shared service client
-      AccumuloClient client;
-      boolean ownsClient;
+    // Determine if we need to create a new client from delegation token
+    // or use the shared service client
+    AccumuloClient client = null;
+    boolean ownsClient = false;
 
+    try {
       if (subScan.hasDelegationToken()) {
         // User impersonation mode: create a new client from the delegation token
         // The reader will own this client and close it when done
@@ -100,6 +100,16 @@ public class AccumuloScanBatchCreator implements BatchCreator<AccumuloSubScan> {
       readers.add(reader);
 
     } catch (Exception e) {
+      // The reader was never handed the client, so nothing else will close it.
+      // Only close clients we created here; the shared service client is owned
+      // by the storage plugin.
+      if (ownsClient && client != null) {
+        try {
+          client.close();
+        } catch (Exception closeException) {
+          e.addSuppressed(closeException);
+        }
+      }
       throw new ExecutionSetupException(
           "Failed to create Accumulo record reader for table: " + subScan.getScanSpec().getTableName(), e);
     }

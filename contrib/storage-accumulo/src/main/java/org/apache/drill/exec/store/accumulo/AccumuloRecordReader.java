@@ -32,7 +32,6 @@ import org.apache.accumulo.core.client.TableNotFoundException;
 import org.apache.accumulo.core.data.Key;
 import org.apache.accumulo.core.data.Range;
 import org.apache.accumulo.core.data.Value;
-import org.apache.accumulo.core.security.Authorizations;
 import org.apache.drill.common.exceptions.DrillRuntimeException;
 import org.apache.drill.common.exceptions.ExecutionSetupException;
 import org.apache.drill.common.expression.PathSegment;
@@ -193,7 +192,7 @@ public class AccumuloRecordReader extends AbstractRecordReader implements DrillA
 
     try {
       // Create scanner
-      scanner = client.createScanner(scanSpec.getTableName(), Authorizations.EMPTY);
+      scanner = client.createScanner(scanSpec.getTableName(), AccumuloConnectionManager.getUserAuthorizations(client));
 
       // Configure scan range
       configureRange();

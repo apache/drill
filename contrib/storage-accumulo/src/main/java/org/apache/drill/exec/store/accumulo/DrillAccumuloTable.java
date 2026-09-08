@@ -22,10 +22,10 @@ import java.util.LinkedHashSet;
 import java.util.Map;
 import java.util.Set;
 
+import org.apache.accumulo.core.client.AccumuloClient;
 import org.apache.accumulo.core.client.Scanner;
 import org.apache.accumulo.core.data.Key;
 import org.apache.accumulo.core.data.Value;
-import org.apache.accumulo.core.security.Authorizations;
 import org.apache.calcite.rel.type.RelDataType;
 import org.apache.calcite.rel.type.RelDataTypeFactory;
 import org.apache.calcite.sql.type.SqlTypeName;
@@ -145,8 +145,9 @@ public class DrillAccumuloTable extends DrillTable {
   private Set<String> getColumnFamilies() {
     if (columnFamilies == null) {
       Set<String> families = new LinkedHashSet<>();
-      try (Scanner scanner = plugin.getClient()
-          .createScanner(scanSpec.getTableName(), Authorizations.EMPTY)) {
+      AccumuloClient client = plugin.getClient();
+      try (Scanner scanner = client.createScanner(scanSpec.getTableName(),
+          AccumuloConnectionManager.getUserAuthorizations(client))) {
         int examined = 0;
         for (Map.Entry<Key, Value> entry : scanner) {
           families.add(entry.getKey().getColumnFamily().toString());
