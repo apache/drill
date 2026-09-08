@@ -25,6 +25,7 @@ Makefile
 .mvn/maven.config
 *.patch
 .project
+result-cache/
 .settings/
 *.swp
 TAGS
