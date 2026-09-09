@@ -11,6 +11,28 @@ Simply add the following to any Drill file system configuration.  Typically, MS 
 }
 ```
 
+### Linked Tables
+An Access file can define tables that live in another database file, referenced by an absolute local path or a UNC
+share embedded in the file itself.  Drill refuses to follow those references by default: reading an untrusted file
+would otherwise make the Drillbit open a path of the file author's choosing, as the Drillbit service account.
+
+If you trust the files being queried and need linked tables to work, set `allowLinkedDatabases` to `true`:
+
+```json
+"msaccess": {
+  "type": "msaccess",
+  "extensions": ["mdb", "accdb"],
+  "allowLinkedDatabases": true
+}
+```
+
+It can also be enabled per query:
+
+```sql
+SELECT *
+FROM table(dfs.`file_name.accdb` (type=> 'msaccess', tableName => 'Linked', allowLinkedDatabases => true))
+```
+
 ## Schemas
 Drill will discover the schema automatically from the Access file.  The plugin does support schema provisioning for consistency, but is not recommended.
 

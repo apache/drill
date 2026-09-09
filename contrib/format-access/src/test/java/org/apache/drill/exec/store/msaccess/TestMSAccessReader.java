@@ -18,6 +18,8 @@
 
 package org.apache.drill.exec.store.msaccess;
 
+import com.healthmarketscience.jackcess.Database;
+import com.healthmarketscience.jackcess.DatabaseBuilder;
 import org.apache.drill.categories.RowSetTest;
 import org.apache.drill.common.types.TypeProtos.MinorType;
 import org.apache.drill.exec.physical.rowSet.RowSet;
@@ -33,8 +35,12 @@ import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
 
+import java.io.File;
+
 import static org.apache.drill.test.rowSet.RowSetUtilities.strArray;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
 @Category(RowSetTest.class)
 public class TestMSAccessReader extends ClusterTest {
@@ -42,6 +48,41 @@ public class TestMSAccessReader extends ClusterTest {
   @BeforeClass
   public static void setup() throws Exception {
     ClusterTest.startCluster(ClusterFixture.builder(dirTestWatcher));
+  }
+
+  @Test
+  public void testLinkedTableResolvedWhenAllowed() throws Exception {
+    String sql = "SELECT * FROM table(dfs.`" + writeLinkedTableFile("linked_allowed.mdb").getName() +
+        "` (type=> 'msaccess', tableName => 'Linked', allowLinkedDatabases => true))";
+    try {
+      client.queryBuilder().sql(sql).run();
+      fail("Expected the (nonexistent) linked database to be opened");
+    } catch (Exception e) {
+      // Jackcess got as far as trying to open the linked path, which is what the option enables.
+      assertTrue(e.getMessage(), e.getMessage().contains("given file does not exist"));
+    }
+  }
+
+  private static File writeLinkedTableFile(String name) throws Exception {
+    File mdb = new File(dirTestWatcher.getRootDir(), name);
+    try (Database db = DatabaseBuilder.create(Database.FileFormat.V2003, mdb)) {
+      db.createLinkedTable("Linked", "//evil.example.com/share/secret.mdb", "Table1");
+    }
+    return mdb;
+  }
+
+  @Test
+  public void testLinkedTableIsNotResolved() throws Exception {
+    // A malicious file can point a linked table at any local path or UNC share; reading it must
+    // not make the Drillbit open that path.
+    File mdb = writeLinkedTableFile("linked.mdb");
+    String sql = "SELECT * FROM table(dfs.`" + mdb.getName() + "` (type=> 'msaccess', tableName => 'Linked'))";
+    try {
+      client.queryBuilder().sql(sql).run();
+      fail("Expected the linked database to be refused");
+    } catch (Exception e) {
+      assertTrue(e.getMessage(), e.getMessage().contains("Refusing to open linked database"));
+    }
   }
 
   @Test
