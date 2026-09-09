@@ -245,6 +245,12 @@ public class SqlConverter {
       RelNode project = LogicalProject.create(rel.rel, Collections.emptyList(), expressions, rel.validatedRowType);
       rel = RelRoot.of(project, rel.validatedRowType, rel.kind);
     }
+
+    // Column-level SELECT authorization check. Done after SqlToRelConverter has
+    // resolved all column references (so we can trace each to its TableScan)
+    // and before flattenTypes/optimization (so column references are intact).
+    new ColumnAccessChecker(session, drillConfig, cluster.getMetadataQuery()).check(rel.rel);
+
     return rel.withRel(sqlToRelConverter.flattenTypes(rel.rel, true));
   }
 

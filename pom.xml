@@ -89,6 +89,45 @@
     <hbase.version>2.6.1-hadoop3</hbase.version>
     <hikari.version>4.0.3</hikari.version>
     <!--
+      Ranger version used by drill-ranger modules and exec/java-exec
+      (ranger-plugin-classloader dependency). Must match the version in
+      drill-ranger/pom.xml.
+    -->
+    <ranger.version>2.8.0</ranger.version>
+    <!--
+      Jersey 2.x version for the Ranger plugin (drill-ranger-plugin).
+      Distinct from <jersey.version> (3.1.9) used by Drill's own REST server.
+      The two coexist via RangerPluginClassLoader isolation.
+    -->
+    <jersey.ranger.version>2.35</jersey.ranger.version>
+    <!--
+      HK2 2.6.1 — DI container used by Jersey 2.x (jersey-hk2:2.35).
+      Force-copied to jars/ranger-drill-plugin-impl/ via RangerPluginClassLoader.
+    -->
+    <hk2.ranger.version>2.6.1</hk2.ranger.version>
+    <!--
+      JAX-RS 2.x API (javax.ws.rs.* package) — required by Jersey 2.35.
+      Must be 2.x, NOT 3.x (jakarta.ws.rs.*): Jersey 2.x bytecode references
+      javax.ws.rs.* classes.
+    -->
+    <jaxrs.api.version>2.1.6</jaxrs.api.version>
+    <!--
+      Jakarta annotations API 1.3.5 (javax.annotation.* package).
+      HK2 2.6.1 needs javax.annotation.PostConstruct / PreDestroy.
+      Version 2.x (jakarta.annotation.* package) would NOT work because
+      HK2 2.6.1 bytecode references javax.annotation.*.
+    -->
+    <jakarta.annotation.api.version>1.3.5</jakarta.annotation.api.version>
+    <!--
+      Jakarta inject API 1.0 (javax.inject.* package).
+      HK2 2.6.1 needs javax.inject.Inject / Singleton / Named.
+    -->
+    <jakarta.inject.api.version>1.0</jakarta.inject.api.version>
+    <!--
+      osgi-resource-locator 1.0.3 — transitive dep of HK2 2.6.1.
+    -->
+    <osgi.resource.locator.version>1.0.3</osgi.resource.locator.version>
+    <!--
       Currently, Hive storage plugin only supports Apache Hive 3.1.3 or vendor specific variants of the
       Apache Hive 2.3.2. If the version is changed, make sure the jars and their dependencies are updated,
       for example parquet-hadoop-bundle and derby dependencies.
@@ -3028,5 +3067,6 @@
     <module>drill-yarn</module>
     <module>distribution</module>
     <module>metastore</module>
+    <module>drill-ranger</module>
   </modules>
 </project>

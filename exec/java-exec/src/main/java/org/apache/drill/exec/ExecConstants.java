@@ -313,6 +313,11 @@ public final class ExecConstants {
   public static final String BIT_ENCRYPTION_SASL_ENABLED = "drill.exec.security.bit.encryption.sasl.enabled";
   public static final String BIT_ENCRYPTION_SASL_MAX_WRAPPED_SIZE = "drill.exec.security.bit.encryption.sasl.max_wrapped_size";
 
+  // Ranger authorization
+  public static final String RANGER_AUTH_ENABLED = "drill.exec.security.ranger.enabled";
+  public static final String RANGER_SERVICE_NAME = "drill.exec.security.ranger.service.name";
+  public static final String RANGER_AUTHORIZER_IMPL = "drill.exec.security.ranger.impl";
+
   /** Size of JDBC batch queue (in batches) above which throttling begins. */
   public static final String JDBC_BATCH_QUEUE_THROTTLING_THRESHOLD =
       "drill.jdbc.batch_queue_throttling_threshold";
