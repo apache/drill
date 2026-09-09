@@ -36,13 +36,16 @@ import java.util.Objects;
 public class MSAccessFormatConfig implements FormatPluginConfig {
   private final List<String> extensions;
   private final String tableName;
+  private final boolean allowLinkedDatabases;
 
   // Omitted properties take reasonable defaults
   @JsonCreator
   public MSAccessFormatConfig(@JsonProperty("extensions") List<String> extensions,
-                              @JsonProperty("tableName") String tableName) {
+                              @JsonProperty("tableName") String tableName,
+                              @JsonProperty("allowLinkedDatabases") Boolean allowLinkedDatabases) {
     this.extensions = extensions == null ? Arrays.asList("accdb", "mdb") : ImmutableList.copyOf(extensions);
     this.tableName = tableName;
+    this.allowLinkedDatabases = allowLinkedDatabases != null && allowLinkedDatabases;
   }
 
   @JsonInclude(Include.NON_DEFAULT)
@@ -55,6 +58,11 @@ public class MSAccessFormatConfig implements FormatPluginConfig {
     return tableName;
   }
 
+  @JsonInclude(Include.NON_DEFAULT)
+  public boolean getAllowLinkedDatabases() {
+    return allowLinkedDatabases;
+  }
+
   @Override
   public boolean equals(Object o) {
     if (this == o) {
@@ -65,12 +73,13 @@ public class MSAccessFormatConfig implements FormatPluginConfig {
     }
     MSAccessFormatConfig that = (MSAccessFormatConfig) o;
     return Objects.equals(extensions, that.extensions) &&
-        Objects.equals(tableName, that.tableName);
+        Objects.equals(tableName, that.tableName) &&
+        allowLinkedDatabases == that.allowLinkedDatabases;
   }
 
   @Override
   public int hashCode() {
-    return Objects.hash(extensions, tableName);
+    return Objects.hash(extensions, tableName, allowLinkedDatabases);
   }
 
   @Override
@@ -78,6 +87,7 @@ public class MSAccessFormatConfig implements FormatPluginConfig {
     return new PlanStringBuilder(this)
         .field("extensions", extensions)
         .field("tableName", tableName)
+        .field("allowLinkedDatabases", allowLinkedDatabases)
         .toString();
   }
 }

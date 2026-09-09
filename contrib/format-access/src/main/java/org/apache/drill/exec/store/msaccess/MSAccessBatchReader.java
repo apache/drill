@@ -22,6 +22,7 @@ import com.healthmarketscience.jackcess.Column;
 import com.healthmarketscience.jackcess.DataType;
 import com.healthmarketscience.jackcess.Database;
 import com.healthmarketscience.jackcess.DatabaseBuilder;
+import com.healthmarketscience.jackcess.util.LinkResolver;
 import com.healthmarketscience.jackcess.Row;
 import com.healthmarketscience.jackcess.Table;
 import org.apache.commons.lang3.StringUtils;
@@ -57,6 +58,15 @@ import java.util.Set;
 public class MSAccessBatchReader implements ManagedReader {
 
   private static final Logger logger = LoggerFactory.getLogger(MSAccessBatchReader.class);
+
+  /**
+   * An Access file can name another database (a local path or a UNC share) as the source of a
+   * linked table.  Jackcess's default resolver would open it as the Drillbit service account, so
+   * refuse instead unless the plugin config explicitly opts in.
+   */
+  private static final LinkResolver REJECT_LINKED_DATABASES = (linkerDb, linkeeFileName) -> {
+    throw new IOException("Refusing to open linked database referenced by this MS Access file: " + linkeeFileName);
+  };
 
   private final FileDescrip file;
   private final CustomErrorContext errorContext;
@@ -247,7 +257,12 @@ public class MSAccessBatchReader implements ManagedReader {
   private void openFile() {
     try {
       fsStream = file.fileSystem().openPossiblyCompressedStream(file.split().getPath());
-      db = DatabaseBuilder.open(convertInputStreamToFile(fsStream));
+      db = new DatabaseBuilder(convertInputStreamToFile(fsStream))
+          .setReadOnly(true)
+          .open();
+      if (!config.getAllowLinkedDatabases()) {
+        db.setLinkResolver(REJECT_LINKED_DATABASES);
+      }
       tableList = db.getTableNames();
     } catch (IOException e) {
       deleteTempFile();
