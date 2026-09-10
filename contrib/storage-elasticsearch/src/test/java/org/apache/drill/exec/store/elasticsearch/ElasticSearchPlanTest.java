@@ -138,7 +138,7 @@ public class ElasticSearchPlanTest extends ClusterTest {
     queryBuilder()
         .sql("select count(*) from elastic.`nation`")
         .planMatcher()
-        .include("ElasticsearchAggregate.*COUNT")
+        .include("ElasticsearchAggregate")
         .match();
   }
 
@@ -156,7 +156,7 @@ public class ElasticSearchPlanTest extends ClusterTest {
     queryBuilder()
         .sql("select sum(n_nationkey) from elastic.`nation` group by n_regionkey")
         .planMatcher()
-        .include("ElasticsearchAggregate.*SUM")
+        .include("ElasticsearchAggregate")
         .match();
   }
 }

@@ -127,7 +127,8 @@ public class TestJdbcQuery extends JdbcTestQueryBase {
   public void testLikeNotLike() throws Exception{
     withNoDefaultSchema()
       .sql("SELECT TABLE_NAME, COLUMN_NAME FROM INFORMATION_SCHEMA.COLUMNS " +
-        "WHERE TABLE_NAME NOT LIKE 'C%' AND COLUMN_NAME LIKE 'TABLE_%E'")
+        "WHERE TABLE_NAME NOT LIKE 'C%' AND COLUMN_NAME LIKE 'TABLE_%E' " +
+        "ORDER BY TABLE_NAME, ORDINAL_POSITION")
       .returns(
         "TABLE_NAME=MATERIALIZED_VIEWS; COLUMN_NAME=TABLE_NAME\n" +
         "TABLE_NAME=PARTITIONS; COLUMN_NAME=TABLE_NAME\n" +

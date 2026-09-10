@@ -95,6 +95,7 @@ public class PhoenixStoragePlugin extends AbstractStoragePlugin {
     PlannerPhase phase
   ) {
     switch (phase) {
+      case LOGICAL:
       case PHYSICAL:
         return convention.getRules();
       default:

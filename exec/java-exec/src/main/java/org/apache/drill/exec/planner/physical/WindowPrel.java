@@ -43,6 +43,8 @@ import org.apache.calcite.plan.RelOptCluster;
 import org.apache.calcite.plan.RelTraitSet;
 import org.apache.calcite.rex.RexLiteral;
 import org.apache.calcite.util.BitSets;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -53,6 +55,7 @@ import java.util.List;
 import static com.google.common.base.Preconditions.checkState;
 
 public class WindowPrel extends DrillWindowRelBase implements Prel {
+  private static final Logger logger = LoggerFactory.getLogger(WindowPrel.class);
   public WindowPrel(RelOptCluster cluster,
                     RelTraitSet traits,
                     RelNode child,
@@ -106,7 +109,8 @@ public class WindowPrel extends DrillWindowRelBase implements Prel {
         orderings,
         window.isRows,
         WindowPOP.newBound(window.lowerBound),
-        WindowPOP.newBound(window.upperBound));
+        WindowPOP.newBound(window.upperBound),
+        WindowPOP.Exclusion.fromCalciteExclusion(window.exclude));
 
     creator.addMetadata(this, windowPOP);
     return windowPOP;

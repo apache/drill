@@ -102,7 +102,7 @@ public class Decimal${aggrtype.className}Functions {
           .add(input.subtract(temp)
                   .divide(java.math.BigDecimal.valueOf(count.value),
                       new java.math.MathContext(
-                          org.apache.drill.exec.planner.types.DrillRelDataTypeSystem.DRILL_REL_DATATYPE_SYSTEM.getMaxNumericPrecision(),
+                          org.apache.drill.exec.planner.types.DrillRelDataTypeSystem.DRILL_REL_DATATYPE_SYSTEM.getMaxPrecision(org.apache.calcite.sql.type.SqlTypeName.DECIMAL),
                           java.math.RoundingMode.HALF_UP)));
       dev.obj = ((java.math.BigDecimal) dev.obj)
           .add(input.subtract(temp).multiply(input.subtract(((java.math.BigDecimal) avg.obj))));
@@ -154,7 +154,7 @@ public class Decimal${aggrtype.className}Functions {
           out.scale = scale.value;
           result = result.setScale(out.scale, java.math.RoundingMode.HALF_UP);
           out.start  = 0;
-          out.precision = org.apache.drill.exec.planner.types.DrillRelDataTypeSystem.DRILL_REL_DATATYPE_SYSTEM.getMaxNumericPrecision();
+          out.precision = org.apache.drill.exec.planner.types.DrillRelDataTypeSystem.DRILL_REL_DATATYPE_SYSTEM.getMaxPrecision(org.apache.calcite.sql.type.SqlTypeName.DECIMAL);
           org.apache.drill.exec.util.DecimalUtility.checkValueOverflow(result, out.precision, out.scale);
           byte[] bytes = result.unscaledValue().toByteArray();
           int len = bytes.length;

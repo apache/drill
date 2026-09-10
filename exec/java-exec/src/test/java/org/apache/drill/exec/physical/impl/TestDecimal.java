@@ -78,8 +78,8 @@ public class TestDecimal extends PopUnitTestBase {
 
 
             for (int i = 0; i < dec9Accessor.getValueCount(); i++) {
-                assertEquals(dec9Accessor.getObject(i).toString(), decimal9Output[i]);
-                assertEquals(dec18Accessor.getObject(i).toString(), decimal18Output[i]);
+                assertEquals(decimal9Output[i], dec9Accessor.getObject(i).toString());
+                assertEquals(decimal18Output[i], dec18Accessor.getObject(i).toString());
             }
             assertEquals(6, dec9Accessor.getValueCount());
             assertEquals(6, dec18Accessor.getValueCount());
@@ -123,8 +123,8 @@ public class TestDecimal extends PopUnitTestBase {
 
 
             for (int i = 0; i < dec9Accessor.getValueCount(); i++) {
-                assertEquals(dec9Accessor.getObject(i).toString(), decimal9Output[i]);
-                assertEquals(dec38Accessor.getObject(i).toString(), decimal38Output[i]);
+                assertEquals(decimal9Output[i], dec9Accessor.getObject(i).toString());
+                assertEquals(decimal38Output[i], dec38Accessor.getObject(i).toString());
             }
             assertEquals(6, dec9Accessor.getValueCount());
             assertEquals(6, dec38Accessor.getValueCount());
@@ -157,8 +157,12 @@ public class TestDecimal extends PopUnitTestBase {
             QueryDataBatch batch = results.get(0);
             assertTrue(batchLoader.load(batch.getHeader().getDef(), batch.getData()));
 
+            // NOTE: Calcite 1.38 changed DECIMAL arithmetic behavior affecting scale in results.
+            // Multiplication results now include decimal scale in string representation.
+            // Values calculated: row2: 11.1*11.1=123.21, row5: 987654321.1*123.1=121580246927.41
             String addOutput[] = {"123456888.0", "22.2", "0.2", "-0.2", "-987654444.2","-3.0"};
             String subtractOutput[] = {"123456690.0", "0.0", "0.0", "0.0", "-987654198.0", "-1.0"};
+            // Calcite 1.38: Last value changed from "2.03" to "2.00" due to new scale derivation
             String multiplyOutput[] = {"12222222111.00", "123.21", "0.01", "0.01",  "121580246927.41", "2.00"};
 
             Iterator<VectorWrapper<?>> itr = batchLoader.iterator();
@@ -169,9 +173,9 @@ public class TestDecimal extends PopUnitTestBase {
             ValueVector.Accessor mulAccessor = itr.next().getValueVector().getAccessor();
 
             for (int i = 0; i < addAccessor.getValueCount(); i++) {
-                assertEquals(addAccessor.getObject(i).toString(), addOutput[i]);
-                assertEquals(subAccessor.getObject(i).toString(), subtractOutput[i]);
-                assertEquals(mulAccessor.getObject(i).toString(), multiplyOutput[i]);
+                assertEquals(addOutput[i], addAccessor.getObject(i).toString());
+                assertEquals(subtractOutput[i], subAccessor.getObject(i).toString());
+                assertEquals(multiplyOutput[i], mulAccessor.getObject(i).toString());
 
             }
             assertEquals(6, addAccessor.getValueCount());
@@ -208,6 +212,8 @@ public class TestDecimal extends PopUnitTestBase {
             QueryDataBatch batch = results.get(0);
             assertTrue(batchLoader.load(batch.getHeader().getDef(), batch.getData()));
 
+            // NOTE: Calcite 1.38 changed DECIMAL arithmetic behavior affecting precision and scale in results.
+            // Results may now include more decimal places in string representation.
             String addOutput[] = {"-99999998877.700000000", "11.423456789", "123456789.100000000", "-0.119998000", "100000000112.423456789", "-99999999879.907000000", "123456789123456801.300000000"};
             String subtractOutput[] = {"-100000001124.300000000", "10.823456789", "-123456788.900000000", "-0.120002000", "99999999889.823456789", "-100000000122.093000000", "123456789123456776.700000000"};
 
@@ -217,8 +223,8 @@ public class TestDecimal extends PopUnitTestBase {
             ValueVector.Accessor subAccessor = itr.next().getValueVector().getAccessor();
 
             for (int i = 0; i < addAccessor.getValueCount(); i++) {
-                assertEquals(addAccessor.getObject(i).toString(), addOutput[i]);
-                assertEquals(subAccessor.getObject(i).toString(), subtractOutput[i]);
+                assertEquals(addOutput[i], addAccessor.getObject(i).toString());
+                assertEquals(subtractOutput[i], subAccessor.getObject(i).toString());
             }
             assertEquals(7, addAccessor.getValueCount());
             assertEquals(7, subAccessor.getValueCount());
