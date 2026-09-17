@@ -50,6 +50,7 @@ Admin-only dashboard for AI / LLM feature usage and cost. Per-feature event log,
   | `sql_lab_optimize` | SQL Lab "Optimize query" |
   | `log_analysis` | Logs page chat |
   | `wiki_generation` | Project wiki generation |
+  | `report_generation` | Prospector "Generate Report" quick action |
   | `profile_analysis` | Query profile detail page |
   | `global_chat` | Global Prospector tab (shell) |
   | `query_suggestions` | Query suggestions panel |

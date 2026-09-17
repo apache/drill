@@ -48,6 +48,7 @@ export const FEATURE_LABEL = {
   // Other pages
   log_analysis: 'Log analysis',
   wiki_generation: 'Wiki generation',
+  report_generation: 'Report generation',
   profile_analysis: 'Profile analysis',
   global_chat: 'Global Prospector chat',
   filesystem_form: 'Filesystem plugin form',
