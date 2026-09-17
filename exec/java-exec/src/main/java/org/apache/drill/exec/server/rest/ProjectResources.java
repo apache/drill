@@ -1814,7 +1814,7 @@ public class ProjectResources {
         + "out of the directory are no longer queryable from this workspace.\n";
 
     pages.add(new WikiPage(
-        "sys-wiki-overview", "About this project", overview, 0, now, now));
+        "sys-wiki-overview", "About this project", overview, 0, null, now, now));
 
     String maintenance =
         "# Maintenance and FAQ\n\n"
@@ -1849,7 +1849,7 @@ public class ProjectResources {
         + "a shared log volume or use a log shipper.\n";
 
     pages.add(new WikiPage(
-        "sys-wiki-faq", "Maintenance & FAQ", maintenance, 1, now, now));
+        "sys-wiki-faq", "Maintenance & FAQ", maintenance, 1, null, now, now));
 
     return pages;
   }
