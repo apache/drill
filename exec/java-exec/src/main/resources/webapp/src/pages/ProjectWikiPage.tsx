@@ -24,6 +24,7 @@ import {
   DeleteOutlined,
   FileTextOutlined,
   RobotOutlined,
+  FilePdfOutlined,
 } from '@ant-design/icons';
 import MarkdownView from '../components/MarkdownView';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
@@ -302,6 +303,21 @@ ${dashDesc}`;
   );
   usePageChrome({ toolbarActions });
 
+  /**
+   * Print the rendered page. The browser's "Save as PDF" gives selectable text,
+   * real page breaks and correct emoji, none of which a canvas screenshot does.
+   * document.title drives the suggested filename, so it is set and restored.
+   */
+  const handlePrint = () => {
+    if (!selectedPage) {
+      return;
+    }
+    const previous = document.title;
+    document.title = selectedPage.title;
+    window.addEventListener('afterprint', () => { document.title = previous; }, { once: true });
+    window.print();
+  };
+
   const renderPageItem = (page: WikiPage) => {
     const selected = selectedPage?.id === page.id;
     return (
@@ -337,6 +353,14 @@ ${dashDesc}`;
                 />
               </Tooltip>
             )}
+            <Tooltip title="Download as PDF">
+              <Button
+                size="small"
+                icon={<FilePdfOutlined />}
+                onClick={handlePrint}
+                disabled={!selectedPage}
+              />
+            </Tooltip>
             <Tooltip title="New page">
               <Button
                 type="primary"
@@ -401,7 +425,7 @@ ${dashDesc}`;
             </div>
           </article>
         ) : selectedPage ? (
-          <article className="wiki-document">
+          <article className="wiki-document wiki-printable">
             <header className="wiki-document-header">
               <h1 className="wiki-document-title">{selectedPage.title}</h1>
               <p className="wiki-document-meta">Last updated {formatRelative(selectedPage.updatedAt)}</p>
