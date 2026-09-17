@@ -313,6 +313,8 @@ export interface WikiPage {
   title: string;
   content: string;
   order: number;
+  /** Group this page belongs to in the wiki list. Absent means the page sits at the root. */
+  folder?: string;
   createdAt: number;
   updatedAt: number;
 }

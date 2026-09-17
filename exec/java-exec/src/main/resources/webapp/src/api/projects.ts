@@ -186,7 +186,7 @@ export async function removeDashboard(projectId: string, dashId: string): Promis
  */
 export async function createWikiPage(
   projectId: string,
-  page: { title: string; content?: string; order?: number }
+  page: { title: string; content?: string; order?: number; folder?: string }
 ): Promise<WikiPage> {
   const response = await apiClient.post<WikiPage>(
     `${PROJECTS_BASE}/${encodeURIComponent(projectId)}/wiki`,
@@ -201,7 +201,7 @@ export async function createWikiPage(
 export async function updateWikiPage(
   projectId: string,
   pageId: string,
-  page: { title?: string; content?: string; order?: number }
+  page: { title?: string; content?: string; order?: number; folder?: string }
 ): Promise<WikiPage> {
   const response = await apiClient.put<WikiPage>(
     `${PROJECTS_BASE}/${encodeURIComponent(projectId)}/wiki/${encodeURIComponent(pageId)}`,
