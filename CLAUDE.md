@@ -12,6 +12,7 @@ All developer documentation is under [`docs/dev/`](docs/dev/). Start with [`docs
 | **Login / authentication refactor** — design notes, current auth model, options | [`docs/dev/LoginRefactor.md`](docs/dev/LoginRefactor.md) |
 | **Tab persistence & project tree** — server-side tabs, hide vs delete, per-tab Prospector | [`docs/dev/TabPersistence.md`](docs/dev/TabPersistence.md) |
 | **Geospatial filter builder** — draw shapes on a map, push into SQL as ST_ predicates | [`docs/dev/GeoFilterBuilder.md`](docs/dev/GeoFilterBuilder.md) |
+| **Prospector reports** — generated reports saved to a project wiki, PDF download | [`docs/dev/ProspectorReports.md`](docs/dev/ProspectorReports.md) |
 | Prospector AI assistant — backend | [`docs/dev/PROSPECTOR.md`](docs/dev/PROSPECTOR.md) |
 | Enterprise AI provider configuration — proxy, SSL/TLS, custom headers, static parameters | [`docs/dev/ai/ENTERPRISE_PROVIDERS.md`](docs/dev/ai/ENTERPRISE_PROVIDERS.md) |
 | SQL transpiler (GraalPy + sqlglot) | [`docs/dev/TRANSPILER.md`](docs/dev/TRANSPILER.md) |
