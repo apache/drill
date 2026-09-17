@@ -216,6 +216,8 @@ export interface UseProspectorReturn {
   clearChat: () => void;
   /** Runs a single tool call. Exposed so its behaviour can be asserted directly. */
   executeToolCall: (toolCall: ToolCall, context?: ChatContext) => Promise<string>;
+  /** The localStorage key this conversation is persisted under, or null when unset. */
+  storageKey: string | null;
 }
 
 /**
@@ -740,5 +742,6 @@ export function useProspector(
     stopStreaming,
     clearChat,
     executeToolCall,
+    storageKey: storageKey ?? null,
   };
 }

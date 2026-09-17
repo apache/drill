@@ -45,6 +45,7 @@ export default function ProspectorPanel({
     sendMessage,
     stopStreaming,
     clearChat,
+    storageKey,
   } = prospector;
 
   const [reportContent, setReportContent] = useState<string | null>(null);
@@ -95,6 +96,8 @@ export default function ProspectorPanel({
         streamingContent={streamingContent}
         isStreaming={isStreaming}
         onInsertCell={isNotebook ? onInsertCell : undefined}
+        onSaveReport={setReportContent}
+        storageKey={storageKey}
       />
       <div className="prospector-panel-footer">
         {usage && (usage.totalTokens || usage.costUsd !== undefined) && (
