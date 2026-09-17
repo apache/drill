@@ -313,8 +313,12 @@ ${dashDesc}`;
       return;
     }
     const previous = document.title;
+    // afterprint does not fire on every browser, so the focus the window regains
+    // when the dialog closes acts as a second chance. Restoring twice is a no-op.
+    const restore = () => { document.title = previous; };
+    window.addEventListener('afterprint', restore, { once: true });
+    window.addEventListener('focus', restore, { once: true });
     document.title = selectedPage.title;
-    window.addEventListener('afterprint', () => { document.title = previous; }, { once: true });
     window.print();
   };
 
