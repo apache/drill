@@ -19,6 +19,16 @@
 import type { PluginType } from '../../types';
 
 export const pluginTemplates: Record<string, Record<string, unknown>> = {
+  accumulo: {
+    type: 'accumulo',
+    zookeeperQuorum: 'localhost:2181',
+    instanceName: 'accumulo',
+    username: '',
+    password: '',
+    authenticationType: 'PASSWORD',
+    authMode: 'SHARED_USER',
+    enabled: false,
+  },
   file: {
     type: 'file',
     connection: 'file:///',
@@ -181,6 +191,7 @@ export function getTemplate(type: PluginType): Record<string, unknown> {
  * Logo images are served from /static/img/storage_logos/.
  */
 export const pluginLogos: Record<string, string> = {
+  accumulo: 'Accumulo.png',
   file: 'FileSystem.png',
   jdbc: 'Jdbc.png',
   http: 'Http.png',
@@ -240,6 +251,7 @@ export function getPluginLogoUrl(type: string, connection?: string): string | un
 
 /** Gradient colors per plugin type for card covers */
 export const pluginGradients: Record<string, string> = {
+  accumulo: 'linear-gradient(135deg, #fa8c16 0%, #ad4e00 100%)',
   file: 'linear-gradient(135deg, #3b82f6 0%, #2563eb 100%)',
   jdbc: 'linear-gradient(135deg, #13c2c2 0%, #006d75 100%)',
   http: 'linear-gradient(135deg, #52c41a 0%, #237804 100%)',
@@ -259,6 +271,7 @@ export function getPluginGradient(type: string): string {
 
 /** Known plugin types for the create flow */
 export const knownPluginTypes = [
+  { value: 'accumulo', label: 'Accumulo' },
   { value: 'cassandra', label: 'Cassandra / ScyllaDB' },
   { value: 'druid', label: 'Druid' },
   { value: 'elastic', label: 'Elasticsearch' },

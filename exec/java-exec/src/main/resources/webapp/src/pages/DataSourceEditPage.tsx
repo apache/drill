@@ -46,6 +46,7 @@ import '../monaco';
 import { getPlugin, savePlugin, deletePlugin, enablePlugin, getExportUrl } from '../api/storage';
 import { cleanupPluginDatasets } from '../api/projects';
 import {
+  AccumuloForm,
   FileSystemForm,
   JdbcForm,
   HttpForm,
@@ -68,7 +69,7 @@ import { useTheme } from '../hooks/useTheme';
 import type { PluginType } from '../types';
 
 const GUIDED_FORM_TYPES: PluginType[] = [
-  'file', 'jdbc', 'http', 'mongo', 'splunk', 'cassandra', 'druid', 'elastic',
+  'accumulo', 'file', 'jdbc', 'http', 'mongo', 'splunk', 'cassandra', 'druid', 'elastic',
   'googlesheets', 'hbase', 'hive', 'kafka', 'kudu', 'openTSDB', 'phoenix',
 ];
 
@@ -404,6 +405,8 @@ export default function DataSourceEditPage({ projectId }: DataSourceEditPageProp
 
   const renderForm = () => {
     switch (pluginType) {
+      case 'accumulo':
+        return <AccumuloForm config={config} onChange={handleFormChange} />;
       case 'file':
         return <FileSystemForm config={config} onChange={handleFormChange} onValidationChange={setIsValid} pluginName={pluginName} />;
       case 'jdbc':

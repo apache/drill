@@ -71,7 +71,7 @@ Configure a storage plugin. Two tabs: a type-aware guided form (when one exists 
 In `src/components/storage/`:
 
 - Guided forms, one per plugin type with bespoke UI:
-  - `FileSystemForm`, `JdbcForm`, `HttpForm`, `MongoForm`, `SplunkForm`, `CassandraForm`, `DruidForm`, `ElasticsearchForm`, `GoogleSheetsForm`, `HBaseForm`, `HiveForm`, `KafkaForm`, `KuduForm`, `OpenTSDBForm`, `PhoenixForm`
+  - `AccumuloForm`, `FileSystemForm`, `JdbcForm`, `HttpForm`, `MongoForm`, `SplunkForm`, `CassandraForm`, `DruidForm`, `ElasticsearchForm`, `GoogleSheetsForm`, `HBaseForm`, `HiveForm`, `KafkaForm`, `KuduForm`, `OpenTSDBForm`, `PhoenixForm`
 - `@monaco-editor/react` `Editor` for the JSON tab.
 
 If a plugin type has no matching form, only the JSON tab is shown.
