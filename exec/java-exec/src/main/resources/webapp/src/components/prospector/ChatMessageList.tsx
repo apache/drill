@@ -18,6 +18,7 @@
 import { useEffect, useRef, useState } from 'react';
 import ChatMessageBubble from './ChatMessageBubble';
 import type { ChatMessage } from '../../types/ai';
+import { messageKey } from '../../utils/report';
 
 interface ChatMessageListProps {
   messages: ChatMessage[];
@@ -34,30 +35,37 @@ interface ChatMessageListProps {
   storageKey?: string | null;
 }
 
-// ponytail: dismissed report suggestions are keyed by the message's position in
-// visibleMessages, since ChatMessage carries no id. That is safe for the normal case
-// (messages only ever append), but it can mistarget a dismissal onto a different
-// message after the conversation is reset and rebuilt at the same indices, e.g.
-// clearChat or the server-side merge on mount. We clear the dismissed set whenever the
-// conversation is empty to close the clearChat case; a full fix (content-hash keys)
-// would be needed to close the rest.
+// Dismissed report suggestions are keyed by a hash of the message's content
+// (messageKey, from utils/report), not its position in the conversation. Content is a
+// stable handle that survives the array being wholesale-replaced (clearChat, the
+// server-merge-on-mount path) and survives reordering; two identical report messages
+// sharing one dismissal is the correct outcome, not a bug.
 function dismissedStorageKey(storageKey: string): string {
   return `${storageKey}:dismissedReports`;
 }
 
-function loadDismissed(storageKey: string | null | undefined): Set<number> {
+function loadDismissed(storageKey: string | null | undefined): Set<string> {
   if (!storageKey) {
     return new Set();
   }
   try {
     const raw = localStorage.getItem(dismissedStorageKey(storageKey));
-    return raw ? new Set(JSON.parse(raw)) : new Set();
+    if (!raw) {
+      return new Set();
+    }
+    const parsed = JSON.parse(raw);
+    // Guard against a stale array from the previous (index-keyed) format: only strings
+    // are valid keys here, so anything else is dropped rather than trusted.
+    if (!Array.isArray(parsed) || !parsed.every((v) => typeof v === 'string')) {
+      return new Set();
+    }
+    return new Set(parsed);
   } catch {
     return new Set();
   }
 }
 
-function saveDismissed(storageKey: string, dismissed: Set<number>): void {
+function saveDismissed(storageKey: string, dismissed: Set<string>): void {
   try {
     localStorage.setItem(dismissedStorageKey(storageKey), JSON.stringify(Array.from(dismissed)));
   } catch {
@@ -74,7 +82,7 @@ export default function ChatMessageList({
   storageKey,
 }: ChatMessageListProps) {
   const bottomRef = useRef<HTMLDivElement>(null);
-  const [dismissedReports, setDismissedReports] = useState<Set<number>>(() => loadDismissed(storageKey));
+  const [dismissedReports, setDismissedReports] = useState<Set<string>>(() => loadDismissed(storageKey));
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -88,14 +96,6 @@ export default function ChatMessageList({
       setDismissedReports(loadDismissed(storageKey));
     }
   }, [storageKey]);
-
-  // A cleared conversation restarts message indices from 0; stale dismissals from the
-  // previous conversation would otherwise silently apply to unrelated new messages.
-  useEffect(() => {
-    if (messages.length === 0) {
-      setDismissedReports((prev) => (prev.size === 0 ? prev : new Set()));
-    }
-  }, [messages.length]);
 
   useEffect(() => {
     if (storageKey) {
@@ -119,17 +119,20 @@ export default function ChatMessageList({
           </div>
         </div>
       )}
-      {visibleMessages.map((msg, i) => (
-        <ChatMessageBubble
-          key={i}
-          message={msg}
-          toolResults={toolResults}
-          onInsertCell={onInsertCell}
-          onSaveReport={onSaveReport}
-          dismissed={dismissedReports.has(i)}
-          onDismissReport={() => setDismissedReports((prev) => new Set(prev).add(i))}
-        />
-      ))}
+      {visibleMessages.map((msg, i) => {
+        const key = messageKey(msg.content ?? '');
+        return (
+          <ChatMessageBubble
+            key={i}
+            message={msg}
+            toolResults={toolResults}
+            onInsertCell={onInsertCell}
+            onSaveReport={onSaveReport}
+            dismissed={dismissedReports.has(key)}
+            onDismissReport={() => setDismissedReports((prev) => new Set(prev).add(key))}
+          />
+        );
+      })}
       {isStreaming && streamingContent && (
         <ChatMessageBubble
           message={{ role: 'assistant', content: streamingContent }}

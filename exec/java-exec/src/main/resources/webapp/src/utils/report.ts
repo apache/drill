@@ -48,6 +48,20 @@ export function looksLikeReport(markdown: string): boolean {
   return /^\|.*\|/m.test(markdown) || markdown.length >= LENGTH_THRESHOLD;
 }
 
+/**
+ * Stable key for a rendered message, used to remember a dismissed report
+ * suggestion. Content rather than list position, because the conversation
+ * array is replaced wholesale when the server copy merges in on mount, and
+ * positions would then point at different messages.
+ */
+export function messageKey(content: string): string {
+  let hash = 5381;
+  for (let i = 0; i < content.length; i++) {
+    hash = ((hash << 5) + hash + content.charCodeAt(i)) | 0;
+  }
+  return hash.toString(36);
+}
+
 /** Title for a report: its first heading, else a timestamped default. */
 export function reportTitle(markdown: string, now: Date = new Date()): string {
   const heading = markdown.match(/^#{1,3}\s+(.+)$/m);
