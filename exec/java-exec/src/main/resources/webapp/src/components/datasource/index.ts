@@ -15,6 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+export { default as AccumuloForm } from './AccumuloForm';
 export { default as FileSystemForm } from './FileSystemForm';
 export { default as JdbcForm } from './JdbcForm';
 export { default as HttpForm } from './HttpForm';
