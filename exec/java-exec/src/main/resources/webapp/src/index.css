@@ -7210,6 +7210,15 @@ html.dark .workflow-row-data {
   padding: 0;
 }
 
+.wiki-pagelist-group-title {
+  margin: 12px 12px 4px;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--color-text-tertiary);
+}
+
 .wiki-pagelist-item {
   position: relative;
   padding: 10px 14px 10px 18px;

@@ -31,7 +31,7 @@ Project documentation in Markdown. Two-pane layout: page list on the left, edito
 
 ## Behavior
 
-- **Page list** sorted by `page.order`. No nested / parent-child hierarchy — flat structure.
+- **Page list** sorted by `page.order`. No nested / parent-child hierarchy — flat structure. Pages carrying a `folder` value render below the ungrouped pages, in a titled group per folder, with folders sorted alphabetically; pages without a `folder` sit at the root of the list.
 - **Selecting** a page updates the URL (`/projects/:id/wiki/:pageId`) so the view is shareable.
 - **AI generation** collects project metadata (datasets, queries, visualizations, dashboards), assembles a context prompt, streams a "Project Overview" page in Markdown.
 - **Markdown preview** strips frontmatter, code blocks, and images for the list snippet — full content shows in the right pane.
