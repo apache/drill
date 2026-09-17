@@ -73,6 +73,12 @@ describe('reportTitle', () => {
     const now = new Date('2026-09-17T14:30:00Z');
     expect(reportTitle('just prose', now)).toBe('Prospector report 2026-09-17 14:30');
   });
+
+  it('does not split an emoji at the length cap', () => {
+    const title = reportTitle(`# ${'a'.repeat(119)}🚨`);
+    expect([...title]).toHaveLength(120);
+    expect(title.endsWith('🚨')).toBe(true);
+  });
 });
 
 describe('queryAppendix', () => {
@@ -105,6 +111,15 @@ describe('queryAppendix', () => {
     };
     expect(queryAppendix([broken])).toBe('');
   });
+
+  it('skips a tool call whose sql is not a string', () => {
+    const bad: ChatMessage = {
+      role: 'assistant',
+      content: null,
+      toolCalls: [{ id: '1', name: 'execute_sql', arguments: JSON.stringify({ sql: 123 }) }],
+    };
+    expect(queryAppendix([bad])).toBe('');
+  });
 });
 
 describe('provenanceFooter', () => {
@@ -123,6 +138,11 @@ describe('provenanceFooter', () => {
   it('still renders when the model is unknown', () => {
     const out = provenanceFooter({ generatedAt: Date.UTC(2026, 8, 17) });
     expect(out).toContain('an unspecified model');
+  });
+
+  it('degrades rather than throwing on an invalid timestamp', () => {
+    expect(() => provenanceFooter({ generatedAt: NaN })).not.toThrow();
+    expect(provenanceFooter({ generatedAt: NaN })).toContain('an unrecorded time');
   });
 });
 
