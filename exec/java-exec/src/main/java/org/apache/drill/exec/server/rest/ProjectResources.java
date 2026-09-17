@@ -170,6 +170,8 @@ public class ProjectResources {
     @JsonProperty
     private int order;
     @JsonProperty
+    private String folder;
+    @JsonProperty
     private long createdAt;
     @JsonProperty
     private long updatedAt;
@@ -183,12 +185,14 @@ public class ProjectResources {
         @JsonProperty("title") String title,
         @JsonProperty("content") String content,
         @JsonProperty("order") int order,
+        @JsonProperty("folder") String folder,
         @JsonProperty("createdAt") long createdAt,
         @JsonProperty("updatedAt") long updatedAt) {
       this.id = id;
       this.title = title;
       this.content = content;
       this.order = order;
+      this.folder = folder;
       this.createdAt = createdAt;
       this.updatedAt = updatedAt;
     }
@@ -197,6 +201,7 @@ public class ProjectResources {
     public String getTitle() { return title; }
     public String getContent() { return content; }
     public int getOrder() { return order; }
+    public String getFolder() { return folder; }
     public long getCreatedAt() { return createdAt; }
     public long getUpdatedAt() { return updatedAt; }
 
@@ -204,6 +209,7 @@ public class ProjectResources {
     public void setTitle(String title) { this.title = title; }
     public void setContent(String content) { this.content = content; }
     public void setOrder(int order) { this.order = order; }
+    public void setFolder(String folder) { this.folder = folder; }
     public void setCreatedAt(long createdAt) { this.createdAt = createdAt; }
     public void setUpdatedAt(long updatedAt) { this.updatedAt = updatedAt; }
   }
@@ -406,6 +412,8 @@ public class ProjectResources {
     public String content;
     @JsonProperty
     public Integer order;
+    @JsonProperty
+    public String folder;
   }
 
   /**
@@ -1274,6 +1282,7 @@ public class ProjectResources {
           request.title.trim(),
           request.content != null ? request.content : "",
           request.order != null ? request.order : project.getWikiPages().size(),
+          request.folder,
           now,
           now
       );
@@ -1339,6 +1348,9 @@ public class ProjectResources {
       }
       if (request.order != null) {
         target.setOrder(request.order);
+      }
+      if (request.folder != null) {
+        target.setFolder(request.folder);
       }
 
       long now = Instant.now().toEpochMilli();
