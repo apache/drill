@@ -25,8 +25,12 @@ interface ChatMessageListProps {
   streamingContent: string;
   isStreaming: boolean;
   onInsertCell?: (code: string) => void;
-  /** Offer to save report-like assistant messages. Omitted when saving is unavailable. */
-  onSaveReport?: (content: string) => void;
+  /**
+   * Offer to save report-like assistant messages. Called with the message's index
+   * within the full `messages` array (not the filtered, visible-only list), so the
+   * query appendix can be built from only the history up to that point.
+   */
+  onSaveReport?: (content: string, messageIndex: number) => void;
   /**
    * The conversation's localStorage key (see prospectorChatKey), used to persist which
    * report suggestions were dismissed so they stay hidden across reloads. Dismissals
@@ -106,8 +110,12 @@ export default function ChatMessageList({
   // Collect tool result messages for display in their parent assistant message
   const toolResults = messages.filter((m) => m.role === 'tool');
 
-  // Only show user and assistant messages (not tool results)
-  const visibleMessages = messages.filter((m) => m.role === 'user' || m.role === 'assistant');
+  // Only show user and assistant messages (not tool results). Each entry keeps its
+  // index within the full `messages` array so a report save can slice the query
+  // appendix at the right point rather than at its position in this filtered list.
+  const visibleMessages = messages
+    .map((m, index) => ({ m, index }))
+    .filter(({ m }) => m.role === 'user' || m.role === 'assistant');
 
   return (
     <div className="prospector-message-list">
@@ -119,7 +127,7 @@ export default function ChatMessageList({
           </div>
         </div>
       )}
-      {visibleMessages.map((msg, i) => {
+      {visibleMessages.map(({ m: msg, index }, i) => {
         const key = messageKey(msg.content ?? '');
         return (
           <ChatMessageBubble
@@ -128,6 +136,7 @@ export default function ChatMessageList({
             toolResults={toolResults}
             onInsertCell={onInsertCell}
             onSaveReport={onSaveReport}
+            messageIndex={index}
             dismissed={dismissedReports.has(key)}
             onDismissReport={() => setDismissedReports((prev) => new Set(prev).add(key))}
           />

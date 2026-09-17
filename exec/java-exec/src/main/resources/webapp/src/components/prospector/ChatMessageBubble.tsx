@@ -28,8 +28,15 @@ interface ChatMessageBubbleProps {
   toolResults: ChatMessage[];
   isStreaming?: boolean;
   onInsertCell?: (code: string) => void;
-  /** Offer to save this message as a report. Omitted when saving is unavailable. */
-  onSaveReport?: (content: string) => void;
+  /**
+   * Offer to save this message as a report. Called with the message's content and its
+   * index within the full (unfiltered) messages array, so the caller can slice the
+   * query appendix at this point rather than including later, unrelated queries.
+   * Omitted when saving is unavailable.
+   */
+  onSaveReport?: (content: string, messageIndex: number) => void;
+  /** This message's index within the full (unfiltered) messages array. */
+  messageIndex?: number;
   /** Whether the report-save suggestion for this message was already dismissed. */
   dismissed?: boolean;
   /** Called when the user dismisses the report-save suggestion for this message. */
@@ -42,6 +49,7 @@ export default function ChatMessageBubble({
   isStreaming,
   onInsertCell,
   onSaveReport,
+  messageIndex,
   dismissed,
   onDismissReport,
 }: ChatMessageBubbleProps) {
@@ -114,7 +122,11 @@ export default function ChatMessageBubble({
           && looksLikeReport(message.content) && !dismissed && (
           <div className="prospector-report-suggestion">
             <span>This looks like a report.</span>
-            <Button type="link" size="small" onClick={() => onSaveReport(message.content as string)}>
+            <Button
+              type="link"
+              size="small"
+              onClick={() => onSaveReport(message.content as string, messageIndex ?? -1)}
+            >
               Save to project
             </Button>
             <Button type="text" size="small" onClick={onDismissReport}>

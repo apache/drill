@@ -47,9 +47,23 @@ export default function ProspectorPanel({
     stopStreaming,
     clearChat,
     storageKey,
+    tabId,
   } = prospector;
 
   const [reportContent, setReportContent] = useState<string | null>(null);
+  // Index (within the full messages array) of the message the report suggestion was
+  // opened from, so the modal's query appendix does not pick up SQL run afterward.
+  const [reportMessageIndex, setReportMessageIndex] = useState<number>(-1);
+
+  const handleSaveReport = useCallback((content: string, messageIndex: number) => {
+    setReportContent(content);
+    setReportMessageIndex(messageIndex);
+  }, []);
+
+  const closeReportModal = useCallback(() => {
+    setReportContent(null);
+    setReportMessageIndex(-1);
+  }, []);
 
   const handleSend = useCallback(
     (text: string) => {
@@ -97,7 +111,7 @@ export default function ProspectorPanel({
         streamingContent={streamingContent}
         isStreaming={isStreaming}
         onInsertCell={isNotebook ? onInsertCell : undefined}
-        onSaveReport={setReportContent}
+        onSaveReport={handleSaveReport}
         storageKey={storageKey}
       />
       <div className="prospector-panel-footer">
@@ -145,9 +159,10 @@ export default function ProspectorPanel({
       <SaveReportModal
         open={reportContent !== null}
         content={reportContent ?? ''}
-        messages={messages}
+        messages={reportMessageIndex >= 0 ? messages.slice(0, reportMessageIndex + 1) : messages}
         defaultProjectId={context.projectId}
-        onClose={() => setReportContent(null)}
+        conversationId={tabId ?? undefined}
+        onClose={closeReportModal}
       />
     </div>
   );

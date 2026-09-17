@@ -15,8 +15,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+import { useState } from 'react';
 import { describe, expect, it, vi, beforeEach } from 'vitest';
 import { renderHook, waitFor } from '@testing-library/react';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 
 import { useProspector, prospectorChatKey, conversationLengthFor } from './useProspector';
 import { createVisualization } from '../api/visualizations';
@@ -25,6 +27,15 @@ import { addVisualization, addDashboard, getProject } from '../api/projects';
 import { executeQuery } from '../api/queries';
 import { getAiStatus, streamChat } from '../api/ai';
 import type { ChatContext, ToolCall } from '../types/ai';
+
+// useProspector reads/writes the React Query cache (save_report invalidation),
+// so every render needs a QueryClientProvider in scope.
+function wrapper({ children }: { children: React.ReactNode }) {
+  const [client] = useState(() => new QueryClient({
+    defaultOptions: { queries: { retry: false } },
+  }));
+  return <QueryClientProvider client={client}>{children}</QueryClientProvider>;
+}
 
 vi.mock('../api/visualizations', () => ({ createVisualization: vi.fn() }));
 vi.mock('../api/projects', () => ({
@@ -71,7 +82,7 @@ describe('create_visualization tool', () => {
   });
 
   it('adds the visualization to the active project', async () => {
-    const { result } = renderHook(() => useProspector());
+    const { result } = renderHook(() => useProspector(), { wrapper });
     const out = JSON.parse(await result.current.executeToolCall(call(), ctx('proj-42')));
 
     expect(createVisualization).toHaveBeenCalledOnce();
@@ -81,7 +92,7 @@ describe('create_visualization tool', () => {
   });
 
   it('creates the visualization without a project when there is no active project', async () => {
-    const { result } = renderHook(() => useProspector());
+    const { result } = renderHook(() => useProspector(), { wrapper });
     const out = JSON.parse(await result.current.executeToolCall(call(), ctx()));
 
     expect(createVisualization).toHaveBeenCalledOnce();
@@ -99,7 +110,7 @@ describe('create_visualization tool', () => {
     const consoleError = vi.spyOn(console, 'error').mockImplementation(() => {});
     vi.mocked(addVisualization).mockRejectedValue(new Error('project not found'));
 
-    const { result } = renderHook(() => useProspector());
+    const { result } = renderHook(() => useProspector(), { wrapper });
     const out = JSON.parse(await result.current.executeToolCall(call(), ctx('proj-42')));
 
     expect(out.id).toBe('viz-1');
@@ -113,7 +124,7 @@ describe('create_visualization tool', () => {
     const consoleError = vi.spyOn(console, 'error').mockImplementation(() => {});
     vi.mocked(createVisualization).mockRejectedValue(new Error('boom'));
 
-    const { result } = renderHook(() => useProspector());
+    const { result } = renderHook(() => useProspector(), { wrapper });
     const out = JSON.parse(await result.current.executeToolCall(call(), ctx('proj-42')));
 
     expect(out.error).toContain('boom');
@@ -136,7 +147,7 @@ describe('create_dashboard tool', () => {
   });
 
   it('adds the dashboard to the active project', async () => {
-    const { result } = renderHook(() => useProspector());
+    const { result } = renderHook(() => useProspector(), { wrapper });
     const out = JSON.parse(await result.current.executeToolCall(dashCall(), ctx('proj-42')));
 
     expect(addDashboard).toHaveBeenCalledWith('proj-42', 'dash-1');
@@ -144,7 +155,7 @@ describe('create_dashboard tool', () => {
   });
 
   it('creates the dashboard without a project when there is no active project', async () => {
-    const { result } = renderHook(() => useProspector());
+    const { result } = renderHook(() => useProspector(), { wrapper });
     const out = JSON.parse(await result.current.executeToolCall(dashCall(), ctx()));
 
     expect(createDashboard).toHaveBeenCalledOnce();
@@ -171,13 +182,13 @@ describe('get_project_docs tool', () => {
   });
 
   it('lists page titles when given no title', async () => {
-    const { result } = renderHook(() => useProspector());
+    const { result } = renderHook(() => useProspector(), { wrapper });
     const out = JSON.parse(await result.current.executeToolCall(docsCall(), ctx('proj-42')));
     expect(out.pages.map((p: { title: string }) => p.title)).toEqual(['Runbook', 'Glossary']);
   });
 
   it('returns the full content of a named page', async () => {
-    const { result } = renderHook(() => useProspector());
+    const { result } = renderHook(() => useProspector(), { wrapper });
     const out = JSON.parse(
       await result.current.executeToolCall(docsCall('Runbook'), ctx('proj-42')));
     expect(out.title).toBe('Runbook');
@@ -185,14 +196,14 @@ describe('get_project_docs tool', () => {
   });
 
   it('reports a missing page rather than failing silently', async () => {
-    const { result } = renderHook(() => useProspector());
+    const { result } = renderHook(() => useProspector(), { wrapper });
     const out = JSON.parse(
       await result.current.executeToolCall(docsCall('Nope'), ctx('proj-42')));
     expect(out.error).toContain('Nope');
   });
 
   it('requires an active project', async () => {
-    const { result } = renderHook(() => useProspector());
+    const { result } = renderHook(() => useProspector(), { wrapper });
     const out = JSON.parse(await result.current.executeToolCall(docsCall(), ctx()));
     expect(out.error).toBe('No active project — get_project_docs is only available inside a project.');
     expect(out.error).not.toContain('Unknown tool');
@@ -231,7 +242,7 @@ describe('tool calls that take no arguments', () => {
   });
 
   it('assembles {} rather than a blank string when no argument deltas arrive', async () => {
-    const { result } = renderHook(() => useProspector());
+    const { result } = renderHook(() => useProspector(), { wrapper });
     result.current.sendMessage('what docs exist?', ctx('proj-42'));
 
     await waitFor(() => expect(streamChat).toHaveBeenCalledTimes(2));
@@ -242,7 +253,7 @@ describe('tool calls that take no arguments', () => {
   });
 
   it('runs the tool instead of failing to parse blank arguments', async () => {
-    const { result } = renderHook(() => useProspector());
+    const { result } = renderHook(() => useProspector(), { wrapper });
     result.current.sendMessage('what docs exist?', ctx('proj-42'));
 
     await waitFor(() => expect(streamChat).toHaveBeenCalledTimes(2));
@@ -282,7 +293,7 @@ describe('execute_sql honours the server sendDataToAi setting', () => {
   /** Waits for the hook's on-mount status fetch to land in its ref. */
   const renderWithStatus = async (sendDataToAi: boolean) => {
     vi.mocked(getAiStatus).mockResolvedValue(status(sendDataToAi) as never);
-    const rendered = renderHook(() => useProspector());
+    const rendered = renderHook(() => useProspector(), { wrapper });
     await waitFor(() => expect(getAiStatus).toHaveBeenCalled());
     return rendered;
   };
@@ -315,7 +326,7 @@ describe('execute_sql honours the server sendDataToAi setting', () => {
   /** A privacy setting that cannot be read must fail closed, not open. */
   it('withholds sample rows when the status fetch fails', async () => {
     vi.mocked(getAiStatus).mockRejectedValue(new Error('403'));
-    const { result } = renderHook(() => useProspector());
+    const { result } = renderHook(() => useProspector(), { wrapper });
     await waitFor(() => expect(getAiStatus).toHaveBeenCalled());
     const out = JSON.parse(await result.current.executeToolCall(sqlCall(), ctx()));
     expect(out.rows).toBeUndefined();
@@ -399,7 +410,7 @@ describe('per-project chat persistence', () => {
   it('loads existing history for the project on mount', () => {
     localStorage.setItem('prospector_chat_p1',
       JSON.stringify([{ role: 'user', content: 'hi' }]));
-    const { result } = renderHook(() => useProspector(undefined, undefined, undefined, 'prospector_chat_p1'));
+    const { result } = renderHook(() => useProspector(undefined, undefined, undefined, 'prospector_chat_p1'), { wrapper });
     expect(result.current.messages).toEqual([{ role: 'user', content: 'hi' }]);
   });
 
@@ -408,7 +419,7 @@ describe('per-project chat persistence', () => {
     localStorage.setItem('prospector_chat_p2', JSON.stringify([{ role: 'user', content: 'in p2' }]));
     const { result, rerender } = renderHook(
       ({ key }) => useProspector(undefined, undefined, undefined, key),
-      { initialProps: { key: 'prospector_chat_p1' } },
+      { initialProps: { key: 'prospector_chat_p1' }, wrapper },
     );
     expect(result.current.messages[0].content).toBe('in p1');
     rerender({ key: 'prospector_chat_p2' });
@@ -416,7 +427,7 @@ describe('per-project chat persistence', () => {
   });
 
   it('does not touch storage when no storageKey is given', () => {
-    const { result } = renderHook(() => useProspector());
+    const { result } = renderHook(() => useProspector(), { wrapper });
     expect(result.current.messages).toEqual([]);
     expect(localStorage.length).toBe(0);
   });
@@ -427,7 +438,7 @@ describe('per-project chat persistence', () => {
       JSON.stringify([{ role: 'user', content: 'about tab a' }]));
     const { result, rerender } = renderHook(
       ({ key }) => useProspector(undefined, undefined, undefined, key),
-      { initialProps: { key: prospectorChatKey('p1', 'tab-a')! } },
+      { initialProps: { key: prospectorChatKey('p1', 'tab-a')! }, wrapper },
     );
     expect(result.current.messages[0].content).toBe('about tab a');
 
@@ -440,7 +451,7 @@ describe('per-project chat persistence', () => {
       JSON.stringify([{ role: 'user', content: 'about tab a' }]));
     const { result, rerender } = renderHook(
       ({ key }) => useProspector(undefined, undefined, undefined, key),
-      { initialProps: { key: prospectorChatKey('p1', 'tab-a')! } },
+      { initialProps: { key: prospectorChatKey('p1', 'tab-a')! }, wrapper },
     );
     rerender({ key: prospectorChatKey('p1', 'tab-b')! });
     rerender({ key: prospectorChatKey('p1', 'tab-a')! });
