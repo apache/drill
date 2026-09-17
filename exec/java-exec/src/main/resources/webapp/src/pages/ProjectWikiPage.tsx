@@ -98,6 +98,28 @@ export default function ProjectWikiPage() {
     [project?.wikiPages],
   );
 
+  /** Root-level pages first, then each folder in alphabetical order. */
+  const pageGroups = useMemo(() => {
+    const root: WikiPage[] = [];
+    const folders = new Map<string, WikiPage[]>();
+    for (const page of sortedPages) {
+      if (!page.folder) {
+        root.push(page);
+        continue;
+      }
+      const existing = folders.get(page.folder);
+      if (existing) {
+        existing.push(page);
+      } else {
+        folders.set(page.folder, [page]);
+      }
+    }
+    return {
+      root,
+      folders: [...folders.entries()].sort(([a], [b]) => a.localeCompare(b)),
+    };
+  }, [sortedPages]);
+
   const selectedPage = useMemo<WikiPage | null>(() => {
     if (pageId) {
       return sortedPages.find((p) => p.id === pageId) || null;
@@ -280,6 +302,23 @@ ${dashDesc}`;
   );
   usePageChrome({ toolbarActions });
 
+  const renderPageItem = (page: WikiPage) => {
+    const selected = selectedPage?.id === page.id;
+    return (
+      <li
+        key={page.id}
+        className={`wiki-pagelist-item${selected ? ' is-selected' : ''}`}
+        onClick={() => navigate(`/projects/${projectId}/wiki/${page.id}`)}
+      >
+        <div className="wiki-pagelist-item-title">{page.title}</div>
+        <div className="wiki-pagelist-item-preview">
+          {previewFromMarkdown(page.content) || <em>No content</em>}
+        </div>
+        <div className="wiki-pagelist-item-meta">{formatRelative(page.updatedAt)}</div>
+      </li>
+    );
+  };
+
   return (
     <div className="page-wiki">
       {/* Pages list — Notes-style middle column */}
@@ -322,24 +361,21 @@ ${dashDesc}`;
               </p>
             </div>
           ) : (
-            <ul className="wiki-pagelist-items" role="list">
-              {sortedPages.map((page) => {
-                const selected = selectedPage?.id === page.id;
-                return (
-                  <li
-                    key={page.id}
-                    className={`wiki-pagelist-item${selected ? ' is-selected' : ''}`}
-                    onClick={() => navigate(`/projects/${projectId}/wiki/${page.id}`)}
-                  >
-                    <div className="wiki-pagelist-item-title">{page.title}</div>
-                    <div className="wiki-pagelist-item-preview">
-                      {previewFromMarkdown(page.content) || <em>No content</em>}
-                    </div>
-                    <div className="wiki-pagelist-item-meta">{formatRelative(page.updatedAt)}</div>
-                  </li>
-                );
-              })}
-            </ul>
+            <>
+              {pageGroups.root.length > 0 && (
+                <ul className="wiki-pagelist-items" role="list">
+                  {pageGroups.root.map(renderPageItem)}
+                </ul>
+              )}
+              {pageGroups.folders.map(([folder, pages]) => (
+                <section key={folder} className="wiki-pagelist-group">
+                  <h3 className="wiki-pagelist-group-title">{folder}</h3>
+                  <ul className="wiki-pagelist-items" role="list">
+                    {pages.map(renderPageItem)}
+                  </ul>
+                </section>
+              ))}
+            </>
           )}
         </div>
       </aside>
