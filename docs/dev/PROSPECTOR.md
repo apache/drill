@@ -99,6 +99,7 @@ Prospector has access to the following tools:
 | `create_visualization` | Create chart visualizations |
 | `create_dashboard` | Create dashboards |
 | `save_query` | Save SQL queries |
+| `save_report` | Save a written report to the project wiki, under the Reports folder |
 | `get_available_functions` | Look up Drill SQL functions by name or description, with signatures |
 
 #### Conversations are per tab
