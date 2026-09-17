@@ -21,12 +21,19 @@ import { Button, Tooltip } from 'antd';
 import { UserOutlined, RobotOutlined, PlusSquareOutlined } from '@ant-design/icons';
 import type { ChatMessage } from '../../types/ai';
 import ToolCallDisplay from './ToolCallDisplay';
+import { looksLikeReport } from '../../utils/report';
 
 interface ChatMessageBubbleProps {
   message: ChatMessage;
   toolResults: ChatMessage[];
   isStreaming?: boolean;
   onInsertCell?: (code: string) => void;
+  /** Offer to save this message as a report. Omitted when saving is unavailable. */
+  onSaveReport?: (content: string) => void;
+  /** Whether the report-save suggestion for this message was already dismissed. */
+  dismissed?: boolean;
+  /** Called when the user dismisses the report-save suggestion for this message. */
+  onDismissReport?: () => void;
 }
 
 export default function ChatMessageBubble({
@@ -34,6 +41,9 @@ export default function ChatMessageBubble({
   toolResults,
   isStreaming,
   onInsertCell,
+  onSaveReport,
+  dismissed,
+  onDismissReport,
 }: ChatMessageBubbleProps) {
   const isUser = message.role === 'user';
   const isError = message.content?.startsWith('Error:');
@@ -100,6 +110,18 @@ export default function ChatMessageBubble({
           </div>
         )}
         {isStreaming && <span className="prospector-cursor" />}
+        {!isUser && !isStreaming && !isError && onSaveReport && message.content
+          && looksLikeReport(message.content) && !dismissed && (
+          <div className="prospector-report-suggestion">
+            <span>This looks like a report.</span>
+            <Button type="link" size="small" onClick={() => onSaveReport(message.content as string)}>
+              Save to project
+            </Button>
+            <Button type="text" size="small" onClick={onDismissReport}>
+              Dismiss
+            </Button>
+          </div>
+        )}
         {message.toolCalls && message.toolCalls.length > 0 && (
           <ToolCallDisplay
             toolCalls={message.toolCalls}
