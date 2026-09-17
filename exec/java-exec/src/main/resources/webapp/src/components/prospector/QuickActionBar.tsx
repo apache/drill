@@ -24,10 +24,12 @@ import {
   ExperimentOutlined,
   LineChartOutlined,
   ThunderboltOutlined,
+  FileTextOutlined,
 } from '@ant-design/icons';
+import type { AiFeature } from '../../constants/aiFeatures';
 
 interface QuickActionBarProps {
-  onAction: (prompt: string) => void;
+  onAction: (prompt: string, feature?: AiFeature) => void;
   hasError: boolean;
   hasResults: boolean;
   hasSql: boolean;
@@ -176,6 +178,23 @@ export default function QuickActionBar({
             Suggest Chart
           </Button>
         )}
+        <Button
+          size="small"
+          icon={<FileTextOutlined />}
+          onClick={() => onAction(
+            'Write a standalone report covering everything analyzed in this conversation. '
+            + 'Start with a markdown H1 title, then an executive summary a non-specialist can '
+            + 'follow. Follow it with the key entities involved, a timeline of what happened, '
+            + 'the findings as markdown tables where the data is tabular, any indicators worth '
+            + 'recording, and concrete recommendations. Base every claim on query results from '
+            + 'this conversation and say so plainly where the evidence is thin. The report must '
+            + 'read on its own, so do not refer to "the above" or to our conversation.',
+            'report_generation',
+          )}
+          disabled={disabled}
+        >
+          Generate Report
+        </Button>
       </Space>
     </div>
   );

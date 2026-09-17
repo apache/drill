@@ -24,6 +24,7 @@ import QuickActionBar from './QuickActionBar';
 import SaveReportModal from './SaveReportModal';
 import type { UseProspectorReturn } from '../../hooks/useProspector';
 import type { ChatContext } from '../../types/ai';
+import type { AiFeature } from '../../constants/aiFeatures';
 
 interface ProspectorPanelProps {
   prospector: UseProspectorReturn;
@@ -58,8 +59,8 @@ export default function ProspectorPanel({
   );
 
   const handleQuickAction = useCallback(
-    (prompt: string) => {
-      sendMessage(prompt, context);
+    (prompt: string, feature?: AiFeature) => {
+      sendMessage(prompt, feature ? { ...context, feature } : context);
     },
     [sendMessage, context],
   );
