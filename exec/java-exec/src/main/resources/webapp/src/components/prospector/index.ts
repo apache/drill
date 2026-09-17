@@ -17,3 +17,4 @@
  */
 export { default as ProspectorPanel } from './ProspectorPanel';
 export { default as ProspectorSettingsModal } from './ProspectorSettingsModal';
+export { default as SaveReportModal } from './SaveReportModal';

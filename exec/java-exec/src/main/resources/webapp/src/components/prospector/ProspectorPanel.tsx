@@ -15,12 +15,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import { useCallback } from 'react';
+import { useCallback, useState } from 'react';
 import { Button, Tooltip, Tag } from 'antd';
 import { DeleteOutlined, RobotOutlined, ExperimentOutlined } from '@ant-design/icons';
 import ChatMessageList from './ChatMessageList';
 import ChatInput from './ChatInput';
 import QuickActionBar from './QuickActionBar';
+import SaveReportModal from './SaveReportModal';
 import type { UseProspectorReturn } from '../../hooks/useProspector';
 import type { ChatContext } from '../../types/ai';
 
@@ -45,6 +46,8 @@ export default function ProspectorPanel({
     stopStreaming,
     clearChat,
   } = prospector;
+
+  const [reportContent, setReportContent] = useState<string | null>(null);
 
   const handleSend = useCallback(
     (text: string) => {
@@ -135,6 +138,13 @@ export default function ProspectorPanel({
           }
         />
       </div>
+      <SaveReportModal
+        open={reportContent !== null}
+        content={reportContent ?? ''}
+        messages={messages}
+        defaultProjectId={context.projectId}
+        onClose={() => setReportContent(null)}
+      />
     </div>
   );
 }
