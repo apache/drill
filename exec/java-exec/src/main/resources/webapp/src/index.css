@@ -8531,3 +8531,43 @@ html.dark .ant-btn:not(.ant-btn-primary):not(.ant-btn-text):not(.ant-btn-link):n
   font-size: 10px;
   color: var(--color-text-secondary);
 }
+
+@media print {
+  /* Print the page body alone: no shell, no chrome, no controls. */
+  body * {
+    visibility: hidden;
+  }
+
+  .wiki-printable,
+  .wiki-printable * {
+    visibility: visible;
+  }
+
+  .wiki-printable {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 100%;
+    padding: 0;
+    overflow: visible;
+  }
+
+  /* Keep a table, a code block or a heading from being split across a page. */
+  .wiki-printable table,
+  .wiki-printable pre,
+  .wiki-printable blockquote {
+    break-inside: avoid;
+  }
+
+  .wiki-printable h1,
+  .wiki-printable h2,
+  .wiki-printable h3 {
+    break-after: avoid;
+  }
+
+  .wiki-printable a::after {
+    content: ' (' attr(href) ')';
+    font-size: 0.85em;
+    word-break: break-all;
+  }
+}

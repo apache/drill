@@ -41,6 +41,10 @@ Project documentation in Markdown. Two-pane layout: page list on the left, edito
 
 Breadcrumb: `Projects > <Project Name> > Wiki[ > <Page>]`. Toolbar: New page, Generate with AI (when AI enabled), Edit (when selected), Delete (when selected).
 
+## PDF download
+
+A "Download as PDF" button sits next to "New page" in the page list header, enabled once a page is selected. It calls `window.print()` through the browser's own print dialog rather than rendering a canvas screenshot, so the saved PDF has real, selectable text, correct page breaks and correct emoji. A print stylesheet (`@media print` rules in `src/index.css`, alongside the `.wiki-*` rules) hides the sidebar, toolbar and everything else on the page and prints only the selected page's `.wiki-printable` article. `document.title` is temporarily set to the page title while printing, since browsers use it as the default filename for "Save as PDF".
+
 ## Quirks
 
 - No cross-project equivalent — wiki content is always project-scoped.
