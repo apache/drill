@@ -8544,6 +8544,21 @@ html.dark .ant-btn:not(.ant-btn-primary):not(.ant-btn-text):not(.ant-btn-link):n
 }
 
 @media print {
+  /* Release the app shell's fixed-height, overflow-hidden containers, or the
+     printable content gets clipped to one screen's worth and the rest of a
+     multi-page report never reaches the printer. */
+  html,
+  body,
+  #root,
+  .shell-root,
+  .shell-main,
+  .shell-content-wrap,
+  .page-wiki {
+    height: auto !important;
+    max-height: none !important;
+    overflow: visible !important;
+  }
+
   /* Print the page body alone: no shell, no chrome, no controls. */
   body * {
     visibility: hidden;

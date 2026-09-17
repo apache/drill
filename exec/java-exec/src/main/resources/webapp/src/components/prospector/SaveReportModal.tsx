@@ -17,7 +17,7 @@
  */
 import { useEffect, useState } from 'react';
 import { Modal, Form, Input, Select, Radio, Spin, message } from 'antd';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { getProjects, createWikiPage, updateWikiPage, getProject } from '../../api/projects';
 import { buildReportMarkdown, reportTitle, REPORTS_FOLDER } from '../../utils/report';
 import type { ChatMessage } from '../../types/ai';
@@ -46,6 +46,7 @@ export default function SaveReportModal({
   const [title, setTitle] = useState('');
   const [mode, setMode] = useState<'new' | 'update'>('new');
   const [saving, setSaving] = useState(false);
+  const queryClient = useQueryClient();
 
   const { data: projects } = useQuery({
     queryKey: ['projects'],
@@ -109,6 +110,11 @@ export default function SaveReportModal({
         });
         message.success('Report saved');
       }
+      // The collision check above reads these cached queries; without invalidating
+      // them, a second save within the staleTime window sees pre-save data and
+      // misses a title that now exists, silently creating a duplicate.
+      await queryClient.invalidateQueries({ queryKey: ['project', projectId] });
+      await queryClient.invalidateQueries({ queryKey: ['projects'] });
       onClose();
     } catch (e) {
       // Leave the modal open with the chosen project and typed title intact

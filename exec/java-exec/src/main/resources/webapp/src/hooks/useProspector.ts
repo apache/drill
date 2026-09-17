@@ -17,6 +17,7 @@
  */
 import { useState, useCallback, useRef, useEffect } from 'react';
 import { message } from 'antd';
+import { useQueryClient } from '@tanstack/react-query';
 import { streamChat } from '../api/ai';
 import { useSendDataToAi } from './useSendDataToAi';
 import { executeQuery } from '../api/queries';
@@ -232,6 +233,9 @@ export interface UseProspectorReturn {
   executeToolCall: (toolCall: ToolCall, context?: ChatContext) => Promise<string>;
   /** The localStorage key this conversation is persisted under, or null when unset. */
   storageKey: string | null;
+  /** The tab this conversation belongs to, or null when unset. Recorded as provenance
+   *  when a report from this conversation is saved. */
+  tabId: string | null;
 }
 
 /**
@@ -318,6 +322,7 @@ export function useProspector(
   // while loading or on error; see its doc comment for the full rationale. The ref form
   // is used below so executeToolCall's dependency array doesn't churn on every fetch.
   const { sendDataToAiRef } = useSendDataToAi();
+  const queryClient = useQueryClient();
 
   const stopStreaming = useCallback(() => {
     if (abortRef.current) {
@@ -559,6 +564,11 @@ export function useProspector(
             content: markdown,
             folder: REPORTS_FOLDER,
           });
+          // Same collision-check cache that SaveReportModal reads; without this a
+          // second save_report call within the staleTime window would not see this
+          // page either.
+          await queryClient.invalidateQueries({ queryKey: ['project', context.projectId] });
+          await queryClient.invalidateQueries({ queryKey: ['projects'] });
           return JSON.stringify({
             id: page.id,
             title: page.title,
@@ -627,7 +637,7 @@ export function useProspector(
       console.error(`Tool "${toolCall.name}" failed`, err);
       return JSON.stringify({ error: msg });
     }
-  }, [onSqlGenerated, onVisualizationCreated, sendDataToAiRef]);
+  }, [onSqlGenerated, onVisualizationCreated, sendDataToAiRef, tabId, queryClient]);
 
   const doStreamRound = useCallback((
     allMessages: ChatMessage[],
@@ -784,5 +794,6 @@ export function useProspector(
     clearChat,
     executeToolCall,
     storageKey: storageKey ?? null,
+    tabId: tabId ?? null,
   };
 }
