@@ -191,10 +191,10 @@ are pure functions in `utils/report.ts`:
 - The query appendix de-duplicates repeated statements and omits itself entirely
   when the conversation ran no queries.
 
-Backend:
-
-- `ProjectResources` round-trips a wiki page with a folder, and a page saved
-  without one reads back with a null folder.
+Backend: `ProjectResources` has no test class today, and the `folder` field is a
+Jackson passthrough with no logic in it. It is covered by the TypeScript types
+either side and by saving a report and reloading the project, rather than by
+standing up a REST test harness for one nullable string.
 
 The print stylesheet and `window.print()` are verified by hand; asserting on
 browser print output is not worth the harness.
