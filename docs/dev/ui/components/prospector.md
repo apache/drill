@@ -94,7 +94,17 @@ Inside, it manages:
 - An accumulating `contentBuffer` and a `tool calls Map`.
 - A `doStreamRound()` function that calls `streamChat`, accumulates deltas, executes any tool calls when `finish_reason === 'tool_calls'`, and recurses up to `maxToolRounds`.
 
-Tool definitions are hardcoded in `TOOL_DEFINITIONS` at the top of the file: `execute_sql`, `list_schemas`, `get_schema_info`, `create_visualization`, `create_dashboard`, `save_query`, `get_available_functions`, `get_project_docs`. Each maps to a backend or local API call invoked by `executeToolCall()`.
+Tool definitions are hardcoded in `TOOL_DEFINITIONS` at the top of the file: `execute_sql`, `list_schemas`, `get_schema_info`, `create_visualization`, `create_dashboard`, `save_query`, `save_report`, `get_available_functions`, `get_project_docs`. Each maps to a backend or local API call invoked by `executeToolCall()`.
+
+### Reports
+
+Three separate paths end at the same wiki page, and all three build it with `buildReportMarkdown` (`src/utils/report.ts`): the assistant's own text, an appendix of the distinct `execute_sql` statements run in the conversation, and a provenance footer (model/provider when known, timestamp, conversation id).
+
+1. **Quick action.** The "Generate Report" button in `QuickActionBar` sends a fixed prompt asking for a standalone, self-contained report (H1 title, executive summary, findings, recommendations) and tags the resulting user message `report_generation`. This is the only step that shapes what Prospector writes; the other two paths just decide whether to keep it.
+2. **The chip.** `ChatMessageBubble` calls `looksLikeReport(message.content)` (two or more markdown headings, plus a table or 1500+ characters) on every non-streaming assistant message. A hit shows a "This looks like a report" chip with **Save to project** and **Dismiss**. Save opens `SaveReportModal`, which lets the user pick a project, edit the title, and choose between a new page or overwriting an existing same-titled page under the `Reports` wiki folder (`REPORTS_FOLDER` in `report.ts`). Dismiss is remembered per message via `messageKey()`, a content hash rather than list index, because the server-merged conversation array gets replaced wholesale on mount and positions would then point at different messages.
+3. **The tool.** `save_report` lets Prospector save a report itself when the user agrees in conversation, without the modal's project picker. The backend system prompt (`ProspectorResources.buildSystemPrompt`) instructs it to offer after writing a full report and to call the tool only once the user agrees. `executeToolCall`'s `save_report` case errors if `context.projectId` is unset (reports need a project), otherwise builds the markdown from `messagesRef.current` (a ref mirroring `messages`, so the callback doesn't have to depend on chat state and re-create itself every streamed token) and creates the page via `createWikiPage(projectId, { title, content, folder: REPORTS_FOLDER })`.
+
+Reports land as ordinary wiki pages under the `Reports` folder in the project tree (`ProjectWikiPage.tsx`), so they inherit whatever that page already does: markdown rendering, and a **Download as PDF** button that calls `window.print()` against a print-styled view (`wiki-printable` in `index.css`) for a selectable-text PDF via the browser's print dialog.
 
 ### get_project_docs
 

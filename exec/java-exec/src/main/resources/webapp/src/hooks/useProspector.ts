@@ -24,9 +24,10 @@ import { getSchemas, getTables, getColumns, searchFunctions } from '../api/metad
 import { createVisualization } from '../api/visualizations';
 import { getConversation, putConversation } from '../api/tabs';
 import type { StoredChatMessage } from '../api/tabs';
-import { addVisualization, addDashboard, getProject } from '../api/projects';
+import { addVisualization, addDashboard, getProject, createWikiPage } from '../api/projects';
 import { createDashboard } from '../api/dashboards';
 import { createSavedQuery } from '../api/savedQueries';
+import { buildReportMarkdown, REPORTS_FOLDER } from '../utils/report';
 import type {
   ChatMessage,
   ToolCall,
@@ -138,6 +139,19 @@ export const TOOL_DEFINITIONS: ToolDefinition[] = [
         sql: { type: 'string' },
       },
       required: ['name', 'sql'],
+    },
+  },
+  {
+    name: 'save_report',
+    description: 'Save a report you have written into the current project\'s wiki, under the '
+      + 'Reports folder. Only call this after the user has agreed to save it.',
+    parameters: {
+      type: 'object',
+      properties: {
+        title: { type: 'string', description: 'Title for the report' },
+        content: { type: 'string', description: 'The full report in markdown' },
+      },
+      required: ['title', 'content'],
     },
   },
   {
@@ -291,6 +305,10 @@ export function useProspector(
   const [usage, setUsage] = useState<UsageEvent | null>(null);
   const abortRef = useRef<AbortController | null>(null);
   const toolRoundsRef = useRef(0);
+
+  // Read inside executeToolCall, which must not re-create itself on every token.
+  const messagesRef = useRef<ChatMessage[]>(messages);
+  messagesRef.current = messages;
 
   // The sendDataToAi privacy setting, read here rather than accepted as a parameter so
   // that every caller of this hook is gated by construction — the previous design had
@@ -524,6 +542,29 @@ export function useProspector(
             sql: args.sql,
           });
           return JSON.stringify({ id: saved.id, name: saved.name, message: 'Query saved successfully' });
+        }
+
+        case 'save_report': {
+          if (!context?.projectId) {
+            return JSON.stringify({ error: 'No active project — a report can only be saved '
+              + 'inside a project. Ask the user to open one.' });
+          }
+          const markdown = buildReportMarkdown(
+            args.content as string,
+            messagesRef.current,
+            { generatedAt: Date.now(), conversationId: tabId ?? undefined }
+          );
+          const page = await createWikiPage(context.projectId, {
+            title: (args.title as string).trim(),
+            content: markdown,
+            folder: REPORTS_FOLDER,
+          });
+          return JSON.stringify({
+            id: page.id,
+            title: page.title,
+            message: `Report saved to the project wiki under ${REPORTS_FOLDER}.`,
+            viewPath: `/projects/${context.projectId}/wiki/${page.id}`,
+          });
         }
 
         case 'get_available_functions': {
