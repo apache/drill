@@ -357,10 +357,13 @@ export default function SqlLabPage({ datasetFilter, headerContent, projectId, sa
   // tab — acceptable, the model streams these one at a time in practice.
   const activeTabRef = useRef(activeTab);
   activeTabRef.current = activeTab;
-  const handleProspectorSql = useCallback((newSql: string) => {
+  const handleProspectorSql = useCallback((newSql: string, title?: string) => {
     if (activeTabRef.current?.sql?.trim()) {
-      pendingQueryRef.current = { sql: newSql, name: 'Query' };
-      dispatch(addTab('Query'));
+      // The model names the tab after what the query answers. It may not supply
+      // one, in which case the tab keeps the generic name it has always had.
+      const name = title || 'Query';
+      pendingQueryRef.current = { sql: newSql, name };
+      dispatch(addTab(name));
     } else {
       updateSql(newSql);
     }

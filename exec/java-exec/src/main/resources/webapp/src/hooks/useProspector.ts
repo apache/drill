@@ -29,6 +29,7 @@ import { addVisualization, addDashboard, getProject, createWikiPage } from '../a
 import { createDashboard } from '../api/dashboards';
 import { createSavedQuery } from '../api/savedQueries';
 import { buildReportMarkdown, REPORTS_FOLDER } from '../utils/report';
+import { sanitizeTabTitle } from '../utils/sql';
 import type {
   ChatMessage,
   ToolCall,
@@ -52,6 +53,13 @@ export const TOOL_DEFINITIONS: ToolDefinition[] = [
       properties: {
         sql: { type: 'string', description: 'The SQL query to execute' },
         limit: { type: 'number', description: 'Max rows (default 100)' },
+        title: {
+          type: 'string',
+          description: 'A 2 to 5 word title naming what this query answers, in the same '
+            + 'descriptive spirit as the comment you put at the top of the SQL. Used as the '
+            + 'name of the query tab. For example "Top Talkers by Bytes" or '
+            + '"Failed Logins by Host". Do not restate the table name alone.',
+        },
       },
       required: ['sql'],
     },
@@ -291,7 +299,7 @@ export function conversationLengthFor(
 }
 
 export function useProspector(
-  onSqlGenerated?: (sql: string) => void,
+  onSqlGenerated?: (sql: string, title?: string) => void,
   onVisualizationCreated?: (id: string, name: string) => void,
   maxToolRounds?: number,
   // When set (e.g. per project), chat history is loaded from and saved to
@@ -438,7 +446,7 @@ export function useProspector(
           });
           // Also set the SQL in the editor
           if (onSqlGenerated && args.sql) {
-            onSqlGenerated(args.sql);
+            onSqlGenerated(args.sql as string, sanitizeTabTitle(args.title));
           }
           const rowCount = result.rows?.length ?? 0;
           const summary = {
