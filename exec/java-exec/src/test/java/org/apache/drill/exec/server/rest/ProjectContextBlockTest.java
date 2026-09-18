@@ -88,7 +88,7 @@ public class ProjectContextBlockTest {
   @Test
   public void testListsWikiTitlesButNotContent() {
     ProjectResources.WikiPage page = new ProjectResources.WikiPage(
-        "w1", "Runbook", "SECRET_BODY_TEXT", 0, 0L, 0L);
+        "w1", "Runbook", "SECRET_BODY_TEXT", 0, null, 0L, 0L);
     String block = ProspectorResources.buildProjectBlock(
         project("Retail", null, null, List.of(page)), List.of());
     assertTrue(block.contains("Runbook"));
@@ -121,7 +121,7 @@ public class ProjectContextBlockTest {
   @Test
   public void testNullNamesNeverRenderAsTheLiteralNull() {
     ProjectResources.WikiPage untitledPage =
-        new ProjectResources.WikiPage("w1", null, "body", 0, 0L, 0L);
+        new ProjectResources.WikiPage("w1", null, "body", 0, null, 0L, 0L);
     String block = ProspectorResources.buildProjectBlock(
         project(null, "Store sales analytics", null, List.of(untitledPage)),
         List.of(savedQuery(null, null, "SELECT 1")));
@@ -184,7 +184,7 @@ public class ProjectContextBlockTest {
   @Test
   public void testLoadedProjectReachesSystemPrompt() {
     ProjectResources.WikiPage wikiPage = new ProjectResources.WikiPage(
-        "w1", "Runbook", "SECRET_BODY_TEXT", 0, 0L, 0L);
+        "w1", "Runbook", "SECRET_BODY_TEXT", 0, null, 0L, 0L);
     ProjectResources.Project fixtureProject = project("Retail", "Store sales analytics",
         List.of("sales", "retail"), List.of(wikiPage));
     fixtureProject.setSavedQueryIds(List.of("q1"));
@@ -235,7 +235,7 @@ public class ProjectContextBlockTest {
       List<String> sharedWith, long deletedAt, List<String> savedQueryIds) {
     return new ProjectResources.Project("proj-42", "Retail", "PROJECT_SECRET_DESC",
         List.of("sales"), owner, isPublic, sharedWith, null, savedQueryIds, null, null,
-        List.of(new ProjectResources.WikiPage("w1", "Runbook", "body", 0, 0L, 0L)),
+        List.of(new ProjectResources.WikiPage("w1", "Runbook", "body", 0, null, 0L, 0L)),
         false, 0L, 0L, null, null, deletedAt);
   }
 
