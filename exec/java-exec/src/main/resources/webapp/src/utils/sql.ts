@@ -130,3 +130,28 @@ export function dynamicTableFromSql(sql: string): { schema: string; table: strin
     table: unquote(parts[parts.length - 1]),
   };
 }
+
+/** Longest tab title we will accept. Tabs are narrow, and a long name just truncates visually. */
+const MAX_TAB_TITLE = 40;
+
+/**
+ * Clean a tab title supplied by the model.
+ *
+ * The value arrives as a tool-call argument, so it is untrusted: it can be
+ * absent, a non-string, empty, wrapped in quotes, or a whole paragraph with
+ * newlines. Returns undefined when there is nothing usable, which leaves the
+ * caller on its existing default name.
+ */
+export function sanitizeTabTitle(raw: unknown): string | undefined {
+  if (typeof raw !== 'string') {
+    return undefined;
+  }
+  const cleaned = raw
+    .replace(/\s+/g, ' ')
+    .replace(/^["'`]+|["'`]+$/g, '')
+    .trim();
+  if (!cleaned) {
+    return undefined;
+  }
+  return Array.from(cleaned).slice(0, MAX_TAB_TITLE).join('').trim();
+}

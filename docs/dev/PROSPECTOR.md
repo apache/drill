@@ -94,7 +94,7 @@ Prospector has access to the following tools:
 
 | Tool | Description |
 |------|-------------|
-| `execute_sql` | Execute SQL queries against Drill |
+| `execute_sql` | Execute SQL queries against Drill. Also carries a short `title` that names the query tab it opens |
 | `get_schema_info` | Browse schemas, tables, and columns |
 | `create_visualization` | Create chart visualizations |
 | `create_dashboard` | Create dashboards |

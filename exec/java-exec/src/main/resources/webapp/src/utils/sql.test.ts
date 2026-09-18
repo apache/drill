@@ -16,7 +16,7 @@
  * limitations under the License.
  */
 import { describe, expect, it } from 'vitest';
-import { buildViewDdl, isCreatableAsView, isValidViewName, formatSchema, dynamicTableFromSql } from './sql';
+import { buildViewDdl, isCreatableAsView, isValidViewName, formatSchema, dynamicTableFromSql, sanitizeTabTitle } from './sql';
 
 describe('formatSchema', () => {
   it('leaves a bare plugin unquoted', () => {
@@ -173,5 +173,37 @@ describe('dynamicTableFromSql', () => {
 
   it('rejects non-SELECT statements', () => {
     expect(dynamicTableFromSql('DESCRIBE splunk.main')).toBeNull();
+  });
+});
+
+describe('sanitizeTabTitle', () => {
+  it('keeps a short descriptive title', () => {
+    expect(sanitizeTabTitle('Top Talkers by Bytes')).toBe('Top Talkers by Bytes');
+  });
+
+  it('collapses newlines and runs of whitespace', () => {
+    expect(sanitizeTabTitle('Failed\n\tLogins   by Host')).toBe('Failed Logins by Host');
+  });
+
+  it('strips surrounding quotes the model may add', () => {
+    expect(sanitizeTabTitle('"Session Duration"')).toBe('Session Duration');
+  });
+
+  it('truncates a title that is really a sentence', () => {
+    const out = sanitizeTabTitle('a'.repeat(80)) as string;
+    expect(out).toHaveLength(40);
+  });
+
+  it('does not split an emoji at the length cap', () => {
+    const out = sanitizeTabTitle(`${'a'.repeat(39)}🚨`) as string;
+    expect([...out]).toHaveLength(40);
+    expect(out.endsWith('🚨')).toBe(true);
+  });
+
+  it('returns undefined for unusable values', () => {
+    expect(sanitizeTabTitle(undefined)).toBeUndefined();
+    expect(sanitizeTabTitle(42)).toBeUndefined();
+    expect(sanitizeTabTitle('   ')).toBeUndefined();
+    expect(sanitizeTabTitle('""')).toBeUndefined();
   });
 });
