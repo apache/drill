@@ -283,26 +283,6 @@ ${dashDesc}`;
   };
 
   // Page-level actions live in the unified shell toolbar
-  const toolbarActions = useMemo(
-    () => (
-      <Space size={4}>
-        {selectedPage && (
-          <>
-            <Tooltip title="Edit page">
-              <Button type="text" size="small" icon={<EditOutlined />} onClick={handleEditSelected} />
-            </Tooltip>
-            <Tooltip title="Delete page">
-              <Button type="text" size="small" icon={<DeleteOutlined />} danger onClick={handleDeleteSelected} />
-            </Tooltip>
-          </>
-        )}
-      </Space>
-    ),
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    [selectedPage?.id],
-  );
-  usePageChrome({ toolbarActions });
-
   /**
    * Print the rendered page. The browser's "Save as PDF" gives selectable text,
    * real page breaks and correct emoji, none of which a canvas screenshot does.
@@ -321,6 +301,30 @@ ${dashDesc}`;
     document.title = selectedPage.title;
     window.print();
   };
+
+  const toolbarActions = useMemo(
+    () => (
+      <Space size={4}>
+        {selectedPage && (
+          <>
+            <Tooltip title="Edit page">
+              <Button type="text" size="small" icon={<EditOutlined />} onClick={handleEditSelected} />
+            </Tooltip>
+            <Tooltip title="Download as PDF">
+              <Button type="text" size="small" icon={<FilePdfOutlined />} onClick={handlePrint} />
+            </Tooltip>
+            <Tooltip title="Delete page">
+              <Button type="text" size="small" icon={<DeleteOutlined />} danger onClick={handleDeleteSelected} />
+            </Tooltip>
+          </>
+        )}
+      </Space>
+    ),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [selectedPage?.id, selectedPage?.title],
+  );
+  usePageChrome({ toolbarActions });
+
 
   const renderPageItem = (page: WikiPage) => {
     const selected = selectedPage?.id === page.id;
@@ -357,14 +361,6 @@ ${dashDesc}`;
                 />
               </Tooltip>
             )}
-            <Tooltip title="Download as PDF">
-              <Button
-                size="small"
-                icon={<FilePdfOutlined />}
-                onClick={handlePrint}
-                disabled={!selectedPage}
-              />
-            </Tooltip>
             <Tooltip title="New page">
               <Button
                 type="primary"
