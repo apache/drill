@@ -135,23 +135,32 @@ export function dynamicTableFromSql(sql: string): { schema: string; table: strin
 const MAX_TAB_TITLE = 40;
 
 /**
+ * Emoji and their modifiers. Extended_Pictographic is the property to match on:
+ * plain \p{Emoji} also matches ASCII digits and #, which belong in a tab title.
+ */
+const EMOJI = /[\p{Extended_Pictographic}\p{Regional_Indicator}\u{FE0F}\u{200D}\u{1F3FB}-\u{1F3FF}]/gu;
+
+/**
  * Clean a tab title supplied by the model.
  *
  * The value arrives as a tool-call argument, so it is untrusted: it can be
- * absent, a non-string, empty, wrapped in quotes, or a whole paragraph with
- * newlines. Returns undefined when there is nothing usable, which leaves the
- * caller on its existing default name.
+ * absent, a non-string, empty, wrapped in quotes, decorated with emoji, or a
+ * whole paragraph with newlines. Returns undefined when there is nothing
+ * usable, which leaves the caller on its existing default name.
  */
 export function sanitizeTabTitle(raw: unknown): string | undefined {
   if (typeof raw !== 'string') {
     return undefined;
   }
+  // Emoji come out first: removing them can leave doubled spaces for the
+  // whitespace pass to collapse, and can empty the string entirely.
   const cleaned = raw
+    .replace(EMOJI, '')
     .replace(/\s+/g, ' ')
     .replace(/^["'`]+|["'`]+$/g, '')
     .trim();
   if (!cleaned) {
     return undefined;
   }
-  return Array.from(cleaned).slice(0, MAX_TAB_TITLE).join('').trim();
+  return cleaned.slice(0, MAX_TAB_TITLE).trim();
 }

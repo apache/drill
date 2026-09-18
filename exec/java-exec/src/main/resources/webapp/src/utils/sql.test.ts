@@ -194,10 +194,23 @@ describe('sanitizeTabTitle', () => {
     expect(out).toHaveLength(40);
   });
 
-  it('does not split an emoji at the length cap', () => {
-    const out = sanitizeTabTitle(`${'a'.repeat(39)}🚨`) as string;
-    expect([...out]).toHaveLength(40);
-    expect(out.endsWith('🚨')).toBe(true);
+  it('strips emoji', () => {
+    expect(sanitizeTabTitle('🚨 Failed Logins by Host')).toBe('Failed Logins by Host');
+    expect(sanitizeTabTitle('Top Talkers 📊 by Bytes')).toBe('Top Talkers by Bytes');
+  });
+
+  it('strips flags, skin tones and zero-width joined sequences', () => {
+    expect(sanitizeTabTitle('🇺🇸 Traffic by Region')).toBe('Traffic by Region');
+    expect(sanitizeTabTitle('Analyst 👍🏽 Activity')).toBe('Analyst Activity');
+    expect(sanitizeTabTitle('Team 👨‍👩‍👧 Sessions')).toBe('Team Sessions');
+  });
+
+  it('keeps digits and punctuation that are not emoji', () => {
+    expect(sanitizeTabTitle('Top 10 Hosts #1')).toBe('Top 10 Hosts #1');
+  });
+
+  it('returns undefined for a title that was only emoji', () => {
+    expect(sanitizeTabTitle('🚨📊')).toBeUndefined();
   });
 
   it('returns undefined for unusable values', () => {
