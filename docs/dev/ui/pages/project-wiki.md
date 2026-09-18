@@ -43,7 +43,7 @@ Breadcrumb: `Projects > <Project Name> > Wiki[ > <Page>]`. Toolbar: New page, Ge
 
 ## PDF download
 
-A "Download as PDF" button sits next to "New page" in the page list header, enabled once a page is selected. It calls `window.print()` through the browser's own print dialog rather than rendering a canvas screenshot, so the saved PDF has real, selectable text, correct page breaks and correct emoji. A print stylesheet (`@media print` rules in `src/index.css`, alongside the `.wiki-*` rules) hides the sidebar, toolbar and everything else on the page and prints only the selected page's `.wiki-printable` article. `document.title` is temporarily set to the page title while printing, since browsers use it as the default filename for "Save as PDF".
+A "Download as PDF" button sits in the page toolbar beside "Edit page" and "Delete page", appearing once a page is selected. It lives with the other actions that operate on the open document rather than in the page list header, which holds actions that operate on the list. It calls `window.print()` through the browser's own print dialog rather than rendering a canvas screenshot, so the saved PDF has real, selectable text, correct page breaks and correct emoji. A print stylesheet (`@media print` rules in `src/index.css`, alongside the `.wiki-*` rules) hides the sidebar, toolbar and everything else on the page and prints only the selected page's `.wiki-printable` article. `document.title` is temporarily set to the page title while printing, since browsers use it as the default filename for "Save as PDF".
 
 ## Quirks
 
