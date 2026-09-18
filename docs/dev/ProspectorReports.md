@@ -199,10 +199,14 @@ are pure functions in `utils/report.ts`:
 - The query appendix de-duplicates repeated statements and omits itself entirely
   when the conversation ran no queries.
 
-Backend: `ProjectResources` has no test class today, and the `folder` field is a
-Jackson passthrough with no logic in it. It is covered by the TypeScript types
-either side and by saving a report and reloading the project, rather than by
-standing up a REST test harness for one nullable string.
+Backend: the `folder` field is a Jackson passthrough with no logic in it, so it
+gets no dedicated assertion. It is covered by the TypeScript types either side
+and by saving a report and reloading the project.
+
+`WikiPage` is constructed positionally in `ProjectContextBlockTest`, so adding a
+field to its `@JsonCreator` constructor breaks that test's call sites. Run
+`mvn test-compile -pl exec/java-exec` when changing the record: `mvn compile`
+does not build test sources and will pass over the breakage.
 
 The print stylesheet and `window.print()` are verified by hand; asserting on
 browser print output is not worth the harness.
