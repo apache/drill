@@ -168,6 +168,7 @@ public class WindowPrule extends Prule {
           windowBase.isRows,
           windowBase.lowerBound,
           windowBase.upperBound,
+          windowBase.exclude,  // Preserve exclude clause from Calcite (CALCITE-5855)
           windowBase.orderKeys,
           newWinAggCalls
       );

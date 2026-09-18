@@ -257,7 +257,8 @@ public class TestLimit0VsRegularQueriesMetadata extends PreparedStatementTestBas
         new ExpectedColumnResult("concat_op_max_length", "CHARACTER VARYING", true, Types.MAX_VARCHAR_LENGTH, Types.MAX_VARCHAR_LENGTH, 0, false, String.class.getName()),
         new ExpectedColumnResult("concat_op_one_unknown", "CHARACTER VARYING", true, Types.MAX_VARCHAR_LENGTH, Types.MAX_VARCHAR_LENGTH, 0, false, String.class.getName()),
         new ExpectedColumnResult("concat_op_two_unknown", "CHARACTER VARYING", true, Types.MAX_VARCHAR_LENGTH, Types.MAX_VARCHAR_LENGTH, 0, false, String.class.getName()),
-        new ExpectedColumnResult("concat_op_one_constant", "CHARACTER VARYING", true, 11, 11, 0, false, String.class.getName()),
+        // Calcite 1.38 coerces string constants to match operand type, so 'a' becomes varchar(10)
+        new ExpectedColumnResult("concat_op_one_constant", "CHARACTER VARYING", true, 20, 20, 0, false, String.class.getName()),
         new ExpectedColumnResult("concat_op_two_constants", "CHARACTER VARYING", false, 2, 2, 0, false, String.class.getName()),
         new ExpectedColumnResult("concat_op_right_null", "CHARACTER VARYING", true, 20, 20, 0, false, String.class.getName()),
         new ExpectedColumnResult("concat_op_left_null", "CHARACTER VARYING", true, 20, 20, 0, false, String.class.getName()),

@@ -23,6 +23,7 @@ import org.apache.drill.test.ClusterTest;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.util.Arrays;
@@ -116,7 +117,7 @@ public class TestTimestampAddDiffFunctions extends ClusterTest {
         .baselineColumns("dateReq", "timeReq", "timestampReq", "dateOpt", "timeOpt", "timestampOpt")
         .baselineValues(
             LocalDateTime.parse("1970-01-11T00:00:01"), LocalTime.parse("00:00:03.600"), LocalDateTime.parse("2018-03-24T17:40:52.123"),
-            LocalDateTime.parse("1970-02-11T00:00"), LocalTime.parse("01:00:03.600"), LocalDateTime.parse("2019-03-23T17:40:52.123"))
+            LocalDate.parse("1970-02-11"), LocalTime.parse("01:00:03.600"), LocalDateTime.parse("2019-03-23T17:40:52.123"))
         .go();
   }
 

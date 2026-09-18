@@ -63,7 +63,16 @@ public interface RuleInstance {
     public boolean matches(RelOptRuleCall call) {
       Preconditions.checkArgument(call.rel(1) instanceof Join);
       Join join = call.rel(1);
-      return !(join.getCondition().isAlwaysTrue() || join.getCondition().isAlwaysFalse());
+      // Reject joins with trivial conditions (always true/false)
+      if (join.getCondition().isAlwaysTrue() || join.getCondition().isAlwaysFalse()) {
+        return false;
+      }
+      // Also reject cross joins (no join keys) by checking if there are any equi-join conditions
+      org.apache.calcite.rel.core.JoinInfo joinInfo = org.apache.calcite.rel.core.JoinInfo.of(join.getLeft(), join.getRight(), join.getCondition());
+      if (joinInfo.leftKeys.isEmpty() && joinInfo.rightKeys.isEmpty()) {
+        return false;
+      }
+      return true;
     }
   };
 
@@ -74,7 +83,16 @@ public interface RuleInstance {
       .as(SemiJoinRule.JoinToSemiJoinRule.JoinToSemiJoinRuleConfig.class)) {
     public boolean matches(RelOptRuleCall call) {
       Join join = call.rel(0);
-      return !(join.getCondition().isAlwaysTrue() || join.getCondition().isAlwaysFalse());
+      // Reject joins with trivial conditions (always true/false)
+      if (join.getCondition().isAlwaysTrue() || join.getCondition().isAlwaysFalse()) {
+        return false;
+      }
+      // Also reject cross joins (no join keys) by checking if there are any equi-join conditions
+      org.apache.calcite.rel.core.JoinInfo joinInfo = org.apache.calcite.rel.core.JoinInfo.of(join.getLeft(), join.getRight(), join.getCondition());
+      if (joinInfo.leftKeys.isEmpty() && joinInfo.rightKeys.isEmpty()) {
+        return false;
+      }
+      return true;
     }
   };
 
