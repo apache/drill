@@ -23,6 +23,13 @@ Status: implemented. See the plan at [plans/2026-09-17-prospector-reports.md](pl
 - **Headless or scheduled report generation.** v1 renders the PDF in the
   browser, so a report requires a user in front of it.
 - **Server-side PDF rendering.** See [Later](#later).
+- **Naming the model in the provenance footer.** Decided against. The footer
+  records the timestamp and the source conversation, and says the report came
+  from Prospector, but does not name the model or provider. Those live only on
+  the admin-only `AiConfig`; putting them in the footer would mean mirroring
+  them onto `/api/v1/ai/status`, which every authenticated user can read, and
+  so disclosing the deployment's LLM choice to all of them. That trade is not
+  worth it for a footer. This is a settled decision, not a deferral.
 
 The data model is chosen so that neither non-goal requires a migration when it
 lands: the report is stored as markdown, and the PDF is always a derived
@@ -203,12 +210,6 @@ browser print output is not worth the harness.
 ## Later
 
 Both deferred pieces build on the stored markdown without changing it.
-
-**Recording the model name.** The provenance footer currently writes only the
-timestamp and source conversation. Recording the model and provider would require
-mirroring these from `AiConfig` onto the `/api/v1/ai/status` endpoint so that
-every authenticated user can read them, rather than restricting it to admin
-access. This is a deliberate open question rather than an oversight.
 
 **Email.** Needs a real sender: `angus-mail` (Apache-licensed, roughly 700KB,
 excluded from `jdbc-all`) driven by the existing `SmtpConfig`. Hand-rolling
