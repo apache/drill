@@ -19,6 +19,7 @@ package org.apache.drill.exec.store.parquet;
 
 import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.common.types.TypeProtos;
+import org.apache.drill.common.types.Types;
 import org.apache.drill.exec.planner.common.DrillStatsTable;
 import org.apache.drill.exec.record.SchemaUtil;
 import org.apache.drill.metastore.metadata.BaseTableMetadata;
@@ -52,6 +53,7 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.LinkedListMultimap;
 import com.google.common.collect.Multimap;
+import com.google.common.collect.Sets;
 import com.google.common.primitives.Longs;
 import org.apache.hadoop.fs.Path;
 import org.apache.parquet.io.api.Binary;
@@ -661,6 +663,12 @@ public class ParquetTableMetadataUtils {
       // row groups in the file have the same schema, so using the first one
       Map<SchemaPath, TypeProtos.MajorType> fileColumns = getFileFields(parquetTableMetadata, file);
       fileColumns.forEach((columnPath, type) -> putType(columns, columnPath, type));
+      // If at least 1 parquet file to read doesn't contain a column, enforce this column
+      // DataMode to OPTIONAL in the overall table schema
+      for (SchemaPath column: Sets.symmetricDifference(columns.keySet(), fileColumns.keySet())) {
+        TypeProtos.MinorType minorType = columns.get(column).getMinorType();
+        columns.put(column, Types.optional(minorType));
+      }
     }
     return columns;
   }
@@ -680,13 +688,7 @@ public class ParquetTableMetadataUtils {
     if (majorType == null) {
       columns.put(columnPath, type);
     } else if (!majorType.equals(type)) {
-      TypeProtos.MinorType leastRestrictiveType = TypeCastRules.getLeastRestrictiveType(
-        majorType.getMinorType(),
-        type.getMinorType()
-      );
-      if (leastRestrictiveType != majorType.getMinorType()) {
-        columns.put(columnPath, type);
-      }
+      columns.put(columnPath, TypeCastRules.getLeastRestrictiveMajorType(majorType, type));
     }
   }
 
