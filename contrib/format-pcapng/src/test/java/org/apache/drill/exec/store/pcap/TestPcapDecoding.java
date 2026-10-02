@@ -82,4 +82,27 @@ public class TestPcapDecoding extends ClusterTest {
     String error = client.queryBuilder().sql(sql).singletonString();
     assertTrue(error, error.startsWith("file: invalid packet record after packet 1: Packet too long"));
   }
+
+  @Test
+  public void testHttpPackets() throws Exception {
+    String sql = "select t.parsed_data.http.method as method, t.parsed_data.http.uri as uri, " +
+        "t.parsed_data.http.host as host, t.parsed_data.http.status_code as status " +
+        "from dfs.`pcap/http.pcap` t where parsed_protocol = 'http'";
+    RowSet results = client.queryBuilder().sql(sql).rowSet();
+    TupleMetadata schema = new SchemaBuilder()
+        .addNullable("method", MinorType.VARCHAR)
+        .addNullable("uri", MinorType.VARCHAR)
+        .addNullable("host", MinorType.VARCHAR)
+        .addNullable("status", MinorType.INT)
+        .buildSchema();
+    RowSet expected = new RowSetBuilder(client.allocator(), schema)
+        // Capture order, as listed by scapy
+        .addRow("GET", "/download.html", "www.ethereal.com", null)
+        .addRow(null, null, null, 200)
+        .addRow("GET", "/pagead/ads?client=ca-pub-2309191948673629&random=1084443430285&lmt=1082467020&format=468x60_as&output=html&url=http%3A%2F%2Fwww.ethereal.com%2Fdownload.html&color_bg=FFFFFF&color_text=333333&color_link=000000&color_url=666633&color_border=666633", "pagead2.googlesyndication.com", null)
+        .addRow(null, null, null, 200)
+        .addRow(null, null, null, 200)
+        .build();
+    new RowSetComparison(expected).verifyAndClearAll(results);
+  }
 }

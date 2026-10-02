@@ -1,1 +1,2 @@
 org.apache.drill.exec.store.pcap.protocol.dns.DnsDecoder
+org.apache.drill.exec.store.pcap.protocol.http.HttpPacketDecoder
