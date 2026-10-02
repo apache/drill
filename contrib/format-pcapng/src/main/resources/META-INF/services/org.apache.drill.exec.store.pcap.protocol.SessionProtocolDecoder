@@ -24,3 +24,4 @@ org.apache.drill.exec.store.pcap.protocol.smtp.SmtpSessionDecoder
 org.apache.drill.exec.store.pcap.protocol.pop3.Pop3SessionDecoder
 org.apache.drill.exec.store.pcap.protocol.imap.ImapSessionDecoder
 org.apache.drill.exec.store.pcap.protocol.telnet.TelnetSessionDecoder
+org.apache.drill.exec.store.pcap.protocol.rdp.RdpSessionDecoder
