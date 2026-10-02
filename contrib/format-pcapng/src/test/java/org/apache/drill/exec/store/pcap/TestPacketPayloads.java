@@ -18,6 +18,7 @@
 package org.apache.drill.exec.store.pcap;
 
 import static org.junit.Assert.assertArrayEquals;
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
@@ -88,5 +89,20 @@ public class TestPacketPayloads extends BaseTest {
     Packet packet = new Packet();
     packet.decodePcap(record, 0, false, 65535);
     assertArrayEquals(ARP, packet.getLinkPayload());
+  }
+
+  @Test
+  public void testPcapPacketOwnsItsBytes() {
+    // The reader reuses its buffer; packets kept for sessionization must not change with it
+    byte[] frame = concat(new byte[] {2, 0, 0, 0, 0, 2, 2, 0, 0, 0, 0, 1, 8, 0},
+        TestPackets.ipv4("10.0.0.1", "10.0.0.2", 17, new byte[] {0, 7, 0, 9, 0, 8, 0, 0}));
+    byte[] record = new byte[16 + frame.length];
+    ByteBuffer.wrap(record).order(ByteOrder.LITTLE_ENDIAN).putInt(0).putInt(0).putInt(frame.length).putInt(frame.length);
+    System.arraycopy(frame, 0, record, 16, frame.length);
+    Packet packet = new Packet();
+    packet.decodePcap(record, 0, false, 65535);
+    java.util.Arrays.fill(record, (byte) 0);
+    assertEquals("10.0.0.1", packet.getSourceIpAddressString());
+    assertEquals(7, packet.getSrc_port());
   }
 }

@@ -18,6 +18,7 @@
 package org.apache.drill.exec.store.pcapng;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 import java.nio.file.Paths;
 
@@ -156,5 +157,15 @@ public class TestPcapngDecoding extends ClusterTest {
         .addRow("file: block at byte 348 has invalid captured length 9999")
         .build();
     new RowSetComparison(expected).verifyAndClearAll(results);
+  }
+
+  @Test
+  public void testReadFailureMidFileIsReported() throws Exception {
+    // A corrupted gzip file fails while decompressing, partway through the capture
+    String file = "dfs.`pcapng/sniff_corrupt.pcapng.gz`";
+    long packets = client.queryBuilder().sql("select count(*) from " + file + " where decode_error is null").singletonLong();
+    String error = client.queryBuilder().sql("select decode_error from " + file + " where decode_error is not null").singletonString();
+    assertTrue(packets > 0);
+    assertTrue(error, error.startsWith("file: read failed at byte "));
   }
 }

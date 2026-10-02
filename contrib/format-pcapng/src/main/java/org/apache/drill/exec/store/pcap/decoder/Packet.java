@@ -87,11 +87,14 @@ public class Packet implements Comparable<Packet> {
 
   @SuppressWarnings("WeakerAccess")
   public int decodePcap(final byte[] buffer, final int offset, final boolean byteOrder, final int maxLength) {
-    raw = buffer;
-    etherOffset = offset + PacketConstants.PCAP_HEADER_SIZE;
-    decodePcapHeader(raw, byteOrder, maxLength, offset);
+    decodePcapHeader(buffer, byteOrder, maxLength, offset);
+    // Copy the record: the reader reuses its buffer, and packets kept for
+    // sessionization must not change when it does
+    int end = offset + PacketConstants.PCAP_HEADER_SIZE + originalLength;
+    raw = Arrays.copyOfRange(buffer, offset, end);
+    etherOffset = PacketConstants.PCAP_HEADER_SIZE;
     decodeEtherPacket();
-    return offset + PacketConstants.PCAP_HEADER_SIZE + originalLength;
+    return end;
   }
 
   public String getPacketType() {
