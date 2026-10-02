@@ -45,11 +45,61 @@ import com.google.common.collect.ImmutableList;
 
 public class ExpressionStringBuilder extends AbstractExprVisitor<Void, StringBuilder, RuntimeException>{
 
+  public static final String BOUND_DYNAMIC_PARAM = "bound_dynamic_param";
+
   static final ExpressionStringBuilder INSTANCE = new ExpressionStringBuilder();
+  private final boolean explainParameters;
+
+  public ExpressionStringBuilder() {
+    this(false);
+  }
+
+  private ExpressionStringBuilder(boolean explainParameters) {
+    this.explainParameters = explainParameters;
+  }
+
+  private boolean startBoundLiteral(LiteralExpression expression, StringBuilder sb) {
+    int index = expression.getDynamicParamIndex();
+    if (index >= 0) {
+      if (explainParameters) {
+        sb.append('?').append(index);
+        return true;
+      }
+      MajorType type = expression.getMajorType();
+      sb.append(BOUND_DYNAMIC_PARAM).append('(').append(index).append(", ")
+          .append(type.getMinorType().name());
+      switch (type.getMinorType()) {
+      case VARCHAR:
+        sb.append('(').append(type.getPrecision()).append(')');
+        break;
+      case VARDECIMAL:
+        sb.append('(').append(type.getPrecision()).append(", ")
+            .append(type.getScale()).append(')');
+        break;
+      default:
+        break;
+      }
+      sb.append(", ");
+    }
+    return false;
+  }
+
+  private static void endBoundLiteral(LiteralExpression expression, StringBuilder sb) {
+    if (expression.getDynamicParamIndex() >= 0) {
+      sb.append(')');
+    }
+  }
 
   public static String toString(LogicalExpression expr) {
     StringBuilder sb = new StringBuilder();
     expr.accept(INSTANCE, sb);
+    return sb.toString();
+  }
+
+  /** Renders parameter slots without exposing the literal stored in a cached plan. */
+  public static String toExplainString(LogicalExpression expr) {
+    StringBuilder sb = new StringBuilder();
+    expr.accept(new ExpressionStringBuilder(true), sb);
     return sb.toString();
   }
 
@@ -147,99 +197,160 @@ public class ExpressionStringBuilder extends AbstractExprVisitor<Void, StringBui
 
   @Override
   public Void visitLongConstant(LongExpression lExpr, StringBuilder sb) throws RuntimeException {
-    sb.append(lExpr.getLong());
+    if (startBoundLiteral(lExpr, sb)) {
+      return null;
+    }
+    if (lExpr.getDynamicParamIndex() < 0) {
+      // Small BIGINT values otherwise parse back as INT during a plan round trip.
+      sb.append("cast(").append(lExpr.getLong()).append(" as BIGINT)");
+    } else {
+      sb.append(lExpr.getLong());
+    }
+    endBoundLiteral(lExpr, sb);
     return null;
   }
 
   @Override
   public Void visitDateConstant(DateExpression lExpr, StringBuilder sb) throws RuntimeException {
+    if (startBoundLiteral(lExpr, sb)) {
+      return null;
+    }
     sb.append("cast( ");
     sb.append(lExpr.getDate());
     sb.append(" as DATE)");
+    endBoundLiteral(lExpr, sb);
     return null;
   }
 
   @Override
   public Void visitTimeConstant(TimeExpression lExpr, StringBuilder sb) throws RuntimeException {
+    if (startBoundLiteral(lExpr, sb)) {
+      return null;
+    }
     sb.append("cast( ");
     sb.append(lExpr.getTime());
     sb.append(" as TIME)");
+    endBoundLiteral(lExpr, sb);
     return null;
   }
 
   @Override
   public Void visitTimeStampConstant(TimeStampExpression lExpr, StringBuilder sb) throws RuntimeException {
+    if (startBoundLiteral(lExpr, sb)) {
+      return null;
+    }
     sb.append("cast( ");
     sb.append(lExpr.getTimeStamp());
     sb.append(" as TIMESTAMP)");
+    endBoundLiteral(lExpr, sb);
     return null;
   }
 
   @Override
   public Void visitIntervalYearConstant(IntervalYearExpression lExpr, StringBuilder sb) throws RuntimeException {
+    if (startBoundLiteral(lExpr, sb)) {
+      return null;
+    }
     sb.append("cast( '");
     sb.append(Period.months(lExpr.getIntervalYear()).toString());
     sb.append("' as INTERVALYEAR)");
+    endBoundLiteral(lExpr, sb);
     return null;
   }
 
   @Override
   public Void visitIntervalDayConstant(IntervalDayExpression lExpr, StringBuilder sb) throws RuntimeException {
+    if (startBoundLiteral(lExpr, sb)) {
+      return null;
+    }
     sb.append("cast( '");
     sb.append(Period.days(lExpr.getIntervalDay()).plusMillis(lExpr.getIntervalMillis()).toString());
     sb.append("' as INTERVALDAY)");
+    endBoundLiteral(lExpr, sb);
     return null;
   }
 
   @Override
   public Void visitDecimal9Constant(Decimal9Expression decExpr, StringBuilder sb) throws RuntimeException {
+    if (startBoundLiteral(decExpr, sb)) {
+      return null;
+    }
     BigDecimal value = new BigDecimal(decExpr.getIntFromDecimal());
     sb.append((value.setScale(decExpr.getScale())).toString());
+    endBoundLiteral(decExpr, sb);
     return null;
   }
 
   @Override
   public Void visitDecimal18Constant(Decimal18Expression decExpr, StringBuilder sb) throws RuntimeException {
+    if (startBoundLiteral(decExpr, sb)) {
+      return null;
+    }
     BigDecimal value = new BigDecimal(decExpr.getLongFromDecimal());
     sb.append((value.setScale(decExpr.getScale())).toString());
+    endBoundLiteral(decExpr, sb);
     return null;
   }
 
   @Override
   public Void visitDecimal28Constant(Decimal28Expression decExpr, StringBuilder sb) throws RuntimeException {
+    if (startBoundLiteral(decExpr, sb)) {
+      return null;
+    }
     sb.append(decExpr.toString());
+    endBoundLiteral(decExpr, sb);
     return null;
   }
 
   @Override
   public Void visitDecimal38Constant(Decimal38Expression decExpr, StringBuilder sb) throws RuntimeException {
+    if (startBoundLiteral(decExpr, sb)) {
+      return null;
+    }
     sb.append(decExpr.getBigDecimal().toString());
+    endBoundLiteral(decExpr, sb);
     return null;
   }
 
   @Override
   public Void visitVarDecimalConstant(VarDecimalExpression decExpr, StringBuilder sb) throws RuntimeException {
+    if (startBoundLiteral(decExpr, sb)) {
+      return null;
+    }
     sb.append(decExpr.getBigDecimal().toString());
+    endBoundLiteral(decExpr, sb);
     return null;
   }
 
   @Override
   public Void visitDoubleConstant(DoubleExpression dExpr, StringBuilder sb) throws RuntimeException {
+    if (startBoundLiteral(dExpr, sb)) {
+      return null;
+    }
     sb.append(dExpr.getDouble());
+    endBoundLiteral(dExpr, sb);
     return null;
   }
 
   @Override
   public Void visitBooleanConstant(BooleanExpression e, StringBuilder sb) throws RuntimeException {
+    if (startBoundLiteral(e, sb)) {
+      return null;
+    }
     sb.append(e.getBoolean());
+    endBoundLiteral(e, sb);
     return null;
   }
 
   @Override
   public Void visitQuotedStringConstant(QuotedString e, StringBuilder sb) throws RuntimeException {
+    if (startBoundLiteral(e, sb)) {
+      return null;
+    }
     sb.append("'");
     sb.append(escapeSingleQuote(e.value));
     sb.append("'");
+    endBoundLiteral(e, sb);
     return null;
   }
 
@@ -324,19 +435,31 @@ public class ExpressionStringBuilder extends AbstractExprVisitor<Void, StringBui
 
   @Override
   public Void visitFloatConstant(FloatExpression fExpr, StringBuilder sb) throws RuntimeException {
+    if (startBoundLiteral(fExpr, sb)) {
+      return null;
+    }
     sb.append(fExpr.getFloat());
+    endBoundLiteral(fExpr, sb);
     return null;
   }
 
   @Override
   public Void visitIntConstant(IntExpression intExpr, StringBuilder sb) throws RuntimeException {
+    if (startBoundLiteral(intExpr, sb)) {
+      return null;
+    }
     sb.append(intExpr.getInt());
+    endBoundLiteral(intExpr, sb);
     return null;
   }
 
   @Override
   public Void visitNullConstant(TypedNullConstant e, StringBuilder sb) throws RuntimeException {
+    if (startBoundLiteral(e, sb)) {
+      return null;
+    }
     sb.append("NULL");
+    endBoundLiteral(e, sb);
     return null;
   }
 

@@ -94,6 +94,8 @@ Bool
   |  'false'
   ;
 
+BoundDynamicParam : 'bound_dynamic_param';
+
 Number
   :  Int ('.' Digit*)? (('e' | 'E') ('+' | '-')? Digit*)?
   ;

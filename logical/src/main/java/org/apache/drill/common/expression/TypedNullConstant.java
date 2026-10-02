@@ -25,7 +25,7 @@ import org.apache.drill.common.types.TypeProtos;
 import org.apache.drill.common.types.TypeProtos.DataMode;
 import org.apache.drill.common.types.TypeProtos.MajorType;
 
-public class TypedNullConstant extends LogicalExpressionBase {
+public class TypedNullConstant extends LiteralExpression {
 
     private final MajorType type;
 

@@ -185,6 +185,11 @@ public class IcebergGroupScan extends AbstractGroupScan {
   }
 
   @Override
+  public boolean supportPlanCache() {
+    return formatPlugin.supportPlanCache() && path.indexOf('#') < 0;
+  }
+
+  @Override
   public IcebergGroupScan applyLimit(int maxRecords) {
     IcebergGroupScan clone = new IcebergGroupScan(this);
     clone.maxRecords = maxRecords;

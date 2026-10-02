@@ -372,6 +372,8 @@ public class QueryManager implements AutoCloseable {
         .setQueueName(queueName == null ? "-" : queueName)
         .setOptionsJson(getQueryOptionsAsJson());
 
+    profileBuilder.setPlanCacheHit(queryCtx.isPlanCacheHit());
+
     if (ex != null) {
       profileBuilder.setError(ex.getMessage(false));
       profileBuilder.setVerboseError(ex.getVerboseMessage(false));

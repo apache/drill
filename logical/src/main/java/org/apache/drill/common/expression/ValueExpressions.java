@@ -95,6 +95,49 @@ public class ValueExpressions {
     return new VarDecimalExpression(input, precision, scale, ExpressionPosition.UNKNOWN);
   }
 
+  /** Restores the exact literal type carried by a serialized bound parameter. */
+  public static LiteralExpression getBoundDynamicParam(int index, MajorType type, String value) {
+    LiteralExpression expression;
+    switch (type.getMinorType()) {
+    case INT:
+      expression = (LiteralExpression) getInt(Integer.parseInt(value));
+      break;
+    case BIGINT:
+      expression = (LiteralExpression) getBigInt(Long.parseLong(value));
+      break;
+    case FLOAT4:
+      expression = (LiteralExpression) getFloat4(Float.parseFloat(value));
+      break;
+    case FLOAT8:
+      expression = (LiteralExpression) getFloat8(Double.parseDouble(value));
+      break;
+    case BIT:
+      if (!"true".equalsIgnoreCase(value) && !"false".equalsIgnoreCase(value)) {
+        throw new IllegalArgumentException("Invalid boolean parameter value");
+      }
+      expression = (LiteralExpression) getBit(Boolean.parseBoolean(value));
+      break;
+    case VARCHAR:
+      expression = (LiteralExpression) getChar(value, type.getPrecision());
+      break;
+    case VARDECIMAL:
+      BigDecimal decimal = new BigDecimal(value);
+      if (decimal.scale() != type.getScale() || decimal.precision() > type.getPrecision()) {
+        throw new IllegalArgumentException("Invalid decimal parameter value");
+      }
+      expression = (LiteralExpression) getVarDecimal(decimal,
+          type.getPrecision(), type.getScale());
+      break;
+    default:
+      throw new IllegalArgumentException("Unsupported bound parameter type: " + type.getMinorType());
+    }
+    if (!expression.getMajorType().equals(type)) {
+      throw new IllegalArgumentException("Bound parameter type changed");
+    }
+    expression.setDynamicParamIndex(index);
+    return expression;
+  }
+
   public static LogicalExpression getNumericExpression(String sign, String s, ExpressionPosition ep) {
     String numStr = (sign == null) ? s : sign+s;
     try {
@@ -120,7 +163,7 @@ public class ValueExpressions {
     return new ParameterExpression(name, type, ExpressionPosition.UNKNOWN);
   }
 
-  protected static abstract class ValueExpression<V> extends LogicalExpressionBase {
+  protected static abstract class ValueExpression<V> extends LiteralExpression {
     public final V value;
 
     protected ValueExpression(String value, ExpressionPosition pos) {
@@ -165,7 +208,7 @@ public class ValueExpressions {
     }
   }
 
-  public static class FloatExpression extends LogicalExpressionBase {
+  public static class FloatExpression extends LiteralExpression {
     private final float f;
 
     private static final MajorType FLOAT_CONSTANT = Types.required(MinorType.FLOAT4);
@@ -195,7 +238,7 @@ public class ValueExpressions {
     }
   }
 
-  public static class IntExpression extends LogicalExpressionBase {
+  public static class IntExpression extends LiteralExpression {
 
     private static final MajorType INT_CONSTANT = Types.required(MinorType.INT);
 
@@ -226,7 +269,7 @@ public class ValueExpressions {
     }
   }
 
-  public static class Decimal9Expression extends LogicalExpressionBase {
+  public static class Decimal9Expression extends LiteralExpression {
 
     private final int decimal;
     private final int scale;
@@ -267,7 +310,7 @@ public class ValueExpressions {
     }
   }
 
-  public static class Decimal18Expression extends LogicalExpressionBase {
+  public static class Decimal18Expression extends LiteralExpression {
 
     private final long decimal;
     private final int scale;
@@ -308,7 +351,7 @@ public class ValueExpressions {
     }
   }
 
-  public static class Decimal28Expression extends LogicalExpressionBase {
+  public static class Decimal28Expression extends LiteralExpression {
 
     private final BigDecimal bigDecimal;
 
@@ -337,7 +380,7 @@ public class ValueExpressions {
     }
   }
 
-  public static class Decimal38Expression extends LogicalExpressionBase {
+  public static class Decimal38Expression extends LiteralExpression {
 
     private final BigDecimal bigDecimal;
 
@@ -366,7 +409,7 @@ public class ValueExpressions {
     }
   }
 
-  public static class VarDecimalExpression extends LogicalExpressionBase {
+  public static class VarDecimalExpression extends LiteralExpression {
 
     private final BigDecimal bigDecimal;
     private final int precision;
@@ -405,7 +448,7 @@ public class ValueExpressions {
     }
   }
 
-  public static class DoubleExpression extends LogicalExpressionBase {
+  public static class DoubleExpression extends LiteralExpression {
     private final double d;
 
     private static final MajorType DOUBLE_CONSTANT = Types.required(MinorType.FLOAT8);
@@ -435,7 +478,7 @@ public class ValueExpressions {
     }
   }
 
-  public static class LongExpression extends LogicalExpressionBase {
+  public static class LongExpression extends LiteralExpression {
 
     private static final MajorType LONG_CONSTANT = Types.required(MinorType.BIGINT);
 
@@ -470,7 +513,7 @@ public class ValueExpressions {
     }
   }
 
-  public static class DateExpression extends LogicalExpressionBase {
+  public static class DateExpression extends LiteralExpression {
 
     private static final MajorType DATE_CONSTANT = Types.required(MinorType.DATE);
 
@@ -505,7 +548,7 @@ public class ValueExpressions {
     }
   }
 
-  public static class TimeExpression extends LogicalExpressionBase {
+  public static class TimeExpression extends LiteralExpression {
 
     private static final MajorType TIME_CONSTANT = Types.required(MinorType.TIME);
 
@@ -540,7 +583,7 @@ public class ValueExpressions {
     }
   }
 
-  public static class TimeStampExpression extends LogicalExpressionBase {
+  public static class TimeStampExpression extends LiteralExpression {
 
     private static final MajorType TIMESTAMP_CONSTANT = Types.required(MinorType.TIMESTAMP);
 
@@ -575,7 +618,7 @@ public class ValueExpressions {
     }
   }
 
-  public static class IntervalYearExpression extends LogicalExpressionBase {
+  public static class IntervalYearExpression extends LiteralExpression {
 
     private static final MajorType INTERVALYEAR_CONSTANT = Types.required(MinorType.INTERVALYEAR);
 
@@ -610,7 +653,7 @@ public class ValueExpressions {
     }
   }
 
-  public static class IntervalDayExpression extends LogicalExpressionBase {
+  public static class IntervalDayExpression extends LiteralExpression {
 
     private static final MajorType INTERVALDAY_CONSTANT = Types.required(MinorType.INTERVALDAY);
     private static final long MILLIS_IN_DAY = 1000 * 60 * 60 * 24;

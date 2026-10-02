@@ -39,6 +39,9 @@ import org.apache.drill.common.PlanStringBuilder;
 import org.apache.drill.common.exceptions.DrillRuntimeException;
 import org.apache.drill.common.exceptions.ExecutionSetupException;
 import org.apache.drill.common.expression.SchemaPath;
+import org.apache.drill.common.expression.LogicalExpression;
+import org.apache.drill.common.parser.LogicalExpressionParser;
+import org.apache.drill.common.expression.ExpressionStringBuilder;
 import org.apache.drill.exec.physical.EndpointAffinity;
 import org.apache.drill.exec.physical.base.AbstractGroupScan;
 import org.apache.drill.exec.physical.base.GroupScan;
@@ -84,6 +87,11 @@ public class HBaseGroupScan extends AbstractGroupScan implements DrillHBaseConst
 
   private HBaseScanSpec hbaseScanSpec;
 
+  /** Selection before predicate pushdown, needed to rebuild value-dependent HBase filters. */
+  private HBaseScanSpec baseScanSpec;
+  private LogicalExpression pushedFilter;
+  private boolean pushedFilterFullyConverted;
+
   private HBaseStoragePlugin storagePlugin;
 
   private final Stopwatch watch = Stopwatch.createUnstarted();
@@ -108,18 +116,44 @@ public class HBaseGroupScan extends AbstractGroupScan implements DrillHBaseConst
                         @JsonProperty("storage") HBaseStoragePluginConfig storagePluginConfig,
                         @JsonProperty("columns") List<SchemaPath> columns,
                         @JsonProperty("maxRecords") int maxRecords,
+                        @JsonProperty("baseScanSpec") HBaseScanSpec baseScanSpec,
+                        @JsonProperty("pushedFilter") String pushedFilter,
+                        @JsonProperty("pushedFilterFullyConverted") boolean pushedFilterFullyConverted,
                         @JacksonInject StoragePluginRegistry pluginRegistry) throws IOException, ExecutionSetupException {
-    this (userName, pluginRegistry.resolve(storagePluginConfig, HBaseStoragePlugin.class), hbaseScanSpec, columns, maxRecords);
+    this(userName, pluginRegistry.resolve(storagePluginConfig, HBaseStoragePlugin.class),
+        hbaseScanSpec, columns, maxRecords, baseScanSpec,
+        pushedFilter == null ? null : LogicalExpressionParser.parse(pushedFilter),
+        pushedFilterFullyConverted, true);
   }
 
   public HBaseGroupScan(String userName, HBaseStoragePlugin storagePlugin, HBaseScanSpec scanSpec,
       List<SchemaPath> columns, int maxRecords) {
+    this(userName, storagePlugin, scanSpec, columns, maxRecords, null, null, false, false);
+  }
+
+  HBaseGroupScan(String userName, HBaseStoragePlugin storagePlugin, HBaseScanSpec scanSpec,
+      List<SchemaPath> columns, int maxRecords, HBaseScanSpec baseScanSpec,
+      LogicalExpression pushedFilter, boolean pushedFilterFullyConverted, boolean rebuild) {
     super(userName);
     this.storagePlugin = storagePlugin;
     this.storagePluginConfig = storagePlugin.getConfig();
-    this.hbaseScanSpec = scanSpec;
+    this.baseScanSpec = baseScanSpec;
+    this.pushedFilter = pushedFilter;
+    this.pushedFilterFullyConverted = pushedFilterFullyConverted;
+    this.hbaseScanSpec = rebuild && pushedFilter != null ? baseScanSpec : scanSpec;
     this.columns = columns == null ? ALL_COLUMNS : columns;
     this.maxRecords = maxRecords;
+    if (rebuild && pushedFilter != null) {
+      if (baseScanSpec == null) {
+        throw new IllegalArgumentException("Cached HBase filter has no base scan specification");
+      }
+      HBaseFilterBuilder builder = new HBaseFilterBuilder(this, pushedFilter);
+      HBaseScanSpec rebuilt = builder.parseTree();
+      if (rebuilt == null || (pushedFilterFullyConverted && !builder.isAllExpressionsConverted())) {
+        throw new IllegalArgumentException("Cached HBase filter cannot be rebuilt safely");
+      }
+      this.hbaseScanSpec = rebuilt;
+    }
     init();
   }
 
@@ -131,6 +165,9 @@ public class HBaseGroupScan extends AbstractGroupScan implements DrillHBaseConst
     super(that);
     this.columns = that.columns == null ? ALL_COLUMNS : that.columns;
     this.hbaseScanSpec = that.hbaseScanSpec;
+    this.baseScanSpec = that.baseScanSpec;
+    this.pushedFilter = that.pushedFilter;
+    this.pushedFilterFullyConverted = that.pushedFilterFullyConverted;
     this.endpointFragmentMapping = that.endpointFragmentMapping;
     this.regionsToScan = that.regionsToScan;
     this.storagePlugin = that.storagePlugin;
@@ -146,6 +183,9 @@ public class HBaseGroupScan extends AbstractGroupScan implements DrillHBaseConst
     super(that);
     this.columns = that.columns == null ? ALL_COLUMNS : that.columns;
     this.hbaseScanSpec = that.hbaseScanSpec;
+    this.baseScanSpec = that.baseScanSpec;
+    this.pushedFilter = that.pushedFilter;
+    this.pushedFilterFullyConverted = that.pushedFilterFullyConverted;
     this.endpointFragmentMapping = that.endpointFragmentMapping;
     this.regionsToScan = that.regionsToScan;
     this.storagePlugin = that.storagePlugin;
@@ -447,6 +487,27 @@ public class HBaseGroupScan extends AbstractGroupScan implements DrillHBaseConst
   @JsonProperty
   public HBaseScanSpec getHBaseScanSpec() {
     return hbaseScanSpec;
+  }
+
+  @JsonProperty("baseScanSpec")
+  public HBaseScanSpec getBaseScanSpec() {
+    return baseScanSpec;
+  }
+
+  @JsonProperty("pushedFilter")
+  public String getPushedFilter() {
+    return pushedFilter == null ? null : ExpressionStringBuilder.toString(pushedFilter);
+  }
+
+  @JsonProperty("pushedFilterFullyConverted")
+  public boolean isPushedFilterFullyConverted() {
+    return pushedFilterFullyConverted;
+  }
+
+  @Override
+  @JsonIgnore
+  public boolean supportPlanCache() {
+    return storagePlugin.supportPlanCache() && (pushedFilter == null || baseScanSpec != null);
   }
 
   @Override
