@@ -153,7 +153,7 @@ The attribute already existed on the annotation but was never read; it now flows
 >
 > Nothing in the normal build catches this: the Java is valid and compiles fine. `TestUdfDescriptions.testDescriptionsAvoidCharactersThatBreakJanino` enforces it.
 
-The system prompt also carries a hand-written Drill dialect section (`DRILL_SQL_DIALECT_NOTES` in `ProspectorResources.java`) covering the places Drill diverges from MySQL/Postgres, which signatures alone cannot express.
+The system prompt also carries a hand-written Drill dialect section (`DRILL_SQL_DIALECT_NOTES` in `ProspectorResources.java`) covering the places Drill diverges from MySQL/Postgres, which signatures alone cannot express. It includes quoting of reserved-word column names (`MIN(\`timestamp\`)`), and how to query packet captures: the `sessionizeTCPStreams` table-function option for one row per TCP session, and the `parsed_protocol` / `parsed_data` / `decode_error` decoder columns. These notes are always sent, not detected from the current SQL, because users ask about sessions before writing any.
 
 When Prospector uses a tool, you'll see a collapsible panel showing the tool name, arguments, and results. Tool calls are executed automatically and Prospector uses the results to continue the conversation.
 
