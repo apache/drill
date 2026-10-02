@@ -17,3 +17,7 @@
 #
 org.apache.drill.exec.store.pcap.protocol.dns.DnsDecoder
 org.apache.drill.exec.store.pcap.protocol.http.HttpPacketDecoder
+org.apache.drill.exec.store.pcap.protocol.ntp.NtpDecoder
+org.apache.drill.exec.store.pcap.protocol.syslog.SyslogDecoder
+org.apache.drill.exec.store.pcap.protocol.ssdp.SsdpDecoder
+org.apache.drill.exec.store.pcap.protocol.sip.SipDecoder
