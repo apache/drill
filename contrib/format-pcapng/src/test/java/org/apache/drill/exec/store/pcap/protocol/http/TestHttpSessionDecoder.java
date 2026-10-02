@@ -90,4 +90,17 @@ public class TestHttpSessionDecoder extends BaseTest {
     assertEquals(Integer.valueOf(201), responses.get(0).statusCode);
     assertEquals(Integer.valueOf(200), responses.get(1).statusCode);
   }
+
+  @Test
+  public void testHugeChunkSizeEndsTheStream() {
+    // A chunk claiming nearly Long.MAX_VALUE bytes cannot be in the data; parsing stops there
+    String client = "GET /a HTTP/1.1\r\n\r\nGET /b HTTP/1.1\r\n\r\n";
+    String server = "HTTP/1.1 200 OK\r\nTransfer-Encoding: chunked\r\n\r\n7fffffffffffffff\r\nabc\r\n0\r\n\r\n"
+        + "HTTP/1.1 204 No Content\r\n\r\n";
+    TestHttpParser.Context context = new TestHttpParser.Context(false);
+    List<HttpMessage> requests = HttpSessionDecoder.parseStream(TestHttpParser.bytes(client), true,
+        Collections.emptyList(), context);
+    List<HttpMessage> responses = HttpSessionDecoder.parseStream(TestHttpParser.bytes(server), false, requests, context);
+    assertEquals(1, responses.size());
+  }
 }

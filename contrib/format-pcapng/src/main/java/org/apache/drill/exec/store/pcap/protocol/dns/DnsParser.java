@@ -116,12 +116,15 @@ public final class DnsParser {
       for (int i = 0; i < counts[s]; i++) {
         if (i == MAX_ITEMS) {
           context.warn(sections[s] + "s truncated to " + MAX_ITEMS);
-          return m;
         }
         try {
-          @SuppressWarnings("unchecked")
-          List<DnsMessage.Record> list = (List<DnsMessage.Record>) lists[s];
-          list.add(record());
+          // Records past the cap are still read, to reach the sections after them
+          DnsMessage.Record record = record();
+          if (i < MAX_ITEMS) {
+            @SuppressWarnings("unchecked")
+            List<DnsMessage.Record> list = (List<DnsMessage.Record>) lists[s];
+            list.add(record);
+          }
           confident = true;
         } catch (IllegalArgumentException e) {
           if (!confident) {

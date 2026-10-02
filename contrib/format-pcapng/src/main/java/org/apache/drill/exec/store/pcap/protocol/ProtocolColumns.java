@@ -66,8 +66,9 @@ public class ProtocolColumns {
     schema.addNullable(DECODE_ERROR, MinorType.VARCHAR);
   }
 
+  /** A copy per reader: map metadata binds its member schema to the parent map. */
   private static TupleMetadata dataSchema(Mode mode, ProtocolDecoders decoders) {
-    return mode == Mode.SESSION ? decoders.sessionDataSchema() : decoders.packetDataSchema();
+    return (mode == Mode.SESSION ? decoders.sessionDataSchema() : decoders.packetDataSchema()).copy();
   }
 
   public ProtocolColumns(RowSetLoader loader, Mode mode, ProtocolDecoders decoders, boolean exposeCredentials) {
