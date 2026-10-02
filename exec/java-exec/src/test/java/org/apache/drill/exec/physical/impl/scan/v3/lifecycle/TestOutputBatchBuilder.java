@@ -328,6 +328,36 @@ public class TestOutputBatchBuilder extends SubOperatorTest {
   }
 
   @Test
+  public void testMapArrayInMap() {
+    // A repeated map inside a map must keep its offsets, not just its members
+    final TupleMetadata schema = new SchemaBuilder()
+        .add("a", MinorType.VARCHAR)
+        .addMap("m")
+          .add("x", MinorType.INT)
+          .addMapArray("y")
+            .add("p", MinorType.INT)
+            .add("q", MinorType.VARCHAR)
+            .resumeMap()
+          .resumeSchema()
+        .buildSchema();
+
+    final VectorContainer input = fixture.rowSetBuilder(schema)
+        .addRow("barney", mapValue(1, mapArray(mapValue(10, "betty"), mapValue(11, "bambam"))))
+        .addRow("fred", mapValue(2, mapArray()))
+        .addRow("wilma", mapValue(3, mapArray(mapValue(30, "pebbles"))))
+        .build()
+        .container();
+
+    final OutputBatchBuilder builder = new OutputBatchBuilder(schema,
+        Collections.singletonList(new BatchSource(schema, input)),
+        fixture.allocator());
+    builder.load(input.getRecordCount());
+    VectorContainer output = builder.outputContainer();
+
+    RowSetUtilities.verify(fixture.wrap(input), fixture.wrap(output));
+  }
+
+  @Test
   public void testListArray() {
     final TupleMetadata schema = new SchemaBuilder()
         .addRepeatedList("int_list")
