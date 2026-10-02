@@ -282,3 +282,21 @@ already carry the raw bytes.
    fields are nullable).
 5. List the class in the matching `META-INF/services` file.
 6. Add the tests described above.
+
+## Implementation Notes
+
+Differences from the design above, recorded during phase 1:
+
+- The two `Packet` accessors for ICMP and ARP bytes arrive with the phase 2 ICMP and ARP decoders; no phase 1
+  decoder needs them.
+- DNS separates "not DNS" from "malformed DNS" by confidence: a payload whose header is implausible, or whose
+  first question (or first record, when there are no questions) does not parse, is not DNS and is left
+  undecoded. Once one question or record has parsed, a later failure is reported in `decode_error`, for
+  example `dns: truncated answer 1: ...`.
+- Every field of `parsed_data` is created with sparse vector sizing (one expected element per array, a small
+  VARCHAR width). Drill otherwise reserves room for a full batch of values in each of the many mostly empty
+  decoder fields, which exhausted the batch memory budget.
+- Two Drill scan framework bugs had to be fixed for decoder fields that are lists: a repeated map inside a map
+  lost its offsets in the scan output (`OutputBatchBuilder`), and an array index inside a map was parsed as an
+  extra array dimension (`ScanProjectionParser`), which rejected projections such as
+  `parsed_data.dns.questions[0].name`.

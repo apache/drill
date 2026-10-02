@@ -30,6 +30,7 @@ Attribute|Default Value|Description
 ---------|-------------|-----------
 stat|false|return the statistics data about the each pcapng file if true
 sessionizeTCPStreams|false|return one row per TCP session instead of one row per packet, for both PCAP and PCAP-NG. A session is written when it closes (FIN or RST). Sessions still open at the end of the file, such as ones that outlived the capture, are written last with `session_closed` false
+exposeCredentials|false|include cleartext passwords found by protocol decoders in `parsed_data`; usernames and a `password_present` flag are always included
 
 ## PCAP-NG columns
 
@@ -57,3 +58,48 @@ and the MAC address columns are only set for Ethernet.
 
 With `stat` set to true, options a block does not have are null. The `comment` column holds the section, interface, name resolution or
 statistics block comment.
+
+## Protocol decoding
+
+Packets and TCP sessions whose application protocol is recognized are decoded into three columns, in both
+PCAP and PCAP-NG files:
+
+Column|Description
+------|-----------
+parsed_protocol|Name of the decoder that handled the row, such as `dns` or `http`; null if none did
+parsed_data|One map per decoder, named after its protocol; only the one named by `parsed_protocol` is filled
+decode_error|Why the row could not be fully decoded; null when there was no problem
+
+```sql
+-- DNS questions and answers
+SELECT t.parsed_data.dns.questions[0].name AS query, t.parsed_data.dns.answers
+FROM dfs.`capture.pcapng` t
+WHERE parsed_protocol = 'dns';
+
+-- HTTP requests, one row per connection
+SELECT src_ip, t.parsed_data.http.exchanges[0].host AS host, t.parsed_data.http.exchanges[0].uri AS uri
+FROM table(dfs.`capture.pcap` (type => 'pcap', sessionizeTCPStreams => true)) t
+WHERE parsed_protocol = 'http';
+
+-- What could not be decoded
+SELECT decode_error, count(*) FROM dfs.`capture.pcapng`
+WHERE decode_error IS NOT NULL GROUP BY decode_error;
+```
+
+Built-in decoders:
+
+Protocol|Rows|Matches
+--------|----|-------
+dns|packets|DNS, mDNS and LLMNR on ports 53, 5353 and 5355
+http|packets and sessions|HTTP/1.x on ports 80, 591, 3128, 8000, 8008, 8080 and 8888
+
+A decoder only handles traffic that parses as its protocol: other traffic on the same port is left undecoded.
+Decoding runs only when `parsed_protocol` or `parsed_data` is queried.
+
+Errors never stop a file from being read. Malformed packets keep the fields that could be read and explain
+the problem in `decode_error`. Damage that makes the rest of a file unreadable, or a file that is not a
+capture at all, produces one row with only `decode_error` set; exclude such rows with
+`WHERE decode_error IS NULL`.
+
+Fields of each decoder, and how to write a decoder of your own, are described in
+`docs/dev/PcapProtocolDecoders.md`.
