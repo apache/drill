@@ -51,6 +51,8 @@ import org.apache.drill.exec.store.dfs.DrillFileSystem;
 import org.apache.drill.exec.store.dfs.easy.EasySubScan;
 import org.apache.drill.exec.store.pcap.TcpSessionizer;
 import org.apache.drill.exec.store.pcap.plugin.PcapFormatConfig;
+import org.apache.drill.exec.store.pcap.protocol.ProtocolColumns;
+import org.apache.drill.exec.store.pcap.protocol.ProtocolDecoders;
 import org.apache.drill.exec.store.pcap.schema.Schema;
 import org.apache.drill.exec.util.Utilities;
 import org.apache.drill.exec.vector.accessor.ScalarWriter;
@@ -92,8 +94,13 @@ public class PcapngBatchReader implements ManagedReader {
   private RowSetLoader loader;
   // Set when TCP packets are grouped into sessions instead of returned as rows
   private TcpSessionizer sessionizer;
+  private ProtocolColumns protocolColumns;
   private InputStream in;
   private Path path;
+  // Bytes of the file consumed so far, for error messages
+  private long position;
+  // Set when damage makes the rest of the file unreadable
+  private boolean finished;
 
   public PcapngBatchReader(final PcapFormatConfig config, final EasySubScan scan,
     FileSchemaNegotiator negotiator) {
@@ -118,9 +125,14 @@ public class PcapngBatchReader implements ManagedReader {
              .build(logger);
     }
     if (isSessionQuery()) {
-      negotiator.tableSchema(new Schema(true).buildSchema(new SchemaBuilder()), false);
+      SchemaBuilder builder = new SchemaBuilder();
+      new Schema(true).addColumns(builder);
+      ProtocolColumns.addColumns(builder, ProtocolColumns.Mode.SESSION, ProtocolDecoders.get());
+      negotiator.tableSchema(builder.buildSchema(), false);
       loader = negotiator.build().writer();
-      sessionizer = new TcpSessionizer(loader);
+      protocolColumns = new ProtocolColumns(loader, ProtocolColumns.Mode.SESSION, ProtocolDecoders.get(),
+          config.getExposeCredentials());
+      sessionizer = new TcpSessionizer(loader, protocolColumns);
       return;
     }
     // define the schema
@@ -129,6 +141,11 @@ public class PcapngBatchReader implements ManagedReader {
     loader = resultSetLoader.writer();
     // bind the writer for columns
     bindColumns(loader);
+    protocolColumns = new ProtocolColumns(loader, rowMode(), ProtocolDecoders.get(), config.getExposeCredentials());
+  }
+
+  private ProtocolColumns.Mode rowMode() {
+    return config.getStat() ? ProtocolColumns.Mode.STAT : ProtocolColumns.Mode.PACKET;
   }
 
   /**
@@ -164,7 +181,9 @@ public class PcapngBatchReader implements ManagedReader {
         return sessionizer != null && !sessionizer.writeOpenSessions();
       }
       if (sessionizer != null) {
-        if (block.packet != null) {
+        if (block.errorRow) {
+          protocolColumns.writeErrorRow(String.join("; ", block.errors));
+        } else if (block.packet != null) {
           sessionizer.addPacket(block.packet);
         }
       } else {
@@ -183,20 +202,27 @@ public class PcapngBatchReader implements ManagedReader {
    */
   private PcapngBlock nextRow() throws IOException {
     while (true) {
+      if (finished) {
+        return null;
+      }
+      long blockStart = position;
       int n = IOUtils.read(in, header, 0, 8);
       if (n == 0) {
         return null;
       }
       if (n < 8) {
-        logger.warn("Ignoring truncated pcapng block header at end of {}", path);
-        return null;
+        finished = true;
+        return PcapngBlock.errorRow("file: truncated block header at byte " + blockStart);
       }
       ByteBuffer buf = ByteBuffer.wrap(header).order(byteOrder);
       int type = buf.getInt(0);
       int consumed = 8;
       if (type == SECTION_HEADER_TYPE) {
         // Each section declares its own byte order; the type itself is a palindrome
-        IOUtils.readFully(in, header, 8, 4);
+        if (IOUtils.read(in, header, 8, 4) < 4) {
+          finished = true;
+          return PcapngBlock.errorRow("file: truncated block header at byte " + blockStart);
+        }
         consumed = 12;
         byteOrder = ByteBuffer.wrap(header, 8, 4).order(ByteOrder.BIG_ENDIAN).getInt() == BYTE_ORDER_MAGIC
             ? ByteOrder.BIG_ENDIAN : ByteOrder.LITTLE_ENDIAN;
@@ -204,7 +230,8 @@ public class PcapngBatchReader implements ManagedReader {
       }
       int totalLength = buf.getInt(4);
       if (totalLength < consumed + 4 || totalLength % 4 != 0) {
-        throw new IOException("Invalid pcapng block length " + totalLength + " for block type " + type);
+        finished = true;
+        return PcapngBlock.errorRow("file: invalid block length " + totalLength + " at byte " + blockStart);
       }
       // Body excludes the header and the trailing copy of the block length
       byte[] body = new byte[totalLength - consumed - 4];
@@ -212,18 +239,19 @@ public class PcapngBatchReader implements ManagedReader {
         IOUtils.readFully(in, body);
         IOUtils.skipFully(in, 4);
       } catch (EOFException e) {
-        logger.warn("Ignoring truncated pcapng block at end of {}", path);
-        return null;
+        finished = true;
+        return PcapngBlock.errorRow("file: truncated block at byte " + blockStart);
       }
+      position += totalLength;
       ByteBuffer block = ByteBuffer.wrap(body).order(byteOrder);
 
       if (type == SECTION_HEADER_TYPE) {
         // Interface IDs are scoped to their section
         interfaces.clear();
       } else if (type == INTERFACE_DESCRIPTION_TYPE) {
-        interfaces.add(new Interface(block));
+        interfaces.add(new Interface(block, interfaces.size()));
       } else if (type == ENHANCED_PACKET_TYPE && !config.getStat()) {
-        return readPacket(block);
+        return readPacket(block, blockStart);
       }
 
       if (config.getStat() && (type == SECTION_HEADER_TYPE || type == INTERFACE_DESCRIPTION_TYPE
@@ -231,18 +259,28 @@ public class PcapngBatchReader implements ManagedReader {
         PcapngBlock row = new PcapngBlock();
         row.comment = readComment(block, optionsOffset(type, block));
         row.stats = readStats(type, block);
+        if (type == INTERFACE_DESCRIPTION_TYPE && interfaces.get(interfaces.size() - 1).error != null) {
+          row.addError(interfaces.get(interfaces.size() - 1).error);
+        }
         return row;
       }
     }
   }
 
-  private PcapngBlock readPacket(ByteBuffer block) throws IOException {
+  private PcapngBlock readPacket(ByteBuffer block, long blockStart) {
     PcapngBlock row = new PcapngBlock();
     row.interfaceId = block.getInt(0);
+    Interface iface;
     if (row.interfaceId < 0 || row.interfaceId >= interfaces.size()) {
-      throw new IOException("Packet references undefined interface " + row.interfaceId);
+      // Unknown link type and resolution: keep the row, decode nothing
+      iface = Interface.UNDEFINED;
+      row.addError("file: packet references undefined interface " + row.interfaceId);
+    } else {
+      iface = interfaces.get(row.interfaceId);
+      if (iface.error != null) {
+        row.addError(iface.error);
+      }
     }
-    Interface iface = interfaces.get(row.interfaceId);
     row.interfaceName = iface.name;
     row.linkType = iface.linkType;
     // 64-bit timestamp stored as high then low 32-bit words
@@ -250,7 +288,8 @@ public class PcapngBatchReader implements ManagedReader {
     row.capturedLength = block.getInt(12);
     row.originalLength = block.getInt(16);
     if (row.capturedLength < 0 || 20 + row.capturedLength > block.capacity()) {
-      throw new IOException("Invalid captured length " + row.capturedLength);
+      return PcapngBlock.errorRow("file: block at byte " + blockStart + " has invalid captured length "
+          + row.capturedLength);
     }
     row.data = Arrays.copyOfRange(block.array(), 20, 20 + row.capturedLength);
 
@@ -281,6 +320,8 @@ public class PcapngBatchReader implements ManagedReader {
       if (packet.readPcapng(row.data, row.linkType)) {
         packet.setTimestamp(row.timestamp);
         row.packet = packet;
+      } else if (packet.getDecodeError() != null) {
+        row.addError("packet: " + packet.getDecodeError());
       }
     }
     return row;
@@ -463,20 +504,23 @@ public class PcapngBatchReader implements ManagedReader {
 
   /** What packets need from their Interface Description Block. */
   private static class Interface {
-    static final Interface DEFAULT = new Interface();
+    static final Interface DEFAULT = new Interface(PacketDecoder.LINKTYPE_ETHERNET);
+    // For packets naming an interface that was never described: nothing is decoded
+    static final Interface UNDEFINED = new Interface(-1);
     final int linkType;
     String name;
+    // Why the interface's settings could not all be used, or null
+    String error;
     // Timestamps are counted in units of 1 / unitsPerSecond, plus an offset in seconds
     long unitsPerSecond = 1_000_000;
     long offsetSeconds;
 
-    private Interface() {
-      linkType = PacketDecoder.LINKTYPE_ETHERNET;
+    private Interface(int linkType) {
+      this.linkType = linkType;
     }
 
-    Interface(ByteBuffer block) throws IOException {
+    Interface(ByteBuffer block, int index) {
       linkType = block.getShort(0) & 0xFFFF;
-      IOException[] error = new IOException[1];
       forEachOption(block, 8, (code, start, length) -> {
         switch (code) {
           case IF_NAME:
@@ -490,7 +534,8 @@ public class PcapngBatchReader implements ManagedReader {
             } else if ((resolution & 0x80) != 0 && exponent <= 62) {
               unitsPerSecond = 1L << exponent;
             } else {
-              error[0] = new IOException("Unsupported if_tsresol " + resolution);
+              error = "file: interface " + index + " has unsupported if_tsresol " + resolution
+                  + "; timestamps assume microseconds";
             }
             break;
           case IF_TSOFFSET:
@@ -500,9 +545,6 @@ public class PcapngBatchReader implements ManagedReader {
             break;
         }
       });
-      if (error[0] != null) {
-        throw error[0];
-      }
     }
 
     Instant toInstant(long timestamp) {
@@ -518,21 +560,42 @@ public class PcapngBatchReader implements ManagedReader {
 
   @Override
   public void close() {
+    if (protocolColumns != null) {
+      protocolColumns.logSummary(logger, path.toString());
+    }
     AutoCloseables.closeSilently(in);
   }
 
   private void processBlock(PcapngBlock block) {
+    if (block.errorRow) {
+      protocolColumns.writeErrorRow(String.join("; ", block.errors));
+      return;
+    }
     loader.start();
     for (ColumnDefn columnDefn : projectedColumns) {
-      // pcapng file name
-      if (columnDefn.getName().equals(PcapColumn.PATH_NAME)) {
-        columnDefn.load(path.getName());
-      } else {
-        // pcapng block data
-        columnDefn.load(block);
+      try {
+        if (columnDefn.getName().equals(PcapColumn.PATH_NAME)) {
+          // pcapng file name
+          columnDefn.load(path.getName());
+        } else {
+          // pcapng block data
+          columnDefn.load(block);
+        }
+      } catch (RuntimeException e) {
+        block.addError("packet: " + columnDefn.getName() + ": " + ProtocolDecoders.describe(e));
       }
     }
+    if (config.getStat()) {
+      protocolColumns.writeErrors(block.errors);
+    } else {
+      protocolColumns.writePacket(block.packet, block.errors);
+    }
     loader.save();
+  }
+
+  private static boolean isDecoderColumn(String name) {
+    return name.equals(ProtocolColumns.PARSED_PROTOCOL) || name.equals(ProtocolColumns.PARSED_DATA)
+        || name.equals(ProtocolColumns.DECODE_ERROR);
   }
 
   /**
@@ -556,6 +619,7 @@ public class PcapngBatchReader implements ManagedReader {
     for (ColumnDefn columnDefn : projectedColumns) {
       columnDefn.define(builder);
     }
+    ProtocolColumns.addColumns(builder, rowMode(), ProtocolDecoders.get());
     return builder.buildSchema();
   }
 
@@ -583,6 +647,9 @@ public class PcapngBatchReader implements ManagedReader {
       for (SchemaPath schemaPath : columns) {
         // Support Case-Insensitive
         String projectedName = schemaPath.rootName().toLowerCase();
+        if (isDecoderColumn(projectedName)) {
+          continue;
+        }
         PcapColumn pcapColumn;
         if (config.getStat()) {
           pcapColumn = PcapColumn.getSummaryColumns().get(projectedName);

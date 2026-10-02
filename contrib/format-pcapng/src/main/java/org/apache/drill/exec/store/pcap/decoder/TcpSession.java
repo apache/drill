@@ -190,6 +190,14 @@ public class TcpSession {
     return handshake.isConnected();
   }
 
+  public List<Packet> getPacketsFromSender() {
+    return Collections.unmodifiableList(packetsFromSender);
+  }
+
+  public List<Packet> getPacketsFromReceiver() {
+    return Collections.unmodifiableList(packetsFromReceiver);
+  }
+
   public boolean connectionClosed() {
     return handshake.isClosed();
   }

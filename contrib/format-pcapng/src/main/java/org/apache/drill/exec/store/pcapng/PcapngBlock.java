@@ -18,6 +18,8 @@
 package org.apache.drill.exec.store.pcapng;
 
 import java.time.Instant;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -45,4 +47,22 @@ class PcapngBlock {
   String hash;
   /** Decoded packet, or null if the link type or protocol is not supported. */
   PacketDecoder packet;
+  /** Problems found while reading this block, or null. */
+  List<String> errors;
+  /** True for a row that only reports an error. */
+  boolean errorRow;
+
+  void addError(String error) {
+    if (errors == null) {
+      errors = new ArrayList<>();
+    }
+    errors.add(error);
+  }
+
+  static PcapngBlock errorRow(String error) {
+    PcapngBlock row = new PcapngBlock();
+    row.errorRow = true;
+    row.addError(error);
+    return row;
+  }
 }

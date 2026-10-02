@@ -18,6 +18,8 @@
 package org.apache.drill.exec.store.pcapng;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.assertNotNull;
 
 import java.nio.file.Paths;
 import java.time.Instant;
@@ -27,6 +29,7 @@ import org.apache.drill.common.exceptions.UserRemoteException;
 import org.apache.drill.common.types.TypeProtos.MinorType;
 import org.apache.drill.exec.physical.rowSet.RowSet;
 import org.apache.drill.exec.physical.rowSet.RowSetBuilder;
+import org.apache.drill.exec.record.metadata.ColumnMetadata;
 import org.apache.drill.exec.record.metadata.SchemaBuilder;
 import org.apache.drill.exec.record.metadata.TupleMetadata;
 import org.apache.drill.test.ClusterFixture;
@@ -65,8 +68,8 @@ public class TestPcapngRecordReader extends ClusterTest {
 
     TupleMetadata schema = new SchemaBuilder()
         .addNullable("type", MinorType.VARCHAR)
-        .add("packet_length", MinorType.INT)
-        .add("timestamp", MinorType.TIMESTAMP)
+        .addNullable("packet_length", MinorType.INT)
+        .addNullable("timestamp", MinorType.TIMESTAMP)
         .buildSchema();
 
     RowSet expected = new RowSetBuilder(client.allocator(), schema)
@@ -119,8 +122,8 @@ public class TestPcapngRecordReader extends ClusterTest {
 
     TupleMetadata schema = new SchemaBuilder()
         .addNullable("type", MinorType.VARCHAR)
-        .add("packet_length", MinorType.INT)
-        .add("timestamp", MinorType.TIMESTAMP)
+        .addNullable("packet_length", MinorType.INT)
+        .addNullable("timestamp", MinorType.TIMESTAMP)
         .buildSchema();
 
     RowSet expected = new RowSetBuilder(client.allocator(), schema)
@@ -152,7 +155,7 @@ public class TestPcapngRecordReader extends ClusterTest {
         .addNullable("type", MinorType.VARCHAR)
         .addNullable("src_ip", MinorType.VARCHAR)
         .addNullable("dst_ip", MinorType.VARCHAR)
-        .add("packet_length", MinorType.INT)
+        .addNullable("packet_length", MinorType.INT)
         .buildSchema();
 
     RowSet expected = new RowSetBuilder(client.allocator(), schema)
@@ -171,8 +174,8 @@ public class TestPcapngRecordReader extends ClusterTest {
     RowSet sets = client.queryBuilder().sql(sql).rowSet();
 
     TupleMetadata schema = new SchemaBuilder()
-        .add("timestamp", MinorType.TIMESTAMP)
-        .add("packet_length", MinorType.INT)
+        .addNullable("timestamp", MinorType.TIMESTAMP)
+        .addNullable("packet_length", MinorType.INT)
         .addNullable("type", MinorType.VARCHAR)
         .addNullable("src_ip", MinorType.VARCHAR)
         .addNullable("dst_ip", MinorType.VARCHAR)
@@ -196,21 +199,32 @@ public class TestPcapngRecordReader extends ClusterTest {
         .addNullable("tcp_flags_fin", MinorType.INT)
         .addNullable("tcp_parsed_flags", MinorType.VARCHAR)
         .addNullable("packet_data", MinorType.VARCHAR)
-        .add("captured_length", MinorType.INT)
-        .add("interface_id", MinorType.INT)
+        .addNullable("captured_length", MinorType.INT)
+        .addNullable("interface_id", MinorType.INT)
         .addNullable("interface_name", MinorType.VARCHAR)
-        .add("link_type", MinorType.INT)
+        .addNullable("link_type", MinorType.INT)
         .addNullable("comment", MinorType.VARCHAR)
         .addNullable("direction", MinorType.VARCHAR)
         .addNullable("reception_type", MinorType.VARCHAR)
         .addNullable("fcs_length", MinorType.INT)
         .addNullable("drop_count", MinorType.BIGINT)
         .addNullable("packet_hash", MinorType.VARCHAR)
-        .build();
+        .addNullable("parsed_protocol", MinorType.VARCHAR)
+        .addNullable("decode_error", MinorType.VARCHAR)
+        .buildSchema();
 
-    RowSet expected = new RowSetBuilder(client.allocator(), schema).build();
-    new RowSetComparison(expected).verifyAndClearAll(sets);
+    // parsed_data holds one map per registered decoder, so only its presence is pinned here
+    TupleMetadata actual = sets.schema();
+    assertEquals(schema.size() + 1, actual.size());
+    for (int i = 0; i < schema.size(); i++) {
+      ColumnMetadata column = schema.metadata(i);
+      assertEquals(column.name(), column.majorType(), actual.metadata(column.name()).majorType());
+    }
+    assertTrue(actual.metadata("parsed_data").isMap());
+    assertNotNull(actual.metadata("parsed_data").tupleSchema().metadata("echo_test"));
+    sets.clear();
   }
+
 
   @Test
   public void testBigEndian() throws Exception {
@@ -244,14 +258,14 @@ public class TestPcapngRecordReader extends ClusterTest {
     RowSet results = client.queryBuilder().sql(sql).rowSet();
 
     TupleMetadata schema = new SchemaBuilder()
-        .add("interface_id", MinorType.INT)
-        .add("link_type", MinorType.INT)
+        .addNullable("interface_id", MinorType.INT)
+        .addNullable("link_type", MinorType.INT)
         .addNullable("interface_name", MinorType.VARCHAR)
-        .add("timestamp", MinorType.TIMESTAMP)
+        .addNullable("timestamp", MinorType.TIMESTAMP)
         .addNullable("src_ip", MinorType.VARCHAR)
         .addNullable("src_port", MinorType.INT)
         .addNullable("src_mac_address", MinorType.VARCHAR)
-        .add("captured_length", MinorType.INT)
+        .addNullable("captured_length", MinorType.INT)
         .buildSchema();
 
     Instant ts = Instant.parse("2024-01-02T03:04:05.678Z");
@@ -398,8 +412,8 @@ public class TestPcapngRecordReader extends ClusterTest {
 
     TupleMetadata schema = new SchemaBuilder()
             .addNullable("type", MinorType.VARCHAR)
-            .add("packet_length", MinorType.INT)
-            .add("timestamp", MinorType.TIMESTAMP)
+            .addNullable("packet_length", MinorType.INT)
+            .addNullable("timestamp", MinorType.TIMESTAMP)
             .buildSchema();
 
     RowSet expected = new RowSetBuilder(client.allocator(), schema)
