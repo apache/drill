@@ -45,6 +45,8 @@ import static org.apache.drill.exec.store.pcap.PcapFormatUtils.parseBytesToASCII
 
 public class PcapBatchReader implements ManagedReader {
   protected static final int BUFFER_SIZE = 500_000;
+  // libpcap's largest snapshot length; a larger header value is not trusted for allocation
+  private static final int MAX_SNAPLEN = 262_144;
   private static final Logger logger = LoggerFactory.getLogger(PcapBatchReader.class);
   private final FileDescrip file;
   private PacketDecoder decoder;
@@ -90,6 +92,8 @@ public class PcapBatchReader implements ManagedReader {
   // Set when a damaged record makes the rest of the file unreadable
   private boolean finished;
   private int packetCount;
+  // Snapshot length from the file header, capped at MAX_SNAPLEN
+  private int maxLength;
 
 
   public PcapBatchReader(PcapFormatConfig readerConfig, FileSchemaNegotiator negotiator) {
@@ -163,7 +167,9 @@ public class PcapBatchReader implements ManagedReader {
     try {
       fsStream = file.fileSystem().openPossiblyCompressedStream(file.split().getPath());
       decoder = new PacketDecoder(fsStream);
-      buffer = new byte[BUFFER_SIZE + decoder.getMaxLength()];
+      int snaplen = decoder.getMaxLength();
+      maxLength = snaplen <= 0 || snaplen > MAX_SNAPLEN ? MAX_SNAPLEN : snaplen;
+      buffer = new byte[BUFFER_SIZE + maxLength];
       validBytes = fsStream.read(buffer);
     } catch (IOException e) {
       decoder = null;
@@ -217,13 +223,13 @@ public class PcapBatchReader implements ManagedReader {
     if (offset >= validBytes) {
       return false;
     }
-    if (validBytes - offset < decoder.getMaxLength()) {
+    if (validBytes - offset < maxLength) {
       getNextPacket(rowWriter);
     }
 
     int old = offset;
     try {
-      offset = decoder.decodePacket(buffer, offset, packet, decoder.getMaxLength(), validBytes);
+      offset = decoder.decodePacket(buffer, offset, packet, maxLength, validBytes);
     } catch (RuntimeException e) {
       // The record's length cannot be trusted, so neither can anything after it
       finished = true;
@@ -241,7 +247,12 @@ public class PcapBatchReader implements ManagedReader {
     }
 
     if (sessionizer != null) {
-      sessionizer.addPacket(packet);
+      if (packet.getDecodeError() != null) {
+        // Packets are not rows here; a packet that failed to decode cannot join a session
+        protocolColumns.writeErrorRowOnce("packet: " + packet.getDecodeError());
+      } else {
+        sessionizer.addPacket(packet);
+      }
     } else {
       addDataToTable(packet, decoder.getNetwork(), rowWriter);
     }
