@@ -155,6 +155,13 @@ Decoders for protocols that carry cleartext credentials (FTP, POP3, IMAP, SMTP A
 when the format option `exposeCredentials` is true. Credentials sent after a protocol switches to TLS are
 not visible to any decoder.
 
+Challenge-response authentication is treated differently. The SMB and NTLM path outputs the account name,
+domain and workstation but never the NTLM challenge, responses or session key, with or without
+`exposeCredentials`, because those are offline-crackable material rather than a password. Kerberos records
+only the encryption types, never the encrypted parts. RADIUS and SNMP community strings follow the same rule
+as cleartext passwords. The aim is to let an analyst see who authenticated where, not to extract hashes for
+cracking.
+
 ## Error Handling
 
 The rule: **an error never stops a file from being analyzed, and every error is visible in the results.**
@@ -220,7 +227,8 @@ Phase | Contents
 1. Framework | Interfaces, registry, `TcpStream`, the three columns, `exposeCredentials`, the error handling above for both readers. Decoders: DNS (including mDNS and LLMNR) per packet, HTTP/1.x per packet and per session.
 2. Packet decoders | DHCP, DHCPv6, NTP, TLS ClientHello (SNI, ALPN, JA3), SSDP, SIP, Syslog, NetBIOS name service, TFTP, STUN, RADIUS, SNMP, ICMP and ICMPv6, ARP
 3. Session decoders | SMTP, POP3, IMAP, FTP control channel, SSH banners (HASSH if practical), TLS server side (certificate subject, issuer, validity; JA3S), DNS over TCP
-Later | Kerberos, SMB, QUIC, HTTP/2. These need much more parsing per protocol and are encrypted or deeply nested.
+4. Auth and QUIC | Kerberos, LDAP, SMB2/3 (with a shared NTLMSSP parser), QUIC Initial (ClientHello from public keys), JA4, Telnet, RDP, MQTT
+Later | SMB file-level operations, HTTP/2, and decryption from key-log files. These need much more parsing or key material Drill does not have.
 
 ## Phase 1 Decoder Fields
 
@@ -579,6 +587,132 @@ Field | Type
 `responses` | repeated map: `tag`, `status` (`OK`, `NO`, `BAD`), `text` VARCHAR
 `fetched_messages` | repeated map: `number` INT, `uid` BIGINT plus the message map, from FETCH ENVELOPE or header bodies
 
+## Phase 4 Decoder Fields
+
+Authentication and lateral-movement protocols, plus QUIC. These surface identity and session metadata only;
+they never decrypt user traffic or output crackable credential material (see the per-decoder notes).
+
+### `quic` (packet)
+
+UDP on 80, 443 and 8443, or any UDP whose first byte is a QUIC v1 long header with the Initial type. QUIC v1
+Initial packets are decrypted with the initial keys derived from the Destination Connection ID and the
+RFC 9001 published salt, so the ClientHello inside is read from public values only. Other versions, Version
+Negotiation, and non-Initial packet types record the type and version and stop without decryption.
+
+Field | Type
+------|-----
+`packet_type` | VARCHAR (`initial`, `0rtt`, `handshake`, `retry`, `version_negotiation`)
+`version` | VARCHAR (8 hex digits)
+`dcid`, `scid` | VARCHAR (hex)
+`sni` | VARCHAR (from the decrypted ClientHello)
+`alpn`, `supported_versions` | VARCHAR array
+`cipher_suites` | INT array
+`ja4` | VARCHAR (the QUIC `q...` form)
+
+### `kerberos` (packet)
+
+UDP and single-segment TCP, port 88. Valid only when the outer ASN.1 APPLICATION tag is a known message type
+and the protocol version is 5. Encrypted parts are never read; only the ticket's encryption type is recorded,
+which is the Kerberoasting signal (23 = RC4-HMAC).
+
+Field | Type
+------|-----
+`message_type` | VARCHAR (`AS-REQ`, `AS-REP`, `TGS-REQ`, `TGS-REP`, `KRB-ERROR`)
+`realm`, `client_name`, `server_name` | VARCHAR (`server_name` is an SPN such as `krbtgt/REALM`)
+`encryption_types` | INT array (etypes offered in a request)
+`ticket_encryption_type` | INT (etype of the ticket in a reply)
+`error_code` | INT
+`error_text` | VARCHAR (name of the error, e.g. `KDC_ERR_PREAUTH_REQUIRED`)
+`pre_auth_present` | BIT
+`till` | TIMESTAMP (requested ticket end time)
+
+### JA4 (added to the `tls` and `quic` decoders)
+
+JA4 is the successor to JA3 for fingerprinting a TLS ClientHello, computed for both TLS over TCP and QUIC.
+Only JA4 itself is implemented; the JA4S, JA4H and JA4SSH variants are under a license that is not compatible
+with Apache, so they are not included. JA3 and JA3S are unchanged.
+
+Field | Type
+------|-----
+`ja4` | VARCHAR (`a_b_c`; the leading character is `t` for TCP, `q` for QUIC)
+`ja4_raw` | VARCHAR (the same fingerprint with the cipher, extension and signature-algorithm lists shown before hashing)
+
+## Phase 4 Session Decoder Fields
+
+### `smb` (session)
+
+TCP 445 and 139. SMB2 and SMB3. A pure SMB1 session reports only `dialect` = `SMB1`; an SMB3 transform header
+marks the session encrypted and stops that direction. The authenticating identity comes from the NTLMSSP blob
+inside SESSION_SETUP. Only identity metadata is output: the NTLM challenge, responses and session key are
+never read or exposed, with or without `exposeCredentials`.
+
+Field | Type
+------|-----
+`dialect` | VARCHAR (negotiated, e.g. `3.1.1`; `SMB1` if never upgraded)
+`client_dialects` | VARCHAR array
+`signing_required`, `encryption` | BIT
+`server_guid`, `client_guid` | VARCHAR
+`auth_type` | VARCHAR (`ntlmssp` or `kerberos`)
+`user_name`, `domain_name`, `workstation` | VARCHAR (from NTLM AUTHENTICATE)
+`ntlm_version` | VARCHAR (`NTLMv1` / `NTLMv2`)
+
+### `ldap` (session)
+
+TCP 389. Bind, search and their responses, reassembled across segments.
+
+Field | Type
+------|-----
+`version` | INT
+`bind_dn` | VARCHAR
+`auth_type` | VARCHAR (`simple` or the SASL mechanism)
+`password_present` | BIT
+`password` | VARCHAR (cleartext simple-bind password, only with `exposeCredentials`)
+`bind_result_code` | INT
+`bind_result` | VARCHAR (name of the result code, e.g. `invalidCredentials`)
+`searches` | repeated map: `base_dn` VARCHAR, `scope` VARCHAR (`base`/`one`/`sub`), `filter` VARCHAR (RFC 4515) — capped at 64
+`entries_returned` | VARCHAR array (object DNs, capped at 64)
+`operation_count` | INT
+
+### `telnet` (session)
+
+TCP 23. Best-effort text extraction: IAC negotiation is stripped and the readable text of each direction is
+kept. The login and password are heuristics drawn from the prompts in the server text.
+
+Field | Type
+------|-----
+`client_text`, `server_text` | VARCHAR (IAC removed, capped at 4096)
+`terminal_type` | VARCHAR
+`login_name` | VARCHAR (text after a `login:` prompt)
+`password_present` | BIT (a `Password:` prompt was seen)
+`password` | VARCHAR (the client input after it, only with `exposeCredentials`)
+`options` | repeated map: `option`, `negotiation` VARCHAR — capped at 64
+
+### `rdp` (session)
+
+TCP 3389. Only the initial clear X.224 exchange is read; everything after is TLS.
+
+Field | Type
+------|-----
+`cookie` | VARCHAR (the `mstshash` routing cookie, usually the username)
+`requested_protocols` | VARCHAR array (`RDP`, `TLS`, `CredSSP`, `RDSTLS`, `HYBRID_EX`)
+`selected_protocol` | VARCHAR
+`negotiation_failure` | VARCHAR
+
+### `mqtt` (session)
+
+TCP 1883. MQTT 3.1, 3.1.1 and 5.0.
+
+Field | Type
+------|-----
+`protocol_level` | INT (3, 4 or 5)
+`client_id`, `user_name`, `will_topic` | VARCHAR
+`password_present` | BIT
+`password` | VARCHAR (CONNECT password, only with `exposeCredentials`)
+`connect_return_code` | INT
+`connect_result` | VARCHAR
+`published_topics`, `subscribed_topics` | VARCHAR array (capped at 64)
+`packet_count` | INT
+
 ## Writing a Decoder
 
 1. Implement `PacketProtocolDecoder<T>` or `SessionProtocolDecoder<T>`, where `T` is a small class
@@ -621,3 +755,14 @@ Differences from the design above, recorded during implementation:
 - Field names avoid words Drill reserves after a dot (`from`, `timestamp`, `date`, `group`), so every field can
   be queried without quotes: SIP and the mail decoders use `from_address` and `to_address`, syslog `timestamp_text`, mail `date_text`.
   `TestDecoderFieldNames` checks this for every registered decoder.
+- JA4 follows the canonical FoxIO algorithm, which differs from an early draft of this spec: in the `c`
+  component the extensions are sorted and the signature algorithms are left in order. Only JA4 is implemented;
+  JA4S, JA4H and JA4SSH are under a license that is not compatible with Apache.
+- QUIC reads only the client Initial packet. Its keys come entirely from the Destination Connection ID and the
+  RFC 9001 salt, so decrypting the ClientHello uses public values, not key material Drill is given. A server
+  Initial, a failed AEAD tag or a truncated packet becomes `decode_error`, never a crash. QUIC is registered
+  last and returns null for non-QUIC UDP, so it does not disturb the other UDP decoders.
+- Kerberos and LDAP share a small ASN.1 BER reader in `protocol/asn1`; the SNMP `BerReader` is package-private
+  and was left untouched.
+- SMB and NTLM output identity only. The NTLM parser reads the length of the NT response to tell NTLMv1 from
+  NTLMv2 but never copies the challenge, response or session key out, so no crackable material is ever written.
