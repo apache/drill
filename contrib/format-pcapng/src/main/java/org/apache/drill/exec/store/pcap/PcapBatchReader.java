@@ -27,7 +27,6 @@ import org.apache.drill.exec.record.metadata.SchemaBuilder;
 import org.apache.drill.exec.record.metadata.TupleMetadata;
 import org.apache.drill.exec.store.pcap.decoder.Packet;
 import org.apache.drill.exec.store.pcap.decoder.PacketDecoder;
-import org.apache.drill.exec.store.pcap.decoder.TcpSession;
 import org.apache.drill.exec.store.pcap.schema.Schema;
 import org.apache.drill.exec.store.pcap.plugin.PcapFormatConfig;
 import org.apache.drill.exec.vector.accessor.ScalarWriter;
@@ -37,8 +36,6 @@ import org.slf4j.LoggerFactory;
 import java.io.IOException;
 import java.io.InputStream;
 import java.time.Instant;
-import java.util.HashMap;
-import java.util.Map;
 
 import static org.apache.drill.exec.store.pcap.PcapFormatUtils.parseBytesToASCII;
 
@@ -82,26 +79,11 @@ public class PcapBatchReader implements ManagedReader {
   private ScalarWriter dataWriter;
   private ScalarWriter isCorruptWriter;
   private final PcapFormatConfig readerConfig;
-  // Writers for TCP Sessions
-  private ScalarWriter sessionStartTimeWriter;
-  private ScalarWriter sessionEndTimeWriter;
-  private ScalarWriter sessionDurationWriter;
-  private ScalarWriter connectionTimeWriter;
-  private ScalarWriter packetCountWriter;
-  private ScalarWriter originPacketCounterWriter;
-  private ScalarWriter remotePacketCounterWriter;
-  private ScalarWriter originDataVolumeWriter;
-  private ScalarWriter remoteDataVolumeWriter;
-  private ScalarWriter hostDataWriter;
-  private ScalarWriter remoteDataWriter;
-  private Map<Long, TcpSession> sessionQueue;
+  private TcpSessionizer sessionizer;
 
 
   public PcapBatchReader(PcapFormatConfig readerConfig, FileSchemaNegotiator negotiator) {
     this.readerConfig = readerConfig;
-    if (readerConfig.getSessionizeTCPStreams()) {
-      sessionQueue = new HashMap<>();
-    }
 
     file = negotiator.file();
     openFile();
@@ -113,14 +95,19 @@ public class PcapBatchReader implements ManagedReader {
 
     // Creates writers for all fields (Since schema is known)
     rowWriter = loader.writer();
-    populateColumnWriters(rowWriter);
+    if (readerConfig.getSessionizeTCPStreams()) {
+      sessionizer = new TcpSessionizer(rowWriter);
+    } else {
+      populateColumnWriters(rowWriter);
+    }
   }
 
   @Override
   public boolean next() {
     while (!rowWriter.isFull()) {
       if (!parseNextPacket(rowWriter)) {
-        return false;
+        // At end of file, more batches are needed only for open sessions that did not fit
+        return sessionizer != null && !sessionizer.writeOpenSessions();
       }
     }
     return true;
@@ -129,12 +116,6 @@ public class PcapBatchReader implements ManagedReader {
   @Override
   public void close() {
 
-    /* This warning could occur in the event of a corrupt or incomplete PCAP file. Specifically,
-     * if a session is started in one file and the end of the session is not captured in the same file.
-     */
-    if (sessionQueue != null && !sessionQueue.isEmpty()) {
-      logger.warn("Unclosed sessions remaining in PCAP");
-    }
 
     try {
       fsStream.close();
@@ -164,63 +145,39 @@ public class PcapBatchReader implements ManagedReader {
   }
 
   private void populateColumnWriters(RowSetLoader rowWriter) {
-    if (readerConfig.getSessionizeTCPStreams()) {
-      srcMacAddressWriter = rowWriter.scalar("src_mac_address");
-      dstMacAddressWriter = rowWriter.scalar("dst_mac_address");
-      dstIPWriter = rowWriter.scalar("dst_ip");
-      srcIPWriter = rowWriter.scalar("src_ip");
-      srcPortWriter = rowWriter.scalar("src_port");
-      dstPortWriter = rowWriter.scalar("dst_port");
-      sessionStartTimeWriter = rowWriter.scalar("session_start_time");
-      sessionEndTimeWriter = rowWriter.scalar("session_end_time");
-      sessionDurationWriter = rowWriter.scalar("session_duration");
-      connectionTimeWriter = rowWriter.scalar("connection_time");
-      tcpSessionWriter = rowWriter.scalar("tcp_session");
-      packetCountWriter = rowWriter.scalar("total_packet_count");
-      hostDataWriter = rowWriter.scalar("data_from_originator");
-      remoteDataWriter = rowWriter.scalar("data_from_remote");
+    typeWriter = rowWriter.scalar("type");
+    timestampWriter = rowWriter.scalar("packet_timestamp");
+    timestampMicroWriter = rowWriter.scalar("timestamp_micro");
+    networkWriter = rowWriter.scalar("network");
+    srcMacAddressWriter = rowWriter.scalar("src_mac_address");
+    dstMacAddressWriter = rowWriter.scalar("dst_mac_address");
+    dstIPWriter = rowWriter.scalar("dst_ip");
+    srcIPWriter = rowWriter.scalar("src_ip");
+    srcPortWriter = rowWriter.scalar("src_port");
+    dstPortWriter = rowWriter.scalar("dst_port");
+    packetLengthWriter = rowWriter.scalar("packet_length");
 
-      originPacketCounterWriter = rowWriter.scalar("packet_count_from_origin");
-      remotePacketCounterWriter = rowWriter.scalar("packet_count_from_remote");
-      originDataVolumeWriter = rowWriter.scalar("data_volume_from_origin");
-      remoteDataVolumeWriter = rowWriter.scalar("data_volume_from_remote");
-      isCorruptWriter = rowWriter.scalar("is_corrupt");
+    //Writers for TCP Packets
+    tcpSessionWriter = rowWriter.scalar("tcp_session");
+    tcpSequenceWriter = rowWriter.scalar("tcp_sequence");
+    tcpAckNumberWriter = rowWriter.scalar("tcp_ack");
+    tcpFlagsWriter = rowWriter.scalar("tcp_flags");
+    tcpParsedFlagsWriter = rowWriter.scalar("tcp_parsed_flags");
+    tcpNsWriter = rowWriter.scalar("tcp_flags_ns");
+    tcpCwrWriter = rowWriter.scalar("tcp_flags_cwr");
+    tcpEceWriter = rowWriter.scalar("tcp_flags_ece");
+    tcpFlagsEceEcnCapableWriter = rowWriter.scalar("tcp_flags_ece_ecn_capable");
+    tcpFlagsCongestionWriter = rowWriter.scalar("tcp_flags_ece_congestion_experienced");
 
-    } else {
-      typeWriter = rowWriter.scalar("type");
-      timestampWriter = rowWriter.scalar("packet_timestamp");
-      timestampMicroWriter = rowWriter.scalar("timestamp_micro");
-      networkWriter = rowWriter.scalar("network");
-      srcMacAddressWriter = rowWriter.scalar("src_mac_address");
-      dstMacAddressWriter = rowWriter.scalar("dst_mac_address");
-      dstIPWriter = rowWriter.scalar("dst_ip");
-      srcIPWriter = rowWriter.scalar("src_ip");
-      srcPortWriter = rowWriter.scalar("src_port");
-      dstPortWriter = rowWriter.scalar("dst_port");
-      packetLengthWriter = rowWriter.scalar("packet_length");
+    tcpUrgWriter = rowWriter.scalar("tcp_flags_urg");
+    tcpAckWriter = rowWriter.scalar("tcp_flags_ack");
+    tcpPshWriter = rowWriter.scalar("tcp_flags_psh");
+    tcpRstWriter = rowWriter.scalar("tcp_flags_rst");
+    tcpSynWriter = rowWriter.scalar("tcp_flags_syn");
+    tcpFinWriter = rowWriter.scalar("tcp_flags_fin");
 
-      //Writers for TCP Packets
-      tcpSessionWriter = rowWriter.scalar("tcp_session");
-      tcpSequenceWriter = rowWriter.scalar("tcp_sequence");
-      tcpAckNumberWriter = rowWriter.scalar("tcp_ack");
-      tcpFlagsWriter = rowWriter.scalar("tcp_flags");
-      tcpParsedFlagsWriter = rowWriter.scalar("tcp_parsed_flags");
-      tcpNsWriter = rowWriter.scalar("tcp_flags_ns");
-      tcpCwrWriter = rowWriter.scalar("tcp_flags_cwr");
-      tcpEceWriter = rowWriter.scalar("tcp_flags_ece");
-      tcpFlagsEceEcnCapableWriter = rowWriter.scalar("tcp_flags_ece_ecn_capable");
-      tcpFlagsCongestionWriter = rowWriter.scalar("tcp_flags_ece_congestion_experienced");
-
-      tcpUrgWriter = rowWriter.scalar("tcp_flags_urg");
-      tcpAckWriter = rowWriter.scalar("tcp_flags_ack");
-      tcpPshWriter = rowWriter.scalar("tcp_flags_psh");
-      tcpRstWriter = rowWriter.scalar("tcp_flags_rst");
-      tcpSynWriter = rowWriter.scalar("tcp_flags_syn");
-      tcpFinWriter = rowWriter.scalar("tcp_flags_fin");
-
-      dataWriter = rowWriter.scalar("data");
-      isCorruptWriter = rowWriter.scalar("is_corrupt");
-    }
+    dataWriter = rowWriter.scalar("data");
+    isCorruptWriter = rowWriter.scalar("is_corrupt");
   }
 
   private boolean parseNextPacket(RowSetLoader rowWriter) {
@@ -242,24 +199,8 @@ public class PcapBatchReader implements ManagedReader {
       logger.debug("Invalid packet at offset {}", old);
     }
 
-    // If we are resessionizing the TCP Stream, add the packet to the stream
-    if (readerConfig.getSessionizeTCPStreams()) {
-      // If the session has not been seen before, add it to the queue
-      long sessionID = packet.getSessionHash();
-      if (!sessionQueue.containsKey(sessionID)) {
-        logger.debug("Adding session {} to session queue.", sessionID);
-        sessionQueue.put(sessionID, new TcpSession(sessionID));
-      }
-
-      // When the session is closed, write it and remove it from the session queue.
-      sessionQueue.get(sessionID).addPacket(packet);
-      if (sessionQueue.get(sessionID).connectionClosed()) {
-        // Write out the session
-        addSessionDataToTable(sessionQueue.get(sessionID), rowWriter);
-        // Remove from the queue
-        sessionQueue.remove(sessionID);
-      }
-
+    if (sessionizer != null) {
+      sessionizer.addPacket(packet);
     } else {
       addDataToTable(packet, decoder.getNetwork(), rowWriter);
     }
@@ -293,34 +234,6 @@ public class PcapBatchReader implements ManagedReader {
       return false;
     }
     return true;
-  }
-
-  private void addSessionDataToTable(TcpSession session, RowSetLoader rowWriter) {
-    rowWriter.start();
-
-    sessionStartTimeWriter.setTimestamp(session.getSessionStartTime());
-    sessionEndTimeWriter.setTimestamp(session.getSessionEndTime());
-    sessionDurationWriter.setPeriod(session.getSessionDuration());
-    connectionTimeWriter.setPeriod(session.getConnectionTime());
-
-    srcMacAddressWriter.setString(session.getSrcMac());
-    dstMacAddressWriter.setString(session.getDstMac());
-    srcIPWriter.setString(session.getSrcIP());
-    dstIPWriter.setString(session.getDstIP());
-    srcPortWriter.setInt(session.getSrcPort());
-    dstPortWriter.setInt(session.getDstPort());
-    tcpSessionWriter.setLong(session.getSessionID());
-    packetCountWriter.setInt(session.getPacketCount());
-
-    originPacketCounterWriter.setInt(session.getPacketCountFromOrigin());
-    remotePacketCounterWriter.setInt(session.getPacketCountFromRemote());
-    originDataVolumeWriter.setInt(session.getDataFromOriginator().length);
-    remoteDataVolumeWriter.setInt(session.getDataFromRemote().length);
-    isCorruptWriter.setBoolean(session.hasCorruptedData());
-
-    hostDataWriter.setString(session.getDataFromOriginatorAsString());
-    remoteDataWriter.setString(session.getDataFromRemoteAsString());
-    rowWriter.save();
   }
 
   private void addDataToTable(Packet packet, int networkType, RowSetLoader rowWriter) {
