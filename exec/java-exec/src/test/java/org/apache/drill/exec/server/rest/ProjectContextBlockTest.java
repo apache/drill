@@ -167,6 +167,17 @@ public class ProjectContextBlockTest {
     assertTrue(prompt.contains("parsed_protocol"));
   }
 
+  /**
+   * Unquoted reserved words such as timestamp are parse errors in Drill, and PCAP-NG
+   * captures have a column named timestamp, so the prompt spells out the quoting.
+   */
+  @Test
+  public void testSystemPromptRequiresQuotingReservedColumnNames() {
+    String prompt = systemPromptOf(
+        new ProspectorResources().buildMessages(new LlmConfig(), request(null), USER));
+    assertTrue(prompt.contains("MIN(`timestamp`)"));
+  }
+
   @Test
   public void testNoProjectBlockWhenNoProjectId() {
     List<ChatMessage> messages =
