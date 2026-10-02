@@ -104,4 +104,24 @@ public class TestPcapngDecoding extends ClusterTest {
     assertEquals(0, results.rowCount());
     results.clear();
   }
+
+  @Test
+  public void testDns() throws Exception {
+    String sql = "select parsed_protocol, t.parsed_data.dns.questions[0].name as qname, " +
+        "t.parsed_data.dns.answers[0].data as answer, decode_error from dfs.`pcapng/dns.pcapng` t";
+    RowSet results = client.queryBuilder().sql(sql).rowSet();
+    TupleMetadata schema = new SchemaBuilder()
+        .addNullable("parsed_protocol", MinorType.VARCHAR)
+        .addNullable("qname", MinorType.VARCHAR)
+        .addNullable("answer", MinorType.VARCHAR)
+        .addNullable("decode_error", MinorType.VARCHAR)
+        .buildSchema();
+    RowSet expected = new RowSetBuilder(client.allocator(), schema)
+        .addRow("dns", "example.com", null, null)
+        .addRow("dns", "example.com", "93.184.216.34", null)
+        .addRow(null, null, null, null)
+        .addRow("dns", null, null, "dns: truncated answer 1: needs 4 bytes at offset 41")
+        .build();
+    new RowSetComparison(expected).verifyAndClearAll(results);
+  }
 }
