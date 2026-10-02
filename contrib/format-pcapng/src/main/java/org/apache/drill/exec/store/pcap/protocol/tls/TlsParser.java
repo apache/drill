@@ -21,6 +21,7 @@ import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 import org.apache.drill.exec.store.pcap.protocol.DecoderContext;
@@ -90,8 +91,43 @@ public final class TlsParser {
     if (available >= 11 && (u16(data, 9) < 0x0300 || u16(data, 9) > 0x0304)) {
       return null;
     }
+    return parseBody(data, type, hello, 9, handshakeEnd, available, false, context);
+  }
+
+  /**
+   * Parses a bare TLS handshake message (ClientHello or ServerHello) that is not wrapped in a TLS record,
+   * as carried in QUIC CRYPTO frames. The message starts at {@code offset} with the one-byte handshake
+   * type. Computes the JA4 fingerprint with the QUIC transport ('q') when {@code quic} is true.
+   *
+   * @return the hello, or null if the bytes are not a ClientHello/ServerHello
+   * @throws IllegalArgumentException if the bytes are a hello but malformed
+   */
+  public static TlsHello parseHandshake(byte[] data, int offset, boolean quic, DecoderContext context) {
+    if (data == null || offset < 0 || data.length - offset < 4) {
+      return null;
+    }
+    int type = data[offset] & 0xFF;
+    if (type != CLIENT_HELLO && type != SERVER_HELLO) {
+      return null;
+    }
+    int bodyStart = offset + 4;
+    int handshakeEnd = bodyStart + u24(data, offset + 1);
+    if (handshakeEnd - bodyStart < (type == CLIENT_HELLO ? MIN_CLIENT_HELLO : MIN_SERVER_HELLO)) {
+      return null;
+    }
+    int available = data.length;
+    if (available >= bodyStart + 2 && (u16(data, bodyStart) < 0x0300 || u16(data, bodyStart) > 0x0304)) {
+      return null;
+    }
+    TlsHello hello = new TlsHello();
+    hello.handshakeType = type == CLIENT_HELLO ? "client_hello" : "server_hello";
+    return parseBody(data, type, hello, bodyStart, handshakeEnd, available, quic, context);
+  }
+
+  private static TlsHello parseBody(byte[] data, int type, TlsHello hello, int bodyStart, int handshakeEnd,
+                                    int available, boolean quic, DecoderContext context) {
     TlsParser parser = new TlsParser(data);
-    parser.pos = 9;
+    parser.pos = bodyStart;
     parser.limit = Math.min(handshakeEnd, available);
     boolean complete;
     try {
@@ -110,6 +146,9 @@ public final class TlsParser {
     }
     if (complete) {
       fingerprint(hello, parser.legacyVersion, type == CLIENT_HELLO);
+      if (type == CLIENT_HELLO) {
+        ja4(hello, parser.legacyVersion, quic);
+      }
     }
     hello.cipherSuites = cap(hello.cipherSuites, "cipher_suites", context);
     cap(hello.extensions, "extensions", context);
@@ -229,6 +268,7 @@ public final class TlsParser {
         List<String> versions = new ArrayList<>();
         if (client) {
           List<Integer> values = u16List(u8(need(1)));
+          hello.rawSupportedVersions = values;
           for (int v : values) {
             versions.add(versionName(v));
           }
@@ -357,6 +397,136 @@ public final class TlsParser {
     } else {
       hello.ja3s = version + "," + hello.cipherSuite + "," + join(hello.extensions, false);
       hello.ja3sHash = md5(hello.ja3s);
+    }
+  }
+
+  /**
+   * JA4 TLS client fingerprint (FoxIO, BSD 3-Clause). Format {@code q d c _ a _ b}:
+   * {@code a} = transport (t for TCP, q for QUIC), 2-char TLS version (highest supported_versions, else
+   * the legacy version), SNI indicator (d present, i absent), 2-digit cipher count and 2-digit extension
+   * count (both excluding GREASE, the extension count still counting SNI and ALPN), and the first and last
+   * character of the first ALPN value. {@code b} = first 12 hex of SHA-256 of the sorted non-GREASE cipher
+   * suites in hex. {@code c} = first 12 hex of SHA-256 of the sorted non-GREASE extensions in hex, with SNI
+   * (0x0000) and ALPN (0x0010) removed, then an underscore and the signature algorithms in their original
+   * order. Only JA4 is implemented; the JA4S/JA4H/JA4SSH variants have an incompatible licence.
+   */
+  private static void ja4(TlsHello hello, int legacyVersion, boolean quic) {
+    int version = ja4HighestVersion(hello, legacyVersion);
+    int cipherCount = Math.min(99, countNonGrease(hello.cipherSuites));
+    int extCount = Math.min(99, countNonGrease(hello.extensions));
+    String a = (quic ? "q" : "t") + ja4VersionCode(version) + (hello.sni != null ? "d" : "i")
+        + twoDigit(cipherCount) + twoDigit(extCount) + ja4Alpn(hello.alpn);
+
+    List<String> cipherHex = new ArrayList<>();
+    if (hello.cipherSuites != null) {
+      for (int c : hello.cipherSuites) {
+        if (!isGrease(c)) {
+          cipherHex.add(hex4(c));
+        }
+      }
+    }
+    Collections.sort(cipherHex);
+    String bRaw = String.join(",", cipherHex);
+    String b = cipherHex.isEmpty() ? "000000000000" : sha256Prefix(bRaw);
+
+    List<String> extHex = new ArrayList<>();
+    for (int e : hello.extensions) {
+      if (!isGrease(e) && e != 0x0000 && e != 0x0010) {
+        extHex.add(hex4(e));
+      }
+    }
+    Collections.sort(extHex);
+    List<String> sigHex = new ArrayList<>();
+    if (hello.signatureAlgorithms != null) {
+      for (int s : hello.signatureAlgorithms) {
+        if (!isGrease(s)) {
+          sigHex.add(hex4(s));
+        }
+      }
+    }
+    String cRaw = String.join(",", extHex) + (sigHex.isEmpty() ? "" : "_" + String.join(",", sigHex));
+    String c = extHex.isEmpty() ? "000000000000" : sha256Prefix(cRaw);
+
+    hello.ja4 = a + "_" + b + "_" + c;
+    hello.ja4Raw = a + "_" + bRaw + "_" + cRaw;
+  }
+
+  private static int ja4HighestVersion(TlsHello hello, int legacyVersion) {
+    int best = -1;
+    if (hello.rawSupportedVersions != null) {
+      for (int v : hello.rawSupportedVersions) {
+        if (!isGrease(v) && v > best) {
+          best = v;
+        }
+      }
+    }
+    return best >= 0 ? best : legacyVersion;
+  }
+
+  private static String ja4VersionCode(int version) {
+    switch (version) {
+      case 0x0304:
+        return "13";
+      case 0x0303:
+        return "12";
+      case 0x0302:
+        return "11";
+      case 0x0301:
+        return "10";
+      case 0x0300:
+        return "s3";
+      case 0xfefd:
+        return "d2";
+      case 0xfefc:
+        return "d3";
+      default:
+        return "00";
+    }
+  }
+
+  private static String ja4Alpn(List<String> alpn) {
+    if (alpn == null || alpn.isEmpty() || alpn.get(0).isEmpty()) {
+      return "00";
+    }
+    byte[] value = alpn.get(0).getBytes(StandardCharsets.UTF_8);
+    char first = (char) (value[0] & 0xFF);
+    char last = (char) (value[value.length - 1] & 0xFF);
+    if (isAlphanumeric(first) && isAlphanumeric(last)) {
+      return "" + first + last;
+    }
+    return "" + HEX[(value[0] >> 4) & 0xF] + HEX[value[value.length - 1] & 0xF];
+  }
+
+  private static boolean isAlphanumeric(char c) {
+    return (c >= '0' && c <= '9') || (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z');
+  }
+
+  private static int countNonGrease(List<Integer> values) {
+    int count = 0;
+    if (values != null) {
+      for (int v : values) {
+        if (!isGrease(v)) {
+          count++;
+        }
+      }
+    }
+    return count;
+  }
+
+  private static String twoDigit(int n) {
+    return n < 10 ? "0" + n : Integer.toString(n);
+  }
+
+  private static String hex4(int v) {
+    return new String(new char[] {HEX[(v >> 12) & 0xF], HEX[(v >> 8) & 0xF], HEX[(v >> 4) & 0xF], HEX[v & 0xF]});
+  }
+
+  private static String sha256Prefix(String s) {
+    try {
+      byte[] digest = MessageDigest.getInstance("SHA-256").digest(s.getBytes(StandardCharsets.US_ASCII));
+      return hex(digest, 0, 6);
+    } catch (NoSuchAlgorithmException e) {
+      throw new IllegalStateException(e);
     }
   }
 

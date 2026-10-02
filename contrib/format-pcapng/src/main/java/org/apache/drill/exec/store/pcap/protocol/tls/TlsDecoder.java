@@ -62,7 +62,9 @@ public class TlsDecoder implements PacketProtocolDecoder<TlsHello> {
         .addNullable("ja3", MinorType.VARCHAR)
         .addNullable("ja3_hash", MinorType.VARCHAR)
         .addNullable("ja3s", MinorType.VARCHAR)
-        .addNullable("ja3s_hash", MinorType.VARCHAR);
+        .addNullable("ja3s_hash", MinorType.VARCHAR)
+        .addNullable("ja4", MinorType.VARCHAR)
+        .addNullable("ja4_raw", MinorType.VARCHAR);
   }
 
   @Override
@@ -96,6 +98,8 @@ public class TlsDecoder implements PacketProtocolDecoder<TlsHello> {
     setString(fields, "ja3_hash", h.ja3Hash);
     setString(fields, "ja3s", h.ja3s);
     setString(fields, "ja3s_hash", h.ja3sHash);
+    setString(fields, "ja4", h.ja4);
+    setString(fields, "ja4_raw", h.ja4Raw);
   }
 
   private static void setString(TupleWriter fields, String name, String value) {
