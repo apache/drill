@@ -59,6 +59,8 @@ public class Packet implements Comparable<Packet> {
   protected int etherProtocol;
   protected int protocol;
   protected boolean isCorrupt = false;
+  // Why the packet could not be fully decoded, or null
+  private String decodeError;
 
   private static final Logger logger = LoggerFactory.getLogger(Packet.class);
 
@@ -378,6 +380,14 @@ public class Packet implements Comparable<Packet> {
     return isCorrupt;
   }
 
+  public String getDecodeError() {
+    return decodeError;
+  }
+
+  protected void setDecodeError(String decodeError) {
+    this.decodeError = decodeError;
+  }
+
   public byte[] getData() {
     int payloadStart = ipOffset + getIPHeaderLength();
     if (isTcpPacket()) {
@@ -499,12 +509,20 @@ public class Packet implements Comparable<Packet> {
   private void decodeEtherPacket() {
     etherProtocol = getShort(raw, etherOffset + PacketConstants.PACKET_PROTOCOL_OFFSET);
     ipOffset = etherOffset + PacketConstants.IP_OFFSET;
-    if (isIpV4Packet()) {
-      protocol = processIpV4Packet();
-    } else if (isIpV6Packet()) {
-      protocol = processIpV6Packet();
-    } else if (isPPPoV6Packet()) {
-      protocol = getByte(raw, etherOffset + 48);
+    try {
+      if (isIpV4Packet()) {
+        protocol = processIpV4Packet();
+      } else if (isIpV6Packet()) {
+        protocol = processIpV6Packet();
+      } else if (isPPPoV6Packet()) {
+        protocol = getByte(raw, etherOffset + 48);
+      }
+    } catch (RuntimeException e) {
+      // Keep the link-layer fields; treat the rest as undecodable
+      isCorrupt = true;
+      decodeError = e.getMessage() != null ? e.getMessage() : e.getClass().getSimpleName();
+      etherProtocol = 0;
+      transportOffset = -1;
     }
     // everything is decoded lazily
   }
@@ -552,7 +570,7 @@ public class Packet implements Comparable<Packet> {
   private void validateIpV4Packet() {
     Preconditions.checkState(ipVersion() == 4, "Should have seen IP version 4, got %d", ipVersion());
     int n = ipV4HeaderLength();
-    Preconditions.checkState(n >= 20 && n < 200, "Invalid header length: ", n);
+    Preconditions.checkState(n >= 20 && n < 200, "Invalid IPv4 header length %s", n);
   }
 
   private String getEthernetAddress(int offset) {

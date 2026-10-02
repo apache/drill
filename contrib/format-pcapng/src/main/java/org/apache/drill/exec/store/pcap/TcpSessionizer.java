@@ -26,6 +26,7 @@ import java.util.Set;
 import org.apache.drill.exec.physical.resultSet.RowSetLoader;
 import org.apache.drill.exec.store.pcap.decoder.Packet;
 import org.apache.drill.exec.store.pcap.decoder.TcpSession;
+import org.apache.drill.exec.store.pcap.protocol.ProtocolColumns;
 import org.apache.drill.exec.vector.accessor.ScalarWriter;
 
 /**
@@ -39,6 +40,7 @@ public class TcpSessionizer {
   // Sessions already written, so the ACKs that trail a FIN do not start a new one
   private final Set<Long> closedSessions = new HashSet<>();
   private final RowSetLoader rowWriter;
+  private final ProtocolColumns protocolColumns;
   private final ScalarWriter srcMacAddressWriter;
   private final ScalarWriter dstMacAddressWriter;
   private final ScalarWriter dstIPWriter;
@@ -60,8 +62,9 @@ public class TcpSessionizer {
   private final ScalarWriter isCorruptWriter;
   private final ScalarWriter sessionClosedWriter;
 
-  public TcpSessionizer(RowSetLoader rowWriter) {
+  public TcpSessionizer(RowSetLoader rowWriter, ProtocolColumns protocolColumns) {
     this.rowWriter = rowWriter;
+    this.protocolColumns = protocolColumns;
     srcMacAddressWriter = rowWriter.scalar("src_mac_address");
     dstMacAddressWriter = rowWriter.scalar("dst_mac_address");
     dstIPWriter = rowWriter.scalar("dst_ip");
@@ -156,6 +159,7 @@ public class TcpSessionizer {
 
     hostDataWriter.setString(session.getDataFromOriginatorAsString());
     remoteDataWriter.setString(session.getDataFromRemoteAsString());
+    protocolColumns.writeSession(session);
     rowWriter.save();
   }
 }

@@ -45,3 +45,7 @@ For information about the Jetty 12 upgrade, known limitations, and developer gui
 ## Materialized Views
 
 For information about materialized view support, including SQL syntax, query rewriting, and metastore integration, see [MaterializedViews.md](MaterializedViews.md)
+
+## PCAP Protocol Decoders
+
+For the design of protocol decoding in the PCAP and PCAP-NG format plugin, and how to write a new decoder, see [PcapProtocolDecoders.md](PcapProtocolDecoders.md)

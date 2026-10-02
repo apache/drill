@@ -17,7 +17,6 @@
  */
 package org.apache.drill.exec.store.pcap.plugin;
 
-import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.common.logical.StoragePluginConfig;
 import org.apache.drill.common.types.TypeProtos;
 import org.apache.drill.common.types.Types;
@@ -129,11 +128,10 @@ public abstract class BasePcapFormatPlugin<T extends PcapFormatConfig> extends E
     try (InputStream inputStream = dfs.openPossiblyCompressedStream(path)) {
       PacketDecoder decoder = new PacketDecoder(inputStream);
       return decoder.getFileFormat();
-    } catch (IOException io) {
-      throw UserException
-              .dataReadError(io)
-              .addContext("File name:", path.toString())
-              .build(logger);
+    } catch (IOException | RuntimeException e) {
+      // Not readable or not a capture: the PCAP reader reports it as an error row
+      logger.debug("Cannot detect the format of {}", path, e);
+      return PacketDecoder.FileFormat.UNKNOWN;
     }
   }
 }

@@ -114,7 +114,8 @@ public class TestPcapngStatRecordReader extends ClusterTest {
     String plan = queryBuilder().sql(sql).explainJson();
     long cnt = queryBuilder().physical(plan).singletonLong();
 
-    assertEquals("Counts should match", 55, cnt);
+    // The error row of bad_block_length.pcapng is counted too
+    assertEquals("Counts should match", 65, cnt);
   }
 
   @Test
@@ -150,6 +151,7 @@ public class TestPcapngStatRecordReader extends ClusterTest {
         .addNullable("isb_filteraccept", MinorType.BIGINT)
         .addNullable("isb_osdrop", MinorType.BIGINT)
         .addNullable("isb_usrdeliv", MinorType.BIGINT)
+        .addNullable("decode_error", MinorType.VARCHAR)
         .build();
 
     RowSet expected = new RowSetBuilder(client.allocator(), schema).build();
