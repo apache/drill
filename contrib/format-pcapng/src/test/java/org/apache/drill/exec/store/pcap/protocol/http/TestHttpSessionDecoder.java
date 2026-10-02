@@ -74,4 +74,20 @@ public class TestHttpSessionDecoder extends BaseTest {
     assertNull(decoder.parse(org.apache.drill.exec.store.pcap.protocol.TcpStream.of(Collections.emptyList()),
         org.apache.drill.exec.store.pcap.protocol.TcpStream.of(Collections.emptyList()), new TestHttpParser.Context(false)));
   }
+
+  @Test
+  public void testInterimResponsesDoNotShiftPairing() {
+    // 100 Continue is not the answer to the request; the final status is
+    String client = "POST /upload HTTP/1.1\r\nExpect: 100-continue\r\nContent-Length: 2\r\n\r\nok"
+        + "GET /next HTTP/1.1\r\n\r\n";
+    String server = "HTTP/1.1 100 Continue\r\n\r\nHTTP/1.1 201 Created\r\nContent-Length: 0\r\n\r\n"
+        + "HTTP/1.1 200 OK\r\nContent-Length: 0\r\n\r\n";
+    TestHttpParser.Context context = new TestHttpParser.Context(false);
+    List<HttpMessage> requests = HttpSessionDecoder.parseStream(TestHttpParser.bytes(client), true,
+        Collections.emptyList(), context);
+    List<HttpMessage> responses = HttpSessionDecoder.parseStream(TestHttpParser.bytes(server), false, requests, context);
+    assertEquals(2, responses.size());
+    assertEquals(Integer.valueOf(201), responses.get(0).statusCode);
+    assertEquals(Integer.valueOf(200), responses.get(1).statusCode);
+  }
 }
