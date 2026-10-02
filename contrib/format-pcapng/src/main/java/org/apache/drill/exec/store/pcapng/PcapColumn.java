@@ -157,7 +157,7 @@ public abstract class PcapColumn {
 
     @Override
     MajorType getType() {
-      return Types.required(MinorType.TIMESTAMP);
+      return Types.optional(MinorType.TIMESTAMP);
     }
 
     @Override
@@ -170,7 +170,7 @@ public abstract class PcapColumn {
 
     @Override
     MajorType getType() {
-      return Types.required(MinorType.INT);
+      return Types.optional(MinorType.INT);
     }
 
     @Override
@@ -530,7 +530,7 @@ public abstract class PcapColumn {
 
     @Override
     MajorType getType() {
-      return Types.required(MinorType.INT);
+      return Types.optional(MinorType.INT);
     }
 
     @Override
@@ -543,7 +543,7 @@ public abstract class PcapColumn {
 
     @Override
     MajorType getType() {
-      return Types.required(MinorType.INT);
+      return Types.optional(MinorType.INT);
     }
 
     @Override
@@ -572,7 +572,7 @@ public abstract class PcapColumn {
 
     @Override
     MajorType getType() {
-      return Types.required(MinorType.INT);
+      return Types.optional(MinorType.INT);
     }
 
     @Override
