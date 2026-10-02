@@ -20,3 +20,6 @@ org.apache.drill.exec.store.pcap.protocol.tlssession.TlsSessionDecoder
 org.apache.drill.exec.store.pcap.protocol.ftp.FtpSessionDecoder
 org.apache.drill.exec.store.pcap.protocol.ssh.SshSessionDecoder
 org.apache.drill.exec.store.pcap.protocol.dns.DnsSessionDecoder
+org.apache.drill.exec.store.pcap.protocol.smtp.SmtpSessionDecoder
+org.apache.drill.exec.store.pcap.protocol.pop3.Pop3SessionDecoder
+org.apache.drill.exec.store.pcap.protocol.imap.ImapSessionDecoder
