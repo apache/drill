@@ -18,3 +18,4 @@
 org.apache.drill.exec.store.pcap.protocol.dns.DnsDecoder
 org.apache.drill.exec.store.pcap.protocol.http.HttpPacketDecoder
 org.apache.drill.exec.store.pcap.protocol.icmp.IcmpDecoder
+org.apache.drill.exec.store.pcap.protocol.arp.ArpDecoder
