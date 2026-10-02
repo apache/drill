@@ -28,6 +28,7 @@ import org.apache.drill.exec.record.metadata.MetadataUtils;
 import org.apache.drill.exec.record.metadata.SchemaBuilder;
 import org.apache.drill.exec.record.metadata.TupleMetadata;
 import org.apache.drill.exec.store.pcap.decoder.Packet;
+import org.apache.drill.exec.store.pcap.decoder.TcpSession;
 import org.apache.drill.exec.vector.accessor.ScalarWriter;
 import org.apache.drill.exec.vector.accessor.TupleWriter;
 import org.slf4j.Logger;
@@ -62,7 +63,7 @@ public class ProtocolColumns {
   }
 
   private static TupleMetadata dataSchema(Mode mode, ProtocolDecoders decoders) {
-    return decoders.packetDataSchema();
+    return mode == Mode.SESSION ? decoders.sessionDataSchema() : decoders.packetDataSchema();
   }
 
   public ProtocolColumns(RowSetLoader loader, Mode mode, ProtocolDecoders decoders, boolean exposeCredentials) {
@@ -103,6 +104,16 @@ public class ProtocolColumns {
         all.add("packet: " + ProtocolDecoders.describe(e));
       }
       write(decoders.decodePacket(packet, payload, context), all);
+    }
+    writeErrors(all);
+  }
+
+  /** Decodes a session into the current row and writes decode_error. */
+  public void writeSession(TcpSession session) {
+    List<String> all = new ArrayList<>();
+    if (decoding) {
+      context.reset();
+      write(decoders.decodeSession(session, context), all);
     }
     writeErrors(all);
   }

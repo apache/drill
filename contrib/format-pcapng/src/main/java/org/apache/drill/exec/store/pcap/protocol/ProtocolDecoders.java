@@ -29,6 +29,7 @@ import org.apache.drill.exec.record.metadata.MetadataUtils;
 import org.apache.drill.exec.record.metadata.SchemaBuilder;
 import org.apache.drill.exec.record.metadata.TupleMetadata;
 import org.apache.drill.exec.store.pcap.decoder.Packet;
+import org.apache.drill.exec.store.pcap.decoder.TcpSession;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -42,6 +43,8 @@ public class ProtocolDecoders {
 
   private final List<PacketProtocolDecoder<?>> packetDecoders;
   private final TupleMetadata packetDataSchema;
+  private final List<SessionProtocolDecoder<?>> sessionDecoders;
+  private final TupleMetadata sessionDataSchema;
 
   /** The decoders on the classpath, loaded once. */
   @SuppressWarnings({"unchecked", "rawtypes"})
@@ -50,7 +53,8 @@ public class ProtocolDecoders {
       synchronized (ProtocolDecoders.class) {
         if (instance == null) {
           ClassLoader loader = ProtocolDecoders.class.getClassLoader();
-          instance = new ProtocolDecoders((Iterable) ServiceLoader.load(PacketProtocolDecoder.class, loader));
+          instance = new ProtocolDecoders((Iterable) ServiceLoader.load(PacketProtocolDecoder.class, loader),
+              (Iterable) ServiceLoader.load(SessionProtocolDecoder.class, loader));
         }
       }
     }
@@ -58,9 +62,17 @@ public class ProtocolDecoders {
   }
 
   public ProtocolDecoders(Iterable<? extends PacketProtocolDecoder<?>> packetDecoders) {
-    SchemaBuilder data = new SchemaBuilder();
-    this.packetDecoders = usable(packetDecoders, data);
-    this.packetDataSchema = data.buildSchema();
+    this(packetDecoders, Collections.emptyList());
+  }
+
+  public ProtocolDecoders(Iterable<? extends PacketProtocolDecoder<?>> packetDecoders,
+                          Iterable<? extends SessionProtocolDecoder<?>> sessionDecoders) {
+    SchemaBuilder packetData = new SchemaBuilder();
+    this.packetDecoders = usable(packetDecoders, packetData);
+    this.packetDataSchema = packetData.buildSchema();
+    SchemaBuilder sessionData = new SchemaBuilder();
+    this.sessionDecoders = usable(sessionDecoders, sessionData);
+    this.sessionDataSchema = sessionData.buildSchema();
   }
 
   public List<PacketProtocolDecoder<?>> packetDecoders() {
@@ -70,6 +82,49 @@ public class ProtocolDecoders {
   /** Members of parsed_data in packet mode: one map per decoder. */
   public TupleMetadata packetDataSchema() {
     return packetDataSchema;
+  }
+
+  public List<SessionProtocolDecoder<?>> sessionDecoders() {
+    return sessionDecoders;
+  }
+
+  /** Members of parsed_data in session mode: one map per decoder. */
+  public TupleMetadata sessionDataSchema() {
+    return sessionDataSchema;
+  }
+
+  /**
+   * Finds the decoder that handles a TCP session. The client and server streams are
+   * reassembled only if some decoder accepts the session.
+   *
+   * @return null if no decoder handles it
+   */
+  public DecodeResult decodeSession(TcpSession session, RowDecoderContext context) {
+    TcpStream[] streams = null;
+    for (SessionProtocolDecoder<?> decoder : sessionDecoders) {
+      try {
+        if (!decoder.accepts(session)) {
+          continue;
+        }
+      } catch (RuntimeException e) {
+        continue;
+      }
+      context.begin(decoder.protocol());
+      try {
+        if (streams == null) {
+          streams = TcpStream.clientServer(session);
+        }
+        Object parsed = decoder.parse(streams[0], streams[1], context);
+        if (parsed != null) {
+          return DecodeResult.success(decoder, parsed);
+        }
+        context.discard();
+      } catch (RuntimeException e) {
+        context.discard();
+        return DecodeResult.failure(decoder, decoder.protocol() + ": " + describe(e));
+      }
+    }
+    return null;
   }
 
   /**
@@ -138,6 +193,10 @@ public class ProtocolDecoders {
   }
 
   private static void defineSchema(ProtocolDecoder decoder, SchemaBuilder fields) {
-    ((PacketProtocolDecoder<?>) decoder).defineSchema(fields);
+    if (decoder instanceof SessionProtocolDecoder) {
+      ((SessionProtocolDecoder<?>) decoder).defineSchema(fields);
+    } else {
+      ((PacketProtocolDecoder<?>) decoder).defineSchema(fields);
+    }
   }
 }
