@@ -29,6 +29,8 @@ import org.apache.drill.exec.store.pcap.decoder.Packet;
 import org.apache.drill.exec.store.pcap.decoder.PacketDecoder;
 import org.apache.drill.exec.store.pcap.schema.Schema;
 import org.apache.drill.exec.store.pcap.plugin.PcapFormatConfig;
+import org.apache.drill.exec.store.pcap.protocol.ProtocolColumns;
+import org.apache.drill.exec.store.pcap.protocol.ProtocolDecoders;
 import org.apache.drill.exec.vector.accessor.ScalarWriter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -36,6 +38,8 @@ import org.slf4j.LoggerFactory;
 import java.io.IOException;
 import java.io.InputStream;
 import java.time.Instant;
+import java.util.ArrayList;
+import java.util.List;
 
 import static org.apache.drill.exec.store.pcap.PcapFormatUtils.parseBytesToASCII;
 
@@ -80,6 +84,12 @@ public class PcapBatchReader implements ManagedReader {
   private ScalarWriter isCorruptWriter;
   private final PcapFormatConfig readerConfig;
   private TcpSessionizer sessionizer;
+  private ProtocolColumns protocolColumns;
+  // Why the file cannot be read, reported once as an error row
+  private String fileError;
+  // Set when a damaged record makes the rest of the file unreadable
+  private boolean finished;
+  private int packetCount;
 
 
   public PcapBatchReader(PcapFormatConfig readerConfig, FileSchemaNegotiator negotiator) {
@@ -89,7 +99,11 @@ public class PcapBatchReader implements ManagedReader {
     openFile();
     SchemaBuilder builder = new SchemaBuilder();
     Schema pcapSchema = new Schema(readerConfig.getSessionizeTCPStreams());
-    TupleMetadata schema = pcapSchema.buildSchema(builder);
+    pcapSchema.addColumns(builder);
+    if (!readerConfig.getSessionizeTCPStreams()) {
+      ProtocolColumns.addColumns(builder, ProtocolColumns.Mode.PACKET, ProtocolDecoders.get());
+    }
+    TupleMetadata schema = builder.buildSchema();
     negotiator.tableSchema(schema, false);
     ResultSetLoader loader = negotiator.build();
 
@@ -99,11 +113,23 @@ public class PcapBatchReader implements ManagedReader {
       sessionizer = new TcpSessionizer(rowWriter);
     } else {
       populateColumnWriters(rowWriter);
+      protocolColumns = new ProtocolColumns(rowWriter, ProtocolColumns.Mode.PACKET, ProtocolDecoders.get(),
+          readerConfig.getExposeCredentials());
     }
   }
 
   @Override
   public boolean next() {
+    if (fileError != null) {
+      if (protocolColumns != null) {
+        protocolColumns.writeErrorRow(fileError);
+      }
+      fileError = null;
+      return false;
+    }
+    if (decoder == null || finished) {
+      return false;
+    }
     while (!rowWriter.isFull()) {
       if (!parseNextPacket(rowWriter)) {
         // At end of file, more batches are needed only for open sessions that did not fit
@@ -115,10 +141,13 @@ public class PcapBatchReader implements ManagedReader {
 
   @Override
   public void close() {
-
-
+    if (protocolColumns != null) {
+      protocolColumns.logSummary(logger, file.split().getPath().toString());
+    }
     try {
-      fsStream.close();
+      if (fsStream != null) {
+        fsStream.close();
+      }
     } catch (IOException e) {
       throw UserException.
         dataReadError()
@@ -136,11 +165,12 @@ public class PcapBatchReader implements ManagedReader {
       decoder = new PacketDecoder(fsStream);
       buffer = new byte[BUFFER_SIZE + decoder.getMaxLength()];
       validBytes = fsStream.read(buffer);
-    } catch (IOException io) {
-      throw UserException
-        .dataReadError(io)
-        .addContext("File name:", file.split().getPath().toString())
-        .build(logger);
+    } catch (IOException e) {
+      decoder = null;
+      fileError = "file: cannot read: " + ProtocolDecoders.describe(e);
+    } catch (RuntimeException e) {
+      decoder = null;
+      fileError = "file: not a PCAP or PCAP-NG file: " + ProtocolDecoders.describe(e);
     }
   }
 
@@ -192,7 +222,18 @@ public class PcapBatchReader implements ManagedReader {
     }
 
     int old = offset;
-    offset = decoder.decodePacket(buffer, offset, packet, decoder.getMaxLength(), validBytes);
+    try {
+      offset = decoder.decodePacket(buffer, offset, packet, decoder.getMaxLength(), validBytes);
+    } catch (RuntimeException e) {
+      // The record's length cannot be trusted, so neither can anything after it
+      finished = true;
+      if (protocolColumns != null) {
+        protocolColumns.writeErrorRow("file: invalid packet record after packet " + packetCount + ": "
+            + ProtocolDecoders.describe(e));
+      }
+      return false;
+    }
+    packetCount++;
     if (offset > validBytes) {
       // Mark that the packet is corrupt and extract whatever data can be extracted from it
       packet.setIsCorrupt(true);
@@ -238,54 +279,63 @@ public class PcapBatchReader implements ManagedReader {
 
   private void addDataToTable(Packet packet, int networkType, RowSetLoader rowWriter) {
     rowWriter.start();
-
-    typeWriter.setString(packet.getPacketType());
-    timestampWriter.setTimestamp(Instant.ofEpochMilli(packet.getTimestamp()));
-    timestampMicroWriter.setLong(packet.getTimestampMicro());
-    networkWriter.setInt(networkType);
-    srcMacAddressWriter.setString(packet.getEthernetSource());
-    dstMacAddressWriter.setString(packet.getEthernetDestination());
-
-    String destinationIp = packet.getDestinationIpAddressString();
-    if (destinationIp == null) {
-      dstIPWriter.setNull();
-    } else {
-      dstIPWriter.setString(destinationIp);
+    List<String> errors = new ArrayList<>();
+    if (packet.getDecodeError() != null) {
+      errors.add("packet: " + packet.getDecodeError());
     }
+    try {
+      typeWriter.setString(packet.getPacketType());
+      timestampWriter.setTimestamp(Instant.ofEpochMilli(packet.getTimestamp()));
+      timestampMicroWriter.setLong(packet.getTimestampMicro());
+      networkWriter.setInt(networkType);
+      srcMacAddressWriter.setString(packet.getEthernetSource());
+      dstMacAddressWriter.setString(packet.getEthernetDestination());
 
-    String sourceIp = packet.getSourceIpAddressString();
-    if (sourceIp == null) {
-      srcIPWriter.setNull();
-    } else {
-      srcIPWriter.setString(sourceIp);
+      String destinationIp = packet.getDestinationIpAddressString();
+      if (destinationIp == null) {
+        dstIPWriter.setNull();
+      } else {
+        dstIPWriter.setString(destinationIp);
+      }
+
+      String sourceIp = packet.getSourceIpAddressString();
+      if (sourceIp == null) {
+        srcIPWriter.setNull();
+      } else {
+        srcIPWriter.setString(sourceIp);
+      }
+      srcPortWriter.setInt(packet.getSrc_port());
+      dstPortWriter.setInt(packet.getDst_port());
+      packetLengthWriter.setInt(packet.getPacketLength());
+
+      // TCP Only Packet Data
+      tcpSessionWriter.setLong(packet.getSessionHash());
+      tcpSequenceWriter.setInt(packet.getSequenceNumber());
+      tcpAckNumberWriter.setInt(packet.getAckNumber());
+      tcpFlagsWriter.setInt(packet.getFlags());
+      tcpParsedFlagsWriter.setString(packet.getParsedFlags());
+
+      // TCP Flags
+      tcpNsWriter.setBoolean((packet.getFlags() & 0x100) != 0);
+      tcpCwrWriter.setBoolean((packet.getFlags() & 0x80) != 0);
+      tcpEceWriter.setBoolean((packet.getFlags() & 0x40) != 0);
+      tcpFlagsEceEcnCapableWriter.setBoolean((packet.getFlags() & 0x42) == 0x42);
+      tcpFlagsCongestionWriter.setBoolean((packet.getFlags() & 0x42) == 0x40);
+      tcpUrgWriter.setBoolean((packet.getFlags() & 0x20) != 0);
+      tcpAckWriter.setBoolean((packet.getFlags() & 0x10) != 0);
+      tcpPshWriter.setBoolean((packet.getFlags() & 0x8) != 0);
+      tcpRstWriter.setBoolean((packet.getFlags() & 0x4) != 0);
+      tcpSynWriter.setBoolean((packet.getFlags() & 0x2) != 0);
+      tcpFinWriter.setBoolean((packet.getFlags() & 0x1) != 0);
+
+      // Note:  getData() MUST be called before isCorrupt
+      dataWriter.setString(parseBytesToASCII(packet.getData()));
+      isCorruptWriter.setBoolean(packet.isCorrupt());
+    } catch (RuntimeException e) {
+      // Keep the fields written so far
+      errors.add("packet: " + ProtocolDecoders.describe(e));
     }
-    srcPortWriter.setInt(packet.getSrc_port());
-    dstPortWriter.setInt(packet.getDst_port());
-    packetLengthWriter.setInt(packet.getPacketLength());
-
-    // TCP Only Packet Data
-    tcpSessionWriter.setLong(packet.getSessionHash());
-    tcpSequenceWriter.setInt(packet.getSequenceNumber());
-    tcpAckNumberWriter.setInt(packet.getAckNumber());
-    tcpFlagsWriter.setInt(packet.getFlags());
-    tcpParsedFlagsWriter.setString(packet.getParsedFlags());
-
-    // TCP Flags
-    tcpNsWriter.setBoolean((packet.getFlags() & 0x100) != 0);
-    tcpCwrWriter.setBoolean((packet.getFlags() & 0x80) != 0);
-    tcpEceWriter.setBoolean((packet.getFlags() & 0x40) != 0);
-    tcpFlagsEceEcnCapableWriter.setBoolean((packet.getFlags() & 0x42) == 0x42);
-    tcpFlagsCongestionWriter.setBoolean((packet.getFlags() & 0x42) == 0x40);
-    tcpUrgWriter.setBoolean((packet.getFlags() & 0x20) != 0);
-    tcpAckWriter.setBoolean((packet.getFlags() & 0x10) != 0);
-    tcpPshWriter.setBoolean((packet.getFlags() & 0x8) != 0);
-    tcpRstWriter.setBoolean((packet.getFlags() & 0x4) != 0);
-    tcpSynWriter.setBoolean((packet.getFlags() & 0x2) != 0);
-    tcpFinWriter.setBoolean((packet.getFlags() & 0x1) != 0);
-
-    // Note:  getData() MUST be called before isCorrupt
-    dataWriter.setString(parseBytesToASCII(packet.getData()));
-    isCorruptWriter.setBoolean(packet.isCorrupt());
+    protocolColumns.writePacket(packet, errors);
     rowWriter.save();
 
     // TODO Parse Data Packet Here:
