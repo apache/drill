@@ -31,7 +31,8 @@ import javax.inject.Inject;
  * the part of geometry A that does not intersect with geometry B
  */
 @FunctionTemplate(name = "st_difference", scope = FunctionTemplate.FunctionScope.SIMPLE,
-  nulls = FunctionTemplate.NullHandling.NULL_IF_NULL)
+  nulls = FunctionTemplate.NullHandling.NULL_IF_NULL,
+  desc = "Returns the part of geometry A that does not intersect geometry B.")
 public class STDifference implements DrillSimpleFunc {
   @Param
   VarBinaryHolder geom1Param;

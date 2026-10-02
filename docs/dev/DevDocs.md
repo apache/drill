@@ -1,5 +1,23 @@
 # Drill Developer Docs
 
+## Web UI
+
+For documentation of the React single-page app served by the Drillbit — architecture, routing, sidebar/shell, and per-page references — see [`ui/README.md`](ui/README.md).
+
+## Authentication / Login
+
+- [LoginRefactor.md](LoginRefactor.md) — design notes for the login/auth refactor: current auth model, the three separable layers (authentication / execution identity / authorization), and a layered direction. Exploration stage.
+- [GeoFilterBuilder.md](GeoFilterBuilder.md) — design for the geospatial filter builder: a Map tab where drawn shapes become Drill ST_ predicates pushed into the query. Design agreed, not yet implemented; the plan is [plans/2026-08-31-geo-filter-builder.md](plans/2026-08-31-geo-filter-builder.md).
+- [ProspectorReports.md](ProspectorReports.md) — design for preserving a Prospector analysis: a generated markdown report saved into a project wiki under a Reports folder, and PDF download of any wiki page. See the plan at [plans/2026-09-17-prospector-reports.md](plans/2026-09-17-prospector-reports.md).
+- [TabPersistence.md](TabPersistence.md) — design for moving SQL Lab tabs server-side: two-tier persistence, promotion rules, hide vs delete, the project tree listing, and per-tab Prospector conversations. Design agreed, not yet implemented; the plan is [plans/2026-08-30-server-side-tabs.md](plans/2026-08-30-server-side-tabs.md).
+
+## AI features
+
+- [PROSPECTOR.md](PROSPECTOR.md) — Prospector AI assistant (backend, REST endpoints, providers)
+- [AI_FEATURES.md](AI_FEATURES.md) — overview of all AI features
+- [ai/ENTERPRISE_PROVIDERS.md](ai/ENTERPRISE_PROVIDERS.md) — enterprise AI provider configuration (proxy, SSL/TLS, custom headers, static parameters)
+- [TRANSPILER.md](TRANSPILER.md) — GraalPy + sqlglot SQL transpiler
+
 ## Environment
 
 For information about configuring your development enviornment see [Environment.md](Environment.md).
@@ -27,3 +45,7 @@ For information about the Jetty 12 upgrade, known limitations, and developer gui
 ## Materialized Views
 
 For information about materialized view support, including SQL syntax, query rewriting, and metastore integration, see [MaterializedViews.md](MaterializedViews.md)
+
+## PCAP Protocol Decoders
+
+For the design of protocol decoding in the PCAP and PCAP-NG format plugin, and how to write a new decoder, see [PcapProtocolDecoders.md](PcapProtocolDecoders.md)

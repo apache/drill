@@ -28,7 +28,8 @@ import org.apache.drill.exec.expr.holders.VarBinaryHolder;
 import javax.inject.Inject;
 
 @FunctionTemplate(name = "st_point", scope = FunctionTemplate.FunctionScope.SIMPLE,
-  nulls = FunctionTemplate.NullHandling.NULL_IF_NULL)
+  nulls = FunctionTemplate.NullHandling.NULL_IF_NULL,
+  desc = "Builds a point geometry from an x longitude and y latitude coordinate.")
 public class STPointFunc implements DrillSimpleFunc {
   @Param
   Float8Holder lonParam;

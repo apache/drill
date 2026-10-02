@@ -178,7 +178,8 @@ public class OutputBatchBuilder {
         int outputIndex = mapSchema.index(col.name());
         Preconditions.checkState(outputIndex >= 0);
         VectorSource vectorSource = new VectorSource(source, i);
-        if (col.isMap()) {
+        // A map array carries its own offsets, so it is passed through whole like a scalar
+        if (col.isMap() && !col.isArray()) {
           if (memberSources[outputIndex] == null) {
             memberSources[outputIndex] = new ArrayList<VectorSource>();
           }
@@ -202,7 +203,7 @@ public class OutputBatchBuilder {
       for (int i = 0; i < mapSchema.size(); i++) {
         ColumnMetadata outputCol = mapSchema.metadata(i);
         ValueVector outputVector;
-        if (outputCol.isMap()) {
+        if (outputCol.isMap() && !outputCol.isArray()) {
           outputVector = buildNestedMap(allocator, outputCol, (List<VectorSource>) memberSources[i]);
         } else {
           outputVector = getMember((VectorSource) memberSources[i]);

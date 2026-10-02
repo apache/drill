@@ -34,7 +34,9 @@ public class DistributionFunctions {
 
   @FunctionTemplate(names = {"width_bucket", "widthBucket"},
       scope = FunctionScope.SIMPLE,
-      nulls = NullHandling.NULL_IF_NULL)
+      nulls = NullHandling.NULL_IF_NULL,
+    desc = "Returns the histogram bucket number for a value, given a range and a bucket count. Values "
+      + "below the range return 0 and values above it return bucketCount + 1.")
   public static class WidthBucketFunction implements DrillSimpleFunc {
 
     @Param
@@ -81,8 +83,8 @@ public class DistributionFunctions {
   @FunctionTemplate(
       names = {"kendall_correlation","kendallCorrelation", "kendallTau", "kendall_tau"},
       scope = FunctionScope.POINT_AGGREGATE,
-      nulls = NullHandling.INTERNAL
-  )
+      nulls = NullHandling.INTERNAL,
+    desc = "Aggregate. Returns the Kendall tau rank correlation coefficient between two numeric columns.")
   public static class KendallTauFunction implements DrillAggFunc {
     @Param
     Float8Holder xInput;
@@ -153,7 +155,9 @@ public class DistributionFunctions {
   }
   @FunctionTemplate(names = {"regr_slope", "regrSlope"},
       scope = FunctionScope.POINT_AGGREGATE,
-      nulls = NullHandling.INTERNAL)
+      nulls = NullHandling.INTERNAL,
+    desc = "Aggregate. Returns the slope of the least-squares regression line through the x and y pairs "
+      + "in the group.")
   public static class RegrSlopeFunction implements DrillAggFunc {
 
     @Param
@@ -241,7 +245,9 @@ public class DistributionFunctions {
 
   @FunctionTemplate(names = {"regr_intercept", "regrIntercept"},
       scope = FunctionScope.POINT_AGGREGATE,
-      nulls = NullHandling.INTERNAL)
+      nulls = NullHandling.INTERNAL,
+    desc = "Aggregate. Returns the y-intercept of the least-squares regression line through the x and y "
+      + "pairs in the group.")
   public static class RegrInterceptFunction implements DrillAggFunc {
 
     @Param
@@ -333,7 +339,8 @@ public class DistributionFunctions {
    */
   @FunctionTemplate(names = {"percentChange", "percent_change"},
       scope = FunctionScope.SIMPLE,
-      nulls = NullHandling.NULL_IF_NULL)
+      nulls = NullHandling.NULL_IF_NULL,
+    desc = "Returns the percent change between two numeric values.")
   public static class PercentChangeFunction implements DrillSimpleFunc {
     @Param
     Float8Holder oldHolder;

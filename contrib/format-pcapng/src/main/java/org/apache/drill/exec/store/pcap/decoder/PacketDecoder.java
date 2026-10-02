@@ -18,6 +18,7 @@
 package org.apache.drill.exec.store.pcap.decoder;
 
 import com.google.common.base.Preconditions;
+import org.apache.commons.io.IOUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -74,7 +75,8 @@ public class PacketDecoder {
   public PacketDecoder(final InputStream input) throws IOException {
     this.input = input;
     byte[] globalHeader = new byte[GLOBAL_HEADER_SIZE];
-    int n = input.read(globalHeader);
+    // Read fully: a compressed stream may return fewer bytes per read
+    int n = IOUtils.read(input, globalHeader);
     if (n != globalHeader.length) {
       throw new IOException("Can't read PCAP file header");
     }
