@@ -37,6 +37,8 @@ exposeCredentials|false|include cleartext passwords found by protocol decoders i
 PCAP-NG files are streamed one block at a time, so file size is not limited by memory.
 
 In addition to the packet columns above, packet queries return the following metadata.
+The time of each packet is in `packet_timestamp`, the same column name as in PCAP files. (It was named
+`timestamp` in PCAP-NG files before; that name is a reserved word that had to be quoted in every query.)
 Timestamps honor each interface's `if_tsresol` and `if_tsoffset`.
 
 Column|Description
