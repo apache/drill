@@ -175,7 +175,7 @@ Structural damage that makes the rest of the file unreadable (invalid block leng
 Session stream gap that stops a decoder early | Fields parsed before the gap are kept; `decode_error` = `<protocol>: stopped at missing data in <direction> stream at byte <n>`
 
 An **error row** has `decode_error` set and every other column null. To allow this, the PCAP-NG packet
-columns that are currently `REQUIRED` (`timestamp`, `packet_length`, `captured_length`, `interface_id`,
+columns that are currently `REQUIRED` (`packet_timestamp`, `packet_length`, `captured_length`, `interface_id`,
 `link_type`) become nullable. Queries that count packets can exclude error rows with
 `WHERE decode_error IS NULL` or count them with `WHERE decode_error IS NOT NULL`.
 
