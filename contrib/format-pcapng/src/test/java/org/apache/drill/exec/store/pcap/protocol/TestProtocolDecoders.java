@@ -26,6 +26,8 @@ import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 import java.util.Collections;
 
+import org.apache.drill.exec.record.metadata.ColumnMetadata;
+import org.apache.drill.exec.record.metadata.TupleMetadata;
 import org.apache.drill.exec.store.pcap.decoder.Packet;
 import org.apache.drill.test.BaseTest;
 import org.junit.Test;
@@ -44,6 +46,15 @@ public class TestProtocolDecoders extends BaseTest {
   public void testServiceLoaderFindsTestDecoder() {
     assertTrue(ProtocolDecoders.get().packetDecoders().stream().anyMatch(d -> d.protocol().equals("echo_test")));
     assertNotNull(ProtocolDecoders.get().packetDataSchema().metadata("echo_test"));
+  }
+
+  @Test
+  public void testDecoderFieldsSizedSparse() {
+    // Most rows have no decoded data, so vectors start small instead of reserving room for every row
+    TupleMetadata dns = ProtocolDecoders.get().packetDataSchema().metadata("dns").tupleSchema();
+    ColumnMetadata answers = dns.metadata("answers");
+    assertEquals(1, answers.expectedElementCount());
+    assertEquals(ProtocolDecoders.SPARSE_WIDTH, answers.tupleSchema().metadata("data").expectedWidth());
   }
 
   @Test

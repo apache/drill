@@ -137,8 +137,35 @@ def classic():
                 'oid sha256:8d48391c3dde43c518b22c3d6ba4bbba315efac713803cc582d00e37144f577a\n'
                 'size 867464224\n')
 
+def dns_name(dotted):
+    out = b''
+    for label in dotted.split('.'):
+        out += bytes([len(label)]) + label.encode()
+    return out + b'\0'
+
+
+def dns_message(ident, flags, questions, answers):
+    body = b''.join(dns_name(n) + struct.pack('>HH', t, 1) for n, t in questions)
+    for ttl, address in answers:
+        # Name is a compression pointer to the first question name at offset 12
+        body += b'\xc0\x0c' + struct.pack('>HHIH', 1, 1, ttl, len(address)) + address
+    return struct.pack('>HHHHHH', ident, flags, len(questions), len(answers), 0, 0) + body
+
+
+def dns():
+    # Link type 101. Rows: query, response, non-DNS bytes on port 53, response cut 3 bytes short
+    query = dns_message(0x1234, 0x0100, [('example.com', 1)], [])
+    response = dns_message(0x1234, 0x8180, [('example.com', 1)], [(300, bytes([93, 184, 216, 34]))])
+    f = shb() + idb(101)
+    f += epb(0, ipv4(17, udp(5000, 53, query), '10.0.0.1', '8.8.8.8'))
+    f += epb(0, ipv4(17, udp(53, 5000, response), '8.8.8.8', '10.0.0.1'))
+    f += epb(0, ipv4(17, udp(5000, 53, bytes(range(1, 14))), '10.0.0.1', '8.8.8.8'))
+    f += epb(0, ipv4(17, udp(53, 5000, response[:-3]), '8.8.8.8', '10.0.0.1'))
+    write(os.path.join(PCAPNG, 'dns.pcapng'), f)
+
 if __name__ == '__main__':
     echo()
     errors()
     bad_block_length()
     classic()
+    dns()

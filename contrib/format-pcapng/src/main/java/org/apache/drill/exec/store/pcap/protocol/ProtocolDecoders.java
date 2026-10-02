@@ -25,6 +25,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.ServiceLoader;
 
+import org.apache.drill.exec.record.metadata.ColumnMetadata;
 import org.apache.drill.exec.record.metadata.MetadataUtils;
 import org.apache.drill.exec.record.metadata.SchemaBuilder;
 import org.apache.drill.exec.record.metadata.TupleMetadata;
@@ -40,6 +41,8 @@ import org.slf4j.LoggerFactory;
 public class ProtocolDecoders {
   private static final Logger logger = LoggerFactory.getLogger(ProtocolDecoders.class);
   private static volatile ProtocolDecoders instance;
+  /** Initial width of VARCHAR fields in parsed_data, which most rows leave empty. */
+  public static final int SPARSE_WIDTH = 8;
 
   private final List<PacketProtocolDecoder<?>> packetDecoders;
   private final TupleMetadata packetDataSchema;
@@ -181,7 +184,9 @@ public class ProtocolDecoders {
       try {
         SchemaBuilder fields = new SchemaBuilder();
         defineSchema(decoder, fields);
-        data.add(MetadataUtils.newMap(decoder.protocol(), fields.buildSchema()));
+        TupleMetadata schema = fields.buildSchema();
+        sizeSparse(schema);
+        data.add(MetadataUtils.newMap(decoder.protocol(), schema));
       } catch (RuntimeException e) {
         logger.warn("Ignoring protocol decoder {}: its schema could not be built", decoder.getClass().getName(), e);
         continue;
@@ -190,6 +195,25 @@ public class ProtocolDecoders {
       result.add(decoder);
     }
     return Collections.unmodifiableList(result);
+  }
+
+  /**
+   * Starts every vector small. Drill otherwise reserves room for a full batch of
+   * values per column, and ten elements per array row, which for the many mostly
+   * empty decoder fields would use up the batch memory budget before any row is
+   * written. Vectors still grow when a row needs more.
+   */
+  private static void sizeSparse(TupleMetadata schema) {
+    for (ColumnMetadata column : schema) {
+      if (column.isArray()) {
+        column.setExpectedElementCount(1);
+      }
+      if (column.isMap()) {
+        sizeSparse(column.tupleSchema());
+      } else if (column.isVariableWidth()) {
+        column.setExpectedWidth(SPARSE_WIDTH);
+      }
+    }
   }
 
   private static void defineSchema(ProtocolDecoder decoder, SchemaBuilder fields) {
