@@ -333,11 +333,13 @@ public class PcapngBatchReader implements ManagedReader {
     // Decode once here instead of once per projected column
     if (!isSkipQuery() || sessionizer != null) {
       PacketDecoder packet = new PacketDecoder();
-      if (packet.readPcapng(row.data, row.linkType)) {
+      boolean decoded = packet.readPcapng(row.data, row.linkType);
+      if (packet.getDecodeError() != null) {
+        row.addError("packet: " + packet.getDecodeError());
+      }
+      if (decoded) {
         packet.setTimestamp(row.timestamp);
         row.packet = packet;
-      } else if (packet.getDecodeError() != null) {
-        row.addError("packet: " + packet.getDecodeError());
       }
     }
     return row;

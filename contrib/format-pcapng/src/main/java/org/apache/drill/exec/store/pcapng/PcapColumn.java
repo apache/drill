@@ -38,7 +38,7 @@ public abstract class PcapColumn {
 
   static {
     // Basic
-    columns.put("timestamp", new PcapTimestamp());
+    columns.put("packet_timestamp", new PcapTimestamp());
     columns.put("packet_length", new PcapPacketLength());
     columns.put("type", new PcapType());
     columns.put("src_ip", new PcapSrcIp());
