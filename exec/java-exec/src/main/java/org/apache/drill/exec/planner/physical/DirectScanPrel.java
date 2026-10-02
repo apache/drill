@@ -128,7 +128,7 @@ public class DirectScanPrel extends AbstractRelNode implements Prel, HasDistribu
 
   @Override
   public RelWriter explainTerms(RelWriter pw) {
-    return super.explainTerms(pw).item("groupscan", this.getGroupScan().getDigest());
+    return super.explainTerms(pw).item("groupscan", this.getGroupScan().getExplainDigest());
   }
 
   @Override

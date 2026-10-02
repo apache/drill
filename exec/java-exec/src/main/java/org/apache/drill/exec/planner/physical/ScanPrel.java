@@ -87,7 +87,7 @@ public class ScanPrel extends DrillScanRelBase implements LeafPrel, HasDistribut
 
   @Override
   public RelWriter explainTerms(RelWriter pw) {
-    return super.explainTerms(pw).item("groupscan", this.getGroupScan().getDigest());
+    return super.explainTerms(pw).item("groupscan", this.getGroupScan().getExplainDigest());
   }
 
   @Override

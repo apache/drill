@@ -469,6 +469,17 @@ public class DrillOptiq {
 
     @Override
     public LogicalExpression visitDynamicParam(RexDynamicParam dynamicParam) {
+      if (dynamicParam instanceof org.apache.drill.exec.planner.sql.conversion.RexBoundDynamicParam) {
+        org.apache.drill.exec.planner.sql.conversion.RexBoundDynamicParam bound =
+            (org.apache.drill.exec.planner.sql.conversion.RexBoundDynamicParam) dynamicParam;
+        LogicalExpression expression = bound.getLiteral().accept(this);
+        if (!(expression instanceof org.apache.drill.common.expression.LiteralExpression)) {
+          return doUnknown(dynamicParam);
+        }
+        ((org.apache.drill.common.expression.LiteralExpression) expression)
+            .setDynamicParamIndex(bound.getIndex());
+        return expression;
+      }
       return doUnknown(dynamicParam);
     }
 

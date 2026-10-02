@@ -179,6 +179,10 @@ public class ProfileWrapper {
     return profile;
   }
 
+  public String getPlanCacheStatus() {
+    return profile.hasPlanCacheHit() ? (profile.getPlanCacheHit() ? "Yes" : "No") : "Unknown";
+  }
+
   public String getProfileDuration() {
     return (new SimpleDurationFormat(profile.getStart(), profile.getEnd())).verbose();
   }
@@ -377,6 +381,9 @@ public class ProfileWrapper {
     //[e.g ] operatorLine = "01-03 Flatten(flattenField=[$1]) : rowType = RecordType(ANY rfsSpecCode, ..."
     String[] operatorLine = plan.split("\\n");
     for (String line : operatorLine) {
+      if (line.startsWith("Parameters: ")) {
+        continue;
+      }
       String[] lineToken = line.split("\\s+", 3);
       if (lineToken.length < 2) {
         continue; //Skip due to possible invalid entry

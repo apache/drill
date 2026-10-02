@@ -48,6 +48,21 @@ public interface FormatPlugin {
 
   boolean supportsWrite();
 
+  /** Whether scans of this format can be rebuilt for a cached plan. */
+  default boolean supportPlanCache() {
+    return false;
+  }
+
+  /** Version of the table definition that determines physical-plan compatibility. */
+  default String planCacheTableVersion(FileSelection selection) throws IOException {
+    return null;
+  }
+
+  /** Reads the current version of a previously resolved table without rebuilding its schema. */
+  default String planCacheTableVersion(Path tablePath) throws IOException {
+    return null;
+  }
+
   /**
    * Indicates whether this FormatPlugin supports auto-partitioning for CTAS statements
    * @return true if auto-partitioning is supported

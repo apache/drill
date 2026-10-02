@@ -51,17 +51,20 @@ import org.apache.drill.exec.oauth.TokenRegistry;
 import org.apache.drill.exec.ops.OptimizerRulesContext;
 import org.apache.drill.exec.physical.base.AbstractGroupScan;
 import org.apache.drill.exec.planner.PlannerPhase;
+import org.apache.drill.exec.planner.logical.DrillTableSelection;
 import org.apache.drill.exec.server.DrillbitContext;
 import org.apache.drill.exec.server.options.SessionOptionManager;
 import org.apache.drill.exec.store.AbstractStoragePlugin;
 import org.apache.drill.exec.store.ClassPathFileSystem;
 import org.apache.drill.exec.store.LocalSyncableFileSystem;
+import org.apache.drill.exec.store.PlanCacheTable;
 import org.apache.drill.exec.store.SchemaConfig;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Strings;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.CommonConfigurationKeys;
 import org.apache.hadoop.fs.FileSystem;
+import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.fs.sftp.SFTPFileSystem;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -328,6 +331,55 @@ public class FileSystemPlugin extends AbstractStoragePlugin {
 
   public FormatPlugin getFormatPlugin(String name) {
     return formatCreator.getFormatPluginByName(name);
+  }
+
+  @Override
+  public boolean supportPlanCache() {
+    return true;
+  }
+
+  @Override
+  public PlanCacheTable planCacheTable(DrillTableSelection selection) throws IOException {
+    if (!(selection instanceof FormatSelection)) {
+      return null;
+    }
+    FormatSelection formatSelection = (FormatSelection) selection;
+    FileSelection files = formatSelection.getSelection();
+    FormatPlugin format = getFormatPlugin(formatSelection.getFormat());
+    if (files == null || files.getSelectionRoot() == null
+        || format == null || !format.supportPlanCache()) {
+      return null;
+    }
+    String version = format.planCacheTableVersion(files);
+    if (version == null) {
+      return null;
+    }
+    String formatName = format.getName();
+    if (formatName == null || formatName.isEmpty()) {
+      return null;
+    }
+    String identifier = formatName.length() + ":" + formatName + files.getSelectionRoot();
+    return new PlanCacheTable(identifier, version);
+  }
+
+  @Override
+  public String planCacheTableVersion(String identifier) throws IOException {
+    int separator = identifier.indexOf(':');
+    if (separator < 1) {
+      return null;
+    }
+    try {
+      int nameLength = Integer.parseInt(identifier.substring(0, separator));
+      if (nameLength < 1 || nameLength >= identifier.length() - separator - 1) {
+        return null;
+      }
+      int nameEnd = separator + 1 + nameLength;
+      FormatPlugin format = getFormatPlugin(identifier.substring(separator + 1, nameEnd));
+      return format == null || !format.supportPlanCache() ? null
+          : format.planCacheTableVersion(new Path(identifier.substring(nameEnd)));
+    } catch (NumberFormatException e) {
+      return null;
+    }
   }
 
   /**

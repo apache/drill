@@ -41,6 +41,10 @@ import org.apache.drill.exec.store.plan.rel.PluginRel;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
+import org.apache.iceberg.HasTableOperations;
+import org.apache.iceberg.Table;
+import org.apache.iceberg.TableMetadata;
+import org.apache.iceberg.hadoop.HadoopTables;
 
 import java.io.IOException;
 import java.util.Collections;
@@ -102,6 +106,34 @@ public class IcebergFormatPlugin implements FormatPlugin {
   @Override
   public boolean supportsRead() {
     return true;
+  }
+
+  @Override
+  public boolean supportPlanCache() {
+    return config.getSnapshot() == null;
+  }
+
+  @Override
+  public String planCacheTableVersion(FileSelection selection) throws IOException {
+    if (!supportPlanCache() || selection instanceof IcebergMetadataFileSelection
+        || selection.getSelectionRoot() == null) {
+      return null;
+    }
+    return planCacheTableVersion(selection.getSelectionRoot());
+  }
+
+  @Override
+  public String planCacheTableVersion(Path tablePath) throws IOException {
+    if (!supportPlanCache()) {
+      return null;
+    }
+    Table table = new HadoopTables(fsConf).load(tablePath.toString());
+    if (!(table instanceof HasTableOperations)) {
+      return null;
+    }
+    TableMetadata metadata = ((HasTableOperations) table).operations().current();
+    return metadata == null || metadata.uuid() == null ? null
+      : metadata.uuid() + ":" + metadata.currentSchemaId();
   }
 
   @Override
