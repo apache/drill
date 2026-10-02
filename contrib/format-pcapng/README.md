@@ -112,6 +112,9 @@ tls|sessions|Full handshake on the same ports: negotiated version and cipher, ce
 stun|packets|UDP 3478 and 19302
 ftp|sessions|FTP control channel on port 21
 ssh|sessions|SSH identification and key exchange (HASSH) on ports 22 and 2222
+smtp|sessions|SMTP on ports 25, 587 and 2525: credentials, envelope, message headers
+pop3|sessions|POP3 on port 110: credentials, retrieved message headers
+imap|sessions|IMAP on port 143: credentials, mailboxes, fetched message headers
 
 A decoder only handles traffic that parses as its protocol: other traffic on the same port is left undecoded.
 Decoding runs only when `parsed_protocol` or `parsed_data` is queried.

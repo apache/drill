@@ -132,7 +132,7 @@ public class TestMailSessions extends ClusterTest {
         + "t.parsed_data.imap.capabilities[1] as capability, t.parsed_data.imap.username as username, "
         + "t.parsed_data.imap.tls_started as tls, t.parsed_data.imap.selected_mailboxes[0] as mailbox, "
         + "t.parsed_data.imap.commands[0].argument as login, "
-        + "t.parsed_data.imap.fetched_messages[0].`from` as from0, "
+        + "t.parsed_data.imap.fetched_messages[0].from_address as from0, "
         + "t.parsed_data.imap.fetched_messages[1].subject as subject1, "
         + "t.parsed_data.imap.fetched_messages[1].uid as uid1, decode_error from " + table("imap", false)
         + " order by src_port";

@@ -525,6 +525,60 @@ Field | Type
 `client_message_count`, `server_message_count` | INT
 `is_zone_transfer` | BIT
 
+### Mail sessions: `smtp`, `pop3`, `imap`
+
+SMTP on TCP 25, 587 and 2525; POP3 on 110; IMAP on 143. The implicit TLS ports (465, 995, 993) are left to
+the `tls` decoders. A session matches only if the server greeting or the client's first command is the
+protocol's. Parsing stops in both directions once STARTTLS (STLS for POP3) is accepted.
+
+The three share credential fields and a message map.
+
+Field | Type
+------|-----
+`auth_mechanism` | VARCHAR (`PLAIN`, `LOGIN`, `CRAM-MD5`, ...; `APOP` for POP3 APOP)
+`username` | VARCHAR
+`password_present` | BIT (a password or digest was sent)
+`password` | VARCHAR (only with `exposeCredentials`; never for CRAM-MD5 or APOP)
+
+Message map: `from_address`, `to_address`, `cc_address`, `subject`, `date_text`, `message_id` VARCHAR,
+taken from the message headers (folded lines unfolded, RFC 2047 UTF-8 words decoded), and `size` BIGINT.
+
+`smtp`:
+
+Field | Type
+------|-----
+`banner`, `helo`, `mail_from` | VARCHAR
+`extensions`, `rcpt_to` | VARCHAR array
+`tls_started` | BIT
+`message_count`, `command_count` | INT
+`messages` | repeated map: the message map, one per DATA or BDAT
+`commands` | repeated map: `command`, `argument` VARCHAR (AUTH responses shown as `***` unless `exposeCredentials`)
+`replies` | repeated map: `code` INT, `text` VARCHAR
+
+`pop3`:
+
+Field | Type
+------|-----
+`banner` | VARCHAR
+`capabilities` | VARCHAR array
+`tls_started` | BIT
+`message_count`, `command_count` | INT
+`retrieved` | repeated map: `number` INT plus the message map, one per RETR or TOP
+`commands` | repeated map: `command`, `argument` VARCHAR (PASS, APOP and AUTH arguments masked unless `exposeCredentials`)
+`replies` | repeated map: `status` (`+OK`, `-ERR`, `+`), `text` VARCHAR
+
+`imap`:
+
+Field | Type
+------|-----
+`banner` | VARCHAR
+`capabilities`, `selected_mailboxes` | VARCHAR array
+`tls_started` | BIT
+`command_count` | INT
+`commands` | repeated map: `tag`, `command`, `argument` VARCHAR (LOGIN password masked unless `exposeCredentials`)
+`responses` | repeated map: `tag`, `status` (`OK`, `NO`, `BAD`), `text` VARCHAR
+`fetched_messages` | repeated map: `number` INT, `uid` BIGINT plus the message map, from FETCH ENVELOPE or header bodies
+
 ## Writing a Decoder
 
 1. Implement `PacketProtocolDecoder<T>` or `SessionProtocolDecoder<T>`, where `T` is a small class
@@ -565,5 +619,5 @@ Differences from the design above, recorded during implementation:
 - Session decoders receive only the two reassembled streams, so FTP cannot fill in the host of an EPSV data
   address.
 - Field names avoid words Drill reserves after a dot (`from`, `timestamp`, `date`, `group`), so every field can
-  be queried without quotes: SIP uses `from_address` and `to_address`, syslog `timestamp_text`.
+  be queried without quotes: SIP and the mail decoders use `from_address` and `to_address`, syslog `timestamp_text`, mail `date_text`.
   `TestDecoderFieldNames` checks this for every registered decoder.

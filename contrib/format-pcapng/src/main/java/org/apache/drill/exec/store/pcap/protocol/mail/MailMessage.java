@@ -33,11 +33,11 @@ public final class MailMessage {
 
   /** Defines the header fields and size. */
   public static void define(MapBuilder m) {
-    m.addNullable("from", MinorType.VARCHAR)
-        .addNullable("to", MinorType.VARCHAR)
-        .addNullable("cc", MinorType.VARCHAR)
+    m.addNullable("from_address", MinorType.VARCHAR)
+        .addNullable("to_address", MinorType.VARCHAR)
+        .addNullable("cc_address", MinorType.VARCHAR)
         .addNullable("subject", MinorType.VARCHAR)
-        .addNullable("date", MinorType.VARCHAR)
+        .addNullable("date_text", MinorType.VARCHAR)
         .addNullable("message_id", MinorType.VARCHAR)
         .addNullable("size", MinorType.BIGINT);
   }
@@ -45,11 +45,11 @@ public final class MailMessage {
   public void write(TupleWriter t) {
     MailFields.setInt(t, "number", number);
     MailFields.setLong(t, "uid", uid);
-    MailFields.setString(t, "from", headers.from);
-    MailFields.setString(t, "to", headers.to);
-    MailFields.setString(t, "cc", headers.cc);
+    MailFields.setString(t, "from_address", headers.from);
+    MailFields.setString(t, "to_address", headers.to);
+    MailFields.setString(t, "cc_address", headers.cc);
     MailFields.setString(t, "subject", headers.subject);
-    MailFields.setString(t, "date", headers.date);
+    MailFields.setString(t, "date_text", headers.date);
     MailFields.setString(t, "message_id", headers.messageId);
     MailFields.setLong(t, "size", size);
   }
