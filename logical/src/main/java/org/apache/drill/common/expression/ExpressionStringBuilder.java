@@ -212,61 +212,41 @@ public class ExpressionStringBuilder extends AbstractExprVisitor<Void, StringBui
 
   @Override
   public Void visitDateConstant(DateExpression lExpr, StringBuilder sb) throws RuntimeException {
-    if (startBoundLiteral(lExpr, sb)) {
-      return null;
-    }
     sb.append("cast( ");
     sb.append(lExpr.getDate());
     sb.append(" as DATE)");
-    endBoundLiteral(lExpr, sb);
     return null;
   }
 
   @Override
   public Void visitTimeConstant(TimeExpression lExpr, StringBuilder sb) throws RuntimeException {
-    if (startBoundLiteral(lExpr, sb)) {
-      return null;
-    }
     sb.append("cast( ");
     sb.append(lExpr.getTime());
     sb.append(" as TIME)");
-    endBoundLiteral(lExpr, sb);
     return null;
   }
 
   @Override
   public Void visitTimeStampConstant(TimeStampExpression lExpr, StringBuilder sb) throws RuntimeException {
-    if (startBoundLiteral(lExpr, sb)) {
-      return null;
-    }
     sb.append("cast( ");
     sb.append(lExpr.getTimeStamp());
     sb.append(" as TIMESTAMP)");
-    endBoundLiteral(lExpr, sb);
     return null;
   }
 
   @Override
   public Void visitIntervalYearConstant(IntervalYearExpression lExpr, StringBuilder sb) throws RuntimeException {
-    if (startBoundLiteral(lExpr, sb)) {
-      return null;
-    }
     sb.append("cast( '");
     sb.append(Period.months(lExpr.getIntervalYear()).toString());
     sb.append("' as INTERVALYEAR)");
-    endBoundLiteral(lExpr, sb);
     return null;
   }
 
   @Override
   public Void visitIntervalDayConstant(IntervalDayExpression lExpr, StringBuilder sb) throws RuntimeException {
-    if (startBoundLiteral(lExpr, sb)) {
-      return null;
-    }
     sb.append("cast( '");
     sb.append(Period.days(lExpr.getIntervalDay()).plusMillis(lExpr.getIntervalMillis()).toString());
     sb.append("' as INTERVALDAY)");
-    endBoundLiteral(lExpr, sb);
     return null;
   }
 

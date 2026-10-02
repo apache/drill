@@ -77,10 +77,10 @@ HBase and Iceberg; other plugins retain the default of no support.
 
 Constants that determine SQL structure stay in the key: group/order expressions,
 window definitions, limit/offset, field selectors, and function configuration
-arguments such as `DATE_PART`'s unit or `CONVERT_FROM`'s encoding. DATE literals
-also stay in the key because DATE parameter binding is not supported. Other
-eligible literals in the same query can still be rebound. Queries with no slots
-can reuse their complete template.
+arguments such as `DATE_PART`'s unit or `CONVERT_FROM`'s encoding. DATE, TIME,
+TIMESTAMP and INTERVAL literals also stay in the key because their parameter
+binding is not supported. Other eligible literals in the same query can still
+be rebound. Queries with no slots can reuse their complete template.
 
 Writes, DDL, existing dynamic parameters, volatile/query-context functions and
 sessions containing temporary tables or mutable aliases bypass the cache.

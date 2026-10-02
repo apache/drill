@@ -513,7 +513,7 @@ public class ValueExpressions {
     }
   }
 
-  public static class DateExpression extends LiteralExpression {
+  public static class DateExpression extends LogicalExpressionBase {
 
     private static final MajorType DATE_CONSTANT = Types.required(MinorType.DATE);
 
@@ -548,7 +548,7 @@ public class ValueExpressions {
     }
   }
 
-  public static class TimeExpression extends LiteralExpression {
+  public static class TimeExpression extends LogicalExpressionBase {
 
     private static final MajorType TIME_CONSTANT = Types.required(MinorType.TIME);
 
@@ -583,7 +583,7 @@ public class ValueExpressions {
     }
   }
 
-  public static class TimeStampExpression extends LiteralExpression {
+  public static class TimeStampExpression extends LogicalExpressionBase {
 
     private static final MajorType TIMESTAMP_CONSTANT = Types.required(MinorType.TIMESTAMP);
 
@@ -618,7 +618,7 @@ public class ValueExpressions {
     }
   }
 
-  public static class IntervalYearExpression extends LiteralExpression {
+  public static class IntervalYearExpression extends LogicalExpressionBase {
 
     private static final MajorType INTERVALYEAR_CONSTANT = Types.required(MinorType.INTERVALYEAR);
 
@@ -653,7 +653,7 @@ public class ValueExpressions {
     }
   }
 
-  public static class IntervalDayExpression extends LiteralExpression {
+  public static class IntervalDayExpression extends LogicalExpressionBase {
 
     private static final MajorType INTERVALDAY_CONSTANT = Types.required(MinorType.INTERVALDAY);
     private static final long MILLIS_IN_DAY = 1000 * 60 * 60 * 24;
