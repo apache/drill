@@ -31,6 +31,7 @@ import org.apache.drill.exec.physical.resultSet.ResultSetLoader;
 import org.apache.drill.exec.physical.resultSet.RowSetLoader;
 import org.apache.drill.exec.physical.resultSet.impl.ResultSetLoaderImpl.ResultSetOptions;
 import org.apache.drill.exec.physical.rowSet.RowSet;
+import org.apache.drill.exec.record.metadata.MetadataUtils;
 import org.apache.drill.exec.record.metadata.SchemaBuilder;
 import org.apache.drill.exec.record.metadata.TupleMetadata;
 import org.apache.drill.exec.vector.ValueVector;
@@ -325,6 +326,45 @@ public class TestResultSetLoaderLimits extends SubOperatorTest {
     rsLoader.harvest().clear();
     assertTrue(rsLoader.atLimit());
 
+    rsLoader.close();
+  }
+
+  /**
+   * Columns never written in a batch are filled in when it is harvested. That fill
+   * cannot overflow to a new batch, so it must be allowed to grow vectors even when
+   * the batch is over its memory budget.
+   */
+  @Test
+  public void testHarvestFillsUnwrittenColumnsOverBudget() {
+    SchemaBuilder sparse = new SchemaBuilder();
+    for (int i = 0; i < 200; i++) {
+      sparse.addNullable("b" + i, MinorType.BIT);
+      sparse.addNullable("v" + i, MinorType.VARCHAR);
+    }
+    TupleMetadata inner = new SchemaBuilder()
+        .add(MetadataUtils.newMap("d", sparse.buildSchema()))
+        .buildSchema();
+    TupleMetadata schema = new SchemaBuilder()
+        .addNullable("a", MinorType.INT)
+        .add(MetadataUtils.newMap("m", inner))
+        .buildSchema();
+    ResultSetOptions options = new ResultSetOptionBuilder()
+        .readerSchema(schema)
+        .rowCountLimit(ValueVector.MAX_ROW_COUNT)
+        .batchSizeLimit(1024 * 1024)
+        .build();
+    ResultSetLoader rsLoader = new ResultSetLoaderImpl(fixture.allocator(), options);
+    RowSetLoader rootWriter = rsLoader.writer();
+    rsLoader.startBatch();
+    int rows = 0;
+    while (!rootWriter.isFull()) {
+      rootWriter.start();
+      rootWriter.scalar("a").setInt(rows++);
+      rootWriter.save();
+    }
+    RowSet result = fixture.wrap(rsLoader.harvest());
+    assertEquals(rows, result.rowCount());
+    result.clear();
     rsLoader.close();
   }
 }

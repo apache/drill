@@ -92,6 +92,8 @@ public class PcapBatchReader implements ManagedReader {
   // Set when a damaged record makes the rest of the file unreadable
   private boolean finished;
   private int packetCount;
+  // Why the stream stopped being readable; reported after the packets already buffered
+  private String readError;
   // Snapshot length from the file header, capped at MAX_SNAPLEN
   private int maxLength;
 
@@ -170,7 +172,8 @@ public class PcapBatchReader implements ManagedReader {
       int snaplen = decoder.getMaxLength();
       maxLength = snaplen <= 0 || snaplen > MAX_SNAPLEN ? MAX_SNAPLEN : snaplen;
       buffer = new byte[BUFFER_SIZE + maxLength];
-      validBytes = fsStream.read(buffer);
+      validBytes = 0;
+      fill();
     } catch (IOException e) {
       decoder = null;
       fileError = "file: cannot read: " + ProtocolDecoders.describe(e);
@@ -221,10 +224,15 @@ public class PcapBatchReader implements ManagedReader {
     Packet packet = new Packet();
 
     if (offset >= validBytes) {
+      if (readError != null) {
+        protocolColumns.writeErrorRow("file: read failed after packet " + packetCount + ": " + readError);
+        readError = null;
+        finished = true;
+      }
       return false;
     }
-    if (validBytes - offset < maxLength) {
-      getNextPacket(rowWriter);
+    if (validBytes - offset < maxLength && readError == null && !finished) {
+      refill();
     }
 
     int old = offset;
@@ -234,8 +242,10 @@ public class PcapBatchReader implements ManagedReader {
       // The record's length cannot be trusted, so neither can anything after it
       finished = true;
       if (protocolColumns != null) {
-        protocolColumns.writeErrorRow("file: invalid packet record after packet " + packetCount + ": "
-            + ProtocolDecoders.describe(e));
+        String error = "file: invalid packet record after packet " + packetCount + ": " + ProtocolDecoders.describe(e);
+        // Damage from a failed read shows up as a bad record; report both in the one row
+        protocolColumns.writeErrorRow(readError == null ? error : error + "; file: read failed: " + readError);
+        readError = null;
       }
       return false;
     }
@@ -259,34 +269,35 @@ public class PcapBatchReader implements ManagedReader {
     return true;
   }
 
-  private boolean getNextPacket(RowSetLoader rowWriter) {
-    Packet packet = new Packet();
-    try {
-      if (validBytes == buffer.length) {
-        // shift data and read more. This is the common case.
-        System.arraycopy(buffer, offset, buffer, 0, validBytes - offset);
-        validBytes = validBytes - offset;
-        offset = 0;
-
-        int n = fsStream.read(buffer, validBytes, buffer.length - validBytes);
-        if (n > 0) {
-          validBytes += n;
-        }
-        logger.debug("read {} bytes, at {} offset", n, validBytes);
-      } else {
-        // near the end of the file, we will just top up the buffer without shifting
-        int n = fsStream.read(buffer, offset, buffer.length - offset);
-        if (n > 0) {
-          validBytes = validBytes + n;
-          logger.debug("Topped up buffer with {} bytes to yield {}", n, validBytes);
-        }
-      }
-    } catch (Exception e) {
-      // Exception denotes EOF or unreadable file
-      return false;
-    }
-    return true;
+  /**
+   * Moves the unread bytes to the front of the buffer and fills the rest.
+   */
+  private void refill() {
+    System.arraycopy(buffer, offset, buffer, 0, validBytes - offset);
+    validBytes -= offset;
+    offset = 0;
+    fill();
   }
+
+  /**
+   * Reads until the buffer is full or the file ends. Compressed streams return short
+   * reads, so one read is not enough. A read failure keeps the bytes read before it
+   * and is reported once those packets have been returned.
+   */
+  private void fill() {
+    try {
+      while (validBytes < buffer.length) {
+        int n = fsStream.read(buffer, validBytes, buffer.length - validBytes);
+        if (n < 0) {
+          break;
+        }
+        validBytes += n;
+      }
+    } catch (IOException e) {
+      readError = ProtocolDecoders.describe(e);
+    }
+  }
+
 
   private void addDataToTable(Packet packet, int networkType, RowSetLoader rowWriter) {
     rowWriter.start();

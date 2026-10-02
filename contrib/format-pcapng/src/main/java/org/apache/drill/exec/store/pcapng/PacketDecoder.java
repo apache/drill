@@ -58,7 +58,8 @@ public class PacketDecoder extends Packet {
     dstMacOffset = -1;
     int networkOffset = findNetworkLayer(linkType);
     if (networkOffset >= 0 && isArpPacket()) {
-      // Typed, but has no IP fields
+      // Typed, but has no IP fields; the link payload starts at the ARP message
+      etherOffset = networkOffset - PacketConstants.IP_OFFSET;
       return true;
     }
     if (networkOffset < 0 || networkOffset + 20 > raw.length) {
