@@ -14,6 +14,7 @@ All developer documentation is under [`docs/dev/`](docs/dev/). Start with [`docs
 | **Geospatial filter builder** — draw shapes on a map, push into SQL as ST_ predicates | [`docs/dev/GeoFilterBuilder.md`](docs/dev/GeoFilterBuilder.md) |
 | **Prospector reports** — generated reports saved to a project wiki, PDF download | [`docs/dev/ProspectorReports.md`](docs/dev/ProspectorReports.md) |
 | Prospector AI assistant — backend | [`docs/dev/PROSPECTOR.md`](docs/dev/PROSPECTOR.md) |
+| **PCAP protocol decoders** — parsed_protocol / parsed_data / decode_error, writing a decoder | [`docs/dev/PcapProtocolDecoders.md`](docs/dev/PcapProtocolDecoders.md) |
 | Enterprise AI provider configuration — proxy, SSL/TLS, custom headers, static parameters | [`docs/dev/ai/ENTERPRISE_PROVIDERS.md`](docs/dev/ai/ENTERPRISE_PROVIDERS.md) |
 | SQL transpiler (GraalPy + sqlglot) | [`docs/dev/TRANSPILER.md`](docs/dev/TRANSPILER.md) |
 | AI features overview | [`docs/dev/AI_FEATURES.md`](docs/dev/AI_FEATURES.md) |
