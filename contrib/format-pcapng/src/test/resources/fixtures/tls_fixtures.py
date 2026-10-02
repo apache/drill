@@ -107,6 +107,43 @@ def ja3_from_scapy(hello):
                      '-'.join(str(v) for v in formats)])
 
 
+def ja4_from_spec(legacy_version, supported_versions, has_sni, ciphers, extensions, sig_algs, alpn):
+    """JA4 (FoxIO, BSD 3-Clause) computed independently from the spec, for cross-checking the Java decoder.
+    Only JA4 is implemented; the JA4S/JA4H/JA4SSH variants have an incompatible licence."""
+    def h4(v):
+        return '%04x' % (v & 0xFFFF)
+
+    def sha12(s):
+        return hashlib.sha256(s.encode('ascii')).hexdigest()[:12]
+
+    ver_code = {0x0304: '13', 0x0303: '12', 0x0302: '11', 0x0301: '10', 0x0300: 's3'}
+    sv = [v for v in supported_versions if v not in GREASE]
+    version = max(sv) if sv else legacy_version
+    alpn_chars = '00'
+    if alpn and alpn[0]:
+        b = alpn[0].encode()
+        fc, lc = chr(b[0]), chr(b[-1])
+        alpn_chars = fc + lc if fc.isalnum() and lc.isalnum() else '%x%x' % ((b[0] >> 4) & 0xF, b[-1] & 0xF)
+    cc = min(99, sum(1 for c in ciphers if c not in GREASE))
+    ec = min(99, sum(1 for e in extensions if e not in GREASE))
+    a = '%s%s%s%02d%02d%s' % ('t', ver_code.get(version, '00'), 'd' if has_sni else 'i', cc, ec, alpn_chars)
+    chex = sorted(h4(c) for c in ciphers if c not in GREASE)
+    b_hash = '000000000000' if not chex else sha12(','.join(chex))
+    ehex = sorted(h4(e) for e in extensions if e not in GREASE and e not in (0x0000, 0x0010))
+    shex = [h4(s) for s in sig_algs if s not in GREASE]
+    c_raw = ','.join(ehex) + (('_' + ','.join(shex)) if shex else '')
+    c_hash = '000000000000' if not ehex else sha12(c_raw)
+    return '%s_%s_%s' % (a, b_hash, c_hash)
+
+
+# Extension types, signature algorithms and supported_versions of the fixture ClientHello above, in wire order.
+CLIENT_EXTENSION_TYPES = [0x2a2a, 0, 23, 65281, 10, 11, 35, 16, 5, 13, 51, 45, 43, 0x3a3a]
+CLIENT_SIG_ALGS = [0x0403, 0x0804, 0x0401, 0x0503]
+CLIENT_SUPPORTED_VERSIONS = [0xbaba, 0x0304, 0x0303]
+EXPECTED_JA4 = ja4_from_spec(0x0303, CLIENT_SUPPORTED_VERSIONS, True, CIPHERS, CLIENT_EXTENSION_TYPES,
+                             CLIENT_SIG_ALGS, ['h2', 'http/1.1'])
+
+
 def cross_check():
     try:
         from scapy.all import load_layer
@@ -138,6 +175,7 @@ def main():
     cross_check()
     print('ja3', EXPECTED_JA3, hashlib.md5(EXPECTED_JA3.encode()).hexdigest())
     print('ja3s', EXPECTED_JA3S, hashlib.md5(EXPECTED_JA3S.encode()).hexdigest())
+    print('ja4', EXPECTED_JA4)
     client, server = '10.0.0.1', '93.184.216.34'
     # A hello whose lengths are complete but whose session ID length (32) overruns the hello
     bad = bytearray(client_hello_body(0x0303, b'', [0x1301], []))

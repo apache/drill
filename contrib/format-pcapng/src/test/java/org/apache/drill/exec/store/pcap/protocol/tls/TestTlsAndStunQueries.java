@@ -87,6 +87,28 @@ public class TestTlsAndStunQueries extends ClusterTest {
   }
 
   @Test
+  public void testTlsJa4() throws Exception {
+    // JA4 of the fixture ClientHello, cross-checked with tls_fixtures.py#ja4_from_spec:
+    //   a = t13d1512h2 (TLS 1.3 from supported_versions, SNI, 15 ciphers, 12 extensions, ALPN h2)
+    //   b = sha256(sorted non-GREASE cipher hex)[:12]
+    //   c = sha256(sorted non-GREASE extension hex without SNI/ALPN, '_', signature algorithms)[:12]
+    String sql = "select t.parsed_data.tls.ja4 as ja4, t.parsed_data.tls.ja4_raw as ja4_raw " +
+        "from dfs.`decoders/tls/tls.pcapng` t where t.parsed_data.tls.handshake_type = 'client_hello' " +
+        "and decode_error is null";
+    RowSet results = client.queryBuilder().sql(sql).rowSet();
+    TupleMetadata schema = new SchemaBuilder()
+        .addNullable("ja4", MinorType.VARCHAR)
+        .addNullable("ja4_raw", MinorType.VARCHAR)
+        .buildSchema();
+    RowSet expected = new RowSetBuilder(client.allocator(), schema)
+        .addRow("t13d1512h2_8daaf6152771_2f4579fd44f8",
+            "t13d1512h2_002f,0035,009c,009d,1301,1302,1303,c013,c014,c02b,c02c,c02f,c030,cca8,cca9" +
+                "_0005,000a,000b,000d,0017,0023,002b,002d,0033,ff01_0403,0804,0401,0503")
+        .build();
+    new RowSetComparison(expected).verifyAndClearAll(results);
+  }
+
+  @Test
   public void testStun() throws Exception {
     String sql = "select parsed_protocol, t.parsed_data.stun.message_class as message_class, " +
         "t.parsed_data.stun.message_method as message_method, t.parsed_data.stun.username as username, " +
