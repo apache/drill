@@ -79,8 +79,7 @@ public class TestPcapEVFReader extends ClusterTest {
       .sqlQuery(sql)
       .ordered()
       .baselineColumns("is_corrupt", "packet_count")
-      .baselineValues(false, 6984L)
-      .baselineValues(true, 16L)
+      .baselineValues(false, 7000L)
       .go();
   }
 

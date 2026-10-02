@@ -52,7 +52,7 @@ public class TestSessionizePCAP extends ClusterTest {
 
   @Test
   public void testSessionizedStarQuery() throws Exception {
-    String sql = "SELECT * FROM cp.`/pcap/http.pcap`";
+    String sql = "SELECT * FROM cp.`/pcap/http.pcap` WHERE session_closed = true";
     String dataFromRemote = readAFileIntoString(dirTestWatcher.getRootDir().getAbsolutePath() + "/pcap/dataFromRemote.txt");
 
     QueryBuilder q = client.queryBuilder().sql(sql);
@@ -76,6 +76,7 @@ public class TestSessionizePCAP extends ClusterTest {
       .addNullable("connection_time", TypeProtos.MinorType.INTERVAL)
       .addNullable("tcp_session", TypeProtos.MinorType.BIGINT)
       .addNullable("is_corrupt", TypeProtos.MinorType.BIT)
+      .addNullable("session_closed", TypeProtos.MinorType.BIT)
       .addNullable("data_from_originator", TypeProtos.MinorType.VARCHAR)
       .addNullable("data_from_remote", TypeProtos.MinorType.VARCHAR)
       .buildSchema();
@@ -90,10 +91,10 @@ public class TestSessionizePCAP extends ClusterTest {
         1084443427311L,
         1084443445216L,
         Period.parse("PT17.905S"), 31,
-        437,18000,14, 17,
+        479, 18364, 14, 17,
         Period.parse("PT0.911S"),
-        -789689725566200012L, false,
-        "r-Agent: Mozilla/5.0 (Windows; U; Windows NT 5.1; en-US; rv:1.6) Gecko/20040113..Accept: text/xml,application/xml,application/xhtml+xml,text/html;q=0.9,text/plain;q=0.8,image/png,image/jpeg,image/gif;q=0.2,*/*;q=0.1..Accept-Language: en-us,en;q=0.5..Accept-Encoding: gzip,deflate..Accept-Charset: ISO-8859-1,utf-8;q=0.7,*;q=0.7..Keep-Alive: 300..Connection: keep-alive..Referer: http://www.ethereal.com/development.html....$K.@....6...6",
+        -789689725566200012L, false, true,
+        "GET /download.html HTTP/1.1..Host: www.ethereal.com..User-Agent: Mozilla/5.0 (Windows; U; Windows NT 5.1; en-US; rv:1.6) Gecko/20040113..Accept: text/xml,application/xml,application/xhtml+xml,text/html;q=0.9,text/plain;q=0.8,image/png,image/jpeg,image/gif;q=0.2,*/*;q=0.1..Accept-Language: en-us,en;q=0.5..Accept-Encoding: gzip,deflate..Accept-Charset: ISO-8859-1,utf-8;q=0.7,*;q=0.7..Keep-Alive: 300..Connection: keep-alive..Referer: http://www.ethereal.com/development.html",
         dataFromRemote
         )
       .build();
@@ -106,7 +107,7 @@ public class TestSessionizePCAP extends ClusterTest {
     String sql = "SELECT src_ip, dst_ip, src_port, dst_port, src_mac_address, dst_mac_address," +
       "session_start_time, session_end_time, session_duration, total_packet_count, data_volume_from_origin, data_volume_from_remote," +
       "packet_count_from_origin, packet_count_from_remote, connection_time, tcp_session, is_corrupt, data_from_originator, data_from_remote " +
-      "FROM cp.`/pcap/http.pcap`";
+      "FROM cp.`/pcap/http.pcap` WHERE session_closed = true";
 
     String dataFromRemote = readAFileIntoString(dirTestWatcher.getRootDir().getAbsolutePath() + "/pcap/dataFromRemote.txt");
 
@@ -145,10 +146,10 @@ public class TestSessionizePCAP extends ClusterTest {
         1084443427311L,
         1084443445216L,
         Period.parse("PT17.905S"), 31,
-        437,18000,14, 17,
+        479, 18364, 14, 17,
         Period.parse("PT0.911S"),
         -789689725566200012L, false,
-        "r-Agent: Mozilla/5.0 (Windows; U; Windows NT 5.1; en-US; rv:1.6) Gecko/20040113..Accept: text/xml,application/xml,application/xhtml+xml,text/html;q=0.9,text/plain;q=0.8,image/png,image/jpeg,image/gif;q=0.2,*/*;q=0.1..Accept-Language: en-us,en;q=0.5..Accept-Encoding: gzip,deflate..Accept-Charset: ISO-8859-1,utf-8;q=0.7,*;q=0.7..Keep-Alive: 300..Connection: keep-alive..Referer: http://www.ethereal.com/development.html....$K.@....6...6",
+        "GET /download.html HTTP/1.1..Host: www.ethereal.com..User-Agent: Mozilla/5.0 (Windows; U; Windows NT 5.1; en-US; rv:1.6) Gecko/20040113..Accept: text/xml,application/xml,application/xhtml+xml,text/html;q=0.9,text/plain;q=0.8,image/png,image/jpeg,image/gif;q=0.2,*/*;q=0.1..Accept-Language: en-us,en;q=0.5..Accept-Encoding: gzip,deflate..Accept-Charset: ISO-8859-1,utf-8;q=0.7,*;q=0.7..Keep-Alive: 300..Connection: keep-alive..Referer: http://www.ethereal.com/development.html",
         dataFromRemote
       )
       .build();
@@ -161,7 +162,35 @@ public class TestSessionizePCAP extends ClusterTest {
     String sql = "SELECT COUNT(*) FROM cp.`/pcap/http.pcap`";
     String plan = queryBuilder().sql(sql).explainJson();
     long cnt = queryBuilder().physical(plan).singletonLong();
-    assertEquals("Counts should match", 1L, cnt);
+    // The closed HTTP session, and one to 216.239.59.99 still open when the capture ended
+    assertEquals("Counts should match", 2L, cnt);
+  }
+
+  @Test
+  public void testUnclosedSession() throws Exception {
+    // The capture starts after this connection's handshake and ends before its FIN
+    String sql = "SELECT src_ip, dst_ip, src_port, dst_port, total_packet_count, data_volume_from_origin, " +
+      "data_volume_from_remote, connection_time, substr(data_from_originator, 1, 27) AS request " +
+      "FROM cp.`/pcap/http.pcap` WHERE session_closed = false";
+    RowSet results = client.queryBuilder().sql(sql).rowSet();
+
+    TupleMetadata expectedSchema = new SchemaBuilder()
+      .addNullable("src_ip", TypeProtos.MinorType.VARCHAR)
+      .addNullable("dst_ip", TypeProtos.MinorType.VARCHAR)
+      .addNullable("src_port", TypeProtos.MinorType.INT)
+      .addNullable("dst_port", TypeProtos.MinorType.INT)
+      .addNullable("total_packet_count", TypeProtos.MinorType.INT)
+      .addNullable("data_volume_from_origin", TypeProtos.MinorType.INT)
+      .addNullable("data_volume_from_remote", TypeProtos.MinorType.INT)
+      .addNullable("connection_time", TypeProtos.MinorType.INTERVAL)
+      .addNullable("request", TypeProtos.MinorType.VARCHAR)
+      .buildSchema();
+
+    RowSet expected = new RowSetBuilder(client.allocator(), expectedSchema)
+      .addRow("145.254.160.237", "216.239.59.99", 3371, 80, 7, 721, 3020, null, "GET /pagead/ads?client=ca-p")
+      .build();
+
+    new RowSetComparison(expected).verifyAndClearAll(results);
   }
 
   /**

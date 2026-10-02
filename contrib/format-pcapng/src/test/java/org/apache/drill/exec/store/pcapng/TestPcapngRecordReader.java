@@ -35,7 +35,6 @@ import org.apache.drill.test.QueryBuilder;
 import org.apache.drill.test.QueryTestUtil;
 import org.apache.drill.test.rowSet.RowSetComparison;
 import org.junit.BeforeClass;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
@@ -46,7 +45,6 @@ public class TestPcapngRecordReader extends ClusterTest {
   public static void setup() throws Exception {
     ClusterTest.startCluster(ClusterFixture.builder(dirTestWatcher));
     dirTestWatcher.copyResourceToRoot(Paths.get("pcapng/"));
-    dirTestWatcher.copyResourceToRoot(Paths.get("todo/"));
   }
 
   @Test
@@ -61,7 +59,7 @@ public class TestPcapngRecordReader extends ClusterTest {
 
   @Test
   public void testExplicitQuery() throws Exception {
-    String sql = "select type, packet_length, `timestamp` from dfs.`pcapng/sniff.pcapng` where type = 'ARP'";
+    String sql = "select type, packet_length, `timestamp` from dfs.`pcapng/sniff.pcapng` where type = 'ARP' limit 2";
     QueryBuilder builder = client.queryBuilder().sql(sql);
     RowSet sets = builder.rowSet();
 
@@ -72,8 +70,8 @@ public class TestPcapngRecordReader extends ClusterTest {
         .buildSchema();
 
     RowSet expected = new RowSetBuilder(client.allocator(), schema)
-        .addRow("ARP", 90, Instant.ofEpochMilli(1518010669927L))
-        .addRow("ARP", 90, Instant.ofEpochMilli(1518010671874L))
+        .addRow("ARP", 60, Instant.ofEpochMilli(1518010666140L))
+        .addRow("ARP", 60, Instant.ofEpochMilli(1518010666140L))
         .build();
 
     assertEquals(2, sets.rowCount());
@@ -100,9 +98,22 @@ public class TestPcapngRecordReader extends ClusterTest {
   }
 
   @Test
+  public void testMixedPcapAndPcapngDirectory() throws Exception {
+    // Each file must be read with the reader for its own format
+    dirTestWatcher.copyResourceToRoot(Paths.get("pcapng/sniff.pcapng"), Paths.get("mixed/sniff.pcapng"));
+    dirTestWatcher.copyResourceToRoot(Paths.get("pcap/tcp-1.pcap"), Paths.get("mixed/tcp-1.pcap"));
+    long pcapng = queryBuilder().sql("select count(*) from dfs.`mixed/sniff.pcapng`").singletonLong();
+    long pcap = queryBuilder().sql("select count(*) from dfs.`mixed/tcp-1.pcap`").singletonLong();
+    long both = queryBuilder().sql("select count(*) from dfs.`mixed`").singletonLong();
+
+    assertEquals(123, pcapng);
+    assertEquals(pcapng + pcap, both);
+  }
+
+  @Test
   public void testExplicitQueryWithCompressedFile() throws Exception {
     QueryTestUtil.generateCompressedFile("pcapng/sniff.pcapng", "zip", "pcapng/sniff.pcapng.zip");
-    String sql = "select type, packet_length, `timestamp` from dfs.`pcapng/sniff.pcapng.zip` where type = 'ARP'";
+    String sql = "select type, packet_length, `timestamp` from dfs.`pcapng/sniff.pcapng.zip` where type = 'ARP' limit 2";
     QueryBuilder builder = client.queryBuilder().sql(sql);
     RowSet sets = builder.rowSet();
 
@@ -113,8 +124,8 @@ public class TestPcapngRecordReader extends ClusterTest {
         .buildSchema();
 
     RowSet expected = new RowSetBuilder(client.allocator(), schema)
-        .addRow("ARP", 90, Instant.ofEpochMilli(1518010669927L))
-        .addRow("ARP", 90, Instant.ofEpochMilli(1518010671874L))
+        .addRow("ARP", 60, Instant.ofEpochMilli(1518010666140L))
+        .addRow("ARP", 60, Instant.ofEpochMilli(1518010666140L))
         .build();
 
     assertEquals(2, sets.rowCount());
@@ -185,6 +196,16 @@ public class TestPcapngRecordReader extends ClusterTest {
         .addNullable("tcp_flags_fin", MinorType.INT)
         .addNullable("tcp_parsed_flags", MinorType.VARCHAR)
         .addNullable("packet_data", MinorType.VARCHAR)
+        .add("captured_length", MinorType.INT)
+        .add("interface_id", MinorType.INT)
+        .addNullable("interface_name", MinorType.VARCHAR)
+        .add("link_type", MinorType.INT)
+        .addNullable("comment", MinorType.VARCHAR)
+        .addNullable("direction", MinorType.VARCHAR)
+        .addNullable("reception_type", MinorType.VARCHAR)
+        .addNullable("fcs_length", MinorType.INT)
+        .addNullable("drop_count", MinorType.BIGINT)
+        .addNullable("packet_hash", MinorType.VARCHAR)
         .build();
 
     RowSet expected = new RowSetBuilder(client.allocator(), schema).build();
@@ -192,17 +213,146 @@ public class TestPcapngRecordReader extends ClusterTest {
   }
 
   @Test
-  @Ignore // todo: infinite loop with current PcapNGReader
-  public void testPcapNG() throws Exception {
-//    String sql = "select * from dfs.`todo/dhcp_big_endian.pcapng` limit 1"; // Bad magic number = 000a0a0a
-//    String sql = "select * from dfs.`todo/dhcp_little_endian.pcapng` limit 1"; // Bad magic number = 1c0a0a0a
-//    String sql = "select * from dfs.`todo/many_interfaces.pcapng` limit 1"; // Bad magic number = ef0a0a0a
-    String sql = "select * from dfs.`todo/mac2.pcap` limit 1";  // Bad magic number = 1c0a0a0a
-    QueryBuilder builder = client.queryBuilder().sql(sql);
-    RowSet sets = builder.rowSet();
+  public void testBigEndian() throws Exception {
+    // The same capture written in both byte orders must decode identically.
+    // (The upstream big-endian copy has zeroed timestamps, so they are not compared.)
+    String sql = "select packet_length, src_ip, dst_ip, src_port, dst_port, src_mac_address from dfs.`pcapng/%s`";
+    RowSet little = client.queryBuilder().sql(String.format(sql, "dhcp.pcapng")).rowSet();
+    RowSet big = client.queryBuilder().sql(String.format(sql, "dhcp_big_endian.pcapng")).rowSet();
 
-    assertEquals(1, sets.rowCount());
-    sets.clear();
+    assertEquals(4, little.rowCount());
+    new RowSetComparison(little).verifyAndClearAll(big);
+  }
+
+  @Test
+  public void testManyInterfaces() throws Exception {
+    // 11 interfaces plus statistics and name resolution blocks between the packets
+    String sql = "select count(*) from dfs.`pcapng/many_interfaces.pcapng`";
+    assertEquals(64, queryBuilder().sql(sql).singletonLong());
+  }
+
+  /**
+   * metadata.pcapng has one UDP packet from 10.0.0.N:100N per interface, each
+   * on a different link type, plus a second big-endian section in which
+   * interface 0 is raw IP. All timestamps are 2024-01-02T03:04:05.678Z except
+   * eth1, which uses 2^-10 s units and if_tsoffset to give 03:04:05.500Z.
+   */
+  @Test
+  public void testLinkTypesAndInterfaces() throws Exception {
+    String sql = "select interface_id, link_type, interface_name, `timestamp`, src_ip, src_port, " +
+        "src_mac_address, captured_length from dfs.`pcapng/metadata.pcapng`";
+    RowSet results = client.queryBuilder().sql(sql).rowSet();
+
+    TupleMetadata schema = new SchemaBuilder()
+        .add("interface_id", MinorType.INT)
+        .add("link_type", MinorType.INT)
+        .addNullable("interface_name", MinorType.VARCHAR)
+        .add("timestamp", MinorType.TIMESTAMP)
+        .addNullable("src_ip", MinorType.VARCHAR)
+        .addNullable("src_port", MinorType.INT)
+        .addNullable("src_mac_address", MinorType.VARCHAR)
+        .add("captured_length", MinorType.INT)
+        .buildSchema();
+
+    Instant ts = Instant.parse("2024-01-02T03:04:05.678Z");
+    RowSet expected = new RowSetBuilder(client.allocator(), schema)
+        .addRow(0, 1, "eth0", ts, "10.0.0.0", 1000, "02:00:00:00:00:01", 44)
+        .addRow(1, 101, "tun0", ts, "10.0.0.1", 1001, null, 30)   // nanosecond resolution
+        .addRow(2, 113, "any", ts, "10.0.0.2", 1002, null, 46)
+        .addRow(3, 0, "lo0", ts, "10.0.0.3", 1003, null, 34)
+        .addRow(4, 9, "ppp0", ts, "10.0.0.4", 1004, null, 34)
+        .addRow(5, 276, "any2", ts, "10.0.0.5", 1005, null, 50)
+        .addRow(6, 105, "wlan0", ts, null, null, null, 54)        // 802.11 is not decoded
+        .addRow(7, 1, "eth1", Instant.parse("2024-01-02T03:04:05.500Z"), "10.0.0.7", 1007, "02:00:00:00:00:01", 44)
+        .addRow(0, 101, "be0", ts, "10.0.0.9", 1009, null, 30)
+        .build();
+    new RowSetComparison(expected).verifyAndClearAll(results);
+  }
+
+  /**
+   * encapsulations.pcapng: 802.11 (FromDS), radiotap + 802.11 QoS (ToDS) with TCP options,
+   * an 802.1Q tag, QinQ + IPv6 with hop-by-hop and routing headers, an encrypted 802.11
+   * frame, and an Ethernet frame with trailing padding.
+   */
+  @Test
+  public void testEncapsulations() throws Exception {
+    String sql = "select interface_name, type, src_ip, dst_ip, src_port, dst_port, src_mac_address, " +
+        "dst_mac_address, tcp_flags from dfs.`pcapng/encapsulations.pcapng`";
+    RowSet results = client.queryBuilder().sql(sql).rowSet();
+
+    TupleMetadata schema = new SchemaBuilder()
+        .addNullable("interface_name", MinorType.VARCHAR)
+        .addNullable("type", MinorType.VARCHAR)
+        .addNullable("src_ip", MinorType.VARCHAR)
+        .addNullable("dst_ip", MinorType.VARCHAR)
+        .addNullable("src_port", MinorType.INT)
+        .addNullable("dst_port", MinorType.INT)
+        .addNullable("src_mac_address", MinorType.VARCHAR)
+        .addNullable("dst_mac_address", MinorType.VARCHAR)
+        .addNullable("tcp_flags", MinorType.INT)
+        .buildSchema();
+
+    RowSet expected = new RowSetBuilder(client.allocator(), schema)
+        .addRow("wlan-fromds", "UDP", "192.168.1.3", "192.168.1.1", 5353, 53, "02:00:00:00:00:03", "02:00:00:00:00:01", 0)
+        .addRow("radiotap-qos", "TCP", "10.0.0.4", "10.0.0.5", 40000, 443, "02:00:00:00:00:04", "02:00:00:00:00:05", 24)
+        .addRow("vlan", "UDP", "10.1.0.6", "10.1.0.7", 1111, 2222, "02:00:00:00:00:06", "02:00:00:00:00:07", 0)
+        .addRow("qinq-ipv6", "TCP", "2001:db8:0:0:0:0:0:8", "2001:db8:0:0:0:0:0:9", 50000, 80, "02:00:00:00:00:08", "02:00:00:00:00:09", 24)
+        .addRow("wlan-protected", null, null, null, null, null, null, null, null)
+        .addRow("eth-padded", "UDP", "10.2.0.10", "10.2.0.11", 7, 9, "02:00:00:00:00:0A", "02:00:00:00:00:0B", 0)
+        .build();
+    new RowSetComparison(expected).verifyAndClearAll(results);
+  }
+
+  @Test
+  public void testSessionizedTcpStreams() throws Exception {
+    // http.pcapng holds the same packets as pcap/http.pcap, so both readers must build the same sessions
+    dirTestWatcher.copyResourceToRoot(Paths.get("pcap/http.pcap"), Paths.get("pcap/http.pcap"));
+    String sql = "select * from table(dfs.`%s` (type => '%s', sessionizeTCPStreams => true))";
+    RowSet pcap = client.queryBuilder().sql(String.format(sql, "pcap/http.pcap", "pcap")).rowSet();
+    RowSet pcapng = client.queryBuilder().sql(String.format(sql, "pcapng/http.pcapng", "pcapng")).rowSet();
+
+    assertEquals(2, pcapng.rowCount());
+    new RowSetComparison(pcap).verifyAndClearAll(pcapng);
+
+    sql = "select session_closed, data_volume_from_origin, data_volume_from_remote, substr(data_from_originator, 1, 27) as request " +
+        "from table(dfs.`pcapng/http.pcapng` (type => 'pcapng', sessionizeTCPStreams => true))";
+    RowSet results = client.queryBuilder().sql(sql).rowSet();
+    TupleMetadata schema = new SchemaBuilder()
+        .addNullable("session_closed", MinorType.BIT)
+        .addNullable("data_volume_from_origin", MinorType.INT)
+        .addNullable("data_volume_from_remote", MinorType.INT)
+        .addNullable("request", MinorType.VARCHAR)
+        .buildSchema();
+    RowSet expected = new RowSetBuilder(client.allocator(), schema)
+        .addRow(true, 479, 18364, "GET /download.html HTTP/1.1")
+        // Still open when the capture ended
+        .addRow(false, 721, 3020, "GET /pagead/ads?client=ca-p")
+        .build();
+    new RowSetComparison(expected).verifyAndClearAll(results);
+  }
+
+  @Test
+  public void testPacketOptions() throws Exception {
+    String sql = "select interface_name, comment, direction, reception_type, fcs_length, drop_count, packet_hash " +
+        "from dfs.`pcapng/metadata.pcapng` where interface_name in ('eth0', 'eth1', 'tun0')";
+    RowSet results = client.queryBuilder().sql(sql).rowSet();
+
+    TupleMetadata schema = new SchemaBuilder()
+        .addNullable("interface_name", MinorType.VARCHAR)
+        .addNullable("comment", MinorType.VARCHAR)
+        .addNullable("direction", MinorType.VARCHAR)
+        .addNullable("reception_type", MinorType.VARCHAR)
+        .addNullable("fcs_length", MinorType.INT)
+        .addNullable("drop_count", MinorType.BIGINT)
+        .addNullable("packet_hash", MinorType.VARCHAR)
+        .buildSchema();
+
+    RowSet expected = new RowSetBuilder(client.allocator(), schema)
+        .addRow("eth0", "first packet", "inbound", "unicast", 4, 7L, "md5:000102030405060708090a0b0c0d0e0f")
+        .addRow("tun0", null, null, null, null, null, null)
+        .addRow("eth1", null, "outbound", null, null, null, null)
+        .build();
+    new RowSetComparison(expected).verifyAndClearAll(results);
   }
 
   @Test
@@ -243,7 +393,7 @@ public class TestPcapngRecordReader extends ClusterTest {
   @Test
   public void testInlineSchema() throws Exception {
     String sql =   "SELECT type, packet_length, `timestamp` FROM table(dfs.`pcapng/sniff.pcapng` " +
-            "(type => 'pcapng', stat => false, sessionizeTCPStreams => true )) where type = 'ARP'";
+            "(type => 'pcapng', stat => false, sessionizeTCPStreams => false )) where type = 'ARP' limit 2";
     RowSet sets = client.queryBuilder().sql(sql).rowSet();
 
     TupleMetadata schema = new SchemaBuilder()
@@ -253,8 +403,8 @@ public class TestPcapngRecordReader extends ClusterTest {
             .buildSchema();
 
     RowSet expected = new RowSetBuilder(client.allocator(), schema)
-            .addRow("ARP", 90, Instant.ofEpochMilli(1518010669927L))
-            .addRow("ARP", 90, Instant.ofEpochMilli(1518010671874L))
+            .addRow("ARP", 60, Instant.ofEpochMilli(1518010666140L))
+            .addRow("ARP", 60, Instant.ofEpochMilli(1518010666140L))
             .build();
 
     assertEquals(2, sets.rowCount());
