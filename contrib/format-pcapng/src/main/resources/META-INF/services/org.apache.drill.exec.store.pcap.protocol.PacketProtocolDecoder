@@ -29,3 +29,5 @@ org.apache.drill.exec.store.pcap.protocol.tftp.TftpDecoder
 org.apache.drill.exec.store.pcap.protocol.netbios.NetbiosNsDecoder
 org.apache.drill.exec.store.pcap.protocol.radius.RadiusDecoder
 org.apache.drill.exec.store.pcap.protocol.snmp.SnmpDecoder
+org.apache.drill.exec.store.pcap.protocol.tls.TlsDecoder
+org.apache.drill.exec.store.pcap.protocol.stun.StunDecoder
