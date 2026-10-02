@@ -168,11 +168,11 @@ public class TcpSession {
     }
 
     // Add the start and ending time stamp.  The packets are not necessarily received in order, so we have to check the timestamps this way
-    if (p.getTimestampMicro() < startTime) {
+    if (p.getTimestamp() < startTime) {
       startTime = p.getTimestamp();
     }
 
-    if (p.getTimestampMicro() > endTime) {
+    if (p.getTimestamp() > endTime) {
       endTime = p.getTimestamp();
     }
 
@@ -247,8 +247,12 @@ public class TcpSession {
     return new Period(endTime - startTime);
   }
 
+  /**
+   * @return time from SYN to the final handshake ACK, or null if the capture
+   *         did not see both, such as when it started mid-connection
+   */
   public Period getConnectionTime() {
-    return new Period(connectTime);
+    return synTime == 0 || ackTime == 0 ? null : new Period(connectTime);
   }
 
   public Instant getSessionEndTime() {
