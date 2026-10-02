@@ -162,7 +162,8 @@ public class HttpSessionDecoder implements SessionProtocolDecoder<HttpExchanges>
           }
         }
       }
-      if (size < 0 || p + size + 2 > data.length) {
+      // Compared this way round so a huge chunk size cannot overflow
+      if (size < 0 || size > data.length - p - 2) {
         return -1;
       }
       p += (int) size + 2;

@@ -70,7 +70,7 @@ public class TestPcapngDecoding extends ClusterTest {
         .addNullable("decode_error", MinorType.VARCHAR)
         .buildSchema();
     RowSet expected = new RowSetBuilder(client.allocator(), schema)
-        .addRow(0, null, "packet: Invalid IPv4 header length 12")
+        .addRow(0, "10.0.0.1", "packet: Invalid IPv4 header length 12")
         .addRow(0, "10.0.0.1", null)
         .addRow(5, null, "file: packet references undefined interface 5")
         .addRow(1, "10.0.0.1", "file: interface 1 has unsupported if_tsresol 127; timestamps assume microseconds")

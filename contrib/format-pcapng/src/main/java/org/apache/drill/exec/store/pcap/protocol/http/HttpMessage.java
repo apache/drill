@@ -37,6 +37,9 @@ public class HttpMessage {
   public boolean passwordPresent;
   public String password;
   private DecoderContext context;
+  // Content-Length is read once, so an invalid value is reported once
+  private boolean contentLengthRead;
+  private Long contentLength;
 
   void setContext(DecoderContext context) {
     this.context = context;
@@ -54,6 +57,14 @@ public class HttpMessage {
 
   /** Content-Length, or null if absent or invalid. */
   public Long contentLength() {
+    if (!contentLengthRead) {
+      contentLengthRead = true;
+      contentLength = readContentLength();
+    }
+    return contentLength;
+  }
+
+  private Long readContentLength() {
     String value = header("Content-Length");
     if (value == null) {
       return null;

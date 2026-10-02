@@ -19,6 +19,7 @@ package org.apache.drill.exec.store.pcap.protocol;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNotSame;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
@@ -27,6 +28,7 @@ import java.util.Arrays;
 import java.util.Collections;
 
 import org.apache.drill.exec.record.metadata.ColumnMetadata;
+import org.apache.drill.exec.record.metadata.SchemaBuilder;
 import org.apache.drill.exec.record.metadata.TupleMetadata;
 import org.apache.drill.exec.store.pcap.decoder.Packet;
 import org.apache.drill.test.BaseTest;
@@ -121,5 +123,22 @@ public class TestProtocolDecoders extends BaseTest {
     };
     ProtocolDecoders decoders = new ProtocolDecoders(Arrays.asList(low, high));
     assertEquals("high", decode(decoders, echo("ECHO:hi"), new RowDecoderContext(false)).protocol());
+  }
+
+  @Test
+  public void testEachReaderGetsItsOwnDataSchema() {
+    // Map metadata binds its member schema to a parent, so readers must not share one instance
+    ProtocolDecoders decoders = ProtocolDecoders.get();
+    SchemaBuilder first = new SchemaBuilder();
+    ProtocolColumns.addColumns(first, ProtocolColumns.Mode.PACKET, decoders);
+    SchemaBuilder second = new SchemaBuilder();
+    ProtocolColumns.addColumns(second, ProtocolColumns.Mode.PACKET, decoders);
+    TupleMetadata a = first.buildSchema().metadata(ProtocolColumns.PARSED_DATA).tupleSchema();
+    TupleMetadata b = second.buildSchema().metadata(ProtocolColumns.PARSED_DATA).tupleSchema();
+    assertNotSame(a, b);
+    assertNotSame(decoders.packetDataSchema(), a);
+    assertEquals(decoders.packetDataSchema().size(), a.size());
+    // The copy keeps the sparse sizing that keeps batches within their memory budget
+    assertEquals(1, a.metadata("dns").tupleSchema().metadata("answers").expectedElementCount());
   }
 }
