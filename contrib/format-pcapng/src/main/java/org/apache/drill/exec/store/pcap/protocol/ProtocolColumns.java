@@ -18,8 +18,10 @@
 package org.apache.drill.exec.store.pcap.protocol;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.TreeMap;
 
 import org.apache.drill.common.types.TypeProtos.MinorType;
@@ -53,6 +55,8 @@ public class ProtocolColumns {
   private final boolean decoding;
   // Errors written so far, by prefix (dns, packet, file, ...), for the end-of-file warning
   private final Map<String, Integer> errorCounts = new TreeMap<>();
+  // Errors already written by writeErrorRowOnce
+  private final Set<String> reportedErrors = new HashSet<>();
 
   public static void addColumns(SchemaBuilder schema, Mode mode, ProtocolDecoders decoders) {
     if (mode != Mode.STAT) {
@@ -149,6 +153,21 @@ public class ProtocolColumns {
     errorWriter.setString(error);
     loader.save();
     count(error);
+  }
+
+  /**
+   * Writes an error row unless the same error was already written. Used where
+   * packets are not rows (session mode), so each distinct problem appears once.
+   *
+   * @return true if a row was written
+   */
+  public boolean writeErrorRowOnce(String error) {
+    if (!reportedErrors.add(error)) {
+      count(error);
+      return false;
+    }
+    writeErrorRow(error);
+    return true;
   }
 
   private void count(String error) {

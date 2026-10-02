@@ -163,9 +163,27 @@ def dns():
     f += epb(0, ipv4(17, udp(53, 5000, response[:-3]), '8.8.8.8', '10.0.0.1'))
     write(os.path.join(PCAPNG, 'dns.pcapng'), f)
 
+def oversized():
+    # A block length near 2 GB must be reported, not allocated
+    good = ipv4(17, udp(4000, 7, b'ECHO:ok'), '10.0.0.1', '10.0.0.2')
+    f = shb() + idb(101) + epb(0, good)
+    print('huge_block.pcapng: huge block at byte', len(f))
+    f += struct.pack('<II', 6, 0x7FFFFFF0) + bytes(16)
+    write(os.path.join(PCAPNG, 'huge_block.pcapng'), f)
+    # A snapshot length near 2 GB in a capture whose packets are normal
+    frame = ETHERNET + good
+    data = struct.pack('<IHHiIII', 0xa1b2c3d4, 2, 4, 0, 0, 0x7FFFFFF0, 1)
+    for i in range(2):
+        data += struct.pack('<IIII', i, 0, len(frame), len(frame)) + frame
+    write(os.path.join(PCAP, 'huge_snaplen.pcap'), data)
+    # A malformed IPv4 header (IHL 3) between two good packets
+    frames = [ETHERNET + ipv4(17, udp(4000, 7, b'ECHO:ok'), '10.0.0.1', '10.0.0.2', ihl=ihl) for ihl in (5, 3, 5)]
+    pcap_file(os.path.join(PCAP, 'malformed.pcap'), frames)
+
 if __name__ == '__main__':
     echo()
     errors()
     bad_block_length()
     classic()
     dns()
+    oversized()

@@ -69,6 +69,8 @@ public class PcapngBatchReader implements ManagedReader {
   private static final int INTERFACE_STATISTICS_TYPE = 5;
   private static final int ENHANCED_PACKET_TYPE = 6;
   private static final int BYTE_ORDER_MAGIC = 0x1A2B3C4D;
+  // libpcap's limit; a longer block is treated as damage rather than allocated
+  private static final int MAX_BLOCK_LENGTH = 16 * 1024 * 1024;
   // Option codes
   private static final int OPT_ENDOFOPT = 0;
   private static final int OPT_COMMENT = 1;
@@ -94,6 +96,8 @@ public class PcapngBatchReader implements ManagedReader {
   private RowSetLoader loader;
   // Set when TCP packets are grouped into sessions instead of returned as rows
   private TcpSessionizer sessionizer;
+  // A packet held back because its block already wrote an error row this iteration
+  private PacketDecoder pendingPacket;
   private ProtocolColumns protocolColumns;
   private InputStream in;
   private Path path;
@@ -166,6 +170,12 @@ public class PcapngBatchReader implements ManagedReader {
   @Override
   public boolean next() {
     while (!loader.isFull()) {
+      if (pendingPacket != null) {
+        PacketDecoder packet = pendingPacket;
+        pendingPacket = null;
+        sessionizer.addPacket(packet);
+        continue;
+      }
       PcapngBlock block;
       try {
         block = nextRow();
@@ -181,10 +191,16 @@ public class PcapngBatchReader implements ManagedReader {
         return sessionizer != null && !sessionizer.writeOpenSessions();
       }
       if (sessionizer != null) {
-        if (block.errorRow) {
-          protocolColumns.writeErrorRow(String.join("; ", block.errors));
-        } else if (block.packet != null) {
-          sessionizer.addPacket(block.packet);
+        // Packets are not rows here, so their problems become error rows, once each.
+        // A block writes at most one row per iteration so a full batch is never overrun.
+        boolean wroteRow = block.errors != null
+            && protocolColumns.writeErrorRowOnce(String.join("; ", block.errors));
+        if (block.packet != null) {
+          if (wroteRow) {
+            pendingPacket = block.packet;
+          } else {
+            sessionizer.addPacket(block.packet);
+          }
         }
       } else {
         processBlock(block);
@@ -229,7 +245,7 @@ public class PcapngBatchReader implements ManagedReader {
         buf.order(byteOrder);
       }
       int totalLength = buf.getInt(4);
-      if (totalLength < consumed + 4 || totalLength % 4 != 0) {
+      if (totalLength < consumed + 4 || totalLength % 4 != 0 || totalLength > MAX_BLOCK_LENGTH) {
         finished = true;
         return PcapngBlock.errorRow("file: invalid block length " + totalLength + " at byte " + blockStart);
       }
