@@ -31,3 +31,4 @@ org.apache.drill.exec.store.pcap.protocol.radius.RadiusDecoder
 org.apache.drill.exec.store.pcap.protocol.snmp.SnmpDecoder
 org.apache.drill.exec.store.pcap.protocol.tls.TlsDecoder
 org.apache.drill.exec.store.pcap.protocol.stun.StunDecoder
+org.apache.drill.exec.store.pcap.protocol.kerberos.KerberosDecoder
