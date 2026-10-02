@@ -105,4 +105,27 @@ public class TestPcapDecoding extends ClusterTest {
         .build();
     new RowSetComparison(expected).verifyAndClearAll(results);
   }
+
+  @Test
+  public void testOversizedSnapshotLengthIsClamped() throws Exception {
+    // The buffer is sized from a capped snapshot length; normal packets still read
+    String sql = "select src_ip, decode_error from dfs.`pcap/huge_snaplen.pcap`";
+    RowSet results = client.queryBuilder().sql(sql).rowSet();
+    TupleMetadata schema = new SchemaBuilder()
+        .addNullable("src_ip", MinorType.VARCHAR)
+        .addNullable("decode_error", MinorType.VARCHAR)
+        .buildSchema();
+    RowSet expected = new RowSetBuilder(client.allocator(), schema)
+        .addRow("10.0.0.1", null)
+        .addRow("10.0.0.1", null)
+        .build();
+    new RowSetComparison(expected).verifyAndClearAll(results);
+  }
+
+  @Test
+  public void testSessionModeReportsPacketErrors() throws Exception {
+    String sql = "select decode_error from table(dfs.`pcap/malformed.pcap` (type => 'pcap', sessionizeTCPStreams => true)) " +
+        "where decode_error is not null";
+    assertEquals("packet: Invalid IPv4 header length 12", client.queryBuilder().sql(sql).singletonString());
+  }
 }

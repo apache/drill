@@ -124,4 +124,37 @@ public class TestPcapngDecoding extends ClusterTest {
         .build();
     new RowSetComparison(expected).verifyAndClearAll(results);
   }
+
+  @Test
+  public void testOversizedBlockLengthIsReported() throws Exception {
+    String sql = "select src_ip, decode_error from dfs.`pcapng/huge_block.pcapng`";
+    RowSet results = client.queryBuilder().sql(sql).rowSet();
+    TupleMetadata schema = new SchemaBuilder()
+        .addNullable("src_ip", MinorType.VARCHAR)
+        .addNullable("decode_error", MinorType.VARCHAR)
+        .buildSchema();
+    RowSet expected = new RowSetBuilder(client.allocator(), schema)
+        .addRow("10.0.0.1", null)
+        .addRow(null, "file: invalid block length 2147483632 at byte 116")
+        .build();
+    new RowSetComparison(expected).verifyAndClearAll(results);
+  }
+
+  @Test
+  public void testSessionModeReportsPacketErrors() throws Exception {
+    // Packets are not rows in session mode, so each distinct problem gets one error row
+    String sql = "select decode_error from table(dfs.`pcapng/errors.pcapng` (type => 'pcapng', sessionizeTCPStreams => true)) " +
+        "where decode_error is not null";
+    RowSet results = client.queryBuilder().sql(sql).rowSet();
+    TupleMetadata schema = new SchemaBuilder()
+        .addNullable("decode_error", MinorType.VARCHAR)
+        .buildSchema();
+    RowSet expected = new RowSetBuilder(client.allocator(), schema)
+        .addRow("packet: Invalid IPv4 header length 12")
+        .addRow("file: packet references undefined interface 5")
+        .addRow("file: interface 1 has unsupported if_tsresol 127; timestamps assume microseconds")
+        .addRow("file: block at byte 348 has invalid captured length 9999")
+        .build();
+    new RowSetComparison(expected).verifyAndClearAll(results);
+  }
 }
