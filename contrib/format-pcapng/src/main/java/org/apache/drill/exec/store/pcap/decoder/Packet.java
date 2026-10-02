@@ -421,6 +421,32 @@ public class Packet implements Comparable<Packet> {
   }
 
   /**
+   * The bytes after the link-layer header, up to the end of the captured data:
+   * for example the whole ARP message of an ARP frame.
+   *
+   * @return null if there are none
+   */
+  public byte[] getLinkPayload() {
+    int start = etherOffset + PacketConstants.IP_OFFSET;
+    int end = Math.min(getFrameEnd(), raw.length);
+    return start >= 0 && start < end ? Arrays.copyOfRange(raw, start, end) : null;
+  }
+
+  /**
+   * The bytes after the IP header and any IPv6 extension headers, bounded by the
+   * IP length: for example the whole ICMP message, or a UDP header and its data.
+   *
+   * @return null if this is not an IP packet whose header could be parsed
+   */
+  public byte[] getIpPayload() {
+    if (transportOffset < 0) {
+      return null;
+    }
+    int end = Math.min(Math.min(getIpPacketEnd(), getFrameEnd()), raw.length);
+    return transportOffset < end ? Arrays.copyOfRange(raw, transportOffset, end) : null;
+  }
+
+  /**
    * @return index just past the captured bytes of this packet
    */
   protected int getFrameEnd() {
