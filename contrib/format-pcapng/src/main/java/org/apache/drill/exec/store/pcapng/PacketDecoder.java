@@ -68,18 +68,24 @@ public class PacketDecoder extends Packet {
     // place a virtual one just before the network layer
     etherOffset = networkOffset - PacketConstants.IP_OFFSET;
     ipOffset = networkOffset;
-    if (isIpV4Packet()) {
-      protocol = processIpV4Packet();
-      return true;
-    } else if (isIpV6Packet()) {
-      int tmp = processIpV6Packet();
-      if (tmp != -1) {
-        protocol = tmp;
+    try {
+      if (isIpV4Packet()) {
+        protocol = processIpV4Packet();
+        return true;
+      } else if (isIpV6Packet()) {
+        int tmp = processIpV6Packet();
+        if (tmp != -1) {
+          protocol = tmp;
+        }
+        return true;
+      } else if (isPPPoV6Packet()) {
+        protocol = getByte(raw, etherOffset + 48);
+        return true;
       }
-      return true;
-    } else if (isPPPoV6Packet()) {
-      protocol = getByte(raw, etherOffset + 48);
-      return true;
+    } catch (RuntimeException e) {
+      setDecodeError(e.getMessage() != null ? e.getMessage() : e.getClass().getSimpleName());
+      etherProtocol = 0;
+      transportOffset = -1;
     }
     return false;
   }
@@ -241,7 +247,7 @@ public class PacketDecoder extends Packet {
     return mac.toString();
   }
 
-  void setTimestamp(Instant timestamp) {
+  public void setTimestamp(Instant timestamp) {
     setTimestampMicro(timestamp.getEpochSecond() * 1_000_000L + timestamp.getNano() / 1000);
   }
 
