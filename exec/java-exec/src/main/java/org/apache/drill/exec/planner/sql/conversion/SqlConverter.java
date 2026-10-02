@@ -62,6 +62,7 @@ import org.apache.drill.exec.planner.sql.parser.impl.DrillParserWithCompoundIdCo
 import org.apache.drill.exec.planner.sql.parser.impl.DrillSqlParseException;
 import org.apache.drill.exec.planner.types.DrillRelDataTypeSystem;
 import org.apache.drill.exec.rpc.user.UserSession;
+import org.apache.drill.exec.security.AccessAuthorizerManager;
 import org.apache.drill.exec.util.ImpersonationUtil;
 import org.apache.drill.exec.util.Utilities;
 import org.slf4j.Logger;
@@ -245,6 +246,19 @@ public class SqlConverter {
       RelNode project = LogicalProject.create(rel.rel, Collections.emptyList(), expressions, rel.validatedRowType);
       rel = RelRoot.of(project, rel.validatedRowType, rel.kind);
     }
+
+    // Column-level SELECT authorization check. Done after SqlToRelConverter has
+    // resolved all column references (so we can trace each to its TableScan)
+    // and before flattenTypes/optimization (so column references are intact).
+    //
+    // Skip the whole check when authorization is disabled: the tree walk plus
+    // a getColumnOrigins() metadata query per output column is measurable
+    // planning cost that deployments not using the feature must not pay on
+    // every query.
+    if (AccessAuthorizerManager.isEnabled(drillConfig)) {
+      new ColumnAccessChecker(session, drillConfig, cluster.getMetadataQuery()).check(rel.rel);
+    }
+
     return rel.withRel(sqlToRelConverter.flattenTypes(rel.rel, true));
   }
 

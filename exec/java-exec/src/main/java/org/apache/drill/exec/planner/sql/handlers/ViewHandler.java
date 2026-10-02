@@ -35,6 +35,9 @@ import org.apache.drill.exec.planner.sql.DirectPlan;
 import org.apache.drill.exec.planner.sql.SchemaUtilities;
 import org.apache.drill.exec.planner.sql.parser.SqlCreateView;
 import org.apache.drill.exec.planner.sql.parser.SqlDropView;
+import org.apache.drill.exec.security.AccessAuthorizerManager;
+import org.apache.drill.exec.security.DdlAccessChecker;
+import org.apache.drill.exec.security.spi.AccessType;
 import org.apache.drill.exec.store.AbstractSchema;
 import org.apache.drill.exec.work.foreman.ForemanSetupException;
 import org.apache.calcite.rel.RelNode;
@@ -80,6 +83,14 @@ public abstract class ViewHandler extends DefaultSqlHandler {
       final View view = new View(newViewName, viewSql, newViewRelNode.getRowType(),
           SchemaUtilities.getSchemaPathAsList(defaultSchema));
       final String schemaPath = drillSchema.getFullSchemaName();
+
+      // Ranger DDL authorization: CREATE privilege on the new view.
+      // OR REPLACE is treated as a single CREATE operation (no extra DROP
+      // requirement). Checked before the existence check so an unauthorized
+      // user cannot probe view existence via differing errors.
+      if (AccessAuthorizerManager.isEnabled(config.getContext().getConfig())) {
+        DdlAccessChecker.checkDdlAccess(context, drillSchema, newViewName, AccessType.CREATE);
+      }
 
       // check view creation possibility
       if(!checkViewCreationPossibility(drillSchema, createView, context)) {
@@ -162,6 +173,13 @@ public abstract class ViewHandler extends DefaultSqlHandler {
           SchemaUtilities.resolveToMutableDrillSchema(context.getNewDefaultSchema(), dropView.getSchemaPath());
 
       final String schemaPath = drillSchema.getFullSchemaName();
+
+      // Ranger DDL authorization: DROP privilege on the target view.
+      // Checked before the existence check so an unauthorized user cannot
+      // probe view existence via differing errors.
+      if (AccessAuthorizerManager.isEnabled(config.getContext().getConfig())) {
+        DdlAccessChecker.checkDdlAccess(context, drillSchema, viewName, AccessType.DROP);
+      }
 
       final Table viewToDrop = SqlHandlerUtil.getTableFromSchema(drillSchema, viewName);
       if (dropView.checkViewExistence()) {
