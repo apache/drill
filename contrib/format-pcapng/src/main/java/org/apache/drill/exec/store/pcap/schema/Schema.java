@@ -116,10 +116,14 @@ public class Schema {
   }
 
   public TupleMetadata buildSchema(SchemaBuilder builder) {
+    addColumns(builder);
+    return builder.buildSchema();
+  }
+
+  /** Adds the columns to a schema that the caller may extend before building it. */
+  public void addColumns(SchemaBuilder builder) {
     for (ColumnDto column : columns) {
       builder.addNullable(column.getColumnName(), typeMap[column.getColumnType().ordinal()]);
     }
-
-    return builder.buildSchema();
   }
 }

@@ -110,7 +110,35 @@ def bad_block_length():
     write(os.path.join(PCAPNG, 'bad_block_length.pcapng'), f)
 
 
+ETHERNET = bytes.fromhex('020000000002' '020000000001' '0800')
+
+
+def pcap_file(path, frames, link_type=1):
+    data = struct.pack('<IHHiIII', 0xa1b2c3d4, 2, 4, 0, 0, 65535, link_type)
+    for i, frame in enumerate(frames):
+        data += struct.pack('<IIII', 1704164645 + i, 0, len(frame), len(frame)) + frame
+    write(path, data)
+
+
+def classic():
+    # The classic reader decodes Ethernet only, so these frames carry an Ethernet header
+    frames = [ETHERNET + ipv4(17, udp(4000, 7, t), '10.0.0.1', '10.0.0.2')
+              for t in (b'ECHO:hello', b'hello', b'ECHO!bad')]
+    pcap_file(os.path.join(PCAP, 'echo.pcap'), frames)
+    # Second record claims 70000 bytes, more than the 65535 snapshot length
+    good = ETHERNET + ipv4(17, udp(4000, 7, b'ECHO:ok'), '10.0.0.1', '10.0.0.2')
+    data = struct.pack('<IHHiIII', 0xa1b2c3d4, 2, 4, 0, 0, 65535, 1)
+    data += struct.pack('<IIII', 1, 0, len(good), len(good)) + good
+    data += struct.pack('<IIII', 2, 0, 70000, 70000) + good
+    write(os.path.join(PCAP, 'bad_record.pcap'), data)
+    # A Git LFS pointer saved in place of a capture
+    with open(os.path.join(PCAP, 'lfs_pointer.pcap'), 'w') as f:
+        f.write('version https://git-lfs.github.com/spec/v1\n'
+                'oid sha256:8d48391c3dde43c518b22c3d6ba4bbba315efac713803cc582d00e37144f577a\n'
+                'size 867464224\n')
+
 if __name__ == '__main__':
     echo()
     errors()
     bad_block_length()
+    classic()
