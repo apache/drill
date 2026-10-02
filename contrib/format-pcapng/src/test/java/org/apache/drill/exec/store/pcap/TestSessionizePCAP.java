@@ -163,6 +163,25 @@ public class TestSessionizePCAP extends ClusterTest {
     new RowSetComparison(expected).verifyAndClearAll(results);
   }
 
+  @Test
+  public void testHttpSessions() throws Exception {
+    String sql = "SELECT parsed_protocol, t.parsed_data.http.exchanges[0].uri AS uri, " +
+      "t.parsed_data.http.exchanges[0].status_code AS status, t.parsed_data.http.exchanges[0].content_length AS length " +
+      "FROM cp.`/pcap/http.pcap` t ORDER BY session_closed DESC";
+    RowSet results = client.queryBuilder().sql(sql).rowSet();
+    TupleMetadata schema = new SchemaBuilder()
+      .addNullable("parsed_protocol", TypeProtos.MinorType.VARCHAR)
+      .addNullable("uri", TypeProtos.MinorType.VARCHAR)
+      .addNullable("status", TypeProtos.MinorType.INT)
+      .addNullable("length", TypeProtos.MinorType.BIGINT)
+      .buildSchema();
+    RowSet expected = new RowSetBuilder(client.allocator(), schema)
+      .addRow("http", "/download.html", 200, 18070L)
+      .addRow("http", "/pagead/ads?client=ca-pub-2309191948673629&random=1084443430285&lmt=1082467020&format=468x60_as&output=html&url=http%3A%2F%2Fwww.ethereal.com%2Fdownload.html&color_bg=FFFFFF&color_text=333333&color_link=000000&color_url=666633&color_border=666633", 200, 1272L)
+      .build();
+    new RowSetComparison(expected).verifyAndClearAll(results);
+  }
+
   /**
    * Helper function to read a file into a String.
    * @param filePath Input file which is to be read into a String
