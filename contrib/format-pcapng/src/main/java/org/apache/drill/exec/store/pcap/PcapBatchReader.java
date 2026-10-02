@@ -100,21 +100,21 @@ public class PcapBatchReader implements ManagedReader {
     SchemaBuilder builder = new SchemaBuilder();
     Schema pcapSchema = new Schema(readerConfig.getSessionizeTCPStreams());
     pcapSchema.addColumns(builder);
-    if (!readerConfig.getSessionizeTCPStreams()) {
-      ProtocolColumns.addColumns(builder, ProtocolColumns.Mode.PACKET, ProtocolDecoders.get());
-    }
+    ProtocolColumns.Mode mode = readerConfig.getSessionizeTCPStreams()
+        ? ProtocolColumns.Mode.SESSION : ProtocolColumns.Mode.PACKET;
+    ProtocolColumns.addColumns(builder, mode, ProtocolDecoders.get());
     TupleMetadata schema = builder.buildSchema();
     negotiator.tableSchema(schema, false);
     ResultSetLoader loader = negotiator.build();
 
     // Creates writers for all fields (Since schema is known)
     rowWriter = loader.writer();
+    protocolColumns = new ProtocolColumns(rowWriter, mode, ProtocolDecoders.get(),
+        readerConfig.getExposeCredentials());
     if (readerConfig.getSessionizeTCPStreams()) {
-      sessionizer = new TcpSessionizer(rowWriter);
+      sessionizer = new TcpSessionizer(rowWriter, protocolColumns);
     } else {
       populateColumnWriters(rowWriter);
-      protocolColumns = new ProtocolColumns(rowWriter, ProtocolColumns.Mode.PACKET, ProtocolDecoders.get(),
-          readerConfig.getExposeCredentials());
     }
   }
 

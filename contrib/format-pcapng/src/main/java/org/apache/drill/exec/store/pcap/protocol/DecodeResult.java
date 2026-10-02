@@ -55,6 +55,10 @@ public final class DecodeResult {
 
   @SuppressWarnings({"unchecked", "rawtypes"})
   public void write(TupleWriter fields) {
-    ((PacketProtocolDecoder) decoder).write(parsed, fields);
+    if (decoder instanceof SessionProtocolDecoder) {
+      ((SessionProtocolDecoder) decoder).write(parsed, fields);
+    } else {
+      ((PacketProtocolDecoder) decoder).write(parsed, fields);
+    }
   }
 }

@@ -125,9 +125,14 @@ public class PcapngBatchReader implements ManagedReader {
              .build(logger);
     }
     if (isSessionQuery()) {
-      negotiator.tableSchema(new Schema(true).buildSchema(new SchemaBuilder()), false);
+      SchemaBuilder builder = new SchemaBuilder();
+      new Schema(true).addColumns(builder);
+      ProtocolColumns.addColumns(builder, ProtocolColumns.Mode.SESSION, ProtocolDecoders.get());
+      negotiator.tableSchema(builder.buildSchema(), false);
       loader = negotiator.build().writer();
-      sessionizer = new TcpSessionizer(loader);
+      protocolColumns = new ProtocolColumns(loader, ProtocolColumns.Mode.SESSION, ProtocolDecoders.get(),
+          config.getExposeCredentials());
+      sessionizer = new TcpSessionizer(loader, protocolColumns);
       return;
     }
     // define the schema
@@ -176,7 +181,9 @@ public class PcapngBatchReader implements ManagedReader {
         return sessionizer != null && !sessionizer.writeOpenSessions();
       }
       if (sessionizer != null) {
-        if (block.packet != null) {
+        if (block.errorRow) {
+          protocolColumns.writeErrorRow(String.join("; ", block.errors));
+        } else if (block.packet != null) {
           sessionizer.addPacket(block.packet);
         }
       } else {
