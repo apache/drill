@@ -107,14 +107,21 @@ tftp|packets|UDP 69
 netbios_ns|packets|UDP 137
 radius|packets|UDP 1812, 1813, 1645 and 1646
 snmp|packets|UDP 161 and 162, versions 1, 2c and 3
-tls|packets|ClientHello and ServerHello (SNI, ALPN, JA3, JA3S) on TLS ports such as 443, 993 and 8443
+tls|packets|ClientHello and ServerHello (SNI, ALPN, JA3, JA3S, JA4) on TLS ports such as 443, 993 and 8443
 tls|sessions|Full handshake on the same ports: negotiated version and cipher, certificates
 stun|packets|UDP 3478 and 19302
+quic|packets|QUIC v1 Initial on UDP 443: ClientHello (SNI, ALPN, JA4) decrypted from public keys
+kerberos|packets|Kerberos on port 88: message type, principals, encryption types, errors
 ftp|sessions|FTP control channel on port 21
 ssh|sessions|SSH identification and key exchange (HASSH) on ports 22 and 2222
 smtp|sessions|SMTP on ports 25, 587 and 2525: credentials, envelope, message headers
 pop3|sessions|POP3 on port 110: credentials, retrieved message headers
 imap|sessions|IMAP on port 143: credentials, mailboxes, fetched message headers
+smb|sessions|SMB2/3 on ports 445 and 139: dialect, signing, and NTLM/Kerberos identity (no hashes)
+ldap|sessions|LDAP on port 389: bind DNs, auth result, search filters
+telnet|sessions|Telnet on port 23: negotiated options and session text
+rdp|sessions|RDP on port 3389: the mstshash cookie and requested security protocols
+mqtt|sessions|MQTT on port 1883: client id, credentials, topics
 
 A decoder only handles traffic that parses as its protocol: other traffic on the same port is left undecoded.
 Decoding runs only when `parsed_protocol` or `parsed_data` is queried.
