@@ -40,8 +40,14 @@ public class TlsHello {
   public List<Integer> supportedGroups;
   public List<Integer> ecPointFormats;
   public List<Integer> signatureAlgorithms;
+  /** Raw supported_versions values of a ClientHello (including GREASE), used for JA4. */
+  public List<Integer> rawSupportedVersions;
   public String ja3;
   public String ja3Hash;
   public String ja3s;
   public String ja3sHash;
+  /** JA4 TLS client fingerprint (ClientHello only). */
+  public String ja4;
+  /** The JA4 with its lists shown before hashing (ClientHello only). */
+  public String ja4Raw;
 }
