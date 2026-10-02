@@ -121,7 +121,7 @@ public class TestDnsDecoder extends BaseTest {
 
   @Test
   public void testCompressionPointerLoop() {
-    // Answer name points to itself
+    // Answer name points forward, past itself
     byte[] loop = ByteBuffer.allocate(12).put((byte) 0xC0).put((byte) 29).putShort((short) 1).putShort((short) 1)
         .putInt(0).putShort((short) 0).array();
     byte[] m = message(1, 0x8180, 1, 1, 0, 0, concat(question("a.b", 1), loop));
@@ -156,5 +156,36 @@ public class TestDnsDecoder extends BaseTest {
     assertEquals("MX", m.answers.get(0).type);
     assertEquals("10 example.com", m.answers.get(0).data);
     assertFalse(m.truncated);
+  }
+
+  @Test
+  public void testRecordCapKeepsLaterSections() {
+    // Records past the cap are skipped, not the sections after them
+    ByteArrayOutputStream body = new ByteArrayOutputStream();
+    byte[] q = question("a.b", 1);
+    body.write(q, 0, q.length);
+    for (int i = 0; i < 71; i++) {
+      byte[] a = answerA(1, new byte[4]);
+      body.write(a, 0, a.length);
+    }
+    Context context = new Context();
+    DnsMessage m = DnsParser.parse(message(1, 0x8180, 1, 70, 0, 1, body.toByteArray()), 0, context);
+    assertEquals(64, m.answers.size());
+    assertEquals(1, m.additionals.size());
+    assertEquals(1, context.warnings.size());
+  }
+
+  @Test
+  public void testCompressionPointerToItself() {
+    // The answer name (at offset 21) is a pointer to offset 21
+    byte[] self = ByteBuffer.allocate(12).put((byte) 0xC0).put((byte) 21).putShort((short) 1).putShort((short) 1)
+        .putInt(0).putShort((short) 0).array();
+    byte[] m = message(1, 0x8180, 1, 1, 0, 0, concat(question("a.b", 1), self));
+    try {
+      DnsParser.parse(m, 0, new Context());
+      fail("expected malformed DNS");
+    } catch (IllegalArgumentException e) {
+      assertTrue(e.getMessage(), e.getMessage().contains("pointer"));
+    }
   }
 }

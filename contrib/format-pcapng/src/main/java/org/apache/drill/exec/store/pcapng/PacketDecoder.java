@@ -83,9 +83,10 @@ public class PacketDecoder extends Packet {
         return true;
       }
     } catch (RuntimeException e) {
+      // Still an IP packet: addresses can be read, the transport layer cannot
       setDecodeError(e.getMessage() != null ? e.getMessage() : e.getClass().getSimpleName());
-      etherProtocol = 0;
       transportOffset = -1;
+      return true;
     }
     return false;
   }

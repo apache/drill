@@ -126,4 +126,15 @@ public class TestHttpParser extends BaseTest {
   public void testChunked() {
     assertTrue(parse("HTTP/1.1 200 OK\r\nTransfer-Encoding: chunked\r\n\r\n", false).isChunked());
   }
+
+  @Test
+  public void testInvalidContentLengthWarnsOnce() {
+    // Parsing and writing both read the length; the problem is reported once
+    byte[] b = bytes("HTTP/1.1 200 OK\r\nContent-Length: abc\r\n\r\n");
+    Context context = new Context(false);
+    HttpMessage m = HttpParser.parseMessage(b, 0, b.length, context);
+    assertNull(m.contentLength());
+    assertNull(m.contentLength());
+    assertEquals(1, context.warnings.size());
+  }
 }

@@ -363,6 +363,9 @@ public class Packet implements Comparable<Packet> {
   }
 
   public int getSrc_port() {
+    if (transportUnknown()) {
+      return 0;
+    }
     if (isPPPoV6Packet()) {
       return getPort(64);
     }
@@ -370,10 +373,18 @@ public class Packet implements Comparable<Packet> {
   }
 
   public int getDst_port() {
+    if (transportUnknown()) {
+      return 0;
+    }
     if (isPPPoV6Packet()) {
       return getPort(66);
     }
     return getPort(2);
+  }
+
+  /** True for an IP packet whose header could not be parsed far enough to find the transport layer. */
+  private boolean transportUnknown() {
+    return (isIpV4Packet() || isIpV6Packet()) && transportOffset < 0;
   }
 
   public boolean isCorrupt(){
@@ -518,10 +529,9 @@ public class Packet implements Comparable<Packet> {
         protocol = getByte(raw, etherOffset + 48);
       }
     } catch (RuntimeException e) {
-      // Keep the link-layer fields; treat the rest as undecodable
+      // Keep what was read (link layer, IP addresses); the transport layer is unknown
       isCorrupt = true;
       decodeError = e.getMessage() != null ? e.getMessage() : e.getClass().getSimpleName();
-      etherProtocol = 0;
       transportOffset = -1;
     }
     // everything is decoded lazily

@@ -39,9 +39,13 @@ public class TestPacketDecodeErrors extends BaseTest {
     byte[] raw = TestPackets.ipv4("10.0.0.1", "10.0.0.2", 17, new byte[8]);
     raw[0] = 0x43; // IHL 3: shorter than the minimum header
     PacketDecoder packet = new PacketDecoder();
-    assertFalse(packet.readPcapng(raw, 101));
+    // Still an IPv4 packet: the addresses are read, the transport layer is not
+    assertTrue(packet.readPcapng(raw, 101));
     assertNotNull(packet.getDecodeError());
     assertTrue(packet.getDecodeError(), packet.getDecodeError().contains("header length"));
+    assertEquals("10.0.0.1", packet.getSourceIpAddressString());
+    assertFalse(packet.isUdpPacket());
+    assertEquals(0, packet.getSrc_port());
   }
 
   @Test
@@ -58,6 +62,8 @@ public class TestPacketDecodeErrors extends BaseTest {
     packet.decodePcap(record, 0, false, 65535);
     assertTrue(packet.isCorrupt());
     assertNotNull(packet.getDecodeError());
+    assertEquals("10.0.0.2", packet.getDestinationIpAddressString());
+    assertEquals(0, packet.getDst_port());
   }
 
   @Test
